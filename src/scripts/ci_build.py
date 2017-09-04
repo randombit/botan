@@ -99,8 +99,10 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
     if target == 'sonar':
         make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
                        '--out-dir', 'bw-outputs']
+
+        sonar_config = os.path.join(root_dir, 'src', 'build-data', 'sonar-project.properties')
         test_cmd = ['sonar-scanner',
-                    '-Dproject.settings=%s' % (os.path.join(root_dir, 'src', 'build-data', 'sonar-project.properties')),
+                    '-Dproject.settings=%s' % (sonar_config),
                     '-Dsonar.login=%s' % (os.getenv('SONAR_TOKEN'))]
 
     if is_cross_target:
@@ -150,10 +152,11 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
         elif target_os == 'linux':
             flags += ['--with-lzma']
 
-        if target_os == 'linux' and (target not in ['sanitizer', 'valgrind', 'mini-shared', 'mini-static']):
-            # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
-            # is not installed on the CI image
-            flags += ['--with-openssl']
+        if target_os == 'linux':
+            if target not in ['sanitizer', 'valgrind', 'mini-shared', 'mini-static']:
+                # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
+                # is not installed on the CI image
+                flags += ['--with-openssl']
 
         if target == 'coverage':
             flags += ['--with-tpm']
@@ -243,7 +246,8 @@ def have_prog(prog):
             return True
 
 def main(args=None):
-    # pylint: disable=too-many-branches,too-many-statements
+    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+
     """
     Parse options, do the things
     """
@@ -346,12 +350,14 @@ def main(args=None):
             cmds.append([os.path.join(root_dir, 'src/scripts/cli_tests.py'),
                          os.path.join(root_dir, 'botan')])
 
+        botan_py = os.path.join(root_dir, 'src/python/botan2.py')
+
         if target in ['shared', 'coverage']:
 
             if use_python2:
-                cmds.append(['python2', os.path.join(root_dir, 'src/python/botan2.py')])
+                cmds.append(['python2', botan_py])
             if use_python3:
-                cmds.append(['python3', os.path.join(root_dir, 'src/python/botan2.py')])
+                cmds.append(['python3', botan_py])
 
         if target != 'docs':
             cmds.append(['make', '-C', root_dir, 'install'])
@@ -366,19 +372,20 @@ def main(args=None):
                 print('Error: gcov not found in PATH (%s)' % (os.getenv('PATH')))
                 return 1
 
-            cmds.append(['lcov', '--capture', '--directory', options.root_dir, '--output-file', 'coverage.info.raw'])
-            cmds.append(['lcov', '--remove', 'coverage.info.raw', '/usr/*', '--output-file', 'coverage.info'])
-            cmds.append(['lcov', '--list', 'coverage.info'])
+            cmds.append(['lcov', '--capture', '--directory', options.root_dir,
+                         '--output-file', 'cov.info.raw'])
+            cmds.append(['lcov', '--remove', 'cov.info.raw', '/usr/*', '--output-file', 'cov.info'])
+            cmds.append(['lcov', '--list', 'cov.info'])
 
             if have_prog('coverage'):
-                cmds.append(['coverage', 'run', '--branch', os.path.join(root_dir, 'src/python/botan2.py')])
+                cmds.append(['coverage', 'run', '--branch', botan_py])
 
             if have_prog('codecov'):
                 # If codecov exists assume we are on Travis and report to codecov.io
                 cmds.append(['codecov'])
             else:
                 # Otherwise generate a local HTML report
-                cmds.append(['genhtml', 'coverage.info', '--output-directory', 'lcov-out'])
+                cmds.append(['genhtml', 'cov.info', '--output-directory', 'lcov-out'])
 
     for cmd in cmds:
         if options.dry_run:
