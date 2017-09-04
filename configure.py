@@ -3070,7 +3070,7 @@ def main_action_configure_build(info_modules, source_paths, options,
             return 'undated'
         return 'dated %d' % (datestamp)
 
-    logging.info('Botan %s (VC %s) (%s %s) build setup is complete' % (
+    logging.info('Botan %s (revision %s) (%s %s) build setup is complete' % (
         Version.as_string(),
         Version.vc_rev(),
         Version.release_type,
