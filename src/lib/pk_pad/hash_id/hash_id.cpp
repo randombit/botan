@@ -44,6 +44,18 @@ const uint8_t SHA_512_256_PKCS_ID[] = {
 0x30, 0x31, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
 0x65, 0x03, 0x04, 0x02, 0x06, 0x05, 0x00, 0x04, 0x20 };
 
+const uint8_t SHA3_224_PKCS_ID[] = {
+0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x03, 0x0D };
+
+const uint8_t SHA3_256_PKCS_ID[] = {
+0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x03, 0x0E };
+
+const uint8_t SHA3_384_PKCS_ID[] = {
+0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x03, 0x0F };
+
+const uint8_t SHA3_512_PKCS_ID[] = {
+0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x03, 0x10 };
+
 const uint8_t SM3_PKCS_ID[] = {
 0x30, 0x30, 0x30, 0x0C, 0x06, 0x08, 0x2A, 0x81, 0x1C, 0xCF,
 0x55, 0x01, 0x83, 0x11, 0x05, 0x00, 0x04, 0x20,
@@ -95,6 +107,22 @@ std::vector<uint8_t> pkcs_hash_id(const std::string& name)
    if(name == "SHA-512-256")
       return std::vector<uint8_t>(SHA_512_256_PKCS_ID,
                                SHA_512_256_PKCS_ID + sizeof(SHA_512_256_PKCS_ID));
+
+   if(name == "SHA-3(224)")
+      return std::vector<uint8_t>(SHA3_224_PKCS_ID,
+                                SHA3_224_PKCS_ID + sizeof(SHA3_224_PKCS_ID));
+
+   if(name == "SHA-3(256)")
+      return std::vector<uint8_t>(SHA3_256_PKCS_ID,
+                                SHA3_256_PKCS_ID + sizeof(SHA3_256_PKCS_ID));
+
+   if(name == "SHA-3(384)")
+      return std::vector<uint8_t>(SHA3_384_PKCS_ID,
+                                SHA3_384_PKCS_ID + sizeof(SHA3_384_PKCS_ID));
+
+   if(name == "SHA-3(512)")
+      return std::vector<uint8_t>(SHA3_512_PKCS_ID,
+                                SHA3_512_PKCS_ID + sizeof(SHA3_512_PKCS_ID));
 
    if(name == "SM3")
       return std::vector<uint8_t>(SM3_PKCS_ID, SM3_PKCS_ID + sizeof(SM3_PKCS_ID));
