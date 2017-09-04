@@ -21,9 +21,8 @@
   */
   #define BOOST_ASIO_DISABLE_SERIAL_PORT
   #include <boost/asio.hpp>
-#endif
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
   #include <sys/types.h>
   #include <sys/mman.h>
   #include <sys/resource.h>
@@ -37,7 +36,7 @@
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
   #define NOMINMAX 1
   #include <winsock2.h>
-  #include <WS2tcpip.h>
+  #include <ws2tcpip.h>
   #include <windows.h>
 #endif
 
@@ -86,7 +85,7 @@ OS::open_socket(const std::string& hostname,
 
    return std::unique_ptr<OS::Socket>(new Asio_Socket(hostname, service));
 
-#elif defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
 
    class Winsock_Socket : public OS::Socket
       {
