@@ -3,7 +3,9 @@
 #
 # Build jobs
 #  1. six basic builds: 32/64bit on MSVS2013/2015/2017
-#  2. add static lib, amalgamation and debug on MSVC2017
+#  2. MSVC2017 static lib with with amalgamation
+#  3. MSVC2017 with debug/sanitizers
+#  4. MSVC2015 for Windows RT (TODO)
 #
 # Note: Avoid the AppVeyor settings `platform` and `configuration` since excluding
 # from the build matrix is not supported (https://github.com/appveyor/ci/issues/386)
@@ -11,69 +13,57 @@
 clone_depth: 5
 
 environment:
+
   matrix:
     # 1
     - MSVS: 2013
       PLATFORM: x86
+      TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - MSVS: 2013
       PLATFORM: x86_amd64
+      TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+
     - MSVS: 2015
       PLATFORM: x86
+      TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - MSVS: 2015
       PLATFORM: x86_amd64
+      TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+
     - MSVS: 2017
       PLATFORM: x86
+      TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - MSVS: 2017
       PLATFORM: x86_amd64
+      TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
     # 2
     - MSVS: 2017
       PLATFORM: x86_amd64
-      CONFIG: --disable-shared
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    - MSVS: 2017
-      PLATFORM: x86_amd64
-      CONFIG: --amalgamation
+      TARGET: static
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
     # 3
     - MSVS: 2017
       PLATFORM: x86_amd64
-      CONFIG: --with-debug
+      TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
 install:
-  # Check setup
-  - echo Current build setup MSVS="%MSVS%" PLATFORM="%PLATFORM%" CONFIG="%CONFIG%"
-
-  # Choose compiler
-  - if %MSVS% == 2013 (
-       call "%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %PLATFORM%
-    )
-  - if %MSVS% == 2015 (
-       call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
-    )
-  - if %MSVS% == 2017 (
-       call "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
-    )
-  - cl # check compiler version
-  - appveyor DownloadFile http://download.qt.io/official_releases/jom/jom.zip -FileName jom.zip
-  - 7z e jom.zip
+  - call src\scripts\ci\setup_appveyor.bat
 
 build_script:
-  - python configure.py --cc=msvc --cpu=%PLATFORM% %CONFIG%
-  - jom -j3
-  - botan-test
-  - nmake install
+  - python src\scripts\ci_build.py --os=windows --cc=msvc --without-python3 --make-tool=jom --cpu=%PLATFORM% %TARGET%
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
   only:
     - master
     - release-2
+

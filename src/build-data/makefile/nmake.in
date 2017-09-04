@@ -42,7 +42,7 @@ CLIOBJS       = %{cli_objs}
 TESTOBJS      = %{test_objs}
 
 # First make target. Will be used by default
-all: $(CLI) $(TEST)
+all: libs cli tests
 
 # Build Commands
 %{lib_build_cmds}
@@ -50,8 +50,6 @@ all: $(CLI) $(TEST)
 %{cli_build_cmds}
 
 %{test_build_cmds}
-
-libs: $(LIBRARIES)
 
 # Link Commands
 $(CLI): $(LIBRARIES) $(CLIOBJS)
@@ -61,6 +59,10 @@ $(CLI): $(LIBRARIES) $(CLIOBJS)
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(TEST_LINK_CMD) /OUT:$@ $(TESTOBJS) $(LIB_FILENAME) $(TEST_LINKS_TO)
 	$(TEST_POST_LINK_CMD)
+
+libs: $(LIBRARIES)
+cli: $(CLI)
+tests: $(TEST)
 
 !If "$(SO_OBJ_FLAGS)" == ""
 # static lib

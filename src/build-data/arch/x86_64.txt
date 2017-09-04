@@ -9,6 +9,7 @@ amd64
 x86-64
 em64t
 x64
+x86_amd64
 </aliases>
 
 <submodels>

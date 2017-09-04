@@ -7,6 +7,7 @@ import argparse
 import re
 import subprocess
 import sys
+import os.path
 
 import vecparser
 
@@ -127,10 +128,10 @@ if __name__ == '__main__':
 
     cli_binary = args.cli_binary
 
-    vecfile_cfb = vecparser.VecDocument("src/tests/data/modes/cfb.vec")
-    vecfile_gcm = vecparser.VecDocument("src/tests/data/aead/gcm.vec")
-    vecfile_ocb = vecparser.VecDocument("src/tests/data/aead/ocb.vec")
-    vecfile_xts = vecparser.VecDocument("src/tests/data/modes/xts.vec")
+    vecfile_cfb = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'modes', 'cfb.vec'))
+    vecfile_gcm = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'gcm.vec'))
+    vecfile_ocb = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'ocb.vec'))
+    vecfile_xts = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'modes', 'xts.vec'))
     #data = vecfile.get_data()
     #for algo in data:
     #    print(algo)
