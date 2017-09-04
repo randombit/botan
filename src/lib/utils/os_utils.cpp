@@ -1,6 +1,6 @@
 /*
 * OS and machine specific utility functions
-* (C) 2015,2016 Jack Lloyd
+* (C) 2015,2016,2017 Jack Lloyd
 * (C) 2016 Daniel Neus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -13,7 +13,6 @@
 #include <chrono>
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
-
   /*
   * We don't need serial port support anyway, and asking for it
   * causes macro conflicts with Darwin's termios.h when this
@@ -21,22 +20,28 @@
   */
   #define BOOST_ASIO_DISABLE_SERIAL_PORT
   #include <boost/asio.hpp>
+#endif
 
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
   #include <sys/types.h>
-  #include <sys/mman.h>
   #include <sys/resource.h>
-  #include <unistd.h>
+  #include <sys/mman.h>
   #include <signal.h>
   #include <setjmp.h>
+  #include <unistd.h>
+
+#if !defined(BOTAN_HAS_BOOST_ASIO)
   #include <sys/socket.h>
   #include <netinet/in.h>
   #include <netdb.h>
+#endif
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
   #define NOMINMAX 1
+#if !defined(BOTAN_HAS_BOOST_ASIO)
   #include <winsock2.h>
   #include <ws2tcpip.h>
+#endif
   #include <windows.h>
 #endif
 
