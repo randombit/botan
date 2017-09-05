@@ -15,8 +15,8 @@ namespace Botan {
 */
 secure_vector<uint8_t> CMAC::poly_double(const secure_vector<uint8_t>& in)
    {
-   secure_vector<uint8_t> out = in;
-   poly_double_n(out.data(), out.size());
+   secure_vector<uint8_t> out(in.size());
+   poly_double_n(out.data(), in.data(), out.size());
    return out;
    }
 
@@ -81,9 +81,7 @@ void CMAC::key_schedule(const uint8_t key[], size_t length)
    m_cipher->set_key(key, length);
    m_cipher->encrypt(m_B);
    poly_double_n(m_B.data(), m_B.size());
-
-   m_P = m_B;
-   poly_double_n(m_P.data(), m_P.size());
+   poly_double_n(m_P.data(), m_B.data(), m_P.size());
    }
 
 /*

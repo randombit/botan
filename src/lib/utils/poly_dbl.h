@@ -11,14 +11,20 @@
 
 namespace Botan {
 
-void BOTAN_DLL poly_double_n(uint8_t b[], size_t n);
+/**
+* Polynomial doubling in GF(2^n)
+*/
+void BOTAN_DLL poly_double_n(uint8_t out[], const uint8_t in[], size_t n);
 
-void poly_double_8(uint8_t b[8]);
-void poly_double_16(uint8_t b[16]);
-void poly_double_24(uint8_t b[24]);
-void poly_double_32(uint8_t b[32]);
-void poly_double_64(uint8_t b[64]);
+inline void poly_double_n(uint8_t buf[], size_t n)
+   {
+   return poly_double_n(buf, buf, n);
+   }
 
+/*
+* Little endian convention - used for XTS
+*/
+void poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n);
 
 }
 

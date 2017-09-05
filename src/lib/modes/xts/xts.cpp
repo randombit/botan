@@ -8,51 +8,19 @@
 
 #include <botan/xts.h>
 #include <botan/loadstor.h>
+#include <botan/internal/poly_dbl.h>
 
 namespace Botan {
 
-namespace {
-
-void poly_double_128(uint8_t out[], const uint8_t in[])
-   {
-   uint64_t X0 = load_le<uint64_t>(in, 0);
-   uint64_t X1 = load_le<uint64_t>(in, 1);
-
-   const bool carry = static_cast<bool>((X1 >> 63) != 0);
-
-   X1 = (X1 << 1) | (X0 >> 63);
-   X0 = (X0 << 1);
-
-   if(carry)
-      X0 ^= 0x87;
-
-   store_le(out, X0, X1);
-   }
-
-void poly_double_64(uint8_t out[], const uint8_t in[])
-   {
-   uint64_t X = load_le<uint64_t>(in, 0);
-   const bool carry = static_cast<bool>((X >> 63) != 0);
-   X <<= 1;
-   if(carry)
-      X ^= 0x1B;
-   store_le(X, out);
-   }
-
-inline void poly_double(uint8_t out[], const uint8_t in[], size_t size)
-   {
-   if(size == 8)
-      poly_double_64(out, in);
-   else
-      poly_double_128(out, in);
-   }
-
-}
-
 XTS_Mode::XTS_Mode(BlockCipher* cipher) : m_cipher(cipher)
    {
-   if(m_cipher->block_size() != 8 && m_cipher->block_size() != 16)
-      throw Invalid_Argument("Bad cipher for XTS: " + cipher->name());
+   if(m_cipher->block_size() != 8 &&
+      m_cipher->block_size() != 16 &&
+      m_cipher->block_size() != 32 &&
+      m_cipher->block_size() != 64)
+      {
+      throw Invalid_Argument("Cannot use " + cipher->name() + " with XTS");
+      }
 
    m_tweak_cipher.reset(m_cipher->clone());
    m_tweak.resize(update_granularity());
@@ -127,12 +95,12 @@ void XTS_Mode::update_tweak(size_t which)
    const size_t BS = m_tweak_cipher->block_size();
 
    if(which > 0)
-      poly_double(m_tweak.data(), &m_tweak[(which-1)*BS], BS);
+      poly_double_n_le(m_tweak.data(), &m_tweak[(which-1)*BS], BS);
 
    const size_t blocks_in_tweak = update_granularity() / BS;
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
-      poly_double(&m_tweak[i*BS], &m_tweak[(i-1)*BS], BS);
+      poly_double_n_le(&m_tweak[i*BS], &m_tweak[(i-1)*BS], BS);
    }
 
 size_t XTS_Encryption::output_length(size_t input_length) const
@@ -173,7 +141,7 @@ void XTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input");
+   BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input in XTS encrypt");
 
    const size_t BS = cipher().block_size();
 
@@ -249,7 +217,7 @@ void XTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input");
+   BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input in XTS decrypt");
 
    const size_t BS = cipher().block_size();
 

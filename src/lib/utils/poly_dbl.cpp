@@ -10,120 +10,74 @@
 
 namespace Botan {
 
-void poly_double_n(uint8_t b[], size_t n)
+namespace {
+
+template<size_t LIMBS, uint64_t POLY>
+void poly_double(uint8_t out[], const uint8_t in[])
    {
-   if(n == 8)
-      return poly_double_8(b);
-   else if(n == 16)
-      return poly_double_16(b);
-   else if(n == 24)
-      return poly_double_24(b);
-   else if(n == 32)
-      return poly_double_32(b);
-   else if(n == 64)
-      return poly_double_64(b);
-   else
-      throw Invalid_Argument("Unsupported size for poly_double_n");
+   uint64_t W[LIMBS];
+   load_be(W, in, LIMBS);
+
+   const uint64_t carry = POLY * (W[0] >> 63);
+   for(size_t i = 0; i != LIMBS - 1; ++i)
+      W[i] = (W[i] << 1) ^ (W[i+1] >> 63);
+   W[LIMBS-1] = (W[LIMBS-1] << 1) ^ carry;
+
+   copy_out_be(out, LIMBS*8, W);
    }
 
-void poly_double_8(uint8_t b[8])
+template<size_t LIMBS, uint64_t POLY>
+void poly_double_le(uint8_t out[], const uint8_t in[])
    {
-   const uint64_t poly = 0x1B;
-   uint64_t b0 = load_be<uint64_t>(b, 0);
-   const uint64_t carry0 = (b0 >> 63);
-   b0 = (b0 << 1) ^ (carry0 * poly);
-   store_be(b0, b);
+   uint64_t W[LIMBS];
+   load_le(W, in, LIMBS);
+
+   const uint64_t carry = POLY * (W[LIMBS-1] >> 63);
+   for(size_t i = 0; i != LIMBS - 1; ++i)
+      W[LIMBS-1-i] = (W[LIMBS-1-i] << 1) ^ (W[LIMBS-2-i] >> 63);
+   W[0] = (W[0] << 1) ^ carry;
+
+   copy_out_le(out, LIMBS*8, W);
    }
 
-void poly_double_16(uint8_t b[16])
+}
+
+void poly_double_n(uint8_t out[], const uint8_t in[], size_t n)
    {
-   const uint64_t poly = 0x87;
-
-   uint64_t b0 = load_be<uint64_t>(b, 0);
-   uint64_t b1 = load_be<uint64_t>(b, 1);
-
-   const uint64_t carry0 = (b0 >> 63);
-
-   b0 = (b0 << 1) ^ (b1 >> 63);
-   b1 = (b1 << 1) ^ (carry0 * poly);
-
-   store_be(b0, b);
-   store_be(b1, b+8);
+   switch(n)
+      {
+      case 8:
+         return poly_double<1, 0x1B>(out, in);
+      case 16:
+         return poly_double<2, 0x87>(out, in);
+      case 24:
+         return poly_double<3, 0x87>(out, in);
+      case 32:
+         return poly_double<4, 0x425>(out, in);
+      case 64:
+         return poly_double<8, 0x125>(out, in);
+      default:
+         throw Invalid_Argument("Unsupported size for poly_double_n");
+      }
    }
 
-void poly_double_24(uint8_t b[24])
+void poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n)
    {
-   const uint64_t poly = 0x87;
-
-   uint64_t b0 = load_be<uint64_t>(b, 0);
-   uint64_t b1 = load_be<uint64_t>(b, 1);
-   uint64_t b2 = load_be<uint64_t>(b, 2);
-
-   const uint64_t carry0 = (b0 >> 63);
-
-   b0 = (b0 << 1) ^ (b1 >> 63);
-   b1 = (b1 << 1) ^ (b2 >> 63);
-   b2 = (b2 << 1) ^ (carry0 * poly);
-
-   store_be(b0, b);
-   store_be(b1, b+8);
-   store_be(b2, b+16);
-   }
-
-void poly_double_32(uint8_t b[32])
-   {
-   const uint64_t poly = 0x425;
-
-   uint64_t b0 = load_be<uint64_t>(b, 0);
-   uint64_t b1 = load_be<uint64_t>(b, 1);
-   uint64_t b2 = load_be<uint64_t>(b, 2);
-   uint64_t b3 = load_be<uint64_t>(b, 3);
-
-   const uint64_t carry0 = (b0 >> 63);
-
-   b0 = (b0 << 1) ^ (b1 >> 63);
-   b1 = (b1 << 1) ^ (b2 >> 63);
-   b2 = (b2 << 1) ^ (b3 >> 63);
-   b3 = (b3 << 1) ^ (carry0 * poly);
-
-   store_be(b0, b);
-   store_be(b1, b+8);
-   store_be(b2, b+16);
-   store_be(b3, b+24);
-   }
-
-void poly_double_64(uint8_t b[64])
-   {
-   const uint64_t poly = 0x125;
-
-   uint64_t b0 = load_be<uint64_t>(b, 0);
-   uint64_t b1 = load_be<uint64_t>(b, 1);
-   uint64_t b2 = load_be<uint64_t>(b, 2);
-   uint64_t b3 = load_be<uint64_t>(b, 3);
-   uint64_t b4 = load_be<uint64_t>(b, 4);
-   uint64_t b5 = load_be<uint64_t>(b, 5);
-   uint64_t b6 = load_be<uint64_t>(b, 6);
-   uint64_t b7 = load_be<uint64_t>(b, 7);
-
-   const uint64_t carry0 = (b0 >> 63);
-
-   b0 = (b0 << 1) ^ (b1 >> 63);
-   b1 = (b1 << 1) ^ (b2 >> 63);
-   b2 = (b2 << 1) ^ (b3 >> 63);
-   b3 = (b3 << 1) ^ (b4 >> 63);
-   b4 = (b4 << 1) ^ (b5 >> 63);
-   b5 = (b5 << 1) ^ (b6 >> 63);
-   b6 = (b6 << 1) ^ (b7 >> 63);
-   b7 = (b7 << 1) ^ (carry0 * poly);
-
-   store_be(b0, b);
-   store_be(b1, b+8);
-   store_be(b2, b+16);
-   store_be(b3, b+24);
-   store_be(b4, b+32);
-   store_be(b5, b+40);
-   store_be(b6, b+48);
-   store_be(b7, b+56);
+   switch(n)
+      {
+      case 8:
+         return poly_double_le<1, 0x1B>(out, in);
+      case 16:
+         return poly_double_le<2, 0x87>(out, in);
+      case 24:
+         return poly_double_le<3, 0x87>(out, in);
+      case 32:
+         return poly_double_le<4, 0x425>(out, in);
+      case 64:
+         return poly_double_le<8, 0x125>(out, in);
+      default:
+         throw Invalid_Argument("Unsupported size for poly_double_n_le");
+      }
    }
 
 }

@@ -56,8 +56,8 @@ class L_computer
 
       secure_vector<uint8_t> poly_double(const secure_vector<uint8_t>& in) const
          {
-         secure_vector<uint8_t> out = in;
-         poly_double_n(out.data(), out.size());
+         secure_vector<uint8_t> out(in.size());
+         poly_double_n(out.data(), in.data(), out.size());
          return out;
          }
 
