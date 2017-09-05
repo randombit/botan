@@ -372,10 +372,13 @@ def main(args=None):
                 print('Error: gcov not found in PATH (%s)' % (os.getenv('PATH')))
                 return 1
 
+            cov_file = 'coverage.info'
+            raw_cov_file = 'coverage.info.raw'
+
             cmds.append(['lcov', '--capture', '--directory', options.root_dir,
-                         '--output-file', 'cov.info.raw'])
-            cmds.append(['lcov', '--remove', 'cov.info.raw', '/usr/*', '--output-file', 'cov.info'])
-            cmds.append(['lcov', '--list', 'cov.info'])
+                         '--output-file', raw_cov_file])
+            cmds.append(['lcov', '--remove', raw_cov_file, '/usr/*', '--output-file', cov_file])
+            cmds.append(['lcov', '--list', cov_file])
 
             if have_prog('coverage'):
                 cmds.append(['coverage', 'run', '--branch', botan_py])
