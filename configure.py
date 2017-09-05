@@ -2849,6 +2849,16 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
             options.os = system_from_python
         logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
 
+    def deduce_compiler_type_from_cc_bin(cc_bin):
+        if cc_bin.find('clang') != -1:
+            return 'clang'
+        if cc_bin.find('-g++') != -1:
+            return 'gcc'
+        return None
+
+    if options.compiler is None and options.compiler_binary != None:
+        options.compiler = deduce_compiler_type_from_cc_bin(options.compiler_binary)
+
     if options.compiler is None:
         if options.os == 'windows':
             if have_program('g++') and not have_program('cl'):
@@ -2868,8 +2878,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
             options.compiler = 'gcc'
         else:
             options.compiler = 'gcc'
-        logging.info('Guessing to use compiler %s (use --cc to set)' % (
-            options.compiler))
+        logging.info('Guessing to use compiler %s (use --cc to set)' % (options.compiler))
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(info_arch)
