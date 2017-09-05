@@ -71,11 +71,11 @@ class SM2_Encryption_KAT_Tests : public PK_Encryption_Decryption_Test
             "SM2",
             "pubkey/sm2_enc.vec",
             "P,A,B,xG,yG,Order,Cofactor,Msg,x,Nonce,Ciphertext",
-            "") {}
+            "Hash") {}
 
-      virtual std::string default_padding(const VarMap&) const override
+      virtual std::string default_padding(const VarMap& vars) const override
          {
-         return "";
+         return get_opt_str(vars, "Hash", "SM3");
          }
 
       Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
