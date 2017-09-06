@@ -2707,7 +2707,9 @@ class CompilerDetector(object):
             xcode_version_to_clang = {
                 '703': '3.8',
                 '800': '3.9',
-                '802': '4.0'
+                # 802 has no support for clang 4.0 flags -Og and -MJ, 900 has.
+                '802': '3.9',
+                '900': '4.0',
             }
 
             match = re.search(r'Apple LLVM version [0-9.]+ \(clang-([0-9]{3})\.', cc_output)
