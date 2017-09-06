@@ -27,11 +27,11 @@ class SM2_Signature_KAT_Tests : public PK_Signature_Generation_Test
             "SM2",
             "pubkey/sm2_sig.vec",
             "P,A,B,xG,yG,Order,Cofactor,Ident,Msg,x,Nonce,Signature",
-            "") {}
+            "Hash") {}
 
       virtual std::string default_padding(const VarMap& vars) const override
          {
-         return get_req_str(vars, "Ident");
+         return get_req_str(vars, "Ident") + "," + get_opt_str(vars, "Hash", "SM3");
          }
 
       Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
