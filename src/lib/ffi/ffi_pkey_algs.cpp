@@ -6,6 +6,7 @@
 */
 
 #include <botan/ffi.h>
+#include <botan/hash.h>
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
@@ -569,6 +570,41 @@ int botan_privkey_load_ecdh(botan_privkey_t* key,
    }
 
 /* SM2 specific operations */
+
+int botan_pubkey_sm2_compute_za(uint8_t out[],
+                                size_t* out_len,
+                                const char* ident,
+                                const char* hash_algo,
+                                const botan_pubkey_t key)
+   {
+   if(out == nullptr || out_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   if(ident == nullptr || hash_algo == nullptr || key == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+#if defined(BOTAN_HAS_SM2)
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+      const Botan::Public_Key& pub_key = safe_get(key);
+      const Botan::EC_PublicKey* ec_key = dynamic_cast<const Botan::EC_PublicKey*>(&pub_key);
+      if(key == nullptr)
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+
+      if(ec_key->algo_name() != "SM2_Sig" && ec_key->algo_name() != "SM2_Enc")
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+
+      const std::string ident_str(ident);
+      std::unique_ptr<Botan::HashFunction> hash =
+         Botan::HashFunction::create_or_throw(hash_algo);
+
+      const std::vector<uint8_t> za =
+         Botan::sm2_compute_za(*hash, ident_str, ec_key->domain(), ec_key->public_point());
+
+      return write_vec_output(out, out_len, za);
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
 
 int botan_pubkey_load_sm2(botan_pubkey_t* key,
                           const botan_mp_t public_x,
