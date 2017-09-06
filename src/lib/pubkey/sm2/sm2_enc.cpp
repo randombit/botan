@@ -199,7 +199,6 @@ class SM2_Decryption_Operation : public PK_Ops::Decryption
    private:
       const SM2_Encryption_PrivateKey& m_key;
       RandomNumberGenerator& m_rng;
-      const std::string m_ident;
       const std::string m_kdf_hash;
    };
 
