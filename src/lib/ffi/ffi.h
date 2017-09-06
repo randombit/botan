@@ -136,6 +136,8 @@ doesn't exactly work well either!
 */
 #define BOTAN_FFI_SUCCESS (0)
 
+#define BOTAN_FFI_INVALID_VERIFIER (1)
+
 #define BOTAN_FFI_ERROR_INVALID_INPUT (-1)
 #define BOTAN_FFI_ERROR_BAD_MAC (-2)
 
