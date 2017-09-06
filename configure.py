@@ -2712,7 +2712,7 @@ class CompilerDetector(object):
                 '900': '4.0',
             }
 
-            match = re.search(r'Apple LLVM version [0-9\.]+ \(clang-([0-9]{3})\.', cc_output)
+            match = re.search(r'Apple LLVM version [0-9\.]+ \(clang-([0-9]+)\.', cc_output)
             if match:
                 apple_clang_version = match.group(1)
                 if apple_clang_version in xcode_version_to_clang:
