@@ -2713,7 +2713,9 @@ class CompilerDetector(object):
                 900: '4.0',
             }
 
-            cc_version = '3.8' # safe default
+            # All appleclang versions without "based on LLVM" note are at least clang 3.7
+            # https://en.wikipedia.org/wiki/Xcode#Latest_versions
+            cc_version = '3.7'
             match = re.search(r'Apple LLVM version [0-9\.]+ \(clang-([0-9]+)\.', cc_output)
             if match:
                 user_appleclang = int(match.group(1))

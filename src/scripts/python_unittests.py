@@ -121,7 +121,7 @@ InstalledDir: /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDe
 Target: x86_64-apple-darwin16.7.0
 Thread model: posix
 InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"""
-        self.assertEqual(detector.version_from_compiler_output(compiler_out), "3.8")
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "3.7")
 
         compiler_out = """Apple LLVM version 8.1.1 (clang-802.1.0)
 Target: x86_64-apple-darwin16.7.0
