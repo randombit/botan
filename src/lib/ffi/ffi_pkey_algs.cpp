@@ -586,7 +586,8 @@ int botan_pubkey_sm2_compute_za(uint8_t out[],
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
       const Botan::Public_Key& pub_key = safe_get(key);
       const Botan::EC_PublicKey* ec_key = dynamic_cast<const Botan::EC_PublicKey*>(&pub_key);
-      if(key == nullptr)
+
+      if(ec_key == nullptr)
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
 
       if(ec_key->algo_name() != "SM2_Sig" && ec_key->algo_name() != "SM2_Enc")
