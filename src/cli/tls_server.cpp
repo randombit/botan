@@ -200,11 +200,6 @@ class TLS_Server final : public Command
                      uint8_t buf[4 * 1024] = { 0 };
                      ssize_t got = ::read(fd, buf, sizeof(buf));
 
-                     if(dump_stream)
-                        {
-                        dump_stream->write(reinterpret_cast<const char*>(buf), got);
-                        }
-
                      if(got == -1)
                         {
                         error_output() << "Error in socket read - " << strerror(errno) << std::endl;
@@ -215,6 +210,11 @@ class TLS_Server final : public Command
                         {
                         error_output() << "EOF on socket" << std::endl;
                         break;
+                        }
+
+                     if(dump_stream)
+                        {
+                        dump_stream->write(reinterpret_cast<const char*>(buf), got);
                         }
 
                      server.received_data(buf, got);
