@@ -1,4 +1,4 @@
-Makefile*
+/Makefile
 CMakeLists.txt*
 libbotan*.so.*
 *.a
