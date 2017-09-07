@@ -2704,7 +2704,7 @@ class CompilerDetector(object):
             cc_version = "%d.%d" % (major, minor)
 
         if cc_version is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
-            xcode_version_to_clang = {
+            appleclang_to_clang_version = {
                 '703': '3.8',
                 '800': '3.9',
                 # 802 has no support for clang 4.0 flags -Og and -MJ, 900 has.
@@ -2715,8 +2715,8 @@ class CompilerDetector(object):
             match = re.search(r'Apple LLVM version [0-9\.]+ \(clang-([0-9]+)\.', cc_output)
             if match:
                 apple_clang_version = match.group(1)
-                if apple_clang_version in xcode_version_to_clang:
-                    cc_version = xcode_version_to_clang[apple_clang_version]
+                if apple_clang_version in appleclang_to_clang_version:
+                    cc_version = appleclang_to_clang_version[apple_clang_version]
                     logging.info('Mapping Apple Clang version %s to LLVM version %s' % (
                         apple_clang_version, cc_version))
                 else:
