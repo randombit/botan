@@ -96,6 +96,20 @@ Candidate multilib: .;@m32
 Selected multilib: .;@m32"""
         self.assertEqual(detector.version_from_compiler_output(compiler_out), "3.7")
 
+    def test_clang_version_appleclang(self):
+        detector = CompilerDetector("clang", "clang++", "darwin")
+        compiler_out = """Apple LLVM version 8.1.0 (clang-802.0.42)
+Target: x86_64-apple-darwin16.7.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "3.9")
+
+        compiler_out = """Apple LLVM version 9.0.0 (clang-900.0.35)
+Target: x86_64-apple-darwin16.7.0
+Thread model: posix
+InstalledDir: /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "4.0")
+
     def test_msvc_version(self):
         detector = CompilerDetector("msvc", "cl.exe", "windows")
         compiler_out = """msvc_version.c
