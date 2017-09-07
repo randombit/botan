@@ -1,5 +1,5 @@
 <defines>
-SM2 -> 20170804
+SM2 -> 20170907
 </defines>
 
 <requires>
