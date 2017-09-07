@@ -17,26 +17,7 @@ env:
     - ANDROID_NDK=android-ndk-r20
 
   matrix:
-    - BUILD_MODE="shared"
-    - BUILD_MODE="coverage"
-    - BUILD_MODE="fuzzers"
-    - BUILD_MODE="valgrind"
-    - BUILD_MODE="cross-i386"
-    - BUILD_MODE="cross-ppc32"
-    - BUILD_MODE="cross-ppc64"
-    - BUILD_MODE="cross-arm32"
-    - BUILD_MODE="cross-arm64"
-    - BUILD_MODE="cross-mips64"
-    - BUILD_MODE="cross-win64"
-    - BUILD_MODE="cross-android-arm32"
-    - BUILD_MODE="cross-android-arm64"
-    - BUILD_MODE="gcc4.8"
     - BUILD_MODE="static"
-    - BUILD_MODE="mini-shared"
-    - BUILD_MODE="bsi"
-    - BUILD_MODE="nist"
-    - BUILD_MODE="docs"
-    - BUILD_MODE="lint"
 
 matrix:
   exclude:
