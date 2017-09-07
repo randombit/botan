@@ -131,11 +131,11 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
    size_t n = num_elems * elem_size;
 
    /*
-   We return nullptr in allocate if there was an overflow, so we
-   should never ever see an overflow in a deallocation.
+   We return nullptr in allocate if there was an overflow, so if an
+   overflow occurs here we know the pointer was not allocated by this pool.
    */
-   BOTAN_ASSERT(n / elem_size == num_elems,
-                "No overflow in deallocation");
+   if(n / elem_size != num_elems)
+      return false;
 
    if(!ptr_in_pool(m_pool, m_poolsize, p, n))
       return false;
