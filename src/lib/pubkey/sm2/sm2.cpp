@@ -1,5 +1,5 @@
 /*
-* SM2
+* SM2 Signatures
 * (C) 2017 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -79,13 +79,14 @@ class SM2_Signature_Operation : public PK_Ops::Signature
    public:
 
       SM2_Signature_Operation(const SM2_Signature_PrivateKey& sm2,
-                              const std::string& ident) :
+                              const std::string& ident,
+                              const std::string& hash) :
          m_order(sm2.domain().get_order()),
          m_base_point(sm2.domain().get_base_point(), m_order),
          m_x(sm2.private_value()),
          m_da_inv(sm2.get_da_inv()),
          m_mod_order(m_order),
-         m_hash(HashFunction::create_or_throw("SM3"))
+         m_hash(HashFunction::create_or_throw(hash))
          {
          // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
          m_za = sm2_compute_za(*m_hash, ident, sm2.domain(), sm2.public_point());
@@ -134,12 +135,13 @@ class SM2_Verification_Operation : public PK_Ops::Verification
    {
    public:
       SM2_Verification_Operation(const SM2_Signature_PublicKey& sm2,
-                                 const std::string& ident) :
+                                 const std::string& ident,
+                                 const std::string& hash) :
          m_base_point(sm2.domain().get_base_point()),
          m_public_point(sm2.public_point()),
          m_order(sm2.domain().get_order()),
          m_mod_order(m_order),
-         m_hash(HashFunction::create_or_throw("SM3"))
+         m_hash(HashFunction::create_or_throw(hash))
          {
          // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
          m_za = sm2_compute_za(*m_hash, ident, sm2.domain(), sm2.public_point());
@@ -199,7 +201,21 @@ SM2_Signature_PublicKey::create_verification_op(const std::string& params,
                                                 const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Verification>(new SM2_Verification_Operation(*this, params));
+      {
+      std::string userid = "";
+      std::string hash = "SM3";
+
+      auto comma = params.find(',');
+      if(comma == std::string::npos)
+         userid = params;
+      else
+         {
+         userid = params.substr(0, comma);
+         hash = params.substr(comma+1, std::string::npos);
+         }
+
+      return std::unique_ptr<PK_Ops::Verification>(new SM2_Verification_Operation(*this, userid, hash));
+      }
 
    throw Provider_Not_Found(algo_name(), provider);
    }
@@ -210,7 +226,21 @@ SM2_Signature_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                               const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Signature>(new SM2_Signature_Operation(*this, params));
+      {
+      std::string userid = "";
+      std::string hash = "SM3";
+
+      auto comma = params.find(',');
+      if(comma == std::string::npos)
+         userid = params;
+      else
+         {
+         userid = params.substr(0, comma);
+         hash = params.substr(comma+1, std::string::npos);
+         }
+
+      return std::unique_ptr<PK_Ops::Signature>(new SM2_Signature_Operation(*this, userid, hash));
+      }
 
    throw Provider_Not_Found(algo_name(), provider);
    }

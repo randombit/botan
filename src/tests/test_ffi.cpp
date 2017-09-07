@@ -1408,6 +1408,10 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
          ffi_test_pubkey_export(result, pub, priv, rng);
 
+         uint8_t za[32];
+         size_t sizeof_za = sizeof(za);
+         TEST_FFI_OK(botan_pubkey_sm2_compute_za, (za, &sizeof_za, "Ident", "SM3", pub));
+
          // Check key load functions
          botan_mp_t private_scalar, public_x, public_y;
          botan_mp_init(&private_scalar);
@@ -1494,6 +1498,10 @@ class FFI_Unit_Tests : public Test
          REQUIRE_FFI_OK(botan_privkey_create, (&priv, "SM2_Enc", kCurve, rng));
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
          ffi_test_pubkey_export(result, pub, priv, rng);
+
+         uint8_t za[32];
+         size_t sizeof_za = sizeof(za);
+         TEST_FFI_OK(botan_pubkey_sm2_compute_za, (za, &sizeof_za, "Ident", "SM3", pub));
 
          // Check key load functions
          botan_mp_t private_scalar, public_x, public_y;
