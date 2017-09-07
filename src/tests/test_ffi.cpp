@@ -1282,15 +1282,15 @@ class FFI_Unit_Tests : public Test
                // TODO: randomize this
                signature[0] ^= 1;
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
                message[0] ^= 1;
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
                signature[0] ^= 1;
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
                message[0] ^= 1;
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
@@ -1366,15 +1366,15 @@ class FFI_Unit_Tests : public Test
             // TODO: randomize this
             signature[0] ^= 1;
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
             message[0] ^= 1;
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
             signature[0] ^= 1;
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
             message[0] ^= 1;
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
@@ -1458,15 +1458,15 @@ class FFI_Unit_Tests : public Test
             // TODO: randomize this
             signature[0] ^= 1;
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
             message[0] ^= 1;
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
             signature[0] ^= 1;
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
             message[0] ^= 1;
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));

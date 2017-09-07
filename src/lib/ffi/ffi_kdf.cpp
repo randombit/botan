@@ -88,7 +88,7 @@ int botan_bcrypt_is_valid(const char* pass, const char* hash)
    {
 #if defined(BOTAN_HAS_BCRYPT)
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      return Botan::check_bcrypt(pass, hash) ? 0 : 1;
+      return Botan::check_bcrypt(pass, hash) ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER;
       });
 #else
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;

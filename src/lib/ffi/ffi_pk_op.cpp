@@ -164,7 +164,7 @@ int botan_pk_op_verify_finish(botan_pk_op_verify_t op, const uint8_t sig[], size
       if(legit)
          return BOTAN_FFI_SUCCESS;
       else
-         return BOTAN_FFI_ERROR_INVALID_INPUT;
+         return BOTAN_FFI_INVALID_VERIFIER;
       });
    }
 
