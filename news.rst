@@ -19,6 +19,20 @@ Version 2.3.0, Not Yet Released
 * Added support for the ECDHE_PSK AEAD TLS ciphersuites from
   draft-ietf-tls-ecdhe-psk-aead-05.
 
+* SM2 encryption and signature schemes were previously hardcoded to use SM3
+  hash, now any hash is allowed. (GH #1188)
+
+* XTS mode now supports 256-bit and 512-bit block ciphers.
+
+* Add ids to allow SHA-3 signatures with PKCSv1.5 (GH #1184)
+
+* The entropy source that called CryptGenRandom has been removed, and
+  replaced by a version which invokes the system PRNG, which may
+  be CryptGenRandom or some other source. (GH #1180)
+
+* Add support for gathering entropy using the Crypt-NG BCryptGenRandom
+  API. This is necessary to build for Windows Phone/Windows Store. (GH #1180)
+
 * Extend "Raw" signature padding (which allows signing a hash computed
   externally) to optionally take a hash function name. In this case, it will be
   verified that the input matches the expected hash size.  This also will
@@ -46,6 +60,12 @@ Version 2.3.0, Not Yet Released
 
 * Improve support for Windows Phone (GH #1180 #796 #794)
 
+* Correct return value of botan_pk_op_verify_finish, in 2.2.0 it returned
+  -1 on invalid signature instead of 1 which was used in 2.0, 2.1, and now
+  again in 2.3. (GH #1189 #1187)
+
+* Allow loading unencrypted private keys via FFI API (GH #1197)
+
 * Add new command line options `--rng-type=drbg` and `--drbg-seed` which
   allow running commands with a deterministic RNG. (GH #1169)
 
@@ -67,6 +87,8 @@ Version 2.3.0, Not Yet Released
 * The Travis CI build is now run via a Python script. This makes it
   easier to replicate the behavior of the CI build locally. Also a number
   of changes were made to improve the turnaround time of CI builds. (GH #1162)
+
+* Added a script to automate running TLS-Attacker tests.
 
 * Fix a bug in FFI tests that caused the test files not to be found when using
   `--data-dir` option (GH #1149)
