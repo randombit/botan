@@ -56,16 +56,21 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
    {
    *key = nullptr;
 
-   if(password == nullptr)
-      password = "";
-
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
       Botan::DataSource_Memory src(bits, len);
 
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
-      std::unique_ptr<Botan::PKCS8_PrivateKey> pkcs8(
-         Botan::PKCS8::load_key(src, rng, static_cast<std::string>(password)));
+      std::unique_ptr<Botan::PKCS8_PrivateKey> pkcs8;
+
+      if(password == nullptr)
+         {
+         pkcs8.reset(Botan::PKCS8::load_key(src, rng));
+         }
+      else
+         {
+         pkcs8.reset(Botan::PKCS8::load_key(src, rng, static_cast<std::string>(password)));
+         }
 
       if(pkcs8)
          {
