@@ -981,6 +981,11 @@ class FFI_Unit_Tests : public Test
 
          result.test_gte("Reasonable size", privkey.size(), 32);
 
+         // reimport exported private key
+         botan_privkey_t copy;
+         TEST_FFI_OK(botan_privkey_load, (&copy, rng, privkey.data(), privkey.size(), nullptr));
+         botan_privkey_destroy(copy);
+
          // Now again for PEM
          privkey_len = 0;
 
@@ -989,6 +994,9 @@ class FFI_Unit_Tests : public Test
 
          privkey.resize(privkey_len);
          TEST_FFI_OK(botan_privkey_export, (priv, privkey.data(), &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+
+         TEST_FFI_OK(botan_privkey_load, (&copy, rng, privkey.data(), privkey.size(), nullptr));
+         botan_privkey_destroy(copy);
 
          // export private key encrypted
          privkey_len = 0;
@@ -1001,7 +1009,7 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_privkey_export_encrypted_pbkdf_iter, (priv, privkey.data(), &privkey_len, rng, "password", pbkdf_iter,
                      "", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
-         botan_privkey_t copy;
+         // reimport encrypted private key
          botan_privkey_load(&copy, rng, privkey.data(), privkey.size(), "password");
          botan_privkey_destroy(copy);
 
@@ -1025,9 +1033,8 @@ class FFI_Unit_Tests : public Test
          result.test_gte("Reasonable KDF iters", pbkdf_iters_out, 1000);
          privkey.resize(privkey_len);
 
-         botan_privkey_load(&copy, rng, privkey.data(), privkey.size(), "password");
+         TEST_FFI_OK(botan_privkey_load, (&copy, rng, privkey.data(), privkey.size(), "password"));
          botan_privkey_destroy(copy);
-
 
          // calculate fingerprint
          size_t strength = 0;
