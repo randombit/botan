@@ -2704,25 +2704,25 @@ class CompilerDetector(object):
             cc_version = "%d.%d" % (major, minor)
 
         if cc_version is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
-            xcode_version_to_clang = {
-                '703': '3.8',
-                '800': '3.9',
+            # For appleclang version >= X, return minimal clang version Y
+            appleclang_to_clang_version = {
+                703: '3.8',
+                800: '3.9',
                 # 802 has no support for clang 4.0 flags -Og and -MJ, 900 has.
-                '802': '3.9',
-                '900': '4.0',
+                802: '3.9',
+                900: '4.0',
             }
 
+            # All appleclang versions without "based on LLVM" note are at least clang 3.7
+            # https://en.wikipedia.org/wiki/Xcode#Latest_versions
+            cc_version = '3.7'
             match = re.search(r'Apple LLVM version [0-9\.]+ \(clang-([0-9]+)\.', cc_output)
             if match:
-                apple_clang_version = match.group(1)
-                if apple_clang_version in xcode_version_to_clang:
-                    cc_version = xcode_version_to_clang[apple_clang_version]
-                    logging.info('Mapping Apple Clang version %s to LLVM version %s' % (
-                        apple_clang_version, cc_version))
-                else:
-                    logging.warning('Unable to determine LLVM Clang version cooresponding to Apple Clang %s' %
-                                    (apple_clang_version))
-                    cc_version = '3.8' # safe default
+                user_appleclang = int(match.group(1))
+                for appleclang, clang in sorted(appleclang_to_clang_version.items()):
+                    if user_appleclang >= appleclang:
+                        cc_version = clang
+                logging.info('Mapping Apple Clang version %s to LLVM version %s' % (user_appleclang, cc_version))
 
         if not cc_version:
             logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (

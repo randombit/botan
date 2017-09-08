@@ -110,6 +110,31 @@ Thread model: posix
 InstalledDir: /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"""
         self.assertEqual(detector.version_from_compiler_output(compiler_out), "4.0")
 
+    def test_clang_version_appleclang_intermediate(self):
+        # fake versions in between the knwon ones
+        # clang-700.0.0 is lower than all known versions
+        # clang-802.1.0 is a minor update of known clang-802
+        # clang-1111.9.99 is a random future value
+        detector = CompilerDetector("clang", "clang++", "darwin")
+
+        compiler_out = """Apple LLVM version 7.0.0 (clang-700.0.0)
+Target: x86_64-apple-darwin16.7.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "3.7")
+
+        compiler_out = """Apple LLVM version 8.1.1 (clang-802.1.0)
+Target: x86_64-apple-darwin16.7.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "3.9")
+
+        compiler_out = """Apple LLVM version 11.11.0 (clang-1111.9.99)
+Target: x86_64-apple-darwin16.7.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "4.0")
+
     def test_msvc_version(self):
         detector = CompilerDetector("msvc", "cl.exe", "windows")
         compiler_out = """msvc_version.c
