@@ -314,7 +314,8 @@ def main(args=None):
 
     if options.compiler_cache is None and options.cc != 'msvc':
         # Autodetect ccache
-        options.compiler_cache = have_prog('ccache')
+        if have_prog('ccache'):
+            options.compiler_cache = 'ccache'
 
     if options.compiler_cache == 'clcache' and target in ['sanitizer']:
         # clcache doesn't support /Zi so using it just adds overhead with
