@@ -109,7 +109,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             flags += ['--with-openmp']
 
     if target == 'sonar':
-        if os != 'linux':
+        if target_os != 'linux':
             raise Exception('Only Linux supported in Sonar target currently')
 
         make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
