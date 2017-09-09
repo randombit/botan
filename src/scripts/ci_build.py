@@ -290,6 +290,8 @@ def main(args=None):
         print('Usage: %s [options] target' % (args[0]))
         return 1
 
+    target = args[1]
+
     py_interp = 'python'
 
     use_python2 = have_prog('python2')
@@ -321,8 +323,6 @@ def main(args=None):
         # clcache doesn't support /Zi so using it just adds overhead with
         # no benefit
         options.compiler_cache = None
-
-    target = args[1]
 
     if target == 'sonar' and os.getenv('SONAR_TOKEN') is None:
         print('Skipping Sonar scan due to missing SONAR_TOKEN env variable')
