@@ -70,7 +70,6 @@ branches:
   only:
     - master
     - release-2
-    - clcache
 
 # Despite claim in docs, %HOME% not supported
 cache:
