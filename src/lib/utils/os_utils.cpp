@@ -122,7 +122,7 @@ OS::open_socket(const std::string& hostname,
                throw Exception("Name resolution failed for " + hostname);
                }
 
-            for(addrinfo* rp = res; (m_socket < 0) && (rp != nullptr); rp = rp->ai_next)
+            for(addrinfo* rp = res; (m_socket == INVALID_SOCKET) && (rp != nullptr); rp = rp->ai_next)
                {
                m_socket = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
