@@ -41,11 +41,6 @@ env:
     - BUILD_MODE="fuzzers"
 
 matrix:
-  # Ignore some problem builds for now
-  allow_failures:
-    - os: linux
-      env: BUILD_MODE="cross-win32"
-
   exclude:
     # Skip GCC on OS X entirely
     - os: osx
