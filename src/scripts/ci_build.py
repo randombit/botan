@@ -11,6 +11,7 @@ import platform
 import subprocess
 import sys
 import time
+import tempfile
 import optparse # pylint: disable=deprecated-module
 
 def get_concurrency():
@@ -25,17 +26,17 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
-def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
-    # pylint: disable=too-many-branches,too-many-statements,too-many-arguments
+def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, root_dir):
+    # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
     """
     Return the configure.py flags as well as make/test running prefixes
     """
     is_cross_target = target.startswith('cross-')
 
-    if target_os not in ['linux', 'osx']:
+    if target_os not in ['linux', 'osx', 'windows']:
         print('Error unknown OS %s' % (target_os))
-        return 1
+        return (None, None, None)
 
     if is_cross_target:
         if target_os == 'osx':
@@ -53,13 +54,19 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
                   'rsa_sign', 'rsa_verify', 'dh_kat', 'ecdsa_sign', 'curve25519_scalar',
                   'simd_32', 'os_utils', 'util', 'util_dates']
 
-    flags = ['--prefix=/tmp/botan-install', '--cc=%s' % (target_cc), '--os=%s' % (target_os)]
+    install_prefix = os.path.join(tempfile.gettempdir(), 'botan-install')
+    flags = ['--prefix=%s' % (install_prefix),
+             '--cc=%s' % (target_cc),
+             '--os=%s' % (target_os)]
+
+    if target_cpu != None:
+        flags += ['--cpu=%s' % (target_cpu)]
 
     if target in ['static', 'mini-static', 'fuzzers'] or target_os in ['ios', 'mingw']:
         flags += ['--disable-shared']
 
     if target in ['mini-static', 'mini-shared']:
-        flags += ['--minimized-build', '--enable-modules=dev_random,system_rng,sha2_32,sha2_64,aes']
+        flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
     if target == 'static':
         # Arbitrarily test amalgamation on static lib builds
@@ -86,7 +93,12 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
     if target in ['fuzzers', 'coverage']:
         flags += ['--build-fuzzers=test']
     if target in ['fuzzers', 'sanitizer']:
-        flags += ['--with-sanitizers']
+
+        # On VC iterator debugging comes from generic debug mode
+        if target_cc == 'msvc':
+            flags += ['--with-debug-info']
+        else:
+            flags += ['--with-sanitizers']
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
@@ -97,6 +109,9 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
             flags += ['--with-openmp']
 
     if target == 'sonar':
+        if target_os != 'linux':
+            raise Exception('Only Linux supported in Sonar target currently')
+
         make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
                        '--out-dir', 'bw-outputs']
 
@@ -144,7 +159,9 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
                 raise Exception("Unknown cross target '%s' for Linux" % (target))
     else:
         # Flags specific to native targets
-        flags += ['--with-bzip2', '--with-sqlite', '--with-zlib']
+
+        if target_os in ['osx', 'linux']:
+            flags += ['--with-bzip2', '--with-sqlite', '--with-zlib']
 
         if target_os == 'osx':
             # Test Boost on OS X
@@ -166,7 +183,12 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
             if os.access(softhsm_lib, os.R_OK):
                 test_cmd += ['--pkcs11-lib=%s' % (softhsm_lib)]
 
-    flags += ['--cc-bin=%s%s' % ('ccache ' if use_ccache else '', cc_bin)]
+    if ccache is None:
+        flags += ['--cc-bin=%s' % (cc_bin)]
+    elif ccache == 'clcache':
+        flags += ['--cc-bin=%s' % (ccache)]
+    else:
+        flags += ['--cc-bin=%s %s' % (ccache, cc_bin)]
 
     if test_cmd is None:
         run_test_command = None
@@ -213,6 +235,19 @@ def parse_args(args):
     parser.add_option('--root-dir', metavar='D', default='.',
                       help='Set directory to execute from (default %default)')
 
+    parser.add_option('--make-tool', metavar='TOOL', default='make',
+                      help='Specify tool to run to build source (default %default)')
+
+    parser.add_option('--cpu', default=None,
+                      help='Specify a target CPU platform')
+
+    parser.add_option('--with-debug', action='store_true', default=False,
+                      help='Include debug information')
+    parser.add_option('--amalgamation', action='store_true', default=False,
+                      help='Build via amalgamation')
+    parser.add_option('--disable-shared', action='store_true', default=False,
+                      help='Disable building shared libraries')
+
     parser.add_option('--branch', metavar='B', default=None,
                       help='Specify branch being built')
 
@@ -224,10 +259,8 @@ def parse_args(args):
     parser.add_option('--build-jobs', metavar='J', default=get_concurrency(),
                       help='Set number of jobs to run in parallel (default %default)')
 
-    parser.add_option('--with-ccache', dest='use_ccache', action='store_true', default=None,
-                      help='Enable using ccache')
-    parser.add_option('--without-ccache', dest='use_ccache', action='store_false',
-                      help='Disable using ccache')
+    parser.add_option('--compiler-cache', default=None,
+                      help='Set a compiler cache to use (ccache, clcache)')
 
     parser.add_option('--with-python3', dest='use_python3', action='store_true', default=None,
                       help='Enable using python3')
@@ -257,8 +290,9 @@ def main(args=None):
         print('Usage: %s [options] target' % (args[0]))
         return 1
 
-    if options.use_ccache is None:
-        options.use_ccache = have_prog('ccache')
+    target = args[1]
+
+    py_interp = 'python'
 
     use_python2 = have_prog('python2')
 
@@ -266,17 +300,29 @@ def main(args=None):
         use_python3 = have_prog('python3')
     else:
         use_python3 = options.use_python3
+        if use_python3:
+            py_interp = 'python3'
 
     if options.cc_bin is None:
         if options.cc == 'gcc':
             options.cc_bin = 'g++'
         elif options.cc == 'clang':
             options.cc_bin = 'clang++'
+        elif options.cc == 'msvc':
+            options.cc_bin = 'cl'
         else:
             print('Error unknown compiler %s' % (options.cc))
             return 1
 
-    target = args[1]
+    if options.compiler_cache is None and options.cc != 'msvc':
+        # Autodetect ccache
+        if have_prog('ccache'):
+            options.compiler_cache = 'ccache'
+
+    if options.compiler_cache == 'clcache' and target in ['sanitizer']:
+        # clcache doesn't support /Zi so using it just adds overhead with
+        # no benefit
+        options.compiler_cache = None
 
     if target == 'sonar' and os.getenv('SONAR_TOKEN') is None:
         print('Skipping Sonar scan due to missing SONAR_TOKEN env variable')
@@ -317,38 +363,48 @@ def main(args=None):
 
     else:
         config_flags, run_test_command, make_prefix = determine_flags(
-            target, options.os, options.cc, options.cc_bin, options.use_ccache, root_dir)
+            target, options.os, options.cpu, options.cc, options.cc_bin, options.compiler_cache, root_dir)
 
-        cmds.append([os.path.join(root_dir, 'configure.py')] + config_flags)
+        cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
+
+        make_cmd = [options.make_tool]
+        if root_dir != '.':
+            make_cmd += ['-C', root_dir]
+        if options.build_jobs > 1:
+            make_cmd += ['-j%d' % (options.build_jobs)]
 
         if target == 'docs':
-            cmds.append(['make', '-C', root_dir, 'docs'])
+            cmds.append(make_cmd + ['docs'])
         else:
-            if options.use_ccache:
+            if options.compiler_cache == 'ccache':
                 cmds.append(['ccache', '--show-stats'])
+            elif options.compiler_cache == 'clcache':
+                cmds.append(['clcache', '-s'])
 
             make_targets = ['libs', 'cli', 'tests']
             if target in ['coverage', 'fuzzers']:
                 make_targets += ['fuzzers', 'fuzzer_corpus_zip']
 
-            cmds.append(make_prefix +
-                        ['make', '-j', str(options.build_jobs), '-C', root_dir] +
-                        make_targets)
+            cmds.append(make_prefix + make_cmd + make_targets)
 
-            if options.use_ccache:
+            if options.compiler_cache == 'ccache':
                 cmds.append(['ccache', '--show-stats'])
+            elif options.compiler_cache == 'clcache':
+                cmds.append(['clcache', '-s'])
 
         if run_test_command != None:
             cmds.append(run_test_command)
 
         if target in ['coverage', 'fuzzers']:
-            cmds.append([os.path.join(root_dir, 'src/scripts/test_fuzzers.py'),
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_fuzzers.py'),
                          os.path.join(root_dir, 'fuzzer_corpus'),
                          os.path.join(root_dir, 'build/fuzzer')])
 
-        if target in ['static', 'shared']:
-            cmds.append([os.path.join(root_dir, 'src/scripts/cli_tests.py'),
-                         os.path.join(root_dir, 'botan')])
+        if target in ['static', 'shared'] and options.os != 'windows':
+            botan_exe = os.path.join(root_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
+            cmds.append([py_interp,
+                         os.path.join(root_dir, 'src/scripts/cli_tests.py'),
+                         botan_exe])
 
         botan_py = os.path.join(root_dir, 'src/python/botan2.py')
 
@@ -360,7 +416,7 @@ def main(args=None):
                 cmds.append(['python3', botan_py])
 
         if target != 'docs':
-            cmds.append(['make', '-C', root_dir, 'install'])
+            cmds.append(make_cmd + ['install'])
 
         if target in ['coverage']:
 

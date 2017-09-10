@@ -43,4 +43,5 @@ stl_util.h
 <libs>
 linux -> rt
 mingw -> ws2_32
+windows -> ws2_32.lib
 </libs>

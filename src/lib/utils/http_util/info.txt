@@ -1,7 +1,3 @@
 <defines>
 HTTP_UTIL -> 20131128
 </defines>
-
-<libs>
-windows -> Ws2_32.lib
-</libs>

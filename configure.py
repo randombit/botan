@@ -1131,22 +1131,22 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         if options.with_coverage_info:
             if self.coverage_flags == '':
-                raise InternalError('No coverage handling for %s' % (self.basename))
+                raise UserError('No coverage handling for %s' % (self.basename))
             abi_link.append(self.coverage_flags)
 
         if options.with_sanitizers:
             if self.sanitizer_flags == '':
-                raise InternalError('No sanitizer handling for %s' % (self.basename))
+                raise UserError('No sanitizer handling for %s' % (self.basename))
             abi_link.append(self.sanitizer_flags)
 
         if options.with_openmp:
             if 'openmp' not in self.mach_abi_linking:
-                raise InternalError('No support for OpenMP for %s' % (self.basename))
+                raise UserError('No support for OpenMP for %s' % (self.basename))
             abi_link.append(self.mach_abi_linking['openmp'])
 
         if options.with_cilkplus:
             if 'cilkplus' not in self.mach_abi_linking:
-                raise InternalError('No support for Cilk Plus for %s' % (self.basename))
+                raise UserError('No support for Cilk Plus for %s' % (self.basename))
             abi_link.append(self.mach_abi_linking['cilkplus'])
 
         abi_flags = ' '.join(sorted(abi_link))
