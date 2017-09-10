@@ -47,7 +47,7 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
          Botan::OCB_Decryption dec(aes->clone(), taglen / 8);
 
          std::vector<uint8_t> key(keylen / 8);
-         key[keylen / 8 - 1] = taglen;
+         key[keylen / 8 - 1] = static_cast<uint8_t>(taglen);
 
          enc.set_key(key);
          dec.set_key(key);

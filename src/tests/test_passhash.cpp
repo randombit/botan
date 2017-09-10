@@ -108,9 +108,9 @@ class Passhash9_Tests : public Text_Based_Test
                }
             }
 
-         const size_t max_level = (Test::run_long_tests() ? 14 : 8);
+         const uint16_t max_level = (Test::run_long_tests() ? 14 : 8);
 
-         for(size_t level = 1; level <= max_level; ++level)
+         for(uint16_t level = 1; level <= max_level; ++level)
             {
             const uint8_t alg_id = 1; // default used by generate_passhash9()
             if(Botan::is_passhash9_alg_supported(alg_id))
