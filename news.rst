@@ -22,6 +22,10 @@ Version 2.3.0, Not Yet Released
 * SM2 encryption and signature schemes were previously hardcoded to use SM3
   hash, now any hash is allowed. (GH #1188)
 
+* SM2 encryption in 2.2 followed an obsolete version of the standard. The
+  format of the ciphertext changed with GM/T 0003:2012. The only difference is
+  in the ordering of the embedded MAC vs the masked input.
+
 * XTS mode now supports 256-bit and 512-bit block ciphers.
 
 * Add ids to allow SHA-3 signatures with PKCSv1.5 (GH #1184)

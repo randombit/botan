@@ -105,8 +105,8 @@ class SM2_Encryption_Operation : public PK_Ops::Encryption
          ciphertext.push_back(0x04);
          ciphertext += x1_bytes;
          ciphertext += y1_bytes;
-         ciphertext += masked_msg;
          ciphertext += C3;
+         ciphertext += masked_msg;
 
          return ciphertext;
          }
@@ -153,6 +153,8 @@ class SM2_Decryption_Operation : public PK_Ops::Decryption
             return secure_vector<uint8_t>();
             }
 
+         const size_t msg_len = ciphertext_len - (1 + p_bytes*2 + hash->output_length());
+
          const PointGFp C1 = OS2ECP(ciphertext, 1 + p_bytes*2, m_key.domain().get_curve());
          // OS2ECP verifies C1 is on the curve
 
@@ -177,20 +179,18 @@ class SM2_Decryption_Operation : public PK_Ops::Decryption
          kdf_input += x2_bytes;
          kdf_input += y2_bytes;
 
-         const size_t msg_len = ciphertext_len - (1 + p_bytes*2 + hash->output_length());
-
          const secure_vector<uint8_t> kdf_output =
             kdf->derive_key(msg_len, kdf_input.data(), kdf_input.size());
 
          secure_vector<uint8_t> msg(msg_len);
-         xor_buf(msg.data(), ciphertext + (1+p_bytes*2), kdf_output.data(), msg_len);
+         xor_buf(msg.data(), ciphertext + (1+p_bytes*2+hash->output_length()), kdf_output.data(), msg_len);
 
          hash->update(x2_bytes);
          hash->update(msg);
          hash->update(y2_bytes);
          secure_vector<uint8_t> u = hash->final();
 
-         if(same_mem(u.data(), ciphertext + (1+p_bytes*2+msg_len), hash->output_length()) == false)
+         if(same_mem(u.data(), ciphertext + (1+p_bytes*2), hash->output_length()) == false)
             return secure_vector<uint8_t>();
 
          valid_mask = 0xFF;
