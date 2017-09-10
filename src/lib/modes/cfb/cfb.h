@@ -40,22 +40,19 @@ class BOTAN_DLL CFB_Mode : public Cipher_Mode
    protected:
       CFB_Mode(BlockCipher* cipher, size_t feedback_bits);
 
+      size_t feedback() const { return m_feedback_bytes; }
       const BlockCipher& cipher() const { return *m_cipher; }
 
-      size_t feedback() const { return m_feedback_bytes; }
-
-      secure_vector<uint8_t>& shift_register() { return m_shift_register; }
-
-      secure_vector<uint8_t>& keystream_buf() { return m_keystream_buf; }
+      secure_vector<uint8_t> m_state;
+      secure_vector<uint8_t> m_keystream;
+      size_t m_keystream_pos = 0;
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
       void key_schedule(const uint8_t key[], size_t length) override;
 
       std::unique_ptr<BlockCipher> m_cipher;
-      secure_vector<uint8_t> m_shift_register;
-      secure_vector<uint8_t> m_keystream_buf;
-      size_t m_feedback_bytes;
+      const size_t m_feedback_bytes;
    };
 
 /**

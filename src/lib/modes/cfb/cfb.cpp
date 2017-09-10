@@ -1,6 +1,6 @@
 /*
 * CFB Mode
-* (C) 1999-2007,2013 Jack Lloyd
+* (C) 1999-2007,2013,2017 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -28,8 +28,8 @@ void CFB_Mode::clear()
 
 void CFB_Mode::reset()
    {
-   m_shift_register.clear();
-   m_keystream_buf.clear();
+   m_state.clear();
+   m_keystream.clear();
    }
 
 std::string CFB_Mode::name() const
@@ -82,44 +82,46 @@ void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
    if(nonce_len == 0)
       {
-      if(m_shift_register.empty())
+      if(m_state.empty())
          {
          throw Invalid_State("CFB requires a non-empty initial nonce");
          }
+      // No reason to encrypt state->keystream_buf, because no change
       }
    else
       {
-      m_shift_register.assign(nonce, nonce + nonce_len);
+      m_state.assign(nonce, nonce + nonce_len);
+      m_keystream.resize(m_state.size());
+      cipher().encrypt(m_state, m_keystream);
+      m_keystream_pos = 0;
       }
-
-   m_keystream_buf.resize(m_shift_register.size());
-   cipher().encrypt(m_shift_register, m_keystream_buf);
    }
 
 size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    {
    const size_t BS = cipher().block_size();
 
-   secure_vector<uint8_t>& state = shift_register();
    const size_t shift = feedback();
-   size_t left = sz;
+   const size_t carryover = BS - shift;
 
-   while(left)
+   for(size_t i = 0; i != sz; ++i)
       {
-      const size_t took = std::min(shift, left);
-      xor_buf(buf, &keystream_buf()[0], took);
+      buf[i] = (m_keystream[m_keystream_pos] ^= buf[i]);
 
-      // Assumes feedback-sized block except for last input
-      if (BS - shift > 0)
+      m_keystream_pos++;
+
+      if(m_keystream_pos == shift)
          {
-         copy_mem(state.data(), &state[shift], BS - shift);
+         if(carryover > 0)
+            {
+            copy_mem(m_state.data(), &m_state[shift], carryover);
+            }
+         copy_mem(&m_state[carryover], m_keystream.data(), shift);
+         cipher().encrypt(m_state, m_keystream);
+         m_keystream_pos = 0;
          }
-      copy_mem(&state[BS-shift], buf, took);
-      cipher().encrypt(state, keystream_buf());
-
-      buf += took;
-      left -= took;
       }
+
    return sz;
    }
 
@@ -131,31 +133,29 @@ void CFB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    {
    const size_t BS = cipher().block_size();
-
-   secure_vector<uint8_t>& state = shift_register();
    const size_t shift = feedback();
-   size_t left = sz;
+   const size_t carryover = BS - shift;
 
-   while(left)
+   for(size_t i = 0; i != sz; ++i)
       {
-      const size_t took = std::min(shift, left);
+      uint8_t k = m_keystream[m_keystream_pos];
+      m_keystream[m_keystream_pos] = buf[i];
+      buf[i] ^= k;
 
-      // first update shift register with ciphertext
-      if (BS - shift > 0)
+      m_keystream_pos++;
+
+      if(m_keystream_pos == shift)
          {
-         copy_mem(state.data(), &state[shift], BS - shift);
+         if(carryover > 0)
+            {
+            copy_mem(m_state.data(), &m_state[shift], carryover);
+            }
+         copy_mem(&m_state[carryover], m_keystream.data(), shift);
+         cipher().encrypt(m_state, m_keystream);
+         m_keystream_pos = 0;
          }
-      copy_mem(&state[BS-shift], buf, took);
-
-      // then decrypt
-      xor_buf(buf, &keystream_buf()[0], took);
-
-      // then update keystream
-      cipher().encrypt(state, keystream_buf());
-
-      buf += took;
-      left -= took;
       }
+
    return sz;
    }
 
