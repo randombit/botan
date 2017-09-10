@@ -80,6 +80,5 @@ elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
 
     # TODO just copy an OS X binary of ccache to botan-ci-tools repo
 
-    #brew update
-    brew install ccache
+    HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache
 fi
