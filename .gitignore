@@ -60,6 +60,7 @@ coverage/
 cachegrind.*
 callgrind.*
 
+src/contrib/perl-xs/Makefile
 src/contrib/perl-xs/Botan.bs
 src/contrib/perl-xs/Botan.c
 src/contrib/perl-xs/Botan.o
