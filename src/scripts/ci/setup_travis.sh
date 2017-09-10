@@ -75,10 +75,5 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    # Avoid running brew update as it is quite slow, and all we need
-    # is any working version of ccache
-
-    # TODO just copy an OS X binary of ccache to botan-ci-tools repo
-
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache
+    export PATH=$PATH:botan-ci-tools/macos
 fi
