@@ -816,7 +816,7 @@ class FFI_Unit_Tests : public Test
 
          uint32_t x_32;
          TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
-         result.test_eq("botan_mp_to_uint32", x, static_cast<size_t>(0x103));
+         result.test_eq("botan_mp_to_uint32", size_t(x_32), size_t(0x103));
 
          TEST_FFI_RC(1, botan_mp_get_bit, (x, 1));
          TEST_FFI_RC(0, botan_mp_get_bit, (x, 87));
