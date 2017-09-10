@@ -14,6 +14,10 @@ clone_depth: 5
 
 environment:
 
+  CLCACHE_HARDLINK: 1
+  CLCACHE_NODIRECT: 1
+  APPVEYOR_CACHE_ENTRY_ZIP_ARGS: -t7z -m0=lzma -mx=9
+
   matrix:
     # 1
     - MSVS: 2013
@@ -59,11 +63,15 @@ install:
   - call src\scripts\ci\setup_appveyor.bat
 
 build_script:
-  - python src\scripts\ci_build.py --os=windows --cc=msvc --without-python3 --make-tool=jom --cpu=%PLATFORM% %TARGET%
+  - python src\scripts\ci_build.py --os=windows --cc=msvc --compiler-cache=clcache --without-python3 --make-tool=jom --cpu=%PLATFORM% %TARGET%
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
   only:
     - master
     - release-2
+    - clcache
 
+# Despite claim in docs, %HOME% not supported
+cache:
+  - C:\Users\Appveyor\clcache -> src\scripts\ci\appveyor.yml
