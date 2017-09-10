@@ -127,7 +127,7 @@ std::vector<std::string> impl_win32(const std::string& dir_path)
       dir_list.pop_front();
 
       WIN32_FIND_DATA find_data;
-      HANDLE dir = ::FindFirstFile(cur_path.c_str(), &find_data);
+      HANDLE dir = ::FindFirstFile((cur_path + "/*").c_str(), &find_data);
 
       if(dir != INVALID_HANDLE_VALUE)
          {
@@ -139,9 +139,13 @@ std::vector<std::string> impl_win32(const std::string& dir_path)
             const std::string full_path = cur_path + "/" + filename;
 
             if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+               {
                dir_list.push_back(full_path);
-            else if(find_data.dwFileAttributes & FILE_ATTRIBUTE_NORMAL)
+               }
+            else
+               {
                out.push_back(full_path);
+               }
             }
          while(::FindNextFile(dir, &find_data));
          }
