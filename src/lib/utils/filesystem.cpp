@@ -1,5 +1,5 @@
 /*
-* (C) 2015 Jack Lloyd
+* (C) 2015,2017 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -20,6 +20,12 @@
   #include <deque>
   #include <memory>
   #include <functional>
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+  #define NOMINMAX 1
+  #define _WINSOCKAPI_ // stop windows.h including winsock.h
+  #include <windows.h>
+  #include <deque>
+  #include <memory>
 #endif
 
 namespace Botan {
@@ -48,7 +54,9 @@ std::vector<std::string> impl_stl_filesystem(const std::string& dir)
 
    return out;
    }
+
 #elif defined(BOTAN_HAS_BOOST_FILESYSTEM)
+
 std::vector<std::string> impl_boost_filesystem(const std::string& dir_path)
 {
    namespace fs = boost::filesystem;
@@ -65,6 +73,7 @@ std::vector<std::string> impl_boost_filesystem(const std::string& dir_path)
 
    return out;
 }
+
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
 std::vector<std::string> impl_readdir(const std::string& dir_path)
    {
@@ -103,6 +112,49 @@ std::vector<std::string> impl_readdir(const std::string& dir_path)
 
    return out;
    }
+
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+
+std::vector<std::string> impl_win32(const std::string& dir_path)
+   {
+   std::vector<std::string> out;
+   std::deque<std::string> dir_list;
+   dir_list.push_back(dir_path);
+
+   while(!dir_list.empty())
+      {
+      const std::string cur_path = dir_list[0];
+      dir_list.pop_front();
+
+      WIN32_FIND_DATA find_data;
+      HANDLE dir = ::FindFirstFile((cur_path + "/*").c_str(), &find_data);
+
+      if(dir != INVALID_HANDLE_VALUE)
+         {
+         do
+            {
+            const std::string filename = find_data.cFileName;
+            if(filename == "." || filename == "..")
+               continue;
+            const std::string full_path = cur_path + "/" + filename;
+
+            if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+               {
+               dir_list.push_back(full_path);
+               }
+            else
+               {
+               out.push_back(full_path);
+               }
+            }
+         while(::FindNextFile(dir, &find_data));
+         }
+
+      ::FindClose(dir);
+      }
+
+   return out;
+}
 #endif
 
 }
@@ -117,6 +169,8 @@ std::vector<std::string> get_files_recursive(const std::string& dir)
    files = impl_boost_filesystem(dir);
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
    files = impl_readdir(dir);
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+   files = impl_win32(dir);
 #else
    BOTAN_UNUSED(dir);
    throw No_Filesystem_Access();
