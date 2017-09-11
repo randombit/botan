@@ -195,18 +195,20 @@ class OCB_Wide_Long_KAT_Tests : public Text_Based_Test
 
          for(size_t i = 0; i != 128; ++i)
             {
-            const std::vector<uint8_t> S(i);
+            std::vector<uint8_t> S(i);
+            for(size_t j = 0; j != S.size(); ++j)
+               S[j] = 0x50 + j;
 
-            Botan::store_be(static_cast<uint32_t>(3 * i + 1), &N[8]);
+            Botan::store_be(static_cast<uint16_t>(3 * i + 1), &N[0]);
 
             ocb_encrypt(result, C, enc, N, S, S);
-            Botan::store_be(static_cast<uint32_t>(3 * i + 2), &N[8]);
+            Botan::store_be(static_cast<uint16_t>(3 * i + 2), &N[0]);
             ocb_encrypt(result, C, enc, N, S, empty);
-            Botan::store_be(static_cast<uint32_t>(3 * i + 3), &N[8]);
+            Botan::store_be(static_cast<uint16_t>(3 * i + 3), &N[0]);
             ocb_encrypt(result, C, enc, N, empty, S);
             }
 
-         Botan::store_be(static_cast<uint32_t>(385), &N[8]);
+         Botan::store_be(static_cast<uint16_t>(385), &N[0]);
          std::vector<uint8_t> final_result;
          ocb_encrypt(result, final_result, enc, N, empty, C);
 
