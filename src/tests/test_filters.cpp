@@ -335,7 +335,7 @@ class Filter_Tests : public Test
             result.test_eq("encrypt", enc_pipe.read_all_as_string(i), cfb_expected[i]);
             }
 
-         for(size_t i = 0; i != enc_pipe.message_count(); ++i)
+         for(size_t i = 0; i != dec_pipe.message_count(); ++i)
             {
             result.test_eq("decrypt", dec_pipe.read_all_as_string(i),
                            Botan::hex_encode(msg_bits, i+1));
