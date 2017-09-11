@@ -43,6 +43,7 @@ class Filter_Tests : public Test
          results.push_back(test_pipe_mac());
          results.push_back(test_pipe_stream());
          results.push_back(test_pipe_cbc());
+         results.push_back(test_pipe_cfb());
          results.push_back(test_pipe_compress());
          results.push_back(test_pipe_codec());
          results.push_back(test_fork());
@@ -271,6 +272,76 @@ class Filter_Tests : public Test
          result.test_eq("Expected CRC32d", pipe.read_all(1), "99841F60");
 #endif
 #endif
+         return result;
+         }
+
+      Test::Result test_pipe_cfb()
+         {
+         Test::Result result("Pipe CFB");
+
+#if defined(BOTAN_HAS_BLOWFISH) && defined(BOTAN_HAS_MODE_CFB)
+
+         // Generated with Botan 1.10
+
+         const Botan::InitializationVector iv("AABBCCDDEEFF0123");
+         const Botan::SymmetricKey key("AABBCCDDEEFF0123");
+
+         const uint8_t msg_bits[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+
+         const std::string cfb_expected[] = {
+            "A4",
+            "BEA4",
+            "06AD98",
+            "E4AFC5AC",
+            "A9B531559C",
+            "38B60DA66445",
+            "194F5E93199839",
+            "093B6381D2E5D806",
+            "B44FA624226EECF027",
+            "80B8DC3332A835AC11A8",
+            "2C0E910A1E5C38344CC5BB",
+            "3CB6180AE2E189342F681023",
+            "DE0F4B10C7D9CADDB5A9078199",
+            "FAE18B0ED873F234CCD6E1555B2D",
+            "7195FFE735B0A95065BA244C77A11F",
+         };
+
+         Botan::Keyed_Filter* cfb_enc =
+            new Botan::Cipher_Mode_Filter(Botan::get_cipher_mode("Blowfish/CFB", Botan::ENCRYPTION));
+         cfb_enc->set_key(key);
+         cfb_enc->set_iv(iv);
+         Botan::Pipe enc_pipe(cfb_enc, new Botan::Hex_Encoder);
+
+         Botan::Keyed_Filter* cfb_dec =
+            new Botan::Cipher_Mode_Filter(Botan::get_cipher_mode("Blowfish/CFB", Botan::DECRYPTION));
+         cfb_dec->set_key(key);
+         cfb_dec->set_iv(iv);
+         Botan::Pipe dec_pipe(new Botan::Hex_Decoder, cfb_dec, new Botan::Hex_Encoder);
+
+         for(size_t i = 1; i != sizeof(msg_bits); ++i)
+            {
+            enc_pipe.start_msg();
+            enc_pipe.write(msg_bits, i);
+            enc_pipe.end_msg();
+
+            dec_pipe.process_msg(cfb_expected[i-1]);
+            }
+
+         result.test_eq("enc pipe msg count", enc_pipe.message_count(), sizeof(msg_bits) - 1);
+         result.test_eq("dec pipe msg count", dec_pipe.message_count(), sizeof(msg_bits) - 1);
+
+         for(size_t i = 0; i != enc_pipe.message_count(); ++i)
+            {
+            result.test_eq("encrypt", enc_pipe.read_all_as_string(i), cfb_expected[i]);
+            }
+
+         for(size_t i = 0; i != enc_pipe.message_count(); ++i)
+            {
+            result.test_eq("decrypt", dec_pipe.read_all_as_string(i),
+                           Botan::hex_encode(msg_bits, i+1));
+            }
+#endif
+
          return result;
          }
 
