@@ -17,13 +17,13 @@ Ciphers, Hashes, PBKDF
 * Serpent using AVX2 or SSSE3/pshufb
 * ChaCha20 using AVX2, NEON
 * XSalsa20-Poly1305 AEAD compatible with NaCl
-* ARIA block cipher (RFCs 5794 and 6209)
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
 * scrypt PBKDF
 * Argon2 PBKDF (draft-irtf-cfrg-argon2)
 * bcrypt PBKDF
 * Skein-MAC
+* PMAC
 * Extend Cascade_Cipher to support arbitrary number of ciphers
 
 Public Key Crypto, Math
@@ -52,7 +52,6 @@ External Providers, Hardware Support
 * /dev/crypto provider (ciphers, hashes)
 * Windows CryptoAPI provider (ciphers, hashes, RSA)
 * Apple CommonCrypto
-* ARMv8-A crypto extensions (AES, GCM)
 * POWER8 crypto extensions (AES, SHA-2)
 * Better TPM support: NVRAM, PCR measurements, sealing
 * Intel SGX support
@@ -109,7 +108,7 @@ New Protocols / Formats
 Cleanups
 -----------
 
-* Split ffi.cpp and test_ffi.cpp into multiple files
+* Split test_ffi.cpp into multiple files
 
 Compat Headers
 ----------------
@@ -142,6 +141,8 @@ Build/Test
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
   debug info during CI
+* Run the TPM tests against an emulator
+  (https://github.com/PeterHuewe/tpm-emulator)
 
 FIPS 140 Build
 ---------------------------------------
