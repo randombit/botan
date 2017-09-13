@@ -177,9 +177,6 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
          .decode_optional_string(public_key_bits, BIT_STRING, 1, PRIVATE)
       .end_cons();
 
-   if(!key_parameters.empty() && key_parameters != alg_id.oid)
-      throw Decoding_Error("EC_PrivateKey - inner and outer OIDs did not match");
-
    if(public_key_bits.empty())
       {
       m_public_key = domain().get_base_point() *
