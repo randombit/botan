@@ -182,7 +182,7 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
 
    m_ctr.reset(new CTR_BE(cipher, 4)); // CTR_BE takes ownership of cipher
 
-   if(m_tag_size != 8 && m_tag_size != GCM_BS)
+   if(m_tag_size != 8 && m_tag_size != 12 && m_tag_size != GCM_BS)
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
    }
 
