@@ -370,17 +370,39 @@ Test::Result test_ecc_key_with_rfc5915_extensions()
       std::unique_ptr<Botan::Private_Key> pkcs8(
          Botan::PKCS8::load_key(Test::data_file("ecc/ecc_private_with_rfc5915_ext.pem"), Test::rng()));
 
-      result.confirm("loaded RFC 5914 key", pkcs8.get());
+      result.confirm("loaded RFC 5915 key", pkcs8.get());
       result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
       result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()));
       }
    catch(std::exception& e)
       {
-      result.test_failure("load_rfc5915", e.what());
+      result.test_failure("load_rfc5915_ext", e.what());
       }
 
    return result;
    }
+
+Test::Result test_ecc_key_with_rfc5915_parameters()
+   {
+   Test::Result result("ECDSA Unit");
+
+   try
+      {
+      std::unique_ptr<Botan::Private_Key> pkcs8(
+         Botan::PKCS8::load_key(Test::data_file("ecc/ecc_private_with_rfc5915_parameters.pem"), Test::rng()));
+
+      result.confirm("loaded RFC 5915 key", pkcs8.get());
+      result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
+      result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()));
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure("load_rfc5915_params", e.what());
+      }
+
+   return result;
+   }
+
 
 
 class ECDSA_Unit_Tests : public Test
@@ -402,6 +424,7 @@ class ECDSA_Unit_Tests : public Test
          results.push_back(test_unusual_curve());
          results.push_back(test_curve_registry());
          results.push_back(test_ecc_key_with_rfc5915_extensions());
+         results.push_back(test_ecc_key_with_rfc5915_parameters());
          return results;
          }
    };
