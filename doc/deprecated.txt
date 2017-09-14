@@ -18,6 +18,8 @@ in the source.
 
 - PBKDF1 key derivation
 
+- GCM support for 64-bit tags
+
 - Old (Google specific) ChaCha20 TLS ciphersuites
 
 - All built in ECC groups < 256 bits
