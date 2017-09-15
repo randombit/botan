@@ -149,19 +149,38 @@ class OCB_Wide_Long_KAT_Tests : public Text_Based_Test
    {
    public:
       OCB_Wide_Long_KAT_Tests()
-         : Text_Based_Test("ocb_wide_long.vec", "Blocklen,Output") {}
+         : Text_Based_Test("ocb_wide_long.vec", "Output") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          Test::Result result("OCB wide block long test");
 
-         const size_t bs = get_req_sz(vars, "Blocklen") / 8;
          const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
 
-         if(bs != 16 && bs != 24 && bs != 32 && bs != 64)
-            throw Test_Error("Unsupported Blocklen in OCB wide block test");
+         std::unique_ptr<Botan::BlockCipher> cipher;
+         size_t bs = 0;
 
-         Botan::OCB_Encryption enc(new OCB_Wide_Test_Block_Cipher(bs), std::min<size_t>(bs, 32));
+         if(algo == "SHACAL2")
+            {
+            cipher = Botan::BlockCipher::create_or_throw("SHACAL2");
+            bs = 32;
+            }
+         else
+            {
+            if(algo == "Toy128")
+               bs = 16;
+            else if(algo == "Toy192")
+               bs = 24;
+            else if(algo == "Toy256")
+               bs = 32;
+            else if(algo == "Toy512")
+               bs = 64;
+            else
+               throw Test_Error("Unknown cipher for OCB wide block long test");
+            cipher.reset(new OCB_Wide_Test_Block_Cipher(bs));
+            }
+
+         Botan::OCB_Encryption enc(cipher.release(), std::min<size_t>(bs, 32));
 
          /*
          Y, string of length min(B, 256) bits
@@ -218,7 +237,7 @@ class OCB_Wide_Long_KAT_Tests : public Text_Based_Test
          }
 
    private:
-      void ocb_encrypt(Test::Result& result,
+      void ocb_encrypt(Test::Result& /*result*/,
                        std::vector<uint8_t>& output_to,
                        Botan::OCB_Encryption& enc,
                        const std::vector<uint8_t>& nonce,

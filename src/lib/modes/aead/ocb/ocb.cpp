@@ -210,11 +210,7 @@ OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
    secure_vector<uint8_t> nonce_buf(BS);
 
    copy_mem(&nonce_buf[BS - nonce_len], nonce, nonce_len);
-   #if 0
    nonce_buf[0] = ((tag_size()*8) % (BS*8)) << (BS <= 16 ? 1 : 0);
-   #else
-   nonce_buf[0] = (tag_size()*8) << (BS <= 16 ? 1 : 0);
-   #endif
 
    nonce_buf[BS - nonce_len - 1] ^= 1;
 
@@ -249,7 +245,6 @@ OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
                  |     1024 |  524355 |   352 |    9    |
                  +----------+---------+-------+---------+
       */
-#if 0
       if(BS == 16)
          {
          for(size_t i = 0; i != BS / 2; ++i)
@@ -270,30 +265,6 @@ OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
          for(size_t i = 0; i != BS / 2; ++i)
             nonce_buf.push_back(nonce_buf[i] ^ nonce_buf[i+22]);
          }
-#else
-      nonce_buf.insert(nonce_buf.end(), nonce_buf.begin(), nonce_buf.end());
-
-      if(BS == 16)
-         {
-         for(size_t i = BS; i != BS + (BS / 2); ++i)
-            nonce_buf[i] ^= nonce_buf[i+1];
-         }
-      else if(BS == 24)
-         {
-         for(size_t i = BS; i != BS + (BS / 2); ++i)
-            nonce_buf[i] ^= nonce_buf[i+5];
-         }
-      else if(BS == 32)
-         {
-         for(size_t i = BS; i != BS + (BS / 2); ++i)
-            nonce_buf[i] ^= (nonce_buf[i] << 1) ^ (nonce_buf[i+1] >> 7);
-         }
-      else if(BS == 64)
-         {
-         for(size_t i = BS; i != BS + (BS / 2); ++i)
-            nonce_buf[i] ^= nonce_buf[i+22];
-         }
-#endif
 
       m_stretch = nonce_buf;
       }

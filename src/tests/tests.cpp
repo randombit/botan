@@ -1032,7 +1032,10 @@ std::vector<Test::Result> Text_Based_Test::run()
 
             if(result.tests_failed())
                {
-               result.test_note("Test #" + std::to_string(test_cnt) + " failed");
+               if(header.empty())
+                  result.test_note("Test #" + std::to_string(test_cnt) + " failed");
+               else
+                  result.test_note("Test #" + std::to_string(test_cnt) + " " + header + " failed");
                }
             results.push_back(result);
             }
