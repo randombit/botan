@@ -183,7 +183,8 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_ctr.reset(new CTR_BE(cipher, 4)); // CTR_BE takes ownership of cipher
 
    /* We allow any of the values 128, 120, 112, 104, or 96 bits as a tag size */
-   if(m_tag_size < 12 || m_tag_size > 16)
+   /* 64 bit tag is still supported but deprecated and will be removed in the future */
+   if(m_tag_size != 8 && (m_tag_size < 12 || m_tag_size > 16))
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
    }
 
