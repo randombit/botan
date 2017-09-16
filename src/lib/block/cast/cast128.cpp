@@ -16,31 +16,31 @@ namespace {
 /*
 * CAST-128 Round Type 1
 */
-inline void R1(uint32_t& L, uint32_t R, uint32_t MK, uint8_t RK)
+inline uint32_t R1(uint32_t R, uint32_t MK, uint8_t RK)
    {
    uint32_t T = rotate_left(MK + R, RK);
-   L ^= (CAST_SBOX1[get_byte(0, T)] ^ CAST_SBOX2[get_byte(1, T)]) -
-         CAST_SBOX3[get_byte(2, T)] + CAST_SBOX4[get_byte(3, T)];
+   return (CAST_SBOX1[get_byte(0, T)] ^ CAST_SBOX2[get_byte(1, T)]) -
+           CAST_SBOX3[get_byte(2, T)] + CAST_SBOX4[get_byte(3, T)];
    }
 
 /*
 * CAST-128 Round Type 2
 */
-inline void R2(uint32_t& L, uint32_t R, uint32_t MK, uint8_t RK)
+inline uint32_t R2(uint32_t R, uint32_t MK, uint8_t RK)
    {
    uint32_t T = rotate_left(MK ^ R, RK);
-   L ^= (CAST_SBOX1[get_byte(0, T)]  - CAST_SBOX2[get_byte(1, T)] +
-         CAST_SBOX3[get_byte(2, T)]) ^ CAST_SBOX4[get_byte(3, T)];
+   return (CAST_SBOX1[get_byte(0, T)]  - CAST_SBOX2[get_byte(1, T)] +
+           CAST_SBOX3[get_byte(2, T)]) ^ CAST_SBOX4[get_byte(3, T)];
    }
 
 /*
 * CAST-128 Round Type 3
 */
-inline void R3(uint32_t& L, uint32_t R, uint32_t MK, uint8_t RK)
+inline uint32_t R3(uint32_t R, uint32_t MK, uint8_t RK)
    {
    uint32_t T = rotate_left(MK - R, RK);
-   L ^= ((CAST_SBOX1[get_byte(0, T)]  + CAST_SBOX2[get_byte(1, T)]) ^
-          CAST_SBOX3[get_byte(2, T)]) - CAST_SBOX4[get_byte(3, T)];
+   return ((CAST_SBOX1[get_byte(0, T)]  + CAST_SBOX2[get_byte(1, T)]) ^
+            CAST_SBOX3[get_byte(2, T)]) - CAST_SBOX4[get_byte(3, T)];
    }
 
 }
@@ -55,22 +55,22 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t L, R;
       load_be(in + BLOCK_SIZE*i, L, R);
 
-      R1(L, R, m_MK[ 0], m_RK[ 0]);
-      R2(R, L, m_MK[ 1], m_RK[ 1]);
-      R3(L, R, m_MK[ 2], m_RK[ 2]);
-      R1(R, L, m_MK[ 3], m_RK[ 3]);
-      R2(L, R, m_MK[ 4], m_RK[ 4]);
-      R3(R, L, m_MK[ 5], m_RK[ 5]);
-      R1(L, R, m_MK[ 6], m_RK[ 6]);
-      R2(R, L, m_MK[ 7], m_RK[ 7]);
-      R3(L, R, m_MK[ 8], m_RK[ 8]);
-      R1(R, L, m_MK[ 9], m_RK[ 9]);
-      R2(L, R, m_MK[10], m_RK[10]);
-      R3(R, L, m_MK[11], m_RK[11]);
-      R1(L, R, m_MK[12], m_RK[12]);
-      R2(R, L, m_MK[13], m_RK[13]);
-      R3(L, R, m_MK[14], m_RK[14]);
-      R1(R, L, m_MK[15], m_RK[15]);
+      L ^= R1(R, m_MK[ 0], m_RK[ 0]);
+      R ^= R2(L, m_MK[ 1], m_RK[ 1]);
+      L ^= R3(R, m_MK[ 2], m_RK[ 2]);
+      R ^= R1(L, m_MK[ 3], m_RK[ 3]);
+      L ^= R2(R, m_MK[ 4], m_RK[ 4]);
+      R ^= R3(L, m_MK[ 5], m_RK[ 5]);
+      L ^= R1(R, m_MK[ 6], m_RK[ 6]);
+      R ^= R2(L, m_MK[ 7], m_RK[ 7]);
+      L ^= R3(R, m_MK[ 8], m_RK[ 8]);
+      R ^= R1(L, m_MK[ 9], m_RK[ 9]);
+      L ^= R2(R, m_MK[10], m_RK[10]);
+      R ^= R3(L, m_MK[11], m_RK[11]);
+      L ^= R1(R, m_MK[12], m_RK[12]);
+      R ^= R2(L, m_MK[13], m_RK[13]);
+      L ^= R3(R, m_MK[14], m_RK[14]);
+      R ^= R1(L, m_MK[15], m_RK[15]);
 
       store_be(out + BLOCK_SIZE*i, R, L);
       }
@@ -86,22 +86,22 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t L, R;
       load_be(in + BLOCK_SIZE*i, L, R);
 
-      R1(L, R, m_MK[15], m_RK[15]);
-      R3(R, L, m_MK[14], m_RK[14]);
-      R2(L, R, m_MK[13], m_RK[13]);
-      R1(R, L, m_MK[12], m_RK[12]);
-      R3(L, R, m_MK[11], m_RK[11]);
-      R2(R, L, m_MK[10], m_RK[10]);
-      R1(L, R, m_MK[ 9], m_RK[ 9]);
-      R3(R, L, m_MK[ 8], m_RK[ 8]);
-      R2(L, R, m_MK[ 7], m_RK[ 7]);
-      R1(R, L, m_MK[ 6], m_RK[ 6]);
-      R3(L, R, m_MK[ 5], m_RK[ 5]);
-      R2(R, L, m_MK[ 4], m_RK[ 4]);
-      R1(L, R, m_MK[ 3], m_RK[ 3]);
-      R3(R, L, m_MK[ 2], m_RK[ 2]);
-      R2(L, R, m_MK[ 1], m_RK[ 1]);
-      R1(R, L, m_MK[ 0], m_RK[ 0]);
+      L ^= R1(R, m_MK[15], m_RK[15]);
+      R ^= R3(L, m_MK[14], m_RK[14]);
+      L ^= R2(R, m_MK[13], m_RK[13]);
+      R ^= R1(L, m_MK[12], m_RK[12]);
+      L ^= R3(R, m_MK[11], m_RK[11]);
+      R ^= R2(L, m_MK[10], m_RK[10]);
+      L ^= R1(R, m_MK[ 9], m_RK[ 9]);
+      R ^= R3(L, m_MK[ 8], m_RK[ 8]);
+      L ^= R2(R, m_MK[ 7], m_RK[ 7]);
+      R ^= R1(L, m_MK[ 6], m_RK[ 6]);
+      L ^= R3(R, m_MK[ 5], m_RK[ 5]);
+      R ^= R2(L, m_MK[ 4], m_RK[ 4]);
+      L ^= R1(R, m_MK[ 3], m_RK[ 3]);
+      R ^= R3(L, m_MK[ 2], m_RK[ 2]);
+      L ^= R2(R, m_MK[ 1], m_RK[ 1]);
+      R ^= R1(L, m_MK[ 0], m_RK[ 0]);
 
       store_be(out + BLOCK_SIZE*i, R, L);
       }
