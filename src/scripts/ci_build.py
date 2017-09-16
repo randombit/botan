@@ -279,15 +279,15 @@ def have_prog(prog):
             return True
 
 def main(args=None):
-    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+    # pylint: disable=too-many-branches,too-many-statements,too-many-locals,too-many-return-statements
+    """
+    Parse options, do the things
+    """
 
     if os.getenv('COVERITY_SCAN_BRANCH') == '1':
         print('Skipping build COVERITY_SCAN_BRANCH set in environment')
         return 0
 
-    """
-    Parse options, do the things
-    """
     (options, args) = parse_args(args or sys.argv)
 
     if len(args) != 2:
