@@ -90,13 +90,11 @@ std::string make_bcrypt(const std::string& pass,
                         const std::vector<uint8_t>& salt,
                         uint16_t work_factor)
    {
-   auto magic = std::vector<uint8_t>{
+   static const uint8_t BCRYPT_MAGIC[8*3] = {
       0x4F, 0x72, 0x70, 0x68, 0x65, 0x61, 0x6E, 0x42,
       0x65, 0x68, 0x6F, 0x6C, 0x64, 0x65, 0x72, 0x53,
       0x63, 0x72, 0x79, 0x44, 0x6F, 0x75, 0x62, 0x74
    };
-
-   std::vector<uint8_t> ctext = magic;
 
    Blowfish blowfish;
 
@@ -105,6 +103,8 @@ std::string make_bcrypt(const std::string& pass,
                              pass.length() + 1,
                              salt.data(),
                              work_factor);
+
+   std::vector<uint8_t> ctext(BCRYPT_MAGIC, BCRYPT_MAGIC + 8*3);
 
    for(size_t i = 0; i != 64; ++i)
       blowfish.encrypt_n(ctext.data(), ctext.data(), 3);
