@@ -361,18 +361,6 @@ Botan__OID::as_string()
 
 MODULE = Botan				    PACKAGE = Botan::OIDS
 
-void
-add_oid(oid, name)
-	Botan__OID  *oid;
-       	char	    *name;
-    CODE:
-	try {
-	    Botan::OIDS::add_oid(*oid, name);
-	}
-	catch (const std::exception &e) {
-	    croak(e.what());
-	}
-
 char *
 lookup_by_oid(oid)
 	Botan__OID *oid;

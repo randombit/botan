@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..6\n"; }
+BEGIN { $| = 1; print "1..5\n"; }
 END { print "not ok 1\n" unless $loaded; }
 
 use Botan;
@@ -38,8 +38,3 @@ my $oid_foo_num = '1.2.3.4.5.6.7.8.9.10.11.12.13.14.15';
 my $oid_foo = Botan::OID->new($oid_foo_num);
 print "not " if Botan::OIDS::lookup_by_oid($oid_foo) ne $oid_foo_num;
 print "ok 5\n";
-
-Botan::OIDS::add_oid($oid_foo, 'Zito.Foo');
-
-print "not " if Botan::OIDS::lookup_by_oid($oid_foo) ne 'Zito.Foo';
-print "ok 6\n";
