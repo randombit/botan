@@ -58,13 +58,16 @@ class SIMD_4x32 final
       SIMD_4x32() // zero initialized
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
-         ::memset(&m_sse, 0, sizeof(m_sse));
+         m_sse = _mm_setzero_si128();
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          m_vmx = vec_splat_u32(0);
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_neon = vdupq_n_u32(0);
 #else
-         ::memset(m_scalar, 0, sizeof(m_scalar));
+         m_scalar[0] = 0;
+         m_scalar[1] = 0;
+         m_scalar[2] = 0;
+         m_scalar[3] = 0;
 #endif
          }
 
