@@ -94,7 +94,7 @@ install:
   - ./src/scripts/ci/setup_travis.sh
 
 script:
-  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX $BUILD_MODE; fi
+  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --compiler-cache=ccache $BUILD_MODE
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
@@ -121,7 +121,6 @@ addons:
     project:
       name: "randombit/botan"
     notification_email: jack@randombit.net
-    build_command_prepend: "./configure.py --no-optimizations --with-zlib"
+    build_command_prepend: "./configure.py --no-optimizations --with-zlib --with-openssl"
     build_command: "make -j2"
     branch_pattern: coverity_scan
-

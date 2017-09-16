@@ -75,5 +75,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    export PATH=$PATH:botan-ci-tools/macos
+    PATH=$PATH:$(pwd)/botan-ci-tools/macos
+    export PATH
 fi
