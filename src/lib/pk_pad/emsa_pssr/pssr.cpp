@@ -181,7 +181,13 @@ void PSSR_Raw::update(const uint8_t input[], size_t length)
 */
 secure_vector<uint8_t> PSSR_Raw::raw_data()
    {
-   return m_msg;
+   secure_vector<uint8_t> ret;
+   std::swap(ret, m_msg);
+
+   if(ret.size() != m_hash->output_length())
+      throw Encoding_Error("PSSR_Raw Bad input length, did not match hash");
+
+   return ret;
    }
 
 secure_vector<uint8_t> PSSR_Raw::encoding_of(const secure_vector<uint8_t>& msg,
