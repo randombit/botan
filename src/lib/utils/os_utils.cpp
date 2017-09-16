@@ -63,12 +63,12 @@ OS::open_socket(const std::string& hostname,
             boost::asio::connect(m_tcp, resolver.resolve(query));
             }
 
-         void write(const uint8_t buf[], size_t len)
+         void write(const uint8_t buf[], size_t len) override
             {
             boost::asio::write(m_tcp, boost::asio::buffer(buf, len));
             }
 
-         size_t read(uint8_t buf[], size_t len)
+         size_t read(uint8_t buf[], size_t len) override
             {
             boost::system::error_code error;
             size_t got = m_tcp.read_some(boost::asio::buffer(buf, len), error);
@@ -154,7 +154,7 @@ OS::open_socket(const std::string& hostname,
             ::WSACleanup();
             }
 
-         void write(const uint8_t buf[], size_t len)
+         void write(const uint8_t buf[], size_t len) override
             {
             size_t sent_so_far = 0;
             while(sent_so_far != len)
@@ -173,7 +173,7 @@ OS::open_socket(const std::string& hostname,
                }
             }
 
-         size_t read(uint8_t buf[], size_t len)
+         size_t read(uint8_t buf[], size_t len) override
             {
             int got = ::recv(m_socket,
                              reinterpret_cast<char*>(buf),
@@ -244,7 +244,7 @@ OS::open_socket(const std::string& hostname,
             m_fd = -1;
             }
 
-         void write(const uint8_t buf[], size_t len)
+         void write(const uint8_t buf[], size_t len) override
             {
             size_t sent_so_far = 0;
             while(sent_so_far != len)
@@ -259,7 +259,7 @@ OS::open_socket(const std::string& hostname,
                }
             }
 
-         size_t read(uint8_t buf[], size_t len)
+         size_t read(uint8_t buf[], size_t len) override
             {
             ssize_t got = ::read(m_fd, buf, len);
 
