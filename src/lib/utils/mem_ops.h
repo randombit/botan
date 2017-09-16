@@ -32,6 +32,17 @@ namespace Botan {
 BOTAN_DLL void secure_scrub_memory(void* ptr, size_t n);
 
 /**
+* Memory comparison, input insensitive
+* @param x a pointer to an array
+* @param y a pointer to another array
+* @param n the number of Ts in x and y
+* @return true iff x[i] == y[i] forall i in [0...n)
+*/
+BOTAN_DLL bool constant_time_compare(const uint8_t x[],
+                                     const uint8_t y[],
+                                     size_t len);
+
+/**
 * Zero out some bytes
 * @param ptr a pointer to memory to zero
 * @param bytes the number of bytes to zero in ptr
@@ -106,19 +117,14 @@ template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
    }
 
 /**
-* XOR_ arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
+* XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
 * @param out the input/output buffer
 * @param in the read-only input buffer
 * @param length the length of the buffers
 */
-template<typename T>
-void xor_buf(T out[], const T in[], size_t length)
-   {
-   for(size_t i = 0; i != length; ++i)
-      {
-      out[i] ^= in[i];
-      }
-   }
+BOTAN_DLL void xor_buf(uint8_t x[],
+                       const uint8_t y[],
+                       size_t len);
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ in2[i] forall i = 0...length
@@ -127,16 +133,10 @@ void xor_buf(T out[], const T in[], size_t length)
 * @param in2 the second output buffer
 * @param length the length of the three buffers
 */
-template<typename T> void xor_buf(T out[],
-                                  const T in[],
-                                  const T in2[],
-                                  size_t length)
-   {
-   for(size_t i = 0; i != length; ++i)
-      {
-      out[i] = in[i] ^ in2[i];
-      }
-   }
+BOTAN_DLL void xor_buf(uint8_t out[],
+                       const uint8_t in[],
+                       const uint8_t in2[],
+                       size_t length);
 
 template<typename Alloc, typename Alloc2>
 void xor_buf(std::vector<uint8_t, Alloc>& out,
@@ -163,10 +163,10 @@ void xor_buf(std::vector<uint8_t, Alloc>& out,
    xor_buf(out.data(), in, in2.data(), n);
    }
 
-template<typename T, typename Alloc, typename Alloc2>
-std::vector<T, Alloc>&
-operator^=(std::vector<T, Alloc>& out,
-           const std::vector<T, Alloc2>& in)
+template<typename Alloc, typename Alloc2>
+std::vector<uint8_t, Alloc>&
+operator^=(std::vector<uint8_t, Alloc>& out,
+           const std::vector<uint8_t, Alloc2>& in)
    {
    if(out.size() < in.size())
       out.resize(in.size());

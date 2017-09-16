@@ -1,0 +1,86 @@
+/*
+* (C) 2017 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <botan/mem_ops.h>
+
+#if defined(BOTAN_HAS_SIMD_32)
+  #include <botan/internal/simd_32.h>
+  #include <botan/cpuid.h>
+#endif
+
+namespace Botan {
+
+bool constant_time_compare(const uint8_t x[],
+                           const uint8_t y[],
+                           size_t len)
+   {
+   volatile uint8_t difference = 0;
+
+   for(size_t i = 0; i != len; ++i)
+      difference |= (x[i] ^ y[i]);
+
+   return difference == 0;
+   }
+
+void xor_buf(uint8_t x[],
+             const uint8_t y[],
+             size_t len)
+   {
+#if defined(BOTAN_HAS_SIMD_32)
+   if(CPUID::has_simd_32())
+      {
+      while(len >= 16)
+         {
+         SIMD_32 x16 = SIMD_32::load_le(x);
+         SIMD_32 y16 = SIMD_32::load_le(y);
+         x16 ^= y16;
+         x16.store_le(x);
+
+         len -= 16;
+         x += 16;
+         y += 16;
+         }
+      }
+#endif
+
+   while(len >= 8)
+      {
+      x[0] ^= y[0]; x[1] ^= y[1];
+      x[2] ^= y[2]; x[3] ^= y[3];
+      x[4] ^= y[4]; x[5] ^= y[5];
+      x[6] ^= y[6]; x[7] ^= y[7];
+      x += 8; y += 8; len -= 8;
+      }
+
+   for(size_t i = 0; i != len; ++i)
+      {
+      x[i] ^= y[i];
+      }
+   }
+
+void xor_buf(uint8_t out[],
+             const uint8_t in[],
+             const uint8_t in2[],
+             size_t length)
+   {
+   while(length >= 8)
+      {
+      out[0] = in[0] ^ in2[0];
+      out[1] = in[1] ^ in2[1];
+      out[2] = in[2] ^ in2[2];
+      out[3] = in[3] ^ in2[3];
+      out[4] = in[4] ^ in2[4];
+      out[5] = in[5] ^ in2[5];
+      out[6] = in[6] ^ in2[6];
+      out[7] = in[7] ^ in2[7];
+      in += 8; in2 += 8; out += 8; length -= 8;
+      }
+
+   for(size_t i = 0; i != length; ++i)
+      out[i] = in[i] ^ in2[i];
+   }
+
+}

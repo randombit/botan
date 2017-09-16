@@ -53,20 +53,28 @@ inline void lps(uint64_t* block)
       }
    }
 
-inline void e(uint64_t* K, const uint8_t* m)
+inline void e(uint64_t* K, const uint64_t* m)
    {
-   uint64_t tmp[8];
+   uint64_t A[8];
    uint64_t C[8];
 
-   std::memcpy(tmp, K, 64);
-   xor_buf(K, reinterpret_cast<const uint64_t*>(m), 8);
+   copy_mem(A, K, 8);
+
+   for(size_t i = 0; i != 8; ++i)
+      {
+      K[i] ^= m[i];
+      }
+
    for(int i = 0; i < 12; ++i)
       {
       lps(K);
       load_le(C, reinterpret_cast<const uint8_t*>(&STREEBOG_C[i][0]), 8);
-      xor_buf(tmp, C, 8);
-      lps(tmp);
-      xor_buf(K, tmp, 8);
+
+      for(size_t i = 0; i != 8; ++i)
+         A[i] ^= C[i];
+      lps(A);
+      for(size_t i = 0; i != 8; ++i)
+         K[i] ^= A[i];
       }
    }
 
@@ -77,12 +85,17 @@ inline void g(uint64_t* h, const uint8_t* m, uint64_t N)
    // force N to little-endian
    store_le(N, reinterpret_cast<uint8_t*>(&N));
 
-   std::memcpy(hN, h, 64);
+   copy_mem(hN, h, 8);
    hN[0] ^= N;
    lps(hN);
-   e(hN, m);
-   xor_buf(h, hN, 8);
-   xor_buf(h, reinterpret_cast<const uint64_t*>(m), 8);
+   const uint64_t* m64 = reinterpret_cast<const uint64_t*>(m);
+
+   e(hN, m64);
+
+   for(size_t i = 0; i != 8; ++i)
+      {
+      h[i] ^= hN[i] ^ m64[i];
+      }
    }
 
 } //namespace
