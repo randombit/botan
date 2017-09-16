@@ -54,12 +54,12 @@ Key_Length_Specification CBC_Mode::key_spec() const
 
 size_t CBC_Mode::default_nonce_length() const
    {
-   return cipher().block_size();
+   return block_size();
    }
 
 bool CBC_Mode::valid_nonce_length(size_t n) const
    {
-   return (n == 0 || n == cipher().block_size());
+   return (n == 0 || n == block_size());
    }
 
 void CBC_Mode::key_schedule(const uint8_t key[], size_t length)
@@ -89,27 +89,27 @@ size_t CBC_Encryption::minimum_final_size() const
 size_t CBC_Encryption::output_length(size_t input_length) const
    {
    if(input_length == 0)
-      return cipher().block_size();
+      return block_size();
    else
-      return round_up(input_length, cipher().block_size());
+      return round_up(input_length, block_size());
    }
 
 size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
    {
-   const size_t BS = cipher().block_size();
+   const size_t BS = block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "CBC input is full blocks");
    const size_t blocks = sz / BS;
 
-   const uint8_t* prev_block = state_ptr();
-
-   if(blocks)
+   if(blocks > 0)
       {
-      for(size_t i = 0; i != blocks; ++i)
+      xor_buf(&buf[0], state_ptr(), BS);
+      cipher().encrypt(&buf[0]);
+
+      for(size_t i = 1; i != blocks; ++i)
          {
-         xor_buf(&buf[BS*i], prev_block, BS);
+         xor_buf(&buf[BS*i], &buf[BS*(i-1)], BS);
          cipher().encrypt(&buf[BS*i]);
-         prev_block = &buf[BS*i];
          }
 
       state().assign(&buf[BS*(blocks-1)], &buf[BS*blocks]);
@@ -122,7 +122,7 @@ void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
-   const size_t BS = cipher().block_size();
+   const size_t BS = block_size();
 
    const size_t bytes_in_final_block = (buffer.size()-offset) % BS;
 
@@ -136,12 +136,12 @@ void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 bool CTS_Encryption::valid_nonce_length(size_t n) const
    {
-   return (n == cipher().block_size());
+   return (n == block_size());
    }
 
 size_t CTS_Encryption::minimum_final_size() const
    {
-   return cipher().block_size() + 1;
+   return block_size() + 1;
    }
 
 size_t CTS_Encryption::output_length(size_t input_length) const
@@ -155,7 +155,7 @@ void CTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    uint8_t* buf = buffer.data() + offset;
    const size_t sz = buffer.size() - offset;
 
-   const size_t BS = cipher().block_size();
+   const size_t BS = block_size();
 
    if(sz < BS + 1)
       throw Encoding_Error(name() + ": insufficient data to encrypt");
@@ -200,12 +200,12 @@ size_t CBC_Decryption::output_length(size_t input_length) const
 
 size_t CBC_Decryption::minimum_final_size() const
    {
-   return cipher().block_size();
+   return block_size();
    }
 
 size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
    {
-   const size_t BS = cipher().block_size();
+   const size_t BS = block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
    size_t blocks = sz / BS;
@@ -234,7 +234,7 @@ void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
 
-   const size_t BS = cipher().block_size();
+   const size_t BS = block_size();
 
    if(sz == 0 || sz % BS)
       throw Decoding_Error(name() + ": Ciphertext not a multiple of block size");
@@ -257,12 +257,12 @@ void CBC_Decryption::reset()
 
 bool CTS_Decryption::valid_nonce_length(size_t n) const
    {
-   return (n == cipher().block_size());
+   return (n == block_size());
    }
 
 size_t CTS_Decryption::minimum_final_size() const
    {
-   return cipher().block_size() + 1;
+   return block_size() + 1;
    }
 
 void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
@@ -271,7 +271,7 @@ void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
 
-   const size_t BS = cipher().block_size();
+   const size_t BS = block_size();
 
    if(sz < BS + 1)
       throw Encoding_Error(name() + ": insufficient data to decrypt");

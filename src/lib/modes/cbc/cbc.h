@@ -48,6 +48,8 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
 
       secure_vector<uint8_t>& state() { return m_state; }
 
+      size_t block_size() const { return m_state.size(); }
+
       uint8_t* state_ptr() { return m_state.data(); }
 
    private:
