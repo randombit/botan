@@ -250,9 +250,12 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    hash->update(secret.data(), secret_len);
    secure_vector<uint8_t> hash_check = hash->final();
 
-   if(!same_mem(hash_check.data(),
-                &secret[secret_len], hash->output_length()))
+   if(!constant_time_compare(hash_check.data(),
+                             &secret[secret_len],
+                             hash->output_length()))
+      {
       throw Decoding_Error("RTSS hash check failed");
+      }
 
    return secure_vector<uint8_t>(secret.cbegin(), secret.cbegin() + secret_len);
    }

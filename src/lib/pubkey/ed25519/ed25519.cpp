@@ -90,7 +90,7 @@ bool ed25519_verify(const uint8_t* m, size_t mlen,
 
    ge_double_scalarmult_vartime(rcheck, h, &A, sig + 32);
 
-   return same_mem(rcheck, sig, 32);
+   return constant_time_compare(rcheck, sig, 32);
    }
 
 }

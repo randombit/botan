@@ -81,7 +81,7 @@ bool Finished::verify(const Handshake_State& state,
    return true;
 #else
    return (m_verification_data.size() == computed_verify.size()) &&
-      same_mem(m_verification_data.data(), computed_verify.data(), computed_verify.size());
+      constant_time_compare(m_verification_data.data(), computed_verify.data(), computed_verify.size());
 #endif
    }
 

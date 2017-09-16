@@ -155,6 +155,11 @@ doesn't exactly work well either!
 /**
 * Returns 0 if x[0..len] == y[0..len], or otherwise -1
 */
+BOTAN_DLL int botan_constant_time_compare(const uint8_t* x, const uint8_t* y, size_t len);
+
+/**
+* Deprecated equivalent to botan_constant_time_compare
+*/
 BOTAN_DLL int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len);
 
 /**

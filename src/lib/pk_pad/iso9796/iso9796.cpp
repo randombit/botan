@@ -202,7 +202,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    secure_vector<uint8_t> H2 = hash->final();
    
    //check if H3 == H2
-   bad_input |= CT::is_equal<uint8_t>(same_mem(H3.data(), H2.data(), HASH_SIZE), false);
+   bad_input |= CT::is_equal<uint8_t>(constant_time_compare(H3.data(), H2.data(), HASH_SIZE), false);
    
    CT::unpoison(bad_input);
    return (bad_input == 0);

@@ -63,9 +63,14 @@ uint32_t botan_version_minor() { return Botan::version_minor(); }
 uint32_t botan_version_patch() { return Botan::version_patch(); }
 uint32_t botan_version_datestamp()  { return Botan::version_datestamp(); }
 
+int botan_constant_time_compare(const uint8_t* x, const uint8_t* y, size_t len)
+   {
+   return Botan::constant_time_compare(x, y, len) ? 0 : -1;
+   }
+
 int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len)
    {
-   return Botan::same_mem(x, y, len) ? 0 : -1;
+   return botan_constant_time_compare(x, y, len);
    }
 
 int botan_scrub_mem(void* mem, size_t bytes)

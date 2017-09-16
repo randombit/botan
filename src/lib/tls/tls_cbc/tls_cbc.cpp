@@ -397,7 +397,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
 
       const size_t mac_offset = enc_size;
 
-      const bool mac_ok = same_mem(&record_contents[mac_offset], mac_buf.data(), tag_size());
+      const bool mac_ok = constant_time_compare(&record_contents[mac_offset], mac_buf.data(), tag_size());
 
       if(!mac_ok)
          {
@@ -459,7 +459,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
 
       const size_t mac_offset = record_len - (tag_size() + pad_size);
 
-      const bool mac_ok = same_mem(&record_contents[mac_offset], mac_buf.data(), tag_size());
+      const bool mac_ok = constant_time_compare(&record_contents[mac_offset], mac_buf.data(), tag_size());
 
       const uint16_t ok_mask = size_ok_mask & CT::expand_mask<uint16_t>(mac_ok) & CT::expand_mask<uint16_t>(pad_size);
 

@@ -157,7 +157,7 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<uint8_t>& buffer, size_t 
 
    m_ctext_len = 0;
 
-   if(!same_mem(mac.data(), included_tag, tag_size()))
+   if(!constant_time_compare(mac.data(), included_tag, tag_size()))
       throw Integrity_Failure("ChaCha20Poly1305 tag check failed");
    buffer.resize(offset + remaining);
    }

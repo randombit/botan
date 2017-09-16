@@ -190,7 +190,7 @@ class SM2_Decryption_Operation : public PK_Ops::Decryption
          hash->update(y2_bytes);
          secure_vector<uint8_t> u = hash->final();
 
-         if(same_mem(u.data(), ciphertext + (1+p_bytes*2), hash->output_length()) == false)
+         if(constant_time_compare(u.data(), ciphertext + (1+p_bytes*2), hash->output_length()) == false)
             return secure_vector<uint8_t>();
 
          valid_mask = 0xFF;

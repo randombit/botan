@@ -122,7 +122,7 @@ bool PSSR::verify(const secure_vector<uint8_t>& const_coded,
    m_hash->update(&DB[salt_offset], DB_size - salt_offset);
    secure_vector<uint8_t> H2 = m_hash->final();
 
-   return same_mem(H, H2.data(), HASH_SIZE);
+   return constant_time_compare(H, H2.data(), HASH_SIZE);
    }
 
 PSSR::PSSR(HashFunction* h) :

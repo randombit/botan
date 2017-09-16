@@ -175,7 +175,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
    secure_vector<uint8_t> tag(msg + m_pub_key_size + ciphertext_len,
                            msg + m_pub_key_size + ciphertext_len + m_mac->output_length());
 
-   valid_mask = CT::expand_mask<uint8_t>(same_mem(tag.data(), calculated_tag.data(), tag.size()));
+   valid_mask = CT::expand_mask<uint8_t>(constant_time_compare(tag.data(), calculated_tag.data(), tag.size()));
 
    // decrypt
    if(m_cipher)

@@ -145,7 +145,7 @@ std::string decrypt(const uint8_t input[], size_t input_len,
    uint8_t computed_mac[MAC_OUTPUT_LEN];
    BOTAN_ASSERT_EQUAL(MAC_OUTPUT_LEN, pipe.read(computed_mac, MAC_OUTPUT_LEN, 1), "MAC size");
 
-   if(!same_mem(computed_mac,
+   if(!constant_time_compare(computed_mac,
                 &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN],
                 MAC_OUTPUT_LEN))
       throw Decoding_Error("CryptoBox integrity failure");

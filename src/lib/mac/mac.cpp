@@ -155,7 +155,7 @@ bool MessageAuthenticationCode::verify_mac(const uint8_t mac[], size_t length)
    if(our_mac.size() != length)
       return false;
 
-   return same_mem(our_mac.data(), mac, length);
+   return constant_time_compare(our_mac.data(), mac, length);
    }
 
 }
