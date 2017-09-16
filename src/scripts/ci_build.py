@@ -281,7 +281,7 @@ def have_prog(prog):
 def main(args=None):
     # pylint: disable=too-many-branches,too-many-statements,too-many-locals
 
-    if os.getenv('COVERITY_SCAN_BRANCH') is not None:
+    if os.getenv('COVERITY_SCAN_BRANCH') == '1':
         print('Skipping build COVERITY_SCAN_BRANCH set in environment')
         return 0
 
