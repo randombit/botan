@@ -6,11 +6,6 @@
 
 #include <botan/mem_ops.h>
 
-#if defined(BOTAN_HAS_SIMD_32)
-  #include <botan/internal/simd_32.h>
-  #include <botan/cpuid.h>
-#endif
-
 namespace Botan {
 
 bool constant_time_compare(const uint8_t x[],
@@ -29,30 +24,25 @@ void xor_buf(uint8_t x[],
              const uint8_t y[],
              size_t len)
    {
-#if defined(BOTAN_HAS_SIMD_32)
-   if(CPUID::has_simd_32())
+   while(len >= 16)
       {
-      while(len >= 16)
-         {
-         SIMD_32 x16 = SIMD_32::load_le(x);
-         SIMD_32 y16 = SIMD_32::load_le(y);
-         x16 ^= y16;
-         x16.store_le(x);
-
-         len -= 16;
-         x += 16;
-         y += 16;
-         }
-      }
-#endif
-
-   while(len >= 8)
-      {
-      x[0] ^= y[0]; x[1] ^= y[1];
-      x[2] ^= y[2]; x[3] ^= y[3];
-      x[4] ^= y[4]; x[5] ^= y[5];
-      x[6] ^= y[6]; x[7] ^= y[7];
-      x += 8; y += 8; len -= 8;
+      x[0] ^= y[0];
+      x[1] ^= y[1];
+      x[2] ^= y[2];
+      x[3] ^= y[3];
+      x[4] ^= y[4];
+      x[5] ^= y[5];
+      x[6] ^= y[6];
+      x[7] ^= y[7];
+      x[8] ^= y[8];
+      x[9] ^= y[9];
+      x[10] ^= y[10];
+      x[11] ^= y[11];
+      x[12] ^= y[12];
+      x[13] ^= y[13];
+      x[14] ^= y[14];
+      x[15] ^= y[15];
+      x += 16; y += 16; len -= 16;
       }
 
    for(size_t i = 0; i != len; ++i)
@@ -76,7 +66,15 @@ void xor_buf(uint8_t out[],
       out[5] = in[5] ^ in2[5];
       out[6] = in[6] ^ in2[6];
       out[7] = in[7] ^ in2[7];
-      in += 8; in2 += 8; out += 8; length -= 8;
+      out[8] = in[8] ^ in2[8];
+      out[9] = in[9] ^ in2[9];
+      out[10] = in[10] ^ in2[10];
+      out[11] = in[11] ^ in2[11];
+      out[12] = in[12] ^ in2[12];
+      out[13] = in[13] ^ in2[13];
+      out[14] = in[14] ^ in2[14];
+      out[15] = in[15] ^ in2[15];
+      in += 16; in2 += 16; out += 16; length -= 16;
       }
 
    for(size_t i = 0; i != length; ++i)
