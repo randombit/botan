@@ -56,7 +56,7 @@ void xor_buf(uint8_t out[],
              const uint8_t in2[],
              size_t length)
    {
-   while(length >= 8)
+   while(length >= 16)
       {
       out[0] = in[0] ^ in2[0];
       out[1] = in[1] ^ in2[1];
