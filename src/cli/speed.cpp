@@ -1,5 +1,5 @@
 /*
-* (C) 2009,2010,2014,2015 Jack Lloyd
+* (C) 2009,2010,2014,2015,2017 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -677,14 +677,10 @@ class Speed final : public Command
 
          for(std::string cpuid_to_clear : Botan::split_on(get_arg("clear-cpuid"), ','))
             {
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-            if(cpuid_to_clear == "avx2")
-               Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_AVX2_BIT);
-            else if(cpuid_to_clear == "sse2")
-               Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
-            else if(cpuid_to_clear == "sha")
-               Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SHA_BIT);
-#endif
+            for(auto bit : Botan::CPUID::bit_from_string(cpuid_to_clear))
+               {
+               Botan::CPUID::clear_cpuid_bit(bit);
+               }
             }
 
          const bool using_defaults = (algos.empty());

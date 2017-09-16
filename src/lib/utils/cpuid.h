@@ -9,6 +9,7 @@
 #define BOTAN_CPUID_H__
 
 #include <botan/types.h>
+#include <vector>
 #include <string>
 #include <iosfwd>
 
@@ -272,6 +273,7 @@ class BOTAN_DLL CPUID
          return ((g_processor_features & static_cast<uint64_t>(elem)) != 0);
          }
 
+      static std::vector<CPUID::CPUID_bits> bit_from_string(const std::string& tok);
    private:
       enum Endian_status : uint32_t {
          ENDIAN_UNKNOWN = 0x00000000,

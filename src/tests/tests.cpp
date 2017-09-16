@@ -872,52 +872,13 @@ std::string strip_ws(const std::string& in)
    return in.substr(first_c, last_c - first_c + 1);
    }
 
-std::vector<Botan::CPUID::CPUID_bits> map_cpuid_string(const std::string& tok)
-   {
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   if(tok == "sse2" || tok == "simd")
-      return {Botan::CPUID::CPUID_SSE2_BIT};
-   if(tok == "ssse3")
-      return {Botan::CPUID::CPUID_SSSE3_BIT};
-   if(tok == "aesni")
-      return {Botan::CPUID::CPUID_AESNI_BIT};
-   if(tok == "clmul")
-      return {Botan::CPUID::CPUID_CLMUL_BIT};
-   if(tok == "avx2")
-      return {Botan::CPUID::CPUID_AVX2_BIT};
-   if(tok == "sha")
-      return {Botan::CPUID::CPUID_SHA_BIT};
-
-#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-   if(tok == "altivec" || tok == "simd")
-      return {Botan::CPUID::CPUID_ALTIVEC_BIT};
-
-#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
-   if(tok == "neon" || tok == "simd")
-      return {Botan::CPUID::CPUID_ARM_NEON_BIT};
-   if(tok == "armv8sha1")
-      return {Botan::CPUID::CPUID_ARM_SHA1_BIT};
-   if(tok == "armv8sha2")
-      return {Botan::CPUID::CPUID_ARM_SHA2_BIT};
-   if(tok == "armv8aes")
-      return {Botan::CPUID::CPUID_ARM_AES_BIT};
-   if(tok == "armv8pmull")
-      return {Botan::CPUID::CPUID_ARM_PMULL_BIT};
-
-#else
-   BOTAN_UNUSED(tok);
-#endif
-
-   return {};
-   }
-
 std::vector<Botan::CPUID::CPUID_bits>
 parse_cpuid_bits(const std::vector<std::string>& tok)
    {
    std::vector<Botan::CPUID::CPUID_bits> bits;
    for(size_t i = 1; i < tok.size(); ++i)
       {
-      const std::vector<Botan::CPUID::CPUID_bits> more = map_cpuid_string(tok[i]);
+      const std::vector<Botan::CPUID::CPUID_bits> more = Botan::CPUID::bit_from_string(tok[i]);
       bits.insert(bits.end(), more.begin(), more.end());
       }
 
