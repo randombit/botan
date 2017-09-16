@@ -86,6 +86,72 @@ class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
          }
    };
 
+class RSA_PSS_KAT_Tests : public PK_Signature_Generation_Test
+   {
+   public:
+      RSA_PSS_KAT_Tests()
+         : PK_Signature_Generation_Test(
+              "RSA",
+              "pubkey/rsa_pss.vec",
+              "P,Q,E,Hash,Nonce,Msg,Signature",
+              "") {}
+
+      std::string default_padding(const VarMap& var) const override
+         {
+         const std::string hash_name = get_req_str(var, "Hash");
+         const size_t salt_size = get_req_bin(var, "Nonce").size();
+         return "PSSR(" + hash_name + ",MGF1," + std::to_string(salt_size) + ")";
+         }
+
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
+
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt q = get_req_bn(vars, "Q");
+         const BigInt e = get_req_bn(vars, "E");
+
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
+         return key;
+         }
+   };
+
+class RSA_PSS_Raw_KAT_Tests : public PK_Signature_Generation_Test
+   {
+   public:
+      RSA_PSS_Raw_KAT_Tests()
+         : PK_Signature_Generation_Test(
+              "RSA",
+              "pubkey/rsa_pss_raw.vec",
+              "P,Q,E,Hash,Nonce,Msg,Signature",
+              "") {}
+
+      std::string default_padding(const VarMap& var) const override
+         {
+         const std::string hash_name = get_req_str(var, "Hash");
+         const size_t salt_size = get_req_bin(var, "Nonce").size();
+         return "PSSR_Raw(" + hash_name + ",MGF1," + std::to_string(salt_size) + ")";
+         }
+
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
+
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt q = get_req_bn(vars, "Q");
+         const BigInt e = get_req_bn(vars, "E");
+
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
+         return key;
+         }
+   };
+
 class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
    {
    public:
@@ -236,6 +302,8 @@ class RSA_Blinding_Tests : public Test
 
 BOTAN_REGISTER_TEST("rsa_encrypt", RSA_ES_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_sign", RSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("rsa_pss", RSA_PSS_KAT_Tests);
+BOTAN_REGISTER_TEST("rsa_pss_raw", RSA_PSS_Raw_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_verify", RSA_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("rsa_verify_invalid", RSA_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("rsa_kem", RSA_KEM_Tests);

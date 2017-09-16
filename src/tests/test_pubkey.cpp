@@ -83,17 +83,25 @@ void check_invalid_ciphertexts(Test::Result& result,
                     " invalid ciphertexts, rejected " + std::to_string(ciphertext_rejected));
    }
 
+std::string PK_Test::choose_padding(const VarMap& vars,
+                                    const std::string& pad_hdr)
+   {
+   if(pad_hdr != "")
+      return pad_hdr;
+   return get_opt_str(vars, "Padding", this->default_padding(vars));
+   }
+
 std::vector<std::string> PK_Test::possible_providers(const std::string& /*params*/)
    {
    return Test::provider_filter({ "base", "bearssl", "openssl", "tpm" });
    }
 
 Test::Result
-PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& vars)
+PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
    const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
    const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
-   const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
+   const std::string padding = choose_padding(vars, pad_hdr);
 
    Test::Result result(algo_name() + "/" + padding + " signature generation");
 
@@ -177,11 +185,12 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
    }
 
 Test::Result
-PK_Signature_Verification_Test::run_one_test(const std::string&, const VarMap& vars)
+PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
    const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
    const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
-   const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
+   const std::string padding = choose_padding(vars, pad_hdr);
+
    std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
 
    Test::Result result(algo_name() + "/" + padding + " signature verification");
@@ -206,9 +215,9 @@ PK_Signature_Verification_Test::run_one_test(const std::string&, const VarMap& v
    }
 
 Test::Result
-PK_Signature_NonVerification_Test::run_one_test(const std::string&, const VarMap& vars)
+PK_Signature_NonVerification_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
-   const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
+   const std::string padding = choose_padding(vars, pad_hdr);
    const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
    std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
 
@@ -235,12 +244,11 @@ PK_Signature_NonVerification_Test::run_one_test(const std::string&, const VarMap
    }
 
 Test::Result
-PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& vars)
+PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
    const std::vector<uint8_t> plaintext  = get_req_bin(vars, "Msg");
    const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
-
-   const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
+   const std::string padding = choose_padding(vars, pad_hdr);
 
    Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " decryption");
 

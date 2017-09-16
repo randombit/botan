@@ -34,6 +34,14 @@ class PK_Test : public Text_Based_Test
    protected:
       std::vector<std::string> possible_providers(const std::string& params) override;
 
+      virtual std::string default_padding(const VarMap&) const
+         {
+         throw Test_Error("No default padding scheme set for " + algo_name());
+         }
+
+      virtual std::string choose_padding(const VarMap& vars,
+                                         const std::string& pad_hdr);
+
    private:
       std::string m_algo;
    };
@@ -47,10 +55,6 @@ class PK_Signature_Generation_Test : public PK_Test
                                    const std::string& optional_keys = "")
          : PK_Test(algo, test_src, required_keys, optional_keys) {}
 
-      virtual std::string default_padding(const VarMap&) const
-         {
-         throw Test_Error("No default padding scheme set for " + algo_name());
-         }
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
 
@@ -72,11 +76,6 @@ class PK_Signature_Verification_Test : public PK_Test
                                      const std::string& optional_keys = "")
          : PK_Test(algo, test_src, required_keys, optional_keys) {}
 
-      virtual std::string default_padding(const VarMap&) const
-         {
-         throw Test_Error("No default padding scheme set for " + algo_name());
-         }
-
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
    private:
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
@@ -96,11 +95,6 @@ class PK_Signature_NonVerification_Test : public PK_Test
          return false;
          }
 
-      virtual std::string default_padding(const VarMap&) const
-         {
-         throw Test_Error("No default padding scheme set for " + algo_name());
-         }
-
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
    private:
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
@@ -117,7 +111,7 @@ class PK_Encryption_Decryption_Test : public PK_Test
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
 
-      virtual std::string default_padding(const VarMap&) const
+      std::string default_padding(const VarMap&) const override
          {
          return "Raw";
          }
