@@ -141,8 +141,7 @@ class Config_Info final : public Command
             }
          else if(arg == "libs")
             {
-            output() << "-lbotan-" << Botan::version_major() << "." << Botan::version_minor()
-                     << " " << BOTAN_LIB_LINK << "\n";
+            output() << "-lbotan-" << Botan::version_major() << " " << BOTAN_LIB_LINK << "\n";
             }
          else
             {
