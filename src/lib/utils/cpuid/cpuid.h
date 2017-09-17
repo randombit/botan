@@ -281,6 +281,14 @@ class BOTAN_DLL CPUID
          ENDIAN_LITTLE  = 0x67452301,
       };
 
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
+    defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
+    defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+      static uint64_t detect_cpu_features(size_t* cache_line_size);
+
+#endif
+
       static Endian_status runtime_check_endian();
 
       static Endian_status endian_status()
