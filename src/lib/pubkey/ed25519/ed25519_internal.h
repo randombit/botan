@@ -16,24 +16,16 @@
 
 namespace Botan {
 
-inline uint64_t load_3(const uint8_t* in)
+inline uint64_t load_3(const uint8_t in[3])
    {
-   uint64_t result;
-   result = (uint64_t) in[0];
-   result |= ((uint64_t) in[1]) << 8;
-   result |= ((uint64_t) in[2]) << 16;
-   return result;
+   return static_cast<uint64_t>(in[0]) |
+      (static_cast<uint64_t>(in[1]) << 8) |
+      (static_cast<uint64_t>(in[2]) << 16);
    }
 
 inline uint64_t load_4(const uint8_t* in)
    {
-   uint64_t result;
-   result = (uint64_t) in[0];
-   result |= ((uint64_t) in[1]) << 8;
-   result |= ((uint64_t) in[2]) << 16;
-   result |= ((uint64_t) in[3]) << 24;
-   return result;
-   //return load_le<uint32_t>(in, 0);
+   return load_le<uint32_t>(in, 0);
    }
 
 /*
