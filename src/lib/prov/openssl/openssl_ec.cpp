@@ -74,7 +74,7 @@ int OpenSSL_EC_curve_builtin(int nid)
       return -1;
       }
 
-   for(int i=0; i < num; ++i)
+   for(size_t i = 0; i < num; ++i)
       {
       if(builtin_curves[i].nid == nid)
          {
