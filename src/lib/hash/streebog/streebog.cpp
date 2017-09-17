@@ -65,16 +65,16 @@ inline void e(uint64_t* K, const uint64_t* m)
       K[i] ^= m[i];
       }
 
-   for(int i = 0; i < 12; ++i)
+   for(size_t i = 0; i < 12; ++i)
       {
       lps(K);
       load_le(C, reinterpret_cast<const uint8_t*>(&STREEBOG_C[i][0]), 8);
 
-      for(size_t i = 0; i != 8; ++i)
-         A[i] ^= C[i];
+      for(size_t j = 0; j != 8; ++j)
+         A[j] ^= C[j];
       lps(A);
-      for(size_t i = 0; i != 8; ++i)
-         K[i] ^= A[i];
+      for(size_t j = 0; j != 8; ++j)
+         K[j] ^= A[j];
       }
    }
 
