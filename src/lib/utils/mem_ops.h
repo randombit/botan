@@ -35,7 +35,7 @@ BOTAN_DLL void secure_scrub_memory(void* ptr, size_t n);
 * Memory comparison, input insensitive
 * @param x a pointer to an array
 * @param y a pointer to another array
-* @param n the number of Ts in x and y
+* @param len the number of Ts in x and y
 * @return true iff x[i] == y[i] forall i in [0...n)
 */
 BOTAN_DLL bool constant_time_compare(const uint8_t x[],
@@ -122,9 +122,9 @@ template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
 * @param in the read-only input buffer
 * @param length the length of the buffers
 */
-BOTAN_DLL void xor_buf(uint8_t x[],
-                       const uint8_t y[],
-                       size_t len);
+BOTAN_DLL void xor_buf(uint8_t out[],
+                       const uint8_t in[],
+                       size_t length);
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ in2[i] forall i = 0...length
