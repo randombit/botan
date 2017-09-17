@@ -46,7 +46,7 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
 
    int vector_type = 0;
    size_t length = sizeof(vector_type);
-   int error = ::sysctl(sels, sizeof(sels), &vector_type, &length, NULL, 0);
+   int error = ::sysctl(sels, 2, &vector_type, &length, NULL, 0);
 
    if(error == 0 && vector_type > 0)
       return CPUID::CPUID_ALTIVEC_BIT;
