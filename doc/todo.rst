@@ -25,6 +25,7 @@ Ciphers, Hashes, PBKDF
 * Skein-MAC
 * PMAC
 * Extend Cascade_Cipher to support arbitrary number of ciphers
+* EME* tweakable block cipher (https://eprint.iacr.org/2004/125.pdf)
 
 Public Key Crypto, Math
 ----------------------------------------
@@ -118,6 +119,8 @@ Compat Headers
   since the OpenSSL API handles both crypto and IO. Use Asio, since it
   is expected to be the base of future C++ standard network library.
 
+* Write a module exposing a NaCl/libsodium compatible API header.
+
 FFI and Bindings
 ----------------------------------------
 
@@ -138,6 +141,7 @@ Build/Test
 
 * Create Docker image for Travis that runs 16.04 and has all
   the tools we need pre-installed.
+* Build/export Windows installer exe on AppVeyor
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
   debug info during CI
