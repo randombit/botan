@@ -30,6 +30,12 @@ Version 2.3.0, Not Yet Released
 
 * Add ids to allow SHA-3 signatures with PKCSv1.5 (GH #1184)
 
+* GCM now supports truncated tags in the range 96...128 bits. GCM had
+  previously supported 64-bit truncated tags, but these are known to
+  be insecure and are now deprecated. (GH #1210 #1207)
+
+* Fix decoding of ECC keys that use extensions from RFC 5915 (GH #1208)
+
 * The entropy source that called CryptGenRandom has been removed, and
   replaced by a version which invokes the system PRNG, which may
   be CryptGenRandom or some other source. (GH #1180)
@@ -83,14 +89,30 @@ Version 2.3.0, Not Yet Released
 
 * Fix Altivec runtime detection, which was broken starting in Botan 2.1.0
 
+* Previously ARM feature detection (NEON, AES, ...) relied on getauxval, which
+  is only supported on Linux and Android. Now iOS is supported, by checking the
+  model name/version and matching it against known versions. Unfortunately this
+  is the best available technique on iOS. On Aarch64 systems that are not iOS or
+  Linux/Android, a technique based on trial execution while catching SIGILL is
+  used. (GH #1213)
+
+* The output of `botan config libs` was incorrect, it produced `-lbotan-2.X`
+  where X is the minor version, instead of the actual lib name `-lbotan-2`.
+
+* Add `constant_time_compare` as better named equivalent of `same_mem`.
+
 * Silence a Clang warning in create_private_key (GH #1150)
 
 * The fuzzers have been better integrated with the main build. See the
   handbook for details. (GH #1158)
 
-* The Travis CI build is now run via a Python script. This makes it
-  easier to replicate the behavior of the CI build locally. Also a number
-  of changes were made to improve the turnaround time of CI builds. (GH #1162)
+* The Travis CI and AppVeyor CI builds are now run via a Python script. This
+  makes it easier to replicate the behavior of the CI build locally. Also a
+  number of changes were made to improve the turnaround time of CI builds.
+  (GH #1162 #1199)
+
+* Add support for Win32 filesystem operation, so the tests pass completely
+  on MinGW now (GH #1203)
 
 * Added a script to automate running TLS-Attacker tests.
 
