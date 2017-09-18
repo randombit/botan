@@ -1,0 +1,7 @@
+<defines>
+CPUID -> 20170917
+</defines>
+
+<header:public>
+cpuid.h
+</header:public>
