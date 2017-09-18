@@ -49,21 +49,24 @@ Botan implements the following hash algorithms:
     - CRC24
     - CRC32
 #. Cryptographic hash functions:
-    - BLAKE2
+    - BLAKE2b
     - GOST-34.11
     - Keccak-1600
     - MD4
     - MD5
     - RIPEMD-160
     - SHA-1
-    - SHA-2 (SHA-224, SHA-256, SHA-384, SHA-512-256)
+    - SHA-2 (SHA-224, SHA-256, SHA-384, SHA-512, SHA-512-256)
     - SHA-3
     - SHAKE (SHAKE-128, SHAKE-256)
     - SM3
-    - Streebog (Streebog-256, Streebog-512)
     - Skein-512
+    - Streebog (Streebog-256, Streebog-512)
     - Tiger
     - Whirlpool
+#. Hash Function Combiners
+   - Parallel
+   - Comb4P
 
 .. note:: Checksums are not suitable for cryptographic use, but can be used for error checking purposes.
 
