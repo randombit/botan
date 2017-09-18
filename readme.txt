@@ -1,6 +1,6 @@
 
 This branch (1.10) of Botan is only supported for security fixes until
-the end of 2017. Please upgrade to 2.0 API as soon as possible.
+the end of 2017. Please upgrade to 2.x as soon as possible.
 
 
 Botan is a C++ library for performing a wide variety of cryptographic
