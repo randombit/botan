@@ -7,6 +7,17 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.17, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Workaround a miscompilation bug in GCC 7 on x86-32 affecting GOST-34.11
+  hash function. (GH #1192 #1148 #882)
+
+* Fix a bug that prevented `configure.py` from running under Python3
+
+* Botan 1.10.x does not support the OpenSSL 1.1 API. Now the build
+  will `#error` if OpenSSL 1.1 is detected. (GH #753)
+
 Version 1.10.16, 2017-04-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
