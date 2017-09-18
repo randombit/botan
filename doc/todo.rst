@@ -32,6 +32,9 @@ Public Key Crypto, Math
 
 * Curves for pairings (BN-256 is widely implemented)
 * Identity based encryption
+* BBS group signatures
+* Paillier homomorphic cryptosystem
+* Hashing onto an elliptic curve
 * SPHINCS-256
 * X448 and Ed448
 * FHMQV
@@ -43,6 +46,18 @@ Public Key Crypto, Math
 * Some PK operations, especially RSA, have extensive computations per
   operation setup but many of the computed values depend only on the
   key and could be shared across operation objects.
+
+Utility Functions
+------------------
+
+* base58 and base32 encoding
+
+Multiparty Protocols
+----------------------
+
+* Distributed key generation for DL, RSA
+* Threshold signing, decryption
+* Socialist Millionaires Protocol
 
 External Providers, Hardware Support
 ----------------------------------------
