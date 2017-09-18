@@ -59,9 +59,6 @@ def get_vc_revision():
         logging.debug('Monotone reported revision %s' % (rev))
 
         return 'mtn:' + rev
-    except OSError as e:
-        logging.debug('Error getting rev from monotone - %s' % (e[1]))
-        return 'unknown'
     except Exception as e:
         logging.debug('Error getting rev from monotone - %s' % (e))
         return 'unknown'
