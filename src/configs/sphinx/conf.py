@@ -18,7 +18,7 @@ def check_for_tag(tag):
 
 def parse_version_file(version_path):
     version_file = open(version_path)
-    key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9\']+)")
+    key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9:\']+)")
 
     results = {}
     for line in version_file.readlines():
