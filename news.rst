@@ -36,6 +36,13 @@ Version 2.3.0, Not Yet Released
   previously supported 64-bit truncated tags, but these are known to
   be insecure and are now deprecated. (GH #1210 #1207)
 
+* Add a new TLS policy hook ``allow_client_initiated_renegotiation`` which is the
+  parallel of the existing ``allow_server_initiated_renegotiation``. If set to
+  false, servers will reject attempts by the client to renegotiation the
+  session, instead sending a ``no_renegotiation`` warning alert. Note that the
+  default is ``false``, ie that client renegotiation is now prohibited by default.
+  (GH #872)
+
 * Fix decoding of ECC keys that use extensions from RFC 5915 (GH #1208)
 
 * The entropy source that called CryptGenRandom has been removed, and
@@ -52,7 +59,7 @@ Version 2.3.0, Not Yet Released
   SHA-512 was always used for RFC 6979 nonces with "Raw". (GH #1153)
 
 * The advertised FFI API version has increased. This should have happened
-  already in 2.2 but was neglected. The `botan_ffi_supports_api` call will
+  already in 2.2 but was neglected. The ``botan_ffi_supports_api`` call will
   return true for either the current or older versions of the API version since
   no backwards incompatible changes have occurred.
 
@@ -78,7 +85,7 @@ Version 2.3.0, Not Yet Released
 
 * Allow loading unencrypted private keys via FFI API (GH #1197)
 
-* Add new command line options `--rng-type=drbg` and `--drbg-seed` which
+* Add new command line options ``--rng-type=drbg`` and ``--drbg-seed`` which
   allow running commands with a deterministic RNG. (GH #1169)
 
 * Fix a number of warnings seen under Visual C++ (GH #1171 #795)
@@ -98,10 +105,10 @@ Version 2.3.0, Not Yet Released
   Linux/Android, a technique based on trial execution while catching SIGILL is
   used. (GH #1213)
 
-* The output of `botan config libs` was incorrect, it produced `-lbotan-2.X`
-  where X is the minor version, instead of the actual lib name `-lbotan-2`.
+* The output of ``botan config libs`` was incorrect, it produced ``-lbotan-2.X``
+  where X is the minor version, instead of the actual lib name ``-lbotan-2``.
 
-* Add `constant_time_compare` as better named equivalent of `same_mem`.
+* Add ``constant_time_compare`` as better named equivalent of ``same_mem``.
 
 * Silence a Clang warning in create_private_key (GH #1150)
 
@@ -119,7 +126,7 @@ Version 2.3.0, Not Yet Released
 * Added a script to automate running TLS-Attacker tests.
 
 * Fix a bug in FFI tests that caused the test files not to be found when using
-  `--data-dir` option (GH #1149)
+  ``--data-dir`` option (GH #1149)
 
 Version 2.2.0, 2017-08-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -185,24 +192,24 @@ Version 2.2.0, 2017-08-07
 
 * Support loading ElGamal keys through FFI interface (GH #1008)
 
-* Support Windows sockets in `http_util` (allowing OCSP checks on Windows),
+* Support Windows sockets in ``http_util`` (allowing OCSP checks on Windows),
   as well as in the TLS command line utils (GH #1138).
 
-* The `--destdir` flag to `configure.py` has been removed. Instead use
-  the `DESTDIR` environment variable at install time. This change was
+* The ``--destdir`` flag to ``configure.py`` has been removed. Instead use
+  the ``DESTDIR`` environment variable at install time. This change was
   done to more closely match how autoconf handles this case.
   (GH #1139 #1111 #997 #996).
 
 * Many changes to configure.py and botan2.py to make them pylint clean
   (GH #1041 #1002 #984)
 
-* Add command line utils `hmac` (GH #1001), `encryption` (GH #359),
-  `hex_enc`, and `hex_dec`.
+* Add command line utils ``hmac`` (GH #1001), ``encryption`` (GH #359),
+  ``hex_enc``, and ``hex_dec``.
 
-* Fix an error in `sign_cert` command line util, which ignored the
-  `--ca-key-pass` option. (GH #1106)
+* Fix an error in ``sign_cert`` command line util, which ignored the
+  ``--ca-key-pass`` option. (GH #1106)
 
-* The `speed` util can now benchmark multiple buffer sizes (GH #1084)
+* The ``speed`` util can now benchmark multiple buffer sizes (GH #1084)
 
 * Fix return value of FFI botan_bcrypt_is_valid (GH #1033)
 
@@ -221,9 +228,9 @@ Version 2.2.0, 2017-08-07
 
 * Add some missing functions to TLS::Text_Policy (GH #1023)
 
-* It was previously possible to use `--single-amalgamation-file`
-  without `--amalgamation`, though it did not do anything useful. Now
-  `--single-amalgamation-file` requires `--amalgamation` also be set
+* It was previously possible to use ``--single-amalgamation-file``
+  without ``--amalgamation``, though it did not do anything useful. Now
+  ``--single-amalgamation-file`` requires ``--amalgamation`` also be set
   on the command line.
 
 Version 2.1.0, 2017-04-04
