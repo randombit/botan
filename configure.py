@@ -36,13 +36,7 @@ import logging
 import time
 import errno
 import optparse # pylint: disable=deprecated-module
-
-# Avoid useless botan_version.pyc (Python 2.6 or higher)
-if 'dont_write_bytecode' in sys.__dict__:
-    sys.dont_write_bytecode = True
-
-import botan_version # pylint: disable=wrong-import-position
-
+import ast
 
 # An error caused by and to be fixed by the user, e.g. invalid command line argument
 class UserError(Exception):
@@ -58,34 +52,71 @@ class InternalError(Exception):
 def flatten(l):
     return sum(l, [])
 
+def parse_version_file(version_path):
+    version_file = open(version_path)
+    key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9\']+)")
+
+    results = {}
+    for line in version_file.readlines():
+        if not line or line[0] == '#':
+            continue
+        match = key_and_val.match(line)
+        if match:
+            results[match.group(1)] = ast.literal_eval(match.group(2))
+    return results
 
 class Version(object):
     """
     Version information are all static members
     """
-    major = botan_version.release_major
-    minor = botan_version.release_minor
-    patch = botan_version.release_patch
-    so_rev = botan_version.release_so_abi_rev
-    release_type = botan_version.release_type
-    datestamp = botan_version.release_datestamp
-    packed = major * 1000 + minor # Used on Darwin for dylib versioning
-    _vc_rev = None
+    data = {}
+
+    @staticmethod
+    def get_data():
+        if not Version.data:
+            root_dir = os.path.dirname(sys.argv[0])
+            Version.data = parse_version_file(os.path.join(root_dir, 'botan_version.py'))
+        return Version.data
+
+    @staticmethod
+    def major():
+        return Version.get_data()["release_major"]
+
+    @staticmethod
+    def minor():
+        return Version.get_data()["release_minor"]
+
+    @staticmethod
+    def patch():
+        return Version.get_data()["release_patch"]
+
+    @staticmethod
+    def packed():
+         # Used on Darwin for dylib versioning
+        return Version.major() * 1000 + Version.minor()
+
+    @staticmethod
+    def so_rev():
+        return Version.get_data()["release_so_abi_rev"]
+
+    @staticmethod
+    def release_type():
+        return Version.get_data()["release_type"]
+
+    @staticmethod
+    def datestamp():
+        return Version.get_data()["release_datestamp"]
 
     @staticmethod
     def as_string():
-        return '%d.%d.%d' % (Version.major, Version.minor, Version.patch)
+        return '%d.%d.%d' % (Version.major(), Version.minor(), Version.patch())
 
     @staticmethod
     def vc_rev():
         # Lazy load to ensure _local_repo_vc_revision() does not run before logger is set up
-        if Version._vc_rev is None:
-            Version._vc_rev = botan_version.release_vc_rev
-        if Version._vc_rev is None:
-            Version._vc_rev = Version._local_repo_vc_revision()
-        if Version._vc_rev is None:
-            Version._vc_rev = 'unknown'
-        return Version._vc_rev
+        if Version.get_data()["release_vc_rev"] is None:
+            Version.data["release_vc_rev"] = Version._local_repo_vc_revision()
+        return Version.get_data()["release_vc_rev"]
 
     @staticmethod
     def _local_repo_vc_revision():
@@ -103,7 +134,7 @@ class Version(object):
             if vc.returncode != 0:
                 logging.debug('Error getting rev from %s - %d (%s)'
                               % (cmdname, vc.returncode, stderr))
-                return None
+                return 'unknown'
 
             rev = str(stdout).strip()
             logging.debug('%s reported revision %s' % (cmdname, rev))
@@ -111,7 +142,8 @@ class Version(object):
             return '%s:%s' % (cmdname, rev)
         except OSError as e:
             logging.debug('Error getting rev from %s - %s' % (cmdname, e.strerror))
-            return None
+            return 'unknown'
+
 
 
 class SourcePaths(object):
@@ -128,12 +160,13 @@ class SourcePaths(object):
 
         # dirs in src/
         self.build_data_dir = os.path.join(self.src_dir, 'build-data')
+        self.configs_dir = os.path.join(self.src_dir, 'configs')
         self.lib_dir = os.path.join(self.src_dir, 'lib')
         self.python_dir = os.path.join(self.src_dir, 'python')
         self.scripts_dir = os.path.join(self.src_dir, 'scripts')
 
-        # dirs in src/build-data/
-        self.sphinx_config_dir = os.path.join(self.build_data_dir, 'sphinx')
+        # subdirs of src/
+        self.sphinx_config_dir = os.path.join(self.configs_dir, 'sphinx')
         self.makefile_dir = os.path.join(self.build_data_dir, 'makefile')
 
 
@@ -222,7 +255,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
             raise InternalError("Unknown src info type '%s'" % (typ))
 
 
-PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major)
+PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major())
 
 
 def make_build_doc_commands(source_paths, build_paths, options):
@@ -1911,15 +1944,15 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     bin_link_cmd = cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd()
 
     variables = {
-        'version_major':  Version.major,
-        'version_minor':  Version.minor,
-        'version_patch':  Version.patch,
+        'version_major':  Version.major(),
+        'version_minor':  Version.minor(),
+        'version_patch':  Version.patch(),
         'version_vc_rev': Version.vc_rev(),
-        'so_abi_rev':     Version.so_rev,
+        'so_abi_rev':     Version.so_rev(),
         'version':        Version.as_string(),
-        'version_packed': Version.packed,
-        'release_type':   Version.release_type,
-        'version_datestamp': Version.datestamp,
+        'version_packed': Version.packed(),
+        'release_type':   Version.release_type(),
+        'version_datestamp': Version.datestamp(),
 
         'distribution_info': options.distribution_info,
 
@@ -2027,24 +2060,24 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         if osinfo.soname_pattern_base != None:
             variables['soname_base'] = osinfo.soname_pattern_base.format(
-                version_major=Version.major,
-                version_minor=Version.minor,
-                version_patch=Version.patch,
-                abi_rev=Version.so_rev)
+                version_major=Version.major(),
+                version_minor=Version.minor(),
+                version_patch=Version.patch(),
+                abi_rev=Version.so_rev())
 
         if osinfo.soname_pattern_abi != None:
             variables['soname_abi'] = osinfo.soname_pattern_abi.format(
-                version_major=Version.major,
-                version_minor=Version.minor,
-                version_patch=Version.patch,
-                abi_rev=Version.so_rev)
+                version_major=Version.major(),
+                version_minor=Version.minor(),
+                version_patch=Version.patch(),
+                abi_rev=Version.so_rev())
 
         if osinfo.soname_pattern_patch != None:
             variables['soname_patch'] = osinfo.soname_pattern_patch.format(
-                version_major=Version.major,
-                version_minor=Version.minor,
-                version_patch=Version.patch,
-                abi_rev=Version.so_rev)
+                version_major=Version.major(),
+                version_minor=Version.minor(),
+                version_patch=Version.patch(),
+                abi_rev=Version.so_rev())
 
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
@@ -2069,7 +2102,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
-        variables['libname'] = 'botan-%d' % (Version.major)
+        variables['libname'] = 'botan-%d' % (Version.major())
 
     if options.os == 'llvm':
         # llvm-link doesn't understand -L or -l flags
@@ -3084,8 +3117,8 @@ def main_action_configure_build(info_modules, source_paths, options,
     logging.info('Botan %s (revision %s) (%s %s) build setup is complete' % (
         Version.as_string(),
         Version.vc_rev(),
-        Version.release_type,
-        release_date(Version.datestamp)))
+        Version.release_type(),
+        release_date(Version.datestamp())))
 
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")
