@@ -13,6 +13,29 @@
   #define BOTAN_USE_GCC_INLINE_ASM 1
 #endif
 
+/**
+* Used to annotate API exports which are public and supported.
+* These APIs will not be broken/removed unless strictly required for
+* functionality or security, and only in new major versions.
+* @param maj The major version this public API was released in
+* @param min The minor version this public API was released in
+*/
+#define BOTAN_PUBLIC_API(maj,min) BOTAN_DLL
+
+/**
+* Used to annotate API exports which are public and can be used by
+* applications if needed, but which are intentionally not documented,
+* and which may change incompatibly in a future major version.
+*/
+#define BOTAN_UNSTABLE_API BOTAN_DLL
+
+/**
+* Used to annotate API exports which are exported but only for the
+* purposes of testing. They should not be used by applications and
+* may be removed or changed without notice.
+*/
+#define BOTAN_TEST_API BOTAN_DLL
+
 /*
 * Define BOTAN_GCC_VERSION
 */
