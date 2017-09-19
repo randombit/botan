@@ -63,15 +63,15 @@ Version 2.3.0, Not Yet Released
   return true for either the current or older versions of the API version since
   no backwards incompatible changes have occurred.
 
-* Add new C89 API functions botan_hex_decode, botan_base64_encode, and
-  botan_base64_decode.
+* Add new C89 API functions ``botan_hex_decode``, ``botan_base64_encode``,
+  ``botan_base64_decode``, ``botan_constant_time_compare``.
 
-* Add new C89 API functions botan_privkey_load_dh, botan_pubkey_load_dh,
-  and botan_privkey_create_dh (GH #1155)
+* Add new C89 API functions ``botan_privkey_load_dh``, ``botan_pubkey_load_dh``,
+  and ``botan_privkey_create_dh`` (GH #1155)
 
-* Add is_passhash9_alg_supported (GH #1154)
+* Add ``is_passhash9_alg_supported`` (GH #1154)
 
-* The power_mod function now supports negative bases (GH #1179 #1168)
+* The ``power_mod`` function now supports negative bases (GH #1179 #1168)
 
 * Add a new command line utility for examining TLS client hellos.
 
@@ -79,9 +79,9 @@ Version 2.3.0, Not Yet Released
 
 * Improve support for Windows Phone (GH #1180 #796 #794)
 
-* Correct return value of botan_pk_op_verify_finish, in 2.2.0 it returned
-  -1 on invalid signature instead of 1 which was used in 2.0, 2.1, and now
-  again in 2.3. (GH #1189 #1187)
+* Correct return value of ``botan_pk_op_verify_finish``. In 2.2.0 this function
+  returned -1 on invalid signature, instead of 1 which was used in 2.0, 2.1, and
+  now again in 2.3. (GH #1189 #1187)
 
 * Allow loading unencrypted private keys via FFI API (GH #1197)
 
@@ -110,7 +110,7 @@ Version 2.3.0, Not Yet Released
 
 * Add ``constant_time_compare`` as better named equivalent of ``same_mem``.
 
-* Silence a Clang warning in create_private_key (GH #1150)
+* Silence a Clang warning in ``create_private_key`` (GH #1150)
 
 * The fuzzers have been better integrated with the main build. See the
   handbook for details. (GH #1158)
