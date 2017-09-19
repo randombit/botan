@@ -13,6 +13,7 @@
 #include <botan/calendar.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/poly_dbl.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
 
@@ -64,8 +65,42 @@ class Utility_Function_Tests : public Text_Based_Test
          std::vector<Test::Result> results;
 
          results.push_back(test_loadstore());
+         results.push_back(test_ct_utils());
 
          return results;
+         }
+
+      Test::Result test_ct_utils()
+         {
+         Test::Result result("CT utils");
+
+         result.test_eq_sz("CT::is_zero8", Botan::CT::is_zero<uint8_t>(0), 0xFF);
+         result.test_eq_sz("CT::is_zero8", Botan::CT::is_zero<uint8_t>(1), 0x00);
+         result.test_eq_sz("CT::is_zero8", Botan::CT::is_zero<uint8_t>(0xFF), 0x00);
+
+         result.test_eq_sz("CT::is_zero16", Botan::CT::is_zero<uint16_t>(0), 0xFFFF);
+         result.test_eq_sz("CT::is_zero16", Botan::CT::is_zero<uint16_t>(1), 0x0000);
+         result.test_eq_sz("CT::is_zero16", Botan::CT::is_zero<uint16_t>(0xFF), 0x0000);
+
+         result.test_eq_sz("CT::is_zero32", Botan::CT::is_zero<uint32_t>(0), 0xFFFFFFFF);
+         result.test_eq_sz("CT::is_zero32", Botan::CT::is_zero<uint32_t>(1), 0x00000000);
+         result.test_eq_sz("CT::is_zero32", Botan::CT::is_zero<uint32_t>(0xFF), 0x00000000);
+
+         result.test_eq_sz("CT::is_less8", Botan::CT::is_less<uint8_t>(0, 1), 0xFF);
+         result.test_eq_sz("CT::is_less8", Botan::CT::is_less<uint8_t>(1, 0), 0x00);
+         result.test_eq_sz("CT::is_less8", Botan::CT::is_less<uint8_t>(0xFF, 5), 0x00);
+
+         result.test_eq_sz("CT::is_less16", Botan::CT::is_less<uint16_t>(0, 1), 0xFFFF);
+         result.test_eq_sz("CT::is_less16", Botan::CT::is_less<uint16_t>(1, 0), 0x0000);
+         result.test_eq_sz("CT::is_less16", Botan::CT::is_less<uint16_t>(0xFFFF, 5), 0x0000);
+
+         result.test_eq_sz("CT::is_less32", Botan::CT::is_less<uint32_t>(0, 1), 0xFFFFFFFF);
+         result.test_eq_sz("CT::is_less32", Botan::CT::is_less<uint32_t>(1, 0), 0x00000000);
+         result.test_eq_sz("CT::is_less32", Botan::CT::is_less<uint32_t>(0xFFFF5, 5), 0x00000000);
+         result.test_eq_sz("CT::is_less32", Botan::CT::is_less<uint32_t>(0xFFFFFFFF, 5), 0x00000000);
+         result.test_eq_sz("CT::is_less32", Botan::CT::is_less<uint32_t>(5, 0xFFFFFFFF), 0xFFFFFFFF);
+
+         return result;
          }
 
       Test::Result test_loadstore()

@@ -203,6 +203,7 @@ class Test
             bool test_eq(const std::string& what, bool produced, bool expected);
 
             bool test_eq(const std::string& what, size_t produced, size_t expected);
+            bool test_eq_sz(const std::string& what, size_t produced, size_t expected);
 
             bool test_eq(const std::string& what, OctetString produced, OctetString expected);
 
