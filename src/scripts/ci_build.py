@@ -213,7 +213,7 @@ def run_cmd(cmd, root_dir):
 
     time_taken = int(time.time() - start)
 
-    if time_taken > 2:
+    if time_taken > 10:
         print("Ran for %d seconds" % (time_taken))
 
     if proc.returncode != 0:
@@ -344,6 +344,14 @@ def main(args=None):
         if not use_python2 and not use_python3:
             raise Exception('No python interpreters found cannot lint')
 
+        pylint_rc = '--rcfile=%s' % (os.path.join(root_dir, 'src/configs/pylint.rc'))
+        pylint_flags = [pylint_rc, '--reports=no', '--score=no']
+
+        # Some disabled rules specific to Python2
+        # superfluous-parens: needed for Python3 compatible print statements
+        # too-many-locals: variable counting differs from pylint3
+        py2_flags = '--disable=superfluous-parens,too-many-locals'
+
         py_scripts = [
             'configure.py',
             'src/python/botan2.py',
@@ -356,14 +364,10 @@ def main(args=None):
             target_path = os.path.join(root_dir, target)
 
             if use_python2:
-                # Some disabled rules specific to Python2
-                # superfluous-parens: needed for Python3 compatible print statements
-                # too-many-locals: variable counting differs from pylint3
-                py2_flags = '--disable=superfluous-parens,too-many-locals'
-                cmds.append(['python2', '-m', 'pylint', py2_flags, target_path])
+                cmds.append(['python2', '-m', 'pylint'] + pylint_flags + [py2_flags, target_path])
 
             if use_python3:
-                cmds.append(['python3', '-m', 'pylint', target_path])
+                cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [target_path])
 
     else:
         config_flags, run_test_command, make_prefix = determine_flags(
@@ -441,14 +445,16 @@ def main(args=None):
             cmds.append(['lcov', '--list', cov_file])
 
             if have_prog('coverage'):
-                cmds.append(['coverage', 'run', '--branch', botan_py])
+                cmds.append(['coverage', 'run', '--branch',
+                             '--rcfile', os.path.join(root_dir, 'src/configs/coverage.rc'),
+                             botan_py])
 
             if have_prog('codecov'):
                 # If codecov exists assume we are on Travis and report to codecov.io
                 cmds.append(['codecov'])
             else:
                 # Otherwise generate a local HTML report
-                cmds.append(['genhtml', 'cov.info', '--output-directory', 'lcov-out'])
+                cmds.append(['genhtml', cov_file, '--output-directory', 'lcov-out'])
 
     for cmd in cmds:
         if options.dry_run:

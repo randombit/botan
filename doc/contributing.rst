@@ -11,6 +11,7 @@ Under ``src`` there are directories
   example ``build-data/cc/gcc.txt`` describes various gcc options.
 * ``scripts`` contains misc scripts: install, distribution, various
   codegen things. Scripts controlling CI go under ``scripts/ci``.
+* ``configs`` contains configuration files for emacs, astyle, pylint, etc
 * ``python/botan2.py`` is the Python ctypes wrapper
 
 Library Layout
@@ -140,9 +141,6 @@ a change in a new year not covered by your existing statement, add the
 year. Even if the years you are making the change are consecutive, avoid year
 ranges: specify each year separated by a comma.
 
-Also if you are a new contributor or making an addition in a new year, include
-an update to ``license.txt`` in your PR.
-
 Style Conventions
 ========================================
 
@@ -172,18 +170,18 @@ introducing a new type that is not intended for derivation, mark it ``final``.
 
 Use ``m_`` prefix on all member variables.
 
-A formatting setup for emacs is included in `scripts/indent.el` but the basic
-formatting style should be obvious. No tabs, and remove trailing whitespace.
+For formatting, there are configs for emacs and astyle in ``src/configs``.
+No tabs, and remove trailing whitespace.
 
 Prefer using braces on both sides of if/else blocks, even if only using a single
 statement. The current code doesn't always do this.
 
 Avoid ``using namespace`` declarations, even inside of single functions.  One
 allowed exception is ``using namespace std::placeholders`` in functions which
-use ``std::bind``.
+use ``std::bind``. (But, don't use ``std::bind`` - use a lambda instead).
 
 Use ``::`` to explicitly refer to the global namespace (eg, when calling an OS
-or library function like ``::select`` or ``::sqlite3_open``).
+or external library function like ``::select`` or ``::sqlite3_open``).
 
 Use of External Dependencies
 ========================================
