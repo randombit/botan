@@ -957,6 +957,14 @@ policy settings from a file.
 
      Default: false
 
+ .. cpp:function:: bool allow_client_initiated_renegotiation() const
+
+     If this function returns true, a server will accept a
+     client-initiated renegotiation attempt. Otherwise it will send
+     the client a non-fatal ``no_renegotiation`` alert.
+
+     Default: true
+
  .. cpp:function:: bool allow_server_initiated_renegotiation() const
 
      If this function returns true, a client will accept a
