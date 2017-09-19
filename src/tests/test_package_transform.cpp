@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#define BOTAN_NO_DEPRECATED_WARNINGS
+
 #if defined(BOTAN_HAS_PACKAGE_TRANSFORM)
    #include <botan/package.h>
 #endif
