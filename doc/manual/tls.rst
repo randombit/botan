@@ -963,7 +963,7 @@ policy settings from a file.
      client-initiated renegotiation attempt. Otherwise it will send
      the client a non-fatal ``no_renegotiation`` alert.
 
-     Default: true
+     Default: false
 
  .. cpp:function:: bool allow_server_initiated_renegotiation() const
 
