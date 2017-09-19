@@ -120,7 +120,12 @@ class BOTAN_DLL Policy
       virtual bool include_time_in_hello_random() const;
 
       /**
-      * Allow servers to initiate a new handshake
+      * Consulted by server side. If true, allows clients to initiate a new handshake
+      */
+      virtual bool allow_client_initiated_renegotiation() const;
+
+      /**
+      * Consulted by client side. If true, allows servers to initiate a new handshake
       */
       virtual bool allow_server_initiated_renegotiation() const;
 
@@ -476,6 +481,8 @@ class BOTAN_DLL Text_Policy : public Policy
       bool include_time_in_hello_random() const override
          { return get_bool("include_time_in_hello_random", Policy::include_time_in_hello_random()); }
 
+      bool allow_client_initiated_renegotiation() const override
+         { return get_bool("allow_client_initiated_renegotiation", Policy::allow_client_initiated_renegotiation()); }
       bool allow_server_initiated_renegotiation() const override
          { return get_bool("allow_server_initiated_renegotiation", Policy::allow_server_initiated_renegotiation()); }
 
