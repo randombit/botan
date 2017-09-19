@@ -26,6 +26,8 @@ Version 2.3.0, Not Yet Released
   format of the ciphertext changed with GM/T 0003:2012. The only difference is
   in the ordering of the embedded MAC vs the masked input.
 
+* OCB mode now supports 192, 256 and 512 bit block ciphers. (GH #1205)
+
 * XTS mode now supports 256-bit and 512-bit block ciphers.
 
 * Add ids to allow SHA-3 signatures with PKCSv1.5 (GH #1184)
