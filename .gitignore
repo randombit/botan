@@ -54,15 +54,34 @@ botan_all_*.cpp
 
 # Coverage output
 coverage.info
+coverage.info.raw
 coverage/
+lcov-out/
+
+/fuzzer_corpus
 
 # Profiler outputs
 cachegrind.*
 callgrind.*
 
 src/contrib/perl-xs/Makefile
+src/contrib/perl-xs/Makefile.old
 src/contrib/perl-xs/Botan.bs
 src/contrib/perl-xs/Botan.c
 src/contrib/perl-xs/Botan.o
 src/contrib/perl-xs/MYMETA*
 src/contrib/perl-xs/*blib
+
+# Ignore stuff in the top level dir that shouldn't be checked in
+/*.c
+/*.cpp
+/*.h
+/*.py
+/*.key
+/*.pem
+/*.der
+/*.ber
+/*.gpg
+/*.pub
+/*.crt
+/*.txt
