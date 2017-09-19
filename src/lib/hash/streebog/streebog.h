@@ -16,7 +16,7 @@ namespace Botan {
 * Streebog (GOST R 34.11-2012)
 * RFC 6986
 */
-class BOTAN_DLL Streebog: public HashFunction
+class BOTAN_PUBLIC_API(2,2) Streebog: public HashFunction
    {
    public:
       size_t output_length() const override { return m_output_bits / 8; }
@@ -48,7 +48,7 @@ class BOTAN_DLL Streebog: public HashFunction
 /**
 * Streebog-256
 */
-class BOTAN_DLL Streebog_256 final : public Streebog
+class BOTAN_PUBLIC_API(2,2) Streebog_256 final : public Streebog
    {
    public:
       Streebog_256() : Streebog(256) {}
@@ -57,7 +57,7 @@ class BOTAN_DLL Streebog_256 final : public Streebog
 /**
 * Streebog-512
 */
-class BOTAN_DLL Streebog_512 final : public Streebog
+class BOTAN_PUBLIC_API(2,2) Streebog_512 final : public Streebog
    {
    public:
       Streebog_512() : Streebog(512) {}

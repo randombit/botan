@@ -23,7 +23,7 @@ namespace Botan {
 /**
 * ARIA-128
 */
-class BOTAN_DLL ARIA_128 final : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_PUBLIC_API(2,3) ARIA_128 final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
@@ -42,7 +42,7 @@ class BOTAN_DLL ARIA_128 final : public Block_Cipher_Fixed_Params<16, 16>
 /**
 * ARIA-192
 */
-class BOTAN_DLL ARIA_192 final : public Block_Cipher_Fixed_Params<16, 24>
+class BOTAN_PUBLIC_API(2,3) ARIA_192 final : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
@@ -61,7 +61,7 @@ class BOTAN_DLL ARIA_192 final : public Block_Cipher_Fixed_Params<16, 24>
 /**
 * ARIA-256
 */
-class BOTAN_DLL ARIA_256 final : public Block_Cipher_Fixed_Params<16, 32>
+class BOTAN_PUBLIC_API(2,3) ARIA_256 final : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

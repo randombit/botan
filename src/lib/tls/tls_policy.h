@@ -342,7 +342,7 @@ class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 : public Policy
 /**
 * BSI TR-02102-2 Policy
 */
-class BOTAN_DLL BSI_TR_02102_2 : public Policy
+class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override
