@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_WORKFACTOR_H__
-#define BOTAN_WORKFACTOR_H__
+#ifndef BOTAN_WORKFACTOR_H_
+#define BOTAN_WORKFACTOR_H_
 
 #include <botan/types.h>
 

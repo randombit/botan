@@ -5,8 +5,8 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#ifndef BOTAN_ISO9796_H__
-#define BOTAN_ISO9796_H__
+#ifndef BOTAN_ISO9796_H_
+#define BOTAN_ISO9796_H_
 
 #include <botan/emsa.h>
 #include <botan/hash.h>

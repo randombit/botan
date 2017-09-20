@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_OUTPUT_FEEDBACK_MODE_H__
-#define BOTAN_OUTPUT_FEEDBACK_MODE_H__
+#ifndef BOTAN_OUTPUT_FEEDBACK_MODE_H_
+#define BOTAN_OUTPUT_FEEDBACK_MODE_H_
 
 #include <botan/stream_cipher.h>
 #include <botan/block_cipher.h>

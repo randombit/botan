@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ENTROPY_SRC_DARWIN_SECRANDOM_H__
-#define BOTAN_ENTROPY_SRC_DARWIN_SECRANDOM_H__
+#ifndef BOTAN_ENTROPY_SRC_DARWIN_SECRANDOM_H_
+#define BOTAN_ENTROPY_SRC_DARWIN_SECRANDOM_H_
 
 #include <botan/entropy_src.h>
 

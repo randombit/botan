@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef BOTAN_GF2M_SMALL_M_H__
-#define BOTAN_GF2M_SMALL_M_H__
+#ifndef BOTAN_GF2M_SMALL_M_H_
+#define BOTAN_GF2M_SMALL_M_H_
 
 #include <vector>
 #include <botan/types.h>

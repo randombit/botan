@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_HASH_FUNCTION_BASE_CLASS_H__
-#define BOTAN_HASH_FUNCTION_BASE_CLASS_H__
+#ifndef BOTAN_HASH_FUNCTION_BASE_CLASS_H_
+#define BOTAN_HASH_FUNCTION_BASE_CLASS_H_
 
 #include <botan/buf_comp.h>
 #include <string>

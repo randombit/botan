@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_MESSAGE_AUTH_CODE_BASE_H__
-#define BOTAN_MESSAGE_AUTH_CODE_BASE_H__
+#ifndef BOTAN_MESSAGE_AUTH_CODE_BASE_H_
+#define BOTAN_MESSAGE_AUTH_CODE_BASE_H_
 
 #include <botan/buf_comp.h>
 #include <botan/sym_algo.h>

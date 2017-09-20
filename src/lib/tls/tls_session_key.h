@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_SESSION_KEYS_H__
-#define BOTAN_TLS_SESSION_KEYS_H__
+#ifndef BOTAN_TLS_SESSION_KEYS_H_
+#define BOTAN_TLS_SESSION_KEYS_H_
 
 #include <botan/symkey.h>
 

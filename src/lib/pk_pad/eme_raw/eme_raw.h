@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_EME_RAW_H__
-#define BOTAN_EME_RAW_H__
+#ifndef BOTAN_EME_RAW_H_
+#define BOTAN_EME_RAW_H_
 
 #include <botan/eme.h>
 

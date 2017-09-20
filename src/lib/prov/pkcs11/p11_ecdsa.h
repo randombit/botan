@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_P11_ECDSA_H__
-#define BOTAN_P11_ECDSA_H__
+#ifndef BOTAN_P11_ECDSA_H_
+#define BOTAN_P11_ECDSA_H_
 
 #include <botan/build.h>
 #if defined(BOTAN_HAS_ECDSA)

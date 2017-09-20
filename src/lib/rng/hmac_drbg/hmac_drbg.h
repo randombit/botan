@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_HMAC_DRBG_H__
-#define BOTAN_HMAC_DRBG_H__
+#ifndef BOTAN_HMAC_DRBG_H_
+#define BOTAN_HMAC_DRBG_H_
 
 #include <botan/stateful_rng.h>
 #include <botan/mac.h>

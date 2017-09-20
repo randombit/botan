@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef BOTAN_POLYN_GF2M_H__
-#define BOTAN_POLYN_GF2M_H__
+#ifndef BOTAN_POLYN_GF2M_H_
+#define BOTAN_POLYN_GF2M_H_
 
 #include <botan/secmem.h>
 #include <botan/gf2m_small_m.h>

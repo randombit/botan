@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CLI_H__
-#define BOTAN_CLI_H__
+#ifndef BOTAN_CLI_H_
+#define BOTAN_CLI_H_
 
 #include <botan/build.h>
 #include <botan/parsing.h>

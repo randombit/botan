@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_BZIP2_H__
-#define BOTAN_BZIP2_H__
+#ifndef BOTAN_BZIP2_H_
+#define BOTAN_BZIP2_H_
 
 #include <botan/compression.h>
 

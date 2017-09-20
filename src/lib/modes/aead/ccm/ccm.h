@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_AEAD_CCM_H__
-#define BOTAN_AEAD_CCM_H__
+#ifndef BOTAN_AEAD_CCM_H_
+#define BOTAN_AEAD_CCM_H_
 
 #include <botan/aead.h>
 #include <botan/block_cipher.h>

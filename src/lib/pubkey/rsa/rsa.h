@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_RSA_H__
-#define BOTAN_RSA_H__
+#ifndef BOTAN_RSA_H_
+#define BOTAN_RSA_H_
 
 #include <botan/bigint.h>
 #include <botan/x509_key.h>

@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PUBKEY_EMSA_H__
-#define BOTAN_PUBKEY_EMSA_H__
+#ifndef BOTAN_PUBKEY_EMSA_H_
+#define BOTAN_PUBKEY_EMSA_H_
 
 #include <botan/secmem.h>
 #include <botan/rng.h>

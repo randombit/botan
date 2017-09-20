@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SECURE_MEMORY_BUFFERS_H__
-#define BOTAN_SECURE_MEMORY_BUFFERS_H__
+#ifndef BOTAN_SECURE_MEMORY_BUFFERS_H_
+#define BOTAN_SECURE_MEMORY_BUFFERS_H_
 
 #include <botan/mem_ops.h>
 #include <algorithm>

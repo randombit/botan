@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PASSHASH9_H__
-#define BOTAN_PASSHASH9_H__
+#ifndef BOTAN_PASSHASH9_H_
+#define BOTAN_PASSHASH9_H_
 
 #include <botan/rng.h>
 

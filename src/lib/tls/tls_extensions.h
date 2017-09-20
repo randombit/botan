@@ -7,8 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_EXTENSIONS_H__
-#define BOTAN_TLS_EXTENSIONS_H__
+#ifndef BOTAN_TLS_EXTENSIONS_H_
+#define BOTAN_TLS_EXTENSIONS_H_
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>

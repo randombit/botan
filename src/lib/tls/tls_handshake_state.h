@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_HANDSHAKE_STATE_H__
-#define BOTAN_TLS_HANDSHAKE_STATE_H__
+#ifndef BOTAN_TLS_HANDSHAKE_STATE_H_
+#define BOTAN_TLS_HANDSHAKE_STATE_H_
 
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>

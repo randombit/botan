@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SHA_224_256_H__
-#define BOTAN_SHA_224_256_H__
+#ifndef BOTAN_SHA_224_256_H_
+#define BOTAN_SHA_224_256_H_
 
 #include <botan/mdx_hash.h>
 

@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CALENDAR_H__
-#define BOTAN_CALENDAR_H__
+#ifndef BOTAN_CALENDAR_H_
+#define BOTAN_CALENDAR_H_
 
 #include <botan/types.h>
 #include <chrono>

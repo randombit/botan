@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PKCS8_H__
-#define BOTAN_PKCS8_H__
+#ifndef BOTAN_PKCS8_H_
+#define BOTAN_PKCS8_H_
 
 #include <botan/x509_key.h>
 #include <functional>

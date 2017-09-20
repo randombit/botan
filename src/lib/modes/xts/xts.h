@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_MODE_XTS_H__
-#define BOTAN_MODE_XTS_H__
+#ifndef BOTAN_MODE_XTS_H_
+#define BOTAN_MODE_XTS_H_
 
 #include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>

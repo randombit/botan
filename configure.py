@@ -2554,7 +2554,7 @@ class AmalgamationHeader(object):
 class AmalgamationGenerator(object):
     filename_prefix = 'botan_all'
 
-    _header_guard_pattern = re.compile('^#define BOTAN_.*_H__$')
+    _header_guard_pattern = re.compile('^#define BOTAN_.*_H_$')
 
     @staticmethod
     def strip_header_goop(header_name, header_lines):
@@ -2621,12 +2621,12 @@ class AmalgamationGenerator(object):
         pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
         header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_name))
-        pub_header_amalag.write_to_file(header_name, "BOTAN_AMALGAMATION_H__")
+        pub_header_amalag.write_to_file(header_name, "BOTAN_AMALGAMATION_H_")
 
         internal_headers = AmalgamationHeader(self._build_paths.internal_headers)
         header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_int_name))
-        internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H__")
+        internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H_")
 
         header_files = [header_name, header_int_name]
         included_in_headers = pub_header_amalag.all_std_includes | internal_headers.all_std_includes

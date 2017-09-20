@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SHAKE128_CIPHER_H__
-#define BOTAN_SHAKE128_CIPHER_H__
+#ifndef BOTAN_SHAKE128_CIPHER_H_
+#define BOTAN_SHAKE128_CIPHER_H_
 
 #include <botan/stream_cipher.h>
 #include <botan/secmem.h>

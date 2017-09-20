@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ASSERTION_CHECKING_H__
-#define BOTAN_ASSERTION_CHECKING_H__
+#ifndef BOTAN_ASSERTION_CHECKING_H_
+#define BOTAN_ASSERTION_CHECKING_H_
 
 #include <botan/build.h>
 

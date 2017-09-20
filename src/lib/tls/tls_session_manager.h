@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_SESSION_MANAGER_H__
-#define BOTAN_TLS_SESSION_MANAGER_H__
+#ifndef BOTAN_TLS_SESSION_MANAGER_H_
+#define BOTAN_TLS_SESSION_MANAGER_H_
 
 #include <botan/tls_session.h>
 #include <botan/mutex.h>

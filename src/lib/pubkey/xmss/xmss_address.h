@@ -5,8 +5,8 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#ifndef BOTAN_XMSS_ADDRESS_H__
-#define BOTAN_XMSS_ADDRESS_H__
+#ifndef BOTAN_XMSS_ADDRESS_H_
+#define BOTAN_XMSS_ADDRESS_H_
 
 #include <botan/xmss_tools.h>
 

@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CREDENTIALS_MANAGER_H__
-#define BOTAN_CREDENTIALS_MANAGER_H__
+#ifndef BOTAN_CREDENTIALS_MANAGER_H_
+#define BOTAN_CREDENTIALS_MANAGER_H_
 
 #include <botan/x509cert.h>
 #include <botan/certstor.h>

@@ -8,8 +8,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ED25519_INT_H__
-#define BOTAN_ED25519_INT_H__
+#ifndef BOTAN_ED25519_INT_H_
+#define BOTAN_ED25519_INT_H_
 
 #include <botan/internal/ed25519_fe.h>
 #include <botan/loadstor.h>

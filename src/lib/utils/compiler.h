@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_UTIL_COMPILER_FLAGS_H__
-#define BOTAN_UTIL_COMPILER_FLAGS_H__
+#ifndef BOTAN_UTIL_COMPILER_FLAGS_H_
+#define BOTAN_UTIL_COMPILER_FLAGS_H_
 
 /* Should we use GCC-style inline assembler? */
 #if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUC__)

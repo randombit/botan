@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef ECC_HELPERS_H__
-#define ECC_HELPERS_H__
+#ifndef ECC_HELPERS_H_
+#define ECC_HELPERS_H_
 
 #include "fuzzers.h"
 #include <botan/curve_gfp.h>

@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_DES_H__
-#define BOTAN_DES_H__
+#ifndef BOTAN_DES_H_
+#define BOTAN_DES_H_
 
 #include <botan/block_cipher.h>
 

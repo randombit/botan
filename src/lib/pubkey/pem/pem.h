@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PEM_H__
-#define BOTAN_PEM_H__
+#ifndef BOTAN_PEM_H_
+#define BOTAN_PEM_H_
 
 #include <botan/data_src.h>
 

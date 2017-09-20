@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_OPENPGP_S2K_H__
-#define BOTAN_OPENPGP_S2K_H__
+#ifndef BOTAN_OPENPGP_S2K_H_
+#define BOTAN_OPENPGP_S2K_H_
 
 #include <botan/pbkdf.h>
 #include <botan/hash.h>

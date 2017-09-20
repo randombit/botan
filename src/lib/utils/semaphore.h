@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SEMAPHORE_H__
-#define BOTAN_SEMAPHORE_H__
+#ifndef BOTAN_SEMAPHORE_H_
+#define BOTAN_SEMAPHORE_H_
 
 #include <botan/mutex.h>
 

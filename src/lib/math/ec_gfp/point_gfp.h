@@ -7,8 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_POINT_GFP_H__
-#define BOTAN_POINT_GFP_H__
+#ifndef BOTAN_POINT_GFP_H_
+#define BOTAN_POINT_GFP_H_
 
 #include <botan/curve_gfp.h>
 #include <vector>

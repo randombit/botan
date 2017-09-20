@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_BASE64_CODEC_H__
-#define BOTAN_BASE64_CODEC_H__
+#ifndef BOTAN_BASE64_CODEC_H_
+#define BOTAN_BASE64_CODEC_H_
 
 #include <botan/secmem.h>
 #include <string>

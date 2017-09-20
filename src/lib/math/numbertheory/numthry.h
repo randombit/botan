@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_NUMBER_THEORY_H__
-#define BOTAN_NUMBER_THEORY_H__
+#ifndef BOTAN_NUMBER_THEORY_H_
+#define BOTAN_NUMBER_THEORY_H_
 
 #include <botan/bigint.h>
 #include <botan/pow_mod.h>

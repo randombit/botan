@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ASN1_TIME_H__
-#define BOTAN_ASN1_TIME_H__
+#ifndef BOTAN_ASN1_TIME_H_
+#define BOTAN_ASN1_TIME_H_
 
 #include <botan/asn1_obj.h>
 #include <chrono>

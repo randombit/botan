@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SCAN_NAME_H__
-#define BOTAN_SCAN_NAME_H__
+#ifndef BOTAN_SCAN_NAME_H_
+#define BOTAN_SCAN_NAME_H_
 
 #include <botan/exceptn.h>
 #include <string>

@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_FUZZ_REDC_HELPERS_H__
-#define BOTAN_FUZZ_REDC_HELPERS_H__
+#ifndef BOTAN_FUZZ_REDC_HELPERS_H_
+#define BOTAN_FUZZ_REDC_HELPERS_H_
 
 #include "fuzzers.h"
 #include <botan/reducer.h>

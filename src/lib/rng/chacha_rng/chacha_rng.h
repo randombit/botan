@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CHACHA_RNG_H__
-#define BOTAN_CHACHA_RNG_H__
+#ifndef BOTAN_CHACHA_RNG_H_
+#define BOTAN_CHACHA_RNG_H_
 
 #include <botan/stateful_rng.h>
 #include <botan/stream_cipher.h>

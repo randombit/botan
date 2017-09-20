@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_DSA_H__
-#define BOTAN_DSA_H__
+#ifndef BOTAN_DSA_H_
+#define BOTAN_DSA_H_
 
 #include <botan/dl_algo.h>
 

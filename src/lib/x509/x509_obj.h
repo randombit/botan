@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_X509_OBJECT_H__
-#define BOTAN_X509_OBJECT_H__
+#ifndef BOTAN_X509_OBJECT_H_
+#define BOTAN_X509_OBJECT_H_
 
 #include <botan/asn1_obj.h>
 #include <botan/x509_key.h>

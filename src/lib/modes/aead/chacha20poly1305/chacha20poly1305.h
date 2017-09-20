@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_AEAD_CHACHA20_POLY1305_H__
-#define BOTAN_AEAD_CHACHA20_POLY1305_H__
+#ifndef BOTAN_AEAD_CHACHA20_POLY1305_H_
+#define BOTAN_AEAD_CHACHA20_POLY1305_H_
 
 #include <botan/aead.h>
 #include <botan/stream_cipher.h>

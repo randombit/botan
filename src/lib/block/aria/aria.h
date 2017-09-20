@@ -13,8 +13,8 @@
 * Internet & Security Agency homepage</A>
 */
 
-#ifndef BOTAN_ARIA_H__
-#define BOTAN_ARIA_H__
+#ifndef BOTAN_ARIA_H_
+#define BOTAN_ARIA_H_
 
 #include <botan/block_cipher.h>
 

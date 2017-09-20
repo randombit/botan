@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CAMELLIA_H__
-#define BOTAN_CAMELLIA_H__
+#ifndef BOTAN_CAMELLIA_H_
+#define BOTAN_CAMELLIA_H_
 
 #include <botan/block_cipher.h>
 

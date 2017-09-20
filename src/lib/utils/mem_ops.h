@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_MEMORY_OPS_H__
-#define BOTAN_MEMORY_OPS_H__
+#ifndef BOTAN_MEMORY_OPS_H_
+#define BOTAN_MEMORY_OPS_H_
 
 #include <botan/types.h>
 #include <cstring>

@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_DATA_SRC_H__
-#define BOTAN_DATA_SRC_H__
+#ifndef BOTAN_DATA_SRC_H_
+#define BOTAN_DATA_SRC_H_
 
 #include <botan/secmem.h>
 #include <string>

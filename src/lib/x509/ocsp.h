@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_OCSP_H__
-#define BOTAN_OCSP_H__
+#ifndef BOTAN_OCSP_H_
+#define BOTAN_OCSP_H_
 
 #include <botan/cert_status.h>
 #include <botan/ocsp_types.h>

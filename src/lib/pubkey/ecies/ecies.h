@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ECIES_H__
-#define BOTAN_ECIES_H__
+#ifndef BOTAN_ECIES_H_
+#define BOTAN_ECIES_H_
 
 #include <botan/ecdh.h>
 #include <botan/ec_group.h>

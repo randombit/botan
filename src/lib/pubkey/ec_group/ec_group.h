@@ -7,8 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ECC_DOMAIN_PARAMETERS_H__
-#define BOTAN_ECC_DOMAIN_PARAMETERS_H__
+#ifndef BOTAN_ECC_DOMAIN_PARAMETERS_H_
+#define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
 #include <botan/point_gfp.h>
 #include <botan/curve_gfp.h>

@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PK_OPERATION_IMPL_H__
-#define BOTAN_PK_OPERATION_IMPL_H__
+#ifndef BOTAN_PK_OPERATION_IMPL_H_
+#define BOTAN_PK_OPERATION_IMPL_H_
 
 #include <botan/pk_ops.h>
 #include <botan/eme.h>

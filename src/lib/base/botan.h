@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_BOTAN_H__
-#define BOTAN_BOTAN_H__
+#ifndef BOTAN_BOTAN_H_
+#define BOTAN_BOTAN_H_
 
 namespace Botan {
 

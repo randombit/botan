@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_BER_DECODER_H__
-#define BOTAN_BER_DECODER_H__
+#ifndef BOTAN_BER_DECODER_H_
+#define BOTAN_BER_DECODER_H_
 
 #include <botan/asn1_oid.h>
 #include <botan/data_src.h>

@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ASN1_ALT_NAME_H__
-#define BOTAN_ASN1_ALT_NAME_H__
+#ifndef BOTAN_ASN1_ALT_NAME_H_
+#define BOTAN_ASN1_ALT_NAME_H_
 
 #include <botan/asn1_obj.h>
 #include <botan/asn1_str.h>

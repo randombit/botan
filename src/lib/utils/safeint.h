@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_UTILS_SAFE_INT_H__
-#define BOTAN_UTILS_SAFE_INT_H__
+#ifndef BOTAN_UTILS_SAFE_INT_H_
+#define BOTAN_UTILS_SAFE_INT_H_
 
 #include <botan/exceptn.h>
 #include <string>

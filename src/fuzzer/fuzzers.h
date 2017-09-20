@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_FUZZER_DRIVER_H__
-#define BOTAN_FUZZER_DRIVER_H__
+#ifndef BOTAN_FUZZER_DRIVER_H_
+#define BOTAN_FUZZER_DRIVER_H_
 
 #include <stdint.h>
 #include <stdlib.h> // for setenv

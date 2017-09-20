@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_OIDS_H__
-#define BOTAN_OIDS_H__
+#ifndef BOTAN_OIDS_H_
+#define BOTAN_OIDS_H_
 
 #include <botan/asn1_oid.h>
 

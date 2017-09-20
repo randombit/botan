@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ANSI_X919_MAC_H__
-#define BOTAN_ANSI_X919_MAC_H__
+#ifndef BOTAN_ANSI_X919_MAC_H_
+#define BOTAN_ANSI_X919_MAC_H_
 
 #include <botan/mac.h>
 #include <botan/block_cipher.h>

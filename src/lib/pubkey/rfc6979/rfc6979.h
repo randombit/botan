@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_RFC6979_GENERATOR_H__
-#define BOTAN_RFC6979_GENERATOR_H__
+#ifndef BOTAN_RFC6979_GENERATOR_H_
+#define BOTAN_RFC6979_GENERATOR_H_
 
 #include <botan/bigint.h>
 #include <string>

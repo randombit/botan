@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CPUID_H__
-#define BOTAN_CPUID_H__
+#ifndef BOTAN_CPUID_H_
+#define BOTAN_CPUID_H_
 
 #include <botan/types.h>
 #include <vector>

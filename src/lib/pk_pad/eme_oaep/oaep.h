@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_OAEP_H__
-#define BOTAN_OAEP_H__
+#ifndef BOTAN_OAEP_H_
+#define BOTAN_OAEP_H_
 
 #include <botan/eme.h>
 #include <botan/hash.h>

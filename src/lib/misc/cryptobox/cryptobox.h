@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CRYPTOBOX_H__
-#define BOTAN_CRYPTOBOX_H__
+#ifndef BOTAN_CRYPTOBOX_H_
+#define BOTAN_CRYPTOBOX_H_
 
 #include <string>
 #include <botan/rng.h>

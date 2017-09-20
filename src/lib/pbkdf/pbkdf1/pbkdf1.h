@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PBKDF1_H__
-#define BOTAN_PBKDF1_H__
+#ifndef BOTAN_PBKDF1_H_
+#define BOTAN_PBKDF1_H_
 
 #include <botan/pbkdf.h>
 #include <botan/hash.h>

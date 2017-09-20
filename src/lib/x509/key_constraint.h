@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ENUMS_H__
-#define BOTAN_ENUMS_H__
+#ifndef BOTAN_ENUMS_H_
+#define BOTAN_ENUMS_H_
 
 #include <botan/build.h>
 #include <string>

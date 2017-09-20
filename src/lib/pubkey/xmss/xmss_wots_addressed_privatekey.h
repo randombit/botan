@@ -5,8 +5,8 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#ifndef BOTAN_XMSS_WOTS_ADDRESSED_PRIVATEKEY_H__
-#define BOTAN_XMSS_WOTS_ADDRESSED_PRIVATEKEY_H__
+#ifndef BOTAN_XMSS_WOTS_ADDRESSED_PRIVATEKEY_H_
+#define BOTAN_XMSS_WOTS_ADDRESSED_PRIVATEKEY_H_
 
 #include <botan/xmss_address.h>
 #include <botan/internal/xmss_wots_addressed_publickey.h>

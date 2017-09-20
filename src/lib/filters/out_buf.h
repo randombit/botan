@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_OUTPUT_BUFFER_H__
-#define BOTAN_OUTPUT_BUFFER_H__
+#ifndef BOTAN_OUTPUT_BUFFER_H_
+#define BOTAN_OUTPUT_BUFFER_H_
 
 #include <botan/types.h>
 #include <botan/pipe.h>

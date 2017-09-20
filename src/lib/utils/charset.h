@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CHARSET_H__
-#define BOTAN_CHARSET_H__
+#ifndef BOTAN_CHARSET_H_
+#define BOTAN_CHARSET_H_
 
 #include <botan/types.h>
 #include <string>

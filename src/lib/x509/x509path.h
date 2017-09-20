@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_X509_CERT_PATH_VALIDATION_H__
-#define BOTAN_X509_CERT_PATH_VALIDATION_H__
+#ifndef BOTAN_X509_CERT_PATH_VALIDATION_H_
+#define BOTAN_X509_CERT_PATH_VALIDATION_H_
 
 #include <botan/cert_status.h>
 #include <botan/x509cert.h>

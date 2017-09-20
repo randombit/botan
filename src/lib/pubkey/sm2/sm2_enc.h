@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SM2_ENC_KEY_H__
-#define BOTAN_SM2_ENC_KEY_H__
+#ifndef BOTAN_SM2_ENC_KEY_H_
+#define BOTAN_SM2_ENC_KEY_H_
 
 #include <botan/ecc_key.h>
 

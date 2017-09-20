@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_BASEFILT_H__
-#define BOTAN_BASEFILT_H__
+#ifndef BOTAN_BASEFILT_H_
+#define BOTAN_BASEFILT_H_
 
 #include <botan/filter.h>
 

@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SECURE_QUEUE_H__
-#define BOTAN_SECURE_QUEUE_H__
+#ifndef BOTAN_SECURE_QUEUE_H_
+#define BOTAN_SECURE_QUEUE_H_
 
 #include <botan/data_src.h>
 #include <botan/filter.h>

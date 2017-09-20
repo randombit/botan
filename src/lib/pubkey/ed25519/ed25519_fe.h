@@ -8,8 +8,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ED25519_FE_H__
-#define BOTAN_ED25519_FE_H__
+#ifndef BOTAN_ED25519_FE_H_
+#define BOTAN_ED25519_FE_H_
 
 #include <botan/mem_ops.h>
 

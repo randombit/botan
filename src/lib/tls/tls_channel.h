@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_CHANNEL_H__
-#define BOTAN_TLS_CHANNEL_H__
+#ifndef BOTAN_TLS_CHANNEL_H_
+#define BOTAN_TLS_CHANNEL_H_
 
 #include <botan/tls_policy.h>
 #include <botan/tls_session.h>

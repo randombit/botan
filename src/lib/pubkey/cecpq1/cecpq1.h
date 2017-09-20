@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CECPQ1_H__
-#define BOTAN_CECPQ1_H__
+#ifndef BOTAN_CECPQ1_H_
+#define BOTAN_CECPQ1_H_
 
 #include <botan/secmem.h>
 #include <botan/newhope.h>

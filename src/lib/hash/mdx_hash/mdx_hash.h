@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_MDX_BASE_H__
-#define BOTAN_MDX_BASE_H__
+#ifndef BOTAN_MDX_BASE_H_
+#define BOTAN_MDX_BASE_H_
 
 #include <botan/hash.h>
 

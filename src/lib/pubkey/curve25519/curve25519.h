@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CURVE_25519_H__
-#define BOTAN_CURVE_25519_H__
+#ifndef BOTAN_CURVE_25519_H_
+#define BOTAN_CURVE_25519_H_
 
 #include <botan/pk_keys.h>
 

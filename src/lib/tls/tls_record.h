@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_RECORDS_H__
-#define BOTAN_TLS_RECORDS_H__
+#ifndef BOTAN_TLS_RECORDS_H_
+#define BOTAN_TLS_RECORDS_H_
 
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>

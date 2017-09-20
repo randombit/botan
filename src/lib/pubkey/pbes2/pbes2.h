@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PBE_PKCS_v20_H__
-#define BOTAN_PBE_PKCS_v20_H__
+#ifndef BOTAN_PBE_PKCS_v20_H_
+#define BOTAN_PBE_PKCS_v20_H_
 
 #include <botan/rng.h>
 #include <botan/alg_id.h>

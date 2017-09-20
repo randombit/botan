@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_EMSA_RAW_H__
-#define BOTAN_EMSA_RAW_H__
+#ifndef BOTAN_EMSA_RAW_H_
+#define BOTAN_EMSA_RAW_H_
 
 #include <botan/emsa.h>
 

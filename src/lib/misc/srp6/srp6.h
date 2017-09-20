@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_RFC5054_SRP6_H__
-#define BOTAN_RFC5054_SRP6_H__
+#ifndef BOTAN_RFC5054_SRP6_H_
+#define BOTAN_RFC5054_SRP6_H_
 
 #include <botan/bigint.h>
 #include <botan/hash.h>

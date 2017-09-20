@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_STATEFUL_RNG_H__
-#define BOTAN_STATEFUL_RNG_H__
+#ifndef BOTAN_STATEFUL_RNG_H_
+#define BOTAN_STATEFUL_RNG_H_
 
 #include <botan/rng.h>
 

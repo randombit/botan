@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_COMB4P_H__
-#define BOTAN_COMB4P_H__
+#ifndef BOTAN_COMB4P_H_
+#define BOTAN_COMB4P_H_
 
 #include <botan/hash.h>
 

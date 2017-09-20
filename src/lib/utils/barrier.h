@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_UTIL_BARRIER_H__
-#define BOTAN_UTIL_BARRIER_H__
+#ifndef BOTAN_UTIL_BARRIER_H_
+#define BOTAN_UTIL_BARRIER_H_
 
 #include <botan/mutex.h>
 

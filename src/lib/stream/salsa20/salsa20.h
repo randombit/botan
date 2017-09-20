@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SALSA20_H__
-#define BOTAN_SALSA20_H__
+#ifndef BOTAN_SALSA20_H_
+#define BOTAN_SALSA20_H_
 
 #include <botan/stream_cipher.h>
 

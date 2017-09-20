@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SIPHASH_H__
-#define BOTAN_SIPHASH_H__
+#ifndef BOTAN_SIPHASH_H_
+#define BOTAN_SIPHASH_H_
 
 #include <botan/mac.h>
 

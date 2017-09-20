@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SQL_DATABASE_H__
-#define BOTAN_SQL_DATABASE_H__
+#ifndef BOTAN_SQL_DATABASE_H_
+#define BOTAN_SQL_DATABASE_H_
 
 #include <botan/types.h>
 #include <botan/exceptn.h>

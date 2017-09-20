@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_AEAD_FILTER_H__
-#define BOTAN_AEAD_FILTER_H__
+#ifndef BOTAN_AEAD_FILTER_H_
+#define BOTAN_AEAD_FILTER_H_
 
 #include <botan/cipher_filter.h>
 #include <botan/aead.h>

@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SP800_108_H__
-#define BOTAN_SP800_108_H__
+#ifndef BOTAN_SP800_108_H_
+#define BOTAN_SP800_108_H_
 
 #include <botan/kdf.h>
 #include <botan/mac.h>

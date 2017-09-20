@@ -7,8 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_GFP_CURVE_H__
-#define BOTAN_GFP_CURVE_H__
+#ifndef BOTAN_GFP_CURVE_H_
+#define BOTAN_GFP_CURVE_H_
 
 #include <botan/numthry.h>
 #include <memory>

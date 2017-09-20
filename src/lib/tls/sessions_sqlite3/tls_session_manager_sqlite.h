@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_SQLITE3_SESSION_MANAGER_H__
-#define BOTAN_TLS_SQLITE3_SESSION_MANAGER_H__
+#ifndef BOTAN_TLS_SQLITE3_SESSION_MANAGER_H_
+#define BOTAN_TLS_SQLITE3_SESSION_MANAGER_H_
 
 #include <botan/tls_session_manager_sql.h>
 #include <botan/rng.h>

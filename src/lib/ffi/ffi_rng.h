@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_FFI_RNG_H__
-#define BOTAN_FFI_RNG_H__
+#ifndef BOTAN_FFI_RNG_H_
+#define BOTAN_FFI_RNG_H_
 
 #include <botan/rng.h>
 #include <botan/internal/ffi_util.h>

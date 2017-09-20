@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_GOST_3411_H__
-#define BOTAN_GOST_3411_H__
+#ifndef BOTAN_GOST_3411_H_
+#define BOTAN_GOST_3411_H_
 
 #include <botan/hash.h>
 #include <botan/gost_28147.h>

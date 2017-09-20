@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_FFI_H__
-#define BOTAN_FFI_H__
+#ifndef BOTAN_FFI_H_
+#define BOTAN_FFI_H_
 
 #ifdef __cplusplus
 extern "C" {

@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PSSR_H__
-#define BOTAN_PSSR_H__
+#ifndef BOTAN_PSSR_H_
+#define BOTAN_PSSR_H_
 
 #include <botan/emsa.h>
 #include <botan/hash.h>

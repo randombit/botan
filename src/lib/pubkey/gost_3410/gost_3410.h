@@ -7,8 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_GOST_3410_KEY_H__
-#define BOTAN_GOST_3410_KEY_H__
+#ifndef BOTAN_GOST_3410_KEY_H_
+#define BOTAN_GOST_3410_KEY_H_
 
 #include <botan/ecc_key.h>
 

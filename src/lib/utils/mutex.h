@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_UTIL_MUTEX_H__
-#define BOTAN_UTIL_MUTEX_H__
+#ifndef BOTAN_UTIL_MUTEX_H_
+#define BOTAN_UTIL_MUTEX_H_
 
 #include <botan/build.h>
 #include <botan/types.h>

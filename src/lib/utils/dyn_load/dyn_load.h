@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_DYNAMIC_LOADER_H__
-#define BOTAN_DYNAMIC_LOADER_H__
+#ifndef BOTAN_DYNAMIC_LOADER_H_
+#define BOTAN_DYNAMIC_LOADER_H_
 
 #include <string>
 #include <botan/build.h>

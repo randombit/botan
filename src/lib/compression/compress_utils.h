@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_COMPRESSION_UTILS_H__
-#define BOTAN_COMPRESSION_UTILS_H__
+#ifndef BOTAN_COMPRESSION_UTILS_H_
+#define BOTAN_COMPRESSION_UTILS_H_
 
 #include <botan/compression.h>
 #include <memory>

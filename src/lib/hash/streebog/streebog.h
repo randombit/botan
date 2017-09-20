@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_STREEBOG_H__
-#define BOTAN_STREEBOG_H__
+#ifndef BOTAN_STREEBOG_H_
+#define BOTAN_STREEBOG_H_
 
 #include <botan/hash.h>
 

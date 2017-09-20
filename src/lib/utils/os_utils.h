@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_OS_UTILS_H__
-#define BOTAN_OS_UTILS_H__
+#ifndef BOTAN_OS_UTILS_H_
+#define BOTAN_OS_UTILS_H_
 
 #include <botan/types.h>
 #include <functional>

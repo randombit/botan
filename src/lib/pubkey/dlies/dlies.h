@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_DLIES_H__
-#define BOTAN_DLIES_H__
+#ifndef BOTAN_DLIES_H_
+#define BOTAN_DLIES_H_
 
 #include <botan/pubkey.h>
 #include <botan/mac.h>

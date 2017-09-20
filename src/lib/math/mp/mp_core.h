@@ -7,8 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_MP_CORE_OPS_H__
-#define BOTAN_MP_CORE_OPS_H__
+#ifndef BOTAN_MP_CORE_OPS_H_
+#define BOTAN_MP_CORE_OPS_H_
 
 #include <botan/bigint.h>
 #include <botan/mp_types.h>

@@ -1,5 +1,5 @@
-#ifndef BOTAN_BUILD_CONFIG_H__
-#define BOTAN_BUILD_CONFIG_H__
+#ifndef BOTAN_BUILD_CONFIG_H_
+#define BOTAN_BUILD_CONFIG_H_
 
 /*
 * This file was automatically generated running

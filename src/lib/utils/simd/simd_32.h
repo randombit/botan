@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SIMD_32_H__
-#define BOTAN_SIMD_32_H__
+#ifndef BOTAN_SIMD_32_H_
+#define BOTAN_SIMD_32_H_
 
 #include <botan/types.h>
 #include <botan/loadstor.h>

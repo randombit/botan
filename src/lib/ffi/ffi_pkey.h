@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_FFI_PKEY_H__
-#define BOTAN_FFI_PKEY_H__
+#ifndef BOTAN_FFI_PKEY_H_
+#define BOTAN_FFI_PKEY_H_
 
 #include <botan/pk_keys.h>
 #include <botan/internal/ffi_util.h>

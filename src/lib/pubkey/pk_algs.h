@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PK_KEY_FACTORY_H__
-#define BOTAN_PK_KEY_FACTORY_H__
+#ifndef BOTAN_PK_KEY_FACTORY_H_
+#define BOTAN_PK_KEY_FACTORY_H_
 
 #include <botan/pk_keys.h>
 #include <botan/alg_id.h>

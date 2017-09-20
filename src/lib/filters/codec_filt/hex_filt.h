@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_HEX_FILTER_H__
-#define BOTAN_HEX_FILTER_H__
+#ifndef BOTAN_HEX_FILTER_H_
+#define BOTAN_HEX_FILTER_H_
 
 #include <botan/filter.h>
 

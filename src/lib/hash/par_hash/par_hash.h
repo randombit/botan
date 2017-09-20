@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PARALLEL_HASH_H__
-#define BOTAN_PARALLEL_HASH_H__
+#ifndef BOTAN_PARALLEL_HASH_H_
+#define BOTAN_PARALLEL_HASH_H_
 
 #include <botan/hash.h>
 #include <vector>

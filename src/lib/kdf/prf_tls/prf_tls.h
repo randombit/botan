@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TLS_PRF_H__
-#define BOTAN_TLS_PRF_H__
+#ifndef BOTAN_TLS_PRF_H_
+#define BOTAN_TLS_PRF_H_
 
 #include <botan/kdf.h>
 #include <botan/mac.h>

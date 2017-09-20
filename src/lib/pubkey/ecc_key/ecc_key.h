@@ -7,8 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H__
-#define BOTAN_ECC_PUBLIC_KEY_BASE_H__
+#ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H_
+#define BOTAN_ECC_PUBLIC_KEY_BASE_H_
 
 #include <botan/ec_group.h>
 #include <botan/pk_keys.h>

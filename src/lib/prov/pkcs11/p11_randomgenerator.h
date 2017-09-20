@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_P11_RNG_H__
-#define BOTAN_P11_RNG_H__
+#ifndef BOTAN_P11_RNG_H_
+#define BOTAN_P11_RNG_H_
 
 #include <botan/rng.h>
 #include <botan/p11_session.h>

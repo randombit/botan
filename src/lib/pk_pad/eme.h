@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H__
-#define BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H__
+#ifndef BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H_
+#define BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H_
 
 #include <botan/secmem.h>
 #include <botan/rng.h>

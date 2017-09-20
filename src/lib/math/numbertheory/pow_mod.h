@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_POWER_MOD_H__
-#define BOTAN_POWER_MOD_H__
+#ifndef BOTAN_POWER_MOD_H_
+#define BOTAN_POWER_MOD_H_
 
 #include <botan/bigint.h>
 

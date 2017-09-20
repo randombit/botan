@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_FPE_FE1_H__
-#define BOTAN_FPE_FE1_H__
+#ifndef BOTAN_FPE_FE1_H_
+#define BOTAN_FPE_FE1_H_
 
 #include <botan/bigint.h>
 #include <botan/symkey.h>

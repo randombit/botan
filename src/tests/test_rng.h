@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TESTS_FIXED_RNG_H__
-#define BOTAN_TESTS_FIXED_RNG_H__
+#ifndef BOTAN_TESTS_FIXED_RNG_H_
+#define BOTAN_TESTS_FIXED_RNG_H_
 
 #include "tests.h"
 #include <deque>

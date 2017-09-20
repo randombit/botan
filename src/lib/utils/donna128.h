@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_CURVE25519_DONNA128_H__
-#define BOTAN_CURVE25519_DONNA128_H__
+#ifndef BOTAN_CURVE25519_DONNA128_H_
+#define BOTAN_CURVE25519_DONNA128_H_
 
 #include <botan/mul128.h>
 

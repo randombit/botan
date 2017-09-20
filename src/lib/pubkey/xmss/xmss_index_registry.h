@@ -5,8 +5,8 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#ifndef BOTAN_XMSS_INDEX_REGISTRY_H__
-#define BOTAN_XMSS_INDEX_REGISTRY_H__
+#ifndef BOTAN_XMSS_INDEX_REGISTRY_H_
+#define BOTAN_XMSS_INDEX_REGISTRY_H_
 
 #include <botan/hash.h>
 #include <botan/atomic.h>

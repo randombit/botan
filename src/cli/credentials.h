@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef EXAMPLE_CREDENTIALS_MANAGER_H__
-#define EXAMPLE_CREDENTIALS_MANAGER_H__
+#ifndef EXAMPLE_CREDENTIALS_MANAGER_H_
+#define EXAMPLE_CREDENTIALS_MANAGER_H_
 
 #include <botan/pkcs8.h>
 #include <botan/credentials_manager.h>

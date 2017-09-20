@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TPM_H__
-#define BOTAN_TPM_H__
+#ifndef BOTAN_TPM_H_
+#define BOTAN_TPM_H_
 
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>

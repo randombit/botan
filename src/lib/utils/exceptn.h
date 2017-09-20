@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_EXCEPTION_H__
-#define BOTAN_EXCEPTION_H__
+#ifndef BOTAN_EXCEPTION_H_
+#define BOTAN_EXCEPTION_H_
 
 #include <botan/types.h>
 #include <botan/parsing.h>

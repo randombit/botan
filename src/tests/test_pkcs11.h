@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TESTS_PKCS11_H__
-#define BOTAN_TESTS_PKCS11_H__
+#ifndef BOTAN_TESTS_PKCS11_H_
+#define BOTAN_TESTS_PKCS11_H_
 
 #include "tests.h"
 

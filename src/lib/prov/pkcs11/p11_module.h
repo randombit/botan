@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_P11_MODULE_H__
-#define BOTAN_P11_MODULE_H__
+#ifndef BOTAN_P11_MODULE_H_
+#define BOTAN_P11_MODULE_H_
 
 #include <string>
 #include <memory>

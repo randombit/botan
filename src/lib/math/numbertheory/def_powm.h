@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_DEFAULT_MODEXP_H__
-#define BOTAN_DEFAULT_MODEXP_H__
+#ifndef BOTAN_DEFAULT_MODEXP_H_
+#define BOTAN_DEFAULT_MODEXP_H_
 
 #include <botan/pow_mod.h>
 #include <botan/reducer.h>

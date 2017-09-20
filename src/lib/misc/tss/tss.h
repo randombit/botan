@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_RTSS_H__
-#define BOTAN_RTSS_H__
+#ifndef BOTAN_RTSS_H_
+#define BOTAN_RTSS_H_
 
 #include <botan/secmem.h>
 #include <botan/hash.h>

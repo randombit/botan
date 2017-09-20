@@ -5,8 +5,8 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#ifndef BOTAN_XMSS_TOOLS_H__
-#define BOTAN_XMSS_TOOLS_H__
+#ifndef BOTAN_XMSS_TOOLS_H_
+#define BOTAN_XMSS_TOOLS_H_
 
 #include <botan/cpuid.h>
 #include <botan/secmem.h>

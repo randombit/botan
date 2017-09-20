@@ -11,8 +11,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TIMING_ATTACK_CM_H__
-#define BOTAN_TIMING_ATTACK_CM_H__
+#ifndef BOTAN_TIMING_ATTACK_CM_H_
+#define BOTAN_TIMING_ATTACK_CM_H_
 
 #include <botan/secmem.h>
 #include <vector>

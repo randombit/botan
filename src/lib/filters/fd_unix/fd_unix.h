@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PIPE_UNIXFD_H__
-#define BOTAN_PIPE_UNIXFD_H__
+#ifndef BOTAN_PIPE_UNIXFD_H_
+#define BOTAN_PIPE_UNIXFD_H_
 
 #include <botan/pipe.h>
 

@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ENTROPY_SRC_DEVICE_H__
-#define BOTAN_ENTROPY_SRC_DEVICE_H__
+#ifndef BOTAN_ENTROPY_SRC_DEVICE_H_
+#define BOTAN_ENTROPY_SRC_DEVICE_H_
 
 #include <botan/entropy_src.h>
 #include <vector>

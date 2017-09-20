@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_KECCAK_H__
-#define BOTAN_KECCAK_H__
+#ifndef BOTAN_KECCAK_H_
+#define BOTAN_KECCAK_H_
 
 #include <botan/hash.h>
 #include <botan/secmem.h>

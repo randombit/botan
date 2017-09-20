@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_FFI_UTILS_H__
-#define BOTAN_FFI_UTILS_H__
+#ifndef BOTAN_FFI_UTILS_H_
+#define BOTAN_FFI_UTILS_H_
 
 #include <cstdint>
 #include <memory>

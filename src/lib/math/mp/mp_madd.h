@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_MP_WORD_MULADD_H__
-#define BOTAN_MP_WORD_MULADD_H__
+#ifndef BOTAN_MP_WORD_MULADD_H_
+#define BOTAN_MP_WORD_MULADD_H_
 
 #include <botan/mp_types.h>
 #include <botan/mul128.h>
