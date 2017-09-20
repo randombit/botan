@@ -103,10 +103,23 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
 
       *op = nullptr;
 
-      if(flags != 0)
-         return BOTAN_FFI_ERROR_BAD_FLAG;
+      // before introducing the flags, 0 defaulted to IEEE_1363
+      Botan::Signature_Format sig_format = Botan::IEEE_1363;
 
-      std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj),Botan::system_rng(),  hash));
+      if(flags == BOTAN_SIGNATURE_FORMAT_IEEE_1363 || flags == 0)
+         {
+         sig_format = Botan::IEEE_1363;
+         }
+      else if(flags == BOTAN_SIGNATURE_FORMAT_DER_SEQUENCE)
+         {
+         sig_format = Botan::DER_SEQUENCE;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_FLAG;
+         }
+
+      std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj), Botan::system_rng(), hash, sig_format));
       *op = new botan_pk_op_sign_struct(pk.release());
       return BOTAN_FFI_SUCCESS;
       });
@@ -137,10 +150,23 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op,
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
       BOTAN_ASSERT_NONNULL(op);
 
-      if(flags != 0)
-         return BOTAN_FFI_ERROR_BAD_FLAG;
+      // before introducing the flags, 0 defaulted to IEEE_1363
+      Botan::Signature_Format sig_format = Botan::IEEE_1363;
 
-      std::unique_ptr<Botan::PK_Verifier> pk(new Botan::PK_Verifier(safe_get(key_obj), hash));
+      if(flags == BOTAN_SIGNATURE_FORMAT_IEEE_1363 || flags == 0)
+         {
+         sig_format = Botan::IEEE_1363;
+         }
+      else if(flags == BOTAN_SIGNATURE_FORMAT_DER_SEQUENCE)
+         {
+         sig_format = Botan::DER_SEQUENCE;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_FLAG;
+         }
+
+      std::unique_ptr<Botan::PK_Verifier> pk(new Botan::PK_Verifier(safe_get(key_obj), hash, sig_format));
       *op = new botan_pk_op_verify_struct(pk.release());
       return BOTAN_FFI_SUCCESS;
       });
