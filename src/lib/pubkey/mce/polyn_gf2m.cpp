@@ -321,7 +321,7 @@ std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m & g)
 
 /*Modulo p square of a certain polynomial g, sq[] contains the square
 Modulo g of the base canonical polynomials of degree < d, where d is
-the degree of G. The table sq[] will be calculated by polyn_gf2m__sqmod_init*/
+the degree of G. The table sq[] will be calculated by polyn_gf2m_sqmod_init*/
 polyn_gf2m polyn_gf2m::sqmod( const std::vector<polyn_gf2m> & sq, int d)
    {
    int i, j;
@@ -531,7 +531,6 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
             cond1 &= cond2;
             }
          /* expand cond1 to a full mask */
-         //CSEC_MASK__GEN_MASK_16B(cond1, mask);
          gf2m mask = generate_gf2m_mask(cond1);
          fake_elem &= mask;
          r0.patchup_deg_secure(trgt_deg, fake_elem);

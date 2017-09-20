@@ -59,7 +59,7 @@ class gf2m_decomp_rootfind_state
 * !! Attention: assumes gf2m is 16bit !!
 */
 #if 0
-gf2m brootf_decomp__gray_to_lex(gf2m gray)
+gf2m brootf_decomp_gray_to_lex(gf2m gray)
    {
    static_assert(sizeof(gf2m) == 2, "Expected size");
    gf2m result = gray ^ (gray>>8);
@@ -73,7 +73,7 @@ gf2m brootf_decomp__gray_to_lex(gf2m gray)
 /**
 * calculates ceil((t-4)/5) = outer_summands - 1
 */
-uint32_t brootf_decomp__calc_sum_limit(uint32_t t)
+uint32_t brootf_decomp_calc_sum_limit(uint32_t t)
    {
    uint32_t result;
    if(t < 4)
@@ -112,7 +112,7 @@ gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn,
       this->m_sigma_3_neq_0_mask = 0 ;
       }
 
-   this->m_outer_summands =  1 + brootf_decomp__calc_sum_limit(deg_sigma);
+   this->m_outer_summands =  1 + brootf_decomp_calc_sum_limit(deg_sigma);
    this->m_Lik.resize(this->m_outer_summands * sp_field->get_extension_degree());
    this->m_Aij.resize(this->m_outer_summands);
    }

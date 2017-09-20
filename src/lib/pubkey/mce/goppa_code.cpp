@@ -48,9 +48,9 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
 
    std::shared_ptr<GF2m_Field> sp_field = g.get_sp_field();
 
-   std::pair<polyn_gf2m, polyn_gf2m> h__aux = polyn_gf2m::eea_with_coefficients( syndrom_polyn, g, 1);
-   polyn_gf2m & h = h__aux.first;
-   polyn_gf2m & aux = h__aux.second;
+   std::pair<polyn_gf2m, polyn_gf2m> h_aux = polyn_gf2m::eea_with_coefficients( syndrom_polyn, g, 1);
+   polyn_gf2m & h = h_aux.first;
+   polyn_gf2m & aux = h_aux.second;
    a = sp_field->gf_inv(aux.get_coef(0));
    gf2m log_a = sp_field->gf_log(a);
    for(int i = 0; i <= h.get_degree(); ++i)
@@ -83,9 +83,9 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
 
    S.get_degree();
 
-   std::pair<polyn_gf2m, polyn_gf2m> v__u = polyn_gf2m::eea_with_coefficients(S, g, t/2+1);
-   polyn_gf2m & u = v__u.second;
-   polyn_gf2m & v = v__u.first;
+   std::pair<polyn_gf2m, polyn_gf2m> v_u = polyn_gf2m::eea_with_coefficients(S, g, t/2+1);
+   polyn_gf2m & u = v_u.second;
+   polyn_gf2m & v = v_u.first;
 
    // sigma = u^2+z*v^2
    polyn_gf2m sigma ( t , g.get_sp_field());
