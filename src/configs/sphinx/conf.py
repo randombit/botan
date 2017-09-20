@@ -29,7 +29,7 @@ def parse_version_file(version_path):
             results[match.group(1)] = ast.literal_eval(match.group(2))
     return results
 
-version_info = parse_version_file('../../../botan_version.py')
+version_info = parse_version_file('../../../version.txt')
 
 version_major = version_info['release_major']
 version_minor = version_info['release_minor']

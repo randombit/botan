@@ -75,7 +75,7 @@ class Version(object):
     def get_data():
         if not Version.data:
             root_dir = os.path.dirname(sys.argv[0])
-            Version.data = parse_version_file(os.path.join(root_dir, 'botan_version.py'))
+            Version.data = parse_version_file(os.path.join(root_dir, 'version.txt'))
         return Version.data
 
     @staticmethod

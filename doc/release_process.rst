@@ -28,10 +28,9 @@ Pre Release Checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Confirm that the release notes in ``news.rst`` are accurate and
-complete and that the version number in ``botan_version.py`` is
-correct. Update the release date in the release notes and change the
-entry for the appropriate branch in ``readme.rst`` to point to the new
-release.
+complete and that the version number in ``version.txt`` is correct.
+Update the release date in the release notes and change the entry for
+the appropriate branch in ``readme.rst`` to point to the new release.
 
 Check in these changes (alone, with no other modifications) with a
 checkin message along the lines of "Update for X.Y.Z release", then
