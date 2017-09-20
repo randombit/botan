@@ -963,6 +963,7 @@ class FFI_Unit_Tests : public Test
          botan_pubkey_t pub_copy;
          TEST_FFI_OK(botan_pubkey_load, (&pub_copy, pubkey.data(), pubkey_len));
          TEST_FFI_OK(botan_pubkey_check_key, (pub_copy, rng, 0));
+         TEST_FFI_OK(botan_pubkey_destroy, (pub_copy));
 
          // export private key
          std::vector<uint8_t> privkey;
@@ -1740,6 +1741,7 @@ class FFI_Unit_Tests : public Test
          result.test_eq(nullptr, "Public key matches", retr_pubkey, 32,
                         pubkey.data(), pubkey.size());
 
+         TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_pubkey_load_ed25519, (&pub, pubkey.data()));
 
          botan_pk_op_sign_t signer;
@@ -1765,8 +1767,12 @@ class FFI_Unit_Tests : public Test
             {
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
             TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+            TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
             }
 
+         TEST_FFI_OK(botan_pubkey_destroy, (pub));
+         TEST_FFI_OK(botan_privkey_destroy, (priv));
 
          return result;
          }
