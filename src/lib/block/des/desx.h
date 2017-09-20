@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * DESX
 */
-class BOTAN_DLL DESX final : public Block_Cipher_Fixed_Params<8, 24>
+class BOTAN_PUBLIC_API(2,0) DESX final : public Block_Cipher_Fixed_Params<8, 24>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

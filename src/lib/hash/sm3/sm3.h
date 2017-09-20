@@ -20,7 +20,7 @@ enum {
 /**
 * SM3
 */
-class BOTAN_DLL SM3 final : public MDx_HashFunction
+class BOTAN_PUBLIC_API(2,2) SM3 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SM3"; }

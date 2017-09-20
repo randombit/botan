@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * This class represents a symmetric algorithm object.
 */
-class BOTAN_DLL SymmetricAlgorithm
+class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
    {
    public:
       virtual ~SymmetricAlgorithm() {}

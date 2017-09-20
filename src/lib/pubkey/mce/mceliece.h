@@ -18,7 +18,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
+class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
    {
    public:
       explicit McEliece_PublicKey(const std::vector<uint8_t>& key_bits);
@@ -67,7 +67,7 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
       uint32_t m_code_length;
    };
 
-class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
+class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey : public virtual McEliece_PublicKey,
                                       public virtual Private_Key
    {
    public:
@@ -129,7 +129,7 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
 * Estimate work factor for McEliece
 * @return estimated security level for these key parameters
 */
-BOTAN_DLL size_t mceliece_work_factor(size_t code_size, size_t t);
+BOTAN_PUBLIC_API(2,0) size_t mceliece_work_factor(size_t code_size, size_t t);
 
 }
 

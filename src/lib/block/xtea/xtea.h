@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * XTEA
 */
-class BOTAN_DLL XTEA : public Block_Cipher_Fixed_Params<8, 16>
+class BOTAN_PUBLIC_API(2,0) XTEA : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

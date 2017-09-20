@@ -33,7 +33,7 @@ class Server_Hello;
 /**
 * Generic interface for TLS endpoint
 */
-class BOTAN_DLL Channel
+class BOTAN_PUBLIC_API(2,0) Channel
    {
    public:
       typedef std::function<void (const uint8_t[], size_t)> output_fn;

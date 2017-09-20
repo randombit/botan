@@ -23,7 +23,7 @@ enum blake2b_constant {
 /**
 * BLAKE2B
 */
-class BOTAN_DLL Blake2b final : public HashFunction
+class BOTAN_PUBLIC_API(2,0) Blake2b final : public HashFunction
    {
    public:
       /**

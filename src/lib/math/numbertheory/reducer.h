@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Modular Reducer (using Barrett's technique)
 */
-class BOTAN_DLL Modular_Reducer
+class BOTAN_PUBLIC_API(2,0) Modular_Reducer
    {
    public:
       const BigInt& get_modulus() const { return m_modulus; }

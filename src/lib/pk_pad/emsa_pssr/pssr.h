@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * PSSR (called EMSA4 in IEEE 1363 and in old versions of the library)
 */
-class BOTAN_DLL PSSR final : public EMSA
+class BOTAN_PUBLIC_API(2,0) PSSR final : public EMSA
    {
    public:
 

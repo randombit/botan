@@ -23,7 +23,7 @@ namespace Botan {
 /**
 * PKCS #10 Certificate Request.
 */
-class BOTAN_DLL PKCS10_Request final : public X509_Object
+class BOTAN_PUBLIC_API(2,0) PKCS10_Request final : public X509_Object
    {
    public:
       /**

@@ -19,7 +19,7 @@ namespace Botan {
 * Exception thrown if you try to convert a zero point to an affine
 * coordinate
 */
-struct BOTAN_DLL Illegal_Transformation : public Exception
+struct BOTAN_PUBLIC_API(2,0) Illegal_Transformation : public Exception
    {
    explicit Illegal_Transformation(const std::string& err =
                           "Requested transformation is not possible") :
@@ -29,7 +29,7 @@ struct BOTAN_DLL Illegal_Transformation : public Exception
 /**
 * Exception thrown if some form of illegal point is decoded
 */
-struct BOTAN_DLL Illegal_Point : public Exception
+struct BOTAN_PUBLIC_API(2,0) Illegal_Point : public Exception
    {
    explicit Illegal_Point(const std::string& err = "Malformed ECP point detected") :
       Exception(err) {}
@@ -38,7 +38,7 @@ struct BOTAN_DLL Illegal_Point : public Exception
 /**
 * This class represents one point on a curve of GF(p)
 */
-class BOTAN_DLL PointGFp
+class BOTAN_PUBLIC_API(2,0) PointGFp
    {
    public:
       enum Compression_Type {
@@ -127,7 +127,7 @@ class BOTAN_DLL PointGFp
       * @param point the point value
       * @return scalar*point on the curve
       */
-      friend BOTAN_DLL PointGFp operator*(const BigInt& scalar, const PointGFp& point);
+      friend BOTAN_PUBLIC_API(2,0) PointGFp operator*(const BigInt& scalar, const PointGFp& point);
 
       /**
       * Multiexponentiation
@@ -137,7 +137,7 @@ class BOTAN_DLL PointGFp
       * @param z2 a scalar
       * @result (p1 * z1 + p2 * z2)
       */
-      friend BOTAN_DLL PointGFp multi_exponentiate(
+      friend BOTAN_PUBLIC_API(2,0) PointGFp multi_exponentiate(
         const PointGFp& p1, const BigInt& z1,
         const PointGFp& p2, const BigInt& z2);
 
@@ -274,9 +274,9 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
    }
 
 // encoding and decoding
-secure_vector<uint8_t> BOTAN_DLL EC2OSP(const PointGFp& point, uint8_t format);
+secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) EC2OSP(const PointGFp& point, uint8_t format);
 
-PointGFp BOTAN_DLL OS2ECP(const uint8_t data[], size_t data_len,
+PointGFp BOTAN_PUBLIC_API(2,0) OS2ECP(const uint8_t data[], size_t data_len,
                           const CurveGFp& curve);
 
 template<typename Alloc>
@@ -286,7 +286,7 @@ PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
 /**
 
 */
-class BOTAN_DLL Blinded_Point_Multiply
+class BOTAN_PUBLIC_API(2,0) Blinded_Point_Multiply
    {
    public:
       Blinded_Point_Multiply(const PointGFp& base, const BigInt& order, size_t h = 0);

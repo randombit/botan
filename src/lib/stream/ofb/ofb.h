@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Output Feedback Mode
 */
-class BOTAN_DLL OFB final : public StreamCipher
+class BOTAN_PUBLIC_API(2,0) OFB final : public StreamCipher
    {
    public:
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override;

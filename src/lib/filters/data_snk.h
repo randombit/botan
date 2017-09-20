@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * This class represents abstract data sink objects.
 */
-class BOTAN_DLL DataSink : public Filter
+class BOTAN_PUBLIC_API(2,0) DataSink : public Filter
    {
    public:
       bool attachable() override { return false; }
@@ -32,7 +32,7 @@ class BOTAN_DLL DataSink : public Filter
 /**
 * This class represents a data sink which writes its output to a stream.
 */
-class BOTAN_DLL DataSink_Stream : public DataSink
+class BOTAN_PUBLIC_API(2,0) DataSink_Stream : public DataSink
    {
    public:
       /**

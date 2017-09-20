@@ -18,7 +18,7 @@ class Entropy_Sources;
 /**
 * HMAC_DRBG from NIST SP800-90A
 */
-class BOTAN_DLL HMAC_DRBG final : public Stateful_RNG
+class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
    {
    public:
       /**

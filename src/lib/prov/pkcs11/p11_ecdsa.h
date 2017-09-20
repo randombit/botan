@@ -22,7 +22,7 @@ namespace PKCS11 {
 class Session;
 
 /// Represents a PKCS#11 ECDSA public key
-class BOTAN_DLL PKCS11_ECDSA_PublicKey final : public PKCS11_EC_PublicKey, public virtual ECDSA_PublicKey
+class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_PublicKey, public virtual ECDSA_PublicKey
    {
    public:
       /**
@@ -57,7 +57,7 @@ class BOTAN_DLL PKCS11_ECDSA_PublicKey final : public PKCS11_EC_PublicKey, publi
    };
 
 /// Represents a PKCS#11 ECDSA private key
-class BOTAN_DLL PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_PrivateKey
+class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_PrivateKey
    {
    public:
       /**
@@ -116,7 +116,7 @@ using PKCS11_ECDSA_KeyPair = std::pair<PKCS11_ECDSA_PublicKey, PKCS11_ECDSA_Priv
 * @param pub_props the properties of the public key
 * @param priv_props the properties of the private key
 */
-BOTAN_DLL PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session,
+BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session,
       const EC_PublicKeyGenerationProperties& pub_props, const EC_PrivateKeyGenerationProperties& priv_props);
 }
 

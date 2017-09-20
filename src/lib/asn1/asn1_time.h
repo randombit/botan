@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * X.509 Time
 */
-class BOTAN_DLL X509_Time final : public ASN1_Object
+class BOTAN_PUBLIC_API(2,0) X509_Time final : public ASN1_Object
    {
    public:
       /// DER encode a X509_Time
@@ -65,12 +65,12 @@ class BOTAN_DLL X509_Time final : public ASN1_Object
 /*
 * Comparison Operations
 */
-bool BOTAN_DLL operator==(const X509_Time&, const X509_Time&);
-bool BOTAN_DLL operator!=(const X509_Time&, const X509_Time&);
-bool BOTAN_DLL operator<=(const X509_Time&, const X509_Time&);
-bool BOTAN_DLL operator>=(const X509_Time&, const X509_Time&);
-bool BOTAN_DLL operator<(const X509_Time&, const X509_Time&);
-bool BOTAN_DLL operator>(const X509_Time&, const X509_Time&);
+bool BOTAN_PUBLIC_API(2,0) operator==(const X509_Time&, const X509_Time&);
+bool BOTAN_PUBLIC_API(2,0) operator!=(const X509_Time&, const X509_Time&);
+bool BOTAN_PUBLIC_API(2,0) operator<=(const X509_Time&, const X509_Time&);
+bool BOTAN_PUBLIC_API(2,0) operator>=(const X509_Time&, const X509_Time&);
+bool BOTAN_PUBLIC_API(2,0) operator<(const X509_Time&, const X509_Time&);
+bool BOTAN_PUBLIC_API(2,0) operator>(const X509_Time&, const X509_Time&);
 
 }
 

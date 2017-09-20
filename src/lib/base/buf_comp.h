@@ -18,7 +18,7 @@ namespace Botan {
 * This class represents any kind of computation which uses an internal
 * state, such as hash functions or MACs
 */
-class BOTAN_DLL Buffered_Computation
+class BOTAN_PUBLIC_API(2,0) Buffered_Computation
    {
    public:
       /**

@@ -32,7 +32,7 @@ class Policy;
 * Encapsulates the callbacks that a TLS channel will make which are due to
 * channel specific operations.
 */
-class BOTAN_DLL Callbacks
+class BOTAN_PUBLIC_API(2,0) Callbacks
    {
    public:
        virtual ~Callbacks() = default;
@@ -197,7 +197,7 @@ class BOTAN_DLL Callbacks
 * This type is only provided for backward compatibility.
 * New implementations should derive from TLS::Callbacks instead.
 */
-class BOTAN_DLL Compat_Callbacks final : public Callbacks
+class BOTAN_PUBLIC_API(2,0) Compat_Callbacks final : public Callbacks
    {
    public:
       typedef std::function<void (const uint8_t[], size_t)> output_fn;

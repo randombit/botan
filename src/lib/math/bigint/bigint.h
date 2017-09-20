@@ -20,7 +20,7 @@ namespace Botan {
 /**
 * Arbitrary precision integer
 */
-class BOTAN_DLL BigInt
+class BOTAN_PUBLIC_API(2,0) BigInt
    {
    public:
      /**
@@ -36,7 +36,7 @@ class BOTAN_DLL BigInt
      /**
      * DivideByZero Exception
      */
-     struct BOTAN_DLL DivideByZero : public Exception
+     struct BOTAN_PUBLIC_API(2,0) DivideByZero : public Exception
         { DivideByZero() : Exception("BigInt divide by zero") {} };
 
      /**
@@ -583,14 +583,14 @@ class BOTAN_DLL BigInt
 /*
 * Arithmetic Operators
 */
-BigInt BOTAN_DLL operator+(const BigInt& x, const BigInt& y);
-BigInt BOTAN_DLL operator-(const BigInt& x, const BigInt& y);
-BigInt BOTAN_DLL operator*(const BigInt& x, const BigInt& y);
-BigInt BOTAN_DLL operator/(const BigInt& x, const BigInt& d);
-BigInt BOTAN_DLL operator%(const BigInt& x, const BigInt& m);
-word   BOTAN_DLL operator%(const BigInt& x, word m);
-BigInt BOTAN_DLL operator<<(const BigInt& x, size_t n);
-BigInt BOTAN_DLL operator>>(const BigInt& x, size_t n);
+BigInt BOTAN_PUBLIC_API(2,0) operator+(const BigInt& x, const BigInt& y);
+BigInt BOTAN_PUBLIC_API(2,0) operator-(const BigInt& x, const BigInt& y);
+BigInt BOTAN_PUBLIC_API(2,0) operator*(const BigInt& x, const BigInt& y);
+BigInt BOTAN_PUBLIC_API(2,0) operator/(const BigInt& x, const BigInt& d);
+BigInt BOTAN_PUBLIC_API(2,0) operator%(const BigInt& x, const BigInt& m);
+word   BOTAN_PUBLIC_API(2,0) operator%(const BigInt& x, word m);
+BigInt BOTAN_PUBLIC_API(2,0) operator<<(const BigInt& x, size_t n);
+BigInt BOTAN_PUBLIC_API(2,0) operator>>(const BigInt& x, size_t n);
 
 /*
 * Comparison Operators
@@ -611,8 +611,8 @@ inline bool operator>(const BigInt& a, const BigInt& b)
 /*
 * I/O Operators
 */
-BOTAN_DLL std::ostream& operator<<(std::ostream&, const BigInt&);
-BOTAN_DLL std::istream& operator>>(std::istream&, BigInt&);
+BOTAN_PUBLIC_API(2,0) std::ostream& operator<<(std::ostream&, const BigInt&);
+BOTAN_PUBLIC_API(2,0) std::istream& operator>>(std::istream&, BigInt&);
 
 }
 

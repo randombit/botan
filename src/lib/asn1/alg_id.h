@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Algorithm Identifier
 */
-class BOTAN_DLL AlgorithmIdentifier final : public ASN1_Object
+class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
    {
    public:
       enum Encoding_Option { USE_NULL_PARAM };
@@ -42,9 +42,9 @@ class BOTAN_DLL AlgorithmIdentifier final : public ASN1_Object
 /*
 * Comparison Operations
 */
-bool BOTAN_DLL operator==(const AlgorithmIdentifier&,
+bool BOTAN_PUBLIC_API(2,0) operator==(const AlgorithmIdentifier&,
                           const AlgorithmIdentifier&);
-bool BOTAN_DLL operator!=(const AlgorithmIdentifier&,
+bool BOTAN_PUBLIC_API(2,0) operator!=(const AlgorithmIdentifier&,
                           const AlgorithmIdentifier&);
 
 }

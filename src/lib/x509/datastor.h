@@ -24,7 +24,7 @@ namespace Botan {
 * reasons. There is no reason for applications to use this type directly.
 * It will be removed in a future major release.
 */
-class BOTAN_DLL Data_Store
+class BOTAN_PUBLIC_API(2,0) Data_Store
    {
    public:
       /**

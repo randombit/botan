@@ -20,7 +20,7 @@ namespace Botan {
 namespace PKCS11 {
 
 /// Represents a PKCS#11 Slot, i.e., a card reader
-class BOTAN_DLL Slot final
+class BOTAN_PUBLIC_API(2,0) Slot final
    {
    public:
       /**

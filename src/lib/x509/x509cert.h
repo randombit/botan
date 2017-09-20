@@ -33,7 +33,7 @@ enum class Usage_Type
 /**
 * This class represents X.509 Certificate
 */
-class BOTAN_DLL X509_Certificate : public X509_Object
+class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
    {
    public:
       /**
@@ -330,7 +330,7 @@ class BOTAN_DLL X509_Certificate : public X509_Object
 * @return true if the arguments represent different certificates,
 * false if they are binary identical
 */
-BOTAN_DLL bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2);
+BOTAN_PUBLIC_API(2,0) bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2);
 
 /*
 * Data Store Extraction Operations
@@ -341,14 +341,14 @@ BOTAN_DLL bool operator!=(const X509_Certificate& cert1, const X509_Certificate&
 * @param info data store containing DN information
 * @return DN containing attributes from data store
 */
-BOTAN_DLL X509_DN create_dn(const Data_Store& info);
+BOTAN_PUBLIC_API(2,0) X509_DN create_dn(const Data_Store& info);
 
 /*
 * Create and populate an AlternativeName
 * @param info data store containing AlternativeName information
 * @return AlternativeName containing attributes from data store
 */
-BOTAN_DLL AlternativeName create_alt_name(const Data_Store& info);
+BOTAN_PUBLIC_API(2,0) AlternativeName create_alt_name(const Data_Store& info);
 
 }
 

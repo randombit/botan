@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Zlib Compression
 */
-class BOTAN_DLL Zlib_Compression final : public Stream_Compression
+class BOTAN_PUBLIC_API(2,0) Zlib_Compression final : public Stream_Compression
    {
    public:
       std::string name() const override { return "Zlib_Compression"; }
@@ -27,7 +27,7 @@ class BOTAN_DLL Zlib_Compression final : public Stream_Compression
 /**
 * Zlib Decompression
 */
-class BOTAN_DLL Zlib_Decompression final : public Stream_Decompression
+class BOTAN_PUBLIC_API(2,0) Zlib_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Zlib_Decompression"; }
@@ -38,7 +38,7 @@ class BOTAN_DLL Zlib_Decompression final : public Stream_Decompression
 /**
 * Deflate Compression
 */
-class BOTAN_DLL Deflate_Compression final : public Stream_Compression
+class BOTAN_PUBLIC_API(2,0) Deflate_Compression final : public Stream_Compression
    {
    public:
       std::string name() const override { return "Deflate_Compression"; }
@@ -49,7 +49,7 @@ class BOTAN_DLL Deflate_Compression final : public Stream_Compression
 /**
 * Deflate Decompression
 */
-class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
+class BOTAN_PUBLIC_API(2,0) Deflate_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Deflate_Decompression"; }
@@ -60,7 +60,7 @@ class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
 /**
 * Gzip Compression
 */
-class BOTAN_DLL Gzip_Compression final : public Stream_Compression
+class BOTAN_PUBLIC_API(2,0) Gzip_Compression final : public Stream_Compression
    {
    public:
       Gzip_Compression(uint8_t os_code = 255) : m_os_code(os_code) {}
@@ -74,7 +74,7 @@ class BOTAN_DLL Gzip_Compression final : public Stream_Compression
 /**
 * Gzip Decompression
 */
-class BOTAN_DLL Gzip_Decompression final : public Stream_Decompression
+class BOTAN_PUBLIC_API(2,0) Gzip_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Gzip_Decompression"; }

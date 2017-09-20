@@ -18,7 +18,7 @@ namespace Botan {
 *
 * Any way of encoding/padding signatures
 */
-class BOTAN_DLL EMSA
+class BOTAN_PUBLIC_API(2,0) EMSA
    {
    public:
       /**
@@ -69,7 +69,7 @@ class BOTAN_DLL EMSA
 * @param algo_spec the name of the EMSA to create
 * @return pointer to newly allocated object of that type
 */
-BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
+BOTAN_PUBLIC_API(2,0) EMSA* get_emsa(const std::string& algo_spec);
 
 /**
 * Returns the hash function used in the given EMSA scheme
@@ -78,7 +78,7 @@ BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
 * @param algo_spec the name of the EMSA
 * @return hash function used in the given EMSA scheme
 */
-BOTAN_DLL std::string hash_for_emsa(const std::string& algo_spec);
+BOTAN_PUBLIC_API(2,0) std::string hash_for_emsa(const std::string& algo_spec);
 
 }
 

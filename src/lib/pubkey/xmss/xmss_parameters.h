@@ -25,7 +25,7 @@ namespace Botan {
  *     https://datatracker.ietf.org/doc/
  *     draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
  **/
-class BOTAN_DLL XMSS_Parameters
+class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
    {
    public:
       enum xmss_algorithm_t

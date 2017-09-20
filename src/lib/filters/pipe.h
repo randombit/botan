@@ -24,7 +24,7 @@ namespace Botan {
 * collected for retrieval.  If you're familiar with the Unix shell
 * environment, this design will sound quite familiar.
 */
-class BOTAN_DLL Pipe final : public DataSource
+class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
    {
    public:
       /**
@@ -36,7 +36,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * Exception if you use an invalid message as an argument to
       * read, remaining, etc
       */
-      struct BOTAN_DLL Invalid_Message_Number : public Invalid_Argument
+      struct BOTAN_PUBLIC_API(2,0) Invalid_Message_Number : public Invalid_Argument
          {
          /**
          * @param where the error occurred
@@ -324,7 +324,7 @@ class BOTAN_DLL Pipe final : public DataSource
 * @param out an output stream
 * @param pipe the pipe
 */
-BOTAN_DLL std::ostream& operator<<(std::ostream& out, Pipe& pipe);
+BOTAN_PUBLIC_API(2,0) std::ostream& operator<<(std::ostream& out, Pipe& pipe);
 
 /**
 * Stream input operator; dumps the remaining bytes of input
@@ -332,7 +332,7 @@ BOTAN_DLL std::ostream& operator<<(std::ostream& out, Pipe& pipe);
 * @param in the input stream
 * @param pipe the pipe
 */
-BOTAN_DLL std::istream& operator>>(std::istream& in, Pipe& pipe);
+BOTAN_PUBLIC_API(2,0) std::istream& operator>>(std::istream& in, Pipe& pipe);
 
 }
 

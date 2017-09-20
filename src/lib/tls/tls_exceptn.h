@@ -18,7 +18,7 @@ namespace TLS {
 /**
 * Exception Base Class
 */
-class BOTAN_DLL TLS_Exception : public Exception
+class BOTAN_PUBLIC_API(2,0) TLS_Exception : public Exception
    {
    public:
       Alert::Type type() const { return m_alert_type; }
@@ -34,7 +34,7 @@ class BOTAN_DLL TLS_Exception : public Exception
 /**
 * Unexpected_Message Exception
 */
-struct BOTAN_DLL Unexpected_Message : public TLS_Exception
+struct BOTAN_PUBLIC_API(2,0) Unexpected_Message : public TLS_Exception
    {
    explicit Unexpected_Message(const std::string& err) :
       TLS_Exception(Alert::UNEXPECTED_MESSAGE, err) {}

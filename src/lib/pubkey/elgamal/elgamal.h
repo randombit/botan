@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * ElGamal Public Key
 */
-class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
+class BOTAN_PUBLIC_API(2,0) ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
       std::string algo_name() const override { return "ElGamal"; }
@@ -50,7 +50,7 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
 /**
 * ElGamal Private Key
 */
-class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
+class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey : public ElGamal_PublicKey,
                                      public virtual DL_Scheme_PrivateKey
    {
    public:

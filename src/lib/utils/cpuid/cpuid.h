@@ -33,7 +33,7 @@ namespace Botan {
 *    thread-unsafe mechanism involving executing probe functions which
 *    catching SIGILL signal is used.
 */
-class BOTAN_DLL CPUID
+class BOTAN_PUBLIC_API(2,1) CPUID
    {
    public:
       /**

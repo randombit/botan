@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * This class represents ECDSA Public Keys.
 */
-class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
+class BOTAN_PUBLIC_API(2,0) ECDSA_PublicKey : public virtual EC_PublicKey
    {
    public:
 
@@ -60,7 +60,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
 /**
 * This class represents ECDSA Private Keys
 */
-class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
+class BOTAN_PUBLIC_API(2,0) ECDSA_PrivateKey : public ECDSA_PublicKey,
                                    public EC_PrivateKey
    {
    public:

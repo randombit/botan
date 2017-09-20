@@ -17,7 +17,7 @@ class Stateful_RNG;
 /**
 * A userspace PRNG
 */
-class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) AutoSeeded_RNG final : public RandomNumberGenerator
    {
    public:
       void randomize(uint8_t out[], size_t len) override;

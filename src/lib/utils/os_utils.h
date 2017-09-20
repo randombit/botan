@@ -18,7 +18,7 @@ namespace OS {
 /*
 * This header is internal (not installed) and these functions are not
 * intended to be called by applications. However they are given public
-* visibility (using BOTAN_DLL macro) for the tests. This also probably
+* visibility (using BOTAN_TEST_API macro) for the tests. This also probably
 * allows them to be overridden by the application on ELF systems, but
 * this hasn't been tested.
 */
@@ -27,7 +27,7 @@ namespace OS {
 /**
 * A wrapper around a simple blocking TCP socket
 */
-class BOTAN_DLL Socket
+class BOTAN_TEST_API Socket
    {
    public:
       /**
@@ -53,7 +53,7 @@ class BOTAN_DLL Socket
 * not available on this platform.
 */
 std::unique_ptr<Socket>
-BOTAN_DLL open_socket(const std::string& hostname,
+BOTAN_TEST_API open_socket(const std::string& hostname,
                       const std::string& service);
 
 /**
@@ -62,7 +62,7 @@ BOTAN_DLL open_socket(const std::string& hostname,
 * On IncludeOS it returns 0 since there is no process ID to speak of
 * in a unikernel.
 */
-uint32_t BOTAN_DLL get_process_id();
+uint32_t BOTAN_TEST_API get_process_id();
 
 /**
 * @return CPU processor clock, if available
@@ -73,7 +73,7 @@ uint32_t BOTAN_DLL get_process_id();
 * Currently supported processors are x86, PPC, Alpha, SPARC, IA-64, S/390x, and HP-PA.
 * If no CPU cycle counter is available on this system, returns zero.
 */
-uint64_t BOTAN_DLL get_processor_timestamp();
+uint64_t BOTAN_TEST_API get_processor_timestamp();
 
 /*
 * @return best resolution timestamp available
@@ -85,13 +85,13 @@ uint64_t BOTAN_DLL get_processor_timestamp();
 * On POSIX platforms clock_gettime is used with a monotonic timer
 * As a final fallback std::chrono::high_resolution_clock is used.
 */
-uint64_t BOTAN_DLL get_high_resolution_clock();
+uint64_t BOTAN_TEST_API get_high_resolution_clock();
 
 /**
 * @return system clock (reflecting wall clock) with best resolution
 * available, normalized to nanoseconds resolution.
 */
-uint64_t BOTAN_DLL get_system_timestamp_ns();
+uint64_t BOTAN_TEST_API get_system_timestamp_ns();
 
 /**
 * @return maximum amount of memory (in bytes) Botan could/should
@@ -136,7 +136,7 @@ void free_locked_pages(void* ptr, size_t length);
 * Return codes:
 * -1 illegal instruction detected
 */
-int BOTAN_DLL run_cpu_instruction_probe(std::function<int ()> probe_fn);
+int BOTAN_TEST_API run_cpu_instruction_probe(std::function<int ()> probe_fn);
 
 }
 

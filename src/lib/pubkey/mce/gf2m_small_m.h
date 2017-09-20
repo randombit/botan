@@ -22,7 +22,7 @@ typedef uint16_t gf2m;
 /**
 * GF(2^m) field for m = [2...16]
 */
-class BOTAN_DLL GF2m_Field
+class BOTAN_PUBLIC_API(2,0) GF2m_Field
    {
    public:
       explicit GF2m_Field(size_t extdeg);

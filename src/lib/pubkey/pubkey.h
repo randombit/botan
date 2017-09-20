@@ -32,7 +32,7 @@ enum Signature_Format { IEEE_1363, DER_SEQUENCE };
 * Public Key Encryptor
 * This is the primary interface for public key encryption
 */
-class BOTAN_DLL PK_Encryptor
+class BOTAN_PUBLIC_API(2,0) PK_Encryptor
    {
    public:
 
@@ -82,7 +82,7 @@ class BOTAN_DLL PK_Encryptor
 /**
 * Public Key Decryptor
 */
-class BOTAN_DLL PK_Decryptor
+class BOTAN_PUBLIC_API(2,0) PK_Decryptor
    {
    public:
       /**
@@ -158,7 +158,7 @@ class BOTAN_DLL PK_Decryptor
 * messages. Use multiple calls update() to process large messages and
 * generate the signature by finally calling signature().
 */
-class BOTAN_DLL PK_Signer final
+class BOTAN_PUBLIC_API(2,0) PK_Signer final
    {
    public:
 
@@ -285,7 +285,7 @@ class BOTAN_DLL PK_Signer final
 * messages. Use multiple calls update() to process large messages and
 * verify the signature by finally calling check_signature().
 */
-class BOTAN_DLL PK_Verifier final
+class BOTAN_PUBLIC_API(2,0) PK_Verifier final
    {
    public:
       /**
@@ -397,7 +397,7 @@ class BOTAN_DLL PK_Verifier final
 /**
 * Key used for key agreement
 */
-class BOTAN_DLL PK_Key_Agreement final
+class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
    {
    public:
 
@@ -507,7 +507,7 @@ class BOTAN_DLL PK_Key_Agreement final
 * Encryption using a standard message recovery algorithm like RSA or
 * ElGamal, paired with an encoding scheme like OAEP.
 */
-class BOTAN_DLL PK_Encryptor_EME final : public PK_Encryptor
+class BOTAN_PUBLIC_API(2,0) PK_Encryptor_EME final : public PK_Encryptor
    {
    public:
       size_t maximum_input_size() const override;
@@ -551,7 +551,7 @@ class BOTAN_DLL PK_Encryptor_EME final : public PK_Encryptor
 /**
 * Decryption with an MR algorithm and an EME.
 */
-class BOTAN_DLL PK_Decryptor_EME final : public PK_Decryptor
+class BOTAN_PUBLIC_API(2,0) PK_Decryptor_EME final : public PK_Decryptor
    {
    public:
      /**
@@ -594,7 +594,7 @@ class BOTAN_DLL PK_Decryptor_EME final : public PK_Decryptor
 /**
 * Public Key Key Encapsulation Mechanism Encryption.
 */
-class BOTAN_DLL PK_KEM_Encryptor final
+class BOTAN_PUBLIC_API(2,0) PK_KEM_Encryptor final
    {
    public:
       /**
@@ -688,7 +688,7 @@ class BOTAN_DLL PK_KEM_Encryptor final
 /**
 * Public Key Key Encapsulation Mechanism Decryption.
 */
-class BOTAN_DLL PK_KEM_Decryptor final
+class BOTAN_PUBLIC_API(2,0) PK_KEM_Decryptor final
    {
    public:
       /**

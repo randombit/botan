@@ -19,7 +19,7 @@ namespace Botan {
 * This class represents abstract X.509 signed objects as
 * in the X.500 SIGNED macro
 */
-class BOTAN_DLL X509_Object : public ASN1_Object
+class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
    {
    public:
       /**

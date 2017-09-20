@@ -79,7 +79,7 @@ enum class Certificate_Status_Code {
 * @param code the certifcate status
 * @return string literal constant, or nullptr if code unknown
 */
-BOTAN_DLL const char* to_string(Certificate_Status_Code code);
+BOTAN_PUBLIC_API(2,0) const char* to_string(Certificate_Status_Code code);
 
 }
 

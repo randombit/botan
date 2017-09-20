@@ -16,7 +16,7 @@ namespace Botan {
 * Filter mixin that breaks input into blocks, useful for
 * cipher modes
 */
-class BOTAN_DLL Buffered_Filter
+class BOTAN_PUBLIC_API(2,0) Buffered_Filter
    {
    public:
       /**

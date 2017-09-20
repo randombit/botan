@@ -50,7 +50,7 @@ class CurveGFp_Repr
 /**
 * This class represents an elliptic curve over GF(p)
 */
-class BOTAN_DLL CurveGFp
+class BOTAN_PUBLIC_API(2,0) CurveGFp
    {
    public:
 

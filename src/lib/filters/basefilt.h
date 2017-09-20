@@ -20,7 +20,7 @@ namespace Botan {
 /**
 * BitBucket is a filter which simply discards all inputs
 */
-struct BOTAN_DLL BitBucket final : public Filter
+struct BOTAN_PUBLIC_API(2,0) BitBucket final : public Filter
    {
    void write(const uint8_t[], size_t) override {}
 
@@ -33,7 +33,7 @@ struct BOTAN_DLL BitBucket final : public Filter
 * through all the Filters contained in the Chain.
 */
 
-class BOTAN_DLL Chain : public Fanout_Filter
+class BOTAN_PUBLIC_API(2,0) Chain : public Fanout_Filter
    {
    public:
       void write(const uint8_t input[], size_t length) override { send(input, length); }
@@ -60,7 +60,7 @@ class BOTAN_DLL Chain : public Fanout_Filter
 * flow of data. It causes an input message to result in n messages at
 * the end of the filter, where n is the number of forks.
 */
-class BOTAN_DLL Fork : public Fanout_Filter
+class BOTAN_PUBLIC_API(2,0) Fork : public Fanout_Filter
    {
    public:
       void write(const uint8_t input[], size_t length) override { send(input, length); }
@@ -88,7 +88,7 @@ class BOTAN_DLL Fork : public Fanout_Filter
 * threads, the class itself is NOT thread-safe. This is meant as a drop-
 * in replacement for Fork where performance gains are possible.
 */
-class BOTAN_DLL Threaded_Fork : public Fork
+class BOTAN_PUBLIC_API(2,0) Threaded_Fork : public Fork
    {
    public:
       std::string name() const override;

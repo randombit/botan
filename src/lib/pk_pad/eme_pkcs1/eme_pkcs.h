@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * EME from PKCS #1 v1.5
 */
-class BOTAN_DLL EME_PKCS1v15 final : public EME
+class BOTAN_PUBLIC_API(2,0) EME_PKCS1v15 final : public EME
    {
    public:
       size_t maximum_input_size(size_t) const override;

@@ -24,7 +24,7 @@ namespace TLS {
 * sessions are stored in the database in plaintext. This may be a
 * serious privacy risk in some situations.
 */
-class BOTAN_DLL Session_Manager_SQL : public Session_Manager
+class BOTAN_PUBLIC_API(2,0) Session_Manager_SQL : public Session_Manager
    {
    public:
       /**

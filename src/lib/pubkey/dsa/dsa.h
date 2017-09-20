@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * DSA Public Key
 */
-class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
+class BOTAN_PUBLIC_API(2,0) DSA_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
       std::string algo_name() const override { return "DSA"; }
@@ -52,7 +52,7 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
 /**
 * DSA Private Key
 */
-class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
+class BOTAN_PUBLIC_API(2,0) DSA_PrivateKey : public DSA_PublicKey,
                                  public virtual DL_Scheme_PrivateKey
    {
    public:

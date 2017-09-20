@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * PKCS #8 General Exception
 */
-struct BOTAN_DLL PKCS8_Exception : public Decoding_Error
+struct BOTAN_PUBLIC_API(2,0) PKCS8_Exception : public Decoding_Error
    {
    explicit PKCS8_Exception(const std::string& error) :
       Decoding_Error("PKCS #8: " + error) {}
@@ -33,14 +33,14 @@ namespace PKCS8 {
 * @param key the private key to encode
 * @return BER encoded key
 */
-BOTAN_DLL secure_vector<uint8_t> BER_encode(const Private_Key& key);
+BOTAN_PUBLIC_API(2,0) secure_vector<uint8_t> BER_encode(const Private_Key& key);
 
 /**
 * Get a string containing a PEM encoded private key.
 * @param key the key to encode
 * @return encoded key
 */
-BOTAN_DLL std::string PEM_encode(const Private_Key& key);
+BOTAN_PUBLIC_API(2,0) std::string PEM_encode(const Private_Key& key);
 
 /**
 * Encrypt a key using PKCS #8 encryption
@@ -53,7 +53,7 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key);
          default will be chosen.
 * @return encrypted key in binary BER form
 */
-BOTAN_DLL std::vector<uint8_t>
+BOTAN_PUBLIC_API(2,0) std::vector<uint8_t>
 BER_encode(const Private_Key& key,
            RandomNumberGenerator& rng,
            const std::string& pass,
@@ -72,7 +72,7 @@ BER_encode(const Private_Key& key,
          default will be chosen.
 * @return encrypted key in PEM form
 */
-BOTAN_DLL std::string
+BOTAN_PUBLIC_API(2,0) std::string
 PEM_encode(const Private_Key& key,
            RandomNumberGenerator& rng,
            const std::string& pass,
@@ -92,7 +92,7 @@ PEM_encode(const Private_Key& key,
 *   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
 * @return encrypted key in binary BER form
 */
-BOTAN_DLL std::vector<uint8_t>
+BOTAN_PUBLIC_API(2,1) std::vector<uint8_t>
 BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass,
@@ -114,7 +114,7 @@ BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
 *   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
 * @return encrypted key in PEM form
 */
-BOTAN_DLL std::string
+BOTAN_PUBLIC_API(2,1) std::string
 PEM_encode_encrypted_pbkdf_iter(const Private_Key& key,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass,
@@ -136,7 +136,7 @@ PEM_encode_encrypted_pbkdf_iter(const Private_Key& key,
 *   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
 * @return encrypted key in binary BER form
 */
-BOTAN_DLL std::vector<uint8_t>
+BOTAN_PUBLIC_API(2,1) std::vector<uint8_t>
 BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass,
@@ -161,7 +161,7 @@ BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
 *   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
 * @return encrypted key in PEM form
 */
-BOTAN_DLL std::string
+BOTAN_PUBLIC_API(2,1) std::string
 PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass,
@@ -177,7 +177,7 @@ PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
 * @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(DataSource& source,
+BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng,
                                 std::function<std::string ()> get_passphrase);
 
@@ -187,7 +187,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 * @param pass the passphrase to decrypt the key
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(DataSource& source,
+BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass);
 
@@ -196,7 +196,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 * @param rng ignored for compatability
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(DataSource& source,
+BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng);
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
@@ -207,7 +207,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 * @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(const std::string& filename,
+BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng,
                                 std::function<std::string ()> get_passphrase);
 
@@ -217,7 +217,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 * @param pass the passphrase to decrypt the key
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(const std::string& filename,
+BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass);
 
@@ -226,7 +226,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 * @param rng ignored for compatability
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(const std::string& filename,
+BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng);
 #endif
 
@@ -236,7 +236,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 * @param rng ignored for compatability
 * @return new copy of the key
 */
-BOTAN_DLL Private_Key* copy_key(const Private_Key& key,
+BOTAN_PUBLIC_API(2,0) Private_Key* copy_key(const Private_Key& key,
                                 RandomNumberGenerator& rng);
 
 }

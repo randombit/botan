@@ -20,7 +20,7 @@ namespace Botan {
 *
 * @see http://www.usenix.org/events/usenix99/provos/provos_html/
 */
-std::string BOTAN_DLL generate_bcrypt(const std::string& password,
+std::string BOTAN_PUBLIC_API(2,0) generate_bcrypt(const std::string& password,
                                       RandomNumberGenerator& rng,
                                       uint16_t work_factor = 10);
 
@@ -29,7 +29,7 @@ std::string BOTAN_DLL generate_bcrypt(const std::string& password,
 * @param password the password to check against
 * @param hash the stored hash to check against
 */
-bool BOTAN_DLL check_bcrypt(const std::string& password,
+bool BOTAN_PUBLIC_API(2,0) check_bcrypt(const std::string& password,
                             const std::string& hash);
 
 }

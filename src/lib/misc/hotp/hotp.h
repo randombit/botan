@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * HOTP one time passwords (RFC 4226)
 */
-class BOTAN_DLL HOTP
+class BOTAN_PUBLIC_API(2,2) HOTP
    {
    public:
       /**

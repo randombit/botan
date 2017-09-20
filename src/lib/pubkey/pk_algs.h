@@ -14,11 +14,11 @@
 
 namespace Botan {
 
-BOTAN_DLL std::unique_ptr<Public_Key>
+BOTAN_PUBLIC_API(2,0) std::unique_ptr<Public_Key>
 load_public_key(const AlgorithmIdentifier& alg_id,
                 const std::vector<uint8_t>& key_bits);
 
-BOTAN_DLL std::unique_ptr<Private_Key>
+BOTAN_PUBLIC_API(2,0) std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,
                  const secure_vector<uint8_t>& key_bits);
 
@@ -30,13 +30,14 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 * For McEliece, algo_params is n,t
 * If algo_params is left empty, suitable default parameters are chosen.
 */
-BOTAN_DLL std::unique_ptr<Private_Key>
+BOTAN_PUBLIC_API(2,0) std::unique_ptr<Private_Key>
 create_private_key(const std::string& algo_name,
                    RandomNumberGenerator& rng,
                    const std::string& algo_params = "",
                    const std::string& provider = "");
 
-BOTAN_DLL std::vector<std::string>
+BOTAN_PUBLIC_API(2,2)
+std::vector<std::string>
 probe_provider_private_key(const std::string& algo_name,
                            const std::vector<std::string> possible);
 

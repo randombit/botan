@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * CBC Mode
 */
-class BOTAN_DLL CBC_Mode : public Cipher_Mode
+class BOTAN_PUBLIC_API(2,0) CBC_Mode : public Cipher_Mode
    {
    public:
       std::string name() const override;
@@ -65,7 +65,7 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
 /**
 * CBC Encryption
 */
-class BOTAN_DLL CBC_Encryption : public CBC_Mode
+class BOTAN_PUBLIC_API(2,0) CBC_Encryption : public CBC_Mode
    {
    public:
       /**
@@ -87,7 +87,7 @@ class BOTAN_DLL CBC_Encryption : public CBC_Mode
 /**
 * CBC Encryption with ciphertext stealing (CBC-CS3 variant)
 */
-class BOTAN_DLL CTS_Encryption final : public CBC_Encryption
+class BOTAN_PUBLIC_API(2,0) CTS_Encryption final : public CBC_Encryption
    {
    public:
       /**
@@ -107,7 +107,7 @@ class BOTAN_DLL CTS_Encryption final : public CBC_Encryption
 /**
 * CBC Decryption
 */
-class BOTAN_DLL CBC_Decryption : public CBC_Mode
+class BOTAN_PUBLIC_API(2,0) CBC_Decryption : public CBC_Mode
    {
    public:
       /**
@@ -134,7 +134,7 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
 /**
 * CBC Decryption with ciphertext stealing (CBC-CS3 variant)
 */
-class BOTAN_DLL CTS_Decryption final : public CBC_Decryption
+class BOTAN_PUBLIC_API(2,0) CTS_Decryption final : public CBC_Decryption
    {
    public:
       /**

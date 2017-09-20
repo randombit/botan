@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * A queue that knows how to zeroize itself
 */
-class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
+class BOTAN_PUBLIC_API(2,0) SecureQueue : public Fanout_Filter, public DataSource
    {
    public:
       std::string name() const override { return "Queue"; }

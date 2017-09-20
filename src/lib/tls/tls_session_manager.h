@@ -26,7 +26,7 @@ namespace TLS {
 *
 * Implementations should strive to be thread safe
 */
-class BOTAN_DLL Session_Manager
+class BOTAN_PUBLIC_API(2,0) Session_Manager
    {
    public:
       /**
@@ -83,7 +83,7 @@ class BOTAN_DLL Session_Manager
 * An implementation of Session_Manager that does not save sessions at
 * all, preventing session resumption.
 */
-class BOTAN_DLL Session_Manager_Noop : public Session_Manager
+class BOTAN_PUBLIC_API(2,0) Session_Manager_Noop : public Session_Manager
    {
    public:
       bool load_from_session_id(const std::vector<uint8_t>&, Session&) override
@@ -105,7 +105,7 @@ class BOTAN_DLL Session_Manager_Noop : public Session_Manager
 /**
 * An implementation of Session_Manager that saves values in memory.
 */
-class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
+class BOTAN_PUBLIC_API(2,0) Session_Manager_In_Memory : public Session_Manager
    {
    public:
       /**

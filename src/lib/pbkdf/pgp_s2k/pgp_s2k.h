@@ -30,7 +30,7 @@ namespace Botan {
 * Note that unlike PBKDF2, OpenPGP S2K's "iterations" are defined as
 * the number of bytes hashed.
 */
-class BOTAN_DLL OpenPGP_S2K final : public PBKDF
+class BOTAN_PUBLIC_API(2,2) OpenPGP_S2K final : public PBKDF
    {
    public:
       /**

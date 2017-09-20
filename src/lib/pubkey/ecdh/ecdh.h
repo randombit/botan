@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * This class represents ECDH Public Keys.
 */
-class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
+class BOTAN_PUBLIC_API(2,0) ECDH_PublicKey : public virtual EC_PublicKey
    {
    public:
       /**
@@ -63,7 +63,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
 /**
 * This class represents ECDH Private Keys.
 */
-class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
+class BOTAN_PUBLIC_API(2,0) ECDH_PrivateKey : public ECDH_PublicKey,
                                   public EC_PrivateKey,
                                   public PK_Key_Agreement_Key
    {

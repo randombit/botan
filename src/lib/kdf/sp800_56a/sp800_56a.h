@@ -19,7 +19,7 @@ namespace Botan {
  * NIST SP 800-56A KDF using hash function
  * @warning This KDF ignores the provided salt value
  */
-class BOTAN_DLL SP800_56A_Hash final : public KDF
+class BOTAN_PUBLIC_API(2,2) SP800_56A_Hash final : public KDF
    {
    public:
       std::string name() const override { return "SP800-56A(" + m_hash->name() + ")"; }
@@ -59,7 +59,7 @@ class BOTAN_DLL SP800_56A_Hash final : public KDF
 /**
  * NIST SP 800-56A KDF using HMAC
  */
-class BOTAN_DLL SP800_56A_HMAC final : public KDF
+class BOTAN_PUBLIC_API(2,2) SP800_56A_HMAC final : public KDF
    {
    public:
       std::string name() const override { return "SP800-56A(" + m_mac->name() + ")"; }

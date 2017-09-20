@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * AES-128
 */
-class BOTAN_DLL AES_128 final : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_PUBLIC_API(2,0) AES_128 final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
@@ -55,7 +55,7 @@ class BOTAN_DLL AES_128 final : public Block_Cipher_Fixed_Params<16, 16>
 /**
 * AES-192
 */
-class BOTAN_DLL AES_192 final : public Block_Cipher_Fixed_Params<16, 24>
+class BOTAN_PUBLIC_API(2,0) AES_192 final : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
@@ -95,7 +95,7 @@ class BOTAN_DLL AES_192 final : public Block_Cipher_Fixed_Params<16, 24>
 /**
 * AES-256
 */
-class BOTAN_DLL AES_256 final : public Block_Cipher_Fixed_Params<16, 32>
+class BOTAN_PUBLIC_API(2,0) AES_256 final : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

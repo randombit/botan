@@ -23,7 +23,7 @@ class Server_Handshake_State;
 /**
 * TLS Server
 */
-class BOTAN_DLL Server final : public Channel
+class BOTAN_PUBLIC_API(2,0) Server final : public Channel
    {
    public:
       typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;

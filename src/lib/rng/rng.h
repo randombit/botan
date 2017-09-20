@@ -22,7 +22,7 @@ class Entropy_Sources;
 /**
 * An interface to a cryptographic random number generator
 */
-class BOTAN_DLL RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
    {
    public:
       virtual ~RandomNumberGenerator() = default;
@@ -177,7 +177,7 @@ typedef RandomNumberGenerator RNG;
 * Hardware_RNG has no members but exists to tag hardware RNG types
 * (PKCS11_RNG, TPM_RNG, RDRAND_RNG)
 */
-class BOTAN_DLL Hardware_RNG : public RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) Hardware_RNG : public RandomNumberGenerator
    {
    };
 
@@ -185,7 +185,7 @@ class BOTAN_DLL Hardware_RNG : public RandomNumberGenerator
 * Null/stub RNG - fails if you try to use it for anything
 * This is not generally useful except for in certain tests
 */
-class BOTAN_DLL Null_RNG final : public RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) Null_RNG final : public RandomNumberGenerator
    {
    public:
       bool is_seeded() const override { return false; }
@@ -208,7 +208,7 @@ class BOTAN_DLL Null_RNG final : public RandomNumberGenerator
 * Note that most of the time it's much better to use a RNG per thread
 * otherwise the RNG will act as an unnecessary contention point
 */
-class BOTAN_DLL Serialized_RNG final : public RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) Serialized_RNG final : public RandomNumberGenerator
    {
    public:
       void randomize(uint8_t out[], size_t len) override

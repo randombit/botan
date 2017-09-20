@@ -36,7 +36,7 @@ class TPM_Error : public Exception
 *
 * TODO: handling owner password?
 */
-class BOTAN_DLL TPM_Context
+class BOTAN_PUBLIC_API(2,0) TPM_Context
    {
    public:
       /**
@@ -72,7 +72,7 @@ class BOTAN_DLL TPM_Context
       TSS_HTPM m_tpm;
    };
 
-class BOTAN_DLL TPM_RNG : public Hardware_RNG
+class BOTAN_PUBLIC_API(2,0) TPM_RNG : public Hardware_RNG
    {
    public:
       TPM_RNG(TPM_Context& ctx) : m_ctx(ctx) {}
@@ -103,7 +103,7 @@ enum class TPM_Storage_Type { User, System };
 * Also implements the public interface, but does not have usable
 * TODO: derive from RSA_PublicKey???
 */
-class BOTAN_DLL TPM_PrivateKey : public Private_Key
+class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey : public Private_Key
    {
    public:
       // TODO: key import?

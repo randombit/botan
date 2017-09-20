@@ -24,7 +24,7 @@ class X509_Certificate;
 /**
 * X.509 Certificate Extension
 */
-class BOTAN_DLL Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Certificate_Extension
    {
    public:
       /**
@@ -83,7 +83,7 @@ class BOTAN_DLL Certificate_Extension
 /**
 * X.509 Certificate Extension List
 */
-class BOTAN_DLL Extensions : public ASN1_Object
+class BOTAN_PUBLIC_API(2,0) Extensions : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;
@@ -179,7 +179,7 @@ static const size_t NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
 /**
 * Basic Constraints Extension
 */
-class BOTAN_DLL Basic_Constraints final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Basic_Constraints final : public Certificate_Extension
    {
    public:
       Basic_Constraints* copy() const override
@@ -206,7 +206,7 @@ class BOTAN_DLL Basic_Constraints final : public Certificate_Extension
 /**
 * Key Usage Constraints Extension
 */
-class BOTAN_DLL Key_Usage final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Key_Usage final : public Certificate_Extension
    {
    public:
       Key_Usage* copy() const override { return new Key_Usage(m_constraints); }
@@ -230,7 +230,7 @@ class BOTAN_DLL Key_Usage final : public Certificate_Extension
 /**
 * Subject Key Identifier Extension
 */
-class BOTAN_DLL Subject_Key_ID final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Subject_Key_ID final : public Certificate_Extension
    {
    public:
       Subject_Key_ID* copy() const override
@@ -255,7 +255,7 @@ class BOTAN_DLL Subject_Key_ID final : public Certificate_Extension
 /**
 * Authority Key Identifier Extension
 */
-class BOTAN_DLL Authority_Key_ID final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Authority_Key_ID final : public Certificate_Extension
    {
    public:
       Authority_Key_ID* copy() const override
@@ -281,7 +281,7 @@ class BOTAN_DLL Authority_Key_ID final : public Certificate_Extension
 /**
 * Alternative Name Extension Base Class
 */
-class BOTAN_DLL Alternative_Name : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Alternative_Name : public Certificate_Extension
    {
    public:
       AlternativeName get_alt_name() const { return m_alt_name; }
@@ -306,7 +306,7 @@ class BOTAN_DLL Alternative_Name : public Certificate_Extension
 /**
 * Subject Alternative Name Extension
 */
-class BOTAN_DLL Subject_Alternative_Name : public Alternative_Name
+class BOTAN_PUBLIC_API(2,0) Subject_Alternative_Name : public Alternative_Name
    {
    public:
       Subject_Alternative_Name* copy() const override
@@ -318,7 +318,7 @@ class BOTAN_DLL Subject_Alternative_Name : public Alternative_Name
 /**
 * Issuer Alternative Name Extension
 */
-class BOTAN_DLL Issuer_Alternative_Name : public Alternative_Name
+class BOTAN_PUBLIC_API(2,0) Issuer_Alternative_Name : public Alternative_Name
    {
    public:
       Issuer_Alternative_Name* copy() const override
@@ -330,7 +330,7 @@ class BOTAN_DLL Issuer_Alternative_Name : public Alternative_Name
 /**
 * Extended Key Usage Extension
 */
-class BOTAN_DLL Extended_Key_Usage final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Extended_Key_Usage final : public Certificate_Extension
    {
    public:
       Extended_Key_Usage* copy() const override
@@ -356,7 +356,7 @@ class BOTAN_DLL Extended_Key_Usage final : public Certificate_Extension
 /**
 * Name Constraints
 */
-class BOTAN_DLL Name_Constraints : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Name_Constraints : public Certificate_Extension
    {
    public:
       Name_Constraints* copy() const override
@@ -385,7 +385,7 @@ class BOTAN_DLL Name_Constraints : public Certificate_Extension
 /**
 * Certificate Policies Extension
 */
-class BOTAN_DLL Certificate_Policies final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Certificate_Policies final : public Certificate_Extension
    {
    public:
       Certificate_Policies* copy() const override
@@ -408,7 +408,7 @@ class BOTAN_DLL Certificate_Policies final : public Certificate_Extension
       std::vector<OID> m_oids;
    };
 
-class BOTAN_DLL Authority_Information_Access final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Authority_Information_Access final : public Certificate_Extension
    {
    public:
       Authority_Information_Access* copy() const override
@@ -436,7 +436,7 @@ class BOTAN_DLL Authority_Information_Access final : public Certificate_Extensio
 /**
 * CRL Number Extension
 */
-class BOTAN_DLL CRL_Number final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) CRL_Number final : public Certificate_Extension
    {
    public:
       CRL_Number* copy() const override;
@@ -461,7 +461,7 @@ class BOTAN_DLL CRL_Number final : public Certificate_Extension
 /**
 * CRL Entry Reason Code Extension
 */
-class BOTAN_DLL CRL_ReasonCode final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) CRL_ReasonCode final : public Certificate_Extension
    {
    public:
       CRL_ReasonCode* copy() const override
@@ -485,10 +485,10 @@ class BOTAN_DLL CRL_ReasonCode final : public Certificate_Extension
 /**
 * CRL Distribution Points Extension
 */
-class BOTAN_DLL CRL_Distribution_Points final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) CRL_Distribution_Points final : public Certificate_Extension
    {
    public:
-      class BOTAN_DLL Distribution_Point final : public ASN1_Object
+      class BOTAN_PUBLIC_API(2,0) Distribution_Point final : public ASN1_Object
          {
          public:
             void encode_into(class DER_Encoder&) const override;
@@ -528,7 +528,7 @@ class BOTAN_DLL CRL_Distribution_Points final : public Certificate_Extension
 * An unknown X.509 extension marked as critical
 * Will always add a failure to the path validation result.
 */
-class BOTAN_DLL Unknown_Critical_Extension final : public Certificate_Extension
+class BOTAN_PUBLIC_API(2,0) Unknown_Critical_Extension final : public Certificate_Extension
    {
    public:
       explicit Unknown_Critical_Extension(OID oid) : m_oid(oid) {}

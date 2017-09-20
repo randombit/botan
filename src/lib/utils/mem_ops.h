@@ -29,7 +29,7 @@ namespace Botan {
 * @param ptr a pointer to memory to scrub
 * @param n the number of bytes pointed to by ptr
 */
-BOTAN_DLL void secure_scrub_memory(void* ptr, size_t n);
+BOTAN_PUBLIC_API(2,0) void secure_scrub_memory(void* ptr, size_t n);
 
 /**
 * Memory comparison, input insensitive
@@ -38,7 +38,7 @@ BOTAN_DLL void secure_scrub_memory(void* ptr, size_t n);
 * @param len the number of Ts in x and y
 * @return true iff x[i] == y[i] forall i in [0...n)
 */
-BOTAN_DLL bool constant_time_compare(const uint8_t x[],
+BOTAN_PUBLIC_API(2,3) bool constant_time_compare(const uint8_t x[],
                                      const uint8_t y[],
                                      size_t len);
 
@@ -122,7 +122,7 @@ template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
 * @param in the read-only input buffer
 * @param length the length of the buffers
 */
-BOTAN_DLL void xor_buf(uint8_t out[],
+BOTAN_PUBLIC_API(2,3) void xor_buf(uint8_t out[],
                        const uint8_t in[],
                        size_t length);
 
@@ -133,7 +133,7 @@ BOTAN_DLL void xor_buf(uint8_t out[],
 * @param in2 the second output buffer
 * @param length the length of the three buffers
 */
-BOTAN_DLL void xor_buf(uint8_t out[],
+BOTAN_PUBLIC_API(2,3) void xor_buf(uint8_t out[],
                        const uint8_t in[],
                        const uint8_t in2[],
                        size_t length);

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MD5
 */
-class BOTAN_DLL MD5 final : public MDx_HashFunction
+class BOTAN_PUBLIC_API(2,0) MD5 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "MD5"; }

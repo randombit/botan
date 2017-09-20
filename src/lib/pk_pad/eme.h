@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Encoding Method for Encryption
 */
-class BOTAN_DLL EME
+class BOTAN_PUBLIC_API(2,0) EME
    {
    public:
       virtual ~EME() = default;
@@ -83,7 +83,7 @@ class BOTAN_DLL EME
 * @param algo_spec the name of the EME to create
 * @return pointer to newly allocated object of that type
 */
-BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
+BOTAN_PUBLIC_API(2,0) EME*  get_eme(const std::string& algo_spec);
 
 }
 

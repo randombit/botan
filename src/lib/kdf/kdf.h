@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Key Derivation Function
 */
-class BOTAN_DLL KDF
+class BOTAN_PUBLIC_API(2,0) KDF
    {
    public:
       virtual ~KDF() = default;
@@ -189,7 +189,7 @@ class BOTAN_DLL KDF
 * @param algo_spec the name of the KDF to create
 * @return pointer to newly allocated object of that type
 */
-BOTAN_DLL KDF* get_kdf(const std::string& algo_spec);
+BOTAN_PUBLIC_API(2,0) KDF* get_kdf(const std::string& algo_spec);
 
 }
 

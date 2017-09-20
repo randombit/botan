@@ -23,7 +23,7 @@ namespace TLS {
 * TLS Policy Base Class
 * Inherit and overload as desired to suit local policy concerns
 */
-class BOTAN_DLL Policy
+class BOTAN_PUBLIC_API(2,0) Policy
    {
    public:
 
@@ -309,7 +309,7 @@ class BOTAN_DLL Policy
 /**
 * NSA Suite B 128-bit security level (RFC 6460)
 */
-class BOTAN_DLL NSA_Suite_B_128 : public Policy
+class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override
@@ -342,7 +342,7 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
 /**
 * BSI TR-02102-2 Policy
 */
-class BOTAN_DLL BSI_TR_02102_2 : public Policy
+class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override
@@ -397,7 +397,7 @@ class BOTAN_DLL BSI_TR_02102_2 : public Policy
 /**
 * Policy for DTLS. We require DTLS v1.2 and an AEAD mode.
 */
-class BOTAN_DLL Datagram_Policy : public Policy
+class BOTAN_PUBLIC_API(2,0) Datagram_Policy : public Policy
    {
    public:
       std::vector<std::string> allowed_macs() const override
@@ -417,7 +417,7 @@ class BOTAN_DLL Datagram_Policy : public Policy
 * to use if you control both sides of the protocol and don't have to worry
 * about ancient and/or bizarre TLS implementations.
 */
-class BOTAN_DLL Strict_Policy : public Policy
+class BOTAN_PUBLIC_API(2,0) Strict_Policy : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override;
@@ -435,7 +435,7 @@ class BOTAN_DLL Strict_Policy : public Policy
       bool allow_dtls12() const override;
    };
 
-class BOTAN_DLL Text_Policy : public Policy
+class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
    {
    public:
 

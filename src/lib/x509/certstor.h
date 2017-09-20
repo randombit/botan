@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Certificate Store Interface
 */
-class BOTAN_DLL Certificate_Store
+class BOTAN_PUBLIC_API(2,0) Certificate_Store
    {
    public:
       virtual ~Certificate_Store() = default;
@@ -71,7 +71,7 @@ class BOTAN_DLL Certificate_Store
 /**
 * In Memory Certificate Store
 */
-class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
+class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_Memory : public Certificate_Store
    {
    public:
       /**

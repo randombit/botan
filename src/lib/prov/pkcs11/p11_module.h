@@ -22,7 +22,7 @@ namespace PKCS11 {
 * Loads the PKCS#11 shared library
 * Calls C_Initialize on load and C_Finalize on destruction
 */
-class BOTAN_DLL Module final
+class BOTAN_PUBLIC_API(2,0) Module final
    {
    public:
       /**

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * 32-bit cyclic redundancy check
 */
-class BOTAN_DLL CRC32 final : public HashFunction
+class BOTAN_PUBLIC_API(2,0) CRC32 final : public HashFunction
    {
    public:
       std::string name() const override { return "CRC32"; }

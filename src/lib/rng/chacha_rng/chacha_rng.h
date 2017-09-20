@@ -37,7 +37,7 @@ class Entropy_Sources;
 * The primary reason to use it is in cases where the other RNGs are
 * not fast enough.
 */
-class BOTAN_DLL ChaCha_RNG final : public Stateful_RNG
+class BOTAN_PUBLIC_API(2,3) ChaCha_RNG final : public Stateful_RNG
    {
    public:
       /**
