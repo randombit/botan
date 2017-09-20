@@ -54,8 +54,8 @@ class BOTAN_PUBLIC_API(2,2) SM2_Encryption_PublicKey : public virtual EC_PublicK
 /**
 * This class represents a private key used for SM2 encryption
 */
-class BOTAN_PUBLIC_API(2,2) SM2_Encryption_PrivateKey : public SM2_Encryption_PublicKey,
-                                            public EC_PrivateKey
+class BOTAN_PUBLIC_API(2,2) SM2_Encryption_PrivateKey final :
+   public SM2_Encryption_PublicKey, public EC_PrivateKey
    {
    public:
 
