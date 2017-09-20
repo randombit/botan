@@ -152,7 +152,10 @@ def remove_file_if_exists(fspath):
         if e.errno != errno.ENOENT:
             raise
 
-def rewrite_version_file(version_file, target_version, rev_id, rel_date):
+def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, rel_date):
+
+    if snapshot_branch:
+        assert target_version == 'HEAD'
 
     version_file_name = os.path.basename(version_file)
 
@@ -163,7 +166,8 @@ def rewrite_version_file(version_file, target_version, rev_id, rel_date):
     def content_rewriter():
         for line in contents:
 
-            if target_version != 'HEAD':
+            if not snapshot_branch:
+                # Verify the version set in the source matches the tag
                 match = version_re.match(line)
                 if match:
                     name_to_idx = {
@@ -186,7 +190,7 @@ def rewrite_version_file(version_file, target_version, rev_id, rel_date):
                 yield 'release_datestamp = %d\n' % (rel_date)
             elif line == "release_type = \'unreleased\'\n":
                 if target_version == 'HEAD':
-                    yield "release_type = 'snapshot'\n"
+                    yield "release_type = 'snapshot:%s'\n" % (snapshot_branch)
                 else:
                     yield "release_type = 'release'\n"
             else:
@@ -224,42 +228,43 @@ def main(args=None):
         logging.error('Usage error, try --help')
         return 1
 
-    is_snapshot = args[0] == 'snapshot'
+    snapshot_branch = None
     target_version = None
 
-    if is_snapshot:
-        if len(args) == 1:
+    if args[0] == 'snapshot':
+        if len(args) != 2:
             logging.error('Missing branch name for snapshot command')
             return 1
+        snapshot_branch = args[1]
+    else:
+        if len(args) != 1:
+            logging.error('Usage error, try --help')
+            return 1
+        target_version = args[0]
 
-        logging.info('Creating snapshot release from branch %s', args[1])
+    if snapshot_branch:
+        logging.info('Creating snapshot release from branch %s', snapshot_branch)
         target_version = 'HEAD'
     elif len(args) == 1:
         try:
-            logging.info('Creating release for version %s' % (args[0]))
+            logging.info('Creating release for version %s' % (target_version))
 
-            (major, minor, patch) = map(int, args[0].split('.'))
+            (major, minor, patch) = map(int, target_version.split('.'))
 
-            assert args[0] == '%d.%d.%d' % (major, minor, patch)
-            target_version = args[0]
+            assert target_version == '%d.%d.%d' % (major, minor, patch)
+            target_version = target_version
         except ValueError as e:
-            logging.error('Invalid version number %s' % (args[0]))
+            logging.error('Invalid version number %s' % (target_version))
             return 1
-    else:
-        logging.error('Usage error, try --help')
-        return 1
 
     def output_name(args):
-        if is_snapshot:
-            def snapshot_name(branch):
-                if branch == 'master':
-                    return 'trunk'
-                else:
-                    return branch
-
-            return 'botan-%s-snapshot-%s' % (snapshot_name(args[1]), today)
+        if snapshot_branch:
+            if snapshot_branch == 'master':
+                return 'Botan-snapshot-%s' % (today)
+            else:
+                return 'Botan-snapshot-%s-%s' % (snapshot_branch, today)
         else:
-            return 'Botan-' + args[0]
+            return 'Botan-' + target_version
 
     rev_id = revision_of(target_version)
 
@@ -296,7 +301,7 @@ def main(args=None):
         logging.error('Cannot read %s' % (version_file))
         return 2
 
-    rewrite_version_file(version_file, target_version, rev_id, rel_date)
+    rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, rel_date)
 
     try:
         os.makedirs(options.output_dir)
