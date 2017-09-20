@@ -178,11 +178,13 @@ class Filter_Tests : public Test
          pipe.prepend(nullptr); // ignored
          pipe.pop(); // empty pipe, so ignored
 
+         std::unique_ptr<Botan::Filter> queue_filter(new Botan::SecureQueue);
+
          // can't explicitly insert a queue into the pipe because they are implicit
          result.test_throws("pipe error", "Invalid argument Pipe::append: SecureQueue cannot be used", [&]()
-            { pipe.append(new Botan::SecureQueue); });
+            { pipe.append(queue_filter.get()); });
          result.test_throws("pipe error", "Invalid argument Pipe::prepend: SecureQueue cannot be used", [&]()
-            { pipe.prepend(new Botan::SecureQueue); });
+            { pipe.prepend(queue_filter.get()); });
 
          pipe.start_msg();
 
