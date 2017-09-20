@@ -347,7 +347,14 @@ class Stateful_RNG_Tests : public Test
             written = ::write(fd[1], &child_bytes[0], child_bytes.size());
             BOTAN_UNUSED(written);
             ::close(fd[1]); // close write end in child
-            ::_exit(0);
+
+            /*
+            * We can't call exit because it causes the mlock pool to be freed (#602)
+            * We can't call _exit because it makes valgrind think we leaked memory.
+            * So instead we execute something that will return 0 for us.
+            */
+            ::execl("/bin/true", "true", NULL);
+            ::_exit(0); // just in case /bin/true isn't available (sandbox?)
             }
 #endif
          return result;
