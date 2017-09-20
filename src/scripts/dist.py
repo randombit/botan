@@ -23,6 +23,9 @@ import tarfile
 
 # This is horrible, but there is no way to override tarfile's use of time.time
 # in setting the gzip header timestamp, which breaks deterministic archives
+# First cache today (needed for snapshot builds) then override time.time...
+
+today = datetime.date.today().isoformat().replace('-', '')
 
 def null_time():
     return 0
@@ -248,8 +251,6 @@ def main(args=None):
 
     def output_name(args):
         if is_snapshot:
-            today = datetime.date.today().isoformat().replace('-', '')
-
             def snapshot_name(branch):
                 if branch == 'master':
                     return 'trunk'
