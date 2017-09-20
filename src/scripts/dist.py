@@ -334,7 +334,7 @@ def main(args=None):
         all_files = []
         for (curdir, _, files) in os.walk(output_basename):
             all_files += [os.path.join(curdir, f) for f in files]
-        all_files.sort()
+        all_files.sort(key = lambda f: (os.path.dirname(f), os.path.basename(f)))
 
         def write_mode(archive_type):
             if archive_type == 'tgz':
