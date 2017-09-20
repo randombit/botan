@@ -32,6 +32,9 @@ Version 2.3.0, Not Yet Released
 
 * Add ids to allow SHA-3 signatures with PKCSv1.5 (GH #1184)
 
+* Add support for `PSSR_Raw` signatures which PSS sign an externally derived
+  hash. (GH #1212 #1211)
+
 * GCM now supports truncated tags in the range 96...128 bits. GCM had
   previously supported 64-bit truncated tags, but these are known to
   be insecure and are now deprecated. (GH #1210 #1207)
@@ -124,6 +127,38 @@ Version 2.3.0, Not Yet Released
   on MinGW now (GH #1203)
 
 * Added a script to automate running TLS-Attacker tests.
+
+* The distribution script now creates reproductible outputs, by
+  forcing all modification times, uids, etc to values fixed by the release date.
+  (GH #1217)
+
+* The ``BOTAN_DLL`` macro has been split up into ``BOTAN_PUBLIC_API``,
+  ``BOTAN_UNSTABLE_API`` and ``BOTAN_TEST_API`` which allows
+  indicating in the header the API stability of the export. All three
+  are defined as ``BOTAN_DLL`` so overriding just that macro continues
+  to work as before. (GH #1216)
+
+* Optimize `bigint_divop` when a double-word type is available. (GH #494)
+
+* Fix several memory leaks in the tests. Additionally a false positive
+  leak seen under ``valgrind`` in the ``fork`` tests for the RNG was resolved.
+
+* Export ``CurveGFp_Repr`` type (only used internally) to resolve a
+  long standing UBSan warning. (GH #453)
+
+* Now ``-fstack-protector`` and similar flags that affect linking are exported
+  in ``botan config ldflags`` as they already were in the ``pkg-config`` output.
+  (GH #863)
+
+* Remove double underscore in header guards to avoid using names
+  reserved by ISO C++. (GH #512)
+
+* Additions to the SRP documentation (GH #1029)
+
+* The package transform (in ``package.h``) is now deprecated, and will be
+  removed in a future release. (GH #1215)
+
+* Add more tests for the const-time utils (GH #1214)
 
 * Fix a bug in FFI tests that caused the test files not to be found when using
   ``--data-dir`` option (GH #1149)
