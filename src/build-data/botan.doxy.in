@@ -144,13 +144,14 @@ GENERATE_XML = NO
 # Configuration options related to the preprocessor
 #---------------------------------------------------------------------------
 ENABLE_PREPROCESSING   = YES
-MACRO_EXPANSION        = NO
+MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = NO
 SEARCH_INCLUDES        = YES
 INCLUDE_PATH           =
 INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = BOTAN_HAS_AES_SSSE3 \
                          BOTAN_HAS_AES_NI \
+                         BOTAN_HAS_AES_ARMV8 \
                          BOTAN_HAS_IDEA_SSE2 \
                          BOTAN_HAS_NOEKEON_SIMD \
                          BOTAN_HAS_SERPENT_SIMD \
@@ -158,7 +159,9 @@ PREDEFINED             = BOTAN_HAS_AES_SSSE3 \
                          BOTAN_HAS_SHA1_SSE2 \
                          BOTAN_HAS_CHACHA_SSE2 \
                          BOTAN_HAS_SHACAL2_SIMD \
-                         BOTAN_HAS_SHACAL2_X86
+                         BOTAN_HAS_SHACAL2_X86 \
+                         BOTAN_PUBLIC_API(maj,min)=
+
 
 EXPAND_AS_DEFINED      =
 SKIP_FUNCTION_MACROS   = YES
