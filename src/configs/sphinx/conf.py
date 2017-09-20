@@ -1,7 +1,6 @@
 # Sphinx configuration file
 
 import sys
-import ast
 import re
 
 #import sphinx
@@ -26,7 +25,17 @@ def parse_version_file(version_path):
             continue
         match = key_and_val.match(line)
         if match:
-            results[match.group(1)] = ast.literal_eval(match.group(2))
+            key = match.group(1)
+            val = match.group(2)
+
+            if val == 'None':
+                val = None
+            elif val.startswith("'") and val.endswith("'"):
+                val = val[1:len(val)-1]
+            else:
+                val = int(val)
+
+            results[key] = val
     return results
 
 version_info = parse_version_file('../../../version.txt')
