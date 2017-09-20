@@ -69,9 +69,11 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
    if(pvr > 0)
       {
       const uint16_t ALTIVEC_PVR[] = {
-         0x003E, // IBM POWER6,
-         0x003F, // IBM POWER7,
-         0x004B, // IBM POWER8,
+         0x003E, // IBM POWER6
+         0x003F, // IBM POWER7
+         0x004A, // IBM POWER7p
+         0x004D, // IBM POWER8
+         0x004B, // IBM POWER8E
          0x000C, // G4-7400
          0x0039, // G5 970
          0x003C, // G5 970FX
