@@ -83,7 +83,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         flags += ['--with-coverage-info']
     if target == 'valgrind':
         flags += ['--with-valgrind']
-        test_prefix = ['valgrind', '--error-exitcode=9', '-v']
+        test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
         test_cmd += fast_tests
     if target == 'fuzzers':
         flags += ['--unsafe-fuzzer-mode']
