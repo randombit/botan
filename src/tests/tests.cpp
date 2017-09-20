@@ -233,6 +233,11 @@ bool Test::Result::test_eq(const std::string& what, size_t produced, size_t expe
    return test_is_eq(what, produced, expected);
    }
 
+bool Test::Result::test_eq_sz(const std::string& what, size_t produced, size_t expected)
+   {
+   return test_is_eq(what, produced, expected);
+   }
+
 bool Test::Result::test_eq(const std::string& what, OctetString produced, OctetString expected)
    {
    std::ostringstream out;
