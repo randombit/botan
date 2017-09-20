@@ -35,9 +35,9 @@ void SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t block
       B0_1 = _mm_shuffle_epi8(_mm_unpackhi_epi64(B0_0, B0_1), MASK2);
       B0_0 = TMP;
 
-      TMP = _mm_shuffle_epi8(_mm_unpacklo_epi64(B0_0, B0_1), MASK2);
-      B0_1 = _mm_shuffle_epi8(_mm_unpackhi_epi64(B0_0, B0_1), MASK2);
-      B0_0 = TMP;
+      TMP = _mm_shuffle_epi8(_mm_unpacklo_epi64(B1_0, B1_1), MASK2);
+      B1_1 = _mm_shuffle_epi8(_mm_unpackhi_epi64(B1_0, B1_1), MASK2);
+      B1_0 = TMP;
 
       for(size_t i = 0; i != 8; ++i)
          {
