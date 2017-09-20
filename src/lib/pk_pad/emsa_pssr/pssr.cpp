@@ -1,6 +1,6 @@
 /*
 * PSSR
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,65 +11,49 @@
 
 namespace Botan {
 
-/*
-* PSSR Update Operation
-*/
-void PSSR::update(const uint8_t input[], size_t length)
-   {
-   m_hash->update(input, length);
-   }
-
-/*
-* Return the raw (unencoded) data
-*/
-secure_vector<uint8_t> PSSR::raw_data()
-   {
-   return m_hash->final();
-   }
+namespace {
 
 /*
 * PSSR Encode Operation
 */
-secure_vector<uint8_t> PSSR::encoding_of(const secure_vector<uint8_t>& msg,
-                                      size_t output_bits,
-                                      RandomNumberGenerator& rng)
+secure_vector<uint8_t> pss_encode(HashFunction& hash,
+                                  const secure_vector<uint8_t>& msg,
+                                  const secure_vector<uint8_t>& salt,
+                                  size_t output_bits)
    {
-   const size_t HASH_SIZE = m_hash->output_length();
+   const size_t HASH_SIZE = hash.output_length();
+   const size_t SALT_SIZE = salt.size();
 
    if(msg.size() != HASH_SIZE)
-      throw Encoding_Error("PSSR::encoding_of: Bad input length");
-   if(output_bits < 8*HASH_SIZE + 8*m_SALT_SIZE + 9)
-      throw Encoding_Error("PSSR::encoding_of: Output length is too small");
+      throw Encoding_Error("Cannot encode PSS string, input length invalid for hash");
+   if(output_bits < 8*HASH_SIZE + 8*SALT_SIZE + 9)
+      throw Encoding_Error("Cannot encode PSS string, output length too small");
 
    const size_t output_length = (output_bits + 7) / 8;
 
-   secure_vector<uint8_t> salt = rng.random_vec(m_SALT_SIZE);
-
-   for(size_t j = 0; j != 8; ++j)
-      m_hash->update(0);
-   m_hash->update(msg);
-   m_hash->update(salt);
-   secure_vector<uint8_t> H = m_hash->final();
+   for(size_t i = 0; i != 8; ++i)
+      hash.update(0);
+   hash.update(msg);
+   hash.update(salt);
+   secure_vector<uint8_t> H = hash.final();
 
    secure_vector<uint8_t> EM(output_length);
 
-   EM[output_length - HASH_SIZE - m_SALT_SIZE - 2] = 0x01;
-   buffer_insert(EM, output_length - 1 - HASH_SIZE - m_SALT_SIZE, salt);
-   mgf1_mask(*m_hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
+   EM[output_length - HASH_SIZE - SALT_SIZE - 2] = 0x01;
+   buffer_insert(EM, output_length - 1 - HASH_SIZE - SALT_SIZE, salt);
+   mgf1_mask(hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
    EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
    buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
    EM[output_length-1] = 0xBC;
-
    return EM;
    }
 
-/*
-* PSSR Decode/Verify Operation
-*/
-bool PSSR::verify(const secure_vector<uint8_t>& const_coded,
-                   const secure_vector<uint8_t>& raw, size_t key_bits)
+bool pss_verify(HashFunction& hash,
+                const secure_vector<uint8_t>& const_coded,
+                const secure_vector<uint8_t>& raw,
+                size_t key_bits)
    {
-   const size_t HASH_SIZE = m_hash->output_length();
+   const size_t HASH_SIZE = hash.output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
 
    if(key_bits < 8*HASH_SIZE + 9)
@@ -102,7 +86,7 @@ bool PSSR::verify(const secure_vector<uint8_t>& const_coded,
    const uint8_t* H = &coded[DB_size];
    const size_t H_size = HASH_SIZE;
 
-   mgf1_mask(*m_hash, H, H_size, DB, DB_size);
+   mgf1_mask(hash, H, H_size, DB, DB_size);
    DB[0] &= 0xFF >> TOP_BITS;
 
    size_t salt_offset = 0;
@@ -116,23 +100,112 @@ bool PSSR::verify(const secure_vector<uint8_t>& const_coded,
    if(salt_offset == 0)
       return false;
 
+   const size_t salt_size = DB_size - salt_offset;
+
    for(size_t j = 0; j != 8; ++j)
-      m_hash->update(0);
-   m_hash->update(raw);
-   m_hash->update(&DB[salt_offset], DB_size - salt_offset);
-   secure_vector<uint8_t> H2 = m_hash->final();
+      hash.update(0);
+   hash.update(raw);
+   hash.update(&DB[salt_offset], salt_size);
+
+   secure_vector<uint8_t> H2 = hash.final();
 
    return constant_time_compare(H, H2.data(), HASH_SIZE);
    }
 
+}
+
 PSSR::PSSR(HashFunction* h) :
-   m_SALT_SIZE(h->output_length()), m_hash(h)
+   m_hash(h), m_SALT_SIZE(m_hash->output_length())
    {
    }
 
 PSSR::PSSR(HashFunction* h, size_t salt_size) :
-   m_SALT_SIZE(salt_size), m_hash(h)
+   m_hash(h), m_SALT_SIZE(salt_size)
    {
+   }
+
+/*
+* PSSR Update Operation
+*/
+void PSSR::update(const uint8_t input[], size_t length)
+   {
+   m_hash->update(input, length);
+   }
+
+/*
+* Return the raw (unencoded) data
+*/
+secure_vector<uint8_t> PSSR::raw_data()
+   {
+   return m_hash->final();
+   }
+
+secure_vector<uint8_t> PSSR::encoding_of(const secure_vector<uint8_t>& msg,
+                                         size_t output_bits,
+                                         RandomNumberGenerator& rng)
+   {
+   secure_vector<uint8_t> salt = rng.random_vec(m_SALT_SIZE);
+   return pss_encode(*m_hash, msg, salt, output_bits);
+   }
+
+/*
+* PSSR Decode/Verify Operation
+*/
+bool PSSR::verify(const secure_vector<uint8_t>& coded,
+                  const secure_vector<uint8_t>& raw,
+                  size_t key_bits)
+   {
+   return pss_verify(*m_hash, coded, raw, key_bits);
+   }
+
+PSSR_Raw::PSSR_Raw(HashFunction* h) :
+   m_hash(h), m_SALT_SIZE(m_hash->output_length())
+   {
+   }
+
+PSSR_Raw::PSSR_Raw(HashFunction* h, size_t salt_size) :
+   m_hash(h), m_SALT_SIZE(salt_size)
+   {
+   }
+
+/*
+* PSSR_Raw Update Operation
+*/
+void PSSR_Raw::update(const uint8_t input[], size_t length)
+   {
+   m_msg.insert(m_msg.end(), input, input + length);
+   }
+
+/*
+* Return the raw (unencoded) data
+*/
+secure_vector<uint8_t> PSSR_Raw::raw_data()
+   {
+   secure_vector<uint8_t> ret;
+   std::swap(ret, m_msg);
+
+   if(ret.size() != m_hash->output_length())
+      throw Encoding_Error("PSSR_Raw Bad input length, did not match hash");
+
+   return ret;
+   }
+
+secure_vector<uint8_t> PSSR_Raw::encoding_of(const secure_vector<uint8_t>& msg,
+                                             size_t output_bits,
+                                             RandomNumberGenerator& rng)
+   {
+   secure_vector<uint8_t> salt = rng.random_vec(m_SALT_SIZE);
+   return pss_encode(*m_hash, msg, salt, output_bits);
+   }
+
+/*
+* PSSR_Raw Decode/Verify Operation
+*/
+bool PSSR_Raw::verify(const secure_vector<uint8_t>& coded,
+                      const secure_vector<uint8_t>& raw,
+                      size_t key_bits)
+   {
+   return pss_verify(*m_hash, coded, raw, key_bits);
    }
 
 }

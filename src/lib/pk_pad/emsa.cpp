@@ -73,9 +73,10 @@ EMSA* get_emsa(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_EMSA_PSSR)
    if(req.algo_name() == "PSSR" ||
-         req.algo_name() == "EMSA-PSS" ||
-         req.algo_name() == "PSS-MGF1" ||
-         req.algo_name() == "EMSA4")
+      req.algo_name() == "EMSA-PSS" ||
+      req.algo_name() == "PSS-MGF1" ||
+      req.algo_name() == "EMSA4" ||
+      req.algo_name() == "PSSR_Raw")
       {
       if(req.arg_count_between(1, 3))
          {
@@ -85,7 +86,11 @@ EMSA* get_emsa(const std::string& algo_spec)
          if(auto h = HashFunction::create(req.arg(0)))
             {
             const size_t salt_size = req.arg_as_integer(2, h->output_length());
-            return new PSSR(h.release(), salt_size);
+
+            if(req.algo_name() == "PSSR_Raw")
+               return new PSSR_Raw(h.release(), salt_size);
+            else
+               return new PSSR(h.release(), salt_size);
             }
          }
       }
