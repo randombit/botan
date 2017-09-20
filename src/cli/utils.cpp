@@ -137,6 +137,8 @@ class Config_Info final : public Command
             }
          else if(arg == "ldflags")
             {
+            if(*BOTAN_LINK_FLAGS)
+               output() << BOTAN_LINK_FLAGS << ' ';
             output() << "-L" << BOTAN_INSTALL_PREFIX << "/" << BOTAN_INSTALL_LIB_DIR << "\n";
             }
          else if(arg == "libs")
