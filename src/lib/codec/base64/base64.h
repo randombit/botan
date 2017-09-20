@@ -127,14 +127,14 @@ secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) base64_decode(const std::string& in
 * @param input_length the length of input in bytes
 * @return the size of output buffer in bytes
 */
-size_t BOTAN_DLL base64_encode_max_output(size_t input_length);
+size_t BOTAN_PUBLIC_API(2,1) base64_encode_max_output(size_t input_length);
 
 /**
 * Calculate the size of output buffer for base64_decode
 * @param input_length the length of input in bytes
 * @return the size of output buffer in bytes
 */
-size_t BOTAN_DLL base64_decode_max_output(size_t input_length);
+size_t BOTAN_PUBLIC_API(2,1) base64_decode_max_output(size_t input_length);
 
 }
 

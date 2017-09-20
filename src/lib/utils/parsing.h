@@ -57,9 +57,10 @@ BOTAN_PUBLIC_API(2,0) std::string erase_chars(const std::string& str, const std:
 * @param to_char the character to replace it with
 * @return str with all instances of from_char replaced by to_char
 */
-BOTAN_PUBLIC_API(2,0) std::string replace_char(const std::string& str,
-                                   char from_char,
-                                   char to_char);
+BOTAN_PUBLIC_API(2,0)
+std::string replace_char(const std::string& str,
+                         char from_char,
+                         char to_char);
 
 /**
 * Replace a character in a string
@@ -68,9 +69,10 @@ BOTAN_PUBLIC_API(2,0) std::string replace_char(const std::string& str,
 * @param to_char the character to replace it with
 * @return str with all instances of from_chars replaced by to_char
 */
-BOTAN_PUBLIC_API(2,0) std::string replace_chars(const std::string& str,
-                                    const std::set<char>& from_chars,
-                                    char to_char);
+BOTAN_PUBLIC_API(2,0)
+std::string replace_chars(const std::string& str,
+                          const std::set<char>& from_chars,
+                          char to_char);
 
 /**
 * Join a string
@@ -78,8 +80,9 @@ BOTAN_PUBLIC_API(2,0) std::string replace_chars(const std::string& str,
 * @param delim the delimitor
 * @return string joined by delim
 */
-BOTAN_PUBLIC_API(2,0) std::string string_join(const std::vector<std::string>& strs,
-                                  char delim);
+BOTAN_PUBLIC_API(2,0)
+std::string string_join(const std::vector<std::string>& strs,
+                        char delim);
 
 /**
 * Parse an ASN.1 OID
@@ -94,8 +97,9 @@ BOTAN_PUBLIC_API(2,0) std::vector<uint32_t> parse_asn1_oid(const std::string& oi
 * @param name2 the second name
 * @return true if name1 is the same as name2 by the X.509 comparison rules
 */
-BOTAN_PUBLIC_API(2,0) bool x500_name_cmp(const std::string& name1,
-                             const std::string& name2);
+BOTAN_PUBLIC_API(2,0)
+bool x500_name_cmp(const std::string& name1,
+                   const std::string& name2);
 
 /**
 * Convert a string to a number
@@ -109,7 +113,7 @@ BOTAN_PUBLIC_API(2,0) uint32_t to_u32bit(const std::string& str);
 * @param str the string to convert
 * @return number value of the string
 */
-BOTAN_DLL uint16_t to_uint16(const std::string& str);
+BOTAN_PUBLIC_API(2,3) uint16_t to_uint16(const std::string& str);
 
 /**
 * Convert a time specification to a number

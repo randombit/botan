@@ -517,38 +517,38 @@ typedef struct botan_block_cipher_struct* botan_block_cipher_t;
 /**
 * Initialize a block cipher object
 */
-BOTAN_PUBLIC_API(2,2) int botan_block_cipher_init(botan_block_cipher_t* bc,
+BOTAN_PUBLIC_API(2,1) int botan_block_cipher_init(botan_block_cipher_t* bc,
                                       const char* cipher_name);
 
 /**
 * Destroy a block cipher object
 */
-BOTAN_PUBLIC_API(2,2) int botan_block_cipher_destroy(botan_block_cipher_t bc);
+BOTAN_PUBLIC_API(2,1) int botan_block_cipher_destroy(botan_block_cipher_t bc);
 
 /**
 * Reinitializes the block cipher
 * @return 0 on success, a negative value on failure
 */
-BOTAN_PUBLIC_API(2,2) int botan_block_cipher_clear(botan_block_cipher_t bc);
+BOTAN_PUBLIC_API(2,1) int botan_block_cipher_clear(botan_block_cipher_t bc);
 
 /**
 * Set the key for a block cipher instance
 */
-BOTAN_PUBLIC_API(2,2) int botan_block_cipher_set_key(botan_block_cipher_t bc,
+BOTAN_PUBLIC_API(2,1) int botan_block_cipher_set_key(botan_block_cipher_t bc,
                                          const uint8_t key[], size_t len);
 
 /**
 * Return the positive block size of this block cipher, or negative to
 * indicate an error
 */
-BOTAN_PUBLIC_API(2,2) int botan_block_cipher_block_size(botan_block_cipher_t bc);
+BOTAN_PUBLIC_API(2,1) int botan_block_cipher_block_size(botan_block_cipher_t bc);
 
-BOTAN_PUBLIC_API(2,2) int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc,
+BOTAN_PUBLIC_API(2,1) int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc,
                                                 const uint8_t in[],
                                                 uint8_t out[],
                                                 size_t blocks);
 
-BOTAN_PUBLIC_API(2,2) int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc,
+BOTAN_PUBLIC_API(2,1) int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc,
                                                 const uint8_t in[],
                                                 uint8_t out[],
                                                 size_t blocks);
@@ -559,57 +559,57 @@ BOTAN_PUBLIC_API(2,2) int botan_block_cipher_decrypt_blocks(botan_block_cipher_t
 */
 typedef struct botan_mp_struct* botan_mp_t;
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_init(botan_mp_t* mp);
-BOTAN_PUBLIC_API(2,2) int botan_mp_destroy(botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_init(botan_mp_t* mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_destroy(botan_mp_t mp);
 
 // writes botan_mp_num_bytes(mp)*2 + 1 bytes to out[]
-BOTAN_PUBLIC_API(2,2) int botan_mp_to_hex(const botan_mp_t mp, char* out);
-BOTAN_PUBLIC_API(2,2) int botan_mp_to_str(const botan_mp_t mp, uint8_t base, char* out, size_t* out_len);
+BOTAN_PUBLIC_API(2,1) int botan_mp_to_hex(const botan_mp_t mp, char* out);
+BOTAN_PUBLIC_API(2,1) int botan_mp_to_str(const botan_mp_t mp, uint8_t base, char* out, size_t* out_len);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_clear(botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_clear(botan_mp_t mp);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_set_from_int(botan_mp_t mp, int initial_value);
-BOTAN_PUBLIC_API(2,2) int botan_mp_set_from_mp(botan_mp_t dest, const botan_mp_t source);
-BOTAN_PUBLIC_API(2,2) int botan_mp_set_from_str(botan_mp_t dest, const char* str);
-BOTAN_PUBLIC_API(2,2) int botan_mp_set_from_radix_str(botan_mp_t dest, const char* str, size_t radix);
+BOTAN_PUBLIC_API(2,1) int botan_mp_set_from_int(botan_mp_t mp, int initial_value);
+BOTAN_PUBLIC_API(2,1) int botan_mp_set_from_mp(botan_mp_t dest, const botan_mp_t source);
+BOTAN_PUBLIC_API(2,1) int botan_mp_set_from_str(botan_mp_t dest, const char* str);
+BOTAN_PUBLIC_API(2,1) int botan_mp_set_from_radix_str(botan_mp_t dest, const char* str, size_t radix);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_num_bits(const botan_mp_t n, size_t* bits);
-BOTAN_PUBLIC_API(2,2) int botan_mp_num_bytes(const botan_mp_t n, size_t* bytes);
+BOTAN_PUBLIC_API(2,1) int botan_mp_num_bits(const botan_mp_t n, size_t* bits);
+BOTAN_PUBLIC_API(2,1) int botan_mp_num_bytes(const botan_mp_t n, size_t* bytes);
 
 // Writes botan_mp_num_bytes(mp) to vec
-BOTAN_PUBLIC_API(2,2) int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[]);
-BOTAN_PUBLIC_API(2,2) int botan_mp_from_bin(const botan_mp_t mp, const uint8_t vec[], size_t vec_len);
+BOTAN_PUBLIC_API(2,1) int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[]);
+BOTAN_PUBLIC_API(2,1) int botan_mp_from_bin(const botan_mp_t mp, const uint8_t vec[], size_t vec_len);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val);
+BOTAN_PUBLIC_API(2,1) int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val);
 
 /**
 * This function is not well named. Returns 1 iff mp is greater than
 * *or equal to* zero. Use botan_mp_is_negative to detect negative
 * numbers, botan_mp_is_zero to check for zero.
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_is_positive(const botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_is_positive(const botan_mp_t mp);
 
 /**
 * Return 1 iff mp is less than 0
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_is_negative(const botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_is_negative(const botan_mp_t mp);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_flip_sign(botan_mp_t mp);
-//BOTAN_PUBLIC_API(2,2) int botan_mp_set_negative(botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_flip_sign(botan_mp_t mp);
+//BOTAN_PUBLIC_API(2,1) int botan_mp_set_negative(botan_mp_t mp);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_is_zero(const botan_mp_t mp);
-BOTAN_PUBLIC_API(2,2) int botan_mp_is_odd(const botan_mp_t mp);
-BOTAN_PUBLIC_API(2,2) int botan_mp_is_even(const botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_is_zero(const botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_is_odd(const botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) int botan_mp_is_even(const botan_mp_t mp);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
-BOTAN_PUBLIC_API(2,2) int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
-BOTAN_PUBLIC_API(2,2) int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
+BOTAN_PUBLIC_API(2,1) int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
+BOTAN_PUBLIC_API(2,1) int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
+BOTAN_PUBLIC_API(2,1) int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_div(botan_mp_t quotient,
+BOTAN_PUBLIC_API(2,1) int botan_mp_div(botan_mp_t quotient,
                            botan_mp_t remainder,
                            const botan_mp_t x, const botan_mp_t y);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_mod_mul(botan_mp_t result, const botan_mp_t x,
+BOTAN_PUBLIC_API(2,1) int botan_mp_mod_mul(botan_mp_t result, const botan_mp_t x,
                                const botan_mp_t y, const botan_mp_t mod);
 
 /*
@@ -617,58 +617,58 @@ BOTAN_PUBLIC_API(2,2) int botan_mp_mod_mul(botan_mp_t result, const botan_mp_t x
 * Returns 1 if x == y
 * Returns negative number on error
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_equal(const botan_mp_t x, const botan_mp_t y);
+BOTAN_PUBLIC_API(2,1) int botan_mp_equal(const botan_mp_t x, const botan_mp_t y);
 
 /*
 * Sets *result to comparison result:
 * -1 if x < y, 0 if x == y, 1 if x > y
 * Returns negative number on error or zero on success
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_cmp(int* result, const botan_mp_t x, const botan_mp_t y);
+BOTAN_PUBLIC_API(2,1) int botan_mp_cmp(int* result, const botan_mp_t x, const botan_mp_t y);
 
 /*
 * Swap two botan_mp_t
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_swap(botan_mp_t x, botan_mp_t y);
+BOTAN_PUBLIC_API(2,1) int botan_mp_swap(botan_mp_t x, botan_mp_t y);
 
 // Return (base^exponent) % modulus
-BOTAN_PUBLIC_API(2,2) int botan_mp_powmod(botan_mp_t out, const botan_mp_t base, const botan_mp_t exponent, const botan_mp_t modulus);
+BOTAN_PUBLIC_API(2,1) int botan_mp_powmod(botan_mp_t out, const botan_mp_t base, const botan_mp_t exponent, const botan_mp_t modulus);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_lshift(botan_mp_t out, const botan_mp_t in, size_t shift);
-BOTAN_PUBLIC_API(2,2) int botan_mp_rshift(botan_mp_t out, const botan_mp_t in, size_t shift);
+BOTAN_PUBLIC_API(2,1) int botan_mp_lshift(botan_mp_t out, const botan_mp_t in, size_t shift);
+BOTAN_PUBLIC_API(2,1) int botan_mp_rshift(botan_mp_t out, const botan_mp_t in, size_t shift);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_mod_inverse(botan_mp_t out, const botan_mp_t in, const botan_mp_t modulus);
+BOTAN_PUBLIC_API(2,1) int botan_mp_mod_inverse(botan_mp_t out, const botan_mp_t in, const botan_mp_t modulus);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_rand_bits(botan_mp_t rand_out, botan_rng_t rng, size_t bits);
+BOTAN_PUBLIC_API(2,1) int botan_mp_rand_bits(botan_mp_t rand_out, botan_rng_t rng, size_t bits);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_rand_range(botan_mp_t rand_out, botan_rng_t rng,
+BOTAN_PUBLIC_API(2,1) int botan_mp_rand_range(botan_mp_t rand_out, botan_rng_t rng,
                                   const botan_mp_t lower_bound, const botan_mp_t upper_bound);
 
-BOTAN_PUBLIC_API(2,2) int botan_mp_gcd(botan_mp_t out, const botan_mp_t x, const botan_mp_t y);
+BOTAN_PUBLIC_API(2,1) int botan_mp_gcd(botan_mp_t out, const botan_mp_t x, const botan_mp_t y);
 
 /**
 * Returns 0 if n is not prime
 * Returns 1 if n is prime
 * Returns negative number on error
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_is_prime(const botan_mp_t n, botan_rng_t rng, size_t test_prob);
+BOTAN_PUBLIC_API(2,1) int botan_mp_is_prime(const botan_mp_t n, botan_rng_t rng, size_t test_prob);
 
 /**
 * Returns 0 if specified bit of n is not set
 * Returns 1 if specified bit of n is set
 * Returns negative number on error
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_get_bit(const botan_mp_t n, size_t bit);
+BOTAN_PUBLIC_API(2,1) int botan_mp_get_bit(const botan_mp_t n, size_t bit);
 
 /**
 * Set the specified bit
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_set_bit(botan_mp_t n, size_t bit);
+BOTAN_PUBLIC_API(2,1) int botan_mp_set_bit(botan_mp_t n, size_t bit);
 
 /**
 * Clear the specified bit
 */
-BOTAN_PUBLIC_API(2,2) int botan_mp_clear_bit(botan_mp_t n, size_t bit);
+BOTAN_PUBLIC_API(2,1) int botan_mp_clear_bit(botan_mp_t n, size_t bit);
 
 /* Bcrypt password hashing */
 

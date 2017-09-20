@@ -92,7 +92,7 @@ PEM_encode(const Private_Key& key,
 *   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
 * @return encrypted key in binary BER form
 */
-BOTAN_DLL std::vector<uint8_t>
+BOTAN_PUBLIC_API(2,1) std::vector<uint8_t>
 BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass,
@@ -114,7 +114,7 @@ BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
 *   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
 * @return encrypted key in PEM form
 */
-BOTAN_DLL std::string
+BOTAN_PUBLIC_API(2,1) std::string
 PEM_encode_encrypted_pbkdf_iter(const Private_Key& key,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass,
@@ -136,7 +136,7 @@ PEM_encode_encrypted_pbkdf_iter(const Private_Key& key,
 *   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
 * @return encrypted key in binary BER form
 */
-BOTAN_DLL std::vector<uint8_t>
+BOTAN_PUBLIC_API(2,1) std::vector<uint8_t>
 BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass,
@@ -161,7 +161,7 @@ BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
 *   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
 * @return encrypted key in PEM form
 */
-BOTAN_DLL std::string
+BOTAN_PUBLIC_API(2,1) std::string
 PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
                                 RandomNumberGenerator& rng,
                                 const std::string& pass,

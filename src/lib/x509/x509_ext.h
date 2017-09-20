@@ -83,7 +83,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Extension
 /**
 * X.509 Certificate Extension List
 */
-class BOTAN_UNSTABLE_API Extensions : public ASN1_Object
+class BOTAN_PUBLIC_API(2,0) Extensions : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;
