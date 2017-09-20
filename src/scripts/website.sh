@@ -2,7 +2,7 @@
 set -e
 which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
-SPHINX_CONFIG=./src/build-data/sphinx
+SPHINX_CONFIG=./src/configs/sphinx
 
 WEBSITE_DIR=./www-botan
 WEBSITE_SRC_DIR=./www-src
