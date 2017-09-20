@@ -1,15 +1,9 @@
 # Sphinx configuration file
 
-import sys, os
+import sys
+import re
 
-# Avoid useless botan_version.pyc (Python 2.6 or higher)
-if 'dont_write_bytecode' in sys.__dict__:
-    sys.dont_write_bytecode = True
-
-sys.path.insert(0, os.path.join(os.pardir, os.pardir, os.pardir))
-
-import sphinx
-import botan_version
+#import sphinx
 
 def check_for_tag(tag):
     # Nasty hack :(
@@ -19,6 +13,36 @@ def check_for_tag(tag):
         return opt_t + 1 == opt_tag
     except ValueError:
         return False
+
+
+def parse_version_file(version_path):
+    version_file = open(version_path)
+    key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9:\-\']+)")
+
+    results = {}
+    for line in version_file.readlines():
+        if not line or line[0] == '#':
+            continue
+        match = key_and_val.match(line)
+        if match:
+            key = match.group(1)
+            val = match.group(2)
+
+            if val == 'None':
+                val = None
+            elif val.startswith("'") and val.endswith("'"):
+                val = val[1:len(val)-1]
+            else:
+                val = int(val)
+
+            results[key] = val
+    return results
+
+version_info = parse_version_file('../../../version.txt')
+
+version_major = version_info['release_major']
+version_minor = version_info['release_minor']
+version_patch = version_info['release_patch']
 
 is_website_build = check_for_tag('website')
 
@@ -55,11 +79,8 @@ master_doc = 'contents'
 project = u'botan'
 copyright = u'2000-2017, The Botan Authors'
 
-version = '%d.%d' % (botan_version.release_major, botan_version.release_minor)
-
-release = '%d.%d.%d' % (botan_version.release_major,
-                        botan_version.release_minor,
-                        botan_version.release_patch)
+version = '%d.%d' % (version_major, version_minor)
+release = '%d.%d.%d' % (version_major, version_minor, version_patch)
 
 #today = ''
 today_fmt = '%Y-%m-%d'
@@ -184,9 +205,10 @@ htmlhelp_basename = 'botandoc'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
+
+authors = u'Jack Lloyd \\and Daniel Neus \\and Ren\u00e9 Korthaus \\and Juraj Somorovsky \\and Tobias Niemann'
 latex_documents = [
-  ('contents', 'botan.tex', u'Botan Reference Manual',
-   u'Jack Lloyd \\and Daniel Neus \\and Ren\u00e9 Korthaus \\and Juraj Somorovsky \\and Tobias Niemann', 'manual'),
+    ('contents', 'botan.tex', u'Botan Reference Manual', authors, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -211,4 +233,3 @@ latex_show_urls = 'inline'
 
 # If false, no module index is generated.
 latex_domain_indices = False
-

@@ -3,11 +3,12 @@
 """
 Release script for botan (https://botan.randombit.net/)
 
-(C) 2011, 2012, 2013, 2015, 2016 Jack Lloyd
+(C) 2011,2012,2013,2015,2016,2017 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+import time
 import errno
 import logging
 import optparse
@@ -15,11 +16,21 @@ import os
 import shutil
 import subprocess
 import sys
-import tarfile
 import datetime
 import hashlib
 import re
-import StringIO
+import tarfile
+
+# This is horrible, but there is no way to override tarfile's use of time.time
+# in setting the gzip header timestamp, which breaks deterministic archives
+# First cache today (needed for snapshot builds) then override time.time...
+
+today = datetime.date.today().isoformat().replace('-', '')
+
+def null_time():
+    return 0
+time.time = null_time
+
 
 def check_subprocess_results(subproc, name):
     (stdout, stderr) = subproc.communicate()
@@ -43,7 +54,7 @@ def run_git(args):
     return check_subprocess_results(proc, 'git')
 
 def maybe_gpg(val):
-    # TODO: verify signatures
+    val = val.decode('ascii')
     if 'BEGIN PGP SIGNATURE' in val:
         return val.split('\n')[-2]
     else:
@@ -52,7 +63,7 @@ def maybe_gpg(val):
 def datestamp(tag):
     ts = maybe_gpg(run_git(['show', '--no-patch', '--format=%ai', tag]))
 
-    ts_matcher = re.compile('^(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}:\d{2} .*')
+    ts_matcher = re.compile(r'^(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}:\d{2} .*')
     match = ts_matcher.match(ts)
 
     if match is None:
@@ -66,10 +77,18 @@ def revision_of(tag):
 
 def extract_revision(revision, to):
     tar_val = run_git(['archive', '--format=tar', '--prefix=%s/' % (to), revision])
-    tar_f = tarfile.open(fileobj=StringIO.StringIO(tar_val))
-    tar_f.extractall()
 
-def gpg_sign(keyid, passphrase_file, files, detached = True):
+    if sys.version_info.major == 3:
+        import io
+        tar_f = tarfile.open(fileobj=io.BytesIO(tar_val))
+        tar_f.extractall()
+    else:
+        import StringIO
+        tar_f = tarfile.open(fileobj=StringIO.StringIO(tar_val))
+        tar_f.extractall()
+
+
+def gpg_sign(keyid, passphrase_file, files, detached=True):
 
     options = ['--armor', '--detach-sign'] if detached else ['--clearsign']
 
@@ -133,7 +152,62 @@ def remove_file_if_exists(fspath):
         if e.errno != errno.ENOENT:
             raise
 
-def main(args = None):
+def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, rel_date):
+
+    if snapshot_branch:
+        assert target_version == 'HEAD'
+
+    version_file_name = os.path.basename(version_file)
+
+    contents = open(version_file).readlines()
+
+    version_re = re.compile('release_(major|minor|patch) = ([0-9]+)')
+
+    def content_rewriter():
+        for line in contents:
+
+            if not snapshot_branch:
+                # Verify the version set in the source matches the tag
+                match = version_re.match(line)
+                if match:
+                    name_to_idx = {
+                        'major': 0,
+                        'minor': 1,
+                        'patch': 2
+                    }
+                    version_parts = target_version.split('.')
+                    assert len(version_parts) == 3
+                    in_tag = int(version_parts[name_to_idx[match.group(1)]])
+                    in_file = int(match.group(2))
+
+                    if in_tag != in_file:
+                        raise Exception('Version number part "%s" in %s does not match tag %s' %
+                                        (match.group(1), version_file_name, target_version))
+
+            if line == 'release_vc_rev = None\n':
+                yield 'release_vc_rev = \'git:%s\'\n' % (rev_id)
+            elif line == 'release_datestamp = 0\n':
+                yield 'release_datestamp = %d\n' % (rel_date)
+            elif line == "release_type = \'unreleased\'\n":
+                if target_version == 'HEAD':
+                    yield "release_type = 'snapshot:%s'\n" % (snapshot_branch)
+                else:
+                    yield "release_type = 'release'\n"
+            else:
+                yield line
+
+    open(version_file, 'w').write(''.join(list(content_rewriter())))
+
+def rel_date_to_epoch(rel_date):
+    rel_str = str(rel_date)
+    year = int(rel_str[0:4])
+    month = int(rel_str[5:6])
+    day = int(rel_str[7:8])
+
+    dt = datetime.datetime(year, month, day, 6, 0, 0)
+    return (dt - datetime.datetime(1970, 1, 1)).total_seconds()
+
+def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
@@ -146,52 +220,51 @@ def main(args = None):
             return logging.ERROR
         return logging.INFO
 
-    logging.basicConfig(stream = sys.stderr,
-                        format = '%(levelname) 7s: %(message)s',
-                        level = log_level())
+    logging.basicConfig(stream=sys.stderr,
+                        format='%(levelname) 7s: %(message)s',
+                        level=log_level())
 
-    if len(args) == 0 or len(args) > 2:
+    if len(args) != 1 and len(args) != 2:
         logging.error('Usage error, try --help')
         return 1
 
-    is_snapshot = args[0] == 'snapshot'
+    snapshot_branch = None
     target_version = None
 
-    if is_snapshot:
-        if len(args) == 1:
+    if args[0] == 'snapshot':
+        if len(args) != 2:
             logging.error('Missing branch name for snapshot command')
             return 1
+        snapshot_branch = args[1]
+    else:
+        if len(args) != 1:
+            logging.error('Usage error, try --help')
+            return 1
+        target_version = args[0]
 
-        logging.info('Creating snapshot release from branch %s', args[1])
+    if snapshot_branch:
+        logging.info('Creating snapshot release from branch %s', snapshot_branch)
         target_version = 'HEAD'
     elif len(args) == 1:
         try:
-            logging.info('Creating release for version %s' % (args[0]))
+            logging.info('Creating release for version %s' % (target_version))
 
-            (major,minor,patch) = map(int, args[0].split('.'))
+            (major, minor, patch) = map(int, target_version.split('.'))
 
-            assert args[0] == '%d.%d.%d' % (major,minor,patch)
-            target_version = args[0]
-        except:
-            logging.error('Invalid version number %s' % (args[0]))
+            assert target_version == '%d.%d.%d' % (major, minor, patch)
+            target_version = target_version
+        except ValueError as e:
+            logging.error('Invalid version number %s' % (target_version))
             return 1
-    else:
-        logging.error('Usage error, try --help')
-        return 1
 
     def output_name(args):
-        if is_snapshot:
-            datestamp = datetime.date.today().isoformat().replace('-', '')
-
-            def snapshot_name(branch):
-                if branch == 'master':
-                    return 'trunk'
-                else:
-                    return branch
-
-            return 'botan-%s-snapshot-%s' % (snapshot_name(args[1]), datestamp)
+        if snapshot_branch:
+            if snapshot_branch == 'master':
+                return 'Botan-snapshot-%s' % (today)
+            else:
+                return 'Botan-snapshot-%s-%s' % (snapshot_branch, today)
         else:
-            return 'Botan-' + args[0]
+            return 'Botan-' + target_version
 
     rev_id = revision_of(target_version)
 
@@ -216,52 +289,19 @@ def main(args = None):
 
     extract_revision(rev_id, output_basename)
 
-    version_file = os.path.join(output_basename, 'botan_version.py')
+    version_file = None
 
-    if os.access(version_file, os.R_OK) == False:
+    for possible_version_file in ['version.txt', 'botan_version.py']:
+        full_path = os.path.join(output_basename, possible_version_file)
+        if os.access(full_path, os.R_OK):
+            version_file = full_path
+            break
+
+    if not os.access(version_file, os.R_OK):
         logging.error('Cannot read %s' % (version_file))
         return 2
 
-    # rewrite botan_version.py
-
-    contents = open(version_file).readlines()
-
-    version_re = re.compile('release_(major|minor|patch) = ([0-9]+)')
-    version_parts = target_version.split('.')
-    assert len(version_parts) == 3
-
-    def content_rewriter():
-        for line in contents:
-
-            if target_version != 'HEAD':
-                match = version_re.match(line)
-                if match:
-                    name_to_idx = {
-                        'major': 0,
-                        'minor': 1,
-                        'patch': 2
-                    }
-                    in_tag = int(version_parts[name_to_idx[match.group(1)]])
-                    in_file = int(match.group(2))
-
-                    if in_tag != in_file:
-                        logging.error('Version number part "%s" in botan_version.py does not match tag %s' %
-                                      (match.group(1), target_version))
-                        raise Exception('Bad botan_version.py')
-
-            if line == 'release_vc_rev = None\n':
-                yield 'release_vc_rev = \'git:%s\'\n' % (rev_id)
-            elif line == 'release_datestamp = 0\n':
-                yield 'release_datestamp = %d\n' % (rel_date)
-            elif line == "release_type = \'unreleased\'\n":
-                if args[0] == 'snapshot':
-                    yield "release_type = 'snapshot'\n"
-                else:
-                    yield "release_type = 'released'\n"
-            else:
-                yield line
-
-    open(version_file, 'w').write(''.join(list(content_rewriter())))
+    rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, rel_date)
 
     try:
         os.makedirs(options.output_dir)
@@ -278,39 +318,51 @@ def main(args = None):
     if options.write_hash_file != None:
         hash_file = open(options.write_hash_file, 'w')
 
-    for archive in archives:
-        logging.debug('Writing archive type "%s"' % (archive))
+    rel_epoch = rel_date_to_epoch(rel_date)
 
-        output_archive = output_basename + '.' + archive
+    for archive_type in archives:
+        if archive_type not in ['tar', 'tgz', 'tbz']:
+            raise Exception('Unknown archive type "%s"' % (archive_type))
+
+        output_archive = output_basename + '.' + archive_type
+
+        logging.info('Writing archive "%s"' % (output_archive))
 
         remove_file_if_exists(output_archive)
         remove_file_if_exists(output_archive + '.asc')
 
-        if archive in ['tgz', 'tbz']:
+        all_files = []
+        for (curdir, _, files) in os.walk(output_basename):
+            all_files += [os.path.join(curdir, f) for f in files]
+        all_files.sort(key = lambda f: (os.path.dirname(f), os.path.basename(f)))
 
-            def write_mode():
-                if archive == 'tgz':
-                    return 'w:gz'
-                elif archive == 'tbz':
-                    return 'w:bz2'
+        def write_mode(archive_type):
+            if archive_type == 'tgz':
+                return 'w:gz'
+            elif archive_type == 'tbz':
+                return 'w:bz2'
+            elif archive_type == 'tar':
+                return 'w'
 
-            archive = tarfile.open(output_archive, write_mode())
+        archive = tarfile.open(output_archive, write_mode(archive_type))
 
-            all_files = []
-            for (curdir,_,files) in os.walk(output_basename):
-                all_files += [os.path.join(curdir, f) for f in files]
-            all_files.sort()
+        for f in all_files:
+            tarinfo = archive.gettarinfo(f)
+            tarinfo.uid = 500
+            tarinfo.gid = 500
+            tarinfo.uname = "botan"
+            tarinfo.gname = "botan"
+            tarinfo.mtime = rel_epoch
+            archive.addfile(tarinfo, open(f))
+        archive.close()
 
-            for f in all_files:
-                archive.add(f)
-            archive.close()
+        sha256 = hashlib.new('sha256')
+        sha256.update(open(output_archive).read())
+        archive_hash = sha256.hexdigest().upper()
 
-            if hash_file != None:
-                sha256 = hashlib.new('sha256')
-                sha256.update(open(output_archive).read())
-                hash_file.write("%s  %s\n" % (sha256.hexdigest(), output_archive))
-        else:
-            raise Exception('Unknown archive type "%s"' % (archive))
+        logging.info('SHA-256(%s) = %s' % (output_archive, archive_hash))
+        if hash_file != None:
+            hash_file.write("%s  %s\n" % (archive_hash, output_archive))
 
         output_files.append(output_archive)
 
@@ -344,5 +396,5 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(e)
         import traceback
-        logging.debug(traceback.format_exc())
+        logging.error(traceback.format_exc())
         sys.exit(1)
