@@ -1,0 +1,22 @@
+<aliases>
+mipsn32el # For Debian
+</aliases>
+
+<submodels>
+r4000
+r4100
+r4300
+r4400
+r4600
+r4560
+r5000
+r8000
+r10000
+</submodels>
+
+<submodel_aliases>
+r4k -> r4000
+r5k -> r5000
+r8k -> r8000
+r10k -> r10000
+</submodel_aliases>

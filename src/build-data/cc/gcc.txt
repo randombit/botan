@@ -75,14 +75,17 @@ sh4         -> "-m4 -mieee"
 
 alpha     -> "-mcpu=SUBMODEL" alpha-
 arm       -> "-march=SUBMODEL"
+aarch64   -> "-mtune=generic"
 superh    -> "-mSUBMODEL" sh
 hppa      -> "-march=SUBMODEL" hppa
 ia64      -> "-mtune=SUBMODEL"
 m68k      -> "-mSUBMODEL"
 mips32    -> "-mips1 -mcpu=SUBMODEL" mips32-
+mipsn32    -> "-mips3 -mcpu=SUBMODEL" mips64-
 mips64    -> "-mips3 -mcpu=SUBMODEL" mips64-
 ppc32     -> "-mcpu=SUBMODEL" ppc
 ppc64     -> "-mcpu=SUBMODEL" ppc
+ppc64le   -> "-mcpu=power7 -mtune=power8" ppc
 sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
 sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"
 x86_32    -> "-march=SUBMODEL -momit-leaf-frame-pointer"

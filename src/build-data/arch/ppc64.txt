@@ -17,6 +17,9 @@ power4
 power5
 power6
 power7
+power7p
+power8
+power8e
 cellppu
 </submodels>
 
@@ -25,5 +28,5 @@ cellbroadbandengine -> cellppu
 </submodel_aliases>
 
 <isa_extn>
-altivec:cellppu,ppc970,power6,power7
+altivec:cellppu,ppc970,power6,power7,power7p,power8,power8e
 </isa_extn>

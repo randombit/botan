@@ -157,6 +157,9 @@ bool altivec_check_pvr_emul()
    const u16bit PVR_G5_970GX = 0x0045;
    const u16bit PVR_POWER6   = 0x003E;
    const u16bit PVR_POWER7   = 0x003F;
+   const u16bit PVR_POWER7p  = 0x004A;
+   const u16bit PVR_POWER8   = 0x004D;
+   const u16bit PVR_POWER8E  = 0x004B;
    const u16bit PVR_CELL_PPU = 0x0070;
 
    // Motorola produced G4s with PVR 0x800[0123C] (at least)
@@ -177,6 +180,9 @@ bool altivec_check_pvr_emul()
    altivec_capable |= (pvr == PVR_G5_970GX);
    altivec_capable |= (pvr == PVR_POWER6);
    altivec_capable |= (pvr == PVR_POWER7);
+   altivec_capable |= (pvr == PVR_POWER7p);
+   altivec_capable |= (pvr == PVR_POWER8);
+   altivec_capable |= (pvr == PVR_POWER8E);
    altivec_capable |= (pvr == PVR_CELL_PPU);
 #endif
 

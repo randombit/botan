@@ -1,0 +1,21 @@
+endian little
+
+family ppc
+
+<aliases>
+powerpc64le
+ppc64el
+</aliases>
+
+<submodels>
+power7
+power7p
+power8
+power8e
+</submodels>
+
+# This should be enabled for all targets, but the Altivec code currently
+# makes lots of endian assumptions that I don't have the time to fix up:
+#<isa_extn>
+#altivec:all
+#</isa_extn>

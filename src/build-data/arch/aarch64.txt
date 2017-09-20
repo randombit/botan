@@ -1,0 +1,6 @@
+endian little
+
+<aliases>
+arm64 # For Debian
+</aliases>
+

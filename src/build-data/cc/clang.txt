@@ -39,6 +39,8 @@ westmere  -> "-march=corei7 -maes"
 
 <mach_abi_linking>
 x86_64  -> "-m64"
+mips32  -> "-mabi=32"
+mipsn32  -> "-mabi=n32"
 mips64  -> "-mabi=64"
 s390    -> "-m31"
 s390x   -> "-m64"

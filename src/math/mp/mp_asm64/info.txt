@@ -8,10 +8,12 @@ mp_generic:mp_asmi.h
 </header:internal>
 
 <arch>
+aarch64
 alpha
 ia64
 mips64
 ppc64
+ppc64le
 sparc64
 </arch>
 
