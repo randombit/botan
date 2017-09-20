@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-class CurveGFp_Repr
+class BOTAN_UNSTABLE_API CurveGFp_Repr
    {
    public:
       virtual ~CurveGFp_Repr() = default;
