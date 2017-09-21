@@ -11,15 +11,16 @@ ar_needs_ranlib yes
 doc_dir doc
 
 <target_features>
+arc4random
 dlopen
+filesystem
 gettimeofday
 gmtime_r
 memset_s
 readdir
-timegm
 sockets
 threads
-filesystem
+timegm
 </target_features>
 
 <aliases>

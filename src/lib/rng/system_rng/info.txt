@@ -2,12 +2,9 @@
 SYSTEM_RNG -> 20141202
 </defines>
 
-
-# Any system with /dev/random or CryptGenRandom
-
 <os>
-android
 aix
+android
 cygwin
 darwin
 dragonfly
@@ -15,8 +12,9 @@ freebsd
 haiku
 hpux
 hurd
-irix
 includeos
+ios
+irix
 linux
 mingw
 netbsd
@@ -30,6 +28,5 @@ winphone
 <libs>
 windows -> advapi32.lib
 winphone -> bcrypt.lib
-
 mingw -> advapi32
 </libs>
