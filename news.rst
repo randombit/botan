@@ -13,6 +13,9 @@ Version 2.3.0, Not Yet Released
 
 * Add support for the ARMv8 PMULL instruction (GH #1181 and #842)
 
+* On macOS and iOS the ``System_RNG`` class is now implemented using ``arc4random``.
+  Previously the system RNG class was not available on iOS. (GH #1219)
+
 * Optimized the CMAC polynomial doubling operation, and removed a small timing
   channel due to a conditional operation.
 
