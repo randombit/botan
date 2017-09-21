@@ -9,11 +9,11 @@
 #define BOTAN_RTSS_H_
 
 #include <botan/secmem.h>
-#include <botan/hash.h>
-#include <botan/rng.h>
 #include <vector>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * A split secret, using the format from draft-mcgrew-tss-03

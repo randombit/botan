@@ -5,9 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/sp800_108.h>
 #include <botan/sp800_56c.h>
-#include <botan/hmac.h>
 
 namespace Botan {
 

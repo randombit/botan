@@ -8,7 +8,6 @@
 */
 
 #include <botan/internal/proc_walk.h>
-#include <botan/secmem.h>
 #include <deque>
 
 #ifndef _POSIX_C_SOURCE

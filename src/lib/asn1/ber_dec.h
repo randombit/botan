@@ -8,7 +8,7 @@
 #ifndef BOTAN_BER_DECODER_H_
 #define BOTAN_BER_DECODER_H_
 
-#include <botan/asn1_oid.h>
+#include <botan/asn1_obj.h>
 #include <botan/data_src.h>
 
 namespace Botan {

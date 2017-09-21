@@ -9,7 +9,6 @@
 #define BOTAN_EXCEPTION_H_
 
 #include <botan/types.h>
-#include <botan/parsing.h>
 #include <exception>
 #include <string>
 

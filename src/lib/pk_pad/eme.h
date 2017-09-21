@@ -9,9 +9,10 @@
 #define BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H_
 
 #include <botan/secmem.h>
-#include <botan/rng.h>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * Encoding Method for Encryption

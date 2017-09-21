@@ -9,7 +9,6 @@
 #include <botan/eax.h>
 #include <botan/cmac.h>
 #include <botan/ctr.h>
-#include <botan/parsing.h>
 
 namespace Botan {
 

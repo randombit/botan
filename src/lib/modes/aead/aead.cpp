@@ -6,6 +6,7 @@
 
 #include <botan/aead.h>
 #include <botan/scan_name.h>
+#include <botan/parsing.h>
 #include <sstream>
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)

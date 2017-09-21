@@ -6,6 +6,8 @@
 */
 
 #include <botan/srp6.h>
+#include <botan/rng.h>
+#include <botan/hash.h>
 #include <botan/dl_group.h>
 #include <botan/numthry.h>
 

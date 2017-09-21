@@ -7,7 +7,6 @@
 
 #include <botan/shake.h>
 #include <botan/sha3.h>
-#include <botan/parsing.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

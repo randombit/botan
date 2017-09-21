@@ -6,9 +6,11 @@
  */
 
 #include <botan/iso9796.h>
+#include <botan/rng.h>
+#include <botan/exceptn.h>
 #include <botan/mgf1.h>
-#include <botan/internal/bit_ops.h>
 #include <botan/hash_id.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {

@@ -6,7 +6,6 @@
 */
 
 #include <botan/pbkdf2.h>
-#include <botan/loadstor.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {

@@ -9,12 +9,12 @@
 #define BOTAN_RFC5054_SRP6_H_
 
 #include <botan/bigint.h>
-#include <botan/hash.h>
-#include <botan/rng.h>
 #include <botan/symkey.h>
 #include <string>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * SRP6a Client side

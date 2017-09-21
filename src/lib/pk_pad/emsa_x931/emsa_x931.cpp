@@ -6,6 +6,7 @@
 */
 
 #include <botan/emsa_x931.h>
+#include <botan/exceptn.h>
 #include <botan/hash_id.h>
 
 namespace Botan {

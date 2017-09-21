@@ -10,6 +10,7 @@
    #include <botan/bigint.h>
    #include <botan/numthry.h>
    #include <botan/reducer.h>
+   #include <botan/parsing.h>
    #include <cmath>
 #endif
 

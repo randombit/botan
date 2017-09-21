@@ -10,7 +10,6 @@
 #define BOTAN_HKDF_H_
 
 #include <botan/mac.h>
-#include <botan/hash.h>
 #include <botan/kdf.h>
 
 namespace Botan {

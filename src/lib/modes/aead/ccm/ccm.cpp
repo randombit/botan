@@ -7,7 +7,7 @@
 */
 
 #include <botan/ccm.h>
-#include <botan/parsing.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

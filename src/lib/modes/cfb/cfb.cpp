@@ -7,7 +7,6 @@
 */
 
 #include <botan/cfb.h>
-#include <botan/parsing.h>
 
 namespace Botan {
 

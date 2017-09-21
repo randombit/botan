@@ -6,7 +6,6 @@
 */
 
 #include <botan/prf_tls.h>
-#include <botan/hmac.h>
 
 namespace Botan {
 

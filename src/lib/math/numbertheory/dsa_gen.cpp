@@ -7,8 +7,7 @@
 
 #include <botan/numthry.h>
 #include <botan/hash.h>
-#include <botan/parsing.h>
-#include <algorithm>
+#include <botan/rng.h>
 
 namespace Botan {
 

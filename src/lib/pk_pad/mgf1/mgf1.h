@@ -8,9 +8,11 @@
 #ifndef BOTAN_MGF1_H_
 #define BOTAN_MGF1_H_
 
-#include <botan/hash.h>
+#include <botan/types.h>
 
 namespace Botan {
+
+class HashFunction;
 
 /**
 * MGF1 from PKCS #1 v2.0

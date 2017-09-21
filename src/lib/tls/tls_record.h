@@ -16,6 +16,7 @@
 #include <botan/mac.h>
 #include <vector>
 #include <chrono>
+#include <functional>
 
 namespace Botan {
 

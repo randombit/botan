@@ -10,7 +10,6 @@
 
 #include <botan/pbkdf.h>
 #include <botan/mac.h>
-#include <botan/hash.h>
 
 namespace Botan {
 

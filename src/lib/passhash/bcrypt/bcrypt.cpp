@@ -6,9 +6,10 @@
 */
 
 #include <botan/bcrypt.h>
-#include <botan/loadstor.h>
+#include <botan/rng.h>
 #include <botan/blowfish.h>
 #include <botan/base64.h>
+#include <botan/parsing.h>
 
 namespace Botan {
 

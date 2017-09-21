@@ -10,7 +10,7 @@
 #ifndef BOTAN_GFP_CURVE_H_
 #define BOTAN_GFP_CURVE_H_
 
-#include <botan/numthry.h>
+#include <botan/bigint.h>
 #include <memory>
 
 namespace Botan {

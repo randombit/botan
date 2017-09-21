@@ -14,6 +14,7 @@
 #include <map>
 #include <chrono>
 #include <string>
+#include <functional>
 
 namespace Botan {
 

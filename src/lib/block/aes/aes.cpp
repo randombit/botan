@@ -10,7 +10,6 @@
 #include <botan/aes.h>
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>
-#include <botan/internal/bit_ops.h>
 
 /*
 * This implementation is based on table lookups which are known to be

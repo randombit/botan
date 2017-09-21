@@ -6,7 +6,6 @@
 */
 
 #include <botan/sp800_108.h>
-#include <botan/hmac.h>
 
 #include <iterator>
 

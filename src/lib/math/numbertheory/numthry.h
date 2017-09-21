@@ -10,9 +10,10 @@
 
 #include <botan/bigint.h>
 #include <botan/pow_mod.h>
-#include <botan/rng.h>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * Fused multiply-add

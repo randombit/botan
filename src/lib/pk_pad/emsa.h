@@ -9,9 +9,10 @@
 #define BOTAN_PUBKEY_EMSA_H_
 
 #include <botan/secmem.h>
-#include <botan/rng.h>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * EMSA, from IEEE 1363s Encoding Method for Signatures, Appendix

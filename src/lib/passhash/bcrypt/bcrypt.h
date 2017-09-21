@@ -8,9 +8,11 @@
 #ifndef BOTAN_BCRYPT_H_
 #define BOTAN_BCRYPT_H_
 
-#include <botan/rng.h>
+#include <botan/types.h>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * Create a password hash using Bcrypt

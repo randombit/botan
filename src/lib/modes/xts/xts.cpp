@@ -7,7 +7,6 @@
 */
 
 #include <botan/xts.h>
-#include <botan/loadstor.h>
 #include <botan/internal/poly_dbl.h>
 
 namespace Botan {

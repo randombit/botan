@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_HOTP)
+   #include <botan/parsing.h>
    #include <botan/hotp.h>
 #endif
 

@@ -26,11 +26,7 @@
 #include <botan/kdf1_iso18033.h>
 #endif
 
-#if defined(BOTAN_HAS_TLS_V10_PRF)
-#include <botan/prf_tls.h>
-#endif
-
-#if defined(BOTAN_HAS_TLS_V12_PRF)
+#if defined(BOTAN_HAS_TLS_V10_PRF) || defined(BOTAN_HAS_TLS_V12_PRF)
 #include <botan/prf_tls.h>
 #endif
 

@@ -6,7 +6,7 @@
 */
 
 #include <botan/numthry.h>
-#include <botan/parsing.h>
+#include <botan/rng.h>
 #include <algorithm>
 
 namespace Botan {

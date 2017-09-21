@@ -10,12 +10,13 @@
 #define BOTAN_PIPE_H_
 
 #include <botan/data_src.h>
-#include <botan/filter.h>
 #include <botan/exceptn.h>
 #include <initializer_list>
 #include <iosfwd>
 
 namespace Botan {
+
+class Filter;
 
 /**
 * This class represents pipe objects.

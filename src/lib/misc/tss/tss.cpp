@@ -6,6 +6,8 @@
 */
 
 #include <botan/tss.h>
+#include <botan/rng.h>
+#include <botan/hash.h>
 #include <botan/loadstor.h>
 #include <botan/hex.h>
 #include <botan/sha2_32.h>

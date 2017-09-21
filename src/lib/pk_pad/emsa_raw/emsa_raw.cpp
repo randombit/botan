@@ -6,6 +6,7 @@
 */
 
 #include <botan/emsa_raw.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

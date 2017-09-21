@@ -9,8 +9,7 @@
 
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
-#include <botan/loadstor.h>
-#include <botan/internal/rounding.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

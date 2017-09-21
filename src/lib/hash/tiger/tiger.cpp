@@ -7,7 +7,6 @@
 
 #include <botan/tiger.h>
 #include <botan/exceptn.h>
-#include <botan/parsing.h>
 
 namespace Botan {
 

@@ -8,6 +8,7 @@
 #include <botan/cipher_mode.h>
 #include <botan/stream_mode.h>
 #include <botan/scan_name.h>
+#include <botan/parsing.h>
 #include <sstream>
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
@@ -24,10 +25,6 @@
 
 #if defined(BOTAN_HAS_MODE_CFB)
   #include <botan/cfb.h>
-#endif
-
-#if defined(BOTAN_HAS_MODE_XTS)
-  #include <botan/xts.h>
 #endif
 
 #if defined(BOTAN_HAS_MODE_XTS)

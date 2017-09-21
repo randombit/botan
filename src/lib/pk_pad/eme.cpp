@@ -7,6 +7,7 @@
 
 #include <botan/eme.h>
 #include <botan/scan_name.h>
+#include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_EME_OAEP)
 #include <botan/oaep.h>

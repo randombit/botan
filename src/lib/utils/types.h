@@ -9,11 +9,11 @@
 #ifndef BOTAN_TYPES_H_
 #define BOTAN_TYPES_H_
 
-#include <botan/build.h>
-#include <botan/assert.h>
-#include <cstddef>
-#include <cstdint>
-#include <memory>
+#include <botan/build.h> // IWYU pragma: export
+#include <botan/assert.h> // IWYU pragma: export
+#include <cstddef> // IWYU pragma: export
+#include <cstdint> // IWYU pragma: export
+#include <memory> // IWYU pragma: export
 
 /**
 * The primary namespace for the botan library

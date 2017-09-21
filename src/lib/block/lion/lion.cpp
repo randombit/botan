@@ -6,7 +6,6 @@
 */
 
 #include <botan/lion.h>
-#include <botan/parsing.h>
 
 namespace Botan {
 

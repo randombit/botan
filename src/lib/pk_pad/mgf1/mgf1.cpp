@@ -6,7 +6,7 @@
 */
 
 #include <botan/mgf1.h>
-#include <botan/exceptn.h>
+#include <botan/hash.h>
 #include <algorithm>
 
 namespace Botan {

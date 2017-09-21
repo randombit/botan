@@ -9,7 +9,6 @@
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
 #include <botan/loadstor.h>
-#include <botan/parsing.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 

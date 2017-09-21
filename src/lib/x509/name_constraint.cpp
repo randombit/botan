@@ -12,6 +12,7 @@
 #include <botan/loadstor.h>
 #include <botan/x509_dn.h>
 #include <botan/x509cert.h>
+#include <botan/parsing.h>
 #include <sstream>
 
 namespace Botan {

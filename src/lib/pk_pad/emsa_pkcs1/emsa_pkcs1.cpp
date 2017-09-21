@@ -7,6 +7,7 @@
 
 #include <botan/emsa_pkcs1.h>
 #include <botan/hash_id.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

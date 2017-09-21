@@ -7,6 +7,7 @@
 
 #include <botan/numthry.h>
 #include <botan/reducer.h>
+#include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/ct_utils.h>

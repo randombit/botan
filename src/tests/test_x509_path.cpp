@@ -10,6 +10,7 @@
    #include <botan/x509path.h>
    #include <botan/calendar.h>
    #include <botan/internal/filesystem.h>
+   #include <botan/parsing.h>
 #endif
 
 #include <algorithm>

@@ -6,6 +6,8 @@
 */
 
 #include <botan/pssr.h>
+#include <botan/exceptn.h>
+#include <botan/rng.h>
 #include <botan/mgf1.h>
 #include <botan/internal/bit_ops.h>
 

@@ -6,7 +6,6 @@
 */
 
 #include <botan/skein_512.h>
-#include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <algorithm>
 

@@ -8,10 +8,9 @@
 #ifndef BOTAN_SCAN_NAME_H_
 #define BOTAN_SCAN_NAME_H_
 
-#include <botan/exceptn.h>
+#include <botan/types.h>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace Botan {
 

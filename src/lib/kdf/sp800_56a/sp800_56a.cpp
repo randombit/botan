@@ -7,7 +7,6 @@
 */
 
 #include <botan/sp800_56a.h>
-#include <botan/hmac.h>
 #include <botan/scan_name.h>
 #include <botan/exceptn.h>
 

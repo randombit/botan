@@ -9,6 +9,7 @@
 #define BOTAN_TLS_SEQ_NUMBERS_H_
 
 #include <botan/types.h>
+#include <map>
 
 namespace Botan {
 
