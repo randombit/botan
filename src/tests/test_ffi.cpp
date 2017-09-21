@@ -1532,8 +1532,8 @@ class FFI_Unit_Tests : public Test
          result.test_eq(namebuf, namebuf, "SM2_Enc");
 
          std::vector<uint8_t> message(32);
-         // Assumes 256-bit params:
-         std::vector<uint8_t> ciphertext(1 + 32*2 + message.size() + 32);
+
+         std::vector<uint8_t> ciphertext(4096);
          TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
 
          botan_pk_op_encrypt_t enc;
@@ -1542,11 +1542,12 @@ class FFI_Unit_Tests : public Test
             size_t ctext_len = ciphertext.size();
             TEST_FFI_OK(botan_pk_op_encrypt, (enc, rng, ciphertext.data(), &ctext_len,
                                               message.data(), message.size()));
+            ciphertext.resize(ctext_len);
 
             botan_pk_op_decrypt_t dec;
             TEST_FFI_OK(botan_pk_op_decrypt_create, (&dec, loaded_privkey, "", 0));
 
-            std::vector<uint8_t> recovered(ciphertext.size());
+            std::vector<uint8_t> recovered(message.size());
             size_t recovered_len = recovered.size();
 
             TEST_FFI_OK(botan_pk_op_decrypt,
