@@ -7,6 +7,7 @@
 
 #include <botan/hash.h>
 #include <botan/scan_name.h>
+#include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_ADLER32)
   #include <botan/adler32.h>
