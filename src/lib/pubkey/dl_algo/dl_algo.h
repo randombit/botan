@@ -9,7 +9,7 @@
 #define BOTAN_DL_ALGO_H_
 
 #include <botan/dl_group.h>
-#include <botan/x509_key.h>
+#include <botan/pk_keys.h>
 
 namespace Botan {
 

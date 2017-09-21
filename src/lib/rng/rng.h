@@ -8,7 +8,6 @@
 #ifndef BOTAN_RANDOM_NUMBER_GENERATOR_H_
 #define BOTAN_RANDOM_NUMBER_GENERATOR_H_
 
-#include <botan/entropy_src.h>
 #include <botan/secmem.h>
 #include <botan/exceptn.h>
 #include <botan/mutex.h>

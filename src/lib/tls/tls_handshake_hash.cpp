@@ -6,7 +6,6 @@
 */
 
 #include <botan/internal/tls_handshake_hash.h>
-#include <botan/tls_exceptn.h>
 #include <botan/hash.h>
 
 namespace Botan {

@@ -6,7 +6,6 @@
 */
 
 #include <botan/charset.h>
-#include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <cctype>
 

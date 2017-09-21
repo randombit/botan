@@ -7,9 +7,6 @@
 
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
-#include <botan/parsing.h>
-#include <botan/pubkey.h>
-#include <botan/oids.h>
 #include <algorithm>
 #include <chrono>
 #include <vector>

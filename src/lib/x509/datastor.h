@@ -10,7 +10,6 @@
 
 #include <botan/secmem.h>
 #include <functional>
-#include <utility>
 #include <string>
 #include <vector>
 #include <map>

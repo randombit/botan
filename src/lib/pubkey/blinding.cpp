@@ -6,7 +6,6 @@
 */
 
 #include <botan/blinding.h>
-#include <botan/numthry.h>
 
 namespace Botan {
 

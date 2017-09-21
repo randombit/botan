@@ -8,11 +8,12 @@
 #ifndef BOTAN_PBE_PKCS_v20_H_
 #define BOTAN_PBE_PKCS_v20_H_
 
-#include <botan/rng.h>
 #include <botan/alg_id.h>
 #include <chrono>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * Encrypt with PBES2 from PKCS #5 v2.0

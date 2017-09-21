@@ -10,12 +10,8 @@
 #define BOTAN_TLS_BLOCKING_CHANNELS_H_
 
 #include <botan/tls_client.h>
-#include <botan/tls_server.h>
-#include <deque>
 
 namespace Botan {
-
-//template<typename T> using secure_deque = std::vector<T, secure_allocator<T>>;
 
 namespace TLS {
 

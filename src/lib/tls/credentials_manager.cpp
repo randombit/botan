@@ -6,7 +6,6 @@
 */
 
 #include <botan/credentials_manager.h>
-#include <botan/x509path.h>
 
 namespace Botan {
 

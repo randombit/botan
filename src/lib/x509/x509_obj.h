@@ -9,11 +9,13 @@
 #define BOTAN_X509_OBJECT_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/x509_key.h>
-#include <botan/rng.h>
+#include <botan/alg_id.h>
 #include <vector>
 
 namespace Botan {
+
+class Public_Key;
+class RandomNumberGenerator;
 
 /**
 * This class represents abstract X.509 signed objects as

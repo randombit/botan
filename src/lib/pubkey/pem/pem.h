@@ -8,9 +8,12 @@
 #ifndef BOTAN_PEM_H_
 #define BOTAN_PEM_H_
 
-#include <botan/data_src.h>
+#include <botan/secmem.h>
+#include <string>
 
 namespace Botan {
+
+class DataSource;
 
 namespace PEM_Code {
 

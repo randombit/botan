@@ -7,6 +7,7 @@
 
 #include <botan/mceies.h>
 #include <botan/aead.h>
+#include <botan/rng.h>
 #include <botan/mceliece.h>
 #include <botan/pubkey.h>
 

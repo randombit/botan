@@ -12,6 +12,7 @@
 #include <botan/pem.h>
 #include <botan/aead.h>
 #include <botan/mac.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

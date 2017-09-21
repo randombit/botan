@@ -11,7 +11,6 @@
 #include <botan/tls_magic.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
-#include <botan/parsing.h>
 
 namespace Botan {
 

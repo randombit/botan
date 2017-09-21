@@ -15,8 +15,8 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#include <botan/internal/xmss_signature_operation.h>
 #include <botan/xmss_privatekey.h>
+#include <botan/internal/xmss_signature_operation.h>
 #include <cmath>
 
 namespace Botan {

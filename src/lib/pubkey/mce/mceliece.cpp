@@ -13,7 +13,6 @@
 #include <botan/mceliece.h>
 #include <botan/internal/code_based_util.h>
 #include <botan/internal/bit_ops.h>
-#include <set>
 
 namespace Botan {
 

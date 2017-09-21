@@ -10,11 +10,7 @@
 
 #include <string>
 #include <vector>
-#include <functional>
 #include <memory>
-#include <array>
-#include <type_traits>
-#include <map>
 #include <numeric>
 
 #if defined(BOTAN_HAS_PKCS11)

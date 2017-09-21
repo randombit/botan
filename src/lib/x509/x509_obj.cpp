@@ -6,7 +6,6 @@
 */
 
 #include <botan/x509_obj.h>
-#include <botan/x509_key.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
 #include <botan/der_enc.h>

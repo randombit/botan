@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_AEAD_OCB)
    #include <botan/ocb.h>
+   #include <botan/block_cipher.h>
    #include <botan/loadstor.h>
    #include <botan/internal/poly_dbl.h>
 #endif

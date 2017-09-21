@@ -10,6 +10,7 @@
 #define BOTAN_TLS_CLIENT_H_
 
 #include <botan/tls_channel.h>
+#include <botan/tls_policy.h>
 #include <botan/credentials_manager.h>
 #include <vector>
 

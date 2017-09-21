@@ -9,8 +9,6 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_TLS)
-   #include <botan/pubkey.h>
-   #include <botan/oids.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_exceptn.h>
 #endif

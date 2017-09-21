@@ -11,7 +11,6 @@
 #include <botan/tls_version.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/x509cert.h>
-#include <botan/dl_group.h>
 #include <botan/parsing.h>
 #include <vector>
 #include <sstream>

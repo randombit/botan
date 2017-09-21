@@ -19,6 +19,7 @@
    #include <botan/oids.h>
    #include <botan/pkcs8.h>
    #include <botan/hash.h>
+   #include <botan/data_src.h>
 #endif
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)

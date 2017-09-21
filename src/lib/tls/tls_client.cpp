@@ -13,8 +13,6 @@
 #include <iterator>
 #include <sstream>
 
-#include <botan/hex.h>
-
 namespace Botan {
 
 namespace TLS {

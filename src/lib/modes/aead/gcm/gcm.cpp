@@ -7,6 +7,7 @@
 */
 
 #include <botan/gcm.h>
+#include <botan/block_cipher.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/loadstor.h>
 #include <botan/ctr.h>
@@ -187,6 +188,8 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    if(m_tag_size != 8 && (m_tag_size < 12 || m_tag_size > 16))
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
    }
+
+GCM_Mode::~GCM_Mode() { /* for unique_ptr */ }
 
 void GCM_Mode::clear()
    {

@@ -6,7 +6,7 @@
 */
 
 #include <botan/x509_key.h>
-#include <botan/der_enc.h>
+#include <botan/data_src.h>
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
 #include <botan/alg_id.h>

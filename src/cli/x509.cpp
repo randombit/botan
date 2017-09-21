@@ -15,6 +15,7 @@
 #include <botan/x509cert.h>
 #include <botan/x509path.h>
 #include <botan/x509self.h>
+#include <botan/data_src.h>
 
 #if defined(BOTAN_HAS_OCSP)
    #include <botan/ocsp.h>

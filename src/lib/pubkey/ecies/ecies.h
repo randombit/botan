@@ -10,9 +10,7 @@
 
 #include <botan/ecdh.h>
 #include <botan/ec_group.h>
-#include <botan/kdf.h>
 #include <botan/cipher_mode.h>
-#include <botan/mac.h>
 #include <botan/point_gfp.h>
 #include <botan/pubkey.h>
 #include <botan/secmem.h>
@@ -24,6 +22,7 @@
 
 namespace Botan {
 
+class MessageAuthenticationCode;
 class RandomNumberGenerator;
 
 enum class ECIES_Flags : uint32_t

@@ -11,6 +11,7 @@
 #include <botan/reducer.h>
 #include <botan/blinding.h>
 #include <botan/workfactor.h>
+#include <botan/pow_mod.h>
 
 namespace Botan {
 

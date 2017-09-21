@@ -15,7 +15,6 @@
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <algorithm>
-#include <iterator>
 #include <sstream>
 
 namespace Botan {

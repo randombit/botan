@@ -8,6 +8,7 @@
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
+#include <botan/data_src.h>
 #include <botan/hash.h>
 #include <botan/pkcs8.h>
 #include <botan/x509_key.h>

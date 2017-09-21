@@ -41,14 +41,6 @@
    #include <botan/bcrypt.h>
 #endif
 
-#if defined(BOTAN_HAS_HMAC)
-   #include <botan/hmac.h>
-#endif
-
-#if defined(BOTAN_HAS_HOTP)
-   #include <botan/hotp.h>
-#endif
-
 namespace Botan_CLI {
 
 std::unique_ptr<Botan::RandomNumberGenerator>
@@ -418,8 +410,8 @@ class HMAC final : public Command
       void go() override
          {
          const std::string hash_algo = get_arg("hash");
-         std::unique_ptr<Botan::MessageAuthenticationCode> hmac(Botan::MessageAuthenticationCode::create("HMAC(" + hash_algo +
-               ")"));
+         std::unique_ptr<Botan::MessageAuthenticationCode> hmac =
+            Botan::MessageAuthenticationCode::create("HMAC(" + hash_algo + ")");
 
          if(!hmac)
             { throw CLI_Error_Unsupported("HMAC", hash_algo); }

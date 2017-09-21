@@ -10,10 +10,11 @@
 
 #include <botan/pk_keys.h>
 #include <botan/alg_id.h>
-#include <botan/data_src.h>
 #include <string>
 
 namespace Botan {
+
+class DataSource;
 
 /**
 * The two types of X509 encoding supported by Botan.

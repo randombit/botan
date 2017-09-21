@@ -9,6 +9,7 @@
 #include <botan/database.h>
 #include <botan/pbkdf.h>
 #include <botan/hex.h>
+#include <botan/rng.h>
 #include <botan/loadstor.h>
 #include <chrono>
 

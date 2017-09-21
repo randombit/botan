@@ -8,9 +8,9 @@
 #ifndef BOTAN_KEYED_FILTER_H_
 #define BOTAN_KEYED_FILTER_H_
 
+#include <botan/symkey.h>
 #include <botan/filter.h>
 #include <botan/cipher_mode.h>
-#include <botan/sym_algo.h>
 
 namespace Botan {
 

@@ -11,7 +11,6 @@
 #include <botan/secmem.h>
 #include <botan/asn1_oid.h>
 #include <botan/alg_id.h>
-#include <botan/rng.h>
 #include <botan/pk_ops_fwd.h>
 
 namespace Botan {

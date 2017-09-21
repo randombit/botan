@@ -69,6 +69,7 @@
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/numthry.h>
+   #include <botan/pow_mod.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA)

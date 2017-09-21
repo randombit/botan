@@ -9,7 +9,6 @@
 #include <botan/tls_policy.h>
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
-#include <botan/certstor.h>
 
 namespace Botan {
 

@@ -16,7 +16,6 @@
 #include <botan/datastor.h>
 #include <botan/key_constraint.h>
 #include <botan/name_constraint.h>
-#include <map>
 #include <memory>
 
 namespace Botan {

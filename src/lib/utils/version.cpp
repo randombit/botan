@@ -6,7 +6,6 @@
 */
 
 #include <botan/version.h>
-#include <botan/parsing.h>
 #include <sstream>
 
 namespace Botan {

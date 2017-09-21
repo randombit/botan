@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <botan/alg_id.h>
+#include <botan/rng.h>
 #include <botan/asn1_oid.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>

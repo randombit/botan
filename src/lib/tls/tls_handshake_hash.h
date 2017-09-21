@@ -10,7 +10,6 @@
 
 #include <botan/secmem.h>
 #include <botan/tls_version.h>
-#include <botan/tls_magic.h>
 
 namespace Botan {
 

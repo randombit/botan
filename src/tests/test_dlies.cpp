@@ -11,7 +11,6 @@
    #include "test_pubkey.h"
    #include <botan/dlies.h>
    #include <botan/dh.h>
-   #include <botan/pubkey.h>
 #endif
 
 namespace Botan_Tests {

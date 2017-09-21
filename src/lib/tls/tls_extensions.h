@@ -11,7 +11,6 @@
 #define BOTAN_TLS_EXTENSIONS_H_
 
 #include <botan/secmem.h>
-#include <botan/tls_magic.h>
 #include <botan/ocsp.h>
 #include <vector>
 #include <string>

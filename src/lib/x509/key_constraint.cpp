@@ -8,6 +8,7 @@
 
 #include <botan/key_constraint.h>
 #include <botan/x509_key.h>
+#include <vector>
 
 namespace Botan {
 

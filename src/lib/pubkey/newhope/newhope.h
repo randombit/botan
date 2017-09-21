@@ -12,9 +12,11 @@
 #ifndef BOTAN_NEWHOPE_H_
 #define BOTAN_NEWHOPE_H_
 
-#include <botan/rng.h>
+#include <botan/mem_ops.h>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /*
 * WARNING: This API is preliminary and will change

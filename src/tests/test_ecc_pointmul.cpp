@@ -7,8 +7,6 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECDSA)
-   #include "test_pubkey.h"
-   #include <botan/pubkey.h>
    #include <botan/ecdsa.h>
    #include <botan/oids.h>
 #endif

@@ -14,7 +14,6 @@
 #include <botan/alg_id.h>
 #include <botan/oids.h>
 #include <botan/rng.h>
-#include <algorithm>
 
 namespace Botan {
 

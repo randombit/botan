@@ -9,7 +9,6 @@
 #ifndef BOTAN_TLS_CHANNEL_H_
 #define BOTAN_TLS_CHANNEL_H_
 
-#include <botan/tls_policy.h>
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_session_manager.h>
@@ -29,6 +28,7 @@ class Handshake_State;
 class Handshake_Message;
 class Client_Hello;
 class Server_Hello;
+class Policy;
 
 /**
 * Generic interface for TLS endpoint

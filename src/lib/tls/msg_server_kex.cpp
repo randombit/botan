@@ -13,7 +13,6 @@
 #include <botan/credentials_manager.h>
 #include <botan/loadstor.h>
 #include <botan/pubkey.h>
-#include <botan/oids.h>
 
 #include <botan/dh.h>
 #include <botan/ecdh.h>

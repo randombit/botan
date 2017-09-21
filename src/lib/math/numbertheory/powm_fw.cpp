@@ -6,7 +6,6 @@
 */
 
 #include <botan/internal/def_powm.h>
-#include <botan/numthry.h>
 #include <vector>
 
 namespace Botan {

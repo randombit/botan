@@ -7,7 +7,6 @@
 
 #include <botan/name_constraint.h>
 #include <botan/ber_dec.h>
-#include <botan/der_enc.h>
 #include <botan/charset.h>
 #include <botan/loadstor.h>
 #include <botan/x509_dn.h>
@@ -16,6 +15,8 @@
 #include <sstream>
 
 namespace Botan {
+
+class DER_Encoder;
 
 GeneralName::GeneralName(const std::string& str) : GeneralName()
    {
@@ -32,7 +33,7 @@ GeneralName::GeneralName(const std::string& str) : GeneralName()
       }
    }
 
-void GeneralName::encode_into(class DER_Encoder&) const
+void GeneralName::encode_into(DER_Encoder&) const
    {
    throw Not_Implemented("GeneralName encoding");
    }
@@ -248,7 +249,7 @@ GeneralSubtree::GeneralSubtree(const std::string& str) : GeneralSubtree()
       }
    }
 
-void GeneralSubtree::encode_into(class DER_Encoder&) const
+void GeneralSubtree::encode_into(DER_Encoder&) const
    {
    throw Not_Implemented("General Subtree encoding");
    }

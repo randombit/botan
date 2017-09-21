@@ -9,9 +9,6 @@
 #include <botan/x509_ext.h>
 #include <botan/x509cert.h>
 #include <botan/ber_dec.h>
-#include <botan/parsing.h>
-#include <botan/bigint.h>
-#include <botan/oids.h>
 
 namespace Botan {
 

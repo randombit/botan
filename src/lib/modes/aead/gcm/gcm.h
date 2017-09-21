@@ -10,11 +10,12 @@
 #define BOTAN_AEAD_GCM_H_
 
 #include <botan/aead.h>
-#include <botan/block_cipher.h>
-#include <botan/stream_cipher.h>
+#include <botan/sym_algo.h>
 
 namespace Botan {
 
+class BlockCipher;
+class StreamCipher;
 class GHASH;
 
 /**
@@ -43,6 +44,8 @@ class BOTAN_PUBLIC_API(2,0) GCM_Mode : public AEAD_Mode
       std::string provider() const override;
    protected:
       GCM_Mode(BlockCipher* cipher, size_t tag_size);
+
+      ~GCM_Mode();
 
       const size_t m_BS = 16;
 

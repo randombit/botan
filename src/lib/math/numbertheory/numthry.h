@@ -9,7 +9,6 @@
 #define BOTAN_NUMBER_THEORY_H_
 
 #include <botan/bigint.h>
-#include <botan/pow_mod.h>
 
 namespace Botan {
 

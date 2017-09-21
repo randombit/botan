@@ -12,7 +12,6 @@
 
 #include <botan/ec_group.h>
 #include <botan/pk_keys.h>
-#include <botan/x509_key.h>
 
 namespace Botan {
 

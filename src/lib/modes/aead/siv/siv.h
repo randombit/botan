@@ -10,11 +10,12 @@
 #define BOTAN_AEAD_SIV_H_
 
 #include <botan/aead.h>
-#include <botan/block_cipher.h>
-#include <botan/stream_cipher.h>
-#include <botan/mac.h>
 
 namespace Botan {
+
+class BlockCipher;
+class StreamCipher;
+class MessageAuthenticationCode;
 
 /**
 * Base class for SIV encryption and decryption (@see RFC 5297)

@@ -13,7 +13,6 @@
 #include <functional>
 #include <memory>
 #include <array>
-#include <type_traits>
 #include <map>
 
 #if defined(BOTAN_HAS_PKCS11)

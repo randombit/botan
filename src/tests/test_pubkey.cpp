@@ -15,8 +15,8 @@
 #include <botan/pk_algs.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
-#include <botan/oids.h>
 #include <botan/hex.h>
+#include <botan/data_src.h>
 
 namespace Botan_Tests {
 

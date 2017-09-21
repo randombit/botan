@@ -9,9 +9,8 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/bigint.h>
    #include <botan/numthry.h>
-   #include <botan/reducer.h>
+   #include <botan/pow_mod.h>
    #include <botan/parsing.h>
-   #include <cmath>
 #endif
 
 namespace Botan_Tests {

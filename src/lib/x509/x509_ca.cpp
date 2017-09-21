@@ -8,16 +8,13 @@
 #include <botan/x509_ca.h>
 #include <botan/pubkey.h>
 #include <botan/der_enc.h>
-#include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/oids.h>
 #include <botan/hash.h>
 #include <botan/key_constraint.h>
 #include <algorithm>
-#include <typeinfo>
 #include <iterator>
-#include <set>
 
 namespace Botan {
 

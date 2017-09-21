@@ -11,6 +11,7 @@
 
 #include <botan/newhope.h>
 #include <botan/hash.h>
+#include <botan/rng.h>
 #include <botan/stream_cipher.h>
 #include <botan/loadstor.h>
 

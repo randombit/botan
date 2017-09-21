@@ -7,9 +7,10 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ED25519)
+   #include "test_pubkey.h"
    #include <botan/ed25519.h>
    #include <botan/pkcs8.h>
-   #include "test_pubkey.h"
+   #include <botan/data_src.h>
 #endif
 
 namespace Botan_Tests {

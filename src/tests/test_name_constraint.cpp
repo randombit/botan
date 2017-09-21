@@ -11,13 +11,7 @@
    #include <botan/calendar.h>
 #endif
 
-#include <algorithm>
-#include <fstream>
-#include <iomanip>
-#include <string>
-#include <vector>
-#include <map>
-#include <cstdlib>
+#include <utility>
 
 namespace Botan_Tests {
 

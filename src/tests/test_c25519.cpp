@@ -10,6 +10,7 @@
    #include "test_pubkey.h"
    #include <botan/curve25519.h>
    #include <botan/pkcs8.h>
+   #include <botan/data_src.h>
 #endif
 
 namespace Botan_Tests {

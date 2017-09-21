@@ -7,6 +7,7 @@
 
 #include <botan/tls_session_manager.h>
 #include <botan/hex.h>
+#include <botan/rng.h>
 #include <chrono>
 
 namespace Botan {

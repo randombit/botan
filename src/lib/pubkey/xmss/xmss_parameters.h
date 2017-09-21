@@ -10,7 +10,6 @@
 
 #include <botan/xmss_wots_parameters.h>
 #include <string>
-#include <map>
 
 namespace Botan {
 

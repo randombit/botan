@@ -11,10 +11,6 @@
 #include <botan/pk_keys.h>
 #include <botan/pk_ops_fwd.h>
 #include <botan/symkey.h>
-#include <botan/rng.h>
-#include <botan/eme.h>
-#include <botan/emsa.h>
-#include <botan/kdf.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -22,6 +18,8 @@
 #endif
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * The two types of signature format supported by Botan.

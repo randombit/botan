@@ -7,7 +7,9 @@
 */
 
 #include <botan/tls_channel.h>
+#include <botan/tls_policy.h>
 #include <botan/tls_messages.h>
+#include <botan/kdf.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>

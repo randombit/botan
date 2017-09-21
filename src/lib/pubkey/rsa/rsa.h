@@ -8,8 +8,8 @@
 #ifndef BOTAN_RSA_H_
 #define BOTAN_RSA_H_
 
+#include <botan/pk_keys.h>
 #include <botan/bigint.h>
-#include <botan/x509_key.h>
 
 namespace Botan {
 

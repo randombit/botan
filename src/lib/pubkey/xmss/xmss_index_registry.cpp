@@ -8,6 +8,7 @@
  **/
 
 #include <botan/xmss_index_registry.h>
+#include <botan/hash.h>
 #include <limits>
 
 namespace Botan {

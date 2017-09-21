@@ -11,6 +11,7 @@
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
 #include <botan/tls_client.h>
+#include <botan/tls_policy.h>
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
 #include <botan/hex.h>

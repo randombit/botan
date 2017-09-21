@@ -18,13 +18,13 @@
 
    #include <botan/tls_client.h>
    #include <botan/tls_server.h>
+   #include <botan/tls_policy.h>
 
    #include <botan/ec_group.h>
    #include <botan/hex.h>
    #include <botan/pkcs10.h>
    #include <botan/rsa.h>
    #include <botan/ecdsa.h>
-   #include <botan/tls_handshake_msg.h>
    #include <botan/x509_ca.h>
    #include <botan/x509self.h>
 

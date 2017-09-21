@@ -7,13 +7,13 @@
 
 #include <botan/rsa.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/parsing.h>
 #include <botan/keypair.h>
 #include <botan/blinding.h>
 #include <botan/reducer.h>
 #include <botan/workfactor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/pow_mod.h>
 
 #if defined(BOTAN_HAS_OPENSSL)
   #include <botan/internal/openssl.h>

@@ -12,7 +12,6 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/tls_alert.h>
-#include <botan/tls_magic.h>
 #include <botan/tls_exceptn.h>
 
 namespace Botan {

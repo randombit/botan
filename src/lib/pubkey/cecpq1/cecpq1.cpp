@@ -8,6 +8,7 @@
 #include <botan/cecpq1.h>
 #include <botan/newhope.h>
 #include <botan/curve25519.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

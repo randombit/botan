@@ -14,6 +14,7 @@
 #include <botan/pk_ops.h>
 #include <botan/rng.h>
 #include <botan/blinding.h>
+#include <botan/pow_mod.h>
 
 namespace Botan {
 
