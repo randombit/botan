@@ -163,6 +163,8 @@ Version 2.3.0, Not Yet Released
 * Fix a bug in FFI tests that caused the test files not to be found when using
   ``--data-dir`` option (GH #1149)
 
+* Improved support for IBM xlc compiler.
+
 Version 2.2.0, 2017-08-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -1,4 +1,4 @@
-macro_name IBM_XLC
+macro_name XLC
 
 binary_name xlC
 
@@ -11,16 +11,18 @@ compile_flags "-c"
 debug_info_flags "-g"
 optimization_flags "-O2"
 
-lang_flags ""
+lang_flags "-std=c++11"
 
 makefile_style gmake
 
 <mach_opt>
-cellppu   -> "-qarch=cell"
-ppc970   -> "-qarch=ppc970"
-power4   -> "-qarch=pwr4"
-power5   -> "-qarch=pwr5"
+power8   -> "-qarch=pwr8"
+power9   -> "-qarch=pwr9"
 </mach_opt>
+
+<isa_flags>
+altivec -> "-qaltivec"
+</isa_flags>
 
 <so_link_commands>
 default -> "$(CXX) -qmkshrobj"

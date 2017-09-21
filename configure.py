@@ -1852,7 +1852,7 @@ class MakefileListsGenerator(object):
         for t in targets:
             src_list, src_dir = self._build_paths.src_info(t)
             src_list.sort()
-            objects = sorted(self._objectfile_list(src_list, src_dir))
+            objects = list(self._objectfile_list(src_list, src_dir))
 
             obj_key = '%s_objs' % (t)
             out[obj_key] = makefile_list(objects)
