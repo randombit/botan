@@ -2439,7 +2439,7 @@ def portable_symlink(file_path, target_dir, method):
 
 class AmalgamationHelper(object):
     _any_include_matcher = re.compile(r'#include <(.*)>$')
-    _botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
+    _botan_include_matcher = re.compile(r'#include <botan/(.*)>')
     _std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
 
     @staticmethod
@@ -2500,6 +2500,9 @@ class AmalgamationHeader(object):
         name = name.replace('internal/', '')
 
         if name in self.included_already:
+            return
+
+        if name == 'botan.h':
             return
 
         self.included_already.add(name)
