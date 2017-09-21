@@ -78,6 +78,8 @@ class SM2_Encryption_KAT_Tests : public PK_Encryption_Decryption_Test
          return get_opt_str(vars, "Hash", "SM3");
          }
 
+      bool clear_between_callbacks() const override { return false; }
+
       Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
          {
          return new Fixed_Output_Position_RNG(nonce, 1);
