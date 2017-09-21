@@ -29,6 +29,7 @@
   #include <signal.h>
   #include <setjmp.h>
   #include <unistd.h>
+  #include <errno.h>
 
 #if !defined(BOTAN_HAS_BOOST_ASIO)
   #include <sys/socket.h>
