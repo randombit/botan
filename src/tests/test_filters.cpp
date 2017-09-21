@@ -23,6 +23,11 @@
    #include <botan/b64_filt.h>
 #endif
 
+#if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
+   #include <botan/fd_unix.h>
+   #include <unistd.h>
+#endif
+
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_FILTERS)
@@ -49,6 +54,10 @@ class Filter_Tests : public Test
          results.push_back(test_fork());
          results.push_back(test_chain());
          results.push_back(test_threaded_fork());
+
+#if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
+         results.push_back(test_pipe_fd_io());
+#endif
 
          return results;
          }
@@ -593,6 +602,34 @@ class Filter_Tests : public Test
          return result;
          }
 
+#if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
+      Test::Result test_pipe_fd_io()
+         {
+         Test::Result result("Pipe file descriptor IO");
+
+         int fd[2];
+         if(::pipe(fd) != 0)
+            return result; // pipe unavailable?
+
+         Botan::Pipe hex_enc(new Botan::Hex_Encoder);
+         Botan::Pipe hex_dec(new Botan::Hex_Decoder);
+
+         hex_enc.process_msg("hi chappy");
+         fd[1] << hex_enc;
+         ::close(fd[1]);
+
+         hex_dec.start_msg();
+         fd[0] >> hex_dec;
+         hex_dec.end_msg();
+         ::close(fd[0]);
+
+         std::string dec = hex_dec.read_all_as_string();
+
+         result.test_eq("IO through Unix pipe works", dec, "hi chappy");
+
+         return result;
+         }
+#endif
 
       Test::Result test_threaded_fork()
          {
