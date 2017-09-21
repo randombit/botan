@@ -12,6 +12,7 @@
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
 #include <botan/database.h>
+#include <botan/mutex.h>
 
 namespace Botan {
 
