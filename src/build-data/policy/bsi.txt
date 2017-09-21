@@ -76,6 +76,7 @@ simd
 
 <prohibited>
 # block
+aria
 blowfish
 camellia
 cascade
@@ -92,6 +93,9 @@ noekeon_simd
 seed
 serpent
 serpent_simd
+shacal2
+shacal2_x86
+shacal2_simd
 sm4
 threefish
 threefish_avx2
@@ -164,5 +168,8 @@ cbc_mac
 poly1305
 siphash
 x919_mac
+
+# misc
+bcrypt
 
 </prohibited>

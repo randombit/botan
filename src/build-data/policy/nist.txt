@@ -80,6 +80,7 @@ simd
 
 <prohibited>
 # block
+aria
 blowfish
 camellia
 cascade
@@ -96,6 +97,9 @@ seed
 serpent
 serpent_simd
 sm4
+shacal2
+shacal2_x86
+shacal2_simd
 threefish
 threefish_avx2
 twofish
@@ -111,6 +115,7 @@ cfb
 # stream
 chacha
 chacha_sse2
+shake_cipher
 ofb
 rc4
 salsa20
