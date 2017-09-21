@@ -7,7 +7,6 @@
 
 #include <botan/internal/rdseed.h>
 #include <botan/cpuid.h>
-#include <botan/build.h>
 
 #if !defined(BOTAN_USE_GCC_INLINE_ASM)
   #include <immintrin.h>

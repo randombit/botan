@@ -9,7 +9,8 @@
 #ifndef BOTAN_P11_ECDSA_H_
 #define BOTAN_P11_ECDSA_H_
 
-#include <botan/build.h>
+#include <botan/p11.h>
+
 #if defined(BOTAN_HAS_ECDSA)
 
 #include <botan/p11_ecc_key.h>

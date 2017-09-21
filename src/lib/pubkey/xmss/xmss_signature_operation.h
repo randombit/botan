@@ -12,7 +12,6 @@
 #include <string>
 #include <botan/secmem.h>
 #include <botan/types.h>
-#include <botan/assert.h>
 #include <botan/xmss_parameters.h>
 #include <botan/xmss_privatekey.h>
 #include <botan/xmss_address.h>

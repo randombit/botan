@@ -9,7 +9,6 @@
 #ifndef BOTAN_P11_SESSION_H_
 #define BOTAN_P11_SESSION_H_
 
-#include <botan/p11.h>
 #include <botan/p11_slot.h>
 
 #include <utility>

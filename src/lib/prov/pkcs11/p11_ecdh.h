@@ -9,10 +9,10 @@
 #ifndef BOTAN_P11_ECDH_H_
 #define BOTAN_P11_ECDH_H_
 
-#include <botan/build.h>
+#include <botan/p11.h>
+
 #if defined(BOTAN_HAS_ECDH)
 
-#include <botan/p11.h>
 #include <botan/p11_ecc_key.h>
 #include <botan/ecdh.h>
 

@@ -10,7 +10,6 @@
 
 #include <vector>
 #include <botan/secmem.h>
-#include <botan/assert.h>
 #include <botan/xmss_parameters.h>
 #include <botan/xmss_address.h>
 #include <botan/xmss_hash.h>

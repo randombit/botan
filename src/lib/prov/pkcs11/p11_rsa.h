@@ -9,8 +9,6 @@
 #ifndef BOTAN_P11_RSA_H_
 #define BOTAN_P11_RSA_H_
 
-#include <botan/build.h>
-#include <botan/p11.h>
 #include <botan/p11_session.h>
 #include <botan/p11_object.h>
 

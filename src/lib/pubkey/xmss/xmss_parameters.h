@@ -8,12 +8,9 @@
 #ifndef BOTAN_XMSS_PARAMETERS_H_
 #define BOTAN_XMSS_PARAMETERS_H_
 
-#include <cstddef>
-#include <map>
-#include <string>
-#include <botan/assert.h>
-#include <botan/types.h>
 #include <botan/xmss_wots_parameters.h>
+#include <string>
+#include <map>
 
 namespace Botan {
 

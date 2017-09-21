@@ -14,6 +14,8 @@
  **/
 
 #include <botan/xmss_wots_parameters.h>
+#include <botan/exceptn.h>
+#include <cmath>
 
 namespace Botan {
 
@@ -80,7 +82,7 @@ XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(ots_algorithm_t oid)
       }
 
    m_w == 16 ? m_lg_w = 4 : m_lg_w = 2;
-   m_len_1 = static_cast<size_t>(ceil((8 * element_size()) / m_lg_w));
+   m_len_1 = static_cast<size_t>(std::ceil((8 * element_size()) / m_lg_w));
    m_len_2 = static_cast<size_t>(
       floor(log2(m_len_1 * (wots_parameter() - 1)) / m_lg_w) + 1);
    BOTAN_ASSERT(m_len == m_len_1 + m_len_2, "Invalid XMSS WOTS parameter "
@@ -114,7 +116,7 @@ XMSS_WOTS_Parameters::base_w(size_t value) const
    {
    value <<= (8 - ((m_len_2 * m_lg_w) % 8));
    size_t len_2_bytes = static_cast<size_t>(
-      ceil(static_cast<float>(m_len_2 * m_lg_w) / 8.f));
+      std::ceil(static_cast<float>(m_len_2 * m_lg_w) / 8.f));
    secure_vector<uint8_t> result;
    XMSS_Tools::concat(result, value, len_2_bytes);
    return base_w(result, m_len_2);

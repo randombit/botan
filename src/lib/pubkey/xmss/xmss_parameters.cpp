@@ -13,6 +13,7 @@
  **/
 
 #include <botan/xmss_parameters.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

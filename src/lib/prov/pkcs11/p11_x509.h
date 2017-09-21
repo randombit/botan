@@ -9,13 +9,11 @@
 #ifndef BOTAN_P11_X509_H_
 #define BOTAN_P11_X509_H_
 
-#include <botan/build.h>
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-
 #include <botan/p11_object.h>
 
-#include <botan/x509cert.h>
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 
+#include <botan/x509cert.h>
 #include <vector>
 
 namespace Botan {

@@ -7,7 +7,6 @@
 #ifndef BOTAN_UTIL_MUTEX_H_
 #define BOTAN_UTIL_MUTEX_H_
 
-#include <botan/build.h>
 #include <botan/types.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)

@@ -6,7 +6,6 @@
 */
 
 #include <botan/system_rng.h>
-#include <botan/build.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    #define NOMINMAX 1

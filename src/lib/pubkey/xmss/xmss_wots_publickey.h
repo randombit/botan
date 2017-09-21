@@ -13,7 +13,6 @@
 #include <vector>
 #include <botan/alg_id.h>
 #include <botan/asn1_oid.h>
-#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/types.h>

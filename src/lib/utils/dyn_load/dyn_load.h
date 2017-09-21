@@ -8,8 +8,8 @@
 #ifndef BOTAN_DYNAMIC_LOADER_H_
 #define BOTAN_DYNAMIC_LOADER_H_
 
+#include <botan/types.h>
 #include <string>
-#include <botan/build.h>
 
 namespace Botan {
 

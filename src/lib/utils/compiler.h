@@ -5,6 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+/* This header is included in both C++ and C (via ffi.h) and should only
+   contain macro definitions.
+*/
+
 #ifndef BOTAN_UTIL_COMPILER_FLAGS_H_
 #define BOTAN_UTIL_COMPILER_FLAGS_H_
 

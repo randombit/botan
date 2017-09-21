@@ -9,7 +9,6 @@
 #ifndef BOTAN_P11_ECC_H_
 #define BOTAN_P11_ECC_H_
 
-#include <botan/build.h>
 #include <botan/p11_object.h>
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)

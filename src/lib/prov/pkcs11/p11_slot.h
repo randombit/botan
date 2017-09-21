@@ -13,7 +13,6 @@
 #include <vector>
 #include <functional>
 
-#include <botan/p11.h>
 #include <botan/p11_module.h>
 
 namespace Botan {

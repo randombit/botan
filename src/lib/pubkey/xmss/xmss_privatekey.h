@@ -12,7 +12,6 @@
 #include <iterator>
 #include <memory>
 #include <botan/alg_id.h>
-#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/rng.h>

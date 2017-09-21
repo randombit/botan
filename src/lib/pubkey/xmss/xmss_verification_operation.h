@@ -12,7 +12,6 @@
 #include <cstddef>
 #include <iterator>
 #include <string>
-#include <botan/assert.h>
 #include <botan/types.h>
 #include <botan/xmss_publickey.h>
 #include <botan/xmss_common_ops.h>

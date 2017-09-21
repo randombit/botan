@@ -10,7 +10,6 @@
 
 #include <cstddef>
 #include <iterator>
-#include <botan/assert.h>
 #include <botan/types.h>
 #include <botan/pk_ops.h>
 #include <botan/internal/xmss_wots_addressed_privatekey.h>

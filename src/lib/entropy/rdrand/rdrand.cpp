@@ -9,7 +9,6 @@
 #include <botan/internal/rdrand.h>
 #include <botan/rdrand_rng.h>
 #include <botan/cpuid.h>
-#include <botan/build.h>
 
 namespace Botan {
 

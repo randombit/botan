@@ -6,6 +6,7 @@
  **/
 
 #include <botan/internal/xmss_signature.h>
+#include <cmath>
 
 namespace Botan {
 
@@ -13,7 +14,7 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
                                const secure_vector<uint8_t>& raw_sig)
    : m_leaf_idx(0), m_randomness(0, 0x00), m_tree_sig()
    {
-   BOTAN_ASSERT(sizeof(size_t) >= ceil(static_cast<float>(
+   BOTAN_ASSERT(sizeof(size_t) >= std::ceil(static_cast<float>(
                    (XMSS_Parameters(oid)).tree_height()) / 8.f),
                    "System type \"size_t\" not big enough to support"
                    " leaf index.");
