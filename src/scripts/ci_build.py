@@ -380,6 +380,7 @@ def main(args=None):
             make_cmd += ['-C', root_dir]
         if options.build_jobs > 1:
             make_cmd += ['-j%d' % (options.build_jobs)]
+        make_cmd += ['-k']
 
         if target == 'docs':
             cmds.append(make_cmd + ['docs'])
