@@ -9,6 +9,7 @@
 #define BOTAN_PASSHASH9_H_
 
 #include <botan/types.h>
+#include <string>
 
 namespace Botan {
 
