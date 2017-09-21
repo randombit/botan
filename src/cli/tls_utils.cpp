@@ -12,6 +12,7 @@
 #include <botan/tls_version.h>
 #include <botan/tls_messages.h>
 #include <botan/hex.h>
+#include <sstream>
 
 namespace Botan_CLI {
 

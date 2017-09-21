@@ -11,6 +11,8 @@
 #include <botan/tls_magic.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
+#include <botan/pk_keys.h>
+#include <sstream>
 
 namespace Botan {
 
