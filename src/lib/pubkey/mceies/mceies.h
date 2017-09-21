@@ -9,6 +9,7 @@
 #define BOTAN_MCEIES_H_
 
 #include <botan/secmem.h>
+#include <string>
 
 namespace Botan {
 
