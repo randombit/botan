@@ -6,6 +6,7 @@
 
 #include "fuzzers.h"
 #include <botan/x509_crl.h>
+#include <botan/data_src.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {

@@ -9,6 +9,7 @@
 
 #include "fuzzers.h"
 #include <botan/reducer.h>
+#include <functional>
 
 namespace {
 

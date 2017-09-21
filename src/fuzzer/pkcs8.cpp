@@ -3,9 +3,10 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include "fuzzers.h"
 
+#include "fuzzers.h"
 #include <botan/pkcs8.h>
+#include <botan/data_src.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {

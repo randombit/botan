@@ -6,6 +6,7 @@
 
 #include "fuzzers.h"
 #include <botan/tls_server.h>
+#include <botan/data_src.h>
 
 const char* fixed_rsa_key =
    "-----BEGIN PRIVATE KEY-----\n"
