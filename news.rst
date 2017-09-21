@@ -22,9 +22,10 @@ Version 2.3.0, Not Yet Released
 * SM2 encryption and signature schemes were previously hardcoded to use SM3
   hash, now any hash is allowed. (GH #1188)
 
-* SM2 encryption in 2.2 followed an obsolete version of the standard. The
-  format of the ciphertext changed with GM/T 0003:2012. The only difference is
-  in the ordering of the embedded MAC vs the masked input.
+* SM2 encryption in 2.2.0 followed an obsolete version of the standard. The
+  format of the ciphertext changed in a more recent revision of the standard,
+  and now uses an ASN.1 encoding. Botan has changed to reflect this format,
+  which is compatible with GmSSL (GH #1218)
 
 * OCB mode now supports 192, 256 and 512 bit block ciphers. (GH #1205)
 
