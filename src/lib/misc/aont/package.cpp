@@ -18,6 +18,9 @@ void aont_package(RandomNumberGenerator& rng,
                   const uint8_t input[], size_t input_len,
                   uint8_t output[])
    {
+   if(input_len <= 1)
+      throw Encoding_Error("Package transform cannot encode small inputs");
+
    const size_t BLOCK_SIZE = cipher->block_size();
 
    if(!cipher->valid_keylength(BLOCK_SIZE))

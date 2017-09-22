@@ -24,36 +24,38 @@ class Package_Transform_Tests final : public Test
          Test::Result result("Package transform");
 
          std::unique_ptr<Botan::BlockCipher> cipher(Botan::BlockCipher::create("AES-128"));
-         std::vector<uint8_t> input = unlock(Test::rng().random_vec(Test::rng().next_byte()));
-         std::vector<uint8_t> output(input.size() + cipher->block_size());
 
-         // aont_package owns/deletes the passed cipher object, kind of a bogus API
-         Botan::aont_package(Test::rng(),
-                             cipher->clone(),
-                             input.data(), input.size(),
-                             output.data());
+         for(size_t input_len = 2; input_len != 256; ++input_len)
+            {
+            std::vector<uint8_t> input = unlock(Test::rng().random_vec(input_len));
+            std::vector<uint8_t> output(input.size() + cipher->block_size());
 
-         std::vector<uint8_t> decoded(output.size() - cipher->block_size());
-         Botan::aont_unpackage(cipher->clone(),
-                               output.data(), output.size(),
-                               decoded.data());
-         result.test_eq("Package transform is reversible", decoded, input);
+            // aont_package owns/deletes the passed cipher object, kind of a bogus API
+            Botan::aont_package(Test::rng(),
+                                cipher->clone(),
+                                input.data(), input.size(),
+                                output.data());
 
-#if 0
-         // Broken - https://github.com/randombit/botan/issues/825
-         output[0] ^= 1;
-         Botan::aont_unpackage(cipher->clone(),
-                               output.data(), output.size(),
-                               decoded.data());
-         result.test_ne("Bitflip breaks package transform", decoded, input);
+            std::vector<uint8_t> decoded(output.size() - cipher->block_size());
+            Botan::aont_unpackage(cipher->clone(),
+                                  output.data(), output.size(),
+                                  decoded.data());
+            result.test_eq("Package transform is reversible", decoded, input);
 
-         output[0] ^= 1;
-         Botan::aont_unpackage(cipher->clone(),
-                               output.data(), output.size(),
-                               decoded.data());
-         result.test_eq("Package transform is still reversible", decoded, input);
-#endif
-         // More tests including KATs would be useful for these functions
+            output[0] ^= 1;
+            Botan::aont_unpackage(cipher->clone(),
+                                  output.data(), output.size(),
+                                  decoded.data());
+            result.test_ne("Bitflip breaks package transform", decoded, input);
+
+            output[0] ^= 1;
+            Botan::aont_unpackage(cipher->clone(),
+                                  output.data(), output.size(),
+                                  decoded.data());
+            result.test_eq("Package transform is still reversible", decoded, input);
+
+            // More tests including KATs would be useful for these functions
+            }
 
          return std::vector<Test::Result> {result};
          }
