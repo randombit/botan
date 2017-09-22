@@ -68,10 +68,8 @@ class BOTAN_PUBLIC_API(2,0) Entropy_Sources final
 
       Entropy_Sources() {}
       explicit Entropy_Sources(const std::vector<std::string>& sources);
-
-      ~Entropy_Sources();
    private:
-      std::vector<Entropy_Source*> m_srcs;
+      std::vector<std::unique_ptr<Entropy_Source>> m_srcs;
    };
 
 }

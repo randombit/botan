@@ -130,7 +130,7 @@ void Entropy_Sources::add_source(std::unique_ptr<Entropy_Source> src)
    {
    if(src.get())
       {
-      m_srcs.push_back(src.release());
+      m_srcs.push_back(std::move(src));
       }
    }
 
@@ -154,9 +154,9 @@ size_t Entropy_Sources::poll(RandomNumberGenerator& rng,
 
    size_t bits_collected = 0;
 
-   for(Entropy_Source* src : m_srcs)
+   for(size_t i = 0; i != m_srcs.size(); ++i)
       {
-      bits_collected += src->poll(rng);
+      bits_collected += m_srcs[i]->poll(rng);
 
       if (bits_collected >= poll_bits || clock::now() > deadline)
          break;
@@ -184,16 +184,6 @@ Entropy_Sources::Entropy_Sources(const std::vector<std::string>& sources)
       {
       add_source(Entropy_Source::create(src_name));
       }
-   }
-
-Entropy_Sources::~Entropy_Sources()
-   {
-   for(size_t i = 0; i != m_srcs.size(); ++i)
-      {
-      delete m_srcs[i];
-      m_srcs[i] = nullptr;
-      }
-   m_srcs.clear();
    }
 
 Entropy_Sources& Entropy_Sources::global_sources()
