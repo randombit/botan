@@ -198,12 +198,12 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       explicit BER_Decoder(const std::vector<uint8_t>& vec);
 
       BER_Decoder(const BER_Decoder&);
-      ~BER_Decoder();
    private:
       BER_Decoder* m_parent;
-      DataSource* m_source;
       BER_Object m_pushed;
-      mutable bool m_owns;
+      // either m_data_src.get() or an unowned pointer
+      DataSource* m_source;
+      mutable std::unique_ptr<DataSource> m_data_src;
    };
 
 /*
