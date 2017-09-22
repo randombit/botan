@@ -125,15 +125,27 @@ class Compression_Tests final : public Test
                              const Botan::secure_vector<uint8_t>& msg)
          {
          Botan::secure_vector<uint8_t> compressed = msg;
+         Botan::secure_vector<uint8_t> flush_bits;
+         Botan::secure_vector<uint8_t> final_bits;
 
          c.start(level);
-         c.finish(compressed);
+         c.update(compressed);
+         c.update(flush_bits, 0, true);
+         c.finish(final_bits);
+
+         compressed += flush_bits;
+         compressed += final_bits;
 
          const size_t c_size = compressed.size();
 
          Botan::secure_vector<uint8_t> decompressed = compressed;
          d.start();
-         d.finish(decompressed);
+         d.update(decompressed);
+
+         Botan::secure_vector<uint8_t> final_outputs;
+         d.finish(final_outputs);
+
+         decompressed += final_outputs;
 
          result.test_eq("compression round tripped", msg, decompressed);
          return c_size;

@@ -68,6 +68,12 @@ void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uin
    BOTAN_ASSERT(m_stream, "Initialized");
    BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
 
+   // bzip doesn't like being called with no input and BZ_RUN
+   if(buf.size() == offset && flags == m_stream->run_flag())
+      {
+      return;
+      }
+
    if(m_buffer.size() < buf.size() + offset)
       m_buffer.resize(buf.size() + offset);
 
