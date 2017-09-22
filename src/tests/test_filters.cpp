@@ -70,6 +70,8 @@ class Filter_Tests final : public Test
          try
             {
             Botan::SecureQueue queue_a;
+            result.test_eq("queue not attachable", queue_a.attachable(), false);
+
             std::vector<uint8_t> test_data = {0x24, 0xB2, 0xBF, 0xC2, 0xE6, 0xD4, 0x7E, 0x04, 0x67, 0xB3};
             queue_a.write(test_data.data(), test_data.size());
 
@@ -77,6 +79,8 @@ class Filter_Tests final : public Test
             result.test_eq("0 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 0);
 
             uint8_t b;
+            result.test_eq("check_available", queue_a.check_available(1), true);
+            result.test_eq("check_available", queue_a.check_available(50), false);
             size_t bytes_read = queue_a.read_byte(b);
             result.test_eq("1 byte read", bytes_read, 1);
 
