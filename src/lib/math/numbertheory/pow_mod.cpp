@@ -15,7 +15,6 @@ namespace Botan {
 */
 Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints, bool disable_monty)
    {
-   m_core = nullptr;
    set_modulus(n, hints, disable_monty);
    }
 
@@ -24,9 +23,8 @@ Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints, bool disable_monty)
 */
 Power_Mod::Power_Mod(const Power_Mod& other)
    {
-   m_core = nullptr;
-   if(other.m_core)
-      m_core = other.m_core->copy();
+   if(other.m_core.get())
+      m_core.reset(other.m_core->copy());
    }
 
 /*
@@ -36,23 +34,12 @@ Power_Mod& Power_Mod::operator=(const Power_Mod& other)
    {
    if(this != &other)
       {
-      delete m_core;
-      m_core = nullptr;
       if(other.m_core)
-         {
-         m_core = other.m_core->copy();
-         }
+         m_core.reset(other.m_core->copy());
+      else
+         m_core.reset();
       }
    return (*this);
-   }
-
-/*
-* Power_Mod Destructor
-*/
-Power_Mod::~Power_Mod()
-   {
-   delete m_core;
-   m_core = nullptr;
    }
 
 /*
@@ -62,16 +49,14 @@ void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints, bool disable_mon
    {
    // Allow set_modulus(0) to mean "drop old state"
 
-   delete m_core;
-   m_core = nullptr;
+   m_core.reset();
 
    if(n != 0)
       {
       if(n.is_odd() && disable_monty == false)
-         m_core = new Montgomery_Exponentiator(n, hints);
-
-      if(!m_core)
-         m_core = new Fixed_Window_Exponentiator(n, hints);
+         m_core.reset(new Montgomery_Exponentiator(n, hints));
+      else
+         m_core.reset(new Fixed_Window_Exponentiator(n, hints));
       }
    }
 
