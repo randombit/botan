@@ -92,10 +92,10 @@ class BearSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification
          if (m_hf == nullptr)
             throw Lookup_Error("BearSSL ECDSA does not support hash " + req.arg(0));
 
-         const secure_vector<uint8_t> enc = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
-         m_key.qlen = enc.size();
-         m_key.q = new uint8_t[m_key.qlen];
-         memcpy(m_key.q, enc.data(), m_key.qlen);
+         m_q_buf = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
+
+         m_key.qlen = m_q_buf.size();
+         m_key.q = m_q_buf.data();
          m_key.curve = curve;
          }
 
@@ -120,14 +120,10 @@ class BearSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification
 
       size_t max_input_bits() const { return m_order_bits; }
 
-      ~BearSSL_ECDSA_Verification_Operation()
-         {
-         delete m_key.q;
-         }
-
    private:
       br_ec_public_key m_key;
       std::unique_ptr<HashFunction> m_hf;
+      secure_vector<uint8_t> m_q_buf;
       const br_hash_class *m_hash;
       size_t m_order_bits;
    };
@@ -151,9 +147,10 @@ class BearSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature
          if (m_hf == nullptr)
             throw Lookup_Error("BearSSL ECDSA does not support hash " + req.arg(0));
 
-         m_key.xlen = ecdsa.private_value().bytes();
-         m_key.x = new uint8_t[m_key.xlen];
-         ecdsa.private_value().binary_encode(m_key.x);
+         m_x_buf = BigInt::encode_locked(ecdsa.private_value());
+
+         m_key.xlen = m_x_buf.size();
+         m_key.x = m_x_buf.data();
          m_key.curve = curve;
          }
 
@@ -178,14 +175,10 @@ class BearSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature
 
       size_t max_input_bits() const { return m_order_bits; }
 
-      ~BearSSL_ECDSA_Signing_Operation()
-         {
-         delete m_key.x;
-         }
-
    private:
       br_ec_private_key m_key;
       std::unique_ptr<HashFunction> m_hf;
+      secure_vector<uint8_t> m_x_buf;
       const br_hash_class *m_hash;
       size_t m_order_bits;
    };
