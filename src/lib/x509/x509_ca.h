@@ -124,7 +124,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
 
       AlgorithmIdentifier m_ca_sig_algo;
       X509_Certificate m_cert;
-      PK_Signer* m_signer;
+      std::unique_ptr<PK_Signer> m_signer;
    };
 
 /**
