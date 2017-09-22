@@ -7,8 +7,7 @@
 
 #include <botan/fpe_fe1.h>
 #include <botan/numthry.h>
-#include <botan/hmac.h>
-#include <botan/sha2_32.h>
+#include <botan/mac.h>
 
 namespace Botan {
 
@@ -93,7 +92,7 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
                              const BigInt& n,
                              const std::vector<uint8_t>& tweak)
    {
-   m_mac.reset(new HMAC(new SHA_256));
+   m_mac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
    m_mac->set_key(key);
 
    std::vector<uint8_t> n_bin = BigInt::encode(n);
