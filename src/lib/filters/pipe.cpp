@@ -56,7 +56,6 @@ Pipe::Pipe(std::initializer_list<Filter*> args)
 Pipe::~Pipe()
    {
    destruct(m_pipe);
-   delete m_outputs;
    }
 
 /*
@@ -64,7 +63,7 @@ Pipe::~Pipe()
 */
 void Pipe::init()
    {
-   m_outputs = new Output_Buffers;
+   m_outputs.reset(new Output_Buffers);
    m_pipe = nullptr;
    m_default_read = 0;
    m_inside_msg = false;

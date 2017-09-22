@@ -168,6 +168,8 @@ declaration and know it will not be modified is useful.
 Use ``override`` annotations whenever overriding a virtual function.  If
 introducing a new type that is not intended for derivation, mark it ``final``.
 
+Avoid explicit ``delete`` - use RAII.
+
 Use ``m_`` prefix on all member variables.
 
 For formatting, there are configs for emacs and astyle in ``src/configs``.

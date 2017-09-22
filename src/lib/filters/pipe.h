@@ -17,6 +17,7 @@
 namespace Botan {
 
 class Filter;
+class Output_Buffers;
 
 /**
 * This class represents pipe objects.
@@ -314,7 +315,7 @@ class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
       message_id get_message_no(const std::string&, message_id) const;
 
       Filter* m_pipe;
-      class Output_Buffers* m_outputs;
+      std::unique_ptr<Output_Buffers> m_outputs;
       message_id m_default_read;
       bool m_inside_msg;
    };
