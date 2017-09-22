@@ -10,8 +10,6 @@
 #include <botan/hash.h>
 #include <botan/loadstor.h>
 #include <botan/hex.h>
-#include <botan/sha2_32.h>
-#include <botan/sha160.h>
 
 namespace Botan {
 
@@ -92,12 +90,12 @@ uint8_t rtss_hash_id(const std::string& hash_name)
       throw Invalid_Argument("RTSS only supports SHA-1 and SHA-256");
    }
 
-HashFunction* get_rtss_hash_by_id(uint8_t id)
+std::unique_ptr<HashFunction> get_rtss_hash_by_id(uint8_t id)
    {
    if(id == 1)
-      return new SHA_160;
+      return HashFunction::create_or_throw("SHA-1");
    else if(id == 2)
-      return new SHA_256;
+      return HashFunction::create_or_throw("SHA-256");
    else
       throw Decoding_Error("Bad RTSS hash identifier");
    }
@@ -131,7 +129,8 @@ RTSS_Share::split(uint8_t M, uint8_t N,
    if(M == 0 || N == 0 || M > N)
       throw Encoding_Error("RTSS_Share::split: M == 0 or N == 0 or M > N");
 
-   SHA_256 hash; // always use SHA-256 when generating shares
+   // always use SHA-256 when generating shares
+   std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw("SHA-256");
 
    std::vector<RTSS_Share> shares(N);
 
@@ -139,7 +138,7 @@ RTSS_Share::split(uint8_t M, uint8_t N,
    for(uint8_t i = 0; i != N; ++i)
       {
       shares[i].m_contents += std::make_pair(identifier, 16);
-      shares[i].m_contents += rtss_hash_id(hash.name());
+      shares[i].m_contents += rtss_hash_id(hash->name());
       shares[i].m_contents += M;
       shares[i].m_contents += get_byte(0, S_len);
       shares[i].m_contents += get_byte(1, S_len);
@@ -151,7 +150,7 @@ RTSS_Share::split(uint8_t M, uint8_t N,
 
    // secret = S || H(S)
    secure_vector<uint8_t> secret(S, S + S_len);
-   secret += hash.process(S, S_len);
+   secret += hash->process(S, S_len);
 
    for(size_t i = 0; i != secret.size(); ++i)
       {
