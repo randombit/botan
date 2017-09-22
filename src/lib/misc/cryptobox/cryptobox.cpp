@@ -6,11 +6,10 @@
 */
 
 #include <botan/cryptobox.h>
-#include <botan/filters.h>
-#include <botan/pipe.h>
-#include <botan/sha2_64.h>
-#include <botan/hmac.h>
-#include <botan/pbkdf2.h>
+#include <botan/cipher_mode.h>
+#include <botan/mac.h>
+#include <botan/pbkdf.h>
+#include <botan/data_src.h>
 #include <botan/pem.h>
 #include <botan/loadstor.h>
 #include <botan/mem_ops.h>
@@ -36,7 +35,7 @@ const size_t PBKDF_SALT_LEN = 10;
 const size_t PBKDF_ITERATIONS = 8 * 1024;
 
 const size_t PBKDF_OUTPUT_LEN = CIPHER_KEY_LEN + MAC_KEY_LEN + CIPHER_IV_LEN;
-const size_t HEADER_LEN = VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
+const size_t CRYPTOBOX_HEADER_LEN = VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
 
 }
 
@@ -51,12 +50,12 @@ std::string encrypt(const uint8_t input[], size_t input_len,
       mac (20 bytes)
       ciphertext
    */
-   secure_vector<uint8_t> out_buf(HEADER_LEN + input_len);
+   secure_vector<uint8_t> out_buf(CRYPTOBOX_HEADER_LEN + input_len);
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
    rng.randomize(&out_buf[VERSION_CODE_LEN], PBKDF_SALT_LEN);
    // space left for MAC here
-   copy_mem(&out_buf[HEADER_LEN], input, input_len);
+   copy_mem(&out_buf[CRYPTOBOX_HEADER_LEN], input, input_len);
 
    // Generate the keys and IV
 
@@ -78,12 +77,12 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    std::unique_ptr<Cipher_Mode> ctr(get_cipher_mode("Serpent/CTR-BE", ENCRYPTION));
    ctr->set_key(cipher_key, CIPHER_KEY_LEN);
    ctr->start(iv, CIPHER_IV_LEN);
-   ctr->finish(out_buf, HEADER_LEN);
+   ctr->finish(out_buf, CRYPTOBOX_HEADER_LEN);
 
    std::unique_ptr<MessageAuthenticationCode> hmac =
       MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
    hmac->set_key(mac_key, MAC_KEY_LEN);
-   hmac->update(&out_buf[HEADER_LEN], input_len);
+   hmac->update(&out_buf[CRYPTOBOX_HEADER_LEN], input_len);
 
    // Can't write directly because of MAC truncation
    secure_vector<uint8_t> mac = hmac->final();
@@ -92,15 +91,16 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
    }
 
-std::string decrypt(const uint8_t input[], size_t input_len,
-                    const std::string& passphrase)
+secure_vector<uint8_t>
+decrypt_bin(const uint8_t input[], size_t input_len,
+            const std::string& passphrase)
    {
    DataSource_Memory input_src(input, input_len);
    secure_vector<uint8_t> ciphertext =
       PEM_Code::decode_check_label(input_src,
                                    "BOTAN CRYPTOBOX MESSAGE");
 
-   if(ciphertext.size() < (VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN))
+   if(ciphertext.size() < CRYPTOBOX_HEADER_LEN)
       throw Decoding_Error("Invalid CryptoBox input");
 
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
@@ -108,10 +108,11 @@ std::string decrypt(const uint8_t input[], size_t input_len,
          throw Decoding_Error("Bad CryptoBox version");
 
    const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
+   const uint8_t* box_mac = &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN];
 
-   PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
+   std::unique_ptr<PBKDF> pbkdf(PBKDF::create_or_throw("PBKDF2(HMAC(SHA-512))"));
 
-   OctetString master_key = pbkdf.derive_key(
+   OctetString master_key = pbkdf->derive_key(
       PBKDF_OUTPUT_LEN,
       passphrase,
       pbkdf_salt,
@@ -119,39 +120,52 @@ std::string decrypt(const uint8_t input[], size_t input_len,
       PBKDF_ITERATIONS);
 
    const uint8_t* mk = master_key.begin();
+   const uint8_t* cipher_key = mk;
+   const uint8_t* mac_key = mk + CIPHER_KEY_LEN;
+   const uint8_t* iv = mk + CIPHER_KEY_LEN + MAC_KEY_LEN;
 
-   SymmetricKey cipher_key(mk, CIPHER_KEY_LEN);
-   SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
-   InitializationVector iv(&mk[CIPHER_KEY_LEN + MAC_KEY_LEN], CIPHER_IV_LEN);
+   // Now authenticate and decrypt
+   std::unique_ptr<MessageAuthenticationCode> hmac =
+      MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
+   hmac->set_key(mac_key, MAC_KEY_LEN);
+   hmac->update(&ciphertext[CRYPTOBOX_HEADER_LEN],
+                ciphertext.size() - CRYPTOBOX_HEADER_LEN);
+   secure_vector<uint8_t> computed_mac = hmac->final();
 
-   Pipe pipe(new Fork(
-                get_cipher("Serpent/CTR-BE", cipher_key, iv, DECRYPTION),
-                new MAC_Filter(new HMAC(new SHA_512),
-                               mac_key, MAC_OUTPUT_LEN)));
-
-   const size_t ciphertext_offset =
-      VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
-
-   pipe.process_msg(&ciphertext[ciphertext_offset],
-                    ciphertext.size() - ciphertext_offset);
-
-   uint8_t computed_mac[MAC_OUTPUT_LEN];
-   BOTAN_ASSERT_EQUAL(MAC_OUTPUT_LEN, pipe.read(computed_mac, MAC_OUTPUT_LEN, 1), "MAC size");
-
-   if(!constant_time_compare(computed_mac,
-                &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN],
-                MAC_OUTPUT_LEN))
+   if(!constant_time_compare(computed_mac.data(), box_mac, MAC_OUTPUT_LEN))
       throw Decoding_Error("CryptoBox integrity failure");
 
-   return pipe.read_all_as_string(0);
+   std::unique_ptr<Cipher_Mode> ctr(get_cipher_mode("Serpent/CTR-BE", DECRYPTION));
+   ctr->set_key(cipher_key, CIPHER_KEY_LEN);
+   ctr->start(iv, CIPHER_IV_LEN);
+   ctr->finish(ciphertext, CRYPTOBOX_HEADER_LEN);
+
+   ciphertext.erase(ciphertext.begin(), ciphertext.begin() + CRYPTOBOX_HEADER_LEN);
+   return ciphertext;
+   }
+
+secure_vector<uint8_t> decrypt_bin(const std::string& input,
+                                   const std::string& passphrase)
+   {
+   return decrypt_bin(reinterpret_cast<const uint8_t*>(input.data()),
+                      input.size(),
+                      passphrase);
+   }
+
+std::string decrypt(const uint8_t input[], size_t input_len,
+                    const std::string& passphrase)
+   {
+   const secure_vector<uint8_t> bin = decrypt_bin(input, input_len, passphrase);
+
+   return std::string(reinterpret_cast<const char*>(&bin[0]),
+                      bin.size());
    }
 
 std::string decrypt(const std::string& input,
                     const std::string& passphrase)
    {
    return decrypt(reinterpret_cast<const uint8_t*>(input.data()),
-                  input.size(),
-                  passphrase);
+                  input.size(), passphrase);
    }
 
 }

@@ -32,17 +32,33 @@ class Cryptobox_Tests final : public Test
             const std::string ciphertext =
                Botan::CryptoBox::encrypt(input.data(), input.size(), password, Test::rng());
 
+            // First verify decryption works
             try
                {
-               const std::string decrypted = Botan::CryptoBox::decrypt(ciphertext, password);
-
-               const uint8_t* pt_b = reinterpret_cast<const uint8_t*>(decrypted.data());
-               std::vector<uint8_t> pt_vec(pt_b, pt_b + decrypted.size());
-               result.test_eq("decrypt", pt_vec, input);
+               const Botan::secure_vector<uint8_t> decrypted =
+                  Botan::CryptoBox::decrypt_bin(ciphertext, password);
+               result.test_eq("decrypt", decrypted, input);
                }
             catch(std::exception& e)
                {
                result.test_failure("cryptobox decrypt", e.what());
+               }
+
+            // Now corrupt a bit and ensure it fails
+            try
+               {
+               std::string corrupted = ciphertext;
+               corrupted[corrupted.size()/2]++;
+               const std::string decrypted = Botan::CryptoBox::decrypt(corrupted, password);
+               result.test_failure("Decrypted corrupted cryptobox message");
+               }
+            catch(Botan::Decoding_Error)
+               {
+               result.test_success("Rejected corrupted cryptobox message");
+               }
+            catch(Botan::Invalid_Argument)
+               {
+               result.test_success("Rejected corrupted cryptobox message");
                }
             }
 
