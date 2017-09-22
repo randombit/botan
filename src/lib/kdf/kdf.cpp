@@ -221,9 +221,9 @@ std::unique_ptr<KDF>
 KDF::create_or_throw(const std::string& algo,
                              const std::string& provider)
    {
-   if(auto bc = KDF::create(algo, provider))
+   if(auto kdf = KDF::create(algo, provider))
       {
-      return bc;
+      return kdf;
       }
    throw Lookup_Error("KDF", algo, provider);
    }

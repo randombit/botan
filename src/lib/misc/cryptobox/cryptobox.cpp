@@ -35,7 +35,8 @@ const size_t MAC_OUTPUT_LEN = 20;
 const size_t PBKDF_SALT_LEN = 10;
 const size_t PBKDF_ITERATIONS = 8 * 1024;
 
-const size_t PBKDF_OUTPUT_LEN = CIPHER_KEY_LEN + CIPHER_IV_LEN + MAC_KEY_LEN;
+const size_t PBKDF_OUTPUT_LEN = CIPHER_KEY_LEN + MAC_KEY_LEN + CIPHER_IV_LEN;
+const size_t HEADER_LEN = VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
 
 }
 
@@ -43,32 +44,6 @@ std::string encrypt(const uint8_t input[], size_t input_len,
                     const std::string& passphrase,
                     RandomNumberGenerator& rng)
    {
-   secure_vector<uint8_t> pbkdf_salt(PBKDF_SALT_LEN);
-   rng.randomize(pbkdf_salt.data(), pbkdf_salt.size());
-
-   PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
-
-   OctetString master_key = pbkdf.derive_key(
-      PBKDF_OUTPUT_LEN,
-      passphrase,
-      pbkdf_salt.data(),
-      pbkdf_salt.size(),
-      PBKDF_ITERATIONS);
-
-   const uint8_t* mk = master_key.begin();
-
-   SymmetricKey cipher_key(mk, CIPHER_KEY_LEN);
-   SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
-   InitializationVector iv(&mk[CIPHER_KEY_LEN + MAC_KEY_LEN], CIPHER_IV_LEN);
-
-   Pipe pipe(get_cipher("Serpent/CTR-BE", cipher_key, iv, ENCRYPTION),
-             new Fork(
-                nullptr,
-                new MAC_Filter(new HMAC(new SHA_512),
-                               mac_key, MAC_OUTPUT_LEN)));
-
-   pipe.process_msg(input, input_len);
-
    /*
    Output format is:
       version # (4 bytes)
@@ -76,25 +51,43 @@ std::string encrypt(const uint8_t input[], size_t input_len,
       mac (20 bytes)
       ciphertext
    */
-   const size_t ciphertext_len = pipe.remaining(0);
-
-   std::vector<uint8_t> out_buf(VERSION_CODE_LEN +
-                             PBKDF_SALT_LEN +
-                             MAC_OUTPUT_LEN +
-                             ciphertext_len);
-
+   secure_vector<uint8_t> out_buf(HEADER_LEN + input_len);
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
+   rng.randomize(&out_buf[VERSION_CODE_LEN], PBKDF_SALT_LEN);
+   // space left for MAC here
+   copy_mem(&out_buf[HEADER_LEN], input, input_len);
 
-   copy_mem(&out_buf[VERSION_CODE_LEN], pbkdf_salt.data(), PBKDF_SALT_LEN);
+   // Generate the keys and IV
 
-   BOTAN_ASSERT_EQUAL(
-      pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], MAC_OUTPUT_LEN, 1),
-      MAC_OUTPUT_LEN, "MAC output");
-   BOTAN_ASSERT_EQUAL(
-      pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN],
-                ciphertext_len, 0),
-      ciphertext_len, "Ciphertext size");
+   std::unique_ptr<PBKDF> pbkdf(PBKDF::create_or_throw("PBKDF2(HMAC(SHA-512))"));
+
+   OctetString master_key = pbkdf->derive_key(
+      CIPHER_KEY_LEN + MAC_KEY_LEN + CIPHER_IV_LEN,
+      passphrase,
+      &out_buf[VERSION_CODE_LEN],
+      PBKDF_SALT_LEN,
+      PBKDF_ITERATIONS);
+
+   const uint8_t* mk = master_key.begin();
+   const uint8_t* cipher_key = mk;
+   const uint8_t* mac_key = mk + CIPHER_KEY_LEN;
+   const uint8_t* iv = mk + CIPHER_KEY_LEN + MAC_KEY_LEN;
+
+   // Now encrypt and authenticate
+   std::unique_ptr<Cipher_Mode> ctr(get_cipher_mode("Serpent/CTR-BE", ENCRYPTION));
+   ctr->set_key(cipher_key, CIPHER_KEY_LEN);
+   ctr->start(iv, CIPHER_IV_LEN);
+   ctr->finish(out_buf, HEADER_LEN);
+
+   std::unique_ptr<MessageAuthenticationCode> hmac =
+      MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
+   hmac->set_key(mac_key, MAC_KEY_LEN);
+   hmac->update(&out_buf[HEADER_LEN], input_len);
+
+   // Can't write directly because of MAC truncation
+   secure_vector<uint8_t> mac = hmac->final();
+   copy_mem(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], mac.data(), MAC_OUTPUT_LEN);
 
    return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
    }

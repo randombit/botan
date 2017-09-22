@@ -68,6 +68,18 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
    return nullptr;
    }
 
+//static
+std::unique_ptr<PBKDF>
+PBKDF::create_or_throw(const std::string& algo,
+                             const std::string& provider)
+   {
+   if(auto pbkdf = PBKDF::create(algo, provider))
+      {
+      return pbkdf;
+      }
+   throw Lookup_Error("PBKDF", algo, provider);
+   }
+
 std::vector<std::string> PBKDF::providers(const std::string& algo_spec)
    {
    return probe_providers_of<PBKDF>(algo_spec, { "base", "openssl" });
