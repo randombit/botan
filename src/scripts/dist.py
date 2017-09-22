@@ -23,9 +23,6 @@ import tarfile
 
 # This is horrible, but there is no way to override tarfile's use of time.time
 # in setting the gzip header timestamp, which breaks deterministic archives
-# First cache today (needed for snapshot builds) then override time.time...
-
-today = datetime.date.today().isoformat().replace('-', '')
 
 def null_time():
     return 0
@@ -64,6 +61,8 @@ def datestamp(tag):
     ts = maybe_gpg(run_git(['show', '--no-patch', '--format=%ai', tag]))
 
     ts_matcher = re.compile(r'^(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}:\d{2} .*')
+
+    logging.debug('Git returned timestamp of %s for tag %s' % (ts, tag))
     match = ts_matcher.match(ts)
 
     if match is None:
@@ -113,7 +112,7 @@ def gpg_sign(keyid, passphrase_file, files, detached=True):
 
 def parse_args(args):
     parser = optparse.OptionParser(
-        "usage: %prog [options] <version #>\n" +
+        "usage: %prog [options] <version tag>\n" +
         "       %prog [options] snapshot <branch>"
         )
 
@@ -155,7 +154,7 @@ def remove_file_if_exists(fspath):
 def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, rel_date):
 
     if snapshot_branch:
-        assert target_version == 'HEAD'
+        assert target_version == snapshot_branch
 
     version_file_name = os.path.basename(version_file)
 
@@ -189,7 +188,7 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
             elif line == 'release_datestamp = 0\n':
                 yield 'release_datestamp = %d\n' % (rel_date)
             elif line == "release_type = \'unreleased\'\n":
-                if target_version == 'HEAD':
+                if target_version == snapshot_branch:
                     yield "release_type = 'snapshot:%s'\n" % (snapshot_branch)
                 else:
                     yield "release_type = 'release'\n"
@@ -206,6 +205,52 @@ def rel_date_to_epoch(rel_date):
 
     dt = datetime.datetime(year, month, day, 6, 0, 0)
     return (dt - datetime.datetime(1970, 1, 1)).total_seconds()
+
+def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file):
+    output_archive = output_basename + '.' + archive_type
+    logging.info('Writing archive "%s"' % (output_archive))
+
+    remove_file_if_exists(output_archive)
+    remove_file_if_exists(output_archive + '.asc')
+
+    def write_mode(archive_type):
+        if archive_type == 'tgz':
+            return 'w:gz'
+        elif archive_type == 'tbz':
+            return 'w:bz2'
+        elif archive_type == 'tar':
+            return 'w'
+
+    # gzip format embeds the original filename, tarfile.py does the wrong
+    # thing unless the output name ends in .gz. So pass an explicit
+    # fileobj in that case, and supply a name in the form tarfile expects.
+    if archive_type == 'tgz':
+        archive = tarfile.open(output_basename + '.tar.gz',
+                               write_mode(archive_type),
+                               fileobj=open(output_archive, 'wb'))
+    else:
+        archive = tarfile.open(output_basename + '.tar',
+                               write_mode(archive_type))
+
+    for f in all_files:
+        tarinfo = archive.gettarinfo(f)
+        tarinfo.uid = 500
+        tarinfo.gid = 500
+        tarinfo.uname = "botan"
+        tarinfo.gname = "botan"
+        tarinfo.mtime = rel_epoch
+        archive.addfile(tarinfo, open(f))
+    archive.close()
+
+    sha256 = hashlib.new('sha256')
+    sha256.update(open(output_archive).read())
+    archive_hash = sha256.hexdigest().upper()
+
+    logging.info('SHA-256(%s) = %s' % (output_archive, archive_hash))
+    if hash_file != None:
+        hash_file.write("%s  %s\n" % (archive_hash, output_archive))
+
+    return output_archive
 
 def main(args=None):
     if args is None:
@@ -225,11 +270,18 @@ def main(args=None):
                         level=log_level())
 
     if len(args) != 1 and len(args) != 2:
-        logging.error('Usage error, try --help')
+        logging.error('Usage: %s [options] <version tag>' % (sys.argv[0]))
+        logging.error('Try --help')
         return 1
 
     snapshot_branch = None
     target_version = None
+
+    archives = options.archive_types.split(',') if options.archive_types != '' else []
+    for archive_type in archives:
+        if archive_type not in ['tar', 'tgz', 'tbz']:
+            logging.error('Unknown archive type "%s"' % (archive_type))
+            return 1
 
     if args[0] == 'snapshot':
         if len(args) != 2:
@@ -244,7 +296,7 @@ def main(args=None):
 
     if snapshot_branch:
         logging.info('Creating snapshot release from branch %s', snapshot_branch)
-        target_version = 'HEAD'
+        target_version = snapshot_branch
     elif len(args) == 1:
         try:
             logging.info('Creating release for version %s' % (target_version))
@@ -257,15 +309,6 @@ def main(args=None):
             logging.error('Invalid version number %s' % (target_version))
             return 1
 
-    def output_name(args):
-        if snapshot_branch:
-            if snapshot_branch == 'master':
-                return 'Botan-snapshot-%s' % (today)
-            else:
-                return 'Botan-snapshot-%s-%s' % (snapshot_branch, today)
-        else:
-            return 'Botan-' + target_version
-
     rev_id = revision_of(target_version)
 
     if rev_id == '':
@@ -277,9 +320,20 @@ def main(args=None):
         logging.error('No date found for version')
         return 2
 
+    rel_epoch = rel_date_to_epoch(rel_date)
+
     logging.info('Found %s at revision id %s released %d' % (target_version, rev_id, rel_date))
 
-    output_basename = output_name(args)
+    def output_name():
+        if snapshot_branch:
+            if snapshot_branch == 'master':
+                return 'Botan-snapshot-%s' % (rel_date)
+            else:
+                return 'Botan-snapshot-%s-%s' % (snapshot_branch, rel_date)
+        else:
+            return 'Botan-' + target_version
+
+    output_basename = output_name()
 
     logging.debug('Output basename %s' % (output_basename))
 
@@ -288,6 +342,11 @@ def main(args=None):
         shutil.rmtree(output_basename)
 
     extract_revision(rev_id, output_basename)
+
+    all_files = []
+    for (curdir, _, files) in os.walk(output_basename):
+        all_files += [os.path.join(curdir, f) for f in files]
+    all_files.sort(key=lambda f: (os.path.dirname(f), os.path.basename(f)))
 
     version_file = None
 
@@ -312,59 +371,12 @@ def main(args=None):
 
     output_files = []
 
-    archives = options.archive_types.split(',') if options.archive_types != '' else []
-
     hash_file = None
     if options.write_hash_file != None:
         hash_file = open(options.write_hash_file, 'w')
 
-    rel_epoch = rel_date_to_epoch(rel_date)
-
     for archive_type in archives:
-        if archive_type not in ['tar', 'tgz', 'tbz']:
-            raise Exception('Unknown archive type "%s"' % (archive_type))
-
-        output_archive = output_basename + '.' + archive_type
-
-        logging.info('Writing archive "%s"' % (output_archive))
-
-        remove_file_if_exists(output_archive)
-        remove_file_if_exists(output_archive + '.asc')
-
-        all_files = []
-        for (curdir, _, files) in os.walk(output_basename):
-            all_files += [os.path.join(curdir, f) for f in files]
-        all_files.sort(key = lambda f: (os.path.dirname(f), os.path.basename(f)))
-
-        def write_mode(archive_type):
-            if archive_type == 'tgz':
-                return 'w:gz'
-            elif archive_type == 'tbz':
-                return 'w:bz2'
-            elif archive_type == 'tar':
-                return 'w'
-
-        archive = tarfile.open(output_archive, write_mode(archive_type))
-
-        for f in all_files:
-            tarinfo = archive.gettarinfo(f)
-            tarinfo.uid = 500
-            tarinfo.gid = 500
-            tarinfo.uname = "botan"
-            tarinfo.gname = "botan"
-            tarinfo.mtime = rel_epoch
-            archive.addfile(tarinfo, open(f))
-        archive.close()
-
-        sha256 = hashlib.new('sha256')
-        sha256.update(open(output_archive).read())
-        archive_hash = sha256.hexdigest().upper()
-
-        logging.info('SHA-256(%s) = %s' % (output_archive, archive_hash))
-        if hash_file != None:
-            hash_file.write("%s  %s\n" % (archive_hash, output_archive))
-
-        output_files.append(output_archive)
+        output_files.append(write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file))
 
     if hash_file != None:
         hash_file.close()
