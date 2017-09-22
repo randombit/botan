@@ -168,6 +168,7 @@ class Stateful_RNG_Tests : public Test
 
          // underlying_rng throws exception
          Botan::Null_RNG broken_entropy_input_rng;
+         result.test_eq("Null_RNG not seeded", broken_entropy_input_rng.is_seeded(), false);
          std::unique_ptr<Botan::Stateful_RNG> rng_with_broken_rng = make_rng(broken_entropy_input_rng);
 
          result.test_throws("broken underlying rng", [&rng_with_broken_rng]() { rng_with_broken_rng->random_vec(16); });
@@ -703,9 +704,7 @@ class System_RNG_Tests final : public Test
 
          Botan::System_RNG rng;
 
-         const std::string name = rng.name();
-
-         result.confirm("Some non-empty name is returned", name.empty() == false);
+         result.test_gte("Some non-empty name is returned", rng.name().size(), 1);
 
          result.confirm("System RNG always seeded", rng.is_seeded());
          rng.clear(); // clear is a noop for system rng
@@ -719,6 +718,7 @@ class System_RNG_Tests final : public Test
             {
             std::vector<uint8_t> out_buf(i);
             rng.randomize(out_buf.data(), out_buf.size());
+            rng.add_entropy(out_buf.data(), out_buf.size());
             }
 
          return std::vector<Test::Result>{result};

@@ -31,9 +31,9 @@ class BOTAN_PUBLIC_API(2,0) System_RNG final : public RandomNumberGenerator
 
       void add_entropy(const uint8_t in[], size_t length) override { system_rng().add_entropy(in, length); }
 
-      bool is_seeded() const override { return true; }
+      bool is_seeded() const override { return system_rng().is_seeded(); }
 
-      void clear() override {}
+      void clear() override { system_rng().clear(); }
    };
 
 }
