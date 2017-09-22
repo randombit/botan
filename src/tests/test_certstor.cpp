@@ -260,7 +260,7 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
       }
    }
 
-class Certstor_Tests : public Test
+class Certstor_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

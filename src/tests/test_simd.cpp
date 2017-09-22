@@ -15,7 +15,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_SIMD_32)
 
-class SIMD_32_Tests : public Test
+class SIMD_32_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

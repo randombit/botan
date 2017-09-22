@@ -14,7 +14,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_FPE_FE1)
 
-class FPE_FE1_Tests : public Text_Based_Test
+class FPE_FE1_Tests final : public Text_Based_Test
    {
    public:
       FPE_FE1_Tests() : Text_Based_Test("fpe_fe1.vec", "Mod,In,Out,Key,Tweak") {}

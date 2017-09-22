@@ -93,7 +93,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
  * RNG that outputs a given set of fixed bytes for a specific request count, outputs random otherwise.
  * Useful for test vectors with fixed nonces, where the algorithm consumes more random than just the fixed nonce.
  */
-class Fixed_Output_Position_RNG : public Fixed_Output_RNG
+class Fixed_Output_Position_RNG final : public Fixed_Output_RNG
    {
    public:
       bool is_seeded() const override
@@ -155,7 +155,7 @@ class Fixed_Output_Position_RNG : public Fixed_Output_RNG
       uint32_t m_requests = 0;
    };
 
-class SeedCapturing_RNG : public Botan::RandomNumberGenerator
+class SeedCapturing_RNG final : public Botan::RandomNumberGenerator
    {
    public:
       void randomize(uint8_t[], size_t) override
@@ -198,7 +198,7 @@ class SeedCapturing_RNG : public Botan::RandomNumberGenerator
 * RNG that counts the number of requests made to it, for example
 * to verify that a reseed attempt was made at the expected time.
 */
-class Request_Counting_RNG : public Botan::RandomNumberGenerator
+class Request_Counting_RNG final : public Botan::RandomNumberGenerator
    {
    public:
       Request_Counting_RNG() : m_randomize_count(0) {}

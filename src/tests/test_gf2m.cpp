@@ -16,7 +16,7 @@ namespace {
 
 #if defined(BOTAN_HAS_MCELIECE)
 
-class GF2m_Tests : public Test
+class GF2m_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

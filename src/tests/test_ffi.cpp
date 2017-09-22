@@ -29,7 +29,7 @@ namespace {
       return result;                                         \
    }
 
-class FFI_Unit_Tests : public Test
+class FFI_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

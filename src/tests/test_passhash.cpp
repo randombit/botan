@@ -19,7 +19,7 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_BCRYPT)
-class Bcrypt_Tests : public Text_Based_Test
+class Bcrypt_Tests final : public Text_Based_Test
    {
    public:
       Bcrypt_Tests() : Text_Based_Test("bcrypt.vec", "Password,Passhash") {}
@@ -73,7 +73,7 @@ BOTAN_REGISTER_TEST("bcrypt", Bcrypt_Tests);
 #endif
 
 #if defined(BOTAN_HAS_PASSHASH9)
-class Passhash9_Tests : public Text_Based_Test
+class Passhash9_Tests final : public Text_Based_Test
    {
    public:
       Passhash9_Tests() : Text_Based_Test("passhash9.vec", "Password,Passhash,PRF") {}

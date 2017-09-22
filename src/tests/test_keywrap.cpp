@@ -15,7 +15,7 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
-class RFC3394_Keywrap_Tests : public Text_Based_Test
+class RFC3394_Keywrap_Tests final : public Text_Based_Test
    {
    public:
       RFC3394_Keywrap_Tests() : Text_Based_Test("rfc3394.vec", "Key,KEK,Output") {}

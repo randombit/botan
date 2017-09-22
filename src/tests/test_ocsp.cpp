@@ -17,7 +17,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_OCSP)
 
-class OCSP_Tests : public Test
+class OCSP_Tests final : public Test
    {
    private:
       std::vector<uint8_t> slurp_data_file(const std::string& path)

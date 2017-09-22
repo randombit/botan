@@ -19,7 +19,7 @@ namespace {
 
 #if defined(BOTAN_HAS_DLIES) && defined(BOTAN_HAS_DIFFIE_HELLMAN)
 
-class DLIES_KAT_Tests : public Text_Based_Test
+class DLIES_KAT_Tests final : public Text_Based_Test
    {
    public:
       DLIES_KAT_Tests()
@@ -164,7 +164,7 @@ Test::Result test_xor()
    return result;
    }
 
-class DLIES_Unit_Tests : public Test
+class DLIES_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

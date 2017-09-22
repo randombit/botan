@@ -20,7 +20,7 @@ namespace {
 
 #if defined(BOTAN_HAS_ECGDSA)
 
-class ECGDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
+class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
    {
    public:
       ECGDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
@@ -56,7 +56,7 @@ class ECGDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
          }
    };
 
-class ECGDSA_Keygen_Tests : public PK_Key_Generation_Test
+class ECGDSA_Keygen_Tests final : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override

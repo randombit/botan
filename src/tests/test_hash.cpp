@@ -12,7 +12,7 @@ namespace Botan_Tests {
 
 namespace {
 
-class Hash_Function_Tests : public Text_Based_Test
+class Hash_Function_Tests final : public Text_Based_Test
    {
    public:
       Hash_Function_Tests() : Text_Based_Test("hash", "In,Out") {}

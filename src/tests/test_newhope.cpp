@@ -17,7 +17,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
 
-class NEWHOPE_RNG : public Botan::RandomNumberGenerator
+class NEWHOPE_RNG final : public Botan::RandomNumberGenerator
    {
    public:
       std::string name() const override
@@ -100,7 +100,7 @@ class NEWHOPE_RNG : public Botan::RandomNumberGenerator
       uint8_t m_calls = 0;
    };
 
-class NEWHOPE_Tests : public Text_Based_Test
+class NEWHOPE_Tests final : public Text_Based_Test
    {
    public:
       NEWHOPE_Tests()

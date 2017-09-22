@@ -9,7 +9,7 @@
 
 namespace Botan_Tests {
 
-class Block_Cipher_Tests : public Text_Based_Test
+class Block_Cipher_Tests final : public Text_Based_Test
    {
    public:
       Block_Cipher_Tests() : Text_Based_Test("block", "Key,In,Out", "Iterations") {}

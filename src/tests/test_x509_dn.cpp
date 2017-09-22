@@ -14,7 +14,7 @@
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_ASN1)
-class X509_DN_Comparisons_Tests : public Text_Based_Test
+class X509_DN_Comparisons_Tests final : public Text_Based_Test
    {
    public:
       X509_DN_Comparisons_Tests() : Text_Based_Test("x509_dn.vec", "DN1,DN2") {}

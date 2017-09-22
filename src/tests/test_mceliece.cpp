@@ -33,7 +33,7 @@ namespace {
 #if defined(BOTAN_HAS_MCELIECE)
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
-class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
+class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
    {
    public:
       McEliece_Keygen_Encrypt_Test()
@@ -117,7 +117,7 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
 BOTAN_REGISTER_TEST("mce_keygen", McEliece_Keygen_Encrypt_Test);
 #endif
 
-class McEliece_Tests : public Test
+class McEliece_Tests final : public Test
    {
    public:
 

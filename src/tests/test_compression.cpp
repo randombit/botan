@@ -52,7 +52,7 @@ const char* text_str =
    "All mimsy were the borogoves,"
    "And the mome raths outgrabe.";
 
-class Compression_Tests : public Test
+class Compression_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

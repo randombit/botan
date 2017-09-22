@@ -19,7 +19,7 @@ namespace {
 
 #if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
 
-class TSS_Tests : public Test
+class TSS_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

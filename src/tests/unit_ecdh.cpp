@@ -19,7 +19,7 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_ECDH)
-class ECDH_Unit_Tests : public Test
+class ECDH_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

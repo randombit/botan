@@ -21,7 +21,7 @@ namespace {
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
 
-class HMAC_DRBG_Tests : public Text_Based_Test
+class HMAC_DRBG_Tests final : public Text_Based_Test
    {
    public:
       HMAC_DRBG_Tests()
@@ -71,7 +71,7 @@ BOTAN_REGISTER_TEST("hmac_drbg", HMAC_DRBG_Tests);
 
 #if defined(BOTAN_HAS_CHACHA_RNG)
 
-class ChaCha_RNG_Tests : public Text_Based_Test
+class ChaCha_RNG_Tests final : public Text_Based_Test
    {
    public:
       ChaCha_RNG_Tests()

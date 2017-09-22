@@ -18,7 +18,7 @@ namespace {
 
 #if defined(BOTAN_HAS_RSA)
 
-class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
+class RSA_ES_KAT_Tests final : public PK_Encryption_Decryption_Test
    {
    public:
       RSA_ES_KAT_Tests()
@@ -39,7 +39,7 @@ class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
          }
    };
 
-class RSA_KEM_Tests : public PK_KEM_Test
+class RSA_KEM_Tests final : public PK_KEM_Test
    {
    public:
       RSA_KEM_Tests()
@@ -60,7 +60,7 @@ class RSA_KEM_Tests : public PK_KEM_Test
 
    };
 
-class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
+class RSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
    {
    public:
       RSA_Signature_KAT_Tests()
@@ -86,7 +86,7 @@ class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
          }
    };
 
-class RSA_PSS_KAT_Tests : public PK_Signature_Generation_Test
+class RSA_PSS_KAT_Tests final : public PK_Signature_Generation_Test
    {
    public:
       RSA_PSS_KAT_Tests()
@@ -119,7 +119,7 @@ class RSA_PSS_KAT_Tests : public PK_Signature_Generation_Test
          }
    };
 
-class RSA_PSS_Raw_KAT_Tests : public PK_Signature_Generation_Test
+class RSA_PSS_Raw_KAT_Tests final : public PK_Signature_Generation_Test
    {
    public:
       RSA_PSS_Raw_KAT_Tests()
@@ -152,7 +152,7 @@ class RSA_PSS_Raw_KAT_Tests : public PK_Signature_Generation_Test
          }
    };
 
-class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
+class RSA_Signature_Verify_Tests final : public PK_Signature_Verification_Test
    {
    public:
       RSA_Signature_Verify_Tests()
@@ -177,7 +177,7 @@ class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
          }
    };
 
-class RSA_Signature_Verify_Invalid_Tests : public PK_Signature_NonVerification_Test
+class RSA_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerification_Test
    {
    public:
       RSA_Signature_Verify_Invalid_Tests()
@@ -200,7 +200,7 @@ class RSA_Signature_Verify_Invalid_Tests : public PK_Signature_NonVerification_T
          }
    };
 
-class RSA_Keygen_Tests : public PK_Key_Generation_Test
+class RSA_Keygen_Tests final : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override
@@ -213,7 +213,7 @@ class RSA_Keygen_Tests : public PK_Key_Generation_Test
          }
    };
 
-class RSA_Blinding_Tests : public Test
+class RSA_Blinding_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

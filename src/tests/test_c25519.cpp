@@ -17,7 +17,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_CURVE_25519)
 
-class Curve25519_Sclarmult_Tests : public Text_Based_Test
+class Curve25519_Sclarmult_Tests final : public Text_Based_Test
    {
    public:
       Curve25519_Sclarmult_Tests() : Text_Based_Test(
@@ -39,7 +39,7 @@ class Curve25519_Sclarmult_Tests : public Text_Based_Test
          }
    };
 
-class Curve25519_Roundtrip_Test : public Test
+class Curve25519_Roundtrip_Test final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -108,7 +108,7 @@ class Curve25519_Roundtrip_Test : public Test
          }
    };
 
-class Curve25519_Keygen_Tests : public PK_Key_Generation_Test
+class Curve25519_Keygen_Tests final : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override

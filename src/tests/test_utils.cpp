@@ -25,7 +25,7 @@ namespace Botan_Tests {
 
 namespace {
 
-class Utility_Function_Tests : public Text_Based_Test
+class Utility_Function_Tests final : public Text_Based_Test
    {
    public:
       Utility_Function_Tests() : Text_Based_Test("util.vec", "In1,In2,Out") {}
@@ -213,7 +213,7 @@ class Utility_Function_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("util", Utility_Function_Tests);
 
-class Poly_Double_Tests : public Text_Based_Test
+class Poly_Double_Tests final : public Text_Based_Test
    {
    public:
       Poly_Double_Tests() : Text_Based_Test("poly_dbl.vec", "In,Out") {}
@@ -234,7 +234,7 @@ class Poly_Double_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("poly_dbl", Poly_Double_Tests);
 
-class Date_Format_Tests : public Text_Based_Test
+class Date_Format_Tests final : public Text_Based_Test
    {
    public:
       Date_Format_Tests() : Text_Based_Test("dates.vec", "Date") {}
@@ -312,7 +312,7 @@ BOTAN_REGISTER_TEST("util_dates", Date_Format_Tests);
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
 
-class Base64_Tests : public Text_Based_Test
+class Base64_Tests final : public Text_Based_Test
    {
    public:
       Base64_Tests() : Text_Based_Test("base64.vec", "Base64", "Binary") {}
@@ -390,7 +390,7 @@ BOTAN_REGISTER_TEST("base64", Base64_Tests);
 
 #endif
 
-class Charset_Tests : public Text_Based_Test
+class Charset_Tests final : public Text_Based_Test
    {
    public:
       Charset_Tests() : Text_Based_Test("charset.vec", "In,Out") {}
@@ -511,7 +511,7 @@ class Charset_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("charset", Charset_Tests);
 
-class Hostname_Tests : public Text_Based_Test
+class Hostname_Tests final : public Text_Based_Test
    {
    public:
       Hostname_Tests() : Text_Based_Test("hostnames.vec", "Issued,Hostname")

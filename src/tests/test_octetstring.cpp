@@ -124,7 +124,7 @@ Test::Result test_append()
    return result;
    }
 
-class OctetString_Tests : public Test
+class OctetString_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

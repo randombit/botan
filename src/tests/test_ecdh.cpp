@@ -17,7 +17,7 @@ namespace {
 
 #if defined(BOTAN_HAS_ECDH)
 
-class ECDH_KAT_Tests : public PK_Key_Agreement_Test
+class ECDH_KAT_Tests final : public PK_Key_Agreement_Test
    {
    public:
       ECDH_KAT_Tests()
@@ -47,7 +47,7 @@ class ECDH_KAT_Tests : public PK_Key_Agreement_Test
          }
    };
 
-class ECDH_Keygen_Tests : public PK_Key_Generation_Test
+class ECDH_Keygen_Tests final : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override

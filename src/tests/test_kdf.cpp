@@ -15,7 +15,7 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_KDF_BASE)
-class KDF_KAT_Tests : public Text_Based_Test
+class KDF_KAT_Tests final : public Text_Based_Test
    {
    public:
       KDF_KAT_Tests() : Text_Based_Test("kdf", "OutputLen,Salt,Secret,Label,Output", "IKM,XTS") {}

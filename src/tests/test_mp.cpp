@@ -16,7 +16,7 @@ namespace {
 
 #if defined(BOTAN_HAS_BIGINT_MP)
 
-class MP_Unit_Tests : public Test
+class MP_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

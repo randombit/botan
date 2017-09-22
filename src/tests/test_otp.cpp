@@ -21,7 +21,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_HOTP)
 
-class HOTP_KAT_Tests : public Text_Based_Test
+class HOTP_KAT_Tests final : public Text_Based_Test
    {
    public:
       HOTP_KAT_Tests()
@@ -72,7 +72,7 @@ BOTAN_REGISTER_TEST("otp_hotp", HOTP_KAT_Tests);
 
 #if defined(BOTAN_HAS_TOTP)
 
-class TOTP_KAT_Tests : public Text_Based_Test
+class TOTP_KAT_Tests final : public Text_Based_Test
    {
    public:
       TOTP_KAT_Tests()

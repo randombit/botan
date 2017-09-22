@@ -14,7 +14,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
 
-class Cipher_Mode_Padding_Tests : public Text_Based_Test
+class Cipher_Mode_Padding_Tests final : public Text_Based_Test
    {
    public:
       Cipher_Mode_Padding_Tests() : Text_Based_Test("pad.vec", "In,Blocksize", "Out") {}

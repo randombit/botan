@@ -13,7 +13,7 @@
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-class PK_Workfactor_Tests : public Text_Based_Test
+class PK_Workfactor_Tests final : public Text_Based_Test
    {
    public:
       PK_Workfactor_Tests() :

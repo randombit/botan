@@ -46,7 +46,7 @@ Test::Result test_ber_stack_recursion()
 
 }
 
-class ASN1_Tests : public Test
+class ASN1_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

@@ -17,7 +17,7 @@ namespace {
 
 #if defined(BOTAN_HAS_AEAD_MODES)
 
-class AEAD_Tests : public Text_Based_Test
+class AEAD_Tests final : public Text_Based_Test
    {
    public:
       AEAD_Tests() : Text_Based_Test("aead", "Key,Nonce,In,Out", "AD") {}

@@ -15,7 +15,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_MODES)
 
-class Cipher_Mode_Tests : public Text_Based_Test
+class Cipher_Mode_Tests final : public Text_Based_Test
    {
    public:
       Cipher_Mode_Tests()
@@ -151,7 +151,7 @@ class Cipher_Mode_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("modes", Cipher_Mode_Tests);
 
-class Cipher_Mode_IV_Carry_Tests : public Test
+class Cipher_Mode_IV_Carry_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

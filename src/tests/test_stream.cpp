@@ -14,7 +14,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_STREAM_CIPHER)
 
-class Stream_Cipher_Tests : public Text_Based_Test
+class Stream_Cipher_Tests final : public Text_Based_Test
    {
    public:
       Stream_Cipher_Tests(): Text_Based_Test("stream", "Key,Out", "In,Nonce,Seek") {}

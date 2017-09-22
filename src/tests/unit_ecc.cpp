@@ -135,7 +135,7 @@ Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
       }
    }
 
-class ECC_Randomized_Tests : public Test
+class ECC_Randomized_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override;
@@ -207,7 +207,7 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
 
 BOTAN_REGISTER_TEST("ecc_randomized", ECC_Randomized_Tests);
 
-class NIST_Curve_Reduction_Tests : public Test
+class NIST_Curve_Reduction_Tests final : public Test
    {
    public:
       typedef std::function<void (Botan::BigInt&, Botan::secure_vector<Botan::word>&)> reducer_fn;
@@ -823,7 +823,7 @@ Test::Result test_curve_cp_ctor()
    return result;
    }
 
-class ECC_Unit_Tests : public Test
+class ECC_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -860,7 +860,7 @@ class ECC_Unit_Tests : public Test
 
 BOTAN_REGISTER_TEST("ecc_unit", ECC_Unit_Tests);
 
-class ECC_Invalid_Key_Tests : public Text_Based_Test
+class ECC_Invalid_Key_Tests final : public Text_Based_Test
    {
    public:
       ECC_Invalid_Key_Tests() :

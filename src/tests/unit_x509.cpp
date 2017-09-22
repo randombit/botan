@@ -869,7 +869,7 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
 /**
  * @brief X.509v3 extension that encodes a given string
  */
-class String_Extension : public Botan::Certificate_Extension
+class String_Extension final : public Botan::Certificate_Extension
    {
    public:
       String_Extension() = default;
@@ -1056,7 +1056,7 @@ Test::Result test_hashes(const std::string& algo, const std::string& hash_fn = "
    return result;
    }
 
-class X509_Cert_Unit_Tests : public Test
+class X509_Cert_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

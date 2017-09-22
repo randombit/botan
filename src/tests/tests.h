@@ -38,7 +38,7 @@ namespace Botan_Tests {
    using Botan::BigInt;
 #endif
 
-class Test_Error : public Botan::Exception
+class Test_Error final : public Botan::Exception
    {
    public:
       explicit Test_Error(const std::string& what) : Exception("Test error", what) {}

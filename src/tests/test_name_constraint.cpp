@@ -19,7 +19,7 @@ namespace {
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
-class Name_Constraint_Tests : public Test
+class Name_Constraint_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

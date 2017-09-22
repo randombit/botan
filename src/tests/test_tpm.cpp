@@ -15,7 +15,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_TPM)
 
-class TPM_Tests : public Test
+class TPM_Tests final : public Test
    {
    public:
 
@@ -81,7 +81,7 @@ class TPM_Tests : public Test
 
 BOTAN_REGISTER_TEST("tpm", TPM_Tests);
 
-class UUID_Tests : public Test
+class UUID_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

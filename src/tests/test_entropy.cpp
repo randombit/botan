@@ -16,7 +16,7 @@ namespace Botan_Tests {
 
 namespace {
 
-class Entropy_Source_Tests : public Test
+class Entropy_Source_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

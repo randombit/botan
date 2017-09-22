@@ -16,7 +16,7 @@ namespace Botan_Tests {
 
 namespace {
 
-class DL_Group_Tests : public Test
+class DL_Group_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

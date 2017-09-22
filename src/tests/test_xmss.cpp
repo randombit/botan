@@ -18,7 +18,7 @@ namespace {
 
 #if defined(BOTAN_HAS_XMSS)
 
-class XMSS_Signature_Tests : public PK_Signature_Generation_Test
+class XMSS_Signature_Tests final : public PK_Signature_Generation_Test
    {
    public:
       XMSS_Signature_Tests()
@@ -60,7 +60,7 @@ class XMSS_Signature_Tests : public PK_Signature_Generation_Test
          }
    };
 
-class XMSS_Signature_Verify_Tests : public PK_Signature_Verification_Test
+class XMSS_Signature_Verify_Tests final : public PK_Signature_Verification_Test
    {
    public:
       XMSS_Signature_Verify_Tests()
@@ -82,7 +82,7 @@ class XMSS_Signature_Verify_Tests : public PK_Signature_Verification_Test
          }
    };
 
-class XMSS_Keygen_Tests : public PK_Key_Generation_Test
+class XMSS_Keygen_Tests final : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override

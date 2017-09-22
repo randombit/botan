@@ -788,7 +788,7 @@ Test::Result test_c_copy_object()
    return result;
    }
 
-class LowLevelTests : public Test
+class LowLevelTests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

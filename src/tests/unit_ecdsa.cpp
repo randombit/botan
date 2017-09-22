@@ -406,7 +406,7 @@ Test::Result test_ecc_key_with_rfc5915_parameters()
 
 
 
-class ECDSA_Unit_Tests : public Test
+class ECDSA_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

@@ -18,7 +18,7 @@ namespace {
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
 
-class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
+class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
    {
    public:
       Diffie_Hellman_KAT_Tests()
@@ -111,7 +111,7 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
 
    };
 
-class DH_Invalid_Key_Tests : public Text_Based_Test
+class DH_Invalid_Key_Tests final : public Text_Based_Test
    {
    public:
       DH_Invalid_Key_Tests() :
@@ -138,7 +138,7 @@ class DH_Invalid_Key_Tests : public Text_Based_Test
          }
    };
 
-class Diffie_Hellman_Keygen_Tests : public PK_Key_Generation_Test
+class Diffie_Hellman_Keygen_Tests final : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override

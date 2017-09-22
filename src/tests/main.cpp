@@ -40,7 +40,7 @@
 
 namespace {
 
-class Test_Runner : public Botan_CLI::Command
+class Test_Runner final : public Botan_CLI::Command
    {
    public:
       Test_Runner()
@@ -217,7 +217,7 @@ class Test_Runner : public Botan_CLI::Command
          rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
 #else
          // last ditch fallback for RNG-less build
-         class Bogus_Fallback_RNG : public Botan::RandomNumberGenerator
+         class Bogus_Fallback_RNG final : public Botan::RandomNumberGenerator
             {
             public:
                std::string name() const override

@@ -18,7 +18,7 @@ namespace {
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
 
-class GOST_3410_2001_Verification_Tests : public PK_Signature_Verification_Test
+class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification_Test
    {
    public:
       GOST_3410_2001_Verification_Tests() : PK_Signature_Verification_Test(
@@ -42,7 +42,7 @@ class GOST_3410_2001_Verification_Tests : public PK_Signature_Verification_Test
          }
    };
 
-class GOST_3410_2001_Signature_Tests : public PK_Signature_Generation_Test
+class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
    {
    public:
       GOST_3410_2001_Signature_Tests() : PK_Signature_Generation_Test(
@@ -71,7 +71,7 @@ class GOST_3410_2001_Signature_Tests : public PK_Signature_Generation_Test
          }
    };
 
-class GOST_3410_2001_Keygen_Tests : public PK_Key_Generation_Test
+class GOST_3410_2001_Keygen_Tests final : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override

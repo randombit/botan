@@ -19,7 +19,7 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_PBKDF)
-class PBKDF_KAT_Tests : public Text_Based_Test
+class PBKDF_KAT_Tests final : public Text_Based_Test
    {
    public:
       PBKDF_KAT_Tests() : Text_Based_Test("pbkdf", "Iterations,Salt,Passphrase,Output", "OutputLen") {}
@@ -59,7 +59,7 @@ BOTAN_REGISTER_TEST("pbkdf", PBKDF_KAT_Tests);
 
 #if defined(BOTAN_HAS_PGP_S2K)
 
-class PGP_S2K_Iter_Test : public Test
+class PGP_S2K_Iter_Test final : public Test
    {
    public:
       std::vector<Test::Result> run() override

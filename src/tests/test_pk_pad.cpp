@@ -15,7 +15,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_PK_PADDING)
 
-class EME_Decoding_Tests : public Text_Based_Test
+class EME_Decoding_Tests final : public Text_Based_Test
    {
    public:
       EME_Decoding_Tests()

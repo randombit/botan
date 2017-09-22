@@ -28,7 +28,7 @@ void free_locked_pages(void* ptr, size_t length);
 int run_cpu_instruction_probe(std::function<int ()> probe_fn);
 */
 
-class OS_Utils_Tests : public Test
+class OS_Utils_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

@@ -38,7 +38,7 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_TLS)
-class TLS_Policy_Unit_Tests : public Test
+class TLS_Policy_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

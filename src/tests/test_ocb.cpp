@@ -21,7 +21,7 @@ namespace {
 
 // Toy cipher used for wide block tests
 
-class OCB_Wide_Test_Block_Cipher : public Botan::BlockCipher
+class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher
    {
    public:
       OCB_Wide_Test_Block_Cipher(size_t bs) : m_bs(bs) {}
@@ -110,7 +110,7 @@ class OCB_Wide_Test_Block_Cipher : public Botan::BlockCipher
       std::vector<uint8_t> m_key;
    };
 
-class OCB_Wide_KAT_Tests : public Text_Based_Test
+class OCB_Wide_KAT_Tests final : public Text_Based_Test
    {
    public:
       OCB_Wide_KAT_Tests()
@@ -149,7 +149,7 @@ class OCB_Wide_KAT_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("ocb_wide", OCB_Wide_KAT_Tests);
 
-class OCB_Wide_Long_KAT_Tests : public Text_Based_Test
+class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
    {
    public:
       OCB_Wide_Long_KAT_Tests()
@@ -258,7 +258,7 @@ class OCB_Wide_Long_KAT_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("ocb_long_wide", OCB_Wide_Long_KAT_Tests);
 
-class OCB_Long_KAT_Tests : public Text_Based_Test
+class OCB_Long_KAT_Tests final : public Text_Based_Test
    {
    public:
       OCB_Long_KAT_Tests()

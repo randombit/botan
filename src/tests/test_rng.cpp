@@ -136,7 +136,7 @@ class Stateful_RNG_Tests : public Test
          {
          Test::Result result(rng_name() + " Broken Entropy Input");
 
-         class Broken_Entropy_Source : public Botan::Entropy_Source
+         class Broken_Entropy_Source final : public Botan::Entropy_Source
             {
             public:
                std::string name() const override
@@ -150,7 +150,7 @@ class Stateful_RNG_Tests : public Test
                   }
             };
 
-         class Insufficient_Entropy_Source : public Botan::Entropy_Source
+         class Insufficient_Entropy_Source final : public Botan::Entropy_Source
             {
             public:
                std::string name() const override
@@ -397,7 +397,7 @@ class Stateful_RNG_Tests : public Test
 
 #if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
 
-class HMAC_DRBG_Unit_Tests : public Stateful_RNG_Tests
+class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
    {
    public:
       std::string rng_name() const override { return "HMAC_DRBG"; }
@@ -535,7 +535,7 @@ BOTAN_REGISTER_TEST("hmac_drbg_unit", HMAC_DRBG_Unit_Tests);
 
 #if defined(BOTAN_HAS_CHACHA_RNG)
 
-class ChaCha_RNG_Unit_Tests : public Stateful_RNG_Tests
+class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests
    {
    public:
 
@@ -607,7 +607,7 @@ BOTAN_REGISTER_TEST("chacha_rng_unit", ChaCha_RNG_Unit_Tests);
 
 #if defined(BOTAN_HAS_AUTO_RNG)
 
-class AutoSeeded_RNG_Tests : public Test
+class AutoSeeded_RNG_Tests final : public Test
    {
    private:
       Test::Result auto_rng_tests()
@@ -694,7 +694,7 @@ BOTAN_REGISTER_TEST("auto_rng_unit", AutoSeeded_RNG_Tests);
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
 
-class System_RNG_Tests : public Test
+class System_RNG_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -731,7 +731,7 @@ BOTAN_REGISTER_TEST("system_rng", System_RNG_Tests);
 
 #if defined(BOTAN_HAS_RDRAND_RNG)
 
-class RDRAND_RNG_Tests : public Test
+class RDRAND_RNG_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

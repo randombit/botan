@@ -32,7 +32,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_FILTERS)
 
-class Filter_Tests : public Test
+class Filter_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

@@ -100,7 +100,7 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
 
 #if defined(BOTAN_HAS_KDF1_18033) && defined(BOTAN_HAS_SHA1)
 
-class ECIES_ISO_Tests : public Text_Based_Test
+class ECIES_ISO_Tests final : public Text_Based_Test
    {
    public:
       ECIES_ISO_Tests() : Text_Based_Test(
@@ -199,7 +199,7 @@ BOTAN_REGISTER_TEST("ecies_iso", ECIES_ISO_Tests);
 
 #endif
 
-class ECIES_Tests : public Text_Based_Test
+class ECIES_Tests final : public Text_Based_Test
    {
    public:
       ECIES_Tests()
@@ -416,7 +416,7 @@ Test::Result test_ciphertext_too_short()
    return result;
    }
 
-class ECIES_Unit_Tests : public Test
+class ECIES_Unit_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

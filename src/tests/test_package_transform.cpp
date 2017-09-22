@@ -16,7 +16,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_PACKAGE_TRANSFORM)
 
-class Package_Transform_Tests : public Test
+class Package_Transform_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override

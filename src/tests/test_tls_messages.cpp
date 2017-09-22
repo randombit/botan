@@ -43,7 +43,7 @@ Test::Result test_hello_verify_request()
    return result;
    }
 
-class TLS_Message_Parsing_Test : public Text_Based_Test
+class TLS_Message_Parsing_Test final : public Text_Based_Test
    {
    public:
       TLS_Message_Parsing_Test()

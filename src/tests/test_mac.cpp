@@ -17,7 +17,7 @@ namespace {
 
 #if defined(BOTAN_HAS_MAC)
 
-class Message_Auth_Tests : public Text_Based_Test
+class Message_Auth_Tests final : public Text_Based_Test
    {
    public:
       Message_Auth_Tests() : Text_Based_Test("mac", "Key,In,Out", "IV") {}

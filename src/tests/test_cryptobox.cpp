@@ -17,7 +17,7 @@ namespace {
 
 #if defined(BOTAN_HAS_CRYPTO_BOX)
 
-class Cryptobox_Tests : public Test
+class Cryptobox_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
