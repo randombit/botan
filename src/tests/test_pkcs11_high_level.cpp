@@ -1378,8 +1378,8 @@ Test::Result test_rng_generate_random()
    TestSession test_session(true);
 
    PKCS11_RNG rng(test_session.session());
-
    result.confirm("RNG already seeded", rng.is_seeded());
+
    std::vector<uint8_t> random(20);
    rng.randomize(random.data(), random.size());
    result.test_ne("random data generated", random, std::vector<uint8_t>(20));
@@ -1393,6 +1393,14 @@ Test::Result test_rng_add_entropy()
    TestSession test_session(true);
 
    PKCS11_RNG rng(test_session.session());
+
+   result.confirm("RNG already seeded", rng.is_seeded());
+   rng.clear();
+   result.confirm("RNG ignores call to clear", rng.is_seeded());
+
+   result.test_eq("RNG ignores calls to reseed",
+                  rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::milliseconds(300)),
+                  0);
 
    auto random = Test::rng().random_vec(20);
    rng.add_entropy(random.data(), random.size());
