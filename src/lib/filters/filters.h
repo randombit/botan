@@ -8,7 +8,6 @@
 #ifndef BOTAN_FILTERS_H_
 #define BOTAN_FILTERS_H_
 
-#include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>

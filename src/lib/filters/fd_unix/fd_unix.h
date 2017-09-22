@@ -8,9 +8,11 @@
 #ifndef BOTAN_PIPE_UNIXFD_H_
 #define BOTAN_PIPE_UNIXFD_H_
 
-#include <botan/pipe.h>
+#include <botan/types.h>
 
 namespace Botan {
+
+class Pipe;
 
 /**
 * Stream output operator; dumps the results from pipe's default
