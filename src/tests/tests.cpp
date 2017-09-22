@@ -239,7 +239,9 @@ bool Test::Result::test_eq_sz(const std::string& what, size_t produced, size_t e
    return test_is_eq(what, produced, expected);
    }
 
-bool Test::Result::test_eq(const std::string& what, OctetString produced, OctetString expected)
+bool Test::Result::test_eq(const std::string& what,
+                           Botan::OctetString produced,
+                           Botan::OctetString expected)
    {
    std::ostringstream out;
    out << m_who << " " << what;

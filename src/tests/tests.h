@@ -38,8 +38,6 @@ namespace Botan_Tests {
    using Botan::BigInt;
 #endif
 
-using Botan::OctetString;
-
 class Test_Error : public Botan::Exception
    {
    public:
@@ -205,7 +203,9 @@ class Test
             bool test_eq(const std::string& what, size_t produced, size_t expected);
             bool test_eq_sz(const std::string& what, size_t produced, size_t expected);
 
-            bool test_eq(const std::string& what, OctetString produced, OctetString expected);
+            bool test_eq(const std::string& what,
+                         Botan::OctetString produced,
+                         Botan::OctetString expected);
 
             template<typename I1, typename I2>
             bool test_int_eq(I1 x, I2 y, const char* what)

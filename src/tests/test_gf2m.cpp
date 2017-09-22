@@ -41,11 +41,9 @@ class GF2m_Tests : public Test
             {
             Botan::GF2m_Field field(degree);
 
-            using Botan::gf2m;
-
             for(size_t i = 0; i <= field.gf_ord(); ++i)
                {
-               gf2m a = static_cast<gf2m>(i);
+               Botan::gf2m a = static_cast<Botan::gf2m>(i);
 
                result.test_eq("square vs multiply",
                               static_cast<size_t>(field.gf_square(a)),
@@ -55,10 +53,10 @@ class GF2m_Tests : public Test
                * This sequence is from the start of gf2m_decomp_rootfind_state::calc_Fxj_j_neq_0
                */
                   {
-                  const gf2m jl_gray = field.gf_l_from_n(a);
-                  const gf2m xl_j_tt_5 = field.gf_square_rr(jl_gray);
-                  const gf2m xl_gray_tt_3 = field.gf_mul_rrr(xl_j_tt_5, jl_gray);
-                  gf2m s = field.gf_mul_nrr(xl_gray_tt_3, field.gf_ord());
+                  const Botan::gf2m jl_gray = field.gf_l_from_n(a);
+                  const Botan::gf2m xl_j_tt_5 = field.gf_square_rr(jl_gray);
+                  const Botan::gf2m xl_gray_tt_3 = field.gf_mul_rrr(xl_j_tt_5, jl_gray);
+                  Botan::gf2m s = field.gf_mul_nrr(xl_gray_tt_3, field.gf_ord());
 
                   result.test_gte("Value less than order", field.gf_ord(), s);
                   }
