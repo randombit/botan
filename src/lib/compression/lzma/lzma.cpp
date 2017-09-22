@@ -22,17 +22,15 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t>
    public:
       LZMA_Stream()
          {
-         auto a = new ::lzma_allocator;
-         a->opaque = alloc();
-         a->alloc = Compression_Alloc_Info::malloc<size_t>;
-         a->free = Compression_Alloc_Info::free;
-         streamp()->allocator = a;
+         m_allocator.opaque = alloc();
+         m_allocator.alloc = Compression_Alloc_Info::malloc<size_t>;
+         m_allocator.free = Compression_Alloc_Info::free;
+         streamp()->allocator = &m_allocator;
          }
 
       ~LZMA_Stream()
          {
          ::lzma_end(streamp());
-         delete streamp()->allocator;
          }
 
       bool run(uint32_t flags) override
@@ -50,6 +48,8 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t>
       uint32_t run_flag() const override { return LZMA_RUN; }
       uint32_t flush_flag() const override { return LZMA_FULL_FLUSH; }
       uint32_t finish_flag() const override { return LZMA_FINISH; }
+   private:
+      ::lzma_allocator m_allocator;
    };
 
 class LZMA_Compression_Stream final : public LZMA_Stream
