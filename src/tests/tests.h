@@ -44,7 +44,7 @@ class Test_Error final : public Botan::Exception
       explicit Test_Error(const std::string& what) : Exception("Test error", what) {}
    };
 
-class Provider_Filter
+class Provider_Filter final
    {
    public:
       Provider_Filter() {}
@@ -68,7 +68,7 @@ class Test
       /*
       * Some number of test results, all associated with who()
       */
-      class Result
+      class Result final
          {
          public:
             explicit Result(const std::string& who) : m_who(who) {}
@@ -345,7 +345,7 @@ class Test
             std::vector<std::string> m_log;
          };
 
-      class Registration
+      class Registration final
          {
          public:
             Registration(const std::string& name, Test* test);
