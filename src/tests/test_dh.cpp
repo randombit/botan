@@ -77,18 +77,16 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
 
       std::vector<Test::Result> run_final_tests() override
          {
-         using namespace Botan;
-
          Test::Result result("DH negative tests");
 
          const BigInt g("2");
          const BigInt p("58458002095536094658683755258523362961421200751439456159756164191494576279467");
-         const DL_Group grp(p, g);
+         const Botan::DL_Group grp(p, g);
 
          const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
-         std::unique_ptr<Private_Key> privkey(new DH_PrivateKey(Test::rng(), grp, x));
+         std::unique_ptr<Botan::Private_Key> privkey(new Botan::DH_PrivateKey(Test::rng(), grp, x));
 
-         std::unique_ptr<PK_Key_Agreement> kas(new PK_Key_Agreement(*privkey, rng(), "Raw"));
+         std::unique_ptr<Botan::PK_Key_Agreement> kas(new Botan::PK_Key_Agreement(*privkey, rng(), "Raw"));
 
          result.test_throws("agreement input too big",
                             "Invalid argument DH agreement - invalid key provided",
