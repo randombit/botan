@@ -29,7 +29,7 @@ namespace {
 /**
 * ECGDSA signature operation
 */
-class ECGDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
+class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
    {
    public:
 
@@ -77,7 +77,7 @@ ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 /**
 * ECGDSA verification operation
 */
-class ECGDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
+class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
    {
    public:
 

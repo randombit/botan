@@ -20,7 +20,7 @@ namespace OCSP {
 /**
 * An OCSP request.
 */
-class BOTAN_PUBLIC_API(2,0) Request
+class BOTAN_PUBLIC_API(2,0) Request final
    {
    public:
       /**
@@ -66,7 +66,7 @@ class BOTAN_PUBLIC_API(2,0) Request
 *
 * Note this class is only usable as an OCSP client
 */
-class BOTAN_PUBLIC_API(2,0) Response
+class BOTAN_PUBLIC_API(2,0) Response final
    {
    public:
       /**

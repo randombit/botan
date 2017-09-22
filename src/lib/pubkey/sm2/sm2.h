@@ -58,7 +58,7 @@ class BOTAN_PUBLIC_API(2,2) SM2_Signature_PublicKey : public virtual EC_PublicKe
 /**
 * This class represents SM2 Signature private keys
 */
-class BOTAN_PUBLIC_API(2,2) SM2_Signature_PrivateKey : public SM2_Signature_PublicKey,
+class BOTAN_PUBLIC_API(2,2) SM2_Signature_PrivateKey final : public SM2_Signature_PublicKey,
                                            public EC_PrivateKey
    {
    public:

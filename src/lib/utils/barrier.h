@@ -23,7 +23,7 @@ namespace Botan {
 // m_syncs counter is incremented. m_syncs is a counter to ensure that wait()
 // can be called after a sync() even if the previously sleeping threads have
 // not awoken.)
-class Barrier
+class Barrier final
     {
     public:
         explicit Barrier(int value = 0) : m_value(value), m_syncs(0) {}

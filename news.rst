@@ -167,6 +167,10 @@ Version 2.3.0, Not Yet Released
 * Fix a bug in FFI tests that caused the test files not to be found when using
   ``--data-dir`` option (GH #1149)
 
+* C++ ``final`` annotations have been added to classes which are not
+  intended for derivation. This keyword was already in use but was not
+  applied consistently.
+
 * Header files have been cleaned up to remove uncessary inclusions. In some
   cases it may be required to include additional botan headers to get all the
   declarations that were previously visible. For example, ``bigint.h`` no longer

@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Filter interface for AEAD Modes
 */
-class AEAD_Filter : public Cipher_Mode_Filter
+class AEAD_Filter final : public Cipher_Mode_Filter
    {
    public:
       AEAD_Filter(AEAD_Mode* aead) : Cipher_Mode_Filter(aead) {}

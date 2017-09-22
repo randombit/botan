@@ -74,7 +74,7 @@ namespace {
 /**
 * SM2 signature operation
 */
-class SM2_Signature_Operation : public PK_Ops::Signature
+class SM2_Signature_Operation final : public PK_Ops::Signature
    {
    public:
 
@@ -131,7 +131,7 @@ SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
 /**
 * SM2 verification operation
 */
-class SM2_Verification_Operation : public PK_Ops::Verification
+class SM2_Verification_Operation final : public PK_Ops::Verification
    {
    public:
       SM2_Verification_Operation(const SM2_Signature_PublicKey& sm2,

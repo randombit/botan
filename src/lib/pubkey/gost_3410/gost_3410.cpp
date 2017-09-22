@@ -94,7 +94,7 @@ BigInt decode_le(const uint8_t msg[], size_t msg_len)
 /**
 * GOST-34.10 signature operation
 */
-class GOST_3410_Signature_Operation : public PK_Ops::Signature_with_EMSA
+class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_EMSA
    {
    public:
       GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410,
@@ -150,7 +150,7 @@ GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 /**
 * GOST-34.10 verification operation
 */
-class GOST_3410_Verification_Operation : public PK_Ops::Verification_with_EMSA
+class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_EMSA
    {
    public:
 

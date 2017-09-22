@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-class CECPQ1_key
+class CECPQ1_key final
    {
    public:
       secure_vector<uint8_t> m_x25519;

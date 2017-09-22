@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Filter interface for cipher modes
 */
-class BOTAN_PUBLIC_API(2,0) Cipher_Mode_Filter : public Keyed_Filter,
+class BOTAN_PUBLIC_API(2,0) Cipher_Mode_Filter final : public Keyed_Filter,
                                      private Buffered_Filter
    {
    public:

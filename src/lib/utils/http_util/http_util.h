@@ -56,7 +56,7 @@ struct Response
 /**
 * HTTP_Error Exception
 */
-struct BOTAN_PUBLIC_API(2,0) HTTP_Error : public Exception
+struct BOTAN_PUBLIC_API(2,0) HTTP_Error final : public Exception
    {
    explicit HTTP_Error(const std::string& msg) :
       Exception("HTTP error " + msg)

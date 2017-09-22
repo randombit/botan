@@ -46,7 +46,7 @@ namespace Botan {
 
 namespace {
 
-class System_RNG_EntropySource : public Entropy_Source
+class System_RNG_EntropySource final : public Entropy_Source
    {
    public:
       size_t poll(RandomNumberGenerator& rng) override

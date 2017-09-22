@@ -18,7 +18,7 @@ class RandomNumberGenerator;
 /**
 * A split secret, using the format from draft-mcgrew-tss-03
 */
-class BOTAN_PUBLIC_API(2,0) RTSS_Share
+class BOTAN_PUBLIC_API(2,0) RTSS_Share final
    {
    public:
       /**

@@ -18,7 +18,7 @@ namespace TLS {
 /**
 * Represents information known about a TLS server.
 */
-class BOTAN_PUBLIC_API(2,0) Server_Information
+class BOTAN_PUBLIC_API(2,0) Server_Information final
    {
    public:
       /**

@@ -15,7 +15,7 @@
 namespace Botan {
 
 // TODO: move to util?
-class UUID
+class UUID final
    {
    public:
       // Represents an unassigned UUID object

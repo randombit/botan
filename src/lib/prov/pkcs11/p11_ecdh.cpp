@@ -38,7 +38,7 @@ secure_vector<uint8_t> PKCS11_ECDH_PrivateKey::private_key_bits() const
    }
 
 namespace {
-class PKCS11_ECDH_KA_Operation : public PK_Ops::Key_Agreement
+class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement
    {
    public:
       PKCS11_ECDH_KA_Operation(const PKCS11_EC_PrivateKey& key, const std::string& params)

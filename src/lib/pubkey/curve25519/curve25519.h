@@ -55,7 +55,7 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PublicKey : public virtual Public_Key
       std::vector<uint8_t> m_public;
    };
 
-class BOTAN_PUBLIC_API(2,0) Curve25519_PrivateKey : public Curve25519_PublicKey,
+class BOTAN_PUBLIC_API(2,0) Curve25519_PrivateKey final : public Curve25519_PublicKey,
                                         public virtual Private_Key,
                                         public virtual PK_Key_Agreement_Key
    {

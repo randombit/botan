@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Represents a DLL or shared object
 */
-class BOTAN_PUBLIC_API(2,0) Dynamically_Loaded_Library
+class BOTAN_PUBLIC_API(2,0) Dynamically_Loaded_Library final
    {
    public:
       /**

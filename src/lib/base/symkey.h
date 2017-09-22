@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Octet String
 */
-class BOTAN_PUBLIC_API(2,0) OctetString
+class BOTAN_PUBLIC_API(2,0) OctetString final
    {
    public:
       /**

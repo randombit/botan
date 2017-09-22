@@ -33,7 +33,7 @@ class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char>
       uint32_t finish_flag() const override { return BZ_FINISH; }
    };
 
-class Bzip2_Compression_Stream : public Bzip2_Stream
+class Bzip2_Compression_Stream final : public Bzip2_Stream
    {
    public:
       explicit Bzip2_Compression_Stream(size_t block_size)
@@ -72,7 +72,7 @@ class Bzip2_Compression_Stream : public Bzip2_Stream
          }
    };
 
-class Bzip2_Decompression_Stream : public Bzip2_Stream
+class Bzip2_Decompression_Stream final : public Bzip2_Stream
    {
    public:
       Bzip2_Decompression_Stream()

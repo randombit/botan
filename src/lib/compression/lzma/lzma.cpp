@@ -52,7 +52,7 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t>
       uint32_t finish_flag() const override { return LZMA_FINISH; }
    };
 
-class LZMA_Compression_Stream : public LZMA_Stream
+class LZMA_Compression_Stream final : public LZMA_Stream
    {
    public:
       explicit LZMA_Compression_Stream(size_t level)
@@ -71,7 +71,7 @@ class LZMA_Compression_Stream : public LZMA_Stream
          }
    };
 
-class LZMA_Decompression_Stream : public LZMA_Stream
+class LZMA_Decompression_Stream final : public LZMA_Stream
    {
    public:
       LZMA_Decompression_Stream()

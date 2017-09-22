@@ -18,7 +18,7 @@ namespace Botan_FFI {
 #define BOTAN_ASSERT_ARG_NON_NULL(p) \
    do { if(!p) throw Botan::Invalid_Argument("Argument " #p " is null"); } while(0)
 
-class FFI_Error : public Botan::Exception
+class FFI_Error final : public Botan::Exception
    {
    public:
       explicit FFI_Error(const std::string& what) : Exception("FFI error", what) {}
@@ -46,7 +46,7 @@ struct botan_struct
    };
 
 #define BOTAN_FFI_DECLARE_STRUCT(NAME, TYPE, MAGIC) \
-   struct NAME : public botan_struct<TYPE, MAGIC> { explicit NAME(TYPE* x) : botan_struct(x) {} }
+   struct NAME final : public botan_struct<TYPE, MAGIC> { explicit NAME(TYPE* x) : botan_struct(x) {} }
 
 // Declared in ffi.cpp
 int ffi_error_exception_thrown(const char* func_name, const char* exn);

@@ -18,7 +18,7 @@ namespace Botan {
 
 namespace {
 
-class OpenSSL_RC4 : public StreamCipher
+class OpenSSL_RC4 final : public StreamCipher
    {
    public:
       void clear() override { clear_mem(&m_rc4, 1); }

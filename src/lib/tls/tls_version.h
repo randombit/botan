@@ -18,7 +18,7 @@ namespace TLS {
 /**
 * TLS Protocol Version
 */
-class BOTAN_PUBLIC_API(2,0) Protocol_Version
+class BOTAN_PUBLIC_API(2,0) Protocol_Version final
    {
    public:
       enum Version_Code {

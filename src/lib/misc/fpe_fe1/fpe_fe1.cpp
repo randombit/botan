@@ -75,7 +75,7 @@ size_t rounds(const BigInt& a, const BigInt& b)
 /*
 * A simple round function based on HMAC(SHA-256)
 */
-class FPE_Encryptor
+class FPE_Encryptor final
    {
    public:
       FPE_Encryptor(const SymmetricKey& key,

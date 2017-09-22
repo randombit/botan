@@ -383,7 +383,7 @@ bool TPM_PrivateKey::check_key(RandomNumberGenerator&, bool) const
 
 namespace {
 
-class TPM_Signing_Operation : public PK_Ops::Signature
+class TPM_Signing_Operation final : public PK_Ops::Signature
    {
    public:
       TPM_Signing_Operation(const TPM_PrivateKey& key,

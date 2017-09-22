@@ -121,7 +121,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Params
    };
 
 
-class BOTAN_PUBLIC_API(2,0) ECIES_System_Params : public ECIES_KA_Params
+class BOTAN_PUBLIC_API(2,0) ECIES_System_Params final : public ECIES_KA_Params
    {
    public:
       /**
@@ -214,7 +214,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_KA_Operation
 /**
 * ECIES Encryption according to ISO 18033-2
 */
-class BOTAN_PUBLIC_API(2,0) ECIES_Encryptor : public PK_Encryptor
+class BOTAN_PUBLIC_API(2,0) ECIES_Encryptor final : public PK_Encryptor
    {
    public:
       /**
@@ -271,7 +271,7 @@ class BOTAN_PUBLIC_API(2,0) ECIES_Encryptor : public PK_Encryptor
 /**
 * ECIES Decryption according to ISO 18033-2
 */
-class BOTAN_PUBLIC_API(2,0) ECIES_Decryptor : public PK_Decryptor
+class BOTAN_PUBLIC_API(2,0) ECIES_Decryptor final : public PK_Decryptor
    {
    public:
       /**

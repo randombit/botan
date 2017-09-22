@@ -112,7 +112,7 @@ namespace {
 /**
 * Curve25519 operation
 */
-class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
+class Curve25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
 

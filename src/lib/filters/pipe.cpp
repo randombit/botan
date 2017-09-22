@@ -16,7 +16,7 @@ namespace {
 /*
 * A Filter that does nothing
 */
-class Null_Filter : public Filter
+class Null_Filter final : public Filter
    {
    public:
       void write(const uint8_t input[], size_t length) override

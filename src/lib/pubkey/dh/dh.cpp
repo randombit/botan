@@ -79,7 +79,7 @@ namespace {
 /**
 * DH operation
 */
-class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
+class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
 

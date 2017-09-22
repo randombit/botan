@@ -34,7 +34,7 @@ class BOTAN_PUBLIC_API(2,0) TLS_Exception : public Exception
 /**
 * Unexpected_Message Exception
 */
-struct BOTAN_PUBLIC_API(2,0) Unexpected_Message : public TLS_Exception
+struct BOTAN_PUBLIC_API(2,0) Unexpected_Message final : public TLS_Exception
    {
    explicit Unexpected_Message(const std::string& err) :
       TLS_Exception(Alert::UNEXPECTED_MESSAGE, err) {}

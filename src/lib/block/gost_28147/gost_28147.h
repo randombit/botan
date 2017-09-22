@@ -18,7 +18,7 @@ namespace Botan {
 * considered a local configuration issue. Several different sets are
 * used.
 */
-class BOTAN_PUBLIC_API(2,0) GOST_28147_89_Params
+class BOTAN_PUBLIC_API(2,0) GOST_28147_89_Params final
    {
    public:
       /**

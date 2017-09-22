@@ -30,7 +30,7 @@ class HashFunction;
 class RandomNumberGenerator;
 enum Cipher_Dir : int;
 
-class OpenSSL_Error : public Exception
+class OpenSSL_Error final : public Exception
    {
    public:
       OpenSSL_Error(const std::string& what) :

@@ -20,7 +20,7 @@ class Decompression_Algorithm;
 /**
 * Filter interface for compression
 */
-class BOTAN_PUBLIC_API(2,0) Compression_Filter : public Filter
+class BOTAN_PUBLIC_API(2,0) Compression_Filter final : public Filter
    {
    public:
       void start_msg() override;
@@ -45,7 +45,7 @@ class BOTAN_PUBLIC_API(2,0) Compression_Filter : public Filter
 /**
 * Filter interface for decompression
 */
-class BOTAN_PUBLIC_API(2,0) Decompression_Filter : public Filter
+class BOTAN_PUBLIC_API(2,0) Decompression_Filter final : public Filter
    {
    public:
       void start_msg() override;

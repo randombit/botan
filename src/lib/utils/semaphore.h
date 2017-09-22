@@ -17,7 +17,7 @@
 namespace Botan {
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-class Semaphore
+class Semaphore final
    {
    public:
       explicit Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}

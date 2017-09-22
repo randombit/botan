@@ -67,7 +67,7 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
       uint32_t m_code_length;
    };
 
-class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey : public virtual McEliece_PublicKey,
+class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_PublicKey,
                                       public virtual Private_Key
    {
    public:

@@ -21,7 +21,7 @@ namespace TLS {
 /**
 * Helper class for decoding TLS protocol messages
 */
-class TLS_Data_Reader
+class TLS_Data_Reader final
    {
    public:
       TLS_Data_Reader(const char* type, const std::vector<uint8_t>& buf_in) :

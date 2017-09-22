@@ -16,7 +16,7 @@ namespace Botan {
 
 namespace TLS {
 
-class Server_Handshake_State : public Handshake_State
+class Server_Handshake_State final : public Handshake_State
    {
    public:
       Server_Handshake_State(Handshake_IO* io, Callbacks& cb)

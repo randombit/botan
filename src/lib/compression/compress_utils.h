@@ -17,7 +17,7 @@ namespace Botan {
 /*
 * Allocation Size Tracking Helper for Zlib/Bzlib/LZMA
 */
-class Compression_Alloc_Info
+class Compression_Alloc_Info final
    {
    public:
       template<typename T>

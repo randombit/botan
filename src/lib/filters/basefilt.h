@@ -33,7 +33,7 @@ struct BOTAN_PUBLIC_API(2,0) BitBucket final : public Filter
 * through all the Filters contained in the Chain.
 */
 
-class BOTAN_PUBLIC_API(2,0) Chain : public Fanout_Filter
+class BOTAN_PUBLIC_API(2,0) Chain final : public Fanout_Filter
    {
    public:
       void write(const uint8_t input[], size_t length) override { send(input, length); }
@@ -88,7 +88,7 @@ class BOTAN_PUBLIC_API(2,0) Fork : public Fanout_Filter
 * threads, the class itself is NOT thread-safe. This is meant as a drop-
 * in replacement for Fork where performance gains are possible.
 */
-class BOTAN_PUBLIC_API(2,0) Threaded_Fork : public Fork
+class BOTAN_PUBLIC_API(2,0) Threaded_Fork final : public Fork
    {
    public:
       std::string name() const override;

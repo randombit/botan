@@ -239,7 +239,7 @@ class RSA_Private_Operation
       Blinder m_blinder;
    };
 
-class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
+class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
                                 private RSA_Private_Operation
    {
    public:
@@ -263,7 +263,7 @@ class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
          }
    };
 
-class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
+class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
                                  private RSA_Private_Operation
    {
    public:
@@ -286,7 +286,7 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
          }
    };
 
-class RSA_KEM_Decryption_Operation : public PK_Ops::KEM_Decryption_with_KDF,
+class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KDF,
                                      private RSA_Private_Operation
    {
    public:
@@ -335,7 +335,7 @@ class RSA_Public_Operation
       Fixed_Exponent_Power_Mod m_powermod_e_n;
    };
 
-class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
+class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
                                  private RSA_Public_Operation
    {
    public:
@@ -356,7 +356,7 @@ class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
          }
    };
 
-class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
+class RSA_Verify_Operation final : public PK_Ops::Verification_with_EMSA,
                              private RSA_Public_Operation
    {
    public:
@@ -378,7 +378,7 @@ class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
          }
    };
 
-class RSA_KEM_Encryption_Operation : public PK_Ops::KEM_Encryption_with_KDF,
+class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF,
                                      private RSA_Public_Operation
    {
    public:

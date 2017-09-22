@@ -45,7 +45,7 @@ namespace {
 /**
 * ECDSA signature operation
 */
-class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
+class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
    {
    public:
 
@@ -103,7 +103,7 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 /**
 * ECDSA verification operation
 */
-class ECDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
+class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
    {
    public:
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa,

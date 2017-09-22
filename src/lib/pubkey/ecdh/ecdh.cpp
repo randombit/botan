@@ -22,7 +22,7 @@ namespace {
 /**
 * ECDH operation
 */
-class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
+class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
 

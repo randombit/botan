@@ -107,20 +107,20 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          }
    };
 
-class Deflate_Compression_Stream : public Zlib_Compression_Stream
+class Deflate_Compression_Stream final : public Zlib_Compression_Stream
    {
    public:
       Deflate_Compression_Stream(size_t level, int wbits) :
          Zlib_Compression_Stream(level, wbits, -1) {}
    };
 
-class Deflate_Decompression_Stream : public Zlib_Decompression_Stream
+class Deflate_Decompression_Stream final : public Zlib_Decompression_Stream
    {
    public:
       explicit Deflate_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, -1) {}
    };
 
-class Gzip_Compression_Stream : public Zlib_Compression_Stream
+class Gzip_Compression_Stream final : public Zlib_Compression_Stream
    {
    public:
       Gzip_Compression_Stream(size_t level, int wbits, uint8_t os_code) :
@@ -139,7 +139,7 @@ class Gzip_Compression_Stream : public Zlib_Compression_Stream
       ::gz_header m_header;
    };
 
-class Gzip_Decompression_Stream : public Zlib_Decompression_Stream
+class Gzip_Decompression_Stream final : public Zlib_Decompression_Stream
    {
    public:
       explicit Gzip_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, 16) {}

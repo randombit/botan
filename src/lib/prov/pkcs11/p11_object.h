@@ -237,7 +237,7 @@ class BOTAN_PUBLIC_API(2,0) StorageObjectProperties : public ObjectProperties
    };
 
 /// Common attributes of all data objects
-class BOTAN_PUBLIC_API(2,0) DataObjectProperties : public StorageObjectProperties
+class BOTAN_PUBLIC_API(2,0) DataObjectProperties final : public StorageObjectProperties
    {
    public:
       DataObjectProperties();
@@ -514,7 +514,7 @@ class BOTAN_PUBLIC_API(2,0) PrivateKeyProperties : public KeyProperties
    };
 
 /// Common attributes of all secret (symmetric) keys
-class BOTAN_PUBLIC_API(2,0) SecretKeyProperties : public KeyProperties
+class BOTAN_PUBLIC_API(2,0) SecretKeyProperties final : public KeyProperties
    {
    public:
       /// @param key_type type of key
@@ -619,7 +619,7 @@ class BOTAN_PUBLIC_API(2,0) SecretKeyProperties : public KeyProperties
    };
 
 /// Common attributes of domain parameter
-class BOTAN_PUBLIC_API(2,0) DomainParameterProperties : public StorageObjectProperties
+class BOTAN_PUBLIC_API(2,0) DomainParameterProperties final : public StorageObjectProperties
    {
    public:
       /// @param key_type type of key the domain parameters can be used to generate

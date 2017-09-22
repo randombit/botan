@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class donna128
+class donna128 final
    {
    public:
       donna128(uint64_t ll = 0, uint64_t hh = 0) { l = ll; h = hh; }

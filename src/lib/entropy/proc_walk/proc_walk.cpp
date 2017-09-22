@@ -24,7 +24,7 @@ namespace Botan {
 
 namespace {
 
-class Directory_Walker : public File_Descriptor_Source
+class Directory_Walker final : public File_Descriptor_Source
    {
    public:
       explicit Directory_Walker(const std::string& root) :

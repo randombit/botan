@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * Options for X.509 certificates.
 */
-class BOTAN_PUBLIC_API(2,0) X509_Cert_Options
+class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
    {
    public:
       /**

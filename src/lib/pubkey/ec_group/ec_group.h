@@ -28,7 +28,7 @@ enum EC_Group_Encoding {
 /**
 * Class representing an elliptic curve
 */
-class BOTAN_PUBLIC_API(2,0) EC_Group
+class BOTAN_PUBLIC_API(2,0) EC_Group final
    {
    public:
 

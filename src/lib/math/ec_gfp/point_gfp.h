@@ -19,7 +19,7 @@ namespace Botan {
 * Exception thrown if you try to convert a zero point to an affine
 * coordinate
 */
-struct BOTAN_PUBLIC_API(2,0) Illegal_Transformation : public Exception
+struct BOTAN_PUBLIC_API(2,0) Illegal_Transformation final : public Exception
    {
    explicit Illegal_Transformation(const std::string& err =
                           "Requested transformation is not possible") :
@@ -29,7 +29,7 @@ struct BOTAN_PUBLIC_API(2,0) Illegal_Transformation : public Exception
 /**
 * Exception thrown if some form of illegal point is decoded
 */
-struct BOTAN_PUBLIC_API(2,0) Illegal_Point : public Exception
+struct BOTAN_PUBLIC_API(2,0) Illegal_Point final : public Exception
    {
    explicit Illegal_Point(const std::string& err = "Malformed ECP point detected") :
       Exception(err) {}
@@ -38,7 +38,7 @@ struct BOTAN_PUBLIC_API(2,0) Illegal_Point : public Exception
 /**
 * This class represents one point on a curve of GF(p)
 */
-class BOTAN_PUBLIC_API(2,0) PointGFp
+class BOTAN_PUBLIC_API(2,0) PointGFp final
    {
    public:
       enum Compression_Type {
@@ -286,7 +286,7 @@ PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
 /**
 
 */
-class BOTAN_PUBLIC_API(2,0) Blinded_Point_Multiply
+class BOTAN_PUBLIC_API(2,0) Blinded_Point_Multiply final
    {
    public:
       Blinded_Point_Multiply(const PointGFp& base, const BigInt& order, size_t h = 0);

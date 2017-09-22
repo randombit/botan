@@ -19,7 +19,7 @@ class RandomNumberGenerator;
 /**
 * Blinding Function Object.
 */
-class BOTAN_PUBLIC_API(2,0) Blinder
+class BOTAN_PUBLIC_API(2,0) Blinder final
    {
    public:
       /**

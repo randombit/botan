@@ -95,7 +95,7 @@ class BOTAN_PUBLIC_API(2,0) DataSource
 /**
 * This class represents a Memory-Based DataSource
 */
-class BOTAN_PUBLIC_API(2,0) DataSource_Memory : public DataSource
+class BOTAN_PUBLIC_API(2,0) DataSource_Memory final : public DataSource
    {
    public:
       size_t read(uint8_t[], size_t) override;
@@ -140,7 +140,7 @@ class BOTAN_PUBLIC_API(2,0) DataSource_Memory : public DataSource
 /**
 * This class represents a Stream-Based DataSource.
 */
-class BOTAN_PUBLIC_API(2,0) DataSource_Stream : public DataSource
+class BOTAN_PUBLIC_API(2,0) DataSource_Stream final : public DataSource
    {
    public:
       size_t read(uint8_t[], size_t) override;

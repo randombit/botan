@@ -54,7 +54,7 @@ secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const
 
 namespace {
 
-class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
+class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
    {
    public:
       PKCS11_ECDSA_Signature_Operation(const PKCS11_EC_PrivateKey& key, const std::string& emsa)
@@ -109,7 +109,7 @@ class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
    };
 
 
-class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
+class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
    {
    public:
       PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, const std::string& emsa)

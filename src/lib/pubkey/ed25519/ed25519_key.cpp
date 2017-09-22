@@ -98,7 +98,7 @@ namespace {
 /**
 * Ed25519 verifying operation
 */
-class Ed25519_Pure_Verify_Operation : public PK_Ops::Verification
+class Ed25519_Pure_Verify_Operation final : public PK_Ops::Verification
    {
    public:
       Ed25519_Pure_Verify_Operation(const Ed25519_PublicKey& key) : m_key(key)
@@ -127,7 +127,7 @@ class Ed25519_Pure_Verify_Operation : public PK_Ops::Verification
 /**
 * Ed25519 verifying operation with pre-hash
 */
-class Ed25519_Hashed_Verify_Operation : public PK_Ops::Verification
+class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification
    {
    public:
       Ed25519_Hashed_Verify_Operation(const Ed25519_PublicKey& key, const std::string& hash) : m_key(key)
@@ -157,7 +157,7 @@ class Ed25519_Hashed_Verify_Operation : public PK_Ops::Verification
 /**
 * Ed25519 signing operation ('pure' - signs message directly)
 */
-class Ed25519_Pure_Sign_Operation : public PK_Ops::Signature
+class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
    {
    public:
       Ed25519_Pure_Sign_Operation(const Ed25519_PrivateKey& key) : m_key(key)
@@ -185,7 +185,7 @@ class Ed25519_Pure_Sign_Operation : public PK_Ops::Signature
 /**
 * Ed25519 signing operation with pre-hash
 */
-class Ed25519_Hashed_Sign_Operation : public PK_Ops::Signature
+class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
    {
    public:
       Ed25519_Hashed_Sign_Operation(const Ed25519_PrivateKey& key, const std::string& hash) : m_key(key)

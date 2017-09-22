@@ -14,7 +14,7 @@ namespace Botan {
 /**
 * A node in a SecureQueue
 */
-class SecureQueueNode
+class SecureQueueNode final
    {
    public:
       SecureQueueNode() : m_buffer(DEFAULT_BUFFERSIZE)

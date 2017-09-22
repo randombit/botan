@@ -317,7 +317,7 @@ std::vector<uint16_t> Policy::srtp_profiles() const
 
 namespace {
 
-class Ciphersuite_Preference_Ordering
+class Ciphersuite_Preference_Ordering final
    {
    public:
       Ciphersuite_Preference_Ordering(const std::vector<std::string>& ciphers,

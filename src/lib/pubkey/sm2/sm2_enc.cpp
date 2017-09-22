@@ -42,7 +42,7 @@ SM2_Encryption_PrivateKey::SM2_Encryption_PrivateKey(RandomNumberGenerator& rng,
 
 namespace {
 
-class SM2_Encryption_Operation : public PK_Ops::Encryption
+class SM2_Encryption_Operation final : public PK_Ops::Encryption
    {
    public:
       SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key, const std::string& kdf_hash) :
@@ -119,7 +119,7 @@ class SM2_Encryption_Operation : public PK_Ops::Encryption
       const std::string m_kdf_hash;
    };
 
-class SM2_Decryption_Operation : public PK_Ops::Decryption
+class SM2_Decryption_Operation final : public PK_Ops::Decryption
    {
    public:
       SM2_Decryption_Operation(const SM2_Encryption_PrivateKey& key,

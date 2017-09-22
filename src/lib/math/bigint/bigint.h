@@ -22,7 +22,7 @@ class RandomNumberGenerator;
 /**
 * Arbitrary precision integer
 */
-class BOTAN_PUBLIC_API(2,0) BigInt
+class BOTAN_PUBLIC_API(2,0) BigInt final
    {
    public:
      /**
@@ -38,7 +38,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt
      /**
      * DivideByZero Exception
      */
-     struct BOTAN_PUBLIC_API(2,0) DivideByZero : public Exception
+     struct BOTAN_PUBLIC_API(2,0) DivideByZero final : public Exception
         { DivideByZero() : Exception("BigInt divide by zero") {} };
 
      /**

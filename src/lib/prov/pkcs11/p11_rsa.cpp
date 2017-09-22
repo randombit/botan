@@ -164,7 +164,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
 
 // note:	multiple-part encryption operations (with C_EncryptUpdate/C_EncryptFinal)
 //			are not supported (PK_Ops::Encryption does not provide an `update` method)
-class PKCS11_RSA_Encryption_Operation : public PK_Ops::Encryption
+class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption
    {
    public:
 
@@ -195,7 +195,7 @@ class PKCS11_RSA_Encryption_Operation : public PK_Ops::Encryption
    };
 
 
-class PKCS11_RSA_Signature_Operation : public PK_Ops::Signature
+class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature
    {
    public:
 
@@ -250,7 +250,7 @@ class PKCS11_RSA_Signature_Operation : public PK_Ops::Signature
    };
 
 
-class PKCS11_RSA_Verification_Operation : public PK_Ops::Verification
+class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification
    {
    public:
 

@@ -15,7 +15,7 @@ namespace Botan {
 
 namespace {
 
-class OpenSSL_Cipher_Mode : public Cipher_Mode
+class OpenSSL_Cipher_Mode final : public Cipher_Mode
    {
    public:
       OpenSSL_Cipher_Mode(const std::string& name,

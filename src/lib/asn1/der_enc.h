@@ -19,7 +19,7 @@ class ASN1_Object;
 /**
 * General DER Encoding Object
 */
-class BOTAN_PUBLIC_API(2,0) DER_Encoder
+class BOTAN_PUBLIC_API(2,0) DER_Encoder final
    {
    public:
       secure_vector<uint8_t> get_contents();

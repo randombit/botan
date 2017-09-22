@@ -37,7 +37,7 @@ class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
       * Exception if you use an invalid message as an argument to
       * read, remaining, etc
       */
-      struct BOTAN_PUBLIC_API(2,0) Invalid_Message_Number : public Invalid_Argument
+      struct BOTAN_PUBLIC_API(2,0) Invalid_Message_Number final : public Invalid_Argument
          {
          /**
          * @param where the error occurred

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(2,0) RDRAND_RNG : public Hardware_RNG
+class BOTAN_PUBLIC_API(2,0) RDRAND_RNG final : public Hardware_RNG
    {
    public:
       /**

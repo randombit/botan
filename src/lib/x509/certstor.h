@@ -71,7 +71,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store
 /**
 * In Memory Certificate Store
 */
-class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_Memory : public Certificate_Store
+class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_Memory final : public Certificate_Store
    {
    public:
       /**

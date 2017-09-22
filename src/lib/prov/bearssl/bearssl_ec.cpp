@@ -73,7 +73,7 @@ const br_hash_class *BearSSL_hash_class_for(const std::string& emsa)
 
 namespace {
 
-class BearSSL_ECDSA_Verification_Operation : public PK_Ops::Verification
+class BearSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification
    {
    public:
       BearSSL_ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const std::string& emsa) :
@@ -132,7 +132,7 @@ class BearSSL_ECDSA_Verification_Operation : public PK_Ops::Verification
       size_t m_order_bits;
    };
 
-class BearSSL_ECDSA_Signing_Operation : public PK_Ops::Signature
+class BearSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature
    {
    public:
       BearSSL_ECDSA_Signing_Operation(const ECDSA_PrivateKey& ecdsa, const std::string& emsa) :

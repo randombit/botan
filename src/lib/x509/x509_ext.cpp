@@ -655,7 +655,7 @@ namespace {
 /*
 * A policy specifier
 */
-class Policy_Information : public ASN1_Object
+class Policy_Information final : public ASN1_Object
    {
    public:
       Policy_Information() = default;

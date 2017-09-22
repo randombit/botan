@@ -19,7 +19,7 @@ namespace Botan {
 
 class HashFunction;
 
-class BearSSL_Error : public Exception
+class BearSSL_Error final : public Exception
    {
    public:
       BearSSL_Error(const std::string& what) :

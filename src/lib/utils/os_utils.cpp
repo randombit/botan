@@ -52,7 +52,7 @@ namespace {
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
 
-class Asio_Socket : public OS::Socket
+class Asio_Socket final : public OS::Socket
    {
    public:
       Asio_Socket(const std::string& hostname, const std::string& service) :
@@ -90,7 +90,7 @@ class Asio_Socket : public OS::Socket
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
 
-class Winsock_Socket : public OS::Socket
+class Winsock_Socket final : public OS::Socket
    {
    public:
       Winsock_Socket(const std::string& hostname, const std::string& service)
@@ -188,7 +188,7 @@ class Winsock_Socket : public OS::Socket
    };
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
-class BSD_Socket : public OS::Socket
+class BSD_Socket final : public OS::Socket
    {
    public:
       BSD_Socket(const std::string& hostname, const std::string& service)

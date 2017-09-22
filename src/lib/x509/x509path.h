@@ -31,7 +31,7 @@ typedef std::vector<std::set<Certificate_Status_Code>> CertificatePathStatusCode
 /**
 * Specifies restrictions on the PKIX path validation
 */
-class BOTAN_PUBLIC_API(2,0) Path_Validation_Restrictions
+class BOTAN_PUBLIC_API(2,0) Path_Validation_Restrictions final
    {
    public:
       /**
@@ -107,7 +107,7 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Restrictions
 /**
 * Represents the result of a PKIX path validation
 */
-class BOTAN_PUBLIC_API(2,0) Path_Validation_Result
+class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
    {
    public:
       typedef Certificate_Status_Code Code;

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * TOTP (time based) one time passwords (RFC 6238)
 */
-class BOTAN_PUBLIC_API(2,2) TOTP
+class BOTAN_PUBLIC_API(2,2) TOTP final
    {
    public:
       /**

@@ -18,7 +18,7 @@ namespace TLS {
 /**
 * TLS Handshake Hash
 */
-class Handshake_Hash
+class Handshake_Hash final
    {
    public:
       void update(const uint8_t in[], size_t length)

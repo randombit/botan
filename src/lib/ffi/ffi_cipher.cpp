@@ -12,7 +12,7 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-struct botan_cipher_struct : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C>
+struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C>
    {
    explicit botan_cipher_struct(Botan::Cipher_Mode* x) : botan_struct(x) {}
    Botan::secure_vector<uint8_t> m_buf;

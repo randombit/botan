@@ -63,7 +63,7 @@ std::string BOTAN_PUBLIC_API(2,0) srp6_group_identifier(const BigInt& N, const B
 /**
 * Represents a SRP-6a server session
 */
-class BOTAN_PUBLIC_API(2,0) SRP6_Server_Session
+class BOTAN_PUBLIC_API(2,0) SRP6_Server_Session final
    {
    public:
       /**

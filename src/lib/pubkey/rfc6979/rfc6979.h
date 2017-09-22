@@ -16,7 +16,7 @@ namespace Botan {
 
 class HMAC_DRBG;
 
-class BOTAN_PUBLIC_API(2,0) RFC6979_Nonce_Generator
+class BOTAN_PUBLIC_API(2,0) RFC6979_Nonce_Generator final
    {
    public:
       /**

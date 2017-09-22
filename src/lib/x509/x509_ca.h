@@ -24,7 +24,7 @@ class PK_Signer;
 /**
 * This class represents X.509 Certificate Authorities (CAs).
 */
-class BOTAN_PUBLIC_API(2,0) X509_CA
+class BOTAN_PUBLIC_API(2,0) X509_CA final
    {
    public:
       /**

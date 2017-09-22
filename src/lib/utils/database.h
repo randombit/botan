@@ -20,7 +20,7 @@ class BOTAN_PUBLIC_API(2,0) SQL_Database
    {
    public:
 
-      class BOTAN_PUBLIC_API(2,0) SQL_DB_Error : public Exception
+      class BOTAN_PUBLIC_API(2,0) SQL_DB_Error final : public Exception
          {
          public:
             explicit SQL_DB_Error(const std::string& what) : Exception("SQL database", what) {}

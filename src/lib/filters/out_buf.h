@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * Container of output buffers for Pipe
 */
-class Output_Buffers
+class Output_Buffers final
    {
    public:
       size_t read(uint8_t[], size_t, Pipe::message_id);

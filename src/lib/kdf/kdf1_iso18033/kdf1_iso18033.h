@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * KDF1, from ISO 18033-2
 */
-class BOTAN_PUBLIC_API(2,0) KDF1_18033 : public KDF
+class BOTAN_PUBLIC_API(2,0) KDF1_18033 final : public KDF
    {
    public:
       std::string name() const override { return "KDF1-18033(" + m_hash->name() + ")"; }

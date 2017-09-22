@@ -82,7 +82,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
 /**
 * BER Encoded Object
 */
-class BOTAN_PUBLIC_API(2,0) BER_Object
+class BOTAN_PUBLIC_API(2,0) BER_Object final
    {
    public:
       void assert_is_a(ASN1_Tag, ASN1_Tag);
@@ -123,7 +123,7 @@ struct BOTAN_PUBLIC_API(2,0) BER_Decoding_Error : public Decoding_Error
 /**
 * Exception For Incorrect BER Taggings
 */
-struct BOTAN_PUBLIC_API(2,0) BER_Bad_Tag : public BER_Decoding_Error
+struct BOTAN_PUBLIC_API(2,0) BER_Bad_Tag final : public BER_Decoding_Error
    {
    BER_Bad_Tag(const std::string& msg, ASN1_Tag tag);
    BER_Bad_Tag(const std::string& msg, ASN1_Tag tag1, ASN1_Tag tag2);

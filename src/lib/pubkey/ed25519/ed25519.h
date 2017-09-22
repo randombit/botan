@@ -62,7 +62,7 @@ class BOTAN_PUBLIC_API(2,2) Ed25519_PublicKey : public virtual Public_Key
       std::vector<uint8_t> m_public;
    };
 
-class BOTAN_PUBLIC_API(2,2) Ed25519_PrivateKey : public Ed25519_PublicKey,
+class BOTAN_PUBLIC_API(2,2) Ed25519_PrivateKey final : public Ed25519_PublicKey,
                                      public virtual Private_Key
    {
    public:

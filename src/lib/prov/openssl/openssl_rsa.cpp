@@ -39,7 +39,7 @@ std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
       throw Lookup_Error("OpenSSL RSA does not support EME " + eme);
    }
 
-class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
+class OpenSSL_RSA_Encryption_Operation final : public PK_Ops::Encryption
    {
    public:
 
@@ -94,7 +94,7 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
       int m_padding = 0;
    };
 
-class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
+class OpenSSL_RSA_Decryption_Operation final : public PK_Ops::Decryption
    {
    public:
 
@@ -137,7 +137,7 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
       int m_padding = 0;
    };
 
-class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
+class OpenSSL_RSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
    {
    public:
 
@@ -188,7 +188,7 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
       std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
    };
 
-class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
+class OpenSSL_RSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
    {
    public:
 

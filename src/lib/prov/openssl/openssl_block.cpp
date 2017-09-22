@@ -13,7 +13,7 @@ namespace Botan {
 
 namespace {
 
-class OpenSSL_BlockCipher : public BlockCipher
+class OpenSSL_BlockCipher final : public BlockCipher
    {
    public:
       OpenSSL_BlockCipher(const std::string& name,

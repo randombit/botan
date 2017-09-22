@@ -19,7 +19,7 @@ namespace TLS {
 /**
 * Ciphersuite Information
 */
-class BOTAN_PUBLIC_API(2,0) Ciphersuite
+class BOTAN_PUBLIC_API(2,0) Ciphersuite final
    {
    public:
       /**

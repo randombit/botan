@@ -36,7 +36,7 @@ namespace Botan {
  *       https://datatracker.ietf.org/doc/
  *       draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
  **/
-class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey : public virtual XMSS_PublicKey,
+class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKey,
                                   public XMSS_Common_Ops,
                                   public virtual Private_Key
    {

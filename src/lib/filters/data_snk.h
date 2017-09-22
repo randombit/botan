@@ -32,7 +32,7 @@ class BOTAN_PUBLIC_API(2,0) DataSink : public Filter
 /**
 * This class represents a data sink which writes its output to a stream.
 */
-class BOTAN_PUBLIC_API(2,0) DataSink_Stream : public DataSink
+class BOTAN_PUBLIC_API(2,0) DataSink_Stream final : public DataSink
    {
    public:
       /**

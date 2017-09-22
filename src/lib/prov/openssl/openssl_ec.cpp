@@ -132,7 +132,7 @@ int OpenSSL_EC_nid_for(const OID& oid)
 
 namespace {
 
-class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
+class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
    {
    public:
       OpenSSL_ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const std::string& emsa, int nid) :
@@ -194,7 +194,7 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
       size_t m_order_bits = 0;
    };
 
-class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
+class OpenSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
    {
    public:
       OpenSSL_ECDSA_Signing_Operation(const ECDSA_PrivateKey& ecdsa, const std::string& emsa) :
@@ -276,7 +276,7 @@ make_openssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params
 
 namespace {
 
-class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
+class OpenSSL_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
 

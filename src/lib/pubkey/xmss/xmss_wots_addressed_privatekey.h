@@ -22,7 +22,7 @@ namespace Botan {
  * XMSS_WOTS_Signature_Operation() on creation.
  **/
 class XMSS_WOTS_Addressed_PrivateKey
-   : public virtual XMSS_WOTS_Addressed_PublicKey,
+   final : public virtual XMSS_WOTS_Addressed_PublicKey,
      public virtual Private_Key
    {
    public:

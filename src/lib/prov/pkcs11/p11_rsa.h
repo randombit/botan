@@ -62,7 +62,7 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKeyImportProperties final : public PublicK
    };
 
 /// Represents a PKCS#11 RSA public key
-class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PublicKey final : public RSA_PublicKey,
+class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PublicKey : public RSA_PublicKey,
    public Object
    {
    public:

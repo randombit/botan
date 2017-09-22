@@ -2830,7 +2830,7 @@ class PKCS11_Error : public Exception
          }
    };
 
-class PKCS11_ReturnError : public PKCS11_Error
+class PKCS11_ReturnError final : public PKCS11_Error
    {
    public:
       explicit PKCS11_ReturnError(ReturnValue return_val) :

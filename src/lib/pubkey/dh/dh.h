@@ -46,7 +46,7 @@ class BOTAN_PUBLIC_API(2,0) DH_PublicKey : public virtual DL_Scheme_PublicKey
 /**
 * This class represents Diffie-Hellman private keys.
 */
-class BOTAN_PUBLIC_API(2,0) DH_PrivateKey : public DH_PublicKey,
+class BOTAN_PUBLIC_API(2,0) DH_PrivateKey final : public DH_PublicKey,
                                 public PK_Key_Agreement_Key,
                                 public virtual DL_Scheme_PrivateKey
    {

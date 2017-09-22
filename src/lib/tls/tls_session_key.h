@@ -19,7 +19,7 @@ class Handshake_State;
 /**
 * TLS Session Keys
 */
-class Session_Keys
+class Session_Keys final
    {
    public:
       /**

@@ -16,7 +16,7 @@ namespace Botan {
 /**
  * NIST SP 800-108 KDF in Counter Mode (5.1)
  */
-class BOTAN_PUBLIC_API(2,0) SP800_108_Counter : public KDF
+class BOTAN_PUBLIC_API(2,0) SP800_108_Counter final : public KDF
    {
    public:
       std::string name() const override { return "SP800-108-Counter(" + m_prf->name() + ")"; }
@@ -56,7 +56,7 @@ class BOTAN_PUBLIC_API(2,0) SP800_108_Counter : public KDF
 /**
  * NIST SP 800-108 KDF in Feedback Mode (5.2)
  */
-class BOTAN_PUBLIC_API(2,0) SP800_108_Feedback : public KDF
+class BOTAN_PUBLIC_API(2,0) SP800_108_Feedback final : public KDF
    {
    public:
       std::string name() const override { return "SP800-108-Feedback(" + m_prf->name() + ")"; }
@@ -93,7 +93,7 @@ class BOTAN_PUBLIC_API(2,0) SP800_108_Feedback : public KDF
 /**
  * NIST SP 800-108 KDF in Double Pipeline Mode (5.3)
  */
-class BOTAN_PUBLIC_API(2,0) SP800_108_Pipeline : public KDF
+class BOTAN_PUBLIC_API(2,0) SP800_108_Pipeline final : public KDF
    {
    public:
       std::string name() const override { return "SP800-108-Pipeline(" + m_prf->name() + ")"; }

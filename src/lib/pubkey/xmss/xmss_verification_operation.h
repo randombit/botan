@@ -25,7 +25,7 @@ namespace Botan {
  * Signatures (XMSS).
  **/
  class XMSS_Verification_Operation
-   : public virtual PK_Ops::Verification,
+   final : public virtual PK_Ops::Verification,
      public XMSS_Common_Ops
    {
    public:

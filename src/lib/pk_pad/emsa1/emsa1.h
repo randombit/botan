@@ -17,7 +17,7 @@ namespace Botan {
 * EMSA1 from IEEE 1363
 * Essentially, sign the hash directly
 */
-class BOTAN_PUBLIC_API(2,0) EMSA1 : public EMSA
+class BOTAN_PUBLIC_API(2,0) EMSA1 final : public EMSA
    {
    public:
       /**

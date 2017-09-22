@@ -60,7 +60,7 @@ class BOTAN_PUBLIC_API(2,0) ECDSA_PublicKey : public virtual EC_PublicKey
 /**
 * This class represents ECDSA Private Keys
 */
-class BOTAN_PUBLIC_API(2,0) ECDSA_PrivateKey : public ECDSA_PublicKey,
+class BOTAN_PUBLIC_API(2,0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
                                    public EC_PrivateKey
    {
    public:

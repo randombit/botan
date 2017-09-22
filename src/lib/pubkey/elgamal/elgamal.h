@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PublicKey : public virtual DL_Scheme_PublicK
 /**
 * ElGamal Private Key
 */
-class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey : public ElGamal_PublicKey,
+class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey final : public ElGamal_PublicKey,
                                      public virtual DL_Scheme_PrivateKey
    {
    public:

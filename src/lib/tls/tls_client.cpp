@@ -19,7 +19,7 @@ namespace TLS {
 
 namespace {
 
-class Client_Handshake_State : public Handshake_State
+class Client_Handshake_State final : public Handshake_State
    {
    public:
       // using Handshake_State::Handshake_State;

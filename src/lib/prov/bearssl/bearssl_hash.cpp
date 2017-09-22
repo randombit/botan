@@ -18,7 +18,7 @@ namespace Botan {
 
 namespace {
 
-class BearSSL_HashFunction : public HashFunction
+class BearSSL_HashFunction final : public HashFunction
    {
    public:
       void clear() override

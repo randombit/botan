@@ -44,7 +44,7 @@ struct MechanismData
    MechanismType type;
    };
 
-struct RSA_SignMechanism : public MechanismData
+struct RSA_SignMechanism final : public MechanismData
    {
    explicit RSA_SignMechanism(MechanismType _type)
       : MechanismData(_type), hash(static_cast<MechanismType>(0)), mgf(static_cast<MGF>(0)), salt_size(0)
@@ -97,7 +97,7 @@ static std::map<std::string, RSA_SignMechanism> SignMechanisms =
       { "ISO9796", RSA_SignMechanism(MechanismType::Rsa9796) }
    };
 
-struct RSA_CryptMechanism : public MechanismData
+struct RSA_CryptMechanism final : public MechanismData
    {
    RSA_CryptMechanism(MechanismType _type, size_t _padding_size, MechanismType _hash, MGF _mgf)
       : MechanismData(_type), hash(_hash), mgf(_mgf), padding_size(_padding_size)

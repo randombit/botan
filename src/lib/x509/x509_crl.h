@@ -27,7 +27,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
       /**
       * This class represents CRL related errors.
       */
-      struct BOTAN_PUBLIC_API(2,0) X509_CRL_Error : public Exception
+      struct BOTAN_PUBLIC_API(2,0) X509_CRL_Error final : public Exception
          {
          explicit X509_CRL_Error(const std::string& error) :
             Exception("X509_CRL: " + error) {}

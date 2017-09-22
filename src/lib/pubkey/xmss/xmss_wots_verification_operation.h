@@ -25,7 +25,7 @@ namespace Botan {
  * in the Botan algorithm registry.
  **/
 class XMSS_WOTS_Verification_Operation
-   : public virtual PK_Ops::Verification,
+   final : public virtual PK_Ops::Verification,
      public XMSS_WOTS_Common_Ops
    {
    public:

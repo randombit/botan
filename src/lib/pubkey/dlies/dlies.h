@@ -20,7 +20,7 @@ namespace Botan {
 /**
 * DLIES Encryption
 */
-class BOTAN_PUBLIC_API(2,0) DLIES_Encryptor : public PK_Encryptor
+class BOTAN_PUBLIC_API(2,0) DLIES_Encryptor final : public PK_Encryptor
    {
    public:
       /**
@@ -93,7 +93,7 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Encryptor : public PK_Encryptor
 /**
 * DLIES Decryption
 */
-class BOTAN_PUBLIC_API(2,0) DLIES_Decryptor : public PK_Decryptor
+class BOTAN_PUBLIC_API(2,0) DLIES_Decryptor final : public PK_Decryptor
    {
    public:
       /**

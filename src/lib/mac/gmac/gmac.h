@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * GMAC
 */
-class BOTAN_PUBLIC_API(2,0) GMAC : public MessageAuthenticationCode, public GHASH
+class BOTAN_PUBLIC_API(2,0) GMAC final : public MessageAuthenticationCode, public GHASH
    {
    public:
       void clear() override;

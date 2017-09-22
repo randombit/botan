@@ -32,7 +32,7 @@ namespace Botan {
  *     https://datatracker.ietf.org/doc/
  *     draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
  **/
-class XMSS_Signature_Operation : public virtual PK_Ops::Signature,
+class XMSS_Signature_Operation final : public virtual PK_Ops::Signature,
                                  public XMSS_Common_Ops
    {
    public:
