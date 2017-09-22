@@ -211,6 +211,10 @@ class Filter_Tests final : public Test
 
          pipe.end_msg();
 
+         result.test_throws("pipe error",
+                            "Invalid argument Pipe::read: Invalid message number 100",
+                            [&]() { uint8_t b; size_t got = pipe.read(&b, 1, 100); BOTAN_UNUSED(got); });
+
          pipe.append(nullptr); // ignored
          pipe.prepend(nullptr); // ignored
          pipe.pop(); // empty pipe, so ignored
