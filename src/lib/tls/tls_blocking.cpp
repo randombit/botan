@@ -6,6 +6,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+/*
+This API is itself deprecated, so we don't care that it relies on
+other deprecated things
+*/
+#define BOTAN_NO_DEPRECATED_WARNINGS
+
 #include <botan/tls_blocking.h>
 
 namespace Botan {
