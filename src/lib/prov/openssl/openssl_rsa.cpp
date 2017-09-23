@@ -295,7 +295,7 @@ make_openssl_rsa_private_key(RandomNumberGenerator& rng, size_t rsa_bits)
 
    const secure_vector<uint8_t> keydata(der, der + bytes);
    memset(der, 0, bytes);
-   free(der);
+   std::free(der);
    return std::unique_ptr<Botan::RSA_PrivateKey>
       (new RSA_PrivateKey(AlgorithmIdentifier(), keydata));
    }
