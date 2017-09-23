@@ -45,6 +45,7 @@ class Filter_Tests final : public Test
          results.push_back(test_data_src_sink());
          results.push_back(test_data_src_sink_flush());
          results.push_back(test_pipe_io());
+         results.push_back(test_pipe_fd_io());
          results.push_back(test_pipe_errors());
          results.push_back(test_pipe_hash());
          results.push_back(test_pipe_mac());
@@ -57,9 +58,6 @@ class Filter_Tests final : public Test
          results.push_back(test_chain());
          results.push_back(test_threaded_fork());
 
-#if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
-         results.push_back(test_pipe_fd_io());
-#endif
 
          return results;
          }
@@ -258,9 +256,11 @@ class Filter_Tests final : public Test
          {
          Test::Result result("Pipe");
 
-#if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32)
-         Botan::Pipe pipe(new Botan::Chain(new Botan::Hash_Filter("SHA-224"), new Botan::Hex_Encoder));
+#if defined(BOTAN_HAS_SHA2_32)
+         // unrelated test of popping a chain
+         Botan::Pipe pipe(new Botan::Chain(new Botan::Hash_Filter("SHA-224"), new Botan::Hash_Filter("SHA-224")));
          pipe.pop();
+
          pipe.append(new Botan::Hash_Filter("SHA-256"));
 
          result.test_eq("Message count", pipe.message_count(), 0);
@@ -310,7 +310,7 @@ class Filter_Tests final : public Test
          {
          Test::Result result("Pipe CFB");
 
-#if defined(BOTAN_HAS_BLOWFISH) && defined(BOTAN_HAS_MODE_CFB)
+#if defined(BOTAN_HAS_BLOWFISH) && defined(BOTAN_HAS_MODE_CFB) && defined(BOTAN_HAS_CODEC_FILT)
 
          // Generated with Botan 1.10
 
@@ -622,11 +622,11 @@ class Filter_Tests final : public Test
          return result;
          }
 
-#if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
       Test::Result test_pipe_fd_io()
          {
          Test::Result result("Pipe file descriptor IO");
 
+#if defined(BOTAN_HAS_PIPE_UNIXFD_IO) && defined(BOTAN_HAS_CODEC_FILTERS)
          int fd[2];
          if(::pipe(fd) != 0)
             return result; // pipe unavailable?
@@ -646,10 +646,10 @@ class Filter_Tests final : public Test
          std::string dec = hex_dec.read_all_as_string();
 
          result.test_eq("IO through Unix pipe works", dec, "hi chappy");
+#endif
 
          return result;
          }
-#endif
 
       Test::Result test_threaded_fork()
          {
