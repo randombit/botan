@@ -9,6 +9,7 @@
 
 #include <botan/version.h>
 #include <botan/hash.h>
+#include <botan/mac.h>
 #include <botan/cpuid.h>
 #include <botan/hex.h>
 #include <botan/entropy_src.h>

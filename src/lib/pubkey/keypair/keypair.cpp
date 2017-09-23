@@ -7,6 +7,7 @@
 
 #include <botan/keypair.h>
 #include <botan/pubkey.h>
+#include <botan/rng.h>
 
 namespace Botan {
 
