@@ -10,6 +10,7 @@
 #include <botan/filters.h>
 #include <botan/ctr.h>
 #include <botan/loadstor.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

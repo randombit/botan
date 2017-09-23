@@ -7,6 +7,7 @@
 
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

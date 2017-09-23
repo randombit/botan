@@ -11,6 +11,7 @@
 #include <botan/ed25519.h>
 #include <botan/internal/ed25519_internal.h>
 #include <botan/sha2_64.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

@@ -9,9 +9,10 @@
 #define BOTAN_AONT_PACKAGE_TRANSFORM_H_
 
 #include <botan/block_cipher.h>
-#include <botan/rng.h>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * Rivest's Package Tranform

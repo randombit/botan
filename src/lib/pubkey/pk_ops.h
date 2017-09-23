@@ -20,10 +20,10 @@
 
 #include <botan/pk_keys.h>
 #include <botan/secmem.h>
-#include <botan/rng.h>
 
 namespace Botan {
 
+class RandomNumberGenerator;
 class EME;
 class KDF;
 class EMSA;

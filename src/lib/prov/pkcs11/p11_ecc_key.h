@@ -15,7 +15,6 @@
 #include <botan/pk_keys.h>
 #include <botan/ecc_key.h>
 #include <botan/ec_group.h>
-#include <botan/rng.h>
 #include <botan/alg_id.h>
 #include <vector>
 

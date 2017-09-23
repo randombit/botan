@@ -9,10 +9,11 @@
 #define BOTAN_CRYPTOBOX_H_
 
 #include <string>
-#include <botan/rng.h>
 #include <botan/symkey.h>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * This namespace holds various high-level crypto functions

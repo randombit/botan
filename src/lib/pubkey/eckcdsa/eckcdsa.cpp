@@ -11,6 +11,7 @@
 #include <botan/reducer.h>
 #include <botan/emsa.h>
 #include <botan/hash.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

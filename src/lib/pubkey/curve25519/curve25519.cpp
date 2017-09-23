@@ -9,6 +9,7 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/rng.h>
 
 namespace Botan {
 
