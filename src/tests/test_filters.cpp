@@ -7,6 +7,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#define BOTAN_NO_DEPRECATED_WARNINGS
+
 #include "tests.h"
 
 #if defined(BOTAN_HAS_FILTERS)
@@ -194,20 +196,30 @@ class Filter_Tests final : public Test
          std::unique_ptr<Botan::Filter> queue_filter(new Botan::SecureQueue);
 
          // can't explicitly insert a queue into the pipe because they are implicit
-         result.test_throws("pipe error", "Invalid argument Pipe::append: SecureQueue cannot be used", [&]()
-            { pipe.append(queue_filter.get()); });
-         result.test_throws("pipe error", "Invalid argument Pipe::prepend: SecureQueue cannot be used", [&]()
-            { pipe.prepend(queue_filter.get()); });
+         result.test_throws("pipe error",
+                            "Invalid argument Pipe::append: SecureQueue cannot be used",
+                            [&]() { pipe.append(queue_filter.get()); });
+
+         result.test_throws("pipe error",
+                            "Invalid argument Pipe::prepend: SecureQueue cannot be used",
+                            [&]() { pipe.prepend(queue_filter.get()); });
 
          pipe.start_msg();
 
+         std::unique_ptr<Botan::Filter> filter(new Botan::BitBucket);
+
          // now inside a message, cannot modify pipe structure
-         result.test_throws("pipe error", "Cannot append to a Pipe while it is processing", [&]()
-            { pipe.append(nullptr); });
-         result.test_throws("pipe error", "Cannot prepend to a Pipe while it is processing", [&]()
-            { pipe.prepend(nullptr); });
-         result.test_throws("pipe error", "Cannot pop off a Pipe while it is processing", [&]()
-            { pipe.pop(); });
+         result.test_throws("pipe error",
+                            "Cannot append to a Pipe while it is processing",
+                            [&]() { pipe.append(filter.get()); });
+
+         result.test_throws("pipe error",
+                            "Cannot prepend to a Pipe while it is processing",
+                            [&]() { pipe.prepend(filter.get()); });
+
+         result.test_throws("pipe error",
+                            "Cannot pop off a Pipe while it is processing",
+                            [&]() { pipe.pop(); });
 
          pipe.end_msg();
 
@@ -247,7 +259,7 @@ class Filter_Tests final : public Test
          Test::Result result("Pipe");
 
 #if defined(BOTAN_HAS_SHA2_32)
-         Botan::Pipe pipe(new Botan::Hash_Filter("SHA-224"));
+         Botan::Pipe pipe(new Botan::Chain(new Botan::Hash_Filter("SHA-224"), new Botan::Hex_Encoder));
          pipe.pop();
          pipe.append(new Botan::Hash_Filter("SHA-256"));
 

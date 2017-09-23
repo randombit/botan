@@ -30,13 +30,9 @@ class Null_Filter final : public Filter
 /*
 * Pipe Constructor
 */
-Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
+Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4) :
+   Pipe({f1,f2,f3,f4})
    {
-   init();
-   append(f1);
-   append(f2);
-   append(f3);
-   append(f4);
    }
 
 /*
@@ -47,7 +43,7 @@ Pipe::Pipe(std::initializer_list<Filter*> args)
    init();
 
    for(auto i = args.begin(); i != args.end(); ++i)
-      append(*i);
+      do_append(*i);
    }
 
 /*
@@ -213,19 +209,25 @@ void Pipe::clear_endpoints(Filter* f)
       }
    }
 
+void Pipe::append(Filter* filter)
+   {
+   do_append(filter);
+   }
+
 /*
 * Append a Filter to the Pipe
 */
-void Pipe::append(Filter* filter)
+void Pipe::do_append(Filter* filter)
    {
-   if(m_inside_msg)
-      throw Invalid_State("Cannot append to a Pipe while it is processing");
    if(!filter)
       return;
    if(dynamic_cast<SecureQueue*>(filter))
       throw Invalid_Argument("Pipe::append: SecureQueue cannot be used");
    if(filter->m_owned)
       throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
+
+   if(m_inside_msg)
+      throw Invalid_State("Cannot append to a Pipe while it is processing");
 
    filter->m_owned = true;
 
@@ -267,16 +269,12 @@ void Pipe::pop()
    if(m_pipe->total_ports() > 1)
       throw Invalid_State("Cannot pop off a Filter with multiple ports");
 
-   Filter* f = m_pipe;
-   size_t owns = f->owns();
-   m_pipe = m_pipe->m_next[0];
-   delete f;
+   size_t to_remove = m_pipe->owns() + 1;
 
-   while(owns--)
+   while(to_remove--)
       {
-      f = m_pipe;
+      std::unique_ptr<Filter> to_destroy(m_pipe);
       m_pipe = m_pipe->m_next[0];
-      delete f;
       }
    }
 
