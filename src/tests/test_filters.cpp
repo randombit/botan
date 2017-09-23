@@ -258,7 +258,7 @@ class Filter_Tests final : public Test
          {
          Test::Result result("Pipe");
 
-#if defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32)
          Botan::Pipe pipe(new Botan::Chain(new Botan::Hash_Filter("SHA-224"), new Botan::Hex_Encoder));
          pipe.pop();
          pipe.append(new Botan::Hash_Filter("SHA-256"));
