@@ -2958,6 +2958,9 @@ def canonicalize_options(options, info_os, info_arch):
     else:
         raise UserError('Unknown or unidentifiable processor "%s"' % (options.cpu))
 
+    # Set default fuzzing lib
+    if options.build_fuzzers == 'libfuzzer' and options.fuzzer_lib is None:
+        options.fuzzer_lib = 'Fuzzer'
 
 # Checks user options for consistency
 # This method DOES NOT change options on behalf of the user but explains
@@ -3001,14 +3004,16 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         if options.os != options.cpu:
             raise UserError('LLVM target requires both CPU and OS be set to llvm')
 
+    if options.build_fuzzers != None:
+        if options.build_fuzzers not in ['libfuzzer', 'afl', 'klee', 'test']:
+            raise UserError('Bad value to --build-fuzzers')
+
+        if options.build_fuzzers == 'klee' and options.os != 'llvm':
+            raise UserError('Building for KLEE requires targetting LLVM')
+
     # Warnings
     if options.os == 'windows' and options.compiler == 'gcc':
         logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
-
-def main_action_list_available_modules(info_modules):
-    for modname in sorted(info_modules.keys()):
-        print(modname)
-
 
 def prepare_configure_build(info_modules, source_paths, options,
                             cc, cc_min_version, arch, osinfo, module_policy):
@@ -3145,23 +3150,19 @@ def main(argv):
 
     setup_logging(options)
 
+    source_paths = SourcePaths(os.path.dirname(argv[0]))
+
+    info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
+
+    if options.list_modules:
+        for modname in sorted(info_modules.keys()):
+            print(modname)
+        return 0
+
     logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
     logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
 
-    source_paths = SourcePaths(os.path.dirname(argv[0]))
-
-    if options.build_fuzzers != None:
-        if options.build_fuzzers not in ['libfuzzer', 'afl', 'klee', 'test']:
-            raise UserError('Bad value to --build-fuzzers')
-
-        if options.build_fuzzers == 'libfuzzer' and options.fuzzer_lib is None:
-            options.fuzzer_lib = 'Fuzzer'
-
-        if options.build_fuzzers == 'klee' and options.os != 'llvm':
-            raise UserError('Building for KLEE requires targetting LLVM')
-
-    info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
     info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
     info_os = load_build_data_info_files(source_paths, 'OS info', 'os', OsInfo)
     info_cc = load_build_data_info_files(source_paths, 'compiler info', 'cc', CompilerInfo)
@@ -3196,15 +3197,9 @@ def main(argv):
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
         options.build_shared_lib = False
 
-    if options.list_modules:
-        main_action_list_available_modules(info_modules)
-        return 0
-    else:
-        main_action_configure_build(
-            info_modules, source_paths, options,
-            cc, cc_min_version, arch, osinfo, module_policy)
-        return 0
-
+    main_action_configure_build(info_modules, source_paths, options,
+                                cc, cc_min_version, arch, osinfo, module_policy)
+    return 0
 
 if __name__ == '__main__':
     try:
