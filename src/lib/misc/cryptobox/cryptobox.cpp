@@ -55,7 +55,8 @@ std::string encrypt(const uint8_t input[], size_t input_len,
      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
    rng.randomize(&out_buf[VERSION_CODE_LEN], PBKDF_SALT_LEN);
    // space left for MAC here
-   copy_mem(&out_buf[CRYPTOBOX_HEADER_LEN], input, input_len);
+   if(input_len > 0)
+      copy_mem(&out_buf[CRYPTOBOX_HEADER_LEN], input, input_len);
 
    // Generate the keys and IV
 
@@ -82,7 +83,8 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    std::unique_ptr<MessageAuthenticationCode> hmac =
       MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
    hmac->set_key(mac_key, MAC_KEY_LEN);
-   hmac->update(&out_buf[CRYPTOBOX_HEADER_LEN], input_len);
+   if(input_len > 0)
+      hmac->update(&out_buf[CRYPTOBOX_HEADER_LEN], input_len);
 
    // Can't write directly because of MAC truncation
    secure_vector<uint8_t> mac = hmac->final();
@@ -128,8 +130,12 @@ decrypt_bin(const uint8_t input[], size_t input_len,
    std::unique_ptr<MessageAuthenticationCode> hmac =
       MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
    hmac->set_key(mac_key, MAC_KEY_LEN);
-   hmac->update(&ciphertext[CRYPTOBOX_HEADER_LEN],
-                ciphertext.size() - CRYPTOBOX_HEADER_LEN);
+
+   if(ciphertext.size() > CRYPTOBOX_HEADER_LEN)
+      {
+      hmac->update(&ciphertext[CRYPTOBOX_HEADER_LEN],
+                   ciphertext.size() - CRYPTOBOX_HEADER_LEN);
+      }
    secure_vector<uint8_t> computed_mac = hmac->final();
 
    if(!constant_time_compare(computed_mac.data(), box_mac, MAC_OUTPUT_LEN))
