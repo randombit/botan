@@ -194,7 +194,7 @@ bool GeneralName::matches_dn(const std::string& nam) const
 
    auto attr = nam_dn.get_attributes();
    bool ret = true;
-   int trys = 0;
+   size_t trys = 0;
 
    for(const std::pair<OID,std::string>& c: my_dn.get_attributes())
       {
@@ -203,7 +203,7 @@ bool GeneralName::matches_dn(const std::string& nam) const
       if(i.first != i.second)
          {
          trys += 1;
-         ret &= i.first->second == c.second;
+         ret = ret && (i.first->second == c.second);
          }
       }
 
