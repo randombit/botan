@@ -46,7 +46,6 @@ decrypt_bin(const uint8_t input[], size_t input_len,
 /**
 * Decrypt a message encrypted with CryptoBox::encrypt
 * @param input the input data
-* @param input_len the length of input in bytes
 * @param passphrase the passphrase used to encrypt the message
 */
 BOTAN_PUBLIC_API(2,3)
