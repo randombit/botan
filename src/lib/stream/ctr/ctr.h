@@ -54,6 +54,7 @@ class BOTAN_PUBLIC_API(2,0) CTR_BE final : public StreamCipher
       std::unique_ptr<BlockCipher> m_cipher;
       secure_vector<uint8_t> m_counter, m_pad;
       std::vector<uint8_t> m_iv;
+      const size_t m_block_size;
       size_t m_ctr_size;
       size_t m_pad_pos;
    };

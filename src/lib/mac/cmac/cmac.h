@@ -20,7 +20,7 @@ class BOTAN_PUBLIC_API(2,0) CMAC final : public MessageAuthenticationCode
    {
    public:
       std::string name() const override;
-      size_t output_length() const override { return m_cipher->block_size(); }
+      size_t output_length() const override { return m_block_size; }
       MessageAuthenticationCode* clone() const override;
 
       void clear() override;
@@ -50,6 +50,7 @@ class BOTAN_PUBLIC_API(2,0) CMAC final : public MessageAuthenticationCode
 
       std::unique_ptr<BlockCipher> m_cipher;
       secure_vector<uint8_t> m_buffer, m_state, m_B, m_P;
+      const size_t m_block_size;
       size_t m_position;
    };
 

@@ -116,13 +116,15 @@ MessageAuthenticationCode* CMAC::clone() const
 /*
 * CMAC Constructor
 */
-CMAC::CMAC(BlockCipher* cipher) : m_cipher(cipher)
+CMAC::CMAC(BlockCipher* cipher) :
+   m_cipher(cipher),
+   m_block_size(m_cipher->block_size())
    {
-   if(m_cipher->block_size() !=  8 && m_cipher->block_size() != 16 &&
-      m_cipher->block_size() != 32 && m_cipher->block_size() != 64)
+   if(m_block_size !=  8 && m_block_size != 16 &&
+      m_block_size != 32 && m_block_size != 64)
       {
       throw Invalid_Argument("CMAC cannot use the " +
-                             std::to_string(m_cipher->block_size() * 8) +
+                             std::to_string(m_block_size * 8) +
                              " bit cipher " + m_cipher->name());
       }
 

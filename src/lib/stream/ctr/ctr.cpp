@@ -14,7 +14,8 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
    m_iv(m_cipher->block_size()),
-   m_ctr_size(m_cipher->block_size()),
+   m_block_size(m_cipher->block_size()),
+   m_ctr_size(m_block_size),
    m_pad_pos(0)
    {
    }
@@ -24,11 +25,11 @@ CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
    m_iv(m_cipher->block_size()),
+   m_block_size(m_cipher->block_size()),
    m_ctr_size(ctr_size),
    m_pad_pos(0)
    {
-   //BOTAN_CHECK_ARG(m_ctr_size > 0 && m_ctr_size <= cipher->block_size(), "Invalid CTR size");
-   if(m_ctr_size == 0 || m_ctr_size > m_cipher->block_size())
+   if(m_ctr_size == 0 || m_ctr_size > m_block_size)
       throw Invalid_Argument("Invalid CTR-BE counter size");
    }
 
@@ -84,8 +85,7 @@ void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
 */
 void CTR_BE::increment_counter()
    {
-   const size_t bs = m_cipher->block_size();
-   const size_t n_wide = m_counter.size() / bs;
+   const size_t n_wide = m_counter.size() / m_block_size;
 
    add_counter(n_wide);
 
@@ -95,8 +95,7 @@ void CTR_BE::increment_counter()
 
 void CTR_BE::add_counter(const uint64_t counter)
    {
-   const size_t bs = m_cipher->block_size();
-   const size_t n_wide = m_counter.size() / bs;
+   const size_t n_wide = m_counter.size() / m_block_size;
 
    for(size_t i = 0; i != n_wide; ++i)
       {
@@ -104,7 +103,7 @@ void CTR_BE::add_counter(const uint64_t counter)
       uint16_t carry = static_cast<uint8_t>(local_counter);
       for(size_t j = 0; (carry || local_counter) && j != m_ctr_size; ++j)
          {
-         const size_t off = i*bs + (bs-1-j);
+         const size_t off = i*m_block_size + (m_block_size-1-j);
          const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
          m_counter[off] = static_cast<uint8_t>(cnt);
          local_counter = (local_counter >> 8);
@@ -115,8 +114,7 @@ void CTR_BE::add_counter(const uint64_t counter)
 
 void CTR_BE::seek(uint64_t offset)
    {
-   const size_t bs = m_cipher->block_size();
-   const size_t n_wide = m_counter.size() / bs;
+   const size_t n_wide = m_counter.size() / m_block_size;
    const uint64_t base_counter = n_wide * (offset / m_counter.size());
 
    zeroise(m_counter);
@@ -125,10 +123,13 @@ void CTR_BE::seek(uint64_t offset)
    // Set m_counter blocks to IV, IV + 1, ... IV + n
    for(size_t i = 1; i != n_wide; ++i)
       {
-      buffer_insert(m_counter, i*bs, &m_counter[(i-1)*bs], bs);
+      buffer_insert(m_counter,
+                    i*m_block_size,
+                    &m_counter[(i-1)*m_block_size],
+                    m_block_size);
 
       for(size_t j = 0; j != m_ctr_size; ++j)
-         if(++m_counter[i*bs + (bs - 1 - j)])
+         if(++m_counter[i*m_block_size + (m_block_size - 1 - j)])
             break;
       }
 

@@ -64,7 +64,7 @@ class AEAD_Tests final : public Text_Based_Test
             {
             // test finish() with full input
             enc->finish(buf);
-            result.test_eq("encrypt", buf, expected);
+            result.test_eq("encrypt full", buf, expected);
 
             // additionally test update() if possible
             const size_t update_granularity = enc->update_granularity();
@@ -89,7 +89,7 @@ class AEAD_Tests final : public Text_Based_Test
                   p += update_granularity;
                   input_length -= update_granularity;
                   buffer_insert(ciphertext, 0 + offset, block);
-                  offset += update_granularity;
+                  offset += block.size();
                   }
 
                // encrypt remaining bytes
@@ -97,7 +97,7 @@ class AEAD_Tests final : public Text_Based_Test
                enc->finish(block);
                buffer_insert(ciphertext, 0 + offset, block);
 
-               result.test_eq("encrypt", ciphertext, expected);
+               result.test_eq("encrypt update", ciphertext, expected);
                }
 
             // additionally test process() if possible
@@ -118,10 +118,19 @@ class AEAD_Tests final : public Text_Based_Test
 
                const size_t bytes_written = enc->process(buf.data(), bytes_to_process);
 
-               result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
+               if(bytes_written == 0)
+                  {
+                  // SIV case
+                  buf.erase(buf.begin(), buf.begin() + bytes_to_process);
+                  enc->finish(buf);
+                  }
+               else
+                  {
+                  result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
+                  enc->finish(buf, bytes_written);
+                  }
 
-               enc->finish(buf, bytes_to_process);
-               result.test_eq("encrypt", buf, expected);
+               result.test_eq("encrypt process", buf, expected);
                }
             }
          return result;
@@ -159,7 +168,7 @@ class AEAD_Tests final : public Text_Based_Test
 
             // test finish() with full input
             dec->finish(buf);
-            result.test_eq("decrypt", buf, expected);
+            result.test_eq("decrypt full", buf, expected);
 
             // additionally test update() if possible
             const size_t update_granularity = dec->update_granularity();
@@ -184,7 +193,7 @@ class AEAD_Tests final : public Text_Based_Test
                   p += update_granularity;
                   input_length -= update_granularity;
                   buffer_insert(plaintext, 0 + offset, block);
-                  offset += update_granularity;
+                  offset += block.size();
                   }
 
                // decrypt remaining bytes
@@ -192,7 +201,7 @@ class AEAD_Tests final : public Text_Based_Test
                dec->finish(block);
                buffer_insert(plaintext, 0 + offset, block);
 
-               result.test_eq("decrypt", plaintext, expected);
+               result.test_eq("decrypt update", plaintext, expected);
                }
 
             // additionally test process() if possible
@@ -213,10 +222,19 @@ class AEAD_Tests final : public Text_Based_Test
 
                const size_t bytes_written = dec->process(buf.data(), bytes_to_process);
 
-               result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
+               if(bytes_written == 0)
+                  {
+                  // SIV case
+                  buf.erase(buf.begin(), buf.begin() + bytes_to_process);
+                  dec->finish(buf);
+                  }
+               else
+                  {
+                  result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
+                  dec->finish(buf, bytes_to_process);
+                  }
 
-               dec->finish(buf, bytes_to_process);
-               result.test_eq("decrypt", buf, expected);
+               result.test_eq("decrypt process", buf, expected);
                }
 
             }

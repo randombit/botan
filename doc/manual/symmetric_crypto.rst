@@ -284,7 +284,7 @@ using :cpp:class:`AEAD_Filter` (a subclass of :cpp:class:`Keyed_Filter` which
 will be returned by :cpp:func:`get_cipher` if the named cipher is an AEAD mode).
 
 AEAD modes currently available include GCM, OCB, EAX, SIV and CCM. All
-support a 128-bit block cipher such as AES. EAX and SIV also support
+support a 128-bit block cipher such as AES. EAX and OCB also support
 256 and 512 bit block ciphers.
 
 .. cpp:class:: AEAD_Mode

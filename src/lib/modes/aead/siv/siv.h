@@ -57,6 +57,8 @@ class BOTAN_PUBLIC_API(2,0) SIV_Mode : public AEAD_Mode
 
       ~SIV_Mode();
 
+      size_t block_size() const { return m_bs; }
+
       StreamCipher& ctr() { return *m_ctr; }
 
       void set_ctr_iv(secure_vector<uint8_t> V);
@@ -71,9 +73,10 @@ class BOTAN_PUBLIC_API(2,0) SIV_Mode : public AEAD_Mode
 
       const std::string m_name;
       std::unique_ptr<StreamCipher> m_ctr;
-      std::unique_ptr<MessageAuthenticationCode> m_cmac;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
       secure_vector<uint8_t> m_nonce, m_msg_buf;
       std::vector<secure_vector<uint8_t>> m_ad_macs;
+      const size_t m_bs;
    };
 
 /**
