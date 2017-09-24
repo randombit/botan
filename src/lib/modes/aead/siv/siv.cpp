@@ -161,8 +161,11 @@ void SIV_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    buffer.insert(buffer.begin() + offset, V.begin(), V.end());
 
-   set_ctr_iv(V);
-   ctr().cipher1(&buffer[offset + V.size()], buffer.size() - offset - V.size());
+   if(buffer.size() != offset + V.size())
+      {
+      set_ctr_iv(V);
+      ctr().cipher1(&buffer[offset + V.size()], buffer.size() - offset - V.size());
+      }
    }
 
 void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
@@ -179,11 +182,14 @@ void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    secure_vector<uint8_t> V(buffer.data() + offset,
                             buffer.data() + offset + block_size());
 
-   set_ctr_iv(V);
+   if(buffer.size() != offset + V.size())
+      {
+      set_ctr_iv(V);
 
-   ctr().cipher(buffer.data() + offset + V.size(),
-                buffer.data() + offset,
-                buffer.size() - offset - V.size());
+      ctr().cipher(buffer.data() + offset + V.size(),
+                   buffer.data() + offset,
+                   buffer.size() - offset - V.size());
+      }
 
    const secure_vector<uint8_t> T = S2V(buffer.data() + offset, buffer.size() - offset - V.size());
 
