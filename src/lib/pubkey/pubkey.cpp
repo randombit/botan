@@ -10,6 +10,7 @@
 #include <botan/bigint.h>
 #include <botan/pk_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

@@ -51,7 +51,8 @@ par_hash
 prf_tls
 rng
 rsa
-sha1_sse2|sha1
+sha1
 sha2_32
+sha2_64
 x509
 </requires>
