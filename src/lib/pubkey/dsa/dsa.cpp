@@ -10,6 +10,7 @@
 #include <botan/keypair.h>
 #include <botan/pow_mod.h>
 #include <botan/reducer.h>
+#include <botan/rng.h>
 #include <botan/internal/pk_ops_impl.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
