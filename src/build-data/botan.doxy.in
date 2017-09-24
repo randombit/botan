@@ -79,7 +79,7 @@ WARN_AS_ERROR          = YES
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = src/lib
+INPUT                  = %{src_dir}/lib
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          =
 RECURSIVE              = YES

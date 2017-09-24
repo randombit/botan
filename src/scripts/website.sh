@@ -1,35 +1,46 @@
 #!/bin/bash
 set -e
-which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
+# TODO rewrite in Python
 
-SPHINX_CONFIG=./src/configs/sphinx
+#which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
-WEBSITE_DIR=./www-botan
-WEBSITE_SRC_DIR=./www-src
+script_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+botan_dir=$(cd ${script_path}/../.. && pwd -P)
 
-rm -rf $WEBSITE_SRC_DIR $WEBSITE_DIR
-mkdir -p $WEBSITE_SRC_DIR
+SPHINX_CONFIG=${botan_dir}/src/configs/sphinx
 
-# build online manual
-cp readme.rst $WEBSITE_SRC_DIR/index.rst
-cp -r news.rst doc/security.rst $WEBSITE_SRC_DIR
-echo -e ".. toctree::\n\n   index\n   news\n   security\n   \
-Users Manual <https://botan.randombit.net/manual>\n   \
-API Reference <https://botan.randombit.net/doxygen>" > $WEBSITE_SRC_DIR/contents.rst
+WEBSITE_DIR=./botan-website
+TMP_DIR=$(mktemp -d)
 
-sphinx-build -t website -c "$SPHINX_CONFIG" -b "html" $WEBSITE_SRC_DIR $WEBSITE_DIR
-sphinx-build -t website -c "$SPHINX_CONFIG" -b "html" doc/manual $WEBSITE_DIR/manual
-rm -rf $WEBSITE_DIR/.doctrees
-rm -f $WEBSITE_DIR/.buildinfo
-rm -rf $WEBSITE_DIR/manual/.doctrees
-rm -f $WEBSITE_DIR/manual/.buildinfo
-cp license.txt doc/pgpkey.txt $WEBSITE_DIR
+mkdir -p $WEBSITE_DIR
 
-# build manual as pdf for download
-sphinx-build -t website -c "$SPHINX_CONFIG" -b "latex" doc/manual handbook-latex
-(cd handbook-latex && pdflatex botan.tex && pdflatex botan.tex)
-cp handbook-latex/botan.pdf $WEBSITE_DIR/manual/botan.pdf
+${botan_dir}/configure.py --with-doxygen --with-sphinx --quiet
 
 # build doxygen
 doxygen build/botan.doxy
 mv build/docs/doxygen $WEBSITE_DIR/doxygen
+
+# build online manual
+cp ${botan_dir}/readme.rst $TMP_DIR/index.rst
+cp -r ${botan_dir}/news.rst ${botan_dir}/doc/security.rst $TMP_DIR
+echo -e ".. toctree::\n\n   index\n   news\n   security\n   \
+Users Manual <https://botan.randombit.net/manual>\n   \
+API Reference <https://botan.randombit.net/doxygen>" > $TMP_DIR/contents.rst
+
+sphinx-build -t website -c "$SPHINX_CONFIG" -b "html" $TMP_DIR $WEBSITE_DIR
+sphinx-build -t website -c "$SPHINX_CONFIG" -b "html" ${botan_dir}/doc/manual $WEBSITE_DIR/manual
+cp ${botan_dir}/license.txt ${botan_dir}/doc/pgpkey.txt $WEBSITE_DIR
+
+rm -rf $WEBSITE_DIR/.doctrees
+rm -f $WEBSITE_DIR/.buildinfo
+rm -rf $WEBSITE_DIR/manual/.doctrees
+rm -f $WEBSITE_DIR/manual/.buildinfo
+
+
+# build manual as pdf for download
+sphinx-build -t website -c "$SPHINX_CONFIG" -b "latex" ${botan_dir}/doc/manual $TMP_DIR/latex
+(cd $TMP_DIR/latex && pdflatex botan.tex && pdflatex botan.tex)
+mv $TMP_DIR/latex/botan.pdf $WEBSITE_DIR/manual/botan.pdf
+
+rm -rf www-src build Makefile
+
