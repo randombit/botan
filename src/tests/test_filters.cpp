@@ -555,7 +555,7 @@ class Filter_Tests final : public Test
          {
          Test::Result result("Pipe CTR");
 
-#if defined(BOTAN_HAS_CTR_BE)
+#if defined(BOTAN_HAS_CTR_BE) && defined(BOTAN_HAS_AES)
          Botan::Keyed_Filter* aes = nullptr;
          const Botan::SymmetricKey some_other_key("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE");
          const Botan::SymmetricKey key("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");

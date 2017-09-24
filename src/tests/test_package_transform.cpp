@@ -25,6 +25,9 @@ class Package_Transform_Tests final : public Test
 
          std::unique_ptr<Botan::BlockCipher> cipher(Botan::BlockCipher::create("AES-128"));
 
+         if(!cipher)
+            return {result};
+
          for(size_t input_len = 2; input_len != 256; ++input_len)
             {
             std::vector<uint8_t> input = unlock(Test::rng().random_vec(input_len));
