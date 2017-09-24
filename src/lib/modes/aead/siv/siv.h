@@ -52,10 +52,10 @@ class BOTAN_PUBLIC_API(2,0) SIV_Mode : public AEAD_Mode
 
       size_t tag_size() const override { return 16; }
 
+      ~SIV_Mode();
+
    protected:
       explicit SIV_Mode(BlockCipher* cipher);
-
-      ~SIV_Mode();
 
       size_t block_size() const { return m_bs; }
 
