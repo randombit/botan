@@ -35,6 +35,8 @@ rm -rf $WEBSITE_DIR/.doctrees
 rm -f $WEBSITE_DIR/.buildinfo
 rm -rf $WEBSITE_DIR/manual/.doctrees
 rm -f $WEBSITE_DIR/manual/.buildinfo
+rm -rf $WEBSITE_DIR/manual/_static
+(cd $WEBSITE_DIR/manual && ln -s ../_static .)
 
 
 # build manual as pdf for download
