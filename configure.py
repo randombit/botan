@@ -3155,8 +3155,8 @@ def main(argv):
     info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
 
     if options.list_modules:
-        for modname in sorted(info_modules.keys()):
-            print(modname)
+        for mod in sorted(info_modules.keys()):
+            print(mod)
         return 0
 
     logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
