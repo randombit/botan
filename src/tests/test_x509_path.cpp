@@ -23,7 +23,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 std::map<std::string, std::string> read_results(const std::string& results_file)
    {

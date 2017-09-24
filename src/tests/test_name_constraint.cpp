@@ -17,7 +17,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA)
 
 class Name_Constraint_Tests final : public Test
    {

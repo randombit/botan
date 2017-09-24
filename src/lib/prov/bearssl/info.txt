@@ -11,3 +11,7 @@ bearssl.h
 <libs>
 all!windows -> bearssl
 </libs>
+
+<requires>
+pubkey
+</requires>

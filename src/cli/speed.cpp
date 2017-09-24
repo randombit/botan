@@ -96,6 +96,10 @@
    #include <botan/ed25519.h>
 #endif
 
+#if defined(BOTAN_HAS_DL_GROUP)
+   #include <botan/dl_group.h>
+#endif
+
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    #include <botan/dh.h>
 #endif

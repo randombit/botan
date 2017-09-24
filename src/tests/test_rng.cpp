@@ -8,6 +8,10 @@
 #include "tests.h"
 #include "test_rng.h"
 
+#if defined(BOTAN_HAS_STATEFUL_RNG)
+   #include <botan/stateful_rng.h>
+#endif
+
 #if defined(BOTAN_HAS_HMAC_DRBG)
    #include <botan/hmac_drbg.h>
 #endif

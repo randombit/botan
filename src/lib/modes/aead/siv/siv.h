@@ -10,11 +10,11 @@
 #define BOTAN_AEAD_SIV_H_
 
 #include <botan/aead.h>
+#include <botan/stream_cipher.h>
 
 namespace Botan {
 
 class BlockCipher;
-class StreamCipher;
 class MessageAuthenticationCode;
 
 /**
@@ -54,6 +54,8 @@ class BOTAN_PUBLIC_API(2,0) SIV_Mode : public AEAD_Mode
 
    protected:
       explicit SIV_Mode(BlockCipher* cipher);
+
+      ~SIV_Mode();
 
       StreamCipher& ctr() { return *m_ctr; }
 

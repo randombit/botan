@@ -454,7 +454,11 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
          const Botan::Private_Key& key = *key_p;
 
-         result.confirm("Key passes self tests", key.check_key(Test::rng(), true));
+         try
+            {
+            result.confirm("Key passes self tests", key.check_key(Test::rng(), true));
+            }
+         catch(Botan::Lookup_Error&) {}
 
          result.test_gte("Key has reasonable estimated strength (lower)", key.estimated_strength(), 64);
          result.test_lt("Key has reasonable estimated strength (upper)", key.estimated_strength(), 512);
@@ -467,7 +471,12 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
             result.confirm("recovered public key from private", loaded.get() != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
-            result.test_eq("public key passes checks", loaded->check_key(Test::rng(), false), true);
+
+            try
+               {
+               result.test_eq("public key passes checks", loaded->check_key(Test::rng(), false), true);
+               }
+            catch(Botan::Lookup_Error&) {}
             }
          catch(std::exception& e)
             {
@@ -482,7 +491,12 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
             result.confirm("recovered public key from private", loaded.get() != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
-            result.test_eq("public key passes checks", loaded->check_key(Test::rng(), false), true);
+
+            try
+               {
+               result.confirm("public key passes self tests", loaded->check_key(Test::rng(), true));
+               }
+            catch(Botan::Lookup_Error&) {}
             }
          catch(std::exception& e)
             {
@@ -498,7 +512,12 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
             result.confirm("recovered private key from PEM blob", loaded.get() != nullptr);
             result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-            result.test_eq("private key passes checks", loaded->check_key(Test::rng(), false), true);
+
+            try
+               {
+               result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
+               }
+            catch(Botan::Lookup_Error&) {}
             }
          catch(std::exception& e)
             {
@@ -512,27 +531,39 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
             result.confirm("recovered public key from private", loaded.get() != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
-            result.test_eq("public key passes checks", loaded->check_key(Test::rng(), false), true);
+            try
+               {
+               result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
+               }
+            catch(Botan::Lookup_Error&) {}
             }
          catch(std::exception& e)
             {
             result.test_failure("roundtrip BER private key", e.what());
             }
 
+#if defined(BOTAN_HAS_PKCS5_PBE2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_32)
+
+         const std::string pbe_algo = "PBE-PKCS5v20(AES-128,SHA-256)";
          const std::string passphrase = Test::random_password();
 
          try
             {
             Botan::DataSource_Memory data_src(
                Botan::PKCS8::PEM_encode(key, Test::rng(), passphrase,
-                                        std::chrono::milliseconds(10)));
+                                        std::chrono::milliseconds(10),
+                                        pbe_algo));
 
             std::unique_ptr<Botan::Private_Key> loaded(
                Botan::PKCS8::load_key(data_src, Test::rng(), passphrase));
 
             result.confirm("recovered private key from encrypted blob", loaded.get() != nullptr);
             result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-            result.test_eq("private key passes checks", loaded->check_key(Test::rng(), false), true);
+            try
+               {
+               result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
+               }
+            catch(Botan::Lookup_Error&) {}
             }
          catch(std::exception& e)
             {
@@ -543,21 +574,28 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
             {
             Botan::DataSource_Memory data_src(
                Botan::PKCS8::BER_encode(key, Test::rng(), passphrase,
-                                        std::chrono::milliseconds(10)));
+                                        std::chrono::milliseconds(10),
+                                        pbe_algo));
 
             std::unique_ptr<Botan::Private_Key> loaded(
                Botan::PKCS8::load_key(data_src, Test::rng(), passphrase));
 
             result.confirm("recovered private key from BER blob", loaded.get() != nullptr);
             result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-            result.test_eq("private key passes checks", loaded->check_key(Test::rng(), false), true);
+
+            try
+               {
+               result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
+               }
+            catch(Botan::Lookup_Error&) {}
             }
          catch(std::exception& e)
             {
             result.test_failure("roundtrip encrypted BER private key", e.what());
             }
-
+#endif
          }
+
       result.end_timer();
 
       results.push_back(result);

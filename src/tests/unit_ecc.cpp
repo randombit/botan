@@ -860,6 +860,8 @@ class ECC_Unit_Tests final : public Test
 
 BOTAN_REGISTER_TEST("ecc_unit", ECC_Unit_Tests);
 
+#if defined(BOTAN_HAS_ECDSA)
+
 class ECC_Invalid_Key_Tests final : public Text_Based_Test
    {
    public:
@@ -887,6 +889,8 @@ class ECC_Invalid_Key_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("ecc_invalid", ECC_Invalid_Key_Tests);
+
+#endif
 
 #endif
 

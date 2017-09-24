@@ -7,9 +7,11 @@ asn1
 bigint
 ec_group
 ecc_key
+emsa1
 hash
 keypair
 numbertheory
 pk_pad
 rng
+sha2_32
 </requires>

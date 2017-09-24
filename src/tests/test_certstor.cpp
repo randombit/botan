@@ -21,7 +21,8 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_CERTSTOR_SQL)
+#if defined(BOTAN_HAS_CERTSTOR_SQL) && defined(BOTAN_HAS_RSA)
+
 struct CertificateAndKey
    {
    const Botan::X509_Certificate certificate;

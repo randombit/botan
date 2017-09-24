@@ -3,6 +3,7 @@ DLIES -> 20160713
 </defines>
 
 <requires>
+dh
 kdf
 mac
 block

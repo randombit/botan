@@ -996,6 +996,12 @@ Test::Result test_hashes(const std::string& algo, const std::string& hash_fn = "
 
    const std::unique_ptr<Botan::Private_Key> key(make_a_private_key(algo));
 
+   if(!key)
+      {
+      result.test_note("Skipping due to missing signature algorithm: " + algo);
+      return result;
+      }
+
    struct TestData
       {
       const std::string issuer, subject, issuer_hash, subject_hash;

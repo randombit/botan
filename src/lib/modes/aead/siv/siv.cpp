@@ -23,6 +23,11 @@ SIV_Mode::SIV_Mode(BlockCipher* cipher) :
       throw Invalid_Argument("SIV requires a 128 bit block cipher");
    }
 
+SIV_Mode::~SIV_Mode()
+   {
+   // for ~unique_ptr
+   }
+
 void SIV_Mode::clear()
    {
    m_ctr->clear();

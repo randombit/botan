@@ -82,7 +82,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
       }
 #endif
 
-#if defined(BOTAN_HAS_HMAC_DRBG)
+#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_AUTO_RNG_HMAC)
    if(rng_type == "drbg")
       {
       std::unique_ptr<Botan::MessageAuthenticationCode> mac =

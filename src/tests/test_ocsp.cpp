@@ -15,7 +15,7 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_OCSP)
+#if defined(BOTAN_HAS_OCSP) && defined(BOTAN_HAS_RSA)
 
 class OCSP_Tests final : public Test
    {

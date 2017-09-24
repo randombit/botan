@@ -166,8 +166,12 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
 
          if(algo == "SHACAL2")
             {
+#if defined(BOTAN_HAS_SHACAL2)
             cipher = Botan::BlockCipher::create_or_throw("SHACAL2");
             bs = 32;
+#else
+            return {result};
+#endif
             }
          else
             {

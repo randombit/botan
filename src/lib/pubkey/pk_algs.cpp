@@ -17,8 +17,16 @@
   #include <botan/dsa.h>
 #endif
 
+#if defined(BOTAN_HAS_DL_GROUP)
+  #include <botan/dl_group.h>
+#endif
+
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
   #include <botan/dh.h>
+#endif
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+  #include <botan/ecc_key.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)

@@ -5,6 +5,7 @@
 */
 
 #include <botan/emsa.h>
+#include <botan/hash.h>
 #include <botan/scan_name.h>
 #include <botan/exceptn.h>
 

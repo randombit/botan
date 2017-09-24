@@ -32,7 +32,7 @@ namespace {
 
 #if defined(BOTAN_HAS_MCELIECE)
 
-#if defined(BOTAN_HAS_HMAC_DRBG)
+#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HASH_SHA2_64)
 class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
    {
    public:
@@ -117,6 +117,9 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
 BOTAN_REGISTER_TEST("mce_keygen", McEliece_Keygen_Encrypt_Test);
 #endif
 
+
+#if defined(BOTAN_HAS_SHA2_32)
+
 class McEliece_Tests final : public Test
    {
    public:
@@ -190,7 +193,9 @@ class McEliece_Tests final : public Test
 
                results.push_back(result);
 
+#if defined(BOTAN_HAS_KDF2)
                results.push_back(test_kem(sk, pk));
+#endif
 
 #if defined(BOTAN_HAS_MCEIES)
                results.push_back(test_mceies(sk, pk));
@@ -277,6 +282,8 @@ class McEliece_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("mceliece", McEliece_Tests);
+
+#endif
 
 #endif
 

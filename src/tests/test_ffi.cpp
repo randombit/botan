@@ -233,6 +233,7 @@ class FFI_Unit_Tests final : public Test
          result.test_note("PBKDF timed 10 ms " + std::to_string(iters_10ms) + " iterations " +
                           "100 ms " + std::to_string(iters_100ms) + " iterations");
 
+#if defined(BOTAN_HAS_KDF2)
          const std::vector<uint8_t> kdf_secret = Botan::hex_decode("92167440112E");
          const std::vector<uint8_t> kdf_salt = Botan::hex_decode("45A9BEDED69163123D0348F5185F61ABFB1BF18D6AEA454F");
          const size_t kdf_out_len = 18;
@@ -248,6 +249,7 @@ class FFI_Unit_Tests final : public Test
             {
             result.test_eq("KDF output", outbuf, "3A5DC9AA1C872B4744515AC2702D6396FC2A");
             }
+#endif
 
          size_t out_len = 64;
          outstr.resize(out_len);
@@ -263,6 +265,7 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_FAIL("bad password", botan_bcrypt_is_valid, ("nope", outstr.data()));
             }
 
+#if defined(BOTAN_HAS_ECDSA)
          // x509 cert test
          botan_x509_cert_t cert;
          if(TEST_FFI_OK(botan_x509_cert_load_file, (&cert, Test::data_file("ecc/CSCA.CSCA.csca-germany.1.crt").c_str())))
@@ -358,6 +361,7 @@ class FFI_Unit_Tests final : public Test
 
             TEST_FFI_OK(botan_x509_cert_destroy, (cert));
             }
+#endif
 
          std::vector<Test::Result> results;
          results.push_back(ffi_test_errors());

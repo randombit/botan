@@ -52,7 +52,7 @@ class Test_Runner final : public Botan_CLI::Command
          {
          std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
-#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_64)
+#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_AUTO_RNG_HMAC)
 
          std::vector<uint8_t> seed = Botan::hex_decode(drbg_seed);
          if(seed.empty())
@@ -62,15 +62,17 @@ class Test_Runner final : public Botan_CLI::Command
             Botan::store_be(ts, seed.data());
             }
 
-         output() << " rng:HMAC_DRBG with seed '" << Botan::hex_encode(seed) << "'\n";
+         output() << " rng:HMAC_DRBG(" << BOTAN_AUTO_RNG_HMAC << ") with seed '" << Botan::hex_encode(seed) << "'\n";
 
-         // Expand out the seed to 512 bits to make the DRBG happy
-         std::unique_ptr<Botan::HashFunction> sha512(Botan::HashFunction::create("SHA-512"));
-         sha512->update(seed);
-         seed.resize(sha512->output_length());
-         sha512->final(seed.data());
+         // Expand out the seed with a hash to make the DRBG happy
+         std::unique_ptr<Botan::MessageAuthenticationCode> mac =
+            Botan::MessageAuthenticationCode::create(BOTAN_AUTO_RNG_HMAC);
 
-         std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384"));
+         mac->set_key(seed);
+         seed.resize(mac->output_length());
+         mac->final(seed.data());
+
+         std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG(std::move(mac)));
          drbg->initialize_with(seed.data(), seed.size());
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
