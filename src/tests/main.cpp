@@ -98,7 +98,12 @@ class Test_Runner final : public Botan_CLI::Command
          if(!rng)
             {
             output() << " rng:autoseeded\n";
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
             rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
+#else
+            rng.reset(new Botan::AutoSeeded_RNG);
+#endif
+
             }
 #endif
 
