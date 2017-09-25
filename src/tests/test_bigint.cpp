@@ -426,6 +426,28 @@ class BigInt_Mod_Test final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("bn_mod", BigInt_Mod_Test);
 
+class BigInt_GCD_Test final : public Text_Based_Test
+   {
+   public:
+      BigInt_GCD_Test() : Text_Based_Test("bn/gcd.vec", "X,Y,GCD") {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         Test::Result result("BigInt Mod");
+
+         const BigInt x = get_req_bn(vars, "X");
+         const BigInt y = get_req_bn(vars, "Y");
+         const BigInt expected = get_req_bn(vars, "GCD");
+
+         const BigInt g = Botan::gcd(x, y);
+
+         result.test_eq("gcd", expected, g);
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("bn_gcd", BigInt_GCD_Test);
+
 class BigInt_Lshift_Test final : public Text_Based_Test
    {
    public:
