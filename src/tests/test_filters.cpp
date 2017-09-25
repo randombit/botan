@@ -310,7 +310,7 @@ class Filter_Tests final : public Test
          {
          Test::Result result("Pipe CFB");
 
-#if defined(BOTAN_HAS_BLOWFISH) && defined(BOTAN_HAS_MODE_CFB) && defined(BOTAN_HAS_CODEC_FILT)
+#if defined(BOTAN_HAS_BLOWFISH) && defined(BOTAN_HAS_MODE_CFB) && defined(BOTAN_HAS_CODEC_FILTERS)
 
          // Generated with Botan 1.10
 
@@ -337,15 +337,10 @@ class Filter_Tests final : public Test
             "7195FFE735B0A95065BA244C77A11F",
          };
 
-         Botan::Keyed_Filter* cfb_enc =
-            new Botan::Cipher_Mode_Filter(Botan::get_cipher_mode("Blowfish/CFB", Botan::ENCRYPTION));
-         cfb_enc->set_key(key);
-         cfb_enc->set_iv(iv);
+         Botan::Keyed_Filter* cfb_enc = Botan::get_cipher("Blowfish/CFB", key, iv, Botan::ENCRYPTION);
          Botan::Pipe enc_pipe(cfb_enc, new Botan::Hex_Encoder);
 
-         Botan::Keyed_Filter* cfb_dec =
-            new Botan::Cipher_Mode_Filter(Botan::get_cipher_mode("Blowfish/CFB", Botan::DECRYPTION));
-         cfb_dec->set_key(key);
+         Botan::Keyed_Filter* cfb_dec = Botan::get_cipher("Blowfish/CFB", key, Botan::DECRYPTION);
          cfb_dec->set_iv(iv);
          Botan::Pipe dec_pipe(new Botan::Hex_Decoder, cfb_dec, new Botan::Hex_Encoder);
 
