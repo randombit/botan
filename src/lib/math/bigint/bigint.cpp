@@ -307,6 +307,8 @@ void BigInt::const_time_lookup(secure_vector<word>& output,
 
    clear_mem(output.data(), output.size());
 
+   CT::poison(&idx, sizeof(idx));
+
    for(size_t i = 0; i != vec.size(); ++i)
       {
       BOTAN_ASSERT(vec[i].size() >= words,
@@ -315,6 +317,9 @@ void BigInt::const_time_lookup(secure_vector<word>& output,
       for(size_t w = 0; w != words; ++w)
          output[w] |= CT::select<word>(CT::is_equal(i, idx), vec[i].word_at(w), 0);
       }
+
+   CT::unpoison(idx);
+   CT::unpoison(output.data(), output.size());
    }
 
 }
