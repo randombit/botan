@@ -50,7 +50,6 @@
 namespace Botan {
 
 template<typename T>
-BOTAN_DEPRECATED("Use secure_vector instead of SecureVector")
 using SecureVector = secure_vector<T>;
 
 }
