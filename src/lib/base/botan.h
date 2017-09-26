@@ -8,16 +8,6 @@
 #ifndef BOTAN_BOTAN_H_
 #define BOTAN_BOTAN_H_
 
-#include <botan/lookup.h>
-#include <botan/version.h>
-#include <botan/parsing.h>
-
-#include <botan/rng.h>
-
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
-#endif
-
 /*
 * There is no real reason for this header to exist beyond historical
 * reasons. The application should instead include the specific header
@@ -25,10 +15,44 @@
 *
 * This header file will be removed in Botan 3.x
 */
+
 #if defined(__GNUC__)
   #warning "botan/botan.h is deprecated"
 #elif defined(_MSC_VER)
   #pragma message "botan/botan.h is deprecated"
 #endif
+
+#include <botan/lookup.h>
+#include <botan/version.h>
+#include <botan/parsing.h>
+#include <botan/init.h>
+#include <botan/rng.h>
+#include <botan/secmem.h>
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
+#endif
+
+#if defined(BOTAN_HAS_FILTERS)
+  #include <botan/filters.h>
+#endif
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+  #include <botan/x509_key.h>
+  #include <botan/pkcs8.h>
+#endif
+
+/*
+* The reason the name changed is because the types are not
+* completely compatible. But allow it as a standin
+*/
+
+namespace Botan {
+
+template<typename T>
+BOTAN_DEPRECATED("Use secure_vector instead of SecureVector")
+using SecureVector = secure_vector<T>;
+
+}
 
 #endif
