@@ -101,6 +101,7 @@ s390x   -> "-m64"
 sparc32 -> "-m32 -mno-app-regs"
 sparc64 -> "-m64 -mno-app-regs"
 ppc64   -> "-m64"
+ppc64le -> "-m64"
 
 # This should probably be used on most/all targets, but the docs are unclear
 openbsd   -> "-pthread"
