@@ -58,6 +58,8 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                        workspace.data());
 
       m_g[i] = z;
+      m_g[i].shrink_to_fit();
+      m_g[i].grow_to(m_mod_words);
       }
    }
 
@@ -74,6 +76,7 @@ BigInt Montgomery_Exponentiator::execute() const
 
    BigInt z(BigInt::Positive, z_size);
    secure_vector<word> workspace(z.size());
+   secure_vector<word> e(m_mod_words);
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {
@@ -87,9 +90,16 @@ BigInt Montgomery_Exponentiator::execute() const
 
       const uint32_t nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
 
-      bigint_monty_mul(z, x, m_g[nibble],
-                       m_modulus.data(), m_mod_words, m_mod_prime,
-                       workspace.data());
+      BigInt::const_time_lookup(e, m_g, nibble);
+
+      bigint_mul(z.mutable_data(), z.size(),
+                 x.data(), x.size(), x.sig_words(),
+                 e.data(), m_mod_words, m_mod_words,
+                 workspace.data());
+
+      bigint_monty_redc(z.mutable_data(),
+                        m_modulus.data(), m_mod_words, m_mod_prime,
+                        workspace.data());
 
       x = z;
       }

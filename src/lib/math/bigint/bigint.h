@@ -435,6 +435,8 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void grow_to(size_t n);
 
+     void shrink_to_fit();
+
      /**
      * Fill BigInt with a random number with size of bitsize
      *
@@ -576,6 +578,15 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @result a secure_vector<uint8_t> containing the concatenation of the two encoded BigInt
      */
      static secure_vector<uint8_t> encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes);
+
+     /**
+     * Set output = vec[idx].m_reg in constant time
+     * All words of vec must have the same size
+     */
+     static void const_time_lookup(
+        secure_vector<word>& output,
+        const std::vector<BigInt>& vec,
+        size_t idx);
 
    private:
       secure_vector<word> m_reg;
