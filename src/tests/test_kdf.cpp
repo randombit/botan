@@ -18,7 +18,7 @@ namespace {
 class KDF_KAT_Tests final : public Text_Based_Test
    {
    public:
-      KDF_KAT_Tests() : Text_Based_Test("kdf", "OutputLen,Salt,Secret,Label,Output", "IKM,XTS") {}
+      KDF_KAT_Tests() : Text_Based_Test("kdf", "Salt,Secret,Label,Output", "IKM,XTS") {}
 
       Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars) override
          {
@@ -32,14 +32,13 @@ class KDF_KAT_Tests final : public Text_Based_Test
             return result;
             }
 
-         const size_t outlen = get_req_sz(vars, "OutputLen");
          const std::vector<uint8_t> salt = get_opt_bin(vars, "Salt");
          const std::vector<uint8_t> secret = get_req_bin(vars, "Secret");
          const std::vector<uint8_t> label = get_opt_bin(vars, "Label");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
 
          result.test_eq("name", kdf->name(), kdf_name);
-         result.test_eq("derived key", kdf->derive_key(outlen, secret, salt, label), expected);
+         result.test_eq("derived key", kdf->derive_key(expected.size(), secret, salt, label), expected);
 
          // Test that clone works
          std::unique_ptr<Botan::KDF> clone(kdf->clone());
