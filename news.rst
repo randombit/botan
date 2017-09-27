@@ -50,6 +50,9 @@ Version 2.3.0, Not Yet Released
   default is ``false``, ie that client renegotiation is now prohibited by default.
   (GH #872)
 
+* Add HKDF-Expand-Label function which is used in TLS v1.3 and QUIC protocols.
+  (GH #1226)
+
 * Fix decoding of ECC keys that use extensions from RFC 5915 (GH #1208)
 
 * The entropy source that called CryptGenRandom has been removed, and
