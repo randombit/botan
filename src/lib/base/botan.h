@@ -42,16 +42,4 @@
   #include <botan/pkcs8.h>
 #endif
 
-/*
-* The reason the name changed is because the types are not
-* completely compatible. But allow it as a standin
-*/
-
-namespace Botan {
-
-template<typename T>
-using SecureVector = secure_vector<T>;
-
-}
-
 #endif

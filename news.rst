@@ -171,6 +171,9 @@ Version 2.3.0, Not Yet Released
   intended for derivation. This keyword was already in use but was not
   applied consistently.
 
+* A typedef ``SecureVector`` has been added for the ``secure_vector`` type.
+  This makes porting code from 1.10 to 2.x API slightly simpler.
+
 * Header files have been cleaned up to remove uncessary inclusions. In some
   cases it may be required to include additional botan headers to get all the
   declarations that were previously visible. For example, ``bigint.h`` no longer
