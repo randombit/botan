@@ -38,6 +38,7 @@ Public Key Crypto, Math
 * SPHINCS-256
 * X448 and Ed448
 * FHMQV
+* Use GLV decomposition to speed up secp256k1 operations
 * Support mixed hashes and non-empty param strings in OAEP
 * wNAF ECC point multiply
 * Recover ECDSA public key from signature/message pair (GH #664)
