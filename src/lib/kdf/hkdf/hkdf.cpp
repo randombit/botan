@@ -1,6 +1,6 @@
 /*
 * HKDF
-* (C) 2013,2015 Jack Lloyd
+* (C) 2013,2015,2017 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -71,6 +71,52 @@ size_t HKDF_Expand::kdf(uint8_t key[], size_t key_len,
       }
 
    return offset;
+   }
+
+secure_vector<uint8_t>
+hkdf_expand_label(const std::string& hash_fn,
+                  const uint8_t secret[], size_t secret_len,
+                  const std::string& label,
+                  const uint8_t hash_val[], size_t hash_val_len,
+                  size_t length)
+   {
+   if(length > 0xFFFF)
+      throw Invalid_Argument("HKDF-Expand-Label requested output too large");
+   if(label.size() > 0xFF)
+      throw Invalid_Argument("HKDF-Expand-Label label too long");
+   if(hash_val_len > 0xFF)
+      throw Invalid_Argument("HKDF-Expand-Label hash too long");
+
+   auto mac = MessageAuthenticationCode::create("HMAC(" + hash_fn + ")");
+   if(!mac)
+      throw Invalid_Argument("HKDF-Expand-Label with HMAC(" + hash_fn + ") not available");
+
+   HKDF_Expand hkdf(mac.release());
+
+   secure_vector<uint8_t> output(length);
+   std::vector<uint8_t> prefix(3 + label.size() + 1);
+
+   prefix[0] = get_byte<uint16_t>(0, length);
+   prefix[1] = get_byte<uint16_t>(1, length);
+   prefix[2] = static_cast<uint8_t>(label.size());
+
+   copy_mem(prefix.data() + 3,
+            reinterpret_cast<const uint8_t*>(label.data()),
+            label.size());
+
+   prefix[3 + label.size()] = static_cast<uint8_t>(hash_val_len);
+
+   /*
+   * We do something a little dirty here to avoid copying the hash_val,
+   * making use of the fact that Botan's KDF interface supports label+salt,
+   * and knowing that our HKDF hashes first param label then param salt.
+   */
+   hkdf.kdf(output.data(), output.size(),
+            secret, secret_len,
+            hash_val, hash_val_len,
+            prefix.data(), prefix.size());
+
+   return output;
    }
 
 }

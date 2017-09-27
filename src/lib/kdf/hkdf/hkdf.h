@@ -86,6 +86,20 @@ class BOTAN_PUBLIC_API(2,0) HKDF_Expand final : public KDF
       std::unique_ptr<MessageAuthenticationCode> m_prf;
    };
 
+/**
+* HKDF-Expand-Label from TLS 1.3/QUIC
+* @param label the full label (no "TLS 1.3, " or "tls13 " prefix
+*  is applied)
+*/
+secure_vector<uint8_t>
+BOTAN_PUBLIC_API(2,3) hkdf_expand_label(
+   const std::string& hash_fn,
+   const uint8_t secret[], size_t secret_len,
+   const std::string& label,
+   const uint8_t hash_val[], size_t hash_val_len,
+   size_t length);
+
+
 }
 
 #endif
