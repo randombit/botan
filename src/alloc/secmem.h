@@ -50,6 +50,12 @@ class MemoryRegion
       * Get a pointer to the first element in the buffer.
       * @return pointer to the first element in the buffer
       */
+      T* data() { return buf; }
+
+      /**
+      * Get a pointer to the first element in the buffer.
+      * @return pointer to the first element in the buffer
+      */
       T* begin() { return buf; }
 
       /**
