@@ -6,6 +6,13 @@ use case if you want to make sure your code continues to work.
 This is in addition to specific API calls marked with BOTAN_DEPRECATED
 in the source.
 
+- The headers botan.h, init.h, lookup.h
+
+- All or nothing package transform
+
+- The TLS constructors taking `std::function` for callbacks. Instead
+  use the TLS::Callbacks interface.
+
 - Platform support for BeOS and IRIX operating systems
 
 - 3DES and SEED ciphersuites in TLS
