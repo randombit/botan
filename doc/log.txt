@@ -13,10 +13,21 @@ Version 1.10.17, Not Yet Released
 * Workaround a miscompilation bug in GCC 7 on x86-32 affecting GOST-34.11
   hash function. (GH #1192 #1148 #882)
 
+* Add SecureVector::data() function which returns the start of the
+  buffer. This makes it slightly simpler to support both 1.10 and 2.x
+  APIs in the same codebase.
+
+* When compiled by a C++11 (or later) compiler, a template typedef of
+  SecureVector, secure_vector, is added. In 2.x this class is a
+  std::vector with a custom allocator, so has a somewhat different
+  interface than SecureVector in 1.10. But this makes it slightly
+  simpler to support both 1.10 and 2.x APIs in the same codebase.
+
 * Fix a bug that prevented `configure.py` from running under Python3
 
 * Botan 1.10.x does not support the OpenSSL 1.1 API. Now the build
-  will `#error` if OpenSSL 1.1 is detected. (GH #753)
+  will `#error` if OpenSSL 1.1 is detected. Avoid `--with-openssl`
+  if compiling against 1.1 or later. (GH #753)
 
 * Import patches from Debian adding basic support for building on
   aarch64, ppc64le, or1k, and mipsn32 platforms.

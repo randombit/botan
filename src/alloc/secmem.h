@@ -375,6 +375,13 @@ class SecureVector : public MemoryRegion<T>
          }
    };
 
+#if __cplusplus >= 201103
+
+// For better compatability with 2.x API
+  template<typename T>
+  using secure_vector = SecureVector<T>;
+#endif
+
 template<typename T>
 MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
                             const MemoryRegion<T>& in)
