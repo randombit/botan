@@ -88,8 +88,14 @@ class BOTAN_PUBLIC_API(2,0) HKDF_Expand final : public KDF
 
 /**
 * HKDF-Expand-Label from TLS 1.3/QUIC
+* @param hash_fn the hash to use
+* @param secret the secret bits
+* @param secret_len the length of secret
 * @param label the full label (no "TLS 1.3, " or "tls13 " prefix
 *  is applied)
+* @param hash_val the previous hash value (used for chaining, may be empty)
+* @param hash_val_len the length of hash_val
+* @param length the desired output length
 */
 secure_vector<uint8_t>
 BOTAN_PUBLIC_API(2,3) hkdf_expand_label(
