@@ -10,10 +10,3 @@ cl
 
 appveyor DownloadFile http://download.qt.io/official_releases/jom/jom.zip -FileName jom.zip
 7z e jom.zip
-
-nuget install -ExcludeVersion -Version 4.1.0 clcache
-
-set PATH=%PATH%;clcache\clcache-4.1.0
-
-rem We rely on LZMA compression to stay under appveyors cache limit
-clcache -M 536870912
