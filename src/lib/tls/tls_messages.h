@@ -14,7 +14,7 @@
 #include <botan/tls_session.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_ciphersuite.h>
-#include <botan/bigint.h>
+#include <botan/pk_keys.h>
 #include <botan/x509cert.h>
 #include <vector>
 #include <string>
@@ -31,7 +31,6 @@
 namespace Botan {
 
 class Public_Key;
-class Private_Key;
 class Credentials_Manager;
 
 namespace TLS {
