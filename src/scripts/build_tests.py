@@ -23,7 +23,8 @@ def get_module_list(configure_py):
         raise Exception("Running configure.py --list-modules failed")
 
     modules = [s.decode('ascii') for s in stdout.split()]
-    modules.remove('bearssl')
+    modules.remove('bearssl') # can't test
+    modules.remove('base') # can't remove
     return modules
 
 def get_concurrency():
@@ -81,12 +82,15 @@ def main(args):
 
     for module in sorted(modules):
         extra = ['sha2_32', 'sha2_64', 'aes']
+        if module in extra:
+            continue # already testing it
         if module == 'auto_rng':
             extra.append('dev_random')
         run_test_build(configure_py, [module] + extra, True)
 
     for module in sorted(modules):
         run_test_build(configure_py, [module], False)
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
