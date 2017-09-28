@@ -500,6 +500,12 @@ class BOTAN_DLL BigInt
      */
      BigInt(NumberType type, size_t n);
 
+     void shrink_to_fit();
+
+     static void const_time_lookup(SecureVector<word>& output,
+                                   const std::vector<BigInt>& vec,
+                                   size_t idx);
+
    private:
       SecureVector<word> reg;
       Sign signedness;

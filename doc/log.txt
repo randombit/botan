@@ -10,6 +10,11 @@ Series 1.10
 Version 1.10.17, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Address a side channel affecting modular exponentiation. An attacker
+  capabable of a local or cross-VM cache analysis attack may be able
+  to recover bits of secret exponents as used in RSA, DH, etc.
+  CVE-2017-14737
+
 * Workaround a miscompilation bug in GCC 7 on x86-32 affecting GOST-34.11
   hash function. (GH #1192 #1148 #882)
 

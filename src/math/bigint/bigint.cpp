@@ -10,6 +10,7 @@
 #include <botan/get_byte.h>
 #include <botan/parsing.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -372,5 +373,26 @@ void BigInt::binary_decode(const MemoryRegion<byte>& buf)
    {
    binary_decode(buf, buf.size());
    }
+
+void BigInt::shrink_to_fit()
+   {
+   reg.resize(sig_words());
+   }
+
+void BigInt::const_time_lookup(SecureVector<word>& output,
+                               const std::vector<BigInt>& vec,
+                               size_t idx)
+   {
+   const size_t words = output.size();
+
+   clear_mem(output.data(), output.size());
+
+   for(size_t i = 0; i != vec.size(); ++i)
+      {
+      for(size_t w = 0; w != words; ++w)
+         output[w] |= CT::select<word>(CT::is_equal(i, idx), vec[i].word_at(w), 0);
+      }
+   }
+
 
 }
