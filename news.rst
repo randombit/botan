@@ -5,7 +5,7 @@ Version 2.3.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Address a side channel affecting modular exponentiation. An attacker
-  capabable of a local or cross-VM cache analysis attack may be able
+  capable of a local or cross-VM cache analysis attack may be able
   to recover bits of secret exponents as used in RSA, DH, etc.
   CVE-2017-14737
 
@@ -140,7 +140,7 @@ Version 2.3.0, Not Yet Released
 
 * Added a script to automate running TLS-Attacker tests.
 
-* The distribution script now creates reproductible outputs, by
+* The distribution script now creates reproducible outputs, by
   forcing all modification times, uids, etc to values fixed by the release date.
   (GH #1217)
 
@@ -182,12 +182,42 @@ Version 2.3.0, Not Yet Released
 * A typedef ``SecureVector`` has been added for the ``secure_vector`` type.
   This makes porting code from 1.10 to 2.x API slightly simpler.
 
-* Header files have been cleaned up to remove uncessary inclusions. In some
+* Header files have been cleaned up to remove unnecessary inclusions. In some
   cases it may be required to include additional botan headers to get all the
   declarations that were previously visible. For example, ``bigint.h`` no longer
   includes ``rng.h``, but just forward declares ``RandomNumberGenerator``.
 
 * Improved support for IBM xlc compiler.
+
+Version 1.10.17, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Address a side channel affecting modular exponentiation. An attacker
+  capable of a local or cross-VM cache analysis attack may be able
+  to recover bits of secret exponents as used in RSA, DH, etc.
+  CVE-2017-14737
+
+* Workaround a miscompilation bug in GCC 7 on x86-32 affecting GOST-34.11
+  hash function. (GH #1192 #1148 #882)
+
+* Add SecureVector::data() function which returns the start of the
+  buffer. This makes it slightly simpler to support both 1.10 and 2.x
+  APIs in the same codebase.
+
+* When compiled by a C++11 (or later) compiler, a template typedef of
+  SecureVector, secure_vector, is added. In 2.x this class is a
+  std::vector with a custom allocator, so has a somewhat different
+  interface than SecureVector in 1.10. But this makes it slightly
+  simpler to support both 1.10 and 2.x APIs in the same codebase.
+
+* Fix a bug that prevented `configure.py` from running under Python3
+
+* Botan 1.10.x does not support the OpenSSL 1.1 API. Now the build
+  will `#error` if OpenSSL 1.1 is detected. Avoid `--with-openssl`
+  if compiling against 1.1 or later. (GH #753)
+
+* Import patches from Debian adding basic support for building on
+  aarch64, ppc64le, or1k, and mipsn32 platforms.
 
 Version 2.2.0, 2017-08-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -321,7 +351,7 @@ Version 2.1.0, 2017-04-04
   identically to an 8-byte IV of all zeros.
 
 * Add new interfaces to the C API including multiple precision integers, key
-  validity tests, block ciphers, and extracting algorithm specific key paramters
+  validity tests, block ciphers, and extracting algorithm specific key parameters
   (such as the modulus and public exponent from RSA public keys). GH #899 #944
   #946 #961 #964
 
@@ -474,7 +504,7 @@ Version 2.0.0, 2017-01-06
 
 * The default TLS policy now requires 2048 or larger DH groups by default.
 
-* Add BSI_TR_02102_2 TLS::Policy subclass representing BSI TR-02102-2 recomendations.
+* Add BSI_TR_02102_2 TLS::Policy subclass representing BSI TR-02102-2 recommendations.
 
 * The default Path_Validation_Restrictions constructor has changed to
   require at least 110 bit signature strength. This means 1024 bit RSA
