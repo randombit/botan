@@ -183,6 +183,11 @@ void bigint_comba_sqr16(word out[32], const word in[16]);
 */
 void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y, word workspace[]);
 
+void bigint_mul(word z[], size_t z_size,
+                const word x[], size_t x_size, size_t x_sw,
+                const word y[], size_t y_size, size_t y_sw,
+                word workspace[]);
+
 void bigint_sqr(word z[], size_t z_size, word workspace[],
                 const word x[], size_t x_size, size_t x_sw);
 

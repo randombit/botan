@@ -101,9 +101,8 @@ void bigint_monty_mul(BigInt& z, const BigInt& x, const BigInt& y,
    bigint_mul(z, x, y, &ws[0]);
 
    bigint_monty_redc(z.mutable_data(),
-                     &p[0], p_size, p_dash,
-                     &ws[0]);
-
+                     p, p_size, p_dash,
+                     ws);
    }
 
 void bigint_monty_sqr(BigInt& z, const BigInt& x, const word p[],
@@ -113,8 +112,8 @@ void bigint_monty_sqr(BigInt& z, const BigInt& x, const word p[],
               x.data(), x.size(), x.sig_words());
 
    bigint_monty_redc(z.mutable_data(),
-                     &p[0], p_size, p_dash,
-                     &ws[0]);
+                     p, p_size, p_dash,
+                     ws);
    }
 
 }
