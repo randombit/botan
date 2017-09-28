@@ -14,29 +14,32 @@ import shutil
 import tempfile
 import os
 
-def run_and_check(proc, proc_name):
+def run_and_check(cmd_line, cwd=None):
+    print("Executing %s ..." % (' '.join(cmd_line)))
+
+    proc = subprocess.Popen(cmd_line,
+                            cwd=cwd,
+                            close_fds=True,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+
     (stdout, stderr) = proc.communicate()
 
     if proc.returncode != 0:
-        print("Error running ", proc_name)
+        print("Error running %s" % (' '.join(cmd_line)))
         print(stdout)
         print(stderr)
         sys.exit(1)
 
 def configure_build(botan_dir, build_dir):
 
-    configure = subprocess.Popen([os.path.join(botan_dir, 'configure.py'),
-                                  '--with-doxygen', '--with-sphinx',
-                                  '--with-build-dir=%s' % (build_dir)],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-    run_and_check(configure, 'configure.py')
+    run_and_check([os.path.join(botan_dir, 'configure.py'),
+                   '--with-doxygen', '--with-sphinx',
+                   '--with-build-dir=%s' % (build_dir)])
 
 def run_doxygen(tmp_dir, output_dir):
-    doxygen = subprocess.Popen(['doxygen', os.path.join(tmp_dir, 'build/botan.doxy')],
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-    run_and_check(doxygen, 'doxygen')
+    run_and_check(['doxygen', os.path.join(tmp_dir, 'build/botan.doxy')])
     shutil.move(os.path.join(tmp_dir, 'build/docs/doxygen'), output_dir)
 
 def run_sphinx(botan_dir, tmp_dir, output_dir):
@@ -65,14 +68,11 @@ def run_sphinx(botan_dir, tmp_dir, output_dir):
     contents_rst.close()
 
     sphinx_invoke = ['sphinx-build', '-t', 'website', '-c', sphinx_config, '-b', 'html']
-    sphinx_website = subprocess.Popen(sphinx_invoke + [sphinx_dir, output_dir],
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    run_and_check(sphinx_website, 'sphinx-build website')
 
-    sphinx_manual = subprocess.Popen(sphinx_invoke + [os.path.join(botan_dir, 'doc/manual'),
-                                                      os.path.join(output_dir, 'manual')],
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    run_and_check(sphinx_manual, 'sphinx-build manual')
+    manual_dir = os.path.join(botan_dir, 'doc/manual')
+
+    run_and_check(sphinx_invoke + [sphinx_dir, output_dir])
+    run_and_check(sphinx_invoke + [manual_dir, os.path.join(output_dir, 'manual')])
 
     shutil.rmtree(os.path.join(output_dir, '.doctrees'))
     shutil.rmtree(os.path.join(output_dir, 'manual', '.doctrees'))
@@ -82,6 +82,18 @@ def run_sphinx(botan_dir, tmp_dir, output_dir):
     # share _static subdirs
     shutil.rmtree(os.path.join(output_dir, 'manual', '_static'))
     os.symlink('../_static', os.path.join(output_dir, 'manual', '_static'))
+
+    # Build PDF
+    latex_output = os.path.join(tmp_dir, 'latex')
+    run_and_check(['sphinx-build', '-c', sphinx_config, '-b', 'latex', manual_dir, latex_output])
+
+    # Have to run twice because TeX
+    run_and_check(['pdflatex', 'botan.tex'], cwd=latex_output)
+    run_and_check(['pdflatex', 'botan.tex'], cwd=latex_output)
+
+    shutil.copy(os.path.join(latex_output, 'botan.pdf'),
+                os.path.join(output_dir, 'manual'))
+
 
 def main(args):
     parser = optparse.OptionParser()
