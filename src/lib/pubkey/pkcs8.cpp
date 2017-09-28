@@ -289,10 +289,10 @@ namespace {
 /*
 * Extract a private key (encrypted/unencrypted) and return it
 */
-Private_Key* load_key(DataSource& source,
-                      RandomNumberGenerator& /*rng*/,
-                      std::function<std::string ()> get_pass,
-                      bool is_encrypted)
+std::unique_ptr<Private_Key>
+load_key(DataSource& source,
+         std::function<std::string ()> get_pass,
+         bool is_encrypted)
    {
    AlgorithmIdentifier alg_id;
    secure_vector<uint8_t> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
@@ -302,10 +302,49 @@ Private_Key* load_key(DataSource& source,
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid.as_string());
 
-   return load_private_key(alg_id, pkcs8_key).release();
+   return std::unique_ptr<Private_Key>(load_private_key(alg_id, pkcs8_key));
    }
 
 }
+
+/*
+* Extract an encrypted private key and return it
+*/
+std::unique_ptr<Private_Key> load_key(DataSource& source,
+                      std::function<std::string ()> get_pass)
+   {
+   return load_key(source, get_pass, true);
+   }
+
+/*
+* Extract an encrypted private key and return it
+*/
+std::unique_ptr<Private_Key> load_key(DataSource& source,
+                      const std::string& pass)
+   {
+   return load_key(source, [pass]() { return pass; }, true);
+   }
+
+/*
+* Extract an unencrypted private key and return it
+*/
+std::unique_ptr<Private_Key> load_key(DataSource& source)
+   {
+   auto fail_fn = []() -> std::string {
+      throw PKCS8_Exception("Internal error: Attempt to read password for unencrypted key");
+   };
+
+   return load_key(source, fail_fn, false);
+   }
+
+/*
+* Make a copy of this private key
+*/
+std::unique_ptr<Private_Key> copy_key(const Private_Key& key)
+   {
+   DataSource_Memory source(PEM_encode(key));
+   return PKCS8::load_key(source);
+   }
 
 /*
 * Extract an encrypted private key and return it
@@ -314,7 +353,8 @@ Private_Key* load_key(DataSource& source,
                       RandomNumberGenerator& rng,
                       std::function<std::string ()> get_pass)
    {
-   return load_key(source, rng, get_pass, true);
+   BOTAN_UNUSED(rng);
+   return PKCS8::load_key(source, get_pass).release();
    }
 
 /*
@@ -324,7 +364,8 @@ Private_Key* load_key(DataSource& source,
                       RandomNumberGenerator& rng,
                       const std::string& pass)
    {
-   return load_key(source, rng, [pass]() { return pass; }, true);
+   BOTAN_UNUSED(rng);
+   return PKCS8::load_key(source, pass).release();
    }
 
 /*
@@ -333,8 +374,8 @@ Private_Key* load_key(DataSource& source,
 Private_Key* load_key(DataSource& source,
                       RandomNumberGenerator& rng)
    {
-   return load_key(source, rng, []() -> std::string {
-      throw PKCS8_Exception( "Internal error: Attempt to read password for unencrypted key" );}, false);
+   BOTAN_UNUSED(rng);
+   return PKCS8::load_key(source).release();
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
@@ -346,8 +387,9 @@ Private_Key* load_key(const std::string& fsname,
                       RandomNumberGenerator& rng,
                       std::function<std::string ()> get_pass)
    {
-   DataSource_Stream source(fsname, true);
-   return load_key(source, rng, get_pass, true);
+   BOTAN_UNUSED(rng);
+   DataSource_Stream in(fsname);
+   return PKCS8::load_key(in, get_pass).release();
    }
 
 /*
@@ -357,7 +399,8 @@ Private_Key* load_key(const std::string& fsname,
                       RandomNumberGenerator& rng,
                       const std::string& pass)
    {
-   return PKCS8::load_key(fsname, rng, [pass]() { return pass; });
+   DataSource_Stream in(fsname);
+   return PKCS8::load_key(in, [pass]() { return pass; }).release();
    }
 
 /*
@@ -366,9 +409,9 @@ Private_Key* load_key(const std::string& fsname,
 Private_Key* load_key(const std::string& fsname,
                       RandomNumberGenerator& rng)
    {
-   DataSource_Stream source(fsname, true);
-   return load_key(source, rng, []() -> std::string {
-      throw PKCS8_Exception( "Internal error: Attempt to read password for unencrypted key" );}, false);
+   BOTAN_UNUSED(rng);
+   DataSource_Stream in(fsname);
+   return PKCS8::load_key(in).release();
    }
 #endif
 
@@ -378,9 +421,11 @@ Private_Key* load_key(const std::string& fsname,
 Private_Key* copy_key(const Private_Key& key,
                       RandomNumberGenerator& rng)
    {
-   DataSource_Memory source(PEM_encode(key));
-   return PKCS8::load_key(source, rng);
+   BOTAN_UNUSED(rng);
+   return PKCS8::copy_key(key).release();
    }
+
+
 
 }
 

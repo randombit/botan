@@ -49,8 +49,8 @@ BOTAN_PUBLIC_API(2,0) std::string PEM_encode(const Private_Key& key);
 * @param pass the password to use for encryption
 * @param msec number of milliseconds to run the password derivation
 * @param pbe_algo the name of the desired password-based encryption
-         algorithm; if empty ("") a reasonable (portable/secure)
-         default will be chosen.
+*        algorithm; if empty ("") a reasonable (portable/secure)
+*        default will be chosen.
 * @return encrypted key in binary BER form
 */
 BOTAN_PUBLIC_API(2,0) std::vector<uint8_t>
@@ -68,8 +68,8 @@ BER_encode(const Private_Key& key,
 * @param pass the password to use for encryption
 * @param msec number of milliseconds to run the password derivation
 * @param pbe_algo the name of the desired password-based encryption
-         algorithm; if empty ("") a reasonable (portable/secure)
-         default will be chosen.
+*        algorithm; if empty ("") a reasonable (portable/secure)
+*        default will be chosen.
 * @return encrypted key in PEM form
 */
 BOTAN_PUBLIC_API(2,0) std::string
@@ -178,8 +178,8 @@ PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
 * @return loaded private key object
 */
 BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
-                                RandomNumberGenerator& rng,
-                                std::function<std::string ()> get_passphrase);
+                                            RandomNumberGenerator& rng,
+                                            std::function<std::string ()> get_passphrase);
 
 /** Load an encrypted key from a data source.
 * @param source the data source providing the encoded key
@@ -188,8 +188,8 @@ BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
 * @return loaded private key object
 */
 BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
-                                RandomNumberGenerator& rng,
-                                const std::string& pass);
+                                            RandomNumberGenerator& rng,
+                                            const std::string& pass);
 
 /** Load an unencrypted key from a data source.
 * @param source the data source providing the encoded key
@@ -197,7 +197,7 @@ BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
 * @return loaded private key object
 */
 BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
-                                RandomNumberGenerator& rng);
+                                            RandomNumberGenerator& rng);
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /**
@@ -208,8 +208,8 @@ BOTAN_PUBLIC_API(2,0) Private_Key* load_key(DataSource& source,
 * @return loaded private key object
 */
 BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
-                                RandomNumberGenerator& rng,
-                                std::function<std::string ()> get_passphrase);
+                                            RandomNumberGenerator& rng,
+                                            std::function<std::string ()> get_passphrase);
 
 /** Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key
@@ -218,8 +218,8 @@ BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
 * @return loaded private key object
 */
 BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
-                                RandomNumberGenerator& rng,
-                                const std::string& pass);
+                                            RandomNumberGenerator& rng,
+                                            const std::string& pass);
 
 /** Load an unencrypted key from a file.
 * @param filename the path to the file containing the encoded key
@@ -227,7 +227,7 @@ BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
 * @return loaded private key object
 */
 BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
-                                RandomNumberGenerator& rng);
+                                            RandomNumberGenerator& rng);
 #endif
 
 /**
@@ -237,7 +237,42 @@ BOTAN_PUBLIC_API(2,0) Private_Key* load_key(const std::string& filename,
 * @return new copy of the key
 */
 BOTAN_PUBLIC_API(2,0) Private_Key* copy_key(const Private_Key& key,
-                                RandomNumberGenerator& rng);
+                                            RandomNumberGenerator& rng);
+
+
+/**
+* Load an encrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param get_passphrase a function that returns passphrases
+* @return loaded private key object
+*/
+BOTAN_PUBLIC_API(2,3)
+std::unique_ptr<Private_Key> load_key(DataSource& source,
+                                      std::function<std::string ()> get_passphrase);
+
+/** Load an encrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param pass the passphrase to decrypt the key
+* @return loaded private key object
+*/
+BOTAN_PUBLIC_API(2,3)
+std::unique_ptr<Private_Key> load_key(DataSource& source,
+                                      const std::string& pass);
+
+/** Load an unencrypted key from a data source.
+* @param source the data source providing the encoded key
+* @return loaded private key object
+*/
+BOTAN_PUBLIC_API(2,3)
+std::unique_ptr<Private_Key> load_key(DataSource& source);
+
+/**
+* Copy an existing encoded key object.
+* @param key the key to copy
+* @return new copy of the key
+*/
+BOTAN_PUBLIC_API(2,3)
+std::unique_ptr<Private_Key> copy_key(const Private_Key& key);
 
 }
 
