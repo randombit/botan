@@ -1,3 +1,7 @@
 <defines>
 CMAC -> 20131128
 </defines>
+
+<requires>
+poly_dbl
+</requires>

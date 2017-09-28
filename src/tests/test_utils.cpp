@@ -12,13 +12,16 @@
 #include <botan/loadstor.h>
 #include <botan/calendar.h>
 #include <botan/internal/rounding.h>
-#include <botan/internal/poly_dbl.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
    #include <botan/base64.h>
+#endif
+
+#if defined(BOTAN_HAS_POLY_DBL)
+   #include <botan/internal/poly_dbl.h>
 #endif
 
 namespace Botan_Tests {
@@ -213,6 +216,8 @@ class Utility_Function_Tests final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("util", Utility_Function_Tests);
 
+#if defined(BOTAN_HAS_POLY_DBL)
+
 class Poly_Double_Tests final : public Text_Based_Test
    {
    public:
@@ -233,6 +238,8 @@ class Poly_Double_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("poly_dbl", Poly_Double_Tests);
+
+#endif
 
 class Date_Format_Tests final : public Text_Based_Test
    {

@@ -1,3 +1,7 @@
 <defines>
 AEAD_OCB -> 20131128
 </defines>
+
+<requires>
+poly_dbl
+</requires>

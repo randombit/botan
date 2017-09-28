@@ -31,7 +31,6 @@ ct_utils.h
 donna128.h
 filesystem.h
 os_utils.h
-poly_dbl.h
 prefetch.h
 rounding.h
 safeint.h

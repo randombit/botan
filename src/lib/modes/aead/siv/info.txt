@@ -7,4 +7,5 @@ load_on auto
 <requires>
 cmac
 ctr
+poly_dbl
 </requires>

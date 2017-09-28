@@ -1,0 +1,7 @@
+<defines>
+POLY_DBL -> 20170927
+</defines>
+
+<header:internal>
+poly_dbl.h
+</header:internal>

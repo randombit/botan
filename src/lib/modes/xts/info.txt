@@ -1,3 +1,7 @@
 <defines>
 MODE_XTS -> 20131128
 </defines>
+
+<requires>
+poly_dbl
+</requires>
