@@ -12,6 +12,7 @@
 #include <botan/base64.h>
 
 #include <botan/pk_keys.h>
+#include <botan/x509_key.h>
 #include <botan/pk_algs.h>
 #include <botan/pkcs8.h>
 #include <botan/pubkey.h>

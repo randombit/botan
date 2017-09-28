@@ -30,6 +30,8 @@
 
 namespace Botan {
 
+class Public_Key;
+class Private_Key;
 class Credentials_Manager;
 
 namespace TLS {

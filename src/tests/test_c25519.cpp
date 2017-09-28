@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_CURVE_25519)
    #include "test_pubkey.h"
    #include <botan/curve25519.h>
+   #include <botan/x509_key.h>
    #include <botan/pkcs8.h>
    #include <botan/data_src.h>
 #endif

@@ -15,7 +15,6 @@
 
 #include <botan/version.h>
 #include <botan/loadstor.h>
-#include <botan/hash.h>
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
    #include <botan/hmac_drbg.h>

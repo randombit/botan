@@ -16,6 +16,7 @@
 
 namespace Botan {
 
+class Private_Key;
 class RandomNumberGenerator;
 
 /**

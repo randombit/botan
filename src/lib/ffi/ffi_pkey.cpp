@@ -11,6 +11,7 @@
 #include <botan/data_src.h>
 #include <botan/hash.h>
 #include <botan/pkcs8.h>
+#include <botan/pk_keys.h>
 #include <botan/x509_key.h>
 #include <botan/pk_algs.h>
 
@@ -62,7 +63,7 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
 
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
-      std::unique_ptr<Botan::PKCS8_PrivateKey> pkcs8;
+      std::unique_ptr<Botan::Private_Key> pkcs8;
 
       if(password == nullptr)
          {

@@ -8,6 +8,7 @@
 #ifndef BOTAN_CREDENTIALS_MANAGER_H_
 #define BOTAN_CREDENTIALS_MANAGER_H_
 
+#include <botan/pk_keys.h>
 #include <botan/x509cert.h>
 #include <botan/certstor.h>
 #include <botan/symkey.h>

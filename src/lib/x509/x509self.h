@@ -15,6 +15,9 @@
 
 namespace Botan {
 
+class RandomNumberGenerator;
+class Private_Key;
+
 /**
 * Options for X.509 certificates.
 */

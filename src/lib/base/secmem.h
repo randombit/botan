@@ -10,8 +10,8 @@
 
 #include <botan/types.h> // IWYU pragma: export
 #include <botan/mem_ops.h> // IWYU pragma: export
+#include <vector> // IWYU pragma: export
 #include <algorithm>
-#include <vector>
 #include <deque>
 #include <type_traits>
 

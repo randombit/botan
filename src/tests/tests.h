@@ -13,16 +13,7 @@
 #include <botan/hex.h>
 #include <botan/symkey.h>
 #include <botan/cpuid.h>
-
-#if defined(BOTAN_HAS_BIGINT)
-   #include <botan/bigint.h>
-#endif
-
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
-   #include <botan/point_gfp.h>
-#endif
-
-#include <fstream>
+#include <iosfwd>
 #include <functional>
 #include <map>
 #include <memory>
@@ -31,6 +22,18 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+namespace Botan {
+
+#if defined(BOTAN_HAS_BIGINT)
+class BigInt;
+#endif
+
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+class PointGFp;
+#endif
+
+}
 
 namespace Botan_Tests {
 
@@ -497,7 +500,7 @@ class Text_Based_Test : public Test
       std::string m_output_key;
 
       bool m_first = true;
-      std::unique_ptr<std::ifstream> m_cur;
+      std::unique_ptr<std::istream> m_cur;
       std::string m_cur_src_name;
       std::deque<std::string> m_srcs;
       std::vector<Botan::CPUID::CPUID_bits> m_cpu_flags;

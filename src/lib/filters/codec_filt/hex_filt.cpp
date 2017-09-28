@@ -7,7 +7,6 @@
 
 #include <botan/hex_filt.h>
 #include <botan/hex.h>
-#include <botan/charset.h>
 #include <botan/exceptn.h>
 #include <algorithm>
 

@@ -10,6 +10,7 @@
    #include <botan/certstor.h>
    #include <botan/internal/filesystem.h>
    #include <botan/pkcs8.h>
+   #include <botan/pk_keys.h>
    #include <sstream>
    #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
       #include <botan/certstor_sqlite.h>

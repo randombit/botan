@@ -6,6 +6,7 @@
 */
 
 #include <botan/x509path.h>
+#include <botan/pk_keys.h>
 #include <botan/ocsp.h>
 #include <algorithm>
 #include <chrono>

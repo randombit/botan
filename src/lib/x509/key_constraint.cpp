@@ -7,7 +7,7 @@
 */
 
 #include <botan/key_constraint.h>
-#include <botan/x509_key.h>
+#include <botan/pk_keys.h>
 #include <vector>
 
 namespace Botan {

@@ -7,7 +7,6 @@
 
 #include <botan/b64_filt.h>
 #include <botan/base64.h>
-#include <botan/charset.h>
 #include <botan/exceptn.h>
 #include <algorithm>
 

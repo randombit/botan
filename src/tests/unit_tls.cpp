@@ -13,6 +13,7 @@
 #include <vector>
 #include <memory>
 #include <thread>
+#include <fstream>
 
 #if defined(BOTAN_HAS_TLS)
 

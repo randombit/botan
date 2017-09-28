@@ -7,6 +7,7 @@
 */
 
 #include <botan/x509cert.h>
+#include <botan/pk_keys.h>
 #include <botan/x509_ext.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
@@ -657,7 +658,7 @@ std::string X509_Certificate::to_string() const
    if(this->subject_key_id().size())
      out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
 
-   std::unique_ptr<X509_PublicKey> pubkey(this->subject_public_key());
+   std::unique_ptr<Public_Key> pubkey(this->subject_public_key());
    out << "Public Key:\n" << X509::PEM_encode(*pubkey);
 
    return out.str();

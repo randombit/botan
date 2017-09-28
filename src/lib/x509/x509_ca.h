@@ -17,6 +17,7 @@
 
 namespace Botan {
 
+class Private_Key;
 class PKCS10_Request;
 class PK_Signer;
 

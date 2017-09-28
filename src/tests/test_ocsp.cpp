@@ -11,6 +11,7 @@
    #include <botan/x509path.h>
    #include <botan/certstor.h>
    #include <botan/calendar.h>
+   #include <fstream>
 #endif
 
 namespace Botan_Tests {

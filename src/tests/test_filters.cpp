@@ -30,6 +30,10 @@
    #include <unistd.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+   #include <fstream>
+#endif
+
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_FILTERS)
@@ -134,7 +138,7 @@ class Filter_Tests final : public Test
          {
          Test::Result result("DataSinkFlush");
 
-#if defined(BOTAN_HAS_CODEC_FILTERS)
+#if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
          std::string tmp_name("botan_test_data_src_sink_flush.tmp");
          std::ofstream outfile(tmp_name);
 

@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
 #include <botan/certstor.h>
+#include <botan/pk_keys.h>
 #include <botan/pkcs8.h>
 #include <botan/x509_ca.h>
 #include <botan/x509cert.h>
@@ -33,7 +34,7 @@ class Sign_Cert final : public Command
       void go() override
          {
          Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
-         std::unique_ptr<Botan::PKCS8_PrivateKey> key;
+         std::unique_ptr<Botan::Private_Key> key;
          const std::string pass = get_arg("ca-key-pass");
 
          if(!pass.empty())

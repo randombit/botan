@@ -399,6 +399,7 @@ Private_Key* load_key(const std::string& fsname,
                       RandomNumberGenerator& rng,
                       const std::string& pass)
    {
+   BOTAN_UNUSED(rng);
    DataSource_Stream in(fsname);
    return PKCS8::load_key(in, [pass]() { return pass; }).release();
    }

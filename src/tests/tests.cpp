@@ -7,12 +7,21 @@
 #include "tests.h"
 
 #include <sstream>
+#include <fstream>
 #include <iomanip>
 #include <botan/hex.h>
 #include <botan/parsing.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/stl_util.h>
+
+#if defined(BOTAN_HAS_BIGINT)
+   #include <botan/bigint.h>
+#endif
+
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+   #include <botan/point_gfp.h>
+#endif
 
 namespace Botan_Tests {
 

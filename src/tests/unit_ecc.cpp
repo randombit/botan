@@ -13,6 +13,7 @@
    #include <botan/numthry.h>
    #include <botan/curve_gfp.h>
    #include <botan/curve_nistp.h>
+   #include <botan/pk_keys.h>
    #include <botan/point_gfp.h>
    #include <botan/ec_group.h>
    #include <botan/reducer.h>

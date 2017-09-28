@@ -11,6 +11,7 @@
 #if defined(BOTAN_HAS_FFI)
    #include <botan/hex.h>
    #include <botan/ffi.h>
+   #include <botan/loadstor.h>
 #endif
 
 namespace Botan_Tests {

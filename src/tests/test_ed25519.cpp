@@ -10,6 +10,7 @@
    #include "test_pubkey.h"
    #include <botan/ed25519.h>
    #include <botan/pkcs8.h>
+   #include <botan/x509_key.h>
    #include <botan/data_src.h>
 #endif
 
