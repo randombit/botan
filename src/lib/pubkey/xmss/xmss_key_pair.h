@@ -9,7 +9,6 @@
 #define BOTAN_XMSS_KEY_PAIR_H_
 
 #include <botan/botan.h>
-#include <botan/rng.h>
 #include <botan/xmss_parameters.h>
 #include <botan/xmss_wots_parameters.h>
 #include <botan/xmss_publickey.h>

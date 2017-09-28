@@ -14,7 +14,6 @@
 #include <botan/alg_id.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
-#include <botan/rng.h>
 #include <botan/types.h>
 #include <botan/xmss_parameters.h>
 #include <botan/xmss_publickey.h>

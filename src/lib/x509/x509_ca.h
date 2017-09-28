@@ -10,8 +10,6 @@
 
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
-#include <botan/x509_ext.h>
-#include <botan/pkcs10.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -19,6 +17,7 @@
 
 namespace Botan {
 
+class PKCS10_Request;
 class PK_Signer;
 
 /**
