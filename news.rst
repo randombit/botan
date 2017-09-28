@@ -4,6 +4,11 @@ Release Notes
 Version 2.3.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Address a side channel affecting modular exponentiation. An attacker
+  capabable of a local or cross-VM cache analysis attack may be able
+  to recover bits of secret exponents as used in RSA, DH, etc.
+  CVE-2017-14737
+
 * Add the SHACAL2 block cipher, including optimizations using SIMD and SHA-NI
   instructions. (GH #1151)
 

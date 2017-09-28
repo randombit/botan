@@ -18,6 +18,17 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2017
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2017-10-02 (CVE-2017-14737): Potential side channel using cache information
+
+  In the Montgomery exponentiation code, a table of precomputed values
+  is used. An attacker able to analyze which cache lines were accessed
+  (perhaps via an active attack such as Prime+Probe) could recover
+  information about the exponent. Identified in "CacheD: Identifying
+  Cache-Based Timing Channels in Production Software" by Wang, Wang,
+  Liu, Zhang, and Wu (Usenix Security 2017).
+
+  Fixed in 1.10.17 and 2.3.0, all prior versions affected.
+
 * 2017-07-16: Failure to fully zeroize memory before free
 
   The secure_allocator type attempts to zeroize memory before freeing it. Due to
