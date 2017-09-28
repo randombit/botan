@@ -201,7 +201,7 @@ def run_cmd(cmd, root_dir):
     """
     Execute a command, die if it failed
     """
-    print("Running '%s':\n" % (' '.join(cmd)))
+    print("Running '%s' ..." % (' '.join(cmd)))
     sys.stdout.flush()
 
     start = time.time()
@@ -357,6 +357,7 @@ def main(args=None):
             'src/python/botan2.py',
             'src/scripts/ci_build.py',
             'src/scripts/install.py',
+            'src/scripts/website.py',
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py']
 
