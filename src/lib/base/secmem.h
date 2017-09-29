@@ -38,10 +38,17 @@ class secure_allocator
 
       typedef T          value_type;
 
+#ifdef BOTAN_BUILD_COMPILER_IS_MSVC_2013
+      secure_allocator() = default;
+      secure_allocator(const secure_allocator&) = default;
+      secure_allocator& operator=(const secure_allocator&) = default;
+      ~secure_allocator() = default;
+#else
       secure_allocator() BOTAN_NOEXCEPT = default;
       secure_allocator(const secure_allocator&) BOTAN_NOEXCEPT = default;
       secure_allocator& operator=(const secure_allocator&) BOTAN_NOEXCEPT = default;
       ~secure_allocator() BOTAN_NOEXCEPT = default;
+#endif
 
       template<typename U>
       secure_allocator(const secure_allocator<U>&) BOTAN_NOEXCEPT {}
