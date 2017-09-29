@@ -36,42 +36,40 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
-def run_test_build(configure_py, modules, include):
-    cmdline = [configure_py]
+def try_to_run(cmdline):
+    print("Running %s ... " % (' '.join(cmdline)))
+    cmd = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (stdout, stderr) = cmd.communicate()
 
-    if include:
-        cmdline.append('--minimized')
-        if modules:
-            cmdline.append('--enable-modules=' + ','.join(modules))
-    else:
-        cmdline.append('--disable-modules=' + ','.join(modules))
-
-    print("Testing", cmdline)
-    configure = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
-    configure.communicate()
-
-    if configure.returncode != 0:
-        raise Exception("Running %s failed" % (' '.join(cmdline)))
-
-    make = subprocess.Popen(['make', '-j', str(get_concurrency())],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (stdout, stderr) = make.communicate()
-
-    if make.returncode != 0:
-        print("Build failed:")
-        print(stdout.decode('ascii'))
-        print(stderr.decode('ascii'))
-
-    tests = subprocess.Popen(['./botan-test'],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-    (stdout, stderr) = tests.communicate()
-    if tests.returncode != 0:
-        print("Tests failed:")
+    if cmd.returncode != 0:
+        print("FAILURE")
         print(stdout.decode('ascii'))
         print(stderr.decode('ascii'))
 
     sys.stdout.flush()
+
+    return (cmd.returncode == 0)
+
+def run_test_build(configure_py, modules, include, run_tests = False):
+    config = [configure_py]
+
+    if include:
+        config.append('--minimized')
+        if modules:
+            config.append('--enable-modules=' + ','.join(modules))
+    else:
+        config.append('--disable-modules=' + ','.join(modules))
+
+    if try_to_run(config) is False:
+        return False
+
+    if try_to_run(['make', '-j', str(get_concurrency())]) is False:
+        return False
+
+    if run_tests is False:
+        return True
+
+    return try_to_run(['./botan-test'])
 
 def main(args):
 
@@ -80,15 +78,22 @@ def main(args):
     configure_py = './configure.py'
     modules = get_module_list(configure_py)
 
-    for module in sorted(modules):
-        extra = ['sha2_32', 'sha2_64', 'aes']
-        if module in extra:
-            continue # already testing it
-        if module == 'auto_rng':
-            extra.append('dev_random')
-        run_test_build(configure_py, [module] + extra, True)
+    cant_disable = ['block', 'hash', 'hex', 'mac', 'modes', 'rng', 'stream', 'utils']
+    always_include = ['sha2_32', 'sha2_64', 'aes']
 
     for module in sorted(modules):
+        continue
+        if module in always_include or module in cant_disable:
+            continue # already testing it
+
+        extra = []
+        if module == 'auto_rng':
+            extra.append('dev_random')
+        run_test_build(configure_py, [module] + always_include + extra, True)
+
+    for module in sorted(modules):
+        if module in cant_disable or module in always_include:
+            continue
         run_test_build(configure_py, [module], False)
 
 
