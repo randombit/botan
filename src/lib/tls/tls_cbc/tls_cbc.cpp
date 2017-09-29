@@ -211,9 +211,6 @@ void TLS_CBC_HMAC_AEAD_Encryption::finish(secure_vector<uint8_t>& buffer, size_t
       }
    }
 
-namespace {
-
-
 /*
 * Checks the TLS padding. Returns 0 if the padding is invalid (we
 * count the padding_length field as part of the padding size so a
@@ -225,7 +222,7 @@ namespace {
 * Returning 0 in the error case should ensure the MAC check will fail.
 * This approach is suggested in section 6.2.3.2 of RFC 5246.
 */
-uint16_t check_tls_padding(const uint8_t record[], size_t record_len)
+uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len)
    {
    /*
    * TLS v1.0 and up require all the padding bytes be the same value
@@ -245,8 +242,6 @@ uint16_t check_tls_padding(const uint8_t record[], size_t record_len)
    uint16_t pad_invalid_mask = CT::expand_mask<uint16_t>(pad_invalid);
    return CT::select<uint16_t>(pad_invalid_mask, 0, pad_byte + 1);
    }
-
-}
 
 void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[], size_t record_len)
    {
@@ -315,7 +310,7 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const
 *    no compressions are performed.
 * 
 * Note that the padding validation in Botan is always performed over
-* min(plen,256) bytes, see the function check_tls_padding. This differs
+* min(plen,256) bytes, see the function check_tls_cbc_padding. This differs
 * from the countermeasure described in the paper.
 * 
 * Note that the padding length padlen does also count the last byte
@@ -406,7 +401,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       cbc_decrypt_record(record_contents, enc_size);
 
       // 0 if padding was invalid, otherwise 1 + padding_bytes
-      uint16_t pad_size = check_tls_padding(record_contents, enc_size);
+      uint16_t pad_size = check_tls_cbc_padding(record_contents, enc_size);
 
       // No oracle here, whoever sent us this had the key since MAC check passed
       if(pad_size == 0)
@@ -426,7 +421,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       CT::poison(record_contents, record_len);
 
       // 0 if padding was invalid, otherwise 1 + padding_bytes
-      uint16_t pad_size = check_tls_padding(record_contents, record_len);
+      uint16_t pad_size = check_tls_cbc_padding(record_contents, record_len);
 
       /*
       This mask is zero if there is not enough room in the packet to get a valid MAC.

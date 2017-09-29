@@ -166,6 +166,14 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AE
       void perform_additional_compressions(size_t plen, size_t padlen);
    };
 
+/**
+* Check the TLS padding of a record
+* @param record the record bits
+* @param record_len length of record
+* @return 0 if padding is invalid, otherwise padding_bytes + 1
+*/
+BOTAN_TEST_API uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len);
+
 }
 
 }
