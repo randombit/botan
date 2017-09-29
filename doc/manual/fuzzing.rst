@@ -18,10 +18,9 @@ need to compile libFuzzer::
 
 Then build the fuzzers::
 
-  $ ./configure.py --with-santitizers --build-fuzzer=libfuzzer --unsafe-fuzzer-mode
+  $ ./configure.py --cc=clang --build-fuzzer=libfuzzer --unsafe-fuzzer-mode \
+        --cc-abi-flags='-fsanitize=address,undefined -fsanitize-coverage=edge,indirect-calls,8bit-counters -fno-sanitize-recover=undefined'
   $ make fuzzers
-
-Using `--with-sanitizers` is optional but highly useful.
 
 The fuzzer binaries will be in `build/fuzzer`. Simply pick one and run it, optionally
 also passing a directory containing corpus inputs.
@@ -38,6 +37,8 @@ To fuzz with AFL (http://lcamtuf.coredump.cx/afl/)::
 
   $ ./configure.py --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-g++
   $ make fuzzers
+
+For AFL, `--with-sanitizers` is optional.
 
 You can also use `afl-clang-fast++` or `afl-clang++`.
 
