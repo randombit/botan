@@ -154,6 +154,10 @@ class Filter_Tests final : public Test
 
          result.test_eq("output string", ss.str(), "efgh");
 
+         // ensure files are closed
+         pipe.reset();
+         outfile_read.close();
+
          if(std::remove(tmp_name.c_str()) != 0)
             {
             result.test_failure("Failed to remove temporary file at conclusion of test");
