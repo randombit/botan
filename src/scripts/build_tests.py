@@ -53,7 +53,7 @@ def try_to_run(cmdline):
         print(stderr.decode('ascii'))
         sys.stdout.flush()
 
-    return failed
+    return not failed
 
 def run_test_build(configure_py, modules, include, run_tests=False):
     config = [configure_py]
@@ -103,13 +103,13 @@ def main(args):
         extra = []
         if module == 'auto_rng':
             extra.append('dev_random')
-        if run_test_build(configure_py, [module] + always_include + extra, run_tests) is False:
+        if run_test_build(configure_py, [module] + always_include + extra, True, run_tests) is False:
             failed.append(module)
 
     for module in sorted(modules):
         if module in cant_disable or module in always_include:
             continue
-        if run_test_build(configure_py, [module], run_tests) is False:
+        if run_test_build(configure_py, [module], False, run_tests) is False:
             failed.append(module)
 
     print("Failed building with %s", ' '.join(failed))
