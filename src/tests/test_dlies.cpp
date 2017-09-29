@@ -67,6 +67,12 @@ class DLIES_KAT_Tests final : public Text_Based_Test
             enc.reset(Botan::get_cipher_mode(cipher_algo, Botan::ENCRYPTION));
             dec.reset(Botan::get_cipher_mode(cipher_algo, Botan::DECRYPTION));
 
+            if(!enc || !dec)
+               {
+               result.test_note("Skipping due to missing cipher:  " + mac_algo);
+               return result;
+               }
+
             cipher_key_len = enc->key_spec().maximum_keylength();
             }
 
