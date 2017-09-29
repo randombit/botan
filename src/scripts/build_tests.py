@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 """
 This configures and builds with many different sub-configurations
@@ -11,6 +11,7 @@ There is probably no reason for you to run this. Unless you want to.
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+import optparse # pylint: disable=deprecated-module
 import sys
 import subprocess
 
@@ -24,6 +25,7 @@ def get_module_list(configure_py):
 
     modules = [s.decode('ascii') for s in stdout.split()]
     modules.remove('bearssl') # can't test
+    modules.remove('tpm') # can't test
     modules.remove('base') # can't remove
     return modules
 
@@ -38,19 +40,22 @@ def get_concurrency():
 
 def try_to_run(cmdline):
     print("Running %s ... " % (' '.join(cmdline)))
+    sys.stdout.flush()
+
     cmd = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = cmd.communicate()
 
-    if cmd.returncode != 0:
+    failed = (cmd.returncode != 0)
+
+    if failed:
         print("FAILURE")
         print(stdout.decode('ascii'))
         print(stderr.decode('ascii'))
+        sys.stdout.flush()
 
-    sys.stdout.flush()
+    return failed
 
-    return (cmd.returncode == 0)
-
-def run_test_build(configure_py, modules, include, run_tests = False):
+def run_test_build(configure_py, modules, include, run_tests=False):
     config = [configure_py]
 
     if include:
@@ -75,26 +80,39 @@ def main(args):
 
     # TODO take configure.py and botan-test paths via options
 
+    parser = optparse.OptionParser()
+
+    parser.add_option('--run-tests', default=False, action='store_true')
+
+    (options, args) = parser.parse_args(args)
+
+    run_tests = options.run_tests
+
     configure_py = './configure.py'
     modules = get_module_list(configure_py)
 
-    cant_disable = ['block', 'hash', 'hex', 'mac', 'modes', 'rng', 'stream', 'utils']
+    cant_disable = ['block', 'hash', 'hex', 'mac', 'modes', 'rng', 'stream', 'utils', 'cpuid', 'entropy']
     always_include = ['sha2_32', 'sha2_64', 'aes']
 
+    failed = []
+
     for module in sorted(modules):
-        continue
-        if module in always_include or module in cant_disable:
+        if (module in always_include) or (module in cant_disable):
             continue # already testing it
 
         extra = []
         if module == 'auto_rng':
             extra.append('dev_random')
-        run_test_build(configure_py, [module] + always_include + extra, True)
+        if run_test_build(configure_py, [module] + always_include + extra, run_tests) is False:
+            failed.append(module)
 
     for module in sorted(modules):
         if module in cant_disable or module in always_include:
             continue
-        run_test_build(configure_py, [module], False)
+        if run_test_build(configure_py, [module], run_tests) is False:
+            failed.append(module)
+
+    print("Failed building with %s", ' '.join(failed))
 
 
 if __name__ == '__main__':
