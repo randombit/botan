@@ -8,6 +8,7 @@
 #ifndef BOTAN_PKCS8_H_
 #define BOTAN_PKCS8_H_
 
+#include <botan/pk_keys.h>
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <functional>
@@ -18,7 +19,6 @@ namespace Botan {
 
 class DataSource;
 class RandomNumberGenerator;
-class Private_Key;
 
 /**
 * PKCS #8 General Exception

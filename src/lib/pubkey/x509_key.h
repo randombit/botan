@@ -8,13 +8,13 @@
 #ifndef BOTAN_X509_PUBLIC_KEY_H_
 #define BOTAN_X509_PUBLIC_KEY_H_
 
+#include <botan/pk_keys.h>
 #include <botan/types.h>
 #include <string>
 #include <vector>
 
 namespace Botan {
 
-class Public_Key;
 class RandomNumberGenerator;
 class DataSource;
 
