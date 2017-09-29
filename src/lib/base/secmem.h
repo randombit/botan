@@ -37,6 +37,7 @@ class secure_allocator
 #endif
 
       typedef T          value_type;
+      typedef std::size_t size_type;
 
 #ifdef BOTAN_BUILD_COMPILER_IS_MSVC_2013
       secure_allocator() = default;
