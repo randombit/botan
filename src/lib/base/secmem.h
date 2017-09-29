@@ -38,49 +38,27 @@ class secure_allocator
 
       typedef T          value_type;
 
-      typedef T*         pointer;
-      typedef const T*   const_pointer;
-
-      typedef T&         reference;
-      typedef const T&   const_reference;
-
-      typedef std::size_t     size_type;
-      typedef std::ptrdiff_t  difference_type;
-
-#ifdef BOTAN_BUILD_COMPILER_IS_MSVC_2013
-      secure_allocator() = default;
-      secure_allocator(const secure_allocator&) = default;
-      secure_allocator& operator=(const secure_allocator&) = default;
-      ~secure_allocator() = default;
-#else
       secure_allocator() BOTAN_NOEXCEPT = default;
       secure_allocator(const secure_allocator&) BOTAN_NOEXCEPT = default;
       secure_allocator& operator=(const secure_allocator&) BOTAN_NOEXCEPT = default;
       ~secure_allocator() BOTAN_NOEXCEPT = default;
-#endif
 
       template<typename U>
       secure_allocator(const secure_allocator<U>&) BOTAN_NOEXCEPT {}
 
-      pointer address(reference x) const BOTAN_NOEXCEPT
-         { return std::addressof(x); }
-
-      const_pointer address(const_reference x) const BOTAN_NOEXCEPT
-         { return std::addressof(x); }
-
-      pointer allocate(size_type n, const void* = 0)
+      T* allocate(std::size_t n)
          {
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
-         if(pointer p = static_cast<pointer>(mlock_allocator::instance().allocate(n, sizeof(T))))
+         if(T* p = static_cast<T*>(mlock_allocator::instance().allocate(n, sizeof(T))))
             return p;
 #endif
 
-         pointer p = new T[n];
+         T* p = new T[n];
          clear_mem(p, n);
          return p;
          }
 
-      void deallocate(pointer p, size_type n)
+      void deallocate(T* p, std::size_t n)
          {
          secure_scrub_memory(p, sizeof(T)*n);
 
@@ -91,24 +69,6 @@ class secure_allocator
 
          delete [] p;
          }
-
-      size_type max_size() const BOTAN_NOEXCEPT
-         {
-         return static_cast<size_type>(-1) / sizeof(T);
-         }
-
-      template<typename U, typename... Args>
-      void construct(U* p, Args&&... args)
-         {
-         ::new(static_cast<void*>(p)) U(std::forward<Args>(args)...);
-         }
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4100)
-      template<typename U> void destroy(U* p) { p->~U(); }
-#pragma warning(pop)
-#endif
    };
 
 template<typename T, typename U> inline bool
