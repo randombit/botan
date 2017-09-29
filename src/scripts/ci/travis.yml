@@ -24,12 +24,10 @@ env:
     - BUILD_MODE="docs"
     - BUILD_MODE="lint"
     - BUILD_MODE="mini-shared"
-    - BUILD_MODE="mini-static"
     - BUILD_MODE="shared"
     - BUILD_MODE="static"
     - BUILD_MODE="bsi"
     - BUILD_MODE="nist"
-    - BUILD_MODE="sanitizer"
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
     - BUILD_MODE="cross-arm32"
@@ -66,15 +64,11 @@ matrix:
     - compiler: clang
       env: BUILD_MODE="sonar"
     - compiler: clang
-      env: BUILD_MODE="sanitizer"
-    - compiler: clang
       env: BUILD_MODE="fuzzers"
     - compiler: clang
       env: BUILD_MODE="valgrind"
     - compiler: clang
       env: BUILD_MODE="mini-shared"
-    - compiler: clang
-      env: BUILD_MODE="mini-static"
     - compiler: clang
       env: BUILD_MODE="cross-win32"
     - compiler: clang
