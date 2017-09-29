@@ -1676,9 +1676,10 @@ class FFI_Unit_Tests final : public Test
                result.test_eq("algo name", std::string(namebuf), "McEliece");
                }
 
-            const uint64_t zero_seq = 0;
-            uint8_t ad[8];
-            Botan::store_be(zero_seq, ad);
+            // TODO test KEM
+
+#if defined(BOTAN_HAS_MCEIES)
+            const uint8_t ad[8] = { 0xAD, 0xAD, 0xAD, 0xAD, 0xBE, 0xEE, 0xEE, 0xFF };
             const size_t ad_len = sizeof(ad);
 
             const Botan::secure_vector<uint8_t> plaintext = Test::rng().random_vec(Test::rng().next_byte());
@@ -1702,6 +1703,7 @@ class FFI_Unit_Tests final : public Test
 
                result.test_eq("MCIES plaintext", decrypted, plaintext);
                }
+#endif
 
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
