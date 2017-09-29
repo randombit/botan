@@ -113,6 +113,14 @@ Version 2.3.0, Not Yet Released
 
 * Fix Altivec runtime detection, which was broken starting in Botan 2.1.0
 
+* Optimized the verification of TLS CBC padding bytes. Previously the check
+  examined every byte of the record, even though at most 256 bytes of padding
+  may be appended. (GH #1227)
+
+* Simplified definition of `Botan::secure_allocator`. In particular, not
+  defining the `construct` and `destroy` methods avoids a performance problem
+  under MSVC. (GH #1228 and #1229)
+
 * Previously ARM feature detection (NEON, AES, ...) relied on getauxval, which
   is only supported on Linux and Android. Now iOS is supported, by checking the
   model name/version and matching it against known versions. Unfortunately this
