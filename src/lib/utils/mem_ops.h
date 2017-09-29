@@ -15,6 +15,24 @@
 namespace Botan {
 
 /**
+* Allocate a memory buffer by some method. This should only be used for
+* primitive types (uint8_t, uint32_t, etc).
+*
+* @param elems the number of elements
+* @param elem_size the size of each element
+* @return pointer to allocated and zeroed memory, or throw std::bad_alloc on failure
+*/
+BOTAN_PUBLIC_API(2,3) void* allocate_memory(size_t elems, size_t elem_size);
+
+/**
+* Free a pointer returned by allocate_memory
+* @param p the pointer returned by allocate_memory
+* @param elems the number of elements, as passed to allocate_memory
+* @param elem_size the size of each element, as passed to allocate_memory
+*/
+BOTAN_PUBLIC_API(2,3) void deallocate_memory(void* p, size_t elems, size_t elem_size);
+
+/**
 * Scrub memory contents in a way that a compiler should not elide,
 * using some system specific technique. Note that this function might
 * not zero the memory (for example, in some hypothetical

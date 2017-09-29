@@ -21,7 +21,7 @@ class BOTAN_PUBLIC_API(2,0) mlock_allocator final
 
       void* allocate(size_t num_elems, size_t elem_size);
 
-      bool deallocate(void* p, size_t num_elems, size_t elem_size);
+      bool deallocate(void* p, size_t num_elems, size_t elem_size) BOTAN_NOEXCEPT;
 
       mlock_allocator(const mlock_allocator&) = delete;
 

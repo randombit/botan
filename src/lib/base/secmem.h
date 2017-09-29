@@ -15,10 +15,6 @@
 #include <deque>
 #include <type_traits>
 
-#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
-  #include <botan/locking_allocator.h>
-#endif
-
 namespace Botan {
 
 template<typename T>
@@ -56,26 +52,12 @@ class secure_allocator
 
       T* allocate(std::size_t n)
          {
-#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
-         if(T* p = static_cast<T*>(mlock_allocator::instance().allocate(n, sizeof(T))))
-            return p;
-#endif
-
-         T* p = new T[n];
-         clear_mem(p, n);
-         return p;
+         return static_cast<T*>(allocate_memory(n, sizeof(T)));
          }
 
       void deallocate(T* p, std::size_t n)
          {
-         secure_scrub_memory(p, sizeof(T)*n);
-
-#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
-         if(mlock_allocator::instance().deallocate(p, n, sizeof(T)))
-            return;
-#endif
-
-         delete [] p;
+         deallocate_memory(p, n, sizeof(T));
          }
    };
 
