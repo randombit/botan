@@ -1,7 +1,7 @@
 Botan 1.8.15, 2016-02-16
 
-NOTE WELL: Botan 1.8 is end of lifed and no longer supported for
-security issues. Please move to 1.10 or 1.11 as soon as possible.
+NOTE WELL: Botan 1.8 has reached end of life and no longer supported
+in any way. Please move to 2.x as soon as possible.
 
 
 Botan is a C++ class library for performing a wide variety of
