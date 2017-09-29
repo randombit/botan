@@ -232,7 +232,7 @@ uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len)
    const uint8_t pad_byte = record[(record_len-1)];
 
    uint8_t pad_invalid = 0;
-   for(size_t i = 0; i != record_len; ++i)
+   for(size_t i = 0; i != std::min<size_t>(record_len, 255); ++i)
       {
       const size_t left = record_len - i - 2;
       const uint8_t delim_mask = CT::is_less<uint16_t>(static_cast<uint16_t>(left), pad_byte) & 0xFF;
