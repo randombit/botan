@@ -224,29 +224,37 @@ void TLS_CBC_HMAC_AEAD_Encryption::finish(secure_vector<uint8_t>& buffer, size_t
 */
 uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len)
    {
+   if(record_len == 0 || record_len > 0xFFFF)
+      return 0;
+
+   const uint16_t rec16 = static_cast<uint16_t>(record_len);
+
    /*
    * TLS v1.0 and up require all the padding bytes be the same value
    * and allows up to 255 bytes.
    */
 
+   const uint16_t to_check = std::min<uint16_t>(256, record_len);
    const uint8_t pad_byte = record[(record_len-1)];
+   const uint16_t pad_bytes = 1 + pad_byte;
 
-   uint8_t pad_invalid = 0;
-   for(size_t i = 0; i != record_len; ++i)
+   uint16_t pad_invalid = CT::is_less<uint16_t>(rec16, pad_bytes);
+
+   for(uint16_t i = rec16 - to_check; i != rec16; ++i)
       {
-      const size_t left = record_len - i - 2;
-      const uint8_t delim_mask = CT::is_less<uint16_t>(static_cast<uint16_t>(left), pad_byte) & 0xFF;
-      pad_invalid |= (delim_mask & (record[i] ^ pad_byte));
+      const uint16_t offset = rec16 - i;
+      const uint16_t in_pad_range = CT::is_lte<uint16_t>(offset, pad_bytes);
+      pad_invalid |= (in_pad_range & (record[i] ^ pad_byte));
       }
 
-   uint16_t pad_invalid_mask = CT::expand_mask<uint16_t>(pad_invalid);
+   const uint16_t pad_invalid_mask = CT::expand_mask<uint16_t>(pad_invalid);
    return CT::select<uint16_t>(pad_invalid_mask, 0, pad_byte + 1);
    }
 
 void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[], size_t record_len)
    {
-   BOTAN_ASSERT(record_len % block_size() == 0,
-                "Buffer is an even multiple of block size");
+   if(record_len % block_size() != 0)
+      throw Decoding_Error("Input CBC ciphertext is not a multiple of block size");
 
    const size_t blocks = record_len / block_size();
 
