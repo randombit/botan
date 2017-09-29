@@ -98,7 +98,8 @@ class secure_allocator
          }
 
       template<typename U, typename... Args>
-      void construct(U* p, Args&&... args)
+      typename std::enable_if<!std::is_trivially_constructible<U>::value, void>::type
+      construct(U* p, Args&&... args)
          {
          ::new(static_cast<void*>(p)) U(std::forward<Args>(args)...);
          }
@@ -106,7 +107,9 @@ class secure_allocator
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4100)
-      template<typename U> void destroy(U* p) { p->~U(); }
+      template<typename U> 
+      typename std::enable_if<!std::is_trivially_destructible<U>::value, void>::type
+      destroy(U* p) { p->~U(); }
 #pragma warning(pop)
 #endif
    };
