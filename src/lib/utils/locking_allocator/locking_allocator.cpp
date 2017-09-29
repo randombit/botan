@@ -22,14 +22,7 @@ bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
    {
    const uintptr_t pool = reinterpret_cast<uintptr_t>(pool_ptr);
    const uintptr_t buf = reinterpret_cast<uintptr_t>(buf_ptr);
-
-   if(buf < pool || buf >= pool + poolsize)
-      return false;
-
-   BOTAN_ASSERT(buf + bufsize <= pool + poolsize,
-                "Pointer does not partially overlap pool");
-
-   return true;
+   return (buf >= pool) && (buf + bufsize <= pool + poolsize);
    }
 
 size_t padding_for_alignment(size_t offset, size_t desired_alignment)
