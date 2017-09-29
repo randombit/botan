@@ -139,7 +139,7 @@ class Filter_Tests final : public Test
          Test::Result result("DataSinkFlush");
 
 #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-         std::string tmp_name("botan_test_data_src_sink_flush.tmp");
+         const std::string tmp_name("botan_test_data_src_sink_flush.tmp");
          std::ofstream outfile(tmp_name);
 
          Botan::Pipe pipe(new Botan::Hex_Decoder, new Botan::DataSink_Stream(outfile));
@@ -154,7 +154,10 @@ class Filter_Tests final : public Test
 
          result.test_eq("output string", ss.str(), "efgh");
 
-         std::remove(tmp_name.c_str());
+         if(std::remove(tmp_name.c_str()) != 0)
+            {
+            result.test_failure("Failed to remove temporary file at conclusion of test");
+            }
 #endif
          return result;
          }
