@@ -41,7 +41,7 @@ Version 2.3.0, Not Yet Released
 
 * Add ids to allow SHA-3 signatures with PKCSv1.5 (GH #1184)
 
-* Add support for `PSSR_Raw` signatures which PSS sign an externally derived
+* Add support for ``PSSR_Raw`` signatures which PSS sign an externally derived
   hash. (GH #1212 #1211)
 
 * GCM now supports truncated tags in the range 96...128 bits. GCM had
@@ -117,9 +117,13 @@ Version 2.3.0, Not Yet Released
   examined every byte of the record, even though at most 256 bytes of padding
   may be appended. (GH #1227)
 
-* Simplified definition of `Botan::secure_allocator`. In particular, not
-  defining the `construct` and `destroy` methods avoids a performance problem
+* Simplified definition of ``Botan::secure_allocator``. In particular, not
+  defining the ``construct`` and ``destroy`` methods avoids a performance problem
   under MSVC. (GH #1228 and #1229)
+
+* The ``secure_allocator`` class now uses ``calloc`` and ``free`` instead of
+  ``new`` and ``delete``. In addition the actual allocation operation is hidden
+  inside of compiled functions, which significantly reduces code size. (GH #1231)
 
 * Previously ARM feature detection (NEON, AES, ...) relied on getauxval, which
   is only supported on Linux and Android. Now iOS is supported, by checking the
@@ -158,7 +162,7 @@ Version 2.3.0, Not Yet Released
   are defined as ``BOTAN_DLL`` so overriding just that macro continues
   to work as before. (GH #1216)
 
-* Optimize `bigint_divop` when a double-word type is available. (GH #494)
+* Optimize ``bigint_divop`` when a double-word type is available. (GH #494)
 
 * Fix several memory leaks in the tests. Additionally a false positive
   leak seen under ``valgrind`` in the ``fork`` tests for the RNG was resolved.
