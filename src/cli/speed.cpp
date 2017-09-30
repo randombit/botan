@@ -211,7 +211,7 @@ class Timer
          return (milliseconds() < msec.count());
          }
 
-      struct Timer_Scope
+      class Timer_Scope
          {
          public:
             explicit Timer_Scope(Timer& timer)
