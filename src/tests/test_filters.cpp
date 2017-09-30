@@ -155,7 +155,7 @@ class Filter_Tests final : public Test
          result.test_eq("output string", ss.str(), "efgh");
 
          // ensure files are closed
-         pipe.reset();
+         outfile.close();
          outfile_read.close();
 
          if(std::remove(tmp_name.c_str()) != 0)
