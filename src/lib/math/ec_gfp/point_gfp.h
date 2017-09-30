@@ -19,20 +19,22 @@ namespace Botan {
 * Exception thrown if you try to convert a zero point to an affine
 * coordinate
 */
-struct BOTAN_PUBLIC_API(2,0) Illegal_Transformation final : public Exception
+class BOTAN_PUBLIC_API(2,0) Illegal_Transformation final : public Exception
    {
-   explicit Illegal_Transformation(const std::string& err =
-                          "Requested transformation is not possible") :
-      Exception(err) {}
+   public:
+      explicit Illegal_Transformation(const std::string& err =
+                                      "Requested transformation is not possible") :
+         Exception(err) {}
    };
 
 /**
 * Exception thrown if some form of illegal point is decoded
 */
-struct BOTAN_PUBLIC_API(2,0) Illegal_Point final : public Exception
+class BOTAN_PUBLIC_API(2,0) Illegal_Point final : public Exception
    {
-   explicit Illegal_Point(const std::string& err = "Malformed ECP point detected") :
-      Exception(err) {}
+   public:
+      explicit Illegal_Point(const std::string& err = "Malformed ECP point detected") :
+         Exception(err) {}
    };
 
 /**

@@ -38,16 +38,17 @@ class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
       * Exception if you use an invalid message as an argument to
       * read, remaining, etc
       */
-      struct BOTAN_PUBLIC_API(2,0) Invalid_Message_Number final : public Invalid_Argument
+      class BOTAN_PUBLIC_API(2,0) Invalid_Message_Number final : public Invalid_Argument
          {
-         /**
-         * @param where the error occurred
-         * @param msg the invalid message id that was used
-         */
-         Invalid_Message_Number(const std::string& where, message_id msg) :
-            Invalid_Argument("Pipe::" + where + ": Invalid message number " +
-                             std::to_string(msg))
-            {}
+         public:
+            /**
+            * @param where the error occurred
+            * @param msg the invalid message id that was used
+            */
+            Invalid_Message_Number(const std::string& where, message_id msg) :
+               Invalid_Argument("Pipe::" + where + ": Invalid message number " +
+                                std::to_string(msg))
+               {}
          };
 
       /**

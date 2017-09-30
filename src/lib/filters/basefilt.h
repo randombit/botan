@@ -20,11 +20,12 @@ namespace Botan {
 /**
 * BitBucket is a filter which simply discards all inputs
 */
-struct BOTAN_PUBLIC_API(2,0) BitBucket final : public Filter
+class BOTAN_PUBLIC_API(2,0) BitBucket final : public Filter
    {
-   void write(const uint8_t[], size_t) override {}
+   public:
+      void write(const uint8_t[], size_t) override {}
 
-   std::string name() const override { return "BitBucket"; }
+      std::string name() const override { return "BitBucket"; }
    };
 
 /**

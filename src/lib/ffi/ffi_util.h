@@ -25,7 +25,7 @@ class FFI_Error final : public Botan::Exception
    };
 
 template<typename T, uint32_t MAGIC>
-struct botan_struct
+class botan_struct
    {
    public:
       botan_struct(T* obj) : m_magic(MAGIC), m_obj(obj) {}
@@ -46,7 +46,7 @@ struct botan_struct
    };
 
 #define BOTAN_FFI_DECLARE_STRUCT(NAME, TYPE, MAGIC) \
-   struct NAME final : public botan_struct<TYPE, MAGIC> { explicit NAME(TYPE* x) : botan_struct(x) {} }
+   class NAME final : public botan_struct<TYPE, MAGIC> { public: explicit NAME(TYPE* x) : botan_struct(x) {} }
 
 // Declared in ffi.cpp
 int ffi_error_exception_thrown(const char* func_name, const char* exn);

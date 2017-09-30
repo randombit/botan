@@ -19,7 +19,7 @@ namespace Botan {
 
 namespace HTTP {
 
-struct Response
+class Response
    {
    public:
       Response() : m_status_code(0), m_status_message("Uninitialized") {}
@@ -56,11 +56,12 @@ struct Response
 /**
 * HTTP_Error Exception
 */
-struct BOTAN_PUBLIC_API(2,0) HTTP_Error final : public Exception
+class BOTAN_PUBLIC_API(2,0) HTTP_Error final : public Exception
    {
-   explicit HTTP_Error(const std::string& msg) :
-      Exception("HTTP error " + msg)
-      {}
+   public:
+      explicit HTTP_Error(const std::string& msg) :
+         Exception("HTTP error " + msg)
+         {}
    };
 
 BOTAN_PUBLIC_API(2,0) std::ostream& operator<<(std::ostream& o, const Response& resp);

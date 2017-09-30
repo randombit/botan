@@ -20,7 +20,7 @@ namespace Botan {
 
 class RandomNumberGenerator;
 
-struct polyn_gf2m
+class polyn_gf2m
    {
    public:
       /**

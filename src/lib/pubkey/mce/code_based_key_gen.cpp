@@ -19,7 +19,7 @@ namespace Botan {
 
 namespace {
 
-struct binary_matrix
+class binary_matrix
    {
    public:
       binary_matrix(uint32_t m_rown, uint32_t m_coln);

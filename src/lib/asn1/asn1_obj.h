@@ -115,18 +115,20 @@ bool maybe_BER(DataSource& src);
 /**
 * General BER Decoding Error Exception
 */
-struct BOTAN_PUBLIC_API(2,0) BER_Decoding_Error : public Decoding_Error
+class BOTAN_PUBLIC_API(2,0) BER_Decoding_Error : public Decoding_Error
    {
-   explicit BER_Decoding_Error(const std::string&);
+   public:
+      explicit BER_Decoding_Error(const std::string&);
    };
 
 /**
 * Exception For Incorrect BER Taggings
 */
-struct BOTAN_PUBLIC_API(2,0) BER_Bad_Tag final : public BER_Decoding_Error
+class BOTAN_PUBLIC_API(2,0) BER_Bad_Tag final : public BER_Decoding_Error
    {
-   BER_Bad_Tag(const std::string& msg, ASN1_Tag tag);
-   BER_Bad_Tag(const std::string& msg, ASN1_Tag tag1, ASN1_Tag tag2);
+   public:
+      BER_Bad_Tag(const std::string& msg, ASN1_Tag tag);
+      BER_Bad_Tag(const std::string& msg, ASN1_Tag tag1, ASN1_Tag tag2);
    };
 
 }

@@ -56,7 +56,7 @@ class CLI_Error_Unsupported : public CLI_Error
          : CLI_Error(what + " with '" + who + "' unsupported or not available") {}
    };
 
-struct CLI_Error_Invalid_Spec : public CLI_Error
+class CLI_Error_Invalid_Spec : public CLI_Error
    {
    public:
       explicit CLI_Error_Invalid_Spec(const std::string& spec)
