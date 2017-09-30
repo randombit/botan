@@ -216,6 +216,11 @@ class BOTAN_PUBLIC_API(2,0) PBKDF
          }
    };
 
+/*
+* Compatability typedef
+*/
+typedef PBKDF S2K;
+
 /**
 * Password based key derivation function factory method
 * @param algo_spec the name of the desired PBKDF algorithm
@@ -223,13 +228,19 @@ class BOTAN_PUBLIC_API(2,0) PBKDF
 * @return pointer to newly allocated object of that type
 */
 inline PBKDF* get_pbkdf(const std::string& algo_spec,
-                           const std::string& provider = "")
+                        const std::string& provider = "")
    {
    std::unique_ptr<PBKDF> p(PBKDF::create(algo_spec, provider));
    if(p)
       return p.release();
    throw Algorithm_Not_Found(algo_spec);
    }
+
+inline PBKDF2* get_s2k(const std::string& algo_spec)
+   {
+   return get_pbkdf(algo_spec);
+   }
+
 
 }
 
