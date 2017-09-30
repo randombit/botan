@@ -57,6 +57,9 @@ Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
 */
 Extensions& Extensions::operator=(const Extensions& other)
    {
+   if(this == &other)
+      return *this;
+
    m_extensions.clear();
 
    for(size_t i = 0; i != other.m_extensions.size(); ++i)
