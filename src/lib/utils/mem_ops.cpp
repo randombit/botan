@@ -5,8 +5,41 @@
 */
 
 #include <botan/mem_ops.h>
+#include <cstdlib>
+
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+  #include <botan/locking_allocator.h>
+#endif
 
 namespace Botan {
+
+void* allocate_memory(size_t elems, size_t elem_size)
+   {
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+   if(void* p = mlock_allocator::instance().allocate(elems, elem_size))
+      return p;
+#endif
+
+   void* ptr = std::calloc(elems, elem_size);
+   if(!ptr)
+      throw std::bad_alloc();
+   return ptr;
+   }
+
+void deallocate_memory(void* p, size_t elems, size_t elem_size)
+   {
+   if(p == nullptr)
+      return;
+
+   secure_scrub_memory(p, elems * elem_size);
+
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+   if(mlock_allocator::instance().deallocate(p, elems, elem_size))
+      return;
+#endif
+
+   std::free(p);
+   }
 
 bool constant_time_compare(const uint8_t x[],
                            const uint8_t y[],
