@@ -354,8 +354,9 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    const size_t X = length / 4;
 
-   // Make clang-analyzer happy
-   BOTAN_ASSERT(X == 4 || X == 6 || X == 8, "Valid AES key size");
+   // Can't happen, but make static analyzers happy
+   if(X != 4 && X != 6 && X != 8)
+      throw Invalid_Argument("Invalid AES key size");
 
    for(size_t i = 0; i != X; ++i)
       XEK[i] = load_be<uint32_t>(key, i);
