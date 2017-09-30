@@ -11,8 +11,6 @@
 
 namespace Botan {
 
-namespace {
-
 #define key_xor(round, B0, B1, B2, B3)                             \
    do {                                                            \
       B0 ^= SIMD_32::splat(m_round_key[4*round  ]);                \
@@ -51,8 +49,6 @@ namespace {
       B2.rotate_right(3);                                          \
       B0.rotate_right(13);                                         \
    } while(0);
-
-}
 
 /*
 * SIMD Serpent Encryption of 4 blocks in parallel
