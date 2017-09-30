@@ -236,7 +236,7 @@ inline PBKDF* get_pbkdf(const std::string& algo_spec,
    throw Algorithm_Not_Found(algo_spec);
    }
 
-inline PBKDF2* get_s2k(const std::string& algo_spec)
+inline PBKDF* get_s2k(const std::string& algo_spec)
    {
    return get_pbkdf(algo_spec);
    }
