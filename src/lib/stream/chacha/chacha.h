@@ -25,7 +25,7 @@ class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
       * @note Currently only 8, 12 or 20 rounds are supported, all others
       * will throw an exception
       */
-      ChaCha(size_t rounds = 20);
+      explicit ChaCha(size_t rounds = 20);
 
       std::string provider() const override;
 

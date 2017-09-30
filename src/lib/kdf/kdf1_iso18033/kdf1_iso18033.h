@@ -31,7 +31,7 @@ class BOTAN_PUBLIC_API(2,0) KDF1_18033 final : public KDF
       /**
       * @param h hash function to use
       */
-      KDF1_18033(HashFunction* h) : m_hash(h) {}
+      explicit KDF1_18033(HashFunction* h) : m_hash(h) {}
    private:
       std::unique_ptr<HashFunction> m_hash;
    };

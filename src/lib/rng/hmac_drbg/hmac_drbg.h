@@ -31,7 +31,7 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
       * in response. In this case, an exception will be thrown rather
       * than generating duplicated output.
       */
-      HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf);
+      explicit HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf);
 
       /**
       * Initialize an HMAC_DRBG instance with the given MAC as PRF (normally HMAC)
@@ -122,7 +122,7 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
       /**
       * Constructor taking a string for the hash
       */
-      HMAC_DRBG(const std::string& hmac_hash) :
+      explicit HMAC_DRBG(const std::string& hmac_hash) :
          Stateful_RNG(),
          m_mac(MessageAuthenticationCode::create_or_throw("HMAC(" + hmac_hash + ")")),
          m_max_number_of_bytes_per_request(64 * 1024)

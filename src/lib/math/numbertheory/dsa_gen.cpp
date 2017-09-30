@@ -61,7 +61,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
       public:
          explicit Seed(const std::vector<uint8_t>& s) : m_seed(s) {}
 
-         operator std::vector<uint8_t>& () { return m_seed; }
+         const std::vector<uint8_t>& value() const { return m_seed; }
 
          Seed& operator++()
             {
@@ -76,7 +76,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 
    Seed seed(seed_c);
 
-   q.binary_decode(hash->process(seed));
+   q.binary_decode(hash->process(seed.value()));
    q.set_bit(qbits-1);
    q.set_bit(0);
 
@@ -94,7 +94,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
       for(size_t k = 0; k <= n; ++k)
          {
          ++seed;
-         hash->update(seed);
+         hash->update(seed.value());
          hash->final(&V[HASH_SIZE * (n-k)]);
          }
 

@@ -65,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      *
      * @param str the string to parse for an integer value
      */
-     BigInt(const std::string& str);
+     explicit BigInt(const std::string& str);
 
      /**
      * Create a BigInt from an integer in a byte array

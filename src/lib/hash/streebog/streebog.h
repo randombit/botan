@@ -28,7 +28,7 @@ class BOTAN_PUBLIC_API(2,2) Streebog : public HashFunction
 
       std::unique_ptr<HashFunction> copy_state() const override;
 
-      Streebog(size_t output_bits);
+      explicit Streebog(size_t output_bits);
    protected:
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t out[]) override;

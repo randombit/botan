@@ -40,7 +40,7 @@ class BOTAN_PUBLIC_API(2,0) GOST_28147_89_Params final
       * Federation
       * @param name of the parameter set
       */
-      GOST_28147_89_Params(const std::string& name = "R3411_94_TestParam");
+      explicit GOST_28147_89_Params(const std::string& name = "R3411_94_TestParam");
    private:
       const uint8_t* m_sboxes;
       std::string m_name;
@@ -64,6 +64,9 @@ class BOTAN_PUBLIC_API(2,0) GOST_28147_89 final : public Block_Cipher_Fixed_Para
       * @param params the sbox parameters to use
       */
       explicit GOST_28147_89(const GOST_28147_89_Params& params);
+
+      explicit GOST_28147_89(const std::string& param_name) :
+         GOST_28147_89(GOST_28147_89_Params(param_name)) {}
    private:
       explicit GOST_28147_89(const std::vector<uint32_t>& other_SBOX) :
          m_SBOX(other_SBOX), m_EK(8) {}

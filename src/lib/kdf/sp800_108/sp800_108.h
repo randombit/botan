@@ -48,7 +48,7 @@ class BOTAN_PUBLIC_API(2,0) SP800_108_Counter final : public KDF
       /**
       * @param mac MAC algorithm to use
       */
-      SP800_108_Counter(MessageAuthenticationCode* mac) : m_prf(mac) {}
+      explicit SP800_108_Counter(MessageAuthenticationCode* mac) : m_prf(mac) {}
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
    };
@@ -85,7 +85,7 @@ class BOTAN_PUBLIC_API(2,0) SP800_108_Feedback final : public KDF
                  const uint8_t salt[], size_t salt_len,
                  const uint8_t label[], size_t label_len) const override;
 
-      SP800_108_Feedback(MessageAuthenticationCode* mac) : m_prf(mac) {}
+      explicit SP800_108_Feedback(MessageAuthenticationCode* mac) : m_prf(mac) {}
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
    };
@@ -122,7 +122,7 @@ class BOTAN_PUBLIC_API(2,0) SP800_108_Pipeline final : public KDF
                  const uint8_t salt[], size_t salt_len,
                  const uint8_t label[], size_t label_len) const override;
 
-      SP800_108_Pipeline(MessageAuthenticationCode* mac) : m_prf(mac) {}
+      explicit SP800_108_Pipeline(MessageAuthenticationCode* mac) : m_prf(mac) {}
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;

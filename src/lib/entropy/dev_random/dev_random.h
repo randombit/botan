@@ -24,7 +24,7 @@ class Device_EntropySource final : public Entropy_Source
 
       size_t poll(RandomNumberGenerator& rng) override;
 
-      Device_EntropySource(const std::vector<std::string>& fsnames);
+      explicit Device_EntropySource(const std::vector<std::string>& fsnames);
 
       ~Device_EntropySource();
    private:

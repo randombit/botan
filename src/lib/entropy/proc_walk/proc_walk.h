@@ -30,7 +30,7 @@ class ProcWalking_EntropySource final : public Entropy_Source
 
       size_t poll(RandomNumberGenerator& rng) override;
 
-      ProcWalking_EntropySource(const std::string& root_dir) :
+      explicit ProcWalking_EntropySource(const std::string& root_dir) :
          m_path(root_dir), m_dir(nullptr) {}
 
    private:

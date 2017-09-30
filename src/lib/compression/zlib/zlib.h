@@ -63,7 +63,7 @@ class BOTAN_PUBLIC_API(2,0) Deflate_Decompression final : public Stream_Decompre
 class BOTAN_PUBLIC_API(2,0) Gzip_Compression final : public Stream_Compression
    {
    public:
-      Gzip_Compression(uint8_t os_code = 255) : m_os_code(os_code) {}
+      explicit Gzip_Compression(uint8_t os_code = 255) : m_os_code(os_code) {}
 
       std::string name() const override { return "Gzip_Compression"; }
    private:

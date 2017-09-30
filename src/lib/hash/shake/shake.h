@@ -25,7 +25,7 @@ class BOTAN_PUBLIC_API(2,0) SHAKE_128 final : public HashFunction
       * @param output_bits the desired output size in bits
       * must be a multiple of 8
       */
-      SHAKE_128(size_t output_bits);
+      explicit SHAKE_128(size_t output_bits);
 
       size_t hash_block_size() const override { return SHAKE_128_BITRATE / 8; }
       size_t output_length() const override { return m_output_bits / 8; }
@@ -57,7 +57,7 @@ class BOTAN_PUBLIC_API(2,0) SHAKE_256 final : public HashFunction
       * @param output_bits the desired output size in bits
       * must be a multiple of 8
       */
-      SHAKE_256(size_t output_bits);
+      explicit SHAKE_256(size_t output_bits);
 
       size_t hash_block_size() const override { return SHAKE_256_BITRATE / 8; }
       size_t output_length() const override { return m_output_bits / 8; }
