@@ -5,6 +5,7 @@
 */
 
 #include <botan/mem_ops.h>
+#include <cstdlib>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
   #include <botan/locking_allocator.h>
