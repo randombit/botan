@@ -17,8 +17,6 @@ env:
     - CCACHE_MAXSIZE=250M
     - CCACHE_MAXFILES=2000
     - CCACHE_COMPRESS=1
-    # SONAR_TOKEN for accessing the Sonar server
-    - secure: "VezRbHFg6kllV5WG06M3tG3aHJaC3xrMylJ6RCVbL+uz2JeralVCqV7eIk4fVb9cu83Li+weEa0AJj0wkxpIUJ+vUh5F65L6gSWSbgHP7muOSVsmnEc6KvX4n3av/ZGe4geSmsxqh2pd/2xI1h7KioGRhKeqaZIdjVgWgGJW2iQ="
 
   matrix:
     - BUILD_MODE="shared"
@@ -109,7 +107,10 @@ cache:
     - $HOME/.sonar/cache
 
 addons:
-  sonarcloud: true
+  sonarcloud:
+    organization: "randombit-github"
+    token:
+      secure: "MTveedl4eey6M4i12SdpXrCJs0eBerN+v+BzkUjCDiVSdHH+/m2wO4EJE/PoJAJyTPeZkxSLag4vCSebr0R1+ojBXUGW0Q1lnZ5xqrf3Vpb7Gvyavqc2kq4tFqVaU0nCF+sTm6dZMTTD7raxOSlP7fefp8yDVz7ddE1G9ZiT8rA="
 
   coverity_scan:
     project:
