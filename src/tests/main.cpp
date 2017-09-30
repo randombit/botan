@@ -125,8 +125,10 @@ class Test_Runner final : public Botan_CLI::Command
                         out[i] = static_cast<uint8_t>(m_x >> 7);
                         }
                      }
+
+                  Bogus_Fallback_RNG() : m_x(1) {}
                private:
-                  uint32_t m_x = 1;
+                  uint32_t m_x;
                };
 
             output() << " rng:bogus\n";
