@@ -22,7 +22,7 @@ namespace Botan {
 * @param elem_size the size of each element
 * @return pointer to allocated and zeroed memory, or throw std::bad_alloc on failure
 */
-BOTAN_PUBLIC_API(2,3) void* allocate_memory(size_t elems, size_t elem_size);
+BOTAN_PUBLIC_API(2,3) BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size);
 
 /**
 * Free a pointer returned by allocate_memory

@@ -85,6 +85,17 @@
 #endif
 
 /*
+* Define BOTAN_MALLOC_FN
+*/
+#if defined(__GNUG__) || defined(__clang__)
+  #define BOTAN_MALLOC_FN __attribute__ ((malloc))
+#elif defined(_MSC_VER)
+  #define BOTAN_MALLOC_FN __declspec(restrict)
+#else
+  #define BOTAN_MALLOC_FN
+#endif
+
+/*
 * Define BOTAN_DEPRECATED
 */
 #if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
