@@ -25,7 +25,7 @@ class FFI_Error final : public Botan::Exception
    };
 
 template<typename T, uint32_t MAGIC>
-class botan_struct
+struct botan_struct
    {
    public:
       botan_struct(T* obj) : m_magic(MAGIC), m_obj(obj) {}
