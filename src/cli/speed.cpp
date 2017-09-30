@@ -1572,7 +1572,7 @@ class Speed final : public Command
             Botan::SymmetricKey symkey1 = ka_timer.run([&]() { return ka1.derive_key(32, ka2_pub); });
             Botan::SymmetricKey symkey2 = ka_timer.run([&]() { return ka2.derive_key(32, ka1_pub); });
 
-            if(symkey1 != symkey1)
+            if(symkey1 != symkey2)
                {
                error_output() << "Key agreement mismatch in PK bench\n";
                }
