@@ -761,7 +761,7 @@ class RDRAND_RNG_Tests final : public Test
             an invalid ptr/length field to add_entropy. If it examined its
             arguments, it would crash...
             */
-            const uint8_t* invalid_ptr = reinterpret_cast<const uint8_t*>(0xDEADC0DE);
+            const uint8_t* invalid_ptr = reinterpret_cast<const uint8_t*>(static_cast<uintptr_t>(0xDEADC0DE));
             const size_t invalid_ptr_len = 64*1024;
             rng.add_entropy(invalid_ptr, invalid_ptr_len);
 

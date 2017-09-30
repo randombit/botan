@@ -119,7 +119,7 @@ void MISTY1::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          B3 ^= B2 & RK[2];
          B2 ^= B3 | RK[3];
 
-         uint32_t T0, T1;
+         uint16_t T0, T1;
 
          T0  = FI(B0 ^ RK[ 4], RK[ 5], RK[ 6]) ^ B1;
          T1  = FI(B1 ^ RK[ 7], RK[ 8], RK[ 9]) ^ T0;
@@ -169,7 +169,7 @@ void MISTY1::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          B0 ^= B1 | RK[2];
          B1 ^= B0 & RK[3];
 
-         uint32_t T0, T1;
+         uint16_t T0, T1;
 
          T0  = FI(B2 ^ RK[ 4], RK[ 5], RK[ 6]) ^ B3;
          T1  = FI(B3 ^ RK[ 7], RK[ 8], RK[ 9]) ^ T0;

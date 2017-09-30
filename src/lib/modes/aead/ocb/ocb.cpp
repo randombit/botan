@@ -211,7 +211,7 @@ OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
    secure_vector<uint8_t> nonce_buf(BS);
 
    copy_mem(&nonce_buf[BS - nonce_len], nonce, nonce_len);
-   nonce_buf[0] = ((tag_size()*8) % (BS*8)) << (BS <= 16 ? 1 : 0);
+   nonce_buf[0] = static_cast<uint8_t>(((tag_size()*8) % (BS*8)) << (BS <= 16 ? 1 : 0));
 
    nonce_buf[BS - nonce_len - 1] ^= 1;
 

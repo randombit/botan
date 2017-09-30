@@ -90,9 +90,8 @@ void GMAC::final_result(uint8_t mac[])
    // This ensures the GMAC computation has been initialized with a fresh
    // nonce. The aim of this check is to prevent developers from re-using
    // nonces (and potential nonce-reuse attacks).
-   BOTAN_ASSERT(m_initialized,
-                "The GMAC computation has not been initialized with a fresh "
-                "nonce.");
+   BOTAN_ASSERT(m_initialized, "GMAC was used with a fresh nonce");
+
    // process the rest of the aad buffer. Even if it is a partial block only
    // ghash_update will process it properly.
    if(m_aad_buf.size() > 0)
@@ -102,7 +101,7 @@ void GMAC::final_result(uint8_t mac[])
                     m_aad_buf.size());
        }
    secure_vector<uint8_t> result = GHASH::final();
-   std::copy(result.begin(), result.end(), mac);
+   copy_mem(mac, result.data(), result.size());
    clear();
    }
 
