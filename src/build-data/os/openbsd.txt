@@ -7,6 +7,7 @@ soname_pattern_patch "libbotan-{version_major}.so.{abi_rev}.{version_minor}"
 <target_features>
 arc4random
 clock_gettime
+explicit_bzero
 gettimeofday
 posix_mlock
 gmtime_r

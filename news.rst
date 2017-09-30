@@ -125,6 +125,8 @@ Version 2.3.0, Not Yet Released
   ``new`` and ``delete``. In addition the actual allocation operation is hidden
   inside of compiled functions, which significantly reduces code size. (GH #1231)
 
+* The ``secure_scrub_memory`` function now uses ``explicit_bzero`` on OpenBSD.
+
 * Previously ARM feature detection (NEON, AES, ...) relied on getauxval, which
   is only supported on Linux and Android. Now iOS is supported, by checking the
   model name/version and matching it against known versions. Unfortunately this
@@ -4849,5 +4851,3 @@ Version 0.7.0, 2001-03-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * First public release
-
-

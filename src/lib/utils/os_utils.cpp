@@ -22,6 +22,10 @@
   #include <boost/asio.hpp>
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
+  #include <string.h>
+#endif
+
 #if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
   #include <sys/types.h>
   #include <sys/resource.h>
@@ -294,10 +298,11 @@ OS::open_socket(const std::string& hostname,
 // Not defined in OS namespace for historical reasons
 void secure_scrub_memory(void* ptr, size_t n)
    {
-   // TODO support explicit_bzero
-
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
    ::RtlSecureZeroMemory(ptr, n);
+
+#elif defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
+   ::explicit_bzero(ptr, n);
 
 #elif defined(BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO) && (BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO == 1)
    /*
