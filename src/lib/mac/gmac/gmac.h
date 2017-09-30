@@ -16,6 +16,9 @@ namespace Botan {
 
 /**
 * GMAC
+*
+* GMAC requires a unique initialization vector be used for each message.
+* This must be provided via the MessageAuthenticationCode::start() API
 */
 class BOTAN_PUBLIC_API(2,0) GMAC final : public MessageAuthenticationCode, public GHASH
    {
@@ -24,31 +27,6 @@ class BOTAN_PUBLIC_API(2,0) GMAC final : public MessageAuthenticationCode, publi
       std::string name() const override;
       size_t output_length() const override;
       MessageAuthenticationCode* clone() const override;
-
-      /**
-      * Must be called to set the initialization vector prior to GMAC
-      * calculation.
-      *
-      * @param nonce Initialization vector.
-      * @param nonce_len size of initialization vector.
-      */
-      void start(const uint8_t nonce[], size_t nonce_len);
-
-      /**
-      * Must be called to set the initialization vector prior to GMAC
-      * calculation.
-      *
-      * @param nonce Initialization vector.
-      */
-      void start(const secure_vector<uint8_t>& nonce);
-
-      /**
-      * Must be called to set the initialization vector prior to GMAC
-      * calculation.
-      *
-      * @param nonce Initialization vector.
-      */
-      void start(const std::vector<uint8_t>& nonce);
 
       Key_Length_Specification key_spec() const override
          {
