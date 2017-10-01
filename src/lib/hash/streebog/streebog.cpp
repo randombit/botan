@@ -29,7 +29,7 @@ static inline void addm(const uint8_t* m, uint64_t* h)
       const uint64_t hi = load_le<uint64_t>(reinterpret_cast<uint8_t*>(h), i);
       const uint64_t t = hi + m64;
 
-      const uint64_t overflow = (t < hi) | (t < m64);
+      const uint64_t overflow = (t < hi ? 1 : 0) | (t < m64 ? 1 : 0);
       store_le(t + carry, reinterpret_cast<uint8_t*>(&h[i]));
       carry = overflow;
       }

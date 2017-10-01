@@ -303,9 +303,9 @@ void SEED::key_schedule(const uint8_t key[], size_t)
       m_K[2*i  ] = SEED_G(WK[0] + WK[2] - RC[i]);
       m_K[2*i+1] = SEED_G(WK[1] - WK[3] + RC[i]) ^ m_K[2*i];
 
-      uint8_t T = get_byte(3, WK[0]);
+      uint32_t T = (WK[0] & 0xFF) << 24;
       WK[0] = (WK[0] >> 8) | (get_byte(3, WK[1]) << 24);
-      WK[1] = (WK[1] >> 8) | (T << 24);
+      WK[1] = (WK[1] >> 8) | T;
 
       m_K[2*i+2] = SEED_G(WK[0] + WK[2] - RC[i+1]);
       m_K[2*i+3] = SEED_G(WK[1] - WK[3] + RC[i+1]) ^ m_K[2*i+2];

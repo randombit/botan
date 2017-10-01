@@ -93,7 +93,7 @@ uint16_t FI(uint16_t input, uint16_t key7, uint16_t key9)
    D9 = MISTY1_SBOX_S9[D9] ^ D7;
    D7 = (MISTY1_SBOX_S7[D7] ^ key7 ^ D9) & 0x7F;
    D9 = MISTY1_SBOX_S9[D9 ^ key9] ^ D7;
-   return static_cast<uint16_t>((D7 << 9) | D9);
+   return static_cast<uint16_t>(D7 << 9) | D9;
    }
 
 }

@@ -100,7 +100,7 @@ uint16_t FI(uint16_t I, uint16_t K)
    D7 ^= (K >> 9);
    D9 = KASUMI_SBOX_S9[D9 ^ (K & 0x1FF)] ^ D7;
    D7 = KASUMI_SBOX_S7[D7] ^ (D9 & 0x7F);
-   return (D7 << 9) | D9;
+   return static_cast<uint16_t>(D7 << 9) | D9;
    }
 
 }

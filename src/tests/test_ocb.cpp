@@ -69,9 +69,9 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher
             for(size_t i = 0; i != m_bs; ++i)
                out[i] = in[i] ^ m_key[i];
 
-            const uint8_t bottom_carry = in[m_bs-1] & 0x01;
+            uint8_t carry = in[m_bs-1] & 0x01;
 
-            if(bottom_carry)
+            if(carry)
                {
                if(m_bs == 16 || m_bs == 24)
                   {
@@ -91,13 +91,14 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher
                   throw Test_Error("Bad OCB test block size");
                }
 
-            uint8_t carry = bottom_carry << 7;
+            carry <<= 7;
 
             for(size_t i = 0; i != m_bs; ++i)
                {
-               uint8_t temp = out[i];
+               const uint8_t temp = out[i];
                out[i] = (temp >> 1) | carry;
-               carry = (temp & 0x1) << 7;
+               carry = (temp & 0x1);
+               carry <<= 7;
                }
 
             blocks--;

@@ -94,7 +94,7 @@ const uint8_t SD[256] = {
    0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63,
    0x55, 0x21, 0x0C, 0x7D };
 
-inline uint8_t xtime(uint8_t s) { return (s << 1) ^ ((s >> 7) * 0x1B); }
+inline uint8_t xtime(uint8_t s) { return static_cast<uint8_t>(s << 1) ^ ((s >> 7) * 0x1B); }
 inline uint8_t xtime4(uint8_t s) { return xtime(xtime(s)); }
 inline uint8_t xtime8(uint8_t s) { return xtime(xtime(xtime(s))); }
 
