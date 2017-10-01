@@ -91,7 +91,7 @@ install:
   - ./src/scripts/ci/setup_travis.sh
 
 script:
-  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --compiler-cache=ccache --pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so $BUILD_MODE
+  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so $BUILD_MODE
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
