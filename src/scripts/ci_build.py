@@ -323,8 +323,8 @@ def main(args=None):
             return 1
 
     if options.compiler_cache is None and options.cc != 'msvc':
-        # Autodetect ccache
-        if have_prog('ccache'):
+        # Autodetect ccache, unless using clang profiling - ccache seems to misbehave there
+        if have_prog('ccache') and target not in ['sonar']:
             options.compiler_cache = 'ccache'
 
     if options.compiler_cache == 'clcache' and target in ['sanitizer']:
