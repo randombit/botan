@@ -58,7 +58,7 @@ class Compression_Tests final : public Test
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
-         const size_t text_len = strlen(text_str);
+         const size_t text_len = std::strlen(text_str);
 
          for(std::string algo : { "zlib", "deflate", "gzip", "bz2", "lzma" })
             {

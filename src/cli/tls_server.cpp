@@ -203,7 +203,7 @@ class TLS_Server final : public Command
 
                      if(got == -1)
                         {
-                        error_output() << "Error in socket read - " << strerror(errno) << std::endl;
+                        error_output() << "Error in socket read - " << std::strerror(errno) << std::endl;
                         break;
                         }
 
@@ -313,7 +313,7 @@ class TLS_Server final : public Command
 
          if(sent == -1)
             {
-            error_output() << "Error writing to socket - " << strerror(errno) << std::endl;
+            error_output() << "Error writing to socket - " << std::strerror(errno) << std::endl;
             }
          else if(sent != static_cast<ssize_t>(length))
             {

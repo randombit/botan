@@ -53,7 +53,7 @@ double cout_iter(size_t n, size_t k, size_t p, size_t l)
    {
    double x = binomial(k / 2, p);
    const size_t i = static_cast<size_t>(std::log(x) / std::log(2));
-   double res = 2 * p * (n - k - l) * ldexp(x * x, -static_cast<int>(l));
+   double res = 2 * p * (n - k - l) * std::ldexp(x * x, -static_cast<int>(l));
 
    // x <- binomial(k/2,p)*2*(2*l+log[2](binomial(k/2,p)))
    x *= 2 * (2 * l + i);

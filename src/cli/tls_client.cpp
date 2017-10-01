@@ -222,7 +222,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                   }
                else if(got == -1)
                   {
-                  output() << "Socket error: " << errno << " " << strerror(errno) << "\n";
+                  output() << "Socket error: " << errno << " " << std::strerror(errno) << "\n";
                   continue;
                   }
 
@@ -242,7 +242,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                   }
                else if(got == -1)
                   {
-                  output() << "Stdin error: " << errno << " " << strerror(errno) << "\n";
+                  output() << "Stdin error: " << errno << " " << std::strerror(errno) << "\n";
                   continue;
                   }
 
@@ -302,7 +302,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
             if(::connect(fd, rp->ai_addr, rp->ai_addrlen) != 0)
                {
-               close(fd);
+               ::close(fd);
                continue;
                }
 
