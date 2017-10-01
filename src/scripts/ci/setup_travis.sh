@@ -45,6 +45,11 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get -qq update
         sudo apt-get install trousers libtspi-dev
 
+        # SoftHSMv1 in 14.04 does not work
+        # Installs prebuilt SoftHSMv2 binaries into /tmp
+        tar -C / -xvjf botan-ci-tools/softhsm2-trusty-bin.tar.bz2
+        /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
+
         # need updated lcov for gcc 4.8 coverage format
         sudo dpkg -i botan-ci-tools/ubuntu/lcov_1.12-2_all.deb
 
@@ -53,12 +58,13 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         pip install --user coverage
         pip install --user codecov
 
-        # SoftHSMv1 in 14.04 does not work
-        # Installs prebuilt SoftHSMv2 binaries into /tmp
+    elif [ "$BUILD_MODE" = "sonar" ]; then
+        sudo apt-get -qq update
+        sudo apt-get install trousers libtspi-dev
+
         tar -C / -xvjf botan-ci-tools/softhsm2-trusty-bin.tar.bz2
         /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
 
-    elif [ "$BUILD_MODE" = "sonar" ]; then
         wget https://sonarqube.com/static/cpp/build-wrapper-linux-x86.zip
         unzip build-wrapper-linux-x86.zip
 
