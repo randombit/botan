@@ -61,6 +61,9 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     elif [ "$BUILD_MODE" = "sonar" ]; then
         sudo apt-get -qq update
         sudo apt-get install trousers libtspi-dev
+        # installed llvm-3.4 conflicts with clang-3.9 in /usr/local
+        # we need a more recent llvm-cov for coverage reports
+        sudo apt-get install llvm
 
         tar -C / -xvjf botan-ci-tools/softhsm2-trusty-bin.tar.bz2
         /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
