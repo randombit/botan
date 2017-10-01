@@ -60,7 +60,7 @@ class DSA_Keygen_Tests final : public PK_Key_Generation_Test
    public:
       std::vector<std::string> keygen_params() const override
          {
-         return { "dsa/jce/1024", "dsa/botan/2048" };
+         return { "dsa/jce/1024" };
          }
       std::string algo_name() const override
          {
