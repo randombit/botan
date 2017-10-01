@@ -342,7 +342,7 @@ class Timing_Test_Command : public Command
          : Command("timing_test test_type --test-data-file= --test-data-dir=src/tests/data/timing "
                    "--warmup-runs=1000 --measurement-runs=10000") {}
 
-      virtual void go() override
+      void go() override
          {
          const std::string test_type = get_arg("test_type");
          const size_t warmup_runs = get_arg_sz("warmup-runs");
@@ -398,7 +398,7 @@ class Timing_Test_Command : public Command
    private:
       std::unique_ptr<Timing_Test> lookup_timing_test(const std::string& test_type);
 
-      virtual std::string help_text() const override
+      std::string help_text() const override
          {
          // TODO check feature macros
          return (Command::help_text() +

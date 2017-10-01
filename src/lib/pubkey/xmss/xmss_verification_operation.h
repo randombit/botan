@@ -34,8 +34,7 @@ namespace Botan {
 
       virtual ~XMSS_Verification_Operation() = default;
 
-      virtual bool is_valid_signature(const uint8_t sig[],
-                                      size_t sig_len) override;
+      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
       void update(const uint8_t msg[], size_t msg_len) override;
 

@@ -29,7 +29,7 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
             "P,A,B,xG,yG,Order,Cofactor,Ident,Msg,x,Nonce,Signature",
             "Hash") {}
 
-      virtual std::string default_padding(const VarMap& vars) const override
+      std::string default_padding(const VarMap& vars) const override
          {
          return get_req_str(vars, "Ident") + "," + get_opt_str(vars, "Hash", "SM3");
          }
@@ -73,7 +73,7 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test
             "P,A,B,xG,yG,Order,Cofactor,Msg,x,Nonce,Ciphertext",
             "Hash") {}
 
-      virtual std::string default_padding(const VarMap& vars) const override
+      std::string default_padding(const VarMap& vars) const override
          {
          return get_opt_str(vars, "Hash", "SM3");
          }

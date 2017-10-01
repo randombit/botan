@@ -231,36 +231,36 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
          return m_wots_params;
          }
 
-      virtual std::string algo_name() const override
+      std::string algo_name() const override
          {
          return m_wots_params.name();
          }
 
-      virtual AlgorithmIdentifier algorithm_identifier() const override
+      AlgorithmIdentifier algorithm_identifier() const override
          {
          throw Not_Implemented("No AlgorithmIdentifier available for XMSS-WOTS.");
          }
 
-      virtual bool check_key(RandomNumberGenerator&, bool) const override
+      bool check_key(RandomNumberGenerator&, bool) const override
          {
          return true;
          }
 
-      virtual std::unique_ptr<PK_Ops::Verification>
+      std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string&,
                                 const std::string& provider) const override;
 
-      virtual size_t estimated_strength() const override
+      size_t estimated_strength() const override
          {
          return m_wots_params.estimated_strength();
          }
 
-      virtual size_t key_length() const override
+      size_t key_length() const override
          {
          return m_wots_params.estimated_strength();
          }
 
-      virtual std::vector<uint8_t> public_key_bits() const override
+      std::vector<uint8_t> public_key_bits() const override
          {
          throw Not_Implemented("No key format defined for XMSS-WOTS");
          }

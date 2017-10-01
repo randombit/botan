@@ -187,26 +187,26 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          return "XMSS";
          }
 
-      virtual AlgorithmIdentifier algorithm_identifier() const override
+      AlgorithmIdentifier algorithm_identifier() const override
          {
          return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_NULL_PARAM);
          }
 
-      virtual bool check_key(RandomNumberGenerator&, bool) const override
+      bool check_key(RandomNumberGenerator&, bool) const override
          {
          return true;
          }
 
-      virtual std::unique_ptr<PK_Ops::Verification>
+      std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string&,
                                 const std::string& provider) const override;
 
-      virtual size_t estimated_strength() const override
+      size_t estimated_strength() const override
          {
          return m_xmss_params.estimated_strength();
          }
 
-      virtual size_t key_length() const override
+      size_t key_length() const override
          {
          return m_xmss_params.estimated_strength();
          }
@@ -217,7 +217,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
        *
        * @return raw public key bits.
        **/
-      virtual std::vector<uint8_t> public_key_bits() const override
+      std::vector<uint8_t> public_key_bits() const override
          {
          return raw_public_key();
          }

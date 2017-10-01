@@ -178,35 +178,35 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
          return m_prf;
          }
 
-      virtual void set_public_seed(
+      void set_public_seed(
          const secure_vector<uint8_t>& public_seed) override
          {
          m_public_seed = public_seed;
          m_wots_priv_key.set_public_seed(public_seed);
          }
 
-      virtual void set_public_seed(secure_vector<uint8_t>&& public_seed) override
+      void set_public_seed(secure_vector<uint8_t>&& public_seed) override
          {
          m_public_seed = std::move(public_seed);
          m_wots_priv_key.set_public_seed(m_public_seed);
          }
 
-      virtual const secure_vector<uint8_t>& public_seed() const override
+      const secure_vector<uint8_t>& public_seed() const override
          {
          return m_public_seed;
          }
 
-      virtual std::unique_ptr<PK_Ops::Signature>
+      std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator&,
                              const std::string&,
                              const std::string& provider) const override;
 
-      virtual secure_vector<uint8_t> private_key_bits() const override
+      secure_vector<uint8_t> private_key_bits() const override
          {
          return raw_private_key();
          }
 
-      virtual size_t size() const override
+      size_t size() const override
          {
          return XMSS_PublicKey::size() +
                 sizeof(uint64_t) +

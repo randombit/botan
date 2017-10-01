@@ -225,7 +225,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
                              const std::string&,
                              const std::string& provider) const override;
 
-      virtual secure_vector<uint8_t> private_key_bits() const override
+      secure_vector<uint8_t> private_key_bits() const override
          {
          throw Not_Implemented("No PKCS8 key format defined for XMSS-WOTS.");
          }

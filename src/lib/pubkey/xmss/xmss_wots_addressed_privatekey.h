@@ -48,13 +48,13 @@ class XMSS_WOTS_Addressed_PrivateKey
       const XMSS_WOTS_PrivateKey& private_key() const { return m_priv_key; }
       XMSS_WOTS_PrivateKey& private_key() { return m_priv_key; }
 
-      virtual AlgorithmIdentifier
+      AlgorithmIdentifier
       pkcs8_algorithm_identifier() const override
          {
          return m_priv_key.pkcs8_algorithm_identifier();
          }
 
-      virtual secure_vector<uint8_t> private_key_bits() const override
+      secure_vector<uint8_t> private_key_bits() const override
          {
          return m_priv_key.private_key_bits();
          }
