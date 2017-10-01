@@ -26,7 +26,7 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
-def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, root_dir):
+def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, root_dir, pkcs11_lib):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
     """
@@ -103,22 +103,20 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         flags += ['--disable-modules=locking_allocator']
 
     if target == 'parallel':
-        if 'cc' == 'gcc':
+        if target_cc == 'gcc':
             flags += ['--with-cilkplus']
         else:
             flags += ['--with-openmp']
 
     if target == 'sonar':
-        if target_os != 'linux':
-            raise Exception('Only Linux supported in Sonar target currently')
+        if target_os != 'linux' or target_cc != 'clang':
+            raise Exception('Only Linux/clang supported in Sonar target currently')
+
+        flags += ['--cc-abi-flags=-fprofile-instr-generate -fcoverage-mapping',
+                  '--disable-shared']
 
         make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
                        '--out-dir', 'bw-outputs']
-
-        sonar_config = os.path.join(root_dir, 'src', 'build-data', 'sonar-project.properties')
-        test_cmd = ['sonar-scanner',
-                    '-Dproject.settings=%s' % (sonar_config),
-                    '-Dsonar.login=%s' % (os.getenv('SONAR_TOKEN'))]
 
     if is_cross_target:
         if target_os == 'ios':
@@ -175,13 +173,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                 # is not installed on the CI image
                 flags += ['--with-openssl']
 
-        if target == 'coverage':
+        if target in ['sonar', 'coverage']:
             flags += ['--with-tpm']
             test_cmd += ['--run-long-tests', '--run-online-tests']
-
-            softhsm_lib = '/tmp/softhsm/lib/softhsm/libsofthsm2.so'
-            if os.access(softhsm_lib, os.R_OK):
-                test_cmd += ['--pkcs11-lib=%s' % (softhsm_lib)]
+            if pkcs11_lib and os.access(pkcs11_lib, os.R_OK):
+                test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
 
     if ccache is None:
         flags += ['--cc-bin=%s' % (cc_bin)]
@@ -208,7 +204,12 @@ def run_cmd(cmd, root_dir):
 
     sub_env = os.environ.copy()
     sub_env['LD_LIBRARY_PATH'] = root_dir
-    proc = subprocess.Popen(cmd, close_fds=True, env=sub_env)
+
+    redirect_stdout = None
+    if len(cmd) > 3 and cmd[-2] == '>':
+        redirect_stdout = open(cmd[-1], 'w')
+        cmd = cmd[:-2]
+    proc = subprocess.Popen(cmd, close_fds=True, env=sub_env, stdout=redirect_stdout)
     proc.communicate()
 
     time_taken = int(time.time() - start)
@@ -261,6 +262,9 @@ def parse_args(args):
 
     parser.add_option('--compiler-cache', default=None,
                       help='Set a compiler cache to use (ccache, clcache)')
+
+    parser.add_option('--pkcs11-lib', default=None,
+                      help='Set PKCS11 lib to use for testing')
 
     parser.add_option('--with-python3', dest='use_python3', action='store_true', default=None,
                       help='Enable using python3')
@@ -372,7 +376,9 @@ def main(args=None):
 
     else:
         config_flags, run_test_command, make_prefix = determine_flags(
-            target, options.os, options.cpu, options.cc, options.cc_bin, options.compiler_cache, root_dir)
+            target, options.os, options.cpu, options.cc,
+            options.cc_bin, options.compiler_cache, root_dir,
+            options.pkcs11_lib)
 
         cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
 
@@ -425,8 +431,19 @@ def main(args=None):
             if use_python3:
                 cmds.append(['python3', botan_py])
 
-        if target != 'docs':
+        if target == 'shared':
             cmds.append(make_cmd + ['install'])
+
+        if target in ['sonar']:
+
+            cmds.append(['llvm-profdata', 'merge', '-sparse', 'default.profraw', '-o', 'botan.profdata'])
+            cmds.append(['llvm-cov', 'show', './botan-test',
+                         '-instr-profile=botan.profdata',
+                         '>', 'build/cov_report.txt'])
+            sonar_config = os.path.join(root_dir, os.path.join(root_dir, 'src/build-data/sonar-project.properties'))
+            cmds.append(['sonar-scanner',
+                         '-Dproject.settings=%s' % (sonar_config),
+                         '-Dsonar.login=%s' % (os.getenv('SONAR_TOKEN'))])
 
         if target in ['coverage']:
 

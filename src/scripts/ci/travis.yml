@@ -42,6 +42,9 @@ matrix:
     - os: osx
       compiler: gcc
 
+    - os: osx
+      env: BUILD_MODE="sonar"
+
     # Run static, docs, lint, bsi, nist, fuzzers, coverage, valgrind,
     # sonar, sanitizer, minimized and non-ARM cross builds only on Linux/gcc.
     # The sanitizer builds under Clang run the tests very slowly and
@@ -60,8 +63,6 @@ matrix:
     - compiler: clang
       env: BUILD_MODE="coverage"
     - compiler: clang
-      env: BUILD_MODE="sonar"
-    - compiler: clang
       env: BUILD_MODE="fuzzers"
     - compiler: clang
       env: BUILD_MODE="valgrind"
@@ -73,6 +74,10 @@ matrix:
       env: BUILD_MODE="cross-ppc32"
     - compiler: clang
       env: BUILD_MODE="cross-ppc64"
+
+    # Use clang coverage for Sonar
+    - compiler: gcc
+      env: BUILD_MODE="sonar"
 
     # No ARM Clang compiler on Linux
     - os: linux
@@ -86,7 +91,7 @@ install:
   - ./src/scripts/ci/setup_travis.sh
 
 script:
-  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --compiler-cache=ccache $BUILD_MODE
+  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --compiler-cache=ccache --pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so $BUILD_MODE
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
