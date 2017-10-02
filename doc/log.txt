@@ -7,7 +7,7 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.17, Not Yet Released
+Version 1.10.17, 1.10.17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Address a side channel affecting modular exponentiation. An attacker
