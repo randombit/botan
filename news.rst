@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.3.0, Not Yet Released
+Version 2.3.0, 2017-10-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Address a side channel affecting modular exponentiation. An attacker
@@ -203,7 +203,7 @@ Version 2.3.0, Not Yet Released
 
 * Improved support for IBM xlc compiler.
 
-Version 1.10.17, Not Yet Released
+Version 1.10.17, 2017-10-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Address a side channel affecting modular exponentiation. An attacker

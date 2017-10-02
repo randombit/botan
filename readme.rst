@@ -102,9 +102,9 @@ Version 2 requires a C++11 compiler; GCC 4.8 and later, Clang 3.5 and
 later, and MSVC 2015 are regularly tested.
 
 The latest 2.x release is
-`2.2.0 <https://botan.randombit.net/releases/Botan-2.2.0.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-2.2.0.tgz.asc>`_
-released on 2017-08-07
+`2.3.0 <https://botan.randombit.net/releases/Botan-2.3.0.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-2.3.0.tgz.asc>`_
+released on 2017-10-02
 
 Old Stable Release
 ----------------------------------------
@@ -115,9 +115,9 @@ critical security updates (with all support ending on 2018-1-1), and the
 developers do not recommend its use anymore.
 
 The latest 1.10 release is
-`1.10.16 <https://botan.randombit.net/releases/Botan-1.10.16.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-1.10.16.tgz.asc>`_
-released on 2017-04-04
+`1.10.17 <https://botan.randombit.net/releases/Botan-1.10.17.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-1.10.17.tgz.asc>`_
+released on 2017-10-02
 
 Find Enclosed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
