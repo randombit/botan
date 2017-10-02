@@ -200,8 +200,8 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
 def rel_date_to_epoch(rel_date):
     rel_str = str(rel_date)
     year = int(rel_str[0:4])
-    month = int(rel_str[5:6])
-    day = int(rel_str[7:8])
+    month = int(rel_str[4:6])
+    day = int(rel_str[6:8])
 
     dt = datetime.datetime(year, month, day, 6, 0, 0)
     return (dt - datetime.datetime(1970, 1, 1)).total_seconds()
@@ -320,9 +320,9 @@ def main(args=None):
         logging.error('No date found for version')
         return 2
 
-    rel_epoch = rel_date_to_epoch(rel_date)
-
     logging.info('Found %s at revision id %s released %d' % (target_version, rev_id, rel_date))
+
+    rel_epoch = rel_date_to_epoch(rel_date)
 
     def output_name():
         if snapshot_branch:
