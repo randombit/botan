@@ -53,17 +53,13 @@ std::time_t boost_timegm(std::tm *tm)
    const int mon  = tm->tm_mon + 1;
    const int year = tm->tm_year + 1900;
 
-   std::time_t out;
-
-      {
-      using namespace boost::posix_time;
-      using namespace boost::gregorian;
-      const auto epoch = ptime(date(1970, 01, 01));
-      const auto time = ptime(date(year, mon, day),
-                              hours(hour) + minutes(min) + seconds(sec));
-      const time_duration diff(time - epoch);
-      out = diff.ticks() / diff.ticks_per_second();
-      }
+   using namespace boost::posix_time;
+   using namespace boost::gregorian;
+   const auto epoch = ptime(date(1970, 01, 01));
+   const auto time = ptime(date(year, mon, day),
+                           hours(hour) + minutes(min) + seconds(sec));
+   const time_duration diff(time - epoch);
+   std::time_t out = diff.ticks() / diff.ticks_per_second();
 
    return out;
    }
