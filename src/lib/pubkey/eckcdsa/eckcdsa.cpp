@@ -85,7 +85,7 @@ ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t,
    secure_vector<uint8_t> to_be_hashed(k_times_P_x.bytes());
    k_times_P_x.binary_encode(to_be_hashed.data());
 
-   std::unique_ptr<EMSA> emsa(m_emsa->clone());
+   std::unique_ptr<EMSA> emsa = this->clone_emsa();
    emsa->update(to_be_hashed.data(), to_be_hashed.size());
    secure_vector<uint8_t> c = emsa->raw_data();
    c = emsa->encoding_of(c, max_input_bits(), rng);
@@ -177,7 +177,7 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
    const BigInt q_x = q.get_affine_x();
    secure_vector<uint8_t> c(q_x.bytes());
    q_x.binary_encode(c.data());
-   std::unique_ptr<EMSA> emsa(m_emsa->clone());
+   std::unique_ptr<EMSA> emsa = this->clone_emsa();
    emsa->update(c.data(), c.size());
    secure_vector<uint8_t> v = emsa->raw_data();
    Null_RNG rng;
