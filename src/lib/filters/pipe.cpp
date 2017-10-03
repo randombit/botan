@@ -133,7 +133,7 @@ void Pipe::process_msg(const std::vector<uint8_t>& input)
 */
 void Pipe::process_msg(const std::string& input)
    {
-   process_msg(reinterpret_cast<const uint8_t*>(input.data()), input.length());
+   process_msg(cast_char_ptr_to_uint8(input.data()), input.length());
    }
 
 /*

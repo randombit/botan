@@ -64,7 +64,7 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
          m_freelist.erase(i);
          clear_mem(m_pool + offset, n);
 
-         BOTAN_ASSERT((reinterpret_cast<size_t>(m_pool) + offset) % alignment == 0,
+         BOTAN_ASSERT((reinterpret_cast<uintptr_t>(m_pool) + offset) % alignment == 0,
                       "Returning correctly aligned pointer");
 
          return m_pool + offset;
@@ -107,7 +107,7 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
 
       clear_mem(m_pool + offset + alignment_padding, n);
 
-      BOTAN_ASSERT((reinterpret_cast<size_t>(m_pool) + offset + alignment_padding) % alignment == 0,
+      BOTAN_ASSERT((reinterpret_cast<uintptr_t>(m_pool) + offset + alignment_padding) % alignment == 0,
                    "Returning correctly aligned pointer");
 
       return m_pool + offset + alignment_padding;

@@ -256,7 +256,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       */
       void update(const std::string& in)
          {
-         update(reinterpret_cast<const uint8_t*>(in.data()), in.size());
+         update(cast_char_ptr_to_uint8(in.data()), in.size());
          }
 
       /**
@@ -356,7 +356,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       */
       void update(const std::string& in)
          {
-         update(reinterpret_cast<const uint8_t*>(in.data()), in.size());
+         update(cast_char_ptr_to_uint8(in.data()), in.size());
          }
 
       /**
@@ -478,7 +478,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
                               const std::string& params = "") const
          {
          return derive_key(key_len, in, in_len,
-                           reinterpret_cast<const uint8_t*>(params.data()),
+                           cast_char_ptr_to_uint8(params.data()),
                            params.length());
          }
 
@@ -493,7 +493,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
                               const std::string& params = "") const
          {
          return derive_key(key_len, in.data(), in.size(),
-                           reinterpret_cast<const uint8_t*>(params.data()),
+                           cast_char_ptr_to_uint8(params.data()),
                            params.length());
          }
 

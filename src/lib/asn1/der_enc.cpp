@@ -394,7 +394,7 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
 DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                                      const std::string& rep_str)
    {
-   const uint8_t* rep = reinterpret_cast<const uint8_t*>(rep_str.data());
+   const uint8_t* rep = cast_char_ptr_to_uint8(rep_str.data());
    const size_t rep_len = rep_str.size();
    return add_object(type_tag, class_tag, rep, rep_len);
    }

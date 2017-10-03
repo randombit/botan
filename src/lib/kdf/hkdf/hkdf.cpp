@@ -103,7 +103,7 @@ hkdf_expand_label(const std::string& hash_fn,
    prefix[2] = static_cast<uint8_t>(label.size());
 
    copy_mem(prefix.data() + 3,
-            reinterpret_cast<const uint8_t*>(label.data()),
+            cast_char_ptr_to_uint8(label.data()),
             label.size());
 
    prefix[3 + label.size()] = static_cast<uint8_t>(hash_val_len);

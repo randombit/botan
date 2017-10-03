@@ -26,7 +26,7 @@ void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
       secure_vector<uint8_t> binary(n.encoded_size(Binary));
       n.binary_encode(binary.data());
 
-      hex_encode(reinterpret_cast<char*>(output),
+      hex_encode(cast_uint8_ptr_to_char(output),
                  binary.data(), binary.size());
       }
    else if(base == Decimal)
@@ -128,12 +128,12 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base)
 
          binary = hex_decode_locked(buf0_with_leading_0, 2);
 
-         binary += hex_decode_locked(reinterpret_cast<const char*>(&buf[1]),
+         binary += hex_decode_locked(cast_uint8_ptr_to_char(&buf[1]),
                                      length - 1,
                                      false);
          }
       else
-         binary = hex_decode_locked(reinterpret_cast<const char*>(buf),
+         binary = hex_decode_locked(cast_uint8_ptr_to_char(buf),
                                     length, false);
 
       r.binary_decode(binary.data(), binary.size());

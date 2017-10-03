@@ -154,7 +154,7 @@ decrypt_bin(const uint8_t input[], size_t input_len,
 secure_vector<uint8_t> decrypt_bin(const std::string& input,
                                    const std::string& passphrase)
    {
-   return decrypt_bin(reinterpret_cast<const uint8_t*>(input.data()),
+   return decrypt_bin(cast_char_ptr_to_uint8(input.data()),
                       input.size(),
                       passphrase);
    }
@@ -164,14 +164,14 @@ std::string decrypt(const uint8_t input[], size_t input_len,
    {
    const secure_vector<uint8_t> bin = decrypt_bin(input, input_len, passphrase);
 
-   return std::string(reinterpret_cast<const char*>(&bin[0]),
+   return std::string(cast_uint8_ptr_to_char(&bin[0]),
                       bin.size());
    }
 
 std::string decrypt(const std::string& input,
                     const std::string& passphrase)
    {
-   return decrypt(reinterpret_cast<const uint8_t*>(input.data()),
+   return decrypt(cast_char_ptr_to_uint8(input.data()),
                   input.size(), passphrase);
    }
 

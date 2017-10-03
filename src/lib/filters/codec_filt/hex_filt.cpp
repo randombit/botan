@@ -43,7 +43,7 @@ Hex_Encoder::Hex_Encoder(Case c) : m_casing(c), m_line_length(0)
 */
 void Hex_Encoder::encode_and_send(const uint8_t block[], size_t length)
    {
-   hex_encode(reinterpret_cast<char*>(m_out.data()),
+   hex_encode(cast_uint8_ptr_to_char(m_out.data()),
               block, length,
               m_casing == Uppercase);
 
@@ -125,7 +125,7 @@ void Hex_Decoder::write(const uint8_t input[], size_t length)
 
       size_t consumed = 0;
       size_t written = hex_decode(m_out.data(),
-                                  reinterpret_cast<const char*>(m_in.data()),
+                                  cast_uint8_ptr_to_char(m_in.data()),
                                   m_position,
                                   consumed,
                                   m_checking != FULL_CHECK);
@@ -152,7 +152,7 @@ void Hex_Decoder::end_msg()
    {
    size_t consumed = 0;
    size_t written = hex_decode(m_out.data(),
-                               reinterpret_cast<const char*>(m_in.data()),
+                               cast_uint8_ptr_to_char(m_in.data()),
                                m_position,
                                consumed,
                                m_checking != FULL_CHECK);

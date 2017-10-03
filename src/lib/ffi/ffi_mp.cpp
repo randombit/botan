@@ -63,7 +63,7 @@ int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix)
       else
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 
-      const uint8_t* bytes = reinterpret_cast<const uint8_t*>(str);
+      const uint8_t* bytes = Botan::cast_char_ptr_to_uint8(str);
       const size_t len = strlen(str);
 
       bn = Botan::BigInt::decode(bytes, len, base);

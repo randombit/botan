@@ -163,7 +163,7 @@ class Winsock_Socket final : public OS::Socket
             {
             const size_t left = len - sent_so_far;
             int sent = ::send(m_socket,
-                              reinterpret_cast<const char*>(buf + sent_so_far),
+                              cast_uint8_ptr_to_char(buf + sent_so_far),
                               static_cast<int>(left),
                               0);
 
@@ -178,7 +178,7 @@ class Winsock_Socket final : public OS::Socket
       size_t read(uint8_t buf[], size_t len) override
          {
          int got = ::recv(m_socket,
-                          reinterpret_cast<char*>(buf),
+                          cast_uint8_ptr_to_char(buf),
                           static_cast<int>(len), 0);
 
          if(got == SOCKET_ERROR)

@@ -44,7 +44,7 @@ void Pipe::write(const uint8_t input[], size_t length)
 */
 void Pipe::write(const std::string& str)
    {
-   write(reinterpret_cast<const uint8_t*>(str.data()), str.size());
+   write(cast_char_ptr_to_uint8(str.data()), str.size());
    }
 
 /*
@@ -119,7 +119,7 @@ std::string Pipe::read_all_as_string(message_id msg)
       size_t got = read(buffer.data(), buffer.size(), msg);
       if(got == 0)
          break;
-      str.append(reinterpret_cast<const char*>(buffer.data()), got);
+      str.append(cast_uint8_ptr_to_char(buffer.data()), got);
       }
 
    return str;

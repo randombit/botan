@@ -89,7 +89,7 @@ void Skein_512::initial_block()
       if(m_personalization.length() > 64)
          throw Invalid_Argument("Skein personalization must be less than 64 bytes");
 
-      const uint8_t* bits = reinterpret_cast<const uint8_t*>(m_personalization.data());
+      const uint8_t* bits = cast_char_ptr_to_uint8(m_personalization.data());
       reset_tweak(SKEIN_PERSONALIZATION, true);
       ubi_512(bits, m_personalization.length());
       }

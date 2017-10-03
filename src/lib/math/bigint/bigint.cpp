@@ -68,7 +68,7 @@ BigInt::BigInt(const std::string& str)
       base = Hexadecimal;
       }
 
-   *this = decode(reinterpret_cast<const uint8_t*>(str.data()) + markers,
+   *this = decode(cast_char_ptr_to_uint8(str.data()) + markers,
                   str.length() - markers, base);
 
    if(negative) set_sign(Negative);

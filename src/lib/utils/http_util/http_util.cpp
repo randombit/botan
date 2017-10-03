@@ -40,7 +40,7 @@ std::string http_transact(const std::string& hostname,
       }
 
    // Blocks until entire message has been written
-   socket->write(reinterpret_cast<const uint8_t*>(message.data()),
+   socket->write(cast_char_ptr_to_uint8(message.data()),
                  message.size());
 
    std::ostringstream oss;
@@ -51,7 +51,7 @@ std::string http_transact(const std::string& hostname,
       if(got == 0) // EOF
          break;
 
-      oss.write(reinterpret_cast<const char*>(buf.data()),
+      oss.write(cast_uint8_ptr_to_char(buf.data()),
                 static_cast<std::streamsize>(got));
       }
 
@@ -75,7 +75,7 @@ std::string url_encode(const std::string& in)
       else if(c == '-' || c == '_' || c == '.' || c == '~')
          out << c;
       else
-         out << '%' << hex_encode(reinterpret_cast<uint8_t*>(&c), 1);
+         out << '%' << hex_encode(cast_char_ptr_to_uint8(&c), 1);
       }
 
    return out.str();
@@ -87,7 +87,7 @@ std::ostream& operator<<(std::ostream& o, const Response& resp)
    for(auto h : resp.headers())
       o << "Header '" << h.first << "' = '" << h.second << "'\n";
    o << "Body " << std::to_string(resp.body().size()) << " bytes:\n";
-   o.write(reinterpret_cast<const char*>(&resp.body()[0]), resp.body().size());
+   o.write(cast_uint8_ptr_to_char(resp.body().data()), resp.body().size());
    return o;
    }
 
@@ -136,7 +136,7 @@ Response http_sync(http_exch_fn http_transact,
    if(!content_type.empty())
       outbuf << "Content-Type: " << content_type << "\r\n";
    outbuf << "Connection: close\r\n\r\n";
-   outbuf.write(reinterpret_cast<const char*>(body.data()), body.size());
+   outbuf.write(cast_uint8_ptr_to_char(body.data()), body.size());
 
    std::istringstream io(http_transact(hostname, outbuf.str()));
 
@@ -184,7 +184,7 @@ Response http_sync(http_exch_fn http_transact,
    std::vector<uint8_t> buf(4096);
    while(io.good())
       {
-      io.read(reinterpret_cast<char*>(buf.data()), buf.size());
+      io.read(cast_uint8_ptr_to_char(buf.data()), buf.size());
       resp_body.insert(resp_body.end(), buf.data(), &buf[io.gcount()]);
       }
 

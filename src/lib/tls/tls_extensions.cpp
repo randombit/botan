@@ -178,7 +178,7 @@ std::vector<uint8_t> Server_Name_Indicator::serialize() const
    buf.push_back(get_byte(1, static_cast<uint16_t>(name_len)));
 
    buf += std::make_pair(
-      reinterpret_cast<const uint8_t*>(m_sni_host_name.data()),
+      cast_char_ptr_to_uint8(m_sni_host_name.data()),
       m_sni_host_name.size());
 
    return buf;
@@ -197,9 +197,7 @@ std::vector<uint8_t> SRP_Identifier::serialize() const
    {
    std::vector<uint8_t> buf;
 
-   const uint8_t* srp_bytes =
-      reinterpret_cast<const uint8_t*>(m_srp_identifier.data());
-
+   const uint8_t* srp_bytes = cast_char_ptr_to_uint8(m_srp_identifier.data());
    append_tls_length_value(buf, srp_bytes, m_srp_identifier.size(), 1);
 
    return buf;
@@ -266,7 +264,7 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize() const
          throw TLS_Exception(Alert::INTERNAL_ERROR, "ALPN name too long");
       if(p != "")
          append_tls_length_value(buf,
-                                 reinterpret_cast<const uint8_t*>(p.data()),
+                                 cast_char_ptr_to_uint8(p.data()),
                                  p.size(),
                                  1);
       }

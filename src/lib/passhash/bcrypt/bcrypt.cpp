@@ -99,8 +99,8 @@ std::string make_bcrypt(const std::string& pass,
 
    Blowfish blowfish;
 
-   // Include the trailing NULL byte
-   blowfish.eks_key_schedule(reinterpret_cast<const uint8_t*>(pass.c_str()),
+   // Include the trailing NULL byte, so we need c_str() not data()
+   blowfish.eks_key_schedule(cast_char_ptr_to_uint8(pass.c_str()),
                              pass.length() + 1,
                              salt.data(),
                              work_factor);

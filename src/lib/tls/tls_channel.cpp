@@ -548,7 +548,7 @@ void Channel::send(const uint8_t buf[], size_t buf_size)
 
 void Channel::send(const std::string& string)
    {
-   this->send(reinterpret_cast<const uint8_t*>(string.c_str()), string.size());
+   this->send(cast_char_ptr_to_uint8(string.data()), string.size());
    }
 
 void Channel::send_alert(const Alert& alert)

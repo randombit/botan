@@ -36,8 +36,8 @@ void Base64_Encoder::encode_and_send(const uint8_t input[], size_t length,
       const size_t proc = std::min(length, m_in.size());
 
       size_t consumed = 0;
-      size_t produced = base64_encode(reinterpret_cast<char*>(m_out.data()), input,
-                                      proc, consumed, final_inputs);
+      size_t produced = base64_encode(cast_uint8_ptr_to_char(m_out.data()),
+                                      input, proc, consumed, final_inputs);
 
       do_output(m_out.data(), produced);
 
@@ -135,7 +135,7 @@ void Base64_Decoder::write(const uint8_t input[], size_t length)
 
       size_t consumed = 0;
       size_t written = base64_decode(m_out.data(),
-                                     reinterpret_cast<const char*>(m_in.data()),
+                                     cast_uint8_ptr_to_char(m_in.data()),
                                      m_position,
                                      consumed,
                                      false,
@@ -163,7 +163,7 @@ void Base64_Decoder::end_msg()
    {
    size_t consumed = 0;
    size_t written = base64_decode(m_out.data(),
-                                  reinterpret_cast<const char*>(m_in.data()),
+                                  cast_uint8_ptr_to_char(m_in.data()),
                                   m_position,
                                   consumed,
                                   true,

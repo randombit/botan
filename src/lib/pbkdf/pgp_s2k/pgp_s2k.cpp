@@ -91,7 +91,7 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
    if(passphrase.empty() == false)
       {
       copy_mem(&input_buf[salt_len],
-               reinterpret_cast<const uint8_t*>(passphrase.data()),
+               cast_char_ptr_to_uint8(passphrase.data()),
                passphrase.size());
       }
 
