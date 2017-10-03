@@ -38,8 +38,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      /**
      * DivideByZero Exception
      */
-     struct BOTAN_PUBLIC_API(2,0) DivideByZero final : public Exception
-        { DivideByZero() : Exception("BigInt divide by zero") {} };
+     class BOTAN_PUBLIC_API(2,0) DivideByZero final : public Exception
+        {
+        public:
+           DivideByZero() : Exception("BigInt divide by zero") {}
+        };
 
      /**
      * Create empty BigInt
