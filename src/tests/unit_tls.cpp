@@ -47,7 +47,8 @@ namespace {
 class Credentials_Manager_Test final : public Botan::Credentials_Manager
    {
    public:
-      Credentials_Manager_Test(const Botan::X509_Certificate& rsa_cert,
+      Credentials_Manager_Test(bool with_client_certs,
+                               const Botan::X509_Certificate& rsa_cert,
                                Botan::Private_Key* rsa_key,
                                const Botan::X509_Certificate& rsa_ca,
                                const Botan::X509_CRL& rsa_crl,
@@ -86,7 +87,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
             }
 
          m_stores.push_back(std::move(store));
-         m_provides_client_certs = false;
+         m_provides_client_certs = with_client_certs;
          }
 
       std::vector<Botan::Certificate_Store*>
@@ -185,7 +186,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
          throw Test_Error("No PSK set for " + type + "/" + context);
          }
 
-   public:
+   private:
       Botan::X509_Certificate m_rsa_cert, m_rsa_ca;
       std::unique_ptr<Botan::Private_Key> m_rsa_key;
 
@@ -277,11 +278,11 @@ create_creds(Botan::RandomNumberGenerator& rng,
 #endif
 
    Credentials_Manager_Test* cmt = new Credentials_Manager_Test(
+      with_client_certs,
       rsa_srv_cert, rsa_srv_key.release(), rsa_ca_cert, rsa_crl,
       ecdsa_srv_cert, ecdsa_srv_key.release(), ecdsa_ca_cert, ecdsa_crl,
       dsa_srv_cert.release(), dsa_srv_key.release(), dsa_ca_cert.release(), dsa_crl.release());
 
-   cmt->m_provides_client_certs = with_client_certs;
    return cmt;
    }
 
