@@ -127,7 +127,7 @@ inline T is_equal(T x, T y)
 template<typename T>
 inline T is_less(T a, T b)
    {
-   return expand_top_bit(a ^ ((a^b) | ((a-b)^a)));
+   return expand_top_bit<T>(a ^ ((a^b) | ((a-b)^a)));
    }
 
 template<typename T>
