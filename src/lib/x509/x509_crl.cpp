@@ -89,7 +89,7 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const
 */
 void X509_CRL::force_decode()
    {
-   BER_Decoder tbs_crl(m_tbs_bits);
+   BER_Decoder tbs_crl(signed_body());
 
    size_t version;
    tbs_crl.decode_optional(version, INTEGER, UNIVERSAL);
@@ -101,7 +101,7 @@ void X509_CRL::force_decode()
    AlgorithmIdentifier sig_algo_inner;
    tbs_crl.decode(sig_algo_inner);
 
-   if(m_sig_algo != sig_algo_inner)
+   if(signature_algorithm() != sig_algo_inner)
       throw X509_CRL_Error("Algorithm identifier mismatch");
 
    X509_DN dn_issuer;

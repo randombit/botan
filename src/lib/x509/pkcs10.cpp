@@ -48,7 +48,7 @@ PKCS10_Request::PKCS10_Request(const std::vector<uint8_t>& in) :
 */
 void PKCS10_Request::force_decode()
    {
-   BER_Decoder cert_req_info(m_tbs_bits);
+   BER_Decoder cert_req_info(signed_body());
 
    size_t version;
    cert_req_info.decode(version);

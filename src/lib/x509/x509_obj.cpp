@@ -86,10 +86,10 @@ void X509_Object::encode_into(DER_Encoder& to) const
    {
    to.start_cons(SEQUENCE)
          .start_cons(SEQUENCE)
-            .raw_bytes(m_tbs_bits)
+            .raw_bytes(signed_body())
          .end_cons()
-         .encode(m_sig_algo)
-         .encode(m_sig, BIT_STRING)
+         .encode(signature_algorithm())
+         .encode(signature(), BIT_STRING)
       .end_cons();
    }
 
@@ -134,32 +134,16 @@ std::vector<uint8_t> X509_Object::tbs_data() const
    }
 
 /*
-* Return the signature of this object
-*/
-std::vector<uint8_t> X509_Object::signature() const
-   {
-   return m_sig;
-   }
-
-/*
-* Return the algorithm used to sign this object
-*/
-AlgorithmIdentifier X509_Object::signature_algorithm() const
-   {
-   return m_sig_algo;
-   }
-
-/*
 * Return the hash used in generating the signature
 */
 std::string X509_Object::hash_used_for_signature() const
    {
-   std::vector<std::string> sig_info =
-      split_on(OIDS::lookup(m_sig_algo.oid), '/');
+   const OID oid = m_sig_algo.oid;
+   std::vector<std::string> sig_info = split_on(OIDS::lookup(oid), '/');
 
    if(sig_info.size() != 2)
       throw Internal_Error("Invalid name format found for " +
-                           m_sig_algo.oid.as_string());
+                           oid.as_string());
 
    std::vector<std::string> pad_and_hash =
       parse_algorithm_name(sig_info[1]);

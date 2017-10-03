@@ -82,7 +82,7 @@ void X509_Certificate::force_decode()
    X509_DN dn_issuer, dn_subject;
    X509_Time start, end;
 
-   BER_Decoder tbs_cert(m_tbs_bits);
+   BER_Decoder tbs_cert(signed_body());
 
    tbs_cert.decode_optional(version, ASN1_Tag(0),
                             ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
@@ -97,7 +97,7 @@ void X509_Certificate::force_decode()
 
    if(version > 2)
       throw Decoding_Error("Unknown X.509 cert version " + std::to_string(version));
-   if(m_sig_algo != sig_algo_inner)
+   if(signature_algorithm() != sig_algo_inner)
       throw Decoding_Error("Algorithm identifier mismatch");
 
 
@@ -505,25 +505,21 @@ bool X509_Certificate::matches_dns_name(const std::string& name) const
 */
 bool X509_Certificate::operator==(const X509_Certificate& other) const
    {
-   return (m_sig == other.m_sig &&
-           m_sig_algo == other.m_sig_algo &&
-           m_self_signed == other.m_self_signed &&
-           m_issuer == other.m_issuer &&
-           m_subject == other.m_subject);
+   return (this->signature() == other.signature() &&
+           this->signature_algorithm() == other.signature_algorithm() &&
+           this->signed_body() == other.signed_body());
    }
 
 bool X509_Certificate::operator<(const X509_Certificate& other) const
    {
    /* If signature values are not equal, sort by lexicographic ordering of that */
-   if(m_sig != other.m_sig)
+   if(this->signature() != other.signature())
       {
-      if(m_sig < other.m_sig)
-         return true;
-      return false;
+      return (this->signature() < other.signature());
       }
 
    // Then compare the signed contents
-   return m_tbs_bits < other.m_tbs_bits;
+   return this->signed_body() < other.signed_body();
    }
 
 /*
