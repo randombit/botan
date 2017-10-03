@@ -29,18 +29,6 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          return !m_buf.empty();
          }
 
-      virtual uint8_t random()
-         {
-         if(!is_seeded())
-            {
-            throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
-            }
-
-         uint8_t out = m_buf.front();
-         m_buf.pop_front();
-         return out;
-         }
-
       size_t reseed(Botan::Entropy_Sources&,
                     size_t,
                     std::chrono::milliseconds) override
@@ -81,11 +69,19 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       Fixed_Output_RNG() = default;
    protected:
-      size_t remaining() const
+      uint8_t random()
          {
-         return m_buf.size();
+         if(m_buf.empty())
+            {
+            throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
+            }
+
+         uint8_t out = m_buf.front();
+         m_buf.pop_front();
+         return out;
          }
 
+   private:
       std::deque<uint8_t> m_buf;
    };
 
@@ -98,19 +94,7 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG
    public:
       bool is_seeded() const override
          {
-         return !m_buf.empty() || Test::rng().is_seeded();
-         }
-
-      uint8_t random() override
-         {
-         if(m_buf.empty())
-            {
-            throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
-            }
-
-         uint8_t out = m_buf.front();
-         m_buf.pop_front();
-         return out;
+         return Fixed_Output_RNG::is_seeded() || Test::rng().is_seeded();
          }
 
       void randomize(uint8_t out[], size_t len) override
@@ -142,17 +126,17 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG
          return "Fixed_Output_Position_RNG";
          }
 
-      explicit Fixed_Output_Position_RNG(const std::vector<uint8_t>& in, uint32_t pos)
+      explicit Fixed_Output_Position_RNG(const std::vector<uint8_t>& in, size_t pos)
          : Fixed_Output_RNG(in)
          , m_pos(pos) {}
 
-      explicit Fixed_Output_Position_RNG(const std::string& in_str, uint32_t pos)
+      explicit Fixed_Output_Position_RNG(const std::string& in_str, size_t pos)
          : Fixed_Output_RNG(in_str)
          , m_pos(pos) {}
 
    private:
-      uint32_t m_pos = 0;
-      uint32_t m_requests = 0;
+      size_t m_pos = 0;
+      size_t m_requests = 0;
    };
 
 class SeedCapturing_RNG final : public Botan::RandomNumberGenerator
