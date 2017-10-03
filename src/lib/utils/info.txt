@@ -1,5 +1,5 @@
 <defines>
-UTIL_FUNCTIONS -> 20161127
+UTIL_FUNCTIONS -> 20171003
 </defines>
 
 load_on always
@@ -37,12 +37,6 @@ safeint.h
 semaphore.h
 stl_util.h
 </header:internal>
-
-<libs>
-linux -> rt
-mingw -> ws2_32
-windows -> ws2_32.lib
-</libs>
 
 <requires>
 cpuid

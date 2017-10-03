@@ -1,3 +1,17 @@
 <defines>
-HTTP_UTIL -> 20131128
+HTTP_UTIL -> 20171003
 </defines>
+
+<header:public>
+http_util.h
+</header:public>
+
+<header:internal>
+socket.h
+</header:internal>
+
+<libs>
+linux -> rt
+mingw -> ws2_32
+windows -> ws2_32.lib
+</libs>
