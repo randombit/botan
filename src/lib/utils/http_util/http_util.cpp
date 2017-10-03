@@ -10,6 +10,7 @@
 #include <botan/parsing.h>
 #include <botan/hex.h>
 #include <botan/internal/os_utils.h>
+#include <botan/internal/socket.h>
 #include <botan/internal/stl_util.h>
 #include <sstream>
 
