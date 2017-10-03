@@ -221,7 +221,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        *         4-byte OID, n-byte root node, n-byte public seed,
        *         8-byte unused leaf index, n-byte prf seed, n-byte private seed.
        **/
-      virtual secure_vector<uint8_t> raw_private_key() const;
+      secure_vector<uint8_t> raw_private_key() const;
       /**
        * Algorithm 9: "treeHash"
        * Computes the internal n-byte nodes of a Merkle tree.

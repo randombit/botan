@@ -43,8 +43,8 @@ class BOTAN_PUBLIC_API(2,0) Threefish_512 final : public Block_Cipher_Fixed_Para
       // Interface for Skein
       friend class Skein_512;
 
-      virtual void skein_feedfwd(const secure_vector<uint64_t>& M,
-                                 const secure_vector<uint64_t>& T);
+      void skein_feedfwd(const secure_vector<uint64_t>& M,
+                         const secure_vector<uint64_t>& T);
 
       // Private data
       secure_vector<uint64_t> m_T;

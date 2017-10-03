@@ -214,13 +214,13 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOT
          m_private_seed = std::move(private_seed);
          }
 
-      virtual AlgorithmIdentifier
+      AlgorithmIdentifier
       pkcs8_algorithm_identifier() const override
          {
          throw Not_Implemented("No AlgorithmIdentifier available for XMSS-WOTS.");
          }
 
-      virtual std::unique_ptr<PK_Ops::Signature>
+      std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator&,
                              const std::string&,
                              const std::string& provider) const override;
