@@ -235,7 +235,7 @@ uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len)
    */
 
    const uint16_t to_check = std::min<uint16_t>(256, record_len);
-   const uint8_t pad_byte = record[(record_len-1)];
+   const uint8_t pad_byte = record[record_len-1];
    const uint16_t pad_bytes = 1 + pad_byte;
 
    uint16_t pad_invalid = CT::is_less<uint16_t>(rec16, pad_bytes);

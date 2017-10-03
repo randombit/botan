@@ -24,10 +24,10 @@ static const uint8_t BIN_TO_BASE64[64] = {
 
 void do_base64_encode(char out[4], const uint8_t in[3])
    {
-   out[0] = BIN_TO_BASE64[((in[0] & 0xFC) >> 2)];
+   out[0] = BIN_TO_BASE64[(in[0] & 0xFC) >> 2];
    out[1] = BIN_TO_BASE64[((in[0] & 0x03) << 4) | (in[1] >> 4)];
    out[2] = BIN_TO_BASE64[((in[1] & 0x0F) << 2) | (in[2] >> 6)];
-   out[3] = BIN_TO_BASE64[((in[2] & 0x3F)     )];
+   out[3] = BIN_TO_BASE64[in[2] & 0x3F];
    }
 
 }

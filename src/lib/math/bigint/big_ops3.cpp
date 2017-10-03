@@ -23,7 +23,7 @@ BigInt operator+(const BigInt& x, const BigInt& y)
 
    BigInt z(x.sign(), std::max(x_sw, y_sw) + 1);
 
-   if((x.sign() == y.sign()))
+   if(x.sign() == y.sign())
       bigint_add3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
    else
       {

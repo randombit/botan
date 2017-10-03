@@ -28,7 +28,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
    {
    m_window_bits = Power_Mod::window_bits(m_exp.bits(), base.bits(), m_hints);
 
-   m_g.resize((1U << m_window_bits));
+   m_g.resize(1U << m_window_bits);
 
    BigInt z(BigInt::Positive, 2 * (m_mod_words + 1));
    secure_vector<word> workspace(z.size());

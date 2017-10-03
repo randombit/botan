@@ -147,7 +147,7 @@ void bigint_add2(word x[], size_t x_size, const word y[], size_t y_size)
 void bigint_add3(word z[], const word x[], size_t x_size,
                            const word y[], size_t y_size)
    {
-   z[(x_size > y_size ? x_size : y_size)] +=
+   z[x_size > y_size ? x_size : y_size] +=
       bigint_add3_nc(z, x, x_size, y, y_size);
    }
 
