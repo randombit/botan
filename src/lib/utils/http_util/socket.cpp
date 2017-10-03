@@ -31,6 +31,8 @@
 #endif
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+  #include <botan/mem_ops.h>
+
   #define NOMINMAX 1
 #if !defined(BOTAN_HAS_BOOST_ASIO)
   #include <winsock2.h>
