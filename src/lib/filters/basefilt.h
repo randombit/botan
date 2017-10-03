@@ -108,11 +108,9 @@ class BOTAN_PUBLIC_API(2,0) Threaded_Fork final : public Fork
 
       ~Threaded_Fork();
 
-   protected:
+   private:
       void set_next(Filter* f[], size_t n);
       void send(const uint8_t in[], size_t length) override;
-
-   private:
       void thread_delegate_work(const uint8_t input[], size_t length);
       void thread_entry(Filter* filter);
 

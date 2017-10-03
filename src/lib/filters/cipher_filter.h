@@ -33,11 +33,6 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode_Filter final : public Keyed_Filter,
 
       std::string name() const override;
 
-   protected:
-      const Cipher_Mode& get_mode() const { return *m_mode; }
-
-      Cipher_Mode& get_mode() { return *m_mode; }
-
    private:
       void write(const uint8_t input[], size_t input_length) override;
       void start_msg() override;
