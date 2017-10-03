@@ -24,6 +24,9 @@
   #include <setjmp.h>
   #include <unistd.h>
   #include <errno.h>
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+  #define NOMINMAX 1
+  #include <windows.h>
 #endif
 
 namespace Botan {
