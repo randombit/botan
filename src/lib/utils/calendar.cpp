@@ -27,9 +27,9 @@ std::tm do_gmtime(std::time_t time_val)
    std::tm tm;
 
 #if defined(BOTAN_TARGET_OS_HAS_GMTIME_S)
-   gmtime_s(&tm, &time_val); // Windows
+   ::gmtime_s(&tm, &time_val); // Windows
 #elif defined(BOTAN_TARGET_OS_HAS_GMTIME_R)
-   gmtime_r(&time_val, &tm); // Unix/SUSv2
+   ::gmtime_r(&time_val, &tm); // Unix/SUSv2
 #else
    std::tm* tm_p = std::gmtime(&time_val);
    if (tm_p == nullptr)
@@ -139,16 +139,16 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
 
    // Define a function alias `botan_timegm`
    #if defined(BOTAN_TARGET_OS_HAS_TIMEGM)
-   std::time_t (&botan_timegm)(std::tm *tm) = timegm;
+   std::time_t (&botan_timegm)(std::tm *tm) = ::timegm;
    #elif defined(BOTAN_TARGET_OS_HAS_MKGMTIME) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    // http://stackoverflow.com/questions/16647819/timegm-cross-platform
-   std::time_t (&botan_timegm)(std::tm *tm) = _mkgmtime;
+   std::time_t (&botan_timegm)(std::tm *tm) = ::_mkgmtime;
    #elif defined(BOTAN_HAS_BOOST_DATETIME)
    std::time_t (&botan_timegm)(std::tm *tm) = boost_timegm;
    #elif defined(BOTAN_OS_TYPE_IS_UNIX)
    std::time_t (&botan_timegm)(std::tm *tm) = fallback_timegm;
    #else
-   std::time_t (&botan_timegm)(std::tm *tm) = mktime; // localtime instead...
+   std::time_t (&botan_timegm)(std::tm *tm) = ::mktime; // localtime instead...
    #endif
 
    // Convert std::tm to std::time_t
