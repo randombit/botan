@@ -42,8 +42,8 @@ class BOTAN_PUBLIC_API(2,0) Serpent final : public Block_Cipher_Fixed_Params<16,
       void simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const;
 #endif
 
-   private:
       void key_schedule(const uint8_t key[], size_t length) override;
+
       secure_vector<uint32_t> m_round_key;
    };
 
