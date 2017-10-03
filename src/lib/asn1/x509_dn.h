@@ -39,7 +39,7 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
 
       bool empty() const { return m_dn_info.empty(); }
 
-      X509_DN();
+      X509_DN() = default;
       explicit X509_DN(const std::multimap<OID, std::string>&);
       explicit X509_DN(const std::multimap<std::string, std::string>&);
    private:

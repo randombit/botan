@@ -23,7 +23,7 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,0) BitBucket final : public Filter
    {
    public:
-      void write(const uint8_t[], size_t) override {}
+      void write(const uint8_t[], size_t) override { /* discard */ }
 
       std::string name() const override { return "BitBucket"; }
    };

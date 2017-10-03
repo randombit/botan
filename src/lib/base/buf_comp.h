@@ -163,7 +163,7 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
          return final();
          }
 
-      virtual ~Buffered_Computation() {}
+      virtual ~Buffered_Computation() = default;
    private:
       /**
       * Add more data to the computation

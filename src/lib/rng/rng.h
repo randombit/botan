@@ -178,6 +178,8 @@ typedef RandomNumberGenerator RNG;
 */
 class BOTAN_PUBLIC_API(2,0) Hardware_RNG : public RandomNumberGenerator
    {
+   public:
+      virtual void clear() final { /* no way to clear state of hardware RNG */ }
    };
 
 /**

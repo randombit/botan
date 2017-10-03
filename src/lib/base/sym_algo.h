@@ -21,7 +21,7 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
    {
    public:
-      virtual ~SymmetricAlgorithm() {}
+      virtual ~SymmetricAlgorithm() = default;
 
       /**
       * Reset the state.

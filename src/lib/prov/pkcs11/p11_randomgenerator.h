@@ -28,9 +28,6 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RNG final : public Hardware_RNG
       /// Initialize the RNG with the PKCS#11 session that provides access to the cryptoki functions
       explicit PKCS11_RNG(Session& session);
 
-      void clear() override
-         {}
-
       std::string name() const override
          {
          return "PKCS11_RNG";

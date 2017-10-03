@@ -136,7 +136,10 @@ class BOTAN_PUBLIC_API(2,0) ESP_Padding final : public BlockCipherModePaddingMet
 class BOTAN_PUBLIC_API(2,0) Null_Padding final : public BlockCipherModePaddingMethod
    {
    public:
-      void add_padding(secure_vector<uint8_t>&, size_t, size_t) const override {}
+      void add_padding(secure_vector<uint8_t>&, size_t, size_t) const override
+         {
+         /* no padding */
+         }
 
       size_t unpad(const uint8_t[], size_t size) const override { return size; }
 

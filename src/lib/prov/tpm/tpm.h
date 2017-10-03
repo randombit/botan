@@ -92,8 +92,6 @@ class BOTAN_PUBLIC_API(2,0) TPM_RNG final : public Hardware_RNG
 
       bool is_seeded() const override { return true; }
 
-      void clear() override {}
-
    private:
       TPM_Context& m_ctx;
 };

@@ -17,13 +17,6 @@
 namespace Botan {
 
 /*
-* Create an empty X509_DN
-*/
-X509_DN::X509_DN()
-   {
-   }
-
-/*
 * Create an X509_DN
 */
 X509_DN::X509_DN(const std::multimap<OID, std::string>& args)

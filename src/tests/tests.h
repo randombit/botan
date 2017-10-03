@@ -50,7 +50,6 @@ class Test_Error final : public Botan::Exception
 class Provider_Filter final
    {
    public:
-      Provider_Filter() {}
       void set(const std::string& provider) { m_provider = provider; }
       std::vector<std::string> filter(const std::vector<std::string>&) const;
    private:

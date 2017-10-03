@@ -54,8 +54,6 @@ class BOTAN_PUBLIC_API(2,0) RDRAND_RNG final : public Hardware_RNG
       std::string name() const override { return "RDRAND"; }
 
       bool is_seeded() const override { return true; }
-
-      void clear() override {}
    };
 
 }
