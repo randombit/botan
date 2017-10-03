@@ -73,18 +73,21 @@ std::string X509_Time::to_string() const
       full_year = (m_year >= 2000) ? (m_year - 2000) : (m_year - 1900);
       }
 
-   const auto factor_y = uint64_t{10000000000ull}; // literal exceeds 32bit int range
-   const auto factor_m = uint64_t{100000000ull};
-   const auto factor_d = uint64_t{1000000ull};
-   const auto factor_h = uint64_t{10000ull};
-   const auto factor_i = uint64_t{100ull};
+   const uint64_t YEAR_FACTOR = 10000000000ULL;
+   const uint64_t MON_FACTOR  = 100000000;
+   const uint64_t DAY_FACTOR  = 1000000;
+   const uint64_t HOUR_FACTOR = 10000;
+   const uint64_t MIN_FACTOR  = 100;
 
-   std::string repr = std::to_string(factor_y * full_year +
-                                     factor_m * m_month +
-                                     factor_d * m_day +
-                                     factor_h * m_hour +
-                                     factor_i * m_minute +
-                                     m_second) + "Z";
+   const uint64_t int_repr =
+      YEAR_FACTOR * full_year +
+      MON_FACTOR * m_month +
+      DAY_FACTOR * m_day +
+      HOUR_FACTOR * m_hour +
+      MIN_FACTOR * m_minute +
+      m_second;
+
+   std::string repr = std::to_string(int_repr) + "Z";
 
    uint32_t desired_size = (m_tag == UTC_TIME) ? 13 : 15;
 
