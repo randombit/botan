@@ -51,7 +51,7 @@ class BOTAN_PUBLIC_API(2,0) Stream_Cipher_Mode final : public Cipher_Mode
          reset();
          }
 
-      void reset() override { /* no msg state */ return; }
+      void reset() override { /* no msg state */ }
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override
