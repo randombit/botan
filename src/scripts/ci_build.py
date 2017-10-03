@@ -202,6 +202,7 @@ def run_cmd(cmd, root_dir):
 
     start = time.time()
 
+    cmd = [os.path.expandvars(elem) for elem in cmd]
     sub_env = os.environ.copy()
     sub_env['LD_LIBRARY_PATH'] = root_dir
 
@@ -443,7 +444,7 @@ def main(args=None):
             sonar_config = os.path.join(root_dir, os.path.join(root_dir, 'src/build-data/sonar-project.properties'))
             cmds.append(['sonar-scanner',
                          '-Dproject.settings=%s' % (sonar_config),
-                         '-Dsonar.login=%s' % (os.getenv('SONAR_TOKEN'))])
+                         '-Dsonar.login=$SONAR_TOKEN'])
 
         if target in ['coverage']:
 

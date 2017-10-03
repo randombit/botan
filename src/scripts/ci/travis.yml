@@ -115,7 +115,7 @@ addons:
   sonarcloud:
     organization: "randombit-github"
     token:
-      secure: "MTveedl4eey6M4i12SdpXrCJs0eBerN+v+BzkUjCDiVSdHH+/m2wO4EJE/PoJAJyTPeZkxSLag4vCSebr0R1+ojBXUGW0Q1lnZ5xqrf3Vpb7Gvyavqc2kq4tFqVaU0nCF+sTm6dZMTTD7raxOSlP7fefp8yDVz7ddE1G9ZiT8rA="
+      secure: "JYwDxEZyCJ1aKLjAYB9YlyyIRkjeaY48iYqcMhmidx6/ploWXMbUzVpv5plLFbMGgeMy9sqa2I7Pbo7u3OdcBbbsogGtk/jomnjiauuNS6KcCHEEcVjBILfadxGJPL9F8/0KbcS2vnPpz/jVlRp18Uemud0yGGXXcDaY471sA50="
 
   coverity_scan:
     project:
