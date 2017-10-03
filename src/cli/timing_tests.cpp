@@ -365,23 +365,7 @@ class Timing_Test_Command : public Command
             filename = test_data_dir + "/" + test_type + ".vec";
             }
 
-         std::vector<std::string> lines;
-
-            {
-            std::ifstream infile(filename);
-            if(infile.good() == false)
-               {
-               throw CLI_Error("Error reading test data from '" + filename + "'");
-               }
-            std::string line;
-            while(std::getline(infile, line))
-               {
-               if(line.size() > 0 && line.at(0) != '#')
-                  {
-                  lines.push_back(line);
-                  }
-               }
-            }
+         std::vector<std::string> lines = read_testdata(filename);
 
          std::vector<std::vector<ticks>> results = test->execute_evaluation(lines, warmup_runs, measurement_runs);
 
@@ -398,6 +382,26 @@ class Timing_Test_Command : public Command
          output() << oss.str();
          }
    private:
+
+      std::vector<std::string> read_testdata(const std::string& filename)
+         {
+         std::vector<std::string> lines;
+         std::ifstream infile(filename);
+         if(infile.good() == false)
+            {
+            throw CLI_Error("Error reading test data from '" + filename + "'");
+            }
+         std::string line;
+         while(std::getline(infile, line))
+            {
+            if(line.size() > 0 && line.at(0) != '#')
+               {
+               lines.push_back(line);
+               }
+            }
+         return lines;
+         }
+
       std::unique_ptr<Timing_Test> lookup_timing_test(const std::string& test_type);
 
       std::string help_text() const override
