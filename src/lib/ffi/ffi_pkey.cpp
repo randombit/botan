@@ -21,6 +21,8 @@
 
 extern "C" {
 
+using namespace Botan_FFI;
+
 int botan_privkey_create(botan_privkey_t* key_obj,
                          const char* algo_name,
                          const char* algo_params,

@@ -46,7 +46,7 @@ struct botan_struct
    };
 
 #define BOTAN_FFI_DECLARE_STRUCT(NAME, TYPE, MAGIC) \
-   struct NAME final : public botan_struct<TYPE, MAGIC> { explicit NAME(TYPE* x) : botan_struct(x) {} }
+   struct NAME final : public Botan_FFI::botan_struct<TYPE, MAGIC> { explicit NAME(TYPE* x) : botan_struct(x) {} }
 
 // Declared in ffi.cpp
 int ffi_error_exception_thrown(const char* func_name, const char* exn);
