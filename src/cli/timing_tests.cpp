@@ -280,6 +280,8 @@ ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
    const Botan::PointGFp k_times_P = m_base_point.blinded_multiply(k, Timing_Test::timing_test_rng());
    const Botan::BigInt r = m_mod_order.reduce(k_times_P.get_affine_x());
    const Botan::BigInt s = m_mod_order.multiply(inverse_mod(k, m_order), mul_add(m_x, r, msg));
+   BOTAN_UNUSED(r);
+   BOTAN_UNUSED(s);
 
    ticks end = get_ticks();
 

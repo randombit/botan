@@ -49,7 +49,7 @@ class Cryptobox_Tests final : public Test
                {
                std::string corrupted = ciphertext;
                corrupted[corrupted.size()/2]++;
-               const std::string decrypted = Botan::CryptoBox::decrypt(corrupted, password);
+               Botan::CryptoBox::decrypt(corrupted, password);
                result.test_failure("Decrypted corrupted cryptobox message");
                }
             catch(Botan::Decoding_Error)

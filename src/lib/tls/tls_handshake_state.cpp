@@ -437,8 +437,6 @@ Handshake_State::choose_sig_format(const Private_Key& key,
       {
       // We skip this check for v1.0 since you're stuck with SHA-1 regardless
 
-      std::vector<std::string> allowed_hashes = policy.allowed_signature_hashes();
-
       if(!policy.allowed_signature_hash(hash_algo))
          {
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,

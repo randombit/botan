@@ -91,7 +91,6 @@ class TLS_Server final : public Command
 
          std::unique_ptr<Botan::TLS::Policy> policy;
          const std::string policy_file = get_arg("policy");
-         std::filebuf fb;
          if(policy_file.size() > 0)
             {
             std::ifstream policy_stream(policy_file);

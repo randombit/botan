@@ -67,7 +67,6 @@ void GeneralName::decode_from(class BER_Decoder& ber)
    else if(tag == 4)
       {
       X509_DN dn;
-      std::multimap<std::string, std::string> nam;
       BER_Decoder dec(obj.value);
       std::stringstream ss;
 

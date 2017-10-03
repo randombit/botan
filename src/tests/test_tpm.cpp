@@ -99,6 +99,7 @@ class UUID_Tests final : public Test
          result.confirm("UUID copied by binary equals original", random_uuid == binary_copy);
 
          std::string uuid_str = random_uuid.to_string();
+         result.test_eq("UUID string in expected format", uuid_str.size(), 36);
 
          const Botan::UUID string_copy(random_uuid.to_string());
          result.confirm("UUID copied by string equals original", random_uuid == string_copy);

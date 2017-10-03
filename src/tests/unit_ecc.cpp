@@ -279,11 +279,11 @@ Test::Result test_coordinates()
    const Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
    const Botan::CurveGFp& curve = secp160r1.get_curve();
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
-   const Botan::PointGFp p0 = p_G;
-   const Botan::PointGFp p1 = p_G * 2;
+
    const Botan::PointGFp point_exp(curve, exp_affine_x, exp_affine_y);
    result.confirm("Point is on the curve", point_exp.on_the_curve());
 
+   const Botan::PointGFp p1 = p_G * 2;
    result.test_eq("Point affine x", p1.get_affine_x(), exp_affine_x);
    result.test_eq("Point affine y", p1.get_affine_y(), exp_affine_y);
    return result;

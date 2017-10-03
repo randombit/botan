@@ -269,7 +269,6 @@ class BigInt_Add_Test final : public Text_Based_Test
          const BigInt a = get_req_bn(vars, "In1");
          const BigInt b = get_req_bn(vars, "In2");
          const BigInt c = get_req_bn(vars, "Output");
-         BigInt d = a + b;
 
          result.test_eq("a + b", a + b, c);
          result.test_eq("b + a", b + a, c);
@@ -301,8 +300,6 @@ class BigInt_Sub_Test final : public Text_Based_Test
          const BigInt a = get_req_bn(vars, "In1");
          const BigInt b = get_req_bn(vars, "In2");
          const BigInt c = get_req_bn(vars, "Output");
-
-         BigInt d = a - b;
 
          result.test_eq("a - b", a - b, c);
 
