@@ -252,6 +252,17 @@ std::string Text_Policy::get_str(const std::string& key, const std::string& def)
    return i->second;
    }
 
+bool Text_Policy::set_value(const std::string& key, const std::string& val, bool overwrite)
+   {
+   auto i = m_kv.find(key);
+
+   if(overwrite == false && i != m_kv.end())
+      return false;
+
+   m_kv.insert(i, std::make_pair(key, val));
+   return true;
+   }
+
 }
 
 }

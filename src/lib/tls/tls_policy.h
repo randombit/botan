@@ -519,6 +519,9 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       std::string get_str(const std::string& key, const std::string& def = "") const;
 
+      bool set_value(const std::string& key, const std::string& val, bool overwrite);
+
+   private:
       std::map<std::string, std::string> m_kv;
    };
 
