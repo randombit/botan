@@ -8,6 +8,7 @@
 
 #include <botan/internal/socket.h>
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <chrono>
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
@@ -18,26 +19,19 @@
   */
   #define BOOST_ASIO_DISABLE_SERIAL_PORT
   #include <boost/asio.hpp>
-#endif
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
-
-#if !defined(BOTAN_HAS_BOOST_ASIO)
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
   #include <sys/socket.h>
   #include <netinet/in.h>
   #include <netdb.h>
   #include <string.h>
   #include <unistd.h>
-#endif
+  #include <errno.h>
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
-  #include <botan/mem_ops.h>
-
   #define NOMINMAX 1
-#if !defined(BOTAN_HAS_BOOST_ASIO)
   #include <winsock2.h>
   #include <ws2tcpip.h>
-#endif
   #include <windows.h>
 #endif
 
