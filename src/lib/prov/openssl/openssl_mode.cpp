@@ -10,6 +10,7 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/openssl.h>
 #include <openssl/evp.h>
+#include <limits.h>
 
 namespace Botan {
 
