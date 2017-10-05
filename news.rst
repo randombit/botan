@@ -4,6 +4,9 @@ Release Notes
 Version 2.4.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The IDs for SHA-3 PKCSv1.5 signatures added in 2.3.0 were incorrect.
+  They have been changed to use the correct encoding, and a test added
+  to ensure such errors do not recur.
 
 Version 2.3.0, 2017-10-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
