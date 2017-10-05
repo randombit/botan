@@ -9,6 +9,7 @@
 #include <botan/data_src.h>
 #include <botan/exceptn.h>
 #include <algorithm>
+#include <istream>
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
   #include <fstream>
