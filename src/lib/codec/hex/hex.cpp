@@ -114,7 +114,10 @@ size_t hex_decode(uint8_t output[],
            bad_char + "'");
          }
 
-      *out_ptr |= bin << (top_nibble*4);
+      if(top_nibble)
+         *out_ptr |= bin << 4;
+      else
+         *out_ptr |= bin;
 
       top_nibble = !top_nibble;
       if(top_nibble)

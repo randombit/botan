@@ -290,7 +290,7 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n,
    if(n == 0)
       return add_object(type_tag, class_tag, 0);
 
-   bool extra_zero = (n.bits() % 8 == 0);
+   const size_t extra_zero = (n.bits() % 8 == 0) ? 1 : 0;
    secure_vector<uint8_t> contents(extra_zero + n.bytes());
    BigInt::encode(&contents[extra_zero], n);
    if(n < 0)

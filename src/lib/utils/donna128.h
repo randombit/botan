@@ -59,15 +59,18 @@ class donna128 final
       donna128& operator+=(const donna128& x)
          {
          l += x.l;
-         h += (l < x.l);
          h += x.h;
+
+         const uint64_t carry = (l < x.l);
+         h += carry;
          return *this;
          }
 
       donna128& operator+=(uint64_t x)
          {
          l += x;
-         h += (l < x);
+         const uint64_t carry = (l < x);
+         h += carry;
          return *this;
          }
 
