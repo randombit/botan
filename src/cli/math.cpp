@@ -14,6 +14,22 @@
 
 namespace Botan_CLI {
 
+class Modular_Inverse final : public Command
+   {
+   public:
+      Modular_Inverse() : Command("mod_inverse n mod") {}
+
+      void go() override
+         {
+         const Botan::BigInt n(get_arg("n"));
+         const Botan::BigInt mod(get_arg("mod"));
+
+         output() << Botan::inverse_mod(n, mod) << "\n";
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("mod_inverse", Modular_Inverse);
+
 class Gen_Prime final : public Command
    {
    public:
