@@ -10,10 +10,11 @@
 #ifndef BOTAN_MP_CORE_OPS_H_
 #define BOTAN_MP_CORE_OPS_H_
 
-#include <botan/bigint.h>
 #include <botan/mp_types.h>
 
 namespace Botan {
+
+class BigInt;
 
 /*
 * The size of the word type, in bits

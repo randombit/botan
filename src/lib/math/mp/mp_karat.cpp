@@ -8,6 +8,7 @@
 
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_asmi.h>
+#include <botan/bigint.h>
 #include <botan/mem_ops.h>
 
 namespace Botan {
