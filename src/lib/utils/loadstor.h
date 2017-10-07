@@ -59,7 +59,7 @@ template<typename T> inline uint8_t get_byte(size_t byte_num, T input)
 */
 inline uint16_t make_uint16(uint8_t i0, uint8_t i1)
    {
-   return ((static_cast<uint16_t>(i0) << 8) | i1);
+   return static_cast<uint16_t>((static_cast<uint16_t>(i0) << 8) | i1);
    }
 
 /**
@@ -115,7 +115,7 @@ inline T load_be(const uint8_t in[], size_t off)
    in += off * sizeof(T);
    T out = 0;
    for(size_t i = 0; i != sizeof(T); ++i)
-      out = (out << 8) | in[i];
+      out = static_cast<T>((out << 8) | in[i]);
    return out;
    }
 

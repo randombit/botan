@@ -613,11 +613,11 @@ inline uint64_t F(uint64_t v, uint64_t K)
 
 inline uint64_t FL(uint64_t v, uint64_t K)
    {
-   uint32_t x1 = (v >> 32);
-   uint32_t x2 = (v & 0xFFFFFFFF);
+   uint32_t x1 = static_cast<uint32_t>(v >> 32);
+   uint32_t x2 = static_cast<uint32_t>(v & 0xFFFFFFFF);
 
-   const uint32_t k1 = (K >> 32);
-   const uint32_t k2 = (K & 0xFFFFFFFF);
+   const uint32_t k1 = static_cast<uint32_t>(K >> 32);
+   const uint32_t k2 = static_cast<uint32_t>(K & 0xFFFFFFFF);
 
    x2 ^= rotate_left(x1 & k1, 1);
    x1 ^= (x2 | k2);
@@ -627,11 +627,11 @@ inline uint64_t FL(uint64_t v, uint64_t K)
 
 inline uint64_t FLINV(uint64_t v, uint64_t K)
    {
-   uint32_t x1 = (v >> 32);
-   uint32_t x2 = (v & 0xFFFFFFFF);
+   uint32_t x1 = static_cast<uint32_t>(v >> 32);
+   uint32_t x2 = static_cast<uint32_t>(v & 0xFFFFFFFF);
 
-   const uint32_t k1 = (K >> 32);
-   const uint32_t k2 = (K & 0xFFFFFFFF);
+   const uint32_t k1 = static_cast<uint32_t>(K >> 32);
+   const uint32_t k2 = static_cast<uint32_t>(K & 0xFFFFFFFF);
 
    x1 ^= (x2 | k2);
    x2 ^= rotate_left(x1 & k1, 1);

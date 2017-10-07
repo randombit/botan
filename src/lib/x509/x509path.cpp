@@ -217,10 +217,10 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
          if(!ca->allowed_usage(CRL_SIGN))
             status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
 
-         if(validation_time < X509_Time(crls[i]->this_update()))
+         if(validation_time < crls[i]->this_update())
             status.insert(Certificate_Status_Code::CRL_NOT_YET_VALID);
 
-         if(validation_time > X509_Time(crls[i]->next_update()))
+         if(validation_time > crls[i]->next_update())
             status.insert(Certificate_Status_Code::CRL_HAS_EXPIRED);
 
          if(crls[i]->check_signature(ca->subject_public_key()) == false)

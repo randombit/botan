@@ -88,9 +88,11 @@ inline T expand_mask(T x)
    T r = x;
    // First fold r down to a single bit
    for(size_t i = 1; i != sizeof(T)*8; i *= 2)
-      r |= r >> i;
+      {
+      r = r | static_cast<T>(r >> i);
+      }
    r &= 1;
-   r = ~(r - 1);
+   r = static_cast<T>(~(r - 1));
    return r;
    }
 
@@ -103,7 +105,7 @@ inline T expand_top_bit(T a)
 template<typename T>
 inline T select(T mask, T from0, T from1)
    {
-   return (from0 & mask) | (from1 & ~mask);
+   return static_cast<T>((from0 & mask) | (from1 & ~mask));
    }
 
 template<typename PredT, typename ValT>
@@ -115,7 +117,7 @@ inline ValT val_or_zero(PredT pred_val, ValT val)
 template<typename T>
 inline T is_zero(T x)
    {
-   return ~expand_mask(x);
+   return static_cast<T>(~expand_mask(x));
    }
 
 template<typename T>
@@ -173,7 +175,7 @@ inline secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t len
 
    for(size_t i = 0; i != length; ++i)
       {
-      only_zeros &= CT::is_zero(in[i]);
+      only_zeros = only_zeros & CT::is_zero<uint8_t>(in[i]);
       leading_zeros += CT::select<uint8_t>(only_zeros, 1, 0);
       }
 

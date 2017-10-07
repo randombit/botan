@@ -36,8 +36,8 @@ class Connection_Sequence_Numbers
 class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers
    {
    public:
-      void new_read_cipher_state() override { m_read_seq_no = 0; m_read_epoch += 1; }
-      void new_write_cipher_state() override { m_write_seq_no = 0; m_write_epoch += 1; }
+      void new_read_cipher_state() override { m_read_seq_no = 0; m_read_epoch++; }
+      void new_write_cipher_state() override { m_write_seq_no = 0; m_write_epoch++; }
 
       uint16_t current_read_epoch() const override { return m_read_epoch; }
       uint16_t current_write_epoch() const override { return m_write_epoch; }
@@ -59,11 +59,11 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers
    public:
       Datagram_Sequence_Numbers() { m_write_seqs[0] = 0; }
 
-      void new_read_cipher_state() override { m_read_epoch += 1; }
+      void new_read_cipher_state() override { m_read_epoch++; }
 
       void new_write_cipher_state() override
          {
-         m_write_epoch += 1;
+         m_write_epoch++;
          m_write_seqs[m_write_epoch] = 0;
          }
 

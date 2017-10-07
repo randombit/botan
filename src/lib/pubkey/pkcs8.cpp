@@ -303,7 +303,7 @@ load_key(DataSource& source,
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid.as_string());
 
-   return std::unique_ptr<Private_Key>(load_private_key(alg_id, pkcs8_key));
+   return load_private_key(alg_id, pkcs8_key);
    }
 
 }
