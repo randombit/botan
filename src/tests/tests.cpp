@@ -1047,6 +1047,8 @@ std::vector<Test::Result> Text_Based_Test::run()
                                               "run_final_tests exception " + std::string(e.what())));
       }
 
+   m_first = true;
+
    return results;
    }
 
