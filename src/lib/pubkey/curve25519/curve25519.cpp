@@ -11,6 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/rng.h>
+#include <botan/sha2_64.h>
 
 
 namespace Botan {
