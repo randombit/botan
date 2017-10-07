@@ -21,12 +21,7 @@ Representations:
   ge_p1p1 (completed): ((X:Z),(Y:T)) satisfying x=X/Z, y=Y/T
   ge_precomp (Duif): (y+x,y-x,2dxy)
 */
-typedef struct
-   {
-   fe X;
-   fe Y;
-   fe Z;
-   } ge_p2;
+
 
 typedef struct
    {
@@ -432,18 +427,7 @@ void slide(int8_t* r, const uint8_t* a)
       }
    }
 
-void ge_tobytes(uint8_t* s, const ge_p2* h)
-   {
-   fe recip;
-   fe x;
-   fe y;
 
-   fe_invert(recip, h->Z);
-   fe_mul(x, h->X, recip);
-   fe_mul(y, h->Y, recip);
-   fe_tobytes(s, y);
-   s[31] ^= fe_isnegative(x) << 7;
-   }
 
 void ge_p2_0(ge_p2* h)
    {
@@ -2091,20 +2075,7 @@ inline void select(ge_precomp* t,
       }
    }
 
-void ge_p3_tobytes(uint8_t* s, const ge_p3* h)
-   {
-   fe recip;
-   fe x;
-   fe y;
 
-   fe_invert(recip, h->Z);
-   fe_mul(x, h->X, recip);
-   fe_mul(y, h->Y, recip);
-   fe_tobytes(s, y);
-   s[31] ^= fe_isnegative(x) << 7;
-   }
-
-}
 
 /*
 h = a * B
@@ -2115,60 +2086,93 @@ Preconditions:
   a[31] <= 127
 */
 
+
+
+
+
+
+}
+
 void ge_scalarmult_base(uint8_t out[32], const uint8_t a[32])
-   {
-   int8_t e[64];
-   int8_t carry;
-   ge_p1p1 r;
-   ge_p2 s;
-   ge_p3 h;
-   ge_precomp t;
-   int i;
+{
+	int8_t e[64];
+	int8_t carry;
+	ge_p1p1 r;
+	ge_p2 s;
+	ge_p3 h;
+	ge_precomp t;
+	int i;
 
-   for(i = 0; i < 32; ++i)
-      {
-      e[2 * i + 0] = (a[i] >> 0) & 15;
-      e[2 * i + 1] = (a[i] >> 4) & 15;
-      }
-   /* each e[i] is between 0 and 15 */
-   /* e[63] is between 0 and 7 */
+	for (i = 0; i < 32; ++i)
+	{
+		e[2 * i + 0] = (a[i] >> 0) & 15;
+		e[2 * i + 1] = (a[i] >> 4) & 15;
+	}
+	/* each e[i] is between 0 and 15 */
+	/* e[63] is between 0 and 7 */
 
-   carry = 0;
-   for(i = 0; i < 63; ++i)
-      {
-      e[i] += carry;
-      carry = e[i] + 8;
-      carry >>= 4;
-      e[i] -= carry << 4;
-      }
-   e[63] += carry;
-   /* each e[i] is between -8 and 8 */
+	carry = 0;
+	for (i = 0; i < 63; ++i)
+	{
+		e[i] += carry;
+		carry = e[i] + 8;
+		carry >>= 4;
+		e[i] -= carry << 4;
+	}
+	e[63] += carry;
+	/* each e[i] is between -8 and 8 */
 
-   ge_p3_0(&h);
-   for(i = 1; i < 64; i += 2)
-      {
-      select(&t, B_precomp[i / 2], e[i]);
-      ge_madd(&r, &h, &t);
-      ge_p1p1_to_p3(&h, &r);
-      }
+	ge_p3_0(&h);
+	for (i = 1; i < 64; i += 2)
+	{
+		select(&t, B_precomp[i / 2], e[i]);
+		ge_madd(&r, &h, &t);
+		ge_p1p1_to_p3(&h, &r);
+	}
 
-   ge_p3_dbl(&r, &h);
-   ge_p1p1_to_p2(&s, &r);
-   ge_p2_dbl(&r, &s);
-   ge_p1p1_to_p2(&s, &r);
-   ge_p2_dbl(&r, &s);
-   ge_p1p1_to_p2(&s, &r);
-   ge_p2_dbl(&r, &s);
-   ge_p1p1_to_p3(&h, &r);
+	ge_p3_dbl(&r, &h);
+	ge_p1p1_to_p2(&s, &r);
+	ge_p2_dbl(&r, &s);
+	ge_p1p1_to_p2(&s, &r);
+	ge_p2_dbl(&r, &s);
+	ge_p1p1_to_p2(&s, &r);
+	ge_p2_dbl(&r, &s);
+	ge_p1p1_to_p3(&h, &r);
 
-   for(i = 0; i < 64; i += 2)
-      {
-      select(&t, B_precomp[i / 2], e[i]);
-      ge_madd(&r, &h, &t);
-      ge_p1p1_to_p3(&h, &r);
-      }
+	for (i = 0; i < 64; i += 2)
+	{
+		select(&t, B_precomp[i / 2], e[i]);
+		ge_madd(&r, &h, &t);
+		ge_p1p1_to_p3(&h, &r);
+	}
 
-   ge_p3_tobytes(out, &h);
-   }
+	ge_p3_tobytes(out, &h);
+}
+
+void ge_p3_tobytes(uint8_t* s, const ge_p3* h)
+{
+	fe recip;
+	fe x;
+	fe y;
+
+	fe_invert(recip, h->Z);
+	fe_mul(x, h->X, recip);
+	fe_mul(y, h->Y, recip);
+	fe_tobytes(s, y);
+	s[31] ^= fe_isnegative(x) << 7;
+}
+
+void ge_tobytes(uint8_t* s, const ge_p2* h)
+{
+	fe recip;
+	fe x;
+	fe y;
+
+	fe_invert(recip, h->Z);
+	fe_mul(x, h->X, recip);
+	fe_mul(y, h->Y, recip);
+	fe_tobytes(s, y);
+	s[31] ^= fe_isnegative(x) << 7;
+}
 
 }

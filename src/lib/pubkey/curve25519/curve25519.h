@@ -50,6 +50,10 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PublicKey : public virtual Public_Key
       explicit Curve25519_PublicKey(const secure_vector<uint8_t>& pub) :
          m_public(pub.begin(), pub.end()) {}
 
+	  std::unique_ptr<PK_Ops::Verification>
+		  create_verification_op(const std::string& params,
+			  const std::string& provider) const override;
+
    protected:
       Curve25519_PublicKey() = default;
       std::vector<uint8_t> m_public;
@@ -95,6 +99,13 @@ class BOTAN_PUBLIC_API(2,0) Curve25519_PrivateKey final : public Curve25519_Publ
                                  const std::string& params,
                                  const std::string& provider) const override;
 
+	  std::unique_ptr<PK_Ops::Signature>
+		  create_signature_op(RandomNumberGenerator& rng,
+			  const std::string& params,
+			  const std::string& provider) const override;
+
+
+
    private:
       secure_vector<uint8_t> m_private;
    };
@@ -117,4 +128,24 @@ void BOTAN_PUBLIC_API(2,0) curve25519_basepoint(uint8_t mypublic[32],
 
 }
 
+namespace Botan {
+	/* returns 0 on success */
+	int curve25519_sign(unsigned char* signature_out, /* 64 bytes */
+		const unsigned char* curve25519_privkey, /* 32 bytes */
+		const unsigned char* msg, const size_t msg_len,
+		const unsigned char * random); /* 64 bytes */
+
+									  /* returns 0 on success */
+	int curve25519_verify(const unsigned char* signature, /* 64 bytes */
+		const unsigned char* curve25519_pubkey, /* 32 bytes */
+		const unsigned char* msg, const size_t msg_len);
+
+	int ed25519_sign_modified(
+		unsigned char *sm,
+		const unsigned char *m, size_t mlen,
+		const unsigned char *sk, const unsigned char* pk,
+		const unsigned char* random
+	);
+
+}
 #endif

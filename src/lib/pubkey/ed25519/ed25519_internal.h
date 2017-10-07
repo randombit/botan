@@ -47,8 +47,16 @@ typedef struct
    fe T;
    } ge_p3;
 
+typedef struct
+{
+	fe X;
+	fe Y;
+	fe Z;
+} ge_p2;
+
 int ge_frombytes_negate_vartime(ge_p3*, const uint8_t*);
 void ge_scalarmult_base(uint8_t out[32], const uint8_t in[32]);
+void ge_p3_tobytes(uint8_t* s, const ge_p3* h);
 
 void ge_double_scalarmult_vartime(uint8_t out[32],
                                   const uint8_t a[],
@@ -59,7 +67,7 @@ void ge_double_scalarmult_vartime(uint8_t out[32],
 The set of scalars is \Z/l
 where l = 2^252 + 27742317777372353535851937790883648493.
 */
-
+void ge_tobytes(uint8_t* s, const ge_p2* h);
 void sc_reduce(uint8_t*);
 void sc_muladd(uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*);
 
