@@ -293,7 +293,7 @@ int ed25519_sign_modified(
 	unsigned char hram[64];
 	unsigned char * sigbuf;
 
-	std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-512"));
+	SHA_512 sha;
 	ge_p3 R;
 	int count = 0;
 
@@ -303,27 +303,22 @@ int ed25519_sign_modified(
 	}
 
 	memmove(sigbuf + 64, m, mlen);
-
-	memmove(sigbuf + 32, sk, 32);
-						
+	memmove(sigbuf + 32, sk, 32);				
 	sigbuf[0] = 0xFE;
 	for (count = 1; count < 32; count++)
 		sigbuf[count] = 0xFF;
 
-	///* add suffix of random data */
+	/* add suffix of random data */
 	memmove(sigbuf + mlen + 64, random, 64);
-
-	hash->update(sigbuf, mlen + 128);
-	hash->final(nonce);
-
+	sha.update(sigbuf, mlen + 128);
+	sha.final(nonce);
 	memmove(sigbuf + 32, pk, 32);
 
 	sc_reduce(nonce);
-
 	ge_scalarmult_base(sigbuf, nonce);
 
-	hash->update(sigbuf, mlen + 64);
-	hash->final(hram);
+	sha.update(sigbuf, mlen + 64);
+	sha.final(hram);
 
 	sc_reduce(hram);
 	sc_muladd(sigbuf + 32, hram, sk, nonce);
