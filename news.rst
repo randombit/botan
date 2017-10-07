@@ -8,6 +8,8 @@ Version 2.4.0, Not Yet Released
   They have been changed to use the correct encoding, and a test added
   to ensure such errors do not recur.
 
+* Add an OID for RIPEMD-160
+
 Version 2.3.0, 2017-10-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
