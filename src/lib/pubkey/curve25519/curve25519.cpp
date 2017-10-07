@@ -36,12 +36,10 @@ namespace Botan {
 			secure_vector<uint8_t> sig(64);
 			std::vector<uint8_t> rand;
 			rand.resize(64);
-			//rng.randomize(rand.data(), 32);
-			memset(rand.data(), 0, 64);
+			rng.randomize(rand.data(), 64);
 			secure_vector<uint8_t> privKey25519RAW;
 
 			BER_Decoder(m_key.private_key_bits()).decode(privKey25519RAW, Botan::ASN1_Tag::OCTET_STRING).discard_remaining();
-
 
 			curve25519_sign(sig.data(), privKey25519RAW.data(), m_msg.data(), m_msg.size(), rand.data());
 
@@ -79,8 +77,6 @@ namespace Botan {
 
 
 			bool ok = curve25519_verify(sig, m_key.public_key_bits().data(), m_msg.data(), m_msg.size());
-
-			// ed25519_verify(m_msg.data(), m_msg.size(), sig, m_key.get_public_key().data());
 			m_msg.clear();
 			return ok;
 		}
@@ -272,7 +268,6 @@ int curve25519_sign(unsigned char* signature_out,
 
 	/* Convert the Curve25519 privkey to an Ed25519 public key */
 	ge_scalarmult_base(ed_pubkey, privkey.data());
-	//ge_p3_tobytes(ed_pubkey, &ed_pubkey_point);
 	sign_bit = ed_pubkey[31] & 0x80;
 
 	/* Perform an Ed25519 signature with explicit private key */
@@ -282,8 +277,6 @@ int curve25519_sign(unsigned char* signature_out,
 	/* Encode the sign bit into signature (in unused high bit of S) */
 	signature_out[63] &= 0x7F; /* bit should be zero already, but just in case */
 	signature_out[63] |= sign_bit;
-
-	//memmove(signature_out, sigbuf, 64);
 
 	free(sigbuf);
 	return 0;

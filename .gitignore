@@ -85,3 +85,5 @@ src/contrib/perl-xs/*blib
 /*.pub
 /*.crt
 /*.txt
+/.vs/ProjectSettings.json
+/.vs/slnx.sqlite
