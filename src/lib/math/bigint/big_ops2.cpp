@@ -116,8 +116,6 @@ BigInt& BigInt::operator*=(const BigInt& y)
    else
       {
       grow_to(size() + y.size());
-
-      secure_vector<word> z(data(), data() + x_sw);
       secure_vector<word> workspace(size());
       bigint_mul(*this, BigInt(*this), y, workspace.data());
       }
