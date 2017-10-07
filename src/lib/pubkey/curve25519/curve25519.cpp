@@ -12,6 +12,7 @@
 #include <botan/der_enc.h>
 #include <botan/rng.h>
 #include <botan/sha2_64.h>
+#include <stdlib.h>
 
 
 namespace Botan {
@@ -73,9 +74,6 @@ namespace Botan {
 		{
 			if (sig_len != 64)
 				return false;
-
-			unsigned char signature[64];
-
 
 			bool ok = curve25519_verify(sig, m_key.public_key_bits().data(), m_msg.data(), m_msg.size());
 			m_msg.clear();
