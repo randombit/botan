@@ -344,7 +344,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
     target_group.add_option('--without-os-features', action='append', metavar='FEAT',
                             help='specify OS features to disable')
 
-    for isa_extn_name in ['SSE2', 'SSSE3', 'AVX2', 'AES-NI', 'AltiVec', 'NEON']:
+    for isa_extn_name in ['SSE2', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX2', 'AES-NI', 'AltiVec', 'NEON']:
         isa_extn = isa_extn_name.lower()
 
         target_group.add_option('--disable-%s' % (isa_extn),
