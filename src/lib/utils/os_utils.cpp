@@ -10,7 +10,9 @@
 #include <botan/cpuid.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+
 #include <chrono>
+#include <cstdlib>
 
 #if defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
   #include <string.h>
