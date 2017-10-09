@@ -6,12 +6,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-/*
-This API is itself deprecated, so we don't care that it relies on
-other deprecated things
-*/
-#define BOTAN_NO_DEPRECATED_WARNINGS
-
 #include <botan/tls_blocking.h>
 
 namespace Botan {
@@ -31,6 +25,7 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  const std::vector<std::string>& next) :
    m_read(reader),
    m_callbacks(new TLS::Compat_Callbacks(
+               TLS::Compat_Callbacks::SILENCE_DEPRECATION_WARNING::PLEASE,
                writer,
                std::bind(&Blocking_Client::data_cb, this, _1, _2),
                std::function<void (Alert)>(std::bind(&Blocking_Client::alert_cb, this, _1)),

@@ -238,6 +238,26 @@ class BOTAN_PUBLIC_API(2,0) Compat_Callbacks final : public Callbacks
             m_alert_cb(alert_cb),
             m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb), m_next_proto(next_proto) {}
 
+       enum class SILENCE_DEPRECATION_WARNING { PLEASE = 0 };
+       Compat_Callbacks(SILENCE_DEPRECATION_WARNING,
+                        output_fn output_fn, data_cb app_data_cb,
+                        std::function<void (Alert)> alert_cb,
+                        handshake_cb hs_cb,
+                        handshake_msg_cb hs_msg_cb = nullptr,
+                        next_protocol_fn next_proto = nullptr)
+          : m_output_function(output_fn), m_app_data_cb(app_data_cb),
+            m_alert_cb(alert_cb),
+            m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb), m_next_proto(next_proto) {}
+
+       Compat_Callbacks(SILENCE_DEPRECATION_WARNING,
+                        output_fn output_fn, data_cb app_data_cb, alert_cb alert_cb,
+                        handshake_cb hs_cb, handshake_msg_cb hs_msg_cb = nullptr,
+                        next_protocol_fn next_proto = nullptr)
+          : m_output_function(output_fn), m_app_data_cb(app_data_cb),
+            m_alert_cb(std::bind(alert_cb, std::placeholders::_1, nullptr, 0)),
+            m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb), m_next_proto(next_proto) {}
+
+
        void tls_emit_data(const uint8_t data[], size_t size) override
           {
           BOTAN_ASSERT(m_output_function != nullptr,
