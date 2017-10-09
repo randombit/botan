@@ -26,7 +26,7 @@ namespace Botan {
  **/
 class XMSS_WOTS_Verification_Operation
    final : public virtual PK_Ops::Verification,
-     public XMSS_WOTS_Common_Ops
+   public XMSS_WOTS_Common_Ops
    {
    public:
       XMSS_WOTS_Verification_Operation(

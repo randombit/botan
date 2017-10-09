@@ -74,13 +74,12 @@ void XMSS_Signature_Operation::update(const uint8_t msg[], size_t msg_len)
    m_hash.h_msg_update(msg, msg_len);
    }
 
-
 secure_vector<uint8_t>
 XMSS_Signature_Operation::sign(RandomNumberGenerator&)
    {
    initialize();
    secure_vector<uint8_t> signature(sign(m_hash.h_msg_final(),
-                                      m_priv_key).bytes());
+                                         m_priv_key).bytes());
    m_is_initialized = false;
    return signature;
    }
@@ -89,7 +88,7 @@ void XMSS_Signature_Operation::initialize()
    {
    // return if we already initialized and reserved a leaf index for signing.
    if(m_is_initialized)
-      return;
+      { return; }
 
    secure_vector<uint8_t> index_bytes;
    // reserve leaf index so it can not be reused in by another signature

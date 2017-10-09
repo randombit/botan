@@ -60,8 +60,8 @@ class XMSS_WOTS_Addressed_PublicKey : public virtual Public_Key
          }
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override
          {
          return m_pub_key.create_verification_op(params, provider);
          }

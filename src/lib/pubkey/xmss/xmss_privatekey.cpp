@@ -18,6 +18,7 @@
 #include <botan/xmss_privatekey.h>
 #include <botan/internal/xmss_signature_operation.h>
 #include <cmath>
+#include <thread>
 
 namespace Botan {
 
@@ -43,9 +44,12 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
    auto end = raw_key.begin() + XMSS_PublicKey::size() + sizeof(uint64_t);
 
    for(auto& i = begin; i != end; i++)
+      {
       unused_leaf = ((unused_leaf << 8) | *i);
+      }
 
-   if(unused_leaf >= (1ull << (XMSS_PublicKey::m_xmss_params.tree_height() - 1)))
+   if(unused_leaf >= (1ull << (XMSS_PublicKey::m_xmss_params.tree_height() -
+                      1)))
       {
       throw Integrity_Failure("XMSS private key leaf index out of "
                               "bounds.");
@@ -85,25 +89,144 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
                            size_t target_node_height,
                            XMSS_Address& adrs)
    {
-   const secure_vector<uint8_t>& seed = this->public_seed();
-
    BOTAN_ASSERT((start_idx % (1 << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
 
+   // dertermine number of parallel tasks to split the tree_hashing into.
+   size_t split_level = std::min(
+      {
+      target_node_height,
+      static_cast<size_t>(
+         std::ceil(std::log2(std::thread::hardware_concurrency())))
+      });
+
+   // skip parallelization overhead for leaf nodes.
+   if(split_level == 0)
+      {
+      secure_vector<uint8_t> result;
+      tree_hash_subtree(result, start_idx, target_node_height, adrs);
+      return result;
+      }
+
+   size_t subtrees = 1 << split_level;
+   size_t last_idx = static_cast<size_t>(1 << (target_node_height)) + start_idx;
+   size_t offs = (last_idx - start_idx) / subtrees;
+   uint8_t level = split_level; // current level in the tree
+
+   BOTAN_ASSERT((last_idx - start_idx) % subtrees == 0,
+                "Number of worker threads in tree_hash need to divide range "
+                "of calculated nodes.");
+
    std::vector<secure_vector<uint8_t>> nodes(
-                                    XMSS_PublicKey::m_xmss_params.tree_height() + 1,
-                                    secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
+       subtrees,
+       secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
+   std::vector<XMSS_Address> node_addresses(subtrees, adrs);
+   std::vector<XMSS_Hash> xmss_hash(subtrees, m_hash);
+   std::vector<std::thread> threads;
+   threads.reserve(subtrees);
+
+   // Calculate multiple subtrees in parallel.
+   for(size_t i = 0; i < subtrees; i++)
+      {
+      using tree_hash_subtree_fn_t =
+         void (XMSS_PrivateKey::*)(secure_vector<uint8_t>&,
+                                   size_t,
+                                   size_t,
+                                   XMSS_Address&,
+                                   XMSS_Hash&);
+
+      threads.emplace_back(
+         std::thread(
+            static_cast<tree_hash_subtree_fn_t>(
+               &XMSS_PrivateKey::tree_hash_subtree),
+            this,
+            std::ref(nodes[i]),
+            start_idx + i * offs,
+            target_node_height - split_level,
+            std::ref(node_addresses[i]),
+            std::ref(xmss_hash[i])));
+      }
+
+   for(auto& t : threads)
+      {
+      t.join();
+      }
+
+   threads.clear();
+
+   // Parallelize the top tree levels horizontally
+   while(level-- > 1)
+      {
+      std::vector<secure_vector<uint8_t>> ro_nodes(
+         nodes.begin(), nodes.begin() + (1 << (level+1)));
+
+      for(size_t i = 0; i < (1 << level); i++)
+         {
+         node_addresses[i].set_tree_height(target_node_height - (level + 1));
+         node_addresses[i].set_tree_index(
+            (node_addresses[2 * i + 1].get_tree_index() - 1) >> 1);
+         using rnd_tree_hash_fn_t =
+            void (XMSS_Common_Ops::*)(secure_vector<uint8_t>&,
+                                      const secure_vector<uint8_t>&,
+                                      const secure_vector<uint8_t>&,
+                                      XMSS_Address& adrs,
+                                      const secure_vector<uint8_t>&,
+                                      XMSS_Hash&);
+
+         threads.emplace_back(
+            std::thread(
+               static_cast<rnd_tree_hash_fn_t>(
+                  &XMSS_Common_Ops::randomize_tree_hash),
+               this,
+               std::ref(nodes[i]),
+               std::ref(ro_nodes[2 * i]),
+               std::ref(ro_nodes[2 * i + 1]),
+               std::ref(node_addresses[i]),
+               std::ref(this->public_seed()),
+               std::ref(xmss_hash[i])));
+         }
+      for(auto &t : threads)
+         {
+         t.join();
+         }
+      threads.clear();
+      }
+
+   // Avoid creation an extra thread to calculate root node.
+   node_addresses[0].set_tree_height(target_node_height - 1);
+   node_addresses[0].set_tree_index(
+      (node_addresses[1].get_tree_index() - 1) >> 1);
+   randomize_tree_hash(nodes[0],
+                       nodes[0],
+                       nodes[1],
+                       node_addresses[0],
+                       this->public_seed());
+   return nodes[0];
+   }
+
+void
+XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
+                                   size_t start_idx,
+                                   size_t target_node_height,
+                                   XMSS_Address& adrs,
+                                   XMSS_Hash& hash)
+   {
+   const secure_vector<uint8_t>& seed = this->public_seed();
+
+   std::vector<secure_vector<uint8_t>> nodes(
+      target_node_height + 1,
+      secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
 
    // node stack, holds all nodes on stack and one extra "pending" node. This
    // temporary node referred to as "node" in the XMSS standard document stays
    // a pending element, meaning it is not regarded as element on the stack
    // until level is increased.
-   std::vector<uint8_t> node_levels(XMSS_PublicKey::m_xmss_params.tree_height() + 1);
+   std::vector<uint8_t> node_levels(target_node_height + 1);
 
-   uint8_t level = 0;
+   uint8_t level = 0; // current level on the node stack.
    XMSS_WOTS_PublicKey pk(m_wots_priv_key.wots_parameters().oid(), seed);
-
    size_t last_idx = static_cast<size_t>(1 << target_node_height) + start_idx;
+
    for(size_t i = start_idx; i < last_idx; i++)
       {
       adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
@@ -112,11 +235,12 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
          pk,
          // getWOTS_SK(SK, s + i), reference implementation uses adrs
          // instead of zero padded index s + i.
-         this->wots_private_key()[adrs],
-         adrs);
+         this->wots_private_key().at(adrs, hash),
+         adrs,
+         hash);
       adrs.set_type(XMSS_Address::Type::LTree_Address);
       adrs.set_ltree_address(i);
-      create_l_tree(nodes[level], pk, adrs, seed);
+      create_l_tree(nodes[level], pk, adrs, seed, hash);
       node_levels[level] = 0;
 
       adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
@@ -131,14 +255,15 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
                              nodes[level - 1],
                              nodes[level],
                              adrs,
-                             seed);
+                             seed,
+                             hash);
          node_levels[level - 1]++;
          level--; //Pop stack top element
          adrs.set_tree_height(adrs.get_tree_height() + 1);
          }
       level++; //push temporary node to stack
       }
-   return nodes[level - 1];
+   result = nodes[level - 1];
    }
 
 std::shared_ptr<Atomic<size_t>>
@@ -181,7 +306,7 @@ XMSS_PrivateKey::create_signature_op(RandomNumberGenerator&,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Signature>(
-           new XMSS_Signature_Operation(*this));
+         new XMSS_Signature_Operation(*this));
 
    throw Provider_Not_Found(algo_name(), provider);
    }

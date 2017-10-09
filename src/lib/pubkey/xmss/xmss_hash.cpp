@@ -18,8 +18,8 @@ XMSS_Hash::XMSS_Hash(const XMSS_Hash& hash)
    }
 
 XMSS_Hash::XMSS_Hash(const std::string& h_func_name) :
-   m_hash_func_name(h_func_name),
-   m_hash(HashFunction::create(h_func_name))
+   m_hash(HashFunction::create(h_func_name)),
+   m_hash_func_name(h_func_name)
    {
    if(!m_hash)
       throw Lookup_Error("XMSS cannot use hash " + h_func_name +

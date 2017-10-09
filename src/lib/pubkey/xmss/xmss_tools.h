@@ -19,7 +19,7 @@ namespace Botan {
  * Helper tools for low level byte operations required
  * for the XMSS implementation.
  **/
- class XMSS_Tools final
+class XMSS_Tools final
    {
    public:
       XMSS_Tools(const XMSS_Tools&) = delete;
@@ -35,7 +35,7 @@ namespace Botan {
        **/
       template<typename T,
                typename U = typename std::enable_if<std::is_integral<T>::value,
-                                                    void>::type>
+                     void>::type>
       static void concat(secure_vector<uint8_t>& target, const T& src);
 
       /**
