@@ -50,6 +50,10 @@ Channel::Channel(output_fn out,
                  size_t io_buf_sz) :
     m_is_datagram(is_datagram),
     m_compat_callbacks(new Compat_Callbacks(
+                          /*
+                          this Channel constructor is also deprecated so its ok that it
+                          relies on a deprecated API
+                          */
                           Compat_Callbacks::SILENCE_DEPRECATION_WARNING::PLEASE,
                           out, app_data_cb, alert_cb, hs_cb, hs_msg_cb)),
     m_callbacks(*m_compat_callbacks.get()),

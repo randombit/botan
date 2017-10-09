@@ -25,6 +25,10 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  const std::vector<std::string>& next) :
    m_read(reader),
    m_callbacks(new TLS::Compat_Callbacks(
+                  /*
+                  we are ok using deprecated features here because the whole Blocking_Client class
+                  is also deprecated, so just silence the warning.
+                  */
                TLS::Compat_Callbacks::SILENCE_DEPRECATION_WARNING::PLEASE,
                writer,
                std::bind(&Blocking_Client::data_cb, this, _1, _2),
