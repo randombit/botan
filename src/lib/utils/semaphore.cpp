@@ -19,25 +19,26 @@ void Semaphore::release(size_t n)
       {
       lock_guard_type<mutex_type> lock(m_mutex);
 
-      ++m_value;
-
-      if(m_value <= 0)
+      if(m_value < 0)
          {
          ++m_wakeups;
          m_cond.notify_one();
          }
+
+      ++m_value;
       }
    }
 
 void Semaphore::acquire()
    {
    std::unique_lock<mutex_type> lock(m_mutex);
+   if(m_value <= 0)
+       {
+       m_cond.wait(lock, [this] { return m_wakeups > 0; });
+       --m_wakeups;
+       }
+       
    --m_value;
-   if(m_value < 0)
-      {
-      m_cond.wait(lock, [this] { return m_wakeups > 0; });
-      --m_wakeups;
-      }
    }
 
 }
