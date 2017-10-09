@@ -21,7 +21,7 @@ void Barrier::sync()
     {
     std::unique_lock<mutex_type> lock(m_mutex);
     
-    if(m_value >= 1)
+    if(m_value > 1)
         {
         --m_value;
         const size_t current_syncs = m_syncs;
