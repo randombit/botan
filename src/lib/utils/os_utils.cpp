@@ -211,7 +211,7 @@ size_t OS::get_memory_locking_limit()
    /*
    * Allow override via env variable
    */
-   if(const char* env = ::getenv("BOTAN_MLOCK_POOL_SIZE"))
+   if(const char* env = std::getenv("BOTAN_MLOCK_POOL_SIZE"))
       {
       try
          {
