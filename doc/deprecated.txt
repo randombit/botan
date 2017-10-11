@@ -17,6 +17,8 @@ in the source.
 
 - 3DES and SEED ciphersuites in TLS
 
+- Anonymous DH/ECDH ciphersuites in TLS
+
 - DSA ciphersuites/certs in TLS
 
 - Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
