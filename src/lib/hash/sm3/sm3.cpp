@@ -21,21 +21,6 @@ const uint32_t SM3_IV[] = {
    0xa96f30bcUL, 0x163138aaUL, 0xe38dee4dUL, 0xb0fb0e4eUL
 };
 
-const uint32_t SM3_TJ[64] = {
-   0x79CC4519, 0xF3988A32, 0xE7311465, 0xCE6228CB, 0x9CC45197,
-   0x3988A32F, 0x7311465E, 0xE6228CBC, 0xCC451979, 0x988A32F3,
-   0x311465E7, 0x6228CBCE, 0xC451979C, 0x88A32F39, 0x11465E73,
-   0x228CBCE6, 0x9D8A7A87, 0x3B14F50F, 0x7629EA1E, 0xEC53D43C,
-   0xD8A7A879, 0xB14F50F3, 0x629EA1E7, 0xC53D43CE, 0x8A7A879D,
-   0x14F50F3B, 0x29EA1E76, 0x53D43CEC, 0xA7A879D8, 0x4F50F3B1,
-   0x9EA1E762, 0x3D43CEC5, 0x7A879D8A, 0xF50F3B14, 0xEA1E7629,
-   0xD43CEC53, 0xA879D8A7, 0x50F3B14F, 0xA1E7629E, 0x43CEC53D,
-   0x879D8A7A, 0x0F3B14F5, 0x1E7629EA, 0x3CEC53D4, 0x79D8A7A8,
-   0xF3B14F50, 0xE7629EA1, 0xCEC53D43, 0x9D8A7A87, 0x3B14F50F,
-   0x7629EA1E, 0xEC53D43C, 0xD8A7A879, 0xB14F50F3, 0x629EA1E7,
-   0xC53D43CE, 0x8A7A879D, 0x14F50F3B, 0x29EA1E76, 0x53D43CEC,
-   0xA7A879D8, 0x4F50F3B1, 0x9EA1E762, 0x3D43CEC5 };
-
 inline uint32_t P0(uint32_t X)
    {
    return X ^ rotate_left(X, 9) ^ rotate_left(X, 17);
@@ -46,24 +31,46 @@ inline uint32_t P1(uint32_t X)
    return X ^ rotate_left(X, 15) ^ rotate_left(X, 23);
    }
 
-inline uint32_t FF0(uint32_t X, uint32_t Y, uint32_t Z)
-   {
-   return X ^ Y ^ Z;
-   }
-
 inline uint32_t FF1(uint32_t X, uint32_t Y, uint32_t Z)
    {
-   return (X & Y) | (X & Z) | (Y & Z);
-   }
-
-inline uint32_t GG0(uint32_t X, uint32_t Y, uint32_t Z)
-   {
-   return X ^ Y ^ Z;
+   return (X & Y) | ((X | Y) & Z);
+   //return (X & Y) | (X & Z) | (Y & Z);
    }
 
 inline uint32_t GG1(uint32_t X, uint32_t Y, uint32_t Z)
    {
-   return (X & Y) | (~X & Z);
+   //return (X & Y) | (~X & Z);
+   return ((Z ^ (X & (Y ^ Z))));
+   }
+
+inline void R1(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
+               uint32_t E, uint32_t& F, uint32_t G, uint32_t& H,
+               uint32_t TJ, uint32_t Wi, uint32_t Wj)
+   {
+   const uint32_t A12 = rotate_left(A, 12);
+   const uint32_t SS1 = rotate_left(A12 + E + TJ, 7);
+   const uint32_t TT1 = (A ^ B ^ C) + D + (SS1 ^ A12) + Wj;
+   const uint32_t TT2 = (E ^ F ^ G) + H + SS1 + Wi;
+
+   B = rotate_left(B, 9);
+   D = TT1;
+   F = rotate_left(F, 19);
+   H = P0(TT2);
+   }
+
+inline void R2(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
+               uint32_t E, uint32_t& F, uint32_t G, uint32_t& H,
+               uint32_t TJ, uint32_t Wi, uint32_t Wj)
+   {
+   const uint32_t A12 = rotate_left(A, 12);
+   const uint32_t SS1 = rotate_left(A12 + E + TJ, 7);
+   const uint32_t TT1 = FF1(A, B, C) + D + (SS1 ^ A12) + Wj;
+   const uint32_t TT2 = GG1(E, F, G) + H + SS1 + Wi;
+
+   B = rotate_left(B, 9);
+   D = TT1;
+   F = rotate_left(F, 19);
+   H = P0(TT2);
    }
 
 }
@@ -151,39 +158,70 @@ void SM3::compress_n(const uint8_t input[], size_t blocks)
       W[66] = P1(W[50] ^ W[57] ^ rotate_left(W[63], 15)) ^ rotate_left(W[53], 7) ^ W[60];
       W[67] = P1(W[51] ^ W[58] ^ rotate_left(W[64], 15)) ^ rotate_left(W[54], 7) ^ W[61];
 
-      for (size_t j = 0; j < 16; j++)
-         {
-         const uint32_t A12 = rotate_left(A, 12);
-         const uint32_t SS1 = rotate_left(A12 + E + SM3_TJ[j], 7);
-         const uint32_t SS2 = SS1 ^ A12;
-         const uint32_t TT1 = FF0(A, B, C) + D + SS2 + (W[j] ^ W[j+4]);
-         const uint32_t TT2 = GG0(E, F, G) + H + SS1 + W[j];
-         D = C;
-         C = rotate_left(B, 9);
-         B = A;
-         A = TT1;
-         H = G;
-         G = rotate_left(F, 19);
-         F = E;
-         E = P0(TT2);
-         }
-
-      for (size_t j = 16; j < 64; j++)
-         {
-         const uint32_t A12 = rotate_left(A, 12);
-         const uint32_t SS1 = rotate_left(A12 + E + SM3_TJ[j], 7);
-         const uint32_t SS2 = SS1 ^ A12;
-         const uint32_t TT1 = FF1(A, B, C) + D + SS2 + (W[j] ^ W[j+4]);
-         const uint32_t TT2 = GG1(E, F, G) + H + SS1 + W[j];
-         D = C;
-         C = rotate_left(B, 9);
-         B = A;
-         A = TT1;
-         H = G;
-         G = rotate_left(F, 19);
-         F = E;
-         E = P0(TT2);
-         }
+      R1(A, B, C, D, E, F, G, H, 0x79CC4519, W[ 0], W[ 0] ^ W[ 4]);
+      R1(D, A, B, C, H, E, F, G, 0xF3988A32, W[ 1], W[ 1] ^ W[ 5]);
+      R1(C, D, A, B, G, H, E, F, 0xE7311465, W[ 2], W[ 2] ^ W[ 6]);
+      R1(B, C, D, A, F, G, H, E, 0xCE6228CB, W[ 3], W[ 3] ^ W[ 7]);
+      R1(A, B, C, D, E, F, G, H, 0x9CC45197, W[ 4], W[ 4] ^ W[ 8]);
+      R1(D, A, B, C, H, E, F, G, 0x3988A32F, W[ 5], W[ 5] ^ W[ 9]);
+      R1(C, D, A, B, G, H, E, F, 0x7311465E, W[ 6], W[ 6] ^ W[10]);
+      R1(B, C, D, A, F, G, H, E, 0xE6228CBC, W[ 7], W[ 7] ^ W[11]);
+      R1(A, B, C, D, E, F, G, H, 0xCC451979, W[ 8], W[ 8] ^ W[12]);
+      R1(D, A, B, C, H, E, F, G, 0x988A32F3, W[ 9], W[ 9] ^ W[13]);
+      R1(C, D, A, B, G, H, E, F, 0x311465E7, W[10], W[10] ^ W[14]);
+      R1(B, C, D, A, F, G, H, E, 0x6228CBCE, W[11], W[11] ^ W[15]);
+      R1(A, B, C, D, E, F, G, H, 0xC451979C, W[12], W[12] ^ W[16]);
+      R1(D, A, B, C, H, E, F, G, 0x88A32F39, W[13], W[13] ^ W[17]);
+      R1(C, D, A, B, G, H, E, F, 0x11465E73, W[14], W[14] ^ W[18]);
+      R1(B, C, D, A, F, G, H, E, 0x228CBCE6, W[15], W[15] ^ W[19]);
+      R2(A, B, C, D, E, F, G, H, 0x9D8A7A87, W[16], W[16] ^ W[20]);
+      R2(D, A, B, C, H, E, F, G, 0x3B14F50F, W[17], W[17] ^ W[21]);
+      R2(C, D, A, B, G, H, E, F, 0x7629EA1E, W[18], W[18] ^ W[22]);
+      R2(B, C, D, A, F, G, H, E, 0xEC53D43C, W[19], W[19] ^ W[23]);
+      R2(A, B, C, D, E, F, G, H, 0xD8A7A879, W[20], W[20] ^ W[24]);
+      R2(D, A, B, C, H, E, F, G, 0xB14F50F3, W[21], W[21] ^ W[25]);
+      R2(C, D, A, B, G, H, E, F, 0x629EA1E7, W[22], W[22] ^ W[26]);
+      R2(B, C, D, A, F, G, H, E, 0xC53D43CE, W[23], W[23] ^ W[27]);
+      R2(A, B, C, D, E, F, G, H, 0x8A7A879D, W[24], W[24] ^ W[28]);
+      R2(D, A, B, C, H, E, F, G, 0x14F50F3B, W[25], W[25] ^ W[29]);
+      R2(C, D, A, B, G, H, E, F, 0x29EA1E76, W[26], W[26] ^ W[30]);
+      R2(B, C, D, A, F, G, H, E, 0x53D43CEC, W[27], W[27] ^ W[31]);
+      R2(A, B, C, D, E, F, G, H, 0xA7A879D8, W[28], W[28] ^ W[32]);
+      R2(D, A, B, C, H, E, F, G, 0x4F50F3B1, W[29], W[29] ^ W[33]);
+      R2(C, D, A, B, G, H, E, F, 0x9EA1E762, W[30], W[30] ^ W[34]);
+      R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W[31], W[31] ^ W[35]);
+      R2(A, B, C, D, E, F, G, H, 0x7A879D8A, W[32], W[32] ^ W[36]);
+      R2(D, A, B, C, H, E, F, G, 0xF50F3B14, W[33], W[33] ^ W[37]);
+      R2(C, D, A, B, G, H, E, F, 0xEA1E7629, W[34], W[34] ^ W[38]);
+      R2(B, C, D, A, F, G, H, E, 0xD43CEC53, W[35], W[35] ^ W[39]);
+      R2(A, B, C, D, E, F, G, H, 0xA879D8A7, W[36], W[36] ^ W[40]);
+      R2(D, A, B, C, H, E, F, G, 0x50F3B14F, W[37], W[37] ^ W[41]);
+      R2(C, D, A, B, G, H, E, F, 0xA1E7629E, W[38], W[38] ^ W[42]);
+      R2(B, C, D, A, F, G, H, E, 0x43CEC53D, W[39], W[39] ^ W[43]);
+      R2(A, B, C, D, E, F, G, H, 0x879D8A7A, W[40], W[40] ^ W[44]);
+      R2(D, A, B, C, H, E, F, G, 0x0F3B14F5, W[41], W[41] ^ W[45]);
+      R2(C, D, A, B, G, H, E, F, 0x1E7629EA, W[42], W[42] ^ W[46]);
+      R2(B, C, D, A, F, G, H, E, 0x3CEC53D4, W[43], W[43] ^ W[47]);
+      R2(A, B, C, D, E, F, G, H, 0x79D8A7A8, W[44], W[44] ^ W[48]);
+      R2(D, A, B, C, H, E, F, G, 0xF3B14F50, W[45], W[45] ^ W[49]);
+      R2(C, D, A, B, G, H, E, F, 0xE7629EA1, W[46], W[46] ^ W[50]);
+      R2(B, C, D, A, F, G, H, E, 0xCEC53D43, W[47], W[47] ^ W[51]);
+      R2(A, B, C, D, E, F, G, H, 0x9D8A7A87, W[48], W[48] ^ W[52]);
+      R2(D, A, B, C, H, E, F, G, 0x3B14F50F, W[49], W[49] ^ W[53]);
+      R2(C, D, A, B, G, H, E, F, 0x7629EA1E, W[50], W[50] ^ W[54]);
+      R2(B, C, D, A, F, G, H, E, 0xEC53D43C, W[51], W[51] ^ W[55]);
+      R2(A, B, C, D, E, F, G, H, 0xD8A7A879, W[52], W[52] ^ W[56]);
+      R2(D, A, B, C, H, E, F, G, 0xB14F50F3, W[53], W[53] ^ W[57]);
+      R2(C, D, A, B, G, H, E, F, 0x629EA1E7, W[54], W[54] ^ W[58]);
+      R2(B, C, D, A, F, G, H, E, 0xC53D43CE, W[55], W[55] ^ W[59]);
+      R2(A, B, C, D, E, F, G, H, 0x8A7A879D, W[56], W[56] ^ W[60]);
+      R2(D, A, B, C, H, E, F, G, 0x14F50F3B, W[57], W[57] ^ W[61]);
+      R2(C, D, A, B, G, H, E, F, 0x29EA1E76, W[58], W[58] ^ W[62]);
+      R2(B, C, D, A, F, G, H, E, 0x53D43CEC, W[59], W[59] ^ W[63]);
+      R2(A, B, C, D, E, F, G, H, 0xA7A879D8, W[60], W[60] ^ W[64]);
+      R2(D, A, B, C, H, E, F, G, 0x4F50F3B1, W[61], W[61] ^ W[65]);
+      R2(C, D, A, B, G, H, E, F, 0x9EA1E762, W[62], W[62] ^ W[66]);
+      R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W[63], W[63] ^ W[67]);
 
       A = (m_digest[0] ^= A);
       B = (m_digest[1] ^= B);
