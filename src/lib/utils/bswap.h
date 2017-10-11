@@ -12,10 +12,6 @@
 #include <botan/types.h>
 #include <botan/rotate.h>
 
-#if defined(BOTAN_TARGET_CPU_HAS_SSE2) && !defined(BOTAN_NO_SSE_INTRINSICS)
-  #include <emmintrin.h>
-#endif
-
 namespace Botan {
 
 /**
@@ -116,26 +112,6 @@ inline void bswap_4(T x[4])
    x[2] = reverse_bytes(x[2]);
    x[3] = reverse_bytes(x[3]);
    }
-
-#if defined(BOTAN_TARGET_CPU_HAS_SSE2) && !defined(BOTAN_NO_SSE_INTRINSICS)
-
-/**
-* Swap 4 uint32_ts in an array using SSE2 shuffle instructions
-*/
-template<>
-inline void bswap_4(uint32_t x[4])
-   {
-   __m128i T = _mm_loadu_si128(reinterpret_cast<const __m128i*>(x));
-
-   T = _mm_shufflehi_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
-   T = _mm_shufflelo_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
-
-   T =  _mm_or_si128(_mm_srli_epi16(T, 8), _mm_slli_epi16(T, 8));
-
-   _mm_storeu_si128(reinterpret_cast<__m128i*>(x), T);
-   }
-
-#endif
 
 }
 
