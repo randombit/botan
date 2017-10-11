@@ -7,7 +7,6 @@
 
 #include "tests.h"
 #include <botan/internal/os_utils.h>
-#include <thread>
 
 // For __ud2 intrinsic
 #if defined(BOTAN_TARGET_COMPILER_IS_MSVC)
@@ -73,7 +72,12 @@ class OS_Utils_Tests final : public Test
          const uint64_t proc_ts1 = Botan::OS::get_processor_timestamp();
 
          // do something that consumes a little time
-         std::this_thread::sleep_for(std::chrono::milliseconds(50));
+         volatile int x = 11;
+         while(x < 65535)
+            {
+            x *= 2;
+            x -= 10;
+            }
 
          uint64_t proc_ts2 = Botan::OS::get_processor_timestamp();
 
