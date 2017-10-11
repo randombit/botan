@@ -17,7 +17,8 @@ using namespace Botan_FFI;
 int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
    {
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      BOTAN_ASSERT_ARG_NON_NULL(rng_out);
+      if(rng_out == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
 
       const std::string rng_type_s(rng_type ? rng_type : "system");
 

@@ -20,7 +20,8 @@ using namespace Botan_FFI;
 int botan_mp_init(botan_mp_t* mp_out)
    {
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      BOTAN_ASSERT_ARG_NON_NULL(mp_out);
+      if(mp_out == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
 
       *mp_out = new botan_mp_struct(new Botan::BigInt);
       return BOTAN_FFI_SUCCESS;

@@ -65,9 +65,8 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
    {
 #if defined(BOTAN_HAS_BCRYPT)
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      BOTAN_ASSERT_ARG_NON_NULL(out);
-      BOTAN_ASSERT_ARG_NON_NULL(out_len);
-      BOTAN_ASSERT_ARG_NON_NULL(pass);
+      if(out == nullptr || out_len == nullptr || pass == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
 
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;

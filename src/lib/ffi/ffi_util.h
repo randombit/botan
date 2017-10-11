@@ -15,9 +15,6 @@
 
 namespace Botan_FFI {
 
-#define BOTAN_ASSERT_ARG_NON_NULL(p) \
-   do { if(!p) throw Botan::Invalid_Argument("Argument " #p " is null"); } while(0)
-
 class FFI_Error final : public Botan::Exception
    {
    public:
@@ -33,11 +30,8 @@ struct botan_struct
 
       bool magic_ok() const { return (m_magic == MAGIC); }
 
-      T* get() const
+      T* unsafe_get() const
          {
-         if(magic_ok() == false)
-            throw FFI_Error("Bad magic " + std::to_string(m_magic) +
-                            " in ffi object expected " + std::to_string(MAGIC));
          return m_obj.get();
          }
    private:
@@ -56,19 +50,14 @@ T& safe_get(botan_struct<T,M>* p)
    {
    if(!p)
       throw FFI_Error("Null pointer argument");
-   if(T* t = p->get())
-      return *t;
-   throw FFI_Error("Invalid object pointer");
-   }
+   if(p->magic_ok() == false)
+      throw FFI_Error("Bad magic in ffi object");
 
-template<typename T, uint32_t M>
-const T& safe_get(const botan_struct<T,M>* p)
-   {
-   if(!p)
-      throw FFI_Error("Null pointer argument");
-   if(const T* t = p->get())
+   T* t = p->unsafe_get();
+   if(t)
       return *t;
-   throw FFI_Error("Invalid object pointer");
+   else
+      throw FFI_Error("Invalid object pointer");
    }
 
 template<typename Thunk>
@@ -78,7 +67,7 @@ int ffi_guard_thunk(const char* func_name, Thunk thunk)
       {
       return thunk();
       }
-   catch(std::bad_alloc)
+   catch(std::bad_alloc&)
       {
       return ffi_error_exception_thrown(func_name, "bad_alloc");
       }
@@ -97,27 +86,13 @@ int ffi_guard_thunk(const char* func_name, Thunk thunk)
 template<typename T, uint32_t M, typename F>
 int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    {
-   try
-      {
-      if(!o)
-         throw FFI_Error("Null object to " + std::string(func_name));
-      if(T* t = o->get())
-         return func(*t);
-      }
-   catch(std::bad_alloc)
-      {
-      return ffi_error_exception_thrown(func_name, "bad_alloc");
-      }
-   catch(std::exception& e)
-      {
-      return ffi_error_exception_thrown(func_name, e.what());
-      }
-   catch(...)
-      {
-      return ffi_error_exception_thrown(func_name, "unknown exception");
-      }
+   if(!o)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
-   return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
+   if(o->magic_ok() == false)
+      return BOTAN_FFI_ERROR_INVALID_OBJECT;
+
+   return ffi_guard_thunk(func_name, [&]() { return func(*o->unsafe_get()); });
    }
 
 #define BOTAN_FFI_DO(T, obj, param, block)                              \
@@ -133,7 +108,7 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
          return BOTAN_FFI_SUCCESS; // ignore delete of null objects
 
       if(obj->magic_ok() == false)
-         return BOTAN_FFI_ERROR_INVALID_INPUT;
+         return BOTAN_FFI_ERROR_INVALID_OBJECT;
 
       delete obj;
       return BOTAN_FFI_SUCCESS;
