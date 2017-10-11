@@ -21,7 +21,7 @@ inline void theta(uint32_t& A0, uint32_t& A1,
                   const uint32_t EK[4])
    {
    uint32_t T = A0 ^ A2;
-   T ^= rotate_left(T, 8) ^ rotate_right(T, 8);
+   T ^= rotl<8>(T) ^ rotr<8>(T);
    A1 ^= T;
    A3 ^= T;
 
@@ -31,7 +31,7 @@ inline void theta(uint32_t& A0, uint32_t& A1,
    A3 ^= EK[3];
 
    T = A1 ^ A3;
-   T ^= rotate_left(T, 8) ^ rotate_right(T, 8);
+   T ^= rotl<8>(T) ^ rotr<8>(T);
    A0 ^= T;
    A2 ^= T;
    }
@@ -43,12 +43,12 @@ inline void theta(uint32_t& A0, uint32_t& A1,
                   uint32_t& A2, uint32_t& A3)
    {
    uint32_t T = A0 ^ A2;
-   T ^= rotate_left(T, 8) ^ rotate_right(T, 8);
+   T ^= rotl<8>(T) ^ rotr<8>(T);
    A1 ^= T;
    A3 ^= T;
 
    T = A1 ^ A3;
-   T ^= rotate_left(T, 8) ^ rotate_right(T, 8);
+   T ^= rotl<8>(T) ^ rotr<8>(T);
    A0 ^= T;
    A2 ^= T;
    }
@@ -135,15 +135,15 @@ void Noekeon::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          A0 ^= RC[j];
          theta(A0, A1, A2, A3, m_EK.data());
 
-         A1 = rotate_left(A1, 1);
-         A2 = rotate_left(A2, 5);
-         A3 = rotate_left(A3, 2);
+         A1 = rotl<1>(A1);
+         A2 = rotl<5>(A2);
+         A3 = rotl<2>(A3);
 
          gamma(A0, A1, A2, A3);
 
-         A1 = rotate_right(A1, 1);
-         A2 = rotate_right(A2, 5);
-         A3 = rotate_right(A3, 2);
+         A1 = rotr<1>(A1);
+         A2 = rotr<5>(A2);
+         A3 = rotr<2>(A3);
          }
 
       A0 ^= RC[16];
@@ -186,15 +186,15 @@ void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          theta(A0, A1, A2, A3, m_DK.data());
          A0 ^= RC[j];
 
-         A1 = rotate_left(A1, 1);
-         A2 = rotate_left(A2, 5);
-         A3 = rotate_left(A3, 2);
+         A1 = rotl<1>(A1);
+         A2 = rotl<5>(A2);
+         A3 = rotl<2>(A3);
 
          gamma(A0, A1, A2, A3);
 
-         A1 = rotate_right(A1, 1);
-         A2 = rotate_right(A2, 5);
-         A3 = rotate_right(A3, 2);
+         A1 = rotr<1>(A1);
+         A2 = rotr<5>(A2);
+         A3 = rotr<2>(A3);
          }
 
       theta(A0, A1, A2, A3, m_DK.data());
@@ -222,15 +222,15 @@ void Noekeon::key_schedule(const uint8_t key[], size_t)
       A0 ^= RC[i];
       theta(A0, A1, A2, A3);
 
-      A1 = rotate_left(A1, 1);
-      A2 = rotate_left(A2, 5);
-      A3 = rotate_left(A3, 2);
+      A1 = rotl<1>(A1);
+      A2 = rotl<5>(A2);
+      A3 = rotl<2>(A3);
 
       gamma(A0, A1, A2, A3);
 
-      A1 = rotate_right(A1, 1);
-      A2 = rotate_right(A2, 5);
-      A3 = rotate_right(A3, 2);
+      A1 = rotr<1>(A1);
+      A2 = rotr<5>(A2);
+      A3 = rotr<2>(A3);
       }
 
    A0 ^= RC[16];

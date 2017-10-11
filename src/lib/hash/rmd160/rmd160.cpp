@@ -19,56 +19,61 @@ namespace {
 /*
 * RIPEMD-160 F1 Function
 */
+template<size_t S>
 inline void F1(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
-               uint32_t msg, uint32_t shift)
+               uint32_t M)
    {
-   A += (B ^ C ^ D) + msg;
-   A  = rotate_left(A, shift) + E;
-   C  = rotate_left(C, 10);
+   A += (B ^ C ^ D) + M;
+   A  = rotl<S>(A) + E;
+   C  = rotl<10>(C);
    }
 
 /*
 * RIPEMD-160 F2 Function
 */
+template<size_t S>
 inline void F2(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
-               uint32_t msg, uint32_t shift, uint32_t magic)
+               uint32_t M)
    {
-   A += (D ^ (B & (C ^ D))) + msg + magic;
-   A  = rotate_left(A, shift) + E;
-   C  = rotate_left(C, 10);
+   A += (D ^ (B & (C ^ D))) + M;
+   A  = rotl<S>(A) + E;
+   C  = rotl<10>(C);
    }
 
 /*
 * RIPEMD-160 F3 Function
 */
+template<size_t S>
 inline void F3(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
-               uint32_t msg, uint32_t shift, uint32_t magic)
+               uint32_t M)
    {
-   A += (D ^ (B | ~C)) + msg + magic;
-   A  = rotate_left(A, shift) + E;
-   C  = rotate_left(C, 10);
+   A += (D ^ (B | ~C)) + M;
+   A  = rotl<S>(A) + E;
+   C  = rotl<10>(C);
    }
 
 /*
 * RIPEMD-160 F4 Function
 */
+template<size_t S>
 inline void F4(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
-               uint32_t msg, uint32_t shift, uint32_t magic)
+               uint32_t M)
    {
-   A += (C ^ (D & (B ^ C))) + msg + magic;
-   A  = rotate_left(A, shift) + E;
-   C  = rotate_left(C, 10);
+   A += (C ^ (D & (B ^ C))) + M;
+   A  = rotl<S>(A) + E;
+   C  = rotl<10>(C);
    }
 
 /*
 * RIPEMD-160 F5 Function
 */
+template<size_t S>
 inline void F5(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
-               uint32_t msg, uint32_t shift, uint32_t magic)
+               uint32_t M)
    {
-   A += (B ^ (C | ~D)) + msg + magic;
-   A  = rotate_left(A, shift) + E;
-   C  = rotate_left(C, 10);
+   A += (B ^ (C | ~D)) + M;
+   A  = rotl<S>(A) + E;
+   C  = rotl<10>(C);
    }
 
 }
@@ -79,102 +84,104 @@ inline void F5(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
 void RIPEMD_160::compress_n(const uint8_t input[], size_t blocks)
    {
    const uint32_t MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
-                MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
-                MAGIC6 = 0x50A28BE6, MAGIC7 = 0x5C4DD124,
-                MAGIC8 = 0x6D703EF3, MAGIC9 = 0x7A6D76E9;
+                  MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
+                  MAGIC6 = 0x50A28BE6, MAGIC7 = 0x5C4DD124,
+                  MAGIC8 = 0x6D703EF3, MAGIC9 = 0x7A6D76E9;
 
    for(size_t i = 0; i != blocks; ++i)
       {
       load_le(m_M.data(), input, m_M.size());
 
-      uint32_t A1 = m_digest[0], A2 = A1, B1 = m_digest[1], B2 = B1,
-             C1 = m_digest[2], C2 = C1, D1 = m_digest[3], D2 = D1,
-             E1 = m_digest[4], E2 = E1;
+      uint32_t A1 = m_digest[0], A2 = A1,
+               B1 = m_digest[1], B2 = B1,
+               C1 = m_digest[2], C2 = C1,
+               D1 = m_digest[3], D2 = D1,
+               E1 = m_digest[4], E2 = E1;
 
-      F1(A1,B1,C1,D1,E1,m_M[ 0],11       );  F5(A2,B2,C2,D2,E2,m_M[ 5], 8,MAGIC6);
-      F1(E1,A1,B1,C1,D1,m_M[ 1],14       );  F5(E2,A2,B2,C2,D2,m_M[14], 9,MAGIC6);
-      F1(D1,E1,A1,B1,C1,m_M[ 2],15       );  F5(D2,E2,A2,B2,C2,m_M[ 7], 9,MAGIC6);
-      F1(C1,D1,E1,A1,B1,m_M[ 3],12       );  F5(C2,D2,E2,A2,B2,m_M[ 0],11,MAGIC6);
-      F1(B1,C1,D1,E1,A1,m_M[ 4], 5       );  F5(B2,C2,D2,E2,A2,m_M[ 9],13,MAGIC6);
-      F1(A1,B1,C1,D1,E1,m_M[ 5], 8       );  F5(A2,B2,C2,D2,E2,m_M[ 2],15,MAGIC6);
-      F1(E1,A1,B1,C1,D1,m_M[ 6], 7       );  F5(E2,A2,B2,C2,D2,m_M[11],15,MAGIC6);
-      F1(D1,E1,A1,B1,C1,m_M[ 7], 9       );  F5(D2,E2,A2,B2,C2,m_M[ 4], 5,MAGIC6);
-      F1(C1,D1,E1,A1,B1,m_M[ 8],11       );  F5(C2,D2,E2,A2,B2,m_M[13], 7,MAGIC6);
-      F1(B1,C1,D1,E1,A1,m_M[ 9],13       );  F5(B2,C2,D2,E2,A2,m_M[ 6], 7,MAGIC6);
-      F1(A1,B1,C1,D1,E1,m_M[10],14       );  F5(A2,B2,C2,D2,E2,m_M[15], 8,MAGIC6);
-      F1(E1,A1,B1,C1,D1,m_M[11],15       );  F5(E2,A2,B2,C2,D2,m_M[ 8],11,MAGIC6);
-      F1(D1,E1,A1,B1,C1,m_M[12], 6       );  F5(D2,E2,A2,B2,C2,m_M[ 1],14,MAGIC6);
-      F1(C1,D1,E1,A1,B1,m_M[13], 7       );  F5(C2,D2,E2,A2,B2,m_M[10],14,MAGIC6);
-      F1(B1,C1,D1,E1,A1,m_M[14], 9       );  F5(B2,C2,D2,E2,A2,m_M[ 3],12,MAGIC6);
-      F1(A1,B1,C1,D1,E1,m_M[15], 8       );  F5(A2,B2,C2,D2,E2,m_M[12], 6,MAGIC6);
+      F1<11>(A1,B1,C1,D1,E1,m_M[ 0]       );  F5< 8>(A2,B2,C2,D2,E2,m_M[ 5]+MAGIC6);
+      F1<14>(E1,A1,B1,C1,D1,m_M[ 1]       );  F5< 9>(E2,A2,B2,C2,D2,m_M[14]+MAGIC6);
+      F1<15>(D1,E1,A1,B1,C1,m_M[ 2]       );  F5< 9>(D2,E2,A2,B2,C2,m_M[ 7]+MAGIC6);
+      F1<12>(C1,D1,E1,A1,B1,m_M[ 3]       );  F5<11>(C2,D2,E2,A2,B2,m_M[ 0]+MAGIC6);
+      F1< 5>(B1,C1,D1,E1,A1,m_M[ 4]       );  F5<13>(B2,C2,D2,E2,A2,m_M[ 9]+MAGIC6);
+      F1< 8>(A1,B1,C1,D1,E1,m_M[ 5]       );  F5<15>(A2,B2,C2,D2,E2,m_M[ 2]+MAGIC6);
+      F1< 7>(E1,A1,B1,C1,D1,m_M[ 6]       );  F5<15>(E2,A2,B2,C2,D2,m_M[11]+MAGIC6);
+      F1< 9>(D1,E1,A1,B1,C1,m_M[ 7]       );  F5< 5>(D2,E2,A2,B2,C2,m_M[ 4]+MAGIC6);
+      F1<11>(C1,D1,E1,A1,B1,m_M[ 8]       );  F5< 7>(C2,D2,E2,A2,B2,m_M[13]+MAGIC6);
+      F1<13>(B1,C1,D1,E1,A1,m_M[ 9]       );  F5< 7>(B2,C2,D2,E2,A2,m_M[ 6]+MAGIC6);
+      F1<14>(A1,B1,C1,D1,E1,m_M[10]       );  F5< 8>(A2,B2,C2,D2,E2,m_M[15]+MAGIC6);
+      F1<15>(E1,A1,B1,C1,D1,m_M[11]       );  F5<11>(E2,A2,B2,C2,D2,m_M[ 8]+MAGIC6);
+      F1< 6>(D1,E1,A1,B1,C1,m_M[12]       );  F5<14>(D2,E2,A2,B2,C2,m_M[ 1]+MAGIC6);
+      F1< 7>(C1,D1,E1,A1,B1,m_M[13]       );  F5<14>(C2,D2,E2,A2,B2,m_M[10]+MAGIC6);
+      F1< 9>(B1,C1,D1,E1,A1,m_M[14]       );  F5<12>(B2,C2,D2,E2,A2,m_M[ 3]+MAGIC6);
+      F1< 8>(A1,B1,C1,D1,E1,m_M[15]       );  F5< 6>(A2,B2,C2,D2,E2,m_M[12]+MAGIC6);
 
-      F2(E1,A1,B1,C1,D1,m_M[ 7], 7,MAGIC2);  F4(E2,A2,B2,C2,D2,m_M[ 6], 9,MAGIC7);
-      F2(D1,E1,A1,B1,C1,m_M[ 4], 6,MAGIC2);  F4(D2,E2,A2,B2,C2,m_M[11],13,MAGIC7);
-      F2(C1,D1,E1,A1,B1,m_M[13], 8,MAGIC2);  F4(C2,D2,E2,A2,B2,m_M[ 3],15,MAGIC7);
-      F2(B1,C1,D1,E1,A1,m_M[ 1],13,MAGIC2);  F4(B2,C2,D2,E2,A2,m_M[ 7], 7,MAGIC7);
-      F2(A1,B1,C1,D1,E1,m_M[10],11,MAGIC2);  F4(A2,B2,C2,D2,E2,m_M[ 0],12,MAGIC7);
-      F2(E1,A1,B1,C1,D1,m_M[ 6], 9,MAGIC2);  F4(E2,A2,B2,C2,D2,m_M[13], 8,MAGIC7);
-      F2(D1,E1,A1,B1,C1,m_M[15], 7,MAGIC2);  F4(D2,E2,A2,B2,C2,m_M[ 5], 9,MAGIC7);
-      F2(C1,D1,E1,A1,B1,m_M[ 3],15,MAGIC2);  F4(C2,D2,E2,A2,B2,m_M[10],11,MAGIC7);
-      F2(B1,C1,D1,E1,A1,m_M[12], 7,MAGIC2);  F4(B2,C2,D2,E2,A2,m_M[14], 7,MAGIC7);
-      F2(A1,B1,C1,D1,E1,m_M[ 0],12,MAGIC2);  F4(A2,B2,C2,D2,E2,m_M[15], 7,MAGIC7);
-      F2(E1,A1,B1,C1,D1,m_M[ 9],15,MAGIC2);  F4(E2,A2,B2,C2,D2,m_M[ 8],12,MAGIC7);
-      F2(D1,E1,A1,B1,C1,m_M[ 5], 9,MAGIC2);  F4(D2,E2,A2,B2,C2,m_M[12], 7,MAGIC7);
-      F2(C1,D1,E1,A1,B1,m_M[ 2],11,MAGIC2);  F4(C2,D2,E2,A2,B2,m_M[ 4], 6,MAGIC7);
-      F2(B1,C1,D1,E1,A1,m_M[14], 7,MAGIC2);  F4(B2,C2,D2,E2,A2,m_M[ 9],15,MAGIC7);
-      F2(A1,B1,C1,D1,E1,m_M[11],13,MAGIC2);  F4(A2,B2,C2,D2,E2,m_M[ 1],13,MAGIC7);
-      F2(E1,A1,B1,C1,D1,m_M[ 8],12,MAGIC2);  F4(E2,A2,B2,C2,D2,m_M[ 2],11,MAGIC7);
+      F2< 7>(E1,A1,B1,C1,D1,m_M[ 7]+MAGIC2);  F4< 9>(E2,A2,B2,C2,D2,m_M[ 6]+MAGIC7);
+      F2< 6>(D1,E1,A1,B1,C1,m_M[ 4]+MAGIC2);  F4<13>(D2,E2,A2,B2,C2,m_M[11]+MAGIC7);
+      F2< 8>(C1,D1,E1,A1,B1,m_M[13]+MAGIC2);  F4<15>(C2,D2,E2,A2,B2,m_M[ 3]+MAGIC7);
+      F2<13>(B1,C1,D1,E1,A1,m_M[ 1]+MAGIC2);  F4< 7>(B2,C2,D2,E2,A2,m_M[ 7]+MAGIC7);
+      F2<11>(A1,B1,C1,D1,E1,m_M[10]+MAGIC2);  F4<12>(A2,B2,C2,D2,E2,m_M[ 0]+MAGIC7);
+      F2< 9>(E1,A1,B1,C1,D1,m_M[ 6]+MAGIC2);  F4< 8>(E2,A2,B2,C2,D2,m_M[13]+MAGIC7);
+      F2< 7>(D1,E1,A1,B1,C1,m_M[15]+MAGIC2);  F4< 9>(D2,E2,A2,B2,C2,m_M[ 5]+MAGIC7);
+      F2<15>(C1,D1,E1,A1,B1,m_M[ 3]+MAGIC2);  F4<11>(C2,D2,E2,A2,B2,m_M[10]+MAGIC7);
+      F2< 7>(B1,C1,D1,E1,A1,m_M[12]+MAGIC2);  F4< 7>(B2,C2,D2,E2,A2,m_M[14]+MAGIC7);
+      F2<12>(A1,B1,C1,D1,E1,m_M[ 0]+MAGIC2);  F4< 7>(A2,B2,C2,D2,E2,m_M[15]+MAGIC7);
+      F2<15>(E1,A1,B1,C1,D1,m_M[ 9]+MAGIC2);  F4<12>(E2,A2,B2,C2,D2,m_M[ 8]+MAGIC7);
+      F2< 9>(D1,E1,A1,B1,C1,m_M[ 5]+MAGIC2);  F4< 7>(D2,E2,A2,B2,C2,m_M[12]+MAGIC7);
+      F2<11>(C1,D1,E1,A1,B1,m_M[ 2]+MAGIC2);  F4< 6>(C2,D2,E2,A2,B2,m_M[ 4]+MAGIC7);
+      F2< 7>(B1,C1,D1,E1,A1,m_M[14]+MAGIC2);  F4<15>(B2,C2,D2,E2,A2,m_M[ 9]+MAGIC7);
+      F2<13>(A1,B1,C1,D1,E1,m_M[11]+MAGIC2);  F4<13>(A2,B2,C2,D2,E2,m_M[ 1]+MAGIC7);
+      F2<12>(E1,A1,B1,C1,D1,m_M[ 8]+MAGIC2);  F4<11>(E2,A2,B2,C2,D2,m_M[ 2]+MAGIC7);
 
-      F3(D1,E1,A1,B1,C1,m_M[ 3],11,MAGIC3);  F3(D2,E2,A2,B2,C2,m_M[15], 9,MAGIC8);
-      F3(C1,D1,E1,A1,B1,m_M[10],13,MAGIC3);  F3(C2,D2,E2,A2,B2,m_M[ 5], 7,MAGIC8);
-      F3(B1,C1,D1,E1,A1,m_M[14], 6,MAGIC3);  F3(B2,C2,D2,E2,A2,m_M[ 1],15,MAGIC8);
-      F3(A1,B1,C1,D1,E1,m_M[ 4], 7,MAGIC3);  F3(A2,B2,C2,D2,E2,m_M[ 3],11,MAGIC8);
-      F3(E1,A1,B1,C1,D1,m_M[ 9],14,MAGIC3);  F3(E2,A2,B2,C2,D2,m_M[ 7], 8,MAGIC8);
-      F3(D1,E1,A1,B1,C1,m_M[15], 9,MAGIC3);  F3(D2,E2,A2,B2,C2,m_M[14], 6,MAGIC8);
-      F3(C1,D1,E1,A1,B1,m_M[ 8],13,MAGIC3);  F3(C2,D2,E2,A2,B2,m_M[ 6], 6,MAGIC8);
-      F3(B1,C1,D1,E1,A1,m_M[ 1],15,MAGIC3);  F3(B2,C2,D2,E2,A2,m_M[ 9],14,MAGIC8);
-      F3(A1,B1,C1,D1,E1,m_M[ 2],14,MAGIC3);  F3(A2,B2,C2,D2,E2,m_M[11],12,MAGIC8);
-      F3(E1,A1,B1,C1,D1,m_M[ 7], 8,MAGIC3);  F3(E2,A2,B2,C2,D2,m_M[ 8],13,MAGIC8);
-      F3(D1,E1,A1,B1,C1,m_M[ 0],13,MAGIC3);  F3(D2,E2,A2,B2,C2,m_M[12], 5,MAGIC8);
-      F3(C1,D1,E1,A1,B1,m_M[ 6], 6,MAGIC3);  F3(C2,D2,E2,A2,B2,m_M[ 2],14,MAGIC8);
-      F3(B1,C1,D1,E1,A1,m_M[13], 5,MAGIC3);  F3(B2,C2,D2,E2,A2,m_M[10],13,MAGIC8);
-      F3(A1,B1,C1,D1,E1,m_M[11],12,MAGIC3);  F3(A2,B2,C2,D2,E2,m_M[ 0],13,MAGIC8);
-      F3(E1,A1,B1,C1,D1,m_M[ 5], 7,MAGIC3);  F3(E2,A2,B2,C2,D2,m_M[ 4], 7,MAGIC8);
-      F3(D1,E1,A1,B1,C1,m_M[12], 5,MAGIC3);  F3(D2,E2,A2,B2,C2,m_M[13], 5,MAGIC8);
+      F3<11>(D1,E1,A1,B1,C1,m_M[ 3]+MAGIC3);  F3< 9>(D2,E2,A2,B2,C2,m_M[15]+MAGIC8);
+      F3<13>(C1,D1,E1,A1,B1,m_M[10]+MAGIC3);  F3< 7>(C2,D2,E2,A2,B2,m_M[ 5]+MAGIC8);
+      F3< 6>(B1,C1,D1,E1,A1,m_M[14]+MAGIC3);  F3<15>(B2,C2,D2,E2,A2,m_M[ 1]+MAGIC8);
+      F3< 7>(A1,B1,C1,D1,E1,m_M[ 4]+MAGIC3);  F3<11>(A2,B2,C2,D2,E2,m_M[ 3]+MAGIC8);
+      F3<14>(E1,A1,B1,C1,D1,m_M[ 9]+MAGIC3);  F3< 8>(E2,A2,B2,C2,D2,m_M[ 7]+MAGIC8);
+      F3< 9>(D1,E1,A1,B1,C1,m_M[15]+MAGIC3);  F3< 6>(D2,E2,A2,B2,C2,m_M[14]+MAGIC8);
+      F3<13>(C1,D1,E1,A1,B1,m_M[ 8]+MAGIC3);  F3< 6>(C2,D2,E2,A2,B2,m_M[ 6]+MAGIC8);
+      F3<15>(B1,C1,D1,E1,A1,m_M[ 1]+MAGIC3);  F3<14>(B2,C2,D2,E2,A2,m_M[ 9]+MAGIC8);
+      F3<14>(A1,B1,C1,D1,E1,m_M[ 2]+MAGIC3);  F3<12>(A2,B2,C2,D2,E2,m_M[11]+MAGIC8);
+      F3< 8>(E1,A1,B1,C1,D1,m_M[ 7]+MAGIC3);  F3<13>(E2,A2,B2,C2,D2,m_M[ 8]+MAGIC8);
+      F3<13>(D1,E1,A1,B1,C1,m_M[ 0]+MAGIC3);  F3< 5>(D2,E2,A2,B2,C2,m_M[12]+MAGIC8);
+      F3< 6>(C1,D1,E1,A1,B1,m_M[ 6]+MAGIC3);  F3<14>(C2,D2,E2,A2,B2,m_M[ 2]+MAGIC8);
+      F3< 5>(B1,C1,D1,E1,A1,m_M[13]+MAGIC3);  F3<13>(B2,C2,D2,E2,A2,m_M[10]+MAGIC8);
+      F3<12>(A1,B1,C1,D1,E1,m_M[11]+MAGIC3);  F3<13>(A2,B2,C2,D2,E2,m_M[ 0]+MAGIC8);
+      F3< 7>(E1,A1,B1,C1,D1,m_M[ 5]+MAGIC3);  F3< 7>(E2,A2,B2,C2,D2,m_M[ 4]+MAGIC8);
+      F3< 5>(D1,E1,A1,B1,C1,m_M[12]+MAGIC3);  F3< 5>(D2,E2,A2,B2,C2,m_M[13]+MAGIC8);
 
-      F4(C1,D1,E1,A1,B1,m_M[ 1],11,MAGIC4);  F2(C2,D2,E2,A2,B2,m_M[ 8],15,MAGIC9);
-      F4(B1,C1,D1,E1,A1,m_M[ 9],12,MAGIC4);  F2(B2,C2,D2,E2,A2,m_M[ 6], 5,MAGIC9);
-      F4(A1,B1,C1,D1,E1,m_M[11],14,MAGIC4);  F2(A2,B2,C2,D2,E2,m_M[ 4], 8,MAGIC9);
-      F4(E1,A1,B1,C1,D1,m_M[10],15,MAGIC4);  F2(E2,A2,B2,C2,D2,m_M[ 1],11,MAGIC9);
-      F4(D1,E1,A1,B1,C1,m_M[ 0],14,MAGIC4);  F2(D2,E2,A2,B2,C2,m_M[ 3],14,MAGIC9);
-      F4(C1,D1,E1,A1,B1,m_M[ 8],15,MAGIC4);  F2(C2,D2,E2,A2,B2,m_M[11],14,MAGIC9);
-      F4(B1,C1,D1,E1,A1,m_M[12], 9,MAGIC4);  F2(B2,C2,D2,E2,A2,m_M[15], 6,MAGIC9);
-      F4(A1,B1,C1,D1,E1,m_M[ 4], 8,MAGIC4);  F2(A2,B2,C2,D2,E2,m_M[ 0],14,MAGIC9);
-      F4(E1,A1,B1,C1,D1,m_M[13], 9,MAGIC4);  F2(E2,A2,B2,C2,D2,m_M[ 5], 6,MAGIC9);
-      F4(D1,E1,A1,B1,C1,m_M[ 3],14,MAGIC4);  F2(D2,E2,A2,B2,C2,m_M[12], 9,MAGIC9);
-      F4(C1,D1,E1,A1,B1,m_M[ 7], 5,MAGIC4);  F2(C2,D2,E2,A2,B2,m_M[ 2],12,MAGIC9);
-      F4(B1,C1,D1,E1,A1,m_M[15], 6,MAGIC4);  F2(B2,C2,D2,E2,A2,m_M[13], 9,MAGIC9);
-      F4(A1,B1,C1,D1,E1,m_M[14], 8,MAGIC4);  F2(A2,B2,C2,D2,E2,m_M[ 9],12,MAGIC9);
-      F4(E1,A1,B1,C1,D1,m_M[ 5], 6,MAGIC4);  F2(E2,A2,B2,C2,D2,m_M[ 7], 5,MAGIC9);
-      F4(D1,E1,A1,B1,C1,m_M[ 6], 5,MAGIC4);  F2(D2,E2,A2,B2,C2,m_M[10],15,MAGIC9);
-      F4(C1,D1,E1,A1,B1,m_M[ 2],12,MAGIC4);  F2(C2,D2,E2,A2,B2,m_M[14], 8,MAGIC9);
+      F4<11>(C1,D1,E1,A1,B1,m_M[ 1]+MAGIC4);  F2<15>(C2,D2,E2,A2,B2,m_M[ 8]+MAGIC9);
+      F4<12>(B1,C1,D1,E1,A1,m_M[ 9]+MAGIC4);  F2< 5>(B2,C2,D2,E2,A2,m_M[ 6]+MAGIC9);
+      F4<14>(A1,B1,C1,D1,E1,m_M[11]+MAGIC4);  F2< 8>(A2,B2,C2,D2,E2,m_M[ 4]+MAGIC9);
+      F4<15>(E1,A1,B1,C1,D1,m_M[10]+MAGIC4);  F2<11>(E2,A2,B2,C2,D2,m_M[ 1]+MAGIC9);
+      F4<14>(D1,E1,A1,B1,C1,m_M[ 0]+MAGIC4);  F2<14>(D2,E2,A2,B2,C2,m_M[ 3]+MAGIC9);
+      F4<15>(C1,D1,E1,A1,B1,m_M[ 8]+MAGIC4);  F2<14>(C2,D2,E2,A2,B2,m_M[11]+MAGIC9);
+      F4< 9>(B1,C1,D1,E1,A1,m_M[12]+MAGIC4);  F2< 6>(B2,C2,D2,E2,A2,m_M[15]+MAGIC9);
+      F4< 8>(A1,B1,C1,D1,E1,m_M[ 4]+MAGIC4);  F2<14>(A2,B2,C2,D2,E2,m_M[ 0]+MAGIC9);
+      F4< 9>(E1,A1,B1,C1,D1,m_M[13]+MAGIC4);  F2< 6>(E2,A2,B2,C2,D2,m_M[ 5]+MAGIC9);
+      F4<14>(D1,E1,A1,B1,C1,m_M[ 3]+MAGIC4);  F2< 9>(D2,E2,A2,B2,C2,m_M[12]+MAGIC9);
+      F4< 5>(C1,D1,E1,A1,B1,m_M[ 7]+MAGIC4);  F2<12>(C2,D2,E2,A2,B2,m_M[ 2]+MAGIC9);
+      F4< 6>(B1,C1,D1,E1,A1,m_M[15]+MAGIC4);  F2< 9>(B2,C2,D2,E2,A2,m_M[13]+MAGIC9);
+      F4< 8>(A1,B1,C1,D1,E1,m_M[14]+MAGIC4);  F2<12>(A2,B2,C2,D2,E2,m_M[ 9]+MAGIC9);
+      F4< 6>(E1,A1,B1,C1,D1,m_M[ 5]+MAGIC4);  F2< 5>(E2,A2,B2,C2,D2,m_M[ 7]+MAGIC9);
+      F4< 5>(D1,E1,A1,B1,C1,m_M[ 6]+MAGIC4);  F2<15>(D2,E2,A2,B2,C2,m_M[10]+MAGIC9);
+      F4<12>(C1,D1,E1,A1,B1,m_M[ 2]+MAGIC4);  F2< 8>(C2,D2,E2,A2,B2,m_M[14]+MAGIC9);
 
-      F5(B1,C1,D1,E1,A1,m_M[ 4], 9,MAGIC5);  F1(B2,C2,D2,E2,A2,m_M[12], 8       );
-      F5(A1,B1,C1,D1,E1,m_M[ 0],15,MAGIC5);  F1(A2,B2,C2,D2,E2,m_M[15], 5       );
-      F5(E1,A1,B1,C1,D1,m_M[ 5], 5,MAGIC5);  F1(E2,A2,B2,C2,D2,m_M[10],12       );
-      F5(D1,E1,A1,B1,C1,m_M[ 9],11,MAGIC5);  F1(D2,E2,A2,B2,C2,m_M[ 4], 9       );
-      F5(C1,D1,E1,A1,B1,m_M[ 7], 6,MAGIC5);  F1(C2,D2,E2,A2,B2,m_M[ 1],12       );
-      F5(B1,C1,D1,E1,A1,m_M[12], 8,MAGIC5);  F1(B2,C2,D2,E2,A2,m_M[ 5], 5       );
-      F5(A1,B1,C1,D1,E1,m_M[ 2],13,MAGIC5);  F1(A2,B2,C2,D2,E2,m_M[ 8],14       );
-      F5(E1,A1,B1,C1,D1,m_M[10],12,MAGIC5);  F1(E2,A2,B2,C2,D2,m_M[ 7], 6       );
-      F5(D1,E1,A1,B1,C1,m_M[14], 5,MAGIC5);  F1(D2,E2,A2,B2,C2,m_M[ 6], 8       );
-      F5(C1,D1,E1,A1,B1,m_M[ 1],12,MAGIC5);  F1(C2,D2,E2,A2,B2,m_M[ 2],13       );
-      F5(B1,C1,D1,E1,A1,m_M[ 3],13,MAGIC5);  F1(B2,C2,D2,E2,A2,m_M[13], 6       );
-      F5(A1,B1,C1,D1,E1,m_M[ 8],14,MAGIC5);  F1(A2,B2,C2,D2,E2,m_M[14], 5       );
-      F5(E1,A1,B1,C1,D1,m_M[11],11,MAGIC5);  F1(E2,A2,B2,C2,D2,m_M[ 0],15       );
-      F5(D1,E1,A1,B1,C1,m_M[ 6], 8,MAGIC5);  F1(D2,E2,A2,B2,C2,m_M[ 3],13       );
-      F5(C1,D1,E1,A1,B1,m_M[15], 5,MAGIC5);  F1(C2,D2,E2,A2,B2,m_M[ 9],11       );
-      F5(B1,C1,D1,E1,A1,m_M[13], 6,MAGIC5);  F1(B2,C2,D2,E2,A2,m_M[11],11       );
+      F5< 9>(B1,C1,D1,E1,A1,m_M[ 4]+MAGIC5);  F1< 8>(B2,C2,D2,E2,A2,m_M[12]       );
+      F5<15>(A1,B1,C1,D1,E1,m_M[ 0]+MAGIC5);  F1< 5>(A2,B2,C2,D2,E2,m_M[15]       );
+      F5< 5>(E1,A1,B1,C1,D1,m_M[ 5]+MAGIC5);  F1<12>(E2,A2,B2,C2,D2,m_M[10]       );
+      F5<11>(D1,E1,A1,B1,C1,m_M[ 9]+MAGIC5);  F1< 9>(D2,E2,A2,B2,C2,m_M[ 4]       );
+      F5< 6>(C1,D1,E1,A1,B1,m_M[ 7]+MAGIC5);  F1<12>(C2,D2,E2,A2,B2,m_M[ 1]       );
+      F5< 8>(B1,C1,D1,E1,A1,m_M[12]+MAGIC5);  F1< 5>(B2,C2,D2,E2,A2,m_M[ 5]       );
+      F5<13>(A1,B1,C1,D1,E1,m_M[ 2]+MAGIC5);  F1<14>(A2,B2,C2,D2,E2,m_M[ 8]       );
+      F5<12>(E1,A1,B1,C1,D1,m_M[10]+MAGIC5);  F1< 6>(E2,A2,B2,C2,D2,m_M[ 7]       );
+      F5< 5>(D1,E1,A1,B1,C1,m_M[14]+MAGIC5);  F1< 8>(D2,E2,A2,B2,C2,m_M[ 6]       );
+      F5<12>(C1,D1,E1,A1,B1,m_M[ 1]+MAGIC5);  F1<13>(C2,D2,E2,A2,B2,m_M[ 2]       );
+      F5<13>(B1,C1,D1,E1,A1,m_M[ 3]+MAGIC5);  F1< 6>(B2,C2,D2,E2,A2,m_M[13]       );
+      F5<14>(A1,B1,C1,D1,E1,m_M[ 8]+MAGIC5);  F1< 5>(A2,B2,C2,D2,E2,m_M[14]       );
+      F5<11>(E1,A1,B1,C1,D1,m_M[11]+MAGIC5);  F1<15>(E2,A2,B2,C2,D2,m_M[ 0]       );
+      F5< 8>(D1,E1,A1,B1,C1,m_M[ 6]+MAGIC5);  F1<13>(D2,E2,A2,B2,C2,m_M[ 3]       );
+      F5< 5>(C1,D1,E1,A1,B1,m_M[15]+MAGIC5);  F1<11>(C2,D2,E2,A2,B2,m_M[ 9]       );
+      F5< 6>(B1,C1,D1,E1,A1,m_M[13]+MAGIC5);  F1<11>(B2,C2,D2,E2,A2,m_M[11]       );
 
       C1          = m_digest[1] + C1 + D2;
       m_digest[1] = m_digest[2] + D1 + E2;

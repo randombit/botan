@@ -19,16 +19,16 @@ void SipRounds(uint64_t M, secure_vector<uint64_t>& V, size_t r)
    for(size_t i = 0; i != r; ++i)
       {
       V0 += V1; V2 += V3;
-      V1 = rotate_left(V1, 13);
-      V3 = rotate_left(V3, 16);
+      V1 = rotl<13>(V1);
+      V3 = rotl<16>(V3);
       V1 ^= V0; V3 ^= V2;
-      V0 = rotate_left(V0, 32);
+      V0 = rotl<32>(V0);
 
       V2 += V1; V0 += V3;
-      V1 = rotate_left(V1, 17);
-      V3 = rotate_left(V3, 21);
+      V1 = rotl<17>(V1);
+      V3 = rotl<21>(V3);
       V1 ^= V2; V3 ^= V0;
-      V2 = rotate_left(V2, 32);
+      V2 = rotl<32>(V2);
       }
    V0 ^= M;
 

@@ -28,10 +28,10 @@ std::unique_ptr<HashFunction> SHA_256::copy_state() const
 * even though it is much faster if inlined.
 */
 #define SHA2_32_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic) do {               \
-   uint32_t A_rho = rotate_right(A, 2) ^ rotate_right(A, 13) ^ rotate_right(A, 22); \
-   uint32_t E_rho = rotate_right(E, 6) ^ rotate_right(E, 11) ^ rotate_right(E, 25); \
-   uint32_t M2_sigma = rotate_right(M2, 17) ^ rotate_right(M2, 19) ^ (M2 >> 10);    \
-   uint32_t M4_sigma = rotate_right(M4, 7) ^ rotate_right(M4, 18) ^ (M4 >> 3);      \
+   uint32_t A_rho = rotr<2>(A) ^ rotr<13>(A) ^ rotr<22>(A); \
+   uint32_t E_rho = rotr<6>(E) ^ rotr<11>(E) ^ rotr<25>(E); \
+   uint32_t M2_sigma = rotr<17>(M2) ^ rotr<19>(M2) ^ (M2 >> 10);    \
+   uint32_t M4_sigma = rotr<7>(M4) ^ rotr<18>(M4) ^ (M4 >> 3);      \
    H += magic + E_rho + ((E & F) ^ (~E & G)) + M1;                                  \
    D += H;                                                                          \
    H += A_rho + ((A & B) | ((A | B) & C));                                          \

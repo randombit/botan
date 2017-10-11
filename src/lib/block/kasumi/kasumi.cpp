@@ -121,8 +121,8 @@ void KASUMI::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          {
          const uint16_t* K = &m_EK[8*j];
 
-         uint16_t R = B1 ^ (rotate_left(B0, 1) & K[0]);
-         uint16_t L = B0 ^ (rotate_left(R, 1) | K[1]);
+         uint16_t R = B1 ^ (rotl<1>(B0) & K[0]);
+         uint16_t L = B0 ^ (rotl<1>(R) | K[1]);
 
          L = FI(L ^ K[ 2], K[ 3]) ^ R;
          R = FI(R ^ K[ 4], K[ 5]) ^ L;
@@ -135,8 +135,8 @@ void KASUMI::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          L = FI(L ^ K[12], K[13]) ^ R;
          R = FI(R ^ K[14], K[15]) ^ L;
 
-         R ^= (rotate_left(L, 1) & K[8]);
-         L ^= (rotate_left(R, 1) | K[9]);
+         R ^= (rotl<1>(L) & K[8]);
+         L ^= (rotl<1>(R) | K[9]);
 
          B0 ^= L;
          B1 ^= R;
@@ -171,14 +171,14 @@ void KASUMI::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          R = FI(R ^ K[12], K[13]) ^ L;
          L = FI(L ^ K[14], K[15]) ^ R;
 
-         L ^= (rotate_left(R, 1) & K[8]);
-         R ^= (rotate_left(L, 1) | K[9]);
+         L ^= (rotl<1>(R) & K[8]);
+         R ^= (rotl<1>(L) | K[9]);
 
          R = B0 ^= R;
          L = B1 ^= L;
 
-         L ^= (rotate_left(R, 1) & K[0]);
-         R ^= (rotate_left(L, 1) | K[1]);
+         L ^= (rotl<1>(R) & K[0]);
+         R ^= (rotl<1>(L) | K[1]);
 
          R = FI(R ^ K[2], K[3]) ^ L;
          L = FI(L ^ K[4], K[5]) ^ R;
@@ -214,13 +214,13 @@ void KASUMI::key_schedule(const uint8_t key[], size_t)
 
    for(size_t i = 0; i != 8; ++i)
       {
-      m_EK[8*i  ] = rotate_left(K[(i+0) % 8    ], 2);
-      m_EK[8*i+1] = rotate_left(K[(i+2) % 8 + 8], 1);
-      m_EK[8*i+2] = rotate_left(K[(i+1) % 8    ], 5);
+      m_EK[8*i  ] = rotl<2>(K[(i+0) % 8]);
+      m_EK[8*i+1] = rotl<1>(K[(i+2) % 8 + 8]);
+      m_EK[8*i+2] = rotl<5>(K[(i+1) % 8]);
       m_EK[8*i+3] = K[(i+4) % 8 + 8];
-      m_EK[8*i+4] = rotate_left(K[(i+5) % 8    ], 8);
+      m_EK[8*i+4] = rotl<8>(K[(i+5) % 8]);
       m_EK[8*i+5] = K[(i+3) % 8 + 8];
-      m_EK[8*i+6] = rotate_left(K[(i+6) % 8    ], 13);
+      m_EK[8*i+6] = rotl<13>(K[(i+6) % 8]);
       m_EK[8*i+7] = K[(i+7) % 8 + 8];
       }
    }

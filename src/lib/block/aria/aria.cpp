@@ -183,7 +183,7 @@ inline void ARIA_FO(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3)
    T1 ^= T2;
 
    T1 = ((T1 << 8) & 0xFF00FF00) | ((T1 >> 8) & 0x00FF00FF);
-   T2 = rotate_right(T2, 16);
+   T2 = rotr<16>(T2);
    T3 = reverse_bytes(T3);
 
    T1 ^= T2;
@@ -205,7 +205,7 @@ inline void ARIA_FE(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3)
    T1 ^= T2;
 
    T3 = ((T3 << 8) & 0xFF00FF00) | ((T3 >> 8) & 0x00FF00FF);
-   T0 = rotate_right(T0, 16);
+   T0 = rotr<16>(T0);
    T1 = reverse_bytes(T1);
 
    T1 ^= T2;
@@ -411,9 +411,9 @@ void key_schedule(secure_vector<uint32_t>& ERK,
       {
       for(size_t j = 0; j != 4; ++j)
          {
-         DRK[i+j] = rotate_right(DRK[i+j], 8) ^
-                    rotate_right(DRK[i+j], 16) ^
-                    rotate_right(DRK[i+j], 24);
+         DRK[i+j] = rotr<8>(DRK[i+j]) ^
+                    rotr<16>(DRK[i+j]) ^
+                    rotr<24>(DRK[i+j]);
          }
 
       DRK[i+1] ^= DRK[i+2]; DRK[i+2] ^= DRK[i+3];
@@ -421,7 +421,7 @@ void key_schedule(secure_vector<uint32_t>& ERK,
       DRK[i+2] ^= DRK[i+0]; DRK[i+1] ^= DRK[i+2];
 
       DRK[i+1] = ((DRK[i+1] << 8) & 0xFF00FF00) | ((DRK[i+1] >> 8) & 0x00FF00FF);
-      DRK[i+2] = rotate_right(DRK[i+2], 16);
+      DRK[i+2] = rotr<16>(DRK[i+2]);
       DRK[i+3] = reverse_bytes(DRK[i+3]);
 
       DRK[i+1] ^= DRK[i+2]; DRK[i+2] ^= DRK[i+3];

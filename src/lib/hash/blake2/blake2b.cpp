@@ -93,13 +93,13 @@ void Blake2b::compress(bool lastblock)
 #define G(r, i, a, b, c, d)                     \
    do {                                         \
    a = a + b + m[blake2b_sigma[r][2 * i + 0]];  \
-   d = rotate_right<uint64_t>(d ^ a, 32);         \
+   d = rotr<32>(d ^ a);                         \
    c = c + d;                                   \
-   b = rotate_right<uint64_t>(b ^ c, 24);         \
+   b = rotr<24>(b ^ c);                         \
    a = a + b + m[blake2b_sigma[r][2 * i + 1]];  \
-   d = rotate_right<uint64_t>(d ^ a, 16);         \
+   d = rotr<16>(d ^ a);                         \
    c = c + d;                                   \
-   b = rotate_right<uint64_t>(b ^ c, 63);         \
+   b = rotr<63>(b ^ c);                         \
    } while(0)
 
 #define ROUND(r)                                \

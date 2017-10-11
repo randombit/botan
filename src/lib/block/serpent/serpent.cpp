@@ -22,11 +22,11 @@ namespace {
 */
 inline void transform(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3)
    {
-   B0  = rotate_left(B0, 13);   B2  = rotate_left(B2, 3);
-   B1 ^= B0 ^ B2;               B3 ^= B2 ^ (B0 << 3);
-   B1  = rotate_left(B1, 1);    B3  = rotate_left(B3, 7);
-   B0 ^= B1 ^ B3;               B2 ^= B3 ^ (B1 << 7);
-   B0  = rotate_left(B0, 5);    B2  = rotate_left(B2, 22);
+   B0  = rotl<13>(B0);   B2  = rotl<3>(B2);
+   B1 ^= B0 ^ B2;        B3 ^= B2 ^ (B0 << 3);
+   B1  = rotl<1>(B1);    B3  = rotl<7>(B3);
+   B0 ^= B1 ^ B3;        B2 ^= B3 ^ (B1 << 7);
+   B0  = rotl<5>(B0);    B2  = rotl<22>(B2);
    }
 
 /*
@@ -34,11 +34,11 @@ inline void transform(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3)
 */
 inline void i_transform(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3)
    {
-   B2  = rotate_right(B2, 22);  B0  = rotate_right(B0, 5);
-   B2 ^= B3 ^ (B1 << 7);        B0 ^= B1 ^ B3;
-   B3  = rotate_right(B3, 7);   B1  = rotate_right(B1, 1);
-   B3 ^= B2 ^ (B0 << 3);        B1 ^= B0 ^ B2;
-   B2  = rotate_right(B2, 3);   B0  = rotate_right(B0, 13);
+   B2  = rotr<22>(B2);   B0  = rotr<5>(B0);
+   B2 ^= B3 ^ (B1 << 7); B0 ^= B1 ^ B3;
+   B3  = rotr<7>(B3);    B1  = rotr<1>(B1);
+   B3 ^= B2 ^ (B0 << 3); B1 ^= B0 ^ B2;
+   B2  = rotr<3>(B2);    B0  = rotr<13>(B0);
    }
 
 }
@@ -192,7 +192,7 @@ void Serpent::key_schedule(const uint8_t key[], size_t length)
    for(size_t i = 8; i != 140; ++i)
       {
       uint32_t wi = W[i-8] ^ W[i-5] ^ W[i-3] ^ W[i-1] ^ PHI ^ uint32_t(i-8);
-      W[i] = rotate_left(wi, 11);
+      W[i] = rotl<11>(wi);
       }
 
    SBoxE1(W[ 20],W[ 21],W[ 22],W[ 23]);

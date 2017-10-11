@@ -114,9 +114,9 @@ const std::vector<uint32_t>& AES_TE()
          const uint32_t x = make_uint32(xtime(s), s, s, xtime3(s));
 
          TE[i] = x;
-         TE[i+256] = rotate_right(x, 8);
-         TE[i+512] = rotate_right(x, 16);
-         TE[i+768] = rotate_right(x, 24);
+         TE[i+256] = rotr< 8>(x);
+         TE[i+512] = rotr<16>(x);
+         TE[i+768] = rotr<24>(x);
          }
       return TE;
    };
@@ -135,9 +135,9 @@ const std::vector<uint32_t>& AES_TD()
          const uint32_t x = make_uint32(xtime14(s), xtime9(s), xtime13(s), xtime11(s));
 
          TD[i] = x;
-         TD[i+256] = rotate_right(x, 8);
-         TD[i+512] = rotate_right(x, 16);
-         TD[i+768] = rotate_right(x, 24);
+         TD[i+256] = rotr< 8>(x);
+         TD[i+512] = rotr<16>(x);
+         TD[i+768] = rotr<24>(x);
          }
       return TD;
    };
@@ -188,24 +188,24 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       */
 
       uint32_t B0 = TE[get_byte(0, T0)] ^
-                  rotate_right(TE[get_byte(1, T1)],  8) ^
-                  rotate_right(TE[get_byte(2, T2)], 16) ^
-                  rotate_right(TE[get_byte(3, T3)], 24) ^ EK[4];
+                  rotr< 8>(TE[get_byte(1, T1)]) ^
+                  rotr<16>(TE[get_byte(2, T2)]) ^
+                  rotr<24>(TE[get_byte(3, T3)]) ^ EK[4];
 
       uint32_t B1 = TE[get_byte(0, T1)] ^
-                  rotate_right(TE[get_byte(1, T2)],  8) ^
-                  rotate_right(TE[get_byte(2, T3)], 16) ^
-                  rotate_right(TE[get_byte(3, T0)], 24) ^ EK[5];
+                  rotr< 8>(TE[get_byte(1, T2)]) ^
+                  rotr<16>(TE[get_byte(2, T3)]) ^
+                  rotr<24>(TE[get_byte(3, T0)]) ^ EK[5];
 
       uint32_t B2 = TE[get_byte(0, T2)] ^
-                  rotate_right(TE[get_byte(1, T3)],  8) ^
-                  rotate_right(TE[get_byte(2, T0)], 16) ^
-                  rotate_right(TE[get_byte(3, T1)], 24) ^ EK[6];
+                  rotr< 8>(TE[get_byte(1, T3)]) ^
+                  rotr<16>(TE[get_byte(2, T0)]) ^
+                  rotr<24>(TE[get_byte(3, T1)]) ^ EK[6];
 
       uint32_t B3 = TE[get_byte(0, T3)] ^
-                  rotate_right(TE[get_byte(1, T0)],  8) ^
-                  rotate_right(TE[get_byte(2, T1)], 16) ^
-                  rotate_right(TE[get_byte(3, T2)], 24) ^ EK[7];
+                  rotr< 8>(TE[get_byte(1, T0)]) ^
+                  rotr<16>(TE[get_byte(2, T1)]) ^
+                  rotr<24>(TE[get_byte(3, T2)]) ^ EK[7];
 
       for(size_t r = 2*4; r < EK.size(); r += 2*4)
          {
@@ -276,24 +276,24 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       T0 ^= Z;
 
       uint32_t B0 = TD[get_byte(0, T0)] ^
-                  rotate_right(TD[get_byte(1, T3)],  8) ^
-                  rotate_right(TD[get_byte(2, T2)], 16) ^
-                  rotate_right(TD[get_byte(3, T1)], 24) ^ DK[4];
+                  rotr< 8>(TD[get_byte(1, T3)]) ^
+                  rotr<16>(TD[get_byte(2, T2)]) ^
+                  rotr<24>(TD[get_byte(3, T1)]) ^ DK[4];
 
       uint32_t B1 = TD[get_byte(0, T1)] ^
-                  rotate_right(TD[get_byte(1, T0)],  8) ^
-                  rotate_right(TD[get_byte(2, T3)], 16) ^
-                  rotate_right(TD[get_byte(3, T2)], 24) ^ DK[5];
+                  rotr< 8>(TD[get_byte(1, T0)]) ^
+                  rotr<16>(TD[get_byte(2, T3)]) ^
+                  rotr<24>(TD[get_byte(3, T2)]) ^ DK[5];
 
       uint32_t B2 = TD[get_byte(0, T2)] ^
-                  rotate_right(TD[get_byte(1, T1)],  8) ^
-                  rotate_right(TD[get_byte(2, T0)], 16) ^
-                  rotate_right(TD[get_byte(3, T3)], 24) ^ DK[6];
+                  rotr< 8>(TD[get_byte(1, T1)]) ^
+                  rotr<16>(TD[get_byte(2, T0)]) ^
+                  rotr<24>(TD[get_byte(3, T3)]) ^ DK[6];
 
       uint32_t B3 = TD[get_byte(0, T3)] ^
-                  rotate_right(TD[get_byte(1, T2)],  8) ^
-                  rotate_right(TD[get_byte(2, T1)], 16) ^
-                  rotate_right(TD[get_byte(3, T0)], 24) ^ DK[7];
+                  rotr< 8>(TD[get_byte(1, T2)]) ^
+                  rotr<16>(TD[get_byte(2, T1)]) ^
+                  rotr<24>(TD[get_byte(3, T0)]) ^ DK[7];
 
       for(size_t r = 2*4; r < DK.size(); r += 2*4)
          {
