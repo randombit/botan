@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
       explicit ASN1_String(const std::string& = "");
       ASN1_String(const std::string&, ASN1_Tag);
    private:
-      std::string m_iso_8859_str;
+      std::string m_utf8_str;
       ASN1_Tag m_tag;
    };
 
