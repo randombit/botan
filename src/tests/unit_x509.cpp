@@ -358,6 +358,40 @@ Test::Result test_x509_dates()
    return result;
    }
 
+Test::Result test_x509_utf8()
+   {
+   Test::Result result("X509 with UTF-8 encoded fields");
+
+   try
+      {
+      Botan::X509_Certificate utf8_cert(Test::data_file("x509test/cyrillic.pem"));
+
+      // UTF-8 encoded fields of test certificate (contains cyrillic letters)
+      const std::string organization =
+         "\xD0\x9C\xD0\xBE\xD1\x8F\x20\xD0\xBA\xD0\xBE\xD0"
+         "\xBC\xD0\xBF\xD0\xB0\xD0\xBD\xD0\xB8\xD1\x8F";
+      const std::string organization_unit =
+         "\xD0\x9C\xD0\xBE\xD1\x91\x20\xD0\xBF\xD0\xBE\xD0\xB4\xD1\x80\xD0\xB0"
+         "\xD0\xB7\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB5";
+      const std::string common_name =
+         "\xD0\x9E\xD0\xBF\xD0\xB8\xD1\x81\xD0\xB0\xD0\xBD\xD0\xB8"
+         "\xD0\xB5\x20\xD1\x81\xD0\xB0\xD0\xB9\xD1\x82\xD0\xB0";
+      const std::string location =
+         "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+
+      result.test_eq("O",  utf8_cert.issuer_info("O").at(0),  organization);
+      result.test_eq("OU", utf8_cert.issuer_info("OU").at(0), organization_unit);
+      result.test_eq("CN", utf8_cert.issuer_info("CN").at(0), common_name);
+      result.test_eq("L",  utf8_cert.issuer_info("L").at(0),  location);
+      }
+   catch (const Botan::Decoding_Error &ex)
+      {
+      result.test_failure(ex.what());
+      }
+
+   return result;
+   }
+
 Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
    {
    Test::Result result("X509 Unit");
@@ -1135,6 +1169,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_x509_dates());
          results.push_back(test_cert_status_strings());
          results.push_back(test_hashes("ECDSA"));
+         results.push_back(test_x509_utf8());
 
          return results;
          }

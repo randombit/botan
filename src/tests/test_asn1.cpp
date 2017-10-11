@@ -82,7 +82,7 @@ Test::Result test_asn1_utf8_parsing()
          {
             // \x0C - ASN1 tag for 'UTF8 string'
             // \x0C - 12 characters of payload
-            // ...  - UTF-8 encoded russian word for Moscow in cyrilic script
+            // ...  - UTF-8 encoded russian word for Moscow in cyrillic script
             const std::string moscow =
                "\x0C\x0C\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
             Botan::DataSource_Memory input(moscow.data());
@@ -138,7 +138,7 @@ Test::Result test_asn1_utf8_encoding()
 
       try
          {
-            // UTF-8 encoded russian word for Moscow in cyrilic script
+            // UTF-8 encoded russian word for Moscow in cyrillic script
             const std::string moscow =
                "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
             Botan::ASN1_String str(moscow);
