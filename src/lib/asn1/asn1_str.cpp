@@ -113,10 +113,7 @@ ASN1_Tag ASN1_String::tagging() const
 */
 void ASN1_String::encode_into(DER_Encoder& encoder) const
    {
-   std::string value = iso_8859();
-   if(tagging() == UTF8_STRING)
-      value = Charset::transcode(value, LATIN1_CHARSET, UTF8_CHARSET);
-   encoder.add_object(tagging(), UNIVERSAL, value);
+   encoder.add_object(tagging(), UNIVERSAL, m_utf8_str);
    }
 
 /*
