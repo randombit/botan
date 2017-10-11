@@ -12,7 +12,8 @@ namespace Botan {
 
 CFB_Mode::CFB_Mode(BlockCipher* cipher, size_t feedback_bits) :
    m_cipher(cipher),
-   m_feedback_bytes(feedback_bits ? feedback_bits / 8 : cipher->block_size())
+   m_block_size(m_cipher->block_size()),
+   m_feedback_bytes(feedback_bits ? feedback_bits / 8 : m_block_size)
    {
    if(feedback_bits % 8 || feedback() > cipher->block_size())
       throw Invalid_Argument(name() + ": feedback bits " +
@@ -61,12 +62,12 @@ Key_Length_Specification CFB_Mode::key_spec() const
 
 size_t CFB_Mode::default_nonce_length() const
    {
-   return cipher().block_size();
+   return block_size();
    }
 
 bool CFB_Mode::valid_nonce_length(size_t n) const
    {
-   return (n == 0 || n == cipher().block_size());
+   return (n == 0 || n == block_size());
    }
 
 void CFB_Mode::key_schedule(const uint8_t key[], size_t length)
@@ -96,29 +97,58 @@ void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
       }
    }
 
+void CFB_Mode::shift_register()
+   {
+   const size_t shift = feedback();
+   const size_t carryover = block_size() - shift;
+
+   if(carryover > 0)
+      {
+      copy_mem(m_state.data(), &m_state[shift], carryover);
+      }
+   copy_mem(&m_state[carryover], m_keystream.data(), shift);
+   cipher().encrypt(m_state, m_keystream);
+   m_keystream_pos = 0;
+   }
+
 size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    {
-   const size_t BS = cipher().block_size();
-
    const size_t shift = feedback();
-   const size_t carryover = BS - shift;
 
-   for(size_t i = 0; i != sz; ++i)
+   size_t left = sz;
+
+   if(m_keystream_pos != 0)
       {
-      buf[i] = (m_keystream[m_keystream_pos] ^= buf[i]);
+      const size_t take = std::min<size_t>(left, shift - m_keystream_pos);
 
-      m_keystream_pos++;
+      xor_buf(m_keystream.data() + m_keystream_pos, buf, take);
+      copy_mem(buf, m_keystream.data() + m_keystream_pos, take);
+
+      m_keystream_pos += take;
+      left -= take;
+      buf += take;
 
       if(m_keystream_pos == shift)
          {
-         if(carryover > 0)
-            {
-            copy_mem(m_state.data(), &m_state[shift], carryover);
-            }
-         copy_mem(&m_state[carryover], m_keystream.data(), shift);
-         cipher().encrypt(m_state, m_keystream);
-         m_keystream_pos = 0;
+         shift_register();
          }
+      }
+
+   while(left >= shift)
+      {
+      xor_buf(m_keystream.data(), buf, shift);
+      copy_mem(buf, m_keystream.data(), shift);
+
+      left -= shift;
+      buf += shift;
+      shift_register();
+      }
+
+   if(left > 0)
+      {
+      xor_buf(m_keystream.data(), buf, left);
+      copy_mem(buf, m_keystream.data(), left);
+      m_keystream_pos += left;
       }
 
    return sz;
@@ -129,30 +159,54 @@ void CFB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    update(buffer, offset);
    }
 
+namespace {
+
+inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len)
+   {
+   for(size_t i = 0; i != len; ++i)
+      {
+      uint8_t k = key_buf[i];
+      key_buf[i] = buf[i];
+      buf[i] ^= k;
+      }
+   }
+
+}
+
 size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    {
-   const size_t BS = cipher().block_size();
    const size_t shift = feedback();
-   const size_t carryover = BS - shift;
 
-   for(size_t i = 0; i != sz; ++i)
+   size_t left = sz;
+
+   if(m_keystream_pos != 0)
       {
-      uint8_t k = m_keystream[m_keystream_pos];
-      m_keystream[m_keystream_pos] = buf[i];
-      buf[i] ^= k;
+      const size_t take = std::min<size_t>(left, shift - m_keystream_pos);
 
-      m_keystream_pos++;
+      xor_copy(buf, m_keystream.data() + m_keystream_pos, take);
+
+      m_keystream_pos += take;
+      left -= take;
+      buf += take;
 
       if(m_keystream_pos == shift)
          {
-         if(carryover > 0)
-            {
-            copy_mem(m_state.data(), &m_state[shift], carryover);
-            }
-         copy_mem(&m_state[carryover], m_keystream.data(), shift);
-         cipher().encrypt(m_state, m_keystream);
-         m_keystream_pos = 0;
+         shift_register();
          }
+      }
+
+   while(left >= shift)
+      {
+      xor_copy(buf, m_keystream.data(), shift);
+      left -= shift;
+      buf += shift;
+      shift_register();
+      }
+
+   if(left > 0)
+      {
+      xor_copy(buf, m_keystream.data(), left);
+      m_keystream_pos += left;
       }
 
    return sz;
