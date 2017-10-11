@@ -20,7 +20,8 @@ SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_mac(new CMAC(cipher)),
    m_bs(cipher->block_size())
    {
-   if(cipher->block_size() != 16)
+   // Not really true but only 128 bit allowed at the moment
+   if(m_bs != 16)
       throw Invalid_Argument("SIV requires a 128 bit block cipher");
    }
 
