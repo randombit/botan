@@ -26,44 +26,29 @@ std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
 
 namespace {
 
-namespace SHA2_64 {
-
-/*
-* SHA-{384,512} Rho Function
-*/
-inline uint64_t rho(uint64_t X, uint32_t rot1, uint32_t rot2, uint32_t rot3)
-   {
-   return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^
-           rotate_right(X, rot3));
-   }
-
-/*
-* SHA-{384,512} Sigma Function
-*/
-inline uint64_t sigma(uint64_t X, uint32_t rot1, uint32_t rot2, uint32_t shift)
-   {
-   return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^ (X >> shift));
-   }
-
 /*
 * SHA-512 F1 Function
 *
 * Use a macro as many compilers won't inline a function this big,
 * even though it is much faster if inlined.
 */
-#define SHA2_64_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic)   \
-   do {                                                            \
-      H += magic + rho(E, 14, 18, 41) + ((E & F) ^ (~E & G)) + M1; \
-      D += H;                                                      \
-      H += rho(A, 28, 34, 39) + ((A & B) | ((A | B) & C));         \
-      M1 += sigma(M2, 19, 61, 6) + M3 + sigma(M4, 1, 8, 7);        \
+#define SHA2_64_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic)         \
+   do {                                                                  \
+      const uint64_t E_rho = rotr<14>(E) ^ rotr<18>(E) ^ rotr<41>(E);    \
+      const uint64_t A_rho = rotr<28>(A) ^ rotr<34>(A) ^ rotr<39>(A);    \
+      const uint64_t M2_sigma = rotr<19>(M2) ^ rotr<61>(M2) ^ (M2 >> 6); \
+      const uint64_t M4_sigma = rotr<1>(M4) ^ rotr<8>(M4) ^ (M4 >> 7);   \
+      H += magic + E_rho + ((E & F) ^ (~E & G)) + M1;                    \
+      D += H;                                                            \
+      H += A_rho + ((A & B) | ((A | B) & C));                            \
+      M1 += M2_sigma + M3 + M4_sigma;                                    \
    } while(0);
 
 /*
 * SHA-{384,512} Compression Function
 */
-void compress(secure_vector<uint64_t>& digest,
-              const uint8_t input[], size_t blocks)
+void SHA64_compress(secure_vector<uint64_t>& digest,
+                    const uint8_t input[], size_t blocks)
    {
    uint64_t A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4], F = digest[5],
@@ -184,21 +169,19 @@ void compress(secure_vector<uint64_t>& digest,
 
 }
 
-}
-
 void SHA_512_256::compress_n(const uint8_t input[], size_t blocks)
    {
-   SHA2_64::compress(m_digest, input, blocks);
+   SHA64_compress(m_digest, input, blocks);
    }
 
 void SHA_384::compress_n(const uint8_t input[], size_t blocks)
    {
-   SHA2_64::compress(m_digest, input, blocks);
+   SHA64_compress(m_digest, input, blocks);
    }
 
 void SHA_512::compress_n(const uint8_t input[], size_t blocks)
    {
-   SHA2_64::compress(m_digest, input, blocks);
+   SHA64_compress(m_digest, input, blocks);
    }
 
 void SHA_512_256::copy_out(uint8_t output[])

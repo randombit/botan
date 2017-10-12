@@ -16,31 +16,31 @@ namespace {
 /*
 * CAST-256 Round Type 1
 */
-void round1(uint32_t& out, uint32_t in, uint32_t mask, uint32_t rot)
+void round1(uint32_t& out, uint32_t in, uint32_t MK, uint32_t RK)
    {
-   uint32_t temp = rotate_left(mask + in, rot);
-   out  ^= (CAST_SBOX1[get_byte(0, temp)] ^ CAST_SBOX2[get_byte(1, temp)]) -
-            CAST_SBOX3[get_byte(2, temp)] + CAST_SBOX4[get_byte(3, temp)];
+   const uint32_t T = rotl_var(MK + in, RK);
+   out ^= (CAST_SBOX1[get_byte(0, T)] ^ CAST_SBOX2[get_byte(1, T)]) -
+           CAST_SBOX3[get_byte(2, T)] + CAST_SBOX4[get_byte(3, T)];
    }
 
 /*
 * CAST-256 Round Type 2
 */
-void round2(uint32_t& out, uint32_t in, uint32_t mask, uint32_t rot)
+void round2(uint32_t& out, uint32_t in, uint32_t MK, uint32_t RK)
    {
-   uint32_t temp = rotate_left(mask ^ in, rot);
-   out  ^= (CAST_SBOX1[get_byte(0, temp)]  - CAST_SBOX2[get_byte(1, temp)] +
-            CAST_SBOX3[get_byte(2, temp)]) ^ CAST_SBOX4[get_byte(3, temp)];
+   const uint32_t T = rotl_var(MK ^ in, RK);
+   out ^= (CAST_SBOX1[get_byte(0, T)]  - CAST_SBOX2[get_byte(1, T)] +
+           CAST_SBOX3[get_byte(2, T)]) ^ CAST_SBOX4[get_byte(3, T)];
    }
 
 /*
 * CAST-256 Round Type 3
 */
-void round3(uint32_t& out, uint32_t in, uint32_t mask, uint32_t rot)
+void round3(uint32_t& out, uint32_t in, uint32_t MK, uint32_t RK)
    {
-   uint32_t temp = rotate_left(mask - in, rot);
-   out  ^= ((CAST_SBOX1[get_byte(0, temp)]  + CAST_SBOX2[get_byte(1, temp)]) ^
-             CAST_SBOX3[get_byte(2, temp)]) - CAST_SBOX4[get_byte(3, temp)];
+   const uint32_t T = rotl_var(MK - in, RK);
+   out ^= ((CAST_SBOX1[get_byte(0, T)]  + CAST_SBOX2[get_byte(1, T)]) ^
+            CAST_SBOX3[get_byte(2, T)]) - CAST_SBOX4[get_byte(3, T)];
    }
 
 }

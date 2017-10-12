@@ -113,8 +113,8 @@ W0 = W[t]..W[t+3]
 */
 inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += (D ^ (B & (C ^ D))) + msg + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
+   E += (D ^ (B & (C ^ D))) + msg + rotl<5>(A);
+   B  = rotl<30>(B);
    }
 
 /*
@@ -122,8 +122,8 @@ inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 */
 inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += (B ^ C ^ D) + msg + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
+   E += (B ^ C ^ D) + msg + rotl<5>(A);
+   B  = rotl<30>(B);
    }
 
 /*
@@ -131,8 +131,8 @@ inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 */
 inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += ((B & C) | ((B | C) & D)) + msg + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
+   E += ((B & C) | ((B | C) & D)) + msg + rotl<5>(A);
+   B  = rotl<30>(B);
    }
 
 /*
@@ -140,8 +140,8 @@ inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 */
 inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += (B ^ C ^ D) + msg + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
+   E += (B ^ C ^ D) + msg + rotl<5>(A);
+   B  = rotl<30>(B);
    }
 
 }

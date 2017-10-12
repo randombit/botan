@@ -19,7 +19,7 @@ namespace Botan {
 */
 inline uint16_t reverse_bytes(uint16_t val)
    {
-   return rotate_left(val, 8);
+   return rotl<8>(val);
    }
 
 /**
@@ -64,8 +64,8 @@ inline uint32_t reverse_bytes(uint32_t val)
 #else
 
    // Generic implementation
-   return (rotate_right(val, 8) & 0xFF00FF00) |
-          (rotate_left (val, 8) & 0x00FF00FF);
+   return (rotr<8>(val) & 0xFF00FF00) |
+          (rotl<8>(val) & 0x00FF00FF);
 
 #endif
    }

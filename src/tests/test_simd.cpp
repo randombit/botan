@@ -42,23 +42,21 @@ class SIMD_32_Tests final : public Test
 
          const Botan::SIMD_4x32 input(pat1, pat2, pat3, pat4);
 
-         Botan::SIMD_4x32 rol = input;
-         rol.rotate_left(3);
+         Botan::SIMD_4x32 rol = input.rotl<3>();
 
-         test_eq(result, "rotate_left", rol,
-                 Botan::rotate_left(pat1, 3),
-                 Botan::rotate_left(pat2, 3),
-                 Botan::rotate_left(pat3, 3),
-                 Botan::rotate_left(pat4, 3));
+         test_eq(result, "rotl", rol,
+                 Botan::rotl<3>(pat1),
+                 Botan::rotl<3>(pat2),
+                 Botan::rotl<3>(pat3),
+                 Botan::rotl<3>(pat4));
 
-         Botan::SIMD_4x32 ror = input;
-         ror.rotate_right(9);
+         Botan::SIMD_4x32 ror = input.rotr<9>();
 
-         test_eq(result, "rotate_right", ror,
-                 Botan::rotate_right(pat1, 9),
-                 Botan::rotate_right(pat2, 9),
-                 Botan::rotate_right(pat3, 9),
-                 Botan::rotate_right(pat4, 9));
+         test_eq(result, "rotr", ror,
+                 Botan::rotr<9>(pat1),
+                 Botan::rotr<9>(pat2),
+                 Botan::rotr<9>(pat3),
+                 Botan::rotr<9>(pat4));
 
          Botan::SIMD_4x32 add = input + splat;
          test_eq(result, "add +", add, pat1 + pat1, pat2 + pat1, pat3 + pat1, pat4 + pat1);

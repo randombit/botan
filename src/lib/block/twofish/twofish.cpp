@@ -41,8 +41,8 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          Y += X + m_RK[2*j + 9];
          X += m_RK[2*j + 8];
 
-         C = rotate_right(C ^ X, 1);
-         D = rotate_left(D, 1) ^ Y;
+         C = rotr<1>(C ^ X);
+         D = rotl<1>(D) ^ Y;
 
          X = m_SB[    get_byte(3, C)] ^ m_SB[256+get_byte(2, C)] ^
              m_SB[512+get_byte(1, C)] ^ m_SB[768+get_byte(0, C)];
@@ -52,8 +52,8 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          Y += X + m_RK[2*j + 11];
          X += m_RK[2*j + 10];
 
-         A = rotate_right(A ^ X, 1);
-         B = rotate_left(B, 1) ^ Y;
+         A = rotr<1>(A ^ X);
+         B = rotl<1>(B) ^ Y;
          }
 
       C ^= m_RK[4];
@@ -92,8 +92,8 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          Y += X + m_RK[39 - 2*j];
          X += m_RK[38 - 2*j];
 
-         C = rotate_left(C, 1) ^ X;
-         D = rotate_right(D ^ Y, 1);
+         C = rotl<1>(C) ^ X;
+         D = rotr<1>(D ^ Y);
 
          X = m_SB[    get_byte(3, C)] ^ m_SB[256+get_byte(2, C)] ^
              m_SB[512+get_byte(1, C)] ^ m_SB[768+get_byte(0, C)];
@@ -103,8 +103,8 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          Y += X + m_RK[37 - 2*j];
          X += m_RK[36 - 2*j];
 
-         A = rotate_left(A, 1) ^ X;
-         B = rotate_right(B ^ Y, 1);
+         A = rotl<1>(A) ^ X;
+         B = rotr<1>(B ^ Y);
          }
 
       C ^= m_RK[0];
@@ -167,11 +167,11 @@ void Twofish::key_schedule(const uint8_t key[], size_t length)
                     MDS1[Q0[Q1[i+1]^key[13]]^key[ 5]] ^
                     MDS2[Q1[Q0[i+1]^key[14]]^key[ 6]] ^
                     MDS3[Q1[Q1[i+1]^key[15]]^key[ 7]];
-         Y = rotate_left(Y, 8);
+         Y = rotl<8>(Y);
          X += Y; Y += X;
 
          m_RK[i] = X;
-         m_RK[i+1] = rotate_left(Y, 9);
+         m_RK[i+1] = rotl<9>(Y);
          }
       }
    else if(length == 24)
@@ -194,11 +194,11 @@ void Twofish::key_schedule(const uint8_t key[], size_t length)
                     MDS1[Q0[Q1[Q1[i+1]^key[21]]^key[13]]^key[ 5]] ^
                     MDS2[Q1[Q0[Q0[i+1]^key[22]]^key[14]]^key[ 6]] ^
                     MDS3[Q1[Q1[Q0[i+1]^key[23]]^key[15]]^key[ 7]];
-         Y = rotate_left(Y, 8);
+         Y = rotl<8>(Y);
          X += Y; Y += X;
 
          m_RK[i] = X;
-         m_RK[i+1] = rotate_left(Y, 9);
+         m_RK[i+1] = rotl<9>(Y);
          }
       }
    else if(length == 32)
@@ -221,11 +221,11 @@ void Twofish::key_schedule(const uint8_t key[], size_t length)
                     MDS1[Q0[Q1[Q1[Q0[i+1]^key[29]]^key[21]]^key[13]]^key[ 5]] ^
                     MDS2[Q1[Q0[Q0[Q0[i+1]^key[30]]^key[22]]^key[14]]^key[ 6]] ^
                     MDS3[Q1[Q1[Q0[Q1[i+1]^key[31]]^key[23]]^key[15]]^key[ 7]];
-         Y = rotate_left(Y, 8);
+         Y = rotl<8>(Y);
          X += Y; Y += X;
 
          m_RK[i] = X;
-         m_RK[i+1] = rotate_left(Y, 9);
+         m_RK[i+1] = rotl<9>(Y);
          }
       }
    }

@@ -281,56 +281,57 @@ class SIMD_4x32 final
 
 
       /*
-      Return rotate_right(x, rot1) ^ rotate_right(x, rot2) ^ rotate_right(x, rot3)
+      * This is used for SHA-2/SHACAL2
+      * Return rotr(ROT1) ^ rotr(ROT2) ^ rotr(ROT3)
       */
-      SIMD_4x32 rho(size_t rot1, size_t rot2, size_t rot3) const
+      template<size_t ROT1, size_t ROT2, size_t ROT3>
+      SIMD_4x32 rho() const
          {
          SIMD_4x32 res;
 
 #if defined(BOTAN_SIMD_USE_SSE2)
 
-         res.m_sse = _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-rot1)),
-                                  _mm_srli_epi32(m_sse, static_cast<int>(rot1)));
+         res.m_sse = _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT1)),
+                                  _mm_srli_epi32(m_sse, static_cast<int>(ROT1)));
          res.m_sse = _mm_xor_si128(
             res.m_sse,
-            _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-rot2)),
-                         _mm_srli_epi32(m_sse, static_cast<int>(rot2))));
+            _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT2)),
+                         _mm_srli_epi32(m_sse, static_cast<int>(ROT2))));
          res.m_sse = _mm_xor_si128(
             res.m_sse,
-            _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-rot3)),
-                         _mm_srli_epi32(m_sse, static_cast<int>(rot3))));
+            _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT3)),
+                         _mm_srli_epi32(m_sse, static_cast<int>(ROT3))));
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         const unsigned int r1 = static_cast<unsigned int>(32-rot1);
-         const unsigned int r2 = static_cast<unsigned int>(32-rot2);
-         const unsigned int r3 = static_cast<unsigned int>(32-rot3);
+         const unsigned int r1 = static_cast<unsigned int>(32-ROT1);
+         const unsigned int r2 = static_cast<unsigned int>(32-ROT2);
+         const unsigned int r3 = static_cast<unsigned int>(32-ROT3);
          res.m_vmx = vec_rl(m_vmx, (__vector unsigned int){r1, r1, r1, r1});
          res.m_vmx = vec_xor(res.m_vmx, vec_rl(m_vmx, (__vector unsigned int){r2, r2, r2, r2}));
          res.m_vmx = vec_xor(res.m_vmx, vec_rl(m_vmx, (__vector unsigned int){r3, r3, r3, r3}));
 
 #elif defined(BOTAN_SIMD_USE_NEON)
-         res.m_neon = vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-rot1)),
-                                vshrq_n_u32(m_neon, static_cast<int>(rot1)));
+         res.m_neon = vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT1)),
+                                vshrq_n_u32(m_neon, static_cast<int>(ROT1)));
 
          res.m_neon = veorq_u32(
             res.m_neon,
-            vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-rot2)),
-                      vshrq_n_u32(m_neon, static_cast<int>(rot2))));
+            vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT2)),
+                      vshrq_n_u32(m_neon, static_cast<int>(ROT2))));
 
          res.m_neon = veorq_u32(
             res.m_neon,
-            vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-rot3)),
-                      vshrq_n_u32(m_neon, static_cast<int>(rot3))));
+            vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT3)),
+                      vshrq_n_u32(m_neon, static_cast<int>(ROT3))));
 
 #else
 
          for(size_t i = 0; i != 4; ++i)
             {
-            res.m_scalar[i] =
-               Botan::rotate_right(m_scalar[i], rot1) ^
-               Botan::rotate_right(m_scalar[i], rot2) ^
-               Botan::rotate_right(m_scalar[i], rot3);
+            res.m_scalar[i] = Botan::rotr<ROT1>(m_scalar[i]) ^
+                              Botan::rotr<ROT2>(m_scalar[i]) ^
+                              Botan::rotr<ROT3>(m_scalar[i]);
             }
 #endif
 
@@ -338,38 +339,42 @@ class SIMD_4x32 final
          }
 
       /**
-      * Rotate each element of SIMD register n bits left
+      * Left rotation by a compile time constant
       */
-      void rotate_left(size_t rot)
+      template<size_t ROT>
+      SIMD_4x32 rotl() const
          {
+         static_assert(ROT > 0 && ROT < 32, "Invalid rotation constant");
+
 #if defined(BOTAN_SIMD_USE_SSE2)
 
-         m_sse = _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(rot)),
-                              _mm_srli_epi32(m_sse, static_cast<int>(32-rot)));
+         return SIMD_4x32(_mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(ROT)),
+                                       _mm_srli_epi32(m_sse, static_cast<int>(32-ROT))));
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         const unsigned int r = static_cast<unsigned int>(rot);
-         m_vmx = vec_rl(m_vmx, (__vector unsigned int){r, r, r, r});
+         const unsigned int r = static_cast<unsigned int>(ROT);
+         return SIMD_4x32(vec_rl(m_vmx, (__vector unsigned int){r, r, r, r}));
 
 #elif defined(BOTAN_SIMD_USE_NEON)
-         m_neon = vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(rot)),
-                            vshrq_n_u32(m_neon, static_cast<int>(32-rot)));
+         return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(ROT)),
+                                    vshrq_n_u32(m_neon, static_cast<int>(32-ROT))));
 
 #else
-         m_scalar[0] = Botan::rotate_left(m_scalar[0], rot);
-         m_scalar[1] = Botan::rotate_left(m_scalar[1], rot);
-         m_scalar[2] = Botan::rotate_left(m_scalar[2], rot);
-         m_scalar[3] = Botan::rotate_left(m_scalar[3], rot);
+         return SIMD_4x32(Botan::rotl<ROT>(m_scalar[0]),
+                          Botan::rotl<ROT>(m_scalar[1]),
+                          Botan::rotl<ROT>(m_scalar[2]),
+                          Botan::rotl<ROT>(m_scalar[3]));
 #endif
          }
 
       /**
-      * Rotate each element of SIMD register n bits right
+      * Right rotation by a compile time constant
       */
-      void rotate_right(size_t rot)
+      template<size_t ROT>
+      SIMD_4x32 rotr() const
          {
-         rotate_left(32 - rot);
+         return this->rotl<32-ROT>();
          }
 
       /**
@@ -596,13 +601,11 @@ class SIMD_4x32 final
          //return SIMD_4x32(vrev64q_u32(m_neon));
 
          // FIXME this is really slow
-         SIMD_4x32 ror8(m_neon);
-         ror8.rotate_right(8);
-         SIMD_4x32 rol8(m_neon);
-         rol8.rotate_left(8);
+         SIMD_4x32 ror8 = this->rotr<8>();
+         SIMD_4x32 rol8 = this->rotl<8>();
 
-         SIMD_4x32 mask1 = SIMD_4x32::splat(0xFF00FF00);
-         SIMD_4x32 mask2 = SIMD_4x32::splat(0x00FF00FF);
+         const SIMD_4x32 mask1 = SIMD_4x32::splat(0xFF00FF00);
+         const SIMD_4x32 mask2 = SIMD_4x32::splat(0x00FF00FF);
          return (ror8 & mask1) | (rol8 & mask2);
 #else
          // scalar

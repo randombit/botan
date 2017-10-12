@@ -46,7 +46,7 @@ inline uint32_t T(uint32_t b)
    const uint32_t t = make_uint32(SBOX[b0], SBOX[b1], SBOX[b2], SBOX[b3]);
 
    // L linear transform
-   return t ^ rotate_left(t, 2) ^ rotate_left(t, 10) ^ rotate_left(t, 18) ^ rotate_left(t, 24);
+   return t ^ rotl<2>(t) ^ rotl<10>(t) ^ rotl<18>(t) ^ rotl<24>(t);
    }
 
 // Variant of T for key schedule
@@ -59,7 +59,7 @@ inline uint32_t Tp(uint32_t b)
    const uint32_t t = make_uint32(SBOX[b0], SBOX[b1], SBOX[b2], SBOX[b3]);
 
    // L' linear transform
-   return t ^ rotate_left(t, 13) ^ rotate_left(t, 23);
+   return t ^ rotl<13>(t) ^ rotl<23>(t);
    }
 
 }

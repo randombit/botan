@@ -24,8 +24,8 @@ namespace {
 */
 inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += (D ^ (B & (C ^ D))) + msg + 0x5A827999 + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
+   E += (D ^ (B & (C ^ D))) + msg + 0x5A827999 + rotl<5>(A);
+   B  = rotl<30>(B);
    }
 
 /*
@@ -33,8 +33,8 @@ inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 */
 inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += (B ^ C ^ D) + msg + 0x6ED9EBA1 + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
+   E += (B ^ C ^ D) + msg + 0x6ED9EBA1 + rotl<5>(A);
+   B  = rotl<30>(B);
    }
 
 /*
@@ -42,8 +42,8 @@ inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 */
 inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += ((B & C) | ((B | C) & D)) + msg + 0x8F1BBCDC + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
+   E += ((B & C) | ((B | C) & D)) + msg + 0x8F1BBCDC + rotl<5>(A);
+   B  = rotl<30>(B);
    }
 
 /*
@@ -51,8 +51,8 @@ inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 */
 inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
-   E += (B ^ C ^ D) + msg + 0xCA62C1D6 + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
+   E += (B ^ C ^ D) + msg + 0xCA62C1D6 + rotl<5>(A);
+   B  = rotl<30>(B);
    }
 
 }
@@ -99,14 +99,14 @@ void SHA_160::compress_n(const uint8_t input[], size_t blocks)
 
       for(size_t j = 16; j != 80; j += 8)
          {
-         m_W[j  ] = rotate_left((m_W[j-3] ^ m_W[j-8] ^ m_W[j-14] ^ m_W[j-16]), 1);
-         m_W[j+1] = rotate_left((m_W[j-2] ^ m_W[j-7] ^ m_W[j-13] ^ m_W[j-15]), 1);
-         m_W[j+2] = rotate_left((m_W[j-1] ^ m_W[j-6] ^ m_W[j-12] ^ m_W[j-14]), 1);
-         m_W[j+3] = rotate_left((m_W[j  ] ^ m_W[j-5] ^ m_W[j-11] ^ m_W[j-13]), 1);
-         m_W[j+4] = rotate_left((m_W[j+1] ^ m_W[j-4] ^ m_W[j-10] ^ m_W[j-12]), 1);
-         m_W[j+5] = rotate_left((m_W[j+2] ^ m_W[j-3] ^ m_W[j- 9] ^ m_W[j-11]), 1);
-         m_W[j+6] = rotate_left((m_W[j+3] ^ m_W[j-2] ^ m_W[j- 8] ^ m_W[j-10]), 1);
-         m_W[j+7] = rotate_left((m_W[j+4] ^ m_W[j-1] ^ m_W[j- 7] ^ m_W[j- 9]), 1);
+         m_W[j  ] = rotl<1>(m_W[j-3] ^ m_W[j-8] ^ m_W[j-14] ^ m_W[j-16]);
+         m_W[j+1] = rotl<1>(m_W[j-2] ^ m_W[j-7] ^ m_W[j-13] ^ m_W[j-15]);
+         m_W[j+2] = rotl<1>(m_W[j-1] ^ m_W[j-6] ^ m_W[j-12] ^ m_W[j-14]);
+         m_W[j+3] = rotl<1>(m_W[j  ] ^ m_W[j-5] ^ m_W[j-11] ^ m_W[j-13]);
+         m_W[j+4] = rotl<1>(m_W[j+1] ^ m_W[j-4] ^ m_W[j-10] ^ m_W[j-12]);
+         m_W[j+5] = rotl<1>(m_W[j+2] ^ m_W[j-3] ^ m_W[j- 9] ^ m_W[j-11]);
+         m_W[j+6] = rotl<1>(m_W[j+3] ^ m_W[j-2] ^ m_W[j- 8] ^ m_W[j-10]);
+         m_W[j+7] = rotl<1>(m_W[j+4] ^ m_W[j-1] ^ m_W[j- 7] ^ m_W[j- 9]);
          }
 
       F1(A, B, C, D, E, m_W[ 0]);   F1(E, A, B, C, D, m_W[ 1]);

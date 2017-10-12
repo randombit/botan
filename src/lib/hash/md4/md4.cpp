@@ -16,31 +16,55 @@ std::unique_ptr<HashFunction> MD4::copy_state() const
 
 namespace {
 
-/*
-* MD4 FF Function
-*/
-inline void FF(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M, uint8_t S)
+inline void FF4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
+                uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
+
    {
-   A += (D ^ (B & (C ^ D))) + M;
-   A  = rotate_left(A, S);
+   A += (D ^ (B & (C ^ D))) + M0;
+   A = rotl<3>(A);
+
+   D += (C ^ (A & (B ^ C))) + M1;
+   D = rotl<7>(D);
+
+   C += (B ^ (D & (A ^ B))) + M2;
+   C = rotl<11>(C);
+
+   B += (A ^ (C & (D ^ A))) + M3;
+   B = rotl<19>(B);
    }
 
-/*
-* MD4 GG Function
-*/
-inline void GG(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M, uint8_t S)
+inline void GG4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
+                uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
+
    {
-   A += ((B & C) | (D & (B | C))) + M + 0x5A827999;
-   A  = rotate_left(A, S);
+   A += ((B & C) | (D & (B | C))) + M0 + 0x5A827999;
+   A = rotl<3>(A);
+
+   D += ((A & B) | (C & (A | B))) + M1 + 0x5A827999;
+   D = rotl<5>(D);
+
+   C += ((D & A) | (B & (D | A))) + M2 + 0x5A827999;
+   C = rotl<9>(C);
+
+   B += ((C & D) | (A & (C | D))) + M3 + 0x5A827999;
+   B = rotl<13>(B);
    }
 
-/*
-* MD4 HH Function
-*/
-inline void HH(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M, uint8_t S)
+inline void HH4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D,
+                uint32_t M0, uint32_t M1, uint32_t M2, uint32_t M3)
+
    {
-   A += (B ^ C ^ D) + M + 0x6ED9EBA1;
-   A  = rotate_left(A, S);
+   A += (B ^ C ^ D) + M0 + 0x6ED9EBA1;
+   A = rotl<3>(A);
+
+   D += (A ^ B ^ C) + M1 + 0x6ED9EBA1;
+   D = rotl<9>(D);
+
+   C += (A ^ B ^ D) + M2 + 0x6ED9EBA1;
+   C = rotl<11>(C);
+
+   B += (A ^ C ^ D) + M3 + 0x6ED9EBA1;
+   B = rotl<15>(B);
    }
 
 }
@@ -54,34 +78,37 @@ void MD4::compress_n(const uint8_t input[], size_t blocks)
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      load_le(m_M.data(), input, m_M.size());
+      uint32_t M00 = load_le<uint32_t>(input, 0);
+      uint32_t M01 = load_le<uint32_t>(input, 1);
+      uint32_t M02 = load_le<uint32_t>(input, 2);
+      uint32_t M03 = load_le<uint32_t>(input, 3);
+      uint32_t M04 = load_le<uint32_t>(input, 4);
+      uint32_t M05 = load_le<uint32_t>(input, 5);
+      uint32_t M06 = load_le<uint32_t>(input, 6);
+      uint32_t M07 = load_le<uint32_t>(input, 7);
+      uint32_t M08 = load_le<uint32_t>(input, 8);
+      uint32_t M09 = load_le<uint32_t>(input, 9);
+      uint32_t M10 = load_le<uint32_t>(input, 10);
+      uint32_t M11 = load_le<uint32_t>(input, 11);
+      uint32_t M12 = load_le<uint32_t>(input, 12);
+      uint32_t M13 = load_le<uint32_t>(input, 13);
+      uint32_t M14 = load_le<uint32_t>(input, 14);
+      uint32_t M15 = load_le<uint32_t>(input, 15);
 
-      FF(A,B,C,D,m_M[ 0], 3);   FF(D,A,B,C,m_M[ 1], 7);
-      FF(C,D,A,B,m_M[ 2],11);   FF(B,C,D,A,m_M[ 3],19);
-      FF(A,B,C,D,m_M[ 4], 3);   FF(D,A,B,C,m_M[ 5], 7);
-      FF(C,D,A,B,m_M[ 6],11);   FF(B,C,D,A,m_M[ 7],19);
-      FF(A,B,C,D,m_M[ 8], 3);   FF(D,A,B,C,m_M[ 9], 7);
-      FF(C,D,A,B,m_M[10],11);   FF(B,C,D,A,m_M[11],19);
-      FF(A,B,C,D,m_M[12], 3);   FF(D,A,B,C,m_M[13], 7);
-      FF(C,D,A,B,m_M[14],11);   FF(B,C,D,A,m_M[15],19);
+      FF4(A, B, C, D, M00, M01, M02, M03);
+      FF4(A, B, C, D, M04, M05, M06, M07);
+      FF4(A, B, C, D, M08, M09, M10, M11);
+      FF4(A, B, C, D, M12, M13, M14, M15);
 
-      GG(A,B,C,D,m_M[ 0], 3);   GG(D,A,B,C,m_M[ 4], 5);
-      GG(C,D,A,B,m_M[ 8], 9);   GG(B,C,D,A,m_M[12],13);
-      GG(A,B,C,D,m_M[ 1], 3);   GG(D,A,B,C,m_M[ 5], 5);
-      GG(C,D,A,B,m_M[ 9], 9);   GG(B,C,D,A,m_M[13],13);
-      GG(A,B,C,D,m_M[ 2], 3);   GG(D,A,B,C,m_M[ 6], 5);
-      GG(C,D,A,B,m_M[10], 9);   GG(B,C,D,A,m_M[14],13);
-      GG(A,B,C,D,m_M[ 3], 3);   GG(D,A,B,C,m_M[ 7], 5);
-      GG(C,D,A,B,m_M[11], 9);   GG(B,C,D,A,m_M[15],13);
+      GG4(A, B, C, D, M00, M04, M08, M12);
+      GG4(A, B, C, D, M01, M05, M09, M13);
+      GG4(A, B, C, D, M02, M06, M10, M14);
+      GG4(A, B, C, D, M03, M07, M11, M15);
 
-      HH(A,B,C,D,m_M[ 0], 3);   HH(D,A,B,C,m_M[ 8], 9);
-      HH(C,D,A,B,m_M[ 4],11);   HH(B,C,D,A,m_M[12],15);
-      HH(A,B,C,D,m_M[ 2], 3);   HH(D,A,B,C,m_M[10], 9);
-      HH(C,D,A,B,m_M[ 6],11);   HH(B,C,D,A,m_M[14],15);
-      HH(A,B,C,D,m_M[ 1], 3);   HH(D,A,B,C,m_M[ 9], 9);
-      HH(C,D,A,B,m_M[ 5],11);   HH(B,C,D,A,m_M[13],15);
-      HH(A,B,C,D,m_M[ 3], 3);   HH(D,A,B,C,m_M[11], 9);
-      HH(C,D,A,B,m_M[ 7],11);   HH(B,C,D,A,m_M[15],15);
+      HH4(A, B, C, D, M00, M08, M04, M12);
+      HH4(A, B, C, D, M02, M10, M06, M14);
+      HH4(A, B, C, D, M01, M09, M05, M13);
+      HH4(A, B, C, D, M03, M11, M07, M15);
 
       A = (m_digest[0] += A);
       B = (m_digest[1] += B);
@@ -106,7 +133,6 @@ void MD4::copy_out(uint8_t output[])
 void MD4::clear()
    {
    MDx_HashFunction::clear();
-   zeroise(m_M);
    m_digest[0] = 0x67452301;
    m_digest[1] = 0xEFCDAB89;
    m_digest[2] = 0x98BADCFE;

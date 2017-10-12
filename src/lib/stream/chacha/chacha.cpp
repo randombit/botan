@@ -49,12 +49,12 @@ void ChaCha::chacha_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
              x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
              x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
-#define CHACHA_QUARTER_ROUND(a, b, c, d)        \
-      do {                                      \
-      a += b; d ^= a; d = rotate_left(d, 16);   \
-      c += d; b ^= c; b = rotate_left(b, 12);   \
-      a += b; d ^= a; d = rotate_left(d, 8);    \
-      c += d; b ^= c; b = rotate_left(b, 7);    \
+#define CHACHA_QUARTER_ROUND(a, b, c, d) \
+      do {                               \
+      a += b; d ^= a; d = rotl<16>(d);   \
+      c += d; b ^= c; b = rotl<12>(b);   \
+      a += b; d ^= a; d = rotl<8>(d);    \
+      c += d; b ^= c; b = rotl<7>(b);    \
       } while(0)
 
       for(size_t r = 0; r != rounds / 2; ++r)
