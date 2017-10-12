@@ -1685,7 +1685,8 @@ class CmakeGenerator(object):
         fd.write('file(GLOB_RECURSE HEADER_FILES src/*.h )\n')
         fd.write('file(GLOB_RECURSE INFO_FILES src/lib/*info.txt )\n')
         fd.write('add_custom_target(CONFIGURATION_DUMMY SOURCES ' +
-                 '${GLOBAL_CONFIGURATION_FILES} ${CONFIGURATION_FILES} ${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
+                 '${GLOBAL_CONFIGURATION_FILES} ${CONFIGURATION_FILES} ' +
+                 '${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
 
     def generate(self):
         library_target_configuration = self._create_target_rules(self._build_paths.lib_sources)
