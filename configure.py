@@ -1625,7 +1625,7 @@ class CmakeGenerator(object):
     def _write_footer(self, fd, library_link, cli_link, tests_link):
         fd.write('\n')
 
-        fd.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warinig policy will be used" OFF)\n')
+        fd.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warning policy will be used" OFF)\n')
         fd.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
 
         fd.write('set(COMPILER_FEATURES_RELEASE %s %s)\n'
@@ -1679,12 +1679,13 @@ class CmakeGenerator(object):
                  % tests_link)
         fd.write('set_target_properties(${PROJECT_NAME}_tests PROPERTIES OUTPUT_NAME botan-test)\n\n')
 
-        fd.write('set(CONFIGURATION_FILES configure.py .gitignore .astylerc authors.txt news.rst readme.rst)\n')
+        fd.write('set(GLOBAL_CONFIGURATION_FILES configure.py .gitignore news.rst readme.rst)\n')
+        fd.write('file(GLOB_RECURSE CONFIGURATION_FILES src/configs/* )\n')
         fd.write('file(GLOB_RECURSE DOCUMENTATION_FILES doc/* )\n')
         fd.write('file(GLOB_RECURSE HEADER_FILES src/*.h )\n')
         fd.write('file(GLOB_RECURSE INFO_FILES src/lib/*info.txt )\n')
         fd.write('add_custom_target(CONFIGURATION_DUMMY SOURCES ' +
-                 '${CONFIGURATION_FILES} ${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
+                 '${GLOBAL_CONFIGURATION_FILES} ${CONFIGURATION_FILES} ${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
 
     def generate(self):
         library_target_configuration = self._create_target_rules(self._build_paths.lib_sources)
