@@ -26,11 +26,6 @@ inline uint32_t P0(uint32_t X)
    return X ^ rotl<9>(X) ^ rotl<17>(X);
    }
 
-inline uint32_t P1(uint32_t X)
-   {
-   return X ^ rotl<15>(X) ^ rotl<23>(X);
-   }
-
 inline uint32_t FF1(uint32_t X, uint32_t Y, uint32_t Z)
    {
    return (X & Y) | ((X | Y) & Z);
@@ -73,6 +68,16 @@ inline void R2(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
    H = P0(TT2);
    }
 
+inline uint32_t P1(uint32_t X)
+   {
+   return X ^ rotl<15>(X) ^ rotl<23>(X);
+   }
+
+inline uint32_t SM3_E(uint32_t W0, uint32_t W7, uint32_t W13, uint32_t W3, uint32_t W10)
+   {
+   return P1(W0 ^ W7 ^ rotl<15>(W13)) ^ rotl<7>(W3) ^ W10;
+   }
+
 }
 
 /*
@@ -82,146 +87,142 @@ void SM3::compress_n(const uint8_t input[], size_t blocks)
    {
    uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3],
             E = m_digest[4], F = m_digest[5], G = m_digest[6], H = m_digest[7];
-   uint32_t W[68];
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      // Message Extension (a)
-      W[ 0] = load_be<uint32_t>(input, 0);
-      W[ 1] = load_be<uint32_t>(input, 1);
-      W[ 2] = load_be<uint32_t>(input, 2);
-      W[ 3] = load_be<uint32_t>(input, 3);
-      W[ 4] = load_be<uint32_t>(input, 4);
-      W[ 5] = load_be<uint32_t>(input, 5);
-      W[ 6] = load_be<uint32_t>(input, 6);
-      W[ 7] = load_be<uint32_t>(input, 7);
-      W[ 8] = load_be<uint32_t>(input, 8);
-      W[ 9] = load_be<uint32_t>(input, 9);
-      W[10] = load_be<uint32_t>(input, 10);
-      W[11] = load_be<uint32_t>(input, 11);
-      W[12] = load_be<uint32_t>(input, 12);
-      W[13] = load_be<uint32_t>(input, 13);
-      W[14] = load_be<uint32_t>(input, 14);
-      W[15] = load_be<uint32_t>(input, 15);
+      uint32_t W00 = load_be<uint32_t>(input, 0);
+      uint32_t W01 = load_be<uint32_t>(input, 1);
+      uint32_t W02 = load_be<uint32_t>(input, 2);
+      uint32_t W03 = load_be<uint32_t>(input, 3);
+      uint32_t W04 = load_be<uint32_t>(input, 4);
+      uint32_t W05 = load_be<uint32_t>(input, 5);
+      uint32_t W06 = load_be<uint32_t>(input, 6);
+      uint32_t W07 = load_be<uint32_t>(input, 7);
+      uint32_t W08 = load_be<uint32_t>(input, 8);
+      uint32_t W09 = load_be<uint32_t>(input, 9);
+      uint32_t W10 = load_be<uint32_t>(input, 10);
+      uint32_t W11 = load_be<uint32_t>(input, 11);
+      uint32_t W12 = load_be<uint32_t>(input, 12);
+      uint32_t W13 = load_be<uint32_t>(input, 13);
+      uint32_t W14 = load_be<uint32_t>(input, 14);
+      uint32_t W15 = load_be<uint32_t>(input, 15);
 
-      // Message Extension (b)
-      W[16] = P1(W[ 0] ^ W[ 7] ^ rotl<15>(W[13])) ^ rotl<7>(W[ 3]) ^ W[10];
-      W[17] = P1(W[ 1] ^ W[ 8] ^ rotl<15>(W[14])) ^ rotl<7>(W[ 4]) ^ W[11];
-      W[18] = P1(W[ 2] ^ W[ 9] ^ rotl<15>(W[15])) ^ rotl<7>(W[ 5]) ^ W[12];
-      W[19] = P1(W[ 3] ^ W[10] ^ rotl<15>(W[16])) ^ rotl<7>(W[ 6]) ^ W[13];
-      W[20] = P1(W[ 4] ^ W[11] ^ rotl<15>(W[17])) ^ rotl<7>(W[ 7]) ^ W[14];
-      W[21] = P1(W[ 5] ^ W[12] ^ rotl<15>(W[18])) ^ rotl<7>(W[ 8]) ^ W[15];
-      W[22] = P1(W[ 6] ^ W[13] ^ rotl<15>(W[19])) ^ rotl<7>(W[ 9]) ^ W[16];
-      W[23] = P1(W[ 7] ^ W[14] ^ rotl<15>(W[20])) ^ rotl<7>(W[10]) ^ W[17];
-      W[24] = P1(W[ 8] ^ W[15] ^ rotl<15>(W[21])) ^ rotl<7>(W[11]) ^ W[18];
-      W[25] = P1(W[ 9] ^ W[16] ^ rotl<15>(W[22])) ^ rotl<7>(W[12]) ^ W[19];
-      W[26] = P1(W[10] ^ W[17] ^ rotl<15>(W[23])) ^ rotl<7>(W[13]) ^ W[20];
-      W[27] = P1(W[11] ^ W[18] ^ rotl<15>(W[24])) ^ rotl<7>(W[14]) ^ W[21];
-      W[28] = P1(W[12] ^ W[19] ^ rotl<15>(W[25])) ^ rotl<7>(W[15]) ^ W[22];
-      W[29] = P1(W[13] ^ W[20] ^ rotl<15>(W[26])) ^ rotl<7>(W[16]) ^ W[23];
-      W[30] = P1(W[14] ^ W[21] ^ rotl<15>(W[27])) ^ rotl<7>(W[17]) ^ W[24];
-      W[31] = P1(W[15] ^ W[22] ^ rotl<15>(W[28])) ^ rotl<7>(W[18]) ^ W[25];
-      W[32] = P1(W[16] ^ W[23] ^ rotl<15>(W[29])) ^ rotl<7>(W[19]) ^ W[26];
-      W[33] = P1(W[17] ^ W[24] ^ rotl<15>(W[30])) ^ rotl<7>(W[20]) ^ W[27];
-      W[34] = P1(W[18] ^ W[25] ^ rotl<15>(W[31])) ^ rotl<7>(W[21]) ^ W[28];
-      W[35] = P1(W[19] ^ W[26] ^ rotl<15>(W[32])) ^ rotl<7>(W[22]) ^ W[29];
-      W[36] = P1(W[20] ^ W[27] ^ rotl<15>(W[33])) ^ rotl<7>(W[23]) ^ W[30];
-      W[37] = P1(W[21] ^ W[28] ^ rotl<15>(W[34])) ^ rotl<7>(W[24]) ^ W[31];
-      W[38] = P1(W[22] ^ W[29] ^ rotl<15>(W[35])) ^ rotl<7>(W[25]) ^ W[32];
-      W[39] = P1(W[23] ^ W[30] ^ rotl<15>(W[36])) ^ rotl<7>(W[26]) ^ W[33];
-      W[40] = P1(W[24] ^ W[31] ^ rotl<15>(W[37])) ^ rotl<7>(W[27]) ^ W[34];
-      W[41] = P1(W[25] ^ W[32] ^ rotl<15>(W[38])) ^ rotl<7>(W[28]) ^ W[35];
-      W[42] = P1(W[26] ^ W[33] ^ rotl<15>(W[39])) ^ rotl<7>(W[29]) ^ W[36];
-      W[43] = P1(W[27] ^ W[34] ^ rotl<15>(W[40])) ^ rotl<7>(W[30]) ^ W[37];
-      W[44] = P1(W[28] ^ W[35] ^ rotl<15>(W[41])) ^ rotl<7>(W[31]) ^ W[38];
-      W[45] = P1(W[29] ^ W[36] ^ rotl<15>(W[42])) ^ rotl<7>(W[32]) ^ W[39];
-      W[46] = P1(W[30] ^ W[37] ^ rotl<15>(W[43])) ^ rotl<7>(W[33]) ^ W[40];
-      W[47] = P1(W[31] ^ W[38] ^ rotl<15>(W[44])) ^ rotl<7>(W[34]) ^ W[41];
-      W[48] = P1(W[32] ^ W[39] ^ rotl<15>(W[45])) ^ rotl<7>(W[35]) ^ W[42];
-      W[49] = P1(W[33] ^ W[40] ^ rotl<15>(W[46])) ^ rotl<7>(W[36]) ^ W[43];
-      W[50] = P1(W[34] ^ W[41] ^ rotl<15>(W[47])) ^ rotl<7>(W[37]) ^ W[44];
-      W[51] = P1(W[35] ^ W[42] ^ rotl<15>(W[48])) ^ rotl<7>(W[38]) ^ W[45];
-      W[52] = P1(W[36] ^ W[43] ^ rotl<15>(W[49])) ^ rotl<7>(W[39]) ^ W[46];
-      W[53] = P1(W[37] ^ W[44] ^ rotl<15>(W[50])) ^ rotl<7>(W[40]) ^ W[47];
-      W[54] = P1(W[38] ^ W[45] ^ rotl<15>(W[51])) ^ rotl<7>(W[41]) ^ W[48];
-      W[55] = P1(W[39] ^ W[46] ^ rotl<15>(W[52])) ^ rotl<7>(W[42]) ^ W[49];
-      W[56] = P1(W[40] ^ W[47] ^ rotl<15>(W[53])) ^ rotl<7>(W[43]) ^ W[50];
-      W[57] = P1(W[41] ^ W[48] ^ rotl<15>(W[54])) ^ rotl<7>(W[44]) ^ W[51];
-      W[58] = P1(W[42] ^ W[49] ^ rotl<15>(W[55])) ^ rotl<7>(W[45]) ^ W[52];
-      W[59] = P1(W[43] ^ W[50] ^ rotl<15>(W[56])) ^ rotl<7>(W[46]) ^ W[53];
-      W[60] = P1(W[44] ^ W[51] ^ rotl<15>(W[57])) ^ rotl<7>(W[47]) ^ W[54];
-      W[61] = P1(W[45] ^ W[52] ^ rotl<15>(W[58])) ^ rotl<7>(W[48]) ^ W[55];
-      W[62] = P1(W[46] ^ W[53] ^ rotl<15>(W[59])) ^ rotl<7>(W[49]) ^ W[56];
-      W[63] = P1(W[47] ^ W[54] ^ rotl<15>(W[60])) ^ rotl<7>(W[50]) ^ W[57];
-      W[64] = P1(W[48] ^ W[55] ^ rotl<15>(W[61])) ^ rotl<7>(W[51]) ^ W[58];
-      W[65] = P1(W[49] ^ W[56] ^ rotl<15>(W[62])) ^ rotl<7>(W[52]) ^ W[59];
-      W[66] = P1(W[50] ^ W[57] ^ rotl<15>(W[63])) ^ rotl<7>(W[53]) ^ W[60];
-      W[67] = P1(W[51] ^ W[58] ^ rotl<15>(W[64])) ^ rotl<7>(W[54]) ^ W[61];
-
-      R1(A, B, C, D, E, F, G, H, 0x79CC4519, W[ 0], W[ 0] ^ W[ 4]);
-      R1(D, A, B, C, H, E, F, G, 0xF3988A32, W[ 1], W[ 1] ^ W[ 5]);
-      R1(C, D, A, B, G, H, E, F, 0xE7311465, W[ 2], W[ 2] ^ W[ 6]);
-      R1(B, C, D, A, F, G, H, E, 0xCE6228CB, W[ 3], W[ 3] ^ W[ 7]);
-      R1(A, B, C, D, E, F, G, H, 0x9CC45197, W[ 4], W[ 4] ^ W[ 8]);
-      R1(D, A, B, C, H, E, F, G, 0x3988A32F, W[ 5], W[ 5] ^ W[ 9]);
-      R1(C, D, A, B, G, H, E, F, 0x7311465E, W[ 6], W[ 6] ^ W[10]);
-      R1(B, C, D, A, F, G, H, E, 0xE6228CBC, W[ 7], W[ 7] ^ W[11]);
-      R1(A, B, C, D, E, F, G, H, 0xCC451979, W[ 8], W[ 8] ^ W[12]);
-      R1(D, A, B, C, H, E, F, G, 0x988A32F3, W[ 9], W[ 9] ^ W[13]);
-      R1(C, D, A, B, G, H, E, F, 0x311465E7, W[10], W[10] ^ W[14]);
-      R1(B, C, D, A, F, G, H, E, 0x6228CBCE, W[11], W[11] ^ W[15]);
-      R1(A, B, C, D, E, F, G, H, 0xC451979C, W[12], W[12] ^ W[16]);
-      R1(D, A, B, C, H, E, F, G, 0x88A32F39, W[13], W[13] ^ W[17]);
-      R1(C, D, A, B, G, H, E, F, 0x11465E73, W[14], W[14] ^ W[18]);
-      R1(B, C, D, A, F, G, H, E, 0x228CBCE6, W[15], W[15] ^ W[19]);
-      R2(A, B, C, D, E, F, G, H, 0x9D8A7A87, W[16], W[16] ^ W[20]);
-      R2(D, A, B, C, H, E, F, G, 0x3B14F50F, W[17], W[17] ^ W[21]);
-      R2(C, D, A, B, G, H, E, F, 0x7629EA1E, W[18], W[18] ^ W[22]);
-      R2(B, C, D, A, F, G, H, E, 0xEC53D43C, W[19], W[19] ^ W[23]);
-      R2(A, B, C, D, E, F, G, H, 0xD8A7A879, W[20], W[20] ^ W[24]);
-      R2(D, A, B, C, H, E, F, G, 0xB14F50F3, W[21], W[21] ^ W[25]);
-      R2(C, D, A, B, G, H, E, F, 0x629EA1E7, W[22], W[22] ^ W[26]);
-      R2(B, C, D, A, F, G, H, E, 0xC53D43CE, W[23], W[23] ^ W[27]);
-      R2(A, B, C, D, E, F, G, H, 0x8A7A879D, W[24], W[24] ^ W[28]);
-      R2(D, A, B, C, H, E, F, G, 0x14F50F3B, W[25], W[25] ^ W[29]);
-      R2(C, D, A, B, G, H, E, F, 0x29EA1E76, W[26], W[26] ^ W[30]);
-      R2(B, C, D, A, F, G, H, E, 0x53D43CEC, W[27], W[27] ^ W[31]);
-      R2(A, B, C, D, E, F, G, H, 0xA7A879D8, W[28], W[28] ^ W[32]);
-      R2(D, A, B, C, H, E, F, G, 0x4F50F3B1, W[29], W[29] ^ W[33]);
-      R2(C, D, A, B, G, H, E, F, 0x9EA1E762, W[30], W[30] ^ W[34]);
-      R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W[31], W[31] ^ W[35]);
-      R2(A, B, C, D, E, F, G, H, 0x7A879D8A, W[32], W[32] ^ W[36]);
-      R2(D, A, B, C, H, E, F, G, 0xF50F3B14, W[33], W[33] ^ W[37]);
-      R2(C, D, A, B, G, H, E, F, 0xEA1E7629, W[34], W[34] ^ W[38]);
-      R2(B, C, D, A, F, G, H, E, 0xD43CEC53, W[35], W[35] ^ W[39]);
-      R2(A, B, C, D, E, F, G, H, 0xA879D8A7, W[36], W[36] ^ W[40]);
-      R2(D, A, B, C, H, E, F, G, 0x50F3B14F, W[37], W[37] ^ W[41]);
-      R2(C, D, A, B, G, H, E, F, 0xA1E7629E, W[38], W[38] ^ W[42]);
-      R2(B, C, D, A, F, G, H, E, 0x43CEC53D, W[39], W[39] ^ W[43]);
-      R2(A, B, C, D, E, F, G, H, 0x879D8A7A, W[40], W[40] ^ W[44]);
-      R2(D, A, B, C, H, E, F, G, 0x0F3B14F5, W[41], W[41] ^ W[45]);
-      R2(C, D, A, B, G, H, E, F, 0x1E7629EA, W[42], W[42] ^ W[46]);
-      R2(B, C, D, A, F, G, H, E, 0x3CEC53D4, W[43], W[43] ^ W[47]);
-      R2(A, B, C, D, E, F, G, H, 0x79D8A7A8, W[44], W[44] ^ W[48]);
-      R2(D, A, B, C, H, E, F, G, 0xF3B14F50, W[45], W[45] ^ W[49]);
-      R2(C, D, A, B, G, H, E, F, 0xE7629EA1, W[46], W[46] ^ W[50]);
-      R2(B, C, D, A, F, G, H, E, 0xCEC53D43, W[47], W[47] ^ W[51]);
-      R2(A, B, C, D, E, F, G, H, 0x9D8A7A87, W[48], W[48] ^ W[52]);
-      R2(D, A, B, C, H, E, F, G, 0x3B14F50F, W[49], W[49] ^ W[53]);
-      R2(C, D, A, B, G, H, E, F, 0x7629EA1E, W[50], W[50] ^ W[54]);
-      R2(B, C, D, A, F, G, H, E, 0xEC53D43C, W[51], W[51] ^ W[55]);
-      R2(A, B, C, D, E, F, G, H, 0xD8A7A879, W[52], W[52] ^ W[56]);
-      R2(D, A, B, C, H, E, F, G, 0xB14F50F3, W[53], W[53] ^ W[57]);
-      R2(C, D, A, B, G, H, E, F, 0x629EA1E7, W[54], W[54] ^ W[58]);
-      R2(B, C, D, A, F, G, H, E, 0xC53D43CE, W[55], W[55] ^ W[59]);
-      R2(A, B, C, D, E, F, G, H, 0x8A7A879D, W[56], W[56] ^ W[60]);
-      R2(D, A, B, C, H, E, F, G, 0x14F50F3B, W[57], W[57] ^ W[61]);
-      R2(C, D, A, B, G, H, E, F, 0x29EA1E76, W[58], W[58] ^ W[62]);
-      R2(B, C, D, A, F, G, H, E, 0x53D43CEC, W[59], W[59] ^ W[63]);
-      R2(A, B, C, D, E, F, G, H, 0xA7A879D8, W[60], W[60] ^ W[64]);
-      R2(D, A, B, C, H, E, F, G, 0x4F50F3B1, W[61], W[61] ^ W[65]);
-      R2(C, D, A, B, G, H, E, F, 0x9EA1E762, W[62], W[62] ^ W[66]);
-      R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W[63], W[63] ^ W[67]);
+      R1(A, B, C, D, E, F, G, H, 0x79CC4519, W00, W00 ^ W04);
+      W00 = SM3_E(W00, W07, W13, W03, W10);
+      R1(D, A, B, C, H, E, F, G, 0xF3988A32, W01, W01 ^ W05);
+      W01 = SM3_E(W01, W08, W14, W04, W11);
+      R1(C, D, A, B, G, H, E, F, 0xE7311465, W02, W02 ^ W06);
+      W02 = SM3_E(W02, W09, W15, W05, W12);
+      R1(B, C, D, A, F, G, H, E, 0xCE6228CB, W03, W03 ^ W07);
+      W03 = SM3_E(W03, W10, W00, W06, W13);
+      R1(A, B, C, D, E, F, G, H, 0x9CC45197, W04, W04 ^ W08);
+      W04 = SM3_E(W04, W11, W01, W07, W14);
+      R1(D, A, B, C, H, E, F, G, 0x3988A32F, W05, W05 ^ W09);
+      W05 = SM3_E(W05, W12, W02, W08, W15);
+      R1(C, D, A, B, G, H, E, F, 0x7311465E, W06, W06 ^ W10);
+      W06 = SM3_E(W06, W13, W03, W09, W00);
+      R1(B, C, D, A, F, G, H, E, 0xE6228CBC, W07, W07 ^ W11);
+      W07 = SM3_E(W07, W14, W04, W10, W01);
+      R1(A, B, C, D, E, F, G, H, 0xCC451979, W08, W08 ^ W12);
+      W08 = SM3_E(W08, W15, W05, W11, W02);
+      R1(D, A, B, C, H, E, F, G, 0x988A32F3, W09, W09 ^ W13);
+      W09 = SM3_E(W09, W00, W06, W12, W03);
+      R1(C, D, A, B, G, H, E, F, 0x311465E7, W10, W10 ^ W14);
+      W10 = SM3_E(W10, W01, W07, W13, W04);
+      R1(B, C, D, A, F, G, H, E, 0x6228CBCE, W11, W11 ^ W15);
+      W11 = SM3_E(W11, W02, W08, W14, W05);
+      R1(A, B, C, D, E, F, G, H, 0xC451979C, W12, W12 ^ W00);
+      W12 = SM3_E(W12, W03, W09, W15, W06);
+      R1(D, A, B, C, H, E, F, G, 0x88A32F39, W13, W13 ^ W01);
+      W13 = SM3_E(W13, W04, W10, W00, W07);
+      R1(C, D, A, B, G, H, E, F, 0x11465E73, W14, W14 ^ W02);
+      W14 = SM3_E(W14, W05, W11, W01, W08);
+      R1(B, C, D, A, F, G, H, E, 0x228CBCE6, W15, W15 ^ W03);
+      W15 = SM3_E(W15, W06, W12, W02, W09);
+      R2(A, B, C, D, E, F, G, H, 0x9D8A7A87, W00, W00 ^ W04);
+      W00 = SM3_E(W00, W07, W13, W03, W10);
+      R2(D, A, B, C, H, E, F, G, 0x3B14F50F, W01, W01 ^ W05);
+      W01 = SM3_E(W01, W08, W14, W04, W11);
+      R2(C, D, A, B, G, H, E, F, 0x7629EA1E, W02, W02 ^ W06);
+      W02 = SM3_E(W02, W09, W15, W05, W12);
+      R2(B, C, D, A, F, G, H, E, 0xEC53D43C, W03, W03 ^ W07);
+      W03 = SM3_E(W03, W10, W00, W06, W13);
+      R2(A, B, C, D, E, F, G, H, 0xD8A7A879, W04, W04 ^ W08);
+      W04 = SM3_E(W04, W11, W01, W07, W14);
+      R2(D, A, B, C, H, E, F, G, 0xB14F50F3, W05, W05 ^ W09);
+      W05 = SM3_E(W05, W12, W02, W08, W15);
+      R2(C, D, A, B, G, H, E, F, 0x629EA1E7, W06, W06 ^ W10);
+      W06 = SM3_E(W06, W13, W03, W09, W00);
+      R2(B, C, D, A, F, G, H, E, 0xC53D43CE, W07, W07 ^ W11);
+      W07 = SM3_E(W07, W14, W04, W10, W01);
+      R2(A, B, C, D, E, F, G, H, 0x8A7A879D, W08, W08 ^ W12);
+      W08 = SM3_E(W08, W15, W05, W11, W02);
+      R2(D, A, B, C, H, E, F, G, 0x14F50F3B, W09, W09 ^ W13);
+      W09 = SM3_E(W09, W00, W06, W12, W03);
+      R2(C, D, A, B, G, H, E, F, 0x29EA1E76, W10, W10 ^ W14);
+      W10 = SM3_E(W10, W01, W07, W13, W04);
+      R2(B, C, D, A, F, G, H, E, 0x53D43CEC, W11, W11 ^ W15);
+      W11 = SM3_E(W11, W02, W08, W14, W05);
+      R2(A, B, C, D, E, F, G, H, 0xA7A879D8, W12, W12 ^ W00);
+      W12 = SM3_E(W12, W03, W09, W15, W06);
+      R2(D, A, B, C, H, E, F, G, 0x4F50F3B1, W13, W13 ^ W01);
+      W13 = SM3_E(W13, W04, W10, W00, W07);
+      R2(C, D, A, B, G, H, E, F, 0x9EA1E762, W14, W14 ^ W02);
+      W14 = SM3_E(W14, W05, W11, W01, W08);
+      R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W15, W15 ^ W03);
+      W15 = SM3_E(W15, W06, W12, W02, W09);
+      R2(A, B, C, D, E, F, G, H, 0x7A879D8A, W00, W00 ^ W04);
+      W00 = SM3_E(W00, W07, W13, W03, W10);
+      R2(D, A, B, C, H, E, F, G, 0xF50F3B14, W01, W01 ^ W05);
+      W01 = SM3_E(W01, W08, W14, W04, W11);
+      R2(C, D, A, B, G, H, E, F, 0xEA1E7629, W02, W02 ^ W06);
+      W02 = SM3_E(W02, W09, W15, W05, W12);
+      R2(B, C, D, A, F, G, H, E, 0xD43CEC53, W03, W03 ^ W07);
+      W03 = SM3_E(W03, W10, W00, W06, W13);
+      R2(A, B, C, D, E, F, G, H, 0xA879D8A7, W04, W04 ^ W08);
+      W04 = SM3_E(W04, W11, W01, W07, W14);
+      R2(D, A, B, C, H, E, F, G, 0x50F3B14F, W05, W05 ^ W09);
+      W05 = SM3_E(W05, W12, W02, W08, W15);
+      R2(C, D, A, B, G, H, E, F, 0xA1E7629E, W06, W06 ^ W10);
+      W06 = SM3_E(W06, W13, W03, W09, W00);
+      R2(B, C, D, A, F, G, H, E, 0x43CEC53D, W07, W07 ^ W11);
+      W07 = SM3_E(W07, W14, W04, W10, W01);
+      R2(A, B, C, D, E, F, G, H, 0x879D8A7A, W08, W08 ^ W12);
+      W08 = SM3_E(W08, W15, W05, W11, W02);
+      R2(D, A, B, C, H, E, F, G, 0x0F3B14F5, W09, W09 ^ W13);
+      W09 = SM3_E(W09, W00, W06, W12, W03);
+      R2(C, D, A, B, G, H, E, F, 0x1E7629EA, W10, W10 ^ W14);
+      W10 = SM3_E(W10, W01, W07, W13, W04);
+      R2(B, C, D, A, F, G, H, E, 0x3CEC53D4, W11, W11 ^ W15);
+      W11 = SM3_E(W11, W02, W08, W14, W05);
+      R2(A, B, C, D, E, F, G, H, 0x79D8A7A8, W12, W12 ^ W00);
+      W12 = SM3_E(W12, W03, W09, W15, W06);
+      R2(D, A, B, C, H, E, F, G, 0xF3B14F50, W13, W13 ^ W01);
+      W13 = SM3_E(W13, W04, W10, W00, W07);
+      R2(C, D, A, B, G, H, E, F, 0xE7629EA1, W14, W14 ^ W02);
+      W14 = SM3_E(W14, W05, W11, W01, W08);
+      R2(B, C, D, A, F, G, H, E, 0xCEC53D43, W15, W15 ^ W03);
+      W15 = SM3_E(W15, W06, W12, W02, W09);
+      R2(A, B, C, D, E, F, G, H, 0x9D8A7A87, W00, W00 ^ W04);
+      W00 = SM3_E(W00, W07, W13, W03, W10);
+      R2(D, A, B, C, H, E, F, G, 0x3B14F50F, W01, W01 ^ W05);
+      W01 = SM3_E(W01, W08, W14, W04, W11);
+      R2(C, D, A, B, G, H, E, F, 0x7629EA1E, W02, W02 ^ W06);
+      W02 = SM3_E(W02, W09, W15, W05, W12);
+      R2(B, C, D, A, F, G, H, E, 0xEC53D43C, W03, W03 ^ W07);
+      W03 = SM3_E(W03, W10, W00, W06, W13);
+      R2(A, B, C, D, E, F, G, H, 0xD8A7A879, W04, W04 ^ W08);
+      R2(D, A, B, C, H, E, F, G, 0xB14F50F3, W05, W05 ^ W09);
+      R2(C, D, A, B, G, H, E, F, 0x629EA1E7, W06, W06 ^ W10);
+      R2(B, C, D, A, F, G, H, E, 0xC53D43CE, W07, W07 ^ W11);
+      R2(A, B, C, D, E, F, G, H, 0x8A7A879D, W08, W08 ^ W12);
+      R2(D, A, B, C, H, E, F, G, 0x14F50F3B, W09, W09 ^ W13);
+      R2(C, D, A, B, G, H, E, F, 0x29EA1E76, W10, W10 ^ W14);
+      R2(B, C, D, A, F, G, H, E, 0x53D43CEC, W11, W11 ^ W15);
+      R2(A, B, C, D, E, F, G, H, 0xA7A879D8, W12, W12 ^ W00);
+      R2(D, A, B, C, H, E, F, G, 0x4F50F3B1, W13, W13 ^ W01);
+      R2(C, D, A, B, G, H, E, F, 0x9EA1E762, W14, W14 ^ W02);
+      R2(B, C, D, A, F, G, H, E, 0x3D43CEC5, W15, W15 ^ W03);
 
       A = (m_digest[0] ^= A);
       B = (m_digest[1] ^= B);
