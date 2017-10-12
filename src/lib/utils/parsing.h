@@ -48,7 +48,9 @@ split_on_pred(const std::string& str,
 /**
 * Erase characters from a string
 */
-BOTAN_PUBLIC_API(2,0) std::string erase_chars(const std::string& str, const std::set<char>& chars);
+BOTAN_PUBLIC_API(2,0)
+BOTAN_DEPRECATED("Unused")
+std::string erase_chars(const std::string& str, const std::set<char>& chars);
 
 /**
 * Replace a character in a string
@@ -58,6 +60,7 @@ BOTAN_PUBLIC_API(2,0) std::string erase_chars(const std::string& str, const std:
 * @return str with all instances of from_char replaced by to_char
 */
 BOTAN_PUBLIC_API(2,0)
+BOTAN_DEPRECATED("Unused")
 std::string replace_char(const std::string& str,
                          char from_char,
                          char to_char);
@@ -70,6 +73,7 @@ std::string replace_char(const std::string& str,
 * @return str with all instances of from_chars replaced by to_char
 */
 BOTAN_PUBLIC_API(2,0)
+BOTAN_DEPRECATED("Unused")
 std::string replace_chars(const std::string& str,
                           const std::set<char>& from_chars,
                           char to_char);

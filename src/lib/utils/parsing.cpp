@@ -13,7 +13,6 @@
 #include <botan/loadstor.h>
 #include <limits>
 #include <set>
-#include <algorithm>
 
 namespace Botan {
 
@@ -346,7 +345,14 @@ bool host_wildcard_match(const std::string& issued, const std::string& host)
       return true;
       }
 
-   if(std::count(issued.begin(), issued.end(), '*') > 1)
+   size_t stars = 0;
+   for(char c : issued)
+      {
+      if(c == '*')
+         stars += 1;
+      }
+
+   if(stars > 1)
       {
       return false;
       }
