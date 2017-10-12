@@ -23,13 +23,22 @@ class L_computer final
          cipher.encrypt(m_L_star);
          m_L_dollar = poly_double(star());
          m_L.push_back(poly_double(dollar()));
+
+         while(m_L.size() < 8)
+            m_L.push_back(poly_double(m_L.back()));
          }
 
       const secure_vector<uint8_t>& star() const { return m_L_star; }
 
       const secure_vector<uint8_t>& dollar() const { return m_L_dollar; }
 
-      const secure_vector<uint8_t>& operator()(size_t i) const { return get(i); }
+      const secure_vector<uint8_t>& get(size_t i) const
+         {
+         while(m_L.size() <= i)
+            m_L.push_back(poly_double(m_L.back()));
+
+         return m_L[i];
+         }
 
       const secure_vector<uint8_t>&
       compute_offsets(secure_vector<uint8_t>& offset,
@@ -37,11 +46,12 @@ class L_computer final
                       size_t blocks,
                       size_t BS) const
          {
-         m_offset_buf.resize(blocks * BS);
+         if(m_offset_buf.size() < blocks * BS)
+            m_offset_buf.resize(blocks * BS);
 
          for(size_t i = 0; i != blocks; ++i)
             { // could be done in parallel
-            offset ^= get(ctz(block_index + 1 + i));
+            offset ^= get(ctz<uint32_t>(block_index + 1 + i));
             copy_mem(&m_offset_buf[BS*i], offset.data(), BS);
             }
 
@@ -49,14 +59,6 @@ class L_computer final
          }
 
    private:
-      const secure_vector<uint8_t>& get(size_t i) const
-         {
-         while(m_L.size() <= i)
-            m_L.push_back(poly_double(m_L.back()));
-
-         return m_L.at(i);
-         }
-
       secure_vector<uint8_t> poly_double(const secure_vector<uint8_t>& in) const
          {
          secure_vector<uint8_t> out(in.size());
@@ -90,7 +92,7 @@ secure_vector<uint8_t> ocb_hash(const L_computer& L,
    for(size_t i = 0; i != ad_blocks; ++i)
       {
       // this loop could run in parallel
-      offset ^= L(ctz(i+1));
+      offset ^= L.get(ctz(i+1));
 
       buf = offset;
       xor_buf(buf.data(), &ad[BS*i], BS);
@@ -106,7 +108,7 @@ secure_vector<uint8_t> ocb_hash(const L_computer& L,
 
       buf = offset;
       xor_buf(buf.data(), &ad[BS*ad_blocks], ad_remainder);
-      buf[ad_len % BS] ^= 0x80;
+      buf[ad_remainder] ^= 0x80;
 
       cipher.encrypt(buf);
 
@@ -123,9 +125,11 @@ OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
    m_checksum(m_cipher->parallel_bytes()),
    m_offset(m_cipher->block_size()),
    m_ad_hash(m_cipher->block_size()),
-   m_tag_size(tag_size)
+   m_tag_size(tag_size),
+   m_block_size(m_cipher->block_size()),
+   m_par_blocks(m_cipher->parallel_bytes() / m_block_size)
    {
-   const size_t BS = m_cipher->block_size();
+   const size_t BS = block_size();
 
    /*
    * draft-krovetz-ocb-wide-d1 specifies OCB for several other block
@@ -162,10 +166,10 @@ bool OCB_Mode::valid_nonce_length(size_t length) const
    {
    if(length == 0)
       return false;
-   if(m_cipher->block_size() == 16)
+   if(block_size() == 16)
       return length < 16;
    else
-      return length < (m_cipher->block_size() - 1);
+      return length < (block_size() - 1);
    }
 
 std::string OCB_Mode::name() const
@@ -198,7 +202,7 @@ void OCB_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
 secure_vector<uint8_t>
 OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
    {
-   const size_t BS = m_cipher->block_size();
+   const size_t BS = block_size();
 
    BOTAN_ASSERT(BS == 16 || BS == 24 || BS == 32 || BS == 64,
                 "OCB block size is supported");
@@ -300,23 +304,20 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
    {
-   const size_t BS = m_cipher->block_size();
-   const size_t par_blocks = m_checksum.size() / BS;
+   const size_t BS = block_size();
+
+   BOTAN_ASSERT(m_L, "A key was set");
 
    while(blocks)
       {
-      const size_t proc_blocks = std::min(blocks, par_blocks);
+      const size_t proc_blocks = std::min(blocks, par_blocks());
       const size_t proc_bytes = proc_blocks * BS;
-
-      BOTAN_ASSERT(m_L, "A key was set");
 
       const auto& offsets = m_L->compute_offsets(m_offset, m_block_index, proc_blocks, BS);
 
       xor_buf(m_checksum.data(), buffer, proc_bytes);
 
-      xor_buf(buffer, offsets.data(), proc_bytes);
-      m_cipher->encrypt_n(buffer, buffer, proc_blocks);
-      xor_buf(buffer, offsets.data(), proc_bytes);
+      m_cipher->encrypt_n_xex(buffer, offsets.data(), proc_blocks);
 
       buffer += proc_bytes;
       blocks -= proc_blocks;
@@ -326,7 +327,7 @@ void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
 
 size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
    {
-   const size_t BS = m_cipher->block_size();
+   const size_t BS = block_size();
    BOTAN_ASSERT(sz % BS == 0, "Invalid OCB input size");
    encrypt(buf, sz / BS);
    return sz;
@@ -334,7 +335,7 @@ size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
 
 void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   const size_t BS = m_cipher->block_size();
+   const size_t BS = block_size();
 
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
@@ -357,17 +358,19 @@ void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
          m_offset ^= m_L->star(); // Offset_*
 
-         secure_vector<uint8_t> zeros(BS);
-         m_cipher->encrypt(m_offset, zeros);
-         xor_buf(remainder, zeros.data(), remainder_bytes);
+         secure_vector<uint8_t> pad(BS);
+         m_cipher->encrypt(m_offset, pad);
+         xor_buf(remainder, pad.data(), remainder_bytes);
          }
       }
 
    secure_vector<uint8_t> checksum(BS);
 
    // fold checksum
-   for(size_t i = 0; i != m_checksum.size(); ++i)
-      checksum[i % checksum.size()] ^= m_checksum[i];
+   for(size_t i = 0; i != m_checksum.size(); i += BS)
+      {
+      xor_buf(checksum.data(), m_checksum.data() + i, BS);
+      }
 
    // now compute the tag
    secure_vector<uint8_t> mac = m_offset;
@@ -385,23 +388,16 @@ void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
    {
-   const size_t BS = m_cipher->block_size();
-   const size_t par_bytes = m_cipher->parallel_bytes();
-
-   BOTAN_ASSERT(par_bytes % BS == 0, "Cipher is parallel in full blocks");
-
-   const size_t par_blocks = par_bytes / BS;
+   const size_t BS = block_size();
 
    while(blocks)
       {
-      const size_t proc_blocks = std::min(blocks, par_blocks);
+      const size_t proc_blocks = std::min(blocks, par_blocks());
       const size_t proc_bytes = proc_blocks * BS;
 
       const auto& offsets = m_L->compute_offsets(m_offset, m_block_index, proc_blocks, BS);
 
-      xor_buf(buffer, offsets.data(), proc_bytes);
-      m_cipher->decrypt_n(buffer, buffer, proc_blocks);
-      xor_buf(buffer, offsets.data(), proc_bytes);
+      m_cipher->decrypt_n_xex(buffer, offsets.data(), proc_blocks);
 
       xor_buf(m_checksum.data(), buffer, proc_bytes);
 
@@ -413,7 +409,7 @@ void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
 
 size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
    {
-   const size_t BS = m_cipher->block_size();
+   const size_t BS = block_size();
    BOTAN_ASSERT(sz % BS == 0, "Invalid OCB input size");
    decrypt(buf, sz / BS);
    return sz;
@@ -421,7 +417,7 @@ size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
 
 void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   const size_t BS = m_cipher->block_size();
+   const size_t BS = block_size();
 
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
@@ -459,8 +455,10 @@ void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    secure_vector<uint8_t> checksum(BS);
 
    // fold checksum
-   for(size_t i = 0; i != m_checksum.size(); ++i)
-      checksum[i % checksum.size()] ^= m_checksum[i];
+   for(size_t i = 0; i != m_checksum.size(); i += BS)
+      {
+      xor_buf(checksum.data(), m_checksum.data() + i, BS);
+      }
 
    // compute the mac
    secure_vector<uint8_t> mac = m_offset;

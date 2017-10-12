@@ -102,6 +102,17 @@ inline size_t ctz(T n)
    return 8*sizeof(T);
    }
 
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
+
+template<>
+inline size_t ctz(uint32_t n)
+   {
+   return __builtin_ctz(n);
+   }
+
+#endif
+
+
 template<typename T>
 size_t ceil_log2(T x)
    {

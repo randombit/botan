@@ -119,11 +119,8 @@ size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
    while(blocks)
       {
       const size_t to_proc = std::min(blocks, blocks_in_tweak);
-      const size_t to_proc_bytes = to_proc * BS;
 
-      xor_buf(buf, tweak(), to_proc_bytes);
-      cipher().encrypt_n(buf, buf, to_proc);
-      xor_buf(buf, tweak(), to_proc_bytes);
+      cipher().encrypt_n_xex(buf, tweak(), to_proc);
 
       buf += to_proc * BS;
       blocks -= to_proc;
@@ -195,11 +192,8 @@ size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
    while(blocks)
       {
       const size_t to_proc = std::min(blocks, blocks_in_tweak);
-      const size_t to_proc_bytes = to_proc * BS;
 
-      xor_buf(buf, tweak(), to_proc_bytes);
-      cipher().decrypt_n(buf, buf, to_proc);
-      xor_buf(buf, tweak(), to_proc_bytes);
+      cipher().decrypt_n_xex(buf, tweak(), to_proc);
 
       buf += to_proc * BS;
       blocks -= to_proc;

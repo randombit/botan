@@ -160,9 +160,36 @@ template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
 * @param in the read-only input buffer
 * @param length the length of the buffers
 */
-BOTAN_PUBLIC_API(2,3) void xor_buf(uint8_t out[],
-                       const uint8_t in[],
-                       size_t length);
+inline void xor_buf(uint8_t out[],
+                    const uint8_t in[],
+                    size_t length)
+   {
+   while(length >= 16)
+      {
+      out[0] ^= in[0];
+      out[1] ^= in[1];
+      out[2] ^= in[2];
+      out[3] ^= in[3];
+      out[4] ^= in[4];
+      out[5] ^= in[5];
+      out[6] ^= in[6];
+      out[7] ^= in[7];
+      out[8] ^= in[8];
+      out[9] ^= in[9];
+      out[10] ^= in[10];
+      out[11] ^= in[11];
+      out[12] ^= in[12];
+      out[13] ^= in[13];
+      out[14] ^= in[14];
+      out[15] ^= in[15];
+      out += 16; in += 16; length -= 16;
+      }
+
+   for(size_t i = 0; i != length; ++i)
+      {
+      out[i] ^= in[i];
+      }
+   }
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ in2[i] forall i = 0...length
@@ -171,10 +198,35 @@ BOTAN_PUBLIC_API(2,3) void xor_buf(uint8_t out[],
 * @param in2 the second output buffer
 * @param length the length of the three buffers
 */
-BOTAN_PUBLIC_API(2,3) void xor_buf(uint8_t out[],
-                       const uint8_t in[],
-                       const uint8_t in2[],
-                       size_t length);
+inline void xor_buf(uint8_t out[],
+                    const uint8_t in[],
+                    const uint8_t in2[],
+                    size_t length)
+   {
+   while(length >= 16)
+      {
+      out[0] = in[0] ^ in2[0];
+      out[1] = in[1] ^ in2[1];
+      out[2] = in[2] ^ in2[2];
+      out[3] = in[3] ^ in2[3];
+      out[4] = in[4] ^ in2[4];
+      out[5] = in[5] ^ in2[5];
+      out[6] = in[6] ^ in2[6];
+      out[7] = in[7] ^ in2[7];
+      out[8] = in[8] ^ in2[8];
+      out[9] = in[9] ^ in2[9];
+      out[10] = in[10] ^ in2[10];
+      out[11] = in[11] ^ in2[11];
+      out[12] = in[12] ^ in2[12];
+      out[13] = in[13] ^ in2[13];
+      out[14] = in[14] ^ in2[14];
+      out[15] = in[15] ^ in2[15];
+      in += 16; in2 += 16; out += 16; length -= 16;
+      }
+
+   for(size_t i = 0; i != length; ++i)
+      out[i] = in[i] ^ in2[i];
+   }
 
 template<typename Alloc, typename Alloc2>
 void xor_buf(std::vector<uint8_t, Alloc>& out,
