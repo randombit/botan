@@ -45,13 +45,7 @@ inline T rotr(T input)
 template<typename T>
 inline T rotl_var(T input, size_t rot)
    {
-   /*
-   * This is a strange way of expressing the rotation operation but it
-   * so happens that both GCC and Clang will recognize it and turn it
-   * into a rotation, which cannot be said for many other forms. See
-   * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82498
-   */
-   return static_cast<T>((input << rot) | (input >> (-rot % (8*sizeof(T)))));
+   return rot ? static_cast<T>((input << rot) | (input >> (sizeof(T)*8 - rot))) : input;
    }
 
 /**
@@ -63,8 +57,31 @@ inline T rotl_var(T input, size_t rot)
 template<typename T>
 inline T rotr_var(T input, size_t rot)
    {
-   return static_cast<T>((input >> rot) | (input << (-rot % (8*sizeof(T)))));
+   return rot ? static_cast<T>((input >> rot) | (input << (sizeof(T)*8 - rot))) : input;
    }
+
+#if BOTAN_USE_GCC_INLINE_ASM
+
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64) || defined(BOTAN_TARGET_ARCH_IS_X86_32)
+
+template<>
+inline uint32_t rotl_var(uint32_t input, size_t rot)
+   {
+   asm("roll %1,%0" : "+r" (input) : "c" (static_cast<uint8_t>(rot)));
+   return input;
+   }
+
+template<>
+inline uint32_t rotr_var(uint32_t input, size_t rot)
+   {
+   asm("rorl %1,%0" : "+r" (input) : "c" (static_cast<uint8_t>(rot)));
+   return input;
+   }
+
+#endif
+
+#endif
+
 
 template<typename T>
 BOTAN_DEPRECATED("Use rotl<N> or rotl_var")
