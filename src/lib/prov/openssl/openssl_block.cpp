@@ -53,8 +53,8 @@ class OpenSSL_BlockCipher final : public BlockCipher
       size_t m_block_sz;
       Key_Length_Specification m_cipher_key_spec;
       std::string m_cipher_name;
-      mutable EVP_CIPHER_CTX *m_encrypt;
-      mutable EVP_CIPHER_CTX *m_decrypt;
+      EVP_CIPHER_CTX *m_encrypt;
+      EVP_CIPHER_CTX *m_decrypt;
    };
 
 OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
