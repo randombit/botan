@@ -111,9 +111,10 @@ class BOTAN_PUBLIC_API(2,0) GCM_Decryption final : public GCM_Mode
 
 /**
 * GCM's GHASH
-* Maybe a Transform?
+* This is not intended for general use, but is exposed to allow
+* shared code between GCM and GMAC
 */
-class BOTAN_PUBLIC_API(2,0) GHASH : public SymmetricAlgorithm
+class BOTAN_PUBLIC_API(2,0) GHASH final : public SymmetricAlgorithm
    {
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len);
@@ -127,6 +128,11 @@ class BOTAN_PUBLIC_API(2,0) GHASH : public SymmetricAlgorithm
       */
       void update(const uint8_t in[], size_t len);
 
+      /*
+      * Incremental update of associated data
+      */
+      void update_associated_data(const uint8_t ad[], size_t len);
+
       secure_vector<uint8_t> final();
 
       Key_Length_Specification key_spec() const override
@@ -137,24 +143,25 @@ class BOTAN_PUBLIC_API(2,0) GHASH : public SymmetricAlgorithm
       void reset();
 
       std::string name() const override { return "GHASH"; }
-   protected:
+
       void ghash_update(secure_vector<uint8_t>& x,
                         const uint8_t input[], size_t input_len);
 
       void add_final_block(secure_vector<uint8_t>& x,
                            size_t ad_len, size_t pt_len);
+   private:
+      void key_schedule(const uint8_t key[], size_t key_len) override;
+
+      void gcm_multiply(secure_vector<uint8_t>& x,
+                        const uint8_t input[],
+                        size_t blocks);
 
       secure_vector<uint8_t> m_H;
       secure_vector<uint8_t> m_H_ad;
       secure_vector<uint8_t> m_ghash;
-      size_t m_ad_len = 0;
-
-   private:
-      void key_schedule(const uint8_t key[], size_t key_len) override;
-
-      void gcm_multiply(secure_vector<uint8_t>& x) const;
-
       secure_vector<uint8_t> m_nonce;
+      secure_vector<uint64_t> m_HM;
+      size_t m_ad_len = 0;
       size_t m_text_len = 0;
    };
 

@@ -12,7 +12,8 @@
 
 namespace Botan {
 
-void gcm_multiply_pmull(uint8_t x[16], const uint8_t H[16]);
+void gcm_multiply_pmull(uint8_t x[16], const uint8_t H[16],
+                        const uint8_t input[], size_t blocks);
 
 }
 
