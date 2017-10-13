@@ -23,6 +23,7 @@
 #include <openssl/x509.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <limits.h>
 
 namespace Botan {
 
