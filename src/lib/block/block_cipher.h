@@ -174,7 +174,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
          {
          const size_t BS = block_size();
          xor_buf(data, mask, blocks * BS);
-         decrypt_n(data, data, blocks);
+         encrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
          }
 
@@ -184,7 +184,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
          {
          const size_t BS = block_size();
          xor_buf(data, mask, blocks * BS);
-         encrypt_n(data, data, blocks);
+         decrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
          }
 
