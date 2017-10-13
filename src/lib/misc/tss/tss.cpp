@@ -82,7 +82,7 @@ uint8_t gfp_mul(uint8_t x, uint8_t y)
 
 uint8_t rtss_hash_id(const std::string& hash_name)
    {
-   if(hash_name == "SHA-160")
+   if(hash_name == "SHA-160" || hash_name == "SHA-1" || hash_name == "SHA1")
       return 1;
    else if(hash_name == "SHA-256")
       return 2;

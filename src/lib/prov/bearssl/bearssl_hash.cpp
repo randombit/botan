@@ -100,7 +100,7 @@ make_bearssl_hash(const std::string& name)
 #endif
 
 #if defined(BOTAN_HAS_SHA1)
-   if(name == "SHA-160" || name == "SHA-1")
+   if(name == "SHA-160" || name == "SHA-1" || name == "SHA1")
       return MAKE_BEARSSL_HASH(&br_sha1_vtable);
 #endif
 

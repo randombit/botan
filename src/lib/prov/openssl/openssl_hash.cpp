@@ -121,7 +121,7 @@ make_openssl_hash(const std::string& name)
 #endif
 
 #if defined(BOTAN_HAS_SHA1) && !defined(OPENSSL_NO_SHA)
-   if(name == "SHA-160")
+   if(name == "SHA-160" || name == "SHA-1" || name == "SHA1")
       return MAKE_OPENSSL_HASH(EVP_sha1);
 #endif
 
