@@ -4,7 +4,7 @@ Release Notes
 Version 2.4.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Optimizations for OCB, CFB, SM3, CAST-128, CAST-256
+* Optimizations for OCB, GCM (#1253), CFB, SM3, CAST-128/CAST-256 (#1247)
 
 * Reduce the overhead of ffi calls.
 

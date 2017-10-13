@@ -11,13 +11,14 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/loadstor.h>
 #include <botan/ctr.h>
+#include <botan/cpuid.h>
 
 #if defined(BOTAN_HAS_GCM_CLMUL)
   #include <botan/internal/clmul.h>
-  #include <botan/cpuid.h>
-#elif defined(BOTAN_HAS_GCM_PMULL)
+#endif
+
+#if defined(BOTAN_HAS_GCM_PMULL)
   #include <botan/internal/pmull.h>
-  #include <botan/cpuid.h>
 #endif
 
 namespace Botan {
@@ -28,48 +29,57 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
                          const uint8_t input[],
                          size_t blocks)
    {
-   if(blocks == 0)
-      return;
-
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
+      {
       return gcm_multiply_clmul(x.data(), m_H.data(), input, blocks);
-#elif defined(BOTAN_HAS_GCM_PMULL)
+      }
+#endif
+
+#if defined(BOTAN_HAS_GCM_PMULL)
    if(CPUID::has_arm_pmull())
+      {
       return gcm_multiply_pmull(x.data(), m_H.data(), input, blocks);
+      }
 #endif
 
    CT::poison(x.data(), x.size());
 
    // SSE2 might be useful here
 
-   const uint64_t ones = 0xFFFFFFFFFFFFFFFF;
+   const uint64_t ALL_BITS = 0xFFFFFFFFFFFFFFFF;
 
-   uint64_t X0 = load_be<uint64_t>(x.data(), 0);
-   uint64_t X1 = load_be<uint64_t>(x.data(), 1);
+   uint64_t X[2] = {
+      load_be<uint64_t>(x.data(), 0),
+      load_be<uint64_t>(x.data(), 1)
+   };
 
    for(size_t b = 0; b != blocks; ++b)
       {
-      X0 ^= load_be<uint64_t>(input, 2*b);
-      X1 ^= load_be<uint64_t>(input, 2*b+1);
+      X[0] ^= load_be<uint64_t>(input, 2*b);
+      X[1] ^= load_be<uint64_t>(input, 2*b+1);
 
       uint64_t Z[2] = { 0, 0 };
 
       for(size_t i = 0; i != 64; ++i)
          {
-         const uint64_t X0MASK = ones * ((X0 >> (63-i)) & 1);
-         const uint64_t X1MASK = ones * ((X1 >> (63-i)) & 1);
+         const uint64_t X0MASK = (ALL_BITS + (X[0] >> 63)) ^ ALL_BITS;
+         const uint64_t X1MASK = (ALL_BITS + (X[1] >> 63)) ^ ALL_BITS;
+
+         X[0] <<= 1;
+         X[1] <<= 1;
+
          Z[0] ^= m_HM[4*i  ] & X0MASK;
          Z[1] ^= m_HM[4*i+1] & X0MASK;
          Z[0] ^= m_HM[4*i+2] & X1MASK;
          Z[1] ^= m_HM[4*i+3] & X1MASK;
          }
 
-      X0 = Z[0];
-      X1 = Z[1];
+      X[0] = Z[0];
+      X[1] = Z[1];
       }
 
-   store_be<uint64_t>(x.data(), X0, X1);
+   store_be<uint64_t>(x.data(), X[0], X[1]);
    CT::unpoison(x.data(), x.size());
    }
 
