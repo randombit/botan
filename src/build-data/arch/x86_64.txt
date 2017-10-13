@@ -17,10 +17,15 @@ k8
 barcelona
 atom
 nocona
-core2
-corei7
+core2 # conroe
+nehalem
+westmere
 sandybridge
 ivybridge
+haswell
+broadwell
+skylake
+znver1
 </submodels>
 
 <submodel_aliases>
@@ -28,13 +33,11 @@ core2duo -> core2
 intelcore2 -> core2
 intelcore2duo -> core2
 
-nehalem -> corei7
-westmere -> corei7
-
 sledgehammer -> k8
 opteron -> k8
 amdopteron -> k8
 athlon64 -> k8
+zen -> znver1
 </submodel_aliases>
 
 <isa_extensions>
