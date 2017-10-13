@@ -167,15 +167,15 @@ inline void xor_buf(uint8_t out[],
    while(length >= 16)
       {
       uint64_t x0, x1, y0, y1;
-      memcpy(&x0, in, 8);
-      memcpy(&x1, in + 8, 8);
-      memcpy(&y0, out, 8);
-      memcpy(&y1, out + 8, 8);
+      std::memcpy(&x0, in, 8);
+      std::memcpy(&x1, in + 8, 8);
+      std::memcpy(&y0, out, 8);
+      std::memcpy(&y1, out + 8, 8);
 
       y0 ^= x0;
       y1 ^= x1;
-      memcpy(out, &y0, 8);
-      memcpy(out + 8, &y1, 8);
+      std::memcpy(out, &y0, 8);
+      std::memcpy(out + 8, &y1, 8);
       out += 16; in += 16; length -= 16;
       }
 
@@ -202,23 +202,17 @@ inline void xor_buf(uint8_t out[],
    {
    while(length >= 16)
       {
-      out[0] = in[0] ^ in2[0];
-      out[1] = in[1] ^ in2[1];
-      out[2] = in[2] ^ in2[2];
-      out[3] = in[3] ^ in2[3];
-      out[4] = in[4] ^ in2[4];
-      out[5] = in[5] ^ in2[5];
-      out[6] = in[6] ^ in2[6];
-      out[7] = in[7] ^ in2[7];
-      out[8] = in[8] ^ in2[8];
-      out[9] = in[9] ^ in2[9];
-      out[10] = in[10] ^ in2[10];
-      out[11] = in[11] ^ in2[11];
-      out[12] = in[12] ^ in2[12];
-      out[13] = in[13] ^ in2[13];
-      out[14] = in[14] ^ in2[14];
-      out[15] = in[15] ^ in2[15];
-      in += 16; in2 += 16; out += 16; length -= 16;
+      uint64_t x0, x1, y0, y1;
+      std::memcpy(&x0, in, 8);
+      std::memcpy(&x1, in + 8, 8);
+      std::memcpy(&y0, in2, 8);
+      std::memcpy(&y1, in2 + 8, 8);
+
+      x0 ^= y0;
+      x1 ^= y1;
+      std::memcpy(out, &x0, 8);
+      std::memcpy(out + 8, &x1, 8);
+      out += 16; in += 16; in2 += 16; length -= 16;
       }
 
    for(size_t i = 0; i != length; ++i)
