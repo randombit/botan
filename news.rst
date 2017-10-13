@@ -4,6 +4,10 @@ Release Notes
 Version 2.4.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Optimizations for OCB, CFB, SM3, CAST-128, CAST-256
+
+* Reduce the overhead of ffi calls.
+
 * The IDs for SHA-3 PKCSv1.5 signatures added in 2.3.0 were incorrect.
   They have been changed to use the correct encoding, and a test added
   to ensure such errors do not recur.
