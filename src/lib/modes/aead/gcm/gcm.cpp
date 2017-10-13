@@ -24,52 +24,52 @@ namespace Botan {
 
 static const size_t GCM_BS = 16;
 
-void GHASH::gcm_multiply(secure_vector<uint8_t>& x) const
+void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
+                         const uint8_t input[],
+                         size_t blocks)
    {
+   if(blocks == 0)
+      return;
+
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
-      return gcm_multiply_clmul(x.data(), m_H.data());
+      return gcm_multiply_clmul(x.data(), m_H.data(), input, blocks);
 #elif defined(BOTAN_HAS_GCM_PMULL)
    if(CPUID::has_arm_pmull())
-      return gcm_multiply_pmull(x.data(), m_H.data());
+      return gcm_multiply_pmull(x.data(), m_H.data(), input, blocks);
 #endif
 
-   static const uint64_t R = 0xE100000000000000;
-
-   uint64_t H[2] = {
-      load_be<uint64_t>(m_H.data(), 0),
-      load_be<uint64_t>(m_H.data(), 1)
-   };
-
-   uint64_t Z[2] = { 0, 0 };
-
-   CT::poison(H, 2);
-   CT::poison(Z, 2);
    CT::poison(x.data(), x.size());
 
    // SSE2 might be useful here
 
-   for(size_t i = 0; i != 2; ++i)
+   const uint64_t ones = 0xFFFFFFFFFFFFFFFF;
+
+   uint64_t X0 = load_be<uint64_t>(x.data(), 0);
+   uint64_t X1 = load_be<uint64_t>(x.data(), 1);
+
+   for(size_t b = 0; b != blocks; ++b)
       {
-      const uint64_t X = load_be<uint64_t>(x.data(), i);
+      X0 ^= load_be<uint64_t>(input, 2*b);
+      X1 ^= load_be<uint64_t>(input, 2*b+1);
 
-      uint64_t mask = 0x8000000000000000;
-      for(size_t j = 0; j != 64; ++j)
+      uint64_t Z[2] = { 0, 0 };
+
+      for(size_t i = 0; i != 64; ++i)
          {
-         const uint64_t XMASK = CT::expand_mask<uint64_t>(X & mask);
-         mask >>= 1;
-         Z[0] ^= H[0] & XMASK;
-         Z[1] ^= H[1] & XMASK;
-
-         // GCM's bit ops are reversed so we carry out of the bottom
-         const uint64_t carry = R & CT::expand_mask<uint64_t>(H[1] & 1);
-
-         H[1] = (H[1] >> 1) | (H[0] << 63);
-         H[0] = (H[0] >> 1) ^ carry;
+         const uint64_t X0MASK = ones * ((X0 >> (63-i)) & 1);
+         const uint64_t X1MASK = ones * ((X1 >> (63-i)) & 1);
+         Z[0] ^= m_HM[4*i  ] & X0MASK;
+         Z[1] ^= m_HM[4*i+1] & X0MASK;
+         Z[0] ^= m_HM[4*i+2] & X1MASK;
+         Z[1] ^= m_HM[4*i+3] & X1MASK;
          }
+
+      X0 = Z[0];
+      X1 = Z[1];
       }
 
-   store_be<uint64_t>(x.data(), Z[0], Z[1]);
+   store_be<uint64_t>(x.data(), X0, X1);
    CT::unpoison(x.data(), x.size());
    }
 
@@ -80,16 +80,20 @@ void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
    This assumes if less than block size input then we're just on the
    final block and should pad with zeros
    */
-   while(length)
+
+   const size_t full_blocks = length / GCM_BS;
+   const size_t final_bytes = length - (full_blocks * GCM_BS);
+
+   if(full_blocks > 0)
       {
-      const size_t to_proc = std::min(length, GCM_BS);
+      gcm_multiply(ghash, input, full_blocks);
+      }
 
-      xor_buf(ghash.data(), input, to_proc);
-
-      gcm_multiply(ghash);
-
-      input += to_proc;
-      length -= to_proc;
+   if(final_bytes)
+      {
+      secure_vector<uint8_t> last_block(GCM_BS);
+      copy_mem(last_block.data(), input + full_blocks * GCM_BS, final_bytes);
+      gcm_multiply(ghash, last_block.data(), 1);
       }
    }
 
@@ -99,6 +103,32 @@ void GHASH::key_schedule(const uint8_t key[], size_t length)
    m_H_ad.resize(GCM_BS);
    m_ad_len = 0;
    m_text_len = 0;
+
+   uint64_t H0 = load_be<uint64_t>(m_H.data(), 0);
+   uint64_t H1 = load_be<uint64_t>(m_H.data(), 1);
+
+   const uint64_t R = 0xE100000000000000;
+
+   m_HM.resize(256);
+
+   // precompute the multiples of H
+   for(size_t i = 0; i != 2; ++i)
+      {
+      for(size_t j = 0; j != 64; ++j)
+         {
+         /*
+         we interleave H^1, H^65, H^2, H^66, ...
+         to make indexing nicer in the multiplication code
+         */
+         m_HM[4*j+2*i] = H0;
+         m_HM[4*j+2*i+1] = H1;
+
+         // GCM's bit ops are reversed so we carry out of the bottom
+         const uint64_t carry = R * (H1 & 1);
+         H1 = (H1 >> 1) | (H0 << 63);
+         H0 = (H0 >> 1) ^ carry;
+         }
+      }
    }
 
 void GHASH::start(const uint8_t nonce[], size_t len)
@@ -115,12 +145,17 @@ void GHASH::set_associated_data(const uint8_t input[], size_t length)
    m_ad_len = length;
    }
 
+void GHASH::update_associated_data(const uint8_t ad[], size_t length)
+   {
+   BOTAN_ASSERT(m_ghash.size() == GCM_BS, "Key was set");
+   m_ad_len += length;
+   ghash_update(m_ghash, ad, length);
+   }
+
 void GHASH::update(const uint8_t input[], size_t length)
    {
    BOTAN_ASSERT(m_ghash.size() == GCM_BS, "Key was set");
-
    m_text_len += length;
-
    ghash_update(m_ghash, input, length);
    }
 

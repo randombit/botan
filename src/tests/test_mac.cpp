@@ -68,6 +68,7 @@ class Message_Auth_Tests final : public Text_Based_Test
 
             // Test to make sure clear() resets what we need it to
             mac->set_key(key);
+            mac->start(iv);
             mac->update("some discarded input");
             mac->clear();
 
@@ -81,6 +82,7 @@ class Message_Auth_Tests final : public Text_Based_Test
             result.confirm("Clone has different pointer", mac.get() != clone.get());
             result.test_eq("Clone has same name", mac->name(), clone->name());
             clone->set_key(key);
+            clone->start(iv);
             clone->update(Test::rng().random_vec(32));
 
             result.test_eq(provider + " correct mac", mac->verify_mac(expected.data(), expected.size()), true);

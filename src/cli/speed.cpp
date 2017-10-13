@@ -1024,6 +1024,7 @@ class Speed final : public Command
 
             const Botan::SymmetricKey key(rng(), mac.maximum_keylength());
             mac.set_key(key);
+            mac.start(nullptr, 0);
 
             Timer timer(mac.name(), provider, "mac", buffer.size(), buf_size);
             timer.run_until_elapsed(runtime, [&]() { mac.update(buffer); });
