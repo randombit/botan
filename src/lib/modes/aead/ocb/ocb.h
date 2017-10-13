@@ -66,7 +66,6 @@ class BOTAN_PUBLIC_API(2,0) OCB_Mode : public AEAD_Mode
       size_t m_block_index = 0;
 
       secure_vector<uint8_t> m_checksum;
-      secure_vector<uint8_t> m_offset;
       secure_vector<uint8_t> m_ad_hash;
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
