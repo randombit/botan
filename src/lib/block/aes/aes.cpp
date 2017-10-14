@@ -1,6 +1,6 @@
 /*
 * AES
-* (C) 1999-2010,2015 Jack Lloyd
+* (C) 1999-2010,2015,2017 Jack Lloyd
 *
 * Based on the public domain reference implementation by Paulo Baretto
 *
@@ -16,7 +16,9 @@
 * vulnerable to timing and cache based side channel attacks. Some
 * countermeasures are used which may be helpful in some situations:
 *
-* - Small tables are used in the first and last rounds.
+* - Only a single 256-word T-table is used, with rotations applied.
+*   Most implementations use 4 T-tables which leaks much more
+*   information via cache usage.
 *
 * - The TE and TD tables are computed at runtime to avoid flush+reload
 *   attacks using clflush. As different processes will not share the
@@ -104,19 +106,22 @@ inline uint8_t xtime11(uint8_t s) { return xtime8(s) ^ xtime(s) ^ s; }
 inline uint8_t xtime13(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ s; }
 inline uint8_t xtime14(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ xtime(s); }
 
+inline uint32_t SE_word(uint32_t x)
+   {
+   return make_uint32(SE[get_byte(0, x)],
+                      SE[get_byte(1, x)],
+                      SE[get_byte(2, x)],
+                      SE[get_byte(3, x)]);
+   }
+
 const std::vector<uint32_t>& AES_TE()
    {
    auto compute_TE = []() -> std::vector<uint32_t> {
-      std::vector<uint32_t> TE(1024);
+      std::vector<uint32_t> TE(256);
       for(size_t i = 0; i != 256; ++i)
          {
          const uint8_t s = SE[i];
-         const uint32_t x = make_uint32(xtime(s), s, s, xtime3(s));
-
-         TE[i] = x;
-         TE[i+256] = rotr< 8>(x);
-         TE[i+512] = rotr<16>(x);
-         TE[i+768] = rotr<24>(x);
+         TE[i] = make_uint32(xtime(s), s, s, xtime3(s));
          }
       return TE;
    };
@@ -128,22 +133,23 @@ const std::vector<uint32_t>& AES_TE()
 const std::vector<uint32_t>& AES_TD()
    {
    auto compute_TD = []() -> std::vector<uint32_t> {
-      std::vector<uint32_t> TD(1024);
+      std::vector<uint32_t> TD(256);
       for(size_t i = 0; i != 256; ++i)
          {
          const uint8_t s = SD[i];
-         const uint32_t x = make_uint32(xtime14(s), xtime9(s), xtime13(s), xtime11(s));
-
-         TD[i] = x;
-         TD[i+256] = rotr< 8>(x);
-         TD[i+512] = rotr<16>(x);
-         TD[i+768] = rotr<24>(x);
+         TD[i] = make_uint32(xtime14(s), xtime9(s), xtime13(s), xtime11(s));
          }
       return TD;
    };
    static const std::vector<uint32_t> TD = compute_TD();
    return TD;
    }
+
+#define AES_T(T, K, V0, V1, V2, V3)                                     \
+   (K ^ T[get_byte(0, V0)] ^                                            \
+    rotr< 8>(T[get_byte(1, V1)]) ^                                      \
+    rotr<16>(T[get_byte(2, V2)]) ^                                      \
+    rotr<24>(T[get_byte(3, V3)]))
 
 /*
 * AES Encryption
@@ -160,7 +166,7 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
    const std::vector<uint32_t>& TE = AES_TE();
 
    // Hit every cache line of TE
-   uint32_t Z = 0;
+   volatile uint32_t Z = 0;
    for(size_t i = 0; i < TE.size(); i += cache_line_size / sizeof(uint32_t))
       {
       Z |= TE[i];
@@ -179,71 +185,44 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 
       T0 ^= Z;
 
-      /* Use only the first 256 entries of the TE table and do the
-      * rotations directly in the code. This reduces the number of
-      * cache lines potentially used in the first round from 64 to 16
-      * (assuming a typical 64 byte cache line), which makes timing
-      * attacks a little harder; the first round is particularly
-      * vulnerable.
-      */
-
-      uint32_t B0 = TE[get_byte(0, T0)] ^
-                  rotr< 8>(TE[get_byte(1, T1)]) ^
-                  rotr<16>(TE[get_byte(2, T2)]) ^
-                  rotr<24>(TE[get_byte(3, T3)]) ^ EK[4];
-
-      uint32_t B1 = TE[get_byte(0, T1)] ^
-                  rotr< 8>(TE[get_byte(1, T2)]) ^
-                  rotr<16>(TE[get_byte(2, T3)]) ^
-                  rotr<24>(TE[get_byte(3, T0)]) ^ EK[5];
-
-      uint32_t B2 = TE[get_byte(0, T2)] ^
-                  rotr< 8>(TE[get_byte(1, T3)]) ^
-                  rotr<16>(TE[get_byte(2, T0)]) ^
-                  rotr<24>(TE[get_byte(3, T1)]) ^ EK[6];
-
-      uint32_t B3 = TE[get_byte(0, T3)] ^
-                  rotr< 8>(TE[get_byte(1, T0)]) ^
-                  rotr<16>(TE[get_byte(2, T1)]) ^
-                  rotr<24>(TE[get_byte(3, T2)]) ^ EK[7];
+      uint32_t B0 = AES_T(TE, EK[4], T0, T1, T2, T3);
+      uint32_t B1 = AES_T(TE, EK[5], T1, T2, T3, T0);
+      uint32_t B2 = AES_T(TE, EK[6], T2, T3, T0, T1);
+      uint32_t B3 = AES_T(TE, EK[7], T3, T0, T1, T2);
 
       for(size_t r = 2*4; r < EK.size(); r += 2*4)
          {
-         T0 = EK[r  ] ^ TE[get_byte(0, B0)      ] ^ TE[get_byte(1, B1) + 256] ^
-                        TE[get_byte(2, B2) + 512] ^ TE[get_byte(3, B3) + 768];
-         T1 = EK[r+1] ^ TE[get_byte(0, B1)      ] ^ TE[get_byte(1, B2) + 256] ^
-                        TE[get_byte(2, B3) + 512] ^ TE[get_byte(3, B0) + 768];
-         T2 = EK[r+2] ^ TE[get_byte(0, B2)      ] ^ TE[get_byte(1, B3) + 256] ^
-                        TE[get_byte(2, B0) + 512] ^ TE[get_byte(3, B1) + 768];
-         T3 = EK[r+3] ^ TE[get_byte(0, B3)      ] ^ TE[get_byte(1, B0) + 256] ^
-                        TE[get_byte(2, B1) + 512] ^ TE[get_byte(3, B2) + 768];
+         T0 = AES_T(TE, EK[r  ], B0, B1, B2, B3);
+         T1 = AES_T(TE, EK[r+1], B1, B2, B3, B0);
+         T2 = AES_T(TE, EK[r+2], B2, B3, B0, B1);
+         T3 = AES_T(TE, EK[r+3], B3, B0, B1, B2);
 
-         B0 = EK[r+4] ^ TE[get_byte(0, T0)      ] ^ TE[get_byte(1, T1) + 256] ^
-                        TE[get_byte(2, T2) + 512] ^ TE[get_byte(3, T3) + 768];
-         B1 = EK[r+5] ^ TE[get_byte(0, T1)      ] ^ TE[get_byte(1, T2) + 256] ^
-                        TE[get_byte(2, T3) + 512] ^ TE[get_byte(3, T0) + 768];
-         B2 = EK[r+6] ^ TE[get_byte(0, T2)      ] ^ TE[get_byte(1, T3) + 256] ^
-                        TE[get_byte(2, T0) + 512] ^ TE[get_byte(3, T1) + 768];
-         B3 = EK[r+7] ^ TE[get_byte(0, T3)      ] ^ TE[get_byte(1, T0) + 256] ^
-                        TE[get_byte(2, T1) + 512] ^ TE[get_byte(3, T2) + 768];
+         B0 = AES_T(TE, EK[r+4], T0, T1, T2, T3);
+         B1 = AES_T(TE, EK[r+5], T1, T2, T3, T0);
+         B2 = AES_T(TE, EK[r+6], T2, T3, T0, T1);
+         B3 = AES_T(TE, EK[r+7], T3, T0, T1, T2);
          }
 
-      out[16*i+ 0] = SE[get_byte(0, B0)] ^ ME[0];
-      out[16*i+ 1] = SE[get_byte(1, B1)] ^ ME[1];
-      out[16*i+ 2] = SE[get_byte(2, B2)] ^ ME[2];
-      out[16*i+ 3] = SE[get_byte(3, B3)] ^ ME[3];
-      out[16*i+ 4] = SE[get_byte(0, B1)] ^ ME[4];
-      out[16*i+ 5] = SE[get_byte(1, B2)] ^ ME[5];
-      out[16*i+ 6] = SE[get_byte(2, B3)] ^ ME[6];
-      out[16*i+ 7] = SE[get_byte(3, B0)] ^ ME[7];
-      out[16*i+ 8] = SE[get_byte(0, B2)] ^ ME[8];
-      out[16*i+ 9] = SE[get_byte(1, B3)] ^ ME[9];
-      out[16*i+10] = SE[get_byte(2, B0)] ^ ME[10];
-      out[16*i+11] = SE[get_byte(3, B1)] ^ ME[11];
-      out[16*i+12] = SE[get_byte(0, B3)] ^ ME[12];
-      out[16*i+13] = SE[get_byte(1, B0)] ^ ME[13];
-      out[16*i+14] = SE[get_byte(2, B1)] ^ ME[14];
-      out[16*i+15] = SE[get_byte(3, B2)] ^ ME[15];
+      /*
+      * Use TE[x] >> 8 instead of SE[] so encryption only references a single
+      * lookup table.
+      */
+      out[16*i+ 0] = static_cast<uint8_t>(TE[get_byte(0, B0)] >> 8) ^ ME[0];
+      out[16*i+ 1] = static_cast<uint8_t>(TE[get_byte(1, B1)] >> 8) ^ ME[1];
+      out[16*i+ 2] = static_cast<uint8_t>(TE[get_byte(2, B2)] >> 8) ^ ME[2];
+      out[16*i+ 3] = static_cast<uint8_t>(TE[get_byte(3, B3)] >> 8) ^ ME[3];
+      out[16*i+ 4] = static_cast<uint8_t>(TE[get_byte(0, B1)] >> 8) ^ ME[4];
+      out[16*i+ 5] = static_cast<uint8_t>(TE[get_byte(1, B2)] >> 8) ^ ME[5];
+      out[16*i+ 6] = static_cast<uint8_t>(TE[get_byte(2, B3)] >> 8) ^ ME[6];
+      out[16*i+ 7] = static_cast<uint8_t>(TE[get_byte(3, B0)] >> 8) ^ ME[7];
+      out[16*i+ 8] = static_cast<uint8_t>(TE[get_byte(0, B2)] >> 8) ^ ME[8];
+      out[16*i+ 9] = static_cast<uint8_t>(TE[get_byte(1, B3)] >> 8) ^ ME[9];
+      out[16*i+10] = static_cast<uint8_t>(TE[get_byte(2, B0)] >> 8) ^ ME[10];
+      out[16*i+11] = static_cast<uint8_t>(TE[get_byte(3, B1)] >> 8) ^ ME[11];
+      out[16*i+12] = static_cast<uint8_t>(TE[get_byte(0, B3)] >> 8) ^ ME[12];
+      out[16*i+13] = static_cast<uint8_t>(TE[get_byte(1, B0)] >> 8) ^ ME[13];
+      out[16*i+14] = static_cast<uint8_t>(TE[get_byte(2, B1)] >> 8) ^ ME[14];
+      out[16*i+15] = static_cast<uint8_t>(TE[get_byte(3, B2)] >> 8) ^ ME[15];
       }
    }
 
@@ -259,7 +238,7 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
    const size_t cache_line_size = CPUID::cache_line_size();
    const std::vector<uint32_t>& TD = AES_TD();
 
-   uint32_t Z = 0;
+   volatile uint32_t Z = 0;
    for(size_t i = 0; i < TD.size(); i += cache_line_size / sizeof(uint32_t))
       {
       Z |= TD[i];
@@ -275,45 +254,22 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
 
       T0 ^= Z;
 
-      uint32_t B0 = TD[get_byte(0, T0)] ^
-                  rotr< 8>(TD[get_byte(1, T3)]) ^
-                  rotr<16>(TD[get_byte(2, T2)]) ^
-                  rotr<24>(TD[get_byte(3, T1)]) ^ DK[4];
-
-      uint32_t B1 = TD[get_byte(0, T1)] ^
-                  rotr< 8>(TD[get_byte(1, T0)]) ^
-                  rotr<16>(TD[get_byte(2, T3)]) ^
-                  rotr<24>(TD[get_byte(3, T2)]) ^ DK[5];
-
-      uint32_t B2 = TD[get_byte(0, T2)] ^
-                  rotr< 8>(TD[get_byte(1, T1)]) ^
-                  rotr<16>(TD[get_byte(2, T0)]) ^
-                  rotr<24>(TD[get_byte(3, T3)]) ^ DK[6];
-
-      uint32_t B3 = TD[get_byte(0, T3)] ^
-                  rotr< 8>(TD[get_byte(1, T2)]) ^
-                  rotr<16>(TD[get_byte(2, T1)]) ^
-                  rotr<24>(TD[get_byte(3, T0)]) ^ DK[7];
+      uint32_t B0 = AES_T(TD, DK[4], T0, T3, T2, T1);
+      uint32_t B1 = AES_T(TD, DK[5], T1, T0, T3, T2);
+      uint32_t B2 = AES_T(TD, DK[6], T2, T1, T0, T3);
+      uint32_t B3 = AES_T(TD, DK[7], T3, T2, T1, T0);
 
       for(size_t r = 2*4; r < DK.size(); r += 2*4)
          {
-         T0 = DK[r  ] ^ TD[get_byte(0, B0)      ] ^ TD[get_byte(1, B3) + 256] ^
-                        TD[get_byte(2, B2) + 512] ^ TD[get_byte(3, B1) + 768];
-         T1 = DK[r+1] ^ TD[get_byte(0, B1)      ] ^ TD[get_byte(1, B0) + 256] ^
-                        TD[get_byte(2, B3) + 512] ^ TD[get_byte(3, B2) + 768];
-         T2 = DK[r+2] ^ TD[get_byte(0, B2)      ] ^ TD[get_byte(1, B1) + 256] ^
-                        TD[get_byte(2, B0) + 512] ^ TD[get_byte(3, B3) + 768];
-         T3 = DK[r+3] ^ TD[get_byte(0, B3)      ] ^ TD[get_byte(1, B2) + 256] ^
-                        TD[get_byte(2, B1) + 512] ^ TD[get_byte(3, B0) + 768];
+         T0 = AES_T(TD, DK[r  ], B0, B3, B2, B1);
+         T1 = AES_T(TD, DK[r+1], B1, B0, B3, B2);
+         T2 = AES_T(TD, DK[r+2], B2, B1, B0, B3);
+         T3 = AES_T(TD, DK[r+3], B3, B2, B1, B0);
 
-         B0 = DK[r+4] ^ TD[get_byte(0, T0)      ] ^ TD[get_byte(1, T3) + 256] ^
-                        TD[get_byte(2, T2) + 512] ^ TD[get_byte(3, T1) + 768];
-         B1 = DK[r+5] ^ TD[get_byte(0, T1)      ] ^ TD[get_byte(1, T0) + 256] ^
-                        TD[get_byte(2, T3) + 512] ^ TD[get_byte(3, T2) + 768];
-         B2 = DK[r+6] ^ TD[get_byte(0, T2)      ] ^ TD[get_byte(1, T1) + 256] ^
-                        TD[get_byte(2, T0) + 512] ^ TD[get_byte(3, T3) + 768];
-         B3 = DK[r+7] ^ TD[get_byte(0, T3)      ] ^ TD[get_byte(1, T2) + 256] ^
-                        TD[get_byte(2, T1) + 512] ^ TD[get_byte(3, T0) + 768];
+         B0 = AES_T(TD, DK[r+4], T0, T3, T2, T1);
+         B1 = AES_T(TD, DK[r+5], T1, T0, T3, T2);
+         B2 = AES_T(TD, DK[r+6], T2, T1, T0, T3);
+         B3 = AES_T(TD, DK[r+7], T3, T2, T1, T0);
          }
 
       out[ 0] = SD[get_byte(0, B0)] ^ MD[0];
@@ -363,21 +319,14 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    for(size_t i = X; i < 4*(rounds+1); i += X)
       {
-      XEK[i] = XEK[i-X] ^ RC[(i-X)/X] ^
-               make_uint32(SE[get_byte(1, XEK[i-1])],
-                           SE[get_byte(2, XEK[i-1])],
-                           SE[get_byte(3, XEK[i-1])],
-                           SE[get_byte(0, XEK[i-1])]);
+      XEK[i] = XEK[i-X] ^ RC[(i-X)/X] ^ SE_word(rotl<8>(XEK[i-1]));
 
       for(size_t j = 1; j != X; ++j)
          {
          XEK[i+j] = XEK[i+j-X];
 
          if(X == 8 && j == 4)
-            XEK[i+j] ^= make_uint32(SE[get_byte(0, XEK[i+j-1])],
-                                    SE[get_byte(1, XEK[i+j-1])],
-                                    SE[get_byte(2, XEK[i+j-1])],
-                                    SE[get_byte(3, XEK[i+j-1])]);
+            XEK[i+j] ^= SE_word(XEK[i+j-1]);
          else
             XEK[i+j] ^= XEK[i+j-1];
          }
@@ -394,10 +343,10 @@ void aes_key_schedule(const uint8_t key[], size_t length,
       }
 
    for(size_t i = 4; i != length + 24; ++i)
-      XDK[i] = TD[SE[get_byte(0, XDK[i])] +   0] ^
-               TD[SE[get_byte(1, XDK[i])] + 256] ^
-               TD[SE[get_byte(2, XDK[i])] + 512] ^
-               TD[SE[get_byte(3, XDK[i])] + 768];
+      {
+      XDK[i] = SE_word(XDK[i]);
+      XDK[i] = AES_T(TD, 0, XDK[i], XDK[i], XDK[i], XDK[i]);
+      }
 
    ME.resize(16);
    MD.resize(16);
@@ -426,6 +375,8 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 #endif
 
    }
+
+#undef AES_T
 
 size_t aes_parallelism()
    {
