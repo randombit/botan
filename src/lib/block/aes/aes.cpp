@@ -10,6 +10,7 @@
 #include <botan/aes.h>
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>
+#include <type_traits>
 
 /*
 * This implementation is based on table lookups which are known to be
@@ -48,6 +49,7 @@ namespace Botan {
 
 namespace {
 
+BOTAN_ALIGNAS(64)
 const uint8_t SE[256] = {
    0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B,
    0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0,
@@ -72,6 +74,7 @@ const uint8_t SE[256] = {
    0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F,
    0xB0, 0x54, 0xBB, 0x16 };
 
+BOTAN_ALIGNAS(64)
 const uint8_t SD[256] = {
    0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E,
    0x81, 0xF3, 0xD7, 0xFB, 0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87,
@@ -114,35 +117,58 @@ inline uint32_t SE_word(uint32_t x)
                       SE[get_byte(3, x)]);
    }
 
-const std::vector<uint32_t>& AES_TE()
+const uint32_t* AES_TE()
    {
-   auto compute_TE = []() -> std::vector<uint32_t> {
-      std::vector<uint32_t> TE(256);
-      for(size_t i = 0; i != 256; ++i)
-         {
-         const uint8_t s = SE[i];
-         TE[i] = make_uint32(xtime(s), s, s, xtime3(s));
-         }
-      return TE;
-   };
+   class TE_Table
+      {
+      public:
+         TE_Table()
+            {
+            uint32_t* p = reinterpret_cast<uint32_t*>(data);
+            for(size_t i = 0; i != 256; ++i)
+               {
+               const uint8_t s = SE[i];
+               p[i] = make_uint32(xtime(s), s, s, xtime3(s));
+               }
+            }
 
-   static const std::vector<uint32_t> TE = compute_TE();
-   return TE;
+         const uint32_t* ptr() const
+            {
+            return reinterpret_cast<const uint32_t*>(data);
+            }
+      private:
+         std::aligned_storage<sizeof(uint32_t), 1024>::type data[256];
+      };
+
+   static TE_Table table;
+   return table.ptr();
    }
 
-const std::vector<uint32_t>& AES_TD()
+const uint32_t* AES_TD()
    {
-   auto compute_TD = []() -> std::vector<uint32_t> {
-      std::vector<uint32_t> TD(256);
-      for(size_t i = 0; i != 256; ++i)
-         {
-         const uint8_t s = SD[i];
-         TD[i] = make_uint32(xtime14(s), xtime9(s), xtime13(s), xtime11(s));
-         }
-      return TD;
-   };
-   static const std::vector<uint32_t> TD = compute_TD();
-   return TD;
+   class TD_Table
+      {
+      public:
+         TD_Table()
+            {
+            uint32_t* p = reinterpret_cast<uint32_t*>(data);
+            for(size_t i = 0; i != 256; ++i)
+               {
+               const uint8_t s = SD[i];
+               p[i] = make_uint32(xtime14(s), xtime9(s), xtime13(s), xtime11(s));
+               }
+            }
+
+         const uint32_t* ptr() const
+            {
+            return reinterpret_cast<const uint32_t*>(data);
+            }
+      private:
+         std::aligned_storage<sizeof(uint32_t), 1024>::type data[256];
+      };
+
+   static TD_Table table;
+   return table.ptr();
    }
 
 #define AES_T(T, K, V0, V1, V2, V3)                                     \
@@ -163,11 +189,11 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 
    const size_t cache_line_size = CPUID::cache_line_size();
 
-   const std::vector<uint32_t>& TE = AES_TE();
+   const uint32_t* TE = AES_TE();
 
    // Hit every cache line of TE
    volatile uint32_t Z = 0;
-   for(size_t i = 0; i < TE.size(); i += cache_line_size / sizeof(uint32_t))
+   for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
       {
       Z |= TE[i];
       }
@@ -236,10 +262,10 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
    BOTAN_ASSERT(DK.size() && MD.size() == 16, "Key was set");
 
    const size_t cache_line_size = CPUID::cache_line_size();
-   const std::vector<uint32_t>& TD = AES_TD();
+   const uint32_t* TD = AES_TD();
 
    volatile uint32_t Z = 0;
-   for(size_t i = 0; i < TD.size(); i += cache_line_size / sizeof(uint32_t))
+   for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
       {
       Z |= TD[i];
       }
@@ -332,8 +358,6 @@ void aes_key_schedule(const uint8_t key[], size_t length,
          }
       }
 
-   const std::vector<uint32_t>& TD = AES_TD();
-
    for(size_t i = 0; i != 4*(rounds+1); i += 4)
       {
       XDK[i  ] = XEK[4*rounds-i  ];
@@ -345,7 +369,7 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    for(size_t i = 4; i != length + 24; ++i)
       {
       XDK[i] = SE_word(XDK[i]);
-      XDK[i] = AES_T(TD, 0, XDK[i], XDK[i], XDK[i], XDK[i]);
+      XDK[i] = AES_T(AES_TD(), 0, XDK[i], XDK[i], XDK[i], XDK[i]);
       }
 
    ME.resize(16);
