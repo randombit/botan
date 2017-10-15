@@ -554,7 +554,7 @@ class Command
          return r;
          }
 
-      class Registration
+      class Registration final
          {
          public:
             Registration(const std::string& name, cmd_maker_fn maker_fn)

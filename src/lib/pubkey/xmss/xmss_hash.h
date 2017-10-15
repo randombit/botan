@@ -16,7 +16,7 @@ namespace Botan {
  * A collection of pseudorandom hash functions required for XMSS and WOTS
  * computations.
  **/
-class XMSS_Hash
+class XMSS_Hash final
    {
    public:
       XMSS_Hash(const std::string& h_func_name);

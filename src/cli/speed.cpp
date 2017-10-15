@@ -132,7 +132,7 @@ namespace Botan_CLI {
 
 namespace {
 
-class Timer
+class Timer final
    {
    public:
       Timer(const std::string& name,
@@ -211,7 +211,7 @@ class Timer
          return (milliseconds() < msec.count());
          }
 
-      class Timer_Scope
+      class Timer_Scope final
          {
          public:
             explicit Timer_Scope(Timer& timer)
@@ -465,7 +465,7 @@ std::vector<std::string> default_benchmark_list()
 
 }
 
-class Summary
+class Summary final
    {
    public:
       Summary() {}
@@ -591,7 +591,7 @@ class Summary
          }
 
    private:
-      class EntryBps
+      class EntryBps final
          {
          public:
             EntryBps(const std::string& algo
@@ -618,7 +618,7 @@ class Summary
             std::map<size_t, double> m_bps;
          };
 
-      class EntryOps
+      class EntryOps final
          {
          public:
             EntryOps(const std::string& algo

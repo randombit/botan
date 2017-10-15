@@ -16,7 +16,7 @@
 
 namespace Botan_CLI {
 
-class TLS_All_Policy : public Botan::TLS::Policy
+class TLS_All_Policy final : public Botan::TLS::Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override

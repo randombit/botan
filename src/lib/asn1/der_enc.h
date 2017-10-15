@@ -115,7 +115,7 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
                               uint8_t val);
 
    private:
-      class DER_Sequence
+      class DER_Sequence final
          {
          public:
             ASN1_Tag tag_of() const;

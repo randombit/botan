@@ -56,7 +56,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 
    const size_t HASH_SIZE = hash->output_length();
 
-   class Seed
+   class Seed final
       {
       public:
          explicit Seed(const std::vector<uint8_t>& s) : m_seed(s) {}

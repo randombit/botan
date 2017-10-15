@@ -17,7 +17,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_HASH_ID) && defined(BOTAN_HAS_ASN1)
 
-class PKCS_HashID_Test : public Test
+class PKCS_HashID_Test final : public Test
    {
    public:
       std::vector<Test::Result> run() override

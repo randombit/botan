@@ -60,7 +60,8 @@ void log_text_message(const char* where,  const uint8_t buf[], size_t buf_len)
    //std::cout << where << ' ' << std::string(c, c + buf_len)  << std::endl;
    }
 
-class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_session>, public Botan::TLS::Callbacks
+class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_session>,
+                                public Botan::TLS::Callbacks
    {
    public:
       enum { readbuf_size = 4 * 1024 };
@@ -337,7 +338,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
       std::vector<uint8_t> m_p2s_pending;
    };
 
-class tls_proxy_server
+class tls_proxy_server final
    {
    public:
       typedef tls_proxy_session session;

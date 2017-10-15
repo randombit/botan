@@ -119,7 +119,7 @@ inline uint32_t SE_word(uint32_t x)
 
 const uint32_t* AES_TE()
    {
-   class TE_Table
+   class TE_Table final
       {
       public:
          TE_Table()
@@ -137,7 +137,7 @@ const uint32_t* AES_TE()
             return reinterpret_cast<const uint32_t*>(data);
             }
       private:
-         std::aligned_storage<sizeof(uint32_t), 1024>::type data[256];
+         std::aligned_storage<256*sizeof(uint32_t), 64>::type data[256];
       };
 
    static TE_Table table;
@@ -146,7 +146,7 @@ const uint32_t* AES_TE()
 
 const uint32_t* AES_TD()
    {
-   class TD_Table
+   class TD_Table final
       {
       public:
          TD_Table()

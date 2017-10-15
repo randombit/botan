@@ -32,7 +32,7 @@ typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
 class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
    {
    public:
-      class TreeSignature
+      class TreeSignature final
          {
          public:
             TreeSignature() = default;

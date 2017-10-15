@@ -320,7 +320,7 @@ void CAST_128::cast_ks(secure_vector<uint32_t>& K,
       0xA466BB1E, 0xF8DA0A82, 0x04F19130, 0xBA6E4EC0, 0x99265164, 0x1EE7230D,
       0x50B2AD80, 0xEAEE6801, 0x8DB2A283, 0xEA8BF59E };
 
-   class ByteReader
+   class ByteReader final
       {
       public:
          uint8_t operator()(size_t i) const

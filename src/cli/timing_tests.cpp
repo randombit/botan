@@ -89,7 +89,7 @@ class Timing_Test
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1v15) && defined(BOTAN_HAS_EME_RAW)
 
-class Bleichenbacker_Timing_Test : public Timing_Test
+class Bleichenbacker_Timing_Test final : public Timing_Test
    {
    public:
       Bleichenbacker_Timing_Test(size_t keysize)
@@ -133,7 +133,7 @@ class Bleichenbacker_Timing_Test : public Timing_Test
 * Padding (OAEP) as Standardized in PKCS #1 v2.0" James Manger
 * http://archiv.infsec.ethz.ch/education/fs08/secsem/Manger01.pdf
 */
-class Manger_Timing_Test : public Timing_Test
+class Manger_Timing_Test final : public Timing_Test
    {
    public:
       Manger_Timing_Test(size_t keysize)
@@ -181,7 +181,7 @@ class Manger_Timing_Test : public Timing_Test
 /*
 * Test handling of countermeasure to the Lucky13 attack
 */
-class Lucky13_Timing_Test : public Timing_Test
+class Lucky13_Timing_Test final : public Timing_Test
    {
    public:
       Lucky13_Timing_Test(const std::string& mac_name, size_t mac_keylen)
@@ -240,7 +240,7 @@ ticks Lucky13_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
 
 #if defined(BOTAN_HAS_ECDSA)
 
-class ECDSA_Timing_Test : public Timing_Test
+class ECDSA_Timing_Test final : public Timing_Test
    {
    public:
       ECDSA_Timing_Test(std::string ecgroup);
@@ -337,7 +337,7 @@ std::vector<std::vector<ticks>> Timing_Test::execute_evaluation(
    return all_results;
    }
 
-class Timing_Test_Command : public Command
+class Timing_Test_Command final : public Command
    {
    public:
       Timing_Test_Command()

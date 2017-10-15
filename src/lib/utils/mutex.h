@@ -27,7 +27,7 @@ typedef std::mutex mutex_type;
 namespace Botan {
 
 template<typename Mutex>
-class lock_guard
+class lock_guard final
    {
    public:
       explicit lock_guard(Mutex& m) : m_mutex(m)
@@ -41,7 +41,7 @@ class lock_guard
       Mutex& m_mutex;
    };
 
-class noop_mutex
+class noop_mutex final
    {
    public:
       void lock() {}

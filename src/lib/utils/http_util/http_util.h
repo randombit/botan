@@ -19,7 +19,7 @@ namespace Botan {
 
 namespace HTTP {
 
-class Response
+class Response final
    {
    public:
       Response() : m_status_code(0), m_status_message("Uninitialized") {}

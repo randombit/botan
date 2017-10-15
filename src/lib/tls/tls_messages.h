@@ -68,7 +68,7 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message
 class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
    {
    public:
-      class Settings
+      class Settings final
       {
           public:
               Settings(const Protocol_Version version,
@@ -182,7 +182,7 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
    {
    public:
-      class Settings
+      class Settings final
       {
           public:
               Settings(const std::vector<uint8_t> new_session_id,

@@ -14,7 +14,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_TLS_CBC)
 
-class TLS_CBC_Padding_Tests : public Text_Based_Test
+class TLS_CBC_Padding_Tests final : public Text_Based_Test
    {
    public:
       TLS_CBC_Padding_Tests() : Text_Based_Test("tls_cbc.vec", "Record,Output") {}

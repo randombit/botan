@@ -74,7 +74,7 @@ secure_vector<byte> do_crypt(const std::string &cipher,
 
 }
 
-class Encryption : public Command
+class Encryption final : public Command
    {
    public:
       Encryption() : Command("encryption --buf-size=4096 --decrypt --mode= --key= --iv= --ad=") {}

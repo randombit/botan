@@ -19,7 +19,7 @@ namespace Botan {
  * Helper tools for low level byte operations required
  * for the XMSS implementation.
  **/
- class XMSS_Tools
+ class XMSS_Tools final
    {
    public:
       XMSS_Tools(const XMSS_Tools&) = delete;
