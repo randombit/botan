@@ -124,7 +124,7 @@ const uint32_t* AES_TE()
       public:
          TE_Table()
             {
-            uint32_t* p = reinterpret_cast<uint32_t*>(data);
+            uint32_t* p = reinterpret_cast<uint32_t*>(&data);
             for(size_t i = 0; i != 256; ++i)
                {
                const uint8_t s = SE[i];
@@ -134,10 +134,10 @@ const uint32_t* AES_TE()
 
          const uint32_t* ptr() const
             {
-            return reinterpret_cast<const uint32_t*>(data);
+            return reinterpret_cast<const uint32_t*>(&data);
             }
       private:
-         std::aligned_storage<256*sizeof(uint32_t), 64>::type data[256];
+         std::aligned_storage<256*sizeof(uint32_t), 64>::type data;
       };
 
    static TE_Table table;
@@ -151,7 +151,7 @@ const uint32_t* AES_TD()
       public:
          TD_Table()
             {
-            uint32_t* p = reinterpret_cast<uint32_t*>(data);
+            uint32_t* p = reinterpret_cast<uint32_t*>(&data);
             for(size_t i = 0; i != 256; ++i)
                {
                const uint8_t s = SD[i];
@@ -161,10 +161,10 @@ const uint32_t* AES_TD()
 
          const uint32_t* ptr() const
             {
-            return reinterpret_cast<const uint32_t*>(data);
+            return reinterpret_cast<const uint32_t*>(&data);
             }
       private:
-         std::aligned_storage<sizeof(uint32_t), 1024>::type data[256];
+         std::aligned_storage<256*sizeof(uint32_t), 64>::type data;
       };
 
    static TD_Table table;
