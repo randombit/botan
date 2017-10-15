@@ -11,17 +11,20 @@
 namespace Botan {
 
 GMAC::GMAC(BlockCipher* cipher) :
-   m_aad_buf(),
    m_cipher(cipher),
    m_ghash(new GHASH),
+   m_aad_buf(GCM_BS),
+   m_aad_buf_pos(0),
    m_initialized(false)
-   {}
+   {
+   }
 
 void GMAC::clear()
    {
    m_cipher->clear();
    m_ghash->clear();
-   m_aad_buf.clear();
+   zeroise(m_aad_buf);
+   m_aad_buf_pos = 0;
    m_initialized = false;
    }
 
@@ -37,23 +40,30 @@ size_t GMAC::output_length() const
 
 void GMAC::add_data(const uint8_t input[], size_t size)
    {
-   /*
-   FIXME this could be much more efficient, and only buffer leftovers
-   as needed, instead of inserting everything into the buffer
-   */
-
-   // buffer partial blocks till we received a full input block
-   // or final is called.
-   m_aad_buf.insert(m_aad_buf.end(), input, input + size);
-   if(m_aad_buf.size() >= GCM_BS)
+   if(m_aad_buf_pos > 0)
       {
-      // process all complete input blocks.
-      m_ghash->update_associated_data(m_aad_buf.data(),
-                                      m_aad_buf.size() - (m_aad_buf.size() % GCM_BS));
+      const size_t taking = std::min(GCM_BS - m_aad_buf_pos, size);
+      copy_mem(&m_aad_buf[m_aad_buf_pos], input, taking);
+      m_aad_buf_pos += taking;
+      input += taking;
+      size -= taking;
 
-      // remove all processed blocks from buffer.
-      m_aad_buf.erase(m_aad_buf.begin(),
-                      m_aad_buf.end() - (m_aad_buf.size() % GCM_BS));
+      if(m_aad_buf_pos == GCM_BS)
+         {
+         m_ghash->update_associated_data(m_aad_buf.data(), GCM_BS);
+         m_aad_buf_pos = 0;
+         }
+      }
+
+   const size_t left_over = size % GCM_BS;
+   const size_t full_blocks = size - left_over;
+   m_ghash->update_associated_data(input, full_blocks);
+   input += full_blocks;
+
+   if(left_over > 0)
+      {
+      copy_mem(&m_aad_buf[m_aad_buf_pos], input, left_over);
+      m_aad_buf_pos += left_over;
       }
    }
 
@@ -98,9 +108,9 @@ void GMAC::final_result(uint8_t mac[])
 
    // process the rest of the aad buffer. Even if it is a partial block only
    // ghash_update will process it properly.
-   if(m_aad_buf.size() > 0)
+   if(m_aad_buf_pos > 0)
        {
-       m_ghash->update_associated_data(m_aad_buf.data(), m_aad_buf.size());
+       m_ghash->update_associated_data(m_aad_buf.data(), m_aad_buf_pos);
        }
    secure_vector<uint8_t> result = m_ghash->final();
    copy_mem(mac, result.data(), result.size());
