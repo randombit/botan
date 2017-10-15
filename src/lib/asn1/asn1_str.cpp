@@ -125,11 +125,15 @@ void ASN1_String::decode_from(BER_Decoder& source)
 
    Character_Set charset_is;
 
-   if(obj.type_tag == BMP_STRING)
+   if(obj.type_tag == BMP_STRING) // Basic Multilingual Plane - 2 byte encoding
       charset_is = UCS2_CHARSET;
    else if(obj.type_tag == UTF8_STRING)
       charset_is = UTF8_CHARSET;
-   else
+   else // IA5_STRING        - international ASCII characters
+        // T61_STRING        - pretty much ASCII
+        // PRINTABLE_STRING  - ASCII subset (a-z, A-Z, ' () +,-.?:/= and SPACE)
+        // VISIBLE_STRING    - visible ASCII subset
+        // NUMERIC_STRING    - ASCII subset (0-9 and SPACE)
       charset_is = LATIN1_CHARSET;
 
    *this = ASN1_String(
