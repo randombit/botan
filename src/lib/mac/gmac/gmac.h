@@ -10,10 +10,11 @@
 #define BOTAN_GMAC_H_
 
 #include <botan/mac.h>
-#include <botan/gcm.h>
-#include <botan/block_cipher.h>
 
 namespace Botan {
+
+class BlockCipher;
+class GHASH;
 
 /**
 * GMAC
@@ -29,10 +30,7 @@ class BOTAN_PUBLIC_API(2,0) GMAC final : public MessageAuthenticationCode
       size_t output_length() const override;
       MessageAuthenticationCode* clone() const override;
 
-      Key_Length_Specification key_spec() const override
-         {
-         return m_cipher->key_spec();
-         }
+      Key_Length_Specification key_spec() const override;
 
       /**
       * Creates a new GMAC instance.
@@ -43,6 +41,8 @@ class BOTAN_PUBLIC_API(2,0) GMAC final : public MessageAuthenticationCode
 
       GMAC(const GMAC&) = delete;
       GMAC& operator=(const GMAC&) = delete;
+
+      virtual ~GMAC();
 
    private:
       void add_data(const uint8_t[], size_t) override;

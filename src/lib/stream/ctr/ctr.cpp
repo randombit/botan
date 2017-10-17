@@ -6,27 +6,30 @@
 */
 
 #include <botan/ctr.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
 CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_cipher(ciph),
+   m_block_size(m_cipher->block_size()),
+   m_ctr_size(m_block_size),
+   m_ctr_blocks(m_cipher->parallel_bytes() / m_block_size),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
    m_iv(m_cipher->block_size()),
-   m_block_size(m_cipher->block_size()),
-   m_ctr_size(m_block_size),
    m_pad_pos(0)
    {
    }
 
 CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
    m_cipher(cipher),
+   m_block_size(m_cipher->block_size()),
+   m_ctr_size(ctr_size),
+   m_ctr_blocks(m_cipher->parallel_bytes() / m_block_size),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
    m_iv(m_cipher->block_size()),
-   m_block_size(m_cipher->block_size()),
-   m_ctr_size(ctr_size),
    m_pad_pos(0)
    {
    if(m_ctr_size == 0 || m_ctr_size > m_block_size)
@@ -57,15 +60,36 @@ std::string CTR_BE::name() const
 
 void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
-   while(length >= m_pad.size() - m_pad_pos)
+   if(m_pad_pos > 0)
       {
-      xor_buf(out, in, &m_pad[m_pad_pos], m_pad.size() - m_pad_pos);
-      length -= (m_pad.size() - m_pad_pos);
-      in += (m_pad.size() - m_pad_pos);
-      out += (m_pad.size() - m_pad_pos);
-      increment_counter();
+      const size_t avail = m_pad.size() - m_pad_pos;
+      const size_t take = std::min(length, avail);
+      xor_buf(out, in, &m_pad[m_pad_pos], take);
+      length -= take;
+      in += take;
+      out += take;
+      m_pad_pos += take;
+
+      if(take == avail)
+         {
+         add_counter(m_ctr_blocks);
+         m_cipher->encrypt_n(m_counter.data(), m_pad.data(), m_ctr_blocks);
+         m_pad_pos = 0;
+         }
       }
-   xor_buf(out, in, &m_pad[m_pad_pos], length);
+
+   while(length >= m_pad.size())
+      {
+      xor_buf(out, in, &m_pad[0], m_pad.size());
+      length -= m_pad.size();
+      in += m_pad.size();
+      out += m_pad.size();
+
+      add_counter(m_ctr_blocks);
+      m_cipher->encrypt_n(m_counter.data(), m_pad.data(), m_ctr_blocks);
+      }
+
+   xor_buf(out, in, &m_pad[0], length);
    m_pad_pos += length;
    }
 
@@ -80,63 +104,89 @@ void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
    seek(0);
    }
 
-/*
-* Increment the counter and update the buffer
-*/
-void CTR_BE::increment_counter()
-   {
-   const size_t n_wide = m_counter.size() / m_block_size;
-
-   add_counter(n_wide);
-
-   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
-   m_pad_pos = 0;
-   }
-
 void CTR_BE::add_counter(const uint64_t counter)
    {
-   const size_t n_wide = m_counter.size() / m_block_size;
+   const size_t ctr_size = m_ctr_size;
+   const size_t ctr_blocks = m_ctr_blocks;
+   const size_t BS = m_block_size;
 
-   for(size_t i = 0; i != n_wide; ++i)
+   if(ctr_size == 4)
       {
-      uint64_t local_counter = counter;
-      uint16_t carry = static_cast<uint8_t>(local_counter);
-      for(size_t j = 0; (carry || local_counter) && j != m_ctr_size; ++j)
+      size_t off = (BS - 4);
+      for(size_t i = 0; i != ctr_blocks; ++i)
          {
-         const size_t off = i*m_block_size + (m_block_size-1-j);
-         const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
-         m_counter[off] = static_cast<uint8_t>(cnt);
-         local_counter = (local_counter >> 8);
-         carry = (cnt >> 8) + static_cast<uint8_t>(local_counter);
+         uint32_t low32 = load_be<uint32_t>(&m_counter[off], 0);
+         low32 += counter;
+         store_be(low32, &m_counter[off]);
+         off += BS;
+         }
+      }
+   else if(ctr_size == 8)
+      {
+      size_t off = (BS - 8);
+      for(size_t i = 0; i != ctr_blocks; ++i)
+         {
+         uint64_t low64 = load_be<uint64_t>(&m_counter[off], 0);
+         low64 += counter;
+         store_be(low64, &m_counter[off]);
+         off += BS;
+         }
+      }
+   else if(ctr_size == 16)
+      {
+      size_t off = (BS - 16);
+      for(size_t i = 0; i != ctr_blocks; ++i)
+         {
+         uint64_t b0 = load_be<uint64_t>(&m_counter[off], 0);
+         uint64_t b1 = load_be<uint64_t>(&m_counter[off], 1);
+         b1 += counter;
+         b1 += (b1 < counter); // carry
+         store_be(b0, &m_counter[off]);
+         store_be(b1, &m_counter[off+8]);
+         off += BS;
+         }
+      }
+   else
+      {
+      for(size_t i = 0; i != ctr_blocks; ++i)
+         {
+         uint64_t local_counter = counter;
+         uint16_t carry = static_cast<uint8_t>(local_counter);
+         for(size_t j = 0; (carry || local_counter) && j != ctr_size; ++j)
+            {
+            const size_t off = i*BS + (BS-1-j);
+            const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
+            m_counter[off] = static_cast<uint8_t>(cnt);
+            local_counter = (local_counter >> 8);
+            carry = (cnt >> 8) + static_cast<uint8_t>(local_counter);
+            }
          }
       }
    }
 
 void CTR_BE::seek(uint64_t offset)
    {
-   const size_t n_wide = m_counter.size() / m_block_size;
-   const uint64_t base_counter = n_wide * (offset / m_counter.size());
+   const uint64_t base_counter = m_ctr_blocks * (offset / m_counter.size());
 
    zeroise(m_counter);
    buffer_insert(m_counter, 0, m_iv);
 
+   const size_t BS = m_block_size;
+
    // Set m_counter blocks to IV, IV + 1, ... IV + n
-   for(size_t i = 1; i != n_wide; ++i)
+   for(size_t i = 1; i != m_ctr_blocks; ++i)
       {
-      buffer_insert(m_counter,
-                    i*m_block_size,
-                    &m_counter[(i-1)*m_block_size],
-                    m_block_size);
+      buffer_insert(m_counter, i*BS, &m_counter[(i-1)*BS], BS);
 
       for(size_t j = 0; j != m_ctr_size; ++j)
-         if(++m_counter[i*m_block_size + (m_block_size - 1 - j)])
+         if(++m_counter[i*BS + (BS - 1 - j)])
             break;
       }
 
-   if (base_counter > 0)
+   if(base_counter > 0)
       add_counter(base_counter);
 
-   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
+   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), m_ctr_blocks);
    m_pad_pos = offset % m_counter.size();
    }
 }
