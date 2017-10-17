@@ -103,6 +103,11 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual std::string choose_curve(const std::vector<std::string>& curve_names) const;
 
       /**
+      * Choose an FFHDE group to use
+      */
+      virtual std::string choose_dh_group(const std::vector<std::string>& dh_group_names) const;
+
+      /**
       * Allow renegotiation even if the counterparty doesn't
       * support the secure renegotiation extension.
       *
@@ -155,6 +160,8 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool allow_dtls12() const;
 
       virtual std::string dh_group() const;
+
+      virtual std::vector<std::string> allowed_groups() const;
 
       /**
       * Return the minimum DH group size we're willing to use
@@ -330,6 +337,9 @@ class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 final : public Policy
       std::vector<std::string> allowed_ecc_curves() const override
          { return std::vector<std::string>({"secp256r1"}); }
 
+      std::vector<std::string> allowed_groups() const override
+         { return allowed_ecc_curves(); }
+
       size_t minimum_signature_strength() const override { return 128; }
 
       bool allow_tls10()  const override { return false; }
@@ -373,6 +383,12 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 final : public Policy
       std::vector<std::string> allowed_ecc_curves() const override
          {
          return std::vector<std::string>({"brainpool512r1", "brainpool384r1", "brainpool256r1", "secp384r1", "secp256r1"});
+         }
+
+      std::vector<std::string> allowed_groups() const override
+         {
+         return std::vector<std::string>({"brainpool512r1", "brainpool384r1", "brainpool256r1", "secp384r1",
+            "secp256r1", "ffdhe/ietf/8192", "ffdhe/ietf/6144", "ffdhe/ietf/4096", "ffdhe/ietf/3072", "ffdhe/ietf/2048"});
          }
 
       bool allow_insecure_renegotiation() const override { return false; }
@@ -450,6 +466,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       std::vector<std::string> allowed_signature_methods() const override;
 
       std::vector<std::string> allowed_ecc_curves() const override;
+
+      std::vector<std::string> allowed_groups() const override;
 
       bool use_ecc_point_compression() const override;
 

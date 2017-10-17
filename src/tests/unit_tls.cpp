@@ -1346,14 +1346,17 @@ class TLS_Unit_Tests final : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
             { { "use_ecc_point_compression", "true" } });
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-256/GCM", "AEAD",
-            { { "ecc_curves", "secp521r1" } });
+            { { "groups", "secp521r1" } });
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
-            { { "ecc_curves", "brainpool256r1" } });
+            { { "groups", "brainpool256r1" } });
 
 #if defined(BOTAN_HAS_CURVE_25519)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
-            { { "ecc_curves", "x25519" } });
+            { { "groups", "x25519" } });
 #endif
+
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
+            { { "groups", "ffdhe/ietf/2048" } });
 
          std::unique_ptr<Botan::Credentials_Manager> creds_with_client_cert(create_creds(rng, true));
          test_modern_versions(results, *client_ses, *server_ses, *creds_with_client_cert, "ECDH", "AES-256/GCM");
@@ -1388,7 +1391,7 @@ class TLS_Unit_Tests final : public Test
 
 #if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
-            { { "ecc_curves", BOTAN_HOUSE_ECC_CURVE_NAME } });
+            { { "groups", BOTAN_HOUSE_ECC_CURVE_NAME } });
 #endif
 
          return results;

@@ -101,6 +101,35 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             throw Decoding_Error("Bad params size for DH key exchange");
 
          /*
+          * If we offer ffdhe groups in the client hello,
+          * p and g must match one of these groups.
+          */
+         std::vector<std::string> allowed_groups = policy.allowed_groups();
+         bool server_sent_requested_group = false;
+
+         if(!allowed_groups.empty())
+            {
+            for(const auto& allowed_group : allowed_groups)
+               {
+               if(Supported_Groups::is_dh_group(allowed_group))
+                  {
+                  DL_Group client_group(allowed_group);
+                  if(client_group.get_p() == p && client_group.get_g() == g)
+                     {
+                     server_sent_requested_group = true;
+                     break;
+                     }
+                  }
+               }
+            }
+
+         if(!server_sent_requested_group)
+            {
+            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                                "Server sent unexpected DH key for DHE exchange");
+            }
+
+         /*
          * A basic check for key validity. As we do not know q here we
          * cannot check that Y is in the right subgroup. However since
          * our key is ephemeral there does not seem to be any

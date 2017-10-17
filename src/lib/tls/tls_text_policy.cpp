@@ -108,6 +108,11 @@ std::string Text_Policy::dh_group() const
    return get_str("dh_group", Policy::dh_group());
    }
 
+std::vector<std::string> Text_Policy::allowed_groups() const
+   {
+   return get_list("groups", Policy::allowed_groups());
+   }
+
 size_t Text_Policy::minimum_ecdh_group_size() const
    {
    return get_len("minimum_ecdh_group_size", Policy::minimum_ecdh_group_size());

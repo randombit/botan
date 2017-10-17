@@ -110,6 +110,8 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       std::vector<std::string> supported_ecc_curves() const;
 
+      std::vector<std::string> supported_dh_groups() const;
+
       bool prefers_compressed_ec_points() const;
 
       std::string sni_hostname() const;

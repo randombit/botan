@@ -275,7 +275,23 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize() const
    return buf;
    }
 
-std::string Supported_Elliptic_Curves::curve_id_to_name(uint16_t id)
+Supported_Groups::Supported_Groups(const std::vector<std::string>& groups) :
+      m_groups(groups)
+   {
+   for(const auto& group : m_groups)
+      {
+      if(is_dh_group(group))
+         {
+         m_dh_groups.push_back(group);
+         }
+      else
+         {
+         m_curves.push_back(group);
+         }
+      }
+   }
+
+std::string Supported_Groups::curve_id_to_name(uint16_t id)
    {
    switch(id)
       {
@@ -302,12 +318,23 @@ std::string Supported_Elliptic_Curves::curve_id_to_name(uint16_t id)
          return BOTAN_HOUSE_ECC_CURVE_NAME;
 #endif
 
+      case 256:
+         return "ffdhe/ietf/2048";
+      case 257:
+         return "ffdhe/ietf/3072";
+      case 258:
+         return "ffdhe/ietf/4096";
+      case 259:
+         return "ffdhe/ietf/6144";
+      case 260:
+         return "ffdhe/ietf/8192";
+
       default:
          return ""; // something we don't know or support
       }
    }
 
-uint16_t Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
+uint16_t Supported_Groups::name_to_curve_id(const std::string& name)
    {
    if(name == "secp256r1")
       return 23;
@@ -332,17 +359,39 @@ uint16_t Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
       return BOTAN_HOUSE_ECC_CURVE_TLS_ID;
 #endif
 
-   // Unknown/unavailable EC curves are ignored
+   if(name == "ffdhe/ietf/2048")
+      return 256;
+   if(name == "ffdhe/ietf/3072")
+      return 257;
+   if(name == "ffdhe/ietf/4096")
+      return 258;
+   if(name == "ffdhe/ietf/6144")
+      return 259;
+   if(name == "ffdhe/ietf/8192")
+      return 260;
+
+   // Unknown/unavailable DH groups/EC curves are ignored
    return 0;
    }
 
-std::vector<uint8_t> Supported_Elliptic_Curves::serialize() const
+bool Supported_Groups::is_dh_group( const std::string& group_name )
+   {
+   if(group_name == "ffdhe/ietf/2048" || group_name == "ffdhe/ietf/3072"
+         || group_name == "ffdhe/ietf/4096" || group_name == "ffdhe/ietf/6144"
+         || group_name == "ffdhe/ietf/8192")
+      {
+      return true;
+      }
+   return false;
+   }
+
+std::vector<uint8_t> Supported_Groups::serialize() const
    {
    std::vector<uint8_t> buf(2);
 
-   for(size_t i = 0; i != m_curves.size(); ++i)
+   for(size_t i = 0; i != m_groups.size(); ++i)
       {
-      const uint16_t id = name_to_curve_id(m_curves[i]);
+      const uint16_t id = name_to_curve_id(m_groups[i]);
 
       if(id > 0)
          {
@@ -357,16 +406,16 @@ std::vector<uint8_t> Supported_Elliptic_Curves::serialize() const
    return buf;
    }
 
-Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
-                                                     uint16_t extension_size)
+Supported_Groups::Supported_Groups(TLS_Data_Reader& reader,
+      uint16_t extension_size)
    {
    uint16_t len = reader.get_uint16_t();
 
    if(len + 2 != extension_size)
-      throw Decoding_Error("Inconsistent length field in elliptic curve list");
+      throw Decoding_Error("Inconsistent length field in supported groups list");
 
    if(len % 2 == 1)
-      throw Decoding_Error("Elliptic curve list of strange size");
+      throw Decoding_Error("Supported groups list of strange size");
 
    len /= 2;
 
@@ -376,7 +425,17 @@ Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
       const std::string name = curve_id_to_name(id);
 
       if(!name.empty())
-         m_curves.push_back(name);
+         {
+         m_groups.push_back(name);
+         if(is_dh_group(name))
+            {
+            m_dh_groups.push_back(name);
+            }
+            else
+            {
+            m_curves.push_back(name);
+            }
+         }
       }
    }
 

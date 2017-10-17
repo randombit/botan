@@ -225,10 +225,11 @@ class Session_Ticket final : public Extension
       std::vector<uint8_t> m_ticket;
    };
 
+
 /**
-* Supported Elliptic Curves Extension (RFC 4492)
+* Supported Groups Extension (RFC 7919)
 */
-class Supported_Elliptic_Curves final : public Extension
+class Supported_Groups final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -239,20 +240,27 @@ class Supported_Elliptic_Curves final : public Extension
       static std::string curve_id_to_name(uint16_t id);
       static uint16_t name_to_curve_id(const std::string& name);
 
+      static bool is_dh_group( const std::string& group_name );
+
       const std::vector<std::string>& curves() const { return m_curves; }
+      const std::vector<std::string>& dh_groups() const { return m_dh_groups; }
 
       std::vector<uint8_t> serialize() const override;
 
-      explicit Supported_Elliptic_Curves(const std::vector<std::string>& curves) :
-         m_curves(curves) {}
+      explicit Supported_Groups(const std::vector<std::string>& groups);
 
-      Supported_Elliptic_Curves(TLS_Data_Reader& reader,
+      Supported_Groups(TLS_Data_Reader& reader,
                                 uint16_t extension_size);
 
-      bool empty() const override { return m_curves.empty(); }
+      bool empty() const override { return m_groups.empty(); }
    private:
+      std::vector<std::string> m_groups;
       std::vector<std::string> m_curves;
+      std::vector<std::string> m_dh_groups;
    };
+
+// previously Supported Elliptic Curves Extension (RFC 4492)
+using Supported_Elliptic_Curves = Supported_Groups;
 
 /**
 * Supported Point Formats Extension (RFC 4492)

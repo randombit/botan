@@ -56,7 +56,10 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
    if(kex_algo == "DH" || kex_algo == "DHE_PSK")
       {
-      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, DL_Group(policy.dh_group())));
+      const std::vector<std::string>& dh_groups =
+               state.client_hello()->supported_dh_groups();
+
+      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, DL_Group(policy.choose_dh_group(dh_groups))));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
