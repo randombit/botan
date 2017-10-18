@@ -50,7 +50,7 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
 #if defined(BOTAN_HAS_GCM_PMULL)
    if(CPUID::has_arm_pmull())
       {
-      return gcm_multiply_pmull(x.data(), m_H.data(), input, blocks);
+      return gcm_multiply_pmull(x.data(), m_H_pow.data(), input, blocks);
       }
 #endif
 
@@ -156,6 +156,14 @@ void GHASH::key_schedule(const uint8_t key[], size_t length)
       {
       m_H_pow.resize(8);
       gcm_clmul_precompute(m_H.data(), m_H_pow.data());
+      }
+#endif
+
+#if defined(BOTAN_HAS_GCM_PMULL)
+   if(CPUID::has_arm_pmull())
+      {
+      m_H_pow.resize(8);
+      gcm_pmull_precompute(m_H.data(), m_H_pow.data());
       }
 #endif
 
