@@ -60,11 +60,14 @@ std::string CTR_BE::name() const
 
 void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
+   const uint8_t* pad_bits = &m_pad[0];
+   const size_t pad_size = m_pad.size();
+
    if(m_pad_pos > 0)
       {
-      const size_t avail = m_pad.size() - m_pad_pos;
+      const size_t avail = pad_size - m_pad_pos;
       const size_t take = std::min(length, avail);
-      xor_buf(out, in, &m_pad[m_pad_pos], take);
+      xor_buf(out, in, pad_bits + m_pad_pos, take);
       length -= take;
       in += take;
       out += take;
@@ -78,18 +81,18 @@ void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
          }
       }
 
-   while(length >= m_pad.size())
+   while(length >= pad_size)
       {
-      xor_buf(out, in, &m_pad[0], m_pad.size());
-      length -= m_pad.size();
-      in += m_pad.size();
-      out += m_pad.size();
+      xor_buf(out, in, pad_bits, pad_size);
+      length -= pad_size;
+      in += pad_size;
+      out += pad_size;
 
       add_counter(m_ctr_blocks);
       m_cipher->encrypt_n(m_counter.data(), m_pad.data(), m_ctr_blocks);
       }
 
-   xor_buf(out, in, &m_pad[0], length);
+   xor_buf(out, in, pad_bits, length);
    m_pad_pos += length;
    }
 

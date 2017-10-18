@@ -13,58 +13,51 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA("pclmul,ssse3")
-inline __m128i gcm_multiply(const __m128i& x, const __m128i& H)
+BOTAN_FUNC_ISA("sse2")
+inline __m128i gcm_reduce(const __m128i& B0, const __m128i& B1)
    {
-   __m128i T0, T1, T2, T3, T4, T5;
+   __m128i T0, T1, T2, T3;
 
-   T0 = _mm_clmulepi64_si128(x, H, 0x00);
-   T1 = _mm_clmulepi64_si128(x, H, 0x01);
-   T2 = _mm_clmulepi64_si128(x, H, 0x10);
-   T3 = _mm_clmulepi64_si128(x, H, 0x11);
+   T0 = _mm_srli_epi32(B1, 31);
+   T1 = _mm_slli_epi32(B1, 1);
+   T2 = _mm_srli_epi32(B0, 31);
+   T3 = _mm_slli_epi32(B0, 1);
 
-   T1 = _mm_xor_si128(T1, T2);
-   T2 = _mm_slli_si128(T1, 8);
-   T1 = _mm_srli_si128(T1, 8);
-   T0 = _mm_xor_si128(T0, T2);
-   T3 = _mm_xor_si128(T3, T1);
+   T3 = _mm_or_si128(T3, _mm_srli_si128(T0, 12));
+   T3 = _mm_or_si128(T3, _mm_slli_si128(T2, 4));
+   T1 = _mm_or_si128(T1, _mm_slli_si128(T0, 4));
 
-   T4 = _mm_srli_epi32(T0, 31);
-   T0 = _mm_slli_epi32(T0, 1);
+   T0 = _mm_xor_si128(_mm_slli_epi32(T1, 31), _mm_slli_epi32(T1, 30));
+   T0 = _mm_xor_si128(T0, _mm_slli_epi32(T1, 25));
 
-   T5 = _mm_srli_epi32(T3, 31);
-   T3 = _mm_slli_epi32(T3, 1);
+   T1 = _mm_xor_si128(T1, _mm_slli_si128(T0, 12));
 
-   T2 = _mm_srli_si128(T4, 12);
-   T5 = _mm_slli_si128(T5, 4);
-   T4 = _mm_slli_si128(T4, 4);
-   T0 = _mm_or_si128(T0, T4);
-   T3 = _mm_or_si128(T3, T5);
-   T3 = _mm_or_si128(T3, T2);
-
-   T4 = _mm_slli_epi32(T0, 31);
-   T5 = _mm_slli_epi32(T0, 30);
-   T2 = _mm_slli_epi32(T0, 25);
-
-   T4 = _mm_xor_si128(T4, T5);
-   T4 = _mm_xor_si128(T4, T2);
-   T5 = _mm_srli_si128(T4, 4);
-   T3 = _mm_xor_si128(T3, T5);
-   T4 = _mm_slli_si128(T4, 12);
-   T0 = _mm_xor_si128(T0, T4);
-   T3 = _mm_xor_si128(T3, T0);
-
-   T4 = _mm_srli_epi32(T0, 1);
-   T1 = _mm_srli_epi32(T0, 2);
-   T2 = _mm_srli_epi32(T0, 7);
-   T3 = _mm_xor_si128(T3, T1);
-   T3 = _mm_xor_si128(T3, T2);
-   T3 = _mm_xor_si128(T3, T4);
-
-   return T3;
+   T0 = _mm_xor_si128(T3, _mm_srli_si128(T0, 4));
+   T0 = _mm_xor_si128(T0, T1);
+   T0 = _mm_xor_si128(T0, _mm_srli_epi32(T1, 7));
+   T0 = _mm_xor_si128(T0, _mm_srli_epi32(T1, 1));
+   T0 = _mm_xor_si128(T0, _mm_srli_epi32(T1, 2));
+   return T0;
    }
 
-BOTAN_FUNC_ISA("pclmul,ssse3")
+BOTAN_FUNC_ISA("pclmul,sse2")
+inline __m128i gcm_multiply(const __m128i& H, const __m128i& x)
+   {
+   __m128i T0, T1, T2, T3, T4;
+
+   T0 = _mm_clmulepi64_si128(x, H, 0x11);
+   T1 = _mm_clmulepi64_si128(x, H, 0x10);
+   T2 = _mm_clmulepi64_si128(x, H, 0x01);
+   T3 = _mm_clmulepi64_si128(x, H, 0x00);
+
+   T1 = _mm_xor_si128(T1, T2);
+   T0 = _mm_xor_si128(T0, _mm_srli_si128(T1, 8));
+   T3 = _mm_xor_si128(T3, _mm_slli_si128(T1, 8));
+
+   return gcm_reduce(T0, T3);
+   }
+
+BOTAN_FUNC_ISA("pclmul,sse2")
 inline __m128i gcm_multiply_x4(const __m128i& H1, const __m128i& H2, const __m128i& H3, const __m128i& H4,
                                const __m128i& X1, const __m128i& X2, const __m128i& X3, const __m128i& X4)
    {
@@ -92,7 +85,7 @@ inline __m128i gcm_multiply_x4(const __m128i& H1, const __m128i& H2, const __m12
       _mm_xor_si128(H3_X3_hi, H4_X4_hi));
 
    __m128i T0 = _mm_xor_si128(lo, hi);
-   __m128i T1, T2, T3, T4, T5;
+   __m128i T1, T2, T3, T4;
 
    T1 = _mm_xor_si128(_mm_srli_si128(H1, 8), H1);
    T2 = _mm_xor_si128(_mm_srli_si128(X1, 8), X1);
@@ -108,36 +101,10 @@ inline __m128i gcm_multiply_x4(const __m128i& H1, const __m128i& H2, const __m12
    T0 = _mm_xor_si128(T0, _mm_clmulepi64_si128(T1, T2, 0x00));
    T0 = _mm_xor_si128(T0, _mm_clmulepi64_si128(T3, T4, 0x00));
 
-   T3 = _mm_xor_si128(_mm_slli_si128(T0, 8), lo);
    T1 = _mm_xor_si128(_mm_srli_si128(T0, 8), hi);
+   T2 = _mm_xor_si128(_mm_slli_si128(T0, 8), lo);
 
-   T0 = _mm_srli_epi32(T3, 31);
-   T4 = _mm_srli_epi32(T1, 31);
-   T3 = _mm_slli_epi32(T3, 1);
-   T1 = _mm_slli_epi32(T1, 1);
-
-   T1 = _mm_or_si128(T1, _mm_srli_si128(T0, 12));
-   T1 = _mm_or_si128(T1, _mm_slli_si128(T4, 4));
-   T3 = _mm_or_si128(T3, _mm_slli_si128(T0, 4));
-
-   T0 = _mm_slli_epi32(T3, 31);
-   T0 = _mm_xor_si128(T0, _mm_slli_epi32(T3, 30));
-   T0 = _mm_xor_si128(T0, _mm_slli_epi32(T3, 25));
-
-   T5 = _mm_srli_si128(T0, 4);
-   T3 = _mm_xor_si128(T3, _mm_slli_si128(T0, 12));
-   T2 = _mm_srli_epi32(T3, 1);
-   T4 = _mm_srli_epi32(T3, 2);
-   T0 = _mm_srli_epi32(T3, 7);
-
-   // combine results: T0 ^ T1 ^ T2 ^ T3 ^ T4 ^ T5
-   T0 = _mm_xor_si128(T0, T1);
-   T2 = _mm_xor_si128(T2, T3);
-   T4 = _mm_xor_si128(T4, T5);
-
-   T0 = _mm_xor_si128(T0, T2);
-   T0 = _mm_xor_si128(T0, T4);
-   return T0;
+   return gcm_reduce(T1, T2);
    }
 
 }
@@ -205,7 +172,7 @@ void gcm_multiply_clmul(uint8_t x[16],
       const __m128i m = _mm_shuffle_epi8(_mm_loadu_si128(input + i), BSWAP_MASK);
 
       a = _mm_xor_si128(a, m);
-      a = gcm_multiply(a, H);
+      a = gcm_multiply(H, a);
       }
 
    a = _mm_shuffle_epi8(a, BSWAP_MASK);

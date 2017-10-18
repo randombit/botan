@@ -103,10 +103,10 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
    m_ctr->set_iv(y0.data(), y0.size());
 
-   secure_vector<uint8_t> m_enc_y0(GCM_BS);
-   m_ctr->encipher(m_enc_y0);
+   zeroise(y0);
+   m_ctr->encipher(y0);
 
-   m_ghash->start(m_enc_y0.data(), m_enc_y0.size());
+   m_ghash->start(y0.data(), y0.size());
    }
 
 size_t GCM_Encryption::process(uint8_t buf[], size_t sz)
