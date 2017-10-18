@@ -77,11 +77,23 @@ class BOTAN_PUBLIC_API(2,0) Policy
       bool allowed_signature_hash(const std::string& hash) const;
 
       /**
-      * Return list of ECC curves we are willing to use in order of preference
+      * Return list of ECC curves we are willing to use in order of preference.
+      * Allowed values: x25519, secp256r1, secp384r1, secp521r1,
+      *                 brainpool256r1, brainpool384r1, brainpool512r1
       */
       virtual std::vector<std::string> allowed_ecc_curves() const;
 
       bool allowed_ecc_curve(const std::string& curve) const;
+
+      /**
+      * Return list of ECC curves and FFDHE groups
+      * we are willing to use in order of preference.
+      * Allowed values: x25519, secp256r1, secp384r1, secp521r1,
+      *                 brainpool256r1, brainpool384r1, brainpool512r1,
+      *                 ffdhe/ietf/2048, ffdhe/ietf/3072, ffdhe/ietf/4096,
+      *                 ffdhe/ietf/6144, ffdhe/ietf/8192
+      */
+      virtual std::vector<std::string> allowed_groups() const;
 
       /**
       * Request that ECC curve points are sent compressed
@@ -160,8 +172,6 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool allow_dtls12() const;
 
       virtual std::string dh_group() const;
-
-      virtual std::vector<std::string> allowed_groups() const;
 
       /**
       * Return the minimum DH group size we're willing to use
