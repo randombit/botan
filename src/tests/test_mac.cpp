@@ -85,7 +85,7 @@ class Message_Auth_Tests final : public Text_Based_Test
             clone->start(iv);
             clone->update(Test::rng().random_vec(32));
 
-            result.test_eq(provider + " correct mac", mac->verify_mac(expected.data(), expected.size()), true);
+            result.test_eq(provider + " verify mac", mac->verify_mac(expected.data(), expected.size()), true);
 
             if(input.size() > 2)
                {
