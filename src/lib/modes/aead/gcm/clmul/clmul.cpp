@@ -43,7 +43,7 @@ inline __m128i gcm_reduce(const __m128i& B0, const __m128i& B1)
 BOTAN_FUNC_ISA("pclmul,sse2")
 inline __m128i gcm_multiply(const __m128i& H, const __m128i& x)
    {
-   __m128i T0, T1, T2, T3, T4;
+   __m128i T0, T1, T2, T3;
 
    T0 = _mm_clmulepi64_si128(x, H, 0x11);
    T1 = _mm_clmulepi64_si128(x, H, 0x10);
