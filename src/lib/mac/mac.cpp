@@ -19,10 +19,12 @@
 
 #if defined(BOTAN_HAS_GMAC)
   #include <botan/gmac.h>
+  #include <botan/block_cipher.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC)
   #include <botan/hmac.h>
+  #include <botan/hash.h>
 #endif
 
 #if defined(BOTAN_HAS_POLY1305)

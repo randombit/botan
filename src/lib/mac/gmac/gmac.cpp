@@ -7,6 +7,8 @@
  */
 
 #include <botan/gmac.h>
+#include <botan/ghash.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 
@@ -26,6 +28,13 @@ void GMAC::clear()
    zeroise(m_aad_buf);
    m_aad_buf_pos = 0;
    m_initialized = false;
+   }
+
+GMAC::~GMAC() { /* for unique_ptr */ }
+
+Key_Length_Specification GMAC::key_spec() const
+   {
+   return m_cipher->key_spec();
    }
 
 std::string GMAC::name() const
