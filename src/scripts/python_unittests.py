@@ -21,6 +21,7 @@ from configure import ModulesChooser # pylint: disable=wrong-import-position
 class AmalgamationHelperTests(unittest.TestCase):
     def test_matcher_std_includes(self):
         self.assertEqual(AmalgamationHelper.is_unconditional_std_include("#include <string>"), "string")
+        self.assertEqual(AmalgamationHelper.is_unconditional_std_include("#include <string> // comment"), "string")
 
         self.assertEqual(AmalgamationHelper.is_unconditional_std_include("#include <myfile.h>"), None)
         self.assertEqual(AmalgamationHelper.is_unconditional_std_include("#include <unistd.h>"), None)
@@ -30,6 +31,10 @@ class AmalgamationHelperTests(unittest.TestCase):
         self.assertEqual(AmalgamationHelper.is_botan_include("#include <botan/oids.h>"),
                          "oids.h")
         self.assertEqual(AmalgamationHelper.is_botan_include("#include <botan/internal/socket.h>"),
+                         "internal/socket.h")
+        self.assertEqual(AmalgamationHelper.is_botan_include("#include <botan/oids.h> // comment"),
+                         "oids.h")
+        self.assertEqual(AmalgamationHelper.is_botan_include("#include <botan/internal/socket.h> // comment"),
                          "internal/socket.h")
         self.assertEqual(AmalgamationHelper.is_botan_include("  #include <botan/oids.h>"),
                          "oids.h")
@@ -50,6 +55,11 @@ class AmalgamationHelperTests(unittest.TestCase):
         self.assertEqual(AmalgamationHelper.is_any_include("  #include <myfile.h>"), "myfile.h")
         self.assertEqual(AmalgamationHelper.is_any_include("  #include <unistd.h>"), "unistd.h")
         self.assertEqual(AmalgamationHelper.is_any_include("  #include <botan/oids.h>"),
+                         "botan/oids.h")
+        self.assertEqual(AmalgamationHelper.is_any_include("#include <string> // comment"), "string")
+        self.assertEqual(AmalgamationHelper.is_any_include("#include <myfile.h> // comment"), "myfile.h")
+        self.assertEqual(AmalgamationHelper.is_any_include("#include <unistd.h> // comment"), "unistd.h")
+        self.assertEqual(AmalgamationHelper.is_any_include("#include <botan/oids.h> // comment"),
                          "botan/oids.h")
 
 class CompilerDetection(unittest.TestCase):

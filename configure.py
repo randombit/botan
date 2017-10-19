@@ -2440,12 +2440,13 @@ def portable_symlink(file_path, target_dir, method):
 
 
 class AmalgamationHelper(object):
-    _any_include = re.compile(r'#include <(.*)>$')
-    _botan_include = re.compile(r'#include <botan/(.*)>$')
+    # All include types may have trailing comment like e.g. '#include <vector> // IWYU pragma: export'
+    _any_include = re.compile(r'#include <(.*)>')
+    _botan_include = re.compile(r'#include <botan/(.*)>')
 
     # Only matches at the beginning of the line. By convention, this means that the include
     # is not wrapped by condition macros
-    _unconditional_std_include = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
+    _unconditional_std_include = re.compile(r'^#include <([^/\.]+|stddef.h)>')
 
     @staticmethod
     def is_any_include(cpp_source_line):
