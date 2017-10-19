@@ -48,10 +48,6 @@ PRNG_Unseeded::PRNG_Unseeded(const std::string& algo) :
    Invalid_State("PRNG not seeded: " + algo)
    {}
 
-Policy_Violation::Policy_Violation(const std::string& err) :
-   Invalid_State("Policy violation: " + err)
-   {}
-
 Algorithm_Not_Found::Algorithm_Not_Found(const std::string& name) :
    Lookup_Error("Could not find any algorithm named \"" + name + "\"")
    {}

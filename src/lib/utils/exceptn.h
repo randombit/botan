@@ -117,8 +117,8 @@ class BOTAN_PUBLIC_API(2,0) PRNG_Unseeded final : public Invalid_State
 class BOTAN_DEPRECATED("deprecated") BOTAN_PUBLIC_API(2,0) Policy_Violation final : public Invalid_State
    {
    public:
-      explicit Policy_Violation(const std::string& err);
-      ~Policy_Violation() { /* avoid strange MSVC warning */ }
+      explicit Policy_Violation(const std::string& err) :
+         Invalid_State("Policy violation: " + err) {}
    };
 
 /**
