@@ -83,7 +83,7 @@ class Version(object):
     @staticmethod
     def get_data():
         if not Version.data:
-            root_dir = os.path.dirname(sys.argv[0])
+            root_dir = os.path.dirname(os.path.realpath(__file__))
             Version.data = parse_version_file(os.path.join(root_dir, 'version.txt'))
         return Version.data
 
