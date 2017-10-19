@@ -83,7 +83,7 @@ class Version(object):
     @staticmethod
     def get_data():
         if not Version.data:
-            root_dir = os.path.dirname(sys.argv[0])
+            root_dir = os.path.dirname(os.path.realpath(__file__))
             Version.data = parse_version_file(os.path.join(root_dir, 'version.txt'))
         return Version.data
 
@@ -2440,13 +2440,18 @@ def portable_symlink(file_path, target_dir, method):
 
 
 class AmalgamationHelper(object):
-    _any_include_matcher = re.compile(r'#include <(.*)>$')
-    _botan_include_matcher = re.compile(r'#include <botan/(.*)>')
-    _std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
+    # All include types may have trailing comment like e.g. '#include <vector> // IWYU pragma: export'
+    _any_include = re.compile(r'#include <(.*)>')
+    _botan_include = re.compile(r'#include <botan/(.*)>')
+
+    # Only matches at the beginning of the line. By convention, this means that the include
+    # is not wrapped by condition macros
+    _unconditional_any_include = re.compile(r'^#include <(.*)>')
+    _unconditional_std_include = re.compile(r'^#include <([^/\.]+|stddef.h)>')
 
     @staticmethod
     def is_any_include(cpp_source_line):
-        match = AmalgamationHelper._any_include_matcher.search(cpp_source_line)
+        match = AmalgamationHelper._any_include.search(cpp_source_line)
         if match:
             return match.group(1)
         else:
@@ -2454,15 +2459,23 @@ class AmalgamationHelper(object):
 
     @staticmethod
     def is_botan_include(cpp_source_line):
-        match = AmalgamationHelper._botan_include_matcher.search(cpp_source_line)
+        match = AmalgamationHelper._botan_include.search(cpp_source_line)
         if match:
             return match.group(1)
         else:
             return None
 
     @staticmethod
-    def is_std_include(cpp_source_line):
-        match = AmalgamationHelper._std_include_matcher.search(cpp_source_line)
+    def is_unconditional_any_include(cpp_source_line):
+        match = AmalgamationHelper._unconditional_any_include.search(cpp_source_line)
+        if match:
+            return match.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def is_unconditional_std_include(cpp_source_line):
+        match = AmalgamationHelper._unconditional_std_include.search(cpp_source_line)
         if match:
             return match.group(1)
         else:
@@ -2518,7 +2531,7 @@ class AmalgamationHeader(object):
                 for c in self.header_contents(header):
                     yield c
             else:
-                std_header = AmalgamationHelper.is_std_include(line)
+                std_header = AmalgamationHelper.is_unconditional_std_include(line)
 
                 if std_header:
                     self.all_std_includes.add(std_header)
@@ -2669,9 +2682,9 @@ class AmalgamationGenerator(object):
                 f.write('#endif\n')
 
         # target to include header map
-        headers_written = {}
+        unconditional_headers_written = {}
         for target, _ in amalgamation_sources.items():
-            headers_written[target] = included_in_headers.copy()
+            unconditional_headers_written[target] = included_in_headers.copy()
 
         for mod in sorted(self._modules, key=lambda module: module.basename):
             tgt = self._target_for_module(mod)
@@ -2679,17 +2692,17 @@ class AmalgamationGenerator(object):
                 with open(src, 'r', **encoding_kwords) as f:
                     for line in f:
                         if AmalgamationHelper.is_botan_include(line):
+                            # Botan headers are inlined in amalgamation headers
                             continue
 
-                        header = AmalgamationHelper.is_any_include(line)
-                        if header:
-                            if header in headers_written[tgt]:
-                                continue
+                        if AmalgamationHelper.is_any_include(line) in unconditional_headers_written[tgt]:
+                            # This include (conditional or unconditional) was unconditionally added before
+                            continue
 
-                            amalgamation_files[tgt].write(line)
-                            headers_written[tgt].add(header)
-                        else:
-                            amalgamation_files[tgt].write(line)
+                        amalgamation_files[tgt].write(line)
+                        unconditional_header = AmalgamationHelper.is_unconditional_any_include(line)
+                        if unconditional_header:
+                            unconditional_headers_written[tgt].add(unconditional_header)
 
         for f in amalgamation_files.values():
             f.close()
