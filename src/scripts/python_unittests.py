@@ -14,9 +14,43 @@ import sys
 import unittest
 
 sys.path.append("../..") # Botan repo root
+from configure import AmalgamationHelper # pylint: disable=wrong-import-position
 from configure import CompilerDetector # pylint: disable=wrong-import-position
 from configure import ModulesChooser # pylint: disable=wrong-import-position
 
+class AmalgamationHelperTests(unittest.TestCase):
+    def test_matcher_std_includes(self):
+        self.assertEqual(AmalgamationHelper.is_unconditional_std_include("#include <string>"), "string")
+
+        self.assertEqual(AmalgamationHelper.is_unconditional_std_include("#include <myfile.h>"), None)
+        self.assertEqual(AmalgamationHelper.is_unconditional_std_include("#include <unistd.h>"), None)
+        self.assertEqual(AmalgamationHelper.is_unconditional_std_include("  #include <string>"), None)
+
+    def test_matcher_botan_include(self):
+        self.assertEqual(AmalgamationHelper.is_botan_include("#include <botan/oids.h>"),
+                         "oids.h")
+        self.assertEqual(AmalgamationHelper.is_botan_include("#include <botan/internal/socket.h>"),
+                         "internal/socket.h")
+        self.assertEqual(AmalgamationHelper.is_botan_include("  #include <botan/oids.h>"),
+                         "oids.h")
+        self.assertEqual(AmalgamationHelper.is_botan_include("  #include <botan/internal/socket.h>"),
+                         "internal/socket.h")
+
+        self.assertEqual(AmalgamationHelper.is_botan_include("#include <string>"), None)
+        self.assertEqual(AmalgamationHelper.is_botan_include("#include <myfile.h>"), None)
+        self.assertEqual(AmalgamationHelper.is_botan_include("#include <unistd.h>"), None)
+
+    def test_matcher_any_includes(self):
+        self.assertEqual(AmalgamationHelper.is_any_include("#include <string>"), "string")
+        self.assertEqual(AmalgamationHelper.is_any_include("#include <myfile.h>"), "myfile.h")
+        self.assertEqual(AmalgamationHelper.is_any_include("#include <unistd.h>"), "unistd.h")
+        self.assertEqual(AmalgamationHelper.is_any_include("#include <botan/oids.h>"),
+                         "botan/oids.h")
+        self.assertEqual(AmalgamationHelper.is_any_include("  #include <string>"), "string")
+        self.assertEqual(AmalgamationHelper.is_any_include("  #include <myfile.h>"), "myfile.h")
+        self.assertEqual(AmalgamationHelper.is_any_include("  #include <unistd.h>"), "unistd.h")
+        self.assertEqual(AmalgamationHelper.is_any_include("  #include <botan/oids.h>"),
+                         "botan/oids.h")
 
 class CompilerDetection(unittest.TestCase):
 

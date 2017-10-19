@@ -2440,13 +2440,16 @@ def portable_symlink(file_path, target_dir, method):
 
 
 class AmalgamationHelper(object):
-    _any_include_matcher = re.compile(r'#include <(.*)>$')
-    _botan_include_matcher = re.compile(r'#include <botan/(.*)>')
-    _std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
+    _any_include = re.compile(r'#include <(.*)>$')
+    _botan_include = re.compile(r'#include <botan/(.*)>$')
+
+    # Only matches at the beginning of the line. By convention, this means that the include
+    # is not wrapped by condition macros
+    _unconditional_std_include = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
 
     @staticmethod
     def is_any_include(cpp_source_line):
-        match = AmalgamationHelper._any_include_matcher.search(cpp_source_line)
+        match = AmalgamationHelper._any_include.search(cpp_source_line)
         if match:
             return match.group(1)
         else:
@@ -2454,15 +2457,15 @@ class AmalgamationHelper(object):
 
     @staticmethod
     def is_botan_include(cpp_source_line):
-        match = AmalgamationHelper._botan_include_matcher.search(cpp_source_line)
+        match = AmalgamationHelper._botan_include.search(cpp_source_line)
         if match:
             return match.group(1)
         else:
             return None
 
     @staticmethod
-    def is_std_include(cpp_source_line):
-        match = AmalgamationHelper._std_include_matcher.search(cpp_source_line)
+    def is_unconditional_std_include(cpp_source_line):
+        match = AmalgamationHelper._unconditional_std_include.search(cpp_source_line)
         if match:
             return match.group(1)
         else:
@@ -2518,7 +2521,7 @@ class AmalgamationHeader(object):
                 for c in self.header_contents(header):
                     yield c
             else:
-                std_header = AmalgamationHelper.is_std_include(line)
+                std_header = AmalgamationHelper.is_unconditional_std_include(line)
 
                 if std_header:
                     self.all_std_includes.add(std_header)
