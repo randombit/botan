@@ -9,6 +9,8 @@
 */
 
 #include <botan/internal/tls_cbc.h>
+#include <botan/cbc.h>
+
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/tls_alert.h>
@@ -21,7 +23,8 @@ namespace TLS {
 /*
 * TLS_CBC_HMAC_AEAD_Mode Constructor
 */
-TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(const std::string& cipher_name,
+TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
+                                               const std::string& cipher_name,
                                                size_t cipher_keylen,
                                                const std::string& mac_name,
                                                size_t mac_keylen,
@@ -33,18 +36,23 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(const std::string& cipher_name,
    m_mac_keylen(mac_keylen),
    m_use_encrypt_then_mac(use_encrypt_then_mac)
    {
-   m_cipher = BlockCipher::create_or_throw(m_cipher_name);
    m_mac = MessageAuthenticationCode::create_or_throw("HMAC(" + m_mac_name + ")");
+   std::unique_ptr<BlockCipher> cipher = BlockCipher::create_or_throw(m_cipher_name);
 
    m_tag_size = m_mac->output_length();
-   m_block_size = m_cipher->block_size();
+   m_block_size = cipher->block_size();
 
    m_iv_size = use_explicit_iv ? m_block_size : 0;
+
+   if(dir == ENCRYPTION)
+      m_cbc.reset(new CBC_Encryption(cipher.release(), new Null_Padding));
+   else
+      m_cbc.reset(new CBC_Decryption(cipher.release(), new Null_Padding));
    }
 
 void TLS_CBC_HMAC_AEAD_Mode::clear()
    {
-   cipher().clear();
+   cbc().clear();
    mac().clear();
    reset();
    }
@@ -85,7 +93,7 @@ void TLS_CBC_HMAC_AEAD_Mode::key_schedule(const uint8_t key[], size_t keylen)
    if(keylen != m_cipher_keylen + m_mac_keylen)
       throw Invalid_Key_Length(name(), keylen);
 
-   cipher().set_key(&key[0], m_cipher_keylen);
+   cbc().set_key(&key[0], m_cipher_keylen);
    mac().set_key(&key[m_cipher_keylen], m_mac_keylen);
    }
 
@@ -145,17 +153,10 @@ void TLS_CBC_HMAC_AEAD_Encryption::cbc_encrypt_record(uint8_t buf[], size_t buf_
    const size_t blocks = buf_size / block_size();
    BOTAN_ASSERT(buf_size % block_size() == 0, "Valid CBC input");
 
-   xor_buf(buf, cbc_state().data(), block_size());
-   cipher().encrypt(buf);
+   cbc().start(cbc_state());
+   cbc().process(buf, buf_size);
 
-   for(size_t i = 1; i < blocks; ++i)
-      {
-      xor_buf(&buf[block_size()*i], &buf[block_size()*(i-1)], block_size());
-      cipher().encrypt(&buf[block_size()*i]);
-      }
-
-   cbc_state().assign(&buf[block_size()*(blocks-1)],
-                      &buf[block_size()*blocks]);
+   cbc_state().assign(buf + buf_size - block_size(), buf + buf_size);
    }
 
 size_t TLS_CBC_HMAC_AEAD_Encryption::output_length(size_t input_length) const
@@ -253,32 +254,14 @@ uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len)
 
 void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[], size_t record_len)
    {
-   if(record_len % block_size() != 0)
-      throw Decoding_Error("Input CBC ciphertext is not a multiple of block size");
+   if(record_len == 0 || record_len % block_size() != 0)
+      throw Decoding_Error("Received TLS CBC ciphertext with invalid length");
 
-   const size_t blocks = record_len / block_size();
+   cbc().start(cbc_state());
+   cbc_state().assign(record_contents + record_len - block_size(),
+                      record_contents + record_len);
 
-   BOTAN_ASSERT(blocks >= 1, "At least one ciphertext block");
-
-   uint8_t* buf = record_contents;
-
-   secure_vector<uint8_t> last_ciphertext(block_size());
-   copy_mem(last_ciphertext.data(), buf, block_size());
-
-   cipher().decrypt(buf);
-   xor_buf(buf, cbc_state().data(), block_size());
-
-   secure_vector<uint8_t> last_ciphertext2;
-
-   for(size_t i = 1; i < blocks; ++i)
-      {
-      last_ciphertext2.assign(&buf[block_size()*i], &buf[block_size()*(i+1)]);
-      cipher().decrypt(&buf[block_size()*i]);
-      xor_buf(&buf[block_size()*i], last_ciphertext.data(), block_size());
-      std::swap(last_ciphertext, last_ciphertext2);
-      }
-
-   cbc_state().assign(last_ciphertext.begin(), last_ciphertext.end());
+   cbc().process(record_contents, record_len);
    }
 
 size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const

@@ -45,7 +45,8 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
       void reset() override final;
 
  protected:
-      TLS_CBC_HMAC_AEAD_Mode(const std::string& cipher_name,
+      TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir direction,
+                             const std::string& cipher_name,
                              size_t cipher_keylen,
                              const std::string& mac_name,
                              size_t mac_keylen,
@@ -59,11 +60,7 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
 
       bool use_encrypt_then_mac() const { return m_use_encrypt_then_mac; }
 
-      BlockCipher& cipher() const
-         {
-         BOTAN_ASSERT_NONNULL(m_cipher);
-         return *m_cipher;
-         }
+      Cipher_Mode& cbc() const { return *m_cbc; }
 
       MessageAuthenticationCode& mac() const
          {
@@ -91,7 +88,7 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
       size_t m_block_size;
       bool m_use_encrypt_then_mac;
 
-      std::unique_ptr<BlockCipher> m_cipher;
+      std::unique_ptr<Cipher_Mode> m_cbc;
       std::unique_ptr<MessageAuthenticationCode> m_mac;
 
       secure_vector<uint8_t> m_cbc_state;
@@ -113,7 +110,8 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AE
                                    const size_t mac_keylen,
                                    bool use_explicit_iv,
                                    bool use_encrypt_then_mac) :
-         TLS_CBC_HMAC_AEAD_Mode(cipher_algo,
+         TLS_CBC_HMAC_AEAD_Mode(ENCRYPTION,
+                                cipher_algo,
                                 cipher_keylen,
                                 mac_algo,
                                 mac_keylen,
@@ -146,7 +144,8 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AE
                                    const size_t mac_keylen,
                                    bool use_explicit_iv,
                                    bool use_encrypt_then_mac) :
-         TLS_CBC_HMAC_AEAD_Mode(cipher_algo,
+         TLS_CBC_HMAC_AEAD_Mode(DECRYPTION,
+                                cipher_algo,
                                 cipher_keylen,
                                 mac_algo,
                                 mac_keylen,
@@ -162,7 +161,7 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AE
 
    private:
       void cbc_decrypt_record(uint8_t record_contents[], size_t record_len);
-      
+
       void perform_additional_compressions(size_t plen, size_t padlen);
    };
 
