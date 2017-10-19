@@ -944,7 +944,7 @@ class Speed final : public Command
             }
          else
             {
-            output() << t.to_string();
+            output() << t.to_string() << std::flush;
             if(m_summary)
                m_summary->add(t);
             }
