@@ -143,7 +143,7 @@ void CTR_BE::add_counter(const uint64_t counter)
          uint64_t b0 = load_be<uint64_t>(&m_counter[off], 0);
          uint64_t b1 = load_be<uint64_t>(&m_counter[off], 1);
          b1 += counter;
-         b1 += (b1 < counter); // carry
+         b1 += (b1 < counter) ? 1 : 0; // carry
          store_be(b0, &m_counter[off]);
          store_be(b1, &m_counter[off+8]);
          off += BS;
