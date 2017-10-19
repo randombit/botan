@@ -12,6 +12,8 @@
    #include <botan/internal/filesystem.h>
    #include <botan/parsing.h>
    #include <botan/data_src.h>
+   #include <botan/x509_crl.h>
+   #include <botan/pkcs10.h>
 #endif
 
 #include <fstream>
@@ -316,6 +318,130 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run()
    }
 
 BOTAN_REGISTER_TEST("x509_path_extended", Extended_Path_Validation_Tests);
+
+class PSS_Path_Validation_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override;
+   };
+
+std::vector<Test::Result> PSS_Path_Validation_Tests::run()
+   {
+   std::vector<Test::Result> results;
+
+   const std::string pss_x509_test_dir = Test::data_dir() + "/pss_x509";
+
+   try
+      {
+      // Do nothing, just test filesystem access
+      Botan::get_files_recursive(pss_x509_test_dir);
+      }
+   catch(Botan::No_Filesystem_Access&)
+      {
+      Test::Result result("RSA-PSS X509 signature validation");
+      result.test_note("Skipping due to missing filesystem access");
+      results.push_back(result);
+      return results;
+      }
+
+   std::map<std::string, std::string> expected =
+      read_results(Test::data_file("pss_x509/expected.txt"));
+
+   std::map<std::string, std::string> validation_times =
+      read_results(Test::data_file("pss_x509/validation_times.txt"));
+
+   auto validation_times_iter = validation_times.begin();
+   for(auto i = expected.begin(); i != expected.end(); ++i)
+      {
+      const std::string test_name = i->first;
+      const std::string expected_result = i->second;
+
+      const std::string test_dir = pss_x509_test_dir + "/" + test_name;
+
+      Test::Result result("RSA-PSS X509 signature validation");
+      result.start_timer();
+
+      const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
+
+      if(all_files.empty())
+         {
+         result.test_failure("No test files found in " + test_dir);
+         results.push_back(result);
+         continue;
+         }
+
+      std::shared_ptr<Botan::X509_CRL> crl;
+      std::shared_ptr<Botan::X509_Certificate> end;
+      std::shared_ptr<Botan::X509_Certificate> root;
+      Botan::Certificate_Store_In_Memory store;
+      std::shared_ptr<Botan::PKCS10_Request> csr;
+      auto validation_time = Botan::calendar_point(std::atoi((validation_times_iter++)->second.c_str()), 0, 0, 0, 0,
+                             0).to_std_timepoint();
+      for(auto const& file : all_files)
+         {
+         if(file.find("end.crt") != std::string::npos)
+            {
+            end.reset(new Botan::X509_Certificate(file));
+            }
+         else if(file.find("root.crt") != std::string::npos)
+            {
+            root.reset(new Botan::X509_Certificate(file));
+            store.add_certificate(*root);
+            }
+         else if(file.find(".crl") != std::string::npos)
+            {
+            crl.reset(new Botan::X509_CRL(file));
+            }
+         else if(file.find(".csr") != std::string::npos)
+            {
+            csr.reset(new Botan::PKCS10_Request(file));
+            }
+         }
+
+      if(end && crl && root)    // CRL tests
+         {
+         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { end, root };
+         const std::vector<std::shared_ptr<const Botan::X509_CRL>> crls = { crl };
+         auto crl_status = Botan::PKIX::check_crl(cert_path, crls,
+                           validation_time);   // alternatively we could just call crl.check_signature( root_pubkey )
+
+         result.test_eq(test_name + " check_crl result",
+                        Botan::Path_Validation_Result::status_string(Botan::PKIX::overall_status(crl_status)),
+                        expected_result);
+         }
+      else if(end && root)     // CRT chain tests
+         {
+         // sha-1 is used
+         Botan::Path_Validation_Restrictions restrictions(false, 80);
+
+         Botan::Path_Validation_Result validation_result =
+            Botan::x509_path_validate(*end,
+                                      restrictions,
+                                      store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+         result.test_eq(test_name + " path validation result",
+                        validation_result.result_string(),
+                        expected_result);
+         }
+      else if(end && !root)    // CRT self signed tests
+         {
+         std::unique_ptr<Botan::Public_Key> pubkey(end->subject_public_key());
+         result.test_eq(test_name + " verify signature", end->check_signature(*pubkey), !!(std::stoi(expected_result)));
+         }
+      else if(csr)    // PKCS#10 Request
+         {
+         std::unique_ptr<Botan::Public_Key> pubkey(csr->subject_public_key());
+         result.test_eq(test_name + " verify signature", csr->check_signature(*pubkey), !!(std::stoi(expected_result)));
+         }
+
+      result.end_timer();
+      results.push_back(result);
+      }
+
+   return results;
+   }
+
+BOTAN_REGISTER_TEST("x509_path_rsa_pss", PSS_Path_Validation_Tests);
 
 #endif
 

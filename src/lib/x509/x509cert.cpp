@@ -112,6 +112,53 @@ void X509_Certificate::force_decode()
       throw BER_Bad_Tag("X509_Certificate: Unexpected tag for public key",
                         public_key.type_tag, public_key.class_tag);
 
+   AlgorithmIdentifier public_key_alg_id;
+   BER_Decoder(public_key.value).decode(public_key_alg_id).discard_remaining();
+
+   std::vector<std::string> sig_info =
+      split_on(OIDS::lookup(public_key_alg_id.oid), '/');
+
+   if(sig_info[0] == "RSA")
+      {
+      // RFC4055: If PublicKeyAlgo = PSS or OAEP: limit the use of the public key exclusively to either RSASSA - PSS or RSAES - OAEP
+      if(sig_info.size() >= 2)
+         {
+         if(sig_info[1] == "EMSA4")
+            {
+            /*
+            When the RSA private key owner wishes to limit the use of the public
+            key exclusively to RSASSA-PSS, then the id-RSASSA-PSS object
+            identifier MUST be used in the algorithm field within the subject
+            public key information, and, if present, the parameters field MUST
+            contain RSASSA-PSS-params.
+
+            All parameters in the signature structure algorithm identifier MUST
+            match the parameters in the key structure algorithm identifier
+            except the saltLength field. The saltLength field in the signature parameters
+            MUST be greater or equal to that in the key parameters field.
+
+            ToDo: Allow salt length to be greater
+            */
+            if(public_key_alg_id != signature_algorithm())
+               {
+               throw Decoding_Error("Algorithm identifier mismatch");
+               }
+            }
+         if(sig_info[1] == "OAEP")
+            {
+            throw Decoding_Error("Currently unsupported");
+            }
+         }
+      else
+         {
+         // oid = rsaEncryption -> parameters field MUST contain NULL
+         if(public_key_alg_id != AlgorithmIdentifier(public_key_alg_id.oid, AlgorithmIdentifier::USE_NULL_PARAM))
+            {
+            throw Decoding_Error("Parameters field MUST contain NULL");
+            }
+         }
+      }
+
    std::vector<uint8_t> v2_issuer_key_id, v2_subject_key_id;
 
    tbs_cert.decode_optional_string(v2_issuer_key_id, BIT_STRING, 1);

@@ -84,7 +84,9 @@ std::unique_ptr<Public_Key>
 load_public_key(const AlgorithmIdentifier& alg_id,
                 const std::vector<uint8_t>& key_bits)
    {
-   const std::string alg_name = OIDS::lookup(alg_id.oid);
+   const std::vector<std::string> alg_info = split_on(OIDS::lookup(alg_id.oid), '/');
+   const std::string alg_name = alg_info[0];
+
    if(alg_name == "")
       throw Decoding_Error("Unknown algorithm OID: " + alg_id.oid.as_string());
 

@@ -1,0 +1,6 @@
+01-02: http://www.kaiser.cx/x509Pss.html
+03-04: R&S Cybersecurity GmbH (Daniel Neus)
+05-96: golang/go - GitHub User @lwithers - https://github.com/golang/go/issues/15958
+97-106: mbed TLS / PolarSSL GitHub Repo
+107: unknown
+108-118: mbed TLS / PolarSSL GitHub Repo
