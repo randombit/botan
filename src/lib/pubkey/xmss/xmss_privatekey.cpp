@@ -18,7 +18,9 @@
 #include <botan/xmss_privatekey.h>
 #include <botan/internal/xmss_signature_operation.h>
 #include <cmath>
-#include <thread>
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <thread>
+#endif
 
 namespace Botan {
 
@@ -92,6 +94,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
    BOTAN_ASSERT((start_idx % (1 << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
    // dertermine number of parallel tasks to split the tree_hashing into.
    size_t split_level = std::min(
       {
@@ -103,9 +106,11 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
    // skip parallelization overhead for leaf nodes.
    if(split_level == 0)
       {
+#endif
       secure_vector<uint8_t> result;
       tree_hash_subtree(result, start_idx, target_node_height, adrs);
       return result;
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
       }
 
    size_t subtrees = 1 << split_level;
@@ -202,6 +207,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
                        node_addresses[0],
                        this->public_seed());
    return nodes[0];
+#endif
    }
 
 void
