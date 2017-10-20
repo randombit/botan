@@ -150,9 +150,6 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data(const uint8_t ad[], size_
 
 void TLS_CBC_HMAC_AEAD_Encryption::cbc_encrypt_record(uint8_t buf[], size_t buf_size)
    {
-   const size_t blocks = buf_size / block_size();
-   BOTAN_ASSERT(buf_size % block_size() == 0, "Valid CBC input");
-
    cbc().start(cbc_state());
    cbc().process(buf, buf_size);
 
