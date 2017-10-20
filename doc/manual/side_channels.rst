@@ -104,12 +104,9 @@ See eme_oaep.cpp.
 Modular Exponentiation
 ------------------------
 
-Modular exponentiation uses a fixed window algorithm with Montgomery representation.
-In the current code, information about the exponent is leaked through the
-sequence of memory indexes; we currently rely on randomized blinding at higher
-levels of the cryptographic stack to hide this. A future project would be to
-change this to use either Montgomery ladder or use a side channel silent table
-lookup. See powm_mnt.cpp.
+Modular exponentiation uses a fixed window algorithm with Montgomery
+representation. A side channel silent table lookup is used to access the
+precomputed powers. See powm_mnt.cpp.
 
 The Karatsuba multiplication algorithm has some conditional branches that
 probably expose information through the branch predictor, but probably? does not
@@ -239,8 +236,8 @@ const time 8x bitsliced AES could be integrated fairly easily.
 GCM
 ---------------------
 
-On x86 platforms which support the clmul instruction, GCM support is fast and
-constant time.
+On platforms that support a carryless multiply instruction (recent x86 and ARM),
+GCM is fast and constant time.
 
 On all other platforms, GCM is slow and constant time. It uses a simple bit at
 at time loop. It would be much faster using a table lookup, but we wish to avoid
