@@ -193,7 +193,6 @@ uint16_t choose_ciphersuite(
       if(suite.valid() == false)
          continue;
 
-      // TODO supported groups SHOULD have preference over ciphersuite list
       if(suite.ecc_ciphersuite() && have_shared_ecc_curve == false)
          continue;
 

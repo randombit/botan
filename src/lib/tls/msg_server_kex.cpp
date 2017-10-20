@@ -59,7 +59,25 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       const std::vector<std::string>& dh_groups =
                state.client_hello()->supported_dh_groups();
 
-      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, DL_Group(policy.choose_dh_group(dh_groups))));
+      std::string group_name;
+
+      // if the client does not send any DH groups in
+      // the supported groups extension, but does offer DH ciphersuites,
+      // we select a group arbitrarily
+      if (dh_groups.empty())
+         {
+         group_name = policy.dh_group();
+         }
+      else
+         {
+         group_name = policy.choose_dh_group(dh_groups);
+         }
+
+      if (group_name.empty())
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+               "Could not agree on a DH group with the client");
+
+      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, DL_Group(group_name)));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
