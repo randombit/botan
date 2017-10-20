@@ -15,6 +15,10 @@
   #include <botan/internal/clmul.h>
 #endif
 
+#if defined(BOTAN_HAS_GCM_CLMUL_SSSE3)
+  #include <botan/internal/clmul_ssse3.h>
+#endif
+
 #if defined(BOTAN_HAS_GCM_PMULL)
   #include <botan/internal/pmull.h>
 #endif
@@ -26,6 +30,11 @@ std::string GHASH::provider() const
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
       return "clmul";
+#endif
+
+#if defined(BOTAN_HAS_GCM_CLMUL_SSSE3)
+   if(CPUID::has_ssse3())
+      return "ssse3";
 #endif
 
 #if defined(BOTAN_HAS_GCM_PMULL)
@@ -47,6 +56,13 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
       }
 #endif
 
+#if defined(BOTAN_HAS_GCM_CLMUL_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return gcm_multiply_ssse3(x.data(), m_HM.data(), input, blocks);
+      }
+#endif
+
 #if defined(BOTAN_HAS_GCM_PMULL)
    if(CPUID::has_arm_pmull())
       {
@@ -55,8 +71,6 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
 #endif
 
    CT::poison(x.data(), x.size());
-
-   // SSE2 might be useful here
 
    const uint64_t ALL_BITS = 0xFFFFFFFFFFFFFFFF;
 

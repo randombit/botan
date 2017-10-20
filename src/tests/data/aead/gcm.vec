@@ -1,5 +1,5 @@
 
-#test cpuid aesni ssse3 clmul
+#test cpuid aesni clmul pmull ssse3
 
 [AES-128/GCM]
 # Nist | Test Case 1
