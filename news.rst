@@ -4,8 +4,8 @@ Release Notes
 Version 2.4.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Optimizations for OCB, CFB, SM3, SM4, GMAC, GCM (#1253),
-  CAST-128/CAST-256 (#1247).
+* Optimizations for OCB, CFB, SM3, SM4, GMAC, GCM (GH #1253 #1262),
+  CAST-128/CAST-256 (GH #1247), TLS-CBC ciphersuites (GH #1269)
 
 * Reduce the overhead of ffi calls.
 
