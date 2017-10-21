@@ -32,7 +32,7 @@ CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
    m_iv(m_cipher->block_size()),
    m_pad_pos(0)
    {
-   if(m_ctr_size == 0 || m_ctr_size > m_block_size)
+   if(m_ctr_size < 4 || m_ctr_size > m_block_size)
       throw Invalid_Argument("Invalid CTR-BE counter size");
    }
 
@@ -55,7 +55,11 @@ void CTR_BE::key_schedule(const uint8_t key[], size_t key_len)
 
 std::string CTR_BE::name() const
    {
-   return ("CTR-BE(" + m_cipher->name() + ")");
+   if(m_ctr_size == m_block_size)
+      return ("CTR-BE(" + m_cipher->name() + ")");
+   else
+      return ("CTR-BE(" + m_cipher->name() + "," + std::to_string(m_ctr_size) + ")");
+
    }
 
 void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)

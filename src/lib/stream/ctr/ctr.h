@@ -34,7 +34,7 @@ class BOTAN_PUBLIC_API(2,0) CTR_BE final : public StreamCipher
       std::string name() const override;
 
       CTR_BE* clone() const override
-         { return new CTR_BE(m_cipher->clone()); }
+         { return new CTR_BE(m_cipher->clone(), m_ctr_size); }
 
       void clear() override;
 

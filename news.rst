@@ -13,6 +13,13 @@ Version 2.4.0, Not Yet Released
   They have been changed to use the correct encoding, and a test added
   to ensure such errors do not recur.
 
+* Counter mode allows setting a configurable width of the counter.
+  Previously it was allowed for a counter of even 8 bits wide, which
+  would mean the keystream would repeat after just 256 blocks. Now it
+  requires the width be at least 32 bits. The only way this feature
+  could be used was by manually constructing a ``CTR_BE`` object and
+  setting the second parameter to something in the range of 1 to 3.
+
 * Add an OID for RIPEMD-160
 
 Version 2.3.0, 2017-10-02
