@@ -115,15 +115,15 @@ void X509_Certificate::force_decode()
    AlgorithmIdentifier public_key_alg_id;
    BER_Decoder(public_key.value).decode(public_key_alg_id).discard_remaining();
 
-   std::vector<std::string> sig_info =
+   std::vector<std::string> public_key_info =
       split_on(OIDS::lookup(public_key_alg_id.oid), '/');
 
-   if(sig_info[0] == "RSA")
+   if(!public_key_info.empty() && public_key_info[0] == "RSA")
       {
       // RFC4055: If PublicKeyAlgo = PSS or OAEP: limit the use of the public key exclusively to either RSASSA - PSS or RSAES - OAEP
-      if(sig_info.size() >= 2)
+      if(public_key_info.size() >= 2)
          {
-         if(sig_info[1] == "EMSA4")
+         if(public_key_info[1] == "EMSA4")
             {
             /*
             When the RSA private key owner wishes to limit the use of the public
@@ -144,9 +144,9 @@ void X509_Certificate::force_decode()
                throw Decoding_Error("Algorithm identifier mismatch");
                }
             }
-         if(sig_info[1] == "OAEP")
+         if(public_key_info[1] == "OAEP")
             {
-            throw Decoding_Error("Currently unsupported");
+            throw Decoding_Error("Decoding subject public keys of type RSAES-OAEP is currently not supported");
             }
          }
       else

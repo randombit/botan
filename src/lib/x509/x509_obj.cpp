@@ -246,8 +246,7 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
 
          // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
          // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-         std::string mgf_hash_algo = OIDS::lookup(pss_parameter.mask_gen_hash.oid);
-         if(mgf_hash_algo != hash_algo)
+         if(pss_parameter.mask_gen_hash.oid != pss_parameter.hash_algo.oid)
             {
             return false;
             }
