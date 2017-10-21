@@ -74,7 +74,7 @@ BOTAN_REGISTER_COMMAND("sign_cert", Sign_Cert);
 class Cert_Info final : public Command
    {
    public:
-      Cert_Info() : Command("cert_info --ber file") {}
+      Cert_Info() : Command("cert_info --fingerprint --ber file") {}
 
       void go() override
          {
@@ -95,6 +95,9 @@ class Cert_Info final : public Command
                   // to_string failed - report the exception and continue
                   output() << "X509_Certificate::to_string failed: " << e.what() << "\n";
                   }
+
+               if(flag_set("fingerprint"))
+                  output() << "Fingerprint: " << cert.fingerprint("SHA-256") << std::endl;
                }
             catch(Botan::Exception& e)
                {
