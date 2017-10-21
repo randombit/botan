@@ -34,10 +34,10 @@ void gcm_multiply_ssse3(uint8_t x[16],
 
       for(size_t i = 0; i != 64; i += 2)
          {
-         const __m128i HM0 = _mm_load_si128(HM_mm + 2*i);
-         const __m128i HM1 = _mm_load_si128(HM_mm + 2*i + 1);
-         const __m128i HM2 = _mm_load_si128(HM_mm + 2*i + 2);
-         const __m128i HM3 = _mm_load_si128(HM_mm + 2*i + 3);
+         const __m128i HM0 = _mm_loadu_si128(HM_mm + 2*i);
+         const __m128i HM1 = _mm_loadu_si128(HM_mm + 2*i + 1);
+         const __m128i HM2 = _mm_loadu_si128(HM_mm + 2*i + 2);
+         const __m128i HM3 = _mm_loadu_si128(HM_mm + 2*i + 3);
 
          const __m128i XMASK1 = _mm_add_epi64(_mm_srli_epi64(X, 63), ones);
          X = _mm_slli_epi64(X, 1);
