@@ -117,7 +117,7 @@ class BOTAN_PUBLIC_API(2,0) PRNG_Unseeded final : public Invalid_State
 class BOTAN_PUBLIC_API(2,0) Policy_Violation final : public Invalid_State
    {
    public:
-      explicit Policy_Violation(const std::string& err);
+      BOTAN_DEPRECATED("deprecated") explicit Policy_Violation(const std::string& err);
    };
 
 /**
@@ -135,7 +135,7 @@ class BOTAN_PUBLIC_API(2,0) Algorithm_Not_Found final : public Lookup_Error
 class BOTAN_PUBLIC_API(2,0) No_Provider_Found final : public Exception
    {
    public:
-      explicit No_Provider_Found(const std::string& name);
+      BOTAN_DEPRECATED("deprecated") explicit No_Provider_Found(const std::string& name);
    };
 
 /**
@@ -208,7 +208,7 @@ class BOTAN_PUBLIC_API(2,0) Stream_IO_Error final : public Exception
 class BOTAN_PUBLIC_API(2,0) Self_Test_Failure final : public Internal_Error
    {
    public:
-      explicit Self_Test_Failure(const std::string& err);
+      BOTAN_DEPRECATED("deprecated") explicit Self_Test_Failure(const std::string& err);
    };
 
 /**
