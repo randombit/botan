@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_COMPRESSION)
    #include <botan/compression.h>
+   #include <fstream>
 #endif
 
 namespace Botan_CLI {
@@ -75,17 +76,17 @@ class Compress final : public Command
          while(in.good())
             {
             buf.resize(buf_size);
-            in.read(reinterpret_cast<char*>(&buf[0]), buf.size());
+            in.read(reinterpret_cast<char*>(buf.data()), buf.size());
             buf.resize(in.gcount());
 
             compress->update(buf);
 
-            out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+            out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
             }
 
          buf.clear();
          compress->finish(buf);
-         out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+         out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
          out.close();
          }
    };
@@ -147,17 +148,17 @@ class Decompress final : public Command
          while(in.good())
             {
             buf.resize(buf_size);
-            in.read(reinterpret_cast<char*>(&buf[0]), buf.size());
+            in.read(reinterpret_cast<char*>(buf.data()), buf.size());
             buf.resize(in.gcount());
 
             decompress->update(buf);
 
-            out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+            out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
             }
 
          buf.clear();
          decompress->finish(buf);
-         out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+         out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
          out.close();
          }
    };

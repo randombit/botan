@@ -114,13 +114,8 @@ class TLS_Ciphersuites final : public Command
             }
          else
             {
-            std::ifstream policy_file(policy_type);
-            if(!policy_file.good())
-               {
-               throw CLI_Error("Error TLS policy '" + policy_type + "' is neither a file nor a known policy type");
-               }
-
-            policy.reset(new Botan::TLS::Text_Policy(policy_file));
+            const std::string policy_txt = slurp_file_as_str(policy_type);
+            policy.reset(new Botan::TLS::Text_Policy(policy_txt));
             }
 
          for(uint16_t suite_id : policy->ciphersuite_list(version, with_srp))

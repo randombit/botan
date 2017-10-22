@@ -8,64 +8,39 @@
 #define BOTAN_CLI_H_
 
 #include <botan/build.h>
-#include <botan/parsing.h>
-#include <botan/rng.h>
-
-#include <fstream>
-#include <iostream>
 #include <functional>
+#include <ostream>
 #include <map>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
+#include "cli_exceptions.h"
+
+namespace Botan {
+
+class RandomNumberGenerator;
+
+}
 
 namespace Botan_CLI {
 
-/* Declared in utils.cpp */
+class Argument_Parser;
+
+/* Declared in cli_rng.cpp */
 std::unique_ptr<Botan::RandomNumberGenerator>
 cli_make_rng(const std::string& type, const std::string& hex_drbg_seed);
-
-class CLI_Error : public std::runtime_error
-   {
-   public:
-      explicit CLI_Error(const std::string& s) : std::runtime_error(s) {}
-   };
-
-class CLI_IO_Error : public CLI_Error
-   {
-   public:
-      CLI_IO_Error(const std::string& op, const std::string& who) :
-         CLI_Error("Error " + op + " " + who) {}
-   };
-
-class CLI_Usage_Error : public CLI_Error
-   {
-   public:
-      explicit CLI_Usage_Error(const std::string& what) : CLI_Error(what) {}
-   };
-
-/* Thrown eg when a requested feature was compiled out of the library
-   or is not available, eg hashing with
-*/
-class CLI_Error_Unsupported : public CLI_Error
-   {
-   public:
-      CLI_Error_Unsupported(const std::string& what,
-                            const std::string& who)
-         : CLI_Error(what + " with '" + who + "' unsupported or not available") {}
-   };
-
-class CLI_Error_Invalid_Spec : public CLI_Error
-   {
-   public:
-      explicit CLI_Error_Invalid_Spec(const std::string& spec)
-         : CLI_Error("Invalid command spec '" + spec + "'") {}
-   };
 
 class Command
    {
    public:
+
+      /**
+      * Get a registered command
+      */
+      static std::unique_ptr<Command> get_cmd(const std::string& name);
+
+      static std::vector<std::string> registered_cmds();
+
       /**
       * The spec string specifies the format of the command line, eg for
       * a somewhat complicated command:
@@ -105,156 +80,13 @@ class Command
       * Use of --help is captured in run() and returns help_text().
       * Use of --verbose can be checked with verbose() or flag_set("verbose")
       */
-      explicit Command(const std::string& cmd_spec) : m_spec(cmd_spec)
-         {
-         // for checking all spec strings at load time
-         //parse_spec();
-         }
-      virtual ~Command() = default;
+      explicit Command(const std::string& cmd_spec);
 
-      int run(const std::vector<std::string>& params)
-         {
-         try
-            {
-            // avoid parsing specs except for the command actually running
-            parse_spec();
+      virtual ~Command();
 
-            std::vector<std::string> args;
-            for(auto const& param : params)
-               {
-               if(param.find("--") == 0)
-                  {
-                  // option
-                  const auto eq = param.find('=');
+      int run(const std::vector<std::string>& params);
 
-                  if(eq == std::string::npos)
-                     {
-                     const std::string opt_name = param.substr(2, std::string::npos);
-
-                     if(m_spec_flags.count(opt_name) == 0)
-                        {
-                        if(m_spec_opts.count(opt_name))
-                           {
-                           throw CLI_Usage_Error("Invalid usage of option --" + opt_name +
-                                                 " without value");
-                           }
-                        else
-                           {
-                           throw CLI_Usage_Error("Unknown flag --" + opt_name);
-                           }
-                        }
-                     m_user_flags.insert(opt_name);
-                     }
-                  else
-                     {
-                     const std::string opt_name = param.substr(2, eq - 2);
-                     const std::string opt_val = param.substr(eq + 1, std::string::npos);
-
-                     if(m_spec_opts.count(opt_name) == 0)
-                        {
-                        throw CLI_Usage_Error("Unknown option --" + opt_name);
-                        }
-
-                     m_user_args.insert(std::make_pair(opt_name, opt_val));
-                     }
-                  }
-               else
-                  {
-                  // argument
-                  args.push_back(param);
-                  }
-               }
-
-            bool seen_stdin_flag = false;
-            size_t arg_i = 0;
-            for(auto const& arg : m_spec_args)
-               {
-               if(arg_i >= args.size())
-                  {
-                  // not enough arguments
-                  throw CLI_Usage_Error("Invalid argument count, got " +
-                                        std::to_string(args.size()) +
-                                        " expected " +
-                                        std::to_string(m_spec_args.size()));
-                  }
-
-               m_user_args.insert(std::make_pair(arg, args[arg_i]));
-
-               if(args[arg_i] == "-")
-                  {
-                  if(seen_stdin_flag)
-                     {
-                     throw CLI_Usage_Error("Cannot specifiy '-' (stdin) more than once");
-                     }
-                  seen_stdin_flag = true;
-                  }
-
-               ++arg_i;
-               }
-
-            if(m_spec_rest.empty())
-               {
-               if(arg_i != args.size())
-                  {
-                  throw CLI_Usage_Error("Too many arguments");
-                  }
-               }
-            else
-               {
-               m_user_rest.assign(args.begin() + arg_i, args.end());
-               }
-
-            if(flag_set("help"))
-               {
-               output() << help_text() << "\n";
-               return 2;
-               }
-
-            if(m_user_args.count("output"))
-               {
-               m_output_stream.reset(new std::ofstream(get_arg("output"), std::ios::binary));
-               }
-
-            if(m_user_args.count("error-output"))
-               {
-               m_error_output_stream.reset(new std::ofstream(get_arg("error-output"), std::ios::binary));
-               }
-
-            // Now insert any defaults for options not supplied by the user
-            for(auto const& opt : m_spec_opts)
-               {
-               if(m_user_args.count(opt.first) == 0)
-                  {
-                  m_user_args.insert(opt);
-                  }
-               }
-
-            this->go();
-            return 0;
-            }
-         catch(CLI_Usage_Error& e)
-            {
-            error_output() << "Usage error: " << e.what() << "\n";
-            error_output() << help_text() << "\n";
-            return 1;
-            }
-         catch(std::exception& e)
-            {
-            error_output() << "Error: " << e.what() << "\n";
-            return 2;
-            }
-         catch(...)
-            {
-            error_output() << "Error: unknown exception\n";
-            return 2;
-            }
-         }
-
-      virtual std::string help_text() const
-         {
-         return "Usage: " + m_spec +
-            "\n\nAll commands support --verbose --help --output= --error-output= --rng-type= --drbg-seed=";
-         }
+      virtual std::string help_text() const;
 
       const std::string& cmd_spec() const
          {
@@ -268,230 +100,53 @@ class Command
 
    protected:
 
-      void parse_spec()
-         {
-         const std::vector<std::string> parts = Botan::split_on(m_spec, ' ');
-
-         if(parts.size() == 0)
-            {
-            throw CLI_Error_Invalid_Spec(m_spec);
-            }
-
-         for(size_t i = 1; i != parts.size(); ++i)
-            {
-            const std::string s = parts[i];
-
-            if(s.empty()) // ?!? (shouldn't happen)
-               {
-               throw CLI_Error_Invalid_Spec(m_spec);
-               }
-
-            if(s.size() > 2 && s[0] == '-' && s[1] == '-')
-               {
-               // option or flag
-
-               auto eq = s.find('=');
-
-               if(eq == std::string::npos)
-                  {
-                  m_spec_flags.insert(s.substr(2, std::string::npos));
-                  }
-               else
-                  {
-                  m_spec_opts.insert(std::make_pair(s.substr(2, eq - 2), s.substr(eq + 1, std::string::npos)));
-                  }
-               }
-            else if(s[0] == '*')
-               {
-               // rest argument
-               if(m_spec_rest.empty() && s.size() > 2)
-                  {
-                  m_spec_rest = s.substr(1, std::string::npos);
-                  }
-               else
-                  {
-                  throw CLI_Error_Invalid_Spec(m_spec);
-                  }
-               }
-            else
-               {
-               // named argument
-               if(!m_spec_rest.empty()) // rest arg wasn't last
-                  {
-                  throw CLI_Error("Invalid command spec " + m_spec);
-                  }
-
-               m_spec_args.push_back(s);
-               }
-            }
-
-         m_spec_flags.insert("verbose");
-         m_spec_flags.insert("help");
-         m_spec_opts.insert(std::make_pair("output", ""));
-         m_spec_opts.insert(std::make_pair("error-output", ""));
-         m_spec_opts.insert(std::make_pair("rng-type", ""));
-         m_spec_opts.insert(std::make_pair("drbg-seed", ""));
-         }
-
       /*
       * The actual functionality of the cli command implemented in subclas
       */
       virtual void go() = 0;
 
-      std::ostream& output()
-         {
-         if(m_output_stream.get())
-            {
-            return *m_output_stream;
-            }
-         return std::cout;
-         }
+      std::ostream& output();
 
-      std::ostream& error_output()
-         {
-         if(m_error_output_stream.get())
-            {
-            return *m_error_output_stream;
-            }
-         return std::cerr;
-         }
+      std::ostream& error_output();
 
       bool verbose() const
          {
          return flag_set("verbose");
          }
 
-      bool flag_set(const std::string& flag_name) const
-         {
-         return m_user_flags.count(flag_name) > 0;
-         }
+      bool flag_set(const std::string& flag_name) const;
 
-      std::string get_arg(const std::string& opt_name) const
-         {
-         auto i = m_user_args.find(opt_name);
-         if(i == m_user_args.end())
-            {
-            // this shouldn't occur unless you passed the wrong thing to get_arg
-            throw CLI_Error("Unknown option " + opt_name + " used (program bug)");
-            }
-         return i->second;
-         }
+      std::string get_arg(const std::string& opt_name) const;
 
       /*
       * Like get_arg() but if the argument was not specified or is empty, returns otherwise
       */
-      std::string get_arg_or(const std::string& opt_name, const std::string& otherwise) const
-         {
-         auto i = m_user_args.find(opt_name);
-         if(i == m_user_args.end() || i->second.empty())
-            {
-            return otherwise;
-            }
-         return i->second;
-         }
+      std::string get_arg_or(const std::string& opt_name, const std::string& otherwise) const;
 
-      size_t get_arg_sz(const std::string& opt_name) const
-         {
-         const std::string s = get_arg(opt_name);
+      size_t get_arg_sz(const std::string& opt_name) const;
 
-         try
-            {
-            return static_cast<size_t>(std::stoul(s));
-            }
-         catch(std::exception&)
-            {
-            throw CLI_Usage_Error("Invalid integer value '" + s + "' for option " + opt_name);
-            }
-         }
-
-      std::vector<std::string> get_arg_list(const std::string& what) const
-         {
-         if(what != m_spec_rest)
-            {
-            throw CLI_Error("Unexpected list name '" + what + "'");
-            }
-
-         return m_user_rest;
-         }
+      std::vector<std::string> get_arg_list(const std::string& what) const;
 
       /*
       * Read an entire file into memory and return the contents
       */
       std::vector<uint8_t> slurp_file(const std::string& input_file,
-                                      size_t buf_size = 0) const
-         {
-         std::vector<uint8_t> buf;
-         auto insert_fn = [&](const uint8_t b[], size_t l)
-            {
-            buf.insert(buf.end(), b, b + l);
-            };
-         this->read_file(input_file, insert_fn, buf_size);
-         return buf;
-         }
-
-      /*
-      * Read an entire file into memory and return the contents
-      */
-      Botan::secure_vector<uint8_t> slurp_file_locked(const std::string& input_file,
-                                                      size_t buf_size = 0) const
-         {
-         Botan::secure_vector<uint8_t> buf;
-         auto insert_fn = [&](const uint8_t b[], size_t l)
-            {
-            buf.insert(buf.end(), b, b + l);
-            };
-         this->read_file(input_file, insert_fn, buf_size);
-         return buf;
-         }
+                                      size_t buf_size = 0) const;
 
       std::string slurp_file_as_str(const std::string& input_file,
-                                    size_t buf_size = 0) const
-         {
-         std::string str;
-         auto insert_fn = [&](const uint8_t b[], size_t l)
-            {
-            str.append(reinterpret_cast<const char*>(b), l);
-            };
-         this->read_file(input_file, insert_fn, buf_size);
-         return str;
-         }
+                                    size_t buf_size = 0) const;
 
       /*
       * Read a file calling consumer_fn() with the inputs
       */
       void read_file(const std::string& input_file,
                      std::function<void (uint8_t[], size_t)> consumer_fn,
-                     size_t buf_size = 0) const
-         {
-         if(input_file == "-")
-            {
-            do_read_file(std::cin, consumer_fn, buf_size);
-            }
-         else
-            {
-            std::ifstream in(input_file, std::ios::binary);
-            if(!in)
-               {
-               throw CLI_IO_Error("reading file", input_file);
-               }
-            do_read_file(in, consumer_fn, buf_size);
-            }
-         }
+                     size_t buf_size = 0) const;
+
 
       void do_read_file(std::istream& in,
                         std::function<void (uint8_t[], size_t)> consumer_fn,
-                        size_t buf_size = 0) const
-         {
-         // Avoid an infinite loop on --buf-size=0
-         std::vector<uint8_t> buf(buf_size == 0 ? 4096 : buf_size);
-
-         while(in.good())
-            {
-            in.read(reinterpret_cast<char*>(buf.data()), buf.size());
-            const size_t got = static_cast<size_t>(in.gcount());
-            consumer_fn(buf.data(), got);
-            }
-         }
+                        size_t buf_size = 0) const;
 
       template<typename Alloc>
       void write_output(const std::vector<uint8_t, Alloc>& vec)
@@ -499,75 +154,31 @@ class Command
          output().write(reinterpret_cast<const char*>(vec.data()), vec.size());
          }
 
-      Botan::RandomNumberGenerator& rng()
-         {
-         if(m_rng == nullptr)
-            {
-            m_rng = cli_make_rng(get_arg("rng-type"), get_arg("drbg-seed"));
-            }
-
-         return *m_rng.get();
-         }
+      Botan::RandomNumberGenerator& rng();
 
    private:
+      void parse_spec();
+
+      typedef std::function<Command* ()> cmd_maker_fn;
+
+      static std::map<std::string, cmd_maker_fn>& global_registry();
+
       // set in constructor
       std::string m_spec;
 
-      // set in parse_spec() from m_spec
-      std::vector<std::string> m_spec_args;
-      std::set<std::string> m_spec_flags;
-      std::map<std::string, std::string> m_spec_opts;
-      std::string m_spec_rest;
-
-      // set in run() from user args
-      std::map<std::string, std::string> m_user_args;
-      std::set<std::string> m_user_flags;
-      std::vector<std::string> m_user_rest;
-
-      std::unique_ptr<std::ofstream> m_output_stream;
-      std::unique_ptr<std::ofstream> m_error_output_stream;
+      std::unique_ptr<Argument_Parser> m_args;
+      std::unique_ptr<std::ostream> m_output_stream;
+      std::unique_ptr<std::ostream> m_error_output_stream;
 
       std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
 
    public:
       // the registry interface:
 
-      typedef std::function<Command* ()> cmd_maker_fn;
-
-      static std::map<std::string, cmd_maker_fn>& global_registry()
-         {
-         static std::map<std::string, cmd_maker_fn> g_cmds;
-         return g_cmds;
-         }
-
-      static std::unique_ptr<Command> get_cmd(const std::string& name)
-         {
-         auto& reg = Command::global_registry();
-
-         std::unique_ptr<Command> r;
-         auto i = reg.find(name);
-         if(i != reg.end())
-            {
-            r.reset(i->second());
-            }
-
-         return r;
-         }
-
       class Registration final
          {
          public:
-            Registration(const std::string& name, cmd_maker_fn maker_fn)
-               {
-               auto& reg = Command::global_registry();
-
-               if(reg.count(name) > 0)
-                  {
-                  throw CLI_Error("Duplicated registration of command " + name);
-                  }
-
-               Command::global_registry().insert(std::make_pair(name, maker_fn));
-               }
+            Registration(const std::string& name, cmd_maker_fn maker_fn);
          };
    };
 

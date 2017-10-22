@@ -11,7 +11,6 @@
 #include <botan/credentials_manager.h>
 #include <botan/x509self.h>
 #include <botan/data_src.h>
-#include <fstream>
 #include <memory>
 
 inline bool value_exists(const std::vector<std::string>& vec,

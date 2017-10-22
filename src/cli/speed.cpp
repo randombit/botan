@@ -23,6 +23,7 @@
 #include <botan/mac.h>
 #include <botan/cipher_mode.h>
 #include <botan/entropy_src.h>
+#include <botan/parsing.h>
 #include <botan/cpuid.h>
 #include <botan/internal/os_utils.h>
 #include <botan/version.h>

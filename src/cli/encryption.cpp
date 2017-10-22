@@ -9,7 +9,6 @@
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_MODES)
 
 #include <botan/aead.h>
-#include <iterator>
 #include <sstream>
 
 using namespace Botan;
@@ -39,7 +38,7 @@ bool is_aead(const std::string &cipher)
    }
 
 secure_vector<byte> do_crypt(const std::string &cipher,
-                             const secure_vector<byte> &input,
+                             const std::vector<byte> &input,
                              const SymmetricKey &key,
                              const InitializationVector &iv,
                              const OctetString &ad,
@@ -97,7 +96,7 @@ class Encryption final : public Command
          const std::string ad_hex  = get_arg_or("ad", "");
          const size_t buf_size = get_arg_sz("buf-size");
 
-         Botan::secure_vector<uint8_t> input = this->slurp_file_locked("-", buf_size);
+         const std::vector<uint8_t> input = this->slurp_file("-", buf_size);
 
          if (verbose())
             {
@@ -109,8 +108,7 @@ class Encryption final : public Command
          auto ad = OctetString(ad_hex);
 
          auto direction = flag_set("decrypt") ? Cipher_Dir::DECRYPTION : Cipher_Dir::ENCRYPTION;
-         auto data = do_crypt(VALID_MODES[mode], input, key, iv, ad, direction);
-         std::copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(output()));
+         write_output(do_crypt(VALID_MODES[mode], input, key, iv, ad, direction));
          }
    };
 
