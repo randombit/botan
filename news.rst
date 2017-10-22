@@ -4,10 +4,34 @@ Release Notes
 Version 2.4.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Optimizations for OCB, CFB, SM3, SM4, GMAC, GCM (GH #1253 #1262),
-  CAST-128/CAST-256 (GH #1247), TLS-CBC ciphersuites (GH #1269)
+* Support for negotiating the DH group as specified in RFC 7919 is now
+  available in TLS (GH #1263)
 
-* Reduce the overhead of ffi calls.
+* Add support for verifying X.509 objects (certificates, CRLs, etc) using
+  RSA-PSS signatures (GH #1270)
+
+* Optimize GCM mode on systems both with and without carryless
+  multiply support. This includes a new base case implementation
+  (still constant time), a new SSSE3 implementation for systems with
+  SSSE3 but not clmul, and better algorithms for systems with clmul
+  and pmull. (GH #1253 #1263)
+
+* Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC
+
+* New functions for bit rotations that distinguish rotating by a
+  compile-time constant vs a runtime variable rotation. This allows
+  better optimizations in both cases. Notably performance of CAST-128
+  and CAST-256 are substantially improved. (GH #1247)
+
+* TLS CBC ciphersuites now are implemented using the standard CBC
+  code, instead of reimplementing CBC inside the TLS stack. This
+  allows for parallel decryption of TLS CBC ciphertexts, and improves
+  performance especially when using AES hardware support. (GH #1269)
+
+* Fix a bug in the amalgamation generation which could cause build
+  failures on some systems including macOS. (GH #1264 #1265)
+
+* The overhead of making a call through the FFI layer has been reduced.
 
 * The IDs for SHA-3 PKCSv1.5 signatures added in 2.3.0 were incorrect.
   They have been changed to use the correct encoding, and a test added
