@@ -10,6 +10,7 @@ macs=AEAD SHA-384 SHA-256
 key_exchange_methods=ECDH DH PSK ECDHE_PSK DHE_PSK 
 signature_methods=ECDSA RSA DSA
 ecc_curves=brainpool512r1 brainpool384r1 brainpool256r1 secp384r1 secp256r1
+groups=brainpool512r1 brainpool384r1 brainpool256r1 secp384r1 secp256r1 ffdhe/ietf/8192 ffdhe/ietf/6144 ffdhe/ietf/4096 ffdhe/ietf/3072 ffdhe/ietf/2048
 minimum_dh_group_size=2000
 minimum_dsa_group_size=2000
 minimum_ecdh_group_size=250

@@ -121,9 +121,10 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       }
 #endif
 
-   m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
+   Supported_Groups* supported_groups = new Supported_Groups(policy.allowed_groups());
+   m_extensions.add(supported_groups);
 
-   if(!policy.allowed_ecc_curves().empty())
+   if(!supported_groups->curves().empty())
       {
       m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
@@ -324,8 +325,15 @@ std::set<std::string> Client_Hello::supported_sig_algos() const
 
 std::vector<std::string> Client_Hello::supported_ecc_curves() const
    {
-   if(Supported_Elliptic_Curves* ecc = m_extensions.get<Supported_Elliptic_Curves>())
-      return ecc->curves();
+   if(Supported_Groups* groups = m_extensions.get<Supported_Groups>())
+      return groups->curves();
+   return std::vector<std::string>();
+   }
+
+std::vector<std::string> Client_Hello::supported_dh_groups() const
+   {
+   if(Supported_Groups* groups = m_extensions.get<Supported_Groups>())
+      return groups->dh_groups();
    return std::vector<std::string>();
    }
 

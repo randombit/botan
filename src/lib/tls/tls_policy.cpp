@@ -10,6 +10,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_extensions.h>
 #include <botan/internal/stl_util.h>
 #include <botan/pk_keys.h>
 #include <sstream>
@@ -117,7 +118,11 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
 
 bool Policy::allowed_ecc_curve(const std::string& curve) const
    {
-   return value_exists(allowed_ecc_curves(), curve);
+   if(!allowed_ecc_curves().empty())
+      {
+      return value_exists(allowed_ecc_curves(), curve);
+      }
+   return value_exists(allowed_groups(), curve);
    }
 
 bool Policy::use_ecc_point_compression() const
@@ -130,19 +135,54 @@ bool Policy::use_ecc_point_compression() const
 */
 std::string Policy::choose_curve(const std::vector<std::string>& curve_names) const
    {
-   const std::vector<std::string> our_curves = allowed_ecc_curves();
+   const std::vector<std::string> our_groups = allowed_groups();
 
-   for(size_t i = 0; i != our_curves.size(); ++i)
-      if(value_exists(curve_names, our_curves[i]))
-         return our_curves[i];
+   for(size_t i = 0; i != our_groups.size(); ++i)
+      if(!Supported_Groups::is_dh_group(our_groups[i])
+         && value_exists(curve_names, our_groups[i]))
+         return our_groups[i];
 
    return ""; // no shared curve
+   }
+
+/*
+* Choose an FFDHE group to use
+*/
+std::string Policy::choose_dh_group(const std::vector<std::string>& dh_groups) const
+   {
+   const std::vector<std::string> our_groups = allowed_groups();
+
+   for(size_t i = 0; i != our_groups.size(); ++i)
+      if(Supported_Groups::is_dh_group(our_groups[i])
+            && value_exists(dh_groups, our_groups[i]))
+         return our_groups[i];
+
+   return ""; // no shared ffdhe group
    }
 
 std::string Policy::dh_group() const
    {
    // We offer 2048 bit DH because we can
    return "modp/ietf/2048";
+   }
+
+std::vector<std::string> Policy::allowed_groups() const
+   {
+   // Default list is ordered by performance
+   return {
+      "x25519",
+      "secp256r1",
+      "secp521r1",
+      "secp384r1",
+      "brainpool256r1",
+      "brainpool384r1",
+      "brainpool512r1",
+      "ffdhe/ietf/2048",
+      "ffdhe/ietf/3072",
+      "ffdhe/ietf/4096",
+      "ffdhe/ietf/6144",
+      "ffdhe/ietf/8192"
+      };
    }
 
 size_t Policy::minimum_dh_group_size() const
@@ -502,6 +542,7 @@ void Policy::print(std::ostream& o) const
    print_vec(o, "signature_methods", allowed_signature_methods());
    print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
    print_vec(o, "ecc_curves", allowed_ecc_curves());
+   print_vec(o, "groups", allowed_groups());
 
    print_bool(o, "allow_insecure_renegotiation", allow_insecure_renegotiation());
    print_bool(o, "include_time_in_hello_random", include_time_in_hello_random());

@@ -133,6 +133,12 @@ class DL_Group_Tests final : public Test
             "dsa/jce/1024",
             "dsa/botan/2048",
             "dsa/botan/3072",
+
+            "ffdhe/ietf/2048",
+            "ffdhe/ietf/3072",
+            "ffdhe/ietf/4096",
+            "ffdhe/ietf/6144",
+            "ffdhe/ietf/8192",
             };
 
          Test::Result result("DL_Group named");

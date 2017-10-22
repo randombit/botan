@@ -168,6 +168,9 @@ uint16_t choose_ciphersuite(
    const bool have_shared_ecc_curve =
       (policy.choose_curve(client_hello.supported_ecc_curves()) != "");
 
+   const bool have_shared_dh_group =
+      (policy.choose_dh_group(client_hello.supported_dh_groups()) != "");
+
    /*
    Walk down one list in preference order
    */
@@ -191,6 +194,9 @@ uint16_t choose_ciphersuite(
          continue;
 
       if(suite.ecc_ciphersuite() && have_shared_ecc_curve == false)
+         continue;
+
+      if(suite.kex_algo() == "DH" && have_shared_dh_group == false)
          continue;
 
       // For non-anon ciphersuites
