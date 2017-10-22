@@ -16,6 +16,36 @@
 
 namespace Botan {
 
+namespace {
+struct Pss_params
+   {
+   AlgorithmIdentifier hash_algo;
+   AlgorithmIdentifier mask_gen_algo;
+   AlgorithmIdentifier mask_gen_hash;  // redundant: decoded mask_gen_algo.parameters
+   size_t salt_len;
+   size_t trailer_field;
+   };
+
+Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
+   {
+   Pss_params pss_parameter;
+   BER_Decoder(encoded_pss_params)
+      .start_cons(SEQUENCE)
+         .decode_optional(pss_parameter.hash_algo, ASN1_Tag(0), PRIVATE, AlgorithmIdentifier("SHA-160",
+                    AlgorithmIdentifier::USE_NULL_PARAM))
+         .decode_optional(pss_parameter.mask_gen_algo, ASN1_Tag(1), PRIVATE,
+                    AlgorithmIdentifier("MGF1", DER_Encoder().encode(AlgorithmIdentifier("SHA-160",
+                                        AlgorithmIdentifier::USE_NULL_PARAM)).get_contents_unlocked()))
+         .decode_optional(pss_parameter.salt_len, ASN1_Tag(2), PRIVATE, size_t(20))
+         .decode_optional(pss_parameter.trailer_field, ASN1_Tag(3), PRIVATE, size_t(1))
+      .end_cons();
+
+   BER_Decoder(pss_parameter.mask_gen_algo.parameters).decode(pss_parameter.mask_gen_hash);
+
+   return pss_parameter;
+   }
+}
+
 /*
 * Create a generic X.509 object
 */
@@ -145,13 +175,22 @@ std::string X509_Object::hash_used_for_signature() const
       throw Internal_Error("Invalid name format found for " +
                            oid.as_string());
 
-   std::vector<std::string> pad_and_hash =
-      parse_algorithm_name(sig_info[1]);
+   if(sig_info[1] == "EMSA4")
+      {
+      return OIDS::lookup(decode_pss_params(signature_algorithm().parameters).hash_algo.oid);
+      }
+   else
+      {
+      std::vector<std::string> pad_and_hash =
+         parse_algorithm_name(sig_info[1]);
 
-   if(pad_and_hash.size() != 2)
-      throw Internal_Error("Invalid name format " + sig_info[1]);
+      if(pad_and_hash.size() != 2)
+         {
+         throw Internal_Error("Invalid name format " + sig_info[1]);
+         }
 
-   return pad_and_hash[1];
+      return pad_and_hash[1];
+      }
    }
 
 /*
@@ -163,7 +202,7 @@ bool X509_Object::check_signature(const Public_Key* pub_key) const
       throw Exception("No key provided for " + m_PEM_label_pref + " signature check");
    std::unique_ptr<const Public_Key> key(pub_key);
    return check_signature(*key);
-}
+   }
 
 /*
 * Check the signature on an object
@@ -180,6 +219,48 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
       std::string padding = sig_info[1];
       Signature_Format format =
          (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+
+      if(padding == "EMSA4")
+         {
+         // "MUST contain RSASSA-PSS-params"
+         if(signature_algorithm().parameters.empty())
+            {
+            return false;
+            }
+
+         Pss_params pss_parameter = decode_pss_params(signature_algorithm().parameters);
+
+         // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+         std::string hash_algo = OIDS::lookup(pss_parameter.hash_algo.oid);
+         if(hash_algo != "SHA-160" && hash_algo != "SHA-224" && hash_algo != "SHA-256" && hash_algo != "SHA-384"
+               && hash_algo != "SHA-512")
+            {
+            return false;
+            }
+
+         std::string mgf_algo = OIDS::lookup(pss_parameter.mask_gen_algo.oid);
+         if(mgf_algo != "MGF1")
+            {
+            return false;
+            }
+
+         // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
+         // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+         if(pss_parameter.mask_gen_hash.oid != pss_parameter.hash_algo.oid)
+            {
+            return false;
+            }
+
+         if(pss_parameter.trailer_field != 1)
+            {
+            return false;
+            }
+
+         padding += "(" + hash_algo;
+         padding += "," + mgf_algo;
+         padding += "," + std::to_string(pss_parameter.salt_len) +
+                    ")";   // salt_len is actually not used for verification. Length is inferred from the signature
+         }
 
       PK_Verifier verifier(pub_key, padding, format);
 

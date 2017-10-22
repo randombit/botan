@@ -329,7 +329,7 @@ BOTAN_PUBLIC_API(2,0) check_ocsp(const std::vector<std::shared_ptr<const X509_Ce
                      std::chrono::system_clock::time_point ref_time);
 
 /**
-* Check CRLs for revocation infomration
+* Check CRLs for revocation information
 * @param cert_path path already validated by check_chain
 * @param crls the list of CRLs to check, it is assumed that crls[i] (if not null)
 * is the associated CRL for the subject in cert_path[i].
@@ -343,7 +343,7 @@ BOTAN_PUBLIC_API(2,0) check_crl(const std::vector<std::shared_ptr<const X509_Cer
                     std::chrono::system_clock::time_point ref_time);
 
 /**
-* Check CRLs for revocation infomration
+* Check CRLs for revocation information
 * @param cert_path path already validated by check_chain
 * @param certstores a list of certificate stores to query for the CRL
 * @param ref_time whatever time you want to perform the validation against
