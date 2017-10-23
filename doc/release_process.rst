@@ -47,7 +47,7 @@ run from a git workspace.
 One useful option is ``--output-dir``, which specifies where the
 output will be placed.
 
-The ``--pgp-key-id`` option is used to specifiy a PGP keyid. If set,
+The ``--pgp-key-id`` option is used to specify a PGP keyid. If set,
 the script assumes that it can execute GnuPG and will attempt to
 create signatures for the tarballs. The default value is ``EFBADFBC``,
 which is the official signing key. You can use ``--pgp-key-id=none``
