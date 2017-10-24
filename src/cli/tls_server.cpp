@@ -17,6 +17,7 @@
 #include "credentials.h"
 
 #include <list>
+#include <fstream>
 
 #if defined(BOTAN_TARGET_OS_IS_WINDOWS)
 #include <winsock2.h>

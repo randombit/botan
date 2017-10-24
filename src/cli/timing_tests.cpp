@@ -20,6 +20,8 @@
 #include "cli.h"
 #include <botan/hex.h>
 #include <sstream>
+#include <fstream>
+
 #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)

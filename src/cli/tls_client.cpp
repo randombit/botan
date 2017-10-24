@@ -15,6 +15,8 @@
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
 #include <botan/hex.h>
+#include <botan/parsing.h>
+#include <fstream>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
    #include <botan/tls_session_manager_sqlite.h>

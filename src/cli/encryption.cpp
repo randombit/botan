@@ -9,10 +9,8 @@
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_MODES)
 
 #include <botan/aead.h>
-#include <iterator>
+#include <botan/hex.h>
 #include <sstream>
-
-using namespace Botan;
 
 namespace Botan_CLI {
 
@@ -32,41 +30,39 @@ auto VALID_MODES = std::map<std::string, std::string>{
          { "aes-256-xts", "AES-256/XTS" },
 };
 
-bool is_aead(const std::string &cipher)
+Botan::secure_vector<uint8_t>
+do_crypt(const std::string &cipher,
+         const std::vector<uint8_t> &input,
+         const Botan::SymmetricKey &key,
+         const Botan::InitializationVector &iv,
+         const std::vector<uint8_t>& ad,
+         Botan::Cipher_Dir direction)
    {
-   return cipher.find("/GCM") != std::string::npos
-          || cipher.find("/OCB") != std::string::npos;
-   }
-
-secure_vector<byte> do_crypt(const std::string &cipher,
-                             const secure_vector<byte> &input,
-                             const SymmetricKey &key,
-                             const InitializationVector &iv,
-                             const OctetString &ad,
-                             Cipher_Dir direction)
-   {
-   if (iv.size() == 0) throw std::invalid_argument("IV must not be empty");
+   if(iv.size() == 0)
+      throw CLI_Usage_Error("IV must not be empty");
 
    // TODO: implement streaming
 
-   std::shared_ptr<Botan::Cipher_Mode> processor(Botan::get_cipher_mode(cipher, direction));
-   if(!processor) throw std::runtime_error("Cipher algorithm not found");
+   std::unique_ptr<Botan::Cipher_Mode> processor(Botan::get_cipher_mode(cipher, direction));
+   if(!processor)
+      throw CLI_Error("Cipher algorithm not found");
 
    // Set key
    processor->set_key(key);
 
-   // Set associated data
-   if (is_aead(cipher))
+   if(Botan::AEAD_Mode* aead = dynamic_cast<Botan::AEAD_Mode*>(processor.get()))
       {
-      auto aead_processor = std::dynamic_pointer_cast<AEAD_Mode>(processor);
-      if(!aead_processor) throw std::runtime_error("Cipher algorithm not could not be converted to AEAD");
-      aead_processor->set_ad(ad.bits_of());
+      aead->set_ad(ad);
+      }
+   else if(ad.size() != 0)
+      {
+      throw CLI_Usage_Error("Cannot specify associated data with non-AEAD mode");
       }
 
    // Set IV
    processor->start(iv.bits_of());
 
-   secure_vector<byte> buf(input.begin(), input.end());
+   Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
    processor->finish(buf);
 
    return buf;
@@ -97,20 +93,19 @@ class Encryption final : public Command
          const std::string ad_hex  = get_arg_or("ad", "");
          const size_t buf_size = get_arg_sz("buf-size");
 
-         Botan::secure_vector<uint8_t> input = this->slurp_file_locked("-", buf_size);
+         const std::vector<uint8_t> input = this->slurp_file("-", buf_size);
 
          if (verbose())
             {
             error_output() << "Got " << input.size() << " bytes of input data.\n";
             }
 
-         auto key = SymmetricKey(key_hex);
-         auto iv = InitializationVector(iv_hex);
-         auto ad = OctetString(ad_hex);
+         const Botan::SymmetricKey key(key_hex);
+         const Botan::InitializationVector iv(iv_hex);
+         const std::vector<uint8_t> ad = Botan::hex_decode(ad_hex);
 
-         auto direction = flag_set("decrypt") ? Cipher_Dir::DECRYPTION : Cipher_Dir::ENCRYPTION;
-         auto data = do_crypt(VALID_MODES[mode], input, key, iv, ad, direction);
-         std::copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(output()));
+         auto direction = flag_set("decrypt") ? Botan::Cipher_Dir::DECRYPTION : Botan::Cipher_Dir::ENCRYPTION;
+         write_output(do_crypt(VALID_MODES[mode], input, key, iv, ad, direction));
          }
    };
 

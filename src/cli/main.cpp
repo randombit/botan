@@ -7,25 +7,21 @@
 #include "cli.h"
 
 #include <botan/version.h>
-#include <botan/internal/stl_util.h>
-#include <iterator>
 #include <sstream>
+#include <iostream>
 
 namespace {
 
 std::string main_help()
    {
-   const std::set<std::string> avail_commands =
-      Botan::map_keys_as_set(Botan_CLI::Command::global_registry());
-
    std::ostringstream oss;
 
    oss << "Usage: botan <cmd> <cmd-options>\n";
    oss << "Available commands:\n";
 
-   for(auto& cmd_name : avail_commands)
+   for(const auto& cmd_name : Botan_CLI::Command::registered_cmds())
       {
-      auto cmd = Botan_CLI::Command::get_cmd(cmd_name);
+      std::unique_ptr<Botan_CLI::Command> cmd = Botan_CLI::Command::get_cmd(cmd_name);
       oss << cmd->cmd_spec() << "\n";
       }
 
