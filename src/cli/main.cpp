@@ -7,6 +7,7 @@
 #include "cli.h"
 #include <botan/version.h>
 #include <iostream>
+#include <algorithm>
 
 int main(int argc, char* argv[])
    {
