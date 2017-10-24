@@ -93,17 +93,17 @@ class Command
          return m_spec;
          }
 
-      std::string cmd_name() const
-         {
-         return m_spec.substr(0, m_spec.find(' '));
-         }
+      std::string cmd_name() const;
 
    protected:
 
       /*
-      * The actual functionality of the cli command implemented in subclas
+      * The actual functionality of the cli command implemented in subclas.
+      * The return value from main will be zero.
       */
       virtual void go() = 0;
+
+      void set_return_code(int rc) { m_return_code = rc; }
 
       std::ostream& output();
 
@@ -171,6 +171,9 @@ class Command
       std::unique_ptr<std::ostream> m_error_output_stream;
 
       std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
+
+      // possibly set by calling set_return_code()
+      int m_return_code = 0;
 
    public:
       // the registry interface:

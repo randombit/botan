@@ -5,41 +5,20 @@
 */
 
 #include "cli.h"
-
 #include <botan/version.h>
-#include <sstream>
 #include <iostream>
-
-namespace {
-
-std::string main_help()
-   {
-   std::ostringstream oss;
-
-   oss << "Usage: botan <cmd> <cmd-options>\n";
-   oss << "Available commands:\n";
-
-   for(const auto& cmd_name : Botan_CLI::Command::registered_cmds())
-      {
-      std::unique_ptr<Botan_CLI::Command> cmd = Botan_CLI::Command::get_cmd(cmd_name);
-      oss << cmd->cmd_spec() << "\n";
-      }
-
-   return oss.str();
-   }
-
-}
 
 int main(int argc, char* argv[])
    {
    std::cerr << Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
 
-   const std::string cmd_name = (argc <= 1) ? "help" : argv[1];
+   std::string cmd_name = "help";
 
-   if(cmd_name == "help" || cmd_name == "--help" || cmd_name == "-h")
+   if(argc >= 2)
       {
-      std::cout << main_help();
-      return 1;
+      cmd_name = argv[1];
+      if(cmd_name == "--help" || cmd_name == "-h")
+         cmd_name = "help";
       }
 
    std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd(cmd_name));
@@ -50,6 +29,6 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   std::vector<std::string> args(argv + 2, argv + argc);
+   std::vector<std::string> args(argv + std::min(argc, 2), argv + argc);
    return cmd->run(args);
    }

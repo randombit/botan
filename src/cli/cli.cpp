@@ -21,10 +21,14 @@ Command::Command(const std::string& cmd_spec) : m_spec(cmd_spec)
 
 Command::~Command() { /* for unique_ptr */ }
 
+std::string Command::cmd_name() const
+   {
+   return m_spec.substr(0, m_spec.find(' '));
+   }
+
 std::string Command::help_text() const
    {
-   return "Usage: " + m_spec +
-      "\n\nAll commands support --verbose --help --output= --error-output= --rng-type= --drbg-seed=";
+   return "Usage: " + m_spec;
    }
 
 int Command::run(const std::vector<std::string>& params)
@@ -68,7 +72,7 @@ int Command::run(const std::vector<std::string>& params)
          }
 
       this->go();
-      return 0;
+      return m_return_code;
       }
    catch(CLI_Usage_Error& e)
       {

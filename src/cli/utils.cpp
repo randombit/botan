@@ -14,6 +14,7 @@
 #include <botan/cpuid.h>
 #include <botan/hex.h>
 #include <botan/parsing.h>
+#include <sstream>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
    #include <botan/base64.h>
@@ -28,6 +29,37 @@
 #endif
 
 namespace Botan_CLI {
+
+class Print_Help final : public Command
+   {
+   public:
+      Print_Help() : Command("help") {}
+
+      std::string help_text() const override
+         {
+         std::ostringstream oss;
+
+         oss << "Usage: botan <cmd> <cmd-options>\n\n";
+         oss << "All commands support --verbose --help --output= --error-output= --rng-type= --drbg-seed=\n\n";
+         oss << "Available commands:\n";
+
+         for(const auto& cmd_name : Command::registered_cmds())
+            {
+            std::unique_ptr<Command> cmd = Command::get_cmd(cmd_name);
+            oss << "  " << cmd->cmd_spec() << "\n";
+            }
+
+         return oss.str();
+         }
+
+      void go() override
+         {
+         this->set_return_code(1);
+         output() << help_text();
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("help", Print_Help);
 
 class Config_Info final : public Command
    {
