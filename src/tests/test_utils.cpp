@@ -404,8 +404,6 @@ class Charset_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
-         using namespace Botan;
-
          Test::Result result("Charset");
 
          const std::vector<uint8_t> in = get_req_bin(vars, "In");
@@ -414,18 +412,21 @@ class Charset_Tests final : public Text_Based_Test
          std::string converted;
          if(type == "UTF16-LATIN1")
             {
-            converted = Charset::transcode(std::string(in.begin(), in.end()),
-                                           Character_Set::LATIN1_CHARSET, Character_Set::UCS2_CHARSET);
+            converted = Botan::Charset::transcode(std::string(in.begin(), in.end()),
+                                                  Botan::Character_Set::LATIN1_CHARSET,
+                                                  Botan::Character_Set::UCS2_CHARSET);
             }
          else if(type == "UTF8-LATIN1")
             {
-            converted = Charset::transcode(std::string(in.begin(), in.end()),
-                                           Character_Set::LATIN1_CHARSET, Character_Set::UTF8_CHARSET);
+            converted = Botan::Charset::transcode(std::string(in.begin(), in.end()),
+                                                  Botan::Character_Set::LATIN1_CHARSET,
+                                                  Botan::Character_Set::UTF8_CHARSET);
             }
          else if(type == "LATIN1-UTF8")
             {
-            converted = Charset::transcode(std::string(in.begin(), in.end()),
-                                           Character_Set::UTF8_CHARSET, Character_Set::LATIN1_CHARSET);
+            converted = Botan::Charset::transcode(std::string(in.begin(), in.end()),
+                                                  Botan::Character_Set::UTF8_CHARSET,
+                                                  Botan::Character_Set::LATIN1_CHARSET);
             }
          else
             {
@@ -439,8 +440,6 @@ class Charset_Tests final : public Text_Based_Test
 
       Test::Result utf16_to_latin1_negative_tests()
          {
-         using namespace Botan;
-
          Test::Result result("Charset negative tests");
 
          result.test_throws("conversion fails for non-Latin1 characters", []()
@@ -450,16 +449,18 @@ class Charset_Tests final : public Text_Based_Test
                                            0x78, 0x00, 0x61, 0x00, 0x62, 0x00, 0x63, 0x00, 0x64, 0x00, 0x65, 0x00, 0x66
                                          };
 
-            Charset::transcode(std::string(input.begin(), input.end()),
-                               Character_Set::LATIN1_CHARSET, Character_Set::UCS2_CHARSET);
+            Botan::Charset::transcode(std::string(input.begin(), input.end()),
+                                      Botan::Character_Set::LATIN1_CHARSET,
+                                      Botan::Character_Set::UCS2_CHARSET);
             });
 
          result.test_throws("conversion fails for UTF16 string with odd number of bytes", []()
             {
             std::vector<uint8_t> input = { 0x00, 0x61, 0x00 };
 
-            Charset::transcode(std::string(input.begin(), input.end()),
-                               Character_Set::LATIN1_CHARSET, Character_Set::UCS2_CHARSET);
+            Botan::Charset::transcode(std::string(input.begin(), input.end()),
+                                      Botan::Character_Set::LATIN1_CHARSET,
+                                      Botan::Character_Set::UCS2_CHARSET);
             });
 
          return result;
@@ -467,8 +468,6 @@ class Charset_Tests final : public Text_Based_Test
 
       Test::Result utf8_to_latin1_negative_tests()
          {
-         using namespace Botan;
-
          Test::Result result("Charset negative tests");
 
          result.test_throws("conversion fails for non-Latin1 characters", []()
@@ -478,8 +477,9 @@ class Charset_Tests final : public Text_Based_Test
                                            0xB8, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66
                                          };
 
-            Charset::transcode(std::string(input.begin(), input.end()),
-                               Character_Set::LATIN1_CHARSET, Character_Set::UTF8_CHARSET);
+            Botan::Charset::transcode(std::string(input.begin(), input.end()),
+                                      Botan::Character_Set::LATIN1_CHARSET,
+                                      Botan::Character_Set::UTF8_CHARSET);
             });
 
          result.test_throws("invalid utf-8 string", []()
@@ -487,16 +487,18 @@ class Charset_Tests final : public Text_Based_Test
             // sequence truncated
             std::vector<uint8_t> input = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0xC5 };
 
-            Charset::transcode(std::string(input.begin(), input.end()),
-                               Character_Set::LATIN1_CHARSET, Character_Set::UTF8_CHARSET);
+            Botan::Charset::transcode(std::string(input.begin(), input.end()),
+                                      Botan::Character_Set::LATIN1_CHARSET,
+                                      Botan::Character_Set::UTF8_CHARSET);
             });
 
          result.test_throws("invalid utf-8 string", []()
             {
             std::vector<uint8_t> input = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0xC8, 0xB8, 0x61 };
 
-            Charset::transcode(std::string(input.begin(), input.end()),
-                               Character_Set::LATIN1_CHARSET, Character_Set::UTF8_CHARSET);
+            Botan::Charset::transcode(std::string(input.begin(), input.end()),
+                                      Botan::Character_Set::LATIN1_CHARSET,
+                                      Botan::Character_Set::UTF8_CHARSET);
             });
 
          return result;
@@ -504,8 +506,6 @@ class Charset_Tests final : public Text_Based_Test
 
       std::vector<Test::Result> run_final_tests() override
          {
-         using namespace Botan;
-
          Test::Result result("Charset negative tests");
 
          result.merge(utf16_to_latin1_negative_tests());
@@ -526,8 +526,6 @@ class Hostname_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
-         using namespace Botan;
-
          Test::Result result("Hostname");
 
          const std::string issued = get_req_str(vars, "Issued");
