@@ -9,10 +9,10 @@ the library.
 Fuzzing with libFuzzer
 ------------------------
 
-To fuzz with libFuzzer (http://llvm.org/docs/LibFuzzer.html), you'll first
+To fuzz with libFuzzer (https://llvm.org/docs/LibFuzzer.html), you'll first
 need to compile libFuzzer::
 
-  $ svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer libFuzzer
+  $ svn co https://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer libFuzzer
   $ cd libFuzzer && clang -c -g -O2 -std=c++11 *.cpp
   $ ar cr libFuzzer.a libFuzzer/*.o
 

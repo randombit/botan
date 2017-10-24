@@ -10,7 +10,7 @@ the build system, primarily due to lack of access. Please contact the
 maintainer if you would like to build Botan on such a system.
 
 Botan's build is controlled by configure.py, which is a `Python
-<http://www.python.org>`_ script. Python 2.6 or later is required.
+<https://www.python.org>`_ script. Python 2.6 or later is required.
 
 .. highlight:: none
 
@@ -237,7 +237,7 @@ For Android
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Instructions for building the library on Android can be found
-`here <http://www.tiwoc.de/blog/2013/03/building-the-botan-library-for-android/>`_.
+`here <https://www.danielseither.de/blog/2013/03/building-the-botan-library-for-android/>`_.
 
 Other Build-Related Tasks
 ----------------------------------------
@@ -334,7 +334,7 @@ distribution this build is from. Applications can test this value by
 checking the string value of the macro ``BOTAN_DISTRIBUTION_INFO``. It
 can be set using the ``--distribution-info`` flag to ``configure.py``,
 and otherwise defaults to "unspecified". For instance, a `Gentoo
-<http://www.gentoo.org>`_ ebuild might set it with
+<https://www.gentoo.org>`_ ebuild might set it with
 ``--distribution-info="Gentoo ${PVR}"`` where ``${PVR}`` is an ebuild
 variable automatically set to a combination of the library and ebuild
 versions.
