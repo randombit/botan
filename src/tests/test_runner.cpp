@@ -298,16 +298,32 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run)
 
    for(auto const& test_name : tests_to_run)
       {
+      output() << test_name << ':' << std::endl;
+
+      std::vector<Test::Result> results;
+
       try
          {
-         output() << test_name << ':' << std::endl;
-         const auto results = Botan_Tests::Test::run_test(test_name, false);
-         output() << report_out(results, tests_failed, tests_ran) << std::flush;
+         if(Test* test = Test::get_test(test_name))
+            {
+            std::vector<Test::Result> test_results = test->run();
+            results.insert(results.end(), test_results.begin(), test_results.end());
+            }
+         else
+            {
+            results.push_back(Test::Result::Note(test_name, "Test missing or unavailable"));
+            }
          }
       catch(std::exception& e)
          {
-         output() << "Test " << test_name << " failed with exception " << e.what() << std::flush;
+         results.push_back(Test::Result::Failure(test_name, e.what()));
          }
+      catch(...)
+         {
+         results.push_back(Test::Result::Failure(test_name, "unknown exception"));
+         }
+
+      output() << report_out(results, tests_failed, tests_ran) << std::flush;
       }
 
    const uint64_t total_ns = Botan_Tests::Test::timestamp() - start_time;

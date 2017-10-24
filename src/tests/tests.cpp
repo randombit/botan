@@ -506,44 +506,6 @@ Test* Test::get_test(const std::string& test_name)
    return nullptr;
    }
 
-//static
-std::vector<Test::Result> Test::run_test(const std::string& test_name, bool fail_if_missing)
-   {
-   std::vector<Test::Result> results;
-
-   try
-      {
-      if(Test* test = get_test(test_name))
-         {
-         std::vector<Test::Result> test_results = test->run();
-         results.insert(results.end(), test_results.begin(), test_results.end());
-         }
-      else
-         {
-         Test::Result result(test_name);
-         if(fail_if_missing)
-            {
-            result.test_failure("Test missing or unavailable");
-            }
-         else
-            {
-            result.test_note("Test missing or unavailable");
-            }
-         results.push_back(result);
-         }
-      }
-   catch(std::exception& e)
-      {
-      results.push_back(Test::Result::Failure(test_name, e.what()));
-      }
-   catch(...)
-      {
-      results.push_back(Test::Result::Failure(test_name, "unknown exception"));
-      }
-
-   return results;
-   }
-
 // static member variables of Test
 Botan::RandomNumberGenerator* Test::m_test_rng = nullptr;
 std::string Test::m_data_dir;

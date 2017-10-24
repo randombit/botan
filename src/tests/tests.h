@@ -357,8 +357,6 @@ class Test
       virtual ~Test() = default;
       virtual std::vector<std::string> possible_providers(const std::string&);
 
-      static std::vector<Test::Result> run_test(const std::string& what, bool fail_if_missing);
-
       static std::map<std::string, std::unique_ptr<Test>>& global_registry();
 
       static std::set<std::string> registered_tests();
@@ -397,7 +395,7 @@ class Test
          return r;
          }
 
-      static void setup_tests(bool log_succcss,
+      static void setup_tests(bool log_success,
                               bool run_online_tests,
                               bool run_long_tests,
                               const std::string& data_dir,
