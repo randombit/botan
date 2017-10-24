@@ -18,8 +18,6 @@ class Test_Runner final
    public:
       Test_Runner(std::ostream& out);
 
-      std::string help_text() const;
-
       int run(const std::vector<std::string>& requested_tests,
               const std::string& data_dir,
               const std::string& pkcs11_lib,

@@ -124,37 +124,6 @@ create_test_rng(const std::string& drbg_seed, std::ostream& output)
 
 }
 
-std::string Test_Runner::help_text() const
-   {
-   std::ostringstream err;
-
-   err << "Usage: botan-test "
-       << "--run-long-tests --run-online-tests --test-runs=1 --drbg-seed= --data-dir= --pkcs11-lib= --provider= --log-success"
-       << "\n\nAvailable test suites\n"
-       << "----------------\n";
-
-   size_t line_len = 0;
-
-   for(auto const& test : Botan_Tests::Test::registered_tests())
-      {
-      err << test << " ";
-      line_len += test.size() + 1;
-
-      if(line_len > 64)
-         {
-         err << "\n";
-         line_len = 0;
-         }
-      }
-
-   if(line_len > 0)
-      {
-      err << "\n";
-      }
-
-   return err.str();
-   }
-
 int Test_Runner::run(const std::vector<std::string>& requested_tests,
                      const std::string& data_dir,
                      const std::string& pkcs11_lib,
