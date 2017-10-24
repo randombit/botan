@@ -21,7 +21,7 @@ class RandomNumberGenerator;
 * @param rng a random number generator
 * @param work_factor how much work to do to slow down guessing attacks
 *
-* @see http://www.usenix.org/events/usenix99/provos/provos_html/
+* @see https://www.usenix.org/events/usenix99/provos/provos_html/
 */
 std::string BOTAN_PUBLIC_API(2,0) generate_bcrypt(const std::string& password,
                                       RandomNumberGenerator& rng,

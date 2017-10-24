@@ -82,7 +82,7 @@ with n <= k <= 2n
 Returns k
 
 "The Montgomery Modular Inverse - Revisited" Çetin Koç, E. Savas
-http://citeseerx.ist.psu.edu/viewdoc/citations?doi=10.1.1.75.8377
+https://citeseerx.ist.psu.edu/viewdoc/citations?doi=10.1.1.75.8377
 
 A const time implementation of this algorithm is described in
 "Constant Time Modular Inversion" Joppe W. Bos
@@ -171,7 +171,7 @@ BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    Software Polynomial Multiplication on ARM Processors using the NEON Engine"
    by Danilo Câmara, Conrado P. L. Gouvêa, Julio López, and Ricardo
    Dahab in LNCS 8182
-      http://conradoplg.cryptoland.net/files/2010/12/mocrysen13.pdf
+      https://conradoplg.cryptoland.net/files/2010/12/mocrysen13.pdf
 
    Thanks to Niels for creating the algorithm, explaining some things
    about it, and the reference to the paper.

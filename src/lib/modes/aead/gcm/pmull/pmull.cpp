@@ -15,7 +15,7 @@ namespace Botan {
 /*
 This follows the same pattern as the clmul implementation.
 
-See also http://conradoplg.cryptoland.net/files/2010/12/gcm14.pdf
+See also https://conradoplg.cryptoland.net/files/2010/12/gcm14.pdf
 */
 
 namespace {

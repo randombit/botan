@@ -5,7 +5,7 @@
 * This is more or less a direct translation of public domain x86-64
 * assembly written by Mike Hamburg, described in "Accelerating AES
 * with Vector Permute Instructions" (CHES 2009). His original code is
-* available at http://crypto.stanford.edu/vpaes/
+* available at https://crypto.stanford.edu/vpaes/
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

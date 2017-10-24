@@ -33,7 +33,7 @@ void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8
    ABCD = vld1q_u32(&digest[0]);
    E0 = digest[4];
 
-   // Intermediate void* cast due to http://llvm.org/bugs/show_bug.cgi?id=20670
+   // Intermediate void* cast due to https://llvm.org/bugs/show_bug.cgi?id=20670
    const uint32_t* input32 = reinterpret_cast<const uint32_t*>(reinterpret_cast<const void*>(input8));
 
    while (blocks)

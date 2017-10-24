@@ -18,7 +18,7 @@ namespace FPE {
 /**
 * Format Preserving Encryption using the scheme FE1 from the paper
 * "Format-Preserving Encryption" by Bellare, Rogaway, et al
-* (http://eprint.iacr.org/2009/251)
+* (https://eprint.iacr.org/2009/251)
 *
 * Encrypt X from and onto the group Z_n using key and tweak
 * @param n the modulus

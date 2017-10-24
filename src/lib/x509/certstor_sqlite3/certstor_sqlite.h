@@ -13,7 +13,7 @@
 namespace Botan {
 
 /**
-* Certificate and private key store backed by an sqlite (http://sqlite.org) database.
+* Certificate and private key store backed by an sqlite (https://sqlite.org) database.
 */
 class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQLite final : public Certificate_Store_In_SQL
    {

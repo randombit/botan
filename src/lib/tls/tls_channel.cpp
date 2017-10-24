@@ -509,7 +509,7 @@ void Channel::send_record_array(uint16_t epoch, uint8_t type, const uint8_t inpu
    * An empty record also works but apparently some implementations do
    * not like this (https://bugzilla.mozilla.org/show_bug.cgi?id=665814)
    *
-   * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
+   * See https://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
 
    auto cipher_state = write_cipher_state_epoch(epoch);

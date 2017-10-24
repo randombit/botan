@@ -14,7 +14,7 @@ namespace Botan {
 
 /**
 * Serpent is the most conservative of the AES finalists
-* http://www.cl.cam.ac.uk/~rja14/serpent.html
+* https://www.cl.cam.ac.uk/~rja14/serpent.html
 */
 class BOTAN_PUBLIC_API(2,0) Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
    {

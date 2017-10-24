@@ -13,7 +13,7 @@
 namespace Botan {
 
 /**
-* DJB's ChaCha (http://cr.yp.to/chacha.html)
+* DJB's ChaCha (https://cr.yp.to/chacha.html)
 */
 class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
    {

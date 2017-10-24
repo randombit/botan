@@ -137,7 +137,7 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
    #if defined(BOTAN_TARGET_OS_HAS_TIMEGM)
    std::time_t (&botan_timegm)(std::tm *tm) = ::timegm;
    #elif defined(BOTAN_TARGET_OS_HAS_MKGMTIME) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-   // http://stackoverflow.com/questions/16647819/timegm-cross-platform
+   // https://stackoverflow.com/questions/16647819/timegm-cross-platform
    std::time_t (&botan_timegm)(std::tm *tm) = ::_mkgmtime;
    #elif defined(BOTAN_HAS_BOOST_DATETIME)
    std::time_t (&botan_timegm)(std::tm *tm) = boost_timegm;

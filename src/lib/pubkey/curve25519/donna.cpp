@@ -10,14 +10,14 @@
  *
  * curve25519-donna: Curve25519 elliptic curve, public key function
  *
- * http://code.google.com/p/curve25519-donna/
+ * https://code.google.com/p/curve25519-donna/
  *
  * Adam Langley <agl@imperialviolet.org>
  *
  * Derived from public domain C code by Daniel J. Bernstein <djb@cr.yp.to>
  *
  * More information about curve25519 can be found here
- *   http://cr.yp.to/ecdh.html
+ *   https://cr.yp.to/ecdh.html
  *
  * djb's sample implementation of curve25519 is written in a special assembly
  * language called qhasm and uses the floating point registers.

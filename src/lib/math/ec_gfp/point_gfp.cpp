@@ -86,7 +86,7 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    BigInt& r = ws_bn[7];
 
    /*
-   http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
+   https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
    */
 
    curve_sqr(rhs_z2, rhs.m_coord_z);
@@ -158,7 +158,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
       }
 
    /*
-   http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#doubling-dbl-1986-cc
+   https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#doubling-dbl-1986-cc
    */
 
    const BigInt& p = m_curve.get_p();
@@ -359,7 +359,7 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
    /*
    Algorithm 7 from "Randomizing the Montgomery Powering Ladder"
    Duc-Phong Le, Chik How Tan and Michael Tunstall
-   http://eprint.iacr.org/2015/657
+   https://eprint.iacr.org/2015/657
 
    It takes a random walk through (a subset of) the set of addition
    chains that end in k.
