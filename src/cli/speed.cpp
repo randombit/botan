@@ -1084,8 +1084,6 @@ class Speed final : public Command
 
          record_result(ks_timer);
 
-         Timer iv_timer(enc.name(), enc.provider(), "iv setup");
-
          for(auto buf_size : buf_sizes)
             {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
@@ -1095,23 +1093,18 @@ class Speed final : public Command
 
             Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
 
-            iv_timer.run([&]() { enc.start(iv); });
-            iv_timer.run([&]() { dec.start(iv); });
-
             if(buf_size >= enc.minimum_final_size())
                {
                while(encrypt_timer.under(runtime) && decrypt_timer.under(runtime))
                   {
                   // Must run in this order, or AEADs will reject the ciphertext
-                  encrypt_timer.run([&]() { enc.finish(buffer); });
+                  encrypt_timer.run([&]() { enc.start(iv); enc.finish(buffer); });
 
-                  decrypt_timer.run([&]() { dec.finish(buffer); });
+                  decrypt_timer.run([&]() { dec.start(iv); dec.finish(buffer); });
 
                   if(iv.size() > 0)
                      {
                      iv[0] += 1;
-                     iv_timer.run([&]() { enc.start(iv); });
-                     iv_timer.run([&]() { dec.start(iv); });
                      }
                   }
                }
@@ -1119,7 +1112,6 @@ class Speed final : public Command
             record_result(encrypt_timer);
             record_result(decrypt_timer);
             }
-         record_result(iv_timer);
          }
 
       void bench_rng(
