@@ -102,7 +102,7 @@ inline size_t ctz(T n)
    return 8*sizeof(T);
    }
 
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
 
 template<>
 inline size_t ctz(uint32_t n)
