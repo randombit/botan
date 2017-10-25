@@ -7,6 +7,7 @@
 
 #include <botan/tls_messages.h>
 #include <botan/tls_extensions.h>
+#include <botan/oids.h>
 #include <botan/rng.h>
 
 #include <botan/internal/tls_reader.h>
