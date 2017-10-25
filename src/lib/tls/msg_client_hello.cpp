@@ -92,7 +92,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    */
    m_extensions.add(new Extended_Master_Secret);
    m_extensions.add(new Session_Ticket());
-   m_extensions.add(new Certificate_Status_Request);
 
    if(policy.negotiate_encrypt_then_mac())
       m_extensions.add(new Encrypt_then_MAC);
@@ -167,7 +166,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    attempt and upgrade us to a new session with the EMS protection.
    */
    m_extensions.add(new Extended_Master_Secret);
-   m_extensions.add(new Certificate_Status_Request);
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new Server_Name_Indicator(session.server_info().hostname()));
