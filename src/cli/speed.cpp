@@ -989,9 +989,19 @@ class Speed final : public Command
          const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
          ks_timer.run([&]() { cipher.set_key(key); });
 
-         for(auto buf_size : buf_sizes)
+         const size_t bs = cipher.block_size();
+         std::set<size_t> buf_sizes_in_blocks;
+         for(size_t buf_size : buf_sizes)
             {
-            std::vector<uint8_t> buffer(buf_size * cipher.block_size());
+            if(buf_size % bs == 0)
+               buf_sizes_in_blocks.insert(buf_size);
+            else
+               buf_sizes_in_blocks.insert(buf_size + bs - (buf_size % bs));
+            }
+
+         for(size_t buf_size : buf_sizes_in_blocks)
+            {
+            std::vector<uint8_t> buffer(buf_size);
 
             Timer encrypt_timer(cipher.name(), buffer.size(), "encrypt", provider, buf_size);
             Timer decrypt_timer(cipher.name(), buffer.size(), "decrypt", provider, buf_size);
