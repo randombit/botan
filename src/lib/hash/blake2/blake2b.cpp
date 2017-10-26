@@ -128,13 +128,19 @@ void Blake2b::compress(const uint8_t* input, size_t blocks, size_t increment)
 
 void Blake2b::add_data(const uint8_t input[], size_t length)
    {
+   if(length == 0)
+      return;
+
    if(m_bufpos > 0)
       {
-      const size_t take = std::min(BLAKE2B_BLOCKBYTES - m_bufpos, length);
-      copy_mem(&m_buffer[m_bufpos], input, take);
-      m_bufpos += take;
-      length -= take;
-      input += take;
+      if(m_bufpos < BLAKE2B_BLOCKBYTES)
+         {
+         const size_t take = std::min(BLAKE2B_BLOCKBYTES - m_bufpos, length);
+         copy_mem(&m_buffer[m_bufpos], input, take);
+         m_bufpos += take;
+         length -= take;
+         input += take;
+         }
 
       if(m_bufpos == m_buffer.size() && length > 0)
          {
@@ -152,13 +158,17 @@ void Blake2b::add_data(const uint8_t input[], size_t length)
       length -= full_blocks * BLAKE2B_BLOCKBYTES;
       }
 
-   copy_mem(&m_buffer[m_bufpos], input, length);
-   m_bufpos += length;
+   if(length > 0)
+      {
+      copy_mem(&m_buffer[m_bufpos], input, length);
+      m_bufpos += length;
+      }
    }
 
 void Blake2b::final_result(uint8_t output[])
    {
-   clear_mem(&m_buffer[m_bufpos], BLAKE2B_BLOCKBYTES - m_bufpos);
+   if(m_bufpos != BLAKE2B_BLOCKBYTES)
+      clear_mem(&m_buffer[m_bufpos], BLAKE2B_BLOCKBYTES - m_bufpos);
    m_F[0] = 0xFFFFFFFFFFFFFFFF;
    compress(m_buffer.data(), 1, m_bufpos);
    copy_out_vec_le(output, output_length(), m_H);
