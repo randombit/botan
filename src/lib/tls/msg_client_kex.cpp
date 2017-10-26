@@ -7,6 +7,7 @@
 
 #include <botan/tls_messages.h>
 #include <botan/tls_extensions.h>
+#include <botan/oids.h>
 #include <botan/rng.h>
 
 #include <botan/internal/tls_reader.h>
@@ -181,7 +182,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             }
          else
             {
-            EC_Group group(curve_name);
+            EC_Group group(OIDS::lookup(curve_name));
             ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
             policy.check_peer_key_acceptable(counterparty_key);
             ECDH_PrivateKey priv_key(rng, group);
