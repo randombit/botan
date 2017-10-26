@@ -53,7 +53,7 @@ void Blake2b::state_init()
    m_F[0] = m_F[1] = 0;
    }
 
-void Blake2b::compress(const uint8_t* input, size_t blocks, size_t increment)
+void Blake2b::compress(const uint8_t* input, size_t blocks, uint64_t increment)
    {
    for(size_t b = 0; b != blocks; ++b)
       {
