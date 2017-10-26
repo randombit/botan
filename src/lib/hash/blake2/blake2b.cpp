@@ -1,6 +1,7 @@
 /*
 * Blake2b
 * (C) 2016 cynecx
+* (C) 2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -16,37 +17,27 @@ namespace Botan {
 
 namespace {
 
-const uint64_t blake2b_IV[BLAKE2B_IVU64COUNT] = {
-   0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
-   0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL,
-   0x510e527fade682d1ULL, 0x9b05688c2b3e6c1fULL,
-   0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL
+enum blake2b_constant {
+  BLAKE2B_BLOCKBYTES = 128,
+  BLAKE2B_IVU64COUNT = 8
 };
 
-const uint64_t blake2b_sigma[12][16] = {
-   {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 } ,
-   { 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 } ,
-   { 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 } ,
-   {  7,  9,  3,  1, 13, 12, 11, 14,  2,  6,  5, 10,  4,  0, 15,  8 } ,
-   {  9,  0,  5,  7,  2,  4, 10, 15, 14,  1, 11, 12,  6,  8,  3, 13 } ,
-   {  2, 12,  6, 10,  0, 11,  8,  3,  4, 13,  7,  5, 15, 14,  1,  9 } ,
-   { 12,  5,  1, 15, 14, 13,  4, 10,  0,  7,  6,  3,  9,  2,  8, 11 } ,
-   { 13, 11,  7, 14, 12,  1,  3,  9,  5,  0, 15,  4,  8,  6,  2, 10 } ,
-   {  6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5 } ,
-   { 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13 , 0 } ,
-   {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 } ,
-   { 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 }
+const uint64_t blake2b_IV[BLAKE2B_IVU64COUNT] = {
+   0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
+   0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+   0x510e527fade682d1, 0x9b05688c2b3e6c1f,
+   0x1f83d9abfb41bd6b, 0x5be0cd19137e2179
 };
+
 }
 
 Blake2b::Blake2b(size_t output_bits) :
    m_output_bits(output_bits),
    m_buffer(BLAKE2B_BLOCKBYTES),
-   m_buflen(0),
+   m_bufpos(0),
    m_H(BLAKE2B_IVU64COUNT)
    {
-   if(output_bits == 0 || output_bits % 8 != 0
-      || output_bits / 8 > BLAKE2B_OUTBYTES)
+   if(output_bits == 0 || output_bits > 512 || output_bits % 8 != 0)
       {
       throw Invalid_Argument("Bad output bits size for Blake2b");
       }
@@ -56,145 +47,121 @@ Blake2b::Blake2b(size_t output_bits) :
 
 void Blake2b::state_init()
    {
-   std::copy(std::begin(blake2b_IV), std::end(blake2b_IV), m_H.begin());
+   copy_mem(m_H.data(), blake2b_IV, BLAKE2B_IVU64COUNT);
    m_H[0] ^= 0x01010000 ^ static_cast<uint8_t>(output_length());
    m_T[0] = m_T[1] = 0;
    m_F[0] = m_F[1] = 0;
    }
 
-void Blake2b::compress(bool lastblock)
+void Blake2b::compress(const uint8_t* input, size_t blocks, size_t increment)
    {
-   uint64_t m[16];
-   uint64_t v[16];
-   uint64_t* const H = m_H.data();
-   const uint8_t* const block = m_buffer.data();
-
-   if(lastblock)
+   for(size_t b = 0; b != blocks; ++b)
       {
-      m_F[0] = ~0ULL;
-      }
+      m_T[0] += increment;
+      if(m_T[0] < increment)
+         {
+         m_T[1]++;
+         }
 
-   for(int i = 0; i < 16; i++)
-      {
-      m[i] = load_le<uint64_t>(block, i);
-      }
+      uint64_t M[16];
+      uint64_t v[16];
+      load_le(M, input, 16);
 
-   for(int i = 0; i < 8; i++)
-      {
-      v[i] = H[i];
-      v[i + 8] = blake2b_IV[i];
-      }
+      input += BLAKE2B_BLOCKBYTES;
 
-   v[12] ^= m_T[0];
-   v[13] ^= m_T[1];
-   v[14] ^= m_F[0];
-   v[15] ^= m_F[1];
+      for(size_t i = 0; i < 8; i++)
+         v[i] = m_H[i];
+      for(size_t i = 0; i != 8; ++i)
+         v[i + 8] = blake2b_IV[i];
 
-#define G(r, i, a, b, c, d)                     \
+      v[12] ^= m_T[0];
+      v[13] ^= m_T[1];
+      v[14] ^= m_F[0];
+      v[15] ^= m_F[1];
+
+#define G(a, b, c, d, M0, M1)                   \
    do {                                         \
-   a = a + b + m[blake2b_sigma[r][2 * i + 0]];  \
+   a = a + b + M0;                              \
    d = rotr<32>(d ^ a);                         \
    c = c + d;                                   \
    b = rotr<24>(b ^ c);                         \
-   a = a + b + m[blake2b_sigma[r][2 * i + 1]];  \
+   a = a + b + M1;                              \
    d = rotr<16>(d ^ a);                         \
    c = c + d;                                   \
    b = rotr<63>(b ^ c);                         \
    } while(0)
 
-#define ROUND(r)                                \
-   do {                                         \
-   G(r, 0, v[0], v[4], v[8], v[12]);            \
-   G(r, 1, v[1], v[5], v[9], v[13]);            \
-   G(r, 2, v[2], v[6], v[10], v[14]);           \
-   G(r, 3, v[3], v[7], v[11], v[15]);           \
-   G(r, 4, v[0], v[5], v[10], v[15]);           \
-   G(r, 5, v[1], v[6], v[11], v[12]);           \
-   G(r, 6, v[2], v[7], v[8], v[13]);            \
-   G(r, 7, v[3], v[4], v[9], v[14]);            \
+#define ROUND(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, iA, iB, iC, iD, iE, iF) \
+   do {                                                     \
+      G(v[ 0], v[ 4], v[ 8], v[12], M[i0], M[i1]);          \
+      G(v[ 1], v[ 5], v[ 9], v[13], M[i2], M[i3]);          \
+      G(v[ 2], v[ 6], v[10], v[14], M[i4], M[i5]);          \
+      G(v[ 3], v[ 7], v[11], v[15], M[i6], M[i7]);          \
+      G(v[ 0], v[ 5], v[10], v[15], M[i8], M[i9]);          \
+      G(v[ 1], v[ 6], v[11], v[12], M[iA], M[iB]);          \
+      G(v[ 2], v[ 7], v[ 8], v[13], M[iC], M[iD]);          \
+      G(v[ 3], v[ 4], v[ 9], v[14], M[iE], M[iF]);          \
    } while(0)
 
-   ROUND(0);
-   ROUND(1);
-   ROUND(2);
-   ROUND(3);
-   ROUND(4);
-   ROUND(5);
-   ROUND(6);
-   ROUND(7);
-   ROUND(8);
-   ROUND(9);
-   ROUND(10);
-   ROUND(11);
+      ROUND( 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15);
+      ROUND(14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3);
+      ROUND(11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4);
+      ROUND( 7,  9,  3,  1, 13, 12, 11, 14,  2,  6,  5, 10,  4,  0, 15,  8);
+      ROUND( 9,  0,  5,  7,  2,  4, 10, 15, 14,  1, 11, 12,  6,  8,  3, 13);
+      ROUND( 2, 12,  6, 10,  0, 11,  8,  3,  4, 13,  7,  5, 15, 14,  1,  9);
+      ROUND(12,  5,  1, 15, 14, 13,  4, 10,  0,  7,  6,  3,  9,  2,  8, 11);
+      ROUND(13, 11,  7, 14, 12,  1,  3,  9,  5,  0, 15,  4,  8,  6,  2, 10);
+      ROUND( 6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5);
+      ROUND(10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13,  0);
+      ROUND( 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15);
+      ROUND(14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3);
 
-   for(int i = 0; i < 8; i++)
-      {
-      H[i] ^= v[i] ^ v[i + 8];
+      for(size_t i = 0; i < 8; i++)
+         {
+         m_H[i] ^= v[i] ^ v[i + 8];
+         }
       }
 
 #undef G
 #undef ROUND
    }
 
-void Blake2b::increment_counter(const uint64_t inc)
-   {
-   m_T[0] += inc;
-   if(m_T[0] < inc)
-      {
-      m_T[1]++;
-      }
-   }
-
 void Blake2b::add_data(const uint8_t input[], size_t length)
    {
-   if(!input || length == 0)
+   if(m_bufpos > 0)
       {
-      return;
-      }
+      const size_t take = std::min(BLAKE2B_BLOCKBYTES - m_bufpos, length);
+      copy_mem(&m_buffer[m_bufpos], input, take);
+      m_bufpos += take;
+      length -= take;
+      input += take;
 
-   uint8_t* const buffer = m_buffer.data();
-
-   while(length > 0)
-      {
-      size_t fill = BLAKE2B_BLOCKBYTES - m_buflen;
-
-      if(length <= fill)
+      if(m_bufpos == m_buffer.size() && length > 0)
          {
-         std::memcpy(buffer + m_buflen, input, length);
-         m_buflen += length;
-         return;
+         compress(m_buffer.data(), 1, BLAKE2B_BLOCKBYTES);
+         m_bufpos = 0;
          }
-
-      std::memcpy(buffer + m_buflen, input, fill);
-      increment_counter(BLAKE2B_BLOCKBYTES);
-      compress();
-
-      m_buflen = 0;
-      input += fill;
-      length -= fill;
       }
+
+   if(length > BLAKE2B_BLOCKBYTES)
+      {
+      const size_t full_blocks = ((length-1) / BLAKE2B_BLOCKBYTES);
+      compress(input, full_blocks, BLAKE2B_BLOCKBYTES);
+
+      input += full_blocks * BLAKE2B_BLOCKBYTES;
+      length -= full_blocks * BLAKE2B_BLOCKBYTES;
+      }
+
+   copy_mem(&m_buffer[m_bufpos], input, length);
+   m_bufpos += length;
    }
 
 void Blake2b::final_result(uint8_t output[])
    {
-   if(!output)
-      {
-      return;
-      }
-
-   uint8_t* const buffer = m_buffer.data();
-   const uint64_t* const H = static_cast<const uint64_t*>(m_H.data());
-   uint16_t outlen = static_cast<uint16_t>(output_length());
-
-   std::memset(buffer + m_buflen, 0, BLAKE2B_BLOCKBYTES - m_buflen);
-   increment_counter(m_buflen);
-   compress(true);
-
-   for (uint16_t i = 0; i < outlen; i++)
-      {
-      output[i] = (H[i >> 3] >> (8 * (i & 7))) & 0xFF;
-      }
-
+   clear_mem(&m_buffer[m_bufpos], BLAKE2B_BLOCKBYTES - m_bufpos);
+   m_F[0] = 0xFFFFFFFFFFFFFFFF;
+   compress(m_buffer.data(), 1, m_bufpos);
+   copy_out_vec_le(output, output_length(), m_H);
    clear();
    }
 
@@ -217,7 +184,7 @@ void Blake2b::clear()
    {
    zeroise(m_H);
    zeroise(m_buffer);
-   m_buflen = 0;
+   m_bufpos = 0;
    state_init();
    }
 

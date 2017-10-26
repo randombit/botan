@@ -19,11 +19,12 @@ MDx_HashFunction::MDx_HashFunction(size_t block_len,
                                    bool bit_end,
                                    size_t cnt_size) :
    m_buffer(block_len),
+   m_count(0),
+   m_position(0),
    BIG_BYTE_ENDIAN(byte_end),
    BIG_BIT_ENDIAN(bit_end),
    COUNT_SIZE(cnt_size)
    {
-   m_count = m_position = 0;
    }
 
 /*
