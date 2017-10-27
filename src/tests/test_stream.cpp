@@ -56,6 +56,18 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             const std::string provider(cipher->provider());
             result.test_is_nonempty("provider", provider);
             result.test_eq(provider, cipher->name(), algo);
+
+            try
+               {
+               std::vector<uint8_t> buf(128);
+               cipher->cipher1(buf.data(), buf.size());
+               result.test_failure("Was able to encrypt without a key being set");
+               }
+            catch(Botan::Invalid_State&)
+               {
+               result.test_success("Trying to encrypt with no key set fails");
+               }
+
             cipher->set_key(key);
 
             if(nonce.size())
@@ -95,6 +107,17 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             cipher->encrypt(buf);
 
             cipher->clear();
+
+            try
+               {
+               std::vector<uint8_t> buf(128);
+               cipher->cipher1(buf.data(), buf.size());
+               result.test_failure("Was able to encrypt without a key being set (after clear)");
+               }
+            catch(Botan::Invalid_State&)
+               {
+               result.test_success("Trying to encrypt with no key set (after clear) fails");
+               }
 
             result.test_eq(provider, "encrypt", buf, expected);
             }

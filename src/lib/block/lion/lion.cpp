@@ -14,6 +14,8 @@ namespace Botan {
 */
 void Lion::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_key1.empty() == false);
+
    const size_t LEFT_SIZE = left_size();
    const size_t RIGHT_SIZE = right_size();
 
@@ -44,6 +46,8 @@ void Lion::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Lion::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_key1.empty() == false);
+
    const size_t LEFT_SIZE = left_size();
    const size_t RIGHT_SIZE = right_size();
 
@@ -77,6 +81,11 @@ void Lion::key_schedule(const uint8_t key[], size_t length)
    clear();
 
    const size_t half = length / 2;
+
+   m_key1.resize(left_size());
+   m_key2.resize(left_size());
+   clear_mem(m_key1.data(), m_key1.size());
+   clear_mem(m_key2.data(), m_key2.size());
    copy_mem(m_key1.data(), key, half);
    copy_mem(m_key2.data(), key + half, half);
    }
@@ -104,8 +113,8 @@ BlockCipher* Lion::clone() const
 */
 void Lion::clear()
    {
-   zeroise(m_key1);
-   zeroise(m_key2);
+   zap(m_key1);
+   zap(m_key2);
    m_hash->clear();
    m_cipher->clear();
    }
@@ -123,9 +132,6 @@ Lion::Lion(HashFunction* hash, StreamCipher* cipher, size_t bs) :
 
    if(!m_cipher->valid_keylength(left_size()))
       throw Invalid_Argument(name() + ": This stream/hash combo is invalid");
-
-   m_key1.resize(left_size());
-   m_key2.resize(left_size());
    }
 
 }

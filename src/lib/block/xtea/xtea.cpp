@@ -15,6 +15,8 @@ namespace Botan {
 */
 void XTEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_EK.empty() == false);
+
    const uint32_t* EK = &m_EK[0];
 
    const size_t blocks4 = blocks / 4;
@@ -61,6 +63,8 @@ void XTEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void XTEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_EK.empty() == false);
+
    const uint32_t* EK = &m_EK[0];
 
    const size_t blocks4 = blocks / 4;

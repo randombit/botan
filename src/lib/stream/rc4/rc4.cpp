@@ -15,6 +15,8 @@ namespace Botan {
 */
 void RC4::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
+   verify_key_set(m_state.empty() == false);
+
    while(length >= m_buffer.size() - m_position)
       {
       xor_buf(out, in, &m_buffer[m_position], m_buffer.size() - m_position);

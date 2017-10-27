@@ -124,8 +124,7 @@ std::string Threefish_512::provider() const
 
 void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_K.size() == 9, "Key was set");
-   BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
+   verify_key_set(m_K.empty() == false);
 
 #if defined(BOTAN_HAS_THREEFISH_512_AVX2)
    if(CPUID::has_avx2())
@@ -161,8 +160,7 @@ void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
 void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_K.size() == 9, "Key was set");
-   BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
+   verify_key_set(m_K.empty() == false);
 
 #if defined(BOTAN_HAS_THREEFISH_512_AVX2)
    if(CPUID::has_avx2())

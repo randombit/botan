@@ -62,6 +62,12 @@ class BOTAN_PUBLIC_API(2,0) Invalid_State : public Exception
       explicit Invalid_State(const std::string& err) : Exception(err) {}
    };
 
+class BOTAN_PUBLIC_API(2,4) Key_Not_Set : public Invalid_State
+   {
+   public:
+      explicit Key_Not_Set(const std::string& algo);
+   };
+
 /**
 * Lookup_Error Exception
 */

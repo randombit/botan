@@ -144,6 +144,8 @@ void des_decrypt(uint32_t& L, uint32_t& R,
 */
 void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_round_key.empty() == false);
+
    for(size_t i = 0; i < blocks; ++i)
       {
       uint64_t T = (DES_IPTAB1[in[8*i+0]]     ) | (DES_IPTAB1[in[8*i+1]] << 1) |
@@ -171,6 +173,8 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_round_key.empty() == false);
+
    for(size_t i = 0; i < blocks; ++i)
       {
       uint64_t T = (DES_IPTAB1[in[BLOCK_SIZE*i+0]]     ) | (DES_IPTAB1[in[BLOCK_SIZE*i+1]] << 1) |
@@ -213,6 +217,8 @@ void DES::clear()
 */
 void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_round_key.empty() == false);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint64_t T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
@@ -246,6 +252,8 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 */
 void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_round_key.empty() == false);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint64_t T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |

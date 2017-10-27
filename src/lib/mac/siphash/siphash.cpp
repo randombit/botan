@@ -39,6 +39,8 @@ void SipRounds(uint64_t M, secure_vector<uint64_t>& V, size_t r)
 
 void SipHash::add_data(const uint8_t input[], size_t length)
    {
+   verify_key_set(m_V.empty() == false);
+
    // SipHash counts the message length mod 256
    m_words += static_cast<uint8_t>(length);
 
@@ -76,6 +78,8 @@ void SipHash::add_data(const uint8_t input[], size_t length)
 
 void SipHash::final_result(uint8_t mac[])
    {
+   verify_key_set(m_V.empty() == false);
+
    m_mbuf = (m_mbuf >> (64-m_mbuf_pos*8)) | (static_cast<uint64_t>(m_words) << 56);
    SipRounds(m_mbuf, m_V, m_C);
 
@@ -103,7 +107,7 @@ void SipHash::key_schedule(const uint8_t key[], size_t)
 
 void SipHash::clear()
    {
-   m_V.clear();
+   zap(m_V);
    m_mbuf = 0;
    m_mbuf_pos = 0;
    m_words = 0;

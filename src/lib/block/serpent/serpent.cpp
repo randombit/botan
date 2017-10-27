@@ -57,6 +57,8 @@ inline void i_transform(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3)
 */
 void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_round_key.empty() == false);
+
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32())
       {
@@ -117,6 +119,8 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_round_key.empty() == false);
+
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32())
       {

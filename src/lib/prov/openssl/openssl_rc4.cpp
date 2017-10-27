@@ -21,7 +21,7 @@ namespace {
 class OpenSSL_RC4 final : public StreamCipher
    {
    public:
-      void clear() override { clear_mem(&m_rc4, 1); }
+      void clear() override { clear_mem(&m_rc4, 1); m_key_set = false; }
 
       std::string provider() const override { return "openssl"; }
 
@@ -61,6 +61,7 @@ class OpenSSL_RC4 final : public StreamCipher
    private:
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override
          {
+         verify_key_set(m_key_set);
          ::RC4(&m_rc4, length, in, out);
          }
 
@@ -70,10 +71,12 @@ class OpenSSL_RC4 final : public StreamCipher
          uint8_t d = 0;
          for(size_t i = 0; i != m_skip; ++i)
             ::RC4(&m_rc4, 1, &d, &d);
+         m_key_set = true;
          }
 
       size_t m_skip;
       RC4_KEY m_rc4;
+      bool m_key_set;
    };
 
 }

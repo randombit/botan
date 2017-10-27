@@ -50,6 +50,8 @@ void round3(uint32_t& out, uint32_t in, uint32_t MK, uint32_t RK)
 */
 void CAST_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_RK.empty() == false);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t A = load_be<uint32_t>(in, 0);
@@ -94,6 +96,8 @@ void CAST_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void CAST_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_RK.empty() == false);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t A = load_be<uint32_t>(in, 0);

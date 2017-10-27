@@ -59,6 +59,17 @@ class Message_Auth_Tests final : public Text_Based_Test
             result.test_is_nonempty("provider", provider);
             result.test_eq(provider, mac->name(), algo);
 
+            try
+               {
+               std::vector<uint8_t> buf(128);
+               mac->update(buf.data(), buf.size());
+               result.test_failure("Was able to MAC without a key being set");
+               }
+            catch(Botan::Invalid_State&)
+               {
+               result.test_success("Trying to MAC with no key set fails");
+               }
+
             mac->set_key(key);
             mac->start(iv);
 
@@ -107,6 +118,30 @@ class Message_Auth_Tests final : public Text_Based_Test
                mac->update(input[ input.size() - 1 ]);
 
                result.test_eq(provider + " split mac", mac->verify_mac(expected.data(), expected.size()), true);
+               }
+
+            mac->clear();
+
+            try
+               {
+               std::vector<uint8_t> buf(128);
+               mac->update(buf.data(), buf.size());
+               result.test_failure("Was able to MAC without a key being set");
+               }
+            catch(Botan::Invalid_State&)
+               {
+               result.test_success("Trying to MAC with no key set (after clear) fails");
+               }
+
+            try
+               {
+               std::vector<uint8_t> buf(mac->output_length());
+               mac->final(buf.data());
+               result.test_failure("Was able to MAC without a key being set");
+               }
+            catch(Botan::Invalid_State&)
+               {
+               result.test_success("Trying to MAC with no key set (after clear) fails");
                }
             }
 

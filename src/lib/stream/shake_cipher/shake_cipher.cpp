@@ -12,13 +12,13 @@
 namespace Botan {
 
 SHAKE_128_Cipher::SHAKE_128_Cipher() :
-   m_state(25),
-   m_buffer((1600 - 256) / 8),
    m_buf_pos(0)
    {}
 
 void SHAKE_128_Cipher::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
+   verify_key_set(m_state.empty() == false);
+
    while(length >= m_buffer.size() - m_buf_pos)
       {
       xor_buf(out, in, &m_buffer[m_buf_pos], m_buffer.size() - m_buf_pos);
@@ -37,6 +37,8 @@ void SHAKE_128_Cipher::cipher(const uint8_t in[], uint8_t out[], size_t length)
 
 void SHAKE_128_Cipher::key_schedule(const uint8_t key[], size_t length)
    {
+   m_state.resize(25);
+   m_buffer.resize((1600 - 256) / 8);
    zeroise(m_state);
 
    for(size_t i = 0; i < length/8; ++i)
@@ -53,8 +55,8 @@ void SHAKE_128_Cipher::key_schedule(const uint8_t key[], size_t length)
 
 void SHAKE_128_Cipher::clear()
    {
-   zeroise(m_state);
-   zeroise(m_buffer);
+   zap(m_state);
+   zap(m_buffer);
    m_buf_pos = 0;
    }
 

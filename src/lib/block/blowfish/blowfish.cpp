@@ -197,6 +197,8 @@ const uint32_t S_INIT[1024] = {
 */
 void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_S.empty() == false);
+
    const uint32_t* S1 = &m_S[0];
    const uint32_t* S2 = &m_S[256];
    const uint32_t* S3 = &m_S[512];
@@ -229,6 +231,8 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_S.empty() == false);
+
    const uint32_t* S1 = &m_S[0];
    const uint32_t* S2 = &m_S[256];
    const uint32_t* S3 = &m_S[512];

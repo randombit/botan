@@ -44,6 +44,8 @@ inline void SHACAL2_Rev(uint32_t A, uint32_t B, uint32_t C, uint32_t& D,
 */
 void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_RK.empty() == false);
+
 #if defined(BOTAN_HAS_SHACAL2_X86)
    if(CPUID::has_intel_sha())
       {
@@ -99,6 +101,8 @@ void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void SHACAL2::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_RK.empty() == false);
+
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32())
       {

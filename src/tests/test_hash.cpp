@@ -68,7 +68,6 @@ class Hash_Function_Tests final : public Text_Based_Test
 
             result.test_eq(provider, "hashing after clear", hash->final(), expected);
 
-            // TODO: feed in random pieces to fully test buffering
             if(input.size() > 5)
                {
                hash->update(input[0]);
@@ -77,7 +76,17 @@ class Hash_Function_Tests final : public Text_Based_Test
                // verify fork copy doesn't affect original computation
                fork->update(&input[1], input.size() - 2);
 
-               hash->update(&input[1], input.size() - 1);
+               size_t so_far = 1;
+               while(so_far < input.size())
+                  {
+                  size_t take = Test::rng().next_byte() % (input.size() - so_far);
+
+                  if(input.size() - so_far == 1)
+                     take = 1;
+
+                  hash->update(&input[so_far], take);
+                  so_far += take;
+                  }
                result.test_eq(provider, "hashing split", hash->final(), expected);
 
                fork->update(&input[input.size() - 1], 1);

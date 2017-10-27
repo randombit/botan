@@ -124,6 +124,8 @@ inline uint32_t SM4_Tp(uint32_t b)
 */
 void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_RK.empty() == false);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t B0 = load_be<uint32_t>(in, 0);
@@ -152,6 +154,8 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_RK.empty() == false);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t B0 = load_be<uint32_t>(in, 0);
