@@ -18,6 +18,10 @@ Version 2.4.0, Not Yet Released
 
 * Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC, BLAKE2b
 
+* Symmetric algorithms (block ciphers, stream ciphers, MACs) now verify that a
+  key was set before accepting data. Previously attempting to use an unkeyed
+  object would instead result in either a crash or invalid outputs. (GH #1279)
+
 * New functions for bit rotations that distinguish rotating by a
   compile-time constant vs a runtime variable rotation. This allows
   better optimizations in both cases. Notably performance of CAST-128
