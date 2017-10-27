@@ -42,7 +42,7 @@ class BOTAN_PUBLIC_API(2,0) GMAC final : public MessageAuthenticationCode
       GMAC(const GMAC&) = delete;
       GMAC& operator=(const GMAC&) = delete;
 
-      virtual ~GMAC();
+      ~GMAC();
 
    private:
       void add_data(const uint8_t[], size_t) override;
