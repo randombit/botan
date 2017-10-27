@@ -19,6 +19,8 @@ namespace Botan {
 */
 void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_SB.empty() == false);
+
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint32_t A, B, C, D;
@@ -70,6 +72,8 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_SB.empty() == false);
+
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint32_t A, B, C, D;

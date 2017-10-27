@@ -17,7 +17,6 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_ctr_blocks(m_cipher->parallel_bytes() / m_block_size),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
-   m_iv(m_cipher->block_size()),
    m_pad_pos(0)
    {
    }
@@ -29,7 +28,6 @@ CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
    m_ctr_blocks(m_cipher->parallel_bytes() / m_block_size),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
-   m_iv(m_cipher->block_size()),
    m_pad_pos(0)
    {
    if(m_ctr_size < 4 || m_ctr_size > m_block_size)
@@ -41,7 +39,7 @@ void CTR_BE::clear()
    m_cipher->clear();
    zeroise(m_pad);
    zeroise(m_counter);
-   zeroise(m_iv);
+   zap(m_iv);
    m_pad_pos = 0;
    }
 
@@ -64,6 +62,8 @@ std::string CTR_BE::name() const
 
 void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
+   verify_key_set(m_iv.empty() == false);
+
    const uint8_t* pad_bits = &m_pad[0];
    const size_t pad_size = m_pad.size();
 
@@ -105,6 +105,7 @@ void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
 
+   m_iv.resize(m_cipher->block_size());
    zeroise(m_iv);
    buffer_insert(m_iv, 0, iv, iv_len);
 

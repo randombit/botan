@@ -111,6 +111,8 @@ std::string GOST_28147_89::name() const
 */
 void GOST_28147_89::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_EK.empty() == false);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t N1 = load_le<uint32_t>(in, 0);
@@ -141,6 +143,8 @@ void GOST_28147_89::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 */
 void GOST_28147_89::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_EK.empty() == false);
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t N1 = load_le<uint32_t>(in, 0);

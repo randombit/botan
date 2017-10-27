@@ -14,6 +14,8 @@ namespace Botan {
 */
 void CBC_MAC::add_data(const uint8_t input[], size_t length)
    {
+   verify_key_set(m_state.empty() == false);
+
    size_t xored = std::min(output_length() - m_position, length);
    xor_buf(&m_state[m_position], input, xored);
    m_position += xored;
@@ -41,6 +43,8 @@ void CBC_MAC::add_data(const uint8_t input[], size_t length)
 */
 void CBC_MAC::final_result(uint8_t mac[])
    {
+   verify_key_set(m_state.empty() == false);
+
    if(m_position)
       m_cipher->encrypt(m_state);
 
@@ -54,6 +58,7 @@ void CBC_MAC::final_result(uint8_t mac[])
 */
 void CBC_MAC::key_schedule(const uint8_t key[], size_t length)
    {
+   m_state.resize(m_cipher->block_size());
    m_cipher->set_key(key, length);
    }
 
@@ -63,7 +68,7 @@ void CBC_MAC::key_schedule(const uint8_t key[], size_t length)
 void CBC_MAC::clear()
    {
    m_cipher->clear();
-   zeroise(m_state);
+   zap(m_state);
    m_position = 0;
    }
 
@@ -87,7 +92,7 @@ MessageAuthenticationCode* CBC_MAC::clone() const
 * CBC-MAC Constructor
 */
 CBC_MAC::CBC_MAC(BlockCipher* cipher) :
-   m_cipher(cipher), m_state(cipher->block_size())
+   m_cipher(cipher)
    {
    }
 

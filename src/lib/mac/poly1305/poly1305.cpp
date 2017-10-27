@@ -155,7 +155,7 @@ void Poly1305::key_schedule(const uint8_t key[], size_t)
 
 void Poly1305::add_data(const uint8_t input[], size_t length)
    {
-   BOTAN_ASSERT_EQUAL(m_poly.size(), 8, "Initialized");
+   verify_key_set(m_poly.size() == 8);
 
    if(m_buf_pos)
       {
@@ -182,7 +182,7 @@ void Poly1305::add_data(const uint8_t input[], size_t length)
 
 void Poly1305::final_result(uint8_t out[])
    {
-   BOTAN_ASSERT_EQUAL(m_poly.size(), 8, "Initialized");
+   verify_key_set(m_poly.size() == 8);
 
    if(m_buf_pos != 0)
       {

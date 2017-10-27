@@ -91,6 +91,13 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
       */
       virtual std::string name() const = 0;
 
+   protected:
+      void verify_key_set(bool cond) const
+         {
+         if(cond == false)
+            throw Key_Not_Set(name());
+         }
+
    private:
       /**
       * Run the key schedule

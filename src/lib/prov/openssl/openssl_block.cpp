@@ -36,6 +36,7 @@ class OpenSSL_BlockCipher final : public BlockCipher
 
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
+         verify_key_set(m_key_set);
          int out_len = 0;
          if(!EVP_EncryptUpdate(m_encrypt, out, &out_len, in, blocks * m_block_sz))
             throw OpenSSL_Error("EVP_EncryptUpdate");
@@ -43,6 +44,7 @@ class OpenSSL_BlockCipher final : public BlockCipher
 
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
+         verify_key_set(m_key_set);
          int out_len = 0;
          if(!EVP_DecryptUpdate(m_decrypt, out, &out_len, in, blocks * m_block_sz))
             throw OpenSSL_Error("EVP_DecryptUpdate");
@@ -55,13 +57,15 @@ class OpenSSL_BlockCipher final : public BlockCipher
       std::string m_cipher_name;
       EVP_CIPHER_CTX *m_encrypt;
       EVP_CIPHER_CTX *m_decrypt;
+      bool m_key_set;
    };
 
 OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
                                          const EVP_CIPHER* algo) :
    m_block_sz(EVP_CIPHER_block_size(algo)),
    m_cipher_key_spec(EVP_CIPHER_key_length(algo)),
-   m_cipher_name(algo_name)
+   m_cipher_name(algo_name),
+   m_key_set(false)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-ECB EVP was passed in");
@@ -92,7 +96,8 @@ OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
                                          size_t key_mod) :
    m_block_sz(EVP_CIPHER_block_size(algo)),
    m_cipher_key_spec(key_min, key_max, key_mod),
-   m_cipher_name(algo_name)
+   m_cipher_name(algo_name),
+   m_key_set(false)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-ECB EVP was passed in");
@@ -134,15 +139,19 @@ void OpenSSL_BlockCipher::key_schedule(const uint8_t key[], size_t length)
       full_key += std::make_pair(key, 8);
       }
    else
+      {
       if(EVP_CIPHER_CTX_set_key_length(m_encrypt, length) == 0 ||
          EVP_CIPHER_CTX_set_key_length(m_decrypt, length) == 0)
          throw Invalid_Argument("OpenSSL_BlockCipher: Bad key length for " +
                                 m_cipher_name);
+      }
 
    if(!EVP_EncryptInit_ex(m_encrypt, nullptr, nullptr, full_key.data(), nullptr))
       throw OpenSSL_Error("EVP_EncryptInit_ex");
    if(!EVP_DecryptInit_ex(m_decrypt, nullptr, nullptr, full_key.data(), nullptr))
       throw OpenSSL_Error("EVP_DecryptInit_ex");
+
+   m_key_set = true;
    }
 
 /*
@@ -163,6 +172,8 @@ BlockCipher* OpenSSL_BlockCipher::clone() const
 void OpenSSL_BlockCipher::clear()
    {
    const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(m_encrypt);
+
+   m_key_set = false;
 
    if(!EVP_CIPHER_CTX_cleanup(m_encrypt))
       throw OpenSSL_Error("EVP_CIPHER_CTX_cleanup encrypt");

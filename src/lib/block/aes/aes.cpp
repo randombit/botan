@@ -452,6 +452,8 @@ size_t AES_256::parallelism() const { return aes_parallelism(); }
 
 void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_EK.empty() == false);
+
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni())
       {
@@ -478,6 +480,8 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
 void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_DK.empty() == false);
+
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni())
       {
@@ -531,6 +535,8 @@ void AES_128::clear()
 
 void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_EK.empty() == false);
+
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni())
       {
@@ -557,6 +563,8 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
 void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_DK.empty() == false);
+
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni())
       {
@@ -610,6 +618,8 @@ void AES_192::clear()
 
 void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_EK.empty() == false);
+
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni())
       {
@@ -636,6 +646,8 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
 void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_DK.empty() == false);
+
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni())
       {

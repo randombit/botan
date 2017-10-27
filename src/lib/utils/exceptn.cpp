@@ -44,6 +44,10 @@ Invalid_IV_Length::Invalid_IV_Length(const std::string& mode, size_t bad_len) :
                     " is invalid for " + mode)
    {}
 
+Key_Not_Set::Key_Not_Set(const std::string& algo) :
+   Invalid_State("Key not set in " + algo)
+   {}
+
 Policy_Violation::Policy_Violation(const std::string& err) :
    Invalid_State("Policy violation: " + err) {}
 

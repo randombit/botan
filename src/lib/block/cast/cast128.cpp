@@ -50,6 +50,8 @@ inline uint32_t R3(uint32_t R, uint32_t MK, uint8_t RK)
 */
 void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_RK.empty() == false);
+
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint32_t L, R;
@@ -81,6 +83,8 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_RK.empty() == false);
+
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint32_t L, R;
