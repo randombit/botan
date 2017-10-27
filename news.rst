@@ -16,7 +16,7 @@ Version 2.4.0, Not Yet Released
   SSSE3 but not clmul, and better algorithms for systems with clmul
   and pmull. (GH #1253 #1263)
 
-* Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC
+* Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC, BLAKE2b
 
 * New functions for bit rotations that distinguish rotating by a
   compile-time constant vs a runtime variable rotation. This allows
