@@ -58,13 +58,14 @@ Test::Result test_asn1_utf8_ascii_parsing()
             // ...  - UTF-8 encoded (ASCII chars only) word 'Moscow'
             const std::string moscow =
                "\x13\x06\x4D\x6F\x73\x63\x6F\x77";
+            const std::string moscow_plain = "Moscow";
             Botan::DataSource_Memory input(moscow.data());
             Botan::BER_Decoder dec(input);
 
             Botan::ASN1_String str;
             str.decode_from(dec);
 
-            result.test_success("No crash");
+            result.test_eq("value()", str.value(), moscow_plain);
          }
       catch(const Botan::Decoding_Error &ex)
          {
@@ -85,13 +86,15 @@ Test::Result test_asn1_utf8_parsing()
             // ...  - UTF-8 encoded russian word for Moscow in cyrillic script
             const std::string moscow =
                "\x0C\x0C\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+            const std::string moscow_plain =
+               "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
             Botan::DataSource_Memory input(moscow.data());
             Botan::BER_Decoder dec(input);
 
             Botan::ASN1_String str;
             str.decode_from(dec);
 
-            result.test_success("No crash");
+            result.test_eq("value()", str.value(), moscow_plain);
          }
       catch(const Botan::Decoding_Error &ex)
          {

@@ -10,6 +10,9 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 
+#include <codecvt>
+#include <locale>
+
 namespace Botan {
 
 namespace {
@@ -57,6 +60,28 @@ ASN1_Tag choose_encoding(const std::string& str,
    }
 
 }
+
+template <typename CharT, class AllocT>
+static std::string ucsX_to_utf8(const std::vector<byte, AllocT> &ucsX)
+   {
+   if (ucsX.size() % sizeof(CharT) != 0)
+      {
+      throw Invalid_Argument("cannot decode UCS string (wrong byte count)");
+      }
+
+   union
+      {
+      const byte  *as_char;
+      const CharT *as_wide_char;
+      };
+
+   as_char = ucsX.data();
+   const size_t wide_char_count = ucsX.size() / sizeof(CharT);
+
+   using converter_t = std::codecvt_utf8<CharT, 0x10ffff, std::consume_header>;
+   std::wstring_convert<converter_t, CharT> convert;
+   return convert.to_bytes(as_wide_char, as_wide_char + wide_char_count);
+   }
 
 /*
 * Create an ASN1_String
@@ -124,22 +149,28 @@ void ASN1_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
 
-   Character_Set charset_is;
-
-   if(obj.type_tag == BMP_STRING) // Basic Multilingual Plane - 2 byte encoding
-      charset_is = UCS2_CHARSET;
-   else if(obj.type_tag == UTF8_STRING)
-      charset_is = UTF8_CHARSET;
+   if(obj.type_tag == UTF8_STRING)
+      {
+      *this = ASN1_String(ASN1::to_string(obj), obj.type_tag);
+      }
+   else if(obj.type_tag == BMP_STRING)
+      {
+      *this = ASN1_String(ucsX_to_utf8<char16_t>(obj.value), obj.type_tag);
+      }
+   else if(obj.type_tag == UNIVERSAL_STRING)
+      {
+      *this = ASN1_String(ucsX_to_utf8<char32_t>(obj.value), obj.type_tag);
+      }
    else // IA5_STRING        - international ASCII characters
         // T61_STRING        - pretty much ASCII
         // PRINTABLE_STRING  - ASCII subset (a-z, A-Z, ' () +,-.?:/= and SPACE)
         // VISIBLE_STRING    - visible ASCII subset
         // NUMERIC_STRING    - ASCII subset (0-9 and SPACE)
-      charset_is = LATIN1_CHARSET;
-
-   *this = ASN1_String(
-      Charset::transcode(ASN1::to_string(obj), UTF8_CHARSET, charset_is),
-      obj.type_tag);
+      {
+      *this = ASN1_String(
+         Charset::transcode(ASN1::to_string(obj), UTF8_CHARSET, LATIN1_CHARSET),
+         obj.type_tag);
+      }
    }
 
 }
