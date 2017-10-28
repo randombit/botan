@@ -49,122 +49,120 @@ Test::Result test_ber_stack_recursion()
 
 Test::Result test_asn1_utf8_ascii_parsing()
    {
-      Test::Result result("ASN.1 ASCII parsing");
+   Test::Result result("ASN.1 ASCII parsing");
 
-      try
-         {
-            // \x13 - ASN1 tag for 'printable string'
-            // \x06 - 6 characters of payload
-            // ...  - UTF-8 encoded (ASCII chars only) word 'Moscow'
-            const std::string moscow =
-               "\x13\x06\x4D\x6F\x73\x63\x6F\x77";
-            const std::string moscow_plain = "Moscow";
-            Botan::DataSource_Memory input(moscow.data());
-            Botan::BER_Decoder dec(input);
+   try
+      {
+      // \x13 - ASN1 tag for 'printable string'
+      // \x06 - 6 characters of payload
+      // ...  - UTF-8 encoded (ASCII chars only) word 'Moscow'
+      const std::string moscow =
+         "\x13\x06\x4D\x6F\x73\x63\x6F\x77";
+      const std::string moscow_plain = "Moscow";
+      Botan::DataSource_Memory input(moscow.data());
+      Botan::BER_Decoder dec(input);
 
-            Botan::ASN1_String str;
-            str.decode_from(dec);
+      Botan::ASN1_String str;
+      str.decode_from(dec);
 
-            result.test_eq("value()", str.value(), moscow_plain);
-         }
-      catch(const Botan::Decoding_Error &ex)
-         {
-            result.test_failure(ex.what());
-         }
+      result.test_eq("value()", str.value(), moscow_plain);
+      }
+   catch(const Botan::Decoding_Error &ex)
+      {
+      result.test_failure(ex.what());
+      }
 
-      return result;
+   return result;
    }
 
 Test::Result test_asn1_utf8_parsing()
    {
-      Test::Result result("ASN.1 UTF-8 parsing");
+   Test::Result result("ASN.1 UTF-8 parsing");
 
-      try
-         {
-            // \x0C - ASN1 tag for 'UTF8 string'
-            // \x0C - 12 characters of payload
-            // ...  - UTF-8 encoded russian word for Moscow in cyrillic script
-            const std::string moscow =
-               "\x0C\x0C\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
-            const std::string moscow_plain =
-               "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
-            Botan::DataSource_Memory input(moscow.data());
-            Botan::BER_Decoder dec(input);
+   try
+      {
+      // \x0C - ASN1 tag for 'UTF8 string'
+      // \x0C - 12 characters of payload
+      // ...  - UTF-8 encoded russian word for Moscow in cyrillic script
+      const std::string moscow =
+         "\x0C\x0C\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+      const std::string moscow_plain =
+         "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+      Botan::DataSource_Memory input(moscow.data());
+      Botan::BER_Decoder dec(input);
 
-            Botan::ASN1_String str;
-            str.decode_from(dec);
+      Botan::ASN1_String str;
+      str.decode_from(dec);
 
-            result.test_eq("value()", str.value(), moscow_plain);
-         }
-      catch(const Botan::Decoding_Error &ex)
-         {
-            result.test_failure(ex.what());
-         }
+      result.test_eq("value()", str.value(), moscow_plain);
+      }
+   catch(const Botan::Decoding_Error &ex)
+      {
+      result.test_failure(ex.what());
+      }
 
-      return result;
+   return result;
    }
 
-Test::Result test_asn1_ascii_encoding()
+Test::Result test_asn1_ucs2_parsing()
    {
-      Test::Result result("ASN.1 ASCII encoding");
+   Test::Result result("ASN.1 BMP string (UCS-2) parsing");
 
-      try
-         {
-            // UTF-8 encoded (ASCII chars only) word 'Moscow'
-            const std::string moscow =
-               "\x4D\x6F\x73\x63\x6F\x77";
-            Botan::ASN1_String str(moscow);
+   try
+      {
+      // \x1E     - ASN1 tag for 'BMP (UCS-2) string'
+      // \x0E     - 14 characters of payload (includes BOM)
+      // \xFF\xFE - Byte Order Mark (BOM)
+      // ...      - UCS-2 encoding for Moscow in cyrillic script
+      const std::string moscow =
+         "\x1E\x0E\xFF\xFE\x1C\x04\x3E\x04"
+         "\x41\x04\x3A\x04\x32\x04\x30\x04";
+      const std::string moscow_plain =  // with BOM (EF BB BF)
+         "\xEF\xBB\xBF\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+      Botan::DataSource_Memory input(moscow.data());
+      Botan::BER_Decoder dec(input);
 
-            Botan::DER_Encoder enc;
+      Botan::ASN1_String str;
+      str.decode_from(dec);
 
-            str.encode_into(enc);
-            auto encodingResult = enc.get_contents();
+      result.test_eq("value()", str.value(), moscow_plain);
+      }
+   catch(const Botan::Decoding_Error &ex)
+      {
+         result.test_failure(ex.what());
+      }
 
-            // \x13 - ASN1 tag for 'printable string'
-            // \x06 - 6 characters of payload
-            const auto moscowEncoded = Botan::hex_decode("13064D6F73636F77");
-            result.test_eq("encoding result", encodingResult, moscowEncoded);
-
-            result.test_success("No crash");
-         }
-      catch(const std::exception &ex)
-         {
-            result.test_failure(ex.what());
-         }
-
-      return result;
+   return result;
    }
 
-Test::Result test_asn1_utf8_encoding()
+Test::Result test_asn1_ucs4_parsing()
    {
-      Test::Result result("ASN.1 UTF-8 encoding");
+   Test::Result result("ASN.1 universal string (UTF-32 LE) parsing");
 
-      try
-         {
-            // UTF-8 encoded russian word for Moscow in cyrillic script
-            const std::string moscow =
-               "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
-            Botan::ASN1_String str(moscow);
+   try
+      {
+      // \x1C - ASN1 tag for 'universal string'
+      // \x1C - 28 characters of payload (with BOM - FF FE 00 00)
+      // ...  - UTF-32 LE encoding for Moscow in cyrillic script
+      const Botan::byte moscow[] =
+         "\x1C\x1C\xFF\xFE\x00\x00\x1C\x04\x00\x00\x3E\x04\x00\x00\x41"
+         "\x04\x00\x00\x3A\x04\x00\x00\x32\x04\x00\x00\x30\x04\x00\x00";
+      const std::string moscow_plain =  // with BOM (EF BB BF)
+         "\xEF\xBB\xBF\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+      Botan::DataSource_Memory input(moscow, sizeof(moscow));
+      Botan::BER_Decoder dec(input);
 
-            Botan::DER_Encoder enc;
+      Botan::ASN1_String str;
+      str.decode_from(dec);
 
-            str.encode_into(enc);
-            auto encodingResult = enc.get_contents();
+      result.test_eq("value()", str.value(), moscow_plain);
+      }
+   catch(const Botan::Decoding_Error &ex)
+      {
+      result.test_failure(ex.what());
+      }
 
-            // \x0C - ASN1 tag for 'UTF8 string'
-            // \x0C - 12 characters of payload
-            const auto moscowEncoded =
-               Botan::hex_decode("0C0CD09CD0BED181D0BAD0B2D0B0");
-            result.test_eq("encoding result", encodingResult, moscowEncoded);
-
-            result.test_success("No crash");
-         }
-      catch(const std::exception &ex)
-         {
-            result.test_failure(ex.what());
-         }
-
-      return result;
+   return result;
    }
 
 Test::Result test_asn1_ascii_encoding()
