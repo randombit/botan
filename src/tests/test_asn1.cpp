@@ -167,6 +167,69 @@ Test::Result test_asn1_utf8_encoding()
       return result;
    }
 
+Test::Result test_asn1_ascii_encoding()
+   {
+   Test::Result result("ASN.1 ASCII encoding");
+
+   try
+      {
+      // UTF-8 encoded (ASCII chars only) word 'Moscow'
+      const std::string moscow =
+         "\x4D\x6F\x73\x63\x6F\x77";
+      Botan::ASN1_String str(moscow);
+
+      Botan::DER_Encoder enc;
+
+      str.encode_into(enc);
+      auto encodingResult = enc.get_contents();
+
+      // \x13 - ASN1 tag for 'printable string'
+      // \x06 - 6 characters of payload
+      const auto moscowEncoded = Botan::hex_decode("13064D6F73636F77");
+      result.test_eq("encoding result", encodingResult, moscowEncoded);
+
+      result.test_success("No crash");
+      }
+   catch(const std::exception &ex)
+      {
+      result.test_failure(ex.what());
+      }
+
+   return result;
+   }
+
+Test::Result test_asn1_utf8_encoding()
+   {
+   Test::Result result("ASN.1 UTF-8 encoding");
+
+   try
+      {
+      // UTF-8 encoded russian word for Moscow in cyrillic script
+      const std::string moscow =
+         "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+      Botan::ASN1_String str(moscow);
+
+      Botan::DER_Encoder enc;
+
+      str.encode_into(enc);
+      auto encodingResult = enc.get_contents();
+
+      // \x0C - ASN1 tag for 'UTF8 string'
+      // \x0C - 12 characters of payload
+      const auto moscowEncoded =
+         Botan::hex_decode("0C0CD09CD0BED181D0BAD0B2D0B0");
+      result.test_eq("encoding result", encodingResult, moscowEncoded);
+
+      result.test_success("No crash");
+      }
+   catch(const std::exception &ex)
+      {
+      result.test_failure(ex.what());
+      }
+
+   return result;
+   }
+
 class ASN1_Tests final : public Test
    {
    public:
@@ -177,6 +240,8 @@ class ASN1_Tests final : public Test
          results.push_back(test_ber_stack_recursion());
          results.push_back(test_asn1_utf8_ascii_parsing());
          results.push_back(test_asn1_utf8_parsing());
+         results.push_back(test_asn1_ucs2_parsing());
+         results.push_back(test_asn1_ucs4_parsing());
          results.push_back(test_asn1_ascii_encoding());
          results.push_back(test_asn1_utf8_encoding());
 
