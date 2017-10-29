@@ -10,6 +10,7 @@
 
 #include <botan/buf_comp.h>
 #include <string>
+#include <memory>
 
 namespace Botan {
 

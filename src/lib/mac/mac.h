@@ -11,6 +11,7 @@
 #include <botan/buf_comp.h>
 #include <botan/sym_algo.h>
 #include <string>
+#include <memory>
 
 namespace Botan {
 
