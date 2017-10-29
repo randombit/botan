@@ -16,7 +16,8 @@ Version 2.4.0, Not Yet Released
   SSSE3 but not clmul, and better algorithms for systems with clmul
   and pmull. (GH #1253 #1263)
 
-* Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC, BLAKE2b
+* Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC, BLAKE2b,
+  CRC24 (GH #1281)
 
 * Symmetric algorithms (block ciphers, stream ciphers, MACs) now verify that a
   key was set before accepting data. Previously attempting to use an unkeyed
