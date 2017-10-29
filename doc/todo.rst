@@ -194,3 +194,8 @@ Documentation
 * Some howto style docs (setting up CA, ...)
 * List each cipher, hash, etc, describe its usage, and give the
   header file and BOTAN_HAS_X macro associated with it.
+
+Packaging
+------------
+
+* Create a PPA for Ubuntu
