@@ -8,20 +8,8 @@
 #include "tests.h"
 
 #include <botan/version.h>
+#include <botan/rotate.h>
 #include <botan/loadstor.h>
-#include <botan/mac.h>
-
-#if defined(BOTAN_HAS_HMAC_DRBG)
-   #include <botan/hmac_drbg.h>
-#endif
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   #include <botan/system_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-   #include <botan/auto_rng.h>
-#endif
 
 namespace Botan_Tests {
 
@@ -29,98 +17,72 @@ Test_Runner::Test_Runner(std::ostream& out) : m_output(out) {}
 
 namespace {
 
-std::unique_ptr<Botan::RandomNumberGenerator>
-create_test_rng(const std::string& drbg_seed, std::ostream& output)
+/*
+* This is a fast, simple, deterministic PRNG that's used for running
+* the tests. It is not intended to be cryptographically secure.
+*/
+class Testsuite_RNG final : public Botan::RandomNumberGenerator
    {
-   std::unique_ptr<Botan::RandomNumberGenerator> rng;
+   public:
+      std::string name() const override { return "Testsuite_RNG"; }
 
-#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_AUTO_RNG_HMAC)
-
-   std::vector<uint8_t> seed = Botan::hex_decode(drbg_seed);
-   if(seed.empty())
-      {
-      const uint64_t ts = Botan_Tests::Test::timestamp();
-      seed.resize(8);
-      Botan::store_be(ts, seed.data());
-      }
-
-   output << " rng:HMAC_DRBG(" << BOTAN_AUTO_RNG_HMAC << ") with seed '" << Botan::hex_encode(seed) << "'\n";
-
-   // Expand out the seed with a hash to make the DRBG happy
-   std::unique_ptr<Botan::MessageAuthenticationCode> mac =
-      Botan::MessageAuthenticationCode::create(BOTAN_AUTO_RNG_HMAC);
-
-   mac->set_key(seed);
-   seed.resize(mac->output_length());
-   mac->final(seed.data());
-
-   std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG(std::move(mac)));
-   drbg->initialize_with(seed.data(), seed.size());
-
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-   rng.reset(new Botan::Serialized_RNG(drbg.release()));
-#else
-   rng = std::move(drbg);
-#endif
-
-#endif
-
-   if(!rng && drbg_seed != "")
-      throw Botan_Tests::Test_Error("HMAC_DRBG disabled in build, cannot specify DRBG seed");
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   if(!rng)
-      {
-      output << " rng:system\n";
-      rng.reset(new Botan::System_RNG);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-   if(!rng)
-      {
-      output << " rng:autoseeded\n";
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-      rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
-#else
-      rng.reset(new Botan::AutoSeeded_RNG);
-#endif
-
-      }
-#endif
-
-   if(!rng)
-      {
-      // last ditch fallback for RNG-less build
-      class Bogus_Fallback_RNG final : public Botan::RandomNumberGenerator
+      void clear() override
          {
-         public:
-            std::string name() const override { return "Bogus_Fallback_RNG"; }
+         m_a = m_b = m_c = m_d = 0;
+         }
 
-            void clear() override { /* ignored */ }
-            void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
-            bool is_seeded() const override { return true; }
+      void add_entropy(const uint8_t data[], size_t len) override
+         {
+         for(size_t i = 0; i != len; ++i)
+            {
+            m_a ^= data[i];
+            m_b ^= i;
+            mix();
+            }
+         }
 
-            void randomize(uint8_t out[], size_t len) override
-               {
-               for(size_t i = 0; i != len; ++i)
-                  {
-                  m_x = (m_x * 31337 + 42);
-                  out[i] = static_cast<uint8_t>(m_x >> 7);
-                  }
-               }
+      bool is_seeded() const override
+         {
+         return true;
+         }
 
-            Bogus_Fallback_RNG() : m_x(1) {}
-         private:
-            uint32_t m_x;
-         };
+      void randomize(uint8_t out[], size_t len) override
+         {
+         for(size_t i = 0; i != len; ++i)
+            {
+            out[i] = static_cast<uint8_t>(m_a);
+            mix();
+            }
+         }
 
-      output << " rng:bogus\n";
-      rng.reset(new Bogus_Fallback_RNG);
-      }
+      Testsuite_RNG(const std::string& drbg_seed, size_t test_counter = 0)
+         {
+         m_d = static_cast<uint32_t>(test_counter);
 
-   return rng;
-   }
+         add_entropy(reinterpret_cast<const uint8_t*>(drbg_seed.data()),
+                     drbg_seed.size());
+         }
+   private:
+      void mix()
+         {
+         const size_t ROUNDS = 3;
+
+         for(size_t i = 0; i != ROUNDS; ++i)
+            {
+            m_a += i;
+
+            m_a = Botan::rotl<9>(m_a);
+            m_b ^= m_a;
+            m_d ^= m_c;
+
+            m_a += m_d;
+            m_c += m_b;
+            m_c = Botan::rotl<23>(m_c);
+            }
+         }
+
+      uint32_t m_a = 0, m_b = 0, m_c = 0, m_d = 0;
+   };
 
 }
 
@@ -205,20 +167,33 @@ int Test_Runner::run(const std::vector<std::string>& requested_tests,
       pf.set(provider);
       }
 
-   std::unique_ptr<Botan::RandomNumberGenerator> rng = create_test_rng(drbg_seed, output());
+   std::vector<uint8_t> seed = Botan::hex_decode(drbg_seed);
+   if(seed.empty())
+      {
+      const uint64_t ts = Botan_Tests::Test::timestamp();
+      seed.resize(8);
+      Botan::store_be(ts, seed.data());
+      }
 
-   Botan_Tests::Test::setup_tests(log_success, run_online_tests, run_long_tests,
-                                  data_dir, pkcs11_lib, pf, rng.get());
+   output() << " drbg_seed:" << Botan::hex_encode(seed) << "\n";
+
+   Botan_Tests::Test::set_test_options(log_success,
+                                       run_online_tests,
+                                       run_long_tests,
+                                       data_dir,
+                                       pkcs11_lib,
+                                       pf);
 
    for(size_t i = 0; i != runs; ++i)
       {
-      const size_t failed = run_tests(req);
+      std::unique_ptr<Botan::RandomNumberGenerator> rng =
+         std::unique_ptr<Botan::RandomNumberGenerator>(new Testsuite_RNG(drbg_seed, i));
 
-      // Throw so main returns an error
-      if(failed)
-         {
+      Botan_Tests::Test::set_test_rng(std::move(rng));
+
+      const size_t failed = run_tests(req, i, runs);
+      if(failed > 0)
          return failed;
-         }
       }
 
    return 0;
@@ -259,7 +234,9 @@ std::string report_out(const std::vector<Botan_Tests::Test::Result>& results,
 
 }
 
-size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run)
+size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
+                              size_t test_run,
+                              size_t tot_test_runs)
    {
    size_t tests_ran = 0, tests_failed = 0;
 
@@ -296,7 +273,13 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run)
       }
 
    const uint64_t total_ns = Botan_Tests::Test::timestamp() - start_time;
-   output() << "Tests complete ran " << tests_ran << " tests in "
+
+   if(test_run == 0 && tot_test_runs == 1)
+      output() << "Tests";
+   else
+      output() << "Test run " << (1+test_run) << "/" << tot_test_runs;
+
+   output() << " complete ran " << tests_ran << " tests in "
             << Botan_Tests::Test::format_time(total_ns) << " ";
 
    if(tests_failed > 0)
