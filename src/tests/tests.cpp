@@ -507,7 +507,7 @@ Test* Test::get_test(const std::string& test_name)
    }
 
 // static member variables of Test
-Botan::RandomNumberGenerator* Test::m_test_rng = nullptr;
+std::unique_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
 std::string Test::m_data_dir;
 bool Test::m_log_success = false;
 bool Test::m_run_online_tests = false;
@@ -516,21 +516,25 @@ std::string Test::m_pkcs11_lib;
 Botan_Tests::Provider_Filter Test::m_provider_filter;
 
 //static
-void Test::setup_tests(bool log_success,
-                       bool run_online,
-                       bool run_long,
-                       const std::string& data_dir,
-                       const std::string& pkcs11_lib,
-                       const Botan_Tests::Provider_Filter& pf,
-                       Botan::RandomNumberGenerator* rng)
+void Test::set_test_options(bool log_success,
+                            bool run_online,
+                            bool run_long,
+                            const std::string& data_dir,
+                            const std::string& pkcs11_lib,
+                            const Botan_Tests::Provider_Filter& pf)
    {
    m_data_dir = data_dir;
    m_log_success = log_success;
    m_run_online_tests = run_online;
    m_run_long_tests = run_long;
-   m_test_rng = rng;
    m_pkcs11_lib = pkcs11_lib;
    m_provider_filter = pf;
+   }
+
+//static
+void Test::set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng)
+   {
+   m_test_rng.reset(rng.release());
    }
 
 //static
@@ -580,7 +584,7 @@ Botan::RandomNumberGenerator& Test::rng()
    {
    if(!m_test_rng)
       {
-      throw Test_Error("No usable RNG in build, and this test requires an RNG");
+      throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
       }
    return *m_test_rng;
    }

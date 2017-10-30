@@ -353,8 +353,9 @@ class Test
             Registration(const std::string& name, Test* test);
          };
 
-      virtual std::vector<Test::Result> run() = 0;
       virtual ~Test() = default;
+      virtual std::vector<Test::Result> run() = 0;
+
       virtual std::vector<std::string> possible_providers(const std::string&);
 
       static std::map<std::string, std::unique_ptr<Test>>& global_registry();
@@ -395,13 +396,14 @@ class Test
          return r;
          }
 
-      static void setup_tests(bool log_success,
-                              bool run_online_tests,
-                              bool run_long_tests,
-                              const std::string& data_dir,
-                              const std::string& pkcs11_lib,
-                              const Botan_Tests::Provider_Filter& pf,
-                              Botan::RandomNumberGenerator* rng);
+      static void set_test_options(bool log_success,
+                                   bool run_online_tests,
+                                   bool run_long_tests,
+                                   const std::string& data_dir,
+                                   const std::string& pkcs11_lib,
+                                   const Botan_Tests::Provider_Filter& pf);
+
+      static void set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng);
 
       static bool log_success();
       static bool run_online_tests();
@@ -417,7 +419,7 @@ class Test
 
    private:
       static std::string m_data_dir;
-      static Botan::RandomNumberGenerator* m_test_rng;
+      static std::unique_ptr<Botan::RandomNumberGenerator> m_test_rng;
       static bool m_log_success, m_run_online_tests, m_run_long_tests;
       static std::string m_pkcs11_lib;
       static Botan_Tests::Provider_Filter m_provider_filter;
