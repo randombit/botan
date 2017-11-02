@@ -179,8 +179,8 @@ void SHACAL2::key_schedule(const uint8_t key[], size_t len)
 
    for(size_t i = 16; i != 64; ++i)
       {
-      const uint32_t sigma0_15 = rotr<7>(m_RK[i-15]) ^ rotr<18>(m_RK[i-15]) ^ (m_RK[i-15] >> 3);
-      const uint32_t sigma1_2  = rotr<17>(m_RK[i-2]) ^ rotr<19>(m_RK[i-2])  ^ (m_RK[i-2] >> 10);
+      const uint32_t sigma0_15 = rotr< 7>(m_RK[i-15]) ^ rotr<18>(m_RK[i-15]) ^ (m_RK[i-15] >> 3);
+      const uint32_t sigma1_2  = rotr<17>(m_RK[i- 2]) ^ rotr<19>(m_RK[i- 2]) ^ (m_RK[i- 2] >> 10);
       m_RK[i] = m_RK[i-16] + sigma0_15 + m_RK[i-7] + sigma1_2;
       }
 
