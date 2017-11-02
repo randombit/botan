@@ -17,7 +17,7 @@ namespace Botan {
       B1 ^= SIMD_32::splat(m_round_key[4*round+1]);                \
       B2 ^= SIMD_32::splat(m_round_key[4*round+2]);                \
       B3 ^= SIMD_32::splat(m_round_key[4*round+3]);                \
-   } while(0);
+   } while(0)
 
 /*
 * Serpent's linear transformations
@@ -34,7 +34,7 @@ namespace Botan {
       B2 ^= B3 ^ (B1 << 7);                                        \
       B0 = B0.rotl<5>();                                           \
       B2 = B2.rotl<22>();                                          \
-   } while(0);
+   } while(0)
 
 #define i_transform(B0, B1, B2, B3)                                \
    do {                                                            \
@@ -48,7 +48,7 @@ namespace Botan {
       B1 ^= B0 ^ B2;                                               \
       B2 = B2.rotr<3>();                                           \
       B0 = B0.rotr<13>();                                          \
-   } while(0);
+   } while(0)
 
 /*
 * SIMD Serpent Encryption of 4 blocks in parallel
