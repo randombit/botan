@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """
 (C) 2018,2019 Jack Lloyd
@@ -83,6 +83,9 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
         proc = subprocess.Popen(cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate(cmd_input.encode())
 
+    stdout = stdout.decode('ascii').strip()
+    stderr = stderr.decode('ascii').strip()
+
     if stderr:
         if expected_stderr is None:
             logging.error("Got output on stderr %s (stdout was %s)", stderr, stdout)
@@ -93,16 +96,14 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
         if expected_stderr is not None:
             logging.error('Expected output on stderr but got nothing')
 
-    output = stdout.decode('ascii').strip()
-
     if expected_output is not None:
-        if output != expected_output:
+        if stdout != expected_output:
             logging.error("Got unexpected output running cmd %s %s", cmd, cmd_options)
-            logging.info("Output lengths %d vs expected %d", len(output), len(expected_output))
-            logging.info("Got %s", output)
+            logging.info("Output lengths %d vs expected %d", len(stdout), len(expected_output))
+            logging.info("Got %s", stdout)
             logging.info("Exp %s", expected_output)
 
-    return output
+    return stdout
 
 def check_for_command(cmd):
     cmdline = [CLI_PATH, 'has_command', cmd]
@@ -554,7 +555,7 @@ ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= Tsy82BBU2xxVqNe1ip11OyEGoKW
 
     with open(chain, 'w') as f:
         f.write("ed25519 cbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA")
-    test_cli("roughtime_check", chain, expected_stderr=b'Error: Roughtime Invalid signature or public key\n')
+    test_cli("roughtime_check", chain, expected_stderr='Error: Roughtime Invalid signature or public key')
 
 def cli_roughtime_tests(tmp_dir):
     # pylint: disable=line-too-long
@@ -614,7 +615,7 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
 
     server_request = request[0]
     server_response = response[0]
-    test_cli("roughtime", [], expected_stderr=b'Please specify either --servers-file or --host and --pubkey\n')
+    test_cli("roughtime", [], expected_stderr='Please specify either --servers-file or --host and --pubkey')
 
     with open(ecosystem, 'w') as f:
         f.write("Cloudflare-Roughtime ed25519 gD63hSj4ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
@@ -623,7 +624,7 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
         "--check-local-clock=0",
         "--chain-file=",
         "--servers-file=" + ecosystem]
-             , expected_stderr=b'ERROR: Public key does not match!\n')
+             , expected_stderr='ERROR: Public key does not match!')
 
     with open(ecosystem, 'w') as f:
         f.write("Cloudflare-Roughtime ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
@@ -631,7 +632,7 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
     test_cli("roughtime", [
         "--chain-file=",
         "--servers-file=" + ecosystem]
-             , expected_stderr=b'ERROR: Local clock mismatch\n')
+             , expected_stderr='ERROR: Local clock mismatch')
 
     test_cli("roughtime", [
         "--check-local-clock=0",
@@ -673,6 +674,41 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
         read_data = f.read()
     if read_data != chain[2]:
         logging.error("unexpected chain")
+
+def cli_zfec_tests(tmp_dir):
+    input_file = os.path.join(tmp_dir, 'input.bin')
+
+    exp_hash = "B49BCD978052C2C05A2D9ACE9863D150E3FA5765FCDF91AC47B5EAD54BFEE24E"
+
+    test_cli("rng", ["4096", "--output=%s" % (input_file)], "")
+    test_cli("hash", ["--no-fsname", input_file], exp_hash)
+    prefix = "test"
+    k = 3
+    n = 5
+
+    test_cli("fec_encode", ["--output-dir=%s" % (tmp_dir),
+                            "--prefix=%s" % (prefix),
+                            str(k), str(n), input_file])
+
+    info_re = re.compile('FEC share [0-9]/%d with %d needed for recovery' % (n, k))
+
+    share_files = []
+    for share in range(1, n + 1):
+        expected_share = os.path.join(tmp_dir, '%s.%d_%d.fec' % (prefix, share, n))
+        share_files.append(expected_share)
+        info_out = test_cli("fec_info", expected_share)
+        if info_re.match(info_out) is None:
+            logging.error("Unexpected output for fec_info")
+
+    k_shares = n - k
+
+    # Insufficient shares:
+    test_cli("fec_decode", share_files[(k_shares + 1):], None, None,
+             "At least %d shares are required for recovery" % (k))
+
+    output_file = os.path.join(tmp_dir, 'output.bin')
+    test_cli("fec_decode", share_files[k_shares:] + ["--output=%s" % (output_file)])
+    test_cli("hash", ["--no-fsname", output_file], exp_hash)
 
 def cli_pk_workfactor_tests(_tmp_dir):
     test_cli("pk_workfactor", "1024", "80")
@@ -1074,7 +1110,7 @@ def cli_tss_tests(tmp_dir):
 
     rec2 = os.path.join(tmp_dir, "recovered_2")
     test_cli("tss_recover", share_files[3:] + ["--output=%s" % (rec2)], "", None,
-             b'Error: Insufficient shares to do TSS reconstruction\n')
+             "Error: Insufficient shares to do TSS reconstruction")
 
 
 def cli_pk_encrypt_tests(tmp_dir):
@@ -1196,19 +1232,19 @@ def cli_speed_table_tests(_tmp_dir):
         logging.error("Unexpected trailing message got %s", output[10])
 
 def cli_speed_invalid_option_tests(_tmp_dir):
-    speed_usage = b"Usage: speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos\n"
+    speed_usage = "Usage: speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos"
 
     test_cli("speed", ["--buf-size=0", "--msec=1", "AES-128"],
-             expected_stderr=b"Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))
+             expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))
 
     test_cli("speed", ["--buf-size=F00F", "--msec=1", "AES-128"],
-             expected_stderr=b"Usage error: Invalid integer value 'F00F' for option buf-size\n%s" % (speed_usage))
+             expected_stderr="Usage error: Invalid integer value 'F00F' for option buf-size\n%s" % (speed_usage))
 
     test_cli("speed", ["--buf-size=90000000", "--msec=1", "AES-128"],
-             expected_stderr=b"Usage error: Specified buffer size is too large\n%s" % (speed_usage))
+             expected_stderr="Usage error: Specified buffer size is too large\n%s" % (speed_usage))
 
     test_cli("speed", ["--clear-cpuid=goku", "--msec=1", "AES-128"],
-             expected_stderr=b"Warning don't know CPUID flag 'goku'\n")
+             expected_stderr="Warning don't know CPUID flag 'goku'")
 
 def cli_speed_math_tests(_tmp_dir):
     msec = 1
@@ -1275,6 +1311,12 @@ def cli_speed_tests(_tmp_dir):
     # Entropy source rdseed output 128 bytes estimated entropy 0 in 0.02168 ms total samples 32
     output = test_cli("speed", ["--msec=%d" % (msec), "entropy"], None).split('\n')
     format_re = re.compile(r'^Entropy source [_a-z0-9]+ output [0-9]+ bytes estimated entropy [0-9]+ in [0-9]+\.[0-9]+ ms .*total samples [0-9]+')
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
+
+    output = test_cli("speed", ["--msec=%d" % (msec), "zfec"], None).split('\n')
+    format_re = re.compile(r'^zfec [0-9]+/[0-9]+ (encode|decode) buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
@@ -1393,6 +1435,7 @@ def main(args=None):
         cli_tss_tests,
         cli_uuid_tests,
         cli_version_tests,
+        cli_zfec_tests,
         ]
 
     tests_to_run = []
