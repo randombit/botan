@@ -65,6 +65,7 @@
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
+   #include <botan/pk_algs.h>
    #include <botan/x509_key.h>
    #include <botan/workfactor.h>
 #endif
@@ -74,56 +75,16 @@
    #include <botan/pow_mod.h>
 #endif
 
-#if defined(BOTAN_HAS_RSA)
-   #include <botan/rsa.h>
-#endif
-
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-   #include <botan/ecdsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ECKCDSA)
-   #include <botan/eckcdsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ECGDSA)
-   #include <botan/ecgdsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ED25519)
-   #include <botan/ed25519.h>
 #endif
 
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
 #endif
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-   #include <botan/dh.h>
-#endif
-
-#if defined(BOTAN_HAS_CURVE_25519)
-   #include <botan/curve25519.h>
-#endif
-
-#if defined(BOTAN_HAS_ECDH)
-   #include <botan/ecdh.h>
-#endif
-
 #if defined(BOTAN_HAS_MCELIECE)
    #include <botan/mceliece.h>
-#endif
-
-#if defined(BOTAN_HAS_XMSS)
-   #include <botan/xmss.h>
-#endif
-
-#if defined(BOTAN_HAS_SM2)
-   #include <botan/sm2.h>
 #endif
 
 #if defined(BOTAN_HAS_NEWHOPE)
@@ -1539,18 +1500,35 @@ class Speed final : public Command
          record_result(dec_timer);
          }
 
-      void bench_pk_ka(const Botan::PK_Key_Agreement_Key& key1,
-                       const Botan::PK_Key_Agreement_Key& key2,
+      void bench_pk_ka(const std::string& algo,
                        const std::string& nm,
+                       const std::string& params,
                        const std::string& provider,
-                       const std::string& kdf,
                        std::chrono::milliseconds msec)
          {
-         Botan::PK_Key_Agreement ka1(key1, rng(), kdf, provider);
-         Botan::PK_Key_Agreement ka2(key2, rng(), kdf, provider);
+         const std::string kdf = "KDF2(SHA-256)"; // arbitrary choice
 
-         const std::vector<uint8_t> ka1_pub = key1.public_value();
-         const std::vector<uint8_t> ka2_pub = key2.public_value();
+         Timer keygen_timer(nm, provider, "keygen");
+
+         std::unique_ptr<Botan::Private_Key> key1(keygen_timer.run([&]
+            {
+            return Botan::create_private_key(algo, rng(), params);
+            }));
+         std::unique_ptr<Botan::Private_Key> key2(keygen_timer.run([&]
+            {
+            return Botan::create_private_key(algo, rng(), params);
+            }));
+
+         record_result(keygen_timer);
+
+         const Botan::PK_Key_Agreement_Key& ka_key1 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key1);
+         const Botan::PK_Key_Agreement_Key& ka_key2 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key2);
+
+         Botan::PK_Key_Agreement ka1(ka_key1, rng(), kdf, provider);
+         Botan::PK_Key_Agreement ka2(ka_key2, rng(), kdf, provider);
+
+         const std::vector<uint8_t> ka1_pub = ka_key1.public_value();
+         const std::vector<uint8_t> ka2_pub = ka_key2.public_value();
 
          Timer ka_timer(nm, provider, "key agreements");
 
@@ -1601,6 +1579,28 @@ class Speed final : public Command
 
          record_result(kem_enc_timer);
          record_result(kem_dec_timer);
+         }
+
+      void bench_pk_sig_ecc(const std::string& algo,
+                            const std::string& emsa,
+                            const std::string& provider,
+                            const std::vector<std::string>& params,
+                            std::chrono::milliseconds msec)
+         {
+         for(std::string grp : params)
+            {
+            const std::string nm = grp.empty() ? algo : (algo + "-" + grp);
+
+            Timer keygen_timer(nm, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
+               return Botan::create_private_key(algo, rng(), grp);
+               }));
+
+            record_result(keygen_timer);
+            bench_pk_sig(*key, nm, provider, emsa, msec);
+            }
          }
 
       void bench_pk_sig(const Botan::Private_Key& key,
@@ -1674,7 +1674,7 @@ class Speed final : public Command
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
                {
-               return new Botan::RSA_PrivateKey(rng(), keylen);
+               return Botan::create_private_key("RSA", rng(), std::to_string(keylen));
                }));
 
             record_result(keygen_timer);
@@ -1694,20 +1694,7 @@ class Speed final : public Command
                        const std::string& provider,
                        std::chrono::milliseconds msec)
          {
-         for(std::string grp : groups)
-            {
-            const std::string nm = "ECDSA-" + grp;
-
-            Timer keygen_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
-               {
-               return new Botan::ECDSA_PrivateKey(rng(), Botan::EC_Group(grp));
-               }));
-
-            record_result(keygen_timer);
-            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
-            }
+         return bench_pk_sig_ecc("ECDSA", "EMSA1(SHA-256)", provider, groups, msec);
          }
 #endif
 
@@ -1716,20 +1703,7 @@ class Speed final : public Command
                          const std::string& provider,
                          std::chrono::milliseconds msec)
          {
-         for(std::string grp : groups)
-            {
-            const std::string nm = "ECKCDSA-" + grp;
-
-            Timer keygen_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
-               {
-               return new Botan::ECKCDSA_PrivateKey(rng(), Botan::EC_Group(grp));
-               }));
-
-            record_result(keygen_timer);
-            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
-            }
+         return bench_pk_sig_ecc("ECKCDSA", "EMSA1(SHA-256)", provider, groups, msec);
          }
 #endif
 
@@ -1738,20 +1712,7 @@ class Speed final : public Command
                      const std::string& provider,
                      std::chrono::milliseconds msec)
          {
-         for(std::string grp : groups)
-            {
-            const std::string nm = "SM2-" + grp;
-
-            Timer keygen_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
-               {
-               return new Botan::SM2_Signature_PrivateKey(rng(), Botan::EC_Group(grp));
-               }));
-
-            record_result(keygen_timer);
-            bench_pk_sig(*key, nm, provider, "SM3", msec);
-            }
+         return bench_pk_sig_ecc("SM2_Sig", "SM3", provider, groups, msec);
          }
 #endif
 
@@ -1760,20 +1721,7 @@ class Speed final : public Command
                         const std::string& provider,
                         std::chrono::milliseconds msec)
          {
-         for(std::string grp : groups)
-            {
-            const std::string nm = "ECGDSA-" + grp;
-
-            Timer keygen_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
-               {
-               return new Botan::ECGDSA_PrivateKey(rng(), Botan::EC_Group(grp));
-               }));
-
-            record_result(keygen_timer);
-            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
-            }
+         return bench_pk_sig_ecc("ECGDSA", "EMSA1(SHA-256)", provider, groups, msec);
          }
 #endif
 
@@ -1781,17 +1729,7 @@ class Speed final : public Command
       void bench_ed25519(const std::string& provider,
                          std::chrono::milliseconds msec)
          {
-         const std::string nm = "Ed25519";
-
-         Timer keygen_timer(nm, provider, "keygen");
-
-         std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
-            {
-            return new Botan::Ed25519_PrivateKey(rng());
-            }));
-
-         record_result(keygen_timer);
-         bench_pk_sig(*key, nm, provider, "Pure", msec);
+         return bench_pk_sig_ecc("Ed25519", "Pure", provider, std::vector<std::string>{""}, msec);
          }
 #endif
 
@@ -1801,22 +1739,10 @@ class Speed final : public Command
          {
          for(size_t bits : { 1024, 2048, 3072 })
             {
-            const std::string grp = "modp/ietf/" + std::to_string(bits);
-            const std::string nm = "DH-" + std::to_string(bits);
-
-            Timer keygen_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&]
-               {
-               return new Botan::DH_PrivateKey(rng(), Botan::DL_Group(grp));
-               }));
-            std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&]
-               {
-               return new Botan::DH_PrivateKey(rng(), Botan::DL_Group(grp));
-               }));
-
-            record_result(keygen_timer);
-            bench_pk_ka(*key1, *key2, nm, provider, "KDF2(SHA-256)", msec);
+            bench_pk_ka("DH",
+                        "DH-" + std::to_string(bits),
+                        "modp/ietf/" + std::to_string(bits),
+                        provider, msec);
             }
          }
 #endif
@@ -1828,21 +1754,7 @@ class Speed final : public Command
          {
          for(std::string grp : groups)
             {
-            const std::string nm = "ECDH-" + grp;
-
-            Timer keygen_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&]
-               {
-               return new Botan::ECDH_PrivateKey(rng(), Botan::EC_Group(grp));
-               }));
-            std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&]
-               {
-               return new Botan::ECDH_PrivateKey(rng(), Botan::EC_Group(grp));
-               }));
-
-            record_result(keygen_timer);
-            bench_pk_ka(*key1, *key2, nm, provider, "KDF2(SHA-256)", msec);
+            bench_pk_ka("ECDH", "ECDH-" + grp, grp, provider, msec);
             }
          }
 #endif
@@ -1851,21 +1763,7 @@ class Speed final : public Command
       void bench_curve25519(const std::string& provider,
                             std::chrono::milliseconds msec)
          {
-         const std::string nm = "Curve25519";
-
-         Timer keygen_timer(nm, provider, "keygen");
-
-         std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&]
-            {
-            return new Botan::Curve25519_PrivateKey(rng());
-            }));
-         std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&]
-            {
-            return new Botan::Curve25519_PrivateKey(rng());
-            }));
-
-         record_result(keygen_timer);
-         bench_pk_ka(*key1, *key2, nm, provider, "KDF2(SHA-256)", msec);
+         bench_pk_ka("Curve25519", "Curve25519", "", provider, msec);
          }
 #endif
 
@@ -1895,11 +1793,6 @@ class Speed final : public Command
             {
             size_t n = params.first;
             size_t t = params.second;
-
-            if((msec < std::chrono::milliseconds(5000)) && (n >= 3000))
-               {
-               continue;
-               }
 
             const std::string nm = "McEliece-" + std::to_string(n) + "," + std::to_string(t) +
                                    " (WF=" + std::to_string(Botan::mceliece_work_factor(n, t)) + ")";
@@ -1936,7 +1829,7 @@ class Speed final : public Command
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
                {
-               return new Botan::XMSS_PrivateKey(Botan::XMSS_Parameters::xmss_id_from_string(params), rng());
+               return Botan::create_private_key("XMSS", rng(), params);
                }));
 
             record_result(keygen_timer);
