@@ -170,6 +170,9 @@ size_t Session_Manager_SQL::remove_all()
 
 void Session_Manager_SQL::save(const Session& session)
    {
+   if(session.server_info().hostname().empty())
+      return;
+
    auto stmt = m_db->new_statement("insert or replace into tls_sessions"
                                    " values(?1, ?2, ?3, ?4, ?5)");
 
