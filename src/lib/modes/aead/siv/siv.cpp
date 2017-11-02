@@ -16,7 +16,7 @@ namespace Botan {
 
 SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_name(cipher->name() + "/SIV"),
-   m_ctr(new CTR_BE(cipher->clone())),
+   m_ctr(new CTR_BE(cipher->clone(), 8)),
    m_mac(new CMAC(cipher)),
    m_bs(cipher->block_size())
    {
@@ -173,8 +173,11 @@ void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
-   buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
-   msg_buf().clear();
+   if(msg_buf().size() > 0)
+      {
+      buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
+      msg_buf().clear();
+      }
 
    const size_t sz = buffer.size() - offset;
 
