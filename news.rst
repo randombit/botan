@@ -7,6 +7,9 @@ Version 2.4.0, Not Yet Released
 * Support for negotiating the DH group as specified in RFC 7919 is now
   available in TLS (GH #1263)
 
+* Support for ARIA-GCM ciphersuites are now available in TLS. They
+  are disabled by default. (GH #1284)
+
 * Add support for verifying X.509 objects (certificates, CRLs, etc) using
   RSA-PSS signatures (GH #1270)
 
