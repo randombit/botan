@@ -1324,6 +1324,11 @@ class TLS_Unit_Tests final : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "Camellia-256/GCM", "AEAD");
 #endif
 
+#if defined(BOTAN_HAS_ARIA)
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "ARIA-128/GCM", "AEAD");
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "ARIA-256/GCM", "AEAD");
+#endif
+
 #if defined(BOTAN_HAS_CECPQ1)
 
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM)
