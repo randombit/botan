@@ -33,6 +33,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
       //"AES-128/CCM(8)",
       //"Camellia-256/GCM",
       //"Camellia-128/GCM",
+      //"ARIA-256/GCM",
+      //"ARIA-128/GCM",
       "AES-256",
       "AES-128",
       //"Camellia-256",

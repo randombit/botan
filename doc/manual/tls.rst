@@ -805,7 +805,8 @@ policy settings from a file.
      "AES-256/CCM", "AES-128/CCM", "AES-256", "AES-128"
 
      Also allowed: "AES-256/CCM(8)", "AES-128/CCM(8)",
-     "Camellia-256/GCM", "Camellia-128/GCM", "Camellia-256", "Camellia-128"
+     "Camellia-256/GCM", "Camellia-128/GCM", "ARIA-256/GCM", "ARIA-128/GCM",
+     "Camellia-256", "Camellia-128"
 
      Also allowed (though currently experimental): "AES-128/OCB(12)",
      "AES-256/OCB(12)"

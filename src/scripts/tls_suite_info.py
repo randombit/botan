@@ -176,10 +176,10 @@ def process_command_line(args):
     parser.add_option('--without-ocb', action='store_false', dest='with_ocb',
                       help='disable OCB AEAD suites')
 
-    parser.add_option('--with-aria', action='store_true', default=False,
-                      help='enable ARIA suites')
-    parser.add_option('--without-aria', action='store_false', dest='with_aria',
-                      help='disable ARIA suites')
+    parser.add_option('--with-aria-cbc', action='store_true', default=False,
+                      help='enable ARIA CBC suites')
+    parser.add_option('--without-aria-cbc', action='store_false', dest='with_aria_cbc',
+                      help='disable ARIA CBC suites')
 
     parser.add_option('--with-cecpq1', action='store_true', default=True,
                       help='enable CECPQ1 suites')
@@ -212,8 +212,8 @@ def main(args = None):
 
     (options, args) = process_command_line(args)
 
-    if options.with_aria == False:
-        not_supported += ['ARIA']
+    if not options.with_aria_cbc:
+        not_supported += ['ARIA_128_CBC', 'ARIA_256_CBC']
 
     ciphersuite_re = re.compile(' +0x([0-9a-fA-F][0-9a-fA-F]),0x([0-9a-fA-F][0-9a-fA-F]) + TLS_([A-Za-z_0-9]+) ')
 
