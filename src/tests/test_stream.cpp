@@ -103,8 +103,11 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             result.test_eq("Clone has same name", cipher->name(), clone->name());
             clone->set_key(Test::rng().random_vec(cipher->maximum_keylength()));
 
+            {
             std::vector<uint8_t> buf = input;
             cipher->encrypt(buf);
+            result.test_eq(provider, "encrypt", buf, expected);
+            }
 
             cipher->clear();
 
@@ -118,8 +121,6 @@ class Stream_Cipher_Tests final : public Text_Based_Test
                {
                result.test_success("Trying to encrypt with no key set (after clear) fails");
                }
-
-            result.test_eq(provider, "encrypt", buf, expected);
             }
 
          return result;
