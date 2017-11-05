@@ -15,11 +15,13 @@ in the source.
 
 - Platform support for BeOS and IRIX operating systems
 
-- 3DES and SEED ciphersuites in TLS
+- TLS: 3DES and SEED ciphersuites
 
-- Anonymous DH/ECDH ciphersuites in TLS
+- TLS: Anonymous DH/ECDH ciphersuites
 
-- DSA ciphersuites/certs in TLS
+- TLS: DSA ciphersuites/certs
+
+- TLS: static RSA key exchange ciphersuites
 
 - Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
 
