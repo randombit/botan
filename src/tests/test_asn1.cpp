@@ -45,8 +45,6 @@ Test::Result test_ber_stack_recursion()
    return result;
    }
 
-}
-
 Test::Result test_asn1_utf8_ascii_parsing()
    {
    Test::Result result("ASN.1 ASCII parsing");
@@ -227,6 +225,8 @@ Test::Result test_asn1_utf8_encoding()
 
    return result;
    }
+
+}
 
 class ASN1_Tests final : public Test
    {
