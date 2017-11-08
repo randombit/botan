@@ -149,17 +149,29 @@ void ASN1_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
 
+#if defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+   // using char32_t and char16_t (as suggested by the standard) leads to linker
+   // errors on MSVC 2015 and 2017. This workaround was suggested here:
+   //   https://social.msdn.microsoft.com/Forums/vstudio/en-US/
+   //    8f40dcd8-c67f-4eba-9134-a19b9178e481/vs-2015-rc-linker-stdcodecvt-error
+   using utf32_type = int32_t;
+   using utf16_type = wchar_t;
+#else
+   using utf32_type = char32_t;
+   using utf16_type = char16_t;
+#endif
+
    if(obj.type_tag == UTF8_STRING)
       {
       *this = ASN1_String(ASN1::to_string(obj), obj.type_tag);
       }
    else if(obj.type_tag == BMP_STRING)
       {
-      *this = ASN1_String(ucsX_to_utf8<char16_t>(obj.value), obj.type_tag);
+      *this = ASN1_String(ucsX_to_utf8<utf16_type>(obj.value), obj.type_tag);
       }
    else if(obj.type_tag == UNIVERSAL_STRING)
       {
-      *this = ASN1_String(ucsX_to_utf8<char32_t>(obj.value), obj.type_tag);
+      *this = ASN1_String(ucsX_to_utf8<utf32_type>(obj.value), obj.type_tag);
       }
    else // IA5_STRING        - international ASCII characters
         // T61_STRING        - pretty much ASCII
