@@ -409,22 +409,33 @@ class Charset_Tests final : public Text_Based_Test
          const std::vector<uint8_t> in = get_req_bin(vars, "In");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
 
+         const std::string in_str(in.begin(), in.end());
+
          std::string converted;
-         if(type == "UTF16-LATIN1")
+
+         if(type == "UCS2-UTF8")
             {
-            converted = Botan::Charset::transcode(std::string(in.begin(), in.end()),
+            converted = Botan::ucs2_to_utf8(in.data(), in.size());
+            }
+         else if(type == "UCS4-UTF8")
+            {
+            converted = Botan::ucs4_to_utf8(in.data(), in.size());
+            }
+         else if(type == "UTF16-LATIN1")
+            {
+            converted = Botan::Charset::transcode(in_str,
                                                   Botan::Character_Set::LATIN1_CHARSET,
                                                   Botan::Character_Set::UCS2_CHARSET);
             }
          else if(type == "UTF8-LATIN1")
             {
-            converted = Botan::Charset::transcode(std::string(in.begin(), in.end()),
+            converted = Botan::Charset::transcode(in_str,
                                                   Botan::Character_Set::LATIN1_CHARSET,
                                                   Botan::Character_Set::UTF8_CHARSET);
             }
          else if(type == "LATIN1-UTF8")
             {
-            converted = Botan::Charset::transcode(std::string(in.begin(), in.end()),
+            converted = Botan::Charset::transcode(in_str,
                                                   Botan::Character_Set::UTF8_CHARSET,
                                                   Botan::Character_Set::LATIN1_CHARSET);
             }
