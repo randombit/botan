@@ -109,14 +109,13 @@ Test::Result test_asn1_ucs2_parsing()
    try
       {
       // \x1E     - ASN1 tag for 'BMP (UCS-2) string'
-      // \x0E     - 14 characters of payload (includes BOM)
-      // \xFF\xFE - Byte Order Mark (BOM)
+      // \x0C     - 12 characters of payload
       // ...      - UCS-2 encoding for Moscow in cyrillic script
       const std::string moscow =
-         "\x1E\x0E\xFF\xFE\x1C\x04\x3E\x04"
-         "\x41\x04\x3A\x04\x32\x04\x30\x04";
-      const std::string moscow_plain =  // with BOM (EF BB BF)
-         "\xEF\xBB\xBF\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+         "\x1E\x0C\x04\x1C\x04\x3E\x04\x41\x04\x3A\x04\x32\x04\x30";
+      const std::string moscow_plain =
+         "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+
       Botan::DataSource_Memory input(moscow.data());
       Botan::BER_Decoder dec(input);
 
@@ -135,18 +134,17 @@ Test::Result test_asn1_ucs2_parsing()
 
 Test::Result test_asn1_ucs4_parsing()
    {
-   Test::Result result("ASN.1 universal string (UTF-32 LE) parsing");
+   Test::Result result("ASN.1 universal string (UCS-4) parsing");
 
    try
       {
       // \x1C - ASN1 tag for 'universal string'
-      // \x1C - 28 characters of payload (with BOM - FF FE 00 00)
-      // ...  - UTF-32 LE encoding for Moscow in cyrillic script
+      // \x18 - 24 characters of payload
+      // ...  - UCS-4 encoding for Moscow in cyrillic script
       const Botan::byte moscow[] =
-         "\x1C\x1C\xFF\xFE\x00\x00\x1C\x04\x00\x00\x3E\x04\x00\x00\x41"
-         "\x04\x00\x00\x3A\x04\x00\x00\x32\x04\x00\x00\x30\x04\x00\x00";
-      const std::string moscow_plain =  // with BOM (EF BB BF)
-         "\xEF\xBB\xBF\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
+         "\x1C\x18\x00\x00\x04\x1C\x00\x00\x04\x3E\x00\x00\x04\x41\x00\x00\x04\x3A\x00\x00\x04\x32\x00\x00\x04\x30";
+      const std::string moscow_plain =
+         "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
       Botan::DataSource_Memory input(moscow, sizeof(moscow));
       Botan::BER_Decoder dec(input);
 
