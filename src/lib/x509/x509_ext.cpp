@@ -12,7 +12,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
-#include <botan/charset.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 #include <sstream>
@@ -735,7 +734,7 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const
       .start_cons(SEQUENCE)
       .start_cons(SEQUENCE)
       .encode(OIDS::lookup("PKIX.OCSP"))
-      .add_object(ASN1_Tag(6), CONTEXT_SPECIFIC, url.iso_8859())
+      .add_object(ASN1_Tag(6), CONTEXT_SPECIFIC, url.value())
       .end_cons()
       .end_cons().get_contents_unlocked();
    }
@@ -758,9 +757,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
 
          if(name.type_tag == 6 && name.class_tag == CONTEXT_SPECIFIC)
             {
-            m_ocsp_responder = Charset::transcode(ASN1::to_string(name),
-                                                  LATIN1_CHARSET,
-                                                  LOCAL_CHARSET);
+            m_ocsp_responder = ASN1::to_string(name);
             }
 
          }

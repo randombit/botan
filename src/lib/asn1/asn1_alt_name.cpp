@@ -11,7 +11,6 @@
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
 #include <botan/internal/stl_util.h>
-#include <botan/charset.h>
 #include <botan/parsing.h>
 #include <botan/loadstor.h>
 
@@ -133,7 +132,7 @@ void encode_entries(DER_Encoder& encoder,
       if(type == "RFC822" || type == "DNS" || type == "URI")
          {
          ASN1_String asn1_string(i->second, IA5_STRING);
-         encoder.add_object(tagging, CONTEXT_SPECIFIC, asn1_string.iso_8859());
+         encoder.add_object(tagging, CONTEXT_SPECIFIC, asn1_string.value());
          }
       else if(type == "IP")
          {
@@ -218,13 +217,9 @@ void AlternativeName::decode_from(BER_Decoder& source)
          }
       else if(tag == 1 || tag == 2 || tag == 6)
          {
-         const std::string value = Charset::transcode(ASN1::to_string(obj),
-                                                      LATIN1_CHARSET,
-                                                      LOCAL_CHARSET);
-
-         if(tag == 1) add_attribute("RFC822", value);
-         if(tag == 2) add_attribute("DNS", value);
-         if(tag == 6) add_attribute("URI", value);
+         if(tag == 1) add_attribute("RFC822", ASN1::to_string(obj));
+         if(tag == 2) add_attribute("DNS", ASN1::to_string(obj));
+         if(tag == 6) add_attribute("URI", ASN1::to_string(obj));
          }
       else if(tag == 7)
          {
