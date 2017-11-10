@@ -364,7 +364,7 @@ Test::Result test_x509_utf8()
 
    try
       {
-      Botan::X509_Certificate utf8_cert(Test::data_file("x509test/cyrillic.pem"));
+      Botan::X509_Certificate utf8_cert(Test::data_file("x509test/contains_utf8string.pem"));
 
       // UTF-8 encoded fields of test certificate (contains cyrillic letters)
       const std::string organization =
