@@ -45,6 +45,7 @@ enum ASN1_Tag {
    T61_STRING       = 0x14,
    IA5_STRING       = 0x16,
    VISIBLE_STRING   = 0x1A,
+   UNIVERSAL_STRING = 0x1C,
    BMP_STRING       = 0x1E,
 
    UTC_TIME                = 0x17,

@@ -79,19 +79,6 @@ associated with a position of some sort in the organization. It may
 also include fields for state/province and locality. What a locality
 is, nobody knows, but it's usually given as a city name.
 
-Botan doesn't currently support any of the Unicode variants used in
-ASN.1 (UTF-8, UCS-2, and UCS-4), any of which could be used for the
-fields in the DN. This could be problematic, particularly in Asia and
-other areas where non-ASCII characters are needed for most names. The
-UTF-8 and UCS-2 string types *are* accepted (in fact, UTF-8 is used
-when encoding much of the time), but if any of the characters included
-in the string are not in ISO 8859-1 (ie 0 ... 255), an exception will
-get thrown. Currently the ``ASN1_String`` type holds its data as ISO
-8859-1 internally (regardless of local character set); this would have
-to be changed to hold UCS-2 or UCS-4 in order to support Unicode
-(also, many interfaces in the X.509 code would have to accept or
-return a ``std::wstring`` instead of a ``std::string``).
-
 Like the distinguished names, subject alternative names can contain a lot of
 things that Botan will flat out ignore (most of which you would likely never
 want to use). However, there are three very useful pieces of information that

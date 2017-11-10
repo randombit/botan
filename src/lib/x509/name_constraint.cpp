@@ -7,7 +7,6 @@
 
 #include <botan/name_constraint.h>
 #include <botan/ber_dec.h>
-#include <botan/charset.h>
 #include <botan/loadstor.h>
 #include <botan/x509_dn.h>
 #include <botan/x509cert.h>
@@ -49,7 +48,7 @@ void GeneralName::decode_from(class BER_Decoder& ber)
 
    if(tag == 1 || tag == 2 || tag == 6)
       {
-      m_name = Charset::transcode(ASN1::to_string(obj), LATIN1_CHARSET, LOCAL_CHARSET);
+      m_name = ASN1::to_string(obj);
 
       if(tag == 1)
          {

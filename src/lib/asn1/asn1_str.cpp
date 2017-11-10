@@ -17,8 +17,7 @@ namespace {
 /*
 * Choose an encoding for the string
 */
-ASN1_Tag choose_encoding(const std::string& str,
-                         const std::string& type)
+ASN1_Tag choose_encoding(const std::string& str)
    {
    static const uint8_t IS_PRINTABLE[256] = {
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -48,12 +47,26 @@ ASN1_Tag choose_encoding(const std::string& str,
       {
       if(!IS_PRINTABLE[static_cast<uint8_t>(str[i])])
          {
-         if(type == "utf8")   return UTF8_STRING;
-         if(type == "latin1") return T61_STRING;
-         throw Invalid_Argument("choose_encoding: Bad string type " + type);
+         return UTF8_STRING;
          }
       }
    return PRINTABLE_STRING;
+   }
+
+void assert_is_string_type(ASN1_Tag tag)
+   {
+   if(tag != NUMERIC_STRING &&
+      tag != PRINTABLE_STRING &&
+      tag != VISIBLE_STRING &&
+      tag != T61_STRING &&
+      tag != IA5_STRING &&
+      tag != UTF8_STRING &&
+      tag != BMP_STRING &&
+      tag != UNIVERSAL_STRING)
+      {
+      throw Invalid_Argument("ASN1_String: Unknown string type " +
+                             std::to_string(tag));
+      }
    }
 
 }
@@ -61,27 +74,22 @@ ASN1_Tag choose_encoding(const std::string& str,
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET)), m_tag(t)
+ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_utf8_str(str), m_tag(t)
    {
-
    if(m_tag == DIRECTORY_STRING)
-      m_tag = choose_encoding(m_iso_8859_str, "latin1");
+      {
+      m_tag = choose_encoding(m_utf8_str);
+      }
 
-   if(m_tag != NUMERIC_STRING &&
-      m_tag != PRINTABLE_STRING &&
-      m_tag != VISIBLE_STRING &&
-      m_tag != T61_STRING &&
-      m_tag != IA5_STRING &&
-      m_tag != UTF8_STRING &&
-      m_tag != BMP_STRING)
-      throw Invalid_Argument("ASN1_String: Unknown string type " +
-                             std::to_string(m_tag));
+   assert_is_string_type(m_tag);
    }
 
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET)), m_tag(choose_encoding(m_iso_8859_str, "latin1"))
+ASN1_String::ASN1_String(const std::string& str) :
+   m_utf8_str(str),
+   m_tag(choose_encoding(m_utf8_str))
    {}
 
 /*
@@ -89,23 +97,7 @@ ASN1_String::ASN1_String(const std::string& str) : m_iso_8859_str(Charset::trans
 */
 std::string ASN1_String::iso_8859() const
    {
-   return m_iso_8859_str;
-   }
-
-/*
-* Return this string in local encoding
-*/
-std::string ASN1_String::value() const
-   {
-   return Charset::transcode(m_iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
-   }
-
-/*
-* Return the type of this string object
-*/
-ASN1_Tag ASN1_String::tagging() const
-   {
-   return m_tag;
+   return utf8_to_latin1(m_utf8_str);
    }
 
 /*
@@ -113,10 +105,15 @@ ASN1_Tag ASN1_String::tagging() const
 */
 void ASN1_String::encode_into(DER_Encoder& encoder) const
    {
-   std::string value = iso_8859();
-   if(tagging() == UTF8_STRING)
-      value = Charset::transcode(value, LATIN1_CHARSET, UTF8_CHARSET);
-   encoder.add_object(tagging(), UNIVERSAL, value);
+   if(m_data.empty())
+      {
+      encoder.add_object(tagging(), UNIVERSAL, m_utf8_str);
+      }
+   else
+      {
+      // If this string was decoded, reserialize using original encoding
+      encoder.add_object(tagging(), UNIVERSAL, m_data.data(), m_data.size());
+      }
    }
 
 /*
@@ -126,18 +123,24 @@ void ASN1_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
 
-   Character_Set charset_is;
+   assert_is_string_type(obj.type_tag);
 
-   if(obj.type_tag == BMP_STRING)
-      charset_is = UCS2_CHARSET;
-   else if(obj.type_tag == UTF8_STRING)
-      charset_is = UTF8_CHARSET;
+   m_tag = obj.type_tag;
+   m_data.assign(obj.value.begin(), obj.value.end());
+
+   if(m_tag == BMP_STRING)
+      {
+      m_utf8_str = ucs2_to_utf8(m_data.data(), m_data.size());
+      }
+   else if(m_tag == UNIVERSAL_STRING)
+      {
+      m_utf8_str = ucs4_to_utf8(m_data.data(), m_data.size());
+      }
    else
-      charset_is = LATIN1_CHARSET;
-
-   *this = ASN1_String(
-      Charset::transcode(ASN1::to_string(obj), LOCAL_CHARSET, charset_is),
-      obj.type_tag);
+      {
+      // All other supported string types are UTF-8 or some subset thereof
+      m_utf8_str = ASN1::to_string(obj);
+      }
    }
 
 }

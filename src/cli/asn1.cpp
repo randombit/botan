@@ -22,9 +22,6 @@
 #include <sstream>
 #include <ctype.h>
 
-// Set this if your terminal understands UTF-8; otherwise output is in Latin-1
-#define UTF8_TERMINAL 1
-
 namespace Botan_CLI {
 
 namespace {
@@ -349,17 +346,7 @@ void decode(std::ostream& output,
          {
          Botan::ASN1_String str;
          data.decode(str);
-         if(UTF8_TERMINAL)
-            {
-            emit(output, type_name(type_tag), level, length,
-                 Botan::Charset::transcode(str.iso_8859(),
-                                           Botan::UTF8_CHARSET,
-                                           Botan::LATIN1_CHARSET));
-            }
-         else
-            {
-            emit(output, type_name(type_tag), level, length, str.iso_8859());
-            }
+         emit(output, type_name(type_tag), level, length, str.value());
          }
       else if(type_tag == Botan::UTC_TIME || type_tag == Botan::GENERALIZED_TIME)
          {

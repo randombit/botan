@@ -1,5 +1,5 @@
 <defines>
-ASN1 -> 20161102
+ASN1 -> 20171109
 </defines>
 
 <requires>

@@ -8,7 +8,6 @@
 #include <botan/asn1_time.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/charset.h>
 #include <botan/exceptn.h>
 #include <botan/parsing.h>
 #include <botan/calendar.h>
@@ -41,20 +40,14 @@ void X509_Time::encode_into(DER_Encoder& der) const
    if(m_tag != GENERALIZED_TIME && m_tag != UTC_TIME)
       throw Invalid_Argument("X509_Time: Bad encoding tag");
 
-   der.add_object(m_tag, UNIVERSAL,
-                  Charset::transcode(to_string(),
-                                     LOCAL_CHARSET,
-                                     LATIN1_CHARSET));
+   der.add_object(m_tag, UNIVERSAL, to_string());
    }
 
 void X509_Time::decode_from(BER_Decoder& source)
    {
    BER_Object ber_time = source.get_next_object();
 
-   set_to(Charset::transcode(ASN1::to_string(ber_time),
-                             LATIN1_CHARSET,
-                             LOCAL_CHARSET),
-          ber_time.type_tag);
+   set_to(ASN1::to_string(ber_time), ber_time.type_tag);
    }
 
 std::string X509_Time::to_string() const
