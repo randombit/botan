@@ -26,6 +26,13 @@ Version 2.4.0, Not Yet Released
   key was set before accepting data. Previously attempting to use an unkeyed
   object would instead result in either a crash or invalid outputs. (GH #1279)
 
+* ASN.1 string objects previously held their contents as ISO 8859-1 codepoints.
+  However this led to certificates which contained strings outside of this
+  character set (eg in Cyrillic, Greek, or Chinese) being rejected. Now the
+  strings are always converted to UTF-8, which allows representing any
+  character. In addition, UCS-4 strings are now supported.
+  (GH #1113 #1250 #1287 #1289)
+
 * New functions for bit rotations that distinguish rotating by a
   compile-time constant vs a runtime variable rotation. This allows
   better optimizations in both cases. Notably performance of CAST-128
@@ -38,6 +45,25 @@ Version 2.4.0, Not Yet Released
 
 * Fix a bug in the amalgamation generation which could cause build
   failures on some systems including macOS. (GH #1264 #1265)
+
+* A particular code sequence in TLS handshake would always (with an ECC
+  ciphersuite) result in an exception being thrown and then caught.
+  This has changed so no exception is thrown. (GH #1275)
+
+* The code for byteswapping has been improved for ARMv7 and for Windows x86-64
+  systems using MSVC. (GH #1274)
+
+* The GMAC class no longer derives from GHASH. This should not cause any
+  noticeable change for applications. (GH #1253)
+
+* The base implementation of AES now uses a single 4K table, instead of 4 such
+  tables. This offers a significant improvement against cache-based side
+  channels without hurting performance too much. In addition the table is now
+  guaranteed to be aligned on a cache line, which ensures the additional
+  countermeasure of reading each cache line works as expected. (GH #1255)
+
+* In TLS client resumption, avoid sending a OCSP stapling request. This caused
+  resumption failures with some servers. (GH #1276)
 
 * The overhead of making a call through the FFI layer has been reduced.
 
@@ -53,6 +79,10 @@ Version 2.4.0, Not Yet Released
   setting the second parameter to something in the range of 1 to 3.
 
 * Add an OID for RIPEMD-160
+
+* Fixes for CMake build (GH #1251)
+
+* Avoid some signed overflow warnings (GH #1220 #1245)
 
 Version 2.3.0, 2017-10-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
