@@ -364,7 +364,7 @@ Test::Result test_x509_utf8()
 
    try
       {
-      Botan::X509_Certificate utf8_cert(Test::data_file("x509test/cyrillic.pem"));
+      Botan::X509_Certificate utf8_cert(Test::data_file("x509test/contains_utf8string.pem"));
 
       // UTF-8 encoded fields of test certificate (contains cyrillic letters)
       const std::string organization =
@@ -383,6 +383,35 @@ Test::Result test_x509_utf8()
       result.test_eq("OU", utf8_cert.issuer_info("OU").at(0), organization_unit);
       result.test_eq("CN", utf8_cert.issuer_info("CN").at(0), common_name);
       result.test_eq("L",  utf8_cert.issuer_info("L").at(0),  location);
+      }
+   catch (const Botan::Decoding_Error &ex)
+      {
+      result.test_failure(ex.what());
+      }
+
+   return result;
+   }
+
+Test::Result test_x509_bmpstring()
+   {
+   Test::Result result("X509 with UCS-2 (BMPString) encoded fields");
+
+   try
+      {
+      Botan::X509_Certificate ucs2_cert(Test::data_file("x509test/contains_bmpstring.pem"));
+
+      // UTF-8 encoded fields of test certificate (contains cyrillic and greek letters)
+      const std::string organization =
+         "\x6E\x65\xCF\x87\xCF\xB5\x6E\x69\xCF\x89";
+      const std::string common_name =
+         "\xC3\xA8\x6E\xC7\x9D\xD0\xAF\x20\xD0\x9C\xC7\x9D\xD0\xB9\xD0\xB7\xD1\x8D\xD0\xBB";
+
+      // UTF-8 encoded fields of test certificate (contains only ASCII characters)
+      const std::string location = "Berlin";
+
+      result.test_eq("O",  ucs2_cert.issuer_info("O").at(0),  organization);
+      result.test_eq("CN", ucs2_cert.issuer_info("CN").at(0), common_name);
+      result.test_eq("L",  ucs2_cert.issuer_info("L").at(0),  location);
       }
    catch (const Botan::Decoding_Error &ex)
       {
@@ -1170,6 +1199,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_cert_status_strings());
          results.push_back(test_hashes("ECDSA"));
          results.push_back(test_x509_utf8());
+         results.push_back(test_x509_bmpstring());
 
          return results;
          }
