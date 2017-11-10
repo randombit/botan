@@ -392,6 +392,35 @@ Test::Result test_x509_utf8()
    return result;
    }
 
+Test::Result test_x509_bmpstring()
+   {
+   Test::Result result("X509 with UCS-2 (BMPString) encoded fields");
+
+   try
+      {
+      Botan::X509_Certificate ucs2_cert(Test::data_file("x509test/contains_bmpstring.pem"));
+
+      // UTF-8 encoded fields of test certificate (contains cyrillic and greek letters)
+      const std::string organization =
+         "\x6E\x65\xCF\x87\xCF\xB5\x6E\x69\xCF\x89";
+      const std::string common_name =
+         "\xC3\xA8\x6E\xC7\x9D\xD0\xAF\x20\xD0\x9C\xC7\x9D\xD0\xB9\xD0\xB7\xD1\x8D\xD0\xBB";
+
+      // UTF-8 encoded fields of test certificate (contains only ASCII characters)
+      const std::string location = "Berlin";
+
+      result.test_eq("O",  ucs2_cert.issuer_info("O").at(0),  organization);
+      result.test_eq("CN", ucs2_cert.issuer_info("CN").at(0), common_name);
+      result.test_eq("L",  ucs2_cert.issuer_info("L").at(0),  location);
+      }
+   catch (const Botan::Decoding_Error &ex)
+      {
+      result.test_failure(ex.what());
+      }
+
+   return result;
+   }
+
 Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
    {
    Test::Result result("X509 Unit");
@@ -1170,6 +1199,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_cert_status_strings());
          results.push_back(test_hashes("ECDSA"));
          results.push_back(test_x509_utf8());
+         results.push_back(test_x509_bmpstring());
 
          return results;
          }
