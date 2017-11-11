@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <cstdlib>
 
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
