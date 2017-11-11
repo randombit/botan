@@ -23,6 +23,8 @@ in the source.
 
 - TLS: static RSA key exchange ciphersuites
 
+- TLS: CCM_8 ciphersuites
+
 - Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
 
 - CBC-MAC, X9.19-MAC
