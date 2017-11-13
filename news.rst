@@ -78,6 +78,13 @@ Version 2.4.0, Not Yet Released
   could be used was by manually constructing a ``CTR_BE`` object and
   setting the second parameter to something in the range of 1 to 3.
 
+* In 2.3.0, final annotations were added to many classes including the TLS
+  policies (like ``Strict_Policy`` and ``BSI_TR_02102_2``). However it is
+  reasonable and useful for an application to derive from one of these policies, so
+  as to create an application specific policy that is based on a library-provided
+  policy, but with a few tweaks. So the final annotations have been removed on
+  these classes. (GH #1292)
+
 * Add an OID for RIPEMD-160
 
 * Fixes for CMake build (GH #1251)

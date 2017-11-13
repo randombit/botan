@@ -326,7 +326,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
 /**
 * NSA Suite B 128-bit security level (RFC 6460)
 */
-class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 final : public Policy
+class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override
@@ -362,7 +362,7 @@ class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 final : public Policy
 /**
 * BSI TR-02102-2 Policy
 */
-class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 final : public Policy
+class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override
@@ -423,7 +423,7 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 final : public Policy
 /**
 * Policy for DTLS. We require DTLS v1.2 and an AEAD mode.
 */
-class BOTAN_PUBLIC_API(2,0) Datagram_Policy final : public Policy
+class BOTAN_PUBLIC_API(2,0) Datagram_Policy : public Policy
    {
    public:
       std::vector<std::string> allowed_macs() const override
@@ -443,7 +443,7 @@ class BOTAN_PUBLIC_API(2,0) Datagram_Policy final : public Policy
 * to use if you control both sides of the protocol and don't have to worry
 * about ancient and/or bizarre TLS implementations.
 */
-class BOTAN_PUBLIC_API(2,0) Strict_Policy final : public Policy
+class BOTAN_PUBLIC_API(2,0) Strict_Policy : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override;
