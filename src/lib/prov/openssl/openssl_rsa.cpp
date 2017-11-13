@@ -15,7 +15,6 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/ct_utils.h>
 
-#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <cstdlib>
