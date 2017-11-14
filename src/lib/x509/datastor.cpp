@@ -161,4 +161,45 @@ void Data_Store::add(const std::multimap<std::string, std::string>& in)
       }
    }
 
+/*
+* Create and populate a X509_DN
+*/
+X509_DN create_dn(const Data_Store& info)
+   {
+   auto names = info.search_for(
+      [](const std::string& key, const std::string&)
+      {
+         return (key.find("X520.") != std::string::npos);
+      });
+
+   X509_DN dn;
+
+   for(auto i = names.begin(); i != names.end(); ++i)
+      dn.add_attribute(i->first, i->second);
+
+   return dn;
+   }
+
+/*
+* Create and populate an AlternativeName
+*/
+AlternativeName create_alt_name(const Data_Store& info)
+   {
+   auto names = info.search_for(
+      [](const std::string& key, const std::string&)
+      {
+         return (key == "RFC822" ||
+                 key == "DNS" ||
+                 key == "URI" ||
+                 key == "IP");
+      });
+
+   AlternativeName alt_name;
+
+   for(auto i = names.begin(); i != names.end(); ++i)
+      alt_name.add_attribute(i->first, i->second);
+
+   return alt_name;
+   }
+
 }
