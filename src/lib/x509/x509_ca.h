@@ -123,7 +123,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
                         RandomNumberGenerator& rng) const;
 
       AlgorithmIdentifier m_ca_sig_algo;
-      X509_Certificate m_cert;
+      X509_Certificate m_ca_cert;
       std::unique_ptr<PK_Signer> m_signer;
    };
 
