@@ -8,5 +8,5 @@ if %MSVS% == 2017 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Communi
 rem check compiler version
 cl
 
-appveyor DownloadFile http://download.qt.io/official_releases/jom/jom.zip -FileName jom.zip
-7z e jom.zip
+git clone --depth 1 https://github.com/randombit/botan-ci-tools
+7z e botan-ci-tools/jom_1_1_2.zip
