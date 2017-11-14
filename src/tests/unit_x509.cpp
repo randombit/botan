@@ -379,10 +379,12 @@ Test::Result test_x509_utf8()
       const std::string location =
          "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
 
-      result.test_eq("O",  utf8_cert.issuer_info("O").at(0),  organization);
-      result.test_eq("OU", utf8_cert.issuer_info("OU").at(0), organization_unit);
-      result.test_eq("CN", utf8_cert.issuer_info("CN").at(0), common_name);
-      result.test_eq("L",  utf8_cert.issuer_info("L").at(0),  location);
+      const Botan::X509_DN& issuer_dn = utf8_cert.issuer_dn();
+
+      result.test_eq("O",  issuer_dn.get_first_attribute("O"),  organization);
+      result.test_eq("OU", issuer_dn.get_first_attribute("OU"), organization_unit);
+      result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
+      result.test_eq("L",  issuer_dn.get_first_attribute("L"),  location);
       }
    catch (const Botan::Decoding_Error &ex)
       {
@@ -409,9 +411,11 @@ Test::Result test_x509_bmpstring()
       // UTF-8 encoded fields of test certificate (contains only ASCII characters)
       const std::string location = "Berlin";
 
-      result.test_eq("O",  ucs2_cert.issuer_info("O").at(0),  organization);
-      result.test_eq("CN", ucs2_cert.issuer_info("CN").at(0), common_name);
-      result.test_eq("L",  ucs2_cert.issuer_info("L").at(0),  location);
+      const Botan::X509_DN& issuer_dn = ucs2_cert.issuer_dn();
+
+      result.test_eq("O",  issuer_dn.get_first_attribute("O"),  organization);
+      result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
+      result.test_eq("L",  issuer_dn.get_first_attribute("L"),  location);
       }
    catch (const Botan::Decoding_Error &ex)
       {
@@ -503,10 +507,11 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    /* Get cert data */
    result.test_eq("x509 version", user1_cert.x509_version(), size_t(3));
 
-   result.test_eq("issuer info CN", user1_cert.issuer_info("CN").at(0), ca_opts().common_name);
-   result.test_eq("issuer info Country", user1_cert.issuer_info("C").at(0), ca_opts().country);
-   result.test_eq("issuer info Orga", user1_cert.issuer_info("O").at(0), ca_opts().organization);
-   result.test_eq("issuer info OrgaUnit", user1_cert.issuer_info("OU").at(0), ca_opts().org_unit);
+   const Botan::X509_DN& user1_issuer_dn = user1_cert.issuer_dn();
+   result.test_eq("issuer info CN", user1_issuer_dn.get_first_attribute("CN"), ca_opts().common_name);
+   result.test_eq("issuer info Country", user1_issuer_dn.get_first_attribute("C"), ca_opts().country);
+   result.test_eq("issuer info Orga", user1_issuer_dn.get_first_attribute("O"), ca_opts().organization);
+   result.test_eq("issuer info OrgaUnit", user1_issuer_dn.get_first_attribute("OU"), ca_opts().org_unit);
 
    const Botan::X509_CRL crl1 = ca.new_crl(Test::rng());
 
@@ -952,6 +957,12 @@ class String_Extension final : public Botan::Certificate_Extension
          {
          return m_oid;
          }
+
+      bool should_encode() const override
+         {
+         return true;
+         }
+
       std::string oid_name() const override
          {
          return "String Extension";
@@ -1005,16 +1016,19 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
 
    // include a custom extension in the request
    Botan::Extensions req_extensions;
-   Botan::OID oid("1.2.3.4.5.6.7.8.9.1");
-   req_extensions.add(new String_Extension("1Test"), false);
+   const Botan::OID oid("1.2.3.4.5.6.7.8.9.1");
+   const Botan::OID ku_oid = Botan::OIDS::lookup("X509v3.KeyUsage");
+   req_extensions.add(new String_Extension("AAAAAAAAAAAAAABCDEF"), false);
    opts.extensions = req_extensions;
 
    /* Create a self-signed certificate */
    const Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(
             opts, *user_key, hash_fn, Test::rng());
 
+   result.confirm("Extensions::extension_set true for Key_Usage", self_signed_cert.v3_extensions().extension_set(ku_oid));
+
    // check if known Key_Usage extension is present in self-signed cert
-   auto key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
+   auto key_usage_ext = self_signed_cert.v3_extensions().get(ku_oid);
    if(result.confirm("Key_Usage extension present in self-signed certificate", key_usage_ext != nullptr))
       {
       result.confirm("Key_Usage extension value matches in self-signed certificate",
@@ -1025,29 +1039,34 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
    auto string_ext = self_signed_cert.v3_extensions().get_raw<String_Extension>(oid);
    if(result.confirm("Custom extension present in self-signed certificate", string_ext != nullptr))
       {
-      result.test_eq("Custom extension value matches in self-signed certificate", string_ext->value(), "1Test");
+      result.test_eq("Custom extension value matches in self-signed certificate", string_ext->value(), "AAAAAAAAAAAAAABCDEF");
       }
 
 
    const Botan::PKCS10_Request user_req = Botan::X509::create_cert_req(opts, *user_key, hash_fn, Test::rng());
 
    /* Create a CA-signed certificate */
-   const Botan::X509_Certificate user_cert = ca.sign_request(
-            user_req, Test::rng(), from_date(2008, 01, 01), from_date(2033, 01, 01));
+   const Botan::X509_Certificate ca_signed_cert =
+      ca.sign_request(user_req, Test::rng(),
+                      from_date(2008, 01, 01),
+                      from_date(2033, 01, 01));
 
    // check if known Key_Usage extension is present in CA-signed cert
-   key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
-   if(result.confirm("Key_Usage extension present in user certificate", key_usage_ext != nullptr))
+   result.confirm("Extensions::extension_set true for Key_Usage", ca_signed_cert.v3_extensions().extension_set(ku_oid));
+
+   key_usage_ext = ca_signed_cert.v3_extensions().get(ku_oid);
+   if(result.confirm("Key_Usage extension present in CA-signed certificate", key_usage_ext != nullptr))
       {
       result.confirm("Key_Usage extension value matches in user certificate",
                      dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == Botan::DIGITAL_SIGNATURE);
       }
 
    // check if custom extension is present in CA-signed cert
-   string_ext = user_cert.v3_extensions().get_raw<String_Extension>(oid);
-   if(result.confirm("Custom extension present in user certificate", string_ext != nullptr))
+   result.confirm("Extensions::extension_set true for String_Extension", ca_signed_cert.v3_extensions().extension_set(oid));
+   string_ext = ca_signed_cert.v3_extensions().get_raw<String_Extension>(oid);
+   if(result.confirm("Custom extension present in CA-signed certificate", string_ext != nullptr))
       {
-      result.test_eq("Custom extension value matches in user certificate", string_ext->value(), "1Test");
+      result.test_eq("Custom extension value matches in CA-signed certificate", string_ext->value(), "AAAAAAAAAAAAAABCDEF");
       }
 
    return result;
