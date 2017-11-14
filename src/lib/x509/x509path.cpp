@@ -6,6 +6,7 @@
 */
 
 #include <botan/x509path.h>
+#include <botan/x509_ext.h>
 #include <botan/pk_keys.h>
 #include <botan/ocsp.h>
 #include <algorithm>
@@ -67,10 +68,10 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
          }
 
       // Check all certs for valid time range
-      if(validation_time < X509_Time(subject->start_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
+      if(validation_time < subject->not_before())
          status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
 
-      if(validation_time > X509_Time(subject->end_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
+      if(validation_time > subject->not_after())
          status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
 
       // Check issuer constraints
@@ -495,7 +496,9 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
       const std::string fprint = issuer->fingerprint("SHA-256");
 
       if(certs_seen.count(fprint) > 0) // already seen?
+         {
          return Certificate_Status_Code::CERT_CHAIN_LOOP;
+         }
 
       certs_seen.insert(fprint);
       cert_path.push_back(issuer);
