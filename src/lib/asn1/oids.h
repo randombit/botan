@@ -29,6 +29,16 @@ BOTAN_PUBLIC_API(2,0) std::string lookup(const OID& oid);
 */
 BOTAN_PUBLIC_API(2,0) OID lookup(const std::string& name);
 
+inline std::string oid2str(const OID& oid)
+   {
+   return lookup(oid);
+   }
+
+inline OID str2oid(const std::string& name)
+   {
+   return lookup(name);
+   }
+
 /**
 * See if an OID exists in the internal table.
 * @param oid the oid to check for
