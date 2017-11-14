@@ -80,6 +80,8 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
 
    BER_Object attr_bits = cert_req_info.get_next_object();
 
+   std::set<std::string> pkcs9_email;
+
    if(attr_bits.type_tag == 0 &&
       attr_bits.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
@@ -94,7 +96,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
             {
             ASN1_String email;
             value.decode(email);
-            data->m_alt_name.add_attribute("RFC822", email.value());
+            pkcs9_email.insert(email.value());
             }
          else if(attr.oid == OIDS::lookup("PKCS9.ChallengePassword"))
             {
@@ -115,9 +117,16 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
 
    cert_req_info.verify_end();
 
-   // TODO pull AlternativeName out of extensions and merge with m_alt_name
+   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>())
+      {
+      data->m_alt_name = ext->get_alt_name();
+      }
 
-   
+   for(std::string email : pkcs9_email)
+      {
+      data->m_alt_name.add_attribute("RFC882", email);
+      }
+
    return data;
    }
 

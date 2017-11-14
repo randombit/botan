@@ -100,10 +100,9 @@ std::string X509_DN::get_first_attribute(const std::string& attr) const
    {
    const OID oid = OIDS::lookup(deref_info_field(attr));
 
-   auto range = m_dn_info.equal_range(oid);
-
-   if(range.first != m_dn_info.end())
-      return range.first->second.value();
+   auto i = m_dn_info.lower_bound(oid);
+   if(i != m_dn_info.end() && i->first == oid)
+      return i->second.value();
 
    return "";
    }

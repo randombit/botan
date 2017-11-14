@@ -29,6 +29,8 @@ class BOTAN_PUBLIC_API(2,0) AlternativeName final : public ASN1_Object
       bool has_field(const std::string& attr) const;
       std::vector<std::string> get_attribute(const std::string& attr) const;
 
+      std::string get_first_attribute(const std::string& attr) const;
+
       void add_attribute(const std::string& type, const std::string& value);
       void add_othername(const OID& oid, const std::string& value, ASN1_Tag type);
 

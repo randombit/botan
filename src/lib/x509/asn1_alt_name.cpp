@@ -98,6 +98,15 @@ bool AlternativeName::has_field(const std::string& attr) const
    return (range.first != range.second);
    }
 
+std::string AlternativeName::get_first_attribute(const std::string& attr) const
+   {
+   auto i = m_alt_info.lower_bound(attr);
+   if(i != m_alt_info.end() && i->first == attr)
+      return i->second;
+
+   return "";
+   }
+
 std::vector<std::string> AlternativeName::get_attribute(const std::string& attr) const
    {
    std::vector<std::string> results;

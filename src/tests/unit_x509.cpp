@@ -538,6 +538,11 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    result.test_eq("issuer info Orga", user1_issuer_dn.get_first_attribute("O"), ca_opts().organization);
    result.test_eq("issuer info OrgaUnit", user1_issuer_dn.get_first_attribute("OU"), ca_opts().org_unit);
 
+   const Botan::AlternativeName& user1_altname = user1_cert.subject_alt_name();
+   result.test_eq("subject alt email", user1_altname.get_first_attribute("RFC822"), "testing@randombit.net");
+   result.test_eq("subject alt email", user1_altname.get_first_attribute("DNS"), "botan.randombit.net");
+   result.test_eq("subject alt email", user1_altname.get_first_attribute("URI"), "https://botan.randombit.net");
+
    const Botan::X509_CRL crl1 = ca.new_crl(Test::rng());
 
    /* Verify the certs */
