@@ -8,10 +8,11 @@
 
 #include <botan/x509_ext.h>
 #include <botan/x509cert.h>
-#include <botan/sha160.h>
+#include <botan/datastor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
+#include <botan/hash.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 #include <sstream>
@@ -19,65 +20,84 @@
 namespace Botan {
 
 /*
-* List of X.509 Certificate Extensions
+* Create a Certificate_Extension object of some kind to handle
 */
-Certificate_Extension* Extensions::create_extension(const OID& oid, bool critical)
+Certificate_Extension*
+Extensions::create_extn_obj(const OID& oid,
+                            bool critical,
+                            const std::vector<uint8_t>& body)
    {
-#define X509_EXTENSION(NAME, TYPE) \
-   if(oid == OIDS::lookup(NAME)) { return new Cert_Extension::TYPE(); }
+   const std::string oid_str = oid.as_string();
 
-   X509_EXTENSION("X509v3.KeyUsage", Key_Usage);
-   X509_EXTENSION("X509v3.BasicConstraints", Basic_Constraints);
-   X509_EXTENSION("X509v3.SubjectKeyIdentifier", Subject_Key_ID);
-   X509_EXTENSION("X509v3.AuthorityKeyIdentifier", Authority_Key_ID);
-   X509_EXTENSION("X509v3.ExtendedKeyUsage", Extended_Key_Usage);
-   X509_EXTENSION("X509v3.IssuerAlternativeName", Issuer_Alternative_Name);
-   X509_EXTENSION("X509v3.SubjectAlternativeName", Subject_Alternative_Name);
-   X509_EXTENSION("X509v3.NameConstraints", Name_Constraints);
-   X509_EXTENSION("X509v3.CertificatePolicies", Certificate_Policies);
-   X509_EXTENSION("X509v3.CRLDistributionPoints", CRL_Distribution_Points);
-   X509_EXTENSION("PKIX.AuthorityInformationAccess", Authority_Information_Access);
-   X509_EXTENSION("X509v3.CRLNumber", CRL_Number);
-   X509_EXTENSION("X509v3.ReasonCode", CRL_ReasonCode);
+   Certificate_Extension* extn = nullptr;
 
-   return critical ? new Cert_Extension::Unknown_Critical_Extension(oid) : nullptr;
-   }
+   if(oid == Cert_Extension::Subject_Key_ID::static_oid())
+      {
+      extn = new Cert_Extension::Subject_Key_ID;
+      }
+   else if(oid == Cert_Extension::Key_Usage::static_oid())
+      {
+      extn = new Cert_Extension::Key_Usage;
+      }
+   else if(oid == Cert_Extension::Subject_Alternative_Name::static_oid())
+      {
+      extn = new Cert_Extension::Subject_Alternative_Name;
+      }
+   else if(oid == Cert_Extension::Issuer_Alternative_Name::static_oid())
+      {
+      extn = new Cert_Extension::Issuer_Alternative_Name;
+      }
+   else if(oid == Cert_Extension::Basic_Constraints::static_oid())
+      {
+      extn = new Cert_Extension::Basic_Constraints;
+      }
+   else if(oid == Cert_Extension::CRL_Number::static_oid())
+      {
+      extn = new Cert_Extension::CRL_Number;
+      }
+   else if(oid == Cert_Extension::CRL_ReasonCode::static_oid())
+      {
+      extn = new Cert_Extension::CRL_ReasonCode;
+      }
+   else if(oid == Cert_Extension::Authority_Key_ID::static_oid())
+      {
+      extn = new Cert_Extension::Authority_Key_ID;
+      }
+   else if(oid == Cert_Extension::Name_Constraints::static_oid())
+      {
+      extn = new Cert_Extension::Name_Constraints;
+      }
+   else if(oid == Cert_Extension::CRL_Distribution_Points::static_oid())
+      {
+      extn = new Cert_Extension::CRL_Distribution_Points;
+      }
+   else if(oid == Cert_Extension::Certificate_Policies::static_oid())
+      {
+      extn = new Cert_Extension::Certificate_Policies;
+      }
+   else if(oid == Cert_Extension::Extended_Key_Usage::static_oid())
+      {
+      extn = new Cert_Extension::Extended_Key_Usage;
+      }
+   else if(oid == Cert_Extension::Authority_Information_Access::static_oid())
+      {
+      extn = new Cert_Extension::Authority_Information_Access;
+      }
+   else
+      {
+      // some other unknown extension type
+      extn = new Cert_Extension::Unknown_Extension(oid, critical);
+      }
 
-/*
-* Extensions Copy Constructor
-*/
-Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
-   {
-   *this = extensions;
-   }
-
-/*
-* Extensions Assignment Operator
-*/
-Extensions& Extensions::operator=(const Extensions& other)
-   {
-   if(this == &other)
-      return *this;
-
-   m_extensions.clear();
-
-   for(size_t i = 0; i != other.m_extensions.size(); ++i)
-      m_extensions.push_back(
-         std::make_pair(std::unique_ptr<Certificate_Extension>(other.m_extensions[i].first->copy()),
-                        other.m_extensions[i].second));
-
-   m_extensions_raw = other.m_extensions_raw;
-   m_throw_on_unknown_critical = other.m_throw_on_unknown_critical;
-
-   return (*this);
-   }
-
-/*
-* Return the OID of this extension
-*/
-OID Certificate_Extension::oid_of() const
-   {
-   return OIDS::lookup(oid_name());
+   try
+      {
+      extn->decode_inner(body);
+      }
+   catch(Decoding_Error& e)
+      {
+      throw Decoding_Error("Decoding X.509 extension " + oid.as_string() + " failed", e.what());
+      }
+   return extn;
    }
 
 /*
@@ -90,67 +110,87 @@ void Certificate_Extension::validate(const X509_Certificate&, const X509_Certifi
    {
    }
 
+/*
+* Add a new cert
+*/
 void Extensions::add(Certificate_Extension* extn, bool critical)
    {
    // sanity check: we don't want to have the same extension more than once
-   for(const auto& ext : m_extensions)
-      {
-      if(ext.first->oid_of() == extn->oid_of())
-         {
-         throw Invalid_Argument(extn->oid_name() + " extension already present");
-         }
-      }
+   if(m_extension_info.count(extn->oid_of()) > 0)
+      throw Invalid_Argument(extn->oid_name() + " extension already present in Extensions::add");
 
-   if(m_extensions_raw.count(extn->oid_of()) > 0)
-      {
-      throw Invalid_Argument(extn->oid_name() + " extension already present");
-      }
-
-   m_extensions.push_back(std::make_pair(std::unique_ptr<Certificate_Extension>(extn), critical));
-   m_extensions_raw.emplace(extn->oid_of(), std::make_pair(extn->encode_inner(), critical));
+   const OID oid = extn->oid_of();
+   Extensions_Info info(critical, extn);
+   m_extension_oids.push_back(oid);
+   m_extension_info.emplace(oid, info);
    }
 
 void Extensions::replace(Certificate_Extension* extn, bool critical)
    {
-   for(auto it = m_extensions.begin(); it != m_extensions.end(); ++it)
-      {
-      if(it->first->oid_of() == extn->oid_of())
-         {
-         m_extensions.erase(it);
-         break;
-         }
-      }
+   // Remove it if it existed
+   m_extension_info.erase(extn->oid_of());
 
-   m_extensions.push_back(std::make_pair(std::unique_ptr<Certificate_Extension>(extn), critical));
-   m_extensions_raw[extn->oid_of()] = std::make_pair(extn->encode_inner(), critical);
+   const OID oid = extn->oid_of();
+   Extensions_Info info(critical, extn);
+   m_extension_oids.push_back(oid);
+   m_extension_info.emplace(oid, info);
+   }
+
+bool Extensions::extension_set(const OID& oid) const
+   {
+   return (m_extension_info.find(oid) != m_extension_info.end());
+   }
+
+bool Extensions::critical_extension_set(const OID& oid) const
+   {
+   auto i = m_extension_info.find(oid);
+   if(i != m_extension_info.end())
+      return i->second.is_critical();
+   return false;
+   }
+
+const Certificate_Extension* Extensions::get_extension_object(const OID& oid) const
+   {
+   auto extn = m_extension_info.find(oid);
+   if(extn == m_extension_info.end())
+      return nullptr;
+
+   return &extn->second.obj();
    }
 
 std::unique_ptr<Certificate_Extension> Extensions::get(const OID& oid) const
    {
-   for(auto& ext : m_extensions)
+   if(const Certificate_Extension* ext = this->get_extension_object(oid))
       {
-      if(ext.first->oid_of() == oid)
-         {
-         return std::unique_ptr<Certificate_Extension>(ext.first->copy());
-         }
+      return std::unique_ptr<Certificate_Extension>(ext->copy());
       }
-
    return nullptr;
    }
 
 std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> Extensions::extensions() const
    {
    std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> exts;
-   for(auto& ext : m_extensions)
+   for(auto&& ext : m_extension_info)
       {
-      exts.push_back(std::make_pair(std::unique_ptr<Certificate_Extension>(ext.first->copy()), ext.second));
+      exts.push_back(
+         std::make_pair(
+            std::unique_ptr<Certificate_Extension>(ext.second.obj().copy()),
+            ext.second.is_critical())
+         );
       }
    return exts;
    }
 
 std::map<OID, std::pair<std::vector<uint8_t>, bool>> Extensions::extensions_raw() const
    {
-   return m_extensions_raw;
+   std::map<OID, std::pair<std::vector<uint8_t>, bool>> out;
+   for(auto&& ext : m_extension_info)
+      {
+      out.emplace(ext.first,
+                  std::make_pair(ext.second.bits(),
+                                 ext.second.is_critical()));
+      }
+   return out;
    }
 
 /*
@@ -158,44 +198,20 @@ std::map<OID, std::pair<std::vector<uint8_t>, bool>> Extensions::extensions_raw(
 */
 void Extensions::encode_into(DER_Encoder& to_object) const
    {
-   // encode any known extensions
-   for(size_t i = 0; i != m_extensions.size(); ++i)
+   for(auto ext_info : m_extension_info)
       {
-      const Certificate_Extension* ext = m_extensions[i].first.get();
-      const bool is_critical = m_extensions[i].second;
-
-      const bool should_encode = ext->should_encode();
+      const OID& oid = ext_info.first;
+      const bool should_encode = ext_info.second.obj().should_encode();
 
       if(should_encode)
          {
-         to_object.start_cons(SEQUENCE)
-               .encode(ext->oid_of())
-               .encode_optional(is_critical, false)
-               .encode(ext->encode_inner(), OCTET_STRING)
-            .end_cons();
-         }
-      }
+         const bool is_critical = ext_info.second.is_critical();
+         const std::vector<uint8_t>& ext_value = ext_info.second.bits();
 
-   // encode any unknown extensions
-   for(const auto& ext_raw : m_extensions_raw)
-      {
-      const bool is_critical = ext_raw.second.second;
-      const OID oid = ext_raw.first;
-      const std::vector<uint8_t> value = ext_raw.second.first;
-
-      auto pos = std::find_if(std::begin(m_extensions), std::end(m_extensions),
-            [&oid](const std::pair<std::unique_ptr<Certificate_Extension>, bool>& ext) -> bool
-            {
-            return ext.first->oid_of() == oid;
-            });
-
-      if(pos == std::end(m_extensions))
-         {
-         // not found in m_extensions, must be unknown
          to_object.start_cons(SEQUENCE)
                .encode(oid)
                .encode_optional(is_critical, false)
-               .encode(value, OCTET_STRING)
+               .encode(ext_value, OCTET_STRING)
             .end_cons();
          }
       }
@@ -206,47 +222,29 @@ void Extensions::encode_into(DER_Encoder& to_object) const
 */
 void Extensions::decode_from(BER_Decoder& from_source)
    {
-   m_extensions.clear();
-   m_extensions_raw.clear();
+   m_extension_oids.clear();
+   m_extension_info.clear();
 
    BER_Decoder sequence = from_source.start_cons(SEQUENCE);
 
    while(sequence.more_items())
       {
       OID oid;
-      std::vector<uint8_t> value;
       bool critical;
+      std::vector<uint8_t> bits;
 
       sequence.start_cons(SEQUENCE)
-            .decode(oid)
-            .decode_optional(critical, BOOLEAN, UNIVERSAL, false)
-            .decode(value, OCTET_STRING)
-         .end_cons();
+         .decode(oid)
+         .decode_optional(critical, BOOLEAN, UNIVERSAL, false)
+         .decode(bits, OCTET_STRING)
+      .end_cons();
 
-      m_extensions_raw.emplace(oid, std::make_pair(value, critical));
+      Extensions_Info info(critical, bits,
+                           create_extn_obj(oid, critical, bits));
 
-      std::unique_ptr<Certificate_Extension> ext(create_extension(oid, critical));
-
-      if(!ext && critical && m_throw_on_unknown_critical)
-         throw Decoding_Error("Encountered unknown X.509 extension marked "
-                              "as critical; OID = " + oid.as_string());
-
-      if(ext)
-         {
-         try
-            {
-            ext->decode_inner(value);
-            }
-         catch(std::exception& e)
-            {
-            throw Decoding_Error("Exception while decoding extension " +
-                                 oid.as_string() + ": " + e.what());
-            }
-
-         m_extensions.push_back(std::make_pair(std::move(ext), critical));
-         }
+      m_extension_oids.push_back(oid);
+      m_extension_info.emplace(oid, info);
       }
-
    sequence.verify_end();
    }
 
@@ -256,13 +254,13 @@ void Extensions::decode_from(BER_Decoder& from_source)
 void Extensions::contents_to(Data_Store& subject_info,
                              Data_Store& issuer_info) const
    {
-   for(size_t i = 0; i != m_extensions.size(); ++i)
+   for(auto&& m_extn_info : m_extension_info)
       {
-      m_extensions[i].first->contents_to(subject_info, issuer_info);
-      subject_info.add(m_extensions[i].first->oid_name() + ".is_critical", (m_extensions[i].second ? 1 : 0));
+      m_extn_info.second.obj().contents_to(subject_info, issuer_info);
+      subject_info.add(m_extn_info.second.obj().oid_name() + ".is_critical",
+                       m_extn_info.second.is_critical());
       }
    }
-
 
 namespace Cert_Extension {
 
@@ -402,8 +400,15 @@ void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
 /*
 * Subject_Key_ID Constructor
 */
-Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key) : m_key_id(unlock(SHA_160().process(pub_key)))
-   {}
+Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key, const std::string& hash_name)
+   {
+   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_name));
+
+   m_key_id.resize(hash->output_length());
+
+   hash->update(pub_key);
+   hash->final(m_key_id.data());
+   }
 
 /*
 * Encode the extension
@@ -439,7 +444,15 @@ void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
 /*
 * Encode the extension
 */
-std::vector<uint8_t> Alternative_Name::encode_inner() const
+std::vector<uint8_t> Subject_Alternative_Name::encode_inner() const
+   {
+   return DER_Encoder().encode(m_alt_name).get_contents_unlocked();
+   }
+
+/*
+* Encode the extension
+*/
+std::vector<uint8_t> Issuer_Alternative_Name::encode_inner() const
    {
    return DER_Encoder().encode(m_alt_name).get_contents_unlocked();
    }
@@ -447,7 +460,15 @@ std::vector<uint8_t> Alternative_Name::encode_inner() const
 /*
 * Decode the extension
 */
-void Alternative_Name::decode_inner(const std::vector<uint8_t>& in)
+void Subject_Alternative_Name::decode_inner(const std::vector<uint8_t>& in)
+   {
+   BER_Decoder(in).decode(m_alt_name);
+   }
+
+/*
+* Decode the extension
+*/
+void Issuer_Alternative_Name::decode_inner(const std::vector<uint8_t>& in)
    {
    BER_Decoder(in).decode(m_alt_name);
    }
@@ -455,45 +476,18 @@ void Alternative_Name::decode_inner(const std::vector<uint8_t>& in)
 /*
 * Return a textual representation
 */
-void Alternative_Name::contents_to(Data_Store& subject_info,
-                                   Data_Store& issuer_info) const
+void Subject_Alternative_Name::contents_to(Data_Store& subject_info,
+                                           Data_Store&) const
    {
-   std::multimap<std::string, std::string> contents =
-      get_alt_name().contents();
-
-   if(m_oid_name_str == "X509v3.SubjectAlternativeName")
-      subject_info.add(contents);
-   else if(m_oid_name_str == "X509v3.IssuerAlternativeName")
-      issuer_info.add(contents);
-   else
-      throw Internal_Error("In Alternative_Name, unknown type " +
-                           m_oid_name_str);
+   subject_info.add(get_alt_name().contents());
    }
 
 /*
-* Alternative_Name Constructor
+* Return a textual representation
 */
-Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
-                                   const std::string& oid_name_str) :
-   m_oid_name_str(oid_name_str),
-   m_alt_name(alt_name)
-   {}
-
-/*
-* Subject_Alternative_Name Constructor
-*/
-Subject_Alternative_Name::Subject_Alternative_Name(
-  const AlternativeName& name) :
-   Alternative_Name(name, "X509v3.SubjectAlternativeName")
+void Issuer_Alternative_Name::contents_to(Data_Store&, Data_Store& issuer_info) const
    {
-   }
-
-/*
-* Issuer_Alternative_Name Constructor
-*/
-Issuer_Alternative_Name::Issuer_Alternative_Name(const AlternativeName& name) :
-   Alternative_Name(name, "X509v3.IssuerAlternativeName")
-   {
+   issuer_info.add(get_alt_name().contents());
    }
 
 /*
@@ -849,20 +843,24 @@ std::vector<uint8_t> CRL_Distribution_Points::encode_inner() const
 
 void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf)
    {
-   BER_Decoder(buf).decode_list(m_distribution_points).verify_end();
-   }
+   BER_Decoder(buf)
+      .decode_list(m_distribution_points)
+      .verify_end();
 
-void CRL_Distribution_Points::contents_to(Data_Store& info, Data_Store&) const
-   {
    for(size_t i = 0; i != m_distribution_points.size(); ++i)
       {
       auto point = m_distribution_points[i].point().contents();
 
       auto uris = point.equal_range("URI");
-
       for(auto uri = uris.first; uri != uris.second; ++uri)
-         info.add("CRL.DistributionPoint", uri->second);
+         m_crl_distribution_urls.push_back(uri->second);
       }
+   }
+
+void CRL_Distribution_Points::contents_to(Data_Store& subject, Data_Store&) const
+   {
+   for(const std::string& crl_url : m_crl_distribution_urls)
+      subject.add("CRL.DistributionPoint", crl_url);
    }
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&) const
@@ -880,17 +878,20 @@ void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder&
       .end_cons().end_cons();
    }
 
-std::vector<uint8_t> Unknown_Critical_Extension::encode_inner() const
+std::vector<uint8_t> Unknown_Extension::encode_inner() const
    {
-   throw Not_Implemented("Unknown_Critical_Extension encoding");
+   return m_bytes;
    }
 
-void Unknown_Critical_Extension::decode_inner(const std::vector<uint8_t>&)
+void Unknown_Extension::decode_inner(const std::vector<uint8_t>& bytes)
    {
+   // Just treat as an opaque blob at this level
+   m_bytes = bytes;
    }
 
-void Unknown_Critical_Extension::contents_to(Data_Store&, Data_Store&) const
+void Unknown_Extension::contents_to(Data_Store&, Data_Store&) const
    {
+   // No information store
    }
 
 }
