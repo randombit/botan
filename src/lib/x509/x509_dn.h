@@ -25,23 +25,29 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
 
-      std::multimap<OID, std::string> get_attributes() const;
-      std::vector<std::string> get_attribute(const std::string&) const;
+      bool has_field(const std::string& attr) const;
+      std::vector<std::string> get_attribute(const std::string& attr) const;
 
+      std::string get_first_attribute(const std::string& attr) const;
+
+      std::multimap<OID, std::string> get_attributes() const;
       std::multimap<std::string, std::string> contents() const;
 
-      void add_attribute(const std::string&, const std::string&);
-      void add_attribute(const OID&, const std::string&);
+      void add_attribute(const std::string& key, const std::string& val);
+      void add_attribute(const OID& oid, const std::string& val);
 
-      static std::string deref_info_field(const std::string&);
+      static std::string deref_info_field(const std::string& key);
 
-      std::vector<uint8_t> get_bits() const;
+      /*
+      * Return the BER encoded data, if any
+      */
+      const std::vector<uint8_t>& get_bits() const;
 
       bool empty() const { return m_dn_info.empty(); }
 
       X509_DN() = default;
-      explicit X509_DN(const std::multimap<OID, std::string>&);
-      explicit X509_DN(const std::multimap<std::string, std::string>&);
+      explicit X509_DN(const std::multimap<OID, std::string>& vals);
+      explicit X509_DN(const std::multimap<std::string, std::string>& vals);
    private:
       std::multimap<OID, ASN1_String> m_dn_info;
       std::vector<uint8_t> m_dn_bits;

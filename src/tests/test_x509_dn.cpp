@@ -6,14 +6,14 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_ASN1)
+#if defined(BOTAN_HAS_CERTIFICATES)
    #include <botan/x509_dn.h>
    #include <botan/ber_dec.h>
 #endif
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_ASN1)
+#if defined(BOTAN_HAS_CERTIFICATES)
 class X509_DN_Comparisons_Tests final : public Text_Based_Test
    {
    public:

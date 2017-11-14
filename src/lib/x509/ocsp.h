@@ -10,6 +10,7 @@
 
 #include <botan/cert_status.h>
 #include <botan/ocsp_types.h>
+#include <botan/x509_dn.h>
 
 namespace Botan {
 
