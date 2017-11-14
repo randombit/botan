@@ -79,7 +79,13 @@ std::multimap<std::string, std::string> X509_DN::contents() const
    {
    std::multimap<std::string, std::string> retval;
    for(auto i = m_dn_info.begin(); i != m_dn_info.end(); ++i)
-      multimap_insert(retval, OIDS::lookup(i->first), i->second.value());
+      {
+      std::string str_value = OIDS::oid2str(i->first);
+
+      if(str_value.empty())
+         str_value = i->first.as_string();
+      multimap_insert(retval, str_value, i->second.value());
+      }
    return retval;
    }
 

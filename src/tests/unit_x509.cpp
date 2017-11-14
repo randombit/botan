@@ -11,6 +11,7 @@
 
    #include <botan/calendar.h>
    #include <botan/pkcs10.h>
+   #include <botan/pkcs8.h>
    #include <botan/x509self.h>
    #include <botan/x509path.h>
    #include <botan/x509_ca.h>
@@ -354,6 +355,30 @@ Test::Result test_x509_dates()
       {
       result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::GENERALIZED_TIME); });
       }
+
+   return result;
+   }
+
+Test::Result test_crl_dn_name()
+   {
+   Test::Result result("CRL DN name");
+
+   // See GH #1252
+
+   const Botan::OID dc_oid("0.9.2342.19200300.100.1.25");
+
+   Botan::X509_Certificate cert(Test::data_file("misc_certs/opcuactt_ca.der"));
+
+   Botan::DataSource_Stream key_input(Test::data_file("misc_certs/opcuactt_ca.pem"));
+   std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(key_input);
+   Botan::X509_CA ca(cert, *key, "SHA-256", Test::rng());
+
+   Botan::X509_CRL crl = ca.new_crl(Test::rng());
+
+   result.confirm("matches issuer cert", crl.issuer_dn() == cert.subject_dn());
+
+   result.confirm("contains DC component",
+                  crl.issuer_dn().get_attributes().count(dc_oid) == 1);
 
    return result;
    }
@@ -1219,6 +1244,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_hashes("ECDSA"));
          results.push_back(test_x509_utf8());
          results.push_back(test_x509_bmpstring());
+         results.push_back(test_crl_dn_name());
 
          return results;
          }
