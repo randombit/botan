@@ -183,7 +183,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
          DER_Encoder().start_cons(SEQUENCE)
             .encode(X509_CRL_VERSION-1)
             .encode(ca_sig_algo)
-            .encode(cert.issuer_dn())
+            .encode(cert.subject_dn())
             .encode(X509_Time(current_time))
             .encode(X509_Time(current_time + next_update))
             .encode_if(revoked.size() > 0,
