@@ -29,6 +29,12 @@ class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
       std::string BOTAN_DEPRECATED("Use value() to get UTF-8 string instead")
          iso_8859() const;
 
+      /**
+      * Return true iff this is a tag for a known string type we can handle.
+      * This ignores string types that are not supported, eg teletexString
+      */
+      static bool is_string_type(ASN1_Tag tag);
+
       explicit ASN1_String(const std::string& utf8 = "");
       ASN1_String(const std::string& utf8, ASN1_Tag tag);
    private:

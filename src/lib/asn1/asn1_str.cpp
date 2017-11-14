@@ -55,14 +55,7 @@ ASN1_Tag choose_encoding(const std::string& str)
 
 void assert_is_string_type(ASN1_Tag tag)
    {
-   if(tag != NUMERIC_STRING &&
-      tag != PRINTABLE_STRING &&
-      tag != VISIBLE_STRING &&
-      tag != T61_STRING &&
-      tag != IA5_STRING &&
-      tag != UTF8_STRING &&
-      tag != BMP_STRING &&
-      tag != UNIVERSAL_STRING)
+   if(!ASN1_String::is_string_type(tag))
       {
       throw Invalid_Argument("ASN1_String: Unknown string type " +
                              std::to_string(tag));
@@ -70,6 +63,20 @@ void assert_is_string_type(ASN1_Tag tag)
    }
 
 }
+
+//static
+bool ASN1_String::is_string_type(ASN1_Tag tag)
+   {
+   return (tag == NUMERIC_STRING ||
+           tag == PRINTABLE_STRING ||
+           tag == VISIBLE_STRING ||
+           tag == T61_STRING ||
+           tag == IA5_STRING ||
+           tag == UTF8_STRING ||
+           tag == BMP_STRING ||
+           tag == UNIVERSAL_STRING);
+   }
+
 
 /*
 * Create an ASN1_String

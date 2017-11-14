@@ -16,24 +16,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*
-* Check if type is a known ASN.1 string type
-*/
-bool is_string_type(ASN1_Tag tag)
-   {
-   return (tag == NUMERIC_STRING ||
-           tag == PRINTABLE_STRING ||
-           tag == VISIBLE_STRING ||
-           tag == T61_STRING ||
-           tag == IA5_STRING ||
-           tag == UTF8_STRING ||
-           tag == BMP_STRING);
-   }
-
-}
-
 /*
 * Create an AlternativeName
 */
@@ -219,8 +201,10 @@ void AlternativeName::decode_from(BER_Decoder& source)
 
             const ASN1_Tag value_type = value.type_tag;
 
-            if(is_string_type(value_type) && value.class_tag == UNIVERSAL)
+            if(ASN1_String::is_string_type(value_type) && value.class_tag == UNIVERSAL)
+               {
                add_othername(oid, ASN1::to_string(value), value_type);
+               }
             }
          }
       else if(tag == 1 || tag == 2 || tag == 6)
