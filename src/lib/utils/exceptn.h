@@ -179,6 +179,8 @@ class BOTAN_PUBLIC_API(2,0) Decoding_Error : public Invalid_Argument
    {
    public:
       explicit Decoding_Error(const std::string& name);
+
+      Decoding_Error(const std::string& name, const char* exception_message);
    };
 
 /**

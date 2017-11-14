@@ -79,6 +79,9 @@ Decoding_Error::Decoding_Error(const std::string& name) :
    Invalid_Argument("Decoding error: " + name)
    {}
 
+Decoding_Error::Decoding_Error(const std::string& name, const char* exception_message) :
+   Invalid_Argument("Decoding error: " + name + " failed with exception " + exception_message) {}
+
 Integrity_Failure::Integrity_Failure(const std::string& msg) :
    Exception("Integrity failure: " + msg)
    {}
