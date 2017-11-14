@@ -25,9 +25,9 @@ namespace Botan {
 X509_CA::X509_CA(const X509_Certificate& c,
                  const Private_Key& key,
                  const std::string& hash_fn,
-                 RandomNumberGenerator& rng) : m_cert(c)
+                 RandomNumberGenerator& rng) : m_ca_cert(c)
    {
-   if(!m_cert.is_CA_cert())
+   if(!m_ca_cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
    m_signer.reset(choose_sig_format(key, rng, hash_fn, m_ca_sig_algo));
