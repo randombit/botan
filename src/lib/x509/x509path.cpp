@@ -47,6 +47,20 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
    if(!cert_path[0]->allowed_usage(usage))
       cert_status[0].insert(Certificate_Status_Code::INVALID_USAGE);
 
+   if(cert_path[0]->is_CA_cert() == false &&
+      cert_path[0]->has_constraints(KEY_CERT_SIGN))
+      {
+      /*
+      "If the keyCertSign bit is asserted, then the cA bit in the
+      basic constraints extension (Section 4.2.1.9) MUST also be
+      asserted." - RFC 5280
+
+      We don't bother doing this check on the rest of the path since they
+      must have the cA bit asserted or the validation will fail anyway.
+      */
+      cert_status[0].insert(Certificate_Status_Code::INVALID_USAGE);
+      }
+
    for(size_t i = 0; i != cert_path.size(); ++i)
       {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
