@@ -68,6 +68,20 @@ class Stream_Cipher_Tests final : public Text_Based_Test
                result.test_success("Trying to encrypt with no key set fails");
                }
 
+            try
+               {
+               cipher->seek(0);
+               result.test_failure("Was able to seek without a key being set");
+               }
+            catch(Botan::Invalid_State&)
+               {
+               result.test_success("Trying to seek with no key set fails");
+               }
+            catch(Botan::Not_Implemented&)
+               {
+               result.test_success("Trying to seek failed because not implemented");
+               }
+
             cipher->set_key(key);
 
             if(nonce.size())

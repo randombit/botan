@@ -174,6 +174,8 @@ void CTR_BE::add_counter(const uint64_t counter)
 
 void CTR_BE::seek(uint64_t offset)
    {
+   verify_key_set(m_iv.empty() == false);
+
    const uint64_t base_counter = m_ctr_blocks * (offset / m_counter.size());
 
    zeroise(m_counter);

@@ -115,6 +115,6 @@ RC4::RC4(size_t s) : m_SKIP(s) {}
 
 void RC4::seek(uint64_t)
    {
-   throw Exception("RC4 does not support seeking");
+   throw Not_Implemented("RC4 does not support seeking");
    }
 }

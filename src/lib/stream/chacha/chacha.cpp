@@ -222,10 +222,7 @@ std::string ChaCha::name() const
 
 void ChaCha::seek(uint64_t offset)
    {
-   if (m_state.size() == 0 && m_buffer.size() == 0)
-      {
-      throw Invalid_State("You have to setup the stream cipher (key and iv)");
-      }
+   verify_key_set(m_state.empty() == false);
 
    // Find the block offset
    uint64_t counter = offset / 64;

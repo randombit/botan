@@ -234,8 +234,23 @@ void Salsa20::clear()
    m_position = 0;
    }
 
-void Salsa20::seek(uint64_t)
+void Salsa20::seek(uint64_t offset)
    {
-   throw Not_Implemented("Salsa20::seek");
+   verify_key_set(m_state.empty() == false);
+
+   // Find the block offset
+   const uint64_t counter = offset / 64;
+   uint8_t counter8[8];
+   store_le(counter, counter8);
+
+   m_state[8]  = load_le<uint32_t>(counter8, 0);
+   m_state[9] += load_le<uint32_t>(counter8, 1);
+
+   salsa20(m_buffer.data(), m_state.data());
+
+   ++m_state[8];
+   m_state[9] += (m_state[8] == 0);
+
+   m_position = offset % 64;
    }
 }
