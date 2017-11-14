@@ -14,6 +14,7 @@
 #include <botan/tls_session_manager.h>
 #include <botan/tls_callbacks.h>
 #include <botan/x509cert.h>
+#include <functional>
 #include <vector>
 #include <string>
 #include <map>

@@ -11,6 +11,7 @@
 
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
+#include <functional>
 
 namespace Botan {
 
