@@ -56,7 +56,7 @@ class OpenSSL_RC4 final : public StreamCipher
 
       void seek(uint64_t) override
          {
-         throw Exception("RC4 does not support seeking");
+         throw Not_Implemented("RC4 does not support seeking");
          }
    private:
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override
