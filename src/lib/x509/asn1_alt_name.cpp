@@ -16,24 +16,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*
-* Check if type is a known ASN.1 string type
-*/
-bool is_string_type(ASN1_Tag tag)
-   {
-   return (tag == NUMERIC_STRING ||
-           tag == PRINTABLE_STRING ||
-           tag == VISIBLE_STRING ||
-           tag == T61_STRING ||
-           tag == IA5_STRING ||
-           tag == UTF8_STRING ||
-           tag == BMP_STRING);
-   }
-
-}
-
 /*
 * Create an AlternativeName
 */
@@ -52,17 +34,17 @@ AlternativeName::AlternativeName(const std::string& email_addr,
 * Add an attribute to an alternative name
 */
 void AlternativeName::add_attribute(const std::string& type,
-                                    const std::string& str)
+                                    const std::string& value)
    {
-   if(type.empty() || str.empty())
+   if(type.empty() || value.empty())
       return;
 
    auto range = m_alt_info.equal_range(type);
    for(auto j = range.first; j != range.second; ++j)
-      if(j->second == str)
+      if(j->second == value)
          return;
 
-   multimap_insert(m_alt_info, type, str);
+   multimap_insert(m_alt_info, type, value);
    }
 
 /*
@@ -74,22 +56,6 @@ void AlternativeName::add_othername(const OID& oid, const std::string& value,
    if(value.empty())
       return;
    multimap_insert(m_othernames, oid, ASN1_String(value, type));
-   }
-
-/*
-* Get the attributes of this alternative name
-*/
-std::multimap<std::string, std::string> AlternativeName::get_attributes() const
-   {
-   return m_alt_info;
-   }
-
-/*
-* Get the otherNames
-*/
-std::multimap<OID, ASN1_String> AlternativeName::get_othernames() const
-   {
-   return m_othernames;
    }
 
 /*
@@ -106,6 +72,30 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
       multimap_insert(names, OIDS::lookup(i->first), i->second.value());
 
    return names;
+   }
+
+bool AlternativeName::has_field(const std::string& attr) const
+   {
+   auto range = m_alt_info.equal_range(attr);
+   return (range.first != range.second);
+   }
+
+std::string AlternativeName::get_first_attribute(const std::string& attr) const
+   {
+   auto i = m_alt_info.lower_bound(attr);
+   if(i != m_alt_info.end() && i->first == attr)
+      return i->second;
+
+   return "";
+   }
+
+std::vector<std::string> AlternativeName::get_attribute(const std::string& attr) const
+   {
+   std::vector<std::string> results;
+   auto range = m_alt_info.equal_range(attr);
+   for(auto i = range.first; i != range.second; ++i)
+      results.push_back(i->second);
+   return results;
    }
 
 /*
@@ -211,8 +201,10 @@ void AlternativeName::decode_from(BER_Decoder& source)
 
             const ASN1_Tag value_type = value.type_tag;
 
-            if(is_string_type(value_type) && value.class_tag == UNIVERSAL)
+            if(ASN1_String::is_string_type(value_type) && value.class_tag == UNIVERSAL)
+               {
                add_othername(oid, ASN1::to_string(value), value_type);
+               }
             }
          }
       else if(tag == 1 || tag == 2 || tag == 6)

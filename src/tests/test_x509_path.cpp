@@ -182,55 +182,63 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
 
    for(auto i = expected.begin(); i != expected.end(); ++i)
       {
-      const std::string test_name = i->first;
-      const std::string expected_result = i->second;
-
-      const std::string test_dir = nist_test_dir + "/" + test_name;
-
       Test::Result result("NIST path validation");
       result.start_timer();
 
-      const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
+      const std::string test_name = i->first;
 
-      if(all_files.empty())
+      try
          {
-         result.test_failure("No test files found in " + test_dir);
-         results.push_back(result);
-         continue;
+         const std::string expected_result = i->second;
+
+         const std::string test_dir = nist_test_dir + "/" + test_name;
+
+         const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
+
+         if(all_files.empty())
+            {
+            result.test_failure("No test files found in " + test_dir);
+            results.push_back(result);
+            continue;
+            }
+
+         Botan::Certificate_Store_In_Memory store;
+
+         store.add_certificate(root_cert);
+         store.add_crl(root_crl);
+
+         for(auto const& file : all_files)
+            {
+            if(file.find(".crt") != std::string::npos && file != "end.crt")
+               {
+               store.add_certificate(Botan::X509_Certificate(file));
+               }
+            else if(file.find(".crl") != std::string::npos)
+               {
+               Botan::DataSource_Stream in(file, true);
+               Botan::X509_CRL crl(in);
+               store.add_crl(crl);
+               }
+            }
+
+         Botan::X509_Certificate end_user(test_dir + "/end.crt");
+
+         // 1024 bit root cert
+         Botan::Path_Validation_Restrictions restrictions(true, 80);
+
+         Botan::Path_Validation_Result validation_result =
+            Botan::x509_path_validate(end_user,
+                                      restrictions,
+                                      store);
+
+         result.test_eq(test_name + " path validation result",
+                        validation_result.result_string(),
+                        expected_result);
          }
-
-      Botan::Certificate_Store_In_Memory store;
-
-      store.add_certificate(root_cert);
-      store.add_crl(root_crl);
-
-      for(auto const& file : all_files)
+      catch(std::exception& e)
          {
-         if(file.find(".crt") != std::string::npos && file != "end.crt")
-            {
-            store.add_certificate(Botan::X509_Certificate(file));
-            }
-         else if(file.find(".crl") != std::string::npos)
-            {
-            Botan::DataSource_Stream in(file, true);
-            Botan::X509_CRL crl(in);
-            store.add_crl(crl);
-            }
+         result.test_failure(test_name, e.what());
          }
-
-      Botan::X509_Certificate end_user(test_dir + "/end.crt");
-
-      // 1024 bit root cert
-      Botan::Path_Validation_Restrictions restrictions(true, 80);
-
-      Botan::Path_Validation_Result validation_result =
-         Botan::x509_path_validate(end_user,
-                                   restrictions,
-                                   store);
-
-      result.test_eq(test_name + " path validation result",
-                     validation_result.result_string(),
-                     expected_result);
 
       result.end_timer();
       results.push_back(result);

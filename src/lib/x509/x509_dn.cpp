@@ -79,8 +79,32 @@ std::multimap<std::string, std::string> X509_DN::contents() const
    {
    std::multimap<std::string, std::string> retval;
    for(auto i = m_dn_info.begin(); i != m_dn_info.end(); ++i)
-      multimap_insert(retval, OIDS::lookup(i->first), i->second.value());
+      {
+      std::string str_value = OIDS::oid2str(i->first);
+
+      if(str_value.empty())
+         str_value = i->first.as_string();
+      multimap_insert(retval, str_value, i->second.value());
+      }
    return retval;
+   }
+
+bool X509_DN::has_field(const std::string& attr) const
+   {
+   const OID oid = OIDS::lookup(deref_info_field(attr));
+   auto range = m_dn_info.equal_range(oid);
+   return (range.first != range.second);
+   }
+
+std::string X509_DN::get_first_attribute(const std::string& attr) const
+   {
+   const OID oid = OIDS::lookup(deref_info_field(attr));
+
+   auto i = m_dn_info.lower_bound(oid);
+   if(i != m_dn_info.end() && i->first == oid)
+      return i->second.value();
+
+   return "";
    }
 
 /*
@@ -98,10 +122,7 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    return values;
    }
 
-/*
-* Return the BER encoded data, if any
-*/
-std::vector<uint8_t> X509_DN::get_bits() const
+const std::vector<uint8_t>& X509_DN::get_bits() const
    {
    return m_dn_bits;
    }
@@ -277,6 +298,9 @@ std::string to_short_form(const std::string& long_id)
    {
    if(long_id == "X520.CommonName")
       return "CN";
+
+   if(long_id == "X520.Country")
+      return "C";
 
    if(long_id == "X520.Organization")
       return "O";

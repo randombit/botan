@@ -299,13 +299,11 @@ void X509_Object::do_decode()
       }
    catch(Decoding_Error& e)
       {
-      throw Decoding_Error(m_PEM_label_pref + " decoding failed (" +
-                           e.what() + ")");
+      throw Decoding_Error(m_PEM_label_pref + " decoding failed", e.what());
       }
    catch(Invalid_Argument& e)
       {
-      throw Decoding_Error(m_PEM_label_pref + " decoding failed (" +
-                           e.what() + ")");
+      throw Decoding_Error(m_PEM_label_pref + " decoding failed", e.what());
       }
    }
 

@@ -1,6 +1,6 @@
 /*
 * PKCS #10
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,6 +13,15 @@
 #include <botan/pem.h>
 
 namespace Botan {
+
+struct PKCS10_Data
+   {
+   X509_DN m_subject_dn;
+   std::vector<uint8_t> m_public_key_bits;
+   AlternativeName m_alt_name;
+   std::string m_challenge;
+   Extensions m_extensions;
+   };
 
 /*
 * PKCS10_Request Constructor
@@ -46,9 +55,13 @@ PKCS10_Request::PKCS10_Request(const std::vector<uint8_t>& in) :
 /*
 * Decode the CertificateRequestInfo
 */
-void PKCS10_Request::force_decode()
+namespace {
+
+std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
    {
-   BER_Decoder cert_req_info(signed_body());
+   std::unique_ptr<PKCS10_Data> data(new PKCS10_Data);
+
+   BER_Decoder cert_req_info(body);
 
    size_t version;
    cert_req_info.decode(version);
@@ -56,24 +69,18 @@ void PKCS10_Request::force_decode()
       throw Decoding_Error("Unknown version code in PKCS #10 request: " +
                            std::to_string(version));
 
-   X509_DN dn_subject;
-   cert_req_info.decode(dn_subject);
-
-   m_info.add(dn_subject.contents());
+   cert_req_info.decode(data->m_subject_dn);
 
    BER_Object public_key = cert_req_info.get_next_object();
    if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
       throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key",
                         public_key.type_tag, public_key.class_tag);
 
-   m_info.add("X509.Certificate.public_key",
-            PEM_Code::encode(
-               ASN1::put_in_sequence(unlock(public_key.value)),
-               "PUBLIC KEY"
-               )
-      );
+   data->m_public_key_bits = ASN1::put_in_sequence(unlock(public_key.value));
 
    BER_Object attr_bits = cert_req_info.get_next_object();
+
+   std::set<std::string> pkcs9_email;
 
    if(attr_bits.type_tag == 0 &&
       attr_bits.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
@@ -83,7 +90,24 @@ void PKCS10_Request::force_decode()
          {
          Attribute attr;
          attributes.decode(attr);
-         handle_attribute(attr);
+         BER_Decoder value(attr.parameters);
+
+         if(attr.oid == OIDS::lookup("PKCS9.EmailAddress"))
+            {
+            ASN1_String email;
+            value.decode(email);
+            pkcs9_email.insert(email.value());
+            }
+         else if(attr.oid == OIDS::lookup("PKCS9.ChallengePassword"))
+            {
+            ASN1_String challenge_password;
+            value.decode(challenge_password);
+            data->m_challenge = challenge_password.value();
+            }
+         else if(attr.oid == OIDS::lookup("PKCS9.ExtensionRequest"))
+            {
+            value.decode(data->m_extensions).verify_end();
+            }
          }
       attributes.verify_end();
       }
@@ -93,33 +117,38 @@ void PKCS10_Request::force_decode()
 
    cert_req_info.verify_end();
 
+   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>())
+      {
+      data->m_alt_name = ext->get_alt_name();
+      }
+
+   for(std::string email : pkcs9_email)
+      {
+      data->m_alt_name.add_attribute("RFC882", email);
+      }
+
+   return data;
+   }
+
+}
+
+void PKCS10_Request::force_decode()
+   {
+   m_data.reset();
+
+   std::unique_ptr<PKCS10_Data> data = decode_pkcs10(signed_body());
+
+   m_data.reset(data.release());
+
    if(!this->check_signature(subject_public_key()))
       throw Decoding_Error("PKCS #10 request: Bad signature detected");
    }
 
-/*
-* Handle attributes in a PKCS #10 request
-*/
-void PKCS10_Request::handle_attribute(const Attribute& attr)
+const PKCS10_Data& PKCS10_Request::data() const
    {
-   BER_Decoder value(attr.parameters);
-
-   if(attr.oid == OIDS::lookup("PKCS9.EmailAddress"))
-      {
-      ASN1_String email;
-      value.decode(email);
-      m_info.add("RFC822", email.value());
-      }
-   else if(attr.oid == OIDS::lookup("PKCS9.ChallengePassword"))
-      {
-      ASN1_String challenge_password;
-      value.decode(challenge_password);
-      m_info.add("PKCS9.ChallengePassword", challenge_password.value());
-      }
-   else if(attr.oid == OIDS::lookup("PKCS9.ExtensionRequest"))
-      {
-      value.decode(m_extensions).verify_end();
-      }
+   if(m_data == nullptr)
+      throw Decoding_Error("PKCS10_Request decoding failed");
+   return *m_data.get();
    }
 
 /*
@@ -127,24 +156,23 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
 */
 std::string PKCS10_Request::challenge_password() const
    {
-   return m_info.get1("PKCS9.ChallengePassword");
+   return data().m_challenge;
    }
 
 /*
 * Return the name of the requestor
 */
-X509_DN PKCS10_Request::subject_dn() const
+const X509_DN& PKCS10_Request::subject_dn() const
    {
-   return create_dn(m_info);
+   return data().m_subject_dn;
    }
 
 /*
 * Return the public key of the requestor
 */
-std::vector<uint8_t> PKCS10_Request::raw_public_key() const
+const std::vector<uint8_t>& PKCS10_Request::raw_public_key() const
    {
-   DataSource_Memory source(m_info.get1("X509.Certificate.public_key"));
-   return unlock(PEM_Code::decode_check_label(source, "PUBLIC KEY"));
+   return data().m_public_key_bits;
    }
 
 /*
@@ -152,16 +180,24 @@ std::vector<uint8_t> PKCS10_Request::raw_public_key() const
 */
 Public_Key* PKCS10_Request::subject_public_key() const
    {
-   DataSource_Memory source(m_info.get1("X509.Certificate.public_key"));
+   DataSource_Memory source(raw_public_key());
    return X509::load_key(source);
    }
 
 /*
 * Return the alternative names of the requestor
 */
-AlternativeName PKCS10_Request::subject_alt_name() const
+const AlternativeName& PKCS10_Request::subject_alt_name() const
    {
-   return create_alt_name(m_info);
+   return data().m_alt_name;
+   }
+
+/*
+* Return the X509v3 extensions
+*/
+const Extensions& PKCS10_Request::extensions() const
+   {
+   return data().m_extensions;
    }
 
 /*
@@ -169,7 +205,7 @@ AlternativeName PKCS10_Request::subject_alt_name() const
 */
 Key_Constraints PKCS10_Request::constraints() const
    {
-   if(auto ext = m_extensions.get(OIDS::lookup("X509v3.KeyUsage")))
+   if(auto ext = extensions().get(OIDS::lookup("X509v3.KeyUsage")))
       {
       return dynamic_cast<Cert_Extension::Key_Usage&>(*ext).get_constraints();
       }
@@ -182,7 +218,7 @@ Key_Constraints PKCS10_Request::constraints() const
 */
 std::vector<OID> PKCS10_Request::ex_constraints() const
    {
-   if(auto ext = m_extensions.get(OIDS::lookup("X509v3.ExtendedKeyUsage")))
+   if(auto ext = extensions().get(OIDS::lookup("X509v3.ExtendedKeyUsage")))
       {
       return dynamic_cast<Cert_Extension::Extended_Key_Usage&>(*ext).get_oids();
       }
@@ -195,7 +231,7 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
 */
 bool PKCS10_Request::is_CA() const
    {
-   if(auto ext = m_extensions.get(OIDS::lookup("X509v3.BasicConstraints")))
+   if(auto ext = extensions().get(OIDS::lookup("X509v3.BasicConstraints")))
       {
       return dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext).get_is_ca();
       }
@@ -208,7 +244,7 @@ bool PKCS10_Request::is_CA() const
 */
 size_t PKCS10_Request::path_limit() const
    {
-   if(auto ext = m_extensions.get(OIDS::lookup("X509v3.BasicConstraints")))
+   if(auto ext = extensions().get(OIDS::lookup("X509v3.BasicConstraints")))
       {
       Cert_Extension::Basic_Constraints& basic_constraints = dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext);
       if(basic_constraints.get_is_ca())
@@ -218,14 +254,6 @@ size_t PKCS10_Request::path_limit() const
       }
 
    return 0;
-   }
-
-/*
-* Return the X509v3 extensions
-*/
-Extensions PKCS10_Request::extensions() const
-   {
-   return m_extensions;
    }
 
 }

@@ -14,24 +14,28 @@
 
 namespace Botan {
 
-/*
-* Create a CRL_Entry
-*/
-CRL_Entry::CRL_Entry(bool t_on_unknown_crit) :
-   m_throw_on_unknown_critical(t_on_unknown_crit)
+struct CRL_Entry_Data
    {
-   m_reason = UNSPECIFIED;
-   }
+   std::vector<uint8_t> m_serial;
+   X509_Time m_time;
+   CRL_Code m_reason;
+   Extensions m_extensions;
+   };
 
 /*
 * Create a CRL_Entry
 */
-CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) :
-   m_throw_on_unknown_critical(false)
+CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why)
    {
-   m_serial = cert.serial_number();
-   m_time = X509_Time(std::chrono::system_clock::now());
-   m_reason = why;
+   m_data.reset(new CRL_Entry_Data);
+   m_data->m_serial = cert.serial_number();
+   m_data->m_time = X509_Time(std::chrono::system_clock::now());
+   m_data->m_reason = why;
+
+   if(why != UNSPECIFIED)
+      {
+      m_data->m_extensions.add(new Cert_Extension::CRL_ReasonCode(why));
+      }
    }
 
 /*
@@ -61,17 +65,13 @@ bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2)
 */
 void CRL_Entry::encode_into(DER_Encoder& der) const
    {
-   Extensions extensions;
-
-   extensions.add(new Cert_Extension::CRL_ReasonCode(m_reason));
-
    der.start_cons(SEQUENCE)
-      .encode(BigInt::decode(m_serial))
-         .encode(m_time)
-         .start_cons(SEQUENCE)
-            .encode(extensions)
-          .end_cons()
-      .end_cons();
+      .encode(BigInt::decode(serial_number()))
+      .encode(expire_time())
+      .start_cons(SEQUENCE)
+         .encode(extensions())
+      .end_cons()
+   .end_cons();
    }
 
 /*
@@ -80,24 +80,58 @@ void CRL_Entry::encode_into(DER_Encoder& der) const
 void CRL_Entry::decode_from(BER_Decoder& source)
    {
    BigInt serial_number_bn;
-   m_reason = UNSPECIFIED;
+
+   std::unique_ptr<CRL_Entry_Data> data(new CRL_Entry_Data);
 
    BER_Decoder entry = source.start_cons(SEQUENCE);
 
-   entry.decode(serial_number_bn).decode(m_time);
+   entry.decode(serial_number_bn).decode(data->m_time);
+   data->m_serial = BigInt::encode(serial_number_bn);
 
    if(entry.more_items())
       {
-      Extensions extensions(m_throw_on_unknown_critical);
-      entry.decode(extensions);
-      Data_Store info;
-      extensions.contents_to(info, info);
-      m_reason = CRL_Code(info.get1_uint32("X509v3.CRLReasonCode"));
+      entry.decode(data->m_extensions);
+      if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_ReasonCode>())
+         {
+         data->m_reason = ext->get_reason();
+         }
+      else
+         {
+         data->m_reason = UNSPECIFIED;
+         }
       }
 
    entry.end_cons();
 
-   m_serial = BigInt::encode(serial_number_bn);
+   m_data.reset(data.release());
    }
+
+const CRL_Entry_Data& CRL_Entry::data() const
+   {
+   if(!m_data)
+      throw Decoding_Error("Uninitialized CRL_Entry");
+   return *m_data.get();
+   }
+
+const std::vector<uint8_t>& CRL_Entry::serial_number() const
+   {
+   return data().m_serial;
+   }
+
+const X509_Time& CRL_Entry::expire_time() const
+   {
+   return data().m_time;
+   }
+
+CRL_Code CRL_Entry::reason_code() const
+   {
+   return data().m_reason;
+   }
+
+const Extensions& CRL_Entry::extensions() const
+   {
+   return data().m_extensions;
+   }
+
 
 }

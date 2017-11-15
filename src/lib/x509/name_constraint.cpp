@@ -6,6 +6,7 @@
 */
 
 #include <botan/name_constraint.h>
+#include <botan/asn1_alt_name.h>
 #include <botan/ber_dec.h>
 #include <botan/loadstor.h>
 #include <botan/x509_dn.h>
@@ -105,14 +106,18 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
    std::vector<std::string> nam;
    std::function<bool(const GeneralName*, const std::string&)> match_fn;
 
+   const X509_DN& dn = cert.subject_dn();
+   const AlternativeName& alt_name = cert.subject_alt_name();
+
    if(type() == "DNS")
       {
       match_fn = std::mem_fn(&GeneralName::matches_dns);
-      nam = cert.subject_info("DNS");
+
+      nam = alt_name.get_attribute("DNS");
 
       if(nam.empty())
          {
-         nam = cert.subject_info("CN");
+         nam = dn.get_attribute("CN");
          }
       }
    else if(type() == "DN")
@@ -120,13 +125,13 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
       match_fn = std::mem_fn(&GeneralName::matches_dn);
 
       std::stringstream ss;
-      ss << cert.subject_dn();
+      ss << dn;
       nam.push_back(ss.str());
       }
    else if(type() == "IP")
       {
       match_fn = std::mem_fn(&GeneralName::matches_ip);
-      nam = cert.subject_info("IP");
+      nam = alt_name.get_attribute("IP");
       }
    else
       {

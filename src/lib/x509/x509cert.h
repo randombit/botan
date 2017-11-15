@@ -1,6 +1,6 @@
 /*
 * X.509 Certificates
-* (C) 1999-2007,2015 Jack Lloyd
+* (C) 1999-2007,2015,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,16 +9,18 @@
 #define BOTAN_X509_CERTS_H_
 
 #include <botan/x509_obj.h>
-#include <botan/x509_dn.h>
 #include <botan/x509_key.h>
-#include <botan/x509_ext.h>
-#include <botan/asn1_alt_name.h>
-#include <botan/datastor.h>
+#include <botan/asn1_time.h>
 #include <botan/key_constraint.h>
 #include <botan/name_constraint.h>
 #include <memory>
 
 namespace Botan {
+
+class Public_Key;
+class X509_DN;
+class AlternativeName;
+class Extensions;
 
 enum class Usage_Type
    {
@@ -29,33 +31,53 @@ enum class Usage_Type
    OCSP_RESPONDER
    };
 
+struct X509_Certificate_Data;
+
 /**
-* This class represents X.509 Certificate
+* This class represents an X.509 Certificate
 */
 class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
    {
    public:
       /**
-      * Get the public key associated with this certificate.
-      * @return subject public key of this certificate
+      * Return a newly allocated copy of the public key associated
+      * with the subject of this certificate. This object is owned
+      * by the caller.
+      *
+      * @return public key
       */
-      Public_Key* subject_public_key() const;
+      Public_Key* subject_public_key() const
+         {
+         return load_subject_public_key().release();
+         }
 
       /**
-      * Get the public key associated with this certificate.
+      * Create a public key object associated with the public key bits in this
+      * certificate. If the public key bits was valid for X.509 encoding
+      * purposes but invalid algorithmically (for example, RSA with an even
+      * modulus) that will be detected at this point, and an exception will be
+      * thrown.
+      *
       * @return subject public key of this certificate
       */
-      std::vector<uint8_t> subject_public_key_bits() const;
+      std::unique_ptr<Public_Key> load_subject_public_key() const;
+
+      /**
+      * Get the public key associated with this certificate. This includes the
+      * outer AlgorithmIdentifier
+      * @return subject public key of this certificate
+      */
+      const std::vector<uint8_t>& subject_public_key_bits() const;
 
       /**
       * Get the bit string of the public key associated with this certificate
-      * @return subject public key of this certificate
+      * @return public key bits
       */
-      std::vector<uint8_t> subject_public_key_bitstring() const;
+      const std::vector<uint8_t>& subject_public_key_bitstring() const;
 
       /**
       * Get the SHA-1 bit string of the public key associated with this certificate.
-      * This is used for OCSP among other protocols
+      * This is used for OCSP among other protocols.
       * @return hash of subject public key of this certificate
       */
       std::vector<uint8_t> subject_public_key_bitstring_sha1() const;
@@ -64,13 +86,13 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * Get the certificate's issuer distinguished name (DN).
       * @return issuer DN of this certificate
       */
-      X509_DN issuer_dn() const;
+      const X509_DN& issuer_dn() const;
 
       /**
       * Get the certificate's subject distinguished name (DN).
       * @return subject DN of this certificate
       */
-      X509_DN subject_dn() const;
+      const X509_DN& subject_dn() const;
 
       /**
       * Get a value for a specific subject_info parameter name.
@@ -97,9 +119,9 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       std::vector<std::string> issuer_info(const std::string& name) const;
 
       /**
-      * Raw issuer DN
+      * Raw issuer DN bits
       */
-      std::vector<uint8_t> raw_issuer_dn() const;
+      const std::vector<uint8_t>& raw_issuer_dn() const;
 
       /**
       * SHA-256 of Raw issuer DN
@@ -109,7 +131,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       /**
       * Raw subject DN
       */
-      std::vector<uint8_t> raw_subject_dn() const;
+      const std::vector<uint8_t>& raw_subject_dn() const;
 
       /**
       * SHA-256 of Raw subject DN
@@ -117,16 +139,34 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       std::vector<uint8_t> raw_subject_dn_sha256() const;
 
       /**
-      * Get the notBefore of the certificate.
+      * Get the notBefore of the certificate as a string
       * @return notBefore of the certificate
       */
-      std::string start_time() const;
+      std::string BOTAN_DEPRECATED("Use not_before().to_string()") start_time() const
+         {
+         return not_before().to_string();
+         }
 
       /**
-      * Get the notAfter of the certificate.
+      * Get the notAfter of the certificate as a string
       * @return notAfter of the certificate
       */
-      std::string end_time() const;
+      std::string BOTAN_DEPRECATED("Use not_after().to_string()") end_time() const
+         {
+         return not_after().to_string();
+         }
+
+      /**
+      * Get the notBefore of the certificate as X509_Time
+      * @return notBefore of the certificate
+      */
+      const X509_Time& not_before() const;
+
+      /**
+      * Get the notAfter of the certificate as X509_Time
+      * @return notAfter of the certificate
+      */
+      const X509_Time& not_after() const;
 
       /**
       * Get the X509 version of this certificate object.
@@ -138,25 +178,26 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * Get the serial number of this certificate.
       * @return certificates serial number
       */
-      std::vector<uint8_t> serial_number() const;
+      const std::vector<uint8_t>& serial_number() const;
 
       /**
       * Get the DER encoded AuthorityKeyIdentifier of this certificate.
       * @return DER encoded AuthorityKeyIdentifier
       */
-      std::vector<uint8_t> authority_key_id() const;
+      const std::vector<uint8_t>& authority_key_id() const;
 
       /**
       * Get the DER encoded SubjectKeyIdentifier of this certificate.
       * @return DER encoded SubjectKeyIdentifier
       */
-      std::vector<uint8_t> subject_key_id() const;
+      const std::vector<uint8_t>& subject_key_id() const;
 
       /**
       * Check whether this certificate is self signed.
+      * If the DN issuer and subject agree,
       * @return true if this certificate is self signed
       */
-      bool is_self_signed() const { return m_self_signed; }
+      bool is_self_signed() const;
 
       /**
       * Check whether this certificate is a CA certificate.
@@ -181,21 +222,39 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       bool allowed_extended_usage(const std::string& usage) const;
 
       /**
+      * Returns true if the specified usage is set in the extended key usage extension,
+      * or if no extended key usage constraints are set at all.
+      * To check if a certain extended key constraint is set in the certificate
+      * use @see X509_Certificate#has_ex_constraint.
+      */
+      bool allowed_extended_usage(const OID& usage) const;
+
+      /**
       * Returns true if the required key and extended key constraints are set in the certificate
       * for the specified @param usage or if no key constraints are set in both the key usage
       * and extended key usage extension.
       */
       bool allowed_usage(Usage_Type usage) const;
 
-      /// Returns true if the specified @param constraints are included in the key usage extension.
+      /**
+      * Returns true if the specified @param constraints are included in the key
+      * usage extension.
+      */
       bool has_constraints(Key_Constraints constraints) const;
 
       /**
-      * Returns true if and only if @param ex_constraint (referring to an extended key
-      * constraint, eg "PKIX.ServerAuth") is included in the extended
-      * key extension.
+      * Returns true if and only if @param ex_constraint (referring to an
+      * extended key constraint, eg "PKIX.ServerAuth") is included in the
+      * extended key extension.
       */
-      bool has_ex_constraint(const std::string& ex_constraint) const;
+      bool BOTAN_DEPRECATED("Use version taking an OID")
+         has_ex_constraint(const std::string& ex_constraint) const;
+
+      /**
+      * Returns true if and only if OID @param ex_constraint is
+      * included in the extended key extension.
+      */
+      bool has_ex_constraint(const OID& ex_constraint) const;
 
       /**
       * Get the path limit as defined in the BasicConstraints extension of
@@ -222,7 +281,15 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * extension of this certificate.
       * @return key constraints
       */
-      std::vector<std::string> ex_constraints() const;
+      std::vector<std::string>
+         BOTAN_DEPRECATED("Use extended_key_usage") ex_constraints() const;
+
+      /**
+      * Get the key usage as defined in the ExtendedKeyUsage extension
+      * of this certificate, or else an empty vector.
+      * @return key usage
+      */
+      const std::vector<OID>& extended_key_usage() const;
 
       /**
       * Get the name constraints as defined in the NameConstraints
@@ -238,11 +305,28 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       */
       std::vector<std::string> policies() const;
 
+      std::vector<OID> certificate_policy_oids() const;
+
       /**
       * Get all extensions of this certificate.
       * @return certificate extensions
       */
-      Extensions v3_extensions() const;
+      const Extensions& v3_extensions() const;
+
+      /**
+      * Return the v2 issuer key ID. v2 key IDs are almost never used,
+      * instead see v3_subject_key_id.
+      */
+      const std::vector<uint8_t>& v2_issuer_key_id() const;
+
+      /**
+      * Return the v2 subject key ID. v2 key IDs are almost never used,
+      * instead see v3_subject_key_id.
+      */
+      const std::vector<uint8_t>& v2_subject_key_id() const;
+
+      const AlternativeName& subject_alt_name() const;
+      const AlternativeName& issuer_alt_name() const;
 
       /**
       * Return the listed address of an OCSP responder, or empty if not set
@@ -255,7 +339,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       std::string crl_distribution_point() const;
 
       /**
-      * @return a string describing the certificate
+      * @return a free-form string describing the certificate
       */
       std::string to_string() const;
 
@@ -313,13 +397,12 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
    private:
       void force_decode() override;
       friend class X509_CA;
-      friend class BER_Decoder;
 
       X509_Certificate() = default;
 
-      Data_Store m_subject, m_issuer;
-      bool m_self_signed;
-      Extensions m_v3_extensions;
+      const X509_Certificate_Data& data() const;
+
+      std::shared_ptr<X509_Certificate_Data> m_data;
    };
 
 /**
@@ -330,24 +413,6 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
 * false if they are binary identical
 */
 BOTAN_PUBLIC_API(2,0) bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2);
-
-/*
-* Data Store Extraction Operations
-*/
-
-/*
-* Create and populate a X509_DN
-* @param info data store containing DN information
-* @return DN containing attributes from data store
-*/
-BOTAN_PUBLIC_API(2,0) X509_DN create_dn(const Data_Store& info);
-
-/*
-* Create and populate an AlternativeName
-* @param info data store containing AlternativeName information
-* @return AlternativeName containing attributes from data store
-*/
-BOTAN_PUBLIC_API(2,0) AlternativeName create_alt_name(const Data_Store& info);
 
 }
 

@@ -336,13 +336,7 @@ void decode(std::ostream& output,
 
          emit(output, type_name(type_tag), level, length, bit_str);
          }
-      else if(type_tag == Botan::PRINTABLE_STRING ||
-              type_tag == Botan::NUMERIC_STRING ||
-              type_tag == Botan::IA5_STRING ||
-              type_tag == Botan::T61_STRING ||
-              type_tag == Botan::VISIBLE_STRING ||
-              type_tag == Botan::UTF8_STRING ||
-              type_tag == Botan::BMP_STRING)
+      else if(Botan::ASN1_String::is_string_type(type_tag))
          {
          Botan::ASN1_String str;
          data.decode(str);

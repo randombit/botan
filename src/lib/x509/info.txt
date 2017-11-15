@@ -7,4 +7,5 @@ OCSP -> 20161118
 asn1
 pubkey
 sha1
+sha2_32
 </requires>
