@@ -163,9 +163,9 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
             {
             try
                {
-               std::vector<uint8_t> bits;
-               data.decode(bits, type_tag);
-               BER_Decoder inner(bits);
+               std::vector<uint8_t> inner_bits;
+               data.decode(inner_bits, type_tag);
+               BER_Decoder inner(inner_bits);
                decode(output, inner, level + 1); // recurse
                }
             catch(...)

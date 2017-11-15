@@ -5,20 +5,20 @@
 */
 
 #include "fuzzers.h"
-#include <botan/ber_dec.h>
+#include <botan/asn1_print.h>
+#include <fstream>
 
 void fuzz(const uint8_t in[], size_t len)
    {
    try
       {
-      Botan::DataSource_Memory input(in, len);
-      Botan::BER_Decoder dec(input);
-
-      while(dec.more_items())
-         {
-         Botan::BER_Object obj;
-         dec.get_next(obj);
-         }
+      /*
+      * Here we use an uninitialized ofstream so the fuzzer doesn't spend time
+      * on actual output formatting, no memory is allocated, etc.
+      */
+      std::ofstream out;
+      Botan::ASN1_Pretty_Printer printer;
+      printer.print_to_stream(out, in, len);
       }
    catch(Botan::Exception& e) { }
    }
