@@ -295,7 +295,6 @@ const X509_Certificate_Data& X509_Certificate::data() const
    {
    if(m_data == nullptr)
       {
-      abort();
       throw Decoding_Error("Failed to parse X509 certificate");
       }
    return *m_data.get();
