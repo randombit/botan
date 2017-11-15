@@ -48,7 +48,7 @@ std::string ASN1_Pretty_Printer::format_binary(const std::vector<uint8_t>& in) c
          }
       else
          {
-         out << "%" << std::hex << static_cast<int>(c) << std::dec;
+         out << "x" << std::hex << static_cast<int>(c) << std::dec;
          ++unprintable;
          if(unprintable >= in.size() / 4)
             {
@@ -161,11 +161,10 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
          {
          if(m_print_context_specific)
             {
-            std::vector<uint8_t> bits;
-            data.decode(bits, type_tag);
-
             try
                {
+               std::vector<uint8_t> bits;
+               data.decode(bits, type_tag);
                BER_Decoder inner(bits);
                decode(output, inner, level + 1); // recurse
                }
