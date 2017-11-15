@@ -89,7 +89,7 @@ servers for SRP authentication.
                                     const std::string& identifier, \
                                     std::string& group_name, \
                                     BigInt& verifier, \
-                                    std::vector<byte>& salt, \
+                                    std::vector<uint8_t>& salt, \
                                     bool generate_fake_on_unknown)
 
     Returns the SRP verifier information for *identifier* (used by server)

@@ -94,7 +94,7 @@ The standard format for serializing a private key is PKCS #8, the operations
 for which are defined in ``pkcs8.h``. It supports both unencrypted and
 encrypted storage.
 
-.. cpp:function:: secure_vector<byte> PKCS8::BER_encode(const Private_Key& key, \
+.. cpp:function:: secure_vector<uint8_t> PKCS8::BER_encode(const Private_Key& key, \
    RandomNumberGenerator& rng, const std::string& password, const std::string& pbe_algo = "")
 
   Takes any private key object, serializes it, encrypts it using
@@ -125,7 +125,7 @@ Unencrypted serialization is also supported.
   security requirements, always use the versions that encrypt the key based on
   a passphrase, described above.
 
-.. cpp:function:: secure_vector<byte> PKCS8::BER_encode(const Private_Key& key)
+.. cpp:function:: secure_vector<uint8_t> PKCS8::BER_encode(const Private_Key& key)
 
   Serializes the private key and returns the result.
 
@@ -205,13 +205,13 @@ Serializing Public Keys
 
 To import and export public keys, use:
 
-.. cpp:function:: std::vector<byte> X509::BER_encode(const Public_Key& key)
+.. cpp:function:: std::vector<uint8_t> X509::BER_encode(const Public_Key& key)
 
 .. cpp:function:: std::string X509::PEM_encode(const Public_Key& key)
 
 .. cpp:function:: Public_Key* X509::load_key(DataSource& in)
 
-.. cpp:function:: Public_Key* X509::load_key(const secure_vector<byte>& buffer)
+.. cpp:function:: Public_Key* X509::load_key(const secure_vector<uint8_t>& buffer)
 
 .. cpp:function:: Public_Key* X509::load_key(const std::string& filename)
 
@@ -264,7 +264,7 @@ You can generate a new random group using
 
 You can serialize a ``DL_Group`` using
 
-.. cpp:function:: secure_vector<byte> DL_Group::DER_Encode(Format format)
+.. cpp:function:: secure_vector<uint8_t> DL_Group::DER_Encode(Format format)
 
 or
 
@@ -374,11 +374,11 @@ The primary interface for encryption is
 
 .. cpp:class:: PK_Encryptor
 
-   .. cpp:function:: secure_vector<byte> encrypt( \
-         const byte* in, size_t length, RandomNumberGenerator& rng) const
+   .. cpp:function:: secure_vector<uint8_t> encrypt( \
+         const uint8_t* in, size_t length, RandomNumberGenerator& rng) const
 
-   .. cpp:function:: secure_vector<byte> encrypt( \
-      const std::vector<byte>& in, RandomNumberGenerator& rng) const
+   .. cpp:function:: secure_vector<uint8_t> encrypt( \
+      const std::vector<uint8_t>& in, RandomNumberGenerator& rng) const
 
       These encrypt a message, returning the ciphertext.
 
@@ -546,23 +546,23 @@ Signature generation is performed using
      ``DER_SEQUENCE``, which will format the signature as an ASN.1
      SEQUENCE value.
 
-   .. cpp:function:: void update(const byte* in, size_t length)
-   .. cpp:function:: void update(const std::vector<byte>& in)
-   .. cpp:function:: void update(byte in)
+   .. cpp:function:: void update(const uint8_t* in, size_t length)
+   .. cpp:function:: void update(const std::vector<uint8_t>& in)
+   .. cpp:function:: void update(uint8_t in)
 
       These add more data to be included in the signature
       computation. Typically, the input will be provided directly to a
       hash function.
 
-   .. cpp:function:: secure_vector<byte> signature(RandomNumberGenerator& rng)
+   .. cpp:function:: secure_vector<uint8_t> signature(RandomNumberGenerator& rng)
 
       Creates the signature and returns it
 
-   .. cpp:function:: secure_vector<byte> sign_message( \
-      const byte* in, size_t length, RandomNumberGenerator& rng)
+   .. cpp:function:: secure_vector<uint8_t> sign_message( \
+      const uint8_t* in, size_t length, RandomNumberGenerator& rng)
 
-   .. cpp:function:: secure_vector<byte> sign_message( \
-      const std::vector<byte>& in, RandomNumberGenerator& rng)
+   .. cpp:function:: secure_vector<uint8_t> sign_message( \
+      const std::vector<uint8_t>& in, RandomNumberGenerator& rng)
 
       These functions are equivalent to calling
       :cpp:func:`PK_Signer::update` and then
@@ -580,15 +580,15 @@ Signatures are verified using
       key *pub_key*. The *emsa* and *format* should be the same as
       that used by the signer.
 
-   .. cpp:function:: void update(const byte* in, size_t length)
-   .. cpp:function:: void update(const std::vector<byte>& in)
-   .. cpp:function:: void update(byte in)
+   .. cpp:function:: void update(const uint8_t* in, size_t length)
+   .. cpp:function:: void update(const std::vector<uint8_t>& in)
+   .. cpp:function:: void update(uint8_t in)
 
       Add further message data that is purportedly assocated with the
       signature that will be checked.
 
-   .. cpp:function:: bool check_signature(const byte* sig, size_t length)
-   .. cpp:function:: bool check_signature(const std::vector<byte>& sig)
+   .. cpp:function:: bool check_signature(const uint8_t* sig, size_t length)
+   .. cpp:function:: bool check_signature(const std::vector<uint8_t>& sig)
 
       Check to see if *sig* is a valid signature for the message data
       that was written in. Return true if so. This function clears the
@@ -596,11 +596,11 @@ Signatures are verified using
       :cpp:func:`PK_Verifier::update` to start verifying another
       message.
 
-   .. cpp:function:: bool verify_message(const byte* msg, size_t msg_length, \
-                                         const byte* sig, size_t sig_length)
+   .. cpp:function:: bool verify_message(const uint8_t* msg, size_t msg_length, \
+                                         const uint8_t* sig, size_t sig_length)
 
-   .. cpp:function:: bool verify_message(const std::vector<byte>& msg, \
-                                         const std::vector<byte>& sig)
+   .. cpp:function:: bool verify_message(const std::vector<uint8_t>& msg, \
+                                         const std::vector<uint8_t>& sig)
 
       These are equivalent to calling :cpp:func:`PK_Verifier::update`
       on *msg* and then calling :cpp:func:`PK_Verifier::check_signature`
@@ -674,7 +674,7 @@ other party, and then each of you runs a computation with the other's
 value and your key (this should return the same result to both
 parties). This computation can be called by using
 ``derive_key`` with either a byte array/length pair, or a
-``secure_vector<byte>`` than holds the public value of the other
+``secure_vector<uint8_t>`` than holds the public value of the other
 party. The last argument to either call is a number that specifies how
 long a key you want.
 
@@ -689,7 +689,7 @@ symmetric algorithm.
 
 The public value that should be used can be obtained by calling
 ``public_data``, which exists for any key that is associated with a
-key agreement algorithm. It returns a ``secure_vector<byte>``.
+key agreement algorithm. It returns a ``secure_vector<uint8_t>``.
 
 "KDF2(SHA-256)" is by far the preferred algorithm for key derivation
 in new applications. The X9.42 algorithm may be useful in some
@@ -798,9 +798,9 @@ public/private key pair and how to use these keys to create and verify a signatu
           private_key.create_signature_op(rng, "", "");
 
        // create and sign a message using the signature operation.
-       Botan::secure_vector<byte> msg { 0x01, 0x02, 0x03, 0x04 };
+       Botan::secure_vector<uint8_t> msg { 0x01, 0x02, 0x03, 0x04 };
        sig_op->update(msg.data(), msg.size());
-       Botan::secure_vector<byte> sig = sig_op->sign(rng);
+       Botan::secure_vector<uint8_t> sig = sig_op->sign(rng);
 
        // create verification operation using the public key
        std::unique_ptr<Botan::PK_Ops::Verification> ver_op =

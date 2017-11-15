@@ -15,17 +15,17 @@ A Botan :cpp:class:`BufferedComputation` is split into three stages:
 
     Return the size of the output of this function.
 
-  .. cpp:function:: void update(const byte* input, size_t length)
+  .. cpp:function:: void update(const uint8_t* input, size_t length)
 
-  .. cpp:function:: void update(byte input)
+  .. cpp:function:: void update(uint8_t input)
 
   .. cpp:function:: void update(const std::string& input)
 
     Updates the computation with *input*.
 
-  .. cpp:function:: void final(byte* out)
+  .. cpp:function:: void final(uint8_t* out)
 
-  .. cpp:function:: secure_vector<byte> final()
+  .. cpp:function:: secure_vector<uint8_t> final()
 
     Finalize the calculation and place the result into ``out``.
     For the argument taking an array, exactly ``output_length`` bytes will

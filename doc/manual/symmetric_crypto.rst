@@ -15,7 +15,7 @@ restrictions on the size of the key.
 
 .. cpp:class:: SymmetricAlgorithm
 
-   .. cpp:function:: void set_key(const byte* key, size_t length)
+   .. cpp:function:: void set_key(const uint8_t* key, size_t length)
 
    .. cpp:function:: void set_key(const SymmetricKey& key)
 
@@ -58,54 +58,54 @@ When processing data larger than a single block, a block cipher mode should be u
 
     Returns the block size of the cipher in bytes.
 
-  .. cpp:function:: void encrypt_n(const byte* in, \
-       byte* out, size_t n) const
+  .. cpp:function:: void encrypt_n(const uint8_t* in, \
+       uint8_t* out, size_t n) const
 
     Encrypt *n* blocks of data, taking the input from the array *in*
     and placing the ciphertext into *out*. The two pointers may be
     identical, but should not overlap ranges.
 
-  .. cpp:function:: void encrypt(const byte* in, byte* out) const
+  .. cpp:function:: void encrypt(const uint8_t* in, uint8_t* out) const
 
     Encrypt a single block, taking the input from *in* and placing
     it in *out*. Acts like :cpp:func:`encrypt_n`\ (in, out, 1).
 
-  .. cpp:function:: void encrypt(const std::vector<byte> in, std::vector<byte> out) const
+  .. cpp:function:: void encrypt(const std::vector<uint8_t> in, std::vector<uint8_t> out) const
 
     Encrypt a single or multiple full blocks, taking the input from *in* and placing it in *out*.
     Acts like :cpp:func:`encrypt_n`\ (in.data(), out.data(), in.size()/ block_size()).
 
-  .. cpp:function:: void encrypt(std::vector<byte> inout) const
+  .. cpp:function:: void encrypt(std::vector<uint8_t> inout) const
 
     Encrypt a single or multiple full blocks in place.
     Acts like :cpp:func:`encrypt_n`\ (inout.data(), inout.data(), inout.size()/ block_size()).
 
-  .. cpp:function:: void encrypt(byte* block) const
+  .. cpp:function:: void encrypt(uint8_t* block) const
 
     Identical to :cpp:func:`encrypt`\ (block, block)
 
-  .. cpp:function:: void decrypt_n(const byte* in, byte out, size_t n) const
+  .. cpp:function:: void decrypt_n(const uint8_t* in, uint8_t out, size_t n) const
 
     Decrypt *n* blocks of data, taking the input from *in* and
     placing the plaintext in *out*. The two pointers may be
     identical, but should not overlap ranges.
 
-  .. cpp:function:: void decrypt(const byte* in, byte* out) const
+  .. cpp:function:: void decrypt(const uint8_t* in, uint8_t* out) const
 
     Decrypt a single block, taking the input from *in* and placing it
     in *out*. Acts like :cpp:func:`decrypt_n`\ (in, out, 1).
 
-  .. cpp:function:: void decrypt(const std::vector<byte> in, std::vector<byte> out) const
+  .. cpp:function:: void decrypt(const std::vector<uint8_t> in, std::vector<uint8_t> out) const
 
     Decrypt a single or multiple full blocks, taking the input from *in* and placing it in *out*.
     Acts like :cpp:func:`decrypt_n`\ (in.data(), out.data(), in.size()/ block_size()).
 
-  .. cpp:function:: void decrypt(std::vector<byte> inout) const
+  .. cpp:function:: void decrypt(std::vector<uint8_t> inout) const
 
     Decrypt a single or multiple full blocks in place.
     Acts like :cpp:func:`decrypt_n`\ (inout.data(), inout.data(), inout.size()/ block_size()).
 
-  .. cpp:function:: void decrypt(byte* block) const
+  .. cpp:function:: void decrypt(uint8_t* block) const
 
     Identical to :cpp:func:`decrypt`\ (block, block)
 
@@ -118,24 +118,26 @@ When processing data larger than a single block, a block cipher mode should be u
 The following block ciphers are implemented in Botan:
 
 #. AES (AES-128, AES-192, AES-256)
-#. Serpent
-#. Twofish
-#. Threefish-512
+#. ARIA
 #. Blowfish
-#. Camellia (Camellia-128, Camellia-192, Camellia-256)
-#. DES
-#. 3DES
-#. DESX
-#. Noekeon
 #. CAST (CAST-128, CAST-256)
+#. Camellia (Camellia-128, Camellia-192, Camellia-256)
+#. Cascade
+#. DES/3DES
+#. DESX
+#. GOST-28147-89
 #. IDEA
 #. Kasumi
-#. MISTY1
-#. SEED
-#. XTEA
-#. GOST-28147-89
-#. Cascade
 #. Lion
+#. MISTY1
+#. Noekeon
+#. SEED
+#. SHACAL2
+#. SM4
+#. Serpent
+#. Threefish-512
+#. Twofish
+#. XTEA
 
 Code Example
 """""""""""""""
@@ -195,19 +197,19 @@ are derived from the base class :cpp:class:`Cipher_Mode`, which is declared in `
 .. cpp:class:: Cipher_Mode
 
   .. cpp:function:: void set_key(const SymmetricKey& key)
-  .. cpp:function:: void set_key(const byte* key, size_t length)
+  .. cpp:function:: void set_key(const uint8_t* key, size_t length)
 
     Set the symmetric key to be used.
 
-  .. cpp:function:: void start_msg(const byte* nonce, size_t nonce_len)
+  .. cpp:function:: void start_msg(const uint8_t* nonce, size_t nonce_len)
 
     Set the IV (unique per-message nonce) of the mode of operation and prepare for message processing.
 
-  .. cpp:function:: void start(const std::vector<byte> nonce)
+  .. cpp:function:: void start(const std::vector<uint8_t> nonce)
 
     Acts like :cpp:func:`start_msg`\ (nonce.data(), nonce.size()).
 
-  .. cpp:function:: void start(const byte* nonce, size_t nonce_len)
+  .. cpp:function:: void start(const uint8_t* nonce, size_t nonce_len)
 
     Acts like :cpp:func:`start_msg`\ (nonce, nonce_len).
 
@@ -216,11 +218,11 @@ are derived from the base class :cpp:class:`Cipher_Mode`, which is declared in `
     The :cpp:class:`Cipher_Mode` interface requires message processing in multiples of the block size.
     Returns size of required blocks to update and 1, if the mode can process messages of any length.
 
-  .. cpp:function:: virtual size_t process(byte* msg, size_t msg_len)
+  .. cpp:function:: virtual size_t process(uint8_t* msg, size_t msg_len)
 
     Process msg in place and returns bytes written. msg must be a multiple of :cpp:func:`update_granularity`.
 
-  .. cpp:function:: void update(secure_vector<byte>& buffer, size_t offset = 0)
+  .. cpp:function:: void update(secure_vector<uint8_t>& buffer, size_t offset = 0)
 
     Continue processing a message in the buffer in place. The passed buffer's size must be a multiple of :cpp:func:`update_granularity`.
     The first *offset* bytes of the buffer will be ignored.
@@ -229,7 +231,7 @@ are derived from the base class :cpp:class:`Cipher_Mode`, which is declared in `
 
     Returns the minimum size needed for :cpp:func:`finish`.
 
-  .. cpp:function:: void finish(secure_vector<byte>& final_block, size_t offset = 0)
+  .. cpp:function:: void finish(secure_vector<uint8_t>& final_block, size_t offset = 0)
 
     Finalize the message processing with a final block of at least :cpp:func:`minimum_final_size` size.
     The first *offset* bytes of the passed final block will be ignored.
@@ -297,7 +299,7 @@ support a 128-bit block cipher such as AES. EAX and OCB also support
 
        Return the key length specification
 
-  .. cpp:function:: void set_associated_data(const byte ad[], size_t ad_len)
+  .. cpp:function:: void set_associated_data(const uint8_t ad[], size_t ad_len)
 
        Set any associated data for this message. For maximum portability between
        different modes, this must be called after :cpp:func:`set_key` and before
@@ -307,12 +309,12 @@ support a 128-bit block cipher such as AES. EAX and OCB also support
        function more than once, even across multiple calls to :cpp:func:`start`
        and :cpp:func:`finish`.
 
-  .. cpp:function:: void start(const byte nonce[], size_t nonce_len)
+  .. cpp:function:: void start(const uint8_t nonce[], size_t nonce_len)
 
        Start processing a message, using *nonce* as the unique per-message
        value.
 
-  .. cpp:function:: void update(secure_vector<byte>& buffer, size_t offset = 0)
+  .. cpp:function:: void update(secure_vector<uint8_t>& buffer, size_t offset = 0)
 
        Continue processing a message. The *buffer* is an in/out parameter and
        may be resized. In particular, some modes require that all input be
@@ -326,7 +328,7 @@ support a 128-bit block cipher such as AES. EAX and OCB also support
        The first *offset* bytes of *buffer* will be ignored (this allows in
        place processing of a buffer that contains an initial plaintext header)
 
-  .. cpp:function:: void finish(secure_vector<byte>& buffer, size_t offset = 0)
+  .. cpp:function:: void finish(secure_vector<uint8_t>& buffer, size_t offset = 0)
 
        Complete processing a message with a final input of *buffer*, which is
        treated the same as with :cpp:func:`update`. It must contain at least
@@ -384,27 +386,27 @@ stream ciphers require a fresh initialisation vector.
     This function returns true if and only if *length* is a valid
     IV length for the stream cipher.
 
-  .. cpp:function:: void set_iv(const byte*, size_t len)
+  .. cpp:function:: void set_iv(const uint8_t*, size_t len)
 
     Load IV into the stream cipher state. This should happen after the key is
     set and before any operation (encrypt/decrypt/seek) is called.
 
-  .. cpp:function:: void seek(u64bit offset)
+  .. cpp:function:: void seek(uint64_t offset)
 
     Sets the state of the stream cipher and keystream according to the passed *offset*.
     Therefore the key and the IV (if required) have to be set beforehand.
 
-  .. cpp:function:: void cipher(const byte* in, byte* out, size_t n)
+  .. cpp:function:: void cipher(const uint8_t* in, uint8_t* out, size_t n)
 
     Processes *n* bytes plain/ciphertext from *in* and writes the result to *out*.
 
-  .. cpp:function:: void cipher1(byte* inout, size_t n)
+  .. cpp:function:: void cipher1(uint8_t* inout, size_t n)
 
     Processes *n* bytes plain/ciphertext in place. Acts like :cpp:func:`cipher`\ (inout, inout, n).
 
-  .. cpp:function:: void encipher(std::vector<byte> inout)
-  .. cpp:function:: void encrypt(std::vector<byte> inout)
-  .. cpp:function:: void decrypt(std::vector<byte> inout)
+  .. cpp:function:: void encipher(std::vector<uint8_t> inout)
+  .. cpp:function:: void encrypt(std::vector<uint8_t> inout)
+  .. cpp:function:: void decrypt(std::vector<uint8_t> inout)
 
     Processes plain/ciphertext *inout* in place. Acts like :cpp:func:`cipher`\ (inout.data(), inout.data(), inout.size()).
 
@@ -483,33 +485,33 @@ The Botan MAC computation is split into five stages.
 
 .. cpp:class:: MessageAuthenticationCode
 
-  .. cpp:function:: void set_key(const byte* key, size_t length)
+  .. cpp:function:: void set_key(const uint8_t* key, size_t length)
 
     Set the shared MAC key for the calculation. This function has to be called before the data is processed.
 
-  .. cpp:function:: void start(const byte* nonce, size_t nonce_len)
+  .. cpp:function:: void start(const uint8_t* nonce, size_t nonce_len)
 
     Set the IV for the MAC calculation. Note that not all MAC algorithms require an IV.
     If an IV is required, the function has to be called before the data is processed.
 
-  .. cpp:function:: void update(const byte* input, size_t length)
-  .. cpp:function:: void update(const secure_vector<byte>& in)
+  .. cpp:function:: void update(const uint8_t* input, size_t length)
+  .. cpp:function:: void update(const secure_vector<uint8_t>& in)
 
     Process the passed data.
 
-  .. cpp:function:: void update(byte in)
+  .. cpp:function:: void update(uint8_t in)
 
     Process a single byte.
 
-  .. cpp:function:: void final(byte* out)
+  .. cpp:function:: void final(uint8_t* out)
 
     Complete the MAC computation and write the calculated tag to the passed byte array.
 
-  .. cpp:function:: secure_vector<byte> final()
+  .. cpp:function:: secure_vector<uint8_t> final()
 
     Complete the MAC computation and return the calculated tag.
 
-  .. cpp:function:: bool verify_mac(const byte* mac, size_t length)
+  .. cpp:function:: bool verify_mac(const uint8_t* mac, size_t length)
 
     Finalize the current MAC computation and compare the result to the passed ``mac``. Returns ``true``, if the verification is successfull and false otherwise.
 

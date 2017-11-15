@@ -90,9 +90,9 @@ to call the method twice in order to determine the number of elements first.
 
 Another example is the :cpp:func:`C_InitPIN` overload:
 
-   .. cpp:function:: template<typename Talloc> bool C_InitPIN( SessionHandle session, const std::vector<byte, TAlloc>& pin, ReturnValue* return_value = ThrowException ) const
+   .. cpp:function:: template<typename Talloc> bool C_InitPIN( SessionHandle session, const std::vector<uint8_t, TAlloc>& pin, ReturnValue* return_value = ThrowException ) const
 
-The templated ``pin`` parameter allows to pass the PIN as a ``std::vector<byte>`` or a ``secure_vector<byte>``.
+The templated ``pin`` parameter allows to pass the PIN as a ``std::vector<uint8_t>`` or a ``secure_vector<uint8_t>``.
 If used with a ``secure_vector`` it is assured that the memory is securely erased when the ``pin`` object is no longer needed.
 
 Error Handling
@@ -434,11 +434,11 @@ Attributes can be set in an :cpp:class:`AttributeContainer` by various ``add_`` 
 
       Add a string attribute (e.g. :c:macro:`CKA_LABEL` / :cpp:enumerator:`AttributeType::Label`).
 
-   .. cpp:function:: void AttributeContainer::add_binary(AttributeType attribute, const byte* value, size_t length)
+   .. cpp:function:: void AttributeContainer::add_binary(AttributeType attribute, const uint8_t* value, size_t length)
 
       Add a binary attribute (e.g. :c:macro:`CKA_ID` / :cpp:enumerator:`AttributeType::Id`).
 
-   .. cpp:function:: template<typename TAlloc> void AttributeContainer::add_binary(AttributeType attribute, const std::vector<byte, TAlloc>& binary)
+   .. cpp:function:: template<typename TAlloc> void AttributeContainer::add_binary(AttributeType attribute, const std::vector<uint8_t, TAlloc>& binary)
 
       Add a binary attribute by passing a ``vector``/``secure_vector`` (e.g. :c:macro:`CKA_ID` / :cpp:enumerator:`AttributeType::Id`).
 
@@ -510,11 +510,11 @@ Following constructors are defined:
 
 The other methods are:
 
-   .. cpp:function:: secure_vector<byte> get_attribute_value(AttributeType attribute) const
+   .. cpp:function:: secure_vector<uint8_t> get_attribute_value(AttributeType attribute) const
 
       Returns the value of the given attribute (using :cpp:func:`C_GetAttributeValue`)
 
-   .. cpp:function:: void set_attribute_value(AttributeType attribute, const secure_vector<byte>& value) const
+   .. cpp:function:: void set_attribute_value(AttributeType attribute, const secure_vector<uint8_t>& value) const
 
       Sets the given value for the attribute (using :cpp:func:`C_SetAttributeValue`)
 
@@ -536,11 +536,11 @@ And static methods to search for objects:
 
       Searches for all objects of the given type using the label (:c:macro:`CKA_LABEL`).
 
-   .. cpp:function:: template<typename T> static std::vector<T> search(Session& session, const std::vector<byte>& id)
+   .. cpp:function:: template<typename T> static std::vector<T> search(Session& session, const std::vector<uint8_t>& id)
 
       Searches for all objects of the given type using the id (:c:macro:`CKA_ID`).
 
-   .. cpp:function:: template<typename T> static std::vector<T> search(Session& session, const std::string& label, const std::vector<byte>& id)
+   .. cpp:function:: template<typename T> static std::vector<T> search(Session& session, const std::string& label, const std::vector<uint8_t>& id)
 
       Searches for all objects of the given type using the label (:c:macro:`CKA_LABEL`) and id (:c:macro:`CKA_ID`).
 
@@ -814,7 +814,7 @@ and import: :cpp:class:`EC_PrivateKeyGenerationProperties` and :cpp:class:`EC_Pr
       This constructor can be used to import an existing ECDSA private key with the :cpp:class:`EC_PrivateKeyImportProperties`
       passed in ``props`` to the token.
 
-   .. cpp:function:: PKCS11_ECDSA_PrivateKey(Session& session, const std::vector<byte>& ec_params, const EC_PrivateKeyGenerationProperties& props)
+   .. cpp:function:: PKCS11_ECDSA_PrivateKey(Session& session, const std::vector<uint8_t>& ec_params, const EC_PrivateKeyGenerationProperties& props)
 
       This constructor can be used to generate a new ECDSA private key with the :cpp:class:`EC_PrivateKeyGenerationProperties`
       passed in ``props`` on the token. The ``ec_params`` parameter is the DER-encoding of an
@@ -965,7 +965,7 @@ property classes. One for key generation and one for import: :cpp:class:`EC_Priv
       This constructor can be used to import an existing ECDH private key with the :cpp:class:`EC_PrivateKeyImportProperties`
       passed in ``props`` to the token.
 
-   .. cpp:function:: PKCS11_ECDH_PrivateKey(Session& session, const std::vector<byte>& ec_params, const EC_PrivateKeyGenerationProperties& props)
+   .. cpp:function:: PKCS11_ECDH_PrivateKey(Session& session, const std::vector<uint8_t>& ec_params, const EC_PrivateKeyGenerationProperties& props)
 
       This constructor can be used to generate a new ECDH private key with the :cpp:class:`EC_PrivateKeyGenerationProperties`
       passed in ``props`` on the token. The ``ec_params`` parameter is the DER-encoding of an
@@ -1091,11 +1091,11 @@ implements the :cpp:class:`Hardware_RNG` interface.
 
       A PKCS#11 :cpp:class:`Session` must be passed to instantiate a ``PKCS11_RNG``.
 
-   .. cpp:function:: void randomize(Botan::byte output[], std::size_t length) override
+   .. cpp:function:: void randomize(uint8_t output[], std::size_t length) override
 
       Calls :cpp:func:`C_GenerateRandom` to generate random data.
 
-   .. cpp:function:: void add_entropy(const Botan::byte in[], std::size_t length) override
+   .. cpp:function:: void add_entropy(const uint8_t in[], std::size_t length) override
 
       Calls :cpp:func:`C_SeedRandom` to add entropy to the random generation function of the token/middleware.
 

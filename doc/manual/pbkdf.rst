@@ -26,7 +26,7 @@ is recommend for new applications.
 
 .. cpp:function:: OctetString PBKDF::derive_key( \
    size_t output_len, const std::string& passphrase, \
-   const byte* salt, size_t salt_len, \
+   const uint8_t* salt, size_t salt_len, \
    size_t iterations) const
 
    Computes a key from *passphrase* and the *salt* (of length
@@ -46,7 +46,7 @@ is recommend for new applications.
    PBKDF* pbkdf = get_pbkdf("PBKDF2(SHA-256)");
    AutoSeeded_RNG rng;
 
-   secure_vector<byte> salt = rng.random_vec(16);
+   secure_vector<uint8_t> salt = rng.random_vec(16);
    OctetString aes256_key = pbkdf->derive_key(32, "password",
                                               &salt[0], salt.size(),
                                               10000);

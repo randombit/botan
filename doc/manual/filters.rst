@@ -74,9 +74,9 @@ Here's code that uses one of them to encrypt a string with AES::
   pipe.process_msg("secrets");
   pipe.process_msg("more secrets");
 
-  secure_vector<byte> c1 = pipe.read_all(0);
+  secure_vector<uint8_t> c1 = pipe.read_all(0);
 
-  byte c2[4096] = { 0 };
+  uint8_t c2[4096] = { 0 };
   size_t got_out = pipe.read(c2, sizeof(c2), 1);
   // use c2[0...got_out]
 
@@ -150,7 +150,7 @@ allows you to bound the amount of memory that is in use at any one
 time. A common idiom for this is::
 
    pipe.start_msg();
-   SecureBuffer<byte, 4096> buffer;
+   std::vector<uint8_t> buffer(4096); // arbitrary size
    while(infile.good())
       {
       infile.read((char*)&buffer[0], buffer.size());
@@ -231,7 +231,7 @@ a case where that is useful::
 
    pipe.process_msg(ciphertext);
    std::string plaintext = pipe.read_all_as_string(0);
-   secure_vector<byte> mac = pipe.read_all(1);
+   secure_vector<uint8_t> mac = pipe.read_all(1);
 
    if(mac != auth_code)
       error();
@@ -393,15 +393,15 @@ another message, without either read affecting any other messages).
   Starts a new message; if a message was already running, an exception is
   thrown. After this function returns, you can call ``write``.
 
-.. cpp:function:: void Pipe::write(const byte* input, size_t length)
+.. cpp:function:: void Pipe::write(const uint8_t* input, size_t length)
 
-.. cpp:function:: void Pipe::write(const std::vector<byte>& input)
+.. cpp:function:: void Pipe::write(const std::vector<uint8_t>& input)
 
 .. cpp:function:: void Pipe::write(const std::string& input)
 
 .. cpp:function:: void Pipe::write(DataSource& input)
 
-.. cpp:function:: void Pipe::write(byte input)
+.. cpp:function:: void Pipe::write(uint8_t input)
 
   All versions of ``write`` write the input into the filter sequence.
   If a message is not currently active, an exception is thrown.
@@ -434,17 +434,17 @@ specifies what message to read from. If this parameter is set to
 
 Functions in ``Pipe`` related to reading include:
 
-.. cpp:function:: size_t Pipe::read(byte* out, size_t len)
+.. cpp:function:: size_t Pipe::read(uint8_t* out, size_t len)
 
   Reads up to ``len`` bytes into ``out``, and returns the number of
   bytes actually read.
 
-.. cpp:function:: size_t Pipe::peek(byte* out, size_t len)
+.. cpp:function:: size_t Pipe::peek(uint8_t* out, size_t len)
 
   Acts exactly like `read`, except the data is not actually read; the
   next read will return the same data.
 
-.. cpp:function:: secure_vector<byte> Pipe::read_all()
+.. cpp:function:: secure_vector<uint8_t> Pipe::read_all()
 
   Reads the entire message into a buffer and returns it
 
@@ -686,7 +686,7 @@ as simple as possible to write new filter types. There are four
 functions that need to be implemented by a class deriving from
 ``Filter``:
 
-.. cpp:function:: void Filter::write(const byte* input, size_t length)
+.. cpp:function:: void Filter::write(const uint8_t* input, size_t length)
 
   This function is what is called when a filter receives input for it
   to process. The filter is not required to process the data right
@@ -694,7 +694,7 @@ functions that need to be implemented by a class deriving from
   filter will usually have ``write`` called many times during its
   lifetime.
 
-.. cpp:function:: void Filter::send(byte* output, size_t length)
+.. cpp:function:: void Filter::send(uint8_t* output, size_t length)
 
   Eventually, a filter will want to produce some output to send along
   to the next filter in the pipeline. It does so by calling ``send``

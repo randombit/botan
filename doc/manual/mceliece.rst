@@ -39,15 +39,15 @@ data), CCA2 security is provided.
 
 In ``mcies.h`` there are functions for this combination:
 
-.. cpp:function:: secure_vector<byte> mceies_encrypt(const McEliece_PublicKey& pubkey, \
-                  const secure_vector<byte>& pt, \
-                  byte ad[], size_t ad_len, \
+.. cpp:function:: secure_vector<uint8_t> mceies_encrypt(const McEliece_PublicKey& pubkey, \
+                  const secure_vector<uint8_t>& pt, \
+                  uint8_t ad[], size_t ad_len, \
                   RandomNumberGenerator& rng, \
                   const std::string& aead = "AES-256/OCB")
 
-.. cpp:function:: secure_vector<byte> mceies_decrypt(const McEliece_PrivateKey& privkey, \
-                                                     const secure_vector<byte>& ct, \
-                                                     byte ad[], size_t ad_len, \
+.. cpp:function:: secure_vector<uint8_t> mceies_decrypt(const McEliece_PrivateKey& privkey, \
+                                                     const secure_vector<uint8_t>& ct, \
+                                                     uint8_t ad[], size_t ad_len, \
                                                      const std::string& aead = "AES-256/OCB")
 
 For a given security level (SL) a McEliece key would use

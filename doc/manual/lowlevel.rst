@@ -63,7 +63,7 @@ Both symmetric keys and initialization values can be considered byte
       The argument *str* is assumed to be a hex string; it is
       converted to binary and stored. Whitespace is ignored.
 
-   .. cpp:function:: OctetString(const byte* input, size_t length)
+   .. cpp:function:: OctetString(const uint8_t* input, size_t length)
 
       This constructor copies its input.
 

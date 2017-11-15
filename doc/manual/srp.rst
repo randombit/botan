@@ -24,7 +24,7 @@ example "modp/srp/2048".
 .. cpp:function:: BigInt generate_srp6_verifier( \
           const std::string& identifier, \
           const std::string& password, \
-          const std::vector<byte>& salt, \
+          const std::vector<uint8_t>& salt, \
           const std::string& group_id, \
           const std::string& hash_id)
 
@@ -54,7 +54,7 @@ example "modp/srp/2048".
                const std::string& password, \
                const std::string& group_id, \
                const std::string& hash_id, \
-               const std::vector<byte>& salt, \
+               const std::vector<uint8_t>& salt, \
                const BigInt& B, \
                RandomNumberGenerator& rng)
 

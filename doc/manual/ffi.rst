@@ -323,7 +323,7 @@ Multiple Precision Integers
 
    Return the size of ``n`` in bits.
 
-.. cpp:function:: int botan_mp_num_bytes(botan_mp_t n, size_t* bytes)
+.. cpp:function:: int botan_mp_num_bytes(botan_mp_t n, size_t* uint8_ts)
 
    Return the size of ``n`` in bytes.
 

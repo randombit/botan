@@ -7,29 +7,29 @@ The base class ``RandomNumberGenerator`` is in the header ``botan/rng.h``.
 
 The major interfaces are
 
-.. cpp:function:: void RandomNumberGenerator::randomize(byte* output_array, size_t length)
+.. cpp:function:: void RandomNumberGenerator::randomize(uint8_t* output_array, size_t length)
 
   Places *length* random bytes into the provided buffer.
 
-.. cpp:function:: void RandomNumberGenerator::add_entropy(const byte* data, size_t length)
+.. cpp:function:: void RandomNumberGenerator::add_entropy(const uint8_t* data, size_t length)
 
   Incorporates provided data into the state of the PRNG, if at all
   possible.  This works for most RNG types, including the system and
   TPM RNGs. But if the RNG doesn't support this operation, the data is
   dropped, no error is indicated.
 
-.. cpp:function:: void RandomNumberGenerator::randomize_with_input(byte* data, size_t length, \
-    const byte* ad, size_t ad_len)
+.. cpp:function:: void RandomNumberGenerator::randomize_with_input(uint8_t* data, size_t length, \
+    const uint8_t* ad, size_t ad_len)
 
   Like randomize, but first incorporates the additional input field
   into the state of the RNG. The additional input could be anything which
   parameterizes this request.
 
-.. cpp:function:: void RandomNumberGenerator::randomize_with_ts_input(byte* data, size_t length)
+.. cpp:function:: void RandomNumberGenerator::randomize_with_ts_input(uint8_t* data, size_t length)
 
   Creates a buffer with some timestamp values and calls ``randomize_with_input``
 
-.. cpp:function:: byte RandomNumberGenerator::next_byte()
+.. cpp:function:: uint8_t RandomNumberGenerator::next_byte()
 
   Generates a single random byte and returns it. Note that calling this
   function several times is much slower than calling ``randomize`` once

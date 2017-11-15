@@ -172,7 +172,7 @@ functions are provided to search them.
      criticality flag. Only contains the supported extension types
      listed above.
 
- .. cpp:function:: std::map<OID, std::pair<std::vector<byte>, bool>> extensions_raw() const
+ .. cpp:function:: std::map<OID, std::pair<std::vector<uint8_t>, bool>> extensions_raw() const
 
      Returns the list of extensions as raw, encoded bytes
      together with the corresponding criticality flag.
@@ -246,7 +246,7 @@ The certificate lookup methods are ``find_cert`` (by Subject
 Distinguished Name and optional Subject Key Identifier) and
 ``find_cert_by_pubkey_sha1`` (by SHA-1 hash of the certificate's
 public key). The Subject Distinguished Name is given as a ``X509_DN``,
-while the SKID parameter takes a ``std::vector<byte>`` containing
+while the SKID parameter takes a ``std::vector<uint8_t>`` containing
 the subject key identifier in raw binary. Both lookup methods are
 mandatory to implement.
 
@@ -545,7 +545,7 @@ The ``CRL_Entry`` type is a structure that contains, at a minimum, the serial
 number of the revoked certificate. As serial numbers are never repeated, the
 pairing of an issuer and a serial number (should) distinctly identify any
 certificate. In this case, we represent the serial number as a
-``secure_vector<byte>`` called ``serial``. There are two additional (optional)
+``secure_vector<uint8_t>`` called ``serial``. There are two additional (optional)
 values, an enumeration called ``CRL_Code`` that specifies the reason for
 revocation (``reason``), and an object that represents the time that the
 certificate became invalid (if this information is known).
@@ -696,7 +696,7 @@ the subject's issuing certificate.
 
       Variant of the above, using serial number from ``subject_cert``.
 
- .. cpp:function:: std::vector<byte> BER_encode() const
+ .. cpp:function:: std::vector<uint8_t> BER_encode() const
 
       Encode the current OCSP request as a binary string.
 
@@ -767,7 +767,7 @@ for certificate status information.
 
      This field is optional in OCSP responses, and may not be set.
 
-  .. cpp:function:: const std::vector<byte>& raw_bits() const
+  .. cpp:function:: const std::vector<uint8_t>& raw_bits() const
 
      Return the entire raw ASN.1 blob (for debugging or specialized decoding needs)
 

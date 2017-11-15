@@ -11,20 +11,20 @@ shared secret created using Diffie-Hellman key agreement.
 
 .. cpp:class:: KDF
 
-  .. cpp:function:: secure_vector<byte> derive_key( \
-     size_t key_len, const std::vector<byte>& secret, \
+  .. cpp:function:: secure_vector<uint8_t> derive_key( \
+     size_t key_len, const std::vector<uint8_t>& secret, \
      const std::string& salt = "") const
 
-  .. cpp:function:: secure_vector<byte> derive_key( \
-     size_t key_len, const std::vector<byte>& secret, \
-     const std::vector<byte>& salt) const
+  .. cpp:function:: secure_vector<uint8_t> derive_key( \
+     size_t key_len, const std::vector<uint8_t>& secret, \
+     const std::vector<uint8_t>& salt) const
 
-  .. cpp:function:: secure_vector<byte> derive_key( \
-     size_t key_len, const std::vector<byte>& secret, \
-     const byte* salt, size_t salt_len) const
+  .. cpp:function:: secure_vector<uint8_t> derive_key( \
+     size_t key_len, const std::vector<uint8_t>& secret, \
+     const uint8_t* salt, size_t salt_len) const
 
-  .. cpp:function:: secure_vector<byte> derive_key( \
-     size_t key_len, const byte* secret, size_t secret_len, \
+  .. cpp:function:: secure_vector<uint8_t> derive_key( \
+     size_t key_len, const uint8_t* secret, size_t secret_len, \
      const std::string& salt) const
 
    All variations on the same theme. Deterministically creates a

@@ -21,7 +21,7 @@ included in the future.
 To use FE1, use these functions, from ``fpe_fe1.h``:
 
 .. cpp:function:: BigInt FPE::fe1_encrypt(const BigInt& n, const BigInt& X, \
-   const SymmetricKey& key, const std::vector<byte>& tweak)
+   const SymmetricKey& key, const std::vector<uint8_t>& tweak)
 
    Encrypts the value *X* modulo the value *n* using the *key* and
    *tweak* specified. Returns an integer less than *n*. The *tweak* is
@@ -39,7 +39,7 @@ To use FE1, use these functions, from ``fpe_fe1.h``:
    checksum is for the new (ciphertext) number.
 
 .. cpp:function:: BigInt FPE::fe1_decrypt(const BigInt& n, const BigInt& X, \
-   const SymmetricKey& key, const std::vector<byte>& tweak)
+   const SymmetricKey& key, const std::vector<uint8_t>& tweak)
 
    Decrypts an FE1 ciphertext produced by :cpp:func:`fe1_encrypt`; the
    *n*, *key* and *tweak* should be the same as that provided to the

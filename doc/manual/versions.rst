@@ -57,19 +57,19 @@ version checks, are included in `botan/version.h`
    Returns a single-line string containing relevant information about
    this build and version of the library in an unspecified format.
 
-.. cpp:function:: u32bit version_major()
+.. cpp:function:: uint32_t version_major()
 
    Returns the major part of the version.
 
-.. cpp:function:: u32bit version_minor()
+.. cpp:function:: uint32_t version_minor()
 
    Returns the minor part of the version.
 
-.. cpp:function:: u32bit version_patch()
+.. cpp:function:: uint32_t version_patch()
 
    Returns the patch part of the version.
 
-.. cpp:function:: u32bit version_datestamp()
+.. cpp:function:: uint32_t version_datestamp()
 
    Return the datestamp of the release (or 0 if the current version is
    not an official release).
