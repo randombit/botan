@@ -16,89 +16,14 @@
 #include <botan/asn1_str.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
-#include <botan/charset.h>
 
 #include <iomanip>
 #include <sstream>
-#include <ctype.h>
+#include <cctype>
 
 namespace Botan_CLI {
 
 namespace {
-
-std::string url_encode(const std::vector<uint8_t>& in)
-   {
-   std::ostringstream out;
-
-   size_t unprintable = 0;
-
-   for(size_t i = 0; i != in.size(); ++i)
-      {
-      const int c = in[i];
-      if(::isprint(c))
-         {
-         out << static_cast<char>(c);
-         }
-      else
-         {
-         out << "%" << std::hex << static_cast<int>(c) << std::dec;
-         ++unprintable;
-         }
-      }
-
-   if(unprintable >= in.size() / 4)
-      {
-      return Botan::hex_encode(in);
-      }
-
-   return out.str();
-   }
-
-void emit(std::ostream& out,
-          const std::string& type,
-          size_t level, size_t length,
-          const std::string& value = "")
-   {
-   // TODO make these configurable
-   const size_t LIMIT = 4 * 1024;
-   const size_t BIN_LIMIT = 1024;
-
-   std::streampos starting_pos = out.tellp();
-
-   out << "  d=" << std::setw(2) << level
-       << ", l=" << std::setw(4) << length << ": ";
-
-   for(size_t i = 0; i != level; ++i)
-      {
-      out << ' ';
-      }
-
-   out << type;
-
-   bool should_skip = false;
-
-   if(value.length() > LIMIT)
-      {
-      should_skip = true;
-      }
-
-   if((type == "OCTET STRING" || type == "BIT STRING") && value.length() > BIN_LIMIT)
-      {
-      should_skip = true;
-      }
-
-   if(value != "" && !should_skip)
-      {
-      while(out.tellp() - starting_pos < 50)
-         {
-         out << ' ';
-         }
-
-      out << value;
-      }
-
-   out << "\n";
-   }
 
 std::string type_name(Botan::ASN1_Tag type)
    {
@@ -157,9 +82,139 @@ std::string type_name(Botan::ASN1_Tag type)
       }
    }
 
-void decode(std::ostream& output,
-            Botan::BER_Decoder& decoder,
-            size_t level)
+class ASN1_Pretty_Printer
+   {
+   public:
+      ASN1_Pretty_Printer(size_t print_limit = 256,
+                          size_t print_binary_limit = 256,
+                          bool print_context_specific = true,
+                          size_t initial_level = 0,
+                          size_t value_column = 50) :
+         m_print_limit(print_limit),
+         m_print_binary_limit(print_binary_limit),
+         m_initial_level(initial_level),
+         m_value_column(value_column),
+         m_print_context_specific(print_context_specific)
+         {}
+
+      void print_to_stream(std::ostream& out,
+                           const uint8_t in[],
+                           size_t len) const;
+
+      std::string print(const uint8_t in[], size_t len) const;
+
+      template<typename Alloc>
+      std::string print(const std::vector<uint8_t, Alloc>& vec) const
+         {
+         return print(vec.data(), vec.size());
+         }
+
+   private:
+      void emit(std::ostream& out,
+                const std::string& type,
+                size_t level, size_t length,
+                const std::string& value = "") const;
+
+      void decode(std::ostream& output,
+                  Botan::BER_Decoder& decoder,
+                  size_t level) const;
+
+      std::string format_binary(const std::vector<uint8_t>& in) const;
+
+      const size_t m_print_limit;
+      const size_t m_print_binary_limit;
+      const size_t m_initial_level;
+      const size_t m_value_column;
+      const bool m_print_context_specific;
+   };
+
+std::string ASN1_Pretty_Printer::print(const uint8_t in[], size_t len) const
+   {
+   std::ostringstream out;
+   print_to_stream(out, in, len);
+   return out.str();
+   }
+
+void ASN1_Pretty_Printer::print_to_stream(std::ostream& out,
+                                          const uint8_t in[],
+                                          size_t len) const
+   {
+   Botan::BER_Decoder dec(in, len);
+   this->decode(out, dec, m_initial_level);
+   }
+
+std::string ASN1_Pretty_Printer::format_binary(const std::vector<uint8_t>& in) const
+   {
+   std::ostringstream out;
+
+   size_t unprintable = 0;
+
+   for(size_t i = 0; i != in.size(); ++i)
+      {
+      const int c = in[i];
+      if(std::isalnum(c))
+         {
+         out << static_cast<char>(c);
+         }
+      else
+         {
+         out << "%" << std::hex << static_cast<int>(c) << std::dec;
+         ++unprintable;
+         if(unprintable >= in.size() / 4)
+            {
+            return Botan::hex_encode(in);
+            }
+         }
+      }
+
+   return out.str();
+   }
+
+void ASN1_Pretty_Printer::emit(std::ostream& out,
+                               const std::string& type,
+                               size_t level, size_t length,
+                               const std::string& value) const
+   {
+   std::streampos starting_pos = out.tellp();
+
+   out << "  d=" << std::setw(2) << level
+       << ", l=" << std::setw(4) << length << ": ";
+
+   for(size_t i = 0; i != level; ++i)
+      {
+      out << ' ';
+      }
+
+   out << type;
+
+   bool should_skip = false;
+
+   if(value.length() > m_print_limit)
+      {
+      should_skip = true;
+      }
+
+   if((type == "OCTET STRING" || type == "BIT STRING") && value.length() > m_print_binary_limit)
+      {
+      should_skip = true;
+      }
+
+   if(value != "" && !should_skip)
+      {
+      while(static_cast<size_t>(out.tellp() - starting_pos) < m_value_column)
+         {
+         out << ' ';
+         }
+
+      out << value;
+      }
+
+   out << "\n";
+   }
+
+void ASN1_Pretty_Printer::decode(std::ostream& output,
+                                 Botan::BER_Decoder& decoder,
+                                 size_t level) const
    {
    Botan::BER_Object obj = decoder.get_next_object();
 
@@ -218,22 +273,25 @@ void decode(std::ostream& output,
          }
       else if((class_tag & Botan::APPLICATION) || (class_tag & Botan::CONTEXT_SPECIFIC))
          {
-#if 0
-         std::vector<uint8_t> bits;
-         data.decode(out, bits, type_tag);
+         if(m_print_context_specific)
+            {
+            std::vector<uint8_t> bits;
+            data.decode(bits, type_tag);
 
-         try
-            {
-            Botan::BER_Decoder inner(bits);
-            decode(output, inner, level + 1); // recurse
+            try
+               {
+               Botan::BER_Decoder inner(bits);
+               decode(output, inner, level + 1); // recurse
+               }
+            catch(...)
+               {
+               emit(output, "[" + std::to_string(type_tag) + "]", level, length, format_binary(bits));
+               }
             }
-         catch(...)
+         else
             {
-            emit(output, "[" + std::to_string(type_tag) + "]", level, length, url_encode(bits));
+            emit(output, "[" + std::to_string(type_tag) + "]", level, length, format_binary(bits));
             }
-#else
-         emit(output, "[" + std::to_string(type_tag) + "]", level, length, url_encode(bits));
-#endif
          }
       else if(type_tag == Botan::OBJECT_ID)
          {
@@ -241,7 +299,11 @@ void decode(std::ostream& output,
          data.decode(oid);
 
          std::string out = Botan::OIDS::lookup(oid);
-         if(out != oid.as_string())
+         if(out.empty())
+            {
+            out = oid.as_string();
+            }
+         else
             {
             out += " [" + oid.as_string() + "]";
             }
@@ -291,7 +353,7 @@ void decode(std::ostream& output,
          {
          emit(output, type_name(type_tag), level, length);
          }
-      else if(type_tag == Botan::OCTET_STRING)
+      else if(type_tag == Botan::OCTET_STRING || type_tag == Botan::BIT_STRING)
          {
          std::vector<uint8_t> decoded_bits;
          data.decode(decoded_bits, type_tag);
@@ -303,38 +365,8 @@ void decode(std::ostream& output,
             }
          catch(...)
             {
-            emit(output, type_name(type_tag), level, length, url_encode(decoded_bits));
+            emit(output, type_name(type_tag), level, length, format_binary(decoded_bits));
             }
-         }
-      else if(type_tag == Botan::BIT_STRING)
-         {
-         std::vector<uint8_t> decoded_bits;
-         data.decode(decoded_bits, type_tag);
-
-         std::vector<bool> bit_set;
-
-         for(size_t i = 0; i != decoded_bits.size(); ++i)
-            {
-            for(size_t j = 0; j != 8; ++j)
-               {
-               const bool bit = static_cast<bool>((decoded_bits[decoded_bits.size() - i - 1] >> (7 - j)) & 1);
-               bit_set.push_back(bit);
-               }
-            }
-
-         std::string bit_str;
-         for(size_t i = 0; i != bit_set.size(); ++i)
-            {
-            bool the_bit = bit_set[bit_set.size() - i - 1];
-
-            if(!the_bit && bit_str.size() == 0)
-               {
-               continue;
-               }
-            bit_str += (the_bit ? "1" : "0");
-            }
-
-         emit(output, type_name(type_tag), level, length, bit_str);
          }
       else if(Botan::ASN1_String::is_string_type(type_tag))
          {
@@ -356,14 +388,6 @@ void decode(std::ostream& output,
 
       obj = decoder.get_next_object();
       }
-   }
-
-std::string format_asn1(const uint8_t in[], size_t len)
-   {
-   std::ostringstream out;
-   Botan::BER_Decoder dec(in, len);
-   decode(out, dec, 0);
-   return out.str();
    }
 
 }
@@ -389,7 +413,13 @@ class ASN1_Printer final : public Command
             contents = slurp_file(input);
             }
 
-         output() << format_asn1(contents.data(), contents.size());
+         // TODO make these configurable
+         const size_t LIMIT = 4 * 1024;
+         const size_t BIN_LIMIT = 1024;
+         const bool PRINT_CONTEXT_SPECIFIC = true;
+
+         ASN1_Pretty_Printer printer(LIMIT, BIN_LIMIT, PRINT_CONTEXT_SPECIFIC);
+         output() << printer.print(contents);
          }
    };
 
