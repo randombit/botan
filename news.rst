@@ -22,9 +22,20 @@ Version 2.4.0, Not Yet Released
 * Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC, BLAKE2b,
   CRC24 (GH #1281)
 
+* Salsa20 now supports the seek operation.
+
 * Symmetric algorithms (block ciphers, stream ciphers, MACs) now verify that a
   key was set before accepting data. Previously attempting to use an unkeyed
   object would instead result in either a crash or invalid outputs. (GH #1279)
+
+* The X509 certificate, CRL and PKCS10 types have been heavily refactored
+  internally. Previously all data of these types was serialized to strings, then
+  in the event a more complicated data structure (such as X509_DN) was needed,
+  it would be recreated from the string representation. However the round trip
+  process was not perfect and could cause fields to become lost. This approach
+  is no longer used, fixing several bugs (GH #1010 #1089 #1242 #1252). The
+  internal data is now stored in a ``shared_ptr``, so copying such objects is
+  now very cheap. (GH #884)
 
 * ASN.1 string objects previously held their contents as ISO 8859-1 codepoints.
   However this led to certificates which contained strings outside of this
@@ -77,6 +88,13 @@ Version 2.4.0, Not Yet Released
   requires the width be at least 32 bits. The only way this feature
   could be used was by manually constructing a ``CTR_BE`` object and
   setting the second parameter to something in the range of 1 to 3.
+
+* A new mechanism for formatting ASN.1 data is included in ``asn1_print.h``.
+  This is the same functionality used by the command line ``asn1print`` util,
+  now cleaned up and moved to the library.
+
+* The size of ASN1_Tag is increased to 32 bits. This avoids a problem
+  with UbSan (GH #751)
 
 * In 2.3.0, final annotations were added to many classes including the TLS
   policies (like ``Strict_Policy`` and ``BSI_TR_02102_2``). However it is
