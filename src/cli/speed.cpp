@@ -28,12 +28,6 @@
 #include <botan/internal/os_utils.h>
 #include <botan/version.h>
 
-//#define INCLUDE_SIMD_PERF
-
-#if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
-   #include <botan/internal/simd_32.h>
-#endif
-
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>
 #endif
@@ -855,19 +849,6 @@ class Speed final : public Command
 #endif
 
                }
-#if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
-            else if(algo == "simd")
-               {
-               if(Botan::CPUID::has_simd_32())
-                  {
-                  bench_simd32(msec);
-                  }
-               else
-                  {
-                  error_output() << "Skipping simd perf test, CPUID indicates SIMD not supported";
-                  }
-               }
-#endif
             else if(algo == "entropy")
                {
                bench_entropy_sources(msec);
@@ -1105,103 +1086,6 @@ class Speed final : public Command
             record_result(timer);
             }
          }
-
-#if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
-      void bench_simd32(const std::chrono::milliseconds msec)
-         {
-         const size_t SIMD_par = 32;
-         static_assert(SIMD_par % 4 == 0, "SIMD input is multiple of 4");
-
-         Botan::SIMD_4x32 simd[SIMD_par];
-
-         Timer total_time("");
-
-         Timer load_le_op("SIMD_4x32", SIMD_par, "load_le");
-         Timer load_be_op("SIMD_4x32", SIMD_par, "load_be");
-         Timer add_op("SIMD_4x32", SIMD_par, "add");
-         Timer sub_op("SIMD_4x32", SIMD_par, "sub");
-         Timer xor_op("SIMD_4x32", SIMD_par, "xor");
-         Timer bswap_op("SIMD_4x32", SIMD_par, "bswap");
-         Timer transpose_op("SIMD_4x32", SIMD_par / 4, "transpose4");
-
-         std::chrono::milliseconds msec_part = msec / 5;
-
-         uint8_t rnd[16 + SIMD_par];
-         rng().randomize(rnd, sizeof(rnd));
-
-         while(total_time.under(msec))
-            {
-            total_time.start();
-
-            load_le_op.run([&]()
-               {
-               for(size_t i = 0; i != SIMD_par; ++i)
-                  {
-                  // Test that unaligned loads work ok
-                  simd[i].load_le(rnd + i);
-                  }
-               });
-
-            load_be_op.run([&]()
-               {
-               for(size_t i = 0; i != SIMD_par; ++i)
-                  {
-                  simd[i].load_be(rnd + i);
-                  }
-               });
-
-            add_op.run([&]()
-               {
-               for(size_t i = 0; i != SIMD_par; ++i)
-                  {
-                  simd[i] += simd[(i + 8) % SIMD_par];
-                  }
-               });
-
-            xor_op.run([&]()
-               {
-               for(size_t i = 0; i != SIMD_par; ++i)
-                  {
-                  simd[i] ^= simd[(i + 8) % SIMD_par];
-                  }
-               });
-
-            transpose_op.run([&]()
-               {
-               for(size_t i = 0; i != SIMD_par; i += 4)
-                  {
-                  Botan::SIMD_4x32::transpose(simd[i], simd[i + 1], simd[i + 2], simd[i + 3]);
-                  }
-               });
-
-            sub_op.run([&]()
-               {
-               for(size_t i = 0; i != SIMD_par; ++i)
-                  {
-                  simd[i] -= simd[(i + 8) % SIMD_par];
-                  }
-               });
-
-            bswap_op.run([&]()
-               {
-               for(size_t i = 0; i != SIMD_par; ++i)
-                  {
-                  simd[i] = simd[i].bswap();
-                  }
-               });
-
-            total_time.stop();
-            }
-
-         record_result(add_op);
-         record_result(sub_op);
-         record_result(xor_op);
-         record_result(bswap_op);
-         record_result(load_le_op);
-         record_result(load_be_op);
-         record_result(transpose_op);
-         }
-#endif
 
       void bench_entropy_sources(const std::chrono::milliseconds)
          {
