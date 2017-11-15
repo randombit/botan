@@ -15,43 +15,96 @@ in the :doc:`tls` protocol. A X.509 certificate is represented by
 
 .. cpp:class:: X509_Certificate
 
- .. cpp:function:: Public_Key* subject_public_key() const
+ .. cpp:function:: X509_Certificate(const std::string& filename)
 
-     Returns the public key of the subject
+     Load a certificate from a file. PEM or DER is accepted.
+
+ .. cpp:function:: X509_Certificate(const std::vector<uint8_t>& in)
+
+     Load a certificate from a byte string.
+
+ .. cpp:function:: X509_Certificate(DataSource& source)
+
+     Load a certificate from an abstract ``DataSource``.
+
+ .. cpp:function:: std::unique_ptr<Public_Key> load_subject_public_key() const
+
+     Deserialize the stored public key and return a new object. This
+     might throw, if it happens that the public key object stored in
+     the certificate is malformed in some way, or in the case that the
+     public key algorithm used is not supported by the library.
+
+     See :ref:`serializing_public_keys` for more information about what to do
+     with the returned object. It may be any type of key, in principle, though
+     RSA and ECDSA are most common.
+
+ .. cpp:function:: std::vector<uint8_t> serial_number() const
+
+     Return the certificates serial number. The tuple of issuer DN and
+     serial number should be unique.
+
+ .. cpp:function:: X509_DN subject_dn() const
+
+     Returns the distinguished name (DN) of the certificate's subject.
 
  .. cpp:function:: X509_DN issuer_dn() const
 
      Returns the distinguished name (DN) of the certificate's issuer
 
- .. cpp:function:: X509_DN subject_dn() const
-
-     Returns the distinguished name (DN) of the certificate's subject
-
- .. cpp:function:: std::string start_time() const
+ .. cpp:function:: X509_Time not_before() const
 
      Returns the point in time the certificate becomes valid
 
- .. cpp:function:: std::string end_time() const
+ .. cpp:function:: X509_Time not_after() const
 
      Returns the point in time the certificate expires
 
- .. cpp:function:: Extensions v3_extensions() const
+ .. cpp:function:: const Extensions& v3_extensions() const
 
-     Returns all extensions of this certificate
+     Returns all extensions of this certificate. You can use this
+     to examine any extension data associated with the certificate,
+     including custom extensions the library doesn't know about.
 
-When working with certificates, the main class to remember is
-``X509_Certificate``. You can read an object of this type, but you
-can't create one on the fly; a CA object is necessary for making a new
-certificate. So for the most part, you only have to worry about
-reading them in, verifying the signatures, and getting the bits of
-data in them (most commonly the public key, and the information about
-the user of that key). An X.509v3 certificate can contain a literally
-infinite number of items related to all kinds of things. Botan doesn't
-support a lot of them, because nobody uses them and they're an
-impossible mess to work with. This section only documents the most
-commonly used ones of the ones that are supported; for the rest, read
-``x509cert.h`` and ``asn1_obj.h`` (which has the definitions of
-various common ASN.1 constructs used in X.509).
+  .. cpp:function:: const AlternativeName& subject_alt_name() const
+
+      Return the subjects alternative name. This is used to store
+      values like associated URIs, DNS addresses, and email addresses.
+
+  .. cpp:function:: const AlternativeName& issuer_alt_name() const
+
+      Return alternative names for the issuer.
+
+  .. cpp:function:: std::string fingerprint(const std::string& hash_name = "SHA-1") const
+
+      Return a fingerprint for the certificate.
+
+  .. cpp:function:: Key_Constraints constraints() const
+
+      Returns either an enumeration listing key constraints (what the
+      associated key can be used for) or ``NO_CONSTRAINTS`` if the
+      relevent extension was not included. Example values are
+      ``DIGITAL_SIGNATURE`` and ``KEY_CERT_SIGN``. More than one value
+      might be specified.
+
+  .. cpp:function:: bool allowed_extended_usage(const OID& usage) const
+
+      Returns true if the OID is included in the extended usage extension.
+
+  .. cpp:function:: bool matches_dns_name(const std::string& name) const
+
+      Check if the certificate's subject alternative name DNS fields
+      match ``name``. This function also handles wildcard certificates.
+
+  .. cpp:function:: std::string to_string() const
+
+      Returns a free-form human readable string describing the certificate.
+
+The ``X509_Certificate`` class has several other functions not described here.
+See the header ``x509cert.h`` for details.
+
+The data of an X.509 certificate is stored as a ``shared_ptr`` to a structure
+containing the decoded information. So copying ``X509_Certificate`` objects is
+quite cheap.
 
 So what's in an X.509 certificate?
 -----------------------------------
@@ -140,8 +193,7 @@ functions are provided to search them.
 
 .. note::
 
-  Validation of custom extensions during path validation
-  is currently not supported.
+  Validation of custom extensions during path validation is currently not supported.
 
 .. cpp:class:: Extensions
 
@@ -178,7 +230,7 @@ functions are provided to search them.
      together with the corresponding criticality flag.
      Contains all extensions, known as well as unknown extensions.
 
-Revocation Lists
+Certificate Revocation Lists
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It will occasionally happen that a certificate must be revoked before
@@ -209,22 +261,7 @@ with
 
 .. cpp:function:: void Certificate_Store::add_crl(const X509_CRL& crl)
 
-and all future verifications will take into account the certificates
-listed.
-
-Reading Certificates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``X509_Certificate`` has two constructors, each of which takes a source of
-data; a filename to read, and a ``DataSource&``::
-
-   X509_Certificate cert1("cert1.pem");
-
-   /* This file contains two certificates, concatenated */
-   DataSource_Stream in("certs2_and_3.pem");
-
-   X509_Certificate cert2(in); // read the first cert
-   X509_Certificate cert3(in); // read the second cert
+and all future verifications will take into account the provided CRL.
 
 Certificate Stores
 ----------------------------------------
@@ -302,9 +339,9 @@ later.
 SQL-backed Certificate Stores
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The SQL-backed certificate stores store all objects in an SQL
-database. They also additionally provide private key storage
-and revocation of individual certificates.
+The SQL-backed certificate stores store all objects in an SQL database. They
+also additionally provide private key storage and revocation of individual
+certificates.
 
 .. cpp:class:: Certificate_Store_In_SQL
 
@@ -323,7 +360,6 @@ and revocation of individual certificates.
 
      Removes ``cert`` from the store. Returns `false` if the certificate could not
      be found and `true` if removal was successful.
-
 
  .. cpp:function:: std::shared_ptr<const Private_Key> find_key(const X509_Certificate&) const
 
@@ -357,8 +393,10 @@ and revocation of individual certificates.
      Generates CRLs for all certificates marked as revoked.
      A CRL is returned for each unique issuer DN.
 
-Botan currently only provides one SQL-backed certificate store using
-sqlite.
+The ``Certificate_Store_In_SQL`` class operates on an abstract ``SQL_Database``
+object. If support for sqlite3 was enabled at build time, Botan includes an
+implementation of this interface for sqlite3, and a subclass of
+``Certificate_Store_In_SQL`` which creates or opens a sqlite3 database.
 
 .. cpp:class:: Certificate_Store_In_SQLite
 
@@ -475,7 +513,7 @@ step. The two constructors are:
     and, if `minimum_key_strength` is less than or equal to 80, then
     SHA-1 signatures will also be accepted.
 
-Certificate Authorities
+Creating New Certificates
 ---------------------------------
 
 A CA is represented by the type ``X509_CA``, which can be found in
@@ -523,10 +561,9 @@ be issued. To generate a new, empty CRL, just call
 .. cpp:function:: X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng, \
                                             uint32_t next_update = 0)
 
-  This function will return a new, empty CRL. The
-  ``next_update`` parameter is the number of seconds before
-  the CRL expires. If it is set to the (default) value of zero, then a
-  reasonable default (currently 7 days) will be used.
+  This function will return a new, empty CRL. The ``next_update`` parameter is
+  the number of seconds before the CRL expires. If it is set to the (default)
+  value of zero, then a reasonable default (currently 7 days) will be used.
 
 On the other hand, you may have issued a CRL before. In that case, you will
 want to issue a new CRL that contains all previously revoked
