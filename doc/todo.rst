@@ -163,6 +163,7 @@ Build/Test
   debug info during CI
 * Run the TPM tests against an emulator
   (https://github.com/PeterHuewe/tpm-emulator)
+* Add clang-tidy, clang-analyzer, cppcheck to CI
 
 FIPS 140 Build
 ---------------------------------------
