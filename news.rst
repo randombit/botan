@@ -20,7 +20,7 @@ Version 2.4.0, Not Yet Released
   and pmull. (GH #1253 #1263)
 
 * Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC, BLAKE2b,
-  Blowfish, CAST-128, and CRC24 (GH #1281)
+  Blowfish, Twofish, CAST-128, and CRC24 (GH #1281)
 
 * Salsa20 now supports the seek operation.
 
