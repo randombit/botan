@@ -190,6 +190,12 @@ const uint32_t S_INIT[1024] = {
    0x01C36AE4, 0xD6EBE1F9, 0x90D4F869, 0xA65CDEA0, 0x3F09252D, 0xC208E69F,
    0xB74E6132, 0xCE77E25B, 0x578FDFE3, 0x3AC372E6 };
 
+inline uint32_t BFF(uint32_t X, const secure_vector<uint32_t>& S)
+   {
+   return ((S[    get_byte(0, X)]  + S[256+get_byte(1, X)]) ^
+            S[512+get_byte(2, X)]) + S[768+get_byte(3, X)];
+   }
+
 }
 
 /*
@@ -199,30 +205,51 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_S.empty() == false);
 
-   const uint32_t* S1 = &m_S[0];
-   const uint32_t* S2 = &m_S[256];
-   const uint32_t* S3 = &m_S[512];
-   const uint32_t* S4 = &m_S[768];
+   while(blocks >= 2)
+      {
+      uint32_t L0, R0, L1, R1;
+      load_be(in, L0, R0, L1, R1);
 
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+      for(size_t r = 0; r != 16; r += 2)
+         {
+         L0 ^= m_P[r];
+         L1 ^= m_P[r];
+         R0 ^= BFF(L0, m_S);
+         R1 ^= BFF(L1, m_S);
+
+         R0 ^= m_P[r+1];
+         R1 ^= m_P[r+1];
+         L0 ^= BFF(R0, m_S);
+         L1 ^= BFF(R1, m_S);
+         }
+
+      L0 ^= m_P[16]; R0 ^= m_P[17];
+      L1 ^= m_P[16]; R1 ^= m_P[17];
+
+      store_be(out, R0, L0, R1, L1);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
+   if(blocks)
       {
       uint32_t L, R;
-      load_be(in + BLOCK_SIZE*i, L, R);
+      load_be(in, L, R);
 
-      for(size_t j = 0; j != 16; j += 2)
+      for(size_t r = 0; r != 16; r += 2)
          {
-         L ^= m_P[j];
-         R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
-                S3[get_byte(2, L)]) + S4[get_byte(3, L)];
+         L ^= m_P[r];
+         R ^= BFF(L, m_S);
 
-         R ^= m_P[j+1];
-         L ^= ((S1[get_byte(0, R)]  + S2[get_byte(1, R)]) ^
-                S3[get_byte(2, R)]) + S4[get_byte(3, R)];
+         R ^= m_P[r+1];
+         L ^= BFF(R, m_S);
          }
 
       L ^= m_P[16]; R ^= m_P[17];
 
-      store_be(out + BLOCK_SIZE*i, R, L);
+      store_be(out, R, L);
       }
    }
 
@@ -233,30 +260,51 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_S.empty() == false);
 
-   const uint32_t* S1 = &m_S[0];
-   const uint32_t* S2 = &m_S[256];
-   const uint32_t* S3 = &m_S[512];
-   const uint32_t* S4 = &m_S[768];
+   while(blocks >= 2)
+      {
+      uint32_t L0, R0, L1, R1;
+      load_be(in, L0, R0, L1, R1);
 
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+      for(size_t r = 17; r != 1; r -= 2)
+         {
+         L0 ^= m_P[r];
+         L1 ^= m_P[r];
+         R0 ^= BFF(L0, m_S);
+         R1 ^= BFF(L1, m_S);
+
+         R0 ^= m_P[r-1];
+         R1 ^= m_P[r-1];
+         L0 ^= BFF(R0, m_S);
+         L1 ^= BFF(R1, m_S);
+         }
+
+      L0 ^= m_P[1]; R0 ^= m_P[0];
+      L1 ^= m_P[1]; R1 ^= m_P[0];
+
+      store_be(out, R0, L0, R1, L1);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
+   if(blocks)
       {
       uint32_t L, R;
-      load_be(in + BLOCK_SIZE*i, L, R);
+      load_be(in, L, R);
 
-      for(size_t j = 17; j != 1; j -= 2)
+      for(size_t r = 17; r != 1; r -= 2)
          {
-         L ^= m_P[j];
-         R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
-                S3[get_byte(2, L)]) + S4[get_byte(3, L)];
+         L ^= m_P[r];
+         R ^= BFF(L, m_S);
 
-         R ^= m_P[j-1];
-         L ^= ((S1[get_byte(0, R)]  + S2[get_byte(1, R)]) ^
-                S3[get_byte(2, R)]) + S4[get_byte(3, R)];
+         R ^= m_P[r-1];
+         L ^= BFF(R, m_S);
          }
 
       L ^= m_P[1]; R ^= m_P[0];
 
-      store_be(out + BLOCK_SIZE*i, R, L);
+      store_be(out, R, L);
       }
    }
 
@@ -282,7 +330,7 @@ void Blowfish::key_expansion(const uint8_t key[],
    {
    for(size_t i = 0, j = 0; i != 18; ++i, j += 4)
       m_P[i] ^= make_uint32(key[(j  ) % length], key[(j+1) % length],
-                          key[(j+2) % length], key[(j+3) % length]);
+                            key[(j+2) % length], key[(j+3) % length]);
 
    uint32_t L = 0, R = 0;
    generate_sbox(m_P, L, R, salt, 0);
@@ -340,25 +388,18 @@ void Blowfish::generate_sbox(secure_vector<uint32_t>& box,
                              const uint8_t salt[16],
                              size_t salt_off) const
    {
-   const uint32_t* S1 = &m_S[0];
-   const uint32_t* S2 = &m_S[256];
-   const uint32_t* S3 = &m_S[512];
-   const uint32_t* S4 = &m_S[768];
-
    for(size_t i = 0; i != box.size(); i += 2)
       {
       L ^= load_be<uint32_t>(salt, (i + salt_off) % 4);
       R ^= load_be<uint32_t>(salt, (i + salt_off + 1) % 4);
 
-      for(size_t j = 0; j != 16; j += 2)
+      for(size_t r = 0; r != 16; r += 2)
          {
-         L ^= m_P[j];
-         R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
-                S3[get_byte(2, L)]) + S4[get_byte(3, L)];
+         L ^= m_P[r];
+         R ^= BFF(L, m_S);
 
-         R ^= m_P[j+1];
-         L ^= ((S1[get_byte(0, R)]  + S2[get_byte(1, R)]) ^
-                S3[get_byte(2, R)]) + S4[get_byte(3, R)];
+         R ^= m_P[r+1];
+         L ^= BFF(R, m_S);
          }
 
       uint32_t T = R; R = L ^ m_P[16]; L = T ^ m_P[17];
