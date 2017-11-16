@@ -16,7 +16,7 @@ namespace {
 /*
 * CAST-128 Round Type 1
 */
-inline uint32_t R1(uint32_t R, uint32_t MK, uint8_t RK)
+inline uint32_t F1(uint32_t R, uint32_t MK, uint8_t RK)
    {
    const uint32_t T = rotl_var(MK + R, RK);
    return (CAST_SBOX1[get_byte(0, T)] ^ CAST_SBOX2[get_byte(1, T)]) -
@@ -26,7 +26,7 @@ inline uint32_t R1(uint32_t R, uint32_t MK, uint8_t RK)
 /*
 * CAST-128 Round Type 2
 */
-inline uint32_t R2(uint32_t R, uint32_t MK, uint8_t RK)
+inline uint32_t F2(uint32_t R, uint32_t MK, uint8_t RK)
    {
    const uint32_t T = rotl_var(MK ^ R, RK);
    return (CAST_SBOX1[get_byte(0, T)]  - CAST_SBOX2[get_byte(1, T)] +
@@ -36,7 +36,7 @@ inline uint32_t R2(uint32_t R, uint32_t MK, uint8_t RK)
 /*
 * CAST-128 Round Type 3
 */
-inline uint32_t R3(uint32_t R, uint32_t MK, uint8_t RK)
+inline uint32_t F3(uint32_t R, uint32_t MK, uint8_t RK)
    {
    const uint32_t T = rotl_var(MK - R, RK);
    return ((CAST_SBOX1[get_byte(0, T)]  + CAST_SBOX2[get_byte(1, T)]) ^
@@ -52,29 +52,74 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_RK.empty() == false);
 
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+   while(blocks >= 2)
+      {
+      uint32_t L0, R0, L1, R1;
+      load_be(in, L0, R0, L1, R1);
+
+      L0 ^= F1(R0, m_MK[ 0], m_RK[ 0]);
+      L1 ^= F1(R1, m_MK[ 0], m_RK[ 0]);
+      R0 ^= F2(L0, m_MK[ 1], m_RK[ 1]);
+      R1 ^= F2(L1, m_MK[ 1], m_RK[ 1]);
+      L0 ^= F3(R0, m_MK[ 2], m_RK[ 2]);
+      L1 ^= F3(R1, m_MK[ 2], m_RK[ 2]);
+      R0 ^= F1(L0, m_MK[ 3], m_RK[ 3]);
+      R1 ^= F1(L1, m_MK[ 3], m_RK[ 3]);
+      L0 ^= F2(R0, m_MK[ 4], m_RK[ 4]);
+      L1 ^= F2(R1, m_MK[ 4], m_RK[ 4]);
+      R0 ^= F3(L0, m_MK[ 5], m_RK[ 5]);
+      R1 ^= F3(L1, m_MK[ 5], m_RK[ 5]);
+      L0 ^= F1(R0, m_MK[ 6], m_RK[ 6]);
+      L1 ^= F1(R1, m_MK[ 6], m_RK[ 6]);
+      R0 ^= F2(L0, m_MK[ 7], m_RK[ 7]);
+      R1 ^= F2(L1, m_MK[ 7], m_RK[ 7]);
+      L0 ^= F3(R0, m_MK[ 8], m_RK[ 8]);
+      L1 ^= F3(R1, m_MK[ 8], m_RK[ 8]);
+      R0 ^= F1(L0, m_MK[ 9], m_RK[ 9]);
+      R1 ^= F1(L1, m_MK[ 9], m_RK[ 9]);
+      L0 ^= F2(R0, m_MK[10], m_RK[10]);
+      L1 ^= F2(R1, m_MK[10], m_RK[10]);
+      R0 ^= F3(L0, m_MK[11], m_RK[11]);
+      R1 ^= F3(L1, m_MK[11], m_RK[11]);
+      L0 ^= F1(R0, m_MK[12], m_RK[12]);
+      L1 ^= F1(R1, m_MK[12], m_RK[12]);
+      R0 ^= F2(L0, m_MK[13], m_RK[13]);
+      R1 ^= F2(L1, m_MK[13], m_RK[13]);
+      L0 ^= F3(R0, m_MK[14], m_RK[14]);
+      L1 ^= F3(R1, m_MK[14], m_RK[14]);
+      R0 ^= F1(L0, m_MK[15], m_RK[15]);
+      R1 ^= F1(L1, m_MK[15], m_RK[15]);
+
+      store_be(out, R0, L0, R1, L1);
+
+      blocks -= 2;
+      out += 2 * BLOCK_SIZE;
+      in  += 2 * BLOCK_SIZE;
+      }
+
+   if(blocks)
       {
       uint32_t L, R;
-      load_be(in + BLOCK_SIZE*i, L, R);
+      load_be(in, L, R);
 
-      L ^= R1(R, m_MK[ 0], m_RK[ 0]);
-      R ^= R2(L, m_MK[ 1], m_RK[ 1]);
-      L ^= R3(R, m_MK[ 2], m_RK[ 2]);
-      R ^= R1(L, m_MK[ 3], m_RK[ 3]);
-      L ^= R2(R, m_MK[ 4], m_RK[ 4]);
-      R ^= R3(L, m_MK[ 5], m_RK[ 5]);
-      L ^= R1(R, m_MK[ 6], m_RK[ 6]);
-      R ^= R2(L, m_MK[ 7], m_RK[ 7]);
-      L ^= R3(R, m_MK[ 8], m_RK[ 8]);
-      R ^= R1(L, m_MK[ 9], m_RK[ 9]);
-      L ^= R2(R, m_MK[10], m_RK[10]);
-      R ^= R3(L, m_MK[11], m_RK[11]);
-      L ^= R1(R, m_MK[12], m_RK[12]);
-      R ^= R2(L, m_MK[13], m_RK[13]);
-      L ^= R3(R, m_MK[14], m_RK[14]);
-      R ^= R1(L, m_MK[15], m_RK[15]);
+      L ^= F1(R, m_MK[ 0], m_RK[ 0]);
+      R ^= F2(L, m_MK[ 1], m_RK[ 1]);
+      L ^= F3(R, m_MK[ 2], m_RK[ 2]);
+      R ^= F1(L, m_MK[ 3], m_RK[ 3]);
+      L ^= F2(R, m_MK[ 4], m_RK[ 4]);
+      R ^= F3(L, m_MK[ 5], m_RK[ 5]);
+      L ^= F1(R, m_MK[ 6], m_RK[ 6]);
+      R ^= F2(L, m_MK[ 7], m_RK[ 7]);
+      L ^= F3(R, m_MK[ 8], m_RK[ 8]);
+      R ^= F1(L, m_MK[ 9], m_RK[ 9]);
+      L ^= F2(R, m_MK[10], m_RK[10]);
+      R ^= F3(L, m_MK[11], m_RK[11]);
+      L ^= F1(R, m_MK[12], m_RK[12]);
+      R ^= F2(L, m_MK[13], m_RK[13]);
+      L ^= F3(R, m_MK[14], m_RK[14]);
+      R ^= F1(L, m_MK[15], m_RK[15]);
 
-      store_be(out + BLOCK_SIZE*i, R, L);
+      store_be(out, R, L);
       }
    }
 
@@ -85,29 +130,74 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_RK.empty() == false);
 
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+   while(blocks >= 2)
+      {
+      uint32_t L0, R0, L1, R1;
+      load_be(in, L0, R0, L1, R1);
+
+      R0 ^= F1(L0, m_MK[15], m_RK[15]);
+      R1 ^= F1(L1, m_MK[15], m_RK[15]);
+      L0 ^= F3(R0, m_MK[14], m_RK[14]);
+      L1 ^= F3(R1, m_MK[14], m_RK[14]);
+      R0 ^= F2(L0, m_MK[13], m_RK[13]);
+      R1 ^= F2(L1, m_MK[13], m_RK[13]);
+      L0 ^= F1(R0, m_MK[12], m_RK[12]);
+      L1 ^= F1(R1, m_MK[12], m_RK[12]);
+      R0 ^= F3(L0, m_MK[11], m_RK[11]);
+      R1 ^= F3(L1, m_MK[11], m_RK[11]);
+      L0 ^= F2(R0, m_MK[10], m_RK[10]);
+      L1 ^= F2(R1, m_MK[10], m_RK[10]);
+      R0 ^= F1(L0, m_MK[ 9], m_RK[ 9]);
+      R1 ^= F1(L1, m_MK[ 9], m_RK[ 9]);
+      L0 ^= F3(R0, m_MK[ 8], m_RK[ 8]);
+      L1 ^= F3(R1, m_MK[ 8], m_RK[ 8]);
+      R0 ^= F2(L0, m_MK[ 7], m_RK[ 7]);
+      R1 ^= F2(L1, m_MK[ 7], m_RK[ 7]);
+      L0 ^= F1(R0, m_MK[ 6], m_RK[ 6]);
+      L1 ^= F1(R1, m_MK[ 6], m_RK[ 6]);
+      R0 ^= F3(L0, m_MK[ 5], m_RK[ 5]);
+      R1 ^= F3(L1, m_MK[ 5], m_RK[ 5]);
+      L0 ^= F2(R0, m_MK[ 4], m_RK[ 4]);
+      L1 ^= F2(R1, m_MK[ 4], m_RK[ 4]);
+      R0 ^= F1(L0, m_MK[ 3], m_RK[ 3]);
+      R1 ^= F1(L1, m_MK[ 3], m_RK[ 3]);
+      L0 ^= F3(R0, m_MK[ 2], m_RK[ 2]);
+      L1 ^= F3(R1, m_MK[ 2], m_RK[ 2]);
+      R0 ^= F2(L0, m_MK[ 1], m_RK[ 1]);
+      R1 ^= F2(L1, m_MK[ 1], m_RK[ 1]);
+      L0 ^= F1(R0, m_MK[ 0], m_RK[ 0]);
+      L1 ^= F1(R1, m_MK[ 0], m_RK[ 0]);
+
+      store_be(out, R0, L0, R1, L1);
+
+      blocks -= 2;
+      out += 2 * BLOCK_SIZE;
+      in  += 2 * BLOCK_SIZE;
+      }
+
+   if(blocks)
       {
       uint32_t L, R;
-      load_be(in + BLOCK_SIZE*i, L, R);
+      load_be(in, L, R);
 
-      L ^= R1(R, m_MK[15], m_RK[15]);
-      R ^= R3(L, m_MK[14], m_RK[14]);
-      L ^= R2(R, m_MK[13], m_RK[13]);
-      R ^= R1(L, m_MK[12], m_RK[12]);
-      L ^= R3(R, m_MK[11], m_RK[11]);
-      R ^= R2(L, m_MK[10], m_RK[10]);
-      L ^= R1(R, m_MK[ 9], m_RK[ 9]);
-      R ^= R3(L, m_MK[ 8], m_RK[ 8]);
-      L ^= R2(R, m_MK[ 7], m_RK[ 7]);
-      R ^= R1(L, m_MK[ 6], m_RK[ 6]);
-      L ^= R3(R, m_MK[ 5], m_RK[ 5]);
-      R ^= R2(L, m_MK[ 4], m_RK[ 4]);
-      L ^= R1(R, m_MK[ 3], m_RK[ 3]);
-      R ^= R3(L, m_MK[ 2], m_RK[ 2]);
-      L ^= R2(R, m_MK[ 1], m_RK[ 1]);
-      R ^= R1(L, m_MK[ 0], m_RK[ 0]);
+      L ^= F1(R, m_MK[15], m_RK[15]);
+      R ^= F3(L, m_MK[14], m_RK[14]);
+      L ^= F2(R, m_MK[13], m_RK[13]);
+      R ^= F1(L, m_MK[12], m_RK[12]);
+      L ^= F3(R, m_MK[11], m_RK[11]);
+      R ^= F2(L, m_MK[10], m_RK[10]);
+      L ^= F1(R, m_MK[ 9], m_RK[ 9]);
+      R ^= F3(L, m_MK[ 8], m_RK[ 8]);
+      L ^= F2(R, m_MK[ 7], m_RK[ 7]);
+      R ^= F1(L, m_MK[ 6], m_RK[ 6]);
+      L ^= F3(R, m_MK[ 5], m_RK[ 5]);
+      R ^= F2(L, m_MK[ 4], m_RK[ 4]);
+      L ^= F1(R, m_MK[ 3], m_RK[ 3]);
+      R ^= F3(L, m_MK[ 2], m_RK[ 2]);
+      L ^= F2(R, m_MK[ 1], m_RK[ 1]);
+      R ^= F1(L, m_MK[ 0], m_RK[ 0]);
 
-      store_be(out + BLOCK_SIZE*i, R, L);
+      store_be(out, R, L);
       }
    }
 
