@@ -22,71 +22,71 @@ namespace Botan {
 /*
 * Create a Certificate_Extension object of some kind to handle
 */
-Certificate_Extension*
+std::unique_ptr<Certificate_Extension>
 Extensions::create_extn_obj(const OID& oid,
                             bool critical,
                             const std::vector<uint8_t>& body)
    {
    const std::string oid_str = oid.as_string();
 
-   Certificate_Extension* extn = nullptr;
+   std::unique_ptr<Certificate_Extension> extn;
 
    if(oid == Cert_Extension::Subject_Key_ID::static_oid())
       {
-      extn = new Cert_Extension::Subject_Key_ID;
+      extn.reset(new Cert_Extension::Subject_Key_ID);
       }
    else if(oid == Cert_Extension::Key_Usage::static_oid())
       {
-      extn = new Cert_Extension::Key_Usage;
+      extn.reset(new Cert_Extension::Key_Usage);
       }
    else if(oid == Cert_Extension::Subject_Alternative_Name::static_oid())
       {
-      extn = new Cert_Extension::Subject_Alternative_Name;
+      extn.reset(new Cert_Extension::Subject_Alternative_Name);
       }
    else if(oid == Cert_Extension::Issuer_Alternative_Name::static_oid())
       {
-      extn = new Cert_Extension::Issuer_Alternative_Name;
+      extn.reset(new Cert_Extension::Issuer_Alternative_Name);
       }
    else if(oid == Cert_Extension::Basic_Constraints::static_oid())
       {
-      extn = new Cert_Extension::Basic_Constraints;
+      extn.reset(new Cert_Extension::Basic_Constraints);
       }
    else if(oid == Cert_Extension::CRL_Number::static_oid())
       {
-      extn = new Cert_Extension::CRL_Number;
+      extn.reset(new Cert_Extension::CRL_Number);
       }
    else if(oid == Cert_Extension::CRL_ReasonCode::static_oid())
       {
-      extn = new Cert_Extension::CRL_ReasonCode;
+      extn.reset(new Cert_Extension::CRL_ReasonCode);
       }
    else if(oid == Cert_Extension::Authority_Key_ID::static_oid())
       {
-      extn = new Cert_Extension::Authority_Key_ID;
+      extn.reset(new Cert_Extension::Authority_Key_ID);
       }
    else if(oid == Cert_Extension::Name_Constraints::static_oid())
       {
-      extn = new Cert_Extension::Name_Constraints;
+      extn.reset(new Cert_Extension::Name_Constraints);
       }
    else if(oid == Cert_Extension::CRL_Distribution_Points::static_oid())
       {
-      extn = new Cert_Extension::CRL_Distribution_Points;
+      extn.reset(new Cert_Extension::CRL_Distribution_Points);
       }
    else if(oid == Cert_Extension::Certificate_Policies::static_oid())
       {
-      extn = new Cert_Extension::Certificate_Policies;
+      extn.reset(new Cert_Extension::Certificate_Policies);
       }
    else if(oid == Cert_Extension::Extended_Key_Usage::static_oid())
       {
-      extn = new Cert_Extension::Extended_Key_Usage;
+      extn.reset(new Cert_Extension::Extended_Key_Usage);
       }
    else if(oid == Cert_Extension::Authority_Information_Access::static_oid())
       {
-      extn = new Cert_Extension::Authority_Information_Access;
+      extn.reset(new Cert_Extension::Authority_Information_Access);
       }
    else
       {
       // some other unknown extension type
-      extn = new Cert_Extension::Unknown_Extension(oid, critical);
+      extn.reset(new Cert_Extension::Unknown_Extension(oid, critical));
       }
 
    try
@@ -239,8 +239,8 @@ void Extensions::decode_from(BER_Decoder& from_source)
          .decode(bits, OCTET_STRING)
       .end_cons();
 
-      Extensions_Info info(critical, bits,
-                           create_extn_obj(oid, critical, bits));
+      std::unique_ptr<Certificate_Extension> obj = create_extn_obj(oid, critical, bits);
+      Extensions_Info info(critical, bits, obj.release());
 
       m_extension_oids.push_back(oid);
       m_extension_info.emplace(oid, info);

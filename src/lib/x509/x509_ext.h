@@ -224,27 +224,30 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
 #endif
 
    private:
-      static Certificate_Extension* create_extn_obj(const OID& oid,
-                                                    bool critical,
-                                                    const std::vector<uint8_t>& body);
+      static std::unique_ptr<Certificate_Extension>
+         create_extn_obj(const OID& oid,
+                         bool critical,
+                         const std::vector<uint8_t>& body);
 
       class Extensions_Info
          {
          public:
             Extensions_Info(bool critical,
                             Certificate_Extension* ext) :
-               m_critical(critical),
-               m_bits(ext->encode_inner()),
-               m_obj(ext)
-               {}
+               m_obj(ext),
+               m_bits(m_obj->encode_inner()),
+               m_critical(critical)
+               {
+               }
 
             Extensions_Info(bool critical,
                             const std::vector<uint8_t>& encoding,
                             Certificate_Extension* ext) :
-               m_critical(critical),
+               m_obj(ext),
                m_bits(encoding),
-               m_obj(ext)
-               {}
+               m_critical(critical)
+               {
+               }
 
             bool is_critical() const { return m_critical; }
             const std::vector<uint8_t>& bits() const { return m_bits; }
@@ -255,9 +258,9 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
                }
 
          private:
-            bool m_critical = false;
+            std::shared_ptr<Certificate_Extension> m_obj;
             std::vector<uint8_t> m_bits;
-            std::shared_ptr<const Certificate_Extension> m_obj;
+            bool m_critical = false;
          };
 
       std::vector<OID> m_extension_oids;
