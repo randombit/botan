@@ -66,9 +66,9 @@ class OCSP_Tests final : public Test
          // Simple parsing tests
          const std::vector<std::string> ocsp_input_paths =
             {
-            "ocsp/resp1.der",
-            "ocsp/resp2.der",
-            "ocsp/resp3.der"
+            "x509/ocsp/resp1.der",
+            "x509/ocsp/resp2.der",
+            "x509/ocsp/resp3.der"
             };
 
          for(std::string ocsp_input_path : ocsp_input_paths)
@@ -93,7 +93,7 @@ class OCSP_Tests final : public Test
 
          try
             {
-            Botan::OCSP::Response resp1(slurp_data_file("ocsp/resp1.der"));
+            Botan::OCSP::Response resp1(slurp_data_file("x509/ocsp/resp1.der"));
             const auto &certs1 = resp1.certificates();
             if(result.test_eq("Expected count of certificates", certs1.size(), 1))
                {
@@ -105,7 +105,7 @@ class OCSP_Tests final : public Test
                result.test_eq("CN matches expected", matches, true);
                }
 
-            Botan::OCSP::Response resp2(slurp_data_file("ocsp/resp2.der"));
+            Botan::OCSP::Response resp2(slurp_data_file("x509/ocsp/resp2.der"));
             const auto &certs2 = resp2.certificates();
             result.test_eq("Expect no certificates", certs2.size(), 0);
             }
@@ -121,8 +121,8 @@ class OCSP_Tests final : public Test
          {
          Test::Result result("OCSP request encoding");
 
-         const Botan::X509_Certificate end_entity(Test::data_file("ocsp/gmail.pem"));
-         const Botan::X509_Certificate issuer(Test::data_file("ocsp/google_g2.pem"));
+         const Botan::X509_Certificate end_entity(Test::data_file("x509/ocsp/gmail.pem"));
+         const Botan::X509_Certificate issuer(Test::data_file("x509/ocsp/google_g2.pem"));
 
          try
             {
@@ -155,13 +155,13 @@ class OCSP_Tests final : public Test
          {
          Test::Result result("OCSP request check");
 
-         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("ocsp/randombit.pem");
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("ocsp/letsencrypt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("ocsp/geotrust.pem");
+         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
 
          const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("ocsp/randombit_ocsp.der");
+         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
 
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
@@ -187,9 +187,9 @@ class OCSP_Tests final : public Test
          Test::Result result("OCSP online check");
 
          // Expired end-entity certificate:
-         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("ocsp/randombit.pem");
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("ocsp/letsencrypt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("ocsp/identrust.pem");
+         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
 
          const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
 

@@ -267,7 +267,7 @@ class Certstor_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         const std::string test_dir = Test::data_dir() + "/certstor";
+         const std::string test_dir = Test::data_dir() + "/x509/certstor";
          struct CertificateAndKeyFilenames
             {
             const std::string certificate;

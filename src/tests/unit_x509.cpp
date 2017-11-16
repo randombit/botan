@@ -367,9 +367,9 @@ Test::Result test_crl_dn_name()
 
    const Botan::OID dc_oid("0.9.2342.19200300.100.1.25");
 
-   Botan::X509_Certificate cert(Test::data_file("misc_certs/opcuactt_ca.der"));
+   Botan::X509_Certificate cert(Test::data_file("x509/misc/opcuactt_ca.der"));
 
-   Botan::DataSource_Stream key_input(Test::data_file("misc_certs/opcuactt_ca.pem"));
+   Botan::DataSource_Stream key_input(Test::data_file("x509/misc/opcuactt_ca.pem"));
    std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(key_input);
    Botan::X509_CA ca(cert, *key, "SHA-256", Test::rng());
 
@@ -389,7 +389,7 @@ Test::Result test_x509_utf8()
 
    try
       {
-      Botan::X509_Certificate utf8_cert(Test::data_file("x509test/contains_utf8string.pem"));
+      Botan::X509_Certificate utf8_cert(Test::data_file("x509/misc/contains_utf8string.pem"));
 
       // UTF-8 encoded fields of test certificate (contains cyrillic letters)
       const std::string organization =
@@ -425,7 +425,7 @@ Test::Result test_x509_bmpstring()
 
    try
       {
-      Botan::X509_Certificate ucs2_cert(Test::data_file("x509test/contains_bmpstring.pem"));
+      Botan::X509_Certificate ucs2_cert(Test::data_file("x509/misc/contains_bmpstring.pem"));
 
       // UTF-8 encoded fields of test certificate (contains cyrillic and greek letters)
       const std::string organization =
