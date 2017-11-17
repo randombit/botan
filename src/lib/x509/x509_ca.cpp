@@ -75,7 +75,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       }
 
    extensions.replace(new Cert_Extension::Authority_Key_ID(m_ca_cert.subject_key_id()));
-   extensions.replace(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
+   extensions.replace(new Cert_Extension::Subject_Key_ID(req.raw_public_key(), m_hash_fn));
 
    extensions.replace(
       new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));

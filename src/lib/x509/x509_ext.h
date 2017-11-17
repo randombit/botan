@@ -336,8 +336,6 @@ class BOTAN_PUBLIC_API(2,0) Subject_Key_ID final : public Certificate_Extension
    public:
       Subject_Key_ID() = default;
 
-      explicit Subject_Key_ID(const std::vector<uint8_t>& k) : m_key_id(k) {}
-
       Subject_Key_ID(const std::vector<uint8_t>& public_key,
                      const std::string& hash_fn);
 
@@ -350,6 +348,8 @@ class BOTAN_PUBLIC_API(2,0) Subject_Key_ID final : public Certificate_Extension
       OID oid_of() const override { return static_oid(); }
 
    private:
+      explicit Subject_Key_ID(const std::vector<uint8_t>& k) : m_key_id(k) {}
+
       std::string oid_name() const override
          { return "X509v3.SubjectKeyIdentifier"; }
 

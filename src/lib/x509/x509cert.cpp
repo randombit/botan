@@ -771,6 +771,7 @@ std::string X509_Certificate::to_string() const
       }
 
    NameConstraints name_constraints = this->name_constraints();
+
    if(!name_constraints.permitted().empty() ||
          !name_constraints.excluded().empty())
       {

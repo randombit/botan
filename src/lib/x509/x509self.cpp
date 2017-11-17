@@ -76,7 +76,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       extensions.add(new Cert_Extension::Key_Usage(constraints), true);
       }
 
-   extensions.add(new Cert_Extension::Subject_Key_ID(pub_key));
+   extensions.add(new Cert_Extension::Subject_Key_ID(pub_key, hash_fn));
 
    extensions.add(
       new Cert_Extension::Subject_Alternative_Name(subject_alt));
