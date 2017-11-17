@@ -79,4 +79,4 @@ docs:
 %{build_doc_commands}
 
 install: $(CLI) docs
-	$(SCRIPTS_DIR)/install.py --prefix=%{prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/install.py --prefix=%{prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}

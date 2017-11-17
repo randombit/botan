@@ -2,6 +2,8 @@
 CXX            = %{cxx} %{cxx_abi_flags}
 LINKER         = %{linker}
 
+PYTHON_EXE     = %{python_exe}
+
 CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 SO_OBJ_FLAGS   = %{shared_flags}

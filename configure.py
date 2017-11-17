@@ -2050,6 +2050,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'fuzzer_type': '#define BOTAN_FUZZER_IS_%s' % (options.build_fuzzers.upper()) if options.build_fuzzers else '',
         'fuzzer_libs': '' if options.fuzzer_lib is None else '%s%s' % (cc.add_lib_option, options.fuzzer_lib),
 
+        'python_exe': sys.executable,
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
         'install_cmd_exec': osinfo.install_cmd_exec,
