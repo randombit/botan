@@ -52,6 +52,10 @@
    #include <botan/fpe_fe1.h>
 #endif
 
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
+   #include <botan/rfc3394.h>
+#endif
+
 #if defined(BOTAN_HAS_COMPRESSION)
    #include <botan/compression.h>
 #endif
@@ -805,6 +809,14 @@ class Speed final : public Command
                bench_fpe_fe1(msec);
                }
 #endif
+
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
+            else if(algo == "rfc3394")
+               {
+               bench_rfc3394(msec);
+               }
+#endif
+
 #if defined(BOTAN_HAS_ECC_GROUP)
             else if(algo == "ecc_mult")
                {
@@ -1222,6 +1234,34 @@ class Speed final : public Command
 
          record_result(enc_timer);
          record_result(dec_timer);
+         }
+#endif
+
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
+
+      void bench_rfc3394(const std::chrono::milliseconds runtime)
+         {
+         Timer wrap_timer("RFC3394 AES-256 key wrap");
+         Timer unwrap_timer("RFC3394 AES-256 key unwrap");
+
+         const Botan::SymmetricKey kek(rng(), 32);
+         Botan::secure_vector<uint8_t> key(64, 0);
+
+         while(wrap_timer.under(runtime))
+            {
+            wrap_timer.start();
+            key = Botan::rfc3394_keywrap(key, kek);
+            wrap_timer.stop();
+
+            unwrap_timer.start();
+            key = Botan::rfc3394_keyunwrap(key, kek);
+            unwrap_timer.stop();
+
+            key[0] += 1;
+            }
+
+         record_result(wrap_timer);
+         record_result(unwrap_timer);
          }
 #endif
 
