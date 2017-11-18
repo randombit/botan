@@ -13,10 +13,7 @@ namespace Botan {
 
 XTS_Mode::XTS_Mode(BlockCipher* cipher) : m_cipher(cipher)
    {
-   if(m_cipher->block_size() != 8 &&
-      m_cipher->block_size() != 16 &&
-      m_cipher->block_size() != 32 &&
-      m_cipher->block_size() != 64)
+   if(poly_double_supported_size(m_cipher->block_size()) == false)
       {
       throw Invalid_Argument("Cannot use " + cipher->name() + " with XTS");
       }
