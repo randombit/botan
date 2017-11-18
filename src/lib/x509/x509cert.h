@@ -70,6 +70,11 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       const std::vector<uint8_t>& subject_public_key_bits() const;
 
       /**
+      * Return the algorithm identifier of the public key
+      */
+      const AlgorithmIdentifier& subject_public_key_algo() const;
+
+      /**
       * Get the bit string of the public key associated with this certificate
       * @return public key bits
       */

@@ -257,9 +257,16 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    // Check for self-signed vs self-issued certificates
    if(data->m_subject_dn == data->m_issuer_dn)
       {
-      std::unique_ptr<Public_Key> pub_key(
-         X509::load_key(ASN1::put_in_sequence(data->m_subject_public_key_bits)));
-      data->m_self_signed = obj.check_signature(*pub_key);
+      try
+         {
+         std::unique_ptr<Public_Key> pub_key(
+            X509::load_key(ASN1::put_in_sequence(data->m_subject_public_key_bits)));
+         data->m_self_signed = obj.check_signature(*pub_key);
+         }
+      catch(Decoding_Error&)
+         {
+         // ignore errors here to allow parsing to continue
+         }
       }
 
    std::unique_ptr<HashFunction> sha1(HashFunction::create("SHA-1"));
@@ -318,6 +325,11 @@ const X509_Time& X509_Certificate::not_before() const
 const X509_Time& X509_Certificate::not_after() const
    {
    return data().m_not_after;
+   }
+
+const AlgorithmIdentifier& X509_Certificate::subject_public_key_algo() const
+   {
+   return data().m_subject_public_key_algid;
    }
 
 const std::vector<uint8_t>& X509_Certificate::v2_issuer_key_id() const
@@ -814,9 +826,17 @@ std::string X509_Certificate::to_string() const
    if(this->subject_key_id().size())
      out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
 
-   std::unique_ptr<Public_Key> pubkey(this->subject_public_key());
-   out << "Public Key [" << pubkey->algo_name() << "-" << pubkey->key_length() << "]\n\n";
-   out << X509::PEM_encode(*pubkey);
+   try
+      {
+      std::unique_ptr<Public_Key> pubkey(this->subject_public_key());
+      out << "Public Key [" << pubkey->algo_name() << "-" << pubkey->key_length() << "]\n\n";
+      out << X509::PEM_encode(*pubkey);
+      }
+   catch(Decoding_Error&)
+      {
+      const AlgorithmIdentifier& alg_id = this->subject_public_key_algo();
+      out << "Failed to decode key with oid " << alg_id.oid.as_string() << "\n";
+      }
 
    return out.str();
    }
