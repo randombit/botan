@@ -27,6 +27,7 @@ Contents
    passhash
    cryptobox
    srp
+   psk_db
    fpe
    compression
    pkcs11

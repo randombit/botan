@@ -14,15 +14,16 @@ The CLI offers access to the following functionalities:
 - TLS server/client
 - Primality testing, prime factorization and prime sampling
 
+.. highlight:: sh
+
 General Command Usage
 ---------------------------------
-All commands follow the predefined syntax
-
-.. code-block:: sh
+All commands follow the predefined syntax::
 
   $ botan <command> <command-options>
 
-and are listed whith their available arguments when botan is called with an invalid or without a command.
+and are listed with their available arguments when ``botan`` is called
+with an unknown command, or without any command, or with ``--help``.
 
 Hash
 ----------------
@@ -127,6 +128,33 @@ Number Theory
 
 ``gen_prime --count=1 bits``
   Samples *count* primes with a length of *bits* bits.
+
+PSK Database
+--------------------
+
+Only available if sqlite3 support was compiled in.
+
+``psk_set db db_key name psk``
+
+  Using the PSK database named db and encrypting under the (hex) key ``db_key``,
+  save the provided psk (also hex) under ``name``::
+
+    $ botan psk_set psk.db deadba55 bunny f00fee
+
+``psk_get db db_key name``
+
+  Get back a value saved with ``psk_set``::
+
+    $ botan psk_get psk.db deadba55 bunny
+    f00fee
+
+``psk_list db db_key``
+
+  List all values saved to the database under the given key::
+
+    $ botan psk_list psk.db deadba55
+    bunny
+
 
 Miscellaneous Commands
 -------------------------------------
