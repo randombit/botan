@@ -6,7 +6,7 @@
  * This operation is not intended for stand-alone use and thus not registered
  * in the Botan algorithm registry.
  *
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/

@@ -1,6 +1,6 @@
 /*
  * XMSS Signature Operation
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/

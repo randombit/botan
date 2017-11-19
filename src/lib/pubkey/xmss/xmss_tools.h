@@ -1,6 +1,6 @@
 /*
- * XMSS Address
- * (C) 2016 Matthias Gierlings
+ * XMSS Tools
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/

@@ -1,6 +1,6 @@
 /*
  * XMSS WOTS Public Key
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -29,7 +29,7 @@ typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
  * A Winternitz One Time Signature public key for use with Extended Hash-Based
  * Signatures.
  **/
-class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PublicKey : virtual public Public_Key
+class XMSS_WOTS_PublicKey : virtual public Public_Key
    {
    public:
       class TreeSignature final

@@ -1,6 +1,6 @@
 /*
  * XMSS WOTS Private Key
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -23,7 +23,7 @@ namespace Botan {
 /** A Winternitz One Time Signature private key for use with Extended Hash-Based
  * Signatures.
  **/
-class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
+class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
    public virtual Private_Key
    {
    public:
