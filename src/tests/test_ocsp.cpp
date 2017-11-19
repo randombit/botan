@@ -198,17 +198,13 @@ class OCSP_Tests final : public Test
 
          typedef std::chrono::system_clock Clock;
          const auto ocspTimeout =  std::chrono::milliseconds(3000);
-         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, Clock::now(), ocspTimeout, true);
+         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, Clock::now(), ocspTimeout, false);
 
-         if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 2))
+         if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
             {
             if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
                {
                result.confirm("Status expired", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED));
-               }
-            if(result.test_eq("Expected size of ocsp_status[1]", ocsp_status[1].size(), 1))
-               {
-               result.confirm("Status good", ocsp_status[1].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
                }
             }
 
