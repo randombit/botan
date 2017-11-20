@@ -91,15 +91,15 @@ All releases are signed with a
         Key fingerprint = 621D AF64 11E1 851C 4CF9  A2E1 6211 EBF1 EFBA DFBC
   uid                  Botan Distribution Key
 
-Some distributions such as Arch, Fedora and Debian include packages
-for Botan. However these are often out of date; using the latest
-source release is recommended.
+Some `distributions <https://github.com/randombit/botan/wiki/Distros>`_
+such as Arch, Fedora and Debian include packages for Botan. However
+these are often out of date; using the latest source release is recommended.
 
 Current Stable Release
 ----------------------------------------
 
 Version 2 requires a C++11 compiler; GCC 4.8 and later, Clang 3.5 and
-later, and MSVC 2015 are regularly tested.
+later, and MSVC 2015/2017 are regularly tested.
 
 The latest 2.x release is
 `2.3.0 <https://botan.randombit.net/releases/Botan-2.3.0.tgz>`_
