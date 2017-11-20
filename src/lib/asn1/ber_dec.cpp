@@ -1,7 +1,6 @@
-
 /*
 * BER Decoder
-* (C) 1999-2008,2015 Jack Lloyd
+* (C) 1999-2008,2015,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,6 +13,13 @@
 namespace Botan {
 
 namespace {
+
+/*
+* This value is somewhat arbitrary. OpenSSL allows up to 128 nested
+* indefinite length sequences. If you increase this, also increase the
+* limit in the test in test_asn1.cpp
+*/
+const size_t ALLOWED_EOC_NESTINGS = 16;
 
 /*
 * BER decode an ASN.1 type tag
@@ -55,12 +61,12 @@ size_t decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
 /*
 * Find the EOC marker
 */
-size_t find_eoc(DataSource*);
+size_t find_eoc(DataSource* src, size_t allow_indef);
 
 /*
 * BER decode an ASN.1 length field
 */
-size_t decode_length(DataSource* ber, size_t& field_size)
+size_t decode_length(DataSource* ber, size_t& field_size, size_t allow_indef)
    {
    uint8_t b;
    if(!ber->read_byte(b))
@@ -70,9 +76,20 @@ size_t decode_length(DataSource* ber, size_t& field_size)
       return b;
 
    field_size += (b & 0x7F);
-   if(field_size == 1) return find_eoc(ber);
    if(field_size > 5)
       throw BER_Decoding_Error("Length field is too large");
+
+   if(field_size == 1)
+      {
+      if(allow_indef == 0)
+         {
+         throw BER_Decoding_Error("Nested EOC markers too deep, rejecting to avoid stack exhaustion");
+         }
+      else
+         {
+         return find_eoc(ber, allow_indef - 1);
+         }
+      }
 
    size_t length = 0;
 
@@ -88,18 +105,9 @@ size_t decode_length(DataSource* ber, size_t& field_size)
    }
 
 /*
-* BER decode an ASN.1 length field
-*/
-size_t decode_length(DataSource* ber)
-   {
-   size_t dummy;
-   return decode_length(ber, dummy);
-   }
-
-/*
 * Find the EOC marker
 */
-size_t find_eoc(DataSource* ber)
+size_t find_eoc(DataSource* ber, size_t allow_indef)
    {
    secure_vector<uint8_t> buffer(DEFAULT_BUFFERSIZE), data;
 
@@ -124,7 +132,7 @@ size_t find_eoc(DataSource* ber)
          break;
 
       size_t length_size = 0;
-      size_t item_size = decode_length(&source, length_size);
+      size_t item_size = decode_length(&source, length_size, allow_indef);
       source.discard_next(item_size);
 
       length = BOTAN_CHECKED_ADD(length, item_size);
@@ -224,7 +232,8 @@ BER_Object BER_Decoder::get_next_object()
       if(next.type_tag == NO_OBJECT)
          return next;
 
-      const size_t length = decode_length(m_source);
+      size_t field_size;
+      const size_t length = decode_length(m_source, field_size, ALLOWED_EOC_NESTINGS);
       if(!m_source->check_available(length))
          throw BER_Decoding_Error("Value truncated");
 
