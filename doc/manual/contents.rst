@@ -23,6 +23,7 @@ Contents
    lowlevel
    kdf
    pbkdf
+   keywrap
    passhash
    cryptobox
    srp

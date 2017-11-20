@@ -14,7 +14,7 @@ Version 2.4.0, Not Yet Released
   RSA-PSS signatures (GH #1270)
 
 * Add support for AES key wrapping with padding, as specified in RFC 5649
-  and NIST SP 800-38F
+  and NIST SP 800-38F (GH #1301)
 
 * Optimize GCM mode on systems both with and without carryless
   multiply support. This includes a new base case implementation
