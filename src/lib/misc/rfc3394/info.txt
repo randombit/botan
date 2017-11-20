@@ -4,4 +4,5 @@ RFC3394_KEYWRAP -> 20131128
 
 <requires>
 aes
+nist_keywrap
 </requires>

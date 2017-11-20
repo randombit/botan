@@ -13,6 +13,9 @@ Version 2.4.0, Not Yet Released
 * Add support for verifying X.509 objects (certificates, CRLs, etc) using
   RSA-PSS signatures (GH #1270)
 
+* Add support for AES key wrapping with padding, as specified in RFC 5649
+  and NIST SP 800-38F
+
 * Optimize GCM mode on systems both with and without carryless
   multiply support. This includes a new base case implementation
   (still constant time), a new SSSE3 implementation for systems with
