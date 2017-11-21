@@ -6,10 +6,13 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_ASN1) && defined(BOTAN_HAS_PEM_CODEC)
+#if defined(BOTAN_HAS_ASN1)
 
-#include <botan/pem.h>
 #include <botan/asn1_print.h>
+
+#if defined(BOTAN_HAS_PEM_CODEC)
+  #include <botan/pem.h>
+#endif
 
 namespace Botan_CLI {
 
@@ -26,8 +29,12 @@ class ASN1_Printer final : public Command
 
          if(flag_set("pem"))
             {
+#if defined(BOTAN_HAS_PEM_CODEC)
             std::string pem_label;
             contents = unlock(Botan::PEM_Code::decode(slurp_file_as_str(input), pem_label));
+#else
+            throw CLI_Error_Unsupported("PEM decoding not available in this build");
+#endif
             }
          else
             {

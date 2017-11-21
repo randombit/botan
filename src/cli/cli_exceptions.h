@@ -34,6 +34,9 @@ class CLI_Usage_Error : public CLI_Error
 class CLI_Error_Unsupported : public CLI_Error
    {
    public:
+
+      CLI_Error_Unsupported(const std::string& msg) : CLI_Error(msg) {}
+
       CLI_Error_Unsupported(const std::string& what,
                             const std::string& who)
          : CLI_Error(what + " with '" + who + "' unsupported or not available") {}
