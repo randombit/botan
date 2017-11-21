@@ -12,6 +12,12 @@
 #include <botan/secmem.h>
 #include <iterator>
 #include <type_traits>
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <thread>
+   #include <chrono>
+   #include <botan/xmss_hash.h>
+   #include <botan/auto_rng.h>
+#endif
 
 namespace Botan {
 
@@ -53,8 +59,42 @@ class XMSS_Tools final
                 void>::type>
       static void concat(secure_vector<uint8_t>& target, const T& src, size_t len);
 
+      /**
+       * @deprecated Determines the maximum number of threads to be used
+       * efficiently, based on runtime timining measurements. Ideally the
+       * result will correspond to the physical number of cores. On systems
+       * supporting simultaneous multi threading (SMT)
+       * std::thread::hardware_concurrency() usually reports a supported
+       * number of threads which is bigger (typically by a factor of 2) than
+       * the number of physical cores available. Using more threads than
+       * physically available cores for computationally intesive tasks
+       * resulted in slowdowns compared to using a number of threads equal to
+       * the number of physical cores on test systems. This function is a
+       * temporary workaround to prevent performance degradation due to
+       * overstressing the CPU with too many threads.
+       *
+       * @return Presumed number of physical cores based on timing measurements.
+       **/
+      static size_t max_threads(); // TODO: Remove max_threads() and use
+                                   // Botan::CPUID once proper plattform
+                                   // independent detection of physical cores is
+                                   // available.
+
    private:
       XMSS_Tools();
+      /**
+       * @deprecated Measures the time t1 it takes to calculate hashes using
+       * std::thread::hardware_concurrency() many threads and the time t2
+       * calculating the same number of hashes using
+       * std::thread::hardware_concurrency() / 2 threads.
+       *
+       * @return std::thread::hardware_concurrency() if t1 < t2
+       *         std::thread::hardware_concurrency() / 2 otherwise.
+       **/
+      static size_t bench_threads(); // TODO: Remove bench_threads() and use
+                                     // Botan::CPUID once proper plattform
+                                     // independent detection of physical cores
+                                     // is //available.
    };
 
 template <typename T, typename U>

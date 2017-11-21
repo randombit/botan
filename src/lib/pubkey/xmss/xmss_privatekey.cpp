@@ -100,7 +100,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
       {
       target_node_height,
       static_cast<size_t>(
-         std::ceil(std::log2(std::thread::hardware_concurrency())))
+         std::ceil(std::log2(XMSS_Tools::max_threads())))
       });
 
    // skip parallelization overhead for leaf nodes.
@@ -171,7 +171,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
          node_addresses[i].set_tree_index(
             (node_addresses[2 * i + 1].get_tree_index() - 1) >> 1);
          using rnd_tree_hash_fn_t =
-            void (XMSS_Common_Ops::*)(secure_vector<uint8_t>&,
+            void (XMSS_PrivateKey::*)(secure_vector<uint8_t>&,
                                       const secure_vector<uint8_t>&,
                                       const secure_vector<uint8_t>&,
                                       XMSS_Address& adrs,
@@ -181,7 +181,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
          threads.emplace_back(
             std::thread(
                static_cast<rnd_tree_hash_fn_t>(
-                  &XMSS_Common_Ops::randomize_tree_hash),
+                  &XMSS_PrivateKey::randomize_tree_hash),
                this,
                std::ref(nodes[i]),
                std::ref(ro_nodes[2 * i]),
