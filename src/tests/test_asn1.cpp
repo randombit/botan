@@ -10,6 +10,7 @@
    #include <botan/der_enc.h>
    #include <botan/ber_dec.h>
    #include <botan/asn1_str.h>
+   #include <botan/asn1_print.h>
 #endif
 
 namespace Botan_Tests {
@@ -41,6 +42,47 @@ Test::Result test_ber_stack_recursion()
       }
 
    result.test_success("No crash");
+
+   return result;
+   }
+
+Test::Result test_ber_eoc_decoding_limits()
+   {
+   Test::Result result("BER nested indefinite length");
+
+   // OSS-Fuzz #4353
+
+   Botan::ASN1_Pretty_Printer printer;
+
+   size_t max_eoc_allowed = 0;
+
+   for(size_t len = 1; len < 1024; ++len)
+      {
+      std::vector<uint8_t> buf(4*len);
+
+      /*
+      This constructs a len deep sequence of SEQUENCES each with
+      an indefinite length
+      */
+      for(size_t i = 0; i != 2*len; i += 2)
+         {
+         buf[i  ] = 0x30;
+         buf[i+1] = 0x80;
+         }
+      // remainder of values left as zeros (EOC markers)
+
+      try
+         {
+         printer.print(buf);
+         }
+      catch(Botan::BER_Decoding_Error&)
+         {
+         max_eoc_allowed = len - 1;
+         break;
+         }
+      }
+
+   result.test_eq("EOC limited to prevent stack exhaustion", max_eoc_allowed, 16);
 
    return result;
    }
@@ -234,6 +276,7 @@ class ASN1_Tests final : public Test
          std::vector<Test::Result> results;
 
          results.push_back(test_ber_stack_recursion());
+         results.push_back(test_ber_eoc_decoding_limits());
          results.push_back(test_asn1_utf8_ascii_parsing());
          results.push_back(test_asn1_utf8_parsing());
          results.push_back(test_asn1_ucs2_parsing());
