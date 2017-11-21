@@ -47,6 +47,15 @@ Version 2.4.0, Not Yet Released
   character. In addition, UCS-4 strings are now supported.
   (GH #1113 #1250 #1287 #1289)
 
+* In BER decoder, avoid unbounded stack recursion when parsing nested
+  indefinite length values. Now at most 16 nested indefinite length
+  values are accepted, anything deeper resulting in a decoding error.
+  (GH #1304 OSS-Fuzz 4353).
+
+* A new ASN.1 printer API allows generating a string representation of arbitrary
+  BER data. This is used in the ``asn1print`` command line utility and may be
+  useful in other applications, for instance for debugging.
+
 * New functions for bit rotations that distinguish rotating by a
   compile-time constant vs a runtime variable rotation. This allows
   better optimizations in both cases. Notably performance of CAST-128
