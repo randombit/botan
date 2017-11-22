@@ -70,9 +70,9 @@ external build systems, see the manual for details.
     :target: https://scan.coverity.com/projects/624
     :alt: Coverity results
 
-.. image:: https://sonarqube.com/api/badges/gate?key=botan
-    :target: https://sonarqube.com/dashboard/index/botan
-    :alt: Sonarqube analysis
+.. image:: https://sonarcloud.io/api/badges/gate?key=botan
+    :target: https://sonarcloud.io/dashboard/index/botan
+    :alt: Sonarcloud analysis
 
 .. image:: https://bestpractices.coreinfrastructure.org/projects/531/badge
     :target: https://bestpractices.coreinfrastructure.org/projects/531
