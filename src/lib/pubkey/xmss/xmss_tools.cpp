@@ -42,8 +42,10 @@ size_t XMSS_Tools::bench_threads()
       auto start = std::chrono::high_resolution_clock::now();
       for(size_t i = 0; i < cc; ++i)
          {
+         auto& hs = hash[i];
+         auto& d = data[i];
          threads.emplace_back(
-            std::thread([&i, &cc, &hs = hash[i], &d = data[i]]()
+            std::thread([&BENCH_ITERATIONS, &i, &cc, &hs, &d]()
                {
                for(size_t n = 0;
                    n < BENCH_ITERATIONS * (std::thread::hardware_concurrency() /
