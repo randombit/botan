@@ -237,7 +237,7 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       const Policy& policy() const { return m_policy; }
 
-      bool save_session(const Session& session) const { return callbacks().tls_session_established(session); }
+      bool save_session(const Session& session);
 
       Callbacks& callbacks() const { return m_callbacks; }
    private:

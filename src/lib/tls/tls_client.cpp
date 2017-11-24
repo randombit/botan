@@ -33,10 +33,11 @@ class Client_Handshake_State final : public Handshake_State
          return *server_public_key.get();
          }
 
+      std::unique_ptr<Public_Key> server_public_key;
+
       // Used during session resumption
       secure_vector<uint8_t> resume_master_secret;
-
-      std::unique_ptr<Public_Key> server_public_key;
+      std::vector<X509_Certificate> resume_peer_certs;
    };
 
 }
@@ -119,6 +120,10 @@ Handshake_State* Client::new_handshake_state(Handshake_IO* io)
 std::vector<X509_Certificate>
 Client::get_peer_cert_chain(const Handshake_State& state) const
    {
+   const Client_Handshake_State& cstate = dynamic_cast<const Client_Handshake_State&>(state);
+   if(cstate.resume_peer_certs.size() > 0)
+      return cstate.resume_peer_certs;
+
    if(state.server_certs())
       return state.server_certs()->cert_chain();
    return std::vector<X509_Certificate>();
@@ -168,6 +173,7 @@ void Client::send_client_hello(Handshake_State& state_base,
                                    next_protocols));
 
                state.resume_master_secret = session_info.master_secret();
+               state.resume_peer_certs = session_info.peer_certs();
                }
             }
          }
@@ -320,6 +326,9 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       else
          {
          // new session
+
+         state.resume_master_secret.clear();
+         state.resume_peer_certs.clear();
 
          if(state.client_hello()->version().is_datagram_protocol() !=
             state.server_hello()->version().is_datagram_protocol())
