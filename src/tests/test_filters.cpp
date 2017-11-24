@@ -198,6 +198,7 @@ class Filter_Tests final : public Test
 
          Botan::Pipe pipe;
 
+         pipe.append_filter(nullptr); // ignored
          pipe.append(nullptr); // ignored
          pipe.prepend(nullptr); // ignored
          pipe.pop(); // empty pipe, so ignored
@@ -213,11 +214,19 @@ class Filter_Tests final : public Test
                             "Invalid argument Pipe::prepend: SecureQueue cannot be used",
                             [&]() { pipe.prepend(queue_filter.get()); });
 
+         pipe.append_filter(new Botan::BitBucket); // succeeds
+         pipe.pop();
+
          pipe.start_msg();
 
          std::unique_ptr<Botan::Filter> filter(new Botan::BitBucket);
 
          // now inside a message, cannot modify pipe structure
+
+         result.test_throws("pipe error",
+                            "Cannot call Pipe::append_filter after start_msg",
+                            [&]() { pipe.append_filter(filter.get()); });
+
          result.test_throws("pipe error",
                             "Cannot append to a Pipe while it is processing",
                             [&]() { pipe.append(filter.get()); });
@@ -231,6 +240,10 @@ class Filter_Tests final : public Test
                             [&]() { pipe.pop(); });
 
          pipe.end_msg();
+
+         result.test_throws("pipe error",
+                            "Cannot call Pipe::append_filter after start_msg",
+                            [&]() { pipe.append_filter(filter.get()); });
 
          result.test_throws("pipe error",
                             "Invalid argument Pipe::read: Invalid message number 100",

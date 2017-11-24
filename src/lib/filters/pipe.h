@@ -295,6 +295,17 @@ class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
       void reset();
 
       /**
+      * Append a new filter onto the filter sequence. This may only be
+      * called immediately after initial construction, before _any_
+      * calls to start_msg have been made.
+      *
+      * This function (unlike append) is not deprecated, as it allows
+      * only modification of the pipe at initialization (before use)
+      * rather than after messages have been processed.
+      */
+      void append_filter(Filter* filt);
+
+      /**
       * Construct a Pipe of up to four filters. The filters are set up
       * in the same order as the arguments.
       */
@@ -312,7 +323,6 @@ class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
 
       ~Pipe();
    private:
-      void init();
       void destruct(Filter*);
       void do_append(Filter* filt);
       void find_endpoints(Filter*);
