@@ -106,13 +106,12 @@ The latest 2.x release is
 `(sig) <https://botan.randombit.net/releases/Botan-2.3.0.tgz.asc>`_
 released on 2017-10-02
 
-Old Stable Release
+Old Release
 ----------------------------------------
 
-The 1.10 branch is the last version of the library written in C++98 and is still
-the most commonly packaged version. It is no longer supported except for
-critical security updates (with all support ending on 2018-1-1), and the
-developers do not recommend its use anymore.
+The 1.10 branch is the last version of the library written in C++98. It is no
+longer supported except for critical security updates (with all support ending
+in 2018), and the developers do not recommend its use anymore.
 
 The latest 1.10 release is
 `1.10.17 <https://botan.randombit.net/releases/Botan-1.10.17.tgz>`_
