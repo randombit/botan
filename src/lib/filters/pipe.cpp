@@ -40,7 +40,10 @@ Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4) :
 */
 Pipe::Pipe(std::initializer_list<Filter*> args)
    {
-   init();
+   m_outputs.reset(new Output_Buffers);
+   m_pipe = nullptr;
+   m_default_read = 0;
+   m_inside_msg = false;
 
    for(auto i = args.begin(); i != args.end(); ++i)
       do_append(*i);
@@ -52,17 +55,6 @@ Pipe::Pipe(std::initializer_list<Filter*> args)
 Pipe::~Pipe()
    {
    destruct(m_pipe);
-   }
-
-/*
-* Initialize the Pipe
-*/
-void Pipe::init()
-   {
-   m_outputs.reset(new Output_Buffers);
-   m_pipe = nullptr;
-   m_default_read = 0;
-   m_inside_msg = false;
    }
 
 /*
@@ -211,6 +203,14 @@ void Pipe::clear_endpoints(Filter* f)
 
 void Pipe::append(Filter* filter)
    {
+   do_append(filter);
+   }
+
+void Pipe::append_filter(Filter* filter)
+   {
+   if(m_outputs->message_count() != 0)
+      throw Invalid_State("Cannot call Pipe::append_filter after start_msg");
+
    do_append(filter);
    }
 
