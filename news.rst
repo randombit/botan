@@ -4,26 +4,25 @@ Release Notes
 Version 2.4.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Support for negotiating the DH group as specified in RFC 7919 is now
-  available in TLS (GH #1263)
+* Support for negotiating the DH group as specified in RFC 7919 is now available
+  in TLS (GH #1263)
 
-* Support for ARIA-GCM ciphersuites are now available in TLS. They
-  are disabled by default. (GH #1284)
+* Support for ARIA-GCM ciphersuites are now available in TLS. They are disabled
+  by default. (GH #1284)
 
 * Add support for verifying X.509 objects (certificates, CRLs, etc) using
   RSA-PSS signatures (GH #1270)
 
-* Add support for AES key wrapping with padding, as specified in RFC 5649
-  and NIST SP 800-38F (GH #1301)
+* Add support for AES key wrapping with padding, as specified in RFC 5649 and
+  NIST SP 800-38F (GH #1301)
 
-* Optimize GCM mode on systems both with and without carryless
-  multiply support. This includes a new base case implementation
-  (still constant time), a new SSSE3 implementation for systems with
-  SSSE3 but not clmul, and better algorithms for systems with clmul
-  and pmull. (GH #1253 #1263)
+* Optimize GCM mode on systems both with and without carryless multiply
+  support. This includes a new base case implementation (still constant time), a
+  new SSSE3 implementation for systems with SSSE3 but not clmul, and better
+  algorithms for systems with clmul and pmull. (GH #1253 #1263)
 
-* Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC, BLAKE2b,
-  Blowfish, Twofish, CAST-128, and CRC24 (GH #1281)
+* Various optimizations for OCB, CFB, CTR, SM3, SM4, GMAC, BLAKE2b, Blowfish,
+  Twofish, CAST-128, and CRC24 (GH #1281)
 
 * Salsa20 now supports the seek operation.
 
@@ -47,31 +46,30 @@ Version 2.4.0, Not Yet Released
   character. In addition, UCS-4 strings are now supported.
   (GH #1113 #1250 #1287 #1289)
 
-* In BER decoder, avoid unbounded stack recursion when parsing nested
-  indefinite length values. Now at most 16 nested indefinite length
-  values are accepted, anything deeper resulting in a decoding error.
-  (GH #1304 OSS-Fuzz 4353).
+* In BER decoder, avoid unbounded stack recursion when parsing nested indefinite
+  length values. Now at most 16 nested indefinite length values are accepted,
+  anything deeper resulting in a decoding error.  (GH #1304 OSS-Fuzz 4353).
 
 * A new ASN.1 printer API allows generating a string representation of arbitrary
   BER data. This is used in the ``asn1print`` command line utility and may be
   useful in other applications, for instance for debugging.
 
-* New functions for bit rotations that distinguish rotating by a
-  compile-time constant vs a runtime variable rotation. This allows
-  better optimizations in both cases. Notably performance of CAST-128
-  and CAST-256 are substantially improved. (GH #1247)
+* New functions for bit rotations that distinguish rotating by a compile-time
+  constant vs a runtime variable rotation. This allows better optimizations in
+  both cases. Notably performance of CAST-128 and CAST-256 are substantially
+  improved. (GH #1247)
 
-* TLS CBC ciphersuites now are implemented using the standard CBC
-  code, instead of reimplementing CBC inside the TLS stack. This
-  allows for parallel decryption of TLS CBC ciphertexts, and improves
-  performance especially when using AES hardware support. (GH #1269)
+* TLS CBC ciphersuites now are implemented using the standard CBC code, instead
+  of reimplementing CBC inside the TLS stack. This allows for parallel
+  decryption of TLS CBC ciphertexts, and improves performance especially when
+  using AES hardware support. (GH #1269)
 
-* Fix a bug in the amalgamation generation which could cause build
-  failures on some systems including macOS. (GH #1264 #1265)
+* Fix a bug in the amalgamation generation which could cause build failures on
+  some systems including macOS. (GH #1264 #1265)
 
 * A particular code sequence in TLS handshake would always (with an ECC
-  ciphersuite) result in an exception being thrown and then caught.
-  This has changed so no exception is thrown. (GH #1275)
+  ciphersuite) result in an exception being thrown and then caught.  This has
+  changed so no exception is thrown. (GH #1275)
 
 * The code for byteswapping has been improved for ARMv7 and for Windows x86-64
   systems using MSVC. (GH #1274)
@@ -90,20 +88,24 @@ Version 2.4.0, Not Yet Released
 
 * The overhead of making a call through the FFI layer has been reduced.
 
-* The IDs for SHA-3 PKCSv1.5 signatures added in 2.3.0 were incorrect.
-  They have been changed to use the correct encoding, and a test added
-  to ensure such errors do not recur.
+* The IDs for SHA-3 PKCSv1.5 signatures added in 2.3.0 were incorrect. They have
+  been changed to use the correct encoding, and a test added to ensure such
+  errors do not recur.
 
-* Counter mode allows setting a configurable width of the counter.
-  Previously it was allowed for a counter of even 8 bits wide, which
-  would mean the keystream would repeat after just 256 blocks. Now it
-  requires the width be at least 32 bits. The only way this feature
-  could be used was by manually constructing a ``CTR_BE`` object and
-  setting the second parameter to something in the range of 1 to 3.
+* Counter mode allows setting a configurable width of the counter. Previously it
+  was allowed for a counter of even 8 bits wide, which would mean the keystream
+  would repeat after just 256 blocks. Now it requires the width be at least 32
+  bits. The only way this feature could be used was by manually constructing a
+  ``CTR_BE`` object and setting the second parameter to something in the range
+  of 1 to 3.
 
 * A new mechanism for formatting ASN.1 data is included in ``asn1_print.h``.
   This is the same functionality used by the command line ``asn1print`` util,
   now cleaned up and moved to the library.
+
+* Add ``Pipe::append_filter``. This is like the existing (deprecated)
+  ``Pipe::append``, the difference being that ``append_filter`` only
+  allows modification before the first call to ``start_msg``. (GH #1306 #1307)
 
 * The size of ASN1_Tag is increased to 32 bits. This avoids a problem
   with UbSan (GH #751)
