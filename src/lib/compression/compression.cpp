@@ -7,6 +7,7 @@
 
 #include <botan/compression.h>
 #include <botan/mem_ops.h>
+#include <botan/exceptn.h>
 #include <cstdlib>
 
 #if defined(BOTAN_HAS_ZLIB)
@@ -48,6 +49,25 @@ Compression_Algorithm* make_compressor(const std::string& name)
    return nullptr;
    }
 
+//static
+std::unique_ptr<Compression_Algorithm>
+Compression_Algorithm::create(const std::string& algo)
+   {
+   std::unique_ptr<Compression_Algorithm> compressor(make_compressor(algo));
+   return compressor;
+   }
+
+//static
+std::unique_ptr<Compression_Algorithm>
+Compression_Algorithm::create_or_throw(const std::string& algo)
+   {
+   if(auto compressor = Compression_Algorithm::create(algo))
+      {
+      return compressor;
+      }
+   throw Lookup_Error("Compression", algo, "");
+   }
+
 Decompression_Algorithm* make_decompressor(const std::string& name)
    {
 #if defined(BOTAN_HAS_ZLIB)
@@ -73,5 +93,24 @@ Decompression_Algorithm* make_decompressor(const std::string& name)
    return nullptr;
    }
 
+//static
+std::unique_ptr<Decompression_Algorithm>
+Decompression_Algorithm::create(const std::string& algo)
+   {
+   std::unique_ptr<Decompression_Algorithm> decompressor(make_decompressor(algo));
+   return decompressor;
+   }
+
+//static
+std::unique_ptr<Decompression_Algorithm>
+Decompression_Algorithm::create_or_throw(const std::string& algo)
+   {
+   if(auto decompressor = Decompression_Algorithm::create(algo))
+      {
+      return decompressor;
+      }
+   throw Lookup_Error("Decompression", algo, "");
+   }
 
 }
+
