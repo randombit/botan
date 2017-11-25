@@ -110,6 +110,10 @@ Version 2.4.0, Not Yet Released
 * The size of ASN1_Tag is increased to 32 bits. This avoids a problem
   with UbSan (GH #751)
 
+* Fix a bug affecting bzip2 compression. In certain circumstances, compression
+  would fail with ``BZ_SEQUENCE_ERROR`` due to calling bzlib in an way it does
+  not support. (GH #1308 #1309)
+
 * In 2.3.0, final annotations were added to many classes including the TLS
   policies (like ``Strict_Policy`` and ``BSI_TR_02102_2``). However it is
   reasonable and useful for an application to derive from one of these policies, so
