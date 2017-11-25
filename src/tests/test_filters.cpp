@@ -463,7 +463,7 @@ class Filter_Tests final : public Test
 
       Test::Result test_pipe_compress()
          {
-         Test::Result result("Pipe");
+         Test::Result result("Pipe compress zlib");
 
 #if defined(BOTAN_HAS_ZLIB)
 
@@ -498,7 +498,7 @@ class Filter_Tests final : public Test
 
       Test::Result test_pipe_compress_bzip2()
          {
-         Test::Result result("Pipe");
+         Test::Result result("Pipe compress bzip2");
 
 #if defined(BOTAN_HAS_BZIP2)
 
@@ -514,8 +514,7 @@ class Filter_Tests final : public Test
          pipe.end_msg();
 
          auto compr = pipe.read_all(0);
-         // Can't do equality check on compression because output may differ
-         result.test_lt("Compressed is shorter", compr.size(), input_str.size());
+         // Here the output is actually longer than the input as input is so short
 
          std::unique_ptr<Botan::Decompression_Filter> decomp_f(new Botan::Decompression_Filter("bzip2"));
          result.test_eq("Decompressor name", decomp_f->name(), "Bzip2_Decompression");
