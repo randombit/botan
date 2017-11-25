@@ -80,6 +80,7 @@ class Compression_Tests final : public Test
                const Botan::secure_vector<uint8_t> empty;
                const Botan::secure_vector<uint8_t> all_zeros(text_len, 0);
                const Botan::secure_vector<uint8_t> random_binary = Test::rng().random_vec(text_len);
+               const Botan::secure_vector<uint8_t> short_text = { 'f', 'o', 'o', '\n' };
 
                const uint8_t* textb = reinterpret_cast<const uint8_t*>(text_str);
                const Botan::secure_vector<uint8_t> text(textb, textb + text_len);
@@ -92,6 +93,8 @@ class Compression_Tests final : public Test
                const size_t c9_r = run_compression(result, 9, *c, *d, random_binary);
                const size_t c1_t = run_compression(result, 1, *c, *d, text);
                const size_t c9_t = run_compression(result, 9, *c, *d, text);
+               const size_t c1_s = run_compression(result, 1, *c, *d, short_text);
+               const size_t c9_s = run_compression(result, 9, *c, *d, short_text);
 
                result.test_gte("Empty input L1 compresses to non-empty output", c1_e, 1);
                result.test_gte("Empty input L9 compresses to non-empty output", c9_e, 1);
@@ -100,6 +103,7 @@ class Compression_Tests final : public Test
                result.test_gte("Level 9 compresses zeros at least as well as level 1", c1_z, c9_z);
                result.test_gte("Level 9 compresses random at least as well as level 1", c1_r, c9_r);
                result.test_gte("Level 9 compresses text at least as well as level 1", c1_t, c9_t);
+               result.test_gte("Level 9 compresses short text at least as well as level 1", c1_s, c9_s);
 
                result.test_lt("Zeros compresses much better than text", c1_z / 8, c1_t);
                result.test_lt("Text compresses much better than random", c1_t / 2, c1_r);
@@ -124,31 +128,46 @@ class Compression_Tests final : public Test
                              Botan::Decompression_Algorithm& d,
                              const Botan::secure_vector<uint8_t>& msg)
          {
-         Botan::secure_vector<uint8_t> compressed = msg;
-         Botan::secure_vector<uint8_t> flush_bits;
-         Botan::secure_vector<uint8_t> final_bits;
+         Botan::secure_vector<uint8_t> compressed(2*msg.size());
 
-         c.start(level);
-         c.update(compressed);
-         c.update(flush_bits, 0, true);
-         c.finish(final_bits);
+         for(bool with_flush : { true, false })
+            {
+            try
+               {
+               compressed = msg;
 
-         compressed += flush_bits;
-         compressed += final_bits;
+               c.start(level);
+               c.update(compressed, 0, false);
 
-         const size_t c_size = compressed.size();
+               if(with_flush)
+                  {
+                  Botan::secure_vector<uint8_t> flush_bits;
+                  c.update(flush_bits, 0, true);
+                  compressed += flush_bits;
+                  }
 
-         Botan::secure_vector<uint8_t> decompressed = compressed;
-         d.start();
-         d.update(decompressed);
+               Botan::secure_vector<uint8_t> final_bits;
+               c.finish(final_bits);
+               compressed += final_bits;
 
-         Botan::secure_vector<uint8_t> final_outputs;
-         d.finish(final_outputs);
+               Botan::secure_vector<uint8_t> decompressed = compressed;
+               d.start();
+               d.update(decompressed);
 
-         decompressed += final_outputs;
+               Botan::secure_vector<uint8_t> final_outputs;
+               d.finish(final_outputs);
 
-         result.test_eq("compression round tripped", msg, decompressed);
-         return c_size;
+               decompressed += final_outputs;
+
+               result.test_eq("compression round tripped", msg, decompressed);
+               }
+            catch(Botan::Exception& e)
+               {
+               result.test_failure(e.what());
+               }
+            }
+
+         return compressed.size();
          }
    };
 

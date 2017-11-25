@@ -57,6 +57,7 @@ class Filter_Tests final : public Test
          results.push_back(test_pipe_cbc());
          results.push_back(test_pipe_cfb());
          results.push_back(test_pipe_compress());
+         results.push_back(test_pipe_compress_bzip2());
          results.push_back(test_pipe_codec());
          results.push_back(test_fork());
          results.push_back(test_chain());
@@ -462,7 +463,7 @@ class Filter_Tests final : public Test
 
       Test::Result test_pipe_compress()
          {
-         Test::Result result("Pipe");
+         Test::Result result("Pipe compress zlib");
 
 #if defined(BOTAN_HAS_ZLIB)
 
@@ -483,6 +484,40 @@ class Filter_Tests final : public Test
 
          std::unique_ptr<Botan::Decompression_Filter> decomp_f(new Botan::Decompression_Filter("zlib"));
          result.test_eq("Decompressor name", decomp_f->name(), "Zlib_Decompression");
+         pipe.append(decomp_f.release());
+         pipe.pop(); // remove compressor
+
+         pipe.process_msg(compr);
+
+         std::string decomp = pipe.read_all_as_string(1);
+         result.test_eq("Decompressed ok", decomp, input_str);
+#endif
+
+         return result;
+         }
+
+      Test::Result test_pipe_compress_bzip2()
+         {
+         Test::Result result("Pipe compress bzip2");
+
+#if defined(BOTAN_HAS_BZIP2)
+
+         std::unique_ptr<Botan::Compression_Filter> comp_f(new Botan::Compression_Filter("bzip2", 9));
+
+         result.test_eq("Compressor filter name", comp_f->name(), "Bzip2_Compression");
+         Botan::Pipe pipe(comp_f.release());
+
+         const std::string input_str = "foo\n";
+
+         pipe.start_msg();
+         pipe.write(input_str);
+         pipe.end_msg();
+
+         auto compr = pipe.read_all(0);
+         // Here the output is actually longer than the input as input is so short
+
+         std::unique_ptr<Botan::Decompression_Filter> decomp_f(new Botan::Decompression_Filter("bzip2"));
+         result.test_eq("Decompressor name", decomp_f->name(), "Bzip2_Decompression");
          pipe.append(decomp_f.release());
          pipe.pop(); // remove compressor
 

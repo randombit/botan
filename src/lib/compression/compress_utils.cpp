@@ -84,9 +84,15 @@ void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uin
 
    while(true)
       {
-      m_stream->run(flags);
+      const bool stream_end = m_stream->run(flags);
 
-      if(m_stream->avail_out() == 0)
+      if(stream_end)
+         {
+         BOTAN_ASSERT(m_stream->avail_in() == 0, "After stream is done, no input remains to be processed");
+         m_buffer.resize(m_buffer.size() - m_stream->avail_out());
+         break;
+         }
+      else if(m_stream->avail_out() == 0)
          {
          const size_t added = 8 + m_buffer.size();
          m_buffer.resize(m_buffer.size() + added);
