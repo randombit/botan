@@ -173,6 +173,64 @@ class Compression_Tests final : public Test
 
 BOTAN_REGISTER_TEST("compression", Compression_Tests);
 
+class CompressionCreate_Tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         for(std::string algo : { "zlib", "deflate", "gzip", "bz2", "lzma" })
+            {
+            try
+               {
+               Test::Result result(algo + " create compression");
+
+               std::unique_ptr<Botan::Compression_Algorithm> c1(Botan::Compression_Algorithm::create(algo));
+               std::unique_ptr<Botan::Decompression_Algorithm> d1(Botan::Decompression_Algorithm::create(algo));
+
+               if(!c1 || !d1)
+                  {
+                  result.note_missing(algo);
+                  continue;
+                  }
+               result.test_ne("Not the same name after create", c1->name(), d1->name());
+
+               std::unique_ptr<Botan::Compression_Algorithm> c2(Botan::Compression_Algorithm::create_or_throw(algo));
+               std::unique_ptr<Botan::Decompression_Algorithm> d2(Botan::Decompression_Algorithm::create_or_throw(algo));
+
+               if(!c2 || !d2)
+                  {
+                  result.note_missing(algo);
+                  continue;
+                  }
+               result.test_ne("Not the same name after create_or_throw", c2->name(), d2->name());
+
+               results.push_back(result);
+               }
+            catch(std::exception& e)
+               {
+               results.push_back(Test::Result::Failure("testing " + algo, e.what()));
+               }
+            }
+
+            {
+            Test::Result result("create invalid compression");
+            result.test_throws("lookup error",
+                               "Unavailable Compression bogocompress",
+                               [&]() { Botan::Compression_Algorithm::create_or_throw("bogocompress"); });
+            result.test_throws("lookup error",
+                               "Unavailable Decompression bogocompress",
+                               [&]() { Botan::Decompression_Algorithm::create_or_throw("bogocompress"); });
+            results.push_back(result);
+            }
+
+         return results;
+         }
+   };
+
+BOTAN_REGISTER_TEST("create_compression", CompressionCreate_Tests);
+
 }
 
 #endif
