@@ -16,6 +16,16 @@ Version 2.4.0, Not Yet Released
 * Add support for AES key wrapping with padding, as specified in RFC 5649 and
   NIST SP 800-38F (GH #1301)
 
+* Fix several minor bugs in the TLS code caught by tlsfuzzer, mostly related to
+  sending the wrong alert type in various circumstances.
+
+* Add support for a ``tls_http_server`` command line utility which responds to
+  simple GET requests. This is useful for testing against a browser, or various
+  TLS test tools which expect the underlying protocol to be HTTP. (GH #1315)
+
+* Add an interface for generic PSK data stores, as well as an implementation
+  which encrypts stored values with AES key wrapping. (GH #1302)
+
 * Optimize GCM mode on systems both with and without carryless multiply
   support. This includes a new base case implementation (still constant time), a
   new SSSE3 implementation for systems with SSSE3 but not clmul, and better
