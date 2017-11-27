@@ -7,6 +7,7 @@
 
 #include <botan/sqlite3.h>
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <sqlite3.h>
 
 namespace Botan {
@@ -108,7 +109,7 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, const uint8_t* p, siz
 
 std::pair<const uint8_t*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int column)
    {
-   BOTAN_ASSERT(::sqlite3_column_type(m_stmt, 0) == SQLITE_BLOB,
+   BOTAN_ASSERT(::sqlite3_column_type(m_stmt, column) == SQLITE_BLOB,
                 "Return value is a blob");
 
    const void* session_blob = ::sqlite3_column_blob(m_stmt, column);
@@ -118,6 +119,16 @@ std::pair<const uint8_t*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(
 
    return std::make_pair(static_cast<const uint8_t*>(session_blob),
                          static_cast<size_t>(session_blob_size));
+   }
+
+std::string Sqlite3_Database::Sqlite3_Statement::get_str(int column)
+   {
+   BOTAN_ASSERT(::sqlite3_column_type(m_stmt, column) == SQLITE_TEXT,
+                "Return value is text");
+
+   const unsigned char* str = ::sqlite3_column_text(m_stmt, column);
+
+   return std::string(cast_uint8_ptr_to_char(str));
    }
 
 size_t Sqlite3_Database::Sqlite3_Statement::get_size_t(int column)

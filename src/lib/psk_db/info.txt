@@ -1,0 +1,10 @@
+<defines>
+PSK_DB -> 20171119
+</defines>
+
+<requires>
+aes
+hmac
+sha2_32
+nist_keywrap
+</requires>
