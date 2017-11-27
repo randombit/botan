@@ -74,7 +74,8 @@ const char* handshake_type_to_string(Handshake_Type type)
          return "invalid";
       }
 
-   throw Internal_Error("Unknown TLS handshake message type " + std::to_string(type));
+   throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                       "Unknown TLS handshake message type " + std::to_string(type));
    }
 
 namespace {
@@ -133,7 +134,8 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type)
          return 0;
       }
 
-   throw Internal_Error("Unknown handshake type " + std::to_string(type));
+   throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                       "Unknown TLS handshake message type " + std::to_string(type));
    }
 
 std::string handshake_mask_to_string(uint32_t mask)

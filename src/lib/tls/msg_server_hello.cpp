@@ -47,7 +47,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
       m_extensions.add(new Encrypt_then_MAC);
       }
 
-   if(c.ecc_ciphersuite())
+   if(c.ecc_ciphersuite() && client_hello.extension_types().count(TLSEXT_EC_POINT_FORMATS))
       {
       m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
