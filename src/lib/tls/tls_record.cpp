@@ -302,6 +302,9 @@ void decrypt_record(secure_vector<uint8_t>& output,
    const uint8_t* msg = &record_contents[cs.nonce_bytes_from_record()];
    const size_t msg_length = record_len - cs.nonce_bytes_from_record();
 
+   if(msg_length < aead->minimum_final_size())
+      throw Decoding_Error("AEAD packet is shorter than the tag");
+
    const size_t ptext_size = aead->output_length(msg_length);
 
    aead->set_associated_data_vec(
