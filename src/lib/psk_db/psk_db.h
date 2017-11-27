@@ -31,7 +31,7 @@ class BOTAN_PUBLIC_API(2,4) PSK_Database
       virtual std::set<std::string> list_names() const = 0;
 
       /**
-      * Return the value associated with the specified @param name, or otherwise
+      * Return the value associated with the specified @param name or otherwise
       * throw an exception.
       */
       virtual secure_vector<uint8_t> get(const std::string& name) const = 0;
