@@ -405,6 +405,11 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
    pending_state.client_hello(new Client_Hello(contents));
    const Protocol_Version client_version = pending_state.client_hello()->version();
 
+   if(client_version.major_version() < 3)
+      throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered version with major version under 3");
+   if(client_version.major_version() == 3 && client_version.minor_version() == 0)
+      throw TLS_Exception(Alert::PROTOCOL_VERSION, "SSLv3 is not supported");
+
    Protocol_Version negotiated_version;
 
    const Protocol_Version latest_supported =
