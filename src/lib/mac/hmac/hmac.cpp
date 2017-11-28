@@ -32,6 +32,12 @@ void HMAC::final_result(uint8_t mac[])
    m_hash->update(m_ikey);
    }
 
+Key_Length_Specification HMAC::key_spec() const
+   {
+   // Support very long lengths for things like PBKDF2 and the TLS PRF
+   return Key_Length_Specification(0, 4096);
+   }
+
 /*
 * HMAC Key Schedule
 */
