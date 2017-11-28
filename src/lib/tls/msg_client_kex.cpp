@@ -403,16 +403,20 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             throw Internal_Error("Expected key agreement key type but got " +
                                  private_key.algo_name());
 
+         std::vector<uint8_t> client_pubkey;
+
+         if(ka_key->algo_name() == "DH")
+            {
+            client_pubkey = reader.get_range<uint8_t>(2, 0, 65535);
+            }
+         else
+            {
+            client_pubkey = reader.get_range<uint8_t>(1, 1, 255);
+            }
+
          try
             {
             PK_Key_Agreement ka(*ka_key, rng, "Raw");
-
-            std::vector<uint8_t> client_pubkey;
-
-            if(ka_key->algo_name() == "DH")
-               client_pubkey = reader.get_range<uint8_t>(2, 0, 65535);
-            else
-               client_pubkey = reader.get_range<uint8_t>(1, 0, 255);
 
             secure_vector<uint8_t> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
 

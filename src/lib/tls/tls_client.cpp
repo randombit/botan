@@ -330,7 +330,13 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          if(state.version() > state.client_hello()->version())
             {
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Server replied with later version than in hello");
+                                "Server replied with later version than client offered");
+            }
+
+         if(state.version().major_version() == 3 && state.version().minor_version() == 0)
+            {
+            throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                "Server attempting to negotiate SSLv3 which is not supported");
             }
 
          if(!policy().acceptable_protocol_version(state.version()))

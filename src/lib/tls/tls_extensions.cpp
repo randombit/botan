@@ -586,7 +586,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
    {
    uint16_t len = reader.get_uint16_t();
 
-   if(len + 2 != extension_size)
+   if(len + 2 != extension_size || len % 2 == 1 || len == 0)
       throw Decoding_Error("Bad encoding on signature algorithms extension");
 
    while(len)
