@@ -16,8 +16,15 @@ Version 2.4.0, Not Yet Released
 * Add support for AES key wrapping with padding, as specified in RFC 5649 and
   NIST SP 800-38F (GH #1301)
 
-* Fix several minor bugs in the TLS code caught by tlsfuzzer, mostly related to
-  sending the wrong alert type in various circumstances.
+* Increase the maximum HMAC key length from 512 bytes to 4096 bytes. This allows
+  using a DH key exchange with a group greater than 4096 bits. (GH #1316)
+
+* Fix a bug in the TLS server where, on receiving an SSLv3 client hello, it
+  would attempt to negotiate TLS v1.2. Now a protocol_version alert is sent.
+  Found with tlsfuzzer. (GH #1316)
+
+* Fix several bugs related to sending the wrong alert type in various error
+  scenarious, caught with tlsfuzzer.
 
 * Add support for a ``tls_http_server`` command line utility which responds to
   simple GET requests. This is useful for testing against a browser, or various
