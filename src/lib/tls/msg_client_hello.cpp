@@ -10,6 +10,8 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/rng.h>
+#include <botan/hash.h>
+
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_io.h>
@@ -27,10 +29,14 @@ enum {
 };
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
-                                    const Policy& policy)
+                                       const Policy& policy)
    {
    std::vector<uint8_t> buf(32);
    rng.randomize(buf.data(), buf.size());
+
+   std::unique_ptr<HashFunction> sha256 = HashFunction::create_or_throw("SHA-256");
+   sha256->update(buf);
+   sha256->final(buf);
 
    if(policy.include_time_in_hello_random())
       {
