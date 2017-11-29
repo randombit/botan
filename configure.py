@@ -269,7 +269,7 @@ PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major())
 
 def make_build_doc_commands(source_paths, build_paths, options):
 
-    if options.with_documentation == False:
+    if options.with_documentation is False:
         return ""
 
     def build_manual_command(src_dir, dst_dir):
@@ -1217,7 +1217,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         return (' '.join(gen_flags())).strip()
 
-    def cc_lang_flags(self, options):
+    def cc_lang_flags(self):
         return self.lang_flags
 
     def cc_compile_flags(self, options):
@@ -1641,12 +1641,12 @@ class CmakeGenerator(object):
         fd.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
 
         fd.write('set(COMPILER_FEATURES_RELEASE %s %s %s)\n'
-                 % (self._cc.cc_lang_flags(self._options_release),
+                 % (self._cc.cc_lang_flags(),
                     self._cc.cc_compile_flags(self._options_release),
                     self._cc.mach_abi_link_flags(self._options_release)))
 
         fd.write('set(COMPILER_FEATURES_DEBUG %s %s %s)\n'
-                 % (self._cc.cc_lang_flags(self._options_debug),
+                 % (self._cc.cc_lang_flags(),
                     self._cc.cc_compile_flags(self._options_debug),
                     self._cc.mach_abi_link_flags(self._options_debug)))
 
@@ -2033,7 +2033,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or '$(CXX)',
 
-        'cc_lang_flags': cc.cc_lang_flags(options),
+        'cc_lang_flags': cc.cc_lang_flags(),
         'cc_compile_flags': cc.cc_compile_flags(options),
         'cc_warning_flags': cc.cc_warning_flags(options),
 
@@ -2964,7 +2964,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
         logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
             options.arch, options.cpu))
 
-    if options.with_sphinx is None and options.with_documentation == True:
+    if options.with_sphinx is None and options.with_documentation is True:
         if have_program('sphinx-build'):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
@@ -3043,7 +3043,7 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         if options.build_fuzzers == 'klee' and options.os != 'llvm':
             raise UserError('Building for KLEE requires targetting LLVM')
 
-    if options.with_documentation == False:
+    if options.with_documentation is False:
         if options.with_doxygen:
             raise UserError('Using --with-doxygen plus --without-documentation makes no sense')
         if options.with_sphinx:
