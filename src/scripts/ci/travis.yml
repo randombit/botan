@@ -6,7 +6,6 @@ os:
 
 dist: trusty
 sudo: required
-osx_image: xcode8.2
 
 compiler:
   - clang
