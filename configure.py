@@ -1206,10 +1206,11 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         return (' '.join(gen_flags())).strip()
 
+    def cc_lang_flags(self, options):
+        return self.lang_flags
+
     def cc_compile_flags(self, options):
         def gen_flags():
-            yield self.lang_flags
-
             if options.with_debug_info:
                 yield self.debug_info_flags
 
@@ -1628,12 +1629,14 @@ class CmakeGenerator(object):
         fd.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warning policy will be used" OFF)\n')
         fd.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
 
-        fd.write('set(COMPILER_FEATURES_RELEASE %s %s)\n'
-                 % (self._cc.cc_compile_flags(self._options_release),
+        fd.write('set(COMPILER_FEATURES_RELEASE %s %s %s)\n'
+                 % (self._cc.cc_lang_flags(self._options_release),
+                    self._cc.cc_compile_flags(self._options_release),
                     self._cc.mach_abi_link_flags(self._options_release)))
 
-        fd.write('set(COMPILER_FEATURES_DEBUG %s %s)\n'
-                 % (self._cc.cc_compile_flags(self._options_debug),
+        fd.write('set(COMPILER_FEATURES_DEBUG %s %s %s)\n'
+                 % (self._cc.cc_lang_flags(self._options_debug),
+                    self._cc.cc_compile_flags(self._options_debug),
                     self._cc.mach_abi_link_flags(self._options_debug)))
 
         fd.write('set(COMPILER_FEATURES $<$<NOT:$<CONFIG:DEBUG>>:${COMPILER_FEATURES_RELEASE}>'
@@ -2018,6 +2021,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or '$(CXX)',
 
+        'cc_lang_flags': cc.cc_lang_flags(options),
         'cc_compile_flags': cc.cc_compile_flags(options),
         'cc_warning_flags': cc.cc_warning_flags(options),
 
