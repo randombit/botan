@@ -268,6 +268,10 @@ PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major())
 
 
 def make_build_doc_commands(source_paths, build_paths, options):
+
+    if options.with_documentation == False:
+        return ""
+
     def build_manual_command(src_dir, dst_dir):
         if options.with_sphinx:
             sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
@@ -447,6 +451,13 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     build_group.add_option('--without-doxygen', action='store_false',
                            dest='with_doxygen', help=optparse.SUPPRESS_HELP)
+
+    build_group.add_option('--with-documentation', action='store_true',
+                           help=optparse.SUPPRESS_HELP)
+
+    build_group.add_option('--without-documentation', action='store_false',
+                           default=True, dest='with_documentation',
+                           help='Skip building/installing documentation')
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
@@ -1987,6 +1998,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
+        'with_documentation': options.with_documentation,
 
         'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
@@ -2952,7 +2964,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
         logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
             options.arch, options.cpu))
 
-    if options.with_sphinx is None:
+    if options.with_sphinx is None and options.with_documentation == True:
         if have_program('sphinx-build'):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
@@ -3030,6 +3042,12 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
         if options.build_fuzzers == 'klee' and options.os != 'llvm':
             raise UserError('Building for KLEE requires targetting LLVM')
+
+    if options.with_documentation == False:
+        if options.with_doxygen:
+            raise UserError('Using --with-doxygen plus --without-documentation makes no sense')
+        if options.with_sphinx:
+            raise UserError('Using --with-sphinx plus --without-documentation makes no sense')
 
     # Warnings
     if options.os == 'windows' and options.compiler == 'gcc':

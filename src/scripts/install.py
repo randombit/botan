@@ -168,9 +168,6 @@ def main(args):
 
     bin_dir = os.path.join(options.prefix, options.bindir)
     lib_dir = os.path.join(options.prefix, options.libdir)
-    target_doc_dir = os.path.join(options.prefix,
-                                  options.docdir,
-                                  'botan-%d.%d.%d' % (ver_major, ver_minor, ver_patch))
     target_include_dir = os.path.join(options.prefix,
                                       options.includedir,
                                       'botan-%d' % (ver_major),
@@ -182,7 +179,7 @@ def main(args):
     else:
         app_exe = process_template('botan%{program_suffix}')
 
-    for d in [options.prefix, lib_dir, bin_dir, target_doc_dir, target_include_dir]:
+    for d in [options.prefix, lib_dir, bin_dir, target_include_dir]:
         makedirs(prepend_destdir(d))
 
     build_include_dir = os.path.join(options.build_dir, 'include', 'botan')
@@ -259,16 +256,19 @@ def main(args):
             for py in os.listdir(py_dir):
                 copy_file(os.path.join(py_dir, py), prepend_destdir(os.path.join(py_lib_path, py)))
 
-    shutil.rmtree(prepend_destdir(target_doc_dir), True)
-    shutil.copytree(cfg['doc_output_dir'], prepend_destdir(target_doc_dir))
+    if cfg['with_documentation']:
+        target_doc_dir = os.path.join(options.prefix, options.docdir,
+                                      'botan-%d.%d.%d' % (ver_major, ver_minor, ver_patch))
 
-    for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
-        copy_file(os.path.join(cfg['doc_dir'], f), prepend_destdir(os.path.join(target_doc_dir, f)))
+        shutil.rmtree(prepend_destdir(target_doc_dir), True)
+        shutil.copytree(cfg['doc_output_dir'], prepend_destdir(target_doc_dir))
 
-    copy_file(os.path.join(cfg['base_dir'], 'license.txt'),
-              prepend_destdir(os.path.join(target_doc_dir, 'license.txt')))
-    copy_file(os.path.join(cfg['base_dir'], 'news.rst'),
-              prepend_destdir(os.path.join(target_doc_dir, 'news.txt')))
+        copy_file(os.path.join(cfg['base_dir'], 'license.txt'),
+                  prepend_destdir(os.path.join(target_doc_dir, 'license.txt')))
+        copy_file(os.path.join(cfg['base_dir'], 'news.rst'),
+                  prepend_destdir(os.path.join(target_doc_dir, 'news.txt')))
+        for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
+            copy_file(os.path.join(cfg['doc_dir'], f), prepend_destdir(os.path.join(target_doc_dir, f)))
 
     logging.info('Botan %s installation complete', cfg['version'])
     return 0
