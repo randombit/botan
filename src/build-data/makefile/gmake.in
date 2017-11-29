@@ -13,6 +13,20 @@ LIBRARIES     = $(STATIC_LIB)
 
 libs: $(LIBRARIES)
 
+# Object Files
+LIBOBJS       = %{lib_objs}
+
+CLIOBJS       = %{cli_objs}
+
+TESTOBJS      = %{test_objs}
+
+# Build Commands
+%{lib_build_cmds}
+
+%{cli_build_cmds}
+
+%{test_build_cmds}
+
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(CLI_LINK_CMD) $(LDFLAGS) $(CLIOBJS) $(CLI_LINKS_TO) -o $(CLI)
 	$(CLI_POST_LINK_CMD)

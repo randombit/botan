@@ -20,6 +20,20 @@ SO_FILENAME   = %{out_dir}\$(LIB_BASENAME).dll
 LIBRARIES     = $(SO_FILENAME)
 !Endif
 
+# Object Files
+LIBOBJS       = %{lib_objs}
+
+CLIOBJS       = %{cli_objs}
+
+TESTOBJS      = %{test_objs}
+
+# Build Commands
+%{lib_build_cmds}
+
+%{cli_build_cmds}
+
+%{test_build_cmds}
+
 # Link Commands
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(CLI_LINK_CMD) /OUT:$@ $(CLIOBJS) $(LIB_FILENAME) $(CLI_LINKS_TO)
