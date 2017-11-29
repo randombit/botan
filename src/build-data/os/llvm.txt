@@ -2,7 +2,8 @@
 obj_suffix bc
 building_shared_supported no
 
-ar_command "llvm-link -o"
+ar_command llvm-link
+ar_options -o
 
 <target_features>
 filesystem

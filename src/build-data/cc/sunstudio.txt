@@ -2,20 +2,14 @@ macro_name SUN_STUDIO
 
 binary_name CC
 
-output_to_option "-o "
-add_include_dir_option -I
-add_lib_dir_option -L
-add_lib_option -l
-
-compile_flags "-c"
-debug_info_flags "-g"
 optimization_flags "-xO2"
 
 shared_flags "-KPIC"
 warning_flags "+w -erroff=truncwarn,wnoretvalue"
 lang_flags "-std=c++11 +p -features=extensions -D__FUNCTION__=__func__"
 
-ar_command "CC -xar -o"
+ar_command CC
+ar_options "-xar -o"
 
 makefile_style gmake
 

@@ -2,19 +2,13 @@ macro_name PATHSCALE
 
 binary_name pathCC
 
-output_to_option "-o "
-add_include_dir_option -I
-add_lib_dir_option -L
-add_lib_option -l
-
-compile_flags "-c"
-debug_info_flags "-g"
 optimization_flags "-O3"
 
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
 warning_flags "-W -Wall"
 
-ar_command "pathCC -ar -o"
+ar_command pathCC
+ar_options "-ar -o"
 
 shared_flags "-fPIC"
 

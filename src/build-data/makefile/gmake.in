@@ -47,8 +47,7 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
-	$(AR) $(STATIC_LIB) $(LIBOBJS)
-	$(RANLIB) $(STATIC_LIB)
+	$(AR) %{ar_options} $(STATIC_LIB) $(LIBOBJS)
 
 # Fake targets
 .PHONY: clean distclean docs install valgrind lcov
