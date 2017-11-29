@@ -1,8 +1,11 @@
-# Compiler Options
+# Paths to relevant programs
+
 CXX            = %{cxx} %{cxx_abi_flags}
 LINKER         = %{linker}
-
+AR             = %{ar_command}
 PYTHON_EXE     = %{python_exe}
+
+# Compiler Flags
 
 LANG_FLAGS     = %{cc_lang_flags}
 CXXFLAGS       = %{cc_compile_flags}

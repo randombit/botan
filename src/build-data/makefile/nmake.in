@@ -1,14 +1,8 @@
 %{header_in}
 
 ### Aliases for Common Programs
-AR            = %{ar_command}
+
 COPY          = copy
-CD            = @cd
-ECHO          = @echo
-INSTALL       = %{install_cmd_exec}
-INSTALL_CMD   = %{install_cmd_exec}
-MKDIR         = @md
-MKDIR_INSTALL = @md
 RM            = @del /Q
 RM_R          = $(RM) /S
 RMDIR         = @rmdir
