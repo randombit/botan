@@ -67,7 +67,7 @@ tests: $(TEST)
 !If "$(SO_OBJ_FLAGS)" == ""
 # static lib
 $(LIB_FILENAME): $(LIBOBJS)
-	$(AR) /OUT:$@ $(LIBOBJS)
+	$(AR) %{ar_options} /OUT:$@ $(LIBOBJS)
 !Else
 # shared lib
 # Creates the DLL $(SO_FILENAME) and the .lib $(LIB_FILENAME)

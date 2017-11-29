@@ -9,6 +9,5 @@ INSTALL_CMD_DATA = %{install_cmd_data}
 LN               = ln -fs
 MKDIR            = @mkdir
 MKDIR_INSTALL    = @umask 022; mkdir -p -m 755
-RANLIB           = %{ranlib_command}
 RM               = @rm -f
 RM_R             = @rm -rf

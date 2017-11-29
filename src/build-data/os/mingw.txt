@@ -6,9 +6,6 @@ static_suffix a
 
 building_shared_supported no
 
-ar_command "ar crs"
-ar_needs_ranlib yes
-
 install_root /mingw
 header_dir include
 lib_dir lib

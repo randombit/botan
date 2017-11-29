@@ -2,11 +2,6 @@ macro_name GCC
 
 binary_name g++
 
-output_to_option "-o "
-add_include_dir_option -I
-add_lib_dir_option -L
-add_lib_option -l
-
 lang_flags "-std=c++11 -D_REENTRANT"
 
 # This should only contain flags which are included in GCC 4.8
@@ -14,8 +9,6 @@ warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wstrict-overflow=5 -W
 
 maintainer_warning_flags "-Wold-style-cast -Wsuggest-override -Wshadow -Werror -Wno-error=strict-overflow -Wno-error=deprecated-declarations"
 
-compile_flags "-c"
-debug_info_flags "-g"
 optimization_flags "-O3"
 size_optimization_flags "-Os"
 

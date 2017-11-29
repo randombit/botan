@@ -331,6 +331,9 @@ def process_command_line(args): # pylint: disable=too-many-locals
                             help='set compiler ABI flags',
                             default='')
 
+    target_group.add_option('--ar-command', dest='ar_command', metavar='AR', default=None,
+                            help='set path to static archive creator')
+
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
@@ -614,6 +617,13 @@ def process_command_line(args): # pylint: disable=too-many-locals
     options.without_os_features = parse_multiple_enable(options.without_os_features)
 
     options.disable_intrinsics = parse_multiple_enable(options.disable_intrinsics)
+
+    # Take some values from environment, if not set on command line
+
+    if options.ar_command is None:
+        options.ar_command = os.getenv('AR')
+    if options.compiler_binary is None:
+        options.compiler_binary = os.getenv('CXX')
 
     return options
 
@@ -1088,8 +1098,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'add_lib_dir_option': '-L',
                 'add_lib_option': '-l',
                 'add_framework_option': '-framework ',
-                'compile_flags': '',
-                'debug_info_flags': '',
+                'compile_flags': '-c',
+                'debug_info_flags': '-g',
                 'optimization_flags': '',
                 'size_optimization_flags': '',
                 'coverage_flags': '',
@@ -1102,6 +1112,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'visibility_build_flags': '',
                 'visibility_attribute': '',
                 'ar_command': None,
+                'ar_options': None,
                 'makefile_style': ''
             })
 
@@ -1110,6 +1121,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.add_lib_option = lex.add_lib_option
         self.add_lib_dir_option = lex.add_lib_dir_option
         self.ar_command = lex.ar_command
+        self.ar_options = lex.ar_options
         self.binary_link_commands = force_to_dict(lex.binary_link_commands)
         self.binary_name = lex.binary_name
         self.compile_flags = lex.compile_flags
@@ -1306,8 +1318,8 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'soname_pattern_abi': '',
                 'soname_pattern_base': '',
                 'static_suffix': 'a',
-                'ar_command': 'ar crs',
-                'ar_needs_ranlib': False,
+                'ar_command': 'ar',
+                'ar_options': '',
                 'install_root': '/usr/local',
                 'header_dir': 'include',
                 'bin_dir': 'bin',
@@ -1317,6 +1329,9 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'install_cmd_data': 'install -m 644',
                 'install_cmd_exec': 'install -m 755'
             })
+
+        if lex.ar_command == 'ar' and lex.ar_options == '':
+            lex.ar_options = 'crs'
 
         if lex.soname_pattern_base:
             self.soname_pattern_base = lex.soname_pattern_base
@@ -1343,7 +1358,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         self.aliases = lex.aliases
         self.ar_command = lex.ar_command
-        self.ar_needs_ranlib = bool(lex.ar_needs_ranlib)
+        self.ar_options = lex.ar_options
         self.bin_dir = lex.bin_dir
         self.building_shared_supported = (True if lex.building_shared_supported == 'yes' else False)
         self.doc_dir = lex.doc_dir
@@ -1357,9 +1372,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.program_suffix = lex.program_suffix
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
-
-    def ranlib_command(self):
-        return 'ranlib' if self.ar_needs_ranlib else 'true'
 
     def defines(self, options):
         r = []
@@ -2067,8 +2079,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'fuzzer_libs': '' if options.fuzzer_lib is None else '%s%s' % (cc.add_lib_option, options.fuzzer_lib),
 
         'python_exe': sys.executable,
-        'ar_command': cc.ar_command or osinfo.ar_command,
-        'ranlib_command': osinfo.ranlib_command(),
+        'ar_command': options.ar_command or cc.ar_command or osinfo.ar_command,
+        'ar_options': cc.ar_options or osinfo.ar_options,
         'install_cmd_exec': osinfo.install_cmd_exec,
         'install_cmd_data': osinfo.install_cmd_data,
 
