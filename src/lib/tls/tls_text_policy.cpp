@@ -103,6 +103,11 @@ bool Text_Policy::negotiate_encrypt_then_mac() const
    return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac());
    }
 
+bool Text_Policy::support_cert_status_message() const
+   {
+   return get_bool("support_cert_status_message", Policy::support_cert_status_message());
+   }
+
 std::string Text_Policy::dh_group() const
    {
    return get_str("dh_group", Policy::dh_group());

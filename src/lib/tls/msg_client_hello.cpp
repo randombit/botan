@@ -105,7 +105,8 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
 
-   m_extensions.add(new Certificate_Status_Request({}, {}));
+   if(policy.support_cert_status_message())
+      m_extensions.add(new Certificate_Status_Request({}, {}));
 
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));

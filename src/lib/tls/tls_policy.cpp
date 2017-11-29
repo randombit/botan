@@ -341,6 +341,7 @@ bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
+bool Policy::support_cert_status_message() const { return true; }
 
 // 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
 size_t Policy::dtls_initial_timeout() const { return 1*1000; }
@@ -552,6 +553,7 @@ void Policy::print(std::ostream& o) const
    print_bool(o, "hide_unknown_users", hide_unknown_users());
    print_bool(o, "server_uses_own_ciphersuite_preferences", server_uses_own_ciphersuite_preferences());
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
+   print_bool(o, "support_cert_status_message", support_cert_status_message());
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
    o << "dh_group = " << dh_group() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';

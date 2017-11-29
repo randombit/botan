@@ -1308,6 +1308,9 @@ class TLS_Unit_Tests final : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
             { { "signature_methods", "RSA" } });
 
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
+            { { "support_cert_status_message", "false" } });
+
 #if defined(BOTAN_HAS_DSA)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
             { { "signature_methods", "DSA" } });
