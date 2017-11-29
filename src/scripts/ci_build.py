@@ -362,6 +362,7 @@ def main(args=None):
             'src/python/botan2.py',
             'src/scripts/ci_build.py',
             'src/scripts/install.py',
+            'src/scripts/cleanup.py',
             'src/scripts/website.py',
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py']
@@ -475,6 +476,9 @@ def main(args=None):
             else:
                 # Otherwise generate a local HTML report
                 cmds.append(['genhtml', cov_file, '--output-directory', 'lcov-out'])
+
+        cmds.append(make_cmd + ['clean'])
+        cmds.append(make_cmd + ['distclean'])
 
     for cmd in cmds:
         if options.dry_run:

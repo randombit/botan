@@ -2096,6 +2096,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
                                    if options.house_curve else ''
         }
 
+    variables['test_exe'] = os.path.join(variables['out_dir'],
+                                         'botan-test' + variables['program_suffix'])
+
     if options.build_shared_lib:
 
         if osinfo.soname_pattern_base != None:
@@ -2137,12 +2140,18 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
             variables['libname'] = 'botand'
         else:
             variables['libname'] = 'botan'
+
+        variables['lib_basename'] = variables['libname']
+        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan-cli' + variables['program_suffix'])
     else:
         variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
         variables['libname'] = 'botan-%d' % (Version.major())
+
+        variables['lib_basename'] = 'lib' + variables['libname']
+        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan' + variables['program_suffix'])
 
     if options.os == 'llvm':
         # llvm-link doesn't understand -L or -l flags
@@ -2159,7 +2168,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
     if variables["makefile_style"] == "gmake":
         templates = [
-            ('gmake_commands.in', True),
             ('gmake_dso.in', options.build_shared_lib),
             ('gmake_coverage.in', options.with_coverage_info),
             ('gmake_fuzzers.in', options.build_fuzzers)
@@ -3160,13 +3168,15 @@ def main_action_configure_build(info_modules, source_paths, options,
     link_headers(build_config.external_headers, 'external',
                  build_config.external_include_dir)
 
-    with open(os.path.join(build_config.build_dir, 'build_config.json'), 'w') as f:
-        json.dump(template_vars, f, sort_keys=True, indent=2)
-
     if options.amalgamation:
         amalgamation_cpp_files = AmalgamationGenerator(build_config, using_mods, options).generate()
         build_config.lib_sources = sorted(amalgamation_cpp_files)
         template_vars.update(MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate())
+
+        template_vars['generated_files'] = ' '.join(build_config.lib_sources)
+
+    with open(os.path.join(build_config.build_dir, 'build_config.json'), 'w') as f:
+        json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.with_bakefile:
         gen_bakefile(build_config, options, template_vars['link_to'])

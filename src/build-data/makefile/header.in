@@ -29,3 +29,43 @@ INSTALLED_LIB_DIR = %{prefix}/%{libdir}
 
 CLI_POST_LINK_CMD  = %{cli_post_link_cmd}
 TEST_POST_LINK_CMD = %{test_post_link_cmd}
+
+# Executable targets
+CLI           = %{cli_exe}
+TEST          = %{test_exe}
+
+# The primary target
+all: libs cli tests
+
+cli: $(CLI)
+tests: $(TEST)
+
+# Object Files
+LIBOBJS       = %{lib_objs}
+
+CLIOBJS       = %{cli_objs}
+
+TESTOBJS      = %{test_objs}
+
+# Build Commands
+%{lib_build_cmds}
+
+%{cli_build_cmds}
+
+%{test_build_cmds}
+
+# Misc targets
+SPHINX_CONFIG = %{sphinx_config_dir}
+SPHINX_OPTS = -b html
+
+docs:
+%{build_doc_commands}
+
+clean:
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/cleanup.py --build-dir="%{build_dir}"
+
+distclean:
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/cleanup.py --build-dir="%{build_dir}" --distclean
+
+install: $(CLI) docs
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/install.py --prefix=%{prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}

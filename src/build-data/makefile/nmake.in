@@ -3,19 +3,12 @@
 ### Aliases for Common Programs
 
 COPY          = copy
-RM            = @del /Q
-RM_R          = $(RM) /S
-RMDIR         = @rmdir
-
-# Executable targets
-CLI           = %{out_dir}\botan-cli%{program_suffix}
-TEST          = %{out_dir}\botan-test%{program_suffix}
 
 # Library targets
 #
 # LIB_FILENAME is always the .lib file, that is either a static lib or a
 # by-product of the DLL creation used to link the DLL into applications
-LIB_BASENAME  = %{libname}
+LIB_BASENAME  = %{lib_basename}
 LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).lib
 
 !If "$(SO_OBJ_FLAGS)" == ""
@@ -27,24 +20,6 @@ SO_FILENAME   = %{out_dir}\$(LIB_BASENAME).dll
 LIBRARIES     = $(SO_FILENAME)
 !Endif
 
-
-# File Lists
-LIBOBJS       = %{lib_objs}
-
-CLIOBJS       = %{cli_objs}
-
-TESTOBJS      = %{test_objs}
-
-# First make target. Will be used by default
-all: libs cli tests
-
-# Build Commands
-%{lib_build_cmds}
-
-%{cli_build_cmds}
-
-%{test_build_cmds}
-
 # Link Commands
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(CLI_LINK_CMD) /OUT:$@ $(CLIOBJS) $(LIB_FILENAME) $(CLI_LINKS_TO)
@@ -55,8 +30,6 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(TEST_POST_LINK_CMD)
 
 libs: $(LIBRARIES)
-cli: $(CLI)
-tests: $(TEST)
 
 !If "$(SO_OBJ_FLAGS)" == ""
 # static lib
@@ -68,32 +41,3 @@ $(LIB_FILENAME): $(LIBOBJS)
 $(SO_FILENAME): $(LIBOBJS)
 	$(LIB_LINK_CMD) /OUT:$@ $(LIBOBJS) $(LIB_LINKS_TO)
 !Endif
-
-# Fake Targets
-
-SPHINX_CONFIG = %{sphinx_config_dir}
-SPHINX_OPTS = -b html
-
-docs:
-%{build_doc_commands}
-
-clean:
-	-$(RM) %{libobj_dir}\*
-	-$(RM) %{cliobj_dir}\*
-	-$(RM) %{testobj_dir}\*
-	-$(RM) %{out_dir}\*.manifest
-	-$(RM) %{out_dir}\*.exp
-	-$(RM) %{out_dir}\*.dll
-	-$(RM) $(LIBRARIES) $(CLI) $(TEST)
-
-distclean: clean
-	$(RM_R) %{build_dir}
-	$(RMDIR) %{build_dir}\include\botan\internal
-	$(RMDIR) %{build_dir}\include\botan
-	$(RMDIR) %{build_dir}\include
-	$(RMDIR) %{build_dir}\lib %{build_dir}\tests
-	$(RMDIR) %{build_dir}
-	$(RM) Makefile $(LIB_BASENAME).* $(CLI).*
-
-install: $(CLI) docs
-	$(PYTHON_EXE) $(SCRIPTS_DIR)\install.py --prefix=%{prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
