@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_01
+
+Purpose: Checks the behaviour of the application when it cannot locate revocation information about the certificate. This path is invalid because revocation information for a certificate is not available.

@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_15
+
+Purpose: Checks the behaviour of the application when the CRL for an intermediate certificate is missing. This path is invalid because revocation information for a CA certificate in the path is not available. Furthermore, no CRL with matching distribution point can be found.

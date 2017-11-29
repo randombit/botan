@@ -528,6 +528,10 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Policies final : public Certificate_Exte
       static OID static_oid() { return OID("2.5.29.32"); }
       OID oid_of() const override { return static_oid(); }
 
+      void validate(const X509_Certificate& subject, const X509_Certificate& issuer,
+            const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+            std::vector<std::set<Certificate_Status_Code>>& cert_status,
+            size_t pos) override;
    private:
       std::string oid_name() const override
          { return "X509v3.CertificatePolicies"; }
@@ -627,6 +631,7 @@ class BOTAN_PUBLIC_API(2,0) CRL_ReasonCode final : public Certificate_Extension
 
 /**
 * CRL Distribution Points Extension
+* todo enforce restrictions from RFC 5280 4.2.1.13
 */
 class BOTAN_PUBLIC_API(2,0) CRL_Distribution_Points final : public Certificate_Extension
    {
@@ -672,6 +677,39 @@ class BOTAN_PUBLIC_API(2,0) CRL_Distribution_Points final : public Certificate_E
 
       std::vector<Distribution_Point> m_distribution_points;
       std::vector<std::string> m_crl_distribution_urls;
+   };
+
+/**
+* CRL Issuing Distribution Point Extension
+* todo enforce restrictions from RFC 5280 5.2.5
+*/
+class CRL_Issuing_Distribution_Point final : public Certificate_Extension
+   {
+   public:
+      CRL_Issuing_Distribution_Point() = default;
+
+      explicit CRL_Issuing_Distribution_Point(const CRL_Distribution_Points::Distribution_Point& distribution_point) :
+         m_distribution_point(distribution_point) {}
+
+      CRL_Issuing_Distribution_Point* copy() const override
+         { return new CRL_Issuing_Distribution_Point(m_distribution_point); }
+
+      const AlternativeName& get_point() const
+         { return m_distribution_point.point(); }
+
+      static OID static_oid() { return OID("2.5.29.28"); }
+      OID oid_of() const override { return static_oid(); }
+
+   private:
+      std::string oid_name() const override
+         { return "X509v3.CRLIssuingDistributionPoint"; }
+
+      bool should_encode() const override { return true; }
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
+      void contents_to(Data_Store&, Data_Store&) const override;
+
+      CRL_Distribution_Points::Distribution_Point m_distribution_point;
    };
 
 /**

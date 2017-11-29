@@ -83,6 +83,12 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
       const X509_Time& next_update() const;
 
       /**
+      * Get the CRL's distribution point
+      * @return CRL.IssuingDistributionPoint from the CRL's Data_Store
+      */
+      std::string crl_issuing_distribution_point() const;
+
+      /**
       * Create an uninitialized CRL object. Any attempts to access
       * this object will throw an exception.
       */

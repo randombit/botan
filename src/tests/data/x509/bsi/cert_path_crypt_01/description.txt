@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRYPT_01
+
+Purpose: Checks the behaviour of the application when the signature of the intermediate certificate is wrong. This path is invalid because the signature of a CA certificate is invalid.

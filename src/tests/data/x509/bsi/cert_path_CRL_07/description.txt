@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_07
+
+Purpose: Checks the behaviour of the application when the target certificate is contained in a CRL that does not contain the Authority Key Identifier extension. This path is invalid because even if this mandatory extension is missing the CRL is still a valid source for revocation information.

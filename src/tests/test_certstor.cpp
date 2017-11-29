@@ -216,6 +216,73 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
       }
    }
 
+Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<CertificateAndKey>& certsandkeys)
+   {
+   Test::Result result("Certificate Store SQLITE3 - Find all certs");
+   try
+      {
+      auto& rng = Test::rng();
+      const std::string passwd(reinterpret_cast<const char*>(rng.random_vec(8).data()), 8);
+      // Just create a database in memory for testing (https://sqlite.org/inmemorydb.html)
+      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
+
+      for(const auto& a : certsandkeys)
+         {
+         store.insert_cert(a.certificate);
+         }
+
+      for(const auto& a : certsandkeys)
+         {
+         auto res_vec = store.find_all_certs(a.certificate.subject_dn(), a.certificate.subject_key_id());
+         if(res_vec.size() != 1)
+            {
+            result.test_failure("SQLITE all lookup error");
+            return result;
+            }
+         else
+            {
+            std::stringstream a_ss;
+            a_ss << a.certificate.subject_dn();
+            std::stringstream res_ss;
+            res_ss << res_vec.at(0)->subject_dn();
+            result.test_eq("Check subject " + a_ss.str(), a_ss.str(), res_ss.str());
+            }
+         }
+
+      Botan::X509_Certificate same_dn_1 = Botan::X509_Certificate(
+         "./src/tests/data/x509/bsi/cert_path_common_14/cert_path_common_14_sub_ca.ca.pem.crt");
+      Botan::X509_Certificate same_dn_2 = Botan::X509_Certificate(
+         "./src/tests/data/x509/bsi/cert_path_common_14/cert_path_common_14_wrong_sub_ca.ca.pem.crt");
+
+      store.insert_cert(same_dn_1);
+      store.insert_cert(same_dn_2);
+      auto res_vec = store.find_all_certs(same_dn_1.subject_dn(), {});
+
+      if(res_vec.size() != 2)
+         {
+         result.test_failure("SQLITE all lookup error (duplicate) " + std::to_string(res_vec.size()));
+         return result;
+         }
+      else
+         {
+         std::stringstream cert_ss;
+         cert_ss << same_dn_1.subject_dn();
+         std::stringstream res_ss;
+         res_ss << res_vec.at(0)->subject_dn();
+         result.test_eq("Check subject " + cert_ss.str(), cert_ss.str(), res_ss.str());
+         res_ss.str("");
+         res_ss << res_vec.at(1)->subject_dn();
+         result.test_eq("Check subject " + cert_ss.str(), cert_ss.str(), res_ss.str());
+         }
+      }
+   catch(const std::exception& e)
+      {
+      result.test_failure(e.what());
+      return result;
+      }
+   return result;
+   }
+
 #endif
 
 Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey>& certsandkeys)
@@ -329,6 +396,7 @@ class Certstor_Tests final : public Test
          results.push_back(test_certstor_sqlite3_insert_find_remove_test(certsandkeys));
          results.push_back(test_certstor_sqlite3_crl_test(certsandkeys));
          results.push_back(test_certstor_sqlite3_all_subjects_test(certsandkeys));
+         results.push_back(test_certstor_sqlite3_find_all_certs_test(certsandkeys));
 #endif
          return results;
          }

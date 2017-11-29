@@ -10,6 +10,8 @@
 #include <botan/x509cert.h>
 #include <botan/ber_dec.h>
 
+#include <sstream>
+
 namespace Botan {
 
 struct CRL_Data
@@ -23,6 +25,7 @@ struct CRL_Data
    // cached values from extensions
    size_t m_crl_number = 0;
    std::vector<uint8_t> m_auth_key_id;
+   std::string m_issuing_distribution_point;
    };
 
 std::string X509_CRL::PEM_label() const
@@ -164,6 +167,26 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
 
    tbs_crl.verify_end();
 
+   // Now cache some fields from the extensions
+   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Number>())
+      {
+      data->m_crl_number = ext->get_crl_number();
+      }
+   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::Authority_Key_ID>())
+      {
+      data->m_auth_key_id = ext->get_key_id();
+      }
+   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>())
+      {
+      std::stringstream ss;
+
+      for(const auto& pair : ext->get_point().contents())
+         {
+         ss << pair.first << ": " << pair.second << " ";
+         }
+      data->m_issuing_distribution_point = ss.str();
+      }
+
    return data;
    }
 
@@ -236,4 +259,11 @@ const X509_Time& X509_CRL::next_update() const
    return data().m_next_update;
    }
 
+/*
+* Return the CRL's distribution point
+*/
+std::string X509_CRL::crl_issuing_distribution_point() const
+   {
+   return data().m_issuing_distribution_point;
+   }
 }

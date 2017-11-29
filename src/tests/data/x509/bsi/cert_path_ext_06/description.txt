@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_06
+
+Purpose: Checks the behaviour of the application when an intermediate certificate does not have the Basic Constraints extension. This path is invalid because this extension must be placed in every intermediate certificate and an application must check that an intermediate certificate is allowed to issue other certificates.

@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_02
+
+Purpose: Checks the behaviour of the application when a v2 certificate contains extensions. Certificates of version v2 are not allowed to contain extensions and therefore this path is invalid.

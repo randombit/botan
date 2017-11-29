@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_07
+
+Purpose: Checks the behaviour of the application when an intermediate certificate has cA=false in the Basic Constraints extension. This path is invalid because an intermediate certificate must contain the Basic Constraints extensions with the value cA=true.

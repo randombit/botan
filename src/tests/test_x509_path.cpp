@@ -16,10 +16,13 @@
    #include <botan/pkcs10.h>
 #endif
 
+#include <botan/exceptn.h>
+
 #include <fstream>
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 namespace Botan_Tests {
 
@@ -27,7 +30,7 @@ namespace {
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
-std::map<std::string, std::string> read_results(const std::string& results_file)
+std::map<std::string, std::string> read_results(const std::string& results_file, const char delim = ':')
    {
    std::ifstream in(results_file);
    if(!in.good())
@@ -49,7 +52,7 @@ std::map<std::string, std::string> read_results(const std::string& results_file)
          continue;
          }
 
-      std::vector<std::string> parts = Botan::split_on(line, ':');
+      std::vector<std::string> parts = Botan::split_on(line, delim);
 
       if(parts.size() != 2)
          {
@@ -450,6 +453,177 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run()
    }
 
 BOTAN_REGISTER_TEST("x509_path_rsa_pss", PSS_Path_Validation_Tests);
+
+// The certificates in this test suite are signed using EMSA_PKCS1
+#ifdef BOTAN_HAS_EMSA_PKCS1
+
+class BSI_Path_Validation_Tests final : public Test
+   {
+   public:
+          std::vector<Test::Result> run() override;
+   };
+
+std::vector<Test::Result> BSI_Path_Validation_Tests::run()
+   {
+   std::vector<Test::Result> results;
+
+   const std::string bsi_test_dir = Test::data_dir() + "/x509/bsi";
+
+   try
+      {
+      // Do nothing, just test filesystem access
+      Botan::get_files_recursive(bsi_test_dir);
+      }
+   catch (Botan::No_Filesystem_Access&)
+      {
+      Test::Result result("BSI path validation");
+      result.test_note("Skipping due to missing filesystem access");
+      results.push_back(result);
+      return results;
+      }
+
+   std::map<std::string, std::string> expected = read_results(
+         Test::data_file("/x509/bsi/expected.txt"), '$');
+
+   for (auto& i : expected)
+      {
+      const std::string test_name = i.first;
+      const std::string expected_result = i.second;
+
+      const std::string test_dir = bsi_test_dir + "/" + test_name;
+
+      Test::Result result("BSI path validation");
+      result.start_timer();
+
+      const std::vector<std::string> all_files =
+            Botan::get_files_recursive(test_dir);
+
+      if (all_files.empty())
+         {
+         result.test_failure("No test files found in " + test_dir);
+         results.push_back(result);
+         continue;
+         }
+
+      Botan::Certificate_Store_In_Memory trusted;
+      std::vector<Botan::X509_Certificate> certs;
+
+      auto validation_time =
+            Botan::calendar_point(2017, 8, 19, 12, 0, 0).to_std_timepoint();
+
+      // By convention: if CRL is a substring if the directory name,
+      // we need to check the CRLs
+      bool use_crl = false;
+      if (test_dir.find("CRL") != std::string::npos)
+         {
+         use_crl = true;
+         }
+
+      try
+         {
+         for (auto const& file : all_files)
+            {
+            // found a trust anchor
+            if (file.find("TA") != std::string::npos)
+               {
+               trusted.add_certificate(Botan::X509_Certificate(file));
+               }
+            // found the target certificate. It needs to be at the front of certs
+            else if (file.find("TC") != std::string::npos)
+               {
+               certs.insert(certs.begin(), Botan::X509_Certificate(file));
+               }
+            // found a certificate that might be part of a valid certificate chain to the trust anchor
+            else if (file.find(".crt") != std::string::npos)
+               {
+               certs.push_back(Botan::X509_Certificate(file));
+               }
+            else if (file.find(".crl") != std::string::npos)
+               {
+               trusted.add_crl(Botan::X509_CRL(file));
+               }
+            }
+
+         Botan::Path_Validation_Restrictions restrictions(use_crl, 79,
+               use_crl);
+
+         /*
+          * Following the test document, the test are executed 16 times with
+          * randomly chosen order of the available certificates. However, the target
+          * certificate needs to stay in front.
+          * For certain test, the order in which the certificates are given to
+          * the validation function may be relevant, i.e. if issuer DNs are
+          * ambiguous.
+          */
+         for (int i = 0; i < 16; i++)
+            {
+            std::random_shuffle(++(certs.begin()), certs.end());
+
+            Botan::Path_Validation_Result validation_result =
+                  Botan::x509_path_validate(certs, restrictions, trusted, "",
+                        Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+            // We expect to be warned
+            if(expected_result.find("Warning: ") == 0)
+               {
+               std::string stripped = expected_result.substr(std::string("Warning: ").size());
+               bool found_warning = false;
+               for(const auto& warning_set : validation_result.warnings())
+                  {
+                  for(const auto& warning : warning_set)
+                     {
+                     std::string warning_str(Botan::to_string(warning));
+                     if(stripped == warning_str)
+                        {
+                        result.test_eq(test_name + " path validation result",
+                              warning_str, stripped);
+                        found_warning = true;
+                        }
+                     }
+                  }
+               if(!found_warning)
+                  {
+                  result.test_failure(test_name,"Did not receive the expected warning: " + stripped);
+                  }
+               }
+            else
+               {
+               result.test_eq(test_name + " path validation result",
+                     validation_result.result_string(), expected_result);
+               }
+
+
+            }
+         }
+
+      /* Some certificates are rejected when executing the X509_Certificate constructor
+       * by throwing a Decoding_Error exception.
+       */
+      catch (const Botan::Decoding_Error& d)
+         {
+         result.test_eq(test_name + " path validation result", d.what(),
+               expected_result);
+         }
+      catch (const Botan::X509_CRL::X509_CRL_Error& e)
+         {
+         result.test_eq(test_name + " path validation result", e.what(),
+               expected_result);
+         }
+      catch (const std::exception& e)
+         {
+         result.test_failure(test_name, e.what());
+         }
+
+      result.end_timer();
+      results.push_back(result);
+      }
+
+   return results;
+   }
+
+BOTAN_REGISTER_TEST("x509_path_bsi", BSI_Path_Validation_Tests);
+
+#endif
 
 #endif
 

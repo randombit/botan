@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_02
+
+Purpose: Checks the behaviour of the application when the target certificate is contained in a CRL. This path is invalid because the target certificate is revoked.

@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_12
+
+Purpose: Checks the behaviour of the application when the target certificate contains a policy OID two times in the Certificates Policies Extension. A policy OID is allowed to be contained only one time within this extension and therefore this path is invalid.

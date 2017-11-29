@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_14
+
+Purpose: Checks the behaviour of the application when the target certificate is a CA certificate that contains a Policy Mappings Extension which maps a policy to the anyPolicy. This path is invalid because it is not allowed to map a concrete policy to the special anyPolicy. The RFC 5280 validation algorithm does not explicitly verify that.

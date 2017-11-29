@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_02
+
+Purpose: Checks the behaviour of the application when no certificate is on the application's set of trust anchors. This path is not valid, because the application cannot build a path to one trust anchor.

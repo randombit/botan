@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_06
+
+Purpose: Checks the behaviour of the application when a CRL contains an unknown critical extension. The target certificate is not contained in this CRL. This path is invalid because it is not allowed for an application to ignore unknown critical extensions.

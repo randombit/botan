@@ -13,6 +13,9 @@
 #include <botan/internal/stl_util.h>
 #include <botan/parsing.h>
 #include <botan/loadstor.h>
+#include <botan/x509_dn.h>
+
+#include <sstream>
 
 namespace Botan {
 
@@ -131,6 +134,13 @@ void encode_entries(DER_Encoder& encoder,
          store_be(ip, ip_buf);
          encoder.add_object(tagging, CONTEXT_SPECIFIC, ip_buf, 4);
          }
+      else if (type == "DN")
+         {
+         std::stringstream ss(i->second);
+         X509_DN dn;
+         ss >> dn;
+         encoder.encode(dn);
+         }
       }
    }
 
@@ -145,6 +155,7 @@ void AlternativeName::encode_into(DER_Encoder& der) const
 
    encode_entries(der, m_alt_info, "RFC822", ASN1_Tag(1));
    encode_entries(der, m_alt_info, "DNS", ASN1_Tag(2));
+   encode_entries(der, m_alt_info, "DN", ASN1_Tag(4));
    encode_entries(der, m_alt_info, "URI", ASN1_Tag(6));
    encode_entries(der, m_alt_info, "IP", ASN1_Tag(7));
 
@@ -212,6 +223,17 @@ void AlternativeName::decode_from(BER_Decoder& source)
          if(tag == 1) add_attribute("RFC822", ASN1::to_string(obj));
          if(tag == 2) add_attribute("DNS", ASN1::to_string(obj));
          if(tag == 6) add_attribute("URI", ASN1::to_string(obj));
+         }
+      else if(tag == 4)
+         {
+         BER_Decoder dec(obj.value);
+         X509_DN dn;
+         std::stringstream ss;
+
+         dec.decode(dn);
+         ss << dn;
+
+         add_attribute("DN", ss.str());
          }
       else if(tag == 7)
          {

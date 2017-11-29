@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_13
+
+Purpose: Checks the behaviour of the application when the certificate's CRL distribution point and the issuing distribution point of a CRL issued by the issuer of the certificate do not match. The target certificate is not contained in the CRL. This path is invalid because the CRL located at the CRLDP of the certificate has a different distribution point and no other CRLs for determining the status of the certificate are available.

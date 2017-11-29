@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_10
+
+Purpose: Checks the behaviour of the application when a critical extension has a wrong value. This path is invalid because a client application must parse and interpret critical extensions.

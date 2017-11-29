@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_03
+
+Purpose: Checks the behaviour of the application when an intermediate certificate is contained in a CRL. This path is invalid because a CA certificate is revoked.

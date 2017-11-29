@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_ALGO_STRENGTH_01
+
+Purpose: Checks the behaviour of the application when an insecure hash algorithm has been used in the production of the intermediate certificate's signature. This path is not valid, because the hash algorithm is insecure.

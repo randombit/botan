@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_13
+
+Purpose: Checks the behaviour of the application when the intermediate certificate contains a Policy Mappings Extension which maps a policy to anyPolicy. This path is invalid because it is not allowed to map a concrete policy to the special anyPolicy.

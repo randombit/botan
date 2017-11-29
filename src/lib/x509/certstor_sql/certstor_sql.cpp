@@ -76,6 +76,40 @@ Certificate_Store_In_SQL::find_cert(const X509_DN& subject_dn, const std::vector
    return cert;
    }
 
+std::vector<std::shared_ptr<const X509_Certificate>>
+Certificate_Store_In_SQL::find_all_certs(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const
+   {
+   std::vector<std::shared_ptr<const X509_Certificate>> certs;
+
+   DER_Encoder enc;
+   std::shared_ptr<SQL_Database::Statement> stmt;
+
+   subject_dn.encode_into(enc);
+
+   if(key_id.empty())
+      {
+      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1");
+      stmt->bind(1,enc.get_contents_unlocked());
+      }
+   else
+      {
+      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE\
+                                        subject_dn == ?1 AND (key_id == NULL OR key_id == ?2)");
+      stmt->bind(1,enc.get_contents_unlocked());
+      stmt->bind(2,key_id);
+      }
+
+   std::shared_ptr<const X509_Certificate> cert;
+   while(stmt->step())
+      {
+      auto blob = stmt->get_blob(0);
+      certs.push_back(std::make_shared<X509_Certificate>(
+            std::vector<uint8_t>(blob.first,blob.first + blob.second)));
+      }
+
+   return certs;
+   }
+
 std::shared_ptr<const X509_Certificate>
 Certificate_Store_In_SQL::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& /*key_hash*/) const
    {
@@ -123,9 +157,6 @@ std::vector<X509_DN> Certificate_Store_In_SQL::all_subjects() const
 
 bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert)
    {
-   if(find_cert(cert.subject_dn(),cert.subject_key_id()))
-      return false;
-
    DER_Encoder enc;
    auto stmt = m_database->new_statement("INSERT OR REPLACE INTO " +
                                      m_prefix + "certificates (\

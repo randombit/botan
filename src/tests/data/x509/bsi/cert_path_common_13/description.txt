@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_13
+
+Purpose: Checks the behaviour of the application when a self-issued certificate is found in the path. This path is not invalid, because self-issued certificates are allowed in the path and processing rules have been specified.

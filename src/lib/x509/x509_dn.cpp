@@ -11,6 +11,7 @@
 #include <botan/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/oids.h>
+#include <botan/x509_dn_ub.h>
 #include <ostream>
 #include <cctype>
 
