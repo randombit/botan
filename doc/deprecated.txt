@@ -15,6 +15,8 @@ in the source.
 
 - Platform support for BeOS and IRIX operating systems
 
+- Support for PathScale and HP compilers
+
 - TLS: 3DES and SEED ciphersuites
 
 - TLS: Anonymous DH/ECDH ciphersuites
