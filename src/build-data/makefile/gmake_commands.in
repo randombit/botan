@@ -1,5 +1,0 @@
-# Program aliases
-COPY             = cp
-LN               = ln -fs
-RM               = @rm -f
-RM_R             = @rm -rf

@@ -7,6 +7,8 @@ DARWIN_CURRENT_VER       = %{version_packed}.%{so_abi_rev}.%{version_patch}
 
 SHARED_LIB      = %{out_dir}/$(SONAME_PATCH)
 
+LN              = ln -fs
+
 $(SHARED_LIB): $(LIBOBJS)
 	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) -o $(SHARED_LIB)
 	$(LN) $(SONAME_PATCH) %{out_dir}/$(SONAME_ABI)
