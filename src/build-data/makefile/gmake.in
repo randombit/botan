@@ -1,18 +1,5 @@
 %{header_in}
 
-COPY             = cp
-LN               = ln -fs
-
-# Library targets
-LIB_BASENAME  = %{lib_basename}
-STATIC_LIB    = %{out_dir}/$(LIB_BASENAME).%{static_suffix}
-LIBRARIES     = $(STATIC_LIB)
-
-# Link Commands
-%{gmake_dso_in}
-
-libs: $(LIBRARIES)
-
 # Object Files
 LIBOBJS       = %{lib_objs}
 
@@ -26,6 +13,21 @@ TESTOBJS      = %{test_objs}
 %{cli_build_cmds}
 
 %{test_build_cmds}
+
+COPY             = cp
+
+docs:
+%{build_doc_commands}
+
+# Library targets
+LIB_BASENAME  = %{lib_basename}
+STATIC_LIB    = %{out_dir}/$(LIB_BASENAME).%{static_suffix}
+LIBRARIES     = $(STATIC_LIB)
+
+# Link Commands
+%{gmake_dso_in}
+
+libs: $(LIBRARIES)
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(CLI_LINK_CMD) $(LDFLAGS) $(CLIOBJS) $(CLI_LINKS_TO) -o $(CLI)

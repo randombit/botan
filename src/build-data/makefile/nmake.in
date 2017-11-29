@@ -1,8 +1,24 @@
 %{header_in}
 
-### Aliases for Common Programs
+# Object Files
+LIBOBJS       = %{lib_objs}
+
+CLIOBJS       = %{cli_objs}
+
+TESTOBJS      = %{test_objs}
+
+# Build Commands
+%{lib_build_cmds}
+
+%{cli_build_cmds}
+
+%{test_build_cmds}
+
 
 COPY          = copy
+
+docs:
+%{build_doc_commands}
 
 # Library targets
 #
@@ -19,20 +35,6 @@ LIBRARIES     = $(LIB_FILENAME)
 SO_FILENAME   = %{out_dir}\$(LIB_BASENAME).dll
 LIBRARIES     = $(SO_FILENAME)
 !Endif
-
-# Object Files
-LIBOBJS       = %{lib_objs}
-
-CLIOBJS       = %{cli_objs}
-
-TESTOBJS      = %{test_objs}
-
-# Build Commands
-%{lib_build_cmds}
-
-%{cli_build_cmds}
-
-%{test_build_cmds}
 
 # Link Commands
 $(CLI): $(LIBRARIES) $(CLIOBJS)
