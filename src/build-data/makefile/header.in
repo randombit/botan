@@ -4,6 +4,7 @@ LINKER         = %{linker}
 
 PYTHON_EXE     = %{python_exe}
 
+LANG_FLAGS     = %{cc_lang_flags}
 CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 SO_OBJ_FLAGS   = %{shared_flags}
@@ -16,9 +17,9 @@ LIB_LINKS_TO   = %{link_to}
 CLI_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
 TEST_LINKS_TO  = %{link_to_botan} $(LIB_LINKS_TO)
 
-LIB_FLAGS      = $(SO_OBJ_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
-CLI_FLAGS      = $(CXXFLAGS) $(WARN_FLAGS)
-TEST_FLAGS     = $(CXXFLAGS) $(WARN_FLAGS)
+LIB_FLAGS      = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
+CLI_FLAGS      = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
+TEST_FLAGS     = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{prefix}/%{libdir}

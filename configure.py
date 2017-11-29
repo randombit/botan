@@ -268,6 +268,10 @@ PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major())
 
 
 def make_build_doc_commands(source_paths, build_paths, options):
+
+    if options.with_documentation is False:
+        return ""
+
     def build_manual_command(src_dir, dst_dir):
         if options.with_sphinx:
             sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
@@ -447,6 +451,13 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     build_group.add_option('--without-doxygen', action='store_false',
                            dest='with_doxygen', help=optparse.SUPPRESS_HELP)
+
+    build_group.add_option('--with-documentation', action='store_true',
+                           help=optparse.SUPPRESS_HELP)
+
+    build_group.add_option('--without-documentation', action='store_false',
+                           default=True, dest='with_documentation',
+                           help='Skip building/installing documentation')
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
@@ -1206,10 +1217,11 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         return (' '.join(gen_flags())).strip()
 
+    def cc_lang_flags(self):
+        return self.lang_flags
+
     def cc_compile_flags(self, options):
         def gen_flags():
-            yield self.lang_flags
-
             if options.with_debug_info:
                 yield self.debug_info_flags
 
@@ -1628,12 +1640,14 @@ class CmakeGenerator(object):
         fd.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warning policy will be used" OFF)\n')
         fd.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
 
-        fd.write('set(COMPILER_FEATURES_RELEASE %s %s)\n'
-                 % (self._cc.cc_compile_flags(self._options_release),
+        fd.write('set(COMPILER_FEATURES_RELEASE %s %s %s)\n'
+                 % (self._cc.cc_lang_flags(),
+                    self._cc.cc_compile_flags(self._options_release),
                     self._cc.mach_abi_link_flags(self._options_release)))
 
-        fd.write('set(COMPILER_FEATURES_DEBUG %s %s)\n'
-                 % (self._cc.cc_compile_flags(self._options_debug),
+        fd.write('set(COMPILER_FEATURES_DEBUG %s %s %s)\n'
+                 % (self._cc.cc_lang_flags(),
+                    self._cc.cc_compile_flags(self._options_debug),
                     self._cc.mach_abi_link_flags(self._options_debug)))
 
         fd.write('set(COMPILER_FEATURES $<$<NOT:$<CONFIG:DEBUG>>:${COMPILER_FEATURES_RELEASE}>'
@@ -1984,6 +1998,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
+        'with_documentation': options.with_documentation,
 
         'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
@@ -2018,6 +2033,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or '$(CXX)',
 
+        'cc_lang_flags': cc.cc_lang_flags(),
         'cc_compile_flags': cc.cc_compile_flags(options),
         'cc_warning_flags': cc.cc_warning_flags(options),
 
@@ -2948,7 +2964,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
         logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
             options.arch, options.cpu))
 
-    if options.with_sphinx is None:
+    if options.with_sphinx is None and options.with_documentation is True:
         if have_program('sphinx-build'):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
@@ -3026,6 +3042,12 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
         if options.build_fuzzers == 'klee' and options.os != 'llvm':
             raise UserError('Building for KLEE requires targetting LLVM')
+
+    if options.with_documentation is False:
+        if options.with_doxygen:
+            raise UserError('Using --with-doxygen plus --without-documentation makes no sense')
+        if options.with_sphinx:
+            raise UserError('Using --with-sphinx plus --without-documentation makes no sense')
 
     # Warnings
     if options.os == 'windows' and options.compiler == 'gcc':

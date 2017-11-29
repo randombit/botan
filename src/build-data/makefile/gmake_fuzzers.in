@@ -3,7 +3,7 @@
 
 FUZZER_LINK_CMD = %{fuzzer_link_cmd}
 FUZZER_LINKS_TO = %{link_to_botan} $(LIB_LINKS_TO) %{fuzzer_libs}
-FUZZER_FLAGS    = $(CXXFLAGS) $(WARN_FLAGS)
+FUZZER_FLAGS    = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
 %{fuzzer_build_cmds}
 
