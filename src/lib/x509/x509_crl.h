@@ -15,9 +15,10 @@
 
 namespace Botan {
 
-class CRL_Data;
 class Extensions;
 class X509_Certificate;
+
+struct CRL_Data;
 
 /**
 * This class represents X.509 Certificate Revocation Lists (CRLs).
