@@ -22,7 +22,7 @@ def remove_dir(d):
             logging.debug('Removing directory "%s"', d)
             shutil.rmtree(d)
         else:
-            logging.debug('Directory %s was missing', f)
+            logging.debug('Directory %s was missing', d)
     except Exception as e: # pylint: disable=broad-except
         logging.error('Failed removing directory "%s": %s', d, e)
 

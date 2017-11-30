@@ -3169,11 +3169,11 @@ def main_action_configure_build(info_modules, source_paths, options,
                  build_config.external_include_dir)
 
     if options.amalgamation:
-        (amalgamation_cpp_files, amalgamation_headers) = AmalgamationGenerator(build_config, using_mods, options).generate()
-        build_config.lib_sources = amalgamation_cpp_files
+        (amalg_cpp_files, amalg_headers) = AmalgamationGenerator(build_config, using_mods, options).generate()
+        build_config.lib_sources = amalg_cpp_files
         template_vars.update(MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate())
 
-        template_vars['generated_files'] = ' '.join(amalgamation_cpp_files + amalgamation_headers)
+        template_vars['generated_files'] = ' '.join(amalg_cpp_files + amalg_headers)
 
     with open(os.path.join(build_config.build_dir, 'build_config.json'), 'w') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
