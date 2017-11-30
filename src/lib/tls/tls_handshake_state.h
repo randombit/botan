@@ -14,6 +14,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_handshake_msg.h>
+#include <botan/tls_callbacks.h>
 #include <botan/pk_keys.h>
 #include <botan/pubkey.h>
 #include <functional>
@@ -159,6 +160,8 @@ class Handshake_State
       const Ciphersuite& ciphersuite() const { return m_ciphersuite; }
 
       const Session_Keys& session_keys() const { return m_session_keys; }
+
+      Callbacks& callbacks() const { return m_callbacks; }
 
       void compute_session_keys();
 
