@@ -2749,7 +2749,7 @@ class AmalgamationGenerator(object):
     def generate(self):
         amalgamation_headers, included_in_headers = self._generate_headers()
         amalgamation_sources = self._generate_sources(amalgamation_headers, included_in_headers)
-        return amalgamation_sources
+        return (sorted(amalgamation_sources), sorted(amalgamation_headers))
 
 
 class CompilerDetector(object):
@@ -3169,11 +3169,11 @@ def main_action_configure_build(info_modules, source_paths, options,
                  build_config.external_include_dir)
 
     if options.amalgamation:
-        amalgamation_cpp_files = AmalgamationGenerator(build_config, using_mods, options).generate()
-        build_config.lib_sources = sorted(amalgamation_cpp_files)
+        (amalgamation_cpp_files, amalgamation_headers) = AmalgamationGenerator(build_config, using_mods, options).generate()
+        build_config.lib_sources = amalgamation_cpp_files
         template_vars.update(MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate())
 
-        template_vars['generated_files'] = ' '.join(build_config.lib_sources)
+        template_vars['generated_files'] = ' '.join(amalgamation_cpp_files + amalgamation_headers)
 
     with open(os.path.join(build_config.build_dir, 'build_config.json'), 'w') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)

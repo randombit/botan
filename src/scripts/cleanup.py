@@ -21,6 +21,8 @@ def remove_dir(d):
         if os.access(d, os.X_OK):
             logging.debug('Removing directory "%s"', d)
             shutil.rmtree(d)
+        else:
+            logging.debug('Directory %s was missing', f)
     except Exception as e: # pylint: disable=broad-except
         logging.error('Failed removing directory "%s": %s', d, e)
 
@@ -29,6 +31,8 @@ def remove_file(f):
         if os.access(f, os.R_OK):
             logging.debug('Removing file "%s"', f)
             os.unlink(f)
+        else:
+            logging.debug('File %s was missing', f)
     except Exception as e: # pylint: disable=broad-except
         logging.error('Failed removing file "%s": %s', f, e)
 
@@ -86,6 +90,7 @@ def main(args=None):
 
     if options.distclean:
         build_dir = build_config['build_dir']
+        remove_file(build_config['makefile_path'])
         remove_dir(build_dir)
     else:
         for dir_type in ['libobj_dir', 'cliobj_dir', 'testobj_dir']:
@@ -102,14 +107,12 @@ def main(args=None):
     for f in os.listdir(build_config['out_dir']):
         match = matches_libname.match(f)
         if match and match.group(1) in known_suffix:
-            remove_file(f)
+            remove_file(os.path.join(build_config['out_dir'], f))
 
     if options.distclean:
         if 'generated_files' in build_config:
             for f in build_config['generated_files'].split(' '):
                 remove_file(f)
-
-        remove_file(build_config['makefile_path'])
 
 if __name__ == '__main__':
     sys.exit(main())
