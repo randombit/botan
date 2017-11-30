@@ -1325,9 +1325,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'bin_dir': 'bin',
                 'lib_dir': 'lib',
                 'doc_dir': 'share/doc',
-                'building_shared_supported': 'yes',
-                'install_cmd_data': 'install -m 644',
-                'install_cmd_exec': 'install -m 755'
+                'building_shared_supported': 'yes'
             })
 
         if lex.ar_command == 'ar' and lex.ar_options == '':
@@ -1363,8 +1361,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.building_shared_supported = (True if lex.building_shared_supported == 'yes' else False)
         self.doc_dir = lex.doc_dir
         self.header_dir = lex.header_dir
-        self.install_cmd_data = lex.install_cmd_data
-        self.install_cmd_exec = lex.install_cmd_exec
         self.install_root = lex.install_root
         self.lib_dir = lex.lib_dir
         self.os_type = lex.os_type
@@ -2081,8 +2077,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'python_exe': sys.executable,
         'ar_command': options.ar_command or cc.ar_command or osinfo.ar_command,
         'ar_options': cc.ar_options or osinfo.ar_options,
-        'install_cmd_exec': osinfo.install_cmd_exec,
-        'install_cmd_data': osinfo.install_cmd_data,
 
         'lib_prefix': 'lib' if options.os != 'windows' else '',
 
