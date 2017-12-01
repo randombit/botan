@@ -1,0 +1,117 @@
+# Paths to relevant programs
+
+CXX            = %{cxx} %{cxx_abi_flags}
+LINKER         = %{linker}
+AR             = %{ar_command}
+PYTHON_EXE     = %{python_exe}
+
+# Compiler Flags
+
+LANG_FLAGS     = %{cc_lang_flags}
+CXXFLAGS       = %{cc_compile_flags}
+WARN_FLAGS     = %{cc_warning_flags}
+SO_OBJ_FLAGS   = %{shared_flags}
+
+LIB_LINK_CMD   = %{lib_link_cmd}
+EXE_LINK_CMD   = %{exe_link_cmd}
+
+LIB_LINKS_TO   = %{link_to}
+EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
+
+LIB_FLAGS      = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
+EXE_FLAGS      = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
+
+SCRIPTS_DIR    = %{scripts_dir}
+INSTALLED_LIB_DIR = %{prefix}/%{libdir}
+
+CLI_POST_LINK_CMD  = %{cli_post_link_cmd}
+TEST_POST_LINK_CMD = %{test_post_link_cmd}
+
+# The primary target
+all: libs cli tests
+
+# Executable targets
+CLI           = %{cli_exe}
+TEST          = %{test_exe}
+LIBRARIES     = %{library_targets}
+
+cli: $(CLI)
+tests: $(TEST)
+libs: $(LIBRARIES)
+
+# Misc targets
+
+clean:
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/cleanup.py --build-dir="%{build_dir}"
+
+distclean:
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/cleanup.py --build-dir="%{build_dir}" --distclean
+
+install: $(CLI) docs
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/install.py --prefix=%{prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
+
+docs:
+%{build_doc_commands}
+
+# Object Files
+LIBOBJS       = %{lib_objs}
+
+CLIOBJS       = %{cli_objs}
+
+TESTOBJS      = %{test_objs}
+
+# Build Commands
+%{lib_build_cmds}
+
+%{cli_build_cmds}
+
+%{test_build_cmds}
+
+# Library targets
+
+$(CLI): $(LIBRARIES) $(CLIOBJS)
+	$(EXE_LINK_CMD) $(LDFLAGS) $(CLIOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(CLI_POST_LINK_CMD)
+
+$(TEST): $(LIBRARIES) $(TESTOBJS)
+	$(EXE_LINK_CMD) $(LDFLAGS) $(TESTOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(TEST_POST_LINK_CMD)
+
+%{if build_static_lib}
+
+%{out_dir}/%{static_lib_name}: $(LIBOBJS)
+	$(AR) %{ar_options} %{ar_output_to}$@ $(LIBOBJS)
+
+%{endif}
+
+%{if build_unix_shared_lib}
+
+%{out_dir}/%{shared_lib_name}: $(LIBOBJS)
+	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
+	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_base}
+	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_patch}
+
+%{endif}
+
+%{if build_msvc_shared_lib}
+
+%{out_dir}/%{shared_lib_name}: $(LIBOBJS)
+	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
+
+%{endif}
+
+%{if build_fuzzers}
+
+%{fuzzer_build_cmds}
+
+FUZZERS=%{fuzzer_bin}
+
+fuzzers: libs $(FUZZERS)
+
+fuzzer_corpus:
+	git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
+
+fuzzer_corpus_zip: fuzzer_corpus
+	./src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
+
+%{endif}

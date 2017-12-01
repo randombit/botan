@@ -175,7 +175,6 @@ class SourcePaths(object):
 
         # subdirs of src/
         self.sphinx_config_dir = os.path.join(self.configs_dir, 'sphinx')
-        self.makefile_dir = os.path.join(self.build_data_dir, 'makefile')
 
 
 class BuildPaths(object): # pylint: disable=too-many-instance-attributes
@@ -435,11 +434,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--link-method', default=None, metavar='METHOD',
                            choices=link_methods,
                            help='choose how links to include headers are created (%s)' % ', '.join(link_methods))
-
-    makefile_styles = ['gmake', 'nmake']
-    build_group.add_option('--makefile-style', metavar='STYLE', default=None,
-                           choices=makefile_styles,
-                           help='makefile type (%s)' % ' or '.join(makefile_styles))
 
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
@@ -1099,7 +1093,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'binary_name': None,
                 'linker_name': None,
                 'macro_name': None,
-                'output_to_option': '-o ',
+                'output_to_object': '-o ',
+                'output_to_exe': '-o ',
                 'add_include_dir_option': '-I',
                 'add_lib_dir_option': '-L',
                 'add_lib_option': '-l',
@@ -1117,9 +1112,9 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'maintainer_warning_flags': '',
                 'visibility_build_flags': '',
                 'visibility_attribute': '',
-                'ar_command': None,
-                'ar_options': None,
-                'makefile_style': ''
+                'ar_command': '',
+                'ar_options': '',
+                'ar_output_to': '',
             })
 
         self.add_framework_option = lex.add_framework_option
@@ -1128,6 +1123,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.add_lib_dir_option = lex.add_lib_dir_option
         self.ar_command = lex.ar_command
         self.ar_options = lex.ar_options
+        self.ar_output_to = lex.ar_output_to
         self.binary_link_commands = force_to_dict(lex.binary_link_commands)
         self.binary_name = lex.binary_name
         self.compile_flags = lex.compile_flags
@@ -1139,9 +1135,9 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.mach_abi_linking = force_to_dict(lex.mach_abi_linking)
         self.macro_name = lex.macro_name
         self.maintainer_warning_flags = lex.maintainer_warning_flags
-        self.makefile_style = lex.makefile_style
         self.optimization_flags = lex.optimization_flags
-        self.output_to_option = lex.output_to_option
+        self.output_to_object = lex.output_to_object
+        self.output_to_exe = lex.output_to_exe
         self.sanitizer_flags = lex.sanitizer_flags
         self.shared_flags = lex.shared_flags
         self.size_optimization_flags = lex.size_optimization_flags
@@ -1326,6 +1322,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'static_suffix': 'a',
                 'ar_command': 'ar',
                 'ar_options': '',
+                'ar_output_to': '',
                 'install_root': '/usr/local',
                 'header_dir': 'include',
                 'bin_dir': 'bin',
@@ -1494,7 +1491,7 @@ def process_template(template_file, variables):
                 v = match.group(1)
                 if v in self.vals:
                     return str(self.vals.get(v))
-                raise KeyError("Unknown template variable '%s'" % (v))
+                raise KeyError(v)
 
             lines = template.splitlines()
 
@@ -1531,9 +1528,9 @@ def process_template(template_file, variables):
     try:
         return SimpleTemplate(variables).substitute(read_textfile(template_file))
     except KeyError as e:
-        raise InternalError('Unbound var %s in template %s' % (e, template_file))
-    except Exception as e:
-        raise InternalError('Exception %s in template %s' % (e, template_file))
+        logging.error('Unbound var %s in template %s' % (e, template_file))
+    except Exception as e: # pylint: disable=broad-except
+        logging.error('Exception %s during template processing file %s' % (e, template_file))
 
 def makefile_list(items):
     separator = " \\\n" + 16*" "
@@ -1891,7 +1888,7 @@ class MakefileListsGenerator(object):
             name = name.replace('.cpp', obj_suffix)
             yield os.path.join(obj_dir, name)
 
-    def _build_commands(self, sources, obj_dir, objects, flags):
+    def _build_commands(self, sources, obj_dir, objects, is_lib):
         """
         Form snippets of makefile for building each source file
         """
@@ -1902,19 +1899,22 @@ class MakefileListsGenerator(object):
             includes += ' ' + self._cc.add_include_dir_option + self._options.with_external_includedir
 
         is_fuzzer = obj_dir.find('fuzzer') != -1
+        fuzzer_link = '' if self._options.fuzzer_lib is None \
+                      else '%s%s' % (self._cc.add_lib_option, self._options.fuzzer_lib)
 
         for (obj_file, src) in zip(objects, sources):
             isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
 
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
-                obj_file, src, isa_specific_flags_str, flags,
-                includes, self._cc.compile_flags, src, self._cc.output_to_option)
+                obj_file, src, isa_specific_flags_str, 'LIB' if is_lib else 'EXE',
+                includes, self._cc.compile_flags, src, self._cc.output_to_object)
 
             if is_fuzzer:
                 fuzz_basename = os.path.basename(obj_file).replace('.' + self._osinfo.obj_suffix, '')
                 fuzz_bin = self._build_paths.fuzzer_output_dir
-                yield '%s: %s $(LIBRARIES)\n\t$(FUZZER_LINK_CMD) %s $(FUZZER_LINKS_TO) %s$@\n' % (
-                    os.path.join(fuzz_bin, fuzz_basename), obj_file, obj_file, self._cc.output_to_option)
+                yield '%s: %s $(LIBRARIES)\n\t$(EXE_LINK_CMD) %s $(EXE_LINKS_TO) %s %s$@\n' % (
+                    os.path.join(fuzz_bin, fuzz_basename), obj_file, obj_file, fuzzer_link,
+                    self._cc.output_to_object)
 
     def generate(self):
         out = {}
@@ -1934,7 +1934,7 @@ class MakefileListsGenerator(object):
                 out['fuzzer_bin'] = makefile_list(self._fuzzer_bin_list(objects, self._build_paths.fuzzer_output_dir))
 
             build_key = '%s_build_cmds' % (t)
-            out[build_key] = '\n'.join(self._build_commands(src_list, src_dir, objects, t.upper()))
+            out[build_key] = '\n'.join(self._build_commands(src_list, src_dir, objects, t == 'lib'))
         return out
 
 
@@ -1971,7 +1971,7 @@ class HouseEccCurve(object):
         return "\\\n" + ' \\\n'.join(lines)
 
 
-def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo): #pylint: disable=too-many-locals,too-many-branches
+def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo): #pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     Create the template variables needed to process the makefile, build.h, etc
     """
@@ -1980,7 +1980,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         return '\n'.join(['#define BOTAN_' + macro for macro in macros])
 
     def external_link_cmd():
-        return ' ' + cc.add_lib_dir_option + options.with_external_libdir if options.with_external_libdir else ''
+        return (' ' + cc.add_lib_dir_option + options.with_external_libdir) if options.with_external_libdir else ''
 
     def link_to(module_member_name):
         """
@@ -2023,8 +2023,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         main_executable = os.path.basename(sys.argv[0])
         return ' '.join([main_executable] + sys.argv[1:])
 
-    bin_link_cmd = cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd()
-
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -2033,11 +2031,13 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'abi_rev':        Version.so_rev(),
 
         'version':        Version.as_string(),
-        'version_packed': Version.packed(),
         'release_type':   Version.release_type(),
         'version_datestamp': Version.datestamp(),
 
         'distribution_info': options.distribution_info,
+
+        'darwin_so_compat_ver': '%s.%s.0' % (Version.packed(), Version.so_rev()),
+        'darwin_so_current_ver': '%s.%s.%s' % (Version.packed(), Version.so_rev(), Version.patch()),
 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
@@ -2045,7 +2045,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'command_line': configure_command_line(),
         'local_config': read_textfile(options.local_config),
-        'makefile_style': options.makefile_style or cc.makefile_style,
 
         'makefile_path': os.path.join(build_config.build_dir, '..', 'Makefile'),
 
@@ -2064,8 +2063,11 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'scripts_dir': source_paths.scripts_dir,
 
         'build_static_lib': options.build_static_lib,
-        'build_shared_lib': options.build_shared_lib,
         'build_fuzzers': options.build_fuzzers,
+
+        'build_shared_lib': options.build_shared_lib,
+        'build_unix_shared_lib': options.build_shared_lib and options.compiler != 'msvc',
+        'build_msvc_shared_lib': options.build_shared_lib and options.compiler == 'msvc',
 
         'libobj_dir': build_config.libobj_dir,
         'cliobj_dir': build_config.cliobj_dir,
@@ -2095,14 +2097,13 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'cc_lang_flags': cc.cc_lang_flags(),
         'cc_compile_flags': cc.cc_compile_flags(options),
         'cc_warning_flags': cc.cc_warning_flags(options),
+        'output_to_exe': cc.output_to_exe,
 
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
         'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
-        'cli_link_cmd': bin_link_cmd,
-        'test_link_cmd': bin_link_cmd,
-        'fuzzer_link_cmd': bin_link_cmd,
+        'exe_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
 
         'link_to': ' '.join(
             [cc.add_lib_option + lib for lib in link_to('libs')] +
@@ -2123,11 +2124,11 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'unsafe_fuzzer_mode_define': '#define BOTAN_UNSAFE_FUZZER_MODE' if options.unsafe_fuzzer_mode else '',
         'fuzzer_type': '#define BOTAN_FUZZER_IS_%s' % (options.build_fuzzers.upper()) if options.build_fuzzers else '',
-        'fuzzer_libs': '' if options.fuzzer_lib is None else '%s%s' % (cc.add_lib_option, options.fuzzer_lib),
 
         'python_exe': sys.executable,
         'ar_command': options.ar_command or cc.ar_command or osinfo.ar_command,
         'ar_options': cc.ar_options or osinfo.ar_options,
+        'ar_output_to': cc.ar_output_to,
 
         'lib_prefix': 'lib' if options.os != 'windows' else '',
 
@@ -2160,7 +2161,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     variables['static_lib_name'] = variables['lib_basename'] + '.' + variables['static_suffix']
 
     if options.build_shared_lib:
-
         if osinfo.soname_pattern_base != None:
             variables['soname_base'] = osinfo.soname_pattern_base.format(**variables)
             variables['shared_lib_name'] = variables['soname_base']
@@ -2171,6 +2171,10 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         if osinfo.soname_pattern_patch != None:
             variables['soname_patch'] = osinfo.soname_pattern_patch.format(**variables)
+
+        variables['lib_link_cmd'] = variables['lib_link_cmd'].format(**variables)
+    else:
+        variables['lib_link_cmd'] = ''
 
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
@@ -2185,12 +2189,23 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
     variables.update(MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate())
 
-    if options.os == 'llvm':
-        # llvm-link doesn't understand -L or -l flags
-        variables['link_to_botan'] = '%s/lib%s.a' % (variables['out_dir'], variables['libname'])
-    elif options.compiler == 'msvc':
-        # Nmake makefiles do something completely different here...
-        variables['link_to_botan'] = ''
+    if options.os == 'windows':
+        # For historical reasons? the library does not have the major number on Windows
+        # This should probably be fixed in a future major release.
+        variables['libname'] = 'botan'
+        variables['lib_basename'] = variables['libname']
+        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan-cli' + variables['program_suffix'])
+    else:
+        variables['libname'] = 'botan-%d' % (Version.major())
+        variables['lib_basename'] = 'lib' + variables['libname']
+        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan' + variables['program_suffix'])
+        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
+
+    variables['static_lib_name'] = variables['lib_basename'] + '.' + variables['static_suffix']
+
+    if options.os == 'llvm' or options.compiler == 'msvc':
+        # llvm-link and msvc require just naming the file directly
+        variables['link_to_botan'] = os.path.join(variables['out_dir'], variables['static_lib_name'])
     else:
         variables['link_to_botan'] = '%s%s %s%s' % (
             cc.add_lib_dir_option, variables['out_dir'],
@@ -2203,8 +2218,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         lib_targets.append('static_lib_name')
 
     variables['library_targets'] = ' '.join([os.path.join(variables['out_dir'], variables[t]) for t in lib_targets])
-
-    variables["header_in"] = process_template(os.path.join(source_paths.makefile_dir, 'header.in'), variables)
 
     return variables
 
@@ -3033,7 +3046,9 @@ def canonicalize_options(options, info_os, info_arch):
     else:
         raise UserError('Unknown or unidentifiable processor "%s"' % (options.cpu))
 
-    if options.build_shared_lib and not info_os[options.os].building_shared_supported:
+    shared_libs_supported = options.os in info_os and info_os[options.os].building_shared_supported
+
+    if options.build_shared_lib and not shared_libs_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (options.os))
         options.build_shared_lib = False
 
@@ -3044,7 +3059,7 @@ def canonicalize_options(options, info_os, info_arch):
         if options.os == 'windows' and options.build_static_lib:
             pass
         else:
-            options.build_shared_lib = info_os[options.os].building_shared_supported
+            options.build_shared_lib = shared_libs_supported
 
     if options.build_static_lib is None:
         if options.os == 'windows' and options.build_shared_lib:
@@ -3118,8 +3133,8 @@ def validate_options(options, info_os, info_cc, available_module_policies):
             raise UserError('Using --with-sphinx plus --without-documentation makes no sense')
 
     # Warnings
-    if options.os == 'windows' and options.compiler == 'gcc':
-        logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
+    if options.os == 'windows' and options.compiler != 'msvc':
+        logging.warning('The windows target is oriented towards MSVC; maybe you want cygwin or mingw')
 
 def prepare_configure_build(info_modules, source_paths, options,
                             cc, cc_min_version, arch, osinfo, module_policy):
@@ -3131,7 +3146,7 @@ def prepare_configure_build(info_modules, source_paths, options,
 
     template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
 
-    makefile_template = os.path.join(source_paths.makefile_dir, '%s.in' % (template_vars['makefile_style']))
+    makefile_template = os.path.join(source_paths.build_data_dir, 'makefile.in')
     logging.debug('Using makefile template %s' % (makefile_template))
 
     return using_mods, build_config, template_vars, makefile_template
@@ -3300,10 +3315,6 @@ def main(argv):
 
     logging.info('Target is %s:%s-%s-%s-%s' % (
         options.compiler, cc_min_version, options.os, options.arch, options.cpu))
-
-    if options.build_shared_lib and not osinfo.building_shared_supported:
-        logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
-        options.build_shared_lib = False
 
     main_action_configure_build(info_modules, source_paths, options,
                                 cc, cc_min_version, arch, osinfo, module_policy)

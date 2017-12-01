@@ -7,8 +7,6 @@ optimization_flags "+O2"
 warning_flags "+w"
 shared_flags "+Z"
 
-makefile_style gmake
-
 <mach_abi_linking>
 hppa1.0 -> "+DAportable"
 hppa1.1 -> "+DA1.1"
@@ -16,5 +14,5 @@ hppa2.0 -> "+DA2.0W"
 </mach_abi_linking>
 
 <so_link_commands>
-default -> "$(CXX) +Z -b -Wl,+h,$(SONAME_ABI)" # Documented in cc(1), but not CC(1) (?)
+default -> "$(CXX) +Z -b -Wl,+h,{soname_abi}" # Documented in cc(1), but not CC(1) (?)
 </so_link_commands>
