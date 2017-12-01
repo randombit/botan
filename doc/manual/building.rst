@@ -106,6 +106,24 @@ variant commonly used by Microsoft compilers. To add a new variant
 (eg, a build script for VMS), you will need to create a new template
 file in ``src/build-data/makefile``.
 
+Cross Compiling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Cross compiling refers to building software on one type of host (say Linux
+x86-64) but creating a binary for some other type (say MinGW x86-32). This is
+completely supported by the build system. To extend the example, we must tell
+`configure.py` to use the MinGW tools:
+
+ $ ./configure.py --os=mingw --cpu=x86_32 --cc-bin=i686-w64-mingw32-g++ --ar=i686-w64-mingw32-ar
+ ...
+ $ make
+ ...
+ $ file botan.exe
+ botan.exe: PE32 executable (console) Intel 80386, for MS Windows
+
+You can also specify the alternate tools by setting the `CXX` and `AR`
+environment variables, as is commonly done with autoconf builds.
+
 On Unix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
