@@ -4,7 +4,7 @@ program_suffix .exe
 obj_suffix obj
 static_suffix lib
 
-soname_pattern_base "botan.dll"
+soname_pattern_base "{libname}.dll"
 
 install_root c:\\Botan
 doc_dir docs

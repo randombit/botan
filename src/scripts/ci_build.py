@@ -73,7 +73,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         flags += ['--amalgamation']
 
     if target in ['bsi', 'nist']:
-        flags += ['--module-policy=%s' % (target)]
+        # Arbitrarily test disable static on module policy builds
+        flags += ['--module-policy=%s' % (target), '--disable-static']
 
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx']

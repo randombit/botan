@@ -14,20 +14,7 @@ TESTOBJS      = %{test_objs}
 
 %{test_build_cmds}
 
-COPY             = cp
-
-docs:
-%{build_doc_commands}
-
 # Library targets
-LIB_BASENAME  = %{lib_basename}
-STATIC_LIB    = %{out_dir}/$(LIB_BASENAME).%{static_suffix}
-LIBRARIES     = $(STATIC_LIB)
-
-# Link Commands
-%{gmake_dso_in}
-
-libs: $(LIBRARIES)
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(CLI_LINK_CMD) $(LDFLAGS) $(CLIOBJS) $(CLI_LINKS_TO) -o $(CLI)
@@ -37,15 +24,44 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(TEST_LINK_CMD) $(LDFLAGS) $(TESTOBJS) $(TEST_LINKS_TO) -o $(TEST)
 	$(TEST_POST_LINK_CMD)
 
-$(STATIC_LIB): $(LIBOBJS)
-	$(AR) %{ar_options} $(STATIC_LIB) $(LIBOBJS)
+%{if build_static_lib}
 
-# Fake targets
-.PHONY: clean distclean docs install valgrind lcov
+%{out_dir}/%{static_lib_name}: $(LIBOBJS)
+	$(AR) %{ar_options} $@ $(LIBOBJS)
 
-%{gmake_coverage_in}
+%{endif}
 
-%{gmake_fuzzers_in}
+%{if build_shared_lib}
 
-valgrind:
-	valgrind --log-file=botan.%%p.log -v --track-origins=yes --leak-check=full --show-reachable=yes ./botan-test
+SONAME_ABI = %{soname_abi}
+DARWIN_COMPATIBILITY_VER = %{version_packed}.%{abi_rev}.0
+DARWIN_CURRENT_VER       = %{version_packed}.%{abi_rev}.%{version_patch}
+
+%{out_dir}/%{shared_lib_name}: $(LIBOBJS)
+	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) -o $@
+	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_base}
+	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_patch}
+
+%{endif}
+
+%{if build_fuzzers}
+
+# Fuzzer build commands
+
+FUZZER_LINK_CMD = %{fuzzer_link_cmd}
+FUZZER_LINKS_TO = %{link_to_botan} $(LIB_LINKS_TO) %{fuzzer_libs}
+FUZZER_FLAGS    = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
+
+%{fuzzer_build_cmds}
+
+FUZZERS=%{fuzzer_bin}
+
+fuzzers: libs $(FUZZERS)
+
+fuzzer_corpus:
+	git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
+
+fuzzer_corpus_zip: fuzzer_corpus
+	./src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
+
+%{endif}
