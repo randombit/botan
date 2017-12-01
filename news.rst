@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Changes between 2.0.1 and 2.0.1-RSCS1, 2017-XX-XX
+Changes between 2.0.1 and 2.0.1-RSCS1, 2017-12-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * The PKCS11 module did not require any external dependencies, so it has been enabled by default. The -with-pkcs11 and --without-pkcs11 flags to configure.py have been removed. (GH #837)

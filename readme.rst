@@ -34,9 +34,42 @@ by the BSI, this version will finally be announced here.
 Release Downloads
 ----------------------------------------
 
-All approved releases are signed with a PGP key.
+The latest version is `2.0.1-RSCS1 <https://cybersecurity.rohde-schwarz.com/sites/default/files/sha_downloads/Botan-2.0.1-RSCS1.zip>`_ (`sig <https://cybersecurity.rohde-schwarz.com/sites/default/files/sha_downloads/Botan-2.0.1-RSCS1.zip.sig>`_) released on 2017-12-01.
 
-Key will be announced here shortly.
+`SHA-256 <https://cybersecurity.rohde-schwarz.com/sites/default/files/sha_downloads/Botan-2.0.1-RSCS1.zip.sha256>`_: 12FE832236F0DF316AAF9643AAD7FF0A9ACEA4E1C7F2E4A0276FC7709CA5F6E7
+
+All approved releases are signed with the following `key <https://cybersecurity.rohde-schwarz.com/sites/default/files/sha_downloads/Botan-Signing-Key.pem>`_ (`cert <https://cybersecurity.rohde-schwarz.com/sites/default/files/sha_downloads/Botan-Signing-Cert.pem>`_)::
+
+  -----BEGIN PUBLIC KEY-----
+  MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAyGKrzmfZhGuIaMXGZ56x
+  yKtzTuvDrK50edCd1/EccVtS1V/52bmM/mfWaTCvUKUd+BlKw544L+hEaMdoGMvj
+  rkJL70DxU+fqV3NHBJKDqV+fJi4X8iWPIq3B/Tu08jFYjeHoRDN3BcaGFSQnR9lC
+  1p3PXbga8Mpk5Qe93ca3tGawr2AKt0ImdVwWvcPlL2JHr63jB0YARYzf1M8DtDzk
+  RQewoyrxbyQbup4Qgd2IbJsfTbNxgeWFMSeiBEZVnqVosKvzLybXZpmbmZSxQr64
+  qT8JRzlJbIh3RrJlfGPu2YFojg9x+uL0KqGGPhqDFIR/UQdW1Ve+kjh7MaSQJsnZ
+  u/+HoGJVSDfkiW1ZLPfYHDye85e4c5z4JCxbOMn2IVSlFWxfrNjaIU6jEjxyS09E
+  6W9Yr2r5iC/ef5BFc38JgVuvfMa3RJHSqY4AfIl+GnozwtKzYsedfKAZkZUx+kiu
+  65FdQqHR1iMrM4kxmRIeYxttdF7h0NzU7CGGXoVV14qRMQ9ZMTHPyasqmt5JihK6
+  cyn9e8DPzgndm2HhBJeQdSMCWraZoZqO8GjzuTuSVtt4a3C/G++rpLA9RXHRwK1P
+  UjeWn1B9Pd6fX4oZ1/eQF+Y5oZnl80IsILOE2CdxEKN2TNQftESdKNNWe+nCEY1c
+  sSPNDnqFuHxJaS2oS5A3BBUCAwEAAQ==
+  -----END PUBLIC KEY-----
+
+Verify the release signature using Botan::
+
+  $ botan verify --hash=SHA-512 --emsa=EMSA4 Botan-Signing-Key.pem Botan-2.0.1-RSCS1.zip Botan-2.0.1-RSCS1.zip.sig
+  Signature is valid
+
+Verify the release signature using OpenSSL (you need to base64 decode the signature first)::
+
+  $ type Botan-2.0.1-RSCS1.zip.sig | openssl base64 -d -out Botan-2.0.1-RSCS1.zip.sig.dec
+
+or alternatively using python::
+
+  $ python -m base64 -d Botan-2.0.1-RSCS1.zip.sig > Botan-2.0.1-RSCS1.zip.sig.dec
+
+  $ openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:64 -verify Botan-Signing-Key.pem -signature Botan-2.0.1-RSCS1.zip.sig.dec Botan-2.0.1-RSCS1.zip
+  Verified OK
 
 Support & Maintenance
 ----------------------------------------
@@ -82,4 +115,5 @@ a ``PKCS11_RNG`` can be used as an entropy source::
 ``HMAC_DRBG`` will automatically reseed whenever the reseed interval or maximum number
 of bytes per request are exceeded. On platforms which support ``fork()``, it will also
 automatically reseed after a fork. For more information, see the `handbook <https://botan.randombit.net/manual/rng.html>`_.
+
 
