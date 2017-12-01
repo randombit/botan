@@ -34,8 +34,8 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 %{if build_shared_lib}
 
 SONAME_ABI = %{soname_abi}
-DARWIN_COMPATIBILITY_VER = %{version_packed}.%{so_abi_rev}.0
-DARWIN_CURRENT_VER       = %{version_packed}.%{so_abi_rev}.%{version_patch}
+DARWIN_COMPATIBILITY_VER = %{version_packed}.%{abi_rev}.0
+DARWIN_CURRENT_VER       = %{version_packed}.%{abi_rev}.%{version_patch}
 
 %{out_dir}/%{shared_lib_name}: $(LIBOBJS)
 	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) -o $@

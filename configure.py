@@ -2030,7 +2030,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'version_minor':  Version.minor(),
         'version_patch':  Version.patch(),
         'version_vc_rev': Version.vc_rev(),
-        'so_abi_rev':     Version.so_rev(),
+        'abi_rev':        Version.so_rev(),
+
         'version':        Version.as_string(),
         'version_packed': Version.packed(),
         'release_type':   Version.release_type(),
@@ -2143,30 +2144,33 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     variables['test_exe'] = os.path.join(variables['out_dir'],
                                          'botan-test' + variables['program_suffix'])
 
+    if options.os == 'windows':
+        # For historical reasons? the library does not have the major number on Windows
+        # This should probably be fixed in a future major release.
+        variables['libname'] = 'botan'
+        variables['lib_basename'] = variables['libname']
+        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan-cli' + variables['program_suffix'])
+    else:
+        variables['libname'] = 'botan-%d' % (Version.major())
+        variables['lib_basename'] = 'lib' + variables['libname']
+        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan' + variables['program_suffix'])
+
+        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
+
+    variables['static_lib_name'] = variables['lib_basename'] + '.' + variables['static_suffix']
+
     if options.build_shared_lib:
 
         if osinfo.soname_pattern_base != None:
-            variables['soname_base'] = osinfo.soname_pattern_base.format(
-                version_major=Version.major(),
-                version_minor=Version.minor(),
-                version_patch=Version.patch(),
-                abi_rev=Version.so_rev())
+            variables['soname_base'] = osinfo.soname_pattern_base.format(**variables)
             variables['shared_lib_name'] = variables['soname_base']
 
         if osinfo.soname_pattern_abi != None:
-            variables['soname_abi'] = osinfo.soname_pattern_abi.format(
-                version_major=Version.major(),
-                version_minor=Version.minor(),
-                version_patch=Version.patch(),
-                abi_rev=Version.so_rev())
+            variables['soname_abi'] = osinfo.soname_pattern_abi.format(**variables)
             variables['shared_lib_name'] = variables['soname_abi']
 
         if osinfo.soname_pattern_patch != None:
-            variables['soname_patch'] = osinfo.soname_pattern_patch.format(
-                version_major=Version.major(),
-                version_minor=Version.minor(),
-                version_patch=Version.patch(),
-                abi_rev=Version.so_rev())
+            variables['soname_patch'] = osinfo.soname_pattern_patch.format(**variables)
 
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
@@ -2180,26 +2184,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         variables['test_post_link_cmd'] = ''
 
     variables.update(MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate())
-
-    if options.os == 'windows':
-        if options.with_debug_info:
-            variables['libname'] = 'botand'
-        else:
-            variables['libname'] = 'botan'
-
-        variables['lib_basename'] = variables['libname']
-        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan-cli' + variables['program_suffix'])
-    else:
-        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
-
-        # 'botan' or 'botan-2'. Used in Makefile and install script
-        # This can be made consistent over all platforms in the future
-        variables['libname'] = 'botan-%d' % (Version.major())
-
-        variables['lib_basename'] = 'lib' + variables['libname']
-        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan' + variables['program_suffix'])
-
-    variables['static_lib_name'] = variables['lib_basename'] + '.' + variables['static_suffix']
 
     if options.os == 'llvm':
         # llvm-link doesn't understand -L or -l flags
