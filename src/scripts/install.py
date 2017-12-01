@@ -196,9 +196,10 @@ def main(args):
         copy_file(os.path.join(build_external_include_dir, include),
                   prepend_destdir(os.path.join(target_include_dir, include)))
 
-    static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
-    copy_file(os.path.join(out_dir, static_lib),
-              prepend_destdir(os.path.join(lib_dir, os.path.basename(static_lib))))
+    static_lib = os.path.join(out_dir, process_template('%{lib_prefix}%{libname}.%{static_suffix}'))
+    if os.path.exists(static_lib):
+        copy_file(static_lib,
+                  prepend_destdir(os.path.join(lib_dir, os.path.basename(static_lib))))
 
     if build_shared_lib:
         if target_os == "windows":
