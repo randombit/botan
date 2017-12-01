@@ -9,8 +9,6 @@ lang_flags "-std=c++0x"
 warning_flags "-w1"
 shared_flags "-fPIC"
 
-makefile_style gmake
-
 <mach_opt>
 pentium3  -> "-march=pentium3"
 pentium4  -> "-march=pentium4"
@@ -23,5 +21,5 @@ westmere  -> "-march=core2"
 </mach_opt>
 
 <so_link_commands>
-default -> "$(CXX) -fPIC -shared -Wl,-soname,$(SONAME_ABI)"
+default -> "$(CXX) -fPIC -shared -Wl,-soname,{soname_abi}"
 </so_link_commands>

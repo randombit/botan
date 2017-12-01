@@ -11,10 +11,8 @@ lang_flags "-std=c++11 +p -features=extensions -D__FUNCTION__=__func__"
 ar_command CC
 ar_options "-xar -o"
 
-makefile_style gmake
-
 <so_link_commands>
-default -> "$(CXX) -G -h$(SONAME_ABI)"
+default -> "$(CXX) -G -h{soname_abi}"
 </so_link_commands>
 
 <mach_opt>

@@ -19,13 +19,11 @@ stack_protector_flags "-fstack-protector"
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 
-makefile_style gmake
-
 <so_link_commands>
-darwin        -> "$(CXX) -dynamiclib -fPIC -install_name $(INSTALLED_LIB_DIR)/$(SONAME_ABI) -current_version $(DARWIN_CURRENT_VER) -compatibility_version $(DARWIN_COMPATIBILITY_VER)"
+darwin        -> "$(CXX) -dynamiclib -fPIC -install_name $(INSTALLED_LIB_DIR)/{soname_abi} -current_version {darwin_so_current_ver} -compatibility_version {darwin_so_compat_ver}"
 
 # The default works for GNU ld and several other Unix linkers
-default       -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME_ABI)"
+default       -> "$(CXX) -shared -fPIC -Wl,-soname,{soname_abi}"
 </so_link_commands>
 
 <binary_link_commands>

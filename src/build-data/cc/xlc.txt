@@ -6,8 +6,6 @@ optimization_flags "-O2"
 
 lang_flags "-std=c++11"
 
-makefile_style gmake
-
 <mach_opt>
 power8   -> "-qarch=pwr8"
 power9   -> "-qarch=pwr9"

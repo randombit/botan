@@ -3,7 +3,9 @@ macro_name MSVC
 binary_name cl
 linker_name link
 
-output_to_option "/Fo"
+output_to_object "/Fo"
+output_to_exe "/OUT:"
+
 add_include_dir_option "/I"
 add_lib_dir_option "/LIBPATH:"
 add_lib_option ""
@@ -27,8 +29,7 @@ visibility_attribute "__declspec(dllimport)"
 
 ar_command lib
 ar_options "/nologo"
-
-makefile_style nmake
+ar_output_to "/OUT:"
 
 <isa_flags>
 sse2   -> ""

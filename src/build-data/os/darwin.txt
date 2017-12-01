@@ -4,6 +4,8 @@ soname_pattern_base  "libbotan-{version_major}.dylib"
 soname_pattern_abi   "libbotan-{version_major}.{abi_rev}.dylib"
 soname_pattern_patch "libbotan-{version_major}.{abi_rev}.{version_minor}.{version_patch}.dylib"
 
+so_post_link_command "install_name_tool -change '$(INSTALLED_LIB_DIR)/{soname_abi}' '@executable_path/{soname_abi}' $@"
+
 doc_dir doc
 
 <target_features>
