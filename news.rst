@@ -4,6 +4,12 @@ Release Notes
 Version 2.4.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Several build improvements requested by downstream packagers, including the
+  ability to disable building the static library. All makefile constructs that
+  were specific to nmake or GNU make have been eliminated, thus the option
+  ``--makefile-style`` which was previously used to select the makefile type has
+  also been removed. (GH #1230 #1237 #1300 #1318 #1319 #1324 and #1325)
+
 * Support for negotiating the DH group as specified in RFC 7919 is now available
   in TLS (GH #1263)
 
