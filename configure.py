@@ -1328,7 +1328,8 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'bin_dir': 'bin',
                 'lib_dir': 'lib',
                 'doc_dir': 'share/doc',
-                'building_shared_supported': 'yes'
+                'building_shared_supported': 'yes',
+                'so_post_link_command': '',
             })
 
         if lex.ar_command == 'ar' and lex.ar_options == '':
@@ -1371,6 +1372,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.program_suffix = lex.program_suffix
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
+        self.so_post_link_command = lex.so_post_link_command
 
     def defines(self, options):
         r = []
@@ -2179,13 +2181,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
         # we need to change the install names
-        variables['cli_post_link_cmd'] = \
-            'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
-        variables['test_post_link_cmd'] = \
-            'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
+        variables['post_link_cmd'] = osinfo.so_post_link_command.format(**variables)
     else:
-        variables['cli_post_link_cmd'] = ''
-        variables['test_post_link_cmd'] = ''
+        variables['post_link_cmd'] = ''
 
     variables.update(MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate())
 

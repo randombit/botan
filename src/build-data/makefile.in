@@ -24,8 +24,7 @@ EXE_FLAGS      = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{prefix}/%{libdir}
 
-CLI_POST_LINK_CMD  = %{cli_post_link_cmd}
-TEST_POST_LINK_CMD = %{test_post_link_cmd}
+POST_LINK_CMD  = %{post_link_cmd}
 
 # The primary target
 all: libs cli tests
@@ -71,11 +70,11 @@ TESTOBJS      = %{test_objs}
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(EXE_LINK_CMD) $(LDFLAGS) $(CLIOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
-	$(CLI_POST_LINK_CMD)
+	$(POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(EXE_LINK_CMD) $(LDFLAGS) $(TESTOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
-	$(TEST_POST_LINK_CMD)
+	$(POST_LINK_CMD)
 
 %{if build_static_lib}
 
