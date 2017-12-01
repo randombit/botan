@@ -29,7 +29,6 @@ import platform
 import re
 import shlex
 import shutil
-import string
 import subprocess
 import traceback
 import logging
@@ -266,7 +265,6 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
 
 PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major())
 
-
 def make_build_doc_commands(source_paths, build_paths, options):
 
     if options.with_documentation is False:
@@ -274,13 +272,14 @@ def make_build_doc_commands(source_paths, build_paths, options):
 
     def build_manual_command(src_dir, dst_dir):
         if options.with_sphinx:
-            sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
+            sphinx = 'sphinx-build -b html -c %s ' % (source_paths.sphinx_config_dir)
             if options.quiet:
                 sphinx += '-q '
             sphinx += '%s %s' % (src_dir, dst_dir)
             return sphinx
         else:
-            return '$(COPY) %s%s*.rst %s' %  (src_dir, os.sep, dst_dir)
+            cp_command = 'copy' if options.os == 'windows' else 'cp'
+            return '%s %s%s*.rst %s' % (cp_command, src_dir, os.sep, dst_dir)
 
     cmds = [
         build_manual_command(os.path.join(source_paths.doc_dir, 'manual'), build_paths.doc_output_dir_manual)
@@ -378,11 +377,18 @@ def process_command_line(args): # pylint: disable=too-many-locals
                            help='add coverage info')
 
     build_group.add_option('--enable-shared-library', dest='build_shared_lib',
-                           action='store_true', default=True,
+                           action='store_true', default=None,
                            help=optparse.SUPPRESS_HELP)
-    build_group.add_option('--disable-shared', dest='build_shared_lib',
+    build_group.add_option('--disable-shared-library', dest='build_shared_lib',
                            action='store_false',
                            help='disable building shared library')
+
+    build_group.add_option('--enable-static-library', dest='build_static_lib',
+                           action='store_true', default=None,
+                           help=optparse.SUPPRESS_HELP)
+    build_group.add_option('--disable-static-library', dest='build_static_lib',
+                           action='store_false',
+                           help='disable building static library')
 
     build_group.add_option('--optimize-for-size', dest='optimize_for_size',
                            action='store_true', default=False,
@@ -1473,14 +1479,57 @@ def read_textfile(filepath):
 def process_template(template_file, variables):
     """
     Perform template substitution
-    """
 
-    class PercentSignTemplate(string.Template):
-        delimiter = '%'
+    The template language supports (un-nested) conditionals.
+    """
+    class SimpleTemplate(object):
+
+        def __init__(self, vals):
+            self.vals = vals
+            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9]+)}')
+            self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
+
+        def substitute(self, template):
+            def insert_value(match):
+                v = match.group(1)
+                if v in self.vals:
+                    return str(self.vals.get(v))
+                raise KeyError("Unknown template variable '%s'" % (v))
+
+            lines = template.splitlines()
+
+            output = []
+            idx = 0
+
+            while idx < len(lines):
+                cond = self.cond_pattern.match(lines[idx])
+
+                if cond:
+                    cond_type = cond.group(1)
+                    cond_var = cond.group(2)
+
+                    include_cond = False
+
+                    if cond_type == 'if' and cond_var in self.vals and self.vals.get(cond_var):
+                        include_cond = True
+                    elif cond_type == 'unless' and (cond_var not in self.vals or (not self.vals.get(cond_var))):
+                        include_cond = True
+
+                    idx += 1
+                    while idx < len(lines):
+                        if lines[idx] == '%{endif}':
+                            break
+                        if include_cond:
+                            output.append(lines[idx])
+                        idx += 1
+                else:
+                    output.append(lines[idx])
+                idx += 1
+
+            return self.value_pattern.sub(insert_value, '\n'.join(output)) + '\n'
 
     try:
-        template = PercentSignTemplate(read_textfile(template_file))
-        return template.substitute(variables)
+        return SimpleTemplate(variables).substitute(read_textfile(template_file))
     except KeyError as e:
         raise InternalError('Unbound var %s in template %s' % (e, template_file))
     except Exception as e:
@@ -2013,7 +2062,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'scripts_dir': source_paths.scripts_dir,
 
+        'build_static_lib': options.build_static_lib,
         'build_shared_lib': options.build_shared_lib,
+        'build_fuzzers': options.build_fuzzers,
 
         'libobj_dir': build_config.libobj_dir,
         'cliobj_dir': build_config.cliobj_dir,
@@ -2027,7 +2078,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'build_doc_commands': make_build_doc_commands(source_paths, build_config, options),
 
         'python_dir': source_paths.python_dir,
-        'sphinx_config_dir': source_paths.sphinx_config_dir,
 
         'os': options.os,
         'arch': options.arch,
@@ -2101,6 +2151,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
                 version_minor=Version.minor(),
                 version_patch=Version.patch(),
                 abi_rev=Version.so_rev())
+            variables['shared_lib_name'] = variables['soname_base']
 
         if osinfo.soname_pattern_abi != None:
             variables['soname_abi'] = osinfo.soname_pattern_abi.format(
@@ -2108,6 +2159,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
                 version_minor=Version.minor(),
                 version_patch=Version.patch(),
                 abi_rev=Version.so_rev())
+            variables['shared_lib_name'] = variables['soname_abi']
 
         if osinfo.soname_pattern_patch != None:
             variables['soname_patch'] = osinfo.soname_pattern_patch.format(
@@ -2147,6 +2199,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         variables['lib_basename'] = 'lib' + variables['libname']
         variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan' + variables['program_suffix'])
 
+    variables['static_lib_name'] = variables['lib_basename'] + '.' + variables['static_suffix']
+
     if options.os == 'llvm':
         # llvm-link doesn't understand -L or -l flags
         variables['link_to_botan'] = '%s/lib%s.a' % (variables['out_dir'], variables['libname'])
@@ -2158,24 +2212,15 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
             cc.add_lib_dir_option, variables['out_dir'],
             cc.add_lib_option, variables['libname'])
 
+    lib_targets = []
+    if options.build_shared_lib:
+        lib_targets.append('shared_lib_name')
+    if options.build_static_lib:
+        lib_targets.append('static_lib_name')
+
+    variables['library_targets'] = ' '.join([os.path.join(variables['out_dir'], variables[t]) for t in lib_targets])
+
     variables["header_in"] = process_template(os.path.join(source_paths.makefile_dir, 'header.in'), variables)
-
-    if variables["makefile_style"] == "gmake":
-        templates = [
-            ('gmake_dso.in', options.build_shared_lib),
-            ('gmake_coverage.in', options.with_coverage_info),
-            ('gmake_fuzzers.in', options.build_fuzzers)
-            ]
-
-        for (template, build_it) in templates:
-            template_file = os.path.join(source_paths.makefile_dir, template)
-
-            var_name = template.replace('.', '_')
-
-            if build_it:
-                variables[var_name] = process_template(template_file, variables)
-            else:
-                variables[var_name] = ''
 
     return variables
 
@@ -3004,6 +3049,25 @@ def canonicalize_options(options, info_os, info_arch):
     else:
         raise UserError('Unknown or unidentifiable processor "%s"' % (options.cpu))
 
+    if options.build_shared_lib and not info_os[options.os].building_shared_supported:
+        logging.warning('Shared libs not supported on %s, disabling shared lib support' % (options.os))
+        options.build_shared_lib = False
+
+    if options.os == 'windows' and options.build_shared_lib is None and options.build_static_lib is None:
+        options.build_shared_lib = True
+
+    if options.build_shared_lib is None:
+        if options.os == 'windows' and options.build_static_lib:
+            pass
+        else:
+            options.build_shared_lib = info_os[options.os].building_shared_supported
+
+    if options.build_static_lib is None:
+        if options.os == 'windows' and options.build_shared_lib:
+            pass
+        else:
+            options.build_static_lib = True
+
     # Set default fuzzing lib
     if options.build_fuzzers == 'libfuzzer' and options.fuzzer_lib is None:
         options.fuzzer_lib = 'Fuzzer'
@@ -3056,6 +3120,12 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
         if options.build_fuzzers == 'klee' and options.os != 'llvm':
             raise UserError('Building for KLEE requires targetting LLVM')
+
+    if options.build_static_lib is False and options.build_shared_lib is False:
+        raise UserError('With both --disable-static-library and --disable-shared-library, nothing to do')
+
+    if options.os == 'windows' and options.build_static_lib is True and options.build_shared_lib is True:
+        raise UserError('On Windows only one of static lib and DLL can be selected')
 
     if options.with_documentation is False:
         if options.with_doxygen:

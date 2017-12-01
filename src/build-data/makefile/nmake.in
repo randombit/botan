@@ -14,27 +14,9 @@ TESTOBJS      = %{test_objs}
 
 %{test_build_cmds}
 
-
-COPY          = copy
-
-docs:
-%{build_doc_commands}
-
-# Library targets
-#
 # LIB_FILENAME is always the .lib file, that is either a static lib or a
 # by-product of the DLL creation used to link the DLL into applications
-LIB_BASENAME  = %{lib_basename}
-LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).lib
-
-!If "$(SO_OBJ_FLAGS)" == ""
-# static lib
-LIBRARIES     = $(LIB_FILENAME)
-!Else
-# shared lib
-SO_FILENAME   = %{out_dir}\$(LIB_BASENAME).dll
-LIBRARIES     = $(SO_FILENAME)
-!Endif
+LIB_FILENAME  = %{out_dir}/%{static_lib_name}
 
 # Link Commands
 $(CLI): $(LIBRARIES) $(CLIOBJS)
@@ -45,15 +27,16 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(TEST_LINK_CMD) /OUT:$@ $(TESTOBJS) $(LIB_FILENAME) $(TEST_LINKS_TO)
 	$(TEST_POST_LINK_CMD)
 
-libs: $(LIBRARIES)
+%{if build_shared_lib}
 
-!If "$(SO_OBJ_FLAGS)" == ""
-# static lib
-$(LIB_FILENAME): $(LIBOBJS)
-	$(AR) %{ar_options} /OUT:$@ $(LIBOBJS)
-!Else
-# shared lib
-# Creates the DLL $(SO_FILENAME) and the .lib $(LIB_FILENAME)
-$(SO_FILENAME): $(LIBOBJS)
+%{out_dir}/%{shared_lib_name}: $(LIBOBJS)
 	$(LIB_LINK_CMD) /OUT:$@ $(LIBOBJS) $(LIB_LINKS_TO)
-!Endif
+
+%{endif}
+
+%{if build_static_lib}
+
+%{out_dir}/%{static_lib_name}: $(LIBOBJS)
+	$(AR) %{ar_options} /OUT:$@ $(LIBOBJS)
+
+%{endif}
