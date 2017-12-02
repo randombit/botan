@@ -104,10 +104,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         flags += ['--disable-modules=locking_allocator']
 
     if target == 'parallel':
-        if target_cc == 'gcc':
-            flags += ['--with-cilkplus']
-        else:
-            flags += ['--with-openmp']
+        flags += ['--with-openmp']
 
     if target == 'sonar':
         if target_os != 'linux' or target_cc != 'clang':

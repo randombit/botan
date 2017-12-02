@@ -427,8 +427,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     build_group.add_option('--with-openmp', default=False, action='store_true',
                            help='enable use of OpenMP')
-    build_group.add_option('--with-cilkplus', default=False, action='store_true',
-                           help='enable use of Cilk Plus')
 
     link_methods = ['symlink', 'hardlink', 'copy']
     build_group.add_option('--link-method', default=None, metavar='METHOD',
@@ -1074,8 +1072,6 @@ class ArchInfo(InfoObject):
 
         if options.with_openmp:
             macros.append('TARGET_HAS_OPENMP')
-        if options.with_cilkplus:
-            macros.append('TARGET_HAS_CILKPLUS')
 
         return macros
 
@@ -1210,11 +1206,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             if 'openmp' not in self.mach_abi_linking:
                 raise UserError('No support for OpenMP for %s' % (self.basename))
             abi_link.append(self.mach_abi_linking['openmp'])
-
-        if options.with_cilkplus:
-            if 'cilkplus' not in self.mach_abi_linking:
-                raise UserError('No support for Cilk Plus for %s' % (self.basename))
-            abi_link.append(self.mach_abi_linking['cilkplus'])
 
         abi_flags = ' '.join(sorted(abi_link))
 

@@ -114,8 +114,7 @@ all_x86_64 -> "-momit-leaf-frame-pointer"
 <mach_abi_linking>
 all     -> "-pthread"
 
-cilkplus -> "-fcilkplus"
-openmp   -> "-fopenmp"
+openmp  -> "-fopenmp"
 
 mips64  -> "-mabi=64"
 s390    -> "-m31"
