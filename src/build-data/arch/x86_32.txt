@@ -1,5 +1,4 @@
 endian little
-unaligned ok
 
 family x86
 

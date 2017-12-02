@@ -1,8 +1,5 @@
 endian big
 
-# Except for Coldfire
-#unaligned ok
-
 <aliases>
 680x0
 68k
