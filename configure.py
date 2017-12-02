@@ -329,6 +329,12 @@ def process_command_line(args): # pylint: disable=too-many-locals
                             help='set compiler ABI flags',
                             default='')
 
+    target_group.add_option('--cxxflags', metavar='FLAG',
+                            help='set compiler flags', default=None)
+
+    target_group.add_option('--ldflags', metavar='FLAG',
+                            help='set linker flags', default=None)
+
     target_group.add_option('--ar-command', dest='ar_command', metavar='AR', default=None,
                             help='set path to static archive creator')
 
@@ -622,6 +628,10 @@ def process_command_line(args): # pylint: disable=too-many-locals
         options.ar_command = os.getenv('AR')
     if options.compiler_binary is None:
         options.compiler_binary = os.getenv('CXX')
+    if options.cxxflags is None:
+        options.cxxflags = os.getenv('CXXFLAGS')
+    if options.ldflags is None:
+        options.ldflags = os.getenv('LDFLAGS')
 
     return options
 
@@ -2088,7 +2098,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'linker': cc.linker_name or '$(CXX)',
 
         'cc_lang_flags': cc.cc_lang_flags(),
-        'cc_compile_flags': cc.cc_compile_flags(options),
+        'cc_compile_flags': options.cxxflags or cc.cc_compile_flags(options),
+        'ldflags': options.ldflags or '',
         'cc_warning_flags': cc.cc_warning_flags(options),
         'output_to_exe': cc.output_to_exe,
 
@@ -2138,6 +2149,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     variables['test_exe'] = os.path.join(variables['out_dir'],
                                          'botan-test' + variables['program_suffix'])
 
+    variables['post_link_cmd'] = osinfo.so_post_link_command.format(**variables) if options.build_shared_lib else ''
+
     if options.os == 'windows':
         # For historical reasons? the library does not have the major number on Windows
         # This should probably be fixed in a future major release.
@@ -2148,7 +2161,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         variables['libname'] = 'botan-%d' % (Version.major())
         variables['lib_basename'] = 'lib' + variables['libname']
         variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan' + variables['program_suffix'])
-
         variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
 
     variables['static_lib_name'] = variables['lib_basename'] + '.' + variables['static_suffix']
@@ -2169,29 +2181,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     else:
         variables['lib_link_cmd'] = ''
 
-    if options.os == 'darwin' and options.build_shared_lib:
-        # In order that these executables work from the build directory,
-        # we need to change the install names
-        variables['post_link_cmd'] = osinfo.so_post_link_command.format(**variables)
-    else:
-        variables['post_link_cmd'] = ''
-
-    variables.update(MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate())
-
-    if options.os == 'windows':
-        # For historical reasons? the library does not have the major number on Windows
-        # This should probably be fixed in a future major release.
-        variables['libname'] = 'botan'
-        variables['lib_basename'] = variables['libname']
-        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan-cli' + variables['program_suffix'])
-    else:
-        variables['libname'] = 'botan-%d' % (Version.major())
-        variables['lib_basename'] = 'lib' + variables['libname']
-        variables['cli_exe'] = os.path.join(variables['out_dir'], 'botan' + variables['program_suffix'])
-        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
-
-    variables['static_lib_name'] = variables['lib_basename'] + '.' + variables['static_suffix']
-
     if options.os == 'llvm' or options.compiler == 'msvc':
         # llvm-link and msvc require just naming the file directly
         variables['link_to_botan'] = os.path.join(variables['out_dir'], variables['static_lib_name'])
@@ -2207,6 +2196,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         lib_targets.append('static_lib_name')
 
     variables['library_targets'] = ' '.join([os.path.join(variables['out_dir'], variables[t]) for t in lib_targets])
+
+    variables.update(MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate())
 
     return variables
 

@@ -11,6 +11,7 @@ LANG_FLAGS     = %{cc_lang_flags}
 CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 SO_OBJ_FLAGS   = %{shared_flags}
+LDFLAGS        = %{ldflags}
 
 LIB_LINK_CMD   = %{lib_link_cmd}
 EXE_LINK_CMD   = %{exe_link_cmd}
@@ -27,7 +28,7 @@ INSTALLED_LIB_DIR = %{prefix}/%{libdir}
 POST_LINK_CMD  = %{post_link_cmd}
 
 # The primary target
-all: libs cli tests
+all: libs cli tests docs
 
 # Executable targets
 CLI           = %{cli_exe}
@@ -40,17 +41,17 @@ libs: $(LIBRARIES)
 
 # Misc targets
 
+docs:
+%{build_doc_commands}
+
 clean:
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/cleanup.py --build-dir="%{build_dir}"
 
 distclean:
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/cleanup.py --build-dir="%{build_dir}" --distclean
 
-install: $(CLI) docs
+install: libs cli docs
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/install.py --prefix=%{prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
-
-docs:
-%{build_doc_commands}
 
 # Object Files
 LIBOBJS       = %{lib_objs}
