@@ -165,6 +165,7 @@ def main(args):
     ver_patch = int(cfg['version_patch'])
     target_os = cfg['os']
     build_shared_lib = bool(cfg['build_shared_lib'])
+    build_static_lib = bool(cfg['build_static_lib'])
 
     bin_dir = os.path.join(options.prefix, options.bindir)
     lib_dir = os.path.join(options.prefix, options.libdir)
@@ -196,9 +197,10 @@ def main(args):
         copy_file(os.path.join(build_external_include_dir, include),
                   prepend_destdir(os.path.join(target_include_dir, include)))
 
-    static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
-    copy_file(os.path.join(out_dir, static_lib),
-              prepend_destdir(os.path.join(lib_dir, os.path.basename(static_lib))))
+    if build_static_lib:
+        static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
+        copy_file(os.path.join(out_dir, static_lib),
+                  prepend_destdir(os.path.join(lib_dir, os.path.basename(static_lib))))
 
     if build_shared_lib:
         if target_os == "windows":
