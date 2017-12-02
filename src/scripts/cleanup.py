@@ -100,7 +100,8 @@ def main(args=None):
     remove_file(build_config['cli_exe'])
     remove_file(build_config['test_exe'])
 
-    matches_libname = re.compile('^' + build_config['lib_basename'] + '.([a-z]+)')
+    lib_basename = build_config['lib_prefix'] + build_config['libname']
+    matches_libname = re.compile('^' + lib_basename + '.([a-z]+)')
 
     known_suffix = ['a', 'so', 'dll', 'manifest', 'exp']
 
