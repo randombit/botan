@@ -71,7 +71,7 @@ W0 = W[t]..W[t+3]
 * r0 = paddd r0,r0
 * r0 = psub r0,r1
 *
-* because pcmpltd and paddd are availabe in both MMX units on
+* because pcmpltd and paddd are available in both MMX units on
 * efficeon, pentium-m, and opteron but shifts are available in
 * only one unit.
 */
