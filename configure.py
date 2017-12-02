@@ -341,15 +341,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
-    target_group.add_option('--with-unaligned-mem',
-                            dest='unaligned_mem', action='store_true',
-                            default=None,
-                            help='use unaligned memory accesses')
-
-    target_group.add_option('--without-unaligned-mem',
-                            dest='unaligned_mem', action='store_false',
-                            help=optparse.SUPPRESS_HELP)
-
     target_group.add_option('--with-os-features', action='append', metavar='FEAT',
                             help='specify OS features to use')
     target_group.add_option('--without-os-features', action='append', metavar='FEAT',
@@ -1006,7 +997,6 @@ class ArchInfo(InfoObject):
             {
                 'endian': None,
                 'family': None,
-                'unaligned': 'no',
                 'wordsize': 32
             })
 
@@ -1014,7 +1004,6 @@ class ArchInfo(InfoObject):
         self.endian = lex.endian
         self.family = lex.family
         self.isa_extensions = lex.isa_extensions
-        self.unaligned_ok = (1 if lex.unaligned == 'ok' else 0)
         self.submodels = lex.submodels
         self.submodel_aliases = force_to_dict(lex.submodel_aliases)
         self.wordsize = int(lex.wordsize)
@@ -1061,12 +1050,6 @@ class ArchInfo(InfoObject):
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (endian.upper()))
             logging.info('Assuming CPU is %s endian' % (endian))
 
-        unaligned_ok = options.unaligned_mem
-        if unaligned_ok is None:
-            unaligned_ok = self.unaligned_ok
-            if unaligned_ok:
-                logging.info('Assuming unaligned memory access works')
-
         if self.family is not None:
             macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
 
@@ -1074,8 +1057,6 @@ class ArchInfo(InfoObject):
 
         if self.wordsize == 64:
             macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
-
-        macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 
         if options.with_valgrind:
             macros.append('HAS_VALGRIND')

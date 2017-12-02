@@ -1,5 +1,4 @@
 endian big
-unaligned ok
 
 <submodels>
 s390
