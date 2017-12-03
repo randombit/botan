@@ -41,7 +41,8 @@ def remove_all_in_dir(d):
         logging.debug('Removing all files in directory "%s"', d)
 
         for f in os.listdir(d):
-            remove_file(os.path.join(d, f))
+            full_path = os.path.join(d, f)
+            shutil.rmtree(full_path)
 
 def main(args=None):
     if args is None:
@@ -93,7 +94,7 @@ def main(args=None):
         remove_file(build_config['makefile_path'])
         remove_dir(build_dir)
     else:
-        for dir_type in ['libobj_dir', 'cliobj_dir', 'testobj_dir']:
+        for dir_type in ['libobj_dir', 'cliobj_dir', 'testobj_dir', 'doc_output_dir']:
             dir_path = build_config[dir_type]
             remove_all_in_dir(dir_path)
 
