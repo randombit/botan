@@ -459,10 +459,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
                            action='store_true', default=False,
                            help="Enable extra warnings")
 
-    build_group.add_option('--dirty-tree', dest='clean_build_tree',
-                           action='store_false', default=True,
-                           help=optparse.SUPPRESS_HELP)
-
     build_group.add_option('--with-python-versions', dest='python_version',
                            metavar='N.M',
                            default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
@@ -3137,8 +3133,7 @@ def main_action_configure_build(info_modules, source_paths, options,
     # Now we start writing to disk
 
     try:
-        if options.clean_build_tree:
-            robust_rmtree(build_config.build_dir)
+        robust_rmtree(build_config.build_dir)
     except OSError as e:
         if e.errno != errno.ENOENT:
             logging.error('Problem while removing build dir: %s' % (e))
