@@ -13,10 +13,15 @@ in the source.
 - The TLS constructors taking `std::function` for callbacks. Instead
   use the TLS::Callbacks interface.
 
-- The Buffered_Computation class. In a future release the class will be removed,
-  and all of member functions instead declared directly on MessageAuthenticationCode
-  and HashFunction. So this only affects you if you are directly referencing
-  `Botan::Buffered_Computation` in some way.
+- The Buffered_Computation base class. In a future release the class will be
+  removed, and all of member functions instead declared directly on
+  MessageAuthenticationCode and HashFunction. So this only affects you if you
+  are directly referencing `Botan::Buffered_Computation` in some way.
+
+- The SymmetricAlgorithm base class. Similarly to Buffered_Computation, in a
+  future release the class will be removed and its member functions copied to
+  classes which currently subclass it. This only affects your code if you
+  are referencing `Botan::SymmetricAlgorithm` directly.
 
 - Platform support for BeOS and IRIX operating systems
 

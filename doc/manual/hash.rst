@@ -62,7 +62,40 @@ internal state is reset to begin hashing a new message.
 
      Equivalent to calling ``update`` followed by ``final``.
 
-Cryptographic Hash Functions
+Code Example
+------------
+
+Assume we want to calculate the SHA-1, Whirlpool and SHA-3 hash digests of the STDIN stream using the Botan library.
+
+.. code-block:: cpp
+
+    #include <botan/hash.h>
+    #include <botan/hex.h>
+    #include <iostream>
+    int main ()
+       {
+       std::unique_ptr<Botan::HashFunction> hash1(Botan::HashFunction::create("SHA-1"));
+       std::unique_ptr<Botan::HashFunction> hash2(Botan::HashFunction::create("Whirlpool"));
+       std::unique_ptr<Botan::HashFunction> hash3(Botan::HashFunction::create("SHA-3"));
+       std::vector<uint8_t> buf(2048);
+
+       while(std::cin.good())
+          {
+          //read STDIN to buffer
+          std::cin.read(reinterpret_cast<char*>(buf.data()), buf.size());
+          size_t readcount = std::cin.gcount();
+          //update hash computations with read data
+          hash1->update(buf.data(),readcount);
+          hash2->update(buf.data(),readcount);
+          hash3->update(buf.data(),readcount);
+          }
+       std::cout << "SHA-1: " << Botan::hex_encode(hash1->final()) << std::endl;
+       std::cout << "Whirlpool: " << Botan::hex_encode(hash2->final()) << std::endl;
+       std::cout << "SHA-3: " << Botan::hex_encode(hash3->final()) << std::endl;
+       return 0;
+       }
+
+Available Hash Functions
 ------------------------------
 
 The following cryptographic hash functions are implemented.
@@ -148,7 +181,7 @@ Available if ``BOTAN_HAS_SHA3`` is defined.
 The new NIST standard hash. Fairly slow.
 
 SHAKE (SHAKE-128, SHAKE-256)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^6
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Available if ``BOTAN_HAS_SHAKE`` is defined.
 
@@ -249,50 +282,4 @@ CRC32
 
 Available if ``BOTAN_HAS_CRC32`` is defined.
 
-This is some kind of 32 bit CRC (which one?).
-
-
-Code Example
-------------
-
-Assume we want to calculate the SHA-1, Whirlpool and SHA-3 hash digests of the STDIN stream using the Botan library.
-
-.. code-block:: cpp
-
-    #include <botan/hash.h>
-    #include <botan/hex.h>
-    #include <iostream>
-    int main ()
-       {
-       std::unique_ptr<Botan::HashFunction> hash1(Botan::HashFunction::create("SHA-1"));
-       std::unique_ptr<Botan::HashFunction> hash2(Botan::HashFunction::create("Whirlpool"));
-       std::unique_ptr<Botan::HashFunction> hash3(Botan::HashFunction::create("SHA-3"));
-       std::vector<uint8_t> buf(2048);
-
-       while(std::cin.good())
-          {
-          //read STDIN to buffer
-          std::cin.read(reinterpret_cast<char*>(buf.data()), buf.size());
-          size_t readcount = std::cin.gcount();
-          //update hash computations with read data
-          hash1->update(buf.data(),readcount);
-          hash2->update(buf.data(),readcount);
-          hash3->update(buf.data(),readcount);
-          }
-       std::cout << "SHA-1: " << Botan::hex_encode(hash1->final()) << std::endl;
-       std::cout << "Whirlpool: " << Botan::hex_encode(hash2->final()) << std::endl;
-       std::cout << "SHA-3: " << Botan::hex_encode(hash3->final()) << std::endl;
-       return 0;
-       }
-
-
-A Note on Checksums
---------------------
-
-Checksums are very similar to hash functions, and in fact share the
-same interface. But there are some significant differences, the major
-ones being that the output size is very small (usually in the range of
-2 to 4 bytes), and is not cryptographically secure. But for their
-intended purpose (error checking), they perform very well. Some
-examples of checksums included in Botan are the Adler32 and CRC32
-checksums.
+This is the 32-bit CRC used in protocols such as Ethernet, gzip, PNG, etc.

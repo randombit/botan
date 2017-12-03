@@ -436,7 +436,7 @@ ElGamal; these use the EME class:
    Parameters for encryption and decryption are set by the
    :cpp:class:`ECIES_System_Params` class which stores the EC domain parameters,
    the KDF (see :ref:`key_derivation_function`), the cipher (see
-   :ref:`symmetric_crypto`) and the MAC.
+   :ref:`cipher_modes`) and the MAC.
 
    .. cpp:function:: ECIES_Encryptor(const PK_Key_Agreement_Key& private_key, \
          const ECIES_System_Params& ecies_params, \

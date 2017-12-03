@@ -1,4 +1,4 @@
-Trusted Platform Module (TPM) Support
+Trusted Platform Module (TPM)
 ==========================================
 
 .. versionadded:: 1.11.26

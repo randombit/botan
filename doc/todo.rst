@@ -193,8 +193,6 @@ Documentation
 * X.509 certs, path validation
 * Specific docs covering one major topic (RSA, ECDSA, AES/GCM, ...)
 * Some howto style docs (setting up CA, ...)
-* List each cipher, hash, etc, describe its usage, and give the
-  header file and BOTAN_HAS_X macro associated with it.
 
 Packaging
 ------------
