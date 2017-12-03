@@ -69,8 +69,9 @@ def main(args=None):
     build_dir = options.build_dir
 
     if os.access(build_dir, os.X_OK) != True:
-        logging.error("Unable to access build directory")
-        return 1
+        logging.debug('No build directory found')
+        # No build dir: clean enough!
+        return 0
 
     build_config_path = os.path.join(build_dir, 'build_config.json')
     build_config_str = None
@@ -86,8 +87,6 @@ def main(args=None):
 
     build_config = json.loads(build_config_str)
 
-    #print(json.dumps(build_config, sort_keys=True, indent=3))
-
     if options.distclean:
         build_dir = build_config['build_dir']
         remove_file(build_config['makefile_path'])
@@ -97,7 +96,12 @@ def main(args=None):
             dir_path = build_config[dir_type]
             remove_all_in_dir(dir_path)
 
-        shutil.rmtree(build_config['doc_output_dir'])
+        try:
+            shutil.rmtree(build_config['doc_output_dir'])
+        except OSError as e:
+            pass
+
+        #remove_file(build_config['doc_stamp_file'])
 
     remove_file(build_config['cli_exe'])
     remove_file(build_config['test_exe'])

@@ -28,7 +28,7 @@ INSTALLED_LIB_DIR = %{prefix}/%{libdir}
 POST_LINK_CMD  = %{post_link_cmd}
 
 # The primary target
-all: libs cli tests docs
+all: libs cli docs tests
 
 # Executable targets
 CLI           = %{cli_exe}
@@ -38,11 +38,14 @@ LIBRARIES     = %{library_targets}
 cli: $(CLI)
 tests: $(TEST)
 libs: $(LIBRARIES)
+docs: %{doc_stamp_file}
 
 # Misc targets
 
-docs:
-%{build_doc_commands}
+.PHONY = all cli libs tests docs clean distclean
+
+%{doc_stamp_file}: %{doc_dir}/manual/*.rst
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/build_docs.py --build-dir="%{build_dir}"
 
 clean:
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/cleanup.py --build-dir="%{build_dir}"
@@ -60,14 +63,7 @@ CLIOBJS       = %{cli_objs}
 
 TESTOBJS      = %{test_objs}
 
-# Build Commands
-%{lib_build_cmds}
-
-%{cli_build_cmds}
-
-%{test_build_cmds}
-
-# Library targets
+# Executable targets
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(EXE_LINK_CMD) $(LDFLAGS) $(CLIOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
@@ -76,6 +72,22 @@ $(CLI): $(LIBRARIES) $(CLIOBJS)
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(EXE_LINK_CMD) $(LDFLAGS) $(TESTOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
 	$(POST_LINK_CMD)
+
+%{if build_fuzzers}
+
+FUZZERS=%{fuzzer_bin}
+
+fuzzers: libs $(FUZZERS)
+
+fuzzer_corpus:
+	git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
+
+fuzzer_corpus_zip: fuzzer_corpus
+	./src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
+
+%{endif}
+
+# Library targets
 
 %{if build_static_lib}
 
@@ -100,18 +112,13 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 
 %{endif}
 
+# Build Commands
+%{lib_build_cmds}
+
+%{cli_build_cmds}
+
+%{test_build_cmds}
+
 %{if build_fuzzers}
-
 %{fuzzer_build_cmds}
-
-FUZZERS=%{fuzzer_bin}
-
-fuzzers: libs $(FUZZERS)
-
-fuzzer_corpus:
-	git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
-
-fuzzer_corpus_zip: fuzzer_corpus
-	./src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
-
 %{endif}

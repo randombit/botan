@@ -364,6 +364,7 @@ def main(args=None):
             'src/scripts/ci_build.py',
             'src/scripts/install.py',
             'src/scripts/cleanup.py',
+            'src/scripts/build_docs.py',
             'src/scripts/website.py',
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py']

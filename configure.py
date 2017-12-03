@@ -261,31 +261,6 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         else:
             raise InternalError("Unknown src info type '%s'" % (typ))
 
-
-def make_build_doc_commands(source_paths, build_paths, options):
-
-    if options.with_documentation is False:
-        return ""
-
-    def build_manual_command(src_dir, dst_dir):
-        if options.with_sphinx:
-            sphinx = 'sphinx-build -b html -c %s ' % (source_paths.sphinx_config_dir)
-            if options.quiet:
-                sphinx += '-q '
-            sphinx += '%s %s' % (src_dir, dst_dir)
-            return sphinx
-        else:
-            cp_command = 'copy' if options.os == 'windows' else 'cp'
-            return '%s %s%s*.rst %s' % (cp_command, src_dir, os.sep, dst_dir)
-
-    cmds = [
-        build_manual_command(os.path.join(source_paths.doc_dir, 'manual'), build_paths.doc_output_dir_manual)
-    ]
-    if options.with_doxygen:
-        cmds += ['doxygen %s%sbotan.doxy' % (build_paths.build_dir, os.sep)]
-    return '\n'.join(['\t' + cmd for cmd in cmds])
-
-
 def process_command_line(args): # pylint: disable=too-many-locals
     """
     Handle command line options
@@ -2018,6 +1993,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
         'doc_dir': source_paths.doc_dir,
+        'scripts_dir': source_paths.scripts_dir,
+        'python_dir': source_paths.python_dir,
 
         'cli_exe': os.path.join(build_dir, osinfo.cli_exe_name + program_suffix),
         'test_exe': os.path.join(build_dir, 'botan-test' + program_suffix),
@@ -2029,8 +2006,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'command_line': configure_command_line(),
         'local_config': read_textfile(options.local_config),
 
-        'makefile_path': os.path.join(build_config.build_dir, '..', 'Makefile'),
-
         'program_suffix': program_suffix,
 
         'prefix': options.prefix or osinfo.install_root,
@@ -2038,12 +2013,17 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
+
         'with_documentation': options.with_documentation,
+        'with_sphinx': options.with_sphinx,
+        'sphinx_config_dir': source_paths.sphinx_config_dir,
+        'with_doxygen': options.with_doxygen,
 
         'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
 
-        'scripts_dir': source_paths.scripts_dir,
+        'doc_stamp_file': os.path.join(build_config.build_dir, 'doc.stamp'),
+        'makefile_path': os.path.join(build_config.build_dir, '..', 'Makefile'),
 
         'build_static_lib': options.build_static_lib,
         'build_fuzzers': options.build_fuzzers,
@@ -2058,12 +2038,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'fuzzobj_dir': build_config.fuzzobj_dir,
 
         'fuzzer_output_dir': build_config.fuzzer_output_dir if build_config.fuzzer_output_dir else '',
-
         'doc_output_dir': build_config.doc_output_dir,
-
-        'build_doc_commands': make_build_doc_commands(source_paths, build_config, options),
-
-        'python_dir': source_paths.python_dir,
 
         'os': options.os,
         'arch': options.arch,
@@ -2072,6 +2047,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'innosetup_arch': innosetup_arch(options.os, options.arch),
 
         'mp_bits': choose_mp_bits(),
+
+        'python_exe': sys.executable,
+        'python_version': options.python_version,
 
         'cxx': (options.compiler_binary or cc.binary_name),
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
@@ -2089,6 +2067,10 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
         'exe_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
         'post_link_cmd': '',
+
+        'ar_command': options.ar_command or cc.ar_command or osinfo.ar_command,
+        'ar_options': cc.ar_options or osinfo.ar_options,
+        'ar_output_to': cc.ar_output_to,
 
         'link_to': ' '.join(
             [cc.add_lib_option + lib for lib in link_to('libs')] +
@@ -2110,15 +2092,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'unsafe_fuzzer_mode_define': '#define BOTAN_UNSAFE_FUZZER_MODE' if options.unsafe_fuzzer_mode else '',
         'fuzzer_type': '#define BOTAN_FUZZER_IS_%s' % (options.build_fuzzers.upper()) if options.build_fuzzers else '',
 
-        'python_exe': sys.executable,
-        'ar_command': options.ar_command or cc.ar_command or osinfo.ar_command,
-        'ar_options': cc.ar_options or osinfo.ar_options,
-        'ar_output_to': cc.ar_output_to,
-
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
-        'python_version': options.python_version,
-        'with_sphinx': options.with_sphinx,
         'house_ecc_curve_defines': make_cpp_macros(HouseEccCurve(options.house_curve).defines()) \
                                    if options.house_curve else '',
         }
