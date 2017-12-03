@@ -262,8 +262,6 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
             raise InternalError("Unknown src info type '%s'" % (typ))
 
 
-PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major())
-
 def make_build_doc_commands(source_paths, build_paths, options):
 
     if options.with_documentation is False:
@@ -2141,7 +2139,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         }
 
     if options.os != 'windows':
-        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
+        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, 'botan-%d.pc' % (Version.major()))
 
     # The name is always set because Windows build needs it
     variables['static_lib_name'] = '%s%s.%s' % (variables['lib_prefix'], variables['libname'],
@@ -3164,8 +3162,8 @@ def main_action_configure_build(info_modules, source_paths, options,
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
-    if options.os != 'windows':
-        write_template(in_build_dir(PKG_CONFIG_FILENAME), in_build_data('botan.pc.in'))
+    if 'botan_pkgconfig' in template_vars:
+        write_template(template_vars['botan_pkgconfig'], in_build_data('botan.pc.in'))
 
     if options.os == 'windows':
         write_template(in_build_dir('botan.iss'), in_build_data('innosetup.in'))
