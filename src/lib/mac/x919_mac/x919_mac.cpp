@@ -91,7 +91,7 @@ MessageAuthenticationCode* ANSI_X919_MAC::clone() const
 */
 ANSI_X919_MAC::ANSI_X919_MAC() :
    m_des1(BlockCipher::create("DES")),
-   m_des2(BlockCipher::create("DES")),
+   m_des2(m_des1->clone()),
    m_position(0)
    {
    }
