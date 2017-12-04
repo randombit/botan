@@ -55,3 +55,5 @@ in the source.
 - All built in MODP groups < 2048 bits
 
 - All pre-created DSA groups
+
+- Directly accessing the member variables of calendar_point

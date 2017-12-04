@@ -20,12 +20,12 @@ X509_Time::X509_Time(const std::chrono::system_clock::time_point& time)
    {
    calendar_point cal = calendar_value(time);
 
-   m_year   = cal.year;
-   m_month  = cal.month;
-   m_day    = cal.day;
-   m_hour   = cal.hour;
-   m_minute = cal.minutes;
-   m_second = cal.seconds;
+   m_year   = cal.get_year();
+   m_month  = cal.get_month();
+   m_day    = cal.get_day();
+   m_hour   = cal.get_hour();
+   m_minute = cal.get_minutes();
+   m_second = cal.get_seconds();
 
    m_tag = (m_year >= 2050) ? GENERALIZED_TIME : UTC_TIME;
    }
