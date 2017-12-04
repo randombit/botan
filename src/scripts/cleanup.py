@@ -98,7 +98,7 @@ def main(args=None):
 
         try:
             shutil.rmtree(build_config['doc_output_dir'])
-        except OSError as e:
+        except OSError:
             pass
 
         #remove_file(build_config['doc_stamp_file'])
