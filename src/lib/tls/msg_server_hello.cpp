@@ -2,6 +2,7 @@
 * TLS Server Hello and Server Hello Done
 * (C) 2004-2011,2015,2016 Jack Lloyd
 *     2016 Matthias Gierlings
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

@@ -1,6 +1,7 @@
 /*
 * Hooks for application level policies on TLS connections
 * (C) 2004-2006,2013 Jack Lloyd
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
