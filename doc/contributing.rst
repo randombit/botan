@@ -97,12 +97,12 @@ Python
 
 Scripts should be in Python whenever possible.
 
-For configure.py (and install.py) the target is stock (no modules outside the
-standard library) CPython 2.7 plus latest CPython 3.x. Support for CPython 2.6,
-PyPy, etc is great when viable (in the sense of not causing problems for 2.7 or
-3.x, and not requiring huge blocks of version dependent code). As running this
-program succesfully is required for a working build making it as portable as
-possible is considered key.
+For configure.py (and helper scripts install.py, cleanup.py and build_docs.py)
+the target is stock (no modules outside the standard library) CPython 2.7 plus
+latest CPython 3.x. Support for CPython 2.6, PyPy, etc is great when viable (in
+the sense of not causing problems for 2.7 or 3.x, and not requiring huge blocks
+of version dependent code). As running this program succesfully is required for
+a working build, making it as portable as possible is considered key.
 
 The python wrapper botan2.py targets CPython 2.7, 3.x, and latest PyPy. Note that
 a single file is used to avoid dealing with any of Python's various crazy module
