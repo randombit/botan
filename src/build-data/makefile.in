@@ -42,7 +42,9 @@ docs: %{doc_stamp_file}
 
 # Misc targets
 
-.PHONY = all cli libs tests docs clean distclean
+%{if make_supports_phony}
+.PHONY = all cli libs tests docs clean distclean install
+%{endif}
 
 %{doc_stamp_file}: %{doc_dir}/manual/*.rst
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/build_docs.py --build-dir="%{build_dir}"
