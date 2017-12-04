@@ -4891,11 +4891,11 @@ Version 0.7.8, 2002-02-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * More capabilities for Pipe, inspired by SysV STREAMS, including peeking,
-    better buffering, and stack ops. NOT BACKWARDS COMPATIBLE: SEE DOCUMENTATION
+  better buffering, and stack ops. NOT BACKWARDS COMPATIBLE: SEE DOCUMENTATION
 * Added a BufferingFilter class
 * Added popen() based EntropySource for generic Unix systems (unix_rnd)
 * Moved 'devrand' module into main distribution (ent_file.h), renamed to
-    File_EntropySource, and changed interface somewhat.
+  File_EntropySource, and changed interface somewhat.
 * Made Randpool somewhat more conservative and also 25% faster
 * Minor fixes and updates for the configure script
 * Added some tweaks for memory allocation
