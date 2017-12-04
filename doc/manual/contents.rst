@@ -6,6 +6,7 @@ Contents
 
    index
    goals
+   support
    building
    platforms
    versions
@@ -41,4 +42,4 @@ Contents
    side_channels
    packaging
    fuzzing
-   support
+

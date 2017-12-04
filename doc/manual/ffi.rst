@@ -1,12 +1,12 @@
 
-FFI Interface
+FFI (C89) Interface
 ========================================
 
 .. versionadded:: 1.11.14
 
 Botan's ffi module provides a C89 API intended to be easily usable with other
 language's foreign function interface (FFI) libraries. For instance the included
-Python module uses the ``ctypes`` module for all library access. This API is of
+Python wrapper uses Python's ``ctypes`` module and the C89 API. This API is of
 course also useful for programs written directly in C.
 
 Code examples can be found in `src/tests/test_ffi.cpp`.
@@ -99,7 +99,7 @@ need to implement custom primitives using a PRP.
 
 .. cpp:type:: opaque* botan_block_cipher_t
 
-   An opauqe data type for a block cipher. Don't mess with it.
+   An opaque data type for a block cipher. Don't mess with it.
 
 .. cpp:function:: int botan_block_cipher_init(botan_block_cipher_t* bc, const char* cipher_name)
 
@@ -119,12 +119,13 @@ need to implement custom primitives using a PRP.
 
 .. cpp:function:: int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc, const uint8_t in[], uint8_t out[], size_t blocks)
 
-   The key must have been set first with
+   The key must have been set first with :cpp:func:`botan_block_cipher_set_key`.
    Encrypt *blocks* blocks of data stored in *in* and place the ciphertext into *out*.
    The two parameters may be the same buffer, but must not overlap.
 
 .. cpp:function:: int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc, const uint8_t in[], uint8_t out[], size_t blocks)
 
+   The key must have been set first with :cpp:func:`botan_block_cipher_set_key`.
    Decrypt *blocks* blocks of data stored in *in* and place the ciphertext into *out*.
    The two parameters may be the same buffer, but must not overlap.
 
@@ -430,14 +431,14 @@ Multiple Precision Integers
 
 .. cpp:function:: int botan_mp_gcd(botan_mp_t out, botan_mp_t x, botan_mp_t y)
 
-   Compute the greated common divisor of ``x`` and ``y``.
+   Compute the greatest common divisor of ``x`` and ``y``.
 
 .. cpp:function:: int botan_mp_is_prime(botan_mp_t n, botan_rng_t rng, size_t test_prob)
 
-   Test if ``n`` is prime. The algorithm used (Miller-Rabin) is probabalistic,
+   Test if ``n`` is prime. The algorithm used (Miller-Rabin) is probabilistic,
    set ``test_prob`` to the desired assurance level. For example if
    ``test_prob`` is 64, then sufficient Miller-Rabin iterations will run to
-   assure there is at most a ``1/2**64`` chance that ``n`` is composit.
+   assure there is at most a ``1/2**64`` chance that ``n`` is composite.
 
 .. cpp:function:: int botan_mp_get_bit(botan_mp_t n, size_t bit)
 
@@ -565,14 +566,14 @@ Public Key Creation, Import and Export
                                      const char* field_name)
 
     Read an algorithm specific field from the public key object, placing it into output.
-    For exampe "n" or "e" for RSA keys or "p", "q", "g", and "y" for DSA keys.
+    For example "n" or "e" for RSA keys or "p", "q", "g", and "y" for DSA keys.
 
 .. cpp:function:: int botan_privkey_get_field(botan_mp_t output, \
                                       botan_privkey_t key, \
                                       const char* field_name)
 
     Read an algorithm specific field from the private key object, placing it into output.
-    For exampe "p" or "q" for RSA keys, or "x" for DSA keys or ECC keys.
+    For example "p" or "q" for RSA keys, or "x" for DSA keys or ECC keys.
 
 
 RSA specific functions
@@ -642,18 +643,18 @@ ElGamal specific functions
 
    Initialize a public ElGamal key using group parameters p and g and public key y.
 
-Diffie Hellmann specific functions
+Diffie-Hellman specific functions
 ----------------------------------------
 
 .. cpp:function:: int botan_privkey_load_dh(botan_privkey_t* key, \
                                      botan_mp_t p, botan_mp_t g, botan_mp_t x)
 
-   Initialize a private Diffie Hellmann key using group parameters p and g and private key x.
+   Initialize a private Diffie-Hellman key using group parameters p and g and private key x.
 
 .. cpp:function:: int botan_pubkey_load_dh(botan_pubkey_t* key, \
                                      botan_mp_t p, botan_mp_t g, botan_mp_t y)
 
-   Initialize a public Diffie Hellmann key using group parameters p and g and public key y.
+   Initialize a public Diffie-Hellman key using group parameters p and g and public key y.
 
 Public Key Encryption/Decryption
 ----------------------------------------

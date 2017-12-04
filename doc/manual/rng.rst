@@ -23,7 +23,7 @@ The major interfaces are
 
   Like randomize, but first incorporates the additional input field
   into the state of the RNG. The additional input could be anything which
-  parameterizes this request.
+  parameterizes this request. Not all RNG types accept additional inputs.
 
 .. cpp:function:: void RandomNumberGenerator::randomize_with_ts_input(uint8_t* data, size_t length)
 

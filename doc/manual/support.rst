@@ -1,5 +1,5 @@
 Support Information
--------------------------
+=======================
 
 Following table provides the support status for Botan branches. Any branch not
 listed here (including 1.11) is no longer supported. Dates in the future are
@@ -17,7 +17,7 @@ Branch         First Release  End of Active Development  End of Life
 "Active development" refers to adding new features and optimizations. At the
 conclusion of the active development phase, only bugfixes are applied.
 
-Getting Support
+Getting Help
 ------------------
 
 To get help with Botan, open an issue on
