@@ -395,15 +395,22 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       */
       explicit X509_Certificate(const std::vector<uint8_t>& in);
 
+      /**
+      * Create an uninitialized certificate object. Any attempts to
+      * access this object will throw an exception.
+      */
+      X509_Certificate() = default;
+
       X509_Certificate(const X509_Certificate& other) = default;
 
       X509_Certificate& operator=(const X509_Certificate& other) = default;
 
    private:
-      void force_decode() override;
-      friend class X509_CA;
+      std::string PEM_label() const override;
 
-      X509_Certificate() = default;
+      std::vector<std::string> alternate_PEM_labels() const override;
+
+      void force_decode() override;
 
       const X509_Certificate_Data& data() const;
 

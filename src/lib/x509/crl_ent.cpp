@@ -109,7 +109,10 @@ void CRL_Entry::decode_from(BER_Decoder& source)
 const CRL_Entry_Data& CRL_Entry::data() const
    {
    if(!m_data)
-      throw Decoding_Error("Uninitialized CRL_Entry");
+      {
+      throw Invalid_State("CRL_Entry_Data uninitialized");
+      }
+
    return *m_data.get();
    }
 

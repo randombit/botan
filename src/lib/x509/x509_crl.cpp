@@ -25,31 +25,34 @@ struct CRL_Data
    std::vector<uint8_t> m_auth_key_id;
    };
 
-/*
-* Load a X.509 CRL
-*/
-X509_CRL::X509_CRL(DataSource& in) :
-   X509_Object(in, "X509 CRL/CRL")
+std::string X509_CRL::PEM_label() const
    {
-   do_decode();
+   return "X509 CRL";
+   }
+
+std::vector<std::string> X509_CRL::alternate_PEM_labels() const
+   {
+   return { "CRL" };
+   }
+
+X509_CRL::X509_CRL(DataSource& src)
+   {
+   load_data(src);
+   }
+
+X509_CRL::X509_CRL(const std::vector<uint8_t>& vec)
+   {
+   DataSource_Memory src(vec.data(), vec.size());
+   load_data(src);
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-/*
-* Load a X.509 CRL
-*/
-X509_CRL::X509_CRL(const std::string& fsname) :
-   X509_Object(fsname, "CRL/X509 CRL")
+X509_CRL::X509_CRL(const std::string& fsname)
    {
-   do_decode();
+   DataSource_Stream src(fsname);
+   load_data(src);
    }
 #endif
-
-X509_CRL::X509_CRL(const std::vector<uint8_t>& in) :
-   X509_Object(in, "CRL/X509 CRL")
-   {
-   do_decode();
-   }
 
 X509_CRL::X509_CRL(const X509_DN& issuer,
                    const X509_Time& this_update,
@@ -174,7 +177,9 @@ void X509_CRL::force_decode()
 const CRL_Data& X509_CRL::data() const
    {
    if(!m_data)
-      throw Decoding_Error("Error decoding X509 CRL");
+      {
+      throw Invalid_State("X509_CRL uninitialized");
+      }
    return *m_data.get();
    }
 
