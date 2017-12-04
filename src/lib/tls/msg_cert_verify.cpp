@@ -1,6 +1,7 @@
 /*
 * Certificate Verify Message
 * (C) 2004,2006,2011,2012 Jack Lloyd
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -29,9 +30,9 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
    std::pair<std::string, Signature_Format> format =
       state.choose_sig_format(*priv_key, m_hash_algo, m_sig_algo, true, policy);
 
-   PK_Signer signer(*priv_key, rng, format.first, format.second);
-
-   m_signature = signer.sign_message(state.hash().get_contents(), rng);
+   m_signature =
+      state.callbacks().tls_sign_message(*priv_key, rng, format.first, format.second,
+                                         state.hash().get_contents());
 
    state.hash().update(io.send(*this));
    }
@@ -89,10 +90,9 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
       state.parse_sig_format(*key.get(), m_hash_algo, m_sig_algo,
                              true, policy);
 
-   PK_Verifier verifier(*key, format.first, format.second);
-
    const bool signature_valid =
-      verifier.verify_message(state.hash().get_contents(), m_signature);
+      state.callbacks().tls_verify_message(*key, format.first, format.second,
+                                           state.hash().get_contents(), m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    return true;

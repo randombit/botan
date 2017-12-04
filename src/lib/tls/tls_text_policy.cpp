@@ -1,6 +1,7 @@
 /*
 * Text-Based TLS Policy
 * (C) 2016,2017 Jack Lloyd
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -101,6 +102,11 @@ bool Text_Policy::server_uses_own_ciphersuite_preferences() const
 bool Text_Policy::negotiate_encrypt_then_mac() const
    {
    return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac());
+   }
+
+bool Text_Policy::support_cert_status_message() const
+   {
+   return get_bool("support_cert_status_message", Policy::support_cert_status_message());
    }
 
 std::string Text_Policy::dh_group() const

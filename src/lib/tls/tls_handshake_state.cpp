@@ -1,6 +1,7 @@
 /*
 * TLS Handshaking
 * (C) 2004-2006,2011,2012,2015,2016 Jack Lloyd
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,7 +9,6 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_record.h>
 #include <botan/tls_messages.h>
-#include <botan/tls_callbacks.h>
 #include <botan/kdf.h>
 #include <sstream>
 

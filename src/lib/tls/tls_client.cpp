@@ -2,6 +2,7 @@
 * TLS Client
 * (C) 2004-2011,2012,2015,2016 Jack Lloyd
 *     2016 Matthias Gierlings
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -386,7 +387,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                              "Client: No certificates sent by server");
 
       /*
-      Certificate verification happens after we receive the server hello done,
+      If the server supports certificate status messages,
+      certificate verification happens after we receive the server hello done,
       in case an OCSP response was also available
       */
 
@@ -411,6 +413,24 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(state.server_hello()->supports_certificate_status_message())
          {
          state.set_expected_next(CERTIFICATE_STATUS); // optional
+         }
+      else
+         {
+         try
+            {
+            auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-client", m_info.hostname());
+
+            callbacks().tls_verify_cert_chain(server_certs,
+                                              {},
+                                              trusted_CAs,
+                                              Usage_Type::TLS_SERVER_AUTH,
+                                              m_info.hostname(),
+                                              policy());
+            }
+         catch(std::exception& e)
+            {
+            throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
+            }
          }
       }
    else if(type == CERTIFICATE_STATUS)
@@ -459,7 +479,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       {
       state.server_hello_done(new Server_Hello_Done(contents));
 
-      if(state.server_certs() != nullptr)
+      if(state.server_certs() != nullptr &&
+         state.server_hello()->supports_certificate_status_message())
          {
          try
             {

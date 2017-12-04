@@ -1,6 +1,7 @@
 /*
 * Hooks for application level policies on TLS connections
 * (C) 2004-2006,2013 Jack Lloyd
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -288,6 +289,11 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool negotiate_encrypt_then_mac() const;
 
       /**
+      * Indicates whether certificate status messages should be supported
+      */
+      virtual bool support_cert_status_message() const;
+
+      /**
       * Return allowed ciphersuites, in order of preference
       */
       virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version,
@@ -501,6 +507,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool server_uses_own_ciphersuite_preferences() const override;
 
       bool negotiate_encrypt_then_mac() const override;
+
+      bool support_cert_status_message() const override;
 
       std::string dh_group() const override;
 

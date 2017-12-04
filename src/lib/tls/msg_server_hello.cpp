@@ -2,6 +2,7 @@
 * TLS Server Hello and Server Hello Done
 * (C) 2004-2011,2015,2016 Jack Lloyd
 *     2016 Matthias Gierlings
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -37,7 +38,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
       m_extensions.add(new Extended_Master_Secret);
 
    // Sending the extension back does not commit us to sending a stapled response
-   if(client_hello.supports_cert_status_message())
+   if(client_hello.supports_cert_status_message() && policy.support_cert_status_message())
       m_extensions.add(new Certificate_Status_Request);
 
    Ciphersuite c = Ciphersuite::by_id(m_ciphersuite);
@@ -105,7 +106,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
       m_extensions.add(new Extended_Master_Secret);
 
    // Sending the extension back does not commit us to sending a stapled response
-   if(client_hello.supports_cert_status_message())
+   if(client_hello.supports_cert_status_message() && policy.support_cert_status_message())
       m_extensions.add(new Certificate_Status_Request);
 
    if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
@@ -113,11 +114,6 @@ Server_Hello::Server_Hello(Handshake_IO& io,
       Ciphersuite c = resumed_session.ciphersuite();
       if(c.cbc_ciphersuite())
          m_extensions.add(new Encrypt_then_MAC);
-      }
-
-   if(client_hello.supports_cert_status_message())
-      {
-      m_extensions.add(new Certificate_Status_Request);
       }
 
    if(resumed_session.ciphersuite().ecc_ciphersuite())

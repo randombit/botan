@@ -1,13 +1,13 @@
 /*
 * Client Key Exchange Message
 * (C) 2004-2010,2016 Jack Lloyd
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/tls_messages.h>
 #include <botan/tls_extensions.h>
-#include <botan/oids.h>
 #include <botan/rng.h>
 
 #include <botan/internal/tls_reader.h>
@@ -17,15 +17,7 @@
 #include <botan/credentials_manager.h>
 #include <botan/internal/ct_utils.h>
 
-#include <botan/pubkey.h>
-
-#include <botan/dh.h>
-#include <botan/ecdh.h>
 #include <botan/rsa.h>
-
-#if defined(BOTAN_HAS_CURVE_25519)
-  #include <botan/curve25519.h>
-#endif
 
 #if defined(BOTAN_HAS_CECPQ1)
   #include <botan/cecpq1.h>
@@ -94,49 +86,25 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       if(kex_algo == "DH" || kex_algo == "DHE_PSK")
          {
-         BigInt p = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
-         BigInt g = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
-         BigInt Y = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
+         const std::vector<uint8_t> modulus = reader.get_range<uint8_t>(2, 1, 65535);
+         const std::vector<uint8_t> generator = reader.get_range<uint8_t>(2, 1, 65535);
+         const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(2, 1, 65535);
 
          if(reader.remaining_bytes())
             throw Decoding_Error("Bad params size for DH key exchange");
 
-         /*
-         * A basic check for key validity. As we do not know q here we
-         * cannot check that Y is in the right subgroup. However since
-         * our key is ephemeral there does not seem to be any
-         * advantage to bogus keys anyway.
-         */
-         if(Y <= 1 || Y >= p - 1)
-            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                                "Server sent bad DH key for DHE exchange");
-
-         DL_Group group(p, g);
-
-         if(!group.verify_group(rng, false))
-            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                                "DH group validation failed");
-
-         DH_PublicKey counterparty_key(group, Y);
-
-         policy.check_peer_key_acceptable(counterparty_key);
-
-         DH_PrivateKey priv_key(rng, group);
-
-         PK_Key_Agreement ka(priv_key, rng, "Raw");
-
-         secure_vector<uint8_t> dh_secret = CT::strip_leading_zeros(
-            ka.derive_key(0, counterparty_key.public_value()).bits_of());
+         const std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> dh_result =
+            state.callbacks().tls_dh_agree(modulus, generator, peer_public_value, policy, rng);
 
          if(kex_algo == "DH")
-            m_pre_master = dh_secret;
+            m_pre_master = dh_result.first;
          else
             {
-            append_tls_length_value(m_pre_master, dh_secret, 2);
+            append_tls_length_value(m_pre_master, dh_result.first, 2);
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         append_tls_length_value(m_key_material, priv_key.public_value(), 2);
+         append_tls_length_value(m_key_material, dh_result.second, 2);
          }
       else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {
@@ -158,51 +126,20 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                 "Server sent ECC curve prohibited by policy");
             }
 
-         const std::vector<uint8_t> ecdh_key = reader.get_range<uint8_t>(1, 1, 255);
-         std::vector<uint8_t> our_ecdh_public;
-         secure_vector<uint8_t> ecdh_secret;
-
-         if(curve_name == "x25519")
-            {
-#if defined(BOTAN_HAS_CURVE_25519)
-            if(ecdh_key.size() != 32)
-               throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid X25519 key size");
-
-            Curve25519_PublicKey counterparty_key(ecdh_key);
-            policy.check_peer_key_acceptable(counterparty_key);
-            Curve25519_PrivateKey priv_key(rng);
-            PK_Key_Agreement ka(priv_key, rng, "Raw");
-            ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
-
-            // X25519 is always compressed but sent as "uncompressed" in TLS
-            our_ecdh_public = priv_key.public_value();
-#else
-            throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
-#endif
-            }
-         else
-            {
-            EC_Group group(OIDS::lookup(curve_name));
-            ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
-            policy.check_peer_key_acceptable(counterparty_key);
-            ECDH_PrivateKey priv_key(rng, group);
-            PK_Key_Agreement ka(priv_key, rng, "Raw");
-            ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
-
-            // follow server's preference for point compression
-            our_ecdh_public = priv_key.public_value(
-               state.server_hello()->prefers_compressed_ec_points() ? PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
-            }
+         const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
+         const std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> ecdh_result =
+            state.callbacks().tls_ecdh_agree(curve_name, peer_public_value, policy, rng,
+                                             state.server_hello()->prefers_compressed_ec_points());
 
          if(kex_algo == "ECDH")
-            m_pre_master = ecdh_secret;
+            m_pre_master = ecdh_result.first;
          else
             {
-            append_tls_length_value(m_pre_master, ecdh_secret, 2);
+            append_tls_length_value(m_pre_master, ecdh_result.first, 2);
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         append_tls_length_value(m_key_material, our_ecdh_public, 1);
+         append_tls_length_value(m_key_material, ecdh_result.second, 1);
          }
 #if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")

@@ -2,6 +2,7 @@
 * TLS Callbacks
 * (C) 2016 Matthias Gierlings
 *     2016 Jack Lloyd
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,6 +12,7 @@
 
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
+#include <botan/pubkey.h>
 #include <functional>
 
 namespace Botan {
@@ -138,6 +140,90 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
           {
           return std::chrono::milliseconds(0);
           }
+
+       /**
+       * Optional callback with default impl: sign a message
+       *
+       * Default implementation uses PK_Signer::sign_message().
+       * Override to provide a different approach, e.g. using an external device.
+       *
+       * @param key the private key of the signer
+       * @param rng a random number generator
+       * @param emsa the encoding method to be applied to the message
+       * @param format the signature format
+       * @param msg the input data for the signature
+       *
+       * @return the signature
+       */
+       virtual std::vector<uint8_t> tls_sign_message(
+          const Private_Key& key,
+          RandomNumberGenerator& rng,
+          const std::string& emsa,
+          Signature_Format format,
+          const std::vector<uint8_t>& msg);
+
+       /**
+       * Optional callback with default impl: verify a message signature
+       *
+       * Default implementation uses PK_Verifier::verify_message().
+       * Override to provide a different approach, e.g. using an external device.
+       *
+       * @param key the public key of the signer
+       * @param emsa the encoding method to be applied to the message
+       * @param format the signature format
+       * @param msg the input data for the signature
+       * @param sig the signature to be checked
+       *
+       * @return true if the signature is valid, false otherwise
+       */
+       virtual bool tls_verify_message(
+          const Public_Key& key,
+          const std::string& emsa,
+          Signature_Format format,
+          const std::vector<uint8_t>& msg,
+          const std::vector<uint8_t>& sig);
+
+       /**
+       * Optional callback with default impl: client side DH agreement
+       *
+       * Default implementation uses PK_Key_Agreement::derive_key().
+       * Override to provide a different approach, e.g. using an external device.
+       *
+       * @param modulus the modulus p of the discrete logarithm group
+       * @param generator the generator of the DH subgroup
+       * @param peer_public_value the public value of the peer
+       * @param policy the TLS policy associated with the session being established
+       * @param rng a random number generator
+       *
+       * @return a pair consisting of the agreed raw secret and our public value
+       */
+       virtual std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> tls_dh_agree(
+          const std::vector<uint8_t>& modulus,
+          const std::vector<uint8_t>& generator,
+          const std::vector<uint8_t>& peer_public_value,
+          const Policy& policy,
+          RandomNumberGenerator& rng);
+
+       /**
+       * Optional callback with default impl: client side ECDH agreement
+       *
+       * Default implementation uses PK_Key_Agreement::derive_key().
+       * Override to provide a different approach, e.g. using an external device.
+       *
+       * @param curve_name the name of the elliptic curve
+       * @param peer_public_value the public value of the peer
+       * @param policy the TLS policy associated with the session being established
+       * @param rng a random number generator
+       * @param compressed the compression preference for our public value
+       *
+       * @return a pair consisting of the agreed raw secret and our public value
+       */
+       virtual std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> tls_ecdh_agree(
+          const std::string& curve_name,
+          const std::vector<uint8_t>& peer_public_value,
+          const Policy& policy,
+          RandomNumberGenerator& rng,
+          bool compressed);
 
        /**
        * Optional callback: inspect handshake message

@@ -1,6 +1,7 @@
 /*
 * Server Key Exchange Message
 * (C) 2004-2010,2012,2015,2016 Jack Lloyd
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -185,12 +186,14 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       std::pair<std::string, Signature_Format> format =
          state.choose_sig_format(*signing_key, m_hash_algo, m_sig_algo, false, policy);
 
-      PK_Signer signer(*signing_key, rng, format.first, format.second);
+      std::vector<uint8_t> buf = state.client_hello()->random();
 
-      signer.update(state.client_hello()->random());
-      signer.update(state.server_hello()->random());
-      signer.update(params());
-      m_signature = signer.signature(rng);
+      buf += state.server_hello()->random();
+      buf += params();
+
+      m_signature =
+         state.callbacks().tls_sign_message(*signing_key, rng,
+                                            format.first, format.second, buf);
       }
 
    state.hash().update(io.send(*this));
@@ -300,13 +303,14 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
       state.parse_sig_format(server_key, m_hash_algo, m_sig_algo,
                              false, policy);
 
-   PK_Verifier verifier(server_key, format.first, format.second);
+   std::vector<uint8_t> buf = state.client_hello()->random();
 
-   verifier.update(state.client_hello()->random());
-   verifier.update(state.server_hello()->random());
-   verifier.update(params());
+   buf += state.server_hello()->random();
+   buf += params();
 
-   const bool signature_valid = verifier.check_signature(m_signature);
+   const bool signature_valid =
+      state.callbacks().tls_verify_message(server_key, format.first, format.second,
+                                           buf, m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    return true;

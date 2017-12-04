@@ -2,6 +2,7 @@
 * (C) 2014,2015 Jack Lloyd
 *     2016 Matthias Gierlings
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
+*     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -1307,6 +1308,9 @@ class TLS_Unit_Tests final : public Test
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
             { { "signature_methods", "RSA" } });
+
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
+            { { "support_cert_status_message", "false" } });
 
 #if defined(BOTAN_HAS_DSA)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
