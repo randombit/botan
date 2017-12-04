@@ -1,3 +1,6 @@
+Deprecated Features
+========================
+
 The following functionality is currently deprecated, and will likely
 be removed in a future release. If you think you have a good reason to
 be using one of the following, contact the developers to explain your
@@ -6,9 +9,9 @@ use case if you want to make sure your code continues to work.
 This is in addition to specific API calls marked with BOTAN_DEPRECATED
 in the source.
 
-- The headers botan.h, init.h, lookup.h
+- The headers ``botan.h``, ``init.h``, ``lookup.h``
 
-- All or nothing package transform
+- All or nothing package transform (``package.h``)
 
 - The TLS constructors taking `std::function` for callbacks. Instead
   use the TLS::Callbacks interface.
