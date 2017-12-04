@@ -43,10 +43,7 @@ def remove_all_in_dir(d):
         for f in os.listdir(d):
             remove_file(os.path.join(d, f))
 
-def main(args=None):
-    if args is None:
-        args = sys.argv
-
+def parse_options(args):
     parser = optparse.OptionParser()
     parser.add_option('--build-dir', default='build', metavar='DIR',
                       help='specify build dir to clean (default %default)')
@@ -58,13 +55,20 @@ def main(args=None):
 
     (options, args) = parser.parse_args(args)
 
+    if len(args) > 1:
+        raise Exception("Unknown arguments")
+
+    return options
+
+def main(args=None):
+    if args is None:
+        args = sys.argv
+
+    options = parse_options(args)
+
     logging.basicConfig(stream=sys.stderr,
                         format='%(levelname) 7s: %(message)s',
                         level=logging.DEBUG if options.verbose else logging.INFO)
-
-    if len(args) > 1:
-        logging.error("Unknown arguments")
-        return 1
 
     build_dir = options.build_dir
 
@@ -100,8 +104,6 @@ def main(args=None):
             shutil.rmtree(build_config['doc_output_dir'])
         except OSError:
             pass
-
-        #remove_file(build_config['doc_stamp_file'])
 
     remove_file(build_config['cli_exe'])
     remove_file(build_config['test_exe'])

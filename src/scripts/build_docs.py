@@ -48,7 +48,7 @@ def run_and_check(cmd_line):
     proc = subprocess.Popen(cmd_line,
                             close_fds=True)
 
-    (stdout, stderr) = proc.communicate()
+    proc.communicate()
 
     if proc.returncode != 0:
         logging.error("Error running %s", ' '.join(cmd_line))
