@@ -2019,6 +2019,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'src_dir': source_paths.src_dir,
         'doc_dir': source_paths.doc_dir,
 
+        'cli_exe_name': osinfo.cli_exe_name + program_suffix,
         'cli_exe': os.path.join(build_dir, osinfo.cli_exe_name + program_suffix),
         'test_exe': os.path.join(build_dir, 'botan-test' + program_suffix),
 
