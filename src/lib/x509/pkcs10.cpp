@@ -47,7 +47,7 @@ PKCS10_Request::PKCS10_Request(const std::vector<uint8_t>& vec)
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 PKCS10_Request::PKCS10_Request(const std::string& fsname)
    {
-   DataSource_Stream src(fsname);
+   DataSource_Stream src(fsname, true);
    load_data(src);
    }
 #endif

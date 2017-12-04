@@ -113,17 +113,7 @@ void X509_Object::decode_from(BER_Decoder& from)
          .decode(m_sig, BIT_STRING)
       .end_cons();
 
-   try {
-      force_decode();
-      }
-   catch(Decoding_Error& e)
-      {
-      throw Decoding_Error(PEM_label() + " decoding failed", e.what());
-      }
-   catch(Invalid_Argument& e)
-      {
-      throw Decoding_Error(PEM_label() + " decoding failed", e.what());
-      }
+   force_decode();
    }
 
 /*

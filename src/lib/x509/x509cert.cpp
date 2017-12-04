@@ -84,7 +84,7 @@ X509_Certificate::X509_Certificate(const std::vector<uint8_t>& vec)
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 X509_Certificate::X509_Certificate(const std::string& fsname)
    {
-   DataSource_Stream src(fsname);
+   DataSource_Stream src(fsname, true);
    load_data(src);
    }
 #endif

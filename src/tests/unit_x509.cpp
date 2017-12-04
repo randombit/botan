@@ -776,7 +776,7 @@ Test::Result test_x509_decode_list()
    {
    Test::Result result("X509_Certificate list decode");
 
-   Botan::DataSource_Stream input(Test::data_file("x509/misc/cert_seq.der"));
+   Botan::DataSource_Stream input(Test::data_file("x509/misc/cert_seq.der"), true);
 
    Botan::BER_Decoder dec(input);
    std::vector<Botan::X509_Certificate> certs;

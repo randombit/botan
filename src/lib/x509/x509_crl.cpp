@@ -49,7 +49,7 @@ X509_CRL::X509_CRL(const std::vector<uint8_t>& vec)
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 X509_CRL::X509_CRL(const std::string& fsname)
    {
-   DataSource_Stream src(fsname);
+   DataSource_Stream src(fsname, true);
    load_data(src);
    }
 #endif
