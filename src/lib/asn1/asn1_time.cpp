@@ -97,14 +97,16 @@ std::string X509_Time::readable_string() const
 
    // desired format: "%04d/%02d/%02d %02d:%02d:%02d UTC"
    std::stringstream output;
-      {
-      using namespace std;
-      output << setfill('0')
-             << setw(4) << m_year << "/" << setw(2) << m_month << "/" << setw(2) << m_day
-             << " "
-             << setw(2) << m_hour << ":" << setw(2) << m_minute << ":" << setw(2) << m_second
-             << " UTC";
-      }
+   output << std::setfill('0')
+          << std::setw(4) << m_year << "/"
+          << std::setw(2) << m_month << "/"
+          << std::setw(2) << m_day
+          << " "
+          << std::setw(2) << m_hour << ":"
+          << std::setw(2) << m_minute << ":"
+          << std::setw(2) << m_second
+          << " UTC";
+
    return output.str();
    }
 

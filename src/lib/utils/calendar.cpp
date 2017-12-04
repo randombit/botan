@@ -92,13 +92,13 @@ std::string calendar_point::to_string() const
    {
    // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
    std::stringstream output;
-      {
-      using namespace std;
-      output << setfill('0')
-             << setw(4) << get_year() << "-" << setw(2) << get_month() << "-" << setw(2) << get_day()
-             << "T"
-             << setw(2) << get_hour() << ":" << setw(2) << get_minutes() << ":" << setw(2) << get_seconds();
-      }
+   output << std::setfill('0')
+          << std::setw(4) << get_year() << "-"
+          << std::setw(2) << get_month() << "-"
+          << std::setw(2) << get_day() << "T"
+          << std::setw(2) << get_hour() << ":"
+          << std::setw(2) << get_minutes() << ":"
+          << std::setw(2) << get_seconds();
    return output.str();
    }
 
