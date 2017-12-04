@@ -266,19 +266,20 @@ class Date_Format_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
+         const std::string date_str = get_req_str(vars, "Date");
          Test::Result result("Date parsing");
 
-         const std::vector<uint32_t> d = parse_date(get_req_str(vars, "Date"));
+         const std::vector<uint32_t> d = parse_date(date_str);
 
          if(type == "valid" || type == "valid.not_std" || type == "valid.64_bit_time_t")
             {
             Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]);
-            result.test_is_eq("year", c.year, d[0]);
-            result.test_is_eq("month", c.month, d[1]);
-            result.test_is_eq("day", c.day, d[2]);
-            result.test_is_eq("hour", c.hour, d[3]);
-            result.test_is_eq("minute", c.minutes, d[4]);
-            result.test_is_eq("second", c.seconds, d[5]);
+            result.test_is_eq(date_str + " year", c.year, d[0]);
+            result.test_is_eq(date_str + " month", c.month, d[1]);
+            result.test_is_eq(date_str + " day", c.day, d[2]);
+            result.test_is_eq(date_str + " hour", c.hour, d[3]);
+            result.test_is_eq(date_str + " minute", c.minutes, d[4]);
+            result.test_is_eq(date_str + " second", c.seconds, d[5]);
 
             if(type == "valid.not_std" || (type == "valid.64_bit_time_t" && c.year > 2037 && sizeof(std::time_t) == 4))
                {
@@ -287,12 +288,12 @@ class Date_Format_Tests final : public Text_Based_Test
             else
                {
                Botan::calendar_point c2 = Botan::calendar_value(c.to_std_timepoint());
-               result.test_is_eq("year", c2.year, d[0]);
-               result.test_is_eq("month", c2.month, d[1]);
-               result.test_is_eq("day", c2.day, d[2]);
-               result.test_is_eq("hour", c2.hour, d[3]);
-               result.test_is_eq("minute", c2.minutes, d[4]);
-               result.test_is_eq("second", c2.seconds, d[5]);
+               result.test_is_eq(date_str + " year", c2.year, d[0]);
+               result.test_is_eq(date_str + " month", c2.month, d[1]);
+               result.test_is_eq(date_str + " day", c2.day, d[2]);
+               result.test_is_eq(date_str + " hour", c2.hour, d[3]);
+               result.test_is_eq(date_str + " minute", c2.minutes, d[4]);
+               result.test_is_eq(date_str + " second", c2.seconds, d[5]);
                }
             }
          else if(type == "invalid")
