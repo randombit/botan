@@ -20,12 +20,12 @@ X509_Time::X509_Time(const std::chrono::system_clock::time_point& time)
    {
    calendar_point cal = calendar_value(time);
 
-   m_year   = cal.year;
-   m_month  = cal.month;
-   m_day    = cal.day;
-   m_hour   = cal.hour;
-   m_minute = cal.minutes;
-   m_second = cal.seconds;
+   m_year   = cal.get_year();
+   m_month  = cal.get_month();
+   m_day    = cal.get_day();
+   m_hour   = cal.get_hour();
+   m_minute = cal.get_minutes();
+   m_second = cal.get_seconds();
 
    m_tag = (m_year >= 2050) ? GENERALIZED_TIME : UTC_TIME;
    }
@@ -97,14 +97,16 @@ std::string X509_Time::readable_string() const
 
    // desired format: "%04d/%02d/%02d %02d:%02d:%02d UTC"
    std::stringstream output;
-      {
-      using namespace std;
-      output << setfill('0')
-             << setw(4) << m_year << "/" << setw(2) << m_month << "/" << setw(2) << m_day
-             << " "
-             << setw(2) << m_hour << ":" << setw(2) << m_minute << ":" << setw(2) << m_second
-             << " UTC";
-      }
+   output << std::setfill('0')
+          << std::setw(4) << m_year << "/"
+          << std::setw(2) << m_month << "/"
+          << std::setw(2) << m_day
+          << " "
+          << std::setw(2) << m_hour << ":"
+          << std::setw(2) << m_minute << ":"
+          << std::setw(2) << m_second
+          << " UTC";
+
    return output.str();
    }
 

@@ -10,7 +10,6 @@ gmtime_r
 dlopen
 getauxval
 readdir
-timegm
 sockets
 threads
 filesystem

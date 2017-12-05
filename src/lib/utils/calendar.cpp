@@ -1,6 +1,6 @@
 /*
 * Calendar Functions
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2017 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -11,12 +11,7 @@
 #include <ctime>
 #include <sstream>
 #include <iomanip>
-#include <botan/mutex.h>
 #include <stdlib.h>
-
-#if defined(BOTAN_HAS_BOOST_DATETIME)
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-#endif
 
 namespace Botan {
 
@@ -40,132 +35,70 @@ std::tm do_gmtime(std::time_t time_val)
    return tm;
    }
 
-#if !defined(BOTAN_TARGET_OS_HAS_TIMEGM) && !(defined(BOTAN_TARGET_OS_HAS_MKGMTIME) && defined(BOTAN_BUILD_COMPILER_IS_MSVC))
+/*
+Portable replacement for timegm, _mkgmtime, etc
 
-#if defined(BOTAN_HAS_BOOST_DATETIME)
+Algorithm due to Howard Hinnant
 
-std::time_t boost_timegm(std::tm *tm)
+See https://howardhinnant.github.io/date_algorithms.html#days_from_civil
+for details and explaination. The code is slightly simplified by our assumption
+that the date is at least 1970, which is sufficient for our purposes.
+*/
+size_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day)
    {
-   const int sec  = tm->tm_sec;
-   const int min  = tm->tm_min;
-   const int hour = tm->tm_hour;
-   const int day  = tm->tm_mday;
-   const int mon  = tm->tm_mon + 1;
-   const int year = tm->tm_year + 1900;
-
-   using namespace boost::posix_time;
-   using namespace boost::gregorian;
-   const auto epoch = ptime(date(1970, 01, 01));
-   const auto time = ptime(date(year, mon, day),
-                           hours(hour) + minutes(min) + seconds(sec));
-   const time_duration diff(time - epoch);
-   std::time_t out = diff.ticks() / diff.ticks_per_second();
-
-   return out;
+   if(month <= 2)
+      year -= 1;
+   const uint32_t era = year / 400;
+   const uint32_t yoe = year - era * 400;      // [0, 399]
+   const uint32_t doy = (153*(month + (month > 2 ? -3 : 9)) + 2)/5 + day-1;  // [0, 365]
+   const uint32_t doe = yoe * 365 + yoe/4 - yoe/100 + doy;         // [0, 146096]
+   return era * 146097 + doe - 719468;
    }
-
-#elif defined(BOTAN_OS_TYPE_IS_UNIX)
-
-#pragma message "Caution! A fallback version of timegm() is used which is not thread-safe"
-
-mutex_type ENV_TZ;
-
-std::time_t fallback_timegm(std::tm *tm)
-   {
-   std::time_t out;
-   std::string tz_backup;
-
-   ENV_TZ.lock();
-
-   // Store current value of env variable TZ
-   const char* tz_env_pointer = ::getenv("TZ");
-   if (tz_env_pointer != nullptr)
-      tz_backup = std::string(tz_env_pointer);
-
-   // Clear value of TZ
-   ::setenv("TZ", "", 1);
-   ::tzset();
-
-   out = ::mktime(tm);
-
-   // Restore TZ
-   if (!tz_backup.empty())
-      {
-      // setenv makes a copy of the second argument
-      ::setenv("TZ", tz_backup.data(), 1);
-      }
-   else
-      {
-      ::unsetenv("TZ");
-      }
-   ::tzset();
-
-   ENV_TZ.unlock();
-
-   return out;
-}
-#endif // BOTAN_HAS_BOOST_DATETIME
-
-#endif
 
 }
 
 std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
    {
-   if (year < 1970)
-      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1970.");
+   if(get_year() < 1970)
+      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1970");
 
    // 32 bit time_t ends at January 19, 2038
    // https://msdn.microsoft.com/en-us/library/2093ets1.aspx
    // Throw after 2037 if 32 bit time_t is used
-   if (year > 2037 && sizeof(std::time_t) == 4)
+   if(get_year() > 2037 && sizeof(std::time_t) == 4)
       {
-      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2037.");
+      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2037 on this system");
+      }
+   else if(get_year() >= 2400)
+      {
+      // This upper bound is somewhat arbitrary
+      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2400");
       }
 
-   // std::tm: struct without any timezone information
-   std::tm tm;
-   tm.tm_isdst = -1; // i.e. no DST information available
-   tm.tm_sec   = seconds;
-   tm.tm_min   = minutes;
-   tm.tm_hour  = hour;
-   tm.tm_mday  = day;
-   tm.tm_mon   = month - 1;
-   tm.tm_year  = year - 1900;
+   const uint64_t seconds_64 = (days_since_epoch(get_year(), get_month(), get_day()) * 86400) +
+                                (get_hour() * 60 * 60) + (get_minutes() * 60) + get_seconds();
 
-   // Define a function alias `botan_timegm`
-   #if defined(BOTAN_TARGET_OS_HAS_TIMEGM)
-   std::time_t (&botan_timegm)(std::tm *tm) = ::timegm;
-   #elif defined(BOTAN_TARGET_OS_HAS_MKGMTIME) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-   // https://stackoverflow.com/questions/16647819/timegm-cross-platform
-   std::time_t (&botan_timegm)(std::tm *tm) = ::_mkgmtime;
-   #elif defined(BOTAN_HAS_BOOST_DATETIME)
-   std::time_t (&botan_timegm)(std::tm *tm) = boost_timegm;
-   #elif defined(BOTAN_OS_TYPE_IS_UNIX)
-   std::time_t (&botan_timegm)(std::tm *tm) = fallback_timegm;
-   #else
-   std::time_t (&botan_timegm)(std::tm *tm) = ::mktime; // localtime instead...
-   #endif
+   const time_t seconds_time_t = static_cast<time_t>(seconds_64);
 
-   // Convert std::tm to std::time_t
-   std::time_t tt = botan_timegm(&tm);
-   if (tt == -1)
-      throw Invalid_Argument("calendar_point couldn't be converted: " + to_string());
+   if(seconds_64 - seconds_time_t != 0)
+      {
+      throw Invalid_Argument("calendar_point::to_std_timepoint time_t overflow");
+      }
 
-   return std::chrono::system_clock::from_time_t(tt);
+   return std::chrono::system_clock::from_time_t(seconds_time_t);
    }
 
 std::string calendar_point::to_string() const
    {
    // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
    std::stringstream output;
-      {
-      using namespace std;
-      output << setfill('0')
-             << setw(4) << year << "-" << setw(2) << month << "-" << setw(2) << day
-             << "T"
-             << setw(2) << hour << ":" << setw(2) << minutes << ":" << setw(2) << seconds;
-      }
+   output << std::setfill('0')
+          << std::setw(4) << get_year() << "-"
+          << std::setw(2) << get_month() << "-"
+          << std::setw(2) << get_day() << "T"
+          << std::setw(2) << get_hour() << ":"
+          << std::setw(2) << get_minutes() << ":"
+          << std::setw(2) << get_seconds();
    return output.str();
    }
 

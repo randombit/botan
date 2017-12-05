@@ -20,7 +20,6 @@ memset_s
 readdir
 sockets
 threads
-timegm
 </target_features>
 
 <aliases>

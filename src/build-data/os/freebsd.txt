@@ -9,7 +9,6 @@ posix_mlock
 gmtime_r
 dlopen
 readdir
-timegm
 sockets
 threads
 filesystem
