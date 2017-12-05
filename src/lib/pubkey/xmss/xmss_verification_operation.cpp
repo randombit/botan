@@ -3,7 +3,7 @@
  * Provides signature verification capabilities for Extended Hash-Based
  * Signatures (XMSS).
  *
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -87,9 +87,9 @@ XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
                    msg);
 
    secure_vector<uint8_t> node = root_from_signature(sig,
-                              msg_digest,
-                              adrs,
-                              public_key.public_seed());
+                                 msg_digest,
+                                 adrs,
+                                 public_key.public_seed());
 
    return (node == public_key.root());
    }

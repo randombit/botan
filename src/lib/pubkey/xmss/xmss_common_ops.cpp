@@ -1,7 +1,7 @@
 /*
  * XMSS Common Ops
  * Operations shared by XMSS signature generation and verification operations.
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -15,16 +15,17 @@ XMSS_Common_Ops::randomize_tree_hash(secure_vector<uint8_t>& result,
                                      const secure_vector<uint8_t>& left,
                                      const secure_vector<uint8_t>& right,
                                      XMSS_Address& adrs,
-                                     const secure_vector<uint8_t>& seed)
+                                     const secure_vector<uint8_t>& seed,
+                                     XMSS_Hash& hash)
    {
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Key_Mode);
-   secure_vector<uint8_t> key { m_hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> key { hash.prf(seed, adrs.bytes()) };
 
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_MSB_Mode);
-   secure_vector<uint8_t> bitmask_l { m_hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> bitmask_l { hash.prf(seed, adrs.bytes()) };
 
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_LSB_Mode);
-   secure_vector<uint8_t> bitmask_r { m_hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> bitmask_r { hash.prf(seed, adrs.bytes()) };
 
    BOTAN_ASSERT(bitmask_l.size() == left.size() &&
                 bitmask_r.size() == right.size(),
@@ -37,7 +38,7 @@ XMSS_Common_Ops::randomize_tree_hash(secure_vector<uint8_t>& result,
       concat_xor[i + left.size()] = right[i] ^ bitmask_r[i];
       }
 
-   m_hash.h(result, key, concat_xor);
+   hash.h(result, key, concat_xor);
    }
 
 
@@ -45,7 +46,8 @@ void
 XMSS_Common_Ops::create_l_tree(secure_vector<uint8_t>& result,
                                wots_keysig_t pk,
                                XMSS_Address& adrs,
-                               const secure_vector<uint8_t>& seed)
+                               const secure_vector<uint8_t>& seed,
+                               XMSS_Hash& hash)
    {
    size_t l = m_xmss_params.len();
    adrs.set_tree_height(0);
@@ -55,7 +57,7 @@ XMSS_Common_Ops::create_l_tree(secure_vector<uint8_t>& result,
       for(size_t i = 0; i < l >> 1; i++)
          {
          adrs.set_tree_index(i);
-         randomize_tree_hash(pk[i], pk[2 * i], pk[2 * i + 1], adrs, seed);
+         randomize_tree_hash(pk[i], pk[2 * i], pk[2 * i + 1], adrs, seed, hash);
          }
       if(l & 0x01)
          {

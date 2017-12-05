@@ -3,7 +3,7 @@
  * A Winternitz One Time Signature private key for use with Extended Hash-Based
  * Signatures.
  *
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -14,7 +14,8 @@
 namespace Botan {
 
 wots_keysig_t
-XMSS_WOTS_PrivateKey::generate(const secure_vector<uint8_t>& priv_seed)
+XMSS_WOTS_PrivateKey::generate(const secure_vector<uint8_t>& priv_seed,
+                               XMSS_Hash& hash)
    {
    wots_keysig_t priv_key(m_wots_params.len(),
                           secure_vector<uint8_t>(0));
@@ -22,7 +23,7 @@ XMSS_WOTS_PrivateKey::generate(const secure_vector<uint8_t>& priv_seed)
    for(size_t i = 0; i < m_wots_params.len(); i++)
       {
       XMSS_Tools::concat<size_t>(priv_key[i], i, 32);
-      m_hash.prf(priv_key[i], priv_seed, priv_key[i]);
+      hash.prf(priv_key[i], priv_seed, priv_key[i]);
       }
    return priv_key;
    }
@@ -39,8 +40,9 @@ XMSS_WOTS_PrivateKey::generate_public_key(XMSS_Address& adrs)
 
 void
 XMSS_WOTS_PrivateKey::generate_public_key(XMSS_WOTS_PublicKey& pub_key,
-      wots_keysig_t&& in_key_data,
-      XMSS_Address& adrs)
+                                          wots_keysig_t&& in_key_data,
+                                          XMSS_Address& adrs,
+                                          XMSS_Hash& hash)
    {
    BOTAN_ASSERT(wots_parameters() == pub_key.wots_parameters() &&
                 public_seed() == pub_key.public_seed(),
@@ -51,14 +53,14 @@ XMSS_WOTS_PrivateKey::generate_public_key(XMSS_WOTS_PublicKey& pub_key,
       {
       adrs.set_chain_address(i);
       chain(pub_key[i], 0, m_wots_params.wots_parameter() - 1, adrs,
-            public_seed());
+            public_seed(), hash);
       }
    }
 
 wots_keysig_t
-XMSS_WOTS_PrivateKey::sign(
-   const secure_vector<uint8_t>& msg,
-   XMSS_Address& adrs)
+XMSS_WOTS_PrivateKey::sign(const secure_vector<uint8_t>& msg,
+                           XMSS_Address& adrs,
+                           XMSS_Hash& hash)
 
    {
    secure_vector<uint8_t> msg_digest
@@ -67,12 +69,12 @@ XMSS_WOTS_PrivateKey::sign(
       };
 
    m_wots_params.append_checksum(msg_digest);
-   wots_keysig_t sig((*this)[adrs]);
+   wots_keysig_t sig(this->at(adrs, hash));
 
    for(size_t i = 0; i < m_wots_params.len(); i++)
       {
       adrs.set_chain_address(i);
-      chain(sig[i], 0 , msg_digest[i], adrs, m_public_seed);
+      chain(sig[i], 0 , msg_digest[i], adrs, m_public_seed, hash);
       }
 
    return sig;

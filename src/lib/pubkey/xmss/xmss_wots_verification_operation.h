@@ -1,6 +1,6 @@
 /**
  * XMSS_WOTS_Verification_Operation.h
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -26,7 +26,7 @@ namespace Botan {
  **/
 class XMSS_WOTS_Verification_Operation
    final : public virtual PK_Ops::Verification,
-     public XMSS_WOTS_Common_Ops
+   public XMSS_WOTS_Common_Ops
    {
    public:
       XMSS_WOTS_Verification_Operation(

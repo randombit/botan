@@ -7,7 +7,7 @@
  *     https://datatracker.ietf.org/doc/
  *     draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
  *
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -17,33 +17,32 @@
 
 namespace Botan {
 
-//static
 XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(const std::string& param_set)
    {
    if(param_set == "XMSS_SHA2-256_W16_H10")
-      return XMSS_SHA2_256_W16_H10;
+      { return XMSS_SHA2_256_W16_H10; }
    if(param_set == "XMSS_SHA2-256_W16_H16")
-      return XMSS_SHA2_256_W16_H16;
+      { return XMSS_SHA2_256_W16_H16; }
    if(param_set == "XMSS_SHA2-256_W16_H20")
-      return XMSS_SHA2_256_W16_H20;
+      { return XMSS_SHA2_256_W16_H20; }
    if(param_set == "XMSS_SHA2-512_W16_H10")
-      return XMSS_SHA2_512_W16_H10;
+      { return XMSS_SHA2_512_W16_H10; }
    if(param_set == "XMSS_SHA2-512_W16_H16")
-      return XMSS_SHA2_512_W16_H16;
+      { return XMSS_SHA2_512_W16_H16; }
    if(param_set == "XMSS_SHA2-512_W16_H20")
-      return XMSS_SHA2_512_W16_H20;
+      { return XMSS_SHA2_512_W16_H20; }
    if(param_set == "XMSS_SHAKE128_W16_H10")
-      return XMSS_SHAKE128_W16_H10;
+      { return XMSS_SHAKE128_W16_H10; }
    if(param_set == "XMSS_SHAKE128_W16_H16")
-      return XMSS_SHAKE128_W16_H16;
+      { return XMSS_SHAKE128_W16_H16; }
    if(param_set == "XMSS_SHAKE128_W16_H20")
-      return XMSS_SHAKE128_W16_H20;
+      { return XMSS_SHAKE128_W16_H20; }
    if(param_set == "XMSS_SHAKE256_W16_H10")
-      return XMSS_SHAKE256_W16_H10;
+      { return XMSS_SHAKE256_W16_H10; }
    if(param_set == "XMSS_SHAKE256_W16_H16")
-      return XMSS_SHAKE256_W16_H16;
+      { return XMSS_SHAKE256_W16_H16; }
    if(param_set == "XMSS_SHAKE256_W16_H20")
-      return XMSS_SHAKE256_W16_H20;
+      { return XMSS_SHAKE256_W16_H20; }
    throw Lookup_Error("Unknown XMSS algorithm param '" + param_set + "'");
    }
 
@@ -51,7 +50,6 @@ XMSS_Parameters::XMSS_Parameters(const std::string& param_set)
    : XMSS_Parameters(XMSS_Parameters::xmss_id_from_string(param_set))
    {
    }
-
 
 XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
    : m_oid(oid)

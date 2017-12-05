@@ -1,6 +1,6 @@
 /**
  * XMSS WOTS Signature Operation
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -25,7 +25,7 @@ namespace Botan {
  * in the Botan algorithm registry.
  ***/
 class XMSS_WOTS_Signature_Operation final : public virtual PK_Ops::Signature,
-                                      public XMSS_WOTS_Common_Ops
+   public XMSS_WOTS_Common_Ops
    {
    public:
       XMSS_WOTS_Signature_Operation(

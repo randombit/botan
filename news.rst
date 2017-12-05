@@ -148,7 +148,7 @@ Version 2.4.0, Not Yet Released
 
 * Fixes for CMake build (GH #1251)
 
-* Avoid some signed overflow warnings (GH #1220 #1245)
+* Add multithreading support for XMSS
 
 Version 2.3.0, 2017-10-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

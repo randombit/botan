@@ -1,6 +1,6 @@
 /*
  * XMSS Signature Operation
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2017 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -33,7 +33,7 @@ namespace Botan {
  *     draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
  **/
 class XMSS_Signature_Operation final : public virtual PK_Ops::Signature,
-                                 public XMSS_Common_Ops
+                                       public XMSS_Common_Ops
    {
    public:
       XMSS_Signature_Operation(const XMSS_PrivateKey& private_key);
