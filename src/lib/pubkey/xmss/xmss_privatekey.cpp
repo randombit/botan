@@ -165,7 +165,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
       std::vector<secure_vector<uint8_t>> ro_nodes(
          nodes.begin(), nodes.begin() + (1 << (level+1)));
 
-      for(size_t i = 0; i < (1 << level); i++)
+      for(size_t i = 0; i < (1U << level); i++)
          {
          node_addresses[i].set_tree_height(target_node_height - (level + 1));
          node_addresses[i].set_tree_index(
