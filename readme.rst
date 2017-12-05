@@ -10,7 +10,9 @@ offering the tools necessary to implement a range of practical systems, such as
 TLS/DTLS, PKIX certificate handling, PKCS#11 and TPM hardware support, password
 hashing, and post quantum crypto schemes. In addition to the C++, botan has a
 C89 API specifically designed to be easy to call from other languages. A Python
-binding using ctypes calling the C89 API is included.
+binding using ctypes is included, and several other
+`language bindings <https://github.com/randombit/botan/wiki/Language-Bindings>`_
+are available.
 
 Find the full feature list below.
 
