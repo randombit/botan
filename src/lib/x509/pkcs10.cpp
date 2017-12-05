@@ -23,34 +23,34 @@ struct PKCS10_Data
    Extensions m_extensions;
    };
 
-/*
-* PKCS10_Request Constructor
-*/
-PKCS10_Request::PKCS10_Request(DataSource& in) :
-   X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
+std::string PKCS10_Request::PEM_label() const
    {
-   do_decode();
+   return "CERTIFICATE REQUEST";
+   }
+
+std::vector<std::string> PKCS10_Request::alternate_PEM_labels() const
+   {
+   return { "NEW CERTIFICATE REQUEST" };
+   }
+
+PKCS10_Request::PKCS10_Request(DataSource& src)
+   {
+   load_data(src);
+   }
+
+PKCS10_Request::PKCS10_Request(const std::vector<uint8_t>& vec)
+   {
+   DataSource_Memory src(vec.data(), vec.size());
+   load_data(src);
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-/*
-* PKCS10_Request Constructor
-*/
-PKCS10_Request::PKCS10_Request(const std::string& fsname) :
-   X509_Object(fsname, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
+PKCS10_Request::PKCS10_Request(const std::string& fsname)
    {
-   do_decode();
+   DataSource_Stream src(fsname, true);
+   load_data(src);
    }
 #endif
-
-/*
-* PKCS10_Request Constructor
-*/
-PKCS10_Request::PKCS10_Request(const std::vector<uint8_t>& in) :
-   X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
-   {
-   do_decode();
-   }
 
 /*
 * Decode the CertificateRequestInfo

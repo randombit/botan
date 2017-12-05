@@ -47,45 +47,10 @@ Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
 }
 
 /*
-* Create a generic X.509 object
-*/
-X509_Object::X509_Object(DataSource& stream, const std::string& labels)
-   {
-   init(stream, labels);
-   }
-
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-/*
-* Create a generic X.509 object
-*/
-X509_Object::X509_Object(const std::string& file, const std::string& labels)
-   {
-   DataSource_Stream stream(file, true);
-   init(stream, labels);
-   }
-#endif
-
-/*
-* Create a generic X.509 object
-*/
-X509_Object::X509_Object(const std::vector<uint8_t>& vec, const std::string& labels)
-   {
-   DataSource_Memory stream(vec.data(), vec.size());
-   init(stream, labels);
-   }
-
-/*
 * Read a PEM or BER X.509 object
 */
-void X509_Object::init(DataSource& in, const std::string& labels)
+void X509_Object::load_data(DataSource& in)
    {
-   m_PEM_labels_allowed = split_on(labels, '/');
-   if(m_PEM_labels_allowed.size() < 1)
-      throw Invalid_Argument("Bad labels argument to X509_Object");
-
-   m_PEM_label_pref = m_PEM_labels_allowed[0];
-   std::sort(m_PEM_labels_allowed.begin(), m_PEM_labels_allowed.end());
-
    try {
       if(ASN1::maybe_BER(in) && !PEM_Code::matches(in))
          {
@@ -97,9 +62,21 @@ void X509_Object::init(DataSource& in, const std::string& labels)
          std::string got_label;
          DataSource_Memory ber(PEM_Code::decode(in, got_label));
 
-         if(!std::binary_search(m_PEM_labels_allowed.begin(),
-                                m_PEM_labels_allowed.end(), got_label))
-            throw Decoding_Error("Invalid PEM label: " + got_label);
+         if(got_label != PEM_label())
+            {
+            bool is_alternate = false;
+            for(std::string alt_label : alternate_PEM_labels())
+               {
+               if(got_label == alt_label)
+                  {
+                  is_alternate = true;
+                  break;
+                  }
+               }
+
+            if(!is_alternate)
+               throw Decoding_Error("Unexpected PEM label for " + PEM_label() + " of " + got_label);
+            }
 
          BER_Decoder dec(ber);
          decode_from(dec);
@@ -107,7 +84,7 @@ void X509_Object::init(DataSource& in, const std::string& labels)
       }
    catch(Decoding_Error& e)
       {
-      throw Decoding_Error(m_PEM_label_pref + " decoding failed: " + e.what());
+      throw Decoding_Error(PEM_label() + " decoding failed: " + e.what());
       }
    }
 
@@ -135,6 +112,8 @@ void X509_Object::decode_from(BER_Decoder& from)
          .decode(m_sig_algo)
          .decode(m_sig, BIT_STRING)
       .end_cons();
+
+   force_decode();
    }
 
 /*
@@ -152,7 +131,7 @@ std::vector<uint8_t> X509_Object::BER_encode() const
 */
 std::string X509_Object::PEM_encode() const
    {
-   return PEM_Code::encode(BER_encode(), m_PEM_label_pref);
+   return PEM_Code::encode(BER_encode(), PEM_label());
    }
 
 /*
@@ -199,7 +178,7 @@ std::string X509_Object::hash_used_for_signature() const
 bool X509_Object::check_signature(const Public_Key* pub_key) const
    {
    if(!pub_key)
-      throw Exception("No key provided for " + m_PEM_label_pref + " signature check");
+      throw Exception("No key provided for " + PEM_label() + " signature check");
    std::unique_ptr<const Public_Key> key(pub_key);
    return check_signature(*key);
    }
@@ -280,31 +259,15 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
                                             const AlgorithmIdentifier& algo,
                                             const secure_vector<uint8_t>& tbs_bits)
    {
+   const std::vector<uint8_t> signature = signer->sign_message(tbs_bits, rng);
+
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .raw_bytes(tbs_bits)
          .encode(algo)
-         .encode(signer->sign_message(tbs_bits, rng), BIT_STRING)
+         .encode(signature, BIT_STRING)
       .end_cons()
    .get_contents_unlocked();
-   }
-
-/*
-* Try to decode the actual information
-*/
-void X509_Object::do_decode()
-   {
-   try {
-      force_decode();
-      }
-   catch(Decoding_Error& e)
-      {
-      throw Decoding_Error(m_PEM_label_pref + " decoding failed", e.what());
-      }
-   catch(Invalid_Argument& e)
-      {
-      throw Decoding_Error(m_PEM_label_pref + " decoding failed", e.what());
-      }
    }
 
 }

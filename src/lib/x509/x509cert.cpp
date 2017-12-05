@@ -60,32 +60,32 @@ struct X509_Certificate_Data
    Data_Store m_issuer_ds;
    };
 
-/*
-* X509_Certificate Constructor
-*/
-X509_Certificate::X509_Certificate(DataSource& in) :
-   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
+std::string X509_Certificate::PEM_label() const
    {
-   do_decode();
+   return "CERTIFICATE";
    }
 
-/*
-* X509_Certificate Constructor
-*/
-X509_Certificate::X509_Certificate(const std::vector<uint8_t>& in) :
-   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
+std::vector<std::string> X509_Certificate::alternate_PEM_labels() const
    {
-   do_decode();
+   return { "X509 CERTIFICATE" };
+   }
+
+X509_Certificate::X509_Certificate(DataSource& src)
+   {
+   load_data(src);
+   }
+
+X509_Certificate::X509_Certificate(const std::vector<uint8_t>& vec)
+   {
+   DataSource_Memory src(vec.data(), vec.size());
+   load_data(src);
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-/*
-* X509_Certificate Constructor
-*/
-X509_Certificate::X509_Certificate(const std::string& fsname) :
-   X509_Object(fsname, "CERTIFICATE/X509 CERTIFICATE")
+X509_Certificate::X509_Certificate(const std::string& fsname)
    {
-   do_decode();
+   DataSource_Stream src(fsname, true);
+   load_data(src);
    }
 #endif
 
@@ -302,7 +302,7 @@ const X509_Certificate_Data& X509_Certificate::data() const
    {
    if(m_data == nullptr)
       {
-      throw Decoding_Error("Failed to parse X509 certificate");
+      throw Invalid_State("X509_Certificate uninitialized");
       }
    return *m_data.get();
    }

@@ -71,7 +71,7 @@ class BOTAN_PUBLIC_API(2,0) CRL_Entry final : public ASN1_Object
       /**
       * Create uninitialized CRL_Entry object
       */
-      CRL_Entry() {}
+      CRL_Entry() = default;
 
       /**
       * Construct an CRL entry.

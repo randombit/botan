@@ -83,6 +83,12 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
       const X509_Time& next_update() const;
 
       /**
+      * Create an uninitialized CRL object. Any attempts to access
+      * this object will throw an exception.
+      */
+      X509_CRL() = default;
+
+      /**
       * Construct a CRL from a data source.
       * @param source the data source providing the DER or PEM encoded CRL.
       */
@@ -113,6 +119,10 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
                const X509_Time& nextUpdate, const std::vector<CRL_Entry>& revoked);
 
    private:
+      std::string PEM_label() const override;
+
+      std::vector<std::string> alternate_PEM_labels() const override;
+
       void force_decode() override;
 
       const CRL_Data& data() const;

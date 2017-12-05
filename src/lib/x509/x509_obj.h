@@ -18,8 +18,8 @@ class Public_Key;
 class RandomNumberGenerator;
 
 /**
-* This class represents abstract X.509 signed objects as
-* in the X.500 SIGNED macro
+* This class represents abstract X.509 signed objects as in the X.500
+* SIGNED macro
 */
 class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
    {
@@ -102,26 +102,28 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
 
       X509_Object(const X509_Object&) = default;
       X509_Object& operator=(const X509_Object&) = default;
+
+      virtual std::string PEM_label() const = 0;
+
+      virtual std::vector<std::string> alternate_PEM_labels() const
+         { return std::vector<std::string>(); }
+
       virtual ~X509_Object() = default;
    protected:
-      X509_Object(DataSource& src, const std::string& pem_labels);
-      X509_Object(const std::vector<uint8_t>& vec, const std::string& labels);
 
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-      X509_Object(const std::string& file, const std::string& pem_labels);
-#endif
-
-      void do_decode();
       X509_Object() = default;
+
+      /**
+      * Decodes from src as either DER or PEM data, then calls force_decode()
+      */
+      void load_data(DataSource& src);
 
    private:
       virtual void force_decode() = 0;
-      void init(DataSource&, const std::string&);
 
       AlgorithmIdentifier m_sig_algo;
-      std::vector<uint8_t> m_tbs_bits, m_sig;
-      std::vector<std::string> m_PEM_labels_allowed;
-      std::string m_PEM_label_pref;
+      std::vector<uint8_t> m_tbs_bits;
+      std::vector<uint8_t> m_sig;
    };
 
 }

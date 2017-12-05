@@ -110,6 +110,10 @@ class BOTAN_PUBLIC_API(2,0) PKCS10_Request final : public X509_Object
       */
       explicit PKCS10_Request(const std::vector<uint8_t>& vec);
    private:
+      std::string PEM_label() const override;
+
+      std::vector<std::string> alternate_PEM_labels() const override;
+
       void force_decode() override;
 
       const PKCS10_Data& data() const;

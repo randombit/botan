@@ -755,6 +755,41 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
    return result;
    }
 
+Test::Result test_x509_uninit()
+   {
+   Test::Result result("X509 object uninitialized access");
+
+   Botan::X509_Certificate cert;
+   result.test_throws("uninitialized cert access causes exception",
+                      "X509_Certificate uninitialized",
+                      [&cert]() { cert.x509_version(); });
+
+   Botan::X509_CRL crl;
+   result.test_throws("uninitialized crl access causes exception",
+                      "X509_CRL uninitialized",
+                      [&crl]() { crl.crl_number(); });
+
+   return result;
+   }
+
+Test::Result test_x509_decode_list()
+   {
+   Test::Result result("X509_Certificate list decode");
+
+   Botan::DataSource_Stream input(Test::data_file("x509/misc/cert_seq.der"), true);
+
+   Botan::BER_Decoder dec(input);
+   std::vector<Botan::X509_Certificate> certs;
+   dec.decode_list(certs);
+
+   result.test_eq("Expected number of certs in list", certs.size(), 2);
+
+   result.test_eq("Expected cert 1 CN", certs[0].subject_dn().get_first_attribute("CN"), "CA1-PP.01.02");
+   result.test_eq("Expected cert 2 CN", certs[1].subject_dn().get_first_attribute("CN"), "User1-PP.01.02");
+
+   return result;
+   }
+
 
 using Botan::Key_Constraints;
 
@@ -1250,6 +1285,8 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_x509_utf8());
          results.push_back(test_x509_bmpstring());
          results.push_back(test_crl_dn_name());
+         results.push_back(test_x509_uninit());
+         results.push_back(test_x509_decode_list());
 
          return results;
          }
