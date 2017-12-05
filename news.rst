@@ -22,6 +22,8 @@ Version 2.4.0, Not Yet Released
 * Add support for AES key wrapping with padding, as specified in RFC 5649 and
   NIST SP 800-38F (GH #1301)
 
+* XMSS signatures now are multithreaded for improved performance (GH #1267)
+
 * Increase the maximum HMAC key length from 512 bytes to 4096 bytes. This allows
   using a DH key exchange with a group greater than 4096 bits. (GH #1316)
 
@@ -69,6 +71,9 @@ Version 2.4.0, Not Yet Released
   character. In addition, UCS-4 strings are now supported.
   (GH #1113 #1250 #1287 #1289)
 
+* It is now possible to create an uninitialized X509_Certificate object. Such an
+  object will throw if any attempt to access its members is made. (GH #1335)
+
 * In BER decoder, avoid unbounded stack recursion when parsing nested indefinite
   length values. Now at most 16 nested indefinite length values are accepted,
   anything deeper resulting in a decoding error.  (GH #1304 OSS-Fuzz 4353).
@@ -86,6 +91,13 @@ Version 2.4.0, Not Yet Released
   of reimplementing CBC inside the TLS stack. This allows for parallel
   decryption of TLS CBC ciphertexts, and improves performance especially when
   using AES hardware support. (GH #1269)
+
+* Add callbacks to make it possible for an application using TLS to provide
+  custom implementations of signature schemes, eg when offloading the
+  computations to another device. (GH #1332)
+
+* Use a direct calculation for calender computations instead of relying on
+  non-portable operating system interfaces. (GH #1336)
 
 * Fix a bug in the amalgamation generation which could cause build failures on
   some systems including macOS. (GH #1264 #1265)
@@ -148,7 +160,7 @@ Version 2.4.0, Not Yet Released
 
 * Fixes for CMake build (GH #1251)
 
-* Add multithreading support for XMSS
+* Avoid some signed overflow warnings (GH #1220 #1245)
 
 Version 2.3.0, 2017-10-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
