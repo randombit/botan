@@ -29,36 +29,6 @@ namespace {
 
 #if defined(BOTAN_HAS_ECC_GROUP)
 
-const std::vector<std::string> ec_groups =
-   {
-   "brainpool160r1",
-   "brainpool192r1",
-   "brainpool224r1",
-   "brainpool256r1",
-   "brainpool320r1",
-   "brainpool384r1",
-   "brainpool512r1",
-   "gost_256A",
-   "secp160k1",
-   "secp160r1",
-   "secp160r2",
-   "secp192k1",
-   "secp192r1",
-   "secp224k1",
-   "secp224r1",
-   "secp256k1",
-   "secp256r1",
-   "secp384r1",
-   "secp521r1",
-   "x962_p192v2",
-   "x962_p192v3",
-   "x962_p239v1",
-   "x962_p239v2",
-   "x962_p239v3",
-   "sm2p256v1",
-   "frp256v1"
-   };
-
 Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, BigInt max)
    {
    /*
@@ -145,7 +115,8 @@ class ECC_Randomized_Tests final : public Test
 std::vector<Test::Result> ECC_Randomized_Tests::run()
    {
    std::vector<Test::Result> results;
-   for(auto const& group_name : ec_groups)
+   std::set<std::string> named_groups = Botan::EC_Group::known_named_groups();
+   for(auto const& group_name : named_groups)
       {
       Test::Result result("ECC randomized " + group_name);
 
@@ -267,6 +238,18 @@ class NIST_Curve_Reduction_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("nist_redc", NIST_Curve_Reduction_Tests);
+
+Test::Result test_groups()
+   {
+   Test::Result result("ECC Unit");
+   std::set<std::string> named_groups = Botan::EC_Group::known_named_groups();
+   for(auto const& group_name : named_groups)
+      {
+      const Botan::EC_Group group(group_name);
+      result.confirm("EC_Group is known", !group.get_oid().empty());
+      }
+   return result;
+   }
 
 Test::Result test_coordinates()
    {
@@ -831,6 +814,7 @@ class ECC_Unit_Tests final : public Test
          {
          std::vector<Test::Result> results;
 
+         results.push_back(test_groups());
          results.push_back(test_coordinates());
          results.push_back(test_point_transformation());
          results.push_back(test_point_mult());

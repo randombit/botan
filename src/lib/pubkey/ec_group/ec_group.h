@@ -13,6 +13,7 @@
 #include <botan/point_gfp.h>
 #include <botan/curve_gfp.h>
 #include <botan/asn1_oid.h>
+#include <set>
 
 namespace Botan {
 
@@ -133,6 +134,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * Return PEM representation of named EC group
       */
       static std::string PEM_for_named_group(const std::string& name);
+
+      /**
+      * Return a set of known named EC groups
+      */
+      static const std::set<std::string>& known_named_groups();
 
    private:
       CurveGFp m_curve;
