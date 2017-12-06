@@ -80,7 +80,7 @@ void* sqlite3Codec(void *pCodec, void *data, Pgno nPageNum, int nMode)
 
 int sqlite3CodecAttach(sqlite3 *db, int nDb, const void *zKey, int nKey)
 {
-    void *pCodec;
+    void *pCodec = NULL;
 
     if (zKey == NULL || nKey <= 0)
     {
