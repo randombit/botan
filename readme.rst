@@ -55,6 +55,8 @@ All approved releases are signed with the following `key <https://cybersecurity.
   sSPNDnqFuHxJaS2oS5A3BBUCAwEAAQ==
   -----END PUBLIC KEY-----
 
+The SHA-256 public key fingerprint is B1B688ED5FD24ACD53E73BE74A5279916471B2A9C80BC33AA9A7EDC58A715CF0.
+
 Verify the release signature using Botan::
 
   $ botan verify --hash=SHA-512 --emsa=EMSA4 Botan-Signing-Key.pem Botan-2.0.1-RSCS1.zip Botan-2.0.1-RSCS1.zip.sig
