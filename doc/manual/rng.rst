@@ -92,6 +92,13 @@ simple and well studied way (the extract-then-expand paradigm), but is still an
 ad-hoc and non-standard construction. It is included because it is roughly 20x
 faster then HMAC_DRBG, and certain applications need access to a very fast RNG.
 
+RDRAND_RNG
+^^^^^^^^^^^^^^^^^
+
+This RNG type directly calls the x86 ``rdrand`` instruction. If the instruction
+is not available it will throw at runtime, you can check beforehand by calling
+``Botan::CPUID::has_rdrand()``.
+
 TPM_RNG
 ^^^^^^^^^^^^^^^^^
 

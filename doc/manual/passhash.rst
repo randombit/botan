@@ -70,7 +70,7 @@ passhash9.
 
 .. _bcrypt:
 
-Bcrypt Password Hashing
+Bcrypt
 ----------------------------------------
 
 :wikipedia:`Bcrypt` is a password hashing scheme originally designed

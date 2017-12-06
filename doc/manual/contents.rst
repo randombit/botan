@@ -8,7 +8,6 @@ Contents
    goals
    support
    building
-   platforms
    versions
    secmem
    rng
@@ -18,7 +17,6 @@ Contents
    message_auth_codes
    cipher_modes
    pubkey
-   mceliece
    x509
    tls
    credentials_manager

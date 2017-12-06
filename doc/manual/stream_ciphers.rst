@@ -135,7 +135,7 @@ ChaCha
 ~~~~~~~~
 
 A very fast cipher, now widely deployed in TLS as part of the ChaCha20Poly1305
-AEAD. Can be used with 8 (fast but dangerous), 12 (balance, or 20 rounds
+AEAD. Can be used with 8 (fast but dangerous), 12 (balance), or 20 rounds
 (conservative). Even with 20 rounds, ChaCha is very fast. Use 20 rounds.
 
 Available if ``BOTAN_HAS_CHACHA`` is defined.
