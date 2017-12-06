@@ -14,7 +14,9 @@ import subprocess
 import shutil
 import logging
 import json
+import tempfile
 import os
+import stat
 
 def get_concurrency():
     """
@@ -34,21 +36,34 @@ def touch(fname):
     except OSError:
         open(fname, 'a').close()
 
-def copy_files(src_dir, dest_dir):
-    for f in os.listdir(src_dir):
-        src_file = os.path.join(src_dir, f)
-        dest_file = os.path.join(dest_dir, f)
-        logging.debug("Copying from %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
+def copy_files(src_path, dest_dir):
 
-def run_and_check(cmd_line):
+    file_mode = os.stat(src_path).st_mode
+
+    if stat.S_ISREG(file_mode):
+        logging.debug("Copying file %s to %s", src_path, dest_dir)
+        shutil.copy(src_path, dest_dir)
+    else:
+        for f in os.listdir(src_path):
+            src_file = os.path.join(src_path, f)
+            dest_file = os.path.join(dest_dir, f)
+            logging.debug("Copying dir %s to %s", src_file, dest_file)
+            shutil.copyfile(src_file, dest_file)
+
+def run_and_check(cmd_line, cwd=None):
 
     logging.debug("Executing %s", ' '.join(cmd_line))
 
     proc = subprocess.Popen(cmd_line,
-                            close_fds=True)
+                            close_fds=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            cwd=cwd)
 
-    proc.communicate()
+    (stdout, stderr) = proc.communicate()
+
+    logging.debug(stdout)
+    logging.debug(stderr)
 
     if proc.returncode != 0:
         logging.error("Error running %s", ' '.join(cmd_line))
@@ -103,6 +118,7 @@ def main(args=None):
 
     with_docs = bool(cfg['with_documentation'])
     with_sphinx = bool(cfg['with_sphinx'])
+    with_pdf = bool(cfg['with_pdf'])
     with_doxygen = bool(cfg['with_doxygen'])
 
     doc_stamp_file = cfg['doc_stamp_file']
@@ -120,8 +136,17 @@ def main(args=None):
         cmds.append(['doxygen', os.path.join(cfg['build_dir'], 'botan.doxy')])
 
     if with_sphinx:
-        cmds.append(['sphinx-build', '-q', '-b', 'html', '-c', cfg['sphinx_config_dir'],
-                     '-j', str(get_concurrency()), manual_src, manual_output])
+        sphinx_build = ['sphinx-build',
+                        '-c', cfg['sphinx_config_dir'],
+                        '-j', str(get_concurrency())]
+
+        cmds.append(sphinx_build + ['-b', 'html', manual_src, manual_output])
+
+        if with_pdf:
+            latex_output = tempfile.mkdtemp(prefix='botan_latex_')
+            cmds.append(sphinx_build + ['-b', 'latex', manual_src, latex_output])
+            cmds.append(['make', '-C', latex_output])
+            cmds.append(['cp', os.path.join(latex_output, 'botan.pdf'), manual_output])
     else:
         # otherwise just copy it
         cmds.append(['cp', manual_src, manual_output])

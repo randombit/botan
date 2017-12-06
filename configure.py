@@ -411,25 +411,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
                            help='distribution specific version',
                            default='unspecified')
 
-    build_group.add_option('--with-sphinx', action='store_true',
-                           default=None, help='Use Sphinx')
-
-    build_group.add_option('--without-sphinx', action='store_false',
-                           dest='with_sphinx', help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--with-doxygen', action='store_true',
-                           default=False, help='Use Doxygen')
-
-    build_group.add_option('--without-doxygen', action='store_false',
-                           dest='with_doxygen', help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--with-documentation', action='store_true',
-                           help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--without-documentation', action='store_false',
-                           default=True, dest='with_documentation',
-                           help='Skip building/installing documentation')
-
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
                            help="Enable extra warnings")
@@ -459,6 +440,33 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     build_group.add_option('--with-fuzzer-lib=', metavar='LIB', default=None, dest='fuzzer_lib',
                            help='additionally link in LIB')
+
+    docs_group = optparse.OptionGroup(parser, 'Documentation Options')
+
+    docs_group.add_option('--with-documentation', action='store_true',
+                          help=optparse.SUPPRESS_HELP)
+
+    docs_group.add_option('--without-documentation', action='store_false',
+                          default=True, dest='with_documentation',
+                          help='Skip building/installing documentation')
+
+    docs_group.add_option('--with-sphinx', action='store_true',
+                          default=None, help='Use Sphinx')
+
+    docs_group.add_option('--without-sphinx', action='store_false',
+                          dest='with_sphinx', help=optparse.SUPPRESS_HELP)
+
+    docs_group.add_option('--with-pdf', action='store_true',
+                          default=False, help='Use Sphinx to generate PDF doc')
+
+    docs_group.add_option('--without-pdf', action='store_false',
+                          dest='with_pdf', help=optparse.SUPPRESS_HELP)
+
+    docs_group.add_option('--with-doxygen', action='store_true',
+                          default=False, help='Use Doxygen')
+
+    docs_group.add_option('--without-doxygen', action='store_false',
+                          dest='with_doxygen', help=optparse.SUPPRESS_HELP)
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -525,6 +533,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
+    parser.add_option_group(docs_group)
     parser.add_option_group(mods_group)
     parser.add_option_group(install_group)
     parser.add_option_group(misc_group)
@@ -2017,6 +2026,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'with_documentation': options.with_documentation,
         'with_sphinx': options.with_sphinx,
+        'with_pdf': options.with_pdf,
         'sphinx_config_dir': source_paths.sphinx_config_dir,
         'with_doxygen': options.with_doxygen,
 
@@ -3051,6 +3061,11 @@ def validate_options(options, info_os, info_cc, available_module_policies):
             raise UserError('Using --with-doxygen plus --without-documentation makes no sense')
         if options.with_sphinx:
             raise UserError('Using --with-sphinx plus --without-documentation makes no sense')
+        if options.with_pdf:
+            raise UserError('Using --with-pdf plus --without-documentation makes no sense')
+
+    if options.with_pdf and not options.with_sphinx:
+        raise UserError('Option --with-pdf requires --with-sphinx')
 
     # Warnings
     if options.os == 'windows' and options.compiler != 'msvc':
