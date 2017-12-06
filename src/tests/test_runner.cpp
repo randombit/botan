@@ -55,12 +55,11 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
             }
          }
 
-      Testsuite_RNG(const std::string& drbg_seed, size_t test_counter = 0)
+      Testsuite_RNG(const std::vector<uint8_t>& seed, size_t test_counter = 0)
          {
          m_d = static_cast<uint32_t>(test_counter);
 
-         add_entropy(reinterpret_cast<const uint8_t*>(drbg_seed.data()),
-                     drbg_seed.size());
+         add_entropy(seed.data(), seed.size());
          }
    private:
       void mix()
@@ -187,7 +186,7 @@ int Test_Runner::run(const std::vector<std::string>& requested_tests,
    for(size_t i = 0; i != runs; ++i)
       {
       std::unique_ptr<Botan::RandomNumberGenerator> rng =
-         std::unique_ptr<Botan::RandomNumberGenerator>(new Testsuite_RNG(drbg_seed, i));
+         std::unique_ptr<Botan::RandomNumberGenerator>(new Testsuite_RNG(seed, i));
 
       Botan_Tests::Test::set_test_rng(std::move(rng));
 
