@@ -16,18 +16,18 @@ namespace Botan {
   version they are running against.
 */
 
-/*
-* Return the version as a string
-*/
-std::string version_string()
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
+const char* short_version_cstr()
    {
-   return std::string(version_cstr());
+   return STR(BOTAN_VERSION_MAJOR) "."
+          STR(BOTAN_VERSION_MINOR) "."
+          STR(BOTAN_VERSION_PATCH);
    }
 
 const char* version_cstr()
    {
-#define QUOTE(name) #name
-#define STR(macro) QUOTE(macro)
 
    /*
    It is intentional that this string is a compile-time constant;
@@ -46,9 +46,22 @@ const char* version_cstr()
 #endif
                    ", revision " BOTAN_VERSION_VC_REVISION
                    ", distribution " BOTAN_DISTRIBUTION_INFO ")";
+   }
 
 #undef STR
 #undef QUOTE
+
+/*
+* Return the version as a string
+*/
+std::string version_string()
+   {
+   return std::string(version_cstr());
+   }
+
+std::string short_version_string()
+   {
+   return std::string(short_version_cstr());
    }
 
 uint32_t version_datestamp() { return BOTAN_VERSION_DATESTAMP; }
@@ -66,16 +79,11 @@ std::string runtime_version_check(uint32_t major,
    {
    std::ostringstream oss;
 
-   if(major != version_major() ||
-      minor != version_minor() ||
-      patch != version_patch())
+   if(major != version_major() || minor != version_minor() || patch != version_patch())
       {
-      oss << "Warning: linked version ("
-          << Botan::version_major() << '.'
-          << Botan::version_minor() << '.'
-          << Botan::version_patch()
-          << ") does not match version built against ("
-          << major << '.' << minor << '.' << patch << ")\n";
+      oss << "Warning: linked version (" << short_version_string() << ")"
+          << " does not match version built against "
+          << "(" << major << '.' << minor << '.' << patch << ")\n";
       }
 
    return oss.str();

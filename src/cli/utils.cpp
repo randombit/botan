@@ -119,9 +119,7 @@ class Version_Info final : public Command
             }
          else
             {
-            output() << Botan::version_major() << "."
-                     << Botan::version_minor() << "."
-                     << Botan::version_patch() << "\n";
+            output() << Botan::short_version_string() << "\n";
             }
          }
    };
