@@ -2385,7 +2385,7 @@ class ModulesChooser(object):
 
 def choose_link_method(options):
     """
-    Choose the link method based on system availablity and user request
+    Choose the link method based on system availability and user request
     """
 
     req = options.link_method
@@ -3038,7 +3038,7 @@ def validate_options(options, info_os, info_cc, available_module_policies):
             raise UserError('Bad value to --build-fuzzers')
 
         if options.build_fuzzers == 'klee' and options.os != 'llvm':
-            raise UserError('Building for KLEE requires targetting LLVM')
+            raise UserError('Building for KLEE requires targeting LLVM')
 
     if options.build_static_lib is False and options.build_shared_lib is False:
         raise UserError('With both --disable-static-library and --disable-shared-library, nothing to do')
