@@ -547,6 +547,50 @@ class Hostname_Tests final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("hostname", Hostname_Tests);
 
+class CPUID_Tests final : public Test
+   {
+   public:
+
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("CPUID");
+
+         result.confirm("Endian is either little or big",
+                        Botan::CPUID::is_big_endian() || Botan::CPUID::is_little_endian());
+
+         if(Botan::CPUID::is_little_endian())
+            {
+            result.test_eq("If endian is little, it is not also big endian", Botan::CPUID::is_big_endian(), false);
+            }
+         else
+            {
+            result.test_eq("If endian is big, it is not also little endian", Botan::CPUID::is_little_endian(), false);
+            }
+
+         const std::string cpuid_string = Botan::CPUID::to_string();
+         result.test_success("CPUID::to_string doesn't crash");
+
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+         if(Botan::CPUID::has_sse2())
+            {
+            result.confirm("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
+
+            Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
+
+            result.test_eq("After clearing cpuid bit, has_sse2 returns false", Botan::CPUID::has_sse2(), false);
+
+            Botan::CPUID::initialize(); // reset state
+            result.test_eq("After reinitializing, has_sse2 returns true", Botan::CPUID::has_sse2(), true);
+            }
+#endif
+
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("cpuid", CPUID_Tests);
+
 }
 
 }
