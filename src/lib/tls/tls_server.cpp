@@ -31,6 +31,11 @@ class Server_Handshake_State final : public Handshake_State
       void set_allow_session_resumption(bool allow_session_resumption)
          { m_allow_session_resumption = allow_session_resumption; }
 
+      const std::vector<X509_Certificate>& resume_peer_certs() const
+         { return m_resume_peer_certs; }
+
+      void set_resume_certs(const std::vector<X509_Certificate>& certs)
+         { m_resume_peer_certs = certs; }
 
    private:
       // Used by the server only, in case of RSA key exchange. Not owned
@@ -41,6 +46,8 @@ class Server_Handshake_State final : public Handshake_State
       * a server-initiated renegotiation
       */
       bool m_allow_session_resumption = true;
+
+      std::vector<X509_Certificate> m_resume_peer_certs;
    };
 
 namespace {
@@ -359,8 +366,12 @@ Handshake_State* Server::new_handshake_state(Handshake_IO* io)
    }
 
 std::vector<X509_Certificate>
-Server::get_peer_cert_chain(const Handshake_State& state) const
+Server::get_peer_cert_chain(const Handshake_State& state_base) const
    {
+   const Server_Handshake_State& state = dynamic_cast<const Server_Handshake_State&>(state_base);
+   if(state.resume_peer_certs().size() > 0)
+      return state.resume_peer_certs();
+
    if(state.client_certs())
       return state.client_certs()->cert_chain();
    return std::vector<X509_Certificate>();
@@ -725,6 +736,7 @@ void Server::session_resume(Server_Handshake_State& pending_state,
    secure_renegotiation_check(pending_state.server_hello());
 
    pending_state.compute_session_keys(session_info.master_secret());
+   pending_state.set_resume_certs(session_info.peer_certs());
 
    if(!save_session(session_info))
       {
