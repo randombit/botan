@@ -33,6 +33,8 @@ class Client_Handshake_State final : public Handshake_State
          return *server_public_key.get();
          }
 
+      bool is_a_resumption() const { return (resume_master_secret.empty() == false); }
+
       std::unique_ptr<Public_Key> server_public_key;
 
       // Used during session resumption
@@ -620,7 +622,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       const bool should_save = save_session(session_info);
 
-      if(!session_id.empty())
+      if(session_id.size() > 0 && state.is_a_resumption() == false)
          {
          if(should_save)
             session_manager().save(session_info);
