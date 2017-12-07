@@ -293,6 +293,30 @@ int botan_ffi_supports_api(uint32_t api_version) {
    return -1;
 }
 
+uint32_t botan_ffi_tls_api_version(void) {
+#if defined(BOTAN_HAS_FFI_TLS)
+   return BOTAN_HAS_FFI_TLS;
+#else
+   return 0;
+#endif
+}
+
+/**
+* Return 0 (ok) if this version of the library supports the named
+* TLS API version.
+* botan_ffi_supports_tls_api(botan_ffi_tls_api_version()) will always return 0,
+* unless botan_ffi_tls_api_version returned 0.
+*/
+int botan_ffi_tls_supports_api(uint32_t api_version) {
+#if defined(BOTAN_HAS_FFI_TLS)
+   if(api_version == BOTAN_HAS_FFI_TLS) {
+      return 0;
+   }
+#endif
+
+   return -1;
+}
+
 const char* botan_version_string() {
    return Botan::version_cstr();
 }
