@@ -100,6 +100,8 @@ def main(args=None):
             dir_path = build_config[dir_type]
             remove_all_in_dir(dir_path)
 
+        remove_file(build_config['doc_stamp_file'])
+
         try:
             shutil.rmtree(build_config['doc_output_dir'])
         except OSError:
