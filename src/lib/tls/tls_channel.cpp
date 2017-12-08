@@ -117,6 +117,11 @@ std::vector<X509_Certificate> Channel::peer_cert_chain() const
    return std::vector<X509_Certificate>();
    }
 
+bool Channel::save_session(const Session& session)
+   {
+   return callbacks().tls_session_established(session);
+   }
+
 Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    {
    if(pending_state())
