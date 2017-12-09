@@ -1131,13 +1131,16 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             return self.visibility_attribute
         return ''
 
-    def mach_abi_link_flags(self, options):
+    def mach_abi_link_flags(self, options, with_debug_info=None):
         """
         Return the machine specific ABI flags
         """
 
+        if with_debug_info is None:
+            with_debug_info = options.with_debug_info
+
         def all_group():
-            if options.with_debug_info and 'all-debug' in self.mach_abi_linking:
+            if with_debug_info and 'all-debug' in self.mach_abi_linking:
                 return 'all-debug'
             return 'all'
 
@@ -1183,12 +1186,17 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def cc_lang_flags(self):
         return self.lang_flags
 
-    def cc_compile_flags(self, options):
-        def gen_flags():
-            if options.with_debug_info:
+    def cc_compile_flags(self, options, with_debug_info=None, enable_optimizations=None):
+        def gen_flags(with_debug_info, enable_optimizations):
+            if with_debug_info is None:
+                with_debug_info = options.with_debug_info
+            if enable_optimizations is None:
+                enable_optimizations = not options.no_optimizations
+
+            if with_debug_info:
                 yield self.debug_info_flags
 
-            if not options.no_optimizations:
+            if enable_optimizations:
                 if options.optimize_for_size:
                     if self.size_optimization_flags != '':
                         yield self.size_optimization_flags
@@ -1213,7 +1221,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             if all_arch in self.mach_opt_flags:
                 yield self.mach_opt_flags[all_arch][0]
 
-        return (' '.join(gen_flags())).strip()
+        return (' '.join(gen_flags(with_debug_info, enable_optimizations))).strip()
 
     @staticmethod
     def _so_link_search(osname, debug_info):
@@ -1572,185 +1580,69 @@ def gen_bakefile(build_config, options, external_libs):
     f.close()
 
 
-class CmakeGenerator(object):
-    def __init__(self, build_paths, using_mods, cc, options, template_vars):
-        self._build_paths = build_paths
-        self._using_mods = using_mods
-        self._cc = cc
+def generate_cmake(source_paths, build_paths, using_mods, cc, options, template_vars):
 
-        self._options_release = copy.deepcopy(options)
-        self._options_release.no_optimizations = False
-        self._options_release.with_debug_info = False
-
-        self._options_debug = copy.deepcopy(options)
-        self._options_debug.no_optimizations = True
-        self._options_debug.with_debug_info = True
-
-        self._template_vars = template_vars
-
-    @staticmethod
-    def _escape(input_str):
+    def escape(input_str):
         return input_str.replace('(', '\\(').replace(')', '\\)').replace('#', '\\#').replace('$', '\\$')
 
-    @staticmethod
-    def _cmake_normalize(source):
+    def cmake_normalize(source):
         return os.path.normpath(source).replace('\\', '/')
 
-    @staticmethod
-    def _create_target_rules(sources):
-        target = {'sources': {}, 'frameworks': set(), 'libs': set()}
-        for source in sources:
-            target['sources'][source] = {'isa_flags': set()}
-        return target
+    def generate_source_list(src_list):
+        s = ""
+        for source in sorted(src_list):
+            s += '    "${CMAKE_CURRENT_LIST_DIR}/%s"\n' % cmake_normalize(source)
+        return s
 
-    def _add_target_details(self, target, using_mod):
-        libs_or_frameworks_needed = False
-        for source_path in target['sources']:
-            for mod_source in using_mod.source:
-                if source_path == mod_source:
-                    libs_or_frameworks_needed = True
-                    for isa in using_mod.need_isa:
-                        isa_flag = self._cc.isa_flags_for(isa, self._template_vars['arch'])
-                        target['sources'][source_path]['isa_flags'].add(isa_flag)
-        if libs_or_frameworks_needed:
-            if self._options_release.os in using_mod.libs:
-                for lib in using_mod.libs[self._options_release.os]:
-                    target['libs'].add(lib)
-            if self._options_release.os in using_mod.frameworks:
-                for framework in using_mod.frameworks[self._options_release.os]:
-                    target['frameworks'].add('"-framework %s"' % framework)
+    def generate_isa_properties(mods):
+        isa_map = {} # map from src file -> ISA flags
+        for mod in mods:
 
-    @staticmethod
-    def _generate_target_sources_list(fd, target_name, target):
-        fd.write('set(%s\n' % target_name)
-        sorted_sources = sorted(target['sources'].keys())
-        for source in sorted_sources:
-            fd.write('    "${CMAKE_CURRENT_LIST_DIR}/%s"\n' % CmakeGenerator._cmake_normalize(source))
-        fd.write(')\n\n')
+            isa_flags = set()
+            for isa in mod.need_isa:
+                flag = cc.isa_flags_for(isa, template_vars['arch'])
+                if flag != "":
+                    isa_flags.add(flag)
 
-    @staticmethod
-    def _generate_target_source_files_isa_properties(fd, target):
-        sorted_sources = sorted(target['sources'].keys())
-        for source in sorted_sources:
-            joined_isa_flags = ' '.join(target['sources'][source]['isa_flags'])
-            if joined_isa_flags:
-                fd.write('set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/%s" PROPERTIES COMPILE_FLAGS "%s")\n'
-                         % (CmakeGenerator._cmake_normalize(source), joined_isa_flags))
+            if isa_flags:
+                isa_flags = ' '.join(isa_flags)
+                for src_file in mod.source:
+                    isa_map[src_file] = isa_flags
 
-    @staticmethod
-    def _write_header(fd):
-        fd.write('cmake_minimum_required(VERSION 2.8.0)\n')
-        fd.write('project(botan)\n\n')
-        fd.write('if(POLICY CMP0042)\n')
-        fd.write('cmake_policy(SET CMP0042 NEW)\n')
-        fd.write('endif()\n\n')
+        output = ""
+        prop_template = 'set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/%s" PROPERTIES COMPILE_FLAGS "%s")\n'
+        for k in sorted(isa_map.keys()):
+            output += prop_template % (os.path.normpath(k), isa_map[k])
+        return output
 
-    def _write_footer(self, fd, library_link, cli_link, tests_link):
-        fd.write('\n')
+    def libs_used(mods):
+        libs = set()
+        for mod in mods:
+            if options.os in mod.libs:
+                for lib in mod.libs[options.os]:
+                    libs.add(lib)
+            if options.os in mod.frameworks:
+                for framework in mod.frameworks[options.os]:
+                    libs.add('"-framework %s"' % framework)
 
-        fd.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warning policy will be used" OFF)\n')
-        fd.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
+        return ' '.join(sorted(libs))
 
-        fd.write('set(COMPILER_FEATURES_RELEASE %s %s %s)\n'
-                 % (self._cc.cc_lang_flags(),
-                    self._cc.cc_compile_flags(self._options_release),
-                    self._cc.mach_abi_link_flags(self._options_release)))
 
-        fd.write('set(COMPILER_FEATURES_DEBUG %s %s %s)\n'
-                 % (self._cc.cc_lang_flags(),
-                    self._cc.cc_compile_flags(self._options_debug),
-                    self._cc.mach_abi_link_flags(self._options_debug)))
+    cmake_template = os.path.join(source_paths.build_data_dir, 'cmake.in')
 
-        fd.write('set(COMPILER_FEATURES $<$<NOT:$<CONFIG:DEBUG>>:${COMPILER_FEATURES_RELEASE}>'
-                 +'  $<$<CONFIG:DEBUG>:${COMPILER_FEATURES_DEBUG}>)\n')
+    # Create cmake-specific variables
+    cmake_vars = copy.deepcopy(template_vars)
 
-        fd.write('set(SHARED_FEATURES %s)\n' % self._escape(self._template_vars['shared_flags']))
-        fd.write('set(STATIC_FEATURES -DBOTAN_DLL=)\n')
-
-        fd.write('set(COMPILER_WARNINGS %s)\n' % self._cc.cc_warning_flags(self._options_release))
-        fd.write('set(COMPILER_INCLUDE_DIRS build/include build/include/external)\n')
-        fd.write('if(ENABLED_LTO)\n')
-        fd.write('    set(COMPILER_FEATURES ${COMPILER_FEATURES} -lto)\n')
-        fd.write('endif()\n')
-        fd.write('if(ENABLED_OPTIONAL_WARINIGS)\n')
-        fd.write('    set(COMPILER_OPTIONAL_WARNINGS -Wsign-promo -Wctor-dtor-privacy -Wdeprecated -Winit-self' +
-                 ' -Wnon-virtual-dtor -Wunused-macros -Wold-style-cast -Wuninitialized)\n')
-        fd.write('endif()\n\n')
-
-        fd.write('add_library(${PROJECT_NAME} STATIC ${BOTAN_SOURCES})\n')
-        fd.write('target_link_libraries(${PROJECT_NAME} PUBLIC %s)\n'
-                 % library_link)
-        fd.write('target_compile_options(${PROJECT_NAME} PUBLIC ${COMPILER_WARNINGS} ${COMPILER_FEATURES}' +
-                 ' ${COMPILER_OPTIONAL_WARNINGS} PRIVATE ${STATIC_FEATURES})\n')
-
-        fd.write('target_include_directories(${PROJECT_NAME} PUBLIC ${COMPILER_INCLUDE_DIRS})\n\n')
-        fd.write('set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME}-static)\n\n')
-
-        fd.write('add_library(${PROJECT_NAME}_shared SHARED ${BOTAN_SOURCES})\n')
-        fd.write('target_link_libraries(${PROJECT_NAME}_shared PUBLIC %s)\n'
-                 % library_link)
-        fd.write('target_compile_options(${PROJECT_NAME}_shared PUBLIC ${COMPILER_WARNINGS}' +
-                 ' ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS} PRIVATE ${SHARED_FEATURES})\n')
-        fd.write('target_include_directories(${PROJECT_NAME}_shared PUBLIC ${COMPILER_INCLUDE_DIRS})\n')
-        fd.write('set_target_properties(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})\n\n')
-
-        fd.write('add_executable(${PROJECT_NAME}_cli ${BOTAN_CLI})\n')
-        fd.write('target_link_libraries(${PROJECT_NAME}_cli PRIVATE ${PROJECT_NAME}_shared %s)\n'
-                 % cli_link)
-        fd.write('set_target_properties(${PROJECT_NAME}_cli PROPERTIES OUTPUT_NAME ${PROJECT_NAME}-cli)\n\n')
-
-        fd.write('add_executable(${PROJECT_NAME}_tests ${BOTAN_TESTS})\n')
-        fd.write('target_link_libraries(${PROJECT_NAME}_tests PRIVATE ${PROJECT_NAME}_shared %s)\n'
-                 % tests_link)
-        fd.write('set_target_properties(${PROJECT_NAME}_tests PROPERTIES OUTPUT_NAME botan-test)\n\n')
-
-        fd.write('set(GLOBAL_CONFIGURATION_FILES configure.py .gitignore news.rst readme.rst)\n')
-        fd.write('file(GLOB_RECURSE CONFIGURATION_FILES src/configs/* )\n')
-        fd.write('file(GLOB_RECURSE DOCUMENTATION_FILES doc/* )\n')
-        fd.write('file(GLOB_RECURSE HEADER_FILES src/*.h )\n')
-        fd.write('file(GLOB_RECURSE INFO_FILES src/lib/*info.txt )\n')
-        fd.write('add_custom_target(CONFIGURATION_DUMMY SOURCES ' +
-                 '${GLOBAL_CONFIGURATION_FILES} ${CONFIGURATION_FILES} ' +
-                 '${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
-
-    def generate(self):
-        library_target_configuration = self._create_target_rules(self._build_paths.lib_sources)
-        tests_target_configuration = self._create_target_rules(self._build_paths.test_sources)
-        cli_target_configuration = self._create_target_rules(self._build_paths.cli_sources)
-
-        for module in self._using_mods:
-            self._add_target_details(library_target_configuration, module)
-            self._add_target_details(tests_target_configuration, module)
-            self._add_target_details(cli_target_configuration, module)
-
-        library_target_libs_and_frameworks = '%s %s' % (
-            ' '.join(library_target_configuration['frameworks']),
-            ' '.join(library_target_configuration['libs']),
-        )
-        tests_target_libs_and_frameworks = '%s %s' % (
-            ' '.join(tests_target_configuration['frameworks']),
-            ' '.join(tests_target_configuration['libs'])
-        )
-        cli_target_libs_and_frameworks = '%s %s' % (
-            ' '.join(cli_target_configuration['frameworks']),
-            ' '.join(cli_target_configuration['libs'])
-        )
-
-        with open('CMakeLists.txt', 'w') as f:
-            self._write_header(f)
-            self._generate_target_sources_list(f, 'BOTAN_SOURCES', library_target_configuration)
-            self._generate_target_sources_list(f, 'BOTAN_CLI', cli_target_configuration)
-            self._generate_target_sources_list(f, 'BOTAN_TESTS', tests_target_configuration)
-
-            self._generate_target_source_files_isa_properties(f, library_target_configuration)
-            self._generate_target_source_files_isa_properties(f, cli_target_configuration)
-            self._generate_target_source_files_isa_properties(f, tests_target_configuration)
-
-            self._write_footer(f,
-                               library_target_libs_and_frameworks,
-                               tests_target_libs_and_frameworks,
-                               cli_target_libs_and_frameworks)
-
+    cmake_vars['cmake_shared_flags'] = escape(template_vars['shared_flags'])
+    cmake_vars['cc_compile_flags'] = cc.cc_compile_flags(options, False, True)
+    cmake_vars['cc_compile_debug_flags'] = cc.cc_compile_flags(options, True, False)
+    cmake_vars['cxx_abi_debug_flags'] = cc.mach_abi_link_flags(options, True)
+    cmake_vars['cmake_lib_sources'] = generate_source_list(build_paths.lib_sources)
+    cmake_vars['cmake_cli_sources'] = generate_source_list(build_paths.cli_sources)
+    cmake_vars['cmake_test_sources'] = generate_source_list(build_paths.test_sources)
+    cmake_vars['cmake_compile_properties'] = generate_isa_properties(using_mods)
+    cmake_vars['cmake_libs_used'] = libs_used(using_mods)
+    return process_template(cmake_template, cmake_vars)
 
 class MakefileListsGenerator(object):
     def __init__(self, build_paths, options, modules, cc, arch, osinfo):
@@ -3179,7 +3071,8 @@ def main_action_configure_build(info_modules, source_paths, options,
         gen_bakefile(build_config, options, template_vars['link_to'])
 
     if options.with_cmake:
-        CmakeGenerator(build_config, using_mods, cc, options, template_vars).generate()
+        with open('CMakeLists.txt', 'w') as f:
+            f.write(generate_cmake(source_paths, build_config, using_mods, cc, options, template_vars))
 
     write_template(template_vars['makefile_path'], makefile_template)
 
