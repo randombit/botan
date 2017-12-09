@@ -432,13 +432,12 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--with-valgrind', help='use valgrind API',
                            dest='with_valgrind', action='store_true', default=False)
 
-    build_group.add_option('--with-bakefile', action='store_true',
-                           default=False,
-                           help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
-
     build_group.add_option('--with-cmake', action='store_true',
                            default=False,
                            help='Generate CMakeLists.txt which can be used to create many IDEs project files')
+
+    build_group.add_option('--with-bakefile', action='store_true',
+                           default=False, help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
                            help='Disable essential checks for testing')
@@ -1547,84 +1546,32 @@ def process_template(template_file, variables):
     except Exception as e: # pylint: disable=broad-except
         logging.error('Exception %s during template processing file %s' % (e, template_file))
 
-def gen_bakefile(build_config, options, external_libs):
+def gen_bakefile(build_config, options, template_vars):
 
-    def bakefile_sources(fd, sources):
+    def bakefile_sources(sources, typ_str='sources'):
+        out = ""
         for src in sources:
             (directory, filename) = os.path.split(os.path.normpath(src))
             directory = directory.replace('\\', '/')
             _, directory = directory.split('src/', 1)
-            fd.write('\tsources { src/%s/%s } \n' % (directory, filename))
+            out += '\t%s { src/%s/%s } \n' % (typ_str, directory, filename)
+        return out
 
-    def bakefile_cli_headers(fd, headers):
-        for header in headers:
-            (directory, filename) = os.path.split(os.path.normpath(header))
-            directory = directory.replace('\\', '/')
-            _, directory = directory.split('src/', 1)
-            fd.write('\theaders { src/%s/%s } \n' % (directory, filename))
+    bakefile_template = os.path.join(source_paths.build_data_dir, 'bakefile.in')
 
-    def bakefile_test_sources(fd, sources):
-        for src in sources:
-            (_, filename) = os.path.split(os.path.normpath(src))
-            fd.write('\tsources { src/tests/%s } \n' %filename)
+    bakefile_vars = copy.deepcopy(template_vars)
+    bakefile_vars['bakefile_source_list'] = bakefile_sources(build_config.lib_sources)
+    bakefile_vars['bakefile_cli_list'] = bakefile_sources(build_config.cli_sources) + \
+                                         bakefile_sources(build_config.cli_headers, 'headers')
+    bakefile_vars['bakefile_tests_list'] = bakefile_sources(build_config.test_sources)
 
-    f = open('botan.bkl', 'w')
-    f.write('toolsets = vs2013;\n')
+    bakefile_vars['cpu'] = options.cpu
 
-    # shared library project
-    f.write('shared-library botan {\n')
-    f.write('\tdefines = "BOTAN_DLL=__declspec(dllexport)";\n')
-    bakefile_sources(f, build_config.lib_sources)
-    f.write('}\n')
+    print(template_vars['link_to'])
+    bakefile_vars['bakefile_libs'] = '\n'.join(
+        ['libs += "%s";' % lib.replace('.lib', '') for lib in template_vars['link_to'].split(' ')])
 
-    # cli project
-    f.write('program cli {\n')
-    f.write('\tdeps = botan;\n')
-    bakefile_sources(f, build_config.cli_sources)
-    bakefile_cli_headers(f, build_config.cli_headers)
-    f.write('}\n')
-
-    # tests project
-    f.write('program tests {\n')
-    f.write('\tdeps = botan;\n')
-    bakefile_test_sources(f, build_config.test_sources)
-    f.write('}\n')
-
-    # global options
-    f.write('includedirs += build/include/;\n')
-
-    for lib in external_libs.split(" "):
-        f.write('libs += "%s";\n' %lib.replace('.lib', ''))
-
-    if options.with_external_includedir:
-        external_inc_dir = options.with_external_includedir.replace('\\', '/')
-        # Attention: bakefile supports only relative paths
-        f.write('includedirs += "%s";\n' %external_inc_dir)
-
-    if options.with_external_libdir:
-        external_lib_dir = options.with_external_libdir.replace('\\', '/')
-        # Attention: bakefile supports only relative paths
-        f.write('libdirs += "%s";\n' %external_lib_dir)
-
-    if build_config.external_headers:
-        f.write('includedirs += build/include/external;\n')
-
-    if options.cpu in "x86_64":
-        f.write('archs = x86_64;\n')
-    else:
-        f.write('archs = x86;\n')
-
-    # vs2013 options
-    f.write('vs2013.option.ClCompile.DisableSpecificWarnings = "4250;4251;4275";\n')
-    f.write('vs2013.option.ClCompile.WarningLevel = Level4;\n')
-    f.write('vs2013.option.ClCompile.ExceptionHandling = SyncCThrow;\n')
-    f.write('vs2013.option.ClCompile.RuntimeTypeInfo = true;\n')
-    f.write('if ( $(config) == Release ) {\n')
-    f.write('vs2013.option.Configuration.WholeProgramOptimization = true;\n')
-    f.write('}\n')
-
-    f.close()
-
+    return process_template(bakefile_template, bakefile_vars)
 
 def generate_cmake(source_paths, build_paths, using_mods, cc, options, template_vars):
 
@@ -3010,7 +2957,11 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.with_pdf and not options.with_sphinx:
         raise UserError('Option --with-pdf requires --with-sphinx')
 
-    # Warnings
+    if options.with_bakefile:
+        if options.os != 'windows' or options.compiler != 'msvc' or options.build_shared_lib is False:
+            raise UserError("Building via bakefile is only supported for MSVC DLL build")
+
+        # Warnings
     if options.os == 'windows' and options.compiler != 'msvc':
         logging.warning('The windows target is oriented towards MSVC; maybe you want cygwin or mingw')
 
@@ -3119,7 +3070,8 @@ def main_action_configure_build(info_modules, source_paths, options,
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.with_bakefile:
-        gen_bakefile(build_config, options, template_vars['link_to'])
+        with open('botan.bkl', 'w') as f:
+            f.write(gen_bakefile(source_paths, build_config, options, template_vars))
 
     if options.with_cmake:
         with open('CMakeLists.txt', 'w') as f:
