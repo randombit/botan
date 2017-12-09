@@ -5,9 +5,9 @@ binary_name g++
 lang_flags "-std=c++11 -D_REENTRANT"
 
 # This should only contain flags which are included in GCC 4.8
-warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
+warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
 
-maintainer_warning_flags "-Wold-style-cast -Wsuggest-override -Wshadow -Werror -Wno-error=strict-overflow -Wno-error=deprecated-declarations"
+maintainer_warning_flags "-Wstrict-overflow=5 -Wold-style-cast -Wsuggest-override -Wshadow -Werror -Wno-error=strict-overflow -Wno-error=deprecated-declarations"
 
 optimization_flags "-O3"
 size_optimization_flags "-Os"
