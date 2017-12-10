@@ -20,7 +20,6 @@ On Jython target detection does not work (use --os and --cpu).
 """
 
 import collections
-import copy
 import json
 import sys
 import os
@@ -1612,17 +1611,25 @@ def yield_objectfile_list(sources, obj_dir, obj_suffix):
 def generate_build_info(build_paths, modules, cc, arch, osinfo):
     # pylint: disable=too-many-locals
 
+    # first create a map of src_file->owning module
+
+    module_that_owns = {}
+
+    for mod in modules:
+        for src in mod.sources():
+            module_that_owns[src] = mod
+
     def _isa_specific_flags(src):
         if os.path.basename(src) == 'test_simd.cpp':
             return cc.get_isa_specific_flags(['simd'], arch)
 
-        for mod in modules:
-            if src in mod.sources():
-                isas = mod.need_isa
-                if 'simd' in mod.dependencies():
-                    isas.append('simd')
+        if src in module_that_owns:
+            module = module_that_owns[src]
+            isas = module.need_isa
+            if 'simd' in module.dependencies():
+                isas.append('simd')
 
-                return cc.get_isa_specific_flags(isas, arch)
+            return cc.get_isa_specific_flags(isas, arch)
 
         if src.startswith('botan_all_'):
             isas = src.replace('botan_all_', '').replace('.cpp', '').split('_')
@@ -2073,7 +2080,7 @@ class ModulesChooser(object):
         if loaded_modules is None:
             loaded_modules = set([])
         else:
-            loaded_modules = copy.deepcopy(loaded_modules)
+            loaded_modules = set(loaded_modules)
 
         if module not in available_modules:
             return False, None
@@ -2379,7 +2386,7 @@ class AmalgamationGenerator(object):
 
     @staticmethod
     def strip_header_goop(header_name, header_lines):
-        lines = copy.deepcopy(header_lines) # defensive copy: don't mutate argument
+        lines = header_lines
 
         start_header_guard_index = None
         for index, line in enumerate(lines):
