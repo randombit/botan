@@ -1596,12 +1596,6 @@ class MakefileListsGenerator(object):
 
         return set()
 
-    def _fuzzer_bin_list(self, fuzzer_objs, bin_dir):
-        for obj in fuzzer_objs:
-            (_, name) = os.path.split(os.path.normpath(obj))
-            name = name.replace('.' + self._osinfo.obj_suffix, '')
-            yield os.path.join(bin_dir, name)
-
     def _objectfile_list(self, sources, obj_dir):
         obj_suffix = '.' + self._osinfo.obj_suffix
 
@@ -1668,6 +1662,7 @@ class MakefileListsGenerator(object):
 
         out['isa_build_info'] = []
 
+        fuzzer_bin = []
         for t in targets:
             src_list, src_dir = self._build_paths.src_info(t)
 
@@ -1687,39 +1682,19 @@ class MakefileListsGenerator(object):
                     if b['isa_flags'] != '':
                         out['isa_build_info'].append(b)
 
+                if t == 'fuzzer':
+                    fuzzer_bin = [b['exe'] for b in build_info]
+
             out[src_key] = src_list if src_list else []
             out[obj_key] = objects
             out[build_key] = build_info
 
-            if t == 'fuzzer':
-                out['fuzzer_bin'] = ' '.join(self._fuzzer_bin_list(objects, self._build_paths.fuzzer_output_dir))
-
+        out['fuzzer_bin'] = ' '.join(fuzzer_bin)
         out['cli_headers'] = self._build_paths.cli_headers
 
         return out
 
-
-class HouseEccCurve(object):
-    def __init__(self, house_curve):
-        p = house_curve.split(",")
-        if len(p) != 4:
-            raise UserError('--house-curve must have 4 comma separated parameters. See --help')
-        # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
-        curve_id = int(p[3], 16)
-        if curve_id < 0xfe00 or curve_id > 0xfeff:
-            raise UserError('TLS curve ID not in reserved range (see RFC 4492)')
-
-        self._defines = [
-            'HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"',
-            'HOUSE_ECC_CURVE_OID \"' + p[2] + '\"',
-            'HOUSE_ECC_CURVE_PEM ' + self._read_pem(filepath=p[0]),
-            'HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id),
-        ]
-
-    def defines(self):
-        return self._defines
-
-    @staticmethod
+def house_ecc_curve_macros(house_curve):
     def _read_pem(filepath):
         try:
             with open(filepath) as f:
@@ -1731,6 +1706,21 @@ class HouseEccCurve(object):
             lines[ndx] = '   \"%s\"' % lines[ndx]
         return "\\\n" + ' \\\n'.join(lines)
 
+    if house_curve is None:
+        return []
+    else:
+        p = house_curve.split(",")
+        if len(p) != 4:
+            raise UserError('--house-curve must have 4 comma separated parameters. See --help')
+        # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
+        curve_id = int(p[3], 16)
+        if curve_id < 0xfe00 or curve_id > 0xfeff:
+            raise UserError('TLS curve ID not in reserved range (see RFC 4492)')
+
+        return ['HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"',
+                'HOUSE_ECC_CURVE_OID \"' + p[2] + '\"',
+                'HOUSE_ECC_CURVE_PEM ' + _read_pem(filepath=p[0]),
+                'HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id)]
 
 def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
     #pylint: disable=too-many-locals,too-many-branches,too-many-statements
@@ -1927,8 +1917,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
-        'house_ecc_curve_defines': make_cpp_macros(HouseEccCurve(options.house_curve).defines()) \
-                                   if options.house_curve else '',
+        'house_ecc_curve_defines': make_cpp_macros(house_ecc_curve_macros(options.house_curve))
         }
 
     if options.os != 'windows':
