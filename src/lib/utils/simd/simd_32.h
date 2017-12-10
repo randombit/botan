@@ -508,37 +508,38 @@ class SIMD_4x32 final
 #endif
          }
 
-      SIMD_4x32 operator<<(size_t shift) const
+
+      template<int SHIFT> SIMD_4x32 shl() const
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
-         return SIMD_4x32(_mm_slli_epi32(m_sse, static_cast<int>(shift)));
+         return SIMD_4x32(_mm_slli_epi32(m_sse, SHIFT));
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         const unsigned int s = static_cast<unsigned int>(shift);
+         const unsigned int s = static_cast<unsigned int>(SHIFT);
          return SIMD_4x32(vec_sl(m_vmx, (__vector unsigned int){s, s, s, s}));
 #elif defined(BOTAN_SIMD_USE_NEON)
-         return SIMD_4x32(vshlq_n_u32(m_neon, static_cast<int>(shift)));
+         return SIMD_4x32(vshlq_n_u32(m_neon, SHIFT));
 #else
-         return SIMD_4x32(m_scalar[0] << shift,
-                          m_scalar[1] << shift,
-                          m_scalar[2] << shift,
-                          m_scalar[3] << shift);
+         return SIMD_4x32(m_scalar[0] << SHIFT,
+                          m_scalar[1] << SHIFT,
+                          m_scalar[2] << SHIFT,
+                          m_scalar[3] << SHIFT);
 #endif
          }
 
-      SIMD_4x32 operator>>(size_t shift) const
+      template<int SHIFT> SIMD_4x32 shr() const
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
-         return SIMD_4x32(_mm_srli_epi32(m_sse, static_cast<int>(shift)));
+         return SIMD_4x32(_mm_srli_epi32(m_sse, SHIFT));
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         const unsigned int s = static_cast<unsigned int>(shift);
+         const unsigned int s = static_cast<unsigned int>(SHIFT);
          return SIMD_4x32(vec_sr(m_vmx, (__vector unsigned int){s, s, s, s}));
 #elif defined(BOTAN_SIMD_USE_NEON)
-         return SIMD_4x32(vshrq_n_u32(m_neon, static_cast<int>(shift)));
+         return SIMD_4x32(vshrq_n_u32(m_neon, SHIFT));
 #else
-         return SIMD_4x32(m_scalar[0] >> shift, m_scalar[1] >> shift,
-                          m_scalar[2] >> shift, m_scalar[3] >> shift);
+         return SIMD_4x32(m_scalar[0] >> SHIFT, m_scalar[1] >> SHIFT,
+                          m_scalar[2] >> SHIFT, m_scalar[3] >> SHIFT);
 
 #endif
          }

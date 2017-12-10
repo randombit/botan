@@ -27,11 +27,11 @@ namespace Botan {
       B0 = B0.rotl<13>();                                          \
       B2 = B2.rotl<3>();                                           \
       B1 ^= B0 ^ B2;                                               \
-      B3 ^= B2 ^ (B0 << 3);                                        \
+      B3 ^= B2 ^ B0.shl<3>();                                      \
       B1 = B1.rotl<1>();                                           \
       B3 = B3.rotl<7>();                                           \
       B0 ^= B1 ^ B3;                                               \
-      B2 ^= B3 ^ (B1 << 7);                                        \
+      B2 ^= B3 ^ B1.shl<7>();                                      \
       B0 = B0.rotl<5>();                                           \
       B2 = B2.rotl<22>();                                          \
    } while(0)
@@ -40,11 +40,11 @@ namespace Botan {
    do {                                                            \
       B2 = B2.rotr<22>();                                          \
       B0 = B0.rotr<5>();                                           \
-      B2 ^= B3 ^ (B1 << 7);                                        \
+      B2 ^= B3 ^ B1.shl<7>();                                      \
       B0 ^= B1 ^ B3;                                               \
       B3 = B3.rotr<7>();                                           \
       B1 = B1.rotr<1>();                                           \
-      B3 ^= B2 ^ (B0 << 3);                                        \
+      B3 ^= B2 ^ B0.shl<3>();                                      \
       B1 ^= B0 ^ B2;                                               \
       B2 = B2.rotr<3>();                                           \
       B0 = B0.rotr<13>();                                          \
