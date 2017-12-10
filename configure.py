@@ -50,6 +50,12 @@ class InternalError(Exception):
 def flatten(l):
     return sum(l, [])
 
+def normalize_source_path(source):
+    """
+    cmake needs this, and nothing else minds
+    """
+    return os.path.normpath(source).replace('\\', '/')
+
 def parse_version_file(version_path):
     version_file = open(version_path)
     key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9:\-\']+)")
@@ -203,7 +209,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         if options.amalgamation:
             self.lib_sources = ['botan_all.cpp']
         else:
-            self.lib_sources = sorted(flatten([mod.sources() for mod in modules]))
+            self.lib_sources = [normalize_source_path(s) for s in sorted(flatten([mod.sources() for mod in modules]))]
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
@@ -219,9 +225,9 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
                     if filename.endswith('.h') and not filename.startswith('.'):
                         yield os.path.join(dirpath, filename)
 
-        self.cli_sources = list(find_sources_in(source_paths.src_dir, 'cli'))
-        self.cli_headers = list(find_headers_in(source_paths.src_dir, 'cli'))
-        self.test_sources = list(find_sources_in(source_paths.src_dir, 'tests'))
+        self.cli_sources = [normalize_source_path(s) for s in find_sources_in(source_paths.src_dir, 'cli')]
+        self.cli_headers = [normalize_source_path(s) for s in find_headers_in(source_paths.src_dir, 'cli')]
+        self.test_sources = [normalize_source_path(s) for s in find_sources_in(source_paths.src_dir, 'tests')]
 
         if options.build_fuzzers:
             self.fuzzer_sources = list(find_sources_in(source_paths.src_dir, 'fuzzer'))
@@ -288,14 +294,11 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     target_group = optparse.OptionGroup(parser, 'Target options')
 
-    target_group.add_option('--cpu',
-                            help='set the target CPU type/model')
+    target_group.add_option('--cpu', help='set the target CPU type/model')
 
-    target_group.add_option('--os',
-                            help='set the target operating system')
+    target_group.add_option('--os', help='set the target operating system')
 
-    target_group.add_option('--cc', dest='compiler',
-                            help='set the desired build compiler')
+    target_group.add_option('--cc', dest='compiler', help='set the desired build compiler')
 
     target_group.add_option('--cc-min-version', dest='cc_min_version', default=None,
                             metavar='MAJOR.MINOR',
@@ -303,16 +306,14 @@ def process_command_line(args): # pylint: disable=too-many-locals
                                  'Use --cc-min-version=0.0 to support all compiler versions. ' \
                                  'Default is auto detection.')
 
-    target_group.add_option('--cc-bin', dest='compiler_binary',
-                            metavar='BINARY',
+    target_group.add_option('--cc-bin', dest='compiler_binary', metavar='BINARY',
                             help='set path to compiler binary')
 
-    target_group.add_option('--cc-abi-flags', metavar='FLAG',
-                            help='set compiler ABI flags',
-                            default='')
+    target_group.add_option('--cc-abi-flags', metavar='FLAG', default='',
+                            help='set compiler ABI flags')
 
-    target_group.add_option('--cxxflags', metavar='FLAG',
-                            help='set compiler flags', default=None)
+    target_group.add_option('--cxxflags', metavar='FLAG', default=None,
+                            help='set compiler flags')
 
     target_group.add_option('--ldflags', metavar='FLAG',
                             help='set linker flags', default=None)
@@ -805,7 +806,7 @@ class ModuleInfo(InfoObject):
                                 *filename.split(':'))
 
         # Modify members
-        self.source = [add_dir_name(s) for s in self.source]
+        self.source = [normalize_source_path(add_dir_name(s)) for s in self.source]
         self.header_internal = [add_dir_name(s) for s in self.header_internal]
         self.header_public = [add_dir_name(s) for s in self.header_public]
         self.header_external = [add_dir_name(s) for s in self.header_external]
@@ -1546,97 +1547,6 @@ def process_template(template_file, variables):
     except Exception as e: # pylint: disable=broad-except
         logging.error('Exception %s during template processing file %s' % (e, template_file))
 
-def gen_bakefile(build_config, options, template_vars):
-
-    def bakefile_sources(sources, typ_str='sources'):
-        out = ""
-        for src in sources:
-            (directory, filename) = os.path.split(os.path.normpath(src))
-            directory = directory.replace('\\', '/')
-            _, directory = directory.split('src/', 1)
-            out += '\t%s { src/%s/%s } \n' % (typ_str, directory, filename)
-        return out
-
-    bakefile_template = os.path.join(source_paths.build_data_dir, 'bakefile.in')
-
-    bakefile_vars = copy.deepcopy(template_vars)
-    bakefile_vars['bakefile_source_list'] = bakefile_sources(build_config.lib_sources)
-    bakefile_vars['bakefile_cli_list'] = bakefile_sources(build_config.cli_sources) + \
-                                         bakefile_sources(build_config.cli_headers, 'headers')
-    bakefile_vars['bakefile_tests_list'] = bakefile_sources(build_config.test_sources)
-
-    bakefile_vars['cpu'] = options.cpu
-
-    print(template_vars['link_to'])
-    bakefile_vars['bakefile_libs'] = '\n'.join(
-        ['libs += "%s";' % lib.replace('.lib', '') for lib in template_vars['link_to'].split(' ')])
-
-    return process_template(bakefile_template, bakefile_vars)
-
-def generate_cmake(source_paths, build_paths, using_mods, cc, options, template_vars):
-
-    def escape(input_str):
-        return input_str.replace('(', '\\(').replace(')', '\\)').replace('#', '\\#').replace('$', '\\$')
-
-    def cmake_normalize(source):
-        return os.path.normpath(source).replace('\\', '/')
-
-    def generate_source_list(src_list):
-        s = ""
-        for source in sorted(src_list):
-            s += '    "${CMAKE_CURRENT_LIST_DIR}/%s"\n' % cmake_normalize(source)
-        return s
-
-    def generate_isa_properties(mods):
-        isa_map = {} # map from src file -> ISA flags
-        for mod in mods:
-
-            isa_flags = set()
-            for isa in mod.need_isa:
-                flag = cc.isa_flags_for(isa, template_vars['arch'])
-                if flag != "":
-                    isa_flags.add(flag)
-
-            if isa_flags:
-                isa_flags = ' '.join(isa_flags)
-                for src_file in mod.source:
-                    isa_map[src_file] = isa_flags
-
-        output = ""
-        prop_template = 'set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/%s" PROPERTIES COMPILE_FLAGS "%s")\n'
-        for k in sorted(isa_map.keys()):
-            output += prop_template % (os.path.normpath(k), isa_map[k])
-        return output
-
-    def libs_used(mods):
-        libs = set()
-        for mod in mods:
-            if options.os in mod.libs:
-                for lib in mod.libs[options.os]:
-                    libs.add(lib)
-            if options.os in mod.frameworks:
-                for framework in mod.frameworks[options.os]:
-                    libs.add('"-framework %s"' % framework)
-
-        return ' '.join(sorted(libs))
-
-
-    cmake_template = os.path.join(source_paths.build_data_dir, 'cmake.in')
-
-    # Create cmake-specific variables
-    cmake_vars = copy.deepcopy(template_vars)
-
-    cmake_vars['cmake_shared_flags'] = escape(template_vars['shared_flags'])
-    cmake_vars['cc_compile_flags'] = cc.cc_compile_flags(options, False, True)
-    cmake_vars['cc_compile_debug_flags'] = cc.cc_compile_flags(options, True, False)
-    cmake_vars['cxx_abi_debug_flags'] = cc.mach_abi_link_flags(options, True)
-    cmake_vars['cmake_lib_sources'] = generate_source_list(build_paths.lib_sources)
-    cmake_vars['cmake_cli_sources'] = generate_source_list(build_paths.cli_sources)
-    cmake_vars['cmake_test_sources'] = generate_source_list(build_paths.test_sources)
-    cmake_vars['cmake_compile_properties'] = generate_isa_properties(using_mods)
-    cmake_vars['cmake_libs_used'] = libs_used(using_mods)
-    return process_template(cmake_template, cmake_vars)
-
 class MakefileListsGenerator(object):
     def __init__(self, build_paths, options, modules, cc, arch, osinfo):
         self._build_paths = build_paths
@@ -1756,9 +1666,12 @@ class MakefileListsGenerator(object):
 
         targets = ['lib', 'cli', 'test', 'fuzzer']
 
+        out['isa_build_info'] = []
+
         for t in targets:
             src_list, src_dir = self._build_paths.src_info(t)
 
+            src_key = '%s_srcs' % (t)
             obj_key = '%s_objs' % (t)
             build_key = '%s_build_info' % (t)
 
@@ -1770,11 +1683,18 @@ class MakefileListsGenerator(object):
                 objects = list(self._objectfile_list(src_list, src_dir))
                 build_info = self._build_info(src_list, objects, t)
 
+                for b in build_info:
+                    if b['isa_flags'] != '':
+                        out['isa_build_info'].append(b)
+
+            out[src_key] = src_list if src_list else []
             out[obj_key] = objects
             out[build_key] = build_info
 
             if t == 'fuzzer':
                 out['fuzzer_bin'] = ' '.join(self._fuzzer_bin_list(objects, self._build_paths.fuzzer_output_dir))
+
+        out['cli_headers'] = self._build_paths.cli_headers
 
         return out
 
@@ -1953,6 +1873,11 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'linker': cc.linker_name or '$(CXX)',
         'make_supports_phony': cc.basename != 'msvc',
 
+        'cc_compile_opt_flags': cc.cc_compile_flags(options, False, True),
+        'cc_compile_debug_flags': cc.cc_compile_flags(options, True, False),
+        'cxx_abi_opt_flags': cc.mach_abi_link_flags(options, False),
+        'cxx_abi_debug_flags': cc.mach_abi_link_flags(options, True),
+
         'dash_o': cc.output_to_object,
         'dash_c': cc.compile_flags,
 
@@ -1978,7 +1903,13 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
             [cc.add_framework_option + fw for fw in link_to('frameworks')]
         ),
 
+        'cmake_link_to': ' '.join(
+            [lib for lib in link_to('libs')] +
+            [('"' + cc.add_framework_option + fw + '"') for fw in link_to('frameworks')]
+        ),
+
         'fuzzer_lib': (cc.add_lib_option + options.fuzzer_lib) if options.fuzzer_lib else '',
+        'libs_used': [lib.replace('.lib', '') for lib in link_to('libs')],
 
         'include_paths': build_config.format_include_paths(cc, options.with_external_includedir),
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
@@ -2975,10 +2906,7 @@ def prepare_configure_build(info_modules, source_paths, options,
 
     template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
 
-    makefile_template = os.path.join(source_paths.build_data_dir, 'makefile.in')
-    logging.debug('Using makefile template %s' % (makefile_template))
-
-    return using_mods, build_config, template_vars, makefile_template
+    return using_mods, build_config, template_vars
 
 
 def calculate_cc_min_version(options, cc, osinfo):
@@ -3002,7 +2930,7 @@ def main_action_configure_build(info_modules, source_paths, options,
                                 cc, cc_min_version, arch, osinfo, module_policy):
     # pylint: disable=too-many-locals
 
-    using_mods, build_config, template_vars, makefile_template = prepare_configure_build(
+    using_mods, build_config, template_vars = prepare_configure_build(
         info_modules, source_paths, options, cc, cc_min_version, arch, osinfo, module_policy)
 
     # Now we start writing to disk
@@ -3069,26 +2997,23 @@ def main_action_configure_build(info_modules, source_paths, options,
     with open(os.path.join(build_config.build_dir, 'build_config.json'), 'w') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
-    if options.with_bakefile:
-        with open('botan.bkl', 'w') as f:
-            f.write(gen_bakefile(source_paths, build_config, options, template_vars))
-
     if options.with_cmake:
-        with open('CMakeLists.txt', 'w') as f:
-            f.write(generate_cmake(source_paths, build_config, using_mods, cc, options, template_vars))
-
-    write_template(template_vars['makefile_path'], makefile_template)
-
-    def release_date(datestamp):
-        if datestamp == 0:
-            return 'undated'
-        return 'dated %d' % (datestamp)
+        logging.warning("CMake build is only for development: use make for production builds")
+        cmake_template = os.path.join(source_paths.build_data_dir, 'cmake.in')
+        write_template('CMakeLists.txt', cmake_template)
+    elif options.with_bakefile:
+        logging.warning("Bakefile build is only for development: use make for production builds")
+        bakefile_template = os.path.join(source_paths.build_data_dir, 'bakefile.in')
+        write_template('botan.bkl', bakefile_template)
+    else:
+        makefile_template = os.path.join(source_paths.build_data_dir, 'makefile.in')
+        write_template(template_vars['makefile_path'], makefile_template)
 
     logging.info('Botan %s (revision %s) (%s %s) build setup is complete' % (
         Version.as_string(),
         Version.vc_rev(),
         Version.release_type(),
-        release_date(Version.datestamp())))
+        ('dated ' + Version.datestamp()) if Version.datestamp() != 0 else 'undated'))
 
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")

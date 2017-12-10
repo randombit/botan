@@ -1,23 +1,35 @@
 toolsets = vs2013;
 shared-library botan {
 	defines = "BOTAN_DLL=__declspec(dllexport)";
-%{bakefile_source_list}
+%{for lib_srcs}
+	sources { %{i} }
+%{endfor}
 }
 program cli {
 	deps = botan;
-%{bakefile_cli_list}
+%{for cli_srcs}
+	sources { %{i} }
+%{endfor}
+%{for cli_headers}
+	headers { %{i} }
+%{endfor}
+
 }
 program tests {
 	deps = botan;
-%{bakefile_tests_list}
+%{for test_srcs}
+	sources { %{i} }
+%{endfor}
 }
 
 includedirs += build/include/;
 includedirs += build/include/external;
 
-%{bakefile_libs}
+%{for libs_used}
+libs += "%{i}";
+%{endfor}
 
-archs = %{cpu};
+archs = %{arch};
 
 vs2013.option.ClCompile.DisableSpecificWarnings = "4250;4251;4275";
 vs2013.option.ClCompile.WarningLevel = Level4;
