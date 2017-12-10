@@ -59,11 +59,11 @@ install: libs cli docs
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/install.py --prefix=%{prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
 
 # Object Files
-LIBOBJS       = %{lib_objs}
+LIBOBJS = %{join lib_objs}
 
-CLIOBJS       = %{cli_objs}
+CLIOBJS = %{join cli_objs}
 
-TESTOBJS      = %{test_objs}
+TESTOBJS = %{join test_objs}
 
 # Executable targets
 
@@ -77,7 +77,7 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 
 %{if build_fuzzers}
 
-FUZZERS=%{fuzzer_bin}
+FUZZERS = %{fuzzer_bin}
 
 fuzzers: libs $(FUZZERS)
 
@@ -115,12 +115,26 @@ fuzzer_corpus_zip: fuzzer_corpus
 %{endif}
 
 # Build Commands
-%{lib_build_cmds}
 
-%{cli_build_cmds}
+%{for lib_build_info}
+%{obj}: %{src}
+	$(CXX) %{isa_flags} $(%{target_type}_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o} $@
+%{endfor}
 
-%{test_build_cmds}
+%{for cli_build_info}
+%{obj}: %{src}
+	$(CXX) %{isa_flags} $(%{target_type}_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o} $@
+%{endfor}
 
-%{if build_fuzzers}
-%{fuzzer_build_cmds}
-%{endif}
+%{for test_build_info}
+%{obj}: %{src}
+	$(CXX) %{isa_flags} $(%{target_type}_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o} $@
+%{endfor}
+
+%{for fuzzer_build_info}
+%{obj}: %{src}
+	$(CXX) %{isa_flags} $(%{target_type}_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o} $@
+
+%{exe}: %{obj} $(LIBRARIES)
+	$(EXE_LINK_CMD) %{obj} $(EXE_LINKS_TO) %{fuzzer_lib} %{dash_o} $@
+%{endfor}
