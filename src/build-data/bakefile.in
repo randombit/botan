@@ -29,7 +29,7 @@ includedirs += build/include/external;
 libs += "%{i}";
 %{endfor}
 
-archs = %{arch};
+archs = %{bakefile_arch};
 
 vs2013.option.ClCompile.DisableSpecificWarnings = "4250;4251;4275";
 vs2013.option.ClCompile.WarningLevel = Level4;

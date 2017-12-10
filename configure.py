@@ -1854,6 +1854,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'arch': options.arch,
         'submodel': options.cpu,
 
+        'bakefile_arch': 'x86' if options.arch == 'x86_32' else 'x86_64',
+
         'innosetup_arch': innosetup_arch(options.os, options.arch),
 
         'mp_bits': choose_mp_bits(),
@@ -2882,6 +2884,9 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.with_bakefile:
         if options.os != 'windows' or options.compiler != 'msvc' or options.build_shared_lib is False:
             raise UserError("Building via bakefile is only supported for MSVC DLL build")
+
+        if options.arch not in ['x86_64', 'x86_32']:
+            raise UserError("Bakefile only supports x86 targets")
 
         # Warnings
     if options.os == 'windows' and options.compiler != 'msvc':
