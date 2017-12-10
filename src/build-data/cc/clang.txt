@@ -46,6 +46,9 @@ rdrand -> "-mrdrnd"
 rdseed -> "-mrdseed"
 sha    -> "-msha"
 altivec -> "-maltivec"
+
+arm32:neon    -> "-mfpu=neon"
+arm64:neon    -> ""
 </isa_flags>
 
 <mach_opt>

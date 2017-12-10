@@ -82,10 +82,10 @@ class SIMD_32_Tests final : public Test
          blender = ~blender;
          test_eq(result, "~", blender, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 
-         blender = blender >> 23;
+         blender = blender.shr<23>();
          test_eq(result, ">>", blender, 0x1FF, 0x1FF, 0x1FF, 0x1FF);
 
-         blender = blender << 27;
+         blender = blender.shl<27>();
          test_eq(result, "<<", blender, 0xF8000000, 0xF8000000, 0xF8000000, 0xF8000000);
 
          blender = ~blender;
