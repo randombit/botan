@@ -1123,6 +1123,30 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             return self.isa_flags[arch_isa]
         return None
 
+    def get_isa_specific_flags(self, isas, arch):
+        flags = set()
+
+        def simd32_impl():
+            for simd_isa in ['sse2', 'altivec', 'neon']:
+                if simd_isa in arch.isa_extensions and self.isa_flags_for(simd_isa, arch.basename):
+                    return simd_isa
+            return None
+
+        for isa in isas:
+
+            if isa == 'simd':
+                isa = simd32_impl()
+
+                if isa is None:
+                    continue
+
+            flagset = self.isa_flags_for(isa, arch.basename)
+            if flagset is None:
+                raise UserError('Compiler %s does not support %s' % (self.basename, isa))
+            flags.add(flagset)
+
+        return ("".join([" %s" % f for f in sorted(flags)])).strip()
+
     def gen_shared_flags(self, options):
         """
         Return the shared library build flags, if any
@@ -1547,152 +1571,120 @@ def process_template(template_file, variables):
     except Exception as e: # pylint: disable=broad-except
         logging.error('Exception %s during template processing file %s' % (e, template_file))
 
-class MakefileListsGenerator(object):
-    def __init__(self, build_paths, options, modules, cc, arch, osinfo):
-        self._build_paths = build_paths
-        self._options = options
-        self._modules = modules
-        self._cc = cc
-        self._arch = arch
-        self._osinfo = osinfo
+def yield_objectfile_list(sources, obj_dir, obj_suffix):
+    obj_suffix = '.' + obj_suffix
 
-    def _simd_implementation(self):
-        for simd32_impl in ['sse2', 'altivec', 'neon']:
-            if simd32_impl in self._arch.isa_extensions \
-                and self._cc.isa_flags_for(simd32_impl, self._arch.basename) is not None:
-                return simd32_impl
-        return None
+    for src in sources:
+        (directory, filename) = os.path.split(os.path.normpath(src))
+        parts = directory.split(os.sep)
 
-    def _get_isa_specific_flags(self, isas):
-        flags = set()
-        for isa in isas:
-            # a flagset is a string that may contain multiple command
-            # line arguments, e.g. "-maes -mpclmul -mssse3"
-            flagset = self._cc.isa_flags_for(isa, self._arch.basename)
-            if flagset is None:
-                raise UserError('Compiler %s does not support %s' % (self._cc.basename, isa))
-            flags.add(flagset)
-        return flags
+        if 'src' in parts:
+            parts = parts[parts.index('src')+2:]
+        elif filename.find('botan_all') != -1:
+            parts = []
+        else:
+            raise InternalError("Unexpected file '%s/%s'" % (directory, filename))
 
-    def _isa_specific_flags(self, src):
-        simd_impl = self._simd_implementation()
+        if parts != []:
+            # Handle src/X/X.cpp -> X.o
+            if filename == parts[-1] + '.cpp':
+                name = '_'.join(parts) + '.cpp'
+            else:
+                name = '_'.join(parts) + '_' + filename
 
+            def fixup_obj_name(name):
+                def remove_dups(parts):
+                    last = None
+                    for part in parts:
+                        if last is None or part != last:
+                            last = part
+                            yield part
+
+                return '_'.join(remove_dups(name.split('_')))
+
+            name = fixup_obj_name(name)
+        else:
+            name = filename
+
+        name = name.replace('.cpp', obj_suffix)
+        yield os.path.join(obj_dir, name)
+
+def generate_build_info(build_paths, modules, cc, arch, osinfo):
+    # pylint: disable=too-many-locals
+
+    def _isa_specific_flags(src):
         if os.path.basename(src) == 'test_simd.cpp':
-            isas = [simd_impl] if simd_impl else []
-            return self._get_isa_specific_flags(isas)
+            return cc.get_isa_specific_flags(['simd'], arch)
 
-        for mod in self._modules:
+        for mod in modules:
             if src in mod.sources():
                 isas = mod.need_isa
                 if 'simd' in mod.dependencies():
-                    if simd_impl:
-                        isas.append(simd_impl)
+                    isas.append('simd')
 
-                return self._get_isa_specific_flags(isas)
+                return cc.get_isa_specific_flags(isas, arch)
 
         if src.startswith('botan_all_'):
             isas = src.replace('botan_all_', '').replace('.cpp', '').split('_')
-            return self._get_isa_specific_flags(isas)
+            return cc.get_isa_specific_flags(isas, arch)
 
-        return set()
+        return ''
 
-    def _objectfile_list(self, sources, obj_dir):
-        obj_suffix = '.' + self._osinfo.obj_suffix
-
-        for src in sources:
-            (directory, filename) = os.path.split(os.path.normpath(src))
-            parts = directory.split(os.sep)
-
-            if 'src' in parts:
-                parts = parts[parts.index('src')+2:]
-            elif filename.find('botan_all') != -1:
-                parts = []
-            else:
-                raise InternalError("Unexpected file '%s/%s'" % (directory, filename))
-
-            if parts != []:
-                # Handle src/X/X.cpp -> X.o
-                if filename == parts[-1] + '.cpp':
-                    name = '_'.join(parts) + '.cpp'
-                else:
-                    name = '_'.join(parts) + '_' + filename
-
-                def fixup_obj_name(name):
-                    def remove_dups(parts):
-                        last = None
-                        for part in parts:
-                            if last is None or part != last:
-                                last = part
-                                yield part
-
-                    return '_'.join(remove_dups(name.split('_')))
-
-                name = fixup_obj_name(name)
-            else:
-                name = filename
-
-            name = name.replace('.cpp', obj_suffix)
-            yield os.path.join(obj_dir, name)
-
-    def _build_info(self, sources, objects, target_type):
+    def _build_info(sources, objects, target_type):
         output = []
         for (obj_file, src) in zip(objects, sources):
-            isa_specific_flags_str = ("".join([" %s" % flagset for flagset in
-                                               sorted(self._isa_specific_flags(src))])).strip()
-
             info = {
                 'src': src,
                 'obj': obj_file,
-                'isa_flags': isa_specific_flags_str,
+                'isa_flags': _isa_specific_flags(src),
                 'target_type': 'LIB' if target_type == 'lib' else 'EXE',
                 }
 
             if target_type == 'fuzzer':
-                fuzz_basename = os.path.basename(obj_file).replace('.' + self._osinfo.obj_suffix, '')
-                info['exe'] = os.path.join(self._build_paths.fuzzer_output_dir, fuzz_basename)
+                fuzz_basename = os.path.basename(obj_file).replace('.' + osinfo.obj_suffix, '')
+                info['exe'] = os.path.join(build_paths.fuzzer_output_dir, fuzz_basename)
 
             output.append(info)
 
         return output
 
-    def generate(self):
-        out = {}
+    out = {}
 
-        targets = ['lib', 'cli', 'test', 'fuzzer']
+    targets = ['lib', 'cli', 'test', 'fuzzer']
 
-        out['isa_build_info'] = []
+    out['isa_build_info'] = []
 
-        fuzzer_bin = []
-        for t in targets:
-            src_list, src_dir = self._build_paths.src_info(t)
+    fuzzer_bin = []
+    for t in targets:
+        src_list, src_dir = build_paths.src_info(t)
 
-            src_key = '%s_srcs' % (t)
-            obj_key = '%s_objs' % (t)
-            build_key = '%s_build_info' % (t)
+        src_key = '%s_srcs' % (t)
+        obj_key = '%s_objs' % (t)
+        build_key = '%s_build_info' % (t)
 
-            objects = []
-            build_info = []
+        objects = []
+        build_info = []
 
-            if src_list is not None:
-                src_list.sort()
-                objects = list(self._objectfile_list(src_list, src_dir))
-                build_info = self._build_info(src_list, objects, t)
+        if src_list is not None:
+            src_list.sort()
+            objects = list(yield_objectfile_list(src_list, src_dir, osinfo.obj_suffix))
+            build_info = _build_info(src_list, objects, t)
 
-                for b in build_info:
-                    if b['isa_flags'] != '':
-                        out['isa_build_info'].append(b)
+            for b in build_info:
+                if b['isa_flags'] != '':
+                    out['isa_build_info'].append(b)
 
-                if t == 'fuzzer':
-                    fuzzer_bin = [b['exe'] for b in build_info]
+            if t == 'fuzzer':
+                fuzzer_bin = [b['exe'] for b in build_info]
 
-            out[src_key] = src_list if src_list else []
-            out[obj_key] = objects
-            out[build_key] = build_info
+        out[src_key] = src_list if src_list else []
+        out[obj_key] = objects
+        out[build_key] = build_info
 
-        out['fuzzer_bin'] = ' '.join(fuzzer_bin)
-        out['cli_headers'] = self._build_paths.cli_headers
+    out['fuzzer_bin'] = ' '.join(fuzzer_bin)
+    out['cli_headers'] = build_paths.cli_headers
 
-        return out
+    return out
 
 def house_ecc_curve_macros(house_curve):
     def _read_pem(filepath):
@@ -1956,8 +1948,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     else:
         variables['link_to_botan'] = '%s%s %s%s' % (cc.add_lib_dir_option, build_dir,
                                                     cc.add_lib_option, variables['libname'])
-
-    variables.update(MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate())
 
     return variables
 
@@ -2979,9 +2969,9 @@ def main_action_configure_build(info_modules, source_paths, options,
     if options.amalgamation:
         (amalg_cpp_files, amalg_headers) = AmalgamationGenerator(build_config, using_mods, options).generate()
         build_config.lib_sources = amalg_cpp_files
-        template_vars.update(MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate())
-
         template_vars['generated_files'] = ' '.join(amalg_cpp_files + amalg_headers)
+
+    template_vars.update(generate_build_info(build_config, using_mods, cc, arch, osinfo))
 
     with open(os.path.join(build_config.build_dir, 'build_config.json'), 'w') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
