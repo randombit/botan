@@ -249,6 +249,15 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
             out += [self.fuzzer_output_dir]
         return out
 
+    def format_include_paths(self, cc, external_include):
+        dash_i = cc.add_include_dir_option
+        output = dash_i + self.include_dir
+        if self.external_headers:
+            output += ' ' + dash_i + self.external_include_dir
+        if external_include:
+            output += ' ' + dash_i + external_include
+        return output
+
     def src_info(self, typ):
         if typ == 'lib':
             return (self.lib_sources, self.libobj_dir)
@@ -1431,6 +1440,8 @@ def read_textfile(filepath):
 
 
 def process_template(template_file, variables):
+    # pylint: disable=too-many-branches,too-many-statements
+
     """
     Perform template substitution
 
@@ -1442,8 +1453,11 @@ def process_template(template_file, variables):
             self.vals = vals
             self.value_pattern = re.compile(r'%{([a-z][a-z_0-9]+)}')
             self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
+            self.for_pattern = re.compile('(.*)%{for ([a-z][a-z_0-9]+)}')
+            self.join_pattern = re.compile('(.*)%{join ([a-z][a-z_0-9]+)}')
 
         def substitute(self, template):
+            # pylint: disable=too-many-locals
             def insert_value(match):
                 v = match.group(1)
                 if v in self.vals:
@@ -1452,15 +1466,17 @@ def process_template(template_file, variables):
 
             lines = template.splitlines()
 
-            output = []
+            output = ""
             idx = 0
 
             while idx < len(lines):
-                cond = self.cond_pattern.match(lines[idx])
+                cond_match = self.cond_pattern.match(lines[idx])
+                join_match = self.join_pattern.match(lines[idx])
+                for_match = self.for_pattern.match(lines[idx])
 
-                if cond:
-                    cond_type = cond.group(1)
-                    cond_var = cond.group(2)
+                if cond_match:
+                    cond_type = cond_match.group(1)
+                    cond_var = cond_match.group(2)
 
                     include_cond = False
 
@@ -1474,13 +1490,47 @@ def process_template(template_file, variables):
                         if lines[idx] == '%{endif}':
                             break
                         if include_cond:
-                            output.append(lines[idx])
+                            output += lines[idx] + "\n"
                         idx += 1
+                elif join_match:
+                    join_var = join_match.group(2)
+                    join_str = ' '
+                    join_line = '%%{join %s}' % (join_var)
+                    output += lines[idx].replace(join_line, join_str.join(self.vals[join_var])) + "\n"
+                elif for_match:
+                    for_prefix = for_match.group(1)
+                    output += for_prefix
+                    for_var = for_match.group(2)
+
+                    if for_var not in self.vals:
+                        raise InternalError("Unknown for loop iteration variable '%s'" % (for_var))
+
+                    var = self.vals[for_var]
+                    if not isinstance(var, list):
+                        raise InternalError("For loop iteration variable '%s' is not a list" % (for_var))
+                    idx += 1
+
+                    for_body = ""
+                    while idx < len(lines):
+                        if lines[idx] == '%{endfor}':
+                            break
+                        for_body += lines[idx] + "\n"
+                        idx += 1
+
+                    for v in var:
+                        if isinstance(v, dict):
+                            for_val = for_body
+                            for ik, iv in v.items():
+                                for_val = for_val.replace('%{' + ik + '}', iv)
+                            output += for_val + "\n"
+                        else:
+                            output += for_body.replace('%{i}', v)
+                    output += "\n"
                 else:
-                    output.append(lines[idx])
+                    output += lines[idx] + "\n"
                 idx += 1
 
-            return self.value_pattern.sub(insert_value, '\n'.join(output)) + '\n'
+            return self.value_pattern.sub(insert_value, output) + '\n'
 
     try:
         return SimpleTemplate(variables).substitute(read_textfile(template_file))
@@ -1488,10 +1538,6 @@ def process_template(template_file, variables):
         logging.error('Unbound var %s in template %s' % (e, template_file))
     except Exception as e: # pylint: disable=broad-except
         logging.error('Exception %s during template processing file %s' % (e, template_file))
-
-def makefile_list(items):
-    separator = " \\\n" + 16*" "
-    return separator.join(items)
 
 def gen_bakefile(build_config, options, external_libs):
 
@@ -1845,53 +1891,52 @@ class MakefileListsGenerator(object):
             name = name.replace('.cpp', obj_suffix)
             yield os.path.join(obj_dir, name)
 
-    def _build_commands(self, sources, obj_dir, objects, is_lib):
-        """
-        Form snippets of makefile for building each source file
-        """
-        includes = self._cc.add_include_dir_option + self._build_paths.include_dir
-        if self._build_paths.external_headers:
-            includes += ' ' + self._cc.add_include_dir_option + self._build_paths.external_include_dir
-        if self._options.with_external_includedir:
-            includes += ' ' + self._cc.add_include_dir_option + self._options.with_external_includedir
-
-        is_fuzzer = obj_dir.find('fuzzer') != -1
-        fuzzer_link = '' if self._options.fuzzer_lib is None \
-                      else '%s%s' % (self._cc.add_lib_option, self._options.fuzzer_lib)
-
+    def _build_info(self, sources, objects, target_type):
+        output = []
         for (obj_file, src) in zip(objects, sources):
-            isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
+            isa_specific_flags_str = ("".join([" %s" % flagset for flagset in
+                                               sorted(self._isa_specific_flags(src))])).strip()
 
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
-                obj_file, src, isa_specific_flags_str, 'LIB' if is_lib else 'EXE',
-                includes, self._cc.compile_flags, src, self._cc.output_to_object)
+            info = {
+                'src': src,
+                'obj': obj_file,
+                'isa_flags': isa_specific_flags_str,
+                'target_type': 'LIB' if target_type == 'lib' else 'EXE',
+                }
 
-            if is_fuzzer:
+            if target_type == 'fuzzer':
                 fuzz_basename = os.path.basename(obj_file).replace('.' + self._osinfo.obj_suffix, '')
-                fuzz_bin = self._build_paths.fuzzer_output_dir
-                yield '%s: %s $(LIBRARIES)\n\t$(EXE_LINK_CMD) %s $(EXE_LINKS_TO) %s %s$@\n' % (
-                    os.path.join(fuzz_bin, fuzz_basename), obj_file, obj_file, fuzzer_link,
-                    self._cc.output_to_object)
+                info['exe'] = os.path.join(self._build_paths.fuzzer_output_dir, fuzz_basename)
+
+            output.append(info)
+
+        return output
 
     def generate(self):
         out = {}
 
-        targets = ['lib', 'cli', 'test'] + \
-                  (['fuzzer'] if self._options.build_fuzzers else [])
+        targets = ['lib', 'cli', 'test', 'fuzzer']
 
         for t in targets:
             src_list, src_dir = self._build_paths.src_info(t)
-            src_list.sort()
-            objects = list(self._objectfile_list(src_list, src_dir))
 
             obj_key = '%s_objs' % (t)
-            out[obj_key] = makefile_list(objects)
+            build_key = '%s_build_info' % (t)
+
+            objects = []
+            build_info = []
+
+            if src_list is not None:
+                src_list.sort()
+                objects = list(self._objectfile_list(src_list, src_dir))
+                build_info = self._build_info(src_list, objects, t)
+
+            out[obj_key] = objects
+            out[build_key] = build_info
 
             if t == 'fuzzer':
-                out['fuzzer_bin'] = makefile_list(self._fuzzer_bin_list(objects, self._build_paths.fuzzer_output_dir))
+                out['fuzzer_bin'] = ' '.join(self._fuzzer_bin_list(objects, self._build_paths.fuzzer_output_dir))
 
-            build_key = '%s_build_cmds' % (t)
-            out[build_key] = '\n'.join(self._build_commands(src_list, src_dir, objects, t == 'lib'))
         return out
 
 
@@ -1928,7 +1973,9 @@ class HouseEccCurve(object):
         return "\\\n" + ' \\\n'.join(lines)
 
 
-def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo): #pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
+    #pylint: disable=too-many-locals,too-many-branches,too-many-statements
+
     """
     Create the template variables needed to process the makefile, build.h, etc
     """
@@ -2067,6 +2114,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'linker': cc.linker_name or '$(CXX)',
         'make_supports_phony': cc.basename != 'msvc',
 
+        'dash_o': cc.output_to_object,
+        'dash_c': cc.compile_flags,
+
         'cc_lang_flags': cc.cc_lang_flags(),
         'cc_compile_flags': options.cxxflags or cc.cc_compile_flags(options),
         'ldflags': options.ldflags or '',
@@ -2089,6 +2139,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
             [cc.add_framework_option + fw for fw in link_to('frameworks')]
         ),
 
+        'fuzzer_lib': (cc.add_lib_option + options.fuzzer_lib) if options.fuzzer_lib else '',
+
+        'include_paths': build_config.format_include_paths(cc, options.with_external_includedir),
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
 
         'target_os_defines': make_cpp_macros(osinfo.defines(options)),
@@ -2098,8 +2151,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'target_cpu_defines': make_cpp_macros(arch.defines(cc, options)),
 
         'botan_include_dir': build_config.botan_include_dir,
-
-        'include_files': makefile_list(build_config.public_headers),
 
         'unsafe_fuzzer_mode_define': '#define BOTAN_UNSAFE_FUZZER_MODE' if options.unsafe_fuzzer_mode else '',
         'fuzzer_type': '#define BOTAN_FUZZER_IS_%s' % (options.build_fuzzers.upper()) if options.build_fuzzers else '',
