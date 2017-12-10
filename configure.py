@@ -1145,7 +1145,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 raise UserError('Compiler %s does not support %s' % (self.basename, isa))
             flags.add(flagset)
 
-        return ("".join([" %s" % f for f in sorted(flags)])).strip()
+        return " ".join(sorted(flags))
 
     def gen_shared_flags(self, options):
         """
