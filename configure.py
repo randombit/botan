@@ -1775,6 +1775,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         main_executable = os.path.basename(sys.argv[0])
         return ' '.join([main_executable] + sys.argv[1:])
 
+    def cmake_escape(s):
+        return s.replace('(', '\\(').replace(')', '\\)')
+
     build_dir = options.with_build_dir or os.path.curdir
     program_suffix = options.program_suffix or osinfo.program_suffix
 
@@ -1877,6 +1880,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'output_to_exe': cc.output_to_exe,
 
         'shared_flags': cc.gen_shared_flags(options),
+        'cmake_shared_flags': cmake_escape(cc.gen_shared_flags(options)),
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
         'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
