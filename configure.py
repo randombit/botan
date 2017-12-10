@@ -1494,7 +1494,7 @@ def makefile_list(items):
 
 def gen_bakefile(source_paths, build_config, options, template_vars):
 
-    def bakefile_sources(sources, typ_str = 'sources'):
+    def bakefile_sources(sources, typ_str='sources'):
         out = ""
         for src in sources:
             (directory, filename) = os.path.split(os.path.normpath(src))
@@ -1502,18 +1502,6 @@ def gen_bakefile(source_paths, build_config, options, template_vars):
             _, directory = directory.split('src/', 1)
             out += '\t%s { src/%s/%s } \n' % (typ_str, directory, filename)
         return out
-
-    def bakefile_cli_headers(headers):
-        for header in headers:
-            (directory, filename) = os.path.split(os.path.normpath(header))
-            directory = directory.replace('\\', '/')
-            _, directory = directory.split('src/', 1)
-            fd.write('\theaders { src/%s/%s } \n' % (directory, filename))
-
-    def bakefile_test_sources(fd, sources):
-        for src in sources:
-            (_, filename) = os.path.split(os.path.normpath(src))
-            fd.write('\tsources { src/tests/%s } \n' %filename)
 
     bakefile_template = os.path.join(source_paths.build_data_dir, 'bakefile.in')
 
@@ -1527,7 +1515,7 @@ def gen_bakefile(source_paths, build_config, options, template_vars):
 
     print(template_vars['link_to'])
     bakefile_vars['bakefile_libs'] = '\n'.join(
-        ['libs += "%s";' % lib.replace('.lib','') for lib in template_vars['link_to'].split(' ')])
+        ['libs += "%s";' % lib.replace('.lib', '') for lib in template_vars['link_to'].split(' ')])
 
     return process_template(bakefile_template, bakefile_vars)
 
