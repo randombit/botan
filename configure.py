@@ -20,6 +20,7 @@ On Jython target detection does not work (use --os and --cpu).
 """
 
 import collections
+import copy
 import json
 import sys
 import os
@@ -2084,7 +2085,7 @@ class ModulesChooser(object):
         if loaded_modules is None:
             loaded_modules = set([])
         else:
-            loaded_modules = set(loaded_modules)
+            loaded_modules = copy.copy(loaded_modules)
 
         if module not in available_modules:
             return False, None
@@ -2390,7 +2391,7 @@ class AmalgamationGenerator(object):
 
     @staticmethod
     def strip_header_goop(header_name, header_lines):
-        lines = header_lines
+        lines = copy.copy(header_lines) # defensive copy
 
         start_header_guard_index = None
         for index, line in enumerate(lines):
