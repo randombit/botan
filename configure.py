@@ -863,7 +863,7 @@ class ModuleInfo(InfoObject):
         return self.header_external
 
     def defines(self):
-        return ['HAS_%s %s' % (key, value) for key, value in self._defines.items()]
+        return [(key + ' ' + value) for key, value in self._defines.items()]
 
     def compatible_cpu(self, archinfo, options):
         arch_name = archinfo.basename
@@ -1370,18 +1370,18 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
     def defines(self, options):
         r = []
-        r += ['TARGET_OS_IS_%s' % (self.basename.upper())]
+        r += ['IS_%s' % (self.basename.upper())]
 
         if self.os_type != None:
-            r += ['TARGET_OS_TYPE_IS_%s' % (self.os_type.upper())]
+            r += ['TYPE_IS_%s' % (self.os_type.upper())]
 
         def feat_macros():
             for feat in self.target_features:
                 if feat not in options.without_os_features:
-                    yield 'TARGET_OS_HAS_' + feat.upper()
+                    yield 'HAS_' + feat.upper()
             for feat in options.with_os_features:
                 if feat not in self.target_features:
-                    yield 'TARGET_OS_HAS_' + feat.upper()
+                    yield 'HAS_' + feat.upper()
 
         r += sorted(feat_macros())
         return r
@@ -1715,10 +1715,10 @@ def house_ecc_curve_macros(house_curve):
         if curve_id < 0xfe00 or curve_id > 0xfeff:
             raise UserError('TLS curve ID not in reserved range (see RFC 4492)')
 
-        return ['HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"',
-                'HOUSE_ECC_CURVE_OID \"' + p[2] + '\"',
-                'HOUSE_ECC_CURVE_PEM ' + _read_pem(filepath=p[0]),
-                'HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id)]
+        return ['NAME \"' + p[1] + '\"',
+                'OID \"' + p[2] + '\"',
+                'PEM ' + _read_pem(filepath=p[0]),
+                'TLS_ID ' + hex(curve_id)]
 
 def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
     #pylint: disable=too-many-locals,too-many-branches,too-many-statements

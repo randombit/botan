@@ -44,7 +44,7 @@
 
 /* Target identification and feature test macros */
 %{for os_defines}
-#define BOTAN_%{i}
+#define BOTAN_TARGET_OS_%{i}
 %{endfor}
 
 %{for cc_defines}
@@ -59,7 +59,7 @@
 * Module availability definitions
 */
 %{for module_defines}
-#define BOTAN_%{i}
+#define BOTAN_HAS_%{i}
 %{endfor}
 
 /*
@@ -68,7 +68,7 @@
 %{local_config}
 
 %{for house_ecc_curve_defines}
-%{i}
+#define BOTAN_HOUSE_ECC_CURVE_%{i}
 %{endfor}
 
 /*
