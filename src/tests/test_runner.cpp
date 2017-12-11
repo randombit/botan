@@ -104,7 +104,7 @@ int Test_Runner::run(const std::vector<std::string>& requested_tests,
       run the "essentials" to smoke test, then everything else in
       alphabetical order.
       */
-      req = {"block", "stream", "hash", "mac", "modes", "aead"
+      req = {"block", "stream", "hash", "mac", "modes", "aead",
              "kdf", "pbkdf", "hmac_drbg", "util"
       };
 
