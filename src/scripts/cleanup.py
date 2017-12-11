@@ -96,16 +96,12 @@ def main(args=None):
         remove_file(build_config['makefile_path'])
         remove_dir(build_dir)
     else:
-        for dir_type in ['libobj_dir', 'cliobj_dir', 'testobj_dir']:
+        for dir_type in ['libobj_dir', 'cliobj_dir', 'testobj_dir', 'doc_output_dir_manual', 'doc_output_dir_doxygen']:
             dir_path = build_config[dir_type]
-            remove_all_in_dir(dir_path)
+            if dir_path:
+                remove_all_in_dir(dir_path)
 
         remove_file(build_config['doc_stamp_file'])
-
-        try:
-            shutil.rmtree(build_config['doc_output_dir'])
-        except OSError:
-            pass
 
     remove_file(build_config['cli_exe'])
     remove_file(build_config['test_exe'])

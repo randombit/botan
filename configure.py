@@ -1849,6 +1849,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'fuzzer_output_dir': build_config.fuzzer_output_dir if build_config.fuzzer_output_dir else '',
         'doc_output_dir': build_config.doc_output_dir,
+        'doc_output_dir_manual': build_config.doc_output_dir_manual,
+        'doc_output_dir_doxygen': build_config.doc_output_dir_doxygen,
 
         'os': options.os,
         'arch': options.arch,
