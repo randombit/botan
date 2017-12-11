@@ -1029,8 +1029,6 @@ class ArchInfo(InfoObject):
         if self.family is not None:
             macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
 
-        macros.append('TARGET_CPU_NATIVE_WORD_SIZE %d' % (self.wordsize))
-
         if self.wordsize == 64:
             macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
 
@@ -1729,9 +1727,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     Create the template variables needed to process the makefile, build.h, etc
     """
 
-    def make_cpp_macros(macros):
-        return '\n'.join(['#define BOTAN_' + macro for macro in macros])
-
     def external_link_cmd():
         return (' ' + cc.add_lib_dir_option + options.with_external_libdir) if options.with_external_libdir else ''
 
@@ -1910,22 +1905,19 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'libs_used': [lib.replace('.lib', '') for lib in link_to('libs')],
 
         'include_paths': build_config.format_include_paths(cc, options.with_external_includedir),
-        'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
+        'module_defines': sorted(flatten([m.defines() for m in modules])),
 
-        'target_os_defines': make_cpp_macros(osinfo.defines(options)),
-
-        'target_compiler_defines': make_cpp_macros(cc.defines()),
-
-        'target_cpu_defines': make_cpp_macros(arch.defines(cc, options)),
+        'os_defines': osinfo.defines(options),
+        'cc_defines': cc.defines(),
+        'cpu_defines': arch.defines(cc, options),
+        'house_ecc_curve_defines': house_ecc_curve_macros(options.house_curve),
 
         'botan_include_dir': build_config.botan_include_dir,
 
-        'unsafe_fuzzer_mode_define': '#define BOTAN_UNSAFE_FUZZER_MODE' if options.unsafe_fuzzer_mode else '',
-        'fuzzer_type': '#define BOTAN_FUZZER_IS_%s' % (options.build_fuzzers.upper()) if options.build_fuzzers else '',
+        'fuzzer_mode': options.unsafe_fuzzer_mode,
+        'fuzzer_type': options.build_fuzzers.upper() if options.build_fuzzers else '',
 
-        'mod_list': '\n'.join(sorted([m.basename for m in modules])),
-
-        'house_ecc_curve_defines': make_cpp_macros(house_ecc_curve_macros(options.house_curve))
+        'mod_list': sorted([m.basename for m in modules])
         }
 
     if options.os != 'windows':

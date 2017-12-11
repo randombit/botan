@@ -24,8 +24,13 @@
 
 /* How many bits per limb in a BigInt */
 #define BOTAN_MP_WORD_BITS %{mp_bits}
-%{unsafe_fuzzer_mode_define}
-%{fuzzer_type}
+
+%{if fuzzer_mode}
+#define BOTAN_UNSAFE_FUZZER_MODE
+%{endif}
+%{if fuzzer_type}
+#define BOTAN_FUZZER_IS_%{fuzzer_type}
+%{endif}
 
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"
 #define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}"
@@ -38,22 +43,33 @@
 #endif
 
 /* Target identification and feature test macros */
-%{target_os_defines}
+%{for os_defines}
+#define BOTAN_%{i}
+%{endfor}
 
-%{target_cpu_defines}
+%{for cc_defines}
+#define BOTAN_%{i}
+%{endfor}
 
-%{target_compiler_defines}
+%{for cpu_defines}
+#define BOTAN_%{i}
+%{endfor}
 
 /*
 * Module availability definitions
 */
-%{module_defines}
+%{for module_defines}
+#define BOTAN_%{i}
+%{endfor}
 
 /*
 * Local/misc configuration options (if any) follow
 */
 %{local_config}
-%{house_ecc_curve_defines}
+
+%{for house_ecc_curve_defines}
+%{i}
+%{endfor}
 
 /*
 * Things you can edit (but probably shouldn't)
