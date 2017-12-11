@@ -62,8 +62,11 @@ def run_and_check(cmd_line, cwd=None):
 
     (stdout, stderr) = proc.communicate()
 
-    logging.debug(stdout)
-    logging.debug(stderr)
+    if stdout:
+        logging.debug(stdout.decode())
+
+    if stderr:
+        logging.debug(stderr.decode())
 
     if proc.returncode != 0:
         logging.error("Error running %s", ' '.join(cmd_line))
