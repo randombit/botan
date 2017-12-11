@@ -3034,7 +3034,7 @@ def main(argv):
         return 0
 
     logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
-    logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
+    logging.debug('Platform running configuration (autodetected): OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
 
     info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
