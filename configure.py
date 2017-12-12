@@ -335,7 +335,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
         target_group.add_option('--disable-%s' % (isa_extn),
                                 help='disable %s intrinsics' % (isa_extn_name),
                                 action='append_const',
-                                const=isa_extn.replace('-', '').replace('.', '_'),
+                                const=isa_extn.replace('-', '').replace('.', ''),
                                 dest='disable_intrinsics')
 
     build_group = optparse.OptionGroup(parser, 'Build options')
@@ -971,6 +971,11 @@ class ArchInfo(InfoObject):
         self.submodels = lex.submodels
         self.submodel_aliases = parse_lex_dict(lex.submodel_aliases)
         self.wordsize = int(lex.wordsize)
+
+        alphanumeric = re.compile('^[a-z0-9]+$')
+        for isa in self.isa_extensions:
+            if alphanumeric.match(isa) is None:
+                logging.error('Invalid name for ISA extension "%s"', isa)
 
     def all_submodels(self):
         """
