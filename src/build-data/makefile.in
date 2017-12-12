@@ -19,8 +19,7 @@ EXE_LINK_CMD   = %{exe_link_cmd}
 LIB_LINKS_TO   = %{link_to}
 EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
 
-LIB_FLAGS      = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
-EXE_FLAGS      = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
+BUILD_FLAGS    = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{prefix}/%{libdir}
@@ -116,22 +115,22 @@ fuzzer_corpus_zip: fuzzer_corpus
 
 %{for lib_build_info}
 %{obj}: %{src}
-	$(CXX) %{isa_flags} $(%{target_type}_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) %{isa_flags} $(SO_OBJ_FLAGS) $(BUILD_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
 %{obj}: %{src}
-	$(CXX) %{isa_flags} $(%{target_type}_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) %{isa_flags} $(BUILD_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
 %{obj}: %{src}
-	$(CXX) %{isa_flags} $(%{target_type}_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) %{isa_flags} $(BUILD_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for fuzzer_build_info}
 %{obj}: %{src}
-	$(CXX) %{isa_flags} $(%{target_type}_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) %{isa_flags} $(BUILD_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
 	$(EXE_LINK_CMD) %{obj} $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@

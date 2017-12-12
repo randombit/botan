@@ -1594,8 +1594,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo):
             info = {
                 'src': src,
                 'obj': obj_file,
-                'isa_flags': _isa_specific_flags(src),
-                'target_type': 'LIB' if target_type == 'lib' else 'EXE',
+                'isa_flags': _isa_specific_flags(src)
                 }
 
             if target_type == 'fuzzer':
