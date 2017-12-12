@@ -47,7 +47,7 @@ rdrand
 rdseed
 sha
 sse2
-sse4.1
-sse4.2
+sse41
+sse42
 ssse3
 </isa_extensions>

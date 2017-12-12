@@ -335,7 +335,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
         target_group.add_option('--disable-%s' % (isa_extn),
                                 help='disable %s intrinsics' % (isa_extn_name),
                                 action='append_const',
-                                const=isa_extn.replace('-', ''),
+                                const=isa_extn.replace('-', '').replace('.', ''),
                                 dest='disable_intrinsics')
 
     build_group = optparse.OptionGroup(parser, 'Build options')
@@ -574,10 +574,9 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     if args != []:
         raise UserError('Unhandled option(s): ' + ' '.join(args))
-    if options.with_endian != None and \
-       options.with_endian not in ['little', 'big']:
-        raise UserError('Bad value to --with-endian "%s"' % (
-            options.with_endian))
+
+    if options.with_endian not in [None, 'little', 'big']:
+        raise UserError('Bad value to --with-endian "%s"' % (options.with_endian))
 
     if options.debug_mode:
         options.no_optimizations = True
@@ -798,22 +797,11 @@ class ModuleInfo(InfoObject):
         self.requires = lex.requires
         self.warning = ' '.join(lex.warning) if lex.warning else None
 
-        def add_dir_name(filename):
-            if filename.count(':') == 0:
-                return os.path.join(self.lives_in, filename)
-
-            # modules can request to add files of the form
-            # MODULE_NAME:FILE_NAME to add a file from another module
-            # For these, assume other module is always in a
-            # neighboring directory; this is true for all current uses
-            return os.path.join(os.path.split(self.lives_in)[0],
-                                *filename.split(':'))
-
         # Modify members
-        self.source = [normalize_source_path(add_dir_name(s)) for s in self.source]
-        self.header_internal = [add_dir_name(s) for s in self.header_internal]
-        self.header_public = [add_dir_name(s) for s in self.header_public]
-        self.header_external = [add_dir_name(s) for s in self.header_external]
+        self.source = [normalize_source_path(os.path.join(self.lives_in, s)) for s in self.source]
+        self.header_internal = [os.path.join(self.lives_in, s) for s in self.header_internal]
+        self.header_public = [os.path.join(self.lives_in, s) for s in self.header_public]
+        self.header_external = [os.path.join(self.lives_in, s) for s in self.header_external]
 
         # Filesystem read access check
         for src in self.source + self.header_internal + self.header_public + self.header_external:
@@ -867,7 +855,7 @@ class ModuleInfo(InfoObject):
         return self.header_external
 
     def defines(self):
-        return ['HAS_%s %s' % (key, value) for key, value in self._defines.items()]
+        return [(key + ' ' + value) for key, value in self._defines.items()]
 
     def compatible_cpu(self, archinfo, options):
         arch_name = archinfo.basename
@@ -990,6 +978,11 @@ class ArchInfo(InfoObject):
         self.submodel_aliases = lex.submodel_aliases
         self.wordsize = int(lex.wordsize)
 
+        alphanumeric = re.compile('^[a-z0-9]+$')
+        for isa in self.isa_extensions:
+            if alphanumeric.match(isa) is None:
+                logging.error('Invalid name for ISA extension "%s"', isa)
+
     def all_submodels(self):
         """
         Return a list of all submodels for this arch, ordered longest
@@ -1000,53 +993,15 @@ class ArchInfo(InfoObject):
                       [k for k in self.submodel_aliases.items()],
                       key=lambda k: len(k[0]), reverse=True)
 
-    def defines(self, cc, options):
-        """
-        Return CPU-specific defines for build.h
-        """
+    def supported_isa_extensions(self, cc, options):
+        isas = []
 
-        def form_macro(cpu_name):
-            return cpu_name.upper().replace('.', '').replace('-', '_')
+        for isa in self.isa_extensions:
+            if isa not in options.disable_intrinsics:
+                if cc.isa_flags_for(isa, self.basename) is not None:
+                    isas.append(isa)
 
-        macros = []
-
-        macros.append('TARGET_ARCH_IS_%s' % (form_macro(self.basename.upper())))
-
-        if self.basename != options.cpu:
-            macros.append('TARGET_CPU_IS_%s' % (form_macro(options.cpu)))
-
-        enabled_isas = set(self.isa_extensions)
-        disabled_isas = set(options.disable_intrinsics)
-
-        isa_extensions = sorted(enabled_isas - disabled_isas)
-
-        for isa in isa_extensions:
-            if cc.isa_flags_for(isa, self.basename) is not None:
-                macros.append('TARGET_SUPPORTS_%s' % (form_macro(isa)))
-            else:
-                logging.warning("Disabling support for %s intrinsics due to missing flag for compiler" % (isa))
-
-        endian = options.with_endian or self.endian
-
-        if endian != None:
-            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (endian.upper()))
-            logging.info('Assuming CPU is %s endian' % (endian))
-
-        if self.family is not None:
-            macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
-
-        macros.append('TARGET_CPU_NATIVE_WORD_SIZE %d' % (self.wordsize))
-
-        if self.wordsize == 64:
-            macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
-
-        if options.with_valgrind:
-            macros.append('HAS_VALGRIND')
-
-        if options.with_openmp:
-            macros.append('TARGET_HAS_OPENMP')
-
-        return macros
+        return sorted(isas)
 
 
 MachOptFlags = collections.namedtuple('MachOptFlags', ['flags', 'submodel_prefix'])
@@ -1294,14 +1249,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         return '$(LINKER)'
 
-    def defines(self):
-        """
-        Return defines for build.h
-        """
-
-        return ['BUILD_COMPILER_IS_' + self.macro_name]
-
-
 class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def __init__(self, infofile):
         super(OsInfo, self).__init__(infofile)
@@ -1378,24 +1325,16 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
 
-    def defines(self, options):
-        r = []
-        r += ['TARGET_OS_IS_%s' % (self.basename.upper())]
+    def enabled_features(self, options):
+        feats = []
+        for feat in self.target_features:
+            if feat not in options.without_os_features:
+                feats.append(feat)
+        for feat in options.with_os_features:
+            if feat not in self.target_features:
+                feats.append(feat)
 
-        if self.os_type != None:
-            r += ['TARGET_OS_TYPE_IS_%s' % (self.os_type.upper())]
-
-        def feat_macros():
-            for feat in self.target_features:
-                if feat not in options.without_os_features:
-                    yield 'TARGET_OS_HAS_' + feat.upper()
-            for feat in options.with_os_features:
-                if feat not in self.target_features:
-                    yield 'TARGET_OS_HAS_' + feat.upper()
-
-        r += sorted(feat_macros())
-        return r
-
+        return sorted(feats)
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
@@ -1491,7 +1430,7 @@ def process_template(template_file, variables):
 
         def __init__(self, vals):
             self.vals = vals
-            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9]+)}')
+            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9\|]+)}')
             self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
             self.for_pattern = re.compile('(.*)%{for ([a-z][a-z_0-9]+)}')
             self.join_pattern = re.compile('(.*)%{join ([a-z][a-z_0-9]+)}')
@@ -1502,6 +1441,11 @@ def process_template(template_file, variables):
                 v = match.group(1)
                 if v in self.vals:
                     return str(self.vals.get(v))
+                if v.endswith('|upper'):
+                    v = v.replace('|upper', '')
+                    if v in self.vals:
+                        return str(self.vals.get(v)).upper()
+
                 raise KeyError(v)
 
             lines = template.splitlines()
@@ -1564,7 +1508,7 @@ def process_template(template_file, variables):
                                 for_val = for_val.replace('%{' + ik + '}', iv)
                             output += for_val + "\n"
                         else:
-                            output += for_body.replace('%{i}', v)
+                            output += for_body.replace('%{i}', v).replace('%{i|upper}', v.upper())
                     output += "\n"
                 else:
                     output += lines[idx] + "\n"
@@ -1725,10 +1669,10 @@ def house_ecc_curve_macros(house_curve):
         if curve_id < 0xfe00 or curve_id > 0xfeff:
             raise UserError('TLS curve ID not in reserved range (see RFC 4492)')
 
-        return ['HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"',
-                'HOUSE_ECC_CURVE_OID \"' + p[2] + '\"',
-                'HOUSE_ECC_CURVE_PEM ' + _read_pem(filepath=p[0]),
-                'HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id)]
+        return ['NAME \"' + p[1] + '\"',
+                'OID \"' + p[2] + '\"',
+                'PEM ' + _read_pem(filepath=p[0]),
+                'TLS_ID ' + hex(curve_id)]
 
 def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
     #pylint: disable=too-many-locals,too-many-branches,too-many-statements
@@ -1736,9 +1680,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     """
     Create the template variables needed to process the makefile, build.h, etc
     """
-
-    def make_cpp_macros(macros):
-        return '\n'.join(['#define BOTAN_' + macro for macro in macros])
 
     def external_link_cmd():
         return (' ' + cc.add_lib_dir_option + options.with_external_libdir) if options.with_external_libdir else ''
@@ -1862,7 +1803,10 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'os': options.os,
         'arch': options.arch,
+        'cpu_family': arch.family,
         'submodel': options.cpu,
+        'endian': options.with_endian or arch.endian,
+        'cpu_is_64bit': arch.wordsize == 64,
 
         'bakefile_arch': 'x86' if options.arch == 'x86_32' else 'x86_64',
 
@@ -1891,6 +1835,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'ldflags': options.ldflags or '',
         'cc_warning_flags': cc.cc_warning_flags(options),
         'output_to_exe': cc.output_to_exe,
+        'cc_macro': cc.macro_name,
 
         'shared_flags': cc.gen_shared_flags(options),
         'cmake_shared_flags': cmake_escape(cc.gen_shared_flags(options)),
@@ -1918,22 +1863,21 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'libs_used': [lib.replace('.lib', '') for lib in link_to('libs')],
 
         'include_paths': build_config.format_include_paths(cc, options.with_external_includedir),
-        'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
+        'module_defines': sorted(flatten([m.defines() for m in modules])),
 
-        'target_os_defines': make_cpp_macros(osinfo.defines(options)),
+        'os_features': osinfo.enabled_features(options),
+        'os_name': osinfo.basename,
+        'os_type': osinfo.os_type,
+        'cpu_features': arch.supported_isa_extensions(cc, options),
+        'house_ecc_curve_defines': house_ecc_curve_macros(options.house_curve),
 
-        'target_compiler_defines': make_cpp_macros(cc.defines()),
+        'fuzzer_mode': options.unsafe_fuzzer_mode,
+        'fuzzer_type': options.build_fuzzers.upper() if options.build_fuzzers else '',
 
-        'target_cpu_defines': make_cpp_macros(arch.defines(cc, options)),
+        'with_valgrind': options.with_valgrind,
+        'with_openmp': options.with_openmp,
 
-        'botan_include_dir': build_config.botan_include_dir,
-
-        'unsafe_fuzzer_mode_define': '#define BOTAN_UNSAFE_FUZZER_MODE' if options.unsafe_fuzzer_mode else '',
-        'fuzzer_type': '#define BOTAN_FUZZER_IS_%s' % (options.build_fuzzers.upper()) if options.build_fuzzers else '',
-
-        'mod_list': '\n'.join(sorted([m.basename for m in modules])),
-
-        'house_ecc_curve_defines': make_cpp_macros(house_ecc_curve_macros(options.house_curve))
+        'mod_list': sorted([m.basename for m in modules])
         }
 
     if options.os != 'windows':

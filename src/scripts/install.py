@@ -229,7 +229,7 @@ def main(args):
         copy_file(cfg['botan_pkgconfig'],
                   prepend_destdir(os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig']))))
 
-    if 'ffi' in cfg['mod_list'].split('\n'):
+    if 'ffi' in cfg['mod_list']:
         for ver in cfg['python_version'].split(','):
             py_lib_path = os.path.join(lib_dir, 'python%s' % (ver), 'site-packages')
             logging.debug('Installing python module to %s' % (py_lib_path))

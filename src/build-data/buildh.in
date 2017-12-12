@@ -24,8 +24,13 @@
 
 /* How many bits per limb in a BigInt */
 #define BOTAN_MP_WORD_BITS %{mp_bits}
-%{unsafe_fuzzer_mode_define}
-%{fuzzer_type}
+
+%{if fuzzer_mode}
+#define BOTAN_UNSAFE_FUZZER_MODE
+%{endif}
+%{if fuzzer_type}
+#define BOTAN_FUZZER_IS_%{fuzzer_type}
+%{endif}
 
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"
 #define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}"
@@ -38,22 +43,56 @@
 #endif
 
 /* Target identification and feature test macros */
-%{target_os_defines}
 
-%{target_cpu_defines}
+#define BOTAN_TARGET_OS_IS_%{os_name|upper}
+%{if os_type}
+#define BOTAN_TARGET_OS_TYPE_IS_%{os_type|upper}
+%{endif}
 
-%{target_compiler_defines}
+%{for os_features}
+#define BOTAN_TARGET_OS_HAS_%{i|upper}
+%{endfor}
+
+#define BOTAN_BUILD_COMPILER_IS_%{cc_macro}
+
+#define BOTAN_TARGET_ARCH_IS_%{arch|upper}
+%{if endian}
+#define BOTAN_TARGET_CPU_IS_%{endian|upper}_ENDIAN
+%{endif}
+%{if cpu_family}
+#define BOTAN_TARGET_CPU_IS_%{cpu_family|upper}_FAMILY
+%{endif}
+%{if cpu_is_64bit}
+#define BOTAN_TARGET_CPU_HAS_NATIVE_64BIT
+%{endif}
+
+%{for cpu_features}
+#define BOTAN_TARGET_SUPPORTS_%{i|upper}
+%{endfor}
+
+%{if with_valgrind}
+#define BOTAN_HAS_VALGRIND
+%{endif}
+
+%{if with_openmp}
+#define BOTAN_TARGET_HAS_OPENMP
+%{endif}
 
 /*
 * Module availability definitions
 */
-%{module_defines}
+%{for module_defines}
+#define BOTAN_HAS_%{i}
+%{endfor}
 
 /*
 * Local/misc configuration options (if any) follow
 */
 %{local_config}
-%{house_ecc_curve_defines}
+
+%{for house_ecc_curve_defines}
+#define BOTAN_HOUSE_ECC_CURVE_%{i}
+%{endfor}
 
 /*
 * Things you can edit (but probably shouldn't)
