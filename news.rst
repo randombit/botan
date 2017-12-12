@@ -24,6 +24,9 @@ Version 2.4.0, Not Yet Released
 
 * XMSS signatures now are multithreaded for improved performance (GH #1267)
 
+* Fix a bug that caused the peer cert list to be empty on a resumed session.
+  (GH #1303 #1342)
+
 * Increase the maximum HMAC key length from 512 bytes to 4096 bytes. This allows
   using a DH key exchange with a group greater than 4096 bits. (GH #1316)
 
@@ -155,6 +158,11 @@ Version 2.4.0, Not Yet Released
   as to create an application specific policy that is based on a library-provided
   policy, but with a few tweaks. So the final annotations have been removed on
   these classes. (GH #1292)
+
+* A new option ``--with-pdf`` enables building a PDF copy of the handbook.
+  (GH #1337)
+
+* Support for NEON is now enabled under Clang.
 
 * Add an OID for RIPEMD-160
 
