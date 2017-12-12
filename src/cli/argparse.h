@@ -207,8 +207,8 @@ Argument_Parser::Argument_Parser(const std::string& spec,
    class CLI_Error_Invalid_Spec : public CLI_Error
       {
       public:
-         explicit CLI_Error_Invalid_Spec(const std::string& spec)
-            : CLI_Error("Invalid command spec '" + spec + "'") {}
+         explicit CLI_Error_Invalid_Spec(const std::string& bad_spec)
+            : CLI_Error("Invalid command spec '" + bad_spec + "'") {}
       };
 
    const std::vector<std::string> parts = Botan::split_on(spec, ' ');
