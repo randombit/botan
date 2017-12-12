@@ -641,7 +641,7 @@ def parse_lex_dict(as_list):
     return result
 
 
-def lex_me_harder(infofile, allowed_groups, name_val_pairs):
+def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
     """
     Generic lexer function for info.txt and src/build-data files
     """
@@ -654,7 +654,8 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
     lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
 
-    for group in allowed_groups:
+    groups = allowed_groups + allowed_maps
+    for group in groups:
         out.__dict__[py_var(group)] = []
     for (key, val) in name_val_pairs.items():
         out.__dict__[key] = val
@@ -674,7 +675,7 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
         if match is not None:
             group = match.group(1)
 
-            if group not in allowed_groups:
+            if group not in groups:
                 raise LexerError('Unknown group "%s"' % (group),
                                  infofile, lexer.lineno)
 
@@ -696,6 +697,9 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
 
         else: # No match -> error
             raise LexerError('Bad token "%s"' % (token), infofile, lexer.lineno)
+
+    for group in allowed_maps:
+        out.__dict__[group] = parse_lex_dict(out.__dict__[group])
 
     return out
 
@@ -727,10 +731,10 @@ class ModuleInfo(InfoObject):
         super(ModuleInfo, self).__init__(infofile)
         lex = lex_me_harder(
             infofile,
-            [
-                'defines', 'header:internal', 'header:public', 'header:external', 'requires',
-                'os', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
+            ['header:internal', 'header:public', 'header:external', 'requires',
+             'os', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
             ],
+            ['defines'],
             {
                 'load_on': 'auto',
                 'need_isa': ''
@@ -784,7 +788,7 @@ class ModuleInfo(InfoObject):
         self.arch = lex.arch
         self.cc = lex.cc
         self.comment = ' '.join(lex.comment) if lex.comment else None
-        self._defines = parse_lex_dict(lex.defines)
+        self._defines = lex.defines
         self._validate_defines_content(self._defines)
         self.frameworks = convert_lib_list(lex.frameworks)
         self.libs = convert_lib_list(lex.libs)
@@ -946,6 +950,7 @@ class ModulePolicyInfo(InfoObject):
         lex = lex_me_harder(
             infofile,
             ['required', 'if_available', 'prohibited'],
+            [],
             {})
 
         self.if_available = lex.if_available
@@ -969,7 +974,8 @@ class ArchInfo(InfoObject):
         super(ArchInfo, self).__init__(infofile)
         lex = lex_me_harder(
             infofile,
-            ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
+            ['aliases', 'submodels', 'isa_extensions'],
+            ['submodel_aliases'],
             {
                 'endian': None,
                 'family': None,
@@ -981,7 +987,7 @@ class ArchInfo(InfoObject):
         self.family = lex.family
         self.isa_extensions = lex.isa_extensions
         self.submodels = lex.submodels
-        self.submodel_aliases = parse_lex_dict(lex.submodel_aliases)
+        self.submodel_aliases = lex.submodel_aliases
         self.wordsize = int(lex.wordsize)
 
     def all_submodels(self):
@@ -1051,7 +1057,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         super(CompilerInfo, self).__init__(infofile)
         lex = lex_me_harder(
             infofile,
-            ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
+            ['mach_opt'],
+            ['so_link_commands', 'binary_link_commands', 'mach_abi_linking', 'isa_flags'],
             {
                 'binary_name': None,
                 'linker_name': None,
@@ -1082,32 +1089,32 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         self.add_framework_option = lex.add_framework_option
         self.add_include_dir_option = lex.add_include_dir_option
-        self.add_lib_option = lex.add_lib_option
         self.add_lib_dir_option = lex.add_lib_dir_option
+        self.add_lib_option = lex.add_lib_option
         self.ar_command = lex.ar_command
         self.ar_options = lex.ar_options
         self.ar_output_to = lex.ar_output_to
-        self.binary_link_commands = parse_lex_dict(lex.binary_link_commands)
+        self.binary_link_commands = lex.binary_link_commands
         self.binary_name = lex.binary_name
         self.compile_flags = lex.compile_flags
         self.coverage_flags = lex.coverage_flags
         self.debug_info_flags = lex.debug_info_flags
-        self.isa_flags = parse_lex_dict(lex.isa_flags)
+        self.isa_flags = lex.isa_flags
         self.lang_flags = lex.lang_flags
         self.linker_name = lex.linker_name
-        self.mach_abi_linking = parse_lex_dict(lex.mach_abi_linking)
+        self.mach_abi_linking = lex.mach_abi_linking
         self.macro_name = lex.macro_name
         self.maintainer_warning_flags = lex.maintainer_warning_flags
         self.optimization_flags = lex.optimization_flags
-        self.output_to_object = lex.output_to_object
         self.output_to_exe = lex.output_to_exe
+        self.output_to_object = lex.output_to_object
         self.sanitizer_flags = lex.sanitizer_flags
         self.shared_flags = lex.shared_flags
         self.size_optimization_flags = lex.size_optimization_flags
-        self.so_link_commands = parse_lex_dict(lex.so_link_commands)
+        self.so_link_commands = lex.so_link_commands
         self.stack_protector_flags = lex.stack_protector_flags
-        self.visibility_build_flags = lex.visibility_build_flags
         self.visibility_attribute = lex.visibility_attribute
+        self.visibility_build_flags = lex.visibility_build_flags
         self.warning_flags = lex.warning_flags
 
         self.mach_opt_flags = {}
@@ -1301,6 +1308,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         lex = lex_me_harder(
             infofile,
             ['aliases', 'target_features'],
+            [],
             {
                 'os_type': None,
                 'program_suffix': '',
