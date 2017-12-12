@@ -574,10 +574,9 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     if args != []:
         raise UserError('Unhandled option(s): ' + ' '.join(args))
-    if options.with_endian != None and \
-       options.with_endian not in ['little', 'big']:
-        raise UserError('Bad value to --with-endian "%s"' % (
-            options.with_endian))
+
+    if options.with_endian not in [None, 'little', 'big']:
+        raise UserError('Bad value to --with-endian "%s"' % (options.with_endian))
 
     if options.debug_mode:
         options.no_optimizations = True
@@ -798,6 +797,8 @@ class ModuleInfo(InfoObject):
             if filename.count(':') == 0:
                 return os.path.join(self.lives_in, filename)
 
+            # TODO is this used anymore??? Probably can be removed.
+
             # modules can request to add files of the form
             # MODULE_NAME:FILE_NAME to add a file from another module
             # For these, assume other module is always in a
@@ -994,6 +995,16 @@ class ArchInfo(InfoObject):
                       [k for k in self.submodel_aliases.items()],
                       key=lambda k: len(k[0]), reverse=True)
 
+    def supported_isa_extensions(self, cc, options):
+        isas = []
+
+        for isa in self.isa_extensions:
+            if isa not in options.disable_intrinsics:
+                if cc.isa_flags_for(isa, self.basename) is not None:
+                    isas.append(isa)
+
+        return sorted(isas)
+
     def defines(self, cc, options):
         """
         Return CPU-specific defines for build.h
@@ -1002,43 +1013,7 @@ class ArchInfo(InfoObject):
         def form_macro(cpu_name):
             return cpu_name.upper().replace('.', '').replace('-', '_')
 
-        macros = []
-
-        macros.append('TARGET_ARCH_IS_%s' % (form_macro(self.basename.upper())))
-
-        if self.basename != options.cpu:
-            macros.append('TARGET_CPU_IS_%s' % (form_macro(options.cpu)))
-
-        enabled_isas = set(self.isa_extensions)
-        disabled_isas = set(options.disable_intrinsics)
-
-        isa_extensions = sorted(enabled_isas - disabled_isas)
-
-        for isa in isa_extensions:
-            if cc.isa_flags_for(isa, self.basename) is not None:
-                macros.append('TARGET_SUPPORTS_%s' % (form_macro(isa)))
-            else:
-                logging.warning("Disabling support for %s intrinsics due to missing flag for compiler" % (isa))
-
-        endian = options.with_endian or self.endian
-
-        if endian != None:
-            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (endian.upper()))
-            logging.info('Assuming CPU is %s endian' % (endian))
-
-        if self.family is not None:
-            macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
-
-        if self.wordsize == 64:
-            macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
-
-        if options.with_valgrind:
-            macros.append('HAS_VALGRIND')
-
-        if options.with_openmp:
-            macros.append('TARGET_HAS_OPENMP')
-
-        return macros
+        return ['TARGET_SUPPORTS_' + form_macro(isa) for isa in self.supported_isa_extensions(cc, options)]
 
 
 MachOptFlags = collections.namedtuple('MachOptFlags', ['flags', 'submodel_prefix'])
@@ -1285,14 +1260,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         return '$(LINKER)'
 
-    def defines(self):
-        """
-        Return defines for build.h
-        """
-
-        return ['BUILD_COMPILER_IS_' + self.macro_name]
-
-
 class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def __init__(self, infofile):
         super(OsInfo, self).__init__(infofile)
@@ -1368,24 +1335,16 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
 
-    def defines(self, options):
-        r = []
-        r += ['IS_%s' % (self.basename.upper())]
+    def enabled_features(self, options):
+        feats = []
+        for feat in self.target_features:
+            if feat not in options.without_os_features:
+                feats.append(feat)
+        for feat in options.with_os_features:
+            if feat not in self.target_features:
+                feats.append(feat)
 
-        if self.os_type != None:
-            r += ['TYPE_IS_%s' % (self.os_type.upper())]
-
-        def feat_macros():
-            for feat in self.target_features:
-                if feat not in options.without_os_features:
-                    yield 'HAS_' + feat.upper()
-            for feat in options.with_os_features:
-                if feat not in self.target_features:
-                    yield 'HAS_' + feat.upper()
-
-        r += sorted(feat_macros())
-        return r
-
+        return sorted(feats)
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
@@ -1481,7 +1440,7 @@ def process_template(template_file, variables):
 
         def __init__(self, vals):
             self.vals = vals
-            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9]+)}')
+            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9\|]+)}')
             self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
             self.for_pattern = re.compile('(.*)%{for ([a-z][a-z_0-9]+)}')
             self.join_pattern = re.compile('(.*)%{join ([a-z][a-z_0-9]+)}')
@@ -1492,6 +1451,11 @@ def process_template(template_file, variables):
                 v = match.group(1)
                 if v in self.vals:
                     return str(self.vals.get(v))
+                if v.endswith('|upper'):
+                    v = v.replace('|upper', '')
+                    if v in self.vals:
+                        return str(self.vals.get(v)).upper()
+
                 raise KeyError(v)
 
             lines = template.splitlines()
@@ -1554,7 +1518,7 @@ def process_template(template_file, variables):
                                 for_val = for_val.replace('%{' + ik + '}', iv)
                             output += for_val + "\n"
                         else:
-                            output += for_body.replace('%{i}', v)
+                            output += for_body.replace('%{i}', v).replace('%{i|upper}', v.upper())
                     output += "\n"
                 else:
                     output += lines[idx] + "\n"
@@ -1849,7 +1813,10 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'os': options.os,
         'arch': options.arch,
+        'cpu_family': arch.family,
         'submodel': options.cpu,
+        'endian': options.with_endian or arch.endian,
+        'cpu_is_64bit': arch.wordsize == 64,
 
         'bakefile_arch': 'x86' if options.arch == 'x86_32' else 'x86_64',
 
@@ -1878,6 +1845,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'ldflags': options.ldflags or '',
         'cc_warning_flags': cc.cc_warning_flags(options),
         'output_to_exe': cc.output_to_exe,
+        'cc_macro': cc.macro_name,
 
         'shared_flags': cc.gen_shared_flags(options),
         'cmake_shared_flags': cmake_escape(cc.gen_shared_flags(options)),
@@ -1907,15 +1875,17 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'include_paths': build_config.format_include_paths(cc, options.with_external_includedir),
         'module_defines': sorted(flatten([m.defines() for m in modules])),
 
-        'os_defines': osinfo.defines(options),
-        'cc_defines': cc.defines(),
+        'os_features': osinfo.enabled_features(options),
+        'os_name': osinfo.basename,
+        'os_type': osinfo.os_type,
         'cpu_defines': arch.defines(cc, options),
         'house_ecc_curve_defines': house_ecc_curve_macros(options.house_curve),
 
-        'botan_include_dir': build_config.botan_include_dir,
-
         'fuzzer_mode': options.unsafe_fuzzer_mode,
         'fuzzer_type': options.build_fuzzers.upper() if options.build_fuzzers else '',
+
+        'with_valgrind': options.with_valgrind,
+        'with_openmp': options.with_openmp,
 
         'mod_list': sorted([m.basename for m in modules])
         }

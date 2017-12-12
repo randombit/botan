@@ -43,17 +43,40 @@
 #endif
 
 /* Target identification and feature test macros */
-%{for os_defines}
-#define BOTAN_TARGET_OS_%{i}
+
+#define BOTAN_TARGET_OS_IS_%{os_name|upper}
+%{if os_type}
+#define BOTAN_TARGET_OS_TYPE_IS_%{os_type|upper}
+%{endif}
+
+%{for os_features}
+#define BOTAN_TARGET_OS_HAS_%{i|upper}
 %{endfor}
 
-%{for cc_defines}
-#define BOTAN_%{i}
-%{endfor}
+#define BOTAN_BUILD_COMPILER_IS_%{cc_macro}
+
+#define BOTAN_TARGET_ARCH_IS_%{arch|upper}
+%{if endian}
+#define BOTAN_TARGET_CPU_IS_%{endian|upper}_ENDIAN
+%{endif}
+%{if cpu_family}
+#define BOTAN_TARGET_CPU_IS_%{cpu_family|upper}_FAMILY
+%{endif}
+%{if cpu_is_64bit}
+#define BOTAN_TARGET_CPU_HAS_NATIVE_64BIT
+%{endif}
 
 %{for cpu_defines}
 #define BOTAN_%{i}
 %{endfor}
+
+%{if with_valgrind}
+#define BOTAN_HAS_VALGRIND
+%{endif}
+
+%{if with_openmp}
+#define BOTAN_TARGET_HAS_OPENMP
+%{endif}
 
 /*
 * Module availability definitions
