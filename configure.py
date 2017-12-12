@@ -335,7 +335,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
         target_group.add_option('--disable-%s' % (isa_extn),
                                 help='disable %s intrinsics' % (isa_extn_name),
                                 action='append_const',
-                                const=isa_extn.replace('-', ''),
+                                const=isa_extn.replace('-', '').replace('.', '_'),
                                 dest='disable_intrinsics')
 
     build_group = optparse.OptionGroup(parser, 'Build options')
@@ -1004,16 +1004,6 @@ class ArchInfo(InfoObject):
                     isas.append(isa)
 
         return sorted(isas)
-
-    def defines(self, cc, options):
-        """
-        Return CPU-specific defines for build.h
-        """
-
-        def form_macro(cpu_name):
-            return cpu_name.upper().replace('.', '').replace('-', '_')
-
-        return ['TARGET_SUPPORTS_' + form_macro(isa) for isa in self.supported_isa_extensions(cc, options)]
 
 
 MachOptFlags = collections.namedtuple('MachOptFlags', ['flags', 'submodel_prefix'])
@@ -1878,7 +1868,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'os_features': osinfo.enabled_features(options),
         'os_name': osinfo.basename,
         'os_type': osinfo.os_type,
-        'cpu_defines': arch.defines(cc, options),
+        'cpu_features': arch.supported_isa_extensions(cc, options),
         'house_ecc_curve_defines': house_ecc_curve_macros(options.house_curve),
 
         'fuzzer_mode': options.unsafe_fuzzer_mode,

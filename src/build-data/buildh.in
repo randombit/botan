@@ -66,8 +66,8 @@
 #define BOTAN_TARGET_CPU_HAS_NATIVE_64BIT
 %{endif}
 
-%{for cpu_defines}
-#define BOTAN_%{i}
+%{for cpu_features}
+#define BOTAN_TARGET_SUPPORTS_%{i|upper}
 %{endfor}
 
 %{if with_valgrind}
