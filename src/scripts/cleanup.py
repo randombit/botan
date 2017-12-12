@@ -10,6 +10,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import os
 import sys
+import stat
 import re
 import optparse  # pylint: disable=deprecated-module
 import logging
@@ -41,7 +42,13 @@ def remove_all_in_dir(d):
         logging.debug('Removing all files in directory "%s"', d)
 
         for f in os.listdir(d):
-            remove_file(os.path.join(d, f))
+            full_path = os.path.join(d, f)
+            mode = os.lstat(full_path).st_mode
+
+            if stat.S_ISDIR(mode):
+                remove_dir(full_path)
+            else:
+                remove_file(full_path)
 
 def parse_options(args):
     parser = optparse.OptionParser()
