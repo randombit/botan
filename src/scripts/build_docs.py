@@ -105,6 +105,8 @@ def parse_options(args):
 
 
 def main(args=None):
+    # pylint: disable=too-many-branches,too-many-locals
+
     if args is None:
         args = sys.argv
 
@@ -122,6 +124,7 @@ def main(args=None):
     with_docs = bool(cfg['with_documentation'])
     with_sphinx = bool(cfg['with_sphinx'])
     with_pdf = bool(cfg['with_pdf'])
+    with_rst2man = bool(cfg['with_rst2man'])
     with_doxygen = bool(cfg['with_doxygen'])
 
     doc_stamp_file = cfg['doc_stamp_file']
@@ -153,6 +156,10 @@ def main(args=None):
     else:
         # otherwise just copy it
         cmds.append(['cp', manual_src, manual_output])
+
+    if with_rst2man:
+        cmds.append(['rst2man', os.path.join(manual_src, 'cli.rst'),
+                     os.path.join(cfg['build_dir'], 'botan.1')])
 
     cmds.append(['touch', doc_stamp_file])
 

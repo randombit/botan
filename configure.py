@@ -378,7 +378,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
                            help='disable all optimizations (for debugging)')
 
     build_group.add_option('--debug-mode', action='store_true', default=False, dest='debug_mode',
-                           help='enable debug info and disable optimizations')
+                           help='enable debug info, disable optimizations')
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
@@ -390,7 +390,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     build_group.add_option('--amalgamation', dest='amalgamation',
                            default=False, action='store_true',
-                           help='generate amalgamation files and build via amalgamation')
+                           help='use amalgamation to build')
 
     build_group.add_option('--single-amalgamation-file',
                            default=False, action='store_true',
@@ -443,11 +443,11 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
                            help='Disable essential checks for testing')
 
-    build_group.add_option('--build-fuzzers=', dest='build_fuzzers',
+    build_group.add_option('--build-fuzzers', dest='build_fuzzers',
                            metavar='TYPE', default=None,
                            help='Build fuzzers (afl, libfuzzer, klee, test)')
 
-    build_group.add_option('--with-fuzzer-lib=', metavar='LIB', default=None, dest='fuzzer_lib',
+    build_group.add_option('--with-fuzzer-lib', metavar='LIB', default=None, dest='fuzzer_lib',
                            help='additionally link in LIB')
 
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
@@ -470,6 +470,12 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     docs_group.add_option('--without-pdf', action='store_false',
                           dest='with_pdf', help=optparse.SUPPRESS_HELP)
+
+    docs_group.add_option('--with-rst2man', action='store_true',
+                          default=None, help='Use rst2man to generate man page')
+
+    docs_group.add_option('--without-rst2man', action='store_false',
+                          dest='with_rst2man', help=optparse.SUPPRESS_HELP)
 
     docs_group.add_option('--with-doxygen', action='store_true',
                           default=False, help='Use Doxygen')
@@ -532,6 +538,8 @@ def process_command_line(args): # pylint: disable=too-many-locals
                              help='set the binary install dir')
     install_group.add_option('--libdir', metavar='DIR',
                              help='set the library install dir')
+    install_group.add_option('--mandir', metavar='DIR',
+                             help='set the install dir for man pages')
     install_group.add_option('--includedir', metavar='DIR',
                              help='set the include file install dir')
 
@@ -558,7 +566,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
         'libexecdir',
         'localedir',
         'localstatedir',
-        'mandir',
         'oldincludedir',
         'pdfdir',
         'psdir',
@@ -1273,6 +1280,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'bin_dir': 'bin',
                 'lib_dir': 'lib',
                 'doc_dir': 'share/doc',
+                'man_dir': 'share/man',
                 'building_shared_supported': 'yes',
                 'so_post_link_command': '',
                 'cli_exe_name': 'botan',
@@ -1318,6 +1326,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.lib_dir = lex.lib_dir
         self.lib_prefix = lex.lib_prefix
         self.library_name = lex.library_name
+        self.man_dir = lex.man_dir
         self.obj_suffix = lex.obj_suffix
         self.os_type = lex.os_type
         self.program_suffix = lex.program_suffix
@@ -1769,12 +1778,14 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'prefix': options.prefix or osinfo.install_root,
         'bindir': options.bindir or osinfo.bin_dir,
         'libdir': options.libdir or osinfo.lib_dir,
+        'mandir': options.mandir or osinfo.man_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
 
         'with_documentation': options.with_documentation,
         'with_sphinx': options.with_sphinx,
         'with_pdf': options.with_pdf,
+        'with_rst2man': options.with_rst2man,
         'sphinx_config_dir': source_paths.sphinx_config_dir,
         'with_doxygen': options.with_doxygen,
 
@@ -2718,10 +2729,13 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
         logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
             options.arch, options.cpu))
 
-    if options.with_sphinx is None and options.with_documentation is True:
-        if have_program('sphinx-build'):
+    if options.with_documentation is True:
+        if options.with_sphinx is None and have_program('sphinx-build'):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
+        if options.with_rst2man is None and have_program('rst2man'):
+            logging.info('Found rst2man (use --without-rst2man to disable)')
+            options.with_rst2man = True
 
 
 # Mutates `options`

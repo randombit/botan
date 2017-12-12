@@ -253,6 +253,13 @@ def main(args):
         for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
             copy_file(os.path.join(cfg['doc_dir'], f), prepend_destdir(os.path.join(target_doc_dir, f)))
 
+        if cfg['with_rst2man']:
+            man1_dir = prepend_destdir(os.path.join(options.prefix, os.path.join(cfg['mandir'], 'man1')))
+            makedirs(man1_dir)
+
+            copy_file(os.path.join(cfg['build_dir'], 'botan.1'),
+                      os.path.join(man1_dir, 'botan.1'))
+
     logging.info('Botan %s installation complete', cfg['version'])
     return 0
 
