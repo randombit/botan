@@ -82,7 +82,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         flags += ['--module-policy=%s' % (target), '--disable-static']
 
     if target == 'docs':
-        flags += ['--with-doxygen', '--with-sphinx']
+        flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
         test_cmd = None
 
     if target == 'coverage':
