@@ -380,14 +380,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--debug-mode', action='store_true', default=False, dest='debug_mode',
                            help='enable debug info, disable optimizations')
 
-    build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
-                           default=False, action='store_true',
-                           help='generate amalgamation files and build without amalgamation (removed)')
-
-    build_group.add_option('--via-amalgamation', dest='via_amalgamation',
-                           default=False, action='store_true',
-                           help='build via amalgamation (deprecated, use --amalgamation)')
-
     build_group.add_option('--amalgamation', dest='amalgamation',
                            default=False, action='store_true',
                            help='use amalgamation to build')
@@ -529,9 +521,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     install_group.add_option('--prefix', metavar='DIR',
                              help='set the install prefix')
-    install_group.add_option('--destdir', metavar='DIR',
-                             help='set the destination prefix (REMOVED, use DESTDIR ' \
-                                  'environment variable when calling \'make install\')')
     install_group.add_option('--docdir', metavar='DIR',
                              help='set the doc install dir')
     install_group.add_option('--bindir', metavar='DIR',
@@ -2324,7 +2313,7 @@ class AmalgamationHeader(object):
     def write_banner(fd):
         fd.write("""/*
 * Botan %s Amalgamation
-* (C) 1999-2013,2014,2015,2016 Jack Lloyd and others
+* (C) 1999-2017 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -2789,12 +2778,6 @@ def canonicalize_options(options, info_os, info_arch):
 def validate_options(options, info_os, info_cc, available_module_policies):
     # pylint: disable=too-many-branches
 
-    if options.gen_amalgamation:
-        raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
-
-    if options.via_amalgamation:
-        raise UserError("--via-amalgamation was removed. Use --amalgamation instead.")
-
     if options.single_amalgamation_file and not options.amalgamation:
         raise UserError("--single-amalgamation-file requires --amalgamation.")
 
@@ -2814,10 +2797,6 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
-
-    if options.destdir:
-        raise UserError("--destdir was removed. Use the DESTDIR environment "
-                        "variable instead when calling 'make install'")
 
     if options.os == 'llvm' or options.cpu == 'llvm':
         if options.compiler != 'clang':
@@ -2886,8 +2865,7 @@ def calculate_cc_min_version(options, cc, osinfo):
             logging.info('Auto-detected compiler version %s' % (cc_version))
             return cc_version
         else:
-            logging.warning("Auto-detected compiler version failed. " \
-                            "Use --cc-min-version to set manually. Falling back to version 0.0")
+            logging.warning("Detecting compiler version failed. Use --cc-min-version to set")
             return "0.0"
 
 def main_action_configure_build(info_modules, source_paths, options,
