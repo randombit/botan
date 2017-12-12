@@ -162,6 +162,9 @@ Version 2.4.0, Not Yet Released
 * A new option ``--with-pdf`` enables building a PDF copy of the handbook.
   (GH #1337)
 
+* A new option ``--with-rst2man`` enables building a man page for the
+  command line util using Docutils rst2man. (GH #1349)
+
 * Support for NEON is now enabled under Clang.
 
 * Add an OID for RIPEMD-160
