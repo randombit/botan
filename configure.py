@@ -793,24 +793,11 @@ class ModuleInfo(InfoObject):
         self.requires = lex.requires
         self.warning = ' '.join(lex.warning) if lex.warning else None
 
-        def add_dir_name(filename):
-            if filename.count(':') == 0:
-                return os.path.join(self.lives_in, filename)
-
-            # TODO is this used anymore??? Probably can be removed.
-
-            # modules can request to add files of the form
-            # MODULE_NAME:FILE_NAME to add a file from another module
-            # For these, assume other module is always in a
-            # neighboring directory; this is true for all current uses
-            return os.path.join(os.path.split(self.lives_in)[0],
-                                *filename.split(':'))
-
         # Modify members
-        self.source = [normalize_source_path(add_dir_name(s)) for s in self.source]
-        self.header_internal = [add_dir_name(s) for s in self.header_internal]
-        self.header_public = [add_dir_name(s) for s in self.header_public]
-        self.header_external = [add_dir_name(s) for s in self.header_external]
+        self.source = [normalize_source_path(os.path.join(self.lives_in, s)) for s in self.source]
+        self.header_internal = [os.path.join(self.lives_in, s) for s in self.header_internal]
+        self.header_public = [os.path.join(self.lives_in, s) for s in self.header_public]
+        self.header_external = [os.path.join(self.lives_in, s) for s in self.header_external]
 
         # Filesystem read access check
         for src in self.source + self.header_internal + self.header_public + self.header_external:
