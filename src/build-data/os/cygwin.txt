@@ -1,4 +1,3 @@
-os_type unix
 
 program_suffix .exe
 
@@ -10,7 +9,10 @@ install_root c:\Botan
 doc_dir docs
 
 <target_features>
-readdir
+posix1
+dev_random
+
+sockets
 threads
 filesystem
 </target_features>

@@ -20,7 +20,7 @@ typedef std::mutex mutex_type;
 
 }
 
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIKERNEL) || defined(BOTAN_TARGET_OS_IS_LLVM)
+#else
 
 // No threads
 
@@ -53,8 +53,6 @@ template<typename T> using lock_guard_type = lock_guard<T>;
 
 }
 
-#else
-  #error "Threads unexpectedly disabled in non unikernel build"
 #endif
 
 #endif

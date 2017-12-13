@@ -1,4 +1,3 @@
-os_type unix
 
 soname_suffix "so"
 
@@ -10,10 +9,10 @@ doc_dir system/documentation
 use_stack_protector no
 
 <target_features>
+posix1
 clock_gettime
-gmtime_r
-dlopen
-readdir
+dev_random
+
 sockets
 threads
 filesystem

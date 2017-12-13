@@ -4,17 +4,10 @@ DYNAMIC_LOADER -> 20160310
 
 load_on dep
 
-<os>
-android
-freebsd
-linux
-netbsd
-openbsd
-qnx
-solaris
-windows
-darwin
-</os>
+<os_features>
+posix1
+win32
+</os_features>
 
 <libs>
 android -> dl

@@ -2,27 +2,12 @@
 SYSTEM_RNG -> 20141202
 </defines>
 
-<os>
-aix
-android
-cygwin
-darwin
-dragonfly
-freebsd
-haiku
-hpux
-hurd
-includeos
-ios
-linux
-mingw
-netbsd
-openbsd
-qnx
-solaris
-windows
-winphone
-</os>
+<os_features>
+dev_random,posix1
+arc4random
+crypto_ng
+cryptgenrandom
+</os_features>
 
 <libs>
 windows -> advapi32.lib

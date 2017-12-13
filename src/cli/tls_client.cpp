@@ -8,7 +8,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(BOTAN_HAS_TLS) && (defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2))
 
 #include <botan/tls_client.h>
 #include <botan/tls_policy.h>

@@ -37,7 +37,7 @@
    #include <botan/entropy_src.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    #include <unistd.h>
    #include <sys/wait.h>
 #endif
@@ -273,7 +273,7 @@ class Stateful_RNG_Tests : public Test
          {
          Test::Result result(rng_name() + " Fork Safety");
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
          const size_t reseed_interval = 1024;
 
          // make sure rng is reseeded after every fork

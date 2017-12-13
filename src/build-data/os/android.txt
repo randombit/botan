@@ -1,16 +1,17 @@
-os_type unix
 
 soname_suffix "so"
 
 <target_features>
+posix1
+
+dev_random
 clock_gettime
-posix_mlock
-gmtime_r
+
 # getauxval is available in Android NDK for min API 18 and in Crystax NDK
-# for all min API levels. Comment out if older API levels must be supported.
+# for all min API levels. Use --without-os-feature=getauxval to disable
 getauxval
-dlopen
-readdir
+
+sockets
 threads
 filesystem
 </target_features>

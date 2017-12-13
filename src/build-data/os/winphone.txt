@@ -1,4 +1,3 @@
-os_type windows
 
 # ?
 program_suffix .exe
@@ -9,13 +8,12 @@ install_root c:\\Botan
 doc_dir docs
 
 <target_features>
+win32
+winsock2
+
 crypto_ng
-gmtime_s
-loadlibrary
-query_perf_counter
 rtlsecurezeromemory
-#stl_filesystem_msvc
+
 threads
 filesystem
-sockets
 </target_features>
