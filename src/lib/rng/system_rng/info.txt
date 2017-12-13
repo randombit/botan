@@ -14,7 +14,6 @@ hpux
 hurd
 includeos
 ios
-irix
 linux
 mingw
 netbsd

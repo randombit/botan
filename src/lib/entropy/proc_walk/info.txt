@@ -15,7 +15,6 @@ dragonfly
 freebsd
 hpux
 hurd
-irix
 linux
 netbsd
 qnx

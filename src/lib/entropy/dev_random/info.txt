@@ -16,7 +16,6 @@ freebsd
 haiku
 hpux
 hurd
-irix
 linux
 netbsd
 openbsd

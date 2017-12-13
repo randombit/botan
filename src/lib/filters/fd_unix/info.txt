@@ -13,7 +13,6 @@ dragonfly
 freebsd
 haiku
 hpux
-irix
 linux
 netbsd
 openbsd

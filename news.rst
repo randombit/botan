@@ -173,6 +173,11 @@ Version 2.4.0, Not Yet Released
 
 * Avoid some signed overflow warnings (GH #1220 #1245)
 
+* As upstream support for Native Client has been deprecated by Google, support
+  is now also deprecated in Botan and will be removed in a future release.
+
+* Support for building on IRIX has been removed.
+
 Version 2.3.0, 2017-10-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
