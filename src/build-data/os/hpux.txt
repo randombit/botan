@@ -4,7 +4,6 @@ os_type unix
 soname_suffix "so"
 
 <target_features>
-gettimeofday
 threads
 filesystem
 </target_features>

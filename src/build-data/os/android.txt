@@ -4,7 +4,6 @@ soname_suffix "so"
 
 <target_features>
 clock_gettime
-gettimeofday
 posix_mlock
 gmtime_r
 # getauxval is available in Android NDK for min API 18 and in Crystax NDK

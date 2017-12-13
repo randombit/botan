@@ -4,7 +4,6 @@ soname_suffix "so"
 
 <target_features>
 posix_mlock
-gettimeofday
 threads
 readdir
 filesystem

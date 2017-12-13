@@ -19,8 +19,7 @@ mingw32
 <target_features>
 cryptgenrandom
 loadlibrary
-win32_virtual_lock
-win32_get_systemtime
+virtual_lock
 threads
 filesystem
 </target_features>

@@ -7,7 +7,6 @@ lib_dir system/lib
 doc_dir system/documentation
 
 <target_features>
-gettimeofday
 gmtime_r
 threads
 filesystem
