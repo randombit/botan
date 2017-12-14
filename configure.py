@@ -2779,9 +2779,9 @@ def prepare_configure_build(info_modules, source_paths, options,
 
 def calculate_cc_min_version(options, ccinfo, source_paths):
     version_patterns = {
-        'msvc': r'^MSVC ([0-9]{2})([0-9]{2})$',
-        'gcc': r'^GCC ([0-9]+) ([0-9]+)$',
-        'clang': r'^CLANG ([0-9]+) ([0-9])$',
+        'msvc': r'^ *MSVC ([0-9]{2})([0-9]{2})$',
+        'gcc': r'^ *GCC ([0-9]+) ([0-9]+)$',
+        'clang': r'^ *CLANG ([0-9]+) ([0-9]+)$',
     }
 
     if ccinfo.basename not in version_patterns:
