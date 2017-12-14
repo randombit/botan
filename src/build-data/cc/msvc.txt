@@ -21,6 +21,8 @@ size_optimization_flags "/O1 /Os"
 # for using a PDB file:
 debug_info_flags "/Zi /FS"
 
+preproc_flags "/nologo /EP"
+
 lang_flags "/EHs /GR"
 warning_flags "/W4 /wd4250 /wd4251 /wd4275"
 

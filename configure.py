@@ -1020,6 +1020,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'add_lib_dir_option': '-L',
                 'add_lib_option': '-l',
                 'add_framework_option': '-framework ',
+                'preproc_flags': '-E',
                 'compile_flags': '-c',
                 'debug_info_flags': '-g',
                 'optimization_flags': '',
@@ -1059,6 +1060,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.optimization_flags = lex.optimization_flags
         self.output_to_exe = lex.output_to_exe
         self.output_to_object = lex.output_to_object
+        self.preproc_flags = lex.preproc_flags
         self.sanitizer_flags = lex.sanitizer_flags
         self.shared_flags = lex.shared_flags
         self.size_optimization_flags = lex.size_optimization_flags
@@ -2485,82 +2487,6 @@ class AmalgamationGenerator(object):
         return (sorted(amalgamation_sources), sorted(amalgamation_headers))
 
 
-class CompilerDetector(object):
-    _msvc_version_source = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "src", "build-data", "compiler_detection", "msvc_version.c")
-    _version_flags = {
-        'msvc': ['/nologo', '/EP', _msvc_version_source],
-        'gcc': ['-v'],
-        'clang': ['-v'],
-    }
-    _version_patterns = {
-        'msvc': r'^([0-9]{2})([0-9]{2})',
-        'gcc': r'gcc version ([0-9]+)\.([0-9]+)\.[0-9]+',
-        'clang': r'clang version ([0-9]+)\.([0-9])[ \.]',
-    }
-
-    def __init__(self, cc_name, cc_bin, os_name):
-        self._cc_name = cc_name
-        self._cc_bin = cc_bin
-        self._os_name = os_name
-
-    def get_version(self):
-        try:
-            cmd = self._cc_bin.split(' ') + CompilerDetector._version_flags[self._cc_name]
-        except KeyError:
-            logging.info("No compiler version detection available for %s" % (self._cc_name))
-            return None
-
-        try:
-            stdout, stderr = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True).communicate()
-            cc_output = stdout + "\n" + stderr
-        except OSError as e:
-            logging.warning('Could not execute %s for version check: %s' % (cmd, e))
-            return None
-
-        return self.version_from_compiler_output(cc_output)
-
-    def version_from_compiler_output(self, cc_output):
-        cc_version = None
-
-        match = re.search(CompilerDetector._version_patterns[self._cc_name], cc_output, flags=re.MULTILINE)
-        if match:
-            major = int(match.group(1))
-            minor = int(match.group(2))
-            cc_version = "%d.%d" % (major, minor)
-
-        if cc_version is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
-            # For appleclang version >= X, return minimal clang version Y
-            appleclang_to_clang_version = {
-                703: '3.8',
-                800: '3.9',
-                # 802 has no support for clang 4.0 flags -Og and -MJ, 900 has.
-                802: '3.9',
-                900: '4.0',
-            }
-
-            # All appleclang versions without "based on LLVM" note are at least clang 3.7
-            # https://en.wikipedia.org/wiki/Xcode#Latest_versions
-            cc_version = '3.7'
-            match = re.search(r'Apple LLVM version [0-9\.]+ \(clang-([0-9]+)\.', cc_output)
-            if match:
-                user_appleclang = int(match.group(1))
-                for appleclang, clang in sorted(appleclang_to_clang_version.items()):
-                    if user_appleclang >= appleclang:
-                        cc_version = clang
-                logging.info('Mapping Apple Clang version %s to LLVM version %s' % (user_appleclang, cc_version))
-
-        if not cc_version:
-            logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
-                self._cc_name, cc_output))
-
-        return cc_version
-
-
 def have_program(program):
     """
     Test for the existence of a program
@@ -2682,7 +2608,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
         logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
 
     def deduce_compiler_type_from_cc_bin(cc_bin):
-        if cc_bin.find('clang') != -1:
+        if cc_bin.find('clang') != -1 or cc_bin in ['emcc', 'em++']:
             return 'clang'
         if cc_bin.find('-g++') != -1:
             return 'gcc'
@@ -2851,21 +2777,43 @@ def prepare_configure_build(info_modules, source_paths, options,
     return using_mods, build_config, template_vars
 
 
-def calculate_cc_min_version(options, cc, osinfo):
-    if options.cc_min_version:
-        return options.cc_min_version
-    else:
-        cc_version = CompilerDetector(
-            cc.basename,
-            options.compiler_binary or cc.binary_name,
-            osinfo.basename
-        ).get_version()
-        if cc_version:
-            logging.info('Auto-detected compiler version %s' % (cc_version))
-            return cc_version
-        else:
-            logging.warning("Detecting compiler version failed. Use --cc-min-version to set")
-            return "0.0"
+def calculate_cc_min_version(options, ccinfo, source_paths):
+    version_patterns = {
+        'msvc': r'^MSVC ([0-9]{2})([0-9]{2})$',
+        'gcc': r'^GCC ([0-9]+) ([0-9]+)$',
+        'clang': r'^CLANG ([0-9]+) ([0-9])$',
+    }
+
+    if ccinfo.basename not in version_patterns:
+        logging.info("No compiler version detection available for %s" % (ccinfo.basename))
+        return "0.0"
+
+    detect_version_source = os.path.join(source_paths.build_data_dir, "detect_version.cpp")
+
+    cc_bin = options.compiler_binary or ccinfo.binary_name
+
+    cmd = cc_bin.split(' ') + [ccinfo.preproc_flags, detect_version_source]
+
+    try:
+        stdout, stderr = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True).communicate()
+        cc_output = stdout + "\n" + stderr
+    except OSError as e:
+        logging.warning('Could not execute %s for version check: %s' % (cmd, e))
+        return "0.0"
+
+    match = re.search(version_patterns[ccinfo.basename], cc_output, flags=re.MULTILINE)
+    if match is None:
+        logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
+            ccinfo.basename, cc_output))
+        return "0.0"
+
+    cc_version = "%d.%d" % (int(match.group(1)), int(match.group(2)))
+    logging.info('Auto-detected compiler version %s' % (cc_version))
+    return cc_version
 
 def main_action_configure_build(info_modules, source_paths, options,
                                 cc, cc_min_version, arch, osinfo, module_policy):
@@ -3007,7 +2955,7 @@ def main(argv):
     arch = info_arch[options.arch]
     osinfo = info_os[options.os]
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
-    cc_min_version = calculate_cc_min_version(options, cc, osinfo)
+    cc_min_version = options.cc_min_version or calculate_cc_min_version(options, cc, source_paths)
 
     logging.info('Target is %s:%s-%s-%s-%s' % (
         options.compiler, cc_min_version, options.os, options.arch, options.cpu))
