@@ -27,6 +27,26 @@
 
 namespace Botan_CLI {
 
+class PK_Fingerprint final : public Command
+   {
+   public:
+      PK_Fingerprint() : Command("fingerprint --algo=SHA-256 *keys") {}
+
+      void go() override
+         {
+         const std::string hash_algo = get_arg("algo");
+
+         for(std::string key_file : get_arg_list("keys"))
+            {
+            std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_file));
+
+            output() << key_file << ": " << key->fingerprint_public(hash_algo) << "\n";
+            }
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("fingerprint", PK_Fingerprint);
+
 class PK_Keygen final : public Command
    {
    public:

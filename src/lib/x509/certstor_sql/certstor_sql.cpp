@@ -186,7 +186,7 @@ std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509
 std::vector<std::shared_ptr<const X509_Certificate>>
 Certificate_Store_In_SQL::find_certs_for_key(const Private_Key& key) const
    {
-   auto fpr = key.fingerprint("SHA-256");
+   auto fpr = key.fingerprint_private("SHA-256");
    auto stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE priv_fingerprint == ?1");
 
    stmt->bind(1,fpr);
@@ -209,7 +209,7 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
       return false;
 
    auto pkcs8 = PKCS8::BER_encode(key, m_rng, m_password);
-   auto fpr = key.fingerprint("SHA-256");
+   auto fpr = key.fingerprint_private("SHA-256");
 
    auto stmt1 = m_database->new_statement(
          "INSERT OR REPLACE INTO " + m_prefix + "keys ( fingerprint, key ) VALUES ( ?1, ?2 )");
@@ -230,7 +230,7 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
 
 void Certificate_Store_In_SQL::remove_key(const Private_Key& key)
    {
-   auto fpr = key.fingerprint("SHA-256");
+   auto fpr = key.fingerprint_private("SHA-256");
    auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "keys WHERE fingerprint == ?1");
 
    stmt->bind(1,fpr);
