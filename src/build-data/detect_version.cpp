@@ -29,11 +29,11 @@
 
    #if __clang_major__ >= 9
       CLANG 4 0
-   #elif __clang__major__ == 8
+   #elif __clang_major__ == 8
       CLANG 3 9
-   #elif __clang__major__ == 7 && __clang__minor__ == 3
+   #elif __clang_major__ == 7 && __clang_minor__ == 3
       CLANG 3 8
-   #elif __clang__major__ == 7
+   #elif __clang_major__ == 7
       CLANG 3 7
    #else
       CLANG 3 5
