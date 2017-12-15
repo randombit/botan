@@ -19,12 +19,14 @@
 #elif defined(__clang__) && defined(__apple_build_version__)
 
    /*
-   Map Apple XCode versions back to standard Clang
-
-   This is not a complete map, since we don't support any versions of
-   Clang before 3.5 in any case, and it arbitrarily maps any version with
-   XCode >= 9 to Clang 4.0. This is fine because we don't currently need
-   any features not available in Clang 4.0
+   Map Apple LLVM versions as used in XCode back to standard Clang.
+   This is not exact since the versions used in XCode are actually
+   forks of Clang and do not coorespond perfectly to standard Clang
+   releases. In addition we don't bother mapping very old versions
+   (anything before XCode 7 is treated like Clang 3.5, which is the
+   oldest version we support) and for "future" versions we simply
+   treat them as Clang 4.0, since we don't currenly rely on any
+   features not included in 4.0
    */
 
    #if __clang_major__ >= 9
