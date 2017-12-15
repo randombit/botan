@@ -662,22 +662,7 @@ std::vector<std::string> X509_Certificate::policies() const
 
 std::string X509_Certificate::fingerprint(const std::string& hash_name) const
    {
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_name));
-   hash->update(this->BER_encode());
-   const std::string hex_print = hex_encode(hash->final());
-
-   std::string formatted_print;
-
-   for(size_t i = 0; i != hex_print.size(); i += 2)
-      {
-      formatted_print.push_back(hex_print[i]);
-      formatted_print.push_back(hex_print[i+1]);
-
-      if(i != hex_print.size() - 2)
-         formatted_print.push_back(':');
-      }
-
-   return formatted_print;
+   return create_hex_fingerprint(this->BER_encode(), hash_name);
    }
 
 bool X509_Certificate::matches_dns_name(const std::string& name) const
