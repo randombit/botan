@@ -52,7 +52,7 @@ std::string encode(const uint8_t der[], size_t length, const std::string& label,
 * Decode PEM down to raw BER/DER
 */
 secure_vector<uint8_t> decode_check_label(DataSource& source,
-                                      const std::string& label_want)
+                                          const std::string& label_want)
    {
    std::string label_got;
    secure_vector<uint8_t> ber = decode(source, label_got);
@@ -68,6 +68,8 @@ secure_vector<uint8_t> decode_check_label(DataSource& source,
 secure_vector<uint8_t> decode(DataSource& source, std::string& label)
    {
    const size_t RANDOM_CHAR_LIMIT = 8;
+
+   label.clear();
 
    const std::string PEM_HEADER1 = "-----BEGIN ";
    const std::string PEM_HEADER2 = "-----";
@@ -122,7 +124,7 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label)
    }
 
 secure_vector<uint8_t> decode_check_label(const std::string& pem,
-                                      const std::string& label_want)
+                                          const std::string& label_want)
    {
    DataSource_Memory src(pem);
    return decode_check_label(src, label_want);
