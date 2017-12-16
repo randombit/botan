@@ -44,13 +44,11 @@ size_t XMSS_Tools::bench_threads()
          {
          auto& hs = hash[i];
          auto& d = data[i];
-         threads.emplace_back(
-            std::thread([&BENCH_ITERATIONS, &i, &cc, &hs, &d]()
+
+         const size_t n_iters = BENCH_ITERATIONS * (std::thread::hardware_concurrency() / cc);
+         threads.emplace_back(std::thread([n_iters, &hs, &d]()
                {
-               for(size_t n = 0;
-                   n < BENCH_ITERATIONS * (std::thread::hardware_concurrency() /
-                                           cc);
-                   n++)
+               for(size_t n = 0; n < n_iters; n++)
                   {
                   hs.h(d, d, d);
                   }
