@@ -207,7 +207,7 @@ Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(
 * @param hostname if not empty, compared against the DNS name in end_cert
 * @param usage if not set to UNSPECIFIED, compared against the key usage in end_cert
 * @param validation_time what reference time to use for validation
-* @param ocsp_timeout timeoutput for OCSP operations, 0 disables OCSP check
+* @param ocsp_timeout timeout for OCSP operations, 0 disables OCSP check
 * @param ocsp_resp additional OCSP responses to consider (eg from peer)
 * @return result of the path validation
 */
@@ -251,7 +251,7 @@ Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(
 * @param hostname if not empty, compared against the DNS name in end_certs[0]
 * @param usage if not set to UNSPECIFIED, compared against the key usage in end_certs[0]
 * @param validation_time what reference time to use for validation
-* @param ocsp_timeout timeoutput for OCSP operations, 0 disables OCSP check
+* @param ocsp_timeout timeout for OCSP operations, 0 disables OCSP check
 * @param ocsp_resp additional OCSP responses to consider (eg from peer)
 * @return result of the path validation
 */

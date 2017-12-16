@@ -320,7 +320,9 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
 
                   auto http = HTTP::POST_sync(subject->ocsp_responder(),
                                               "application/ocsp-request",
-                                              req.BER_encode());
+                                              req.BER_encode(),
+                                              /*redirects*/1,
+                                              timeout);
 
                   http.throw_unless_ok();
                   // Check the MIME type?
@@ -330,30 +332,11 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
             }
       }
 
-   std::vector<std::shared_ptr<const OCSP::Response>> ocsp_responses(ocsp_response_futures.size());
+   std::vector<std::shared_ptr<const OCSP::Response>> ocsp_responses;
 
-   for(size_t pass = 1; pass < 3; ++pass)
+   for(size_t i = 0; i < ocsp_response_futures.size(); ++i)
       {
-      for(size_t i = 0; i < ocsp_response_futures.size(); ++i)
-         {
-         try
-            {
-            if(ocsp_responses[i] == nullptr && ocsp_response_futures[i].valid())
-               {
-               std::future_status status = ocsp_response_futures[i].wait_for(timeout);
-
-               if(status == std::future_status::ready ||
-                  status == std::future_status::deferred)
-                  {
-                  ocsp_responses[i] = ocsp_response_futures[i].get();
-                  }
-               }
-            }
-            catch(std::exception&)
-               {
-               // value is default initialized to null, no need to do anything
-               }
-         }
+      ocsp_responses.push_back(ocsp_response_futures[i].get());
       }
 
    return PKIX::check_ocsp(cert_path, ocsp_responses, trusted_certstores, ref_time);
