@@ -25,13 +25,14 @@ namespace {
 * closes the socket.
 */
 std::string http_transact(const std::string& hostname,
-                          const std::string& message)
+                          const std::string& message,
+                          std::chrono::milliseconds timeout)
    {
    std::unique_ptr<OS::Socket> socket;
 
    try
       {
-      socket = OS::open_socket(hostname, "http", std::chrono::milliseconds(2500));
+      socket = OS::open_socket(hostname, "http", timeout);
       if(!socket)
          throw Exception("No socket support enabled in build");
       }
@@ -205,10 +206,17 @@ Response http_sync(const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,
                    const std::vector<uint8_t>& body,
-                   size_t allowable_redirects)
+                   size_t allowable_redirects,
+                   std::chrono::milliseconds timeout)
    {
+   auto transact_with_timeout =
+      [timeout](const std::string& hostname, const std::string& service)
+      {
+      return http_transact(hostname, service, timeout);
+      };
+
    return http_sync(
-      http_transact,
+      transact_with_timeout,
       verb,
       url,
       content_type,
@@ -216,17 +224,20 @@ Response http_sync(const std::string& verb,
       allowable_redirects);
    }
 
-Response GET_sync(const std::string& url, size_t allowable_redirects)
+Response GET_sync(const std::string& url,
+                  size_t allowable_redirects,
+                  std::chrono::milliseconds timeout)
    {
-   return http_sync("GET", url, "", std::vector<uint8_t>(), allowable_redirects);
+   return http_sync("GET", url, "", std::vector<uint8_t>(), allowable_redirects, timeout);
    }
 
 Response POST_sync(const std::string& url,
                    const std::string& content_type,
                    const std::vector<uint8_t>& body,
-                   size_t allowable_redirects)
+                   size_t allowable_redirects,
+                   std::chrono::milliseconds timeout)
    {
-   return http_sync("POST", url, content_type, body, allowable_redirects);
+   return http_sync("POST", url, content_type, body, allowable_redirects, timeout);
    }
 
 }

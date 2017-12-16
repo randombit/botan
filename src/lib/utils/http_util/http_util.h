@@ -14,6 +14,7 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <chrono>
 
 namespace Botan {
 
@@ -79,15 +80,18 @@ BOTAN_PUBLIC_API(2,0) Response http_sync(const std::string& verb,
                                          const std::string& url,
                                          const std::string& content_type,
                                          const std::vector<uint8_t>& body,
-                                         size_t allowable_redirects);
+                                         size_t allowable_redirects,
+                                         std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
 BOTAN_PUBLIC_API(2,0) Response GET_sync(const std::string& url,
-                                        size_t allowable_redirects = 1);
+                                        size_t allowable_redirects = 1,
+                                        std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
 BOTAN_PUBLIC_API(2,0) Response POST_sync(const std::string& url,
                                          const std::string& content_type,
                                          const std::vector<uint8_t>& body,
-                                         size_t allowable_redirects = 1);
+                                         size_t allowable_redirects = 1,
+                                         std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
 BOTAN_PUBLIC_API(2,0) std::string url_encode(const std::string& url);
 
