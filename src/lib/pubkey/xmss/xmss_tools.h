@@ -60,7 +60,9 @@ class XMSS_Tools final
       static void concat(secure_vector<uint8_t>& target, const T& src, size_t len);
 
       /**
-       * @deprecated Determines the maximum number of threads to be used
+       * Not a public API function - will be removed in a future release.
+       *
+       * Determines the maximum number of threads to be used
        * efficiently, based on runtime timining measurements. Ideally the
        * result will correspond to the physical number of cores. On systems
        * supporting simultaneous multi threading (SMT)
@@ -83,7 +85,7 @@ class XMSS_Tools final
    private:
       XMSS_Tools();
       /**
-       * @deprecated Measures the time t1 it takes to calculate hashes using
+       * Measures the time t1 it takes to calculate hashes using
        * std::thread::hardware_concurrency() many threads and the time t2
        * calculating the same number of hashes using
        * std::thread::hardware_concurrency() / 2 threads.
