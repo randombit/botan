@@ -30,6 +30,8 @@ std::string http_transact(const std::string& hostname,
    {
    std::unique_ptr<OS::Socket> socket;
 
+   const std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
+
    try
       {
       socket = OS::open_socket(hostname, "http", timeout);
@@ -45,6 +47,9 @@ std::string http_transact(const std::string& hostname,
    socket->write(cast_char_ptr_to_uint8(message.data()),
                  message.size());
 
+   if(std::chrono::system_clock::now() - start_time > timeout)
+      throw HTTP_Error("Timeout during writing message body");
+
    std::ostringstream oss;
    std::vector<uint8_t> buf(BOTAN_DEFAULT_BUFFER_SIZE);
    while(true)
@@ -52,6 +57,9 @@ std::string http_transact(const std::string& hostname,
       const size_t got = socket->read(buf.data(), buf.size());
       if(got == 0) // EOF
          break;
+
+      if(std::chrono::system_clock::now() - start_time > timeout)
+         throw HTTP_Error("Timeout while reading message body");
 
       oss.write(cast_uint8_ptr_to_char(buf.data()),
                 static_cast<std::streamsize>(got));
