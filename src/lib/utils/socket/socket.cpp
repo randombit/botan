@@ -1,5 +1,4 @@
 /*
-* OS and machine specific utility functions
 * (C) 2015,2016,2017 Jack Lloyd
 * (C) 2016 Daniel Neus
 *
@@ -19,6 +18,7 @@
   */
   #define BOOST_ASIO_DISABLE_SERIAL_PORT
   #include <boost/asio.hpp>
+  #include <boost/asio/system_timer.hpp>
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
   #include <sys/socket.h>
@@ -44,36 +44,93 @@ namespace {
 class Asio_Socket final : public OS::Socket
    {
    public:
-      Asio_Socket(const std::string& hostname, const std::string& service) :
-         m_tcp(m_io)
+      Asio_Socket(const std::string& hostname,
+                  const std::string& service,
+                  std::chrono::milliseconds timeout) :
+         m_timeout(timeout), m_timer(m_io), m_tcp(m_io)
          {
+         m_timer.expires_from_now(m_timeout);
+         check_timeout();
+
          boost::asio::ip::tcp::resolver resolver(m_io);
          boost::asio::ip::tcp::resolver::query query(hostname, service);
-         boost::asio::connect(m_tcp, resolver.resolve(query));
+         boost::asio::ip::tcp::resolver::iterator dns_iter = resolver.resolve(query);
+
+         boost::system::error_code ec = boost::asio::error::would_block;
+
+         auto connect_cb = [&ec](const boost::system::error_code& e,
+                                 boost::asio::ip::tcp::resolver::iterator) { ec = e; };
+
+         boost::asio::async_connect(m_tcp, dns_iter, connect_cb);
+
+         while(ec == boost::asio::error::would_block)
+            {
+            m_io.run_one();
+            }
+
+         if(ec)
+            throw boost::system::system_error(ec);
+         if(ec || m_tcp.is_open() == false)
+            throw Exception("Connection to host " + hostname + " failed");
          }
 
       void write(const uint8_t buf[], size_t len) override
          {
-         boost::asio::write(m_tcp, boost::asio::buffer(buf, len));
+         m_timer.expires_from_now(m_timeout);
+
+         boost::system::error_code ec = boost::asio::error::would_block;
+
+         boost::asio::async_write(m_tcp, boost::asio::buffer(buf, len),
+                                  [&ec](boost::system::error_code e, size_t got) { printf("wrote %d\n", got); ec = e; });
+
+         while(ec == boost::asio::error::would_block) { m_io.run_one(); }
+
+         if(ec)
+            {
+            throw boost::system::system_error(ec);
+            }
          }
 
       size_t read(uint8_t buf[], size_t len) override
          {
-         boost::system::error_code error;
-         size_t got = m_tcp.read_some(boost::asio::buffer(buf, len), error);
+         m_timer.expires_from_now(m_timeout);
 
-         if(error)
+         boost::system::error_code ec = boost::asio::error::would_block;
+         size_t got = 0;
+
+         auto read_cb = [&](const boost::system::error_code cb_ec, size_t cb_got) {
+            ec = cb_ec; got = cb_got;
+         };
+
+         m_tcp.async_read_some(boost::asio::buffer(buf, len), read_cb);
+
+         while(ec == boost::asio::error::would_block) { m_io.run_one(); }
+
+         if(ec)
             {
-            if(error == boost::asio::error::eof)
+            if(ec == boost::asio::error::eof)
                return 0;
-            throw boost::system::system_error(error); // Some other error.
+            throw boost::system::system_error(ec); // Some other error.
             }
 
          return got;
          }
 
    private:
+      void check_timeout()
+         {
+         if(m_tcp.is_open() && m_timer.expires_at() < std::chrono::system_clock::now())
+            {
+            boost::system::error_code err;
+            m_tcp.close(err);
+            }
+
+         m_timer.async_wait(std::bind(&Asio_Socket::check_timeout, this));
+         }
+
+      const std::chrono::milliseconds m_timeout;
       boost::asio::io_service m_io;
+      boost::asio::system_timer m_timer;
       boost::asio::ip::tcp::socket m_tcp;
    };
 
@@ -180,7 +237,9 @@ class Winsock_Socket final : public OS::Socket
 class BSD_Socket final : public OS::Socket
    {
    public:
-      BSD_Socket(const std::string& hostname, const std::string& service)
+      BSD_Socket(const std::string& hostname,
+                 const std::string& service,
+                 std::chrono::microseconds timeout) : m_timeout(timeout)
          {
          addrinfo hints;
          ::memset(&hints, 0, sizeof(addrinfo));
@@ -228,6 +287,7 @@ class BSD_Socket final : public OS::Socket
          m_fd = -1;
          }
 
+
       void write(const uint8_t buf[], size_t len) override
          {
          size_t sent_so_far = 0;
@@ -254,6 +314,15 @@ class BSD_Socket final : public OS::Socket
          }
 
    private:
+      struct timeval make_timeout_tv() const
+         {
+         struct timeval tv;
+         tv.tv_sec = m_timeout.count() / 1000000;
+         tv.tv_usec = m_timeout.count() % 1000000;
+         return tv;
+         }
+
+      const std::chrono::microseconds m_timeout;
       int m_fd;
    };
 
@@ -263,16 +332,17 @@ class BSD_Socket final : public OS::Socket
 
 std::unique_ptr<OS::Socket>
 OS::open_socket(const std::string& hostname,
-                const std::string& service)
+                const std::string& service,
+                std::chrono::milliseconds timeout)
    {
 #if defined(BOTAN_HAS_BOOST_ASIO)
-   return std::unique_ptr<OS::Socket>(new Asio_Socket(hostname, service));
+   return std::unique_ptr<OS::Socket>(new Asio_Socket(hostname, service, timeout));
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
    return std::unique_ptr<OS::Socket>(new Winsock_Socket(hostname, service));
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
-   return std::unique_ptr<OS::Socket>(new BSD_Socket(hostname, service));
+   return std::unique_ptr<OS::Socket>(new BSD_Socket(hostname, service, timeout));
 
 #else
    // No sockets for you

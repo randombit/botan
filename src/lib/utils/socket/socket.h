@@ -9,7 +9,7 @@
 #define BOTAN_SOCKET_H_
 
 #include <botan/types.h>
-#include <functional>
+#include <chrono>
 
 namespace Botan {
 
@@ -54,7 +54,8 @@ class BOTAN_TEST_API Socket
 */
 std::unique_ptr<Socket>
 BOTAN_TEST_API open_socket(const std::string& hostname,
-                      const std::string& service);
+                           const std::string& service,
+                           std::chrono::milliseconds timeout);
 
 } // OS
 } // Botan

@@ -1,0 +1,13 @@
+<defines>
+SOCKETS -> 20171216
+</defines>
+
+<header:internal>
+socket.h
+</header:internal>
+
+<libs>
+linux -> rt
+mingw -> ws2_32
+windows -> ws2_32.lib
+</libs>

@@ -31,7 +31,7 @@ std::string http_transact(const std::string& hostname,
 
    try
       {
-      socket = OS::open_socket(hostname, "http");
+      socket = OS::open_socket(hostname, "http", std::chrono::milliseconds(2500));
       if(!socket)
          throw Exception("No socket support enabled in build");
       }
