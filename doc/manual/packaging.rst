@@ -1,9 +1,16 @@
-Info for Packagers
+Notes for Distributors
 ========================
 
 This document has information for anyone who is packaging copies of Botan for
 use by downstream developers, such as through a Linux distribution or other
 package management system.
+
+Recommended Options
+------------------------
+
+In most environments, zlib, bzip2, and sqlite are already installed, so there is
+no reason to not include support for them in Botan as well. Build with options
+``--with-zlib --with-bzip2 --with-sqlite3`` to enable these features.
 
 Set Distribution Info
 ------------------------
