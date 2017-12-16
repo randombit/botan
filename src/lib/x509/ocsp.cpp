@@ -283,7 +283,8 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
 Response online_check(const X509_Certificate& issuer,
                       const BigInt& subject_serial,
                       const std::string& ocsp_responder,
-                      Certificate_Store* trusted_roots)
+                      Certificate_Store* trusted_roots,
+                      std::chrono::milliseconds timeout)
    {
    if(ocsp_responder.empty())
       throw Invalid_Argument("No OCSP responder specified");
@@ -292,7 +293,9 @@ Response online_check(const X509_Certificate& issuer,
 
    auto http = HTTP::POST_sync(ocsp_responder,
                                "application/ocsp-request",
-                               req.BER_encode());
+                               req.BER_encode(),
+                               1,
+                               timeout);
 
    http.throw_unless_ok();
 
@@ -312,7 +315,8 @@ Response online_check(const X509_Certificate& issuer,
 
 Response online_check(const X509_Certificate& issuer,
                       const X509_Certificate& subject,
-                      Certificate_Store* trusted_roots)
+                      Certificate_Store* trusted_roots,
+                      std::chrono::milliseconds timeout)
    {
    if(subject.issuer_dn() != issuer.subject_dn())
       throw Invalid_Argument("Invalid cert pair to OCSP::online_check (mismatched issuer,subject args?)");
@@ -320,7 +324,8 @@ Response online_check(const X509_Certificate& issuer,
    return online_check(issuer,
                        BigInt::decode(subject.serial_number()),
                        subject.ocsp_responder(),
-                       trusted_roots);
+                       trusted_roots,
+                       timeout);
    }
 
 #endif
