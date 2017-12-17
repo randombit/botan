@@ -78,14 +78,14 @@ def _ctype_bits(s):
         if isinstance(s, str):
             return s
         else:
-            assert False
+            raise Exception("Internal error - unexpected type provided to _ctype_bits")
     else:
         if isinstance(s, bytes):
             return s
         elif isinstance(s, str):
             return s.encode('utf-8')
         else:
-            assert False
+            raise Exception("Internal error - unexpected type provided to _ctype_bits")
 
 def _ctype_bufout(buf):
     if sys.version_info[0] < 3:
