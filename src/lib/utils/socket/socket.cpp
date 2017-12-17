@@ -142,6 +142,7 @@ class BSD_Socket final : public OS::Socket
    private:
 #if defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
       typedef SOCKET socket_type;
+      typedef int socket_op_ret_type;
       static socket_type invalid_socket() { return INVALID_SOCKET; }
       static void close_socket(socket_type s) { ::closesocket(s); }
       static std::string get_last_socket_error() { return std::to_string(::WSAGetLastError()); }
@@ -180,6 +181,7 @@ class BSD_Socket final : public OS::Socket
          }
 #else
       typedef int socket_type;
+      typedef ssize_t socket_op_ret_type;
       static socket_type invalid_socket() { return -1; }
       static void close_socket(socket_type s) { ::close(s); }
       static std::string get_last_socket_error() { return ::strerror(errno); }
@@ -299,7 +301,7 @@ class BSD_Socket final : public OS::Socket
                throw Exception("Timeout during socket write");
 
             const size_t left = len - sent_so_far;
-            ssize_t sent = ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), left, 0);
+            socket_op_ret_type sent = ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), left, 0);
             if(sent < 0)
                throw Exception("Socket write failed with error '" +
                                std::string(::strerror(errno)) + "'");
@@ -320,7 +322,7 @@ class BSD_Socket final : public OS::Socket
          if(active == 0)
             throw Exception("Timeout during socket read");
 
-         ssize_t got = ::recv(m_socket, cast_uint8_ptr_to_char(buf), len, 0);
+         socket_op_ret_type got = ::recv(m_socket, cast_uint8_ptr_to_char(buf), len, 0);
 
          if(got < 0)
             throw Exception("Socket read failed with error '" +
