@@ -9,6 +9,7 @@
 #define BOTAN_SOCKET_H_
 
 #include <botan/types.h>
+#include <string>
 #include <chrono>
 
 namespace Botan {
