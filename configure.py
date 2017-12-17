@@ -2792,9 +2792,10 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
 
     cc_bin = options.compiler_binary or ccinfo.binary_name
 
-    cmd = cc_bin.split(' ') + [ccinfo.preproc_flags, detect_version_source]
+    cmd = cc_bin.split(' ') + ccinfo.preproc_flags.split(' ') + [detect_version_source]
 
     try:
+        logging.debug("Running '%s'", ' '.join(cmd))
         stdout, stderr = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
