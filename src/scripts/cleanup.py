@@ -128,5 +128,7 @@ def main(args=None):
             for f in build_config['generated_files'].split(' '):
                 remove_file(f)
 
+    return 0
+
 if __name__ == '__main__':
     sys.exit(main())

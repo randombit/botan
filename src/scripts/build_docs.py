@@ -175,6 +175,7 @@ def main(args=None):
                 touch(cmd[1])
             else:
                 run_and_check(cmd)
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())
