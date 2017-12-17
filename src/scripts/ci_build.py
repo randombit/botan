@@ -285,6 +285,7 @@ def have_prog(prog):
         exe_file = os.path.join(path, prog)
         if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
             return True
+    return False
 
 def main(args=None):
     # pylint: disable=too-many-branches,too-many-statements,too-many-locals,too-many-return-statements
@@ -343,7 +344,7 @@ def main(args=None):
     root_dir = options.root_dir
 
     if os.access(root_dir, os.R_OK) != True:
-        raise Exception('Bad root dir setting, dir %s not readable', root_dir)
+        raise Exception('Bad root dir setting, dir %s not readable' % (root_dir))
 
     cmds = []
 
