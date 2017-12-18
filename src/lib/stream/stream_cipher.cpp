@@ -64,6 +64,12 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          return std::unique_ptr<StreamCipher>(new ChaCha(req.arg_as_integer(0, 20)));
       }
+
+   if(req.algo_name() == "ChaCha20")
+      {
+      if(provider.empty() || provider == "base")
+         return std::unique_ptr<StreamCipher>(new ChaCha(20));
+      }
 #endif
 
 #if defined(BOTAN_HAS_SALSA20)
