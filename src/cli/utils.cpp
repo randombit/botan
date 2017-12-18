@@ -218,11 +218,15 @@ BOTAN_REGISTER_COMMAND("rng", RNG);
 class HTTP_Get final : public Command
    {
    public:
-      HTTP_Get() : Command("http_get url") {}
+      HTTP_Get() : Command("http_get --redirects=1 --timeout=3000 url") {}
 
       void go() override
          {
-         output() << Botan::HTTP::GET_sync(get_arg("url")) << "\n";
+         const std::string url = get_arg("url");
+         const std::chrono::milliseconds timeout(get_arg_sz("timeout"));
+         const size_t redirects = get_arg_sz("redirects");
+
+         output() << Botan::HTTP::GET_sync(url, redirects, timeout) << "\n";
          }
    };
 

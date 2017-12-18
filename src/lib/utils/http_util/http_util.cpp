@@ -25,13 +25,16 @@ namespace {
 * closes the socket.
 */
 std::string http_transact(const std::string& hostname,
-                          const std::string& message)
+                          const std::string& message,
+                          std::chrono::milliseconds timeout)
    {
    std::unique_ptr<OS::Socket> socket;
 
+   const std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
+
    try
       {
-      socket = OS::open_socket(hostname, "http");
+      socket = OS::open_socket(hostname, "http", timeout);
       if(!socket)
          throw Exception("No socket support enabled in build");
       }
@@ -44,6 +47,9 @@ std::string http_transact(const std::string& hostname,
    socket->write(cast_char_ptr_to_uint8(message.data()),
                  message.size());
 
+   if(std::chrono::system_clock::now() - start_time > timeout)
+      throw HTTP_Error("Timeout during writing message body");
+
    std::ostringstream oss;
    std::vector<uint8_t> buf(BOTAN_DEFAULT_BUFFER_SIZE);
    while(true)
@@ -51,6 +57,9 @@ std::string http_transact(const std::string& hostname,
       const size_t got = socket->read(buf.data(), buf.size());
       if(got == 0) // EOF
          break;
+
+      if(std::chrono::system_clock::now() - start_time > timeout)
+         throw HTTP_Error("Timeout while reading message body");
 
       oss.write(cast_uint8_ptr_to_char(buf.data()),
                 static_cast<std::streamsize>(got));
@@ -205,10 +214,17 @@ Response http_sync(const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,
                    const std::vector<uint8_t>& body,
-                   size_t allowable_redirects)
+                   size_t allowable_redirects,
+                   std::chrono::milliseconds timeout)
    {
+   auto transact_with_timeout =
+      [timeout](const std::string& hostname, const std::string& service)
+      {
+      return http_transact(hostname, service, timeout);
+      };
+
    return http_sync(
-      http_transact,
+      transact_with_timeout,
       verb,
       url,
       content_type,
@@ -216,17 +232,20 @@ Response http_sync(const std::string& verb,
       allowable_redirects);
    }
 
-Response GET_sync(const std::string& url, size_t allowable_redirects)
+Response GET_sync(const std::string& url,
+                  size_t allowable_redirects,
+                  std::chrono::milliseconds timeout)
    {
-   return http_sync("GET", url, "", std::vector<uint8_t>(), allowable_redirects);
+   return http_sync("GET", url, "", std::vector<uint8_t>(), allowable_redirects, timeout);
    }
 
 Response POST_sync(const std::string& url,
                    const std::string& content_type,
                    const std::vector<uint8_t>& body,
-                   size_t allowable_redirects)
+                   size_t allowable_redirects,
+                   std::chrono::milliseconds timeout)
    {
-   return http_sync("POST", url, content_type, body, allowable_redirects);
+   return http_sync("POST", url, content_type, body, allowable_redirects, timeout);
    }
 
 }

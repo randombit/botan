@@ -117,16 +117,17 @@ BOTAN_REGISTER_COMMAND("cert_info", Cert_Info);
 class OCSP_Check final : public Command
    {
    public:
-      OCSP_Check() : Command("ocsp_check subject issuer") {}
+      OCSP_Check() : Command("ocsp_check --timeout=3000 subject issuer") {}
 
       void go() override
          {
          Botan::X509_Certificate subject(get_arg("subject"));
          Botan::X509_Certificate issuer(get_arg("issuer"));
+         std::chrono::milliseconds timeout(get_arg_sz("timeout"));
 
          Botan::Certificate_Store_In_Memory cas;
          cas.add_certificate(issuer);
-         Botan::OCSP::Response resp = Botan::OCSP::online_check(issuer, subject, &cas);
+         Botan::OCSP::Response resp = Botan::OCSP::online_check(issuer, subject, &cas, timeout);
 
          auto status = resp.status_for(issuer, subject, std::chrono::system_clock::now());
 
