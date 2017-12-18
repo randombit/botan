@@ -124,7 +124,8 @@ BOTAN_PUBLIC_API(2,3) uint16_t to_uint16(const std::string& str);
 * @param timespec the time specification
 * @return number of seconds represented by timespec
 */
-BOTAN_PUBLIC_API(2,0) uint32_t timespec_to_u32bit(const std::string& timespec);
+BOTAN_PUBLIC_API(2,0) uint32_t BOTAN_DEPRECATED("Not used anymore")
+timespec_to_u32bit(const std::string& timespec);
 
 /**
 * Convert a string representation of an IPv4 address to a number

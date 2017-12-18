@@ -10,6 +10,7 @@
 
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
+#include <chrono>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -49,12 +50,39 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       /**
       * Create a new and empty CRL for this CA.
       * @param rng the random number generator to use
+      * @param issue_time the issue time (typically system_clock::now)
+      * @param next_update the time interval after issue_data within which
+      *        a new CRL will be produced.
+      * @return new CRL
+      */
+      X509_CRL new_crl(RandomNumberGenerator& rng,
+                       std::chrono::system_clock::time_point issue_time,
+                       std::chrono::seconds next_update) const;
+
+      /**
+      * Create a new CRL by with additional entries.
+      * @param last_crl the last CRL of this CA to add the new entries to
+      * @param new_entries contains the new CRL entries to be added to the CRL
+      * @param rng the random number generator to use
+      * @param issue_time the issue time (typically system_clock::now)
+      * @param next_update the time interval after issue_data within which
+      *        a new CRL will be produced.
+      */
+      X509_CRL update_crl(const X509_CRL& last_crl,
+                          const std::vector<CRL_Entry>& new_entries,
+                          RandomNumberGenerator& rng,
+                          std::chrono::system_clock::time_point issue_time,
+                          std::chrono::seconds next_update) const;
+
+      /**
+      * Create a new and empty CRL for this CA.
+      * @param rng the random number generator to use
       * @param next_update the time to set in next update in seconds
       * as the offset from the current time
       * @return new CRL
       */
       X509_CRL new_crl(RandomNumberGenerator& rng,
-                       uint32_t next_update = 0) const;
+                       uint32_t next_update = 604800) const;
 
       /**
       * Create a new CRL by with additional entries.
@@ -67,7 +95,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       X509_CRL update_crl(const X509_CRL& last_crl,
                           const std::vector<CRL_Entry>& new_entries,
                           RandomNumberGenerator& rng,
-                          uint32_t next_update = 0) const;
+                          uint32_t next_update = 604800) const;
 
       /**
       * Interface for creating new certificates
@@ -125,8 +153,10 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
 
    private:
       X509_CRL make_crl(const std::vector<CRL_Entry>& entries,
-                        uint32_t crl_number, uint32_t next_update,
-                        RandomNumberGenerator& rng) const;
+                        uint32_t crl_number,
+                        RandomNumberGenerator& rng,
+                        std::chrono::system_clock::time_point issue_time,
+                        std::chrono::seconds next_update) const;
 
       AlgorithmIdentifier m_ca_sig_algo;
       X509_Certificate m_ca_cert;

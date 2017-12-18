@@ -146,8 +146,9 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
 X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
                           uint32_t next_update) const
    {
-   std::vector<CRL_Entry> empty;
-   return make_crl(empty, 1, next_update, rng);
+   return new_crl(rng,
+                  std::chrono::system_clock::now(),
+                  std::chrono::seconds(next_update));
    }
 
 /*
@@ -158,33 +159,49 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
                              RandomNumberGenerator& rng,
                              uint32_t next_update) const
    {
-   std::vector<CRL_Entry> revoked = crl.get_revoked();
+   return update_crl(crl, new_revoked, rng,
+                     std::chrono::system_clock::now(),
+                     std::chrono::seconds(next_update));
+   }
+
+
+X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
+                          std::chrono::system_clock::time_point issue_time,
+                          std::chrono::seconds next_update) const
+   {
+   std::vector<CRL_Entry> empty;
+   return make_crl(empty, 1, rng, issue_time, next_update);
+   }
+
+X509_CRL X509_CA::update_crl(const X509_CRL& last_crl,
+                             const std::vector<CRL_Entry>& new_revoked,
+                             RandomNumberGenerator& rng,
+                             std::chrono::system_clock::time_point issue_time,
+                             std::chrono::seconds next_update) const
+   {
+   std::vector<CRL_Entry> revoked = last_crl.get_revoked();
 
    std::copy(new_revoked.begin(), new_revoked.end(),
              std::back_inserter(revoked));
 
-   return make_crl(revoked, crl.crl_number() + 1, next_update, rng);
+   return make_crl(revoked, last_crl.crl_number() + 1, rng, issue_time, next_update);
    }
 
 /*
 * Create a CRL
 */
 X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
-                           uint32_t crl_number, uint32_t next_update,
-                           RandomNumberGenerator& rng) const
+                           uint32_t crl_number,
+                           RandomNumberGenerator& rng,
+                           std::chrono::system_clock::time_point issue_time,
+                           std::chrono::seconds next_update) const
    {
    const size_t X509_CRL_VERSION = 2;
 
-   if(next_update == 0)
-      next_update = timespec_to_u32bit("7d");
-
-   // Totally stupid: ties encoding logic to the return of std::time!!
-   auto current_time = std::chrono::system_clock::now();
-   auto expire_time = current_time + std::chrono::seconds(next_update);
+   auto expire_time = issue_time + next_update;
 
    Extensions extensions;
-   extensions.add(
-      new Cert_Extension::Authority_Key_ID(m_ca_cert.subject_key_id()));
+   extensions.add(new Cert_Extension::Authority_Key_ID(m_ca_cert.subject_key_id()));
    extensions.add(new Cert_Extension::CRL_Number(crl_number));
 
    // clang-format off
@@ -194,7 +211,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
          .encode(X509_CRL_VERSION-1)
          .encode(m_ca_sig_algo)
          .encode(m_ca_cert.subject_dn())
-         .encode(X509_Time(current_time))
+         .encode(X509_Time(issue_time))
          .encode(X509_Time(expire_time))
          .encode_if(revoked.size() > 0,
               DER_Encoder()
