@@ -8,7 +8,7 @@ Version 2.4.0, Not Yet Released
   ability to disable building the static library. All makefile constructs that
   were specific to nmake or GNU make have been eliminated, thus the option
   ``--makefile-style`` which was previously used to select the makefile type has
-  also been removed. (GH #1230 #1237 #1300 #1318 #1319 #1324 and #1325)
+  also been removed. (GH #1230 #1237 #1300 #1318 #1319 #1324 #1325 #1346)
 
 * Support for negotiating the DH group as specified in RFC 7919 is now available
   in TLS (GH #1263)
@@ -22,19 +22,28 @@ Version 2.4.0, Not Yet Released
 * Add support for AES key wrapping with padding, as specified in RFC 5649 and
   NIST SP 800-38F (GH #1301)
 
+* OCSP requests made during certificate verification had the potential to hang
+  forever. Now the sockets are non-blocking and a timeout is enforced. (GH #1360
+  fixing GH #1326)
+
+* Add ``Public_Key::fingerprint_public`` which allows fingerprinting the public key.
+  The previously available ``Private_Key::fingerprint`` is deprecated, now
+  ``Private_Key::fingerprint_private`` should be used if this is required.
+  (GH #1357)
+
 * XMSS signatures now are multithreaded for improved performance (GH #1267)
 
-* Fix a bug that caused the peer cert list to be empty on a resumed session.
+* Fix a bug that caused the TLS peer cert list to be empty on a resumed session.
   (GH #1303 #1342)
 
 * Increase the maximum HMAC key length from 512 bytes to 4096 bytes. This allows
-  using a DH key exchange with a group greater than 4096 bits. (GH #1316)
+  using a DH key exchange in TLS with a group greater than 4096 bits. (GH #1316)
 
 * Fix a bug in the TLS server where, on receiving an SSLv3 client hello, it
   would attempt to negotiate TLS v1.2. Now a protocol_version alert is sent.
   Found with tlsfuzzer. (GH #1316)
 
-* Fix several bugs related to sending the wrong alert type in various error
+* Fix several bugs related to sending the wrong TLS alert type in various error
   scenarious, caught with tlsfuzzer.
 
 * Add support for a ``tls_http_server`` command line utility which responds to
@@ -53,6 +62,8 @@ Version 2.4.0, Not Yet Released
   Twofish, CAST-128, and CRC24 (GH #1281)
 
 * Salsa20 now supports the seek operation.
+
+* Add ``EC_Group::known_named_groups`` (GH #1339)
 
 * Symmetric algorithms (block ciphers, stream ciphers, MACs) now verify that a
   key was set before accepting data. Previously attempting to use an unkeyed
@@ -166,6 +177,14 @@ Version 2.4.0, Not Yet Released
   command line util using Docutils rst2man. (GH #1349)
 
 * Support for NEON is now enabled under Clang.
+
+* Now the compiler version is detected using the preprocessor, instead of trying
+  to parse the output of the compiler's version string, which was subject to
+  problems with localization. (GH #1358)
+
+* By default the gzip compressor will not include a timestamp in the header.
+  The timestamp can be set by passing it to the ``Gzip_Compression``
+  constructor.
 
 * Add an OID for RIPEMD-160
 
