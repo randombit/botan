@@ -369,6 +369,7 @@ def main(args=None):
             'src/scripts/cleanup.py',
             'src/scripts/build_docs.py',
             'src/scripts/website.py',
+            'src/scripts/bench.py',
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py']
 
