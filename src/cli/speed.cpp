@@ -391,9 +391,13 @@ class JSON_Output final
          std::ostringstream out;
 
          out << "[\n";
-         for(const Timer& t : m_results)
+
+         for(size_t i = 0; i != m_results.size(); ++i)
             {
-            //out << t.format_json();
+            if(i != 0)
+               out << ",";
+
+            const Timer& t = m_results[i];
 
             out << '{';
             out << "\"algo\": \"" << t.get_name() << "\", ";
@@ -403,11 +407,14 @@ class JSON_Output final
             if(t.cycles_consumed() > 0)
                out << "\"cycles\": " << t.cycles_consumed() << ", ";
             if(t.buf_size() > 0)
+               {
+               out << "\"bps\": " << static_cast<uint64_t>(t.events() / (t.value() / 1000000000.0)) << ", ";
                out << "\"buf_size\": " << t.buf_size() << ", ";
+               }
 
             out << "\"nanos\": " << t.value();
 
-            out << "},\n";
+            out << "}\n";
             }
          out << "]\n";
 
