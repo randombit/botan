@@ -178,19 +178,6 @@ DER_Encoder& DER_Encoder::end_explicit()
 /*
 * Write raw bytes into the stream
 */
-DER_Encoder& DER_Encoder::raw_bytes(const secure_vector<uint8_t>& val)
-   {
-   return raw_bytes(val.data(), val.size());
-   }
-
-DER_Encoder& DER_Encoder::raw_bytes(const std::vector<uint8_t>& val)
-   {
-   return raw_bytes(val.data(), val.size());
-   }
-
-/*
-* Write raw bytes into the stream
-*/
 DER_Encoder& DER_Encoder::raw_bytes(const uint8_t bytes[], size_t length)
    {
    if(m_subsequences.size())
@@ -231,26 +218,6 @@ DER_Encoder& DER_Encoder::encode(size_t n)
 DER_Encoder& DER_Encoder::encode(const BigInt& n)
    {
    return encode(n, INTEGER, UNIVERSAL);
-   }
-
-/*
-* DER encode an OCTET STRING or BIT STRING
-*/
-DER_Encoder& DER_Encoder::encode(const secure_vector<uint8_t>& bytes,
-                                 ASN1_Tag real_type)
-   {
-   return encode(bytes.data(), bytes.size(),
-                 real_type, real_type, UNIVERSAL);
-   }
-
-/*
-* DER encode an OCTET STRING or BIT STRING
-*/
-DER_Encoder& DER_Encoder::encode(const std::vector<uint8_t>& bytes,
-                                 ASN1_Tag real_type)
-   {
-   return encode(bytes.data(), bytes.size(),
-                 real_type, real_type, UNIVERSAL);
    }
 
 /*
