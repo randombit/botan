@@ -52,6 +52,9 @@ newhope
 ed25519
 
 clmul
+clmul_ssse3
+pmull
+
 locking_allocator
 http_util # needed by x509 for OCSP online checks
 

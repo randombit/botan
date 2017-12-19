@@ -55,6 +55,12 @@ aes_ssse3
 
 # modes
 clmul
+clmul_ssse3
+pmull
+
+# hash
+sha2_32_x86
+sha2_32_armv8
 
 # entropy sources
 darwin_secrandom
