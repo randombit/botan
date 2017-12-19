@@ -163,7 +163,11 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                              bool with_modular_inverse)
    {
    m_domain_params = EC_Group(alg_id.parameters);
-   m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+
+   if (!domain().get_oid().empty())
+      m_domain_encoding = EC_DOMPAR_ENC_OID;
+   else
+      m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    OID key_parameters;
    secure_vector<uint8_t> public_key_bits;
