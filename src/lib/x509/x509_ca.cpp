@@ -273,8 +273,8 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    padding = padding + "(" + hash->name() + ")";
 
-   sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
-   sig_algo.parameters = key.algorithm_identifier().parameters;
+   sig_algo = AlgorithmIdentifier(OIDS::lookup(algo_name + "/" + padding),
+                                  key.algorithm_identifier().get_parameters());
 
    return new PK_Signer(key, rng, padding, format);
    }

@@ -34,17 +34,28 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
       DER_Encoder& start_explicit(uint16_t type_tag);
       DER_Encoder& end_explicit();
 
+      /**
+      * Insert raw bytes directly into the output stream
+      */
       DER_Encoder& raw_bytes(const uint8_t val[], size_t len);
-      DER_Encoder& raw_bytes(const secure_vector<uint8_t>& val);
-      DER_Encoder& raw_bytes(const std::vector<uint8_t>& val);
+
+      template<typename Alloc>
+      DER_Encoder& raw_bytes(const std::vector<uint8_t, Alloc>& val)
+         {
+         return raw_bytes(val.data(), val.size());
+         }
 
       DER_Encoder& encode_null();
       DER_Encoder& encode(bool b);
       DER_Encoder& encode(size_t s);
       DER_Encoder& encode(const BigInt& n);
-      DER_Encoder& encode(const secure_vector<uint8_t>& v, ASN1_Tag real_type);
-      DER_Encoder& encode(const std::vector<uint8_t>& v, ASN1_Tag real_type);
       DER_Encoder& encode(const uint8_t val[], size_t len, ASN1_Tag real_type);
+
+      template<typename Alloc>
+      DER_Encoder& encode(const std::vector<uint8_t, Alloc>& vec, ASN1_Tag real_type)
+         {
+         return encode(vec.data(), vec.size(), real_type);
+         }
 
       DER_Encoder& encode(bool b,
                           ASN1_Tag type_tag,

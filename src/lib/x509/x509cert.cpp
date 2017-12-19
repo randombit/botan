@@ -131,7 +131,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    BER_Decoder(public_key.value).decode(public_key_alg_id).discard_remaining();
 
    std::vector<std::string> public_key_info =
-      split_on(OIDS::oid2str(public_key_alg_id.oid), '/');
+      split_on(OIDS::oid2str(public_key_alg_id.get_oid()), '/');
 
    if(!public_key_info.empty() && public_key_info[0] == "RSA")
       {
@@ -167,7 +167,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       else
          {
          // oid = rsaEncryption -> parameters field MUST contain NULL
-         if(public_key_alg_id != AlgorithmIdentifier(public_key_alg_id.oid, AlgorithmIdentifier::USE_NULL_PARAM))
+         if(public_key_alg_id != AlgorithmIdentifier(public_key_alg_id.get_oid(), AlgorithmIdentifier::USE_NULL_PARAM))
             {
             throw Decoding_Error("Parameters field MUST contain NULL");
             }
@@ -801,7 +801,7 @@ std::string X509_Certificate::to_string() const
       out << "CRL " << crl_distribution_point() << "\n";
 
    out << "Signature algorithm: " <<
-      OIDS::oid2str(this->signature_algorithm().oid) << "\n";
+      OIDS::oid2str(this->signature_algorithm().get_oid()) << "\n";
 
    out << "Serial number: " << hex_encode(this->serial_number()) << "\n";
 
@@ -820,7 +820,7 @@ std::string X509_Certificate::to_string() const
    catch(Decoding_Error&)
       {
       const AlgorithmIdentifier& alg_id = this->subject_public_key_algo();
-      out << "Failed to decode key with oid " << alg_id.oid.as_string() << "\n";
+      out << "Failed to decode key with oid " << alg_id.get_oid().as_string() << "\n";
       }
 
    return out.str();

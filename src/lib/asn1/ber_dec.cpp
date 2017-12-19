@@ -150,7 +150,7 @@ size_t find_eoc(DataSource* ber, size_t allow_indef)
 /*
 * Check a type invariant on BER data
 */
-void BER_Object::assert_is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_)
+void BER_Object::assert_is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_) const
    {
    if(type_tag != type_tag_ || class_tag != class_tag_)
       throw BER_Decoding_Error("Tag mismatch when decoding got " +
@@ -181,34 +181,13 @@ BER_Decoder& BER_Decoder::verify_end()
    }
 
 /*
-* Save all the bytes remaining in the source
-*/
-BER_Decoder& BER_Decoder::raw_bytes(secure_vector<uint8_t>& out)
-   {
-   out.clear();
-   uint8_t buf;
-   while(m_source->read_byte(buf))
-      out.push_back(buf);
-   return (*this);
-   }
-
-BER_Decoder& BER_Decoder::raw_bytes(std::vector<uint8_t>& out)
-   {
-   out.clear();
-   uint8_t buf;
-   while(m_source->read_byte(buf))
-      out.push_back(buf);
-   return (*this);
-   }
-
-/*
 * Discard all the bytes remaining in the source
 */
 BER_Decoder& BER_Decoder::discard_remaining()
    {
    uint8_t buf;
    while(m_source->read_byte(buf))
-      ;
+      {}
    return (*this);
    }
 
@@ -429,7 +408,8 @@ BER_Decoder& BER_Decoder::decode(bool& out,
 * Decode a small BER encoded INTEGER
 */
 BER_Decoder& BER_Decoder::decode(size_t& out,
-                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+                                 ASN1_Tag type_tag,
+                                 ASN1_Tag class_tag)
    {
    BigInt integer;
    decode(integer, type_tag, class_tag);
@@ -448,8 +428,8 @@ BER_Decoder& BER_Decoder::decode(size_t& out,
 * Decode a small BER encoded INTEGER
 */
 uint64_t BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
-                                               ASN1_Tag class_tag,
-                                               size_t T_bytes)
+                                                 ASN1_Tag class_tag,
+                                                 size_t T_bytes)
    {
    if(T_bytes > 8)
       throw BER_Decoding_Error("Can't decode small integer over 8 bytes");
@@ -471,7 +451,8 @@ uint64_t BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
 * Decode a BER encoded INTEGER
 */
 BER_Decoder& BER_Decoder::decode(BigInt& out,
-                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+                                 ASN1_Tag type_tag,
+                                 ASN1_Tag class_tag)
    {
    BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, class_tag);
@@ -500,21 +481,36 @@ BER_Decoder& BER_Decoder::decode(BigInt& out,
    return (*this);
    }
 
-/*
-* BER decode a BIT STRING or OCTET STRING
-*/
-BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& out, ASN1_Tag real_type)
+namespace {
+
+template<typename Alloc>
+void asn1_decode_binary_string(std::vector<uint8_t, Alloc>& buffer,
+                               const BER_Object& obj,
+                               ASN1_Tag real_type,
+                               ASN1_Tag type_tag,
+                               ASN1_Tag class_tag)
    {
-   return decode(out, real_type, real_type, UNIVERSAL);
+   obj.assert_is_a(type_tag, class_tag);
+
+   if(real_type == OCTET_STRING)
+      {
+      buffer.assign(obj.value.begin(), obj.value.end());
+      }
+   else
+      {
+      if(obj.value.empty())
+         throw BER_Decoding_Error("Invalid BIT STRING");
+      if(obj.value[0] >= 8)
+         throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
+
+      buffer.resize(obj.value.size() - 1);
+
+      if(obj.value.size() > 1)
+         copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
+      }
    }
 
-/*
-* BER decode a BIT STRING or OCTET STRING
-*/
-BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& out, ASN1_Tag real_type)
-   {
-   return decode(out, real_type, real_type, UNIVERSAL);
-   }
+}
 
 /*
 * BER decode a BIT STRING or OCTET STRING
@@ -526,23 +522,7 @@ BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& buffer,
    if(real_type != OCTET_STRING && real_type != BIT_STRING)
       throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", real_type);
 
-   BER_Object obj = get_next_object();
-   obj.assert_is_a(type_tag, class_tag);
-
-   if(real_type == OCTET_STRING)
-      buffer = obj.value;
-   else
-      {
-      if(obj.value.empty())
-         throw BER_Decoding_Error("Invalid BIT STRING");
-      if(obj.value[0] >= 8)
-         throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
-
-      buffer.resize(obj.value.size() - 1);
-
-      if(obj.value.size() > 1)
-         copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
-      }
+   asn1_decode_binary_string(buffer, get_next_object(), real_type, type_tag, class_tag);
    return (*this);
    }
 
@@ -553,23 +533,7 @@ BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& buffer,
    if(real_type != OCTET_STRING && real_type != BIT_STRING)
       throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", real_type);
 
-   BER_Object obj = get_next_object();
-   obj.assert_is_a(type_tag, class_tag);
-
-   if(real_type == OCTET_STRING)
-      buffer = unlock(obj.value);
-   else
-      {
-      if(obj.value.empty())
-         throw BER_Decoding_Error("Invalid BIT STRING");
-      if(obj.value[0] >= 8)
-         throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
-
-      buffer.resize(obj.value.size() - 1);
-
-      if(obj.value.size() > 1)
-         copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
-      }
+   asn1_decode_binary_string(buffer, get_next_object(), real_type, type_tag, class_tag);
    return (*this);
    }
 

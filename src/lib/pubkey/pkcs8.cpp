@@ -101,9 +101,9 @@ secure_vector<uint8_t> PKCS8_decode(
       {
       if(is_encrypted)
          {
-         if(OIDS::lookup(pbe_alg_id.oid) != "PBE-PKCS5v20")
-            throw Exception("Unknown PBE type " + pbe_alg_id.oid.as_string());
-         key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.parameters);
+         if(OIDS::lookup(pbe_alg_id.get_oid()) != "PBE-PKCS5v20")
+            throw Exception("Unknown PBE type " + pbe_alg_id.get_oid().as_string());
+         key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.get_parameters());
          }
       else
          key = key_data;
@@ -298,10 +298,10 @@ load_key(DataSource& source,
    AlgorithmIdentifier alg_id;
    secure_vector<uint8_t> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
 
-   const std::string alg_name = OIDS::lookup(alg_id.oid);
-   if(alg_name.empty() || alg_name == alg_id.oid.as_string())
+   const std::string alg_name = OIDS::lookup(alg_id.get_oid());
+   if(alg_name.empty() || alg_name == alg_id.get_oid().as_string())
       throw PKCS8_Exception("Unknown algorithm OID: " +
-                            alg_id.oid.as_string());
+                            alg_id.get_oid().as_string());
 
    return load_private_key(alg_id, pkcs8_key);
    }

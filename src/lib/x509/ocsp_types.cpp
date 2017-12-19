@@ -39,7 +39,7 @@ bool CertID::is_id_for(const X509_Certificate& issuer,
       if(BigInt::decode(subject.serial_number()) != m_subject_serial)
          return false;
 
-      std::unique_ptr<HashFunction> hash(HashFunction::create(OIDS::lookup(m_hash_id.oid)));
+      std::unique_ptr<HashFunction> hash(HashFunction::create(OIDS::lookup(m_hash_id.get_oid())));
 
       if(m_issuer_dn_hash != unlock(hash->process(subject.raw_issuer_dn())))
          return false;
