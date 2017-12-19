@@ -84,10 +84,10 @@ std::unique_ptr<Public_Key>
 load_public_key(const AlgorithmIdentifier& alg_id,
                 const std::vector<uint8_t>& key_bits)
    {
-   const std::vector<std::string> alg_info = split_on(OIDS::lookup(alg_id.oid), '/');
+   const std::vector<std::string> alg_info = split_on(OIDS::lookup(alg_id.get_oid()), '/');
 
    if(alg_info.empty())
-      throw Decoding_Error("Unknown algorithm OID: " + alg_id.oid.as_string());
+      throw Decoding_Error("Unknown algorithm OID: " + alg_id.get_oid().as_string());
 
    const std::string alg_name = alg_info[0];
 
@@ -170,9 +170,9 @@ std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,
                  const secure_vector<uint8_t>& key_bits)
    {
-   const std::string alg_name = OIDS::lookup(alg_id.oid);
+   const std::string alg_name = OIDS::lookup(alg_id.get_oid());
    if(alg_name == "")
-      throw Decoding_Error("Unknown algorithm OID: " + alg_id.oid.as_string());
+      throw Decoding_Error("Unknown algorithm OID: " + alg_id.get_oid().as_string());
 
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")

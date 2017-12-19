@@ -16,38 +16,46 @@ namespace Botan {
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
-                                         const std::vector<uint8_t>& param) : oid(alg_id), parameters(param)
+                                         const std::vector<uint8_t>& param) :
+   oid(alg_id),
+   parameters(param)
    {}
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
-                                         const std::vector<uint8_t>& param) : oid(OIDS::lookup(alg_id)), parameters(param)
+                                         const std::vector<uint8_t>& param) :
+   oid(OIDS::lookup(alg_id)),
+   parameters(param)
    {}
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
-                                         Encoding_Option option) : oid(alg_id), parameters()
+                                         Encoding_Option option) :
+   oid(alg_id),
+   parameters()
    {
    const uint8_t DER_NULL[] = { 0x05, 0x00 };
 
    if(option == USE_NULL_PARAM)
-      parameters += std::pair<const uint8_t*, size_t>(DER_NULL, sizeof(DER_NULL));
+      parameters.assign(DER_NULL, DER_NULL + 2);
    }
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
-                                         Encoding_Option option) : oid(OIDS::lookup(alg_id)), parameters()
+                                         Encoding_Option option) :
+   oid(OIDS::lookup(alg_id)),
+   parameters()
    {
    const uint8_t DER_NULL[] = { 0x05, 0x00 };
 
    if(option == USE_NULL_PARAM)
-      parameters += std::pair<const uint8_t*, size_t>(DER_NULL, sizeof(DER_NULL));
+      parameters.assign(DER_NULL, DER_NULL + 2);
    }
 
 /*
@@ -66,14 +74,14 @@ bool param_null_or_empty(const std::vector<uint8_t>& p)
 
 bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
    {
-   if(a1.oid != a2.oid)
+   if(a1.get_oid() != a2.get_oid())
       return false;
 
-   if(param_null_or_empty(a1.parameters) &&
-      param_null_or_empty(a2.parameters))
+   if(param_null_or_empty(a1.get_parameters()) &&
+      param_null_or_empty(a2.get_parameters()))
       return true;
 
-   return (a1.parameters == a2.parameters);
+   return (a1.get_parameters() == a2.get_parameters());
    }
 
 /*
@@ -90,8 +98,8 @@ bool operator!=(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
 void AlgorithmIdentifier::encode_into(DER_Encoder& codec) const
    {
    codec.start_cons(SEQUENCE)
-      .encode(oid)
-      .raw_bytes(parameters)
+      .encode(get_oid())
+      .raw_bytes(get_parameters())
    .end_cons();
    }
 

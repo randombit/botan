@@ -174,14 +174,14 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
 
    AlgorithmIdentifier prf_algo;
 
-   if(kdf_algo.oid != OIDS::lookup("PKCS5.PBKDF2"))
+   if(kdf_algo.get_oid() != OIDS::lookup("PKCS5.PBKDF2"))
       throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
-                           kdf_algo.oid.as_string());
+                           kdf_algo.get_oid().as_string());
 
    secure_vector<uint8_t> salt;
    size_t iterations = 0, key_length = 0;
 
-   BER_Decoder(kdf_algo.parameters)
+   BER_Decoder(kdf_algo.get_parameters())
       .start_cons(SEQUENCE)
          .decode(salt, OCTET_STRING)
          .decode(iterations)
@@ -191,7 +191,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
                                               AlgorithmIdentifier::USE_NULL_PARAM))
       .end_cons();
 
-   const std::string cipher = OIDS::lookup(enc_algo.oid);
+   const std::string cipher = OIDS::lookup(enc_algo.get_oid());
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
@@ -202,9 +202,9 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
       throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
 
    secure_vector<uint8_t> iv;
-   BER_Decoder(enc_algo.parameters).decode(iv, OCTET_STRING).verify_end();
+   BER_Decoder(enc_algo.get_parameters()).decode(iv, OCTET_STRING).verify_end();
 
-   const std::string prf = OIDS::lookup(prf_algo.oid);
+   const std::string prf = OIDS::lookup(prf_algo.get_oid());
 
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 

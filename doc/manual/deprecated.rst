@@ -9,6 +9,9 @@ use case if you want to make sure your code continues to work.
 This is in addition to specific API calls marked with BOTAN_DEPRECATED
 in the source.
 
+- Directly accessing the member variables of types calendar_point, ASN1_Attribute,
+  and AlgorithmIdentifier
+
 - The headers ``botan.h``, ``init.h``, ``lookup.h``
 
 - All or nothing package transform (``package.h``)
@@ -55,5 +58,3 @@ in the source.
 - All built in MODP groups < 2048 bits
 
 - All pre-created DSA groups
-
-- Directly accessing the member variables of calendar_point

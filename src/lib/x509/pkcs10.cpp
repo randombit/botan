@@ -90,21 +90,23 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
          {
          Attribute attr;
          attributes.decode(attr);
-         BER_Decoder value(attr.parameters);
 
-         if(attr.oid == OIDS::lookup("PKCS9.EmailAddress"))
+         const OID& oid = attr.get_oid();
+         BER_Decoder value(attr.get_parameters());
+
+         if(oid == OIDS::lookup("PKCS9.EmailAddress"))
             {
             ASN1_String email;
             value.decode(email);
             pkcs9_email.insert(email.value());
             }
-         else if(attr.oid == OIDS::lookup("PKCS9.ChallengePassword"))
+         else if(oid == OIDS::lookup("PKCS9.ChallengePassword"))
             {
             ASN1_String challenge_password;
             value.decode(challenge_password);
             data->m_challenge = challenge_password.value();
             }
-         else if(attr.oid == OIDS::lookup("PKCS9.ExtensionRequest"))
+         else if(oid == OIDS::lookup("PKCS9.ExtensionRequest"))
             {
             value.decode(data->m_extensions).verify_end();
             }

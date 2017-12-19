@@ -40,7 +40,7 @@ Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
          .decode_optional(pss_parameter.trailer_field, ASN1_Tag(3), PRIVATE, size_t(1))
       .end_cons();
 
-   BER_Decoder(pss_parameter.mask_gen_algo.parameters).decode(pss_parameter.mask_gen_hash);
+   BER_Decoder(pss_parameter.mask_gen_algo.get_parameters()).decode(pss_parameter.mask_gen_hash);
 
    return pss_parameter;
    }
@@ -147,7 +147,7 @@ std::vector<uint8_t> X509_Object::tbs_data() const
 */
 std::string X509_Object::hash_used_for_signature() const
    {
-   const OID oid = m_sig_algo.oid;
+   const OID& oid = m_sig_algo.get_oid();
    std::vector<std::string> sig_info = split_on(OIDS::lookup(oid), '/');
 
    if(sig_info.size() != 2)
@@ -156,7 +156,7 @@ std::string X509_Object::hash_used_for_signature() const
 
    if(sig_info[1] == "EMSA4")
       {
-      return OIDS::lookup(decode_pss_params(signature_algorithm().parameters).hash_algo.oid);
+      return OIDS::lookup(decode_pss_params(signature_algorithm().get_parameters()).hash_algo.get_oid());
       }
    else
       {
@@ -190,7 +190,7 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
    {
    try {
       std::vector<std::string> sig_info =
-         split_on(OIDS::lookup(m_sig_algo.oid), '/');
+         split_on(OIDS::lookup(m_sig_algo.get_oid()), '/');
 
       if(sig_info.size() != 2 || sig_info[0] != pub_key.algo_name())
          return false;
@@ -202,22 +202,22 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
       if(padding == "EMSA4")
          {
          // "MUST contain RSASSA-PSS-params"
-         if(signature_algorithm().parameters.empty())
+         if(signature_algorithm().get_parameters().empty())
             {
             return false;
             }
 
-         Pss_params pss_parameter = decode_pss_params(signature_algorithm().parameters);
+         Pss_params pss_parameter = decode_pss_params(signature_algorithm().get_parameters());
 
          // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-         std::string hash_algo = OIDS::lookup(pss_parameter.hash_algo.oid);
+         std::string hash_algo = OIDS::lookup(pss_parameter.hash_algo.get_oid());
          if(hash_algo != "SHA-160" && hash_algo != "SHA-224" && hash_algo != "SHA-256" && hash_algo != "SHA-384"
                && hash_algo != "SHA-512")
             {
             return false;
             }
 
-         std::string mgf_algo = OIDS::lookup(pss_parameter.mask_gen_algo.oid);
+         std::string mgf_algo = OIDS::lookup(pss_parameter.mask_gen_algo.get_oid());
          if(mgf_algo != "MGF1")
             {
             return false;
@@ -225,7 +225,7 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
 
          // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
          // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-         if(pss_parameter.mask_gen_hash.oid != pss_parameter.hash_algo.oid)
+         if(pss_parameter.mask_gen_hash.get_oid() != pss_parameter.hash_algo.get_oid())
             {
             return false;
             }
