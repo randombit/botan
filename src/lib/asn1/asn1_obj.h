@@ -88,7 +88,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
 class BOTAN_PUBLIC_API(2,0) BER_Object final
    {
    public:
-      void assert_is_a(ASN1_Tag, ASN1_Tag);
+      void assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag) const;
 
       // public member variable:
       ASN1_Tag type_tag, class_tag;

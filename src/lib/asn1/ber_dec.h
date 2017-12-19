@@ -66,15 +66,32 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
          return (*this);
          }
 
-      BER_Decoder& raw_bytes(secure_vector<uint8_t>& v);
-      BER_Decoder& raw_bytes(std::vector<uint8_t>& v);
+      /*
+      * Save all the bytes remaining in the source
+      */
+      template<typename Alloc>
+      BER_Decoder& raw_bytes(std::vector<uint8_t, Alloc>& out)
+         {
+         out.clear();
+         uint8_t buf;
+         while(m_source->read_byte(buf))
+            out.push_back(buf);
+         return (*this);
+         }
 
       BER_Decoder& decode_null();
       BER_Decoder& decode(bool& v);
       BER_Decoder& decode(size_t& v);
       BER_Decoder& decode(class BigInt& v);
-      BER_Decoder& decode(std::vector<uint8_t>& v, ASN1_Tag type_tag);
-      BER_Decoder& decode(secure_vector<uint8_t>& v, ASN1_Tag type_tag);
+
+      /*
+      * BER decode a BIT STRING or OCTET STRING
+      */
+      template<typename Alloc>
+      BER_Decoder& decode(std::vector<uint8_t, Alloc>& out, ASN1_Tag real_type)
+         {
+         return decode(out, real_type, real_type, UNIVERSAL);
+         }
 
       BER_Decoder& decode(bool& v,
                           ASN1_Tag type_tag,

@@ -44,9 +44,9 @@ class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
 * Comparison Operations
 */
 bool BOTAN_PUBLIC_API(2,0) operator==(const AlgorithmIdentifier&,
-                          const AlgorithmIdentifier&);
+                                      const AlgorithmIdentifier&);
 bool BOTAN_PUBLIC_API(2,0) operator!=(const AlgorithmIdentifier&,
-                          const AlgorithmIdentifier&);
+                                      const AlgorithmIdentifier&);
 
 }
 
