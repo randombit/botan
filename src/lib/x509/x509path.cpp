@@ -100,10 +100,10 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
          }
       else
          {
-         if(subject->check_signature(*issuer_key) == false)
-            {
-            status.insert(Certificate_Status_Code::SIGNATURE_ERROR);
-            }
+         const Certificate_Status_Code sig_status = subject->verify_signature(*issuer_key);
+
+         if(sig_status != Certificate_Status_Code::VERIFIED)
+            status.insert(sig_status);
 
          if(issuer_key->estimated_strength() < min_signature_algo_strength)
             status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);

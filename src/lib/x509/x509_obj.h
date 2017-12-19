@@ -10,6 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/alg_id.h>
+#include <botan/cert_status.h>
 #include <vector>
 
 namespace Botan {
@@ -59,9 +60,17 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       * @return signed X509 object
       */
       static std::vector<uint8_t> make_signed(class PK_Signer* signer,
-                                           RandomNumberGenerator& rng,
-                                           const AlgorithmIdentifier& alg_id,
-                                           const secure_vector<uint8_t>& tbs);
+                                              RandomNumberGenerator& rng,
+                                              const AlgorithmIdentifier& alg_id,
+                                              const secure_vector<uint8_t>& tbs);
+
+      /**
+      * Check the signature on this data
+      * @param key the public key purportedly used to sign this data
+      * @return status of the signature - OK if verified or otherwise an indicator of
+      *         the problem preventing verification.
+      */
+      Certificate_Status_Code verify_signature(const Public_Key& key) const;
 
       /**
       * Check the signature on this data
@@ -73,7 +82,8 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       /**
       * Check the signature on this data
       * @param key the public key purportedly used to sign this data
-      *        the pointer will be deleted after use
+      *        the object will be deleted after use (this should have
+      *        been a std::unique_ptr<Public_Key>)
       * @return true if the signature is valid, otherwise false
       */
       bool check_signature(const Public_Key* key) const;

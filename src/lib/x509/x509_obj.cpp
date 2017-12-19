@@ -183,71 +183,85 @@ bool X509_Object::check_signature(const Public_Key* pub_key) const
    return check_signature(*key);
    }
 
-/*
-* Check the signature on an object
-*/
 bool X509_Object::check_signature(const Public_Key& pub_key) const
    {
-   try {
-      std::vector<std::string> sig_info =
-         split_on(OIDS::lookup(m_sig_algo.get_oid()), '/');
+   const Certificate_Status_Code code = verify_signature(pub_key);
+   return (code == Certificate_Status_Code::VERIFIED);
+   }
 
-      if(sig_info.size() != 2 || sig_info[0] != pub_key.algo_name())
-         return false;
+Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key) const
+   {
+   const std::vector<std::string> sig_info =
+      split_on(OIDS::lookup(m_sig_algo.get_oid()), '/');
 
-      std::string padding = sig_info[1];
-      Signature_Format format =
-         (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+   if(sig_info.size() != 2 || sig_info[0] != pub_key.algo_name())
+      return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
 
-      if(padding == "EMSA4")
+   std::string padding = sig_info[1];
+   const Signature_Format format =
+      (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+
+   if(padding == "EMSA4")
+      {
+      // "MUST contain RSASSA-PSS-params"
+      if(signature_algorithm().parameters.empty())
          {
-         // "MUST contain RSASSA-PSS-params"
-         if(signature_algorithm().get_parameters().empty())
-            {
-            return false;
-            }
-
-         Pss_params pss_parameter = decode_pss_params(signature_algorithm().get_parameters());
-
-         // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-         std::string hash_algo = OIDS::lookup(pss_parameter.hash_algo.get_oid());
-         if(hash_algo != "SHA-160" && hash_algo != "SHA-224" && hash_algo != "SHA-256" && hash_algo != "SHA-384"
-               && hash_algo != "SHA-512")
-            {
-            return false;
-            }
-
-         std::string mgf_algo = OIDS::lookup(pss_parameter.mask_gen_algo.get_oid());
-         if(mgf_algo != "MGF1")
-            {
-            return false;
-            }
-
-         // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
-         // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-         if(pss_parameter.mask_gen_hash.get_oid() != pss_parameter.hash_algo.get_oid())
-            {
-            return false;
-            }
-
-         if(pss_parameter.trailer_field != 1)
-            {
-            return false;
-            }
-
-         padding += "(" + hash_algo;
-         padding += "," + mgf_algo;
-         padding += "," + std::to_string(pss_parameter.salt_len) +
-                    ")";   // salt_len is actually not used for verification. Length is inferred from the signature
+         return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      PK_Verifier verifier(pub_key, padding, format);
+      Pss_params pss_parameter = decode_pss_params(signature_algorithm().parameters);
 
-      return verifier.verify_message(tbs_data(), signature());
+      // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+      const std::string hash_algo = OIDS::lookup(pss_parameter.hash_algo.oid);
+      if(hash_algo != "SHA-160" &&
+         hash_algo != "SHA-224" &&
+         hash_algo != "SHA-256" &&
+         hash_algo != "SHA-384" &&
+         hash_algo != "SHA-512")
+         {
+         return Certificate_Status_Code::UNTRUSTED_HASH;
+         }
+
+      const std::string mgf_algo = OIDS::lookup(pss_parameter.mask_gen_algo.oid);
+      if(mgf_algo != "MGF1")
+         {
+         return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+         }
+
+      // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
+      // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+      if(pss_parameter.mask_gen_hash.oid != pss_parameter.hash_algo.oid)
+         {
+         return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+         }
+
+      if(pss_parameter.trailer_field != 1)
+         {
+         return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+         }
+
+      // salt_len is actually not used for verification. Length is inferred from the signature
+      padding += "(" + hash_algo + "," + mgf_algo + "," + std::to_string(pss_parameter.salt_len) + ")";
       }
-   catch(std::exception&)
+
+   try
       {
-      return false;
+      PK_Verifier verifier(pub_key, padding, format);
+      const bool valid = verifier.verify_message(tbs_data(), signature());
+
+      if(valid)
+         return Certificate_Status_Code::VERIFIED;
+      else
+         return Certificate_Status_Code::SIGNATURE_ERROR;
+      }
+   catch(Algorithm_Not_Found&)
+      {
+      return Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN;
+      }
+   catch(...)
+      {
+      // This shouldn't happen, fallback to generic signature error
+      return Certificate_Status_Code::SIGNATURE_ERROR;
       }
    }
 
