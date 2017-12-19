@@ -27,9 +27,9 @@ the approved version number will contain the original version it is based on fol
 a `RSCSN` suffix. For example, the version 2.0.1-RSCS1 is based on the official
 Botan version 2.0.1, but contains additional changes that are not part of 2.0.1
 (but may be part of a to-be-released version 2.1.0).
-New Botan releases will be audited every 3-6 months and cryptographically relevant
-changes will be checked and documented. Provided that the official version 2.1.0 will be approved
-by the BSI, this version will finally be announced here.
+New Botan releases will be audited on a regular basis and cryptographically relevant
+changes will be checked and documented. Provided that the official version 2.4.0 (to be released Jan 8, 2018)
+will be approved by the BSI, this version will finally be announced here.
 
 Release Downloads
 ----------------------------------------
