@@ -257,13 +257,22 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    // Check for self-signed vs self-issued certificates
    if(data->m_subject_dn == data->m_issuer_dn)
       {
+      data->m_self_signed = false;
+
       try
          {
          std::unique_ptr<Public_Key> pub_key(
             X509::load_key(ASN1::put_in_sequence(data->m_subject_public_key_bits)));
-         data->m_self_signed = obj.check_signature(*pub_key);
+
+         Certificate_Status_Code sig_status = obj.verify_signature(*pub_key);
+
+         if(sig_status == Certificate_Status_Code::OK ||
+            sig_status == Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN)
+            {
+            data->m_self_signed = true;
+            }
          }
-      catch(Decoding_Error&)
+      catch(...)
          {
          // ignore errors here to allow parsing to continue
          }

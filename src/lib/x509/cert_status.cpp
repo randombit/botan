@@ -91,7 +91,12 @@ const char* to_string(Certificate_Status_Code code)
          return "Signature error";
       case Certificate_Status_Code::CERT_PUBKEY_INVALID:
          return "Certificate public key invalid";
-         // intentionally no default so we are warned
+      case Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN:
+         return "Certificate signed with unknown/unavailable algorithm";
+      case Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS:
+         return "Certificate signature has invalid parameters";
+
+      // intentionally no default so we are warned if new enum values are added
       }
 
    return nullptr;
