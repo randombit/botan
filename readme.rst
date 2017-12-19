@@ -31,6 +31,9 @@ New Botan releases will be audited on a regular basis and cryptographically rele
 changes will be checked and documented. Provided that the official version 2.4.0 (to be released Jan 8, 2018)
 will be approved by the BSI, this version will finally be announced here.
 
+New releases are also announced on the botan-bsi-announce@rohde-schwarz.com mailing list.
+Subscribe by sending an email to botan-bsi-announce-register@rohde-schwarz.com.
+
 Release Downloads
 ----------------------------------------
 
