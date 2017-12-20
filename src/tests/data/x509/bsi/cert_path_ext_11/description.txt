@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_11
+
+Purpose: Checks the behaviour of the application when an intermediate certificate does not contain the keyCertSign value in the Key Usage extension. This path is invalid because an intermediate certificate must have this value in this extension.

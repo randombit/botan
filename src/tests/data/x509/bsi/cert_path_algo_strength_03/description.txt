@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_ALGO_STRENGTH_03
+
+Purpose: Checks the behaviour of the application when the last intermediate certificate contains an RSA public key with exponent e=3 and the target certificate features a malformed signature the acceptance of which indicates an implementation flaw that allows the Bleichenbacher's Low Exponent Attack. This path is invalid because the certificate's signature is invalid.

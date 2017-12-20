@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_09
+
+Purpose: Checks the behaviour of the application when the target certificate does not contain the Authority Key Identifier Extension. This path is valid, although this certificate does not support path construction because of the missing AKIE.

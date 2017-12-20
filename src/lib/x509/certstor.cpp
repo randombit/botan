@@ -1,6 +1,7 @@
 /*
 * Certificate Store
 * (C) 1999-2010,2013 Jack Lloyd
+* (C) 2017 Fabian Weissberg, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -64,6 +65,28 @@ Certificate_Store_In_Memory::find_cert(const X509_DN& subject_dn,
    return nullptr;
    }
 
+std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_In_Memory::find_all_certs(
+      const X509_DN& subject_dn,
+      const std::vector<uint8_t>& key_id) const
+   {
+   std::vector<std::shared_ptr<const X509_Certificate>> matches;
+
+   for(const auto& cert : m_certs)
+      {
+      if(key_id.size())
+         {
+         std::vector<uint8_t> skid = cert->subject_key_id();
+
+         if(skid.size() && skid != key_id) // no match
+            continue;
+         }
+
+      if(cert->subject_dn() == subject_dn)
+         matches.push_back(cert);
+      }
+
+   return matches;
+   }
 
 std::shared_ptr<const X509_Certificate>
 Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const

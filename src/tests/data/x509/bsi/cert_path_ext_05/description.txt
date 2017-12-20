@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_05
+
+Purpose: Checks the behaviour of the application when a certificate contains an extension two times, possibly with different values. This path is invalid because this is not allowed and additionally the client could not decide which to use.

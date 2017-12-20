@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_15
+
+Purpose: Checks the behaviour of an application when the target certificate, which is not a CA, contains the Name Constraints extension. Name Constraints is only allowed in CA certificates and therefore this path is invalid.

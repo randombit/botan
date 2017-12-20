@@ -136,6 +136,11 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
       bool successful_validation() const;
 
       /**
+      * @return true iff no warnings occured during validation
+      */
+      bool no_warnings() const;
+
+      /**
       * @return overall validation result code
       */
       Certificate_Status_Code result() const { return m_overall; }
@@ -145,6 +150,11 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
       */
       const CertificatePathStatusCodes& all_statuses() const
          { return m_all_status; }
+
+      /**
+      * @return the subset of status codes that are warnings
+      */
+      CertificatePathStatusCodes warnings() const;
 
       /**
       * @return string representation of the validation result
@@ -173,6 +183,7 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
 
    private:
       CertificatePathStatusCodes m_all_status;
+      CertificatePathStatusCodes m_warnings;
       std::vector<std::shared_ptr<const X509_Certificate>> m_cert_path;
       Certificate_Status_Code m_overall;
    };
@@ -273,6 +284,13 @@ Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(
 * probably want to just call x509_path_validate instead.
 */
 namespace PKIX {
+
+Certificate_Status_Code
+build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const X509_Certificate>>>& cert_paths,
+                            const std::vector<Certificate_Store*>& trusted_certstores,
+                            const std::shared_ptr<const X509_Certificate>& end_entity,
+                            const std::vector<std::shared_ptr<const X509_Certificate>>& end_entity_extra);
+
 
 /**
 * Build certificate path

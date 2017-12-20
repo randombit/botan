@@ -186,6 +186,12 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       const std::vector<uint8_t>& serial_number() const;
 
       /**
+      * Get the serial number's sign
+      * @return 1 iff the serial is negative.
+      */
+      bool is_serial_negative() const;
+
+      /**
       * Get the DER encoded AuthorityKeyIdentifier of this certificate.
       * @return DER encoded AuthorityKeyIdentifier
       */

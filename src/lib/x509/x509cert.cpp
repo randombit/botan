@@ -25,6 +25,7 @@ struct X509_Certificate_Data
    {
    size_t m_version = 0;
    std::vector<uint8_t> m_serial;
+   bool m_serial_negative;
    AlgorithmIdentifier m_sig_algo_inner;
    X509_DN m_issuer_dn;
    X509_DN m_subject_dn;
@@ -113,6 +114,8 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       throw Decoding_Error("Unknown X.509 cert version " + std::to_string(data->m_version));
    if(obj.signature_algorithm() != data->m_sig_algo_inner)
       throw Decoding_Error("X.509 Certificate had differing algorithm identifers in inner and outer ID fields");
+   // crude method to save the serial's sign; will get lost during decoding, otherwise
+   data->m_serial_negative = serial_bn.is_negative();
 
    // for general sanity convert wire version (0 based) to standards version (v1 .. v3)
    data->m_version += 1;
@@ -383,6 +386,12 @@ const std::vector<uint8_t>& X509_Certificate::serial_number() const
    {
    return data().m_serial;
    }
+
+bool X509_Certificate::is_serial_negative() const
+   {
+   return data().m_serial_negative;
+   }
+
 
 const X509_DN& X509_Certificate::issuer_dn() const
    {

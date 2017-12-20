@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_03
+
+Purpose: Checks the behaviour of the application when the signature algorithm in the TBS part of the certificate and the one outside the TBS part are not the same. This path is not valid, because the application cannot decide which algorithm to use for validating the certificate's signature.

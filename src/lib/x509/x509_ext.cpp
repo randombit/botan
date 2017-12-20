@@ -2,6 +2,7 @@
 * X.509 Certificate Extensions
 * (C) 1999-2010,2012 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
+* (C) 2017 Fabian Weissberg, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,6 +16,7 @@
 #include <botan/hash.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
+#include <set>
 #include <sstream>
 
 namespace Botan {
@@ -70,6 +72,10 @@ Extensions::create_extn_obj(const OID& oid,
    else if(oid == Cert_Extension::CRL_Distribution_Points::static_oid())
       {
       extn.reset(new Cert_Extension::CRL_Distribution_Points);
+      }
+   else if(oid == Cert_Extension::CRL_Issuing_Distribution_Point::static_oid())
+      {
+      extn.reset(new Cert_Extension::CRL_Issuing_Distribution_Point);
       }
    else if(oid == Cert_Extension::Certificate_Policies::static_oid())
       {
@@ -708,7 +714,6 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in)
    std::vector<Policy_Information> policies;
 
    BER_Decoder(in).decode_list(policies);
-
    m_oids.clear();
    for(size_t i = 0; i != policies.size(); ++i)
       m_oids.push_back(policies[i].oid());
@@ -721,6 +726,18 @@ void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
    for(size_t i = 0; i != m_oids.size(); ++i)
       info.add("X509v3.CertificatePolicies", m_oids[i].as_string());
+   }
+
+void Certificate_Policies::validate(const X509_Certificate& subject, const X509_Certificate& issuer,
+            const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+            std::vector<std::set<Certificate_Status_Code>>& cert_status,
+            size_t pos)
+   {
+   std::set<OID> oid_set(m_oids.begin(), m_oids.end());
+   if(oid_set.size() != m_oids.size())
+      {
+      cert_status.at(pos).insert(Certificate_Status_Code::DUPLICATE_CERT_POLICY);
+      }
    }
 
 std::vector<uint8_t> Authority_Information_Access::encode_inner() const
@@ -801,6 +818,7 @@ std::vector<uint8_t> CRL_Number::encode_inner() const
 void CRL_Number::decode_inner(const std::vector<uint8_t>& in)
    {
    BER_Decoder(in).decode(m_crl_number);
+   m_has_value = true;
    }
 
 /*
@@ -850,14 +868,19 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf)
       .decode_list(m_distribution_points)
       .verify_end();
 
+   std::stringstream ss;
+
    for(size_t i = 0; i != m_distribution_points.size(); ++i)
       {
-      auto point = m_distribution_points[i].point().contents();
+      auto contents = m_distribution_points[i].point().contents();
 
-      auto uris = point.equal_range("URI");
-      for(auto uri = uris.first; uri != uris.second; ++uri)
-         m_crl_distribution_urls.push_back(uri->second);
+      for(const auto& pair : contents)
+         {
+         ss << pair.first << ": " << pair.second << " ";
+         }
       }
+
+   m_crl_distribution_urls.push_back(ss.str());
    }
 
 void CRL_Distribution_Points::contents_to(Data_Store& subject, Data_Store&) const
@@ -879,6 +902,29 @@ void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder&
                                   ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED),
                                   SEQUENCE, CONSTRUCTED)
       .end_cons().end_cons();
+   }
+
+std::vector<uint8_t> CRL_Issuing_Distribution_Point::encode_inner() const
+   {
+   throw Not_Implemented("CRL_Issuing_Distribution_Point encoding");
+   }
+
+void CRL_Issuing_Distribution_Point::decode_inner(const std::vector<uint8_t>& buf)
+   {
+   BER_Decoder(buf).decode(m_distribution_point).verify_end();
+   }
+
+void CRL_Issuing_Distribution_Point::contents_to(Data_Store& info, Data_Store&) const
+   {
+   auto contents = m_distribution_point.point().contents();
+   std::stringstream ss;
+
+   for(const auto& pair : contents)
+      {
+      ss << pair.first << ": " << pair.second << " ";
+      }
+
+   info.add("X509v3.CRLIssuingDistributionPoint", ss.str());
    }
 
 std::vector<uint8_t> Unknown_Extension::encode_inner() const

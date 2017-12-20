@@ -1,0 +1,54 @@
+cert_path_algo_strength_01$Hash function used is considered too weak for security
+cert_path_algo_strength_02$Hash function used is considered too weak for security
+cert_path_algo_strength_03$Signature error
+cert_path_common_01$Verified
+cert_path_common_02$Cannot establish trust
+cert_path_common_03$Invalid argument Decoding error: CERTIFICATE decoding failed: Invalid argument Decoding error: X.509 Certificate had differing algorithm identifers in inner and outer ID fields
+cert_path_common_04$Certificate signed with unknown/unavailable algorithm
+cert_path_common_05$Invalid argument Decoding error: CERTIFICATE decoding failed: Invalid argument Decoding error: BER: Value truncated
+cert_path_common_06$Warning: Certificate serial number is negative
+cert_path_common_07$Certificate is not yet valid
+cert_path_common_08$Certificate has expired
+cert_path_common_09$Certificate is not yet valid
+cert_path_common_10$Certificate has expired
+cert_path_common_11$Invalid argument Decoding error: CERTIFICATE decoding failed: Invalid argument Decoding error: Unknown X.509 cert version 5
+cert_path_common_12$Warning: Distinguished name too long
+cert_path_common_13$Verified
+cert_path_common_14$Verified
+cert_path_CRL_01$No revocation data
+cert_path_CRL_02$Certificate is revoked
+cert_path_CRL_03$Certificate is revoked
+cert_path_CRL_04$CRL bad signature
+cert_path_CRL_05$Certificate is revoked
+cert_path_CRL_06$Certificate is revoked
+cert_path_CRL_07$Certificate is revoked
+cert_path_CRL_08$CRL response is not yet valid
+cert_path_CRL_09$CRL has expired
+cert_path_CRL_10$Certificate is revoked
+cert_path_CRL_11$Certificate is revoked
+cert_path_CRL_12$No revocation data
+cert_path_CRL_13$No CRL with matching distribution point for certificate
+cert_path_CRL_14$Invalid argument Decoding error: X509 CRL decoding failed: Invalid argument Decoding error: BER: Tag mismatch when decoding got 65280/65280 expected 3/0
+cert_path_CRL_15$No CRL with matching distribution point for certificate
+cert_path_CRL_16$Certificate is revoked
+cert_path_crypt_01$Signature error
+cert_path_crypt_02$Signature error
+cert_path_ext_01$Encountered extension in certificate with version < 3
+cert_path_ext_02$Encountered extension in certificate with version < 3
+cert_path_ext_03$Verified
+cert_path_ext_04$Unknown critical extension encountered
+cert_path_ext_05$Duplicate certificate extension encountered
+cert_path_ext_06$CA certificate not allowed to issue certs
+cert_path_ext_07$CA certificate not allowed to issue certs
+cert_path_ext_08$Certificate chain too long
+cert_path_ext_09$Verified
+cert_path_ext_10$Invalid argument Decoding error: CERTIFICATE decoding failed: Invalid argument Decoding error: Decoding X.509 extension 2.5.29.15 failed failed with exception Invalid argument Decoding error: BER: Bad tag for usage constraint: 16/32
+cert_path_ext_11$CA certificate not allowed to issue certs
+cert_path_ext_12$Certificate contains duplicate policy
+cert_path_ext_13$Unknown critical extension encountered
+cert_path_ext_14$Unknown critical extension encountered
+cert_path_ext_15$Certificate does not pass name constraint
+cert_path_ext_16$Certificate does not pass name constraint
+#cert_path_ext_17$
+cert_path_ext_18$Unknown critical extension encountered
+cert_path_ext_19$Unknown critical extension encountered

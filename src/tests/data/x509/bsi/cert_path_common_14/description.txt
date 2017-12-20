@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_14
+
+Purpose: Checks the behaviour of the application when it should construct and validate a path based on a set of certificates, for which a valid path can be constructed but where invalid paths can be constructed as well. Failing this test indicates that the application does not perform an exhaustive search for all possible paths.

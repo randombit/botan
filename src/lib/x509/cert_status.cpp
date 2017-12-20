@@ -22,6 +22,11 @@ const char* to_string(Certificate_Status_Code code)
       case Certificate_Status_Code::VALID_CRL_CHECKED:
          return "Valid CRL examined";
 
+      case Certificate_Status_Code::CERT_SERIAL_NEGATIVE:
+         return "Certificate serial number is negative";
+      case Certificate_Status_Code::DN_TOO_LONG:
+         return "Distinguished name too long";
+
       case Certificate_Status_Code::NO_REVOCATION_DATA:
          return "No revocation data";
       case Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK:
@@ -55,6 +60,8 @@ const char* to_string(Certificate_Status_Code code)
 
       case Certificate_Status_Code::POLICY_ERROR:
          return "Certificate policy error";
+      case Certificate_Status_Code::DUPLICATE_CERT_POLICY:
+         return "Certificate contains duplicate policy";
       case Certificate_Status_Code::INVALID_USAGE:
          return "Certificate does not allow the requested usage";
       case Certificate_Status_Code::CERT_CHAIN_TOO_LONG:
@@ -63,6 +70,8 @@ const char* to_string(Certificate_Status_Code code)
          return "CA certificate not allowed to issue certs";
       case Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER:
          return "CA certificate not allowed to issue CRLs";
+      case Certificate_Status_Code::NO_MATCHING_CRLDP:
+         return "No CRL with matching distribution point for certificate";
       case Certificate_Status_Code::OCSP_CERT_NOT_LISTED:
          return "OCSP cert not listed";
       case Certificate_Status_Code::OCSP_BAD_STATUS:
@@ -73,6 +82,10 @@ const char* to_string(Certificate_Status_Code code)
          return "Certificate does not pass name constraint";
       case Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION:
          return "Unknown critical extension encountered";
+      case Certificate_Status_Code::DUPLICATE_CERT_EXTENSION:
+         return "Duplicate certificate extension encountered";
+      case Certificate_Status_Code::EXT_IN_V1_V2_CERT:
+         return "Encountered extension in certificate with version < 3";
       case Certificate_Status_Code::OCSP_SIGNATURE_ERROR:
          return "OCSP signature error";
       case Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND:

@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_14
+
+Purpose: Checks the behaviour of the application when the CRL does not have a signature. This path is invalid because the integrity and authenticity of the source of revocation information cannot be verified.

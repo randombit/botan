@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_19
+
+Purpose: Checks the behaviour of an application when the first intermediate certificate in a certification path of length 3 contains a Policy Constraints extension with inhibitPolicyMapping=0 and requireExplicitPolicy=0. The next certificate in the path has a Policy Mappings extension which maps the only valid policy of the path to another policy. Every certificate has the same policy. This path is invalid because the inhibited policy mapping renders it impossible to have a valid policy.

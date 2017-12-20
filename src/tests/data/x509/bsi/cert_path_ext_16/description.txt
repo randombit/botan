@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_16
+
+Purpose: Checks the behaviour of an application when the intermediate certificate contains a non-critical Name Constraints extension. This path is invalid because this extension must be critical.

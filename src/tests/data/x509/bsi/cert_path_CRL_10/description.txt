@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_10
+
+Purpose: Checks the behaviour of the application when the target certificate is contained in a CRL and this certificate has a negative serial number. This path is invalid because the certificate, even if malformed, is revoked.

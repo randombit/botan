@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_12
+
+Purpose: Checks the behaviour of the application when the CRL's signature can be verified by a certificate whose certification path is invalid. This path is invalid because revocation information for a certificate is not available.

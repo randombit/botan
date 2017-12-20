@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_08
+
+Purpose: Checks the behaviour of the application when the first intermediate certificate in a certification path of length 3 has pathLenConstraint=0 in the Basic Constraints extension. This path is invalid because the last intermediate certificate is not allowed to issue other certificates.

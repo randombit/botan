@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_06
+
+Purpose: Checks the behaviour of the application when the serial number of the certificate is negative. This path is not valid, because serial number must be positive integers. However, negative numbers should be gracefully handled.

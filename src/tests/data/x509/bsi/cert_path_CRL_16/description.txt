@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_16
+
+Purpose: Checks the behaviour of the application when the intermediate certificate is revoked. This path is invalid because a CA certificate in the path is revoked.

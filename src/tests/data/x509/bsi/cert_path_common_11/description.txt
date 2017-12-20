@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_11
+
+Purpose: Checks the behaviour of the application when a certificate contains an invalid version (e.g. 5). This path is not valid, because the certificate has an invalid version.

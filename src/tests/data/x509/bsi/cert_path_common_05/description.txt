@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_05
+
+Purpose: Checks the behaviour of the application when a certificate has a wrong DER encoding. This path is not valid, because the certificate is not a properly encoded structure.

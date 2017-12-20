@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_EXT_04
+
+Purpose: Checks the behaviour of the application when a v3 certificate contains an unknown critical extension. This path is invalid because a client application must parse and interpret such extensions.

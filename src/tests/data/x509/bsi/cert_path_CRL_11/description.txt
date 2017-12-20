@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_CRL_11
+
+Purpose: Checks the behaviour of the application when a CRL contains a CRL Entry with an unknown critical extension. This path is invalid because the application cannot process the critical extension.

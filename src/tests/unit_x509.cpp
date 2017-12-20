@@ -127,7 +127,11 @@ Test::Result test_cert_status_strings()
       Botan::Certificate_Status_Code::VALID_CRL_CHECKED,
       Botan::Certificate_Status_Code::OCSP_NO_HTTP,
 
+      Botan::Certificate_Status_Code::CERT_SERIAL_NEGATIVE,
+      Botan::Certificate_Status_Code::DN_TOO_LONG,
+
       Botan::Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK,
+      Botan::Certificate_Status_Code::NO_MATCHING_CRLDP,
       Botan::Certificate_Status_Code::UNTRUSTED_HASH,
       Botan::Certificate_Status_Code::NO_REVOCATION_DATA,
       Botan::Certificate_Status_Code::CERT_NOT_YET_VALID,
@@ -142,6 +146,7 @@ Test::Result test_cert_status_strings()
       Botan::Certificate_Status_Code::CHAIN_LACKS_TRUST_ROOT,
       Botan::Certificate_Status_Code::CHAIN_NAME_MISMATCH,
       Botan::Certificate_Status_Code::POLICY_ERROR,
+      Botan::Certificate_Status_Code::DUPLICATE_CERT_POLICY,
       Botan::Certificate_Status_Code::INVALID_USAGE,
       Botan::Certificate_Status_Code::CERT_CHAIN_TOO_LONG,
       Botan::Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER,
@@ -151,6 +156,8 @@ Test::Result test_cert_status_strings()
       Botan::Certificate_Status_Code::OCSP_BAD_STATUS,
       Botan::Certificate_Status_Code::CERT_NAME_NOMATCH,
       Botan::Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION,
+      Botan::Certificate_Status_Code::DUPLICATE_CERT_EXTENSION,
+      Botan::Certificate_Status_Code::EXT_IN_V1_V2_CERT,
       Botan::Certificate_Status_Code::OCSP_SIGNATURE_ERROR,
       Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND,
       Botan::Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE,
@@ -159,6 +166,8 @@ Test::Result test_cert_status_strings()
       Botan::Certificate_Status_Code::CRL_BAD_SIGNATURE,
       Botan::Certificate_Status_Code::SIGNATURE_ERROR,
       Botan::Certificate_Status_Code::CERT_PUBKEY_INVALID,
+      Botan::Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN,
+      Botan::Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS,
       };
 
    for(const auto code : codes)

@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_08
+
+Purpose: Checks the behaviour of the application when an intermediate certificate has expired (now > notAfter). This path is not valid, because one CA certificate has expired.

@@ -1,0 +1,3 @@
+Test Case: CERT_PATH_COMMON_07
+
+Purpose: Checks the behaviour of the application when an intermediate certificate is not valid yet (now < notBefore). This path is not valid, because one CA certificate is not valid yet.
