@@ -252,9 +252,12 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_fn));
 
    std::string padding;
+   std::vector<uint8_t> algo_params;
    if(algo_name == "RSA")
       {
       padding = "EMSA3";
+      // for RSA PKCSv1.5 parameters "SHALL" be NULL
+      algo_params = key.algorithm_identifier().get_parameters();
       }
    else if(algo_name == "DSA" ||
            algo_name == "ECDSA" ||
@@ -262,6 +265,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
            algo_name == "ECKCDSA" ||
            algo_name == "GOST-34.10")
       {
+      // for DSA, ECDSA, GOST parameters "SHALL" be empty
       padding = "EMSA1";
       }
    else
@@ -273,8 +277,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    padding = padding + "(" + hash->name() + ")";
 
-   sig_algo = AlgorithmIdentifier(OIDS::lookup(algo_name + "/" + padding),
-                                  key.algorithm_identifier().get_parameters());
+   sig_algo = AlgorithmIdentifier(OIDS::lookup(algo_name + "/" + padding), algo_params);
 
    return new PK_Signer(key, rng, padding, format);
    }
