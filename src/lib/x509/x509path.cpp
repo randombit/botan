@@ -717,9 +717,9 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
          // push a deletion marker on the stack for backtracing later
          stack.push_back({std::shared_ptr<const X509_Certificate>(nullptr),false});
 
-         for(const auto trusted : trusted_issuers)
+         for(const auto trusted_cert : trusted_issuers)
             {
-            stack.push_back({trusted,true});
+            stack.push_back({trusted_cert,true});
             }
 
          for(const auto misc : misc_issuers)

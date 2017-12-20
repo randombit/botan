@@ -728,10 +728,12 @@ void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
       info.add("X509v3.CertificatePolicies", m_oids[i].as_string());
    }
 
-void Certificate_Policies::validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-            const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
-            std::vector<std::set<Certificate_Status_Code>>& cert_status,
-            size_t pos)
+void Certificate_Policies::validate(
+   const X509_Certificate& /*subject*/,
+   const X509_Certificate& /*issuer*/,
+   const std::vector<std::shared_ptr<const X509_Certificate>>& /*cert_path*/,
+   std::vector<std::set<Certificate_Status_Code>>& cert_status,
+   size_t pos)
    {
    std::set<OID> oid_set(m_oids.begin(), m_oids.end());
    if(oid_set.size() != m_oids.size())

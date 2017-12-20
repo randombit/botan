@@ -555,7 +555,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
           * the validation function may be relevant, i.e. if issuer DNs are
           * ambiguous.
           */
-         for (int i = 0; i < 16; i++)
+         for (size_t r = 0; r < 16; r++)
             {
             std::random_shuffle(++(certs.begin()), certs.end());
 
