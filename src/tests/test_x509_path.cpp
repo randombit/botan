@@ -28,7 +28,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 std::map<std::string, std::string> read_results(const std::string& results_file, const char delim = ':')
    {
@@ -454,9 +454,6 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run()
 
 BOTAN_REGISTER_TEST("x509_path_rsa_pss", PSS_Path_Validation_Tests);
 
-// The certificates in this test suite are signed using EMSA_PKCS1
-#ifdef BOTAN_HAS_EMSA_PKCS1
-
 class BSI_Path_Validation_Tests final : public Test
    {
    public:
@@ -622,8 +619,6 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
    }
 
 BOTAN_REGISTER_TEST("x509_path_bsi", BSI_Path_Validation_Tests);
-
-#endif
 
 #endif
 

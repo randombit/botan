@@ -374,6 +374,7 @@ Test::Result test_crl_dn_name()
 
    // See GH #1252
 
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
    const Botan::OID dc_oid("0.9.2342.19200300.100.1.25");
 
    Botan::X509_Certificate cert(Test::data_file("x509/misc/opcuactt_ca.der"));
@@ -388,6 +389,7 @@ Test::Result test_crl_dn_name()
 
    result.confirm("contains DC component",
                   crl.issuer_dn().get_attributes().count(dc_oid) == 1);
+#endif
 
    return result;
    }
@@ -1231,8 +1233,13 @@ class X509_Cert_Unit_Tests final : public Test
          Test::Result self_issued_result("X509 Self Issued");
          Test::Result extensions_result("X509 Extensions");
 
-         for(const auto& algo : sig_algos)
+         for(const std::string& algo : sig_algos)
             {
+#if !defined(BOTAN_HAS_EMSA_PKCS1)
+            if(algo == "RSA")
+               continue;
+#endif
+
             try
                {
                cert_result.merge(test_x509_cert(algo));
@@ -1280,10 +1287,15 @@ class X509_Cert_Unit_Tests final : public Test
             "DH", "ECDH", "RSA", "ElGamal", "GOST-34.10",
             "DSA", "ECDSA", "ECGDSA", "ECKCDSA"
             };
+
          Test::Result valid_constraints_result("X509 Valid Constraints");
 
-         for(const auto& algo : pk_algos)
+         for(const std::string& algo : pk_algos)
             {
+#if !defined(BOTAN_HAS_EMSA_PKCS1)
+            if(algo == "RSA")
+               continue;
+#endif
             valid_constraints_result.merge(test_valid_constraints(algo));
             }
 
