@@ -1,9 +1,9 @@
 Secure Remote Password
 ========================================
 
-The library contains an implementation of the :wikipedia:`SRP-6a
-password based key exchange protocol
-<Secure_remote_password_protocol>` in ``srp6.h``.
+The library contains an implementation of the
+`SRP6-a <http://srp.stanford.edu/design.html>`_ password authenticated
+key exchange protocol in ``srp6.h``.
 
 A SRP client provides what is called a SRP *verifier* to the server.
 This verifier is based on a password, but the password cannot be

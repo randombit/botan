@@ -48,27 +48,7 @@ is_website_build = check_for_tag('website')
 
 needs_sphinx = '1.1'
 
-extensions = ['sphinx.ext.extlinks']
-
 templates_path = ['templates']
-
-files_dir = 'https://botan.randombit.net/releases'
-
-extlinks = {
-    'wikipedia': ('https://en.wikipedia.org/wiki/%s', ''),
-    'botan-devel': ('https://lists.randombit.net/pipermail/botan-devel/%s.html', None),
-
-    'cve': ('https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s', 'CVE-'),
-
-    'tgz': (files_dir + '/Botan-%s.tgz', 'tar/gz for '),
-    'tgz_sig': (files_dir + '/Botan-%s.tgz.asc', 'tar/gz sig '),
-
-    'installer_x86_32': (files_dir + '/win32/botan-%s-x86_32.exe', 'x86-32 '),
-    'installer_x86_64': (files_dir + '/win32/botan-%s-x86_64.exe', 'x86-64 '),
-
-    'installer_sig_x86_32': (files_dir + '/win32/botan-%s-x86_32.exe.asc', None),
-    'installer_sig_x86_64': (files_dir + '/win32/botan-%s-x86_64.exe.asc', None),
-}
 
 source_suffix = '.rst'
 

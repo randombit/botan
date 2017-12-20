@@ -73,9 +73,9 @@ passhash9.
 Bcrypt
 ----------------------------------------
 
-:wikipedia:`Bcrypt` is a password hashing scheme originally designed
-for use in OpenBSD, but numerous other implementations exist.
-It is made available by including ``bcrypt.h``.
+`Bcrypt <https://www.usenix.org/legacy/event/usenix99/provos/provos.pdf>`_ is a
+password hashing scheme originally designed for use in OpenBSD, but numerous
+other implementations exist. It is made available by including ``bcrypt.h``.
 
 It has the advantage that it requires a small amount (4K) of fast RAM
 to compute, which can make hardware password cracking somewhat more
