@@ -3,23 +3,26 @@
 """
 Release script for botan (https://botan.randombit.net/)
 
+This script requires Python 2.7 or 3.6
+
 (C) 2011,2012,2013,2015,2016,2017 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import time
+import datetime
 import errno
+import hashlib
+import io
 import logging
-import optparse
+import optparse # pylint: disable=deprecated-module
 import os
+import re
 import shutil
 import subprocess
 import sys
-import datetime
-import hashlib
-import re
 import tarfile
+import time
 
 # This is horrible, but there is no way to override tarfile's use of time.time
 # in setting the gzip header timestamp, which breaks deterministic archives
@@ -76,16 +79,8 @@ def revision_of(tag):
 
 def extract_revision(revision, to):
     tar_val = run_git(['archive', '--format=tar', '--prefix=%s/' % (to), revision])
-
-    if sys.version_info.major == 3:
-        import io
-        tar_f = tarfile.open(fileobj=io.BytesIO(tar_val))
-        tar_f.extractall()
-    else:
-        import StringIO
-        tar_f = tarfile.open(fileobj=StringIO.StringIO(tar_val))
-        tar_f.extractall()
-
+    tar_f = tarfile.open(fileobj=io.BytesIO(tar_val))
+    tar_f.extractall()
 
 def gpg_sign(keyid, passphrase_file, files, detached=True):
 
@@ -252,11 +247,13 @@ def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file
 
     return output_archive
 
-def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
-
-    (options, args) = parse_args(args)
+def configure_logging(options):
+    class ExitOnErrorLogHandler(logging.StreamHandler, object):
+        def emit(self, record):
+            super(ExitOnErrorLogHandler, self).emit(record)
+            # Exit script if and ERROR or worse occurred
+            if record.levelno >= logging.ERROR:
+                sys.exit(1)
 
     def log_level():
         if options.verbose:
@@ -265,14 +262,22 @@ def main(args=None):
             return logging.ERROR
         return logging.INFO
 
-    logging.basicConfig(stream=sys.stderr,
-                        format='%(levelname) 7s: %(message)s',
-                        level=log_level())
+    lh = ExitOnErrorLogHandler(sys.stderr)
+    lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
+    logging.getLogger().addHandler(lh)
+    logging.getLogger().setLevel(log_level())
+
+def main(args=None):
+    # pylint: disable=too-many-branches,too-many-locals
+    if args is None:
+        args = sys.argv[1:]
+
+    (options, args) = parse_args(args)
+
+    configure_logging(options)
 
     if len(args) != 1 and len(args) != 2:
         logging.error('Usage: %s [options] <version tag>' % (sys.argv[0]))
-        logging.error('Try --help')
-        return 1
 
     snapshot_branch = None
     target_version = None
@@ -281,17 +286,14 @@ def main(args=None):
     for archive_type in archives:
         if archive_type not in ['tar', 'tgz', 'tbz']:
             logging.error('Unknown archive type "%s"' % (archive_type))
-            return 1
 
     if args[0] == 'snapshot':
         if len(args) != 2:
             logging.error('Missing branch name for snapshot command')
-            return 1
         snapshot_branch = args[1]
     else:
         if len(args) != 1:
             logging.error('Usage error, try --help')
-            return 1
         target_version = args[0]
 
     if snapshot_branch:
@@ -307,18 +309,14 @@ def main(args=None):
             target_version = target_version
         except ValueError as e:
             logging.error('Invalid version number %s' % (target_version))
-            return 1
 
     rev_id = revision_of(target_version)
-
     if rev_id == '':
         logging.error('No tag matching %s found' % (target_version))
-        return 2
 
     rel_date = datestamp(target_version)
     if rel_date == 0:
         logging.error('No date found for version')
-        return 2
 
     logging.info('Found %s at revision id %s released %d' % (target_version, rev_id, rel_date))
 
@@ -358,7 +356,6 @@ def main(args=None):
 
     if not os.access(version_file, os.R_OK):
         logging.error('Cannot read %s' % (version_file))
-        return 2
 
     rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, rel_date)
 
@@ -367,7 +364,6 @@ def main(args=None):
     except OSError as e:
         if e.errno != errno.EEXIST:
             logging.error('Creating dir %s failed %s' % (options.output_dir, e))
-            return 2
 
     output_files = []
 
@@ -405,7 +401,7 @@ def main(args=None):
 if __name__ == '__main__':
     try:
         sys.exit(main())
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         logging.error(e)
         import traceback
         logging.error(traceback.format_exc())

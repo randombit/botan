@@ -366,6 +366,7 @@ def main(args=None):
             'src/python/botan2.py',
             'src/scripts/ci_build.py',
             'src/scripts/install.py',
+            'src/scripts/dist.py',
             'src/scripts/cleanup.py',
             'src/scripts/build_docs.py',
             'src/scripts/website.py',
