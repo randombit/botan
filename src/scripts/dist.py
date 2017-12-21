@@ -215,6 +215,8 @@ def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file
             return 'w:bz2'
         elif archive_type == 'tar':
             return 'w'
+        else:
+            raise Exception("Unknown archive type '%s'" % (archive_type))
 
     # gzip format embeds the original filename, tarfile.py does the wrong
     # thing unless the output name ends in .gz. So pass an explicit
