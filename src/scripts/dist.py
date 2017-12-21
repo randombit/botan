@@ -239,11 +239,11 @@ def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file
         tarinfo.uname = "botan"
         tarinfo.gname = "botan"
         tarinfo.mtime = rel_epoch
-        archive.addfile(tarinfo, open(f))
+        archive.addfile(tarinfo, open(f, 'rb'))
     archive.close()
 
     sha256 = hashlib.new('sha256')
-    sha256.update(open(output_archive).read())
+    sha256.update(open(output_archive, 'rb').read())
     archive_hash = sha256.hexdigest().upper()
 
     logging.info('SHA-256(%s) = %s' % (output_archive, archive_hash))
