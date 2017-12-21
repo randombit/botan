@@ -115,8 +115,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
 
    if(m_version.supports_negotiable_signature_algorithms())
-      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
-                                                policy.allowed_signature_methods()));
+      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_schemes()));
 
    if(m_version.is_datagram_protocol())
       m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
@@ -137,10 +136,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       {
       m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
-
-   if(m_version.supports_negotiable_signature_algorithms())
-      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
-                                                policy.allowed_signature_methods()));
 
    cb.tls_modify_extensions(m_extensions, CLIENT);
 
@@ -200,8 +195,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 #endif
 
    if(m_version.supports_negotiable_signature_algorithms())
-      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
-                                                policy.allowed_signature_methods()));
+      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_schemes()));
 
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
@@ -318,19 +312,16 @@ bool Client_Hello::offered_suite(uint16_t ciphersuite) const
    return false;
    }
 
-std::vector<std::pair<std::string, std::string>> Client_Hello::supported_algos() const
+std::vector<Signature_Scheme> Client_Hello::signature_schemes() const
    {
-   if(Signature_Algorithms* sigs = m_extensions.get<Signature_Algorithms>())
-      return sigs->supported_signature_algorthms();
-   return std::vector<std::pair<std::string, std::string>>();
-   }
+   std::vector<Signature_Scheme> schemes;
 
-std::set<std::string> Client_Hello::supported_sig_algos() const
-   {
-   std::set<std::string> sig;
-   for(auto&& hash_and_sig : supported_algos())
-      sig.insert(hash_and_sig.second);
-   return sig;
+   if(Signature_Algorithms* sigs = m_extensions.get<Signature_Algorithms>())
+      {
+      schemes = sigs->supported_schemes();
+      }
+
+   return schemes;
    }
 
 std::vector<std::string> Client_Hello::supported_ecc_curves() const

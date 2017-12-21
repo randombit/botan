@@ -19,16 +19,16 @@ def to_ciphersuite_info(code, name):
     (sig_and_kex,cipher_and_mac) = name.split('_WITH_')
 
     if sig_and_kex == 'RSA':
-        sig_algo = 'RSA'
+        sig_algo = 'IMPLICIT'
         kex_algo = 'RSA'
     elif 'PSK' in sig_and_kex:
-        sig_algo = ''
+        sig_algo = 'IMPLICIT'
         kex_algo = sig_and_kex
     elif 'SRP' in sig_and_kex:
         srp_info = sig_and_kex.split('_')
         if len(srp_info) == 2: # 'SRP_' + hash
             kex_algo = sig_and_kex
-            sig_algo = ''
+            sig_algo = 'IMPLICIT'
         else:
             kex_algo = '_'.join(srp_info[0:-1])
             sig_algo = srp_info[-1]
@@ -67,7 +67,9 @@ def to_ciphersuite_info(code, name):
         }
 
     tls_to_botan_names = {
-        'anon': '',
+        'IMPLICIT': 'IMPLICIT',
+
+        'anon': 'ANONYMOUS',
         'MD5': 'MD5',
         'SHA': 'SHA-1',
         'SHA256': 'SHA-256',
@@ -105,6 +107,8 @@ def to_ciphersuite_info(code, name):
     mac_algo = tls_to_botan_names[mac_algo]
     sig_algo = tls_to_botan_names[sig_algo]
     kex_algo = tls_to_botan_names[kex_algo]
+    if kex_algo == 'RSA':
+        kex_algo = 'STATIC_RSA'
 
     (cipher_algo, cipher_keylen) = cipher_info[cipher[0]]
 
@@ -116,21 +120,13 @@ def to_ciphersuite_info(code, name):
 
     modestr = ''
     mode = ''
-    ivlen = 0
 
     if cipher[0] == 'CHACHA20' and cipher[1] == 'POLY1305':
-        iv_len = 12
-        if code in ['CC13', 'CC14', 'CC15']:
-            iv_len = 0 # Google variant
-        record_iv_len = 0
-
-        return (name, code, sig_algo, kex_algo, "ChaCha20Poly1305", cipher_keylen, iv_len, record_iv_len, "AEAD", 0, mac_algo)
+        return (name, code, sig_algo, kex_algo, "ChaCha20Poly1305", cipher_keylen, "AEAD", 0, mac_algo, 'AEAD_XOR_12')
 
     mode = cipher[-1]
     if mode not in ['CBC', 'GCM', 'CCM(8)', 'CCM', 'OCB']:
         print "#warning Unknown mode '%s' for ciphersuite %s (0x%d)" % (' '.join(cipher), name, code)
-
-    ivlen = 8 if cipher_algo == '3DES' else 16
 
     if mode != 'CBC':
         if mode == 'OCB':
@@ -139,16 +135,16 @@ def to_ciphersuite_info(code, name):
             cipher_algo += '/' + mode
 
     if mode == 'CBC':
-        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, 0, mac_algo, mac_keylen[mac_algo], "")
+        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, mac_algo, mac_keylen[mac_algo], mac_algo, 'CBC_MODE')
 
     elif mode == 'OCB':
-        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 12, 0, "AEAD", 0, mac_algo)
+        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, "AEAD", 0, mac_algo, 'AEAD_XOR_12')
 
     else:
         iv_bytes_from_hs = 4
         iv_bytes_from_rec = 8
 
-        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, iv_bytes_from_hs, iv_bytes_from_rec, "AEAD", 0, mac_algo)
+        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, "AEAD", 0, mac_algo, 'AEAD_IMPLICIT_4')
 
 def open_input(args):
     iana_url = 'https://www.iana.org/assignments/tls-parameters/tls-parameters.txt'
@@ -249,11 +245,6 @@ def main(args = None):
     def define_custom_ciphersuite(name, code):
         suites[code] = to_ciphersuite_info(code, name)
 
-    # Google servers - draft-agl-tls-chacha20poly1305-04
-    define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC13')
-    define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CC14')
-    define_custom_ciphersuite('DHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC15')
-
     if options.with_cecpq1:
         # CECPQ1 key exchange
         define_custom_ciphersuite('CECPQ1_RSA_WITH_CHACHA20_POLY1305_SHA256', '16B7')
@@ -328,9 +319,9 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
 
     for code in sorted(suites.keys()):
         info = suites[code]
-        assert len(info) == 11
-        suite_expr = 'Ciphersuite(0x%s, "%s", "%s", "%s", "%s", %d, %d, %d, "%s", %d, "%s")' % (
-            code, info[0], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9], info[10])
+        assert len(info) == 10
+        suite_expr = 'Ciphersuite(0x%s, "%s", Auth_Method::%s, Kex_Algo::%s, "%s", %d, "%s", %d, KDF_Algo::%s, Nonce_Format::%s)' % (
+            code, info[0], info[2], info[3], info[4], info[5], info[6], info[7], info[8].replace('-','_'), info[9])
 
         suite_info += "      " + suite_expr + ",\n"
         

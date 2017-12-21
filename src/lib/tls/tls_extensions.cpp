@@ -442,16 +442,19 @@ Supported_Groups::Supported_Groups(TLS_Data_Reader& reader,
    for(size_t i = 0; i != len; ++i)
       {
       const uint16_t id = reader.get_uint16_t();
-      const std::string name = curve_id_to_name(id);
+      const Group_Params group_id = static_cast<Group_Params>(id);
+
+      const bool is_dh = (id >= 256 && id <= 511);
+      const std::string name = group_param_to_string(group_id);
 
       if(!name.empty())
          {
          m_groups.push_back(name);
-         if(is_dh_group(name))
+         if(is_dh)
             {
             m_dh_groups.push_back(name);
             }
-            else
+         else
             {
             m_curves.push_back(name);
             }
@@ -501,104 +504,24 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
       }
    }
 
-std::string Signature_Algorithms::hash_algo_name(uint8_t code)
-   {
-   switch(code)
-      {
-      // code 1 is MD5 - ignore it
-
-      case 2:
-         return "SHA-1";
-
-      // code 3 is SHA-224
-
-      case 4:
-         return "SHA-256";
-      case 5:
-         return "SHA-384";
-      case 6:
-         return "SHA-512";
-      default:
-         return "";
-      }
-   }
-
-uint8_t Signature_Algorithms::hash_algo_code(const std::string& name)
-   {
-   if(name == "SHA-1")
-      return 2;
-
-   if(name == "SHA-256")
-      return 4;
-
-   if(name == "SHA-384")
-      return 5;
-
-   if(name == "SHA-512")
-      return 6;
-
-   throw Internal_Error("Unknown hash ID " + name + " for signature_algorithms");
-   }
-
-std::string Signature_Algorithms::sig_algo_name(uint8_t code)
-   {
-   switch(code)
-      {
-      case 1:
-         return "RSA";
-      case 2:
-         return "DSA";
-      case 3:
-         return "ECDSA";
-      default:
-         return "";
-      }
-   }
-
-uint8_t Signature_Algorithms::sig_algo_code(const std::string& name)
-   {
-   if(name == "RSA")
-      return 1;
-
-   if(name == "DSA")
-      return 2;
-
-   if(name == "ECDSA")
-      return 3;
-
-   throw Internal_Error("Unknown sig ID " + name + " for signature_algorithms");
-   }
-
 std::vector<uint8_t> Signature_Algorithms::serialize() const
    {
-   std::vector<uint8_t> buf(2);
+   std::vector<uint8_t> buf;
 
-   for(size_t i = 0; i != m_supported_algos.size(); ++i)
+   const uint16_t len = m_schemes.size() * 2;
+
+   buf.push_back(get_byte(0, len));
+   buf.push_back(get_byte(1, len));
+
+   for(Signature_Scheme scheme : m_schemes)
       {
-      try
-         {
-         const uint8_t hash_code = hash_algo_code(m_supported_algos[i].first);
-         const uint8_t sig_code = sig_algo_code(m_supported_algos[i].second);
+      const uint16_t scheme_code = static_cast<uint16_t>(scheme);
 
-         buf.push_back(hash_code);
-         buf.push_back(sig_code);
-         }
-      catch(...)
-         {}
+      buf.push_back(get_byte(0, scheme_code));
+      buf.push_back(get_byte(1, scheme_code));
       }
 
-   buf[0] = get_byte(0, static_cast<uint16_t>(buf.size()-2));
-   buf[1] = get_byte(1, static_cast<uint16_t>(buf.size()-2));
-
    return buf;
-   }
-
-Signature_Algorithms::Signature_Algorithms(const std::vector<std::string>& hashes,
-                                           const std::vector<std::string>& sigs)
-   {
-   for(size_t i = 0; i != hashes.size(); ++i)
-      for(size_t j = 0; j != sigs.size(); ++j)
-         m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
    }
 
 Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
@@ -607,31 +530,15 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
    uint16_t len = reader.get_uint16_t();
 
    if(len + 2 != extension_size || len % 2 == 1 || len == 0)
+      {
       throw Decoding_Error("Bad encoding on signature algorithms extension");
+      }
 
    while(len)
       {
-      const uint8_t hash_code = reader.get_byte();
-      const uint8_t sig_code = reader.get_byte();
+      const uint16_t scheme_code = reader.get_uint16_t();
+      m_schemes.push_back(static_cast<Signature_Scheme>(scheme_code));
       len -= 2;
-
-      if(sig_code == 0)
-         {
-         /*
-         RFC 5247 7.4.1.4.1 explicitly prohibits anonymous (0) signature code in
-         the client hello. ("It MUST NOT appear in this extension.")
-         */
-         throw TLS_Exception(Alert::DECODE_ERROR, "Client sent ANON signature");
-         }
-
-      const std::string hash_name = hash_algo_name(hash_code);
-      const std::string sig_name = sig_algo_name(sig_code);
-
-      // If not something we know, ignore it completely
-      if(hash_name.empty() || sig_name.empty())
-         continue;
-
-      m_supported_algos.push_back(std::make_pair(hash_name, sig_name));
       }
    }
 

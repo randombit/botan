@@ -879,9 +879,9 @@ class TLS_Unit_Tests final : public Test
          policy.set("key_exchange_methods", kex_policy);
          policy.set("negotiate_encrypt_then_mac", etm_policy);
 
-         if(kex_policy == "RSA")
+         if(kex_policy.find("RSA") != std::string::npos)
             {
-            policy.set("signature_methods", "RSA");
+            policy.set("signature_methods", "IMPLICIT");
             }
 
          std::vector<Botan::TLS::Protocol_Version> versions =
@@ -926,6 +926,11 @@ class TLS_Unit_Tests final : public Test
          policy.set("ciphers", cipher_policy);
          policy.set("macs", mac_policy);
          policy.set("key_exchange_methods", kex_policy);
+
+         if(kex_policy.find("RSA") != std::string::npos)
+            {
+            policy.set("signature_methods", "IMPLICIT");
+            }
 
          for(auto const& kv : extra_policies)
             {

@@ -177,8 +177,6 @@ uint16_t choose_ciphersuite(
    if(!our_choice)
       std::swap(pref_list, other_list);
 
-   const std::set<std::string> client_sig_algos = client_hello.supported_sig_algos();
-
    for(auto suite_id : pref_list)
       {
       if(!value_exists(other_list, suite_id))
@@ -187,39 +185,50 @@ uint16_t choose_ciphersuite(
       const Ciphersuite suite = Ciphersuite::by_id(suite_id);
 
       if(suite.valid() == false)
-         continue;
-
-      if(suite.ecc_ciphersuite() && have_shared_ecc_curve == false)
-         continue;
-
-      // For non-anon ciphersuites
-      if(suite.sig_algo() != "")
          {
-         // Do we have any certificates for this sig?
-         if(cert_chains.count(suite.sig_algo()) == 0)
-            continue;
-
-         // Client reques
-         if(!client_sig_algos.empty() && client_sig_algos.count(suite.sig_algo()) == 0)
-            continue;
+         continue;
          }
 
-      if(version.supports_negotiable_signature_algorithms() && suite.sig_algo() != "")
+      if(have_shared_ecc_curve == false && suite.ecc_ciphersuite())
          {
-         const std::vector<std::pair<std::string, std::string>> client_sig_hash_pairs =
-            client_hello.supported_algos();
+         continue;
+         }
 
-         if(client_hello.supported_algos().empty() == false)
+      // For non-anon ciphersuites
+      if(suite.signature_used())
+         {
+         const std::string sig_algo = suite.sig_algo();
+
+         // Do we have any certificates for this sig?
+         if(cert_chains.count(sig_algo) == 0)
             {
-            bool we_support_some_hash_by_client = false;
+            continue;
+            }
 
-            for(auto&& hash_and_sig : client_hello.supported_algos())
+         if(version.supports_negotiable_signature_algorithms())
+            {
+            const std::vector<Signature_Scheme> allowed =
+               policy.allowed_signature_schemes();
+
+            std::vector<Signature_Scheme> client_sig_methods =
+               client_hello.signature_schemes();
+
+            if(client_sig_methods.empty())
                {
-               if(hash_and_sig.second == suite.sig_algo() &&
-                  policy.allowed_signature_hash(hash_and_sig.first))
+               // If empty, then implicit SHA-1 (TLS v1.2 rules)
+               client_sig_methods.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
+               client_sig_methods.push_back(Signature_Scheme::ECDSA_SHA1);
+               client_sig_methods.push_back(Signature_Scheme::DSA_SHA1);
+               }
+
+            bool we_support_some_hash_by_client = true;
+
+            for(Signature_Scheme scheme : client_sig_methods)
+               {
+               if(signature_algorithm_of_scheme(scheme) == suite.sig_algo() &&
+                  policy.allowed_signature_hash(hash_function_of_scheme(scheme)))
                   {
                   we_support_some_hash_by_client = true;
-                  break;
                   }
                }
 
@@ -228,13 +237,6 @@ uint16_t choose_ciphersuite(
                throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                    "Policy does not accept any hash function supported by client");
                }
-            }
-         else
-            {
-            if(policy.allowed_signature_hash("SHA-1") == false)
-               throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                   "Client did not send signature_algorithms extension "
-                                   "and policy prohibits SHA-1 fallback");
             }
          }
 
@@ -247,7 +249,7 @@ uint16_t choose_ciphersuite(
       client hello message.
        - RFC 5054 section 2.5.1.2
       */
-      if(suite.kex_algo() == "SRP_SHA" && client_hello.srp_identifier() == "")
+      if(suite.kex_method() == Kex_Algo::SRP_SHA && client_hello.srp_identifier() == "")
          throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
                              "Client wanted SRP but did not send username");
 #endif
@@ -806,23 +808,22 @@ void Server::session_create(Server_Handshake_State& pending_state,
 
    secure_renegotiation_check(pending_state.server_hello());
 
-   const std::string sig_algo = pending_state.ciphersuite().sig_algo();
-   const std::string kex_algo = pending_state.ciphersuite().kex_algo();
-
-   if(sig_algo != "")
-      {
-      BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
-                   "Attempting to send empty certificate chain");
-
-      pending_state.server_certs(new Certificate(pending_state.handshake_io(),
-                                                 pending_state.hash(),
-                                                 cert_chains[sig_algo]));
-      }
+   const Ciphersuite& pending_suite = pending_state.ciphersuite();
 
    Private_Key* private_key = nullptr;
 
-   if(kex_algo == "RSA" || sig_algo != "")
+   if(pending_suite.signature_used() || pending_suite.kex_method() == Kex_Algo::STATIC_RSA)
       {
+      const std::string algo_used =
+         pending_suite.signature_used() ? pending_suite.sig_algo() : "RSA";
+
+      BOTAN_ASSERT(!cert_chains[algo_used].empty(),
+                     "Attempting to send empty certificate chain");
+
+      pending_state.server_certs(new Certificate(pending_state.handshake_io(),
+                                                 pending_state.hash(),
+                                                 cert_chains[algo_used]));
+
       private_key = m_creds.private_key_for(
          pending_state.server_certs()->cert_chain()[0],
          "tls-server",
@@ -832,7 +833,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
          throw Internal_Error("No private key located for associated server cert");
       }
 
-   if(kex_algo == "RSA")
+   if(pending_suite.kex_method() == Kex_Algo::STATIC_RSA)
       {
       pending_state.set_server_rsa_kex_key(private_key);
       }
@@ -853,7 +854,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());
       }
 
-   if(!client_auth_CAs.empty() && pending_state.ciphersuite().sig_algo() != "")
+   if(!client_auth_CAs.empty() && pending_state.ciphersuite().signature_used())
       {
       pending_state.cert_req(
          new Certificate_Req(pending_state.handshake_io(),
