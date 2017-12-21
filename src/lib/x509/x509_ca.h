@@ -132,6 +132,20 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
               const std::string& hash_fn,
               RandomNumberGenerator& rng);
 
+      /**
+      * Create a new CA object.
+      * @param ca_certificate the certificate of the CA
+      * @param key the private key of the CA
+      * @param opts additional options, e.g. padding, as key value pairs
+      * @param hash_fn name of a hash function to use for signing
+      * @param rng the random generator to use
+      */
+      X509_CA(const X509_Certificate& ca_certificate,
+              const Private_Key& key,
+              const std::map<std::string,std::string>& opts,
+              const std::string& hash_fn,
+              RandomNumberGenerator& rng);
+
 #if defined(BOTAN_HAS_SYSTEM_RNG)
       BOTAN_DEPRECATED("Use version taking RNG object")
       X509_CA(const X509_Certificate& ca_certificate,
@@ -174,6 +188,28 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
 * @return A PK_Signer object for generating signatures
 */
 BOTAN_PUBLIC_API(2,0) PK_Signer* choose_sig_format(const Private_Key& key,
+                                       RandomNumberGenerator& rng,
+                                       const std::string& hash_fn,
+                                       AlgorithmIdentifier& alg_id);
+
+/**
+* Choose the default signature format for a certain public key signature
+* scheme.
+*
+* The only option recognized by opts at this moment is "padding"
+* Find an entry from src/build-data/oids.txt under [signature] of the form
+* <sig_algo>/<padding>[(<hash_algo>)] and add {"padding",<padding>}
+* to opts.
+*
+* @param key will be the key to choose a padding scheme for
+* @param opts contains additional options for building the certificate
+* @param rng the random generator to use
+* @param hash_fn is the desired hash function
+* @param alg_id will be set to the chosen scheme
+* @return A PK_Signer object for generating signatures
+*/
+ PK_Signer* choose_sig_format(const Private_Key& key,
+                                       const std::map<std::string,std::string>& opts,
                                        RandomNumberGenerator& rng,
                                        const std::string& hash_fn,
                                        AlgorithmIdentifier& alg_id);

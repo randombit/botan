@@ -29,7 +29,7 @@ class Sign_Cert final : public Command
    public:
       Sign_Cert()
          : Command("sign_cert --ca-key-pass= --hash=SHA-256 "
-                   "--duration=365 ca_cert ca_key pkcs10_req") {}
+                   "--duration=365 --emsa= ca_cert ca_key pkcs10_req") {}
 
       void go() override
          {
@@ -51,7 +51,8 @@ class Sign_Cert final : public Command
             throw CLI_Error("Failed to load key from " + get_arg("ca_key"));
             }
 
-         Botan::X509_CA ca(ca_cert, *key, get_arg("hash"), rng());
+         Botan::X509_CA ca(ca_cert, *key,
+            {{"padding",get_arg_or("emsa", "EMSA4")}}, get_arg("hash"), rng());
 
          Botan::PKCS10_Request req(get_arg("pkcs10_req"));
 
@@ -186,7 +187,7 @@ class Gen_Self_Signed final : public Command
    public:
       Gen_Self_Signed()
          : Command("gen_self_signed key CN --country= --dns= "
-                   "--organization= --email= --key-pass= --ca --hash=SHA-256") {}
+                   "--organization= --email= --key-pass= --ca --hash=SHA-256 --emsa=") {}
 
       void go() override
          {
@@ -204,6 +205,7 @@ class Gen_Self_Signed final : public Command
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
          opts.dns          = get_arg("dns");
+         opts.set_padding_scheme(get_arg_or("emsa", "EMSA4"));
 
          if(flag_set("ca"))
             {
@@ -223,7 +225,7 @@ class Generate_PKCS10 final : public Command
    public:
       Generate_PKCS10()
          : Command("gen_pkcs10 key CN --country= --organization= "
-                   "--email= --key-pass= --hash=SHA-256") {}
+                   "--email= --key-pass= --hash=SHA-256 --emsa=") {}
 
       void go() override
          {
@@ -240,6 +242,7 @@ class Generate_PKCS10 final : public Command
          opts.country      = get_arg("country");
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
+         opts.set_padding_scheme(get_arg_or("emsa", "EMSA4"));
 
          Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, get_arg("hash"), rng());
 

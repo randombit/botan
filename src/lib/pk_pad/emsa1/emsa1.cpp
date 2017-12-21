@@ -7,6 +7,8 @@
 
 #include <botan/emsa1.h>
 #include <botan/exceptn.h>
+#include <botan/oids.h>
+#include <botan/internal/padding.h>
 
 namespace Botan {
 
@@ -92,6 +94,40 @@ bool EMSA1::verify(const secure_vector<uint8_t>& input,
       {
       return false;
       }
+   }
+
+AlgorithmIdentifier EMSA1::config_for_x509(const Private_Key& key,
+                                           const std::string& cert_hash_name) const
+   {
+   if(cert_hash_name != m_hash->name())
+      throw Invalid_Argument("Hash function from opts and hash_fn argument"
+         " need to be identical");
+   // check that the signature algorithm and the padding scheme fit
+   if(!sig_algo_and_pad_ok(key.algo_name(), "EMSA1"))
+      {
+      throw Invalid_Argument("Encoding scheme with canonical name EMSA1"
+         " not supported for signature algorithm " + key.algo_name());
+      }
+
+   AlgorithmIdentifier sig_algo;
+   sig_algo.oid = OIDS::lookup( key.algo_name() + "/" + name() );
+
+   std::string algo_name = key.algo_name();
+   if(algo_name == "DSA" ||
+      algo_name == "ECDSA" ||
+      algo_name == "ECGDSA" ||
+      algo_name == "ECKCDSA" ||
+      algo_name == "GOST-34.10")
+      {
+      // for DSA, ECDSA, GOST parameters "SHALL" be empty
+      sig_algo.parameters = {};
+      }
+   else
+      {
+      sig_algo.parameters = key.algorithm_identifier().parameters;
+      }
+
+   return sig_algo;
    }
 
 }

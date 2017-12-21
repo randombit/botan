@@ -69,6 +69,101 @@ class EME_Decoding_Tests final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("pk_pad_eme", EME_Decoding_Tests);
 
+class EMSA_unit_tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result name_tests("EMSA_name_tests");
+
+         std::vector<std::string> pads_need_hash =
+            {
+#if BOTAN_HAS_EMSA1
+             "EMSA1",
+#endif
+#if BOTAN_HAS_EMSA_X931
+             "EMSA2",
+#endif
+#if BOTAN_HAS_EMSA_PKCS1
+             "EMSA3",
+#endif
+#if BOTAN_HAS_EMSA_PSSR
+             "EMSA4",
+             "PSSR_Raw",
+#endif
+#if BOTAN_HAS_ISO_9796
+             "ISO_9796_DS2",
+             "ISO_9796_DS3",
+#endif
+            };
+
+         std::vector<std::string> pads_no_hash =
+            {
+#if BOTAN_HAS_EMSA_RAW
+            "Raw",
+#endif
+#if BOTAN_HAS_EMSA_PKCS1
+            "EMSA3(Raw)",
+            "EMSA3(Raw,SHA-512)",
+#endif
+            };
+
+         for(auto pad : pads_need_hash)
+            {
+            try
+               {
+               std::unique_ptr<Botan::EMSA> emsa_1(
+                  Botan::get_emsa(pad + "(" + Botan::hash_for_emsa(pad) + ")"));
+               std::unique_ptr<Botan::EMSA> emsa_2(Botan::get_emsa(emsa_1->name()));
+               name_tests.test_eq("EMSA_name_test for " + pad,
+                     emsa_1->name(), emsa_2->name());
+               }
+            catch(const std::exception& e)
+               {
+               name_tests.test_failure("EMSA_name_test for " + pad + ": " + e.what());
+               }
+            }
+
+         for(auto pad : pads_need_hash)
+            {
+            std::string algo_name = pad + "(YYZ)";
+            try
+               {
+               std::unique_ptr<Botan::EMSA> emsa(
+                  Botan::get_emsa(algo_name));
+               name_tests.test_failure("EMSA_name_test for " + pad + ": " +
+                   "Could create EMSA with fantasy hash YYZ");
+               }
+            catch(const std::exception& e)
+               {
+               name_tests.test_eq("EMSA_name_test for " + pad,
+                   e.what(),
+                   "Could not find any algorithm named \"" + algo_name + "\"");
+               }
+            }
+
+         for(auto pad : pads_no_hash)
+            {
+            try
+               {
+               std::unique_ptr<Botan::EMSA> emsa_1(Botan::get_emsa(pad));
+               std::unique_ptr<Botan::EMSA> emsa_2(Botan::get_emsa(emsa_1->name()));
+               name_tests.test_eq("EMSA_name_test for " + pad,
+                     emsa_1->name(), emsa_2->name());
+               }
+            catch(const std::exception& e)
+               {
+               name_tests.test_failure("EMSA_name_test for " + pad + ": " + e.what());
+               }
+            }
+
+
+         return { name_tests };
+         }
+   };
+
+BOTAN_REGISTER_TEST("pk_pad_emsa_unit", EMSA_unit_tests);
+
 #endif
 
 }

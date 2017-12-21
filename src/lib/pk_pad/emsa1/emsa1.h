@@ -27,6 +27,11 @@ class BOTAN_PUBLIC_API(2,0) EMSA1 final : public EMSA
 
       EMSA* clone() override;
 
+      virtual std::string name() const override
+         { return "EMSA1(" + m_hash->name() + ")"; };
+
+      AlgorithmIdentifier config_for_x509(const Private_Key& key,
+                                          const std::string& cert_hash_name) const override;
    private:
       size_t hash_output_length() const { return m_hash->output_length(); }
 
