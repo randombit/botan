@@ -68,8 +68,6 @@ schedule) and may also make some hardware attacks more expensive.
 Botan provides two techniques for password hashing, bcrypt and
 passhash9.
 
-.. _bcrypt:
-
 Bcrypt
 ----------------------------------------
 

@@ -182,11 +182,15 @@ build flags. Do this with the `configure.py` flag `--cc-abi-flags`::
 On Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+
+   The earliest versions of Windows supported are Windows 7 and Windows 2008 R2
+
 You need to have a copy of Python installed, and have both Python and
 your chosen compiler in your path. Open a command shell (or the SDK
 shell), and run::
 
-   $ python configure.py --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
+   $ python configure.py --cc=msvc --os=windows
    $ nmake
    $ botan-test.exe
    $ nmake install
@@ -194,12 +198,10 @@ shell), and run::
 Botan supports the nmake replacement `Jom <https://wiki.qt.io/Jom>`_
 which enables you to run multiple build jobs in parallel.
 
-For Win95 pre OSR2, the ``cryptoapi_rng`` module will not work,
-because CryptoAPI didn't exist. And all versions of NT4 lack the
-ToolHelp32 interface, which is how ``win32_stats`` does its slow
-polls, so a version of the library built with that module will not
-load under NT4. Later versions of Windows support both methods, so
-this shouldn't be much of an issue anymore.
+For MinGW, use::
+
+   $ python configure.py --cc=gcc --os=mingw
+   $ make
 
 By default the install target will be ``C:\botan``; you can modify
 this with the ``--prefix`` option.
