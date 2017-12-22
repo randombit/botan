@@ -23,6 +23,7 @@ import subprocess
 import sys
 import tarfile
 import time
+import traceback
 
 # This is horrible, but there is no way to override tarfile's use of time.time
 # in setting the gzip header timestamp, which breaks deterministic archives
@@ -33,9 +34,12 @@ time.time = null_time
 
 
 def check_subprocess_results(subproc, name):
-    (stdout, stderr) = subproc.communicate()
+    (raw_stdout, raw_stderr) = subproc.communicate()
+
+    stderr = raw_stderr.decode('utf-8')
 
     if subproc.returncode != 0:
+        stdout = raw_stdout.decode('utf-8')
         if stdout != '':
             logging.error(stdout)
         if stderr != '':
@@ -43,9 +47,9 @@ def check_subprocess_results(subproc, name):
         raise Exception('Running %s failed' % (name))
     else:
         if stderr != '':
-            logging.debug(stderr)
+            logging.warning(stderr)
 
-    return stdout
+    return raw_stdout
 
 def run_git(args):
     cmd = ['git'] + args
@@ -255,6 +259,8 @@ def configure_logging(options):
             super(ExitOnErrorLogHandler, self).emit(record)
             # Exit script if and ERROR or worse occurred
             if record.levelno >= logging.ERROR:
+                if sys.exc_info()[2] != None:
+                    logging.info(traceback.format_exc())
                 sys.exit(1)
 
     def log_level():
@@ -404,7 +410,6 @@ if __name__ == '__main__':
     try:
         sys.exit(main())
     except Exception as e: # pylint: disable=broad-except
+        logging.info(traceback.format_exc())
         logging.error(e)
-        import traceback
-        logging.error(traceback.format_exc())
         sys.exit(1)
