@@ -95,23 +95,34 @@ Public Key Cryptography
 
 X.509
 ----------------------------------------------
-``gen_pkcs10 key CN --country= --organization= --email= --key-pass= --hash=SHA-256``
+<<<<<<< HEAD
+``gen_pkcs10 key CN --country= --organization= --email= --key-pass= --hash=SHA-256  --emsa=``
   Generate a PKCS #10 certificate signing request (CSR) using the passed PKCS #8
   private key *key*. If the private key is encrypted, the decryption passphrase
-  *key-pass* has to be passed.
+  *key-pass* has to be passed.*emsa* specifies the padding scheme to be used
+  when calculating the signature.
+  
+    - For RSA keys EMSA4 (RSA-PSS) is the default scheme.
+    - For ECDSA, DSA, ECGDSA, ECKCDSA and GOST-34.10 keys *emsa* defaults to EMSA1.
 
-``gen_self_signed key CN --country= --dns= --organization= --email= --key-pass= --ca --hash=SHA-256``
+``gen_self_signed key CN --country= --dns= --organization= --email= --key-pass= --ca --hash=SHA-256 --emsa=``
   Generate a self signed X.509 certificate using the PKCS #8 private key
   *key*. If the private key is encrypted, the decryption passphrase *key-pass*
   has to be passed. If *ca* is passed, the certificate is marked for certificate
-  authority (CA) usage.
+  authority (CA) usage. *emsa* specifies the padding scheme to be used when
+  calculating the signature.
 
-``sign_cert --ca-key-pass= --hash=SHA-256 --duration=365 ca_cert ca_key pkcs10_req``
+    - For RSA keys EMSA4 (RSA-PSS) is the default scheme.
+    - For ECDSA, DSA, ECGDSA, ECKCDSA and GOST-34.10 keys *emsa* defaults to EMSA1.
+
+``sign_cert --ca-key-pass= --hash=SHA-256 --duration=365 --emsa= ca_cert ca_key pkcs10_req``
   Create a CA signed X.509 certificate from the information contained in the
   PKCS #10 CSR *pkcs10_req*. The CA certificate is passed as *ca_cert* and the
   respective PKCS #8 private key as *ca_key*. If the private key is encrypted,
   the decryption passphrase *ca-key-pass* has to be passed. The created
-  certificate has a validity period of *duration* days.
+  certificate has a validity period of *duration* days. *emsa* specifies the
+  padding scheme to be used when calculating the signature. *emsa* defaults to
+  the padding scheme used in the CA certificate.
 
 ``ocsp_check subject issuer``
   Verify an X.509 certificate against the issuers OCSP responder. Pass the

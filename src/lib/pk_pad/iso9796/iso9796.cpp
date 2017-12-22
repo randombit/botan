@@ -250,6 +250,15 @@ bool ISO_9796_DS2::verify(const secure_vector<uint8_t>& const_coded,
    }
 
 /*
+ * Return the SCAN name
+ */
+std::string ISO_9796_DS2::name() const
+   {
+   return "ISO_9796_DS2(" + m_hash->name() + ","
+         + (m_implicit ? "imp" : "exp") + "," + std::to_string(m_SALT_SIZE) + ")";
+   }
+
+/*
  *  ISO-9796-2 signature scheme 3
  *  DS 3 is deterministic and equals DS2 without salt
  */
@@ -285,5 +294,13 @@ bool ISO_9796_DS3::verify(const secure_vector<uint8_t>& const_coded,
                           const secure_vector<uint8_t>& raw, size_t key_bits)
    {
    return iso9796_verification(const_coded, raw, key_bits, m_hash, 0);
+   }
+/*
+ * Return the SCAN name
+ */
+std::string ISO_9796_DS3::name() const
+   {
+   return "ISO_9796_DS3(" + m_hash->name() + "," +
+      (m_implicit ? "imp" : "exp") + ")";
    }
 }

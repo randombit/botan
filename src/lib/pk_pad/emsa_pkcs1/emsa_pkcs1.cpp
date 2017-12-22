@@ -8,6 +8,8 @@
 #include <botan/emsa_pkcs1.h>
 #include <botan/hash_id.h>
 #include <botan/exceptn.h>
+#include <botan/oids.h>
+#include <botan/internal/padding.h>
 
 namespace Botan {
 
@@ -81,6 +83,28 @@ bool EMSA_PKCS1v15::verify(const secure_vector<uint8_t>& coded,
       }
    }
 
+AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const Private_Key& key,
+                                    const std::string& cert_hash_name) const
+   {
+   if(cert_hash_name != m_hash->name())
+      throw Invalid_Argument("Hash function from opts and hash_fn argument"
+         " need to be identical");
+   // check that the signature algorithm and the padding scheme fit
+   if(!sig_algo_and_pad_ok(key.algo_name(), "EMSA3"))
+      {
+      throw Invalid_Argument("Encoding scheme with canonical name EMSA3"
+         " not supported for signature algorithm " + key.algo_name());
+      }
+
+
+   AlgorithmIdentifier sig_algo;
+   sig_algo.oid = OIDS::lookup( key.algo_name() + "/" + name() );
+   // for RSA PKCSv1.5 parameters "SHALL" be NULL as configured by
+   // RSA_PublicKey::algorithm_identifier()
+   sig_algo.parameters = key.algorithm_identifier().parameters;
+   return sig_algo;
+   }
+
 EMSA_PKCS1v15::EMSA_PKCS1v15(HashFunction* hash) : m_hash(hash)
    {
    m_hash_id = pkcs_hash_id(m_hash->name());
@@ -92,6 +116,7 @@ EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw(const std::string& hash_algo)
       {
       m_hash_id = pkcs_hash_id(hash_algo);
       std::unique_ptr<HashFunction> hash(HashFunction::create(hash_algo));
+      m_hash_name = hash->name();
       m_hash_output_len = hash->output_length();
       }
    else

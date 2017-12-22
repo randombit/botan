@@ -108,6 +108,8 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       */
       size_t path_limit;
 
+      std::string padding_scheme;
+
       /**
       * The key constraints for the subject public key
       */
@@ -128,6 +130,11 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       * @param limit the path limit to be set in the BasicConstraints extension.
       */
       void CA_key(size_t limit = 1);
+
+      /**
+      * Choose a padding scheme different from the default for the key used.
+      */
+      void set_padding_scheme(const std::string& scheme);
 
       /**
       * Set the notBefore of the certificate.

@@ -531,6 +531,21 @@ The private ``key`` is the private key corresponding to the public key in the
 CA's certificate. ``hash_fn`` is the name of the hash function to use
 for signing, e.g., `SHA-256`. ``rng`` is queried for random during signing.
 
+There is an alternative constructor that lets you set additional options, namely
+the padding scheme that will be used by the X509_CA object to sign certificates
+and certificate revocation lists. If the padding is not set explicitly, the CA
+will use the padding scheme that was used when signing the CA certificate.
+
+.. cpp:function:: X509_CA::X509_CA(const X509_Certificate& cert, \
+                                   const Private_Key& key, \
+                                   const std::map<std::string,std::string>& opts, \
+                                   const std::string& hash_fn, \
+                                   RandomNumberGenerator& rng)
+
+The only option valid at this moment is "padding". The supported padding schemes
+can be found in src/lib/pubkey/padding.cpp. Some alternative names for the
+padding schemes are understood, as well.
+
 Requests for new certificates are supplied to a CA in the form of PKCS
 #10 certificate requests (called a ``PKCS10_Request`` object in
 Botan). These are decoded in a similar manner to
@@ -667,6 +682,15 @@ Third, you can set constraints on a key. The one you're mostly likely
 to want to use is to create (or request) a CA certificate, which can
 be done by calling the member function ``CA_key``. This should only be
 used when needed.
+
+Moreover, you can specify the padding scheme to be used when digital signatures
+are computed by calling function ``set_padding_scheme`` with a string
+representing the padding scheme. This way, you can control the padding scheme
+for self-signed certificates and PKCS #10 requests. The padding scheme used by
+a CA when building a certificate or a certificate revocation list can be set in
+the ``X509_CA`` constructor. The supported padding schemes can be found in
+src/lib/pubkey/padding.cpp. Some alternative names for the padding schemes are
+understood, as well.
 
 Other constraints can be set by calling the member functions
 ``add_constraints`` and ``add_ex_constraints``. The first takes a

@@ -32,6 +32,11 @@ class BOTAN_PUBLIC_API(2,0) PSSR final : public EMSA
       PSSR(HashFunction* hash, size_t salt_size);
 
       EMSA* clone() override { return new PSSR(m_hash->clone(), m_SALT_SIZE); }
+
+      std::string name() const override;
+
+      AlgorithmIdentifier config_for_x509(const Private_Key& key,
+                                          const std::string& cert_hash_name) const override;
    private:
       void update(const uint8_t input[], size_t length) override;
 
@@ -69,6 +74,8 @@ class BOTAN_DLL PSSR_Raw final : public EMSA
       PSSR_Raw(HashFunction* hash, size_t salt_size);
 
       EMSA* clone() override { return new PSSR_Raw(m_hash->clone(), m_SALT_SIZE); }
+
+      std::string name() const override;
    private:
       void update(const uint8_t input[], size_t length) override;
 

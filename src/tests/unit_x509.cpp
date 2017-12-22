@@ -19,6 +19,7 @@
    #include <botan/ber_dec.h>
    #include <botan/der_enc.h>
    #include <botan/oids.h>
+   #include <botan/internal/padding.h>
 
 #endif
 
@@ -35,26 +36,28 @@ Botan::X509_Time from_date(const int y, const int m, const int d)
    }
 
 /* Return some option sets */
-Botan::X509_Cert_Options ca_opts()
+Botan::X509_Cert_Options ca_opts(const std::string& sig_padding = "")
    {
    Botan::X509_Cert_Options opts("Test CA/US/Botan Project/Testing");
 
    opts.uri = "https://botan.randombit.net";
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
+   opts.set_padding_scheme(sig_padding);
 
    opts.CA_key(1);
 
    return opts;
    }
 
-Botan::X509_Cert_Options req_opts1(const std::string& algo)
+Botan::X509_Cert_Options req_opts1(const std::string& algo, const std::string& sig_padding = "")
    {
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
 
    opts.uri = "https://botan.randombit.net";
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
+   opts.set_padding_scheme(sig_padding);
 
    opts.not_before("160101200000Z");
    opts.not_after("300101200000Z");
@@ -73,13 +76,14 @@ Botan::X509_Cert_Options req_opts1(const std::string& algo)
    return opts;
    }
 
-Botan::X509_Cert_Options req_opts2()
+Botan::X509_Cert_Options req_opts2(const std::string& sig_padding = "")
    {
    Botan::X509_Cert_Options opts("Test User 2/US/Botan Project/Testing");
 
    opts.uri = "https://botan.randombit.net";
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
+   opts.set_padding_scheme(sig_padding);
 
    opts.add_ex_constraint("PKIX.EmailProtection");
 
@@ -461,7 +465,7 @@ Test::Result test_x509_bmpstring()
    return result;
    }
 
-Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
+Test::Result test_x509_cert(const std::string& sig_algo, const std::string& sig_padding = "", const std::string& hash_fn = "SHA-256")
    {
    Test::Result result("X509 Unit");
 
@@ -476,7 +480,7 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
       }
 
    /* Create the self-signed cert */
-   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, Test::rng());
+   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(sig_padding), *ca_key, hash_fn, Test::rng());
 
       {
       const auto constraints = Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN);
@@ -487,7 +491,7 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
 
    Botan::PKCS10_Request user1_req =
-      Botan::X509::create_cert_req(req_opts1(sig_algo),
+      Botan::X509::create_cert_req(req_opts1(sig_algo, sig_padding),
                                    *user1_key,
                                    hash_fn,
                                    Test::rng());
@@ -499,13 +503,13 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    std::unique_ptr<Botan::Private_Key> user2_key(make_a_private_key(sig_algo));
 
    Botan::PKCS10_Request user2_req =
-      Botan::X509::create_cert_req(req_opts2(),
+      Botan::X509::create_cert_req(req_opts2(sig_padding),
                                    *user2_key,
                                    hash_fn,
                                    Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
+   Botan::X509_CA ca(ca_cert, *ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
 
    /* Sign the requests to create the certs */
    Botan::X509_Certificate user1_cert =
@@ -519,7 +523,8 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
                       from_date(2033, 01, 01));
 
    // user#1 creates a self-signed cert on the side
-   const auto user1_ss_cert = Botan::X509::create_self_signed_cert(req_opts1(sig_algo), *user1_key, hash_fn, Test::rng());
+   const auto user1_ss_cert =
+      Botan::X509::create_self_signed_cert(req_opts1(sig_algo, sig_padding), *user1_key, hash_fn, Test::rng());
 
       {
       auto constrains = req_opts1(sig_algo).constraints;
@@ -718,7 +723,7 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
    return result;
    }
 
-Test::Result test_self_issued(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
+Test::Result test_self_issued(const std::string& sig_algo, const std::string& sig_padding = "", const std::string& hash_fn = "SHA-256")
    {
    using Botan::Key_Constraints;
 
@@ -736,10 +741,10 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
 
    // create the self-signed cert
    const Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(
-         ca_opts(), *ca_key, hash_fn, Test::rng());
+         ca_opts(sig_padding), *ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
-   const Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
+   const Botan::X509_CA ca(ca_cert, *ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
@@ -747,6 +752,7 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
    // but signed by a CA, not signed by it's own private key
    Botan::X509_Cert_Options opts = ca_opts();
    opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+   opts.set_padding_scheme(sig_padding);
 
    const Botan::PKCS10_Request self_issued_req = Botan::X509::create_cert_req(opts, *user_key, hash_fn, Test::rng());
 
@@ -1063,7 +1069,7 @@ class String_Extension final : public Botan::Certificate_Extension
       std::string m_contents;
    };
 
-Test::Result test_x509_extensions(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
+Test::Result test_x509_extensions(const std::string& sig_algo, const std::string& sig_padding = "", const std::string& hash_fn = "SHA-256")
    {
    using Botan::Key_Constraints;
 
@@ -1080,10 +1086,11 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
       }
 
    /* Create the self-signed cert */
-   Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, Test::rng());
+   Botan::X509_Certificate ca_cert =
+      Botan::X509::create_self_signed_cert(ca_opts(sig_padding), *ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
+   Botan::X509_CA ca(ca_cert, *ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
@@ -1096,6 +1103,7 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
    const Botan::OID ku_oid = Botan::OIDS::lookup("X509v3.KeyUsage");
    req_extensions.add(new String_Extension("AAAAAAAAAAAAAABCDEF"), false);
    opts.extensions = req_extensions;
+   opts.set_padding_scheme(sig_padding);
 
    /* Create a self-signed certificate */
    const Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(
@@ -1220,6 +1228,99 @@ Test::Result test_hashes(const std::string& algo, const std::string& hash_fn = "
    return result;
    }
 
+/*
+ * @brief checks the configurability of the EMSA4(RSA-PSS) signature scheme
+ *
+ * For the other algorithms than RSA, only one padding is supported right now.
+ */
+Test::Result test_padding_config() {
+   // Throughout the test, some synonyms for EMSA4 are used, e.g. PSSR, EMSA-PSS
+   Test::Result test_result("X509 Padding Config");
+
+   std::unique_ptr<Botan::Private_Key> sk(Botan::PKCS8::load_key(
+      Test::data_file("x509/misc/rsa_key.pem"), Test::rng()));
+
+   // Create X509 CA certificate; EMSA3 is used for signing by default
+   Botan::X509_Cert_Options opt("TESTCA");
+   opt.CA_key();
+   Botan::X509_Certificate ca_cert_def = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
+   test_result.test_eq("CA certificate signature algorithm (default)",
+      Botan::OIDS::lookup(ca_cert_def.signature_algorithm().oid),"RSA/EMSA3(SHA-512)");
+
+   // Create X509 CA certificate; RSA-PSS is explicitly set
+   opt.set_padding_scheme("PSSR");
+   Botan::X509_Certificate ca_cert_exp = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
+   test_result.test_eq("CA certificate signature algorithm (explicit)",
+      Botan::OIDS::lookup(ca_cert_exp.signature_algorithm().oid),"RSA/EMSA4");
+
+   // Try to set a padding scheme that is not supported for signing with the given key type
+   opt.set_padding_scheme("EMSA1");
+   try
+      {
+      Botan::X509_Certificate ca_cert_wrong = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
+      test_result.test_failure("Could build CA certitiface with invalid encoding scheme EMSA1 for key type " + sk->algo_name());
+      }
+   catch (const Botan::Invalid_Argument& e)
+      {
+      test_result.test_eq("Build CA certitiface with invalid encoding scheme EMSA1 for key type " +
+         sk->algo_name(), e.what(),
+         "Invalid argument Encoding scheme with canonical name EMSA1 not supported for signature algorithm RSA");
+      }
+   test_result.test_eq("CA certificate signature algorithm (explicit)",
+      Botan::OIDS::lookup(ca_cert_exp.signature_algorithm().oid),"RSA/EMSA4");
+
+   // Prepare a signing request for the end certificate
+   Botan::X509_Cert_Options req_opt("endpoint");
+   req_opt.set_padding_scheme("EMSA4(SHA-512,MGF1,64)");
+   auto not_before = Botan::calendar_point(2017, 1, 1, 1, 1,
+                                1).to_std_timepoint();
+   auto not_after = Botan::calendar_point(2018, 1, 1, 1, 1,
+                                1).to_std_timepoint();
+   Botan::PKCS10_Request end_req = Botan::X509::create_cert_req(req_opt, (*sk), "SHA-512", Test::rng());
+   test_result.test_eq("Certificate request signature algorithm", Botan::OIDS::lookup(end_req.signature_algorithm().oid),"RSA/EMSA4");
+
+   // Create X509 CA object: will fail as the chosen hash functions differ
+   try
+      {
+      Botan::X509_CA ca_fail(ca_cert_exp, (*sk), {{"padding","EMSA4(SHA-256)"}},"SHA-512", Test::rng());
+      test_result.test_failure("Configured conflicting hash functions for CA");
+      }
+   catch(const Botan::Invalid_Argument& e)
+      {
+      test_result.test_eq("Configured conflicting hash functions for CA",
+            e.what(),
+            "Invalid argument Hash function from opts and hash_fn argument need to be identical");
+      }
+
+   // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3
+   Botan::X509_CA ca_def(ca_cert_def, (*sk), "SHA-512", Test::rng());
+   Botan::X509_Certificate end_cert_emsa3 = ca_def.sign_request(end_req, Test::rng(), Botan::X509_Time(not_before), Botan::X509_Time(not_after));
+   test_result.test_eq("End certificate signature algorithm", Botan::OIDS::lookup(end_cert_emsa3.signature_algorithm().oid), "RSA/EMSA3(SHA-512)");
+
+   // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
+   Botan::X509_CA ca_diff(ca_cert_def, (*sk), {{"padding","EMSA-PSS"}}, "SHA-512", Test::rng());
+   Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, Test::rng(), Botan::X509_Time(not_before), Botan::X509_Time(not_after));
+   test_result.test_eq("End certificate signature algorithm", Botan::OIDS::lookup(end_cert_diff_emsa4.signature_algorithm().oid), "RSA/EMSA4");
+
+   // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is identical to the CA certificate's scheme
+   Botan::X509_CA ca_exp(ca_cert_exp, (*sk), {{"padding","EMSA4(SHA-512,MGF1,64)"}},"SHA-512", Test::rng());
+   Botan::X509_Certificate end_cert_emsa4= ca_exp.sign_request(end_req, Test::rng(), Botan::X509_Time(not_before), Botan::X509_Time(not_after));
+   test_result.test_eq("End certificate signature algorithm", Botan::OIDS::lookup(end_cert_emsa4.signature_algorithm().oid), "RSA/EMSA4");
+
+   // Check CRL signature algorithm
+   Botan::X509_CRL crl = ca_exp.new_crl(Test::rng());
+   test_result.test_eq("CRL signature algorithm", Botan::OIDS::lookup(crl.signature_algorithm().oid), "RSA/EMSA4");
+
+   // sanity check for verification, the heavy lifting is done in the other unit tests
+   const Botan::Certificate_Store_In_Memory trusted(ca_exp.ca_certificate());
+   const Botan::Path_Validation_Restrictions restrictions(false, 80);
+   const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
+            end_cert_emsa4, restrictions, trusted);
+   test_result.confirm("EMSA4-signed certificate validates", validation_result.successful_validation());
+
+   return test_result;
+}
+
 class X509_Cert_Unit_Tests final : public Test
    {
    public:
@@ -1239,16 +1340,17 @@ class X509_Cert_Unit_Tests final : public Test
             if(algo == "RSA")
                continue;
 #endif
-
-            try
+            for(auto padding_scheme : Botan::get_sig_paddings(algo))
                {
-               cert_result.merge(test_x509_cert(algo));
+               try
+                  {
+                  cert_result.merge(test_x509_cert(algo, padding_scheme));
+                  }
+               catch(std::exception& e)
+                  {
+                  cert_result.test_failure("test_x509_cert " + algo, e.what());
+                  }
                }
-            catch(std::exception& e)
-               {
-               cert_result.test_failure("test_x509_cert " + algo, e.what());
-               }
-
             try
                {
                usage_result.merge(test_usage(algo));
@@ -1257,23 +1359,27 @@ class X509_Cert_Unit_Tests final : public Test
                {
                usage_result.test_failure("test_usage " + algo, e.what());
                }
-
-            try
+            for(auto padding_scheme : Botan::get_sig_paddings(algo))
                {
-               self_issued_result.merge(test_self_issued(algo));
+               try
+                  {
+                  self_issued_result.merge(test_self_issued(algo, padding_scheme));
+                  }
+               catch(std::exception& e)
+                  {
+                  self_issued_result.test_failure("test_self_issued " + algo, e.what());
+                  }
                }
-            catch(std::exception& e)
+            for(auto padding_scheme : Botan::get_sig_paddings(algo))
                {
-               self_issued_result.test_failure("test_self_issued " + algo, e.what());
-               }
-
-            try
-               {
-               extensions_result.merge(test_x509_extensions(algo));
-               }
-            catch(std::exception& e)
-               {
-               extensions_result.test_failure("test_extensions " + algo, e.what());
+               try
+                  {
+                  extensions_result.merge(test_x509_extensions(algo, padding_scheme));
+                  }
+               catch(std::exception& e)
+                  {
+                  extensions_result.test_failure("test_extensions " + algo, e.what());
+                  }
                }
             }
 
@@ -1281,6 +1387,17 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(usage_result);
          results.push_back(self_issued_result);
          results.push_back(extensions_result);
+
+         Test::Result pad_config_result("X509 Padding Config");
+         try
+            {
+            pad_config_result.merge(test_padding_config());
+            }
+         catch(const std::exception& e)
+            {
+            pad_config_result.test_failure("test_padding_config", e.what());
+            }
+         results.push_back(pad_config_result);
 
          const std::vector<std::string> pk_algos
             {

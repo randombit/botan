@@ -27,6 +27,9 @@ class BOTAN_PUBLIC_API(2,0) EMSA_X931 final : public EMSA
       explicit EMSA_X931(HashFunction* hash);
 
       EMSA* clone() override { return new EMSA_X931(m_hash->clone()); }
+
+      virtual std::string name() const override
+         { return "EMSA2(" + m_hash->name() + ")"; };
    private:
       void update(const uint8_t[], size_t) override;
       secure_vector<uint8_t> raw_data() override;

@@ -8,6 +8,10 @@ load_on auto
 rng
 </requires>
 
+<header:internal>
+padding.h
+</header:internal>
+
 <header:public>
 eme.h
 emsa.h

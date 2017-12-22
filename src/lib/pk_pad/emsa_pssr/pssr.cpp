@@ -10,6 +10,9 @@
 #include <botan/rng.h>
 #include <botan/mgf1.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/oids.h>
+#include <botan/der_enc.h>
+#include <botan/internal/padding.h>
 
 namespace Botan {
 
@@ -160,6 +163,50 @@ bool PSSR::verify(const secure_vector<uint8_t>& coded,
    return pss_verify(*m_hash, coded, raw, key_bits);
    }
 
+std::string PSSR::name() const
+   {
+   return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_SALT_SIZE) + ")";
+   }
+
+AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
+                                          const std::string& cert_hash_name) const
+   {
+   if(cert_hash_name != m_hash->name())
+      throw Invalid_Argument("Hash function from opts and hash_fn argument"
+         " need to be identical");
+   // check that the signature algorithm and the padding scheme fit
+   if(!sig_algo_and_pad_ok(key.algo_name(), "EMSA4"))
+      {
+      throw Invalid_Argument("Encoding scheme with canonical name EMSA4"
+         " not supported for signature algorithm " + key.algo_name());
+      }
+
+   AlgorithmIdentifier sig_algo;
+   // hardcoded as RSA is the only valid algorithm for EMSA4 at the moment
+   sig_algo.oid = OIDS::lookup( "RSA/EMSA4" );
+
+   sig_algo.parameters = DER_Encoder()
+       .start_cons( SEQUENCE )
+       .start_cons( ASN1_Tag(0), CONTEXT_SPECIFIC )
+       .encode( AlgorithmIdentifier( cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM ) )
+       .end_cons()
+       .start_cons( ASN1_Tag(1), CONTEXT_SPECIFIC )
+       .encode( AlgorithmIdentifier( "MGF1", DER_Encoder()
+          .encode( AlgorithmIdentifier( cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM ) )
+          .get_contents_unlocked() ) )
+       .end_cons()
+       .start_cons( ASN1_Tag(2), CONTEXT_SPECIFIC )
+       .encode( size_t( m_SALT_SIZE ) )
+       .end_cons()
+       .start_cons( ASN1_Tag(3), CONTEXT_SPECIFIC )
+       .encode( size_t( 1 ) ) // trailer field
+       .end_cons()
+       .end_cons()
+       .get_contents_unlocked();
+
+   return sig_algo;
+   }
+
 PSSR_Raw::PSSR_Raw(HashFunction* h) :
    m_hash(h), m_SALT_SIZE(m_hash->output_length())
    {
@@ -208,6 +255,11 @@ bool PSSR_Raw::verify(const secure_vector<uint8_t>& coded,
                       size_t key_bits)
    {
    return pss_verify(*m_hash, coded, raw, key_bits);
+   }
+
+std::string PSSR_Raw::name() const
+   {
+   return "PSSR_Raw(" + m_hash->name() + ",MGF1," + std::to_string(m_SALT_SIZE) + ")";
    }
 
 }

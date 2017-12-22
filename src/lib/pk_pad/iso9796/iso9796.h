@@ -36,6 +36,8 @@ class BOTAN_PUBLIC_API(2,0) ISO_9796_DS2 final : public EMSA
 
       EMSA* clone() override
          {return new ISO_9796_DS2(m_hash->clone(), m_implicit, m_SALT_SIZE);}
+
+      virtual std::string name() const override;
    private:
       void update(const uint8_t input[], size_t length) override;
 
@@ -70,6 +72,8 @@ class BOTAN_PUBLIC_API(2,0) ISO_9796_DS3 final : public EMSA
 
       EMSA* clone() override
          {return new ISO_9796_DS3(m_hash->clone(), m_implicit);}
+
+      virtual std::string name() const override;
    private:
       void update(const uint8_t input[], size_t length) override;
 
