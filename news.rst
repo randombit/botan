@@ -398,6 +398,9 @@ Version 2.3.0, 2017-10-02
 
 * Add more tests for the const-time utils (GH #1214)
 
+* Resolve a performance regression on Windows involving the system stats
+  entropy source. (GH #1369)
+
 * Fix a bug in FFI tests that caused the test files not to be found when using
   ``--data-dir`` option (GH #1149)
 

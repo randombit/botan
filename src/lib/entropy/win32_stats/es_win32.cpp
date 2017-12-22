@@ -19,6 +19,10 @@ namespace Botan {
 */
 size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
    {
+   const size_t POLL_TARGET = 128;
+   const size_t EST_ENTROPY_HEAP_INFO = 4;
+   const size_t EST_ENTROPY_THREAD_INFO = 2;
+
    /*
    First query a bunch of basic statistical stuff
    */
@@ -51,10 +55,10 @@ size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
    */
 
    HANDLE snapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
-   size_t bits = 0;
+   size_t collected = 0;
 
 #define TOOLHELP32_ITER(DATA_TYPE, FUNC_FIRST, FUNC_NEXT)        \
-   if(bits < 256)                                                \
+   if(collected < POLL_TARGET)                                   \
       {                                                          \
       DATA_TYPE info;                                            \
       info.dwSize = sizeof(DATA_TYPE);                           \
@@ -63,7 +67,9 @@ size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
          do                                                      \
             {                                                    \
             rng.add_entropy_T(info);                             \
-            bits += 4;                                           \
+            collected += EST_ENTROPY_THREAD_INFO;                \
+            if(collected >= POLL_TARGET)                         \
+               break;                                            \
             } while(FUNC_NEXT(snapshot, &info));                 \
          }                                                       \
       }
@@ -74,7 +80,7 @@ size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
 
 #undef TOOLHELP32_ITER
 
-   if(bits <= 256)
+   if(collected < POLL_TARGET)
       {
       HEAPLIST32 heap_list;
       heap_list.dwSize = sizeof(HEAPLIST32);
@@ -94,11 +100,13 @@ size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
                do
                   {
                   rng.add_entropy_T(heap_entry);
-                  bits += 4;
+                  collected += EST_ENTROPY_HEAP_INFO;
+                  if(collected >= POLL_TARGET)
+                     break;
                   } while(::Heap32Next(&heap_entry));
                }
 
-            if(bits >= 256)
+            if(collected >= POLL_TARGET)
                break;
 
             } while(::Heap32ListNext(snapshot, &heap_list));
@@ -107,7 +115,7 @@ size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
 
    ::CloseHandle(snapshot);
 
-   return bits;
+   return collected;
    }
 
 }
