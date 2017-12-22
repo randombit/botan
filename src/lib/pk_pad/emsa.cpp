@@ -35,6 +35,12 @@
 
 namespace Botan {
 
+AlgorithmIdentifier EMSA::config_for_x509(const Private_Key&,
+                                          const std::string&) const
+   {
+   throw Not_Implemented("Encoding " + name() + " not supported for signing X509 objects");
+   }
+
 EMSA* get_emsa(const std::string& algo_spec)
    {
    SCAN_Name req(algo_spec);

@@ -24,6 +24,8 @@ class RandomNumberGenerator;
 class BOTAN_PUBLIC_API(2,0) EMSA
    {
    public:
+      virtual ~EMSA() = default;
+
       /**
       * Add more data to the signature computation
       * @param input some data
@@ -67,10 +69,7 @@ class BOTAN_PUBLIC_API(2,0) EMSA
       * @return padding string to be consumed by PK_signer
       */
       virtual AlgorithmIdentifier config_for_x509(const Private_Key& key,
-                                                  const std::string& cert_hash_name) const
-         { throw Not_Implemented("Encoding " + name() + " not supported for signing X509 objects"); }
-
-      virtual ~EMSA() = default;
+                                                  const std::string& cert_hash_name) const;
 
       /**
       * @return a new object representing the same encoding method as *this
