@@ -16,8 +16,8 @@ Version 2.4.0, Not Yet Released
 * Support for ARIA-GCM ciphersuites are now available in TLS. They are disabled
   by default. (GH #1284)
 
-* Add support for verifying X.509 objects (certificates, CRLs, etc) using
-  RSA-PSS signatures (GH #1270)
+* Add support for generating and verifying X.509 objects (certificates, CRLs,
+  etc) using RSA-PSS signatures (GH #1270 and #1368)
 
 * Add support for AES key wrapping with padding, as specified in RFC 5649 and
   NIST SP 800-38F (GH #1301)
