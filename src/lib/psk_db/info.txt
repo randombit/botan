@@ -5,6 +5,7 @@ PSK_DB -> 20171119
 <requires>
 aes
 hmac
+base64
 sha2_32
 nist_keywrap
 </requires>
