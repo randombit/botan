@@ -33,12 +33,13 @@ size_t XMSS_Tools::bench_threads()
 
    for(const auto& cc : concurrency)
       {
-      AutoSeeded_RNG rng;
       std::vector<XMSS_Hash> hash(std::thread::hardware_concurrency(),
                                   XMSS_Hash("SHA-256"));
+
+      const std::vector<uint8_t> buffer(hash[0].output_length());
       std::vector<secure_vector<uint8_t>> data(
           std::thread::hardware_concurrency(),
-          rng.random_vec(hash[0].output_length()));
+          secure_vector<uint8_t>(hash[0].output_length()));
       auto start = std::chrono::high_resolution_clock::now();
       for(size_t i = 0; i < cc; ++i)
          {

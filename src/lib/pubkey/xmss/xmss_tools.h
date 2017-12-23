@@ -12,11 +12,11 @@
 #include <botan/secmem.h>
 #include <iterator>
 #include <type_traits>
+
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
    #include <thread>
    #include <chrono>
    #include <botan/xmss_hash.h>
-   #include <botan/auto_rng.h>
 #endif
 
 namespace Botan {
