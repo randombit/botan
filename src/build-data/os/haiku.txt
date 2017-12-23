@@ -7,7 +7,9 @@ lib_dir system/lib
 doc_dir system/documentation
 
 <target_features>
+readdir
 gmtime_r
+sockets
 threads
 filesystem
 </target_features>

@@ -22,6 +22,7 @@
 
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
   #include <sys/socket.h>
+  #include <sys/time.h>
   #include <netinet/in.h>
   #include <netdb.h>
   #include <string.h>

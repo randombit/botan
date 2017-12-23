@@ -34,7 +34,7 @@ in the source.
   classes which currently subclass it. This only affects your code if you
   are referencing `Botan::SymmetricAlgorithm` directly.
 
-- Platform support for BeOS and NaCl (Native Client)
+- Platform support for Google Native Client
 
 - Support for PathScale and HP compilers
 
