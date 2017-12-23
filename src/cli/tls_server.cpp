@@ -14,35 +14,12 @@
 #include <botan/tls_policy.h>
 #include <botan/hex.h>
 #include <botan/internal/os_utils.h>
-#include "credentials.h"
 
 #include <list>
 #include <fstream>
 
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
-#include <winsock2.h>
-#include <WS2tcpip.h>
-
-// definitions in tls_client.cpp
-int close(int fd);
-int read(int s, void* buf, size_t len);
-int send(int s, const uint8_t* buf, size_t len, int flags);
-
-typedef size_t ssize_t;
-#else
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#endif
-
-#if !defined(MSG_NOSIGNAL)
-   #define MSG_NOSIGNAL 0
-#endif
+#include "credentials.h"
+#include "socket_utils.h"
 
 namespace Botan_CLI {
 
@@ -51,28 +28,12 @@ class TLS_Server final : public Command
    public:
       TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces=")
          {
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
-         WSAData wsa_data;
-         WORD wsa_version = MAKEWORD(2, 2);
-
-         if(::WSAStartup(wsa_version, &wsa_data) != 0)
-            {
-            throw CLI_Error("WSAStartup() failed: " + std::to_string(WSAGetLastError()));
-            }
-
-         if(LOBYTE(wsa_data.wVersion) != 2 || HIBYTE(wsa_data.wVersion) != 2)
-            {
-            ::WSACleanup();
-            throw CLI_Error("Could not find a usable version of Winsock.dll");
-            }
-#endif
+         init_sockets();
          }
 
       ~TLS_Server()
          {
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
-         ::WSACleanup();
-#endif
+         stop_sockets();
          }
 
       void go() override
