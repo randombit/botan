@@ -208,17 +208,7 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
             data.decode(number, ENUMERATED, class_tag);
             }
 
-         std::vector<uint8_t> rep;
-
-         /* If it's small, it's probably a number, not a hash */
-         if(number.bits() <= 20)
-            {
-            rep = BigInt::encode(number, BigInt::Decimal);
-            }
-         else
-            {
-            rep = BigInt::encode(number, BigInt::Hexadecimal);
-            }
+         const std::vector<uint8_t> rep = BigInt::encode(number, BigInt::Hexadecimal);
 
          std::string str;
          for(size_t i = 0; i != rep.size(); ++i)
