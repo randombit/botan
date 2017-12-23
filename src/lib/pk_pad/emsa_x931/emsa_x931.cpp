@@ -43,6 +43,11 @@ secure_vector<uint8_t> emsa2_encoding(const secure_vector<uint8_t>& msg,
 
 }
 
+std::string EMSA_X931::name() const
+   {
+   return "EMSA2(" + m_hash->name() + ")";
+   }
+
 void EMSA_X931::update(const uint8_t input[], size_t length)
    {
    m_hash->update(input, length);

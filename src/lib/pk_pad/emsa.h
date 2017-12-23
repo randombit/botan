@@ -10,10 +10,10 @@
 
 #include <botan/secmem.h>
 #include <botan/alg_id.h>
-#include <botan/pk_keys.h>
 
 namespace Botan {
 
+class Private_Key;
 class RandomNumberGenerator;
 
 /**

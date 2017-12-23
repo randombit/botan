@@ -12,6 +12,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/oids.h>
 #include <botan/der_enc.h>
+#include <botan/pk_keys.h>
 #include <botan/internal/padding.h>
 
 namespace Botan {

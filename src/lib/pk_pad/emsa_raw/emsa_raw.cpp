@@ -10,6 +10,13 @@
 
 namespace Botan {
 
+std::string EMSA_Raw::name() const
+   {
+   if(m_expected_size > 0)
+      return "Raw(" + std::to_string(m_expected_size) + ")";
+   return "Raw";
+   }
+
 /*
 * EMSA-Raw Encode Operation
 */

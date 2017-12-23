@@ -8,6 +8,7 @@
 #include <botan/emsa1.h>
 #include <botan/exceptn.h>
 #include <botan/oids.h>
+#include <botan/pk_keys.h>
 #include <botan/internal/padding.h>
 
 namespace Botan {
@@ -42,6 +43,11 @@ secure_vector<uint8_t> emsa1_encoding(const secure_vector<uint8_t>& msg,
    }
 
 }
+
+std::string EMSA1::name() const
+   {
+   return "EMSA1(" + m_hash->name() + ")";
+   }
 
 EMSA* EMSA1::clone()
    {

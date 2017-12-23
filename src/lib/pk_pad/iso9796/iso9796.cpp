@@ -128,7 +128,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
       }
 
    secure_vector<uint8_t> coded = const_coded;
-   
+
    CT::poison(coded.data(), coded.size());
    //remove mask
    uint8_t* DB = coded.data();
@@ -149,18 +149,18 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
       const uint8_t one_m = CT::is_equal<uint8_t>(DB[j], 0x01);
       const uint8_t zero_m = CT::is_zero(DB[j]);
       const uint8_t add_m = waiting_for_delim & zero_m;
-      
+
       bad_input |= waiting_for_delim & ~(zero_m | one_m);
       msg1_offset += CT::select<uint8_t>(add_m, 1, 0);
-      
+
       waiting_for_delim &= zero_m;
       }
-   
+
    //invalid, if delimiter 0x01 was not found or msg1_offset is too big
    bad_input |= waiting_for_delim;
    bad_input |= CT::is_less(coded.size(), tLength + HASH_SIZE + msg1_offset + SALT_SIZE);
 
-   //in case that msg1_offset is too big, just continue with offset = 0. 
+   //in case that msg1_offset is too big, just continue with offset = 0.
    msg1_offset = CT::select<size_t>(bad_input, 0, msg1_offset);
 
    CT::unpoison(coded.data(), coded.size());
@@ -202,15 +202,21 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    hash->update(msg2);
    hash->update(salt);
    secure_vector<uint8_t> H2 = hash->final();
-   
+
    //check if H3 == H2
    bad_input |= CT::is_equal<uint8_t>(constant_time_compare(H3.data(), H2.data(), HASH_SIZE), false);
-   
+
    CT::unpoison(bad_input);
    return (bad_input == 0);
    }
 
 }
+
+EMSA* ISO_9796_DS2::clone()
+   {
+   return new ISO_9796_DS2(m_hash->clone(), m_implicit, m_SALT_SIZE);
+   }
+
 /*
  *  ISO-9796-2 signature scheme 2
  *  DS 2 is probabilistic
@@ -256,6 +262,11 @@ std::string ISO_9796_DS2::name() const
    {
    return "ISO_9796_DS2(" + m_hash->name() + ","
          + (m_implicit ? "imp" : "exp") + "," + std::to_string(m_SALT_SIZE) + ")";
+   }
+
+EMSA* ISO_9796_DS3::clone()
+   {
+   return new ISO_9796_DS3(m_hash->clone(), m_implicit);
    }
 
 /*

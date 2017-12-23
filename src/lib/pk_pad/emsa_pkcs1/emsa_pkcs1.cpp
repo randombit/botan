@@ -9,6 +9,7 @@
 #include <botan/hash_id.h>
 #include <botan/exceptn.h>
 #include <botan/oids.h>
+#include <botan/pk_keys.h>
 #include <botan/internal/padding.h>
 
 namespace Botan {
