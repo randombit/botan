@@ -13,7 +13,6 @@ WARN_FLAGS     = %{cc_warning_flags}
 SO_OBJ_FLAGS   = %{shared_flags}
 LDFLAGS        = %{ldflags}
 
-LIB_LINK_CMD   = %{lib_link_cmd}
 EXE_LINK_CMD   = %{exe_link_cmd}
 
 LIB_LINKS_TO   = %{link_to}
@@ -98,7 +97,7 @@ fuzzer_corpus_zip: fuzzer_corpus
 %{if build_unix_shared_lib}
 
 %{out_dir}/%{shared_lib_name}: $(LIBOBJS)
-	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
+	%{lib_link_cmd} $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
 	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_base}
 	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_patch}
 
@@ -107,7 +106,7 @@ fuzzer_corpus_zip: fuzzer_corpus
 %{if build_msvc_shared_lib}
 
 %{out_dir}/%{shared_lib_name}: $(LIBOBJS)
-	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
+	%{lib_link_cmd} $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
 
 %{endif}
 
