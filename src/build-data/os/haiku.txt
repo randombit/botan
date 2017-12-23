@@ -8,8 +8,10 @@ lib_dir system/lib
 doc_dir system/documentation
 
 <target_features>
-readdir
+clock_gettime
 gmtime_r
+dlopen
+readdir
 sockets
 threads
 filesystem
