@@ -1135,13 +1135,23 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         if with_debug_info is None:
             with_debug_info = options.with_debug_info
 
-        def all_group():
+        def mach_abi_groups():
             if with_debug_info and 'all-debug' in self.mach_abi_linking:
-                return 'all-debug'
-            return 'all'
+                yield 'all-debug'
+            elif 'all' in self.mach_abi_linking:
+                yield 'all'
+
+            for all_except in [s for s in self.mach_abi_linking.keys() if s.startswith('all!')]:
+                exceptions = all_except[4:].split(',')
+                if options.os not in exceptions and options.arch not in exceptions:
+                    yield all_except
+
+            yield options.os
+            yield options.arch
+            yield options.cpu
 
         abi_link = list()
-        for what in [all_group(), options.os, options.arch, options.cpu]:
+        for what in mach_abi_groups():
             flag = self.mach_abi_linking.get(what)
             if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)

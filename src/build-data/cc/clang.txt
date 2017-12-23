@@ -62,7 +62,7 @@ ivybridge   -> "-march=core-avx-i"
 </mach_opt>
 
 <mach_abi_linking>
-all     -> "-pthread"
+all!haiku -> "-pthread"
 
 openmp  -> "-fopenmp"
 

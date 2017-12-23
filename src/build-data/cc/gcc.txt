@@ -112,7 +112,7 @@ all_x86_64 -> "-momit-leaf-frame-pointer"
 
 # Flags set here are included at compile and link time
 <mach_abi_linking>
-all     -> "-pthread"
+all!haiku -> "-pthread"
 
 openmp  -> "-fopenmp"
 
