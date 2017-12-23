@@ -246,7 +246,12 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
          try
             {
             BER_Decoder inner(decoded_bits);
-            decode(output, inner, level + 1);
+
+            std::ostringstream inner_data;
+            decode(inner_data, inner, level + 1);
+
+            emit(output, asn1_tag_to_string(type_tag), level, length, "");
+            output << inner_data.str();
             }
          catch(...)
             {
