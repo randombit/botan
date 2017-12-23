@@ -5,6 +5,7 @@ PK_PADDING -> 20131128
 load_on auto
 
 <requires>
+asn1
 rng
 </requires>
 
