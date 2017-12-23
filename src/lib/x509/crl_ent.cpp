@@ -18,7 +18,7 @@ struct CRL_Entry_Data
    {
    std::vector<uint8_t> m_serial;
    X509_Time m_time;
-   CRL_Code m_reason;
+   CRL_Code m_reason = UNSPECIFIED;
    Extensions m_extensions;
    };
 
