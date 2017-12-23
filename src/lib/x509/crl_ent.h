@@ -19,7 +19,7 @@ struct CRL_Entry_Data;
 /**
 * X.509v2 CRL Reason Code.
 */
-enum CRL_Code {
+enum CRL_Code : uint32_t {
    UNSPECIFIED            = 0,
    KEY_COMPROMISE         = 1,
    CA_COMPROMISE          = 2,
