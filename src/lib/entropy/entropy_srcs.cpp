@@ -123,6 +123,7 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       }
 #endif
 
+   BOTAN_UNUSED(name);
    return std::unique_ptr<Entropy_Source>();
    }
 
