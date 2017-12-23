@@ -8,7 +8,6 @@
 
 #include <botan/x509path.h>
 #include <botan/x509_ext.h>
-#include <botan/x509_dn_ub.h>
 #include <botan/pk_keys.h>
 #include <botan/ocsp.h>
 #include <botan/oids.h>
@@ -95,8 +94,9 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
       // Check the subject's DN components' length
       for(const auto& dn_pair : subject->subject_dn().get_attributes())
          {
+         const size_t dn_ub = X509_DN::lookup_ub(dn_pair.first);
          // dn_pair = <OID,str>
-         if(lookup_ub(dn_pair.first) < dn_pair.second.size())
+         if(dn_ub > 0 && dn_pair.second.size() > dn_ub)
             {
             status.insert(Certificate_Status_Code::DN_TOO_LONG);
             }

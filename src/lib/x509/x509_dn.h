@@ -1,6 +1,7 @@
 /*
 * X.509 Distinguished Name
 * (C) 1999-2010 Jack Lloyd
+* (C) 2017 Fabian Weissberg, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -37,6 +38,15 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
       void add_attribute(const OID& oid, const std::string& val);
 
       static std::string deref_info_field(const std::string& key);
+
+      /**
+      * Lookup upper bounds in characters for the length of distinguished name fields
+      * as given in RFC 5280, Appendix A.
+      *
+      * @param oid the oid of the DN to lookup
+      * @return the upper bound, or zero if no ub is known to Botan
+      */
+      static size_t lookup_ub(const OID& oid);
 
       /*
       * Return the BER encoded data, if any

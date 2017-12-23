@@ -156,10 +156,9 @@ def format_dn_ub_as_map(dn_ub, oid2str):
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/x509_dn.h>
 #include <botan/asn1_oid.h>
-#include <botan/x509_dn_ub.h>
 #include <map>
-#include <stdint.h>
 
 namespace {
 /**
@@ -176,7 +175,8 @@ static const std::map<Botan::OID, size_t> DN_UB =
 
 namespace Botan {
 
-size_t lookup_ub(const OID& oid)
+//static
+size_t X509_DN::lookup_ub(const OID& oid)
    {
    auto ub_entry = DN_UB.find(oid);
    if(ub_entry != DN_UB.end())
@@ -185,7 +185,7 @@ size_t lookup_ub(const OID& oid)
       }
    else
       {
-      return SIZE_MAX;
+      return 0;
       }
    }
 }
