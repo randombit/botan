@@ -80,7 +80,15 @@ void SipHash::final_result(uint8_t mac[])
    {
    verify_key_set(m_V.empty() == false);
 
-   m_mbuf = (m_mbuf >> (64-m_mbuf_pos*8)) | (static_cast<uint64_t>(m_words) << 56);
+   if(m_mbuf_pos == 0)
+      {
+      m_mbuf = (static_cast<uint64_t>(m_words) << 56);
+      }
+   else if(m_mbuf_pos < 8)
+      {
+      m_mbuf = (m_mbuf >> (64-m_mbuf_pos*8)) | (static_cast<uint64_t>(m_words) << 56);
+      }
+
    SipRounds(m_mbuf, m_V, m_C);
 
    m_V[2] ^= 0xFF;
