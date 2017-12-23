@@ -552,9 +552,16 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
           * the validation function may be relevant, i.e. if issuer DNs are
           * ambiguous.
           */
+         auto uniform_shuffle = [](size_t m) -> size_t
+         {
+            size_t s;
+            Test::rng().randomize(reinterpret_cast<uint8_t*>(&s), sizeof(s));
+            return s % m;
+         };
+
          for (size_t r = 0; r < 16; r++)
             {
-            std::random_shuffle(++(certs.begin()), certs.end());
+            std::random_shuffle(++(certs.begin()), certs.end(), uniform_shuffle);
 
             Botan::Path_Validation_Result validation_result =
                   Botan::x509_path_validate(certs, restrictions, trusted, "",
