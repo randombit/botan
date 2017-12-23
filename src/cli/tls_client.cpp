@@ -281,7 +281,8 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
    private:
       int connect_to_host(const std::string& host, uint16_t port, bool tcp)
          {
-         addrinfo hints = {};
+         addrinfo hints;
+         std::memset(&hints, 0, sizeof(hints));
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = tcp ? SOCK_STREAM : SOCK_DGRAM;
          addrinfo* res, *rp = nullptr;
