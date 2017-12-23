@@ -2654,6 +2654,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
 
 # Mutates `options`
 def canonicalize_options(options, info_os, info_arch):
+    # pylint: disable=too-many-branches
     if options.os not in info_os:
         def find_canonical_os_name(os_name_variant):
             for (canonical_os_name, info) in info_os.items():
@@ -2674,9 +2675,12 @@ def canonicalize_options(options, info_os, info_arch):
 
     shared_libs_supported = options.os in info_os and info_os[options.os].building_shared_supported
 
-    if options.build_shared_lib and not shared_libs_supported:
-        logging.warning('Shared libs not supported on %s, disabling shared lib support' % (options.os))
-        options.build_shared_lib = False
+    if not shared_libs_supported:
+        if options.build_shared_lib is not None:
+            logging.warning('Shared libs not supported on %s, disabling shared lib support' % (options.os))
+            options.build_shared_lib = False
+        else:
+            logging.info('Shared libs not supported on %s, disabling shared lib support' % (options.os))
 
     if options.os == 'windows' and options.build_shared_lib is None and options.build_static_lib is None:
         options.build_shared_lib = True
