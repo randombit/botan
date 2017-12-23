@@ -7,6 +7,8 @@ header_dir develop/headers
 lib_dir system/lib
 doc_dir system/documentation
 
+use_stack_protector no
+
 <target_features>
 clock_gettime
 gmtime_r

@@ -1,5 +1,4 @@
 
-building_shared_supported no
 
 <target_features>
 threads

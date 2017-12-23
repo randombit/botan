@@ -1,6 +1,5 @@
 os_type unikernel
 
-building_shared_supported no
 
 <target_features>
 </target_features>

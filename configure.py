@@ -346,8 +346,11 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
                            help='enable ASan/UBSan checks')
 
-    build_group.add_option('--without-stack-protector', action='store_false', default=True, dest='with_stack_protector',
-                           help='disable stack smashing protections')
+    build_group.add_option('--with-stack-protector', dest='with_stack_protector',
+                           action='store_false', default=None, help=optparse.SUPPRESS_HELP)
+
+    build_group.add_option('--without-stack-protector', dest='with_stack_protector',
+                           action='store_false', help='disable stack smashing protections')
 
     build_group.add_option('--with-coverage', action='store_true', default=False, dest='with_coverage',
                            help='add coverage info and disable opts')
@@ -1272,7 +1275,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'lib_dir': 'lib',
                 'doc_dir': 'share/doc',
                 'man_dir': 'share/man',
-                'building_shared_supported': 'yes',
+                'use_stack_protector': 'true',
                 'so_post_link_command': '',
                 'cli_exe_name': 'botan',
                 'lib_prefix': 'lib',
@@ -1309,7 +1312,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.ar_command = lex.ar_command
         self.ar_options = lex.ar_options
         self.bin_dir = lex.bin_dir
-        self.building_shared_supported = (lex.building_shared_supported == 'yes')
         self.cli_exe_name = lex.cli_exe_name
         self.doc_dir = lex.doc_dir
         self.header_dir = lex.header_dir
@@ -1324,6 +1326,10 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.so_post_link_command = lex.so_post_link_command
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
+        self.use_stack_protector = (lex.use_stack_protector == "true")
+
+    def building_shared_supported(self):
+        return self.soname_pattern_base != None
 
     def enabled_features(self, options):
         feats = []
@@ -2673,7 +2679,7 @@ def canonicalize_options(options, info_os, info_arch):
     else:
         raise UserError('Unknown or unidentifiable processor "%s"' % (options.cpu))
 
-    shared_libs_supported = options.os in info_os and info_os[options.os].building_shared_supported
+    shared_libs_supported = options.os in info_os and info_os[options.os].building_shared_supported()
 
     if not shared_libs_supported:
         if options.build_shared_lib is not None:
@@ -2684,6 +2690,10 @@ def canonicalize_options(options, info_os, info_arch):
 
     if options.os == 'windows' and options.build_shared_lib is None and options.build_static_lib is None:
         options.build_shared_lib = True
+
+    if options.with_stack_protector is None:
+        if options.os in info_os:
+            options.with_stack_protector = info_os[options.os].use_stack_protector
 
     if options.build_shared_lib is None:
         if options.os == 'windows' and options.build_static_lib:

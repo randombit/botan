@@ -4,7 +4,6 @@ os_type windows
 program_suffix .exe
 obj_suffix obj
 static_suffix lib
-building_shared_supported no
 
 install_root c:\\Botan
 doc_dir docs
