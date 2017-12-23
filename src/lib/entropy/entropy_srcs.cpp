@@ -56,7 +56,7 @@ class System_RNG_EntropySource final : public Entropy_Source
          return poll_bits;
          }
 
-      std::string name() const override { return system_rng().name(); }
+      std::string name() const override { return "system_rng"; }
    };
 
 }
