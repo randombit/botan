@@ -249,6 +249,8 @@ load_private_key(const AlgorithmIdentifier& alg_id,
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);
    }
 
+#if defined(BOTAN_HAS_ECC_GROUP)
+
 namespace {
 
 std::string default_ec_group_for(const std::string& alg_name)
@@ -264,6 +266,8 @@ std::string default_ec_group_for(const std::string& alg_name)
    }
 
 }
+
+#endif
 
 std::unique_ptr<Private_Key>
 create_private_key(const std::string& alg_name,
@@ -401,7 +405,7 @@ create_private_key(const std::string& alg_name,
       }
 #endif
 
-   BOTAN_UNUSED(alg_name, rng, provider);
+   BOTAN_UNUSED(alg_name, rng, params, provider);
 
    return std::unique_ptr<Private_Key>();
    }
