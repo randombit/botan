@@ -188,12 +188,42 @@ class NIST_Curve_Reduction_Tests final : public Test
          std::vector<Test::Result> results;
 
 #if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
-         results.push_back(random_redc_test("P-384", Botan::prime_p384(), Botan::redc_p384));
-         results.push_back(random_redc_test("P-256", Botan::prime_p256(), Botan::redc_p256));
-         results.push_back(random_redc_test("P-224", Botan::prime_p224(), Botan::redc_p224));
-         results.push_back(random_redc_test("P-192", Botan::prime_p192(), Botan::redc_p192));
+         results.push_back(random_redc_test(
+	    "P-384",
+	    Botan::prime_p384(),
+	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+	        {
+		Botan::redc_p384(p, ws);
+		}));
+         results.push_back(random_redc_test(
+	    "P-256",
+	    Botan::prime_p256(),
+	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+	        {
+		Botan::redc_p256(p, ws);
+		}));
+         results.push_back(random_redc_test(
+	    "P-224",
+	    Botan::prime_p224(),
+	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+	        {
+		Botan::redc_p224(p, ws);
+		}));
+         results.push_back(random_redc_test(
+	    "P-192",
+	    Botan::prime_p192(),
+	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+	        {
+		Botan::redc_p192(p, ws);
+		}));
 #endif
-         results.push_back(random_redc_test("P-521", Botan::prime_p521(), Botan::redc_p521));
+         results.push_back(random_redc_test(
+	    "P-521",
+	    Botan::prime_p521(),
+	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+	        {
+	        Botan::redc_p521(p, ws);
+	        }));
 
          return results;
          }
