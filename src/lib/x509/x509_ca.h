@@ -193,6 +193,7 @@ BOTAN_PUBLIC_API(2,0) PK_Signer* choose_sig_format(const Private_Key& key,
                                        AlgorithmIdentifier& alg_id);
 
 /**
+* @verbatim
 * Choose the default signature format for a certain public key signature
 * scheme.
 *
@@ -200,6 +201,7 @@ BOTAN_PUBLIC_API(2,0) PK_Signer* choose_sig_format(const Private_Key& key,
 * Find an entry from src/build-data/oids.txt under [signature] of the form
 * <sig_algo>/<padding>[(<hash_algo>)] and add {"padding",<padding>}
 * to opts.
+* @endverbatim
 *
 * @param key will be the key to choose a padding scheme for
 * @param opts contains additional options for building the certificate
@@ -208,11 +210,11 @@ BOTAN_PUBLIC_API(2,0) PK_Signer* choose_sig_format(const Private_Key& key,
 * @param alg_id will be set to the chosen scheme
 * @return A PK_Signer object for generating signatures
 */
- PK_Signer* choose_sig_format(const Private_Key& key,
-                                       const std::map<std::string,std::string>& opts,
-                                       RandomNumberGenerator& rng,
-                                       const std::string& hash_fn,
-                                       AlgorithmIdentifier& alg_id);
+PK_Signer* choose_sig_format(const Private_Key& key,
+                             const std::map<std::string,std::string>& opts,
+                             RandomNumberGenerator& rng,
+                             const std::string& hash_fn,
+                             AlgorithmIdentifier& alg_id);
 
 }
 

@@ -61,12 +61,12 @@ class BOTAN_PUBLIC_API(2,0) EMSA
                           size_t key_bits) = 0;
 
       /**
-      * Prepare sig_algo for use in choose_sig_format for x509 certs,
-      * return padding info string
-      * @param sig_algo's oid and parameters will be set properly
+      * Prepare sig_algo for use in choose_sig_format for x509 certs
+      *
       * @param key used for checking compatibility with the encoding scheme
       * @param cert_hash_name is checked to equal the hash for the encoding
-      * @return padding string to be consumed by PK_signer
+      * @return algorithm identifier to signatures created using this key,
+      *         padding method and hash.
       */
       virtual AlgorithmIdentifier config_for_x509(const Private_Key& key,
                                                   const std::string& cert_hash_name) const;
