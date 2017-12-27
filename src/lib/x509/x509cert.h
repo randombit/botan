@@ -83,9 +83,10 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       /**
       * Get the SHA-1 bit string of the public key associated with this certificate.
       * This is used for OCSP among other protocols.
+      * This function will throw if SHA-1 is not available.
       * @return hash of subject public key of this certificate
       */
-      std::vector<uint8_t> subject_public_key_bitstring_sha1() const;
+      const std::vector<uint8_t>& subject_public_key_bitstring_sha1() const;
 
       /**
       * Get the certificate's issuer distinguished name (DN).

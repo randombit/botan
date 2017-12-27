@@ -364,7 +364,7 @@ const std::vector<uint8_t>& X509_Certificate::subject_public_key_bitstring() con
    return data().m_subject_public_key_bitstring;
    }
 
-std::vector<uint8_t> X509_Certificate::subject_public_key_bitstring_sha1() const
+const std::vector<uint8_t>& X509_Certificate::subject_public_key_bitstring_sha1() const
    {
    if(data().m_subject_public_key_bitstring_sha1.empty())
       throw Encoding_Error("X509_Certificate::subject_public_key_bitstring_sha1 called but SHA-1 disabled in build");
