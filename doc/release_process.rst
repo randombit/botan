@@ -73,7 +73,7 @@ tool. If all goes well it will produce an executable with a name like
 Update The Website
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The website content is created by ``src/scripts/website.sh``.
+The website content is created by ``src/scripts/website.py``.
 Currently refreshing the website is a manual process.
 
 Announce The Release
