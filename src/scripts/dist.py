@@ -28,9 +28,11 @@ import traceback
 # This is horrible, but there is no way to override tarfile's use of time.time
 # in setting the gzip header timestamp, which breaks deterministic archives
 
-def null_time():
-    return 0
-time.time = null_time
+GZIP_HEADER_TIME = 0
+
+def fake_time():
+    return GZIP_HEADER_TIME
+time.time = fake_time
 
 
 def check_subprocess_results(subproc, name):
@@ -64,10 +66,14 @@ def maybe_gpg(val):
     else:
         return val.strip()
 
+def rel_time_to_epoch(year, month, day, hour, minute, second):
+    dt = datetime.datetime(year, month, day, hour, minute, second)
+    return (dt - datetime.datetime(1970, 1, 1)).total_seconds()
+
 def datestamp(tag):
     ts = maybe_gpg(run_git(['show', '--no-patch', '--format=%ai', tag]))
 
-    ts_matcher = re.compile(r'^(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}:\d{2} .*')
+    ts_matcher = re.compile(r'^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}) .*')
 
     logging.debug('Git returned timestamp of %s for tag %s' % (ts, tag))
     match = ts_matcher.match(ts)
@@ -76,7 +82,10 @@ def datestamp(tag):
         logging.error('Failed parsing timestamp "%s" of tag %s' % (ts, tag))
         return 0
 
-    return int(match.group(1) + match.group(2) + match.group(3))
+    rel_date = int(match.group(1) + match.group(2) + match.group(3))
+    rel_epoch = rel_time_to_epoch(*[int(match.group(i)) for i in range(1, 7)])
+
+    return rel_date, rel_epoch
 
 def revision_of(tag):
     return maybe_gpg(run_git(['show', '--no-patch', '--format=%H', tag]))
@@ -196,15 +205,6 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
 
     open(version_file, 'w').write(''.join(list(content_rewriter())))
 
-def rel_date_to_epoch(rel_date):
-    rel_str = str(rel_date)
-    year = int(rel_str[0:4])
-    month = int(rel_str[4:6])
-    day = int(rel_str[6:8])
-
-    dt = datetime.datetime(year, month, day, 6, 0, 0)
-    return (dt - datetime.datetime(1970, 1, 1)).total_seconds()
-
 def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file):
     output_archive = output_basename + '.' + archive_type
     logging.info('Writing archive "%s"' % (output_archive))
@@ -322,13 +322,14 @@ def main(args=None):
     if rev_id == '':
         logging.error('No tag matching %s found' % (target_version))
 
-    rel_date = datestamp(target_version)
-    if rel_date == 0:
-        logging.error('No date found for version')
+    rel_date, rel_epoch = datestamp(target_version)
+    if rel_date == 0 or rel_epoch == 0:
+        logging.error('No date found for version, git error?')
 
     logging.info('Found %s at revision id %s released %d' % (target_version, rev_id, rel_date))
 
-    rel_epoch = rel_date_to_epoch(rel_date)
+    global GZIP_HEADER_TIME # pylint: disable=global-statement
+    GZIP_HEADER_TIME = rel_epoch
 
     def output_name():
         if snapshot_branch:
