@@ -8,7 +8,6 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#include <botan/internal/xmss_wots_signature_operation.h>
 #include <botan/xmss_wots_privatekey.h>
 
 namespace Botan {
@@ -78,18 +77,6 @@ XMSS_WOTS_PrivateKey::sign(const secure_vector<uint8_t>& msg,
       }
 
    return sig;
-   }
-
-std::unique_ptr<PK_Ops::Signature>
-XMSS_WOTS_PrivateKey::create_signature_op(RandomNumberGenerator&,
-                                          const std::string&,
-                                          const std::string& provider) const
-   {
-   if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Signature>(
-           new XMSS_WOTS_Signature_Operation(*this));
-
-   throw Provider_Not_Found(algo_name(), provider);
    }
 
 }
