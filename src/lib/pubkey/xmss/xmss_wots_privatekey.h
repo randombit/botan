@@ -298,11 +298,6 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
          throw Not_Implemented("No AlgorithmIdentifier available for XMSS-WOTS.");
          }
 
-      std::unique_ptr<PK_Ops::Signature>
-      create_signature_op(RandomNumberGenerator&,
-                          const std::string&,
-                          const std::string& provider) const override;
-
       secure_vector<uint8_t> private_key_bits() const override
          {
          throw Not_Implemented("No PKCS8 key format defined for XMSS-WOTS.");
