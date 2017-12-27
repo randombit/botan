@@ -16,6 +16,8 @@ in the source.
 
 - All or nothing package transform (``package.h``)
 
+- The Perl-XS wrapper
+
 - The TLS constructors taking `std::function` for callbacks. Instead
   use the TLS::Callbacks interface.
 

@@ -211,6 +211,9 @@ Version 2.4.0, Not Yet Released
 * As upstream support for Native Client has been deprecated by Google, support
   is now also deprecated in Botan and will be removed in a future release.
 
+* The Perl-XS wrapper has not been maintained in many years. It is now deprecated,
+  and if no attempts are made to revive it, it will be removed in a future release.
+
 * Support for building on IRIX has been removed.
 
 Version 2.3.0, 2017-10-02
