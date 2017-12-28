@@ -34,7 +34,7 @@ class OpenSSL_RC4 final : public StreamCipher
             case 256:
                return "MARK-4";
             default:
-               return "RC4_skip(" + std::to_string(m_skip) + ")";
+               return "RC4(" + std::to_string(m_skip) + ")";
             }
          }
 
