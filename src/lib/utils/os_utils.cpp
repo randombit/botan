@@ -363,7 +363,7 @@ static ::sigjmp_buf g_sigill_jmp_buf;
 
 void botan_sigill_handler(int)
    {
-   ::siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/1);
+   siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/1);
    }
 
 }
@@ -386,7 +386,7 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    if(rc != 0)
       throw Exception("run_cpu_instruction_probe sigaction failed");
 
-   rc = ::sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
+   rc = sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
 
    if(rc == 0)
       {
