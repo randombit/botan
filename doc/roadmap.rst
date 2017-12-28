@@ -24,6 +24,7 @@ Interface to PSK and SRP databases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Adding support for databases storing encrypted PSKs and SRP credentials.
+(PSK database support was added in 2.4.0)
 
 ECC Refactoring
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
