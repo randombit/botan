@@ -126,4 +126,5 @@ x86_64  -> "-m64"
 
 netbsd  -> "-D_NETBSD_SOURCE"
 qnx     -> "-fexceptions -D_QNX_SOURCE"
+cygwin  -> "-U__STRICT_ANSI__"
 </mach_abi_linking>
