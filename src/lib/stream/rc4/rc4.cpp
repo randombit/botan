@@ -93,9 +93,12 @@ void RC4::key_schedule(const uint8_t key[], size_t length)
 */
 std::string RC4::name() const
    {
-   if(m_SKIP == 0)   return "RC4";
-   if(m_SKIP == 256) return "MARK-4";
-   else            return "RC4_skip(" + std::to_string(m_SKIP) + ")";
+   if(m_SKIP == 0)
+      return "RC4";
+   else if(m_SKIP == 256)
+      return "MARK-4";
+   else
+      return "RC4(" + std::to_string(m_SKIP) + ")";
    }
 
 /*

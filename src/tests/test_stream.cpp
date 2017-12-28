@@ -84,6 +84,15 @@ class Stream_Cipher_Tests final : public Text_Based_Test
 
             cipher->set_key(key);
 
+            /*
+            Test invalid nonce sizes. this assumes no implemented cipher supports a nonce of 65000
+            */
+            const size_t large_nonce_size = 65000;
+            result.confirm("Stream cipher does not support very large nonce", cipher->valid_iv_length(large_nonce_size) == false);
+
+            result.test_throws("Throws if invalid nonce size given",
+                               [&]() { cipher->set_iv(nullptr, large_nonce_size); });
+
             if(nonce.size())
                {
                if(!cipher->valid_iv_length(nonce.size()))
