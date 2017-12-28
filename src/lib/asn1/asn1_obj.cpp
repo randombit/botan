@@ -16,6 +16,12 @@ std::string asn1_tag_to_string(ASN1_Tag type)
    {
    switch(type)
       {
+      case Botan::SEQUENCE:
+         return "SEQUENCE";
+
+      case Botan::SET:
+         return "SET";
+
       case Botan::PRINTABLE_STRING:
          return "PRINTABLE STRING";
 
