@@ -181,6 +181,8 @@ class PSK_DB_Tests final : public Test
          Test::Result result("PSK_DB SQL");
 
          const Botan::secure_vector<uint8_t> zeros(32);
+         const Botan::secure_vector<uint8_t> not_zeros = Test::rng().random_vec(32);
+
          const std::string table_name = "bobby";
          std::shared_ptr<Botan::SQL_Database> sqldb = std::make_shared<Botan::Sqlite3_Database>(":memory:");
 
@@ -210,6 +212,15 @@ class PSK_DB_Tests final : public Test
          db.set_str("leroy jeeeeeeeenkins", "chicken");
          test_entry(result, sqldb, table_name, "KyYo272vlSjClM2F0OZBMlRYjr33ZXv2jN1oY8OfCEs=", "tCl1qShSTsXi9tA5Kpo9vg==");
          result.test_eq("DB read", db.get_str("leroy jeeeeeeeenkins"), "chicken");
+
+         /*
+         * Test that we can have another database in the same table with distinct key
+         * without any problems.
+         */
+         Botan::Encrypted_PSK_Database_SQL db2(not_zeros, sqldb, table_name);
+         db2.set_str("name", "price&value");
+         result.test_eq("DB read", db2.get_str("name"), "price&value");
+         result.test_eq("DB2 size", db2.list_names().size(), 1);
 
          std::set<std::string> all_names = db.list_names();
 
