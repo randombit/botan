@@ -18,89 +18,24 @@
 
 namespace Botan {
 
-std::string ASN1_Pretty_Printer::print(const uint8_t in[], size_t len) const
+std::string ASN1_Formatter::print(const uint8_t in[], size_t len) const
    {
    std::ostringstream output;
    print_to_stream(output, in, len);
    return output.str();
    }
 
-void ASN1_Pretty_Printer::print_to_stream(std::ostream& output,
-                                          const uint8_t in[],
-                                          size_t len) const
+void ASN1_Formatter::print_to_stream(std::ostream& output,
+                                     const uint8_t in[],
+                                     size_t len) const
    {
    BER_Decoder dec(in, len);
-   decode(output, dec, m_initial_level);
+   decode(output, dec, 0);
    }
 
-std::string ASN1_Pretty_Printer::format_binary(const std::vector<uint8_t>& in) const
-   {
-   std::ostringstream out;
-
-   size_t unprintable = 0;
-
-   for(size_t i = 0; i != in.size(); ++i)
-      {
-      const int c = in[i];
-      if(std::isalnum(c))
-         {
-         out << static_cast<char>(c);
-         }
-      else
-         {
-         out << "x" << std::hex << static_cast<int>(c) << std::dec;
-         ++unprintable;
-         if(unprintable >= in.size() / 4)
-            {
-            return hex_encode(in);
-            }
-         }
-      }
-
-   return out.str();
-   }
-
-void ASN1_Pretty_Printer::emit(std::ostream& output,
-                               const std::string& type,
-                               size_t level, size_t length,
-                               const std::string& value) const
-   {
-   std::ostringstream oss;
-
-   oss << "  d=" << std::setw(2) << level
-       << ", l=" << std::setw(4) << length << ":"
-       << std::string(level + 1, ' ') << type;
-
-   bool should_skip = false;
-
-   if(value.length() > m_print_limit)
-      {
-      should_skip = true;
-      }
-
-   if((type == "OCTET STRING" || type == "BIT STRING") && value.length() > m_print_binary_limit)
-      {
-      should_skip = true;
-      }
-
-   const std::string s = oss.str();
-
-   output << s;
-
-   if(value != "" && !should_skip)
-      {
-      const size_t spaces_to_align =
-         (s.size() >= m_value_column) ? 1 : (m_value_column - s.size());
-
-      output << std::string(spaces_to_align, ' ') << value;
-      }
-
-   output << "\n";
-   }
-
-void ASN1_Pretty_Printer::decode(std::ostream& output,
-                                 BER_Decoder& decoder,
-                                 size_t level) const
+void ASN1_Formatter::decode(std::ostream& output,
+                            BER_Decoder& decoder,
+                            size_t level) const
    {
    BER_Object obj = decoder.get_next_object();
 
@@ -114,48 +49,15 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
          that we've gotten the type info */
       DER_Encoder encoder;
       encoder.add_object(type_tag, class_tag, obj.value);
-      std::vector<uint8_t> bits = encoder.get_contents_unlocked();
+      const std::vector<uint8_t> bits = encoder.get_contents_unlocked();
 
       BER_Decoder data(bits);
 
       if(class_tag & CONSTRUCTED)
          {
          BER_Decoder cons_info(obj.value);
-         if(type_tag == SEQUENCE)
-            {
-            emit(output, "SEQUENCE", level, length);
-            decode(output, cons_info, level + 1); // recurse
-            }
-         else if(type_tag == SET)
-            {
-            emit(output, "SET", level, length);
-            decode(output, cons_info, level + 1); // recurse
-            }
-         else
-            {
-            std::string name;
-
-            if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
-               {
-               name = "cons [" + std::to_string(type_tag) + "]";
-
-               if(class_tag & APPLICATION)
-                  {
-                  name += " appl";
-                  }
-               if(class_tag & CONTEXT_SPECIFIC)
-                  {
-                  name += " context";
-                  }
-               }
-            else
-               {
-               name = asn1_tag_to_string(type_tag) + " (cons)";
-               }
-
-            emit(output, name, level, length);
-            decode(output, cons_info, level + 1); // recurse
-            }
+         output << format(type_tag, class_tag, level, length, "");
+         decode(output, cons_info, level + 1); // recurse
          }
       else if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
          {
@@ -166,16 +68,21 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
                std::vector<uint8_t> inner_bits;
                data.decode(inner_bits, type_tag);
                BER_Decoder inner(inner_bits);
-               decode(output, inner, level + 1); // recurse
+
+               std::ostringstream inner_data;
+               decode(inner_data, inner, level + 1); // recurse
+               output << inner_data.str();
                }
             catch(...)
                {
-               emit(output, "[" + std::to_string(type_tag) + "]", level, length, format_binary(bits));
+               output << format(type_tag, class_tag, level, length,
+                                format_bin(type_tag, class_tag, bits));
                }
             }
          else
             {
-            emit(output, "[" + std::to_string(type_tag) + "]", level, length, format_binary(bits));
+            output << format(type_tag, class_tag, level, length,
+                             format_bin(type_tag, class_tag, bits));
             }
          }
       else if(type_tag == OBJECT_ID)
@@ -193,7 +100,7 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
             out += " [" + oid.as_string() + "]";
             }
 
-         emit(output, asn1_tag_to_string(type_tag), level, length, out);
+         output << format(type_tag, class_tag, level, length, out);
          }
       else if(type_tag == INTEGER || type_tag == ENUMERATED)
          {
@@ -216,17 +123,17 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
             str += static_cast<char>(rep[i]);
             }
 
-         emit(output, asn1_tag_to_string(type_tag), level, length, str);
+         output << format(type_tag, class_tag, level, length, str);
          }
       else if(type_tag == BOOLEAN)
          {
          bool boolean;
          data.decode(boolean);
-         emit(output, asn1_tag_to_string(type_tag), level, length, (boolean ? "true" : "false"));
+         output << format(type_tag, class_tag, level, length, (boolean ? "true" : "false"));
          }
       else if(type_tag == NULL_TAG)
          {
-         emit(output, asn1_tag_to_string(type_tag), level, length);
+         output << format(type_tag, class_tag, level, length, "");
          }
       else if(type_tag == OCTET_STRING || type_tag == BIT_STRING)
          {
@@ -238,27 +145,28 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
             BER_Decoder inner(decoded_bits);
 
             std::ostringstream inner_data;
-            decode(inner_data, inner, level + 1);
+            decode(inner_data, inner, level + 1); // recurse
 
-            emit(output, asn1_tag_to_string(type_tag), level, length, "");
+            output << format(type_tag, class_tag, level, length, "");
             output << inner_data.str();
             }
          catch(...)
             {
-            emit(output, asn1_tag_to_string(type_tag), level, length, format_binary(decoded_bits));
+            output << format(type_tag, class_tag, level, length,
+                             format_bin(type_tag, class_tag, decoded_bits));
             }
          }
       else if(ASN1_String::is_string_type(type_tag))
          {
          ASN1_String str;
          data.decode(str);
-         emit(output, asn1_tag_to_string(type_tag), level, length, str.value());
+         output << format(type_tag, class_tag, level, length, str.value());
          }
       else if(type_tag == UTC_TIME || type_tag == GENERALIZED_TIME)
          {
          X509_Time time;
          data.decode(time);
-         emit(output, asn1_tag_to_string(type_tag), level, length, time.readable_string());
+         output << format(type_tag, class_tag, level, length, time.readable_string());
          }
       else
          {
@@ -268,6 +176,104 @@ void ASN1_Pretty_Printer::decode(std::ostream& output,
 
       obj = decoder.get_next_object();
       }
+   }
+
+namespace {
+
+std::string format_type(ASN1_Tag type_tag, ASN1_Tag class_tag)
+   {
+   if((class_tag & CONSTRUCTED) && ((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC)))
+      {
+      std::string name = "cons [" + std::to_string(type_tag) + "]";
+
+      if(class_tag & APPLICATION)
+         {
+         name += " appl";
+         }
+      if(class_tag & CONTEXT_SPECIFIC)
+         {
+         name += " context";
+         }
+
+      return name;
+      }
+   else
+      {
+      return asn1_tag_to_string(type_tag);
+      }
+   }
+
+}
+
+std::string ASN1_Pretty_Printer::format(ASN1_Tag type_tag,
+                                        ASN1_Tag class_tag,
+                                        size_t level,
+                                        size_t length,
+                                        const std::string& value) const
+   {
+   bool should_skip = false;
+
+   if(value.length() > m_print_limit)
+      {
+      should_skip = true;
+      }
+
+   if((type_tag == OCTET_STRING || type_tag == BIT_STRING) &&
+      value.length() > m_print_binary_limit)
+      {
+      should_skip = true;
+      }
+
+   level += m_initial_level;
+
+   std::ostringstream oss;
+
+   oss << "  d=" << std::setw(2) << level
+       << ", l=" << std::setw(4) << length << ":"
+       << std::string(level + 1, ' ') << format_type(type_tag, class_tag);
+
+   if(value != "" && !should_skip)
+      {
+      const size_t current_pos = static_cast<size_t>(oss.tellp());
+      const size_t spaces_to_align =
+         (current_pos >= m_value_column) ? 1 : (m_value_column - current_pos);
+
+      oss << std::string(spaces_to_align, ' ') << value;
+      }
+
+   oss << "\n";
+
+   return oss.str();
+   }
+
+std::string ASN1_Pretty_Printer::format_bin(ASN1_Tag /*type_tag*/,
+                                            ASN1_Tag /*class_tag*/,
+                                            const std::vector<uint8_t>& vec) const
+   {
+   const size_t unprintable_bound = vec.size() / 4;
+   size_t unprintable = 0;
+
+   std::ostringstream out;
+
+   for(size_t i = 0; i != vec.size(); ++i)
+      {
+      const int c = vec[i];
+      if(std::isalnum(c))
+         {
+         out << static_cast<char>(c);
+         }
+      else
+         {
+         out << "x" << std::hex << static_cast<int>(c) << std::dec;
+         ++unprintable;
+         if(unprintable >= unprintable_bound)
+            {
+            return hex_encode(vec);
+            }
+         }
+      }
+
+   return out.str();
    }
 
 }

@@ -8,6 +8,25 @@
 #include <botan/asn1_print.h>
 #include <fstream>
 
+class ASN1_Parser final : public Botan::ASN1_Formatter
+   {
+   public:
+      ASN1_Parser() : Botan::ASN1_Formatter(true) {}
+
+   protected:
+      std::string format(Botan::ASN1_Tag, Botan::ASN1_Tag, size_t, size_t,
+                         const std::string&) const override
+         {
+         return "";
+         }
+
+      std::string format_bin(Botan::ASN1_Tag, Botan::ASN1_Tag,
+                             const std::vector<uint8_t>&) const override
+         {
+         return "";
+         }
+   };
+
 void fuzz(const uint8_t in[], size_t len)
    {
    try
@@ -17,7 +36,7 @@ void fuzz(const uint8_t in[], size_t len)
       * on actual output formatting, no memory is allocated, etc.
       */
       std::ofstream out;
-      Botan::ASN1_Pretty_Printer printer;
+      ASN1_Parser printer;
       printer.print_to_stream(out, in, len);
       }
    catch(Botan::Exception& e) { }
