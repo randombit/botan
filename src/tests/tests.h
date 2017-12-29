@@ -413,6 +413,9 @@ class Test
 
       static const std::string& data_dir();
 
+      static std::string read_data_file(const std::string& path);
+      static std::vector<uint8_t> read_binary_data_file(const std::string& path);
+
       static Botan::RandomNumberGenerator& rng();
       static std::string random_password();
       static uint64_t timestamp(); // nanoseconds arbitrary epoch

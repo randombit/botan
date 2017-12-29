@@ -506,6 +506,47 @@ Test* Test::get_test(const std::string& test_name)
    return nullptr;
    }
 
+std::string Test::read_data_file(const std::string& path)
+   {
+   const std::string fsname = Test::data_file(path);
+   std::ifstream file(fsname.c_str());
+   if(!file.good())
+      {
+      throw Test_Error("Error reading from " + fsname);
+      }
+
+   return std::string((std::istreambuf_iterator<char>(file)),
+                      std::istreambuf_iterator<char>());
+   }
+
+std::vector<uint8_t> Test::read_binary_data_file(const std::string& path)
+   {
+   const std::string fsname = Test::data_file(path);
+   std::ifstream file(fsname.c_str(), std::ios::binary);
+   if(!file.good())
+      {
+      throw Test_Error("Error reading from " + fsname);
+      }
+
+   std::vector<uint8_t> contents;
+
+   while(file.good())
+      {
+      std::vector<uint8_t> buf(4096);
+      file.read(reinterpret_cast<char*>(buf.data()), buf.size());
+      size_t got = file.gcount();
+
+      if(got == 0 && file.eof())
+         {
+         break;
+         }
+
+      contents.insert(contents.end(), buf.data(), buf.data() + got);
+      }
+
+   return contents;
+   }
+
 // static member variables of Test
 std::unique_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
 std::string Test::m_data_dir;

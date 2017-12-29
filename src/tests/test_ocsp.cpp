@@ -21,34 +21,6 @@ namespace Botan_Tests {
 class OCSP_Tests final : public Test
    {
    private:
-      std::vector<uint8_t> slurp_data_file(const std::string& path)
-         {
-         const std::string fsname = Test::data_file(path);
-         std::ifstream file(fsname.c_str(), std::ios::binary);
-         if(!file.good())
-            {
-            throw Test_Error("Error reading from " + fsname);
-            }
-
-         std::vector<uint8_t> contents;
-
-         while(file.good())
-            {
-            std::vector<uint8_t> buf(4096);
-            file.read(reinterpret_cast<char*>(buf.data()), buf.size());
-            size_t got = file.gcount();
-
-            if(got == 0 && file.eof())
-               {
-               break;
-               }
-
-            contents.insert(contents.end(), buf.data(), buf.data() + got);
-            }
-
-         return contents;
-         }
-
       std::shared_ptr<const Botan::X509_Certificate> load_test_X509_cert(const std::string& path)
          {
          return std::make_shared<const Botan::X509_Certificate>(Test::data_file(path));
@@ -56,7 +28,7 @@ class OCSP_Tests final : public Test
 
       std::shared_ptr<const Botan::OCSP::Response> load_test_OCSP_resp(const std::string& path)
          {
-         return std::make_shared<const Botan::OCSP::Response>(slurp_data_file(path));
+         return std::make_shared<const Botan::OCSP::Response>(Test::read_binary_data_file(path));
          }
 
       Test::Result test_response_parsing()
@@ -75,7 +47,7 @@ class OCSP_Tests final : public Test
             {
             try
                {
-               Botan::OCSP::Response resp(slurp_data_file(ocsp_input_path));
+               Botan::OCSP::Response resp(Test::read_binary_data_file(ocsp_input_path));
                result.test_success("Parsed input " + ocsp_input_path);
                }
             catch(Botan::Exception& e)
@@ -93,7 +65,7 @@ class OCSP_Tests final : public Test
 
          try
             {
-            Botan::OCSP::Response resp1(slurp_data_file("x509/ocsp/resp1.der"));
+            Botan::OCSP::Response resp1(Test::read_binary_data_file("x509/ocsp/resp1.der"));
             const auto &certs1 = resp1.certificates();
             if(result.test_eq("Expected count of certificates", certs1.size(), 1))
                {
@@ -105,7 +77,7 @@ class OCSP_Tests final : public Test
                result.test_eq("CN matches expected", matches, true);
                }
 
-            Botan::OCSP::Response resp2(slurp_data_file("x509/ocsp/resp2.der"));
+            Botan::OCSP::Response resp2(Test::read_binary_data_file("x509/ocsp/resp2.der"));
             const auto &certs2 = resp2.certificates();
             result.test_eq("Expect no certificates", certs2.size(), 0);
             }
