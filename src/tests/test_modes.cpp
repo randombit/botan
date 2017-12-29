@@ -61,6 +61,19 @@ class Cipher_Mode_Tests final : public Text_Based_Test
 
             result.test_eq("mode not authenticated", enc->authenticated(), false);
 
+            if(algo.find("/CBC"))
+               {
+               // can't test equal due to CBC padding
+               result.test_lte("output_length", enc->output_length(input.size()), expected.size());
+               result.test_gte("output_length", dec->output_length(expected.size()), input.size());
+               }
+            else
+               {
+               // assume all other modes are not expanding (currently true)
+               result.test_eq("output_length", enc->output_length(input.size()), expected.size());
+               result.test_eq("output_length", dec->output_length(expected.size()), input.size());
+               }
+
             // Test to make sure reset() resets what we need it to
             enc->set_key(mutate_vec(key));
             Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(enc->update_granularity());
