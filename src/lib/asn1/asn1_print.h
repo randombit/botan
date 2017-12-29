@@ -71,7 +71,8 @@ class BOTAN_DLL ASN1_Formatter
    };
 
 /**
-* Format ASN.1 data into human readable strings
+* Format ASN.1 data into human readable output. The exact form of the output for
+* any particular input is not guaranteed and may change from release to release.
 */
 class BOTAN_DLL ASN1_Pretty_Printer final : public ASN1_Formatter
    {

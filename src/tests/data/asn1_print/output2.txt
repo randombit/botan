@@ -1,0 +1,11 @@
+  d= 0, l=  38: SEQUENCE
+  d= 1, l=   1:  INTEGER
+  d= 1, l=   6:  OCTET STRING                               public
+  d= 1, l=  25:  cons [0] context
+  d= 2, l=   1:   INTEGER                                   26
+  d= 2, l=   1:   INTEGER
+  d= 2, l=   1:   INTEGER
+  d= 2, l=  14:   SEQUENCE
+  d= 3, l=  12:    SEQUENCE
+  d= 4, l=   8:     OBJECT                                  1.3.6.1.2.1.1.2.0
+  d= 4, l=   0:     NULL

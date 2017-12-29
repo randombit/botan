@@ -12,6 +12,7 @@
    #include <botan/asn1_str.h>
    #include <botan/asn1_print.h>
 #endif
+#include <fstream>
 
 namespace Botan_Tests {
 
@@ -289,6 +290,32 @@ class ASN1_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("asn1", ASN1_Tests);
+
+class ASN1_Printer_Tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("ASN1_Pretty_Printer");
+
+         Botan::ASN1_Pretty_Printer printer;
+
+         const size_t num_tests = 4;
+
+         for(size_t i = 1; i <= num_tests; ++i)
+            {
+            std::string i_str = std::to_string(i);
+            const std::vector<uint8_t> input1 = Test::read_binary_data_file("asn1_print/input" + i_str + ".der");
+            const std::string expected1 = Test::read_data_file("asn1_print/output" + i_str + ".txt");
+
+            result.test_eq("Test " + i_str, printer.print(input1), expected1);
+            }
+
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("asn1_printer", ASN1_Printer_Tests);
 
 #endif
 

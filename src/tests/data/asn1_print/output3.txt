@@ -1,0 +1,20 @@
+  d= 0, l= 397: cons [33] appl
+  d= 1, l= 333:  cons [78] appl
+  d= 2, l=   1:   TAG(41)                                   5F290100
+  d= 2, l=  16:   INTEGER                                   Bx10DECVCx7fEPASS00001
+  d= 2, l= 253:   cons [73] appl
+  d= 3, l=  10:    OBJECT                                   0.4.0.127.0.7.2.2.2.2.2
+  d= 3, l=  28:    BOOLEAN                                  811CD7C134AA264366862A18302575D1D787B09F075797DA89F57EC8C0FF
+  d= 3, l=  28:    INTEGER                                  821C68A5E62CA9CE6C1C299803A6C1530B514E182AD8B0042A59CAD29F43
+  d= 3, l=  28:    BIT STRING                               831C2580F63CCFE44138870713B1A92369E33E2135D266DBB372386C400B
+  d= 3, l=  57:    OCTET STRING                             8439040D9029AD2C7E5CF4340823B2A87DC68C9E4CE3174C1E6EFDEE12C07D58AA56F772C0726F24C6B89E4ECDAC24354B9E99CAA3F6D3761402CD
+  d= 3, l=  28:    NULL                                     851CD7C134AA264366862A18302575D0FB98D116BC4B6DDEBCA3A5A7939F
+  d= 3, l=  57:    OBJECT                                   8639045FE7B42614096E67E3B25675EFBBD94B9F1244B17228F109F07856D285867B1F72FA60E4929D88C0BF61035A7C3ECF17CA2C81532308C390
+  d= 3, l=   1:    TAG(7)                                   870101
+  d= 2, l=  16:   TAG(32)                                   x5fx20x10DECVCAEPASS00001
+  d= 2, l=  14:   cons [76] appl
+  d= 3, l=   9:    OBJECT                                   0.4.0.127.0.7.3.1.2.1
+  d= 3, l=   1:    PRINTABLE STRING                         5301C1
+  d= 2, l=   6:   TAG(37)                                   5F2506000700080108
+  d= 2, l=   6:   TAG(36)                                   5F2406010000080108
+  d= 1, l=  56:  TAG(55)                                    5F37386978982008CBD24950ADBECEE03A1675660B7FAFBD2D77CF17A5D128CFD9609B5BD0518D28D4D212CAE337F4F47495EDE92C0D7D15EA657D

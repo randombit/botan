@@ -1,0 +1,8 @@
+  d= 0, l=  32: SEQUENCE
+  d= 1, l=   1:  INTEGER                                    05
+  d= 1, l=   6:  PRINTABLE STRING                           string
+  d= 1, l=   6:  SET
+  d= 2, l=   1:   BOOLEAN                                   true
+  d= 2, l=   1:   INTEGER                                   63
+  d= 1, l=   5:  OCTET STRING                               0000000000
+  d= 1, l=   4:  BIT STRING                                 FFFFFF
