@@ -74,6 +74,12 @@ class Cipher_Mode_Tests final : public Text_Based_Test
                result.test_eq("output_length", dec->output_length(expected.size()), input.size());
                }
 
+            // Test that disallowed nonce sizes result in an exception
+            const size_t large_nonce_size = 65000;
+            result.test_eq("Large nonce not allowed", enc->valid_nonce_length(large_nonce_size), false);
+            result.test_throws("Large nonce causes exception",
+                               [&enc]() { enc->start(nullptr, large_nonce_size); });
+
             // Test to make sure reset() resets what we need it to
             enc->set_key(mutate_vec(key));
             Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(enc->update_granularity());
