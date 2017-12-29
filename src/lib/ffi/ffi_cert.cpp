@@ -18,7 +18,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F62
 
 int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       if(!cert_obj || !cert_path)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -34,7 +34,7 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
 
 int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[], size_t cert_bits_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       if(!cert_obj || !cert_bits)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -48,7 +48,7 @@ int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[],
 
 int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       if(key == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 

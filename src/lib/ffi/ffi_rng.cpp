@@ -16,7 +16,7 @@ using namespace Botan_FFI;
 
 int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       if(rng_out == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 

@@ -16,7 +16,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_mac_struct, Botan::MessageAuthenticationCode, 0xA
 
 int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       if(!mac || !mac_name || flags != 0)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 

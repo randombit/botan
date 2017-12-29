@@ -25,7 +25,7 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
                                const char* padding,
                                uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       BOTAN_ASSERT_NONNULL(op);
 
       *op = nullptr;
@@ -62,7 +62,7 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
                                const char* padding,
                                uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       BOTAN_ASSERT_NONNULL(op);
 
       *op = nullptr;
@@ -98,7 +98,7 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
                             const char* hash,
                             uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       BOTAN_ASSERT_NONNULL(op);
 
       *op = nullptr;
@@ -134,7 +134,7 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op,
                               const char* hash,
                               uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       BOTAN_ASSERT_NONNULL(op);
 
       if(flags != 0)
@@ -173,7 +173,7 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op,
                                      const char* kdf,
                                      uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       BOTAN_ASSERT_NONNULL(op);
 
       *op = nullptr;

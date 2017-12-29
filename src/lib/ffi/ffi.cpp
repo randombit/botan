@@ -81,7 +81,7 @@ int botan_scrub_mem(void* mem, size_t bytes)
 
 int botan_hex_encode(const uint8_t* in, size_t len, char* out, uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       const bool uppercase = (flags & BOTAN_FFI_HEX_LOWER_CASE) == 0;
       Botan::hex_encode(out, in, len, uppercase);
       return BOTAN_FFI_SUCCESS;
@@ -90,7 +90,7 @@ int botan_hex_encode(const uint8_t* in, size_t len, char* out, uint32_t flags)
 
 int botan_hex_decode(const char* hex_str, size_t in_len, uint8_t* out, size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       const std::vector<uint8_t> bin = Botan::hex_decode(hex_str, in_len);
       return Botan_FFI::write_vec_output(out, out_len, bin);
       });
@@ -98,7 +98,7 @@ int botan_hex_decode(const char* hex_str, size_t in_len, uint8_t* out, size_t* o
 
 int botan_base64_encode(const uint8_t* in, size_t len, char* out, size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       const std::string base64 = Botan::base64_encode(in, len);
       return Botan_FFI::write_str_output(out, out_len, base64);
       });
@@ -107,7 +107,7 @@ int botan_base64_encode(const uint8_t* in, size_t len, char* out, size_t* out_le
 int botan_base64_decode(const char* base64_str, size_t in_len,
                         uint8_t* out, size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       if(*out_len < Botan::base64_decode_max_output(in_len))
          {
          *out_len = Botan::base64_decode_max_output(in_len);

@@ -22,7 +22,7 @@ int botan_pbkdf(const char* pbkdf_algo, uint8_t out[], size_t out_len,
                 const char* pass, const uint8_t salt[], size_t salt_len,
                 size_t iterations)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
       pbkdf->pbkdf_iterations(out, out_len, pass, salt, salt_len, iterations);
       return BOTAN_FFI_SUCCESS;
@@ -36,7 +36,7 @@ int botan_pbkdf_timed(const char* pbkdf_algo,
                       size_t ms_to_run,
                       size_t* iterations_used)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
       pbkdf->pbkdf_timed(out, out_len, password, salt, salt_len,
                          std::chrono::milliseconds(ms_to_run),
@@ -51,7 +51,7 @@ int botan_kdf(const char* kdf_algo,
               const uint8_t salt[], size_t salt_len,
               const uint8_t label[], size_t label_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_algo));
       kdf->kdf(out, out_len, secret, secret_len, salt, salt_len, label, label_len);
       return BOTAN_FFI_SUCCESS;
@@ -64,7 +64,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
                           uint32_t flags)
    {
 #if defined(BOTAN_HAS_BCRYPT)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       if(out == nullptr || out_len == nullptr || pass == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -86,7 +86,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
 int botan_bcrypt_is_valid(const char* pass, const char* hash)
    {
 #if defined(BOTAN_HAS_BCRYPT)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       return Botan::check_bcrypt(pass, hash) ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER;
       });
 #else
