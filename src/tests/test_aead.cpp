@@ -340,6 +340,13 @@ class AEAD_Tests final : public Text_Based_Test
          result.test_eq("Encryption algo is an authenticated mode", enc->authenticated(), true);
          result.test_eq("Decryption algo is an authenticated mode", dec->authenticated(), true);
 
+         const std::string enc_provider = enc->provider();
+         result.test_is_nonempty("enc provider", enc_provider);
+         const std::string dec_provider = enc->provider();
+         result.test_is_nonempty("dec provider", dec_provider);
+
+         result.test_eq("same provider", enc_provider, dec_provider);
+
          // test enc
          result.merge(test_enc(key, nonce, input, expected, ad, algo));
 
