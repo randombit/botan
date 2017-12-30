@@ -432,8 +432,7 @@ class Test
 * Register the test with the runner
 */
 #define BOTAN_REGISTER_TEST(type, Test_Class) \
-   namespace { Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class); } \
-   BOTAN_FORCE_SEMICOLON
+   Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class)
 
 /*
 * A test based on reading an input file which contains key/value pairs
