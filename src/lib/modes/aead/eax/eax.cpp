@@ -66,7 +66,11 @@ std::string EAX_Mode::name() const
 
 size_t EAX_Mode::update_granularity() const
    {
-   return 1;
+   /*
+   * For EAX this actually can be as low as 1 but that causes problems
+   * for applications which use update_granularity as the buffer size.
+   */
+   return m_cipher->parallel_bytes();
    }
 
 Key_Length_Specification EAX_Mode::key_spec() const
