@@ -30,7 +30,7 @@
   #include <errno.h>
   #include <fcntl.h>
 
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS) && !defined(BOTAN_TARGET_OS_IS_MINGW)
   #define NOMINMAX 1
   #include <winsock2.h>
   #include <ws2tcpip.h>
@@ -136,7 +136,7 @@ class Asio_Socket final : public OS::Socket
       boost::asio::ip::tcp::socket m_tcp;
    };
 
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX) || defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX) || (defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS) && !defined(BOTAN_TARGET_OS_IS_MINGW))
 
 class BSD_Socket final : public OS::Socket
    {
@@ -356,7 +356,7 @@ OS::open_socket(const std::string& hostname,
 #if defined(BOTAN_HAS_BOOST_ASIO)
    return std::unique_ptr<OS::Socket>(new Asio_Socket(hostname, service, timeout));
 
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX) || defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIX) || (defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS) && !defined(BOTAN_TARGET_OS_IS_MINGW))
    return std::unique_ptr<OS::Socket>(new BSD_Socket(hostname, service, timeout));
 
 #else
