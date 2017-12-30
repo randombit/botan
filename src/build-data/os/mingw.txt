@@ -12,7 +12,7 @@ doc_dir share/doc
 
 <aliases>
 msys
-mingw32
+mingw32.*
 </aliases>
 
 <target_features>

@@ -650,7 +650,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
         return group.replace(':', '_')
 
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
-    lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
+    lexer.wordchars += '|:.<>/,-!+*' # handle various funky chars in info.txt
 
     groups = allowed_groups + allowed_maps
     for group in groups:
@@ -1318,7 +1318,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 self.soname_pattern_abi = None
                 self.soname_pattern_patch = None
 
-        self.aliases = lex.aliases
+        self._aliases = lex.aliases
         self.ar_command = lex.ar_command
         self.ar_options = lex.ar_options
         self.bin_dir = lex.bin_dir
@@ -1337,6 +1337,15 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
         self.use_stack_protector = (lex.use_stack_protector == "true")
+
+    def matches_name(self, nm):
+        if nm in self._aliases:
+            return True
+
+        for alias in self._aliases:
+            if re.match(alias, nm):
+                return True
+        return False
 
     def building_shared_supported(self):
         return self.soname_pattern_base != None
@@ -2673,8 +2682,8 @@ def canonicalize_options(options, info_os, info_arch):
     # pylint: disable=too-many-branches
     if options.os not in info_os:
         def find_canonical_os_name(os_name_variant):
-            for (canonical_os_name, info) in info_os.items():
-                if os_name_variant in info.aliases:
+            for (canonical_os_name, os_info) in info_os.items():
+                if os_info.matches_name(os_name_variant):
                     return canonical_os_name
             return os_name_variant # not found
         options.os = find_canonical_os_name(options.os)
