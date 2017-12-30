@@ -825,7 +825,7 @@ class ModuleInfo(InfoObject):
             if not re.match('^[0-9]{8}$', value):
                 raise InternalError('Module defines value has invalid format: "%s"' % value)
 
-    def cross_check(self, arch_info, os_info, cc_info, all_os_features):
+    def cross_check(self, arch_info, cc_info, all_os_features):
 
         for feat in set(flatten([o.split(',') for o in self.os_features])):
             if feat not in all_os_features:
@@ -2814,7 +2814,8 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
 def prepare_configure_build(info_modules, source_paths, options,
                             cc, cc_min_version, arch, osinfo, module_policy):
-    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options).choose()
+    chooser = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options)
+    loaded_module_names = chooser.choose()
     using_mods = [info_modules[modname] for modname in loaded_module_names]
 
     build_config = BuildPaths(source_paths, options, using_mods)
@@ -2962,6 +2963,8 @@ def main(argv):
     Main driver
     """
 
+    # pylint: disable=too-many-locals
+
     options = process_command_line(argv[1:])
 
     setup_logging(options)
@@ -2987,7 +2990,7 @@ def main(argv):
     all_os_features = set(flatten([o.target_features for o in info_os.values()]))
 
     for mod in info_modules.values():
-        mod.cross_check(info_arch, info_os, info_cc, all_os_features)
+        mod.cross_check(info_arch, info_cc, all_os_features)
 
     for policy in info_module_policies.values():
         policy.cross_check(info_modules)
