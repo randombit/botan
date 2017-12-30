@@ -46,6 +46,7 @@ struct X509_Certificate_Data
    std::vector<OID> m_extended_key_usage;
    std::vector<uint8_t> m_authority_key_id;
    std::vector<uint8_t> m_subject_key_id;
+   std::vector<OID> m_cert_policies;
 
    std::vector<std::string> m_crl_distribution_points;
    std::string m_ocsp_responder;
@@ -56,6 +57,7 @@ struct X509_Certificate_Data
 
    AlternativeName m_subject_alt_name;
    AlternativeName m_issuer_alt_name;
+   NameConstraints m_name_constraints;
 
    Data_Store m_subject_ds;
    Data_Store m_issuer_ds;
@@ -219,6 +221,11 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       data->m_authority_key_id = ext->get_key_id();
       }
 
+   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Name_Constraints>())
+      {
+      data->m_name_constraints = ext->get_name_constraints();
+      }
+
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Basic_Constraints>())
       {
       if(ext->get_is_ca() == true)
@@ -245,6 +252,11 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Extended_Key_Usage>())
       {
       data->m_extended_key_usage = ext->get_oids();
+      }
+
+   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Certificate_Policies>())
+      {
+      data->m_cert_policies = ext->get_policy_oids();
       }
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Authority_Information_Access>())
@@ -433,25 +445,14 @@ const std::vector<OID>& X509_Certificate::extended_key_usage() const
    return data().m_extended_key_usage;
    }
 
-std::vector<OID> X509_Certificate::certificate_policy_oids() const
+const std::vector<OID>& X509_Certificate::certificate_policy_oids() const
    {
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Certificate_Policies>())
-      {
-      return ext->get_policy_oids();
-      }
-   return std::vector<OID>();
+   return data().m_cert_policies;
    }
 
-/*
-* Return the name constraints
-*/
-NameConstraints X509_Certificate::name_constraints() const
+const NameConstraints& X509_Certificate::name_constraints() const
    {
-   if(auto ext = v3_extensions().get_extension_object_as<Cert_Extension::Name_Constraints>())
-      {
-      return ext->get_name_constraints();
-      }
-   return NameConstraints(); // no constraints
+   return data().m_name_constraints;
    }
 
 const Extensions& X509_Certificate::v3_extensions() const
@@ -785,10 +786,9 @@ std::string X509_Certificate::to_string() const
          out << "   " << OIDS::oid2str(ex_constraints[i]) << "\n";
       }
 
-   NameConstraints name_constraints = this->name_constraints();
+   const NameConstraints& name_constraints = this->name_constraints();
 
-   if(!name_constraints.permitted().empty() ||
-         !name_constraints.excluded().empty())
+   if(!name_constraints.permitted().empty() || !name_constraints.excluded().empty())
       {
       out << "Name Constraints:\n";
 

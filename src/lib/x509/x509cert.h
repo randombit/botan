@@ -308,7 +308,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * extension of this certificate.
       * @return name constraints
       */
-      NameConstraints name_constraints() const;
+      const NameConstraints& name_constraints() const;
 
       /**
       * Get the policies as defined in the CertificatePolicies extension
@@ -317,7 +317,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       */
       std::vector<std::string> BOTAN_DEPRECATED("Use certificate_policy_oids") policies() const;
 
-      std::vector<OID> certificate_policy_oids() const;
+      const std::vector<OID>& certificate_policy_oids() const;
 
       /**
       * Get all extensions of this certificate.
