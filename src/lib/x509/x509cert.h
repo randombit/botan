@@ -315,7 +315,7 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * of this certificate.
       * @return certificate policies
       */
-      std::vector<std::string> policies() const;
+      std::vector<std::string> BOTAN_DEPRECATED("Use certificate_policy_oids") policies() const;
 
       std::vector<OID> certificate_policy_oids() const;
 
