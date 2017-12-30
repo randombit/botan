@@ -23,9 +23,7 @@ namespace Botan {
 
 struct X509_Certificate_Data
    {
-   size_t m_version = 0;
    std::vector<uint8_t> m_serial;
-   bool m_serial_negative;
    AlgorithmIdentifier m_sig_algo_inner;
    X509_DN m_issuer_dn;
    X509_DN m_subject_dn;
@@ -34,15 +32,14 @@ struct X509_Certificate_Data
    X509_Time m_not_before;
    X509_Time m_not_after;
    std::vector<uint8_t> m_subject_public_key_bits;
-   AlgorithmIdentifier m_subject_public_key_algid;
    std::vector<uint8_t> m_subject_public_key_bitstring;
    std::vector<uint8_t> m_subject_public_key_bitstring_sha1;
+   AlgorithmIdentifier m_subject_public_key_algid;
 
    std::vector<uint8_t> m_v2_issuer_key_id;
    std::vector<uint8_t> m_v2_subject_key_id;
    Extensions m_v3_extensions;
 
-   Key_Constraints m_key_constraints;
    std::vector<OID> m_extended_key_usage;
    std::vector<uint8_t> m_authority_key_id;
    std::vector<uint8_t> m_subject_key_id;
@@ -51,16 +48,19 @@ struct X509_Certificate_Data
    std::vector<std::string> m_crl_distribution_points;
    std::string m_ocsp_responder;
 
-   size_t m_path_len_constraint = 0;
-   bool m_self_signed = false;
-   bool m_is_ca_certificate = false;
-
    AlternativeName m_subject_alt_name;
    AlternativeName m_issuer_alt_name;
    NameConstraints m_name_constraints;
 
    Data_Store m_subject_ds;
    Data_Store m_issuer_ds;
+
+   size_t m_version = 0;
+   size_t m_path_len_constraint = 0;
+   Key_Constraints m_key_constraints = NO_CONSTRAINTS;
+   bool m_self_signed = false;
+   bool m_is_ca_certificate = false;
+   bool m_serial_negative = false;
    };
 
 std::string X509_Certificate::PEM_label() const
