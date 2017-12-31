@@ -2815,6 +2815,7 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
         'msvc': r'^ *MSVC ([0-9]{2})([0-9]{2})$',
         'gcc': r'^ *GCC ([0-9]+) ([0-9]+)$',
         'clang': r'^ *CLANG ([0-9]+) ([0-9]+)$',
+        'xlc': r'^ *XLC (0x[0-9a-fA-F]{2})([0-9a-fA-F]{2})$'
     }
 
     if ccinfo.basename not in version_patterns:
@@ -2839,13 +2840,16 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
         logging.warning('Could not execute %s for version check: %s' % (cmd, e))
         return "0.0"
 
+    def cleanup_output(output):
+        return ('\n'.join([l for l in output.splitlines() if l.startswith('#') is False])).strip()
+
     match = re.search(version_patterns[ccinfo.basename], cc_output, flags=re.MULTILINE)
     if match is None:
         logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
-            ccinfo.basename, cc_output))
+            ccinfo.basename, cleanup_output(cc_output)))
         return "0.0"
 
-    cc_version = "%d.%d" % (int(match.group(1)), int(match.group(2)))
+    cc_version = "%d.%d" % (int(match.group(1), 0), int(match.group(2), 0))
     logging.info('Auto-detected compiler version %s' % (cc_version))
     return cc_version
 

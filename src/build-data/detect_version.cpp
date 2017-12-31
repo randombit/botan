@@ -16,6 +16,10 @@
    */
    MSVC _MSC_VER
 
+#elif defined(__xlC__)
+
+   XLC __xlC__
+
 #elif defined(__clang__) && defined(__apple_build_version__)
 
    /*
