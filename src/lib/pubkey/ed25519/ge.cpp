@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/ed25519_internal.h>
+#include <assert.h>
 
 namespace Botan {
 
@@ -2028,7 +2029,7 @@ inline void select(ge_precomp* t,
                    int8_t b)
    {
    uint8_t bnegative = negative(b);
-   uint8_t babs = b - (((-bnegative) & b) << 1);
+   uint8_t babs = b - (((-bnegative) & b) * 2);
 
    ge_precomp_0(t);
 
