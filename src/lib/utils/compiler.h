@@ -13,7 +13,7 @@
 #define BOTAN_UTIL_COMPILER_FLAGS_H_
 
 /* Should we use GCC-style inline assembler? */
-#if !defined(BOTAN_USE_GCC_INLINE_ASM) && (defined(__GNUC__) || defined(__xlc__))
+#if !defined(BOTAN_USE_GCC_INLINE_ASM) && (defined(__GNUC__) || defined(__xlc__) || defined(__SUNPRO_CC))
   #define BOTAN_USE_GCC_INLINE_ASM 1
 #endif
 
