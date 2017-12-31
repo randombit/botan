@@ -109,6 +109,7 @@ PKIX
 New Protocols / Formats
 ----------------------------------------
 
+* PKCS7 / Cryptographic Message Syntax
 * NaCl compatible cryptobox functions
 * Off-The-Record v3 https://otr.cypherpunks.ca/
 * Some useful subset of OpenPGP
