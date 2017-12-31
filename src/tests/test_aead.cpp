@@ -347,6 +347,10 @@ class AEAD_Tests final : public Text_Based_Test
 
          result.test_eq("same provider", enc_provider, dec_provider);
 
+         // FFI currently requires this, so assure it is true for all modes
+         result.test_gte("enc buffer sizes ok", enc->update_granularity(), enc->minimum_final_size());
+         result.test_gte("dec buffer sizes ok", dec->update_granularity(), dec->minimum_final_size());
+
          // test enc
          result.merge(test_enc(key, nonce, input, expected, ad, algo));
 
