@@ -277,71 +277,74 @@ FE_25519 FE_25519::mul(const FE_25519& f, const FE_25519& g)
    |h1| <= (1.65*1.65*2^51*(1+1+19+19+19+19+19+19+19+19))
    i.e. |h1| <= 1.7*2^59; narrower ranges for h3, h5, h7, h9
    */
+   const int64_t X24 = (1 << 24);
+   const int64_t X25 = (1 << 25);
+   const int64_t X26 = (1 << 26);
 
-   carry0 = (h0 + (static_cast<int64_t>(1) << 25)) >> 26;
+   carry0 = (h0 + X25) >> 26;
    h1 += carry0;
-   h0 -= carry0 << 26;
-   carry4 = (h4 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h0 -= carry0 * X26;
+   carry4 = (h4 + X25) >> 26;
    h5 += carry4;
-   h4 -= carry4 << 26;
+   h4 -= carry4 * X26;
    /* |h0| <= 2^25 */
    /* |h4| <= 2^25 */
    /* |h1| <= 1.71*2^59 */
    /* |h5| <= 1.71*2^59 */
 
-   carry1 = (h1 + (static_cast<int64_t>(1) << 24)) >> 25;
+   carry1 = (h1 + X24) >> 25;
    h2 += carry1;
-   h1 -= carry1 << 25;
-   carry5 = (h5 + (static_cast<int64_t>(1) << 24)) >> 25;
+   h1 -= carry1 * X25;
+   carry5 = (h5 + X24) >> 25;
    h6 += carry5;
-   h5 -= carry5 << 25;
+   h5 -= carry5 * X25;
    /* |h1| <= 2^24; from now on fits into int32 */
    /* |h5| <= 2^24; from now on fits into int32 */
    /* |h2| <= 1.41*2^60 */
    /* |h6| <= 1.41*2^60 */
 
-   carry2 = (h2 + (static_cast<int64_t>(1) << 25)) >> 26;
+   carry2 = (h2 + X25) >> 26;
    h3 += carry2;
-   h2 -= carry2 << 26;
-   carry6 = (h6 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h2 -= carry2 * X26;
+   carry6 = (h6 + X25) >> 26;
    h7 += carry6;
-   h6 -= carry6 << 26;
+   h6 -= carry6 * X26;
    /* |h2| <= 2^25; from now on fits into int32 unchanged */
    /* |h6| <= 2^25; from now on fits into int32 unchanged */
    /* |h3| <= 1.71*2^59 */
    /* |h7| <= 1.71*2^59 */
 
-   carry3 = (h3 + (static_cast<int64_t>(1) << 24)) >> 25;
+   carry3 = (h3 + X24) >> 25;
    h4 += carry3;
-   h3 -= carry3 << 25;
-   carry7 = (h7 + (static_cast<int64_t>(1) << 24)) >> 25;
+   h3 -= carry3 * X25;
+   carry7 = (h7 + X24) >> 25;
    h8 += carry7;
-   h7 -= carry7 << 25;
+   h7 -= carry7 * X25;
    /* |h3| <= 2^24; from now on fits into int32 unchanged */
    /* |h7| <= 2^24; from now on fits into int32 unchanged */
    /* |h4| <= 1.72*2^34 */
    /* |h8| <= 1.41*2^60 */
 
-   carry4 = (h4 + (static_cast<int64_t>(1) << 25)) >> 26;
+   carry4 = (h4 + X25) >> 26;
    h5 += carry4;
-   h4 -= carry4 << 26;
-   carry8 = (h8 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h4 -= carry4 * X26;
+   carry8 = (h8 + X25) >> 26;
    h9 += carry8;
-   h8 -= carry8 << 26;
+   h8 -= carry8 * X26;
    /* |h4| <= 2^25; from now on fits into int32 unchanged */
    /* |h8| <= 2^25; from now on fits into int32 unchanged */
    /* |h5| <= 1.01*2^24 */
    /* |h9| <= 1.71*2^59 */
 
-   carry9 = (h9 + (static_cast<int64_t>(1) << 24)) >> 25;
+   carry9 = (h9 + X24) >> 25;
    h0 += carry9 * 19;
-   h9 -= carry9 << 25;
+   h9 -= carry9 * X25;
    /* |h9| <= 2^24; from now on fits into int32 unchanged */
    /* |h0| <= 1.1*2^39 */
 
-   carry0 = (h0 + (static_cast<int64_t>(1) << 25)) >> 26;
+   carry0 = (h0 + X25) >> 26;
    h1 += carry0;
-   h0 -= carry0 << 26;
+   h0 -= carry0 * X26;
    /* |h0| <= 2^25; from now on fits into int32 unchanged */
    /* |h1| <= 1.01*2^24 */
 
@@ -366,6 +369,10 @@ See fe_mul.c for discussion of implementation strategy.
 //static
 FE_25519 FE_25519::sqr_iter(const FE_25519& f, size_t iter)
    {
+   const int64_t X24 = (1 << 24);
+   const int64_t X25 = (1 << 25);
+   const int64_t X26 = (1 << 26);
+
    int32_t f0 = f[0];
    int32_t f1 = f[1];
    int32_t f2 = f[2];
@@ -471,47 +478,47 @@ FE_25519 FE_25519::sqr_iter(const FE_25519& f, size_t iter)
       int64_t carry8;
       int64_t carry9;
 
-      carry0 = (h0 + (static_cast<int64_t>(1) << 25)) >> 26;
+      carry0 = (h0 + X25) >> 26;
       h1 += carry0;
-      h0 -= carry0 << 26;
-      carry4 = (h4 + (static_cast<int64_t>(1) << 25)) >> 26;
+      h0 -= carry0 * X26;
+      carry4 = (h4 + X25) >> 26;
       h5 += carry4;
-      h4 -= carry4 << 26;
+      h4 -= carry4 * X26;
 
-      carry1 = (h1 + (static_cast<int64_t>(1) << 24)) >> 25;
+      carry1 = (h1 + X24) >> 25;
       h2 += carry1;
-      h1 -= carry1 << 25;
-      carry5 = (h5 + (static_cast<int64_t>(1) << 24)) >> 25;
+      h1 -= carry1 * X25;
+      carry5 = (h5 + X24) >> 25;
       h6 += carry5;
-      h5 -= carry5 << 25;
+      h5 -= carry5 * X25;
 
-      carry2 = (h2 + (static_cast<int64_t>(1) << 25)) >> 26;
+      carry2 = (h2 + X25) >> 26;
       h3 += carry2;
-      h2 -= carry2 << 26;
-      carry6 = (h6 + (static_cast<int64_t>(1) << 25)) >> 26;
+      h2 -= carry2 * X26;
+      carry6 = (h6 + X25) >> 26;
       h7 += carry6;
-      h6 -= carry6 << 26;
+      h6 -= carry6 * X26;
 
-      carry3 = (h3 + (static_cast<int64_t>(1) << 24)) >> 25;
+      carry3 = (h3 + X24) >> 25;
       h4 += carry3;
-      h3 -= carry3 << 25;
-      carry7 = (h7 + (static_cast<int64_t>(1) << 24)) >> 25;
+      h3 -= carry3 * X25;
+      carry7 = (h7 + X24) >> 25;
       h8 += carry7;
-      h7 -= carry7 << 25;
+      h7 -= carry7 * X25;
 
-      carry4 = (h4 + (static_cast<int64_t>(1) << 25)) >> 26;
+      carry4 = (h4 + X25) >> 26;
       h5 += carry4;
-      h4 -= carry4 << 26;
-      carry8 = (h8 + (static_cast<int64_t>(1) << 25)) >> 26;
+      h4 -= carry4 * X26;
+      carry8 = (h8 + X25) >> 26;
       h9 += carry8;
-      h8 -= carry8 << 26;
+      h8 -= carry8 * X26;
 
-      carry9 = (h9 + (static_cast<int64_t>(1) << 24)) >> 25;
+      carry9 = (h9 + X24) >> 25;
       h0 += carry9 * 19;
-      h9 -= carry9 << 25;
-      carry0 = (h0 + (static_cast<int64_t>(1) << 25)) >> 26;
+      h9 -= carry9 * X25;
+      carry0 = (h0 + X25) >> 26;
       h1 += carry0;
-      h0 -= carry0 << 26;
+      h0 -= carry0 * X26;
 
       f0 = h0;
       f1 = h1;
@@ -546,6 +553,10 @@ See fe_mul.c for discussion of implementation strategy.
 //static
 FE_25519 FE_25519::sqr2(const FE_25519& f)
    {
+   const int64_t X24 = (1 << 24);
+   const int64_t X25 = (1 << 25);
+   const int64_t X26 = (1 << 26);
+
    int32_t f0 = f[0];
    int32_t f1 = f[1];
    int32_t f2 = f[2];
@@ -656,48 +667,48 @@ FE_25519 FE_25519::sqr2(const FE_25519& f)
    h8 += h8;
    h9 += h9;
 
-   carry0 = (h0 + (static_cast<int64_t>(1) << 25)) >> 26;
+   carry0 = (h0 + X25) >> 26;
    h1 += carry0;
-   h0 -= carry0 << 26;
-   carry4 = (h4 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h0 -= carry0 * X26;
+   carry4 = (h4 + X25) >> 26;
    h5 += carry4;
-   h4 -= carry4 << 26;
+   h4 -= carry4 * X26;
 
-   carry1 = (h1 + (static_cast<int64_t>(1) << 24)) >> 25;
+   carry1 = (h1 + X24) >> 25;
    h2 += carry1;
-   h1 -= carry1 << 25;
-   carry5 = (h5 + (static_cast<int64_t>(1) << 24)) >> 25;
+   h1 -= carry1 * X25;
+   carry5 = (h5 + X24) >> 25;
    h6 += carry5;
-   h5 -= carry5 << 25;
+   h5 -= carry5 * X25;
 
-   carry2 = (h2 + (static_cast<int64_t>(1) << 25)) >> 26;
+   carry2 = (h2 + X25) >> 26;
    h3 += carry2;
-   h2 -= carry2 << 26;
-   carry6 = (h6 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h2 -= carry2 * X26;
+   carry6 = (h6 + X25) >> 26;
    h7 += carry6;
-   h6 -= carry6 << 26;
+   h6 -= carry6 * X26;
 
-   carry3 = (h3 + (static_cast<int64_t>(1) << 24)) >> 25;
+   carry3 = (h3 + X24) >> 25;
    h4 += carry3;
-   h3 -= carry3 << 25;
-   carry7 = (h7 + (static_cast<int64_t>(1) << 24)) >> 25;
+   h3 -= carry3 * X25;
+   carry7 = (h7 + X24) >> 25;
    h8 += carry7;
-   h7 -= carry7 << 25;
+   h7 -= carry7 * X25;
 
-   carry4 = (h4 + (static_cast<int64_t>(1) << 25)) >> 26;
+   carry4 = (h4 + X25) >> 26;
    h5 += carry4;
-   h4 -= carry4 << 26;
-   carry8 = (h8 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h4 -= carry4 * X26;
+   carry8 = (h8 + X25) >> 26;
    h9 += carry8;
-   h8 -= carry8 << 26;
+   h8 -= carry8 * X26;
 
-   carry9 = (h9 + (static_cast<int64_t>(1) << 24)) >> 25;
+   carry9 = (h9 + X24) >> 25;
    h0 += carry9 * 19;
-   h9 -= carry9 << 25;
+   h9 -= carry9 * X25;
 
-   carry0 = (h0 + (static_cast<int64_t>(1) << 25)) >> 26;
+   carry0 = (h0 + X25) >> 26;
    h1 += carry0;
-   h0 -= carry0 << 26;
+   h0 -= carry0 * X26;
 
    return FE_25519(h0, h1, h2, h3, h4, h5, h6, h7, h8, h9);
    }
@@ -708,6 +719,10 @@ Ignores top bit of h.
 
 void FE_25519::from_bytes(const uint8_t s[32])
    {
+   const int64_t X24 = (1 << 24);
+   const int64_t X25 = (1 << 25);
+   const int64_t X26 = (1 << 26);
+
    int64_t h0 = load_4(s);
    int64_t h1 = load_3(s + 4) << 6;
    int64_t h2 = load_3(s + 7) << 5;
@@ -719,37 +734,37 @@ void FE_25519::from_bytes(const uint8_t s[32])
    int64_t h8 = load_3(s + 26) << 4;
    int64_t h9 = (load_3(s + 29) & 0x7fffff) << 2;
 
-   const int64_t carry9 = (h9 + (static_cast<int64_t>(1) << 24)) >> 25;
+   const int64_t carry9 = (h9 + X24) >> 25;
    h0 += carry9 * 19;
-   h9 -= carry9 << 25;
-   const int64_t carry1 = (h1 + (static_cast<int64_t>(1) << 24)) >> 25;
+   h9 -= carry9 * X25;
+   const int64_t carry1 = (h1 + X24) >> 25;
    h2 += carry1;
-   h1 -= carry1 << 25;
-   const int64_t carry3 = (h3 + (static_cast<int64_t>(1) << 24)) >> 25;
+   h1 -= carry1 * X25;
+   const int64_t carry3 = (h3 + X24) >> 25;
    h4 += carry3;
-   h3 -= carry3 << 25;
-   const int64_t carry5 = (h5 + (static_cast<int64_t>(1) << 24)) >> 25;
+   h3 -= carry3 * X25;
+   const int64_t carry5 = (h5 + X24) >> 25;
    h6 += carry5;
-   h5 -= carry5 << 25;
-   const int64_t carry7 = (h7 + (static_cast<int64_t>(1) << 24)) >> 25;
+   h5 -= carry5 * X25;
+   const int64_t carry7 = (h7 + X24) >> 25;
    h8 += carry7;
-   h7 -= carry7 << 25;
+   h7 -= carry7 * X25;
 
-   const int64_t carry0 = (h0 + (static_cast<int64_t>(1) << 25)) >> 26;
+   const int64_t carry0 = (h0 + X25) >> 26;
    h1 += carry0;
-   h0 -= carry0 << 26;
-   const int64_t carry2 = (h2 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h0 -= carry0 * X26;
+   const int64_t carry2 = (h2 + X25) >> 26;
    h3 += carry2;
-   h2 -= carry2 << 26;
-   const int64_t carry4 = (h4 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h2 -= carry2 * X26;
+   const int64_t carry4 = (h4 + X25) >> 26;
    h5 += carry4;
-   h4 -= carry4 << 26;
-   const int64_t carry6 = (h6 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h4 -= carry4 * X26;
+   const int64_t carry6 = (h6 + X25) >> 26;
    h7 += carry6;
-   h6 -= carry6 << 26;
-   const int64_t carry8 = (h8 + (static_cast<int64_t>(1) << 25)) >> 26;
+   h6 -= carry6 * X26;
+   const int64_t carry8 = (h8 + X25) >> 26;
    h9 += carry8;
-   h8 -= carry8 << 26;
+   h8 -= carry8 * X26;
 
    m_fe[0] = h0;
    m_fe[1] = h1;
@@ -790,6 +805,9 @@ so floor(2^(-255)(h + 19 2^(-25) h9 + 2^(-1))) = q.
 
 void FE_25519::to_bytes(uint8_t s[32]) const
    {
+   const int64_t X25 = (1 << 25);
+   const int64_t X26 = (1 << 26);
+
    int32_t h0 = m_fe[0];
    int32_t h1 = m_fe[1];
    int32_t h2 = m_fe[2];
@@ -830,33 +848,33 @@ void FE_25519::to_bytes(uint8_t s[32]) const
 
    carry0 = h0 >> 26;
    h1 += carry0;
-   h0 -= carry0 << 26;
+   h0 -= carry0 * X26;
    carry1 = h1 >> 25;
    h2 += carry1;
-   h1 -= carry1 << 25;
+   h1 -= carry1 * X25;
    carry2 = h2 >> 26;
    h3 += carry2;
-   h2 -= carry2 << 26;
+   h2 -= carry2 * X26;
    carry3 = h3 >> 25;
    h4 += carry3;
-   h3 -= carry3 << 25;
+   h3 -= carry3 * X25;
    carry4 = h4 >> 26;
    h5 += carry4;
-   h4 -= carry4 << 26;
+   h4 -= carry4 * X26;
    carry5 = h5 >> 25;
    h6 += carry5;
-   h5 -= carry5 << 25;
+   h5 -= carry5 * X25;
    carry6 = h6 >> 26;
    h7 += carry6;
-   h6 -= carry6 << 26;
+   h6 -= carry6 * X26;
    carry7 = h7 >> 25;
    h8 += carry7;
-   h7 -= carry7 << 25;
+   h7 -= carry7 * X25;
    carry8 = h8 >> 26;
    h9 += carry8;
-   h8 -= carry8 << 26;
+   h8 -= carry8 * X26;
    carry9 = h9 >> 25;
-   h9 -= carry9 << 25;
+   h9 -= carry9 * X25;
    /* h10 = carry9 */
 
    /*
