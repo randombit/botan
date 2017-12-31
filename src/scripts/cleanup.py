@@ -16,6 +16,7 @@ import optparse  # pylint: disable=deprecated-module
 import logging
 import json
 import shutil
+import errno
 
 def remove_dir(d):
     try:
@@ -29,13 +30,11 @@ def remove_dir(d):
 
 def remove_file(f):
     try:
-        if os.access(f, os.R_OK):
-            logging.debug('Removing file "%s"', f)
-            os.unlink(f)
-        else:
-            logging.debug('File %s was missing', f)
-    except Exception as e: # pylint: disable=broad-except
-        logging.error('Failed removing file "%s": %s', f, e)
+        logging.debug('Removing file "%s"', f)
+        os.unlink(f)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            logging.error('Failed removing file "%s": %s', f, e)
 
 def remove_all_in_dir(d):
     if os.access(d, os.X_OK):
