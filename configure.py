@@ -1752,6 +1752,18 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     def cmake_escape(s):
         return s.replace('(', '\\(').replace(')', '\\)')
 
+    def ar_command():
+        if options.ar_command:
+            return options.ar_command
+
+        if cc.ar_command:
+            if cc.ar_command == cc.binary_name:
+                return options.compiler_binary or cc.binary_name
+            else:
+                return cc.ar_command
+
+        return osinfo.ar_command
+
     build_dir = options.with_build_dir or os.path.curdir
     program_suffix = options.program_suffix or osinfo.program_suffix
 
@@ -1871,7 +1883,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'exe_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
         'post_link_cmd': '',
 
-        'ar_command': options.ar_command or cc.ar_command or osinfo.ar_command,
+        'ar_command': ar_command(),
         'ar_options': cc.ar_options or osinfo.ar_options,
         'ar_output_to': cc.ar_output_to,
 
