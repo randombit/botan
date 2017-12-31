@@ -26,7 +26,7 @@ class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test
       Ed25519_Signature_Tests() : PK_Signature_Generation_Test(
             "Ed25519",
             "pubkey/ed25519.vec",
-            "Privkey,Pubkey,Hash,Msg,Signature") {}
+            "Privkey,Pubkey,Msg,Signature") {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
@@ -41,11 +41,6 @@ class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test
             throw Test_Error("Invalid Ed25519 key in test data");
 
          return std::unique_ptr<Botan::Private_Key>(key.release());
-         }
-
-      std::string default_padding(const VarMap& vars) const override
-         {
-         return get_opt_str(vars, "Hash", "Pure");
          }
    };
 
