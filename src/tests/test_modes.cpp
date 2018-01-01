@@ -61,7 +61,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
 
             result.test_eq("mode not authenticated", enc->authenticated(), false);
 
-            if(algo.find("/CBC"))
+            if(algo.find("/CBC") != std::string::npos)
                {
                // can't test equal due to CBC padding
                result.test_lte("output_length", enc->output_length(input.size()), expected.size());
