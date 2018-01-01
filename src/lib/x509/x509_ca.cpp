@@ -277,7 +277,8 @@ PK_Signer* choose_sig_format(const Private_Key& key,
                              const std::string& hash_fn,
                              AlgorithmIdentifier& sig_algo)
    {
-   return choose_sig_format(key, {}, rng, hash_fn, sig_algo);
+   return choose_sig_format(key, std::map<std::string,std::string>(),
+                            rng, hash_fn, sig_algo);
    }
 
 /*
