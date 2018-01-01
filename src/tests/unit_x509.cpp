@@ -1269,13 +1269,12 @@ Test::Result test_padding_config() {
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::lookup(ca_cert_exp.signature_algorithm().oid),"RSA/EMSA4");
 
+   const auto not_before = Botan::calendar_point(2017, 1, 1, 1, 1, 1).to_std_timepoint();
+   const auto not_after  = Botan::calendar_point(2037, 12, 25, 1, 1, 1).to_std_timepoint();
+
    // Prepare a signing request for the end certificate
    Botan::X509_Cert_Options req_opt("endpoint");
    req_opt.set_padding_scheme("EMSA4(SHA-512,MGF1,64)");
-   auto not_before = Botan::calendar_point(2017, 1, 1, 1, 1,
-                                1).to_std_timepoint();
-   auto not_after = Botan::calendar_point(2018, 1, 1, 1, 1,
-                                1).to_std_timepoint();
    Botan::PKCS10_Request end_req = Botan::X509::create_cert_req(req_opt, (*sk), "SHA-512", Test::rng());
    test_result.test_eq("Certificate request signature algorithm", Botan::OIDS::lookup(end_req.signature_algorithm().oid),"RSA/EMSA4");
 
