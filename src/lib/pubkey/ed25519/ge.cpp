@@ -2029,7 +2029,7 @@ inline void select(ge_precomp* t,
                    int8_t b)
    {
    const uint8_t bnegative = negative(b);
-   const uint8_t babs = b - (((-static_cast<int>(bnegative)) & b) * 2);
+   const uint8_t babs = b - ((-static_cast<int>(bnegative) & b) * 2);
    const int32_t neg_mask = equal32(bnegative, 1);
 
    const int32_t mask1 = equal32(babs, 1);
@@ -2040,6 +2040,8 @@ inline void select(ge_precomp* t,
    const int32_t mask6 = equal32(babs, 6);
    const int32_t mask7 = equal32(babs, 7);
    const int32_t mask8 = equal32(babs, 8);
+
+   ge_precomp_0(t);
 
    for(size_t i = 0; i != 10; ++i)
       {
