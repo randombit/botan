@@ -2351,7 +2351,7 @@ class AmalgamationHeader(object):
     def write_banner(fd):
         fd.write("""/*
 * Botan %s Amalgamation
-* (C) 1999-2017 The Botan Authors
+* (C) 1999-2018 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -2486,7 +2486,7 @@ class AmalgamationGenerator(object):
             f.write('\n')
 
             for isa in self._isas_for_target(target):
-                f.write('#if defined(__GNUG__)\n')
+                f.write('#if defined(__GNUG__) && !defined(__clang__)\n')
                 f.write('#pragma GCC target ("%s")\n' % (isa))
                 f.write('#endif\n')
 
