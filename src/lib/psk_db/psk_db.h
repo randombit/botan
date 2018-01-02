@@ -59,12 +59,12 @@ class BOTAN_PUBLIC_API(2,4) PSK_Database
       std::string get_str(const std::string& name) const
          {
          secure_vector<uint8_t> psk = get(name);
-         return std::string(reinterpret_cast<const char*>(psk.data()), psk.size());
+         return std::string(cast_uint8_ptr_to_char(psk.data()), psk.size());
          }
 
       void set_str(const std::string& name, const std::string& psk)
          {
-         set(name, reinterpret_cast<const uint8_t*>(psk.data()), psk.size());
+         set(name, cast_char_ptr_to_uint8(psk.data()), psk.size());
          }
 
       template<typename Alloc>
