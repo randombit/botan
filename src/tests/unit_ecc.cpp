@@ -379,7 +379,9 @@ Test::Result test_zeropoint()
                       Botan::BigInt("1373093393927139016463695321221277758035357890939"));
 
    result.confirm("point is on the curve", p1.on_the_curve());
-   p1 -= p1;
+
+   Botan::PointGFp p2 = p1;
+   p1 -= p2;
 
    result.confirm("p - q with q = p results in zero", p1.is_zero());
    return result;
