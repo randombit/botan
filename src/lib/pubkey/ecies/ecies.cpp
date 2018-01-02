@@ -194,7 +194,7 @@ ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::stri
    m_mac_keylen(mac_key_len)
    {
    // ISO 18033: "At most one of CofactorMode, OldCofactorMode, and CheckMode may be 1."
-   if(cofactor_mode() + old_cofactor_mode() + check_mode() > 1)
+   if(size_t(cofactor_mode()) + size_t(old_cofactor_mode()) + size_t(check_mode()) > 1)
       {
       throw Invalid_Argument("ECIES: only one of cofactor_mode, old_cofactor_mode and check_mode can be set");
       }
