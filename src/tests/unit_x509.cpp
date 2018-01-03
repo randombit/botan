@@ -465,6 +465,44 @@ Test::Result test_x509_bmpstring()
    return result;
    }
 
+Test::Result test_x509_authority_info_access_extension()
+   {
+   Test::Result result("X509 with PKIX.AuthorityInformationAccess extension");
+
+   // contains no AIA extension
+   Botan::X509_Certificate no_aia_cert(Test::data_file("x509/misc/contains_utf8string.pem"));
+
+   result.test_eq("number of ca_issuers URLs", no_aia_cert.ca_issuers().size(), 0);
+   result.test_eq("CA issuer URL matches", no_aia_cert.ocsp_responder(), "");
+
+   // contains AIA extension with 1 CA issuer URL and 1 OCSP responder
+   Botan::X509_Certificate aia_cert(Test::data_file("x509/misc/contains_authority_info_access.pem"));
+
+   const auto ca_issuers = aia_cert.ca_issuers();
+
+   result.test_eq("number of ca_issuers URLs", ca_issuers.size(), 1);
+   if (result.tests_failed())
+      return result;
+
+   result.test_eq("CA issuer URL matches", ca_issuers[0], "http://gp.symcb.com/gp.crt");
+   result.test_eq("OCSP responder URL matches", aia_cert.ocsp_responder(), "http://gp.symcd.com");
+
+   // contains AIA extension with 2 CA issuer URL and 1 OCSP responder
+   Botan::X509_Certificate aia_cert_2ca(Test::data_file("x509/misc/contains_authority_info_access_with_two_ca_issuers.pem"));
+
+   const auto ca_issuers2 = aia_cert_2ca.ca_issuers();
+
+   result.test_eq("number of ca_issuers URLs", ca_issuers2.size(), 2);
+   if (result.tests_failed())
+      return result;
+
+   result.test_eq("CA issuer URL matches", ca_issuers2[0], "http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt");
+   result.test_eq("CA issuer URL matches", ca_issuers2[1], "ldap://directory.d-trust.net/CN=Bdrive%20Test%20CA%201-2%202017,O=Bundesdruckerei%20GmbH,C=DE?cACertificate?base?");
+   result.test_eq("OCSP responder URL matches", aia_cert_2ca.ocsp_responder(), "http://staging.ocsp.d-trust.net");
+
+   return result;
+   }
+
 Test::Result test_x509_cert(const std::string& sig_algo, const std::string& sig_padding = "", const std::string& hash_fn = "SHA-256")
    {
    Test::Result result("X509 Unit");
@@ -1424,6 +1462,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_crl_dn_name());
          results.push_back(test_x509_uninit());
          results.push_back(test_x509_decode_list());
+         results.push_back(test_x509_authority_info_access_extension());
 
          return results;
          }
