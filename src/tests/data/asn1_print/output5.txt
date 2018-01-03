@@ -1,0 +1,134 @@
+  d= 0, l=1779: SEQUENCE
+  d= 1, l=1499:  SEQUENCE
+  d= 2, l=   3:   cons [0] context
+  d= 3, l=   1:    INTEGER                                  02
+  d= 2, l=  16:   INTEGER                                   03EB7E1D9B4C4C7B145FF6A902CE81F9
+  d= 2, l=  13:   SEQUENCE
+  d= 3, l=   9:    OBJECT                                   RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 3, l=   0:    NULL
+  d= 2, l= 126:   SEQUENCE
+  d= 3, l=  11:    SET
+  d= 4, l=   9:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.Country [2.5.4.6]
+  d= 5, l=   2:      PRINTABLE STRING                       US
+  d= 3, l=  29:    SET
+  d= 4, l=  27:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.Organization [2.5.4.10]
+  d= 5, l=  20:      PRINTABLE STRING                       Symantec Corporation
+  d= 3, l=  31:    SET
+  d= 4, l=  29:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.OrganizationalUnit [2.5.4.11]
+  d= 5, l=  22:      PRINTABLE STRING                       Symantec Trust Network
+  d= 3, l=  47:    SET
+  d= 4, l=  45:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.CommonName [2.5.4.3]
+  d= 5, l=  38:      PRINTABLE STRING                       Symantec Class 3 Secure Server CA - G4
+  d= 2, l=  30:   SEQUENCE
+  d= 3, l=  13:    UTC TIME                                 2017/04/07 00:00:00 UTC
+  d= 3, l=  13:    UTC TIME                                 2019/04/08 23:59:59 UTC
+  d= 2, l= 128:   SEQUENCE
+  d= 3, l=  11:    SET
+  d= 4, l=   9:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.Country [2.5.4.6]
+  d= 5, l=   2:      PRINTABLE STRING                       US
+  d= 3, l=  19:    SET
+  d= 4, l=  17:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.State [2.5.4.8]
+  d= 5, l=  10:      UTF8 STRING                            Washington
+  d= 3, l=  16:    SET
+  d= 4, l=  14:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.Locality [2.5.4.7]
+  d= 5, l=   7:      UTF8 STRING                            Redmond
+  d= 3, l=  30:    SET
+  d= 4, l=  28:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.Organization [2.5.4.10]
+  d= 5, l=  21:      UTF8 STRING                            Microsoft Corporation
+  d= 3, l=  14:    SET
+  d= 4, l=  12:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.OrganizationalUnit [2.5.4.11]
+  d= 5, l=   5:      UTF8 STRING                            MSCOM
+  d= 3, l=  26:    SET
+  d= 4, l=  24:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X520.CommonName [2.5.4.3]
+  d= 5, l=  17:      UTF8 STRING                            www.microsoft.com
+  d= 2, l= 290:   SEQUENCE
+  d= 3, l=  13:    SEQUENCE
+  d= 4, l=   9:     OBJECT                                  RSA [1.2.840.113549.1.1.1]
+  d= 4, l=   0:     NULL
+  d= 3, l= 271:    BIT STRING
+  d= 4, l= 266:     SEQUENCE
+  d= 5, l= 257:      INTEGER                                B5AA73E7BDFFA06C6A1D0F0E116386ACB98C55C27EEC1FDF0164539D337F4D66EE0824CE6355927411770262AC284619AE06F2BAADF3D9E03E40850F42846F821AF49219E7EF8434AEF76DB5E3E9F17AFB5CE04E45959B77CC9B55819EC501B5979F345DF10051AC456926A48CD44F0EC8FBD3E8E91D5A76C35C882DC8FA95275AC2150ACF990D4019B96E55497CB1F46A842643C64168DFD8A31AC4A1E808DF710C53363ADAF82B5F62C9A2AAEE1FEC64880D951E7D48BDB3FDF724E25F67F373D2EC1426B7E4BA2B60442A42320D3FEF96640B6E795CF8C4FEB28E1608CB968BBB83B65F96BB5175682095310CE5FD02805AA9273326F7A9E8B33730EB8EDD
+  d= 5, l=   3:      INTEGER                                010001
+  d= 2, l= 872:   cons [3] context
+  d= 3, l= 868:    SEQUENCE
+  d= 4, l= 153:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X509v3.SubjectAlternativeName [2.5.29.17]
+  d= 5, l= 145:      OCTET STRING
+  d= 6, l= 142:       SEQUENCE
+  d= 7, l=   7:        [2] context                          privacy.microsoft.com
+  d= 7, l=   7:        [2] context                          c.s-microsoft.com
+  d= 7, l=   7:        [2] context                          microsoft.com
+  d= 7, l=   7:        [2] context                          i.s-microsoft.com
+  d= 7, l=   7:        [2] context                          staticview.microsoft.com
+  d= 7, l=   7:        [2] context                          www.microsoft.com
+  d= 7, l=   7:        [2] context                          wwwqa.microsoft.com
+  d= 4, l=   9:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X509v3.BasicConstraints [2.5.29.19]
+  d= 5, l=   2:      OCTET STRING
+  d= 6, l=   0:       SEQUENCE
+  d= 4, l=  14:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X509v3.KeyUsage [2.5.29.15]
+  d= 5, l=   1:      BOOLEAN                                true
+  d= 5, l=   4:      OCTET STRING
+  d= 6, l=   2:       BIT STRING                            A0
+  d= 4, l=  29:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X509v3.ExtendedKeyUsage [2.5.29.37]
+  d= 5, l=  22:      OCTET STRING
+  d= 6, l=  20:       SEQUENCE
+  d= 7, l=   8:        OBJECT                               PKIX.ServerAuth [1.3.6.1.5.5.7.3.1]
+  d= 7, l=   8:        OBJECT                               PKIX.ClientAuth [1.3.6.1.5.5.7.3.2]
+  d= 4, l=  97:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X509v3.CertificatePolicies [2.5.29.32]
+  d= 5, l=  90:      OCTET STRING
+  d= 6, l=  88:       SEQUENCE
+  d= 7, l=  86:        SEQUENCE
+  d= 8, l=   6:         OBJECT                              2.23.140.1.2.2
+  d= 8, l=  76:         SEQUENCE
+  d= 9, l=  35:          SEQUENCE
+  d=10, l=   8:           OBJECT                            1.3.6.1.5.5.7.2.1
+  d=10, l=  23:           IA5 STRING                        https://d.symcb.com/cps
+  d= 9, l=  37:          SEQUENCE
+  d=10, l=   8:           OBJECT                            1.3.6.1.5.5.7.2.2
+  d=10, l=  25:           SEQUENCE
+  d=11, l=  23:            UTF8 STRING                      https://d.symcb.com/rpa
+  d= 4, l=  31:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X509v3.AuthorityKeyIdentifier [2.5.29.35]
+  d= 5, l=  24:      OCTET STRING
+  d= 6, l=  22:       SEQUENCE
+  d= 7, l=  20:        [0] context                          80145F60CF619055DF8443148A602AB2F57AF44318EF
+  d= 4, l=  43:     SEQUENCE
+  d= 5, l=   3:      OBJECT                                 X509v3.CRLDistributionPoints [2.5.29.31]
+  d= 5, l=  36:      OCTET STRING
+  d= 6, l=  34:       SEQUENCE
+  d= 7, l=  32:        SEQUENCE
+  d= 8, l=  30:         cons [0] context
+  d= 9, l=  28:          cons [0] context
+  d=10, l=  10:           [6] context                       http://ss.symcb.com/ss.crl
+  d= 4, l=  87:     SEQUENCE
+  d= 5, l=   8:      OBJECT                                 PKIX.AuthorityInformationAccess [1.3.6.1.5.5.7.1.1]
+  d= 5, l=  75:      OCTET STRING
+  d= 6, l=  73:       SEQUENCE
+  d= 7, l=  31:        SEQUENCE
+  d= 8, l=   8:         OBJECT                              PKIX.OCSP [1.3.6.1.5.5.7.48.1]
+  d= 8, l=   8:         [6] context                         http://ss.symcd.com
+  d= 7, l=  38:        SEQUENCE
+  d= 8, l=   8:         OBJECT                              PKIX.CertificateAuthorityIssuers [1.3.6.1.5.5.7.48.2]
+  d= 8, l=   8:         [6] context                         http://ss.symcb.com/ss.crt
+  d= 4, l= 384:     SEQUENCE
+  d= 5, l=  10:      OBJECT                                 1.3.6.1.4.1.11129.2.4.2
+  d= 5, l= 368:      OCTET STRING
+  d= 6, l= 364:       OCTET STRING                          016A007600DDEB1D2B7A0D4FA6208B81AD8168707E2E8E9D01D55C888D3D11C4CDB6ECBECC0000015B49E33F30000004030047304502202C120993A99E062A5225B952D481EF4E5EB16E03621BF872A7AAD42A3F16EC23022100C985D52BE92DB9B762A275F2A7E0F49771EA0ACE86743858AA4CF80290DA8145007700A4B90990B418581487BB13A2CC67700A3C359804F91BDFB8E377CD0EC80DDC100000015B49E33F7000000403004830460221008B6517805EB1D97BEC542B71A306D951919A939F2636F2FB040E0DB6028B4C64022100E93EC6DBE9CB33EC35E648B57B8E9C9FC689B41E7F16BEA3DF2E925D8689CA57007700EE4BBDB775CE60BAE142691FABE19E66A30F7E5FB072D88300C47B897AA8FDCB0000015B49E3412F0000040300483046022100DC119C89231AE57213DA754DF08E0E8EE64B3761515E473E2FB8364757C56ED6022100C824C1810D0338256ABE99EC7A862AB73EDEA1EF796EA10F79C1E755F1FCC59F
+  d= 1, l=  13:  SEQUENCE
+  d= 2, l=   9:   OBJECT                                    RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 2, l=   0:   NULL
+  d= 1, l= 257:  BIT STRING                                 462713C195078A607A226FB4279E2CBA8C363DA6F4696B88677E83E1E8BA5773681BA2EABA141A425CB2E9E065EF2D1037353C7BD31F39C63CB2B0449F0AF1BFBC7E90C175C335437AAED10AA0A15BB67B357E8E9F7DFF2C3D25A467D12878809E114717EEA877175DF255954728BABC5E616B55262EDC494019B6E8301D8D8D676D86731FCECAAF040C6D8D93BA608AD7F76D4065A83BB6E9AEDE3208BE4574213D478764AF0634773B4FA5543AA3523ED795DC1AFC76D8A8AAEA09E0B259ABC6924A82C2F1D5E6F7F18B131EEC9B163CE11A8339FAA52426105F053136B245E51B8BE836EFE6A75671F1FC02CC6F5BF6BE19AE00171E27FE157FD1DC323784

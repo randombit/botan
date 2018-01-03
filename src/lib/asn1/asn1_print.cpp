@@ -18,6 +18,44 @@
 
 namespace Botan {
 
+namespace {
+
+bool all_printable_chars(const uint8_t bits[], size_t bits_len)
+   {
+   for(size_t i = 0; i != bits_len; ++i)
+      {
+      int c = bits[i];
+      if(c > 127)
+         return false;
+
+      if((std::isalnum(c) || c == '.' || c == ':' || c == '/' || c == '-') == false)
+         return false;
+      }
+   return true;
+   }
+
+/*
+* Special hack to handle GeneralName [2] and [6] (DNS name and URI)
+*/
+bool possibly_a_general_name(const uint8_t bits[], size_t bits_len)
+   {
+   if(bits_len <= 2)
+      return false;
+
+   if(bits[0] != 0x82 && bits[0] != 0x86)
+      return false;
+
+   if(bits[1] != bits_len - 2)
+      return false;
+
+   if(all_printable_chars(bits + 2, bits_len - 2) == false)
+      return false;
+
+   return true;
+   }
+
+}
+
 std::string ASN1_Formatter::print(const uint8_t in[], size_t len) const
    {
    std::ostringstream output;
@@ -61,25 +99,36 @@ void ASN1_Formatter::decode(std::ostream& output,
          }
       else if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
          {
+         bool success_parsing_cs = false;
+
          if(m_print_context_specific)
             {
             try
                {
-               std::vector<uint8_t> inner_bits;
-               data.decode(inner_bits, type_tag);
-               BER_Decoder inner(inner_bits);
+               if(possibly_a_general_name(bits.data(), bits.size()))
+                  {
+                  output << format(type_tag, class_tag, level, level,
+                                   std::string(cast_uint8_ptr_to_char(&bits[2]), bits.size() - 2));
+                  success_parsing_cs = true;
+                  }
+               else
+                  {
+                  std::vector<uint8_t> inner_bits;
+                  data.decode(inner_bits, type_tag);
 
-               std::ostringstream inner_data;
-               decode(inner_data, inner, level + 1); // recurse
-               output << inner_data.str();
+                  BER_Decoder inner(inner_bits);
+                  std::ostringstream inner_data;
+                  decode(inner_data, inner, level + 1); // recurse
+                  output << inner_data.str();
+                  success_parsing_cs = true;
+                  }
                }
             catch(...)
                {
-               output << format(type_tag, class_tag, level, length,
-                                format_bin(type_tag, class_tag, bits));
                }
             }
-         else
+
+         if(success_parsing_cs == false)
             {
             output << format(type_tag, class_tag, level, length,
                              format_bin(type_tag, class_tag, bits));
@@ -182,25 +231,29 @@ namespace {
 
 std::string format_type(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
-   if((class_tag & CONSTRUCTED) && ((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC)))
-      {
-      std::string name = "cons [" + std::to_string(type_tag) + "]";
-
-      if(class_tag & APPLICATION)
-         {
-         name += " appl";
-         }
-      if(class_tag & CONTEXT_SPECIFIC)
-         {
-         name += " context";
-         }
-
-      return name;
-      }
-   else
-      {
+   if(class_tag == UNIVERSAL)
       return asn1_tag_to_string(type_tag);
+
+   if(class_tag == CONSTRUCTED && (type_tag == SEQUENCE || type_tag == SET))
+      return asn1_tag_to_string(type_tag);
+
+   std::string name;
+
+   if(class_tag & CONSTRUCTED)
+      name += "cons ";
+
+   name += "[" + std::to_string(type_tag) + "]";
+
+   if(class_tag & APPLICATION)
+      {
+      name += " appl";
       }
+   if(class_tag & CONTEXT_SPECIFIC)
+      {
+      name += " context";
+      }
+
+   return name;
    }
 
 }
@@ -250,30 +303,12 @@ std::string ASN1_Pretty_Printer::format_bin(ASN1_Tag /*type_tag*/,
                                             ASN1_Tag /*class_tag*/,
                                             const std::vector<uint8_t>& vec) const
    {
-   const size_t unprintable_bound = vec.size() / 4;
-   size_t unprintable = 0;
-
-   std::ostringstream out;
-
-   for(size_t i = 0; i != vec.size(); ++i)
+   if(all_printable_chars(vec.data(), vec.size()))
       {
-      const int c = vec[i];
-      if(std::isalnum(c))
-         {
-         out << static_cast<char>(c);
-         }
-      else
-         {
-         out << "x" << std::hex << static_cast<int>(c) << std::dec;
-         ++unprintable;
-         if(unprintable >= unprintable_bound)
-            {
-            return hex_encode(vec);
-            }
-         }
+      return std::string(cast_uint8_ptr_to_char(vec.data()), vec.size());
       }
-
-   return out.str();
+   else
+      return hex_encode(vec);
    }
 
 }
