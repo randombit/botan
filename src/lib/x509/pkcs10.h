@@ -11,7 +11,6 @@
 
 #include <botan/x509_obj.h>
 #include <botan/x509_dn.h>
-#include <botan/x509_ext.h>
 #include <botan/key_constraint.h>
 #include <botan/asn1_attribute.h>
 #include <botan/asn1_alt_name.h>
@@ -19,6 +18,7 @@
 
 namespace Botan {
 
+class Extensions;
 struct PKCS10_Data;
 
 /**
