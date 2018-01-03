@@ -84,8 +84,8 @@ class BOTAN_DLL ASN1_Pretty_Printer final : public ASN1_Formatter
       * @param initial_level the initial depth (0 or 1 are the only reasonable values)
       * @param value_column ASN.1 values are lined up at this column in output
       */
-      ASN1_Pretty_Printer(size_t print_limit = 256,
-                          size_t print_binary_limit = 256,
+      ASN1_Pretty_Printer(size_t print_limit = 4096,
+                          size_t print_binary_limit = 2048,
                           bool print_context_specific = true,
                           size_t initial_level = 0,
                           size_t value_column = 60) :
