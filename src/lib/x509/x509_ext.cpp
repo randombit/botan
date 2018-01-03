@@ -793,10 +793,8 @@ void Authority_Information_Access::contents_to(Data_Store& subject, Data_Store&)
    {
    if(!m_ocsp_responder.empty())
       subject.add("OCSP.responder", m_ocsp_responder);
-   std::for_each(m_ca_issuers.begin(), m_ca_issuers.end(), [&subject] (const std::string& ca_issuer)
-   {
-       subject.add("PKIX.CertificateAuthorityIssuers", ca_issuer);
-   });
+   for(const std::string& ca_issuer : m_ca_issuers)
+      subject.add("PKIX.CertificateAuthorityIssuers", ca_issuer);
    }
 
 /*
