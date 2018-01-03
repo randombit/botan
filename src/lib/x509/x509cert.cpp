@@ -47,6 +47,7 @@ struct X509_Certificate_Data
 
    std::vector<std::string> m_crl_distribution_points;
    std::string m_ocsp_responder;
+   std::vector<std::string> m_ca_issuers;
 
    AlternativeName m_subject_alt_name;
    AlternativeName m_issuer_alt_name;
@@ -262,6 +263,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Authority_Information_Access>())
       {
       data->m_ocsp_responder = ext->ocsp_responder();
+      data->m_ca_issuers = ext->ca_issuers();
       }
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::CRL_Distribution_Points>())
@@ -543,6 +545,11 @@ std::string X509_Certificate::ocsp_responder() const
    return data().m_ocsp_responder;
    }
 
+std::vector<std::string> X509_Certificate::ca_issuers() const
+   {
+   return data().m_ca_issuers;
+   }
+
 std::string X509_Certificate::crl_distribution_point() const
    {
    // just returns the first (arbitrarily)
@@ -815,6 +822,15 @@ std::string X509_Certificate::to_string() const
 
    if(!ocsp_responder().empty())
       out << "OCSP responder " << ocsp_responder() << "\n";
+
+   std::vector<std::string> ca_issuers = this->ca_issuers();
+   if(!ca_issuers.empty())
+      {
+      out << "CA Issuers:\n";
+      for(size_t i = 0; i != ca_issuers.size(); i++)
+         out << "   URI: " << ca_issuers[i] << "\n";
+      }
+
    if(!crl_distribution_point().empty())
       out << "CRL " << crl_distribution_point() << "\n";
 

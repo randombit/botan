@@ -544,21 +544,25 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Policies final : public Certificate_Exte
       std::vector<OID> m_oids;
    };
 
+/**
+* Authority Information Access Extension
+*/
 class BOTAN_PUBLIC_API(2,0) Authority_Information_Access final : public Certificate_Extension
    {
    public:
       Authority_Information_Access* copy() const override
-         { return new Authority_Information_Access(m_ocsp_responder); }
+         { return new Authority_Information_Access(m_ocsp_responder, m_ca_issuers); }
 
       Authority_Information_Access() = default;
 
-      explicit Authority_Information_Access(const std::string& ocsp) :
-         m_ocsp_responder(ocsp) {}
+      explicit Authority_Information_Access(const std::string& ocsp, const std::vector<std::string>& ca_issuers = std::vector<std::string>()) :
+         m_ocsp_responder(ocsp), m_ca_issuers(ca_issuers) {}
 
       std::string ocsp_responder() const { return m_ocsp_responder; }
 
       static OID static_oid() { return OID("1.3.6.1.5.5.7.1.1"); }
       OID oid_of() const override { return static_oid(); }
+      const std::vector<std::string> ca_issuers() const { return m_ca_issuers; }
 
    private:
       std::string oid_name() const override
@@ -572,6 +576,7 @@ class BOTAN_PUBLIC_API(2,0) Authority_Information_Access final : public Certific
       void contents_to(Data_Store&, Data_Store&) const override;
 
       std::string m_ocsp_responder;
+      std::vector<std::string> m_ca_issuers;
    };
 
 /**

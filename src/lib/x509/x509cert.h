@@ -346,6 +346,11 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       std::string ocsp_responder() const;
 
       /**
+      * Return the listed addresses of ca issuers, or empty if not set
+      */
+      std::vector<std::string> ca_issuers() const;
+
+      /**
       * Return the CRL distribution point, or empty if not set
       */
       std::string crl_distribution_point() const;

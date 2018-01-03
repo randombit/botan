@@ -777,6 +777,15 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
             }
 
          }
+      if(oid == OIDS::lookup("PKIX.CertificateAuthorityIssuers"))
+         {
+         BER_Object name = info.get_next_object();
+
+         if(name.type_tag == 6 && name.class_tag == CONTEXT_SPECIFIC)
+            {
+            m_ca_issuers.push_back(ASN1::to_string(name));
+            }
+         }
       }
    }
 
@@ -784,6 +793,10 @@ void Authority_Information_Access::contents_to(Data_Store& subject, Data_Store&)
    {
    if(!m_ocsp_responder.empty())
       subject.add("OCSP.responder", m_ocsp_responder);
+   std::for_each(m_ca_issuers.begin(), m_ca_issuers.end(), [&subject] (const std::string& ca_issuer)
+   {
+       subject.add("PKIX.CertificateAuthorityIssuers", ca_issuer);
+   });
    }
 
 /*

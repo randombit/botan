@@ -133,6 +133,7 @@ std::string lookup(const OID& oid)
    if(oid_str == "1.3.6.1.4.1.8301.3.1.2.9.0.38") return "secp521r1";
    if(oid_str == "1.3.6.1.5.5.7.1.1") return "PKIX.AuthorityInformationAccess";
    if(oid_str == "1.3.6.1.5.5.7.3.1") return "PKIX.ServerAuth";
+   if(oid_str == "1.3.6.1.5.5.7.48.2") return "PKIX.CertificateAuthorityIssuers";
    if(oid_str == "1.3.6.1.5.5.7.3.2") return "PKIX.ClientAuth";
    if(oid_str == "1.3.6.1.5.5.7.3.3") return "PKIX.CodeSigning";
    if(oid_str == "1.3.6.1.5.5.7.3.4") return "PKIX.EmailProtection";
@@ -303,6 +304,7 @@ OID lookup(const std::string& name)
    if(name == "PKCS9.MessageDigest") return OID("1.2.840.113549.1.9.4");
    if(name == "PKCS9.UnstructuredName") return OID("1.2.840.113549.1.9.2");
    if(name == "PKIX.AuthorityInformationAccess") return OID("1.3.6.1.5.5.7.1.1");
+   if(name == "PKIX.CertificateAuthorityIssuers") return OID("1.3.6.1.5.5.7.48.2");
    if(name == "PKIX.ClientAuth") return OID("1.3.6.1.5.5.7.3.2");
    if(name == "PKIX.CodeSigning") return OID("1.3.6.1.5.5.7.3.3");
    if(name == "PKIX.EmailProtection") return OID("1.3.6.1.5.5.7.3.4");
