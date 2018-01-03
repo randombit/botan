@@ -96,16 +96,6 @@ Currently available policies include ``bsi``, ``nist`` and ``modern``::
 
  $ ./configure.py --module-policy=bsi --enable-modules=tls,xts
 
-The script tries to guess what kind of makefile to generate, and it
-almost always guesses correctly (basically, Visual C++ uses NMAKE with
-Windows commands, and everything else uses Unix make with POSIX
-commands). Just in case, you can override it with
-``--make-style=X``. The styles Botan currently knows about are 'gmake'
-(GNU make and possibly some other Unix makes), and 'nmake', the make
-variant commonly used by Microsoft compilers. To add a new variant
-(eg, a build script for VMS), you will need to create a new template
-file in ``src/build-data/makefile``.
-
 Cross Compiling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -122,7 +112,8 @@ completely supported by the build system. To extend the example, we must tell
  botan.exe: PE32 executable (console) Intel 80386, for MS Windows
 
 You can also specify the alternate tools by setting the `CXX` and `AR`
-environment variables, as is commonly done with autoconf builds.
+environment variables (instead of the `--cc-bin` and `--ar-command` options), as
+is commonly done with autoconf builds.
 
 On Unix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -159,22 +150,12 @@ shared libraries to be picked up by the linker. An alternative is to
 set your ``LD_LIBRARY_PATH`` shell variable to include the directory
 that the Botan libraries were installed into.
 
-On OS X
+On macOS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In general the Unix instructions above should apply, however OS X does
-not support ``LD_LIBRARY_PATH``. Thomas Keller suggests instead
-running ``install_name_tool`` between building and running the
-self-test program::
+A build on macOS works much like that on any other Unix-like system.
 
-  $ VERSION=1.11.11 # or whatever the current version is
-  $ install_name_tool -change $(otool -X -D libbotan-$VERSION.dylib) \
-       $PWD/libbotan-$VERSION.dylib botan-test
-
-Building Universal Binaries
-&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
-To build a universal binary for OS X, you need to set some additional
+To build a universal binary for macOS, you need to set some additional
 build flags. Do this with the `configure.py` flag `--cc-abi-flags`::
 
   --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
