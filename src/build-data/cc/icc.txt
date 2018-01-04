@@ -5,19 +5,29 @@ binary_name icpc
 optimization_flags "-O2"
 size_optimization_flags "-Os"
 
-lang_flags "-std=c++0x"
+lang_flags "-std=c++11"
 warning_flags "-w1"
 shared_flags "-fPIC"
+
+<isa_flags>
+sse2    -> "-msse2"
+ssse3   -> "-mssse3"
+sse41   -> "-msse4.1"
+sse42   -> "-msse4.2"
+avx2    -> "-march=core-avx2"
+aesni   -> "-march=corei7"
+rdrand  -> "-march=core-avx-i"
+</isa_flags>
 
 <mach_opt>
 pentium3  -> "-march=pentium3"
 pentium4  -> "-march=pentium4"
-pentium-m -> "-march=pentium3"
+pentium-m -> "-march=pentium-m"
 core2     -> "-march=core2"
 
-# ICC 11.1 doesn't have native Nehalem or Westmere support
-nehalem   -> "-march=core2"
-westmere  -> "-march=core2"
+nehalem     -> "-march=corei7"
+sandybridge -> "-march=corei7-avx"
+ivybridge   -> "-march=core-avx-i"
 </mach_opt>
 
 <so_link_commands>
