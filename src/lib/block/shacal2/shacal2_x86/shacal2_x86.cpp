@@ -15,6 +15,7 @@ Only encryption is supported since the inverse round function would
 require a different instruction
 */
 
+BOTAN_FUNC_ISA("sha,ssse3")
 void SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i MASK1 = _mm_set_epi8(8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7);

@@ -13,6 +13,7 @@ namespace Botan {
 
 // called from sha2_32.cpp
 #if defined(BOTAN_HAS_SHA2_32_X86)
+BOTAN_FUNC_ISA("sha,sse4.1,ssse3")
 void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
    {
    __m128i STATE0, STATE1;

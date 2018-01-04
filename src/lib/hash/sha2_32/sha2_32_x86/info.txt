@@ -2,7 +2,7 @@
 SHA2_32_X86 -> 20170518
 </defines>
 
-need_isa sha,sse41
+need_isa sha,ssse3,sse41
 
 <cc>
 gcc:5.0
