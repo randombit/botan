@@ -214,6 +214,12 @@ SM2_Signature_PublicKey::create_verification_op(const std::string& params,
          hash = params.substr(comma+1, std::string::npos);
          }
 
+      if (userid.empty())
+         {
+         // GM/T 0009-2012 specifies this as the default userid
+         userid = "1234567812345678";
+         }
+
       return std::unique_ptr<PK_Ops::Verification>(new SM2_Verification_Operation(*this, userid, hash));
       }
 
@@ -237,6 +243,12 @@ SM2_Signature_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
          {
          userid = params.substr(0, comma);
          hash = params.substr(comma+1, std::string::npos);
+         }
+
+      if (userid.empty())
+         {
+         // GM/T 0009-2012 specifies this as the default userid
+         userid = "1234567812345678";
          }
 
       return std::unique_ptr<PK_Ops::Signature>(new SM2_Signature_Operation(*this, userid, hash));
