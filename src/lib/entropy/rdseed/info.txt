@@ -8,11 +8,6 @@ need_isa rdseed
 rdseed.h
 </header:internal>
 
-<arch>
-x86_32
-x86_64
-</arch>
-
 <cc>
 gcc
 clang
