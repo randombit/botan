@@ -202,6 +202,9 @@ Version 2.4.0, Not Yet Released
   The timestamp can be set by passing it to the ``Gzip_Compression``
   constructor.
 
+* Resolve a performance regression on Windows involving the system stats
+  entropy source. (GH #1369)
+
 * Add an OID for RIPEMD-160
 
 * Fixes for CMake build (GH #1251)
@@ -400,9 +403,6 @@ Version 2.3.0, 2017-10-02
   removed in a future release. (GH #1215)
 
 * Add more tests for the const-time utils (GH #1214)
-
-* Resolve a performance regression on Windows involving the system stats
-  entropy source. (GH #1369)
 
 * Fix a bug in FFI tests that caused the test files not to be found when using
   ``--data-dir`` option (GH #1149)
