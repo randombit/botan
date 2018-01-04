@@ -370,7 +370,8 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_mp(rng));
          results.push_back(ffi_test_block_ciphers());
          results.push_back(ffi_test_ciphers_cbc());
-         results.push_back(ffi_test_ciphers_aead());
+         results.push_back(ffi_test_ciphers_aead_gcm());
+         results.push_back(ffi_test_ciphers_aead_eax());
          results.push_back(ffi_test_stream_ciphers());
          results.push_back(ffi_test_pkcs_hash_id());
 
@@ -515,9 +516,9 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_ciphers_aead()
+      Test::Result ffi_test_ciphers_aead_gcm()
          {
-         Test::Result result("FFI AEAD");
+         Test::Result result("FFI GCM");
 
 #if defined(BOTAN_HAS_AEAD_GCM)
 
@@ -593,6 +594,91 @@ class FFI_Unit_Tests final : public Test
                   result.test_int_eq(input_consumed, ciphertext.size(), "All input consumed");
                   result.test_int_eq(output_written, decrypted.size(), "Expected output size produced");
                   result.test_eq("AES/GCM plaintext", decrypted, plaintext);
+
+                  TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
+                  }
+               }
+
+            TEST_FFI_OK(botan_cipher_destroy, (cipher_encrypt));
+            }
+#endif
+
+         return result;
+         }
+
+      Test::Result ffi_test_ciphers_aead_eax()
+         {
+         Test::Result result("FFI EAX");
+
+#if defined(BOTAN_HAS_AEAD_EAX)
+
+         botan_cipher_t cipher_encrypt, cipher_decrypt;
+
+         if(TEST_FFI_OK(botan_cipher_init, (&cipher_encrypt, "AES-128/EAX", BOTAN_CIPHER_INIT_FLAG_ENCRYPT)))
+            {
+            size_t min_keylen = 0;
+            size_t max_keylen = 0;
+            size_t nonce_len = 0;
+            size_t tag_len = 0;
+
+            TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
+            result.test_int_eq(min_keylen, 16, "Min key length");
+            result.test_int_eq(max_keylen, 16, "Max key length");
+
+            TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &nonce_len));
+            result.test_int_eq(nonce_len, 12, "Expected default EAX nonce length");
+
+            TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &tag_len));
+            result.test_int_eq(tag_len, 16, "Expected EAX tag length");
+
+            TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 12));
+            // EAX accepts any nonce size...
+            TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 0));
+
+            const std::vector<uint8_t> plaintext =
+               Botan::hex_decode("0000000000000000000000000000000011111111111111111111111111111111");
+            const std::vector<uint8_t> symkey = Botan::hex_decode("000102030405060708090a0b0c0d0e0f");
+            const std::vector<uint8_t> nonce = Botan::hex_decode("3c8cc2970a008f75cc5beae2847258c2");
+            const std::vector<uint8_t> exp_ciphertext =
+               Botan::hex_decode("3c441f32ce07822364d7a2990e50bb13d7b02a26969e4a937e5e9073b0d9c968db90bdb3da3d00afd0fc6a83551da95e");
+
+            std::vector<uint8_t> ciphertext(tag_len + plaintext.size());
+
+            size_t output_written = 0;
+            size_t input_consumed = 0;
+
+            // Test that after clear or final the object can be reused
+            for(size_t r = 0; r != 2; ++r)
+               {
+               TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
+               TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
+               TEST_FFI_OK(botan_cipher_update, (cipher_encrypt, 0,
+                                                 ciphertext.data(), ciphertext.size(), &output_written,
+                                                 plaintext.data(), plaintext.size(), &input_consumed));
+               TEST_FFI_OK(botan_cipher_clear, (cipher_encrypt));
+
+               TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
+               TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
+               TEST_FFI_OK(botan_cipher_update, (cipher_encrypt, BOTAN_CIPHER_UPDATE_FLAG_FINAL,
+                                                 ciphertext.data(), ciphertext.size(), &output_written,
+                                                 plaintext.data(), plaintext.size(), &input_consumed));
+
+               ciphertext.resize(output_written);
+               result.test_eq("AES/EAX ciphertext", ciphertext, exp_ciphertext);
+
+               if(TEST_FFI_OK(botan_cipher_init, (&cipher_decrypt, "AES-128/EAX", BOTAN_CIPHER_INIT_FLAG_DECRYPT)))
+                  {
+                  std::vector<uint8_t> decrypted(plaintext.size());
+
+                  TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
+                  TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
+                  TEST_FFI_OK(botan_cipher_update, (cipher_decrypt, BOTAN_CIPHER_UPDATE_FLAG_FINAL,
+                                                    decrypted.data(), decrypted.size(), &output_written,
+                                                    ciphertext.data(), ciphertext.size(), &input_consumed));
+
+                  result.test_int_eq(input_consumed, ciphertext.size(), "All input consumed");
+                  result.test_int_eq(output_written, decrypted.size(), "Expected output size produced");
+                  result.test_eq("AES/EAX plaintext", decrypted, plaintext);
 
                   TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
                   }
