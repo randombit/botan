@@ -98,7 +98,7 @@ def run_sphinx(botan_dir, tmp_dir, output_dir):
 def main(args):
     parser = optparse.OptionParser()
 
-    parser.add_option('--output-dir', default=None,
+    parser.add_option('-o', '--output-dir', default=None,
                       help="Where to write output")
 
     (options, args) = parser.parse_args(args)
