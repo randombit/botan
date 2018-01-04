@@ -56,7 +56,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         (cd /home/travis/bin && ln -s gcov-4.8 gcov)
 
         pip install --user coverage
-        pip install --user codecov
+        pip install --user codecov==2.0.10
 
     elif [ "$BUILD_MODE" = "sonar" ]; then
         sudo apt-get -qq update
