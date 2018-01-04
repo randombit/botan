@@ -261,11 +261,10 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                              "Server replied with a signaling ciphersuite");
          }
 
-      if(!value_exists(state.client_hello()->compression_methods(),
-                       state.server_hello()->compression_method()))
+      if(state.server_hello()->compression_method() != 0)
          {
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Server replied with compression method we didn't send");
+                             "Server replied with non-null compression method");
          }
 
       auto client_extn = state.client_hello()->extension_types();
@@ -609,7 +608,6 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.session_keys().master_secret(),
          state.server_hello()->version(),
          state.server_hello()->ciphersuite(),
-         state.server_hello()->compression_method(),
          CLIENT,
          state.server_hello()->supports_extended_master_secret(),
          state.server_hello()->supports_encrypt_then_mac(),

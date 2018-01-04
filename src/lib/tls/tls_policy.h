@@ -102,15 +102,6 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool use_ecc_point_compression() const;
 
       /**
-      * Returns a list of compression algorithms we are willing to use,
-      * in order of preference. Allowed values any value of
-      * Compression_Method.
-      *
-      * @note Compression is not currently supported
-      */
-      virtual std::vector<uint8_t> compression() const;
-
-      /**
       * Choose an elliptic curve to use
       */
       virtual std::string choose_curve(const std::vector<std::string>& curve_names) const;

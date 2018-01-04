@@ -923,15 +923,6 @@ policy settings from a file.
 
      Default: false
 
- .. cpp:function:: std::vector<uint8_t> compression() const
-
-     Return the list of compression methods we are willing to use, in order of
-     preference. Default is null compression only.
-
-     .. note::
-
-        TLS data compression is not currently supported.
-
  .. cpp:function:: bool acceptable_protocol_version(Protocol_Version version)
 
      Return true if this version of the protocol is one that we are
