@@ -95,13 +95,13 @@ Public Key Cryptography
 
 X.509
 ----------------------------------------------
-<<<<<<< HEAD
+
 ``gen_pkcs10 key CN --country= --organization= --email= --key-pass= --hash=SHA-256  --emsa=``
   Generate a PKCS #10 certificate signing request (CSR) using the passed PKCS #8
   private key *key*. If the private key is encrypted, the decryption passphrase
   *key-pass* has to be passed.*emsa* specifies the padding scheme to be used
   when calculating the signature.
-  
+
     - For RSA keys EMSA4 (RSA-PSS) is the default scheme.
     - For ECDSA, DSA, ECGDSA, ECKCDSA and GOST-34.10 keys *emsa* defaults to EMSA1.
 
