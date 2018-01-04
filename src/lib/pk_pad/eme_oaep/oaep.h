@@ -15,6 +15,7 @@ namespace Botan {
 
 /**
 * OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
+* as specified in PKCS#1 v2.0 (RFC 2437)
 */
 class BOTAN_PUBLIC_API(2,0) OAEP final : public EME
    {
