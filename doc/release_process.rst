@@ -39,8 +39,8 @@ tag the release with the version in git (eg tag '2.6.13', no prefix).
 Build The Release Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The release script is ``src/scripts/dist.py`` and must be
-run from a git workspace.
+The release script is ``src/scripts/dist.py`` and must be run from a
+git workspace.
 
  $ src/scripts/dist.py 2.6.13
 
@@ -53,6 +53,19 @@ create signatures for the tarballs. The default value is ``EFBADFBC``,
 which is the official signing key. You can use ``--pgp-key-id=none``
 to avoid creating any signature, though official distributed releases
 *should not* be released without signatures.
+
+The releases served on the official site are taken from the contents
+in a git repository::
+
+  $ git checkout git@botan.randombit.net:/srv/git/botan-releases.git
+  $ src/scripts/dist.py 2.6.13 --output-dir=botan-releases
+  $ cd botan-releases
+  $ sha256sum Botan-2.6.13.tgz >> sha256sums.txt
+  $ git add .
+  $ git commit -m "Release version 2.6.13"
+  $ git push origin master
+
+A cron job updates the live site every 10 minutes.
 
 Build The Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,7 +87,15 @@ Update The Website
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The website content is created by ``src/scripts/website.py``.
-Currently refreshing the website is a manual process.
+
+The website is mirrored automatically from a git repository which must be updated::
+
+  $ git checkout git@botan.randombit.net:/srv/git/botan-website.git
+  $ ./src/scripts/website.py --output botan-website
+  $ cd botan-website
+  $ git add .
+  $ git commit -m "Update for 2.6.13"
+  $ git push origin master
 
 Announce The Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
