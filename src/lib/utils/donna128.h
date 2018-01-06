@@ -114,7 +114,7 @@ inline uint64_t carry_shift(const donna128& a, size_t shift)
    }
 
 inline uint64_t combine_lower(const donna128& a, size_t s1,
-                            const donna128& b, size_t s2)
+                              const donna128& b, size_t s2)
    {
    donna128 z = (a >> s1) | (b << s2);
    return z.lo();
@@ -127,7 +127,7 @@ inline uint64_t carry_shift(const uint128_t a, size_t shift)
    }
 
 inline uint64_t combine_lower(const uint128_t a, size_t s1,
-                            const uint128_t b, size_t s2)
+                              const uint128_t b, size_t s2)
    {
    return static_cast<uint64_t>((a >> s1) | (b << s2));
    }
