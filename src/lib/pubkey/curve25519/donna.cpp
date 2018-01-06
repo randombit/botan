@@ -46,25 +46,6 @@ namespace {
 typedef donna128 uint128_t;
 #endif
 
-struct fmonty_pair_t
-   {
-   uint64_t* x;
-   uint64_t* z;
-   };
-
-struct fmonty_in_t
-   {
-   fmonty_pair_t q;
-   fmonty_pair_t q_dash;
-   const uint64_t* q_minus_q_dash;
-   };
-
-struct fmonty_out_t
-   {
-   fmonty_pair_t two_q;
-   fmonty_pair_t q_plus_q_dash;
-   };
-
 /* Sum two numbers: output += in */
 inline void fsum(uint64_t out[5], const uint64_t in[5])
    {
@@ -286,12 +267,20 @@ inline void fcontract(uint8_t *out, const uint64_t input[5])
 *
 *   result.two_q (2*Q): long form
 *   result.q_plus_q_dash (Q + Q): long form
-*   in.q: short form, destroyed
-*   in.q_dash: short form, destroyed
-*   in.q_minus_q_dash: short form, preserved
+*   in_q: short form, destroyed
+*   in_q_dash: short form, destroyed
+*   in_q_minus_q_dash: short form, preserved
 */
-void
-fmonty(fmonty_out_t& result, fmonty_in_t& in)
+
+void fmonty(uint64_t result_two_q_x[5],
+            uint64_t result_two_q_z[5],
+            uint64_t result_q_plus_q_dash_x[5],
+            uint64_t result_q_plus_q_dash_z[5],
+            uint64_t in_q_x[5],
+            uint64_t in_q_z[5],
+            uint64_t in_q_dash_x[5],
+            uint64_t in_q_dash_z[5],
+            const uint64_t q_minus_q_dash[5])
    {
    uint64_t origx[5];
    uint64_t origxprime[5];
@@ -302,29 +291,29 @@ fmonty(fmonty_out_t& result, fmonty_in_t& in)
    uint64_t zzprime[5];
    uint64_t zzzprime[5];
 
-   copy_mem(origx, in.q.x, 5);
-   fsum(in.q.x, in.q.z);
-   fdifference_backwards(in.q.z, origx);  // does x - z
+   copy_mem(origx, in_q_x, 5);
+   fsum(in_q_x, in_q_z);
+   fdifference_backwards(in_q_z, origx);  // does x - z
 
-   copy_mem(origxprime, in.q_dash.x, 5);
-   fsum(in.q_dash.x, in.q_dash.z);
-   fdifference_backwards(in.q_dash.z, origxprime);
-   fmul(xxprime, in.q_dash.x, in.q.z);
-   fmul(zzprime, in.q.x, in.q_dash.z);
+   copy_mem(origxprime, in_q_dash_x, 5);
+   fsum(in_q_dash_x, in_q_dash_z);
+   fdifference_backwards(in_q_dash_z, origxprime);
+   fmul(xxprime, in_q_dash_x, in_q_z);
+   fmul(zzprime, in_q_x, in_q_dash_z);
    copy_mem(origxprime, xxprime, 5);
    fsum(xxprime, zzprime);
    fdifference_backwards(zzprime, origxprime);
-   fsquare_times(result.q_plus_q_dash.x, xxprime, 1);
+   fsquare_times(result_q_plus_q_dash_x, xxprime, 1);
    fsquare_times(zzzprime, zzprime, 1);
-   fmul(result.q_plus_q_dash.z, zzzprime, in.q_minus_q_dash);
+   fmul(result_q_plus_q_dash_z, zzzprime, q_minus_q_dash);
 
-   fsquare_times(xx, in.q.x, 1);
-   fsquare_times(zz, in.q.z, 1);
-   fmul(result.two_q.x, xx, zz);
+   fsquare_times(xx, in_q_x, 1);
+   fsquare_times(zz, in_q_z, 1);
+   fmul(result_two_q_x, xx, zz);
    fdifference_backwards(zz, xx);  // does zz = xx - zz
    fscalar_product(zzz, zz, 121665);
    fsum(zzz, xx);
-   fmul(result.two_q.z, zz, zzz);
+   fmul(result_two_q_z, zz, zzz);
    }
 
 // -----------------------------------------------------------------------------
@@ -352,52 +341,69 @@ void swap_conditional(uint64_t a[5], uint64_t b[5], uint64_t iswap)
 *   n: a little endian, 32-byte number
 *   q: a point of the curve (short form)
 */
-void cmult(uint64_t *resultx, uint64_t *resultz, const uint8_t *n, const uint64_t *q)
+void cmult(uint64_t resultx[5], uint64_t resultz[5], const uint8_t n[32], const uint64_t q[5])
    {
-   uint64_t a[5] = {0};
-   uint64_t b[5] = {1};
-   uint64_t c[5] = {1};
-   uint64_t d[5] = {0};
-   uint64_t e[5] = {0};
-   uint64_t f[5] = {1};
-   uint64_t g[5] = {0};
-   uint64_t h[5] = {1};
+   uint64_t a[5] = {0}; // nqpqx
+   uint64_t b[5] = {1}; // npqpz
+   uint64_t c[5] = {1}; // nqx
+   uint64_t d[5] = {0}; // nqz
+   uint64_t e[5] = {0}; // npqqx2
+   uint64_t f[5] = {1}; // npqqz2
+   uint64_t g[5] = {0}; // nqx2
+   uint64_t h[5] = {1}; // nqz2
 
-   uint64_t *nqpqx = a;
-   uint64_t *nqpqz = b;
-   uint64_t *nqx = c;
-   uint64_t *nqz = d;
-   uint64_t *nqpqx2 = e;
-   uint64_t *nqpqz2 = f;
-   uint64_t *nqx2 = g;
-   uint64_t *nqz2 = h;
-
-   copy_mem(nqpqx, q, 5);
+   copy_mem(a, q, 5);
 
    for(size_t i = 0; i < 32; ++i)
       {
-      for(size_t j = 0; j < 8; ++j)
-         {
-         const uint64_t bit = (n[31 - i] >> (7-j)) & 1;
+      const uint64_t bit0 = (n[31 - i] >> (7)) & 1;
+      const uint64_t bit1 = (n[31 - i] >> (6)) & 1;
+      const uint64_t bit2 = (n[31 - i] >> (5)) & 1;
+      const uint64_t bit3 = (n[31 - i] >> (4)) & 1;
+      const uint64_t bit4 = (n[31 - i] >> (3)) & 1;
+      const uint64_t bit5 = (n[31 - i] >> (2)) & 1;
+      const uint64_t bit6 = (n[31 - i] >> (1)) & 1;
+      const uint64_t bit7 = (n[31 - i] >> (0)) & 1;
 
-         swap_conditional(nqx, nqpqx, bit);
-         swap_conditional(nqz, nqpqz, bit);
+      swap_conditional(c, a, bit0);
+      swap_conditional(d, b, bit0);
+      fmonty(g, h, e, f, c, d, a, b, q);
 
-         fmonty_out_t result { {nqx2, nqz2}, {nqpqx2, nqpqz2} };
-         fmonty_in_t in { { nqx, nqz }, { nqpqx, nqpqz }, q };
-         fmonty(result, in);
-         swap_conditional(nqx2, nqpqx2, bit);
-         swap_conditional(nqz2, nqpqz2, bit);
+      swap_conditional(g, e, bit0 ^ bit1);
+      swap_conditional(h, f, bit0 ^ bit1);
+      fmonty(c, d, a, b, g, h, e, f, q);
 
-         std::swap(nqx, nqx2);
-         std::swap(nqz, nqz2);
-         std::swap(nqpqx, nqpqx2);
-         std::swap(nqpqz, nqpqz2);
-         }
+      swap_conditional(c, a, bit1 ^ bit2);
+      swap_conditional(d, b, bit1 ^ bit2);
+      fmonty(g, h, e, f, c, d, a, b, q);
+
+      swap_conditional(g, e, bit2 ^ bit3);
+      swap_conditional(h, f, bit2 ^ bit3);
+      fmonty(c, d, a, b, g, h, e, f, q);
+
+      swap_conditional(c, a, bit3 ^ bit4);
+      swap_conditional(d, b, bit3 ^ bit4);
+
+      fmonty(g, h, e, f, c, d, a, b, q);
+
+      swap_conditional(g, e, bit4 ^ bit5);
+      swap_conditional(h, f, bit4 ^ bit5);
+      fmonty(c, d, a, b, g, h, e, f, q);
+
+      swap_conditional(c, a, bit5 ^ bit6);
+      swap_conditional(d, b, bit5 ^ bit6);
+      fmonty(g, h, e, f, c, d, a, b, q);
+
+      swap_conditional(g, e, bit6 ^ bit7);
+      swap_conditional(h, f, bit6 ^ bit7);
+      fmonty(c, d, a, b, g, h, e, f, q);
+
+      swap_conditional(c, a, bit7);
+      swap_conditional(d, b, bit7);
       }
 
-   copy_mem(resultx, nqx, 5);
-   copy_mem(resultz, nqz, 5);
+   copy_mem(resultx, c, 5);
+   copy_mem(resultz, d, 5);
    }
 
 
