@@ -19,6 +19,8 @@
   #include <sys/param.h>
   #include <sys/sysctl.h>
   #include <machine/cpu.h>
+#elif defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+  #include <sys/auxv.h>
 #endif
 
 #endif
@@ -50,6 +52,28 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
 
    if(error == 0 && vector_type > 0)
       return CPUID::CPUID_ALTIVEC_BIT;
+
+#elif defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) && defined(BOTAN_TARGET_ARCH_IS_PPC64)
+
+   enum PPC_hwcap_bit {
+      ALTIVEC_bit  = (1 << 28),
+      CRYPTO_bit   = (1 << 25),
+
+      ARCH_hwcap_altivec = 16, // AT_HWCAP
+      ARCH_hwcap_crypto  = 26, // AT_HWCAP2
+   };
+
+   uint64_t detected_features = 0;
+
+   const unsigned long hwcap_altivec = ::getauxval(PPC_hwcap_bit::ARCH_hwcap_altivec);
+   if(hwcap_altivec & PPC_hwcap_bit::ALTIVEC_bit)
+      detected_features |= CPUID::CPUID_ALTIVEC_BIT;
+
+   const unsigned long hwcap_crypto = ::getauxval(PPC_hwcap_bit::ARCH_hwcap_crypto);
+   if(hwcap_crypto & PPC_hwcap_bit::CRYPTO_bit)
+     detected_features |= CPUID::CPUID_PPC_CRYPTO_BIT;
+
+   return detected_features;
 
 #else
 
