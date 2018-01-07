@@ -89,6 +89,11 @@ inline donna128 operator*(const donna128& x, uint64_t y)
    return donna128(lo, hi);
    }
 
+inline donna128 operator*(uint64_t y, const donna128& x)
+   {
+   return x * y;
+   }
+
 inline donna128 operator+(const donna128& x, const donna128& y)
    {
    donna128 z = x;
