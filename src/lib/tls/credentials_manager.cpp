@@ -59,6 +59,15 @@ bool Credentials_Manager::srp_verifier(const std::string&,
    return false;
    }
 
+std::vector<X509_Certificate> Credentials_Manager::find_cert_chain(
+   const std::vector<std::string>& key_types,
+   const std::vector<X509_DN>&,
+   const std::string& type,
+   const std::string& context)
+   {
+   return cert_chain(key_types, type, context);
+   }
+
 std::vector<X509_Certificate> Credentials_Manager::cert_chain(
    const std::vector<std::string>&,
    const std::string&,
@@ -74,7 +83,7 @@ std::vector<X509_Certificate> Credentials_Manager::cert_chain_single_type(
    {
    std::vector<std::string> cert_types;
    cert_types.push_back(cert_key_type);
-   return cert_chain(cert_types, type, context);
+   return find_cert_chain(cert_types, std::vector<X509_DN>(), type, context);
    }
 
 Private_Key* Credentials_Manager::private_key_for(const X509_Certificate&,

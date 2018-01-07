@@ -412,7 +412,7 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
       const std::vector<std::string>& acceptable_cert_types() const
          { return m_cert_key_types; }
 
-      std::vector<X509_DN> acceptable_CAs() const { return m_names; }
+      const std::vector<X509_DN>& acceptable_CAs() const { return m_names; }
 
       std::vector<std::pair<std::string, std::string> > supported_algos() const
          { return m_supported_algos; }
