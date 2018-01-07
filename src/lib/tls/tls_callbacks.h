@@ -30,6 +30,7 @@ namespace TLS {
 
 class Handshake_Message;
 class Policy;
+class Extensions;
 
 /**
 * Encapsulates the callbacks that a TLS channel will make which are due to
@@ -248,6 +249,17 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * client ALPN extension. Default return value is empty string.
        */
        virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos);
+
+       /**
+       * Optional callback: examine/modify Extensions before sending.  Both
+       * client and server will call this callback on the Extensions object
+       * before serializing it in the client/server hellos. This allows a client
+       * to modify which extensions are sent during the handshake. This also
+       * allows creating custom extensions.
+       *
+       * Default implementation does nothing.
+       */
+       virtual void tls_modify_extensions(Extensions& extn);
 
        /**
        * Optional callback: error logging. (not currently called)

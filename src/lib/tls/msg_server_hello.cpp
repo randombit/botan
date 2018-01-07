@@ -9,6 +9,7 @@
 
 #include <botan/tls_messages.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_callbacks.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_io.h>
@@ -23,6 +24,7 @@ namespace TLS {
 Server_Hello::Server_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const Policy& policy,
+                           Callbacks& cb,
                            RandomNumberGenerator& rng,
                            const std::vector<uint8_t>& reneg_info,
                            const Client_Hello& client_hello,
@@ -83,6 +85,8 @@ Server_Hello::Server_Hello(Handshake_IO& io,
          }
       }
 
+   cb.tls_modify_extensions(m_extensions);
+
    hash.update(io.send(*this));
    }
 
@@ -90,6 +94,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
 Server_Hello::Server_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const Policy& policy,
+                           Callbacks& cb,
                            RandomNumberGenerator& rng,
                            const std::vector<uint8_t>& reneg_info,
                            const Client_Hello& client_hello,
@@ -129,6 +134,8 @@ Server_Hello::Server_Hello(Handshake_IO& io,
 
    if(!next_protocol.empty() && client_hello.supports_alpn())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
+
+   cb.tls_modify_extensions(m_extensions);
 
    hash.update(io.send(*this));
    }

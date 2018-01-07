@@ -466,6 +466,13 @@ class BOTAN_UNSTABLE_API Extensions final
 
       void deserialize(TLS_Data_Reader& reader);
 
+      /**
+      * Remvoe an extension from this extensions object, if it exists.
+      * Returns true if the extension existed (and thus is now removed),
+      * otherwise false (the extension wasn't set in the first place).
+      */
+      bool remove_extension(Handshake_Extension_Type typ);
+
       Extensions() = default;
 
       explicit Extensions(TLS_Data_Reader& reader) { deserialize(reader); }

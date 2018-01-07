@@ -124,6 +124,15 @@ std::vector<uint8_t> Extensions::serialize() const
    return buf;
    }
 
+bool Extensions::remove_extension(Handshake_Extension_Type typ)
+   {
+   auto i = m_extensions.find(typ);
+   if(i == m_extensions.end())
+      return false;
+   m_extensions.erase(i);
+   return true;
+   }
+
 std::set<Handshake_Extension_Type> Extensions::extension_types() const
    {
    std::set<Handshake_Extension_Type> offers;
