@@ -5,26 +5,8 @@ wordsize 64
 
 <aliases>
 powerpc64
+ppc64le
 </aliases>
-
-<submodel_aliases>
-g5 -> ppc970
-</submodel_aliases>
-
-<submodels>
-ppc970
-power3
-power4
-power5
-power6
-power7
-power8
-cellppu
-</submodels>
-
-<submodel_aliases>
-cellbroadbandengine -> cellppu
-</submodel_aliases>
 
 <isa_extensions>
 altivec

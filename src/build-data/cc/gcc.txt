@@ -63,52 +63,10 @@ arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
 </isa_flags>
 
-<mach_opt>
-# Avoid using -march=i[3456]86, instead tune for generic
-i386        -> "-mtune=generic"
-i486        -> "-mtune=generic"
-i586        -> "-mtune=generic"
-i686        -> "-mtune=generic"
-
-# Translate to GCC-speak
-nehalem     -> "-march=corei7"
-sandybridge -> "-march=corei7-avx"
-ivybridge   -> "-march=core-avx-i"
-
-ppc601      -> "-mpowerpc -mcpu=601"
-cellppu     -> "-mcpu=cell"
-e500v2      -> "-mcpu=8548"
-
-# No scheduler in GCC for anything after EV67
-alpha-ev68  -> "-mcpu=ev67"
-alpha-ev7   -> "-mcpu=ev67"
-
-# The patch from Debian bug 594159 has this, don't know why though...
-sh4         -> "-m4 -mieee"
-
-# Default family options (SUBMODEL is substitued with the actual
-# submodel name). Anything after the pipe will be removed from the
-# submodel name before it's put into SUBMODEL.
-
-alpha     -> "-mcpu=SUBMODEL|alpha-"
-arm32     -> "-march=SUBMODEL"
-arm64     -> "-march=SUBMODEL"
-superh    -> "-mSUBMODEL|sh"
-hppa      -> "-march=SUBMODEL|hppa"
-ia64      -> "-mtune=SUBMODEL"
-m68k      -> "-mSUBMODEL"
-mips32    -> "-mips1 -mcpu=SUBMODEL|mips32-"
-mips64    -> "-mips3 -mcpu=SUBMODEL|mips64-"
-ppc32     -> "-mcpu=SUBMODEL|ppc"
-ppc64     -> "-mcpu=SUBMODEL|ppc"
-sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus|sparc32-"
-sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"
-x86_32    -> "-march=SUBMODEL"
-x86_64    -> "-march=SUBMODEL"
-
-all_x86_32 -> "-momit-leaf-frame-pointer"
-all_x86_64 -> "-momit-leaf-frame-pointer"
-</mach_opt>
+<cpu_flags>
+x86_32 -> "-momit-leaf-frame-pointer"
+x86_64 -> "-momit-leaf-frame-pointer"
+</cpu_flags>
 
 # Flags set here are included at compile and link time
 <mach_abi_linking>

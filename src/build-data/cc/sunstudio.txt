@@ -15,30 +15,6 @@ ar_options "-xar -o"
 default -> "$(CXX) -G -h{soname_abi}"
 </so_link_commands>
 
-<mach_opt>
-i386       -> "-xtarget=486"
-i486       -> "-xtarget=486"
-i586       -> "-xtarget=pentium"
-k6         -> "-xtarget=pentium"
-i686       -> "-xtarget=pentium_pro"
-
-pentium3   -> "-xtarget=pentium3"
-pentium4   -> "-xtarget=pentium4"
-
-core2      -> "-xtarget=core2"
-opteron    -> "-xtarget=opteron"
-nehalem    -> "-xtarget=nehalem"
-
-sparc32-v9 -> "-xchip=ultra -xarch=v8"
-
-ultrasparc3 -> "-xchip=ultra3"
-niagra1    -> "-xchip=ultraT1"
-niagra2    -> "-xchip=ultraT2"
-
-sparc32    -> "-xchip=ultra -xarch=SUBMODEL|sparc32-"
-sparc64    -> "-xchip=generic"
-</mach_opt>
-
 <mach_abi_linking>
 # Needed on some Linux distros
 linux      -> "-library=stlport4"
