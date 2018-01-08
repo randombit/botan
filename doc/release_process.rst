@@ -32,9 +32,12 @@ complete and that the version number in ``version.txt`` is correct.
 Update the release date in the release notes and change the entry for
 the appropriate branch in ``readme.rst`` to point to the new release.
 
-Check in these changes (alone, with no other modifications) with a
-checkin message along the lines of "Update for X.Y.Z release", then
-tag the release with the version in git (eg tag '2.6.13', no prefix).
+Now check in, and backport changes to the release branch::
+
+  $ git commit readme.rst news.rst -m "Update for 2.6.13 release"
+  $ git checkout release-2
+  $ git merge master
+  $ git tag 2.6.13
 
 Build The Release Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -42,10 +45,12 @@ Build The Release Tarballs
 The release script is ``src/scripts/dist.py`` and must be run from a
 git workspace.
 
- $ src/scripts/dist.py 2.6.13
+  $ src/scripts/dist.py 2.6.13
 
 One useful option is ``--output-dir``, which specifies where the
 output will be placed.
+
+Now do a final build/test of the released tarball.
 
 The ``--pgp-key-id`` option is used to specify a PGP keyid. If set,
 the script assumes that it can execute GnuPG and will attempt to
