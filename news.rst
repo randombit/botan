@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.4.0, Not Yet Released
+Version 2.4.0, 2018-01-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Several build improvements requested by downstream packagers, including the
