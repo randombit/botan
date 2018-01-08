@@ -2952,7 +2952,7 @@ def main_action_configure_build(info_modules, source_paths, options,
         Version.as_string(),
         Version.vc_rev(),
         Version.release_type(),
-        ('dated ' + Version.datestamp()) if Version.datestamp() != 0 else 'undated'))
+        ('dated %d' % (Version.datestamp())) if Version.datestamp() != 0 else 'undated'))
 
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")
