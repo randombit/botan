@@ -10,6 +10,7 @@ evbarm # For NetBSD
 
 armv7
 armv7l
+armv7-a
 </aliases>
 
 <isa_extensions>
