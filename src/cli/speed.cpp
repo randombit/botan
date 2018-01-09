@@ -20,13 +20,16 @@
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
-#include <botan/mac.h>
 #include <botan/cipher_mode.h>
 #include <botan/entropy_src.h>
 #include <botan/parsing.h>
 #include <botan/cpuid.h>
 #include <botan/internal/os_utils.h>
 #include <botan/version.h>
+
+#if defined(BOTAN_HAS_MAC)
+   #include <botan/mac.h>
+#endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>
@@ -713,12 +716,14 @@ class Speed final : public Command
                auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
                bench_cipher_mode(*enc, *dec, msec, buf_sizes);
                }
+#if defined(BOTAN_HAS_MAC)
             else if(Botan::MessageAuthenticationCode::providers(algo).size() > 0)
                {
                bench_providers_of<Botan::MessageAuthenticationCode>(
                   algo, provider, msec, buf_sizes,
                   std::bind(&Speed::bench_mac, this, _1, _2, _3, _4));
                }
+#endif
 #if defined(BOTAN_HAS_RSA)
             else if(algo == "RSA")
                {
@@ -1021,6 +1026,7 @@ class Speed final : public Command
             }
          }
 
+#if defined(BOTAN_HAS_MAC)
       void bench_mac(
          Botan::MessageAuthenticationCode& mac,
          const std::string& provider,
@@ -1040,6 +1046,7 @@ class Speed final : public Command
             record_result(timer);
             }
          }
+#endif
 
       void bench_cipher_mode(
          Botan::Cipher_Mode& enc,

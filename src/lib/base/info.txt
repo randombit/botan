@@ -14,7 +14,6 @@ symkey.h
 block
 hash
 hex
-mac
 modes
 rng
 stream
