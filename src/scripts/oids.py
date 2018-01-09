@@ -323,7 +323,7 @@ def main(args = None):
             str2oid[nam] = oid
 
     if args[1] == "oids":
-        print format_as_ifs(oid2str, str2oid)
+        print format_as_map(oid2str, str2oid)
     elif args[1] == "dn_ub":
         print format_dn_ub_as_map(dn_ub,oid2str)
     elif args[1] == "pads":
