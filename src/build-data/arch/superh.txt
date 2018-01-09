@@ -1,5 +1,0 @@
-<submodels>
-sh2
-sh3
-sh4
-</submodels>

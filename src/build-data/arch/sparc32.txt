@@ -5,27 +5,3 @@ family sparc
 <aliases>
 sparc
 </aliases>
-
-<submodels>
-sparc32-v7
-sparc32-v8
-sparc32-v9
-</submodels>
-
-<submodel_aliases>
-cypress -> sparc32-v7
-supersparc -> sparc32-v8
-hypersparc -> sparc32-v8
-microsparc -> sparc32-v8
-sparclite  -> sparc32-v8
-
-sparcv7 -> sparc32-v7
-sparcv8 -> sparc32-v8
-sparcv9 -> sparc32-v9
-
-sparc-v7 -> sparc32-v7
-sparc-v8 -> sparc32-v8
-sparc-v9 -> sparc32-v9
-
-sun4u    -> sparc32-v9
-</submodel_aliases>

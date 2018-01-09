@@ -294,7 +294,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     target_group = optparse.OptionGroup(parser, 'Target options')
 
-    target_group.add_option('--cpu', help='set the target CPU type/model')
+    target_group.add_option('--cpu', help='set the target CPU architecture')
 
     target_group.add_option('--os', help='set the target operating system')
 
@@ -961,8 +961,8 @@ class ArchInfo(InfoObject):
         super(ArchInfo, self).__init__(infofile)
         lex = lex_me_harder(
             infofile,
-            ['aliases', 'submodels', 'isa_extensions'],
-            ['submodel_aliases'],
+            ['aliases', 'isa_extensions'],
+            [],
             {
                 'endian': None,
                 'family': None,
@@ -973,24 +973,12 @@ class ArchInfo(InfoObject):
         self.endian = lex.endian
         self.family = lex.family
         self.isa_extensions = lex.isa_extensions
-        self.submodels = lex.submodels
-        self.submodel_aliases = lex.submodel_aliases
         self.wordsize = int(lex.wordsize)
 
         alphanumeric = re.compile('^[a-z0-9]+$')
         for isa in self.isa_extensions:
             if alphanumeric.match(isa) is None:
                 logging.error('Invalid name for ISA extension "%s"', isa)
-
-    def all_submodels(self):
-        """
-        Return a list of all submodels for this arch, ordered longest
-        to shortest
-        """
-
-        return sorted([(k, k) for k in self.submodels] +
-                      [k for k in self.submodel_aliases.items()],
-                      key=lambda k: len(k[0]), reverse=True)
 
     def supported_isa_extensions(self, cc, options):
         isas = []
@@ -1003,16 +991,13 @@ class ArchInfo(InfoObject):
         return sorted(isas)
 
 
-MachOptFlags = collections.namedtuple('MachOptFlags', ['flags', 'submodel_prefix'])
-
-
 class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def __init__(self, infofile):
         super(CompilerInfo, self).__init__(infofile)
         lex = lex_me_harder(
             infofile,
-            ['mach_opt'],
-            ['so_link_commands', 'binary_link_commands', 'mach_abi_linking', 'isa_flags'],
+            [],
+            ['cpu_flags', 'so_link_commands', 'binary_link_commands', 'mach_abi_linking', 'isa_flags'],
             {
                 'binary_name': None,
                 'linker_name': None,
@@ -1051,6 +1036,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.ar_output_to = lex.ar_output_to
         self.binary_link_commands = lex.binary_link_commands
         self.binary_name = lex.binary_name
+        self.cpu_flags = lex.cpu_flags
         self.compile_flags = lex.compile_flags
         self.coverage_flags = lex.coverage_flags
         self.debug_info_flags = lex.debug_info_flags
@@ -1072,11 +1058,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.visibility_attribute = lex.visibility_attribute
         self.visibility_build_flags = lex.visibility_build_flags
         self.warning_flags = lex.warning_flags
-
-        self.mach_opt_flags = {}
-        for key, value in parse_lex_dict(lex.mach_opt).items():
-            parts = value.split("|")
-            self.mach_opt_flags[key] = MachOptFlags(parts[0], parts[1] if len(parts) == 2 else '')
 
     def isa_flags_for(self, isa, arch):
         if isa in self.isa_flags:
@@ -1147,7 +1128,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                     yield all_except
 
             yield options.os
-            yield options.arch
             yield options.cpu
 
         abi_link = list()
@@ -1212,20 +1192,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 else:
                     yield self.optimization_flags
 
-            def submodel_fixup(full_cpu, mach_opt_flags_tupel):
-                submodel_replacement = full_cpu.replace(mach_opt_flags_tupel.submodel_prefix, '')
-                return mach_opt_flags_tupel.flags.replace('SUBMODEL', submodel_replacement)
-
-            if options.cpu != options.arch:
-                if options.cpu in self.mach_opt_flags:
-                    yield submodel_fixup(options.cpu, self.mach_opt_flags[options.cpu])
-                elif options.arch in self.mach_opt_flags:
-                    yield submodel_fixup(options.cpu, self.mach_opt_flags[options.arch])
-
-            all_arch = 'all_%s' % (options.arch)
-
-            if all_arch in self.mach_opt_flags:
-                yield self.mach_opt_flags[all_arch][0]
+            if options.arch in self.cpu_flags:
+                yield self.cpu_flags[options.arch]
 
         return (' '.join(gen_flags(with_debug_info, enable_optimizations))).strip()
 
@@ -1373,21 +1341,7 @@ def canon_processor(archinfo, proc):
     # First, try to search for an exact match
     for ainfo in archinfo.values():
         if ainfo.basename == proc or proc in ainfo.aliases:
-            return (ainfo.basename, ainfo.basename)
-
-        for (match, submodel) in ainfo.all_submodels():
-            if proc == submodel or proc == match:
-                return (ainfo.basename, submodel)
-
-    logging.debug('Could not find an exact match for CPU "%s"' % (proc))
-
-    # Now, try searching via regex match
-    for ainfo in archinfo.values():
-        for (match, submodel) in ainfo.all_submodels():
-            if re.search(match, proc) != None:
-                logging.debug('Possible match "%s" with "%s" (%s)' % (
-                    proc, match, submodel))
-                return (ainfo.basename, submodel)
+            return ainfo.basename
 
     return None
 
@@ -1401,21 +1355,8 @@ def system_cpu_info():
     if platform.processor() != '':
         cpu_info.append(platform.processor())
 
-    try:
-        with open('/proc/cpuinfo') as f:
-            for line in f.readlines():
-                colon = line.find(':')
-                if colon > 1:
-                    key = line[0:colon].strip()
-                    val = ' '.join([s.strip() for s in line[colon+1:].split(' ') if s != ''])
-
-                    # Different Linux arch use different names for this field in cpuinfo
-                    if key in ["model name", "cpu model", "Processor"]:
-                        logging.info('Detected CPU model "%s" in /proc/cpuinfo' % (val))
-                        cpu_info.append(val)
-                        break
-    except IOError:
-        pass
+    if 'uname' in os.__dict__:
+        cpu_info.append(os.uname()[4])
 
     return cpu_info
 
@@ -1764,6 +1705,17 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         return osinfo.ar_command
 
+    def choose_endian(arch_info, options):
+        if options.with_endian != None:
+            return options.with_endian
+
+        if options.cpu.endswith('eb') or options.cpu.endswith('be'):
+            return 'big'
+        elif options.cpu.endswith('el') or options.cpu.endswith('le'):
+            return 'little'
+
+        return arch_info.endian
+
     build_dir = options.with_build_dir or os.path.curdir
     program_suffix = options.program_suffix or osinfo.program_suffix
 
@@ -1842,8 +1794,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'os': options.os,
         'arch': options.arch,
         'cpu_family': arch.family,
-        'submodel': options.cpu,
-        'endian': options.with_endian or arch.endian,
+        'endian': choose_endian(arch, options),
         'cpu_is_64bit': arch.wordsize == 64,
 
         'bakefile_arch': 'x86' if options.arch == 'x86_32' else 'x86_64',
@@ -2676,9 +2627,8 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
         logging.info('Guessing to use compiler %s (use --cc to set)' % (options.compiler))
 
     if options.cpu is None:
-        (options.arch, options.cpu) = guess_processor(info_arch)
-        logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
-            options.arch, options.cpu))
+        options.cpu = options.arch = guess_processor(info_arch)
+        logging.info('Guessing target processor is a %s (use --cpu to set)' % (options.arch))
 
     if options.with_documentation is True:
         if options.with_sphinx is None and have_program('sphinx-build'):
@@ -2701,14 +2651,12 @@ def canonicalize_options(options, info_os, info_arch):
         options.os = find_canonical_os_name(options.os)
 
     # canonical ARCH/CPU
-    cpu_from_user = options.cpu
-    results = canon_processor(info_arch, options.cpu)
-    if results != None:
-        (options.arch, options.cpu) = results
-        logging.info('Canonicalized CPU target %s to %s/%s' % (
-            cpu_from_user, options.arch, options.cpu))
-    else:
+    options.arch = canon_processor(info_arch, options.cpu)
+    if options.arch is None:
         raise UserError('Unknown or unidentifiable processor "%s"' % (options.cpu))
+
+    if options.cpu != options.arch:
+        logging.info('Canonicalized CPU target %s to %s', options.cpu, options.arch)
 
     shared_libs_supported = options.os in info_os and info_os[options.os].building_shared_supported()
 
@@ -2992,10 +2940,7 @@ def main(argv):
         policy.cross_check(info_modules)
 
     logging.debug('Known CPU names: ' + ' '.join(
-        sorted(flatten([[ainfo.basename] + \
-                        ainfo.aliases + \
-                        [x for (x, _) in ainfo.all_submodels()]
-                        for ainfo in info_arch.values()]))))
+        sorted(flatten([[ainfo.basename] + ainfo.aliases for ainfo in info_arch.values()]))))
 
     set_defaults_for_unset_options(options, info_arch, info_cc)
     canonicalize_options(options, info_os, info_arch)
@@ -3007,8 +2952,8 @@ def main(argv):
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
     cc_min_version = options.cc_min_version or calculate_cc_min_version(options, cc, source_paths)
 
-    logging.info('Target is %s:%s-%s-%s-%s' % (
-        options.compiler, cc_min_version, options.os, options.arch, options.cpu))
+    logging.info('Target is %s:%s-%s-%s' % (
+        options.compiler, cc_min_version, options.os, options.arch))
 
     main_action_configure_build(info_modules, source_paths, options,
                                 cc, cc_min_version, arch, osinfo, module_policy)

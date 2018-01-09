@@ -9,11 +9,3 @@ shared_flags "-fPIC"
 linux   -> "$(CXX) -shared -fPIC -Wl,-soname,{soname_abi}"
 solaris -> "$(CXX) -G -fPIC -Wl,-h,{soname_abi}"
 </so_link_commands>
-
-<mach_opt>
-i586     -> "-tp p5"
-i686     -> "-tp p6"
-athlon   -> "-tp k7"
-pentium4 -> "-tp p6"
-x86_32   -> "-tp px"
-</mach_opt>

@@ -10,55 +10,10 @@ ix86
 i86pc # for Solaris
 x86pc # for QNX
 bepc  # for Haiku
-</aliases>
 
-<submodels>
-i386
-i486
-i586
 i686
-pentium2
-pentium3
-pentium4
-pentium-m
-prescott
-k6
-athlon
-atom32
-</submodels>
-
-<submodel_aliases>
-pentium -> i586
-pentiumpro -> i686
-pentium_pro -> i686
-pentium2 -> pentium2
-pentiumii -> pentium2
-pentium3 -> pentium3
-pentiumiii -> pentium3
-
-x86family5 -> i586
-x86family6 -> i686
-
-pentiumm -> pentium-m
-intelpentiumm -> pentium-m
-
-intelpentium4 -> pentium4
-
-duron -> athlon
-athlon-xp -> athlon
-k7 -> athlon
-
-p2 -> i686
-p3 -> i686
-p4 -> pentium4
-
-intelcput2250 -> prescott
-intelcput2300 -> prescott
-intelcput2400 -> prescott
-intelcput2500 -> prescott
-intelcput2600 -> prescott
-intelcput2700 -> prescott
-</submodel_aliases>
+i386
+</aliases>
 
 <isa_extensions>
 aesni
