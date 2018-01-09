@@ -329,7 +329,7 @@ void fmonty(uint64_t result_two_q_x[5],
 */
 void swap_conditional(uint64_t a[5], uint64_t b[5], uint64_t iswap)
    {
-   const uint64_t swap = static_cast<uint64_t>(-iswap);
+   const uint64_t swap = static_cast<uint64_t>(-static_cast<int64_t>(iswap));
 
    for(size_t i = 0; i < 5; ++i)
       {
