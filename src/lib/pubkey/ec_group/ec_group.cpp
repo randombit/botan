@@ -14,18 +14,31 @@
 #include <botan/pem.h>
 #include <botan/reducer.h>
 
+#if defined(BOTAN_HAS_ECC_GROUP_CUSTOM)
+   #include <botan/ec_group_custom.h>
+#endif
+
 namespace Botan {
 
 EC_Group::EC_Group(const OID& domain_oid)
    {
    const std::string pem = PEM_for_named_group(OIDS::lookup(domain_oid));
-
+   EC_Group group;
+   
    if(pem == "")
       {
-      throw Lookup_Error("No ECC domain data for '" + domain_oid.as_string() + "'");
+#if defined(BOTAN_HAS_ECC_GROUP_CUSTOM)
+      group = EC_Group_Custom::get_group(OIDS::lookup(domain_oid));
+      if(!group.initialized())
+#endif
+         throw Lookup_Error("No ECC domain data for '" + domain_oid.as_string() + "'");
+      }
+   else
+      {
+      group = EC_Group(pem);
       }
 
-   *this = EC_Group(pem);
+   *this = group;
    m_oid = domain_oid.as_string();
    }
 
