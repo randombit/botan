@@ -164,15 +164,11 @@ void ASN1_Formatter::decode(std::ostream& output,
             data.decode(number, ENUMERATED, class_tag);
             }
 
-         const std::vector<uint8_t> rep = BigInt::encode(number, BigInt::Hexadecimal);
+         std::vector<uint8_t> rep = BigInt::encode(number, BigInt::Binary);
+         if(rep.empty()) // if zero
+            rep.resize(1);
 
-         std::string str;
-         for(size_t i = 0; i != rep.size(); ++i)
-            {
-            str += static_cast<char>(rep[i]);
-            }
-
-         output << format(type_tag, class_tag, level, length, str);
+         output << format(type_tag, class_tag, level, length, hex_encode(rep));
          }
       else if(type_tag == BOOLEAN)
          {
