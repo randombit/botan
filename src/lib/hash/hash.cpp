@@ -250,7 +250,7 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(req.algo_name() == "Blake2b")
       {
       return std::unique_ptr<HashFunction>(
-         new Blake2b(req.arg_as_integer(0, 512)));
+         new Blake2b(req.arg_as_integer(0, 512), req.arg(1, "")));
    }
 #endif
 
