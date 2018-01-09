@@ -1,9 +1,13 @@
-os_type unix
 
 # It is "sl" on HP-PA, but HP-UX on PA is EOL
 soname_suffix "so"
 
 <target_features>
+posix1
+clock_gettime
+dev_random
+
+sockets
 threads
 filesystem
 </target_features>

@@ -21,9 +21,9 @@ std::tm do_gmtime(std::time_t time_val)
    {
    std::tm tm;
 
-#if defined(BOTAN_TARGET_OS_HAS_GMTIME_S)
+#if defined(BOTAN_TARGET_OS_HAS_WIN32)
    ::gmtime_s(&tm, &time_val); // Windows
-#elif defined(BOTAN_TARGET_OS_HAS_GMTIME_R)
+#elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
    ::gmtime_r(&time_val, &tm); // Unix/SUSv2
 #else
    std::tm* tm_p = std::gmtime(&time_val);

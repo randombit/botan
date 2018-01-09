@@ -55,8 +55,8 @@ class OS_Utils_Tests final : public Test
 
          result.test_eq("PID same across calls", static_cast<size_t>(pid1), static_cast<size_t>(pid2));
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIKERNEL)
-         result.test_eq("PID is zero on unikernel systems", pid1, 0);
+#if defined(BOTAN_TARGET_OS_IS_INCLUDEOS) || defined(BOTAN_TARGET_OS_IS_LLVM)
+         result.test_eq("PID is expected to be zero on this platform", pid1, 0);
 #else
          result.test_ne("PID is non-zero on systems with processes", pid1, 0);
 #endif

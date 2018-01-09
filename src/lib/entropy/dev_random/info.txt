@@ -6,19 +6,6 @@ ENTROPY_SRC_DEV_RANDOM -> 20131128
 dev_random.h
 </header:internal>
 
-<os>
-aix
-android
-cygwin
-darwin
-dragonfly
-freebsd
-haiku
-hpux
-hurd
-linux
-netbsd
-openbsd
-qnx
-solaris
-</os>
+<os_features>
+dev_random,posix1
+</os_features>

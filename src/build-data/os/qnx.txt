@@ -1,13 +1,11 @@
-# not really, but for our purposes
-os_type unix
-
 soname_suffix "so"
 
 <target_features>
+posix1
 clock_gettime
-posix_mlock
-gmtime_r
-dlopen
+dev_random
+
+sockets
 threads
 filesystem
 </target_features>

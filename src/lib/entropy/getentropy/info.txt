@@ -6,6 +6,6 @@ ENTROPY_SRC_GETENTROPY -> 20170327
 getentropy.h
 </header:internal>
 
-<os>
-openbsd
-</os>
+<os_features>
+getentropy
+</os_features>

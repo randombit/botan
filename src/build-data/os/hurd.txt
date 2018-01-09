@@ -1,9 +1,12 @@
-os_type unix
 
 soname_suffix "so"
 
 <target_features>
-posix_mlock
+posix1
+dev_random
+clock_gettime
+
+sockets
 threads
 filesystem
 </target_features>

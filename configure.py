@@ -730,7 +730,7 @@ class ModuleInfo(InfoObject):
         lex = lex_me_harder(
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
-             'os', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
+             'os_features', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
             ],
             ['defines'],
             {
@@ -792,7 +792,7 @@ class ModuleInfo(InfoObject):
         self.libs = convert_lib_list(lex.libs)
         self.load_on = lex.load_on
         self.need_isa = lex.need_isa.split(',') if lex.need_isa else []
-        self.os = lex.os
+        self.os_features = lex.os_features
         self.requires = lex.requires
         self.warning = ' '.join(lex.warning) if lex.warning else None
 
@@ -825,10 +825,12 @@ class ModuleInfo(InfoObject):
             if not re.match('^[0-9]{8}$', value):
                 raise InternalError('Module defines value has invalid format: "%s"' % value)
 
-    def cross_check(self, arch_info, os_info, cc_info):
-        for supp_os in self.os:
-            if supp_os not in os_info:
-                raise InternalError('Module %s mentions unknown OS %s' % (self.infofile, supp_os))
+    def cross_check(self, arch_info, cc_info, all_os_features):
+
+        for feat in set(flatten([o.split(',') for o in self.os_features])):
+            if feat not in all_os_features:
+                logging.error("Module %s uses an OS feature (%s) which no OS supports", self.infofile, feat)
+
         for supp_cc in self.cc:
             if supp_cc not in cc_info:
                 colon_idx = supp_cc.find(':')
@@ -873,8 +875,23 @@ class ModuleInfo(InfoObject):
 
         return True
 
-    def compatible_os(self, os_name):
-        return self.os == [] or os_name in self.os
+    def compatible_os(self, os_data, options):
+        if not self.os_features:
+            return True
+
+        def has_all(needed, provided):
+            for n in needed:
+                if n not in provided:
+                    return False
+            return True
+
+        provided_features = os_data.enabled_features(options)
+
+        for feature_set in self.os_features:
+            if has_all(feature_set.split(','), provided_features):
+                return True
+
+        return False
 
     def compatible_compiler(self, ccinfo, cc_min_version, arch):
         # Check if this compiler supports the flags we need
@@ -1236,7 +1253,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             ['aliases', 'target_features'],
             [],
             {
-                'os_type': None,
                 'program_suffix': '',
                 'obj_suffix': 'o',
                 'soname_suffix': '',
@@ -1299,7 +1315,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.library_name = lex.library_name
         self.man_dir = lex.man_dir
         self.obj_suffix = lex.obj_suffix
-        self.os_type = lex.os_type
         self.program_suffix = lex.program_suffix
         self.so_post_link_command = lex.so_post_link_command
         self.static_suffix = lex.static_suffix
@@ -1856,7 +1871,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'os_features': osinfo.enabled_features(options),
         'os_name': osinfo.basename,
-        'os_type': osinfo.os_type,
         'cpu_features': arch.supported_isa_extensions(cc, options),
         'house_ecc_curve_defines': house_ecc_curve_macros(options.house_curve),
 
@@ -1913,10 +1927,11 @@ class ModulesChooser(object):
     Determine which modules to load based on options, target, etc
     """
 
-    def __init__(self, modules, module_policy, archinfo, ccinfo, cc_min_version, options):
+    def __init__(self, modules, module_policy, archinfo, osinfo, ccinfo, cc_min_version, options):
         self._modules = modules
         self._module_policy = module_policy
         self._archinfo = archinfo
+        self._osinfo = osinfo
         self._ccinfo = ccinfo
         self._cc_min_version = cc_min_version
         self._options = options
@@ -1931,7 +1946,7 @@ class ModulesChooser(object):
             self._modules, self._options.enabled_modules, self._options.disabled_modules)
 
     def _check_usable(self, module, modname):
-        if not module.compatible_os(self._options.os):
+        if not module.compatible_os(self._osinfo, self._options):
             self._not_using_because['incompatible OS'].add(modname)
             return False
         elif not module.compatible_compiler(self._ccinfo, self._cc_min_version, self._archinfo.basename):
@@ -2759,7 +2774,8 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
 def prepare_configure_build(info_modules, source_paths, options,
                             cc, cc_min_version, arch, osinfo, module_policy):
-    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, cc_min_version, options).choose()
+    chooser = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options)
+    loaded_module_names = chooser.choose()
     using_mods = [info_modules[modname] for modname in loaded_module_names]
 
     build_config = BuildPaths(source_paths, options, using_mods)
@@ -2911,6 +2927,8 @@ def main(argv):
     Main driver
     """
 
+    # pylint: disable=too-many-locals
+
     options = process_command_line(argv[1:])
 
     setup_logging(options)
@@ -2933,8 +2951,10 @@ def main(argv):
     info_cc = load_build_data_info_files(source_paths, 'compiler info', 'cc', CompilerInfo)
     info_module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
 
+    all_os_features = set(flatten([o.target_features for o in info_os.values()]))
+
     for mod in info_modules.values():
-        mod.cross_check(info_arch, info_os, info_cc)
+        mod.cross_check(info_arch, info_cc, all_os_features)
 
     for policy in info_module_policies.values():
         policy.cross_check(info_modules)

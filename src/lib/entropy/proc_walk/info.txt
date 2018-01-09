@@ -6,16 +6,6 @@ ENTROPY_SRC_PROC_WALKER -> 20131128
 proc_walk.h
 </header:internal>
 
-<os>
-android
-aix
-cygwin
-darwin
-dragonfly
-hpux
-hurd
-linux
-netbsd
-qnx
-solaris
-</os>
+<os_features>
+posix1,proc_fs
+</os_features>

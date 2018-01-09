@@ -1,5 +1,4 @@
-os_type unikernel
-
-
 <target_features>
+posix1
+dev_random
 </target_features>

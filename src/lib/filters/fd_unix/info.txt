@@ -4,18 +4,6 @@ PIPE_UNIXFD_IO -> 20131128
 
 load_on auto
 
-<os>
-android
-aix
-cygwin
-darwin
-dragonfly
-freebsd
-haiku
-hpux
-linux
-netbsd
-openbsd
-qnx
-solaris
-</os>
+<os_features>
+posix1
+</os_features>

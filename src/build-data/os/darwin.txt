@@ -1,4 +1,3 @@
-os_type unix
 
 soname_pattern_base  "libbotan-{version_major}.dylib"
 soname_pattern_abi   "libbotan-{version_major}.{abi_rev}.dylib"
@@ -11,13 +10,14 @@ so_post_link_command "install_name_tool -change '$(INSTALLED_LIB_DIR)/{soname_ab
 doc_dir doc
 
 <target_features>
+posix1
 arc4random
-dlopen
-filesystem
-gmtime_r
-readdir
+dev_random
+security_framework
+
 sockets
 threads
+filesystem
 </target_features>
 
 <aliases>
