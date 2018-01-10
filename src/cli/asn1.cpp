@@ -27,7 +27,7 @@ class ASN1_Printer final : public Command
 
          std::vector<uint8_t> contents;
 
-         if(flag_set("pem"))
+         if(flag_set("pem") || (input.size() > 4 && input.substr(input.size() - 4) == ".pem"))
             {
 #if defined(BOTAN_HAS_PEM_CODEC)
             std::string pem_label;
