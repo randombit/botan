@@ -8,14 +8,18 @@
 #ifndef BOTAN_LOOKUP_H_
 #define BOTAN_LOOKUP_H_
 
+#include <botan/build.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
-#include <botan/mac.h>
 #include <botan/exceptn.h>
 #include <string>
 #include <vector>
 #include <memory>
+
+#if defined(BOTAN_HAS_MAC)
+   #include <botan/mac.h>
+#endif
 
 namespace Botan {
 
@@ -118,6 +122,7 @@ inline std::vector<std::string> get_hash_function_providers(const std::string& a
    return HashFunction::providers(algo_spec);
    }
 
+#if defined(BOTAN_HAS_MAC)
 /**
 * MAC factory method.
 *
@@ -144,6 +149,7 @@ inline std::vector<std::string> get_mac_providers(const std::string& algo_spec)
    {
    return MessageAuthenticationCode::providers(algo_spec);
    }
+#endif
 
 }
 
