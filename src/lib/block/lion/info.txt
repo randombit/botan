@@ -1,3 +1,8 @@
 <defines>
 LION -> 20131128
 </defines>
+
+<requires>
+stream
+hash
+</requires>

@@ -51,10 +51,12 @@ Cipher_Mode* get_cipher_mode(const std::string& algo, Cipher_Dir direction,
       }
 #endif
 
+#if defined(BOTAN_HAS_STREAM_CIPHER)
    if(auto sc = StreamCipher::create(algo))
       {
       return new Stream_Cipher_Mode(sc.release());
       }
+#endif
 
 #if defined(BOTAN_HAS_AEAD_MODES)
    if(auto aead = get_aead(algo, direction))

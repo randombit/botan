@@ -11,12 +11,7 @@ symkey.h
 </header:public>
 
 <requires>
-block
-hash
 hex
-mac
-modes
 rng
-stream
 utils
 </requires>

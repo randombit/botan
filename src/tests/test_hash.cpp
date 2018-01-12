@@ -6,9 +6,13 @@
 
 #include "tests.h"
 
-#include <botan/hash.h>
+#if defined(BOTAN_HAS_HASH)
+   #include <botan/hash.h>
+#endif
 
 namespace Botan_Tests {
+
+#if defined(BOTAN_HAS_HASH)
 
 namespace {
 
@@ -108,5 +112,7 @@ class Hash_Function_Tests final : public Text_Based_Test
 BOTAN_REGISTER_TEST("hash", Hash_Function_Tests);
 
 }
+
+#endif
 
 }

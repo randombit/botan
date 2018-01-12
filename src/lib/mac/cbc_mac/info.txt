@@ -1,3 +1,7 @@
 <defines>
 CBC_MAC -> 20131128
 </defines>
+
+<requires>
+block
+</requires>

@@ -5,6 +5,9 @@
 */
 
 #include "tests.h"
+
+#if defined(BOTAN_HAS_BLOCK_CIPHER)
+
 #include <botan/block_cipher.h>
 
 namespace Botan_Tests {
@@ -144,3 +147,5 @@ class Block_Cipher_Tests final : public Text_Based_Test
 BOTAN_REGISTER_TEST("block", Block_Cipher_Tests);
 
 }
+
+#endif
