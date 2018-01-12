@@ -8,7 +8,7 @@
 
 #include <botan/basefilt.h>
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+#if defined(BOTAN_HAS_THREAD_UTILS)
 
 #include <botan/internal/semaphore.h>
 #include <botan/internal/barrier.h>

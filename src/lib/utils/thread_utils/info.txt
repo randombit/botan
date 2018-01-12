@@ -1,0 +1,12 @@
+<defines>
+THREAD_UTILS -> 20180112
+</defines>
+
+<header:internal>
+barrier.h
+semaphore.h
+</header:internal>
+
+<os_features>
+threads
+</os_features>

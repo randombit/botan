@@ -82,7 +82,7 @@ class BOTAN_PUBLIC_API(2,0) Fork : public Fanout_Filter
       Fork(Filter* filter_arr[], size_t length);
    };
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+#if defined(BOTAN_HAS_THREAD_UTILS)
 
 /**
 * This class is a threaded version of the Fork filter. While this uses
