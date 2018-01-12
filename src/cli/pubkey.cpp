@@ -121,7 +121,7 @@ std::string algo_default_emsa(const std::string& key)
 class PK_Sign final : public Command
    {
    public:
-      PK_Sign() : Command("sign --passphrase= --hash=SHA-256 --emsa= key file") {}
+      PK_Sign() : Command("sign --der-format --passphrase= --hash=SHA-256 --emsa= key file") {}
 
       void go() override
          {
@@ -139,7 +139,10 @@ class PK_Sign final : public Command
          const std::string sig_padding =
             get_arg_or("emsa", algo_default_emsa(key->algo_name())) + "(" + get_arg("hash") + ")";
 
-         Botan::PK_Signer signer(*key, rng(), sig_padding);
+         const Botan::Signature_Format format =
+            flag_set("der-format") ? Botan::DER_SEQUENCE : Botan::IEEE_1363;
+
+         Botan::PK_Signer signer(*key, rng(), sig_padding, format);
 
          auto onData = [&signer](const uint8_t b[], size_t l)
             {
@@ -156,7 +159,7 @@ BOTAN_REGISTER_COMMAND("sign", PK_Sign);
 class PK_Verify final : public Command
    {
    public:
-      PK_Verify() : Command("verify --hash=SHA-256 --emsa= pubkey file signature") {}
+      PK_Verify() : Command("verify --der-format --hash=SHA-256 --emsa= pubkey file signature") {}
 
       void go() override
          {
@@ -169,7 +172,10 @@ class PK_Verify final : public Command
          const std::string sig_padding =
             get_arg_or("emsa", algo_default_emsa(key->algo_name())) + "(" + get_arg("hash") + ")";
 
-         Botan::PK_Verifier verifier(*key, sig_padding);
+         const Botan::Signature_Format format =
+            flag_set("der-format") ? Botan::DER_SEQUENCE : Botan::IEEE_1363;
+
+         Botan::PK_Verifier verifier(*key, sig_padding, format);
          auto onData = [&verifier](const uint8_t b[], size_t l)
             {
             verifier.update(b, l);
