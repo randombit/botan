@@ -8,12 +8,15 @@
 #include "cli.h"
 
 #include <botan/version.h>
-#include <botan/hash.h>
 #include <botan/rng.h>
 #include <botan/cpuid.h>
 #include <botan/hex.h>
 #include <botan/parsing.h>
 #include <sstream>
+
+#if defined(BOTAN_HAS_HASH)
+   #include <botan/hash.h>
+#endif
 
 #if defined(BOTAN_HAS_MAC)
    #include <botan/mac.h>
@@ -142,6 +145,8 @@ class Print_Cpuid final : public Command
 
 BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
 
+#if defined(BOTAN_HAS_HASH)
+
 class Hash final : public Command
    {
    public:
@@ -182,6 +187,8 @@ class Hash final : public Command
    };
 
 BOTAN_REGISTER_COMMAND("hash", Hash);
+
+#endif
 
 class RNG final : public Command
    {

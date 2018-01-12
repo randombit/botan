@@ -8,9 +8,8 @@
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    #include <botan/rfc6979.h>
+   #include <botan/hash.h>
 #endif
-
-#include <botan/hash.h>
 
 namespace Botan_Tests {
 

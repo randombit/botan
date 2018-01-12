@@ -9,13 +9,22 @@
 #define BOTAN_LOOKUP_H_
 
 #include <botan/build.h>
-#include <botan/block_cipher.h>
-#include <botan/stream_cipher.h>
-#include <botan/hash.h>
 #include <botan/exceptn.h>
 #include <string>
 #include <vector>
 #include <memory>
+
+#if defined(BOTAN_HAS_BLOCK_CIPHER)
+   #include <botan/block_cipher.h>
+#endif
+
+#if defined(BOTAN_HAS_STREAM_CIPHER)
+   #include <botan/stream_cipher.h>
+#endif
+
+#if defined(BOTAN_HAS_HASH)
+   #include <botan/hash.h>
+#endif
 
 #if defined(BOTAN_HAS_MAC)
    #include <botan/mac.h>
@@ -33,6 +42,8 @@ namespace Botan {
 *  NOTE: these functions create and return new objects, letting the
 * caller assume ownership of them
 */
+
+#if defined(BOTAN_HAS_BLOCK_CIPHER)
 
 /**
 * Block cipher factory method.
@@ -61,6 +72,10 @@ inline std::vector<std::string> get_block_cipher_providers(const std::string& al
    return BlockCipher::providers(algo_spec);
    }
 
+#endif
+
+#if defined(BOTAN_HAS_STREAM_CIPHER)
+
 /**
 * Stream cipher factory method.
 *
@@ -87,6 +102,10 @@ inline std::vector<std::string> get_stream_cipher_providers(const std::string& a
    {
    return StreamCipher::providers(algo_spec);
    }
+
+#endif
+
+#if defined(BOTAN_HAS_HASH)
 
 /**
 * Hash function factory method.
@@ -121,6 +140,8 @@ inline std::vector<std::string> get_hash_function_providers(const std::string& a
    {
    return HashFunction::providers(algo_spec);
    }
+
+#endif
 
 #if defined(BOTAN_HAS_MAC)
 /**

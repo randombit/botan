@@ -1,3 +1,7 @@
 <defines>
 CTR_BE -> 20131128
 </defines>
+
+<requires>
+block
+</requires>

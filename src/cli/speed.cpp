@@ -17,15 +17,27 @@
 #include <set>
 
 // Always available:
-#include <botan/block_cipher.h>
-#include <botan/stream_cipher.h>
-#include <botan/hash.h>
-#include <botan/cipher_mode.h>
 #include <botan/entropy_src.h>
 #include <botan/parsing.h>
 #include <botan/cpuid.h>
 #include <botan/internal/os_utils.h>
 #include <botan/version.h>
+
+#if defined(BOTAN_HAS_BLOCK_CIPHER)
+   #include <botan/block_cipher.h>
+#endif
+
+#if defined(BOTAN_HAS_STREAM_CIPHER)
+   #include <botan/stream_cipher.h>
+#endif
+
+#if defined(BOTAN_HAS_HASH)
+   #include <botan/hash.h>
+#endif
+
+#if defined(BOTAN_HAS_CIPHER_MODE)
+   #include <botan/cipher_mode.h>
+#endif
 
 #if defined(BOTAN_HAS_MAC)
    #include <botan/mac.h>
@@ -693,29 +705,40 @@ class Speed final : public Command
             {
             using namespace std::placeholders;
 
-            if(Botan::HashFunction::providers(algo).size() > 0)
+            if(false)
+               {
+               }
+#if defined(BOTAN_HAS_HASH)
+            else if(Botan::HashFunction::providers(algo).size() > 0)
                {
                bench_providers_of<Botan::HashFunction>(
                   algo, provider, msec, buf_sizes,
                   std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
                }
+#endif
+#if defined(BOTAN_HAS_BLOCK_CIPHER)
             else if(Botan::BlockCipher::providers(algo).size() > 0)
                {
                bench_providers_of<Botan::BlockCipher>(
                   algo, provider, msec, buf_sizes,
                   std::bind(&Speed::bench_block_cipher, this, _1, _2, _3, _4));
                }
+#endif
+#if defined(BOTAN_HAS_STREAM_CIPHER)
             else if(Botan::StreamCipher::providers(algo).size() > 0)
                {
                bench_providers_of<Botan::StreamCipher>(
                   algo, provider, msec, buf_sizes,
                   std::bind(&Speed::bench_stream_cipher, this, _1, _2, _3, _4));
                }
+#endif
+#if defined(BOTAN_HAS_CIPHER_MODE)
             else if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
                {
                auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
                bench_cipher_mode(*enc, *dec, msec, buf_sizes);
                }
+#endif
 #if defined(BOTAN_HAS_MAC)
             else if(Botan::MessageAuthenticationCode::providers(algo).size() > 0)
                {
@@ -944,6 +967,7 @@ class Speed final : public Command
             }
          }
 
+#if defined(BOTAN_HAS_BLOCK_CIPHER)
       void bench_block_cipher(Botan::BlockCipher& cipher,
                               const std::string& provider,
                               std::chrono::milliseconds runtime,
@@ -979,7 +1003,9 @@ class Speed final : public Command
             record_result(decrypt_timer);
             }
          }
+#endif
 
+#if defined(BOTAN_HAS_STREAM_CIPHER)
       void bench_stream_cipher(
          Botan::StreamCipher& cipher,
          const std::string& provider,
@@ -1009,7 +1035,9 @@ class Speed final : public Command
             record_result(encrypt_timer);
             }
          }
+#endif
 
+#if defined(BOTAN_HAS_HASH)
       void bench_hash(
          Botan::HashFunction& hash,
          const std::string& provider,
@@ -1025,6 +1053,7 @@ class Speed final : public Command
             record_result(timer);
             }
          }
+#endif
 
 #if defined(BOTAN_HAS_MAC)
       void bench_mac(
@@ -1048,6 +1077,7 @@ class Speed final : public Command
          }
 #endif
 
+#if defined(BOTAN_HAS_CIPHER_MODE)
       void bench_cipher_mode(
          Botan::Cipher_Mode& enc,
          Botan::Cipher_Mode& dec,
@@ -1092,6 +1122,7 @@ class Speed final : public Command
             record_result(decrypt_timer);
             }
          }
+#endif
 
       void bench_rng(
          Botan::RandomNumberGenerator& rng,

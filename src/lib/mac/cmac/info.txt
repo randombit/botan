@@ -3,5 +3,6 @@ CMAC -> 20131128
 </defines>
 
 <requires>
+block
 poly_dbl
 </requires>

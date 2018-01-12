@@ -1,3 +1,7 @@
 <defines>
 NIST_KEYWRAP -> 20171119
 </defines>
+
+<requires>
+block
+</requires>
