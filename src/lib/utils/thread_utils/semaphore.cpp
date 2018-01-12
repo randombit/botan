@@ -7,8 +7,6 @@
 
 #include <botan/internal/semaphore.h>
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-
 // Based on code by Pierre Gaston (http://p9as.blogspot.com/2012/06/c11-semaphores.html)
 
 namespace Botan {
@@ -38,5 +36,3 @@ void Semaphore::acquire()
    }
 
 }
-
-#endif
