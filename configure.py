@@ -521,6 +521,8 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     install_group.add_option('--program-suffix', metavar='SUFFIX',
                              help='append string to program names')
+    install_group.add_option('--library-suffix', metavar='SUFFIX', default='',
+                             help='append string to library names')
 
     install_group.add_option('--prefix', metavar='DIR',
                              help='set the install prefix')
@@ -1273,7 +1275,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'so_post_link_command': '',
                 'cli_exe_name': 'botan',
                 'lib_prefix': 'lib',
-                'library_name': 'botan-{major}',
+                'library_name': 'botan{suffix}-{major}',
             })
 
         if lex.ar_command == 'ar' and lex.ar_options == '':
@@ -1292,7 +1294,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 raise InternalError("Invalid soname_patterns in %s" % (self.infofile))
         else:
             if lex.soname_suffix:
-                self.soname_pattern_base = "libbotan-{version_major}.%s" % (lex.soname_suffix)
+                self.soname_pattern_base = "libbotan{lib_suffix}-{version_major}.%s" % (lex.soname_suffix)
                 self.soname_pattern_abi = self.soname_pattern_base + ".{abi_rev}"
                 self.soname_pattern_patch = self.soname_pattern_abi + ".{version_minor}.{version_patch}"
             else:
@@ -1762,7 +1764,10 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'lib_prefix': osinfo.lib_prefix,
         'static_suffix': osinfo.static_suffix,
-        'libname': osinfo.library_name.format(major=Version.major(), minor=Version.minor()),
+        'lib_suffix': options.library_suffix,
+        'libname': osinfo.library_name.format(major=Version.major(),
+                                              minor=Version.minor(),
+                                              suffix=options.library_suffix),
 
         'command_line': configure_command_line(),
         'local_config': read_textfile(options.local_config),

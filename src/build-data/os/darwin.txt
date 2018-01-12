@@ -1,7 +1,7 @@
 
-soname_pattern_base  "libbotan-{version_major}.dylib"
-soname_pattern_abi   "libbotan-{version_major}.{abi_rev}.dylib"
-soname_pattern_patch "libbotan-{version_major}.{abi_rev}.{version_minor}.{version_patch}.dylib"
+soname_pattern_base  "lib{libname}.dylib"
+soname_pattern_abi   "lib{libname}.{abi_rev}.dylib"
+soname_pattern_patch "lib{libname}.{abi_rev}.{version_minor}.{version_patch}.dylib"
 
 # In order that these executables work from the build directory,
 # we need to change the install names

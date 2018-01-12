@@ -8,7 +8,7 @@ lib_prefix ''
 
 # For historical reasons? the library does not have the major number on Windows
 # This should probably be fixed in a future major release.
-library_name 'botan'
+library_name 'botan{suffix}'
 
 soname_pattern_base "{libname}.dll"
 
