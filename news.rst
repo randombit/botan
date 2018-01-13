@@ -4,6 +4,9 @@ Release Notes
 Version 2.5.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Correct the return value of PK_Encryptor::maximum_input_size which
+  reported a much too small value (GH #1410)
+
 * Support detecting POWER crypto extensions using getauxval (GH #1393)
 
 * Remove use of CPU specific optimization flags (GH #1392)

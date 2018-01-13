@@ -307,6 +307,21 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
          kat_rng.reset(test_rng(get_req_bin(vars, "Nonce")));
          }
 
+      if(padding == "Raw")
+         {
+         /*
+         Hack for RSA with no padding since sometimes one more bit will fit in but maximum_input_size
+         rounds down to nearest byte
+         */
+         result.test_lte("Input within accepted bounds",
+                         plaintext.size(), encryptor->maximum_input_size() + 1);
+         }
+      else
+         {
+         result.test_lte("Input within accepted bounds",
+                         plaintext.size(), encryptor->maximum_input_size());
+         }
+
       const std::vector<uint8_t> generated_ciphertext =
          encryptor->encrypt(plaintext, kat_rng ? *kat_rng : Test::rng());
 
