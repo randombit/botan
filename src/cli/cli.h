@@ -160,10 +160,10 @@ class Command
 
       Botan::RandomNumberGenerator& rng();
 
+   private:
       typedef std::function<Command* ()> cmd_maker_fn;
       static std::map<std::string, cmd_maker_fn>& global_registry();
 
-   private:
       void parse_spec();
 
       // set in constructor
