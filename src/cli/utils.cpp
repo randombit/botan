@@ -47,39 +47,31 @@ class Print_Help final : public Command
 
       std::string help_text() const override
          {
-         const std::set<std::string> avail_commands =
-            Botan::map_keys_as_set(Botan_CLI::Command::global_registry());
+         std::map<std::string, std::vector<std::unique_ptr<Command>>> grouped_commands;
+
+         auto reg_commands = Command::registered_cmds();
+         for(const auto& cmd_name : reg_commands)
+            {
+            auto cmd = Command::get_cmd(cmd_name);
+            if(cmd)
+               {
+               grouped_commands[cmd->group()].push_back(std::move(cmd));
+               }
+            }
 
          const std::map<std::string, std::string> groups_description
-#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_MODES)
             { { "encryption", "Encryption" },
-#endif
-#if defined(BOTAN_HAS_COMPRESSION)
             { "compression", "Compression" },
-#endif
             { "hash", "Hash Functions" },
-#if defined(BOTAN_HAS_HMAC)
             { "hmac", "HMAC" },
-#endif
             { "numtheory", "Number Theory" },
-#if defined(BOTAN_HAS_BCRYPT)
             { "passhash", "Password Hashing" },
-#endif
-#if defined(BOTAN_HAS_PSK_DB) && defined(BOTAN_HAS_SQLITE3)
             { "psk", "PSK Database" },
-#endif
             { "pubkey", "Public Key Cryptography" },
-#if defined(BOTAN_HAS_TLS)
             { "tls", "TLS" },
-#endif
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
             { "x509", "X.509" },
-#endif
             { "misc", "Miscellaneous" }
          };
-   
-      const std::set<std::string> groups =
-         Botan::map_keys_as_set(groups_description);
 
       std::ostringstream oss;
 
@@ -87,16 +79,23 @@ class Print_Help final : public Command
       oss << "All commands support --verbose --help --output= --error-output= --rng-type= --drbg-seed=\n\n";
       oss << "Available commands:\n\n";
 
-      for(auto& cmd_group : groups)
+      for(const auto& commands : grouped_commands)
          {
-         oss << groups_description.at(cmd_group) << ":\n";
-         for(auto& cmd_name : avail_commands)
+         std::string desc = commands.first;
+         if(desc.empty())
             {
-            auto cmd = Botan_CLI::Command::get_cmd(cmd_name);
-            if(cmd->group() == cmd_group)
-               {
-               oss << "   " << std::setw(16) << std::left << cmd->cmd_name() << "   " << cmd->description() << "\n";
-               }
+            continue;
+            }
+
+         if(groups_description.find(commands.first) != groups_description.end())
+            {
+            desc = groups_description.at(commands.first);
+            }
+         oss << desc << ":\n";
+
+         for(auto& cmd : commands.second)
+            {
+            oss << "   " << std::setw(16) << std::left << cmd->cmd_name() << "   " << cmd->description() << "\n";
             }
          oss << "\n";
          }
