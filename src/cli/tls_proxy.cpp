@@ -411,6 +411,16 @@ class TLS_Proxy final : public Command
       TLS_Proxy() : Command("tls_proxy listen_port target_host target_port server_cert server_key "
                                "--threads=0 --session-db= --session-db-pass=") {}
 
+      std::string group() const override
+         {
+         return "tls";
+         }
+
+      std::string description() const override
+         {
+         return "Proxies requests between a TLS client and a TLS server";
+         }
+
       void go() override
          {
          const size_t listen_port = get_arg_sz("listen_port");

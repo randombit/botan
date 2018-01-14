@@ -21,6 +21,16 @@ class ASN1_Printer final : public Command
    public:
       ASN1_Printer() : Command("asn1print --pem file") {}
 
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Decode and print file with ASN.1 Basic Encoding Rules (BER)";
+         }
+
       void go() override
          {
          const std::string input = get_arg("file");
