@@ -11,7 +11,7 @@
 class ASN1_Parser final : public Botan::ASN1_Formatter
    {
    public:
-      ASN1_Parser() : Botan::ASN1_Formatter(true) {}
+      ASN1_Parser() : Botan::ASN1_Formatter(true, 64) {}
 
    protected:
       std::string format(Botan::ASN1_Tag, Botan::ASN1_Tag, size_t, size_t,
