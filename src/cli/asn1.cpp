@@ -19,7 +19,7 @@ namespace Botan_CLI {
 class ASN1_Printer final : public Command
    {
    public:
-      ASN1_Printer() : Command("asn1print --pem file") {}
+      ASN1_Printer() : Command("asn1print --print-limit=4096 --bin-limit=1024 --max-depth=64 --pem file") {}
 
       std::string group() const override
          {
@@ -34,6 +34,13 @@ class ASN1_Printer final : public Command
       void go() override
          {
          const std::string input = get_arg("file");
+         const size_t print_limit = get_arg_sz("print-limit");
+         const size_t bin_limit = get_arg_sz("bin-limit");
+         const bool print_context_specific = flag_set("print-context-specific");
+         const size_t max_depth = get_arg_sz("max-depth");
+
+         const size_t value_column = 60;
+         const size_t initial_level = 0;
 
          std::vector<uint8_t> contents;
 
@@ -51,12 +58,9 @@ class ASN1_Printer final : public Command
             contents = slurp_file(input);
             }
 
-         // TODO make these configurable
-         const size_t LIMIT = 4 * 1024;
-         const size_t BIN_LIMIT = 1024;
-         const bool PRINT_CONTEXT_SPECIFIC = true;
+         Botan::ASN1_Pretty_Printer printer(print_limit, bin_limit, print_context_specific,
+                                            initial_level, value_column, max_depth);
 
-         Botan::ASN1_Pretty_Printer printer(LIMIT, BIN_LIMIT, PRINT_CONTEXT_SPECIFIC);
          printer.print_to_stream(output(), contents.data(), contents.size());
          }
    };

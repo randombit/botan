@@ -77,6 +77,8 @@ void ASN1_Formatter::decode(std::ostream& output,
    {
    BER_Object obj = decoder.get_next_object();
 
+   const bool recurse_deeper = (m_max_depth == 0 || level < m_max_depth);
+
    while(obj.type_tag != NO_OBJECT)
       {
       const ASN1_Tag type_tag = obj.type_tag;
@@ -94,8 +96,17 @@ void ASN1_Formatter::decode(std::ostream& output,
       if(class_tag & CONSTRUCTED)
          {
          BER_Decoder cons_info(obj.value);
-         output << format(type_tag, class_tag, level, length, "");
-         decode(output, cons_info, level + 1); // recurse
+
+         if(recurse_deeper)
+            {
+            output << format(type_tag, class_tag, level, length, "");
+            decode(output, cons_info, level + 1); // recurse
+            }
+         else
+            {
+            output << format(type_tag, class_tag, level, length,
+                             format_bin(type_tag, class_tag, bits));
+            }
          }
       else if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
          {
@@ -111,7 +122,7 @@ void ASN1_Formatter::decode(std::ostream& output,
                                    std::string(cast_uint8_ptr_to_char(&bits[2]), bits.size() - 2));
                   success_parsing_cs = true;
                   }
-               else
+               else if(recurse_deeper)
                   {
                   std::vector<uint8_t> inner_bits;
                   data.decode(inner_bits, type_tag);
@@ -184,18 +195,27 @@ void ASN1_Formatter::decode(std::ostream& output,
          {
          std::vector<uint8_t> decoded_bits;
          data.decode(decoded_bits, type_tag);
+         bool printing_octet_string_worked = false;
 
-         try
+         if(recurse_deeper)
             {
-            BER_Decoder inner(decoded_bits);
+            try
+               {
+               BER_Decoder inner(decoded_bits);
 
-            std::ostringstream inner_data;
-            decode(inner_data, inner, level + 1); // recurse
+               std::ostringstream inner_data;
+               decode(inner_data, inner, level + 1); // recurse
 
-            output << format(type_tag, class_tag, level, length, "");
-            output << inner_data.str();
+               output << format(type_tag, class_tag, level, length, "");
+               output << inner_data.str();
+               printing_octet_string_worked = true;
+               }
+            catch(...)
+               {
+               }
             }
-         catch(...)
+
+         if(!printing_octet_string_worked)
             {
             output << format(type_tag, class_tag, level, length,
                              format_bin(type_tag, class_tag, decoded_bits));
