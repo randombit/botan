@@ -1300,13 +1300,7 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
-      Test::Result ffi_test_dsa(botan_rng_t rng)
-         {
-         Test::Result result("FFI DSA");
-
-         botan_privkey_t priv;
-
-         if(TEST_FFI_OK(botan_privkey_create, (&priv, "DSA", "dsa/jce/1024", rng)))
+         void do_dsa_test(botan_privkey_t priv, botan_rng_t rng, Test::Result &result)
             {
             TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
 
@@ -1402,6 +1396,21 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
             TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
+            }
+
+      Test::Result ffi_test_dsa(botan_rng_t rng)
+         {
+         Test::Result result("FFI DSA");
+         botan_privkey_t priv;
+
+         if(TEST_FFI_OK(botan_privkey_create, (&priv, "DSA", "dsa/jce/1024", rng)))
+            {
+               do_dsa_test(priv, rng, result);
+            }
+
+         if(TEST_FFI_OK(botan_privkey_create_dsa, (&priv, rng, 1024, 160)))
+            {
+               do_dsa_test(priv, rng, result);
             }
 
          return result;

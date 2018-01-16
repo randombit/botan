@@ -333,6 +333,24 @@ int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key)
    }
 
 /* DSA specific operations */
+int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t pbits, size_t qbits)
+   {
+#if defined(BOTAN_HAS_DSA)
+
+    if(rng_obj == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      Botan::DL_Group group(rng, Botan::DL_Group::Prime_Subgroup, pbits, qbits);
+      *key = new botan_privkey_struct(new Botan::DSA_PrivateKey(rng, group));
+      return BOTAN_FFI_SUCCESS;
+    });
+#else
+    BOTAN_UNUSED(key, rng_obj, pbits, qbits);
+    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
 
 int botan_privkey_load_dsa(botan_privkey_t* key,
                            botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t x)

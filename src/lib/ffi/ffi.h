@@ -702,6 +702,7 @@ BOTAN_PUBLIC_API(2,0) int botan_privkey_create_ecdsa(botan_privkey_t* key, botan
 BOTAN_PUBLIC_API(2,0) int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params);
 BOTAN_PUBLIC_API(2,0) int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);
 BOTAN_PUBLIC_API(2,0) int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* param);
+BOTAN_PUBLIC_API(2,0) int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng, size_t pbits, size_t qbits);
 
 /*
 * Input currently assumed to be PKCS #8 structure;
