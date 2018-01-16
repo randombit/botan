@@ -7,6 +7,7 @@
 
 #include <botan/numthry.h>
 #include <botan/rng.h>
+#include <botan/internal/bit_ops.h>
 #include <algorithm>
 
 namespace Botan {
@@ -50,6 +51,17 @@ BigInt random_prime(RandomNumberGenerator& rng,
    else if(bits == 4)
       {
       return ((rng.next_byte() % 2) ? 11 : 13);
+      }
+   else if(bits <= 16)
+      {
+      for(;;)
+         {
+         size_t idx = make_uint16(rng.next_byte(), rng.next_byte()) % PRIME_TABLE_SIZE;
+         uint16_t small_prime = PRIMES[idx];
+
+         if(high_bit(small_prime) == bits)
+            return small_prime;
+         }
       }
 
    secure_vector<uint16_t> sieve(PRIME_TABLE_SIZE);
