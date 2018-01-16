@@ -164,9 +164,9 @@ size_t BOTAN_PUBLIC_API(2,0) low_zero_bits(const BigInt& x);
 * @return true if all primality tests passed, otherwise false
 */
 bool BOTAN_PUBLIC_API(2,0) is_prime(const BigInt& n,
-                        RandomNumberGenerator& rng,
-                        size_t prob = 56,
-                        bool is_random = false);
+                                    RandomNumberGenerator& rng,
+                                    size_t prob = 56,
+                                    bool is_random = false);
 
 inline bool quick_check_prime(const BigInt& n, RandomNumberGenerator& rng)
    { return is_prime(n, rng, 32); }
@@ -186,11 +186,15 @@ inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
 * @param equiv a non-negative number that the result should be
                equivalent to modulo equiv_mod
 * @param equiv_mod the modulus equiv should be checked against
+* @param prob use test so false positive is bounded by 1/2**prob
 * @return random prime with the specified criteria
 */
 BigInt BOTAN_PUBLIC_API(2,0) random_prime(RandomNumberGenerator& rng,
-                              size_t bits, const BigInt& coprime = 1,
-                              size_t equiv = 1, size_t equiv_mod = 2);
+                                          size_t bits,
+                                          const BigInt& coprime = 0,
+                                          size_t equiv = 1,
+                                          size_t equiv_mod = 2,
+                                          size_t prob = 128);
 
 /**
 * Return a 'safe' prime, of the form p=2*q+1 with q prime
@@ -199,7 +203,7 @@ BigInt BOTAN_PUBLIC_API(2,0) random_prime(RandomNumberGenerator& rng,
 * @return prime randomly chosen from safe primes of length bits
 */
 BigInt BOTAN_PUBLIC_API(2,0) random_safe_prime(RandomNumberGenerator& rng,
-                                   size_t bits);
+                                               size_t bits);
 
 /**
 * Generate DSA parameters using the FIPS 186 kosherizer

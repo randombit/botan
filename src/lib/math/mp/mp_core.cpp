@@ -436,10 +436,14 @@ word bigint_divop(word n1, word n0, word d)
 */
 word bigint_modop(word n1, word n0, word d)
    {
+#if defined(BOTAN_HAS_MP_DWORD)
+   return ((static_cast<dword>(n1) << MP_WORD_BITS) | n0) % d;
+#else
    word z = bigint_divop(n1, n0, d);
    word dummy = 0;
    z = word_madd2(z, d, &dummy);
    return (n0-z);
+#endif
    }
 
 }
