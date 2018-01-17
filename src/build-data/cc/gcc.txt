@@ -57,6 +57,8 @@ rdseed	-> "-mrdseed"
 sha     -> "-msha"
 altivec -> "-maltivec"
 
+arm64:armv8crypto -> ""
+
 # For Aarch32 -mfpu=neon is required
 # For Aarch64 NEON is enabled by default
 arm32:neon    -> "-mfpu=neon"

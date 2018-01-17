@@ -11,4 +11,5 @@ armv8-a
 
 <isa_extensions>
 neon
+armv8crypto
 </isa_extensions>

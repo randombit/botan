@@ -2,9 +2,7 @@
 GCM_PMULL -> 20170903
 </defines>
 
-<arch>
-arm64
-</arch>
+need_isa armv8crypto
 
 <cc>
 gcc:4.9

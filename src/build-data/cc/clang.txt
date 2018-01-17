@@ -47,6 +47,8 @@ rdseed -> "-mrdseed"
 sha    -> "-msha"
 altivec -> "-maltivec"
 
+arm64:armv8crypto -> ""
+
 arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
 </isa_flags>
