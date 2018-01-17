@@ -3,7 +3,8 @@ KDF_BASE -> 20131128
 </defines>
 
 <requires>
-base
+mac
+hash
 </requires>
 
 <header:public>
