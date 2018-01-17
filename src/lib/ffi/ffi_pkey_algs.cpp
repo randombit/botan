@@ -459,6 +459,24 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key,
    }
 
 /* ElGamal specific operations */
+int botan_privkey_create_elgamal(botan_privkey_t* key, botan_rng_t rng_obj, size_t pbits)
+   {
+#if defined(BOTAN_HAS_ELGAMAL)
+
+    if(rng_obj == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      Botan::DL_Group group(rng, Botan::DL_Group::Strong, pbits);
+      *key = new botan_privkey_struct(new Botan::ElGamal_PrivateKey(rng, group));
+      return BOTAN_FFI_SUCCESS;
+    });
+#else
+    BOTAN_UNUSED(key, rng_obj, pbits);
+    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
 
 int botan_pubkey_load_elgamal(botan_pubkey_t* key,
                               botan_mp_t p, botan_mp_t g, botan_mp_t y)
