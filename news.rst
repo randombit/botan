@@ -4,14 +4,22 @@ Release Notes
 Version 2.5.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Use an improved algorithm for generating safe primes which is several tens of
+  times faster. Also, fix a bug in the prime sieving algorithm which caused
+  standard prime generation (like for RSA keys) to be slower than necessary.
+  (GH #1413 #1411)
+
 * Correct the return value of PK_Encryptor::maximum_input_size which
   reported a much too small value (GH #1410)
 
 * Support detecting POWER crypto extensions using getauxval (GH #1393)
 
-* Remove use of CPU specific optimization flags (GH #1392)
+* Remove use of CPU specific optimization flags, instead the user should set
+  these via CXXFLAGS if desired. (GH #1392)
 
 * Use feature flags to enable/disable system specific code (GH #1378)
+
+* The Perl XS based wrapper has been removed. (GH #1412)
 
 Version 2.4.0, 2018-01-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
