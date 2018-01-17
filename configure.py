@@ -2635,13 +2635,12 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
             if have_program('clang++'):
                 options.compiler = 'clang'
         elif options.os == 'openbsd':
-            if have_program('eg++'):
-                info_cc['gcc'].binary_name = 'eg++'
+            if have_program('clang++'):
+                options.compiler = 'clang'
             else:
-                logging.warning('Default GCC is too old; install a newer one using \'pkg_add gcc\'')
-            # The assembler shipping with OpenBSD 5.9 does not support avx2
-            del info_cc['gcc'].isa_flags['avx2']
-            options.compiler = 'gcc'
+                options.compiler = 'gcc'
+                # The assembler shipping with OpenBSD 5.9 does not support avx2
+                del info_cc['gcc'].isa_flags['avx2']
         else:
             options.compiler = 'gcc'
         logging.info('Guessing to use compiler %s (use --cc to set)' % (options.compiler))
