@@ -1,6 +1,6 @@
 /*
 * Prime Generation
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -97,11 +97,15 @@ BigInt random_prime(RandomNumberGenerator& rng,
          if(p.bits() > bits)
             break;
 
-         bool passes_sieve = true;
+         // Now that p is updated, update the sieve
          for(size_t i = 0; i != sieve.size(); ++i)
             {
             sieve[i] = (sieve[i] + modulo) % PRIMES[i];
+            }
 
+         bool passes_sieve = true;
+         for(size_t i = 0; passes_sieve && (i != sieve.size()); ++i)
+            {
             /*
             In this case, p is a multiple of PRIMES[i]
             */
@@ -119,7 +123,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
             See "Safe Prime Generation with a Combined Sieve" M. Wiener
             https://eprint.iacr.org/2003/186.pdf
             */
-            if(sieve[i] == PRIMES[i] / 2)
+            if(sieve[i] == (PRIMES[i] - 1) / 2)
                passes_sieve = false;
             }
 
