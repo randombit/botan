@@ -449,7 +449,7 @@ def main(args=None):
             cmds.append(['llvm-cov', 'show', './botan-test',
                          '-instr-profile=botan.profdata',
                          '>', 'build/cov_report.txt'])
-            sonar_config = os.path.join(root_dir, os.path.join(root_dir, 'src/build-data/sonar-project.properties'))
+            sonar_config = os.path.join(root_dir, os.path.join(root_dir, 'src/configs/sonar-project.properties'))
             cmds.append(['sonar-scanner',
                          '-Dproject.settings=%s' % (sonar_config),
                          '-Dsonar.login=$SONAR_TOKEN'])
