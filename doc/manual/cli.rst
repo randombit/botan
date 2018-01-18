@@ -163,12 +163,12 @@ TLS Server/Client
   defined in the *policy* file.
 
 ``tls_http_server cert key --port=443 --policy= --session-db --session-db-pass=``
-  Only available if asio support was enabled. Provides a simple HTTP server
+  Only available if Boost.Asio support was enabled. Provides a simple HTTP server
   which replies to all requests with an informational text output. The server
   honors the TLS policy defined in the *policy* file.
 
 ``tls_proxy listen_port target_host target_port server_cert server_key``
-  Only available if asio support was enabled. Listens on a port and
+  Only available if Boost.Asio support was enabled. Listens on a port and
   forwards all connects to a target server specified at
   ``target_host`` and ``target_port``.
 

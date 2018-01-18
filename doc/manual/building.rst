@@ -299,24 +299,26 @@ Currently ``configure.py`` cannot detect if external libraries are
 available, so using them is controlled explicitly at build time
 by the user using
 
- - ``--with-bzip2`` enables the filters providing bzip2 compression
-   and decompression. Requires the bzip2 development libraries to be
-   installed.
+ - ``--with-bzip2`` enables the filters providing bzip2 compression and
+   decompression. Requires the bzip2 development libraries to be installed.
 
- - ``--with-zlib`` enables the filters providing zlib compression
-   and decompression. Requires the zlib development libraries to be
-   installed.
+ - ``--with-zlib`` enables the filters providing zlib compression and
+   decompression. Requires the zlib development libraries to be installed.
 
  - ``--with-lzma`` enables the filters providing lzma compression and
-   decompression. Requires the lzma development libraries to be
-   installed.
+   decompression. Requires the lzma development libraries to be installed.
 
- - ``--with-sqlite3`` enables storing TLS session information to an
-   encrypted SQLite database.
+ - ``--with-sqlite3`` enables using sqlite3 databases in various contexts
+   (TLS session cache, PSK database, etc).
 
- - ``--with-openssl`` adds an engine that uses OpenSSL for some public
-   key operations and ciphers/hashes. OpenSSL 1.0.1 or later is supported.
-   LibreSSL is API compatible with OpenSSL 1.0 and can be used instead.
+ - ``--with-openssl`` adds an engine that uses OpenSSL for some ciphers, hashes,
+   and public key operations. OpenSSL 1.0.2 or later is supported. LibreSSL can
+   also be used.
+
+ - ``--with-boost`` enables using some Boost libraries. In particular
+   Boost.Filesystem is used for a few operations (but on most platforms, a
+   native API equivalent is available), and Boost.Asio is used to provide a few
+   extra TLS related command line utilities.
 
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
