@@ -1,6 +1,6 @@
 /*
 * PKCS #8
-* (C) 1999-2010,2014 Jack Lloyd
+* (C) 1999-2010,2014,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,9 +12,12 @@
 #include <botan/alg_id.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
-#include <botan/pbes2.h>
 #include <botan/scan_name.h>
 #include <botan/pk_algs.h>
+
+#if defined(BOTAN_HAS_PKCS5_PBES2)
+   #include <botan/pbes2.h>
+#endif
 
 namespace Botan {
 
@@ -54,20 +57,20 @@ secure_vector<uint8_t> PKCS8_decode(
    try {
       if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
          {
-         if ( is_encrypted )
+         if(is_encrypted)
             {
             key_data = PKCS8_extract(source, pbe_alg_id);
             }
          else
             {
             // todo read more efficiently
-            while ( !source.end_of_data() )
+            while(!source.end_of_data())
                {
                uint8_t b;
-               size_t read = source.read_byte( b );
-               if ( read )
+               size_t read = source.read_byte(b);
+               if(read)
                   {
-                  key_data.push_back( b );
+                  key_data.push_back(b);
                   }
                }
             }
@@ -103,14 +106,19 @@ secure_vector<uint8_t> PKCS8_decode(
          {
          if(OIDS::lookup(pbe_alg_id.get_oid()) != "PBE-PKCS5v20")
             throw Exception("Unknown PBE type " + pbe_alg_id.get_oid().as_string());
+#if defined(BOTAN_HAS_PKCS5_PBES2)
          key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.get_parameters());
+#else
+         BOTAN_UNUSED(get_passphrase);
+         throw Decoding_Error("Private key is encrypted but PBES2 was disabled in build");
+#endif
          }
       else
          key = key_data;
 
       BER_Decoder(key)
          .start_cons(SEQUENCE)
-         .decode_and_check<size_t>(0, "Unknown PKCS #8 version number")
+            .decode_and_check<size_t>(0, "Unknown PKCS #8 version number")
             .decode(pk_alg_id)
             .decode(key, OCTET_STRING)
             .discard_remaining()
@@ -142,6 +150,8 @@ std::string PEM_encode(const Private_Key& key)
    return PEM_Code::encode(PKCS8::BER_encode(key), "PRIVATE KEY");
    }
 
+#if defined(BOTAN_HAS_PKCS5_PBES2)
+
 namespace {
 
 std::pair<std::string, std::string>
@@ -164,6 +174,8 @@ choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
 
 }
 
+#endif
+
 /*
 * BER encode a PKCS #8 private key, encrypted
 */
@@ -173,6 +185,7 @@ std::vector<uint8_t> BER_encode(const Private_Key& key,
                              std::chrono::milliseconds msec,
                              const std::string& pbe_algo)
    {
+#if defined(BOTAN_HAS_PKCS5_PBES2)
    const auto pbe_params = choose_pbe_params(pbe_algo, key.algo_name());
 
    const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
@@ -185,6 +198,10 @@ std::vector<uint8_t> BER_encode(const Private_Key& key,
             .encode(pbe_info.second, OCTET_STRING)
          .end_cons()
       .get_contents_unlocked();
+#else
+   BOTAN_UNUSED(key, rng, pass, msec, pbe_algo);
+   throw Encoding_Error("PKCS8::BER_encode cannot encrypt because PBES2 was disabled in build");
+#endif
    }
 
 /*
@@ -213,6 +230,7 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
                                                      const std::string& cipher,
                                                      const std::string& pbkdf_hash)
    {
+#if defined(BOTAN_HAS_PKCS5_PBES2)
    const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
       pbes2_encrypt_iter(key.private_key_info(),
                          pass, pbkdf_iterations,
@@ -226,6 +244,10 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
             .encode(pbe_info.second, OCTET_STRING)
          .end_cons()
       .get_contents_unlocked();
+#else
+   BOTAN_UNUSED(key, rng, pass, pbkdf_iterations, cipher, pbkdf_hash);
+   throw Encoding_Error("PKCS8::BER_encode_encrypted_pbkdf_iter cannot encrypt because PBES2 disabled in build");
+#endif
    }
 
 /*
@@ -254,6 +276,7 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
                                                      const std::string& cipher,
                                                      const std::string& pbkdf_hash)
    {
+#if defined(BOTAN_HAS_PKCS5_PBES2)
    const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
       pbes2_encrypt_msec(key.private_key_info(), pass,
                          pbkdf_msec, pbkdf_iterations,
@@ -267,6 +290,10 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
             .encode(pbe_info.second, OCTET_STRING)
          .end_cons()
       .get_contents_unlocked();
+#else
+   BOTAN_UNUSED(key, rng, pass, pbkdf_msec, pbkdf_iterations, cipher, pbkdf_hash);
+   throw Encoding_Error("BER_encode_encrypted_pbkdf_msec cannot encrypt because PBES2 disabled in build");
+#endif
    }
 
 /*
