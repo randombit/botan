@@ -79,23 +79,23 @@ void ASN1_Formatter::decode(std::ostream& output,
 
    const bool recurse_deeper = (m_max_depth == 0 || level < m_max_depth);
 
-   while(obj.type_tag != NO_OBJECT)
+   while(obj.is_set())
       {
-      const ASN1_Tag type_tag = obj.type_tag;
-      const ASN1_Tag class_tag = obj.class_tag;
-      const size_t length = obj.value.size();
+      const ASN1_Tag type_tag = obj.type();
+      const ASN1_Tag class_tag = obj.get_class();
+      const size_t length = obj.length();
 
       /* hack to insert the tag+length back in front of the stuff now
          that we've gotten the type info */
       DER_Encoder encoder;
-      encoder.add_object(type_tag, class_tag, obj.value);
+      encoder.add_object(type_tag, class_tag, obj.bits(), obj.length());
       const std::vector<uint8_t> bits = encoder.get_contents_unlocked();
 
       BER_Decoder data(bits);
 
       if(class_tag & CONSTRUCTED)
          {
-         BER_Decoder cons_info(obj.value);
+         BER_Decoder cons_info(obj.bits(), obj.length());
 
          if(recurse_deeper)
             {

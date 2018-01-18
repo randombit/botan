@@ -12,6 +12,38 @@
 
 namespace Botan {
 
+/*
+* Check a type invariant on BER data
+*/
+void BER_Object::assert_is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_,
+                             const std::string& descr) const
+   {
+   if(this->is_a(type_tag_, class_tag_) == false)
+      {
+      throw BER_Decoding_Error("Tag mismatch when decoding " + descr + " got " +
+                               std::to_string(type_tag) + "/" +
+                               std::to_string(class_tag) + " expected " +
+                               std::to_string(type_tag_) + "/" +
+                               std::to_string(class_tag_));
+      }
+   }
+
+bool BER_Object::is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_) const
+   {
+   return (type_tag == type_tag_ && class_tag == class_tag_);
+   }
+
+bool BER_Object::is_a(int type_tag_, ASN1_Tag class_tag_) const
+   {
+   return is_a(ASN1_Tag(type_tag_), class_tag_);
+   }
+
+void BER_Object::set_tagging(ASN1_Tag t, ASN1_Tag c)
+   {
+   type_tag = t;
+   class_tag = c;
+   }
+
 std::string asn1_tag_to_string(ASN1_Tag type)
    {
    switch(type)
@@ -95,9 +127,14 @@ namespace ASN1 {
 */
 std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& contents)
    {
+   return ASN1::put_in_sequence(contents.data(), contents.size());
+   }
+
+std::vector<uint8_t> put_in_sequence(const uint8_t bits[], size_t len)
+   {
    return DER_Encoder()
       .start_cons(SEQUENCE)
-         .raw_bytes(contents)
+         .raw_bytes(bits, len)
       .end_cons()
    .get_contents_unlocked();
    }
@@ -107,7 +144,8 @@ std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& contents)
 */
 std::string to_string(const BER_Object& obj)
    {
-   return to_string(obj.value);
+   return std::string(cast_uint8_ptr_to_char(obj.bits()),
+                      obj.length());
    }
 
 /*

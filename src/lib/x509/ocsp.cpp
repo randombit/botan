@@ -32,18 +32,18 @@ void decode_optional_list(BER_Decoder& ber,
    {
    BER_Object obj = ber.get_next_object();
 
-   if(obj.type_tag != tag || obj.class_tag != (CONTEXT_SPECIFIC | CONSTRUCTED))
+   if(obj.is_a(tag, ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED)) == false)
       {
       ber.push_back(obj);
       return;
       }
 
-   BER_Decoder list(obj.value);
+   BER_Decoder list(obj);
 
    while(list.more_items())
       {
       BER_Object certbits = list.get_next_object();
-      X509_Certificate cert(unlock(certbits.value));
+      X509_Certificate cert(certbits.bits(), certbits.length());
       output.push_back(std::move(cert));
       }
    }

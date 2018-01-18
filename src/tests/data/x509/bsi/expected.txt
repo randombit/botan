@@ -28,7 +28,7 @@ cert_path_CRL_10$Certificate is revoked
 cert_path_CRL_11$Certificate is revoked
 cert_path_CRL_12$No revocation data
 cert_path_CRL_13$No CRL with matching distribution point for certificate
-cert_path_CRL_14$Invalid argument Decoding error: X509 CRL decoding failed: Invalid argument Decoding error: BER: Tag mismatch when decoding got 65280/65280 expected 3/0
+cert_path_CRL_14$Invalid argument Decoding error: X509 CRL decoding failed: Invalid argument Decoding error: BER: Tag mismatch when decoding object got 65280/65280 expected 3/0
 cert_path_CRL_15$No CRL with matching distribution point for certificate
 cert_path_CRL_16$Certificate is revoked
 cert_path_crypt_01$Signature error
@@ -42,7 +42,7 @@ cert_path_ext_06$CA certificate not allowed to issue certs
 cert_path_ext_07$CA certificate not allowed to issue certs
 cert_path_ext_08$Certificate chain too long
 cert_path_ext_09$Verified
-cert_path_ext_10$Invalid argument Decoding error: CERTIFICATE decoding failed: Invalid argument Decoding error: Decoding X.509 extension 2.5.29.15 failed failed with exception Invalid argument Decoding error: BER: Bad tag for usage constraint: 16/32
+cert_path_ext_10$Invalid argument Decoding error: CERTIFICATE decoding failed: Invalid argument Decoding error: Decoding X.509 extension 2.5.29.15 failed failed with exception Invalid argument Decoding error: BER: Tag mismatch when decoding usage constraint got 16/32 expected 3/0
 cert_path_ext_11$CA certificate not allowed to issue certs
 cert_path_ext_12$Certificate contains duplicate policy
 cert_path_ext_13$Unknown critical extension encountered
