@@ -485,7 +485,12 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
    for (auto& i : expected)
       {
       const std::string test_name = i.first;
-      const std::string expected_result = i.second;
+      std::string expected_result = i.second;
+
+#if !defined(BOTAN_HAS_MD5)
+      if(expected_result == "Hash function used is considered too weak for security")
+         expected_result = "Certificate signed with unknown/unavailable algorithm";
+#endif
 
       const std::string test_dir = bsi_test_dir + "/" + test_name;
 
