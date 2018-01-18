@@ -54,14 +54,14 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
          BER_Object obj = get_next_object();
          obj.assert_is_a(type_tag, class_tag);
 
-         if (obj.value.size() != sizeof(T))
+         if (obj.length() != sizeof(T))
             throw BER_Decoding_Error(
                     "Size mismatch. Object value size is " +
-                    std::to_string(obj.value.size()) +
+                    std::to_string(obj.length()) +
                     "; Output type size is " +
                     std::to_string(sizeof(T)));
 
-         copy_mem(reinterpret_cast<uint8_t*>(&out), obj.value.data(), obj.value.size());
+         copy_mem(reinterpret_cast<uint8_t*>(&out), obj.bits(), obj.length());
 
          return (*this);
          }
@@ -185,10 +185,10 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
 
          ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
 
-         if(obj.type_tag == type_tag && obj.class_tag == class_tag)
+         if(obj.is_a(type_tag, class_tag))
             {
             if((class_tag & CONSTRUCTED) && (class_tag & CONTEXT_SPECIFIC))
-               BER_Decoder(obj.value).decode(out, real_type).verify_end();
+               BER_Decoder(obj).decode(out, real_type).verify_end();
             else
                {
                push_back(obj);
@@ -210,13 +210,15 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
 
       BER_Decoder(const uint8_t[], size_t);
 
+      explicit BER_Decoder(const BER_Object& obj);
+
       explicit BER_Decoder(const secure_vector<uint8_t>&);
 
       explicit BER_Decoder(const std::vector<uint8_t>& vec);
 
       BER_Decoder(const BER_Decoder&);
    private:
-      BER_Decoder* m_parent;
+      BER_Decoder* m_parent = nullptr;
       BER_Object m_pushed;
       // either m_data_src.get() or an unowned pointer
       DataSource* m_source;
@@ -234,10 +236,10 @@ BER_Decoder& BER_Decoder::decode_optional(T& out,
    {
    BER_Object obj = get_next_object();
 
-   if(obj.type_tag == type_tag && obj.class_tag == class_tag)
+   if(obj.is_a(type_tag, class_tag))
       {
       if((class_tag & CONSTRUCTED) && (class_tag & CONTEXT_SPECIFIC))
-         BER_Decoder(obj.value).decode(out).verify_end();
+         BER_Decoder(obj).decode(out).verify_end();
       else
          {
          push_back(obj);
@@ -267,10 +269,9 @@ BER_Decoder& BER_Decoder::decode_optional_implicit(
    {
    BER_Object obj = get_next_object();
 
-   if(obj.type_tag == type_tag && obj.class_tag == class_tag)
+   if(obj.is_a(type_tag, class_tag))
       {
-      obj.type_tag = real_type;
-      obj.class_tag = real_class;
+      obj.set_tagging(real_type, real_class);
       push_back(obj);
       decode(out, real_type, real_class);
       }

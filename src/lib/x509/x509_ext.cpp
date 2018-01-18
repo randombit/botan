@@ -350,22 +350,27 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in)
 
    BER_Object obj = ber.get_next_object();
 
-   if(obj.type_tag != BIT_STRING || obj.class_tag != UNIVERSAL)
-      throw BER_Bad_Tag("Bad tag for usage constraint",
-                        obj.type_tag, obj.class_tag);
+   obj.assert_is_a(BIT_STRING, UNIVERSAL, "usage constraint");
 
-   if(obj.value.size() != 2 && obj.value.size() != 3)
+   if(obj.length() != 2 && obj.length() != 3)
       throw BER_Decoding_Error("Bad size for BITSTRING in usage constraint");
 
-   if(obj.value[0] >= 8)
+   uint16_t usage = 0;
+
+      const uint8_t* bits = obj.bits();
+
+   if(bits[0] >= 8)
       throw BER_Decoding_Error("Invalid unused bits in usage constraint");
 
-   obj.value[obj.value.size()-1] &= (0xFF << obj.value[0]);
+   const uint8_t mask = static_cast<uint8_t>(0xFF << bits[0]);
 
-   uint16_t usage = 0;
-   for(size_t i = 1; i != obj.value.size(); ++i)
+   if(obj.length() == 2)
       {
-      usage = (obj.value[i] << 8*(sizeof(usage)-i)) | usage;
+      usage = make_uint16(bits[1] & mask, 0);
+      }
+   else if(obj.length() == 3)
+      {
+      usage = make_uint16(bits[1], bits[2] & mask);
       }
 
    m_constraints = Key_Constraints(usage);
@@ -545,7 +550,7 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in)
    BER_Object per = ext.get_next_object();
 
    ext.push_back(per);
-   if(per.type_tag == 0 && per.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+   if(per.is_a(0, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
       ext.decode_list(permit,ASN1_Tag(0),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
       if(permit.empty())
@@ -554,7 +559,7 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in)
 
    BER_Object exc = ext.get_next_object();
    ext.push_back(exc);
-   if(per.type_tag == 1 && per.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+   if(per.is_a(1, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
       ext.decode_list(exclude,ASN1_Tag(1),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
       if(exclude.empty())
@@ -771,7 +776,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
          {
          BER_Object name = info.get_next_object();
 
-         if(name.type_tag == 6 && name.class_tag == CONTEXT_SPECIFIC)
+         if(name.is_a(6, CONTEXT_SPECIFIC))
             {
             m_ocsp_responder = ASN1::to_string(name);
             }
@@ -781,7 +786,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
          {
          BER_Object name = info.get_next_object();
 
-         if(name.type_tag == 6 && name.class_tag == CONTEXT_SPECIFIC)
+         if(name.is_a(6, CONTEXT_SPECIFIC))
             {
             m_ca_issuers.push_back(ASN1::to_string(name));
             }

@@ -161,31 +161,33 @@ void OID::encode_into(DER_Encoder& der) const
 void OID::decode_from(BER_Decoder& decoder)
    {
    BER_Object obj = decoder.get_next_object();
-   if(obj.type_tag != OBJECT_ID || obj.class_tag != UNIVERSAL)
-      throw BER_Bad_Tag("Error decoding OID, unknown tag",
-                        obj.type_tag, obj.class_tag);
-   if(obj.value.size() < 2)
+   if(obj.tagging() != OBJECT_ID)
+      throw BER_Bad_Tag("Error decoding OID, unknown tag", obj.tagging());
+
+   const size_t length = obj.length();
+   const uint8_t* bits = obj.bits();
+
+   if(length < 2)
       throw BER_Decoding_Error("OID encoding is too short");
 
-
    clear();
-   m_id.push_back(obj.value[0] / 40);
-   m_id.push_back(obj.value[0] % 40);
+   m_id.push_back(bits[0] / 40);
+   m_id.push_back(bits[0] % 40);
 
    size_t i = 0;
-   while(i != obj.value.size() - 1)
+   while(i != length - 1)
       {
       uint32_t component = 0;
-      while(i != obj.value.size() - 1)
+      while(i != length - 1)
          {
          ++i;
 
          if(component >> (32-7))
             throw Decoding_Error("OID component overflow");
 
-         component = (component << 7) + (obj.value[i] & 0x7F);
+         component = (component << 7) + (bits[i] & 0x7F);
 
-         if(!(obj.value[i] & 0x80))
+         if(!(bits[i] & 0x80))
             break;
          }
       m_id.push_back(component);

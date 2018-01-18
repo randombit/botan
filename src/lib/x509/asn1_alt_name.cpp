@@ -179,18 +179,15 @@ void AlternativeName::decode_from(BER_Decoder& source)
    {
    BER_Decoder names = source.start_cons(SEQUENCE);
 
+   // FIXME this is largely a duplication of GeneralName::decode_from
+
    while(names.more_items())
       {
       BER_Object obj = names.get_next_object();
-      if((obj.class_tag != CONTEXT_SPECIFIC) &&
-         (obj.class_tag != (CONTEXT_SPECIFIC | CONSTRUCTED)))
-         continue;
 
-      const ASN1_Tag tag = obj.type_tag;
-
-      if(tag == 0)
+      if(obj.is_a(0, CONTEXT_SPECIFIC))
          {
-         BER_Decoder othername(obj.value);
+         BER_Decoder othername(obj);
 
          OID oid;
          othername.decode(oid);
@@ -199,34 +196,35 @@ void AlternativeName::decode_from(BER_Decoder& source)
             BER_Object othername_value_outer = othername.get_next_object();
             othername.verify_end();
 
-            if(othername_value_outer.type_tag != ASN1_Tag(0) ||
-               othername_value_outer.class_tag !=
-                   (CONTEXT_SPECIFIC | CONSTRUCTED)
-               )
+            if(othername_value_outer.is_a(0, ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED)) == false)
                throw Decoding_Error("Invalid tags on otherName value");
 
-            BER_Decoder othername_value_inner(othername_value_outer.value);
+            BER_Decoder othername_value_inner(othername_value_outer);
 
             BER_Object value = othername_value_inner.get_next_object();
             othername_value_inner.verify_end();
 
-            const ASN1_Tag value_type = value.type_tag;
-
-            if(ASN1_String::is_string_type(value_type) && value.class_tag == UNIVERSAL)
+            if(ASN1_String::is_string_type(value.type()) && value.get_class() == UNIVERSAL)
                {
-               add_othername(oid, ASN1::to_string(value), value_type);
+               add_othername(oid, ASN1::to_string(value), value.type());
                }
             }
          }
-      else if(tag == 1 || tag == 2 || tag == 6)
+      if(obj.is_a(1, CONTEXT_SPECIFIC))
          {
-         if(tag == 1) add_attribute("RFC822", ASN1::to_string(obj));
-         if(tag == 2) add_attribute("DNS", ASN1::to_string(obj));
-         if(tag == 6) add_attribute("URI", ASN1::to_string(obj));
+         add_attribute("RFC822", ASN1::to_string(obj));
          }
-      else if(tag == 4)
+      else if(obj.is_a(2, CONTEXT_SPECIFIC))
          {
-         BER_Decoder dec(obj.value);
+         add_attribute("DNS", ASN1::to_string(obj));
+         }
+      else if(obj.is_a(6, CONTEXT_SPECIFIC))
+         {
+         add_attribute("URI", ASN1::to_string(obj));
+         }
+      else if(obj.is_a(4, ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED)))
+         {
+         BER_Decoder dec(obj);
          X509_DN dn;
          std::stringstream ss;
 
@@ -235,11 +233,11 @@ void AlternativeName::decode_from(BER_Decoder& source)
 
          add_attribute("DN", ss.str());
          }
-      else if(tag == 7)
+      else if(obj.is_a(7, CONTEXT_SPECIFIC))
          {
-         if(obj.value.size() == 4)
+         if(obj.length() == 4)
             {
-            const uint32_t ip = load_be<uint32_t>(&obj.value[0], 0);
+            const uint32_t ip = load_be<uint32_t>(obj.bits(), 0);
             add_attribute("IP", ipv4_to_string(ip));
             }
          }

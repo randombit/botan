@@ -47,7 +47,7 @@ void X509_Time::decode_from(BER_Decoder& source)
    {
    BER_Object ber_time = source.get_next_object();
 
-   set_to(ASN1::to_string(ber_time), ber_time.type_tag);
+   set_to(ASN1::to_string(ber_time), ber_time.type());
    }
 
 std::string X509_Time::to_string() const

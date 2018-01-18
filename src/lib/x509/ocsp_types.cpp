@@ -97,7 +97,7 @@ void SingleResponse::decode_from(class BER_Decoder& from)
                        ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED))
       .end_cons();
 
-   m_cert_status = cert_status.type_tag;
+   m_cert_status = cert_status.type();
    }
 
 }

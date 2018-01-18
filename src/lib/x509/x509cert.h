@@ -408,6 +408,13 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       explicit X509_Certificate(const std::vector<uint8_t>& in);
 
       /**
+      * Create a certificate from a buffer
+      * @param data the buffer containing the DER-encoded certificate
+      * @param length length of data in bytes
+      */
+      X509_Certificate(const uint8_t data[], size_t length);
+
+      /**
       * Create an uninitialized certificate object. Any attempts to
       * access this object will throw an exception.
       */

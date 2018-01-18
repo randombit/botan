@@ -88,13 +88,46 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
 class BOTAN_PUBLIC_API(2,0) BER_Object final
    {
    public:
-      void assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag) const;
+      BER_Object() : type_tag(NO_OBJECT), class_tag(UNIVERSAL) {}
 
-      // public member variable:
+      bool is_set() const { return type_tag != NO_OBJECT; }
+
+      ASN1_Tag tagging() const { return ASN1_Tag(type() | get_class()); }
+
+      ASN1_Tag type() const { return type_tag; }
+      ASN1_Tag get_class() const { return class_tag; }
+
+      const uint8_t* bits() const { return value.data(); }
+
+      size_t length() const { return value.size(); }
+
+      void assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag,
+                       const std::string& descr = "object") const;
+
+      bool is_a(ASN1_Tag type_tag, ASN1_Tag class_tag) const;
+
+      bool is_a(int type_tag, ASN1_Tag class_tag) const;
+
+   public:
+      /*
+      * The following member variables are public for historical reasons, but
+      * will be made private in a future major release. Use the accessor
+      * functions above.
+      */
       ASN1_Tag type_tag, class_tag;
-
-      // public member variable:
       secure_vector<uint8_t> value;
+
+   private:
+
+      friend class BER_Decoder;
+
+      void set_tagging(ASN1_Tag type_tag, ASN1_Tag class_tag);
+
+      uint8_t* mutable_bits(size_t length)
+         {
+         value.resize(length);
+         return value.data();
+         }
    };
 
 /*
@@ -105,6 +138,7 @@ class DataSource;
 namespace ASN1 {
 
 std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& val);
+std::vector<uint8_t> put_in_sequence(const uint8_t bits[], size_t len);
 std::string to_string(const BER_Object& obj);
 
 /**

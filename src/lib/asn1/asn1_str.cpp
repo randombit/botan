@@ -130,10 +130,10 @@ void ASN1_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
 
-   assert_is_string_type(obj.type_tag);
+   assert_is_string_type(obj.type());
 
-   m_tag = obj.type_tag;
-   m_data.assign(obj.value.begin(), obj.value.end());
+   m_tag = obj.type();
+   m_data.assign(obj.bits(), obj.bits() + obj.length());
 
    if(m_tag == BMP_STRING)
       {
