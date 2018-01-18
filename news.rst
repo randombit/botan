@@ -19,7 +19,12 @@ Version 2.5.0, Not Yet Released
 
 * Use feature flags to enable/disable system specific code (GH #1378)
 
-* The Perl XS based wrapper has been removed. (GH #1412)
+* The Perl XS based wrapper has been removed, as it was unmaintained and
+  broken. (GH #1412)
+
+* The sqlite3 encryption patch under ``contrib`` has been removed. It
+  is still maintained by the original author at
+  https://github.com/OlivierJG/botansqlite3
 
 Version 2.4.0, 2018-01-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
