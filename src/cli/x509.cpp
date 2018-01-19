@@ -7,7 +7,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 #include <botan/certstor.h>
 #include <botan/pk_keys.h>

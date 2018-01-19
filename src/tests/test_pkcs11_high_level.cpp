@@ -1550,6 +1550,7 @@ Test::Result test_x509_import()
    {
    Test::Result result("PKCS11 X509 cert import");
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
    TestSession test_session(true);
 
    X509_Certificate root(Test::data_file("x509/nist/test01/end.crt"));
@@ -1565,6 +1566,7 @@ Test::Result test_x509_import()
    result.test_eq("X509 certificate by handle", pkcs11_cert == pkcs11_cert2, true);
 
    pkcs11_cert.destroy();
+#endif
 
    return result;
    }

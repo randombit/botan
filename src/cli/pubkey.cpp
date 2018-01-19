@@ -27,36 +27,6 @@
 
 namespace Botan_CLI {
 
-class PK_Fingerprint final : public Command
-   {
-   public:
-      PK_Fingerprint() : Command("fingerprint --algo=SHA-256 *keys") {}
-
-      std::string group() const override
-         {
-         return "pubkey";
-         }
-
-      std::string description() const override
-         {
-         return "Calculate a public key fingerprint";
-         }
-
-      void go() override
-         {
-         const std::string hash_algo = get_arg("algo");
-
-         for(std::string key_file : get_arg_list("keys"))
-            {
-            std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_file));
-
-            output() << key_file << ": " << key->fingerprint_public(hash_algo) << "\n";
-            }
-         }
-   };
-
-BOTAN_REGISTER_COMMAND("fingerprint", PK_Fingerprint);
-
 class PK_Keygen final : public Command
    {
    public:
@@ -118,6 +88,8 @@ class PK_Keygen final : public Command
 
 BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
 namespace {
 
 std::string algo_default_emsa(const std::string& key)
@@ -137,6 +109,36 @@ std::string algo_default_emsa(const std::string& key)
    }
 
 }
+
+class PK_Fingerprint final : public Command
+   {
+   public:
+      PK_Fingerprint() : Command("fingerprint --algo=SHA-256 *keys") {}
+
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Calculate a public key fingerprint";
+         }
+
+      void go() override
+         {
+         const std::string hash_algo = get_arg("algo");
+
+         for(std::string key_file : get_arg_list("keys"))
+            {
+            std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_file));
+
+            output() << key_file << ": " << key->fingerprint_public(hash_algo) << "\n";
+            }
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("fingerprint", PK_Fingerprint);
 
 class PK_Sign final : public Command
    {
@@ -232,6 +234,84 @@ class PK_Verify final : public Command
    };
 
 BOTAN_REGISTER_COMMAND("verify", PK_Verify);
+
+class PKCS8_Tool final : public Command
+   {
+   public:
+      PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key") {}
+
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Open a PKCS #8 formatted key";
+         }
+
+      void go() override
+         {
+         std::unique_ptr<Botan::Private_Key> key;
+         std::string pass_in = get_arg("pass-in");
+
+         if (pass_in.empty())
+         {
+            key.reset(Botan::PKCS8::load_key(get_arg("key"), rng()));
+         }
+         else
+         {
+            key.reset(Botan::PKCS8::load_key(get_arg("key"), rng(), pass_in));
+         }
+
+         const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
+         const std::string pbe = get_arg("pbe");
+         const bool der_out = flag_set("der-out");
+
+         if(flag_set("pub-out"))
+            {
+            if(der_out)
+               {
+               write_output(Botan::X509::BER_encode(*key));
+               }
+            else
+               {
+               output() << Botan::X509::PEM_encode(*key);
+               }
+            }
+         else
+            {
+            const std::string pass_out = get_arg("pass-out");
+
+            if(der_out)
+               {
+               if(pass_out.empty())
+                  {
+                  write_output(Botan::PKCS8::BER_encode(*key));
+                  }
+               else
+                  {
+                  write_output(Botan::PKCS8::BER_encode(*key, rng(), pass_out, pbe_millis, pbe));
+                  }
+               }
+            else
+               {
+               if(pass_out.empty())
+                  {
+                  output() << Botan::PKCS8::PEM_encode(*key);
+                  }
+               else
+                  {
+                  output() << Botan::PKCS8::PEM_encode(*key, rng(), pass_out, pbe_millis, pbe);
+                  }
+               }
+            }
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("pkcs8", PKCS8_Tool);
+
+#endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
 
@@ -351,82 +431,6 @@ class Gen_DL_Group final : public Command
 BOTAN_REGISTER_COMMAND("gen_dl_group", Gen_DL_Group);
 
 #endif
-
-class PKCS8_Tool final : public Command
-   {
-   public:
-      PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key") {}
-
-      std::string group() const override
-         {
-         return "pubkey";
-         }
-
-      std::string description() const override
-         {
-         return "Open a PKCS #8 formatted key";
-         }
-
-      void go() override
-         {
-         std::unique_ptr<Botan::Private_Key> key;
-         std::string pass_in = get_arg("pass-in");
-
-         if (pass_in.empty())
-         {
-            key.reset(Botan::PKCS8::load_key(get_arg("key"), rng()));
-         }
-         else
-         {
-            key.reset(Botan::PKCS8::load_key(get_arg("key"), rng(), pass_in));
-         }
-
-         const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
-         const std::string pbe = get_arg("pbe");
-         const bool der_out = flag_set("der-out");
-
-         if(flag_set("pub-out"))
-            {
-            if(der_out)
-               {
-               write_output(Botan::X509::BER_encode(*key));
-               }
-            else
-               {
-               output() << Botan::X509::PEM_encode(*key);
-               }
-            }
-         else
-            {
-            const std::string pass_out = get_arg("pass-out");
-
-            if(der_out)
-               {
-               if(pass_out.empty())
-                  {
-                  write_output(Botan::PKCS8::BER_encode(*key));
-                  }
-               else
-                  {
-                  write_output(Botan::PKCS8::BER_encode(*key, rng(), pass_out, pbe_millis, pbe));
-                  }
-               }
-            else
-               {
-               if(pass_out.empty())
-                  {
-                  output() << Botan::PKCS8::PEM_encode(*key);
-                  }
-               else
-                  {
-                  output() << Botan::PKCS8::PEM_encode(*key, rng(), pass_out, pbe_millis, pbe);
-                  }
-               }
-            }
-         }
-   };
-
-BOTAN_REGISTER_COMMAND("pkcs8", PKCS8_Tool);
 
 }
 

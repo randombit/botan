@@ -22,7 +22,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_CERTSTOR_SQL) && defined(BOTAN_HAS_RSA)
+#if defined(BOTAN_HAS_CERTSTOR_SQL) && defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 struct CertificateAndKey
    {

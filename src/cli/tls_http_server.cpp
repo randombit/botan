@@ -7,7 +7,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 #include <iostream>
 #include <fstream>
