@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef TLS_CURVEID_MAP_H
-#define TLS_CURVEID_MAP_H
+#ifndef BOTAN_TLS_CURVEID_MAP_H_
+#define BOTAN_TLS_CURVEID_MAP_H_
 
 #include <string>
 

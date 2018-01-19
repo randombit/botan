@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef EC_GROUP_CUSTOM_H
-#define EC_GROUP_CUSTOM_H
+#ifndef BOTAN_EC_GROUP_CUSTOM_H_
+#define BOTAN_EC_GROUP_CUSTOM_H_
 
 #include <botan/oids.h>
 #include <botan/bigint.h>
