@@ -756,8 +756,10 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
 
             while(true)
                {
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
                // TODO: client and server should be in different threads
                std::this_thread::sleep_for(std::chrono::microseconds(rng.next_byte() % 128));
+#endif
                ++rounds;
 
                if(rounds > 100)
