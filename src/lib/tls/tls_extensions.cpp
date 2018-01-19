@@ -314,11 +314,6 @@ std::string Supported_Groups::curve_id_to_name(uint16_t id)
          return "x25519";
 #endif
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-      case BOTAN_HOUSE_ECC_CURVE_TLS_ID:
-         return BOTAN_HOUSE_ECC_CURVE_NAME;
-#endif
-
       case 256:
          return "ffdhe/ietf/2048";
       case 257:
@@ -354,11 +349,6 @@ uint16_t Supported_Groups::name_to_curve_id(const std::string& name)
 #if defined(BOTAN_HAS_CURVE_25519)
    if(name == "x25519")
       return 29;
-#endif
-
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-   if(name == BOTAN_HOUSE_ECC_CURVE_NAME)
-      return BOTAN_HOUSE_ECC_CURVE_TLS_ID;
 #endif
 
    if(name == "ffdhe/ietf/2048")

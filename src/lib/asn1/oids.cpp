@@ -47,10 +47,7 @@ class OID_Map
          auto i = m_oid2str.find(oid.as_string());
          if(i != m_oid2str.end())
             return i->second;
-
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-         if(oid_str == BOTAN_HOUSE_ECC_CURVE_OID) return BOTAN_HOUSE_ECC_CURVE_NAME;
-#endif
+         
          return "";
          }
 
@@ -61,9 +58,6 @@ class OID_Map
          if(i != m_str2oid.end())
             return i->second;
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-         if(name == BOTAN_HOUSE_ECC_CURVE_NAME) return OID(BOTAN_HOUSE_ECC_CURVE_OID);
-#endif
          return OID();
          }
 

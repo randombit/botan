@@ -1398,11 +1398,6 @@ class TLS_Unit_Tests final : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "DHE_PSK", "AES-128", "SHA-1");
 #endif
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-         test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
-            { { "groups", BOTAN_HOUSE_ECC_CURVE_NAME } });
-#endif
-
          return results;
          }
 
