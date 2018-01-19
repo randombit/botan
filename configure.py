@@ -490,9 +490,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     mods_group.add_option('--disable-modules', dest='disabled_modules',
                           metavar='MODS', action='append',
                           help='disable specific modules')
-    mods_group.add_option('--list-modules', dest='list_modules',
-                          action='store_true',
-                          help='list available modules and exit')
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help=optparse.SUPPRESS_HELP)
     mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
@@ -542,12 +539,23 @@ def process_command_line(args): # pylint: disable=too-many-locals
     misc_group.add_option('--house-curve', metavar='STRING', dest='house_curve',
                           help='a custom in-house curve of the format: curve.pem,NAME,OID,CURVEID')
 
+    info_group = optparse.OptionGroup(parser, 'Informational')
+
+    info_group.add_option('--list-modules', dest='list_modules',
+                          action='store_true',
+                          help='list available modules and exit')
+
+    info_group.add_option('--list-os-features', dest='list_os_features',
+                          action='store_true',
+                          help='list available OS features and exit')
+
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
     parser.add_option_group(docs_group)
     parser.add_option_group(mods_group)
     parser.add_option_group(install_group)
     parser.add_option_group(misc_group)
+    parser.add_option_group(info_group)
 
     # These exist only for autoconf compatibility (requested by zw for mtn)
     compat_with_autoconf_options = [
@@ -2925,6 +2933,17 @@ def main_action_configure_build(info_modules, source_paths, options,
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")
 
+def list_os_features(all_os_features, info_os):
+    for feat in all_os_features:
+        os_with_feat = [o for o in info_os.keys() if feat in info_os[o].target_features]
+        os_without_feat = [o for o in info_os.keys() if feat not in info_os[o].target_features]
+
+        if len(os_with_feat) < len(os_without_feat):
+            print("%s: %s" % (feat, ' '.join(sorted(os_with_feat))))
+        else:
+            print("%s: %s" % (feat, '!' + ' !'.join(sorted(os_without_feat))))
+    return 0
+
 
 def main(argv):
     """
@@ -2946,22 +2965,25 @@ def main(argv):
             print(mod)
         return 0
 
-    logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
-    logging.debug('Platform running configuration (autodetected): OS="%s" machine="%s" proc="%s"' % (
-        platform.system(), platform.machine(), platform.processor()))
-
     info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
     info_os = load_build_data_info_files(source_paths, 'OS info', 'os', OsInfo)
     info_cc = load_build_data_info_files(source_paths, 'compiler info', 'cc', CompilerInfo)
     info_module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
 
-    all_os_features = set(flatten([o.target_features for o in info_os.values()]))
+    all_os_features = sorted(set(flatten([o.target_features for o in info_os.values()])))
+
+    if options.list_os_features:
+        return list_os_features(all_os_features, info_os)
 
     for mod in info_modules.values():
         mod.cross_check(info_arch, info_cc, all_os_features)
 
     for policy in info_module_policies.values():
         policy.cross_check(info_modules)
+
+    logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
+    logging.debug('Platform running configuration (autodetected): OS="%s" machine="%s" proc="%s"' % (
+        platform.system(), platform.machine(), platform.processor()))
 
     logging.debug('Known CPU names: ' + ' '.join(
         sorted(flatten([[ainfo.basename] + ainfo.aliases for ainfo in info_arch.values()]))))
