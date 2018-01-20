@@ -68,8 +68,53 @@ class DSA_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
+class DSA_Reduction_Test : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("DSA reduction");
+
+#if defined(BOTAN_HAS_EME_RAW)
+
+         /*
+         * Test "Raw" signature of SHA-256 hash using a DSA param set
+         * with 160 bit q. Previously DSA would go into an effectively
+         * infinite loop due to subtracting a 160 bit integer from a
+         * 256 bit integer enough times to make it less than or equal q.
+         */
+         Botan::DL_Group group("dsa/jce/1024");
+         Botan::DSA_PrivateKey dsa(Test::rng(), group);
+
+         Botan::PK_Signer signer(dsa, Test::rng(), "Raw");
+
+         // Standin for a large hash value
+         const uint8_t large_hash[32] = { 0xFF, 0xFE, 0xFD, 0xFC, 0 };
+
+         const std::vector<uint8_t> signature =
+            signer.sign_message(large_hash, sizeof(large_hash), Test::rng());
+
+         result.test_success("PK_Signer::sign_message returned");
+
+         // Now verify it...
+         Botan::PK_Verifier verifier(dsa, "Raw");
+
+         const bool signature_verified =
+            verifier.verify_message(large_hash, sizeof(large_hash),
+                                    signature.data(), signature.size());
+
+         result.confirm("Signature of large hash value verifies", signature_verified);
+#else
+         result.test_note("Skipping DSA reduction test due to missing EME_Raw");
+#endif
+
+         return std::vector<Test::Result>{result};
+         }
+   };
+
 BOTAN_REGISTER_TEST("dsa_sign", DSA_KAT_Tests);
 BOTAN_REGISTER_TEST("dsa_keygen", DSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("dsa_reduction", DSA_Reduction_Test);
 
 #endif
 
