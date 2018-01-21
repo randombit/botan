@@ -428,9 +428,9 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--with-valgrind', help='use valgrind API',
                            dest='with_valgrind', action='store_true', default=False)
 
+    # Cmake and bakefile options are hidden as they should not be used by end users
     build_group.add_option('--with-cmake', action='store_true',
-                           default=False,
-                           help='Generate CMakeLists.txt which can be used to create many IDEs project files')
+                           default=False, help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--with-bakefile', action='store_true',
                            default=False, help=optparse.SUPPRESS_HELP)
