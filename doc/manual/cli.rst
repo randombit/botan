@@ -1,8 +1,5 @@
-botan
+Command Line Interface
 ========================================
-
-:Subtitle: Botan command line util
-:Manual section: 1
 
 Outline
 ------------

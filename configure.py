@@ -2830,10 +2830,8 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
     logging.info('Auto-detected compiler version %s' % (cc_version))
     return cc_version
 
-def do_io_for_build(cc, arch, osinfo,
-                    using_mods, build_paths, template_vars,
-                    source_paths, options):
-    # pylint: disable=too-many-locals
+def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, template_vars, options):
+    # pylint: disable=too-many-locals,too-many-branches
 
     try:
         robust_rmtree(build_paths.build_dir)
@@ -2908,6 +2906,30 @@ def do_io_for_build(cc, arch, osinfo,
     else:
         makefile_template = os.path.join(source_paths.build_data_dir, 'makefile.in')
         write_template(template_vars['makefile_path'], makefile_template)
+
+    if options.with_rst2man:
+        rst2man_file = os.path.join(build_paths.build_dir, 'botan.rst')
+        cli_doc = os.path.join(source_paths.doc_dir, 'manual/cli.rst')
+
+        cli_doc_contents = open(cli_doc).readlines()
+
+        while cli_doc_contents[0] != "\n":
+            cli_doc_contents.pop(0)
+
+        rst2man_header = """
+botan
+=============================
+
+:Subtitle: Botan command line util
+:Manual section: 1
+
+        """.strip()
+
+        with open(rst2man_file, 'w') as f:
+            f.write(rst2man_header)
+            f.write("\n")
+            for line in cli_doc_contents:
+                f.write(line)
 
     logging.info('Botan %s (revision %s) (%s %s) build setup is complete' % (
         Version.as_string(),
@@ -2996,7 +3018,7 @@ def main(argv):
     template_vars = create_template_vars(source_paths, build_paths, options, using_mods, cc, arch, osinfo)
 
     # Now we start writing to disk
-    do_io_for_build(cc, arch, osinfo, using_mods, build_paths, template_vars, source_paths, options)
+    do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, template_vars, options)
 
     return 0
 
