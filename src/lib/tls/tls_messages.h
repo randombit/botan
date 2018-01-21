@@ -146,6 +146,8 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
 
+      const Extensions& extensions() const { return m_extensions; }
+
       Client_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const Policy& policy,
@@ -276,6 +278,8 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
 
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
+
+      const Extensions& extensions() const { return m_extensions; }
 
       bool prefers_compressed_ec_points() const
          {

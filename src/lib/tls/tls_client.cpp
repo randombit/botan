@@ -296,6 +296,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                 "Server replied with DTLS-SRTP alg we did not send");
          }
 
+      callbacks().tls_examine_extensions(state.server_hello()->extensions(), SERVER);
+
       state.set_version(state.server_hello()->version());
       m_application_protocol = state.server_hello()->next_protocol();
 

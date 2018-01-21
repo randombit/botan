@@ -32,7 +32,11 @@ std::string TLS::Callbacks::tls_server_choose_app_protocol(const std::vector<std
    return "";
    }
 
-void TLS::Callbacks::tls_modify_extensions(Extensions&)
+void TLS::Callbacks::tls_modify_extensions(Extensions&, Connection_Side)
+   {
+   }
+
+void TLS::Callbacks::tls_examine_extensions(const Extensions&, Connection_Side)
    {
    }
 

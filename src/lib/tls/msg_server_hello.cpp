@@ -85,7 +85,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
          }
       }
 
-   cb.tls_modify_extensions(m_extensions);
+   cb.tls_modify_extensions(m_extensions, SERVER);
 
    hash.update(io.send(*this));
    }
@@ -135,7 +135,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    if(!next_protocol.empty() && client_hello.supports_alpn())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
 
-   cb.tls_modify_extensions(m_extensions);
+   cb.tls_modify_extensions(m_extensions, SERVER);
 
    hash.update(io.send(*this));
    }

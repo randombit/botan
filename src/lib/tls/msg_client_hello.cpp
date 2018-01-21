@@ -142,7 +142,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
                                                 policy.allowed_signature_methods()));
 
-   cb.tls_modify_extensions(m_extensions);
+   cb.tls_modify_extensions(m_extensions, CLIENT);
 
    if(policy.send_fallback_scsv(client_settings.protocol_version()))
       m_suites.push_back(TLS_FALLBACK_SCSV);
@@ -206,7 +206,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
 
-   cb.tls_modify_extensions(m_extensions);
+   cb.tls_modify_extensions(m_extensions, CLIENT);
 
    hash.update(io.send(*this));
    }
