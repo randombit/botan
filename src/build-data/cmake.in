@@ -7,24 +7,24 @@ endif()
 
 set(BOTAN_SOURCES
 %{for lib_srcs}
-    "${CMAKE_CURRENT_LIST_DIR}/%{i}"
+    "%{i}"
 %{endfor}
 )
 
 set(BOTAN_CLI
 %{for cli_srcs}
-    "${CMAKE_CURRENT_LIST_DIR}/%{i}"
+    "%{i}"
 %{endfor}
 )
 
 set(BOTAN_TESTS
 %{for test_srcs}
-    "${CMAKE_CURRENT_LIST_DIR}/%{i}"
+    "%{i}"
 %{endfor}
 )
 
 %{for isa_build_info}
-set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/%{src}" PROPERTIES COMPILE_FLAGS "%{isa_flags}")
+set_source_files_properties("%{src}" PROPERTIES COMPILE_FLAGS "%{isa_flags}")
 %{endfor}
 
 option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warning policy will be used" OFF)
