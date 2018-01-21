@@ -2639,19 +2639,22 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
                 options.compiler = 'gcc'
             else:
                 options.compiler = 'msvc'
-        elif options.os in ['darwin', 'freebsd', 'ios']:
-            if have_program('clang++'):
-                options.compiler = 'clang'
-        elif options.os == 'openbsd':
+        elif options.os in ['darwin', 'freebsd', 'openbsd', 'ios']:
+            # Prefer Clang on these systems
             if have_program('clang++'):
                 options.compiler = 'clang'
             else:
                 options.compiler = 'gcc'
-                # The assembler shipping with OpenBSD 5.9 does not support avx2
-                del info_cc['gcc'].isa_flags['avx2']
+                if options.os == 'openbsd':
+                    # The assembler shipping with OpenBSD 5.9 does not support avx2
+                    del info_cc['gcc'].isa_flags['avx2']
         else:
             options.compiler = 'gcc'
-        logging.info('Guessing to use compiler %s (use --cc to set)' % (options.compiler))
+
+        if options.compiler is None:
+            logging.error('Could not guess which compiler to use, use --cc or CXX to set')
+        else:
+            logging.info('Guessing to use compiler %s (use --cc or CXX to set)' % (options.compiler))
 
     if options.cpu is None:
         options.cpu = options.arch = guess_processor(info_arch)
@@ -2784,20 +2787,6 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.os == 'windows' and options.compiler != 'msvc':
         logging.warning('The windows target is oriented towards MSVC; maybe you want cygwin or mingw')
 
-def prepare_configure_build(info_modules, source_paths, options,
-                            cc, cc_min_version, arch, osinfo, module_policy):
-    chooser = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options)
-    loaded_module_names = chooser.choose()
-    using_mods = [info_modules[modname] for modname in loaded_module_names]
-
-    build_config = BuildPaths(source_paths, options, using_mods)
-    build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
-
-    template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
-
-    return using_mods, build_config, template_vars
-
-
 def calculate_cc_min_version(options, ccinfo, source_paths):
     version_patterns = {
         'msvc': r'^ *MSVC ([0-9]{2})([0-9]{2})$',
@@ -2841,14 +2830,10 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
     logging.info('Auto-detected compiler version %s' % (cc_version))
     return cc_version
 
-def main_action_configure_build(info_modules, source_paths, options,
-                                cc, cc_min_version, arch, osinfo, module_policy):
+def do_io_for_build(cc, arch, osinfo,
+                    using_mods, build_config, template_vars,
+                    source_paths, options):
     # pylint: disable=too-many-locals
-
-    using_mods, build_config, template_vars = prepare_configure_build(
-        info_modules, source_paths, options, cc, cc_min_version, arch, osinfo, module_policy)
-
-    # Now we start writing to disk
 
     try:
         robust_rmtree(build_config.build_dir)
@@ -3001,8 +2986,18 @@ def main(argv):
     logging.info('Target is %s:%s-%s-%s' % (
         options.compiler, cc_min_version, options.os, options.arch))
 
-    main_action_configure_build(info_modules, source_paths, options,
-                                cc, cc_min_version, arch, osinfo, module_policy)
+    chooser = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options)
+    loaded_module_names = chooser.choose()
+    using_mods = [info_modules[modname] for modname in loaded_module_names]
+
+    build_config = BuildPaths(source_paths, options, using_mods)
+    build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
+
+    template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
+
+    # Now we start writing to disk
+    do_io_for_build(cc, arch, osinfo, using_mods, build_config, template_vars, source_paths, options)
+
     return 0
 
 if __name__ == '__main__':
