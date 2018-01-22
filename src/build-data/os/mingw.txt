@@ -1,4 +1,3 @@
-os_type windows
 
 program_suffix .exe
 obj_suffix o
@@ -16,9 +15,10 @@ mingw32.*
 </aliases>
 
 <target_features>
+win32
 cryptgenrandom
-loadlibrary
 virtual_lock
+
 threads
 filesystem
 </target_features>

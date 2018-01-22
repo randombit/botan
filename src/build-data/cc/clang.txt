@@ -47,19 +47,15 @@ rdseed -> "-mrdseed"
 sha    -> "-msha"
 altivec -> "-maltivec"
 
+arm64:armv8crypto -> ""
+
 arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
 </isa_flags>
 
-<mach_opt>
-all_llvm    -> "-emit-llvm -fno-use-cxa-atexit"
-
-x86_32      -> "-march=SUBMODEL"
-x86_64      -> "-march=SUBMODEL"
-nehalem     -> "-march=corei7"
-sandybridge -> "-march=corei7-avx"
-ivybridge   -> "-march=core-avx-i"
-</mach_opt>
+<cpu_flags>
+llvm    -> "-emit-llvm -fno-use-cxa-atexit"
+</cpu_flags>
 
 <mach_abi_linking>
 all!haiku -> "-pthread"

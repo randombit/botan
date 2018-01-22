@@ -1,18 +1,6 @@
 <aliases>
 mips
-mipsel # For Debian
+mipsbe # RedHat
+mipsle # RedHat
+mipsel # Debian
 </aliases>
-
-<submodels>
-r3000
-r6000
-</submodels>
-
-<submodel_aliases>
-r3k -> r3000
-r6k -> r6000
-
-# These are for RPM
-mipsbe -> r3000
-mipsle -> r3000
-</submodel_aliases>

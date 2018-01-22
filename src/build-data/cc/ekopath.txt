@@ -15,14 +15,3 @@ shared_flags "-fPIC"
 <so_link_commands>
 default -> "$(CXX) -shared -fPIC -Wl,-soname,{soname_abi}"
 </so_link_commands>
-
-<mach_opt>
-athlon   -> "-mcpu=athlon"
-pentium4 -> "-mcpu=pentium4"
-
-k8       -> "-mcpu=opteron"
-core2    -> "-mcpu=core"
-
-x86_32   -> "-mcpu=anyx86"
-x86_64   -> "-mcpu=athlon64"
-</mach_opt>

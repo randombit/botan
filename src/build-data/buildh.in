@@ -7,7 +7,7 @@
 *
 * Target
 *  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_lang_flags} %{cc_compile_flags}
-*  - Arch: %{submodel}/%{arch}
+*  - Arch: %{arch}
 *  - OS: %{os}
 */
 
@@ -45,9 +45,6 @@
 /* Target identification and feature test macros */
 
 #define BOTAN_TARGET_OS_IS_%{os_name|upper}
-%{if os_type}
-#define BOTAN_TARGET_OS_TYPE_IS_%{os_type|upper}
-%{endif}
 
 %{for os_features}
 #define BOTAN_TARGET_OS_HAS_%{i|upper}

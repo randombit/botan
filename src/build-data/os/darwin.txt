@@ -1,8 +1,7 @@
-os_type unix
 
-soname_pattern_base  "libbotan-{version_major}.dylib"
-soname_pattern_abi   "libbotan-{version_major}.{abi_rev}.dylib"
-soname_pattern_patch "libbotan-{version_major}.{abi_rev}.{version_minor}.{version_patch}.dylib"
+soname_pattern_base  "lib{libname}.dylib"
+soname_pattern_abi   "lib{libname}.{abi_rev}.dylib"
+soname_pattern_patch "lib{libname}.{abi_rev}.{version_minor}.{version_patch}.dylib"
 
 # In order that these executables work from the build directory,
 # we need to change the install names
@@ -11,13 +10,14 @@ so_post_link_command "install_name_tool -change '$(INSTALLED_LIB_DIR)/{soname_ab
 doc_dir doc
 
 <target_features>
+posix1
 arc4random
-dlopen
-filesystem
-gmtime_r
-readdir
+dev_random
+security_framework
+
 sockets
 threads
+filesystem
 </target_features>
 
 <aliases>

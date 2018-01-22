@@ -108,7 +108,8 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-         CPUID_ALTIVEC_BIT = (1ULL << 0),
+         CPUID_ALTIVEC_BIT    = (1ULL << 0),
+         CPUID_PPC_CRYPTO_BIT = (1ULL << 1),
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
@@ -128,6 +129,13 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static bool has_altivec()
          { return has_cpuid_bit(CPUID_ALTIVEC_BIT); }
+
+      /**
+      * Check if the processor supports POWER8 crypto extensions
+      */
+      static bool has_ppc_crypto()
+         { return has_cpuid_bit(CPUID_PPC_CRYPTO_BIT); }
+
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)

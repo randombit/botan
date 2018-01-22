@@ -1,6 +1,2 @@
 endian big
 wordsize 64
-
-<submodels>
-s390x
-</submodels>

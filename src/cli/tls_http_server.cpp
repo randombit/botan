@@ -7,7 +7,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 #include <iostream>
 #include <fstream>
@@ -465,6 +465,16 @@ class TLS_HTTP_Server final : public Command
       TLS_HTTP_Server() : Command("tls_http_server server_cert server_key "
                                   "--port=443 --policy= --threads=0 "
                                   "--session-db= --session-db-pass=") {}
+
+      std::string group() const override
+         {
+         return "tls";
+         }
+
+      std::string description() const override
+         {
+         return "Provides a simple HTTP server";
+         }
 
       void go() override
          {

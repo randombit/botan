@@ -1,12 +1,13 @@
 /*
 * Prime Generation
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/numthry.h>
 #include <botan/rng.h>
+#include <botan/internal/bit_ops.h>
 #include <algorithm>
 
 namespace Botan {
@@ -16,20 +17,22 @@ namespace Botan {
 */
 BigInt random_prime(RandomNumberGenerator& rng,
                     size_t bits, const BigInt& coprime,
-                    size_t equiv, size_t modulo)
+                    size_t equiv, size_t modulo,
+                    size_t prob)
    {
-   if(coprime <= 0)
+   if(coprime.is_negative())
       {
-      throw Invalid_Argument("random_prime: coprime must be > 0");
+      throw Invalid_Argument("random_prime: coprime must be >= 0");
       }
-   if(modulo % 2 == 1 || modulo == 0)
+   if(modulo == 0)
       {
       throw Invalid_Argument("random_prime: Invalid modulo value");
       }
-   if(equiv >= modulo || equiv % 2 == 0)
-      {
-      throw Invalid_Argument("random_prime: equiv must be < modulo, and odd");
-      }
+
+   equiv %= modulo;
+
+   if(equiv == 0)
+      throw Invalid_Argument("random_prime Invalid value for equiv/modulo");
 
    // Handle small values:
    if(bits <= 1)
@@ -49,6 +52,20 @@ BigInt random_prime(RandomNumberGenerator& rng,
       {
       return ((rng.next_byte() % 2) ? 11 : 13);
       }
+   else if(bits <= 16)
+      {
+      for(;;)
+         {
+         size_t idx = make_uint16(rng.next_byte(), rng.next_byte()) % PRIME_TABLE_SIZE;
+         uint16_t small_prime = PRIMES[idx];
+
+         if(high_bit(small_prime) == bits)
+            return small_prime;
+         }
+      }
+
+   secure_vector<uint16_t> sieve(PRIME_TABLE_SIZE);
+   const size_t MAX_ATTEMPTS = 32*1024;
 
    while(true)
       {
@@ -59,21 +76,18 @@ BigInt random_prime(RandomNumberGenerator& rng,
       p.set_bit(bits - 2);
       p.set_bit(0);
 
-      if(p % modulo != equiv)
-         p += (modulo - p % modulo) + equiv;
+      // Force p to be equal to equiv mod modulo
+      p += (modulo - (p % modulo)) + equiv;
 
-      const size_t sieve_size = std::min(bits / 2, PRIME_TABLE_SIZE);
-      secure_vector<uint16_t> sieve(sieve_size);
-
-      for(size_t j = 0; j != sieve.size(); ++j)
-         sieve[j] = static_cast<uint16_t>(p % PRIMES[j]);
+      for(size_t i = 0; i != sieve.size(); ++i)
+         sieve[i] = static_cast<uint16_t>(p % PRIMES[i]);
 
       size_t counter = 0;
       while(true)
          {
          ++counter;
 
-         if(counter >= 4096)
+         if(counter > MAX_ATTEMPTS)
             {
             break; // don't try forever, choose a new starting point
             }
@@ -83,27 +97,44 @@ BigInt random_prime(RandomNumberGenerator& rng,
          if(p.bits() > bits)
             break;
 
-         bool passes_sieve = true;
-         for(size_t j = 0; j != sieve.size(); ++j)
+         // Now that p is updated, update the sieve
+         for(size_t i = 0; i != sieve.size(); ++i)
             {
-            sieve[j] = (sieve[j] + modulo) % PRIMES[j];
-            if(sieve[j] == 0)
-               {
+            sieve[i] = (sieve[i] + modulo) % PRIMES[i];
+            }
+
+         bool passes_sieve = true;
+         for(size_t i = 0; passes_sieve && (i != sieve.size()); ++i)
+            {
+            /*
+            In this case, p is a multiple of PRIMES[i]
+            */
+            if(sieve[i] == 0)
                passes_sieve = false;
-               break;
-               }
+
+            /*
+            In this case, 2*p+1 will be a multiple of PRIMES[i]
+
+            So if generating a safe prime, we want to avoid this value
+            because 2*p+1 will not be useful. Since the check is cheap to
+            do and doesn't seem to affect the overall distribution of the
+            generated primes overmuch it's used in all cases.
+
+            See "Safe Prime Generation with a Combined Sieve" M. Wiener
+            https://eprint.iacr.org/2003/186.pdf
+            */
+            if(sieve[i] == (PRIMES[i] - 1) / 2)
+               passes_sieve = false;
             }
 
          if(!passes_sieve)
             continue;
 
-         if(gcd(p - 1, coprime) != 1)
+         if(coprime > 0 && gcd(p - 1, coprime) != 1)
             continue;
 
-         if(is_prime(p, rng, 128, true))
-            {
+         if(is_prime(p, rng, prob, true))
             return p;
-            }
          }
       }
    }
@@ -117,12 +148,25 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
       throw Invalid_Argument("random_safe_prime: Can't make a prime of " +
                              std::to_string(bits) + " bits");
 
-   BigInt p;
-   do
-      p = (random_prime(rng, bits - 1) << 1) + 1;
-   while(!is_prime(p, rng, 128, true));
+   BigInt q, p;
+   for(;;)
+      {
+      /*
+      Generate q == 2 (mod 3)
 
-   return p;
+      Otherwise [q == 1 (mod 3) case], 2*q+1 == 3 (mod 3) and not prime.
+      */
+      q = random_prime(rng, bits - 1, 1, 2, 3, 8);
+      p = (q << 1) + 1;
+
+      if(is_prime(p, rng, 128, true))
+         {
+         // We did only a weak check before, go back and verify q before returning
+         if(is_prime(q, rng, 128, true))
+            return p;
+         }
+
+      }
    }
 
 }

@@ -128,7 +128,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             if target == 'cross-arm32':
                 flags += ['--cpu=armv7', '--cc-abi-flags=-arch armv7 -arch armv7s -stdlib=libc++']
             elif target == 'cross-arm64':
-                flags += ['--cpu=armv8-a', '--cc-abi-flags=-arch arm64 -stdlib=libc++']
+                flags += ['--cpu=arm64', '--cc-abi-flags=-arch arm64 -stdlib=libc++']
             else:
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
         elif target == 'cross-win32':
@@ -145,7 +145,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                 cc_bin = 'arm-linux-gnueabihf-g++'
                 test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
             elif target == 'cross-arm64':
-                flags += ['--cpu=armv8-a']
+                flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
                 test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']
             elif target == 'cross-ppc32':
@@ -449,7 +449,7 @@ def main(args=None):
             cmds.append(['llvm-cov', 'show', './botan-test',
                          '-instr-profile=botan.profdata',
                          '>', 'build/cov_report.txt'])
-            sonar_config = os.path.join(root_dir, os.path.join(root_dir, 'src/build-data/sonar-project.properties'))
+            sonar_config = os.path.join(root_dir, os.path.join(root_dir, 'src/configs/sonar-project.properties'))
             cmds.append(['sonar-scanner',
                          '-Dproject.settings=%s' % (sonar_config),
                          '-Dsonar.login=$SONAR_TOKEN'])

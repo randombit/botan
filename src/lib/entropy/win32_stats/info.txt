@@ -6,11 +6,9 @@ ENTROPY_SRC_WIN32 -> 20131128
 es_win32.h
 </header:internal>
 
-<os>
-windows
-cygwin
-mingw
-</os>
+<os_features>
+win32
+</os_features>
 
 <libs>
 windows -> user32.lib

@@ -214,6 +214,19 @@ void Pipe::append_filter(Filter* filter)
    do_append(filter);
    }
 
+void Pipe::prepend(Filter* filter)
+   {
+   do_prepend(filter);
+   }
+
+void Pipe::prepend_filter(Filter* filter)
+   {
+   if(m_outputs->message_count() != 0)
+      throw Invalid_State("Cannot call Pipe::prepend_filter after start_msg");
+
+   do_prepend(filter);
+   }
+
 /*
 * Append a Filter to the Pipe
 */
@@ -238,7 +251,7 @@ void Pipe::do_append(Filter* filter)
 /*
 * Prepend a Filter to the Pipe
 */
-void Pipe::prepend(Filter* filter)
+void Pipe::do_prepend(Filter* filter)
    {
    if(m_inside_msg)
       throw Invalid_State("Cannot prepend to a Pipe while it is processing");

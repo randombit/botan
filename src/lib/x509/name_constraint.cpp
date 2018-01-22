@@ -41,58 +41,49 @@ void GeneralName::encode_into(DER_Encoder&) const
 void GeneralName::decode_from(class BER_Decoder& ber)
    {
    BER_Object obj = ber.get_next_object();
-   if((obj.class_tag != CONTEXT_SPECIFIC) &&
-      (obj.class_tag != (CONTEXT_SPECIFIC | CONSTRUCTED)))
-      throw Decoding_Error("Invalid class tag while decoding GeneralName");
 
-   const ASN1_Tag tag = obj.type_tag;
-
-   if(tag == 1 || tag == 2 || tag == 6)
+   if(obj.is_a(1, CONTEXT_SPECIFIC))
       {
+      m_type = "RFC822";
       m_name = ASN1::to_string(obj);
-
-      if(tag == 1)
-         {
-         m_type = "RFC822";
-         }
-      else if(tag == 2)
-         {
-         m_type = "DNS";
-         }
-      else if(tag == 6)
-         {
-         m_type = "URI";
-         }
       }
-   else if(tag == 4)
+   else if(obj.is_a(2, CONTEXT_SPECIFIC))
       {
+      m_type = "DNS";
+      m_name = ASN1::to_string(obj);
+      }
+   else if(obj.is_a(6, CONTEXT_SPECIFIC))
+      {
+      m_type = "URI";
+      m_name = ASN1::to_string(obj);
+      }
+   else if(obj.is_a(4, ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED)))
+      {
+      m_type = "DN";
       X509_DN dn;
-      BER_Decoder dec(obj.value);
+      BER_Decoder dec(obj);
       std::stringstream ss;
 
       dn.decode_from(dec);
       ss << dn;
 
       m_name = ss.str();
-      m_type = "DN";
       }
-   else if(tag == 7)
+   else if(obj.is_a(7, CONTEXT_SPECIFIC))
       {
-      if(obj.value.size() == 8)
+      if(obj.length() == 8)
          {
-         const std::vector<uint8_t> ip(obj.value.begin(), obj.value.begin() + 4);
-         const std::vector<uint8_t> net(obj.value.begin() + 4, obj.value.end());
          m_type = "IP";
-         m_name = ipv4_to_string(load_be<uint32_t>(ip.data(), 0)) + "/" + ipv4_to_string(load_be<uint32_t>(net.data(), 0));
+         m_name = ipv4_to_string(load_be<uint32_t>(obj.bits(), 0)) + "/" +
+                  ipv4_to_string(load_be<uint32_t>(obj.bits(), 1));
          }
-      else if(obj.value.size() == 32)
+      else if(obj.length() == 32)
          {
          throw Decoding_Error("Unsupported IPv6 name constraint");
          }
       else
          {
-         throw Decoding_Error("Invalid IP name constraint size " +
-                              std::to_string(obj.value.size()));
+         throw Decoding_Error("Invalid IP name constraint size " + std::to_string(obj.length()));
          }
       }
    else

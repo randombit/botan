@@ -1,4 +1,3 @@
-os_type windows
 
 cli_exe_name botan-cli
 
@@ -9,7 +8,7 @@ lib_prefix ''
 
 # For historical reasons? the library does not have the major number on Windows
 # This should probably be fixed in a future major release.
-library_name 'botan'
+library_name 'botan{suffix}'
 
 soname_pattern_base "{libname}.dll"
 
@@ -17,16 +16,17 @@ install_root c:\\Botan
 doc_dir docs
 
 <target_features>
+win32
+winsock2
+
 cryptgenrandom
-gmtime_s
-loadlibrary
-query_perf_counter
-virtual_lock
 rtlsecurezeromemory
+
+virtual_lock
 stl_filesystem_msvc
+
 threads
 filesystem
-sockets
 </target_features>
 
 <aliases>

@@ -147,6 +147,10 @@ def main(args):
     for f in ['doc/pgpkey.txt', 'license.txt']:
         shutil.copy(os.path.join(botan_dir, f), output_dir)
 
+    favicon = open(os.path.join(output_dir, 'favicon.ico'), 'w')
+    # Create an empty favicon.ico file so it gets cached by browsers
+    favicon.close()
+
     shutil.rmtree(tmp_dir)
 
 if __name__ == '__main__':

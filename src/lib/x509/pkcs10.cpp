@@ -72,20 +72,18 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
    cert_req_info.decode(data->m_subject_dn);
 
    BER_Object public_key = cert_req_info.get_next_object();
-   if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
-      throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key",
-                        public_key.type_tag, public_key.class_tag);
+   if(public_key.is_a(SEQUENCE, CONSTRUCTED) == false)
+      throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key", public_key.tagging());
 
-   data->m_public_key_bits = ASN1::put_in_sequence(unlock(public_key.value));
+   data->m_public_key_bits = ASN1::put_in_sequence(public_key.bits(), public_key.length());
 
    BER_Object attr_bits = cert_req_info.get_next_object();
 
    std::set<std::string> pkcs9_email;
 
-   if(attr_bits.type_tag == 0 &&
-      attr_bits.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+   if(attr_bits.is_a(0, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
-      BER_Decoder attributes(attr_bits.value);
+      BER_Decoder attributes(attr_bits);
       while(attributes.more_items())
          {
          Attribute attr;
@@ -113,9 +111,8 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body)
          }
       attributes.verify_end();
       }
-   else if(attr_bits.type_tag != NO_OBJECT)
-      throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for attributes",
-                        attr_bits.type_tag, attr_bits.class_tag);
+   else if(attr_bits.is_set())
+      throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for attributes", attr_bits.tagging());
 
    cert_req_info.verify_end();
 

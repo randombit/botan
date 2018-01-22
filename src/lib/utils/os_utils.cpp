@@ -18,7 +18,7 @@
   #include <string.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
   #include <sys/types.h>
   #include <sys/resource.h>
   #include <sys/mman.h>
@@ -26,7 +26,7 @@
   #include <setjmp.h>
   #include <unistd.h>
   #include <errno.h>
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+#elif defined(BOTAN_TARGET_OS_HAS_WIN32)
   #define NOMINMAX 1
   #include <windows.h>
 #endif
@@ -63,11 +63,11 @@ void secure_scrub_memory(void* ptr, size_t n)
 
 uint32_t OS::get_process_id()
    {
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    return ::getpid();
-#elif defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
+#elif defined(BOTAN_TARGET_OS_HAS_WIN32)
    return ::GetCurrentProcessId();
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIKERNEL) || defined(BOTAN_TARGET_OS_IS_LLVM)
+#elif defined(BOTAN_TARGET_OS_IS_INCLUDEOS) || defined(BOTAN_TARGET_OS_IS_LLVM)
    return 0; // truly no meaningful value
 #else
    #error "Missing get_process_id"
@@ -78,7 +78,7 @@ uint64_t OS::get_processor_timestamp()
    {
    uint64_t rtc = 0;
 
-#if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
+#if defined(BOTAN_TARGET_OS_HAS_WIN32)
    LARGE_INTEGER tv;
    ::QueryPerformanceCounter(&tv);
    rtc = tv.QuadPart;
@@ -196,7 +196,7 @@ uint64_t OS::get_system_timestamp_ns()
 
 size_t OS::get_memory_locking_limit()
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    /*
    * Linux defaults to only 64 KiB of mlockable memory per process
    * (too small) but BSDs offer a small fraction of total RAM (more
@@ -282,7 +282,7 @@ size_t OS::get_memory_locking_limit()
 
 void* OS::allocate_locked_pages(size_t length)
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
 
 #if !defined(MAP_NOCORE)
    #define MAP_NOCORE 0
@@ -342,11 +342,11 @@ void OS::free_locked_pages(void* ptr, size_t length)
    if(ptr == nullptr || length == 0)
       return;
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    secure_scrub_memory(ptr, length);
    ::munlock(ptr, length);
    ::munmap(ptr, length);
-#elif defined BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK
+#elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    secure_scrub_memory(ptr, length);
    ::VirtualUnlock(ptr, length);
    ::VirtualFree(ptr, 0, MEM_RELEASE);
@@ -356,7 +356,7 @@ void OS::free_locked_pages(void* ptr, size_t length)
 #endif
    }
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
 namespace {
 
 static ::sigjmp_buf g_sigill_jmp_buf;
@@ -373,7 +373,7 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    {
    volatile int probe_result = -3;
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    struct sigaction old_sigaction;
    struct sigaction sigaction;
 

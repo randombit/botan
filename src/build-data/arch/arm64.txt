@@ -5,12 +5,11 @@ family arm
 
 <aliases>
 aarch64
-</aliases>
-
-<submodels>
+armv8
 armv8-a
-</submodels>
+</aliases>
 
 <isa_extensions>
 neon
+armv8crypto
 </isa_extensions>

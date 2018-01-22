@@ -9,9 +9,14 @@
 #define BOTAN_STREAM_MODE_H_
 
 #include <botan/cipher_mode.h>
-#include <botan/stream_cipher.h>
+
+#if defined(BOTAN_HAS_STREAM_CIPHER)
+   #include <botan/stream_cipher.h>
+#endif
 
 namespace Botan {
+
+#if defined(BOTAN_HAS_STREAM_CIPHER)
 
 class BOTAN_PUBLIC_API(2,0) Stream_Cipher_Mode final : public Cipher_Mode
    {
@@ -69,6 +74,8 @@ class BOTAN_PUBLIC_API(2,0) Stream_Cipher_Mode final : public Cipher_Mode
 
       std::unique_ptr<StreamCipher> m_cipher;
    };
+
+#endif
 
 }
 

@@ -151,19 +151,22 @@ void Argument_Parser::parse_args(const std::vector<std::string>& params)
          }
       }
 
+   if(flag_set("help"))
+      return;
+
+   if(args.size() < m_spec_args.size())
+      {
+      // not enough arguments
+      throw CLI_Usage_Error("Invalid argument count, got " +
+                            std::to_string(args.size()) +
+                            " expected " +
+                            std::to_string(m_spec_args.size()));
+      }
+
    bool seen_stdin_flag = false;
    size_t arg_i = 0;
    for(auto const& arg : m_spec_args)
       {
-      if(arg_i >= args.size())
-         {
-         // not enough arguments
-         throw CLI_Usage_Error("Invalid argument count, got " +
-                               std::to_string(args.size()) +
-                               " expected " +
-                               std::to_string(m_spec_args.size()));
-         }
-
       m_user_args.insert(std::make_pair(arg, args[arg_i]));
 
       if(args[arg_i] == "-")

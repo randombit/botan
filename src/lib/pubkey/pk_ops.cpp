@@ -20,7 +20,7 @@ PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme)
 
 size_t PK_Ops::Encryption_with_EME::max_input_bits() const
    {
-   return m_eme->maximum_input_size(max_raw_input_bits());
+   return 8 * m_eme->maximum_input_size(max_raw_input_bits());
    }
 
 secure_vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(const uint8_t msg[], size_t msg_len,

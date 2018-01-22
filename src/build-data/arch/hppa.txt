@@ -5,9 +5,3 @@ pa-risc
 hp-parisc
 hp-pa-risc
 </aliases>
-
-<submodels>
-hppa1.0
-hppa1.1
-hppa2.0
-</submodels>

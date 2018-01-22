@@ -16,7 +16,7 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_OCSP) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
+#if defined(BOTAN_HAS_OCSP) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 class OCSP_Tests final : public Test
    {

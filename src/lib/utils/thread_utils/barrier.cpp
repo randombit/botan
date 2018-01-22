@@ -7,8 +7,6 @@
 
 #include <botan/internal/barrier.h>
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-
 namespace Botan {
 
 void Barrier::wait(size_t delta)
@@ -20,7 +18,7 @@ void Barrier::wait(size_t delta)
 void Barrier::sync()
     {
     std::unique_lock<mutex_type> lock(m_mutex);
-    
+
     if(m_value > 1)
         {
         --m_value;
@@ -36,5 +34,3 @@ void Barrier::sync()
     }
 
 }
-
-#endif

@@ -11,7 +11,7 @@
 #include <botan/build.h>
 #include "cli_exceptions.h"
 
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
 
 #include <winsock2.h>
 #include <WS2tcpip.h>
@@ -57,7 +57,7 @@ inline int send(int s, const uint8_t* buf, size_t len, int flags)
    return ::send(s, reinterpret_cast<const char*>(buf), static_cast<int>(len), flags);
    }
 
-#else
+#elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
 
 #include <sys/types.h>
 #include <sys/time.h>

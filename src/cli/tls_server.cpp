@@ -8,7 +8,8 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && \
+   (defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2))
 
 #include <botan/tls_server.h>
 #include <botan/tls_policy.h>
@@ -34,6 +35,16 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
       ~TLS_Server()
          {
          stop_sockets();
+         }
+
+      std::string group() const override
+         {
+         return "tls";
+         }
+
+      std::string description() const override
+         {
+         return "Accept TLS/DTLS connections from TLS/DTLS clients";
          }
 
       void go() override

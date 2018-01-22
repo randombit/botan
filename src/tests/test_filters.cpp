@@ -199,9 +199,10 @@ class Filter_Tests final : public Test
 
          Botan::Pipe pipe;
 
-         pipe.append_filter(nullptr); // ignored
          pipe.append(nullptr); // ignored
+         pipe.append_filter(nullptr); // ignored
          pipe.prepend(nullptr); // ignored
+         pipe.prepend_filter(nullptr); // ignored
          pipe.pop(); // empty pipe, so ignored
 
          std::unique_ptr<Botan::Filter> queue_filter(new Botan::SecureQueue);
@@ -218,6 +219,9 @@ class Filter_Tests final : public Test
          pipe.append_filter(new Botan::BitBucket); // succeeds
          pipe.pop();
 
+         pipe.prepend_filter(new Botan::BitBucket); // succeeds
+         pipe.pop();
+
          pipe.start_msg();
 
          std::unique_ptr<Botan::Filter> filter(new Botan::BitBucket);
@@ -227,6 +231,10 @@ class Filter_Tests final : public Test
          result.test_throws("pipe error",
                             "Cannot call Pipe::append_filter after start_msg",
                             [&]() { pipe.append_filter(filter.get()); });
+
+         result.test_throws("pipe error",
+                            "Cannot call Pipe::prepend_filter after start_msg",
+                            [&]() { pipe.prepend_filter(filter.get()); });
 
          result.test_throws("pipe error",
                             "Cannot append to a Pipe while it is processing",
@@ -245,6 +253,10 @@ class Filter_Tests final : public Test
          result.test_throws("pipe error",
                             "Cannot call Pipe::append_filter after start_msg",
                             [&]() { pipe.append_filter(filter.get()); });
+
+         result.test_throws("pipe error",
+                            "Cannot call Pipe::prepend_filter after start_msg",
+                            [&]() { pipe.prepend_filter(filter.get()); });
 
          result.test_throws("pipe error",
                             "Invalid argument Pipe::read: Invalid message number 100",
@@ -709,7 +721,7 @@ class Filter_Tests final : public Test
          {
          Test::Result result("Threaded_Fork");
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_THREAD_UTILS) && defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32)
          Botan::Pipe pipe(new Botan::Threaded_Fork(new Botan::Hex_Encoder, new Botan::Base64_Encoder));
 
          result.test_eq("Message count", pipe.message_count(), 0);

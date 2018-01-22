@@ -8,7 +8,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 #include <iostream>
 #include <string>
@@ -410,6 +410,16 @@ class TLS_Proxy final : public Command
    public:
       TLS_Proxy() : Command("tls_proxy listen_port target_host target_port server_cert server_key "
                                "--threads=0 --session-db= --session-db-pass=") {}
+
+      std::string group() const override
+         {
+         return "tls";
+         }
+
+      std::string description() const override
+         {
+         return "Proxies requests between a TLS client and a TLS server";
+         }
 
       void go() override
          {

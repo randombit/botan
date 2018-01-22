@@ -1,3 +1,7 @@
 <defines>
 AEAD_CCM -> 20131128
 </defines>
+
+<requires>
+block
+</requires>

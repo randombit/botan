@@ -6,10 +6,9 @@ ENTROPY_SRC_DARWIN_SECRANDOM -> 20150925
 darwin_secrandom.h
 </header:internal>
 
-<os>
-darwin
-ios
-</os>
+<os_features>
+security_framework
+</os_features>
 
 <frameworks>
 darwin -> Security

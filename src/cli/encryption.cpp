@@ -75,6 +75,16 @@ class Encryption final : public Command
    public:
       Encryption() : Command("encryption --buf-size=4096 --decrypt --mode= --key= --iv= --ad=") {}
 
+      std::string group() const override
+         {
+         return "encryption";
+         }
+
+      std::string description() const override
+         {
+         return "Encrypt or decrypt a given file";
+         }
+
       void go() override
          {
          std::string mode = get_arg_or("mode", "");

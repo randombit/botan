@@ -141,9 +141,9 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
 
    BER_Object next = tbs_crl.get_next_object();
 
-   if(next.type_tag == SEQUENCE && next.class_tag == CONSTRUCTED)
+   if(next.is_a(SEQUENCE, CONSTRUCTED))
       {
-      BER_Decoder cert_list(next.value);
+      BER_Decoder cert_list(next);
 
       while(cert_list.more_items())
          {
@@ -154,15 +154,14 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
       next = tbs_crl.get_next_object();
       }
 
-   if(next.type_tag == 0 &&
-      next.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+   if(next.is_a(0, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
-      BER_Decoder crl_options(next.value);
+      BER_Decoder crl_options(next);
       crl_options.decode(data->m_extensions).verify_end();
       next = tbs_crl.get_next_object();
       }
 
-   if(next.type_tag != NO_OBJECT)
+   if(next.is_set())
       throw X509_CRL::X509_CRL_Error("Unknown tag in CRL");
 
    tbs_crl.verify_end();

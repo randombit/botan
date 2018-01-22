@@ -65,15 +65,15 @@ EC_Group::EC_Group(const std::vector<uint8_t>& ber_data)
    BER_Decoder ber(ber_data);
    BER_Object obj = ber.get_next_object();
 
-   if(obj.type_tag == NULL_TAG)
+   if(obj.type() == NULL_TAG)
       throw Decoding_Error("Cannot handle ImplicitCA ECDSA parameters");
-   else if(obj.type_tag == OBJECT_ID)
+   else if(obj.type() == OBJECT_ID)
       {
       OID dom_par_oid;
       BER_Decoder(ber_data).decode(dom_par_oid);
       *this = EC_Group(dom_par_oid);
       }
-   else if(obj.type_tag == SEQUENCE)
+   else if(obj.type() == SEQUENCE)
       {
       BigInt p, a, b;
       std::vector<uint8_t> sv_base_point;

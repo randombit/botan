@@ -6,16 +6,17 @@
 */
 
 #include "tests.h"
-#include <botan/hash.h>
 
 #if defined(BOTAN_HAS_HOTP)
    #include <botan/parsing.h>
    #include <botan/hotp.h>
+   #include <botan/hash.h>
 #endif
 
 #if defined(BOTAN_HAS_TOTP)
    #include <botan/totp.h>
    #include <botan/calendar.h>
+   #include <botan/hash.h>
 #endif
 
 namespace Botan_Tests {

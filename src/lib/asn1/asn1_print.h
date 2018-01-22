@@ -26,9 +26,12 @@ class BOTAN_DLL ASN1_Formatter
 
       /**
       * @param print_context_specific if true, try to parse nested context specific data.
+      * @param max_depth do not recurse more than this many times. If zero, recursion
+      *        is unbounded.
       */
-      ASN1_Formatter(bool print_context_specific) :
-         m_print_context_specific(print_context_specific)
+      ASN1_Formatter(bool print_context_specific, size_t max_depth) :
+         m_print_context_specific(print_context_specific),
+         m_max_depth(max_depth)
          {}
 
       void print_to_stream(std::ostream& out,
@@ -68,6 +71,7 @@ class BOTAN_DLL ASN1_Formatter
                   size_t level) const;
 
       const bool m_print_context_specific;
+      const size_t m_max_depth;
    };
 
 /**
@@ -83,13 +87,16 @@ class BOTAN_DLL ASN1_Pretty_Printer final : public ASN1_Formatter
       * @param print_context_specific if true, try to parse nested context specific data.
       * @param initial_level the initial depth (0 or 1 are the only reasonable values)
       * @param value_column ASN.1 values are lined up at this column in output
+      * @param max_depth do not recurse more than this many times. If zero, recursion
+      *        is unbounded.
       */
       ASN1_Pretty_Printer(size_t print_limit = 4096,
                           size_t print_binary_limit = 2048,
                           bool print_context_specific = true,
                           size_t initial_level = 0,
-                          size_t value_column = 60) :
-         ASN1_Formatter(print_context_specific),
+                          size_t value_column = 60,
+                          size_t max_depth = 64) :
+         ASN1_Formatter(print_context_specific, max_depth),
          m_print_limit(print_limit),
          m_print_binary_limit(print_binary_limit),
          m_initial_level(initial_level),

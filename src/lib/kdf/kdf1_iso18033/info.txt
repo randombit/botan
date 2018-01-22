@@ -1,3 +1,7 @@
 <defines>
 KDF1_18033 -> 20160128
 </defines>
+
+<requires>
+hash
+</requires>

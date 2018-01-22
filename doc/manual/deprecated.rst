@@ -10,13 +10,11 @@ This is in addition to specific API calls marked with BOTAN_DEPRECATED
 in the source.
 
 - Directly accessing the member variables of types calendar_point, ASN1_Attribute,
-  and AlgorithmIdentifier
+  AlgorithmIdentifier, and BER_Object
 
 - The headers ``botan.h``, ``init.h``, ``lookup.h``
 
 - All or nothing package transform (``package.h``)
-
-- The Perl-XS wrapper
 
 - The TLS constructors taking `std::function` for callbacks. Instead
   use the TLS::Callbacks interface.

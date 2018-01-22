@@ -299,24 +299,26 @@ Currently ``configure.py`` cannot detect if external libraries are
 available, so using them is controlled explicitly at build time
 by the user using
 
- - ``--with-bzip2`` enables the filters providing bzip2 compression
-   and decompression. Requires the bzip2 development libraries to be
-   installed.
+ - ``--with-bzip2`` enables the filters providing bzip2 compression and
+   decompression. Requires the bzip2 development libraries to be installed.
 
- - ``--with-zlib`` enables the filters providing zlib compression
-   and decompression. Requires the zlib development libraries to be
-   installed.
+ - ``--with-zlib`` enables the filters providing zlib compression and
+   decompression. Requires the zlib development libraries to be installed.
 
  - ``--with-lzma`` enables the filters providing lzma compression and
-   decompression. Requires the lzma development libraries to be
-   installed.
+   decompression. Requires the lzma development libraries to be installed.
 
- - ``--with-sqlite3`` enables storing TLS session information to an
-   encrypted SQLite database.
+ - ``--with-sqlite3`` enables using sqlite3 databases in various contexts
+   (TLS session cache, PSK database, etc).
 
- - ``--with-openssl`` adds an engine that uses OpenSSL for some public
-   key operations and ciphers/hashes. OpenSSL 1.0.1 or later is supported.
-   LibreSSL is API compatible with OpenSSL 1.0 and can be used instead.
+ - ``--with-openssl`` adds an engine that uses OpenSSL for some ciphers, hashes,
+   and public key operations. OpenSSL 1.0.2 or later is supported. LibreSSL can
+   also be used.
+
+ - ``--with-boost`` enables using some Boost libraries. In particular
+   Boost.Filesystem is used for a few operations (but on most platforms, a
+   native API equivalent is available), and Boost.Asio is used to provide a few
+   extra TLS related command line utilities.
 
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -425,41 +427,3 @@ build step is required, just import botan2.py
 
 See :doc:`Python Bindings <python>` for more information about the
 Python bindings.
-
-Building the Perl XS wrappers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To build the Perl XS wrappers, after building the main library change
-your directory to ``src/contrib/perl-xs`` and run ``perl Makefile.PL``,
-then run ``make`` to build the module and ``make test`` to run the
-test suite::
-
-  $ perl Makefile.PL
-  Checking if your kit is complete...
-  Looks good
-  Writing Makefile for Botan
-  $ make
-  cp Botan.pm blib/lib/Botan.pm
-  AutoSplitting blib/lib/Botan.pm (blib/lib/auto/Botan)
-  /usr/bin/perl5.8.8 /usr/lib64/perl5/5.8.8/ExtUtils/xsubpp  [...]
-  g++ -c   -Wno-write-strings -fexceptions  -g   [...]
-  Running Mkbootstrap for Botan ()
-  chmod 644 Botan.bs
-  rm -f blib/arch/auto/Botan/Botan.so
-  g++  -shared Botan.o  -o blib/arch/auto/Botan/Botan.so  \
-             -lbotan -lbz2 -lpthread -lrt -lz     \
-
-  chmod 755 blib/arch/auto/Botan/Botan.so
-  cp Botan.bs blib/arch/auto/Botan/Botan.bs
-  chmod 644 blib/arch/auto/Botan/Botan.bs
-  Manifying blib/man3/Botan.3pm
-  $ make test
-  PERL_DL_NONLAZY=1 /usr/bin/perl5.8.8 [...]
-  t/base64......ok
-  t/filt........ok
-  t/hex.........ok
-  t/oid.........ok
-  t/pipe........ok
-  t/x509cert....ok
-  All tests successful.
-  Files=6, Tests=83,  0 wallclock secs ( 0.08 cusr +  0.02 csys =  0.10 CPU)

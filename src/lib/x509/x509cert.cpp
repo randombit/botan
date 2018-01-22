@@ -85,6 +85,12 @@ X509_Certificate::X509_Certificate(const std::vector<uint8_t>& vec)
    load_data(src);
    }
 
+X509_Certificate::X509_Certificate(const uint8_t data[], size_t len)
+   {
+   DataSource_Memory src(data, len);
+   load_data(src);
+   }
+
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 X509_Certificate::X509_Certificate(const std::string& fsname)
    {
@@ -128,13 +134,11 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    data->m_issuer_dn_bits = ASN1::put_in_sequence(data->m_issuer_dn.get_bits());
 
    BER_Object public_key = tbs_cert.get_next_object();
-   if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
-      throw BER_Bad_Tag("X509_Certificate: Unexpected tag for public key",
-                        public_key.type_tag, public_key.class_tag);
+   public_key.assert_is_a(SEQUENCE, CONSTRUCTED, "X.509 certificate public key");
 
    // validate_public_key_params(public_key.value);
    AlgorithmIdentifier public_key_alg_id;
-   BER_Decoder(public_key.value).decode(public_key_alg_id).discard_remaining();
+   BER_Decoder(public_key).decode(public_key_alg_id).discard_remaining();
 
    std::vector<std::string> public_key_info =
       split_on(OIDS::oid2str(public_key_alg_id.get_oid()), '/');
@@ -180,7 +184,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
          }
       }
 
-   data->m_subject_public_key_bits = unlock(public_key.value);
+   data->m_subject_public_key_bits.assign(public_key.bits(), public_key.bits() + public_key.length());
 
    BER_Decoder(data->m_subject_public_key_bits)
       .decode(data->m_subject_public_key_algid)
@@ -190,14 +194,12 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    tbs_cert.decode_optional_string(data->m_v2_subject_key_id, BIT_STRING, 2);
 
    BER_Object v3_exts_data = tbs_cert.get_next_object();
-   if(v3_exts_data.type_tag == 3 &&
-      v3_exts_data.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+   if(v3_exts_data.is_a(3, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
-      BER_Decoder(v3_exts_data.value).decode(data->m_v3_extensions).verify_end();
+      BER_Decoder(v3_exts_data).decode(data->m_v3_extensions).verify_end();
       }
-   else if(v3_exts_data.type_tag != NO_OBJECT)
-      throw BER_Bad_Tag("Unknown tag in X.509 cert",
-                        v3_exts_data.type_tag, v3_exts_data.class_tag);
+   else if(v3_exts_data.is_set())
+      throw BER_Bad_Tag("Unknown tag in X.509 cert", v3_exts_data.tagging());
 
    if(tbs_cert.more_items())
       throw Decoding_Error("TBSCertificate has extra data after extensions block");

@@ -1,19 +1,17 @@
-os_type unix
 
-soname_pattern_base  "libbotan-{version_major}.{version_minor}.dylib"
-soname_pattern_abi   "libbotan-{version_major}.{version_minor}.{abi_rev}.dylib"
-soname_pattern_patch "libbotan-{version_major}.{version_minor}.{abi_rev}.{version_patch}.dylib"
+soname_pattern_base  "lib{libname}.{version_minor}.dylib"
+soname_pattern_abi   "lib{libname}.{version_minor}.{abi_rev}.dylib"
+soname_pattern_patch "lib{libname}.{version_minor}.{abi_rev}.{version_patch}.dylib"
 
 doc_dir doc
 
 <target_features>
+posix1
 arc4random
-dlopen
-filesystem
-gmtime_r
-readdir
+
 sockets
 threads
+filesystem
 </target_features>
 
 <aliases>

@@ -2,10 +2,7 @@
 LOCKING_ALLOCATOR -> 20131128
 </defines>
 
-<os>
-linux
-freebsd
-openbsd
-netbsd
-windows
-</os>
+<os_features>
+posix1
+virtual_lock
+</os_features>

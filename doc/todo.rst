@@ -184,7 +184,6 @@ CLI
   instead of a bogus echo server.
 * `encrypt` / `decrypt` tools providing password and/or public key
   based file encryption
-* Make help output more helpful
 
 Documentation
 ----------------------------------------

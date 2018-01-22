@@ -8,13 +8,23 @@
 #include "cli.h"
 
 #include <botan/version.h>
-#include <botan/hash.h>
-#include <botan/mac.h>
 #include <botan/rng.h>
 #include <botan/cpuid.h>
 #include <botan/hex.h>
 #include <botan/parsing.h>
+#include <botan/internal/stl_util.h>
 #include <sstream>
+#include <iostream>
+#include <iterator>
+#include <iomanip>
+
+#if defined(BOTAN_HAS_HASH)
+   #include <botan/hash.h>
+#endif
+
+#if defined(BOTAN_HAS_MAC)
+   #include <botan/mac.h>
+#endif
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
    #include <botan/base64.h>
@@ -37,19 +47,65 @@ class Print_Help final : public Command
 
       std::string help_text() const override
          {
-         std::ostringstream oss;
+         std::map<std::string, std::vector<std::unique_ptr<Command>>> grouped_commands;
 
-         oss << "Usage: botan <cmd> <cmd-options>\n\n";
-         oss << "All commands support --verbose --help --output= --error-output= --rng-type= --drbg-seed=\n\n";
-         oss << "Available commands:\n";
-
-         for(const auto& cmd_name : Command::registered_cmds())
+         auto reg_commands = Command::registered_cmds();
+         for(const auto& cmd_name : reg_commands)
             {
-            std::unique_ptr<Command> cmd = Command::get_cmd(cmd_name);
-            oss << "  " << cmd->cmd_spec() << "\n";
+            auto cmd = Command::get_cmd(cmd_name);
+            if(cmd)
+               {
+               grouped_commands[cmd->group()].push_back(std::move(cmd));
+               }
             }
 
-         return oss.str();
+         const std::map<std::string, std::string> groups_description
+            { { "encryption", "Encryption" },
+            { "compression", "Compression" },
+            { "hash", "Hash Functions" },
+            { "hmac", "HMAC" },
+            { "numtheory", "Number Theory" },
+            { "passhash", "Password Hashing" },
+            { "psk", "PSK Database" },
+            { "pubkey", "Public Key Cryptography" },
+            { "tls", "TLS" },
+            { "x509", "X.509" },
+            { "misc", "Miscellaneous" }
+         };
+
+      std::ostringstream oss;
+
+      oss << "Usage: botan <cmd> <cmd-options>\n";
+      oss << "All commands support --verbose --help --output= --error-output= --rng-type= --drbg-seed=\n\n";
+      oss << "Available commands:\n\n";
+
+      for(const auto& commands : grouped_commands)
+         {
+         std::string desc = commands.first;
+         if(desc.empty())
+            {
+            continue;
+            }
+
+         oss << Botan::search_map(groups_description, desc, desc) << ":\n";
+         for(auto& cmd : commands.second)
+            {
+            oss << "   " << std::setw(16) << std::left << cmd->cmd_name() << "   " << cmd->description() << "\n";
+            }
+         oss << "\n";
+         }
+
+      return oss.str();
+      }
+
+      std::string group() const override
+         {
+         return "";
+         }
+
+      std::string description() const override
+         {
+         return "Prints a help string";
          }
 
       void go() override
@@ -73,6 +129,16 @@ class Config_Info final : public Command
                 "   cflags: Print include params\n"
                 "   ldflags: Print linker params\n"
                 "   libs: Print libraries\n";
+         }
+
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Print the used prefix, cflags, ldflags or libs";
          }
 
       void go() override
@@ -111,6 +177,16 @@ class Version_Info final : public Command
    public:
       Version_Info() : Command("version --full") {}
 
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Print version info";
+         }
+
       void go() override
          {
          if(flag_set("full"))
@@ -131,6 +207,16 @@ class Print_Cpuid final : public Command
    public:
       Print_Cpuid() : Command("cpuid") {}
 
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "List available processor flags (aes_ni, SIMD extensions, ...)";
+         }
+
       void go() override
          {
          output() << "CPUID flags: " << Botan::CPUID::to_string() << "\n";
@@ -139,10 +225,22 @@ class Print_Cpuid final : public Command
 
 BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
 
+#if defined(BOTAN_HAS_HASH)
+
 class Hash final : public Command
    {
    public:
       Hash() : Command("hash --algo=SHA-256 --buf-size=4096 *files") {}
+
+      std::string group() const override
+         {
+         return "hash";
+         }
+
+      std::string description() const override
+         {
+         return "Compute the message digest of given file(s)";
+         }
 
       void go() override
          {
@@ -180,10 +278,22 @@ class Hash final : public Command
 
 BOTAN_REGISTER_COMMAND("hash", Hash);
 
+#endif
+
 class RNG final : public Command
    {
    public:
       RNG() : Command("rng --system --rdrand --auto --entropy --drbg --drbg-seed= *bytes") {}
+
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Sample random bytes from the specified rng";
+         }
 
       void go() override
          {
@@ -220,6 +330,16 @@ class HTTP_Get final : public Command
    public:
       HTTP_Get() : Command("http_get --redirects=1 --timeout=3000 url") {}
 
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Retrieve resource from the passed http/https url";
+         }
+
       void go() override
          {
          const std::string url = get_arg("url");
@@ -241,6 +361,16 @@ class Hex_Encode final : public Command
    public:
       Hex_Encode() : Command("hex_enc file") {}
 
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Hex encode a given file";
+         }
+
       void go() override
          {
          auto hex_enc_f = [&](const uint8_t b[], size_t l) { output() << Botan::hex_encode(b, l); };
@@ -254,6 +384,16 @@ class Hex_Decode final : public Command
    {
    public:
       Hex_Decode() : Command("hex_dec file") {}
+
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Hex decode a given file";
+         }
 
       void go() override
          {
@@ -278,6 +418,16 @@ class Base64_Encode final : public Command
    public:
       Base64_Encode() : Command("base64_enc file") {}
 
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Encode given file to Base64";
+         }
+
       void go() override
          {
          auto onData = [&](const uint8_t b[], size_t l)
@@ -294,6 +444,16 @@ class Base64_Decode final : public Command
    {
    public:
       Base64_Decode() : Command("base64_dec file") {}
+
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Decode Base64 encoded file";
+         }
 
       void go() override
          {
@@ -318,6 +478,16 @@ class Generate_Bcrypt final : public Command
    public:
       Generate_Bcrypt() : Command("gen_bcrypt --work-factor=12 password") {}
 
+      std::string group() const override
+         {
+         return "passhash";
+         }
+
+      std::string description() const override
+         {
+         return "Calculate the bcrypt password digest of a given file";
+         }
+
       void go() override
          {
          const std::string password = get_arg("password");
@@ -341,6 +511,16 @@ class Check_Bcrypt final : public Command
    {
    public:
       Check_Bcrypt() : Command("check_bcrypt password hash") {}
+
+      std::string group() const override
+         {
+         return "passhash";
+         }
+
+      std::string description() const override
+         {
+         return "Checks a given bcrypt hash against hash";
+         }
 
       void go() override
          {
@@ -368,6 +548,16 @@ class HMAC final : public Command
    {
    public:
       HMAC() : Command("hmac --hash=SHA-256 --buf-size=4096 key *files") {}
+
+      std::string group() const override
+         {
+         return "hmac";
+         }
+
+      std::string description() const override
+         {
+         return "Compute the HMAC tag of given file(s)";
+         }
 
       void go() override
          {

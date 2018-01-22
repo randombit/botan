@@ -1,11 +1,12 @@
 <defines>
-ENTROPY_SRC_PROC_WALKER -> 20131128
+THREAD_UTILS -> 20180112
 </defines>
 
 <header:internal>
-proc_walk.h
+barrier.h
+semaphore.h
 </header:internal>
 
 <os_features>
-posix1,proc_fs
+threads
 </os_features>

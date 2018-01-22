@@ -158,7 +158,8 @@ def main(args=None):
         cmds.append(['cp', manual_src, manual_output])
 
     if with_rst2man:
-        cmds.append(['rst2man', os.path.join(manual_src, 'cli.rst'),
+        cmds.append(['rst2man',
+                     os.path.join(cfg['build_dir'], 'botan.rst'),
                      os.path.join(cfg['build_dir'], 'botan.1')])
 
     cmds.append(['touch', doc_stamp_file])
