@@ -1,6 +1,7 @@
 /*
 * (C) 2015 Jack Lloyd
 * (C) 2016 René Korthaus
+* (C) 2018 Ribose Inc, Krzysztof Kwiatkowski
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -1956,7 +1957,7 @@ class FFI_Unit_Tests final : public Test
                do_elgamal_test(priv, rng, result);
             }
 
-         if(TEST_FFI_OK(botan_privkey_create_elgamal, (&priv, rng, 2048)))
+         if(TEST_FFI_OK(botan_privkey_create_elgamal, (&priv, rng, 1024, 160)))
             {
                do_elgamal_test(priv, rng, result);
             }
