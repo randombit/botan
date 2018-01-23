@@ -131,6 +131,21 @@ void Extensions::add(Certificate_Extension* extn, bool critical)
    m_extension_info.emplace(oid, info);
    }
 
+bool Extensions::add_new(Certificate_Extension* extn, bool critical)
+   {
+   if(m_extension_info.count(extn->oid_of()) > 0)
+      {
+      delete extn;
+      return false; // already exists
+      }
+
+   const OID oid = extn->oid_of();
+   Extensions_Info info(critical, extn);
+   m_extension_oids.push_back(oid);
+   m_extension_info.emplace(oid, info);
+   return true;
+   }
+
 void Extensions::replace(Certificate_Extension* extn, bool critical)
    {
    // Remove it if it existed

@@ -16,6 +16,7 @@
 namespace Botan {
 
 class Public_Key;
+class Private_Key;
 class RandomNumberGenerator;
 
 /**
@@ -119,6 +120,14 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
          { return std::vector<std::string>(); }
 
       virtual ~X509_Object() = default;
+
+      static std::unique_ptr<PK_Signer>
+         choose_sig_format(AlgorithmIdentifier& sig_algo,
+                           const Private_Key& key,
+                           RandomNumberGenerator& rng,
+                           const std::string& hash_fn,
+                           const std::string& padding_algo);
+
    protected:
 
       X509_Object() = default;

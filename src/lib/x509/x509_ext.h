@@ -155,6 +155,16 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
       void add(Certificate_Extension* extn, bool critical = false);
 
       /**
+      * Adds a new extension to the list unless it already exists. If the extension
+      * already exists within the Extensions object, the extn pointer will be deleted.
+      *
+      * @param extn pointer to the certificate extension (Extensions takes ownership)
+      * @param critical whether this extension should be marked as critical
+      * @return true if the object was added false if the extension was already used
+      */
+      bool add_new(Certificate_Extension* extn, bool critical = false);
+
+      /**
       * Adds an extension to the list or replaces it.
       * @param extn the certificate extension
       * @param critical whether this extension should be marked as critical

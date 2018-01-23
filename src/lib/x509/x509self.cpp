@@ -56,6 +56,8 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, sig_opts, rng, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
+   Extensions extensions = opts.extensions;
+
    Key_Constraints constraints;
    if(opts.is_CA)
       {
@@ -67,23 +69,21 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       constraints = opts.constraints;
       }
 
-   Extensions extensions = opts.extensions;
-
-   extensions.add(
+   extensions.add_new(
       new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit),
       true);
 
    if(constraints != NO_CONSTRAINTS)
       {
-      extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+      extensions.add_new(new Cert_Extension::Key_Usage(constraints), true);
       }
 
-   extensions.add(new Cert_Extension::Subject_Key_ID(pub_key, hash_fn));
+   extensions.add_new(new Cert_Extension::Subject_Key_ID(pub_key, hash_fn));
 
-   extensions.add(
+   extensions.add_new(
       new Cert_Extension::Subject_Alternative_Name(subject_alt));
 
-   extensions.add(
+   extensions.add_new(
       new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
 
    return X509_CA::make_cert(signer.get(), rng, sig_algo, pub_key,
@@ -100,18 +100,9 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
                                const std::string& hash_fn,
                                RandomNumberGenerator& rng)
    {
-   AlgorithmIdentifier sig_algo;
    X509_DN subject_dn;
    AlternativeName subject_alt;
-
-   // for now, only the padding option is used
-   std::map<std::string,std::string> sig_opts = { {"padding",opts.padding_scheme} };
-
-   std::vector<uint8_t> pub_key = X509::BER_encode(key);
-   std::unique_ptr<PK_Signer> signer(choose_sig_format(key, sig_opts, rng, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
-
-   const size_t PKCS10_VERSION = 0;
 
    Key_Constraints constraints;
    if(opts.is_CA)
@@ -126,55 +117,22 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    Extensions extensions = opts.extensions;
 
-   extensions.add(
-      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
+   extensions.add_new(new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
 
    if(constraints != NO_CONSTRAINTS)
       {
-      extensions.add(
-         new Cert_Extension::Key_Usage(constraints));
+      extensions.add_new(new Cert_Extension::Key_Usage(constraints));
       }
-   extensions.add(
-      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
-   extensions.add(
-      new Cert_Extension::Subject_Alternative_Name(subject_alt));
+   extensions.add_new(new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
+   extensions.add_new(new Cert_Extension::Subject_Alternative_Name(subject_alt));
 
-   DER_Encoder tbs_req;
-
-   tbs_req.start_cons(SEQUENCE)
-      .encode(PKCS10_VERSION)
-      .encode(subject_dn)
-      .raw_bytes(pub_key)
-      .start_explicit(0);
-
-   if(!opts.challenge.empty())
-      {
-      ASN1_String challenge(opts.challenge, DIRECTORY_STRING);
-
-      tbs_req.encode(
-         Attribute("PKCS9.ChallengePassword",
-                   DER_Encoder().encode(challenge).get_contents_unlocked()
-            )
-         );
-      }
-
-   tbs_req.encode(
-      Attribute("PKCS9.ExtensionRequest",
-                DER_Encoder()
-                   .start_cons(SEQUENCE)
-                      .encode(extensions)
-                   .end_cons()
-               .get_contents_unlocked()
-         )
-      )
-      .end_explicit()
-      .end_cons();
-
-   const std::vector<uint8_t> req =
-      X509_Object::make_signed(signer.get(), rng, sig_algo,
-                               tbs_req.get_contents());
-
-   return PKCS10_Request(req);
+   return PKCS10_Request::create(key,
+                                 subject_dn,
+                                 extensions,
+                                 hash_fn,
+                                 rng,
+                                 opts.padding_scheme,
+                                 opts.challenge);
    }
 
 }

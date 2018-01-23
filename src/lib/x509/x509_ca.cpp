@@ -277,76 +277,19 @@ PK_Signer* choose_sig_format(const Private_Key& key,
                              const std::string& hash_fn,
                              AlgorithmIdentifier& sig_algo)
    {
-   return choose_sig_format(key, std::map<std::string,std::string>(),
-                            rng, hash_fn, sig_algo);
+   return X509_Object::choose_sig_format(sig_algo, key, rng, hash_fn, "").release();
    }
 
-/*
-* Choose a signing format for the key
-*/
 PK_Signer* choose_sig_format(const Private_Key& key,
                              const std::map<std::string,std::string>& opts,
                              RandomNumberGenerator& rng,
                              const std::string& hash_fn,
                              AlgorithmIdentifier& sig_algo)
    {
-   const std::string algo_name = key.algo_name();
-
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_fn));
-   std::string hash_name = hash->name();
-
-   // check algo_name and set default
    std::string padding;
-   if(algo_name == "RSA")
-      {
-      // set to EMSA3 for compatibility reasons, originally it was the only option
-      padding = "EMSA3(" + hash_name + ")";
-      }
-   else if(algo_name == "DSA" ||
-           algo_name == "ECDSA" ||
-           algo_name == "ECGDSA" ||
-           algo_name == "ECKCDSA" ||
-           algo_name == "GOST-34.10")
-      {
-      padding = "EMSA1(" + hash_name + ")";
-      }
-   else
-      {
-      throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
-      }
-
-   if(opts.count("padding") > 0 && !opts.at("padding").empty())
-      {
+   if(opts.count("padding"))
       padding = opts.at("padding");
-      }
-
-   // try to construct an EMSA object from the padding options or default
-   std::unique_ptr<EMSA> emsa = nullptr;
-   try
-      {
-      emsa.reset(get_emsa(padding));
-      }
-   /*
-    * get_emsa will throw if opts contains {"padding",<valid_padding>} but
-    * <valid_padding> does not specify a hash function.
-    * Omitting it is valid since it needs to be identical to hash_fn.
-    * If it still throws, something happened that we cannot repair here,
-    * e.g. the algorithm/padding combination is not supported.
-    */
-   catch(...)
-      {
-      emsa.reset(get_emsa(padding + "(" + hash_fn + ")"));
-      }
-   if(emsa == nullptr)
-      {
-      throw Invalid_Argument("Could not parse padding scheme " + padding);
-      }
-
-   const Signature_Format format = (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
-
-   sig_algo = emsa->config_for_x509(key, hash_name);
-
-   return new PK_Signer(key, rng, emsa->name(), format);
+   return X509_Object::choose_sig_format(sig_algo, key, rng, hash_fn, padding).release();
    }
 
 }
