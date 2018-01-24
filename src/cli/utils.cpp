@@ -14,7 +14,6 @@
 #include <botan/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <sstream>
-#include <iostream>
 #include <iterator>
 #include <iomanip>
 

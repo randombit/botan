@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <iostream>
 #include "tests.h"
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
