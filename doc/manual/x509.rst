@@ -10,60 +10,39 @@ signature on the certificate, which is placed there by some authority
 the certificate really "owns" the private key corresponding to the
 public key in the certificate.
 
-The major certificate format in use today is X.509v3, used for instance
-in the :doc:`tls` protocol. A X.509 certificate is represented by
+The major certificate format in use today is X.509v3, used for instance in the
+:doc:`tls` protocol. A X.509 certificate is represented by the class
+``X509_Certificate``. The data of an X.509 certificate is stored as a
+``shared_ptr`` to a structure containing the decoded information. So copying
+``X509_Certificate`` objects is quite cheap.
+
 
 .. cpp:class:: X509_Certificate
 
- .. cpp:function:: X509_Certificate(const std::string& filename)
+  .. cpp:function:: X509_Certificate(const std::string& filename)
 
      Load a certificate from a file. PEM or DER is accepted.
 
- .. cpp:function:: X509_Certificate(const std::vector<uint8_t>& in)
+  .. cpp:function:: X509_Certificate(const std::vector<uint8_t>& in)
 
      Load a certificate from a byte string.
 
- .. cpp:function:: X509_Certificate(DataSource& source)
+  .. cpp:function:: X509_Certificate(DataSource& source)
 
      Load a certificate from an abstract ``DataSource``.
 
- .. cpp:function:: std::unique_ptr<Public_Key> load_subject_public_key() const
+  .. cpp:function:: X509_DN subject_dn() const
 
-     Deserialize the stored public key and return a new object. This
-     might throw, if it happens that the public key object stored in
-     the certificate is malformed in some way, or in the case that the
-     public key algorithm used is not supported by the library.
+     Returns the distinguished name (DN) of the certificate's subject. This is
+     the primary place where information about the subject of the certificate is
+     stored. However "modern" information that doesn't fit in the X.500
+     framework, such as DNS name, email, IP address, or XMPP address, appears
+     instead in the subject alternative name.
 
-     See :ref:`serializing_public_keys` for more information about what to do
-     with the returned object. It may be any type of key, in principle, though
-     RSA and ECDSA are most common.
+  .. cpp:function:: X509_DN issuer_dn() const
 
- .. cpp:function:: std::vector<uint8_t> serial_number() const
-
-     Return the certificates serial number. The tuple of issuer DN and
-     serial number should be unique.
-
- .. cpp:function:: X509_DN subject_dn() const
-
-     Returns the distinguished name (DN) of the certificate's subject.
-
- .. cpp:function:: X509_DN issuer_dn() const
-
-     Returns the distinguished name (DN) of the certificate's issuer
-
- .. cpp:function:: X509_Time not_before() const
-
-     Returns the point in time the certificate becomes valid
-
- .. cpp:function:: X509_Time not_after() const
-
-     Returns the point in time the certificate expires
-
- .. cpp:function:: const Extensions& v3_extensions() const
-
-     Returns all extensions of this certificate. You can use this
-     to examine any extension data associated with the certificate,
-     including custom extensions the library doesn't know about.
+     Returns the distinguished name (DN) of the certificate's issuer, ie the CA
+     that issued this certificate.
 
   .. cpp:function:: const AlternativeName& subject_alt_name() const
 
@@ -74,9 +53,83 @@ in the :doc:`tls` protocol. A X.509 certificate is represented by
 
       Return alternative names for the issuer.
 
-  .. cpp:function:: std::string fingerprint(const std::string& hash_name = "SHA-1") const
+  .. cpp:function:: std::unique_ptr<Public_Key> load_subject_public_key() const
 
-      Return a fingerprint for the certificate.
+     Deserialize the stored public key and return a new object. This
+     might throw, if it happens that the public key object stored in
+     the certificate is malformed in some way, or in the case that the
+     public key algorithm used is not supported by the library.
+
+     See :ref:`serializing_public_keys` for more information about what to do
+     with the returned object. It may be any type of key, in principle, though
+     RSA and ECDSA are most common.
+
+  .. cpp:function:: std::vector<uint8_t> subject_public_key_bits() const
+
+     Return the binary encoding of the subject public key. This value (or a hash of
+     it) is used in various protocols, eg for public key pinning.
+
+  .. cpp:function:: AlgorithmIdentifier subject_public_key_algo() const
+
+     Return an algorithm identifier that identifies the algorithm used in the
+     subject's public key.
+
+  .. cpp:function:: std::vector<uint8_t> serial_number() const
+
+     Return the certificates serial number. The tuple of issuer DN and
+     serial number should be unique.
+
+  .. cpp:function:: std::vector<uint8> raw_subject_dn() const
+
+     Return the binary encoding of the subject DN.
+
+  .. cpp:function:: std::vector<uint8> raw_issuer_dn() const
+
+     Return the binary encoding of the issuer DN.
+
+  .. cpp:function:: X509_Time not_before() const
+
+     Returns the point in time the certificate becomes valid
+
+  .. cpp:function:: X509_Time not_after() const
+
+     Returns the point in time the certificate expires
+
+  .. cpp:function:: const Extensions& v3_extensions() const
+
+     Returns all extensions of this certificate. You can use this
+     to examine any extension data associated with the certificate,
+     including custom extensions the library doesn't know about.
+
+  .. cpp:function:: std::vector<uint8_t> authority_key_id() const
+
+      Return the authority key id, if set. This is an arbitrary string; in the
+      issuing certificate this will be the subject key id.
+
+  .. cpp:function:: std::vector<uint8_t> subject_key_id() const
+
+      Return the subject key id, if set.
+
+  .. cpp:function:: bool allowed_extended_usage(const OID& usage) const
+
+      Return true if and only if the usage OID appears in the extended key usage
+      extension. Also will return true if the extended key usage extension is
+      not used in the current certificate.
+
+  .. cpp:function: std::vector<OID> extended_key_usage() const
+
+      Return the list of extended key usages. May be empty.
+
+  .. cpp:function:: std::string fingerprint(const std::string& hash_fn = "SHA-1") const
+
+      Return a fingerprint for the certificate, which is basically just a hash
+      of the binary contents. Normally SHA-1 or SHA-256 is used, but any hash
+      function is allowed.
+
+  .. cpp:function:: bool matches_dns_name(const std::string& name) const
+
+     Returns true if ``name`` matches the DNS name in the certificate. This function
+     accounts for wildcard certificates.
 
   .. cpp:function:: Key_Constraints constraints() const
 
@@ -99,64 +152,51 @@ in the :doc:`tls` protocol. A X.509 certificate is represented by
 
       Returns a free-form human readable string describing the certificate.
 
-The ``X509_Certificate`` class has several other functions not described here.
-See the header ``x509cert.h`` for details.
+X.509 Distinguished Names
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The data of an X.509 certificate is stored as a ``shared_ptr`` to a structure
-containing the decoded information. So copying ``X509_Certificate`` objects is
-quite cheap.
+.. cpp:class:: X509_DN
 
-So what's in an X.509 certificate?
------------------------------------
+  .. cpp:function:: bool has_field(const std::string& attr) const
 
-Obviously, you want to be able to get the public key. This is achieved
-by calling the member function ``subject_public_key``, which will
-return a ``Public_Key``\*. As to what to do with this, read about
-``load_key`` in :ref:`serializing_public_keys`. In the general case,
-this could be any kind of public key, though 99% of the time it will
-be an RSA key. However, Diffie-Hellman, DSA, and ECDSA keys are also
-supported, so be careful about how you treat this. It is also a wise
-idea to examine the value returned by ``constraints``, to see what
-uses the public key is approved for.
+      Returns true if ``get_attribute`` or ``get_first_attribute`` will return a value.
 
-The second major piece of information you'll want is the
-name/email/etc of the person to whom this certificate is
-assigned. Here is where things get a little nasty. X.509v3 has two
-(well, mostly just two...) different places where you can stick
-information about the user: the *subject* field, and in an extension
-called *subjectAlternativeName*. The *subject* field is supposed to
-only included the following information: country, organization, an
-organizational sub-unit name, and a so-called common name. The common
-name is usually the name of the person, or it could be a title
-associated with a position of some sort in the organization. It may
-also include fields for state/province and locality. What a locality
-is, nobody knows, but it's usually given as a city name.
+  .. cpp:function:: std::vector<std::string> get_attribute(const std::string& attr) const
 
-Like the distinguished names, subject alternative names can contain a lot of
-things that Botan will flat out ignore (most of which you would likely never
-want to use). However, there are three very useful pieces of information that
-this extension might hold: an email address (mailbox@example.com), a DNS name
-(somehost.example.com), or a URI (http://www.example.com).
+      Return all attributes associated with a certain attribute type.
 
-So, how to get the information? Call ``subject_info`` with the name of
-the piece of information you want, and it will return a
-``std::string`` that is either empty (signifying that the certificate
-doesn't have this information), or has the information
-requested. There are several names for each possible item, but the
-most easily readable ones are: "Name", "Country", "Organization",
-"Organizational Unit", "Locality", "State", "RFC822", "URI", and
-"DNS". These values are returned as a ``std::string``.
+  .. cpp:function:: std::string get_first_attribute(const std::string& attr) const
 
-You can also get information about the issuer of the certificate in the same
-way, using ``issuer_info``.
+      Like ``get_attribute`` but returns just the first attribute, or
+      empty if the DN has no attribute of the specified type.
+
+  .. cpp:function:: std::multimap<OID, std::string> get_attributes() const
+
+      Get all attributes of the DN. The OID maps to a DN component such as
+      2.5.4.10 ("Organization"), and the strings are UTF-8 encoded.
+
+  .. cpp:function:: std::multimap<std::string, std::string> contents() const
+
+      Similar to ``get_attributes``, but the OIDs are decoded to strings.
+
+  .. cpp:function:: void add_attribute(const std::string& key, const std::string& val)
+
+      Add an attribute to a DN.
+
+  .. cpp:function:: void add_attribute(const OID& oid, const std::string& val)
+
+      Add an attribute to a DN using an OID instead of string-valued attribute type.
+
+The ``X509_DN`` type also supports iostream extraction and insertion operators,
+for formatted input and output.
 
 X.509v3 Extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-X.509v3 specifies a large number of possible extensions. Botan
-supports some, but by no means all of them.
-The following listing lists which X.509v3 extensions are supported
-and notes areas where there may be problems with the handling.
+X.509v3 specifies a large number of possible extensions. Botan supports some,
+but by no means all of them. The following listing lists which X.509v3
+extensions are supported and notes areas where there may be problems with the
+handling.
 
  - Key Usage and Extended Key Usage: No problems known.
 
@@ -199,10 +239,16 @@ functions are provided to search them.
 
  .. cpp:function:: void add(Certificate_Extension* extn, bool critical = false)
 
-     Adds a new extension to the list. ``critical`` specifies whether the extension
-     should be marked as critical.
+     Adds a new extension to the extensions object. If an extension of the same
+     type already exists, ``extn`` will replace it. If ``critical`` is true the
+     extension will be marked as critical in the encoding.
 
- .. cpp:function:: replace(Certificate_Extension* extn, bool critical = false)
+ .. cpp:function:: bool add_new(Certificate_Extension* extn, bool critical = false)
+
+    Like ``add`` but an existing extension will not be replaced. Returns true if the
+    extension was used, false if an extension of the same type was already in place.
+
+ .. cpp:function:: void replace(Certificate_Extension* extn, bool critical = false)
 
      Adds an extension to the list or replaces it, if the same
      extension was already added
@@ -641,6 +687,20 @@ This function acts quite similarly to
 transmit it to a CA, who signs it and returns a freshly minted X.509
 certificate.
 
+.. cpp:function:: PKCS10_Request PKCS10_Request::create(const Private_Key& key, \
+                                   const X509_DN& subject_dn, \
+                                   const Extensions& extensions, \
+                                   const std::string& hash_fn, \
+                                   RandomNumberGenerator& rng, \
+                                   const std::string& padding_scheme = "", \
+                                   const std::string& challenge = "")
+
+  This function (added in 2.5) is similar to ``create_cert_req`` but allows
+  specifying all the parameters directly. In fact ``create_cert_req`` just
+  creates the DN and extensions from the options, then uses this call to
+  actually create the ``PKCS10_Request`` object.
+
+
 Certificate Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -718,13 +778,9 @@ are named "PKIX.ServerAuth" (for TLS server authentication),
 times - each new OID will be added to the list to include in the
 certificate.
 
-Lastly, you can add any X.509v3 extensions in the `extensions`
-member. This is really only useful if you want to encode custom
-extensions in the certificate. Most users probably won't need this.
-Note that extensions added this way will be overwritten by an
-``X509_CA`` if also added by the ``X509_CA`` itself. This currently
-includes the Basic Constraints, Key Usage, Authority Key ID, Subject
-Key ID, Subject Alternative Name and Extended Key Usage extension.
+Lastly, you can add any X.509v3 extensions in the `extensions` member, which is
+useful if you want to encode a custom extension, or encode an extension in a way
+differently from how Botan defaults.
 
 OCSP Requests
 ----------------------------------------

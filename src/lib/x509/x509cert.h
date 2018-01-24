@@ -337,7 +337,14 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       */
       const std::vector<uint8_t>& v2_subject_key_id() const;
 
+      /**
+      * Return the subject alternative names (DNS, IP, ...)
+      */
       const AlternativeName& subject_alt_name() const;
+
+      /**
+      * Return the issuer alternative names (DNS, IP, ...)
+      */
       const AlternativeName& issuer_alt_name() const;
 
       /**
@@ -380,7 +387,8 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       bool operator==(const X509_Certificate& other) const;
 
       /**
-      * Impose an arbitrary (but consistent) ordering
+      * Impose an arbitrary (but consistent) ordering, eg to allow sorting
+      * a container of certificate objects.
       * @return true if this is less than other by some unspecified criteria
       */
       bool operator<(const X509_Certificate& other) const;
