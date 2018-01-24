@@ -333,6 +333,30 @@ int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key)
    }
 
 /* DSA specific operations */
+int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t pbits, size_t qbits)
+   {
+#if defined(BOTAN_HAS_DSA)
+
+    if ((rng_obj == nullptr) || (key == nullptr))
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+    if ((pbits % 64) || (qbits % 8) ||
+        (pbits < 1024) || (pbits > 3072) ||
+        (qbits < 160) || (qbits > 256)) {
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+    }
+
+    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      Botan::DL_Group group(rng, Botan::DL_Group::Prime_Subgroup, pbits, qbits);
+      *key = new botan_privkey_struct(new Botan::DSA_PrivateKey(rng, group));
+      return BOTAN_FFI_SUCCESS;
+    });
+#else
+    BOTAN_UNUSED(key, rng_obj, pbits, qbits);
+    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
 
 int botan_privkey_load_dsa(botan_privkey_t* key,
                            botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t x)
@@ -441,6 +465,35 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key,
    }
 
 /* ElGamal specific operations */
+int botan_privkey_create_elgamal(botan_privkey_t* key,
+                                 botan_rng_t rng_obj,
+                                 size_t pbits,
+                                 size_t qbits)
+   {
+#if defined(BOTAN_HAS_ELGAMAL)
+
+    if ((rng_obj == nullptr) || (key == nullptr))
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+    if ((pbits < 1024) || (qbits<160)) {
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+    }
+
+    Botan::DL_Group::PrimeType prime_type = ((pbits-1) == qbits)
+      ? Botan::DL_Group::Strong
+      : Botan::DL_Group::Prime_Subgroup;
+
+    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      Botan::DL_Group group(rng, prime_type, pbits, qbits);
+      *key = new botan_privkey_struct(new Botan::ElGamal_PrivateKey(rng, group));
+      return BOTAN_FFI_SUCCESS;
+    });
+#else
+    BOTAN_UNUSED(key, rng_obj, pbits);
+    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
 
 int botan_pubkey_load_elgamal(botan_pubkey_t* key,
                               botan_mp_t p, botan_mp_t g, botan_mp_t y)

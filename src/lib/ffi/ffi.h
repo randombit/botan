@@ -703,6 +703,56 @@ BOTAN_PUBLIC_API(2,0) int botan_privkey_create_ecdh(botan_privkey_t* key, botan_
 BOTAN_PUBLIC_API(2,0) int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);
 BOTAN_PUBLIC_API(2,0) int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* param);
 
+
+/*
+ * Generates DSA key pair. Gives to a caller control over key length
+ * and order of a subgroup 'q'.
+ *
+ * @param   key   handler to the resulting key
+ * @param   rng   initialized PRNG
+ * @param   pbits length of the key in bits. Must be between in range (1024, 3072)
+ *          and multiple of 64. Bit size of the prime 'p'
+ * @param   qbits order of the subgroup. Must be in range (160, 256) and multiple
+ *          of 8
+ *
+ * @returns BOTAN_FFI_SUCCESS Success, `key' initialized with DSA key
+ * @returns BOTAN_FFI_ERROR_NULL_POINTER  either `key' or `rng' is NULL
+ * @returns BOTAN_FFI_ERROR_BAD_PARAMETER unexpected value for either `pbits' or
+ *          `qbits'
+ * @returns BOTAN_FFI_ERROR_NOT_IMPLEMENTED functionality not implemented
+ *
+-------------------------------------------------------------------------------- */
+BOTAN_PUBLIC_API(2,5) int botan_privkey_create_dsa(
+                                botan_privkey_t* key,
+                                botan_rng_t rng,
+                                size_t pbits,
+                                size_t qbits);
+
+/*
+ * Generates ElGamal key pair. Caller has a control over key length
+ * and order of a subgroup 'q'. Function is able to use two types of
+ * primes:
+ *    * if pbits-1 == qbits then safe primes are used for key generation
+ *    * otherwise generation uses group of prime order
+ *
+ * @param   key   handler to the resulting key
+ * @param   rng   initialized PRNG
+ * @param   pbits length of the key in bits. Must be at least 1024
+ * @param   qbits order of the subgroup. Must be at least 160
+ *
+ * @returns BOTAN_FFI_SUCCESS Success, `key' initialized with DSA key
+ * @returns BOTAN_FFI_ERROR_NULL_POINTER  either `key' or `rng' is NULL
+ * @returns BOTAN_FFI_ERROR_BAD_PARAMETER unexpected value for either `pbits' or
+ *          `qbits'
+ * @returns BOTAN_FFI_ERROR_NOT_IMPLEMENTED functionality not implemented
+ *
+-------------------------------------------------------------------------------- */
+BOTAN_PUBLIC_API(2,5) int botan_privkey_create_elgamal(
+                            botan_privkey_t* key,
+                            botan_rng_t rng,
+                            size_t pbits,
+                            size_t qbits);
+
 /*
 * Input currently assumed to be PKCS #8 structure;
 * Set password to NULL to indicate no encryption expected
