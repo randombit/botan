@@ -32,7 +32,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    m_session_id(server_settings.session_id()),
    m_random(make_hello_random(rng, policy)),
    m_ciphersuite(server_settings.ciphersuite()),
-   m_comp_method(server_settings.compression())
+   m_comp_method(0)
    {
    if(client_hello.supports_extended_master_secret())
       m_extensions.add(new Extended_Master_Secret);
@@ -100,7 +100,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    m_session_id(client_hello.session_id()),
    m_random(make_hello_random(rng, policy)),
    m_ciphersuite(resumed_session.ciphersuite_code()),
-   m_comp_method(resumed_session.compression_method())
+   m_comp_method(0)
    {
    if(client_hello.supports_extended_master_secret())
       m_extensions.add(new Extended_Master_Secret);

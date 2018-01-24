@@ -98,11 +98,6 @@ bool check_for_resume(Session& session_info,
                     session_info.ciphersuite_code()))
       return false;
 
-   // client didn't send original compression method
-   if(!value_exists(client_hello->compression_methods(),
-                    session_info.compression_method()))
-      return false;
-
 #if defined(BOTAN_HAS_SRP6)
    // client sent a different SRP identity
    if(client_hello->srp_identifier() != "")
@@ -262,23 +257,6 @@ uint16_t choose_ciphersuite(
 
    throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                        "Can't agree on a ciphersuite with client");
-   }
-
-
-/*
-* Choose which compression algorithm to use
-*/
-uint8_t choose_compression(const Policy& policy,
-                        const std::vector<uint8_t>& c_comp)
-   {
-   std::vector<uint8_t> s_comp = policy.compression();
-
-   for(size_t i = 0; i != s_comp.size(); ++i)
-      for(size_t j = 0; j != c_comp.size(); ++j)
-         if(s_comp[i] == c_comp[j])
-            return s_comp[i];
-
-   return NO_COMPRESSION;
    }
 
 std::map<std::string, std::vector<X509_Certificate> >
@@ -615,7 +593,6 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
          pending_state.session_keys().master_secret(),
          pending_state.server_hello()->version(),
          pending_state.server_hello()->ciphersuite(),
-         pending_state.server_hello()->compression_method(),
          SERVER,
          pending_state.server_hello()->supports_extended_master_secret(),
          pending_state.server_hello()->supports_encrypt_then_mac(),
@@ -811,7 +788,6 @@ void Server::session_create(Server_Handshake_State& pending_state,
       make_hello_random(rng(), policy()), // new session ID
       pending_state.version(),
       ciphersuite,
-      choose_compression(policy(), pending_state.client_hello()->compression_methods()),
       have_session_ticket_key);
 
    pending_state.server_hello(new Server_Hello(

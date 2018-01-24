@@ -270,14 +270,6 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
                            std::to_string(expected_keylength));
    }
 
-/*
-* Return allowed compression algorithms
-*/
-std::vector<uint8_t> Policy::compression() const
-   {
-   return std::vector<uint8_t>{ NO_COMPRESSION };
-   }
-
 uint32_t Policy::session_ticket_lifetime() const
    {
    return 86400; // ~1 day

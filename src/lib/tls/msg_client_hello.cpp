@@ -88,7 +88,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_version(client_settings.protocol_version()),
    m_random(make_hello_random(rng, policy)),
    m_suites(policy.ciphersuite_list(m_version, !client_settings.srp_identifier().empty())),
-   m_comp_methods(policy.compression())
+   m_comp_methods(1)
    {
    BOTAN_ASSERT(policy.acceptable_protocol_version(client_settings.protocol_version()),
                 "Our policy accepts the version we are offering");
@@ -160,13 +160,10 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_session_id(session.session_id()),
    m_random(make_hello_random(rng, policy)),
    m_suites(policy.ciphersuite_list(m_version, (session.srp_identifier() != ""))),
-   m_comp_methods(policy.compression())
+   m_comp_methods(1)
    {
    if(!value_exists(m_suites, session.ciphersuite_code()))
       m_suites.push_back(session.ciphersuite_code());
-
-   if(!value_exists(m_comp_methods, session.compression_method()))
-      m_comp_methods.push_back(session.compression_method());
 
    /*
    We always add the EMS extension, even if not used in the original session.

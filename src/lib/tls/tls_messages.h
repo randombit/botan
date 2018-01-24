@@ -69,24 +69,24 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
    {
    public:
       class Settings final
-      {
-          public:
-              Settings(const Protocol_Version version,
-                       const std::string& hostname = "",
-                       const std::string& srp_identifier = "")
-                  : m_new_session_version(version),
-                    m_hostname(hostname),
-                    m_srp_identifier(srp_identifier) {}
+         {
+         public:
+            Settings(const Protocol_Version version,
+                     const std::string& hostname = "",
+                     const std::string& srp_identifier = "") :
+               m_new_session_version(version),
+               m_hostname(hostname),
+               m_srp_identifier(srp_identifier) {}
 
-              const Protocol_Version protocol_version() const { return m_new_session_version; }
-              const std::string& hostname() const { return m_hostname; }
-              const std::string& srp_identifier() const { return m_srp_identifier; }
+            const Protocol_Version protocol_version() const { return m_new_session_version; }
+            const std::string& hostname() const { return m_hostname; }
+            const std::string& srp_identifier() const { return m_srp_identifier; }
 
-          private:
-              const Protocol_Version m_new_session_version;
-              const std::string m_hostname;
-              const std::string m_srp_identifier;
-      };
+         private:
+            const Protocol_Version m_new_session_version;
+            const std::string m_hostname;
+            const std::string m_srp_identifier;
+         };
 
       Handshake_Type type() const override { return CLIENT_HELLO; }
 
@@ -97,8 +97,6 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
       const std::vector<uint8_t>& session_id() const { return m_session_id; }
 
       const std::vector<uint16_t>& ciphersuites() const { return m_suites; }
-
-      const std::vector<uint8_t>& compression_methods() const { return m_comp_methods; }
 
       bool offered_suite(uint16_t ciphersuite) const;
 
@@ -185,32 +183,28 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
    {
    public:
       class Settings final
-      {
-          public:
-              Settings(const std::vector<uint8_t> new_session_id,
-                       Protocol_Version new_session_version,
-                       uint16_t ciphersuite,
-                       uint8_t compression,
-                       bool offer_session_ticket)
-                  : m_new_session_id(new_session_id),
-                    m_new_session_version(new_session_version),
-                    m_ciphersuite(ciphersuite),
-                    m_compression(compression),
-                    m_offer_session_ticket(offer_session_ticket) {}
+         {
+         public:
+            Settings(const std::vector<uint8_t> new_session_id,
+                     Protocol_Version new_session_version,
+                     uint16_t ciphersuite,
+                     bool offer_session_ticket) :
+               m_new_session_id(new_session_id),
+               m_new_session_version(new_session_version),
+               m_ciphersuite(ciphersuite),
+               m_offer_session_ticket(offer_session_ticket) {}
 
-              const std::vector<uint8_t>& session_id() const { return m_new_session_id; }
-              Protocol_Version protocol_version() const { return m_new_session_version; }
-              uint16_t ciphersuite() const { return m_ciphersuite; }
-              uint8_t compression() const { return m_compression; }
-              bool offer_session_ticket() const { return m_offer_session_ticket; }
+            const std::vector<uint8_t>& session_id() const { return m_new_session_id; }
+            Protocol_Version protocol_version() const { return m_new_session_version; }
+            uint16_t ciphersuite() const { return m_ciphersuite; }
+            bool offer_session_ticket() const { return m_offer_session_ticket; }
 
-          private:
-              const std::vector<uint8_t> m_new_session_id;
-              Protocol_Version m_new_session_version;
-              uint16_t m_ciphersuite;
-              uint8_t m_compression;
-              bool m_offer_session_ticket;
-      };
+         private:
+            const std::vector<uint8_t> m_new_session_id;
+            Protocol_Version m_new_session_version;
+            uint16_t m_ciphersuite;
+            bool m_offer_session_ticket;
+         };
 
 
       Handshake_Type type() const override { return SERVER_HELLO; }

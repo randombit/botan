@@ -22,7 +22,6 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
                  const secure_vector<uint8_t>& master_secret,
                  Protocol_Version version,
                  uint16_t ciphersuite,
-                 uint8_t compression_method,
                  Connection_Side side,
                  bool extended_master_secret,
                  bool encrypt_then_mac,
@@ -37,7 +36,6 @@ Session::Session(const std::vector<uint8_t>& session_identifier,
    m_master_secret(master_secret),
    m_version(version),
    m_ciphersuite(ciphersuite),
-   m_compression_method(compression_method),
    m_connection_side(side),
    m_srtp_profile(srtp_profile),
    m_extended_master_secret(extended_master_secret),
@@ -71,6 +69,7 @@ Session::Session(const uint8_t ber[], size_t ber_len)
    size_t start_time = 0;
    size_t srtp_profile = 0;
    size_t fragment_size = 0;
+   size_t compression_method = 0;
 
    BER_Decoder(ber, ber_len)
       .start_cons(SEQUENCE)
@@ -82,7 +81,7 @@ Session::Session(const uint8_t ber[], size_t ber_len)
         .decode(m_identifier, OCTET_STRING)
         .decode(m_session_ticket, OCTET_STRING)
         .decode_integer_type(m_ciphersuite)
-        .decode_integer_type(m_compression_method)
+        .decode_integer_type(compression_method)
         .decode_integer_type(side_code)
         .decode_integer_type(fragment_size)
         .decode(m_extended_master_secret)
@@ -96,6 +95,14 @@ Session::Session(const uint8_t ber[], size_t ber_len)
         .decode(srtp_profile)
       .end_cons()
       .verify_end();
+
+   /*
+   * Compression is not supported and must be zero
+   */
+   if(compression_method != 0)
+      {
+      throw Decoding_Error("Serialized TLS session contains non-null compression method");
+      }
 
    /*
    Fragment size is not supported anymore, but the field is still
@@ -142,7 +149,7 @@ secure_vector<uint8_t> Session::DER_encode() const
          .encode(m_identifier, OCTET_STRING)
          .encode(m_session_ticket, OCTET_STRING)
          .encode(static_cast<size_t>(m_ciphersuite))
-         .encode(static_cast<size_t>(m_compression_method))
+         .encode(static_cast<size_t>(/*old compression method*/0))
          .encode(static_cast<size_t>(m_connection_side))
          .encode(static_cast<size_t>(/*old fragment size*/0))
          .encode(m_extended_master_secret)
