@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <iostream>
 #include "tests.h"
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -617,22 +618,48 @@ Test::Result test_padding_config() {
 
 #endif
 
-Test::Result test_x509_cert(const std::string& sig_algo, const std::string& sig_padding = "", const std::string& hash_fn = "SHA-256")
+Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
+                             const std::string& sig_padding,
+                             const std::string& hash_fn = "SHA-256")
+   {
+   Test::Result result("PKCS10 extensions");
+
+   Botan::X509_Cert_Options opts;
+
+   opts.padding_scheme = sig_padding;
+
+   Botan::AlternativeName alt_name;
+   alt_name.add_attribute("DNS", "example.org");
+   alt_name.add_attribute("DNS", "example.com");
+   alt_name.add_attribute("DNS", "example.net");
+
+   opts.extensions.add(new Botan::Cert_Extension::Subject_Alternative_Name(alt_name));
+
+   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, key, hash_fn, Test::rng());
+
+   std::vector<std::string> alt_dns_names = req.subject_alt_name().get_attribute("DNS");
+
+   result.test_eq("Expected number of DNS names", alt_dns_names.size(), 3);
+
+   // The order is not guaranteed so sort before comparing
+   std::sort(alt_dns_names.begin(), alt_dns_names.end());
+
+   result.test_eq("Expected DNS name 1", alt_dns_names.at(0), "example.com");
+   result.test_eq("Expected DNS name 2", alt_dns_names.at(1), "example.net");
+   result.test_eq("Expected DNS name 3", alt_dns_names.at(2), "example.org");
+
+   return result;
+   }
+
+Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
+                            const std::string& sig_algo,
+                            const std::string& sig_padding = "",
+                            const std::string& hash_fn = "SHA-256")
    {
    Test::Result result("X509 Unit");
 
-   /* Create the CA's key and self-signed cert */
-   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(sig_algo));
-
-   if(!ca_key)
-      {
-      // Failure because X.509 enabled but requested signature algorithm is not present
-      result.test_note("Skipping due to missing signature algorithm: " + sig_algo);
-      return result;
-      }
-
    /* Create the self-signed cert */
-   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(sig_padding), *ca_key, hash_fn, Test::rng());
+   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
 
       {
       const auto constraints = Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN);
@@ -661,7 +688,7 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& sig_
                                    Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
+   Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
 
    /* Sign the requests to create the certs */
    Botan::X509_Certificate user1_cert =
@@ -787,31 +814,23 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& sig_
    return result;
    }
 
-Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
+Test::Result test_usage(const Botan::Private_Key& ca_key,
+                        const std::string& sig_algo,
+                        const std::string& hash_fn = "SHA-256")
    {
    using Botan::Key_Constraints;
 
    Test::Result result("X509 Usage");
 
-   /* Create the CA's key and self-signed cert */
-   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(sig_algo));
-
-   if(!ca_key)
-      {
-      // Failure because X.509 enabled but requested signature algorithm is not present
-      result.test_note("Skipping due to missing signature algorithm: " + sig_algo);
-      return result;
-      }
-
    /* Create the self-signed cert */
    const Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(
          ca_opts(),
-         *ca_key,
+         ca_key,
          hash_fn,
          Test::rng());
 
    /* Create the CA object */
-   const Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
+   const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
 
@@ -875,28 +894,21 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
    return result;
    }
 
-Test::Result test_self_issued(const std::string& sig_algo, const std::string& sig_padding = "", const std::string& hash_fn = "SHA-256")
+Test::Result test_self_issued(const Botan::Private_Key& ca_key,
+                              const std::string& sig_algo,
+                              const std::string& sig_padding = "",
+                              const std::string& hash_fn = "SHA-256")
    {
    using Botan::Key_Constraints;
 
    Test::Result result("X509 Self Issued");
 
-   // create the CA's key and self-signed cert
-   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(sig_algo));
-
-   if(!ca_key)
-      {
-      // Failure because X.509 enabled but requested signature algorithm is not present
-      result.test_note("Skipping due to missing signature algorithm: " + sig_algo);
-      return result;
-      }
-
    // create the self-signed cert
    const Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(
-         ca_opts(sig_padding), *ca_key, hash_fn, Test::rng());
+         ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
-   const Botan::X509_CA ca(ca_cert, *ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
+   const Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
@@ -983,21 +995,13 @@ struct typical_usage_constraints
    };
 
 
-Test::Result test_valid_constraints(const std::string& pk_algo)
+Test::Result test_valid_constraints(const Botan::Private_Key& key,
+                                    const std::string& pk_algo)
    {
    Test::Result result("X509 Valid Constraints");
 
-   std::unique_ptr<Botan::Private_Key> key(make_a_private_key(pk_algo));
-
-   if(!key)
-      {
-      // Failure because X.509 enabled but requested algorithm is not present
-      result.test_note("Skipping due to missing signature algorithm: " + pk_algo);
-      return result;
-      }
-
    // should not throw on empty constraints
-   verify_cert_constraints_valid_for_key_type(*key, Key_Constraints(Key_Constraints::NO_CONSTRAINTS));
+   verify_cert_constraints_valid_for_key_type(key, Key_Constraints(Key_Constraints::NO_CONSTRAINTS));
 
    // now check some typical usage scenarios for the given key type
    typical_usage_constraints typical_usage;
@@ -1007,40 +1011,40 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
       // DH and ECDH only for key agreement
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.all);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
          });
       result.test_throws("cert sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
          });
       result.test_throws("signature not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_data);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
          });
       result.test_throws("non repudiation not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
          });
       result.test_throws("key encipherment not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
          });
       result.test_throws("data encipherment not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
          });
 
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
 
       result.test_throws("crl sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
          });
       result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
          });
       }
    else if(pk_algo == "RSA")
@@ -1048,65 +1052,65 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
       // RSA can do everything except key agreement
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.all);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
          });
 
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_data);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
 
       result.test_throws("key agreement not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
          });
       result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
          });
       result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
          });
 
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
       }
    else if(pk_algo == "ElGamal")
       {
       // only ElGamal encryption is currently implemented
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.all);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
          });
       result.test_throws("cert sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
          });
 
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
 
       result.test_throws("key agreement not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
          });
       result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
          });
       result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
          });
       result.test_throws("crl sign not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
          });
       result.test_throws("sign, cert sign, crl sign not permitted not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
          });
       }
    else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" ||
@@ -1115,36 +1119,36 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
       // these are signature algorithms only
       result.test_throws("all constraints not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.all);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.all);
          });
 
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_data);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.ca);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_data);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.non_repudiation);
 
       result.test_throws("key encipherment not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_encipherment);
          });
       result.test_throws("data encipherment not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.data_encipherment);
          });
       result.test_throws("key agreement not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement);
          });
       result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_encipher_only);
          });
       result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
          {
-         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
+         verify_cert_constraints_valid_for_key_type(key, typical_usage.key_agreement_decipher_only);
          });
 
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.crl_sign);
+      verify_cert_constraints_valid_for_key_type(key, typical_usage.sign_everything);
       }
 
    return result;
@@ -1203,28 +1207,21 @@ class String_Extension final : public Botan::Certificate_Extension
       std::string m_contents;
    };
 
-Test::Result test_x509_extensions(const std::string& sig_algo, const std::string& sig_padding = "", const std::string& hash_fn = "SHA-256")
+Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
+                                  const std::string& sig_algo,
+                                  const std::string& sig_padding = "",
+                                  const std::string& hash_fn = "SHA-256")
    {
    using Botan::Key_Constraints;
 
    Test::Result result("X509 Extensions");
 
-   /* Create the CA's key and self-signed cert */
-   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(sig_algo));
-
-   if(!ca_key)
-      {
-      // Failure because X.509 enabled but requested signature algorithm is not present
-      result.test_note("Skipping due to missing signature algorithm: " + sig_algo);
-      return result;
-      }
-
    /* Create the self-signed cert */
    Botan::X509_Certificate ca_cert =
-      Botan::X509::create_self_signed_cert(ca_opts(sig_padding), *ca_key, hash_fn, Test::rng());
+      Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
+   Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
@@ -1290,17 +1287,10 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
    return result;
    }
 
-Test::Result test_hashes(const std::string& algo, const std::string& hash_fn = "SHA-256")
+Test::Result test_hashes(const Botan::Private_Key& key,
+                         const std::string& hash_fn = "SHA-256")
    {
    Test::Result result("X509 Hashes");
-
-   const std::unique_ptr<Botan::Private_Key> key(make_a_private_key(algo));
-
-   if(!key)
-      {
-      result.test_note("Skipping due to missing signature algorithm: " + algo);
-      return result;
-      }
 
    struct TestData
       {
@@ -1345,14 +1335,14 @@ Test::Result test_hashes(const std::string& algo, const std::string& hash_fn = "
       opts.CA_key();
 
       const Botan::X509_Certificate issuer_cert =
-         Botan::X509::create_self_signed_cert(opts, *key, hash_fn, Test::rng());
+         Botan::X509::create_self_signed_cert(opts, key, hash_fn, Test::rng());
 
       result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_issuer_dn_sha256()), a.issuer_hash);
       result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_subject_dn_sha256()), a.issuer_hash);
 
-      const Botan::X509_CA ca(issuer_cert, *key, hash_fn, Test::rng());
+      const Botan::X509_CA ca(issuer_cert, key, hash_fn, Test::rng());
       const Botan::PKCS10_Request req =
-         Botan::X509::create_cert_req(a.subject, *key, hash_fn, Test::rng());
+         Botan::X509::create_cert_req(a.subject, key, hash_fn, Test::rng());
       const Botan::X509_Certificate subject_cert =
          ca.sign_request(req, Test::rng(), from_date(2008, 01, 01), from_date(2033, 01, 01));
 
@@ -1370,10 +1360,6 @@ class X509_Cert_Unit_Tests final : public Test
          std::vector<Test::Result> results;
 
          const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10" };
-         Test::Result cert_result("X509 Unit");
-         Test::Result usage_result("X509 Usage");
-         Test::Result self_issued_result("X509 Self Issued");
-         Test::Result extensions_result("X509 Extensions");
 
          for(const std::string& algo : sig_algos)
             {
@@ -1381,53 +1367,85 @@ class X509_Cert_Unit_Tests final : public Test
             if(algo == "RSA")
                continue;
 #endif
-            for(auto padding_scheme : Botan::get_sig_paddings(algo))
-               {
-               try
-                  {
-                  cert_result.merge(test_x509_cert(algo, padding_scheme));
-                  }
-               catch(std::exception& e)
-                  {
-                  cert_result.test_failure("test_x509_cert " + algo, e.what());
-                  }
-               }
+
+            std::unique_ptr<Botan::Private_Key> key = make_a_private_key(algo);
+
+            if(key == nullptr)
+               continue;
+
+            results.push_back(test_hashes(*key));
+            results.push_back(test_valid_constraints(*key, algo));
+
+            Test::Result usage_result("X509 Usage");
             try
                {
-               usage_result.merge(test_usage(algo));
+               usage_result.merge(test_usage(*key, algo));
                }
             catch(std::exception& e)
                {
                usage_result.test_failure("test_usage " + algo, e.what());
                }
+            results.push_back(usage_result);
+
             for(auto padding_scheme : Botan::get_sig_paddings(algo))
                {
+               Test::Result cert_result("X509 Unit");
                try
                   {
-                  self_issued_result.merge(test_self_issued(algo, padding_scheme));
+                  cert_result.merge(test_x509_cert(*key, algo, padding_scheme));
+                  }
+               catch(std::exception& e)
+                  {
+                  cert_result.test_failure("test_x509_cert " + algo, e.what());
+                  }
+               results.push_back(cert_result);
+
+               Test::Result pkcs10_result("PKCS10 extensions");
+               try
+                  {
+                  pkcs10_result.merge(test_pkcs10_ext(*key, padding_scheme));
+                  }
+               catch(std::exception& e)
+                  {
+                  pkcs10_result.test_failure("test_pkcs10_ext " + algo, e.what());
+                  }
+               results.push_back(pkcs10_result);
+
+               Test::Result self_issued_result("X509 Self Issued");
+               try
+                  {
+                  self_issued_result.merge(test_self_issued(*key, algo, padding_scheme));
                   }
                catch(std::exception& e)
                   {
                   self_issued_result.test_failure("test_self_issued " + algo, e.what());
                   }
-               }
-            for(auto padding_scheme : Botan::get_sig_paddings(algo))
-               {
+               results.push_back(self_issued_result);
+
+               Test::Result extensions_result("X509 Extensions");
                try
                   {
-                  extensions_result.merge(test_x509_extensions(algo, padding_scheme));
+                  extensions_result.merge(test_x509_extensions(*key, algo, padding_scheme));
                   }
                catch(std::exception& e)
                   {
                   extensions_result.test_failure("test_extensions " + algo, e.what());
                   }
+               results.push_back(extensions_result);
                }
+
             }
 
-         results.push_back(cert_result);
-         results.push_back(usage_result);
-         results.push_back(self_issued_result);
-         results.push_back(extensions_result);
+         /*
+         These are algos which cannot sign but can be included in certs
+         */
+         const std::vector<std::string> enc_algos = { "DH", "ECDH", "ElGamal" };
+
+         for(std::string algo : enc_algos)
+            {
+            std::unique_ptr<Botan::Private_Key> key = make_a_private_key(algo);
+            results.push_back(test_valid_constraints(*key, algo));
+            }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
          Test::Result pad_config_result("X509 Padding Config");
@@ -1442,23 +1460,6 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(pad_config_result);
 #endif
 
-         const std::vector<std::string> pk_algos
-            {
-            "DH", "ECDH", "RSA", "ElGamal", "GOST-34.10",
-            "DSA", "ECDSA", "ECGDSA", "ECKCDSA"
-            };
-
-         Test::Result valid_constraints_result("X509 Valid Constraints");
-
-         for(const std::string& algo : pk_algos)
-            {
-#if !defined(BOTAN_HAS_EMSA_PKCS1)
-            if(algo == "RSA")
-               continue;
-#endif
-            valid_constraints_result.merge(test_valid_constraints(algo));
-            }
-
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
          results.push_back(test_x509_utf8());
          results.push_back(test_x509_bmpstring());
@@ -1467,10 +1468,8 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_x509_authority_info_access_extension());
 #endif
 
-         results.push_back(valid_constraints_result);
          results.push_back(test_x509_dates());
          results.push_back(test_cert_status_strings());
-         results.push_back(test_hashes("ECDSA"));
          results.push_back(test_x509_uninit());
 
          return results;

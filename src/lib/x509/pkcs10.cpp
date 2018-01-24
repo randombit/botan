@@ -9,6 +9,8 @@
 #include <botan/x509_ext.h>
 #include <botan/x509cert.h>
 #include <botan/ber_dec.h>
+#include <botan/der_enc.h>
+#include <botan/pubkey.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 
@@ -51,6 +53,60 @@ PKCS10_Request::PKCS10_Request(const std::string& fsname)
    load_data(src);
    }
 #endif
+
+//static
+PKCS10_Request PKCS10_Request::create(const Private_Key& key,
+                                      const X509_DN& subject_dn,
+                                      const Extensions& extensions,
+                                      const std::string& hash_fn,
+                                      RandomNumberGenerator& rng,
+                                      const std::string& padding_scheme,
+                                      const std::string& challenge)
+   {
+   const std::map<std::string,std::string> sig_opts = { {"padding", padding_scheme} };
+
+   AlgorithmIdentifier sig_algo;
+   std::unique_ptr<PK_Signer> signer = choose_sig_format(sig_algo, key, rng, hash_fn, padding_scheme);
+
+   const size_t PKCS10_VERSION = 0;
+
+   DER_Encoder tbs_req;
+
+   tbs_req.start_cons(SEQUENCE)
+      .encode(PKCS10_VERSION)
+      .encode(subject_dn)
+      .raw_bytes(key.subject_public_key())
+      .start_explicit(0);
+
+   if(challenge.empty() == false)
+      {
+      ASN1_String challenge_str(challenge, DIRECTORY_STRING);
+
+      tbs_req.encode(
+         Attribute("PKCS9.ChallengePassword",
+                   DER_Encoder().encode(challenge_str).get_contents_unlocked()
+            )
+         );
+      }
+
+   tbs_req.encode(
+      Attribute("PKCS9.ExtensionRequest",
+                DER_Encoder()
+                   .start_cons(SEQUENCE)
+                      .encode(extensions)
+                   .end_cons()
+               .get_contents_unlocked()
+         )
+      )
+      .end_explicit()
+      .end_cons();
+
+   const std::vector<uint8_t> req =
+      X509_Object::make_signed(signer.get(), rng, sig_algo,
+                               tbs_req.get_contents());
+
+   return PKCS10_Request(req);
+   }
 
 /*
 * Decode the CertificateRequestInfo
