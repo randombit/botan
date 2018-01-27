@@ -1,5 +1,6 @@
 <defines>
 MODES -> 20150626
+CIPHER_MODES -> 20180124
 </defines>
 
 <header:public>

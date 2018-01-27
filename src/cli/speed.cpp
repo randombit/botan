@@ -35,7 +35,7 @@
    #include <botan/hash.h>
 #endif
 
-#if defined(BOTAN_HAS_CIPHER_MODE)
+#if defined(BOTAN_HAS_CIPHER_MODES)
    #include <botan/cipher_mode.h>
 #endif
 
@@ -742,7 +742,7 @@ class Speed final : public Command
                   std::bind(&Speed::bench_stream_cipher, this, _1, _2, _3, _4));
                }
 #endif
-#if defined(BOTAN_HAS_CIPHER_MODE)
+#if defined(BOTAN_HAS_CIPHER_MODES)
             else if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
                {
                auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
@@ -1087,7 +1087,7 @@ class Speed final : public Command
          }
 #endif
 
-#if defined(BOTAN_HAS_CIPHER_MODE)
+#if defined(BOTAN_HAS_CIPHER_MODES)
       void bench_cipher_mode(
          Botan::Cipher_Mode& enc,
          Botan::Cipher_Mode& dec,
