@@ -10,6 +10,7 @@
 #include <botan/tls_messages.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_callbacks.h>
 #include <botan/rng.h>
 #include <botan/hash.h>
 
@@ -81,6 +82,7 @@ std::vector<uint8_t> Hello_Request::serialize() const
 Client_Hello::Client_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const Policy& policy,
+                           Callbacks& cb,
                            RandomNumberGenerator& rng,
                            const std::vector<uint8_t>& reneg_info,
                            const Client_Hello::Settings& client_settings,
@@ -140,6 +142,8 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
                                                 policy.allowed_signature_methods()));
 
+   cb.tls_modify_extensions(m_extensions, CLIENT);
+
    if(policy.send_fallback_scsv(client_settings.protocol_version()))
       m_suites.push_back(TLS_FALLBACK_SCSV);
 
@@ -152,6 +156,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 Client_Hello::Client_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const Policy& policy,
+                           Callbacks& cb,
                            RandomNumberGenerator& rng,
                            const std::vector<uint8_t>& reneg_info,
                            const Session& session,
@@ -200,6 +205,8 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
+
+   cb.tls_modify_extensions(m_extensions, CLIENT);
 
    hash.update(io.send(*this));
    }

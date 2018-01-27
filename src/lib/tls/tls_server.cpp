@@ -460,6 +460,8 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
 
    pending_state.set_version(negotiated_version);
 
+   callbacks().tls_examine_extensions(pending_state.client_hello()->extensions(), CLIENT);
+
    Session session_info;
    const bool resuming =
       pending_state.allow_session_resumption() &&
@@ -703,6 +705,7 @@ void Server::session_resume(Server_Handshake_State& pending_state,
                                  pending_state.handshake_io(),
                                  pending_state.hash(),
                                  policy(),
+                                 callbacks(),
                                  rng(),
                                  secure_renegotiation_data_for_server_hello(),
                                  *pending_state.client_hello(),
@@ -794,6 +797,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
                                  pending_state.handshake_io(),
                                  pending_state.hash(),
                                  policy(),
+                                 callbacks(),
                                  rng(),
                                  secure_renegotiation_data_for_server_hello(),
                                  *pending_state.client_hello(),

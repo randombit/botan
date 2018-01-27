@@ -169,6 +169,7 @@ void Client::send_client_hello(Handshake_State& state_base,
                   new Client_Hello(state.handshake_io(),
                                    state.hash(),
                                    policy(),
+                                   callbacks(),
                                    rng(),
                                    secure_renegotiation_data_for_client_hello(),
                                    session_info,
@@ -188,6 +189,7 @@ void Client::send_client_hello(Handshake_State& state_base,
          state.handshake_io(),
          state.hash(),
          policy(),
+         callbacks(),
          rng(),
          secure_renegotiation_data_for_client_hello(),
          client_settings,
@@ -293,6 +295,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server replied with DTLS-SRTP alg we did not send");
          }
+
+      callbacks().tls_examine_extensions(state.server_hello()->extensions(), SERVER);
 
       state.set_version(state.server_hello()->version());
       m_application_protocol = state.server_hello()->next_protocol();

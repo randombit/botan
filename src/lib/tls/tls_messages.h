@@ -38,9 +38,10 @@ namespace TLS {
 class Session;
 class Handshake_IO;
 class Handshake_State;
+class Callbacks;
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
-                                    const Policy& policy);
+                                       const Policy& policy);
 
 /**
 * DTLS Hello Verify Request
@@ -145,9 +146,12 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
 
+      const Extensions& extensions() const { return m_extensions; }
+
       Client_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const Policy& policy,
+                   Callbacks& cb,
                    RandomNumberGenerator& rng,
                    const std::vector<uint8_t>& reneg_info,
                    const Client_Hello::Settings& client_settings,
@@ -156,6 +160,7 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
       Client_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const Policy& policy,
+                   Callbacks& cb,
                    RandomNumberGenerator& rng,
                    const std::vector<uint8_t>& reneg_info,
                    const Session& resumed_session,
@@ -274,6 +279,8 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
 
+      const Extensions& extensions() const { return m_extensions; }
+
       bool prefers_compressed_ec_points() const
          {
          if(auto ecc_formats = m_extensions.get<Supported_Point_Formats>())
@@ -286,6 +293,7 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const Policy& policy,
+                   Callbacks& cb,
                    RandomNumberGenerator& rng,
                    const std::vector<uint8_t>& secure_reneg_info,
                    const Client_Hello& client_hello,
@@ -295,6 +303,7 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const Policy& policy,
+                   Callbacks& cb,
                    RandomNumberGenerator& rng,
                    const std::vector<uint8_t>& secure_reneg_info,
                    const Client_Hello& client_hello,
