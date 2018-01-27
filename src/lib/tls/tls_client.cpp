@@ -522,9 +522,10 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          const auto& types = state.cert_req()->acceptable_cert_types();
 
          std::vector<X509_Certificate> client_certs =
-            m_creds.cert_chain(types,
-                               "tls-client",
-                               m_info.hostname());
+            m_creds.find_cert_chain(types,
+                                    state.cert_req()->acceptable_CAs(),
+                                    "tls-client",
+                                    m_info.hostname());
 
          state.client_certs(new Certificate(state.handshake_io(),
                                             state.hash(),
