@@ -59,7 +59,8 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size)
          return new Session_Ticket(reader, size);
       }
 
-   return nullptr; // not known
+   return new Unknown_Extension(static_cast<Handshake_Extension_Type>(code),
+                                reader, size);
    }
 
 }
@@ -82,10 +83,7 @@ void Extensions::deserialize(TLS_Data_Reader& reader)
                                           extension_code,
                                           extension_size);
 
-         if(extn)
-            this->add(extn);
-         else // unknown/unhandled extension
-            reader.discard_next(extension_size);
+         this->add(extn);
          }
       }
    }
@@ -139,6 +137,19 @@ std::set<Handshake_Extension_Type> Extensions::extension_types() const
    for(auto i = m_extensions.begin(); i != m_extensions.end(); ++i)
       offers.insert(i->first);
    return offers;
+   }
+
+Unknown_Extension::Unknown_Extension(Handshake_Extension_Type type,
+                                     TLS_Data_Reader& reader,
+                                     uint16_t extension_size) :
+   m_type(type),
+   m_value(reader.get_fixed<uint8_t>(extension_size))
+   {
+   }
+
+std::vector<uint8_t> Unknown_Extension::serialize() const
+   {
+   throw Invalid_State("Cannot encode an unknown TLS extension");
    }
 
 Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,

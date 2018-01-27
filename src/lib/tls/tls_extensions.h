@@ -432,6 +432,30 @@ class Certificate_Status_Request final : public Extension
    };
 
 /**
+* Unknown extensions are deserialized as this type
+*/
+class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
+   {
+   public:
+      Unknown_Extension(Handshake_Extension_Type type,
+                        TLS_Data_Reader& reader,
+                        uint16_t extension_size);
+
+      std::vector<uint8_t> serialize() const override; // always fails
+
+      const std::vector<uint8_t>& value() { return m_value; }
+
+      bool empty() const { return false; }
+
+      Handshake_Extension_Type type() const { return m_type; }
+
+   private:
+      Handshake_Extension_Type m_type;
+      std::vector<uint8_t> m_value;
+
+   };
+
+/**
 * Represents a block of extensions in a hello message
 */
 class BOTAN_UNSTABLE_API Extensions final
@@ -442,13 +466,7 @@ class BOTAN_UNSTABLE_API Extensions final
       template<typename T>
       T* get() const
          {
-         Handshake_Extension_Type type = T::static_type();
-
-         auto i = m_extensions.find(type);
-
-         if(i != m_extensions.end())
-            return dynamic_cast<T*>(i->second.get());
-         return nullptr;
+         return dynamic_cast<T*>(get(T::static_type()));
          }
 
       template<typename T>
@@ -460,6 +478,15 @@ class BOTAN_UNSTABLE_API Extensions final
       void add(Extension* extn)
          {
          m_extensions[extn->type()].reset(extn);
+         }
+
+      Extension* get(Handshake_Extension_Type type) const
+         {
+         auto i = m_extensions.find(type);
+
+         if(i != m_extensions.end())
+            return i->second.get();
+         return nullptr;
          }
 
       std::vector<uint8_t> serialize() const;

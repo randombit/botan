@@ -96,11 +96,19 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
       /**
       * Return the protocol notification set by the client (using the
-      * NPN extension) for this connection, if any. This value is not
+      * ALPN extension) for this connection, if any. This value is not
       * tied to the session and a later renegotiation of the same
       * session can choose a new protocol.
       */
       std::string next_protocol() const { return m_next_protocol; }
+
+      /**
+      * Return the protocol notification set by the client (using the
+      * ALPN extension) for this connection, if any. This value is not
+      * tied to the session and a later renegotiation of the same
+      * session can choose a new protocol.
+      */
+      std::string application_protocol() const { return m_next_protocol; }
 
    private:
       std::vector<X509_Certificate>
