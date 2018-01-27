@@ -445,9 +445,9 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
 
       const std::vector<uint8_t>& value() { return m_value; }
 
-      bool empty() const { return false; }
+      bool empty() const override { return false; }
 
-      Handshake_Extension_Type type() const { return m_type; }
+      Handshake_Extension_Type type() const override { return m_type; }
 
    private:
       Handshake_Extension_Type m_type;

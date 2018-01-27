@@ -357,7 +357,7 @@ class TLS_Handshake_Test final
                                                    6, 1);
                }
 
-            Test_Extension(Botan::TLS::TLS_Data_Reader& reader, uint16_t extension_size)
+            Test_Extension(Botan::TLS::TLS_Data_Reader& reader, uint16_t)
                {
                m_buf = reader.get_range_vector<uint8_t>(1, 6, 6);
                }
