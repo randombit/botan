@@ -189,21 +189,18 @@ class TLS_Client_Hello_Reader final : public Command
             }
 
          // Assume the handshake header is there, strip it
-         if(input[0] != 1)
+         if(input[0] == 1)
             {
-            error_output() << "Input message is not a TLS client hello\n";
-            return;
+            const size_t hs_len = Botan::make_uint32(0, input[1], input[2], input[3]);
+
+            if(input.size() != hs_len + 4)
+               {
+               error_output() << "Handshake layer length invalid\n";
+               return;
+               }
+
+            input = std::vector<uint8_t>(input.begin() + 4, input.end());
             }
-
-         const size_t hs_len = Botan::make_uint32(0, input[1], input[2], input[3]);
-
-         if(input.size() != hs_len + 4)
-            {
-            error_output() << "Handshake layer length invalid\n";
-            return;
-            }
-
-         input = std::vector<uint8_t>(input.begin() + 4, input.end());
 
          try
             {
