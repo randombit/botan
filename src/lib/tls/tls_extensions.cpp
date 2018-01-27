@@ -9,6 +9,7 @@
 #include <botan/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_curveid_map.h>
 
 namespace Botan {
 
@@ -333,11 +334,6 @@ std::string Supported_Groups::curve_id_to_name(uint16_t id)
          return "x25519";
 #endif
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-      case BOTAN_HOUSE_ECC_CURVE_TLS_ID:
-         return BOTAN_HOUSE_ECC_CURVE_NAME;
-#endif
-
       case 256:
          return "ffdhe/ietf/2048";
       case 257:
@@ -350,7 +346,8 @@ std::string Supported_Groups::curve_id_to_name(uint16_t id)
          return "ffdhe/ietf/8192";
 
       default:
-         return ""; // something we don't know or support
+         // Unknown/unavailable DH groups/EC curves or custom group
+         return CurveIDS::lookup(id);
       }
    }
 
@@ -374,11 +371,6 @@ uint16_t Supported_Groups::name_to_curve_id(const std::string& name)
       return 29;
 #endif
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-   if(name == BOTAN_HOUSE_ECC_CURVE_NAME)
-      return BOTAN_HOUSE_ECC_CURVE_TLS_ID;
-#endif
-
    if(name == "ffdhe/ietf/2048")
       return 256;
    if(name == "ffdhe/ietf/3072")
@@ -390,8 +382,8 @@ uint16_t Supported_Groups::name_to_curve_id(const std::string& name)
    if(name == "ffdhe/ietf/8192")
       return 260;
 
-   // Unknown/unavailable DH groups/EC curves are ignored
-   return 0;
+   // Unknown/unavailable DH groups/EC curves or custom group
+   return CurveIDS::lookup(name);
    }
 
 bool Supported_Groups::is_dh_group( const std::string& group_name )

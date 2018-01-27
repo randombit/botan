@@ -103,22 +103,12 @@ std::string lookup(const OID& oid)
    {
    const std::string oid_str = oid.as_string();
 %s
-
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-   if(oid_str == BOTAN_HOUSE_ECC_CURVE_OID) return BOTAN_HOUSE_ECC_CURVE_NAME;
-#endif
-
    return std::string();
    }
 
 OID lookup(const std::string& name)
    {
 %s
-
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-   if(name == BOTAN_HOUSE_ECC_CURVE_NAME) return OID(BOTAN_HOUSE_ECC_CURVE_OID);
-#endif
-
    return OID();
    }
 
@@ -323,7 +313,7 @@ def main(args = None):
             str2oid[nam] = oid
 
     if args[1] == "oids":
-        print format_as_ifs(oid2str, str2oid)
+        print format_as_map(oid2str, str2oid)
     elif args[1] == "dn_ub":
         print format_dn_ub_as_map(dn_ub,oid2str)
     elif args[1] == "pads":

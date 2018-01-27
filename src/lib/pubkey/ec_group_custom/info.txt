@@ -1,0 +1,8 @@
+<defines>
+ECC_GROUP_CUSTOM -> 20171215
+</defines>
+
+<requires>
+asn1
+ec_group
+</requires>

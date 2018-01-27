@@ -23,6 +23,7 @@ tls_server.h
 tls_session.h
 tls_session_manager.h
 tls_version.h
+tls_curveid_map.h
 </header:public>
 
 <header:internal>
