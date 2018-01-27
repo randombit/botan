@@ -100,8 +100,9 @@ these are often out of date; using the latest source release is recommended.
 Current Stable Release
 ----------------------------------------
 
-Version 2 requires a C++11 compiler; GCC 4.8 and later, Clang 3.5 and
-later, and MSVC 2015/2017 are regularly tested.
+Version 2 requires a C++11 compiler; GCC 4.8 and later, Clang 3.8 and later, and
+MSVC 2015/2017 are regularly tested. New releases of Botan 2 are made on a
+quarterly basis.
 
 The latest 2.x release is
 `2.4.0 <https://botan.randombit.net/releases/Botan-2.4.0.tgz>`_
