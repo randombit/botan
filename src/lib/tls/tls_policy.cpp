@@ -317,9 +317,10 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const
       }
    }
 
-bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
+bool Policy::acceptable_ciphersuite(const Ciphersuite& ciphersuite) const
    {
-   return true;
+   return value_exists(allowed_ciphers(), ciphersuite.cipher_algo()) &&
+          value_exists(allowed_macs(), ciphersuite.mac_algo());
    }
 
 bool Policy::allow_client_initiated_renegotiation() const { return false; }

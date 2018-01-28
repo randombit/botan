@@ -161,7 +161,7 @@ void Client::send_client_hello(Handshake_State& state_base,
          Ensure that the session protocol type matches what we want to use
          If not skip the resume and establish a new session
          */
-         if(version == session_info.version())
+         if(version == session_info.version() && policy().acceptable_ciphersuite(session_info.ciphersuite()))
             {
             if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
                {
