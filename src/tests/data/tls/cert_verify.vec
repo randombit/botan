@@ -24,7 +24,7 @@ Exception =
 #Incomplete algorithm
 Buffer = 06
 Protocol = 0303
-Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 1 bytes remaining, only 0 left
+Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left
 
 #Incomplete certificate
 Buffer = 0601000500

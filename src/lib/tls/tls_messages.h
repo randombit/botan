@@ -16,6 +16,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/pk_keys.h>
 #include <botan/x509cert.h>
+#include <botan/ocsp.h>
 #include <vector>
 #include <string>
 #include <set>
@@ -103,9 +104,7 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       bool sent_fallback_scsv() const;
 
-      std::vector<std::pair<std::string, std::string>> supported_algos() const;
-
-      std::set<std::string> supported_sig_algos() const;
+      std::vector<Signature_Scheme> signature_schemes() const;
 
       std::vector<std::string> supported_ecc_curves() const;
 
@@ -414,8 +413,10 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
 
       const std::vector<X509_DN>& acceptable_CAs() const { return m_names; }
 
-      std::vector<std::pair<std::string, std::string> > supported_algos() const
-         { return m_supported_algos; }
+      const std::vector<Signature_Scheme>& signature_schemes() const
+         {
+         return m_schemes;
+         }
 
       Certificate_Req(Handshake_IO& io,
                       Handshake_Hash& hash,
@@ -431,7 +432,7 @@ class BOTAN_UNSTABLE_API Certificate_Req final : public Handshake_Message
       std::vector<X509_DN> m_names;
       std::vector<std::string> m_cert_key_types;
 
-      std::vector<std::pair<std::string, std::string> > m_supported_algos;
+      std::vector<Signature_Scheme> m_schemes;
    };
 
 /**
@@ -463,9 +464,8 @@ class BOTAN_UNSTABLE_API Certificate_Verify final : public Handshake_Message
    private:
       std::vector<uint8_t> serialize() const override;
 
-      std::string m_sig_algo; // sig algo used to create signature
-      std::string m_hash_algo; // hash used to create signature
       std::vector<uint8_t> m_signature;
+      Signature_Scheme m_scheme = Signature_Scheme::NONE;
    };
 
 /**
@@ -550,8 +550,8 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
                           const Private_Key* signing_key = nullptr);
 
       Server_Key_Exchange(const std::vector<uint8_t>& buf,
-                          const std::string& kex_alg,
-                          const std::string& sig_alg,
+                          Kex_Algo kex_alg,
+                          Auth_Method sig_alg,
                           Protocol_Version version);
 
       ~Server_Key_Exchange() = default;
@@ -570,9 +570,8 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
 
       std::vector<uint8_t> m_params;
 
-      std::string m_sig_algo; // sig algo used to create signature
-      std::string m_hash_algo; // hash used to create signature
       std::vector<uint8_t> m_signature;
+      Signature_Scheme m_scheme = Signature_Scheme::NONE;
    };
 
 /**

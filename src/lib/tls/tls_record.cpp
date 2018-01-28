@@ -31,9 +31,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  const Ciphersuite& suite,
                                                  const Session_Keys& keys,
                                                  bool uses_encrypt_then_mac) :
-   m_start_time(std::chrono::system_clock::now()),
-   m_nonce_bytes_from_handshake(suite.nonce_bytes_from_handshake()),
-   m_nonce_bytes_from_record(suite.nonce_bytes_from_record())
+   m_start_time(std::chrono::system_clock::now())
    {
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -51,27 +49,11 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       mac_key = keys.server_mac_key();
       }
 
-   BOTAN_ASSERT_EQUAL(iv.length(), nonce_bytes_from_handshake(), "Matching nonce sizes");
-
    m_nonce = unlock(iv.bits_of());
+   m_nonce_bytes_from_handshake = m_nonce.size();
+   m_nonce_format = suite.nonce_format();
 
-   if(suite.mac_algo() == "AEAD")
-      {
-      m_aead.reset(get_aead(suite.cipher_algo(), our_side ? ENCRYPTION : DECRYPTION));
-      BOTAN_ASSERT(m_aead, "Have AEAD");
-
-      m_aead->set_key(cipher_key + mac_key);
-
-      BOTAN_ASSERT(nonce_bytes_from_record() == 0 || nonce_bytes_from_record() == 8,
-                   "Ciphersuite uses implemented IV length");
-
-      m_cbc_nonce = false;
-      if(m_nonce.size() != 12)
-         {
-         m_nonce.resize(m_nonce.size() + 8);
-         }
-      }
-   else
+   if(nonce_format() == Nonce_Format::CBC_MODE)
       {
 #if defined(BOTAN_HAS_TLS_CBC)
       // legacy CBC+HMAC mode
@@ -98,7 +80,8 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
       m_aead->set_key(cipher_key + mac_key);
 
-      m_cbc_nonce = true;
+      m_nonce_bytes_from_record = 0;
+
       if(version.supports_explicit_cbc_ivs())
          m_nonce_bytes_from_record = m_nonce_bytes_from_handshake;
       else if(our_side == false)
@@ -107,77 +90,89 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       throw Exception("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
       }
+   else
+      {
+      m_aead.reset(get_aead(suite.cipher_algo(), our_side ? ENCRYPTION : DECRYPTION));
+      BOTAN_ASSERT(m_aead, "Have AEAD");
+
+      m_aead->set_key(cipher_key + mac_key);
+
+      if(nonce_format() == Nonce_Format::AEAD_IMPLICIT_4)
+         {
+         m_nonce_bytes_from_record = 8;
+         m_nonce.resize(m_nonce.size() + 8);
+         }
+      else if(nonce_format() != Nonce_Format::AEAD_XOR_12)
+         {
+         throw Invalid_State("Invalid AEAD nonce format used");
+         }
+      }
    }
 
 std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNumberGenerator& rng)
    {
-   if(m_cbc_nonce)
+   switch(m_nonce_format)
       {
-      if(m_nonce.size())
+      case Nonce_Format::CBC_MODE:
          {
-         std::vector<uint8_t> nonce;
-         nonce.swap(m_nonce);
+         if(m_nonce.size())
+            {
+            std::vector<uint8_t> nonce;
+            nonce.swap(m_nonce);
+            return nonce;
+            }
+         std::vector<uint8_t> nonce(nonce_bytes_from_record());
+         rng.randomize(nonce.data(), nonce.size());
          return nonce;
          }
-      std::vector<uint8_t> nonce(nonce_bytes_from_record());
-      rng.randomize(nonce.data(), nonce.size());
-      return nonce;
+      case Nonce_Format::AEAD_XOR_12:
+         {
+         std::vector<uint8_t> nonce(12);
+         store_be(seq, nonce.data() + 4);
+         xor_buf(nonce, m_nonce.data(), m_nonce.size());
+         return nonce;
+         }
+      case Nonce_Format::AEAD_IMPLICIT_4:
+         {
+         std::vector<uint8_t> nonce = m_nonce;
+         store_be(seq, &nonce[nonce_bytes_from_handshake()]);
+         return nonce;
+         }
       }
-   else if(nonce_bytes_from_handshake() == 12)
-      {
-      std::vector<uint8_t> nonce(12);
-      store_be(seq, nonce.data() + 4);
-      xor_buf(nonce, m_nonce.data(), m_nonce.size());
-      return nonce;
-      }
-   else
-      {
-      std::vector<uint8_t> nonce = m_nonce;
-      store_be(seq, &nonce[nonce_bytes_from_handshake()]);
-      return nonce;
-      }
+
+   throw Invalid_State("Unknown nonce format specified");
    }
 
 std::vector<uint8_t>
 Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq)
    {
-   if(m_cbc_nonce)
+   switch(m_nonce_format)
       {
-      if(record_len < nonce_bytes_from_record())
-         throw Decoding_Error("Invalid CBC packet too short to be valid");
-      std::vector<uint8_t> nonce(record, record + nonce_bytes_from_record());
-      return nonce;
+      case Nonce_Format::CBC_MODE:
+         {
+         if(record_len < nonce_bytes_from_record())
+            throw Decoding_Error("Invalid CBC packet too short to be valid");
+         std::vector<uint8_t> nonce(record, record + nonce_bytes_from_record());
+         return nonce;
+         }
+      case Nonce_Format::AEAD_XOR_12:
+         {
+         std::vector<uint8_t> nonce(12);
+         store_be(seq, nonce.data() + 4);
+         xor_buf(nonce, m_nonce.data(), m_nonce.size());
+         return nonce;
+         }
+      case Nonce_Format::AEAD_IMPLICIT_4:
+         {
+         if(record_len < nonce_bytes_from_record())
+            throw Decoding_Error("Invalid AEAD packet too short to be valid");
+         std::vector<uint8_t> nonce = m_nonce;
+         copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
+         return nonce;
+         }
       }
-   else if(nonce_bytes_from_handshake() == 12)
-      {
-      /*
-      Assumes if the suite specifies 12 bytes come from the handshake then
-      use the XOR nonce construction from draft-ietf-tls-chacha20-poly1305
-      */
 
-      std::vector<uint8_t> nonce(12);
-      store_be(seq, nonce.data() + 4);
-      xor_buf(nonce, m_nonce.data(), m_nonce.size());
-      return nonce;
-      }
-   else if(nonce_bytes_from_record() > 0)
-      {
-      if(record_len < nonce_bytes_from_record())
-         throw Decoding_Error("Invalid AEAD packet too short to be valid");
-      std::vector<uint8_t> nonce = m_nonce;
-      copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
-      return nonce;
-      }
-   else
-      {
-      /*
-      nonce_len == 0 is assumed to mean no nonce in the message but
-      instead the AEAD uses the seq number in network order.
-      */
-      std::vector<uint8_t> nonce = m_nonce;
-      store_be(seq, &nonce[nonce_bytes_from_handshake()]);
-      return nonce;
-      }
+   throw Invalid_State("Unknown nonce format specified");
    }
 
 std::vector<uint8_t>
@@ -251,7 +246,7 @@ void write_record(secure_vector<uint8_t>& output,
 
    if(cs->nonce_bytes_from_record() > 0)
       {
-      if(cs->cbc_nonce())
+      if(cs->nonce_format() == Nonce_Format::CBC_MODE)
          output += nonce;
       else
          output += std::make_pair(&nonce[cs->nonce_bytes_from_handshake()], cs->nonce_bytes_from_record());

@@ -228,14 +228,14 @@ class TLS_Client_Hello_Reader final : public Command
 
          oss << "Supported signature schemes: ";
 
-         if(hello.supported_algos().empty())
+         if(hello.signature_schemes().empty())
             {
             oss << "Did not send signature_algorithms extension\n";
             }
          else
             {
-            for(auto&& hash_and_sig : hello.supported_algos())
-               oss << hash_and_sig.second << '+' << hash_and_sig.first << ' ';
+            for(Botan::TLS::Signature_Scheme scheme : hello.signature_schemes())
+               oss << sig_scheme_to_string(scheme) << " ";
             oss << "\n";
             }
 

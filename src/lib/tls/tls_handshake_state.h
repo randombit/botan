@@ -83,15 +83,13 @@ class Handshake_State
 
       std::pair<std::string, Signature_Format>
          parse_sig_format(const Public_Key& key,
-                          const std::string& hash_algo,
-                          const std::string& sig_algo,
+                          Signature_Scheme scheme,
                           bool for_client_auth,
                           const Policy& policy) const;
 
       std::pair<std::string, Signature_Format>
          choose_sig_format(const Private_Key& key,
-                           std::string& hash_algo,
-                           std::string& sig_algo,
+                           Signature_Scheme& scheme,
                            bool for_client_auth,
                            const Policy& policy) const;
 
