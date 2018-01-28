@@ -2465,6 +2465,12 @@ class AmalgamationGenerator(object):
             f.write('\n')
 
             for isa in self._isas_for_target(target):
+
+                if isa == 'sse41':
+                    isa = 'sse4.1'
+                elif isa == 'sse42':
+                    isa = 'ssse4.2'
+
                 f.write('#if defined(__GNUG__) && !defined(__clang__)\n')
                 f.write('#pragma GCC target ("%s")\n' % (isa))
                 f.write('#endif\n')
