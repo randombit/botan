@@ -125,6 +125,9 @@ OpenSSL_BlockCipher::~OpenSSL_BlockCipher()
    {
    EVP_CIPHER_CTX_cleanup(m_encrypt);
    EVP_CIPHER_CTX_cleanup(m_decrypt);
+
+   EVP_CIPHER_CTX_free(m_encrypt);
+   EVP_CIPHER_CTX_free(m_decrypt);
    }
 
 /*
