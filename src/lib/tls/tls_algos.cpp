@@ -194,24 +194,32 @@ std::string hash_function_of_scheme(Signature_Scheme scheme)
 
 const std::vector<Signature_Scheme>& all_signature_schemes()
    {
+   /*
+   * This is ordered in some approximate order of preference
+   */
    static const std::vector<Signature_Scheme> all_schemes = {
-      Signature_Scheme::RSA_PKCS1_SHA1,
-      Signature_Scheme::RSA_PKCS1_SHA256,
+      //Signature_Scheme::EDDSA_448,
+      //Signature_Scheme::EDDSA_25519,
+
+      Signature_Scheme::RSA_PSS_SHA384,
+      Signature_Scheme::RSA_PSS_SHA256,
+      Signature_Scheme::RSA_PSS_SHA512,
+
       Signature_Scheme::RSA_PKCS1_SHA384,
       Signature_Scheme::RSA_PKCS1_SHA512,
-      Signature_Scheme::DSA_SHA1,
-      Signature_Scheme::DSA_SHA256,
-      Signature_Scheme::DSA_SHA384,
-      Signature_Scheme::DSA_SHA512,
-      Signature_Scheme::ECDSA_SHA1,
-      Signature_Scheme::ECDSA_SHA256,
+      Signature_Scheme::RSA_PKCS1_SHA256,
+
       Signature_Scheme::ECDSA_SHA384,
       Signature_Scheme::ECDSA_SHA512,
-      Signature_Scheme::RSA_PSS_SHA256,
-      Signature_Scheme::RSA_PSS_SHA384,
-      Signature_Scheme::RSA_PSS_SHA512,
-      Signature_Scheme::EDDSA_25519,
-      Signature_Scheme::EDDSA_448,
+      Signature_Scheme::ECDSA_SHA256,
+
+      Signature_Scheme::DSA_SHA384,
+      Signature_Scheme::DSA_SHA512,
+      Signature_Scheme::DSA_SHA256,
+
+      Signature_Scheme::RSA_PKCS1_SHA1,
+      Signature_Scheme::ECDSA_SHA1,
+      Signature_Scheme::DSA_SHA1,
    };
 
    return all_schemes;
