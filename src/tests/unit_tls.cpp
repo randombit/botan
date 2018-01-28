@@ -7,9 +7,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-// Deprecated TLS APIs are tested below
-#define BOTAN_NO_DEPRECATED_WARNINGS
-
 #include "tests.h"
 #include <vector>
 #include <memory>
@@ -1077,6 +1074,8 @@ class TLS_Unit_Tests final : public Test
                               { { "groups", "ffdhe/ietf/2048" } });
 
          std::unique_ptr<Botan::Credentials_Manager> creds_with_client_cert(create_creds(rng, true));
+
+         server_ses->remove_all();
          test_modern_versions("AES-256/GCM client certs",
                               results, *client_ses, *server_ses, *creds_with_client_cert, "ECDH", "AES-256/GCM", "AEAD", true);
 
