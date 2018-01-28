@@ -107,6 +107,8 @@ Auth_Method auth_method_from_string(const std::string& str)
       return Auth_Method::DSA;
    if(str == "ECDSA")
       return Auth_Method::ECDSA;
+   if(str == "IMPLICIT")
+      return Auth_Method::IMPLICIT;
    if(str == "ANONYMOUS" || str == "")
       return Auth_Method::ANONYMOUS;
 

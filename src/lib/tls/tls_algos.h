@@ -75,8 +75,8 @@ enum class Auth_Method {
    ANONYMOUS
 };
 
-std::string auth_method_to_string(Auth_Method method);
-Auth_Method auth_method_from_string(const std::string& str);
+std::string BOTAN_TEST_API auth_method_to_string(Auth_Method method);
+Auth_Method BOTAN_TEST_API auth_method_from_string(const std::string& str);
 
 /*
 * This matches the wire encoding
@@ -107,7 +107,7 @@ enum class Signature_Scheme : uint16_t {
    EDDSA_448   = 0x0808,
 };
 
-const std::vector<Signature_Scheme>& all_signature_schemes();
+BOTAN_UNSTABLE_API const std::vector<Signature_Scheme>& all_signature_schemes();
 
 std::string BOTAN_UNSTABLE_API sig_scheme_to_string(Signature_Scheme scheme);
 std::string hash_function_of_scheme(Signature_Scheme scheme);
@@ -151,8 +151,8 @@ enum class Kex_Algo {
    ECDHE_PSK,
 };
 
-std::string kex_method_to_string(Kex_Algo method);
-Kex_Algo kex_method_from_string(const std::string& str);
+std::string BOTAN_TEST_API kex_method_to_string(Kex_Algo method);
+Kex_Algo BOTAN_TEST_API kex_method_from_string(const std::string& str);
 
 inline bool key_exchange_is_psk(Kex_Algo m)
    {
