@@ -54,13 +54,19 @@ def run_and_check(cmd_line, cwd=None):
 
     logging.debug("Executing %s", ' '.join(cmd_line))
 
-    proc = subprocess.Popen(cmd_line,
-                            close_fds=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=cwd)
+    stdout = None
+    stderr = None
 
-    (stdout, stderr) = proc.communicate()
+    try:
+        proc = subprocess.Popen(cmd_line,
+                                close_fds=True,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                cwd=cwd)
+
+        (stdout, stderr) = proc.communicate()
+    except OSError as e:
+        logging.error("Executing %s failed (%s)", ' '.join(cmd_line), e)
 
     if stdout:
         logging.debug(stdout.decode())
