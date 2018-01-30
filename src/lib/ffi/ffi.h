@@ -1202,6 +1202,12 @@ enum botan_x509_cert_key_constraints {
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage);
 
 /**
+* Check if the certificate matches the specified hostname via alternative name or CN match.
+* RFC 5280 wildcards also supported.
+*/
+BOTAN_PUBLIC_API(2,5) int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname);
+
+/**
  * Key wrapping as per RFC 3394
  */
 BOTAN_PUBLIC_API(2,2)

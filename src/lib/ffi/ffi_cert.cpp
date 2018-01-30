@@ -133,4 +133,13 @@ int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, uint8_t out[], s
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.subject_public_key_bits()); });
    }
 
+int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname)
+   {
+   if(hostname == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c,
+                       { return c.matches_dns_name(hostname) ? 0 : -1; });
+   }
+
 }
