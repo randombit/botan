@@ -1054,12 +1054,14 @@ class Speed final : public Command
          const std::chrono::milliseconds runtime,
          const std::vector<size_t>& buf_sizes)
          {
+         std::vector<uint8_t> output(hash.output_length());
+
          for(auto buf_size : buf_sizes)
             {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
             Timer timer(hash.name(), buffer.size(), "hash", provider, buf_size);
-            timer.run_until_elapsed(runtime, [&]() { hash.update(buffer); });
+            timer.run_until_elapsed(runtime, [&]() { hash.update(buffer); hash.final(output.data()); });
             record_result(timer);
             }
          }
@@ -1072,6 +1074,8 @@ class Speed final : public Command
          const std::chrono::milliseconds runtime,
          const std::vector<size_t>& buf_sizes)
          {
+         std::vector<uint8_t> output(mac.output_length());
+
          for(auto buf_size : buf_sizes)
             {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
@@ -1082,6 +1086,7 @@ class Speed final : public Command
 
             Timer timer(mac.name(), buffer.size(), "mac", provider, buf_size);
             timer.run_until_elapsed(runtime, [&]() { mac.update(buffer); });
+            timer.run([&]() { mac.final(output.data()); });
             record_result(timer);
             }
          }
