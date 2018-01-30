@@ -41,34 +41,54 @@ BOTAN_FFI_DECLARE_STRUCT(botan_tls_session_struct, FFI_TLS_Dummy_Struct, 0x93091
 BOTAN_FFI_DECLARE_STRUCT(botan_tls_policy_struct, FFI_TLS_Dummy_Struct, 0x6E590C76);
 BOTAN_FFI_DECLARE_STRUCT(botan_tls_channel_struct, FFI_TLS_Dummy_Struct, 0xE818A572);
 
-
 #endif
 
-int botan_tls_policy_default_init(botan_tls_policy_t* policy)
+}
+
+namespace {
+
+template<typename Policy_Type>
+int botan_tls_policy_init(botan_tls_policy_t* policy)
    {
+   if(policy == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   *policy = nullptr;
+
 #if defined(BOTAN_HAS_TLS)
-   return -1;
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      policy = new botan_tls_policy_struct(new Botan::TLS::Policy);
+      return BOTAN_FFI_SUCCESS;
+      });
 #else
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
+   }
+
+}
+
+extern "C" {
+
+int botan_tls_policy_default_init(botan_tls_policy_t* policy)
+   {
+   return botan_tls_policy_init<Botan::TLS::Policy>(policy);
    }
 
 int botan_tls_policy_nsa_suiteb_init(botan_tls_policy_t* policy)
    {
-
+   return botan_tls_policy_init<Botan::TLS::NSA_Suite_B_128>(policy);
    }
 
 int botan_tls_policy_bsi_tr_02102_2_init(botan_tls_policy_t* policy)
    {
-#if defined(BOTAN_HAS_TLS)
-   return -1;
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_tls_policy_init<Botan::TLS::BSI_TR_02102_2>(policy);
    }
 
 int botan_tls_policy_text_init(botan_tls_policy_t* policy, const char* policy_text)
    {
+   if(policy == nullptr || policy_text == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
 #if defined(BOTAN_HAS_TLS)
    return -1;
 #else
@@ -149,11 +169,54 @@ int botan_tls_session_get_ciphersuite(botan_tls_session_t session, uint16_t* cip
 int botan_tls_session_get_peer_certs(botan_tls_session_t session, botan_x509_cert_t certs[], size_t* cert_len)
    {
 #if defined(BOTAN_HAS_TLS)
-
+   return -1;
 #else
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
+
+namespace {
+
+class FFI_TLS_Callbacks : public Botan::TLS::Callbacks
+   {
+   public:
+      FFI_TLS_Callbacks(botan_tls_channel_output_fn output_fn,
+                        botan_tls_channel_data_cb data_cb,
+                        botan_tls_channel_alert_cb alert_cb,
+                        botan_tls_channel_session_established session_cb) :
+         m_output_fn(output_fn),
+         m_data_cb(data_cb),
+         m_alert_cb(alert_cb),
+         m_session_cb(session_cb)
+         {}
+
+      void tls_emit_data(const uint8_t data[], size_t size) override
+         {
+         }
+
+       void tls_record_received(uint64_t seq_no, const uint8_t data[], size_t size) override
+         {
+
+         }
+
+      void tls_alert(Botan::TLS::Alert alert) override
+         {
+
+         }
+
+      bool tls_session_established(const Botan::TLS::Session& session) override
+         {
+
+         }
+
+   private:
+      botan_tls_channel_output_fn m_output_fn;
+      botan_tls_channel_data_cb m_data_cb;
+      botan_tls_channel_alert_cb m_alert_cb;
+      botan_tls_channel_session_established m_session_cb;
+   };
+
+}
 
 int botan_tls_channel_init_client(botan_tls_channel_t* channel,
                                   botan_tls_channel_output_fn output_fn,
