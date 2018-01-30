@@ -59,8 +59,7 @@ void Keccak_1600::final_result(uint8_t output[])
    * We never have to run the permutation again because we only support
    * limited output lengths
    */
-   for(size_t i = 0; i != m_output_bits/8; ++i)
-      output[i] = get_byte(7 - (i % 8), m_S[i/8]);
+   copy_out_vec_le(output, m_output_bits/8, m_S);
 
    clear();
    }
