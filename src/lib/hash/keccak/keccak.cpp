@@ -53,12 +53,13 @@ void Keccak_1600::add_data(const uint8_t input[], size_t length)
 
 void Keccak_1600::final_result(uint8_t output[])
    {
-   std::vector<uint8_t> padding(m_bitrate / 8 - m_S_pos);
+   size_t padding_size(m_bitrate / 8 - m_S_pos);
+   uint8_t padding[1600 / 8] = { 0 };
 
    padding[0] = 0x01;
-   padding[padding.size()-1] |= 0x80;
+   padding[padding_size-1] |= 0x80;
 
-   add_data(padding.data(), padding.size());
+   add_data(padding, padding_size);
 
    /*
    * We never have to run the permutation again because we only support
