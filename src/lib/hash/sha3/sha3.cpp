@@ -39,16 +39,16 @@ void SHA_3::permute(uint64_t A[25])
       const uint64_t D4 = rotl<1>(C4) ^ C2;
 
       const uint64_t B00 = A[ 0] ^ D1;
-      const uint64_t B10 = rotl<1>(A[ 1] ^ D2);
+      const uint64_t B10 = rotl< 1>(A[ 1] ^ D2);
       const uint64_t B20 = rotl<62>(A[ 2] ^ D3);
       const uint64_t B05 = rotl<28>(A[ 3] ^ D4);
       const uint64_t B15 = rotl<27>(A[ 4] ^ D0);
       const uint64_t B16 = rotl<36>(A[ 5] ^ D1);
       const uint64_t B01 = rotl<44>(A[ 6] ^ D2);
-      const uint64_t B11 = rotl<6>(A[ 7] ^ D3);
+      const uint64_t B11 = rotl< 6>(A[ 7] ^ D3);
       const uint64_t B21 = rotl<55>(A[ 8] ^ D4);
       const uint64_t B06 = rotl<20>(A[ 9] ^ D0);
-      const uint64_t B07 = rotl<3>(A[10] ^ D1);
+      const uint64_t B07 = rotl< 3>(A[10] ^ D1);
       const uint64_t B17 = rotl<10>(A[11] ^ D2);
       const uint64_t B02 = rotl<43>(A[12] ^ D3);
       const uint64_t B12 = rotl<25>(A[13] ^ D4);
@@ -57,9 +57,9 @@ void SHA_3::permute(uint64_t A[25])
       const uint64_t B08 = rotl<45>(A[16] ^ D2);
       const uint64_t B18 = rotl<15>(A[17] ^ D3);
       const uint64_t B03 = rotl<21>(A[18] ^ D4);
-      const uint64_t B13 = rotl<8>(A[19] ^ D0);
+      const uint64_t B13 = rotl< 8>(A[19] ^ D0);
       const uint64_t B14 = rotl<18>(A[20] ^ D1);
-      const uint64_t B24 = rotl<2>(A[21] ^ D2);
+      const uint64_t B24 = rotl< 2>(A[21] ^ D2);
       const uint64_t B09 = rotl<61>(A[22] ^ D3);
       const uint64_t B19 = rotl<56>(A[23] ^ D4);
       const uint64_t B04 = rotl<14>(A[24] ^ D0);
