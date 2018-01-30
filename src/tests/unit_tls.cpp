@@ -914,7 +914,7 @@ class TLS_Unit_Tests final : public Test
 
          std::unique_ptr<Botan::Credentials_Manager> creds_with_client_cert(create_creds(rng, true));
 
-         server_ses->remove_all();
+         client_ses->remove_all();
          test_modern_versions("AES-256/GCM client certs",
                               results, *client_ses, *server_ses, *creds_with_client_cert, "ECDH", "AES-256/GCM", "AEAD", true);
 
