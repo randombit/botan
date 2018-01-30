@@ -10,11 +10,6 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> SHA_3::copy_state() const
-   {
-   return std::unique_ptr<HashFunction>(new SHA_3(*this));
-   }
-
 //static
 void SHA_3::permute(uint64_t A[25])
    {
@@ -97,36 +92,6 @@ void SHA_3::permute(uint64_t A[25])
 
       A[0] ^= RC[i];
       }
-   }
-
-SHA_3::SHA_3(size_t output_bits) :
-   m_output_bits(output_bits),
-   m_bitrate(1600 - 2*output_bits),
-   m_S(25),
-   m_S_pos(0)
-   {
-   // We only support the parameters for SHA-3 in this constructor
-
-   if(output_bits != 224 && output_bits != 256 &&
-      output_bits != 384 && output_bits != 512)
-      throw Invalid_Argument("SHA_3: Invalid output length " +
-                             std::to_string(output_bits));
-   }
-
-std::string SHA_3::name() const
-   {
-   return "SHA-3(" + std::to_string(m_output_bits) + ")";
-   }
-
-HashFunction* SHA_3::clone() const
-   {
-   return new SHA_3(m_output_bits);
-   }
-
-void SHA_3::clear()
-   {
-   zeroise(m_S);
-   m_S_pos = 0;
    }
 
 //static
@@ -212,6 +177,41 @@ void SHA_3::expand(size_t bitrate,
 
       output[i] = get_byte(7 - (i % 8), S[Si]);
       }
+   }
+
+SHA_3::SHA_3(size_t output_bits) :
+   m_output_bits(output_bits),
+   m_bitrate(1600 - 2*output_bits),
+   m_S(25),
+   m_S_pos(0)
+   {
+   // We only support the parameters for SHA-3 in this constructor
+
+   if(output_bits != 224 && output_bits != 256 &&
+      output_bits != 384 && output_bits != 512)
+      throw Invalid_Argument("SHA_3: Invalid output length " +
+                             std::to_string(output_bits));
+   }
+
+std::string SHA_3::name() const
+   {
+   return "SHA-3(" + std::to_string(m_output_bits) + ")";
+   }
+
+std::unique_ptr<HashFunction> SHA_3::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new SHA_3(*this));
+   }
+
+HashFunction* SHA_3::clone() const
+   {
+   return new SHA_3(m_output_bits);
+   }
+
+void SHA_3::clear()
+   {
+   zeroise(m_S);
+   m_S_pos = 0;
    }
 
 void SHA_3::add_data(const uint8_t input[], size_t length)
