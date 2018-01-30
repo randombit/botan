@@ -10,11 +10,6 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> SHA_3::copy_state() const
-   {
-   return std::unique_ptr<HashFunction>(new SHA_3(*this));
-   }
-
 //static
 void SHA_3::permute(uint64_t A[25])
    {
@@ -44,16 +39,16 @@ void SHA_3::permute(uint64_t A[25])
       const uint64_t D4 = rotl<1>(C4) ^ C2;
 
       const uint64_t B00 = A[ 0] ^ D1;
-      const uint64_t B10 = rotl<1>(A[ 1] ^ D2);
+      const uint64_t B10 = rotl< 1>(A[ 1] ^ D2);
       const uint64_t B20 = rotl<62>(A[ 2] ^ D3);
       const uint64_t B05 = rotl<28>(A[ 3] ^ D4);
       const uint64_t B15 = rotl<27>(A[ 4] ^ D0);
       const uint64_t B16 = rotl<36>(A[ 5] ^ D1);
       const uint64_t B01 = rotl<44>(A[ 6] ^ D2);
-      const uint64_t B11 = rotl<6>(A[ 7] ^ D3);
+      const uint64_t B11 = rotl< 6>(A[ 7] ^ D3);
       const uint64_t B21 = rotl<55>(A[ 8] ^ D4);
       const uint64_t B06 = rotl<20>(A[ 9] ^ D0);
-      const uint64_t B07 = rotl<3>(A[10] ^ D1);
+      const uint64_t B07 = rotl< 3>(A[10] ^ D1);
       const uint64_t B17 = rotl<10>(A[11] ^ D2);
       const uint64_t B02 = rotl<43>(A[12] ^ D3);
       const uint64_t B12 = rotl<25>(A[13] ^ D4);
@@ -62,9 +57,9 @@ void SHA_3::permute(uint64_t A[25])
       const uint64_t B08 = rotl<45>(A[16] ^ D2);
       const uint64_t B18 = rotl<15>(A[17] ^ D3);
       const uint64_t B03 = rotl<21>(A[18] ^ D4);
-      const uint64_t B13 = rotl<8>(A[19] ^ D0);
+      const uint64_t B13 = rotl< 8>(A[19] ^ D0);
       const uint64_t B14 = rotl<18>(A[20] ^ D1);
-      const uint64_t B24 = rotl<2>(A[21] ^ D2);
+      const uint64_t B24 = rotl< 2>(A[21] ^ D2);
       const uint64_t B09 = rotl<61>(A[22] ^ D3);
       const uint64_t B19 = rotl<56>(A[23] ^ D4);
       const uint64_t B04 = rotl<14>(A[24] ^ D0);
@@ -97,36 +92,6 @@ void SHA_3::permute(uint64_t A[25])
 
       A[0] ^= RC[i];
       }
-   }
-
-SHA_3::SHA_3(size_t output_bits) :
-   m_output_bits(output_bits),
-   m_bitrate(1600 - 2*output_bits),
-   m_S(25),
-   m_S_pos(0)
-   {
-   // We only support the parameters for SHA-3 in this constructor
-
-   if(output_bits != 224 && output_bits != 256 &&
-      output_bits != 384 && output_bits != 512)
-      throw Invalid_Argument("SHA_3: Invalid output length " +
-                             std::to_string(output_bits));
-   }
-
-std::string SHA_3::name() const
-   {
-   return "SHA-3(" + std::to_string(m_output_bits) + ")";
-   }
-
-HashFunction* SHA_3::clone() const
-   {
-   return new SHA_3(m_output_bits);
-   }
-
-void SHA_3::clear()
-   {
-   zeroise(m_S);
-   m_S_pos = 0;
    }
 
 //static
@@ -177,6 +142,16 @@ size_t SHA_3::absorb(size_t bitrate,
    }
 
 //static
+void SHA_3::finish(size_t bitrate,
+                   secure_vector<uint64_t>& S, size_t S_pos,
+                   uint8_t init_pad, uint8_t fini_pad)
+   {
+   S[S_pos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (S_pos % 8));
+   S[(bitrate / 64) - 1] ^= static_cast<uint64_t>(fini_pad) << 56;
+   SHA_3::permute(S.data());
+   }
+
+//static
 void SHA_3::expand(size_t bitrate,
                    secure_vector<uint64_t>& S,
                    uint8_t output[], size_t output_length)
@@ -204,6 +179,41 @@ void SHA_3::expand(size_t bitrate,
       }
    }
 
+SHA_3::SHA_3(size_t output_bits) :
+   m_output_bits(output_bits),
+   m_bitrate(1600 - 2*output_bits),
+   m_S(25),
+   m_S_pos(0)
+   {
+   // We only support the parameters for SHA-3 in this constructor
+
+   if(output_bits != 224 && output_bits != 256 &&
+      output_bits != 384 && output_bits != 512)
+      throw Invalid_Argument("SHA_3: Invalid output length " +
+                             std::to_string(output_bits));
+   }
+
+std::string SHA_3::name() const
+   {
+   return "SHA-3(" + std::to_string(m_output_bits) + ")";
+   }
+
+std::unique_ptr<HashFunction> SHA_3::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new SHA_3(*this));
+   }
+
+HashFunction* SHA_3::clone() const
+   {
+   return new SHA_3(m_output_bits);
+   }
+
+void SHA_3::clear()
+   {
+   zeroise(m_S);
+   m_S_pos = 0;
+   }
+
 void SHA_3::add_data(const uint8_t input[], size_t length)
    {
    m_S_pos = SHA_3::absorb(m_bitrate, m_S, m_S_pos, input, length);
@@ -211,19 +221,13 @@ void SHA_3::add_data(const uint8_t input[], size_t length)
 
 void SHA_3::final_result(uint8_t output[])
    {
-   std::vector<uint8_t> padding(m_bitrate / 8 - m_S_pos);
-
-   padding[0] = 0x06;
-   padding[padding.size()-1] |= 0x80;
-
-   add_data(padding.data(), padding.size());
+   SHA_3::finish(m_bitrate, m_S, m_S_pos, 0x06, 0x80);
 
    /*
    * We never have to run the permutation again because we only support
    * limited output lengths
    */
-   for(size_t i = 0; i != m_output_bits/8; ++i)
-      output[i] = get_byte(7 - (i % 8), m_S[i/8]);
+   copy_out_vec_le(output, m_output_bits/8, m_S);
 
    clear();
    }
