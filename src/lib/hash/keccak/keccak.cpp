@@ -53,12 +53,7 @@ void Keccak_1600::add_data(const uint8_t input[], size_t length)
 
 void Keccak_1600::final_result(uint8_t output[])
    {
-   std::vector<uint8_t> padding(m_bitrate / 8 - m_S_pos);
-
-   padding[0] = 0x01;
-   padding[padding.size()-1] |= 0x80;
-
-   add_data(padding.data(), padding.size());
+   SHA_3::finish(m_bitrate, m_S, m_S_pos, 0x01, 0x80);
 
    /*
    * We never have to run the permutation again because we only support

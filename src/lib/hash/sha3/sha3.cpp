@@ -177,6 +177,16 @@ size_t SHA_3::absorb(size_t bitrate,
    }
 
 //static
+void SHA_3::finish(size_t bitrate,
+                   secure_vector<uint64_t>& S, size_t S_pos,
+                   uint8_t init_pad, uint8_t fini_pad)
+   {
+   S[S_pos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (S_pos % 8));
+   S[(bitrate / 64) - 1] ^= static_cast<uint64_t>(fini_pad) << 56;
+   SHA_3::permute(S.data());
+   }
+
+//static
 void SHA_3::expand(size_t bitrate,
                    secure_vector<uint64_t>& S,
                    uint8_t output[], size_t output_length)
@@ -211,12 +221,7 @@ void SHA_3::add_data(const uint8_t input[], size_t length)
 
 void SHA_3::final_result(uint8_t output[])
    {
-   std::vector<uint8_t> padding(m_bitrate / 8 - m_S_pos);
-
-   padding[0] = 0x06;
-   padding[padding.size()-1] |= 0x80;
-
-   add_data(padding.data(), padding.size());
+   SHA_3::finish(m_bitrate, m_S, m_S_pos, 0x06, 0x80);
 
    /*
    * We never have to run the permutation again because we only support
