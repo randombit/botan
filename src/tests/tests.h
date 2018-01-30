@@ -192,6 +192,15 @@ class Test
                   }
                }
 
+            template<typename T>
+            bool test_not_null(const std::string& what, T* ptr)
+               {
+               if(ptr == nullptr)
+                  return test_failure(what + " was null");
+               else
+                  return test_success(what + " was not null");
+               }
+
             bool test_eq(const std::string& what, const char* produced, const char* expected);
 
             bool test_is_nonempty(const std::string& what_is_it, const std::string& to_examine);
