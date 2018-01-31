@@ -39,7 +39,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test
 
          if(providers.empty())
             {
-            result.note_missing("block cipher " + algo);
+            result.note_missing("stream cipher " + algo);
             return result;
             }
 
