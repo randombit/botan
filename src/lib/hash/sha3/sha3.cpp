@@ -146,6 +146,8 @@ void SHA_3::finish(size_t bitrate,
                    secure_vector<uint64_t>& S, size_t S_pos,
                    uint8_t init_pad, uint8_t fini_pad)
    {
+   BOTAN_ARG_CHECK(bitrate % 64 == 0);
+
    S[S_pos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (S_pos % 8));
    S[(bitrate / 64) - 1] ^= static_cast<uint64_t>(fini_pad) << 56;
    SHA_3::permute(S.data());
@@ -156,26 +158,23 @@ void SHA_3::expand(size_t bitrate,
                    secure_vector<uint64_t>& S,
                    uint8_t output[], size_t output_length)
    {
-   BOTAN_ARG_CHECK(bitrate % 8 == 0);
+   BOTAN_ARG_CHECK(bitrate % 64 == 0);
 
-   size_t Si = 0;
+   const size_t byterate = bitrate / 8;
 
-   for(size_t i = 0; i != output_length; ++i)
+   while(output_length > 0)
       {
-      if(i > 0)
-         {
-         if(i % (bitrate / 8) == 0)
-            {
-            SHA_3::permute(S.data());
-            Si = 0;
-            }
-         else if(i % 8 == 0)
-            {
-            Si += 1;
-            }
-         }
+      const size_t copying = std::min(byterate, output_length);
 
-      output[i] = get_byte(7 - (i % 8), S[Si]);
+      copy_out_vec_le(output, copying, S);
+
+      output += copying;
+      output_length -= copying;
+
+      if(output_length > 0)
+         {
+         SHA_3::permute(S.data());
+         }
       }
    }
 
