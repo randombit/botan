@@ -150,6 +150,12 @@ class NIST_Path_Validation_Tests final : public Test
 
 std::vector<Test::Result> NIST_Path_Validation_Tests::run()
    {
+   if(Botan::has_filesystem_impl() == false)
+      {
+      return {Test::Result::Note("NIST path validation",
+                                 "Skipping due to missing filesystem access")};
+      }
+
    std::vector<Test::Result> results;
 
    /**
@@ -163,19 +169,6 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
    *    obscure CRL extensions which are not supported.
    */
    const std::string nist_test_dir = Test::data_dir() + "/x509/nist";
-
-   try
-      {
-      // Do nothing, just test filesystem access
-      Botan::get_files_recursive(nist_test_dir);
-      }
-   catch(Botan::No_Filesystem_Access&)
-      {
-      Test::Result result("NIST path validation");
-      result.test_note("Skipping due to missing filesystem access");
-      results.push_back(result);
-      return results;
-      }
 
    std::map<std::string, std::string> expected =
       read_results(Test::data_file("x509/nist/expected.txt"));
@@ -260,22 +253,15 @@ class Extended_Path_Validation_Tests final : public Test
 
 std::vector<Test::Result> Extended_Path_Validation_Tests::run()
    {
+   if(Botan::has_filesystem_impl() == false)
+      {
+      return {Test::Result::Note("Extended x509 path validation",
+                                 "Skipping due to missing filesystem access")};
+      }
+
    std::vector<Test::Result> results;
 
    const std::string extended_x509_test_dir = Test::data_dir() + "/x509/extended";
-
-   try
-      {
-      // Do nothing, just test filesystem access
-      Botan::get_files_recursive(extended_x509_test_dir);
-      }
-   catch(Botan::No_Filesystem_Access&)
-      {
-      Test::Result result("Extended x509 path validation");
-      result.test_note("Skipping due to missing filesystem access");
-      results.push_back(result);
-      return results;
-      }
 
    std::map<std::string, std::string> expected =
       read_results(Test::data_file("x509/extended/expected.txt"));
@@ -338,22 +324,15 @@ class PSS_Path_Validation_Tests : public Test
 
 std::vector<Test::Result> PSS_Path_Validation_Tests::run()
    {
+   if(Botan::has_filesystem_impl() == false)
+      {
+      return {Test::Result::Note("RSA-PSS X509 signature validation",
+                                 "Skipping due to missing filesystem access")};
+      }
+
    std::vector<Test::Result> results;
 
    const std::string pss_x509_test_dir = Test::data_dir() + "/x509/pss_certs";
-
-   try
-      {
-      // Do nothing, just test filesystem access
-      Botan::get_files_recursive(pss_x509_test_dir);
-      }
-   catch(Botan::No_Filesystem_Access&)
-      {
-      Test::Result result("RSA-PSS X509 signature validation");
-      result.test_note("Skipping due to missing filesystem access");
-      results.push_back(result);
-      return results;
-      }
 
    std::map<std::string, std::string> expected =
       read_results(Test::data_file("x509/pss_certs/expected.txt"));
@@ -457,32 +436,25 @@ BOTAN_REGISTER_TEST("x509_path_rsa_pss", PSS_Path_Validation_Tests);
 class BSI_Path_Validation_Tests final : public Test
    {
    public:
-          std::vector<Test::Result> run() override;
+      std::vector<Test::Result> run() override;
    };
 
 std::vector<Test::Result> BSI_Path_Validation_Tests::run()
    {
+   if(Botan::has_filesystem_impl() == false)
+      {
+      return {Test::Result::Note("BSI path validation",
+                                 "Skipping due to missing filesystem access")};
+      }
+
    std::vector<Test::Result> results;
 
    const std::string bsi_test_dir = Test::data_dir() + "/x509/bsi";
 
-   try
-      {
-      // Do nothing, just test filesystem access
-      Botan::get_files_recursive(bsi_test_dir);
-      }
-   catch (Botan::No_Filesystem_Access&)
-      {
-      Test::Result result("BSI path validation");
-      result.test_note("Skipping due to missing filesystem access");
-      results.push_back(result);
-      return results;
-      }
-
-   std::map<std::string, std::string> expected = read_results(
+   const std::map<std::string, std::string> expected = read_results(
          Test::data_file("/x509/bsi/expected.txt"), '$');
 
-   for (auto& i : expected)
+   for(auto& i : expected)
       {
       const std::string test_name = i.first;
       std::string expected_result = i.second;
@@ -500,7 +472,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
       const std::vector<std::string> all_files =
             Botan::get_files_recursive(test_dir);
 
-      if (all_files.empty())
+      if(all_files.empty())
          {
          result.test_failure("No test files found in " + test_dir);
          results.push_back(result);
@@ -516,31 +488,31 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
       // By convention: if CRL is a substring if the directory name,
       // we need to check the CRLs
       bool use_crl = false;
-      if (test_dir.find("CRL") != std::string::npos)
+      if(test_dir.find("CRL") != std::string::npos)
          {
          use_crl = true;
          }
 
       try
          {
-         for (auto const& file : all_files)
+         for(auto const& file : all_files)
             {
             // found a trust anchor
-            if (file.find("TA") != std::string::npos)
+            if(file.find("TA") != std::string::npos)
                {
                trusted.add_certificate(Botan::X509_Certificate(file));
                }
             // found the target certificate. It needs to be at the front of certs
-            else if (file.find("TC") != std::string::npos)
+            else if(file.find("TC") != std::string::npos)
                {
                certs.insert(certs.begin(), Botan::X509_Certificate(file));
                }
             // found a certificate that might be part of a valid certificate chain to the trust anchor
-            else if (file.find(".crt") != std::string::npos)
+            else if(file.find(".crt") != std::string::npos)
                {
                certs.push_back(Botan::X509_Certificate(file));
                }
-            else if (file.find(".crl") != std::string::npos)
+            else if(file.find(".crl") != std::string::npos)
                {
                trusted.add_crl(Botan::X509_CRL(file));
                }
@@ -564,7 +536,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
             return s % m;
          };
 
-         for (size_t r = 0; r < 16; r++)
+         for(size_t r = 0; r < 16; r++)
             {
             std::random_shuffle(++(certs.begin()), certs.end(), uniform_shuffle);
 
@@ -608,17 +580,17 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
       /* Some certificates are rejected when executing the X509_Certificate constructor
        * by throwing a Decoding_Error exception.
        */
-      catch (const Botan::Decoding_Error& d)
+      catch(const Botan::Decoding_Error& d)
          {
          result.test_eq(test_name + " path validation result", d.what(),
-               expected_result);
+                        expected_result);
          }
-      catch (const Botan::X509_CRL::X509_CRL_Error& e)
+      catch(const Botan::X509_CRL::X509_CRL_Error& e)
          {
          result.test_eq(test_name + " path validation result", e.what(),
-               expected_result);
+                        expected_result);
          }
-      catch (const std::exception& e)
+      catch(const std::exception& e)
          {
          result.test_failure(test_name, e.what());
          }

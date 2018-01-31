@@ -160,6 +160,21 @@ std::vector<std::string> impl_win32(const std::string& dir_path)
 
 }
 
+bool has_filesystem_impl()
+   {
+#if defined(BOTAN_TARGET_OS_HAS_STL_FILESYSTEM_MSVC) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   return true;
+#elif defined(BOTAN_HAS_BOOST_FILESYSTEM)
+   return true;
+#elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   return true;
+#elif defined(BOTAN_TARGET_OS_HAS_WIN32)
+   return true;
+#else
+   return false;
+#endif
+   }
+
 std::vector<std::string> get_files_recursive(const std::string& dir)
    {
    std::vector<std::string> files;

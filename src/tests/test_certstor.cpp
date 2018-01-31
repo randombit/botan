@@ -334,6 +334,12 @@ class Certstor_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
+         if(Botan::has_filesystem_impl() == false)
+            {
+            return {Test::Result::Note("Certificate Store",
+                                       "Skipping due to missing filesystem access")};
+            }
+
          const std::string test_dir = Test::data_dir() + "/x509/certstor";
          struct CertificateAndKeyFilenames
             {
@@ -348,18 +354,6 @@ class Certstor_Tests final : public Test
                {"cert5a.crt", "key05.pem"},
                {"cert5b.crt", "key06.pem"},
             };
-
-         try
-            {
-            // Do nothing, just test filesystem access
-            Botan::get_files_recursive(test_dir);
-            }
-         catch(Botan::No_Filesystem_Access&)
-            {
-            Test::Result result("Certificate Store");
-            result.test_note("Skipping due to missing filesystem access");
-            return {result};
-            }
 
          const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
 
