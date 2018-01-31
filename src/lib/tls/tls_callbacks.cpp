@@ -164,7 +164,7 @@ std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_ecdh
    else
       {
       EC_Group group(OIDS::lookup(curve_name));
-      ECDH_PublicKey peer_key(group, OS2ECP(peer_public_value, group.get_curve()));
+      ECDH_PublicKey peer_key(group, group.OS2ECP(peer_public_value));
       policy.check_peer_key_acceptable(peer_key);
       ECDH_PrivateKey priv_key(rng, group);
       PK_Key_Agreement ka(priv_key, rng, "Raw");

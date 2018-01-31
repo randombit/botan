@@ -13,7 +13,7 @@ void check_os2ecp(const Botan::EC_Group& group, const uint8_t in[], size_t len)
    {
    try
       {
-      Botan::PointGFp point = Botan::OS2ECP(in, len, group.get_curve());
+      Botan::PointGFp point = group.OS2ECP(in, len);
       }
    catch(Botan::Exception& e) {}
    }

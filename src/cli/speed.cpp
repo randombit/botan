@@ -1215,7 +1215,7 @@ class Speed final : public Command
             Timer mult_timer(group_name + " scalar mult");
             Timer blinded_mult_timer(group_name + " blinded scalar mult");
 
-            const Botan::BigInt scalar(rng(), group.get_curve().get_p().bits());
+            const Botan::BigInt scalar(rng(), group.get_p_bits());
             const Botan::PointGFp& base_point = group.get_base_point();
             Botan::Blinded_Point_Multiply scalar_mult(base_point, group.get_order(), 4);
 
@@ -1242,7 +1242,6 @@ class Speed final : public Command
          for(std::string group_name : groups)
             {
             const Botan::EC_Group group(group_name);
-            const Botan::CurveGFp& curve = group.get_curve();
 
             while(uncmp_timer.under(runtime) && cmp_timer.under(runtime))
                {
@@ -1251,8 +1250,8 @@ class Speed final : public Command
                const Botan::secure_vector<uint8_t> os_cmp = Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED);
                const Botan::secure_vector<uint8_t> os_uncmp = Botan::EC2OSP(p, Botan::PointGFp::UNCOMPRESSED);
 
-               uncmp_timer.run([&]() { OS2ECP(os_uncmp, curve); });
-               cmp_timer.run([&]() { OS2ECP(os_cmp, curve); });
+               uncmp_timer.run([&]() { group.OS2ECP(os_uncmp); });
+               cmp_timer.run([&]() { group.OS2ECP(os_cmp); });
                }
 
             record_result(uncmp_timer);

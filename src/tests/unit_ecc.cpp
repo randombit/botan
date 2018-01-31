@@ -83,9 +83,9 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, BigIn
    }
 
 Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
-                                    const Botan::CurveGFp& curve)
+                                    const Botan::EC_Group& group)
    {
-   const Botan::BigInt& p = curve.get_p();
+   const Botan::BigInt& p = group.get_p();
 
    Botan::Modular_Reducer mod_p(p);
 
@@ -93,14 +93,14 @@ Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
       {
       const Botan::BigInt x = Botan::BigInt::random_integer(rng, 1, p);
       const Botan::BigInt x3 = mod_p.multiply(x, mod_p.square(x));
-      const Botan::BigInt ax = mod_p.multiply(curve.get_a(), x);
-      const Botan::BigInt y = mod_p.reduce(x3 + ax + curve.get_b());
+      const Botan::BigInt ax = mod_p.multiply(group.get_a(), x);
+      const Botan::BigInt y = mod_p.reduce(x3 + ax + group.get_b());
       const Botan::BigInt sqrt_y = ressol(y, p);
 
       if(sqrt_y > 1)
          {
          BOTAN_ASSERT_EQUAL(mod_p.square(sqrt_y), y, "Square root is correct");
-         Botan::PointGFp point(curve, x, sqrt_y);
+         Botan::PointGFp point = group.point(x, sqrt_y);
          return point;
          }
       }
@@ -276,7 +276,7 @@ Test::Result test_groups()
    for(auto const& group_name : named_groups)
       {
       const Botan::EC_Group group(group_name);
-      result.confirm("EC_Group is known", !group.get_oid().empty());
+      result.confirm("EC_Group is known", !group.get_curve_oid().empty());
       }
    return result;
    }
@@ -290,10 +290,9 @@ Test::Result test_coordinates()
 
    // precalculation
    const Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
-   const Botan::PointGFp point_exp(curve, exp_affine_x, exp_affine_y);
+   const Botan::PointGFp point_exp = secp160r1.point(exp_affine_x, exp_affine_y);
    result.confirm("Point is on the curve", point_exp.on_the_curve());
 
    const Botan::PointGFp p1 = p_G * 2;
@@ -372,11 +371,9 @@ Test::Result test_zeropoint()
    Test::Result result("ECC Unit");
 
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
 
-   Botan::PointGFp p1(curve,
-                      Botan::BigInt("16984103820118642236896513183038186009872590470"),
-                      Botan::BigInt("1373093393927139016463695321221277758035357890939"));
+   Botan::PointGFp p1 = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
+                                        Botan::BigInt("1373093393927139016463695321221277758035357890939"));
 
    result.confirm("point is on the curve", p1.on_the_curve());
 
@@ -392,19 +389,18 @@ Test::Result test_zeropoint_enc_dec()
    Test::Result result("ECC Unit");
 
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
 
-   Botan::PointGFp p(curve);
+   Botan::PointGFp p = secp160r1.zero_point();
    result.confirm("zero point is zero", p.is_zero());
 
    std::vector<uint8_t> sv_p = unlock(EC2OSP(p, Botan::PointGFp::UNCOMPRESSED));
-   result.test_eq("encoded/decode rt works", OS2ECP(sv_p, curve), p);
+   result.test_eq("encoded/decode rt works", secp160r1.OS2ECP(sv_p), p);
 
    sv_p = unlock(EC2OSP(p, Botan::PointGFp::COMPRESSED));
-   result.test_eq("encoded/decode compressed rt works", OS2ECP(sv_p, curve), p);
+   result.test_eq("encoded/decode compressed rt works", secp160r1.OS2ECP(sv_p), p);
 
    sv_p = unlock(EC2OSP(p, Botan::PointGFp::HYBRID));
-   result.test_eq("encoded/decode hybrid rt works", OS2ECP(sv_p, curve), p);
+   result.test_eq("encoded/decode hybrid rt works", secp160r1.OS2ECP(sv_p), p);
    return result;
    }
 
@@ -413,16 +409,14 @@ Test::Result test_calc_with_zeropoint()
    Test::Result result("ECC Unit");
 
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
 
-   Botan::PointGFp p(curve,
-                     Botan::BigInt("16984103820118642236896513183038186009872590470"),
-                     Botan::BigInt("1373093393927139016463695321221277758035357890939"));
+   Botan::PointGFp p = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
+                                       Botan::BigInt("1373093393927139016463695321221277758035357890939"));
 
    result.confirm("point is on the curve", p.on_the_curve());
    result.confirm("point is not zero", !p.is_zero());
 
-   Botan::PointGFp zero(curve);
+   Botan::PointGFp zero = secp160r1.zero_point();
    result.confirm("zero point is zero", zero.is_zero());
 
    Botan::PointGFp res = p + zero;
@@ -442,7 +436,6 @@ Test::Result test_add_point()
 
    // precalculation
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    Botan::PointGFp p0 = p_G;
@@ -450,9 +443,8 @@ Test::Result test_add_point()
 
    p1 += p0;
 
-   Botan::PointGFp expected(curve,
-                            Botan::BigInt("704859595002530890444080436569091156047721708633"),
-                            Botan::BigInt("1147993098458695153857594941635310323215433166682"));
+   Botan::PointGFp expected = secp160r1.point(Botan::BigInt("704859595002530890444080436569091156047721708633"),
+                                              Botan::BigInt("1147993098458695153857594941635310323215433166682"));
 
    result.test_eq("point addition", p1, expected);
    return result;
@@ -463,7 +455,6 @@ Test::Result test_sub_point()
    Test::Result result("ECC Unit");
 
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    Botan::PointGFp p0 = p_G;
@@ -471,9 +462,8 @@ Test::Result test_sub_point()
 
    p1 -= p0;
 
-   Botan::PointGFp expected(curve,
-                            Botan::BigInt("425826231723888350446541592701409065913635568770"),
-                            Botan::BigInt("203520114162904107873991457957346892027982641970"));
+   Botan::PointGFp expected = secp160r1.point(Botan::BigInt("425826231723888350446541592701409065913635568770"),
+                                              Botan::BigInt("203520114162904107873991457957346892027982641970"));
 
    result.test_eq("point subtraction", p1, expected);
    return result;
@@ -484,7 +474,6 @@ Test::Result test_mult_point()
    Test::Result result("ECC Unit");
 
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    Botan::PointGFp p0 = p_G;
@@ -494,7 +483,7 @@ Test::Result test_mult_point()
 
    const Botan::BigInt exp_mult_x(std::string("967697346845926834906555988570157345422864716250"));
    const Botan::BigInt exp_mult_y(std::string("512319768365374654866290830075237814703869061656"));
-   Botan::PointGFp expected(curve, exp_mult_x, exp_mult_y);
+   Botan::PointGFp expected = secp160r1.point(exp_mult_x, exp_mult_y);
 
    result.test_eq("point mult", p1, expected);
    return result;
@@ -506,7 +495,6 @@ Test::Result test_basic_operations()
 
    // precalculation
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    const Botan::PointGFp p0 = p_G;
@@ -516,16 +504,14 @@ Test::Result test_basic_operations()
    result.test_eq("p1 affine y", p1.get_affine_y(), Botan::BigInt("1373093393927139016463695321221277758035357890939"));
 
    const Botan::PointGFp simplePlus = p1 + p0;
-   const Botan::PointGFp exp_simplePlus(curve,
-                                        Botan::BigInt("704859595002530890444080436569091156047721708633"),
-                                        Botan::BigInt("1147993098458695153857594941635310323215433166682"));
+   const Botan::PointGFp exp_simplePlus = secp160r1.point(Botan::BigInt("704859595002530890444080436569091156047721708633"),
+                                                          Botan::BigInt("1147993098458695153857594941635310323215433166682"));
 
    result.test_eq("point addition", simplePlus, exp_simplePlus);
 
    const Botan::PointGFp simpleMinus = p1 - p0;
-   const Botan::PointGFp exp_simpleMinus(curve,
-                                         Botan::BigInt("425826231723888350446541592701409065913635568770"),
-                                         Botan::BigInt("203520114162904107873991457957346892027982641970"));
+   const Botan::PointGFp exp_simpleMinus=  secp160r1.point(Botan::BigInt("425826231723888350446541592701409065913635568770"),
+                                                           Botan::BigInt("203520114162904107873991457957346892027982641970"));
 
    result.test_eq("point subtraction", simpleMinus, exp_simpleMinus);
 
@@ -545,11 +531,10 @@ Test::Result test_enc_dec_compressed_160()
 
    // Test for compressed conversion (02/03) 160bit
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
 
    const std::vector<uint8_t> G_comp = Botan::hex_decode("024A96B5688EF573284664698968C38BB913CBFC82");
 
-   const Botan::PointGFp p = Botan::OS2ECP(G_comp, curve);
+   const Botan::PointGFp p = secp160r1.OS2ECP(G_comp);
 
    std::vector<uint8_t> sv_result = unlock(Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED));
 
@@ -696,7 +681,7 @@ Test::Result test_gfp_store_restore()
    Botan::PointGFp p = dom_pars.get_base_point();
 
    std::vector<uint8_t> sv_mes = unlock(EC2OSP(p, Botan::PointGFp::COMPRESSED));
-   Botan::PointGFp new_p = Botan::OS2ECP(sv_mes, dom_pars.get_curve());
+   Botan::PointGFp new_p = dom_pars.OS2ECP(sv_mes);
 
    result.test_eq("original and restored points are same", p, new_p);
    return result;
@@ -733,11 +718,9 @@ Test::Result test_more_zeropoint()
    // by Falko
 
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
-   const Botan::CurveGFp& curve = secp160r1.get_curve();
 
-   Botan::PointGFp p1(curve,
-                      Botan::BigInt("16984103820118642236896513183038186009872590470"),
-                      Botan::BigInt("1373093393927139016463695321221277758035357890939"));
+   Botan::PointGFp p1 = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
+                                        Botan::BigInt("1373093393927139016463695321221277758035357890939"));
 
    result.confirm("point is on the curve", p1.on_the_curve());
    Botan::PointGFp minus_p1 = -p1;
@@ -747,12 +730,12 @@ Test::Result test_more_zeropoint()
    result.confirm("point is zero", shouldBeZero.is_zero());
 
    Botan::BigInt y1 = p1.get_affine_y();
-   y1 = curve.get_p() - y1;
+   y1 = secp160r1.get_p() - y1;
 
    result.test_eq("minus point x", minus_p1.get_affine_x(), p1.get_affine_x());
    result.test_eq("minus point y", minus_p1.get_affine_y(), y1);
 
-   Botan::PointGFp zero(curve);
+   Botan::PointGFp zero = secp160r1.zero_point();
    result.confirm("zero point is on the curve", zero.on_the_curve());
    result.test_eq("addition of zero does nothing", p1, p1 + zero);
 
@@ -778,8 +761,8 @@ Test::Result test_point_swap()
 
    Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
 
-   Botan::PointGFp a(create_random_point(Test::rng(), dom_pars.get_curve()));
-   Botan::PointGFp b(create_random_point(Test::rng(), dom_pars.get_curve()));
+   Botan::PointGFp a(create_random_point(Test::rng(), dom_pars));
+   Botan::PointGFp b(create_random_point(Test::rng(), dom_pars));
    b *= Botan::BigInt(Test::rng(), 20);
 
    Botan::PointGFp c(a);
@@ -805,7 +788,7 @@ Test::Result test_mult_sec_mass()
       {
       try
          {
-         Botan::PointGFp a(create_random_point(Test::rng(), dom_pars.get_curve()));
+         Botan::PointGFp a(create_random_point(Test::rng(), dom_pars));
          Botan::BigInt scal(Botan::BigInt(Test::rng(), 40));
          Botan::PointGFp b = a * scal;
          Botan::PointGFp c(a);
@@ -817,23 +800,6 @@ Test::Result test_mult_sec_mass()
          {
          result.test_failure("mult_sec_mass", e.what());
          }
-      }
-
-   return result;
-   }
-
-Test::Result test_curve_cp_ctor()
-   {
-   Test::Result result("ECC Unit");
-
-   try
-      {
-      Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
-      Botan::CurveGFp curve(dom_pars.get_curve());
-      }
-   catch(std::exception& e)
-      {
-      result.test_failure("curve_cp_ctor", e.what());
       }
 
    return result;
@@ -869,7 +835,6 @@ class ECC_Unit_Tests final : public Test
          results.push_back(test_mult_by_order());
          results.push_back(test_point_swap());
          results.push_back(test_mult_sec_mass());
-         results.push_back(test_curve_cp_ctor());
 
          return results;
          }

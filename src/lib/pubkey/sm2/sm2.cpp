@@ -54,10 +54,10 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
    hash.update(get_byte(1, uid_len));
    hash.update(user_id);
 
-   const size_t p_bytes = domain.get_curve().get_p().bytes();
+   const size_t p_bytes = domain.get_p_bytes();
 
-   hash.update(BigInt::encode_1363(domain.get_curve().get_a(), p_bytes));
-   hash.update(BigInt::encode_1363(domain.get_curve().get_b(), p_bytes));
+   hash.update(BigInt::encode_1363(domain.get_a(), p_bytes));
+   hash.update(BigInt::encode_1363(domain.get_b(), p_bytes));
    hash.update(BigInt::encode_1363(domain.get_base_point().get_affine_x(), p_bytes));
    hash.update(BigInt::encode_1363(domain.get_base_point().get_affine_y(), p_bytes));
    hash.update(BigInt::encode_1363(pubkey.get_affine_x(), p_bytes));

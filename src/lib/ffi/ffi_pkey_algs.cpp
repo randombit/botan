@@ -96,7 +96,7 @@ int pubkey_load_ec(std::unique_ptr<ECPublicKey_t>& key,
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
    Botan::EC_Group grp(curve_name);
-   Botan::PointGFp uncompressed_point(grp.get_curve(), public_x, public_y);
+   Botan::PointGFp uncompressed_point = grp.point(public_x, public_y);
    key.reset(new ECPublicKey_t(grp, uncompressed_point));
    return BOTAN_FFI_SUCCESS;
    }
@@ -149,11 +149,11 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
       else if(field == "base_y")
          return ecc->domain().get_base_point().get_affine_y();
       else if(field == "p")
-         return ecc->domain().get_curve().get_p();
+         return ecc->domain().get_p();
       else if(field == "a")
-         return ecc->domain().get_curve().get_a();
+         return ecc->domain().get_a();
       else if(field == "b")
-         return ecc->domain().get_curve().get_b();
+         return ecc->domain().get_b();
       else if(field == "cofactor")
          return ecc->domain().get_cofactor();
       else if(field == "order")
