@@ -1,10 +1,14 @@
 /*
-* (C) 2017 Jack Lloyd
+* (C) 2017,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include "tests.h"
+
+#if defined(BOTAN_HAS_BIGINT)
+   #include <botan/bigint.h>
+#endif
 
 namespace Botan_Tests {
 
@@ -54,8 +58,22 @@ class Test_Tests final : public Test
 
             {
             Test::Result test_result("Testcase");
-            std::vector<uint8_t> vec1(5), vec2(3);
+            std::vector<uint8_t> vec1(5), vec2(3, 9);
             test_result.test_eq("test vectors equal", vec1, vec2);
+            verify_failure("test vectors equal", result, test_result);
+            }
+
+            {
+            Test::Result test_result("Testcase");
+            std::vector<uint8_t> vec1(5), vec2(5);
+            test_result.test_ne("test vectors not equal", vec1, vec2);
+            verify_failure("test vectors equal", result, test_result);
+            }
+
+            {
+            Test::Result test_result("Testcase");
+            std::vector<uint8_t> vec1(5), vec2(5);
+            test_result.test_ne("test arrays not equal", vec1.data(), vec1.size(), vec2.data(), vec2.size());
             verify_failure("test vectors equal", result, test_result);
             }
 
@@ -64,6 +82,13 @@ class Test_Tests final : public Test
             size_t x = 5, y = 6;
             test_result.test_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
+            }
+
+            {
+            Test::Result test_result("Testcase");
+            size_t x = 5, y = 5;
+            test_result.test_ne("test ints not equal", x, y);
+            verify_failure("test ints not equal", result, test_result);
             }
 
             {
@@ -128,6 +153,29 @@ class Test_Tests final : public Test
             verify_failure("test_throws", result, test_result);
             }
 
+            {
+            Test::Result test_result("Testcase");
+            test_result.test_throws("test_throws", "expected msg",
+                                    []() { ; });
+            verify_failure("test_throws", result, test_result);
+            }
+
+#if defined(BOTAN_HAS_BIGINT)
+            {
+            Test::Result test_result("Testcase");
+            Botan::BigInt x = 5, y = 6;
+            test_result.test_eq("test ints equal", x, y);
+            verify_failure("test ints equal", result, test_result);
+            }
+
+            {
+            Test::Result test_result("Testcase");
+            Botan::BigInt x = 5, y = 5;
+            test_result.test_ne("test ints not equal", x, y);
+            verify_failure("test ints not equal", result, test_result);
+            }
+#endif
+
          return {result};
          }
 
@@ -137,7 +185,13 @@ class Test_Tests final : public Test
                           const Test::Result& test_result)
          {
          if(test_result.tests_failed() > 0)
+            {
             result.test_success("Got expected failure for " + what);
+            const std::string result_str = test_result.result_string(true);
+
+            result.confirm("result string contains FAIL",
+                           result_str.find("FAIL") != std::string::npos);
+            }
          else
             result.test_failure("Expected test to fail for " + what);
          }
