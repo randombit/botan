@@ -17,7 +17,6 @@
    #include <botan/point_gfp.h>
    #include <botan/ec_group.h>
    #include <botan/reducer.h>
-   #include <botan/oids.h>
    #include <botan/hex.h>
    #include <botan/data_src.h>
    #include <botan/x509_key.h>
@@ -291,7 +290,7 @@ Test::Result test_coordinates()
    const Botan::BigInt exp_affine_y("1373093393927139016463695321221277758035357890939");
 
    // precalculation
-   const Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   const Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    const Botan::PointGFp point_exp = secp160r1.point(exp_affine_x, exp_affine_y);
@@ -320,7 +319,7 @@ Test::Result test_point_transformation()
    Test::Result result("ECC Unit");
 
    // get a valid point
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::EC_Group dom_pars("secp160r1");
    Botan::PointGFp p = dom_pars.get_base_point() * Test::rng().next_nonzero_byte();
 
    // get a copy
@@ -338,7 +337,7 @@ Test::Result test_point_mult()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    Botan::BigInt d_U("0xaa374ffc3ce144e6b073307972cb6d57b2a4e982");
@@ -353,7 +352,7 @@ Test::Result test_point_negative()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    const Botan::PointGFp p1 = p_G * 2;
@@ -372,7 +371,7 @@ Test::Result test_zeropoint()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
 
    Botan::PointGFp p1 = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
                                         Botan::BigInt("1373093393927139016463695321221277758035357890939"));
@@ -390,7 +389,7 @@ Test::Result test_zeropoint_enc_dec()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
 
    Botan::PointGFp p = secp160r1.zero_point();
    result.confirm("zero point is zero", p.is_zero());
@@ -410,7 +409,7 @@ Test::Result test_calc_with_zeropoint()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
 
    Botan::PointGFp p = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
                                        Botan::BigInt("1373093393927139016463695321221277758035357890939"));
@@ -437,7 +436,7 @@ Test::Result test_add_point()
    Test::Result result("ECC Unit");
 
    // precalculation
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    Botan::PointGFp p0 = p_G;
@@ -456,7 +455,7 @@ Test::Result test_sub_point()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    Botan::PointGFp p0 = p_G;
@@ -475,7 +474,7 @@ Test::Result test_mult_point()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    Botan::PointGFp p0 = p_G;
@@ -496,7 +495,7 @@ Test::Result test_basic_operations()
    Test::Result result("ECC Unit");
 
    // precalculation
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
    const Botan::PointGFp& p_G = secp160r1.get_base_point();
 
    const Botan::PointGFp p0 = p_G;
@@ -532,7 +531,7 @@ Test::Result test_enc_dec_compressed_160()
    Test::Result result("ECC Unit");
 
    // Test for compressed conversion (02/03) 160bit
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
 
    const std::vector<uint8_t> G_comp = Botan::hex_decode("024A96B5688EF573284664698968C38BB913CBFC82");
 
@@ -679,7 +678,7 @@ Test::Result test_gfp_store_restore()
    Test::Result result("ECC Unit");
 
    // generate point
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::EC_Group dom_pars("secp160r1");
    Botan::PointGFp p = dom_pars.get_base_point();
 
    std::vector<uint8_t> sv_mes = unlock(EC2OSP(p, Botan::PointGFp::COMPRESSED));
@@ -719,7 +718,7 @@ Test::Result test_more_zeropoint()
 
    // by Falko
 
-   Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
+   Botan::EC_Group secp160r1("secp160r1");
 
    Botan::PointGFp p1 = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
                                         Botan::BigInt("1373093393927139016463695321221277758035357890939"));
@@ -749,7 +748,7 @@ Test::Result test_mult_by_order()
    Test::Result result("ECC Unit");
 
    // generate point
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::EC_Group dom_pars("secp160r1");
    Botan::PointGFp p = dom_pars.get_base_point();
    Botan::PointGFp shouldBeZero = p * dom_pars.get_order();
 
@@ -761,7 +760,7 @@ Test::Result test_point_swap()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::EC_Group dom_pars("secp160r1");
 
    Botan::PointGFp a(create_random_point(Test::rng(), dom_pars));
    Botan::PointGFp b(create_random_point(Test::rng(), dom_pars));
@@ -785,7 +784,7 @@ Test::Result test_mult_sec_mass()
    {
    Test::Result result("ECC Unit");
 
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::EC_Group dom_pars("secp160r1");
    for(int i = 0; i < 50; i++)
       {
       try
