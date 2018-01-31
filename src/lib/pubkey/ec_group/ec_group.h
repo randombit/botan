@@ -43,10 +43,31 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param order the order of the base point
       * @param cofactor the cofactor
       */
+      BOTAN_DEPRECATED("Use version taking all BigInts")
       EC_Group(const CurveGFp& curve,
                const PointGFp& base_point,
                const BigInt& order,
                const BigInt& cofactor);
+
+      /**
+      * Construct Domain paramers from specified parameters
+      * @param p the elliptic curve p
+      * @param a the elliptic curve a param
+      * @param b the elliptic curve b param
+      * @param base_x the x coordinate of the base point
+      * @param base_y the y coordinate of the base point
+      * @param order the order of the base point
+      * @param cofactor the cofactor
+      * @param oid an optional OID used to identify this curve
+      */
+      EC_Group(const BigInt& p,
+               const BigInt& a,
+               const BigInt& b,
+               const BigInt& base_x,
+               const BigInt& base_y,
+               const BigInt& order,
+               const BigInt& cofactor,
+               const OID& oid = OID());
 
       /**
       * Decode a BER encoded ECC domain parameter set
@@ -65,7 +86,14 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * from an OID name (eg "secp256r1", or "1.2.840.10045.3.1.7")
       * @param pem_or_oid PEM-encoded data, or an OID
       */
-      explicit EC_Group(const std::string& pem_or_oid = "");
+      explicit EC_Group(const std::string& pem_or_oid);
+
+      /**
+      * Create an uninitialized EC_Group
+      */
+      EC_Group();
+
+      ~EC_Group();
 
       /**
       * Create the DER encoding of this domain
@@ -154,7 +182,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       PointGFp OS2ECP(const uint8_t bits[], size_t len) const;
 
       template<typename Alloc>
-         PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& vec) const
+      PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& vec) const
          {
          return this->OS2ECP(vec.data(), vec.size());
          }

@@ -28,6 +28,49 @@ struct EC_Group_Data
 
 namespace {
 
+std::shared_ptr<EC_Group_Data> new_EC_group_data(const BigInt& p,
+                                                 const BigInt& a,
+                                                 const BigInt& b,
+                                                 const BigInt& g_x,
+                                                 const BigInt& g_y,
+                                                 const BigInt& order,
+                                                 const BigInt& cofactor,
+                                                 const OID& oid = OID())
+   {
+   std::shared_ptr<EC_Group_Data> data = std::make_shared<EC_Group_Data>();
+
+   data->m_curve = CurveGFp(p, a, b);
+   data->m_base_point = PointGFp(data->m_curve, g_x, g_y);
+   data->m_order = order;
+   data->m_cofactor = cofactor;
+   data->m_oid = oid;
+
+   data->m_p_bits = p.bits();
+   data->m_p_bytes = p.bytes();
+   return data;
+   }
+
+std::shared_ptr<EC_Group_Data> new_EC_group_data(const BigInt& p,
+                                                 const BigInt& a,
+                                                 const BigInt& b,
+                                                 const std::vector<uint8_t>& base_point,
+                                                 const BigInt& order,
+                                                 const BigInt& cofactor,
+                                                 const OID& oid = OID())
+   {
+   std::shared_ptr<EC_Group_Data> data = std::make_shared<EC_Group_Data>();
+
+   data->m_curve = CurveGFp(p, a, b);
+   data->m_base_point = Botan::OS2ECP(base_point, data->m_curve);
+   data->m_order = order;
+   data->m_cofactor = cofactor;
+   data->m_oid = oid;
+
+   data->m_p_bits = p.bits();
+   data->m_p_bytes = p.bytes();
+   return data;
+   }
+
 std::shared_ptr<EC_Group_Data> lookup_EC_group_by_oid(const OID& oid);
 
 std::shared_ptr<EC_Group_Data> BER_decode_EC_group(const uint8_t bits[], size_t len)
@@ -47,8 +90,7 @@ std::shared_ptr<EC_Group_Data> BER_decode_EC_group(const uint8_t bits[], size_t 
       }
    else if(obj.type() == SEQUENCE)
       {
-      std::shared_ptr<EC_Group_Data> data = std::make_shared<EC_Group_Data>();
-      BigInt p, a, b;
+      BigInt p, a, b, order, cofactor;
       std::vector<uint8_t> sv_base_point;
 
       BER_Decoder(bits, len)
@@ -64,17 +106,12 @@ std::shared_ptr<EC_Group_Data> BER_decode_EC_group(const uint8_t bits[], size_t 
              .decode_octet_string_bigint(b)
            .end_cons()
            .decode(sv_base_point, OCTET_STRING)
-           .decode(data->m_order)
-           .decode(data->m_cofactor)
+           .decode(order)
+           .decode(cofactor)
          .end_cons()
          .verify_end();
 
-      data->m_curve = CurveGFp(p, a, b);
-      data->m_base_point = Botan::OS2ECP(sv_base_point, data->m_curve);
-
-      data->m_p_bits = p.bits();
-      data->m_p_bytes = p.bytes();
-      return data;
+      return new_EC_group_data(p, a, b, sv_base_point, order, cofactor);
       }
    else
       {
@@ -107,6 +144,15 @@ std::shared_ptr<EC_Group_Data> lookup_EC_group_by_oid(const OID& oid)
 
 }
 
+EC_Group::EC_Group()
+   {
+   }
+
+EC_Group::~EC_Group()
+   {
+   // shared_ptr possibly freed here
+   }
+
 EC_Group::EC_Group(const OID& domain_oid)
    {
    this->m_data = lookup_EC_group_by_oid(domain_oid);
@@ -134,19 +180,30 @@ EC_Group::EC_Group(const std::string& str)
       }
    }
 
+EC_Group::EC_Group(const BigInt& p,
+                   const BigInt& a,
+                   const BigInt& b,
+                   const BigInt& base_x,
+                   const BigInt& base_y,
+                   const BigInt& order,
+                   const BigInt& cofactor,
+                   const OID& oid)
+   {
+   m_data = new_EC_group_data(p, a, b, base_x, base_y, order, cofactor, oid);
+   }
+
 EC_Group::EC_Group(const CurveGFp& curve,
                    const PointGFp& base_point,
                    const BigInt& order,
                    const BigInt& cofactor)
    {
-   m_data.reset(new EC_Group_Data);
-
-   m_data->m_curve = curve;
-   m_data->m_base_point = base_point;
-   m_data->m_order = order;
-   m_data->m_cofactor = cofactor;
-   m_data->m_p_bits = curve.get_p().bits();
-   m_data->m_p_bytes = curve.get_p().bytes();
+   m_data = new_EC_group_data(curve.get_p(),
+                              curve.get_a(),
+                              curve.get_b(),
+                              base_point.get_affine_x(),
+                              base_point.get_affine_y(),
+                              order,
+                              cofactor);
    }
 
 EC_Group::EC_Group(const std::vector<uint8_t>& ber)

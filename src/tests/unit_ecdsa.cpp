@@ -233,20 +233,20 @@ Test::Result test_unusual_curve()
    Test::Result result("ECDSA Unit");
 
    //calc a curve which is not in the registry
-   const std::string G_secp_comp =
-      "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
-   const Botan::BigInt
-   bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
-   const Botan::BigInt
-   bi_a_secp("0x0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
-   const Botan::BigInt
-   bi_b_secp("0x0a9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7");
-   Botan::BigInt bi_order_g("0x0e1a16196e6000000000bc7f1618d867b15bb86474418f");
-   Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-   Botan::PointGFp p_G = Botan::OS2ECP(Botan::hex_decode(G_secp_comp), curve);
+   const Botan::BigInt p("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
+   const Botan::BigInt a("0x0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
+   const Botan::BigInt b("0x0a9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7");
+   const Botan::BigInt order_g("0x0e1a16196e6000000000bc7f1618d867b15bb86474418f");
+   const Botan::BigInt cofactor = 1;
 
-   Botan::EC_Group dom_params(curve, p_G, bi_order_g, Botan::BigInt(1));
-   if(!result.confirm("point is on curve", p_G.on_the_curve()))
+   const BigInt Gx("1503931002566715881584977704503341991763310127581173321974500299341775226206001860606586625324214456299149080935147329869147994265934715820");
+   const BigInt Gy("1774988776970033741491814582357926984496972046739476148938345272681378523636129776486407268230155403536112014267092770854858769258781598199");
+
+   Botan::EC_Group dom_params(p, a, b, Gx, Gy, order_g, cofactor);
+
+   Botan::PointGFp p_G = dom_params.point(Gx, Gy);
+
+   if(!result.confirm("G is on curve", p_G.on_the_curve()))
       {
       return result;
       }
