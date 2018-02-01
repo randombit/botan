@@ -528,7 +528,8 @@ Test::Result test_x509_authority_info_access_extension()
  *
  * For the other algorithms than RSA, only one padding is supported right now.
  */
-Test::Result test_padding_config() {
+#if defined(BOTAN_HAS_EMSA_PKCS1) && defined(BOTAN_HAS_EMSA_PSSR) && defined(BOTAN_HAS_RSA)
+ Test::Result test_padding_config() {
    // Throughout the test, some synonyms for EMSA4 are used, e.g. PSSR, EMSA-PSS
    Test::Result test_result("X509 Padding Config");
 
@@ -538,6 +539,7 @@ Test::Result test_padding_config() {
    // Create X509 CA certificate; EMSA3 is used for signing by default
    Botan::X509_Cert_Options opt("TESTCA");
    opt.CA_key();
+
    Botan::X509_Certificate ca_cert_def = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
    test_result.test_eq("CA certificate signature algorithm (default)",
       Botan::OIDS::lookup(ca_cert_def.signature_algorithm().oid),"RSA/EMSA3(SHA-512)");
@@ -553,7 +555,7 @@ Test::Result test_padding_config() {
    try
       {
       Botan::X509_Certificate ca_cert_wrong = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", Test::rng());
-      test_result.test_failure("Could build CA certitiface with invalid encoding scheme EMSA1 for key type " + sk->algo_name());
+      test_result.test_failure("Could build CA cert with invalid encoding scheme EMSA1 for key type " + sk->algo_name());
       }
    catch (const Botan::Invalid_Argument& e)
       {
@@ -614,6 +616,7 @@ Test::Result test_padding_config() {
 
    return test_result;
 }
+#endif
 
 #endif
 
@@ -1443,10 +1446,15 @@ class X509_Cert_Unit_Tests final : public Test
          for(std::string algo : enc_algos)
             {
             std::unique_ptr<Botan::Private_Key> key = make_a_private_key(algo);
-            results.push_back(test_valid_constraints(*key, algo));
+
+            if(key)
+               {
+               results.push_back(test_valid_constraints(*key, algo));
+               }
             }
 
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && defined(BOTAN_HAS_EMSA_PKCS1) && defined(BOTAN_HAS_EMSA_PSSR) && defined(BOTAN_HAS_RSA)
          Test::Result pad_config_result("X509 Padding Config");
          try
             {
