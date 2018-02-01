@@ -46,7 +46,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
    {
    public:
       SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key, const std::string& kdf_hash) :
-         m_p_bytes(key.domain().get_curve().get_p().bytes()),
+         m_p_bytes(key.domain().get_p_bytes()),
          m_order(key.domain().get_order()),
          m_base_point(key.domain().get_base_point(), m_order),
          m_public_point(key.public_point(), m_order),
@@ -135,7 +135,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
                                      size_t ciphertext_len) override
          {
          const BigInt& cofactor = m_key.domain().get_cofactor();
-         const size_t p_bytes = m_key.domain().get_curve().get_p().bytes();
+         const size_t p_bytes = m_key.domain().get_p_bytes();
 
          valid_mask = 0x00;
 
@@ -160,7 +160,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
             .end_cons()
             .verify_end();
 
-         const PointGFp C1(m_key.domain().get_curve(), x1, y1);
+         const PointGFp C1 = m_key.domain().point(x1, y1);
          if(!C1.on_the_curve())
             return secure_vector<uint8_t>();
 

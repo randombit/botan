@@ -41,7 +41,7 @@ AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    {
    std::vector<uint8_t> params =
       DER_Encoder().start_cons(SEQUENCE)
-         .encode(OID(domain().get_oid()))
+         .encode(domain().get_curve_oid())
          .end_cons()
       .get_contents_unlocked();
 
@@ -73,7 +73,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    BigInt x(bits.data(), part_size);
    BigInt y(&bits[part_size], part_size);
 
-   m_public_key = PointGFp(domain().get_curve(), x, y);
+   m_public_key = domain().point(x, y);
 
    BOTAN_ASSERT(m_public_key.on_the_curve(),
                 "Loaded GOST 34.10 public key is on the curve");

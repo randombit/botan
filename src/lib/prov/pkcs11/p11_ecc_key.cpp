@@ -17,11 +17,11 @@ namespace Botan {
 namespace PKCS11 {
 namespace {
 /// Converts a DER-encoded ANSI X9.62 ECPoint to PointGFp
-PointGFp decode_public_point(const secure_vector<uint8_t>& ec_point_data, const CurveGFp& curve)
+PointGFp decode_public_point(const secure_vector<uint8_t>& ec_point_data, const EC_Group& group)
    {
    secure_vector<uint8_t> ec_point;
    BER_Decoder(ec_point_data).decode(ec_point, OCTET_STRING);
-   return OS2ECP(ec_point, curve);
+   return group.OS2ECP(ec_point);
    }
 }
 
@@ -44,7 +44,7 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, ObjectHandle handle)
    {
    secure_vector<uint8_t> ec_parameters = get_attribute_value(AttributeType::EcParams);
    m_domain_params = EC_Group(unlock(ec_parameters));
-   m_public_key = decode_public_point(get_attribute_value(AttributeType::EcPoint), m_domain_params.get_curve());
+   m_public_key = decode_public_point(get_attribute_value(AttributeType::EcPoint), m_domain_params);
    m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
    }
 
@@ -55,7 +55,7 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImp
 
    secure_vector<uint8_t> ec_point;
    BER_Decoder(props.ec_point()).decode(ec_point, OCTET_STRING);
-   m_public_key = OS2ECP(ec_point, m_domain_params.get_curve());
+   m_public_key = m_domain_params.OS2ECP(ec_point);
    m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
    }
 
@@ -100,7 +100,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, const std::vector<u
    this->reset_handle(priv_key_handle);
 
    Object public_key(session, pub_key_handle);
-   m_public_key = decode_public_point(public_key.get_attribute_value(AttributeType::EcPoint), m_domain_params.get_curve());
+   m_public_key = decode_public_point(public_key.get_attribute_value(AttributeType::EcPoint), m_domain_params);
    }
 
 size_t PKCS11_EC_PrivateKey::key_length() const

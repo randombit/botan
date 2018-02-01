@@ -5,7 +5,6 @@ ECC_PUBLIC_KEY_CRYPTO -> 20131128
 <requires>
 asn1
 bigint
-ec_gfp
 ec_group
 numbertheory
 </requires>

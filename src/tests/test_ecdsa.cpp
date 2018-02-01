@@ -104,7 +104,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
 
          try
             {
-            public_point.reset(new Botan::PointGFp(group.get_curve(), x, y));
+            public_point.reset(new Botan::PointGFp(group.point(x, y)));
             }
          catch(Botan::Invalid_Argument&)
             {

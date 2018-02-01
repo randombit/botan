@@ -340,9 +340,9 @@ class EC_Group_Info final : public Command
             }
          else
             {
-            output() << "P = " << std::hex << group.get_curve().get_p() << "\n"
-                     << "A = " << std::hex << group.get_curve().get_a() << "\n"
-                     << "B = " << std::hex << group.get_curve().get_b() << "\n"
+            output() << "P = " << std::hex << group.get_p() << "\n"
+                     << "A = " << std::hex << group.get_a() << "\n"
+                     << "B = " << std::hex << group.get_b() << "\n"
                      << "G = " << group.get_base_point().get_affine_x() << ","
                      << group.get_base_point().get_affine_y() << "\n";
             }

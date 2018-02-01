@@ -19,7 +19,7 @@ namespace Botan {
 
 size_t EC_PublicKey::key_length() const
    {
-   return domain().get_curve().get_p().bits();
+   return domain().get_p_bits();
    }
 
 size_t EC_PublicKey::estimated_strength() const
@@ -31,20 +31,23 @@ EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
                            const PointGFp& pub_point) :
    m_domain_params(dom_par), m_public_key(pub_point)
    {
-   if (!dom_par.get_oid().empty())
+   if (!dom_par.get_curve_oid().empty())
       m_domain_encoding = EC_DOMPAR_ENC_OID;
    else
       m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+
+#if 0
    if(domain().get_curve() != public_point().get_curve())
       throw Invalid_Argument("EC_PublicKey: curve mismatch in constructor");
+#endif
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
                            const std::vector<uint8_t>& key_bits) :
    m_domain_params{EC_Group(alg_id.get_parameters())},
-   m_public_key{OS2ECP(key_bits, domain().get_curve())}
+   m_public_key{domain().OS2ECP(key_bits)}
    {
-   if (!domain().get_oid().empty())
+   if (!domain().get_curve_oid().empty())
       m_domain_encoding = EC_DOMPAR_ENC_OID;
    else
       m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
@@ -101,7 +104,7 @@ void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form)
       form != EC_DOMPAR_ENC_OID)
       throw Invalid_Argument("Invalid encoding form for EC-key object specified");
 
-   if((form == EC_DOMPAR_ENC_OID) && (m_domain_params.get_oid() == ""))
+   if((form == EC_DOMPAR_ENC_OID) && (m_domain_params.get_curve_oid().empty()))
       throw Invalid_Argument("Invalid encoding form OID specified for "
                              "EC-key object whose corresponding domain "
                              "parameters are without oid");
@@ -126,7 +129,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                              bool with_modular_inverse)
    {
    m_domain_params = ec_group;
-   if (!ec_group.get_oid().empty())
+   if (!ec_group.get_curve_oid().empty())
       m_domain_encoding = EC_DOMPAR_ENC_OID;
    else
       m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
@@ -165,7 +168,7 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    m_domain_params = EC_Group(alg_id.get_parameters());
    m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
-   if (!domain().get_oid().empty())
+   if (!domain().get_curve_oid().empty())
       m_domain_encoding = EC_DOMPAR_ENC_OID;
    else
       m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
@@ -191,7 +194,7 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       }
    else
       {
-      m_public_key = OS2ECP(public_key_bits, domain().get_curve());
+      m_public_key = domain().OS2ECP(public_key_bits);
       // OS2ECP verifies that the point is on the curve
       }
    }

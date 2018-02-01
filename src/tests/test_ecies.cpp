@@ -127,12 +127,11 @@ class ECIES_ISO_Tests final : public Text_Based_Test
          const std::vector<uint8_t> c0 = get_req_bin(vars, "C0");   // expected encoded (ephemeral) public key
          const std::vector<uint8_t> k = get_req_bin(vars, "K");   // expected derived secret
 
-         const Botan::CurveGFp curve(p, a, b);
-         const Botan::EC_Group domain(curve, Botan::PointGFp(curve, gx, gy), mu, nu);
+         const Botan::EC_Group domain(p, a, b, gx, gy, mu, nu);
 
          // keys of bob
          const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, x);
-         const Botan::PointGFp other_public_key_point(curve, hx, hy);
+         const Botan::PointGFp other_public_key_point = domain.point(hx, hy);
          const Botan::ECDH_PublicKey other_public_key(domain, other_public_key_point);
 
          // (ephemeral) keys of alice

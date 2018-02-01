@@ -13,6 +13,7 @@
 #include <botan/point_gfp.h>
 #include <botan/curve_gfp.h>
 #include <botan/asn1_oid.h>
+#include <memory>
 #include <set>
 
 namespace Botan {
@@ -25,6 +26,8 @@ enum EC_Group_Encoding {
    EC_DOMPAR_ENC_IMPLICITCA = 1,
    EC_DOMPAR_ENC_OID = 2
 };
+
+struct EC_Group_Data;
 
 /**
 * Class representing an elliptic curve
@@ -40,16 +43,31 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param order the order of the base point
       * @param cofactor the cofactor
       */
+      BOTAN_DEPRECATED("Use version taking all BigInts")
       EC_Group(const CurveGFp& curve,
                const PointGFp& base_point,
                const BigInt& order,
-               const BigInt& cofactor) :
-         m_curve(curve),
-         m_base_point(base_point),
-         m_order(order),
-         m_cofactor(cofactor),
-         m_oid("")
-         {}
+               const BigInt& cofactor);
+
+      /**
+      * Construct Domain paramers from specified parameters
+      * @param p the elliptic curve p
+      * @param a the elliptic curve a param
+      * @param b the elliptic curve b param
+      * @param base_x the x coordinate of the base point
+      * @param base_y the y coordinate of the base point
+      * @param order the order of the base point
+      * @param cofactor the cofactor
+      * @param oid an optional OID used to identify this curve
+      */
+      EC_Group(const BigInt& p,
+               const BigInt& a,
+               const BigInt& b,
+               const BigInt& base_x,
+               const BigInt& base_y,
+               const BigInt& order,
+               const BigInt& cofactor,
+               const OID& oid = OID());
 
       /**
       * Decode a BER encoded ECC domain parameter set
@@ -68,7 +86,14 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * from an OID name (eg "secp256r1", or "1.2.840.10045.3.1.7")
       * @param pem_or_oid PEM-encoded data, or an OID
       */
-      EC_Group(const std::string& pem_or_oid = "");
+      explicit EC_Group(const std::string& pem_or_oid);
+
+      /**
+      * Create an uninitialized EC_Group
+      */
+      EC_Group();
+
+      ~EC_Group();
 
       /**
       * Create the DER encoding of this domain
@@ -87,48 +112,91 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * Return domain parameter curve
       * @result domain parameter curve
       */
-      const CurveGFp& get_curve() const { return m_curve; }
+      BOTAN_DEPRECATED("Avoid CurveGFp") const CurveGFp& get_curve() const;
+
+      /**
+      * Return the size of p in bits (same as get_p().bits())
+      */
+      size_t get_p_bits() const;
+
+      /**
+      * Return the size of p in bits (same as get_p().bytes())
+      */
+      size_t get_p_bytes() const;
+
+      /**
+      * Return the prime modulus of the field
+      */
+      const BigInt& get_p() const;
+
+      /**
+      * Return the a parameter of the elliptic curve equation
+      */
+      const BigInt& get_a() const;
+
+      /**
+      * Return the b parameter of the elliptic curve equation
+      */
+      const BigInt& get_b() const;
 
       /**
       * Return group base point
       * @result base point
       */
-      const PointGFp& get_base_point() const { return m_base_point; }
+      const PointGFp& get_base_point() const;
 
       /**
       * Return the order of the base point
       * @result order of the base point
       */
-      const BigInt& get_order() const { return m_order; }
+      const BigInt& get_order() const;
 
       /**
-      * Return the cofactor
-      * @result the cofactor
+      * Return the OID of these domain parameters
+      * @result the OID as a string
       */
-      const BigInt& get_cofactor() const { return m_cofactor; }
-
-      bool initialized() const { return !m_base_point.is_zero(); }
+      std::string BOTAN_DEPRECATED("Use get_curve_oid") get_oid() const { return get_curve_oid().as_string(); }
 
       /**
       * Return the OID of these domain parameters
       * @result the OID
       */
-      std::string get_oid() const { return m_oid; }
-      
+      const OID& get_curve_oid() const;
+
+      /**
+      * Return the cofactor
+      * @result the cofactor
+      */
+      const BigInt& get_cofactor() const;
+
+      /**
+      * Return a point on this curve with the affine values x, y
+      */
+      PointGFp point(const BigInt& x, const BigInt& y) const;
+
+      /**
+      * Return the zero (or infinite) point on this curve
+      */
+      PointGFp zero_point() const;
+
+      PointGFp OS2ECP(const uint8_t bits[], size_t len) const;
+
+      template<typename Alloc>
+      PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& vec) const
+         {
+         return this->OS2ECP(vec.data(), vec.size());
+         }
+
+      bool initialized() const { return (m_data != nullptr); }
+
       /**
        * Verify EC_Group domain
        * @returns true if group is valid. false otherwise
        */
       bool verify_group(RandomNumberGenerator& rng,
-                            bool strong = false) const;
-      
-      bool operator==(const EC_Group& other) const
-         {
-         return ((get_curve() == other.get_curve()) &&
-                 (get_base_point() == other.get_base_point()) &&
-                 (get_order() == other.get_order()) &&
-                 (get_cofactor() == other.get_cofactor()));
-         }
+                        bool strong = false) const;
+
+      bool operator==(const EC_Group& other) const;
 
       /**
       * Return PEM representation of named EC group
@@ -140,11 +208,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       */
       static const std::set<std::string>& known_named_groups();
 
+      static void add_named_group(const std::string& name, const OID& oid, const EC_Group& group);
+
    private:
-      CurveGFp m_curve;
-      PointGFp m_base_point;
-      BigInt m_order, m_cofactor;
-      std::string m_oid;
+      const EC_Group_Data& data() const;
+      std::shared_ptr<EC_Group_Data> m_data;
    };
 
 inline bool operator!=(const EC_Group& lhs,
