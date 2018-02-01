@@ -112,7 +112,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * Return domain parameter curve
       * @result domain parameter curve
       */
-      const CurveGFp& BOTAN_DEPRECATED("Avoid CurveGFp") get_curve() const;
+      BOTAN_DEPRECATED("Avoid CurveGFp") const CurveGFp& get_curve() const;
 
       /**
       * Return the size of p in bits (same as get_p().bits())
@@ -196,13 +196,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       bool verify_group(RandomNumberGenerator& rng,
                         bool strong = false) const;
 
-      bool operator==(const EC_Group& other) const
-         {
-         return ((get_curve() == other.get_curve()) &&
-                 (get_base_point() == other.get_base_point()) &&
-                 (get_order() == other.get_order()) &&
-                 (get_cofactor() == other.get_cofactor()));
-         }
+      bool operator==(const EC_Group& other) const;
 
       /**
       * Return PEM representation of named EC group

@@ -270,17 +270,17 @@ const OID& EC_Group::get_curve_oid() const
 
 PointGFp EC_Group::OS2ECP(const uint8_t bits[], size_t len) const
    {
-   return Botan::OS2ECP(bits, len, get_curve());
+   return Botan::OS2ECP(bits, len, data().m_curve);
    }
 
 PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
    {
-   return PointGFp(get_curve(), x, y);
+   return PointGFp(data().m_curve, x, y);
    }
 
 PointGFp EC_Group::zero_point() const
    {
-   return PointGFp(get_curve());
+   return PointGFp(data().m_curve);
    }
 
 std::vector<uint8_t>
@@ -331,6 +331,21 @@ std::string EC_Group::PEM_encode() const
    {
    const std::vector<uint8_t> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
    return PEM_Code::encode(der, "EC PARAMETERS");
+   }
+
+bool EC_Group::operator==(const EC_Group& other) const
+   {
+   if(m_data == other.m_data)
+      return true; // same shared rep
+
+   /*
+   * No point comparing order/cofactor as they are uniquely determined
+   * by the curve equation (p,a,b) and the base point.
+   */
+   return (get_p() == other.get_p() &&
+           get_a() == other.get_a() &&
+           get_b() == other.get_b() &&
+           get_base_point() == other.get_base_point());
    }
 
 bool EC_Group::verify_group(RandomNumberGenerator& rng,
