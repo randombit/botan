@@ -575,7 +575,7 @@ class Speed final : public Command
    {
    public:
       Speed()
-         : Command("speed --msec=100 --format=default --provider= --buf-size=1024 --clear-cpuid= --ecc-groups= *algos") {}
+         : Command("speed --msec=300 --format=default --provider= --buf-size=1024 --clear-cpuid= --ecc-groups= *algos") {}
 
       std::vector<std::string> default_benchmark_list()
          {
