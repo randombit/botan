@@ -279,7 +279,20 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
 secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) EC2OSP(const PointGFp& point, uint8_t format);
 
 PointGFp BOTAN_PUBLIC_API(2,0) OS2ECP(const uint8_t data[], size_t data_len,
-                          const CurveGFp& curve);
+                                      const CurveGFp& curve);
+
+/**
+* Perform point decoding
+* @param data the encoded point
+* @param data_len length of data in bytes
+* @param curve_p the curve equation prime
+* @param curve_a the curve equation a parameter
+* @param curve_b the curve equation b parameter
+*/
+std::pair<BigInt, BigInt> BOTAN_PUBLIC_API(2,5) OS2ECP(const uint8_t data[], size_t data_len,
+                                                       const BigInt& curve_p,
+                                                       const BigInt& curve_a,
+                                                       const BigInt& curve_b);
 
 template<typename Alloc>
 PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)

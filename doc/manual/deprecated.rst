@@ -58,7 +58,10 @@ in the source.
 
 - Old (Google specific) ChaCha20 TLS ciphersuites
 
-- All built in ECC groups < 256 bits
+- Weak or rarely used ECC builtin groups including "secp160k1", "secp160r1",
+  "secp160r2", "secp192k1", "secp192r1", "secp224k1", "secp224r1",
+  "brainpool160r1", "brainpool192r1", "brainpool224r1", "brainpool320r1",
+  "x962_p192v2", "x962_p192v3", "x962_p239v1", "x962_p239v2", "x962_p239v3".
 
 - All built in MODP groups < 2048 bits
 

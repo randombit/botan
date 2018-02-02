@@ -1177,7 +1177,7 @@ class String_Extension final : public Botan::Certificate_Extension
 
       Botan::OID oid_of() const override
          {
-         return m_oid;
+         return Botan::OID("1.2.3.4.5.6.7.8.9.1");
          }
 
       bool should_encode() const override
@@ -1205,7 +1205,6 @@ class String_Extension final : public Botan::Certificate_Extension
          }
 
    private:
-      Botan::OID m_oid {"1.2.3.4.5.6.7.8.9.1"};
       std::string m_contents;
    };
 

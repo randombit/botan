@@ -516,24 +516,24 @@ namespace {
 
 BigInt decompress_point(bool yMod2,
                         const BigInt& x,
-                        const CurveGFp& curve)
+                        const BigInt& curve_p,
+                        const BigInt& curve_a,
+                        const BigInt& curve_b)
    {
    BigInt xpow3 = x * x * x;
 
-   const BigInt& p = curve.get_p();
-
-   BigInt g = curve.get_a() * x;
+   BigInt g = curve_a * x;
    g += xpow3;
-   g += curve.get_b();
-   g = g % p;
+   g += curve_b;
+   g = g % curve_p;
 
-   BigInt z = ressol(g, p);
+   BigInt z = ressol(g, curve_p);
 
    if(z < 0)
       throw Illegal_Point("error during EC point decompression");
 
    if(z.get_bit(0) != yMod2)
-      z = p - z;
+      z = curve_p - z;
 
    return z;
    }
@@ -543,8 +543,27 @@ BigInt decompress_point(bool yMod2,
 PointGFp OS2ECP(const uint8_t data[], size_t data_len,
                 const CurveGFp& curve)
    {
+   // Should we really be doing this?
    if(data_len <= 1)
       return PointGFp(curve); // return zero
+
+   std::pair<BigInt, BigInt> xy = OS2ECP(data, data_len, curve.get_p(), curve.get_a(), curve.get_b());
+
+   PointGFp point(curve, xy.first, xy.second);
+
+   if(!point.on_the_curve())
+      throw Illegal_Point("OS2ECP: Decoded point was not on the curve");
+
+   return point;
+   }
+
+std::pair<BigInt, BigInt> OS2ECP(const uint8_t data[], size_t data_len,
+                                 const BigInt& curve_p,
+                                 const BigInt& curve_a,
+                                 const BigInt& curve_b)
+   {
+   if(data_len <= 1)
+      throw Decoding_Error("OS2ECP invalid point");
 
    const uint8_t pc = data[0];
 
@@ -556,7 +575,7 @@ PointGFp OS2ECP(const uint8_t data[], size_t data_len,
       x = BigInt::decode(&data[1], data_len - 1);
 
       const bool y_mod_2 = ((pc & 0x01) == 1);
-      y = decompress_point(y_mod_2, x, curve);
+      y = decompress_point(y_mod_2, x, curve_p, curve_a, curve_b);
       }
    else if(pc == 4)
       {
@@ -576,18 +595,13 @@ PointGFp OS2ECP(const uint8_t data[], size_t data_len,
 
       const bool y_mod_2 = ((pc & 0x01) == 1);
 
-      if(decompress_point(y_mod_2, x, curve) != y)
+      if(decompress_point(y_mod_2, x, curve_p, curve_a, curve_b) != y)
          throw Illegal_Point("OS2ECP: Decoding error in hybrid format");
       }
    else
       throw Invalid_Argument("OS2ECP: Unknown format type " + std::to_string(pc));
 
-   PointGFp result(curve, x, y);
-
-   if(!result.on_the_curve())
-      throw Illegal_Point("OS2ECP: Decoded point was not on the curve");
-
-   return result;
+   return std::make_pair(x, y);
    }
 
 }
