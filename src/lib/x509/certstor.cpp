@@ -9,6 +9,7 @@
 #include <botan/certstor.h>
 #include <botan/internal/filesystem.h>
 #include <botan/hash.h>
+#include <botan/data_src.h>
 
 namespace Botan {
 
@@ -184,8 +185,20 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
    for(auto&& cert_file : maybe_certs)
       {
       try
-         {
-         m_certs.push_back(std::make_shared<X509_Certificate>(cert_file));
+         {               
+         DataSource_Stream src(cert_file, true);
+         while(!src.end_of_data())
+            {
+            try
+               {
+               m_certs.push_back(std::make_shared<X509_Certificate>(src));            
+               }
+            catch(std::exception&)
+               {       
+               // stop searching for other certificate at first exception
+               break;
+               }
+            }
          }
       catch(std::exception&)
          {

@@ -329,6 +329,34 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
       }
    }
 
+Test::Result test_certstor_load_allcert()
+   {
+   Test::Result result("Certificate Store - Load every cert of every files");
+   // test_dir_bundled dir should contain only one file with 2 certificates 
+   // concatenated (ValidCert and root)
+   const std::string test_dir_bundled = Test::data_dir() + "/x509/x509test/bundledcertdir";
+
+   try
+      {
+      result.test_note("load certs from dir: " + test_dir_bundled);
+      // Certificate_Store_In_Memory constructor loads every cert of every files of the dir.
+      Botan::Certificate_Store_In_Memory store(test_dir_bundled);
+      
+      // X509_Certificate constructor loads only the first certificate found in the file.
+      Botan::X509_Certificate root_cert(Test::data_dir() + "/x509/x509test/root.pem");
+      Botan::X509_Certificate valid_cert(Test::data_dir() + "/x509/x509test/ValidCert.pem");
+      std::vector<uint8_t> key_id;
+      result.confirm("Root cert found", store.find_cert(root_cert.subject_dn(), key_id) != nullptr);
+      result.confirm("ValidCert found", store.find_cert(valid_cert.subject_dn(), key_id) != nullptr);
+      return result;
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure(e.what());
+      return result;
+      }
+   }
+
 class Certstor_Tests final : public Test
    {
    public:
@@ -386,6 +414,7 @@ class Certstor_Tests final : public Test
          std::vector<Test::Result> results;
 
          results.push_back(test_certstor_find_hash_subject(certsandkeys));
+         results.push_back(test_certstor_load_allcert());
 #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
          results.push_back(test_certstor_sqlite3_insert_find_remove_test(certsandkeys));
          results.push_back(test_certstor_sqlite3_crl_test(certsandkeys));
