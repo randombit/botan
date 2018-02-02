@@ -334,7 +334,7 @@ Test::Result test_certstor_load_allcert()
    Test::Result result("Certificate Store - Load every cert of every files");
    // test_dir_bundled dir should contain only one file with 2 certificates 
    // concatenated (ValidCert and root)
-   const std::string test_dir_bundled = Test::data_dir() + "/x509/x509test/bundledcertdir";
+   const std::string test_dir_bundled = Test::data_dir() + "/x509/misc/bundledcertdir";
 
    try
       {
