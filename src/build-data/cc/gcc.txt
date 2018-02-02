@@ -82,6 +82,7 @@ s390x   -> "-m64"
 sparc32 -> "-m32 -mno-app-regs"
 sparc64 -> "-m64 -mno-app-regs"
 ppc64   -> "-m64"
+x86_32  -> "-m32"
 x86_64  -> "-m64"
 
 netbsd  -> "-D_NETBSD_SOURCE"
