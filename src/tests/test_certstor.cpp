@@ -6,9 +6,6 @@
 
 #include "tests.h"
 
-#include <botan/x509_dn.h>
-#include <botan/x509cert.h>
-
 #if defined(BOTAN_HAS_CERTSTOR_SQL)
    #include <botan/certstor.h>
    #include <botan/internal/filesystem.h>
