@@ -175,8 +175,13 @@ EC_Group_Data_Map& EC_Group::ec_group_data()
    * This exists purely to ensure the allocator is constructed before g_ec_data,
    * which ensures that its destructor runs after ~g_ec_data is complete.
    */
-   secure_vector<uint8_t> initialize_allocator(1);
+   class Allocator_Initializer
+      {
+      public:
+         Allocator_Initializer() { initialize_allocator(); }
+      };
 
+   static Allocator_Initializer g_init_allocator;
    static EC_Group_Data_Map g_ec_data;
    return g_ec_data;
    }
