@@ -27,7 +27,8 @@ enum EC_Group_Encoding {
    EC_DOMPAR_ENC_OID = 2
 };
 
-struct EC_Group_Data;
+class EC_Group_Data;
+class EC_Group_Data_Map;
 
 /**
 * Class representing an elliptic curve
@@ -47,7 +48,14 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       EC_Group(const CurveGFp& curve,
                const PointGFp& base_point,
                const BigInt& order,
-               const BigInt& cofactor);
+               const BigInt& cofactor) :
+         EC_Group(curve.get_p(),
+                  curve.get_a(),
+                  curve.get_b(),
+                  base_point.get_affine_x(),
+                  base_point.get_affine_y(),
+                  order,
+                  cofactor) {}
 
       /**
       * Construct Domain paramers from specified parameters
@@ -200,17 +208,35 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
 
       /**
       * Return PEM representation of named EC group
+      * Deprecated: Use EC_Group(name).PEM_encode() if this is needed
       */
-      static std::string PEM_for_named_group(const std::string& name);
+      static std::string BOTAN_DEPRECATED("See header comment") PEM_for_named_group(const std::string& name);
 
       /**
       * Return a set of known named EC groups
       */
       static const std::set<std::string>& known_named_groups();
 
-      static void add_named_group(const std::string& name, const OID& oid, const EC_Group& group);
+      /*
+      * For internal use only
+      */
+      static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
 
    private:
+      static EC_Group_Data_Map& ec_group_data();
+
+      static std::shared_ptr<EC_Group_Data> BER_decode_EC_group(const uint8_t bits[], size_t len);
+
+      static std::shared_ptr<EC_Group_Data>
+         load_EC_group_info(const char* p,
+                            const char* a,
+                            const char* b,
+                            const char* g_x,
+                            const char* g_y,
+                            const char* order,
+                            const OID& oid);
+
+      // Member data
       const EC_Group_Data& data() const;
       std::shared_ptr<EC_Group_Data> m_data;
    };

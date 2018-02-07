@@ -806,6 +806,31 @@ Test::Result test_mult_sec_mass()
    return result;
    }
 
+Test::Result test_ecc_registration()
+   {
+   Test::Result result("ECC registration");
+
+   // secp112r1
+   const Botan::BigInt p("0xDB7C2ABF62E35E668076BEAD208B");
+   const Botan::BigInt a("0xDB7C2ABF62E35E668076BEAD2088");
+   const Botan::BigInt b("0x659EF8BA043916EEDE8911702B22");
+
+   const Botan::BigInt g_x("0x09487239995A5EE76B55F9C2F098");
+   const Botan::BigInt g_y("0xA89CE5AF8724C0A23E0E0FF77500");
+   const Botan::BigInt order("0xDB7C2ABF62E35E7628DFAC6561C5");
+
+   const Botan::OID oid("1.3.132.0.6");
+
+   // Creating this object implicitly registers the curve for future use ...
+   Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1, oid);
+
+   Botan::EC_Group group(oid);
+
+   result.test_eq("Group registration worked", group.get_p(), p);
+
+   return result;
+   }
+
 class ECC_Unit_Tests final : public Test
    {
    public:
@@ -836,6 +861,7 @@ class ECC_Unit_Tests final : public Test
          results.push_back(test_mult_by_order());
          results.push_back(test_point_swap());
          results.push_back(test_mult_sec_mass());
+         results.push_back(test_ecc_registration());
 
          return results;
          }

@@ -41,6 +41,13 @@ void deallocate_memory(void* p, size_t elems, size_t elem_size)
    std::free(p);
    }
 
+void initialize_allocator()
+   {
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+   mlock_allocator::instance();
+#endif
+   }
+
 bool constant_time_compare(const uint8_t x[],
                            const uint8_t y[],
                            size_t len)

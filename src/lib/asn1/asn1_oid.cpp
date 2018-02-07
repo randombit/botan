@@ -47,7 +47,7 @@ void OID::clear()
 /*
 * Return this OID as a string
 */
-std::string OID::as_string() const
+std::string OID::to_string() const
    {
    std::string oid_str;
    for(size_t i = 0; i != m_id.size(); ++i)
