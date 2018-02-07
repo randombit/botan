@@ -62,6 +62,33 @@ how to provide the cleanest API for such users would be most welcome.
 #include <stddef.h>
 
 /**
+* Error codes
+*/
+enum BOTAN_FFI_ERROR {
+   BOTAN_FFI_SUCCESS = 0,
+   BOTAN_FFI_INVALID_VERIFIER = 1,
+
+   BOTAN_FFI_ERROR_INVALID_INPUT = -1,
+   BOTAN_FFI_ERROR_BAD_MAC = -2,
+
+   BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE = -10,
+   BOTAN_FFI_ERROR_EXCEPTION_THROWN = -20,
+   BOTAN_FFI_ERROR_BAD_FLAG = -30,
+   BOTAN_FFI_ERROR_NULL_POINTER = -31,
+   BOTAN_FFI_ERROR_BAD_PARAMETER = -32,
+   BOTAN_FFI_ERROR_NOT_IMPLEMENTED = -40,
+   BOTAN_FFI_ERROR_INVALID_OBJECT = -50,
+
+   BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100,
+};
+
+/**
+* Convert an error code into a string. Returns "Unknown error"
+* if the error code is not a known one.
+*/
+const char* botan_error_description(int err);
+
+/**
 * Return the version of the currently supported FFI API. This is
 * expressed in the form YYYYMMDD of the release date of this version
 * of the API.
@@ -99,59 +126,6 @@ BOTAN_PUBLIC_API(2,0) uint32_t botan_version_patch();
 * an integer, or 0 if an unreleased version
 */
 BOTAN_PUBLIC_API(2,0) uint32_t botan_version_datestamp();
-
-/*
-* Error handling
-*
-* Some way of exporting these values to other languages would be useful
-
-
- THIS FUNCTION ASSUMES BOTH ARGUMENTS ARE LITERAL STRINGS
- so it retains only the pointers and does not make a copy.
-
-int botan_make_error(const char* msg, const char* func, int line);
-* This value is returned to callers ^^
-
- normally called like
-   return botan_make_error(BOTAN_ERROR_STRING_NOT_IMPLEMENTED, BOTAN_FUNCTION, __LINE__);
-
-// This would seem to require both saving the message permanently
-catch(std::exception& e) {
-return botan_make_error_from_transient_string(e.what(), BOTAN_FUNCTION, __LINE__);
-}
-
-#define botan_make_error_inf(s) return botan_make_error(s, BOTAN_FUNCTION, __LINE__);
-
-Easier to return a const char* from each function directly? However,
-
-catch(std::exception& e) { return e.what(); }
-
-doesn't exactly work well either!
-
-*
-* Later call:
-* const char* botan_get_error_str(int);
-* To recover the msg, func, and line
-
-*/
-#define BOTAN_FFI_SUCCESS (0)
-
-#define BOTAN_FFI_INVALID_VERIFIER (1)
-
-#define BOTAN_FFI_ERROR_INVALID_INPUT (-1)
-#define BOTAN_FFI_ERROR_BAD_MAC (-2)
-
-#define BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE (-10)
-#define BOTAN_FFI_ERROR_EXCEPTION_THROWN (-20)
-#define BOTAN_FFI_ERROR_BAD_FLAG (-30)
-#define BOTAN_FFI_ERROR_NULL_POINTER (-31)
-#define BOTAN_FFI_ERROR_BAD_PARAMETER (-32)
-#define BOTAN_FFI_ERROR_NOT_IMPLEMENTED (-40)
-#define BOTAN_FFI_ERROR_INVALID_OBJECT (-50)
-
-#define BOTAN_FFI_ERROR_UNKNOWN_ERROR (-100)
-
-//const char* botan_error_description(int err);
 
 /**
 * Returns 0 if x[0..len] == y[0..len], or otherwise -1

@@ -26,6 +26,50 @@ extern "C" {
 
 using namespace Botan_FFI;
 
+const char* botan_error_description(int err)
+   {
+   switch(err)
+      {
+      case BOTAN_FFI_SUCCESS:
+         return "OK";
+
+      case BOTAN_FFI_INVALID_VERIFIER:
+         return "Invalid verifier";
+
+      case BOTAN_FFI_ERROR_INVALID_INPUT:
+         return "Invalid input";
+
+      case BOTAN_FFI_ERROR_BAD_MAC:
+         return "Invalid authentication code";
+
+      case BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE:
+         return "Insufficient buffer space";
+
+      case BOTAN_FFI_ERROR_EXCEPTION_THROWN:
+         return "Exception thrown";
+
+      case BOTAN_FFI_ERROR_BAD_FLAG:
+         return "Bad flag";
+
+      case BOTAN_FFI_ERROR_NULL_POINTER:
+         return "Null pointer argument";
+
+      case BOTAN_FFI_ERROR_BAD_PARAMETER:
+         return "Bad parameter";
+
+      case BOTAN_FFI_ERROR_NOT_IMPLEMENTED:
+         return "Not implemented";
+
+      case BOTAN_FFI_ERROR_INVALID_OBJECT:
+         return "Invalid object handle";
+
+      case BOTAN_FFI_ERROR_UNKNOWN_ERROR:
+         return "Unknown error";
+      }
+
+   return "Unknown error";
+   }
+
 /*
 * Versioning
 */
@@ -120,4 +164,3 @@ int botan_base64_decode(const char* base64_str, size_t in_len,
    }
 
 }
-
