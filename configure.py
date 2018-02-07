@@ -2793,6 +2793,31 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.os == 'windows' and options.compiler != 'msvc':
         logging.warning('The windows target is oriented towards MSVC; maybe you want cygwin or mingw')
 
+def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_flags=None):
+    if extra_flags is None:
+        extra_flags = []
+
+    cc_bin = options.compiler_binary or ccinfo.binary_name
+
+    cmd = cc_bin.split(' ') + ccinfo.preproc_flags.split(' ') + extra_flags + [source_file]
+
+    try:
+        logging.debug("Running '%s'", ' '.join(cmd))
+        stdout, _ = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True).communicate()
+        cc_output = stdout
+    except OSError as e:
+        logging.warning('Could not execute %s: %s' % (cmd, e))
+        return default_return
+
+    def cleanup_output(output):
+        return ('\n'.join([l for l in output.splitlines() if l.startswith('#') is False])).strip()
+
+    return cleanup_output(cc_output)
+
 def calculate_cc_min_version(options, ccinfo, source_paths):
     version_patterns = {
         'msvc': r'^ *MSVC ([0-9]{2})([0-9]{2})$',
@@ -2807,34 +2832,35 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
 
     detect_version_source = os.path.join(source_paths.build_data_dir, "detect_version.cpp")
 
-    cc_bin = options.compiler_binary or ccinfo.binary_name
-
-    cmd = cc_bin.split(' ') + ccinfo.preproc_flags.split(' ') + [detect_version_source]
-
-    try:
-        logging.debug("Running '%s'", ' '.join(cmd))
-        stdout, stderr = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True).communicate()
-        cc_output = stdout + "\n" + stderr
-    except OSError as e:
-        logging.warning('Could not execute %s for version check: %s' % (cmd, e))
-        return "0.0"
-
-    def cleanup_output(output):
-        return ('\n'.join([l for l in output.splitlines() if l.startswith('#') is False])).strip()
+    cc_output = run_compiler_preproc(options, ccinfo, detect_version_source, "0.0")
 
     match = re.search(version_patterns[ccinfo.basename], cc_output, flags=re.MULTILINE)
     if match is None:
         logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
-            ccinfo.basename, cleanup_output(cc_output)))
+            ccinfo.basename, cc_output))
         return "0.0"
 
     cc_version = "%d.%d" % (int(match.group(1), 0), int(match.group(2), 0))
     logging.info('Auto-detected compiler version %s' % (cc_version))
     return cc_version
+
+def check_compiler_arch(options, ccinfo, archinfo, source_paths):
+    detect_version_source = os.path.join(source_paths.build_data_dir, 'detect_arch.cpp')
+
+    abi_flags = ccinfo.mach_abi_link_flags(options).split(' ')
+    cc_output = run_compiler_preproc(options, ccinfo, detect_version_source, 'UNKNOWN', abi_flags).lower()
+
+    if cc_output in ['', 'unknown']:
+        logging.warning('Unable to detect target architecture via compiler macro checks')
+        return None
+
+    if cc_output not in archinfo:
+        # Should not happen
+        logging.warning("Error detecting compiler target arch: '%s'", cc_output)
+        return None
+
+    logging.info('Auto-detected compiler arch %s' % (cc_output))
+    return cc_output
 
 def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, template_vars, options):
     # pylint: disable=too-many-locals,too-many-branches
@@ -3010,6 +3036,11 @@ def main(argv):
     osinfo = info_os[options.os]
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
     cc_min_version = options.cc_min_version or calculate_cc_min_version(options, cc, source_paths)
+
+    cc_arch = check_compiler_arch(options, cc, info_arch, source_paths)
+
+    if cc_arch is not None and cc_arch != options.arch:
+        logging.error("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
 
     logging.info('Target is %s:%s-%s-%s' % (
         options.compiler, cc_min_version, options.os, options.arch))
