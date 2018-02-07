@@ -42,28 +42,34 @@ class OID_Map
 
       std::string lookup(const OID& oid)
          {
+         const std::string oid_str = oid.as_string();
+
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+         if(oid_str == BOTAN_HOUSE_ECC_CURVE_OID)
+            return BOTAN_HOUSE_ECC_CURVE_NAME;
+#endif
+
          lock_guard_type<mutex_type> lock(m_mutex);
 
-         auto i = m_oid2str.find(oid.as_string());
+         auto i = m_oid2str.find(oid_str);
          if(i != m_oid2str.end())
             return i->second;
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-         if(oid_str == BOTAN_HOUSE_ECC_CURVE_OID) return BOTAN_HOUSE_ECC_CURVE_NAME;
-#endif
          return "";
          }
 
       OID lookup(const std::string& str)
          {
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+         if(str == BOTAN_HOUSE_ECC_CURVE_NAME)
+            return OID(BOTAN_HOUSE_ECC_CURVE_OID);
+#endif
+
          lock_guard_type<mutex_type> lock(m_mutex);
          auto i = m_str2oid.find(str);
          if(i != m_str2oid.end())
             return i->second;
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-         if(name == BOTAN_HOUSE_ECC_CURVE_NAME) return OID(BOTAN_HOUSE_ECC_CURVE_OID);
-#endif
          return OID();
          }
 

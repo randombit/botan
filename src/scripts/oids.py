@@ -12,6 +12,9 @@ import datetime
 import re
 from collections import defaultdict
 
+def format_oid(oid):
+    #return '"' + oid + '"'
+    return "{" + oid.replace('.', ',') + '}'
 
 def format_map(m, for_oid = False):
     s = ''
@@ -22,7 +25,7 @@ def format_map(m, for_oid = False):
             s += '      '
 
         if for_oid:
-            s += '{ "%s", OID("%s") },\n' % (k,v)
+            s += '{ "%s", OID(%s) },\n' % (k,format_oid(v))
         else:
             s += '{ "%s", "%s" },\n' % (k,v)
 
@@ -73,7 +76,7 @@ def format_if(m, nm,t=False):
         v = m[k]
 
         if t:
-            s += '   if(%s == "%s") return OID("%s");\n' % (nm,k, v)
+            s += '   if(%s == "%s") return OID(%s);\n' % (nm,k, format_oid(v))
         else:
             s += '   if(%s == "%s") return "%s";\n' % (nm,k, v)
 
