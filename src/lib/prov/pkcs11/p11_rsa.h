@@ -11,6 +11,7 @@
 
 #include <botan/p11_session.h>
 #include <botan/p11_object.h>
+#include <botan/pk_keys.h>
 
 #if defined(BOTAN_HAS_RSA)
 #include <botan/rsa.h>

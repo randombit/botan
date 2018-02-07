@@ -10,9 +10,9 @@
 #define BOTAN_P11_ECC_H_
 
 #include <botan/p11_object.h>
+#include <botan/pk_keys.h>
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-#include <botan/pk_keys.h>
 #include <botan/ecc_key.h>
 #include <botan/ec_group.h>
 #include <botan/alg_id.h>

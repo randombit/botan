@@ -5,6 +5,7 @@ PKCS11 -> 20160219
 <requires>
 dyn_load
 rng
+pubkey
 pk_pad
 </requires>
 

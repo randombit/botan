@@ -10,6 +10,7 @@
 #define BOTAN_P11_ECDSA_H_
 
 #include <botan/p11.h>
+#include <botan/pk_keys.h>
 
 #if defined(BOTAN_HAS_ECDSA)
 
