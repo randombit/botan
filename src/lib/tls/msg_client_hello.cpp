@@ -129,13 +129,14 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       }
 #endif
 
-   Supported_Groups* supported_groups = new Supported_Groups(policy.allowed_groups());
-   m_extensions.add(supported_groups);
+   std::unique_ptr<Supported_Groups> supported_groups(new Supported_Groups(policy.key_exchange_groups()));
 
-   if(!supported_groups->curves().empty())
+   if(supported_groups->ec_groups().size() > 0)
       {
       m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
+
+   m_extensions.add(supported_groups.release());
 
    cb.tls_modify_extensions(m_extensions, CLIENT);
 
@@ -175,12 +176,15 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new Server_Name_Indicator(session.server_info().hostname()));
    m_extensions.add(new Session_Ticket(session.session_ticket()));
-   m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
 
-   if(!policy.allowed_ecc_curves().empty())
+   std::unique_ptr<Supported_Groups> supported_groups(new Supported_Groups(policy.key_exchange_groups()));
+
+   if(supported_groups->ec_groups().size() > 0)
       {
       m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
+
+   m_extensions.add(supported_groups.release());
 
    if(session.supports_encrypt_then_mac())
       m_extensions.add(new Encrypt_then_MAC);
@@ -324,18 +328,18 @@ std::vector<Signature_Scheme> Client_Hello::signature_schemes() const
    return schemes;
    }
 
-std::vector<std::string> Client_Hello::supported_ecc_curves() const
+std::vector<Group_Params> Client_Hello::supported_ecc_curves() const
    {
    if(Supported_Groups* groups = m_extensions.get<Supported_Groups>())
-      return groups->curves();
-   return std::vector<std::string>();
+      return groups->ec_groups();
+   return std::vector<Group_Params>();
    }
 
-std::vector<std::string> Client_Hello::supported_dh_groups() const
+std::vector<Group_Params> Client_Hello::supported_dh_groups() const
    {
    if(Supported_Groups* groups = m_extensions.get<Supported_Groups>())
       return groups->dh_groups();
-   return std::vector<std::string>();
+   return std::vector<Group_Params>();
    }
 
 bool Client_Hello::prefers_compressed_ec_points() const

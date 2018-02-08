@@ -9,9 +9,8 @@
 
 #include <botan/tls_policy.h>
 #include <botan/tls_ciphersuite.h>
-#include <botan/tls_magic.h>
+#include <botan/tls_algos.h>
 #include <botan/tls_exceptn.h>
-#include <botan/tls_extensions.h>
 #include <botan/internal/stl_util.h>
 #include <botan/pk_keys.h>
 #include <sstream>
@@ -123,90 +122,58 @@ bool Policy::allowed_signature_hash(const std::string& sig_hash) const
    return value_exists(allowed_signature_hashes(), sig_hash);
    }
 
-std::vector<std::string> Policy::allowed_ecc_curves() const
-   {
-   // Default list is ordered by performance
-
-   return {
-      "x25519",
-      "secp256r1",
-      "secp521r1",
-      "secp384r1",
-      "brainpool256r1",
-      "brainpool384r1",
-      "brainpool512r1",
-      };
-   }
-
-bool Policy::allowed_ecc_curve(const std::string& curve) const
-   {
-   if(!allowed_ecc_curves().empty())
-      {
-      return value_exists(allowed_ecc_curves(), curve);
-      }
-   return value_exists(allowed_groups(), curve);
-   }
-
 bool Policy::use_ecc_point_compression() const
    {
    return false;
    }
 
-/*
-* Choose an ECC curve to use
-*/
-std::string Policy::choose_curve(const std::vector<std::string>& curve_names) const
+Group_Params Policy::choose_key_exchange_group(const std::vector<Group_Params>& peer_groups) const
    {
-   const std::vector<std::string> our_groups = allowed_groups();
+   if(peer_groups.empty())
+      return Group_Params::NONE;
 
-   for(size_t i = 0; i != our_groups.size(); ++i)
-      if(!Supported_Groups::is_dh_group(our_groups[i])
-         && value_exists(curve_names, our_groups[i]))
-         return our_groups[i];
+   const std::vector<Group_Params> our_groups = key_exchange_groups();
 
-   return ""; // no shared curve
+   for(auto g : our_groups)
+      {
+      if(value_exists(peer_groups, g))
+         return g;
+      }
+
+   return Group_Params::NONE;
    }
 
-/*
-* Choose an FFDHE group to use
-*/
-std::string Policy::choose_dh_group(const std::vector<std::string>& dh_groups) const
+Group_Params Policy::default_dh_group() const
    {
-   if(dh_groups.empty())
-      return dh_group();
+   /*
+   * Return the first listed or just default to 2048
+   */
+   for(auto g : key_exchange_groups())
+      {
+      if(group_param_is_dh(g))
+         return g;
+      }
 
-   const std::vector<std::string> our_groups = allowed_groups();
-
-   for(size_t i = 0; i != our_groups.size(); ++i)
-      if(Supported_Groups::is_dh_group(our_groups[i])
-            && value_exists(dh_groups, our_groups[i]))
-         return our_groups[i];
-
-   return ""; // no shared ffdhe group
+   return Group_Params::FFDHE_2048;
    }
 
-std::string Policy::dh_group() const
-   {
-   // We offer 2048 bit DH because we can
-   return "modp/ietf/2048";
-   }
-
-std::vector<std::string> Policy::allowed_groups() const
+std::vector<Group_Params> Policy::key_exchange_groups() const
    {
    // Default list is ordered by performance
    return {
-      "x25519",
-      "secp256r1",
-      "secp521r1",
-      "secp384r1",
-      "brainpool256r1",
-      "brainpool384r1",
-      "brainpool512r1",
-      "ffdhe/ietf/2048",
-      "ffdhe/ietf/3072",
-      "ffdhe/ietf/4096",
-      "ffdhe/ietf/6144",
-      "ffdhe/ietf/8192"
+      Group_Params::X25519,
+      Group_Params::SECP256R1,
+      Group_Params::SECP521R1,
+      Group_Params::SECP384R1,
+      Group_Params::BRAINPOOL256R1,
+      Group_Params::BRAINPOOL384R1,
+      Group_Params::BRAINPOOL512R1,
+
+      Group_Params::FFDHE_2048,
+      Group_Params::FFDHE_3072,
+      Group_Params::FFDHE_4096,
+      Group_Params::FFDHE_6144,
+      Group_Params::FFDHE_8192,
       };
    }
 
@@ -448,7 +415,7 @@ class Ciphersuite_Preference_Ordering final
 }
 
 std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
-                                             bool have_srp) const
+                                               bool have_srp) const
    {
    const std::vector<std::string> ciphers = allowed_ciphers();
    const std::vector<std::string> macs = allowed_macs();
@@ -503,8 +470,11 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
       removal of x25519 from the ECC curve list as equivalent to
       saying they do not trust CECPQ1
       */
-      if(suite.kex_method() == Kex_Algo::CECPQ1 && allowed_ecc_curve("x25519") == false)
-         continue;
+      if(suite.kex_method() == Kex_Algo::CECPQ1)
+         {
+         if(value_exists(key_exchange_groups(), Group_Params::X25519) == false)
+            continue;
+         }
 
       // OK, consider it
       ciphersuites.push_back(suite);
@@ -540,6 +510,20 @@ void print_vec(std::ostream& o,
    o << '\n';
    }
 
+void print_vec(std::ostream& o,
+               const char* key,
+               const std::vector<Group_Params>& v)
+   {
+   o << key << " = ";
+   for(size_t i = 0; i != v.size(); ++i)
+      {
+      o << group_param_to_string(v[i]);
+      if(i != v.size() - 1)
+         o << ' ';
+      }
+   o << '\n';
+   }
+
 void print_bool(std::ostream& o,
                 const char* key, bool b)
    {
@@ -560,8 +544,7 @@ void Policy::print(std::ostream& o) const
    print_vec(o, "signature_hashes", allowed_signature_hashes());
    print_vec(o, "signature_methods", allowed_signature_methods());
    print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
-   print_vec(o, "ecc_curves", allowed_ecc_curves());
-   print_vec(o, "groups", allowed_groups());
+   print_vec(o, "key_exchange_groups", key_exchange_groups());
 
    print_bool(o, "allow_insecure_renegotiation", allow_insecure_renegotiation());
    print_bool(o, "include_time_in_hello_random", include_time_in_hello_random());
@@ -571,7 +554,6 @@ void Policy::print(std::ostream& o) const
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
    print_bool(o, "support_cert_status_message", support_cert_status_message());
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
-   o << "dh_group = " << dh_group() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';
    o << "minimum_rsa_bits = " << minimum_rsa_bits() << '\n';

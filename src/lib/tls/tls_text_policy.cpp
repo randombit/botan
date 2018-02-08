@@ -40,11 +40,6 @@ std::vector<std::string> Text_Policy::allowed_signature_methods() const
    return get_list("signature_methods", Policy::allowed_signature_methods());
    }
 
-std::vector<std::string> Text_Policy::allowed_ecc_curves() const
-   {
-   return get_list("ecc_curves", Policy::allowed_ecc_curves());
-   }
-
 bool Text_Policy::use_ecc_point_compression() const
    {
    return get_bool("use_ecc_point_compression", Policy::use_ecc_point_compression());
@@ -89,6 +84,7 @@ bool Text_Policy::allow_client_initiated_renegotiation() const
    {
    return get_bool("allow_client_initiated_renegotiation", Policy::allow_client_initiated_renegotiation());
    }
+
 bool Text_Policy::allow_server_initiated_renegotiation() const
    {
    return get_bool("allow_server_initiated_renegotiation", Policy::allow_server_initiated_renegotiation());
@@ -109,14 +105,36 @@ bool Text_Policy::support_cert_status_message() const
    return get_bool("support_cert_status_message", Policy::support_cert_status_message());
    }
 
-std::string Text_Policy::dh_group() const
+std::vector<Group_Params> Text_Policy::key_exchange_groups() const
    {
-   return get_str("dh_group", Policy::dh_group());
-   }
+   std::string group_str = get_str("key_exchange_groups");
 
-std::vector<std::string> Text_Policy::allowed_groups() const
-   {
-   return get_list("groups", Policy::allowed_groups());
+   if(group_str.empty())
+      {
+      // fall back to previously used name
+      group_str = get_str("ecc_curves");
+      }
+
+   if(group_str.empty())
+      {
+      return Policy::key_exchange_groups();
+      }
+
+   std::vector<Group_Params> groups;
+   for(std::string group_name : split_on(group_str, ' '))
+      {
+      Group_Params group_id = group_param_from_string(group_name);
+
+      if(group_id == Group_Params::NONE)
+         {
+         // TODO accept hex codes in text file
+         continue;
+         }
+
+      groups.push_back(group_id);
+      }
+
+   return groups;
    }
 
 size_t Text_Policy::minimum_ecdh_group_size() const

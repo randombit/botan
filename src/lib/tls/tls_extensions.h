@@ -1,8 +1,8 @@
 /*
 * TLS Extensions
-* (C) 2011,2012,2016 Jack Lloyd
-*     2016 Juraj Somorovsky
-*     2016 Matthias Gierlings
+* (C) 2011,2012,2016,2018 Jack Lloyd
+* (C) 2016 Juraj Somorovsky
+* (C) 2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -29,7 +29,7 @@ enum Handshake_Extension_Type {
    TLSEXT_CERT_STATUS_REQUEST    = 5,
 
    TLSEXT_CERTIFICATE_TYPES      = 9,
-   TLSEXT_USABLE_ELLIPTIC_CURVES = 10,
+   TLSEXT_SUPPORTED_GROUPS       = 10,
    TLSEXT_EC_POINT_FORMATS       = 11,
    TLSEXT_SRP_IDENTIFIER         = 12,
    TLSEXT_SIGNATURE_ALGORITHMS   = 13,
@@ -234,34 +234,32 @@ class Supported_Groups final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
-         { return TLSEXT_USABLE_ELLIPTIC_CURVES; }
+         { return TLSEXT_SUPPORTED_GROUPS; }
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
       static std::string curve_id_to_name(uint16_t id);
       static uint16_t name_to_curve_id(const std::string& name);
 
-      static bool is_dh_group( const std::string& group_name );
+      static bool is_dh_group(const std::string& group_name);
 
-      const std::vector<std::string>& curves() const { return m_curves; }
-      const std::vector<std::string>& dh_groups() const { return m_dh_groups; }
+      std::vector<Group_Params> ec_groups() const;
+      std::vector<Group_Params> dh_groups() const;
 
       std::vector<uint8_t> serialize() const override;
 
-      explicit Supported_Groups(const std::vector<std::string>& groups);
+      explicit Supported_Groups(const std::vector<Group_Params>& groups);
 
       Supported_Groups(TLS_Data_Reader& reader,
-                                uint16_t extension_size);
+                       uint16_t extension_size);
 
       bool empty() const override { return m_groups.empty(); }
    private:
-      std::vector<std::string> m_groups;
-      std::vector<std::string> m_curves;
-      std::vector<std::string> m_dh_groups;
+      std::vector<Group_Params> m_groups;
    };
 
 // previously Supported Elliptic Curves Extension (RFC 4492)
-using Supported_Elliptic_Curves = Supported_Groups;
+//using Supported_Elliptic_Curves = Supported_Groups;
 
 /**
 * Supported Point Formats Extension (RFC 4492)

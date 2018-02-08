@@ -28,8 +28,8 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size)
          return new SRP_Identifier(reader, size);
 #endif
 
-      case TLSEXT_USABLE_ELLIPTIC_CURVES:
-         return new Supported_Elliptic_Curves(reader, size);
+      case TLSEXT_SUPPORTED_GROUPS:
+         return new Supported_Groups(reader, size);
 
       case TLSEXT_CERT_STATUS_REQUEST:
          return new Certificate_Status_Request(reader, size);
@@ -295,20 +295,30 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize() const
    return buf;
    }
 
-Supported_Groups::Supported_Groups(const std::vector<std::string>& groups) :
-      m_groups(groups)
+Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups)
    {
-   for(const auto& group : m_groups)
+   }
+
+std::vector<Group_Params> Supported_Groups::ec_groups() const
+   {
+   std::vector<Group_Params> ec;
+   for(auto g : m_groups)
       {
-      if(is_dh_group(group))
-         {
-         m_dh_groups.push_back(group);
-         }
-      else
-         {
-         m_curves.push_back(group);
-         }
+      if(group_param_is_dh(g) == false)
+         ec.push_back(g);
       }
+   return ec;
+   }
+
+std::vector<Group_Params> Supported_Groups::dh_groups() const
+   {
+   std::vector<Group_Params> dh;
+   for(auto g : m_groups)
+      {
+      if(group_param_is_dh(g) == true)
+         dh.push_back(g);
+      }
+   return dh;
    }
 
 std::string Supported_Groups::curve_id_to_name(uint16_t id)
@@ -409,9 +419,9 @@ std::vector<uint8_t> Supported_Groups::serialize() const
    {
    std::vector<uint8_t> buf(2);
 
-   for(size_t i = 0; i != m_groups.size(); ++i)
+   for(auto g : m_groups)
       {
-      const uint16_t id = name_to_curve_id(m_groups[i]);
+      const uint16_t id = static_cast<uint16_t>(g);
 
       if(id > 0)
          {
@@ -427,9 +437,9 @@ std::vector<uint8_t> Supported_Groups::serialize() const
    }
 
 Supported_Groups::Supported_Groups(TLS_Data_Reader& reader,
-      uint16_t extension_size)
+                                   uint16_t extension_size)
    {
-   uint16_t len = reader.get_uint16_t();
+   const uint16_t len = reader.get_uint16_t();
 
    if(len + 2 != extension_size)
       throw Decoding_Error("Inconsistent length field in supported groups list");
@@ -437,28 +447,10 @@ Supported_Groups::Supported_Groups(TLS_Data_Reader& reader,
    if(len % 2 == 1)
       throw Decoding_Error("Supported groups list of strange size");
 
-   len /= 2;
-
-   for(size_t i = 0; i != len; ++i)
+   for(size_t i = 0; i != len / 2; ++i)
       {
       const uint16_t id = reader.get_uint16_t();
-      const Group_Params group_id = static_cast<Group_Params>(id);
-
-      const bool is_dh = (id >= 256 && id <= 511);
-      const std::string name = group_param_to_string(group_id);
-
-      if(!name.empty())
-         {
-         m_groups.push_back(name);
-         if(is_dh)
-            {
-            m_dh_groups.push_back(name);
-            }
-         else
-            {
-            m_curves.push_back(name);
-            }
-         }
+      m_groups.push_back(static_cast<Group_Params>(id));
       }
    }
 

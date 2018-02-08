@@ -686,13 +686,20 @@ class TLS_Unit_Tests final : public Test
          {
          Botan::RandomNumberGenerator& rng = Test::rng();
 
-         for(auto const& version : versions)
+         try
             {
-            TLS_Handshake_Test test(
-               version.to_string() + " " + test_descr,
-               version, creds, policy, policy, rng, client_ses, server_ses, client_auth);
-            test.go();
-            results.push_back(test.results());
+            for(auto const& version : versions)
+               {
+               TLS_Handshake_Test test(
+                  version.to_string() + " " + test_descr,
+                  version, creds, policy, policy, rng, client_ses, server_ses, client_auth);
+               test.go();
+               results.push_back(test.results());
+               }
+            }
+         catch(std::exception& e)
+            {
+            results.push_back(Test::Result::Failure(test_descr, e.what()));
             }
          }
 

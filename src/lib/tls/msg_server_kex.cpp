@@ -57,27 +57,31 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
    if(kex_algo == Kex_Algo::DH || kex_algo == Kex_Algo::DHE_PSK)
       {
-      const std::vector<std::string>& dh_groups =
-               state.client_hello()->supported_dh_groups();
+      const std::vector<Group_Params> dh_groups = state.client_hello()->supported_dh_groups();
 
-      std::string group_name;
+      Group_Params shared_group = Group_Params::NONE;
 
-      // if the client does not send any DH groups in
-      // the supported groups extension, but does offer DH ciphersuites,
-      // we select a group arbitrarily
-      if (dh_groups.empty())
+      /*
+      If the client does not send any DH groups in the supported groups
+      extension, but does offer DH ciphersuites, we select a group arbitrarily
+      */
+
+      if(dh_groups.empty())
          {
-         group_name = policy.dh_group();
+         shared_group = policy.default_dh_group();
          }
       else
          {
-         group_name = policy.choose_dh_group(dh_groups);
+         shared_group = policy.choose_key_exchange_group(dh_groups);
          }
 
-      if (group_name.empty())
+      if(shared_group == Group_Params::NONE)
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                "Could not agree on a DH group with the client");
 
+      BOTAN_ASSERT(group_param_is_dh(shared_group), "DH groups for the DH ciphersuites god");
+
+      const std::string group_name = group_param_to_string(shared_group);
       std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, DL_Group(group_name)));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
@@ -87,25 +91,19 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       }
    else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK)
       {
-      const std::vector<std::string>& curves =
-         state.client_hello()->supported_ecc_curves();
+      const std::vector<Group_Params> ec_groups = state.client_hello()->supported_ecc_curves();
 
-      if(curves.empty())
+      if(ec_groups.empty())
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
 
-      const std::string curve_name = policy.choose_curve(curves);
+      Group_Params shared_group = policy.choose_key_exchange_group(ec_groups);
 
-      if(curve_name == "")
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Could not agree on an ECC curve with the client");
-
-      const uint16_t named_curve_id = Supported_Elliptic_Curves::name_to_curve_id(curve_name);
-      if(named_curve_id == 0)
-         throw Internal_Error("TLS does not support ECC with " + curve_name);
+      if(shared_group == Group_Params::NONE)
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "No shared ECC group with client");
 
       std::vector<uint8_t> ecdh_public_val;
 
-      if(curve_name == "x25519")
+      if(shared_group == Group_Params::X25519)
          {
 #if defined(BOTAN_HAS_CURVE_25519)
          std::unique_ptr<Curve25519_PrivateKey> x25519(new Curve25519_PrivateKey(rng));
@@ -117,6 +115,10 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          }
       else
          {
+         Group_Params curve = policy.choose_key_exchange_group(ec_groups);
+
+         const std::string curve_name = group_param_to_string(curve);
+
          EC_Group ec_group(curve_name);
          std::unique_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
 
@@ -128,6 +130,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          m_kex_key.reset(ecdh.release());
          }
 
+      const uint16_t named_curve_id = static_cast<uint16_t>(shared_group);
       m_params.push_back(3); // named curve
       m_params.push_back(get_byte(0, named_curve_id));
       m_params.push_back(get_byte(1, named_curve_id));
