@@ -238,11 +238,6 @@ class Supported_Groups final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      static std::string curve_id_to_name(uint16_t id);
-      static uint16_t name_to_curve_id(const std::string& name);
-
-      static bool is_dh_group(const std::string& group_name);
-
       std::vector<Group_Params> ec_groups() const;
       std::vector<Group_Params> dh_groups() const;
 
