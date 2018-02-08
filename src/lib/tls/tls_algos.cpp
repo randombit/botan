@@ -182,11 +182,6 @@ std::string group_param_to_string(Group_Params group)
       case Group_Params::FFDHE_8192:
          return "ffdhe/ietf/8192";
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-      case BOTAN_HOUSE_ECC_CURVE_TLS_ID:
-         return BOTAN_HOUSE_ECC_CURVE_NAME;
-#endif
-
       default:
          return "";
       }

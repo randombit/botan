@@ -87,10 +87,6 @@
 */
 %{local_config}
 
-%{for house_ecc_curve_defines}
-#define BOTAN_HOUSE_ECC_CURVE_%{i}
-%{endfor}
-
 /*
 * Things you can edit (but probably shouldn't)
 */

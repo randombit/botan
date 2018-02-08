@@ -134,10 +134,6 @@ enum class Group_Params : uint16_t {
    FFDHE_4096 = 258,
    FFDHE_6144 = 259,
    FFDHE_8192 = 260,
-
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-   HOUSE_CURVE = BOTAN_HOUSE_ECC_CURVE_TLS_ID,
-#endif
 };
 
 std::string group_param_to_string(Group_Params group);

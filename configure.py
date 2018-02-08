@@ -534,11 +534,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     install_group.add_option('--includedir', metavar='DIR',
                              help='set the include file install dir')
 
-    misc_group = optparse.OptionGroup(parser, 'Miscellaneous options')
-
-    misc_group.add_option('--house-curve', metavar='STRING', dest='house_curve',
-                          help='a custom in-house curve of the format: curve.pem,NAME,OID,CURVEID')
-
     info_group = optparse.OptionGroup(parser, 'Informational')
 
     info_group.add_option('--list-modules', dest='list_modules',
@@ -554,7 +549,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     parser.add_option_group(docs_group)
     parser.add_option_group(mods_group)
     parser.add_option_group(install_group)
-    parser.add_option_group(misc_group)
     parser.add_option_group(info_group)
 
     # These exist only for autoconf compatibility (requested by zw for mtn)
@@ -1636,34 +1630,6 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo):
 
     return out
 
-def house_ecc_curve_macros(house_curve):
-    def _read_pem(filepath):
-        try:
-            with open(filepath) as f:
-                lines = [line.rstrip() for line in f]
-        except IOError:
-            raise UserError("Error reading file '%s'" % filepath)
-
-        for ndx, _ in enumerate(lines):
-            lines[ndx] = '   \"%s\"' % lines[ndx]
-        return "\\\n" + ' \\\n'.join(lines)
-
-    if house_curve is None:
-        return []
-    else:
-        p = house_curve.split(",")
-        if len(p) != 4:
-            raise UserError('--house-curve must have 4 comma separated parameters. See --help')
-        # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
-        curve_id = int(p[3], 16)
-        if curve_id < 0xfe00 or curve_id > 0xfeff:
-            raise UserError('TLS curve ID not in reserved range (see RFC 4492)')
-
-        return ['NAME \"' + p[1] + '\"',
-                'OID \"' + p[2] + '\"',
-                'PEM ' + _read_pem(filepath=p[0]),
-                'TLS_ID ' + hex(curve_id)]
-
 def create_template_vars(source_paths, build_paths, options, modules, cc, arch, osinfo):
     #pylint: disable=too-many-locals,too-many-branches,too-many-statements
 
@@ -1885,7 +1851,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'os_features': osinfo.enabled_features(options),
         'os_name': osinfo.basename,
         'cpu_features': arch.supported_isa_extensions(cc, options),
-        'house_ecc_curve_defines': house_ecc_curve_macros(options.house_curve),
 
         'fuzzer_mode': options.unsafe_fuzzer_mode,
         'fuzzer_type': options.build_fuzzers.upper() if options.build_fuzzers else '',

@@ -283,9 +283,6 @@ const std::set<std::string>& EC_Group::known_named_groups()
       "gost_256A",
       "frp256v1",
       "sm2p256v1"
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-      ,BOTAN_HOUSE_ECC_CURVE_NAME
-#endif
       };
    return named_groups;
    }
