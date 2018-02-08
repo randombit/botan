@@ -112,7 +112,7 @@ std::vector<Group_Params> Text_Policy::key_exchange_groups() const
    if(group_str.empty())
       {
       // fall back to previously used name
-      group_str = get_str("ecc_curves");
+      group_str = get_str("groups");
       }
 
    if(group_str.empty())
@@ -127,11 +127,28 @@ std::vector<Group_Params> Text_Policy::key_exchange_groups() const
 
       if(group_id == Group_Params::NONE)
          {
-         // TODO accept hex codes in text file
-         continue;
+         try
+            {
+            size_t consumed = 0;
+            unsigned long ll_id = std::stoul(group_name, &consumed, 0);
+            if(consumed != group_name.size())
+               continue; // some other cruft
+
+            const uint16_t id = static_cast<uint16_t>(ll_id);
+
+            if(id != ll_id)
+               continue; // integer too large
+
+            group_id = static_cast<Group_Params>(id);
+            }
+         catch(...)
+            {
+            continue;
+            }
          }
 
-      groups.push_back(group_id);
+      if(group_id != Group_Params::NONE)
+         groups.push_back(group_id);
       }
 
    return groups;
