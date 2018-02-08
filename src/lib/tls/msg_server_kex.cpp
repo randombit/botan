@@ -81,7 +81,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       BOTAN_ASSERT(group_param_is_dh(shared_group), "DH groups for the DH ciphersuites god");
 
-      const std::string group_name = group_param_to_string(shared_group);
+      const std::string group_name = state.callbacks().tls_decode_group_param(shared_group);
       std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, DL_Group(group_name)));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
@@ -117,7 +117,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          {
          Group_Params curve = policy.choose_key_exchange_group(ec_groups);
 
-         const std::string curve_name = group_param_to_string(curve);
+         const std::string curve_name = state.callbacks().tls_decode_group_param(curve);
 
          EC_Group ec_group(curve_name);
          std::unique_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));

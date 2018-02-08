@@ -284,6 +284,17 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        virtual void tls_examine_extensions(const Extensions& extn, Connection_Side which_side);
 
        /**
+       * Optional callback: decode TLS group ID
+       *
+       * TLS uses a 16-bit field to identify ECC and DH groups. This callback
+       * handles the decoding. You only need to implement this if you are using
+       * a custom ECC or DH group (this is extremely uncommon).
+       *
+       * Default implementation uses the standard (IETF-defined) mappings.
+       */
+       virtual std::string tls_decode_group_param(Group_Params group_param);
+
+       /**
        * Optional callback: error logging. (not currently called)
        * @param err An error message related to this connection.
        */

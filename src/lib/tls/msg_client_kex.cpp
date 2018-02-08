@@ -124,7 +124,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                 "Server sent ECC curve prohibited by policy");
             }
 
-         const std::string curve_name = group_param_to_string(curve_id);
+         const std::string curve_name = state.callbacks().tls_decode_group_param(curve_id);
 
          if(curve_name == "")
             throw Decoding_Error("Server sent unknown named curve " +
