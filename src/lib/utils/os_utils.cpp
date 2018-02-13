@@ -245,7 +245,7 @@ size_t OS::get_memory_locking_limit()
    return 0;
 #endif
 
-#elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+#elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    SIZE_T working_min = 0, working_max = 0;
    DWORD working_flags = 0;
    if(!::GetProcessWorkingSetSizeEx(::GetCurrentProcess(), &working_min, &working_max, &working_flags))
@@ -317,7 +317,7 @@ void* OS::allocate_locked_pages(size_t length)
    ::memset(ptr, 0, length);
 
    return ptr;
-#elif defined BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK
+#elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    LPVOID ptr = ::VirtualAlloc(nullptr, length, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
    if(!ptr)
       {
