@@ -65,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) calendar_point
       */
       std::string to_string() const;
 
-   BOTAN_DEPRECATED_PUBLIC_MEMBER_FUNCTIONS:
+   BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES:
       /*
       The member variables are public for historical reasons. Use the get_xxx() functions
       defined above. These members will be made private in a future major release.

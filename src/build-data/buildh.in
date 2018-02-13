@@ -95,12 +95,12 @@
 * Things you can edit (but probably shouldn't)
 */
 
-#if !defined(BOTAN_DEPRECATED_PUBLIC_MEMBER_FUNCTIONS)
+#if !defined(BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES)
 
   #if defined(BOTAN_NO_DEPRECATED)
-     #define BOTAN_DEPRECATED_PUBLIC_MEMBER_FUNCTIONS private
+     #define BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES private
   #else
-     #define BOTAN_DEPRECATED_PUBLIC_MEMBER_FUNCTIONS public
+     #define BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES public
   #endif
 
 #endif
