@@ -31,6 +31,7 @@ class BOTAN_PUBLIC_API(2,0) Attribute final : public ASN1_Object
 
       const std::vector<uint8_t>& get_parameters() const { return parameters; }
 
+   BOTAN_DEPRECATED_PUBLIC_MEMBER_FUNCTIONS:
       /*
       * These values are public for historical reasons, but in a future release
       * they will be made private. Do not access them.

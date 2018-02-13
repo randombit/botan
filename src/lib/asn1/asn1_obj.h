@@ -108,7 +108,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       bool is_a(int type_tag, ASN1_Tag class_tag) const;
 
-   public:
+   BOTAN_DEPRECATED_PUBLIC_MEMBER_FUNCTIONS:
       /*
       * The following member variables are public for historical reasons, but
       * will be made private in a future major release. Use the accessor
