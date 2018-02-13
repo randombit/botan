@@ -314,8 +314,10 @@ void BigInt::const_time_lookup(secure_vector<word>& output,
       BOTAN_ASSERT(vec[i].size() >= words,
                    "Word size as expected in const_time_lookup");
 
+      const word mask = CT::is_equal(i, idx);
+
       for(size_t w = 0; w != words; ++w)
-         output[w] |= CT::select<word>(CT::is_equal(i, idx), vec[i].word_at(w), 0);
+         output[w] |= CT::select<word>(mask, vec[i].word_at(w), 0);
       }
 
    CT::unpoison(idx);
