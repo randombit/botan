@@ -117,11 +117,8 @@ RSA_PrivateKey::RSA_PrivateKey(const BigInt& prime1,
 
    if(m_d == 0)
       {
-      BigInt inv_for_d = lcm(m_p - 1, m_q - 1);
-      if(m_e.is_even())
-         inv_for_d >>= 1;
-
-      m_d = inverse_mod(m_e, inv_for_d);
+      const BigInt phi_n = lcm(m_p - 1, m_q - 1);
+      m_d = inverse_mod(m_e, phi_n);
       }
 
    m_d1 = m_d % (m_p - 1);
