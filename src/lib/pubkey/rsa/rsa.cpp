@@ -66,7 +66,7 @@ RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,
 */
 bool RSA_PublicKey::check_key(RandomNumberGenerator&, bool) const
    {
-   if(m_n < 35 || m_n.is_even() || m_e < 2)
+   if(m_n < 35 || m_n.is_even() || m_e < 3 || m_e.is_even())
       return false;
    return true;
    }
@@ -146,7 +146,8 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
       m_n = m_p * m_q;
       } while(m_n.bits() != bits);
 
-   m_d = inverse_mod(m_e, lcm(m_p - 1, m_q - 1));
+   const BigInt phi_n = lcm(m_p - 1, m_q - 1);
+   m_d = inverse_mod(m_e, phi_n);
    m_d1 = m_d % (m_p - 1);
    m_d2 = m_d % (m_q - 1);
    m_c = inverse_mod(m_q, m_p);
@@ -157,7 +158,10 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
 */
 bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
-   if(m_n < 35 || m_n.is_even() || m_e < 2 || m_d < 2 || m_p < 3 || m_q < 3 || m_p*m_q != m_n)
+   if(m_n < 35 || m_n.is_even() || m_e < 3 || m_e.is_even())
+      return false;
+
+   if(m_d < 2 || m_p < 3 || m_q < 3 || m_p*m_q != m_n)
       return false;
 
    if(m_d1 != m_d % (m_p - 1) || m_d2 != m_d % (m_q - 1) || m_c != inverse_mod(m_q, m_p))
