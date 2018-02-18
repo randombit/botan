@@ -799,6 +799,18 @@ class Speed final : public Command
                bench_dh(provider, msec);
                }
 #endif
+#if defined(BOTAN_HAS_DSA)
+            else if(algo == "DSA")
+               {
+               bench_dsa(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_ELGAMAL)
+            else if(algo == "ElGamal")
+               {
+               bench_elgamal(provider, msec);
+               }
+#endif
 #if defined(BOTAN_HAS_ECDH)
             else if(algo == "ECDH")
                {
@@ -1726,6 +1738,53 @@ class Speed final : public Command
                         "DH-" + std::to_string(bits),
                         "modp/ietf/" + std::to_string(bits),
                         provider, msec);
+            }
+         }
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+      void bench_dsa(const std::string& provider, std::chrono::milliseconds msec)
+         {
+         for(size_t bits : { 1024, 2048, 3072 })
+            {
+            const std::string nm = "DSA-" + std::to_string(bits);
+
+            const std::string params =
+               (bits == 1024) ? "dsa/jce/1024" : ("dsa/botan/" + std::to_string(bits));
+
+            Timer keygen_timer(nm, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
+               return Botan::create_private_key("DSA", rng(), params);
+               }));
+
+            record_result(keygen_timer);
+
+            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
+            }
+         }
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
+      void bench_elgamal(const std::string& provider, std::chrono::milliseconds msec)
+         {
+         for(size_t keylen : { 1024, 2048, 3072, 4096 })
+            {
+            const std::string nm = "ElGamal-" + std::to_string(keylen);
+
+            const std::string params = "modp/ietf/" + std::to_string(keylen);
+
+            Timer keygen_timer(nm, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
+               return Botan::create_private_key("ElGamal", rng(), params);
+               }));
+
+            record_result(keygen_timer);
+
+            bench_pk_enc(*key, nm, provider, "EME-PKCS1-v1_5", msec);
             }
          }
 #endif
