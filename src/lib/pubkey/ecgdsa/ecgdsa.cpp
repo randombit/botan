@@ -1,6 +1,7 @@
 /*
 * ECGDSA (BSI-TR-03111, version 2.0)
 * (C) 2016 René Korthaus
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -36,23 +37,21 @@ class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
       ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa,
                                 const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
-         m_order(ecgdsa.domain().get_order()),
-         m_base_point(ecgdsa.domain().get_base_point(), m_order),
-         m_x(ecgdsa.private_value()),
-         m_mod_order(m_order)
+         m_group(ecgdsa.domain()),
+         m_base_point(m_group.get_base_point(), m_group.get_order()),
+         m_x(ecgdsa.private_value())
          {
          }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                   RandomNumberGenerator& rng) override;
+                                      RandomNumberGenerator& rng) override;
 
-      size_t max_input_bits() const override { return m_order.bits(); }
+      size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
    private:
-      const BigInt& m_order;
+      const EC_Group m_group;
       Blinded_Point_Multiply m_base_point;
       const BigInt& m_x;
-      Modular_Reducer m_mod_order;
    };
 
 secure_vector<uint8_t>
@@ -61,17 +60,17 @@ ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    {
    const BigInt m(msg, msg_len);
 
-   BigInt k = BigInt::random_integer(rng, 1, m_order);
+   BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
 
    const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
-   const BigInt r = m_mod_order.reduce(k_times_P.get_affine_x());
-   const BigInt s = m_mod_order.multiply(m_x, mul_sub(k, r, m));
+   const BigInt r = m_group.mod_order(k_times_P.get_affine_x());
+   const BigInt s = m_group.multiply_mod_order(m_x, mul_sub(k, r, m));
 
    // With overwhelming probability, a bug rather than actual zero r/s
-   BOTAN_ASSERT(s != 0, "invalid s");
-   BOTAN_ASSERT(r != 0, "invalid r");
+   if(r.is_zero() || s.is_zero())
+      throw Internal_Error("During ECGDSA signature generated zero r/s");
 
-   return BigInt::encode_fixed_length_int_pair(r, s, m_order.bytes());
+   return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order_bytes());
    }
 
 /**
@@ -84,51 +83,46 @@ class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_EMS
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa,
                                    const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
-         m_base_point(ecgdsa.domain().get_base_point()),
-         m_public_point(ecgdsa.public_point()),
-         m_order(ecgdsa.domain().get_order()),
-         m_mod_order(m_order)
+         m_group(ecgdsa.domain()),
+         m_public_point(ecgdsa.public_point())
          {
          }
 
-      size_t max_input_bits() const override { return m_order.bits(); }
+      size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
       bool with_recovery() const override { return false; }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
    private:
-      const PointGFp& m_base_point;
+      const EC_Group m_group;
       const PointGFp& m_public_point;
-      const BigInt& m_order;
-      // FIXME: should be offered by curve
-      Modular_Reducer m_mod_order;
    };
 
 bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
                                            const uint8_t sig[], size_t sig_len)
    {
-   if(sig_len != m_order.bytes()*2)
+   if(sig_len != m_group.get_order_bytes() * 2)
       return false;
 
-   BigInt e(msg, msg_len);
+   const BigInt e(msg, msg_len);
 
-   BigInt r(sig, sig_len / 2);
-   BigInt s(sig + sig_len / 2, sig_len / 2);
+   const BigInt r(sig, sig_len / 2);
+   const BigInt s(sig + sig_len / 2, sig_len / 2);
 
-   if(r <= 0 || r >= m_order || s <= 0 || s >= m_order)
+   if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order())
       return false;
 
-   BigInt w = inverse_mod(r, m_order);
+   const BigInt w = inverse_mod(r, m_group.get_order());
 
-   const BigInt u1 = m_mod_order.reduce(e * w);
-   const BigInt u2 = m_mod_order.reduce(s * w);
-   const PointGFp R = multi_exponentiate(m_base_point, u1, m_public_point, u2);
+   const BigInt u1 = m_group.multiply_mod_order(e, w);
+   const BigInt u2 = m_group.multiply_mod_order(s, w);
+   const PointGFp R = m_group.point_multiply(u1, m_public_point, u2);
 
    if(R.is_zero())
       return false;
 
-   const BigInt v = m_mod_order.reduce(R.get_affine_x());
+   const BigInt v = m_group.mod_order(R.get_affine_x());
    return (v == r);
    }
 
