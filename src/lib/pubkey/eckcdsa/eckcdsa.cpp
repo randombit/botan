@@ -171,7 +171,7 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
    BigInt w(r_xor_e.data(), r_xor_e.size());
    w = m_group.mod_order(w);
 
-   const PointGFp q = multi_exponentiate(m_group.get_base_point(), w, m_public_point, s);
+   const PointGFp q = m_group.point_multiply(w, m_public_point, s);
    const BigInt q_x = q.get_affine_x();
    secure_vector<uint8_t> c(q_x.bytes());
    q_x.binary_encode(c.data());

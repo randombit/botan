@@ -179,7 +179,7 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
    if(t == 0)
       return false;
 
-   const PointGFp R = multi_exponentiate(m_group.get_base_point(), s, m_public_point, t);
+   const PointGFp R = m_group.point_multiply(s, m_public_point, t);
 
    // ???
    if(R.is_zero())

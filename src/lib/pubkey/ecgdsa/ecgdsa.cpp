@@ -117,7 +117,7 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    const BigInt u1 = m_group.multiply_mod_order(e, w);
    const BigInt u2 = m_group.multiply_mod_order(s, w);
-   const PointGFp R = multi_exponentiate(m_group.get_base_point(), u1, m_public_point, u2);
+   const PointGFp R = m_group.point_multiply(u1, m_public_point, u2);
 
    if(R.is_zero())
       return false;

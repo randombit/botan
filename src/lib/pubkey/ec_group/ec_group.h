@@ -32,6 +32,9 @@ class EC_Group_Data_Map;
 
 /**
 * Class representing an elliptic curve
+*
+* The internal representation is stored in a shared_ptr, so copying an
+* EC_Group is inexpensive.
 */
 class BOTAN_PUBLIC_API(2,0) EC_Group final
    {
@@ -201,6 +204,12 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * Return a point on this curve with the affine values x, y
       */
       PointGFp point(const BigInt& x, const BigInt& y) const;
+
+      /**
+      * Multi exponentiate
+      * @return base_point*x + pt*y
+      */
+      PointGFp point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const;
 
       /**
       * Return the zero (or infinite) point on this curve

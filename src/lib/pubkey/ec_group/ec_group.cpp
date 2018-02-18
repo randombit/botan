@@ -429,6 +429,11 @@ PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
    return PointGFp(data().curve(), x, y);
    }
 
+PointGFp EC_Group::point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const
+   {
+   return multi_exponentiate(get_base_point(), x, pt, y);
+   }
+
 PointGFp EC_Group::zero_point() const
    {
    return PointGFp(data().curve());

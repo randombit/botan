@@ -194,8 +194,7 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_le
    const BigInt z1 = m_group.multiply_mod_order(s, v);
    const BigInt z2 = m_group.multiply_mod_order(-r, v);
 
-   PointGFp R = multi_exponentiate(m_group.get_base_point(), z1,
-                                   m_public_point, z2);
+   const PointGFp R = m_group.point_multiply(z1, m_public_point, z2);
 
    if(R.is_zero())
      return false;
