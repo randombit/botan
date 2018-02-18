@@ -35,9 +35,10 @@ class EC_Group_Data final
          m_base_point(m_curve, g_x, g_y),
          m_order(order),
          m_cofactor(cofactor),
+         m_mod_order(order),
          m_oid(oid),
          m_p_bits(p.bits()),
-         m_p_bytes(p.bytes())
+         m_order_bits(order.bits())
          {
          }
 
@@ -60,18 +61,30 @@ class EC_Group_Data final
       BigInt g_y() const { return m_base_point.get_affine_y(); }
 
       size_t p_bits() const { return m_p_bits; }
-      size_t p_bytes() const { return m_p_bytes; }
+      size_t p_bytes() const { return (m_p_bits + 7) / 8; }
+
+      size_t order_bits() const { return m_order_bits; }
+      size_t order_bytes() const { return (m_order_bits + 7) / 8; }
 
       const CurveGFp& curve() const { return m_curve; }
       const PointGFp& base_point() const { return m_base_point; }
+
+      BigInt mod_order(const BigInt& x) const { return m_mod_order.reduce(x); }
+
+      BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const
+         {
+         return m_mod_order.multiply(x, y);
+         }
 
    private:
       CurveGFp m_curve;
       PointGFp m_base_point;
       BigInt m_order;
       BigInt m_cofactor;
+      Modular_Reducer m_mod_order;
       OID m_oid;
-      size_t m_p_bits, m_p_bytes;
+      size_t m_p_bits;
+      size_t m_order_bits;
    };
 
 class EC_Group_Data_Map final
@@ -246,6 +259,9 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
          .end_cons()
          .verify_end();
 
+      if(p.bits() < 64 || p.is_negative() || a.is_negative() || b.is_negative() || order <= 0 || cofactor <= 0)
+         throw Decoding_Error("Invalid ECC parameters");
+
       std::pair<BigInt, BigInt> base_xy = Botan::OS2ECP(base_pt.data(), base_pt.size(), p, a, b);
 
       return ec_group_data().lookup_or_create(p, a, b, base_xy.first, base_xy.second, order, cofactor, OID());
@@ -348,6 +364,16 @@ size_t EC_Group::get_p_bytes() const
    return data().p_bytes();
    }
 
+size_t EC_Group::get_order_bits() const
+   {
+   return data().order_bits();
+   }
+
+size_t EC_Group::get_order_bytes() const
+   {
+   return data().order_bytes();
+   }
+
 const BigInt& EC_Group::get_p() const
    {
    return data().p();
@@ -376,6 +402,16 @@ const BigInt& EC_Group::get_order() const
 const BigInt& EC_Group::get_cofactor() const
    {
    return data().cofactor();
+   }
+
+BigInt EC_Group::mod_order(const BigInt& k) const
+   {
+   return data().mod_order(k);
+   }
+
+BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y) const
+   {
+   return data().multiply_mod_order(x, y);
    }
 
 const OID& EC_Group::get_curve_oid() const

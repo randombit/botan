@@ -133,6 +133,16 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       size_t get_p_bytes() const;
 
       /**
+      * Return the size of group order in bits (same as get_order().bits())
+      */
+      size_t get_order_bits() const;
+
+      /**
+      * Return the size of p in bytes (same as get_order().bytes())
+      */
+      size_t get_order_bytes() const;
+
+      /**
       * Return the prime modulus of the field
       */
       const BigInt& get_p() const;
@@ -159,6 +169,22 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       */
       const BigInt& get_order() const;
 
+      /*
+      * Reduce x modulo the order
+      */
+      BigInt mod_order(const BigInt& x) const;
+
+      /*
+      * Reduce (x*y) modulo the order
+      */
+      BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const;
+
+      /**
+      * Return the cofactor
+      * @result the cofactor
+      */
+      const BigInt& get_cofactor() const;
+
       /**
       * Return the OID of these domain parameters
       * @result the OID as a string
@@ -170,12 +196,6 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @result the OID
       */
       const OID& get_curve_oid() const;
-
-      /**
-      * Return the cofactor
-      * @result the cofactor
-      */
-      const BigInt& get_cofactor() const;
 
       /**
       * Return a point on this curve with the affine values x, y

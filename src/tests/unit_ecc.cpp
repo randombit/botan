@@ -889,9 +889,15 @@ class ECC_Invalid_Key_Tests final : public Text_Based_Test
          const std::string encoded = get_req_str(vars, "SubjectPublicKey");
          Botan::DataSource_Memory key_data(Botan::hex_decode(encoded));
 
-         std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_data));
-         result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
-
+         try
+            {
+            std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_data));
+            result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
+            }
+         catch(Botan::Decoding_Error&)
+            {
+            result.test_success("Decoding invalid ECC key results in decoding error exception");
+            }
 
          return result;
          }

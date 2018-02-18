@@ -1,6 +1,7 @@
 /*
 * ECKCDSA (ISO/IEC 14888-3:2006/Cor.2:2009)
 * (C) 2016 René Korthaus, Sirrix AG
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -43,10 +44,9 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
       ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa,
                                 const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
-         m_order(eckcdsa.domain().get_order()),
-         m_base_point(eckcdsa.domain().get_base_point(), m_order),
+         m_group(eckcdsa.domain()),
+         m_base_point(m_group.get_base_point(), m_group.get_order()),
          m_x(eckcdsa.private_value()),
-         m_mod_order(m_order),
          m_prefix()
          {
          const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
@@ -59,18 +59,17 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                   RandomNumberGenerator& rng) override;
+                                      RandomNumberGenerator& rng) override;
 
-      size_t max_input_bits() const override { return m_order.bits(); }
+      size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
       bool has_prefix() override { return true; }
       secure_vector<uint8_t> message_prefix() const override { return m_prefix; }
 
    private:
-      const BigInt& m_order;
+      const EC_Group m_group;
       Blinded_Point_Multiply m_base_point;
       const BigInt& m_x;
-      Modular_Reducer m_mod_order;
       secure_vector<uint8_t> m_prefix;
    };
 
@@ -78,7 +77,7 @@ secure_vector<uint8_t>
 ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t,
                                      RandomNumberGenerator& rng)
    {
-   const BigInt k = BigInt::random_integer(rng, 1, m_order);
+   const BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
    const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
    const BigInt k_times_P_x = k_times_P.get_affine_x();
 
@@ -94,13 +93,14 @@ ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t,
 
    xor_buf(c, msg, c.size());
    BigInt w(c.data(), c.size());
-   w = m_mod_order.reduce(w);
+   w = m_group.mod_order(w);
 
-   const BigInt s = m_mod_order.multiply(m_x, k - w);
-   BOTAN_ASSERT(s != 0, "invalid s");
+   const BigInt s = m_group.multiply_mod_order(m_x, k - w);
+   if(s.is_zero())
+      throw Internal_Error("During ECKCDSA signature generation created zero s");
 
    secure_vector<uint8_t> output = BigInt::encode_1363(r, c.size());
-   output += BigInt::encode_1363(s, m_order.bytes());
+   output += BigInt::encode_1363(s, m_group.get_order_bytes());
    return output;
    }
 
@@ -114,10 +114,8 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa,
                                    const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
-         m_base_point(eckcdsa.domain().get_base_point()),
+         m_group(eckcdsa.domain()),
          m_public_point(eckcdsa.public_point()),
-         m_order(eckcdsa.domain().get_order()),
-         m_mod_order(m_order),
          m_prefix()
          {
          const BigInt public_point_x = m_public_point.get_affine_x();
@@ -132,18 +130,15 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
       bool has_prefix() override { return true; }
       secure_vector<uint8_t> message_prefix() const override { return m_prefix; }
 
-      size_t max_input_bits() const override { return m_order.bits(); }
+      size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
       bool with_recovery() const override { return false; }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
    private:
-      const PointGFp& m_base_point;
+      const EC_Group m_group;
       const PointGFp& m_public_point;
-      const BigInt& m_order;
-      // FIXME: should be offered by curve
-      Modular_Reducer m_mod_order;
       secure_vector<uint8_t> m_prefix;
    };
 
@@ -152,8 +147,11 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
    {
    const std::unique_ptr<HashFunction> hash = HashFunction::create(hash_for_signature());
    //calculate size of r
-   size_t size_r = std::min(hash -> output_length(), m_order.bytes());
-   if(sig_len != size_r+m_order.bytes())
+
+   const size_t order_bytes = m_group.get_order_bytes();
+
+   const size_t size_r = std::min(hash -> output_length(), order_bytes);
+   if(sig_len != size_r + order_bytes)
       {
       return false;
       }
@@ -161,9 +159,9 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
    secure_vector<uint8_t> r(sig, sig + size_r);
 
    // check that 0 < s < q
-   const BigInt s(sig + size_r, m_order.bytes());
+   const BigInt s(sig + size_r, order_bytes);
 
-   if(s <= 0 || s >= m_order)
+   if(s <= 0 || s >= m_group.get_order())
       {
       return false;
       }
@@ -171,9 +169,9 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
    secure_vector<uint8_t> r_xor_e(r);
    xor_buf(r_xor_e, msg, r.size());
    BigInt w(r_xor_e.data(), r_xor_e.size());
-   w = m_mod_order.reduce(w);
-   
-   const PointGFp q = multi_exponentiate(m_base_point, w, m_public_point, s);
+   w = m_group.mod_order(w);
+
+   const PointGFp q = multi_exponentiate(m_group.get_base_point(), w, m_public_point, s);
    const BigInt q_x = q.get_affine_x();
    secure_vector<uint8_t> c(q_x.bytes());
    q_x.binary_encode(c.data());
