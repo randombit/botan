@@ -83,13 +83,13 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
                               const std::string& ident,
                               const std::string& hash) :
          m_group(sm2.domain()),
-         m_base_point(sm2.domain().get_base_point(), sm2.domain().get_order()),
+         m_base_point(m_group.get_base_point(), m_group.get_order()),
          m_x(sm2.private_value()),
          m_da_inv(sm2.get_da_inv()),
          m_hash(HashFunction::create_or_throw(hash))
          {
          // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-         m_za = sm2_compute_za(*m_hash, ident, sm2.domain(), sm2.public_point());
+         m_za = sm2_compute_za(*m_hash, ident, m_group, sm2.public_point());
          m_hash->update(m_za);
          }
 
@@ -141,7 +141,7 @@ class SM2_Verification_Operation final : public PK_Ops::Verification
          m_hash(HashFunction::create_or_throw(hash))
          {
          // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-         m_za = sm2_compute_za(*m_hash, ident, sm2.domain(), sm2.public_point());
+         m_za = sm2_compute_za(*m_hash, ident, m_group, m_public_point);
          m_hash->update(m_za);
          }
 

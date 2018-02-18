@@ -46,10 +46,9 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
    {
    public:
       SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key, const std::string& kdf_hash) :
-         m_p_bytes(key.domain().get_p_bytes()),
-         m_order(key.domain().get_order()),
-         m_base_point(key.domain().get_base_point(), m_order),
-         m_public_point(key.public_point(), m_order),
+         m_group(key.domain()),
+         m_base_point(m_group.get_base_point(), m_group.get_order()),
+         m_public_point(key.public_point(), m_group.get_order()),
          m_kdf_hash(kdf_hash)
          {}
 
@@ -66,13 +65,15 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
          std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw(m_kdf_hash);
          std::unique_ptr<KDF> kdf = KDF::create_or_throw("KDF2(" + m_kdf_hash + ")");
 
-         const BigInt k = BigInt::random_integer(rng, 1, m_order);
+         const size_t p_bytes = m_group.get_p_bytes();
+
+         const BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
 
          const PointGFp C1 = m_base_point.blinded_multiply(k, rng);
          const BigInt x1 = C1.get_affine_x();
          const BigInt y1 = C1.get_affine_y();
-         std::vector<uint8_t> x1_bytes(m_p_bytes);
-         std::vector<uint8_t> y1_bytes(m_p_bytes);
+         std::vector<uint8_t> x1_bytes(p_bytes);
+         std::vector<uint8_t> y1_bytes(p_bytes);
          BigInt::encode_1363(x1_bytes.data(), x1_bytes.size(), x1);
          BigInt::encode_1363(y1_bytes.data(), y1_bytes.size(), y1);
 
@@ -80,8 +81,8 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
 
          const BigInt x2 = kPB.get_affine_x();
          const BigInt y2 = kPB.get_affine_y();
-         std::vector<uint8_t> x2_bytes(m_p_bytes);
-         std::vector<uint8_t> y2_bytes(m_p_bytes);
+         std::vector<uint8_t> x2_bytes(p_bytes);
+         std::vector<uint8_t> y2_bytes(p_bytes);
          BigInt::encode_1363(x2_bytes.data(), x2_bytes.size(), x2);
          BigInt::encode_1363(y2_bytes.data(), y2_bytes.size(), y2);
 
@@ -112,8 +113,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
          }
 
    private:
-      size_t m_p_bytes;
-      const BigInt& m_order;
+      const EC_Group m_group;
       Blinded_Point_Multiply m_base_point;
       Blinded_Point_Multiply m_public_point;
       const std::string m_kdf_hash;
