@@ -86,24 +86,24 @@ srp6_client_agree(const std::string& identifier,
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
 
-   const size_t p_bytes = group.get_p().bytes();
+   const size_t p_bytes = group.p_bytes();
 
    if(B <= 0 || B >= p)
       throw Exception("Invalid SRP parameter from server");
 
-   BigInt k = hash_seq(hash_id, p_bytes, p, g);
+   const BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
-   BigInt a(rng, 256);
+   const BigInt a(rng, 256);
 
-   BigInt A = power_mod(g, a, p);
+   const BigInt A = group.power_g_p(a);
 
-   BigInt u = hash_seq(hash_id, p_bytes, A, B);
+   const BigInt u = hash_seq(hash_id, p_bytes, A, B);
 
    const BigInt x = compute_x(hash_id, identifier, password, salt);
 
-   BigInt S = power_mod((B - (k * power_mod(g, x, p))) % p, (a + (u * x)), p);
+   const BigInt S = power_mod((B - (k * power_mod(g, x, p))) % p, (a + (u * x)), p);
 
-   SymmetricKey Sk(BigInt::encode_1363(S, p_bytes));
+   const SymmetricKey Sk(BigInt::encode_1363(S, p_bytes));
 
    return std::make_pair(A, Sk);
    }
@@ -117,7 +117,7 @@ BigInt generate_srp6_verifier(const std::string& identifier,
    const BigInt x = compute_x(hash_id, identifier, password, salt);
 
    DL_Group group(group_id);
-   return power_mod(group.get_g(), x, group.get_p());
+   return group.power_g_p(x);
    }
 
 BigInt SRP6_Server_Session::step1(const BigInt& v,
@@ -137,7 +137,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 
    const BigInt k = hash_seq(hash_id, m_p_bytes, p, g);
 
-   m_B = (v*k + power_mod(g, m_b, p)) % p;
+   m_B = group.mod_p(v*k + group.power_g_p(m_b));;
 
    return m_B;
    }

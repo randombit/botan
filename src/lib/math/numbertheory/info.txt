@@ -12,6 +12,7 @@ reducer.h
 
 <header:internal>
 def_powm.h
+monty_exp.h
 </header:internal>
 
 <requires>

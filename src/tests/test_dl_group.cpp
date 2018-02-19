@@ -43,25 +43,23 @@ class DL_Group_Tests final : public Test
          const std::string pem2 = orig.PEM_encode(Botan::DL_Group::ANSI_X9_57);
          const std::string pem3 = orig.PEM_encode(Botan::DL_Group::PKCS_3);
 
-         Botan::DL_Group group;
+         Botan::DL_Group group1(pem1);
 
-         group.PEM_decode(pem1);
+         result.test_eq("Same p in X9.42 decoding", group1.get_p(), orig.get_p());
+         result.test_eq("Same q in X9.42 decoding", group1.get_q(), orig.get_q());
+         result.test_eq("Same g in X9.42 decoding", group1.get_g(), orig.get_g());
 
-         result.test_eq("Same p in X9.42 decoding", group.get_p(), orig.get_p());
-         result.test_eq("Same q in X9.42 decoding", group.get_q(), orig.get_q());
-         result.test_eq("Same g in X9.42 decoding", group.get_g(), orig.get_g());
+         Botan::DL_Group group2(pem2);
 
-         group.PEM_decode(pem2);
+         result.test_eq("Same p in X9.57 decoding", group2.get_p(), orig.get_p());
+         result.test_eq("Same q in X9.57 decoding", group2.get_q(), orig.get_q());
+         result.test_eq("Same g in X9.57 decoding", group2.get_g(), orig.get_g());
 
-         result.test_eq("Same p in X9.57 decoding", group.get_p(), orig.get_p());
-         result.test_eq("Same q in X9.57 decoding", group.get_q(), orig.get_q());
-         result.test_eq("Same g in X9.57 decoding", group.get_g(), orig.get_g());
+         Botan::DL_Group group3(pem3);
 
-         group.PEM_decode(pem3);
-
-         result.test_eq("Same p in X9.57 decoding", group.get_p(), orig.get_p());
+         result.test_eq("Same p in X9.57 decoding", group3.get_p(), orig.get_p());
          // no q in PKCS #3 format
-         result.test_eq("Same g in X9.57 decoding", group.get_g(), orig.get_g());
+         result.test_eq("Same g in X9.57 decoding", group3.get_g(), orig.get_g());
 
          return result;
          }

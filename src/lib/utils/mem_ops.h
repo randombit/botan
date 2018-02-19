@@ -37,6 +37,12 @@ BOTAN_PUBLIC_API(2,3) void deallocate_memory(void* p, size_t elems, size_t elem_
 */
 void initialize_allocator();
 
+class Allocator_Initializer
+   {
+   public:
+      Allocator_Initializer() { initialize_allocator(); }
+   };
+
 /**
 * Scrub memory contents in a way that a compiler should not elide,
 * using some system specific technique. Note that this function might
