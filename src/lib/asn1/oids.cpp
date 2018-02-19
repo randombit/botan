@@ -44,11 +44,6 @@ class OID_Map
          {
          const std::string oid_str = oid.as_string();
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-         if(oid_str == BOTAN_HOUSE_ECC_CURVE_OID)
-            return BOTAN_HOUSE_ECC_CURVE_NAME;
-#endif
-
          lock_guard_type<mutex_type> lock(m_mutex);
 
          auto i = m_oid2str.find(oid_str);
@@ -60,11 +55,6 @@ class OID_Map
 
       OID lookup(const std::string& str)
          {
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-         if(str == BOTAN_HOUSE_ECC_CURVE_NAME)
-            return OID(BOTAN_HOUSE_ECC_CURVE_OID);
-#endif
-
          lock_guard_type<mutex_type> lock(m_mutex);
          auto i = m_str2oid.find(str);
          if(i != m_str2oid.end())

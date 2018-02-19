@@ -21,6 +21,7 @@
 
    #include <botan/ec_group.h>
    #include <botan/hex.h>
+   #include <botan/oids.h>
    #include <botan/pkcs10.h>
    #include <botan/rsa.h>
    #include <botan/ecdsa.h>
@@ -443,6 +444,14 @@ class TLS_Handshake_Test final
                return "test/3";
                }
 
+            virtual std::string tls_decode_group_param(Botan::TLS::Group_Params group_param)
+               {
+               if(static_cast<uint16_t>(group_param) == 0xFEE1)
+                  return "secp112r1";
+
+               return Botan::TLS::Callbacks::tls_decode_group_param(group_param);
+               }
+
          private:
             Test::Result& m_results;
             const Botan::TLS::Protocol_Version m_expected_version;
@@ -686,13 +695,20 @@ class TLS_Unit_Tests final : public Test
          {
          Botan::RandomNumberGenerator& rng = Test::rng();
 
-         for(auto const& version : versions)
+         try
             {
-            TLS_Handshake_Test test(
-               version.to_string() + " " + test_descr,
-               version, creds, policy, policy, rng, client_ses, server_ses, client_auth);
-            test.go();
-            results.push_back(test.results());
+            for(auto const& version : versions)
+               {
+               TLS_Handshake_Test test(
+                  version.to_string() + " " + test_descr,
+                  version, creds, policy, policy, rng, client_ses, server_ses, client_auth);
+               test.go();
+               results.push_back(test.results());
+               }
+            }
+         catch(std::exception& e)
+            {
+            results.push_back(Test::Result::Failure(test_descr, e.what()));
             }
          }
 
@@ -946,11 +962,28 @@ class TLS_Unit_Tests final : public Test
          test_modern_versions("AES-128 DHE_PSK", results, *client_ses, *server_ses, *creds, "DHE_PSK", "AES-128", "SHA-1");
 #endif
 
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-         test_modern_versions("AES-128/GCM house curve",
-                              results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
-                              { { "groups", BOTAN_HOUSE_ECC_CURVE_NAME } });
-#endif
+         // Test with a custom curve
+
+         /*
+         * First register a curve, in this case secp112r1
+         */
+         const Botan::BigInt p("0xDB7C2ABF62E35E668076BEAD208B");
+         const Botan::BigInt a("0xDB7C2ABF62E35E668076BEAD2088");
+         const Botan::BigInt b("0x659EF8BA043916EEDE8911702B22");
+
+         const Botan::BigInt g_x("0x09487239995A5EE76B55F9C2F098");
+         const Botan::BigInt g_y("0xA89CE5AF8724C0A23E0E0FF77500");
+         const Botan::BigInt order("0xDB7C2ABF62E35E7628DFAC6561C5");
+
+         const Botan::OID oid("1.3.132.0.6");
+
+         // Creating this object implicitly registers the curve for future use ...
+         Botan::EC_Group reg_secp112r1(p, a, b, g_x, g_y, order, 1, oid);
+
+         Botan::OIDS::add_oid(oid, "secp112r1");
+
+         test_modern_versions("AES-256/GCM secp112r1", results, *client_ses, *server_ses, *creds, "ECDH", "AES-256/GCM", "AEAD",
+                              { { "groups", "0xFEE1" }, { "minimum_ecdh_group_size", "112" } });
 
          return results;
          }

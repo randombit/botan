@@ -115,6 +115,43 @@ Auth_Method auth_method_from_string(const std::string& str)
    throw Invalid_Argument("Bad signature method " + str);
    }
 
+bool group_param_is_dh(Group_Params group)
+   {
+   uint16_t group_id = static_cast<uint16_t>(group);
+   return (group_id >= 256 && group_id < 512);
+   }
+
+Group_Params group_param_from_string(const std::string& group_name)
+   {
+   if(group_name == "secp256r1")
+      return Group_Params::SECP256R1;
+   if(group_name == "secp384r1")
+      return Group_Params::SECP384R1;
+   if(group_name == "secp521r1")
+      return Group_Params::SECP521R1;
+   if(group_name == "brainpool256r1")
+      return Group_Params::BRAINPOOL256R1;
+   if(group_name == "brainpool384r1")
+      return Group_Params::BRAINPOOL384R1;
+   if(group_name == "brainpool512r1")
+      return Group_Params::BRAINPOOL512R1;
+   if(group_name == "x25519")
+      return Group_Params::X25519;
+
+   if(group_name == "ffdhe/ietf/2048")
+      return Group_Params::FFDHE_2048;
+   if(group_name == "ffdhe/ietf/3072")
+      return Group_Params::FFDHE_3072;
+   if(group_name == "ffdhe/ietf/4096")
+      return Group_Params::FFDHE_4096;
+   if(group_name == "ffdhe/ietf/6144")
+      return Group_Params::FFDHE_6144;
+   if(group_name == "ffdhe/ietf/8192")
+      return Group_Params::FFDHE_8192;
+
+   return Group_Params::NONE; // unknown
+   }
+
 std::string group_param_to_string(Group_Params group)
    {
    switch(group)
@@ -144,11 +181,6 @@ std::string group_param_to_string(Group_Params group)
          return "ffdhe/ietf/6144";
       case Group_Params::FFDHE_8192:
          return "ffdhe/ietf/8192";
-
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-      case BOTAN_HOUSE_ECC_CURVE_TLS_ID:
-         return BOTAN_HOUSE_ECC_CURVE_NAME;
-#endif
 
       default:
          return "";

@@ -118,6 +118,8 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme);
 * Matches with wire encoding
 */
 enum class Group_Params : uint16_t {
+   NONE = 0,
+
    SECP256R1 = 23,
    SECP384R1 = 24,
    SECP521R1 = 25,
@@ -132,13 +134,11 @@ enum class Group_Params : uint16_t {
    FFDHE_4096 = 258,
    FFDHE_6144 = 259,
    FFDHE_8192 = 260,
-
-#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
-   HOUSE_CURVE = BOTAN_HOUSE_ECC_CURVE_TLS_ID,
-#endif
 };
 
 std::string group_param_to_string(Group_Params group);
+Group_Params group_param_from_string(const std::string& group_name);
+bool group_param_is_dh(Group_Params group);
 
 enum class Kex_Algo {
    STATIC_RSA,

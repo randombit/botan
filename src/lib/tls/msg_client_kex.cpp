@@ -112,30 +112,32 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
               kex_algo == Kex_Algo::ECDHE_PSK)
          {
          const uint8_t curve_type = reader.get_byte();
-
          if(curve_type != 3)
             throw Decoding_Error("Server sent non-named ECC curve");
 
-         const uint16_t curve_id = reader.get_uint16_t();
+         const Group_Params curve_id = static_cast<Group_Params>(reader.get_uint16_t());
+         const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
 
-         const std::string curve_name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
-
-         if(curve_name == "")
-            throw Decoding_Error("Server sent unknown named curve " + std::to_string(curve_id));
-
-         if(!policy.allowed_ecc_curve(curve_name))
+         if(policy.choose_key_exchange_group({curve_id}) != curve_id)
             {
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server sent ECC curve prohibited by policy");
             }
 
-         const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
+         const std::string curve_name = state.callbacks().tls_decode_group_param(curve_id);
+
+         if(curve_name == "")
+            throw Decoding_Error("Server sent unknown named curve " +
+                                 std::to_string(static_cast<uint16_t>(curve_id)));
+
          const std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> ecdh_result =
             state.callbacks().tls_ecdh_agree(curve_name, peer_public_value, policy, rng,
                                              state.server_hello()->prefers_compressed_ec_points());
 
          if(kex_algo == Kex_Algo::ECDH)
+            {
             m_pre_master = ecdh_result.first;
+            }
          else
             {
             append_tls_length_value(m_pre_master, ecdh_result.first, 2);

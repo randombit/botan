@@ -108,7 +108,7 @@ class Test_TLS_Alert_Strings : public Test
 
 BOTAN_REGISTER_TEST("tls_alert_strings", Test_TLS_Alert_Strings);
 
-class Test_TLS_Policy_Test : public Test
+class Test_TLS_Policy_Text : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -119,9 +119,10 @@ class Test_TLS_Policy_Test : public Test
 
          for(std::string policy : policies)
             {
-            result.test_eq("Values for TLS " + policy + " policy",
-                           tls_policy_string(policy),
-                           read_tls_policy(policy));
+            const std::string from_policy_obj = tls_policy_string(policy);
+            const std::string from_file = read_tls_policy(policy);
+
+            result.test_eq("Values for TLS " + policy + " policy", from_file, from_policy_obj);
             }
 
          return {result};
@@ -174,7 +175,7 @@ class Test_TLS_Policy_Test : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_policy_test", Test_TLS_Policy_Test);
+BOTAN_REGISTER_TEST("tls_policy_text", Test_TLS_Policy_Text);
 
 class Test_TLS_Ciphersuites : public Test
    {

@@ -81,23 +81,10 @@ class BOTAN_PUBLIC_API(2,0) Policy
       bool allowed_signature_hash(const std::string& hash) const;
 
       /**
-      * Return list of ECC curves we are willing to use in order of preference.
-      * Allowed values: x25519, secp256r1, secp384r1, secp521r1,
-      *                 brainpool256r1, brainpool384r1, brainpool512r1
+      * Return list of ECC curves and FFDHE groups we are willing to
+      * use in order of preference.
       */
-      virtual std::vector<std::string> allowed_ecc_curves() const;
-
-      bool allowed_ecc_curve(const std::string& curve) const;
-
-      /**
-      * Return list of ECC curves and FFDHE groups
-      * we are willing to use in order of preference.
-      * Allowed values: x25519, secp256r1, secp384r1, secp521r1,
-      *                 brainpool256r1, brainpool384r1, brainpool512r1,
-      *                 ffdhe/ietf/2048, ffdhe/ietf/3072, ffdhe/ietf/4096,
-      *                 ffdhe/ietf/6144, ffdhe/ietf/8192
-      */
-      virtual std::vector<std::string> allowed_groups() const;
+      virtual std::vector<Group_Params> key_exchange_groups() const;
 
       /**
       * Request that ECC curve points are sent compressed
@@ -105,14 +92,10 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool use_ecc_point_compression() const;
 
       /**
-      * Choose an elliptic curve to use
+      * Select a key exchange group to use, from the list of groups sent by the
+      * peer. If none are acceptable, return Group_Params::NONE
       */
-      virtual std::string choose_curve(const std::vector<std::string>& curve_names) const;
-
-      /**
-      * Choose an FFHDE group to use
-      */
-      virtual std::string choose_dh_group(const std::vector<std::string>& dh_group_names) const;
+      virtual Group_Params choose_key_exchange_group(const std::vector<Group_Params>& peer_groups) const;
 
       /**
       * Allow renegotiation even if the counterparty doesn't
@@ -166,7 +149,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
       */
       virtual bool allow_dtls12() const;
 
-      virtual std::string dh_group() const;
+      virtual Group_Params default_dh_group() const;
 
       /**
       * Return the minimum DH group size we're willing to use
@@ -291,7 +274,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * Return allowed ciphersuites, in order of preference
       */
       virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version,
-                                                   bool have_srp) const;
+                                                     bool have_srp) const;
 
       /**
       * @return the default MTU for DTLS
@@ -323,6 +306,8 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual ~Policy() = default;
    };
 
+typedef Policy Default_Policy;
+
 /**
 * NSA Suite B 128-bit security level (RFC 6460)
 */
@@ -344,11 +329,8 @@ class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 : public Policy
       std::vector<std::string> allowed_signature_methods() const override
          { return std::vector<std::string>({"ECDSA"}); }
 
-      std::vector<std::string> allowed_ecc_curves() const override
-         { return std::vector<std::string>({"secp256r1"}); }
-
-      std::vector<std::string> allowed_groups() const override
-         { return allowed_ecc_curves(); }
+      std::vector<Group_Params> key_exchange_groups() const override
+         { return {Group_Params::SECP256R1}; }
 
       size_t minimum_signature_strength() const override { return 128; }
 
@@ -390,15 +372,20 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
          return std::vector<std::string>({"ECDSA", "RSA", "DSA"});
          }
 
-      std::vector<std::string> allowed_ecc_curves() const override
+      std::vector<Group_Params> key_exchange_groups() const override
          {
-         return std::vector<std::string>({"brainpool512r1", "brainpool384r1", "brainpool256r1", "secp384r1", "secp256r1"});
-         }
-
-      std::vector<std::string> allowed_groups() const override
-         {
-         return std::vector<std::string>({"brainpool512r1", "brainpool384r1", "brainpool256r1", "secp384r1",
-            "secp256r1", "ffdhe/ietf/8192", "ffdhe/ietf/6144", "ffdhe/ietf/4096", "ffdhe/ietf/3072", "ffdhe/ietf/2048"});
+         return std::vector<Group_Params>({
+            Group_Params::BRAINPOOL512R1,
+            Group_Params::BRAINPOOL384R1,
+            Group_Params::BRAINPOOL256R1,
+            Group_Params::SECP384R1,
+            Group_Params::SECP256R1,
+            Group_Params::FFDHE_8192,
+            Group_Params::FFDHE_6144,
+            Group_Params::FFDHE_4096,
+            Group_Params::FFDHE_3072,
+            Group_Params::FFDHE_2048
+            });
          }
 
       bool allow_insecure_renegotiation() const override { return false; }
@@ -475,9 +462,7 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       std::vector<std::string> allowed_signature_methods() const override;
 
-      std::vector<std::string> allowed_ecc_curves() const override;
-
-      std::vector<std::string> allowed_groups() const override;
+      std::vector<Group_Params> key_exchange_groups() const;
 
       bool use_ecc_point_compression() const override;
 
@@ -503,8 +488,6 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool negotiate_encrypt_then_mac() const override;
 
       bool support_cert_status_message() const override;
-
-      std::string dh_group() const override;
 
       size_t minimum_ecdh_group_size() const override;
 

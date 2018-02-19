@@ -8,6 +8,7 @@
 
 #include <botan/tls_callbacks.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_algos.h>
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
 #include <botan/dh.h>
@@ -38,6 +39,11 @@ void TLS::Callbacks::tls_modify_extensions(Extensions&, Connection_Side)
 
 void TLS::Callbacks::tls_examine_extensions(const Extensions&, Connection_Side)
    {
+   }
+
+std::string TLS::Callbacks::tls_decode_group_param(Group_Params group_param)
+   {
+   return group_param_to_string(group_param);
    }
 
 void TLS::Callbacks::tls_verify_cert_chain(
