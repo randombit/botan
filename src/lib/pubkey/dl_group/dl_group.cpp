@@ -55,7 +55,6 @@ class DL_Group_Data final
       Modular_Reducer m_mod_p;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
-      size_t m_q_bits;
    };
 
 //static

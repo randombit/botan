@@ -34,12 +34,17 @@ std::vector<uint8_t> DL_Scheme_PublicKey::public_key_bits() const
    return DER_Encoder().encode(m_y).get_contents_unlocked();
    }
 
+DL_Scheme_PublicKey::DL_Scheme_PublicKey(const DL_Group& group, const BigInt& y) :
+   m_y(y),
+   m_group(group)
+   {
+   }
+
 DL_Scheme_PublicKey::DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                                          const std::vector<uint8_t>& key_bits,
-                                         DL_Group::Format format)
+                                         DL_Group::Format format) :
+   m_group(alg_id.get_parameters(), format)
    {
-   m_group.BER_decode(alg_id.get_parameters(), format);
-
    BER_Decoder(key_bits).decode(m_y);
    }
 
@@ -91,7 +96,6 @@ bool DL_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
                                      bool strong) const
    {
    const BigInt& p = group_p();
-   const BigInt& g = group_g();
 
    if(m_y < 2 || m_y >= p || m_x < 2 || m_x >= p)
       return false;
@@ -101,7 +105,7 @@ bool DL_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
    if(!strong)
       return true;
 
-   if(m_y != power_mod(g, m_x, p))
+   if(m_y != m_group.power_g_p(m_x))
       return false;
 
    return true;

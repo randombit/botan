@@ -47,14 +47,14 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
    else
       m_x = x_arg;
 
-   m_y = power_mod(group_g(), m_x, group_p());
+   m_y = m_group.power_g_p(m_x);
    }
 
 DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                                const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
-   m_y = power_mod(group_g(), m_x, group_p());
+   m_y = m_group.power_g_p(m_x);
    }
 
 /*
