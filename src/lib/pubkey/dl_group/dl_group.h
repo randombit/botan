@@ -105,6 +105,13 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       DL_Group(const uint8_t ber[], size_t ber_len, Format format);
 
       /**
+      * Decode a BER-encoded DL group param
+      */
+      template<typename Alloc>
+      DL_Group(const std::vector<uint8_t, Alloc>& ber, Format format) :
+         DL_Group(ber.data(), ber.size(), format) {}
+
+      /**
       * Get the prime p.
       * @return prime p
       */
@@ -181,13 +188,13 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * @param ber a vector containing the DER/BER encoded group
       * @param format the format of the encoded group
       */
-      void BOTAN_DEPRECATED("Use DL_Group(ber, Format)") BER_decode(const std::vector<uint8_t>& ber, Format format);
+      void BER_decode(const std::vector<uint8_t>& ber, Format format);
 
       /**
       * Decode a PEM encoded group into this instance.
       * @param pem the PEM encoding of the group
       */
-      void BOTAN_DEPRECATED("Use DL_Group(std::string)") PEM_decode(const std::string& pem);
+      void PEM_decode(const std::string& pem);
 
       /**
       * Return PEM representation of named DL group

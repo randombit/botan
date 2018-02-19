@@ -101,7 +101,7 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& k) const
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {
-      for(size_t k = 0; k != m_window_bits; ++k)
+      for(size_t j = 0; j != m_window_bits; ++j)
          {
          bigint_monty_sqr(z, x, m_p.data(), m_p_words, m_mod_prime,
                           workspace.data());

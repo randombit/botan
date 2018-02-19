@@ -117,7 +117,7 @@ BigInt generate_srp6_verifier(const std::string& identifier,
    const BigInt x = compute_x(hash_id, identifier, password, salt);
 
    DL_Group group(group_id);
-   return power_mod(group.get_g(), x, group.get_p());
+   return group.power_g_p(x);
    }
 
 BigInt SRP6_Server_Session::step1(const BigInt& v,
