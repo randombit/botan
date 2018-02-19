@@ -219,7 +219,7 @@ class RSA_Private_Operation
       BigInt private_op(const BigInt& m) const
          {
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-         auto future_j1 = std::async(std::launch::async, m_powermod_d1_p, m);
+         auto future_j1 = std::async(std::launch::async, std::ref(m_powermod_d1_p), m);
          BigInt j2 = m_powermod_d2_q(m);
          BigInt j1 = future_j1.get();
 #else

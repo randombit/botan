@@ -32,6 +32,12 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PublicKey : public virtual Public_Key
       const DL_Group& get_domain() const { return m_group; }
 
       /**
+      * Get the DL domain parameters of this key.
+      * @return DL domain parameters of this key
+      */
+      const DL_Group& get_group() const { return m_group; }
+
+      /**
       * Get the public value y with y = g^x mod p where x is the secret key.
       */
       const BigInt& get_y() const { return m_y; }
@@ -72,6 +78,10 @@ class BOTAN_PUBLIC_API(2,0) DL_Scheme_PublicKey : public virtual Public_Key
       DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                           const std::vector<uint8_t>& key_bits,
                           DL_Group::Format group_format);
+
+      DL_Scheme_PublicKey(const DL_Group& group, const BigInt& y) :
+         m_y(y), m_group(group)
+         {}
 
       DL_Scheme_PublicKey& operator=(const DL_Scheme_PublicKey& other) = default;
 
