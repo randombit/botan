@@ -296,28 +296,32 @@ const DL_Group_Data& DL_Group::data() const
 bool DL_Group::verify_group(RandomNumberGenerator& rng,
                             bool strong) const
    {
-   if(get_g() < 2 || get_p() < 3 || get_q() < 0)
+   const BigInt& p = get_p();
+   const BigInt& q = get_q();
+   const BigInt& g = get_g();
+
+   if(g < 2 || p < 3 || q < 0)
       return false;
 
    const size_t prob = (strong) ? 128 : 10;
 
-   if(get_q() != 0)
+   if(q != 0)
       {
-      if((get_p() - 1) % get_q() != 0)
+      if((p - 1) % q != 0)
          {
          return false;
          }
-      if(this->power_g_p(get_q()) != 1)
+      if(this->power_g_p(q) != 1)
          {
          return false;
          }
-      if(!is_prime(get_q(), rng, prob))
+      if(!is_prime(q, rng, prob))
          {
          return false;
          }
       }
 
-   if(!is_prime(get_p(), rng, prob))
+   if(!is_prime(p, rng, prob))
       {
       return false;
       }
