@@ -107,6 +107,9 @@ BigInt operator*(const BigInt& x, const BigInt& y)
 */
 BigInt operator/(const BigInt& x, const BigInt& y)
    {
+   if(y.sig_words() == 1 && is_power_of_2(y.word_at(0)))
+      return (x >> (y.bits() - 1));
+
    BigInt q, r;
    divide(x, y, q, r);
    return q;
@@ -136,6 +139,9 @@ word operator%(const BigInt& n, word mod)
    {
    if(mod == 0)
       throw BigInt::DivideByZero();
+
+   if(mod == 1)
+      return 0;
 
    if(is_power_of_2(mod))
       return (n.word_at(0) & (mod - 1));

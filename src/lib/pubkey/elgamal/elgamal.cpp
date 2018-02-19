@@ -1,6 +1,6 @@
 /*
 * ElGamal
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -18,33 +18,34 @@ namespace Botan {
 /*
 * ElGamal_PublicKey Constructor
 */
-ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& grp, const BigInt& y1)
+ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& group, const BigInt& y) :
+   DL_Scheme_PublicKey(group, y)
    {
-   m_group = grp;
-   m_y = y1;
    }
 
 /*
 * ElGamal_PrivateKey Constructor
 */
 ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
-                                       const DL_Group& grp,
-                                       const BigInt& x_arg)
+                                       const DL_Group& group,
+                                       const BigInt& x)
    {
-   m_group = grp;
-   m_x = x_arg;
+   m_x = x;
+   m_group = group;
 
-   if(m_x == 0)
+   if(m_x.is_zero())
+      {
       m_x.randomize(rng, dl_exponent_size(group_p().bits()));
+      }
 
-   m_y = power_mod(group_g(), m_x, group_p());
+   m_y = m_group.power_g_p(m_x);
    }
 
 ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
                                        const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
-   m_y = power_mod(group_g(), m_x, group_p());
+   m_y = m_group.power_g_p(m_x);
    }
 
 /*
@@ -71,7 +72,7 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME
    {
    public:
 
-      size_t max_raw_input_bits() const override { return m_mod_p.get_modulus().bits() - 1; }
+      size_t max_raw_input_bits() const override { return m_group.p_bits() - 1; }
 
       ElGamal_Encryption_Operation(const ElGamal_PublicKey& key, const std::string& eme);
 
@@ -79,41 +80,34 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME
                                       RandomNumberGenerator& rng) override;
 
    private:
-      Fixed_Base_Power_Mod m_powermod_g_p, m_powermod_y_p;
-      Modular_Reducer m_mod_p;
+      const DL_Group m_group;
+      Fixed_Base_Power_Mod m_powermod_y_p;
    };
 
 ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicKey& key,
                                                            const std::string& eme) :
-   PK_Ops::Encryption_with_EME(eme)
+   PK_Ops::Encryption_with_EME(eme),
+   m_group(key.get_group()),
+   m_powermod_y_p(key.get_y(), m_group.get_p())
    {
-   const BigInt& p = key.group_p();
-
-   m_powermod_g_p = Fixed_Base_Power_Mod(key.group_g(), p);
-   m_powermod_y_p = Fixed_Base_Power_Mod(key.get_y(), p);
-   m_mod_p = Modular_Reducer(p);
    }
 
 secure_vector<uint8_t>
 ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
                                           RandomNumberGenerator& rng)
    {
-   const BigInt& p = m_mod_p.get_modulus();
-
    BigInt m(msg, msg_len);
 
-   if(m >= p)
+   if(m >= m_group.get_p())
       throw Invalid_Argument("ElGamal encryption: Input is too large");
 
-   BigInt k(rng, dl_exponent_size(p.bits()));
+   const size_t k_bits = dl_exponent_size(m_group.p_bits());
+   const BigInt k(rng, k_bits);
 
-   BigInt a = m_powermod_g_p(k);
-   BigInt b = m_mod_p.multiply(m, m_powermod_y_p(k));
+   const BigInt a = m_group.power_g_p(k);
+   const BigInt b = m_group.multiply_mod_p(m, m_powermod_y_p(k));
 
-   secure_vector<uint8_t> output(2*p.bytes());
-   a.binary_encode(&output[p.bytes() - a.bytes()]);
-   b.binary_encode(&output[output.size() / 2 + (p.bytes() - b.bytes())]);
-   return output;
+   return BigInt::encode_fixed_length_int_pair(a, b, m_group.p_bytes());
    }
 
 /**
@@ -123,8 +117,7 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME
    {
    public:
 
-      size_t max_raw_input_bits() const override
-         { return m_mod_p.get_modulus().bits() - 1; }
+      size_t max_raw_input_bits() const override { return m_group.p_bits() - 1; }
 
       ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
                                    const std::string& eme,
@@ -132,8 +125,8 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME
 
       secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override;
    private:
+      const DL_Group m_group;
       Fixed_Exponent_Power_Mod m_powermod_x_p;
-      Modular_Reducer m_mod_p;
       Blinder m_blinder;
    };
 
@@ -141,9 +134,9 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
                                                            const std::string& eme,
                                                            RandomNumberGenerator& rng) :
    PK_Ops::Decryption_with_EME(eme),
-   m_powermod_x_p(Fixed_Exponent_Power_Mod(key.get_x(), key.group_p())),
-   m_mod_p(Modular_Reducer(key.group_p())),
-   m_blinder(key.group_p(),
+   m_group(key.get_group()),
+   m_powermod_x_p(key.get_x(), m_group.get_p()),
+   m_blinder(m_group.get_p(),
              rng,
              [](const BigInt& k) { return k; },
              [this](const BigInt& k) { return m_powermod_x_p(k); })
@@ -153,22 +146,20 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
 secure_vector<uint8_t>
 ElGamal_Decryption_Operation::raw_decrypt(const uint8_t msg[], size_t msg_len)
    {
-   const BigInt& p = m_mod_p.get_modulus();
-
-   const size_t p_bytes = p.bytes();
+   const size_t p_bytes = m_group.p_bytes();
 
    if(msg_len != 2 * p_bytes)
       throw Invalid_Argument("ElGamal decryption: Invalid message");
 
    BigInt a(msg, p_bytes);
-   BigInt b(msg + p_bytes, p_bytes);
+   const BigInt b(msg + p_bytes, p_bytes);
 
-   if(a >= p || b >= p)
+   if(a >= m_group.get_p() || b >= m_group.get_p())
       throw Invalid_Argument("ElGamal decryption: Invalid message");
 
    a = m_blinder.blind(a);
 
-   BigInt r = m_mod_p.multiply(b, inverse_mod(m_powermod_x_p(a), p));
+   const BigInt r = m_group.multiply_mod_p(m_group.inverse_mod_p(m_powermod_x_p(a)), b);
 
    return BigInt::encode_1363(m_blinder.unblind(r), p_bytes);
    }
