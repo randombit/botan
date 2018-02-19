@@ -473,15 +473,15 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
    const BigInt n_minus_1 = n - 1;
    const size_t s = low_zero_bits(n_minus_1);
 
-   Fixed_Exponent_Power_Mod pow_mod(n_minus_1 >> s, n);
-   Modular_Reducer reducer(n);
+   const Modular_Reducer mod_n(n);
+   const Fixed_Exponent_Power_Mod pow_mod(n_minus_1 >> s, n);
 
    for(size_t i = 0; i != test_iterations; ++i)
       {
       const BigInt a = BigInt::random_integer(rng, 2, n_minus_1);
       BigInt y = pow_mod(a);
 
-      if(mr_witness(std::move(y), reducer, n_minus_1, s))
+      if(mr_witness(std::move(y), mod_n, n_minus_1, s))
          return false;
       }
 
