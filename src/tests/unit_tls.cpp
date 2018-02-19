@@ -444,7 +444,7 @@ class TLS_Handshake_Test final
                return "test/3";
                }
 
-            virtual std::string tls_decode_group_param(Botan::TLS::Group_Params group_param)
+            virtual std::string tls_decode_group_param(Botan::TLS::Group_Params group_param) override
                {
                if(static_cast<uint16_t>(group_param) == 0xFEE1)
                   return "secp112r1";

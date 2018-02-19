@@ -462,7 +462,7 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
 
       std::vector<std::string> allowed_signature_methods() const override;
 
-      std::vector<Group_Params> key_exchange_groups() const;
+      std::vector<Group_Params> key_exchange_groups() const override;
 
       bool use_ecc_point_compression() const override;
 
