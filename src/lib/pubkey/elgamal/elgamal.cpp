@@ -117,8 +117,6 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME
    {
    public:
 
-      size_t max_raw_input_bits() const override { return m_group.p_bits() - 1; }
-
       ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
                                    const std::string& eme,
                                    RandomNumberGenerator& rng);

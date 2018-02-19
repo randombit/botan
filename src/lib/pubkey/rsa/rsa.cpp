@@ -269,8 +269,6 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
    {
    public:
 
-      size_t max_raw_input_bits() const override { return get_max_input_bits(); }
-
       RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string& eme, RandomNumberGenerator& rng) :
          PK_Ops::Decryption_with_EME(eme),
          RSA_Private_Operation(rsa, rng)

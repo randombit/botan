@@ -46,7 +46,6 @@ class Decryption_with_EME : public Decryption
    protected:
       explicit Decryption_with_EME(const std::string& eme);
    private:
-      virtual size_t max_raw_input_bits() const = 0;
       virtual secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t len) = 0;
       std::unique_ptr<EME> m_eme;
    };
