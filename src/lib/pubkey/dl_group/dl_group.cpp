@@ -194,6 +194,9 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
 
    if(type == Strong)
       {
+      if(qbits != 0 && qbits != pbits - 1)
+         throw Invalid_Argument("Cannot create strong-prime DL_Group with specified q bits");
+
       const BigInt p = random_safe_prime(rng, pbits);
       const BigInt q = (p - 1) / 2;
 
@@ -388,6 +391,9 @@ BigInt DL_Group::power_g_p(const BigInt& x) const
 */
 std::vector<uint8_t> DL_Group::DER_encode(Format format) const
    {
+   if(get_q().is_zero() && (format == ANSI_X9_57 || format == ANSI_X9_42))
+      throw Encoding_Error("Cannot encode DL_Group in ANSI formats when q param is missing");
+
    if(format == ANSI_X9_57)
       {
       return DER_Encoder()
