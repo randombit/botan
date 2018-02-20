@@ -89,6 +89,8 @@ class BOTAN_PUBLIC_API(2,0) ECDH_PrivateKey final : public ECDH_PublicKey,
                       const BigInt& x = 0) :
          EC_PrivateKey(rng, domain, x) {}
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       std::vector<uint8_t> public_value() const override
          { return ECDH_PublicKey::public_value(PointGFp::UNCOMPRESSED); }
 

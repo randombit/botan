@@ -105,6 +105,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_Pri
       /// @return the exported ECDSA private key
       ECDSA_PrivateKey export_key() const;
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       secure_vector<uint8_t> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator&, bool) const override;

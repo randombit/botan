@@ -124,6 +124,8 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RS
       RSA_PrivateKey(RandomNumberGenerator& rng,
                      size_t bits, size_t exp = 65537);
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
       /**

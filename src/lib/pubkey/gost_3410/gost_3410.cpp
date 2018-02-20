@@ -109,6 +109,11 @@ GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
                            std::to_string(p_bits));
    }
 
+std::unique_ptr<Public_Key> GOST_3410_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new GOST_3410_PublicKey(domain(), public_point()));
+   }
+
 namespace {
 
 BigInt decode_le(const uint8_t msg[], size_t msg_len)

@@ -87,6 +87,11 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier&,
    ed25519_gen_keypair(m_public.data(), m_private.data(), bits.data());
    }
 
+std::unique_ptr<Public_Key> Ed25519_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new Ed25519_PublicKey(get_public_key()));
+   }
+
 secure_vector<uint8_t> Ed25519_PrivateKey::private_key_bits() const
    {
    secure_vector<uint8_t> bits(&m_private[0], &m_private[32]);

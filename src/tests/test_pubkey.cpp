@@ -667,6 +667,12 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
          std::unique_ptr<Botan::Private_Key> key_p =
             Botan::create_private_key(algo_name(), Test::rng(), param, prov);
 
+         if(key_p == nullptr)
+            {
+            result.test_failure("create_private_key returned null, should throw instead");
+            continue;
+            }
+
          const Botan::Private_Key& key = *key_p;
 
          try
@@ -677,6 +683,14 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
          result.test_gte("Key has reasonable estimated strength (lower)", key.estimated_strength(), 64);
          result.test_lt("Key has reasonable estimated strength (upper)", key.estimated_strength(), 512);
+
+         std::unique_ptr<Botan::Public_Key> public_key = key.public_key();
+
+         result.test_eq("public_key has same name", public_key->algo_name(), key.algo_name());
+
+         result.test_eq("public_key has same encoding",
+                        Botan::X509::PEM_encode(key),
+                        Botan::X509::PEM_encode(*public_key));
 
          // Test PEM public key round trips OK
          try

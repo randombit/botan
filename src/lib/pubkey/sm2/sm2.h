@@ -89,6 +89,8 @@ class BOTAN_PUBLIC_API(2,2) SM2_PrivateKey final :
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
                              const std::string& params,

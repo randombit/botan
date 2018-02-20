@@ -93,6 +93,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDH_PrivateKey final : public virtual PKCS11
          return "ECDH";
          }
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       inline std::vector<uint8_t> public_value() const override
          {
          return public_point().encode(PointGFp::UNCOMPRESSED);

@@ -314,6 +314,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
 
       bool stateful_operation() const override { return true; }
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       /**
        * Retrieves the last unused leaf index of the private key. Reusing a leaf
        * by utilizing leaf indices lower than the last unused leaf index will

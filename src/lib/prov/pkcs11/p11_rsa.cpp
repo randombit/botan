@@ -106,6 +106,17 @@ RSA_PrivateKey PKCS11_RSA_PrivateKey::export_key() const
                          , BigInt::decode(n));
    }
 
+std::unique_ptr<Public_Key> PKCS11_RSA_PrivateKey::public_key() const
+   {
+   auto p = get_attribute_value(AttributeType::Prime1);
+   auto q = get_attribute_value(AttributeType::Prime2);
+   auto e = get_attribute_value(AttributeType::PublicExponent);
+
+   BigInt n = BigInt::decode(p) * BigInt::decode(q);
+
+   return std::unique_ptr<Public_Key>(new RSA_PublicKey(n, BigInt::decode(e)));
+   }
+
 secure_vector<uint8_t> PKCS11_RSA_PrivateKey::private_key_bits() const
    {
    return export_key().private_key_bits();

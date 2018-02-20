@@ -50,6 +50,11 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
    m_y = m_group.power_g_p(m_x, m_group.p_bits());
    }
 
+std::unique_ptr<Public_Key> ElGamal_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new ElGamal_PublicKey(get_group(), get_y()));
+   }
+
 /*
 * Check Private ElGamal Parameters
 */

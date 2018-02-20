@@ -74,6 +74,8 @@ class BOTAN_PUBLIC_API(2,0) ElGamal_PrivateKey final : public ElGamal_PublicKey,
                          const DL_Group& group,
                          const BigInt& priv_key = 0);
 
+      std::unique_ptr<Public_Key> public_key() const override;
+
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
                               const std::string& params,

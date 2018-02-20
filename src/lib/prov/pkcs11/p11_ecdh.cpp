@@ -32,6 +32,11 @@ ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const
    return ECDH_PrivateKey(rng, domain(), BigInt::decode(priv_key));
    }
 
+std::unique_ptr<Public_Key> PKCS11_ECDH_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(new ECDH_PublicKey(domain(), public_point()));
+   }
+
 secure_vector<uint8_t> PKCS11_ECDH_PrivateKey::private_key_bits() const
    {
    return export_key().private_key_bits();

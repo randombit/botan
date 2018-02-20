@@ -390,6 +390,12 @@ secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
    return result;
    }
 
+std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const
+   {
+   return std::unique_ptr<Public_Key>(
+      new XMSS_PublicKey(xmss_oid(), root(), public_seed()));
+   }
+
 std::unique_ptr<PK_Ops::Signature>
 XMSS_PrivateKey::create_signature_op(RandomNumberGenerator&,
                                      const std::string&,
