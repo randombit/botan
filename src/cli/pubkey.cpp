@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
 #include <botan/base64.h>
+#include <botan/hex.h>
 
 #include <botan/pk_keys.h>
 #include <botan/x509_key.h>
@@ -393,7 +394,7 @@ BOTAN_REGISTER_COMMAND("dl_group_info", DL_Group_Info);
 class Gen_DL_Group final : public Command
    {
    public:
-      Gen_DL_Group() : Command("gen_dl_group --pbits=1024 --qbits=0 --type=subgroup") {}
+      Gen_DL_Group() : Command("gen_dl_group --pbits=1024 --qbits=0 --seed= --type=subgroup") {}
 
       std::string group() const override
          {
@@ -408,6 +409,7 @@ class Gen_DL_Group final : public Command
       void go() override
          {
          const size_t pbits = get_arg_sz("pbits");
+         const size_t qbits = get_arg_sz("qbits");
 
          const std::string type = get_arg("type");
 
@@ -418,7 +420,31 @@ class Gen_DL_Group final : public Command
             }
          else if(type == "subgroup")
             {
-            Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, get_arg_sz("qbits"));
+            Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
+            output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
+            }
+         else if(type == "dsa")
+            {
+            const std::string seed_str = get_arg("seed");
+            const std::vector<uint8_t> seed = Botan::hex_decode(seed_str);
+
+            if(seed.empty())
+               {
+               throw CLI_Usage_Error("Generating DSA parameter set requires providing seed");
+               }
+
+            size_t dsa_qbits = qbits;
+            if(dsa_qbits == 0)
+               {
+               if(pbits == 1024)
+                  dsa_qbits = 160;
+               else if(pbits == 2048 || pbits == 3072)
+                  dsa_qbits = 256;
+               else
+                  throw CLI_Usage_Error("Invalid DSA p/q sizes");
+               }
+
+            Botan::DL_Group grp(rng(), seed, pbits, dsa_qbits);
             output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
             }
          else
