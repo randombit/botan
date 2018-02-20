@@ -49,7 +49,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    if(seed_c.size() * 8 < qbits)
       throw Invalid_Argument(
          "Generating a DSA parameter set with a " + std::to_string(qbits) +
-         "long q requires a seed at least as many bits long");
+         " bit long q requires a seed at least as many bits long");
 
    const std::string hash_name = "SHA-" + std::to_string(qbits);
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_name));
