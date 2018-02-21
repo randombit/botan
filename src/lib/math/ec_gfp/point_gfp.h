@@ -117,28 +117,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param scalar the PointGFp to multiply with *this
       * @result resulting PointGFp
       */
-
       PointGFp& operator*=(const BigInt& scalar);
-
-      /**
-      * Multiplication Operator
-      * @param scalar the scalar value
-      * @param point the point value
-      * @return scalar*point on the curve
-      */
-      friend BOTAN_PUBLIC_API(2,0) PointGFp operator*(const BigInt& scalar, const PointGFp& point);
-
-      /**
-      * Multiexponentiation
-      * @param p1 a point
-      * @param z1 a scalar
-      * @param p2 a point
-      * @param z2 a scalar
-      * @result (p1 * z1 + p2 * z2)
-      */
-      friend BOTAN_PUBLIC_API(2,0) PointGFp multi_exponentiate(
-        const PointGFp& p1, const BigInt& z1,
-        const PointGFp& p2, const BigInt& z2);
 
       /**
       * Negate this point
@@ -221,6 +200,26 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       CurveGFp m_curve;
       BigInt m_coord_x, m_coord_y, m_coord_z;
    };
+
+/**
+* Point multiplication operator
+* @param scalar the scalar value
+* @param point the point value
+* @return scalar*point on the curve
+*/
+BOTAN_PUBLIC_API(2,0) PointGFp operator*(const BigInt& scalar, const PointGFp& point);
+
+/**
+* ECC point multiexponentiation
+* @param p1 a point
+* @param z1 a scalar
+* @param p2 a point
+* @param z2 a scalar
+* @result (p1 * z1 + p2 * z2)
+*/
+BOTAN_PUBLIC_API(2,0) PointGFp multi_exponentiate(
+   const PointGFp& p1, const BigInt& z1,
+   const PointGFp& p2, const BigInt& z2);
 
 // relational operators
 inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs)
