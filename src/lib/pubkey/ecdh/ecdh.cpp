@@ -28,26 +28,30 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
 
       ECDH_KA_Operation(const ECDH_PrivateKey& key, const std::string& kdf, RandomNumberGenerator& rng) :
          PK_Ops::Key_Agreement_with_KDF(kdf),
-         m_domain(key.domain()),
+         m_group(key.domain()),
          m_rng(rng)
          {
-         m_l_times_priv = inverse_mod(m_domain.get_cofactor(), m_domain.get_order()) * key.private_value();
+         m_l_times_priv = inverse_mod(m_group.get_cofactor(), m_group.get_order()) * key.private_value();
          }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
-         PointGFp point = m_domain.OS2ECP(w, w_len);
-         PointGFp S = m_domain.get_cofactor() * point;
-         Blinded_Point_Multiply blinder(S, m_domain.get_order());
-         S = blinder.blinded_multiply(m_l_times_priv, m_rng);
-         BOTAN_ASSERT(S.on_the_curve(), "ECDH agreed value was on the curve");
-         return BigInt::encode_1363(S.get_affine_x(), m_domain.get_p_bytes());
+         PointGFp input_point = m_group.get_cofactor() * m_group.OS2ECP(w, w_len);
+         input_point.randomize_repr(m_rng);
+
+         PointGFp_Blinded_Multiplier blinder(input_point, m_ws);
+
+         const PointGFp S = blinder.mul(m_l_times_priv, m_group.get_order(), m_rng, m_ws);
+
+         if(S.on_the_curve() == false)
+            throw Internal_Error("ECDH agreed value was not on the curve");
+         return BigInt::encode_1363(S.get_affine_x(), m_group.get_p_bytes());
          }
    private:
-      const EC_Group& m_domain;
+      const EC_Group m_group;
       BigInt m_l_times_priv;
       RandomNumberGenerator& m_rng;
-
+      std::vector<BigInt> m_ws;
    };
 
 }

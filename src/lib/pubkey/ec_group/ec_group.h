@@ -206,10 +206,19 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       PointGFp point(const BigInt& x, const BigInt& y) const;
 
       /**
-      * Multi exponentiate
+      * Multi exponentiate. Not constant time.
       * @return base_point*x + pt*y
       */
       PointGFp point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const;
+
+      /**
+      * Blinded point multiplication, attempts resistance to side channels
+      * @param k the scalar
+      * @param rng a random number generator
+      * @param ws a temp workspace
+      * @return base_point*k
+      */
+      PointGFp blinded_base_point_multiply(const BigInt& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
 
       /**
       * Return the zero (or infinite) point on this curve

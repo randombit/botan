@@ -66,16 +66,24 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
-         PointGFp point = m_key.domain().OS2ECP(w, w_len);
-         Blinded_Point_Multiply blinder(point, m_key.domain().get_order());
-         PointGFp S = blinder.blinded_multiply(m_key.private_value(), m_rng);
-         BOTAN_ASSERT(S.on_the_curve(), "ECDH agreed value was on the curve");
-         return BigInt::encode_1363(S.get_affine_x(), m_key.domain().get_p_bytes());
+         const EC_Group& group = m_key.domain();
+
+         PointGFp input_point = group.OS2ECP(w, w_len);
+         input_point.randomize_repr(m_rng);
+
+         PointGFp_Blinded_Multiplier blinder(input_point, m_ws);
+
+         const PointGFp S = blinder.mul(m_key.private_value(), group.get_order(), m_rng, m_ws);
+
+         if(S.on_the_curve() == false)
+            throw Internal_Error("ECDH agreed value was not on the curve");
+         return BigInt::encode_1363(S.get_affine_x(), group.get_p_bytes());
          }
 
    private:
       ECIES_PrivateKey m_key;
       RandomNumberGenerator& m_rng;
+      std::vector<BigInt> m_ws;
    };
 
 std::unique_ptr<PK_Ops::Key_Agreement>

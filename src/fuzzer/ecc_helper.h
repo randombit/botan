@@ -25,7 +25,7 @@ void check_ecc_math(const Botan::EC_Group& group,
    {
    // These depend only on the group, which is also static
    static const Botan::PointGFp base_point = group.get_base_point();
-   static Botan::Blinded_Point_Multiply blind(base_point, group.get_order(), 4);
+   static Botan::PointGFp_Blinded_Multiplier blind(base_point);
 
    const size_t hlen = len / 2;
    const Botan::BigInt a = Botan::BigInt::decode(in, hlen);
@@ -42,9 +42,9 @@ void check_ecc_math(const Botan::EC_Group& group,
 
    FUZZER_ASSERT_EQUAL(A1, A2);
 
-   const Botan::PointGFp P1 = blind.blinded_multiply(a, fuzzer_rng());
-   const Botan::PointGFp Q1 = blind.blinded_multiply(b, fuzzer_rng());
-   const Botan::PointGFp R1 = blind.blinded_multiply(c, fuzzer_rng());
+   const Botan::PointGFp P1 = blind.blinded_multiply(a, group.get_order(), fuzzer_rng());
+   const Botan::PointGFp Q1 = blind.blinded_multiply(b, group.get_order(), fuzzer_rng());
+   const Botan::PointGFp R1 = blind.blinded_multiply(c, group.get_order(), fuzzer_rng());
 
    const Botan::PointGFp S1 = P1 + Q1;
    const Botan::PointGFp S2 = Q1 + P1;

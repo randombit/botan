@@ -17,6 +17,10 @@
 #include <botan/mutex.h>
 #include <vector>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   #include <botan/system_rng.h>
+#endif
+
 namespace Botan {
 
 class EC_Group_Data final
@@ -36,10 +40,14 @@ class EC_Group_Data final
          m_order(order),
          m_cofactor(cofactor),
          m_mod_order(order),
+         m_base_mult(m_base_point, 5),
          m_oid(oid),
          m_p_bits(p.bits()),
          m_order_bits(order.bits())
          {
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+         m_base_mult.randomize(system_rng());
+#endif
          }
 
       bool match(const BigInt& p, const BigInt& a, const BigInt& b,
@@ -76,12 +84,20 @@ class EC_Group_Data final
          return m_mod_order.multiply(x, y);
          }
 
+      PointGFp blinded_base_point_multiply(const BigInt& k,
+                                           RandomNumberGenerator& rng,
+                                           std::vector<BigInt>& ws) const
+         {
+         return m_base_mult.mul(k, m_order, rng, ws);
+         }
+
    private:
       CurveGFp m_curve;
       PointGFp m_base_point;
       BigInt m_order;
       BigInt m_cofactor;
       Modular_Reducer m_mod_order;
+      PointGFp_Blinded_Multiplier m_base_mult;
       OID m_oid;
       size_t m_p_bits;
       size_t m_order_bits;
@@ -427,6 +443,13 @@ PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
 PointGFp EC_Group::point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const
    {
    return multi_exponentiate(get_base_point(), x, pt, y);
+   }
+
+PointGFp EC_Group::blinded_base_point_multiply(const BigInt& k,
+                                               RandomNumberGenerator& rng,
+                                               std::vector<BigInt>& ws) const
+   {
+   return data().blinded_base_point_multiply(k, rng, ws);
    }
 
 PointGFp EC_Group::zero_point() const

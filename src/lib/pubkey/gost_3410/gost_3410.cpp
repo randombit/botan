@@ -101,7 +101,6 @@ class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_EMSA
                                     const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
          m_group(gost_3410.domain()),
-         m_base_point(m_group.get_base_point(), m_group.get_order()),
          m_x(gost_3410.private_value())
          {}
 
@@ -112,8 +111,8 @@ class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_EMSA
 
    private:
       const EC_Group m_group;
-      Blinded_Point_Multiply m_base_point;
       const BigInt& m_x;
+      std::vector<BigInt> m_ws;
    };
 
 secure_vector<uint8_t>
@@ -133,7 +132,7 @@ GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    if(e == 0)
       e = 1;
 
-   const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
+   const PointGFp k_times_P = m_group.blinded_base_point_multiply(k, rng, m_ws);
    BOTAN_ASSERT(k_times_P.on_the_curve(), "GOST 34.10 k*g is on the curve");
 
    const BigInt r = m_group.mod_order(k_times_P.get_affine_x());

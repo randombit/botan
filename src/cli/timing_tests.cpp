@@ -44,7 +44,6 @@
 
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
-   #include <botan/reducer.h>
    #include <botan/numthry.h>
 #endif
 
@@ -251,19 +250,17 @@ class ECDSA_Timing_Test final : public Timing_Test
       ticks measure_critical_function(std::vector<uint8_t> input) override;
 
    private:
+      const Botan::EC_Group m_group;
       const Botan::ECDSA_PrivateKey m_privkey;
-      const Botan::BigInt m_order;
-      Botan::Blinded_Point_Multiply m_base_point;
-      const Botan::BigInt m_x;
-      const Botan::Modular_Reducer m_mod_order;
+      const Botan::BigInt& m_x;
+      std::vector<Botan::BigInt> m_ws;
    };
 
 ECDSA_Timing_Test::ECDSA_Timing_Test(std::string ecgroup)
-   : m_privkey(Timing_Test::timing_test_rng(), Botan::EC_Group(ecgroup))
-   , m_order(m_privkey.domain().get_order())
-   , m_base_point(m_privkey.domain().get_base_point(), m_order)
+   : m_group(ecgroup)
+   , m_privkey(Timing_Test::timing_test_rng(), m_group)
    , m_x(m_privkey.private_value())
-   , m_mod_order(m_order) {}
+   {}
 
 std::vector<uint8_t> ECDSA_Timing_Test::prepare_input(std::string input)
    {
@@ -274,16 +271,94 @@ std::vector<uint8_t> ECDSA_Timing_Test::prepare_input(std::string input)
 ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
    {
    const Botan::BigInt k(input.data(), input.size());
-   const Botan::BigInt msg(Timing_Test::timing_test_rng(), m_order.bits());
+   const Botan::BigInt msg(5); // fixed message to minimize noise
 
    ticks start = get_ticks();
 
    //The following ECDSA operations involve and should not leak any information about k.
-   const Botan::PointGFp k_times_P = m_base_point.blinded_multiply(k, Timing_Test::timing_test_rng());
-   const Botan::BigInt r = m_mod_order.reduce(k_times_P.get_affine_x());
-   const Botan::BigInt s = m_mod_order.multiply(inverse_mod(k, m_order), mul_add(m_x, r, msg));
-   BOTAN_UNUSED(r);
-   BOTAN_UNUSED(s);
+
+   const Botan::BigInt k_inv = Botan::inverse_mod(k, m_group.get_order());
+   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, Timing_Test::timing_test_rng(), m_ws);
+   const Botan::BigInt r = m_group.mod_order(k_times_P.get_affine_x());
+   const Botan::BigInt s = m_group.multiply_mod_order(k_inv, mul_add(m_x, r, msg));
+
+   BOTAN_UNUSED(r, s);
+
+   ticks end = get_ticks();
+
+   return (end - start);
+   }
+
+#endif
+
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+
+class ECC_Mul_Timing_Test final : public Timing_Test
+   {
+   public:
+      ECC_Mul_Timing_Test(std::string ecgroup) :
+         m_group(ecgroup)
+         {}
+
+      std::vector<uint8_t> prepare_input(std::string input) override;
+      ticks measure_critical_function(std::vector<uint8_t> input) override;
+
+   private:
+      const Botan::EC_Group m_group;
+      std::vector<Botan::BigInt> m_ws;
+   };
+
+std::vector<uint8_t> ECC_Mul_Timing_Test::prepare_input(std::string input)
+   {
+   const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
+   return input_vector;
+   }
+
+ticks ECC_Mul_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
+   {
+   const Botan::BigInt k(input.data(), input.size());
+
+   ticks start = get_ticks();
+
+   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, Timing_Test::timing_test_rng(), m_ws);
+
+   ticks end = get_ticks();
+
+   return (end - start);
+   }
+
+#endif
+
+#if defined(BOTAN_HAS_NUMBERTHEORY)
+
+class Invmod_Timing_Test final : public Timing_Test
+   {
+   public:
+      Invmod_Timing_Test(size_t p_bits)
+         {
+         m_p = Botan::random_prime(timing_test_rng(), p_bits);
+         }
+
+      std::vector<uint8_t> prepare_input(std::string input) override;
+      ticks measure_critical_function(std::vector<uint8_t> input) override;
+
+   private:
+      Botan::BigInt m_p;
+   };
+
+std::vector<uint8_t> Invmod_Timing_Test::prepare_input(std::string input)
+   {
+   const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
+   return input_vector;
+   }
+
+ticks Invmod_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
+   {
+   const Botan::BigInt k(input.data(), input.size());
+
+   ticks start = get_ticks();
+
+   const Botan::BigInt inv = inverse_mod(k, m_p);
 
    ticks end = get_ticks();
 
@@ -455,6 +530,20 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::
    if(test_type == "ecdsa")
       {
       return std::unique_ptr<Timing_Test>(new ECDSA_Timing_Test("secp384r1"));
+      }
+#endif
+
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+   if(test_type == "ecc_mul")
+      {
+      return std::unique_ptr<Timing_Test>(new ECC_Mul_Timing_Test("brainpool512r1"));
+      }
+#endif
+
+#if defined(BOTAN_HAS_NUMBERTHEORY)
+   if(test_type == "inverse_mod")
+      {
+      return std::unique_ptr<Timing_Test>(new Invmod_Timing_Test(512));
       }
 #endif
 

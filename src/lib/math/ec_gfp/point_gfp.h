@@ -202,9 +202,20 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * Equality operator
       */
       bool operator==(const PointGFp& other) const;
-   private:
-      friend class Blinded_Point_Multiply;
 
+      /**
+      * Point addition
+      * @param workspace temp space, at least 11 elements
+      */
+      void add(const PointGFp& other, std::vector<BigInt>& workspace);
+
+      /**
+      * Point doubling
+      * @param workspace temp space, at least 9 elements
+      */
+      void mult2(std::vector<BigInt>& workspace);
+
+   private:
       BigInt curve_mult(const BigInt& x, const BigInt& y) const
          {
          BigInt z;
@@ -228,18 +239,6 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
          {
          m_curve.sqr(z, x, m_monty_ws);
          }
-
-      /**
-      * Point addition
-      * @param workspace temp space, at least 11 elements
-      */
-      void add(const PointGFp& other, std::vector<BigInt>& workspace);
-
-      /**
-      * Point doubling
-      * @param workspace temp space, at least 9 elements
-      */
-      void mult2(std::vector<BigInt>& workspace);
 
       CurveGFp m_curve;
       BigInt m_coord_x, m_coord_y, m_coord_z;
@@ -299,19 +298,68 @@ PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
    { return OS2ECP(data.data(), data.size(), curve); }
 
 /**
-
+* Blinded ECC point multiplication
 */
-class BOTAN_PUBLIC_API(2,0) Blinded_Point_Multiply final
+class BOTAN_PUBLIC_API(2,5) PointGFp_Blinded_Multiplier final
    {
    public:
-      Blinded_Point_Multiply(const PointGFp& base, const BigInt& order, size_t h = 0);
+      /**
+      * @param base_point the point that will be multiplied (eg, the base point of the curve)
+      * @param w the window bits (leave as zero to take a default value)
+      */
+      PointGFp_Blinded_Multiplier(const PointGFp& base_point,
+                                  size_t w = 0);
 
-      PointGFp blinded_multiply(const BigInt& scalar, RandomNumberGenerator& rng);
+      /**
+      * @param base_point the point that will be multiplied (eg, the base point of the curve)
+      * @param ws a temporary workspace
+      * @param w the window bits (leave as zero to take a default value)
+      */
+      PointGFp_Blinded_Multiplier(const PointGFp& base_point,
+                                  std::vector<BigInt>& ws,
+                                  size_t w = 0);
+
+      /**
+      * Randomize the internal state. Changing the values may provide
+      * some protection against side channel attacks.
+      * @param rng a random number generator
+      */
+      void randomize(RandomNumberGenerator& rng);
+
+      /**
+      * Perform blinded point multiplication
+      * @param k the scalar
+      * @param group_order the order of the group
+      * @param rng a random number generator
+      * @param ws a temporary workspace
+      * @return base_point*k
+      */
+      PointGFp mul(const BigInt& k,
+                   const BigInt& group_order,
+                   RandomNumberGenerator& rng,
+                   std::vector<BigInt>& ws) const;
    private:
-      const size_t m_h;
-      const BigInt& m_order;
-      std::vector<BigInt> m_ws;
+      void init(const PointGFp& base_point, size_t w, std::vector<BigInt>& ws);
+
       std::vector<PointGFp> m_U;
+      size_t m_h;
+   };
+
+class BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use PointGFp_Blinded_Multiplier") Blinded_Point_Multiply final
+   {
+   public:
+      Blinded_Point_Multiply(const PointGFp& base, const BigInt& order, size_t h = 0) :
+         m_ws(9), m_order(order), m_point_mul(base, m_ws, h) {}
+
+      PointGFp blinded_multiply(const BigInt& scalar, RandomNumberGenerator& rng)
+         {
+         m_point_mul.randomize(rng);
+         return m_point_mul.mul(scalar, m_order, rng, m_ws);
+         }
+   private:
+      std::vector<BigInt> m_ws;
+      const BigInt& m_order;
+      PointGFp_Blinded_Multiplier m_point_mul;
    };
 
 }
