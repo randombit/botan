@@ -55,9 +55,13 @@ class EC_Group_Data final
                  const BigInt& g_x, const BigInt& g_y,
                  const BigInt& order, const BigInt& cofactor) const
          {
-         return (this->p() == p && this->a() == a && this->b() == b &&
-                 this->order() == order && this->cofactor() == cofactor &&
-                 this->g_x() == g_x && this->g_y() == g_y);
+         return (this->p() == p &&
+                 this->a() == a &&
+                 this->b() == b &&
+                 this->order() == order &&
+                 this->cofactor() == cofactor &&
+                 this->g_x() == g_x &&
+                 this->g_y() == g_y);
          }
 
       const OID& oid() const { return m_oid; }
@@ -446,6 +450,7 @@ PointGFp EC_Group::OS2ECP(const uint8_t bits[], size_t len) const
 
 PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
    {
+   // TODO: randomize the representation?
    return PointGFp(data().curve(), x, y);
    }
 
