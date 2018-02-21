@@ -49,6 +49,8 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
          HYBRID       = 2
       };
 
+      enum { WORKSPACE_SIZE = 10 };
+
       /**
       * Construct an uninitialized PointGFp
       */
@@ -59,11 +61,6 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param curve The base curve
       */
       explicit PointGFp(const CurveGFp& curve);
-
-      static PointGFp zero_of(const CurveGFp& curve)
-         {
-         return PointGFp(curve);
-         }
 
       /**
       * Copy constructor
@@ -205,44 +202,24 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
 
       /**
       * Point addition
-      * @param workspace temp space, at least 11 elements
+      * @param workspace temp space, at least 9 elements
       */
       void add(const PointGFp& other, std::vector<BigInt>& workspace);
 
       /**
       * Point doubling
-      * @param workspace temp space, at least 9 elements
+      * @param workspace temp space, at least 10 elements
       */
       void mult2(std::vector<BigInt>& workspace);
 
+      /**
+      * Return the zero (aka infinite) point associated with this curve
+      */
+      PointGFp zero() const { return PointGFp(m_curve); }
+
    private:
-      BigInt curve_mult(const BigInt& x, const BigInt& y) const
-         {
-         BigInt z;
-         m_curve.mul(z, x, y, m_monty_ws);
-         return z;
-         }
-
-      void curve_mult(BigInt& z, const BigInt& x, const BigInt& y) const
-         {
-         m_curve.mul(z, x, y, m_monty_ws);
-         }
-
-      BigInt curve_sqr(const BigInt& x) const
-         {
-         BigInt z;
-         m_curve.sqr(z, x, m_monty_ws);
-         return z;
-         }
-
-      void curve_sqr(BigInt& z, const BigInt& x) const
-         {
-         m_curve.sqr(z, x, m_monty_ws);
-         }
-
       CurveGFp m_curve;
       BigInt m_coord_x, m_coord_y, m_coord_z;
-      mutable secure_vector<word> m_monty_ws; // workspace for Montgomery
    };
 
 // relational operators
@@ -349,7 +326,7 @@ class BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use PointGFp_Blinded_Multiplier") 
    {
    public:
       Blinded_Point_Multiply(const PointGFp& base, const BigInt& order, size_t h = 0) :
-         m_ws(9), m_order(order), m_point_mul(base, m_ws, h) {}
+         m_ws(PointGFp::WORKSPACE_SIZE), m_order(order), m_point_mul(base, m_ws, h) {}
 
       PointGFp blinded_multiply(const BigInt& scalar, RandomNumberGenerator& rng)
          {

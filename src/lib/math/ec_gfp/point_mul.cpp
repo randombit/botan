@@ -32,14 +32,12 @@ void PointGFp_Blinded_Multiplier::init(const PointGFp& base,
    {
    m_h = (w == 0 ? 5 : w);
 
-   if(ws.size() < 9)
-      ws.resize(9);
+   if(ws.size() < PointGFp::WORKSPACE_SIZE)
+      ws.resize(PointGFp::WORKSPACE_SIZE);
 
    // Upper bound is a sanity check rather than hard limit
    if(m_h < 1 || m_h > 8)
       throw Invalid_Argument("PointGFp_Blinded_Multiplier invalid w param");
-
-   const CurveGFp& curve = base.get_curve();
 
    #if USE_RANDOM_MONTY_WALK
    const PointGFp inv = -base;
@@ -47,7 +45,7 @@ void PointGFp_Blinded_Multiplier::init(const PointGFp& base,
    m_U.resize(6*m_h + 3);
 
    m_U[3*m_h+0] = inv;
-   m_U[3*m_h+1] = PointGFp::zero_of(curve);
+   m_U[3*m_h+1] = base.zero();
    m_U[3*m_h+2] = base;
 
    for(size_t i = 1; i <= 3 * m_h + 1; ++i)
@@ -61,7 +59,7 @@ void PointGFp_Blinded_Multiplier::init(const PointGFp& base,
    #else
 
    m_U.resize(1 << m_h);
-   m_U[0] = PointGFp::zero_of(curve);
+   m_U[0] = base.zero();
    m_U[1] = base;
 
    for(size_t i = 2; i < m_U.size(); ++i)
@@ -96,8 +94,8 @@ PointGFp PointGFp_Blinded_Multiplier::mul(const BigInt& k,
    const BigInt& scalar = k;
 #endif
 
-   if(ws.size() < 9)
-      ws.resize(9);
+   if(ws.size() < PointGFp::WORKSPACE_SIZE)
+      ws.resize(PointGFp::WORKSPACE_SIZE);
 
    const size_t scalar_bits = scalar.bits();
 
