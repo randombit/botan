@@ -261,28 +261,28 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
 PointGFp multi_exponentiate(const PointGFp& p1, const BigInt& z1,
                             const PointGFp& p2, const BigInt& z2)
    {
-   const PointGFp p3 = p1 + p2;
-
    PointGFp H = p1.zero();
-   size_t bits_left = std::max(z1.bits(), z2.bits());
+   const size_t z_bits = std::max(z1.bits(), z2.bits());
 
    std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
 
-   while(bits_left)
+   PointGFp M[4] = {
+      p1.zero(),
+      p1,
+      p2,
+      p1 + p2,
+   };
+
+   for(size_t i = 0; i != z_bits; ++i)
       {
       H.mult2(ws);
 
-      const bool z1_b = z1.get_bit(bits_left - 1);
-      const bool z2_b = z2.get_bit(bits_left - 1);
+      const uint8_t z1_b = z1.get_bit(z_bits - i - 1);
+      const uint8_t z2_b = z2.get_bit(z_bits - i - 1);
 
-      if(z1_b == true && z2_b == true)
-         H.add(p3, ws);
-      else if(z1_b)
-         H.add(p1, ws);
-      else if(z2_b)
-         H.add(p2, ws);
+      const uint8_t z12 = (2*z2_b) + z1_b;
 
-      --bits_left;
+      H.add(M[z12], ws);
       }
 
    if(z1.is_negative() != z2.is_negative())
