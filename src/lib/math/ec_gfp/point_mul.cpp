@@ -24,8 +24,6 @@ PointGFp_Blinded_Multiplier::PointGFp_Blinded_Multiplier(const PointGFp& base,
    init(base, w, ws);
    }
 
-#define USE_RANDOM_MONTY_WALK 0
-
 void PointGFp_Blinded_Multiplier::init(const PointGFp& base,
                                        size_t w,
                                        std::vector<BigInt>& ws)
@@ -39,25 +37,6 @@ void PointGFp_Blinded_Multiplier::init(const PointGFp& base,
    if(m_h < 1 || m_h > 8)
       throw Invalid_Argument("PointGFp_Blinded_Multiplier invalid w param");
 
-   #if USE_RANDOM_MONTY_WALK
-   const PointGFp inv = -base;
-
-   m_U.resize(6*m_h + 3);
-
-   m_U[3*m_h+0] = inv;
-   m_U[3*m_h+1] = base.zero();
-   m_U[3*m_h+2] = base;
-
-   for(size_t i = 1; i <= 3 * m_h + 1; ++i)
-      {
-      m_U[3*m_h+1+i] = m_U[3*m_h+i];
-      m_U[3*m_h+1+i].add(base, ws);
-
-      m_U[3*m_h+1-i] = m_U[3*m_h+2-i];
-      m_U[3*m_h+1-i].add(inv, ws);
-      }
-   #else
-
    m_U.resize(1 << m_h);
    m_U[0] = base.zero();
    m_U[1] = base;
@@ -67,8 +46,6 @@ void PointGFp_Blinded_Multiplier::init(const PointGFp& base,
       m_U[i] = m_U[i-1];
       m_U[i].add(base, ws);
       }
-
-   #endif
    }
 
 void PointGFp_Blinded_Multiplier::randomize(RandomNumberGenerator& rng)
@@ -99,40 +76,6 @@ PointGFp PointGFp_Blinded_Multiplier::mul(const BigInt& k,
 
    const size_t scalar_bits = scalar.bits();
 
-#if USE_RANDOM_MONTY_WALK
-   const size_t w = (m_U.size() - 3) / 6;
-
-   PointGFp R = m_U.at(3*w + 2); // base point
-   int32_t alpha = 0;
-
-   R.randomize_repr(rng);
-
-   /*
-   Algorithm 7 from "Randomizing the Montgomery Powering Ladder"
-   Duc-Phong Le, Chik How Tan and Michael Tunstall
-   https://eprint.iacr.org/2015/657
-
-   It takes a random walk through (a subset of) the set of addition
-   chains that end in k.
-   */
-   for(size_t i = scalar_bits; i > 0; i--)
-      {
-      const int32_t ki = scalar.get_bit(i);
-
-      // choose gamma from -h,...,h
-      const int32_t gamma = static_cast<int32_t>((rng.next_byte() % (2*w))) - w;
-      const int32_t l = gamma - 2*alpha + ki - (ki ^ 1);
-
-      R.mult2(ws);
-      R.add(m_U.at(3*w + 1 + l), ws);
-      alpha = gamma;
-      }
-
-   const int32_t k0 = scalar.get_bit(0);
-   R.add(m_U[3*w + 1 - alpha - (k0 ^ 1)], ws);
-
-   #else
-
    size_t windows = round_up(scalar_bits, m_h) / m_h;
 
    PointGFp R = m_U[0];
@@ -161,9 +104,6 @@ PointGFp PointGFp_Blinded_Multiplier::mul(const BigInt& k,
          windows--;
          }
       }
-
-
-   #endif
 
    //BOTAN_ASSERT(R.on_the_curve(), "Output is on the curve");
 

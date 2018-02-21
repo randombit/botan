@@ -162,7 +162,8 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    {
    if(is_zero())
       return;
-   else if(m_coord_y.is_zero())
+
+   if(m_coord_y.is_zero())
       {
       *this = PointGFp(m_curve); // setting myself to zero
       return;
