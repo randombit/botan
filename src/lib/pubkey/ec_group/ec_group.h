@@ -11,7 +11,6 @@
 #define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
 #include <botan/point_gfp.h>
-#include <botan/curve_gfp.h>
 #include <botan/asn1_oid.h>
 #include <memory>
 #include <set>
@@ -26,6 +25,8 @@ enum EC_Group_Encoding {
    EC_DOMPAR_ENC_IMPLICITCA = 1,
    EC_DOMPAR_ENC_OID = 2
 };
+
+class CurveGFp;
 
 class EC_Group_Data;
 class EC_Group_Data_Map;

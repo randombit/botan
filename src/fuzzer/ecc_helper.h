@@ -8,7 +8,6 @@
 #define ECC_HELPERS_H_
 
 #include "fuzzers.h"
-#include <botan/curve_gfp.h>
 #include <botan/ec_group.h>
 #include <botan/reducer.h>
 
