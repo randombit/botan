@@ -281,6 +281,13 @@ Test::Result test_groups()
       result.confirm("EC_Group is known", !group.get_curve_oid().empty());
       result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
       result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
+
+      bool a_is_minus_3 = group.a_is_minus_3();
+
+      if(a_is_minus_3)
+         result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
+      else
+         result.test_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
       }
    return result;
    }

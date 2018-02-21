@@ -43,7 +43,8 @@ class EC_Group_Data final
          m_base_mult(m_base_point, 5),
          m_oid(oid),
          m_p_bits(p.bits()),
-         m_order_bits(order.bits())
+         m_order_bits(order.bits()),
+         m_a_is_minus_3(a == p - 3)
          {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
          m_base_mult.randomize(system_rng());
@@ -77,6 +78,8 @@ class EC_Group_Data final
       const CurveGFp& curve() const { return m_curve; }
       const PointGFp& base_point() const { return m_base_point; }
 
+      bool a_is_minus_3() const { return m_a_is_minus_3; }
+
       BigInt mod_order(const BigInt& x) const { return m_mod_order.reduce(x); }
 
       BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const
@@ -101,6 +104,7 @@ class EC_Group_Data final
       OID m_oid;
       size_t m_p_bits;
       size_t m_order_bits;
+      bool m_a_is_minus_3;
    };
 
 class EC_Group_Data_Map final
@@ -363,6 +367,11 @@ const EC_Group_Data& EC_Group::data() const
 const CurveGFp& EC_Group::get_curve() const
    {
    return data().curve();
+   }
+
+bool EC_Group::a_is_minus_3() const
+   {
+   return data().a_is_minus_3();
    }
 
 size_t EC_Group::get_p_bits() const

@@ -126,6 +126,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       BOTAN_DEPRECATED("Avoid CurveGFp") const CurveGFp& get_curve() const;
 
       /**
+      * Return if a == -3 mod p
+      */
+      bool a_is_minus_3() const;
+
+      /**
       * Return the size of p in bits (same as get_p().bits())
       */
       size_t get_p_bits() const;
