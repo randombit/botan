@@ -13,7 +13,6 @@
 #include <botan/pem.h>
 #include <botan/workfactor.h>
 #include <botan/internal/monty_exp.h>
-#include <map>
 
 namespace Botan {
 
