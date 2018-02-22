@@ -130,13 +130,16 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
       result.test_eq("infinite order correct", inf.is_zero(), true);
       result.test_eq("infinity on the curve", inf.on_the_curve(), true);
 
+      std::vector<Botan::BigInt> blind_ws;
+
       try
          {
          const size_t trials = (Test::run_long_tests() ? 10 : 3);
          for(size_t i = 0; i < trials; ++i)
             {
-            const size_t h = 1 + (Test::rng().next_byte() % 8);
-            Botan::Blinded_Point_Multiply blind(base_point, group_order, h);
+            const size_t w = 1 + (Test::rng().next_byte() % 8);
+
+            Botan::PointGFp_Blinded_Multiplier blinded(base_point, w);
 
             const Botan::BigInt a = Botan::BigInt::random_integer(Test::rng(), 2, group_order);
             const Botan::BigInt b = Botan::BigInt::random_integer(Test::rng(), 2, group_order);
@@ -146,9 +149,9 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
             const Botan::PointGFp Q = base_point * b;
             const Botan::PointGFp R = base_point * c;
 
-            const Botan::PointGFp P1 = blind.blinded_multiply(a, Test::rng());
-            const Botan::PointGFp Q1 = blind.blinded_multiply(b, Test::rng());
-            const Botan::PointGFp R1 = blind.blinded_multiply(c, Test::rng());
+            const Botan::PointGFp P1 = blinded.mul(a, group_order, Test::rng(), blind_ws);
+            const Botan::PointGFp Q1 = blinded.mul(b, group_order, Test::rng(), blind_ws);
+            const Botan::PointGFp R1 = blinded.mul(c, group_order, Test::rng(), blind_ws);
 
             const Botan::PointGFp A1 = P + Q;
             const Botan::PointGFp A2 = Q + P;
@@ -278,6 +281,13 @@ Test::Result test_groups()
       result.confirm("EC_Group is known", !group.get_curve_oid().empty());
       result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
       result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
+
+      bool a_is_minus_3 = group.a_is_minus_3();
+
+      if(a_is_minus_3)
+         result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
+      else
+         result.test_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
       }
    return result;
    }

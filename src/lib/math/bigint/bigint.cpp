@@ -119,7 +119,7 @@ int32_t BigInt::cmp(const BigInt& other, bool check_signs) const
 uint32_t BigInt::get_substring(size_t offset, size_t length) const
    {
    if(length > 32)
-      throw Invalid_Argument("BigInt::get_substring: Substring size too big");
+      throw Invalid_Argument("BigInt::get_substring: Substring size " + std::to_string(length) + " too big");
 
    uint64_t piece = 0;
    for(size_t i = 0; i != 8; ++i)

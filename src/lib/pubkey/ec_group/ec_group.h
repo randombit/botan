@@ -11,7 +11,6 @@
 #define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
 #include <botan/point_gfp.h>
-#include <botan/curve_gfp.h>
 #include <botan/asn1_oid.h>
 #include <memory>
 #include <set>
@@ -26,6 +25,8 @@ enum EC_Group_Encoding {
    EC_DOMPAR_ENC_IMPLICITCA = 1,
    EC_DOMPAR_ENC_OID = 2
 };
+
+class CurveGFp;
 
 class EC_Group_Data;
 class EC_Group_Data_Map;
@@ -126,6 +127,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       BOTAN_DEPRECATED("Avoid CurveGFp") const CurveGFp& get_curve() const;
 
       /**
+      * Return if a == -3 mod p
+      */
+      bool a_is_minus_3() const;
+
+      /**
       * Return the size of p in bits (same as get_p().bits())
       */
       size_t get_p_bits() const;
@@ -206,10 +212,19 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       PointGFp point(const BigInt& x, const BigInt& y) const;
 
       /**
-      * Multi exponentiate
+      * Multi exponentiate. Not constant time.
       * @return base_point*x + pt*y
       */
       PointGFp point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const;
+
+      /**
+      * Blinded point multiplication, attempts resistance to side channels
+      * @param k the scalar
+      * @param rng a random number generator
+      * @param ws a temp workspace
+      * @return base_point*k
+      */
+      PointGFp blinded_base_point_multiply(const BigInt& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
 
       /**
       * Return the zero (or infinite) point on this curve

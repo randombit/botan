@@ -17,6 +17,10 @@
 #include <botan/mutex.h>
 #include <vector>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   #include <botan/system_rng.h>
+#endif
+
 namespace Botan {
 
 class EC_Group_Data final
@@ -36,19 +40,28 @@ class EC_Group_Data final
          m_order(order),
          m_cofactor(cofactor),
          m_mod_order(order),
+         m_base_mult(m_base_point, 5),
          m_oid(oid),
          m_p_bits(p.bits()),
-         m_order_bits(order.bits())
+         m_order_bits(order.bits()),
+         m_a_is_minus_3(a == p - 3)
          {
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+         m_base_mult.randomize(system_rng());
+#endif
          }
 
       bool match(const BigInt& p, const BigInt& a, const BigInt& b,
                  const BigInt& g_x, const BigInt& g_y,
                  const BigInt& order, const BigInt& cofactor) const
          {
-         return (this->p() == p && this->a() == a && this->b() == b &&
-                 this->order() == order && this->cofactor() == cofactor &&
-                 this->g_x() == g_x && this->g_y() == g_y);
+         return (this->p() == p &&
+                 this->a() == a &&
+                 this->b() == b &&
+                 this->order() == order &&
+                 this->cofactor() == cofactor &&
+                 this->g_x() == g_x &&
+                 this->g_y() == g_y);
          }
 
       const OID& oid() const { return m_oid; }
@@ -69,11 +82,20 @@ class EC_Group_Data final
       const CurveGFp& curve() const { return m_curve; }
       const PointGFp& base_point() const { return m_base_point; }
 
+      bool a_is_minus_3() const { return m_a_is_minus_3; }
+
       BigInt mod_order(const BigInt& x) const { return m_mod_order.reduce(x); }
 
       BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const
          {
          return m_mod_order.multiply(x, y);
+         }
+
+      PointGFp blinded_base_point_multiply(const BigInt& k,
+                                           RandomNumberGenerator& rng,
+                                           std::vector<BigInt>& ws) const
+         {
+         return m_base_mult.mul(k, m_order, rng, ws);
          }
 
    private:
@@ -82,9 +104,11 @@ class EC_Group_Data final
       BigInt m_order;
       BigInt m_cofactor;
       Modular_Reducer m_mod_order;
+      PointGFp_Blinded_Multiplier m_base_mult;
       OID m_oid;
       size_t m_p_bits;
       size_t m_order_bits;
+      bool m_a_is_minus_3;
    };
 
 class EC_Group_Data_Map final
@@ -349,6 +373,11 @@ const CurveGFp& EC_Group::get_curve() const
    return data().curve();
    }
 
+bool EC_Group::a_is_minus_3() const
+   {
+   return data().a_is_minus_3();
+   }
+
 size_t EC_Group::get_p_bits() const
    {
    return data().p_bits();
@@ -421,12 +450,20 @@ PointGFp EC_Group::OS2ECP(const uint8_t bits[], size_t len) const
 
 PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
    {
+   // TODO: randomize the representation?
    return PointGFp(data().curve(), x, y);
    }
 
 PointGFp EC_Group::point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const
    {
    return multi_exponentiate(get_base_point(), x, pt, y);
+   }
+
+PointGFp EC_Group::blinded_base_point_multiply(const BigInt& k,
+                                               RandomNumberGenerator& rng,
+                                               std::vector<BigInt>& ws) const
+   {
+   return data().blinded_base_point_multiply(k, rng, ws);
    }
 
 PointGFp EC_Group::zero_point() const

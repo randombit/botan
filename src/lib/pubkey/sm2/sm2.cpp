@@ -83,7 +83,6 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
                               const std::string& ident,
                               const std::string& hash) :
          m_group(sm2.domain()),
-         m_base_point(m_group.get_base_point(), m_group.get_order()),
          m_x(sm2.private_value()),
          m_da_inv(sm2.get_da_inv()),
          m_hash(HashFunction::create_or_throw(hash))
@@ -102,12 +101,12 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
 
    private:
       const EC_Group m_group;
-      Blinded_Point_Multiply m_base_point;
       const BigInt& m_x;
       const BigInt& m_da_inv;
 
       std::vector<uint8_t> m_za;
       std::unique_ptr<HashFunction> m_hash;
+      std::vector<BigInt> m_ws;
    };
 
 secure_vector<uint8_t>
@@ -115,7 +114,7 @@ SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
    {
    const BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
 
-   const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
+   const PointGFp k_times_P = m_group.blinded_base_point_multiply(k, rng, m_ws);
 
    const BigInt e = BigInt::decode(m_hash->final());
    const BigInt r = m_group.mod_order(k_times_P.get_affine_x() + e);
