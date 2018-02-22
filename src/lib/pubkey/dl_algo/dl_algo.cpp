@@ -75,15 +75,12 @@ bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
    if(!m_group.verify_group(rng, strong))
       return false;
 
-   try
+   const BigInt& q = group_q();
+
+   if(q.is_zero() == false)
       {
-      const BigInt& q = group_q();
       if(power_mod(m_y, q, p) != 1)
          return false;
-      }
-   catch(const Invalid_State&)
-      {
-      return true;
       }
 
    return true;
