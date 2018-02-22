@@ -12,6 +12,15 @@ Version 2.5.0, Not Yet Released
 * Add new TLS::Callbacks methods that allow creating or removing extensions,
   as well as examining extensions sent by the peer (GH #1394 #1186)
 
+* Add new TLS::Callbacks methods that allow an application to
+  negotiate use of custom elliptic curves. (GH #1448)
+
+* Add ability to create custom ellipcic curves (GH #1441 #1444)
+
+* Change DL_Group and EC_Group to store their data as shared_ptr for
+  fast copying. Also both classes precompute additional useful values
+  (eg for modular reductions). (GH #1435 #1454)
+
 * Make it possible for PKCS10 requests to include custom extensions. This also
   makes it possible to use muliple SubjectAlternativeNames of a single type in
   a request, which was previously not possible. (GH #1429 #1428)
@@ -34,6 +43,8 @@ Version 2.5.0, Not Yet Released
 
 * Remove use of CPU specific optimization flags, instead the user should set
   these via CXXFLAGS if desired. (GH #1392)
+
+* Various minor optimizations for SHA-3 (GH #1433 #1434)
 
 * The output of ``botan --help`` has been improved (GH #1387)
 
