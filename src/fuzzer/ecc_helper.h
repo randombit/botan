@@ -26,6 +26,9 @@ void check_ecc_math(const Botan::EC_Group& group,
    static const Botan::PointGFp base_point = group.get_base_point();
    static Botan::PointGFp_Blinded_Multiplier blind(base_point);
 
+   // This is shared across runs to reduce overhead
+   static std::vector<Botan::BigInt> ws(10);
+
    const size_t hlen = len / 2;
    const Botan::BigInt a = Botan::BigInt::decode(in, hlen);
    const Botan::BigInt b = Botan::BigInt::decode(in + hlen, len - hlen);
@@ -41,9 +44,9 @@ void check_ecc_math(const Botan::EC_Group& group,
 
    FUZZER_ASSERT_EQUAL(A1, A2);
 
-   const Botan::PointGFp P1 = blind.blinded_multiply(a, group.get_order(), fuzzer_rng());
-   const Botan::PointGFp Q1 = blind.blinded_multiply(b, group.get_order(), fuzzer_rng());
-   const Botan::PointGFp R1 = blind.blinded_multiply(c, group.get_order(), fuzzer_rng());
+   const Botan::PointGFp P1 = blind.mul(a, group.get_order(), fuzzer_rng(), ws);
+   const Botan::PointGFp Q1 = blind.mul(b, group.get_order(), fuzzer_rng(), ws);
+   const Botan::PointGFp R1 = blind.mul(c, group.get_order(), fuzzer_rng(), ws);
 
    const Botan::PointGFp S1 = P1 + Q1;
    const Botan::PointGFp S2 = Q1 + P1;
