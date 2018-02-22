@@ -722,7 +722,7 @@ applies the key derivation function KDF2(SHA-256) with 256 bit output length to 
 
   int main()
      {
-     Botan::AutoSeeded_RNG rng
+     Botan::AutoSeeded_RNG rng;
      // ec domain and
      Botan::EC_Group domain("secp521r1");
      std::string kdf = "KDF2(SHA-256)";
