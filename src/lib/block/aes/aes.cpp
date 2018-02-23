@@ -430,6 +430,13 @@ const char* aes_provider()
       }
 #endif
 
+#if defined(BOTAN_HAS_AES_POWER8)
+   if(CPUID::has_ppc_crypto())
+      {
+      return "power8";
+      }
+#endif
+
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
@@ -475,6 +482,13 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
+#if defined(BOTAN_HAS_AES_POWER8)
+   if(CPUID::has_ppc_crypto())
+      {
+      return power8_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
@@ -500,6 +514,13 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_arm_aes())
       {
       return armv8_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_POWER8) && 0
+   if(CPUID::has_ppc_crypto())
+      {
+      return power8_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -558,6 +579,13 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
+#if defined(BOTAN_HAS_AES_POWER8)
+   if(CPUID::has_ppc_crypto())
+      {
+      return power8_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
@@ -583,6 +611,13 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_arm_aes())
       {
       return armv8_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_POWER8) && 0
+   if(CPUID::has_ppc_crypto())
+      {
+      return power8_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -641,6 +676,13 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
+#if defined(BOTAN_HAS_AES_POWER8)
+   if(CPUID::has_ppc_crypto())
+      {
+      return power8_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
@@ -666,6 +708,13 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_arm_aes())
       {
       return armv8_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_POWER8) && 0
+   if(CPUID::has_ppc_crypto())
+      {
+      return power8_decrypt_n(in, out, blocks);
       }
 #endif
 
