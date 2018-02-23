@@ -19,7 +19,8 @@ void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound
    const size_t p_words = p.sig_words();
 
    // TODO: provide a high level function for this compare-and-sub operation
-   x.grow_to(p_words + 1);
+   if(x.size() < p_words + 1)
+      x.grow_to(p_words + 1);
 
    if(ws.size() < p_words + 1)
       ws.resize(p_words + 1);
