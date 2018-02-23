@@ -21,7 +21,9 @@ BigInt& BigInt::operator+=(const BigInt& y)
    const size_t x_sw = sig_words(), y_sw = y.sig_words();
 
    const size_t reg_size = std::max(x_sw, y_sw) + 1;
-   grow_to(reg_size);
+
+   if(m_reg.size() < reg_size)
+      grow_to(reg_size);
 
    if(sign() == y.sign())
       bigint_add2(mutable_data(), reg_size - 1, y.data(), y_sw);

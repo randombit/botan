@@ -23,7 +23,7 @@ BigInt::BigInt(uint64_t n)
 
    const size_t limbs_needed = sizeof(uint64_t) / sizeof(word);
 
-   m_reg.resize(4*limbs_needed);
+   m_reg.resize(limbs_needed);
    for(size_t i = 0; i != limbs_needed; ++i)
       m_reg[i] = ((n >> (i*MP_WORD_BITS)) & MP_WORD_MASK);
    }
