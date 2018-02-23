@@ -93,6 +93,7 @@ void CPUID::initialize()
 
 #endif
 
+   g_endian_status = runtime_check_endian();
    g_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
    }
 
