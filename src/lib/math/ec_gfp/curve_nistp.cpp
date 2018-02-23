@@ -18,9 +18,6 @@ void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound
    const word* prime = p.data();
    const size_t p_words = p.sig_words();
 
-   while(x.is_negative())
-      x += p;
-
    // TODO: provide a high level function for this compare-and-sub operation
    x.grow_to(p_words + 1);
 
@@ -384,26 +381,31 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
 
-   #if 0
-   if(S >= 2)
-      {
-      BOTAN_ASSERT(S <= 10, "Expected overflow");
-      static const BigInt P256_mults[9] = {
-         2*CurveGFp_P256::prime(),
-         3*CurveGFp_P256::prime(),
-         4*CurveGFp_P256::prime(),
-         5*CurveGFp_P256::prime(),
-         6*CurveGFp_P256::prime(),
-         7*CurveGFp_P256::prime(),
-         8*CurveGFp_P256::prime(),
-         9*CurveGFp_P256::prime(),
-         10*CurveGFp_P256::prime()
-      };
-      x -= P256_mults[S - 2];
-      }
-   #endif
+#if 0
+   BOTAN_ASSERT(S <= 10, "Expected overflow");
+   static const BigInt P256_mults[11] = {
+      prime_p256(),
+      2*prime_p256(),
+      3*prime_p256(),
+      4*prime_p256(),
+      5*prime_p256(),
+      6*prime_p256(),
+      7*prime_p256(),
+      8*prime_p256(),
+      9*prime_p256(),
+      10*prime_p256(),
+      11*prime_p256()
+   };
 
+   x -= P256_mults[S];
+
+   while(x.is_negative())
+      {
+      x += prime_p256();
+      }
+#else
    normalize(prime_p256(), x, ws, 10);
+   #endif
    }
 
 const BigInt& prime_p384()
@@ -557,21 +559,6 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    S >>= 32;
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
    set_uint32_t(x, 12, S);
-
-   #if 0
-   if(S >= 2)
-      {
-      BOTAN_ASSERT(S <= 4, "Expected overflow");
-
-      static const BigInt P384_mults[3] = {
-         2*CurveGFp_P384::prime(),
-         3*CurveGFp_P384::prime(),
-         4*CurveGFp_P384::prime()
-      };
-
-      x -= P384_mults[S - 2];
-      }
-   #endif
 
    normalize(prime_p384(), x, ws, 4);
    }
