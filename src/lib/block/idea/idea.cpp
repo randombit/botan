@@ -190,37 +190,42 @@ void IDEA::key_schedule(const uint8_t key[], size_t)
    CT::poison(m_EK.data(), 52);
    CT::poison(m_DK.data(), 52);
 
-   for(size_t i = 0; i != 8; ++i)
-      m_EK[i] = load_be<uint16_t>(key, i);
+   secure_vector<uint64_t> K(2);
 
-   for(size_t i = 1, j = 8, offset = 0; j != 52; i %= 8, ++i, ++j)
+   K[0] = load_be<uint64_t>(key, 0);
+   K[1] = load_be<uint64_t>(key, 1);
+
+   for(size_t off = 0; off != 48; off += 8)
       {
-      m_EK[i+7+offset] = static_cast<uint16_t>((m_EK[(i     % 8) + offset] << 9) |
-                                           (m_EK[((i+1) % 8) + offset] >> 7));
-      offset += (i == 8) ? 8 : 0;
+      for(size_t i = 0; i != 8; ++i)
+         m_EK[off+i] = K[i/4] >> (48-16*(i % 4));
+
+      const uint64_t Kx = (K[0] >> 39);
+      const uint64_t Ky = (K[1] >> 39);
+
+      K[0] = (K[0] << 25) | Ky;
+      K[1] = (K[1] << 25) | Kx;
       }
 
-   m_DK[51] = mul_inv(m_EK[3]);
-   m_DK[50] = -m_EK[2];
-   m_DK[49] = -m_EK[1];
-   m_DK[48] = mul_inv(m_EK[0]);
+   for(size_t i = 0; i != 4; ++i)
+      m_EK[48+i] = K[i/4] >> (48-16*(i % 4));
 
-   for(size_t i = 1, j = 4, counter = 47; i != 8; ++i, j += 6)
-      {
-      m_DK[counter--] = m_EK[j+1];
-      m_DK[counter--] = m_EK[j];
-      m_DK[counter--] = mul_inv(m_EK[j+5]);
-      m_DK[counter--] = -m_EK[j+3];
-      m_DK[counter--] = -m_EK[j+4];
-      m_DK[counter--] = mul_inv(m_EK[j+2]);
-      }
-
-   m_DK[5] = m_EK[47];
-   m_DK[4] = m_EK[46];
-   m_DK[3] = mul_inv(m_EK[51]);
-   m_DK[2] = -m_EK[50];
-   m_DK[1] = -m_EK[49];
    m_DK[0] = mul_inv(m_EK[48]);
+   m_DK[1] = -m_EK[49];
+   m_DK[2] = -m_EK[50];
+   m_DK[3] = mul_inv(m_EK[51]);
+
+   for(size_t i = 0; i != 8*6; i += 6)
+      {
+      m_DK[i+4] = m_EK[46-i];
+      m_DK[i+5] = m_EK[47-i];
+      m_DK[i+6] = mul_inv(m_EK[42-i]);
+      m_DK[i+7] = -m_EK[44-i];
+      m_DK[i+8] = -m_EK[43-i];
+      m_DK[i+9] = mul_inv(m_EK[45-i]);
+      }
+
+   std::swap(m_DK[49], m_DK[50]);
 
    CT::unpoison(key, 16);
    CT::unpoison(m_EK.data(), 52);
