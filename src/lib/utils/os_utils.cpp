@@ -247,8 +247,7 @@ size_t OS::get_memory_locking_limit()
 
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    SIZE_T working_min = 0, working_max = 0;
-   DWORD working_flags = 0;
-   if(!::GetProcessWorkingSetSizeEx(::GetCurrentProcess(), &working_min, &working_max, &working_flags))
+   if(!::GetProcessWorkingSetSize(::GetCurrentProcess(), &working_min, &working_max))
       {
       return 0;
       }
