@@ -13,29 +13,20 @@ namespace Botan {
 
 namespace {
 
-void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound)
+inline void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound)
    {
    const word* prime = p.data();
    const size_t p_words = p.sig_words();
 
-   // TODO: provide a high level function for this compare-and-sub operation
    if(x.size() < p_words + 1)
       x.grow_to(p_words + 1);
 
    if(ws.size() < p_words + 1)
       ws.resize(p_words + 1);
 
-   for(size_t i = 0; bound == 0 || i < bound; ++i)
+   for(size_t i = 0; i < bound; ++i)
       {
-      const word* xd = x.data();
-      word borrow = 0;
-
-      for(size_t j = 0; j != p_words; ++j)
-         {
-         ws[j] = word_sub(xd[j], prime[j], &borrow);
-         }
-
-      ws[p_words] = word_sub(xd[p_words], 0, &borrow);
+      word borrow = bigint_sub3(ws.data(), x.data(), p_words + 1, prime, p_words);
 
       if(borrow)
          break;
