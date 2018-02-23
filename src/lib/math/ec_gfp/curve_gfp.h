@@ -90,6 +90,8 @@ class BOTAN_PUBLIC_API(2,0) CurveGFp final
       */
       const BigInt& get_p() const { return m_repr->get_p(); }
 
+      size_t get_p_words() const { return m_repr->get_p_words(); }
+
       const BigInt& get_a_rep() const { return m_repr->get_a_rep(); }
 
       const BigInt& get_b_rep() const { return m_repr->get_b_rep(); }
@@ -118,19 +120,19 @@ class BOTAN_PUBLIC_API(2,0) CurveGFp final
          m_repr->curve_mul(z, x, y, ws);
          }
 
-      BigInt mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const
+      void sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const
+         {
+         m_repr->curve_sqr(z, x, ws);
+         }
+
+      BigInt mul_to_tmp(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const
          {
          BigInt z;
          m_repr->curve_mul(z, x, y, ws);
          return z;
          }
 
-      void sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const
-         {
-         m_repr->curve_sqr(z, x, ws);
-         }
-
-      BigInt sqr(const BigInt& x, secure_vector<word>& ws) const
+      BigInt sqr_to_tmp(const BigInt& x, secure_vector<word>& ws) const
          {
          BigInt z;
          m_repr->curve_sqr(z, x, ws);

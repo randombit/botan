@@ -342,8 +342,14 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      void set_word_at(size_t i, word w)
         {
-        grow_to(i + 1);
+        if(i >= m_reg.size())
+           grow_to(i + 1);
         m_reg[i] = w;
+        }
+
+     void ensure_capacity(size_t sz)
+        {
+        m_reg.reserve(sz);
         }
 
      /**

@@ -53,12 +53,12 @@ void PointGFp::randomize_repr(RandomNumberGenerator& rng)
       secure_vector<word> monty_ws;
 
       m_curve.to_rep(mask, monty_ws);
-      const BigInt mask2 = m_curve.mul(mask, mask, monty_ws);
-      const BigInt mask3 = m_curve.mul(mask2, mask, monty_ws);
+      const BigInt mask2 = m_curve.mul_to_tmp(mask, mask, monty_ws);
+      const BigInt mask3 = m_curve.mul_to_tmp(mask2, mask, monty_ws);
 
-      m_coord_x = m_curve.mul(m_coord_x, mask2, monty_ws);
-      m_coord_y = m_curve.mul(m_coord_y, mask3, monty_ws);
-      m_coord_z = m_curve.mul(m_coord_z, mask, monty_ws);
+      m_coord_x = m_curve.mul_to_tmp(m_coord_x, mask2, monty_ws);
+      m_coord_y = m_curve.mul_to_tmp(m_coord_y, mask3, monty_ws);
+      m_coord_z = m_curve.mul_to_tmp(m_coord_z, mask, monty_ws);
       }
    }
 
@@ -77,6 +77,10 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    const BigInt& p = m_curve.get_p();
 
+   const size_t cap_size = 2*m_curve.get_p_words() + 2;
+   for(size_t i = 0; i != ws_bn.size(); ++i)
+      ws_bn[i].ensure_capacity(cap_size);
+
    BigInt& rhs_z2 = ws_bn[0];
    BigInt& U1 = ws_bn[1];
    BigInt& S1 = ws_bn[2];
@@ -88,6 +92,8 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    BigInt& H = ws_bn[6];
    BigInt& r = ws_bn[7];
 
+   BigInt& tmp = ws_bn[9];
+
    secure_vector<word>& monty_ws = ws_bn[8].get_word_vector();
 
    /*
@@ -96,15 +102,15 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    m_curve.sqr(rhs_z2, rhs.m_coord_z, monty_ws);
    m_curve.mul(U1, m_coord_x, rhs_z2, monty_ws);
-   m_curve.mul(S1, m_coord_y,
-               m_curve.mul(rhs.m_coord_z, rhs_z2, monty_ws),
-               monty_ws);
+
+   m_curve.mul(tmp, rhs.m_coord_z, rhs_z2, monty_ws); // z^3
+   m_curve.mul(S1, m_coord_y, tmp, monty_ws);
 
    m_curve.sqr(lhs_z2, m_coord_z, monty_ws);
    m_curve.mul(U2, rhs.m_coord_x, lhs_z2, monty_ws);
-   m_curve.mul(S2, rhs.m_coord_y,
-               m_curve.mul(m_coord_z, lhs_z2, monty_ws),
-               monty_ws);
+
+   m_curve.mul(tmp, m_coord_z, lhs_z2, monty_ws);
+   m_curve.mul(S2, rhs.m_coord_y, tmp, monty_ws);
 
    H = U2;
    H -= U1;
@@ -135,7 +141,8 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    m_curve.mul(S2, U2, H, monty_ws);
 
-   U2 = m_curve.mul(U1, U2, monty_ws);
+   m_curve.mul(tmp, U1, U2, monty_ws);
+   U2 = tmp;
 
    m_curve.sqr(m_coord_x, r, monty_ws);
    m_coord_x -= S2;
@@ -148,13 +155,13 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
       U2 += p;
 
    m_curve.mul(m_coord_y, r, U2, monty_ws);
-   m_coord_y -= m_curve.mul(S1, S2, monty_ws);
+   m_curve.mul(tmp, S1, S2, monty_ws);
+   m_coord_y -= tmp;
    if(m_coord_y.is_negative())
       m_coord_y += p;
 
-   m_curve.mul(m_coord_z,
-               m_curve.mul(m_coord_z, rhs.m_coord_z, monty_ws),
-               H, monty_ws);
+   m_curve.mul(tmp, m_coord_z, rhs.m_coord_z, monty_ws);
+   m_curve.mul(m_coord_z, tmp, H, monty_ws);
    }
 
 // *this *= 2
@@ -173,11 +180,15 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#doubling-dbl-1986-cc
    */
 
+   const size_t cap_size = 2*m_curve.get_p_words() + 2;
+   for(size_t i = 0; i != ws_bn.size(); ++i)
+      ws_bn[i].ensure_capacity(cap_size);
+
    const BigInt& p = m_curve.get_p();
 
    BigInt& y_2 = ws_bn[0];
    BigInt& S = ws_bn[1];
-   BigInt& z4 = ws_bn[2];
+   BigInt& tmp = ws_bn[2];
    BigInt& a_z4 = ws_bn[3];
    BigInt& M = ws_bn[4];
    BigInt& U = ws_bn[5];
@@ -194,10 +205,11 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    while(S >= p)
       S -= p;
 
-   m_curve.sqr(z4, m_curve.sqr(m_coord_z, monty_ws), monty_ws);
-   m_curve.mul(a_z4, m_curve.get_a_rep(), z4, monty_ws);
+   m_curve.sqr(a_z4, m_coord_z, monty_ws); // z^2
+   m_curve.sqr(tmp, a_z4, monty_ws); // z^4
+   m_curve.mul(a_z4, m_curve.get_a_rep(), tmp, monty_ws);
 
-   M = m_curve.sqr(m_coord_x, monty_ws);
+   m_curve.sqr(M, m_coord_x, monty_ws);
    M *= 3;
    M += a_z4;
    while(M >= p)
@@ -266,7 +278,7 @@ PointGFp multi_exponentiate(const PointGFp& p1, const BigInt& z1,
 
    std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
 
-   PointGFp M[4] = {
+   const PointGFp M[4] = {
       p1.zero(),
       p1,
       p2,
@@ -322,11 +334,11 @@ BigInt PointGFp::get_affine_x() const
       throw Illegal_Transformation("Cannot convert zero point to affine");
 
    secure_vector<word> monty_ws;
-   BigInt z2 = m_curve.sqr(m_coord_z, monty_ws);
+   BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
    m_curve.from_rep(z2, monty_ws);
    z2 = inverse_mod(z2, m_curve.get_p());
 
-   return m_curve.mul(z2, m_coord_x, monty_ws);
+   return m_curve.mul_to_tmp(z2, m_coord_x, monty_ws);
    }
 
 BigInt PointGFp::get_affine_y() const
@@ -335,11 +347,11 @@ BigInt PointGFp::get_affine_y() const
       throw Illegal_Transformation("Cannot convert zero point to affine");
 
    secure_vector<word> monty_ws;
-   BigInt z3 = m_curve.mul(m_coord_z, m_curve.sqr(m_coord_z, monty_ws), monty_ws);
+   BigInt z3 = m_curve.mul_to_tmp(m_coord_z, m_curve.sqr_to_tmp(m_coord_z, monty_ws), monty_ws);
    z3 = inverse_mod(z3, m_curve.get_p());
    m_curve.to_rep(z3, monty_ws);
 
-   return m_curve.mul(z3, m_coord_y, monty_ws);
+   return m_curve.mul_to_tmp(z3, m_coord_y, monty_ws);
    }
 
 bool PointGFp::on_the_curve() const
@@ -355,10 +367,10 @@ bool PointGFp::on_the_curve() const
 
    secure_vector<word> monty_ws;
 
-   const BigInt y2 = m_curve.from_rep(m_curve.sqr(m_coord_y, monty_ws), monty_ws);
-   const BigInt x3 = m_curve.mul(m_coord_x, m_curve.sqr(m_coord_x, monty_ws), monty_ws);
-   const BigInt ax = m_curve.mul(m_coord_x, m_curve.get_a_rep(), monty_ws);
-   const BigInt z2 = m_curve.sqr(m_coord_z, monty_ws);
+   const BigInt y2 = m_curve.from_rep(m_curve.sqr_to_tmp(m_coord_y, monty_ws), monty_ws);
+   const BigInt x3 = m_curve.mul_to_tmp(m_coord_x, m_curve.sqr_to_tmp(m_coord_x, monty_ws), monty_ws);
+   const BigInt ax = m_curve.mul_to_tmp(m_coord_x, m_curve.get_a_rep(), monty_ws);
+   const BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
 
    if(m_coord_z == z2) // Is z equal to 1 (in Montgomery form)?
       {
@@ -366,9 +378,9 @@ bool PointGFp::on_the_curve() const
          return false;
       }
 
-   const BigInt z3 = m_curve.mul(m_coord_z, z2, monty_ws);
-   const BigInt ax_z4 = m_curve.mul(ax, m_curve.sqr(z2, monty_ws), monty_ws);
-   const BigInt b_z6 = m_curve.mul(m_curve.get_b_rep(), m_curve.sqr(z3, monty_ws), monty_ws);
+   const BigInt z3 = m_curve.mul_to_tmp(m_coord_z, z2, monty_ws);
+   const BigInt ax_z4 = m_curve.mul_to_tmp(ax, m_curve.sqr_to_tmp(z2, monty_ws), monty_ws);
+   const BigInt b_z6 = m_curve.mul_to_tmp(m_curve.get_b_rep(), m_curve.sqr_to_tmp(z3, monty_ws), monty_ws);
 
    if(y2 != m_curve.from_rep(x3 + ax_z4 + b_z6, monty_ws))
       return false;
