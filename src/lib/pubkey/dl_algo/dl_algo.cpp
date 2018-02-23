@@ -68,22 +68,7 @@ DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
 bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
                                     bool strong) const
    {
-   const BigInt& p = group_p();
-
-   if(m_y < 2 || m_y >= p)
-      return false;
-   if(!m_group.verify_group(rng, strong))
-      return false;
-
-   const BigInt& q = group_q();
-
-   if(q.is_zero() == false)
-      {
-      if(power_mod(m_y, q, p) != 1)
-         return false;
-      }
-
-   return true;
+   return m_group.verify_group(rng, strong) && m_group.verify_public_element(m_y);
    }
 
 /*
@@ -92,20 +77,7 @@ bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
 bool DL_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
                                      bool strong) const
    {
-   const BigInt& p = group_p();
-
-   if(m_y < 2 || m_y >= p || m_x < 2 || m_x >= p)
-      return false;
-   if(!m_group.verify_group(rng, strong))
-      return false;
-
-   if(!strong)
-      return true;
-
-   if(m_y != m_group.power_g_p(m_x))
-      return false;
-
-   return true;
+   return m_group.verify_group(rng, strong) && m_group.verify_element_pair(m_y, m_x);
    }
 
 }

@@ -135,7 +135,22 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * @param strong whether to perform stronger by lengthier tests
       * @return true if the object is consistent, false otherwise
       */
-      bool verify_group(RandomNumberGenerator& rng, bool strong) const;
+      bool verify_group(RandomNumberGenerator& rng, bool strong = true) const;
+
+      /**
+      * Verify a public element, ie check if y = g^x for some x.
+      *
+      * This is not a perfect test. It verifies that 1 < y < p and (if q is set)
+      * that y is in the subgroup of size q.
+      */
+      bool verify_public_element(const BigInt& y) const;
+
+      /**
+      * Verify a pair of elements y = g^x
+      *
+      * This verifies that 1 < x,y < p and that y=g^x mod p
+      */
+      bool verify_element_pair(const BigInt& y, const BigInt& x) const;
 
       /**
       * Encode this group into a string using PEM encoding.

@@ -292,6 +292,36 @@ const DL_Group_Data& DL_Group::data() const
    throw Invalid_State("DL_Group uninitialized");
    }
 
+bool DL_Group::verify_public_element(const BigInt& y) const
+   {
+   const BigInt& p = get_p();
+   const BigInt& q = get_q();
+
+   if(y <= 1 || y >= p)
+      return false;
+
+   if(q.is_zero() == false)
+      {
+      if(power_mod(y, q, p) != 1)
+         return false;
+      }
+
+   return true;
+   }
+
+bool DL_Group::verify_element_pair(const BigInt& y, const BigInt& x) const
+   {
+   const BigInt& p = get_p();
+
+   if(y <= 1 || y >= p || x <= 1 || x >= p)
+      return false;
+
+   if(y != power_g_p(x))
+      return false;
+
+   return true;
+   }
+
 /*
 * Verify the parameters
 */
