@@ -199,6 +199,14 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       size_t p_bytes() const;
 
       /**
+      * Return an estimate of the strength of this group against
+      * discrete logarithm attacks (eg NFS). Warning: since this only
+      * takes into account known attacks it is by necessity an
+      * overestimate of the actual strength.
+      */
+      size_t estimated_strength() const;
+
+      /**
       * Decode a DER/BER encoded group into this instance.
       * @param ber a vector containing the DER/BER encoded group
       * @param format the format of the encoded group

@@ -23,7 +23,8 @@ class DL_Group_Data final
          m_p(p), m_q(q), m_g(g),
          m_mod_p(p),
          m_monty(monty_precompute(m_g, m_p, m_mod_p, /*window bits=*/4)),
-         m_p_bits(p.bits())
+         m_p_bits(p.bits()),
+         m_estimated_strength(dl_work_factor(m_p_bits))
          {}
 
       ~DL_Group_Data() = default;
@@ -45,6 +46,8 @@ class DL_Group_Data final
       size_t p_bits() const { return m_p_bits; }
       size_t p_bytes() const { return (m_p_bits + 7) / 8; }
 
+      size_t estimated_strength() const { return m_estimated_strength; }
+
       BigInt power_g_p(const BigInt& k) const { return monty_execute(*m_monty, k); }
 
    private:
@@ -54,6 +57,7 @@ class DL_Group_Data final
       Modular_Reducer m_mod_p;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
+      size_t m_estimated_strength;
    };
 
 //static
@@ -392,6 +396,11 @@ size_t DL_Group::p_bits() const
 size_t DL_Group::p_bytes() const
    {
    return data().p_bytes();
+   }
+
+size_t DL_Group::estimated_strength() const
+   {
+   return data().estimated_strength();
    }
 
 BigInt DL_Group::inverse_mod_p(const BigInt& x) const

@@ -7,7 +7,6 @@
 
 #include <botan/dl_algo.h>
 #include <botan/numthry.h>
-#include <botan/workfactor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
@@ -15,12 +14,12 @@ namespace Botan {
 
 size_t DL_Scheme_PublicKey::key_length() const
    {
-   return m_group.get_p().bits();
+   return m_group.p_bits();
    }
 
 size_t DL_Scheme_PublicKey::estimated_strength() const
    {
-   return dl_work_factor(key_length());
+   return m_group.estimated_strength();
    }
 
 AlgorithmIdentifier DL_Scheme_PublicKey::algorithm_identifier() const

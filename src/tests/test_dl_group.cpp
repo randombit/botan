@@ -195,6 +195,11 @@ class DL_Group_Tests final : public Test
             result.test_ne("DL_Group p is set", group.get_p(), 0);
             result.test_ne("DL_Group g is set", group.get_g(), 0);
 
+            const size_t strength = group.estimated_strength();
+
+            // 8192 bit ~~ 2**202 strength
+            result.confirm("Plausible strength", strength >= 80 && strength < 210);
+
             if(name.find("modp/srp/") == std::string::npos)
                {
                result.test_ne("DL_Group q is set", group.get_q(), 0);
