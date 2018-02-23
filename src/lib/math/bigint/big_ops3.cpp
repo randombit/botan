@@ -66,6 +66,7 @@ BigInt operator-(const BigInt& x, const BigInt& y)
       {
       if(x.sign() != y.sign())
          bigint_shl2(z.mutable_data(), x.data(), x_sw, 0, 1);
+      z.set_sign(y.reverse_sign());
       }
    else if(relative_size > 0)
       {

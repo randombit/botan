@@ -7,9 +7,41 @@ In1 = 0x0
 In2 = 0x1
 Output = -0x1
 
-In1 = 0x1
-In2 = -0x1
-Output = 0x2
+In1 = 1
+In2 = -1
+Output = 2
+
+In1 = -1
+In2 = 1
+Output = -2
+
+In1 = -1
+In2 = -1
+Output = 0
+
+In1 = 1
+In2 = 1
+Output = 0
+
+In1 = 1
+In2 = -1
+Output = 2
+
+In1 = 1
+In2 = -2
+Output = 3
+
+In1 = -1
+In2 = 2
+Output = -3
+
+In1 = -3
+In2 = -1
+Output = -2
+
+In1 = -3
+In2 = 1
+Output = -4
 
 In1 = 0x64
 In2 = -0x64
