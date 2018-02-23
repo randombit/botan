@@ -10,6 +10,7 @@
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -270,29 +271,56 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    return *this;
    }
 
-PointGFp multi_exponentiate(const PointGFp& p1, const BigInt& z1,
-                            const PointGFp& p2, const BigInt& z2)
+PointGFp multi_exponentiate(const PointGFp& x, const BigInt& z1,
+                            const PointGFp& y, const BigInt& z2)
    {
-   PointGFp H = p1.zero();
-   const size_t z_bits = std::max(z1.bits(), z2.bits());
+   const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
 
    std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
 
-   const PointGFp M[4] = {
-      p1.zero(),
-      p1,
-      p2,
-      p1 + p2,
+   PointGFp x2 = x;
+   x2.mult2(ws);
+
+   const PointGFp x3(x2.plus(x, ws));
+
+   PointGFp y2 = y;
+   y2.mult2(ws);
+
+   const PointGFp y3(y2.plus(y, ws));
+
+   const PointGFp M[16] = {
+      x.zero(),        // 0000
+      x,               // 0001
+      x2,              // 0010
+      x3,              // 0011
+      y,               // 0100
+      y.plus(x, ws),   // 0101
+      y.plus(x2, ws),  // 0110
+      y.plus(x3, ws),  // 0111
+      y2,              // 1000
+      y2.plus(x, ws),  // 1001
+      y2.plus(x2, ws), // 1010
+      y2.plus(x3, ws), // 1011
+      y3,              // 1100
+      y3.plus(x, ws),  // 1101
+      y3.plus(x2, ws), // 1110
+      y3.plus(x3, ws), // 1111
    };
 
-   for(size_t i = 0; i != z_bits; ++i)
+   PointGFp H = x.zero();
+
+   for(size_t i = 0; i != z_bits; i += 2)
       {
-      H.mult2(ws);
+      if(i > 0)
+         {
+         H.mult2(ws);
+         H.mult2(ws);
+         }
 
-      const uint8_t z1_b = z1.get_bit(z_bits - i - 1);
-      const uint8_t z2_b = z2.get_bit(z_bits - i - 1);
+      const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
+      const uint8_t z2_b = z2.get_substring(z_bits - i - 2, 2);
 
-      const uint8_t z12 = (2*z2_b) + z1_b;
+      const uint8_t z12 = (4*z2_b) + z1_b;
 
       H.add(M[z12], ws);
       }

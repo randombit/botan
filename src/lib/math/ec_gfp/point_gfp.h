@@ -181,15 +181,26 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
 
       /**
       * Point addition
-      * @param workspace temp space, at least 9 elements
+      * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
       void add(const PointGFp& other, std::vector<BigInt>& workspace);
 
       /**
       * Point doubling
-      * @param workspace temp space, at least 10 elements
+      * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
       void mult2(std::vector<BigInt>& workspace);
+
+      /**
+      * Point addition
+      * @param workspace temp space, at least WORKSPACE_SIZE elements
+      */
+      PointGFp plus(const PointGFp& other, std::vector<BigInt>& workspace) const
+         {
+         PointGFp x = (*this);
+         x.add(other, workspace);
+         return x;
+         }
 
       /**
       * Return the zero (aka infinite) point associated with this curve
@@ -210,7 +221,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
 BOTAN_PUBLIC_API(2,0) PointGFp operator*(const BigInt& scalar, const PointGFp& point);
 
 /**
-* ECC point multiexponentiation
+* ECC point multiexponentiation - not constant time!
 * @param p1 a point
 * @param z1 a scalar
 * @param p2 a point
