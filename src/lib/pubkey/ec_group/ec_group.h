@@ -195,6 +195,14 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       const BigInt& get_cofactor() const;
 
       /**
+      * Check if y is a plausible point on the curve
+      *
+      * In particular, checks that it is a point on the curve, not infinity,
+      * and that it has order matching the group.
+      */
+      bool verify_public_element(const PointGFp& y) const;
+
+      /**
       * Return the OID of these domain parameters
       * @result the OID as a string
       */

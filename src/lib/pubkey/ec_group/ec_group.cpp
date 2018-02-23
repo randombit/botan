@@ -536,6 +536,29 @@ bool EC_Group::operator==(const EC_Group& other) const
            get_base_point() == other.get_base_point());
    }
 
+bool EC_Group::verify_public_element(const PointGFp& point) const
+   {
+   //check that public point is not at infinity
+   if(point.is_zero())
+      return false;
+
+   //check that public point is on the curve
+   if(point.on_the_curve() == false)
+      return false;
+
+   //check that public point has order q
+   if((point * get_order()).is_zero() == false)
+      return false;
+
+   if(get_cofactor() > 1)
+      {
+      if((point * get_cofactor()).is_zero())
+         return false;
+      }
+
+   return true;
+   }
+
 bool EC_Group::verify_group(RandomNumberGenerator& rng,
                             bool) const
    {
