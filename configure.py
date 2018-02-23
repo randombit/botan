@@ -1390,7 +1390,7 @@ def guess_processor(archinfo):
             match = canon_processor(archinfo, info_part)
             if match != None:
                 logging.debug("Matched '%s' to processor '%s'" % (info_part, match))
-                return match
+                return match, info_part
             else:
                 logging.debug("Failed to deduce CPU from '%s'" % info_part)
 
@@ -1710,6 +1710,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         elif options.cpu.endswith('el') or options.cpu.endswith('le'):
             return 'little'
 
+        logging.info('Defaulting to assuming %s endian', arch_info.endian)
         return arch_info.endian
 
     build_dir = options.with_build_dir or os.path.curdir
@@ -2633,7 +2634,9 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
             logging.info('Guessing to use compiler %s (use --cc or CXX to set)' % (options.compiler))
 
     if options.cpu is None:
-        options.cpu = options.arch = guess_processor(info_arch)
+        (arch, cpu) = guess_processor(info_arch)
+        options.arch = arch
+        options.cpu = cpu
         logging.info('Guessing target processor is a %s (use --cpu to set)' % (options.arch))
 
     if options.with_documentation is True:
@@ -3010,7 +3013,7 @@ def main(argv):
     cc_arch = check_compiler_arch(options, cc, info_arch, source_paths)
 
     if cc_arch is not None and cc_arch != options.arch:
-        logging.error("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
+        logging.warning("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
 
     logging.info('Target is %s:%s-%s-%s' % (
         options.compiler, cc_min_version, options.os, options.arch))
