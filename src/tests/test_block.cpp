@@ -111,9 +111,35 @@ class Block_Cipher_Tests final : public Text_Based_Test
                cipher->decrypt(buf);
                }
 
-            cipher->clear();
-
             result.test_eq(provider, "decrypt", buf, input);
+
+            // Now test misaligned buffers
+            const size_t blocks = input.size() / cipher->block_size();
+            buf.resize(input.size() + 1);
+            std::memcpy(buf.data() + 1, input.data(), input.size());
+
+            for(size_t i = 0; i != iterations; ++i)
+               {
+               cipher->encrypt_n(buf.data() + 1, buf.data() + 1, blocks);
+               }
+
+            result.test_eq(provider.c_str(), "encrypt",
+                           buf.data() + 1, buf.size() - 1,
+                           expected.data(), expected.size());
+
+            // always decrypt expected ciphertext vs what we produced above
+            std::memcpy(buf.data() + 1, expected.data(), expected.size());
+
+            for(size_t i = 0; i != iterations; ++i)
+               {
+               cipher->decrypt_n(buf.data() + 1, buf.data() + 1, blocks);
+               }
+
+            result.test_eq(provider.c_str(), "decrypt",
+                           buf.data() + 1, buf.size() - 1,
+                           input.data(), input.size());
+
+            cipher->clear();
 
             try
                {
