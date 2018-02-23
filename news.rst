@@ -6,8 +6,9 @@ Version 2.5.0, Not Yet Released
 
 * Add support for RSA-PSS signatures in TLS (GH #1285)
 
-* A faster algorithm for ECC point multiplications is now used, resulting
-  in ECDSA and ECDH being approximately 2-2.5x faster. (GH #1457)
+* A faster algorithm for ECC point multiplications is now used, resulting in
+  ECDSA signature generation being 2-3 times fater than previous releases. Other
+  optimizations have improved ECDSA verification time by about 25%. (GH #1457)
 
 * Add a new Credentials_Manager callback that specifies which CAs the server
   has indicated it trusts (GH #1395 fixing #1261)
@@ -18,7 +19,7 @@ Version 2.5.0, Not Yet Released
 * Add new TLS::Callbacks methods that allow an application to
   negotiate use of custom elliptic curves. (GH #1448)
 
-* Add ability to create custom ellipcic curves (GH #1441 #1444)
+* Add ability to create custom elliptic curves (GH #1441 #1444)
 
 * Change DL_Group and EC_Group to store their data as shared_ptr for
   fast copying. Also both classes precompute additional useful values
