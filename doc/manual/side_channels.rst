@@ -210,9 +210,9 @@ bytes runs in constant time, depending only on the block size of the cipher.
 AES
 ----------------------
 
-On x86 processors which support it, AES-NI instruction set is used, as it is
-fast and (presumed) side channel silent. There is no support at the moment for
-the similar ARMv8 or POWER AES instructions; patches would be welcome.
+Some x86, ARMv8 and POWER processors support AES instructions which
+are fast and are thought to be side channel silent. These instructions
+are used when available.
 
 On x86 processors without AES-NI but with SSSE3 (which includes older Intel
 Atoms and Core2 Duos, and even now some embedded or low power x86 chips), a
@@ -239,10 +239,8 @@ GCM
 On platforms that support a carryless multiply instruction (recent x86 and ARM),
 GCM is fast and constant time.
 
-On all other platforms, GCM is slow and constant time. It uses a simple bit at
-at time loop. It would be much faster using a table lookup, but we wish to avoid
-side channels. One improvement here would be the option of using a 2K or 4K
-table, but using a side-channel silent (masked) table lookup.
+On all other platforms, GCM uses a slow but constant time algorithm. There is
+also an SSSE3 variant of the same (still slow) algorithm.
 
 OCB
 -----------------------

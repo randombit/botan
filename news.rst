@@ -21,6 +21,8 @@ Version 2.5.0, Not Yet Released
 
 * Add ability to create custom elliptic curves (GH #1441 #1444)
 
+* Add support for POWER8 AES instructions (GH #1459 #1206)
+
 * Change DL_Group and EC_Group to store their data as shared_ptr for
   fast copying. Also both classes precompute additional useful values
   (eg for modular reductions). (GH #1435 #1454)
