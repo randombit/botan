@@ -517,7 +517,7 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_POWER8) && 0
+#if defined(BOTAN_HAS_AES_POWER8)
    if(CPUID::has_ppc_crypto())
       {
       return power8_decrypt_n(in, out, blocks);
@@ -614,7 +614,7 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_POWER8) && 0
+#if defined(BOTAN_HAS_AES_POWER8)
    if(CPUID::has_ppc_crypto())
       {
       return power8_decrypt_n(in, out, blocks);
@@ -711,7 +711,7 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_POWER8) && 0
+#if defined(BOTAN_HAS_AES_POWER8)
    if(CPUID::has_ppc_crypto())
       {
       return power8_decrypt_n(in, out, blocks);
