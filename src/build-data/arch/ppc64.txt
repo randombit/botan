@@ -10,4 +10,5 @@ ppc64le
 
 <isa_extensions>
 altivec
+ppccrypto
 </isa_extensions>
