@@ -133,21 +133,15 @@ class SIMD_4x32 final
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         const uint32_t* in_32 = static_cast<const uint32_t*>(in);
 
-         __vector unsigned int R0 = vec_ld(0, in_32);
-         __vector unsigned int R1 = vec_ld(12, in_32);
+         union {
+            __vector unsigned int V;
+            uint32_t R[4];
+            } vec;
 
-         __vector unsigned char perm = vec_lvsl(0, in_32);
+         Botan::load_le(vec.R, static_cast<const uint8_t*>(in), 4);
 
-         if(CPUID::is_big_endian())
-            {
-            perm = vec_xor(perm, vec_splat_u8(3)); // bswap vector
-            }
-
-         R0 = vec_perm(R0, R1, perm);
-
-         return SIMD_4x32(R0);
+         return SIMD_4x32(vec.V);
 #elif defined(BOTAN_SIMD_USE_NEON)
 
          uint32_t in32[4];
@@ -176,18 +170,14 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         const uint32_t* in_32 = static_cast<const uint32_t*>(in);
-         __vector unsigned int R0 = vec_ld(0, in_32);
-         __vector unsigned int R1 = vec_ld(12, in_32);
-         __vector unsigned char perm = vec_lvsl(0, in_32);
+         union {
+            __vector unsigned int V;
+            uint32_t R[4];
+            } vec;
 
-         if(CPUID::is_little_endian())
-            {
-            perm = vec_xor(perm, vec_splat_u8(3)); // bswap vector
-            }
+         Botan::load_be(vec.R, static_cast<const uint8_t*>(in), 4);
 
-         R0 = vec_perm(R0, R1, perm);
-         return SIMD_4x32(R0);
+         return SIMD_4x32(vec.V);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
