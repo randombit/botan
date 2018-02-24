@@ -123,7 +123,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
                cipher->encrypt_n(buf.data() + 1, buf.data() + 1, blocks);
                }
 
-            result.test_eq(provider.c_str(), "encrypt",
+            result.test_eq(provider.c_str(), "encrypt misaligned",
                            buf.data() + 1, buf.size() - 1,
                            expected.data(), expected.size());
 
@@ -135,7 +135,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
                cipher->decrypt_n(buf.data() + 1, buf.data() + 1, blocks);
                }
 
-            result.test_eq(provider.c_str(), "decrypt",
+            result.test_eq(provider.c_str(), "decrypt misaligned",
                            buf.data() + 1, buf.size() - 1,
                            input.data(), input.size());
 
