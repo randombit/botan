@@ -122,41 +122,58 @@ class SIMD_32_Tests final : public Test
                    const Botan::SIMD_4x32& simd,
                    uint32_t exp0, uint32_t exp1, uint32_t exp2, uint32_t exp3)
          {
-         uint8_t mem_be[16];
-         simd.store_be(mem_be);
+         uint8_t arr_be[16 + 15];
+         uint8_t arr_be2[16 + 15];
+         uint8_t arr_le[16 + 15];
+         uint8_t arr_le2[16 + 15];
 
-         result.test_int_eq("SIMD_4x32 " + op + " elem0 BE", Botan::make_uint32(mem_be[ 0], mem_be[ 1], mem_be[ 2], mem_be[ 3]),
-                            exp0);
-         result.test_int_eq("SIMD_4x32 " + op + " elem1 BE", Botan::make_uint32(mem_be[ 4], mem_be[ 5], mem_be[ 6], mem_be[ 7]),
-                            exp1);
-         result.test_int_eq("SIMD_4x32 " + op + " elem2 BE", Botan::make_uint32(mem_be[ 8], mem_be[ 9], mem_be[10], mem_be[11]),
-                            exp2);
-         result.test_int_eq("SIMD_4x32 " + op + " elem3 BE", Botan::make_uint32(mem_be[12], mem_be[13], mem_be[14], mem_be[15]),
-                            exp3);
+         for(size_t misalignment = 0; misalignment != 16; ++misalignment)
+            {
+            uint8_t* mem_be  = arr_be  + misalignment;
+            uint8_t* mem_be2 = arr_be2 + misalignment;
+            uint8_t* mem_le  = arr_le  + misalignment;
+            uint8_t* mem_le2 = arr_le2 + misalignment;
 
-         // Check load_be+store_be results in same value
-         const Botan::SIMD_4x32 reloaded_be = Botan::SIMD_4x32::load_be(mem_be);
-         uint8_t mem_be2[16];
-         reloaded_be.store_be(mem_be2);
-         result.test_eq(nullptr, "SIMD_4x32 load_be", mem_be, 16, mem_be2, 16);
+            simd.store_be(mem_be);
 
-         uint8_t mem_le[16];
-         simd.store_le(mem_le);
+            result.test_int_eq("SIMD_4x32 " + op + " elem0 BE",
+                               Botan::make_uint32(mem_be[ 0], mem_be[ 1], mem_be[ 2], mem_be[ 3]),
+                               exp0);
+            result.test_int_eq("SIMD_4x32 " + op + " elem1 BE",
+                               Botan::make_uint32(mem_be[ 4], mem_be[ 5], mem_be[ 6], mem_be[ 7]),
+                               exp1);
+            result.test_int_eq("SIMD_4x32 " + op + " elem2 BE",
+                               Botan::make_uint32(mem_be[ 8], mem_be[ 9], mem_be[10], mem_be[11]),
+                               exp2);
+            result.test_int_eq("SIMD_4x32 " + op + " elem3 BE",
+                               Botan::make_uint32(mem_be[12], mem_be[13], mem_be[14], mem_be[15]),
+                               exp3);
 
-         result.test_int_eq("SIMD_4x32 " + op + " elem0 LE", Botan::make_uint32(mem_le[ 3], mem_le[ 2], mem_le[ 1], mem_le[ 0]),
-                            exp0);
-         result.test_int_eq("SIMD_4x32 " + op + " elem1 LE", Botan::make_uint32(mem_le[ 7], mem_le[ 6], mem_le[ 5], mem_le[ 4]),
-                            exp1);
-         result.test_int_eq("SIMD_4x32 " + op + " elem2 LE", Botan::make_uint32(mem_le[11], mem_le[10], mem_le[ 9], mem_le[ 8]),
-                            exp2);
-         result.test_int_eq("SIMD_4x32 " + op + " elem3 LE", Botan::make_uint32(mem_le[15], mem_le[14], mem_le[13], mem_le[12]),
-                            exp3);
+            // Check load_be+store_be results in same value
+            const Botan::SIMD_4x32 reloaded_be = Botan::SIMD_4x32::load_be(mem_be);
+            reloaded_be.store_be(mem_be2);
+            result.test_eq(nullptr, "SIMD_4x32 load_be", mem_be, 16, mem_be2, 16);
 
-         // Check load_le+store_le results in same value
-         const Botan::SIMD_4x32 reloaded_le = Botan::SIMD_4x32::load_le(mem_le);
-         uint8_t mem_le2[16];
-         reloaded_le.store_le(mem_le2);
-         result.test_eq(nullptr, "SIMD_4x32 load_le", mem_le, 16, mem_le2, 16);
+            simd.store_le(mem_le);
+
+            result.test_int_eq("SIMD_4x32 " + op + " elem0 LE",
+                               Botan::make_uint32(mem_le[ 3], mem_le[ 2], mem_le[ 1], mem_le[ 0]),
+                               exp0);
+            result.test_int_eq("SIMD_4x32 " + op + " elem1 LE",
+                               Botan::make_uint32(mem_le[ 7], mem_le[ 6], mem_le[ 5], mem_le[ 4]),
+                               exp1);
+            result.test_int_eq("SIMD_4x32 " + op + " elem2 LE",
+                               Botan::make_uint32(mem_le[11], mem_le[10], mem_le[ 9], mem_le[ 8]),
+                               exp2);
+            result.test_int_eq("SIMD_4x32 " + op + " elem3 LE",
+                               Botan::make_uint32(mem_le[15], mem_le[14], mem_le[13], mem_le[12]),
+                               exp3);
+
+            // Check load_le+store_le results in same value
+            const Botan::SIMD_4x32 reloaded_le = Botan::SIMD_4x32::load_le(mem_le);
+            reloaded_le.store_le(mem_le2);
+            result.test_eq(nullptr, "SIMD_4x32 load_le", mem_le, 16, mem_le2, 16);
+            }
          }
 
    };
