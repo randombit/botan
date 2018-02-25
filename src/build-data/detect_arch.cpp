@@ -18,10 +18,20 @@
   PPC32
 
 #elif defined(__mips__) || defined(__mips)
+
+  #if defined(__LP64__) || defined(_LP64)
+  MIPS64
+  #else
   MIPS32
+  #endif
 
 #elif defined(__sparc__)
+
+  #if defined(__LP64__) || defined(_LP64)
+  SPARC64
+  #else
   SPARC32
+  #endif
 
 #elif defined(__alpha__)
   ALPHA
