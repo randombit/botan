@@ -216,6 +216,15 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      bool operator !() const { return (!is_nonzero()); }
 
      /**
+     * Return *this below mod
+     *
+     * Assumes that *this is (if anything) only slightly larger than
+     * mod and performs repeated subtractions. It should not be used if
+     * *this is much larger than mod, instead of modulo operator.
+     */
+     void reduce_below(const BigInt& mod, secure_vector<word> &ws);
+
+     /**
      * Zeroize the BigInt. The size of the underlying register is not
      * modified.
      */

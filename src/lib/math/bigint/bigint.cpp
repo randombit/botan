@@ -247,6 +247,30 @@ BigInt BigInt::operator-() const
    return x;
    }
 
+void BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
+   {
+   if(p.is_negative())
+      throw Invalid_Argument("BigInt::reduce_below mod must be positive");
+
+   const size_t p_words = p.sig_words();
+
+   if(size() < p_words + 1)
+      grow_to(p_words + 1);
+
+   if(ws.size() < p_words + 1)
+      ws.resize(p_words + 1);
+
+   for(;;)
+      {
+      word borrow = bigint_sub3(ws.data(), data(), p_words + 1, p.data(), p_words);
+
+      if(borrow)
+         break;
+
+      m_reg.swap(ws);
+      }
+   }
+
 /*
 * Return the absolute value of this number
 */
