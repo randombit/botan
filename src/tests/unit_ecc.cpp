@@ -575,16 +575,24 @@ Test::Result test_enc_dec_uncompressed_112()
 
    // Test for uncompressed conversion (04) 112bit
 
+   // Curve is secp112r2
+
    const Botan::BigInt p("0xdb7c2abf62e35e668076bead208b");
    const Botan::BigInt a("0x6127C24C05F38A0AAAF65C0EF02C");
    const Botan::BigInt b("0x51DEF1815DB5ED74FCC34C85D709");
 
-   Botan::CurveGFp curve(p, a, b);
+   const Botan::BigInt g_x("0x4BA30AB5E892B4E1649DD0928643");
+   const Botan::BigInt g_y("0xADCD46F5882E3747DEF36E956E97");
+
+   const Botan::BigInt order("0x36DF0AAFD8B8D7597CA10520D04B");
+   const Botan::BigInt cofactor("4"); // !
+
+   const Botan::EC_Group group(p, a, b, g_x, g_y, order, cofactor);
 
    const std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
    const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
 
-   Botan::PointGFp p_G = OS2ECP(sv_G_secp_uncomp, curve);
+   Botan::PointGFp p_G = group.OS2ECP(sv_G_secp_uncomp);
    std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
 
    result.test_eq("uncompressed_112", sv_result, sv_G_secp_uncomp);
@@ -612,45 +620,6 @@ Test::Result test_enc_dec_uncompressed_521()
    return result;
    }
 
-Test::Result test_enc_dec_uncompressed_521_prime_too_large()
-   {
-   Test::Result result("ECC Unit");
-
-   // Test for uncompressed conversion(04) with big values(521 bit)
-   std::string p_secp =
-      "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"; // length increased by "ff"
-   std::string a_secp =
-      "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffFC";
-   std::string b_secp =
-      "0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00";
-   std::string G_secp_uncomp =
-      "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
-
-   std::vector<uint8_t> sv_p_secp = Botan::hex_decode(p_secp);
-   std::vector<uint8_t> sv_a_secp = Botan::hex_decode(a_secp);
-   std::vector<uint8_t> sv_b_secp = Botan::hex_decode(b_secp);
-   std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
-
-   Botan::BigInt bi_p_secp = Botan::BigInt::decode(sv_p_secp.data(), sv_p_secp.size());
-   Botan::BigInt bi_a_secp = Botan::BigInt::decode(sv_a_secp.data(), sv_a_secp.size());
-   Botan::BigInt bi_b_secp = Botan::BigInt::decode(sv_b_secp.data(), sv_b_secp.size());
-
-   Botan::CurveGFp secp521r1(bi_p_secp, bi_a_secp, bi_b_secp);
-   std::unique_ptr<Botan::PointGFp> p_G;
-
-   try
-      {
-      p_G = std::unique_ptr<Botan::PointGFp>(new Botan::PointGFp(Botan::OS2ECP(sv_G_secp_uncomp, secp521r1)));
-      result.test_failure("point decoding with too large value accepted");
-      }
-   catch(std::exception&)
-      {
-      result.test_note("rejected invalid point");
-      }
-
-   return result;
-   }
-
 Test::Result test_gfp_store_restore()
    {
    Test::Result result("ECC Unit");
@@ -663,30 +632,6 @@ Test::Result test_gfp_store_restore()
    Botan::PointGFp new_p = dom_pars.OS2ECP(sv_mes);
 
    result.test_eq("original and restored points are same", p, new_p);
-   return result;
-   }
-
-
-// maybe move this test
-Test::Result test_cdc_curve_33()
-   {
-   Test::Result result("ECC Unit");
-
-   std::string G_secp_uncomp =
-      "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
-
-   std::vector<uint8_t> sv_G_uncomp = Botan::hex_decode(G_secp_uncomp);
-
-   Botan::BigInt bi_p_secp =
-      Botan::BigInt("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
-   Botan::BigInt
-   bi_a_secp("0xa377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
-   Botan::BigInt
-   bi_b_secp("0xa9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7");
-
-   Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-   Botan::PointGFp p_G = Botan::OS2ECP(sv_G_uncomp, curve);
-   result.confirm("point is on the curve", p_G.on_the_curve());
    return result;
    }
 
@@ -832,9 +777,7 @@ class ECC_Unit_Tests final : public Test
          results.push_back(test_enc_dec_compressed_256());
          results.push_back(test_enc_dec_uncompressed_112());
          results.push_back(test_enc_dec_uncompressed_521());
-         results.push_back(test_enc_dec_uncompressed_521_prime_too_large());
          results.push_back(test_gfp_store_restore());
-         results.push_back(test_cdc_curve_33());
          results.push_back(test_more_zeropoint());
          results.push_back(test_mult_by_order());
          results.push_back(test_point_swap());
