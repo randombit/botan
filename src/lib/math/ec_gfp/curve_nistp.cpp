@@ -11,32 +11,6 @@
 
 namespace Botan {
 
-namespace {
-
-inline void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound)
-   {
-   const word* prime = p.data();
-   const size_t p_words = p.sig_words();
-
-   if(x.size() < p_words + 1)
-      x.grow_to(p_words + 1);
-
-   if(ws.size() < p_words + 1)
-      ws.resize(p_words + 1);
-
-   for(size_t i = 0; i < bound; ++i)
-      {
-      word borrow = bigint_sub3(ws.data(), x.data(), p_words + 1, prime, p_words);
-
-      if(borrow)
-         break;
-
-      x.swap_reg(ws);
-      }
-   }
-
-}
-
 const BigInt& prime_p521()
    {
    static const BigInt p521("0x1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
@@ -67,7 +41,7 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
    BOTAN_ASSERT_EQUAL(carry, 0, "Final final carry in P-521 reduction");
 
-   normalize(prime_p521(), x, ws, 1);
+   x.reduce_below(prime_p521(), ws);
    }
 
 #if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
@@ -171,7 +145,7 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 
    // No underflow possible
 
-   normalize(prime_p192(), x, ws, 3);
+   x.reduce_below(prime_p192(), ws);
    }
 
 const BigInt& prime_p224()
@@ -249,7 +223,7 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
 
-   normalize(prime_p224(), x, ws, 3);
+   x.reduce_below(prime_p224(), ws);
    }
 
 const BigInt& prime_p256()
@@ -396,7 +370,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
       x += prime_p256();
       }
 #else
-   normalize(prime_p256(), x, ws, 10);
+   x.reduce_below(prime_p256(), ws);
    #endif
    }
 
@@ -552,7 +526,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
    set_uint32_t(x, 12, S);
 
-   normalize(prime_p384(), x, ws, 4);
+   x.reduce_below(prime_p384(), ws);
    }
 
 #endif
