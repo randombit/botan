@@ -312,7 +312,7 @@ void bigint_mul(word z[], size_t z_size,
       {
       const size_t N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
 
-      if(N && ws_size >= 2*N)
+      if(N && z_size >= 2*N && ws_size >= 2*N)
          karatsuba_mul(z, x, y, N, workspace);
       else
          basecase_mul(z, z_size, x, x_sw, y, y_sw);
@@ -360,7 +360,7 @@ void bigint_sqr(word z[], size_t z_size,
       {
       const size_t N = karatsuba_size(z_size, x_size, x_sw);
 
-      if(N && ws_size >= 2*N)
+      if(N && z_size >= 2*N && ws_size >= 2*N)
          karatsuba_sqr(z, x, N, workspace);
       else
          basecase_mul(z, z_size, x, x_sw, x, x_sw);
