@@ -1,5 +1,5 @@
 /*
-* (C) 2016 Jack Lloyd
+* (C) 2016,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,8 +13,7 @@ namespace {
 
 Botan::BigInt simple_power_mod(Botan::BigInt x,
                                Botan::BigInt n,
-                               const Botan::BigInt& p,
-                               const Botan::Modular_Reducer& mod_p)
+                               const Botan::BigInt& p)
    {
    if(n == 0)
       {
@@ -23,6 +22,7 @@ Botan::BigInt simple_power_mod(Botan::BigInt x,
       return 1;
       }
 
+   Botan::Modular_Reducer mod_p(p);
    Botan::BigInt y = 1;
 
    while(n > 1)
@@ -41,19 +41,23 @@ Botan::BigInt simple_power_mod(Botan::BigInt x,
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   static const size_t p_bits = 1024;
-   static const Botan::BigInt p = random_prime(fuzzer_rng(), p_bits);
-   static Botan::Modular_Reducer mod_p(p);
+   static const size_t max_bits = 2048;
 
-   if(len == 0 || len > p_bits/8)
+   if(len % 3 != 0)
       return;
+
+   const size_t part_size = len / 3;
+
+   if(part_size * 8 > max_bits)
+      return;
+
+   const Botan::BigInt g = Botan::BigInt::decode(in, part_size);
+   const Botan::BigInt x = Botan::BigInt::decode(in + part_size, part_size);
+   const Botan::BigInt p = Botan::BigInt::decode(in + 2*part_size, part_size);
 
    try
       {
-      const Botan::BigInt g = Botan::BigInt::decode(in, len / 2);
-      const Botan::BigInt x = Botan::BigInt::decode(in + len / 2, len / 2);
-
-      const Botan::BigInt ref = simple_power_mod(g, x, p, mod_p);
+      const Botan::BigInt ref = simple_power_mod(g, x, p);
       const Botan::BigInt z = Botan::power_mod(g, x, p);
 
       if(ref != z)
