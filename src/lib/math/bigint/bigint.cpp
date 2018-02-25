@@ -260,6 +260,8 @@ void BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
    if(ws.size() < p_words + 1)
       ws.resize(p_words + 1);
 
+   clear_mem(ws.data(), ws.size());
+
    for(;;)
       {
       word borrow = bigint_sub3(ws.data(), data(), p_words + 1, p.data(), p_words);

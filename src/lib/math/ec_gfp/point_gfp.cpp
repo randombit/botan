@@ -203,8 +203,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.mul(S, m_coord_x, y_2, monty_ws);
    S <<= 2; // * 4
-   while(S >= p)
-      S -= p;
+   S.reduce_below(p, monty_ws);
 
    m_curve.sqr(a_z4, m_coord_z, monty_ws); // z^2
    m_curve.sqr(tmp, a_z4, monty_ws); // z^4
@@ -213,8 +212,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    m_curve.sqr(M, m_coord_x, monty_ws);
    M *= 3;
    M += a_z4;
-   while(M >= p)
-      M -= p;
+   M.reduce_below(p, monty_ws);
 
    m_curve.sqr(x, M, monty_ws);
    x -= (S << 1);
@@ -223,8 +221,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.sqr(U, y_2, monty_ws);
    U <<= 3;
-   while(U >= p)
-      U -= p;
+   U.reduce_below(p, monty_ws);
 
    S -= x;
    while(S.is_negative())
@@ -237,8 +234,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.mul(z, m_coord_y, m_coord_z, monty_ws);
    z <<= 1;
-   if(z >= p)
-      z -= p;
+   z.reduce_below(p, monty_ws);
 
    m_coord_x = x;
    m_coord_y = y;
