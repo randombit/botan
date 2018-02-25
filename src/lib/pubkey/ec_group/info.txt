@@ -1,10 +1,10 @@
 <defines>
-ECC_GROUP -> 20131128
+ECC_GROUP -> 20170225
+EC_CURVE_GFP -> 20131128
 </defines>
 
 <requires>
 asn1
-ec_gfp
 numbertheory
 pem
 </requires>
