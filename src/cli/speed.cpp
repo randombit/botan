@@ -1735,7 +1735,7 @@ class Speed final : public Command
       void bench_dh(const std::string& provider,
                     std::chrono::milliseconds msec)
          {
-         for(size_t bits : { 1024, 2048, 3072 })
+         for(size_t bits : { 1024, 2048, 3072, 4096, 6144, 8192 })
             {
             bench_pk_ka("DH",
                         "DH-" + std::to_string(bits),
