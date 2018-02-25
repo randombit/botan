@@ -8,7 +8,7 @@
 
 #include <botan/internal/def_powm.h>
 #include <botan/numthry.h>
-#include <botan/internal/mp_core.h>
+#include <botan/monty.h>
 #include <botan/internal/monty_exp.h>
 
 namespace Botan {
@@ -21,7 +21,7 @@ void Montgomery_Exponentiator::set_exponent(const BigInt& exp)
 void Montgomery_Exponentiator::set_base(const BigInt& base)
    {
    size_t window_bits = Power_Mod::window_bits(m_e.bits(), base.bits(), m_hints);
-   m_monty = monty_precompute(base, m_p, m_mod_p, window_bits);
+   m_monty = monty_precompute(m_monty_params, base, window_bits);
    }
 
 BigInt Montgomery_Exponentiator::execute() const
@@ -33,6 +33,7 @@ Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
                                                    Power_Mod::Usage_Hints hints) :
    m_p(mod),
    m_mod_p(mod),
+   m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
    m_hints(hints)
    {
    }

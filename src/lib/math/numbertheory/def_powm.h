@@ -36,6 +36,7 @@ class Fixed_Window_Exponentiator final : public Modular_Exponentiator
       Power_Mod::Usage_Hints m_hints;
    };
 
+class Montgomery_Params;
 class Montgomery_Exponentation_State;
 
 /**
@@ -53,9 +54,11 @@ class Montgomery_Exponentiator final : public Modular_Exponentiator
 
       Montgomery_Exponentiator(const BigInt&, Power_Mod::Usage_Hints);
    private:
-      std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       BigInt m_p;
       Modular_Reducer m_mod_p;
+      std::shared_ptr<const Montgomery_Params> m_monty_params;
+      std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
+
       BigInt m_e;
       Power_Mod::Usage_Hints m_hints;
    };

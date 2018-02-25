@@ -14,15 +14,16 @@ namespace Botan {
 class BigInt;
 class Modular_Reducer;
 
+class Montgomery_Params;
+
 class Montgomery_Exponentation_State;
 
 /*
 * Precompute for calculating values g^x mod p
 */
 std::shared_ptr<const Montgomery_Exponentation_State>
-monty_precompute(const BigInt& g,
-                 const BigInt& p,
-                 const Modular_Reducer& mod_p,
+monty_precompute(std::shared_ptr<const Montgomery_Params> params_p,
+                 const BigInt& g,
                  size_t window_bits);
 
 /*
