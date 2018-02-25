@@ -24,8 +24,8 @@ BigInt square(const BigInt& x)
    secure_vector<word> workspace(z.size());
 
    bigint_sqr(z.mutable_data(), z.size(),
-              workspace.data(),
-              x.data(), x.size(), x_sw);
+              x.data(), x.size(), x_sw,
+              workspace.data(), workspace.size());
    return z;
    }
 
@@ -44,7 +44,7 @@ BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
    BigInt r(sign, std::max(a.size() + b.size(), c.sig_words()) + 1);
    secure_vector<word> workspace(r.size());
 
-   bigint_mul(r, a, b, workspace.data());
+   bigint_mul(r, a, b, workspace.data(), workspace.size());
 
    const size_t r_size = std::max(r.sig_words(), c.sig_words());
    bigint_add2(r.mutable_data(), r_size, c.data(), c.sig_words());

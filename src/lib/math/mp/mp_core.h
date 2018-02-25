@@ -132,21 +132,22 @@ void bigint_linmul3(word z[], const word x[], size_t x_size, word y);
 void bigint_monty_redc(word z[],
                        const word p[], size_t p_size,
                        word p_dash,
-                       word workspace[]);
+                       word workspace[],
+                       size_t ws_size);
 
 /*
 * Montgomery Multiplication
 */
 void bigint_monty_mul(BigInt& z, const BigInt& x, const BigInt& y,
                       const word p[], size_t p_size, word p_dash,
-                      word workspace[]);
+                      word workspace[], size_t ws_size);
 
 /*
 * Montgomery Squaring
 */
 void bigint_monty_sqr(BigInt& z, const BigInt& x,
                       const word p[], size_t p_size, word p_dash,
-                      word workspace[]);
+                      word workspace[], size_t ws_size);
 
 /**
 * Compare x and y
@@ -182,15 +183,17 @@ void bigint_comba_sqr16(word out[32], const word in[16]);
 /*
 * High Level Multiplication/Squaring Interfaces
 */
-void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y, word workspace[]);
+void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y,
+                word workspace[], size_t ws_size);
 
 void bigint_mul(word z[], size_t z_size,
                 const word x[], size_t x_size, size_t x_sw,
                 const word y[], size_t y_size, size_t y_sw,
-                word workspace[]);
+                word workspace[], size_t ws_size);
 
-void bigint_sqr(word z[], size_t z_size, word workspace[],
-                const word x[], size_t x_size, size_t x_sw);
+void bigint_sqr(word z[], size_t z_size,
+                const word x[], size_t x_size, size_t x_sw,
+                word workspace[], size_t ws_size);
 
 }
 

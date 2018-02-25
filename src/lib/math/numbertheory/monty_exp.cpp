@@ -61,14 +61,14 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const BigInt& g,
 
    bigint_monty_mul(z, m_g[0], m_R2_mod,
                     m_p.data(), m_p_words, m_mod_prime,
-                    workspace.data());
+                    workspace.data(), workspace.size());
    m_g[0] = z;
 
    m_g[1] = mod_p.reduce(g);
 
    bigint_monty_mul(z, m_g[1], m_R2_mod,
                     m_p.data(), m_p_words, m_mod_prime,
-                    workspace.data());
+                    workspace.data(), workspace.size());
 
    m_g[1] = z;
 
@@ -79,7 +79,7 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const BigInt& g,
       const BigInt& y = m_g[i-1];
 
       bigint_monty_mul(z, x, y, m_p.data(), m_p_words, m_mod_prime,
-                       workspace.data());
+                       workspace.data(), workspace.size());
 
       m_g[i] = z;
       m_g[i].shrink_to_fit();
@@ -104,7 +104,7 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& k) const
       for(size_t j = 0; j != m_window_bits; ++j)
          {
          bigint_monty_sqr(z, x, m_p.data(), m_p_words, m_mod_prime,
-                          workspace.data());
+                          workspace.data(), workspace.size());
 
          x = z;
          }
@@ -116,11 +116,11 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& k) const
       bigint_mul(z.mutable_data(), z.size(),
                  x.data(), x.size(), x.sig_words(),
                  e.data(), m_p_words, m_p_words,
-                 workspace.data());
+                 workspace.data(), workspace.size());
 
       bigint_monty_redc(z.mutable_data(),
                         m_p.data(), m_p_words, m_mod_prime,
-                        workspace.data());
+                        workspace.data(), workspace.size());
 
       x = z;
       }
@@ -129,7 +129,7 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& k) const
 
    bigint_monty_redc(x.mutable_data(),
                      m_p.data(), m_p_words, m_mod_prime,
-                     workspace.data());
+                     workspace.data(), workspace.size());
 
    return x;
    }

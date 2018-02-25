@@ -20,10 +20,13 @@ namespace Botan {
 * Montgomery Reduction Algorithm
 */
 void bigint_monty_redc(word z[],
-                       const word p[], size_t p_size,
-                       word p_dash, word ws[])
+                       const word p[], size_t p_size, word p_dash,
+                       word ws[], size_t ws_size)
    {
    const size_t z_size = 2*(p_size+1);
+
+   if(ws_size < z_size)
+      throw Invalid_Argument("bigint_monty_redc workspace too small");
 
    CT::poison(z, z_size);
    CT::poison(p, p_size);
@@ -96,24 +99,25 @@ void bigint_monty_redc(word z[],
 
 void bigint_monty_mul(BigInt& z, const BigInt& x, const BigInt& y,
                       const word p[], size_t p_size, word p_dash,
-                      word ws[])
+                      word ws[], size_t ws_size)
    {
-   bigint_mul(z, x, y, &ws[0]);
+   bigint_mul(z, x, y, ws, ws_size);
 
    bigint_monty_redc(z.mutable_data(),
                      p, p_size, p_dash,
-                     ws);
+                     ws, ws_size);
    }
 
 void bigint_monty_sqr(BigInt& z, const BigInt& x, const word p[],
-                      size_t p_size, word p_dash, word ws[])
+                      size_t p_size, word p_dash, word ws[], size_t ws_size)
    {
-   bigint_sqr(z.mutable_data(), z.size(), &ws[0],
-              x.data(), x.size(), x.sig_words());
+   bigint_sqr(z.mutable_data(), z.size(),
+              x.data(), x.size(), x.sig_words(),
+              ws, ws_size);
 
    bigint_monty_redc(z.mutable_data(),
                      p, p_size, p_dash,
-                     ws);
+                     ws, ws_size);
    }
 
 }

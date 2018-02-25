@@ -95,7 +95,7 @@ BigInt operator*(const BigInt& x, const BigInt& y)
    else if(x_sw && y_sw)
       {
       secure_vector<word> workspace(z.size());
-      bigint_mul(z, x, y, workspace.data());
+      bigint_mul(z, x, y, workspace.data(), workspace.size());
       }
 
    if(x_sw && y_sw && x.sign() != y.sign())

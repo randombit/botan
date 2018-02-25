@@ -250,18 +250,19 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw)
 /*
 * Multiplication Algorithm Dispatcher
 */
-void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y, word workspace[])
+void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y,
+                word workspace[], size_t ws_size)
    {
    return bigint_mul(z.mutable_data(), z.size(),
                      x.data(), x.size(), x.sig_words(),
                      y.data(), y.size(), y.sig_words(),
-                     workspace);
+                     workspace, ws_size);
    }
 
 void bigint_mul(word z[], size_t z_size,
                 const word x[], size_t x_size, size_t x_sw,
                 const word y[], size_t y_size, size_t y_sw,
-                word workspace[])
+                word workspace[], size_t ws_size)
    {
    clear_mem(z, z_size);
 
@@ -308,7 +309,7 @@ void bigint_mul(word z[], size_t z_size,
       {
       const size_t N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
 
-      if(N)
+      if(N && ws_size >= 2*N)
          karatsuba_mul(z, x, y, N, workspace);
       else
          basecase_mul(z, x, x_sw, y, y_sw);
@@ -318,8 +319,9 @@ void bigint_mul(word z[], size_t z_size,
 /*
 * Squaring Algorithm Dispatcher
 */
-void bigint_sqr(word z[], size_t z_size, word workspace[],
-                const word x[], size_t x_size, size_t x_sw)
+void bigint_sqr(word z[], size_t z_size,
+                const word x[], size_t x_size, size_t x_sw,
+                word workspace[], size_t ws_size)
    {
    BOTAN_ASSERT(z_size/2 >= x_sw, "Output size is sufficient");
 
@@ -355,7 +357,7 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
       {
       const size_t N = karatsuba_size(z_size, x_size, x_sw);
 
-      if(N)
+      if(N && ws_size >= 2*N)
          karatsuba_sqr(z, x, N, workspace);
       else
          basecase_mul(z, x, x_sw, x, x_sw);
