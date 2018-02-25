@@ -11,7 +11,6 @@
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/bigint.h>
    #include <botan/numthry.h>
-   #include <botan/curve_gfp.h>
    #include <botan/curve_nistp.h>
    #include <botan/pk_keys.h>
    #include <botan/point_gfp.h>
@@ -557,24 +556,12 @@ Test::Result test_enc_dec_compressed_256()
    {
    Test::Result result("ECC Unit");
 
-   // Test for compressed conversion (02/03) 256bit
-   std::string p_secp = "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff";
-   std::string a_secp = "ffffffff00000001000000000000000000000000ffffffffffffffffffffffFC";
-   std::string b_secp = "5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B";
-   std::string G_secp_comp = "036B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296";
+   Botan::EC_Group group("secp256r1");
 
-   std::vector<uint8_t> sv_p_secp = Botan::hex_decode(p_secp);
-   std::vector<uint8_t> sv_a_secp = Botan::hex_decode(a_secp);
-   std::vector<uint8_t> sv_b_secp = Botan::hex_decode(b_secp);
-   std::vector<uint8_t> sv_G_secp_comp = Botan::hex_decode(G_secp_comp);
+   const std::string G_secp_comp = "036B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296";
+   const std::vector<uint8_t> sv_G_secp_comp = Botan::hex_decode(G_secp_comp);
 
-   Botan::BigInt bi_p_secp = Botan::BigInt::decode(sv_p_secp.data(), sv_p_secp.size());
-   Botan::BigInt bi_a_secp = Botan::BigInt::decode(sv_a_secp.data(), sv_a_secp.size());
-   Botan::BigInt bi_b_secp = Botan::BigInt::decode(sv_b_secp.data(), sv_b_secp.size());
-
-   Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-
-   Botan::PointGFp p_G = OS2ECP(sv_G_secp_comp, curve);
+   Botan::PointGFp p_G = group.OS2ECP(sv_G_secp_comp);
    std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::COMPRESSED));
 
    result.test_eq("compressed_256", sv_result, sv_G_secp_comp);
@@ -588,21 +575,14 @@ Test::Result test_enc_dec_uncompressed_112()
 
    // Test for uncompressed conversion (04) 112bit
 
-   std::string p_secp = "db7c2abf62e35e668076bead208b";
-   std::string a_secp = "6127C24C05F38A0AAAF65C0EF02C";
-   std::string b_secp = "51DEF1815DB5ED74FCC34C85D709";
-   std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
+   const Botan::BigInt p("0xdb7c2abf62e35e668076bead208b");
+   const Botan::BigInt a("0x6127C24C05F38A0AAAF65C0EF02C");
+   const Botan::BigInt b("0x51DEF1815DB5ED74FCC34C85D709");
 
-   std::vector<uint8_t> sv_p_secp = Botan::hex_decode(p_secp);
-   std::vector<uint8_t> sv_a_secp = Botan::hex_decode(a_secp);
-   std::vector<uint8_t> sv_b_secp = Botan::hex_decode(b_secp);
-   std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
+   Botan::CurveGFp curve(p, a, b);
 
-   Botan::BigInt bi_p_secp = Botan::BigInt::decode(sv_p_secp.data(), sv_p_secp.size());
-   Botan::BigInt bi_a_secp = Botan::BigInt::decode(sv_a_secp.data(), sv_a_secp.size());
-   Botan::BigInt bi_b_secp = Botan::BigInt::decode(sv_b_secp.data(), sv_b_secp.size());
-
-   Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
+   const std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
+   const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
 
    Botan::PointGFp p_G = OS2ECP(sv_G_secp_uncomp, curve);
    std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
@@ -616,27 +596,15 @@ Test::Result test_enc_dec_uncompressed_521()
    Test::Result result("ECC Unit");
 
    // Test for uncompressed conversion(04) with big values(521 bit)
-   std::string p_secp =
-      "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-   std::string a_secp =
-      "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffFC";
-   std::string b_secp =
-      "0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00";
-   std::string G_secp_uncomp =
+
+   const std::string G_secp_uncomp =
       "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
 
-   std::vector<uint8_t> sv_p_secp = Botan::hex_decode(p_secp);
-   std::vector<uint8_t> sv_a_secp = Botan::hex_decode(a_secp);
-   std::vector<uint8_t> sv_b_secp = Botan::hex_decode(b_secp);
-   std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
+   const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
 
-   Botan::BigInt bi_p_secp = Botan::BigInt::decode(sv_p_secp.data(), sv_p_secp.size());
-   Botan::BigInt bi_a_secp = Botan::BigInt::decode(sv_a_secp.data(), sv_a_secp.size());
-   Botan::BigInt bi_b_secp = Botan::BigInt::decode(sv_b_secp.data(), sv_b_secp.size());
+   Botan::EC_Group group("secp521r1");
 
-   Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-
-   Botan::PointGFp p_G = Botan::OS2ECP(sv_G_secp_uncomp, curve);
+   Botan::PointGFp p_G = group.OS2ECP(sv_G_secp_uncomp);
 
    std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
 
