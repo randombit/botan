@@ -87,9 +87,17 @@ std::string Request::base64_encode() const
    return Botan::base64_encode(BER_encode());
    }
 
+Response::Response(Certificate_Status_Code status)
+   {
+   m_status_code = status;
+   m_return_status = true;
+   }
+
 Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
    m_response_bits(response_bits, response_bits + response_bits_len)
    {
+   m_return_status = false;
+
    BER_Decoder response_outer = BER_Decoder(m_response_bits).start_cons(SEQUENCE);
 
    size_t resp_status = 0;
@@ -143,6 +151,9 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
 Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer) const
    {
+   if (m_return_status)
+      return m_status_code;
+
    try
       {
       std::unique_ptr<Public_Key> pub_key(issuer.subject_public_key());
@@ -172,6 +183,9 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
 Certificate_Status_Code Response::check_signature(const std::vector<Certificate_Store*>& trusted_roots,
                                                   const std::vector<std::shared_ptr<const X509_Certificate>>& ee_cert_path) const
    {
+   if (m_return_status)
+      return m_status_code;
+
    std::shared_ptr<const X509_Certificate> signing_cert;
 
    for(size_t i = 0; i != trusted_roots.size(); ++i)
@@ -253,6 +267,9 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
                                              const X509_Certificate& subject,
                                              std::chrono::system_clock::time_point ref_time) const
    {
+   if (m_return_status)
+      return m_status_code;
+
    for(const auto& response : m_responses)
       {
       if(response.certid().is_id_for(issuer, subject))
