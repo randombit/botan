@@ -154,6 +154,12 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      BigInt& operator*=(const BigInt& y);
 
      /**
+     * *= operator
+     * @param y the word to multiply with this
+     */
+     BigInt& operator*=(word y);
+
+     /**
      * /= operator
      * @param y the BigInt to divide this by
      */

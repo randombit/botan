@@ -107,12 +107,12 @@ BigInt& BigInt::operator*=(const BigInt& y)
       }
    else if(x_sw == 1 && y_sw)
       {
-      grow_to(y_sw + 2);
+      grow_to(y_sw + 1);
       bigint_linmul3(mutable_data(), y.data(), y_sw, word_at(0));
       }
    else if(y_sw == 1 && x_sw)
       {
-      grow_to(x_sw + 2);
+      grow_to(x_sw + 1);
       bigint_linmul2(mutable_data(), x_sw, y.word_at(0));
       }
    else
@@ -121,6 +121,21 @@ BigInt& BigInt::operator*=(const BigInt& y)
       secure_vector<word> workspace(size());
       bigint_mul(*this, BigInt(*this), y, workspace.data(), workspace.size());
       }
+
+   return (*this);
+   }
+
+BigInt& BigInt::operator*=(word y)
+   {
+   if(y == 0)
+      {
+      clear();
+      set_sign(Positive);
+      }
+
+   const size_t x_sw = sig_words();
+   grow_to(x_sw + 1);
+   bigint_linmul2(mutable_data(), x_sw, y);
 
    return (*this);
    }
