@@ -85,7 +85,8 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    const size_t output_size = 2*m_p_words + 1;
    ws.resize(2*(m_p_words+2));
 
-   z.grow_to(output_size);
+   if(z.size() < output_size)
+      z.grow_to(output_size);
    z.clear();
 
    bigint_monty_mul(z, x, y,
@@ -109,7 +110,8 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
 
    ws.resize(2*(m_p_words+2));
 
-   z.grow_to(output_size);
+   if(z.size() < output_size)
+      z.grow_to(output_size);
    z.clear();
 
    bigint_monty_sqr(z, x, m_p.data(), m_p_words, m_p_dash,
@@ -164,9 +166,11 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
 
    const size_t p_words = get_p_words();
    const size_t output_size = 2*p_words + 1;
+
    ws.resize(2*(p_words+2));
 
-   z.grow_to(output_size);
+   if(z.size() < output_size)
+      z.grow_to(output_size);
    z.clear();
 
    bigint_mul(z, x, y, ws.data(), ws.size());
@@ -188,7 +192,8 @@ void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
 
    ws.resize(2*(p_words+2));
 
-   z.grow_to(output_size);
+   if(z.size() < output_size)
+      z.grow_to(output_size);
    z.clear();
 
    bigint_sqr(z.mutable_data(), output_size,
