@@ -5,7 +5,7 @@
 */
 
 #include "fuzzers.h"
-#include "redc_helper.h"
+#include <botan/reducer.h>
 #include <botan/curve_nistp.h>
 
 void fuzz(const uint8_t in[], size_t len)
@@ -17,10 +17,15 @@ void fuzz(const uint8_t in[], size_t len)
    static const Botan::BigInt prime_2 = prime * prime;
    static Botan::Modular_Reducer prime_redc(prime);
 
-   Botan::BigInt x = Botan::BigInt::decode(in, len);
+   Botan::BigInt input = Botan::BigInt::decode(in, len);
 
-   if(x < prime_2)
+   if(input < prime_2)
       {
-      check_redc(Botan::redc_p256, prime_redc, prime, x);
+      const Botan::BigInt ref = prime_redc.reduce(input);
+
+      Botan::secure_vector<Botan::word> ws;
+      Botan::redc_p256(input, ws);
+
+      FUZZER_ASSERT_EQUAL(ref, input);
       }
    }
