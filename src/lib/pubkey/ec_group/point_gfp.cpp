@@ -93,9 +93,9 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    BigInt& H = ws_bn[6];
    BigInt& r = ws_bn[7];
 
-   BigInt& tmp = ws_bn[9];
+   BigInt& tmp = ws_bn[8];
 
-   secure_vector<word>& monty_ws = ws_bn[8].get_word_vector();
+   secure_vector<word>& monty_ws = ws_bn[9].get_word_vector();
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
@@ -204,7 +204,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.mul(S, m_coord_x, y_2, monty_ws);
    S <<= 2; // * 4
-   S.reduce_below(p, monty_ws);
+   S.reduce_below(p, tmp.get_word_vector());
 
    m_curve.sqr(a_z4, m_coord_z, monty_ws); // z^2
    m_curve.sqr(tmp, a_z4, monty_ws); // z^4
@@ -213,7 +213,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    m_curve.sqr(M, m_coord_x, monty_ws);
    M *= 3;
    M += a_z4;
-   M.reduce_below(p, monty_ws);
+   M.reduce_below(p, tmp.get_word_vector());
 
    m_curve.sqr(x, M, monty_ws);
    x -= S;
@@ -223,7 +223,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.sqr(U, y_2, monty_ws);
    U <<= 3;
-   U.reduce_below(p, monty_ws);
+   U.reduce_below(p, tmp.get_word_vector());
 
    S -= x;
    while(S.is_negative())
@@ -236,7 +236,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.mul(z, m_coord_y, m_coord_z, monty_ws);
    z <<= 1;
-   z.reduce_below(p, monty_ws);
+   z.reduce_below(p, tmp.get_word_vector());
 
    m_coord_x = x;
    m_coord_y = y;
