@@ -108,17 +108,27 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    else
       m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
+   const BigInt& order = m_domain_params.get_order();
+
    if(x == 0)
       {
-      m_private_key = BigInt::random_integer(rng, 1, domain().get_order());
+      m_private_key = BigInt::random_integer(rng, 1, order);
       }
    else
       {
       m_private_key = x;
       }
 
-   m_public_key = domain().get_base_point() *
-                  ((with_modular_inverse) ? inverse_mod(m_private_key, m_domain_params.get_order()) : m_private_key);
+   // Can't use rng here because ffi load functions use Null_RNG
+   if(with_modular_inverse)
+      {
+      // ECKCDSA
+      m_public_key = domain().get_base_point() * inverse_mod(m_private_key, order);
+      }
+   else
+      {
+      m_public_key = domain().get_base_point() * m_private_key;
+      }
 
    BOTAN_ASSERT(m_public_key.on_the_curve(),
                 "Generated public key point was on the curve");
@@ -160,8 +170,16 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
 
    if(public_key_bits.empty())
       {
-      m_public_key = domain().get_base_point() *
-                     ((with_modular_inverse) ? inverse_mod(m_private_key, m_domain_params.get_order()) : m_private_key);
+      if(with_modular_inverse)
+         {
+         // ECKCDSA
+         const BigInt& order = m_domain_params.get_order();
+         m_public_key = domain().get_base_point() * inverse_mod(m_private_key, order);
+         }
+      else
+         {
+         m_public_key = domain().get_base_point() * m_private_key;
+         }
 
       BOTAN_ASSERT(m_public_key.on_the_curve(),
                    "Public point derived from loaded key was on the curve");

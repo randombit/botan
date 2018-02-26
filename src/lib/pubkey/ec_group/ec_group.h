@@ -173,6 +173,16 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       const PointGFp& get_base_point() const;
 
       /**
+      * Return the x coordinate of the base point
+      */
+      const BigInt& get_g_x() const;
+
+      /**
+      * Return the y coordinate of the base point
+      */
+      const BigInt& get_g_y() const;
+
+      /**
       * Return the order of the base point
       * @result order of the base point
       */
@@ -232,7 +242,9 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @param ws a temp workspace
       * @return base_point*k
       */
-      PointGFp blinded_base_point_multiply(const BigInt& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
+      PointGFp blinded_base_point_multiply(const BigInt& k,
+                                           RandomNumberGenerator& rng,
+                                           std::vector<BigInt>& ws) const;
 
       /**
       * Return the zero (or infinite) point on this curve

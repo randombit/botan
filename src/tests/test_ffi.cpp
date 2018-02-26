@@ -1425,7 +1425,7 @@ class FFI_Unit_Tests final : public Test
 
             botan_pk_op_verify_t verifier;
 
-            if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", 0)))
+            if(signature.size() > 0 && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", 0)))
                {
                TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
                TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
@@ -1524,7 +1524,7 @@ class FFI_Unit_Tests final : public Test
 
          botan_pk_op_verify_t verifier;
 
-         if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", 0)))
+         if(signature.size() > 0 && TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", 0)))
             {
             TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
             TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
@@ -1587,8 +1587,8 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
-         TEST_FFI_OK(botan_privkey_load_sm2, (&loaded_privkey, private_scalar, kCurve));
-         TEST_FFI_OK(botan_pubkey_load_sm2, (&loaded_pubkey, public_x, public_y, kCurve));
+         REQUIRE_FFI_OK(botan_privkey_load_sm2, (&loaded_privkey, private_scalar, kCurve));
+         REQUIRE_FFI_OK(botan_pubkey_load_sm2, (&loaded_pubkey, public_x, public_y, kCurve));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
 
@@ -1678,8 +1678,8 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
-         TEST_FFI_OK(botan_privkey_load_sm2_enc, (&loaded_privkey, private_scalar, kCurve));
-         TEST_FFI_OK(botan_pubkey_load_sm2_enc, (&loaded_pubkey, public_x, public_y, kCurve));
+         REQUIRE_FFI_OK(botan_privkey_load_sm2_enc, (&loaded_privkey, private_scalar, kCurve));
+         REQUIRE_FFI_OK(botan_pubkey_load_sm2_enc, (&loaded_pubkey, public_x, public_y, kCurve));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
 

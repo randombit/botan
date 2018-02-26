@@ -145,9 +145,9 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
       else if(field == "public_y")
          return ecc->public_point().get_affine_y();
       else if(field == "base_x")
-         return ecc->domain().get_base_point().get_affine_x();
+         return ecc->domain().get_g_x();
       else if(field == "base_y")
-         return ecc->domain().get_base_point().get_affine_y();
+         return ecc->domain().get_g_y();
       else if(field == "p")
          return ecc->domain().get_p();
       else if(field == "a")

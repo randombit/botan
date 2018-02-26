@@ -59,8 +59,8 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
 
    hash.update(BigInt::encode_1363(domain.get_a(), p_bytes));
    hash.update(BigInt::encode_1363(domain.get_b(), p_bytes));
-   hash.update(BigInt::encode_1363(domain.get_base_point().get_affine_x(), p_bytes));
-   hash.update(BigInt::encode_1363(domain.get_base_point().get_affine_y(), p_bytes));
+   hash.update(BigInt::encode_1363(domain.get_g_x(), p_bytes));
+   hash.update(BigInt::encode_1363(domain.get_g_y(), p_bytes));
    hash.update(BigInt::encode_1363(pubkey.get_affine_x(), p_bytes));
    hash.update(BigInt::encode_1363(pubkey.get_affine_y(), p_bytes));
 
