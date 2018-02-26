@@ -7,140 +7,115 @@
 */
 
 #include <botan/internal/monty_exp.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
-#include <botan/internal/mp_core.h>
+#include <botan/monty.h>
 
 namespace Botan {
 
 class Montgomery_Exponentation_State
    {
    public:
-      Montgomery_Exponentation_State(const BigInt& g,
-                                     const BigInt& p,
-                                     const Modular_Reducer& mod_p,
+      Montgomery_Exponentation_State(std::shared_ptr<const Montgomery_Params> params,
+                                     const BigInt& g,
                                      size_t window_bits);
 
       BigInt exponentiation(const BigInt& k) const;
    private:
-      BigInt m_p;
-      BigInt m_R_mod;
-      BigInt m_R2_mod;
-      word m_mod_prime;
-      size_t m_p_words;
+      std::shared_ptr<const Montgomery_Params> m_params;
+      std::vector<Montgomery_Int> m_g;
       size_t m_window_bits;
-      std::vector<BigInt> m_g;
    };
 
-Montgomery_Exponentation_State::Montgomery_Exponentation_State(const BigInt& g,
-                                                               const BigInt& p,
-                                                               const Modular_Reducer& mod_p,
+Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<const Montgomery_Params> params,
+                                                               const BigInt& g,
                                                                size_t window_bits) :
-   m_p(p),
-   m_p_words(p.sig_words()),
-   m_window_bits(window_bits)
+   m_params(params),
+   m_window_bits(window_bits == 0 ? 4 : window_bits)
    {
-   if(p.is_positive() == false || p.is_even())
-      throw Invalid_Argument("Cannot use Montgomery reduction on even or negative integer");
+   if(m_window_bits < 1 || m_window_bits > 12) // really even 8 is too large ...
+      throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
 
-   if(window_bits > 12) // really even 8 is too large ...
-      throw Invalid_Argument("Montgomery window bits too large");
+   const size_t window_size = (1U << m_window_bits);
 
-   m_mod_prime = monty_inverse(m_p.word_at(0));
+   m_g.reserve(window_size);
 
-   const BigInt r = BigInt::power_of_2(m_p_words * BOTAN_MP_WORD_BITS);
-   m_R_mod = mod_p.reduce(r);
-   m_R2_mod = mod_p.square(m_R_mod);
+   m_g.push_back(Montgomery_Int(m_params, m_params->R1(), false));;
 
-   m_g.resize(1U << m_window_bits);
+   m_g.push_back(Montgomery_Int(m_params, g));
 
-   BigInt z(BigInt::Positive, 2 * (m_p_words + 1));
-   secure_vector<word> workspace(z.size());
+   const Montgomery_Int& monty_g = m_g[1];
 
-   m_g[0] = 1;
-
-   bigint_monty_mul(z, m_g[0], m_R2_mod,
-                    m_p.data(), m_p_words, m_mod_prime,
-                    workspace.data(), workspace.size());
-   m_g[0] = z;
-
-   m_g[1] = mod_p.reduce(g);
-
-   bigint_monty_mul(z, m_g[1], m_R2_mod,
-                    m_p.data(), m_p_words, m_mod_prime,
-                    workspace.data(), workspace.size());
-
-   m_g[1] = z;
-
-   const BigInt& x = m_g[1];
-
-   for(size_t i = 2; i != m_g.size(); ++i)
+   for(size_t i = 2; i != window_size; ++i)
       {
-      const BigInt& y = m_g[i-1];
+      m_g.push_back(monty_g * m_g[i - 1]);
+      }
 
-      bigint_monty_mul(z, x, y, m_p.data(), m_p_words, m_mod_prime,
-                       workspace.data(), workspace.size());
-
-      m_g[i] = z;
-      m_g[i].shrink_to_fit();
-      m_g[i].grow_to(m_p_words);
+   // Resize each element to exactly p words
+   for(size_t i = 0; i != window_size; ++i)
+      {
+      m_g[i].fix_size();
       }
    }
 
-BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& k) const
+namespace {
+
+void const_time_lookup(secure_vector<word>& output,
+                        const std::vector<Montgomery_Int>& g,
+                        size_t nibble)
    {
-   const size_t exp_nibbles = (k.bits() + m_window_bits - 1) / m_window_bits;
+   const size_t words = output.size();
 
-   BigInt x = m_R_mod;
+   clear_mem(output.data(), output.size());
 
-   const size_t z_size = 2*(m_p_words + 1);
+   for(size_t i = 0; i != g.size(); ++i)
+      {
+      const secure_vector<word>& vec = g[i].repr().get_word_vector();
 
-   BigInt z(BigInt::Positive, z_size);
-   secure_vector<word> workspace(z.size());
-   secure_vector<word> e(m_p_words);
+      BOTAN_ASSERT(vec.size() >= words,
+                   "Word size as expected in const_time_lookup");
+
+      const word mask = CT::is_equal<word>(i, nibble);
+
+      for(size_t w = 0; w != words; ++w)
+         output[w] |= (mask & vec[w]);
+      }
+   }
+
+}
+
+BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar) const
+   {
+   const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
+
+   Montgomery_Int x(m_params, m_params->R1(), false);
+
+   secure_vector<word> e_bits(m_params->p_words());
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {
       for(size_t j = 0; j != m_window_bits; ++j)
          {
-         bigint_monty_sqr(z, x, m_p.data(), m_p_words, m_mod_prime,
-                          workspace.data(), workspace.size());
-
-         x = z;
+         x.square_this();
          }
 
-      const uint32_t nibble = k.get_substring(m_window_bits*(i-1), m_window_bits);
+      const uint32_t nibble = scalar.get_substring(m_window_bits*(i-1), m_window_bits);
 
-      BigInt::const_time_lookup(e, m_g, nibble);
+      const_time_lookup(e_bits, m_g, nibble);
 
-      bigint_mul(z.mutable_data(), z.size(),
-                 x.data(), x.size(), x.sig_words(),
-                 e.data(), m_p_words, m_p_words,
-                 workspace.data(), workspace.size());
-
-      bigint_monty_redc(z.mutable_data(),
-                        m_p.data(), m_p_words, m_mod_prime,
-                        workspace.data(), workspace.size());
-
-      x = z;
+      x *= e_bits;
       }
 
-   x.grow_to(2*m_p_words + 1);
-
-   bigint_monty_redc(x.mutable_data(),
-                     m_p.data(), m_p_words, m_mod_prime,
-                     workspace.data(), workspace.size());
-
-   return x;
+   return x.value();
    }
 
 std::shared_ptr<const Montgomery_Exponentation_State>
-monty_precompute(const BigInt& g,
-                 const BigInt& p,
-                 const Modular_Reducer& mod_p,
+monty_precompute(std::shared_ptr<const Montgomery_Params> params,
+                 const BigInt& g,
                  size_t window_bits)
    {
-   return std::make_shared<const Montgomery_Exponentation_State>(g, p, mod_p, window_bits);
+   return std::make_shared<const Montgomery_Exponentation_State>(params, g, window_bits);
    }
 
 BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state,

@@ -8,6 +8,7 @@
 #include <botan/dl_group.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
+#include <botan/monty.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
@@ -22,7 +23,8 @@ class DL_Group_Data final
       DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g) :
          m_p(p), m_q(q), m_g(g),
          m_mod_p(p),
-         m_monty(monty_precompute(m_g, m_p, m_mod_p, /*window bits=*/4)),
+         m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
+         m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
          m_p_bits(p.bits()),
          m_estimated_strength(dl_work_factor(m_p_bits))
          {}
@@ -55,6 +57,7 @@ class DL_Group_Data final
       BigInt m_q;
       BigInt m_g;
       Modular_Reducer m_mod_p;
+      std::shared_ptr<const Montgomery_Params> m_monty_params;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
       size_t m_estimated_strength;

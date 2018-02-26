@@ -9,6 +9,7 @@ curve_nistp.h
 numthry.h
 pow_mod.h
 reducer.h
+monty.h
 </header:public>
 
 <header:internal>
