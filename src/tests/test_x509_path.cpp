@@ -113,9 +113,44 @@ class X509test_Path_Validation_Tests final : public Test
 
             result.test_eq("test " + filename, path_result.result_string(), expected_result);
             result.test_eq("test no warnings string", path_result.warnings_string(), "");
-            result.confirm("test no warnings", path_result.no_warnings() == true);
+            result.confirm("test no warnings", path_result.no_warnings());
             result.end_timer();
             results.push_back(result);
+            }
+
+         // test softfail
+            {
+            Test::Result result("X509test path validation softfail");
+            result.start_timer();
+
+            // this certificate must not have a OCSP URL
+            const std::string filename = "ValidAltName.pem";
+            std::vector<Botan::X509_Certificate> certs =
+               load_cert_file(Test::data_file("x509/x509test/" + filename));
+            if(certs.empty())
+               {
+               throw Test_Error("Failed to read certs from " + filename);
+               }
+
+            Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
+                     certs, restrictions, trusted,
+                     "www.tls.test", Botan::Usage_Type::TLS_SERVER_AUTH,
+                     validation_time, 
+                     /* activate check_ocsp_online */ std::chrono::milliseconds(1000), {});
+
+            if(path_result.successful_validation() && path_result.trust_root() != root)
+               {
+               path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
+               }
+
+            // certificate verification succeed even if no OCSP URL (softfail)
+            result.confirm("test success", path_result.successful_validation());
+            result.test_eq("test " + filename, path_result.result_string(), "Verified");
+            // if softfail, there is warnings
+            result.confirm("test warnings", !path_result.no_warnings());
+            result.test_eq("test warnings string", path_result.warnings_string(), "[0] OCSP URL not available");
+            result.end_timer();
+            results.push_back(result);  
             }
 
          return results;
