@@ -13,6 +13,11 @@
 
 namespace Botan {
 
+BigInt::BigInt(const word words[], size_t length)
+   {
+   m_reg.assign(words, words + length);
+   }
+
 /*
 * Construct a BigInt from a regular number
 */

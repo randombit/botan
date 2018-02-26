@@ -79,6 +79,13 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      BigInt(const uint8_t buf[], size_t length, Base base = Binary);
 
      /**
+     * Create a BigInt from an array of words
+     * @param words the words
+     * @param length number of words
+     */
+     BigInt(const word words[], size_t length);
+
+     /**
      * \brief Create a random BigInt of the specified size
      *
      * @param rng random number generator
@@ -220,6 +227,20 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @return true iff this is zero, otherwise false
      */
      bool operator !() const { return (!is_nonzero()); }
+
+     /**
+     * Multiply this with y
+     * @param y the BigInt to multiply with this
+     * @param ws a temp workspace
+     */
+     BigInt& mul(const BigInt& y, secure_vector<word>& ws);
+
+     /**
+     * Set *this to y - *this
+     * @param y the BigInt to subtract from
+     * @param ws a temp workspace
+     */
+     BigInt& rev_sub(const word y[], size_t y_size, secure_vector<word>& ws);
 
      /**
      * Return *this below mod

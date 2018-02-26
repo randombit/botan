@@ -92,12 +92,54 @@ BigInt& BigInt::operator-=(const BigInt& y)
    return (*this);
    }
 
+BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws)
+   {
+   /*
+   *this = BigInt(y, y_sw) - *this;
+   return *this;
+   */
+   if(this->sign() != BigInt::Positive)
+      throw Invalid_State("BigInt::sub_rev requires this is positive");
+
+   const size_t x_sw = this->sig_words();
+
+   const int32_t relative_size = bigint_cmp(y, y_sw, this->data(), x_sw);
+
+   ws.resize(std::max(y_sw, x_sw) + 1);
+   clear_mem(ws.data(), ws.size());
+
+   if(relative_size < 0)
+      {
+      bigint_sub3(ws.data(), this->data(), x_sw, y, y_sw);
+      this->flip_sign();
+      }
+   else if(relative_size == 0)
+      {
+      ws.clear();
+      }
+   else if(relative_size > 0)
+      {
+      bigint_sub3(ws.data(), y, y_sw, this->data(), x_sw);
+      }
+
+   m_reg.swap(ws);
+
+   return (*this);
+   }
+
 /*
 * Multiplication Operator
 */
 BigInt& BigInt::operator*=(const BigInt& y)
    {
-   const size_t x_sw = sig_words(), y_sw = y.sig_words();
+   secure_vector<word> ws;
+   return this->mul(y, ws);
+   }
+
+BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws)
+   {
+   const size_t x_sw = sig_words();
+   const size_t y_sw = y.sig_words();
    set_sign((sign() == y.sign()) ? Positive : Negative);
 
    if(x_sw == 0 || y_sw == 0)
@@ -117,9 +159,16 @@ BigInt& BigInt::operator*=(const BigInt& y)
       }
    else
       {
-      grow_to(size() + y.size());
-      secure_vector<word> workspace(size());
-      bigint_mul(*this, BigInt(*this), y, workspace.data(), workspace.size());
+      const size_t new_size = x_sw + y_sw + 1;
+      ws.resize(new_size);
+      secure_vector<word> z_reg(new_size);
+
+      bigint_mul(z_reg.data(), z_reg.size(),
+                 data(), size(), x_sw,
+                 y.data(), y.size(), y_sw,
+                 ws.data(), ws.size());
+
+      z_reg.swap(m_reg);
       }
 
    return (*this);

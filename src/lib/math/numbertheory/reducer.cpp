@@ -34,7 +34,9 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
    if(m_mod_words == 0)
       throw Invalid_State("Modular_Reducer: Never initalized");
 
-   if(x.cmp(m_modulus, false) < 0)
+   const size_t x_sw = x.sig_words();
+
+   if(x_sw < m_mod_words || x.cmp(m_modulus, false) < 0)
       {
       if(x.is_negative())
          return x + m_modulus; // make positive
@@ -42,34 +44,29 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
       }
    else if(x.cmp(m_modulus_2, false) < 0)
       {
-      BigInt t1 = x;
-      t1.set_sign(BigInt::Positive);
-      t1 >>= (MP_WORD_BITS * (m_mod_words - 1));
-      t1 *= m_mu;
+      secure_vector<word> ws;
 
+      BigInt t1(x.data() + m_mod_words - 1, x_sw - (m_mod_words - 1));
+
+      t1.mul(m_mu, ws);
       t1 >>= (MP_WORD_BITS * (m_mod_words + 1));
-      t1 *= m_modulus;
 
+      t1.mul(m_modulus, ws);
       t1.mask_bits(MP_WORD_BITS * (m_mod_words + 1));
 
-      BigInt t2 = x;
-      t2.set_sign(BigInt::Positive);
-      t2.mask_bits(MP_WORD_BITS * (m_mod_words + 1));
+      t1.rev_sub(x.data(), std::min(x_sw, m_mod_words + 1), ws);
 
-      t2 -= t1;
-
-      if(t2.is_negative())
+      if(t1.is_negative())
          {
-         t2 += BigInt::power_of_2(MP_WORD_BITS * (m_mod_words + 1));
+         t1 += BigInt::power_of_2(MP_WORD_BITS * (m_mod_words + 1));
          }
 
-      while(t2 >= m_modulus)
-         t2 -= m_modulus;
+      t1.reduce_below(m_modulus, ws);
 
       if(x.is_positive())
-         return t2;
+         return t1;
       else
-         return (m_modulus - t2);
+         return (m_modulus - t1);
       }
    else
       {
