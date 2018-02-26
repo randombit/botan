@@ -291,7 +291,12 @@ BigInt BigInt::abs() const
 void BigInt::grow_to(size_t n)
    {
    if(n > size())
-      m_reg.resize(round_up(n, 8));
+      {
+      if(n <= m_reg.capacity())
+         m_reg.resize(m_reg.capacity());
+      else
+         m_reg.resize(round_up(n, 8));
+      }
    }
 
 /*
@@ -325,9 +330,10 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
       m_reg[length / WORD_BYTES] = (m_reg[length / WORD_BYTES] << 8) | buf[i];
    }
 
-void BigInt::shrink_to_fit()
+void BigInt::shrink_to_fit(size_t min_size)
    {
-   m_reg.resize(sig_words());
+   const size_t words = std::max(min_size, sig_words());
+   m_reg.resize(words);
    }
 
 void BigInt::const_time_lookup(secure_vector<word>& output,

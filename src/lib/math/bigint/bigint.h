@@ -480,7 +480,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void grow_to(size_t n);
 
-     void shrink_to_fit();
+     /**
+     * Resize the vector to the minimum word size to hold the integer, or
+     * min_size words, whichever is larger
+     */
+     void shrink_to_fit(size_t min_size = 0);
 
      /**
      * Fill BigInt with a random number with size of bitsize

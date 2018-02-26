@@ -6,9 +6,9 @@ Version 2.5.0, Not Yet Released
 
 * Add support for RSA-PSS signatures in TLS (GH #1285)
 
-* A faster algorithm for ECC point multiplications is now used, resulting in
-  ECDSA signature generation being 2-3 times fater than previous releases. Other
-  optimizations have improved ECDSA verification time by about 25%. (GH #1457)
+* Several optimizations in ECC operations have improved ECDSA signature
+  generation and ECDH key exchange performance by 2 to 4 times as compared to
+  previous releases. ECDSA verification is 1.25 to 2 times faster. (GH #1457)
 
 * Add a new Credentials_Manager callback that specifies which CAs the server
   has indicated it trusts (GH #1395 fixing #1261)
