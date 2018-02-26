@@ -147,7 +147,8 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    m_curve.sqr(m_coord_x, r, monty_ws);
    m_coord_x -= S2;
-   m_coord_x -= (U2 << 1);
+   m_coord_x -= U2;
+   m_coord_x -= U2;
    while(m_coord_x.is_negative())
       m_coord_x += p;
 
@@ -215,7 +216,8 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    M.reduce_below(p, monty_ws);
 
    m_curve.sqr(x, M, monty_ws);
-   x -= (S << 1);
+   x -= S;
+   x -= S;
    while(x.is_negative())
       x += p;
 

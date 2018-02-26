@@ -1,6 +1,5 @@
 /*
-* BigInt Assignment Operators
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -20,21 +19,25 @@ BigInt& BigInt::operator+=(const BigInt& y)
    {
    const size_t x_sw = sig_words(), y_sw = y.sig_words();
 
-   const size_t reg_size = std::max(x_sw, y_sw) + 1;
-
-   if(m_reg.size() < reg_size)
-      grow_to(reg_size);
-
    if(sign() == y.sign())
+      {
+      const size_t reg_size = std::max(x_sw, y_sw) + 1;
+
+      if(m_reg.size() < reg_size)
+         grow_to(reg_size);
+
       bigint_add2(mutable_data(), reg_size - 1, y.data(), y_sw);
+      }
    else
       {
-      int32_t relative_size = bigint_cmp(data(), x_sw, y.data(), y_sw);
+      const int32_t relative_size = bigint_cmp(data(), x_sw, y.data(), y_sw);
 
       if(relative_size < 0)
          {
-         secure_vector<word> z(reg_size - 1);
-         bigint_sub3(z.data(), y.data(), reg_size - 1, data(), x_sw);
+         const size_t reg_size = std::max(x_sw, y_sw);
+
+         secure_vector<word> z(reg_size);
+         bigint_sub3(z.data(), y.data(), reg_size, data(), x_sw);
          std::swap(m_reg, z);
          set_sign(y.sign());
          }
@@ -44,7 +47,9 @@ BigInt& BigInt::operator+=(const BigInt& y)
          set_sign(Positive);
          }
       else if(relative_size > 0)
+         {
          bigint_sub2(mutable_data(), x_sw, y.data(), y_sw);
+         }
       }
 
    return (*this);
@@ -183,7 +188,9 @@ BigInt& BigInt::operator*=(word y)
       }
 
    const size_t x_sw = sig_words();
-   grow_to(x_sw + 1);
+
+   if(size() < x_sw + 1)
+      grow_to(x_sw + 1);
    bigint_linmul2(mutable_data(), x_sw, y);
 
    return (*this);
@@ -254,7 +261,16 @@ BigInt& BigInt::operator<<=(size_t shift)
                    shift_bits  = shift % MP_WORD_BITS,
                    words = sig_words();
 
-      grow_to(words + shift_words + (shift_bits ? 1 : 0));
+      /*
+      * FIXME - if shift_words == 0 && the top shift_bits of the top word
+      * are zero then we know that no additional word is needed and can
+      * skip the allocation.
+      */
+      const size_t needed_size = words + shift_words + (shift_bits ? 1 : 0);
+
+      if(m_reg.size() < needed_size)
+         grow_to(needed_size);
+
       bigint_shl1(mutable_data(), words, shift_words, shift_bits);
       }
 
