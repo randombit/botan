@@ -82,7 +82,7 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
       return;
       }
 
-   const size_t output_size = 2*m_p_words + 1;
+   const size_t output_size = 2*m_p_words + 2;
    ws.resize(2*(m_p_words+2));
 
    if(z.size() < output_size)
@@ -106,7 +106,7 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
    const size_t x_sw = x.sig_words();
    BOTAN_ASSERT(x_sw <= m_p_words, "Input in range");
 
-   const size_t output_size = 2*m_p_words + 1;
+   const size_t output_size = 2*m_p_words + 2;
 
    ws.resize(2*(m_p_words+2));
 
@@ -165,7 +165,7 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
       }
 
    const size_t p_words = get_p_words();
-   const size_t output_size = 2*p_words + 1;
+   const size_t output_size = 2*p_words + 2;
 
    ws.resize(2*(p_words+2));
 
@@ -188,7 +188,7 @@ void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
       }
 
    const size_t p_words = get_p_words();
-   const size_t output_size = 2*p_words + 1;
+   const size_t output_size = 2*p_words + 2;
 
    ws.resize(2*(p_words+2));
 
