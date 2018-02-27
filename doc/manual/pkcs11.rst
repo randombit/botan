@@ -18,11 +18,12 @@ or HSM specific code for each device they want to support.
 
      The Botan PKCS#11 interface is implemented against version v2.40 of the standard.
 
-Botan wraps the C PKCS#11 API to provide a C++ PKCS#11 interface. This is done in two
-levels of abstraction: a low level API (see :ref:`pkcs11_low_level`) and a high level API (see :ref:`pkcs11_high_level`). The low level API provides
-access to all functions that are specified by the standard. The high level API represents
-an object oriented approach to use PKCS#11 compatible devices but only provides a subset
-of the functions described in the standard.
+Botan wraps the C PKCS#11 API to provide a C++ PKCS#11 interface. This is done
+in two levels of abstraction: a low level API (see :ref:`pkcs11_low_level`) and
+a high level API (see :ref:`pkcs11_high_level`). The low level API provides
+access to all functions that are specified by the standard. The high level API
+represents an object oriented approach to use PKCS#11 compatible devices but
+only provides a subset of the functions described in the standard.
 
 To use the PKCS#11 implementation the ``pkcs11`` module has to be enabled.
 
@@ -1248,16 +1249,15 @@ The following PIN and SO-PIN/PUK values are used in tests:
 - PIN 123456
 - SO-PIN/PUK 12345678
 
-!!! Warning !!!
+ .. warning::
 
-Unlike the CardOS (4.4, 5.0, 5.3), the aforementioned SO-PIN/PUK is inappropriate for Gemalto (IDPrime MD 3840) cards,
-as it must be a byte array of length 24. For this reason some of the tests for Gemalto card involving SO-PIN will fail.
-You run into a risk of exceding login attempts and as a result locking your card!
-Currently, specifying pin via command-line option is not implemented, and therefore the desired PIN must
-be modified in the header src/tests/test_pkcs11.h:
-
-
-Code example:
+   Unlike the CardOS (4.4, 5.0, 5.3), the aforementioned SO-PIN/PUK is
+   inappropriate for Gemalto (IDPrime MD 3840) cards, as it must be a byte array
+   of length 24. For this reason some of the tests for Gemalto card involving
+   SO-PIN will fail.  You run into a risk of exceding login attempts and as a
+   result locking your card!  Currently, specifying pin via command-line option
+   is not implemented, and therefore the desired PIN must be modified in the
+   header src/tests/test_pkcs11.h:
 
    .. code-block:: cpp
 
