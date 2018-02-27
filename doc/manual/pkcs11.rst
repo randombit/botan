@@ -1242,3 +1242,158 @@ also possible to execute only a subset with the following arguments:
 - pkcs11-session
 - pkcs11-slot
 - pkcs11-x509
+
+The following PIN and SO-PIN/PUK values are used in tests:
+
+- PIN 123456
+- SO-PIN/PUK 12345678
+
+!!! Warning !!!
+
+Unlike the CardOS (4.4, 5.0, 5.3), the aforementioned SO-PIN/PUK is inappropriate for Gemalto (IDPrime MD 3840) cards,
+as it must be a byte array of length 24. For this reason some of the tests for Gemalto card involving SO-PIN will fail.
+You run into a risk of exceding login attempts and as a result locking your card!
+Currently, specifying pin via command-line option is not implemented, and therefore the desired PIN must
+be modified in the header src/tests/test_pkcs11.h:
+
+
+Code example:
+
+   .. code-block:: cpp
+
+      // SO PIN is expected to be set to "12345678" prior to running the tests
+      const std::string SO_PIN = "12345678";
+      const auto SO_PIN_SECVEC = Botan::PKCS11::secure_string(SO_PIN.begin(), SO_PIN.end());
+
+
+Tested/Supported Smartcards
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You are very welcome to contribute your own test results for other testing environments or other cards.
+
+
+Test results
+
++-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
+|  Smartcard                          | Status                                    | OS                                                | Midleware                                         |   Botan                                           | Errors                                            |
++=====================================+===========================================+===================================================+===================================================+===================================================+===================================================+
+| CardOS 4.4                          | mostly works                              | Windows 10, 64-bit, version 1709                  | API Version 5.4.9.77 (Cryptoki v2.11)             |  2.4.0, Cryptoki v2.40                            | [50]_                                             |
++-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
+| CardOS 5.0                          | mostly works                              | Windows 10, 64-bit, version 1709                  | API Version 5.4.9.77 (Cryptoki v2.11)             |  2.4.0, Cryptoki v2.40                            | [51]_                                             |
++-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
+| CardOS 5.3                          | mostly works                              | Windows 10, 64-bit, version 1709                  | API Version 5.4.9.77 (Cryptoki v2.11)             |  2.4.0, Cryptoki v2.40                            | [52]_                                             |
++-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
+| Gemalto IDPrime MD 3840             | mostly works                              | Windows 10, 64-bit, version 1709                  | IDGo 800, v1.2.4 (Cryptoki v2.20)                 |  2.4.0, Cryptoki v2.40                            | [53]_                                             |
++-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
+| SoftHSM 2.3.0 (OpenSSL 1.0.2g)      | works                                     | Windows 10, 64-bit, version 1709                  | Cryptoki v2.40                                    |  2.4.0, Cryptoki v2.40                            |                                                   |
++-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
+
+.. [50] Failing operations for CardOS 4.4:
+
+ - object_copy [20]_
+
+ - rsa_privkey_export [21]_
+ - rsa_generate_private_key [22]_
+ - rsa_sign_verify [23]_
+
+ - ecdh_privkey_import [3]_
+ - ecdh_privkey_export [2]_
+ - ecdh_pubkey_import [4]_
+ - ecdh_pubkey_export [4]_
+ - ecdh_generate_private_key [3]_
+ - ecdh_generate_keypair [3]_
+ - ecdh_derive [3]_
+
+ - ecdsa_privkey_import [3]_
+ - ecdsa_privkey_export [2]_
+ - ecdsa_pubkey_import [4]_
+ - ecdsa_pubkey_export [4]_
+ - ecdsa_generate_private_key  [3]_
+ - ecdsa_generate_keypair  [3]_
+ - ecdsa_sign_verify  [3]_
+
+ - rng_add_entropy [5]_
+
+
+.. [51] Failing operations for CardOS 5.0
+
+ - object_copy [20]_
+
+ - rsa_privkey_export [21]_
+ - rsa_generate_private_key [22]_
+ - rsa_sign_verify [23]_
+
+ - ecdh_privkey_export [2]_
+ - ecdh_pubkey_import [4]_
+ - ecdh_generate_private_key [32]_
+ - ecdh_generate_keypair [3]_
+ - ecdh_derive [33]_
+
+ - ecdsa_privkey_export [2]_
+ - ecdsa_generate_private_key  [30]_
+ - ecdsa_generate_keypair  [30]_
+ - ecdsa_sign_verify  [30]_
+
+ - rng_add_entropy [5]_
+
+.. [52] Failing operations for CardOS 5.3
+
+ - object_copy [20]_
+
+ - rsa_privkey_export [21]_
+ - rsa_generate_private_key [22]_
+ - rsa_sign_verify [23]_
+
+ - ecdh_privkey_export [2]_
+ - ecdh_pubkey_import [6]_
+ - ecdh_pubkey_export [6]_
+ - ecdh_generate_private_key [30]_
+ - ecdh_generate_keypair [31]_
+ - ecdh_derive [30]_
+
+ - ecdsa_privkey_export [2]_
+ - ecdsa_pubkey_import [6]_
+ - ecdsa_pubkey_export [6]_
+ - ecdsa_generate_private_key  [31]_
+ - ecdsa_generate_keypair  [31]_
+ - ecdsa_sign_verify  [34]_
+
+ - rng_add_entropy [5]_
+
+.. [53] Failing operations for Gemalto IDPrime MD 3840
+
+ - session_login_logout [2]_
+ - session_info [2]_
+ - set_pin [2]_
+ - initialize [2]_
+ - change_so_pin [2]_
+
+ - object_copy [20]_
+
+ - rsa_generate_private_key [7]_
+ - rsa_encrypt_decrypt [8]_
+ - rsa_sign_verify [2]_
+
+ - rng_add_entropy [5]_
+
+Error descriptions
+
+.. [1] CKR_TEMPLATE_INCOMPLETE (0xD0=208)
+.. [2] CKR_ARGUMENTS_BAD (0x7=7)
+.. [3] CKR_MECHANISM_INVALID (0x70=112)
+.. [4] CKR_FUNCTION_NOT_SUPPORTED (0x54=84)
+.. [5] CKR_RANDOM_SEED_NOT_SUPPORTED (0x120=288)
+.. [6] CKM_X9_42_DH_KEY_PAIR_GEN | CKR_DEVICE_ERROR (0x30=48)
+.. [7] CKR_TEMPLATE_INCONSISTENT (0xD1=209)
+.. [8] CKR_ENCRYPTED_DATA_INVALID | CKM_SHA256_RSA_PKCS (0x40=64)
+
+.. [20] Test fails due to unsupported copy function (CKR_FUNCTION_NOT_SUPPORTED)
+.. [21] Generating private key for extraction with property extractable fails (CKR_ARGUMENTS_BAD)
+.. [22] Generate rsa private key operation fails (CKR_TEMPLATE_INCOMPLETE)
+.. [23] Raw RSA sign-verify fails (CKR_MECHANISM_INVALID)
+
+.. [30] Invalid argument Decoding error: BER: Value truncated
+.. [31] Invalid argument Decoding error: BER: Length field is to large
+.. [32] Invalid argument OS2ECP: Unknown format type 155
+.. [33] Invalid argument OS2ECP: Unknown format type 92
+.. [34] Invalid argument OS2ECP: Unknown format type 57
