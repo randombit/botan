@@ -168,8 +168,7 @@ class BOTAN_PUBLIC_API(2,0) Response final
 
       std::vector<SingleResponse> m_responses;
 
-      bool m_return_status;
-      Certificate_Status_Code m_status_code;
+      Certificate_Status_Code m_dummy_response_status;
    };
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
