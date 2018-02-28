@@ -28,6 +28,7 @@ auto VALID_MODES = std::map<std::string, std::string>{
          { "aes-128-ocb", "AES-128/OCB" },
          { "aes-128-xts", "AES-128/XTS" },
          { "aes-256-xts", "AES-256/XTS" },
+         { "chacha20poly1305", "ChaCha20Poly1305" },
 };
 
 Botan::secure_vector<uint8_t>
