@@ -287,6 +287,19 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    if(mod.is_odd())
       return ct_inverse_mod_odd_modulus(n, mod);
 
+   return inverse_euclid(n, mod);
+   }
+
+BigInt inverse_euclid(const BigInt& n, const BigInt& mod)
+   {
+   if(mod.is_zero())
+      throw BigInt::DivideByZero();
+   if(mod.is_negative() || n.is_negative())
+      throw Invalid_Argument("inverse_mod: arguments must be non-negative");
+
+   if(n.is_zero() || (n.is_even() && mod.is_even()))
+      return 0; // fast fail checks
+
    BigInt u = mod, v = n;
    BigInt A = 1, B = 0, C = 0, D = 1;
 

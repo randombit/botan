@@ -84,7 +84,17 @@ BigInt BOTAN_PUBLIC_API(2,0) square(const BigInt& x);
 * Not const time
 */
 BigInt BOTAN_PUBLIC_API(2,0) inverse_mod(const BigInt& x,
-                             const BigInt& modulus);
+                                         const BigInt& modulus);
+
+/**
+* Modular inversion using extended binary Euclidian algorithm
+* @param x a positive integer
+* @param modulus a positive integer
+* @return y st (x*y) % modulus == 1 or 0 if no such value
+* Not const time
+*/
+BigInt BOTAN_PUBLIC_API(2,5) inverse_euclid(const BigInt& x,
+                                            const BigInt& modulus);
 
 /**
 * Const time modular inversion

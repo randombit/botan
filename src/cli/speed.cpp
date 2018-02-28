@@ -1376,7 +1376,7 @@ class Speed final : public Command
          p.set_bit(521);
          p--;
 
-         Timer invmod_timer("inverse_mod");
+         Timer invmod_timer("inverse_euclid");
          Timer monty_timer("montgomery_inverse");
          Timer ct_invmod_timer("ct_inverse_mod");
          Timer powm_timer("exponentiation");
@@ -1389,7 +1389,7 @@ class Speed final : public Command
 
             const Botan::BigInt x_inv1 = invmod_timer.run([&]
                {
-               return Botan::inverse_mod(x + p, p);
+               return Botan::inverse_euclid(x + p, p);
                });
 
             const Botan::BigInt x_inv2 = monty_timer.run([&]
