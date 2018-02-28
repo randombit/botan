@@ -10,10 +10,10 @@
 
 #include <botan/sym_algo.h>
 #include <botan/bigint.h>
-#include <botan/reducer.h>
 
 namespace Botan {
 
+class Modular_Reducer;
 class MessageAuthenticationCode;
 
 class BOTAN_PUBLIC_API(2,5) FPE_FE1 final : public SymmetricAlgorithm
@@ -22,6 +22,8 @@ class BOTAN_PUBLIC_API(2,5) FPE_FE1 final : public SymmetricAlgorithm
       FPE_FE1(const BigInt& n,
               size_t rounds = 3,
               const std::string& mac_algo = "HMAC(SHA-256)");
+
+      ~FPE_FE1();
 
       Key_Length_Specification key_spec() const override;
 
@@ -46,10 +48,10 @@ class BOTAN_PUBLIC_API(2,5) FPE_FE1 final : public SymmetricAlgorithm
       secure_vector<uint8_t> compute_tweak_mac(const uint8_t tweak[], size_t tweak_len) const;
 
       std::unique_ptr<MessageAuthenticationCode> m_mac;
+      std::unique_ptr<Modular_Reducer> mod_a;
       std::vector<uint8_t> m_n_bytes;
       BigInt m_a;
       BigInt m_b;
-      Modular_Reducer mod_a;
       size_t m_rounds;
    };
 

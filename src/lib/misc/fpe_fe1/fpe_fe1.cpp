@@ -8,6 +8,7 @@
 #include <botan/fpe_fe1.h>
 #include <botan/numthry.h>
 #include <botan/divide.h>
+#include <botan/reducer.h>
 #include <botan/mac.h>
 
 namespace Botan {
@@ -71,7 +72,7 @@ FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, const std::string& mac_algo) :
 
    factor(n, m_a, m_b);
 
-   mod_a = Modular_Reducer(m_a);
+   mod_a.reset(new Modular_Reducer(m_a));
 
    /*
    * According to a paper by Rogaway, Bellare, etc, the min safe number
@@ -84,6 +85,11 @@ FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, const std::string& mac_algo) :
 
    if(m_rounds < 3)
       throw Invalid_Argument("FPE_FE1 rounds too small");
+   }
+
+FPE_FE1::~FPE_FE1()
+   {
+   // for ~unique_ptr
    }
 
 void FPE_FE1::clear()
@@ -146,7 +152,7 @@ BigInt FPE_FE1::encrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
       {
       divide(X, m_b, L, R);
       Fi = F(R, i, tweak_mac, tmp);
-      X = m_a * R + mod_a.reduce(L + Fi);
+      X = m_a * R + mod_a->reduce(L + Fi);
       }
 
    return X;
@@ -165,7 +171,7 @@ BigInt FPE_FE1::decrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
       divide(X, m_a, R, W);
 
       Fi = F(R, m_rounds-i-1, tweak_mac, tmp);
-      X = m_b * mod_a.reduce(W - Fi) + R;
+      X = m_b * mod_a->reduce(W - Fi) + R;
       }
 
    return X;
