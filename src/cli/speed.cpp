@@ -1290,17 +1290,20 @@ class Speed final : public Command
 
          Botan::BigInt x = 1;
 
+         Botan::FPE_FE1 fpe_fe1(n, 3, "HMAC(SHA-256)");
+         fpe_fe1.set_key(key);
+
          while(enc_timer.under(runtime))
             {
             enc_timer.start();
-            x = Botan::FPE::fe1_encrypt(n, x, key, tweak);
+            x = fpe_fe1.encrypt(x, tweak.data(), tweak.size());
             enc_timer.stop();
             }
 
          for(size_t i = 0; i != enc_timer.events(); ++i)
             {
             dec_timer.start();
-            x = Botan::FPE::fe1_decrypt(n, x, key, tweak);
+            x = fpe_fe1.decrypt(x, tweak.data(), tweak.size());
             dec_timer.stop();
             }
 
