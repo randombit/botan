@@ -26,6 +26,10 @@ const char* to_string(Certificate_Status_Code code)
          return "Certificate serial number is negative";
       case Certificate_Status_Code::DN_TOO_LONG:
          return "Distinguished name too long";
+      case Certificate_Status_Code::OSCP_NO_REVOCATION_URL:
+         return "OCSP URL not available";
+      case Certificate_Status_Code::OSCP_SERVER_NOT_AVAILABLE:
+         return "OSCP server not available";
 
       case Certificate_Status_Code::NO_REVOCATION_DATA:
          return "No revocation data";
