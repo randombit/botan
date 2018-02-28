@@ -22,7 +22,7 @@ SUPPORTED_ALGORITHMS = [
     'AES-256/GCM',
     'AES-128/OCB',
     'AES-128/XTS',
-    'AES-256/XTS'
+    'AES-256/XTS',
 ]
 
 def append_ordered(base, additional_elements):
@@ -65,7 +65,8 @@ def create_test(data):
             mode = "aes-128-xts"
         elif algorithm == "AES-256/XTS":
             mode = "aes-256-xts"
-        else: raise Exception("Unknown algorithm: '" + algorithm + "'")
+        else:
+            raise Exception("Unknown algorithm: '" + algorithm + "'")
 
         cmd = [
             cli_binary,
