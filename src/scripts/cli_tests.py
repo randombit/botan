@@ -22,7 +22,8 @@ SUPPORTED_ALGORITHMS = [
     'AES-256/GCM',
     'AES-128/OCB',
     'AES-128/XTS',
-    'AES-256/XTS'
+    'AES-256/XTS',
+    'ChaCha20Poly1305',
 ]
 
 def append_ordered(base, additional_elements):
@@ -65,7 +66,11 @@ def create_test(data):
             mode = "aes-128-xts"
         elif algorithm == "AES-256/XTS":
             mode = "aes-256-xts"
-        else: raise Exception("Unknown algorithm: '" + algorithm + "'")
+        # ChaCha20Poly1305
+        elif algorithm == "ChaCha20Poly1305":
+            mode = "chacha20poly1305"
+        else:
+            raise Exception("Unknown algorithm: '" + algorithm + "'")
 
         cmd = [
             cli_binary,
@@ -132,6 +137,7 @@ if __name__ == '__main__':
     vecfile_gcm = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'gcm.vec'))
     vecfile_ocb = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'ocb.vec'))
     vecfile_xts = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'modes', 'xts.vec'))
+    vecfile_chacha20poly1305 = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'chacha20poly1305.vec'))
     #data = vecfile.get_data()
     #for algo in data:
     #    print(algo)
@@ -145,6 +151,7 @@ if __name__ == '__main__':
     append_ordered(testdata, get_testdata(vecfile_gcm.get_data()))
     append_ordered(testdata, get_testdata(vecfile_ocb.get_data()))
     append_ordered(testdata, get_testdata(vecfile_xts.get_data()))
+    append_ordered(testdata, get_testdata(vecfile_chacha20poly1305.get_data()))
 
     #for testname in testdata:
     #    print(testname)
