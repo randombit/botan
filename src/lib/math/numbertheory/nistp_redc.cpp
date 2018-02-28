@@ -38,10 +38,26 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
 
    x.mask_bits(521);
 
+   // Word-level carry will be zero
    word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
    BOTAN_ASSERT_EQUAL(carry, 0, "Final final carry in P-521 reduction");
 
-   x.reduce_below(prime_p521(), ws);
+   // Now find the actual carry in bit 522
+   const uint8_t bit_522_set = x.word_at(p_full_words) >> (p_top_bits);
+
+   if(bit_522_set)
+      {
+#if (BOTAN_MP_WORD_BITS == 64)
+      static const word p521_words[9] = {
+         0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+         0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+         0x1FF };
+
+      bigint_sub2(x.mutable_data(), x.size(), p521_words, 9);
+#else
+      x -= prime_p521();
+#endif
+      }
    }
 
 #if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
