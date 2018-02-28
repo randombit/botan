@@ -25,8 +25,8 @@ void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
 
    for(size_t i = 0; i != size; ++i)
       {
-      word a = x[i];
-      word b = y[i];
+      const word a = x[i];
+      const word b = y[i];
       x[i] = CT::select(mask, b, a);
       y[i] = CT::select(mask, a, b);
       }
@@ -41,12 +41,20 @@ word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
    const word mask = CT::expand_mask(cnd);
 
    word carry = 0;
-   for(size_t i = 0; i != size; ++i)
+   word z[8];
+
+   const size_t blocks = size - (size % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
       {
-      /*
-      Here we are relying on asm version of word_add being
-      a single addcl or equivalent. Fix this.
-      */
+      carry = word8_add3(z, x + i, y + i, carry);
+
+      for(size_t j = 0; j != 8; ++j)
+         x[i+j] = CT::select(mask, z[j], x[i+j]);
+      }
+
+   for(size_t i = blocks; i != size; ++i)
+      {
       const word z = word_add(x[i], y[i], &carry);
       x[i] = CT::select(mask, z, x[i]);
       }
@@ -63,7 +71,19 @@ word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
    const word mask = CT::expand_mask(cnd);
 
    word carry = 0;
-   for(size_t i = 0; i != size; ++i)
+   word z[8];
+
+   const size_t blocks = size - (size % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      carry = word8_sub3(z, x + i, y + i, carry);
+
+      for(size_t j = 0; j != 8; ++j)
+         x[i+j] = CT::select(mask, z[j], x[i+j]);
+      }
+
+   for(size_t i = blocks; i != size; ++i)
       {
       const word z = word_sub(x[i], y[i], &carry);
       x[i] = CT::select(mask, z, x[i]);
