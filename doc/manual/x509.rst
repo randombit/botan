@@ -126,11 +126,6 @@ The major certificate format in use today is X.509v3, used for instance in the
       of the binary contents. Normally SHA-1 or SHA-256 is used, but any hash
       function is allowed.
 
-  .. cpp:function:: bool matches_dns_name(const std::string& name) const
-
-     Returns true if ``name`` matches the DNS name in the certificate. This function
-     accounts for wildcard certificates.
-
   .. cpp:function:: Key_Constraints constraints() const
 
       Returns either an enumeration listing key constraints (what the
@@ -138,10 +133,6 @@ The major certificate format in use today is X.509v3, used for instance in the
       relevent extension was not included. Example values are
       ``DIGITAL_SIGNATURE`` and ``KEY_CERT_SIGN``. More than one value
       might be specified.
-
-  .. cpp:function:: bool allowed_extended_usage(const OID& usage) const
-
-      Returns true if the OID is included in the extended usage extension.
 
   .. cpp:function:: bool matches_dns_name(const std::string& name) const
 
