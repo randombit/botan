@@ -112,6 +112,8 @@ class X509test_Path_Validation_Tests final : public Test
                }
 
             result.test_eq("test " + filename, path_result.result_string(), expected_result);
+            result.test_eq("test no warnings string", path_result.warnings_string(), "");
+            result.confirm("test no warnings", path_result.no_warnings() == true);
             result.end_timer();
             results.push_back(result);
             }

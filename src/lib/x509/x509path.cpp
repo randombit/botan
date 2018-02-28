@@ -1019,7 +1019,10 @@ bool Path_Validation_Result::successful_validation() const
 
 bool Path_Validation_Result::no_warnings() const
    {
-   return m_warnings.empty();
+   for(auto status_set_i : m_warnings) 
+      if(!status_set_i.empty())
+         return false;
+   return true;
    }
 
 CertificatePathStatusCodes Path_Validation_Result::warnings() const
@@ -1040,4 +1043,18 @@ const char* Path_Validation_Result::status_string(Certificate_Status_Code code)
    return "Unknown error";
    }
 
+std::string Path_Validation_Result::warnings_string() const
+   {
+   const std::string sep(", ");
+   std::string res;
+   for(size_t i = 0; i < m_warnings.size(); i++)
+      {
+      for(auto code : m_warnings[i])
+         res += "[" + std::to_string(i) + "] " + status_string(code) + sep;
+      }
+   // remove last sep
+   if(res.size() >= sep.size())
+      res = res.substr(0, res.size() - sep.size());
+   return res;
+   }
 }
