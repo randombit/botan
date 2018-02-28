@@ -35,10 +35,8 @@ BigInt& BigInt::operator+=(const BigInt& y)
       if(relative_size < 0)
          {
          const size_t reg_size = std::max(x_sw, y_sw);
-
-         secure_vector<word> z(reg_size);
-         bigint_sub3(z.data(), y.data(), reg_size, data(), x_sw);
-         std::swap(m_reg, z);
+         grow_to(reg_size);
+         bigint_sub2_rev(mutable_data(), y.data(), y_sw);
          set_sign(y.sign());
          }
       else if(relative_size == 0)
