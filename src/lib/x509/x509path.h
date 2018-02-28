@@ -162,6 +162,11 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
       std::string result_string() const;
 
       /**
+      * @return string representation of the warnings
+      */
+      std::string warnings_string() const;
+
+      /**
       * @param code validation status code
       * @return corresponding validation status message
       */
