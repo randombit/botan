@@ -1019,7 +1019,10 @@ bool Path_Validation_Result::successful_validation() const
 
 bool Path_Validation_Result::no_warnings() const
    {
-   return m_warnings.empty();
+   for(auto status_set_i : m_warnings) 
+      if(!status_set_i.empty())
+         return false;
+   return true;
    }
 
 CertificatePathStatusCodes Path_Validation_Result::warnings() const
