@@ -129,9 +129,10 @@ int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[])
 
 int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val)
    {
-   if(val == nullptr) {
-   return BOTAN_FFI_ERROR_NULL_POINTER;
-   }
+   if(val == nullptr)
+      {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
    return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { *val = bn.to_u32bit(); });
    }
 
