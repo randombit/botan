@@ -6,7 +6,6 @@
 */
 
 #include <botan/reducer.h>
-#include <botan/internal/mp_core.h>
 
 namespace Botan {
 
@@ -23,7 +22,7 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
 
    m_modulus_2 = Botan::square(m_modulus);
 
-   m_mu = BigInt::power_of_2(2 * MP_WORD_BITS * m_mod_words) / m_modulus;
+   m_mu = BigInt::power_of_2(2 * BOTAN_MP_WORD_BITS * m_mod_words) / m_modulus;
    }
 
 /*
@@ -49,16 +48,16 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
       BigInt t1(x.data() + m_mod_words - 1, x_sw - (m_mod_words - 1));
 
       t1.mul(m_mu, ws);
-      t1 >>= (MP_WORD_BITS * (m_mod_words + 1));
+      t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words + 1));
 
       t1.mul(m_modulus, ws);
-      t1.mask_bits(MP_WORD_BITS * (m_mod_words + 1));
+      t1.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
 
       t1.rev_sub(x.data(), std::min(x_sw, m_mod_words + 1), ws);
 
       if(t1.is_negative())
          {
-         t1 += BigInt::power_of_2(MP_WORD_BITS * (m_mod_words + 1));
+         t1 += BigInt::power_of_2(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
          }
 
       t1.reduce_below(m_modulus, ws);

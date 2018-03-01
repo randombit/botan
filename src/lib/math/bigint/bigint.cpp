@@ -30,7 +30,7 @@ BigInt::BigInt(uint64_t n)
 
    m_reg.resize(limbs_needed);
    for(size_t i = 0; i != limbs_needed; ++i)
-      m_reg[i] = ((n >> (i*MP_WORD_BITS)) & MP_WORD_MASK);
+      m_reg[i] = ((n >> (i*BOTAN_MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
 /*
@@ -160,8 +160,8 @@ uint32_t BigInt::to_u32bit() const
 */
 void BigInt::set_bit(size_t n)
    {
-   const size_t which = n / MP_WORD_BITS;
-   const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
+   const size_t which = n / BOTAN_MP_WORD_BITS;
+   const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
    if(which >= size()) grow_to(which + 1);
    m_reg[which] |= mask;
    }
@@ -171,8 +171,8 @@ void BigInt::set_bit(size_t n)
 */
 void BigInt::clear_bit(size_t n)
    {
-   const size_t which = n / MP_WORD_BITS;
-   const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
+   const size_t which = n / BOTAN_MP_WORD_BITS;
+   const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
    if(which < size())
       m_reg[which] &= ~mask;
    }
@@ -193,7 +193,7 @@ size_t BigInt::bits() const
       return 0;
 
    const size_t full_words = words - 1;
-   return (full_words * MP_WORD_BITS + high_bit(word_at(full_words)));
+   return (full_words * BOTAN_MP_WORD_BITS + high_bit(word_at(full_words)));
    }
 
 /*

@@ -21,8 +21,8 @@ const BigInt& prime_p521()
 
 void redc_p521(BigInt& x, secure_vector<word>& ws)
    {
-   const size_t p_full_words = 521 / MP_WORD_BITS;
-   const size_t p_top_bits = 521 % MP_WORD_BITS;
+   const size_t p_full_words = 521 / BOTAN_MP_WORD_BITS;
+   const size_t p_top_bits = 521 % BOTAN_MP_WORD_BITS;
    const size_t p_words = p_full_words + 1;
 
    const size_t x_sw = x.sig_words();

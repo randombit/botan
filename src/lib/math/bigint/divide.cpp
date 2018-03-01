@@ -101,7 +101,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
          return;
          }
 
-      BigInt temp = y << (MP_WORD_BITS * (n-t));
+      BigInt temp = y << (BOTAN_MP_WORD_BITS * (n-t));
 
       while(r >= temp) { r -= temp; q_words[n-t] += 1; }
 
@@ -123,11 +123,11 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
             q_words[j-t-1] -= 1;
             }
 
-         r -= (q_words[j-t-1] * y) << (MP_WORD_BITS * (j-t-1));
+         r -= (q_words[j-t-1] * y) << (BOTAN_MP_WORD_BITS * (j-t-1));
 
          if(r.is_negative())
             {
-            r += y << (MP_WORD_BITS * (j-t-1));
+            r += y << (BOTAN_MP_WORD_BITS * (j-t-1));
             q_words[j-t-1] -= 1;
             }
          }

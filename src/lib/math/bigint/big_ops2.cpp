@@ -255,8 +255,8 @@ BigInt& BigInt::operator<<=(size_t shift)
    {
    if(shift)
       {
-      const size_t shift_words = shift / MP_WORD_BITS,
-                   shift_bits  = shift % MP_WORD_BITS,
+      const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
+                   shift_bits  = shift % BOTAN_MP_WORD_BITS,
                    words = sig_words();
 
       /*
@@ -282,8 +282,8 @@ BigInt& BigInt::operator>>=(size_t shift)
    {
    if(shift)
       {
-      const size_t shift_words = shift / MP_WORD_BITS,
-                   shift_bits  = shift % MP_WORD_BITS;
+      const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
+                   shift_bits  = shift % BOTAN_MP_WORD_BITS;
 
       bigint_shr1(mutable_data(), sig_words(), shift_words, shift_bits);
 

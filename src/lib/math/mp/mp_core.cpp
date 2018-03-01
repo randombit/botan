@@ -290,7 +290,7 @@ void bigint_shl1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
          {
          word temp = x[j];
          x[j] = (temp << bit_shift) | carry;
-         carry = (temp >> (MP_WORD_BITS - bit_shift));
+         carry = (temp >> (BOTAN_MP_WORD_BITS - bit_shift));
          }
       }
    }
@@ -322,19 +322,19 @@ void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
          {
          word w = x[top-1];
          x[top-1] = (w >> bit_shift) | carry;
-         carry = (w << (MP_WORD_BITS - bit_shift));
+         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
 
          w = x[top-2];
          x[top-2] = (w >> bit_shift) | carry;
-         carry = (w << (MP_WORD_BITS - bit_shift));
+         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
 
          w = x[top-3];
          x[top-3] = (w >> bit_shift) | carry;
-         carry = (w << (MP_WORD_BITS - bit_shift));
+         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
 
          w = x[top-4];
          x[top-4] = (w >> bit_shift) | carry;
-         carry = (w << (MP_WORD_BITS - bit_shift));
+         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
 
          top -= 4;
          }
@@ -343,7 +343,7 @@ void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
          {
          word w = x[top-1];
          x[top-1] = (w >> bit_shift) | carry;
-         carry = (w << (MP_WORD_BITS - bit_shift));
+         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
 
          top--;
          }
@@ -365,7 +365,7 @@ void bigint_shl2(word y[], const word x[], size_t x_size,
          {
          word w = y[j];
          y[j] = (w << bit_shift) | carry;
-         carry = (w >> (MP_WORD_BITS - bit_shift));
+         carry = (w >> (BOTAN_MP_WORD_BITS - bit_shift));
          }
       }
    }
@@ -387,7 +387,7 @@ void bigint_shr2(word y[], const word x[], size_t x_size,
          {
          word w = y[j-1];
          y[j-1] = (w >> bit_shift) | carry;
-         carry = (w << (MP_WORD_BITS - bit_shift));
+         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
          }
       }
    }
@@ -427,17 +427,17 @@ word bigint_divop(word n1, word n0, word d)
       throw Invalid_Argument("bigint_divop divide by zero");
 
 #if defined(BOTAN_HAS_MP_DWORD)
-   return ((static_cast<dword>(n1) << MP_WORD_BITS) | n0) / d;
+   return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) / d;
 #else
 
    word high = n1 % d, quotient = 0;
 
-   for(size_t i = 0; i != MP_WORD_BITS; ++i)
+   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
       {
       word high_top_bit = (high & MP_WORD_TOP_BIT);
 
       high <<= 1;
-      high |= (n0 >> (MP_WORD_BITS-1-i)) & 1;
+      high |= (n0 >> (BOTAN_MP_WORD_BITS-1-i)) & 1;
       quotient <<= 1;
 
       if(high_top_bit || high >= d)
@@ -457,7 +457,7 @@ word bigint_divop(word n1, word n0, word d)
 word bigint_modop(word n1, word n0, word d)
    {
 #if defined(BOTAN_HAS_MP_DWORD)
-   return ((static_cast<dword>(n1) << MP_WORD_BITS) | n0) % d;
+   return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) % d;
 #else
    word z = bigint_divop(n1, n0, d);
    word dummy = 0;

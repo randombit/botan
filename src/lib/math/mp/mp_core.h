@@ -15,11 +15,6 @@
 namespace Botan {
 
 /*
-* The size of the word type, in bits
-*/
-const size_t MP_WORD_BITS = BOTAN_MP_WORD_BITS;
-
-/*
 * If cond == 0, does nothing.
 * If cond > 0, swaps x[0:size] with y[0:size]
 * Runs in constant time
