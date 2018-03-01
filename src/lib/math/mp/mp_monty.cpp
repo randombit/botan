@@ -60,7 +60,7 @@ void bigint_monty_redc(word z[],
       for(size_t j = p_size + 1; j < z_size - i; ++j)
          {
          z_i[j] += carry;
-         carry = carry & !z_i[j];
+         carry = (z_i[j] < carry);
          }
       }
 
