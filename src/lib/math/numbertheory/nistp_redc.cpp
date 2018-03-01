@@ -40,23 +40,42 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
 
    // Word-level carry will be zero
    word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
-   BOTAN_ASSERT_EQUAL(carry, 0, "Final final carry in P-521 reduction");
+   BOTAN_ASSERT_EQUAL(carry, 0, "Final carry in P-521 reduction");
 
    // Now find the actual carry in bit 522
    const uint8_t bit_522_set = x.word_at(p_full_words) >> (p_top_bits);
 
+#if (BOTAN_MP_WORD_BITS == 64)
+   static const word p521_words[9] = {
+      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+      0x1FF };
+#endif
+
+   /*
+   * If bit 522 is set then we overflowed and must reduce. Otherwise, if the
+   * top bit is set, it is possible we have x == 2**521 - 1 so check for that.
+   */
    if(bit_522_set)
       {
 #if (BOTAN_MP_WORD_BITS == 64)
-      static const word p521_words[9] = {
-         0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-         0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-         0x1FF };
-
       bigint_sub2(x.mutable_data(), x.size(), p521_words, 9);
 #else
       x -= prime_p521();
 #endif
+      }
+   else if(x.word_at(p_full_words) >> (p_top_bits - 1))
+      {
+      /*
+      * Otherwise we must reduce if p is exactly 2^512-1
+      */
+
+      word possibly_521 = MP_WORD_MAX;;
+      for(size_t i = 0; i != p_full_words; ++i)
+         possibly_521 &= x.word_at(i);
+
+      if(possibly_521 == MP_WORD_MAX)
+         x.reduce_below(prime_p521(), ws);
       }
    }
 
