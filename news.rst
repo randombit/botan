@@ -31,6 +31,10 @@ Version 2.5.0, Not Yet Released
   makes it possible to use muliple SubjectAlternativeNames of a single type in
   a request, which was previously not possible. (GH #1429 #1428)
 
+* Add new optimized interface for FE1 format preserving encryption. By caching a
+  number of values computed in the course of the FPE calculation, it provides a
+  6-7x speedup versus the old API. (GH #1469)
+
 * Add DSA and ElGamal keygen functions to FFI (#1426)
 
 * Add Pipe::prepend_filter to replace Pipe::prepend (GH #1402)
