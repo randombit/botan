@@ -409,18 +409,32 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      /**
      * @result the opposite sign of the represented integer value
      */
-     Sign reverse_sign() const;
+     Sign reverse_sign() const
+        {
+        if(sign() == Positive)
+           return Negative;
+        return Positive;
+        }
 
      /**
      * Flip the sign of this BigInt
      */
-     void flip_sign();
+     void flip_sign()
+        {
+        set_sign(reverse_sign());
+        }
 
      /**
      * Set sign of the integer
      * @param sign new Sign to set
      */
-     void set_sign(Sign sign);
+     void set_sign(Sign sign)
+        {
+        if(is_zero())
+           m_signedness = Positive;
+        else
+           m_signedness = sign;
+        }
 
      /**
      * @result absolute (positive) value of this

@@ -214,35 +214,6 @@ size_t BigInt::encoded_size(Base base) const
    }
 
 /*
-* Set the sign
-*/
-void BigInt::set_sign(Sign s)
-   {
-   if(is_zero())
-      m_signedness = Positive;
-   else
-      m_signedness = s;
-   }
-
-/*
-* Reverse the value of the sign flag
-*/
-void BigInt::flip_sign()
-   {
-   set_sign(reverse_sign());
-   }
-
-/*
-* Return the opposite value of the current sign
-*/
-BigInt::Sign BigInt::reverse_sign() const
-   {
-   if(sign() == Positive)
-      return Negative;
-   return Positive;
-   }
-
-/*
 * Return the negation of this number
 */
 BigInt BigInt::operator-() const
