@@ -745,7 +745,7 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
    word carry = *w0;
    *w0 = word_madd2(x, y, &carry);
    *w1 += carry;
-   *w2 += (*w1 < carry) ? 1 : 0;
+   *w2 += (*w1 < carry);
 #endif
    }
 
