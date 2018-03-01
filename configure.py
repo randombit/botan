@@ -1001,6 +1001,9 @@ class ArchInfo(InfoObject):
         self.isa_extensions = lex.isa_extensions
         self.wordsize = int(lex.wordsize)
 
+        if self.wordsize not in [32, 64]:
+            logging.error('Unexpected wordsize %d for arch %s', self.wordsize, infofile)
+
         alphanumeric = re.compile('^[a-z0-9]+$')
         for isa in self.isa_extensions:
             if alphanumeric.match(isa) is None:
