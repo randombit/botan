@@ -9,7 +9,7 @@
 #ifndef BOTAN_MP_WORD_MULADD_H_
 #define BOTAN_MP_WORD_MULADD_H_
 
-#include <botan/mp_types.h>
+#include <botan/types.h>
 #include <botan/mul128.h>
 
 namespace Botan {

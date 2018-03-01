@@ -10,9 +10,13 @@
 #ifndef BOTAN_MP_CORE_OPS_H_
 #define BOTAN_MP_CORE_OPS_H_
 
-#include <botan/mp_types.h>
+#include <botan/types.h>
 
 namespace Botan {
+
+const word MP_WORD_MASK = ~static_cast<word>(0);
+const word MP_WORD_TOP_BIT = static_cast<word>(1) << (8*sizeof(word) - 1);
+const word MP_WORD_MAX = MP_WORD_MASK;
 
 /*
 * If cond == 0, does nothing.

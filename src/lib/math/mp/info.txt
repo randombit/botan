@@ -2,10 +2,6 @@
 BIGINT_MP -> 20151225
 </defines>
 
-<header:public>
-mp_types.h
-</header:public>
-
 <header:internal>
 mp_core.h
 mp_madd.h
