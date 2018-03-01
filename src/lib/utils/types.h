@@ -92,11 +92,6 @@ using u32bit = std::uint32_t;
 using u64bit = std::uint64_t;
 using s32bit = std::int32_t;
 
-/**
-* A default buffer size; typically a memory page
-*/
-static const size_t DEFAULT_BUFFERSIZE = BOTAN_DEFAULT_BUFFER_SIZE;
-
 #if (BOTAN_MP_WORD_BITS == 8)
   typedef uint8_t word;
 #elif (BOTAN_MP_WORD_BITS == 16)

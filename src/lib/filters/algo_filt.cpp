@@ -13,26 +13,26 @@ namespace Botan {
 #if defined(BOTAN_HAS_STREAM_CIPHER)
 
 StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher) :
-   m_buffer(DEFAULT_BUFFERSIZE),
+   m_buffer(BOTAN_DEFAULT_BUFFER_SIZE),
    m_cipher(cipher)
    {
    }
 
 StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher, const SymmetricKey& key) :
-   m_buffer(DEFAULT_BUFFERSIZE),
+   m_buffer(BOTAN_DEFAULT_BUFFER_SIZE),
    m_cipher(cipher)
    {
    m_cipher->set_key(key);
    }
 
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
-   m_buffer(DEFAULT_BUFFERSIZE),
+   m_buffer(BOTAN_DEFAULT_BUFFER_SIZE),
    m_cipher(StreamCipher::create_or_throw(sc_name))
    {
    }
 
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name, const SymmetricKey& key) :
-   m_buffer(DEFAULT_BUFFERSIZE),
+   m_buffer(BOTAN_DEFAULT_BUFFER_SIZE),
    m_cipher(StreamCipher::create_or_throw(sc_name))
    {
    m_cipher->set_key(key);

@@ -109,7 +109,7 @@ size_t decode_length(DataSource* ber, size_t& field_size, size_t allow_indef)
 */
 size_t find_eoc(DataSource* ber, size_t allow_indef)
    {
-   secure_vector<uint8_t> buffer(DEFAULT_BUFFERSIZE), data;
+   secure_vector<uint8_t> buffer(BOTAN_DEFAULT_BUFFER_SIZE), data;
 
    while(true)
       {
