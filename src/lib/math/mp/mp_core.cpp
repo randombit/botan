@@ -41,9 +41,9 @@ word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
    const word mask = CT::expand_mask(cnd);
 
    word carry = 0;
-   word z[8];
 
    const size_t blocks = size - (size % 8);
+   word z[8] = { 0 };
 
    for(size_t i = 0; i != blocks; i += 8)
       {
@@ -55,8 +55,8 @@ word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
 
    for(size_t i = blocks; i != size; ++i)
       {
-      const word z = word_add(x[i], y[i], &carry);
-      x[i] = CT::select(mask, z, x[i]);
+      z[0] = word_add(x[i], y[i], &carry);
+      x[i] = CT::select(mask, z[0], x[i]);
       }
 
    return carry & mask;
@@ -71,9 +71,9 @@ word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
    const word mask = CT::expand_mask(cnd);
 
    word carry = 0;
-   word z[8];
 
    const size_t blocks = size - (size % 8);
+   word z[8] = { 0 };
 
    for(size_t i = 0; i != blocks; i += 8)
       {
@@ -85,8 +85,8 @@ word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
 
    for(size_t i = blocks; i != size; ++i)
       {
-      const word z = word_sub(x[i], y[i], &carry);
-      x[i] = CT::select(mask, z, x[i]);
+      z[0] = word_sub(x[i], y[i], &carry);
+      x[i] = CT::select(mask, z[0], x[i]);
       }
 
    return carry & mask;
