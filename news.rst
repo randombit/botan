@@ -21,7 +21,7 @@ Version 2.5.0, Not Yet Released
 
 * Add ability to create custom elliptic curves (GH #1441 #1444)
 
-* Add support for POWER8 AES instructions (GH #1459 #1206)
+* Add support for POWER8 AES instructions (GH #1459 #1393 #1206)
 
 * Change DL_Group and EC_Group to store their data as shared_ptr for
   fast copying. Also both classes precompute additional useful values
@@ -48,8 +48,6 @@ Version 2.5.0, Not Yet Released
 
 * Correct the return value of PK_Encryptor::maximum_input_size which
   reported a much too small value (GH #1410)
-
-* Support detecting POWER crypto extensions using getauxval (GH #1393)
 
 * Remove use of CPU specific optimization flags, instead the user should set
   these via CXXFLAGS if desired. (GH #1392)
