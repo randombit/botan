@@ -422,7 +422,7 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
       {
       for(size_t c = 0; c != certstores.size(); ++i)
          {
-         crls[i] = certstores[i]->find_crl_for(*cert_path[i]);
+         crls[i] = certstores[c]->find_crl_for(*cert_path[i]);
          if(crls[i])
             break;
          }
