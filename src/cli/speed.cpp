@@ -1681,11 +1681,11 @@ class Speed final : public Command
             record_result(keygen_timer);
 
             // Using PKCS #1 padding so OpenSSL provider can play along
-            bench_pk_enc(*key, nm, provider, "EME-PKCS1-v1_5", msec);
-            bench_pk_enc(*key, nm, provider, "OAEP(SHA-1)", msec);
+            bench_pk_sig(*key, nm, provider, "EMSA-PKCS1-v1_5(SHA-256)", msec);
 
-            bench_pk_sig(*key, nm, provider, "EMSA-PKCS1-v1_5(SHA-1)", msec);
-            bench_pk_sig(*key, nm, provider, "PSSR(SHA-256)", msec);
+            //bench_pk_sig(*key, nm, provider, "PSSR(SHA-256)", msec);
+            //bench_pk_enc(*key, nm, provider, "EME-PKCS1-v1_5", msec);
+            //bench_pk_enc(*key, nm, provider, "OAEP(SHA-1)", msec);
             }
          }
 #endif
