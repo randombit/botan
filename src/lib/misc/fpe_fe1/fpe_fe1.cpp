@@ -1,17 +1,17 @@
 /*
 * Format Preserving Encryption (FE1 scheme)
-* (C) 2009 Jack Lloyd
+* (C) 2009,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/fpe_fe1.h>
 #include <botan/numthry.h>
+#include <botan/divide.h>
+#include <botan/reducer.h>
 #include <botan/mac.h>
 
 namespace Botan {
-
-namespace FPE {
 
 namespace {
 
@@ -58,127 +58,157 @@ void factor(BigInt n, BigInt& a, BigInt& b)
       throw Exception("Could not factor n for use in FPE");
    }
 
-/*
-* According to a paper by Rogaway, Bellare, etc, the min safe number
-* of rounds to use for FPE is 2+log_a(b). If a >= b then log_a(b) <= 1
-* so 3 rounds is safe. The FPE factorization routine should always
-* return a >= b, so just confirm that and return 3.
-*/
-size_t rounds(const BigInt& a, const BigInt& b)
-   {
-   if(a < b)
-      throw Internal_Error("FPE rounds: a < b");
-   return 3;
-   }
-
-/*
-* A simple round function based on HMAC(SHA-256)
-*/
-class FPE_Encryptor final
-   {
-   public:
-      FPE_Encryptor(const SymmetricKey& key,
-                    const BigInt& n,
-                    const std::vector<uint8_t>& tweak);
-
-      BigInt operator()(size_t i, const BigInt& R);
-
-   private:
-      std::unique_ptr<MessageAuthenticationCode> m_mac;
-      std::vector<uint8_t> m_mac_n_t;
-   };
-
-FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
-                             const BigInt& n,
-                             const std::vector<uint8_t>& tweak)
-   {
-   m_mac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
-   m_mac->set_key(key);
-
-   std::vector<uint8_t> n_bin = BigInt::encode(n);
-
-   if(n_bin.size() > MAX_N_BYTES)
-      throw Exception("N is too large for FPE encryption");
-
-   m_mac->update_be(static_cast<uint32_t>(n_bin.size()));
-   m_mac->update(n_bin.data(), n_bin.size());
-
-   m_mac->update_be(static_cast<uint32_t>(tweak.size()));
-   m_mac->update(tweak.data(), tweak.size());
-
-   m_mac_n_t = unlock(m_mac->final());
-   }
-
-BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
-   {
-   secure_vector<uint8_t> r_bin = BigInt::encode_locked(R);
-
-   m_mac->update(m_mac_n_t);
-   m_mac->update_be(static_cast<uint32_t>(round_no));
-
-   m_mac->update_be(static_cast<uint32_t>(r_bin.size()));
-   m_mac->update(r_bin.data(), r_bin.size());
-
-   secure_vector<uint8_t> X = m_mac->final();
-   return BigInt(X.data(), X.size());
-   }
-
 }
 
-/*
-* Generic Z_n FPE encryption, FE1 scheme
-*/
-BigInt fe1_encrypt(const BigInt& n, const BigInt& X0,
-                   const SymmetricKey& key,
-                   const std::vector<uint8_t>& tweak)
+FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, const std::string& mac_algo) :
+   m_rounds(rounds)
    {
-   FPE_Encryptor F(key, n, tweak);
+   m_mac = MessageAuthenticationCode::create_or_throw(mac_algo);
 
-   BigInt a, b;
-   factor(n, a, b);
+   m_n_bytes = BigInt::encode(n);
 
-   const size_t r = rounds(a, b);
+   if(m_n_bytes.size() > MAX_N_BYTES)
+      throw Exception("N is too large for FPE encryption");
 
-   BigInt X = X0;
+   factor(n, m_a, m_b);
 
-   for(size_t i = 0; i != r; ++i)
+   mod_a.reset(new Modular_Reducer(m_a));
+
+   /*
+   * According to a paper by Rogaway, Bellare, etc, the min safe number
+   * of rounds to use for FPE is 2+log_a(b). If a >= b then log_a(b) <= 1
+   * so 3 rounds is safe. The FPE factorization routine should always
+   * return a >= b, so just confirm that and return 3.
+   */
+   if(m_a < m_b)
+      throw Internal_Error("FPE rounds: a < b");
+
+   if(m_rounds < 3)
+      throw Invalid_Argument("FPE_FE1 rounds too small");
+   }
+
+FPE_FE1::~FPE_FE1()
+   {
+   // for ~unique_ptr
+   }
+
+void FPE_FE1::clear()
+   {
+   m_mac->clear();
+   }
+
+std::string FPE_FE1::name() const
+   {
+   return "FPE_FE1(" + m_mac->name() + "," + std::to_string(m_rounds) + ")";
+   }
+
+Key_Length_Specification FPE_FE1::key_spec() const
+   {
+   return m_mac->key_spec();
+   }
+
+void FPE_FE1::key_schedule(const uint8_t key[], size_t length)
+   {
+   m_mac->set_key(key, length);
+   }
+
+BigInt FPE_FE1::F(const BigInt& R, size_t round,
+                  const secure_vector<uint8_t>& tweak_mac,
+                  secure_vector<uint8_t>& tmp) const
+   {
+   tmp = BigInt::encode_locked(R);
+
+   m_mac->update(tweak_mac);
+   m_mac->update_be(static_cast<uint32_t>(round));
+
+   m_mac->update_be(static_cast<uint32_t>(tmp.size()));
+   m_mac->update(tmp.data(), tmp.size());
+
+   tmp = m_mac->final();
+   return BigInt(tmp.data(), tmp.size());
+   }
+
+secure_vector<uint8_t> FPE_FE1::compute_tweak_mac(const uint8_t tweak[], size_t tweak_len) const
+   {
+   m_mac->update_be(static_cast<uint32_t>(m_n_bytes.size()));
+   m_mac->update(m_n_bytes.data(), m_n_bytes.size());
+
+   m_mac->update_be(static_cast<uint32_t>(tweak_len));
+   m_mac->update(tweak, tweak_len);
+
+   return m_mac->final();
+   }
+
+BigInt FPE_FE1::encrypt(const BigInt& input, const uint8_t tweak[], size_t tweak_len) const
+   {
+   const secure_vector<uint8_t> tweak_mac = compute_tweak_mac(tweak, tweak_len);
+
+   BigInt X = input;
+
+   secure_vector<uint8_t> tmp;
+
+   BigInt L, R, Fi;
+   for(size_t i = 0; i != m_rounds; ++i)
       {
-      BigInt L = X / b;
-      BigInt R = X % b;
-
-      BigInt W = (L + F(i, R)) % a;
-      X = a * R + W;
+      divide(X, m_b, L, R);
+      Fi = F(R, i, tweak_mac, tmp);
+      X = m_a * R + mod_a->reduce(L + Fi);
       }
 
    return X;
    }
 
-/*
-* Generic Z_n FPE decryption, FD1 scheme
-*/
-BigInt fe1_decrypt(const BigInt& n, const BigInt& X0,
-                   const SymmetricKey& key,
-                   const std::vector<uint8_t>& tweak)
+BigInt FPE_FE1::decrypt(const BigInt& input, const uint8_t tweak[], size_t tweak_len) const
    {
-   FPE_Encryptor F(key, n, tweak);
+   const secure_vector<uint8_t> tweak_mac = compute_tweak_mac(tweak, tweak_len);
 
-   BigInt a, b;
-   factor(n, a, b);
+   BigInt X = input;
+   secure_vector<uint8_t> tmp;
 
-   const size_t r = rounds(a, b);
-
-   BigInt X = X0;
-
-   for(size_t i = 0; i != r; ++i)
+   BigInt W, R, Fi;
+   for(size_t i = 0; i != m_rounds; ++i)
       {
-      BigInt W = X % a;
-      BigInt R = X / a;
+      divide(X, m_a, R, W);
 
-      BigInt L = (W - F(r-i-1, R)) % a;
-      X = b * L + R;
+      Fi = F(R, m_rounds-i-1, tweak_mac, tmp);
+      X = m_b * mod_a->reduce(W - Fi) + R;
       }
 
    return X;
+   }
+
+BigInt FPE_FE1::encrypt(const BigInt& x, uint64_t tweak) const
+   {
+   uint8_t tweak8[8];
+   store_be(tweak, tweak8);
+   return encrypt(x, tweak8, sizeof(tweak8));
+   }
+
+BigInt FPE_FE1::decrypt(const BigInt& x, uint64_t tweak) const
+   {
+   uint8_t tweak8[8];
+   store_be(tweak, tweak8);
+   return decrypt(x, tweak8, sizeof(tweak8));
+   }
+
+namespace FPE {
+
+BigInt fe1_encrypt(const BigInt& n, const BigInt& X,
+                   const SymmetricKey& key,
+                   const std::vector<uint8_t>& tweak)
+   {
+   FPE_FE1 fpe(n, 3, "HMAC(SHA-256)");
+   fpe.set_key(key);
+   return fpe.encrypt(X, tweak.data(), tweak.size());
+   }
+
+BigInt fe1_decrypt(const BigInt& n, const BigInt& X,
+                   const SymmetricKey& key,
+                   const std::vector<uint8_t>& tweak)
+   {
+   FPE_FE1 fpe(n, 3, "HMAC(SHA-256)");
+   fpe.set_key(key);
+   return fpe.decrypt(X, tweak.data(), tweak.size());
    }
 
 }

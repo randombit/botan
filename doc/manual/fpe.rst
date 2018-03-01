@@ -1,8 +1,6 @@
 Format Preserving Encryption
 ========================================
 
-.. versionadded:: 1.9.17
-
 Format preserving encryption (FPE) refers to a set of techniques for
 encrypting data such that the ciphertext has the same format as the
 plaintext. For instance, you can use FPE to encrypt credit card
@@ -18,39 +16,73 @@ Ristenpart, Phillip Rogaway, and Till Stegers. FPE is an area of
 ongoing standardization and it is likely that other schemes will be
 included in the future.
 
-To use FE1, use these functions, from ``fpe_fe1.h``:
+To encrypt an arbitrary value using FE1, you need to use a ranking
+method. Basically, the idea is to assign an integer to every value you
+might encrypt. For instance, a 16 digit credit card number consists of
+a 15 digit code plus a 1 digit checksum. So to encrypt a credit card
+number, you first remove the checksum, encrypt the 15 digit value
+modulo 10\ :sup:`15`, and then calculate what the checksum is for the
+new (ciphertext) number.
+
+The interfaces for FE1 are defined in the header ``fpe_fe1.h``:
+
+.. versionadded:: 2.5.0
+
+.. cpp:class:: FPE_FE1
+
+   .. cpp:function:: FPE_FE1(const BigInt& n, size_t rounds = 3, std::string mac_algo = "HMAC(SHA-256)")
+
+      Initialize an FPE operation to encrypt/decrypt integers less than *n*. It
+      is expected that *n* is trially factorable into small integers.
+
+      The default rounds and mac algorithm match the original FPE implementation
+      first available in version 1.9.17.
+
+   .. cpp:function:: BigInt encrypt(const BigInt& x, const uint8_t tweak[], size_t tweak_len) const
+
+      Encrypts the value *x* modulo the value *n* using the *key* and *tweak*
+      specified. Returns an integer less than *n*. The *tweak* is a value that
+      does not need to be secret that parameterizes the encryption function. For
+      instance, if you were encrypting a database column with a single key, you
+      could use a per-row-unique integer index value as the tweak. The same
+      tweak value must be used during decryption.
+
+   .. cpp:function:: BigInt decrypt(const BigInt& x, const uint8_t tweak[], size_t tweak_len) const
+
+      Decrypts an FE1 ciphertext. The *tweak* must be the same as that provided
+      to the encryption function. Returns the plaintext integer.
+
+      Note that there is not any implicit authentication or checking of data in
+      FE1, so if you provide an incorrect key or tweak the result is simply a
+      random integer.
+
+   .. cpp:function:: BigInt encrypt(const BigInt& x, uint64_t tweak)
+
+      Convenience version of encrypt taking an integer tweak.
+
+   .. cpp:function:: BigInt decrypt(const BigInt& x, uint64_t tweak)
+
+      Convenience version of decrypt taking an integer tweak.
+
+There are two functions that handle the entire FE1 encrypt/decrypt operation.
+These are the original interface to FE1, first added in 1.9.17. However because
+they do the entire setup cost for each operation, they are significantly slower
+than the class-based API presented above.
 
 .. cpp:function:: BigInt FPE::fe1_encrypt(const BigInt& n, const BigInt& X, \
-   const SymmetricKey& key, const std::vector<uint8_t>& tweak)
+             const SymmetricKey& key, const std::vector<uint8_t>& tweak)
 
-   Encrypts the value *X* modulo the value *n* using the *key* and
-   *tweak* specified. Returns an integer less than *n*. The *tweak* is
-   a value that does not need to be secret that parameterizes the
-   encryption function. For instance, if you were encrypting a
-   database column with a single key, you could use a per-row-unique
-   integer index value as the tweak.
-
-   To encrypt an arbitrary value using FE1, you need to use a ranking
-   method. Basically, the idea is to assign an integer to every value
-   you might encrypt. For instance, a 16 digit credit card number
-   consists of a 15 digit code plus a 1 digit checksum. So to encrypt
-   a credit card number, you first remove the checksum, encrypt the 15
-   digit value modulo 10\ :sup:`15`, and then calculate what the
-   checksum is for the new (ciphertext) number.
+    This creates an FPE_FE1 object, sets the key, and encrypts *X* using
+    the provided tweak.
 
 .. cpp:function:: BigInt FPE::fe1_decrypt(const BigInt& n, const BigInt& X, \
-   const SymmetricKey& key, const std::vector<uint8_t>& tweak)
+             const SymmetricKey& key, const std::vector<uint8_t>& tweak)
 
-   Decrypts an FE1 ciphertext produced by :cpp:func:`fe1_encrypt`; the
-   *n*, *key* and *tweak* should be the same as that provided to the
-   encryption function. Returns the plaintext.
+    This creates an FPE_FE1 object, sets the key, and decrypts *X* using
+    the provided tweak.
 
-   Note that there is not any implicit authentication or checking of
-   data, so if you provide an incorrect key or tweak the result is
-   simply a random integer.
-
-This example encrypts a credit card number with a valid
-`Luhn checksum <https://en.wikipedia.org/wiki/Luhn_algorithm>`_ to
-another number with the same format, including a correct checksum.
+This example encrypts a credit card number with a valid `Luhn checksum
+<https://en.wikipedia.org/wiki/Luhn_algorithm>`_ to another number with the same
+format, including a correct checksum.
 
 .. literalinclude:: ../../src/cli/cc_enc.cpp
