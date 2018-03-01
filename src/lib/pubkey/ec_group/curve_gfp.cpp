@@ -89,9 +89,14 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
       z.grow_to(output_size);
    z.clear();
 
-   bigint_monty_mul(z, x, y,
-                    m_p.data(), m_p_words, m_p_dash,
-                    ws.data(), ws.size());
+   bigint_mul(z.mutable_data(), z.size(),
+              x.data(), x.size(), x.sig_words(),
+              y.data(), y.size(), y.sig_words(),
+              ws.data(), ws.size());
+
+   bigint_monty_redc(z.mutable_data(),
+                     m_p.data(), m_p_words, m_p_dash,
+                     ws.data(), ws.size());
    }
 
 void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
@@ -114,8 +119,13 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
       z.grow_to(output_size);
    z.clear();
 
-   bigint_monty_sqr(z, x, m_p.data(), m_p_words, m_p_dash,
-                    ws.data(), ws.size());
+   bigint_sqr(z.mutable_data(), z.size(),
+              x.data(), x.size(), x_sw,
+              ws.data(), ws.size());
+
+   bigint_monty_redc(z.mutable_data(),
+                     m_p.data(), m_p_words, m_p_dash,
+                     ws.data(), ws.size());
    }
 
 class CurveGFp_NIST : public CurveGFp_Repr
@@ -173,7 +183,10 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
       z.grow_to(output_size);
    z.clear();
 
-   bigint_mul(z, x, y, ws.data(), ws.size());
+   bigint_mul(z.mutable_data(), z.size(),
+              x.data(), x.size(), x.sig_words(),
+              y.data(), y.size(), y.sig_words(),
+              ws.data(), ws.size());
 
    this->redc(z, ws);
    }

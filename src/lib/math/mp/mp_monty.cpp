@@ -97,27 +97,4 @@ void bigint_monty_redc(word z[],
    BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow");
    }
 
-void bigint_monty_mul(BigInt& z, const BigInt& x, const BigInt& y,
-                      const word p[], size_t p_size, word p_dash,
-                      word ws[], size_t ws_size)
-   {
-   bigint_mul(z, x, y, ws, ws_size);
-
-   bigint_monty_redc(z.mutable_data(),
-                     p, p_size, p_dash,
-                     ws, ws_size);
-   }
-
-void bigint_monty_sqr(BigInt& z, const BigInt& x, const word p[],
-                      size_t p_size, word p_dash, word ws[], size_t ws_size)
-   {
-   bigint_sqr(z.mutable_data(), z.size(),
-              x.data(), x.size(), x.sig_words(),
-              ws, ws_size);
-
-   bigint_monty_redc(z.mutable_data(),
-                     p, p_size, p_dash,
-                     ws, ws_size);
-   }
-
 }

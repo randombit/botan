@@ -14,8 +14,6 @@
 
 namespace Botan {
 
-class BigInt;
-
 /*
 * The size of the word type, in bits
 */
@@ -135,20 +133,6 @@ void bigint_monty_redc(word z[],
                        word workspace[],
                        size_t ws_size);
 
-/*
-* Montgomery Multiplication
-*/
-void bigint_monty_mul(BigInt& z, const BigInt& x, const BigInt& y,
-                      const word p[], size_t p_size, word p_dash,
-                      word workspace[], size_t ws_size);
-
-/*
-* Montgomery Squaring
-*/
-void bigint_monty_sqr(BigInt& z, const BigInt& x,
-                      const word p[], size_t p_size, word p_dash,
-                      word workspace[], size_t ws_size);
-
 /**
 * Compare x and y
 */
@@ -183,8 +167,6 @@ void bigint_comba_sqr16(word out[32], const word in[16]);
 /*
 * High Level Multiplication/Squaring Interfaces
 */
-void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y,
-                word workspace[], size_t ws_size);
 
 void bigint_mul(word z[], size_t z_size,
                 const word x[], size_t x_size, size_t x_sw,

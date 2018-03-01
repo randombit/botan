@@ -52,9 +52,15 @@ BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y) const
    const size_t output_size = 2*m_p_words + 2;
    std::vector<word> ws(output_size);
    BigInt z(BigInt::Positive, output_size);
-   bigint_monty_mul(z, x, y,
-                    m_p.data(), m_p_words, m_p_dash,
-                    ws.data(), ws.size());
+   bigint_mul(z.mutable_data(), z.size(),
+              x.data(), x.size(), x.sig_words(),
+              y.data(), y.size(), y.sig_words(),
+              ws.data(), ws.size());
+
+   bigint_monty_redc(z.mutable_data(),
+                     m_p.data(), m_p_words, m_p_dash,
+                     ws.data(), ws.size());
+
    secure_scrub_memory(ws.data(), ws.size() * sizeof(word));
    return z;
    }
