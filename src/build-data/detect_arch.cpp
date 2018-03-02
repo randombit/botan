@@ -1,5 +1,8 @@
 
-#if defined(__x86_64__) || defined(_M_X64)
+#if defined(__x86_64__) && defined(__ILP32__)
+  X32
+
+#elif defined(__x86_64__) || defined(_M_X64)
   X86_64
 
 #elif defined(__i386__) || defined(__i386) || defined(_M_IX86)

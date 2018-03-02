@@ -1,0 +1,16 @@
+endian little
+
+family x86
+
+<isa_extensions>
+aesni
+avx2
+bmi2
+rdrand
+rdseed
+sha
+sse2
+sse41
+sse42
+ssse3
+</isa_extensions>
