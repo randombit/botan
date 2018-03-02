@@ -19,7 +19,7 @@ class BER_Decoder;
 /**
 * Format ASN.1 data and call a virtual to format
 */
-class BOTAN_DLL ASN1_Formatter
+class BOTAN_PUBLIC_API(2,4) ASN1_Formatter
    {
    public:
       virtual ~ASN1_Formatter() = default;
@@ -78,7 +78,7 @@ class BOTAN_DLL ASN1_Formatter
 * Format ASN.1 data into human readable output. The exact form of the output for
 * any particular input is not guaranteed and may change from release to release.
 */
-class BOTAN_DLL ASN1_Pretty_Printer final : public ASN1_Formatter
+class BOTAN_PUBLIC_API(2,4) ASN1_Pretty_Printer final : public ASN1_Formatter
    {
    public:
       /**

@@ -58,7 +58,7 @@ class BOTAN_PUBLIC_API(2,0) PSSR final : public EMSA
 * PSSR_Raw
 * This accepts a pre-hashed buffer
 */
-class BOTAN_DLL PSSR_Raw final : public EMSA
+class BOTAN_PUBLIC_API(2,3) PSSR_Raw final : public EMSA
    {
    public:
 
