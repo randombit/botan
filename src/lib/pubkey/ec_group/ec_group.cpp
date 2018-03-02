@@ -329,10 +329,16 @@ EC_Group::EC_Group(const std::string& str)
 
    if(m_data == nullptr)
       {
-      // OK try it as PEM ...
-      secure_vector<uint8_t> ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
-      this->m_data = BER_decode_EC_group(ber.data(), ber.size());
+      if(str.size() > 30 && str.substr(0, 29) == "-----BEGIN EC PARAMETERS-----")
+         {
+         // OK try it as PEM ...
+         secure_vector<uint8_t> ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
+         this->m_data = BER_decode_EC_group(ber.data(), ber.size());
+         }
       }
+
+   if(m_data == nullptr)
+      throw Invalid_Argument("Unknown ECC group '" + str + "'");
    }
 
 //static
