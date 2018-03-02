@@ -750,6 +750,42 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
    }
 
 /*
+* 3-word addition
+* (w2,w1,w0) += x
+*/
+inline void word3_add(word* w2, word* w1, word* w0, word x)
+   {
+#if defined(BOTAN_MP_USE_X86_32_ASM)
+   asm(
+      ASM("addl %[x],%[w0]")
+      ASM("adcl $0,%[w1]")
+      ASM("adcl $0,%[w2]")
+
+      : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
+      : [x]"r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
+      : "cc");
+
+#elif defined(BOTAN_MP_USE_X86_64_ASM)
+
+   asm(
+      ASM("addq %[x],%[w0]")
+      ASM("adcq $0,%[w1]")
+      ASM("adcq $0,%[w2]")
+
+      : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
+      : [x]"r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
+      : "cc");
+
+#else
+   *w0 += x;
+   word c1 = (*w0 < x);
+   *w1 += c1;
+   word c2 = (*w1 < c1);
+   *w2 += c2;
+#endif
+   }
+
+/*
 * Multiply-Add Accumulator
 * (w2,w1,w0) += 2 * x * y
 */
