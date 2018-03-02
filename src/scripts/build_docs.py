@@ -59,7 +59,6 @@ def run_and_check(cmd_line, cwd=None):
 
     try:
         proc = subprocess.Popen(cmd_line,
-                                close_fds=True,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 cwd=cwd)
@@ -75,6 +74,8 @@ def run_and_check(cmd_line, cwd=None):
         logging.debug(stderr.decode())
 
     if proc.returncode != 0:
+        logging.info(stdout.decode())
+        logging.info(stderr.decode())
         logging.error("Error running %s", ' '.join(cmd_line))
         sys.exit(1)
 
