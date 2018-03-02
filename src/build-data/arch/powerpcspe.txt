@@ -1,0 +1,3 @@
+endian big
+
+family ppc
