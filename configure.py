@@ -2996,9 +2996,10 @@ def main(argv):
     for policy in info_module_policies.values():
         policy.cross_check(info_modules)
 
-    logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
-    logging.debug('Platform running configuration (autodetected): OS="%s" machine="%s" proc="%s"' % (
-        platform.system(), platform.machine(), platform.processor()))
+    logging.info('%s invoked with options "%s"', argv[0], ' '.join(argv[1:]))
+
+    logging.info('Autodetected platform information: OS="%s" machine="%s" proc="%s"',
+        platform.system(), platform.machine(), platform.processor())
 
     logging.debug('Known CPU names: ' + ' '.join(
         sorted(flatten([[ainfo.basename] + ainfo.aliases for ainfo in info_arch.values()]))))
