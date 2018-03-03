@@ -10,6 +10,9 @@ Version 2.5.0, Not Yet Released
   generation and ECDH key exchange performance by 3 to 5 times as compared to
   previous releases. ECDSA verification is 2 to 3 times faster. (GH #1457)
 
+* Implement product scanning Montgomery reduction, which improves Diffie-Hellman
+  and RSA performance by 10 to 20% on most platforms. (GH #1472)
+
 * Add a new Credentials_Manager callback that specifies which CAs the server
   has indicated it trusts (GH #1395 fixing #1261)
 
