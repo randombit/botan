@@ -7,11 +7,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/bigint.h>
+#include <botan/internal/mp_core.h>
 #include <botan/internal/mp_madd.h>
 #include <botan/internal/mp_asmi.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/mem_ops.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
