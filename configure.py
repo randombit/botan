@@ -1719,6 +1719,12 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     build_dir = options.with_build_dir or os.path.curdir
     program_suffix = options.program_suffix or osinfo.program_suffix
 
+    def join_with_build_dir(path):
+        # For some unknown reason MinGW doesn't like ./foo
+        if build_dir == os.path.curdir and options.os == 'mingw':
+            return path
+        return os.path.join(build_dir, path)
+
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -1738,12 +1744,12 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
         'doc_dir': source_paths.doc_dir,
-        'scripts_dir': source_paths.scripts_dir,
+        'scripts_dir': normalize_source_path(source_paths.scripts_dir),
         'python_dir': source_paths.python_dir,
 
         'cli_exe_name': osinfo.cli_exe_name + program_suffix,
-        'cli_exe': os.path.join(build_dir, osinfo.cli_exe_name + program_suffix),
-        'test_exe': os.path.join(build_dir, 'botan-test' + program_suffix),
+        'cli_exe': join_with_build_dir(osinfo.cli_exe_name + program_suffix),
+        'test_exe': join_with_build_dir('botan-test' + program_suffix),
 
         'lib_prefix': osinfo.lib_prefix,
         'static_suffix': osinfo.static_suffix,
@@ -1771,7 +1777,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'sphinx_config_dir': source_paths.sphinx_config_dir,
         'with_doxygen': options.with_doxygen,
 
-        'out_dir': options.with_build_dir or os.path.curdir,
+        'out_dir': build_dir,
         'build_dir': build_paths.build_dir,
 
         'doc_stamp_file': os.path.join(build_paths.build_dir, 'doc.stamp'),
@@ -1806,7 +1812,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'mp_bits': choose_mp_bits(),
 
-        'python_exe': sys.executable,
+        'python_exe': os.path.basename(sys.executable),
         'python_version': options.python_version,
 
         'cxx': (options.compiler_binary or cc.binary_name),
@@ -1898,7 +1904,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     if options.build_shared_lib:
         lib_targets.append('shared_lib_name')
 
-    variables['library_targets'] = ' '.join([os.path.join(build_dir, variables[t]) for t in lib_targets])
+    variables['library_targets'] = ' '.join([join_with_build_dir(variables[t]) for t in lib_targets])
 
     if options.os == 'llvm' or options.compiler == 'msvc':
         # llvm-link and msvc require just naming the file directly
