@@ -689,7 +689,9 @@ class Speed final : public Command
             throw CLI_Usage_Error("Unknown --format type '" + format + "'");
 
          if(ecc_groups.empty())
-            ecc_groups = { "secp256r1", "secp384r1", "secp521r1" };
+            ecc_groups = { "secp256r1", "brainpool256r1",
+                           "secp384r1", "brainpool384r1",
+                           "secp521r1", "brainpool512r1" };
 
          std::vector<std::string> algos = get_arg_list("algos");
 
