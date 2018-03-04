@@ -79,53 +79,48 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    const BigInt& p = m_curve.get_p();
 
    const size_t cap_size = 2*m_curve.get_p_words() + 2;
+
+   BOTAN_ASSERT(ws_bn.size() >= WORKSPACE_SIZE, "Expected size for PointGFp::add workspace");
+
    for(size_t i = 0; i != ws_bn.size(); ++i)
       ws_bn[i].ensure_capacity(cap_size);
 
-   BigInt& rhs_z2 = ws_bn[0];
-   BigInt& U1 = ws_bn[1];
-   BigInt& S1 = ws_bn[2];
+   secure_vector<word>& ws = ws_bn[0].get_word_vector();
 
-   BigInt& lhs_z2 = ws_bn[3];
-   BigInt& U2 = ws_bn[4];
-   BigInt& S2 = ws_bn[5];
-
-   BigInt& H = ws_bn[6];
-   BigInt& r = ws_bn[7];
-
-   BigInt& tmp = ws_bn[8];
-
-   secure_vector<word>& monty_ws = ws_bn[9].get_word_vector();
+   BigInt& T0 = ws_bn[1];
+   BigInt& T1 = ws_bn[2];
+   BigInt& T2 = ws_bn[3];
+   BigInt& T3 = ws_bn[4];
+   BigInt& T4 = ws_bn[5];
+   BigInt& T5 = ws_bn[6];
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
    */
 
-   m_curve.sqr(rhs_z2, rhs.m_coord_z, monty_ws);
-   m_curve.mul(U1, m_coord_x, rhs_z2, monty_ws);
+   m_curve.sqr(T0, rhs.m_coord_z, ws); // z2^2
+   m_curve.mul(T1, m_coord_x, T0, ws); // x1*z2^2
+   m_curve.mul(T3, rhs.m_coord_z, T0, ws); // z2^3
+   m_curve.mul(T2, m_coord_y, T3, ws); // y1*z2^3
 
-   m_curve.mul(tmp, rhs.m_coord_z, rhs_z2, monty_ws); // z^3
-   m_curve.mul(S1, m_coord_y, tmp, monty_ws);
+   m_curve.sqr(T3, m_coord_z, ws); // z1^2
+   m_curve.mul(T4, rhs.m_coord_x, T3, ws); // x2*z1^2
 
-   m_curve.sqr(lhs_z2, m_coord_z, monty_ws);
-   m_curve.mul(U2, rhs.m_coord_x, lhs_z2, monty_ws);
+   m_curve.mul(T5, m_coord_z, T3, ws); // z1^3
+   m_curve.mul(T0, rhs.m_coord_y, T5, ws); // y2*z1^3
 
-   m_curve.mul(tmp, m_coord_z, lhs_z2, monty_ws);
-   m_curve.mul(S2, rhs.m_coord_y, tmp, monty_ws);
+   T4 -= T1; // x2*z1^2 - x1*z2^2
+   if(T4.is_negative())
+      T4 += p;
 
-   H = U2;
-   H -= U1;
-   if(H.is_negative())
-      H += p;
+   T3 = T0;
+   T3 -= T2;
+   if(T3.is_negative())
+      T3 += p;
 
-   r = S2;
-   r -= S1;
-   if(r.is_negative())
-      r += p;
-
-   if(H.is_zero())
+   if(T4.is_zero())
       {
-      if(r.is_zero())
+      if(T3.is_zero())
          {
          mult2(ws_bn);
          return;
@@ -138,32 +133,31 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
       return;
       }
 
-   m_curve.sqr(U2, H, monty_ws);
+   m_curve.sqr(T5, T4, ws);
 
-   m_curve.mul(S2, U2, H, monty_ws);
+   m_curve.mul(T0, T1, T5, ws);
 
-   m_curve.mul(tmp, U1, U2, monty_ws);
-   U2 = tmp;
+   m_curve.mul(T1, T5, T4, ws);
 
-   m_curve.sqr(m_coord_x, r, monty_ws);
-   m_coord_x -= S2;
-   m_coord_x -= U2;
-   m_coord_x -= U2;
+   m_curve.sqr(m_coord_x, T3, ws);
+   m_coord_x -= T1;
+   m_coord_x -= T0;
+   m_coord_x -= T0;
    while(m_coord_x.is_negative())
       m_coord_x += p;
 
-   U2 -= m_coord_x;
-   if(U2.is_negative())
-      U2 += p;
+   T0 -= m_coord_x;
+   if(T0.is_negative())
+      T0 += p;
 
-   m_curve.mul(m_coord_y, r, U2, monty_ws);
-   m_curve.mul(tmp, S1, S2, monty_ws);
-   m_coord_y -= tmp;
+   m_curve.mul(m_coord_y, T3, T0, ws);
+   m_curve.mul(T0, T2, T1, ws);
+   m_coord_y -= T0;
    if(m_coord_y.is_negative())
       m_coord_y += p;
 
-   m_curve.mul(tmp, m_coord_z, rhs.m_coord_z, monty_ws);
-   m_curve.mul(m_coord_z, tmp, H, monty_ws);
+   m_curve.mul(T0, m_coord_z, rhs.m_coord_z, ws);
+   m_curve.mul(m_coord_z, T0, T4, ws);
    }
 
 // *this *= 2
@@ -183,64 +177,61 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    */
 
    const size_t cap_size = 2*m_curve.get_p_words() + 2;
+
+   BOTAN_ASSERT(ws_bn.size() >= WORKSPACE_SIZE, "Expected size for PointGFp::add workspace");
    for(size_t i = 0; i != ws_bn.size(); ++i)
       ws_bn[i].ensure_capacity(cap_size);
 
    const BigInt& p = m_curve.get_p();
 
-   BigInt& y_2 = ws_bn[0];
-   BigInt& S = ws_bn[1];
-   BigInt& tmp = ws_bn[2];
-   BigInt& a_z4 = ws_bn[3];
-   BigInt& M = ws_bn[4];
-   BigInt& U = ws_bn[5];
-   BigInt& x = ws_bn[6];
-   BigInt& y = ws_bn[7];
-   BigInt& z = ws_bn[8];
+   secure_vector<word>& ws = ws_bn[0].get_word_vector();
+   BigInt& T0 = ws_bn[1];
+   BigInt& T1 = ws_bn[2];
+   BigInt& T2 = ws_bn[6];
+   BigInt& T3 = ws_bn[4];
+   BigInt& T4 = ws_bn[5];
 
-   secure_vector<word>& monty_ws = ws_bn[9].get_word_vector();
+   m_curve.sqr(T0, m_coord_y, ws);
 
-   m_curve.sqr(y_2, m_coord_y, monty_ws);
+   m_curve.mul(T1, m_coord_x, T0, ws);
+   T1 <<= 2; // * 4
+   T1.reduce_below(p, T3.get_word_vector());
 
-   m_curve.mul(S, m_coord_x, y_2, monty_ws);
-   S <<= 2; // * 4
-   S.reduce_below(p, tmp.get_word_vector());
+   m_curve.sqr(T3, m_coord_z, ws); // z^2
+   m_curve.sqr(T4, T3, ws); // z^4
+   m_curve.mul(T3, m_curve.get_a_rep(), T4, ws);
 
-   m_curve.sqr(a_z4, m_coord_z, monty_ws); // z^2
-   m_curve.sqr(tmp, a_z4, monty_ws); // z^4
-   m_curve.mul(a_z4, m_curve.get_a_rep(), tmp, monty_ws);
+   m_curve.sqr(T4, m_coord_x, ws);
+   T4 *= 3;
+   T4 += T3;
+   T4.reduce_below(p, T3.get_word_vector());
 
-   m_curve.sqr(M, m_coord_x, monty_ws);
-   M *= 3;
-   M += a_z4;
-   M.reduce_below(p, tmp.get_word_vector());
+   m_curve.sqr(T2, T4, ws);
+   T2 -= T1;
+   T2 -= T1;
+   while(T2.is_negative())
+      T2 += p;
+   m_coord_x = T2;
 
-   m_curve.sqr(x, M, monty_ws);
-   x -= S;
-   x -= S;
-   while(x.is_negative())
-      x += p;
+   m_curve.sqr(T3, T0, ws);
+   T3 <<= 3;
+   T3.reduce_below(p, T0.get_word_vector());
 
-   m_curve.sqr(U, y_2, monty_ws);
-   U <<= 3;
-   U.reduce_below(p, tmp.get_word_vector());
+   T1 -= T2;
+   while(T1.is_negative())
+      T1 += p;
 
-   S -= x;
-   while(S.is_negative())
-      S += p;
+   m_curve.mul(T0, T4, T1, ws);
+   T0 -= T3;
+   if(T0.is_negative())
+      T0 += p;
 
-   m_curve.mul(y, M, S, monty_ws);
-   y -= U;
-   if(y.is_negative())
-      y += p;
+   m_curve.mul(T2, m_coord_y, m_coord_z, ws);
+   T2 <<= 1;
+   T2.reduce_below(p, T3.get_word_vector());
 
-   m_curve.mul(z, m_coord_y, m_coord_z, monty_ws);
-   z <<= 1;
-   z.reduce_below(p, tmp.get_word_vector());
-
-   m_coord_x = x;
-   m_coord_y = y;
-   m_coord_z = z;
+   m_coord_y = T0;
+   m_coord_z = T2;
    }
 
 // arithmetic operators

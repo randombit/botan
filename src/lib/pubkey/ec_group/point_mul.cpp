@@ -20,7 +20,7 @@ PointGFp_Blinded_Multiplier::PointGFp_Blinded_Multiplier(const PointGFp& base,
 PointGFp_Blinded_Multiplier::PointGFp_Blinded_Multiplier(const PointGFp& base,
                                                          size_t w)
    {
-   std::vector<BigInt> ws(9);
+   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
    init(base, w, ws);
    }
 

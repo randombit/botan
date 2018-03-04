@@ -49,7 +49,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
          HYBRID       = 2
       };
 
-      enum { WORKSPACE_SIZE = 10 };
+      enum { WORKSPACE_SIZE = 7 };
 
       /**
       * Construct an uninitialized PointGFp
