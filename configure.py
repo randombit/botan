@@ -55,6 +55,11 @@ def normalize_source_path(source):
     cmake needs this, and nothing else minds
     """
     return os.path.normpath(source).replace('\\', '/')
+    
+def normalize_source_path_if_mingw(options, source):
+    if (options.os == 'windows' and options.compiler != 'msvc') or options.os == 'mingw':
+        return normalize_source_path(source)
+    return source
 
 def parse_version_file(version_path):
     version_file = open(version_path)
@@ -1738,12 +1743,12 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
         'doc_dir': source_paths.doc_dir,
-        'scripts_dir': source_paths.scripts_dir,
+        'scripts_dir': normalize_source_path_if_mingw(options, source_paths.scripts_dir),
         'python_dir': source_paths.python_dir,
 
         'cli_exe_name': osinfo.cli_exe_name + program_suffix,
-        'cli_exe': os.path.join(build_dir, osinfo.cli_exe_name + program_suffix),
-        'test_exe': os.path.join(build_dir, 'botan-test' + program_suffix),
+        'cli_exe': normalize_source_path_if_mingw(options, os.path.join(build_dir, osinfo.cli_exe_name + program_suffix)),
+        'test_exe': normalize_source_path_if_mingw(options, os.path.join(build_dir, 'botan-test' + program_suffix)),
 
         'lib_prefix': osinfo.lib_prefix,
         'static_suffix': osinfo.static_suffix,
@@ -1806,7 +1811,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'mp_bits': choose_mp_bits(),
 
-        'python_exe': sys.executable,
+        'python_exe': normalize_source_path_if_mingw(options, sys.executable),
         'python_version': options.python_version,
 
         'cxx': (options.compiler_binary or cc.binary_name),
@@ -1898,7 +1903,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     if options.build_shared_lib:
         lib_targets.append('shared_lib_name')
 
-    variables['library_targets'] = ' '.join([os.path.join(build_dir, variables[t]) for t in lib_targets])
+    variables['library_targets'] = ' '.join([normalize_source_path_if_mingw(options, os.path.join(build_dir, variables[t])) for t in lib_targets])
 
     if options.os == 'llvm' or options.compiler == 'msvc':
         # llvm-link and msvc require just naming the file directly
