@@ -495,14 +495,14 @@ class Timing_Test_Command final : public Command
          {
          // TODO check feature macros
          return (Command::help_text() +
-                 "\ntest_type can take on values " +
-                 "bleichenbacher " +
+                 "\ntest_type can take on values "
+                 "bleichenbacher "
                  "manger "
-                 "ecdsa " +
-                 "lucky13sha1sec3 " +
-                 "lucky13sha256sec3 " +
-                 "lucky13sec4sha1 " +
-                 "lucky13sec4sha256 " +
+                 "ecdsa "
+                 "ecc_mul "
+                 "lucky13sec3 "
+                 "lucky13sec4sha1 "
+                 "lucky13sec4sha256 "
                  "lucky13sec4sha384 "
                 );
          }
@@ -548,15 +548,15 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::
 #endif
 
 #if defined(BOTAN_HAS_TLS_CBC)
-   if(test_type == "lucky13sha1sec3" || test_type == "lucky13sha1sec4")
+   if(test_type == "lucky13sec3" || test_type == "lucky13sec4sha1")
       {
       return std::unique_ptr<Timing_Test>(new Lucky13_Timing_Test("SHA-1", 20));
       }
-   if(test_type == "lucky13sha256sec3" || test_type == "lucky13sha256sec4")
+   if(test_type == "lucky13sec4sha256")
       {
       return std::unique_ptr<Timing_Test>(new Lucky13_Timing_Test("SHA-256", 32));
       }
-   if(test_type == "lucky13sha384")
+   if(test_type == "lucky13sec4sha384")
       {
       return std::unique_ptr<Timing_Test>(new Lucky13_Timing_Test("SHA-384", 48));
       }
