@@ -70,16 +70,16 @@ void bigint_monty_redc(word z[],
       w2 = 0;
       }
 
-   for(size_t i = p_size; i != 2*p_size; ++i)
+   for(size_t i = 0; i != p_size; ++i)
       {
-      for(size_t j = i - p_size + 1; j != p_size; ++j)
+      for(size_t j = i + 1; j != p_size; ++j)
          {
-         word3_muladd(&w2, &w1, &w0, ws[j], p[i-j]);
+         word3_muladd(&w2, &w1, &w0, ws[j], p[p_size + i-j]);
          }
 
-      word3_add(&w2, &w1, &w0, z[i]);
+      word3_add(&w2, &w1, &w0, z[p_size+i]);
 
-      ws[i-p_size] = w0;
+      ws[i] = w0;
       w0 = w1;
       w1 = w2;
       w2 = 0;
