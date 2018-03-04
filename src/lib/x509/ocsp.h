@@ -77,6 +77,12 @@ class BOTAN_PUBLIC_API(2,0) Response final
       Response() = default;
 
       /**
+      * Create a fake OCSP response from a given status code.
+      * @param status the status code the check functions will return
+      */
+      Response(Certificate_Status_Code status);
+
+      /**
       * Parses an OCSP response.
       * @param response_bits response bits received
       */
@@ -161,6 +167,8 @@ class BOTAN_PUBLIC_API(2,0) Response final
       std::vector<X509_Certificate> m_certs;
 
       std::vector<SingleResponse> m_responses;
+
+      Certificate_Status_Code m_dummy_response_status;
    };
 
 #if defined(BOTAN_HAS_HTTP_UTIL)

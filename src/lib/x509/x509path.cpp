@@ -371,26 +371,34 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
       if(subject->ocsp_responder() == "")
          {
          ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const OCSP::Response> {
-                  throw Exception("No OCSP responder URL set for this certificate");
+                  return std::make_shared<const OCSP::Response>(Certificate_Status_Code::OSCP_NO_REVOCATION_URL);
                   }));
-            }
-         else
-            {
-            ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::shared_ptr<const OCSP::Response> {
-                  OCSP::Request req(*issuer, BigInt::decode(subject->serial_number()));
+         }
+      else
+         {
+         ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::shared_ptr<const OCSP::Response> {
+               OCSP::Request req(*issuer, BigInt::decode(subject->serial_number()));
 
-                  auto http = HTTP::POST_sync(subject->ocsp_responder(),
-                                              "application/ocsp-request",
-                                              req.BER_encode(),
-                                              /*redirects*/1,
-                                              timeout);
+               HTTP::Response http;
+               try
+                  {
+                  http = HTTP::POST_sync(subject->ocsp_responder(),
+                                                "application/ocsp-request",
+                                                req.BER_encode(),
+                                                /*redirects*/1,
+                                                timeout);
+                  }
+               catch(std::exception& e)
+                  {
+                  // log e.what() ?
+                  }
+               if (http.status_code() != 200)
+                  return std::make_shared<const OCSP::Response>(Certificate_Status_Code::OSCP_SERVER_NOT_AVAILABLE);
+               // Check the MIME type?
 
-                  http.throw_unless_ok();
-                  // Check the MIME type?
-
-                  return std::make_shared<const OCSP::Response>(http.body());
-                  }));
-            }
+               return std::make_shared<const OCSP::Response>(http.body());
+               }));
+         }
       }
 
    std::vector<std::shared_ptr<const OCSP::Response>> ocsp_responses;
@@ -773,7 +781,9 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
          {
          for(auto&& code : ocsp[i])
             {
-            if(code == Certificate_Status_Code::OCSP_RESPONSE_GOOD)
+            if(code == Certificate_Status_Code::OCSP_RESPONSE_GOOD ||
+               code == Certificate_Status_Code::OSCP_NO_REVOCATION_URL ||  // softfail
+               code == Certificate_Status_Code::OSCP_SERVER_NOT_AVAILABLE) // softfail
                {
                had_ocsp = true;
                }
