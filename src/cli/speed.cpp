@@ -86,6 +86,7 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/numthry.h>
    #include <botan/pow_mod.h>
+   #include <botan/reducer.h>
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
@@ -860,6 +861,10 @@ class Speed final : public Command
                {
                bench_inverse_mod(msec);
                }
+            else if(algo == "bn_redc")
+               {
+               bench_bn_redc(msec);
+               }
 #endif
 
 #if defined(BOTAN_HAS_FPE_FE1)
@@ -1375,6 +1380,33 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
+      void bench_bn_redc(const std::chrono::milliseconds runtime)
+         {
+         Botan::BigInt p;
+         p.set_bit(521);
+         p--;
+
+         Timer barrett_timer("Barrett");
+         Timer schoolbook_timer("Schoolbook");
+
+         Botan::Modular_Reducer mod_p(p);
+
+         while(schoolbook_timer.under(runtime))
+            {
+            const Botan::BigInt x(rng(), p.bits() * 2 - 2);
+
+            const Botan::BigInt r1 = barrett_timer.run(
+               [&] { return mod_p.reduce(x); });
+            const Botan::BigInt r2 = schoolbook_timer.run(
+               [&] { return x % p; });
+
+            BOTAN_ASSERT(r1 == r2, "Computed different results");
+            }
+
+         record_result(barrett_timer);
+         record_result(schoolbook_timer);
+         }
+
       void bench_inverse_mod(const std::chrono::milliseconds runtime)
          {
          Botan::BigInt p;
