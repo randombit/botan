@@ -9,6 +9,7 @@
 #include <botan/curve_gfp.h>
 #include <botan/curve_nistp.h>
 #include <botan/numthry.h>
+#include <botan/reducer.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_asmi.h>
 
@@ -26,9 +27,11 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
          {
          const BigInt r = BigInt::power_of_2(m_p_words * BOTAN_MP_WORD_BITS);
 
-         m_r2  = (r * r) % p;
-         m_a_r = (m_a * r) % p;
-         m_b_r = (m_b * r) % p;
+         Modular_Reducer mod_p(m_p);
+
+         m_r2  = mod_p.square(r);
+         m_a_r = mod_p.multiply(r, m_a);
+         m_b_r = mod_p.multiply(r, m_b);
          }
 
       const BigInt& get_a() const override { return m_a; }
