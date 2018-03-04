@@ -10,7 +10,7 @@ For Botan 2, the tier-1 supported platforms are
 * Linux x86-64, Clang 3.5 or higher
 * Linux aarch64, GCC 4.8+
 * Linux ppc64le, GCC 4.8+
-* Windows x86-64, Visual C++ 2013 and 2015
+* Windows x86-64, Visual C++ 2015 and 2017
 
 These platforms are all tested by continuous integration, and the developers
 have access to hardware in order to test patches. Problems affecting these
@@ -26,6 +26,7 @@ For Botan 2, the tier-2 supported platforms are
 * Android arm32, NDK Clang
 * FreeBSD x86-64, Clang 3.8+
 * IncludeOS x86-32, Clang 3.8+
+* Windows x86-64, Visual C++ 2013
 
 Some (but not all) of the tier-2 platforms are tested by CI. Things should
 mostly work, and if problems are encountered, the Botan devs will probably be
