@@ -1,6 +1,6 @@
 /*
 * OAEP
-* (C) 1999-2010,2015 Jack Lloyd
+* (C) 1999-2010,2015,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -35,11 +35,11 @@ secure_vector<uint8_t> OAEP::pad(const uint8_t in[], size_t in_length,
    out[out.size() - in_length - 1] = 0x01;
    buffer_insert(out, out.size() - in_length, in, in_length);
 
-   mgf1_mask(*m_hash,
+   mgf1_mask(*m_mgf1_hash,
              out.data(), m_Phash.size(),
              &out[m_Phash.size()], out.size() - m_Phash.size());
 
-   mgf1_mask(*m_hash,
+   mgf1_mask(*m_mgf1_hash,
              &out[m_Phash.size()], out.size() - m_Phash.size(),
              out.data(), m_Phash.size());
 
@@ -80,11 +80,11 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
 
    const size_t hlen = m_Phash.size();
 
-   mgf1_mask(*m_hash,
+   mgf1_mask(*m_mgf1_hash,
              &input[hlen], input.size() - hlen,
              input.data(), hlen);
 
-   mgf1_mask(*m_hash,
+   mgf1_mask(*m_mgf1_hash,
              input.data(), hlen,
              &input[hlen], input.size() - hlen);
 
@@ -136,9 +136,17 @@ size_t OAEP::maximum_input_size(size_t keybits) const
 /*
 * OAEP Constructor
 */
-OAEP::OAEP(HashFunction* hash, const std::string& P) : m_hash(hash)
+OAEP::OAEP(HashFunction* hash, const std::string& P) : m_mgf1_hash(hash)
    {
-   m_Phash = m_hash->process(P);
+   m_Phash = m_mgf1_hash->process(P);
+   }
+
+OAEP::OAEP(HashFunction* hash,
+           HashFunction* mgf1_hash,
+           const std::string& P) : m_mgf1_hash(mgf1_hash)
+   {
+   std::unique_ptr<HashFunction> phash(hash); // takes ownership
+   m_Phash = phash->process(P);
    }
 
 }
