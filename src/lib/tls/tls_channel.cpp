@@ -314,8 +314,7 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
                         raw_input,
                         record,
                         m_sequence_numbers.get(),
-                        std::bind(&TLS::Channel::read_cipher_state_epoch, this,
-                                  std::placeholders::_1));
+                        [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); });
 
          BOTAN_ASSERT(consumed > 0, "Got to eat something");
 
