@@ -167,8 +167,10 @@ void OID::decode_from(BER_Decoder& decoder)
    const size_t length = obj.length();
    const uint8_t* bits = obj.bits();
 
-   if(length < 2)
+   if(length < 2 && !(length == 1 && bits[0] == 0))
+      {
       throw BER_Decoding_Error("OID encoding is too short");
+      }
 
    clear();
    m_id.push_back(bits[0] / 40);

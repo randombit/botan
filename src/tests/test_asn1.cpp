@@ -300,7 +300,7 @@ class ASN1_Printer_Tests final : public Test
 
          Botan::ASN1_Pretty_Printer printer;
 
-         const size_t num_tests = 5;
+         const size_t num_tests = 6;
 
          for(size_t i = 1; i <= num_tests; ++i)
             {
