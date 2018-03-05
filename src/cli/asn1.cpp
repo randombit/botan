@@ -19,7 +19,7 @@ namespace Botan_CLI {
 class ASN1_Printer final : public Command
    {
    public:
-      ASN1_Printer() : Command("asn1print --print-limit=4096 --bin-limit=1024 --max-depth=64 --pem file") {}
+      ASN1_Printer() : Command("asn1print --print-context-specific --print-limit=4096 --bin-limit=2048 --max-depth=64 --pem file") {}
 
       std::string group() const override
          {
