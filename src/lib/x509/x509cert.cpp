@@ -32,6 +32,7 @@ struct X509_Certificate_Data
    X509_Time m_not_before;
    X509_Time m_not_after;
    std::vector<uint8_t> m_subject_public_key_bits;
+   std::vector<uint8_t> m_subject_public_key_bits_seq;
    std::vector<uint8_t> m_subject_public_key_bitstring;
    std::vector<uint8_t> m_subject_public_key_bitstring_sha1;
    AlgorithmIdentifier m_subject_public_key_algid;
@@ -186,6 +187,8 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    data->m_subject_public_key_bits.assign(public_key.bits(), public_key.bits() + public_key.length());
 
+   data->m_subject_public_key_bits_seq = ASN1::put_in_sequence(data->m_subject_public_key_bits);
+
    BER_Decoder(data->m_subject_public_key_bits)
       .decode(data->m_subject_public_key_algid)
       .decode(data->m_subject_public_key_bitstring, BIT_STRING);
@@ -280,8 +283,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
       try
          {
-         std::unique_ptr<Public_Key> pub_key(
-            X509::load_key(ASN1::put_in_sequence(data->m_subject_public_key_bits)));
+         std::unique_ptr<Public_Key> pub_key(X509::load_key(data->m_subject_public_key_bits_seq));
 
          Certificate_Status_Code sig_status = obj.verify_signature(*pub_key);
 
@@ -373,6 +375,11 @@ const std::vector<uint8_t>& X509_Certificate::v2_subject_key_id() const
 const std::vector<uint8_t>& X509_Certificate::subject_public_key_bits() const
    {
    return data().m_subject_public_key_bits;
+   }
+
+const std::vector<uint8_t>& X509_Certificate::subject_public_key_info() const
+   {
+   return data().m_subject_public_key_bits_seq;
    }
 
 const std::vector<uint8_t>& X509_Certificate::subject_public_key_bitstring() const
@@ -632,7 +639,7 @@ std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
    {
    try
       {
-      return std::unique_ptr<Public_Key>(X509::load_key(ASN1::put_in_sequence(this->subject_public_key_bits())));
+      return std::unique_ptr<Public_Key>(X509::load_key(subject_public_key_info()));
       }
    catch(std::exception& e)
       {
