@@ -264,6 +264,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
       {
       BigInt p, a, b, order, cofactor;
       std::vector<uint8_t> base_pt;
+      std::vector<uint8_t> seed;
 
       BER_Decoder(bits, len)
          .start_cons(SEQUENCE)
@@ -276,6 +277,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
            .start_cons(SEQUENCE)
              .decode_octet_string_bigint(a)
              .decode_octet_string_bigint(b)
+             .decode_optional_string(seed, BIT_STRING, BIT_STRING)
            .end_cons()
            .decode(base_pt, OCTET_STRING)
            .decode(order)

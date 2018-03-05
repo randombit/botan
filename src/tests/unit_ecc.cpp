@@ -293,6 +293,22 @@ Test::Result test_groups()
    return result;
    }
 
+Test::Result test_decoding_with_seed()
+   {
+   Test::Result result("ECC Unit");
+
+   Botan::EC_Group secp384r1_with_seed(
+      Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
+
+   result.confirm("decoding worked", secp384r1_with_seed.initialized());
+
+   Botan::EC_Group secp384r1("secp384r1");
+
+   result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
+
+   return result;
+   }
+
 Test::Result test_coordinates()
    {
    Test::Result result("ECC Unit");
@@ -765,6 +781,7 @@ class ECC_Unit_Tests final : public Test
 
          results.push_back(test_groups());
          results.push_back(test_coordinates());
+         results.push_back(test_decoding_with_seed());
          results.push_back(test_point_transformation());
          results.push_back(test_point_mult());
          results.push_back(test_point_negative());
