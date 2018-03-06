@@ -3,5 +3,5 @@ SKEIN_512 -> 20131128
 </defines>
 
 <requires>
-threefish
+threefish_512
 </requires>

@@ -66,6 +66,9 @@ Version 2.5.0, Not Yet Released
 
 * Use feature flags to enable/disable system specific code (GH #1378)
 
+* The threefish module has been renamed threefish_512 since that is the
+  algorithm it provides. (GH #1477)
+
 * The Perl XS based wrapper has been removed, as it was unmaintained and
   broken. (GH #1412)
 

@@ -1,12 +1,12 @@
 /*
-* Threefish
+* Threefish-512
 * (C) 2013,2014 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_THREEFISH_H_
-#define BOTAN_THREEFISH_H_
+#ifndef BOTAN_THREEFISH_512_H_
+#define BOTAN_THREEFISH_512_H_
 
 #include <botan/block_cipher.h>
 

@@ -86,7 +86,7 @@
 #endif
 
 #if defined(BOTAN_HAS_THREEFISH_512)
-  #include <botan/threefish.h>
+  #include <botan/threefish_512.h>
 #endif
 
 #if defined(BOTAN_HAS_XTEA)

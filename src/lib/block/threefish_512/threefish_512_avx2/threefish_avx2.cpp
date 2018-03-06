@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/threefish.h>
+#include <botan/threefish_512.h>
 #include <immintrin.h>
 
 namespace Botan {

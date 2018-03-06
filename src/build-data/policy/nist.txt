@@ -106,8 +106,8 @@ sm4
 shacal2
 shacal2_x86
 shacal2_simd
-threefish
-threefish_avx2
+threefish_512
+threefish_512_avx2
 twofish
 xtea
 

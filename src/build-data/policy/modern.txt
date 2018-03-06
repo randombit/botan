@@ -1,7 +1,7 @@
 <required>
 aes
 serpent
-threefish
+threefish_512
 chacha
 
 sha2_32
@@ -61,7 +61,7 @@ http_util # needed by x509 for OCSP online checks
 aes_ni
 aes_ssse3
 serpent_simd
-threefish_avx2
+threefish_512_avx2
 chacha_sse2
 
 sha1_sse2
