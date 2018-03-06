@@ -8,6 +8,7 @@
 
 #include <botan/blake2b.h>
 #include <botan/exceptn.h>
+#include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
@@ -31,8 +32,9 @@ const uint64_t blake2b_IV[BLAKE2B_IVU64COUNT] = {
 
 }
 
-Blake2b::Blake2b(size_t output_bits) :
+Blake2b::Blake2b(size_t output_bits, std::string key_hex) :
    m_output_bits(output_bits),
+   m_key_hex(key_hex),
    m_buffer(BLAKE2B_BLOCKBYTES),
    m_bufpos(0),
    m_H(BLAKE2B_IVU64COUNT)
@@ -42,15 +44,29 @@ Blake2b::Blake2b(size_t output_bits) :
       throw Invalid_Argument("Bad output bits size for Blake2b");
       }
 
-   state_init();
+   const secure_vector<uint8_t> key = hex_decode_locked(m_key_hex, false);
+   if(key.size() > 64)
+      {
+      throw Invalid_Argument("Bad key length for Blake2b");
+      }
+
+   state_init(key);
    }
 
-void Blake2b::state_init()
+void Blake2b::state_init(secure_vector<uint8_t> key)
    {
    copy_mem(m_H.data(), blake2b_IV, BLAKE2B_IVU64COUNT);
-   m_H[0] ^= 0x01010000 ^ static_cast<uint8_t>(output_length());
+   auto change = 0x01010000 ^ (key.size() << 8) ^ static_cast<uint8_t>(output_length());
+   m_H[0] ^= change;
    m_T[0] = m_T[1] = 0;
    m_F[0] = m_F[1] = 0;
+
+   if(key.size() > 0)
+      {
+      auto padding = secure_vector<uint8_t>(128 - key.size(), '\0');
+      key.insert(key.end(), padding.begin(), padding.end());
+      update(key);
+      }
    }
 
 namespace {
@@ -182,12 +198,15 @@ void Blake2b::final_result(uint8_t output[])
 
 std::string Blake2b::name() const
    {
+   if(!m_key_hex.empty())
+      return "Blake2b(" + std::to_string(m_output_bits) + "," +
+                            m_key_hex + ")";
    return "Blake2b(" + std::to_string(m_output_bits) + ")";
    }
 
 HashFunction* Blake2b::clone() const
    {
-   return new Blake2b(m_output_bits);
+   return new Blake2b(m_output_bits, m_key_hex);
    }
 
 std::unique_ptr<HashFunction> Blake2b::copy_state() const
@@ -200,7 +219,7 @@ void Blake2b::clear()
    zeroise(m_H);
    zeroise(m_buffer);
    m_bufpos = 0;
-   state_init();
+   state_init(hex_decode_locked(m_key_hex, false));
    }
 
 }
