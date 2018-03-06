@@ -1,6 +1,6 @@
 /*
 * PKCS #10/Self Signed Cert Creation
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,6 +11,7 @@
 #include <botan/der_enc.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
+#include <botan/hash.h>
 
 namespace Botan {
 
@@ -52,7 +53,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    // for now, only the padding option is used
    std::map<std::string,std::string> sig_opts = { {"padding",opts.padding_scheme} };
 
-   std::vector<uint8_t> pub_key = X509::BER_encode(key);
+   const std::vector<uint8_t> pub_key = X509::BER_encode(key);
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, sig_opts, rng, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
@@ -78,7 +79,13 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       extensions.add_new(new Cert_Extension::Key_Usage(constraints), true);
       }
 
-   extensions.add_new(new Cert_Extension::Subject_Key_ID(pub_key, hash_fn));
+   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_fn));
+   hash->update(pub_key);
+   std::vector<uint8_t> skid(hash->output_length());
+   hash->final(skid.data());
+
+   extensions.add_new(new Cert_Extension::Subject_Key_ID(skid));
+   extensions.add_new(new Cert_Extension::Authority_Key_ID(skid));
 
    extensions.add_new(
       new Cert_Extension::Subject_Alternative_Name(subject_alt));
