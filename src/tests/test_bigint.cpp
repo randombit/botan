@@ -139,7 +139,7 @@ class BigInt_Unit_Tests final : public Test
 
          result.start_timer();
 
-         const size_t SAMPLES = 50000;
+         const size_t SAMPLES = 500000;
 
          const uint64_t range_min = 0;
          const uint64_t range_max = 100;
