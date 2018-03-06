@@ -583,6 +583,9 @@ const AlternativeName& X509_Certificate::issuer_alt_name() const
 std::vector<std::string>
 X509_Certificate::subject_info(const std::string& req) const
    {
+   if(req == "Email")
+      return this->subject_info("RFC822");
+
    if(subject_dn().has_field(req))
       return subject_dn().get_attribute(req);
 
