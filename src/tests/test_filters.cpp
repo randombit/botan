@@ -275,7 +275,16 @@ class Filter_Tests final : public Test
 
 #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_HMAC) && defined(BOTAN_HAS_SHA2_32)
          const Botan::SymmetricKey key("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-         Botan::Pipe pipe(new Botan::MAC_Filter("HMAC(SHA-256)", key, 12),
+
+         Botan::Keyed_Filter* mac_filter = new Botan::MAC_Filter("HMAC(SHA-256)", key, 12);
+
+         mac_filter->set_iv(Botan::InitializationVector()); // ignored
+
+         result.test_throws("Keyed_Filter::set_iv throws if not implemented",
+                            "Invalid argument IV length 1 is invalid for HMAC(SHA-256)",
+                            [mac_filter]() { mac_filter->set_iv(Botan::InitializationVector("AA")); });
+
+         Botan::Pipe pipe(mac_filter,
                           new Botan::Base64_Encoder);
 
          pipe.process_msg("Hi");
@@ -666,10 +675,20 @@ class Filter_Tests final : public Test
          Test::Result result("Filter Chain");
 
 #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64)
+
+         Botan::Filter* filters[2] = {
+            new Botan::Hash_Filter("SHA-256"),
+            new Botan::Hex_Encoder
+         };
+
+         std::unique_ptr<Botan::Chain> chain(new Botan::Chain(filters, 2));
+
+         result.test_eq("Chain has a name", chain->name(), "Chain");
+
          std::unique_ptr<Botan::Fork> fork(
             new Botan::Fork(
-               new Botan::Chain(new Botan::Hash_Filter("SHA-256"), new Botan::Hex_Encoder),
-               new Botan::Chain(new Botan::Hash_Filter("SHA-512-256"), new Botan::Hex_Encoder)
+               chain.release(),
+               new Botan::Chain(new Botan::Hash_Filter("SHA-512-256", 19), new Botan::Hex_Encoder)
             ));
 
          result.test_eq("Fork has a name", fork->name(), "Fork");
@@ -682,7 +701,7 @@ class Filter_Tests final : public Test
          result.test_eq("Hash 1", pipe.read_all_as_string(0),
                         "C00862D1C6C1CF7C1B49388306E7B3C1BB79D8D6EC978B41035B556DBB3797DF");
          result.test_eq("Hash 2", pipe.read_all_as_string(1),
-                        "610480FFA82F24F6926544B976FE387878E3D973C03DFD591C2E9896EFB903E0");
+                        "610480FFA82F24F6926544B976FE387878E3D9");
 #endif
 
          return result;

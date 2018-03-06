@@ -19,8 +19,7 @@ StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher) :
    }
 
 StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher, const SymmetricKey& key) :
-   m_buffer(BOTAN_DEFAULT_BUFFER_SIZE),
-   m_cipher(cipher)
+   StreamCipher_Filter(cipher)
    {
    m_cipher->set_key(key);
    }
@@ -32,8 +31,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    }
 
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name, const SymmetricKey& key) :
-   m_buffer(BOTAN_DEFAULT_BUFFER_SIZE),
-   m_cipher(StreamCipher::create_or_throw(sc_name))
+   StreamCipher_Filter(sc_name)
    {
    m_cipher->set_key(key);
    }
@@ -79,8 +77,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, size_t len) :
    }
 
 MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key, size_t len) :
-   m_mac(MessageAuthenticationCode::create_or_throw(mac_name)),
-   m_out_len(len)
+   MAC_Filter(mac_name, len)
    {
    m_mac->set_key(key);
    }
