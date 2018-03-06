@@ -21,7 +21,7 @@ void BOTAN_PUBLIC_API(2,3) poly_double_n(uint8_t out[], const uint8_t in[], size
 */
 inline bool poly_double_supported_size(size_t n)
    {
-   return (n == 8 || n == 16 || n == 24 || n == 32 || n == 64);
+   return (n == 8 || n == 16 || n == 24 || n == 32 || n == 64 || n == 128);
    }
 
 inline void poly_double_n(uint8_t buf[], size_t n)
