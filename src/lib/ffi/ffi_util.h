@@ -15,7 +15,7 @@
 
 namespace Botan_FFI {
 
-class FFI_Error final : public Botan::Exception
+class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception
    {
    public:
       explicit FFI_Error(const std::string& what) : Exception("FFI error", what) {}

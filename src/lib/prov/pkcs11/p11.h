@@ -2821,7 +2821,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       const FunctionListPtr m_func_list_ptr;
    };
 
-class PKCS11_Error : public Exception
+class BOTAN_PUBLIC_API(2,0) PKCS11_Error : public Exception
    {
    public:
       explicit PKCS11_Error(const std::string& what) :
@@ -2830,7 +2830,7 @@ class PKCS11_Error : public Exception
          }
    };
 
-class PKCS11_ReturnError final : public PKCS11_Error
+class BOTAN_PUBLIC_API(2,0) PKCS11_ReturnError final : public PKCS11_Error
    {
    public:
       explicit PKCS11_ReturnError(ReturnValue return_val) :

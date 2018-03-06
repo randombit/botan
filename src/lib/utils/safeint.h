@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-class Integer_Overflow_Detected final : public Exception
+class BOTAN_PUBLIC_API(2,0) Integer_Overflow_Detected final : public Exception
    {
    public:
       Integer_Overflow_Detected(const std::string& file, int line) :
