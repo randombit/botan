@@ -95,16 +95,19 @@ uint64_t OS::get_processor_timestamp()
       }
 
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
-   uint32_t rtc_low = 0, rtc_high = 0;
-   asm volatile("mftbu %0; mftb %1" : "=r" (rtc_high), "=r" (rtc_low));
 
-   /*
-   qemu-ppc seems to not support mftb instr, it always returns zero.
-   If both time bases are 0, assume broken and return another clock.
-   */
-   if(rtc_high > 0 || rtc_low > 0)
+   for(;;)
       {
-      rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
+      uint32_t rtc_low = 0, rtc_high = 0, rtc_high2 = 0;
+      asm volatile("mftbu %0" : "=r" (rtc_high));
+      asm volatile("mftb %0" : "=r" (rtc_low));
+      asm volatile("mftbu %0" : "=r" (rtc_high2));
+
+      if(rtc_high == rtc_high2)
+	 {
+         rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
+         break;
+	 }
       }
 
 #elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
