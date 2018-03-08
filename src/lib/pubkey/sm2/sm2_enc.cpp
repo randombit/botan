@@ -6,6 +6,7 @@
 */
 
 #include <botan/sm2_enc.h>
+#include <botan/internal/point_mul.h>
 #include <botan/pk_ops.h>
 #include <botan/keypair.h>
 #include <botan/der_enc.h>
@@ -76,7 +77,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
          BigInt::encode_1363(x1_bytes.data(), x1_bytes.size(), x1);
          BigInt::encode_1363(y1_bytes.data(), y1_bytes.size(), y1);
 
-         const PointGFp kPB = m_mul_public_point.mul(k, m_group.get_order(), rng, m_ws);
+         const PointGFp kPB = m_mul_public_point.mul(k, rng, m_group.get_order(), m_ws);
 
          const BigInt x2 = kPB.get_affine_x();
          const BigInt y2 = kPB.get_affine_y();
@@ -113,7 +114,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
 
    private:
       const EC_Group m_group;
-      PointGFp_Blinded_Multiplier m_mul_public_point;
+      PointGFp_Var_Point_Precompute m_mul_public_point;
       const std::string m_kdf_hash;
       std::vector<BigInt> m_ws;
    };
@@ -161,6 +162,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
             .verify_end();
 
          PointGFp C1 = group.point(x1, y1);
+         C1.randomize_repr(m_rng);
+
          if(!C1.on_the_curve())
             return secure_vector<uint8_t>();
 
@@ -169,11 +172,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
             return secure_vector<uint8_t>();
             }
 
-         C1.randomize_repr(m_rng);
-
-         PointGFp_Blinded_Multiplier C1_mul(C1);
-
-         const PointGFp dbC1 = C1_mul.mul(m_key.private_value(), group.get_order(), m_rng, m_ws);
+         const PointGFp dbC1 = group.blinded_var_point_multiply(
+            C1, m_key.private_value(), m_rng, m_ws);
 
          const BigInt x2 = dbC1.get_affine_x();
          const BigInt y2 = dbC1.get_affine_y();

@@ -39,9 +39,8 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          PointGFp input_point = m_group.get_cofactor() * m_group.OS2ECP(w, w_len);
          input_point.randomize_repr(m_rng);
 
-         PointGFp_Blinded_Multiplier blinder(input_point, m_ws);
-
-         const PointGFp S = blinder.mul(m_l_times_priv, m_group.get_order(), m_rng, m_ws);
+         const PointGFp S = m_group.blinded_var_point_multiply(
+            input_point, m_l_times_priv, m_rng, m_ws);
 
          if(S.on_the_curve() == false)
             throw Internal_Error("ECDH agreed value was not on the curve");

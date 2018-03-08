@@ -124,12 +124,6 @@
 #define BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO 1
 
 /*
-* If enabled the ECC implementation will use scalar blinding with order.bits()/2
-* bit long masks.
-*/
-#define BOTAN_POINTGFP_USE_SCALAR_BLINDING 1
-
-/*
 * Set number of bits used to generate mask for blinding the
 * representation of an ECC point. Set to zero to disable this
 * side-channel countermeasure.
