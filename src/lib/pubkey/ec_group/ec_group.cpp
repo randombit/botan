@@ -9,6 +9,7 @@
 */
 
 #include <botan/ec_group.h>
+#include <botan/internal/point_mul.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/oids.h>
@@ -16,10 +17,6 @@
 #include <botan/reducer.h>
 #include <botan/mutex.h>
 #include <vector>
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   #include <botan/system_rng.h>
-#endif
 
 namespace Botan {
 
@@ -42,15 +39,12 @@ class EC_Group_Data final
          m_order(order),
          m_cofactor(cofactor),
          m_mod_order(order),
-         m_base_mult(m_base_point, 5),
+         m_base_mult(m_base_point),
          m_oid(oid),
          m_p_bits(p.bits()),
          m_order_bits(order.bits()),
          m_a_is_minus_3(a == p - 3)
          {
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-         m_base_mult.randomize(system_rng());
-#endif
          }
 
       bool match(const BigInt& p, const BigInt& a, const BigInt& b,
@@ -97,7 +91,7 @@ class EC_Group_Data final
                                            RandomNumberGenerator& rng,
                                            std::vector<BigInt>& ws) const
          {
-         return m_base_mult.mul(k, m_order, rng, ws);
+         return m_base_mult.mul(k, rng, m_order, ws);
          }
 
    private:
@@ -109,7 +103,7 @@ class EC_Group_Data final
       BigInt m_order;
       BigInt m_cofactor;
       Modular_Reducer m_mod_order;
-      PointGFp_Blinded_Multiplier m_base_mult;
+      PointGFp_Base_Point_Precompute m_base_mult;
       OID m_oid;
       size_t m_p_bits;
       size_t m_order_bits;
@@ -487,6 +481,16 @@ PointGFp EC_Group::blinded_base_point_multiply(const BigInt& k,
                                                std::vector<BigInt>& ws) const
    {
    return data().blinded_base_point_multiply(k, rng, ws);
+   }
+
+PointGFp EC_Group::blinded_var_point_multiply(const PointGFp& point,
+                                              const BigInt& k,
+                                              RandomNumberGenerator& rng,
+                                              std::vector<BigInt>& ws) const
+   {
+   PointGFp_Var_Point_Precompute mul(point);
+   mul.randomize_repr(rng);
+   return mul.mul(k, rng, get_order(), ws);
    }
 
 PointGFp EC_Group::zero_point() const

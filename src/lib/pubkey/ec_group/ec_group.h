@@ -247,6 +247,19 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
                                            std::vector<BigInt>& ws) const;
 
       /**
+      * Blinded point multiplication, attempts resistance to side channels
+      * @param point input point
+      * @param k the scalar
+      * @param rng a random number generator
+      * @param ws a temp workspace
+      * @return point*k
+      */
+      PointGFp blinded_var_point_multiply(const PointGFp& point,
+                                          const BigInt& k,
+                                          RandomNumberGenerator& rng,
+                                          std::vector<BigInt>& ws) const;
+
+      /**
       * Return the zero (or infinite) point on this curve
       */
       PointGFp zero_point() const;

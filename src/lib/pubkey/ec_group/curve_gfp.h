@@ -26,6 +26,8 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
 
       virtual size_t get_p_words() const = 0;
 
+      virtual bool is_one(const BigInt& x) const = 0;
+
       /*
       * Returns to_curve_rep(get_a())
       */
@@ -35,6 +37,8 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
       * Returns to_curve_rep(get_b())
       */
       virtual const BigInt& get_b_rep() const = 0;
+
+      virtual BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const = 0;
 
       virtual void to_curve_rep(BigInt& x, secure_vector<word>& ws) const = 0;
 
@@ -95,6 +99,13 @@ class BOTAN_UNSTABLE_API CurveGFp final
       const BigInt& get_a_rep() const { return m_repr->get_a_rep(); }
 
       const BigInt& get_b_rep() const { return m_repr->get_b_rep(); }
+
+      bool is_one(const BigInt& x) const { return m_repr->is_one(x); }
+
+      BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const
+         {
+         return m_repr->invert_element(x, ws);
+         }
 
       void to_rep(BigInt& x, secure_vector<word>& ws) const
          {

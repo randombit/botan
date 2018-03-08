@@ -4,86 +4,137 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/point_gfp.h>
+#include <botan/internal/point_mul.h>
 #include <botan/rng.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {
 
-PointGFp_Blinded_Multiplier::PointGFp_Blinded_Multiplier(const PointGFp& base,
-                                                         std::vector<BigInt>& ws,
-                                                         size_t w)
+Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base,
+                                               const BigInt& order,
+                                               size_t h) :
+   m_ws(PointGFp::WORKSPACE_SIZE),
+   m_order(order)
    {
-   init(base, w, ws);
+   BOTAN_UNUSED(h);
+   m_point_mul.reset(new PointGFp_Var_Point_Precompute(base));
    }
 
-PointGFp_Blinded_Multiplier::PointGFp_Blinded_Multiplier(const PointGFp& base,
-                                                         size_t w)
+PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar,
+                                                  RandomNumberGenerator& rng)
+   {
+   return m_point_mul->mul(scalar, rng, m_order, m_ws);
+   }
+
+
+PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& base)
    {
    std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
-   init(base, w, ws);
-   }
 
-void PointGFp_Blinded_Multiplier::init(const PointGFp& base,
-                                       size_t w,
-                                       std::vector<BigInt>& ws)
-   {
-   m_h = (w == 0 ? 5 : w);
+   const size_t p_bits = base.get_curve().get_p().bits();
 
-   if(ws.size() < PointGFp::WORKSPACE_SIZE)
-      ws.resize(PointGFp::WORKSPACE_SIZE);
+   /*
+   * Some of the curves (eg secp160k1) have an order slightly larger than
+   * the size of the prime modulus. In all cases they are at most 1 bit
+   * longer. The +1 compensates for this.
+   */
+   const size_t T_bits = p_bits + PointGFp_SCALAR_BLINDING_BITS + 1;
 
-   // Upper bound is a sanity check rather than hard limit
-   if(m_h < 1 || m_h > 8)
-      throw Invalid_Argument("PointGFp_Blinded_Multiplier invalid w param");
+   m_T.push_back(base);
 
-   m_U.resize(1 << m_h);
-   m_U[0] = base.zero();
-   m_U[1] = base;
-
-   for(size_t i = 2; i < m_U.size(); ++i)
+   for(size_t i = 1; i != T_bits; ++i)
       {
-      m_U[i] = m_U[i-1];
-      m_U[i].add(base, ws);
+      m_T.push_back(m_T[i-1]);
+      m_T[i].mult2(ws);
       }
+
+   for(size_t i = 0; i != m_T.size(); ++i)
+      m_T[i].force_affine();
    }
 
-void PointGFp_Blinded_Multiplier::randomize(RandomNumberGenerator& rng)
-   {
-   // Randomize each point representation (Coron's 3rd countermeasure)
-   for(size_t i = 0; i != m_U.size(); ++i)
-      m_U[i].randomize_repr(rng);
-   }
-
-PointGFp PointGFp_Blinded_Multiplier::mul(const BigInt& k,
-                                          const BigInt& group_order,
-                                          RandomNumberGenerator& rng,
-                                          std::vector<BigInt>& ws) const
+PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
+                                             RandomNumberGenerator& rng,
+                                             const BigInt& group_order,
+                                             std::vector<BigInt>& ws) const
    {
    if(k.is_negative())
-      throw Invalid_Argument("PointGFp_Blinded_Multiplier scalar must be positive");
+      throw Invalid_Argument("PointGFp_Base_Point_Precompute scalar must be positive");
 
-#if BOTAN_POINTGFP_USE_SCALAR_BLINDING
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
-   const BigInt mask(rng, group_order.bits() / 4, false);
+   const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS, false);
    const BigInt scalar = k + group_order * mask;
-#else
-   const BigInt& scalar = k;
-#endif
-
-   if(ws.size() < PointGFp::WORKSPACE_SIZE)
-      ws.resize(PointGFp::WORKSPACE_SIZE);
 
    const size_t scalar_bits = scalar.bits();
 
-   size_t windows = round_up(scalar_bits, m_h) / m_h;
+   BOTAN_ASSERT(scalar_bits <= m_T.size(),
+                "Precomputed sufficient values for scalar mult");
+
+   PointGFp R = m_T[0].zero();
+
+   if(ws.size() < PointGFp::WORKSPACE_SIZE)
+      ws.resize(PointGFp::WORKSPACE_SIZE);
+
+   for(size_t i = 0; i != scalar_bits; ++i)
+      {
+      //if(i % 4 == 3)
+      if(i == 4)
+         {
+         R.randomize_repr(rng);
+         }
+
+      if(scalar.get_bit(i))
+         R.add(m_T[i], ws);
+      }
+
+   return R;
+   }
+
+PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& point)
+   {
+   m_window_bits = 4;
+
+   m_U.resize(1U << m_window_bits);
+   m_U[0] = point.zero();
+   m_U[1] = point;
+
+   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+   for(size_t i = 2; i < m_U.size(); ++i)
+      {
+      m_U[i] = m_U[i-1];
+      m_U[i].add(point, ws);
+      }
+   }
+
+void PointGFp_Var_Point_Precompute::randomize_repr(RandomNumberGenerator& rng)
+   {
+   for(size_t i = 1; i != m_U.size(); ++i)
+      m_U[i].randomize_repr(rng);
+   }
+
+PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
+                                            RandomNumberGenerator& rng,
+                                            const BigInt& group_order,
+                                            std::vector<BigInt>& ws) const
+   {
+   if(k.is_negative())
+      throw Invalid_Argument("PointGFp_Base_Point_Precompute scalar must be positive");
+   if(ws.size() < PointGFp::WORKSPACE_SIZE)
+      ws.resize(PointGFp::WORKSPACE_SIZE);
+
+   // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
+   const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS, false);
+   const BigInt scalar = k + group_order * mask;
+
+   const size_t scalar_bits = scalar.bits();
+
+   size_t windows = round_up(scalar_bits, m_window_bits) / m_window_bits;
 
    PointGFp R = m_U[0];
 
    if(windows > 0)
       {
       windows--;
-      const uint32_t nibble = scalar.get_substring(windows*m_h, m_h);
+      const uint32_t nibble = scalar.get_substring(windows*m_window_bits, m_window_bits);
       R.add(m_U[nibble], ws);
 
       /*
@@ -95,17 +146,15 @@ PointGFp PointGFp_Blinded_Multiplier::mul(const BigInt& k,
 
       while(windows)
          {
-         for(size_t i = 0; i != m_h; ++i)
+         for(size_t i = 0; i != m_window_bits; ++i)
             R.mult2(ws);
 
-         const uint32_t inner_nibble = scalar.get_substring((windows-1)*m_h, m_h);
+         const uint32_t inner_nibble = scalar.get_substring((windows-1)*m_window_bits, m_window_bits);
          // cache side channel here, we are relying on blinding...
          R.add(m_U[inner_nibble], ws);
          windows--;
          }
       }
-
-   //BOTAN_ASSERT(R.on_the_curve(), "Output is on the curve");
 
    return R;
    }

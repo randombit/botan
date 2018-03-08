@@ -8,3 +8,13 @@ asn1
 numbertheory
 pem
 </requires>
+
+<header:internal>
+point_mul.h
+</header:internal>
+
+<header:public>
+curve_gfp.h
+ec_group.h
+point_gfp.h
+</header:public>

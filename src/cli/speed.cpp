@@ -1258,28 +1258,35 @@ class Speed final : public Command
             {
             const Botan::EC_Group group(group_name);
 
-            std::unique_ptr<Timer> mult_timer = make_timer(group_name + " scalar mult");
-            std::unique_ptr<Timer> blinded_mult_timer = make_timer(group_name + " blinded scalar mult");
+            std::unique_ptr<Timer> mult_timer = make_timer(group_name + " Montgomery ladder");
+            std::unique_ptr<Timer> blinded_mult_timer = make_timer(group_name + " blinded comb");
+            std::unique_ptr<Timer> blinded_var_mult_timer = make_timer(group_name + " blinded window");
 
-            const Botan::BigInt scalar(rng(), group.get_p_bits());
             const Botan::PointGFp& base_point = group.get_base_point();
-
-            const Botan::PointGFp_Blinded_Multiplier scalar_mult(base_point);
 
             std::vector<Botan::BigInt> ws;
 
-            while(blinded_mult_timer->under(runtime))
+            while(mult_timer->under(runtime) &&
+                  blinded_mult_timer->under(runtime) &&
+                  blinded_var_mult_timer->under(runtime))
                {
+               const Botan::BigInt scalar(rng(), group.get_p_bits());
+
                const Botan::PointGFp r1 = mult_timer->run([&]() { return base_point * scalar; });
 
                const Botan::PointGFp r2 = blinded_mult_timer->run(
-                  [&]() { return scalar_mult.mul(scalar, group.get_order(), rng(), ws); });
+                  [&]() { return group.blinded_base_point_multiply(scalar, rng(), ws); });
 
-               BOTAN_ASSERT_EQUAL(r1, r2, "Same point computed by both methods");
+               const Botan::PointGFp r3 = blinded_var_mult_timer->run(
+                  [&]() { return group.blinded_var_point_multiply(base_point, scalar, rng(), ws); });
+
+               BOTAN_ASSERT_EQUAL(r1, r2, "Same point computed by Montgomery and comb");
+               BOTAN_ASSERT_EQUAL(r1, r3, "Same point computed by Montgomery and window");
                }
 
             record_result(mult_timer);
             record_result(blinded_mult_timer);
+            record_result(blinded_var_mult_timer);
             }
          }
 
