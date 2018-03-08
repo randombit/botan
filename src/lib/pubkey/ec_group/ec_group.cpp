@@ -483,6 +483,13 @@ PointGFp EC_Group::blinded_base_point_multiply(const BigInt& k,
    return data().blinded_base_point_multiply(k, rng, ws);
    }
 
+BigInt EC_Group::blinded_base_point_multiply_x(const BigInt& k,
+                                               RandomNumberGenerator& rng,
+                                               std::vector<BigInt>& ws) const
+   {
+   return data().blinded_base_point_multiply(k, rng, ws).get_affine_x();
+   }
+
 PointGFp EC_Group::blinded_var_point_multiply(const PointGFp& point,
                                               const BigInt& k,
                                               RandomNumberGenerator& rng,

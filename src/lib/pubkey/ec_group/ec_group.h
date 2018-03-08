@@ -248,6 +248,19 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
 
       /**
       * Blinded point multiplication, attempts resistance to side channels
+      * Returns just the x coordinate of the point
+      *
+      * @param k the scalar
+      * @param rng a random number generator
+      * @param ws a temp workspace
+      * @return x coordinate of base_point*k
+      */
+      BigInt blinded_base_point_multiply_x(const BigInt& k,
+                                           RandomNumberGenerator& rng,
+                                           std::vector<BigInt>& ws) const;
+
+      /**
+      * Blinded point multiplication, attempts resistance to side channels
       * @param point input point
       * @param k the scalar
       * @param rng a random number generator
