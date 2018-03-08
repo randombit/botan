@@ -309,6 +309,8 @@ class BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("See comments") Blinded_Point_Multi
    public:
       Blinded_Point_Multiply(const PointGFp& base, const BigInt& order, size_t h = 0);
 
+      ~Blinded_Point_Multiply();
+
       PointGFp blinded_multiply(const BigInt& scalar, RandomNumberGenerator& rng);
    private:
       std::vector<BigInt> m_ws;

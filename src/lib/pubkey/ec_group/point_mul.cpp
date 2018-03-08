@@ -20,6 +20,11 @@ Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base,
    m_point_mul.reset(new PointGFp_Var_Point_Precompute(base));
    }
 
+Blinded_Point_Multiply::~Blinded_Point_Multiply()
+   {
+   /* for ~unique_ptr */
+   }
+
 PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar,
                                                   RandomNumberGenerator& rng)
    {
