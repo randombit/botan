@@ -718,6 +718,12 @@ class Speed final : public Command
                }
             }
 
+         if(verbose() || m_summary)
+            {
+            output() << Botan::version_string() << "\n"
+                     << "CPUID: " << Botan::CPUID::to_string() << "\n\n";
+            }
+
          const bool using_defaults = (algos.empty());
          if(using_defaults)
             {
@@ -954,20 +960,30 @@ class Speed final : public Command
             }
          if(m_summary)
             {
-            output() << m_summary->print() << "\n"
-                     << Botan::version_string() << "\n"
-                     << "CPUID: " << Botan::CPUID::to_string() << "\n";
+            output() << m_summary->print() << "\n";
+            }
+
+         if(verbose() && m_cycles_consumed > 0 && m_ns_taken > 0)
+            {
+            const double seconds = static_cast<double>(m_ns_taken) / 1000000000;
+            const double Hz = static_cast<double>(m_cycles_consumed) / seconds;
+            const double MHz = Hz / 1000000;
+            output() << "\nEstimated clock speed " << MHz << " MHz\n";
             }
          }
 
    private:
 
       double m_clock_cycle_ratio;
+      uint64_t m_cycles_consumed = 0;
+      uint64_t m_ns_taken = 0;
       std::unique_ptr<Summary> m_summary;
       std::unique_ptr<JSON_Output> m_json;
 
       void record_result(const std::unique_ptr<Timer>& t)
          {
+         m_ns_taken += t->value();
+         m_cycles_consumed += t->cycles_consumed();
          if(m_json)
             {
             m_json->add(*t);
