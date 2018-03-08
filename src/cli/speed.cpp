@@ -815,6 +815,12 @@ class Speed final : public Command
                bench_eckcdsa(ecc_groups, provider, msec);
                }
 #endif
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+            else if(algo == "GOST-34.10")
+               {
+               bench_gost_3410(provider, msec);
+               }
+#endif
 #if defined(BOTAN_HAS_ECGDSA)
             else if(algo == "ECGDSA")
                {
@@ -1806,6 +1812,14 @@ class Speed final : public Command
                          std::chrono::milliseconds msec)
          {
          return bench_pk_sig_ecc("ECKCDSA", "EMSA1(SHA-256)", provider, groups, msec);
+         }
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+      void bench_gost_3410(const std::string& provider,
+                           std::chrono::milliseconds msec)
+         {
+         return bench_pk_sig_ecc("GOST-34.10", "EMSA1(GOST-34.11)", provider, {"gost_256A"}, msec);
          }
 #endif
 
