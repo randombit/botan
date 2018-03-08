@@ -112,12 +112,12 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
 secure_vector<uint8_t>
 SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
    {
+   const BigInt e = BigInt::decode(m_hash->final());
+
    const BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
 
-   const PointGFp k_times_P = m_group.blinded_base_point_multiply(k, rng, m_ws);
-
-   const BigInt e = BigInt::decode(m_hash->final());
-   const BigInt r = m_group.mod_order(k_times_P.get_affine_x() + e);
+   const BigInt r = m_group.mod_order(
+      m_group.blinded_base_point_multiply_x(k, rng, m_ws) + e);
    const BigInt s = m_group.multiply_mod_order(m_da_inv, (k - r*m_x));
 
    // prepend ZA for next signature if any

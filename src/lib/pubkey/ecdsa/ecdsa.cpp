@@ -90,7 +90,7 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
    const BigInt k_inv = inverse_mod(k, m_group.get_order());
    const BigInt r = m_group.mod_order(
-      m_group.blinded_base_point_multiply(k, rng, m_ws).get_affine_x());
+      m_group.blinded_base_point_multiply_x(k, rng, m_ws));
 
    const BigInt xrm = m_group.mod_order(m_group.multiply_mod_order(m_x, r) + m);
    const BigInt s = m_group.multiply_mod_order(k_inv, xrm);

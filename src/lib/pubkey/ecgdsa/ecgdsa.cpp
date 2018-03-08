@@ -61,9 +61,12 @@ ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
    BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
 
-   const PointGFp k_times_P = m_group.blinded_base_point_multiply(k, rng, m_ws);
-   const BigInt r = m_group.mod_order(k_times_P.get_affine_x());
-   const BigInt s = m_group.multiply_mod_order(m_x, mul_sub(k, r, m));
+   const BigInt r = m_group.mod_order(
+      m_group.blinded_base_point_multiply_x(k, rng, m_ws));
+
+   const BigInt kr = m_group.multiply_mod_order(k, r);
+
+   const BigInt s = m_group.multiply_mod_order(m_x, kr - m);
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero())

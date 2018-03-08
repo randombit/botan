@@ -77,8 +77,7 @@ ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t,
                                      RandomNumberGenerator& rng)
    {
    const BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
-   const PointGFp k_times_P = m_group.blinded_base_point_multiply(k, rng, m_ws);
-   const BigInt k_times_P_x = k_times_P.get_affine_x();
+   const BigInt k_times_P_x = m_group.blinded_base_point_multiply_x(k, rng, m_ws);
 
    secure_vector<uint8_t> to_be_hashed(k_times_P_x.bytes());
    k_times_P_x.binary_encode(to_be_hashed.data());

@@ -132,11 +132,12 @@ GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    if(e == 0)
       e = 1;
 
-   const PointGFp k_times_P = m_group.blinded_base_point_multiply(k, rng, m_ws);
-   BOTAN_ASSERT(k_times_P.on_the_curve(), "GOST 34.10 k*g is on the curve");
+   const BigInt r = m_group.mod_order(
+      m_group.blinded_base_point_multiply_x(k, rng, m_ws));
 
-   const BigInt r = m_group.mod_order(k_times_P.get_affine_x());
-   const BigInt s = m_group.mod_order(r*m_x + k*e);
+   const BigInt s = m_group.mod_order(
+      m_group.multiply_mod_order(r, m_x) +
+      m_group.multiply_mod_order(k, e));
 
    if(r == 0 || s == 0)
       throw Internal_Error("GOST 34.10 signature generation failed, r/s equal to zero");
