@@ -151,14 +151,15 @@ void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
       T3 += p;
 
    T2 = m_coord_y;
-   m_curve.mul(m_coord_y, T0, T3, ws);
-   m_curve.mul(T3, T2, T1, ws);
-   m_coord_y -= T3;
-   if(m_coord_y.is_negative())
-      m_coord_y += p;
+   m_curve.mul(T2, T0, T3, ws);
+   m_curve.mul(T3, m_coord_y, T1, ws);
+   T2 -= T3;
+   if(T2.is_negative())
+      T2 += p;
+   m_coord_y = T2;
 
-   T3 = m_coord_z;
-   m_curve.mul(m_coord_z, T3, T4, ws);
+   m_curve.mul(T3, m_coord_z, T4, ws);
+   m_coord_z = T3;
    }
 
 // Point addition
