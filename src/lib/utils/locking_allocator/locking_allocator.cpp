@@ -17,15 +17,15 @@ namespace Botan {
 
 namespace {
 
-bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
-                 const void* buf_ptr, size_t bufsize)
+inline bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
+                        const void* buf_ptr, size_t bufsize)
    {
    const uintptr_t pool = reinterpret_cast<uintptr_t>(pool_ptr);
    const uintptr_t buf = reinterpret_cast<uintptr_t>(buf_ptr);
    return (buf >= pool) && (buf + bufsize <= pool + poolsize);
    }
 
-size_t padding_for_alignment(size_t offset, size_t desired_alignment)
+inline size_t padding_for_alignment(size_t offset, size_t desired_alignment)
    {
    size_t mod = offset % desired_alignment;
    if(mod == 0)
@@ -70,8 +70,9 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
          return m_pool + offset;
          }
 
-      if((i->second >= (n + padding_for_alignment(i->first, alignment)) &&
-          ((best_fit == m_freelist.end()) || (best_fit->second > i->second))))
+
+      if(((best_fit == m_freelist.end()) || (best_fit->second > i->second)) &&
+         (i->second >= (n + padding_for_alignment(i->first, alignment))))
          {
          best_fit = i;
          }
