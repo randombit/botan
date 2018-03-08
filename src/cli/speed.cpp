@@ -117,12 +117,14 @@ class Timer final
             const std::string& doing,
             uint64_t event_mult,
             size_t buf_size,
-            double clock_cycle_ratio)
+            double clock_cycle_ratio,
+            uint64_t clock_speed)
          : m_name(name + ((provider.empty() || provider == "base") ? "" : " [" + provider + "]"))
          , m_doing(doing)
          , m_buf_size(buf_size)
          , m_event_mult(event_mult)
          , m_clock_cycle_ratio(clock_cycle_ratio)
+         , m_clock_speed(clock_speed)
          {}
 
       Timer(const Timer& other) = default;
@@ -205,6 +207,10 @@ class Timer final
 
       uint64_t cycles_consumed() const
          {
+         if(m_clock_speed != 0)
+            {
+            return (static_cast<double>(m_clock_speed) * value()) / 1000;
+            }
          return m_cpu_cycles_used;
          }
 
@@ -281,6 +287,7 @@ class Timer final
       size_t m_buf_size;
       uint64_t m_event_mult;
       double m_clock_cycle_ratio;
+      uint64_t m_clock_speed;
 
       // set at runtime
       std::string m_custom_msg;
@@ -574,7 +581,7 @@ class Speed final : public Command
    {
    public:
       Speed()
-         : Command("speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-ratio=1.0 *algos") {}
+         : Command("speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos") {}
 
       std::vector<std::string> default_benchmark_list()
          {
@@ -680,6 +687,7 @@ class Speed final : public Command
          std::vector<std::string> ecc_groups = Botan::split_on(get_arg("ecc-groups"), ',');
          const std::string format = get_arg("format");
          const std::string clock_ratio = get_arg("cpu-clock-ratio");
+         m_clock_speed = get_arg_sz("cpu-clock-speed");
 
          m_clock_cycle_ratio = std::strtod(clock_ratio.c_str(), nullptr);
 
@@ -691,6 +699,13 @@ class Speed final : public Command
          */
          if(m_clock_cycle_ratio < 0.0 || m_clock_cycle_ratio > 1.0)
             throw CLI_Usage_Error("Unlikely CPU clock ratio of " + clock_ratio);
+
+         if(m_clock_speed != 0 && Botan::OS::get_processor_timestamp() != 0)
+            {
+            error_output() << "The --cpu-clock-speed option is only intended to be used on "
+                              "platforms without access to a cycle counter.\n"
+                              "Expected incorrect results\n\n";;
+            }
 
          if(format == "table")
             m_summary.reset(new Summary);
@@ -963,7 +978,7 @@ class Speed final : public Command
             output() << m_summary->print() << "\n";
             }
 
-         if(verbose() && m_cycles_consumed > 0 && m_ns_taken > 0)
+         if(verbose() && m_clock_speed == 0 && m_cycles_consumed > 0 && m_ns_taken > 0)
             {
             const double seconds = static_cast<double>(m_ns_taken) / 1000000000;
             const double Hz = static_cast<double>(m_cycles_consumed) / seconds;
@@ -974,7 +989,8 @@ class Speed final : public Command
 
    private:
 
-      double m_clock_cycle_ratio;
+      size_t m_clock_speed = 0;
+      double m_clock_cycle_ratio = 0.0;
       uint64_t m_cycles_consumed = 0;
       uint64_t m_ns_taken = 0;
       std::unique_ptr<Summary> m_summary;
@@ -1030,7 +1046,8 @@ class Speed final : public Command
                                         size_t buf_size = 0)
          {
          return std::unique_ptr<Timer>(
-            new Timer(name, provider, what, event_mult, buf_size, m_clock_cycle_ratio));
+            new Timer(name, provider, what, event_mult, buf_size,
+                      m_clock_cycle_ratio, m_clock_speed));
          }
 
       std::unique_ptr<Timer> make_timer(const std::string& algo,
