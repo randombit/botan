@@ -153,6 +153,11 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       */
       void force_affine();
 
+      /**
+      * Force all points on the list to affine coordinates
+      */
+      static void force_all_affine(std::vector<PointGFp>& points);
+
       bool is_affine() const;
 
       /**

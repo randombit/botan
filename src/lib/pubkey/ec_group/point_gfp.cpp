@@ -444,20 +444,75 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    return R[0];
    }
 
+//static
+void PointGFp::force_all_affine(std::vector<PointGFp>& points)
+   {
+   if(points.size() <= 1)
+      {
+      for(size_t i = 0; i != points.size(); ++i)
+         points[i].force_affine();
+      return;
+      }
+
+   /*
+   For >= 2 points use Montgomery's trick
+
+   See Algorithm 2.26 in "Guide to Elliptic Curve Cryptography"
+   (Hankerson, Menezes, Vanstone)
+
+   TODO is it really necessary to save all k points in c?
+   */
+
+   secure_vector<word> ws;
+
+   std::vector<BigInt> c;
+
+   c.push_back(points[0].m_coord_z);
+
+   BigInt rep_1 = 1;
+
+   const CurveGFp& curve = points[0].m_curve;
+   curve.to_rep(rep_1, ws);
+
+   for(size_t i = 1; i != points.size(); ++i)
+      {
+      c.push_back(curve.mul_to_tmp(c[i-1], points[i].m_coord_z, ws));
+      }
+
+   BigInt s_inv = curve.invert_element(c[c.size()-1], ws);
+
+   for(size_t i = points.size() - 1; i != 0; i--)
+      {
+      PointGFp& point = points[i];
+
+      const BigInt z_inv = curve.mul_to_tmp(s_inv, c[i-1], ws);
+
+      s_inv = curve.mul_to_tmp(s_inv, point.m_coord_z, ws);
+
+      const BigInt z2_inv = curve.sqr_to_tmp(z_inv, ws);
+      const BigInt z3_inv = curve.mul_to_tmp(z_inv, z2_inv, ws);
+      point.m_coord_x = curve.mul_to_tmp(point.m_coord_x, z2_inv, ws);
+      point.m_coord_y = curve.mul_to_tmp(point.m_coord_y, z3_inv, ws);
+      point.m_coord_z = rep_1;
+      }
+
+   const BigInt z2_inv = curve.sqr_to_tmp(s_inv, ws);
+   const BigInt z3_inv = curve.mul_to_tmp(s_inv, z2_inv, ws);
+   points[0].m_coord_x = curve.mul_to_tmp(points[0].m_coord_x, z2_inv, ws);
+   points[0].m_coord_y = curve.mul_to_tmp(points[0].m_coord_y, z3_inv, ws);
+   points[0].m_coord_z = rep_1;
+   }
+
 void PointGFp::force_affine()
    {
    if(is_zero())
       throw Invalid_State("Cannot convert zero ECC point to affine");
 
    secure_vector<word> ws;
-   BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, ws);
-   BigInt z3 = m_curve.mul_to_tmp(m_coord_z, z2, ws);
 
-   const BigInt z5 = m_curve.mul_to_tmp(z2, z3, ws);
-   const BigInt z5_inv = m_curve.invert_element(z5, ws);
-   const BigInt z2_inv = m_curve.mul_to_tmp(z5_inv, z3, ws);
-   const BigInt z3_inv = m_curve.mul_to_tmp(z5_inv, z2, ws);
-
+   const BigInt z_inv = m_curve.invert_element(m_coord_z, ws);
+   const BigInt z2_inv = m_curve.sqr_to_tmp(z_inv, ws);
+   const BigInt z3_inv = m_curve.mul_to_tmp(z_inv, z2_inv, ws);
    m_coord_x = m_curve.mul_to_tmp(m_coord_x, z2_inv, ws);
    m_coord_y = m_curve.mul_to_tmp(m_coord_y, z3_inv, ws);
    m_coord_z = 1;

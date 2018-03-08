@@ -53,8 +53,7 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
       m_T[i].mult2(ws);
       }
 
-   for(size_t i = 0; i != m_T.size(); ++i)
-      m_T[i].force_affine();
+   PointGFp::force_all_affine(m_T);
    }
 
 PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
