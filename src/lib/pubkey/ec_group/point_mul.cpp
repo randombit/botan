@@ -88,7 +88,7 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
          }
 
       if(scalar.get_bit(i))
-         R.add(m_T[i], ws);
+         R.add_affine(m_T[i], ws);
       }
 
    return R;

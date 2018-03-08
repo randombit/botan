@@ -76,7 +76,7 @@ void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
       return;
       }
 
-   BOTAN_ASSERT(rhs.is_affine(), "PointGFp::add_affine requires arg be affine point");
+   //BOTAN_ASSERT(rhs.is_affine(), "PointGFp::add_affine requires arg be affine point");
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
@@ -166,9 +166,6 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    {
    if(rhs.is_zero())
       return;
-
-   if(rhs.is_affine())
-      return this->add_affine(rhs, ws_bn);
 
    if(is_zero())
       {
