@@ -6,9 +6,9 @@ Version 2.5.0, Not Yet Released
 
 * Add support for RSA-PSS signatures in TLS (GH #1285)
 
-* Several optimizations in ECC operations have improved ECDSA signature
-  generation and ECDH key exchange performance by 3 to 5 times as compared to
-  previous releases. ECDSA verification is 2 to 3 times faster. (GH #1457)
+* Many optimizations in ECC operations. ECDSA signatures are 6-8 times faster.
+  ECDSA verification is about twice as fast. ECDH key agreement is 3-4 times
+  faster. (GH #1457 #1478)
 
 * Implement product scanning Montgomery reduction, which improves Diffie-Hellman
   and RSA performance by 10 to 20% on most platforms. (GH #1472)
