@@ -78,11 +78,6 @@ void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    //BOTAN_ASSERT(rhs.is_affine(), "PointGFp::add_affine requires arg be affine point");
 
-   /*
-   https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
-   simplified with Z2 = 1
-   */
-
    const BigInt& p = m_curve.get_p();
 
    const size_t cap_size = 2*m_curve.get_p_words() + 2;
@@ -102,6 +97,7 @@ void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
+   simplified with Z2 = 1
    */
 
    m_curve.sqr(T3, m_coord_z, ws); // z1^2
@@ -272,10 +268,6 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
       return;
       }
 
-   /*
-   https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#doubling-dbl-1986-cc
-   */
-
    const size_t cap_size = 2*m_curve.get_p_words() + 2;
 
    BOTAN_ASSERT(ws_bn.size() >= WORKSPACE_SIZE, "Expected size for PointGFp::add workspace");
@@ -290,6 +282,10 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    BigInt& T2 = ws_bn[6];
    BigInt& T3 = ws_bn[4];
    BigInt& T4 = ws_bn[5];
+
+   /*
+   https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#doubling-dbl-1986-cc
+   */
 
    m_curve.sqr(T0, m_coord_y, ws);
 
@@ -311,7 +307,6 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    T2 -= T1;
    while(T2.is_negative())
       T2 += p;
-   m_coord_x = T2;
 
    m_curve.sqr(T3, T0, ws);
    T3 <<= 3;
@@ -325,6 +320,8 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    T0 -= T3;
    if(T0.is_negative())
       T0 += p;
+
+   m_coord_x = T2;
 
    m_curve.mul(T2, m_coord_y, m_coord_z, ws);
    T2 <<= 1;
