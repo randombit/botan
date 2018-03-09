@@ -6,3 +6,7 @@ LOCKING_ALLOCATOR -> 20131128
 posix1
 virtual_lock
 </os_features>
+
+<requires>
+mem_pool
+</requires>
