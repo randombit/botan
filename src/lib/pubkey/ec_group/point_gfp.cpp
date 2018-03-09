@@ -375,22 +375,22 @@ PointGFp multi_exponentiate(const PointGFp& x, const BigInt& z1,
    const PointGFp y3(y2.plus(y, ws));
 
    const PointGFp M[16] = {
-      x.zero(),        // 0000
-      x,               // 0001
-      x2,              // 0010
-      x3,              // 0011
-      y,               // 0100
-      y.plus(x, ws),   // 0101
-      y.plus(x2, ws),  // 0110
-      y.plus(x3, ws),  // 0111
-      y2,              // 1000
-      y2.plus(x, ws),  // 1001
-      y2.plus(x2, ws), // 1010
-      y2.plus(x3, ws), // 1011
-      y3,              // 1100
-      y3.plus(x, ws),  // 1101
-      y3.plus(x2, ws), // 1110
-      y3.plus(x3, ws), // 1111
+      x.zero(),                   // 0000
+      x,                          // 0001
+      x2,                         // 0010
+      x3,                         // 0011
+      y,                          // 0100
+      std::move(y.plus(x, ws)),   // 0101
+      std::move(y.plus(x2, ws)),  // 0110
+      std::move(y.plus(x3, ws)),  // 0111
+      y2,                         // 1000
+      std::move(y2.plus(x, ws)),  // 1001
+      std::move(y2.plus(x2, ws)), // 1010
+      std::move(y2.plus(x3, ws)), // 1011
+      y3,                         // 1100
+      std::move(y3.plus(x, ws)),  // 1101
+      std::move(y3.plus(x2, ws)), // 1110
+      std::move(y3.plus(x3, ws)), // 1111
    };
 
    PointGFp H = x.zero();
