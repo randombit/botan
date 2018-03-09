@@ -68,6 +68,12 @@ uint64_t BOTAN_TEST_API get_system_timestamp_ns();
 size_t get_memory_locking_limit();
 
 /**
+* Return the size of a memory page, if that can be derived on the
+* current system. Otherwise returns some default value (eg 4096)
+*/
+size_t system_page_size();
+
+/**
 * Request so many bytes of page-aligned RAM locked into memory using
 * mlock, VirtualLock, or similar. Returns null on failure. The memory
 * returned is zeroed. Free it with free_locked_pages.
