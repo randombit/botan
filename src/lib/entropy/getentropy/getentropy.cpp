@@ -8,6 +8,18 @@
 #include <botan/internal/getentropy.h>
 
 #include <unistd.h>
+ 
+#if defined(__APPLE__)
+#if defined(__MAC_OS_X_VERSION_MIN_REQUIRED)
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 101200
+/*
+ * To enable genentropy() method on MacOS, you also need
+ * to add "--with-os-features=getentropy
+ */
+#include <sys/random.h>
+#endif
+#endif /* __MAC_OS_X_VERSION_MIN_REQUIRED */
+#endif /* __APPLE__ */
 
 namespace Botan {
 
