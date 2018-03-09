@@ -700,6 +700,8 @@ class Speed final : public Command
          if(m_clock_cycle_ratio < 0.0 || m_clock_cycle_ratio > 1.0)
             throw CLI_Usage_Error("Unlikely CPU clock ratio of " + clock_ratio);
 
+         m_clock_cycle_ratio = 1.0 / m_clock_cycle_ratio;
+
          if(m_clock_speed != 0 && Botan::OS::get_processor_timestamp() != 0)
             {
             error_output() << "The --cpu-clock-speed option is only intended to be used on "
