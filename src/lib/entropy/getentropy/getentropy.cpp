@@ -7,7 +7,11 @@
 
 #include <botan/internal/getentropy.h>
 
-#include <unistd.h>
+#if defined(BOTAN_TARGET_OS_IS_DARWIN)
+   #include <sys/random.h>
+#else
+   #include <unistd.h>
+#endif
 
 namespace Botan {
 
