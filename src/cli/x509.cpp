@@ -46,6 +46,8 @@ class Sign_Cert final : public Command
          Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
          std::unique_ptr<Botan::Private_Key> key;
          const std::string pass = get_arg("ca-key-pass");
+         const std::string emsa = get_arg("emsa");
+         const std::string hash = get_arg("hash");
 
          if(!pass.empty())
             {
@@ -61,8 +63,11 @@ class Sign_Cert final : public Command
             throw CLI_Error("Failed to load key from " + get_arg("ca_key"));
             }
 
-         Botan::X509_CA ca(ca_cert, *key,
-            {{"padding",get_arg_or("emsa", "EMSA4")}}, get_arg("hash"), rng());
+         std::map<std::string, std::string> options;
+         if(emsa.empty() == false)
+            options["padding"] = emsa;
+
+         Botan::X509_CA ca(ca_cert, *key, options, hash, rng());
 
          Botan::PKCS10_Request req(get_arg("pkcs10_req"));
 
@@ -255,7 +260,11 @@ class Gen_Self_Signed final : public Command
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
          opts.dns          = get_arg("dns");
-         opts.set_padding_scheme(get_arg_or("emsa", "EMSA4"));
+
+         std::string emsa = get_arg("emsa");
+
+         if(emsa.empty() == false)
+            opts.set_padding_scheme(emsa);
 
          if(flag_set("ca"))
             {
@@ -302,7 +311,11 @@ class Generate_PKCS10 final : public Command
          opts.country      = get_arg("country");
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
-         opts.set_padding_scheme(get_arg_or("emsa", "EMSA4"));
+
+         std::string emsa = get_arg("emsa");
+
+         if(emsa.empty() == false)
+            opts.set_padding_scheme(emsa);
 
          Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, get_arg("hash"), rng());
 
