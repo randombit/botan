@@ -99,6 +99,12 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y);
 
       /**
+      * EC2OSP - elliptic curve to octet string primitive
+      * @param format which format to encode using
+      */
+      std::vector<uint8_t> encode(PointGFp::Compression_Type format) const;
+
+      /**
       * += Operator
       * @param rhs the PointGFp to add to the local value
       * @result resulting PointGFp
@@ -129,12 +135,6 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
             m_coord_y = m_curve.get_p() - m_coord_y;
          return *this;
          }
-
-      /**
-      * Return base curve of this point
-      * @result the curve over GF(p) of this point
-      */
-      const CurveGFp& get_curve() const { return m_curve; }
 
       /**
       * get affine x coordinate
@@ -199,7 +199,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
 
       /**
       * Point addition - mixed J+A
-      * @param other affine point to add
+      * @param other affine point to add - assumed to be affine!
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
       void add_affine(const PointGFp& other, std::vector<BigInt>& workspace);
@@ -225,6 +225,14 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * Return the zero (aka infinite) point associated with this curve
       */
       PointGFp zero() const { return PointGFp(m_curve); }
+
+      /**
+      * Return base curve of this point
+      * @result the curve over GF(p) of this point
+      *
+      * You should not need to use this
+      */
+      const CurveGFp& get_curve() const { return m_curve; }
 
    private:
       CurveGFp m_curve;
@@ -281,7 +289,12 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
    }
 
 // encoding and decoding
-secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) EC2OSP(const PointGFp& point, uint8_t format);
+inline secure_vector<uint8_t> BOTAN_DEPRECATED("Use PointGFp::encode")
+   EC2OSP(const PointGFp& point, uint8_t format)
+   {
+   std::vector<uint8_t> enc = point.encode(static_cast<PointGFp::Compression_Type>(format));
+   return secure_vector<uint8_t>(enc.begin(), enc.end());
+   }
 
 PointGFp BOTAN_PUBLIC_API(2,0) OS2ECP(const uint8_t data[], size_t data_len,
                                       const CurveGFp& curve);

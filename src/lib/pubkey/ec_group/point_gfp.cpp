@@ -618,50 +618,42 @@ bool PointGFp::operator==(const PointGFp& other) const
    }
 
 // encoding and decoding
-secure_vector<uint8_t> EC2OSP(const PointGFp& point, uint8_t format)
+std::vector<uint8_t> PointGFp::encode(PointGFp::Compression_Type format) const
    {
-   if(point.is_zero())
-      return secure_vector<uint8_t>(1); // single 0 byte
+   if(is_zero())
+      return std::vector<uint8_t>(1); // single 0 byte
 
-   const size_t p_bytes = point.get_curve().get_p().bytes();
+   const size_t p_bytes = m_curve.get_p().bytes();
 
-   BigInt x = point.get_affine_x();
-   BigInt y = point.get_affine_y();
+   const BigInt x = get_affine_x();
+   const BigInt y = get_affine_y();
 
-   secure_vector<uint8_t> bX = BigInt::encode_1363(x, p_bytes);
-   secure_vector<uint8_t> bY = BigInt::encode_1363(y, p_bytes);
+   std::vector<uint8_t> result;
 
    if(format == PointGFp::UNCOMPRESSED)
       {
-      secure_vector<uint8_t> result;
-      result.push_back(0x04);
-
-      result += bX;
-      result += bY;
-
-      return result;
+      result.resize(1 + 2*p_bytes);
+      result[0] = 0x04;
+      BigInt::encode_1363(&result[1], p_bytes, x);
+      BigInt::encode_1363(&result[1+p_bytes], p_bytes, y);
       }
    else if(format == PointGFp::COMPRESSED)
       {
-      secure_vector<uint8_t> result;
-      result.push_back(0x02 | static_cast<uint8_t>(y.get_bit(0)));
-
-      result += bX;
-
-      return result;
+      result.resize(1 + p_bytes);
+      result[0] = 0x02 | static_cast<uint8_t>(y.get_bit(0));
+      BigInt::encode_1363(&result[1], p_bytes, x);
       }
    else if(format == PointGFp::HYBRID)
       {
-      secure_vector<uint8_t> result;
-      result.push_back(0x06 | static_cast<uint8_t>(y.get_bit(0)));
-
-      result += bX;
-      result += bY;
-
-      return result;
+      result.resize(1 + 2*p_bytes);
+      result[0] = 0x06 | static_cast<uint8_t>(y.get_bit(0));
+      BigInt::encode_1363(&result[1], p_bytes, x);
+      BigInt::encode_1363(&result[1+p_bytes], p_bytes, y);
       }
    else
       throw Invalid_Argument("EC2OSP illegal point encoding");
+
+   return result;
    }
 
 namespace {

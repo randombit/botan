@@ -68,8 +68,7 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
 
 std::vector<uint8_t> EC_PublicKey::public_key_bits() const
    {
-   //return public_point().encode(point_format());
-   return unlock(EC2OSP(public_point(), point_format()));
+   return public_point().encode(point_format());
    }
 
 void EC_PublicKey::set_point_encoding(PointGFp::Compression_Type enc)

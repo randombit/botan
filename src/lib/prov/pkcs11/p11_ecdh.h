@@ -95,7 +95,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ECDH_PrivateKey final : public virtual PKCS11
 
       inline std::vector<uint8_t> public_value() const override
          {
-         return unlock(EC2OSP(public_point(), PointGFp::UNCOMPRESSED));
+         return public_point().encode(PointGFp::UNCOMPRESSED);
          }
 
       /// @return the exported ECDH private key

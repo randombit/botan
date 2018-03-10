@@ -168,7 +168,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
       }
 
    // ISO 18033: encryption step f / decryption step h
-   secure_vector<uint8_t> other_public_key_bin = EC2OSP(other_point, static_cast<uint8_t>(m_params.compression_type()));
+   std::vector<uint8_t> other_public_key_bin = other_point.encode(m_params.compression_type());
     // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
    // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
    const SymmetricKey peh = m_ka.derive_key(m_params.domain().get_order().bytes(), other_public_key_bin.data(), other_public_key_bin.size());
@@ -247,8 +247,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
       {
       // ISO 18033: step d 
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
-      m_eph_public_key_bin = unlock(EC2OSP(m_params.domain().OS2ECP(m_eph_public_key_bin),
-                                           static_cast<uint8_t>(ecies_params.compression_type())));
+      m_eph_public_key_bin = m_params.domain().OS2ECP(m_eph_public_key_bin).encode(ecies_params.compression_type());
       }
    }
 

@@ -56,7 +56,7 @@ secure_vector<uint8_t> PKCS8_for_openssl(const EC_PrivateKey& ec)
       .raw_bytes(ec.domain().DER_encode(EC_DOMPAR_ENC_OID))
       .end_cons()
       .start_cons(ASN1_Tag(1), PRIVATE)
-      .encode(EC2OSP(pub_key, PointGFp::UNCOMPRESSED), BIT_STRING)
+      .encode(pub_key.encode(PointGFp::UNCOMPRESSED), BIT_STRING)
       .end_cons()
       .end_cons()
       .get_contents();
@@ -147,7 +147,7 @@ class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_w
          if(!::EC_KEY_set_group(m_ossl_ec.get(), grp.get()))
             throw OpenSSL_Error("EC_KEY_set_group");
 
-         const secure_vector<uint8_t> enc = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
+         const std::vector<uint8_t> enc = ecdsa.public_point().encode(PointGFp::UNCOMPRESSED);
          const uint8_t* enc_ptr = enc.data();
          EC_KEY* key_ptr = m_ossl_ec.get();
          if(!::o2i_ECPublicKey(&key_ptr, &enc_ptr, enc.size()))
