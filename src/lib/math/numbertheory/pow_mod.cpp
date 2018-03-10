@@ -107,7 +107,7 @@ size_t Power_Mod::window_bits(size_t exp_bits, size_t,
       {  539, 6 },
       {  197, 4 },
       {   70, 3 },
-      {   25, 2 },
+      {   17, 2 },
       {    0, 0 }
    };
 
