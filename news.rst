@@ -26,6 +26,11 @@ Version 2.5.0, Not Yet Released
 
 * Add support for POWER8 AES instructions (GH #1459 #1393 #1206)
 
+* The default encoding of ECC public keys has changed from compressed
+  to uncompressed point representation. This improves compatability with
+  some common software packages including Golang's standard library.
+  (GH #1480)
+
 * Change DL_Group and EC_Group to store their data as shared_ptr for
   fast copying. Also both classes precompute additional useful values
   (eg for modular reductions). (GH #1435 #1454)
