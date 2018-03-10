@@ -29,7 +29,7 @@ Version 2.5.0, Not Yet Released
 * The default encoding of ECC public keys has changed from compressed
   to uncompressed point representation. This improves compatability with
   some common software packages including Golang's standard library.
-  (GH #1480)
+  (GH #1480 #1483)
 
 * Change DL_Group and EC_Group to store their data as shared_ptr for
   fast copying. Also both classes precompute additional useful values
