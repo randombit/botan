@@ -47,7 +47,7 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
 
     fixed_drbg_seed = "802" * 32
 
-    if type(cmd_options) == str:
+    if isinstance(cmd_options, str):
         cmd_options = cmd_options.split(' ')
 
     drbg_options = ['--rng-type=drbg', '--drbg-seed=' + fixed_drbg_seed]
@@ -163,7 +163,10 @@ wGf/MGbgPebBLmozAANENw==
              "Signature is invalid",
              valid_sig.replace("W", "Z"))
 
-    test_cli("gen_self_signed", "%s CA --ca --country=VT --dns=ca.example --hash=SHA-384 --output=%s" % (priv_key, ca_cert), "")
+    test_cli("gen_self_signed",
+             [priv_key, "CA", "--ca", "--country=VT",
+              "--dns=ca.example", "--hash=SHA-384", "--output="+ca_cert],
+             "")
 
     test_cli("cert_verify", ca_cert, "Certificate did not validate - Cannot establish trust")
 
