@@ -6,9 +6,9 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import botan2
 import sys
 import binascii
+import botan2
 
 def hex_encode(buf):
     return binascii.hexlify(buf).decode('ascii')
@@ -237,7 +237,7 @@ def test():
         for field in dn_fields:
             try:
                 print("%s: %s" % (field, cert.subject_dn(field, 0)))
-            except BotanException:
+            except botan2.BotanException:
                 print("Field: %s not found in certificate" % field)
 
         print(cert.to_string())
