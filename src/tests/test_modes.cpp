@@ -78,6 +78,11 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             result.test_gte("enc buffer sizes ok", enc->update_granularity(), enc->minimum_final_size());
             result.test_gte("dec buffer sizes ok", dec->update_granularity(), dec->minimum_final_size());
 
+            result.confirm("default nonce size is allowed",
+                           enc->valid_nonce_length(enc->default_nonce_length()));
+            result.confirm("default nonce size is allowed",
+                           dec->valid_nonce_length(dec->default_nonce_length()));
+
             // Test that disallowed nonce sizes result in an exception
             const size_t large_nonce_size = 65000;
             result.test_eq("Large nonce not allowed", enc->valid_nonce_length(large_nonce_size), false);

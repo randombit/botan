@@ -86,8 +86,7 @@ void GCM_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
 
 void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
-   if(!valid_nonce_length(nonce_len))
-      throw Invalid_IV_Length(name(), nonce_len);
+   // any size is valid for GCM nonce
 
    secure_vector<uint8_t> y0(GCM_BS);
 

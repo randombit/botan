@@ -58,7 +58,7 @@ namespace {
 
 size_t euclids_algorithm(size_t a, size_t b)
    {
-   while(b != 0) // gcd
+   while(b != 0)
       {
       size_t t = b;
       b = a % b;
@@ -73,7 +73,7 @@ size_t block_size_for_cascade(size_t bs, size_t bs2)
    if(bs == bs2)
       return bs;
 
-   size_t gcd = euclids_algorithm(bs, bs2);
+   const size_t gcd = euclids_algorithm(bs, bs2);
 
    return (bs * bs2) / gcd;
    }
@@ -85,8 +85,9 @@ Cascade_Cipher::Cascade_Cipher(BlockCipher* c1, BlockCipher* c2) :
    {
    m_block = block_size_for_cascade(c1->block_size(), c2->block_size());
 
-   if(block_size() % c1->block_size() || block_size() % c2->block_size())
-      throw Internal_Error("Failure in " + name() + " constructor");
+   BOTAN_ASSERT(m_block % c1->block_size() == 0 &&
+                m_block % c2->block_size() == 0,
+                "Combined block size is a multiple of each ciphers block");
    }
 
 }
