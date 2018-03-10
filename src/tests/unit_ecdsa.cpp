@@ -122,7 +122,7 @@ Test::Result test_sign_then_ver()
    {
    Test::Result result("ECDSA Unit");
 
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::EC_Group dom_pars("secp160r1");
    Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
 
    Botan::PK_Signer signer(ecdsa, Test::rng(), "EMSA1(SHA-256)");
@@ -145,7 +145,7 @@ Test::Result test_ec_sign()
 
    try
       {
-      Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+      Botan::EC_Group dom_pars("secp160r1");
       Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
       Botan::PK_Signer signer(priv_key, Test::rng(), "EMSA1(SHA-224)");
       Botan::PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
@@ -199,7 +199,7 @@ Test::Result test_ecdsa_create_save_load()
 
    try
       {
-      Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+      Botan::EC_Group dom_pars("secp160r1");
       Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
 
       Botan::PK_Signer signer(key, Test::rng(), "EMSA1(SHA-256)");
@@ -258,6 +258,52 @@ Test::Result test_unusual_curve()
    std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(key_data_src, Test::rng()));
 
    result.confirm("reloaded key", loaded_key.get());
+
+   return result;
+   }
+
+Test::Result test_encoding_options()
+   {
+   Test::Result result("ECDSA Unit");
+
+   Botan::EC_Group group("secp256r1");
+   Botan::ECDSA_PrivateKey key(Test::rng(), group);
+
+   result.confirm("Default encoding is uncompressed",
+                  key.point_encoding() == Botan::PointGFp::UNCOMPRESSED);
+
+   const std::vector<uint8_t> enc_uncompressed = key.public_key_bits();
+
+   key.set_point_encoding(Botan::PointGFp::COMPRESSED);
+
+   result.confirm("set_point_encoding works",
+                  key.point_encoding() == Botan::PointGFp::COMPRESSED);
+
+   const std::vector<uint8_t> enc_compressed = key.public_key_bits();
+
+   result.test_lt("Comprssed points are smaller",
+                  enc_compressed.size(), enc_uncompressed.size());
+
+   size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
+
+   result.test_gte("Compressed points smaller by group size",
+                   size_diff, 32);
+
+   key.set_point_encoding(Botan::PointGFp::HYBRID);
+
+   result.confirm("set_point_encoding works",
+                  key.point_encoding() == Botan::PointGFp::HYBRID);
+
+   const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
+
+   result.test_eq("Hybrid point same size as uncompressed",
+                  enc_uncompressed.size(), enc_hybrid.size());
+
+   auto invalid_format = static_cast<Botan::PointGFp::Compression_Type>(99);
+
+   result.test_throws("Invalid point format throws",
+                      "Invalid argument Invalid point encoding for EC_PublicKey",
+                      [&] { key.set_point_encoding(invalid_format); });
 
    return result;
    }
@@ -435,6 +481,7 @@ class ECDSA_Unit_Tests final : public Test
          results.push_back(test_ecdsa_create_save_load());
          results.push_back(test_unusual_curve());
          results.push_back(test_curve_registry());
+         results.push_back(test_encoding_options());
          return results;
          }
    };

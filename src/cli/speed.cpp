@@ -1344,8 +1344,8 @@ class Speed final : public Command
                {
                const Botan::BigInt k(rng(), 256);
                const Botan::PointGFp p = group.get_base_point() * k;
-               const Botan::secure_vector<uint8_t> os_cmp = Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED);
-               const Botan::secure_vector<uint8_t> os_uncmp = Botan::EC2OSP(p, Botan::PointGFp::UNCOMPRESSED);
+               const std::vector<uint8_t> os_cmp = p.encode(Botan::PointGFp::COMPRESSED);
+               const std::vector<uint8_t> os_uncmp = p.encode(Botan::PointGFp::UNCOMPRESSED);
 
                uncmp_timer->run([&]() { group.OS2ECP(os_uncmp); });
                cmp_timer->run([&]() { group.OS2ECP(os_cmp); });

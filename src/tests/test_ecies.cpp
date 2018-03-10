@@ -137,8 +137,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test
          // (ephemeral) keys of alice
          const Botan::ECDH_PrivateKey eph_private_key(Test::rng(), domain, r);
          const Botan::PointGFp eph_public_key_point = eph_private_key.public_point();
-         const std::vector<uint8_t> eph_public_key_bin = Botan::unlock(
-                  Botan::EC2OSP(eph_public_key_point, compression_type));
+         const std::vector<uint8_t> eph_public_key_bin = eph_public_key_point.encode(compression_type);
          result.test_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033

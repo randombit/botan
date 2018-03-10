@@ -429,13 +429,13 @@ Test::Result test_zeropoint_enc_dec()
    Botan::PointGFp p = secp160r1.zero_point();
    result.confirm("zero point is zero", p.is_zero());
 
-   std::vector<uint8_t> sv_p = unlock(EC2OSP(p, Botan::PointGFp::UNCOMPRESSED));
+   std::vector<uint8_t> sv_p = p.encode(Botan::PointGFp::UNCOMPRESSED);
    result.test_eq("encoded/decode rt works", secp160r1.OS2ECP(sv_p), p);
 
-   sv_p = unlock(EC2OSP(p, Botan::PointGFp::COMPRESSED));
+   sv_p = p.encode(Botan::PointGFp::COMPRESSED);
    result.test_eq("encoded/decode compressed rt works", secp160r1.OS2ECP(sv_p), p);
 
-   sv_p = unlock(EC2OSP(p, Botan::PointGFp::HYBRID));
+   sv_p = p.encode(Botan::PointGFp::HYBRID);
    result.test_eq("encoded/decode hybrid rt works", secp160r1.OS2ECP(sv_p), p);
    return result;
    }
@@ -572,7 +572,7 @@ Test::Result test_enc_dec_compressed_160()
 
    const Botan::PointGFp p = secp160r1.OS2ECP(G_comp);
 
-   std::vector<uint8_t> sv_result = unlock(Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED));
+   std::vector<uint8_t> sv_result = p.encode(Botan::PointGFp::COMPRESSED);
 
    result.test_eq("result", sv_result, G_comp);
    return result;
@@ -588,7 +588,7 @@ Test::Result test_enc_dec_compressed_256()
    const std::vector<uint8_t> sv_G_secp_comp = Botan::hex_decode(G_secp_comp);
 
    Botan::PointGFp p_G = group.OS2ECP(sv_G_secp_comp);
-   std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::COMPRESSED));
+   std::vector<uint8_t> sv_result = p_G.encode(Botan::PointGFp::COMPRESSED);
 
    result.test_eq("compressed_256", sv_result, sv_G_secp_comp);
    return result;
@@ -619,7 +619,7 @@ Test::Result test_enc_dec_uncompressed_112()
    const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
 
    Botan::PointGFp p_G = group.OS2ECP(sv_G_secp_uncomp);
-   std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
+   std::vector<uint8_t> sv_result = p_G.encode(Botan::PointGFp::UNCOMPRESSED);
 
    result.test_eq("uncompressed_112", sv_result, sv_G_secp_uncomp);
    return result;
@@ -640,7 +640,7 @@ Test::Result test_enc_dec_uncompressed_521()
 
    Botan::PointGFp p_G = group.OS2ECP(sv_G_secp_uncomp);
 
-   std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
+   std::vector<uint8_t> sv_result = p_G.encode(Botan::PointGFp::UNCOMPRESSED);
 
    result.test_eq("expected", sv_result, sv_G_secp_uncomp);
    return result;
@@ -654,7 +654,7 @@ Test::Result test_gfp_store_restore()
    Botan::EC_Group dom_pars("secp160r1");
    Botan::PointGFp p = dom_pars.get_base_point();
 
-   std::vector<uint8_t> sv_mes = unlock(EC2OSP(p, Botan::PointGFp::COMPRESSED));
+   std::vector<uint8_t> sv_mes = p.encode(Botan::PointGFp::COMPRESSED);
    Botan::PointGFp new_p = dom_pars.OS2ECP(sv_mes);
 
    result.test_eq("original and restored points are same", p, new_p);

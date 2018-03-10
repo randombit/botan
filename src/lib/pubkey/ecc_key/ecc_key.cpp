@@ -68,7 +68,17 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
 
 std::vector<uint8_t> EC_PublicKey::public_key_bits() const
    {
-   return unlock(EC2OSP(public_point(), PointGFp::COMPRESSED));
+   return public_point().encode(point_encoding());
+   }
+
+void EC_PublicKey::set_point_encoding(PointGFp::Compression_Type enc)
+   {
+   if(enc != PointGFp::COMPRESSED &&
+      enc != PointGFp::UNCOMPRESSED &&
+      enc != PointGFp::HYBRID)
+      throw Invalid_Argument("Invalid point encoding for EC_PublicKey");
+
+   m_point_encoding = enc;
    }
 
 void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form)

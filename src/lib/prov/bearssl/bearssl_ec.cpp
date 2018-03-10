@@ -92,7 +92,7 @@ class BearSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification
          if (m_hf == nullptr)
             throw Lookup_Error("BearSSL ECDSA does not support hash " + req.arg(0));
 
-         m_q_buf = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
+         m_q_buf = ecdsa.public_point().encode(PointGFp::UNCOMPRESSED);
 
          m_key.qlen = m_q_buf.size();
          m_key.q = m_q_buf.data();
@@ -123,7 +123,7 @@ class BearSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification
    private:
       br_ec_public_key m_key;
       std::unique_ptr<HashFunction> m_hf;
-      secure_vector<uint8_t> m_q_buf;
+      std::vector<uint8_t> m_q_buf;
       const br_hash_class *m_hash;
       size_t m_order_bits;
    };

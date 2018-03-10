@@ -980,9 +980,12 @@ Test::Result test_ecdsa_pubkey_import()
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
+   const std::vector<uint8_t> enc_point = DER_Encoder().encode(
+      priv_key.public_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING).
+      get_contents_unlocked();
+
    // import to card
-   EC_PublicKeyImportProperties props(priv_key.DER_domain(), DER_Encoder().encode(EC2OSP(priv_key.public_point(),
-                                      PointGFp::UNCOMPRESSED), OCTET_STRING).get_contents_unlocked());
+   EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
    props.set_token(true);
    props.set_verify(true);
    props.set_private(false);
@@ -1008,9 +1011,12 @@ Test::Result test_ecdsa_pubkey_export()
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
+   const std::vector<uint8_t> enc_point = DER_Encoder().encode(
+      priv_key.public_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING).
+      get_contents_unlocked();
+
    // import to card
-   EC_PublicKeyImportProperties props(priv_key.DER_domain(), DER_Encoder().encode(EC2OSP(priv_key.public_point(),
-                                      PointGFp::UNCOMPRESSED), OCTET_STRING).get_contents_unlocked());
+   EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
    props.set_token(true);
    props.set_verify(true);
    props.set_private(false);
@@ -1216,9 +1222,12 @@ Test::Result test_ecdh_pubkey_import()
    ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
+   const std::vector<uint8_t> enc_point = DER_Encoder().encode(
+      priv_key.public_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING).
+      get_contents_unlocked();
+
    // import to card
-   EC_PublicKeyImportProperties props(priv_key.DER_domain(), DER_Encoder().encode(EC2OSP(priv_key.public_point(),
-                                      PointGFp::UNCOMPRESSED), OCTET_STRING).get_contents_unlocked());
+   EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
    props.set_token(true);
    props.set_private(false);
    props.set_derive(true);
@@ -1244,9 +1253,12 @@ Test::Result test_ecdh_pubkey_export()
    ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
+   const std::vector<uint8_t> enc_point = DER_Encoder().encode(
+      priv_key.public_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING).
+      get_contents_unlocked();
+
    // import to card
-   EC_PublicKeyImportProperties props(priv_key.DER_domain(), DER_Encoder().encode(EC2OSP(priv_key.public_point(),
-                                      PointGFp::UNCOMPRESSED), OCTET_STRING).get_contents_unlocked());
+   EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
    props.set_token(true);
    props.set_derive(true);
    props.set_private(false);
@@ -1332,9 +1344,8 @@ Test::Result test_ecdh_derive()
    Botan::PK_Key_Agreement ka(keypair.second, Test::rng(), "Raw");
    Botan::PK_Key_Agreement kb(keypair2.second, Test::rng(), "Raw");
 
-   Botan::SymmetricKey alice_key = ka.derive_key(32, unlock(EC2OSP(keypair2.first.public_point(),
-                                   PointGFp::UNCOMPRESSED)));
-   Botan::SymmetricKey bob_key = kb.derive_key(32, unlock(EC2OSP(keypair.first.public_point(), PointGFp::UNCOMPRESSED)));
+   Botan::SymmetricKey alice_key = ka.derive_key(32, keypair2.first.public_point().encode(PointGFp::UNCOMPRESSED));
+   Botan::SymmetricKey bob_key = kb.derive_key(32, keypair.first.public_point().encode(PointGFp::UNCOMPRESSED));
 
    bool eq = alice_key == bob_key;
    result.test_eq("same secret key derived", eq, true);

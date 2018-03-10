@@ -528,7 +528,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
                .encode(BigInt::encode_1363(get_b(), p_bytes),
                        OCTET_STRING)
             .end_cons()
-            .encode(EC2OSP(get_base_point(), PointGFp::UNCOMPRESSED), OCTET_STRING)
+              .encode(get_base_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING)
             .encode(get_order())
             .encode(get_cofactor())
          .end_cons()
