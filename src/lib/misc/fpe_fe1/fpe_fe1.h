@@ -27,9 +27,9 @@ class BOTAN_PUBLIC_API(2,5) FPE_FE1 final : public SymmetricAlgorithm
 
       Key_Length_Specification key_spec() const override;
 
-      std::string name() const;
+      std::string name() const override;
 
-      void clear();
+      void clear() override;
 
       BigInt encrypt(const BigInt& x, const uint8_t tweak[], size_t tweak_len) const;
 
