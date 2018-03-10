@@ -68,7 +68,7 @@ external build systems, see the manual for details.
     :target: https://codecov.io/github/randombit/botan
     :alt: Code coverage report
 
-.. image:: https://sonarcloud.io/api/badges/gate?key=botan
+.. image:: https://sonarcloud.io/api/project_badges/measure?project=botan&metric=ncloc
     :target: https://sonarcloud.io/dashboard/index/botan
     :alt: Sonarcloud analysis
 
@@ -182,7 +182,7 @@ Other Useful Things
 * HOTP and TOTP algorithms
 * Format preserving encryption scheme FE1
 * Threshold secret sharing
-* RFC 3394 AES key wrap
+* NIST key wrapping
 
 Recommended Algorithms
 ----------------------------------------
