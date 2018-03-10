@@ -1372,7 +1372,7 @@ class Speed final : public Command
 
          Botan::BigInt x = 1;
 
-         Botan::FPE_FE1 fpe_fe1(n, 3, "HMAC(SHA-256)");
+         Botan::FPE_FE1 fpe_fe1(n);
          fpe_fe1.set_key(key);
 
          while(enc_timer->under(runtime))

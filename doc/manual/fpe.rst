@@ -30,13 +30,18 @@ The interfaces for FE1 are defined in the header ``fpe_fe1.h``:
 
 .. cpp:class:: FPE_FE1
 
-   .. cpp:function:: FPE_FE1(const BigInt& n, size_t rounds = 3, std::string mac_algo = "HMAC(SHA-256)")
+   .. cpp:function:: FPE_FE1(const BigInt& n, size_t rounds = 5, \
+                             bool compat_mode = false,           \
+                             std::string mac_algo = "HMAC(SHA-256)");
 
-      Initialize an FPE operation to encrypt/decrypt integers less than *n*. It
-      is expected that *n* is trially factorable into small integers.
+      Initialize an FPE operation to encrypt/decrypt integers less
+      than *n*. It is expected that *n* is trially factorable into
+      small integers. Common usage would be n to be a power of 10.
 
-      The default rounds and mac algorithm match the original FPE implementation
-      first available in version 1.9.17.
+      Note that the default parameters to this constructor are
+      **incompatible** with the ``fe1_encrypt`` and ``fe1_decrypt``
+      function originally added in 1.9.17. For compatability, use
+      3 rounds and set ``compat_mode`` to true.
 
    .. cpp:function:: BigInt encrypt(const BigInt& x, const uint8_t tweak[], size_t tweak_len) const
 
