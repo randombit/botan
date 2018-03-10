@@ -378,6 +378,7 @@ def main(args=None):
             'src/scripts/website.py',
             'src/scripts/bench.py',
             'src/scripts/test_python.py',
+            'src/scripts/test_cli.py',
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py']
 
@@ -432,11 +433,13 @@ def main(args=None):
                          os.path.join(root_dir, 'fuzzer_corpus'),
                          os.path.join(root_dir, 'build/fuzzer')])
 
-        if target in ['static', 'shared'] and options.os != 'windows':
+        if target in ['shared', 'coverage'] and options.os != 'windows':
             botan_exe = os.path.join(root_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
-            cmds.append([py_interp,
-                         os.path.join(root_dir, 'src/scripts/cli_tests.py'),
-                         botan_exe])
+
+            test_scripts = ['cli_tests.py', 'test_cli.py']
+            for script in test_scripts:
+                cmds.append([py_interp, os.path.join(root_dir, 'src/scripts', script),
+                             botan_exe])
 
         python_tests = os.path.join(root_dir, 'src/scripts/test_python.py')
 

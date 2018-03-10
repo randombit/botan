@@ -66,11 +66,11 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
       }
 #endif
 
-#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_AUTO_RNG_HMAC)
+#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
    if(rng_type == "drbg")
       {
       std::unique_ptr<Botan::MessageAuthenticationCode> mac =
-         Botan::MessageAuthenticationCode::create(BOTAN_AUTO_RNG_HMAC);
+         Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
       std::unique_ptr<Botan::Stateful_RNG> rng(new Botan::HMAC_DRBG(std::move(mac)));
       rng->add_entropy(drbg_seed.data(), drbg_seed.size());
 
