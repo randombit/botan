@@ -236,8 +236,9 @@ def main(args):
             makedirs(prepend_destdir(py_lib_path))
 
             py_dir = cfg['python_dir']
-            for py in os.listdir(py_dir):
-                copy_file(os.path.join(py_dir, py), prepend_destdir(os.path.join(py_lib_path, py)))
+
+            copy_file(os.path.join(py_dir, 'botan2.py'),
+                      prepend_destdir(os.path.join(py_lib_path, 'botan2.py')))
 
     if cfg['with_documentation']:
         target_doc_dir = os.path.join(options.prefix, options.docdir,
