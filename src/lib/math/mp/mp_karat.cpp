@@ -248,6 +248,23 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw)
    return 0;
    }
 
+template<size_t SZ>
+inline bool sized_for_comba_mul(size_t x_sw, size_t x_size,
+                                size_t y_sw, size_t y_size,
+                                size_t z_size)
+   {
+   return (x_sw <= SZ && x_size >= SZ &&
+           y_sw <= SZ && y_size >= SZ &&
+           z_size >= 2*SZ);
+   }
+
+template<size_t SZ>
+inline bool sized_for_comba_sqr(size_t x_sw, size_t x_size,
+                                size_t z_size)
+   {
+   return (x_sw <= SZ && x_size >= SZ && z_size >= 2*SZ);
+   }
+
 }
 
 void bigint_mul(word z[], size_t z_size,
@@ -265,28 +282,23 @@ void bigint_mul(word z[], size_t z_size,
       {
       bigint_linmul3(z, x, x_sw, y[0]);
       }
-   else if(x_sw <= 4 && x_size >= 4 &&
-           y_sw <= 4 && y_size >= 4 && z_size >= 8)
+   else if(sized_for_comba_mul<4>(x_sw, x_size, y_sw, y_size, z_size))
       {
       bigint_comba_mul4(z, x, y);
       }
-   else if(x_sw <= 6 && x_size >= 6 &&
-           y_sw <= 6 && y_size >= 6 && z_size >= 12)
+   else if(sized_for_comba_mul<6>(x_sw, x_size, y_sw, y_size, z_size))
       {
       bigint_comba_mul6(z, x, y);
       }
-   else if(x_sw <= 8 && x_size >= 8 &&
-           y_sw <= 8 && y_size >= 8 && z_size >= 16)
+   else if(sized_for_comba_mul<8>(x_sw, x_size, y_sw, y_size, z_size))
       {
       bigint_comba_mul8(z, x, y);
       }
-   else if(x_sw <= 9 && x_size >= 9 &&
-           y_sw <= 9 && y_size >= 9 && z_size >= 18)
+   else if(sized_for_comba_mul<9>(x_sw, x_size, y_sw, y_size, z_size))
       {
       bigint_comba_mul9(z, x, y);
       }
-   else if(x_sw <= 16 && x_size >= 16 &&
-           y_sw <= 16 && y_size >= 16 && z_size >= 32)
+   else if(sized_for_comba_mul<16>(x_sw, x_size, y_sw, y_size, z_size))
       {
       bigint_comba_mul16(z, x, y);
       }
@@ -320,23 +332,23 @@ void bigint_sqr(word z[], size_t z_size,
       {
       bigint_linmul3(z, x, x_sw, x[0]);
       }
-   else if(x_sw <= 4 && x_size >= 4 && z_size >= 8)
+   else if(sized_for_comba_sqr<4>(x_sw, x_size, z_size))
       {
       bigint_comba_sqr4(z, x);
       }
-   else if(x_sw <= 6 && x_size >= 6 && z_size >= 12)
+   else if(sized_for_comba_sqr<6>(x_sw, x_size, z_size))
       {
       bigint_comba_sqr6(z, x);
       }
-   else if(x_sw <= 8 && x_size >= 8 && z_size >= 16)
+   else if(sized_for_comba_sqr<8>(x_sw, x_size, z_size))
       {
       bigint_comba_sqr8(z, x);
       }
-   else if(x_sw <= 9 && x_size >= 9 && z_size >= 18)
+   else if(sized_for_comba_sqr<9>(x_sw, x_size, z_size))
       {
       bigint_comba_sqr9(z, x);
       }
-   else if(x_sw <= 16 && x_size >= 16 && z_size >= 32)
+   else if(sized_for_comba_sqr<16>(x_sw, x_size, z_size))
       {
       bigint_comba_sqr16(z, x);
       }
