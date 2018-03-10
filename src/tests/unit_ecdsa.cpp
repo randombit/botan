@@ -122,7 +122,7 @@ Test::Result test_sign_then_ver()
    {
    Test::Result result("ECDSA Unit");
 
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::EC_Group dom_pars("secp160r1");
    Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
 
    Botan::PK_Signer signer(ecdsa, Test::rng(), "EMSA1(SHA-256)");
@@ -145,7 +145,7 @@ Test::Result test_ec_sign()
 
    try
       {
-      Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+      Botan::EC_Group dom_pars("secp160r1");
       Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
       Botan::PK_Signer signer(priv_key, Test::rng(), "EMSA1(SHA-224)");
       Botan::PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
@@ -199,7 +199,7 @@ Test::Result test_ecdsa_create_save_load()
 
    try
       {
-      Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+      Botan::EC_Group dom_pars("secp160r1");
       Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
 
       Botan::PK_Signer signer(key, Test::rng(), "EMSA1(SHA-256)");
