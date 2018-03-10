@@ -22,7 +22,9 @@ might encrypt. For instance, a 16 digit credit card number consists of
 a 15 digit code plus a 1 digit checksum. So to encrypt a credit card
 number, you first remove the checksum, encrypt the 15 digit value
 modulo 10\ :sup:`15`, and then calculate what the checksum is for the
-new (ciphertext) number.
+new (ciphertext) number. Or, if you were encrypting words in a
+dictionary, you could rank the words by their lexicographical order,
+and choose the modulus to be the number of words in the dictionary.
 
 The interfaces for FE1 are defined in the header ``fpe_fe1.h``:
 
@@ -32,7 +34,7 @@ The interfaces for FE1 are defined in the header ``fpe_fe1.h``:
 
    .. cpp:function:: FPE_FE1(const BigInt& n, size_t rounds = 5, \
                              bool compat_mode = false,           \
-                             std::string mac_algo = "HMAC(SHA-256)");
+                             std::string mac_algo = "HMAC(SHA-256)")
 
       Initialize an FPE operation to encrypt/decrypt integers less
       than *n*. It is expected that *n* is trially factorable into
@@ -73,6 +75,9 @@ There are two functions that handle the entire FE1 encrypt/decrypt operation.
 These are the original interface to FE1, first added in 1.9.17. However because
 they do the entire setup cost for each operation, they are significantly slower
 than the class-based API presented above.
+
+.. warning:: These functions are hardcoded to use 3 rounds, which may be
+             insufficient depending on the chosen modulus.
 
 .. cpp:function:: BigInt FPE::fe1_encrypt(const BigInt& n, const BigInt& X, \
              const SymmetricKey& key, const std::vector<uint8_t>& tweak)
