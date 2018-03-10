@@ -262,6 +262,52 @@ Test::Result test_unusual_curve()
    return result;
    }
 
+Test::Result test_encoding_options()
+   {
+   Test::Result result("ECDSA Unit");
+
+   Botan::EC_Group group("secp256r1");
+   Botan::ECDSA_PrivateKey key(Test::rng(), group);
+
+   result.confirm("Default encoding is uncompressed",
+                  key.point_encoding() == Botan::PointGFp::UNCOMPRESSED);
+
+   const std::vector<uint8_t> enc_uncompressed = key.public_key_bits();
+
+   key.set_point_encoding(Botan::PointGFp::COMPRESSED);
+
+   result.confirm("set_point_encoding works",
+                  key.point_encoding() == Botan::PointGFp::COMPRESSED);
+
+   const std::vector<uint8_t> enc_compressed = key.public_key_bits();
+
+   result.test_lt("Comprssed points are smaller",
+                  enc_compressed.size(), enc_uncompressed.size());
+
+   size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
+
+   result.test_gte("Compressed points smaller by group size",
+                   size_diff, 32);
+
+   key.set_point_encoding(Botan::PointGFp::HYBRID);
+
+   result.confirm("set_point_encoding works",
+                  key.point_encoding() == Botan::PointGFp::HYBRID);
+
+   const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
+
+   result.test_eq("Hybrid point same size as uncompressed",
+                  enc_uncompressed.size(), enc_hybrid.size());
+
+   auto invalid_format = static_cast<Botan::PointGFp::Compression_Type>(99);
+
+   result.test_throws("Invalid point format throws",
+                      "Invalid argument Invalid point encoding for EC_PublicKey",
+                      [&] { key.set_point_encoding(invalid_format); });
+
+   return result;
+   }
+
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 Test::Result test_read_pkcs8()
@@ -435,6 +481,7 @@ class ECDSA_Unit_Tests final : public Test
          results.push_back(test_ecdsa_create_save_load());
          results.push_back(test_unusual_curve());
          results.push_back(test_curve_registry());
+         results.push_back(test_encoding_options());
          return results;
          }
    };
