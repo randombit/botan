@@ -101,7 +101,7 @@ class BOTAN_PUBLIC_API(2,0) EC_PublicKey : public virtual Public_Key
       * Get the point encoding method to be used when encoding this key.
       * @result the encoding to use
       */
-      PointGFp::Compression_Type point_format() const
+      PointGFp::Compression_Type point_encoding() const
          { return m_point_encoding; }
 
       size_t key_length() const override;
