@@ -654,7 +654,7 @@ class Speed final : public Command
             "HMAC(SHA-256)",
 
             /* Misc */
-            "random_prime"
+            "random_prime",
 
             /* pubkey */
             "RSA",
