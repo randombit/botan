@@ -264,7 +264,7 @@ def cli_tls_ciphersuite_tests():
             output = test_cli("tls_ciphers", ["--version=" + version, "--policy=" + policy], None).split('\n')
 
             for line in output:
-                if ciphersuite_re.match(line) == None:
+                if ciphersuite_re.match(line) is None:
                     logging.error("Unexpected ciphersuite line %s", line)
 
 def cli_speed_tests():
@@ -273,6 +273,7 @@ def cli_speed_tests():
     if len(output) != 4:
         logging.error("Unexpected number of lines for AES-128 speed test")
 
+    # pylint: disable=line-too-long
     format_re = re.compile(r'^AES-128 .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     for line in output:
         if format_re.match(line) is None:
