@@ -8,6 +8,7 @@ import optparse # pylint: disable=deprecated-module
 import time
 import shutil
 import tempfile
+import re
 
 # pylint: disable=global-statement
 
@@ -47,11 +48,15 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
 
     fixed_drbg_seed = "802" * 32
 
+    opt_list = []
+
     if isinstance(cmd_options, str):
-        cmd_options = cmd_options.split(' ')
+        opt_list = cmd_options.split(' ')
+    elif isinstance(cmd_options, list):
+        opt_list = cmd_options
 
     drbg_options = ['--rng-type=drbg', '--drbg-seed=' + fixed_drbg_seed]
-    cmdline = [CLI_PATH, cmd] + drbg_options + cmd_options
+    cmdline = [CLI_PATH, cmd] + drbg_options + opt_list
 
     stdout = None
     stderr = None
@@ -73,6 +78,13 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
             logging.error("Got unexpected output running cmd %s %s - %s", cmd, cmd_options, output)
 
     return output
+
+def cli_help_tests():
+    output = test_cli("help", None, None)
+
+    # Maybe test format somehow??
+    if len(output) < 500:
+        logging.error("Help output seems very short")
 
 def cli_is_prime_tests():
     test_cli("is_prime", "5", "5 is probably prime")
@@ -182,6 +194,16 @@ wGf/MGbgPebBLmozAANENw==
 
     shutil.rmtree(tmp_dir)
 
+def cli_psk_db_tests():
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+
+    psk_db = os.path.join(tmp_dir, 'psk.db')
+    db_key = "909"*32
+
+    test_cli("psk_set", [psk_db, db_key, "name", "val"], "")
+
+    shutil.rmtree(tmp_dir)
+
 def cli_rng_tests():
     test_cli("rng", "10", "D80F88F6ADBE65ACB10C")
     test_cli("rng", "16", "D80F88F6ADBE65ACB10C3602E67D985B")
@@ -205,6 +227,64 @@ gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1AiEA
 
     test_cli("ec_group_info", "secp256r1", secp256r1_info)
     test_cli("ec_group_info", "--pem secp256r1", secp256r1_pem)
+
+def cli_cc_enc_tests():
+    test_cli("cc_encrypt", ["8028028028028029", "pass"], "4308989841607208")
+    test_cli("cc_decrypt", ["4308989841607208", "pass"], "8028028028028027")
+
+def cli_timing_test_tests():
+
+    timing_tests = ["bleichenbacher", "manger",
+                    "ecdsa", "ecc_mul", "inverse_mod",
+                    "lucky13sec3", "lucky13sec4sha1",
+                    "lucky13sec4sha256", "lucky13sec4sha384"]
+
+    output_re = re.compile('[0-9]+;[0-9];[0-9]+')
+
+    for suite in timing_tests:
+        output = test_cli("timing_test", [suite, "--measurement-runs=16", "--warmup-runs=3"], None).split('\n')
+
+        for line in output:
+            if output_re.match(line) is None:
+                logging.error("Unexpected output in timing_test %s: %s", suite, line)
+
+def cli_tls_ciphersuite_tests():
+    policies = ['default', 'suiteb', 'strict', 'all']
+
+    versions = ['tls1.0', 'tls1.1', 'tls1.2']
+
+    ciphersuite_re = re.compile('^[A-Z0-9_]+$')
+
+    for policy in policies:
+        for version in versions:
+
+            if policy in ['suiteb', 'strict'] and version != 'tls1.2':
+                continue
+
+            output = test_cli("tls_ciphers", ["--version=" + version, "--policy=" + policy], None).split('\n')
+
+            for line in output:
+                if ciphersuite_re.match(line) == None:
+                    logging.error("Unexpected ciphersuite line %s", line)
+
+def cli_speed_tests():
+    output = test_cli("speed", ["--msec=1", "--buf-size=64,512", "AES-128"], None).split('\n')
+
+    if len(output) != 4:
+        logging.error("Unexpected number of lines for AES-128 speed test")
+
+    format_re = re.compile(r'^AES-128 .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
+
+    output = test_cli("speed", ["--msec=5", "ECDSA", "ECDH"], None).split('\n')
+
+    # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
+    format_re = re.compile(r'^.* [0-9]+ ([a-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
 
 def main(args=None):
     if args is None:
@@ -232,6 +312,7 @@ def main(args=None):
     CLI_PATH = args[1]
 
     start_time = time.time()
+    cli_help_tests()
     cli_is_prime_tests()
     cli_factor_tests()
     cli_mod_inverse_tests()
@@ -244,6 +325,11 @@ def main(args=None):
     cli_gen_dl_group_tests()
     cli_ec_group_info_tests()
     cli_key_tests()
+    cli_cc_enc_tests()
+    cli_timing_test_tests()
+    cli_speed_tests()
+    cli_tls_ciphersuite_tests()
+    #cli_psk_db_tests()
     end_time = time.time()
 
     print("Ran %d tests with %d failures in %.02f seconds" % (
