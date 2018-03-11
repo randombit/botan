@@ -75,7 +75,10 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
 
     if expected_output != None:
         if output != expected_output:
-            logging.error("Got unexpected output running cmd %s %s - %s", cmd, cmd_options, output)
+            logging.error("Got unexpected output running cmd %s %s", cmd, cmd_options)
+            logging.info("Output lengths %d vs expected %d", len(output), len(expected_output))
+            logging.info("Got %s", output)
+            logging.info("Exp %s", expected_output)
 
     return output
 
@@ -267,6 +270,23 @@ def cli_tls_ciphersuite_tests():
                 if ciphersuite_re.match(line) is None:
                     logging.error("Unexpected ciphersuite line %s", line)
 
+def cli_asn1_tests():
+    input_pem = """-----BEGIN BLOB-----
+MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
+-----END BLOB------
+"""
+
+    expected = """d= 0, l=  32: SEQUENCE
+  d= 1, l=   1:  INTEGER                                    05
+  d= 1, l=   6:  PRINTABLE STRING                           string
+  d= 1, l=   6:  SET
+  d= 2, l=   1:   BOOLEAN                                   true
+  d= 2, l=   1:   INTEGER                                   63
+  d= 1, l=   5:  OCTET STRING                               0000000000
+  d= 1, l=   4:  BIT STRING                                 FFFFFF"""
+
+    test_cli("asn1print", "--pem -", expected, input_pem)
+
 def cli_speed_tests():
     output = test_cli("speed", ["--msec=1", "--buf-size=64,512", "AES-128"], None).split('\n')
 
@@ -279,10 +299,23 @@ def cli_speed_tests():
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
 
-    output = test_cli("speed", ["--msec=5", "ECDSA", "ECDH"], None).split('\n')
+    output = test_cli("speed", ["--msec=1", "ChaCha20", "SHA-256", "HMAC(SHA-256)"], None).split('\n')
+
+    # pylint: disable=line-too-long
+    format_re = re.compile(r'^.* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
+
+
+    pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA",
+                "DH", "DSA", "ElGamal", "Ed25519", "Curve25519",
+                "NEWHOPE", "McEliece"]
+
+    output = test_cli("speed", ["--msec=5"] + pk_algos, None).split('\n')
 
     # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
-    format_re = re.compile(r'^.* [0-9]+ ([a-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+    format_re = re.compile(r'^.* [0-9]+ ([A-Za-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
@@ -328,6 +361,7 @@ def main(args=None):
     cli_key_tests()
     cli_cc_enc_tests()
     cli_timing_test_tests()
+    cli_asn1_tests()
     cli_speed_tests()
     cli_tls_ciphersuite_tests()
     #cli_psk_db_tests()
