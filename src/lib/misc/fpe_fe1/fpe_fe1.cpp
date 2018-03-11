@@ -22,9 +22,6 @@ const size_t MAX_N_BYTES = 128/8;
 * Factor n into a and b which are as close together as possible.
 * Assumes n is composed mostly of small factors which is the case for
 * typical uses of FPE (typically, n is a power of 10)
-*
-* Want a >= b since the safe number of rounds is 2+log_a(b); if a >= b
-* then this is always 3
 */
 void factor(BigInt n, BigInt& a, BigInt& b)
    {
