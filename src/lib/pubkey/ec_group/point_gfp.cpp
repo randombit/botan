@@ -463,18 +463,16 @@ void PointGFp::force_all_affine(std::vector<PointGFp>& points)
 
    secure_vector<word> ws;
 
-   std::vector<BigInt> c;
-
-   c.push_back(points[0].m_coord_z);
-
-   BigInt rep_1 = 1;
-
    const CurveGFp& curve = points[0].m_curve;
+   BigInt rep_1 = 1;
    curve.to_rep(rep_1, ws);
+
+   std::vector<BigInt> c(points.size());
+   c[0] = points[0].m_coord_z;
 
    for(size_t i = 1; i != points.size(); ++i)
       {
-      c.push_back(curve.mul_to_tmp(c[i-1], points[i].m_coord_z, ws));
+      curve.mul(c[i], c[i-1], points[i].m_coord_z, ws);
       }
 
    BigInt s_inv = curve.invert_element(c[c.size()-1], ws);
