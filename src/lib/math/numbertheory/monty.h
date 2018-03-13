@@ -68,9 +68,15 @@ class Montgomery_Int final
 
       Montgomery_Int& operator*=(const secure_vector<word>& other);
 
-      Montgomery_Int square() const;
+      Montgomery_Int& mul_by(const Montgomery_Int& other,
+                             secure_vector<word>& ws);
 
-      Montgomery_Int& square_this();
+      Montgomery_Int& mul_by(const secure_vector<word>& other,
+                             secure_vector<word>& ws);
+
+      Montgomery_Int square(secure_vector<word>& ws) const;
+
+      Montgomery_Int& square_this(secure_vector<word>& ws);
 
       Montgomery_Int multiplicative_inverse() const;
 
@@ -110,13 +116,26 @@ class Montgomery_Params final
 
       size_t p_words() const { return m_p_words; }
 
-      BigInt redc(const BigInt& x) const;
+      BigInt redc(const BigInt& x,
+                  secure_vector<word>& ws) const;
 
-      BigInt mul(const BigInt& x, const BigInt& y) const;
+      BigInt mul(const BigInt& x,
+                 const BigInt& y,
+                 secure_vector<word>& ws) const;
 
-      BigInt mul(const BigInt& x, const secure_vector<word>& y) const;
+      BigInt mul(const BigInt& x,
+                 const secure_vector<word>& y,
+                 secure_vector<word>& ws) const;
 
-      BigInt sqr(const BigInt& x) const;
+      void mul_by(BigInt& x,
+                  const secure_vector<word>& y,
+                  secure_vector<word>& ws) const;
+
+      BigInt sqr(const BigInt& x,
+                 secure_vector<word>& ws) const;
+
+      void square_this(BigInt& x,
+                       secure_vector<word>& ws) const;
 
       BigInt inv_mod_p(const BigInt& x) const;
 

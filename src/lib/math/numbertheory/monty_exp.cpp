@@ -92,19 +92,20 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar) cons
    Montgomery_Int x(m_params, m_params->R1(), false);
 
    secure_vector<word> e_bits(m_params->p_words());
+   secure_vector<word> ws;
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {
       for(size_t j = 0; j != m_window_bits; ++j)
          {
-         x.square_this();
+         x.square_this(ws);
          }
 
       const uint32_t nibble = scalar.get_substring(m_window_bits*(i-1), m_window_bits);
 
       const_time_lookup(e_bits, m_g, nibble);
 
-      x *= e_bits;
+      x.mul_by(e_bits, ws);
       }
 
    return x.value();

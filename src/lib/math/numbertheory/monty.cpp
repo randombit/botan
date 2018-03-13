@@ -32,10 +32,13 @@ BigInt Montgomery_Params::inv_mod_p(const BigInt& x) const
    return ct_inverse_mod_odd_modulus(x, p());
    }
 
-BigInt Montgomery_Params::redc(const BigInt& x) const
+BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const
    {
    const size_t output_size = 2*m_p_words + 2;
-   std::vector<word> ws(output_size);
+
+   if(ws.size() < output_size)
+      ws.resize(output_size);
+
    BigInt z = x;
    z.grow_to(output_size);
 
@@ -43,14 +46,17 @@ BigInt Montgomery_Params::redc(const BigInt& x) const
                      m_p.data(), m_p_words, m_p_dash,
                      ws.data(), ws.size());
 
-   secure_scrub_memory(ws.data(), ws.size() * sizeof(word));
    return z;
    }
 
-BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y) const
+BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y,
+                              secure_vector<word>& ws) const
    {
    const size_t output_size = 2*m_p_words + 2;
-   std::vector<word> ws(output_size);
+
+   if(ws.size() < output_size)
+      ws.resize(output_size);
+
    BigInt z(BigInt::Positive, output_size);
    bigint_mul(z.mutable_data(), z.size(),
               x.data(), x.size(), x.sig_words(),
@@ -61,14 +67,16 @@ BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y) const
                      m_p.data(), m_p_words, m_p_dash,
                      ws.data(), ws.size());
 
-   secure_scrub_memory(ws.data(), ws.size() * sizeof(word));
    return z;
    }
 
-BigInt Montgomery_Params::mul(const BigInt& x, const secure_vector<word>& y) const
+BigInt Montgomery_Params::mul(const BigInt& x,
+                              const secure_vector<word>& y,
+                              secure_vector<word>& ws) const
    {
    const size_t output_size = 2*m_p_words + 2;
-   std::vector<word> ws(output_size);
+   if(ws.size() < output_size)
+      ws.resize(output_size);
    BigInt z(BigInt::Positive, output_size);
 
    bigint_mul(z.mutable_data(), z.size(),
@@ -80,14 +88,42 @@ BigInt Montgomery_Params::mul(const BigInt& x, const secure_vector<word>& y) con
                      m_p.data(), m_p_words, m_p_dash,
                      ws.data(), ws.size());
 
-   secure_scrub_memory(ws.data(), ws.size() * sizeof(word));
    return z;
    }
 
-BigInt Montgomery_Params::sqr(const BigInt& x) const
+void Montgomery_Params::mul_by(BigInt& x,
+                               const secure_vector<word>& y,
+                               secure_vector<word>& ws) const
    {
    const size_t output_size = 2*m_p_words + 2;
-   std::vector<word> ws(output_size);
+
+   if(ws.size() < 2*output_size)
+      ws.resize(2*output_size);
+
+   word* z_data = &ws[0];
+   word* ws_data = &ws[output_size];
+
+   bigint_mul(z_data, output_size,
+              x.data(), x.size(), x.sig_words(),
+              y.data(), y.size(), y.size(),
+              ws_data, output_size);
+
+   bigint_monty_redc(z_data,
+                     m_p.data(), m_p_words, m_p_dash,
+                     ws_data, output_size);
+
+   if(x.size() < output_size)
+      x.grow_to(output_size);
+   copy_mem(x.mutable_data(), z_data, output_size);
+   }
+
+BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const
+   {
+   const size_t output_size = 2*m_p_words + 2;
+
+   if(ws.size() < output_size)
+      ws.resize(output_size);
+
    BigInt z(BigInt::Positive, output_size);
 
    bigint_sqr(z.mutable_data(), z.size(),
@@ -98,16 +134,48 @@ BigInt Montgomery_Params::sqr(const BigInt& x) const
                      m_p.data(), m_p_words, m_p_dash,
                      ws.data(), ws.size());
 
-   secure_scrub_memory(ws.data(), ws.size() * sizeof(word));
    return z;
+   }
+
+void Montgomery_Params::square_this(BigInt& x,
+                                    secure_vector<word>& ws) const
+   {
+   const size_t output_size = 2*m_p_words + 2;
+
+   if(ws.size() < 2*output_size)
+      ws.resize(2*output_size);
+
+   word* z_data = &ws[0];
+   word* ws_data = &ws[output_size];
+
+   bigint_sqr(z_data, output_size,
+              x.data(), x.size(), x.sig_words(),
+              ws_data, output_size);
+
+   bigint_monty_redc(z_data,
+                     m_p.data(), m_p_words, m_p_dash,
+                     ws_data, output_size);
+
+   if(x.size() < output_size)
+      x.grow_to(output_size);
+   copy_mem(x.mutable_data(), z_data, output_size);
    }
 
 Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params> params,
                                const BigInt& v,
                                bool redc_needed) :
-   m_params(params),
-   m_v(redc_needed ? m_params->mul(v % m_params->p(), m_params->R2()) : v)
-   {}
+   m_params(params)
+   {
+   if(redc_needed == false)
+      {
+      m_v = v;
+      }
+   else
+      {
+      secure_vector<word> ws;
+      m_v = m_params->mul(v % m_params->p(), m_params->R2(), ws);
+      }
+   }
 
 void Montgomery_Int::fix_size()
    {
@@ -154,7 +222,8 @@ bool Montgomery_Int::is_zero() const
 
 BigInt Montgomery_Int::value() const
    {
-   return m_params->redc(m_v);
+   secure_vector<word> ws;
+   return m_params->redc(m_v, ws);
    }
 
 Montgomery_Int Montgomery_Int::operator+(const Montgomery_Int& other) const
@@ -191,36 +260,53 @@ Montgomery_Int& Montgomery_Int::operator-=(const Montgomery_Int& other)
 
 Montgomery_Int Montgomery_Int::operator*(const Montgomery_Int& other) const
    {
-   return Montgomery_Int(m_params, m_params->mul(m_v, other.m_v), false);
+   secure_vector<word> ws;
+   return Montgomery_Int(m_params, m_params->mul(m_v, other.m_v, ws), false);
+   }
+
+Montgomery_Int& Montgomery_Int::mul_by(const Montgomery_Int& other,
+                                       secure_vector<word>& ws)
+   {
+   m_v = m_params->mul(m_v, other.m_v, ws);
+   return (*this);
+   }
+
+Montgomery_Int& Montgomery_Int::mul_by(const secure_vector<word>& other,
+                                       secure_vector<word>& ws)
+   {
+   m_params->mul_by(m_v, other, ws);
+   //m_v = m_params->mul(m_v, other, ws);
+   return (*this);
    }
 
 Montgomery_Int& Montgomery_Int::operator*=(const Montgomery_Int& other)
    {
-   m_v = m_params->mul(m_v, other.m_v);
-   return (*this);
+   secure_vector<word> ws;
+   return mul_by(other, ws);
    }
 
 Montgomery_Int& Montgomery_Int::operator*=(const secure_vector<word>& other)
    {
-   m_v = m_params->mul(m_v, other);
+   secure_vector<word> ws;
+   return mul_by(other, ws);
+   }
+
+Montgomery_Int& Montgomery_Int::square_this(secure_vector<word>& ws)
+   {
+   m_params->square_this(m_v, ws);
    return (*this);
    }
 
-Montgomery_Int& Montgomery_Int::square_this()
+Montgomery_Int Montgomery_Int::square(secure_vector<word>& ws) const
    {
-   m_v = m_params->sqr(m_v);
-   return (*this);
-   }
-
-Montgomery_Int Montgomery_Int::square() const
-   {
-   const BigInt v = m_params->sqr(m_v);
+   const BigInt v = m_params->sqr(m_v, ws);
    return Montgomery_Int(m_params, v, false);
    }
 
 Montgomery_Int Montgomery_Int::multiplicative_inverse() const
    {
-   const BigInt iv = m_params->mul(m_params->inv_mod_p(m_v), m_params->R3());
+   secure_vector<word> ws;
+   const BigInt iv = m_params->mul(m_params->inv_mod_p(m_v), m_params->R3(), ws);
    return Montgomery_Int(m_params, iv, false);
    }
 
