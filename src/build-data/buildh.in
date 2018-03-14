@@ -153,6 +153,7 @@
 */
 #define BOTAN_RNG_DEFAULT_RESEED_INTERVAL 1024
 #define BOTAN_RNG_RESEED_POLL_BITS 256
+
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
 
@@ -174,14 +175,6 @@
 * These control the RNG used by the system RNG interface
 */
 #define BOTAN_SYSTEM_RNG_DEVICE "/dev/urandom"
-#define BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE PROV_RSA_FULL
-
-/*
-* These paramaters control how many bytes to read from the system
-* PRNG, and how long to block if applicable.
-*
-* Timeout is ignored on Windows as CryptGenRandom doesn't block
-*/
 #define BOTAN_SYSTEM_RNG_POLL_DEVICES { "/dev/urandom", "/dev/random", "/dev/srandom" }
 
 /*
@@ -192,9 +185,13 @@
 */
 #define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
 
+/*
+* These paramaters control how many bytes to read from the system
+* PRNG, and how long to block if applicable. The timeout only applies
+* to reading /dev/urandom and company.
+*/
 #define BOTAN_SYSTEM_RNG_POLL_REQUEST 64
 #define BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS 20
-
 
 /*
 How many times to read from the RDRAND/RDSEED RNGs.
