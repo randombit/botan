@@ -40,24 +40,30 @@ X509_DN::X509_DN(const std::multimap<std::string, std::string>& args)
 void X509_DN::add_attribute(const std::string& type,
                             const std::string& str)
    {
-   OID oid = OIDS::lookup(type);
-   add_attribute(oid, str);
+   add_attribute(OIDS::lookup(type), str);
+   }
+
+void X509_DN::add_attribute(const OID& oid, const std::string& str)
+   {
+   add_attribute(oid, ASN1_String(str));
    }
 
 /*
 * Add an attribute to a X509_DN
 */
-void X509_DN::add_attribute(const OID& oid, const std::string& str)
+void X509_DN::add_attribute(const OID& oid, const ASN1_String& str)
    {
    if(str.empty())
       return;
 
    auto range = m_dn_info.equal_range(oid);
    for(auto i = range.first; i != range.second; ++i)
-      if(i->second.value() == str)
+      {
+      if(i->second == str)
          return;
+      }
 
-   multimap_insert(m_dn_info, oid, ASN1_String(str));
+   multimap_insert(m_dn_info, oid, str);
    m_dn_bits.clear();
    }
 
@@ -91,7 +97,11 @@ std::multimap<std::string, std::string> X509_DN::contents() const
 
 bool X509_DN::has_field(const std::string& attr) const
    {
-   const OID oid = OIDS::lookup(deref_info_field(attr));
+   return has_field(OIDS::lookup(deref_info_field(attr)));
+   }
+
+bool X509_DN::has_field(const OID& oid) const
+   {
    auto range = m_dn_info.equal_range(oid);
    return (range.first != range.second);
    }
@@ -99,12 +109,16 @@ bool X509_DN::has_field(const std::string& attr) const
 std::string X509_DN::get_first_attribute(const std::string& attr) const
    {
    const OID oid = OIDS::lookup(deref_info_field(attr));
+   return get_first_attribute(oid).value();
+   }
 
+ASN1_String X509_DN::get_first_attribute(const OID& oid) const
+   {
    auto i = m_dn_info.lower_bound(oid);
    if(i != m_dn_info.end() && i->first == oid)
-      return i->second.value();
+      return i->second;
 
-   return "";
+   return ASN1_String();
    }
 
 /*
@@ -120,11 +134,6 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    for(auto i = range.first; i != range.second; ++i)
       values.push_back(i->second.value());
    return values;
-   }
-
-const std::vector<uint8_t>& X509_DN::get_bits() const
-   {
-   return m_dn_bits;
    }
 
 /*
@@ -201,58 +210,32 @@ bool operator<(const X509_DN& dn1, const X509_DN& dn2)
    return false;
    }
 
-namespace {
-
-/*
-* DER encode a RelativeDistinguishedName
-*/
-void do_ava(DER_Encoder& encoder,
-            const std::multimap<OID, std::string>& dn_info,
-            ASN1_Tag string_type, const std::string& oid_str,
-            bool must_exist = false)
-   {
-   const OID oid = OIDS::lookup(oid_str);
-   const bool exists = (dn_info.find(oid) != dn_info.end());
-
-   if(!exists && must_exist)
-      throw Encoding_Error("X509_DN: No entry for " + oid_str);
-   if(!exists) return;
-
-   auto range = dn_info.equal_range(oid);
-
-   for(auto i = range.first; i != range.second; ++i)
-      {
-      encoder.start_cons(SET)
-         .start_cons(SEQUENCE)
-            .encode(oid)
-            .encode(ASN1_String(i->second, string_type))
-         .end_cons()
-      .end_cons();
-      }
-   }
-
-}
-
 /*
 * DER encode a DistinguishedName
 */
 void X509_DN::encode_into(DER_Encoder& der) const
    {
-   auto dn_info = get_attributes();
-
    der.start_cons(SEQUENCE);
 
    if(!m_dn_bits.empty())
+      {
+      /*
+      If we decoded this from somewhere, encode it back exactly as
+      we recieved it
+      */
       der.raw_bytes(m_dn_bits);
+      }
    else
       {
-      do_ava(der, dn_info, PRINTABLE_STRING, "X520.Country");
-      do_ava(der, dn_info, DIRECTORY_STRING, "X520.State");
-      do_ava(der, dn_info, DIRECTORY_STRING, "X520.Locality");
-      do_ava(der, dn_info, DIRECTORY_STRING, "X520.Organization");
-      do_ava(der, dn_info, DIRECTORY_STRING, "X520.OrganizationalUnit");
-      do_ava(der, dn_info, DIRECTORY_STRING, "X520.CommonName");
-      do_ava(der, dn_info, PRINTABLE_STRING, "X520.SerialNumber");
+      for(auto dn : m_dn_info)
+         {
+         der.start_cons(SET)
+            .start_cons(SEQUENCE)
+            .encode(dn.first)
+            .encode(dn.second)
+            .end_cons()
+         .end_cons();
+         }
       }
 
    der.end_cons();
@@ -285,7 +268,7 @@ void X509_DN::decode_from(BER_Decoder& source)
             .decode(str)
         .end_cons();
 
-         add_attribute(oid, str.value());
+         add_attribute(oid, str);
          }
       }
 

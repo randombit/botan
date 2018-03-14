@@ -1,6 +1,6 @@
 /*
 * X.509 Distinguished Name
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2018 Jack Lloyd
 * (C) 2017 Fabian Weissberg, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -23,12 +23,27 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
    {
    public:
+      X509_DN() = default;
+      explicit X509_DN(const std::multimap<OID, std::string>& vals);
+      explicit X509_DN(const std::multimap<std::string, std::string>& vals);
+
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
 
+      const std::multimap<OID, ASN1_String>& dn_info() const { return m_dn_info; }
+
+      bool has_field(const OID& oid) const;
+      ASN1_String get_first_attribute(const OID& oid) const;
+
+      /*
+      * Return the BER encoded data, if any
+      */
+      const std::vector<uint8_t>& get_bits() const { return m_dn_bits; }
+
+      bool empty() const { return m_dn_info.empty(); }
+
       bool has_field(const std::string& attr) const;
       std::vector<std::string> get_attribute(const std::string& attr) const;
-
       std::string get_first_attribute(const std::string& attr) const;
 
       std::multimap<OID, std::string> get_attributes() const;
@@ -36,6 +51,7 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
 
       void add_attribute(const std::string& key, const std::string& val);
       void add_attribute(const OID& oid, const std::string& val);
+      void add_attribute(const OID& oid, const ASN1_String& val);
 
       static std::string deref_info_field(const std::string& key);
 
@@ -48,16 +64,6 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
       */
       static size_t lookup_ub(const OID& oid);
 
-      /*
-      * Return the BER encoded data, if any
-      */
-      const std::vector<uint8_t>& get_bits() const;
-
-      bool empty() const { return m_dn_info.empty(); }
-
-      X509_DN() = default;
-      explicit X509_DN(const std::multimap<OID, std::string>& vals);
-      explicit X509_DN(const std::multimap<std::string, std::string>& vals);
    private:
       std::multimap<OID, ASN1_String> m_dn_info;
       std::vector<uint8_t> m_dn_bits;
