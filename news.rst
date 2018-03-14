@@ -31,6 +31,11 @@ Version 2.5.0, Not Yet Released
   some common software packages including Golang's standard library.
   (GH #1480 #1483)
 
+* It is now possible to create DNs with custom components. (GH #1490 #1492)
+
+* It is now possible to specify the serial number of created certificates,
+  instead of using the default 128-bit random integer. (GH #1489 #1491)
+
 * Change DL_Group and EC_Group to store their data as shared_ptr for
   fast copying. Also both classes precompute additional useful values
   (eg for modular reductions). (GH #1435 #1454)
