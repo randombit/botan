@@ -19,7 +19,7 @@ doc_dir docs
 win32
 winsock2
 
-cryptgenrandom
+rtlgenrandom
 rtlsecurezeromemory
 
 virtual_lock

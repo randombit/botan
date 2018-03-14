@@ -86,6 +86,8 @@ Version 2.5.0, Not Yet Released
   is still maintained by the original author at
   https://github.com/OlivierJG/botansqlite3
 
+* Support for Windows Phone is deprecated.
+
 Version 2.4.0, 2018-01-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
