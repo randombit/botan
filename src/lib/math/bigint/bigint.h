@@ -383,11 +383,6 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
         m_reg[i] = w;
         }
 
-     void ensure_capacity(size_t sz)
-        {
-        m_reg.reserve(sz);
-        }
-
      /**
      * Tests if the sign of the integer is negative
      * @result true, iff the integer has a negative sign

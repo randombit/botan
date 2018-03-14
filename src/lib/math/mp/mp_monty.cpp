@@ -109,7 +109,7 @@ void bigint_monty_redc(word z[],
    ws[2*p_size+1] = word_sub(ws[p_size], 0, &borrow);
 
    CT::conditional_copy_mem(borrow, z, ws, ws + (p_size + 1), (p_size + 1));
-   clear_mem(z + p_size + 1, z_size - p_size - 1);
+   clear_mem(z + p_size, z_size - p_size - 2);
 
    CT::unpoison(z, z_size);
    CT::unpoison(p, p_size);

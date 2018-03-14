@@ -156,7 +156,8 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       /**
       * Force all points on the list to affine coordinates
       */
-      static void force_all_affine(std::vector<PointGFp>& points);
+      static void force_all_affine(std::vector<PointGFp>& points,
+                                   secure_vector<word>& ws);
 
       bool is_affine() const;
 
@@ -185,6 +186,12 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * The actual value (get_affine_x, get_affine_y) does not change
       */
       void randomize_repr(RandomNumberGenerator& rng);
+
+      /**
+      * Randomize the point representation
+      * The actual value (get_affine_x, get_affine_y) does not change
+      */
+      void randomize_repr(RandomNumberGenerator& rng, secure_vector<word>& ws);
 
       /**
       * Equality operator

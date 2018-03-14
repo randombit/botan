@@ -26,6 +26,8 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
 
       virtual size_t get_p_words() const = 0;
 
+      virtual size_t get_ws_size() const = 0;
+
       virtual bool is_one(const BigInt& x) const = 0;
 
       /*
@@ -95,6 +97,8 @@ class BOTAN_UNSTABLE_API CurveGFp final
       const BigInt& get_p() const { return m_repr->get_p(); }
 
       size_t get_p_words() const { return m_repr->get_p_words(); }
+
+      size_t get_ws_size() const { return m_repr->get_ws_size(); }
 
       const BigInt& get_a_rep() const { return m_repr->get_a_rep(); }
 

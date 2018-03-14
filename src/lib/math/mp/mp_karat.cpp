@@ -326,6 +326,8 @@ void bigint_sqr(word z[], size_t z_size,
                 const word x[], size_t x_size, size_t x_sw,
                 word workspace[], size_t ws_size)
    {
+   clear_mem(z, z_size);
+
    BOTAN_ASSERT(z_size/2 >= x_sw, "Output size is sufficient");
 
    if(x_sw == 1)

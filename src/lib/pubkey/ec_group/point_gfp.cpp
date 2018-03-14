@@ -20,7 +20,7 @@ PointGFp::PointGFp(const CurveGFp& curve) :
    m_coord_y(1),
    m_coord_z(0)
    {
-   secure_vector<word> monty_ws;
+   secure_vector<word> monty_ws(m_curve.get_ws_size());
    m_curve.to_rep(m_coord_x, monty_ws);
    m_curve.to_rep(m_coord_y, monty_ws);
    m_curve.to_rep(m_coord_z, monty_ws);
@@ -37,7 +37,7 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    if(y <= 0 || y >= curve.get_p())
       throw Invalid_Argument("Invalid PointGFp affine y");
 
-   secure_vector<word> monty_ws;
+   secure_vector<word> monty_ws(m_curve.get_ws_size());
    m_curve.to_rep(m_coord_x, monty_ws);
    m_curve.to_rep(m_coord_y, monty_ws);
    m_curve.to_rep(m_coord_z, monty_ws);
@@ -45,23 +45,42 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
 
 void PointGFp::randomize_repr(RandomNumberGenerator& rng)
    {
+   secure_vector<word> ws(m_curve.get_ws_size());
+   randomize_repr(rng, ws);
+   }
+
+void PointGFp::randomize_repr(RandomNumberGenerator& rng, secure_vector<word>& ws)
+   {
    if(BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS > 1)
       {
       BigInt mask;
       while(mask.is_zero())
          mask.randomize(rng, BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS, false);
 
-      secure_vector<word> monty_ws;
+      //m_curve.to_rep(mask, ws);
+      const BigInt mask2 = m_curve.sqr_to_tmp(mask, ws);
+      const BigInt mask3 = m_curve.mul_to_tmp(mask2, mask, ws);
 
-      m_curve.to_rep(mask, monty_ws);
-      const BigInt mask2 = m_curve.mul_to_tmp(mask, mask, monty_ws);
-      const BigInt mask3 = m_curve.mul_to_tmp(mask2, mask, monty_ws);
-
-      m_coord_x = m_curve.mul_to_tmp(m_coord_x, mask2, monty_ws);
-      m_coord_y = m_curve.mul_to_tmp(m_coord_y, mask3, monty_ws);
-      m_coord_z = m_curve.mul_to_tmp(m_coord_z, mask, monty_ws);
+      m_coord_x = m_curve.mul_to_tmp(m_coord_x, mask2, ws);
+      m_coord_y = m_curve.mul_to_tmp(m_coord_y, mask3, ws);
+      m_coord_z = m_curve.mul_to_tmp(m_coord_z, mask, ws);
       }
    }
+
+namespace {
+
+inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size)
+   {
+   BOTAN_ASSERT(ws_bn.size() >= PointGFp::WORKSPACE_SIZE,
+                "Expected size for PointGFp workspace");
+
+   for(size_t i = 0; i != ws_bn.size(); ++i)
+      if(ws_bn[i].size() < cap_size)
+         ws_bn[i].get_word_vector().resize(cap_size);
+   }
+
+
+}
 
 void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    {
@@ -78,14 +97,7 @@ void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    //BOTAN_ASSERT(rhs.is_affine(), "PointGFp::add_affine requires arg be affine point");
 
-   const BigInt& p = m_curve.get_p();
-
-   const size_t cap_size = 2*m_curve.get_p_words() + 2;
-
-   BOTAN_ASSERT(ws_bn.size() >= WORKSPACE_SIZE, "Expected size for PointGFp::add workspace");
-
-   for(size_t i = 0; i != ws_bn.size(); ++i)
-      ws_bn[i].ensure_capacity(cap_size);
+   resize_ws(ws_bn, m_curve.get_ws_size());
 
    secure_vector<word>& ws = ws_bn[0].get_word_vector();
 
@@ -99,6 +111,8 @@ void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
    simplified with Z2 = 1
    */
+
+   const BigInt& p = m_curve.get_p();
 
    m_curve.sqr(T3, m_coord_z, ws); // z1^2
    m_curve.mul(T4, rhs.m_coord_x, T3, ws); // x2*z1^2
@@ -172,14 +186,7 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
       return;
       }
 
-   const BigInt& p = m_curve.get_p();
-
-   const size_t cap_size = 2*m_curve.get_p_words() + 2;
-
-   BOTAN_ASSERT(ws_bn.size() >= WORKSPACE_SIZE, "Expected size for PointGFp::add workspace");
-
-   for(size_t i = 0; i != ws_bn.size(); ++i)
-      ws_bn[i].ensure_capacity(cap_size);
+   resize_ws(ws_bn, m_curve.get_ws_size());
 
    secure_vector<word>& ws = ws_bn[0].get_word_vector();
 
@@ -193,6 +200,8 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
    */
+
+   const BigInt& p = m_curve.get_p();
 
    m_curve.sqr(T0, rhs.m_coord_z, ws); // z2^2
    m_curve.mul(T1, m_coord_x, T0, ws); // x1*z2^2
@@ -268,13 +277,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
       return;
       }
 
-   const size_t cap_size = 2*m_curve.get_p_words() + 2;
-
-   BOTAN_ASSERT(ws_bn.size() >= WORKSPACE_SIZE, "Expected size for PointGFp::add workspace");
-   for(size_t i = 0; i != ws_bn.size(); ++i)
-      ws_bn[i].ensure_capacity(cap_size);
-
-   const BigInt& p = m_curve.get_p();
+   resize_ws(ws_bn, m_curve.get_ws_size());
 
    secure_vector<word>& ws = ws_bn[0].get_word_vector();
    BigInt& T0 = ws_bn[1];
@@ -286,6 +289,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#doubling-dbl-1986-cc
    */
+   const BigInt& p = m_curve.get_p();
 
    m_curve.sqr(T0, m_coord_y, ws);
 
@@ -443,7 +447,8 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    }
 
 //static
-void PointGFp::force_all_affine(std::vector<PointGFp>& points)
+void PointGFp::force_all_affine(std::vector<PointGFp>& points,
+                                secure_vector<word>& ws)
    {
    if(points.size() <= 1)
       {
@@ -461,9 +466,11 @@ void PointGFp::force_all_affine(std::vector<PointGFp>& points)
    TODO is it really necessary to save all k points in c?
    */
 
-   secure_vector<word> ws;
-
    const CurveGFp& curve = points[0].m_curve;
+
+   if(ws.size() < curve.get_ws_size())
+      ws.resize(curve.get_ws_size());
+
    BigInt rep_1 = 1;
    curve.to_rep(rep_1, ws);
 
@@ -477,23 +484,25 @@ void PointGFp::force_all_affine(std::vector<PointGFp>& points)
 
    BigInt s_inv = curve.invert_element(c[c.size()-1], ws);
 
+   BigInt z_inv, z2_inv, z3_inv;
+
    for(size_t i = points.size() - 1; i != 0; i--)
       {
       PointGFp& point = points[i];
 
-      const BigInt z_inv = curve.mul_to_tmp(s_inv, c[i-1], ws);
+      curve.mul(z_inv, s_inv, c[i-1], ws);
 
       s_inv = curve.mul_to_tmp(s_inv, point.m_coord_z, ws);
 
-      const BigInt z2_inv = curve.sqr_to_tmp(z_inv, ws);
-      const BigInt z3_inv = curve.mul_to_tmp(z_inv, z2_inv, ws);
+      curve.sqr(z2_inv, z_inv, ws);
+      curve.mul(z3_inv, z2_inv, z_inv, ws);
       point.m_coord_x = curve.mul_to_tmp(point.m_coord_x, z2_inv, ws);
       point.m_coord_y = curve.mul_to_tmp(point.m_coord_y, z3_inv, ws);
       point.m_coord_z = rep_1;
       }
 
-   const BigInt z2_inv = curve.sqr_to_tmp(s_inv, ws);
-   const BigInt z3_inv = curve.mul_to_tmp(s_inv, z2_inv, ws);
+   curve.sqr(z2_inv, s_inv, ws);
+   curve.mul(z3_inv, z2_inv, s_inv, ws);
    points[0].m_coord_x = curve.mul_to_tmp(points[0].m_coord_x, z2_inv, ws);
    points[0].m_coord_y = curve.mul_to_tmp(points[0].m_coord_y, z3_inv, ws);
    points[0].m_coord_z = rep_1;
@@ -530,11 +539,11 @@ BigInt PointGFp::get_affine_x() const
    if(is_affine())
       return m_curve.from_rep(m_coord_x, monty_ws);
 
-   const BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
-   const BigInt z2_inv = m_curve.invert_element(z2, monty_ws);
+   BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
+   z2 = m_curve.invert_element(z2, monty_ws);
 
    BigInt r;
-   m_curve.mul(r, m_coord_x, z2_inv, monty_ws);
+   m_curve.mul(r, m_coord_x, z2, monty_ws);
    m_curve.from_rep(r, monty_ws);
    return r;
    }

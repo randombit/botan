@@ -50,6 +50,8 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
 
       size_t get_p_words() const override { return m_p_words; }
 
+      size_t get_ws_size() const override { return 2*m_p_words + 4; }
+
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
 
       void to_curve_rep(BigInt& x, secure_vector<word>& ws) const override;
@@ -102,12 +104,12 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
       return;
       }
 
-   const size_t output_size = 2*m_p_words + 2;
-   ws.resize(2*(m_p_words+2));
+   if(ws.size() < get_ws_size())
+      ws.resize(get_ws_size());
 
+   const size_t output_size = 2*m_p_words + 2;
    if(z.size() < output_size)
       z.grow_to(output_size);
-   z.clear();
 
    bigint_mul(z.mutable_data(), z.size(),
               x.data(), x.size(), x.sig_words(),
@@ -131,13 +133,13 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
    const size_t x_sw = x.sig_words();
    BOTAN_ASSERT(x_sw <= m_p_words, "Input in range");
 
-   const size_t output_size = 2*m_p_words + 2;
+   if(ws.size() < get_ws_size())
+      ws.resize(get_ws_size());
 
-   ws.resize(2*(m_p_words+2));
+   const size_t output_size = 2*m_p_words + 2;
 
    if(z.size() < output_size)
       z.grow_to(output_size);
-   z.clear();
 
    bigint_sqr(z.mutable_data(), z.size(),
               x.data(), x.size(), x_sw,
@@ -161,6 +163,8 @@ class CurveGFp_NIST : public CurveGFp_Repr
       const BigInt& get_b() const override { return m_b; }
 
       size_t get_p_words() const override { return m_p_words; }
+
+      size_t get_ws_size() const override { return 2*m_p_words + 4; }
 
       const BigInt& get_a_rep() const override { return m_a; }
 
@@ -205,14 +209,12 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
       return;
       }
 
-   const size_t p_words = get_p_words();
-   const size_t output_size = 2*p_words + 2;
+   if(ws.size() < get_ws_size())
+      ws.resize(get_ws_size());
 
-   ws.resize(2*(p_words+2));
-
+   const size_t output_size = 2*m_p_words + 2;
    if(z.size() < output_size)
       z.grow_to(output_size);
-   z.clear();
 
    bigint_mul(z.mutable_data(), z.size(),
               x.data(), x.size(), x.sig_words(),
@@ -231,14 +233,12 @@ void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
       return;
       }
 
-   const size_t p_words = get_p_words();
-   const size_t output_size = 2*p_words + 2;
+   if(ws.size() < get_ws_size())
+      ws.resize(get_ws_size());
 
-   ws.resize(2*(p_words+2));
-
+   const size_t output_size = 2*m_p_words + 2;
    if(z.size() < output_size)
       z.grow_to(output_size);
-   z.clear();
 
    bigint_sqr(z.mutable_data(), output_size,
               x.data(), x.size(), x.sig_words(),
