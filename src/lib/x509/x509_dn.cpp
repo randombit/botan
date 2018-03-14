@@ -221,13 +221,13 @@ void X509_DN::encode_into(DER_Encoder& der) const
       {
       /*
       If we decoded this from somewhere, encode it back exactly as
-      we recieved it
+      we received it
       */
       der.raw_bytes(m_dn_bits);
       }
    else
       {
-      for(auto dn : m_dn_info)
+      for(const auto& dn : m_dn_info)
          {
          der.start_cons(SET)
             .start_cons(SEQUENCE)
