@@ -100,7 +100,7 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    {
    if(x.is_zero() || y.is_zero())
       {
-      z = 0;
+      z.clear();
       return;
       }
 
@@ -126,7 +126,7 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
    {
    if(x.is_zero())
       {
-      z = 0;
+      z.clear();
       return;
       }
 
@@ -205,7 +205,7 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    {
    if(x.is_zero() || y.is_zero())
       {
-      z = 0;
+      z.clear();
       return;
       }
 
@@ -229,7 +229,7 @@ void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
    {
    if(x.is_zero())
       {
-      z = 0;
+      z.clear();
       return;
       }
 
