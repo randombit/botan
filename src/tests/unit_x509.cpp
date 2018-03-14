@@ -1213,6 +1213,73 @@ class String_Extension final : public Botan::Certificate_Extension
       std::string m_contents;
    };
 
+Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
+                                  const std::string& sig_algo,
+                                  const std::string& sig_padding = "",
+                                  const std::string& hash_fn = "SHA-256")
+   {
+   Test::Result result("X509 Custom DN");
+
+   /* Create the self-signed cert */
+   Botan::X509_Certificate ca_cert =
+      Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, Test::rng());
+
+   /* Create the CA object */
+   Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
+
+   std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
+
+   Botan::X509_DN subject_dn;
+
+   const Botan::OID attr1(Botan::OID("1.3.6.1.4.1.25258.9.1.1"));
+   const Botan::OID attr2(Botan::OID("1.3.6.1.4.1.25258.9.1.2"));
+   const Botan::ASN1_String val1("Custom Attr 1", Botan::PRINTABLE_STRING);
+   const Botan::ASN1_String val2("12345", Botan::UTF8_STRING);
+
+   subject_dn.add_attribute(attr1, val1);
+   subject_dn.add_attribute(attr2, val2);
+
+   Botan::Extensions extensions;
+
+   Botan::PKCS10_Request req =
+      Botan::PKCS10_Request::create(*user_key,
+                                    subject_dn,
+                                    extensions,
+                                    hash_fn,
+                                    Test::rng(),
+                                    sig_padding);
+
+   Botan::X509_DN req_dn = req.subject_dn();
+
+   result.test_eq("Expected number of DN entries", req_dn.dn_info().size(), 2);
+
+   Botan::ASN1_String req_val1 = req_dn.get_first_attribute(attr1);
+   Botan::ASN1_String req_val2 = req_dn.get_first_attribute(attr2);
+   result.confirm("Attr1 matches encoded", req_val1 == val1);
+   result.confirm("Attr2 matches encoded", req_val2 == val2);
+   result.confirm("Attr1 tag matches encoded", req_val1.tagging() == val1.tagging());
+   result.confirm("Attr2 tag matches encoded", req_val2.tagging() == val2.tagging());
+
+   Botan::X509_Time not_before("100301123001Z", Botan::UTC_TIME);
+   Botan::X509_Time not_after("300301123001Z", Botan::UTC_TIME);
+
+   auto cert = ca.sign_request(req, Test::rng(), not_before, not_after);
+
+   Botan::X509_DN cert_dn = cert.subject_dn();
+
+   result.test_eq("Expected number of DN entries", cert_dn.dn_info().size(), 2);
+
+   Botan::ASN1_String cert_val1 = cert_dn.get_first_attribute(attr1);
+   Botan::ASN1_String cert_val2 = cert_dn.get_first_attribute(attr2);
+   result.confirm("Attr1 matches encoded", cert_val1 == val1);
+   result.confirm("Attr2 matches encoded", cert_val2 == val2);
+   result.confirm("Attr1 tag matches encoded", cert_val1.tagging() == val1.tagging());
+   result.confirm("Attr2 tag matches encoded", cert_val2.tagging() == val2.tagging());
+
+   return result;
+   }
+
+
 Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
                                   const std::string& sig_algo,
                                   const std::string& sig_padding = "",
@@ -1324,14 +1391,14 @@ Test::Result test_hashes(const Botan::Private_Key& key,
          {
          "Test Issuer/US/Botan Project/Testing",
          "Test Subject/US/Botan Project/Testing",
-         "E2407027922619C0673E0AA59A9CD3673730C36A39F891BCE0806D1DD225A937",
-         "42A63CB4FCCA81AC6D14D5E209B3156E033B90FF1007216927EA9324BA4EF2DB"
+         "ACB4F373004A56A983A23EB8F60FA4706312B5DB90FD978574FE7ACC84E093A5",
+         "87039231C2205B74B6F1F3830A66272C0B41F71894B03AC3150221766D95267B",
          },
          {
          "Test Subject/US/Botan Project/Testing",
          "Test Issuer/US/Botan Project/Testing",
-         "42A63CB4FCCA81AC6D14D5E209B3156E033B90FF1007216927EA9324BA4EF2DB",
-         "E2407027922619C0673E0AA59A9CD3673730C36A39F891BCE0806D1DD225A937"
+         "87039231C2205B74B6F1F3830A66272C0B41F71894B03AC3150221766D95267B",
+         "ACB4F373004A56A983A23EB8F60FA4706312B5DB90FD978574FE7ACC84E093A5",
          }
       };
 
@@ -1438,6 +1505,17 @@ class X509_Cert_Unit_Tests final : public Test
                   extensions_result.test_failure("test_extensions " + algo, e.what());
                   }
                results.push_back(extensions_result);
+
+               Test::Result custom_dn_result("X509 Custom DN");
+               try
+                  {
+                  custom_dn_result.merge(test_custom_dn_attr(*key, algo, padding_scheme));
+                  }
+               catch(std::exception& e)
+                  {
+                  custom_dn_result.test_failure("test_custom_dn_attr " + algo, e.what());
+                  }
+               results.push_back(custom_dn_result);
                }
 
             }
