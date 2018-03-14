@@ -59,7 +59,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Copy Constructor
      * @param other the BigInt to copy
      */
-     BigInt(const BigInt& other);
+     BigInt(const BigInt& other) = default;
 
      /**
      * Create BigInt from a string. If the string starts with 0x the
@@ -156,13 +156,14 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void swap(BigInt& other)
         {
-        m_reg.swap(other.m_reg);
+        m_data.swap(other.m_data);
         std::swap(m_signedness, other.m_signedness);
         }
 
      void swap_reg(secure_vector<word>& reg)
         {
-        m_reg.swap(reg);
+        m_data.swap(reg);
+        // sign left unchanged
         }
 
      /**
@@ -318,7 +319,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Zeroize the BigInt. The size of the underlying register is not
      * modified.
      */
-     void clear() { zeroise(m_reg); }
+     void clear() { m_data.set_to_zero(); }
 
      /**
      * Compare this to another BigInt
@@ -382,20 +383,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void mask_bits(size_t n)
         {
-        if(n == 0) { clear(); return; }
-
-        const size_t top_word = n / BOTAN_MP_WORD_BITS;
-        const word mask = (static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS)) - 1;
-
-        if(top_word < size())
-           {
-           const size_t len = size() - (top_word + 1);
-           if (len > 0)
-              {
-              clear_mem(&m_reg[top_word+1], len);
-              }
-           m_reg[top_word] &= mask;
-           }
+        m_data.mask_bits(n);
         }
 
      /**
@@ -451,19 +439,18 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @return value at position n
      */
      word word_at(size_t n) const
-        { return ((n < size()) ? m_reg[n] : 0); }
+        {
+        return m_data.get_word_at(n);
+        }
 
      void set_word_at(size_t i, word w)
         {
-        if(i >= m_reg.size())
-           grow_to(i + 1);
-        m_reg[i] = w;
+        m_data.set_word_at(i, w);
         }
 
      void set_words(const word w[], size_t len)
         {
-        m_reg.resize(len);
-        copy_mem(mutable_data(), w, len);
+        m_data.set_words(w, len);
         }
 
      /**
@@ -523,7 +510,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Give size of internal register
      * @result size of internal register in words
      */
-     size_t size() const { return m_reg.size(); }
+     size_t size() const { return m_data.size(); }
 
      /**
      * Return how many words we need to hold this value
@@ -531,12 +518,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      size_t sig_words() const
         {
-        const word* x = m_reg.data();
-        size_t sig = m_reg.size();
-
-        while(sig && (x[sig-1] == 0))
-           sig--;
-        return sig;
+        return m_data.sig_words();
         }
 
      /**
@@ -555,22 +537,29 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Return a mutable pointer to the register
      * @result a pointer to the start of the internal register
      */
-     word* mutable_data() { return m_reg.data(); }
+     word* mutable_data() { return m_data.mutable_data(); }
 
      /**
      * Return a const pointer to the register
      * @result a pointer to the start of the internal register
      */
-     const word* data() const { return m_reg.data(); }
+     const word* data() const { return m_data.const_data(); }
 
-     secure_vector<word>& get_word_vector() { return m_reg; }
-     const secure_vector<word>& get_word_vector() const { return m_reg; }
+     /**
+     * Don't use this function in application code
+     */
+     secure_vector<word>& get_word_vector() { return m_data.mutable_vector(); }
+
+     /**
+     * Don't use this function in application code
+     */
+     const secure_vector<word>& get_word_vector() const { return m_data.const_vector(); }
 
      /**
      * Increase internal register buffer to at least n words
      * @param n new size of register
      */
-     void grow_to(size_t n);
+     void grow_to(size_t n) { m_data.grow_to(n); }
 
      /**
      * Resize the vector to the minimum word size to hold the integer, or
@@ -578,8 +567,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void shrink_to_fit(size_t min_size = 0)
         {
-        const size_t words = std::max(min_size, sig_words());
-        m_reg.resize(words);
+        m_data.shrink_to_fit(min_size);
         }
 
      /**
@@ -822,7 +810,145 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
         size_t idx);
 
    private:
-      secure_vector<word> m_reg;
+
+     class Data
+        {
+        public:
+           word* mutable_data()
+              {
+              invalidate_sig_words();
+              return m_reg.data();
+              }
+
+           const word* const_data() const
+              {
+              return m_reg.data();
+              }
+
+           secure_vector<word>& mutable_vector()
+              {
+              invalidate_sig_words();
+              return m_reg;
+              }
+
+           const secure_vector<word>& const_vector() const
+              {
+              return m_reg;
+              }
+
+           word get_word_at(size_t n) const
+              {
+              if(n < m_reg.size())
+                 return m_reg[n];
+              return 0;
+              }
+
+           void set_word_at(size_t i, word w)
+              {
+              invalidate_sig_words();
+              if(i >= m_reg.size())
+                 grow_to(i + 1);
+              m_reg[i] = w;
+              }
+
+           void set_words(const word w[], size_t len)
+              {
+              invalidate_sig_words();
+              m_reg.assign(w, w + len);
+              }
+
+           void set_to_zero()
+              {
+              m_reg.resize(m_reg.capacity());
+              clear_mem(m_reg.data(), m_reg.size());
+              m_sig_words = 0;
+              }
+
+           void set_size(size_t s)
+              {
+              invalidate_sig_words();
+              clear_mem(m_reg.data(), m_reg.size());
+              m_reg.resize(s + (8 - (s % 8)));
+              }
+
+           void mask_bits(size_t n)
+              {
+              if(n == 0) { return set_to_zero(); }
+
+              const size_t top_word = n / BOTAN_MP_WORD_BITS;
+
+              // if(top_word < sig_words()) ?
+              if(top_word < size())
+                 {
+                 const word mask = (static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS)) - 1;
+                 const size_t len = size() - (top_word + 1);
+                 if (len > 0)
+                    {
+                    clear_mem(&m_reg[top_word+1], len);
+                    }
+                 m_reg[top_word] &= mask;
+                 invalidate_sig_words();
+                 }
+              }
+
+           void grow_to(size_t n)
+              {
+              if(n > size())
+                 {
+                 if(n <= m_reg.capacity())
+                    m_reg.resize(m_reg.capacity());
+                 else
+                    m_reg.resize(n + (8 - (n % 8)));
+                 }
+              }
+
+           size_t size() const { return m_reg.size(); }
+
+           void shrink_to_fit(size_t min_size = 0)
+              {
+              const size_t words = std::max(min_size, sig_words());
+              m_reg.resize(words);
+              }
+
+           void swap(Data& other)
+              {
+              m_reg.swap(other.m_reg);
+              std::swap(m_sig_words, other.m_sig_words);
+              }
+
+           void swap(secure_vector<word>& reg)
+              {
+              m_reg.swap(reg);
+              invalidate_sig_words();
+              }
+
+           void invalidate_sig_words() const
+              {
+              m_sig_words = sig_words_npos;
+              }
+
+           size_t sig_words() const
+              {
+              if(m_sig_words == sig_words_npos)
+                 {
+                 m_sig_words = calc_sig_words();
+                 }
+              else
+                 {
+                 BOTAN_DEBUG_ASSERT(m_sig_words == calc_sig_words());
+                 }
+              return m_sig_words;
+              }
+        private:
+           static const size_t sig_words_npos = static_cast<size_t>(-1);
+
+           size_t calc_sig_words() const;
+
+           secure_vector<word> m_reg;
+           mutable size_t m_sig_words = sig_words_npos;
+        };
+
+      Data m_data;
       Sign m_signedness = Positive;
    };
 
