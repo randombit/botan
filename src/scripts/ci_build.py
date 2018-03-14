@@ -89,7 +89,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         test_cmd = None
 
     if target == 'coverage':
-        flags += ['--with-coverage-info', '--no-optimization']
+        flags += ['--with-coverage-info']
     if target == 'valgrind':
         flags += ['--with-valgrind']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
@@ -229,7 +229,9 @@ def run_cmd(cmd, root_dir):
 
     if proc.returncode != 0:
         print("Command failed with error code %d" % (proc.returncode))
-        sys.exit(proc.returncode)
+
+        if cmd[0] not in ['lcov']:
+            sys.exit(proc.returncode)
 
 def parse_args(args):
     """
