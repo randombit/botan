@@ -18,6 +18,7 @@
 
 namespace Botan {
 
+class BigInt;
 class Private_Key;
 class PKCS10_Request;
 class PK_Signer;
@@ -38,6 +39,21 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       */
       X509_Certificate sign_request(const PKCS10_Request& req,
                                     RandomNumberGenerator& rng,
+                                    const X509_Time& not_before,
+                                    const X509_Time& not_after) const;
+
+      /**
+      * Sign a PKCS#10 Request.
+      * @param req the request to sign
+      * @param rng the rng to use
+      * @param serial_number the serial number the cert will be assigned.
+      * @param not_before the starting time for the certificate
+      * @param not_after the expiration time for the certificate
+      * @return resulting certificate
+      */
+      X509_Certificate sign_request(const PKCS10_Request& req,
+                                    RandomNumberGenerator& rng,
+                                    const BigInt& serial_number,
                                     const X509_Time& not_before,
                                     const X509_Time& not_after) const;
 
@@ -112,6 +128,31 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       */
       static X509_Certificate make_cert(PK_Signer* signer,
                                         RandomNumberGenerator& rng,
+                                        const AlgorithmIdentifier& sig_algo,
+                                        const std::vector<uint8_t>& pub_key,
+                                        const X509_Time& not_before,
+                                        const X509_Time& not_after,
+                                        const X509_DN& issuer_dn,
+                                        const X509_DN& subject_dn,
+                                        const Extensions& extensions);
+
+      /**
+      * Interface for creating new certificates
+      * @param signer a signing object
+      * @param rng a random number generator
+      * @param serial_number the serial number the cert will be assigned
+      * @param sig_algo the signature algorithm identifier
+      * @param pub_key the serialized public key
+      * @param not_before the start time of the certificate
+      * @param not_after the end time of the certificate
+      * @param issuer_dn the DN of the issuer
+      * @param subject_dn the DN of the subject
+      * @param extensions an optional list of certificate extensions
+      * @returns newly minted certificate
+      */
+      static X509_Certificate make_cert(PK_Signer* signer,
+                                        RandomNumberGenerator& rng,
+                                        const BigInt& serial_number,
                                         const AlgorithmIdentifier& sig_algo,
                                         const std::vector<uint8_t>& pub_key,
                                         const X509_Time& not_before,

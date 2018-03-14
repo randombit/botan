@@ -72,13 +72,11 @@ X509_CA::~X509_CA()
    /* for unique_ptr */
    }
 
-/*
-* Sign a PKCS #10 certificate request
-*/
-X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
-                                       RandomNumberGenerator& rng,
-                                       const X509_Time& not_before,
-                                       const X509_Time& not_after) const
+namespace {
+
+Extensions choose_extensions(const PKCS10_Request& req,
+                             const X509_Certificate& ca_cert,
+                             const std::string& hash_fn)
    {
    Key_Constraints constraints;
    if(req.is_CA())
@@ -103,14 +101,44 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       extensions.replace(new Cert_Extension::Key_Usage(constraints), true);
       }
 
-   extensions.replace(new Cert_Extension::Authority_Key_ID(m_ca_cert.subject_key_id()));
-   extensions.replace(new Cert_Extension::Subject_Key_ID(req.raw_public_key(), m_hash_fn));
+   extensions.replace(new Cert_Extension::Authority_Key_ID(ca_cert.subject_key_id()));
+   extensions.replace(new Cert_Extension::Subject_Key_ID(req.raw_public_key(), hash_fn));
 
    extensions.replace(
       new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
 
    extensions.replace(
       new Cert_Extension::Extended_Key_Usage(req.ex_constraints()));
+
+   return extensions;
+   }
+
+}
+
+X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
+                                       RandomNumberGenerator& rng,
+                                       const BigInt& serial_number,
+                                       const X509_Time& not_before,
+                                       const X509_Time& not_after) const
+   {
+   auto extensions = choose_extensions(req, m_ca_cert, m_hash_fn);
+
+   return make_cert(m_signer.get(), rng, serial_number,
+                    m_ca_sig_algo, req.raw_public_key(),
+                    not_before, not_after,
+                    m_ca_cert.subject_dn(), req.subject_dn(),
+                    extensions);
+   }
+
+/*
+* Sign a PKCS #10 certificate request
+*/
+X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
+                                       RandomNumberGenerator& rng,
+                                       const X509_Time& not_before,
+                                       const X509_Time& not_after) const
+   {
+   auto extensions = choose_extensions(req, m_ca_cert, m_hash_fn);
 
    return make_cert(m_signer.get(), rng, m_ca_sig_algo,
                     req.raw_public_key(),
@@ -119,9 +147,6 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                     extensions);
    }
 
-/*
-* Create a new certificate
-*/
 X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     RandomNumberGenerator& rng,
                                     const AlgorithmIdentifier& sig_algo,
@@ -132,10 +157,28 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     const X509_DN& subject_dn,
                                     const Extensions& extensions)
    {
-   const size_t X509_CERT_VERSION = 3;
    const size_t SERIAL_BITS = 128;
-
    BigInt serial_no(rng, SERIAL_BITS);
+
+   return make_cert(signer, rng, serial_no, sig_algo, pub_key,
+                    not_before, not_after, issuer_dn, subject_dn, extensions);
+   }
+
+/*
+* Create a new certificate
+*/
+X509_Certificate X509_CA::make_cert(PK_Signer* signer,
+                                    RandomNumberGenerator& rng,
+                                    const BigInt& serial_no,
+                                    const AlgorithmIdentifier& sig_algo,
+                                    const std::vector<uint8_t>& pub_key,
+                                    const X509_Time& not_before,
+                                    const X509_Time& not_after,
+                                    const X509_DN& issuer_dn,
+                                    const X509_DN& subject_dn,
+                                    const Extensions& extensions)
+   {
+   const size_t X509_CERT_VERSION = 3;
 
    // clang-format off
    return X509_Certificate(X509_Object::make_signed(

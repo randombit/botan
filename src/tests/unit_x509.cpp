@@ -692,11 +692,16 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
 
+   const BigInt user1_serial = 99;
+
    /* Sign the requests to create the certs */
    Botan::X509_Certificate user1_cert =
-      ca.sign_request(user1_req, Test::rng(),
+      ca.sign_request(user1_req, Test::rng(), user1_serial,
                       from_date(2008, 01, 01),
                       from_date(2033, 01, 01));
+
+   result.test_eq("User1 serial size matches expected", user1_cert.serial_number().size(), 1);
+   result.test_eq("User1 serial matches expected", user1_cert.serial_number().at(0), size_t(99));
 
    Botan::X509_Certificate user2_cert =
       ca.sign_request(user2_req, Test::rng(),
