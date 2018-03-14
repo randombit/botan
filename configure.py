@@ -1872,6 +1872,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'with_valgrind': options.with_valgrind,
         'with_openmp': options.with_openmp,
+        'with_debug_asserts': options.debug_mode,
 
         'mod_list': sorted([m.basename for m in modules])
         }

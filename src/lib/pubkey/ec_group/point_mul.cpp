@@ -90,6 +90,8 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
          R.add_affine(m_T[i], ws);
       }
 
+   BOTAN_DEBUG_ASSERT(R.on_the_curve());
+
    return R;
    }
 
@@ -159,6 +161,8 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
          windows--;
          }
       }
+
+   BOTAN_DEBUG_ASSERT(R.on_the_curve());
 
    return R;
    }

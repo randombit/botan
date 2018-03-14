@@ -126,8 +126,13 @@ BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const
 
    BigInt z(BigInt::Positive, output_size);
 
+   // assume x.sig_words() is at most p_words
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+
+   const size_t x_words = (x.size() >= m_p_words) ? m_p_words : x.sig_words();
+
    bigint_sqr(z.mutable_data(), z.size(),
-              x.data(), x.size(), x.sig_words(),
+              x.data(), x.size(), x_words,
               ws.data(), ws.size());
 
    bigint_monty_redc(z.mutable_data(),
@@ -299,8 +304,7 @@ Montgomery_Int& Montgomery_Int::square_this(secure_vector<word>& ws)
 
 Montgomery_Int Montgomery_Int::square(secure_vector<word>& ws) const
    {
-   const BigInt v = m_params->sqr(m_v, ws);
-   return Montgomery_Int(m_params, v, false);
+   return Montgomery_Int(m_params, m_params->sqr(m_v, ws), false);
    }
 
 Montgomery_Int Montgomery_Int::multiplicative_inverse() const

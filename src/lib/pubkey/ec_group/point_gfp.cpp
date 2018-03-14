@@ -423,7 +423,7 @@ PointGFp multi_exponentiate(const PointGFp& x, const BigInt& z1,
 
 PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    {
-   //BOTAN_ASSERT(point.on_the_curve(), "Input is on the curve");
+   BOTAN_DEBUG_ASSERT(point.on_the_curve());
 
    const size_t scalar_bits = scalar.bits();
 
@@ -441,7 +441,7 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    if(scalar.is_negative())
       R[0].negate();
 
-   //BOTAN_ASSERT(R[0].on_the_curve(), "Output is on the curve");
+   BOTAN_DEBUG_ASSERT(R[0].on_the_curve());
 
    return R[0];
    }

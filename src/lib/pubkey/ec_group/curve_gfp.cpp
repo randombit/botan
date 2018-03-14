@@ -119,6 +119,9 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    if(z.size() < output_size)
       z.grow_to(output_size);
 
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+   BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
+
    const size_t x_words = (x.size() >= m_p_words) ? m_p_words : x.sig_words();
    const size_t y_words = (y.size() >= m_p_words) ? m_p_words : y.sig_words();
 
