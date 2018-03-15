@@ -166,13 +166,13 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       */
       std::vector<uint8_t> DER_encode(Format format) const;
 
-      /*
+      /**
       * Reduce an integer modulo p
       * @return x % p
       */
       BigInt mod_p(const BigInt& x) const;
 
-      /*
+      /**
       * Multiply and reduce an integer modulo p
       * @return (x*y) % p
       */
@@ -180,11 +180,17 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
 
       BigInt inverse_mod_p(const BigInt& x) const;
 
-      /*
+      /**
       * Modular exponentiation
       * @return (g^x) % p
       */
       BigInt power_g_p(const BigInt& x) const;
+
+      /**
+      * Multi-exponentiate
+      * Return (g^x * y^z) % p
+      */
+      BigInt multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const;
 
       /**
       * Return the size of p in bits
