@@ -659,7 +659,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
         return group.replace(':', '_')
 
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
-    lexer.wordchars += '|:.<>/,-!+*' # handle various funky chars in info.txt
+    lexer.wordchars += ':.<>/,-!?+*' # handle various funky chars in info.txt
 
     groups = allowed_groups + allowed_maps
     for group in groups:
@@ -937,11 +937,20 @@ class ModuleInfo(InfoObject):
 
         return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_min_version)
 
-    def dependencies(self):
+    def dependencies(self, osinfo):
         # base is an implicit dep for all submodules
-        deps = self.requires + ['base']
+        deps = ['base']
         if self.parent_module != None:
             deps.append(self.parent_module)
+
+        for req in self.requires:
+            if req.find('?') != -1:
+                (cond, dep) = req.split('?')
+                if osinfo is None or cond in osinfo.target_features:
+                    deps.append(dep)
+            else:
+                deps.append(req)
+
         return deps
 
     def dependencies_exist(self, modules):
@@ -950,9 +959,9 @@ class ModuleInfo(InfoObject):
         about any that do not
         """
 
-        all_deps = [s.split('|') for s in self.dependencies()]
+        missing = [s for s in self.dependencies(None) if s not in modules]
 
-        for missing in [s for s in flatten(all_deps) if s not in modules]:
+        if missing:
             logging.error("Module '%s', dep of '%s', does not exist" % (
                 missing, self.basename))
 
@@ -1572,7 +1581,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo):
         if src in module_that_owns:
             module = module_that_owns[src]
             isas = module.need_isa
-            if 'simd' in module.dependencies():
+            if 'simd' in module.dependencies(osinfo):
                 isas.append('simd')
 
             return cc.get_isa_specific_flags(isas, arch)
@@ -2072,7 +2081,7 @@ class ModulesChooser(object):
     def _modules_dependency_table(self):
         out = {}
         for modname in self._modules:
-            out[modname] = self._modules[modname].dependencies()
+            out[modname] = self._modules[modname].dependencies(self._osinfo)
         return out
 
     def _resolve_dependencies_for_all_modules(self):

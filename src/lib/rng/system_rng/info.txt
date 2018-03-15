@@ -5,12 +5,9 @@ SYSTEM_RNG -> 20141202
 <os_features>
 dev_random,posix1
 arc4random
-crypto_ng
-cryptgenrandom
+rtlgenrandom
 </os_features>
 
-<libs>
-windows -> advapi32.lib
-winphone -> bcrypt.lib
-mingw -> advapi32
-</libs>
+<requires>
+rtlgenrandom?dyn_load
+</requires>

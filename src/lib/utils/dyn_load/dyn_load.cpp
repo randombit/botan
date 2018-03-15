@@ -71,7 +71,7 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 
    if(!addr)
       throw Exception("Failed to resolve symbol " + symbol +
-                               " in " + m_lib_name);
+                      " in " + m_lib_name);
 
    return addr;
    }

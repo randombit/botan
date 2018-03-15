@@ -11,7 +11,6 @@ doc_dir docs
 win32
 winsock2
 
-crypto_ng
 rtlsecurezeromemory
 
 threads

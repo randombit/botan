@@ -16,7 +16,7 @@ mingw32.*
 
 <target_features>
 win32
-cryptgenrandom
+rtlgenrandom
 virtual_lock
 
 threads
