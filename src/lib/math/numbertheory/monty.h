@@ -33,6 +33,13 @@ class Montgomery_Int final
                      const BigInt& v,
                      bool redc_needed = true);
 
+      /**
+      * Create a Montgomery_Int
+      */
+      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
+                     const uint8_t bits[], size_t len,
+                     bool redc_needed = true);
+
       bool operator==(const Montgomery_Int& other) const;
       bool operator!=(const Montgomery_Int& other) const { return (m_v != other.m_v); }
 
@@ -106,6 +113,12 @@ class Montgomery_Params final
       * can be shared by all values in a specific Montgomery domain.
       */
       Montgomery_Params(const BigInt& p, const Modular_Reducer& mod_p);
+
+      /**
+      * Initialize a set of Montgomery reduction parameters. These values
+      * can be shared by all values in a specific Montgomery domain.
+      */
+      Montgomery_Params(const BigInt& p);
 
       const BigInt& p() const { return m_p; }
       const BigInt& R1() const { return m_r1; }

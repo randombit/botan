@@ -27,6 +27,25 @@ Montgomery_Params::Montgomery_Params(const BigInt& p,
    m_r3 = mod_p.multiply(m_r1, m_r2);
    }
 
+Montgomery_Params::Montgomery_Params(const BigInt& p)
+   {
+
+   if(p.is_negative() || p.is_even())
+      throw Invalid_Argument("Montgomery_Params invalid modulus");
+
+   m_p = p;
+   m_p_words = m_p.sig_words();
+   m_p_dash = monty_inverse(m_p.word_at(0));
+
+   const BigInt r = BigInt::power_of_2(m_p_words * BOTAN_MP_WORD_BITS);
+
+   Modular_Reducer mod_p(p);
+
+   m_r1 = mod_p.reduce(r);
+   m_r2 = mod_p.square(m_r1);
+   m_r3 = mod_p.multiply(m_r1, m_r2);
+   }
+
 BigInt Montgomery_Params::inv_mod_p(const BigInt& x) const
    {
    return ct_inverse_mod_odd_modulus(x, p());
@@ -179,6 +198,19 @@ Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params> pa
       {
       secure_vector<word> ws;
       m_v = m_params->mul(v % m_params->p(), m_params->R2(), ws);
+      }
+   }
+
+Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
+                               const uint8_t bits[], size_t len,
+                               bool redc_needed) :
+   m_params(params),
+   m_v(bits, len)
+   {
+   if(redc_needed)
+      {
+      secure_vector<word> ws;
+      m_v = m_params->mul(m_v % m_params->p(), m_params->R2(), ws);
       }
    }
 
