@@ -8,6 +8,7 @@
 
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/rounding.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 #include <botan/monty.h>
@@ -123,6 +124,82 @@ BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state,
                      const BigInt& k)
    {
    return precomputed_state.exponentiation(k);
+   }
+
+BigInt monty_multi_exp(std::shared_ptr<const Montgomery_Params> params_p,
+                       const BigInt& x_bn,
+                       const BigInt& z1,
+                       const BigInt& y_bn,
+                       const BigInt& z2)
+   {
+   if(z1.is_negative() || z2.is_negative())
+      throw Invalid_Argument("multi_exponentiate exponents must be positive");
+
+   const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
+
+   secure_vector<word> ws;
+
+   const Montgomery_Int one(params_p, params_p->R1(), false);
+   //const Montgomery_Int one(params_p, 1);
+
+   const Montgomery_Int x1(params_p, x_bn);
+   const Montgomery_Int x2 = x1.square(ws);
+   const Montgomery_Int x3 = x2.mul(x1, ws);
+
+   const Montgomery_Int y1(params_p, y_bn);
+   const Montgomery_Int y2 = y1.square(ws);
+   const Montgomery_Int y3 = y2.mul(y1, ws);
+
+   const Montgomery_Int y1x1 = y1.mul(x1, ws);
+   const Montgomery_Int y1x2 = y1.mul(x2, ws);
+   const Montgomery_Int y1x3 = y1.mul(x3, ws);
+
+   const Montgomery_Int y2x1 = y2.mul(x1, ws);
+   const Montgomery_Int y2x2 = y2.mul(x2, ws);
+   const Montgomery_Int y2x3 = y2.mul(x3, ws);
+
+   const Montgomery_Int y3x1 = y3.mul(x1, ws);
+   const Montgomery_Int y3x2 = y3.mul(x2, ws);
+   const Montgomery_Int y3x3 = y3.mul(x3, ws);
+
+   const Montgomery_Int* M[16] = {
+      &one,
+      &x1,                    // 0001
+      &x2,                    // 0010
+      &x3,                    // 0011
+      &y1,                    // 0100
+      &y1x1,
+      &y1x2,
+      &y1x3,
+      &y2,                    // 1000
+      &y2x1,
+      &y2x2,
+      &y2x3,
+      &y3,                    // 1100
+      &y3x1,
+      &y3x2,
+      &y3x3
+   };
+
+   Montgomery_Int H = one;
+
+   for(size_t i = 0; i != z_bits; i += 2)
+      {
+      if(i > 0)
+         {
+         H.square_this(ws);
+         H.square_this(ws);
+         }
+
+      const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
+      const uint8_t z2_b = z2.get_substring(z_bits - i - 2, 2);
+
+      const uint8_t z12 = (4*z2_b) + z1_b;
+
+      H.mul_by(*M[z12], ws);
+      }
+
+   return H.value();
    }
 
 }

@@ -75,6 +75,9 @@ class Montgomery_Int final
 
       Montgomery_Int& operator*=(const secure_vector<word>& other);
 
+      Montgomery_Int mul(const Montgomery_Int& other,
+                         secure_vector<word>& ws) const;
+
       Montgomery_Int& mul_by(const Montgomery_Int& other,
                              secure_vector<word>& ws);
 

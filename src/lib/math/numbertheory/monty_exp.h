@@ -32,6 +32,15 @@ monty_precompute(std::shared_ptr<const Montgomery_Params> params_p,
 BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state,
                      const BigInt& k);
 
+/**
+* Return (x^z1 * y^z2) % p
+*/
+BigInt monty_multi_exp(std::shared_ptr<const Montgomery_Params> params_p,
+                       const BigInt& x,
+                       const BigInt& z1,
+                       const BigInt& y,
+                       const BigInt& z2);
+
 }
 
 #endif

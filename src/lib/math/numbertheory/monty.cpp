@@ -301,6 +301,12 @@ Montgomery_Int Montgomery_Int::operator*(const Montgomery_Int& other) const
    return Montgomery_Int(m_params, m_params->mul(m_v, other.m_v, ws), false);
    }
 
+Montgomery_Int Montgomery_Int::mul(const Montgomery_Int& other,
+                                   secure_vector<word>& ws) const
+   {
+   return Montgomery_Int(m_params, m_params->mul(m_v, other.m_v, ws), false);
+   }
+
 Montgomery_Int& Montgomery_Int::mul_by(const Montgomery_Int& other,
                                        secure_vector<word>& ws)
    {
