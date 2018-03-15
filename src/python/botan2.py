@@ -17,7 +17,7 @@ versions of Botan >= 2.0
 """
 
 import sys
-from ctypes import CDLL, POINTER, byref, c_void_p, c_size_t, c_uint32, c_char, c_char_p, create_string_buffer
+from ctypes import CDLL, POINTER, byref, c_void_p, c_size_t, c_uint32, c_int, c_char, c_char_p, create_string_buffer
 from binascii import hexlify
 from datetime import datetime
 import time
@@ -33,13 +33,28 @@ class BotanException(Exception):
 #
 # Module initialization
 #
-if sys.platform == 'darwin':
-    botan = CDLL('libbotan-2.dylib') # pylint: disable=invalid-name
-else:
-    botan = CDLL('libbotan-2.so') # pylint: disable=invalid-name
 
-if botan.botan_ffi_supports_api(20151015) is False:
-    raise BotanException("The Botan library does not support the FFI API expected by this version of the Python module")
+def load_botan_dll(expected_version):
+
+    possible_dll_names = ['libbotan-2.dylib', 'libbotan-2.so'] + \
+                         ['libbotan-2.so.%d' % (v) for v in reversed(range(0, 16))]
+
+    for dll_name in possible_dll_names:
+        try:
+            dll = CDLL(dll_name)
+            dll.botan_ffi_supports_api.argtypes = [c_uint32]
+            dll.botan_ffi_supports_api.restype = c_int
+            if dll.botan_ffi_supports_api(expected_version) == 1:
+                return dll
+        except OSError:
+            pass
+
+    return None
+
+botan = load_botan_dll(20150515) # pylint: disable=invalid-name
+
+if botan is None:
+    raise BotanException("Could not find a usable Botan shared object library")
 
 #
 # Internal utilities
