@@ -114,22 +114,22 @@ fuzzer_corpus_zip: fuzzer_corpus
 
 %{for lib_build_info}
 %{obj}: %{src}
-	$(CXX) %{isa_flags} $(SO_OBJ_FLAGS) $(BUILD_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(SO_OBJ_FLAGS) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
 %{obj}: %{src}
-	$(CXX) %{isa_flags} $(BUILD_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
 %{obj}: %{src}
-	$(CXX) %{isa_flags} $(BUILD_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for fuzzer_build_info}
 %{obj}: %{src}
-	$(CXX) %{isa_flags} $(BUILD_FLAGS) %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
 	$(EXE_LINK_CMD) %{obj} $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
