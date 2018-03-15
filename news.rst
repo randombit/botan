@@ -13,6 +13,8 @@ Version 2.5.0, Not Yet Released
 * Implement product scanning Montgomery reduction, which improves Diffie-Hellman
   and RSA performance by 10 to 20% on most platforms. (GH #1472)
 
+* DSA signing and verification performance has improved by 30-50%.
+
 * Add a new Credentials_Manager callback that specifies which CAs the server
   has indicated it trusts (GH #1395 fixing #1261)
 
@@ -39,6 +41,9 @@ Version 2.5.0, Not Yet Released
 * Change DL_Group and EC_Group to store their data as shared_ptr for
   fast copying. Also both classes precompute additional useful values
   (eg for modular reductions). (GH #1435 #1454)
+
+* On Windows platforms RtlGenRandom is now used in preference to CryptoAPI
+  or CryptoNG libraries. (GH #1494)
 
 * Make it possible for PKCS10 requests to include custom extensions. This also
   makes it possible to use muliple SubjectAlternativeNames of a single type in
