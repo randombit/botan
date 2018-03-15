@@ -18,10 +18,6 @@
   #include <botan/rfc6979.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-  #include <future>
-#endif
-
 namespace Botan {
 
 /*
@@ -121,16 +117,8 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    const BigInt k = BigInt::random_integer(rng, 1, q);
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-   auto future_r = std::async(std::launch::async,
-                              [&]() { return m_mod_q.reduce(m_group.power_g_p(k)); });
-
-   BigInt s = inverse_mod(k, q);
-   const BigInt r = future_r.get();
-#else
    BigInt s = inverse_mod(k, q);
    const BigInt r = m_mod_q.reduce(m_group.power_g_p(k));
-#endif
 
    s = m_mod_q.multiply(s, mul_add(m_x, r, i));
 
@@ -152,7 +140,6 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
          PK_Ops::Verification_with_EMSA(emsa),
          m_group(dsa.get_group()),
          m_y(dsa.get_y()),
-         m_powermod_y_p(m_y, dsa.group_p()),
          m_mod_q(dsa.group_q())
          {}
 
@@ -166,7 +153,6 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
       const DL_Group m_group;
       const BigInt& m_y;
 
-      Fixed_Base_Power_Mod m_powermod_y_p;
       Modular_Reducer m_mod_q;
    };
 
@@ -188,18 +174,10 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    s = inverse_mod(s, q);
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-   auto future_s_i = std::async(std::launch::async,
-                                [&]() { return m_group.power_g_p(m_mod_q.multiply(s, i)); });
+   const BigInt sr = m_mod_q.multiply(s, r);
+   const BigInt si = m_mod_q.multiply(s, i);
 
-   BigInt s_r = m_powermod_y_p(m_mod_q.multiply(s, r));
-   BigInt s_i = future_s_i.get();
-#else
-   BigInt s_r = m_powermod_y_p(m_mod_q.multiply(s, r));
-   BigInt s_i = m_group.power_g_p(m_mod_q.multiply(s, i));
-#endif
-
-   s = m_group.multiply_mod_p(s_i, s_r);
+   s = m_group.multi_exponentiate(si, m_y, sr);
 
    return (m_mod_q.reduce(s) == r);
    }
