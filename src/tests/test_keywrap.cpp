@@ -160,7 +160,7 @@ class NIST_Keywrap_Invalid_Tests final : public Text_Based_Test
 
                result.test_failure("Was able to unwrap invalid keywrap input");
                }
-            catch(Botan::Integrity_Failure)
+            catch(Botan::Integrity_Failure&)
                {
                result.test_success("Rejected invalid input");
                }

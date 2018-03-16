@@ -319,7 +319,7 @@ EC_Group::EC_Group(const std::string& str)
       if(oid.empty() == false)
          m_data = ec_group_data().lookup(oid);
       }
-   catch(Invalid_OID)
+   catch(Invalid_OID&)
       {
       }
 

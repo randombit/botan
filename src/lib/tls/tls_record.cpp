@@ -476,7 +476,7 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
                      *rec.get_type(),
                      *cs);
       }
-   catch(std::exception)
+   catch(std::exception&)
       {
       readbuf.clear();
       *rec.get_type() = NO_RECORD;

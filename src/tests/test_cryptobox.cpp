@@ -52,11 +52,11 @@ class Cryptobox_Tests final : public Test
                Botan::CryptoBox::decrypt(corrupted, password);
                result.test_failure("Decrypted corrupted cryptobox message");
                }
-            catch(Botan::Decoding_Error)
+            catch(Botan::Decoding_Error&)
                {
                result.test_success("Rejected corrupted cryptobox message");
                }
-            catch(Botan::Invalid_Argument)
+            catch(Botan::Invalid_Argument&)
                {
                result.test_success("Rejected corrupted cryptobox message");
                }

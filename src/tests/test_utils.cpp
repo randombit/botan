@@ -51,7 +51,7 @@ class Utility_Function_Tests final : public Text_Based_Test
                Botan::round_up(x, 0);
                result.test_failure("round_up did not reject invalid input");
                }
-            catch(std::exception) {}
+            catch(std::exception&) {}
             }
          else if(algo == "round_down")
             {

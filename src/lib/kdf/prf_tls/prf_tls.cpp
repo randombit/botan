@@ -29,7 +29,7 @@ void P_hash(uint8_t out[], size_t out_len,
       {
       mac.set_key(secret, secret_len);
       }
-   catch(Invalid_Key_Length)
+   catch(Invalid_Key_Length&)
       {
       throw Internal_Error("The premaster secret of " +
                            std::to_string(secret_len) +

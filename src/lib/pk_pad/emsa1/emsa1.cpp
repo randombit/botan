@@ -77,29 +77,23 @@ bool EMSA1::verify(const secure_vector<uint8_t>& input,
                    const secure_vector<uint8_t>& raw,
                    size_t key_bits)
    {
-   try {
-      if(raw.size() != m_hash->output_length())
-         throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
+   if(raw.size() != m_hash->output_length())
+      return false;
 
-      // Call emsa1_encoding to handle any required bit shifting
-      const secure_vector<uint8_t> our_coding = emsa1_encoding(raw, key_bits);
+   // Call emsa1_encoding to handle any required bit shifting
+   const secure_vector<uint8_t> our_coding = emsa1_encoding(raw, key_bits);
 
-      if(our_coding.size() < input.size())
-         return false;
+   if(our_coding.size() < input.size())
+      return false;
 
-      const size_t offset = our_coding.size() - input.size(); // must be >= 0 per check above
+   const size_t offset = our_coding.size() - input.size(); // must be >= 0 per check above
 
-      // If our encoding is longer, all the bytes in it must be zero
-      for(size_t i = 0; i != offset; ++i)
-         if(our_coding[i] != 0)
+   // If our encoding is longer, all the bytes in it must be zero
+   for(size_t i = 0; i != offset; ++i)
+      if(our_coding[i] != 0)
             return false;
 
-      return constant_time_compare(input.data(), &our_coding[offset], input.size());
-      }
-   catch(Invalid_Argument)
-      {
-      return false;
-      }
+   return constant_time_compare(input.data(), &our_coding[offset], input.size());
    }
 
 AlgorithmIdentifier EMSA1::config_for_x509(const Private_Key& key,
