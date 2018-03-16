@@ -48,6 +48,32 @@ void basecase_mul(word z[], size_t z_size,
       }
    }
 
+void basecase_sqr(word z[], size_t z_size,
+                  const word x[], size_t x_size)
+   {
+   if(z_size < 2*x_size)
+      throw Invalid_Argument("basecase_sqr z_size too small");
+
+   const size_t x_size_8 = x_size - (x_size % 8);
+
+   clear_mem(z, z_size);
+
+   for(size_t i = 0; i != x_size; ++i)
+      {
+      const word x_i = x[i];
+
+      word carry = 0;
+
+      for(size_t j = 0; j != x_size_8; j += 8)
+         carry = word8_madd3(z + i + j, x + j, x_i, carry);
+
+      for(size_t j = x_size_8; j != x_size; ++j)
+         z[i+j] = word_madd3(x[j], x_i, z[i+j], &carry);
+
+      z[x_size+i] = carry;
+      }
+   }
+
 /*
 * Karatsuba Multiplication Operation
 */
@@ -133,7 +159,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
       else if(N == 16)
          return bigint_comba_sqr16(z, x);
       else
-         return basecase_mul(z, 2*N, x, N, x, N);
+         return basecase_sqr(z, 2*N, x, N);
       }
 
    const size_t N2 = N / 2;
@@ -356,7 +382,7 @@ void bigint_sqr(word z[], size_t z_size,
       }
    else if(x_size < KARATSUBA_SQUARE_THRESHOLD || !workspace)
       {
-      basecase_mul(z, z_size, x, x_sw, x, x_sw);
+      basecase_sqr(z, z_size, x, x_sw);
       }
    else
       {
@@ -365,7 +391,7 @@ void bigint_sqr(word z[], size_t z_size,
       if(N && z_size >= 2*N && ws_size >= 2*N)
          karatsuba_sqr(z, x, N, workspace);
       else
-         basecase_mul(z, z_size, x, x_sw, x, x_sw);
+         basecase_sqr(z, z_size, x, x_sw);
       }
    }
 
