@@ -583,9 +583,14 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         __vector unsigned char perm = vec_lvsl(0, static_cast<uint32_t*>(nullptr));
-         perm = vec_xor(perm, vec_splat_u8(3));
-         return SIMD_4x32(vec_perm(m_vmx, m_vmx, perm));
+         union {
+            __vector unsigned int V;
+            uint32_t R[4];
+            } vec;
+
+         vec.V = m_vmx;
+         bswap_4(vec.R);
+         return SIMD_4x32(vec.V);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
