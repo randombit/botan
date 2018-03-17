@@ -77,16 +77,16 @@ std::string runtime_version_check(uint32_t major,
                                   uint32_t minor,
                                   uint32_t patch)
    {
-   std::ostringstream oss;
-
    if(major != version_major() || minor != version_minor() || patch != version_patch())
       {
+      std::ostringstream oss;
       oss << "Warning: linked version (" << short_version_string() << ")"
           << " does not match version built against "
           << "(" << major << '.' << minor << '.' << patch << ")\n";
+      return oss.str();
       }
 
-   return oss.str();
+   return "";
    }
 
 }
