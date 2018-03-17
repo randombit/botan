@@ -73,7 +73,7 @@ def _call_fn_returning_vec(guess, fn):
             raise BotanException("Call failed: %d" % (rc))
 
     assert buf_len.value <= len(buf)
-    return buf.raw[0:buf_len.value]
+    return buf.raw[0:int(buf_len.value)]
 
 def _call_fn_returning_string(guess, fn):
     # Assumes that anything called with this is returning plain ASCII strings
@@ -319,7 +319,7 @@ class cipher(object): # pylint: disable=invalid-name
 
         # buffering not supported yet
         assert inp_consumed.value == inp_sz.value
-        return out.raw[0:out_written.value]
+        return out.raw[0:int(out_written.value)]
 
     def update(self, txt):
         return self._update(txt, False)
@@ -341,7 +341,7 @@ def bcrypt(passwd, rng_instance, work_factor=10):
                                      rng_instance.rng, c_size_t(work_factor), flags)
     if rc != 0:
         raise BotanException('botan bcrypt failed, error %s' % (rc))
-    b = out.raw[0:out_len.value-1]
+    b = out.raw[0:int(out_len.value)-1]
     if b[-1] == '\x00':
         b = b[:-1]
     return b
@@ -379,7 +379,7 @@ def kdf(algo, secret, out_len, salt, label):
     out_sz = c_size_t(out_len)
     botan.botan_kdf(_ctype_str(algo), out_buf, out_sz, secret, len(secret),
                     salt, len(salt), label, len(label))
-    return out_buf.raw[0:out_sz.value]
+    return out_buf.raw[0:int(out_sz.value)]
 
 #
 # Public and private keys
@@ -416,7 +416,7 @@ class public_key(object): # pylint: disable=invalid-name
         buf_len = c_size_t(n)
 
         botan.botan_pubkey_fingerprint(self.pubkey, _ctype_str(hash_algorithm), buf, byref(buf_len))
-        return _hex_encode(buf[0:buf_len.value])
+        return _hex_encode(buf[0:int(buf_len.value)])
 
 class private_key(object): # pylint: disable=invalid-name
     def __init__(self, alg, param, rng_instance):
@@ -463,7 +463,7 @@ class private_key(object): # pylint: disable=invalid-name
         if rc != 0:
             buf = create_string_buffer(buf_len.value)
             botan.botan_privkey_export(self.privkey, buf, byref(buf_len))
-        return buf[0:buf_len.value]
+        return buf[0:int(buf_len.value)]
 
 class pk_op_encrypt(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
@@ -493,7 +493,7 @@ class pk_op_encrypt(object): # pylint: disable=invalid-name
         #    ll = c_size_t(ll)
         botan.botan_pk_op_encrypt(self.op, rng_instance.rng, outbuf, byref(outbuf_sz), msg, ll)
         #print("encrypt: outbuf_sz.value=%d" % outbuf_sz.value)
-        return outbuf.raw[0:outbuf_sz.value]
+        return outbuf.raw[0:int(outbuf_sz.value)]
 
 
 class pk_op_decrypt(object): # pylint: disable=invalid-name
@@ -518,7 +518,7 @@ class pk_op_decrypt(object): # pylint: disable=invalid-name
         outbuf = create_string_buffer(outbuf_sz.value)
         ll = len(msg)
         botan.botan_pk_op_decrypt(self.op, outbuf, byref(outbuf_sz), _ctype_bits(msg), ll)
-        return outbuf.raw[0:outbuf_sz.value]
+        return outbuf.raw[0:int(outbuf_sz.value)]
 
 class pk_op_sign(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
@@ -542,7 +542,7 @@ class pk_op_sign(object): # pylint: disable=invalid-name
         outbuf_sz = c_size_t(4096) #?!?!
         outbuf = create_string_buffer(outbuf_sz.value)
         botan.botan_pk_op_sign_finish(self.op, rng_instance.rng, outbuf, byref(outbuf_sz))
-        return outbuf.raw[0:outbuf_sz.value]
+        return outbuf.raw[0:int(outbuf_sz.value)]
 
 class pk_op_verify(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
