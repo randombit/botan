@@ -35,6 +35,8 @@ namespace Botan {
 */
 uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
    {
+   BOTAN_UNUSED(cache_line_size);
+
 #if defined(BOTAN_TARGET_OS_IS_DARWIN) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
    // On Darwin/OS X and OpenBSD, use sysctl
 
