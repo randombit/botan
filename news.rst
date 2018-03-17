@@ -70,6 +70,13 @@ Version 2.5.0, Not Yet Released
 * Remove use of CPU specific optimization flags, instead the user should set
   these via CXXFLAGS if desired. (GH #1392)
 
+* Resolve an issue that would cause a crash in the tests if they were run on
+  a machine without SSE2/NEON/VMX instructions. (GH #1495)
+
+* The Python module now tries to load DLLs from a list of names and
+  uses the first one which successfully loads and indicates it
+  supports the desired API level. (GH #1497)
+
 * Various minor optimizations for SHA-3 (GH #1433 #1434)
 
 * The output of ``botan --help`` has been improved (GH #1387)
