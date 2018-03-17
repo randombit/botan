@@ -10,6 +10,7 @@
 #include <botan/version.h>
 #include <botan/rotate.h>
 #include <botan/loadstor.h>
+#include <botan/cpuid.h>
 
 namespace Botan_Tests {
 
@@ -249,7 +250,11 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
 
       try
          {
-         if(Test* test = Test::get_test(test_name))
+         if(test_name == "simd_32" && Botan::CPUID::has_simd_32() == false)
+            {
+            results.push_back(Test::Result::Note(test_name, "SIMD not available on this platform"));
+            }
+         else if(Test* test = Test::get_test(test_name))
             {
             std::vector<Test::Result> test_results = test->run();
             results.insert(results.end(), test_results.begin(), test_results.end());
