@@ -278,7 +278,9 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          {
          if(g_processor_features == 0)
             initialize();
-         return ((g_processor_features & static_cast<uint64_t>(elem)) != 0);
+
+         const uint64_t elem64 = static_cast<uint64_t>(elem);
+         return ((g_processor_features & elem64) == elem64);
          }
 
       static std::vector<CPUID::CPUID_bits> bit_from_string(const std::string& tok);
