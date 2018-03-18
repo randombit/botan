@@ -590,7 +590,7 @@ class SIMD_4x32 final
 
          vec.V = m_vmx;
          bswap_4(vec.R);
-         return SIMD_4x32(vec.V);
+         return SIMD_4x32(vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
