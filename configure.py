@@ -1105,12 +1105,14 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             return self.isa_flags[arch_isa]
         return None
 
-    def get_isa_specific_flags(self, isas, arch):
+    def get_isa_specific_flags(self, isas, arch, options):
         flags = set()
 
         def simd32_impl():
             for simd_isa in ['sse2', 'altivec', 'neon']:
-                if simd_isa in arch.isa_extensions and self.isa_flags_for(simd_isa, arch.basename):
+                if simd_isa in arch.isa_extensions and \
+                   simd_isa not in options.disable_intrinsics and \
+                   self.isa_flags_for(simd_isa, arch.basename):
                     return simd_isa
             return None
 
@@ -1563,7 +1565,7 @@ def yield_objectfile_list(sources, obj_dir, obj_suffix):
         name = name.replace('.cpp', obj_suffix)
         yield os.path.join(obj_dir, name)
 
-def generate_build_info(build_paths, modules, cc, arch, osinfo):
+def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
     # pylint: disable=too-many-locals
 
     # first create a map of src_file->owning module
@@ -1576,7 +1578,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo):
 
     def _isa_specific_flags(src):
         if os.path.basename(src) == 'test_simd.cpp':
-            return cc.get_isa_specific_flags(['simd'], arch)
+            return cc.get_isa_specific_flags(['simd'], arch, options)
 
         if src in module_that_owns:
             module = module_that_owns[src]
@@ -1584,11 +1586,11 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo):
             if 'simd' in module.dependencies(osinfo):
                 isas.append('simd')
 
-            return cc.get_isa_specific_flags(isas, arch)
+            return cc.get_isa_specific_flags(isas, arch, options)
 
         if src.startswith('botan_all_'):
             isas = src.replace('botan_all_', '').replace('.cpp', '').split('_')
-            return cc.get_isa_specific_flags(isas, arch)
+            return cc.get_isa_specific_flags(isas, arch, options)
 
         return ''
 
@@ -2914,7 +2916,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
         build_paths.lib_sources = amalg_cpp_files
         template_vars['generated_files'] = ' '.join(amalg_cpp_files + amalg_headers)
 
-    template_vars.update(generate_build_info(build_paths, using_mods, cc, arch, osinfo))
+    template_vars.update(generate_build_info(build_paths, using_mods, cc, arch, osinfo, options))
 
     with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
