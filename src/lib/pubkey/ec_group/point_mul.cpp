@@ -43,9 +43,9 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
    * the size of the prime modulus. In all cases they are at most 1 bit
    * longer. The +1 compensates for this.
    */
-   m_T_bits = round_up(p_bits + PointGFp_SCALAR_BLINDING_BITS + 1, 2);
+   const size_t T_bits = round_up(p_bits + PointGFp_SCALAR_BLINDING_BITS + 1, 2) / 2;
 
-   m_T.resize(3*m_T_bits);
+   m_T.resize(3*T_bits);
 
    m_T[0] = base;
    m_T[1] = m_T[0];
@@ -53,7 +53,7 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
    m_T[2] = m_T[1];
    m_T[2].add(m_T[0], ws);
 
-   for(size_t i = 1; i != m_T_bits; ++i)
+   for(size_t i = 1; i != T_bits; ++i)
       {
       m_T[3*i+0] = m_T[3*i - 2];
       m_T[3*i+0].mult2(ws);
@@ -78,17 +78,15 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS, false);
    const BigInt scalar = k + group_order * mask;
 
-   const size_t scalar_bits = scalar.bits();
+   size_t windows = round_up(scalar.bits(), 2) / 2;
 
-   BOTAN_ASSERT(scalar_bits <= m_T_bits,
+   BOTAN_ASSERT(windows <= m_T.size() / 3,
                 "Precomputed sufficient values for scalar mult");
-
-   PointGFp R = m_T[0].zero();
 
    if(ws.size() < PointGFp::WORKSPACE_SIZE)
       ws.resize(PointGFp::WORKSPACE_SIZE);
 
-   size_t windows = round_up(scalar_bits, 2) / 2;
+   PointGFp R = m_T[0].zero();
 
    for(size_t i = 0; i != windows; ++i)
       {

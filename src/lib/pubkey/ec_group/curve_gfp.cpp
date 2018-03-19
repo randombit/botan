@@ -106,12 +106,6 @@ void CurveGFp_Montgomery::from_curve_rep(BigInt& z, secure_vector<word>& ws) con
 void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
                                     secure_vector<word>& ws) const
    {
-   if(x.is_zero() || y.is_zero())
-      {
-      z.clear();
-      return;
-      }
-
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
@@ -138,12 +132,6 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
 void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
                                     secure_vector<word>& ws) const
    {
-   if(x.is_zero())
-      {
-      z.clear();
-      return;
-      }
-
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
@@ -215,12 +203,6 @@ BigInt CurveGFp_NIST::invert_element(const BigInt& x, secure_vector<word>& ws) c
 void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
                               secure_vector<word>& ws) const
    {
-   if(x.is_zero() || y.is_zero())
-      {
-      z.clear();
-      return;
-      }
-
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
@@ -242,12 +224,6 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
 void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
                               secure_vector<word>& ws) const
    {
-   if(x.is_zero())
-      {
-      z.clear();
-      return;
-      }
-
    if(ws.size() < get_ws_size())
       ws.resize(get_ws_size());
 
