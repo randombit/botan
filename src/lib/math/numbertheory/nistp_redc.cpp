@@ -70,7 +70,7 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
       * Otherwise we must reduce if p is exactly 2^512-1
       */
 
-      word possibly_521 = MP_WORD_MAX;;
+      word possibly_521 = MP_WORD_MAX;
       for(size_t i = 0; i != p_full_words; ++i)
          possibly_521 &= x.word_at(i);
 

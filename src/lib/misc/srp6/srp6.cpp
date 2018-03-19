@@ -137,7 +137,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 
    const BigInt k = hash_seq(hash_id, m_p_bytes, p, g);
 
-   m_B = group.mod_p(v*k + group.power_g_p(m_b));;
+   m_B = group.mod_p(v*k + group.power_g_p(m_b));
 
    return m_B;
    }

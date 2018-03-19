@@ -42,7 +42,7 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<c
 
    m_g.reserve(window_size);
 
-   m_g.push_back(Montgomery_Int(m_params, m_params->R1(), false));;
+   m_g.push_back(Montgomery_Int(m_params, m_params->R1(), false));
 
    m_g.push_back(Montgomery_Int(m_params, g));
 

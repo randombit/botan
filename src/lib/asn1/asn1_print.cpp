@@ -236,7 +236,7 @@ void ASN1_Formatter::decode(std::ostream& output,
       else
          {
          output << "Unknown ASN.1 tag class=" << static_cast<int>(class_tag)
-                << " type=" << static_cast<int>(type_tag) << "\n";;
+                << " type=" << static_cast<int>(type_tag) << "\n";
          }
 
       obj = decoder.get_next_object();

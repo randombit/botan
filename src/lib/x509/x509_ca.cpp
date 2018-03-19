@@ -208,7 +208,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
          .end_explicit()
       .end_cons()
       .get_contents()
-      ));;
+      ));
    // clang-format on
    }
 
