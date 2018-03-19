@@ -42,6 +42,22 @@ class PointGFp_Var_Point_Precompute
       std::vector<PointGFp> m_U;
    };
 
+class PointGFp_Multi_Point_Precompute
+   {
+   public:
+      PointGFp_Multi_Point_Precompute(const PointGFp& g1,
+                                      const PointGFp& g2);
+
+      /*
+      * Return (g1*k1 + g2*k2)
+      * Not constant time, intended to use with public inputs
+      */
+      PointGFp multi_exp(const BigInt& k1,
+                         const BigInt& k2) const;
+   private:
+      std::vector<PointGFp> m_M;
+   };
+
 }
 
 #endif

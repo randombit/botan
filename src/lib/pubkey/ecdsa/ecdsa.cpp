@@ -10,6 +10,7 @@
 
 #include <botan/ecdsa.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/point_mul.h>
 #include <botan/keypair.h>
 #include <botan/reducer.h>
 #include <botan/emsa.h>
@@ -112,7 +113,7 @@ class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
                                    const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
          m_group(ecdsa.domain()),
-         m_public_point(ecdsa.public_point())
+         m_gy_mul(m_group.get_base_point(), ecdsa.public_point())
          {
          }
 
@@ -124,7 +125,7 @@ class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
                   const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp& m_public_point;
+      const PointGFp_Multi_Point_Precompute m_gy_mul;
    };
 
 bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
@@ -145,7 +146,7 @@ bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    const BigInt u1 = m_group.multiply_mod_order(e, w);
    const BigInt u2 = m_group.multiply_mod_order(r, w);
-   const PointGFp R = m_group.point_multiply(u1, m_public_point, u2);
+   const PointGFp R = m_gy_mul.multi_exp(u1, u2);
 
    if(R.is_zero())
       return false;

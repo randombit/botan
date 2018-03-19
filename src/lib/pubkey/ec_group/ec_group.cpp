@@ -473,7 +473,8 @@ PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
 
 PointGFp EC_Group::point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const
    {
-   return multi_exponentiate(get_base_point(), x, pt, y);
+   PointGFp_Multi_Point_Precompute xy_mul(get_base_point(), pt);
+   return xy_mul.multi_exp(x, y);
    }
 
 PointGFp EC_Group::blinded_base_point_multiply(const BigInt& k,

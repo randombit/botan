@@ -10,6 +10,13 @@
 
 namespace Botan {
 
+PointGFp multi_exponentiate(const PointGFp& x, const BigInt& z1,
+                            const PointGFp& y, const BigInt& z2)
+   {
+   PointGFp_Multi_Point_Precompute xy_mul(x, y);
+   return xy_mul.multi_exp(z1, z2);
+   }
+
 Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base,
                                                const BigInt& order,
                                                size_t h) :
@@ -176,6 +183,80 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
    BOTAN_DEBUG_ASSERT(R.on_the_curve());
 
    return R;
+   }
+
+
+PointGFp_Multi_Point_Precompute::PointGFp_Multi_Point_Precompute(const PointGFp& x,
+                                                                 const PointGFp& y)
+   {
+   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+
+   PointGFp x2 = x;
+   x2.mult2(ws);
+
+   const PointGFp x3(x2.plus(x, ws));
+
+   PointGFp y2 = y;
+   y2.mult2(ws);
+
+   const PointGFp y3(y2.plus(y, ws));
+
+   m_M.reserve(15);
+
+   m_M.push_back(x);
+   m_M.push_back(x2);
+   m_M.push_back(x3);
+
+   m_M.push_back(y);
+   m_M.push_back(y.plus(x, ws));
+   m_M.push_back(y.plus(x2, ws));
+   m_M.push_back(y.plus(x3, ws));
+
+   m_M.push_back(y2);
+   m_M.push_back(y2.plus(x, ws));
+   m_M.push_back(y2.plus(x2, ws));
+   m_M.push_back(y2.plus(x3, ws));
+
+   m_M.push_back(y3);
+   m_M.push_back(y3.plus(x, ws));
+   m_M.push_back(y3.plus(x2, ws));
+   m_M.push_back(y3.plus(x3, ws));
+
+   PointGFp::force_all_affine(m_M, ws[0].get_word_vector());
+   }
+
+PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
+                                                    const BigInt& z2) const
+   {
+   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+
+   const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
+
+   PointGFp H = m_M[0].zero();
+
+   for(size_t i = 0; i != z_bits; i += 2)
+      {
+      if(i > 0)
+         {
+         H.mult2(ws);
+         H.mult2(ws);
+         }
+
+      const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
+      const uint8_t z2_b = z2.get_substring(z_bits - i - 2, 2);
+
+      const uint8_t z12 = (4*z2_b) + z1_b;
+
+      if(z12)
+         {
+         H.add_affine(m_M[z12-1], ws);
+         }
+      }
+
+   if(z1.is_negative() != z2.is_negative())
+      H.negate();
+
+   return H;
    }
 
 }

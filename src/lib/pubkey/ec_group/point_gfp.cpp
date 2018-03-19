@@ -361,66 +361,6 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    return *this;
    }
 
-PointGFp multi_exponentiate(const PointGFp& x, const BigInt& z1,
-                            const PointGFp& y, const BigInt& z2)
-   {
-   const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
-
-   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
-
-   PointGFp x2 = x;
-   x2.mult2(ws);
-
-   const PointGFp x3(x2.plus(x, ws));
-
-   PointGFp y2 = y;
-   y2.mult2(ws);
-
-   const PointGFp y3(y2.plus(y, ws));
-
-   const PointGFp M[16] = {
-      x.zero(),        // 0000
-      x,               // 0001
-      x2,              // 0010
-      x3,              // 0011
-      y,               // 0100
-      y.plus(x, ws),   // 0101
-      y.plus(x2, ws),  // 0110
-      y.plus(x3, ws),  // 0111
-      y2,              // 1000
-      y2.plus(x, ws),  // 1001
-      y2.plus(x2, ws), // 1010
-      y2.plus(x3, ws), // 1011
-      y3,              // 1100
-      y3.plus(x, ws),  // 1101
-      y3.plus(x2, ws), // 1110
-      y3.plus(x3, ws), // 1111
-   };
-
-   PointGFp H = x.zero();
-
-   for(size_t i = 0; i != z_bits; i += 2)
-      {
-      if(i > 0)
-         {
-         H.mult2(ws);
-         H.mult2(ws);
-         }
-
-      const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
-      const uint8_t z2_b = z2.get_substring(z_bits - i - 2, 2);
-
-      const uint8_t z12 = (4*z2_b) + z1_b;
-
-      H.add(M[z12], ws);
-      }
-
-   if(z1.is_negative() != z2.is_negative())
-      H.negate();
-
-   return H;
-   }
-
 PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    {
    BOTAN_DEBUG_ASSERT(point.on_the_curve());
