@@ -163,7 +163,11 @@ class Timer final
                }
             ~Timer_Scope()
                {
-               m_timer.stop();
+               try
+                  {
+                  m_timer.stop();
+                  }
+               catch(...) {}
                }
          private:
             Timer& m_timer;
