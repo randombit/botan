@@ -118,6 +118,17 @@ int32_t BigInt::cmp(const BigInt& other, bool check_signs) const
                      other.data(), other.sig_words());
    }
 
+void BigInt::encode_words(word out[], size_t size) const
+   {
+   const size_t words = sig_words();
+
+   if(words > size)
+      throw Encoding_Error("BigInt::encode_words value too large to encode");
+
+   clear_mem(out, size);
+   copy_mem(out, data(), words);
+   }
+
 /*
 * Return bits {offset...offset+length}
 */

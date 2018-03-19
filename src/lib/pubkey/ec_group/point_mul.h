@@ -23,7 +23,14 @@ class PointGFp_Base_Point_Precompute
                    const BigInt& group_order,
                    std::vector<BigInt>& ws) const;
    private:
-      std::vector<PointGFp> m_T;
+      const PointGFp& m_base_point;
+      const size_t m_p_words;
+      const size_t m_T_size;
+
+      /*
+      * This is a table of T_size * 3*p_word words
+      */
+      std::vector<word> m_W;
    };
 
 class PointGFp_Var_Point_Precompute

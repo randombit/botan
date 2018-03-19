@@ -537,6 +537,12 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      size_t encoded_size(Base base = Binary) const;
 
      /**
+     * Place the value into out, zero-padding up to size words
+     * Throw if *this cannot be represented in size words
+     */
+     void encode_words(word out[], size_t size) const;
+
+     /**
      * @param rng a random number generator
      * @param min the minimum value
      * @param max the maximum value

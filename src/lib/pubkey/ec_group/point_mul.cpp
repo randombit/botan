@@ -38,8 +38,10 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar,
    return m_point_mul->mul(scalar, rng, m_order, m_ws);
    }
 
-
-PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& base)
+PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& base) :
+   m_base_point(base),
+   m_p_words(base.get_curve().get_p().size()),
+   m_T_size(base.get_curve().get_p().bits() + PointGFp_SCALAR_BLINDING_BITS + 1)
    {
    std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
 
@@ -52,25 +54,37 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
    */
    const size_t T_bits = round_up(p_bits + PointGFp_SCALAR_BLINDING_BITS + 1, 2) / 2;
 
-   m_T.resize(3*T_bits);
+   std::vector<PointGFp> T(3*T_bits);
+   T.resize(3*T_bits);
 
-   m_T[0] = base;
-   m_T[1] = m_T[0];
-   m_T[1].mult2(ws);
-   m_T[2] = m_T[1];
-   m_T[2].add(m_T[0], ws);
+   T[0] = base;
+   T[1] = T[0];
+   T[1].mult2(ws);
+   T[2] = T[1];
+   T[2].add(T[0], ws);
 
    for(size_t i = 1; i != T_bits; ++i)
       {
-      m_T[3*i+0] = m_T[3*i - 2];
-      m_T[3*i+0].mult2(ws);
-      m_T[3*i+1] = m_T[3*i+0];
-      m_T[3*i+1].mult2(ws);
-      m_T[3*i+2] = m_T[3*i+1];
-      m_T[3*i+2].add(m_T[3*i+0], ws);
+      T[3*i+0] = T[3*i - 2];
+      T[3*i+0].mult2(ws);
+      T[3*i+1] = T[3*i+0];
+      T[3*i+1].mult2(ws);
+      T[3*i+2] = T[3*i+1];
+      T[3*i+2].add(T[3*i+0], ws);
       }
 
-   PointGFp::force_all_affine(m_T, ws[0].get_word_vector());
+   PointGFp::force_all_affine(T, ws[0].get_word_vector());
+
+   m_W.resize(T.size() * 2 * m_p_words);
+
+   word* p = &m_W[0];
+   for(size_t i = 0; i != T.size(); ++i)
+      {
+      T[i].get_x().encode_words(p, m_p_words);
+      p += m_p_words;
+      T[i].get_y().encode_words(p, m_p_words);
+      p += m_p_words;
+      }
    }
 
 PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
@@ -87,13 +101,13 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
 
    size_t windows = round_up(scalar.bits(), 2) / 2;
 
-   BOTAN_ASSERT(windows <= m_T.size() / 3,
+   BOTAN_ASSERT(windows <= m_W.size() / (3*2*m_p_words),
                 "Precomputed sufficient values for scalar mult");
+
+   PointGFp R = m_base_point.zero();
 
    if(ws.size() < PointGFp::WORKSPACE_SIZE)
       ws.resize(PointGFp::WORKSPACE_SIZE);
-
-   PointGFp R = m_T[0].zero();
 
    for(size_t i = 0; i != windows; ++i)
       {
@@ -105,7 +119,11 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
       const uint32_t w = scalar.get_substring(2*i, 2);
 
       if(w > 0)
-         R.add_affine(m_T[3*i + w - 1], ws);
+         {
+         const size_t idx = (3*i + w - 1)*2*m_p_words;
+         R.add_affine(&m_W[idx], m_p_words,
+                      &m_W[idx + m_p_words], m_p_words, ws);
+         }
       }
 
    BOTAN_DEBUG_ASSERT(R.on_the_curve());

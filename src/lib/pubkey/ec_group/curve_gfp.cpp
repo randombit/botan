@@ -1,6 +1,6 @@
 /*
 * Elliptic curves over GF(p) Montgomery Representation
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2018 Jack Lloyd
 *     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -60,6 +60,12 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
 
       void curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
                      secure_vector<word>& ws) const override;
+
+      void curve_mul_words(BigInt& z,
+                           const word x_words[],
+                           const size_t x_size,
+                           const BigInt& y,
+                           secure_vector<word>& ws) const override;
 
       void curve_sqr(BigInt& z, const BigInt& x,
                      secure_vector<word>& ws) const override;
@@ -129,6 +135,34 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
                      ws.data(), ws.size());
    }
 
+void CurveGFp_Montgomery::curve_mul_words(BigInt& z,
+                                          const word x_w[],
+                                          size_t x_size,
+                                          const BigInt& y,
+                                          secure_vector<word>& ws) const
+   {
+   if(ws.size() < get_ws_size())
+      ws.resize(get_ws_size());
+
+   const size_t output_size = 2*m_p_words + 2;
+   if(z.size() < output_size)
+      z.grow_to(output_size);
+
+   BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
+
+   const size_t x_words = (x_size >= m_p_words) ? m_p_words : x_size;
+   const size_t y_words = (y.size() >= m_p_words) ? m_p_words : y.sig_words();
+
+   bigint_mul(z.mutable_data(), z.size(),
+              x_w, x_size, x_words,
+              y.data(), y.size(), y_words,
+              ws.data(), ws.size());
+
+   bigint_monty_redc(z.mutable_data(),
+                     m_p.data(), m_p_words, m_p_dash,
+                     ws.data(), ws.size());
+   }
+
 void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
                                     secure_vector<word>& ws) const
    {
@@ -183,6 +217,12 @@ class CurveGFp_NIST : public CurveGFp_Repr
       void curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
                      secure_vector<word>& ws) const override;
 
+      void curve_mul_words(BigInt& z,
+                           const word x_words[],
+                           const size_t x_size,
+                           const BigInt& y,
+                           secure_vector<word>& ws) const override;
+
       void curve_sqr(BigInt& z, const BigInt& x,
                      secure_vector<word>& ws) const override;
    private:
@@ -215,6 +255,30 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
 
    bigint_mul(z.mutable_data(), z.size(),
               x.data(), x.size(), x_words,
+              y.data(), y.size(), y_words,
+              ws.data(), ws.size());
+
+   this->redc(z, ws);
+   }
+
+void CurveGFp_NIST::curve_mul_words(BigInt& z,
+                                    const word x_w[],
+                                    size_t x_size,
+                                    const BigInt& y,
+                                    secure_vector<word>& ws) const
+   {
+   if(ws.size() < get_ws_size())
+      ws.resize(get_ws_size());
+
+   const size_t output_size = 2*m_p_words + 2;
+   if(z.size() < output_size)
+      z.grow_to(output_size);
+
+   const size_t x_words = (x_size >= m_p_words) ? m_p_words : x_size;
+   const size_t y_words = (y.size() >= m_p_words) ? m_p_words : y.sig_words();
+
+   bigint_mul(z.mutable_data(), z.size(),
+              x_w, x_size, x_words,
               y.data(), y.size(), y_words,
               ws.data(), ws.size());
 

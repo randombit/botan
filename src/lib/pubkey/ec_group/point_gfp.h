@@ -148,6 +148,10 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       */
       BigInt get_affine_y() const;
 
+      const BigInt& get_x() const { return m_coord_x; }
+      const BigInt& get_y() const { return m_coord_y; }
+      const BigInt& get_z() const { return m_coord_z; }
+
       /**
       * Force this point to affine coordinates
       */
@@ -210,6 +214,10 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
       void add_affine(const PointGFp& other, std::vector<BigInt>& workspace);
+
+      void add_affine(const word x_words[], size_t x_size,
+                      const word y_words[], size_t y_size,
+                      std::vector<BigInt>& workspace);
 
       /**
       * Point doubling

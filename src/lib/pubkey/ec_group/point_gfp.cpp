@@ -79,23 +79,42 @@ inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size)
          ws_bn[i].get_word_vector().resize(cap_size);
    }
 
+inline bool all_zeros(const word x[], size_t len)
+   {
+   word z = 0;
+   for(size_t i = 0; i != len; ++i)
+      z |= x[i];
+   return (z == 0);
+   }
 
 }
 
-void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
+void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& workspace)
    {
-   if(rhs.is_zero())
+   BOTAN_DEBUG_ASSERT(rhs.is_affine());
+
+   const size_t p_words = m_curve.get_p_words();
+   add_affine(rhs.m_coord_x.data(), std::min(p_words, rhs.m_coord_x.size()),
+              rhs.m_coord_y.data(), std::min(p_words, rhs.m_coord_y.size()),
+              workspace);
+   }
+
+void PointGFp::add_affine(const word x_words[], size_t x_size,
+                          const word y_words[], size_t y_size,
+                          std::vector<BigInt>& ws_bn)
+   {
+   if(all_zeros(x_words, x_size) && all_zeros(y_words, y_size))
       return;
 
    if(is_zero())
       {
-      m_coord_x = rhs.m_coord_x;
-      m_coord_y = rhs.m_coord_y;
-      m_coord_z = rhs.m_coord_z;
+      // FIXME avoid the copy here
+      m_coord_x = BigInt(x_words, x_size);
+      m_coord_y = BigInt(y_words, y_size);
+      m_coord_z = 1;
+      m_curve.to_rep(m_coord_z, ws_bn[0].get_word_vector());
       return;
       }
-
-   //BOTAN_ASSERT(rhs.is_affine(), "PointGFp::add_affine requires arg be affine point");
 
    resize_ws(ws_bn, m_curve.get_ws_size());
 
@@ -115,10 +134,10 @@ void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    const BigInt& p = m_curve.get_p();
 
    m_curve.sqr(T3, m_coord_z, ws); // z1^2
-   m_curve.mul(T4, rhs.m_coord_x, T3, ws); // x2*z1^2
+   m_curve.mul(T4, x_words, x_size, T3, ws); // x2*z1^2
 
    m_curve.mul(T2, m_coord_z, T3, ws); // z1^3
-   m_curve.mul(T0, rhs.m_coord_y, T2, ws); // y2*z1^3
+   m_curve.mul(T0, y_words, y_size, T2, ws); // y2*z1^3
 
    T4 -= m_coord_x; // x2*z1^2 - x1*z2^2
    if(T4.is_negative())
