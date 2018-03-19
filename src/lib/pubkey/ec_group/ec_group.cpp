@@ -115,6 +115,14 @@ class EC_Group_Data_Map final
    public:
       EC_Group_Data_Map() {}
 
+      size_t clear()
+         {
+         lock_guard_type<mutex_type> lock(m_mutex);
+         size_t count = m_registered_curves.size();
+         m_registered_curves.clear();
+         return count;
+         }
+
       std::shared_ptr<EC_Group_Data> lookup(const OID& oid)
          {
          lock_guard_type<mutex_type> lock(m_mutex);
@@ -215,6 +223,12 @@ EC_Group_Data_Map& EC_Group::ec_group_data()
    static Allocator_Initializer g_init_allocator;
    static EC_Group_Data_Map g_ec_data;
    return g_ec_data;
+   }
+
+//static
+size_t EC_Group::clear_registered_curve_data()
+   {
+   return ec_group_data().clear();
    }
 
 //static
