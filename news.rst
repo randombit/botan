@@ -6,7 +6,7 @@ Version 2.5.0, Not Yet Released
 
 * Add support for RSA-PSS signatures in TLS (GH #1285)
 
-* Many optimizations in ECC operations. ECDSA signatures are 6-8 times faster.
+* Many optimizations in ECC operations. ECDSA signatures are 8-10 times faster.
   ECDSA verification is about twice as fast. ECDH key agreement is 3-4 times
   faster. (GH #1457 #1478)
 

@@ -23,6 +23,7 @@ class PointGFp_Base_Point_Precompute
                    const BigInt& group_order,
                    std::vector<BigInt>& ws) const;
    private:
+      size_t m_T_bits;
       std::vector<PointGFp> m_T;
    };
 

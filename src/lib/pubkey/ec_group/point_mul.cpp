@@ -43,14 +43,24 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
    * the size of the prime modulus. In all cases they are at most 1 bit
    * longer. The +1 compensates for this.
    */
-   const size_t T_bits = p_bits + PointGFp_SCALAR_BLINDING_BITS + 1;
+   m_T_bits = round_up(p_bits + PointGFp_SCALAR_BLINDING_BITS + 1, 2);
 
-   m_T.push_back(base);
+   m_T.resize(3*m_T_bits);
 
-   for(size_t i = 1; i != T_bits; ++i)
+   m_T[0] = base;
+   m_T[1] = m_T[0];
+   m_T[1].mult2(ws);
+   m_T[2] = m_T[1];
+   m_T[2].add(m_T[0], ws);
+
+   for(size_t i = 1; i != m_T_bits; ++i)
       {
-      m_T.push_back(m_T[i-1]);
-      m_T[i].mult2(ws);
+      m_T[3*i+0] = m_T[3*i - 2];
+      m_T[3*i+0].mult2(ws);
+      m_T[3*i+1] = m_T[3*i+0];
+      m_T[3*i+1].mult2(ws);
+      m_T[3*i+2] = m_T[3*i+1];
+      m_T[3*i+2].add(m_T[3*i+0], ws);
       }
 
    PointGFp::force_all_affine(m_T, ws[0].get_word_vector());
@@ -70,7 +80,7 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
 
    const size_t scalar_bits = scalar.bits();
 
-   BOTAN_ASSERT(scalar_bits <= m_T.size(),
+   BOTAN_ASSERT(scalar_bits <= m_T_bits,
                 "Precomputed sufficient values for scalar mult");
 
    PointGFp R = m_T[0].zero();
@@ -78,16 +88,19 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    if(ws.size() < PointGFp::WORKSPACE_SIZE)
       ws.resize(PointGFp::WORKSPACE_SIZE);
 
-   for(size_t i = 0; i != scalar_bits; ++i)
+   size_t windows = round_up(scalar_bits, 2) / 2;
+
+   for(size_t i = 0; i != windows; ++i)
       {
-      //if(i % 4 == 3)
       if(i == 4)
          {
          R.randomize_repr(rng, ws[0].get_word_vector());
          }
 
-      if(scalar.get_bit(i))
-         R.add_affine(m_T[i], ws);
+      const uint32_t w = scalar.get_substring(2*i, 2);
+
+      if(w > 0)
+         R.add_affine(m_T[3*i + w - 1], ws);
       }
 
    BOTAN_DEBUG_ASSERT(R.on_the_curve());
