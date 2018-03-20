@@ -26,6 +26,7 @@ Ciphers, Hashes, PBKDF
 * PMAC
 * Extend Cascade_Cipher to support arbitrary number of ciphers
 * EME* tweakable block cipher (https://eprint.iacr.org/2004/125.pdf)
+* FFX format preserving encryption (NIST 800-38G)
 
 Public Key Crypto, Math
 ----------------------------------------
