@@ -1432,7 +1432,7 @@ class X509_Cert_Unit_Tests final : public Test
          {
          std::vector<Test::Result> results;
 
-         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10" };
+         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519" };
 
          for(const std::string& algo : sig_algos)
             {

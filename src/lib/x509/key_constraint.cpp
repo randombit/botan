@@ -84,7 +84,9 @@ void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
       permitted |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
       }
 
-   if(name == "RSA" || name == "DSA" || name == "ECDSA" || name == "ECGDSA" || name == "ECKCDSA" || name == "GOST-34.10")
+   if(name == "RSA" || name == "DSA" ||
+      name == "ECDSA" || name == "ECGDSA" || name == "ECKCDSA" || name == "GOST-34.10" ||
+      name == "Ed25519")
       {
       permitted |= DIGITAL_SIGNATURE | NON_REPUDIATION | KEY_CERT_SIGN | CRL_SIGN;
       }
