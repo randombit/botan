@@ -58,6 +58,9 @@ default-debug -> "$(LINKER) /DEBUG"
 </binary_link_commands>
 
 <mach_abi_linking>
-all       -> "/MD /bigobj"
-all-debug -> "/MDd /bigobj"
+all              -> "/bigobj"
+
+# These can be overridden with --msvc-runtime option
+rt               -> "/MD"
+rt-debug         -> "/MDd"
 </mach_abi_linking>
