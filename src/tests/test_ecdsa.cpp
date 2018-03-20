@@ -21,6 +21,38 @@ namespace {
 
 #if defined(BOTAN_HAS_ECDSA)
 
+class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test
+   {
+   public:
+      ECDSA_Verification_Tests() : PK_Signature_Verification_Test(
+            "ECDSA",
+            "pubkey/ecdsa_verify.vec",
+            "Group,Px,Py,Hash,Msg,Signature") {}
+
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
+         {
+         const std::string group_id = get_req_str(vars, "Group");
+         const BigInt px = get_req_bn(vars, "Px");
+         const BigInt py = get_req_bn(vars, "Py");
+         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+
+         const Botan::PointGFp public_point = group.point(px, py);
+
+         std::unique_ptr<Botan::Public_Key> key(new Botan::ECDSA_PublicKey(group, public_point));
+         return key;
+         }
+
+      std::string default_padding(const VarMap&) const override
+         {
+         return "Raw";
+         }
+   };
+
 class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
    {
    public:
@@ -121,6 +153,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
          }
    };
 
+BOTAN_REGISTER_TEST("ecdsa_verify", ECDSA_Verification_Tests);
 BOTAN_REGISTER_TEST("ecdsa_sign", ECDSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("ecdsa_keygen", ECDSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("ecdsa_invalid", ECDSA_Invalid_Key_Tests);
