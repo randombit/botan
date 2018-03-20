@@ -33,6 +33,9 @@ void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
    subject_alt = AlternativeName(opts.email, opts.uri, opts.dns, opts.ip);
    subject_alt.add_othername(OIDS::lookup("PKIX.XMPPAddr"),
                              opts.xmpp, UTF8_STRING);
+
+   for(auto dns : opts.more_dns)
+      subject_alt.add_attribute("DNS", dns);
    }
 }
 

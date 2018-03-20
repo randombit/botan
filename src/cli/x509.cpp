@@ -1,5 +1,5 @@
 /*
-* (C) 2010,2014,2015 Jack Lloyd
+* (C) 2010,2014,2015,2018 Jack Lloyd
 * (C) 2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -17,6 +17,7 @@
 #include <botan/x509path.h>
 #include <botan/x509self.h>
 #include <botan/data_src.h>
+#include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_OCSP)
    #include <botan/ocsp.h>
@@ -259,7 +260,7 @@ class Gen_Self_Signed final : public Command
          opts.country      = get_arg("country");
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
-         opts.dns          = get_arg("dns");
+         opts.more_dns = Botan::split_on(get_arg("dns"), ',');
 
          std::string emsa = get_arg("emsa");
 
@@ -284,7 +285,7 @@ class Generate_PKCS10 final : public Command
    public:
       Generate_PKCS10()
          : Command("gen_pkcs10 key CN --country= --organization= "
-                   "--email= --key-pass= --hash=SHA-256 --emsa=") {}
+                   "--email= --dns= --key-pass= --hash=SHA-256 --emsa=") {}
 
       std::string group() const override
          {
@@ -311,6 +312,7 @@ class Generate_PKCS10 final : public Command
          opts.country      = get_arg("country");
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
+         opts.more_dns     = Botan::split_on(get_arg("dns"), ',');
 
          std::string emsa = get_arg("emsa");
 

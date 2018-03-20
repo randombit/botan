@@ -79,6 +79,8 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       */
       std::string dns;
 
+      std::vector<std::string> more_dns;
+
       /**
       * the subject XMPP
       */
