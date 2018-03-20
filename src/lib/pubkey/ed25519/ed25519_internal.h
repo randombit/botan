@@ -62,6 +62,23 @@ inline void carry0(int32_t& h0, int32_t& h1)
    h0 -= c * X1;
    }
 
+inline void redc_mul(int64_t& s1,
+                     int64_t& s2,
+                     int64_t& s3,
+                     int64_t& s4,
+                     int64_t& s5,
+                     int64_t& s6,
+                     int64_t& X)
+   {
+   s1 += X * 666643;
+   s2 += X * 470296;
+   s3 += X * 654183;
+   s4 -= X * 997805;
+   s5 += X * 136657;
+   s6 -= X * 683901;
+   X = 0;
+   }
+
 /*
 ge means group element.
 
