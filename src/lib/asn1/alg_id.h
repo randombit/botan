@@ -21,7 +21,7 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
    {
    public:
-      enum Encoding_Option { USE_NULL_PARAM };
+      enum Encoding_Option { USE_NULL_PARAM, USE_EMPTY_PARAM };
 
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
