@@ -25,9 +25,6 @@ Output:
 
 void sc_muladd(uint8_t* s, const uint8_t* a, const uint8_t* b, const uint8_t* c)
    {
-   const int64_t X20 = (1 << 20);
-   const int64_t X21 = (1 << 21);
-
    const int32_t MASK = 0x1fffff;
 
    const int64_t a0 = MASK & load_3(a);

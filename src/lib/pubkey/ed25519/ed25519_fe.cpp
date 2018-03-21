@@ -667,7 +667,6 @@ so floor(2^(-255)(h + 19 2^(-25) h9 + 2^(-1))) = q.
 void FE_25519::to_bytes(uint8_t s[32]) const
    {
    const int64_t X25 = (1 << 25);
-   const int64_t X26 = (1 << 26);
 
    int32_t h0 = m_fe[0];
    int32_t h1 = m_fe[1];
