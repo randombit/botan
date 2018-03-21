@@ -92,7 +92,8 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
          }
 
       // Check the subject's DN components' length
-      for(const auto& dn_pair : subject->subject_dn().get_attributes())
+
+      for(const auto& dn_pair : subject->subject_dn().dn_info())
          {
          const size_t dn_ub = X509_DN::lookup_ub(dn_pair.first);
          // dn_pair = <OID,str>

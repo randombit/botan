@@ -12,6 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
 #include <botan/asn1_str.h>
+#include <vector>
 #include <map>
 #include <iosfwd>
 
@@ -24,13 +25,21 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
    {
    public:
       X509_DN() = default;
-      explicit X509_DN(const std::multimap<OID, std::string>& vals);
-      explicit X509_DN(const std::multimap<std::string, std::string>& vals);
+
+      explicit X509_DN(const std::multimap<OID, std::string>& args)
+         {
+         for(auto i : args)
+            add_attribute(i.first, i.second);
+         }
+
+      explicit X509_DN(const std::multimap<std::string, std::string>& args)
+         {
+         for(auto i : args)
+            add_attribute(i.first, i.second);
+         }
 
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
-
-      const std::multimap<OID, ASN1_String>& dn_info() const { return m_dn_info; }
 
       bool has_field(const OID& oid) const;
       ASN1_String get_first_attribute(const OID& oid) const;
@@ -40,17 +49,24 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
       */
       const std::vector<uint8_t>& get_bits() const { return m_dn_bits; }
 
-      bool empty() const { return m_dn_info.empty(); }
+      bool empty() const { return m_rdn.empty(); }
+
+      const std::vector<std::pair<OID,ASN1_String>>& dn_info() const { return m_rdn; }
+
+      std::multimap<OID, std::string> get_attributes() const;
+      std::multimap<std::string, std::string> contents() const;
 
       bool has_field(const std::string& attr) const;
       std::vector<std::string> get_attribute(const std::string& attr) const;
       std::string get_first_attribute(const std::string& attr) const;
 
-      std::multimap<OID, std::string> get_attributes() const;
-      std::multimap<std::string, std::string> contents() const;
-
       void add_attribute(const std::string& key, const std::string& val);
-      void add_attribute(const OID& oid, const std::string& val);
+
+      void add_attribute(const OID& oid, const std::string& val)
+         {
+         add_attribute(oid, ASN1_String(val));
+         }
+
       void add_attribute(const OID& oid, const ASN1_String& val);
 
       static std::string deref_info_field(const std::string& key);
@@ -65,7 +81,7 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
       static size_t lookup_ub(const OID& oid);
 
    private:
-      std::multimap<OID, ASN1_String> m_dn_info;
+      std::vector<std::pair<OID,ASN1_String>> m_rdn;
       std::vector<uint8_t> m_dn_bits;
    };
 

@@ -26,6 +26,8 @@ class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
 
       const std::string& value() const { return m_utf8_str; }
 
+      size_t size() const { return value().size(); }
+
       bool empty() const { return m_utf8_str.empty(); }
 
       std::string BOTAN_DEPRECATED("Use value() to get UTF-8 string instead")
