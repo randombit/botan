@@ -67,7 +67,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
 
          const size_t p_bytes = m_group.get_p_bytes();
 
-         const BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
+         const BigInt k = m_group.random_scalar(rng);
 
          const PointGFp C1 = m_group.blinded_base_point_multiply(k, rng, m_ws);
          const BigInt x1 = C1.get_affine_x();

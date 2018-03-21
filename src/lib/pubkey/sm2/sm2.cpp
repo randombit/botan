@@ -114,7 +114,7 @@ SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
    {
    const BigInt e = BigInt::decode(m_hash->final());
 
-   const BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
+   const BigInt k = m_group.random_scalar(rng);
 
    const BigInt r = m_group.mod_order(
       m_group.blinded_base_point_multiply_x(k, rng, m_ws) + e);

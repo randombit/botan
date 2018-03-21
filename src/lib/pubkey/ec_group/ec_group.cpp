@@ -505,6 +505,11 @@ BigInt EC_Group::blinded_base_point_multiply_x(const BigInt& k,
    return data().blinded_base_point_multiply(k, rng, ws).get_affine_x();
    }
 
+BigInt EC_Group::random_scalar(RandomNumberGenerator& rng) const
+   {
+   return BigInt::random_integer(rng, 1, get_order());
+   }
+
 PointGFp EC_Group::blinded_var_point_multiply(const PointGFp& point,
                                               const BigInt& k,
                                               RandomNumberGenerator& rng,

@@ -273,6 +273,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
                                           std::vector<BigInt>& ws) const;
 
       /**
+      * Return a random scalar ie an integer in [1,order)
+      */
+      BigInt random_scalar(RandomNumberGenerator& rng) const;
+
+      /**
       * Return the zero (or infinite) point on this curve
       */
       PointGFp zero_point() const;

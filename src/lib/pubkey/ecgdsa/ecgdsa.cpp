@@ -59,7 +59,7 @@ ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    {
    const BigInt m(msg, msg_len, m_group.get_order_bits());
 
-   BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
+   const BigInt k = m_group.random_scalar(rng);
 
    const BigInt r = m_group.mod_order(
       m_group.blinded_base_point_multiply_x(k, rng, m_ws));

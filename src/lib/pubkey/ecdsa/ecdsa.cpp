@@ -86,7 +86,7 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    const BigInt k = generate_rfc6979_nonce(m_x, m_group.get_order(), m, m_rfc6979_hash);
 #else
-   const BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
+   const BigInt k = m_group.random_scalar(rng);
 #endif
 
    const BigInt k_inv = inverse_mod(k, m_group.get_order());

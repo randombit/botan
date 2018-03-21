@@ -122,7 +122,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
 
    if(x == 0)
       {
-      m_private_key = BigInt::random_integer(rng, 1, order);
+      m_private_key = ec_group.random_scalar(rng);
       }
    else
       {
