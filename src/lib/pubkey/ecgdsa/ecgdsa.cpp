@@ -57,7 +57,7 @@ secure_vector<uint8_t>
 ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
                                      RandomNumberGenerator& rng)
    {
-   const BigInt m(msg, msg_len);
+   const BigInt m(msg, msg_len, m_group.get_order_bits());
 
    BigInt k = BigInt::random_integer(rng, 1, m_group.get_order());
 
@@ -107,7 +107,7 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
    if(sig_len != m_group.get_order_bytes() * 2)
       return false;
 
-   const BigInt e(msg, msg_len);
+   const BigInt e(msg, msg_len, m_group.get_order_bits());
 
    const BigInt r(sig, sig_len / 2);
    const BigInt s(sig + sig_len / 2, sig_len / 2);

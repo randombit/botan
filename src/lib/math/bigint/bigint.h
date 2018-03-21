@@ -86,6 +86,15 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      BigInt(const uint8_t buf[], size_t length, Base base);
 
      /**
+     * Create a BigInt from an integer in a byte array
+     * @param buf the byte array holding the value
+     * @param length size of buf
+     * @param max_bits if the resulting integer is more than max_bits,
+     *        it will be shifted so it is at most max_bits in length.
+     */
+     BigInt(const uint8_t buf[], size_t length, size_t max_bits);
+
+     /**
      * Create a BigInt from an array of words
      * @param words the words
      * @param length number of words
