@@ -39,7 +39,7 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
    m_group = grp;
 
    if(x_arg == 0)
-      m_x = BigInt::random_integer(rng, 2, group_q() - 1);
+      m_x = BigInt::random_integer(rng, 2, group_q());
    else
       m_x = x_arg;
 
