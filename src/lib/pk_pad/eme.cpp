@@ -8,6 +8,7 @@
 #include <botan/eme.h>
 #include <botan/scan_name.h>
 #include <botan/exceptn.h>
+#include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_EME_OAEP)
 #include <botan/oaep.h>
@@ -42,11 +43,25 @@ EME* get_eme(const std::string& algo_spec)
       req.algo_name() == "EME-OAEP" ||
       req.algo_name() == "EME1")
       {
-      if(req.arg_count() == 1 ||
-         (req.arg_count() == 2 && req.arg(1) == "MGF1"))
+      if(req.arg_count() == 1 ||(req.arg_count() == 2 && req.arg(1) == "MGF1"))
          {
          if(auto hash = HashFunction::create(req.arg(0)))
             return new OAEP(hash.release());
+         }
+      else if(req.arg_count() == 2)
+         {
+         auto mgf_params = parse_algorithm_name(req.arg(1));
+
+         if(mgf_params.size() == 2 && mgf_params[0] == "MGF1")
+            {
+            auto hash = HashFunction::create(req.arg(0));
+            auto mgf1_hash = HashFunction::create(mgf_params[1]);
+
+            if(hash && mgf1_hash)
+               {
+               return new OAEP(hash.release(), mgf1_hash.release());
+               }
+            }
          }
       }
 #endif

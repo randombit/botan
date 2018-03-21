@@ -250,7 +250,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
    const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
    const std::string padding = choose_padding(vars, pad_hdr);
 
-   Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " decryption");
+   Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " encryption");
 
    std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
 
@@ -339,6 +339,49 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
             }
          }
 
+      }
+
+   return result;
+   }
+
+Test::Result
+PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
+   {
+   const std::vector<uint8_t> plaintext  = get_req_bin(vars, "Msg");
+   const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
+   const std::string padding = choose_padding(vars, pad_hdr);
+
+   Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " decryption");
+
+   std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
+
+   std::vector<std::unique_ptr<Botan::PK_Decryptor>> decryptors;
+
+   for(auto const& dec_provider : possible_providers(algo_name()))
+      {
+      std::unique_ptr<Botan::PK_Decryptor> decryptor;
+
+      try
+         {
+         decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, Test::rng(), padding, dec_provider));
+         }
+      catch(Botan::Lookup_Error&)
+         {
+         continue;
+         }
+
+      Botan::secure_vector<uint8_t> decrypted;
+      try
+         {
+         decrypted = decryptor->decrypt(ciphertext);
+         }
+      catch(Botan::Exception& e)
+         {
+         result.test_failure("Failed to decrypt KAT ciphertext", e.what());
+         }
+
+      result.test_eq(dec_provider, "decryption of KAT", decrypted, plaintext);
+      check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext);
       }
 
    return result;

@@ -39,6 +39,30 @@ class RSA_ES_KAT_Tests final : public PK_Encryption_Decryption_Test
          }
    };
 
+class RSA_Decryption_KAT_Tests final : public PK_Decryption_Test
+   {
+   public:
+      RSA_Decryption_KAT_Tests() :
+         PK_Decryption_Test("RSA",
+                            "pubkey/rsa_decrypt.vec",
+                            "E,P,Q,Ciphertext,Msg") {}
+
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
+
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt q = get_req_bn(vars, "Q");
+         const BigInt e = get_req_bn(vars, "E");
+
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
+         return key;
+         }
+   };
+
 class RSA_KEM_Tests final : public PK_KEM_Test
    {
    public:
@@ -301,6 +325,7 @@ class RSA_Blinding_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("rsa_encrypt", RSA_ES_KAT_Tests);
+BOTAN_REGISTER_TEST("rsa_decrypt", RSA_Decryption_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_sign", RSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_pss", RSA_PSS_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_pss_raw", RSA_PSS_Raw_KAT_Tests);
