@@ -105,7 +105,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    {
    const BigInt& q = m_group.get_q();
 
-   BigInt i(msg, msg_len);
+   BigInt i(msg, msg_len, q.bits());
 
    while(i >= q)
       i -= q;
@@ -167,7 +167,7 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    BigInt r(sig, q_bytes);
    BigInt s(sig + q_bytes, q_bytes);
-   BigInt i(msg, msg_len);
+   BigInt i(msg, msg_len, q.bits());
 
    if(r <= 0 || r >= q || s <= 0 || s >= q)
       return false;
