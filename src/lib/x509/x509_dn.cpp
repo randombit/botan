@@ -260,8 +260,13 @@ void X509_DN::decode_from(BER_Decoder& source)
 
 namespace {
 
-std::string to_short_form(const std::string& long_id)
+std::string to_short_form(const OID& oid)
    {
+   const std::string long_id = OIDS::oid2str(oid);
+
+   if(long_id.empty())
+      return oid.to_string();
+
    if(long_id == "X520.CommonName")
       return "CN";
 
@@ -281,13 +286,12 @@ std::string to_short_form(const std::string& long_id)
 
 std::ostream& operator<<(std::ostream& out, const X509_DN& dn)
    {
-   std::multimap<std::string, std::string> contents = dn.contents();
+   auto info = dn.dn_info();
 
-   for(std::multimap<std::string, std::string>::const_iterator i = contents.begin();
-       i != contents.end(); ++i)
+   for(size_t i = 0; i != info.size(); ++i)
       {
-      out << to_short_form(i->first) << "=\"";
-      for(char c: i->second)
+      out << to_short_form(info[i].first) << "=\"";
+      for(char c : info[i].second.value())
          {
          if(c == '\\' || c == '\"')
             {
@@ -297,7 +301,7 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn)
          }
       out << "\"";
 
-      if(std::next(i) != contents.end())
+      if(i + 1 < info.size())
          {
          out << ",";
          }
