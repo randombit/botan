@@ -422,7 +422,7 @@ RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
          * to the normal version.
          */
          if(provider == "openssl")
-            throw Exception("OpenSSL RSA provider rejected key:", e.what());
+            throw Lookup_Error("OpenSSL RSA provider rejected key:" + std::string(e.what()));
          }
       }
 #endif
@@ -476,7 +476,7 @@ RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
       catch(Exception& e)
          {
          if(provider == "openssl")
-            throw Exception("OpenSSL RSA provider rejected key:", e.what());
+            throw Lookup_Error("OpenSSL RSA provider rejected key:" + std::string(e.what()));
          }
       }
 #endif
