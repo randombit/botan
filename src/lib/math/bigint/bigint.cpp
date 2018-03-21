@@ -80,6 +80,11 @@ BigInt::BigInt(const std::string& str)
    else         set_sign(Positive);
    }
 
+BigInt::BigInt(const uint8_t input[], size_t length)
+   {
+   binary_decode(input, length);
+   }
+
 /*
 * Construct a BigInt from an encoded BigInt
 */
