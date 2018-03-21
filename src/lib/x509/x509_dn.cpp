@@ -1,6 +1,6 @@
 /*
 * X509_DN
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,35 +17,12 @@
 namespace Botan {
 
 /*
-* Create an X509_DN
-*/
-X509_DN::X509_DN(const std::multimap<OID, std::string>& args)
-   {
-   for(auto i = args.begin(); i != args.end(); ++i)
-      add_attribute(i->first, i->second);
-   }
-
-/*
-* Create an X509_DN
-*/
-X509_DN::X509_DN(const std::multimap<std::string, std::string>& args)
-   {
-   for(auto i = args.begin(); i != args.end(); ++i)
-      add_attribute(OIDS::lookup(i->first), i->second);
-   }
-
-/*
 * Add an attribute to a X509_DN
 */
 void X509_DN::add_attribute(const std::string& type,
                             const std::string& str)
    {
    add_attribute(OIDS::lookup(type), str);
-   }
-
-void X509_DN::add_attribute(const OID& oid, const std::string& str)
-   {
-   add_attribute(oid, ASN1_String(str));
    }
 
 /*
@@ -56,14 +33,7 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str)
    if(str.empty())
       return;
 
-   auto range = m_dn_info.equal_range(oid);
-   for(auto i = range.first; i != range.second; ++i)
-      {
-      if(i->second == str)
-         return;
-      }
-
-   multimap_insert(m_dn_info, oid, str);
+   m_rdn.push_back(std::make_pair(oid, str));
    m_dn_bits.clear();
    }
 
@@ -73,8 +43,9 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str)
 std::multimap<OID, std::string> X509_DN::get_attributes() const
    {
    std::multimap<OID, std::string> retval;
-   for(auto i = m_dn_info.begin(); i != m_dn_info.end(); ++i)
-      multimap_insert(retval, i->first, i->second.value());
+
+   for(auto& i : m_rdn)
+      multimap_insert(retval, i.first, i.second.value());
    return retval;
    }
 
@@ -84,13 +55,14 @@ std::multimap<OID, std::string> X509_DN::get_attributes() const
 std::multimap<std::string, std::string> X509_DN::contents() const
    {
    std::multimap<std::string, std::string> retval;
-   for(auto i = m_dn_info.begin(); i != m_dn_info.end(); ++i)
+
+   for(auto& i : m_rdn)
       {
-      std::string str_value = OIDS::oid2str(i->first);
+      std::string str_value = OIDS::oid2str(i.first);
 
       if(str_value.empty())
-         str_value = i->first.as_string();
-      multimap_insert(retval, str_value, i->second.value());
+         str_value = i.first.as_string();
+      multimap_insert(retval, str_value, i.second.value());
       }
    return retval;
    }
@@ -102,8 +74,13 @@ bool X509_DN::has_field(const std::string& attr) const
 
 bool X509_DN::has_field(const OID& oid) const
    {
-   auto range = m_dn_info.equal_range(oid);
-   return (range.first != range.second);
+   for(auto& i : m_rdn)
+      {
+      if(i.first == oid)
+         return true;
+      }
+
+   return false;
    }
 
 std::string X509_DN::get_first_attribute(const std::string& attr) const
@@ -114,9 +91,13 @@ std::string X509_DN::get_first_attribute(const std::string& attr) const
 
 ASN1_String X509_DN::get_first_attribute(const OID& oid) const
    {
-   auto i = m_dn_info.lower_bound(oid);
-   if(i != m_dn_info.end() && i->first == oid)
-      return i->second;
+   for(auto& i : m_rdn)
+      {
+      if(i.first == oid)
+         {
+         return i.second;
+         }
+      }
 
    return ASN1_String();
    }
@@ -128,11 +109,16 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    {
    const OID oid = OIDS::lookup(deref_info_field(attr));
 
-   auto range = m_dn_info.equal_range(oid);
-
    std::vector<std::string> values;
-   for(auto i = range.first; i != range.second; ++i)
-      values.push_back(i->second.value());
+
+   for(auto& i : m_rdn)
+      {
+      if(i.first == oid)
+         {
+         values.push_back(i.second.value());
+         }
+      }
+
    return values;
    }
 
@@ -227,7 +213,7 @@ void X509_DN::encode_into(DER_Encoder& der) const
       }
    else
       {
-      for(const auto& dn : m_dn_info)
+      for(const auto& dn : m_rdn)
          {
          der.start_cons(SET)
             .start_cons(SEQUENCE)
@@ -263,10 +249,7 @@ void X509_DN::decode_from(BER_Decoder& source)
          OID oid;
          ASN1_String str;
 
-         rdn.start_cons(SEQUENCE)
-            .decode(oid)
-            .decode(str)
-        .end_cons();
+         rdn.start_cons(SEQUENCE).decode(oid).decode(str).end_cons();
 
          add_attribute(oid, str);
          }
