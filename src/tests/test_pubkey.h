@@ -125,6 +125,26 @@ class PK_Encryption_Decryption_Test : public PK_Test
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
    };
 
+class PK_Decryption_Test : public PK_Test
+   {
+   public:
+      PK_Decryption_Test(const std::string& algo,
+                         const std::string& test_src,
+                         const std::string& required_keys,
+                         const std::string& optional_keys = "")
+         : PK_Test(algo, test_src, required_keys, optional_keys) {}
+
+      virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
+
+      std::string default_padding(const VarMap&) const override
+         {
+         return "Raw";
+         }
+
+   private:
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
+   };
+
 class PK_Key_Agreement_Test : public PK_Test
    {
    public:
