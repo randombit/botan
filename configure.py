@@ -321,6 +321,9 @@ def process_command_line(args): # pylint: disable=too-many-locals
     target_group.add_option('--ar-command', dest='ar_command', metavar='AR', default=None,
                             help='set path to static archive creator')
 
+    target_group.add_option('--msvc-runtime', metavar='RT', default=None,
+                            help='specify MSVC runtime (MT, MD, MTd, MDd)')
+
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
@@ -429,6 +432,10 @@ def process_command_line(args): # pylint: disable=too-many-locals
                            metavar='N.M',
                            default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
                            help='where to install botan2.py (def %default)')
+
+    build_group.add_option('--disable-cc-tests', dest='enable_cc_tests',
+                           default=True, action='store_false',
+                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--with-valgrind', help='use valgrind API',
                            dest='with_valgrind', action='store_true', default=False)
@@ -1149,6 +1156,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         return ''
 
     def mach_abi_link_flags(self, options, with_debug_info=None):
+        #pylint: disable=too-many-branches
+
         """
         Return the machine specific ABI flags
         """
@@ -1157,10 +1166,14 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             with_debug_info = options.with_debug_info
 
         def mach_abi_groups():
-            if with_debug_info and 'all-debug' in self.mach_abi_linking:
-                yield 'all-debug'
-            elif 'all' in self.mach_abi_linking:
-                yield 'all'
+
+            yield 'all'
+
+            if options.msvc_runtime is None:
+                if with_debug_info:
+                    yield 'rt-debug'
+                else:
+                    yield 'rt'
 
             for all_except in [s for s in self.mach_abi_linking.keys() if s.startswith('all!')]:
                 exceptions = all_except[4:].split(',')
@@ -1172,9 +1185,13 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         abi_link = list()
         for what in mach_abi_groups():
-            flag = self.mach_abi_linking.get(what)
-            if flag != None and flag != '' and flag not in abi_link:
-                abi_link.append(flag)
+            if what in self.mach_abi_linking:
+                flag = self.mach_abi_linking.get(what)
+                if flag != None and flag != '' and flag not in abi_link:
+                    abi_link.append(flag)
+
+        if options.msvc_runtime:
+            abi_link.append("/" + options.msvc_runtime)
 
         if options.with_stack_protector and self.stack_protector_flags != '':
             abi_link.append(self.stack_protector_flags)
@@ -1833,6 +1850,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'cc_compile_opt_flags': cc.cc_compile_flags(options, False, True),
         'cc_compile_debug_flags': cc.cc_compile_flags(options, True, False),
+
+        # These are for CMake
         'cxx_abi_opt_flags': cc.mach_abi_link_flags(options, False),
         'cxx_abi_debug_flags': cc.mach_abi_link_flags(options, True),
 
@@ -2783,9 +2802,16 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         if options.arch not in ['x86_64', 'x86_32']:
             raise UserError("Bakefile only supports x86 targets")
 
-        # Warnings
+    # Warnings
     if options.os == 'windows' and options.compiler != 'msvc':
-        logging.warning('The windows target is oriented towards MSVC; maybe you want cygwin or mingw')
+        logging.warning('The windows target is oriented towards MSVC; maybe you want --os=cygwin or --os=mingw')
+
+    if options.msvc_runtime:
+        if options.compiler != 'msvc':
+            raise UserError("Makes no sense to specify MSVC runtime for %s" % (options.compiler))
+
+        if options.msvc_runtime not in ['MT', 'MD', 'MTd', 'MDd']:
+            logging.warning("MSVC runtime option '%s' not known", (options.msvc_runtime))
 
 def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_flags=None):
     if extra_flags is None:
@@ -3030,12 +3056,15 @@ def main(argv):
     arch = info_arch[options.arch]
     osinfo = info_os[options.os]
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
-    cc_min_version = options.cc_min_version or calculate_cc_min_version(options, cc, source_paths)
 
-    cc_arch = check_compiler_arch(options, cc, info_arch, source_paths)
+    if options.enable_cc_tests:
+        cc_min_version = options.cc_min_version or calculate_cc_min_version(options, cc, source_paths)
+        cc_arch = check_compiler_arch(options, cc, info_arch, source_paths)
 
-    if cc_arch is not None and cc_arch != options.arch:
-        logging.warning("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
+        if cc_arch is not None and cc_arch != options.arch:
+            logging.warning("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
+    else:
+        cc_min_version = options.cc_min_version or "0.0"
 
     logging.info('Target is %s:%s-%s-%s' % (
         options.compiler, cc_min_version, options.os, options.arch))
