@@ -30,6 +30,8 @@ Version 2.5.0, Not Yet Released
 
 * Add support for POWER8 AES instructions (GH #1459 #1393 #1206)
 
+* Fix DSA/ECDSA handling of hashes longer than the group order (GH #1502 #986)
+
 * The default encoding of ECC public keys has changed from compressed
   to uncompressed point representation. This improves compatability with
   some common software packages including Golang's standard library.
@@ -89,6 +91,8 @@ Version 2.5.0, Not Yet Released
 * Add support for ``--library-suffix`` option to ``configure.py`` (GH #1405 #1404)
 
 * Use feature flags to enable/disable system specific code (GH #1378)
+
+* Add --msvc-runtime option to allow using static runtime (GH #1499 #210)
 
 * The threefish module has been renamed threefish_512 since that is the
   algorithm it provides. (GH #1477)
