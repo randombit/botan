@@ -119,12 +119,7 @@ secure_vector<uint8_t>
 GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
                                         RandomNumberGenerator& rng)
    {
-   BigInt k;
-
-   do
-      {
-      k.randomize(rng, m_group.get_order_bits() - 1);
-      } while(k >= m_group.get_order());
+   const BigInt k = m_group.random_scalar(rng);
 
    BigInt e = decode_le(msg, msg_len);
 
