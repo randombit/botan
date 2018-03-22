@@ -15,7 +15,6 @@ import optparse # pylint: disable=deprecated-module
 import os
 import shutil
 import sys
-import subprocess
 import traceback
 
 def parse_command_line(args):
@@ -209,20 +208,6 @@ def main(args):
                     os.chdir(prev_cwd)
 
     copy_executable(cfg['cli_exe'], prepend_destdir(os.path.join(bin_dir, cfg['cli_exe_name'])))
-
-    # On Darwin, if we are using shared libraries and we install, we should fix
-    # up the library name, otherwise the botan command won't work; ironically
-    # we only need to do this because we previously changed it from a setting
-    # that would be correct for installation to one that lets us run it from
-    # the build directory
-    if target_os == 'darwin' and build_shared_lib:
-        soname_abi = cfg['soname_abi']
-
-        subprocess.check_call(['install_name_tool',
-                               '-change',
-                               os.path.join('@executable_path', soname_abi),
-                               os.path.join(lib_dir, soname_abi),
-                               os.path.join(bin_dir, cfg['cli_exe_name'])])
 
     if 'botan_pkgconfig' in cfg:
         pkgconfig_dir = os.path.join(options.prefix, options.libdir, options.pkgconfigdir)

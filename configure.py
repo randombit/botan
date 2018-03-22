@@ -180,6 +180,7 @@ class SourcePaths(object):
         self.scripts_dir = os.path.join(self.src_dir, 'scripts')
 
         # subdirs of src/
+        self.test_data_dir = os.path.join(self.src_dir, 'tests/data')
         self.sphinx_config_dir = os.path.join(self.configs_dir, 'sphinx')
 
 
@@ -1386,7 +1387,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'doc_dir': 'share/doc',
                 'man_dir': 'share/man',
                 'use_stack_protector': 'true',
-                'so_post_link_command': '',
                 'cli_exe_name': 'botan',
                 'lib_prefix': 'lib',
                 'library_name': 'botan{suffix}-{major}',
@@ -1435,7 +1435,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.man_dir = lex.man_dir
         self.obj_suffix = lex.obj_suffix
         self.program_suffix = lex.program_suffix
-        self.so_post_link_command = lex.so_post_link_command
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
         self.use_stack_protector = (lex.use_stack_protector == "true")
@@ -1866,6 +1865,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
+        'test_data_dir': source_paths.test_data_dir,
         'doc_dir': source_paths.doc_dir,
         'scripts_dir': normalize_source_path(source_paths.scripts_dir),
         'python_dir': source_paths.python_dir,
@@ -1970,7 +1970,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
         'exe_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
-        'post_link_cmd': '',
 
         'ar_command': ar_command(),
         'ar_options': options.ar_options or cc.ar_options or osinfo.ar_options,
@@ -2031,7 +2030,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             variables['soname_patch'] = osinfo.soname_pattern_patch.format(**variables)
 
         variables['lib_link_cmd'] = variables['lib_link_cmd'].format(**variables)
-        variables['post_link_cmd'] = osinfo.so_post_link_command.format(**variables) if options.build_shared_lib else ''
 
     lib_targets = []
     if options.build_static_lib:

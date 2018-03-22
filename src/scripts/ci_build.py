@@ -46,7 +46,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
 
     make_prefix = []
     test_prefix = []
-    test_cmd = [os.path.join(root_dir, 'botan-test')]
+    test_cmd = ['make', 'test']
 
     if target in ['shared', 'static', 'sanitizer', 'fuzzers', 'gcc4.8', 'cross-i386', 'bsi', 'nist']:
         test_cmd += ['--test-threads=%d' % (get_concurrency())]
@@ -408,6 +408,7 @@ def main(args=None):
             'configure.py',
             'src/python/botan2.py',
             'src/scripts/ci_build.py',
+            'src/scripts/run_tests.py',
             'src/scripts/install.py',
             'src/scripts/dist.py',
             'src/scripts/cleanup.py',

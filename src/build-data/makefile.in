@@ -42,7 +42,7 @@ docs: %{doc_stamp_file}
 # Misc targets
 
 %{if make_supports_phony}
-.PHONY = all cli libs tests docs clean distclean install
+.PHONY = all cli libs tests docs clean distclean install test
 %{endif}
 
 %{doc_stamp_file}: %{doc_dir}/manual/*.rst
@@ -57,6 +57,9 @@ distclean:
 install: libs cli docs
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/install.py --prefix="%{prefix}" --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
 
+test: $(TEST)
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/run_tests.py --build-dir="%{build_dir}" --test-data-dir="%{test_data_dir}" $(TEST)
+
 # Object Files
 LIBOBJS = %{join lib_objs}
 
@@ -68,11 +71,9 @@ TESTOBJS = %{join test_objs}
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) $(LDFLAGS) $(CLIOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
-	$(POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) $(LDFLAGS) $(TESTOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
-	$(POST_LINK_CMD)
 
 %{if build_fuzzers}
 
