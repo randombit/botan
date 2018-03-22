@@ -128,7 +128,7 @@ size_t almost_montgomery_inverse(BigInt& result,
 
    if(r >= p)
       {
-      r = r - p;
+      r -= p;
       }
 
    result = p - r;
