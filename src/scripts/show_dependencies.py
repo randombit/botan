@@ -43,7 +43,7 @@ parser.add_argument('--format',
 parser.add_argument('--engine',
                     nargs='?',
                     choices=["fdp", "dot"],
-                    default="fdp",
+                    default="dot",
                     help='The graph engine (drawing mode only)')
 parser.add_argument('--all', dest='all', action='store_const',
                     const=True, default=False,
@@ -198,6 +198,7 @@ if args.mode == "draw":
     tmpdir = tempfile.mkdtemp(prefix="botan-")
 
     g2 = gv.Digraph(format=args.format, engine=args.engine)
+    g2.attr('graph', rankdir='RL') # draw horizontally
     for key in direct_dependencies:
         g2.node(key)
         for dep in direct_dependencies[key]:
