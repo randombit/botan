@@ -1488,50 +1488,46 @@ class Speed final : public Command
 
       void bench_inverse_mod(const std::chrono::milliseconds runtime)
          {
-         Botan::BigInt p;
-         p.set_bit(521);
-         p--;
 
-         std::unique_ptr<Timer> invmod_timer = make_timer("inverse_euclid");
-         std::unique_ptr<Timer> monty_timer = make_timer("montgomery_inverse");
-         std::unique_ptr<Timer> ct_invmod_timer = make_timer("ct_inverse_mod");
-         std::unique_ptr<Timer> powm_timer = make_timer("exponentiation");
-
-         Botan::Fixed_Exponent_Power_Mod powm_p(p - 2, p);
-
-         while(invmod_timer->under(runtime))
+         for(size_t bits : { 256, 384, 512 })
             {
-            const Botan::BigInt x(rng(), p.bits() - 1);
+            const Botan::BigInt p = Botan::random_prime(rng(), bits);
 
-            const Botan::BigInt x_inv1 = invmod_timer->run([&]
+            const std::string bit_str = std::to_string(bits);
+
+            std::unique_ptr<Timer> invmod_timer = make_timer("binext-" + bit_str);
+            std::unique_ptr<Timer> monty_timer = make_timer("monty-" + bit_str);
+            std::unique_ptr<Timer> ct_invmod_timer = make_timer("ct-" + bit_str);
+            std::unique_ptr<Timer> powm_timer = make_timer("powm-" + bit_str);
+
+            Botan::Fixed_Exponent_Power_Mod powm_p(p - 2, p);
+
+            while(invmod_timer->under(runtime))
                {
-               return Botan::inverse_euclid(x + p, p);
-               });
+               const Botan::BigInt x(rng(), p.bits() - 1);
 
-            const Botan::BigInt x_inv2 = monty_timer->run([&]
-               {
-               return Botan::normalized_montgomery_inverse(x, p);
-               });
+               const Botan::BigInt x_inv1 = invmod_timer->run(
+                  [&] { return Botan::inverse_euclid(x, p); });
 
-            const Botan::BigInt x_inv3 = ct_invmod_timer->run([&]
-               {
-               return Botan::ct_inverse_mod_odd_modulus(x, p);
-               });
+               const Botan::BigInt x_inv2 = monty_timer->run(
+                  [&] { return Botan::normalized_montgomery_inverse(x, p); });
 
-            const Botan::BigInt x_inv4 = powm_timer->run([&]
-               {
-               return powm_p(x);
-               });
+               const Botan::BigInt x_inv3 = ct_invmod_timer->run(
+                  [&] { return Botan::ct_inverse_mod_odd_modulus(x, p); });
 
-            BOTAN_ASSERT_EQUAL(x_inv1, x_inv2, "Same result");
-            BOTAN_ASSERT_EQUAL(x_inv1, x_inv3, "Same result");
-            BOTAN_ASSERT_EQUAL(x_inv1, x_inv4, "Same result");
+               const Botan::BigInt x_inv4 = powm_timer->run(
+                  [&] { return powm_p(x); });
+
+               BOTAN_ASSERT_EQUAL(x_inv1, x_inv2, "Same result");
+               BOTAN_ASSERT_EQUAL(x_inv1, x_inv3, "Same result");
+               BOTAN_ASSERT_EQUAL(x_inv1, x_inv4, "Same result");
+               }
+
+            record_result(invmod_timer);
+            record_result(monty_timer);
+            record_result(ct_invmod_timer);
+            record_result(powm_timer);
             }
-
-         record_result(invmod_timer);
-         record_result(monty_timer);
-         record_result(ct_invmod_timer);
-         record_result(powm_timer);
          }
 
       void bench_random_prime(const std::chrono::milliseconds runtime)
