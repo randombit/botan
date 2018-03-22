@@ -61,6 +61,12 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
 
 /**
 * This class represents an elliptic curve over GF(p)
+*
+* There should not be any reason for applications to use this type.
+* If you need EC primitives use the interfaces EC_Group and PointGFp
+*
+* It is likely this class will be removed entirely in a future major
+* release.
 */
 class BOTAN_UNSTABLE_API CurveGFp final
    {
