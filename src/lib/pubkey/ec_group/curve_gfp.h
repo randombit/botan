@@ -152,6 +152,16 @@ class BOTAN_UNSTABLE_API CurveGFp final
          m_repr->curve_sqr(z, x, ws);
          }
 
+      BigInt mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const
+         {
+         return mul_to_tmp(x, y, ws);
+         }
+
+      BigInt sqr(const BigInt& x, secure_vector<word>& ws) const
+         {
+         return sqr_to_tmp(x, ws);
+         }
+
       BigInt mul_to_tmp(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const
          {
          BigInt z;
