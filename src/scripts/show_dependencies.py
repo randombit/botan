@@ -88,7 +88,7 @@ for filename in files:
     modules.append(module)
     if args.verbose:
         print(module.basename)
-        print("\t" + str(set(module.dependencies())))
+        print("\t" + str(set(module.dependencies(None))))
 
 if args.verbose:
     print(str(len(modules)) + " modules:")
@@ -108,7 +108,7 @@ all_dependencies = dict()
 direct_dependencies = dict()
 
 for module in modules:
-    lst = module.dependencies()
+    lst = module.dependencies(None)
     registered_dependencies[module.basename] = set(lst) - set([module.basename])
 
 # Get all_dependencies from registered_dependencies
