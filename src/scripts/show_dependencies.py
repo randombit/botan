@@ -6,7 +6,7 @@ Show Botan module dependencies as a list or graph.
 Requires graphviz from pip when graphical output is selected:
 https://pypi.python.org/pypi/graphviz
 
-(C) 2015 Simon Warta (Kullo GmbH)
+(C) 2015,2018 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -141,7 +141,7 @@ while True:
     card = cartinality(all_dependencies)
     # print(card)
     if card == last_card:
-        break;
+        break
     last_card = card
     add_dependency()
 
@@ -168,11 +168,13 @@ while True:
     card = cartinality(direct_dependencies)
     # print(card)
     if card == last_card:
-        break;
+        break
     last_card = card
     remove_indirect_dependencies()
 
 def openfile(f):
+    # pylint: disable=no-member
+    # os.startfile is available on Windows only
     if sys.platform.startswith('linux'):
         subprocess.call(["xdg-open", f])
     else:
@@ -208,4 +210,3 @@ if args.mode == "draw":
     if args.verbose:
         print("Opening " + filename + " ...")
     openfile(filename)
-
