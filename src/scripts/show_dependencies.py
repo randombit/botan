@@ -6,7 +6,7 @@ Show Botan module dependencies as a list or graph.
 Requires graphviz from pip when graphical output is selected:
 https://pypi.python.org/pypi/graphviz
 
-(C) 2015 Simon Warta (Kullo GmbH)
+(C) 2015,2018 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -43,7 +43,7 @@ parser.add_argument('--format',
 parser.add_argument('--engine',
                     nargs='?',
                     choices=["fdp", "dot"],
-                    default="fdp",
+                    default="dot",
                     help='The graph engine (drawing mode only)')
 parser.add_argument('--all', dest='all', action='store_const',
                     const=True, default=False,
@@ -88,7 +88,7 @@ for filename in files:
     modules.append(module)
     if args.verbose:
         print(module.basename)
-        print("\t" + str(set(module.dependencies())))
+        print("\t" + str(set(module.dependencies(None))))
 
 if args.verbose:
     print(str(len(modules)) + " modules:")
@@ -108,7 +108,7 @@ all_dependencies = dict()
 direct_dependencies = dict()
 
 for module in modules:
-    lst = module.dependencies()
+    lst = module.dependencies(None)
     registered_dependencies[module.basename] = set(lst) - set([module.basename])
 
 # Get all_dependencies from registered_dependencies
@@ -141,7 +141,7 @@ while True:
     card = cartinality(all_dependencies)
     # print(card)
     if card == last_card:
-        break;
+        break
     last_card = card
     add_dependency()
 
@@ -168,11 +168,13 @@ while True:
     card = cartinality(direct_dependencies)
     # print(card)
     if card == last_card:
-        break;
+        break
     last_card = card
     remove_indirect_dependencies()
 
 def openfile(f):
+    # pylint: disable=no-member
+    # os.startfile is available on Windows only
     if sys.platform.startswith('linux'):
         subprocess.call(["xdg-open", f])
     else:
@@ -196,6 +198,7 @@ if args.mode == "draw":
     tmpdir = tempfile.mkdtemp(prefix="botan-")
 
     g2 = gv.Digraph(format=args.format, engine=args.engine)
+    g2.attr('graph', rankdir='RL') # draw horizontally
     for key in direct_dependencies:
         g2.node(key)
         for dep in direct_dependencies[key]:
@@ -208,4 +211,3 @@ if args.mode == "draw":
     if args.verbose:
         print("Opening " + filename + " ...")
     openfile(filename)
-
