@@ -279,23 +279,28 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    // Check for self-signed vs self-issued certificates
    if(data->m_subject_dn == data->m_issuer_dn)
       {
-      data->m_self_signed = false;
-
-      try
+      if(data->m_subject_key_id.empty() == false && data->m_authority_key_id.empty() == false)
          {
-         std::unique_ptr<Public_Key> pub_key(X509::load_key(data->m_subject_public_key_bits_seq));
-
-         Certificate_Status_Code sig_status = obj.verify_signature(*pub_key);
-
-         if(sig_status == Certificate_Status_Code::OK ||
-            sig_status == Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN)
-            {
-            data->m_self_signed = true;
-            }
+         data->m_self_signed = (data->m_subject_key_id == data->m_authority_key_id);
          }
-      catch(...)
+      else
          {
-         // ignore errors here to allow parsing to continue
+         try
+            {
+            std::unique_ptr<Public_Key> pub_key(X509::load_key(data->m_subject_public_key_bits_seq));
+
+            Certificate_Status_Code sig_status = obj.verify_signature(*pub_key);
+
+            if(sig_status == Certificate_Status_Code::OK ||
+               sig_status == Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN)
+               {
+               data->m_self_signed = true;
+               }
+            }
+         catch(...)
+            {
+            // ignore errors here to allow parsing to continue
+            }
          }
       }
 
