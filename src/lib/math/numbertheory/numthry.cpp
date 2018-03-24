@@ -157,6 +157,8 @@ BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
       throw Invalid_Argument("ct_inverse_mod_odd_modulus: arguments must be non-negative");
    if(mod < 3 || mod.is_even())
       throw Invalid_Argument("Bad modulus to ct_inverse_mod_odd_modulus");
+   if(n >= mod)
+      throw Invalid_Argument("ct_inverse_mod_odd_modulus n >= mod not supported");
 
    /*
    This uses a modular inversion algorithm designed by Niels Möller
@@ -284,7 +286,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    if(n.is_zero() || (n.is_even() && mod.is_even()))
       return 0; // fast fail checks
 
-   if(mod.is_odd())
+   if(mod.is_odd() && n < mod)
       return ct_inverse_mod_odd_modulus(n, mod);
 
    return inverse_euclid(n, mod);
@@ -386,6 +388,18 @@ word monty_inverse(word input)
 */
 BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    {
+   if(mod.is_negative() || mod == 1)
+      {
+      return 0;
+      }
+
+   if(base.is_zero() || mod.is_zero())
+      {
+      if(exp.is_zero())
+         return 1;
+      return 0;
+      }
+
    Power_Mod pow_mod(mod);
 
    /*
