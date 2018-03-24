@@ -182,19 +182,25 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
       return;
 
    std::vector<std::string> maybe_certs = get_files_recursive(dir);
+
+   if(maybe_certs.empty())
+      {
+      maybe_certs.push_back(dir);
+      }
+
    for(auto&& cert_file : maybe_certs)
       {
       try
-         {               
+         {
          DataSource_Stream src(cert_file, true);
          while(!src.end_of_data())
             {
             try
                {
-               m_certs.push_back(std::make_shared<X509_Certificate>(src));            
+               m_certs.push_back(std::make_shared<X509_Certificate>(src));
                }
             catch(std::exception&)
-               {       
+               {
                // stop searching for other certificate at first exception
                break;
                }
