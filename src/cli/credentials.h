@@ -29,9 +29,24 @@ inline bool value_exists(const std::vector<std::string>& vec,
 class Basic_Credentials_Manager : public Botan::Credentials_Manager
    {
    public:
-      Basic_Credentials_Manager()
+      Basic_Credentials_Manager(bool use_system_store,
+                                const std::string& ca_paths)
          {
-         load_certstores();
+         std::vector<std::string> paths;
+
+         if(ca_paths.empty() == false)
+            paths.push_back(ca_paths);
+
+         if(use_system_store)
+            {
+            paths.push_back("/etc/ssl/certs");
+            paths.push_back("/usr/share/ca-certificates");
+            }
+
+         if(paths.empty() == false)
+            {
+            load_certstores(paths);
+            }
          }
 
       Basic_Credentials_Manager(Botan::RandomNumberGenerator& rng,
@@ -59,13 +74,10 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
          m_creds.push_back(cert);
          }
 
-      void load_certstores()
+      void load_certstores(const std::vector<std::string>& paths)
          {
          try
             {
-            // TODO: make path configurable
-            const std::vector<std::string> paths = { "/etc/ssl/certs", "/usr/share/ca-certificates" };
-
             for(auto const& path : paths)
                {
                std::shared_ptr<Botan::Certificate_Store> cs(new Botan::Certificate_Store_In_Memory(path));

@@ -37,6 +37,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
       TLS_Client()
          : Command("tls_client host --port=443 --print-certs --policy= "
                    "--tls1.0 --tls1.1 --tls1.2 "
+                   "--skip-system-cert-store --trusted-cas= "
                    "--session-db= --session-db-pass= --next-protocols= --type=tcp")
          {
          init_sockets();
@@ -64,6 +65,13 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
 
          const std::string sessions_db = get_arg("session-db");
+         const std::string host = get_arg("host");
+         const uint16_t port = get_arg_sz("port");
+         const std::string transport = get_arg("type");
+         const std::string next_protos = get_arg("next-protocols");
+         std::string policy_file = get_arg("policy");
+         const bool use_system_cert_store = flag_set("skip-system-cert-store") == false;
+         const std::string trusted_CAs = get_arg("trusted-cas");
 
          if(!sessions_db.empty())
             {
@@ -79,8 +87,6 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             {
             session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
             }
-
-         std::string policy_file = get_arg("policy");
 
          std::unique_ptr<Botan::TLS::Policy> policy;
 
@@ -99,13 +105,6 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             {
             policy.reset(new Botan::TLS::Policy);
             }
-
-         Basic_Credentials_Manager creds;
-
-         const std::string host = get_arg("host");
-         const uint16_t port = get_arg_sz("port");
-         const std::string transport = get_arg("type");
-         const std::string next_protos = get_arg("next-protocols");
 
          if(transport != "tcp" && transport != "udp")
             {
@@ -139,6 +138,8 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             {
             hostname = host;
             }
+
+         Basic_Credentials_Manager creds(use_system_cert_store, trusted_CAs);
 
          Botan::TLS::Client client(*this, *session_mgr, creds, *policy, rng(),
                                    Botan::TLS::Server_Information(hostname, port),
