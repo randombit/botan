@@ -62,10 +62,10 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
 
       t1.reduce_below(m_modulus, ws);
 
-      if(x.is_positive())
-         return t1;
-      else
-         return (m_modulus - t1);
+      if(x.is_negative())
+         t1.rev_sub(m_modulus.data(), m_modulus.size(), ws);
+
+      return t1;
       }
    else
       {
