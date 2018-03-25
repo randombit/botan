@@ -47,7 +47,7 @@ class DL_Group_Tests final : public Test
          result.test_throws("Bad generator param",
                             "Invalid argument DL_Group unknown PrimeType",
                             []() {
-                            auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(666);
+                            auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
                             Botan::DL_Group dl(Test::rng(), invalid_type, 1024);
                             });
 
