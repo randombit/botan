@@ -11,12 +11,15 @@
 
 namespace Botan {
 
+class Modular_Reducer;
+
 static const size_t PointGFp_SCALAR_BLINDING_BITS = 80;
 
 class PointGFp_Base_Point_Precompute
    {
    public:
-      PointGFp_Base_Point_Precompute(const PointGFp& base_point);
+      PointGFp_Base_Point_Precompute(const PointGFp& base_point,
+                                     const Modular_Reducer& mod_order);
 
       PointGFp mul(const BigInt& k,
                    RandomNumberGenerator& rng,
@@ -24,6 +27,8 @@ class PointGFp_Base_Point_Precompute
                    std::vector<BigInt>& ws) const;
    private:
       const PointGFp& m_base_point;
+      const Modular_Reducer& m_mod_order;
+
       const size_t m_p_words;
       const size_t m_T_size;
 

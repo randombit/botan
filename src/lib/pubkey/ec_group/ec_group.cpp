@@ -39,7 +39,7 @@ class EC_Group_Data final
          m_order(order),
          m_cofactor(cofactor),
          m_mod_order(order),
-         m_base_mult(m_base_point),
+         m_base_mult(m_base_point, m_mod_order),
          m_oid(oid),
          m_p_bits(p.bits()),
          m_order_bits(order.bits()),
@@ -502,7 +502,11 @@ BigInt EC_Group::blinded_base_point_multiply_x(const BigInt& k,
                                                RandomNumberGenerator& rng,
                                                std::vector<BigInt>& ws) const
    {
-   return data().blinded_base_point_multiply(k, rng, ws).get_affine_x();
+   const PointGFp pt = data().blinded_base_point_multiply(k, rng, ws);
+
+   if(pt.is_zero())
+      return 0;
+   return pt.get_affine_x();
    }
 
 BigInt EC_Group::random_scalar(RandomNumberGenerator& rng) const

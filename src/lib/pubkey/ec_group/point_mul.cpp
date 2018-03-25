@@ -6,6 +6,7 @@
 
 #include <botan/internal/point_mul.h>
 #include <botan/rng.h>
+#include <botan/reducer.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {
@@ -38,8 +39,10 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar,
    return m_point_mul->mul(scalar, rng, m_order, m_ws);
    }
 
-PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& base) :
+PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& base,
+                                                               const Modular_Reducer& mod_order) :
    m_base_point(base),
+   m_mod_order(mod_order),
    m_p_words(base.get_curve().get_p().size()),
    m_T_size(base.get_curve().get_p().bits() + PointGFp_SCALAR_BLINDING_BITS + 1)
    {
@@ -97,7 +100,9 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
 
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
    const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS, false);
-   const BigInt scalar = k + group_order * mask;
+
+   // Instead of reducing k mod group order should we alter the mask size??
+   const BigInt scalar = m_mod_order.reduce(k) + group_order * mask;
 
    size_t windows = round_up(scalar.bits(), 2) / 2;
 
