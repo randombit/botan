@@ -3,6 +3,7 @@ soname_suffix "so"
 
 <target_features>
 posix1
+posix_mlock
 
 dev_random
 proc_fs

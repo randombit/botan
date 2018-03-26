@@ -3,9 +3,10 @@ soname_suffix "so"
 
 <target_features>
 posix1
+posix_mlock
+clock_gettime
 
 dev_random
-clock_gettime
 
 # getauxval is available in Android NDK for min API 18 and in Crystax NDK
 # for all min API levels. Use --without-os-feature=getauxval to disable

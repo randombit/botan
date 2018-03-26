@@ -7,6 +7,7 @@ doc_dir doc
 
 <target_features>
 posix1
+posix_mlock
 arc4random
 
 sockets

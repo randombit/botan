@@ -5,6 +5,7 @@ use_stack_protector no
 
 <target_features>
 posix1
+posix_mlock
 clock_gettime
 dev_random
 proc_fs

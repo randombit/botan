@@ -325,11 +325,13 @@ void* OS::allocate_locked_pages(size_t length)
    ::madvise(ptr, length, MADV_DONTDUMP);
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    if(::mlock(ptr, length) != 0)
       {
       ::munmap(ptr, length);
       return nullptr; // failed to lock
       }
+#endif
 
    ::memset(ptr, 0, length);
 
@@ -361,7 +363,11 @@ void OS::free_locked_pages(void* ptr, size_t length)
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    secure_scrub_memory(ptr, length);
+
+#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    ::munlock(ptr, length);
+#endif
+
    ::munmap(ptr, length);
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    secure_scrub_memory(ptr, length);
