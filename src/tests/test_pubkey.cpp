@@ -191,6 +191,8 @@ PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const V
    const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
    const std::string padding = choose_padding(vars, pad_hdr);
 
+   const bool expected_valid = (get_opt_sz(vars, "Valid", 1) == 1);
+
    std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
 
    Test::Result result(algo_name() + "/" + padding + " signature verification");
@@ -202,12 +204,23 @@ PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const V
       try
          {
          verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
-         result.test_eq("correct signature valid", verifier->verify_message(message, signature), true);
-         check_invalid_signatures(result, *verifier, message, signature);
          }
       catch(Botan::Lookup_Error&)
          {
          result.test_note("Skipping verifying with " + verify_provider);
+         }
+
+      if(verifier)
+         {
+         const bool verified = verifier->verify_message(message, signature);
+
+         if(expected_valid)
+            {
+            result.test_eq("correct signature valid", verified, true);
+            check_invalid_signatures(result, *verifier, message, signature);
+            }
+         else
+            result.test_eq("incorrect signature invalid", verified, false);
          }
       }
 

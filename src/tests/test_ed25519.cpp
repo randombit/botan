@@ -20,6 +20,25 @@ namespace {
 
 #if defined(BOTAN_HAS_ED25519)
 
+class Ed25519_Verification_Tests : public PK_Signature_Verification_Test
+   {
+   public:
+      Ed25519_Verification_Tests() : PK_Signature_Verification_Test(
+         "Ed25519",
+         "pubkey/ed25519_verify.vec",
+         "Pubkey,Msg,Signature", "Valid") {}
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
+         {
+         const std::vector<uint8_t> pubkey = get_req_bin(vars, "Pubkey");
+
+         std::unique_ptr<Botan::Ed25519_PublicKey> key(new Botan::Ed25519_PublicKey(pubkey));
+
+         return std::unique_ptr<Botan::Public_Key>(key.release());
+
+         }
+   };
+
 class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test
    {
    public:
@@ -82,6 +101,7 @@ class Ed25519_Curdle_Format_Tests final : public Test
          }
    };
 
+BOTAN_REGISTER_TEST("ed25519_verify", Ed25519_Verification_Tests);
 BOTAN_REGISTER_TEST("ed25519_sign", Ed25519_Signature_Tests);
 BOTAN_REGISTER_TEST("ed25519_curdle", Ed25519_Curdle_Format_Tests);
 
