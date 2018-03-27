@@ -120,8 +120,10 @@ If you don't already use it for all your C/C++ development, install
 ``ccache`` now and configure a large cache on a fast disk. It allows for
 very quick rebuilds by caching the compiler output.
 
-Use ``--with-sanitizers`` to enable ASan. UBSan has to be added separately
-with ``--cc-abi-flags`` at the moment as GCC 4.8 does not have UBSan.
+Use ``--enable-sanitizers=`` flag to enable various sanitizer checks.
+Supported values including "address" and "undefined" for GCC and
+Clang.  GCC also supports "iterator" (checked iterators), and Clang
+supports "memory" (MSan) and "coverage" (for fuzzing).
 
 Copyright Notice
 ========================================

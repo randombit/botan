@@ -41,9 +41,8 @@ To fuzz with AFL (http://lcamtuf.coredump.cx/afl/)::
   $ ./configure.py --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-g++
   $ make fuzzers
 
-For AFL, `--with-sanitizers` is optional.
-
-You can also use `afl-clang-fast++` or `afl-clang++`.
+For AFL sanitizers are optional. You can also use `afl-clang-fast++`
+or `afl-clang++`, be sure to set `--cc=clang` also.
 
 The fuzzer binaries will be in `build/fuzzer`. To run them you need to
 run under `afl-fuzz`::
