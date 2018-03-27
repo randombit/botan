@@ -96,11 +96,10 @@ size_t Argument_Parser::get_arg_sz(const std::string& opt_name) const
 
 std::vector<std::string> Argument_Parser::get_arg_list(const std::string& what) const
    {
-   if(what != m_spec_rest)
-      {
-      throw CLI_Error("Unexpected list name '" + what + "'");
-      }
-   return m_user_rest;
+   if(what == m_spec_rest)
+      return m_user_rest;
+
+   return Botan::split_on(get_arg(what), ',');
    }
 
 void Argument_Parser::parse_args(const std::vector<std::string>& params)
