@@ -19,6 +19,8 @@
 
 #include "cli.h"
 #include <botan/hex.h>
+#include <botan/bigint.h>
+#include <botan/numthry.h>
 #include <sstream>
 #include <fstream>
 
@@ -43,8 +45,8 @@
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
+   #include <botan/pubkey.h>
    #include <botan/ecdsa.h>
-   #include <botan/numthry.h>
 #endif
 
 namespace Botan_CLI {
