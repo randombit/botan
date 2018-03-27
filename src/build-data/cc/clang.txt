@@ -9,8 +9,15 @@ maintainer_warning_flags "-Wunreachable-code -Wdocumentation -Qunused-arguments 
 
 optimization_flags "-O3"
 size_optimization_flags "-Os"
-#sanitizer_flags "-fsanitize=address,undefined -fsanitize-coverage=edge,indirect-calls,8bit-counters -fno-sanitize-recover=undefined"
-sanitizer_flags "-fsanitize=address,undefined"
+
+<sanitizers>
+default   -> address,undefined
+
+address   -> "-fsanitize=address"
+undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
+coverage  -> "-fsanitize-coverage=edge,indirect-calls,8bit-counters"
+memory    -> "-fsanitize=memory"
+</sanitizers>
 
 shared_flags "-fPIC"
 coverage_flags "--coverage"

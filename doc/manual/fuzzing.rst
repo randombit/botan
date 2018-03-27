@@ -19,8 +19,11 @@ need to compile libFuzzer::
 Then build the fuzzers::
 
   $ ./configure.py --cc=clang --build-fuzzer=libfuzzer --unsafe-fuzzer-mode \
-        --cc-abi-flags='-fsanitize=address,undefined -fsanitize-coverage=edge,indirect-calls,8bit-counters -fno-sanitize-recover=undefined'
+        --enable-sanitizers=coverage,address,undefined
   $ make fuzzers
+
+Enabling 'coverage' sanitizer flags is required for libFuzzer to work.
+Address sanitizer and undefined sanitizer are optional.
 
 The fuzzer binaries will be in `build/fuzzer`. Simply pick one and run it, optionally
 also passing a directory containing corpus inputs.

@@ -354,6 +354,9 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
                            help='enable ASan/UBSan checks')
 
+    build_group.add_option('--enable-sanitizers', metavar='SAN', default='',
+                           help='enable specific sanitizers')
+
     build_group.add_option('--with-stack-protector', dest='with_stack_protector',
                            action='store_false', default=None, help=optparse.SUPPRESS_HELP)
 
@@ -1042,7 +1045,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         lex = lex_me_harder(
             infofile,
             [],
-            ['cpu_flags', 'so_link_commands', 'binary_link_commands', 'mach_abi_linking', 'isa_flags'],
+            ['cpu_flags', 'so_link_commands', 'binary_link_commands',
+             'mach_abi_linking', 'isa_flags', 'sanitizers'],
             {
                 'binary_name': None,
                 'linker_name': None,
@@ -1059,7 +1063,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'optimization_flags': '',
                 'size_optimization_flags': '',
                 'coverage_flags': '',
-                'sanitizer_flags': '',
                 'stack_protector_flags': '',
                 'shared_flags': '',
                 'lang_flags': '',
@@ -1095,7 +1098,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.output_to_exe = lex.output_to_exe
         self.output_to_object = lex.output_to_object
         self.preproc_flags = lex.preproc_flags
-        self.sanitizer_flags = lex.sanitizer_flags
+        self.sanitizers = lex.sanitizers
         self.shared_flags = lex.shared_flags
         self.size_optimization_flags = lex.size_optimization_flags
         self.so_link_commands = lex.so_link_commands
@@ -1183,33 +1186,48 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             yield options.os
             yield options.cpu
 
-        abi_link = list()
+        abi_link = set()
         for what in mach_abi_groups():
             if what in self.mach_abi_linking:
                 flag = self.mach_abi_linking.get(what)
                 if flag != None and flag != '' and flag not in abi_link:
-                    abi_link.append(flag)
+                    abi_link.add(flag)
 
         if options.msvc_runtime:
-            abi_link.append("/" + options.msvc_runtime)
+            abi_link.add("/" + options.msvc_runtime)
 
         if options.with_stack_protector and self.stack_protector_flags != '':
-            abi_link.append(self.stack_protector_flags)
+            abi_link.add(self.stack_protector_flags)
 
         if options.with_coverage_info:
             if self.coverage_flags == '':
                 raise UserError('No coverage handling for %s' % (self.basename))
-            abi_link.append(self.coverage_flags)
+            abi_link.add(self.coverage_flags)
 
-        if options.with_sanitizers:
-            if self.sanitizer_flags == '':
+        if options.with_sanitizers or options.enable_sanitizers != '':
+            if not self.sanitizers:
                 raise UserError('No sanitizer handling for %s' % (self.basename))
-            abi_link.append(self.sanitizer_flags)
+
+            default_san = self.sanitizers['default'].split(',')
+
+            if options.enable_sanitizers:
+                san = options.enable_sanitizers.split(',')
+            else:
+                san = default_san
+
+            for s in san:
+                if s not in self.sanitizers:
+                    raise UserError('No flags defined for sanitizer %s in %s' % (s, self.basename))
+
+                if s == 'default':
+                    abi_link.update([self.sanitizers[s] for s in default_san])
+                else:
+                    abi_link.add(self.sanitizers[s])
 
         if options.with_openmp:
             if 'openmp' not in self.mach_abi_linking:
                 raise UserError('No support for OpenMP for %s' % (self.basename))
-            abi_link.append(self.mach_abi_linking['openmp'])
+            abi_link.add(self.mach_abi_linking['openmp'])
 
         abi_flags = ' '.join(sorted(abi_link))
 

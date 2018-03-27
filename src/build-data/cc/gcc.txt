@@ -16,11 +16,13 @@ shared_flags "-fPIC"
 coverage_flags "--coverage"
 stack_protector_flags "-fstack-protector"
 
-# GCC 4.8
-sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address"
+<sanitizers>
+default   -> iterator,address
 
-# GCC 4.9 and later
-#sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined"
+iterator  -> "-D_GLIBCXX_DEBUG"
+address   -> "-fsanitize=address"
+undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
+</sanitizers>
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
