@@ -400,7 +400,7 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
     class Client_Credentials : public Botan::Credentials_Manager
     {
        public:
-          std::vector<Certificate_Store*> trusted_certificate_authorities(
+          std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
              const std::string& type,
              const std::string& context) override
              {
@@ -409,7 +409,7 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
              return { new Botan::Certificate_Store_In_Memory("cas") };
              }
 
-          std::vector<X509_Certificate> cert_chain(
+          std::vector<Botan::X509_Certificate> cert_chain(
              const std::vector<std::string>& cert_key_types,
              const std::string& type,
              const std::string& context) override
@@ -551,11 +551,11 @@ The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
     class Server_Credentials : public Botan::Credentials_Manager
     {
        public:
-	  Server_Credentials() : m_key(Botan::X509::load_key("botan.randombit.net.key"))
+	  Server_Credentials() : m_key(Botan::PKCS8::load_key("botan.randombit.net.key"))
              {
              }
 
-          std::vector<Certificate_Store*> trusted_certificate_authorities(
+          std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
              const std::string& type,
              const std::string& context) override
              {
@@ -565,7 +565,7 @@ The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
              return std::vector<Certificate_Store*>();
              }
 
-          std::vector<X509_Certificate> cert_chain(
+          std::vector<Botan::X509_Certificate> cert_chain(
              const std::vector<std::string>& cert_key_types,
              const std::string& type,
              const std::string& context) override
