@@ -19,12 +19,18 @@
 
 #include "cli.h"
 #include <botan/hex.h>
-#include <botan/bigint.h>
-#include <botan/numthry.h>
 #include <sstream>
 #include <fstream>
 
 #include <botan/internal/os_utils.h>
+
+#if defined(BOTAN_HAS_BIGINT)
+   #include <botan/bigint.h>
+#endif
+
+#if defined(BOTAN_HAS_NUMBERTHEORY)
+   #include <botan/numthry.h>
+#endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
