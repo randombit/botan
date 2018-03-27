@@ -157,17 +157,17 @@ void sc_muladd(uint8_t* s, const uint8_t* a, const uint8_t* b, const uint8_t* c)
 
    redc_mul(s0, s1, s2, s3, s4, s5, s12);
 
-   carry<21>(s0, s1);
-   carry<21>(s1, s2);
-   carry<21>(s2, s3);
-   carry<21>(s3, s4);
-   carry<21>(s4, s5);
-   carry<21>(s5, s6);
-   carry<21>(s6, s7);
-   carry<21>(s7, s8);
-   carry<21>(s8, s9);
-   carry<21>(s9, s10);
-   carry<21>(s10, s11);
+   carry0<21>(s0, s1);
+   carry0<21>(s1, s2);
+   carry0<21>(s2, s3);
+   carry0<21>(s3, s4);
+   carry0<21>(s4, s5);
+   carry0<21>(s5, s6);
+   carry0<21>(s6, s7);
+   carry0<21>(s7, s8);
+   carry0<21>(s8, s9);
+   carry0<21>(s9, s10);
+   carry0<21>(s10, s11);
    carry0<21>(s11, s12);
 
    redc_mul(s0, s1, s2, s3, s4, s5, s12);
