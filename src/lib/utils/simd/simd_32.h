@@ -134,14 +134,10 @@ class SIMD_4x32 final
          return SIMD_4x32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         union {
-            __vector unsigned int V;
-            uint32_t R[4];
-            } vec;
+         uint32_t R[4];
+         Botan::load_le(R, static_cast<const uint8_t*>(in), 4);
+         return SIMD_4x32(R);
 
-         Botan::load_le(vec.R, static_cast<const uint8_t*>(in), 4);
-
-         return SIMD_4x32(vec.V);
 #elif defined(BOTAN_SIMD_USE_NEON)
 
          uint32_t in32[4];
@@ -170,14 +166,9 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         union {
-            __vector unsigned int V;
-            uint32_t R[4];
-            } vec;
-
-         Botan::load_be(vec.R, static_cast<const uint8_t*>(in), 4);
-
-         return SIMD_4x32(vec.V);
+         uint32_t R[4];
+         Botan::load_be(R, static_cast<const uint8_t*>(in), 4);
+         return SIMD_4x32(R);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
