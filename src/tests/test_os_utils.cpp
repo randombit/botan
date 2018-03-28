@@ -66,29 +66,22 @@ class OS_Utils_Tests final : public Test
 
       Test::Result test_get_processor_timestamp()
          {
-         // TODO better tests
          Test::Result result("OS::get_processor_timestamp");
 
          const uint64_t proc_ts1 = Botan::OS::get_processor_timestamp();
 
-         // do something that consumes a little time
-         volatile int x = 11;
-         while(x < 65535)
-            {
-            x *= 2;
-            x -= 10;
-            }
-
-         uint64_t proc_ts2 = Botan::OS::get_processor_timestamp();
-
          if(proc_ts1 == 0)
             {
+            const uint64_t proc_ts2 = Botan::OS::get_processor_timestamp();
             result.test_is_eq("Disabled processor timestamp stays at zero", proc_ts1, proc_ts2);
+            return result;
             }
-         else
-            {
-            result.confirm("Processor timestamp does not duplicate", proc_ts1 != proc_ts2);
-            }
+
+         size_t counts = 0;
+         while(Botan::OS::get_processor_timestamp() == proc_ts1)
+            ++counts;
+
+         result.test_lt("CPU cycle counter eventually changes value", counts, 10);
 
          return result;
          }
