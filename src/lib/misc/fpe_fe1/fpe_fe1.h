@@ -50,6 +50,7 @@ class BOTAN_PUBLIC_API(2,5) FPE_FE1 final : public SymmetricAlgorithm
       * Encrypt X from and onto the group Z_n using key and tweak
       * @param x the plaintext to encrypt <= n
       * @param tweak will modify the ciphertext
+      * @param tweak_len length of tweak
       */
       BigInt encrypt(const BigInt& x, const uint8_t tweak[], size_t tweak_len) const;
 
@@ -57,6 +58,7 @@ class BOTAN_PUBLIC_API(2,5) FPE_FE1 final : public SymmetricAlgorithm
       * Decrypt X from and onto the group Z_n using key and tweak
       * @param x the ciphertext to encrypt <= n
       * @param tweak must match the value used to encrypt
+      * @param tweak_len length of tweak
       */
       BigInt decrypt(const BigInt& x, const uint8_t tweak[], size_t tweak_len) const;
 

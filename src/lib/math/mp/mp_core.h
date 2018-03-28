@@ -125,6 +125,7 @@ void bigint_linmul3(word z[], const word x[], size_t x_size, word y);
 * @param p_size size of p
 * @param p_dash Montgomery value
 * @param workspace array of at least 2*(p_size+1) words
+* @param ws_size size of workspace in words
 */
 void bigint_monty_redc(word z[],
                        const word p[], size_t p_size,

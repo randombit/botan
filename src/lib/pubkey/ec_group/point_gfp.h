@@ -204,6 +204,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
 
       /**
       * Point addition
+      * @param other the point to add to *this
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
       void add(const PointGFp& other, std::vector<BigInt>& workspace);
@@ -215,6 +216,15 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       */
       void add_affine(const PointGFp& other, std::vector<BigInt>& workspace);
 
+      /**
+      * Point addition - mixed J+A. Array version.
+      *
+      * @param x_words the words of the x coordinate of the other point
+      * @param x_size size of x_words
+      * @param y_words the words of the y coordinate of the other point
+      * @param y_size size of y_words
+      * @param workspace temp space, at least WORKSPACE_SIZE elements
+      */
       void add_affine(const word x_words[], size_t x_size,
                       const word y_words[], size_t y_size,
                       std::vector<BigInt>& workspace);
@@ -227,7 +237,9 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
 
       /**
       * Point addition
+      * @param other the point to add to *this
       * @param workspace temp space, at least WORKSPACE_SIZE elements
+      * @return other plus *this
       */
       PointGFp plus(const PointGFp& other, std::vector<BigInt>& workspace) const
          {
