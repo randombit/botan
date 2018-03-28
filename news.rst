@@ -92,7 +92,11 @@ Version 2.5.0, Not Yet Released
 
 * Use feature flags to enable/disable system specific code (GH #1378)
 
-* Add --msvc-runtime option to allow using static runtime (GH #1499 #210)
+* Add ``--msvc-runtime`` option to allow using static runtime (GH #1499 #210)
+
+* Add --enable-sanitizers= option to allow specifying which sanitizers to
+  enable. The existing ``--with-sanitizers`` option just enables some default
+  set which is known to work with the minimum required compiler versions.
 
 * The threefish module has been renamed threefish_512 since that is the
   algorithm it provides. (GH #1477)
