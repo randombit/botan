@@ -408,6 +408,7 @@ class Test
       static void set_test_options(bool log_success,
                                    bool run_online_tests,
                                    bool run_long_tests,
+                                   bool abort_on_first_fail,
                                    const std::string& data_dir,
                                    const std::string& pkcs11_lib,
                                    const Botan_Tests::Provider_Filter& pf);
@@ -432,7 +433,10 @@ class Test
    private:
       static std::string m_data_dir;
       static std::unique_ptr<Botan::RandomNumberGenerator> m_test_rng;
-      static bool m_log_success, m_run_online_tests, m_run_long_tests;
+      static bool m_log_success;
+      static bool m_run_online_tests;
+      static bool m_run_long_tests;
+      static bool m_abort_on_first_fail;
       static std::string m_pkcs11_lib;
       static Botan_Tests::Provider_Filter m_provider_filter;
    };

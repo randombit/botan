@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
    try
       {
       const std::string arg_spec =
-         "botan-test --data-dir= --pkcs11-lib= --provider= --log-success "
+         "botan-test --data-dir= --pkcs11-lib= --provider= --log-success --abort-on-first-fail "
          "--verbose --help --run-long-tests --run-online-tests --test-runs=1 --drbg-seed= "
          "*suites";
 
@@ -78,6 +78,7 @@ int main(int argc, char* argv[])
       const std::string provider = parser.get_arg("provider");
       const std::string drbg_seed = parser.get_arg("drbg-seed");
 
+      const bool abort_on_first_fail = parser.flag_set("abort-on-first-fail");
       const bool log_success = parser.flag_set("log-success");
       const bool run_long_tests = parser.flag_set("run-long-tests");
       const bool run_online_tests = parser.flag_set("run-online-tests");
@@ -96,7 +97,7 @@ int main(int argc, char* argv[])
 
       return tests.run(suites, data_dir, pkcs11_lib, provider,
                        log_success, run_online_tests, run_long_tests,
-                       drbg_seed, test_runs);
+                       abort_on_first_fail, drbg_seed, test_runs);
       }
    catch(std::exception& e)
       {

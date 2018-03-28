@@ -25,6 +25,7 @@ class Test_Runner final
               bool log_success,
               bool run_online_tests,
               bool run_long_tests,
+              bool abort_on_first_fail,
               const std::string& drbg_seed,
               size_t runs);
 

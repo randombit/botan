@@ -159,6 +159,11 @@ void Test::Result::test_failure(const std::string& what, const uint8_t buf[], si
 bool Test::Result::test_failure(const std::string& err)
    {
    m_fail_log.push_back(err);
+
+   if(m_who != "Failing Test" && m_abort_on_first_fail)
+      {
+      std::abort();
+      }
    return false;
    }
 
@@ -553,6 +558,7 @@ std::string Test::m_data_dir;
 bool Test::m_log_success = false;
 bool Test::m_run_online_tests = false;
 bool Test::m_run_long_tests = false;
+bool Test::m_abort_on_first_fail = false;
 std::string Test::m_pkcs11_lib;
 Botan_Tests::Provider_Filter Test::m_provider_filter;
 
@@ -560,6 +566,7 @@ Botan_Tests::Provider_Filter Test::m_provider_filter;
 void Test::set_test_options(bool log_success,
                             bool run_online,
                             bool run_long,
+                            bool abort_on_first_fail,
                             const std::string& data_dir,
                             const std::string& pkcs11_lib,
                             const Botan_Tests::Provider_Filter& pf)
@@ -568,6 +575,7 @@ void Test::set_test_options(bool log_success,
    m_log_success = log_success;
    m_run_online_tests = run_online;
    m_run_long_tests = run_long;
+   m_abort_on_first_fail = abort_on_first_fail;
    m_pkcs11_lib = pkcs11_lib;
    m_provider_filter = pf;
    }

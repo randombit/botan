@@ -30,131 +30,132 @@ class Test_Tests final : public Test
          Test::Result result("Test Framework");
 
          // Test a few success corner cases first
+         const std::string testcase_name = "Failing Test";
 
          result.test_throws("throws pi", []() { throw 3.14159; });
 
          // Test expected failure cases
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_throws("doesn't throw", []() { });
             verify_failure("test_throws", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_failure("explicitly reported failure", std::vector<uint8_t>());
             verify_failure("explicit failure", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_failure("explicitly reported failure", "test error");
             verify_failure("explicit failure", result, test_result);
             }
 
             {
-            verify_failure("explicit failure", result, Test::Result::Failure("test", "failure"));
+            verify_failure("explicit failure", result, Test::Result::Failure(testcase_name, "failure"));
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             std::vector<uint8_t> vec1(5), vec2(3, 9);
             test_result.test_eq("test vectors equal", vec1, vec2);
             verify_failure("test vectors equal", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             std::vector<uint8_t> vec1(5), vec2(5);
             test_result.test_ne("test vectors not equal", vec1, vec2);
             verify_failure("test vectors equal", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             std::vector<uint8_t> vec1(5), vec2(5);
             test_result.test_ne("test arrays not equal", vec1.data(), vec1.size(), vec2.data(), vec2.size());
             verify_failure("test vectors equal", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             size_t x = 5, y = 6;
             test_result.test_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             size_t x = 5, y = 5;
             test_result.test_ne("test ints not equal", x, y);
             verify_failure("test ints not equal", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_is_nonempty("empty", "");
             verify_failure("test_is_nonempty", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_lt("not less", 5, 5);
             verify_failure("test_lt", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_lte("not lte", 6, 5);
             verify_failure("test_lte", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_gte("not gte", 5, 6);
             verify_failure("test_gte", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_ne("string ne", "foo", "foo");
             verify_failure("test_ne", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_rc_ok("test_func", -1);
             verify_failure("test_rc_ok", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_rc("test_func", 0, 5);
             verify_failure("test_rc", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_rc_fail("test_func", "testing", 0);
             verify_failure("test_rc_fail", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg",
                                     []() { throw std::runtime_error("not the message"); });
             verify_failure("test_throws", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg",
                                     []() { throw "not even a std::exception"; });
             verify_failure("test_throws", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg",
                                     []() { ; });
             verify_failure("test_throws", result, test_result);
@@ -162,14 +163,14 @@ class Test_Tests final : public Test
 
 #if defined(BOTAN_HAS_BIGINT)
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             Botan::BigInt x = 5, y = 6;
             test_result.test_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
             }
 
             {
-            Test::Result test_result("Testcase");
+            Test::Result test_result(testcase_name);
             Botan::BigInt x = 5, y = 5;
             test_result.test_ne("test ints not equal", x, y);
             verify_failure("test ints not equal", result, test_result);
