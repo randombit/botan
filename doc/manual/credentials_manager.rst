@@ -29,12 +29,23 @@ implementation.
 
       The default implementation returns an empty list.
 
+   .. cpp:function:: std::vector<X509_Certificate> find_cert_chain( \
+                     const std::vector<std::string>& cert_key_types, \
+                     const std::vector<X509_DN>& acceptable_CAs, \
+                     const std::string& type, \
+                     const std::string& context)
+
+      Return the certificate chain to use to identify ourselves. The
+      ``acceptable_CAs`` parameter gives a list of CAs the peer trusts.
+      This may be empty.
+
    .. cpp:function:: std::vector<X509_Certificate> cert_chain( \
          const std::vector<std::string>& cert_key_types, \
          const std::string& type, \
          const std::string& context)
 
-      Return the certificate chain to use to identify ourselves
+      Return the certificate chain to use to identify ourselves. Starting in
+      2.5, prefer ``find_cert_chain`` which additionally provides the CA list.
 
    .. cpp:function:: std::vector<X509_Certificate> cert_chain_single_type( \
          const std::string& cert_key_type, \

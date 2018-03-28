@@ -137,6 +137,22 @@ information about the connection.
      This callback is optional, and can be used to inspect all handshake messages
      while the session establishment occurs.
 
+ .. cpp:function:: void tls_modify_extensions(Extensions& extn, Connection_Side which_side)
+
+     This callback is optional, and can be used to modify extensions before they
+     are sent to the peer. For example this enables adding a custom extension,
+     or replacing or removing an extension set by the library.
+
+ .. cpp:function:: void tls_examine_extensions(const Extensions& extn, Connection_Side which_side)
+
+     This callback is optional, and can be used to examine extensions sent by
+     the peer.
+
+ .. std::string tls_decode_group_param(Group_Params group_param)
+
+     This callback is optional. It can be used to support custom group ids for
+     ECDH and DH key exchange.
+
  .. cpp:function:: void tls_log_error(const char* msg)
 
      Optional logging for an error message. (Not currently used)
