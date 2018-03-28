@@ -78,7 +78,7 @@ class OS_Utils_Tests final : public Test
             }
 
          size_t counts = 0;
-         while(Botan::OS::get_processor_timestamp() == proc_ts1)
+         while(counts < 100 && (Botan::OS::get_processor_timestamp() == proc_ts1))
             ++counts;
 
          result.test_lt("CPU cycle counter eventually changes value", counts, 10);
