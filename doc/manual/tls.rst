@@ -148,11 +148,6 @@ information about the connection.
      This callback is optional, and can be used to examine extensions sent by
      the peer.
 
- .. std::string tls_decode_group_param(Group_Params group_param)
-
-     This callback is optional. It can be used to support custom group ids for
-     ECDH and DH key exchange.
-
  .. cpp:function:: void tls_log_error(const char* msg)
 
      Optional logging for an error message. (Not currently used)
