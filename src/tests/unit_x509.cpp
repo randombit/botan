@@ -550,6 +550,8 @@ Test::Result test_x509_authority_info_access_extension()
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::lookup(ca_cert_exp.signature_algorithm().oid),"RSA/EMSA4");
 
+#if defined(BOTAN_HAS_EMSA1)
+
    // Try to set a padding scheme that is not supported for signing with the given key type
    opt.set_padding_scheme("EMSA1");
    try
@@ -563,6 +565,8 @@ Test::Result test_x509_authority_info_access_extension()
          sk->algo_name(), e.what(),
          "Invalid argument Encoding scheme with canonical name EMSA1 not supported for signature algorithm RSA");
       }
+#endif
+
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::lookup(ca_cert_exp.signature_algorithm().oid),"RSA/EMSA4");
 
