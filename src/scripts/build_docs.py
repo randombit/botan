@@ -30,6 +30,16 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
+def have_prog(prog):
+    """
+    Check if some named program exists in the path
+    """
+    for path in os.environ['PATH'].split(os.pathsep):
+        exe_file = os.path.join(path, prog)
+        if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
+            return True
+    return False
+
 def touch(fname):
     try:
         os.utime(fname, None)
@@ -164,8 +174,17 @@ def main(args=None):
         # otherwise just copy it
         cmds.append(['cp', manual_src, manual_output])
 
+    def find_rst2man():
+        possible_names = ['rst2man', 'rst2man.py']
+
+        for name in possible_names:
+            if have_prog(name):
+                return name
+
+        raise Exception("Was configured with rst2man but could not be located in PATH")
+
     if with_rst2man:
-        cmds.append(['rst2man',
+        cmds.append([find_rst2man(),
                      os.path.join(cfg['build_dir'], 'botan.rst'),
                      os.path.join(cfg['build_dir'], 'botan.1')])
 
