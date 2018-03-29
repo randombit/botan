@@ -15,6 +15,19 @@ mail please use::
 This key can be found in the file ``doc/pgpkey.txt`` or online at
 https://keybase.io/jacklloyd and on most PGP keyservers.
 
+2018
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* 2018-03-29 (CVE-2018-9127): Invalid wildcard match
+
+  RFC 6125 wildcard matching was incorrectly implemented, so that a wildcard
+  certificate such as "b*.domain.com" would match any hosts "*b*.domain.com"
+  instead of just server names beginning with 'b'. The host and certificate
+  would still have to be in the same domain name. Reported by Fabian Weißberg of
+  Rohde and Schwarz Cybersecurity.
+
+  Bug introduced in 2.2.0, fixed in 2.5.0
+
 2017
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

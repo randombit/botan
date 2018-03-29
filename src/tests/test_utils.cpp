@@ -531,7 +531,7 @@ class Hostname_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
-         Test::Result result("Hostname");
+         Test::Result result("Hostname Matching");
 
          const std::string issued = get_req_str(vars, "Issued");
          const std::string hostname = get_req_str(vars, "Hostname");
