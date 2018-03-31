@@ -146,9 +146,11 @@ class X509test_Path_Validation_Tests final : public Test
             // certificate verification succeed even if no OCSP URL (softfail)
             result.confirm("test success", path_result.successful_validation());
             result.test_eq("test " + filename, path_result.result_string(), "Verified");
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
             // if softfail, there is warnings
             result.confirm("test warnings", !path_result.no_warnings());
             result.test_eq("test warnings string", path_result.warnings_string(), "[0] OCSP URL not available");
+#endif
             result.end_timer();
             results.push_back(result);  
             }
