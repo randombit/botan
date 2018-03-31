@@ -188,8 +188,3 @@ Documentation
 * X.509 certs, path validation
 * Specific docs covering one major topic (RSA, ECDSA, AES/GCM, ...)
 * Some howto style docs (setting up CA, ...)
-
-Packaging
-------------
-
-* Create a PPA for Ubuntu
