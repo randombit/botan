@@ -6,6 +6,7 @@ CRYPTO_BOX -> 20131128
 base64
 ctr
 hmac
+modes
 pbkdf2
 pem
 serpent

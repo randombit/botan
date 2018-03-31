@@ -6,5 +6,5 @@ DLIES -> 20160713
 dh
 kdf
 mac
-block
+modes
 </requires>

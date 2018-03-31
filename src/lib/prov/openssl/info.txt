@@ -14,5 +14,8 @@ windows -> libeay32.lib
 </libs>
 
 <requires>
+block
+stream
+modes
 pubkey
 </requires>

@@ -32,6 +32,10 @@
    #include <botan/numthry.h>
 #endif
 
+#if defined(BOTAN_HAS_EC_GROUP)
+   #include <botan/ec_group.h>
+#endif
+
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
 #endif
@@ -299,7 +303,7 @@ ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
 
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_EC_GROUP)
 
 class ECC_Mul_Timing_Test final : public Timing_Test
    {
