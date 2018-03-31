@@ -40,7 +40,68 @@ Hostname = test.www.example.com
 Issued = *www.example.com
 Hostname = www.example.com
 
+Issued = fluf*z.example.net
+Hostname = flufbaz.example.net
+
+Issued = example.com
+Hostname = EXAMPLE.com
+
+Issued = example.com
+Hostname = EXAMPLE.COM
+
+Issued = *.example.COM
+Hostname = a.EXAMPLE.com
+
+Issued = b*z.example.net
+Hostname = bz.example.net
+
 [Invalid]
+Issued =
+Hostname = empty.com
+
+Issued = empty.com
+Hostname =
+
+Issued =
+Hostname =
+
+Issued = *
+Hostname = *
+
+Issued = *
+Hostname = a
+
+Issued = *.com
+Hostname = a.com
+
+Issued = *.com
+Hostname = x.a.com
+
+# We reject hostnames with ..
+Issued = a*..com
+Hostname = aninvalidhostname..com
+
+Issued = f.*.com
+Hostname = f.a.com
+
+Issued = ample.com
+Hostname = example.com
+
+Issued = example.com
+Hostname = ample.com
+
+Issued = b*z.example.net
+Hostname = foobaz.example.net
+
+Issued = b*z.example.net
+Hostname = z.example.net
+
+Issued = flufb*z.example.net
+Hostname = foobaz.example.net
+
+Issued = b*z.example.net
+Hostname = baz.example.com
+
 Issued = example.com
 Hostname = www.example.com
 
@@ -50,6 +111,9 @@ Hostname = example.com
 Issued = bar.*.example.net
 Hostname = bar.foo.example.net
 
+Issued = bar.*.example.net
+Hostname = bar..example.net
+
 Issued = *.example.com
 Hostname = bar.foo.example.com
 
@@ -58,6 +122,12 @@ Hostname = example.com
 
 Issued = foo*foo.example.com
 Hostname = foo.example.com
+
+Issued = foo.exa*ple.com
+Hostname = foo.example.com
+
+Issued = exa*ple.com
+Hostname = example.com
 
 Issued = **.example.com
 Hostname = foo.example.com
