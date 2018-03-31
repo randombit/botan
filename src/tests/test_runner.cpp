@@ -86,19 +86,9 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
 }
 
-int Test_Runner::run(const std::vector<std::string>& requested_tests,
-                     const std::string& data_dir,
-                     const std::string& pkcs11_lib,
-                     const std::string& provider,
-                     bool log_success,
-                     bool run_online_tests,
-                     bool run_long_tests,
-                     bool abort_on_first_fail,
-                     bool avoid_undefined,
-                     const std::string& drbg_seed,
-                     size_t runs)
+int Test_Runner::run(const Test_Options& opts)
    {
-   std::vector<std::string> req = requested_tests;
+   std::vector<std::string> req = opts.requested_tests();
 
    if(req.empty())
       {
@@ -113,7 +103,7 @@ int Test_Runner::run(const std::vector<std::string>& requested_tests,
 
       std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
 
-      if(pkcs11_lib.empty())
+      if(opts.pkcs11_lib().empty())
          {
          // do not run pkcs11 tests by default unless pkcs11-lib set
          for(std::set<std::string>::iterator iter = all_others.begin(); iter != all_others.end();)
@@ -157,19 +147,17 @@ int Test_Runner::run(const std::vector<std::string>& requested_tests,
    output() << "Testing " << Botan::version_string() << "\n";
    output() << "Starting tests";
 
-   if(!pkcs11_lib.empty())
+   if(!opts.pkcs11_lib().empty())
       {
-      output() << " pkcs11 library:" << pkcs11_lib;
+      output() << " pkcs11 library:" << opts.pkcs11_lib();
       }
 
-   Botan_Tests::Provider_Filter pf;
-   if(!provider.empty())
+   if(!opts.provider().empty())
       {
-      output() << " provider:" << provider;
-      pf.set(provider);
+      output() << " provider:" << opts.provider();
       }
 
-   std::vector<uint8_t> seed = Botan::hex_decode(drbg_seed);
+   std::vector<uint8_t> seed = Botan::hex_decode(opts.drbg_seed());
    if(seed.empty())
       {
       const uint64_t ts = Botan_Tests::Test::timestamp();
@@ -179,23 +167,16 @@ int Test_Runner::run(const std::vector<std::string>& requested_tests,
 
    output() << " drbg_seed:" << Botan::hex_encode(seed) << "\n";
 
-   Botan_Tests::Test::set_test_options(log_success,
-                                       run_online_tests,
-                                       run_long_tests,
-                                       abort_on_first_fail,
-                                       avoid_undefined,
-                                       data_dir,
-                                       pkcs11_lib,
-                                       pf);
+   Botan_Tests::Test::set_test_options(opts);
 
-   for(size_t i = 0; i != runs; ++i)
+   for(size_t i = 0; i != opts.test_runs(); ++i)
       {
       std::unique_ptr<Botan::RandomNumberGenerator> rng =
          std::unique_ptr<Botan::RandomNumberGenerator>(new Testsuite_RNG(seed, i));
 
       Botan_Tests::Test::set_test_rng(std::move(rng));
 
-      const size_t failed = run_tests(req, i, runs);
+      const size_t failed = run_tests(req, i, opts.test_runs());
       if(failed > 0)
          return failed;
       }

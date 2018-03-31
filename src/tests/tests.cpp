@@ -160,7 +160,7 @@ bool Test::Result::test_failure(const std::string& err)
    {
    m_fail_log.push_back(err);
 
-   if(m_who != "Failing Test" && m_abort_on_first_fail)
+   if(m_who != "Failing Test" && Test::abort_on_first_fail())
       {
       std::abort();
       }
@@ -463,22 +463,6 @@ std::string Test::Result::result_string(bool verbose) const
    return report.str();
    }
 
-std::vector<std::string> Provider_Filter::filter(const std::vector<std::string>& in) const
-   {
-   if(m_provider.empty())
-      {
-      return in;
-      }
-   for(auto&& provider : in)
-      {
-      if(provider == m_provider)
-         {
-         return std::vector<std::string> { provider };
-         }
-      }
-   return std::vector<std::string> {};
-   }
-
 // static Test:: functions
 //static
 std::map<std::string, std::unique_ptr<Test>>& Test::global_registry()
@@ -553,34 +537,14 @@ std::vector<uint8_t> Test::read_binary_data_file(const std::string& path)
    }
 
 // static member variables of Test
+
+Test_Options Test::m_opts;
 std::unique_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
-std::string Test::m_data_dir;
-bool Test::m_log_success = false;
-bool Test::m_run_online_tests = false;
-bool Test::m_run_long_tests = false;
-bool Test::m_abort_on_first_fail = false;
-bool Test::m_avoid_undefined = false;
-std::string Test::m_pkcs11_lib;
-Botan_Tests::Provider_Filter Test::m_provider_filter;
 
 //static
-void Test::set_test_options(bool log_success,
-                            bool run_online,
-                            bool run_long,
-                            bool abort_on_first_fail,
-                            bool avoid_undefined,
-                            const std::string& data_dir,
-                            const std::string& pkcs11_lib,
-                            const Botan_Tests::Provider_Filter& pf)
+void Test::set_test_options(const Test_Options& opts)
    {
-   m_data_dir = data_dir;
-   m_log_success = log_success;
-   m_run_online_tests = run_online;
-   m_run_long_tests = run_long;
-   m_abort_on_first_fail = abort_on_first_fail;
-   m_avoid_undefined = avoid_undefined;
-   m_pkcs11_lib = pkcs11_lib;
-   m_provider_filter = pf;
+   m_opts = opts;
    }
 
 //static
@@ -596,45 +560,20 @@ std::string Test::data_file(const std::string& what)
    }
 
 //static
-const std::string& Test::data_dir()
-   {
-   return m_data_dir;
-   }
-
-//static
-bool Test::log_success()
-   {
-   return m_log_success;
-   }
-
-//static
-bool Test::avoid_undefined_behavior()
-   {
-   return m_avoid_undefined;
-   }
-
-//static
-bool Test::run_online_tests()
-   {
-   return m_run_online_tests;
-   }
-
-//static
-bool Test::run_long_tests()
-   {
-   return m_run_long_tests;
-   }
-
-//static
-std::string Test::pkcs11_lib()
-   {
-   return m_pkcs11_lib;
-   }
-
-//static
 std::vector<std::string> Test::provider_filter(const std::vector<std::string>& in)
    {
-   return m_provider_filter.filter(in);
+   if(m_opts.provider().empty())
+      {
+      return in;
+      }
+   for(auto&& provider : in)
+      {
+      if(provider == m_opts.provider())
+         {
+         return std::vector<std::string> { provider };
+         }
+      }
+   return std::vector<std::string> {};
    }
 
 //static
