@@ -842,11 +842,14 @@ class FFI_Unit_Tests final : public Test
          // delete of null is ok/ignored
          TEST_FFI_RC(0, botan_hash_destroy, (nullptr));
 
-         // Confirm that botan_x_destroy checks the argument type
-         botan_mp_t mp;
-         botan_mp_init(&mp);
-         TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT, botan_hash_destroy, (reinterpret_cast<botan_hash_t>(mp)));
-         TEST_FFI_RC(0, botan_mp_destroy, (mp));
+         if(Test::avoid_undefined_behavior() == false)
+            {
+            // Confirm that botan_x_destroy checks the argument type
+            botan_mp_t mp;
+            botan_mp_init(&mp);
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT, botan_hash_destroy, (reinterpret_cast<botan_hash_t>(mp)));
+            TEST_FFI_RC(0, botan_mp_destroy, (mp));
+            }
 
          return result;
          }

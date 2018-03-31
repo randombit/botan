@@ -409,12 +409,14 @@ class Test
                                    bool run_online_tests,
                                    bool run_long_tests,
                                    bool abort_on_first_fail,
+                                   bool avoid_undefined,
                                    const std::string& data_dir,
                                    const std::string& pkcs11_lib,
                                    const Botan_Tests::Provider_Filter& pf);
 
       static void set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng);
 
+      static bool avoid_undefined_behavior();
       static bool log_success();
       static bool run_online_tests();
       static bool run_long_tests();
@@ -437,6 +439,7 @@ class Test
       static bool m_run_online_tests;
       static bool m_run_long_tests;
       static bool m_abort_on_first_fail;
+      static bool m_avoid_undefined;
       static std::string m_pkcs11_lib;
       static Botan_Tests::Provider_Filter m_provider_filter;
    };

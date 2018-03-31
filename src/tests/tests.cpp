@@ -559,6 +559,7 @@ bool Test::m_log_success = false;
 bool Test::m_run_online_tests = false;
 bool Test::m_run_long_tests = false;
 bool Test::m_abort_on_first_fail = false;
+bool Test::m_avoid_undefined = false;
 std::string Test::m_pkcs11_lib;
 Botan_Tests::Provider_Filter Test::m_provider_filter;
 
@@ -567,6 +568,7 @@ void Test::set_test_options(bool log_success,
                             bool run_online,
                             bool run_long,
                             bool abort_on_first_fail,
+                            bool avoid_undefined,
                             const std::string& data_dir,
                             const std::string& pkcs11_lib,
                             const Botan_Tests::Provider_Filter& pf)
@@ -576,6 +578,7 @@ void Test::set_test_options(bool log_success,
    m_run_online_tests = run_online;
    m_run_long_tests = run_long;
    m_abort_on_first_fail = abort_on_first_fail;
+   m_avoid_undefined = avoid_undefined;
    m_pkcs11_lib = pkcs11_lib;
    m_provider_filter = pf;
    }
@@ -602,6 +605,12 @@ const std::string& Test::data_dir()
 bool Test::log_success()
    {
    return m_log_success;
+   }
+
+//static
+bool Test::avoid_undefined_behavior()
+   {
+   return m_avoid_undefined;
    }
 
 //static

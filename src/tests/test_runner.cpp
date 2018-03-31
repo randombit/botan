@@ -94,6 +94,7 @@ int Test_Runner::run(const std::vector<std::string>& requested_tests,
                      bool run_online_tests,
                      bool run_long_tests,
                      bool abort_on_first_fail,
+                     bool avoid_undefined,
                      const std::string& drbg_seed,
                      size_t runs)
    {
@@ -182,6 +183,7 @@ int Test_Runner::run(const std::vector<std::string>& requested_tests,
                                        run_online_tests,
                                        run_long_tests,
                                        abort_on_first_fail,
+                                       avoid_undefined,
                                        data_dir,
                                        pkcs11_lib,
                                        pf);

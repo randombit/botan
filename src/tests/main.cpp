@@ -59,8 +59,9 @@ int main(int argc, char* argv[])
    try
       {
       const std::string arg_spec =
-         "botan-test --data-dir= --pkcs11-lib= --provider= --log-success --abort-on-first-fail "
-         "--verbose --help --run-long-tests --run-online-tests --test-runs=1 --drbg-seed= "
+         "botan-test --verbose --help --data-dir= --pkcs11-lib= --provider= "
+         "--log-success --abort-on-first-fail --avoid-undefined "
+         "--run-long-tests --run-online-tests --test-runs=1 --drbg-seed= "
          "*suites";
 
       Botan_CLI::Argument_Parser parser(arg_spec);
@@ -82,6 +83,7 @@ int main(int argc, char* argv[])
       const bool log_success = parser.flag_set("log-success");
       const bool run_long_tests = parser.flag_set("run-long-tests");
       const bool run_online_tests = parser.flag_set("run-online-tests");
+      const bool avoid_undefined = parser.flag_set("avoid-undefined");
       const size_t test_runs = parser.get_arg_sz("test-runs");
 
       const std::vector<std::string> suites = parser.get_arg_list("suites");
@@ -97,7 +99,8 @@ int main(int argc, char* argv[])
 
       return tests.run(suites, data_dir, pkcs11_lib, provider,
                        log_success, run_online_tests, run_long_tests,
-                       abort_on_first_fail, drbg_seed, test_runs);
+                       abort_on_first_fail, avoid_undefined,
+                       drbg_seed, test_runs);
       }
    catch(std::exception& e)
       {
