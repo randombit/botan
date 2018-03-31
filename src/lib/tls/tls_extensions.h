@@ -47,7 +47,7 @@ enum Handshake_Extension_Type {
 /**
 * Base class representing a TLS extension of some kind
 */
-class Extension
+class BOTAN_UNSTABLE_API Extension
    {
    public:
       /**
