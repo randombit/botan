@@ -4,6 +4,10 @@ Release Notes
 Version 2.5.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix error in certificate wildcard matching (CVE-2018-9127), where a
+  wildcard cert for ``b*.example.com`` would be accepted as a match for
+  any host with name ``*b*.example.com`` (GH #1519)
+
 * Add support for RSA-PSS signatures in TLS (GH #1285)
 
 * Ed25519 certificates are now supported (GH #1501)
@@ -97,6 +101,9 @@ Version 2.5.0, Not Yet Released
 * Add --enable-sanitizers= option to allow specifying which sanitizers to
   enable. The existing ``--with-sanitizers`` option just enables some default
   set which is known to work with the minimum required compiler versions.
+
+* Use either ``rst2man`` or ``rst2man.py`` for generating man page as
+  distributions differ on where this program is installed (GH #1516)
 
 * The threefish module has been renamed threefish_512 since that is the
   algorithm it provides. (GH #1477)
