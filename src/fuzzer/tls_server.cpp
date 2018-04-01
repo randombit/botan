@@ -109,44 +109,82 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager
       std::unique_ptr<Botan::Private_Key> m_rsa_key;
    };
 
+class Fuzzer_TLS_Server_Callbacks : public Botan::TLS::Callbacks
+   {
+   public:
+       void tls_emit_data(const uint8_t[], size_t) override
+         {
+         // discard
+         }
+
+      void tls_record_received(uint64_t, const uint8_t[], size_t) override
+         {
+         // ignore peer data
+         }
+
+      void tls_alert(Botan::TLS::Alert) override
+         {
+         // ignore alert
+         }
+
+      bool tls_session_established(const Botan::TLS::Session&)
+         {
+         return true; // cache it
+         }
+
+      std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override
+         {
+         if(client_protos.size() > 1)
+            return client_protos[0];
+         else
+            return "fuzzy";
+         }
+
+      void tls_verify_cert_chain(
+         const std::vector<Botan::X509_Certificate>& cert_chain,
+         const std::vector<std::shared_ptr<const Botan::OCSP::Response>>& ocsp_responses,
+         const std::vector<Botan::Certificate_Store*>& trusted_roots,
+         Botan::Usage_Type usage,
+         const std::string& hostname,
+         const Botan::TLS::Policy& policy) override
+         {
+         try
+            {
+            // try to validate to exercise those code paths
+            Botan::TLS::Callbacks::tls_verify_cert_chain(cert_chain, ocsp_responses,
+                                                         trusted_roots, usage, hostname, policy);
+            }
+         catch(...)
+            {
+            // ignore validation result
+            }
+         }
+
+   };
+
 void fuzz(const uint8_t in[], size_t len)
    {
-   if(len == 0)
+   if(len <= 1)
       return;
-
-   auto dev_null = [](const uint8_t[], size_t) {};
-
-   auto ignore_alerts = [](Botan::TLS::Alert, const uint8_t[], size_t) {};
-   auto ignore_hs = [](const Botan::TLS::Session&) { return true; };
 
    Botan::TLS::Session_Manager_Noop session_manager;
    Botan::TLS::Policy policy;
    Botan::TLS::Server_Information info("server.name", 443);
    Fuzzer_TLS_Server_Creds creds;
+   Fuzzer_TLS_Server_Callbacks callbacks;
 
-   auto next_proto_fn = [](const std::vector<std::string>& protos) -> std::string {
-      if(protos.size() > 1)
-         return protos[0];
-      else
-         return "fuzzed";
-   };
+   const bool is_datagram = in[0] & 1;
 
-   const bool is_datagram = (len % 2 == 0);
-
-   Botan::TLS::Server server(dev_null,
-                      dev_null,
-                      ignore_alerts,
-                      ignore_hs,
-                      session_manager,
-                      creds,
-                      policy,
-                      fuzzer_rng(),
-                      next_proto_fn,
-                      is_datagram);
+   Botan::TLS::Server server(callbacks,
+                             session_manager,
+                             creds,
+                             policy,
+                             fuzzer_rng(),
+                             is_datagram);
 
    try
       {
-      server.received_data(in, len);
+      server.received_data(in + 1, len - 1);
       }
    catch(std::exception& e)
       {
