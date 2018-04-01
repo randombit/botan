@@ -18,32 +18,70 @@ class Fuzzer_TLS_Client_Creds : public Botan::Credentials_Manager
          }
    };
 
+class Fuzzer_TLS_Client_Callbacks : public Botan::TLS::Callbacks
+   {
+   public:
+       void tls_emit_data(const uint8_t[], size_t) override
+         {
+         // discard
+         }
+
+      void tls_record_received(uint64_t, const uint8_t[], size_t) override
+         {
+         // ignore peer data
+         }
+
+      void tls_alert(Botan::TLS::Alert) override
+         {
+         // ignore alert
+         }
+
+      bool tls_session_established(const Botan::TLS::Session&)
+         {
+         return true; // cache it
+         }
+
+      void tls_verify_cert_chain(
+         const std::vector<Botan::X509_Certificate>& cert_chain,
+         const std::vector<std::shared_ptr<const Botan::OCSP::Response>>& ocsp_responses,
+         const std::vector<Botan::Certificate_Store*>& trusted_roots,
+         Botan::Usage_Type usage,
+         const std::string& hostname,
+         const Botan::TLS::Policy& policy) override
+         {
+         try
+            {
+            // try to validate to exercise those code paths
+            Botan::TLS::Callbacks::tls_verify_cert_chain(cert_chain, ocsp_responses,
+                                                         trusted_roots, usage, hostname, policy);
+            }
+         catch(...)
+            {
+            // ignore validation result
+            }
+         }
+
+   };
+
 void fuzz(const uint8_t in[], size_t len)
    {
    if(len == 0)
       return;
 
-   auto dev_null = [](const uint8_t[], size_t) {};
-
-   auto ignore_alerts = [](Botan::TLS::Alert, const uint8_t[], size_t) {};
-   auto ignore_hs = [](const Botan::TLS::Session&) { abort(); return true; };
-
    Botan::TLS::Session_Manager_Noop session_manager;
    Botan::TLS::Policy policy;
    Botan::TLS::Protocol_Version client_offer = Botan::TLS::Protocol_Version::TLS_V12;
    Botan::TLS::Server_Information info("server.name", 443);
+   Fuzzer_TLS_Client_Callbacks callbacks;
    Fuzzer_TLS_Client_Creds creds;
 
-   Botan::TLS::Client client(dev_null,
-                      dev_null,
-                      ignore_alerts,
-                      ignore_hs,
-                      session_manager,
-                      creds,
-                      policy,
-                      fuzzer_rng(),
-                      info,
-                      client_offer);
+   Botan::TLS::Client client(callbacks,
+                             session_manager,
+                             creds,
+                             policy,
+                             fuzzer_rng(),
+                             info,
+                             client_offer);
 
    try
       {
