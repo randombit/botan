@@ -545,7 +545,7 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::
       }
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_EC_GROUP)
    if(test_type == "ecc_mul")
       {
       return std::unique_ptr<Timing_Test>(new ECC_Mul_Timing_Test("brainpool512r1"));
