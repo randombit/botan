@@ -215,6 +215,8 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
    const Botan::X509_Certificate root_cert(nist_test_dir + "/root.crt");
    const Botan::X509_CRL root_crl(nist_test_dir + "/root.crl");
 
+   const auto validation_time = Botan::calendar_point(2018,4,1,9,30,33).to_std_timepoint();
+
    for(auto i = expected.begin(); i != expected.end(); ++i)
       {
       Test::Result result("NIST path validation");
@@ -264,7 +266,10 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
          Botan::Path_Validation_Result validation_result =
             Botan::x509_path_validate(end_user,
                                       restrictions,
-                                      store);
+                                      store,
+                                      "",
+                                      Botan::Usage_Type::UNSPECIFIED,
+                                      validation_time);
 
          result.test_eq(test_name + " path validation result",
                         validation_result.result_string(),

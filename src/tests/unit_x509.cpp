@@ -31,7 +31,9 @@ namespace {
 
 Botan::X509_Time from_date(const int y, const int m, const int d)
    {
-   Botan::calendar_point t(y, m, d, 0, 0, 0);
+   const size_t this_year = Botan::calendar_value(std::chrono::system_clock::now()).get_year();
+
+   Botan::calendar_point t(this_year + y, m, d, 0, 0, 0);
    return Botan::X509_Time(t.to_std_timepoint());
    }
 
@@ -570,8 +572,8 @@ Test::Result test_x509_authority_info_access_extension()
    test_result.test_eq("CA certificate signature algorithm (explicit)",
       Botan::OIDS::lookup(ca_cert_exp.signature_algorithm().oid),"RSA/EMSA4");
 
-   const auto not_before = Botan::calendar_point(2017, 1, 1, 1, 1, 1).to_std_timepoint();
-   const auto not_after  = Botan::calendar_point(2037, 12, 25, 1, 1, 1).to_std_timepoint();
+   const Botan::X509_Time not_before = from_date(-1, 1, 1);
+   const Botan::X509_Time not_after = from_date(2, 1, 2);
 
    // Prepare a signing request for the end certificate
    Botan::X509_Cert_Options req_opt("endpoint");
@@ -594,17 +596,17 @@ Test::Result test_x509_authority_info_access_extension()
 
    // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3
    Botan::X509_CA ca_def(ca_cert_def, (*sk), "SHA-512", Test::rng());
-   Botan::X509_Certificate end_cert_emsa3 = ca_def.sign_request(end_req, Test::rng(), Botan::X509_Time(not_before), Botan::X509_Time(not_after));
+   Botan::X509_Certificate end_cert_emsa3 = ca_def.sign_request(end_req, Test::rng(), not_before, not_after);
    test_result.test_eq("End certificate signature algorithm", Botan::OIDS::lookup(end_cert_emsa3.signature_algorithm().oid), "RSA/EMSA3(SHA-512)");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
    Botan::X509_CA ca_diff(ca_cert_def, (*sk), {{"padding","EMSA-PSS"}}, "SHA-512", Test::rng());
-   Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, Test::rng(), Botan::X509_Time(not_before), Botan::X509_Time(not_after));
+   Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, Test::rng(), not_before, not_after);
    test_result.test_eq("End certificate signature algorithm", Botan::OIDS::lookup(end_cert_diff_emsa4.signature_algorithm().oid), "RSA/EMSA4");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is identical to the CA certificate's scheme
    Botan::X509_CA ca_exp(ca_cert_exp, (*sk), {{"padding","EMSA4(SHA-512,MGF1,64)"}},"SHA-512", Test::rng());
-   Botan::X509_Certificate end_cert_emsa4= ca_exp.sign_request(end_req, Test::rng(), Botan::X509_Time(not_before), Botan::X509_Time(not_after));
+   Botan::X509_Certificate end_cert_emsa4= ca_exp.sign_request(end_req, Test::rng(), not_before, not_after);
    test_result.test_eq("End certificate signature algorithm", Botan::OIDS::lookup(end_cert_emsa4.signature_algorithm().oid), "RSA/EMSA4");
 
    // Check CRL signature algorithm
@@ -701,16 +703,16 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    /* Sign the requests to create the certs */
    Botan::X509_Certificate user1_cert =
       ca.sign_request(user1_req, Test::rng(), user1_serial,
-                      from_date(2008, 01, 01),
-                      from_date(2033, 01, 01));
+                      from_date(-1, 01, 01),
+                      from_date(2, 01, 01));
 
    result.test_eq("User1 serial size matches expected", user1_cert.serial_number().size(), 1);
    result.test_eq("User1 serial matches expected", user1_cert.serial_number().at(0), size_t(99));
 
    Botan::X509_Certificate user2_cert =
       ca.sign_request(user2_req, Test::rng(),
-                      from_date(2008, 01, 01),
-                      from_date(2033, 01, 01));
+                      from_date(-1, 01, 01),
+                      from_date(2, 01, 01));
 
    // user#1 creates a self-signed cert on the side
    const auto user1_ss_cert =
@@ -730,8 +732,8 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    Botan::X509_Certificate user1_cert_differ =
       ca.sign_request(user1_req, Test::rng(),
-                      from_date(2008, 01, 01),
-                      from_date(2032, 01, 01));
+                      from_date(-1, 01, 01),
+                      from_date(2, 01, 01));
 
    result.test_eq("certificate differs", user1_cert == user1_cert_differ, false);
 
@@ -857,8 +859,8 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    const Botan::X509_Certificate user1_cert = ca.sign_request(
             user1_req,
             Test::rng(),
-            from_date(2008, 01, 01),
-            from_date(2033, 01, 01));
+            from_date(-1, 01, 01),
+            from_date(2, 01, 01));
 
    // cert only allows digitalSignature, but we check for both digitalSignature and cRLSign
    result.test_eq("key usage cRLSign not allowed",
@@ -879,8 +881,8 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    const Botan::X509_Certificate mult_usage_cert = ca.sign_request(
             mult_usage_req,
             Test::rng(),
-            from_date(2008, 01, 01),
-            from_date(2033, 01, 01));
+            from_date(-1, 01, 01),
+            from_date(2, 01, 01));
 
    // cert allows multiple usages, so each one of them as well as both together should be allowed
    result.confirm("key usage multiple digitalSignature allowed",
@@ -895,8 +897,8 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
 
    const Botan::X509_Certificate no_usage_cert =
       ca.sign_request(no_usage_req, Test::rng(),
-                      from_date(2008, 01, 01),
-                      from_date(2033, 01, 01));
+                      from_date(-1, 01, 01),
+                      from_date(2, 01, 01));
 
    // cert allows every usage
    result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
@@ -932,7 +934,7 @@ Test::Result test_self_issued(const Botan::Private_Key& ca_key,
    const Botan::PKCS10_Request self_issued_req = Botan::X509::create_cert_req(opts, *user_key, hash_fn, Test::rng());
 
    const Botan::X509_Certificate self_issued_cert = ca.sign_request(
-            self_issued_req, Test::rng(), from_date(2008, 01, 01), from_date(2033, 01, 01));
+            self_issued_req, Test::rng(), from_date(-1, 01, 01), from_date(2, 01, 01));
 
    // check that this chain can can be verified successfully
    const Botan::Certificate_Store_In_Memory trusted(ca.ca_certificate());
@@ -1340,8 +1342,8 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    /* Create a CA-signed certificate */
    const Botan::X509_Certificate ca_signed_cert =
       ca.sign_request(user_req, Test::rng(),
-                      from_date(2008, 01, 01),
-                      from_date(2033, 01, 01));
+                      from_date(-1, 01, 01),
+                      from_date(2, 01, 01));
 
    // check if known Key_Usage extension is present in CA-signed cert
    result.confirm("Extensions::extension_set true for Key_Usage", ca_signed_cert.v3_extensions().extension_set(ku_oid));
@@ -1421,7 +1423,7 @@ Test::Result test_hashes(const Botan::Private_Key& key,
       const Botan::PKCS10_Request req =
          Botan::X509::create_cert_req(a.subject, key, hash_fn, Test::rng());
       const Botan::X509_Certificate subject_cert =
-         ca.sign_request(req, Test::rng(), from_date(2008, 01, 01), from_date(2033, 01, 01));
+         ca.sign_request(req, Test::rng(), from_date(-1, 01, 01), from_date(2, 01, 01));
 
       result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_issuer_dn_sha256()), a.issuer_hash);
       result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_subject_dn_sha256()), a.subject_hash);
