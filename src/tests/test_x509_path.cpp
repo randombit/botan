@@ -305,6 +305,8 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run()
    std::map<std::string, std::string> expected =
       read_results(Test::data_file("x509/extended/expected.txt"));
 
+   auto validation_time = Botan::calendar_point(2017,9,1,9,30,33).to_std_timepoint();
+
    for(auto i = expected.begin(); i != expected.end(); ++i)
       {
       const std::string test_name = i->first;
@@ -340,7 +342,10 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run()
       Botan::Path_Validation_Result validation_result =
          Botan::x509_path_validate(end_user,
                                    restrictions,
-                                   store);
+                                   store,
+                                   "",
+                                   Botan::Usage_Type::UNSPECIFIED,
+                                   validation_time);
 
       result.test_eq(test_name + " path validation result",
                      validation_result.result_string(),
