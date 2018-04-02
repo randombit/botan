@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.5.0, Not Yet Released
+Version 2.5.0, 2018-04-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix error in certificate wildcard matching (CVE-2018-9127), where a
