@@ -13,22 +13,14 @@
 
 namespace Botan_Tests {
 
+class Test_Options;
+
 class Test_Runner final
    {
    public:
       Test_Runner(std::ostream& out);
 
-      int run(const std::vector<std::string>& requested_tests,
-              const std::string& data_dir,
-              const std::string& pkcs11_lib,
-              const std::string& provider,
-              bool log_success,
-              bool run_online_tests,
-              bool run_long_tests,
-              bool abort_on_first_fail,
-              bool avoid_undefined,
-              const std::string& drbg_seed,
-              size_t runs);
+      int run(const Test_Options& options);
 
    private:
       std::ostream& output() const { return m_output; }

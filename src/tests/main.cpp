@@ -74,22 +74,21 @@ int main(int argc, char* argv[])
          return 0;
          }
 
-      const std::string data_dir = parser.get_arg_or("data-dir", "src/tests/data");
-      const std::string pkcs11_lib = parser.get_arg("pkcs11-lib");
-      const std::string provider = parser.get_arg("provider");
-      const std::string drbg_seed = parser.get_arg("drbg-seed");
-
-      const bool abort_on_first_fail = parser.flag_set("abort-on-first-fail");
-      const bool log_success = parser.flag_set("log-success");
-      const bool run_long_tests = parser.flag_set("run-long-tests");
-      const bool run_online_tests = parser.flag_set("run-online-tests");
-      const bool avoid_undefined = parser.flag_set("avoid-undefined");
-      const size_t test_runs = parser.get_arg_sz("test-runs");
-
-      const std::vector<std::string> suites = parser.get_arg_list("suites");
+      const Botan_Tests::Test_Options opts(
+         parser.get_arg_list("suites"),
+         parser.get_arg_or("data-dir", "src/tests/data"),
+         parser.get_arg("pkcs11-lib"),
+         parser.get_arg("provider"),
+         parser.get_arg("drbg-seed"),
+         parser.get_arg_sz("test-runs"),
+         parser.flag_set("log-success"),
+         parser.flag_set("run-online-tests"),
+         parser.flag_set("run-long-tests"),
+         parser.flag_set("abort-on-first-fail"),
+         parser.flag_set("avoid-undefined"));
 
 #if defined(BOTAN_HAS_OPENSSL)
-      if(provider.empty() || provider == "openssl")
+      if(opts.provider().empty() || opts.provider() == "openssl")
          {
          ::ERR_load_crypto_strings();
          }
@@ -97,10 +96,7 @@ int main(int argc, char* argv[])
 
       Botan_Tests::Test_Runner tests(std::cout);
 
-      return tests.run(suites, data_dir, pkcs11_lib, provider,
-                       log_success, run_online_tests, run_long_tests,
-                       abort_on_first_fail, avoid_undefined,
-                       drbg_seed, test_runs);
+      return tests.run(opts);
       }
    catch(std::exception& e)
       {
