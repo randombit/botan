@@ -1,7 +1,7 @@
 /*
 * (C) 2007 Falko Strenzke
 *     2007 Manuel Hartl
-*     2009,2015 Jack Lloyd
+*     2009,2015,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -84,10 +84,9 @@ Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
                                     const Botan::EC_Group& group)
    {
    const Botan::BigInt& p = group.get_p();
+   const Botan::Modular_Reducer mod_p(p);
 
-   Botan::Modular_Reducer mod_p(p);
-
-   while(true)
+   for(;;)
       {
       const Botan::BigInt x = Botan::BigInt::random_integer(rng, 1, p);
       const Botan::BigInt x3 = mod_p.multiply(x, mod_p.square(x));
@@ -98,8 +97,7 @@ Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
       if(sqrt_y > 1)
          {
          BOTAN_ASSERT_EQUAL(mod_p.square(sqrt_y), y, "Square root is correct");
-         Botan::PointGFp point = group.point(x, sqrt_y);
-         return point;
+         return group.point(x, sqrt_y);
          }
       }
    }
@@ -113,8 +111,7 @@ class ECC_Randomized_Tests final : public Test
 std::vector<Test::Result> ECC_Randomized_Tests::run()
    {
    std::vector<Test::Result> results;
-   std::set<std::string> named_groups = Botan::EC_Group::known_named_groups();
-   for(auto const& group_name : named_groups)
+   for(const std::string& group_name : Botan::EC_Group::known_named_groups())
       {
       Test::Result result("ECC randomized " + group_name);
 
@@ -122,12 +119,8 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
 
       Botan::EC_Group group(group_name);
 
-      const Botan::PointGFp& base_point = group.get_base_point();
+      const Botan::PointGFp& pt = create_random_point(Test::rng(), group);
       const Botan::BigInt& group_order = group.get_order();
-
-      const Botan::PointGFp inf = base_point * group_order;
-      result.test_eq("infinite order correct", inf.is_zero(), true);
-      result.test_eq("infinity on the curve", inf.on_the_curve(), true);
 
       std::vector<Botan::BigInt> blind_ws;
 
@@ -140,13 +133,13 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
             const Botan::BigInt b = Botan::BigInt::random_integer(Test::rng(), 2, group_order);
             const Botan::BigInt c = a + b;
 
-            const Botan::PointGFp P = base_point * a;
-            const Botan::PointGFp Q = base_point * b;
-            const Botan::PointGFp R = base_point * c;
+            const Botan::PointGFp P = pt * a;
+            const Botan::PointGFp Q = pt * b;
+            const Botan::PointGFp R = pt * c;
 
-            Botan::PointGFp P1 = group.blinded_base_point_multiply(a, Test::rng(), blind_ws);
-            Botan::PointGFp Q1 = group.blinded_base_point_multiply(b, Test::rng(), blind_ws);
-            Botan::PointGFp R1 = group.blinded_base_point_multiply(c, Test::rng(), blind_ws);
+            Botan::PointGFp P1 = group.blinded_var_point_multiply(pt, a, Test::rng(), blind_ws);
+            Botan::PointGFp Q1 = group.blinded_var_point_multiply(pt, b, Test::rng(), blind_ws);
+            Botan::PointGFp R1 = group.blinded_var_point_multiply(pt, c, Test::rng(), blind_ws);
 
             Botan::PointGFp A1 = P + Q;
             Botan::PointGFp A2 = Q + P;
@@ -280,26 +273,145 @@ class NIST_Curve_Reduction_Tests final : public Test
 
 BOTAN_REGISTER_TEST("nist_redc", NIST_Curve_Reduction_Tests);
 
-Test::Result test_groups()
+class EC_Group_Tests : public Test
    {
-   Test::Result result("ECC Unit");
-   std::set<std::string> named_groups = Botan::EC_Group::known_named_groups();
-   for(auto const& group_name : named_groups)
-      {
-      const Botan::EC_Group group(group_name);
-      result.confirm("EC_Group is known", !group.get_curve_oid().empty());
-      result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
-      result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
 
-      bool a_is_minus_3 = group.a_is_minus_3();
+         for(const std::string& group_name : Botan::EC_Group::known_named_groups())
+            {
+            Test::Result result("EC_Group " + group_name);
 
-      if(a_is_minus_3)
-         result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
-      else
-         result.test_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
-      }
-   return result;
-   }
+            const Botan::EC_Group group(group_name);
+
+            result.confirm("EC_Group is known", !group.get_curve_oid().empty());
+            result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
+            result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
+
+            const auto pt_mult_by_order = group.get_base_point() * group.get_order();
+            result.confirm("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());
+
+            if(group.a_is_minus_3())
+               result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
+            else
+               result.test_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
+
+            // get a valid point
+            Botan::PointGFp p = group.get_base_point() * Test::rng().next_nonzero_byte();
+
+            // get a copy
+            Botan::PointGFp q = p;
+
+            p.randomize_repr(Test::rng());
+            q.randomize_repr(Test::rng());
+
+            result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
+            result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
+
+            q.force_affine();
+
+            result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
+            result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
+
+            test_ser_der(result, group);
+            test_basic_math(result, group);
+            test_point_swap(result, group);
+            test_zeropoint(result, group);
+
+            results.push_back(result);
+            }
+
+         return results;
+         }
+   private:
+
+      void test_ser_der(Test::Result& result, const Botan::EC_Group& group)
+         {
+         // generate point
+         const Botan::PointGFp pt = create_random_point(Test::rng(), group);
+         const Botan::PointGFp zero = group.zero_point();
+
+         for(auto scheme : { Botan::PointGFp::UNCOMPRESSED,
+                             Botan::PointGFp::COMPRESSED,
+                             Botan::PointGFp::HYBRID })
+            {
+            result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)), pt);
+            result.test_eq("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)), zero);
+            }
+         }
+
+      void test_basic_math(Test::Result& result, const Botan::EC_Group& group)
+         {
+         const Botan::PointGFp& G = group.get_base_point();
+
+         Botan::PointGFp p1 = G * 2;
+         p1 += G;
+
+         result.test_eq("point addition", p1, G * 3);
+
+         p1 -= G * 2;
+
+         result.test_eq("point subtraction", p1, G);
+         }
+
+      void test_point_swap(Test::Result& result, const Botan::EC_Group& group)
+         {
+         Botan::PointGFp a(create_random_point(Test::rng(), group));
+         Botan::PointGFp b(create_random_point(Test::rng(), group));
+         b *= Botan::BigInt(Test::rng(), 20);
+
+         Botan::PointGFp c(a);
+         Botan::PointGFp d(b);
+
+         d.swap(c);
+         result.test_eq("swap correct", a, d);
+         result.test_eq("swap correct", b, c);
+         }
+
+      void test_zeropoint(Test::Result& result, const Botan::EC_Group& group)
+         {
+         const Botan::PointGFp zero = group.zero_point();
+         const Botan::PointGFp p1 = group.get_base_point() * 2;
+
+         result.confirm("point is on the curve", p1.on_the_curve());
+         result.confirm("point is not zero", !p1.is_zero());
+
+         Botan::PointGFp p2 = p1;
+         p2 -= p1;
+
+         result.confirm("p - q with q = p results in zero", p2.is_zero());
+
+         const Botan::PointGFp minus_p1 = -p1;
+         result.confirm("point is on the curve", minus_p1.on_the_curve());
+         const Botan::PointGFp shouldBeZero = p1 + minus_p1;
+         result.confirm("point is on the curve", shouldBeZero.on_the_curve());
+         result.confirm("point is zero", shouldBeZero.is_zero());
+
+         result.test_eq("minus point x", minus_p1.get_affine_x(), p1.get_affine_x());
+         result.test_eq("minus point y", minus_p1.get_affine_y(), group.get_p() - p1.get_affine_y());
+
+         result.confirm("zero point is zero", zero.is_zero());
+         result.confirm("zero point is on the curve", zero.on_the_curve());
+         result.test_eq("addition of zero does nothing", p1, p1 + zero);
+         result.test_eq("addition of zero does nothing", p1, zero + p1);
+         result.test_eq("addition of zero does nothing", p1, p1 - zero);
+         result.confirm("zero times anything is the zero point", (zero * 39193).is_zero());
+
+         for(auto scheme : { Botan::PointGFp::UNCOMPRESSED,
+                             Botan::PointGFp::COMPRESSED,
+                             Botan::PointGFp::HYBRID })
+            {
+            const std::vector<uint8_t> v = zero.encode(scheme);
+            result.test_eq("encoded/decode rt works", group.OS2ECP(v), zero);
+            }
+         }
+
+
+   };
+
+BOTAN_REGISTER_TEST("ec_group", EC_Group_Tests);
 
 Test::Result test_decoding_with_seed()
    {
@@ -349,25 +461,6 @@ Version 0.3;
 Section 2.1.2
 --------
 */
-Test::Result test_point_transformation()
-   {
-   Test::Result result("ECC Unit");
-
-   // get a valid point
-   Botan::EC_Group dom_pars("secp160r1");
-   Botan::PointGFp p = dom_pars.get_base_point() * Test::rng().next_nonzero_byte();
-
-   // get a copy
-   Botan::PointGFp q = p;
-
-   p.randomize_repr(Test::rng());
-   q.randomize_repr(Test::rng());
-
-   result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
-   result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
-   return result;
-   }
-
 Test::Result test_point_mult()
    {
    Test::Result result("ECC Unit");
@@ -399,109 +492,6 @@ Test::Result test_point_negative()
 
    result.test_eq("affine x", p1_neg.get_affine_x(), p1.get_affine_x());
    result.test_eq("affine y", p1_neg.get_affine_y(),  Botan::BigInt("88408243403763901739989511495005261618427168388"));
-   return result;
-   }
-
-Test::Result test_zeropoint()
-   {
-   Test::Result result("ECC Unit");
-
-   Botan::EC_Group secp160r1("secp160r1");
-
-   Botan::PointGFp p1 = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
-                                        Botan::BigInt("1373093393927139016463695321221277758035357890939"));
-
-   result.confirm("point is on the curve", p1.on_the_curve());
-
-   Botan::PointGFp p2 = p1;
-   p1 -= p2;
-
-   result.confirm("p - q with q = p results in zero", p1.is_zero());
-   return result;
-   }
-
-Test::Result test_zeropoint_enc_dec()
-   {
-   Test::Result result("ECC Unit");
-
-   Botan::EC_Group secp160r1("secp160r1");
-
-   Botan::PointGFp p = secp160r1.zero_point();
-   result.confirm("zero point is zero", p.is_zero());
-
-   std::vector<uint8_t> sv_p = p.encode(Botan::PointGFp::UNCOMPRESSED);
-   result.test_eq("encoded/decode rt works", secp160r1.OS2ECP(sv_p), p);
-
-   sv_p = p.encode(Botan::PointGFp::COMPRESSED);
-   result.test_eq("encoded/decode compressed rt works", secp160r1.OS2ECP(sv_p), p);
-
-   sv_p = p.encode(Botan::PointGFp::HYBRID);
-   result.test_eq("encoded/decode hybrid rt works", secp160r1.OS2ECP(sv_p), p);
-   return result;
-   }
-
-Test::Result test_calc_with_zeropoint()
-   {
-   Test::Result result("ECC Unit");
-
-   Botan::EC_Group secp160r1("secp160r1");
-
-   Botan::PointGFp p = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
-                                       Botan::BigInt("1373093393927139016463695321221277758035357890939"));
-
-   result.confirm("point is on the curve", p.on_the_curve());
-   result.confirm("point is not zero", !p.is_zero());
-
-   Botan::PointGFp zero = secp160r1.zero_point();
-   result.confirm("zero point is zero", zero.is_zero());
-
-   Botan::PointGFp res = p + zero;
-   result.test_eq("point + 0 equals the point", p, res);
-
-   res = p - zero;
-   result.test_eq("point - 0 equals the point", p, res);
-
-   res = zero * 32432243;
-   result.confirm("point * 0 is the zero point", res.is_zero());
-   return result;
-   }
-
-Test::Result test_add_point()
-   {
-   Test::Result result("ECC Unit");
-
-   // precalculation
-   Botan::EC_Group secp160r1("secp160r1");
-   const Botan::PointGFp& p_G = secp160r1.get_base_point();
-
-   Botan::PointGFp p0 = p_G;
-   Botan::PointGFp p1 = p_G * 2;
-
-   p1 += p0;
-
-   Botan::PointGFp expected = secp160r1.point(Botan::BigInt("704859595002530890444080436569091156047721708633"),
-                                              Botan::BigInt("1147993098458695153857594941635310323215433166682"));
-
-   result.test_eq("point addition", p1, expected);
-   return result;
-   }
-
-Test::Result test_sub_point()
-   {
-   Test::Result result("ECC Unit");
-
-   Botan::EC_Group secp160r1("secp160r1");
-   const Botan::PointGFp& p_G = secp160r1.get_base_point();
-
-   Botan::PointGFp p0 = p_G;
-   Botan::PointGFp p1 = p_G * 2;
-
-   p1 -= p0;
-
-   Botan::PointGFp expected = secp160r1.point(Botan::BigInt("425826231723888350446541592701409065913635568770"),
-                                              Botan::BigInt("203520114162904107873991457957346892027982641970"));
-
-   result.test_eq("point subtraction", p1, expected);
    return result;
    }
 
@@ -646,115 +636,6 @@ Test::Result test_enc_dec_uncompressed_521()
    return result;
    }
 
-Test::Result test_gfp_store_restore()
-   {
-   Test::Result result("ECC Unit");
-
-   // generate point
-   Botan::EC_Group dom_pars("secp160r1");
-   Botan::PointGFp p = dom_pars.get_base_point();
-
-   std::vector<uint8_t> sv_mes = p.encode(Botan::PointGFp::COMPRESSED);
-   Botan::PointGFp new_p = dom_pars.OS2ECP(sv_mes);
-
-   result.test_eq("original and restored points are same", p, new_p);
-   return result;
-   }
-
-Test::Result test_more_zeropoint()
-   {
-   Test::Result result("ECC Unit");
-
-   // by Falko
-
-   Botan::EC_Group secp160r1("secp160r1");
-
-   Botan::PointGFp p1 = secp160r1.point(Botan::BigInt("16984103820118642236896513183038186009872590470"),
-                                        Botan::BigInt("1373093393927139016463695321221277758035357890939"));
-
-   result.confirm("point is on the curve", p1.on_the_curve());
-   Botan::PointGFp minus_p1 = -p1;
-   result.confirm("point is on the curve", minus_p1.on_the_curve());
-   Botan::PointGFp shouldBeZero = p1 + minus_p1;
-   result.confirm("point is on the curve", shouldBeZero.on_the_curve());
-   result.confirm("point is zero", shouldBeZero.is_zero());
-
-   Botan::BigInt y1 = p1.get_affine_y();
-   y1 = secp160r1.get_p() - y1;
-
-   result.test_eq("minus point x", minus_p1.get_affine_x(), p1.get_affine_x());
-   result.test_eq("minus point y", minus_p1.get_affine_y(), y1);
-
-   Botan::PointGFp zero = secp160r1.zero_point();
-   result.confirm("zero point is on the curve", zero.on_the_curve());
-   result.test_eq("addition of zero does nothing", p1, p1 + zero);
-
-   return result;
-   }
-
-Test::Result test_mult_by_order()
-   {
-   Test::Result result("ECC Unit");
-
-   // generate point
-   Botan::EC_Group dom_pars("secp160r1");
-   Botan::PointGFp p = dom_pars.get_base_point();
-   Botan::PointGFp shouldBeZero = p * dom_pars.get_order();
-
-   result.confirm("G * order = 0", shouldBeZero.is_zero());
-   return result;
-   }
-
-Test::Result test_point_swap()
-   {
-   Test::Result result("ECC Unit");
-
-   Botan::EC_Group dom_pars("secp160r1");
-
-   Botan::PointGFp a(create_random_point(Test::rng(), dom_pars));
-   Botan::PointGFp b(create_random_point(Test::rng(), dom_pars));
-   b *= Botan::BigInt(Test::rng(), 20);
-
-   Botan::PointGFp c(a);
-   Botan::PointGFp d(b);
-
-   d.swap(c);
-   result.test_eq("swap correct", a, d);
-   result.test_eq("swap correct", b, c);
-
-   return result;
-   }
-
-/**
-* This test verifies that the side channel attack resistant multiplication function
-* yields the same result as the normal (insecure) multiplication via operator*=
-*/
-Test::Result test_mult_sec_mass()
-   {
-   Test::Result result("ECC Unit");
-
-   Botan::EC_Group dom_pars("secp160r1");
-   for(int i = 0; i < 50; i++)
-      {
-      try
-         {
-         Botan::PointGFp a(create_random_point(Test::rng(), dom_pars));
-         Botan::BigInt scal(Botan::BigInt(Test::rng(), 40));
-         Botan::PointGFp b = a * scal;
-         Botan::PointGFp c(a);
-
-         c *= scal;
-         result.test_eq("same result", b, c);
-         }
-      catch(std::exception& e)
-         {
-         result.test_failure("mult_sec_mass", e.what());
-         }
-      }
-
-   return result;
-   }
-
 Test::Result test_ecc_registration()
    {
    Test::Result result("ECC registration");
@@ -787,28 +668,16 @@ class ECC_Unit_Tests final : public Test
          {
          std::vector<Test::Result> results;
 
-         results.push_back(test_groups());
          results.push_back(test_coordinates());
          results.push_back(test_decoding_with_seed());
-         results.push_back(test_point_transformation());
          results.push_back(test_point_mult());
          results.push_back(test_point_negative());
-         results.push_back(test_zeropoint());
-         results.push_back(test_zeropoint_enc_dec());
-         results.push_back(test_calc_with_zeropoint());
-         results.push_back(test_add_point());
-         results.push_back(test_sub_point());
          results.push_back(test_mult_point());
          results.push_back(test_basic_operations());
          results.push_back(test_enc_dec_compressed_160());
          results.push_back(test_enc_dec_compressed_256());
          results.push_back(test_enc_dec_uncompressed_112());
          results.push_back(test_enc_dec_uncompressed_521());
-         results.push_back(test_gfp_store_restore());
-         results.push_back(test_more_zeropoint());
-         results.push_back(test_mult_by_order());
-         results.push_back(test_point_swap());
-         results.push_back(test_mult_sec_mass());
          results.push_back(test_ecc_registration());
 
          return results;

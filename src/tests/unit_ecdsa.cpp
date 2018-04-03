@@ -403,54 +403,26 @@ Test::Result test_ecc_key_with_rfc5915_parameters()
 
 Test::Result test_curve_registry()
    {
-   const std::vector<std::string> oids =
-      {
-      "1.3.132.0.8",
-      "1.2.840.10045.3.1.1",
-      "1.2.840.10045.3.1.2",
-      "1.2.840.10045.3.1.3",
-      "1.2.840.10045.3.1.4",
-      "1.2.840.10045.3.1.5",
-      "1.2.840.10045.3.1.6",
-      "1.2.840.10045.3.1.7",
-      "1.3.132.0.9",
-      "1.3.132.0.30",
-      "1.3.132.0.31",
-      "1.3.132.0.32",
-      "1.3.132.0.33",
-      "1.3.132.0.10",
-      "1.3.132.0.34",
-      "1.3.132.0.35",
-      "1.3.36.3.3.2.8.1.1.1",
-      "1.3.36.3.3.2.8.1.1.3",
-      "1.3.36.3.3.2.8.1.1.5",
-      "1.3.36.3.3.2.8.1.1.7",
-      "1.3.36.3.3.2.8.1.1.9",
-      "1.3.36.3.3.2.8.1.1.11",
-      "1.3.36.3.3.2.8.1.1.13",
-      };
-
    Test::Result result("ECDSA Unit");
 
-   for(auto const& oid_str : oids)
+   for(const std::string& group_name : Botan::EC_Group::known_named_groups())
       {
       try
          {
-         Botan::OID oid(oid_str);
-         Botan::EC_Group dom_pars(oid);
-         Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
+         Botan::EC_Group group(group_name);
+         Botan::ECDSA_PrivateKey ecdsa(Test::rng(), group);
 
          Botan::PK_Signer signer(ecdsa, Test::rng(), "EMSA1(SHA-256)");
          Botan::PK_Verifier verifier(ecdsa, "EMSA1(SHA-256)");
 
-         auto msg = Botan::hex_decode("12345678901234567890abcdef12");
-         std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());
+         const std::vector<uint8_t> msg = Botan::hex_decode("12345678901234567890abcdef12");
+         const std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());
 
          result.confirm("verified signature", verifier.verify_message(msg, sig));
          }
       catch(Botan::Invalid_Argument& e)
          {
-         result.test_failure("testing " + oid_str + ": " + e.what());
+         result.test_failure("testing " + group_name + ": " + e.what());
          }
       }
 
