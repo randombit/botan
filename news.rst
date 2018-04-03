@@ -63,7 +63,7 @@ Version 2.5.0, 2018-04-02
 
 * Add DSA and ElGamal keygen functions to FFI (#1426)
 
-* Add Pipe::prepend_filter to replace Pipe::prepend (GH #1402)
+* Add ``Pipe::prepend_filter`` to replace deprecated ``Pipe::prepend`` (GH #1402)
 
 * Fix a memory leak in the OpenSSL block cipher integration, introduced in 2.2.0
 
@@ -72,7 +72,7 @@ Version 2.5.0, 2018-04-02
   standard prime generation (like for RSA keys) to be slower than necessary.
   (GH #1413 #1411)
 
-* Correct the return value of PK_Encryptor::maximum_input_size which
+* Correct the return value of ``PK_Encryptor::maximum_input_size`` which
   reported a much too small value (GH #1410)
 
 * Remove use of CPU specific optimization flags, instead the user should set
@@ -98,7 +98,7 @@ Version 2.5.0, 2018-04-02
 
 * Add ``--msvc-runtime`` option to allow using static runtime (GH #1499 #210)
 
-* Add --enable-sanitizers= option to allow specifying which sanitizers to
+* Add ``--enable-sanitizers=`` option to allow specifying which sanitizers to
   enable. The existing ``--with-sanitizers`` option just enables some default
   set which is known to work with the minimum required compiler versions.
 
