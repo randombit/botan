@@ -231,7 +231,7 @@ class RSA_Private_Operation
          const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-         auto future_j1 = std::async(std::launch::async, [this, &m, &masked_d1]() {
+         auto future_j1 = std::async(std::launch::async, [this, &m, &masked_d1, powm_window]() {
                auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
                return monty_execute(*powm_d1_p, masked_d1);
             });
