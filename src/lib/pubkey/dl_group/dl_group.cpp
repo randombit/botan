@@ -45,7 +45,7 @@ class DL_Group_Data final
          return m_mod_p.multiply(x, y);
          }
 
-      std::shared_ptr<const Montgomery_Params> monty_params() const
+      std::shared_ptr<const Montgomery_Params> monty_params_p() const
          { return m_monty_params; }
 
       size_t p_bits() const { return m_p_bits; }
@@ -394,6 +394,11 @@ const BigInt& DL_Group::get_q() const
    return data().q();
    }
 
+std::shared_ptr<const Montgomery_Params> DL_Group::monty_params_p() const
+   {
+   return data().monty_params_p();
+   }
+
 size_t DL_Group::p_bits() const
    {
    return data().p_bits();
@@ -427,7 +432,7 @@ BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const
 
 BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const
    {
-   return monty_multi_exp(data().monty_params(), get_g(), x, y, z);
+   return monty_multi_exp(data().monty_params_p(), get_g(), x, y, z);
    }
 
 BigInt DL_Group::power_g_p(const BigInt& x) const

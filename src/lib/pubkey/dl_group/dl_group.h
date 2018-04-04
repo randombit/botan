@@ -12,6 +12,7 @@
 
 namespace Botan {
 
+class Montgomery_Params;
 class DL_Group_Data;
 
 /**
@@ -191,6 +192,11 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * Return (g^x * y^z) % p
       */
       BigInt multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const;
+
+      /**
+      * Return parameters for Montgomery reduction/exponentiation mod p
+      */
+      std::shared_ptr<const Montgomery_Params> monty_params_p() const;
 
       /**
       * Return the size of p in bits
