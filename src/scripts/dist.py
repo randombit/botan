@@ -357,7 +357,8 @@ def main(args=None):
 
     version_file = None
 
-    for possible_version_file in ['version.txt', 'botan_version.py']:
+    # location of file with version information has moved over time
+    for possible_version_file in ['src/build-data/version.txt', 'version.txt', 'botan_version.py']:
         full_path = os.path.join(output_basename, possible_version_file)
         if os.access(full_path, os.R_OK):
             version_file = full_path

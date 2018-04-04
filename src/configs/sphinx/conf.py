@@ -38,7 +38,7 @@ def parse_version_file(version_path):
             results[key] = val
     return results
 
-version_info = parse_version_file('../../../version.txt')
+version_info = parse_version_file('../../build-data/version.txt')
 
 version_major = version_info['release_major']
 version_minor = version_info['release_minor']
