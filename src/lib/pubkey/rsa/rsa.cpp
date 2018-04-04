@@ -222,22 +222,29 @@ class RSA_Private_Operation
       BigInt private_op(const BigInt& m) const
          {
          const size_t powm_window = 4;
+         const size_t exp_blinding_bits = 64;
+
+         const BigInt d1_mask(m_blinder.rng(), exp_blinding_bits);
+         const BigInt d2_mask(m_blinder.rng(), exp_blinding_bits);
+
+         const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
+         const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-         auto future_j1 = std::async(std::launch::async, [this, &m]() {
+         auto future_j1 = std::async(std::launch::async, [this, &m, &masked_d1]() {
                auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
-               return monty_execute(*powm_d1_p, m_key.get_d1());
+               return monty_execute(*powm_d1_p, masked_d1);
             });
 
          auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
-         BigInt j2 = monty_execute(*powm_d2_q, m_key.get_d2());
+         BigInt j2 = monty_execute(*powm_d2_q, masked_d2);
          BigInt j1 = future_j1.get();
 #else
          auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
          auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
 
-         BigInt j1 = monty_execute(*powm_d1_p, m_key.get_d1());
-         BigInt j2 = monty_execute(*powm_d2_q, m_key.get_d2());
+         BigInt j1 = monty_execute(*powm_d1_p, masked_d1);
+         BigInt j2 = monty_execute(*powm_d2_q, masked_d2);
 #endif
 
          j1 = m_mod_p.reduce(sub_mul(j1, j2, m_key.get_c()));
