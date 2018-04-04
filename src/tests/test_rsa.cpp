@@ -288,9 +288,16 @@ class RSA_Blinding_Tests final : public Test
 
          Botan::PK_Encryptor_EME encryptor(rsa, Test::rng(), "Raw");   // don't try this at home
 
-         // test blinding reinit interval
-         // Seed Fixed_Output_RNG only with enough bytes for the initial blinder initialization
-         Botan_Tests::Fixed_Output_RNG fixed_rng(Botan::unlock(Test::rng().random_vec(rsa.get_n().bytes())));
+         /*
+         Test blinding reinit interval
+
+         Seed Fixed_Output_RNG only with enough bytes for the initial
+         blinder initialization plus the exponent blinding bits which
+         is 2*64 bits per operation.
+         */
+         const size_t rng_bytes = rsa.get_n().bytes() + (2*8*BOTAN_BLINDING_REINIT_INTERVAL);
+
+         Botan_Tests::Fixed_Output_RNG fixed_rng(Botan::unlock(Test::rng().random_vec(rng_bytes)));
          Botan::PK_Decryptor_EME decryptor(rsa, fixed_rng, "Raw", "base");
 
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL ; ++i)

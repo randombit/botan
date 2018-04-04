@@ -13,12 +13,16 @@ RSA
 ----------------------
 
 Blinding is always used to protect private key operations (there is no way to
-turn it off). As an optimization, instead of choosing a new random mask and
+turn it off). Both base blinding and exponent blinding are used.
+
+For base blinding, as an optimization, instead of choosing a new random mask and
 inverse with each decryption, both the mask and its inverse are simply squared
 to choose the next blinding factor. This is much faster than computing a fresh
 value each time, and the additional relation is thought to provide only minimal
 useful information for an attacker. Every BOTAN_BLINDING_REINIT_INTERVAL
 (default 32) operations, a new starting point is chosen.
+
+Exponent blinding uses new values for each signature.
 
 RSA signing uses the CRT optimization, which is much faster but vulnerable to
 trivial fault attacks [RsaFault] which can result in the key being entirely

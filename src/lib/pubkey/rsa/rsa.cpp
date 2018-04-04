@@ -1,6 +1,6 @@
 /*
 * RSA
-* (C) 1999-2010,2015,2016 Jack Lloyd
+* (C) 1999-2010,2015,2016,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,6 +14,8 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/pow_mod.h>
+#include <botan/monty.h>
+#include <botan/internal/monty_exp.h>
 
 #if defined(BOTAN_HAS_OPENSSL)
   #include <botan/internal/openssl.h>
@@ -191,26 +193,27 @@ namespace {
 class RSA_Private_Operation
    {
    protected:
-      size_t get_max_input_bits() const { return (m_n.bits() - 1); }
+      size_t get_max_input_bits() const { return (m_mod_bits - 1); }
 
       explicit RSA_Private_Operation(const RSA_PrivateKey& rsa, RandomNumberGenerator& rng) :
-         m_n(rsa.get_n()),
-         m_q(rsa.get_q()),
-         m_c(rsa.get_c()),
-         m_powermod_e_n(rsa.get_e(), rsa.get_n()),
-         m_powermod_d1_p(rsa.get_d1(), rsa.get_p()),
-         m_powermod_d2_q(rsa.get_d2(), rsa.get_q()),
-         m_mod_p(rsa.get_p()),
-         m_blinder(m_n,
+         m_key(rsa),
+         m_mod_p(m_key.get_p()),
+         m_mod_q(m_key.get_q()),
+         m_monty_p(std::make_shared<Montgomery_Params>(m_key.get_p(), m_mod_p)),
+         m_monty_q(std::make_shared<Montgomery_Params>(m_key.get_q(), m_mod_q)),
+         m_powermod_e_n(m_key.get_e(), m_key.get_n()),
+         m_blinder(m_key.get_n(),
                    rng,
                    [this](const BigInt& k) { return m_powermod_e_n(k); },
-                   [this](const BigInt& k) { return inverse_mod(k, m_n); })
+                   [this](const BigInt& k) { return inverse_mod(k, m_key.get_n()); }),
+         m_mod_bytes(m_key.get_n().bytes()),
+         m_mod_bits(m_key.get_n().bits())
          {
          }
 
       BigInt blinded_private_op(const BigInt& m) const
          {
-         if(m >= m_n)
+         if(m >= m_key.get_n())
             throw Invalid_Argument("RSA private op - input is too large");
 
          return m_blinder.unblind(private_op(m_blinder.blind(m)));
@@ -218,26 +221,49 @@ class RSA_Private_Operation
 
       BigInt private_op(const BigInt& m) const
          {
+         const size_t powm_window = 4;
+         const size_t exp_blinding_bits = 64;
+
+         const BigInt d1_mask(m_blinder.rng(), exp_blinding_bits);
+         const BigInt d2_mask(m_blinder.rng(), exp_blinding_bits);
+
+         const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
+         const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
+
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-         auto future_j1 = std::async(std::launch::async, std::ref(m_powermod_d1_p), m);
-         BigInt j2 = m_powermod_d2_q(m);
+         auto future_j1 = std::async(std::launch::async, [this, &m, &masked_d1, powm_window]() {
+               auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
+               return monty_execute(*powm_d1_p, masked_d1);
+            });
+
+         auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
+         BigInt j2 = monty_execute(*powm_d2_q, masked_d2);
          BigInt j1 = future_j1.get();
 #else
-         BigInt j1 = m_powermod_d1_p(m);
-         BigInt j2 = m_powermod_d2_q(m);
+         auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
+         auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
+
+         BigInt j1 = monty_execute(*powm_d1_p, masked_d1);
+         BigInt j2 = monty_execute(*powm_d2_q, masked_d2);
 #endif
 
-         j1 = m_mod_p.reduce(sub_mul(j1, j2, m_c));
+         j1 = m_mod_p.reduce(sub_mul(j1, j2, m_key.get_c()));
 
-         return mul_add(j1, m_q, j2);
+         return mul_add(j1, m_key.get_q(), j2);
          }
 
-      const BigInt& m_n;
-      const BigInt& m_q;
-      const BigInt& m_c;
-      Fixed_Exponent_Power_Mod m_powermod_e_n, m_powermod_d1_p, m_powermod_d2_q;
+      const RSA_PrivateKey& m_key;
+
+      // TODO these could all be computed once and stored in the key object
       Modular_Reducer m_mod_p;
+      Modular_Reducer m_mod_q;
+      std::shared_ptr<const Montgomery_Params> m_monty_p;
+      std::shared_ptr<const Montgomery_Params> m_monty_q;
+
+      Fixed_Exponent_Power_Mod m_powermod_e_n;
       Blinder m_blinder;
+      size_t m_mod_bytes;
+      size_t m_mod_bits;
    };
 
 class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
@@ -260,7 +286,7 @@ class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
          const BigInt x = blinded_private_op(m);
          const BigInt c = m_powermod_e_n(x);
          BOTAN_ASSERT(m == c, "RSA sign consistency check");
-         return BigInt::encode_1363(x, m_n.bytes());
+         return BigInt::encode_1363(x, m_mod_bytes);
          }
    };
 
@@ -281,7 +307,7 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
          const BigInt x = blinded_private_op(m);
          const BigInt c = m_powermod_e_n(x);
          BOTAN_ASSERT(m == c, "RSA decrypt consistency check");
-         return BigInt::encode_1363(x, m_n.bytes());
+         return BigInt::encode_1363(x, m_mod_bytes);
          }
    };
 
@@ -304,7 +330,7 @@ class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KD
          const BigInt x = blinded_private_op(m);
          const BigInt c = m_powermod_e_n(x);
          BOTAN_ASSERT(m == c, "RSA KEM consistency check");
-         return BigInt::encode_1363(x, m_n.bytes());
+         return BigInt::encode_1363(x, m_mod_bytes);
          }
    };
 
