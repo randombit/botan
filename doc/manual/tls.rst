@@ -1200,7 +1200,8 @@ as shown in the following code examples.
 3. Adjustment of the TLS policy by allowing the custom curve
 
 Client Code Example
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
+
 .. code-block:: cpp
 
     #include <botan/tls_client.h>
@@ -1373,7 +1374,8 @@ Client Code Example
        }
 
 Server Code Example
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+
 .. code-block:: cpp
 
     #include <botan/tls_server.h>
