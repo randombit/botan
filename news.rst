@@ -1,6 +1,15 @@
 Release Notes
 ========================================
 
+Version 2.6.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add support for OAEP labels (GH #1508)
+
+* RSA signing optimizations, about 15% faster (GH #1523)
+
+* Add exponent blinding to RSA (GH #1523)
+
 Version 2.5.0, 2018-04-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
