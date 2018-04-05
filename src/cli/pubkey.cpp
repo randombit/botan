@@ -144,7 +144,7 @@ BOTAN_REGISTER_COMMAND("fingerprint", PK_Fingerprint);
 class PK_Sign final : public Command
    {
    public:
-      PK_Sign() : Command("sign --der-format --passphrase= --hash=SHA-256 --emsa= key file") {}
+      PK_Sign() : Command("sign --der-format --passphrase= --hash=SHA-256 --emsa= --provider= key file") {}
 
       std::string group() const override
          {
@@ -175,7 +175,9 @@ class PK_Sign final : public Command
          const Botan::Signature_Format format =
             flag_set("der-format") ? Botan::DER_SEQUENCE : Botan::IEEE_1363;
 
-         Botan::PK_Signer signer(*key, rng(), sig_padding, format);
+         const std::string provider = get_arg("provider");
+
+         Botan::PK_Signer signer(*key, rng(), sig_padding, format, provider);
 
          auto onData = [&signer](const uint8_t b[], size_t l)
             {
