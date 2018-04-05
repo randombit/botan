@@ -10,6 +10,9 @@ Version 2.6.0, Not Yet Released
 
 * Add exponent blinding to RSA (GH #1523)
 
+* Fix a bug in inline asm that caused incorrect computations when
+  compiled with GCC's `-fno-plt` option. (GH #1524)
+
 Version 2.5.0, 2018-04-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
