@@ -169,7 +169,7 @@ wGf/MGbgPebBLmozAANENw==
 
     valid_sig = "xd3J9jtTBWFWA9ceVGYpmEB0A1DmOoxHRF7FpYW2ng/GYEH/HYljIfYzu/L5iTK6XfVePxeMr6ubCYCD9vFGIw=="
 
-    test_cli("sign", "%s %s" % (priv_key, priv_key), valid_sig)
+    test_cli("sign", "--provider=base %s %s" % (priv_key, priv_key), valid_sig)
 
     test_cli("verify", [pub_key, priv_key, '-'],
              "Signature is valid", valid_sig)
@@ -290,7 +290,7 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
 def cli_speed_tests():
     output = test_cli("speed", ["--msec=1", "--buf-size=64,512", "AES-128"], None).split('\n')
 
-    if len(output) != 4:
+    if len(output) % 4 != 0:
         logging.error("Unexpected number of lines for AES-128 speed test")
 
     # pylint: disable=line-too-long
@@ -370,6 +370,8 @@ def main(args=None):
     print("Ran %d tests with %d failures in %.02f seconds" % (
         TESTS_RUN, TESTS_FAILED, end_time - start_time))
 
+    if TESTS_FAILED > 0:
+        return 1
     return 0
 
 if __name__ == '__main__':

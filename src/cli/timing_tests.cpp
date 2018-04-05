@@ -32,7 +32,7 @@
    #include <botan/numthry.h>
 #endif
 
-#if defined(BOTAN_HAS_EC_GROUP)
+#if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
 #endif
 
@@ -303,7 +303,7 @@ ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
 
 #endif
 
-#if defined(BOTAN_HAS_EC_GROUP)
+#if defined(BOTAN_HAS_ECC_GROUP)
 
 class ECC_Mul_Timing_Test final : public Timing_Test
    {
@@ -545,7 +545,7 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::
       }
 #endif
 
-#if defined(BOTAN_HAS_EC_GROUP)
+#if defined(BOTAN_HAS_ECC_GROUP)
    if(test_type == "ecc_mul")
       {
       return std::unique_ptr<Timing_Test>(new ECC_Mul_Timing_Test("brainpool512r1"));
