@@ -717,29 +717,37 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry)
 inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
    {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(
-      ASM("mull %[y]")
+   word z0 = 0, z1 = 0;
 
-      ASM("addl %[x],%[w0]")
-      ASM("adcl %[y],%[w1]")
-      ASM("adcl $0,%[w2]")
+   asm ("mull %[y]"
+        : "=a"(z0),"=d"(z1)
+        : "a"(x), [y]"rm"(y)
+        : "cc");
 
-      : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
-      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
-      : "cc");
+   asm(ASM("addl %[z0],%[w0]")
+       ASM("adcl %[z1],%[w1]")
+       ASM("adcl $0,%[w2]")
+
+       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
+       : [z0]"r"(z0), [z1]"r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
+       : "cc");
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
 
-   asm(
-      ASM("mulq %[y]")
+   word z0 = 0, z1 = 0;
 
-      ASM("addq %[x],%[w0]")
-      ASM("adcq %[y],%[w1]")
-      ASM("adcq $0,%[w2]")
+   asm ("mulq %[y]"
+        : "=a"(z0),"=d"(z1)
+        : "a"(x), [y]"rm"(y)
+        : "cc");
 
-      : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
-      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
-      : "cc");
+   asm(ASM("addq %[z0],%[w0]")
+       ASM("adcq %[z1],%[w1]")
+       ASM("adcq $0,%[w2]")
+
+       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
+       : [z0]"r"(z0), [z1]"r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
+       : "cc");
 
 #else
    word carry = *w0;
@@ -792,36 +800,47 @@ inline void word3_add(word* w2, word* w1, word* w0, word x)
 inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
    {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(
-      ASM("mull %[y]")
 
-      ASM("addl %[x],%[w0]")
-      ASM("adcl %[y],%[w1]")
+   word z0 = 0, z1 = 0;
+
+   asm ("mull %[y]"
+        : "=a"(z0),"=d"(z1)
+        : "a"(x), [y]"rm"(y)
+        : "cc");
+
+   asm(
+      ASM("addl %[z0],%[w0]")
+      ASM("adcl %[z1],%[w1]")
       ASM("adcl $0,%[w2]")
 
-      ASM("addl %[x],%[w0]")
-      ASM("adcl %[y],%[w1]")
+      ASM("addl %[z0],%[w0]")
+      ASM("adcl %[z1],%[w1]")
       ASM("adcl $0,%[w2]")
 
       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
-      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
+      : [z0]"r"(z0), [z1]"r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
 
-   asm(
-      ASM("mulq %[y]")
+   word z0 = 0, z1 = 0;
 
-      ASM("addq %[x],%[w0]")
-      ASM("adcq %[y],%[w1]")
+   asm ("mulq %[y]"
+        : "=a"(z0),"=d"(z1)
+        : "a"(x), [y]"rm"(y)
+        : "cc");
+
+   asm(
+      ASM("addq %[z0],%[w0]")
+      ASM("adcq %[z1],%[w1]")
       ASM("adcq $0,%[w2]")
 
-      ASM("addq %[x],%[w0]")
-      ASM("adcq %[y],%[w1]")
+      ASM("addq %[z0],%[w0]")
+      ASM("adcq %[z1],%[w1]")
       ASM("adcq $0,%[w2]")
 
       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
-      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
+      : [z0]"r"(z0), [z1]"r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
 
 #else
