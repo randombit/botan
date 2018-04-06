@@ -787,6 +787,8 @@ class Speed final : public Command
                {
                auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
                bench_cipher_mode(*enc, *dec, msec, buf_sizes);
+               delete dec;
+               delete enc;
                }
 #endif
 #if defined(BOTAN_HAS_MAC)
