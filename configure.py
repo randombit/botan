@@ -1099,6 +1099,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.output_to_object = lex.output_to_object
         self.preproc_flags = lex.preproc_flags
         self.sanitizers = lex.sanitizers
+        self.sanitizer_types = []
         self.shared_flags = lex.shared_flags
         self.size_optimization_flags = lex.size_optimization_flags
         self.so_link_commands = lex.so_link_commands
@@ -1223,6 +1224,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                     abi_link.update([self.sanitizers[s] for s in default_san])
                 else:
                     abi_link.add(self.sanitizers[s])
+
+            self.sanitizer_types = san
 
         if options.with_openmp:
             if 'openmp' not in self.mach_abi_linking:
@@ -1865,6 +1868,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or '$(CXX)',
         'make_supports_phony': cc.basename != 'msvc',
+
+        'sanitizer_types' : sorted(cc.sanitizer_types),
 
         'cc_compile_opt_flags': cc.cc_compile_flags(options, False, True),
         'cc_compile_debug_flags': cc.cc_compile_flags(options, True, False),
