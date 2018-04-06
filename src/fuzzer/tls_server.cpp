@@ -127,7 +127,7 @@ class Fuzzer_TLS_Server_Callbacks : public Botan::TLS::Callbacks
          // ignore alert
          }
 
-      bool tls_session_established(const Botan::TLS::Session&)
+      bool tls_session_established(const Botan::TLS::Session&) override
          {
          return true; // cache it
          }
