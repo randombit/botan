@@ -97,7 +97,14 @@ class Test_Options
 
       bool abort_on_first_fail() const { return m_abort_on_first_fail; }
 
-      bool no_avoid_undefined_behavior() const { return m_no_avoid_undefined; }
+      bool no_avoid_undefined_behavior() const
+         {
+#if defined(BOTAN_HAS_SANITIZER_UNDEFINED)
+         return m_no_avoid_undefined;
+#else
+         return true;
+#endif
+         }
 
    private:
       std::vector<std::string> m_requested_tests;
