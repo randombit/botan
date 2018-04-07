@@ -46,9 +46,7 @@ mceies_encrypt(const McEliece_PublicKey& pubkey,
 
    BOTAN_ASSERT(mce_ciphertext.size() == mce_code_bytes, "Unexpected size");
 
-   std::unique_ptr<AEAD_Mode> aead(get_aead(algo, ENCRYPTION));
-   if(!aead)
-      throw Exception("mce_encrypt unable to create AEAD instance '" + algo + "'");
+   std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw(algo, ENCRYPTION);
 
    const size_t nonce_len = aead->default_nonce_length();
 
@@ -80,9 +78,7 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
 
       const size_t mce_code_bytes = (privkey.get_code_length() + 7) / 8;
 
-      std::unique_ptr<AEAD_Mode> aead(get_aead(algo, DECRYPTION));
-      if(!aead)
-         throw Exception("Unable to create AEAD instance '" + algo + "'");
+      std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw(algo, DECRYPTION);
 
       const size_t nonce_len = aead->default_nonce_length();
 

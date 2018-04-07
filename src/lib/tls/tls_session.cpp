@@ -179,7 +179,7 @@ std::chrono::seconds Session::session_age() const
 std::vector<uint8_t>
 Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
    {
-   std::unique_ptr<AEAD_Mode> aead(get_aead("AES-256/GCM", ENCRYPTION));
+   std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw("AES-256/GCM", ENCRYPTION);
    const size_t nonce_len = aead->default_nonce_length();
 
    const secure_vector<uint8_t> nonce = rng.random_vec(nonce_len);
@@ -202,7 +202,7 @@ Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& 
    {
    try
       {
-      std::unique_ptr<AEAD_Mode> aead(get_aead("AES-256/GCM", DECRYPTION));
+      std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw("AES-256/GCM", ENCRYPTION);
       const size_t nonce_len = aead->default_nonce_length();
 
       if(in_len < nonce_len + aead->tag_size())

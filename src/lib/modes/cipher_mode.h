@@ -18,6 +18,12 @@
 namespace Botan {
 
 /**
+* The two possible directions for cipher filters, determining whether they
+* actually perform encryption or decryption.
+*/
+enum Cipher_Dir : int { ENCRYPTION, DECRYPTION };
+
+/**
 * Interface for cipher modes
 */
 class BOTAN_PUBLIC_API(2,0) Cipher_Mode
@@ -30,6 +36,28 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode
       * @param algo_spec algorithm name
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
+
+      /**
+      * Create an AEAD mode
+      * @param algo the algorithm to create
+      * @param direction specify if this should be an encryption or decryption AEAD
+      * @param provider optional specification for provider to use
+      * @return an AEAD mode or a null pointer if not available
+      */
+      static std::unique_ptr<Cipher_Mode> create(const std::string& algo,
+                                                 Cipher_Dir direction,
+                                                 const std::string& provider = "");
+
+      /**
+      * Create an AEAD mode, or throw
+      * @param algo the algorithm to create
+      * @param direction specify if this should be an encryption or decryption AEAD
+      * @param provider optional specification for provider to use
+      * @return an AEAD mode, or throw an exception
+      */
+      static std::unique_ptr<Cipher_Mode> create_or_throw(const std::string& algo,
+                                                          Cipher_Dir direction,
+                                                          const std::string& provider = "");
 
       /*
       * Prepare for processing a message under the specified nonce
@@ -212,21 +240,17 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode
    };
 
 /**
-* The two possible directions for cipher filters, determining whether they
-* actually perform encryption or decryption.
-*/
-enum Cipher_Dir : int { ENCRYPTION, DECRYPTION };
-
-/**
 * Get a cipher mode by name (eg "AES-128/CBC" or "Serpent/XTS")
 * @param algo_spec cipher name
 * @param direction ENCRYPTION or DECRYPTION
 * @param provider provider implementation to choose
 */
-BOTAN_PUBLIC_API(2,2)
-Cipher_Mode* get_cipher_mode(const std::string& algo_spec,
-                             Cipher_Dir direction,
-                             const std::string& provider = "");
+inline Cipher_Mode* get_cipher_mode(const std::string& algo_spec,
+                                    Cipher_Dir direction,
+                                    const std::string& provider = "")
+   {
+   return Cipher_Mode::create(algo_spec, direction, provider).release();
+   }
 
 }
 

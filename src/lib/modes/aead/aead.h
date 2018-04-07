@@ -22,6 +22,28 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
    {
    public:
+      /**
+      * Create an AEAD mode
+      * @param algo the algorithm to create
+      * @param direction specify if this should be an encryption or decryption AEAD
+      * @param provider optional specification for provider to use
+      * @return an AEAD mode or a null pointer if not available
+      */
+      static std::unique_ptr<AEAD_Mode> create(const std::string& algo,
+                                               Cipher_Dir direction,
+                                               const std::string& provider = "");
+
+      /**
+      * Create an AEAD mode, or throw
+      * @param algo the algorithm to create
+      * @param direction specify if this should be an encryption or decryption AEAD
+      * @param provider optional specification for provider to use
+      * @return an AEAD mode, or throw an exception
+      */
+      static std::unique_ptr<AEAD_Mode> create_or_throw(const std::string& algo,
+                                                        Cipher_Dir direction,
+                                                        const std::string& provider = "");
+
       bool authenticated() const override { return true; }
 
       /**
@@ -82,7 +104,10 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
 * @param name AEAD name
 * @param direction ENCRYPTION or DECRYPTION
 */
-BOTAN_PUBLIC_API(2,0) AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction);
+inline AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction)
+   {
+   return AEAD_Mode::create(name, direction, "").release();
+   }
 
 }
 

@@ -76,7 +76,7 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    const uint8_t* iv = mk + CIPHER_KEY_LEN + MAC_KEY_LEN;
 
    // Now encrypt and authenticate
-   std::unique_ptr<Cipher_Mode> ctr(get_cipher_mode("Serpent/CTR-BE", ENCRYPTION));
+   std::unique_ptr<Cipher_Mode> ctr = Cipher_Mode::create_or_throw("Serpent/CTR-BE", ENCRYPTION);
    ctr->set_key(cipher_key, CIPHER_KEY_LEN);
    ctr->start(iv, CIPHER_IV_LEN);
    ctr->finish(out_buf, CRYPTOBOX_HEADER_LEN);
@@ -142,7 +142,7 @@ decrypt_bin(const uint8_t input[], size_t input_len,
    if(!constant_time_compare(computed_mac.data(), box_mac, MAC_OUTPUT_LEN))
       throw Decoding_Error("CryptoBox integrity failure");
 
-   std::unique_ptr<Cipher_Mode> ctr(get_cipher_mode("Serpent/CTR-BE", DECRYPTION));
+   std::unique_ptr<Cipher_Mode> ctr(Cipher_Mode::create_or_throw("Serpent/CTR-BE", DECRYPTION));
    ctr->set_key(cipher_key, CIPHER_KEY_LEN);
    ctr->start(iv, CIPHER_IV_LEN);
    ctr->finish(ciphertext, CRYPTOBOX_HEADER_LEN);

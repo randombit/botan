@@ -221,12 +221,7 @@ std::unique_ptr<MessageAuthenticationCode> ECIES_System_Params::create_mac() con
 
 std::unique_ptr<Cipher_Mode> ECIES_System_Params::create_cipher(Botan::Cipher_Dir direction) const
    {
-   Cipher_Mode* cipher = get_cipher_mode(m_dem_spec, direction);
-   if(cipher == nullptr)
-      {
-      throw Algorithm_Not_Found(m_dem_spec);
-      }
-   return std::unique_ptr<Cipher_Mode>(cipher);
+   return Cipher_Mode::create_or_throw(m_dem_spec, direction);
    }
 
 

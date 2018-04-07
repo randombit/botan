@@ -423,7 +423,7 @@ class Filter_Tests final : public Test
 
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_MODE_CBC) && defined(BOTAN_HAS_CIPHER_MODE_PADDING)
          Botan::Cipher_Mode_Filter* cipher =
-            new Botan::Cipher_Mode_Filter(Botan::get_cipher_mode("AES-128/CBC/PKCS7", Botan::ENCRYPTION));
+            new Botan::Cipher_Mode_Filter(Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION));
 
          result.test_eq("Cipher filter name", cipher->name(), "AES-128/CBC/PKCS7");
 
@@ -458,7 +458,7 @@ class Filter_Tests final : public Test
          result.test_eq("Ciphertext3", ciphertext3, "1241B9976F73051BCF809525D6E86C25");
 
          Botan::Cipher_Mode_Filter* dec_cipher =
-            new Botan::Cipher_Mode_Filter(Botan::get_cipher_mode("AES-128/CBC/PKCS7", Botan::DECRYPTION));
+            new Botan::Cipher_Mode_Filter(Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::DECRYPTION));
          pipe.append(dec_cipher);
          dec_cipher->set_key(Botan::SymmetricKey("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
          dec_cipher->set_iv(Botan::InitializationVector("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB"));

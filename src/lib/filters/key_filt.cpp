@@ -12,10 +12,8 @@ namespace Botan {
 Keyed_Filter* get_cipher(const std::string& algo_spec,
                          Cipher_Dir direction)
    {
-   std::unique_ptr<Cipher_Mode> c(get_cipher_mode(algo_spec, direction));
-   if(c)
-      return new Cipher_Mode_Filter(c.release());
-   throw Algorithm_Not_Found(algo_spec);
+   std::unique_ptr<Cipher_Mode> c(Cipher_Mode::create_or_throw(algo_spec, direction));
+   return new Cipher_Mode_Filter(c.release());
    }
 
 Keyed_Filter* get_cipher(const std::string& algo_spec,

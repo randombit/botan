@@ -39,15 +39,27 @@
 
 namespace Botan {
 
-AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
+std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(const std::string& algo,
+                                                      Cipher_Dir dir,
+                                                      const std::string& provider)
+   {
+   if(auto aead = AEAD_Mode::create(algo, dir, provider))
+      return aead;
+
+   throw Lookup_Error("AEAD", algo, provider);
+   }
+
+std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
+                                             Cipher_Dir dir,
+                                             const std::string& provider)
    {
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
    if(algo == "ChaCha20Poly1305")
       {
       if(dir == ENCRYPTION)
-         return new ChaCha20Poly1305_Encryption;
+         return std::unique_ptr<AEAD_Mode>(new ChaCha20Poly1305_Encryption);
       else
-         return new ChaCha20Poly1305_Decryption;
+         return std::unique_ptr<AEAD_Mode>(new ChaCha20Poly1305_Decryption);
 
       }
 #endif
@@ -59,7 +71,7 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
       const std::vector<std::string> mode_info = parse_algorithm_name(algo_parts[1]);
 
       if(mode_info.empty())
-         return nullptr;
+         return std::unique_ptr<AEAD_Mode>();
 
       std::ostringstream alg_args;
 
@@ -71,7 +83,7 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
       alg_args << ')';
 
       const std::string mode_name = mode_info[0] + alg_args.str();
-      return get_aead(mode_name, dir);
+      return AEAD_Mode::create(mode_name, dir);
       }
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
@@ -80,14 +92,14 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
 
    if(req.arg_count() == 0)
       {
-      return nullptr;
+      return std::unique_ptr<AEAD_Mode>();
       }
 
-   std::unique_ptr<BlockCipher> bc(BlockCipher::create(req.arg(0)));
+   std::unique_ptr<BlockCipher> bc(BlockCipher::create(req.arg(0), provider));
 
    if(!bc)
       {
-      return nullptr;
+      return std::unique_ptr<AEAD_Mode>();
       }
 
 #if defined(BOTAN_HAS_AEAD_CCM)
@@ -96,9 +108,9 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
       size_t tag_len = req.arg_as_integer(1, 16);
       size_t L_len = req.arg_as_integer(2, 3);
       if(dir == ENCRYPTION)
-         return new CCM_Encryption(bc.release(), tag_len, L_len);
+         return std::unique_ptr<AEAD_Mode>(new CCM_Encryption(bc.release(), tag_len, L_len));
       else
-         return new CCM_Decryption(bc.release(), tag_len, L_len);
+         return std::unique_ptr<AEAD_Mode>(new CCM_Decryption(bc.release(), tag_len, L_len));
       }
 #endif
 
@@ -107,9 +119,9 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
       {
       size_t tag_len = req.arg_as_integer(1, 16);
       if(dir == ENCRYPTION)
-         return new GCM_Encryption(bc.release(), tag_len);
+         return std::unique_ptr<AEAD_Mode>(new GCM_Encryption(bc.release(), tag_len));
       else
-         return new GCM_Decryption(bc.release(), tag_len);
+         return std::unique_ptr<AEAD_Mode>(new GCM_Decryption(bc.release(), tag_len));
       }
 #endif
 
@@ -118,9 +130,9 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
       {
       size_t tag_len = req.arg_as_integer(1, 16);
       if(dir == ENCRYPTION)
-         return new OCB_Encryption(bc.release(), tag_len);
+         return std::unique_ptr<AEAD_Mode>(new OCB_Encryption(bc.release(), tag_len));
       else
-         return new OCB_Decryption(bc.release(), tag_len);
+         return std::unique_ptr<AEAD_Mode>(new OCB_Decryption(bc.release(), tag_len));
       }
 #endif
 
@@ -129,9 +141,9 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
       {
       size_t tag_len = req.arg_as_integer(1, bc->block_size());
       if(dir == ENCRYPTION)
-         return new EAX_Encryption(bc.release(), tag_len);
+         return std::unique_ptr<AEAD_Mode>(new EAX_Encryption(bc.release(), tag_len));
       else
-         return new EAX_Decryption(bc.release(), tag_len);
+         return std::unique_ptr<AEAD_Mode>(new EAX_Decryption(bc.release(), tag_len));
       }
 #endif
 
@@ -139,15 +151,17 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
    if(req.algo_name() == "SIV")
       {
       if(dir == ENCRYPTION)
-         return new SIV_Encryption(bc.release());
+         return std::unique_ptr<AEAD_Mode>(new SIV_Encryption(bc.release()));
       else
-         return new SIV_Decryption(bc.release());
+         return std::unique_ptr<AEAD_Mode>(new SIV_Decryption(bc.release()));
       }
 #endif
 
 #endif
 
-   return nullptr;
+   return std::unique_ptr<AEAD_Mode>();
    }
+
+
 
 }

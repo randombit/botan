@@ -77,7 +77,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
-   std::unique_ptr<Cipher_Mode> enc(get_cipher_mode(cipher, ENCRYPTION));
+   std::unique_ptr<Cipher_Mode> enc = Cipher_Mode::create(cipher, ENCRYPTION);
 
    if(!enc)
       throw Decoding_Error("PBE-PKCS5 cannot encrypt no cipher " + cipher);
@@ -208,7 +208,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
 
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 
-   std::unique_ptr<Cipher_Mode> dec(get_cipher_mode(cipher, DECRYPTION));
+   std::unique_ptr<Cipher_Mode> dec = Cipher_Mode::create(cipher, DECRYPTION);
    if(!dec)
       throw Decoding_Error("PBE-PKCS5 cannot decrypt no cipher " + cipher);
 
