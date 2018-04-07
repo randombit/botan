@@ -64,8 +64,8 @@ class DLIES_KAT_Tests final : public Text_Based_Test
 
          if(cipher_algo != "XOR")
             {
-            enc.reset(Botan::get_cipher_mode(cipher_algo, Botan::ENCRYPTION));
-            dec.reset(Botan::get_cipher_mode(cipher_algo, Botan::DECRYPTION));
+            enc = Botan::Cipher_Mode::create(cipher_algo, Botan::ENCRYPTION);
+            dec = Botan::Cipher_Mode::create(cipher_algo, Botan::DECRYPTION);
 
             if(!enc || !dec)
                {

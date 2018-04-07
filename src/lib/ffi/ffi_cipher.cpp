@@ -23,7 +23,7 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       const bool encrypt_p = ((flags & BOTAN_CIPHER_INIT_FLAG_MASK_DIRECTION) == BOTAN_CIPHER_INIT_FLAG_ENCRYPT);
       const Botan::Cipher_Dir dir = encrypt_p ? Botan::ENCRYPTION : Botan::DECRYPTION;
-      std::unique_ptr<Botan::Cipher_Mode> mode(Botan::get_cipher_mode(cipher_name, dir));
+      std::unique_ptr<Botan::Cipher_Mode> mode(Botan::Cipher_Mode::create(cipher_name, dir));
       if(!mode)
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       *cipher = new botan_cipher_struct(mode.release());

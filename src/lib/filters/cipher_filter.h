@@ -23,6 +23,9 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode_Filter final : public Keyed_Filter,
    public:
       explicit Cipher_Mode_Filter(Cipher_Mode* t);
 
+      explicit Cipher_Mode_Filter(std::unique_ptr<Cipher_Mode> t) :
+         Cipher_Mode_Filter(t.release()) {}
+
       void set_iv(const InitializationVector& iv) override;
 
       void set_key(const SymmetricKey& key) override;

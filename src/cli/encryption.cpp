@@ -44,7 +44,7 @@ do_crypt(const std::string &cipher,
 
    // TODO: implement streaming
 
-   std::unique_ptr<Botan::Cipher_Mode> processor(Botan::get_cipher_mode(cipher, direction));
+   std::unique_ptr<Botan::Cipher_Mode> processor(Botan::Cipher_Mode::create(cipher, direction));
    if(!processor)
       throw CLI_Error("Cipher algorithm not found");
 

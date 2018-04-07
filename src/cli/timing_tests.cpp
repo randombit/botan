@@ -217,7 +217,7 @@ std::vector<uint8_t> Lucky13_Timing_Test::prepare_input(std::string input)
    const std::vector<uint8_t> key(16);
    const std::vector<uint8_t> iv(16);
 
-   std::unique_ptr<Botan::Cipher_Mode> enc(Botan::get_cipher_mode("AES-128/CBC/NoPadding", Botan::ENCRYPTION));
+   std::unique_ptr<Botan::Cipher_Mode> enc(Botan::Cipher_Mode::create("AES-128/CBC/NoPadding", Botan::ENCRYPTION));
    enc->set_key(key);
    enc->start(iv);
    Botan::secure_vector<uint8_t> buf(input_vector.begin(), input_vector.end());
