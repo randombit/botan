@@ -102,6 +102,7 @@ class Test_Options
 #if defined(BOTAN_HAS_SANITIZER_UNDEFINED)
          return m_no_avoid_undefined;
 #else
+         BOTAN_UNUSED(m_no_avoid_undefined);
          return true;
 #endif
          }
