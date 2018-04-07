@@ -10,6 +10,7 @@ warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing
 maintainer_warning_flags "-Wstrict-overflow=5 -Wold-style-cast -Wsuggest-override -Wshadow -Werror -Wno-error=strict-overflow"
 
 optimization_flags "-O3"
+sanitizer_optimization_flags "-O1 -fno-optimize-sibling-calls -fno-omit-frame-pointer"
 size_optimization_flags "-Os"
 
 shared_flags "-fPIC"
@@ -69,10 +70,10 @@ arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
 </isa_flags>
 
-<cpu_flags>
+<cpu_flags_no_debug>
 x86_32 -> "-momit-leaf-frame-pointer"
 x86_64 -> "-momit-leaf-frame-pointer"
-</cpu_flags>
+</cpu_flags_no_debug>
 
 # Flags set here are included at compile and link time
 <mach_abi_linking>
