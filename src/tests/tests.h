@@ -62,7 +62,7 @@ class Test_Options
                    bool run_online_tests,
                    bool run_long_tests,
                    bool abort_on_first_fail,
-                   bool avoid_undefined) :
+                   bool no_avoid_undefined) :
          m_requested_tests(requested_tests),
          m_data_dir(data_dir),
          m_pkcs11_lib(pkcs11_lib),
@@ -73,7 +73,7 @@ class Test_Options
          m_run_online_tests(run_online_tests),
          m_run_long_tests(run_long_tests),
          m_abort_on_first_fail(abort_on_first_fail),
-         m_avoid_undefined(avoid_undefined)
+         m_no_avoid_undefined(no_avoid_undefined)
          {}
 
       const std::vector<std::string>& requested_tests() const
@@ -97,7 +97,14 @@ class Test_Options
 
       bool abort_on_first_fail() const { return m_abort_on_first_fail; }
 
-      bool avoid_undefined_behavior() const { return m_avoid_undefined; }
+      bool no_avoid_undefined_behavior() const
+         {
+#if defined(BOTAN_HAS_SANITIZER_UNDEFINED)
+         return m_no_avoid_undefined;
+#else
+         return true;
+#endif
+         }
 
    private:
       std::vector<std::string> m_requested_tests;
@@ -110,7 +117,7 @@ class Test_Options
       bool m_run_online_tests;
       bool m_run_long_tests;
       bool m_abort_on_first_fail;
-      bool m_avoid_undefined;
+      bool m_no_avoid_undefined;
    };
 
 /*
@@ -466,7 +473,7 @@ class Test
 
       static void set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng);
 
-      static bool avoid_undefined_behavior() { return m_opts.avoid_undefined_behavior(); }
+      static bool no_avoid_undefined_behavior() { return m_opts.no_avoid_undefined_behavior(); }
       static bool log_success() { return m_opts.log_success(); }
       static bool run_online_tests() { return m_opts.run_online_tests(); }
       static bool run_long_tests() { return m_opts.run_long_tests(); }
