@@ -74,7 +74,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 #if defined(BOTAN_HAS_AEAD_MODES)
    if(auto aead = AEAD_Mode::create(algo, direction))
       {
-      return aead;
+      return std::unique_ptr<Cipher_Mode>(aead.release());
       }
 #endif
 
