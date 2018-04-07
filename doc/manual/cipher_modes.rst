@@ -95,7 +95,7 @@ with PKCS#7 padding.
        const std::string plaintext("Your great-grandfather gave this watch to your granddad for good luck. Unfortunately, Dane's luck wasn't as good as his old man's.");
        const std::vector<uint8_t> key = Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");
 
-       std::unique_ptr<Botan::Cipher_Mode> enc(Botan::get_cipher_mode("AES-128/CBC/PKCS7", Botan::ENCRYPTION));
+       std::unique_ptr<Botan::Cipher_Mode> enc = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION);
        enc->set_key(key);
 
        Botan::secure_vector<uint8_t> pt(plaintext.data(), plaintext.data()+plaintext.length());
