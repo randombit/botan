@@ -783,12 +783,18 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_CIPHER_MODES)
-            else if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
+            else if(auto enc =
+                       std::unique_ptr<std::remove_reference<
+                           decltype(*Botan::get_cipher_mode(
+                                     algo, Botan::ENCRYPTION))>::type>
+                       { Botan::get_cipher_mode(algo, Botan::ENCRYPTION) })
                {
-               auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
+               auto dec =
+                  std::unique_ptr<std::remove_reference<
+                     decltype(*Botan::get_cipher_mode(algo, Botan::DECRYPTION))>::type>
+                  { Botan::get_cipher_mode(algo, Botan::DECRYPTION) };
+
                bench_cipher_mode(*enc, *dec, msec, buf_sizes);
-               delete dec;
-               delete enc;
                }
 #endif
 #if defined(BOTAN_HAS_MAC)
