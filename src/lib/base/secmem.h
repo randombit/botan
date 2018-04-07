@@ -105,6 +105,7 @@ size_t buffer_insert(std::vector<T, Alloc>& buf,
                      const T input[],
                      size_t input_length)
    {
+   BOTAN_ASSERT_NOMSG(buf_offset <= buf.size());
    const size_t to_copy = std::min(input_length, buf.size() - buf_offset);
    if(to_copy > 0)
       {
@@ -118,6 +119,7 @@ size_t buffer_insert(std::vector<T, Alloc>& buf,
                      size_t buf_offset,
                      const std::vector<T, Alloc2>& input)
    {
+   BOTAN_ASSERT_NOMSG(buf_offset <= buf.size());
    const size_t to_copy = std::min(input.size(), buf.size() - buf_offset);
    if(to_copy > 0)
       {
