@@ -23,6 +23,10 @@
 #include <botan/internal/os_utils.h>
 #include <botan/version.h>
 
+#if defined(BOTAN_HAS_BIGINT)
+   #include <botan/bigint.h>
+#endif
+
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
    #include <botan/block_cipher.h>
 #endif
@@ -895,6 +899,13 @@ class Speed final : public Command
                }
 #endif
 
+#if defined(BOTAN_HAS_BIGINT)
+            else if(algo == "mp_mul")
+               {
+               bench_mp_mul(msec);
+               }
+#endif
+
 #if defined(BOTAN_HAS_NUMBERTHEORY)
             else if(algo == "random_prime")
                {
@@ -1426,6 +1437,42 @@ class Speed final : public Command
          record_result(wrap_timer);
          record_result(unwrap_timer);
          }
+#endif
+
+#if defined(BOTAN_HAS_BIGINT)
+
+      void bench_mp_mul(const std::chrono::milliseconds runtime)
+         {
+         std::chrono::milliseconds runtime_per_size = runtime / 9;
+         for(size_t bits : { 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096 })
+            {
+            std::unique_ptr<Timer> mul_timer = make_timer("BigInt mul " + std::to_string(bits));
+            std::unique_ptr<Timer> sqr_timer = make_timer("BigInt sqr " + std::to_string(bits));
+
+            const Botan::BigInt y(rng(), bits);
+            Botan::secure_vector<Botan::word> ws;
+
+            while(mul_timer->under(runtime_per_size))
+               {
+               Botan::BigInt x(rng(), bits);
+
+               sqr_timer->start();
+               x.square(ws);
+               sqr_timer->stop();
+
+               x.mask_bits(bits);
+
+               mul_timer->start();
+               x.mul(y, ws);
+               mul_timer->stop();
+               }
+
+            record_result(mul_timer);
+            record_result(sqr_timer);
+            }
+
+         }
+
 #endif
 
 #if defined(BOTAN_HAS_DL_GROUP)

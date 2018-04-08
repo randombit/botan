@@ -252,6 +252,12 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      BigInt& mul(const BigInt& y, secure_vector<word>& ws);
 
      /**
+     * Square value of *this
+     * @param ws a temp workspace
+     */
+     BigInt& square(secure_vector<word>& ws);
+
+     /**
      * Set *this to y - *this
      * @param y the BigInt to subtract from as a sequence of words
      * @param y_size length of y in words
