@@ -27,7 +27,7 @@ namespace Botan_Tests {
 class TLS_CBC_Padding_Tests final : public Text_Based_Test
    {
    public:
-      TLS_CBC_Padding_Tests() : Text_Based_Test("tls_cbc.vec", "Record,Output") {}
+      TLS_CBC_Padding_Tests() : Text_Based_Test("tls_cbc_padding.vec", "Record,Output") {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
