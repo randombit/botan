@@ -401,7 +401,6 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             }
          }
 
-   private:
       int m_sockfd = -1;
    };
 
