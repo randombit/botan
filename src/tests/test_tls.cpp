@@ -108,7 +108,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
 
             void add_data(const uint8_t[], size_t) override {}
 
-            void final_result(uint8_t out[])
+            void final_result(uint8_t out[]) override
                {
                std::memset(out, 0, m_mac_len);
                }
