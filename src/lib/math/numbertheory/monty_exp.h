@@ -32,6 +32,12 @@ monty_precompute(std::shared_ptr<const Montgomery_Params> params_p,
 BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state,
                      const BigInt& k);
 
+/*
+* Return g^x mod p taking variable time
+*/
+BigInt monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_state,
+                             const BigInt& k);
+
 /**
 * Return (x^z1 * y^z2) % p
 */

@@ -23,6 +23,8 @@ class Montgomery_Exponentation_State
                                      size_t window_bits);
 
       BigInt exponentiation(const BigInt& k) const;
+
+      BigInt exponentiation_vartime(const BigInt& k) const;
    private:
       std::shared_ptr<const Montgomery_Params> m_params;
       std::vector<Montgomery_Int> m_g;
@@ -112,6 +114,30 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar) cons
    return x.value();
    }
 
+BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scalar) const
+   {
+   const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
+
+   Montgomery_Int x(m_params, m_params->R1(), false);
+
+   secure_vector<word> ws;
+
+   for(size_t i = exp_nibbles; i > 0; --i)
+      {
+      for(size_t j = 0; j != m_window_bits; ++j)
+         {
+         x.square_this(ws);
+         }
+
+      const uint32_t nibble = scalar.get_substring(m_window_bits*(i-1), m_window_bits);
+
+      if(nibble > 0)
+         x.mul_by(m_g[nibble], ws);
+      }
+
+   return x.value();
+   }
+
 std::shared_ptr<const Montgomery_Exponentation_State>
 monty_precompute(std::shared_ptr<const Montgomery_Params> params,
                  const BigInt& g,
@@ -124,6 +150,12 @@ BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state,
                      const BigInt& k)
    {
    return precomputed_state.exponentiation(k);
+   }
+
+BigInt monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_state,
+                             const BigInt& k)
+   {
+   return precomputed_state.exponentiation_vartime(k);
    }
 
 BigInt monty_multi_exp(std::shared_ptr<const Montgomery_Params> params_p,

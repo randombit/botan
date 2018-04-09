@@ -6,7 +6,8 @@ Version 2.6.0, Not Yet Released
 
 * Add support for OAEP labels (GH #1508)
 
-* RSA signing optimizations, about 15% faster (GH #1523)
+* RSA signing is about 15% faster (GH #1523) and RSA verification is
+  about 50% faster.
 
 * Add exponent blinding to RSA (GH #1523)
 

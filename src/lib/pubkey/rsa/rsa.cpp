@@ -341,7 +341,9 @@ class RSA_Public_Operation
    {
    public:
       explicit RSA_Public_Operation(const RSA_PublicKey& rsa) :
-         m_n(rsa.get_n()), m_powermod_e_n(rsa.get_e(), rsa.get_n())
+         m_n(rsa.get_n()),
+         m_e(rsa.get_e()),
+         m_monty_n(std::make_shared<Montgomery_Params>(m_n))
          {}
 
       size_t get_max_input_bits() const { return (m_n.bits() - 1); }
@@ -351,17 +353,22 @@ class RSA_Public_Operation
          {
          if(m >= m_n)
             throw Invalid_Argument("RSA public op - input is too large");
-         return m_powermod_e_n(m);
+
+         const size_t powm_window = 1;
+
+         auto powm_m_n = monty_precompute(m_monty_n, m, powm_window);
+         return monty_execute_vartime(*powm_m_n, m_e);
          }
 
       const BigInt& get_n() const { return m_n; }
 
       const BigInt& m_n;
-      Fixed_Exponent_Power_Mod m_powermod_e_n;
+      const BigInt& m_e;
+      std::shared_ptr<Montgomery_Params> m_monty_n;
    };
 
 class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
-                                 private RSA_Public_Operation
+                                       private RSA_Public_Operation
    {
    public:
 
@@ -374,7 +381,7 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
       size_t max_raw_input_bits() const override { return get_max_input_bits(); }
 
       secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t msg_len,
-                                      RandomNumberGenerator&) override
+                                         RandomNumberGenerator&) override
          {
          BigInt m(msg, msg_len);
          return BigInt::encode_1363(public_op(m), m_n.bytes());
@@ -382,7 +389,7 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
    };
 
 class RSA_Verify_Operation final : public PK_Ops::Verification_with_EMSA,
-                             private RSA_Public_Operation
+                                   private RSA_Public_Operation
    {
    public:
 
@@ -404,7 +411,7 @@ class RSA_Verify_Operation final : public PK_Ops::Verification_with_EMSA,
    };
 
 class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF,
-                                     private RSA_Public_Operation
+                                           private RSA_Public_Operation
    {
    public:
 
