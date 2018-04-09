@@ -714,7 +714,7 @@ class Speed final : public Command
             {
             error_output() << "The --cpu-clock-speed option is only intended to be used on "
                               "platforms without access to a cycle counter.\n"
-                              "Expected incorrect results\n\n";;
+                              "Expected incorrect results\n\n";
             }
 
          if(format == "table")
