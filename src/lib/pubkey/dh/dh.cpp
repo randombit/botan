@@ -7,7 +7,6 @@
 
 #include <botan/dh.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/workfactor.h>
 #include <botan/pow_mod.h>
 #include <botan/blinding.h>
 
@@ -41,8 +40,7 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
 
    if(x_arg == 0)
       {
-      const BigInt& p = group_p();
-      m_x.randomize(rng, dl_exponent_size(p.bits()));
+      m_x.randomize(rng, grp.exponent_bits());
       }
    else
       {

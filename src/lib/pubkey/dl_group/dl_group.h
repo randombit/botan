@@ -211,6 +211,18 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       size_t p_bytes() const;
 
       /**
+      * Return size in bits of a secret exponent
+      *
+      * This attempts to balance between the attack costs of NFS
+      * (which depends on the size of the modulus) and Pollard's rho
+      * (which depends on the size of the exponent).
+      *
+      * It may vary over time for a particular group, if the attack
+      * costs change.
+      */
+      size_t exponent_bits() const;
+
+      /**
       * Return an estimate of the strength of this group against
       * discrete logarithm attacks (eg NFS). Warning: since this only
       * takes into account known attacks it is by necessity an

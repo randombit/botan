@@ -10,7 +10,6 @@
 #include <botan/keypair.h>
 #include <botan/reducer.h>
 #include <botan/blinding.h>
-#include <botan/workfactor.h>
 #include <botan/pow_mod.h>
 
 namespace Botan {
@@ -35,7 +34,7 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
 
    if(m_x.is_zero())
       {
-      m_x.randomize(rng, dl_exponent_size(group_p().bits()));
+      m_x.randomize(rng, group.exponent_bits());
       }
 
    m_y = m_group.power_g_p(m_x);
@@ -101,7 +100,7 @@ ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
    if(m >= m_group.get_p())
       throw Invalid_Argument("ElGamal encryption: Input is too large");
 
-   const size_t k_bits = dl_exponent_size(m_group.p_bits());
+   const size_t k_bits = m_group.exponent_bits();
    const BigInt k(rng, k_bits);
 
    const BigInt a = m_group.power_g_p(k);
