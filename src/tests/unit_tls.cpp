@@ -704,6 +704,12 @@ class TLS_Unit_Tests final : public Test
                   version, creds, policy, policy, rng, client_ses, server_ses, client_auth);
                test.go();
                results.push_back(test.results());
+
+               TLS_Handshake_Test test_resumption(
+                  version.to_string() + " " + test_descr,
+                  version, creds, policy, policy, rng, client_ses, server_ses, client_auth);
+               test_resumption.go();
+               results.push_back(test_resumption.results());
                }
             }
          catch(std::exception& e)

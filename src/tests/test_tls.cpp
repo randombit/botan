@@ -11,6 +11,8 @@
 #if defined(BOTAN_HAS_TLS)
   #include <botan/tls_alert.h>
   #include <botan/tls_policy.h>
+  #include <botan/tls_session.h>
+  #include <botan/tls_version.h>
 
   #if defined(BOTAN_HAS_TLS_CBC)
      #include <botan/internal/tls_cbc.h>
@@ -21,6 +23,52 @@
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_TLS)
+
+class TLS_Session_Tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("TLS::Session");
+
+         Botan::TLS::Session default_session;
+
+         Botan::secure_vector<uint8_t> default_der = default_session.DER_encode();
+
+         result.test_gte("Encoded default session has size", default_der.size(), 0);
+
+         Botan::TLS::Session decoded_default(default_der.data(), default_der.size());
+
+         Botan::TLS::Session session(std::vector<uint8_t>{0xAA, 0xBB},
+                                     Botan::secure_vector<uint8_t>{0xCC, 0xDD},
+                                     Botan::TLS::Protocol_Version::TLS_V12,
+                                     0xFE0F,
+                                     Botan::TLS::CLIENT,
+                                     true,
+                                     false,
+                                     std::vector<Botan::X509_Certificate>(),
+                                     std::vector<uint8_t>(),
+                                     Botan::TLS::Server_Information("server"),
+                                     "SRP username",
+                                     0x0000);
+
+         const Botan::SymmetricKey key("ABCDEF");
+         std::vector<uint8_t> ctext1 = session.encrypt(key, Test::rng());
+         std::vector<uint8_t> ctext2 = session.encrypt(key, Test::rng());
+
+         result.test_ne("TLS session encryption is non-determinsitic",
+                        ctext1.data(), ctext1.size(),
+                        ctext2.data(), ctext2.size());
+
+         Botan::TLS::Session dsession = Botan::TLS::Session::decrypt(ctext1.data(), ctext1.size(), key);
+
+         result.test_eq("Decrypted session access works", dsession.srp_identifier(), "SRP username");
+
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("tls_session", TLS_Session_Tests);
 
 #if defined(BOTAN_HAS_TLS_CBC)
 
