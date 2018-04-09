@@ -189,6 +189,7 @@ BigInt& BigInt::square(secure_vector<word>& ws)
               ws.data(), ws.size());
 
    swap_reg(z);
+   set_sign(BigInt::Positive);
 
    return (*this);
    }
