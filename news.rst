@@ -16,8 +16,8 @@ Version 2.6.0, Not Yet Released
   fail if the client offered any signature algorithm not known to the
   server (for example RSA/SHA-224).
 
-* Fix a bug in inline asm that caused incorrect computations when
-  compiled with GCC's ``-fno-plt`` option. (GH #1524)
+* Fix a bug in inline asm that would with GCC 7.3 cause incorrect
+  computations and an infinite loop during the tests. (GH #1524 #1529)
 
 Version 2.5.0, 2018-04-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
