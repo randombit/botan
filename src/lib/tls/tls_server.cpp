@@ -225,6 +225,9 @@ uint16_t choose_ciphersuite(
 
             for(Signature_Scheme scheme : client_sig_methods)
                {
+               if(signature_scheme_is_known(scheme) == false)
+                  continue;
+
                if(signature_algorithm_of_scheme(scheme) == suite.sig_algo() &&
                   policy.allowed_signature_hash(hash_function_of_scheme(scheme)))
                   {
