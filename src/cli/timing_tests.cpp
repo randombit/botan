@@ -200,7 +200,9 @@ class Lucky13_Timing_Test final : public Timing_Test
       Lucky13_Timing_Test(const std::string& mac_name, size_t mac_keylen)
          : m_mac_algo(mac_name)
          , m_mac_keylen(mac_keylen)
-         , m_dec("AES-128", 16, m_mac_algo, m_mac_keylen, true, false) {}
+         , m_dec(Botan::BlockCipher::create_or_throw("AES-128"),
+                 Botan::MessageAuthenticationCode::create_or_throw("HMAC(" + m_mac_algo + ")"),
+                 16, m_mac_keylen, true, false) {}
 
       std::vector<uint8_t> prepare_input(std::string input) override;
       ticks measure_critical_function(std::vector<uint8_t> input) override;

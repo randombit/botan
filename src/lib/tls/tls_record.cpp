@@ -57,12 +57,15 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       {
 #if defined(BOTAN_HAS_TLS_CBC)
       // legacy CBC+HMAC mode
+      auto mac = MessageAuthenticationCode::create_or_throw("HMAC(" + suite.mac_algo() + ")");
+      auto cipher = BlockCipher::create_or_throw(suite.cipher_algo());
+
       if(our_side)
          {
          m_aead.reset(new TLS_CBC_HMAC_AEAD_Encryption(
-                         suite.cipher_algo(),
+                         std::move(cipher),
+                         std::move(mac),
                          suite.cipher_keylen(),
-                         suite.mac_algo(),
                          suite.mac_keylen(),
                          version.supports_explicit_cbc_ivs(),
                          uses_encrypt_then_mac));
@@ -70,9 +73,9 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       else
          {
          m_aead.reset(new TLS_CBC_HMAC_AEAD_Decryption(
-                         suite.cipher_algo(),
+                         std::move(cipher),
+                         std::move(mac),
                          suite.cipher_keylen(),
-                         suite.mac_algo(),
                          suite.mac_keylen(),
                          version.supports_explicit_cbc_ivs(),
                          uses_encrypt_then_mac));

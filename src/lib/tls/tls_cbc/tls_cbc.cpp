@@ -24,25 +24,24 @@ namespace TLS {
 * TLS_CBC_HMAC_AEAD_Mode Constructor
 */
 TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
-                                               const std::string& cipher_name,
+                                               std::unique_ptr<BlockCipher> cipher,
+                                               std::unique_ptr<MessageAuthenticationCode> mac,
                                                size_t cipher_keylen,
-                                               const std::string& mac_name,
                                                size_t mac_keylen,
                                                bool use_explicit_iv,
                                                bool use_encrypt_then_mac) :
-   m_cipher_name(cipher_name),
-   m_mac_name(mac_name),
+   m_cipher_name(cipher->name()),
+   m_mac_name(mac->name()),
    m_cipher_keylen(cipher_keylen),
    m_mac_keylen(mac_keylen),
    m_use_encrypt_then_mac(use_encrypt_then_mac)
    {
-   m_mac = MessageAuthenticationCode::create_or_throw("HMAC(" + m_mac_name + ")");
-   std::unique_ptr<BlockCipher> cipher = BlockCipher::create_or_throw(m_cipher_name);
-
-   m_tag_size = m_mac->output_length();
+   m_tag_size = mac->output_length();
    m_block_size = cipher->block_size();
 
    m_iv_size = use_explicit_iv ? m_block_size : 0;
+
+   m_mac = std::move(mac);
 
    if(dir == ENCRYPTION)
       m_cbc.reset(new CBC_Encryption(cipher.release(), new Null_Padding));
@@ -419,7 +418,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       (sending empty records, instead of 1/(n-1) splitting)
       */
 
-      const uint16_t size_ok_mask = CT::is_lte<uint16_t>(static_cast<uint16_t>(tag_size() + pad_size), static_cast<uint16_t>(record_len + 1));
+      const uint16_t size_ok_mask = CT::is_lte<uint16_t>(static_cast<uint16_t>(tag_size() + pad_size), static_cast<uint16_t>(record_len));
       pad_size &= size_ok_mask;
 
       CT::unpoison(record_contents, record_len);
