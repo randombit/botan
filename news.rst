@@ -10,6 +10,12 @@ Version 2.6.0, Not Yet Released
 
 * Add exponent blinding to RSA (GH #1523)
 
+* Add ``Cipher_Mode::create`` and ``AEAD_Mode::create`` (GH #1527)
+
+* Fix bug in TLS server introduced in 2.5 which caused connection to
+  fail if the client offered any signature algorithm not known to the
+  server (for example RSA/SHA-224).
+
 * Fix a bug in inline asm that caused incorrect computations when
   compiled with GCC's ``-fno-plt`` option. (GH #1524)
 
