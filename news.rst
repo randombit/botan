@@ -1,8 +1,14 @@
 Release Notes
 ========================================
 
-Version 2.6.0, Not Yet Released
+Version 2.6.0, 2018-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* CVE-2018-9860 Fix a bug decrypting TLS CBC ciphertexts which could
+  for a malformed ciphertext cause the decryptor to read and HMAC an
+  additional 64K bytes of data which is not part of the record. This
+  could cause a crash if the read went into unmapped memory. No
+  information leak or out of bounds write occurs.
 
 * Add support for OAEP labels (GH #1508)
 

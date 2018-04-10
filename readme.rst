@@ -105,9 +105,9 @@ MSVC 2015/2017 are regularly tested. New releases of Botan 2 are made on a
 quarterly basis.
 
 The latest 2.x release is
-`2.5.0 <https://botan.randombit.net/releases/Botan-2.5.0.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-2.5.0.tgz.asc>`_
-released on 2018-04-02
+`2.6.0 <https://botan.randombit.net/releases/Botan-2.6.0.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-2.6.0.tgz.asc>`_
+released on 2018-04-10
 
 Old Release
 ----------------------------------------
