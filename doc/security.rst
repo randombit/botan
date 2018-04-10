@@ -18,6 +18,17 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2018
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2018-04-10 (CVE-2018-9860): Memory overread in TLS CBC decryption
+
+  An off by one error in TLS CBC decryption meant that for a particular
+  malformed ciphertext, the receiver would miscompute a length field and HMAC
+  exactly 64K bytes of data following the record buffer as if it was part of the
+  message. This cannot be used to leak information since the MAC comparison will
+  subsequently fail and the connection will be closed. However it might be used
+  for denial of service. Found by OSS-Fuzz.
+
+  Bug introduced in 1.11.32, fixed in 2.6.0
+
 * 2018-03-29 (CVE-2018-9127): Invalid wildcard match
 
   RFC 6125 wildcard matching was incorrectly implemented, so that a wildcard
