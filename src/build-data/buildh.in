@@ -56,6 +56,10 @@
 #define BOTAN_HAS_SANITIZER_%{i|upper}
 %{endfor}
 
+%{if build_coverage}
+#define BOTAN_HAS_COVERAGE
+%{endif}
+
 #define BOTAN_TARGET_ARCH_IS_%{arch|upper}
 %{if endian}
 #define BOTAN_TARGET_CPU_IS_%{endian|upper}_ENDIAN
