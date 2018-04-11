@@ -43,7 +43,8 @@ class EC_Group_Data final
          m_oid(oid),
          m_p_bits(p.bits()),
          m_order_bits(order.bits()),
-         m_a_is_minus_3(a == p - 3)
+         m_a_is_minus_3(a == p - 3),
+         m_a_is_zero(a.is_zero())
          {
          }
 
@@ -79,6 +80,7 @@ class EC_Group_Data final
       const PointGFp& base_point() const { return m_base_point; }
 
       bool a_is_minus_3() const { return m_a_is_minus_3; }
+      bool a_is_zero() const { return m_a_is_zero; }
 
       BigInt mod_order(const BigInt& x) const { return m_mod_order.reduce(x); }
 
@@ -108,6 +110,7 @@ class EC_Group_Data final
       size_t m_p_bits;
       size_t m_order_bits;
       bool m_a_is_minus_3;
+      bool m_a_is_zero;
    };
 
 class EC_Group_Data_Map final
@@ -397,6 +400,11 @@ const CurveGFp& EC_Group::get_curve() const
 bool EC_Group::a_is_minus_3() const
    {
    return data().a_is_minus_3();
+   }
+
+bool EC_Group::a_is_zero() const
+   {
+   return data().a_is_zero();
    }
 
 size_t EC_Group::get_p_bits() const

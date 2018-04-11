@@ -298,6 +298,11 @@ class EC_Group_Tests : public Test
             else
                result.test_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
 
+            if(group.a_is_zero())
+               result.test_eq("Group A is zero", group.get_a(), BigInt(0));
+            else
+               result.test_ne("Group " + group_name + " A does not equal zero", group.get_a(), BigInt(0));
+
             // get a valid point
             Botan::PointGFp p = group.get_base_point() * Test::rng().next_nonzero_byte();
 

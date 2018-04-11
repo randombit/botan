@@ -132,6 +132,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       bool a_is_minus_3() const;
 
       /**
+      * Return if a == 0 mod p
+      */
+      bool a_is_zero() const;
+
+      /**
       * Return the size of p in bits (same as get_p().bits())
       */
       size_t get_p_bits() const;
