@@ -1852,6 +1852,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'build_shared_lib': options.build_shared_lib,
         'build_unix_shared_lib': options.build_shared_lib and options.compiler != 'msvc',
+        'symlink_shared_lib': options.build_shared_lib and options.compiler != 'msvc' and options.os != 'openbsd',
         'build_msvc_shared_lib': options.build_shared_lib and options.compiler == 'msvc',
 
         'libobj_dir': build_paths.libobj_dir,
