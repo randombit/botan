@@ -140,7 +140,14 @@ class Filter_Tests final : public Test
          Test::Result result("DataSinkFlush");
 
 #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-         const std::string tmp_name("botan_test_data_src_sink_flush.tmp");
+
+         const std::string tmp_name = Test::temp_file_name("botan_test_data_src_sink_flush.tmp");
+         if(tmp_name.empty())
+            {
+            result.test_failure("Failed to create temporary file");
+            return result;
+            }
+
          std::ofstream outfile(tmp_name);
 
          Botan::Pipe pipe(new Botan::Hex_Decoder, new Botan::DataSink_Stream(outfile));
