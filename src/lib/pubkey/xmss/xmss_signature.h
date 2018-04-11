@@ -117,7 +117,7 @@ class XMSS_Signature final
       secure_vector<uint8_t> bytes() const;
 
    private:
-      size_t m_leaf_idx;
+      uint64_t m_leaf_idx;
       secure_vector<uint8_t> m_randomness;
       XMSS_WOTS_PublicKey::TreeSignature m_tree_sig;
    };
