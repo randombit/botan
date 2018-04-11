@@ -482,6 +482,8 @@ class Test
       static const std::string& data_dir() { return m_opts.data_dir(); }
       static const std::string& pkcs11_lib() { return m_opts.pkcs11_lib(); }
 
+      static std::string temp_file_name(const std::string& basename);
+
       static std::vector<std::string> provider_filter(const std::vector<std::string>& providers);
 
       static std::string read_data_file(const std::string& path);

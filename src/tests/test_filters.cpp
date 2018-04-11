@@ -32,7 +32,6 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
    #include <fstream>
-   #include <stdlib.h>
 #endif
 
 namespace Botan_Tests {
@@ -141,15 +140,14 @@ class Filter_Tests final : public Test
          Test::Result result("DataSinkFlush");
 
 #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-         char *tmp_cstr = strdup("/tmp/botan_test_data_src_sink_flush.XXXXXXXXXX");
-         if (mkstemp(tmp_cstr) == -1)
-         {
+
+         const std::string tmp_name = Test::temp_file_name("botan_test_data_src_sink_flush.tmp");
+         if(tmp_name.empty())
+            {
             result.test_failure("Failed to create temporary file");
-            free(tmp_cstr);
             return result;
-         }
-         const std::string tmp_name(tmp_cstr);
-         free(tmp_cstr);
+            }
+
          std::ofstream outfile(tmp_name);
 
          Botan::Pipe pipe(new Botan::Hex_Decoder, new Botan::DataSink_Stream(outfile));
