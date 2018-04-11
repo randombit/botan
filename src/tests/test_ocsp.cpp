@@ -228,7 +228,7 @@ class OCSP_Tests final : public Test
          results.push_back(test_response_verification_softfail());
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
-         if(Test::run_online_tests())
+         if(Test::options().run_online_tests())
             {
             results.push_back(test_online_request());
             }

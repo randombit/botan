@@ -208,8 +208,7 @@ std::string report_out(const std::vector<Botan_Tests::Test::Result>& results,
 
    for(auto const& result : combined)
       {
-      const bool verbose = false;
-      out << result.second.result_string(verbose);
+      out << result.second.result_string();
       tests_failed += result.second.tests_failed();
       tests_ran += result.second.tests_run();
       }

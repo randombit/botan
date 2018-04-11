@@ -842,7 +842,7 @@ class FFI_Unit_Tests final : public Test
          // delete of null is ok/ignored
          TEST_FFI_RC(0, botan_hash_destroy, (nullptr));
 
-         if(Test::no_avoid_undefined_behavior())
+         if(Test::options().undefined_behavior_allowed())
             {
             // Confirm that botan_x_destroy checks the argument type
             botan_mp_t mp;

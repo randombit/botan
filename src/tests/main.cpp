@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
          parser.get_arg("provider"),
          parser.get_arg("drbg-seed"),
          parser.get_arg_sz("test-runs"),
+         parser.flag_set("verbose"),
          parser.flag_set("log-success"),
          parser.flag_set("run-online-tests"),
          parser.flag_set("run-long-tests"),
