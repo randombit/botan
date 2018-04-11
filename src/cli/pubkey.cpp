@@ -259,14 +259,14 @@ class PKCS8_Tool final : public Command
          std::unique_ptr<Botan::Private_Key> key;
          std::string pass_in = get_arg("pass-in");
 
-         if (pass_in.empty())
-         {
+         if(pass_in.empty())
+            {
             key.reset(Botan::PKCS8::load_key(get_arg("key"), rng()));
-         }
+            }
          else
-         {
+            {
             key.reset(Botan::PKCS8::load_key(get_arg("key"), rng(), pass_in));
-         }
+            }
 
          const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
          const std::string pbe = get_arg("pbe");
