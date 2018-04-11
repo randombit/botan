@@ -316,14 +316,47 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    T1 <<= 2; // * 4
    T1.reduce_below(p, T3.get_word_vector());
 
-   m_curve.sqr(T3, m_coord_z, ws); // z^2
-   m_curve.sqr(T4, T3, ws); // z^4
-   m_curve.mul(T3, m_curve.get_a_rep(), T4, ws);
+   if(m_curve.a_is_zero())
+      {
+      // if a == 0 then 3*x^2 + a*z^4 is just 3*x^2
+      m_curve.sqr(T4, m_coord_x, ws); // x^2
+      T4 *= 3; // 3*x^2
+      T4.reduce_below(p, T3.get_word_vector());
+      }
+   else if(m_curve.a_is_minus_3())
+      {
+      /*
+      if a == -3 then
+        3*x^2 + a*z^4 == 3*x^2 - 3*z^4 == 3*(x^2-z^4) == 3*(x-z^2)*(x+z^2)
+      */
+      m_curve.sqr(T3, m_coord_z, ws); // z^2
 
-   m_curve.sqr(T4, m_coord_x, ws);
-   T4 *= 3;
-   T4 += T3;
-   T4.reduce_below(p, T3.get_word_vector());
+      // (x-z^2)
+      T2 = m_coord_x;
+      T2 -= T3;
+      if(T2.is_negative())
+         T2 += p;
+
+      // (x+z^2)
+      T3 += m_coord_x;
+      T3.reduce_below(p, T4.get_word_vector());
+
+      m_curve.mul(T4, T2, T3, ws); // (x-z^2)*(x+z^2)
+
+      T4 *= 3; // 3*(x-z^2)*(x+z^2)
+      T4.reduce_below(p, T3.get_word_vector());
+      }
+   else
+      {
+      m_curve.sqr(T3, m_coord_z, ws); // z^2
+      m_curve.sqr(T4, T3, ws); // z^4
+      m_curve.mul(T3, m_curve.get_a_rep(), T4, ws); // a*z^4
+
+      m_curve.sqr(T4, m_coord_x, ws); // x^2
+      T4 *= 3; // 3*x^2
+      T4 += T3; // 3*x^2 + a*z^4
+      T4.reduce_below(p, T3.get_word_vector());
+      }
 
    m_curve.sqr(T2, T4, ws);
    T2 -= T1;

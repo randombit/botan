@@ -34,7 +34,13 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
          m_r3  = mod_p.multiply(m_r, m_r2);
          m_a_r = mod_p.multiply(m_r, m_a);
          m_b_r = mod_p.multiply(m_r, m_b);
+
+         m_a_is_zero = m_a.is_zero();
+         m_a_is_minus_3 = (m_a + 3 == m_p);
          }
+
+      bool a_is_zero() const override { return m_a_is_zero; }
+      bool a_is_minus_3() const override { return m_a_is_minus_3; }
 
       const BigInt& get_a() const override { return m_a; }
 
@@ -78,6 +84,9 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
       // Montgomery parameters
       BigInt m_r, m_r2, m_r3;
       word m_p_dash;
+
+      bool m_a_is_zero;
+      bool m_a_is_minus_3;
    };
 
 BigInt CurveGFp_Montgomery::invert_element(const BigInt& x, secure_vector<word>& ws) const
@@ -190,7 +199,11 @@ class CurveGFp_NIST : public CurveGFp_Repr
       CurveGFp_NIST(size_t p_bits, const BigInt& a, const BigInt& b) :
          m_a(a), m_b(b), m_p_words((p_bits + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS)
          {
+         // All Solinas prime curves are assumed a == -3
          }
+
+      bool a_is_zero() const override { return false; }
+      bool a_is_minus_3() const override { return true; }
 
       const BigInt& get_a() const override { return m_a; }
 
@@ -232,7 +245,6 @@ class CurveGFp_NIST : public CurveGFp_Repr
       BigInt m_a, m_b;
       size_t m_p_words; // cache of m_p.sig_words()
    };
-
 
 BigInt CurveGFp_NIST::invert_element(const BigInt& x, secure_vector<word>& ws) const
    {

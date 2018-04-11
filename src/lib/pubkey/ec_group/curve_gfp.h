@@ -30,6 +30,10 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
 
       virtual bool is_one(const BigInt& x) const = 0;
 
+      virtual bool a_is_zero() const = 0;
+
+      virtual bool a_is_minus_3() const = 0;
+
       /*
       * Returns to_curve_rep(get_a())
       */
@@ -115,6 +119,9 @@ class BOTAN_UNSTABLE_API CurveGFp final
       const BigInt& get_a_rep() const { return m_repr->get_a_rep(); }
 
       const BigInt& get_b_rep() const { return m_repr->get_b_rep(); }
+
+      bool a_is_minus_3() const { return m_repr->a_is_minus_3(); }
+      bool a_is_zero() const { return m_repr->a_is_zero(); }
 
       bool is_one(const BigInt& x) const { return m_repr->is_one(x); }
 
