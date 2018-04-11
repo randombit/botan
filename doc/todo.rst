@@ -40,7 +40,6 @@ Public Key Crypto, Math
 * X448 and Ed448
 * FHMQV
 * Use GLV decomposition to speed up secp256k1 operations
-* Optimize ECC point doubling for a=-3 and a=0 curves
 * wNAF ECC point multiply
 * Recover ECDSA public key from signature/message pair (GH #664)
 
