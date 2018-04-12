@@ -61,7 +61,7 @@ To run it against Botan's server::
 
   $ ./configure.py --with-sanitizers
   $ make botan
-  $ ./src/scripts/run_tls_fuzzer.py ./botan ./botan-ci-tools
+  $ ./src/scripts/run_tls_attacker.py ./botan ./botan-ci-tools
 
 Output and logs from the fuzzer are placed into `/tmp`. See the
 TLS-Attacker documentation for more information about how to use this
