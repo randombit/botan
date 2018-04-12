@@ -4,6 +4,9 @@ Release Notes
 Version 2.7.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Optimized elliptic point doubling for curves with a parameter of
+  zero or negative three. (GH #1534)
+
 Version 2.6.0, 2018-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
