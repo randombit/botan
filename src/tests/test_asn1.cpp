@@ -297,7 +297,7 @@ class ASN1_Time_Parsing_Tests final : public Text_Based_Test
       ASN1_Time_Parsing_Tests() :
          Text_Based_Test("asn1_time.vec", "Tspec") {}
 
-      Test::Result run_one_test(const std::string& tag_str, const VarMap& vars)
+      Test::Result run_one_test(const std::string& tag_str, const VarMap& vars) override
          {
          Test::Result result("ASN.1 date parsing");
 
