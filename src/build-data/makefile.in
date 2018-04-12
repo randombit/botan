@@ -14,6 +14,7 @@ SO_OBJ_FLAGS   = %{shared_flags}
 LDFLAGS        = %{ldflags}
 
 EXE_LINK_CMD   = %{exe_link_cmd}
+POST_LINK_CMD  = %{post_link_cmd}
 
 LIB_LINKS_TO   = %{link_to}
 EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
@@ -65,11 +66,11 @@ TESTOBJS = %{join test_objs}
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(EXE_LINK_CMD) $(LDFLAGS) $(CLIOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
-	%{post_link_cmd}
+	$(POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(EXE_LINK_CMD) $(LDFLAGS) $(TESTOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
-	%{post_link_cmd}
+	$(POST_LINK_CMD)
 
 %{if build_fuzzers}
 
@@ -94,7 +95,7 @@ fuzzer_corpus_zip: fuzzer_corpus
 
 %{endif}
 
-%{if build_unix_shared_lib}
+%{if build_shared_lib}
 
 %{out_dir}/%{shared_lib_name}: $(LIBOBJS)
 	%{lib_link_cmd} $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
@@ -102,14 +103,6 @@ fuzzer_corpus_zip: fuzzer_corpus
 %{if symlink_shared_lib}
 	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_base}
 	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_patch}
-
-%{endif}
-
-%{if build_msvc_shared_lib}
-
-%{out_dir}/%{shared_lib_name}: $(LIBOBJS)
-	%{lib_link_cmd} $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
-
 %{endif}
 
 # Build Commands
