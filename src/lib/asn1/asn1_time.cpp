@@ -213,7 +213,7 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
       }
 
    if(!passes_sanity_check())
-      throw Invalid_Argument("Time did not pass sanity check: " + t_spec);
+      throw Invalid_Argument("Time " + t_spec + " does not seem to be valid");
    }
 
 /*
@@ -221,13 +221,26 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
 */
 bool X509_Time::passes_sanity_check() const
    {
-   if(m_year < 1950 || m_year > 2100)
+   if(m_year < 1950 || m_year > 2200)
       return false;
    if(m_month == 0 || m_month > 12)
       return false;
-   if(m_day == 0 || m_day > 31)
+
+   const uint32_t days_in_month[12] = { 31, 28+1, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+   if(m_day == 0 || m_day > days_in_month[m_month-1])
       return false;
-   if(m_hour >= 24 || m_minute > 60 || m_second > 60)
+
+   if(m_month == 2 && m_day == 29)
+      {
+      if(m_year % 4 != 0)
+         return false; // not a leap year
+
+      if(m_year % 100 == 0 && m_year % 400 != 0)
+         return false;
+      }
+
+   if(m_hour >= 24 || m_minute >= 60 || m_second > 60)
       return false;
 
    if (m_tag == UTC_TIME)

@@ -72,6 +72,8 @@ bool BOTAN_PUBLIC_API(2,0) operator>=(const X509_Time&, const X509_Time&);
 bool BOTAN_PUBLIC_API(2,0) operator<(const X509_Time&, const X509_Time&);
 bool BOTAN_PUBLIC_API(2,0) operator>(const X509_Time&, const X509_Time&);
 
+typedef X509_Time ASN1_Time;
+
 }
 
 #endif

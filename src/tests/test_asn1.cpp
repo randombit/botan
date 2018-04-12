@@ -11,8 +11,8 @@
    #include <botan/ber_dec.h>
    #include <botan/asn1_str.h>
    #include <botan/asn1_print.h>
+   #include <botan/asn1_time.h>
 #endif
-#include <fstream>
 
 namespace Botan_Tests {
 
@@ -290,6 +290,49 @@ class ASN1_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("asn1", ASN1_Tests);
+
+class ASN1_Time_Parsing_Tests final : public Text_Based_Test
+   {
+   public:
+      ASN1_Time_Parsing_Tests() :
+         Text_Based_Test("asn1_time.vec", "Tspec") {}
+
+      Test::Result run_one_test(const std::string& tag_str, const VarMap& vars)
+         {
+         Test::Result result("ASN.1 date parsing");
+
+         const std::string tspec = get_req_str(vars, "Tspec");
+
+         if(tag_str != "UTC" &&
+            tag_str != "UTC.invalid" &&
+            tag_str != "Generalized" &&
+            tag_str != "Generalized.invalid")
+            {
+            throw Test_Error("Invalid tag value in ASN1 date parsing test");
+            }
+
+         const Botan::ASN1_Tag tag =
+            (tag_str == "UTC" || tag_str == "UTC.invalid") ? Botan::UTC_TIME : Botan::GENERALIZED_TIME;
+
+         const bool valid = tag_str.find(".invalid") == std::string::npos;
+
+         if(valid)
+            {
+            Botan::ASN1_Time time(tspec, tag);
+            result.test_success("Accepted valid time");
+            }
+         else
+            {
+            result.test_throws("Invalid time rejected", [=]() {
+               Botan::ASN1_Time time(tspec, tag);
+               });
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("asn1_time", ASN1_Time_Parsing_Tests);
 
 class ASN1_Printer_Tests final : public Test
    {
