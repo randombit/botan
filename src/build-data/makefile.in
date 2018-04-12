@@ -98,6 +98,8 @@ fuzzer_corpus_zip: fuzzer_corpus
 
 %{out_dir}/%{shared_lib_name}: $(LIBOBJS)
 	%{lib_link_cmd} $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
+%{endif}
+%{if symlink_shared_lib}
 	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_base}
 	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_patch}
 
