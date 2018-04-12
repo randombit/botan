@@ -1789,6 +1789,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             return path
         return os.path.join(build_dir, path)
 
+    def shared_lib_uses_symlinks():
+        if options.os in ['windows', 'openbsd']:
+            return False
+        return True
+
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -1848,11 +1853,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'makefile_path': os.path.join(build_paths.build_dir, '..', 'Makefile'),
 
         'build_static_lib': options.build_static_lib,
+        'build_shared_lib': options.build_shared_lib,
+
         'build_fuzzers': options.build_fuzzers,
 
-        'build_shared_lib': options.build_shared_lib,
-        'build_shared_lib': options.build_shared_lib,
-        'symlink_shared_lib': options.build_shared_lib and options.compiler != 'msvc' and options.os != 'openbsd',
+        'symlink_shared_lib': options.build_shared_lib and shared_lib_uses_symlinks(),
 
         'libobj_dir': build_paths.libobj_dir,
         'cliobj_dir': build_paths.cliobj_dir,
