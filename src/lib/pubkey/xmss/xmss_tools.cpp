@@ -19,26 +19,28 @@ size_t XMSS_Tools::max_threads()
 
 size_t XMSS_Tools::bench_threads()
    {
-   if(std::thread::hardware_concurrency() <= 1)
+   const size_t hardware_concurrency = std::thread::hardware_concurrency();
+
+   if(hardware_concurrency <= 1)
       {
       return 1;
       }
    const size_t BENCH_ITERATIONS = 1000;
    std::vector<std::thread> threads;
-   threads.reserve(std::thread::hardware_concurrency());
+   threads.reserve(hardware_concurrency);
    std::vector<std::chrono::nanoseconds> durations;
 
-   std::vector<size_t> concurrency { std::thread::hardware_concurrency(),
-                                     std::thread::hardware_concurrency() / 2 };
+   std::vector<size_t> concurrency { hardware_concurrency,
+                                     hardware_concurrency / 2 };
 
    for(const auto& cc : concurrency)
       {
-      std::vector<XMSS_Hash> hash(std::thread::hardware_concurrency(),
+      std::vector<XMSS_Hash> hash(hardware_concurrency,
                                   XMSS_Hash("SHA-256"));
 
       const std::vector<uint8_t> buffer(hash[0].output_length());
       std::vector<secure_vector<uint8_t>> data(
-          std::thread::hardware_concurrency(),
+          hardware_concurrency,
           secure_vector<uint8_t>(hash[0].output_length()));
       auto start = std::chrono::high_resolution_clock::now();
       for(size_t i = 0; i < cc; ++i)
@@ -46,7 +48,7 @@ size_t XMSS_Tools::bench_threads()
          auto& hs = hash[i];
          auto& d = data[i];
 
-         const size_t n_iters = BENCH_ITERATIONS * (std::thread::hardware_concurrency() / cc);
+         const size_t n_iters = BENCH_ITERATIONS * (hardware_concurrency / cc);
          threads.emplace_back(std::thread([n_iters, &hs, &d]()
                {
                for(size_t n = 0; n < n_iters; n++)
