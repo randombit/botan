@@ -111,8 +111,7 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
       // FIXME avoid the copy here
       m_coord_x = BigInt(x_words, x_size);
       m_coord_y = BigInt(y_words, y_size);
-      m_coord_z = 1;
-      m_curve.to_rep(m_coord_z, ws_bn[0].get_word_vector());
+      m_coord_z = m_curve.get_1_rep();
       return;
       }
 
@@ -284,6 +283,25 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    m_curve.mul(m_coord_z, T0, T4, ws);
    }
 
+void PointGFp::mult2i(size_t iterations, std::vector<BigInt>& ws_bn)
+   {
+   if(iterations == 0)
+      return;
+
+   if(m_coord_y.is_zero())
+      {
+      *this = PointGFp(m_curve); // setting myself to zero
+      return;
+      }
+
+   /*
+   TODO we can save 2 squarings per iteration by computing
+   a*Z^4 using values cached from previous iteration
+   */
+   for(size_t i = 0; i != iterations; ++i)
+      mult2(ws_bn);
+   }
+
 // *this *= 2
 void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    {
@@ -301,7 +319,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    secure_vector<word>& ws = ws_bn[0].get_word_vector();
    BigInt& T0 = ws_bn[1];
    BigInt& T1 = ws_bn[2];
-   BigInt& T2 = ws_bn[6];
+   BigInt& T2 = ws_bn[3];
    BigInt& T3 = ws_bn[4];
    BigInt& T4 = ws_bn[5];
 
@@ -459,12 +477,10 @@ void PointGFp::force_all_affine(std::vector<PointGFp>& points,
    */
 
    const CurveGFp& curve = points[0].m_curve;
+   const BigInt& rep_1 = curve.get_1_rep();
 
    if(ws.size() < curve.get_ws_size())
       ws.resize(curve.get_ws_size());
-
-   BigInt rep_1 = 1;
-   curve.to_rep(rep_1, ws);
 
    std::vector<BigInt> c(points.size());
    c[0] = points[0].m_coord_z;
@@ -512,8 +528,7 @@ void PointGFp::force_affine()
    const BigInt z3_inv = m_curve.mul_to_tmp(z_inv, z2_inv, ws);
    m_coord_x = m_curve.mul_to_tmp(m_coord_x, z2_inv, ws);
    m_coord_y = m_curve.mul_to_tmp(m_coord_y, z3_inv, ws);
-   m_coord_z = 1;
-   m_curve.to_rep(m_coord_z, ws);
+   m_coord_z = m_curve.get_1_rep();
    }
 
 bool PointGFp::is_affine() const
