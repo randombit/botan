@@ -56,8 +56,8 @@
 #define BOTAN_HAS_SANITIZER_%{i|upper}
 %{endfor}
 
-%{if build_coverage}
-#define BOTAN_HAS_COVERAGE
+%{if test_mode}
+#define BOTAN_TEST_MODE
 %{endif}
 
 #define BOTAN_TARGET_ARCH_IS_%{arch|upper}

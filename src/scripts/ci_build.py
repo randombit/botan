@@ -89,7 +89,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         test_cmd = None
 
     if target == 'coverage':
-        flags += ['--with-coverage-info']
+        flags += ['--with-coverage-info', '--test-mode']
     if target == 'valgrind':
         flags += ['--with-valgrind']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']

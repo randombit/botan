@@ -3,7 +3,7 @@
 """
 Configuration program for botan
 
-(C) 2009,2010,2011,2012,2013,2014,2015,2016,2017 Jack Lloyd
+(C) 2009,2010,2011,2012,2013,2014,2015,2016,2017,2018 Jack Lloyd
 (C) 2015,2016,2017 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
@@ -459,6 +459,12 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     build_group.add_option('--with-fuzzer-lib', metavar='LIB', default=None, dest='fuzzer_lib',
                            help='additionally link in LIB')
+
+    build_group.add_option('--test-mode', action='store_true', default=False,
+                           help=optparse.SUPPRESS_HELP)
+
+    build_group.add_option('--with-debug-asserts', action='store_true', default=False,
+                           help=optparse.SUPPRESS_HELP)
 
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
 
@@ -1947,7 +1953,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'with_valgrind': options.with_valgrind,
         'with_openmp': options.with_openmp,
-        'with_debug_asserts': options.debug_mode,
+        'with_debug_asserts': options.with_debug_asserts,
+        'test_mode': options.test_mode,
 
         'mod_list': sorted([m.basename for m in modules])
         }
