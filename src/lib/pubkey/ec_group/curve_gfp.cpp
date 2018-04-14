@@ -52,6 +52,8 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
 
       const BigInt& get_b_rep() const override { return m_b_r; }
 
+      const BigInt& get_1_rep() const override { return m_r; }
+
       bool is_one(const BigInt& x) const override { return x == m_r; }
 
       size_t get_p_words() const override { return m_p_words; }
@@ -197,7 +199,7 @@ class CurveGFp_NIST : public CurveGFp_Repr
    {
    public:
       CurveGFp_NIST(size_t p_bits, const BigInt& a, const BigInt& b) :
-         m_a(a), m_b(b), m_p_words((p_bits + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS)
+         m_1(1), m_a(a), m_b(b), m_p_words((p_bits + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS)
          {
          // All Solinas prime curves are assumed a == -3
          }
@@ -208,6 +210,8 @@ class CurveGFp_NIST : public CurveGFp_Repr
       const BigInt& get_a() const override { return m_a; }
 
       const BigInt& get_b() const override { return m_b; }
+
+      const BigInt& get_1_rep() const override { return m_1; }
 
       size_t get_p_words() const override { return m_p_words; }
 
@@ -242,6 +246,7 @@ class CurveGFp_NIST : public CurveGFp_Repr
       virtual void redc(BigInt& x, secure_vector<word>& ws) const = 0;
 
       // Curve parameters
+      BigInt m_1;
       BigInt m_a, m_b;
       size_t m_p_words; // cache of m_p.sig_words()
    };

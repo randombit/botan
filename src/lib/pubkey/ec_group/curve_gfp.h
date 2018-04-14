@@ -44,6 +44,11 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
       */
       virtual const BigInt& get_b_rep() const = 0;
 
+      /*
+      * Returns to_curve_rep(1)
+      */
+      virtual const BigInt& get_1_rep() const = 0;
+
       virtual BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const = 0;
 
       virtual void to_curve_rep(BigInt& x, secure_vector<word>& ws) const = 0;
@@ -119,6 +124,8 @@ class BOTAN_UNSTABLE_API CurveGFp final
       const BigInt& get_a_rep() const { return m_repr->get_a_rep(); }
 
       const BigInt& get_b_rep() const { return m_repr->get_b_rep(); }
+
+      const BigInt& get_1_rep() const { return m_repr->get_1_rep(); }
 
       bool a_is_minus_3() const { return m_repr->a_is_minus_3(); }
       bool a_is_zero() const { return m_repr->a_is_zero(); }

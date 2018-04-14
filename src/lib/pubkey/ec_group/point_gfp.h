@@ -152,6 +152,13 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       const BigInt& get_y() const { return m_coord_y; }
       const BigInt& get_z() const { return m_coord_z; }
 
+      void swap_coords(BigInt& new_x, BigInt& new_y, BigInt& new_z)
+         {
+         m_coord_x.swap(new_x);
+         m_coord_y.swap(new_y);
+         m_coord_z.swap(new_z);
+         }
+
       /**
       * Force this point to affine coordinates
       */
@@ -236,6 +243,13 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       void mult2(std::vector<BigInt>& workspace);
 
       /**
+      * Repeated point doubling
+      * @param i number of doublings to perform
+      * @param workspace temp space, at least WORKSPACE_SIZE elements
+      */
+      void mult2i(size_t i, std::vector<BigInt>& workspace);
+
+      /**
       * Point addition
       * @param other the point to add to *this
       * @param workspace temp space, at least WORKSPACE_SIZE elements
@@ -245,6 +259,18 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
          {
          PointGFp x = (*this);
          x.add(other, workspace);
+         return x;
+         }
+
+      /**
+      * Point doubling
+      * @param workspace temp space, at least WORKSPACE_SIZE elements
+      * @return *this doubled
+      */
+      PointGFp double_of(std::vector<BigInt>& workspace) const
+         {
+         PointGFp x = (*this);
+         x.mult2(workspace);
          return x;
          }
 

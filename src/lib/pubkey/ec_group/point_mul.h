@@ -43,7 +43,8 @@ class PointGFp_Var_Point_Precompute
    public:
       PointGFp_Var_Point_Precompute(const PointGFp& point);
 
-      void randomize_repr(RandomNumberGenerator& rng);
+      void randomize_repr(RandomNumberGenerator& rng,
+                          std::vector<BigInt>& ws);
 
       PointGFp mul(const BigInt& k,
                    RandomNumberGenerator& rng,

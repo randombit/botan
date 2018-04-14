@@ -140,22 +140,54 @@ PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& poi
    {
    m_window_bits = 4;
 
+   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+
    m_U.resize(1U << m_window_bits);
    m_U[0] = point.zero();
    m_U[1] = point;
 
-   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
-   for(size_t i = 2; i < m_U.size(); ++i)
+   for(size_t i = 2; i < m_U.size(); i += 2)
       {
-      m_U[i] = m_U[i-1];
-      m_U[i].add(point, ws);
+      m_U[i] = m_U[i/2].double_of(ws);
+      m_U[i+1] = m_U[i].plus(point, ws);
       }
    }
 
-void PointGFp_Var_Point_Precompute::randomize_repr(RandomNumberGenerator& rng)
+void PointGFp_Var_Point_Precompute::randomize_repr(RandomNumberGenerator& rng,
+                                                   std::vector<BigInt>& ws_bn)
    {
+   if(BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS <= 1)
+      return;
+
+   if(ws_bn.size() < 7)
+      ws_bn.resize(7);
+
+   BigInt& mask = ws_bn[0];
+   BigInt& mask2 = ws_bn[1];
+   BigInt& mask3 = ws_bn[2];
+   BigInt& new_x = ws_bn[3];
+   BigInt& new_y = ws_bn[4];
+   BigInt& new_z = ws_bn[5];
+   secure_vector<word>& ws = ws_bn[6].get_word_vector();
+
+   const CurveGFp& curve = m_U[0].get_curve();
+
+   // Skipping zero point since it can't be randomized
    for(size_t i = 1; i != m_U.size(); ++i)
-      m_U[i].randomize_repr(rng);
+      {
+      mask.randomize(rng, BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS, false);
+      // Easy way of ensuring mask != 0
+      mask.set_bit(0);
+
+      curve.sqr(mask2, mask, ws);
+      curve.mul(mask3, mask, mask2, ws);
+
+      curve.mul(new_x, m_U[i].get_x(), mask2, ws);
+      curve.mul(new_y, m_U[i].get_y(), mask3, ws);
+      curve.mul(new_z, m_U[i].get_z(), mask, ws);
+
+      m_U[i].swap_coords(new_x, new_y, new_z);
+      }
    }
 
 PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
@@ -193,8 +225,7 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
 
       while(windows)
          {
-         for(size_t i = 0; i != m_window_bits; ++i)
-            R.mult2(ws);
+         R.mult2i(m_window_bits, ws);
 
          const uint32_t inner_nibble = scalar.get_substring((windows-1)*m_window_bits, m_window_bits);
          // cache side channel here, we are relying on blinding...
@@ -261,8 +292,7 @@ PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
       {
       if(i > 0)
          {
-         H.mult2(ws);
-         H.mult2(ws);
+         H.mult2i(2, ws);
          }
 
       const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
