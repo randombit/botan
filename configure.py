@@ -1857,6 +1857,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'build_fuzzers': options.build_fuzzers,
 
+        'build_coverage' : options.with_coverage_info or options.with_coverage,
+
         'symlink_shared_lib': options.build_shared_lib and shared_lib_uses_symlinks(),
 
         'libobj_dir': build_paths.libobj_dir,

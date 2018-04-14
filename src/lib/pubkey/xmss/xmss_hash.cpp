@@ -56,11 +56,6 @@ void XMSS_Hash::h_msg_init(const secure_vector<uint8_t>& randomness,
    m_msg_hash->update(index_bytes);
    }
 
-void XMSS_Hash::h_msg_update(const secure_vector<uint8_t>& data)
-   {
-   m_msg_hash->update(data);
-   }
-
 void XMSS_Hash::h_msg_update(const uint8_t data[], size_t size)
    {
    m_msg_hash->update(data, size);

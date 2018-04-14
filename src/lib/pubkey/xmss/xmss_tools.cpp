@@ -68,11 +68,19 @@ size_t XMSS_Tools::bench_threads()
 
       if(durations[0].count() < durations[1].count())
          {
+#if defined(BOTAN_HAS_COVERAGE)
+         return 4;
+#else
          return concurrency[0];
+#endif
          }
       else
          {
+#if defined(BOTAN_HAS_COVERAGE)
+         return 4;
+#else
          return concurrency[1];
+#endif
          }
   }
 

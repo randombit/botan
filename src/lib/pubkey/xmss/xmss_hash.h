@@ -120,13 +120,6 @@ class XMSS_Hash final
        * Adds a message block to buffered h_msg computation.
        *
        * @param data A message block
-       **/
-      void h_msg_update(const secure_vector<uint8_t>& data);
-
-      /**
-       * Adds a message block to buffered h_msg computation.
-       *
-       * @param data A message block
        * @param size Length of the message block in bytes.
        **/
       void h_msg_update(const uint8_t data[], size_t size);
