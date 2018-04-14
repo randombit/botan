@@ -31,6 +31,8 @@ Ciphers, Hashes, PBKDF
 Public Key Crypto, Math
 ----------------------------------------
 
+* Abstract repesentation of ECC point elements to allow specific
+  implementations of the field arithmetic depending upon the curve.
 * Curves for pairings (BN-256 is widely implemented)
 * Identity based encryption
 * BBS group signatures
