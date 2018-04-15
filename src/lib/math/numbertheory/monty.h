@@ -100,6 +100,9 @@ class Montgomery_Int final
 
       Montgomery_Int& mul_by_8(secure_vector<word>& ws);
 
+      void const_time_poison() const { m_v.const_time_poison(); }
+      void const_time_unpoison() const { return m_v.const_time_unpoison(); }
+
    private:
       std::shared_ptr<const Montgomery_Params> m_params;
       BigInt m_v;

@@ -565,6 +565,14 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void encode_words(word out[], size_t size) const;
 
+#if defined(BOTAN_HAS_VALGRIND)
+     void const_time_poison() const;
+     void const_time_unpoison() const;
+#else
+     void const_time_poison() const {}
+     void const_time_unpoison() const {}
+#endif
+
      /**
      * @param rng a random number generator
      * @param min the minimum value
