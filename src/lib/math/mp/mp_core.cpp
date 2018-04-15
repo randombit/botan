@@ -157,8 +157,7 @@ word bigint_add3_nc(word z[], const word x[], size_t x_size,
 */
 void bigint_add2(word x[], size_t x_size, const word y[], size_t y_size)
    {
-   if(bigint_add2_nc(x, x_size, y, y_size))
-      x[x_size] += 1;
+   x[x_size] += bigint_add2_nc(x, x_size, y, y_size);
    }
 
 /*
@@ -210,6 +209,20 @@ void bigint_sub2_rev(word x[],  const word y[], size_t y_size)
       x[i] = word_sub(y[i], x[i], &borrow);
 
    BOTAN_ASSERT(!borrow, "y must be greater than x");
+   }
+
+int32_t bigint_sub_abs(word z[], const word x[], const word y[], size_t sz)
+   {
+   word borrow = bigint_sub3(z, x, sz, y, sz);
+
+   CT::unpoison(borrow);
+   if(borrow)
+      {
+      bigint_sub3(z, y, sz, x, sz);
+      return -1;
+      }
+
+   return 1;
    }
 
 /*
@@ -396,7 +409,7 @@ void bigint_shr2(word y[], const word x[], size_t x_size,
 * Compare two MP integers
 */
 int32_t bigint_cmp(const word x[], size_t x_size,
-                  const word y[], size_t y_size)
+                   const word y[], size_t y_size)
    {
    if(x_size < y_size) { return (-bigint_cmp(y, y_size, x, x_size)); }
 

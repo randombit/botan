@@ -95,6 +95,15 @@ word bigint_sub3(word z[],
                  const word x[], size_t x_size,
                  const word y[], size_t y_size);
 
+/**
+* Return abs(x-y), ie if x >= y, then compute z = x - y
+* Otherwise compute z = y - x
+* No borrow is possible since the result is always >= 0
+*
+* Returns 1 if x >= y or -1 if x < y
+*/
+int32_t bigint_sub_abs(word z[], const word x[], const word y[], size_t size);
+
 /*
 * Shift Operations
 */
@@ -134,10 +143,10 @@ void bigint_monty_redc(word z[],
                        size_t ws_size);
 
 /**
-* Compare x and y
+* Compare x and y returning early
 */
 int32_t bigint_cmp(const word x[], size_t x_size,
-                  const word y[], size_t y_size);
+                   const word y[], size_t y_size);
 
 /**
 * Compute ((n1<<bits) + n0) / d
