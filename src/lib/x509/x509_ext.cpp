@@ -434,6 +434,12 @@ Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key, const std::s
 
    hash->update(pub_key);
    hash->final(m_key_id.data());
+
+   // Truncate longer hashes, 192 bits here seems plenty
+   const size_t max_skid_len = (192 / 8);
+   if(m_key_id.size() > max_skid_len)
+      m_key_id.resize(max_skid_len);
+   m_key_id[0] = 0x44;
    }
 
 /*

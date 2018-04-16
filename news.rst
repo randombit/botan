@@ -13,6 +13,11 @@ Version 2.7.0, Not Yet Released
 * XMSS signature verification did not check that the signature was of
   the expected length which could lead to a crash. (GH #1537)
 
+* Botan generates X.509 subject key IDs by hashing the public key with
+  whatever hash function is being used to sign the certificate. However
+  especially for SHA-512 this caused SKIDs that were far longer than
+  necessary. Now all SKIDs are truncated to 192 bits.
+
 * Small optimizations for ECC (#1531)
 
 * In the test suite use ``mkstemp`` to create temporary files instead
