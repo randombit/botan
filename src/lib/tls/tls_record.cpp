@@ -299,8 +299,15 @@ void decrypt_record(secure_vector<uint8_t>& output,
    const uint8_t* msg = &record_contents[cs.nonce_bytes_from_record()];
    const size_t msg_length = record_len - cs.nonce_bytes_from_record();
 
+   /*
+   * This early rejection is based just on public information (length of the
+   * encrypted packet) and so does not leak any information. We used to use
+   * decode_error here which really is more appropriate, but that confuses some
+   * tools which are attempting automated detection of padding oracles,
+   * including older versions of TLS-Attacker.
+   */
    if(msg_length < aead->minimum_final_size())
-      throw Decoding_Error("AEAD packet is shorter than the tag");
+      throw TLS_Exception(Alert::BAD_RECORD_MAC, "AEAD packet is shorter than the tag");
 
    const size_t ptext_size = aead->output_length(msg_length);
 
