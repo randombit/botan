@@ -24,7 +24,8 @@ class Montgomery_Exponentation_State;
 std::shared_ptr<const Montgomery_Exponentation_State>
 monty_precompute(std::shared_ptr<const Montgomery_Params> params_p,
                  const BigInt& g,
-                 size_t window_bits);
+                 size_t window_bits,
+                 bool const_time = true);
 
 /*
 * Return g^x mod p

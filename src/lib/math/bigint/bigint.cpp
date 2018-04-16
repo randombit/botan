@@ -335,6 +335,18 @@ void BigInt::shrink_to_fit(size_t min_size)
    m_reg.resize(words);
    }
 
+#if defined(BOTAN_HAS_VALGRIND)
+void BigInt::const_time_poison() const
+   {
+   CT::poison(m_reg.data(), m_reg.size());
+   }
+
+void BigInt::const_time_unpoison() const
+   {
+   CT::unpoison(m_reg.data(), m_reg.size());
+   }
+#endif
+
 void BigInt::const_time_lookup(secure_vector<word>& output,
                                const std::vector<BigInt>& vec,
                                size_t idx)

@@ -101,9 +101,6 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    word* z0 = z;
    word* z1 = z + N;
 
-   const int32_t cmp0 = bigint_cmp(x0, N2, x1, N2);
-   const int32_t cmp1 = bigint_cmp(y1, N2, y0, N2);
-
    clear_mem(workspace, 2*N);
 
    /*
@@ -115,22 +112,17 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    * subtractions and recursively multiply to avoid the timing channel.
    */
 
-   //if(cmp0 && cmp1)
-      {
-      if(cmp0 > 0)
-         bigint_sub3(z0, x0, N2, x1, N2);
-      else
-         bigint_sub3(z0, x1, N2, x0, N2);
+   // First compute (X_lo - X_hi)*(Y_hi - Y_lo)
+   const int32_t cmp0 = bigint_sub_abs(z0, x0, x1, N2);
+   const int32_t cmp1 = bigint_sub_abs(z1, y1, y0, N2);
 
-      if(cmp1 > 0)
-         bigint_sub3(z1, y1, N2, y0, N2);
-      else
-         bigint_sub3(z1, y0, N2, y1, N2);
+   karatsuba_mul(workspace, z0, z1, N2, workspace+N);
+   const bool is_negative = cmp0 != cmp1;
 
-      karatsuba_mul(workspace, z0, z1, N2, workspace+N);
-      }
-
+   // Compute X_lo * Y_lo
    karatsuba_mul(z0, x0, y0, N2, workspace+N);
+
+   // Compute X_hi * Y_hi
    karatsuba_mul(z1, x1, y1, N2, workspace+N);
 
    const word ws_carry = bigint_add3_nc(workspace + N, z0, N, z1, N);
@@ -139,10 +131,10 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    z_carry += bigint_add2_nc(z + N + N2, N2, &ws_carry, 1);
    bigint_add2_nc(z + N + N2, N2, &z_carry, 1);
 
-   if((cmp0 == cmp1) || (cmp0 == 0) || (cmp1 == 0))
-      bigint_add2(z + N2, 2*N-N2, workspace, N);
-   else
+   if(is_negative)
       bigint_sub2(z + N2, 2*N-N2, workspace, N);
+   else
+      bigint_add2_nc(z + N2, 2*N-N2, workspace, N);
    }
 
 /*
@@ -169,21 +161,11 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    word* z0 = z;
    word* z1 = z + N;
 
-   const int32_t cmp = bigint_cmp(x0, N2, x1, N2);
-
    clear_mem(workspace, 2*N);
 
    // See comment in karatsuba_mul
-
-   //if(cmp)
-      {
-      if(cmp > 0)
-         bigint_sub3(z0, x0, N2, x1, N2);
-      else
-         bigint_sub3(z0, x1, N2, x0, N2);
-
-      karatsuba_sqr(workspace, z0, N2, workspace+N);
-      }
+   bigint_sub_abs(z0, x0, x1, N2);
+   karatsuba_sqr(workspace, z0, N2, workspace+N);
 
    karatsuba_sqr(z0, x0, N2, workspace+N);
    karatsuba_sqr(z1, x1, N2, workspace+N);
@@ -195,9 +177,9 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    bigint_add2_nc(z + N + N2, N2, &z_carry, 1);
 
    /*
-   * This is only actually required if cmp is != 0, however
-   * if cmp==0 then workspace[0:N] == 0 and avoiding the jump
-   * hides a timing channel.
+   * This is only actually required if cmp (result of bigint_sub_abs) is != 0,
+   * however if cmp==0 then workspace[0:N] == 0 and avoiding the jump hides a
+   * timing channel.
    */
    bigint_sub2(z + N2, 2*N-N2, workspace, N);
    }

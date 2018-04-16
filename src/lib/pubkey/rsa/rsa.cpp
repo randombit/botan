@@ -356,7 +356,7 @@ class RSA_Public_Operation
 
          const size_t powm_window = 1;
 
-         auto powm_m_n = monty_precompute(m_monty_n, m, powm_window);
+         auto powm_m_n = monty_precompute(m_monty_n, m, powm_window, false);
          return monty_execute_vartime(*powm_m_n, m_e);
          }
 
