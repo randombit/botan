@@ -7,6 +7,19 @@ Version 2.7.0, Not Yet Released
 * Optimized elliptic point doubling for curves with an ``a`` parameter
   of zero or negative three. (GH #1534)
 
+* Allow the year to be up to 2200 in ASN.1 time objects. Previously this
+  was limited to 2100. (GH #1536)
+
+* XMSS signature verification did not check that the signature was of
+  the expected length which could lead to a crash. (GH #1537)
+
+* Small optimizations for ECC (#1531)
+
+* In the test suite use ``mkstemp`` to create temporary files instead
+  of creating them in the current working directory. (GH #1533 #1530)
+
+* Avoid creating symlinks to the shared object on OpenBSD (#1535)
+
 Version 2.6.0, 2018-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
