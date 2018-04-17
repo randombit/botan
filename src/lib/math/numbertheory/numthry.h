@@ -189,7 +189,7 @@ inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
 
 
 /**
-* Randomly generate a prime
+* Randomly generate a prime suitable for discrete logarithm parameters
 * @param rng a random number generator
 * @param bits how large the resulting prime should be in bits
 * @param coprime a positive integer that (prime - 1) should be coprime to
@@ -205,6 +205,21 @@ BigInt BOTAN_PUBLIC_API(2,0) random_prime(RandomNumberGenerator& rng,
                                           size_t equiv = 1,
                                           size_t equiv_mod = 2,
                                           size_t prob = 128);
+
+/**
+* Generate a prime suitable for RSA p/q
+* @param keygen_rng a random number generator
+* @param prime_test_rng a random number generator
+* @param bits how large the resulting prime should be in bits (must be >= 512)
+* @param coprime a positive integer that (prime - 1) should be coprime to
+* @param prob use test so false positive is bounded by 1/2**prob
+* @return random prime with the specified criteria
+*/
+BigInt BOTAN_PUBLIC_API(2,7) generate_rsa_prime(RandomNumberGenerator& keygen_rng,
+                                                RandomNumberGenerator& prime_test_rng,
+                                                size_t bits,
+                                                const BigInt& coprime,
+                                                size_t prob = 128);
 
 /**
 * Return a 'safe' prime, of the form p=2*q+1 with q prime

@@ -12,6 +12,61 @@
 
 namespace Botan {
 
+namespace {
+
+class Prime_Sieve
+   {
+   public:
+      Prime_Sieve(const BigInt& init_value) : m_sieve(PRIME_TABLE_SIZE)
+         {
+         for(size_t i = 0; i != m_sieve.size(); ++i)
+            m_sieve[i] = static_cast<uint16_t>(init_value % PRIMES[i]);
+         }
+
+      void step(word increment)
+         {
+         for(size_t i = 0; i != m_sieve.size(); ++i)
+            {
+            m_sieve[i] = (m_sieve[i] + increment) % PRIMES[i];
+            }
+         }
+
+      bool passes(bool check_2p1 = false) const
+         {
+         for(size_t i = 0; i != m_sieve.size(); ++i)
+            {
+            /*
+            In this case, p is a multiple of PRIMES[i]
+            */
+            if(m_sieve[i] == 0)
+               return false;
+
+            if(check_2p1)
+               {
+               /*
+               In this case, 2*p+1 will be a multiple of PRIMES[i]
+
+               So if potentially generating a safe prime, we want to
+               avoid this value because 2*p+1 will certainly not be prime.
+
+               See "Safe Prime Generation with a Combined Sieve" M. Wiener
+               https://eprint.iacr.org/2003/186.pdf
+               */
+               if(m_sieve[i] == (PRIMES[i] - 1) / 2)
+                  return false;
+               }
+            }
+
+         return true;
+         }
+
+   private:
+      std::vector<uint16_t> m_sieve;
+   };
+
+}
+
+
 /*
 * Generate a random prime
 */
@@ -64,7 +119,6 @@ BigInt random_prime(RandomNumberGenerator& rng,
          }
       }
 
-   secure_vector<uint16_t> sieve(PRIME_TABLE_SIZE);
    const size_t MAX_ATTEMPTS = 32*1024;
 
    while(true)
@@ -79,8 +133,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
       // Force p to be equal to equiv mod modulo
       p += (modulo - (p % modulo)) + equiv;
 
-      for(size_t i = 0; i != sieve.size(); ++i)
-         sieve[i] = static_cast<uint16_t>(p % PRIMES[i]);
+      Prime_Sieve sieve(p);
 
       size_t counter = 0;
       while(true)
@@ -94,46 +147,89 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
          p += modulo;
 
+         sieve.step(modulo);
+
+         if(sieve.passes(true) == false)
+            continue;
+
+         if(coprime > 1)
+            {
+            /*
+            * Check if gcd(p - 1, coprime) != 1 by computing the inverse. The
+            * gcd algorithm is not constant time, but modular inverse is (for
+            * odd modulus anyway). This avoids a side channel attack against RSA
+            * key generation, though RSA keygen should be using generate_rsa_prime.
+            */
+            if(inverse_mod(p - 1, coprime).is_zero())
+               continue;
+            }
+
          if(p.bits() > bits)
             break;
 
-         // Now that p is updated, update the sieve
-         for(size_t i = 0; i != sieve.size(); ++i)
-            {
-            sieve[i] = (sieve[i] + modulo) % PRIMES[i];
-            }
-
-         bool passes_sieve = true;
-         for(size_t i = 0; passes_sieve && (i != sieve.size()); ++i)
-            {
-            /*
-            In this case, p is a multiple of PRIMES[i]
-            */
-            if(sieve[i] == 0)
-               passes_sieve = false;
-
-            /*
-            In this case, 2*p+1 will be a multiple of PRIMES[i]
-
-            So if generating a safe prime, we want to avoid this value
-            because 2*p+1 will not be useful. Since the check is cheap to
-            do and doesn't seem to affect the overall distribution of the
-            generated primes overmuch it's used in all cases.
-
-            See "Safe Prime Generation with a Combined Sieve" M. Wiener
-            https://eprint.iacr.org/2003/186.pdf
-            */
-            if(sieve[i] == (PRIMES[i] - 1) / 2)
-               passes_sieve = false;
-            }
-
-         if(!passes_sieve)
-            continue;
-
-         if(coprime > 0 && gcd(p - 1, coprime) != 1)
-            continue;
-
          if(is_prime(p, rng, prob, true))
+            return p;
+         }
+      }
+   }
+
+BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
+                          RandomNumberGenerator& prime_test_rng,
+                          size_t bits,
+                          const BigInt& coprime,
+                          size_t prob)
+   {
+   if(bits < 512)
+      throw Invalid_Argument("generate_rsa_prime bits too small");
+
+   if(coprime <= 1 || coprime.is_even())
+      throw Invalid_Argument("generate_rsa_prime coprime must be odd positive integer");
+
+   const size_t MAX_ATTEMPTS = 32*1024;
+
+   while(true)
+      {
+      BigInt p(keygen_rng, bits);
+
+      // Force lowest and two top bits on
+      p.set_bit(bits - 1);
+      p.set_bit(bits - 2);
+      p.set_bit(0);
+
+      Prime_Sieve sieve(p);
+
+      const word step = 2;
+
+      size_t counter = 0;
+      while(true)
+         {
+         ++counter;
+
+         if(counter > MAX_ATTEMPTS)
+            {
+            break; // don't try forever, choose a new starting point
+            }
+
+         p += step;
+
+         sieve.step(step);
+
+         if(sieve.passes() == false)
+            continue;
+
+         /*
+         * Check if gcd(p - 1, coprime) != 1 by computing the inverse. The
+         * gcd algorithm is not constant time, but modular inverse is (for
+         * odd modulus anyway). This avoids a side channel attack against RSA
+         * key generation.
+         */
+         if(inverse_mod(p - 1, coprime).is_zero())
+            continue;
+
+         if(p.bits() > bits)
+            break;
+
+         if(is_prime(p, prime_test_rng, prob, true))
             return p;
          }
       }
@@ -156,7 +252,7 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
 
       Otherwise [q == 1 (mod 3) case], 2*q+1 == 3 (mod 3) and not prime.
       */
-      q = random_prime(rng, bits - 1, 1, 2, 3, 8);
+      q = random_prime(rng, bits - 1, 0, 2, 3, 8);
       p = (q << 1) + 1;
 
       if(is_prime(p, rng, 128, true))
@@ -165,7 +261,6 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
          if(is_prime(q, rng, 128, true))
             return p;
          }
-
       }
    }
 

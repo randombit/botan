@@ -143,9 +143,13 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
 
    do
       {
-      m_p = random_prime(rng, (bits + 1) / 2, m_e);
-      m_q = random_prime(rng, bits - m_p.bits(), m_e);
+      const size_t p_bits = (bits + 1) / 2;
+      const size_t q_bits = bits - p_bits;
+
+      m_p = generate_rsa_prime(rng, rng, p_bits, m_e);
+      m_q = generate_rsa_prime(rng, rng, q_bits, m_e);
       m_n = m_p * m_q;
+
       } while(m_n.bits() != bits);
 
    const BigInt phi_n = lcm(m_p - 1, m_q - 1);
