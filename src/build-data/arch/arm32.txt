@@ -11,6 +11,8 @@ evbarm # For NetBSD
 armv7
 armv7l
 armv7-a
+
+armv8l # For AlpineLinux
 </aliases>
 
 <isa_extensions>
