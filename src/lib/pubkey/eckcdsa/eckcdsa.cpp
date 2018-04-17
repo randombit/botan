@@ -8,6 +8,7 @@
 
 #include <botan/eckcdsa.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/point_mul.h>
 #include <botan/keypair.h>
 #include <botan/reducer.h>
 #include <botan/emsa.h>
@@ -113,11 +114,11 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
                                    const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
          m_group(eckcdsa.domain()),
-         m_public_point(eckcdsa.public_point()),
+         m_gy_mul(m_group.get_base_point(), eckcdsa.public_point()),
          m_prefix()
          {
-         const BigInt public_point_x = m_public_point.get_affine_x();
-         const BigInt public_point_y = m_public_point.get_affine_y();
+         const BigInt public_point_x = eckcdsa.public_point().get_affine_x();
+         const BigInt public_point_y = eckcdsa.public_point().get_affine_y();
 
          m_prefix.resize(public_point_x.bytes() + public_point_y.bytes());
          public_point_x.binary_encode(&m_prefix[0]);
@@ -136,7 +137,7 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification_with_EM
                   const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp& m_public_point;
+      const PointGFp_Multi_Point_Precompute m_gy_mul;
       secure_vector<uint8_t> m_prefix;
    };
 
@@ -169,7 +170,7 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
    BigInt w(r_xor_e.data(), r_xor_e.size());
    w = m_group.mod_order(w);
 
-   const PointGFp q = m_group.point_multiply(w, m_public_point, s);
+   const PointGFp q = m_gy_mul.multi_exp(w, s);
    const BigInt q_x = q.get_affine_x();
    secure_vector<uint8_t> c(q_x.bytes());
    q_x.binary_encode(c.data());

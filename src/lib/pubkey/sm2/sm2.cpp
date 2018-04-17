@@ -8,6 +8,7 @@
 
 #include <botan/sm2.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/point_mul.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
 #include <botan/hash.h>
@@ -136,11 +137,11 @@ class SM2_Verification_Operation final : public PK_Ops::Verification
                                  const std::string& ident,
                                  const std::string& hash) :
          m_group(sm2.domain()),
-         m_public_point(sm2.public_point()),
+         m_gy_mul(m_group.get_base_point(), sm2.public_point()),
          m_hash(HashFunction::create_or_throw(hash))
          {
          // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-         m_za = sm2_compute_za(*m_hash, ident, m_group, m_public_point);
+         m_za = sm2_compute_za(*m_hash, ident, m_group, sm2.public_point());
          m_hash->update(m_za);
          }
 
@@ -152,7 +153,7 @@ class SM2_Verification_Operation final : public PK_Ops::Verification
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp& m_public_point;
+      const PointGFp_Multi_Point_Precompute m_gy_mul;
       std::vector<uint8_t> m_za;
       std::unique_ptr<HashFunction> m_hash;
    };
@@ -178,7 +179,7 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
    if(t == 0)
       return false;
 
-   const PointGFp R = m_group.point_multiply(s, m_public_point, t);
+   const PointGFp R = m_gy_mul.multi_exp(s, t);
 
    // ???
    if(R.is_zero())

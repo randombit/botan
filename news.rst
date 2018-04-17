@@ -13,6 +13,9 @@ Version 2.7.0, Not Yet Released
 * Optimized elliptic point doubling for curves with an ``a`` parameter
   of zero or negative three. (GH #1534)
 
+* Improved performance of signature verification in ECGDSA, ECKCDSA,
+  SM2 and GOST by 10-15%.
+
 * Allow the year to be up to 2200 in ASN.1 time objects. Previously this
   was limited to 2100. (GH #1536)
 

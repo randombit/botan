@@ -9,6 +9,7 @@
 
 #include <botan/gost_3410.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/point_mul.h>
 #include <botan/reducer.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -151,7 +152,7 @@ class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_
                                        const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
          m_group(gost.domain()),
-         m_public_point(gost.public_point())
+         m_gy_mul(m_group.get_base_point(), gost.public_point())
          {}
 
       size_t max_input_bits() const override { return m_group.get_order_bits(); }
@@ -162,7 +163,7 @@ class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_
                   const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
-      const PointGFp& m_public_point;
+      const PointGFp_Multi_Point_Precompute m_gy_mul;
    };
 
 bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
@@ -189,7 +190,7 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_le
    const BigInt z1 = m_group.multiply_mod_order(s, v);
    const BigInt z2 = m_group.multiply_mod_order(-r, v);
 
-   const PointGFp R = m_group.point_multiply(z1, m_public_point, z2);
+   const PointGFp R = m_gy_mul.multi_exp(z1, z2);
 
    if(R.is_zero())
      return false;
