@@ -89,7 +89,7 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    const BigInt k = m_group.random_scalar(rng);
 #endif
 
-   const BigInt k_inv = inverse_mod(k, m_group.get_order());
+   const BigInt k_inv = m_group.inverse_mod_order(k);
    const BigInt r = m_group.mod_order(
       m_group.blinded_base_point_multiply_x(k, rng, m_ws));
 
@@ -142,7 +142,7 @@ bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
    if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order())
       return false;
 
-   const BigInt w = inverse_mod(s, m_group.get_order());
+   const BigInt w = m_group.inverse_mod_order(s);
 
    const BigInt u1 = m_group.multiply_mod_order(e, w);
    const BigInt u2 = m_group.multiply_mod_order(r, w);

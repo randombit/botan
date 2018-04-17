@@ -89,6 +89,11 @@ class EC_Group_Data final
          return m_mod_order.multiply(x, y);
          }
 
+      BigInt inverse_mod_order(const BigInt& x) const
+         {
+         return inverse_mod(x, m_order);
+         }
+
       PointGFp blinded_base_point_multiply(const BigInt& k,
                                            RandomNumberGenerator& rng,
                                            std::vector<BigInt>& ws) const
@@ -475,6 +480,11 @@ BigInt EC_Group::mod_order(const BigInt& k) const
 BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y) const
    {
    return data().multiply_mod_order(x, y);
+   }
+
+BigInt EC_Group::inverse_mod_order(const BigInt& x) const
+   {
+   return data().inverse_mod_order(x);
    }
 
 const OID& EC_Group::get_curve_oid() const

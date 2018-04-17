@@ -31,7 +31,7 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          m_group(key.domain()),
          m_rng(rng)
          {
-         m_l_times_priv = inverse_mod(m_group.get_cofactor(), m_group.get_order()) * key.private_value();
+         m_l_times_priv = m_group.inverse_mod_order(m_group.get_cofactor()) * key.private_value();
          }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
