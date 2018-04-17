@@ -4,6 +4,12 @@ Release Notes
 Version 2.7.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Avoid a side channel in RSA key generation due to use of a non-constant time
+  gcd algorithm. (GH #1542)
+
+* Optimize prime generation, especially improving RSA key generation.
+  (GH #1542)
+
 * Optimized elliptic point doubling for curves with an ``a`` parameter
   of zero or negative three. (GH #1534)
 
