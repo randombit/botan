@@ -139,60 +139,90 @@ const BigInt& prime_p192()
 
 void redc_p192(BigInt& x, secure_vector<word>& ws)
    {
-   const uint32_t X6 = get_uint32_t(x, 6);
-   const uint32_t X7 = get_uint32_t(x, 7);
-   const uint32_t X8 = get_uint32_t(x, 8);
-   const uint32_t X9 = get_uint32_t(x, 9);
-   const uint32_t X10 = get_uint32_t(x, 10);
-   const uint32_t X11 = get_uint32_t(x, 11);
+   static const size_t p192_limbs = 192 / BOTAN_MP_WORD_BITS;
+
+   const uint64_t X00 = get_uint32_t(x,  0);
+   const uint64_t X01 = get_uint32_t(x,  1);
+   const uint64_t X02 = get_uint32_t(x,  2);
+   const uint64_t X03 = get_uint32_t(x,  3);
+   const uint64_t X04 = get_uint32_t(x,  4);
+   const uint64_t X05 = get_uint32_t(x,  5);
+   const uint64_t X06 = get_uint32_t(x,  6);
+   const uint64_t X07 = get_uint32_t(x,  7);
+   const uint64_t X08 = get_uint32_t(x,  8);
+   const uint64_t X09 = get_uint32_t(x,  9);
+   const uint64_t X10 = get_uint32_t(x, 10);
+   const uint64_t X11 = get_uint32_t(x, 11);
+
+   const uint64_t S0 = X00 + X06 + X10;
+   const uint64_t S1 = X01 + X07 + X11;
+   const uint64_t S2 = X02 + X06 + X08 + X10;
+   const uint64_t S3 = X03 + X07 + X09 + X11;
+   const uint64_t S4 = X04 + X08 + X10;
+   const uint64_t S5 = X05 + X09 + X11;
 
    x.mask_bits(192);
 
    uint64_t S = 0;
+   uint32_t R0 = 0, R1 = 0;
 
-   S += get_uint32_t(x, 0);
-   S += X6;
-   S += X10;
-   set_uint32_t(x, 0, S);
+   S += S0;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 1);
-   S += X7;
-   S += X11;
-   set_uint32_t(x, 1, S);
+   S += S1;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 2);
-   S += X6;
-   S += X8;
-   S += X10;
-   set_uint32_t(x, 2, S);
+   set_words(x, 0, R0, R1);
+
+   S += S2;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 3);
-   S += X7;
-   S += X9;
-   S += X11;
-   set_uint32_t(x, 3, S);
+   S += S3;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 4);
-   S += X8;
-   S += X10;
-   set_uint32_t(x, 4, S);
+   set_words(x, 2, R0, R1);
+
+   S += S4;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 5);
-   S += X9;
-   S += X11;
-   set_uint32_t(x, 5, S);
+   S += S5;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_uint32_t(x, 6, S);
+   set_words(x, 4, R0, R1);
 
    // No underflow possible
 
-   x.reduce_below(prime_p192(), ws);
+   BOTAN_ASSERT(S <= 2, "Expected overflow in P-192 reduce");
+
+   /*
+   This is a table of (i*P-192) % 2**192 for i in 1...3
+   */
+   static const word p192_mults[3][p192_limbs] = {
+#if (BOTAN_MP_WORD_BITS == 64)
+      {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFF},
+      {0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFF},
+      {0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFC, 0xFFFFFFFFFFFFFFFF},
+#else
+      {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+      {0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+      {0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFC, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+#endif
+   };
+
+   word borrow = bigint_sub2(x.mutable_data(), x.size(), p192_mults[S], p192_limbs);
+
+   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-192 reduction");
+
+   if(borrow)
+      {
+      bigint_add2(x.mutable_data(), x.size() - 1, p192_mults[0], p192_limbs);
+      }
    }
 
 const BigInt& prime_p224()
