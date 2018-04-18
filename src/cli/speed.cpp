@@ -945,6 +945,10 @@ class Speed final : public Command
                {
                bench_ecc_mult(ecc_groups, msec);
                }
+            else if(algo == "ecc_ops")
+               {
+               bench_ecc_ops(ecc_groups, msec);
+               }
             else if(algo == "os2ecp")
                {
                bench_os2ecp(ecc_groups, msec);
@@ -1313,6 +1317,35 @@ class Speed final : public Command
          }
 
 #if defined(BOTAN_HAS_ECC_GROUP)
+      void bench_ecc_ops(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
+         {
+         for(std::string group_name : groups)
+            {
+            const Botan::EC_Group group(group_name);
+
+            std::unique_ptr<Timer> add_timer = make_timer(group_name + " add");
+            std::unique_ptr<Timer> addf_timer = make_timer(group_name + " addf");
+            std::unique_ptr<Timer> dbl_timer = make_timer(group_name + " dbl");
+
+            const Botan::PointGFp& base_point = group.get_base_point();
+            Botan::PointGFp non_affine_pt = group.get_base_point() * 1776; // create a non-affine point
+            Botan::PointGFp pt = group.get_base_point();
+
+            std::vector<Botan::BigInt> ws(Botan::PointGFp::WORKSPACE_SIZE);
+
+            while(add_timer->under(runtime) && addf_timer->under(runtime) && dbl_timer->under(runtime))
+               {
+               dbl_timer->run([&]() { pt.mult2(ws); });
+               add_timer->run([&]() { pt.add(non_affine_pt, ws); });
+               addf_timer->run([&]() { pt.add_affine(base_point, ws); });
+               }
+
+            record_result(dbl_timer);
+            record_result(add_timer);
+            record_result(addf_timer);
+            }
+         }
+
       void bench_ecc_mult(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
          {
          for(std::string group_name : groups)
