@@ -458,7 +458,75 @@ class CurveGFp_P521 final : public CurveGFp_NIST
       const BigInt& get_p() const override { return prime_p521(); }
    private:
       void redc(BigInt& x, secure_vector<word>& ws) const override { redc_p521(x, ws); }
+      BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
    };
+
+BigInt CurveGFp_P521::invert_element(const BigInt& x, secure_vector<word>& ws) const
+   {
+   BigInt r;
+   BigInt rl;
+   BigInt a7;
+   BigInt tmp;
+
+   curve_sqr(r, x, ws);
+   curve_mul_tmp(r, x, tmp, ws);
+
+   curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, x, tmp, ws);
+
+   rl = r;
+
+   for(size_t i = 0; i != 3; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, rl, tmp, ws);
+
+   curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, x, tmp, ws);
+   a7 = r; // need this value later
+
+   curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, x, tmp, ws);
+
+   rl = r;
+   for(size_t i = 0; i != 8; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, rl, tmp, ws);
+
+   rl = r;
+   for(size_t i = 0; i != 16; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, rl, tmp, ws);
+
+    rl = r;
+    for(size_t i = 0; i != 32; ++i)
+        curve_sqr_tmp(r, tmp, ws);
+    curve_mul_tmp(r, rl, tmp, ws);
+
+    rl = r;
+    for(size_t i = 0; i != 64; ++i)
+        curve_sqr_tmp(r, tmp, ws);
+    curve_mul_tmp(r, rl, tmp, ws);
+
+    rl = r;
+    for(size_t i = 0; i != 128; ++i)
+        curve_sqr_tmp(r, tmp, ws);
+    curve_mul_tmp(r, rl, tmp, ws);
+
+    rl = r;
+    for(size_t i = 0; i != 256; ++i)
+        curve_sqr_tmp(r, tmp, ws);
+    curve_mul_tmp(r, rl, tmp, ws);
+
+    for(size_t i = 0; i != 7; ++i)
+        curve_sqr_tmp(r, tmp, ws);
+    curve_mul_tmp(r, a7, tmp, ws);
+
+    for(size_t i = 0; i != 2; ++i)
+       curve_sqr_tmp(r, tmp, ws);
+    curve_mul_tmp(r, x, tmp, ws);
+
+    return r;
+   }
 
 }
 
