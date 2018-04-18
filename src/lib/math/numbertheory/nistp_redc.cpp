@@ -117,6 +117,18 @@ inline void set_uint32_t(BigInt& x, size_t i, T v_in)
 #endif
    }
 
+inline void set_words(BigInt& x, size_t i, uint32_t R0, uint32_t R1)
+   {
+#if (BOTAN_MP_WORD_BITS == 32)
+   x.set_word_at(i, R0);
+   x.set_word_at(i+1, R1);
+#elif (BOTAN_MP_WORD_BITS == 64)
+   x.set_word_at(i/2, (static_cast<uint64_t>(R1) << 32) | R0);
+#else
+  #error "Not implemented"
+#endif
+   }
+
 }
 
 const BigInt& prime_p192()
@@ -273,8 +285,16 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const int64_t X08 = get_uint32_t(x, 8);
-   const int64_t X09 = get_uint32_t(x, 9);
+   const int64_t X00 = get_uint32_t(x,  0);
+   const int64_t X01 = get_uint32_t(x,  1);
+   const int64_t X02 = get_uint32_t(x,  2);
+   const int64_t X03 = get_uint32_t(x,  3);
+   const int64_t X04 = get_uint32_t(x,  4);
+   const int64_t X05 = get_uint32_t(x,  5);
+   const int64_t X06 = get_uint32_t(x,  6);
+   const int64_t X07 = get_uint32_t(x,  7);
+   const int64_t X08 = get_uint32_t(x,  8);
+   const int64_t X09 = get_uint32_t(x,  9);
    const int64_t X10 = get_uint32_t(x, 10);
    const int64_t X11 = get_uint32_t(x, 11);
    const int64_t X12 = get_uint32_t(x, 12);
@@ -297,45 +317,54 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    int64_t S = 0;
 
-   S = get_uint32_t(x, 0);
+   uint32_t R0 = 0, R1 = 0;
+
+   S = X00;
    S += S0;
-   set_uint32_t(x, 0, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 1);
+   S += X01;
    S += S1;
-   set_uint32_t(x, 1, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 2);
+   set_words(x, 0, R0, R1);
+
+   S += X02;
    S += S2;
-   set_uint32_t(x, 2, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 3);
+   S += X03;
    S += S3;
-   set_uint32_t(x, 3, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 4);
+   set_words(x, 2, R0, R1);
+
+   S += X04;
    S += S4;
-   set_uint32_t(x, 4, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 5);
+   S += X05;
    S += S5;
-   set_uint32_t(x, 5, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 6);
+   set_words(x, 4, R0, R1);
+
+   S += X06;
    S += S6;
-   set_uint32_t(x, 6, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 7);
+   S += X07;
    S += S7;
-   set_uint32_t(x, 7, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+   set_words(x, 6, R0, R1);
 
    S += 5; // the top digits of 6*P-256
 
@@ -426,65 +455,79 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    int64_t S = 0;
 
+   uint32_t R0 = 0, R1 = 0;
+
    S = get_uint32_t(x, 0);
    S += S0;
-   set_uint32_t(x, 0, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
    S += get_uint32_t(x, 1);
    S += S1;
-   set_uint32_t(x, 1, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+
+   set_words(x, 0, R0, R1);
 
    S += get_uint32_t(x, 2);
    S += S2;
-   set_uint32_t(x, 2, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
    S += get_uint32_t(x, 3);
    S += S3;
-   set_uint32_t(x, 3, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+
+   set_words(x, 2, R0, R1);
 
    S += get_uint32_t(x, 4);
    S += S4;
-   set_uint32_t(x, 4, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
    S += get_uint32_t(x, 5);
    S += S5;
-   set_uint32_t(x, 5, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+
+   set_words(x, 4, R0, R1);
 
    S += get_uint32_t(x, 6);
    S += S6;
-   set_uint32_t(x, 6, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
    S += get_uint32_t(x, 7);
    S += S7;
-   set_uint32_t(x, 7, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+
+   set_words(x, 6, R0, R1);
 
    S += get_uint32_t(x, 8);
    S += S8;
-   set_uint32_t(x, 8, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
    S += get_uint32_t(x, 9);
    S += S9;
-   set_uint32_t(x, 9, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+
+   set_words(x, 8, R0, R1);
 
    S += get_uint32_t(x, 10);
    S += SA;
-   set_uint32_t(x, 10, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
    S += get_uint32_t(x, 11);
    S += SB;
-   set_uint32_t(x, 11, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+
+   set_words(x, 10, R0, R1);
 
    BOTAN_ASSERT(S >= 0 && S <= 4, "Expected overflow in P-384 reduction");
 
