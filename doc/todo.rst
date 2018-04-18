@@ -15,7 +15,7 @@ Ciphers, Hashes, PBKDF
 * Compressed tables for AES
 * AES using vector permutes for NEON
 * Camellia using AES-NI
-* ChaCha20 using AVX2, NEON
+* ChaCha20 using NEON
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
 * Argon2 PBKDF (draft-irtf-cfrg-argon2)

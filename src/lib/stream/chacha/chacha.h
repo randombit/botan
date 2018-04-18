@@ -1,6 +1,6 @@
 /*
 * ChaCha20
-* (C) 2014 Jack Lloyd
+* (C) 2014,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -58,10 +58,14 @@ class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
 
       void initialize_state();
 
-      void chacha_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds);
+      void chacha_x8(uint8_t output[64*8], uint32_t state[16], size_t rounds);
 
 #if defined(BOTAN_HAS_CHACHA_SSE2)
       void chacha_sse2_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds);
+#endif
+
+#if defined(BOTAN_HAS_CHACHA_AVX2)
+      void chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rounds);
 #endif
 
       size_t m_rounds;
