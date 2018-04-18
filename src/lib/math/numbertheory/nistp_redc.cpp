@@ -273,116 +273,71 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const uint32_t X8 = get_uint32_t(x, 8);
-   const uint32_t X9 = get_uint32_t(x, 9);
-   const uint32_t X10 = get_uint32_t(x, 10);
-   const uint32_t X11 = get_uint32_t(x, 11);
-   const uint32_t X12 = get_uint32_t(x, 12);
-   const uint32_t X13 = get_uint32_t(x, 13);
-   const uint32_t X14 = get_uint32_t(x, 14);
-   const uint32_t X15 = get_uint32_t(x, 15);
+   const int64_t X08 = get_uint32_t(x, 8);
+   const int64_t X09 = get_uint32_t(x, 9);
+   const int64_t X10 = get_uint32_t(x, 10);
+   const int64_t X11 = get_uint32_t(x, 11);
+   const int64_t X12 = get_uint32_t(x, 12);
+   const int64_t X13 = get_uint32_t(x, 13);
+   const int64_t X14 = get_uint32_t(x, 14);
+   const int64_t X15 = get_uint32_t(x, 15);
+
+   // Adds 6 * P-256 to prevent underflow
+   const int64_t S0 = 0xFFFFFFFA + X08 + X09 - X11 - X12 - X13 - X14;
+   const int64_t S1 = 0xFFFFFFFF + X09 + X10 - X12 - X13 - X14 - X15;
+   const int64_t S2 = 0xFFFFFFFF + X10 + X11 - X13 - X14 - X15;
+   const int64_t S3 = 0x00000005 + (X11 + X12)*2 + X13 - X15 - X08 - X09;
+   const int64_t S4 = 0x00000000 + (X12 + X13)*2 + X14 - X09 - X10;
+   const int64_t S5 = 0x00000000 + (X13 + X14)*2 + X15 - X10 - X11;
+   const int64_t S6 = 0x00000006 + X13 + X14*3 + X15*2 - X08 - X09;
+   const int64_t S7 = 0xFFFFFFFA + X15*3 + X08 - X10 - X11 - X12 - X13;
 
    x.mask_bits(256);
    x.shrink_to_fit(p256_limbs + 1);
 
    int64_t S = 0;
 
-   // Adds 6 * P-256 to prevent underflow
-
    S = get_uint32_t(x, 0);
-   S += 0xFFFFFFFA;
-   S += X8;
-   S += X9;
-   S -= X11;
-   S -= X12;
-   S -= X13;
-   S -= X14;
+   S += S0;
    set_uint32_t(x, 0, S);
    S >>= 32;
 
    S += get_uint32_t(x, 1);
-   S += 0xFFFFFFFF;
-   S += X9;
-   S += X10;
-   S -= X12;
-   S -= X13;
-   S -= X14;
-   S -= X15;
+   S += S1;
    set_uint32_t(x, 1, S);
    S >>= 32;
 
    S += get_uint32_t(x, 2);
-   S += 0xFFFFFFFF;
-   S += X10;
-   S += X11;
-   S -= X13;
-   S -= X14;
-   S -= X15;
+   S += S2;
    set_uint32_t(x, 2, S);
    S >>= 32;
 
    S += get_uint32_t(x, 3);
-   S += 5;
-   S += X11;
-   S += X11;
-   S += X12;
-   S += X12;
-   S += X13;
-   S -= X15;
-   S -= X8;
-   S -= X9;
+   S += S3;
    set_uint32_t(x, 3, S);
    S >>= 32;
 
    S += get_uint32_t(x, 4);
-   S += X12;
-   S += X12;
-   S += X13;
-   S += X13;
-   S += X14;
-   S -= X9;
-   S -= X10;
+   S += S4;
    set_uint32_t(x, 4, S);
    S >>= 32;
 
    S += get_uint32_t(x, 5);
-   S += X13;
-   S += X13;
-   S += X14;
-   S += X14;
-   S += X15;
-   S -= X10;
-   S -= X11;
+   S += S5;
    set_uint32_t(x, 5, S);
    S >>= 32;
 
    S += get_uint32_t(x, 6);
-   S += 6;
-   S += X14;
-   S += X14;
-   S += X15;
-   S += X15;
-   S += X14;
-   S += X13;
-   S -= X8;
-   S -= X9;
+   S += S6;
    set_uint32_t(x, 6, S);
    S >>= 32;
 
    S += get_uint32_t(x, 7);
-   S += 0xFFFFFFFA;
-   S += X15;
-   S += X15;
-   S += X15;
-   S += X8;
-   S -= X10;
-   S -= X11;
-   S -= X12;
-   S -= X13;
+   S += S7;
    set_uint32_t(x, 7, S);
    S >>= 32;
 
-   S += 5; // final carry of 6*P-256
+   S += 5; // the top digits of 6*P-256
 
    BOTAN_ASSERT(S >= 0 && S <= 10, "Expected overflow");
 
@@ -439,146 +394,95 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p384_limbs = (BOTAN_MP_WORD_BITS == 32) ? 12 : 6;
 
-   const uint32_t X12 = get_uint32_t(x, 12);
-   const uint32_t X13 = get_uint32_t(x, 13);
-   const uint32_t X14 = get_uint32_t(x, 14);
-   const uint32_t X15 = get_uint32_t(x, 15);
-   const uint32_t X16 = get_uint32_t(x, 16);
-   const uint32_t X17 = get_uint32_t(x, 17);
-   const uint32_t X18 = get_uint32_t(x, 18);
-   const uint32_t X19 = get_uint32_t(x, 19);
-   const uint32_t X20 = get_uint32_t(x, 20);
-   const uint32_t X21 = get_uint32_t(x, 21);
-   const uint32_t X22 = get_uint32_t(x, 22);
-   const uint32_t X23 = get_uint32_t(x, 23);
+   const int64_t X12 = get_uint32_t(x, 12);
+   const int64_t X13 = get_uint32_t(x, 13);
+   const int64_t X14 = get_uint32_t(x, 14);
+   const int64_t X15 = get_uint32_t(x, 15);
+   const int64_t X16 = get_uint32_t(x, 16);
+   const int64_t X17 = get_uint32_t(x, 17);
+   const int64_t X18 = get_uint32_t(x, 18);
+   const int64_t X19 = get_uint32_t(x, 19);
+   const int64_t X20 = get_uint32_t(x, 20);
+   const int64_t X21 = get_uint32_t(x, 21);
+   const int64_t X22 = get_uint32_t(x, 22);
+   const int64_t X23 = get_uint32_t(x, 23);
+
+   // One copy of P-384 is added to prevent underflow
+   const int64_t S0 = 0xFFFFFFFF + X12 + X20 + X21 - X23;
+   const int64_t S1 = 0x00000000 + X13 + X22 + X23 - X12 - X20;
+   const int64_t S2 = 0x00000000 + X14 + X23 - X13 - X21;
+   const int64_t S3 = 0xFFFFFFFF + X12 + X15 + X20 + X21 - X14 - X22 - X23;
+   const int64_t S4 = 0xFFFFFFFE + X12 + X13 + X16 + X20 + X21*2 + X22 - X15 - X23*2;
+   const int64_t S5 = 0xFFFFFFFF + X13 + X14 + X17 + X21 + X22*2 + X23 - X16;
+   const int64_t S6 = 0xFFFFFFFF + X14 + X15 + X18 + X22 + X23*2 - X17;
+   const int64_t S7 = 0xFFFFFFFF + X15 + X16 + X19 + X23 - X18;
+   const int64_t S8 = 0xFFFFFFFF + X16 + X17 + X20 - X19;
+   const int64_t S9 = 0xFFFFFFFF + X17 + X18 + X21 - X20;
+   const int64_t SA = 0xFFFFFFFF + X18 + X19 + X22 - X21;
+   const int64_t SB = 0xFFFFFFFF + X19 + X20 + X23 - X22;
 
    x.mask_bits(384);
    x.shrink_to_fit(p384_limbs + 1);
 
    int64_t S = 0;
 
-   // One copy of P-384 is added to prevent underflow
    S = get_uint32_t(x, 0);
-   S += 0xFFFFFFFF;
-   S += X12;
-   S += X21;
-   S += X20;
-   S -= X23;
+   S += S0;
    set_uint32_t(x, 0, S);
    S >>= 32;
 
    S += get_uint32_t(x, 1);
-   S += X13;
-   S += X22;
-   S += X23;
-   S -= X12;
-   S -= X20;
+   S += S1;
    set_uint32_t(x, 1, S);
    S >>= 32;
 
    S += get_uint32_t(x, 2);
-   S += X14;
-   S += X23;
-   S -= X13;
-   S -= X21;
+   S += S2;
    set_uint32_t(x, 2, S);
    S >>= 32;
 
    S += get_uint32_t(x, 3);
-   S += 0xFFFFFFFF;
-   S += X15;
-   S += X12;
-   S += X20;
-   S += X21;
-   S -= X14;
-   S -= X22;
-   S -= X23;
+   S += S3;
    set_uint32_t(x, 3, S);
    S >>= 32;
 
    S += get_uint32_t(x, 4);
-   S += 0xFFFFFFFE;
-   S += X21;
-   S += X21;
-   S += X16;
-   S += X13;
-   S += X12;
-   S += X20;
-   S += X22;
-   S -= X15;
-   S -= X23;
-   S -= X23;
+   S += S4;
    set_uint32_t(x, 4, S);
    S >>= 32;
 
    S += get_uint32_t(x, 5);
-   S += 0xFFFFFFFF;
-   S += X22;
-   S += X22;
-   S += X17;
-   S += X14;
-   S += X13;
-   S += X21;
-   S += X23;
-   S -= X16;
+   S += S5;
    set_uint32_t(x, 5, S);
    S >>= 32;
 
    S += get_uint32_t(x, 6);
-   S += 0xFFFFFFFF;
-   S += X23;
-   S += X23;
-   S += X18;
-   S += X15;
-   S += X14;
-   S += X22;
-   S -= X17;
+   S += S6;
    set_uint32_t(x, 6, S);
    S >>= 32;
 
    S += get_uint32_t(x, 7);
-   S += 0xFFFFFFFF;
-   S += X19;
-   S += X16;
-   S += X15;
-   S += X23;
-   S -= X18;
+   S += S7;
    set_uint32_t(x, 7, S);
    S >>= 32;
 
    S += get_uint32_t(x, 8);
-   S += 0xFFFFFFFF;
-   S += X20;
-   S += X17;
-   S += X16;
-   S -= X19;
+   S += S8;
    set_uint32_t(x, 8, S);
    S >>= 32;
 
    S += get_uint32_t(x, 9);
-   S += 0xFFFFFFFF;
-   S += X21;
-   S += X18;
-   S += X17;
-   S -= X20;
+   S += S9;
    set_uint32_t(x, 9, S);
    S >>= 32;
 
    S += get_uint32_t(x, 10);
-   S += 0xFFFFFFFF;
-   S += X22;
-   S += X19;
-   S += X18;
-   S -= X21;
+   S += SA;
    set_uint32_t(x, 10, S);
    S >>= 32;
 
    S += get_uint32_t(x, 11);
-   S += 0xFFFFFFFF;
-   S += X23;
-   S += X20;
-   S += X19;
-   S -= X22;
+   S += SB;
    set_uint32_t(x, 11, S);
    S >>= 32;
 
