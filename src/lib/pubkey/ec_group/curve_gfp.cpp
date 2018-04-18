@@ -240,6 +240,18 @@ class CurveGFp_NIST : public CurveGFp_Repr
                            const BigInt& y,
                            secure_vector<word>& ws) const override;
 
+      void curve_mul_tmp(BigInt& x, const BigInt& y, BigInt& tmp, secure_vector<word>& ws) const
+         {
+         curve_mul(tmp, x, y, ws);
+         x.swap(tmp);
+         }
+
+      void curve_sqr_tmp(BigInt& x, BigInt& tmp, secure_vector<word>& ws) const
+         {
+         curve_sqr(tmp, x, ws);
+         x.swap(tmp);
+         }
+
       void curve_sqr(BigInt& z, const BigInt& x,
                      secure_vector<word>& ws) const override;
    private:
@@ -357,7 +369,70 @@ class CurveGFp_P256 final : public CurveGFp_NIST
       const BigInt& get_p() const override { return prime_p256(); }
    private:
       void redc(BigInt& x, secure_vector<word>& ws) const override { redc_p256(x, ws); }
+      BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
    };
+
+BigInt CurveGFp_P256::invert_element(const BigInt& x, secure_vector<word>& ws) const
+   {
+   BigInt r, p2, p4, p8, p16, p32, tmp;
+
+   curve_sqr(r, x, ws);
+
+   curve_mul(p2, r, x, ws);
+   curve_sqr(r, p2, ws);
+   curve_sqr_tmp(r, tmp, ws);
+
+   curve_mul(p4, r, p2, ws);
+
+   curve_sqr(r, p4, ws);
+   for(size_t i = 0; i != 3; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul(p8, r, p4, ws);;
+
+   curve_sqr(r, p8, ws);
+   for(size_t i = 0; i != 7; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul(p16, r, p8, ws);
+
+   curve_sqr(r, p16, ws);
+   for(size_t i = 0; i != 15; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul(p32, r, p16, ws);
+
+   curve_sqr(r, p32, ws);
+   for(size_t i = 0; i != 31; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, x, tmp, ws);
+
+   for(size_t i = 0; i != 32*4; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, p32, tmp, ws);
+
+   for(size_t i = 0; i != 32; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, p32, tmp, ws);
+
+   for(size_t i = 0; i != 16; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, p16, tmp, ws);
+   for(size_t i = 0; i != 8; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, p8, tmp, ws);
+
+   for(size_t i = 0; i != 4; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, p4, tmp, ws);
+
+   for(size_t i = 0; i != 2; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, p2, tmp, ws);
+
+   for(size_t i = 0; i != 2; ++i)
+      curve_sqr_tmp(r, tmp, ws);
+   curve_mul_tmp(r, x, tmp, ws);
+
+   return r;
+   }
 
 /**
 * The NIST P-384 curve
