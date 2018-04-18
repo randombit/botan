@@ -98,20 +98,13 @@ inline uint32_t get_uint32_t(const BigInt& x, size_t i)
 #endif
    }
 
-/**
-* Treating this MPI as a sequence of 32-bit words in big-endian
-* order, set word i to the value x
-*/
-template<typename T>
-inline void set_uint32_t(BigInt& x, size_t i, T v_in)
+inline void set_words(BigInt& x, size_t i, uint32_t R0, uint32_t R1)
    {
-   const uint32_t v = static_cast<uint32_t>(v_in);
 #if (BOTAN_MP_WORD_BITS == 32)
-   x.set_word_at(i, v);
+   x.set_word_at(i, R0);
+   x.set_word_at(i+1, R1);
 #elif (BOTAN_MP_WORD_BITS == 64)
-   const word shift_32 = (i % 2) * 32;
-   const word w = (x.word_at(i/2) & (static_cast<word>(0xFFFFFFFF) << (32-shift_32))) | (static_cast<word>(v) << shift_32);
-   x.set_word_at(i/2, w);
+   x.set_word_at(i/2, (static_cast<uint64_t>(R1) << 32) | R0);
 #else
   #error "Not implemented"
 #endif
@@ -127,60 +120,97 @@ const BigInt& prime_p192()
 
 void redc_p192(BigInt& x, secure_vector<word>& ws)
    {
-   const uint32_t X6 = get_uint32_t(x, 6);
-   const uint32_t X7 = get_uint32_t(x, 7);
-   const uint32_t X8 = get_uint32_t(x, 8);
-   const uint32_t X9 = get_uint32_t(x, 9);
-   const uint32_t X10 = get_uint32_t(x, 10);
-   const uint32_t X11 = get_uint32_t(x, 11);
+   BOTAN_UNUSED(ws);
+
+   static const size_t p192_limbs = 192 / BOTAN_MP_WORD_BITS;
+
+   const uint64_t X00 = get_uint32_t(x,  0);
+   const uint64_t X01 = get_uint32_t(x,  1);
+   const uint64_t X02 = get_uint32_t(x,  2);
+   const uint64_t X03 = get_uint32_t(x,  3);
+   const uint64_t X04 = get_uint32_t(x,  4);
+   const uint64_t X05 = get_uint32_t(x,  5);
+   const uint64_t X06 = get_uint32_t(x,  6);
+   const uint64_t X07 = get_uint32_t(x,  7);
+   const uint64_t X08 = get_uint32_t(x,  8);
+   const uint64_t X09 = get_uint32_t(x,  9);
+   const uint64_t X10 = get_uint32_t(x, 10);
+   const uint64_t X11 = get_uint32_t(x, 11);
+
+   const uint64_t S0 = X00 + X06 + X10;
+   const uint64_t S1 = X01 + X07 + X11;
+   const uint64_t S2 = X02 + X06 + X08 + X10;
+   const uint64_t S3 = X03 + X07 + X09 + X11;
+   const uint64_t S4 = X04 + X08 + X10;
+   const uint64_t S5 = X05 + X09 + X11;
 
    x.mask_bits(192);
 
    uint64_t S = 0;
+   uint32_t R0 = 0, R1 = 0;
 
-   S += get_uint32_t(x, 0);
-   S += X6;
-   S += X10;
-   set_uint32_t(x, 0, S);
+   S += S0;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 1);
-   S += X7;
-   S += X11;
-   set_uint32_t(x, 1, S);
+   S += S1;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 2);
-   S += X6;
-   S += X8;
-   S += X10;
-   set_uint32_t(x, 2, S);
+   set_words(x, 0, R0, R1);
+
+   S += S2;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 3);
-   S += X7;
-   S += X9;
-   S += X11;
-   set_uint32_t(x, 3, S);
+   S += S3;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 4);
-   S += X8;
-   S += X10;
-   set_uint32_t(x, 4, S);
+   set_words(x, 2, R0, R1);
+
+   S += S4;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 5);
-   S += X9;
-   S += X11;
-   set_uint32_t(x, 5, S);
+   S += S5;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_uint32_t(x, 6, S);
+   set_words(x, 4, R0, R1);
 
    // No underflow possible
 
-   x.reduce_below(prime_p192(), ws);
+   BOTAN_ASSERT(S <= 2, "Expected overflow in P-192 reduce");
+
+   /*
+   This is a table of (i*P-192) % 2**192 for i in 1...3
+   */
+   static const word p192_mults[3][p192_limbs] = {
+#if (BOTAN_MP_WORD_BITS == 64)
+      {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFF},
+      {0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFF},
+      {0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFC, 0xFFFFFFFFFFFFFFFF},
+#else
+      {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+      {0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+      {0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFC, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+#endif
+   };
+
+   if(S == 0 && x.word_at(p192_limbs-1) < p192_mults[0][p192_limbs-1])
+      {
+      return;
+      }
+
+   word borrow = bigint_sub2(x.mutable_data(), x.size(), p192_mults[S], p192_limbs);
+
+   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-192 reduction");
+
+   if(borrow)
+      {
+      bigint_add2(x.mutable_data(), x.size() - 1, p192_mults[0], p192_limbs);
+      }
    }
 
 const BigInt& prime_p224()
@@ -191,74 +221,104 @@ const BigInt& prime_p224()
 
 void redc_p224(BigInt& x, secure_vector<word>& ws)
    {
-   const uint32_t X7 = get_uint32_t(x, 7);
-   const uint32_t X8 = get_uint32_t(x, 8);
-   const uint32_t X9 = get_uint32_t(x, 9);
-   const uint32_t X10 = get_uint32_t(x, 10);
-   const uint32_t X11 = get_uint32_t(x, 11);
-   const uint32_t X12 = get_uint32_t(x, 12);
-   const uint32_t X13 = get_uint32_t(x, 13);
+   BOTAN_UNUSED(ws);
 
-   x.mask_bits(224);
+   const int64_t X00 = get_uint32_t(x,  0);
+   const int64_t X01 = get_uint32_t(x,  1);
+   const int64_t X02 = get_uint32_t(x,  2);
+   const int64_t X03 = get_uint32_t(x,  3);
+   const int64_t X04 = get_uint32_t(x,  4);
+   const int64_t X05 = get_uint32_t(x,  5);
+   const int64_t X06 = get_uint32_t(x,  6);
+   const int64_t X07 = get_uint32_t(x,  7);
+   const int64_t X08 = get_uint32_t(x,  8);
+   const int64_t X09 = get_uint32_t(x,  9);
+   const int64_t X10 = get_uint32_t(x, 10);
+   const int64_t X11 = get_uint32_t(x, 11);
+   const int64_t X12 = get_uint32_t(x, 12);
+   const int64_t X13 = get_uint32_t(x, 13);
 
    // One full copy of P224 is added, so the result is always positive
 
+   const int64_t S0 = 0x00000001 + X00 - X07 - X11;
+   const int64_t S1 = 0x00000000 + X01 - X08 - X12;
+   const int64_t S2 = 0x00000000 + X02 - X09 - X13;
+   const int64_t S3 = 0xFFFFFFFF + X03 + X07 + X11 - X10;
+   const int64_t S4 = 0xFFFFFFFF + X04 + X08 + X12 - X11;
+   const int64_t S5 = 0xFFFFFFFF + X05 + X09 + X13 - X12;
+   const int64_t S6 = 0xFFFFFFFF + X06 + X10 - X13;
+
+   x.mask_bits(224);
+
    int64_t S = 0;
+   uint32_t R0 = 0, R1 = 0;
 
-   S += get_uint32_t(x, 0);
-   S += 1;
-   S -= X7;
-   S -= X11;
-   set_uint32_t(x, 0, S);
+   S += S0;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 1);
-   S -= X8;
-   S -= X12;
-   set_uint32_t(x, 1, S);
+   S += S1;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 2);
-   S -= X9;
-   S -= X13;
-   set_uint32_t(x, 2, S);
+   set_words(x, 0, R0, R1);
+
+   S += S2;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 3);
-   S += 0xFFFFFFFF;
-   S += X7;
-   S += X11;
-   S -= X10;
-   set_uint32_t(x, 3, S);
+   S += S3;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 4);
-   S += 0xFFFFFFFF;
-   S += X8;
-   S += X12;
-   S -= X11;
-   set_uint32_t(x, 4, S);
+   set_words(x, 2, R0, R1);
+
+   S += S4;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 5);
-   S += 0xFFFFFFFF;
-   S += X9;
-   S += X13;
-   S -= X12;
-   set_uint32_t(x, 5, S);
+   S += S5;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 6);
-   S += 0xFFFFFFFF;
-   S += X10;
-   S -= X13;
-   set_uint32_t(x, 6, S);
+   set_words(x, 4, R0, R1);
+
+   S += S6;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
-   set_uint32_t(x, 7, S);
 
-   BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
+   set_words(x, 6, R0, 0);
 
-   x.reduce_below(prime_p224(), ws);
+   BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow in P-224 reduce");
+
+   static const size_t p224_limbs = (BOTAN_MP_WORD_BITS == 32) ? 7 : 4;
+
+   static const word p224_mults[3][p224_limbs] = {
+#if (BOTAN_MP_WORD_BITS == 64)
+    {0x0000000000000001, 0xFFFFFFFF00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+    {0x0000000000000002, 0xFFFFFFFE00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+    {0x0000000000000003, 0xFFFFFFFD00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+#else
+    {0x00000001, 0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+    {0x00000002, 0x00000000, 0x00000000, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+    {0x00000003, 0x00000000, 0x00000000, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}
+#endif
+
+   };
+
+   if(S == 0 && x.word_at(p224_limbs-1) < p224_mults[0][p224_limbs-1])
+      {
+      return;
+      }
+
+   word borrow = bigint_sub2(x.mutable_data(), x.size(), p224_mults[S], p224_limbs);
+
+   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-224 reduction");
+
+   if(borrow)
+      {
+      bigint_add2(x.mutable_data(), x.size() - 1, p224_mults[0], p224_limbs);
+      }
    }
 
 const BigInt& prime_p256()
@@ -273,8 +333,16 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const int64_t X08 = get_uint32_t(x, 8);
-   const int64_t X09 = get_uint32_t(x, 9);
+   const int64_t X00 = get_uint32_t(x,  0);
+   const int64_t X01 = get_uint32_t(x,  1);
+   const int64_t X02 = get_uint32_t(x,  2);
+   const int64_t X03 = get_uint32_t(x,  3);
+   const int64_t X04 = get_uint32_t(x,  4);
+   const int64_t X05 = get_uint32_t(x,  5);
+   const int64_t X06 = get_uint32_t(x,  6);
+   const int64_t X07 = get_uint32_t(x,  7);
+   const int64_t X08 = get_uint32_t(x,  8);
+   const int64_t X09 = get_uint32_t(x,  9);
    const int64_t X10 = get_uint32_t(x, 10);
    const int64_t X11 = get_uint32_t(x, 11);
    const int64_t X12 = get_uint32_t(x, 12);
@@ -283,59 +351,60 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    const int64_t X15 = get_uint32_t(x, 15);
 
    // Adds 6 * P-256 to prevent underflow
-   const int64_t S0 = 0xFFFFFFFA + X08 + X09 - X11 - X12 - X13 - X14;
-   const int64_t S1 = 0xFFFFFFFF + X09 + X10 - X12 - X13 - X14 - X15;
-   const int64_t S2 = 0xFFFFFFFF + X10 + X11 - X13 - X14 - X15;
-   const int64_t S3 = 0x00000005 + (X11 + X12)*2 + X13 - X15 - X08 - X09;
-   const int64_t S4 = 0x00000000 + (X12 + X13)*2 + X14 - X09 - X10;
-   const int64_t S5 = 0x00000000 + (X13 + X14)*2 + X15 - X10 - X11;
-   const int64_t S6 = 0x00000006 + X13 + X14*3 + X15*2 - X08 - X09;
-   const int64_t S7 = 0xFFFFFFFA + X15*3 + X08 - X10 - X11 - X12 - X13;
+   const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - X11 - X12 - X13 - X14;
+   const int64_t S1 = 0xFFFFFFFF + X01 + X09 + X10 - X12 - X13 - X14 - X15;
+   const int64_t S2 = 0xFFFFFFFF + X02 + X10 + X11 - X13 - X14 - X15;
+   const int64_t S3 = 0x00000005 + X03 + (X11 + X12)*2 + X13 - X15 - X08 - X09;
+   const int64_t S4 = 0x00000000 + X04 + (X12 + X13)*2 + X14 - X09 - X10;
+   const int64_t S5 = 0x00000000 + X05 + (X13 + X14)*2 + X15 - X10 - X11;
+   const int64_t S6 = 0x00000006 + X06 + X13 + X14*3 + X15*2 - X08 - X09;
+   const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - X11 - X12 - X13;
 
    x.mask_bits(256);
    x.shrink_to_fit(p256_limbs + 1);
 
    int64_t S = 0;
 
-   S = get_uint32_t(x, 0);
+   uint32_t R0 = 0, R1 = 0;
+
    S += S0;
-   set_uint32_t(x, 0, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 1);
    S += S1;
-   set_uint32_t(x, 1, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 2);
+   set_words(x, 0, R0, R1);
+
    S += S2;
-   set_uint32_t(x, 2, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 3);
    S += S3;
-   set_uint32_t(x, 3, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 4);
+   set_words(x, 2, R0, R1);
+
    S += S4;
-   set_uint32_t(x, 4, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 5);
    S += S5;
-   set_uint32_t(x, 5, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 6);
+   set_words(x, 4, R0, R1);
+
    S += S6;
-   set_uint32_t(x, 6, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 7);
    S += S7;
-   set_uint32_t(x, 7, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+   set_words(x, 6, R0, R1);
 
    S += 5; // the top digits of 6*P-256
 
@@ -372,6 +441,11 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
+   if(S == 0 && x.word_at(p256_limbs-1) < p256_mults[0][p256_limbs-1])
+      {
+      return;
+      }
+
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p256_mults[S], p256_limbs);
 
    BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-256 reduction");
@@ -394,6 +468,18 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p384_limbs = (BOTAN_MP_WORD_BITS == 32) ? 12 : 6;
 
+   const int64_t X00 = get_uint32_t(x,  0);
+   const int64_t X01 = get_uint32_t(x,  1);
+   const int64_t X02 = get_uint32_t(x,  2);
+   const int64_t X03 = get_uint32_t(x,  3);
+   const int64_t X04 = get_uint32_t(x,  4);
+   const int64_t X05 = get_uint32_t(x,  5);
+   const int64_t X06 = get_uint32_t(x,  6);
+   const int64_t X07 = get_uint32_t(x,  7);
+   const int64_t X08 = get_uint32_t(x,  8);
+   const int64_t X09 = get_uint32_t(x,  9);
+   const int64_t X10 = get_uint32_t(x, 10);
+   const int64_t X11 = get_uint32_t(x, 11);
    const int64_t X12 = get_uint32_t(x, 12);
    const int64_t X13 = get_uint32_t(x, 13);
    const int64_t X14 = get_uint32_t(x, 14);
@@ -408,83 +494,85 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    const int64_t X23 = get_uint32_t(x, 23);
 
    // One copy of P-384 is added to prevent underflow
-   const int64_t S0 = 0xFFFFFFFF + X12 + X20 + X21 - X23;
-   const int64_t S1 = 0x00000000 + X13 + X22 + X23 - X12 - X20;
-   const int64_t S2 = 0x00000000 + X14 + X23 - X13 - X21;
-   const int64_t S3 = 0xFFFFFFFF + X12 + X15 + X20 + X21 - X14 - X22 - X23;
-   const int64_t S4 = 0xFFFFFFFE + X12 + X13 + X16 + X20 + X21*2 + X22 - X15 - X23*2;
-   const int64_t S5 = 0xFFFFFFFF + X13 + X14 + X17 + X21 + X22*2 + X23 - X16;
-   const int64_t S6 = 0xFFFFFFFF + X14 + X15 + X18 + X22 + X23*2 - X17;
-   const int64_t S7 = 0xFFFFFFFF + X15 + X16 + X19 + X23 - X18;
-   const int64_t S8 = 0xFFFFFFFF + X16 + X17 + X20 - X19;
-   const int64_t S9 = 0xFFFFFFFF + X17 + X18 + X21 - X20;
-   const int64_t SA = 0xFFFFFFFF + X18 + X19 + X22 - X21;
-   const int64_t SB = 0xFFFFFFFF + X19 + X20 + X23 - X22;
+   const int64_t S0 = 0xFFFFFFFF + X00 + X12 + X20 + X21 - X23;
+   const int64_t S1 = 0x00000000 + X01 + X13 + X22 + X23 - X12 - X20;
+   const int64_t S2 = 0x00000000 + X02 + X14 + X23 - X13 - X21;
+   const int64_t S3 = 0xFFFFFFFF + X03 + X12 + X15 + X20 + X21 - X14 - X22 - X23;
+   const int64_t S4 = 0xFFFFFFFE + X04 + X12 + X13 + X16 + X20 + X21*2 + X22 - X15 - X23*2;
+   const int64_t S5 = 0xFFFFFFFF + X05 + X13 + X14 + X17 + X21 + X22*2 + X23 - X16;
+   const int64_t S6 = 0xFFFFFFFF + X06 + X14 + X15 + X18 + X22 + X23*2 - X17;
+   const int64_t S7 = 0xFFFFFFFF + X07 + X15 + X16 + X19 + X23 - X18;
+   const int64_t S8 = 0xFFFFFFFF + X08 + X16 + X17 + X20 - X19;
+   const int64_t S9 = 0xFFFFFFFF + X09 + X17 + X18 + X21 - X20;
+   const int64_t SA = 0xFFFFFFFF + X10 + X18 + X19 + X22 - X21;
+   const int64_t SB = 0xFFFFFFFF + X11 + X19 + X20 + X23 - X22;
 
    x.mask_bits(384);
    x.shrink_to_fit(p384_limbs + 1);
 
    int64_t S = 0;
 
-   S = get_uint32_t(x, 0);
+   uint32_t R0 = 0, R1 = 0;
+
    S += S0;
-   set_uint32_t(x, 0, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 1);
    S += S1;
-   set_uint32_t(x, 1, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 2);
+   set_words(x, 0, R0, R1);
+
    S += S2;
-   set_uint32_t(x, 2, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 3);
    S += S3;
-   set_uint32_t(x, 3, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 4);
+   set_words(x, 2, R0, R1);
+
    S += S4;
-   set_uint32_t(x, 4, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 5);
    S += S5;
-   set_uint32_t(x, 5, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 6);
+   set_words(x, 4, R0, R1);
+
    S += S6;
-   set_uint32_t(x, 6, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 7);
    S += S7;
-   set_uint32_t(x, 7, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 8);
+   set_words(x, 6, R0, R1);
+
    S += S8;
-   set_uint32_t(x, 8, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 9);
    S += S9;
-   set_uint32_t(x, 9, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 10);
+   set_words(x, 8, R0, R1);
+
    S += SA;
-   set_uint32_t(x, 10, S);
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 11);
    S += SB;
-   set_uint32_t(x, 11, S);
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
+
+   set_words(x, 10, R0, R1);
 
    BOTAN_ASSERT(S >= 0 && S <= 4, "Expected overflow in P-384 reduction");
 
@@ -512,6 +600,11 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
 #endif
    };
+
+   if(S == 0 && x.word_at(p384_limbs-1) < p384_mults[0][p384_limbs-1])
+      {
+      return;
+      }
 
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p384_mults[S], p384_limbs);
 
