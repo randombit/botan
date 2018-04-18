@@ -235,74 +235,104 @@ const BigInt& prime_p224()
 
 void redc_p224(BigInt& x, secure_vector<word>& ws)
    {
-   const uint32_t X7 = get_uint32_t(x, 7);
-   const uint32_t X8 = get_uint32_t(x, 8);
-   const uint32_t X9 = get_uint32_t(x, 9);
-   const uint32_t X10 = get_uint32_t(x, 10);
-   const uint32_t X11 = get_uint32_t(x, 11);
-   const uint32_t X12 = get_uint32_t(x, 12);
-   const uint32_t X13 = get_uint32_t(x, 13);
+   BOTAN_UNUSED(ws);
 
-   x.mask_bits(224);
+   const int64_t X00 = get_uint32_t(x,  0);
+   const int64_t X01 = get_uint32_t(x,  1);
+   const int64_t X02 = get_uint32_t(x,  2);
+   const int64_t X03 = get_uint32_t(x,  3);
+   const int64_t X04 = get_uint32_t(x,  4);
+   const int64_t X05 = get_uint32_t(x,  5);
+   const int64_t X06 = get_uint32_t(x,  6);
+   const int64_t X07 = get_uint32_t(x,  7);
+   const int64_t X08 = get_uint32_t(x,  8);
+   const int64_t X09 = get_uint32_t(x,  9);
+   const int64_t X10 = get_uint32_t(x, 10);
+   const int64_t X11 = get_uint32_t(x, 11);
+   const int64_t X12 = get_uint32_t(x, 12);
+   const int64_t X13 = get_uint32_t(x, 13);
 
    // One full copy of P224 is added, so the result is always positive
 
+   const int64_t S0 = 0x00000001 + X00 - X07 - X11;
+   const int64_t S1 = 0x00000000 + X01 - X08 - X12;
+   const int64_t S2 = 0x00000000 + X02 - X09 - X13;
+   const int64_t S3 = 0xFFFFFFFF + X03 + X07 + X11 - X10;
+   const int64_t S4 = 0xFFFFFFFF + X04 + X08 + X12 - X11;
+   const int64_t S5 = 0xFFFFFFFF + X05 + X09 + X13 - X12;
+   const int64_t S6 = 0xFFFFFFFF + X06 + X10 - X13;
+
+   x.mask_bits(224);
+
    int64_t S = 0;
+   uint32_t R0 = 0, R1 = 0;
 
-   S += get_uint32_t(x, 0);
-   S += 1;
-   S -= X7;
-   S -= X11;
-   set_uint32_t(x, 0, S);
+   S += S0;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 1);
-   S -= X8;
-   S -= X12;
-   set_uint32_t(x, 1, S);
+   S += S1;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 2);
-   S -= X9;
-   S -= X13;
-   set_uint32_t(x, 2, S);
+   set_words(x, 0, R0, R1);
+
+   S += S2;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 3);
-   S += 0xFFFFFFFF;
-   S += X7;
-   S += X11;
-   S -= X10;
-   set_uint32_t(x, 3, S);
+   S += S3;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 4);
-   S += 0xFFFFFFFF;
-   S += X8;
-   S += X12;
-   S -= X11;
-   set_uint32_t(x, 4, S);
+   set_words(x, 2, R0, R1);
+
+   S += S4;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 5);
-   S += 0xFFFFFFFF;
-   S += X9;
-   S += X13;
-   S -= X12;
-   set_uint32_t(x, 5, S);
+   S += S5;
+   R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 6);
-   S += 0xFFFFFFFF;
-   S += X10;
-   S -= X13;
-   set_uint32_t(x, 6, S);
+   set_words(x, 4, R0, R1);
+
+   S += S6;
+   R0 = static_cast<uint32_t>(S);
    S >>= 32;
-   set_uint32_t(x, 7, S);
 
-   BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
+   set_words(x, 6, R0, 0);
 
-   x.reduce_below(prime_p224(), ws);
+   BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow in P-224 reduce");
+
+   static const size_t p224_limbs = (BOTAN_MP_WORD_BITS == 32) ? 7 : 4;
+
+   static const word p224_mults[3][p224_limbs] = {
+#if (BOTAN_MP_WORD_BITS == 64)
+    {0x0000000000000001, 0xFFFFFFFF00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+    {0x0000000000000002, 0xFFFFFFFE00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+    {0x0000000000000003, 0xFFFFFFFD00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
+#else
+    {0x00000001, 0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+    {0x00000002, 0x00000000, 0x00000000, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
+    {0x00000003, 0x00000000, 0x00000000, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}
+#endif
+
+   };
+
+   if(S == 0 && x.word_at(p224_limbs-1) < p224_mults[0][p224_limbs-1])
+      {
+      return;
+      }
+
+   word borrow = bigint_sub2(x.mutable_data(), x.size(), p224_mults[S], p224_limbs);
+
+   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-224 reduction");
+
+   if(borrow)
+      {
+      bigint_add2(x.mutable_data(), x.size() - 1, p224_mults[0], p224_limbs);
+      }
    }
 
 const BigInt& prime_p256()
