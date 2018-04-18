@@ -98,25 +98,6 @@ inline uint32_t get_uint32_t(const BigInt& x, size_t i)
 #endif
    }
 
-/**
-* Treating this MPI as a sequence of 32-bit words in big-endian
-* order, set word i to the value x
-*/
-template<typename T>
-inline void set_uint32_t(BigInt& x, size_t i, T v_in)
-   {
-   const uint32_t v = static_cast<uint32_t>(v_in);
-#if (BOTAN_MP_WORD_BITS == 32)
-   x.set_word_at(i, v);
-#elif (BOTAN_MP_WORD_BITS == 64)
-   const word shift_32 = (i % 2) * 32;
-   const word w = (x.word_at(i/2) & (static_cast<word>(0xFFFFFFFF) << (32-shift_32))) | (static_cast<word>(v) << shift_32);
-   x.set_word_at(i/2, w);
-#else
-  #error "Not implemented"
-#endif
-   }
-
 inline void set_words(BigInt& x, size_t i, uint32_t R0, uint32_t R1)
    {
 #if (BOTAN_MP_WORD_BITS == 32)
