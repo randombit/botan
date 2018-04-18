@@ -198,6 +198,11 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
+   if(S == 0 && x.word_at(p192_limbs-1) < p192_mults[0][p192_limbs-1])
+      {
+      return;
+      }
+
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p192_mults[S], p192_limbs);
 
    BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-192 reduction");
