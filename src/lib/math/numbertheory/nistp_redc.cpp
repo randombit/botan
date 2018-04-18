@@ -139,6 +139,8 @@ const BigInt& prime_p192()
 
 void redc_p192(BigInt& x, secure_vector<word>& ws)
    {
+   BOTAN_UNUSED(ws);
+
    static const size_t p192_limbs = 192 / BOTAN_MP_WORD_BITS;
 
    const uint64_t X00 = get_uint32_t(x,  0);
@@ -333,14 +335,14 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    const int64_t X15 = get_uint32_t(x, 15);
 
    // Adds 6 * P-256 to prevent underflow
-   const int64_t S0 = 0xFFFFFFFA + X08 + X09 - X11 - X12 - X13 - X14;
-   const int64_t S1 = 0xFFFFFFFF + X09 + X10 - X12 - X13 - X14 - X15;
-   const int64_t S2 = 0xFFFFFFFF + X10 + X11 - X13 - X14 - X15;
-   const int64_t S3 = 0x00000005 + (X11 + X12)*2 + X13 - X15 - X08 - X09;
-   const int64_t S4 = 0x00000000 + (X12 + X13)*2 + X14 - X09 - X10;
-   const int64_t S5 = 0x00000000 + (X13 + X14)*2 + X15 - X10 - X11;
-   const int64_t S6 = 0x00000006 + X13 + X14*3 + X15*2 - X08 - X09;
-   const int64_t S7 = 0xFFFFFFFA + X15*3 + X08 - X10 - X11 - X12 - X13;
+   const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - X11 - X12 - X13 - X14;
+   const int64_t S1 = 0xFFFFFFFF + X01 + X09 + X10 - X12 - X13 - X14 - X15;
+   const int64_t S2 = 0xFFFFFFFF + X02 + X10 + X11 - X13 - X14 - X15;
+   const int64_t S3 = 0x00000005 + X03 + (X11 + X12)*2 + X13 - X15 - X08 - X09;
+   const int64_t S4 = 0x00000000 + X04 + (X12 + X13)*2 + X14 - X09 - X10;
+   const int64_t S5 = 0x00000000 + X05 + (X13 + X14)*2 + X15 - X10 - X11;
+   const int64_t S6 = 0x00000006 + X06 + X13 + X14*3 + X15*2 - X08 - X09;
+   const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - X11 - X12 - X13;
 
    x.mask_bits(256);
    x.shrink_to_fit(p256_limbs + 1);
@@ -349,48 +351,40 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    uint32_t R0 = 0, R1 = 0;
 
-   S = X00;
    S += S0;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += X01;
    S += S1;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
    set_words(x, 0, R0, R1);
 
-   S += X02;
    S += S2;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += X03;
    S += S3;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
    set_words(x, 2, R0, R1);
 
-   S += X04;
    S += S4;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += X05;
    S += S5;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
    set_words(x, 4, R0, R1);
 
-   S += X06;
    S += S6;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += X07;
    S += S7;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
@@ -431,6 +425,11 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
+   if(S == 0 && x.word_at(p256_limbs-1) < p256_mults[0][p256_limbs-1])
+      {
+      return;
+      }
+
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p256_mults[S], p256_limbs);
 
    BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-256 reduction");
@@ -453,6 +452,18 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p384_limbs = (BOTAN_MP_WORD_BITS == 32) ? 12 : 6;
 
+   const int64_t X00 = get_uint32_t(x,  0);
+   const int64_t X01 = get_uint32_t(x,  1);
+   const int64_t X02 = get_uint32_t(x,  2);
+   const int64_t X03 = get_uint32_t(x,  3);
+   const int64_t X04 = get_uint32_t(x,  4);
+   const int64_t X05 = get_uint32_t(x,  5);
+   const int64_t X06 = get_uint32_t(x,  6);
+   const int64_t X07 = get_uint32_t(x,  7);
+   const int64_t X08 = get_uint32_t(x,  8);
+   const int64_t X09 = get_uint32_t(x,  9);
+   const int64_t X10 = get_uint32_t(x, 10);
+   const int64_t X11 = get_uint32_t(x, 11);
    const int64_t X12 = get_uint32_t(x, 12);
    const int64_t X13 = get_uint32_t(x, 13);
    const int64_t X14 = get_uint32_t(x, 14);
@@ -467,18 +478,18 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    const int64_t X23 = get_uint32_t(x, 23);
 
    // One copy of P-384 is added to prevent underflow
-   const int64_t S0 = 0xFFFFFFFF + X12 + X20 + X21 - X23;
-   const int64_t S1 = 0x00000000 + X13 + X22 + X23 - X12 - X20;
-   const int64_t S2 = 0x00000000 + X14 + X23 - X13 - X21;
-   const int64_t S3 = 0xFFFFFFFF + X12 + X15 + X20 + X21 - X14 - X22 - X23;
-   const int64_t S4 = 0xFFFFFFFE + X12 + X13 + X16 + X20 + X21*2 + X22 - X15 - X23*2;
-   const int64_t S5 = 0xFFFFFFFF + X13 + X14 + X17 + X21 + X22*2 + X23 - X16;
-   const int64_t S6 = 0xFFFFFFFF + X14 + X15 + X18 + X22 + X23*2 - X17;
-   const int64_t S7 = 0xFFFFFFFF + X15 + X16 + X19 + X23 - X18;
-   const int64_t S8 = 0xFFFFFFFF + X16 + X17 + X20 - X19;
-   const int64_t S9 = 0xFFFFFFFF + X17 + X18 + X21 - X20;
-   const int64_t SA = 0xFFFFFFFF + X18 + X19 + X22 - X21;
-   const int64_t SB = 0xFFFFFFFF + X19 + X20 + X23 - X22;
+   const int64_t S0 = 0xFFFFFFFF + X00 + X12 + X20 + X21 - X23;
+   const int64_t S1 = 0x00000000 + X01 + X13 + X22 + X23 - X12 - X20;
+   const int64_t S2 = 0x00000000 + X02 + X14 + X23 - X13 - X21;
+   const int64_t S3 = 0xFFFFFFFF + X03 + X12 + X15 + X20 + X21 - X14 - X22 - X23;
+   const int64_t S4 = 0xFFFFFFFE + X04 + X12 + X13 + X16 + X20 + X21*2 + X22 - X15 - X23*2;
+   const int64_t S5 = 0xFFFFFFFF + X05 + X13 + X14 + X17 + X21 + X22*2 + X23 - X16;
+   const int64_t S6 = 0xFFFFFFFF + X06 + X14 + X15 + X18 + X22 + X23*2 - X17;
+   const int64_t S7 = 0xFFFFFFFF + X07 + X15 + X16 + X19 + X23 - X18;
+   const int64_t S8 = 0xFFFFFFFF + X08 + X16 + X17 + X20 - X19;
+   const int64_t S9 = 0xFFFFFFFF + X09 + X17 + X18 + X21 - X20;
+   const int64_t SA = 0xFFFFFFFF + X10 + X18 + X19 + X22 - X21;
+   const int64_t SB = 0xFFFFFFFF + X11 + X19 + X20 + X23 - X22;
 
    x.mask_bits(384);
    x.shrink_to_fit(p384_limbs + 1);
@@ -487,72 +498,60 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    uint32_t R0 = 0, R1 = 0;
 
-   S = get_uint32_t(x, 0);
    S += S0;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 1);
    S += S1;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
    set_words(x, 0, R0, R1);
 
-   S += get_uint32_t(x, 2);
    S += S2;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 3);
    S += S3;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
    set_words(x, 2, R0, R1);
 
-   S += get_uint32_t(x, 4);
    S += S4;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 5);
    S += S5;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
    set_words(x, 4, R0, R1);
 
-   S += get_uint32_t(x, 6);
    S += S6;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 7);
    S += S7;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
    set_words(x, 6, R0, R1);
 
-   S += get_uint32_t(x, 8);
    S += S8;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 9);
    S += S9;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
    set_words(x, 8, R0, R1);
 
-   S += get_uint32_t(x, 10);
    S += SA;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   S += get_uint32_t(x, 11);
    S += SB;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
@@ -585,6 +584,11 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
 #endif
    };
+
+   if(S == 0 && x.word_at(p384_limbs-1) < p384_mults[0][p384_limbs-1])
+      {
+      return;
+      }
 
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p384_mults[S], p384_limbs);
 
