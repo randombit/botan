@@ -10,8 +10,7 @@ Version 2.7.0, Not Yet Released
 * Optimize prime generation, especially improving RSA key generation.
   (GH #1542)
 
-* Optimized elliptic point doubling for curves with an ``a`` parameter
-  of zero or negative three. (GH #1534)
+* Optimizations for elliptic curve operations (GH #1534 #1531 #1546)
 
 * Improved performance of signature verification in ECGDSA, ECKCDSA,
   SM2 and GOST by 10-15%.
@@ -26,8 +25,6 @@ Version 2.7.0, Not Yet Released
   whatever hash function is being used to sign the certificate. However
   especially for SHA-512 this caused SKIDs that were far longer than
   necessary. Now all SKIDs are truncated to 192 bits.
-
-* Small optimizations for ECC (#1531)
 
 * In the test suite use ``mkstemp`` to create temporary files instead
   of creating them in the current working directory. (GH #1533 #1530)
