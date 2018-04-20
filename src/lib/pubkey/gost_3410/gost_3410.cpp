@@ -185,7 +185,7 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_le
    if(e == 0)
       e = 1;
 
-   const BigInt v = inverse_mod(e, order);
+   const BigInt v = m_group.inverse_mod_order(e);
 
    const BigInt z1 = m_group.multiply_mod_order(s, v);
    const BigInt z2 = m_group.multiply_mod_order(-r, v);

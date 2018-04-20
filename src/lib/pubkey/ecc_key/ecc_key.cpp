@@ -118,8 +118,6 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    else
       m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
-   const BigInt& order = m_domain_params.get_order();
-
    if(x == 0)
       {
       m_private_key = ec_group.random_scalar(rng);
@@ -133,7 +131,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    if(with_modular_inverse)
       {
       // ECKCDSA
-      m_public_key = domain().get_base_point() * inverse_mod(m_private_key, order);
+      m_public_key = domain().get_base_point() * m_domain_params.inverse_mod_order(m_private_key);
       }
    else
       {
@@ -183,8 +181,7 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       if(with_modular_inverse)
          {
          // ECKCDSA
-         const BigInt& order = m_domain_params.get_order();
-         m_public_key = domain().get_base_point() * inverse_mod(m_private_key, order);
+         m_public_key = domain().get_base_point() * m_domain_params.inverse_mod_order(m_private_key);
          }
       else
          {

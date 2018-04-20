@@ -291,7 +291,7 @@ ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
 
    //The following ECDSA operations involve and should not leak any information about k.
 
-   const Botan::BigInt k_inv = Botan::inverse_mod(k, m_group.get_order());
+   const Botan::BigInt k_inv = m_group.inverse_mod_order(k);
    const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, Timing_Test::timing_test_rng(), m_ws);
    const Botan::BigInt r = m_group.mod_order(k_times_P.get_affine_x());
    const Botan::BigInt s = m_group.multiply_mod_order(k_inv, mul_add(m_x, r, msg));
