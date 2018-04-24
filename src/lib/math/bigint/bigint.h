@@ -266,6 +266,22 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      BigInt& rev_sub(const word y[], size_t y_size, secure_vector<word>& ws);
 
      /**
+     * Set *this to (*this + y) % mod
+     * @param y the BigInt to add - assumed y >= 0 and y < mod
+     * @param mod the positive modulus
+     * @param ws a temp workspace
+     */
+     BigInt& mod_add(const BigInt& y, const BigInt& mod, secure_vector<word>& ws);
+
+     /**
+     * Set *this to (*this - y) % mod
+     * @param y the BigInt to subtract - assumed y >= 0 and y < mod
+     * @param mod the positive modulus
+     * @param ws a temp workspace
+     */
+     BigInt& mod_sub(const BigInt& y, const BigInt& mod, secure_vector<word>& ws);
+
+     /**
      * Return *this below mod
      *
      * Assumes that *this is (if anything) only slightly larger than

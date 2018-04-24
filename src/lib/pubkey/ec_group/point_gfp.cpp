@@ -17,20 +17,17 @@ namespace Botan {
 PointGFp::PointGFp(const CurveGFp& curve) :
    m_curve(curve),
    m_coord_x(0),
-   m_coord_y(1),
+   m_coord_y(curve.get_1_rep()),
    m_coord_z(0)
    {
-   secure_vector<word> monty_ws(m_curve.get_ws_size());
-   m_curve.to_rep(m_coord_x, monty_ws);
-   m_curve.to_rep(m_coord_y, monty_ws);
-   m_curve.to_rep(m_coord_z, monty_ws);
+   // Assumes Montgomery rep of zero is zero
    }
 
 PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    m_curve(curve),
    m_coord_x(x),
    m_coord_y(y),
-   m_coord_z(1)
+   m_coord_z(m_curve.get_1_rep())
    {
    if(x <= 0 || x >= curve.get_p())
       throw Invalid_Argument("Invalid PointGFp affine x");
@@ -40,7 +37,6 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    secure_vector<word> monty_ws(m_curve.get_ws_size());
    m_curve.to_rep(m_coord_x, monty_ws);
    m_curve.to_rep(m_coord_y, monty_ws);
-   m_curve.to_rep(m_coord_z, monty_ws);
    }
 
 void PointGFp::randomize_repr(RandomNumberGenerator& rng)
@@ -118,12 +114,13 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
    resize_ws(ws_bn, m_curve.get_ws_size());
 
    secure_vector<word>& ws = ws_bn[0].get_word_vector();
+   secure_vector<word>& sub_ws = ws_bn[1].get_word_vector();
 
-   BigInt& T0 = ws_bn[1];
-   BigInt& T1 = ws_bn[2];
-   BigInt& T2 = ws_bn[3];
-   BigInt& T3 = ws_bn[4];
-   BigInt& T4 = ws_bn[5];
+   BigInt& T0 = ws_bn[2];
+   BigInt& T1 = ws_bn[3];
+   BigInt& T2 = ws_bn[4];
+   BigInt& T3 = ws_bn[5];
+   BigInt& T4 = ws_bn[6];
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
@@ -138,13 +135,9 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
    m_curve.mul(T2, m_coord_z, T3, ws); // z1^3
    m_curve.mul(T0, y_words, y_size, T2, ws); // y2*z1^3
 
-   T4 -= m_coord_x; // x2*z1^2 - x1*z2^2
-   if(T4.is_negative())
-      T4 += p;
+   T4.mod_sub(m_coord_x, p, sub_ws); // x2*z1^2 - x1*z2^2
 
-   T0 -= m_coord_y;
-   if(T0.is_negative())
-      T0 += p;
+   T0.mod_sub(m_coord_y, p, sub_ws);
 
    if(T4.is_zero())
       {
@@ -156,7 +149,7 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
 
       // setting to zero:
       m_coord_x = 0;
-      m_coord_y = 1;
+      m_coord_y = m_curve.get_1_rep();
       m_coord_z = 0;
       return;
       }
@@ -168,22 +161,16 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
    m_curve.mul(T1, T2, T4, ws);
 
    m_curve.sqr(m_coord_x, T0, ws);
-   m_coord_x -= T1;
-   m_coord_x -= T3;
-   m_coord_x -= T3;
-   while(m_coord_x.is_negative())
-      m_coord_x += p;
+   m_coord_x.mod_sub(T1, p, sub_ws);
+   m_coord_x.mod_sub(T3, p, sub_ws);
+   m_coord_x.mod_sub(T3, p, sub_ws);
 
-   T3 -= m_coord_x;
-   if(T3.is_negative())
-      T3 += p;
+   T3.mod_sub(m_coord_x, p, sub_ws);
 
    T2 = m_coord_y;
    m_curve.mul(T2, T0, T3, ws);
    m_curve.mul(T3, m_coord_y, T1, ws);
-   T2 -= T3;
-   if(T2.is_negative())
-      T2 += p;
+   T2.mod_sub(T3, p, sub_ws);
    m_coord_y = T2;
 
    m_curve.mul(T3, m_coord_z, T4, ws);
@@ -207,13 +194,14 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    resize_ws(ws_bn, m_curve.get_ws_size());
 
    secure_vector<word>& ws = ws_bn[0].get_word_vector();
+   secure_vector<word>& sub_ws = ws_bn[1].get_word_vector();
 
-   BigInt& T0 = ws_bn[1];
-   BigInt& T1 = ws_bn[2];
-   BigInt& T2 = ws_bn[3];
-   BigInt& T3 = ws_bn[4];
-   BigInt& T4 = ws_bn[5];
-   BigInt& T5 = ws_bn[6];
+   BigInt& T0 = ws_bn[2];
+   BigInt& T1 = ws_bn[3];
+   BigInt& T2 = ws_bn[4];
+   BigInt& T3 = ws_bn[5];
+   BigInt& T4 = ws_bn[6];
+   BigInt& T5 = ws_bn[7];
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
@@ -232,18 +220,13 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    m_curve.mul(T5, m_coord_z, T3, ws); // z1^3
    m_curve.mul(T0, rhs.m_coord_y, T5, ws); // y2*z1^3
 
-   T4 -= T1; // x2*z1^2 - x1*z2^2
-   if(T4.is_negative())
-      T4 += p;
+   T4.mod_sub(T1, p, sub_ws); // x2*z1^2 - x1*z2^2
 
-   T3 = T0;
-   T3 -= T2;
-   if(T3.is_negative())
-      T3 += p;
+   T0.mod_sub(T2, p, sub_ws);
 
    if(T4.is_zero())
       {
-      if(T3.is_zero())
+      if(T0.is_zero())
          {
          mult2(ws_bn);
          return;
@@ -251,36 +234,31 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
       // setting to zero:
       m_coord_x = 0;
-      m_coord_y = 1;
+      m_coord_y = m_curve.get_1_rep();
       m_coord_z = 0;
       return;
       }
 
    m_curve.sqr(T5, T4, ws);
 
-   m_curve.mul(T0, T1, T5, ws);
+   m_curve.mul(T3, T1, T5, ws);
 
    m_curve.mul(T1, T5, T4, ws);
 
-   m_curve.sqr(m_coord_x, T3, ws);
-   m_coord_x -= T1;
-   m_coord_x -= T0;
-   m_coord_x -= T0;
-   while(m_coord_x.is_negative())
-      m_coord_x += p;
+   m_curve.sqr(m_coord_x, T0, ws);
+   m_coord_x.mod_sub(T1, p, sub_ws);
+   m_coord_x.mod_sub(T3, p, sub_ws);
+   m_coord_x.mod_sub(T3, p, sub_ws);
 
-   T0 -= m_coord_x;
-   if(T0.is_negative())
-      T0 += p;
+   T3.mod_sub(m_coord_x, p, sub_ws);
 
-   m_curve.mul(m_coord_y, T3, T0, ws);
-   m_curve.mul(T0, T2, T1, ws);
-   m_coord_y -= T0;
-   if(m_coord_y.is_negative())
-      m_coord_y += p;
+   m_curve.mul(m_coord_y, T0, T3, ws);
+   m_curve.mul(T3, T2, T1, ws);
 
-   m_curve.mul(T0, m_coord_z, rhs.m_coord_z, ws);
-   m_curve.mul(m_coord_z, T0, T4, ws);
+   m_coord_y.mod_sub(T3, p, sub_ws);
+
+   m_curve.mul(T3, m_coord_z, rhs.m_coord_z, ws);
+   m_curve.mul(m_coord_z, T3, T4, ws);
    }
 
 void PointGFp::mult2i(size_t iterations, std::vector<BigInt>& ws_bn)
@@ -317,11 +295,13 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    resize_ws(ws_bn, m_curve.get_ws_size());
 
    secure_vector<word>& ws = ws_bn[0].get_word_vector();
-   BigInt& T0 = ws_bn[1];
-   BigInt& T1 = ws_bn[2];
-   BigInt& T2 = ws_bn[3];
-   BigInt& T3 = ws_bn[4];
-   BigInt& T4 = ws_bn[5];
+   secure_vector<word>& sub_ws = ws_bn[1].get_word_vector();
+
+   BigInt& T0 = ws_bn[2];
+   BigInt& T1 = ws_bn[3];
+   BigInt& T2 = ws_bn[4];
+   BigInt& T3 = ws_bn[5];
+   BigInt& T4 = ws_bn[6];
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#doubling-dbl-1986-cc
@@ -332,14 +312,14 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.mul(T1, m_coord_x, T0, ws);
    T1 <<= 2; // * 4
-   T1.reduce_below(p, T3.get_word_vector());
+   T1.reduce_below(p, sub_ws);
 
    if(m_curve.a_is_zero())
       {
       // if a == 0 then 3*x^2 + a*z^4 is just 3*x^2
       m_curve.sqr(T4, m_coord_x, ws); // x^2
       T4 *= 3; // 3*x^2
-      T4.reduce_below(p, T3.get_word_vector());
+      T4.reduce_below(p, sub_ws);
       }
    else if(m_curve.a_is_minus_3())
       {
@@ -351,18 +331,15 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
       // (x-z^2)
       T2 = m_coord_x;
-      T2 -= T3;
-      if(T2.is_negative())
-         T2 += p;
+      T2.mod_sub(T3, p, sub_ws);
 
       // (x+z^2)
-      T3 += m_coord_x;
-      T3.reduce_below(p, T4.get_word_vector());
+      T3.mod_add(m_coord_x, p, sub_ws);
 
       m_curve.mul(T4, T2, T3, ws); // (x-z^2)*(x+z^2)
 
       T4 *= 3; // 3*(x-z^2)*(x+z^2)
-      T4.reduce_below(p, T3.get_word_vector());
+      T4.reduce_below(p, sub_ws);
       }
    else
       {
@@ -372,34 +349,27 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
       m_curve.sqr(T4, m_coord_x, ws); // x^2
       T4 *= 3; // 3*x^2
-      T4 += T3; // 3*x^2 + a*z^4
-      T4.reduce_below(p, T3.get_word_vector());
+      T4.mod_add(T3, p, sub_ws); // 3*x^2 + a*z^4
       }
 
    m_curve.sqr(T2, T4, ws);
-   T2 -= T1;
-   T2 -= T1;
-   while(T2.is_negative())
-      T2 += p;
+   T2.mod_sub(T1, p, sub_ws);
+   T2.mod_sub(T1, p, sub_ws);
 
    m_curve.sqr(T3, T0, ws);
    T3 <<= 3;
-   T3.reduce_below(p, T0.get_word_vector());
+   T3.reduce_below(p, sub_ws);
 
-   T1 -= T2;
-   while(T1.is_negative())
-      T1 += p;
+   T1.mod_sub(T2, p, sub_ws);
 
    m_curve.mul(T0, T4, T1, ws);
-   T0 -= T3;
-   if(T0.is_negative())
-      T0 += p;
+   T0.mod_sub(T3, p, sub_ws);
 
    m_coord_x = T2;
 
    m_curve.mul(T2, m_coord_y, m_coord_z, ws);
    T2 <<= 1;
-   T2.reduce_below(p, T3.get_word_vector());
+   T2.reduce_below(p, sub_ws);
 
    m_coord_y = T0;
    m_coord_z = T2;
