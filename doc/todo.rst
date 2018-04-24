@@ -31,7 +31,7 @@ Ciphers, Hashes, PBKDF
 Public Key Crypto, Math
 ----------------------------------------
 
-* Abstract repesentation of ECC point elements to allow specific
+* Abstract representation of ECC point elements to allow specific
   implementations of the field arithmetic depending upon the curve.
 * Curves for pairings (BN-256 is widely implemented)
 * Identity based encryption
@@ -110,6 +110,7 @@ New Protocols / Formats
 * PKCS12 / PFX
 * NaCl compatible cryptobox functions
 * Off-The-Record v3 https://otr.cypherpunks.ca/
+* Fernet symmetric encryption (https://cryptography.io/en/latest/fernet/)
 * Some useful subset of OpenPGP
   - Subset #1: symmetrically encrypted files
 
@@ -172,7 +173,7 @@ FIPS 140 Build
   plus wrapping the appropriate functions for self-tests and so on. This creates a
   library in FIPS 140 validated form (since there is no 'crypto' anymore from
   Botan, just the ASN.1 parser, TLS library, PKI etc all of which FIPS 140 does
-  not care about) without the enourmous hassle and expense of actually having to
+  not care about) without the enormous hassle and expense of actually having to
   maintain a FIPS validation on Botan. Email Jack if you are interested in this.
 
 CLI
