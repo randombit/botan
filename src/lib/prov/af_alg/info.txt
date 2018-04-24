@@ -1,0 +1,16 @@
+<defines>
+AF_ALG -> 20180424
+</defines>
+
+<os_features>
+af_alg
+</os_features>
+
+<header:public>
+af_alg_hash.h
+</header:public>
+
+<header:internal>
+af_alg_util.h
+</header:internal>
+
