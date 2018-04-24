@@ -125,7 +125,7 @@ class Hash_Function_Tests final : public Text_Based_Test
 
             result.test_eq(provider, "hashing after clear", hash->final(), expected);
 
-            if(input.size() > 5)
+            if(input.size() > 5 && hash->provider() != "af_alg")
                {
                hash->update(input[0]);
 
