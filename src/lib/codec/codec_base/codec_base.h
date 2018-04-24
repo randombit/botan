@@ -1,0 +1,165 @@
+/*
+* Base Encoding and Decoding
+* (C) 2018 Erwan Chaussy
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#ifndef BOTAN_BASE_CODEC_H_
+#define BOTAN_BASE_CODEC_H_
+
+#include <botan/secmem.h>
+#include <vector>
+#include <string>
+
+namespace Botan {
+
+/**
+* Perform encoding using the base provided
+* @param encoding object giving access to the encodings specifications
+* @param output an array of at least base.encode_max_output bytes
+* @param input is some binary data
+* @param input_length length of input in bytes
+* @param input_consumed is an output parameter which says how many
+*        bytes of input were actually consumed. If less than
+*        input_length, then the range input[consumed:length]
+*        should be passed in later along with more input.
+* @param final_inputs true iff this is the last input, in which case
+         padding chars will be applied if needed
+* @return number of bytes written to output
+*/
+template <class Base>
+size_t base_encode(Base&& base,
+                   char output[],
+                   const uint8_t input[],
+                   size_t input_length,
+                   size_t& input_consumed,
+                   bool final_inputs)
+   {
+   input_consumed = 0;
+
+   const size_t encoding_bytes_in = base.encoding_bytes_in();
+   const size_t encoding_bytes_out = base.encoding_bytes_out();
+
+   size_t input_remaining = input_length;
+   size_t output_produced = 0;
+
+   while(input_remaining >= encoding_bytes_in)
+      {
+      base.encode(output + output_produced, input + input_consumed);
+
+      input_consumed += encoding_bytes_in;
+      output_produced += encoding_bytes_out;
+      input_remaining -= encoding_bytes_in;
+      }
+
+   if(final_inputs && input_remaining)
+      {
+      std::vector<uint8_t> remainder(encoding_bytes_in, 0);
+      for(size_t i = 0; i != input_remaining; ++i)
+         { remainder[i] = input[input_consumed + i]; }
+
+      base.encode(output + output_produced, remainder.data());
+
+      const size_t bits_consumed = base.bits_consumed();
+      const size_t remaining_bits_before_padding = base.remaining_bits_before_padding();
+
+      size_t empty_bits = 8 * (encoding_bytes_in - input_remaining);
+      size_t index = output_produced + encoding_bytes_out - 1;
+      while(empty_bits >= remaining_bits_before_padding)
+         {
+         output[index--] = '=';
+         empty_bits -= bits_consumed;
+         }
+
+      input_consumed += input_remaining;
+      output_produced += encoding_bytes_out;
+      }
+
+   return output_produced;
+   }
+
+/**
+* Perform decoding using the base provided
+* @param base object giving access to the encodings specifications
+* @param output an array of at least base.decode_max_output bytes
+* @param input some base input
+* @param input_length length of input in bytes
+* @param input_consumed is an output parameter which says how many
+*        bytes of input were actually consumed. If less than
+*        input_length, then the range input[consumed:length]
+*        should be passed in later along with more input.
+* @param final_inputs true iff this is the last input, in which case
+         padding is allowed
+* @param ignore_ws ignore whitespace on input; if false, throw an
+                   exception if whitespace is encountered
+* @return number of bytes written to output
+*/
+template <typename Base>
+size_t base_decode(Base&& base,
+                   uint8_t output[],
+                   const char input[],
+                   size_t input_length,
+                   size_t& input_consumed,
+                   bool final_inputs,
+                   bool ignore_ws = true)
+   {
+   const size_t decoding_bytes_in = base.decoding_bytes_in();
+   const size_t decoding_bytes_out = base.decoding_bytes_out();
+
+   uint8_t* out_ptr = output;
+   std::vector<uint8_t> decode_buf(decoding_bytes_in, 0);
+   size_t decode_buf_pos = 0;
+   size_t final_truncate = 0;
+
+   clear_mem(output, base.decode_max_output(input_length));
+
+   for(size_t i = 0; i != input_length; ++i)
+      {
+      const uint8_t bin = base.lookup_binary_value(input[i]);
+
+      if(base.check_bad_char(bin, input[i], ignore_ws)) // May throw Invalid_Argument
+         {
+         decode_buf[decode_buf_pos] = bin;
+         ++decode_buf_pos;
+         }
+
+      /*
+      * If we're at the end of the input, pad with 0s and truncate
+      */
+      if(final_inputs && (i == input_length - 1))
+         {
+         if(decode_buf_pos)
+            {
+            for(size_t j = decode_buf_pos; j < decoding_bytes_in; ++j)
+               { decode_buf[j] = 0; }
+
+            final_truncate = decoding_bytes_in - decode_buf_pos;
+            decode_buf_pos = decoding_bytes_in;
+            }
+         }
+
+      if(decode_buf_pos == decoding_bytes_in)
+         {
+         base.decode(out_ptr, decode_buf.data());
+
+         out_ptr += decoding_bytes_out;
+         decode_buf_pos = 0;
+         input_consumed = i+1;
+         }
+      }
+
+   while(input_consumed < input_length &&
+         base.lookup_binary_value(input[input_consumed]) == 0x80)
+      {
+      ++input_consumed;
+      }
+
+   size_t written = (out_ptr - output) - base.bytes_to_remove(final_truncate);
+
+   return written;
+   }
+
+}
+
+#endif
