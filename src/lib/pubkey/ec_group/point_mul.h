@@ -15,7 +15,7 @@ class Modular_Reducer;
 
 static const size_t PointGFp_SCALAR_BLINDING_BITS = 80;
 
-class PointGFp_Base_Point_Precompute
+class PointGFp_Base_Point_Precompute final
    {
    public:
       PointGFp_Base_Point_Precompute(const PointGFp& base_point,
@@ -38,7 +38,7 @@ class PointGFp_Base_Point_Precompute
       std::vector<word> m_W;
    };
 
-class PointGFp_Var_Point_Precompute
+class PointGFp_Var_Point_Precompute final
    {
    public:
       PointGFp_Var_Point_Precompute(const PointGFp& point);
@@ -55,7 +55,7 @@ class PointGFp_Var_Point_Precompute
       std::vector<PointGFp> m_U;
    };
 
-class PointGFp_Multi_Point_Precompute
+class PointGFp_Multi_Point_Precompute final
    {
    public:
       PointGFp_Multi_Point_Precompute(const PointGFp& g1,
