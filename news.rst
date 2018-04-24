@@ -10,7 +10,7 @@ Version 2.7.0, Not Yet Released
 * Optimize prime generation, especially improving RSA key generation.
   (GH #1542)
 
-* Optimizations for elliptic curve operations (GH #1534 #1531 #1546 #1547)
+* Optimizations for elliptic curve operations (GH #1534 #1531 #1546 #1547 #1550)
 
 * Improved performance of signature verification in ECGDSA, ECKCDSA,
   SM2 and GOST by 10-15%.
