@@ -122,20 +122,6 @@ secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 7) base32_decode(const char input[],
 secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 7) base32_decode(const std::string& input,
       bool ignore_ws = true);
 
-/**
-* Calculate the size of output buffer for base32_encode
-* @param input_length the length of input in bytes
-* @return the size of output buffer in bytes
-*/
-size_t BOTAN_PUBLIC_API(2, 7) base32_encode_max_output(size_t input_length);
-
-/**
-* Calculate the size of output buffer for base32_decode
-* @param input_length the length of input in bytes
-* @return the size of output buffer in bytes
-*/
-size_t BOTAN_PUBLIC_API(2, 7) base32_decode_max_output(size_t input_length);
-
 } // namespace Botan
 
 #endif
