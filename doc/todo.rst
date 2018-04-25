@@ -49,7 +49,7 @@ Public Key Crypto, Math
 Utility Functions
 ------------------
 
-* base58 and base32 encoding
+* base58 encoding
 
 Multiparty Protocols
 ----------------------

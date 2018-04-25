@@ -52,6 +52,9 @@ Version 2.7.0, Not Yet Released
 
 * Support for Visual C++ 2013 is deprecated, and will be removed in Jan 2019.
 
+* Implement Base32 encoding with template function to prepare
+  refactoring of Base64. (GH #1541)
+
 Version 2.6.0, 2018-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

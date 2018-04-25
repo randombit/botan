@@ -143,3 +143,7 @@ snail-mail address (S), and Bitcoin address (B).
   W: https://sirrix.com/
   D: CI, PKCS#11, RdSeed, BSI module policy
   S: Bochum, Germany
+
+  N: Erwan Chaussy
+  D: Base32
+  S: France
