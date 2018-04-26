@@ -2912,8 +2912,14 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
             ccinfo.basename, cc_output))
         return "0.0"
 
-    cc_version = "%d.%d" % (int(match.group(1), 0), int(match.group(2), 0))
+    major_version = int(match.group(1), 0)
+    minor_version = int(match.group(2), 0)
+    cc_version = "%d.%d" % (major_version, minor_version)
     logging.info('Auto-detected compiler version %s' % (cc_version))
+
+    if ccinfo.basename == 'msvc':
+        if major_version == 18:
+            logging.warning('MSVC 2013 support is deprecated and will be removed in a future release')
     return cc_version
 
 def check_compiler_arch(options, ccinfo, archinfo, source_paths):
