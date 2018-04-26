@@ -87,11 +87,6 @@ BigInt operator+(const BigInt& x, word y)
    return bigint_add(x, &y, 1, BigInt::Positive);
    }
 
-BigInt operator+(word y, const BigInt& x)
-   {
-   return bigint_add(x, &y, 1, BigInt::Positive);
-   }
-
 BigInt operator-(const BigInt& x, const BigInt& y)
    {
    return bigint_sub(x, y.data(), y.sig_words(), y.sign());
