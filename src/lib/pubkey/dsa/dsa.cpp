@@ -8,7 +8,6 @@
 
 #include <botan/dsa.h>
 #include <botan/keypair.h>
-#include <botan/pow_mod.h>
 #include <botan/reducer.h>
 #include <botan/rng.h>
 #include <botan/internal/pk_ops_impl.h>

@@ -14,69 +14,87 @@
 
 namespace Botan {
 
-/*
-* Addition Operator
-*/
-BigInt operator+(const BigInt& x, const BigInt& y)
+namespace {
+
+BigInt bigint_add(const BigInt& x, const word y[], size_t y_sw, BigInt::Sign y_sign)
    {
-   const size_t x_sw = x.sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = x.sig_words();
 
    BigInt z(x.sign(), std::max(x_sw, y_sw) + 1);
 
-   if(x.sign() == y.sign())
-      bigint_add3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
+   if(x.sign() == y_sign)
+      bigint_add3(z.mutable_data(), x.data(), x_sw, y, y_sw);
    else
       {
-      int32_t relative_size = bigint_cmp(x.data(), x_sw, y.data(), y_sw);
+      int32_t relative_size = bigint_cmp(x.data(), x_sw, y, y_sw);
 
       if(relative_size < 0)
          {
-         bigint_sub3(z.mutable_data(), y.data(), y_sw, x.data(), x_sw);
-         z.set_sign(y.sign());
+         bigint_sub3(z.mutable_data(), y, y_sw, x.data(), x_sw);
+         z.set_sign(y_sign);
          }
       else if(relative_size == 0)
          z.set_sign(BigInt::Positive);
       else if(relative_size > 0)
-         bigint_sub3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
+         bigint_sub3(z.mutable_data(), x.data(), x_sw, y, y_sw);
       }
 
    return z;
    }
 
-/*
-* Subtraction Operator
-*/
-BigInt operator-(const BigInt& x, const BigInt& y)
+BigInt bigint_sub(const BigInt& x, const word y[], size_t y_sw, BigInt::Sign y_sign)
    {
-   const size_t x_sw = x.sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = x.sig_words();
 
-   int32_t relative_size = bigint_cmp(x.data(), x_sw, y.data(), y_sw);
+   int32_t relative_size = bigint_cmp(x.data(), x_sw, y, y_sw);
 
    BigInt z(BigInt::Positive, std::max(x_sw, y_sw) + 1);
 
    if(relative_size < 0)
       {
-      if(x.sign() == y.sign())
-         bigint_sub3(z.mutable_data(), y.data(), y_sw, x.data(), x_sw);
+      if(x.sign() == y_sign)
+         bigint_sub3(z.mutable_data(), y, y_sw, x.data(), x_sw);
       else
-         bigint_add3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
-      z.set_sign(y.reverse_sign());
+         bigint_add3(z.mutable_data(), x.data(), x_sw, y, y_sw);
+      z.set_sign(y_sign == BigInt::Positive ? BigInt::Negative : BigInt::Positive);
       }
    else if(relative_size == 0)
       {
-      if(x.sign() != y.sign())
+      if(x.sign() != y_sign)
          bigint_shl2(z.mutable_data(), x.data(), x_sw, 0, 1);
-      z.set_sign(y.reverse_sign());
+      z.set_sign(y_sign == BigInt::Positive ? BigInt::Negative : BigInt::Positive);
       }
    else if(relative_size > 0)
       {
-      if(x.sign() == y.sign())
-         bigint_sub3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
+      if(x.sign() == y_sign)
+         bigint_sub3(z.mutable_data(), x.data(), x_sw, y, y_sw);
       else
-         bigint_add3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
+         bigint_add3(z.mutable_data(), x.data(), x_sw, y, y_sw);
       z.set_sign(x.sign());
       }
    return z;
+   }
+
+}
+
+BigInt operator+(const BigInt& x, const BigInt& y)
+   {
+   return bigint_add(x, y.data(), y.sig_words(), y.sign());
+   }
+
+BigInt operator+(const BigInt& x, word y)
+   {
+   return bigint_add(x, &y, 1, BigInt::Positive);
+   }
+
+BigInt operator-(const BigInt& x, const BigInt& y)
+   {
+   return bigint_sub(x, y.data(), y.sig_words(), y.sign());
+   }
+
+BigInt operator-(const BigInt& x, word y)
+   {
+   return bigint_sub(x, &y, 1, BigInt::Positive);
    }
 
 /*

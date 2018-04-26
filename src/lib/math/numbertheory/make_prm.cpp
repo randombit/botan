@@ -182,8 +182,13 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
    if(bits < 512)
       throw Invalid_Argument("generate_rsa_prime bits too small");
 
-   if(coprime <= 1 || coprime.is_even())
-      throw Invalid_Argument("generate_rsa_prime coprime must be odd positive integer");
+   /*
+   * The restriction on coprime <= 64 bits is arbitrary but generally speaking
+   * very large RSA public exponents are a bad idea both for performance and due
+   * to attacks on small d.
+   */
+   if(coprime <= 1 || coprime.is_even() || coprime.bits() > 64)
+      throw Invalid_Argument("generate_rsa_prime coprime must be small odd positive integer");
 
    const size_t MAX_ATTEMPTS = 32*1024;
 
@@ -218,13 +223,26 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
             continue;
 
          /*
-         * Check if gcd(p - 1, coprime) != 1 by computing the inverse. The
-         * gcd algorithm is not constant time, but modular inverse is (for
-         * odd modulus anyway). This avoids a side channel attack against RSA
-         * key generation.
+         * Check if p - 1 and coprime are relatively prime by computing the inverse.
+         *
+         * We avoid gcd here because that algorithm is not constant time.
+         * Modular inverse is (for odd modulus anyway).
+         *
+         * We earlier verified that coprime argument is odd. Thus the factors of 2
+         * in (p - 1) cannot possibly be factors in coprime, so remove them from p - 1.
+         * Using an odd modulus allows the const time algorithm to be used.
+         *
+         * This assumes coprime < p - 1 which is always true for RSA.
          */
-         if(inverse_mod(p - 1, coprime).is_zero())
+         BigInt p1 = p - 1;
+         p1 >>= low_zero_bits(p1);
+         if(inverse_mod(coprime, p1).is_zero())
+            {
+            BOTAN_DEBUG_ASSERT(gcd(p1, coprime) > 1);
             continue;
+            }
+
+         BOTAN_DEBUG_ASSERT(gcd(p1, coprime) == 1);
 
          if(p.bits() > bits)
             break;

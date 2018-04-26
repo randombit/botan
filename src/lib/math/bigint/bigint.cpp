@@ -113,6 +113,18 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit)
    randomize(rng, bits, set_high_bit);
    }
 
+int32_t BigInt::cmp_word(word other) const
+   {
+   if(is_negative())
+      return -1; // other is positive ...
+
+   const size_t sw = this->sig_words();
+   if(sw > 1)
+      return 1; // must be larger since other is just one word ...
+
+   return bigint_cmp(this->data(), sw, &other, 1);
+   }
+
 /*
 * Comparison Function
 */
