@@ -5,7 +5,7 @@ Version 2.7.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Avoid a side channel in RSA key generation due to use of a non-constant time
-  gcd algorithm. (GH #1542)
+  gcd algorithm. (GH #1542 #1556)
 
 * Optimize prime generation, especially improving RSA key generation.
   (GH #1542)
@@ -30,6 +30,8 @@ Version 2.7.0, Not Yet Released
   of creating them in the current working directory. (GH #1533 #1530)
 
 * Avoid creating symlinks to the shared object on OpenBSD (#1535)
+
+* Support for Visual C++ 2013 is deprecated, and will be removed in Jan 2019.
 
 Version 2.6.0, 2018-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
