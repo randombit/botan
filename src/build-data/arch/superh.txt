@@ -1,0 +1,4 @@
+
+<aliases>
+sh4
+</aliases>
