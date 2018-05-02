@@ -32,6 +32,10 @@
 
 1.2.643.2.2.19 = GOST-34.10
 
+# OpenPGP (RFC4880bis)
+1.3.6.1.4.1.11591.15.1 = OpenPGP.Ed25519
+1.3.6.1.4.1.3029.1.5.1 = OpenPGP.Curve25519
+
 [cipher]
 # Cipher modes
 1.3.14.3.2.7 = DES/CBC
