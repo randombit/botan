@@ -10,6 +10,7 @@
 
 #include <botan/reducer.h>
 #include <botan/numthry.h>
+#include <botan/monty.h>
 #include <iterator>
 
 namespace Botan_CLI {
@@ -163,34 +164,55 @@ class Factor final : public Command
          }
 
       /*
-      * Pollard's Rho algorithm, as described in the MIT algorithms book. We
-      * use (x^2+x) mod n instead of (x*2-1) mod n as the random function,
-      * it _seems_ to lead to faster factorization for the values I tried.
+      * Pollard's Rho algorithm, as described in the MIT algorithms book.
+      * Uses Brent's cycle finding
       */
       Botan::BigInt rho(const Botan::BigInt& n, Botan::RandomNumberGenerator& rng)
          {
-         Botan::BigInt x = Botan::BigInt::random_integer(rng, 0, n - 1);
-         Botan::BigInt y = x;
-         Botan::BigInt d = 0;
+         auto monty_n = std::make_shared<Botan::Montgomery_Params>(n);
 
-         Botan::Modular_Reducer mod_n(n);
+         const Botan::Montgomery_Int one(monty_n, monty_n->R1(), false);
+
+         Botan::Montgomery_Int x(monty_n, Botan::BigInt::random_integer(rng, 2, n - 3), false);
+         Botan::Montgomery_Int y = x;
+         Botan::Montgomery_Int z = one;
+         Botan::BigInt d;
+         Botan::Montgomery_Int t(monty_n);
+
+         Botan::secure_vector<Botan::word> ws;
 
          size_t i = 1, k = 2;
+
          while(true)
             {
             i++;
 
-            if(i == 0) // overflow, bail out
+            if(i >= 0xFFFF0000) // bad seed? too slow? bail out
                {
                break;
                }
 
-            x = mod_n.multiply((x + 1), x);
+            x.square_this(ws); // x = x^2
+            x.add(one, ws);
 
-            d = Botan::gcd(y - x, n);
-            if(d != 1 && d != n)
+            t = y;
+            t -= x;
+
+            z.mul_by(t, ws);
+
+            if(i == k || i % 128 == 0)
                {
-               return d;
+               d = Botan::gcd(z.value(), n);
+               z = one;
+
+               if(d == n)
+                  {
+                  // TODO Should rewind here
+                  break;
+                  }
+
+               if(d != 1)
+                  return d;
                }
 
             if(i == k)
@@ -199,6 +221,8 @@ class Factor final : public Command
                k = 2 * k;
                }
             }
+
+         // failed
          return 0;
          }
 
