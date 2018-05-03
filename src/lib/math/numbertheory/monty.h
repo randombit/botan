@@ -18,7 +18,7 @@ class Montgomery_Params;
 /**
 * The Montgomery representation of an integer
 */
-class Montgomery_Int final
+class BOTAN_UNSTABLE_API Montgomery_Int final
    {
    public:
       /**
@@ -75,6 +75,9 @@ class Montgomery_Int final
 
       Montgomery_Int& operator*=(const secure_vector<word>& other);
 
+      Montgomery_Int& add(const Montgomery_Int& other,
+                          secure_vector<word>& ws);
+
       Montgomery_Int mul(const Montgomery_Int& other,
                          secure_vector<word>& ws) const;
 
@@ -111,7 +114,7 @@ class Montgomery_Int final
 /**
 * Parameters for Montgomery Reduction
 */
-class Montgomery_Params final
+class BOTAN_UNSTABLE_API Montgomery_Params final
    {
    public:
       /**

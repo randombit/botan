@@ -281,8 +281,13 @@ Montgomery_Int Montgomery_Int::operator-(const Montgomery_Int& other) const
 
 Montgomery_Int& Montgomery_Int::operator+=(const Montgomery_Int& other)
    {
-   m_v += other.m_v;
    secure_vector<word> ws;
+   return this->add(other, ws);
+   }
+
+Montgomery_Int& Montgomery_Int::add(const Montgomery_Int& other, secure_vector<word>& ws)
+   {
+   m_v += other.m_v;
    m_v.reduce_below(m_params->p(), ws);
    return (*this);
    }
