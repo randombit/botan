@@ -176,8 +176,8 @@ class Factor final : public Command
          Botan::Montgomery_Int x(monty_n, Botan::BigInt::random_integer(rng, 2, n - 3), false);
          Botan::Montgomery_Int y = x;
          Botan::Montgomery_Int z = one;
-         Botan::BigInt d;
          Botan::Montgomery_Int t(monty_n);
+         Botan::BigInt d;
 
          Botan::secure_vector<Botan::word> ws;
 
@@ -196,7 +196,7 @@ class Factor final : public Command
             x.add(one, ws);
 
             t = y;
-            t -= x;
+            t.sub(x, ws);
 
             z.mul_by(t, ws);
 
