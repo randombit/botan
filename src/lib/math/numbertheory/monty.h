@@ -78,6 +78,9 @@ class BOTAN_UNSTABLE_API Montgomery_Int final
       Montgomery_Int& add(const Montgomery_Int& other,
                           secure_vector<word>& ws);
 
+      Montgomery_Int& sub(const Montgomery_Int& other,
+                          secure_vector<word>& ws);
+
       Montgomery_Int mul(const Montgomery_Int& other,
                          secure_vector<word>& ws) const;
 
@@ -151,6 +154,9 @@ class BOTAN_UNSTABLE_API Montgomery_Params final
 
       void mul_by(BigInt& x,
                   const secure_vector<word>& y,
+                  secure_vector<word>& ws) const;
+
+      void mul_by(BigInt& x, const BigInt& y,
                   secure_vector<word>& ws) const;
 
       BigInt sqr(const BigInt& x,

@@ -136,6 +136,32 @@ void Montgomery_Params::mul_by(BigInt& x,
    copy_mem(x.mutable_data(), z_data, output_size);
    }
 
+void Montgomery_Params::mul_by(BigInt& x,
+                               const BigInt& y,
+                               secure_vector<word>& ws) const
+   {
+   const size_t output_size = 2*m_p_words + 2;
+
+   if(ws.size() < 2*output_size)
+      ws.resize(2*output_size);
+
+   word* z_data = &ws[0];
+   word* ws_data = &ws[output_size];
+
+   bigint_mul(z_data, output_size,
+              x.data(), x.size(), x.sig_words(),
+              y.data(), y.size(), y.sig_words(),
+              ws_data, output_size);
+
+   bigint_monty_redc(z_data,
+                     m_p.data(), m_p_words, m_p_dash,
+                     ws_data, output_size);
+
+   if(x.size() < output_size)
+      x.grow_to(output_size);
+   copy_mem(x.mutable_data(), z_data, output_size);
+   }
+
 BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const
    {
    const size_t output_size = 2*m_p_words + 2;
@@ -287,16 +313,19 @@ Montgomery_Int& Montgomery_Int::operator+=(const Montgomery_Int& other)
 
 Montgomery_Int& Montgomery_Int::add(const Montgomery_Int& other, secure_vector<word>& ws)
    {
-   m_v += other.m_v;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_add(other.m_v, m_params->p(), ws);
    return (*this);
    }
 
 Montgomery_Int& Montgomery_Int::operator-=(const Montgomery_Int& other)
    {
-   m_v -= other.m_v;
-   if(m_v.is_negative())
-      m_v += m_params->p();
+   secure_vector<word> ws;
+   return this->sub(other, ws);
+   }
+
+Montgomery_Int& Montgomery_Int::sub(const Montgomery_Int& other, secure_vector<word>& ws)
+   {
+   m_v.mod_sub(other.m_v, m_params->p(), ws);
    return (*this);
    }
 
@@ -315,7 +344,7 @@ Montgomery_Int Montgomery_Int::mul(const Montgomery_Int& other,
 Montgomery_Int& Montgomery_Int::mul_by(const Montgomery_Int& other,
                                        secure_vector<word>& ws)
    {
-   m_v = m_params->mul(m_v, other.m_v, ws);
+   m_params->mul_by(m_v, other.m_v, ws);
    return (*this);
    }
 
@@ -323,7 +352,6 @@ Montgomery_Int& Montgomery_Int::mul_by(const secure_vector<word>& other,
                                        secure_vector<word>& ws)
    {
    m_params->mul_by(m_v, other, ws);
-   //m_v = m_params->mul(m_v, other, ws);
    return (*this);
    }
 
