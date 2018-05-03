@@ -31,6 +31,8 @@ Version 2.7.0, Not Yet Released
 
 * Avoid creating symlinks to the shared object on OpenBSD (#1535)
 
+* The ``factor`` command runs much faster on larger inputs now.
+
 * Support for Visual C++ 2013 is deprecated, and will be removed in Jan 2019.
 
 Version 2.6.0, 2018-04-10
