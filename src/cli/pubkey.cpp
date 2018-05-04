@@ -18,6 +18,7 @@
 #include <botan/pkcs8.h>
 #include <botan/pubkey.h>
 #include <botan/workfactor.h>
+#include <botan/data_src.h>
 
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
@@ -256,16 +257,18 @@ class PKCS8_Tool final : public Command
 
       void go() override
          {
+         const std::string pass_in = get_arg("pass-in");
+
+         Botan::DataSource_Memory key_src(slurp_file(get_arg("key")));
          std::unique_ptr<Botan::Private_Key> key;
-         std::string pass_in = get_arg("pass-in");
 
          if(pass_in.empty())
             {
-            key.reset(Botan::PKCS8::load_key(get_arg("key"), rng()));
+            key.reset(Botan::PKCS8::load_key(key_src, rng()));
             }
          else
             {
-            key.reset(Botan::PKCS8::load_key(get_arg("key"), rng(), pass_in));
+            key.reset(Botan::PKCS8::load_key(key_src, rng(), pass_in));
             }
 
          const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
