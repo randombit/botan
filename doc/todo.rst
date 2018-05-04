@@ -105,6 +105,7 @@ PKIX
 New Protocols / Formats
 ----------------------------------------
 
+* ORAM (Circuit-ORAM, Path-ORAM, ??)
 * Roughtime client (https://roughtime.googlesource.com/roughtime/)
 * PKCS7 / Cryptographic Message Syntax
 * PKCS12 / PFX
