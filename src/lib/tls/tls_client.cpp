@@ -64,10 +64,10 @@ Client::Client(Callbacks& callbacks,
    init(offer_version, next_protos);
    }
 
-Client::Client(output_fn output_fn,
+Client::Client(output_fn data_output_fn,
                data_cb proc_cb,
-               alert_cb alert_cb,
-               handshake_cb handshake_cb,
+               alert_cb recv_alert_cb,
+               handshake_cb hs_cb,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
@@ -76,7 +76,7 @@ Client::Client(output_fn output_fn,
                const Protocol_Version& offer_version,
                const std::vector<std::string>& next_protos,
                size_t io_buf_sz) :
-   Channel(output_fn, proc_cb, alert_cb, handshake_cb, Channel::handshake_msg_cb(),
+   Channel(data_output_fn, proc_cb, recv_alert_cb, hs_cb, Channel::handshake_msg_cb(),
            session_manager, rng, policy, offer_version.is_datagram_protocol(), io_buf_sz),
    m_creds(creds),
    m_info(info)
@@ -84,10 +84,10 @@ Client::Client(output_fn output_fn,
    init(offer_version, next_protos);
    }
 
-Client::Client(output_fn output_fn,
+Client::Client(output_fn data_output_fn,
                data_cb proc_cb,
-               alert_cb alert_cb,
-               handshake_cb handshake_cb,
+               alert_cb recv_alert_cb,
+               handshake_cb hs_cb,
                handshake_msg_cb hs_msg_cb,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
@@ -96,7 +96,7 @@ Client::Client(output_fn output_fn,
                const Server_Information& info,
                const Protocol_Version& offer_version,
                const std::vector<std::string>& next_protos) :
-   Channel(output_fn, proc_cb, alert_cb, handshake_cb, hs_msg_cb,
+   Channel(data_output_fn, proc_cb, recv_alert_cb, hs_cb, hs_msg_cb,
            session_manager, rng, policy, offer_version.is_datagram_protocol()),
    m_creds(creds),
    m_info(info)

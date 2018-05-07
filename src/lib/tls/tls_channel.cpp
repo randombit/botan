@@ -40,7 +40,7 @@ Channel::Channel(Callbacks& callbacks,
 
 Channel::Channel(output_fn out,
                  data_cb app_data_cb,
-                 alert_cb alert_cb,
+                 alert_cb recv_alert_cb,
                  handshake_cb hs_cb,
                  handshake_msg_cb hs_msg_cb,
                  Session_Manager& session_manager,
@@ -55,7 +55,7 @@ Channel::Channel(output_fn out,
                           relies on a deprecated API
                           */
                           Compat_Callbacks::SILENCE_DEPRECATION_WARNING::PLEASE,
-                          out, app_data_cb, alert_cb, hs_cb, hs_msg_cb)),
+                          out, app_data_cb, recv_alert_cb, hs_cb, hs_msg_cb)),
     m_callbacks(*m_compat_callbacks.get()),
     m_session_manager(session_manager),
     m_policy(policy),

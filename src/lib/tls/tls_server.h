@@ -61,12 +61,13 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       /**
        * DEPRECATED. This constructor is only provided for backward
        * compatibility and should not be used in new implementations.
+       * It will be removed in a future release.
        */
       BOTAN_DEPRECATED("Use TLS::Server(TLS::Callbacks ...)")
       Server(output_fn output,
              data_cb data_cb,
-             alert_cb alert_cb,
-             handshake_cb handshake_cb,
+             alert_cb recv_alert_cb,
+             handshake_cb hs_cb,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
              const Policy& policy,
@@ -79,12 +80,13 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       /**
        * DEPRECATED. This constructor is only provided for backward
        * compatibility and should not be used in new implementations.
+       * It will be removed in a future release.
        */
       BOTAN_DEPRECATED("Use TLS::Server(TLS::Callbacks ...)")
       Server(output_fn output,
              data_cb data_cb,
-             alert_cb alert_cb,
-             handshake_cb handshake_cb,
+             alert_cb recv_alert_cb,
+             handshake_cb hs_cb,
              handshake_msg_cb hs_msg_cb,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
