@@ -41,7 +41,8 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
       void randomize(uint8_t buf[], size_t len) override
          {
-         if(m_rtlgenrandom(buf, len) == false)
+         bool success = m_rtlgenrandom(buf, len) == TRUE;
+         if(!success)
             throw Exception("RtlGenRandom failed");
          }
 
