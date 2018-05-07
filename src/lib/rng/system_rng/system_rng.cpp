@@ -51,7 +51,10 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void clear() override { /* not possible */ }
       std::string name() const override { return "RtlGenRandom"; }
    private:
-      using RtlGenRandom_fptr = BOOLEAN (NTAPI *)(PVOID, ULONG);
+      // Use type BYTE instead of BOOLEAN because of a naming conflict
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/aa387694(v=vs.85).aspx
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
+      using RtlGenRandom_fptr = BYTE (NTAPI *)(PVOID, ULONG);
 
       Dynamically_Loaded_Library m_advapi;
       RtlGenRandom_fptr m_rtlgenrandom;
