@@ -36,7 +36,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
       System_RNG_Impl() : m_advapi("advapi32.dll")
          {
          // This throws if the function is not found
-         m_rtlgenrandom = m_advapi.resolve<RtlGenRandom_f>("SystemFunction036");
+         m_rtlgenrandom = m_advapi.resolve<RtlGenRandom_fptr>("SystemFunction036");
          }
 
       void randomize(uint8_t buf[], size_t len) override
@@ -51,10 +51,10 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void clear() override { /* not possible */ }
       std::string name() const override { return "RtlGenRandom"; }
    private:
-      using RtlGenRandom_f = BOOLEAN (NTAPI *)(PVOID, ULONG);
+      using RtlGenRandom_fptr = BOOLEAN (NTAPI *)(PVOID, ULONG);
 
       Dynamically_Loaded_Library m_advapi;
-      RtlGenRandom_f m_rtlgenrandom;
+      RtlGenRandom_fptr m_rtlgenrandom;
    };
 
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
