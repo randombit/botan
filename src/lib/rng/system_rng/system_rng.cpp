@@ -50,7 +50,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void clear() override { /* not possible */ }
       std::string name() const override { return "RtlGenRandom"; }
    private:
-      typedef BOOL (*RtlGenRandom_f)(PVOID, ULONG);
+      typedef BOOL (NTAPI *RtlGenRandom_f)(PVOID, ULONG);
 
       Dynamically_Loaded_Library m_advapi;
       RtlGenRandom_f m_rtlgenrandom;
