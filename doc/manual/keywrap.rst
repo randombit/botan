@@ -6,7 +6,7 @@ another key. The first (and older, more widely supported) methd requres the
 input be a multiple of 8 bytes long. The other allows any length input, though
 only up to 2**32 bytes.
 
-These algorithms are described in NIST SP 800-38F, and RFCs 3394 and 5694.
+These algorithms are described in NIST SP 800-38F, and RFCs 3394 and 5649.
 
 This API, defined in ``nist_keywrap.h``, first became available in version 2.4.0
 
