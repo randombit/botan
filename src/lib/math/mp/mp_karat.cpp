@@ -86,8 +86,12 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
          return bigint_comba_mul6(z, x, y);
       else if(N == 8)
          return bigint_comba_mul8(z, x, y);
+      else if(N == 9)
+         return bigint_comba_mul9(z, x, y);
       else if(N == 16)
          return bigint_comba_mul16(z, x, y);
+      else if(N == 24)
+         return bigint_comba_mul24(z, x, y);
       else
          return basecase_mul(z, 2*N, x, N, y, N);
       }
@@ -151,8 +155,12 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
          return bigint_comba_sqr6(z, x);
       else if(N == 8)
          return bigint_comba_sqr8(z, x);
+      else if(N == 9)
+         return bigint_comba_sqr9(z, x);
       else if(N == 16)
          return bigint_comba_sqr16(z, x);
+      else if(N == 24)
+         return bigint_comba_sqr24(z, x);
       else
          return basecase_sqr(z, 2*N, x, N);
       }
@@ -316,6 +324,10 @@ void bigint_mul(word z[], size_t z_size,
       {
       bigint_comba_mul16(z, x, y);
       }
+   else if(sized_for_comba_mul<24>(x_sw, x_size, y_sw, y_size, z_size))
+      {
+      bigint_comba_mul24(z, x, y);
+      }
    else if(x_sw < KARATSUBA_MULTIPLY_THRESHOLD ||
            y_sw < KARATSUBA_MULTIPLY_THRESHOLD ||
            !workspace)
@@ -367,6 +379,10 @@ void bigint_sqr(word z[], size_t z_size,
    else if(sized_for_comba_sqr<16>(x_sw, x_size, z_size))
       {
       bigint_comba_sqr16(z, x);
+      }
+   else if(sized_for_comba_sqr<24>(x_sw, x_size, z_size))
+      {
+      bigint_comba_sqr24(z, x);
       }
    else if(x_size < KARATSUBA_SQUARE_THRESHOLD || !workspace)
       {
