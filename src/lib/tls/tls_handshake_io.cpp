@@ -83,16 +83,16 @@ Stream_Handshake_IO::get_next_record(bool)
    {
    if(m_queue.size() >= 4)
       {
-      const size_t length = make_uint32(0, m_queue[1], m_queue[2], m_queue[3]);
+      const size_t length = 4 + make_uint32(0, m_queue[1], m_queue[2], m_queue[3]);
 
-      if(m_queue.size() >= length + 4)
+      if(m_queue.size() >= length)
          {
          Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
 
          std::vector<uint8_t> contents(m_queue.begin() + 4,
-                                    m_queue.begin() + 4 + length);
+                                       m_queue.begin() + length);
 
-         m_queue.erase(m_queue.begin(), m_queue.begin() + 4 + length);
+         m_queue.erase(m_queue.begin(), m_queue.begin() + length);
 
          return std::make_pair(type, contents);
          }
