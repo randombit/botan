@@ -36,12 +36,13 @@ class System_RNG_Impl final : public RandomNumberGenerator
       System_RNG_Impl() : m_advapi("advapi32.dll")
          {
          // This throws if the function is not found
-         m_rtlgenrandom = m_advapi.resolve<RtlGenRandom_f>("SystemFunction036");
+         m_rtlgenrandom = m_advapi.resolve<RtlGenRandom_fptr>("SystemFunction036");
          }
 
       void randomize(uint8_t buf[], size_t len) override
          {
-         if(m_rtlgenrandom(buf, len) == false)
+         bool success = m_rtlgenrandom(buf, len) == TRUE;
+         if(!success)
             throw Exception("RtlGenRandom failed");
          }
 
@@ -50,10 +51,13 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void clear() override { /* not possible */ }
       std::string name() const override { return "RtlGenRandom"; }
    private:
-      typedef BOOL (*RtlGenRandom_f)(PVOID, ULONG);
+      // Use type BYTE instead of BOOLEAN because of a naming conflict
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/aa387694(v=vs.85).aspx
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
+      using RtlGenRandom_fptr = BYTE (NTAPI *)(PVOID, ULONG);
 
       Dynamically_Loaded_Library m_advapi;
-      RtlGenRandom_f m_rtlgenrandom;
+      RtlGenRandom_fptr m_rtlgenrandom;
    };
 
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
