@@ -27,8 +27,13 @@
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
 #include <botan/version.h>
-#include <botan/auto_rng.h>
 #include <botan/hex.h>
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   #include <botan/system_rng.h>
+#else
+   #include <botan/auto_rng.h>
+#endif
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
    #include <botan/tls_session_manager_sqlite.h>
@@ -385,7 +390,11 @@ class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_As
 
       tcp::socket m_client_socket;
 
-      Botan::AutoSeeded_RNG m_rng; // RNG per connection
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+      Botan::System_RNG m_rng;
+#else
+      Botan::AutoSeeded_RNG m_rng;
+#endif
       Botan::TLS::Server m_tls;
       std::string m_chello_summary;
       std::string m_session_summary;
@@ -476,6 +485,15 @@ class TLS_HTTP_Server final : public Command
          return "Provides a simple HTTP server";
          }
 
+      size_t thread_count() const
+         {
+         if(size_t t = get_arg_sz("threads"))
+            return t;
+         if(size_t t = std::thread::hardware_concurrency())
+            return t;
+         return 2;
+         }
+
       void go() override
          {
          const size_t listen_port = get_arg_sz("port");
@@ -483,7 +501,7 @@ class TLS_HTTP_Server final : public Command
          const std::string server_crt = get_arg("server_cert");
          const std::string server_key = get_arg("server_key");
 
-         const size_t num_threads = get_arg_sz("threads") || std::thread::hardware_concurrency() || 2;
+         const size_t num_threads = thread_count();
 
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 

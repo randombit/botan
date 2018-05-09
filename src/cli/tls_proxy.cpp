@@ -421,6 +421,15 @@ class TLS_Proxy final : public Command
          return "Proxies requests between a TLS client and a TLS server";
          }
 
+      size_t thread_count() const
+         {
+         if(size_t t = get_arg_sz("threads"))
+            return t;
+         if(size_t t = std::thread::hardware_concurrency())
+            return t;
+         return 2;
+         }
+
       void go() override
          {
          const size_t listen_port = get_arg_sz("listen_port");
@@ -430,7 +439,7 @@ class TLS_Proxy final : public Command
          const std::string server_crt = get_arg("server_cert");
          const std::string server_key = get_arg("server_key");
 
-         const size_t num_threads = get_arg_sz("threads") || std::thread::hardware_concurrency() || 2;
+         const size_t num_threads = thread_count();
 
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
