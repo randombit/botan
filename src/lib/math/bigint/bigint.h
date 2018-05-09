@@ -552,7 +552,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Resize the vector to the minimum word size to hold the integer, or
      * min_size words, whichever is larger
      */
-     void shrink_to_fit(size_t min_size = 0);
+     void shrink_to_fit(size_t min_size = 0)
+        {
+        const size_t words = std::max(min_size, sig_words());
+        m_reg.resize(words);
+        }
 
      /**
      * Fill BigInt with a random number with size of bitsize

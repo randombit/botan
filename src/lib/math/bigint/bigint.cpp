@@ -341,12 +341,6 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
       m_reg[length / WORD_BYTES] = (m_reg[length / WORD_BYTES] << 8) | buf[i];
    }
 
-void BigInt::shrink_to_fit(size_t min_size)
-   {
-   const size_t words = std::max(min_size, sig_words());
-   m_reg.resize(words);
-   }
-
 #if defined(BOTAN_HAS_VALGRIND)
 void BigInt::const_time_poison() const
    {
