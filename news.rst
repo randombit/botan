@@ -12,6 +12,9 @@ Version 2.7.0, Not Yet Released
 
 * Optimizations for elliptic curve operations (GH #1534 #1531 #1546 #1547 #1550)
 
+* Add 24 word wide Comba multiplication, improving 3072-bit RSA and DH by
+  about 25%. (GH #1564)
+
 * Improved performance of signature verification in ECGDSA, ECKCDSA,
   SM2 and GOST by 10-15%.
 
