@@ -91,7 +91,7 @@ BOTAN_REGISTER_COMMAND("sign_cert", Sign_Cert);
 class Cert_Info final : public Command
    {
    public:
-      Cert_Info() : Command("cert_info --fingerprint --ber file") {}
+      Cert_Info() : Command("cert_info --fingerprint file") {}
 
       std::string group() const override
          {
@@ -105,7 +105,11 @@ class Cert_Info final : public Command
 
       void go() override
          {
-         Botan::DataSource_Stream in(get_arg("file"), flag_set("ber"));
+         const std::string arg_file = get_arg("file");
+
+         std::vector<uint8_t> data = slurp_file(get_arg("file"));
+
+         Botan::DataSource_Memory in(data);
 
          while(!in.end_of_data())
             {
@@ -233,7 +237,7 @@ class Gen_Self_Signed final : public Command
    public:
       Gen_Self_Signed()
          : Command("gen_self_signed key CN --country= --dns= "
-                   "--organization= --email= --key-pass= --ca --hash=SHA-256 --emsa=") {}
+                   "--organization= --email= --days=365 --key-pass= --ca --hash=SHA-256 --emsa= --der") {}
 
       std::string group() const override
          {
@@ -254,13 +258,16 @@ class Gen_Self_Signed final : public Command
             throw CLI_Error("Failed to load key from " + get_arg("key"));
             }
 
-         Botan::X509_Cert_Options opts;
+         const size_t days = get_arg_sz("days");
+
+         Botan::X509_Cert_Options opts("", days * 24 * 60 * 60);
 
          opts.common_name  = get_arg("CN");
          opts.country      = get_arg("country");
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
          opts.more_dns = Botan::split_on(get_arg("dns"), ',');
+         const bool der_format = flag_set("der");
 
          std::string emsa = get_arg("emsa");
 
@@ -274,7 +281,13 @@ class Gen_Self_Signed final : public Command
 
          Botan::X509_Certificate cert = Botan::X509::create_self_signed_cert(opts, *key, get_arg("hash"), rng());
 
-         output() << cert.PEM_encode();
+         if(der_format)
+            {
+            auto der = cert.BER_encode();
+            output().write(reinterpret_cast<const char*>(der.data()), der.size());
+            }
+         else
+            output() << cert.PEM_encode();
          }
    };
 
