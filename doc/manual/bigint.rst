@@ -1,48 +1,207 @@
 BigInt
 ========================================
 
-``BigInt`` is Botan's implementation of a multiple-precision
-integer. Thanks to C++'s operator overloading features, using
-``BigInt`` is often quite similar to using a native integer type. The
-number of functions related to ``BigInt`` is quite large. You can find
-most of them in ``botan/bigint.h`` and ``botan/numthry.h``.
+``BigInt`` is Botan's implementation of a multiple-precision integer. Thanks to
+C++'s operator overloading features, using ``BigInt`` is often quite similar to
+using a native integer type. The number of functions related to ``BigInt`` is
+quite large, and not all of them are documented here. You can find the complete
+declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
 
-Encoding Functions
-----------------------------------------
+.. cpp:class:: BigInt
 
-These transform the normal representation of a ``BigInt`` into some
-other form, such as a decimal string:
+   .. cpp:function:: BigInt(uint64_t n)
 
-.. cpp:function:: secure_vector<uint8_t> BigInt::encode(const BigInt& n, Encoding enc = Binary)
+      Create a BigInt with value *n*
 
-  This function encodes the BigInt n into a memory
-  vector. ``Encoding`` is an enum that has values ``Binary``,
-  ``Decimal``, and ``Hexadecimal``.
+   .. cpp:function:: BigInt(const std::string& str)
 
-.. cpp:function:: BigInt BigInt::decode(const std::vector<uint8_t>& vec, Encoding enc)
+      Create a BigInt from a string. By default decimal is
+      expected. With an 0x prefix instead it is treated as hexadecimal.
 
-  Decode the integer from ``vec`` using the encoding specified.
+   .. cpp:function:: BigInt(const uint8_t buf[], size_t length)
 
-These functions are static member functions, so they would be called
-like this::
+      Create a BigInt from a binary array (big-endian encoding).
 
-  BigInt n1 = ...; // some number
-  secure_vector<uint8_t> n1_encoded = BigInt::encode(n1);
-  BigInt n2 = BigInt::decode(n1_encoded);
-  assert(n1 == n2);
+   .. cpp:function:: BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit = true)
 
-There are also C++-style I/O operators defined for use with
-``BigInt``. The input operator understands negative numbers and
-hexadecimal numbers (marked with a leading "0x"). The '-' must come
-before the "0x" marker. The output operator will never adorn the
-output; for example, when printing a hexadecimal number, there will
-not be a leading "0x" (though a leading '-' will be printed if the
-number is negative). If you want such things, you'll have to do them
-yourself.
+      Create a random BigInt of the specified size.
 
-``BigInt`` has constructors that can create a ``BigInt`` from an
-unsigned integer or a string. You can also decode an array (a ``byte``
-pointer plus a length) into a ``BigInt`` using a constructor.
+   .. cpp:function:: BigInt operator+(const BigInt& x, const BigInt& y)
+
+      Add ``x`` and ``y`` and return result.
+
+   .. cpp:function:: BigInt operator+(const BigInt& x, word y)
+
+      Add ``x`` and ``y`` and return result.
+
+   .. cpp:function:: BigInt operator+(word x, const BigInt& y)
+
+      Add ``x`` and ``y`` and return result.
+
+   .. cpp:function:: BigInt operator-(const BigInt& x, const BigInt& y)
+
+      Subtract ``y`` from ``x`` and return result.
+
+   .. cpp:function:: BigInt operator-(const BigInt& x, word y)
+
+      Subtract ``y`` from ``x`` and return result.
+
+   .. cpp:function:: BigInt operator*(const BigInt& x, const BigInt& y)
+
+      Multiply ``x`` and ``y`` and return result.
+
+   .. cpp:function:: BigInt operator/(const BigInt& x, const BigInt& y)
+
+      Divide ``x`` by ``y`` and return result.
+
+   .. cpp:function:: BigInt operator%(const BigInt& x, const BigInt& y)
+
+      Divide ``x`` by ``y`` and return remainder.
+
+   .. cpp:function:: word operator%(const BigInt& x, word y)
+
+      Divide ``x`` by ``y`` and return remainder.
+
+   .. cpp:function:: word operator<<(const BigInt& x, size_t n)
+
+      Left shift ``x`` by ``n`` and return result.
+
+   .. cpp:function:: word operator>>(const BigInt& x, size_t n)
+
+      Right shift ``x`` by ``n`` and return result.
+
+   .. cpp:function:: BigInt& operator+=(const BigInt& y)
+
+      Add y to ``*this``
+
+   .. cpp:function:: BigInt& operator+=(word y)
+
+      Add y to ``*this``
+
+   .. cpp:function:: BigInt& operator-=(const BigInt& y)
+
+      Subtract y from ``*this``
+
+   .. cpp:function:: BigInt& operator-=(word y)
+
+      Subtract y from ``*this``
+
+   .. cpp:function:: BigInt& operator*=(const BigInt& y)
+
+      Multiply ``*this`` with y
+
+   .. cpp:function:: BigInt& operator*=(word y)
+
+      Multiply ``*this`` with y
+
+   .. cpp:function:: BigInt& operator/=(const BigInt& y)
+
+      Divide ``*this`` by y
+
+   .. cpp:function:: BigInt& operator%=(const BigInt& y)
+
+      Divide ``*this`` by y and set ``*this`` to the remainder.
+
+   .. cpp:function:: word operator%=(word y)
+
+      Divide ``*this`` by y and set ``*this`` to the remainder.
+
+   .. cpp:function:: word operator<<=(size_t shift)
+
+      Left shift ``*this`` by *shift* bits
+
+   .. cpp:function:: word operator>>=(size_t shift)
+
+      Right shift ``*this`` by *shift* bits
+
+   .. cpp:function:: BigInt& operator++()
+
+      Increment ``*this`` by 1
+
+   .. cpp:function:: BigInt& operator--()
+
+      Decrement ``*this`` by 1
+
+   .. cpp:function:: BigInt operator++(int)
+
+      Postfix increment ``*this`` by 1
+
+   .. cpp:function:: BigInt operator--(int)
+
+      Postfix decrement ``*this`` by 1
+
+   .. cpp:function:: BigInt operator-() const
+
+      Negation operator
+
+   .. cpp:function:: bool operator !() const
+
+      Return true unless ``*this`` is zero
+
+   .. cpp:function:: void clear()
+
+      Set ``*this`` to zero
+
+   .. cpp:function:: size_t bytes() const
+
+      Return number of bytes need to represent value of ``*this``
+
+   .. cpp:function:: size_t bits() const
+
+      Return number of bits need to represent value of ``*this``
+
+   .. cpp:function:: bool is_even() const
+
+      Return true if ``*this`` is even
+
+   .. cpp:function:: bool is_odd() const
+
+      Return true if ``*this`` is odd
+
+   .. cpp:function:: bool is_nonzero() const
+
+      Return true if ``*this`` is not zero
+
+   .. cpp:function:: bool is_zero() const
+
+      Return true if ``*this`` is zero
+
+   .. cpp:function:: void set_bit(size_t n)
+
+      Set bit *n* of ``*this``
+
+   .. cpp:function:: void clear_bit(size_t n)
+
+      Clear bit *n* of ``*this``
+
+   .. cpp:function:: bool get_bit(size_t n) const
+
+      Get bit *n* of ``*this``
+
+   .. cpp:function:: uint32_t to_u32bit() const
+
+      Return value of ``*this`` as a 32-bit integer, if possible.
+      If the integer is negative or not in range, an exception is thrown.
+
+   .. cpp:function:: bool is_negative() const
+
+      Return true if ``*this`` is negative
+
+   .. cpp:function:: bool is_positive() const
+
+      Return true if ``*this`` is negative
+
+   .. cpp:function:: BigInt abs() const
+
+      Return absolute value of ``*this``
+
+   .. cpp:function:: void binary_encode(uint8_t buf[]) const
+
+      Encode this BigInt as a big-endian integer. The sign is ignored.
+
+   .. cpp:function:: void binary_decode(uint8_t buf[])
+
+      Decode this BigInt as a big-endian integer.
 
 Number Theory
 ----------------------------------------
@@ -57,6 +216,10 @@ Number theoretic functions available include:
 
   Returns an integer z which is the smallest integer such that z % x
   == 0 and z % y == 0
+
+.. cpp:function:: BigInt jacobi(BigInt a, BigInt n)
+
+  Return Jacobi symbol of (a|n).
 
 .. cpp:function:: BigInt inverse_mod(BigInt x, BigInt m)
 
@@ -85,15 +248,6 @@ Number theoretic functions available include:
   2\ :sup:`prob`. Set *is_random* to true if (and only if) *n* was randomly
   chosen (ie, there is no danger it was chosen maliciously) as far fewer tests
   are needed in that case.
-
-.. cpp:function:: bool quick_check_prime(BigInt n, RandomNumberGenerator& rng)
-
-.. cpp:function:: bool check_prime(BigInt n, RandomNumberGenerator& rng)
-
-.. cpp:function:: bool verify_prime(BigInt n, RandomNumberGenerator& rng)
-
-  Three variations on *is_prime*, with probabilities set to 32, 56, and 80
-  respectively.
 
 .. cpp:function:: BigInt random_prime(RandomNumberGenerator& rng, \
                                       size_t bits, \
