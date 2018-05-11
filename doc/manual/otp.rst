@@ -65,3 +65,32 @@ given to any other symmetric key or plaintext password.
        then always returns (false,starting_counter), since the last successful
        authentication counter has not changed.
 
+
+TOTP
+^^^^^^^^^^
+
+TOTP is based on the same algorithm as HOTP, but instead of a counter a
+timestamp is used.
+
+.. cpp:class:: TOTP
+
+   .. cpp:function:: TOTP(const SymmetricKey& key, const std::string& hash_algo = "SHA-1", \
+                          size_t digits = 6, size_t time_step = 30)
+
+      Setup to perform TOTP authentication using secret key *key*.
+
+   .. cpp:function:: uint32_t generate_totp(std::chrono::system_clock::time_point time_point)
+
+   .. cpp:function:: uint32_t generate_totp(uint64_t unix_time)
+
+      Generate and return a TOTP code based on a timestamp.
+
+   .. cpp:function:: bool verify_totp(uint32_t otp, std::chrono::system_clock::time_point time, \
+                                      size_t clock_drift_accepted = 0)
+
+   .. cpp:function:: bool verify_totp(uint32_t otp, uint64_t unix_time, \
+                                      size_t clock_drift_accepted = 0)
+
+      Return true if the provided OTP code is correct for the provided
+      timestamp. If required, use *clock_drift_accepted* to deal with
+      the client and server having slightly different clocks.
