@@ -14,15 +14,15 @@
    #include <botan/data_src.h>
    #include <botan/x509_crl.h>
    #include <botan/pkcs10.h>
+   #include <botan/exceptn.h>
+
+   #include <fstream>
+   #include <string>
+   #include <vector>
+   #include <map>
+   #include <algorithm>
+   #include <limits>
 #endif
-
-#include <botan/exceptn.h>
-
-#include <fstream>
-#include <string>
-#include <vector>
-#include <map>
-#include <algorithm>
 
 namespace Botan_Tests {
 
@@ -580,8 +580,8 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
           */
          struct random_bit_generator {
             using result_type = size_t;
-            static result_type min() { return 0; }
-            static result_type max() { return std::numeric_limits<size_t>::max(); }
+            static BOTAN_CONSTEXPR result_type min() { return 0; }
+            static BOTAN_CONSTEXPR result_type max() { return std::numeric_limits<size_t>::max(); }
             result_type operator()()
                {
                size_t s;

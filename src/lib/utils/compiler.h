@@ -137,7 +137,7 @@
 /*
 * Define BOTAN_CURRENT_FUNCTION
 */
-#if defined(_MSC_VER)
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
   #define BOTAN_CURRENT_FUNCTION __FUNCTION__
 #else
   #define BOTAN_CURRENT_FUNCTION __func__
@@ -152,6 +152,15 @@
   #define BOTAN_NOEXCEPT _NOEXCEPT
 #else
   #define BOTAN_NOEXCEPT noexcept
+#endif
+
+/*
+* Define BOTAN_CONSTEXPR (for MSVC 2013)
+*/
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
+  #define BOTAN_CONSTEXPR /**/
+#else
+  #define BOTAN_CONSTEXPR constexpr
 #endif
 
 /*
