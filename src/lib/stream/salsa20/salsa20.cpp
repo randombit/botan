@@ -6,6 +6,7 @@
 */
 
 #include <botan/salsa20.h>
+#include <botan/exceptn.h>
 #include <botan/loadstor.h>
 
 namespace Botan {

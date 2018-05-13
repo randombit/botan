@@ -38,9 +38,6 @@ class BOTAN_PUBLIC_API(2,0) Invalid_Argument : public Exception
       explicit Invalid_Argument(const std::string& msg, const std::string& where);
 };
 
-#define BOTAN_ARG_CHECK(expr) \
-   do { if(!(expr)) throw Invalid_Argument(#expr, BOTAN_CURRENT_FUNCTION); } while(0)
-
 /**
 * Unsupported_Argument Exception
 *

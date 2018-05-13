@@ -146,7 +146,7 @@ void SHA_3::finish(size_t bitrate,
                    secure_vector<uint64_t>& S, size_t S_pos,
                    uint8_t init_pad, uint8_t fini_pad)
    {
-   BOTAN_ARG_CHECK(bitrate % 64 == 0);
+   BOTAN_ARG_CHECK(bitrate % 64 == 0, "SHA-3 bitrate must be multiple of 64");
 
    S[S_pos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (S_pos % 8));
    S[(bitrate / 64) - 1] ^= static_cast<uint64_t>(fini_pad) << 56;
@@ -158,7 +158,7 @@ void SHA_3::expand(size_t bitrate,
                    secure_vector<uint64_t>& S,
                    uint8_t output[], size_t output_length)
    {
-   BOTAN_ARG_CHECK(bitrate % 64 == 0);
+   BOTAN_ARG_CHECK(bitrate % 64 == 0, "SHA-3 bitrate must be multiple of 64");
 
    const size_t byterate = bitrate / 8;
 

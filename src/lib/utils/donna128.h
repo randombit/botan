@@ -82,7 +82,7 @@ class donna128 final
 
 inline donna128 operator*(const donna128& x, uint64_t y)
    {
-   BOTAN_ASSERT(x.hi() == 0, "High 64 bits of donna128 set to zero during multiply");
+   BOTAN_ARG_CHECK(x.hi() == 0, "High 64 bits of donna128 set to zero during multiply");
 
    uint64_t lo = 0, hi = 0;
    mul64x64_128(x.lo(), y, &lo, &hi);

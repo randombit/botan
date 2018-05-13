@@ -6,6 +6,7 @@
 */
 
 #include <botan/ofb.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

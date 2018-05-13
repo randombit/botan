@@ -6,7 +6,7 @@
 */
 
 #include <botan/sp800_108.h>
-
+#include <botan/exceptn.h>
 #include <iterator>
 
 namespace Botan {

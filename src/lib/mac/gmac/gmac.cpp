@@ -8,6 +8,7 @@
 
 #include <botan/gmac.h>
 #include <botan/ghash.h>
+#include <botan/exceptn.h>
 #include <botan/block_cipher.h>
 
 namespace Botan {

@@ -100,8 +100,8 @@ MessageAuthenticationCode* HMAC::clone() const
 */
 HMAC::HMAC(HashFunction* hash) : m_hash(hash)
    {
-   if(m_hash->hash_block_size() == 0)
-      throw Invalid_Argument("HMAC cannot be used with " + m_hash->name());
+   BOTAN_ARG_CHECK(m_hash->hash_block_size() > 0,
+                   "HMAC is not compatible with this hash function");
    }
 
 }

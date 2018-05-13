@@ -6,6 +6,7 @@
 */
 
 #include <botan/chacha.h>
+#include <botan/exceptn.h>
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>
 
@@ -13,8 +14,8 @@ namespace Botan {
 
 ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
    {
-   if(m_rounds != 8 && m_rounds != 12 && m_rounds != 20)
-      throw Invalid_Argument("ChaCha only supports 8, 12 or 20 rounds");
+   BOTAN_ARG_CHECK(m_rounds == 8 || m_rounds == 12 || m_rounds == 20,
+                   "ChaCha only supports 8, 12 or 20 rounds");
    }
 
 std::string ChaCha::provider() const

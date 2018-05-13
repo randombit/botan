@@ -9,7 +9,6 @@
 #define BOTAN_PBKDF_H_
 
 #include <botan/symkey.h>
-#include <botan/exceptn.h>
 #include <chrono>
 
 namespace Botan {
@@ -230,10 +229,7 @@ typedef PBKDF S2K;
 inline PBKDF* get_pbkdf(const std::string& algo_spec,
                         const std::string& provider = "")
    {
-   std::unique_ptr<PBKDF> p(PBKDF::create(algo_spec, provider));
-   if(p)
-      return p.release();
-   throw Algorithm_Not_Found(algo_spec);
+   return PBKDF::create_or_throw(algo_spec, provider).release();
    }
 
 inline PBKDF* get_s2k(const std::string& algo_spec)

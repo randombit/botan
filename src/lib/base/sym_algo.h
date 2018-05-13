@@ -9,7 +9,6 @@
 #define BOTAN_SYMMETRIC_ALGORITHM_H_
 
 #include <botan/key_spec.h>
-#include <botan/exceptn.h>
 #include <botan/symkey.h>
 #include <botan/types.h>
 
@@ -79,12 +78,7 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
       * @param key the to be set as a byte array.
       * @param length in bytes of key param
       */
-      void set_key(const uint8_t key[], size_t length)
-         {
-         if(!valid_keylength(length))
-            throw Invalid_Key_Length(name(), length);
-         key_schedule(key, length);
-         }
+      void set_key(const uint8_t key[], size_t length);
 
       /**
       * @return the algorithm name
@@ -92,11 +86,7 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
       virtual std::string name() const = 0;
 
    protected:
-      void verify_key_set(bool cond) const
-         {
-         if(cond == false)
-            throw Key_Not_Set(name());
-         }
+      void verify_key_set(bool cond) const;
 
    private:
       /**

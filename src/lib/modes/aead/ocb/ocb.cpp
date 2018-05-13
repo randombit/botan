@@ -171,11 +171,13 @@ OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
    * sizes but only 128, 192, 256 and 512 bit are currently supported
    * by this implementation.
    */
-   if(BS != 16 && BS != 24 && BS != 32 && BS != 64)
-      throw Invalid_Argument("OCB does not support cipher " + m_cipher->name());
+   BOTAN_ARG_CHECK(BS == 16 || BS == 24 || BS == 32 || BS == 64,
+                   "Invalid block size for OCB");
 
-   if(m_tag_size % 4 != 0 || m_tag_size < 8 || m_tag_size > BS || m_tag_size > 32)
-      throw Invalid_Argument("Invalid OCB tag length");
+   BOTAN_ARG_CHECK(m_tag_size % 4 == 0 &&
+                   m_tag_size >= 8 && m_tag_size <= BS &&
+                   m_tag_size <= 32,
+                   "Invalid OCB tag length");
    }
 
 OCB_Mode::~OCB_Mode() { /* for unique_ptr destructor */ }

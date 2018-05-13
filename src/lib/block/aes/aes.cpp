@@ -337,8 +337,7 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    const size_t X = length / 4;
 
    // Can't happen, but make static analyzers happy
-   if(X != 4 && X != 6 && X != 8)
-      throw Invalid_Argument("Invalid AES key size");
+   BOTAN_ARG_CHECK(X == 4 || X == 6 || X == 8, "Invalid AES key size");
 
    for(size_t i = 0; i != X; ++i)
       XEK[i] = load_be<uint32_t>(key, i);

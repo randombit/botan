@@ -6,6 +6,7 @@
 */
 
 #include <botan/lion.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

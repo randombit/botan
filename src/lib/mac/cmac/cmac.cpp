@@ -6,6 +6,7 @@
 */
 
 #include <botan/cmac.h>
+#include <botan/exceptn.h>
 #include <botan/internal/poly_dbl.h>
 
 namespace Botan {

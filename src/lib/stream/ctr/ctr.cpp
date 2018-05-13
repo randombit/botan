@@ -6,6 +6,7 @@
 */
 
 #include <botan/ctr.h>
+#include <botan/exceptn.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
@@ -30,8 +31,8 @@ CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
    m_pad(m_counter.size()),
    m_pad_pos(0)
    {
-   if(m_ctr_size < 4 || m_ctr_size > m_block_size)
-      throw Invalid_Argument("Invalid CTR-BE counter size");
+   BOTAN_ARG_CHECK(m_ctr_size >= 4 && m_ctr_size <= m_block_size,
+                   "Invalid CTR-BE counter size");
    }
 
 void CTR_BE::clear()

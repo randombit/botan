@@ -350,12 +350,8 @@ void Blowfish::eks_key_schedule(const uint8_t key[], size_t length,
    * time being.
    * Bcrypt allows up to work factor 31 (2^31 iterations)
    */
-   if(workfactor > 18)
-      throw Invalid_Argument("Requested Bcrypt work factor " +
-                             std::to_string(workfactor) + " too large");
-
-   if(workfactor < 4)
-      throw Invalid_Argument("Bcrypt requires work factor at least 4");
+   BOTAN_ARG_CHECK(workfactor >= 4 && workfactor <= 18,
+                   "Invalid bcrypt work factor");
 
    if(length > 72)
       {

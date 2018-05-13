@@ -6,19 +6,20 @@
 */
 
 #include <botan/hotp.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
 HOTP::HOTP(const SymmetricKey& key, const std::string& hash_algo, size_t digits)
    {
+   BOTAN_ARG_CHECK(digits == 6 || digits == 7 || digits == 8, "Invalid HOTP digits");
+
    if(digits == 6)
       m_digit_mod = 1000000;
    else if(digits == 7)
       m_digit_mod = 10000000;
    else if(digits == 8)
       m_digit_mod = 100000000;
-   else
-      throw Invalid_Argument("Invalid HOTP digits");
 
    /*
    RFC 4228 only supports SHA-1 but TOTP allows SHA-256 and SHA-512

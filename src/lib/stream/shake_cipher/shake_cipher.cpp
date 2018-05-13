@@ -6,6 +6,7 @@
 */
 
 #include <botan/shake_cipher.h>
+#include <botan/exceptn.h>
 #include <botan/sha3.h>
 #include <botan/loadstor.h>
 

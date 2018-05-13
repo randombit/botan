@@ -1,6 +1,6 @@
 /*
 * Runtime assertion checking
-* (C) 2010,2012 Jack Lloyd
+* (C) 2010,2012,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +9,17 @@
 #include <sstream>
 
 namespace Botan {
+
+void throw_invalid_argument(const char* message,
+                            const char* func,
+                            const char* file)
+   {
+   std::ostringstream format;
+
+   format << message << " in " << func << ":" << file;
+
+   throw Invalid_Argument(format.str());
+   }
 
 void assertion_failure(const char* expr_str,
                        const char* assertion_made,

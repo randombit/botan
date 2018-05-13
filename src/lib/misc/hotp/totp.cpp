@@ -20,8 +20,7 @@ TOTP::TOTP(const SymmetricKey& key, const std::string& hash_algo,
    * Technically any time step except 0 is valid, but 30 is typical
    * and over 5 minutes seems unlikely.
    */
-   if(m_time_step == 0 || m_time_step > 300)
-      throw Invalid_Argument("Invalid TOTP time step");
+   BOTAN_ARG_CHECK(m_time_step > 0 && m_time_step < 300, "Invalid TOTP time step");
    }
 
 uint32_t TOTP::generate_totp(std::chrono::system_clock::time_point current_time)

@@ -88,7 +88,7 @@ void CCM_Mode::set_associated_data(const uint8_t ad[], size_t length)
    if(length)
       {
       // FIXME: support larger AD using length encoding rules
-      BOTAN_ASSERT(length < (0xFFFF - 0xFF), "Supported CCM AD length");
+      BOTAN_ARG_CHECK(length < (0xFFFF - 0xFF), "Supported CCM AD length");
 
       m_ad_buf.push_back(get_byte(0, static_cast<uint16_t>(length)));
       m_ad_buf.push_back(get_byte(1, static_cast<uint16_t>(length)));
@@ -160,7 +160,7 @@ secure_vector<uint8_t> CCM_Mode::format_c0()
 
 void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is sane");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
@@ -168,7 +168,7 @@ void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    uint8_t* buf = buffer.data() + offset;
 
    const secure_vector<uint8_t>& ad = ad_buf();
-   BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
+   BOTAN_ARG_CHECK(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
    const BlockCipher& E = cipher();
 
@@ -211,7 +211,7 @@ void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is sane");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
@@ -221,7 +221,7 @@ void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
 
    const secure_vector<uint8_t>& ad = ad_buf();
-   BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
+   BOTAN_ARG_CHECK(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
    const BlockCipher& E = cipher();
 
