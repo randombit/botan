@@ -474,33 +474,23 @@ size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
    * These values are derived from the inequality for p(k,t) given on
    * the second page.
    */
-   if(random)
+   if(prob <= 128)
       {
-      if(prob <= 80)
-         {
-         if(n_bits >= 1536)
-            return 2; // < 2^-89
-         if(n_bits >= 1024)
-            return 3; // < 2^-89
-         if(n_bits >= 512)
-            return 5; // < 2^-80
-         if(n_bits >= 256)
-            return 11; // < 2^-80
-         }
-
-      if(prob <= 128)
-         {
-         if(n_bits >= 1536)
-            return 4; // < 2^-133
-         if(n_bits >= 1024)
-            return 6; // < 2^-133
-         if(n_bits >= 512)
-            return 12; // < 2^-129
-         if(n_bits >= 256)
-            return 28; // < 2^-128
-         }
+      if(n_bits >= 1536)
+         return 4; // < 2^-133
+      if(n_bits >= 1024)
+         return 6; // < 2^-133
+      if(n_bits >= 512)
+         return 12; // < 2^-129
+      if(n_bits >= 256)
+         return 28; // < 2^-128
       }
 
+   /*
+   If the user desires a smaller error probability than we have
+   precomputed error estimates for, just fall back to using the worst
+   case error rate.
+   */
    return base;
    }
 
