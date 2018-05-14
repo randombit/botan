@@ -35,17 +35,21 @@ namespace {
 #if defined(BOTAN_TARGET_OS_HAS_STL_FILESYSTEM_MSVC) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
 std::vector<std::string> impl_stl_filesystem(const std::string& dir)
    {
+#if (_MSVC_LANG >= 201703L)
+   using namespace std::filesystem;
+#else
    using namespace std::tr2::sys;
+#endif
 
    std::vector<std::string> out;
 
    path p(dir);
 
-   if (is_directory(p))
+   if(is_directory(p))
       {
-      for (recursive_directory_iterator itr(p), end; itr != end; ++itr)
+      for(recursive_directory_iterator itr(p), end; itr != end; ++itr)
          {
-         if (is_regular_file(itr->path()))
+         if(is_regular_file(itr->path()))
             {
             out.push_back(itr->path().string());
             }
