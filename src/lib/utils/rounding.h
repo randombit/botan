@@ -20,7 +20,7 @@ namespace Botan {
 */
 inline size_t round_up(size_t n, size_t align_to)
    {
-   BOTAN_ASSERT(align_to != 0, "align_to must not be 0");
+   BOTAN_ARG_CHECK(align_to != 0, "align_to must not be 0");
 
    if(n % align_to)
       n += align_to - (n % align_to);

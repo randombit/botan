@@ -6,6 +6,7 @@
 */
 
 #include <botan/prf_tls.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

@@ -14,8 +14,8 @@ namespace Botan {
 secure_vector<uint8_t> rfc3394_keywrap(const secure_vector<uint8_t>& key,
                                        const SymmetricKey& kek)
    {
-   if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
-      throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key wrap");
+   BOTAN_ARG_CHECK(kek.size() == 16 || kek.size() == 24 || kek.size() == 32,
+                   "Invalid KEK length for NIST key wrap");
 
    const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
    std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
@@ -28,11 +28,11 @@ secure_vector<uint8_t> rfc3394_keywrap(const secure_vector<uint8_t>& key,
 secure_vector<uint8_t> rfc3394_keyunwrap(const secure_vector<uint8_t>& key,
                                          const SymmetricKey& kek)
    {
-   if(key.size() < 16 || key.size() % 8 != 0)
-      throw Invalid_Argument("Bad input key size for NIST key unwrap");
+   BOTAN_ARG_CHECK(kek.size() == 16 || kek.size() == 24 || kek.size() == 32,
+                   "Invalid KEK length for NIST key wrap");
 
-   if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
-      throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key unwrap");
+   BOTAN_ARG_CHECK(key.size() >= 16 && key.size() % 8 == 0,
+                   "Bad input key size for NIST key unwrap");
 
    const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
    std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));

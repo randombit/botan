@@ -220,9 +220,6 @@ inline void ARIA_FE(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3)
 void transform(const uint8_t in[], uint8_t out[], size_t blocks,
                const secure_vector<uint32_t>& KS)
    {
-   if(KS.empty())
-      throw Invalid_State("ARIA key was not set");
-
    // Hit every cache line of S1 and S2
    const size_t cache_line_size = CPUID::cache_line_size();
 
@@ -436,31 +433,37 @@ void key_schedule(secure_vector<uint32_t>& ERK,
 
 void ARIA_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_ERK.size() > 0);
    ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_ERK.size() > 0);
    ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_ERK.size() > 0);
    ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_DRK.size() > 0);
    ARIA_F::transform(in, out, blocks, m_DRK);
    }
 
 void ARIA_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_DRK.size() > 0);
    ARIA_F::transform(in, out, blocks, m_DRK);
    }
 
 void ARIA_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   verify_key_set(m_DRK.size() > 0);
    ARIA_F::transform(in, out, blocks, m_DRK);
    }
 

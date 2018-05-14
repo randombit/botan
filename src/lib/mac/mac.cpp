@@ -6,6 +6,7 @@
 */
 
 #include <botan/mac.h>
+#include <botan/exceptn.h>
 #include <botan/scan_name.h>
 #include <botan/mem_ops.h>
 
@@ -145,6 +146,13 @@ MessageAuthenticationCode::create_or_throw(const std::string& algo,
       return mac;
       }
    throw Lookup_Error("MAC", algo, provider);
+   }
+
+void MessageAuthenticationCode::start_msg(const uint8_t nonce[], size_t nonce_len)
+   {
+   BOTAN_UNUSED(nonce);
+   if(nonce_len > 0)
+      throw Invalid_IV_Length(name(), nonce_len);
    }
 
 /*

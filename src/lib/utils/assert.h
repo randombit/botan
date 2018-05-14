@@ -16,6 +16,7 @@ namespace Botan {
 
 /**
 * Called when an assertion fails
+* Throws an Exception object
 */
 BOTAN_NORETURN void BOTAN_PUBLIC_API(2,0)
    assertion_failure(const char* expr_str,
@@ -23,6 +24,18 @@ BOTAN_NORETURN void BOTAN_PUBLIC_API(2,0)
                      const char* func,
                      const char* file,
                      int line);
+
+/**
+* Called when an invalid argument is used
+* Throws Invalid_Argument
+*/
+BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_argument(const char* message,
+                                                              const char* func,
+                                                              const char* file);
+
+
+#define BOTAN_ARG_CHECK(expr, msg)                                      \
+   do { if(!(expr)) Botan::throw_invalid_argument(msg, BOTAN_CURRENT_FUNCTION, __FILE__); } while(0)
 
 /**
 * Make an assertion

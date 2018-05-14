@@ -7,6 +7,7 @@
 
 #include <botan/block_cipher.h>
 #include <botan/scan_name.h>
+#include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_AES)
   #include <botan/aes.h>

@@ -25,8 +25,7 @@ void bigint_monty_redc(word z[],
    {
    const size_t z_size = 2*(p_size+1);
 
-   if(ws_size < z_size)
-      throw Invalid_Argument("bigint_monty_redc workspace too small");
+   BOTAN_ARG_CHECK(ws_size >= z_size, "workspace too small");
 
    CT::poison(z, z_size);
    CT::poison(p, p_size);

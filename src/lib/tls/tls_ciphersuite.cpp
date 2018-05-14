@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_ciphersuite.h>
+#include <botan/exceptn.h>
 #include <botan/parsing.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>

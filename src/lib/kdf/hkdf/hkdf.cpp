@@ -80,18 +80,13 @@ hkdf_expand_label(const std::string& hash_fn,
                   const uint8_t hash_val[], size_t hash_val_len,
                   size_t length)
    {
-   if(length > 0xFFFF)
-      throw Invalid_Argument("HKDF-Expand-Label requested output too large");
-   if(label.size() > 0xFF)
-      throw Invalid_Argument("HKDF-Expand-Label label too long");
-   if(hash_val_len > 0xFF)
-      throw Invalid_Argument("HKDF-Expand-Label hash too long");
+   BOTAN_ARG_CHECK(length <= 0xFFFF, "HKDF-Expand-Label requested output too large");
+   BOTAN_ARG_CHECK(label.size() <= 0xFF, "HKDF-Expand-Label label too long");
+   BOTAN_ARG_CHECK(hash_val_len <= 0xFF, "HKDF-Expand-Label hash too long");
 
    const uint16_t length16 = static_cast<uint16_t>(length);
 
-   auto mac = MessageAuthenticationCode::create("HMAC(" + hash_fn + ")");
-   if(!mac)
-      throw Invalid_Argument("HKDF-Expand-Label with HMAC(" + hash_fn + ") not available");
+   auto mac = MessageAuthenticationCode::create_or_throw("HMAC(" + hash_fn + ")");
 
    HKDF_Expand hkdf(mac.release());
 

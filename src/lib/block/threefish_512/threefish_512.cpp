@@ -239,8 +239,8 @@ void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
 void Threefish_512::set_tweak(const uint8_t tweak[], size_t len)
    {
-   if(len != 16)
-      throw Exception("Threefish-512 requires 128 bit tweak");
+   BOTAN_ARG_CHECK(len == 16, "Threefish-512 requires 128 bit tweak");
+
    m_T.resize(3);
    m_T[0] = load_le<uint64_t>(tweak, 0);
    m_T[1] = load_le<uint64_t>(tweak, 1);
