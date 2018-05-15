@@ -449,11 +449,15 @@ bool mr_witness(BigInt&& y,
       if(y == 1) // found a non-trivial square root
          return true;
 
-      if(y == n_minus_1) // -1, trivial square root, so give up
+      /*
+      -1 is the trivial square root of unity, so ``a`` is not a
+      witness for this number - give up
+      */
+      if(y == n_minus_1)
          return false;
       }
 
-   return true; // fails Fermat test
+   return true; // is a witness
    }
 
 size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
@@ -483,7 +487,7 @@ size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
       if(n_bits >= 512)
          return 12; // < 2^-129
       if(n_bits >= 256)
-         return 28; // < 2^-128
+         return 29; // < 2^-128
       }
 
    /*
