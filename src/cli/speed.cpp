@@ -110,6 +110,10 @@
    #include <botan/newhope.h>
 #endif
 
+#if defined(BOTAN_HAS_SCRYPT)
+   #include <botan/scrypt.h>
+#endif
+
 namespace Botan_CLI {
 
 namespace {
@@ -890,6 +894,12 @@ class Speed final : public Command
             else if(algo == "NEWHOPE")
                {
                bench_newhope(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_SCRYPT)
+            else if(algo == "scrypt")
+               {
+               bench_scrypt(provider, msec);
                }
 #endif
 
@@ -2135,6 +2145,28 @@ class Speed final : public Command
          }
 #endif
 
+#if defined(BOTAN_HAS_SCRYPT)
+
+      void bench_scrypt(const std::string& /*provider*/,
+                        std::chrono::milliseconds msec)
+         {
+         std::unique_ptr<Timer> scrypt_timer = make_timer("scrypt");
+
+         uint8_t out[64];
+         uint8_t salt[8] = { 0 };
+
+         while(scrypt_timer->under(msec))
+            {
+            scrypt_timer->run([&] {
+               Botan::scrypt(out, sizeof(out), "password",
+                             salt, sizeof(salt), 16384, 8, 1);
+               });
+            }
+
+         record_result(scrypt_timer);
+         }
+
+#endif
 
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA_RNG)
       void bench_newhope(const std::string& /*provider*/,

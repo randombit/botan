@@ -1,0 +1,10 @@
+<defines>
+SCRYPT -> 20180515
+</defines>
+
+<requires>
+salsa20
+pbkdf2
+hmac
+sha2_32
+</requires>

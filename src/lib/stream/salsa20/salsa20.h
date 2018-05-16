@@ -34,6 +34,8 @@ class BOTAN_PUBLIC_API(2,0) Salsa20 final : public StreamCipher
       std::string name() const override;
       StreamCipher* clone() const override { return new Salsa20; }
 
+      static void salsa_core(uint8_t output[64], const uint32_t input[16], size_t rounds);
+
       void seek(uint64_t offset) override;
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;
