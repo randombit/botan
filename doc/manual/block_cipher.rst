@@ -5,10 +5,10 @@ Block ciphers are a n-bit permutation for some small n, typically 64 or 128
 bits.  They are a cryptographic primitive used to generate higher level
 operations such as authenticated encryption.
 
-.. note::
+.. warning::
 
-   In general a bare block cipher is not what you should be using. You probably
-   want a cipher mode instead (see :ref:`cipher_modes`)
+   In almost all cases, a bare block cipher is not what you should be using.
+   You probably want an authenticated cipher mode instead (see :ref:`cipher_modes`)
 
 .. cpp:class:: BlockCipher
 
