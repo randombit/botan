@@ -19,7 +19,6 @@ Ciphers, Hashes, PBKDF
 * XSalsa20-Poly1305 AEAD compatible with NaCl
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
-* scrypt PBKDF
 * Argon2 PBKDF (draft-irtf-cfrg-argon2)
 * bcrypt PBKDF
 * Skein-MAC
@@ -36,6 +35,7 @@ Public Key Crypto, Math
 * Curves for pairings (BN-256 is widely implemented)
 * Identity based encryption
 * BBS group signatures
+* Support Scrypt for private key encryption (RFC 7914)
 * Paillier homomorphic cryptosystem
 * Hashing onto an elliptic curve
 * SPHINCS-256
