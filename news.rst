@@ -21,6 +21,8 @@ Version 2.7.0, Not Yet Released
 * Allow the year to be up to 2200 in ASN.1 time objects. Previously this
   was limited to 2100. (GH #1536)
 
+* Add support for Scrypt password hashing (GH #1570)
+
 * Optimizations for DES/3DES, approx 50% faster when used in certain
   modes such as CBC decrypt or CTR.
 
