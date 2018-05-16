@@ -157,7 +157,7 @@ inline void des_decrypt_x2(uint32_t& L0r, uint32_t& R0r,
    uint32_t L1 = L1r;
    uint32_t R1 = R1r;
 
-   for(size_t i = 0; i != 16; i += 2)
+   for(size_t i = 16; i != 0; i -= 2)
       {
       L0 ^= spbox(rotr<4>(R0) ^ round_key[2*i - 2], R0  ^ round_key[2*i - 1]);
       L1 ^= spbox(rotr<4>(R1) ^ round_key[2*i - 2], R1  ^ round_key[2*i - 1]);
@@ -293,9 +293,9 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       des_IP(L0, R0, in);
       des_IP(L1, R1, in + BLOCK_SIZE);
 
-      des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
-      des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
-      des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
+      des_encrypt_x2(L0, R0, L1, R1, &m_round_key[0]);
+      des_decrypt_x2(R0, L0, R1, L1, &m_round_key[32]);
+      des_encrypt_x2(L0, R0, L1, R1, &m_round_key[64]);
 
       des_FP(L0, R0, out);
       des_FP(L1, R1, out + BLOCK_SIZE);
@@ -333,9 +333,9 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       des_IP(L0, R0, in);
       des_IP(L1, R1, in + BLOCK_SIZE);
 
-      des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
-      des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
-      des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
+      des_decrypt_x2(L0, R0, L1, R1, &m_round_key[64]);
+      des_encrypt_x2(R0, L0, R1, L1, &m_round_key[32]);
+      des_decrypt_x2(L0, R0, L1, R1, &m_round_key[0]);
 
       des_FP(L0, R0, out);
       des_FP(L1, R1, out + BLOCK_SIZE);
