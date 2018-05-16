@@ -1,6 +1,6 @@
 /*
 * DES
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2018 Jack Lloyd
 *
 * Based on a public domain implemenation by Phil Karn (who in turn
 * credited Richard Outerbridge and Jim Gillogly)
@@ -24,33 +24,33 @@ void des_key_schedule(uint32_t round_key[32], const uint8_t key[8])
                                  1, 2, 2, 2, 2, 2, 2, 1 };
 
    uint32_t C = ((key[7] & 0x80) << 20) | ((key[6] & 0x80) << 19) |
-              ((key[5] & 0x80) << 18) | ((key[4] & 0x80) << 17) |
-              ((key[3] & 0x80) << 16) | ((key[2] & 0x80) << 15) |
-              ((key[1] & 0x80) << 14) | ((key[0] & 0x80) << 13) |
-              ((key[7] & 0x40) << 13) | ((key[6] & 0x40) << 12) |
-              ((key[5] & 0x40) << 11) | ((key[4] & 0x40) << 10) |
-              ((key[3] & 0x40) <<  9) | ((key[2] & 0x40) <<  8) |
-              ((key[1] & 0x40) <<  7) | ((key[0] & 0x40) <<  6) |
-              ((key[7] & 0x20) <<  6) | ((key[6] & 0x20) <<  5) |
-              ((key[5] & 0x20) <<  4) | ((key[4] & 0x20) <<  3) |
-              ((key[3] & 0x20) <<  2) | ((key[2] & 0x20) <<  1) |
-              ((key[1] & 0x20)      ) | ((key[0] & 0x20) >>  1) |
-              ((key[7] & 0x10) >>  1) | ((key[6] & 0x10) >>  2) |
-              ((key[5] & 0x10) >>  3) | ((key[4] & 0x10) >>  4);
+                ((key[5] & 0x80) << 18) | ((key[4] & 0x80) << 17) |
+                ((key[3] & 0x80) << 16) | ((key[2] & 0x80) << 15) |
+                ((key[1] & 0x80) << 14) | ((key[0] & 0x80) << 13) |
+                ((key[7] & 0x40) << 13) | ((key[6] & 0x40) << 12) |
+                ((key[5] & 0x40) << 11) | ((key[4] & 0x40) << 10) |
+                ((key[3] & 0x40) <<  9) | ((key[2] & 0x40) <<  8) |
+                ((key[1] & 0x40) <<  7) | ((key[0] & 0x40) <<  6) |
+                ((key[7] & 0x20) <<  6) | ((key[6] & 0x20) <<  5) |
+                ((key[5] & 0x20) <<  4) | ((key[4] & 0x20) <<  3) |
+                ((key[3] & 0x20) <<  2) | ((key[2] & 0x20) <<  1) |
+                ((key[1] & 0x20)      ) | ((key[0] & 0x20) >>  1) |
+                ((key[7] & 0x10) >>  1) | ((key[6] & 0x10) >>  2) |
+                ((key[5] & 0x10) >>  3) | ((key[4] & 0x10) >>  4);
    uint32_t D = ((key[7] & 0x02) << 26) | ((key[6] & 0x02) << 25) |
-              ((key[5] & 0x02) << 24) | ((key[4] & 0x02) << 23) |
-              ((key[3] & 0x02) << 22) | ((key[2] & 0x02) << 21) |
-              ((key[1] & 0x02) << 20) | ((key[0] & 0x02) << 19) |
-              ((key[7] & 0x04) << 17) | ((key[6] & 0x04) << 16) |
-              ((key[5] & 0x04) << 15) | ((key[4] & 0x04) << 14) |
-              ((key[3] & 0x04) << 13) | ((key[2] & 0x04) << 12) |
-              ((key[1] & 0x04) << 11) | ((key[0] & 0x04) << 10) |
-              ((key[7] & 0x08) <<  8) | ((key[6] & 0x08) <<  7) |
-              ((key[5] & 0x08) <<  6) | ((key[4] & 0x08) <<  5) |
-              ((key[3] & 0x08) <<  4) | ((key[2] & 0x08) <<  3) |
-              ((key[1] & 0x08) <<  2) | ((key[0] & 0x08) <<  1) |
-              ((key[3] & 0x10) >>  1) | ((key[2] & 0x10) >>  2) |
-              ((key[1] & 0x10) >>  3) | ((key[0] & 0x10) >>  4);
+                ((key[5] & 0x02) << 24) | ((key[4] & 0x02) << 23) |
+                ((key[3] & 0x02) << 22) | ((key[2] & 0x02) << 21) |
+                ((key[1] & 0x02) << 20) | ((key[0] & 0x02) << 19) |
+                ((key[7] & 0x04) << 17) | ((key[6] & 0x04) << 16) |
+                ((key[5] & 0x04) << 15) | ((key[4] & 0x04) << 14) |
+                ((key[3] & 0x04) << 13) | ((key[2] & 0x04) << 12) |
+                ((key[1] & 0x04) << 11) | ((key[0] & 0x04) << 10) |
+                ((key[7] & 0x08) <<  8) | ((key[6] & 0x08) <<  7) |
+                ((key[5] & 0x08) <<  6) | ((key[4] & 0x08) <<  5) |
+                ((key[3] & 0x08) <<  4) | ((key[2] & 0x08) <<  3) |
+                ((key[1] & 0x08) <<  2) | ((key[0] & 0x08) <<  1) |
+                ((key[3] & 0x10) >>  1) | ((key[2] & 0x10) >>  2) |
+                ((key[1] & 0x10) >>  3) | ((key[0] & 0x10) >>  4);
 
    for(size_t i = 0; i != 16; ++i)
       {
@@ -81,60 +81,117 @@ void des_key_schedule(uint32_t round_key[32], const uint8_t key[8])
       }
    }
 
+inline uint32_t spbox(uint32_t T0, uint32_t T1)
+   {
+   return DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
+          DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
+          DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
+          DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
+   }
+
 /*
 * DES Encryption
 */
-void des_encrypt(uint32_t& L, uint32_t& R,
-                 const uint32_t round_key[32])
+inline void des_encrypt(uint32_t& Lr, uint32_t& Rr,
+                        const uint32_t round_key[32])
    {
+   uint32_t L = Lr;
+   uint32_t R = Rr;
    for(size_t i = 0; i != 16; i += 2)
       {
-      uint32_t T0, T1;
-
-      T0 = rotr<4>(R) ^ round_key[2*i];
-      T1 =         R  ^ round_key[2*i + 1];
-
-      L ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
-           DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
-           DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
-           DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
-
-      T0 = rotr<4>(L) ^ round_key[2*i + 2];
-      T1 =         L  ^ round_key[2*i + 3];
-
-      R ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
-           DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
-           DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
-           DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
+      L ^= spbox(rotr<4>(R) ^ round_key[2*i  ], R ^ round_key[2*i+1]);
+      R ^= spbox(rotr<4>(L) ^ round_key[2*i+2], L ^ round_key[2*i+3]);
       }
+
+   Lr = L;
+   Rr = R;
+   }
+
+inline void des_encrypt_x2(uint32_t& L0r, uint32_t& R0r,
+                           uint32_t& L1r, uint32_t& R1r,
+                           const uint32_t round_key[32])
+   {
+   uint32_t L0 = L0r;
+   uint32_t R0 = R0r;
+   uint32_t L1 = L1r;
+   uint32_t R1 = R1r;
+
+   for(size_t i = 0; i != 16; i += 2)
+      {
+      L0 ^= spbox(rotr<4>(R0) ^ round_key[2*i  ], R0 ^ round_key[2*i+1]);
+      L1 ^= spbox(rotr<4>(R1) ^ round_key[2*i  ], R1 ^ round_key[2*i+1]);
+
+      R0 ^= spbox(rotr<4>(L0) ^ round_key[2*i+2], L0 ^ round_key[2*i+3]);
+      R1 ^= spbox(rotr<4>(L1) ^ round_key[2*i+2], L1 ^ round_key[2*i+3]);
+      }
+
+   L0r = L0;
+   R0r = R0;
+   L1r = L1;
+   R1r = R1;
    }
 
 /*
 * DES Decryption
 */
-void des_decrypt(uint32_t& L, uint32_t& R,
-                 const uint32_t round_key[32])
+inline void des_decrypt(uint32_t& Lr, uint32_t& Rr,
+                        const uint32_t round_key[32])
    {
+   uint32_t L = Lr;
+   uint32_t R = Rr;
    for(size_t i = 16; i != 0; i -= 2)
       {
-      uint32_t T0, T1;
-
-      T0 = rotr<4>(R) ^ round_key[2*i - 2];
-      T1 =         R  ^ round_key[2*i - 1];
-
-      L ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
-           DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
-           DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
-           DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
-
-      T0 = rotr<4>(L) ^ round_key[2*i - 4];
-      T1 =         L  ^ round_key[2*i - 3];
-
-      R ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
-           DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
-           DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
-           DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
+      L ^= spbox(rotr<4>(R) ^ round_key[2*i - 2], R  ^ round_key[2*i - 1]);
+      R ^= spbox(rotr<4>(L) ^ round_key[2*i - 4], L  ^ round_key[2*i - 3]);
       }
+   Lr = L;
+   Rr = R;
+   }
+
+inline void des_decrypt_x2(uint32_t& L0r, uint32_t& R0r,
+                           uint32_t& L1r, uint32_t& R1r,
+                           const uint32_t round_key[32])
+   {
+   uint32_t L0 = L0r;
+   uint32_t R0 = R0r;
+   uint32_t L1 = L1r;
+   uint32_t R1 = R1r;
+
+   for(size_t i = 0; i != 16; i += 2)
+      {
+      L0 ^= spbox(rotr<4>(R0) ^ round_key[2*i - 2], R0  ^ round_key[2*i - 1]);
+      L1 ^= spbox(rotr<4>(R1) ^ round_key[2*i - 2], R1  ^ round_key[2*i - 1]);
+
+      R0 ^= spbox(rotr<4>(L0) ^ round_key[2*i - 4], L0  ^ round_key[2*i - 3]);
+      R1 ^= spbox(rotr<4>(L1) ^ round_key[2*i - 4], L1  ^ round_key[2*i - 3]);
+      }
+
+   L0r = L0;
+   R0r = R0;
+   L1r = L1;
+   R1r = R1;
+   }
+
+inline void des_IP(uint32_t& L, uint32_t& R, const uint8_t block[])
+   {
+   uint64_t T = (DES_IPTAB1[block[0]]     ) | (DES_IPTAB1[block[1]] << 1) |
+                (DES_IPTAB1[block[2]] << 2) | (DES_IPTAB1[block[3]] << 3) |
+                (DES_IPTAB1[block[4]] << 4) | (DES_IPTAB1[block[5]] << 5) |
+                (DES_IPTAB1[block[6]] << 6) | (DES_IPTAB2[block[7]]     );
+
+   L = static_cast<uint32_t>(T >> 32);
+   R = static_cast<uint32_t>(T);
+   }
+
+inline void des_FP(uint32_t L, uint32_t R, uint8_t out[])
+   {
+   uint64_t T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+                (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+                (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+                (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+   T = rotl<32>(T);
+
+   store_be(T, out);
    }
 
 }
@@ -146,25 +203,30 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_round_key.empty() == false);
 
+   while(blocks >= 2)
+      {
+      uint32_t L0, R0;
+      uint32_t L1, R1;
+
+      des_IP(L0, R0, in);
+      des_IP(L1, R1, in + BLOCK_SIZE);
+
+      des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
+
+      des_FP(L0, R0, out);
+      des_FP(L1, R1, out + BLOCK_SIZE);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
    for(size_t i = 0; i < blocks; ++i)
       {
-      uint64_t T = (DES_IPTAB1[in[8*i+0]]     ) | (DES_IPTAB1[in[8*i+1]] << 1) |
-                 (DES_IPTAB1[in[8*i+2]] << 2) | (DES_IPTAB1[in[8*i+3]] << 3) |
-                 (DES_IPTAB1[in[8*i+4]] << 4) | (DES_IPTAB1[in[8*i+5]] << 5) |
-                 (DES_IPTAB1[in[8*i+6]] << 6) | (DES_IPTAB2[in[8*i+7]]     );
-
-      uint32_t L = static_cast<uint32_t>(T >> 32);
-      uint32_t R = static_cast<uint32_t>(T);
-
+      uint32_t L, R;
+      des_IP(L, R, in + BLOCK_SIZE*i);
       des_encrypt(L, R, m_round_key.data());
-
-      T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-          (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-          (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-          (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
-      T = rotl<32>(T);
-
-      store_be(T, out + 8*i);
+      des_FP(L, R, out + BLOCK_SIZE*i);
       }
    }
 
@@ -175,26 +237,30 @@ void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_round_key.empty() == false);
 
+   while(blocks >= 2)
+      {
+      uint32_t L0, R0;
+      uint32_t L1, R1;
+
+      des_IP(L0, R0, in);
+      des_IP(L1, R1, in + BLOCK_SIZE);
+
+      des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
+
+      des_FP(L0, R0, out);
+      des_FP(L1, R1, out + BLOCK_SIZE);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
    for(size_t i = 0; i < blocks; ++i)
       {
-      uint64_t T = (DES_IPTAB1[in[BLOCK_SIZE*i+0]]     ) | (DES_IPTAB1[in[BLOCK_SIZE*i+1]] << 1) |
-                 (DES_IPTAB1[in[BLOCK_SIZE*i+2]] << 2) | (DES_IPTAB1[in[BLOCK_SIZE*i+3]] << 3) |
-                 (DES_IPTAB1[in[BLOCK_SIZE*i+4]] << 4) | (DES_IPTAB1[in[BLOCK_SIZE*i+5]] << 5) |
-                 (DES_IPTAB1[in[BLOCK_SIZE*i+6]] << 6) | (DES_IPTAB2[in[BLOCK_SIZE*i+7]]     );
-
-      uint32_t L = static_cast<uint32_t>(T >> 32);
-      uint32_t R = static_cast<uint32_t>(T);
-
+      uint32_t L, R;
+      des_IP(L, R, in + BLOCK_SIZE*i);
       des_decrypt(L, R, m_round_key.data());
-
-      T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-          (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-          (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-          (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
-
-      T = rotl<32>(T);
-
-      store_be(T, out + BLOCK_SIZE*i);
+      des_FP(L, R, out + BLOCK_SIZE*i);
       }
    }
 
@@ -219,31 +285,36 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
    {
    verify_key_set(m_round_key.empty() == false);
 
+   while(blocks >= 2)
+      {
+      uint32_t L0, R0;
+      uint32_t L1, R1;
+
+      des_IP(L0, R0, in);
+      des_IP(L1, R1, in + BLOCK_SIZE);
+
+      des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
+      des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
+      des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
+
+      des_FP(L0, R0, out);
+      des_FP(L1, R1, out + BLOCK_SIZE);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
    for(size_t i = 0; i != blocks; ++i)
       {
-      uint64_t T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
-                 (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
-                 (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
-                 (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
-
-      uint32_t L = static_cast<uint32_t>(T >> 32);
-      uint32_t R = static_cast<uint32_t>(T);
+      uint32_t L, R;
+      des_IP(L, R, in + BLOCK_SIZE*i);
 
       des_encrypt(L, R, &m_round_key[0]);
       des_decrypt(R, L, &m_round_key[32]);
       des_encrypt(L, R, &m_round_key[64]);
 
-      T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-          (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-          (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-          (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
-
-      T = rotl<32>(T);
-
-      store_be(T, out);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      des_FP(L, R, out + BLOCK_SIZE*i);
       }
    }
 
@@ -254,31 +325,36 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
    {
    verify_key_set(m_round_key.empty() == false);
 
+   while(blocks >= 2)
+      {
+      uint32_t L0, R0;
+      uint32_t L1, R1;
+
+      des_IP(L0, R0, in);
+      des_IP(L1, R1, in + BLOCK_SIZE);
+
+      des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
+      des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
+      des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
+
+      des_FP(L0, R0, out);
+      des_FP(L1, R1, out + BLOCK_SIZE);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
    for(size_t i = 0; i != blocks; ++i)
       {
-      uint64_t T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
-                 (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
-                 (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
-                 (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
-
-      uint32_t L = static_cast<uint32_t>(T >> 32);
-      uint32_t R = static_cast<uint32_t>(T);
+      uint32_t L, R;
+      des_IP(L, R, in + BLOCK_SIZE*i);
 
       des_decrypt(L, R, &m_round_key[64]);
       des_encrypt(R, L, &m_round_key[32]);
       des_decrypt(L, R, &m_round_key[0]);
 
-      T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-          (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-          (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-          (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
-
-      T = rotl<32>(T);
-
-      store_be(T, out);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      des_FP(L, R, out + BLOCK_SIZE*i);
       }
    }
 
