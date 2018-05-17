@@ -501,7 +501,7 @@ size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
 }
 
 /*
-* Test for primaility using Miller-Rabin
+* Test for primality using Miller-Rabin
 */
 bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
               size_t prob, bool is_random)
