@@ -57,11 +57,20 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       */
       template<typename T> void update_be(const T in)
          {
-         for(size_t i = 0; i != sizeof(T); ++i)
-            {
-            uint8_t b = get_byte(i, in);
-            add_data(&b, 1);
-            }
+         uint8_t inb[sizeof(T)];
+         store_be(in, inb);
+         add_data(inb, sizeof(inb));
+         }
+
+      /**
+      * Add an integer in little-endian order
+      * @param in the value
+      */
+      template<typename T> void update_le(const T in)
+         {
+         uint8_t inb[sizeof(T)];
+         store_le(in, inb);
+         add_data(inb, sizeof(inb));
          }
 
       /**
