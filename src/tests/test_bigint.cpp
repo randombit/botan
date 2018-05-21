@@ -682,12 +682,6 @@ class DSA_ParamGen_Test final : public Text_Based_Test
 
          Test::Result result("DSA Parameter Generation");
 
-         // These tests are very slow so skip in normal runs
-         if(p_bits > 1024 && Test::run_long_tests() == false)
-            {
-            return result;
-            }
-
          try
             {
             Botan::BigInt gen_P, gen_Q;

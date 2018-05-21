@@ -7,6 +7,7 @@
 
 #include <botan/numthry.h>
 #include <botan/hash.h>
+#include <botan/reducer.h>
 #include <botan/rng.h>
 
 namespace Botan {
@@ -80,7 +81,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    q.set_bit(qbits-1);
    q.set_bit(0);
 
-   if(!is_prime(q, rng, 126))
+   if(!is_prime(q, rng, 128, true))
       return false;
 
    const size_t n = (pbits-1) / (HASH_SIZE * 8),
@@ -88,6 +89,8 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 
    BigInt X;
    std::vector<uint8_t> V(HASH_SIZE * (n+1));
+
+   Modular_Reducer mod_2q(2*q);
 
    for(size_t j = 0; j != 4*pbits; ++j)
       {
@@ -104,9 +107,9 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
                          V.size() - (HASH_SIZE - 1 - b/8));
          X.set_bit(pbits-1);
 
-         p = X - (X % (2*q) - 1);
+         p = X - (mod_2q.reduce(X) - 1);
 
-         if(p.bits() == pbits && is_prime(p, rng, 126))
+         if(p.bits() == pbits && is_prime(p, rng, 128, true))
             return true;
          }
       }
