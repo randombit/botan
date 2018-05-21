@@ -240,7 +240,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
       Modular_Reducer mod_2q(2*q);
       BigInt X;
       BigInt p;
-      while(p.bits() != pbits || !is_prime(p, rng))
+      while(p.bits() != pbits || !is_prime(p, rng, 128, true))
          {
          X.randomize(rng, pbits);
          p = X - mod_2q.reduce(X) + 1;
