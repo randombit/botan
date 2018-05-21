@@ -109,6 +109,10 @@
    #include <botan/mceliece.h>
 #endif
 
+#if defined(BOTAN_HAS_ECDSA)
+   #include <botan/ecdsa.h>
+#endif
+
 #if defined(BOTAN_HAS_NEWHOPE)
    #include <botan/newhope.h>
 #endif
@@ -451,9 +455,16 @@ class Speed final : public Command
             throw CLI_Usage_Error("Unknown --format type '" + format + "'");
 
          if(ecc_groups.empty())
+            {
             ecc_groups = { "secp256r1", "brainpool256r1",
                            "secp384r1", "brainpool384r1",
                            "secp521r1", "brainpool512r1" };
+            }
+         else if(ecc_groups.size() == 1 && ecc_groups[0] == "all")
+            {
+            auto all = Botan::EC_Group::known_named_groups();
+            ecc_groups.assign(all.begin(), all.end());
+            }
 
          std::vector<std::string> algos = get_arg_list("algos");
 
@@ -543,6 +554,10 @@ class Speed final : public Command
             else if(algo == "ECDSA")
                {
                bench_ecdsa(ecc_groups, provider, msec);
+               }
+            else if(algo == "ecdsa_recovery")
+               {
+               bench_ecdsa_recovery(ecc_groups, provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_SM2)
@@ -1831,6 +1846,42 @@ class Speed final : public Command
          {
          return bench_pk_sig_ecc("ECDSA", "EMSA1(SHA-256)", provider, groups, msec);
          }
+
+      void bench_ecdsa_recovery(const std::vector<std::string>& groups,
+                                const std::string&,
+                                std::chrono::milliseconds msec)
+         {
+         for(std::string group_name : groups)
+            {
+            Botan::EC_Group group(group_name);
+            std::unique_ptr<Timer> recovery_timer = make_timer("ECDSA recovery " + group_name);
+
+            while(recovery_timer->under(msec))
+               {
+               Botan::ECDSA_PrivateKey key(rng(), group);
+
+               std::vector<uint8_t> message(group.get_order_bytes());
+               rng().randomize(message.data(), message.size());
+
+               Botan::PK_Signer signer(key, rng(), "Raw");
+               signer.update(message);
+               std::vector<uint8_t> signature = signer.signature(rng());
+
+               Botan::BigInt r(signature.data(), signature.size()/2);
+               Botan::BigInt s(signature.data() + signature.size()/2, signature.size()/2);
+               const uint8_t v = key.recovery_param(message, r, s);
+
+               recovery_timer->run([&]() {
+                  Botan::ECDSA_PublicKey pubkey(group, message, r, s, v);
+                  BOTAN_ASSERT(pubkey.public_point() == key.public_point(), "Recovered public key");
+                  });
+               }
+
+            record_result(recovery_timer);
+            }
+
+         }
+
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)

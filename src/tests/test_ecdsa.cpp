@@ -152,6 +152,56 @@ class ECDSA_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
+#if defined(BOTAN_HAS_EMSA_RAW)
+
+class ECDSA_Key_Recovery_Tests final : public Text_Based_Test
+   {
+   public:
+      ECDSA_Key_Recovery_Tests() :
+         Text_Based_Test("pubkey/ecdsa_key_recovery.vec", "Group,Msg,R,S,V,PubkeyX,PubkeyY") {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         Test::Result result("ECDSA key recovery");
+
+         const std::string group_id = vars.get_req_str("Group");
+         Botan::EC_Group group(group_id);
+
+         const BigInt R = vars.get_req_bn("R");
+         const BigInt S = vars.get_req_bn("S");
+         const uint8_t V = vars.get_req_u8("V");
+         const std::vector<uint8_t> msg = vars.get_req_bin("Msg");
+         const BigInt pubkey_x = vars.get_req_bn("PubkeyX");
+         const BigInt pubkey_y = vars.get_req_bn("PubkeyY");
+
+         try
+            {
+            Botan::ECDSA_PublicKey pubkey(group, msg, R, S, V);
+            result.test_eq("Pubkey X coordinate", pubkey.public_point().get_affine_x(), pubkey_x);
+            result.test_eq("Pubkey Y coordinate", pubkey.public_point().get_affine_y(), pubkey_y);
+
+            const uint8_t computed_V = pubkey.recovery_param(msg, R, S);
+            result.test_eq("Recovery param is correct", static_cast<size_t>(computed_V), static_cast<size_t>(V));
+
+            Botan::PK_Verifier verifier(pubkey, "Raw");
+
+            auto sig = Botan::BigInt::encode_fixed_length_int_pair(R, S, group.get_order_bytes());
+
+            result.confirm("Signature verifies", verifier.verify_message(msg, sig));
+            }
+         catch(Botan::Exception& e)
+            {
+            result.test_failure("Failed to recover ECDSA public key", e.what());
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("ecdsa_key_recovery", ECDSA_Key_Recovery_Tests);
+
+#endif
+
 class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
    {
    public:

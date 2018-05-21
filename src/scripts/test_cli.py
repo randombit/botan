@@ -655,7 +655,9 @@ def cli_speed_tests():
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
 
-    math_ops = ['mp_mul', 'mp_div', 'modexp', 'random_prime', 'inverse_mod', 'rfc3394', 'fpe_fe1',
+    # these all have a common output format
+    math_ops = ['mp_mul', 'mp_div', 'mp_div10', 'modexp', 'random_prime', 'inverse_mod',
+                'rfc3394', 'fpe_fe1', 'ecdsa_recovery',
                 'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'primality_test',
                 'bcrypt', 'passhash9']
 
@@ -728,7 +730,11 @@ def main(args=None):
 
     test_regex = None
     if len(args) == 3:
-        test_regex = re.compile(args[2])
+        try:
+            test_regex = re.compile(args[2])
+        except re.error as e:
+            logging.error("Invalid regex: %s", str(e))
+            return 1
 
     start_time = time.time()
 
