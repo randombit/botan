@@ -27,6 +27,8 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
 
       bool more_items() const;
       BER_Decoder& verify_end();
+      BER_Decoder& verify_end(const std::string& err_msg);
+
       BER_Decoder& discard_remaining();
 
       BER_Decoder  start_cons(ASN1_Tag type_tag, ASN1_Tag class_tag = UNIVERSAL);

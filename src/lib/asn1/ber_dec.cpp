@@ -162,8 +162,16 @@ bool BER_Decoder::more_items() const
 */
 BER_Decoder& BER_Decoder::verify_end()
    {
+   return verify_end("BER_Decoder::verify_end called, but data remains");
+   }
+
+/*
+* Verify that no bytes remain in the source
+*/
+BER_Decoder& BER_Decoder::verify_end(const std::string& err)
+   {
    if(!m_source->end_of_data() || m_pushed.is_set())
-      throw Invalid_State("BER_Decoder::verify_end called, but data remains");
+      throw Decoding_Error(err);
    return (*this);
    }
 
