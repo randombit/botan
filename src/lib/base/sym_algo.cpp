@@ -9,10 +9,9 @@
 
 namespace Botan {
 
-void SymmetricAlgorithm::verify_key_set(bool cond) const
+void SymmetricAlgorithm::throw_key_not_set_error() const
    {
-   if(cond == false)
-      throw Key_Not_Set(name());
+   throw Key_Not_Set(name());
    }
 
 void SymmetricAlgorithm::set_key(const uint8_t key[], size_t length)
