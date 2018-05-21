@@ -1,6 +1,6 @@
 /*
 * DER Encoder
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -19,39 +19,40 @@ namespace {
 /*
 * DER encode an ASN.1 type tag
 */
-secure_vector<uint8_t> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
+void encode_tag(std::vector<uint8_t>& encoded_tag,
+                ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    if((class_tag | 0xE0) != 0xE0)
       throw Encoding_Error("DER_Encoder: Invalid class tag " +
                            std::to_string(class_tag));
 
-   secure_vector<uint8_t> encoded_tag;
    if(type_tag <= 30)
+      {
       encoded_tag.push_back(static_cast<uint8_t>(type_tag | class_tag));
+      }
    else
       {
       size_t blocks = high_bit(type_tag) + 6;
       blocks = (blocks - (blocks % 7)) / 7;
 
-      BOTAN_ASSERT(blocks > 0, "Math works");
+      BOTAN_ASSERT_NOMSG(blocks > 0);
 
       encoded_tag.push_back(static_cast<uint8_t>(class_tag | 0x1F));
       for(size_t i = 0; i != blocks - 1; ++i)
          encoded_tag.push_back(0x80 | ((type_tag >> 7*(blocks-i-1)) & 0x7F));
       encoded_tag.push_back(type_tag & 0x7F);
       }
-
-   return encoded_tag;
    }
 
 /*
 * DER encode an ASN.1 length field
 */
-secure_vector<uint8_t> encode_length(size_t length)
+void encode_length(std::vector<uint8_t>& encoded_length, size_t length)
    {
-   secure_vector<uint8_t> encoded_length;
    if(length <= 127)
+      {
       encoded_length.push_back(static_cast<uint8_t>(length));
+      }
    else
       {
       const size_t bytes_needed = significant_bytes(length);
@@ -61,15 +62,14 @@ secure_vector<uint8_t> encode_length(size_t length)
       for(size_t i = sizeof(length) - bytes_needed; i < sizeof(length); ++i)
          encoded_length.push_back(get_byte(i, length));
       }
-   return encoded_length;
    }
 
 }
 
 /*
-* Return the encoded SEQUENCE/SET
+* Push the encoded SEQUENCE/SET to the encoder stream
 */
-secure_vector<uint8_t> DER_Encoder::DER_Sequence::get_contents()
+void DER_Encoder::DER_Sequence::push_contents(DER_Encoder& der)
    {
    const ASN1_Tag real_class_tag = ASN1_Tag(m_class_tag | CONSTRUCTED);
 
@@ -81,13 +81,8 @@ secure_vector<uint8_t> DER_Encoder::DER_Sequence::get_contents()
       m_set_contents.clear();
       }
 
-   secure_vector<uint8_t> result;
-   result += encode_tag(m_type_tag, real_class_tag);
-   result += encode_length(m_contents.size());
-   result += m_contents;
+   der.add_object(m_type_tag, real_class_tag, m_contents.data(), m_contents.size());
    m_contents.clear();
-
-   return result;
    }
 
 /*
@@ -99,6 +94,24 @@ void DER_Encoder::DER_Sequence::add_bytes(const uint8_t data[], size_t length)
       m_set_contents.push_back(secure_vector<uint8_t>(data, data + length));
    else
       m_contents += std::make_pair(data, length);
+   }
+
+void DER_Encoder::DER_Sequence::add_bytes(const uint8_t hdr[], size_t hdr_len,
+                                          const uint8_t val[], size_t val_len)
+   {
+   if(m_type_tag == SET)
+      {
+      secure_vector<uint8_t> m;
+      m.reserve(hdr_len + val_len);
+      m += std::make_pair(hdr, hdr_len);
+      m += std::make_pair(val, val_len);
+      m_set_contents.push_back(std::move(m));
+      }
+   else
+      {
+      m_contents += std::make_pair(hdr, hdr_len);
+      m_contents += std::make_pair(val, val_len);
+      }
    }
 
 /*
@@ -130,6 +143,16 @@ secure_vector<uint8_t> DER_Encoder::get_contents()
    return output;
    }
 
+std::vector<uint8_t> DER_Encoder::get_contents_unlocked()
+   {
+   if(m_subsequences.size() != 0)
+      throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
+
+   std::vector<uint8_t> output(m_contents.begin(), m_contents.end());
+   m_contents.clear();
+   return output;
+   }
+
 /*
 * Start a new ASN.1 SEQUENCE/SET/EXPLICIT
 */
@@ -148,9 +171,10 @@ DER_Encoder& DER_Encoder::end_cons()
    if(m_subsequences.empty())
       throw Invalid_State("DER_Encoder::end_cons: No such sequence");
 
-   secure_vector<uint8_t> seq = m_subsequences[m_subsequences.size()-1].get_contents();
+   DER_Sequence last_seq = std::move(m_subsequences[m_subsequences.size()-1]);
    m_subsequences.pop_back();
-   raw_bytes(seq);
+   last_seq.push_contents(*this);
+
    return (*this);
    }
 
@@ -161,8 +185,9 @@ DER_Encoder& DER_Encoder::start_explicit(uint16_t type_no)
    {
    ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
 
+   // This would confuse DER_Sequence
    if(type_tag == SET)
-      throw Internal_Error("DER_Encoder.start_explicit(SET); cannot perform");
+      throw Internal_Error("DER_Encoder.start_explicit(SET) not supported");
 
    return start_cons(type_tag, CONTEXT_SPECIFIC);
    }
@@ -181,9 +206,13 @@ DER_Encoder& DER_Encoder::end_explicit()
 DER_Encoder& DER_Encoder::raw_bytes(const uint8_t bytes[], size_t length)
    {
    if(m_subsequences.size())
+      {
       m_subsequences[m_subsequences.size()-1].add_bytes(bytes, length);
+      }
    else
+      {
       m_contents += std::make_pair(bytes, length);
+      }
 
    return (*this);
    }
@@ -275,28 +304,6 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n,
 /*
 * DER encode an OCTET STRING or BIT STRING
 */
-DER_Encoder& DER_Encoder::encode(const secure_vector<uint8_t>& bytes,
-                                 ASN1_Tag real_type,
-                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
-   {
-   return encode(bytes.data(), bytes.size(),
-                 real_type, type_tag, class_tag);
-   }
-
-/*
-* DER encode an OCTET STRING or BIT STRING
-*/
-DER_Encoder& DER_Encoder::encode(const std::vector<uint8_t>& bytes,
-                                 ASN1_Tag real_type,
-                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
-   {
-   return encode(bytes.data(), bytes.size(),
-                 real_type, type_tag, class_tag);
-   }
-
-/*
-* DER encode an OCTET STRING or BIT STRING
-*/
 DER_Encoder& DER_Encoder::encode(const uint8_t bytes[], size_t length,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
@@ -315,26 +322,6 @@ DER_Encoder& DER_Encoder::encode(const uint8_t bytes[], size_t length,
       return add_object(type_tag, class_tag, bytes, length);
    }
 
-/*
-* Conditionally write some values to the stream
-*/
-DER_Encoder& DER_Encoder::encode_if(bool cond, DER_Encoder& codec)
-   {
-   if(cond)
-      return raw_bytes(codec.get_contents());
-   return (*this);
-   }
-
-DER_Encoder& DER_Encoder::encode_if(bool cond, const ASN1_Object& obj)
-   {
-   if(cond)
-      encode(obj);
-   return (*this);
-   }
-
-/*
-* Request for an object to encode itself
-*/
 DER_Encoder& DER_Encoder::encode(const ASN1_Object& obj)
    {
    obj.encode_into(*this);
@@ -347,12 +334,21 @@ DER_Encoder& DER_Encoder::encode(const ASN1_Object& obj)
 DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                                      const uint8_t rep[], size_t length)
    {
-   secure_vector<uint8_t> buffer;
-   buffer += encode_tag(type_tag, class_tag);
-   buffer += encode_length(length);
-   buffer += std::make_pair(rep, length);
+   std::vector<uint8_t> hdr;
+   encode_tag(hdr, type_tag, class_tag);
+   encode_length(hdr, length);
 
-   return raw_bytes(buffer);
+   if(m_subsequences.size())
+      {
+      m_subsequences[m_subsequences.size()-1].add_bytes(hdr.data(), hdr.size(), rep, length);
+      }
+   else
+      {
+      m_contents += hdr;
+      m_contents += std::make_pair(rep, length);
+      }
+
+   return (*this);
    }
 
 /*

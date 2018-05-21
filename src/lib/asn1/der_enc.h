@@ -1,6 +1,6 @@
 /*
 * DER Encoder
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -24,8 +24,7 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
    public:
       secure_vector<uint8_t> get_contents();
 
-      std::vector<uint8_t> get_contents_unlocked()
-         { return unlock(get_contents()); }
+      std::vector<uint8_t> get_contents_unlocked();
 
       DER_Encoder& start_cons(ASN1_Tag type_tag,
                               ASN1_Tag class_tag = UNIVERSAL);
@@ -69,20 +68,19 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
                           ASN1_Tag type_tag,
                           ASN1_Tag class_tag = CONTEXT_SPECIFIC);
 
-      DER_Encoder& encode(const std::vector<uint8_t>& v,
-                          ASN1_Tag real_type,
-                          ASN1_Tag type_tag,
-                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
-
-      DER_Encoder& encode(const secure_vector<uint8_t>& v,
-                          ASN1_Tag real_type,
-                          ASN1_Tag type_tag,
-                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
-
       DER_Encoder& encode(const uint8_t v[], size_t len,
                           ASN1_Tag real_type,
                           ASN1_Tag type_tag,
                           ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+
+      template<typename Alloc>
+      DER_Encoder& encode(const std::vector<uint8_t, Alloc>& bytes,
+                          ASN1_Tag real_type,
+                          ASN1_Tag type_tag, ASN1_Tag class_tag)
+         {
+         return encode(bytes.data(), bytes.size(),
+                       real_type, type_tag, class_tag);
+         }
 
       template<typename T>
       DER_Encoder& encode_optional(const T& value, const T& default_value)
@@ -100,9 +98,27 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
          return (*this);
          }
 
+      /*
+      * Request for an object to encode itself to this stream
+      */
       DER_Encoder& encode(const ASN1_Object& obj);
-      DER_Encoder& encode_if(bool pred, DER_Encoder& enc);
-      DER_Encoder& encode_if(bool pred, const ASN1_Object& obj);
+
+      /*
+      * Conditionally write some values to the stream
+      */
+      DER_Encoder& encode_if(bool pred, DER_Encoder& enc)
+         {
+         if(pred)
+            return raw_bytes(enc.get_contents());
+         return (*this);
+         }
+
+      DER_Encoder& encode_if(bool pred, const ASN1_Object& obj)
+         {
+         if(pred)
+            encode(obj);
+         return (*this);
+         }
 
       DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                               const uint8_t rep[], size_t length);
@@ -130,9 +146,37 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
          {
          public:
             ASN1_Tag tag_of() const;
-            secure_vector<uint8_t> get_contents();
-            void add_bytes(const uint8_t[], size_t);
+
+            void push_contents(DER_Encoder& der);
+
+            void add_bytes(const uint8_t val[], size_t len);
+
+            void add_bytes(const uint8_t hdr[], size_t hdr_len,
+                           const uint8_t val[], size_t val_len);
+
             DER_Sequence(ASN1_Tag, ASN1_Tag);
+
+            DER_Sequence(DER_Sequence&& seq)
+               {
+               std::swap(m_type_tag, seq.m_type_tag);
+               std::swap(m_class_tag, seq.m_class_tag);
+               std::swap(m_contents, seq.m_contents);
+               std::swap(m_set_contents, seq.m_set_contents);
+               }
+
+            DER_Sequence& operator=(DER_Sequence&& seq)
+               {
+               std::swap(m_type_tag, seq.m_type_tag);
+               std::swap(m_class_tag, seq.m_class_tag);
+               std::swap(m_contents, seq.m_contents);
+               std::swap(m_set_contents, seq.m_set_contents);
+               return (*this);
+               }
+
+            DER_Sequence(const DER_Sequence& seq) = default;
+
+            DER_Sequence& operator=(const DER_Sequence& seq) = default;
+
          private:
             ASN1_Tag m_type_tag, m_class_tag;
             secure_vector<uint8_t> m_contents;
