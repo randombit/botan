@@ -450,27 +450,24 @@ class Gen_DL_Group final : public Command
          const size_t qbits = get_arg_sz("qbits");
 
          const std::string type = get_arg("type");
+         const std::string seed_str = get_arg("seed");
 
          if(type == "strong")
             {
+            if(seed_str.size() > 0)
+               throw CLI_Usage_Error("Seed only supported for DSA param gen");
             Botan::DL_Group grp(rng(), Botan::DL_Group::Strong, pbits);
             output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
             }
          else if(type == "subgroup")
             {
+            if(seed_str.size() > 0)
+               throw CLI_Usage_Error("Seed only supported for DSA param gen");
             Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
             output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
             }
          else if(type == "dsa")
             {
-            const std::string seed_str = get_arg("seed");
-            const std::vector<uint8_t> seed = Botan::hex_decode(seed_str);
-
-            if(seed.empty())
-               {
-               throw CLI_Usage_Error("Generating DSA parameter set requires providing seed");
-               }
-
             size_t dsa_qbits = qbits;
             if(dsa_qbits == 0)
                {
@@ -482,8 +479,18 @@ class Gen_DL_Group final : public Command
                   throw CLI_Usage_Error("Invalid DSA p/q sizes");
                }
 
-            Botan::DL_Group grp(rng(), seed, pbits, dsa_qbits);
-            output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
+            if(seed_str.empty())
+               {
+               Botan::DL_Group grp(rng(), Botan::DL_Group::DSA_Kosherizer, pbits, dsa_qbits);
+               output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
+               }
+            else
+               {
+               const std::vector<uint8_t> seed = Botan::hex_decode(seed_str);
+               Botan::DL_Group grp(rng(), seed, pbits, dsa_qbits);
+               output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
+               }
+
             }
          else
             {
