@@ -1,5 +1,5 @@
 
-Botan Development Roadmap
+Development Roadmap
 ========================================
 
 Near Term Plans
@@ -31,12 +31,16 @@ ECC Refactoring
 
 Refactoring how elliptic curve groups are stored, sharing representation and
 allowing better precomputations (eg precomputing base point multiples).
+[Completed in 2.5.0]
 
 Performance Improvements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The eventual goal would be performance parity with OpenSSL, but initial
 target is probably more like "no worse than 30% slower for any algorithm".
+
+[Major improvements were made in ECC and RSA performance were made
+between 2.4.0 and 2.7.0, measurement and optimization work is ongoing.]
 
 Elliptic Curve Pairings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -58,15 +62,15 @@ Initial work is focused on features which are included in TLS v1.3 but also
 available for TLS v1.2 (such as PSS signatures and FFDHE) as well as
 refactorings which will make the eventual implementation of v1.3 simpler.
 Assuming no source of dedicated funding appears, a full v1.3 implementation will
-likely not available until late in 2018.
+likely not available until sometime in 2019.
 
 ASN.1 Redesign
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
-   This project has been deferred to 3.x as constexpr will likely make it
-   much easier to implement.
+   This project has been deferred to 3.x as C++14 extended constexpr
+   will likely make it much easier to implement.
 
 The current ASN.1 library (DER_Encoder/BER_Decoder) does make it
 roughly possible to write C++ code matching the ASN.1 structures. But

@@ -50,17 +50,17 @@ properly.
 Branch Support Status
 -------------------------
 
-Following table provides the support status for Botan branches. Any branch not
-listed here (including 1.11) is no longer supported. Dates in the future are
-approximate.
+Following table provides the support status for Botan branches as of May 2018.
+Any branch not listed here (including 1.11) is no longer supported.
+Dates in the future are approximate.
 
 ============== ============== ========================== ============
 Branch         First Release  End of Active Development  End of Life
 ============== ============== ========================== ============
 1.8            2008-12-08     2010-08-31                 2016-02-13
 1.10           2011-06-20     2012-07-10                 2018-12-31
-2              2017-01-06     2019-01-01                 2021-12-31
-3 (planned)    2019-04-01     2022-01-01                 2023-12-31
+2.x            2017-01-06     2019-01-01                 2021-12-31
+3.x (planned)  2019-07-01     2022-01-01                 2023-12-31
 ============== ============== ========================== ============
 
 "Active development" refers to adding new features and optimizations. At the
