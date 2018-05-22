@@ -638,6 +638,7 @@ class Speed final : public Command
             "AES-128/OCB",
             "AES-128/GCM",
             "AES-128/XTS",
+            "AES-128/SIV",
 
             "Serpent/CBC",
             "Serpent/CTR-BE",
@@ -645,37 +646,36 @@ class Speed final : public Command
             "Serpent/OCB",
             "Serpent/GCM",
             "Serpent/XTS",
+            "Serpent/SIV",
 
             "ChaCha20Poly1305",
 
             /* Stream ciphers */
             "RC4",
             "Salsa20",
+            "ChaCha20",
 
             /* Hashes */
-            "Tiger",
-            "RIPEMD-160",
             "SHA-160",
             "SHA-256",
             "SHA-512",
+            "SHA-3(256)",
+            "SHA-3(512)",
+            "RIPEMD-160",
             "Skein-512",
-            "Keccak-1600(512)",
+            "Blake2b",
+            "Tiger",
             "Whirlpool",
 
             /* MACs */
             "CMAC(AES-128)",
             "HMAC(SHA-256)",
 
-            /* Misc */
-            "random_prime",
-
             /* pubkey */
             "RSA",
             "DH",
             "ECDH",
             "ECDSA",
-            "ECKCDSA",
-            "ECGDSA",
             "Ed25519",
             "Curve25519",
             "NEWHOPE",
