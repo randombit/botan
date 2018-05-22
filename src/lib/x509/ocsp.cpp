@@ -68,7 +68,8 @@ Request::Request(const X509_Certificate& issuer_cert,
 
 std::vector<uint8_t> Request::BER_encode() const
    {
-   return DER_Encoder().start_cons(SEQUENCE)
+   std::vector<uint8_t> output;
+   DER_Encoder(output).start_cons(SEQUENCE)
         .start_cons(SEQUENCE)
           .start_explicit(0)
             .encode(static_cast<size_t>(0)) // version #
@@ -79,7 +80,9 @@ std::vector<uint8_t> Request::BER_encode() const
               .end_cons()
             .end_cons()
           .end_cons()
-      .end_cons().get_contents_unlocked();
+      .end_cons();
+
+   return output;
    }
 
 std::string Request::base64_encode() const

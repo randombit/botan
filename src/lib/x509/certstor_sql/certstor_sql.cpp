@@ -1,6 +1,7 @@
 /*
 * Certificate Store in SQL
 * (C) 2016 Kai Michaelis, Rohde & Schwarz Cybersecurity
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,7 +9,6 @@
 #include <botan/certstor_sql.h>
 #include <botan/pk_keys.h>
 #include <botan/ber_dec.h>
-#include <botan/der_enc.h>
 #include <botan/pkcs8.h>
 #include <botan/data_src.h>
 
@@ -46,21 +46,20 @@ Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database>
 std::shared_ptr<const X509_Certificate>
 Certificate_Store_In_SQL::find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const
    {
-   DER_Encoder enc;
    std::shared_ptr<SQL_Database::Statement> stmt;
 
-   subject_dn.encode_into(enc);
+   const std::vector<uint8_t> dn_encoding = subject_dn.BER_encode();
 
    if(key_id.empty())
       {
       stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1");
-      stmt->bind(1,enc.get_contents_unlocked());
+      stmt->bind(1, dn_encoding);
       }
    else
       {
       stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE\
                                         subject_dn == ?1 AND (key_id == NULL OR key_id == ?2)");
-      stmt->bind(1,enc.get_contents_unlocked());
+      stmt->bind(1, dn_encoding);
       stmt->bind(2,key_id);
       }
 
@@ -81,22 +80,21 @@ Certificate_Store_In_SQL::find_all_certs(const X509_DN& subject_dn, const std::v
    {
    std::vector<std::shared_ptr<const X509_Certificate>> certs;
 
-   DER_Encoder enc;
    std::shared_ptr<SQL_Database::Statement> stmt;
 
-   subject_dn.encode_into(enc);
+   const std::vector<uint8_t> dn_encoding = subject_dn.BER_encode();
 
    if(key_id.empty())
       {
       stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1");
-      stmt->bind(1,enc.get_contents_unlocked());
+      stmt->bind(1, dn_encoding);
       }
    else
       {
       stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE\
                                         subject_dn == ?1 AND (key_id == NULL OR key_id == ?2)");
-      stmt->bind(1,enc.get_contents_unlocked());
-      stmt->bind(2,key_id);
+      stmt->bind(1, dn_encoding);
+      stmt->bind(2, key_id);
       }
 
    std::shared_ptr<const X509_Certificate> cert;
@@ -113,13 +111,13 @@ Certificate_Store_In_SQL::find_all_certs(const X509_DN& subject_dn, const std::v
 std::shared_ptr<const X509_Certificate>
 Certificate_Store_In_SQL::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& /*key_hash*/) const
    {
-   throw Not_Implemented("TODO!");
+   throw Not_Implemented("Certificate_Store_In_SQL::find_cert_by_pubkey_sha1");
    }
 
 std::shared_ptr<const X509_Certificate>
 Certificate_Store_In_SQL::find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& /*subject_hash*/) const
    {
-   throw Not_Implemented("TODO!");
+   throw Not_Implemented("Certificate_Store_In_SQL::find_cert_by_raw_subject_dn_sha256");
    }
 
 std::shared_ptr<const X509_CRL>
@@ -157,7 +155,9 @@ std::vector<X509_DN> Certificate_Store_In_SQL::all_subjects() const
 
 bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert)
    {
-   DER_Encoder enc;
+   const std::vector<uint8_t> dn_encoding = cert.subject_dn().BER_encode();
+   const std::vector<uint8_t> cert_encoding = cert.BER_encode();
+
    auto stmt = m_database->new_statement("INSERT OR REPLACE INTO " +
                                      m_prefix + "certificates (\
                                          fingerprint,          \
@@ -168,13 +168,10 @@ bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert)
                                      ) VALUES ( ?1, ?2, ?3, ?4, ?5 )");
 
    stmt->bind(1,cert.fingerprint("SHA-256"));
-   cert.subject_dn().encode_into(enc);
-   stmt->bind(2,enc.get_contents_unlocked());
+   stmt->bind(2,dn_encoding);
    stmt->bind(3,cert.subject_key_id());
    stmt->bind(4,std::vector<uint8_t>());
-   enc = DER_Encoder();
-   cert.encode_into(enc);
-   stmt->bind(5,enc.get_contents_unlocked());
+   stmt->bind(5,cert_encoding);
    stmt->spin();
 
    return true;
@@ -281,9 +278,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
 
    if(time.time_is_set())
       {
-      DER_Encoder der;
-      time.encode_into(der);
-      stmt1->bind(3,der.get_contents_unlocked());
+      stmt1->bind(3, time.BER_encode());
       }
    else
       {

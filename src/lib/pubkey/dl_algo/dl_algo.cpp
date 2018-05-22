@@ -30,7 +30,9 @@ AlgorithmIdentifier DL_Scheme_PublicKey::algorithm_identifier() const
 
 std::vector<uint8_t> DL_Scheme_PublicKey::public_key_bits() const
    {
-   return DER_Encoder().encode(m_y).get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(m_y);
+   return output;
    }
 
 DL_Scheme_PublicKey::DL_Scheme_PublicKey(const DL_Group& group, const BigInt& y) :

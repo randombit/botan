@@ -1,6 +1,6 @@
 /*
 * ASN.1 Internals
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -75,6 +75,13 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
       * @param from the BER_Decoder that will be read from
       */
       virtual void decode_from(BER_Decoder& from) = 0;
+
+      /**
+      * Return the encoding of this object. This is a convenience
+      * method when just one object needs to be serialized. Use
+      * DER_Encoder for complicated encodings.
+      */
+      std::vector<uint8_t> BER_encode() const;
 
       ASN1_Object() = default;
       ASN1_Object(const ASN1_Object&) = default;

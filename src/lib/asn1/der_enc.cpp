@@ -66,6 +66,22 @@ void encode_length(std::vector<uint8_t>& encoded_length, size_t length)
 
 }
 
+DER_Encoder::DER_Encoder(secure_vector<uint8_t>& vec)
+   {
+   m_append_output_fn = [&vec](const uint8_t b[], size_t l)
+      {
+      vec.insert(vec.end(), b, b + l);
+      };
+   }
+
+DER_Encoder::DER_Encoder(std::vector<uint8_t>& vec)
+   {
+   m_append_output_fn = [&vec](const uint8_t b[], size_t l)
+      {
+      vec.insert(vec.end(), b, b + l);
+      };
+   }
+
 /*
 * Push the encoded SEQUENCE/SET to the encoder stream
 */
@@ -138,8 +154,11 @@ secure_vector<uint8_t> DER_Encoder::get_contents()
    if(m_subsequences.size() != 0)
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
+   if(m_append_output_fn)
+      throw Invalid_State("DER_Encoder Cannot get contents when using output vector");
+
    secure_vector<uint8_t> output;
-   std::swap(output, m_contents);
+   std::swap(output, m_default_outbuf);
    return output;
    }
 
@@ -148,8 +167,11 @@ std::vector<uint8_t> DER_Encoder::get_contents_unlocked()
    if(m_subsequences.size() != 0)
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
-   std::vector<uint8_t> output(m_contents.begin(), m_contents.end());
-   m_contents.clear();
+   if(m_append_output_fn)
+      throw Invalid_State("DER_Encoder Cannot get contents when using output vector");
+
+   std::vector<uint8_t> output(m_default_outbuf.begin(), m_default_outbuf.end());
+   m_default_outbuf.clear();
    return output;
    }
 
@@ -209,9 +231,41 @@ DER_Encoder& DER_Encoder::raw_bytes(const uint8_t bytes[], size_t length)
       {
       m_subsequences[m_subsequences.size()-1].add_bytes(bytes, length);
       }
+   else if(m_append_output_fn)
+      {
+      m_append_output_fn(bytes, length);
+      }
    else
       {
-      m_contents += std::make_pair(bytes, length);
+      m_default_outbuf += std::make_pair(bytes, length);
+      }
+
+   return (*this);
+   }
+
+/*
+* Write the encoding of the byte(s)
+*/
+DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
+                                     const uint8_t rep[], size_t length)
+   {
+   std::vector<uint8_t> hdr;
+   encode_tag(hdr, type_tag, class_tag);
+   encode_length(hdr, length);
+
+   if(m_subsequences.size())
+      {
+      m_subsequences[m_subsequences.size()-1].add_bytes(hdr.data(), hdr.size(), rep, length);
+      }
+   else if(m_append_output_fn)
+      {
+      m_append_output_fn(hdr.data(), hdr.size());
+      m_append_output_fn(rep, length);
+      }
+   else
+      {
+      m_default_outbuf += hdr;
+      m_default_outbuf += std::make_pair(rep, length);
       }
 
    return (*this);
@@ -325,29 +379,6 @@ DER_Encoder& DER_Encoder::encode(const uint8_t bytes[], size_t length,
 DER_Encoder& DER_Encoder::encode(const ASN1_Object& obj)
    {
    obj.encode_into(*this);
-   return (*this);
-   }
-
-/*
-* Write the encoding of the byte(s)
-*/
-DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
-                                     const uint8_t rep[], size_t length)
-   {
-   std::vector<uint8_t> hdr;
-   encode_tag(hdr, type_tag, class_tag);
-   encode_length(hdr, length);
-
-   if(m_subsequences.size())
-      {
-      m_subsequences[m_subsequences.size()-1].add_bytes(hdr.data(), hdr.size(), rep, length);
-      }
-   else
-      {
-      m_contents += hdr;
-      m_contents += std::make_pair(rep, length);
-      }
-
    return (*this);
    }
 

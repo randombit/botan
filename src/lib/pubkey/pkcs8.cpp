@@ -192,12 +192,14 @@ std::vector<uint8_t> BER_encode(const Private_Key& key,
       pbes2_encrypt_msec(PKCS8::BER_encode(key), pass, msec, nullptr,
                          pbe_params.first, pbe_params.second, rng);
 
-   return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(pbe_info.first)
-            .encode(pbe_info.second, OCTET_STRING)
-         .end_cons()
-      .get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder der(output);
+   der.start_cons(SEQUENCE)
+         .encode(pbe_info.first)
+         .encode(pbe_info.second, OCTET_STRING)
+      .end_cons();
+
+   return output;
 #else
    BOTAN_UNUSED(key, rng, pass, msec, pbe_algo);
    throw Encoding_Error("PKCS8::BER_encode cannot encrypt because PBES2 was disabled in build");
@@ -238,12 +240,15 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
                          pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
                          rng);
 
-   return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(pbe_info.first)
-            .encode(pbe_info.second, OCTET_STRING)
-         .end_cons()
-      .get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder der(output);
+   der.start_cons(SEQUENCE)
+         .encode(pbe_info.first)
+         .encode(pbe_info.second, OCTET_STRING)
+      .end_cons();
+
+   return output;
+
 #else
    BOTAN_UNUSED(key, rng, pass, pbkdf_iterations, cipher, pbkdf_hash);
    throw Encoding_Error("PKCS8::BER_encode_encrypted_pbkdf_iter cannot encrypt because PBES2 disabled in build");
@@ -284,12 +289,14 @@ std::vector<uint8_t> BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
                          pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
                          rng);
 
-   return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(pbe_info.first)
-            .encode(pbe_info.second, OCTET_STRING)
-         .end_cons()
-      .get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
+      .start_cons(SEQUENCE)
+         .encode(pbe_info.first)
+         .encode(pbe_info.second, OCTET_STRING)
+      .end_cons();
+
+   return output;
 #else
    BOTAN_UNUSED(key, rng, pass, pbkdf_msec, pbkdf_iterations, cipher, pbkdf_hash);
    throw Encoding_Error("BER_encode_encrypted_pbkdf_msec cannot encrypt because PBES2 disabled in build");

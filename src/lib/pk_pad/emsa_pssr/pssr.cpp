@@ -186,24 +186,16 @@ AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
    // hardcoded as RSA is the only valid algorithm for EMSA4 at the moment
    sig_algo.oid = OIDS::lookup( "RSA/EMSA4" );
 
-   sig_algo.parameters = DER_Encoder()
-       .start_cons( SEQUENCE )
-       .start_cons( ASN1_Tag(0), CONTEXT_SPECIFIC )
-       .encode( AlgorithmIdentifier( cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM ) )
-       .end_cons()
-       .start_cons( ASN1_Tag(1), CONTEXT_SPECIFIC )
-       .encode( AlgorithmIdentifier( "MGF1", DER_Encoder()
-          .encode( AlgorithmIdentifier( cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM ) )
-          .get_contents_unlocked() ) )
-       .end_cons()
-       .start_cons( ASN1_Tag(2), CONTEXT_SPECIFIC )
-       .encode( size_t( m_SALT_SIZE ) )
-       .end_cons()
-       .start_cons( ASN1_Tag(3), CONTEXT_SPECIFIC )
-       .encode( size_t( 1 ) ) // trailer field
-       .end_cons()
-       .end_cons()
-       .get_contents_unlocked();
+   const AlgorithmIdentifier hash_id(cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM);
+   const AlgorithmIdentifier mgf_id("MGF1", hash_id.BER_encode());
+
+   DER_Encoder(sig_algo.parameters)
+      .start_cons(SEQUENCE)
+      .start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC).encode(hash_id).end_cons()
+      .start_cons(ASN1_Tag(1), CONTEXT_SPECIFIC).encode(mgf_id).end_cons()
+      .start_cons(ASN1_Tag(2), CONTEXT_SPECIFIC).encode(m_SALT_SIZE).end_cons()
+      .start_cons(ASN1_Tag(3), CONTEXT_SPECIFIC).encode(size_t(1)).end_cons() // trailer field
+      .end_cons();
 
    return sig_algo;
    }

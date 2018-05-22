@@ -87,9 +87,8 @@ void ASN1_Formatter::decode(std::ostream& output,
 
       /* hack to insert the tag+length back in front of the stuff now
          that we've gotten the type info */
-      DER_Encoder encoder;
-      encoder.add_object(type_tag, class_tag, obj.bits(), obj.length());
-      const std::vector<uint8_t> bits = encoder.get_contents_unlocked();
+      std::vector<uint8_t> bits;
+      DER_Encoder(bits).add_object(type_tag, class_tag, obj.bits(), obj.length());
 
       BER_Decoder data(bits);
 

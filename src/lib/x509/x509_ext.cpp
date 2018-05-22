@@ -300,15 +300,16 @@ size_t Basic_Constraints::get_path_limit() const
 */
 std::vector<uint8_t> Basic_Constraints::encode_inner() const
    {
-   return DER_Encoder()
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
       .start_cons(SEQUENCE)
       .encode_if(m_is_ca,
                  DER_Encoder()
                     .encode(m_is_ca)
                     .encode_optional(m_path_limit, NO_CERT_PATH_LIMIT)
          )
-      .end_cons()
-   .get_contents_unlocked();
+      .end_cons();
+   return output;
    }
 
 /*
@@ -404,7 +405,9 @@ void Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
 */
 std::vector<uint8_t> Subject_Key_ID::encode_inner() const
    {
-   return DER_Encoder().encode(m_key_id, OCTET_STRING).get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(m_key_id, OCTET_STRING);
+   return output;
    }
 
 /*
@@ -446,11 +449,12 @@ Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key, const std::s
 */
 std::vector<uint8_t> Authority_Key_ID::encode_inner() const
    {
-   return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(m_key_id, OCTET_STRING, ASN1_Tag(0), CONTEXT_SPECIFIC)
-         .end_cons()
-      .get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
+      .start_cons(SEQUENCE)
+         .encode(m_key_id, OCTET_STRING, ASN1_Tag(0), CONTEXT_SPECIFIC)
+      .end_cons();
+   return output;
    }
 
 /*
@@ -477,7 +481,9 @@ void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
 */
 std::vector<uint8_t> Subject_Alternative_Name::encode_inner() const
    {
-   return DER_Encoder().encode(m_alt_name).get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(m_alt_name);
+   return output;
    }
 
 /*
@@ -485,7 +491,9 @@ std::vector<uint8_t> Subject_Alternative_Name::encode_inner() const
 */
 std::vector<uint8_t> Issuer_Alternative_Name::encode_inner() const
    {
-   return DER_Encoder().encode(m_alt_name).get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(m_alt_name);
+   return output;
    }
 
 /*
@@ -526,11 +534,12 @@ void Issuer_Alternative_Name::contents_to(Data_Store&, Data_Store& issuer_info) 
 */
 std::vector<uint8_t> Extended_Key_Usage::encode_inner() const
    {
-   return DER_Encoder()
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
       .start_cons(SEQUENCE)
          .encode_list(m_oids)
-      .end_cons()
-   .get_contents_unlocked();
+      .end_cons();
+   return output;
    }
 
 /*
@@ -724,11 +733,12 @@ std::vector<uint8_t> Certificate_Policies::encode_inner() const
    for(size_t i = 0; i != m_oids.size(); ++i)
       policies.push_back(Policy_Information(m_oids[i]));
 
-   return DER_Encoder()
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
       .start_cons(SEQUENCE)
          .encode_list(policies)
-      .end_cons()
-   .get_contents_unlocked();
+      .end_cons();
+   return output;
    }
 
 /*
@@ -771,13 +781,15 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const
    {
    ASN1_String url(m_ocsp_responder, IA5_STRING);
 
-   return DER_Encoder()
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
       .start_cons(SEQUENCE)
       .start_cons(SEQUENCE)
       .encode(OIDS::lookup("PKIX.OCSP"))
       .add_object(ASN1_Tag(6), CONTEXT_SPECIFIC, url.value())
       .end_cons()
-      .end_cons().get_contents_unlocked();
+      .end_cons();
+   return output;
    }
 
 void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
@@ -847,7 +859,9 @@ CRL_Number* CRL_Number::copy() const
 */
 std::vector<uint8_t> CRL_Number::encode_inner() const
    {
-   return DER_Encoder().encode(m_crl_number).get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(m_crl_number);
+   return output;
    }
 
 /*
@@ -872,9 +886,9 @@ void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
 */
 std::vector<uint8_t> CRL_ReasonCode::encode_inner() const
    {
-   return DER_Encoder()
-      .encode(static_cast<size_t>(m_reason), ENUMERATED, UNIVERSAL)
-   .get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(static_cast<size_t>(m_reason), ENUMERATED, UNIVERSAL);
+   return output;
    }
 
 /*

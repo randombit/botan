@@ -102,11 +102,6 @@ class BOTAN_PUBLIC_API(2,0) X509_Object : public ASN1_Object
       void decode_from(class BER_Decoder& from) override;
 
       /**
-      * @return BER encoding of this
-      */
-      std::vector<uint8_t> BER_encode() const;
-
-      /**
       * @return PEM encoding of this
       */
       std::string PEM_encode() const;

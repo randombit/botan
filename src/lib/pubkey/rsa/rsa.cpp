@@ -45,12 +45,14 @@ AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const
 
 std::vector<uint8_t> RSA_PublicKey::public_key_bits() const
    {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
+   std::vector<uint8_t> output;
+   DER_Encoder der(output);
+   der.start_cons(SEQUENCE)
          .encode(m_n)
          .encode(m_e)
-      .end_cons()
-      .get_contents_unlocked();
+      .end_cons();
+
+   return output;
    }
 
 RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,

@@ -72,15 +72,16 @@ AlgorithmIdentifier McEliece_PublicKey::algorithm_identifier() const
 
 std::vector<uint8_t> McEliece_PublicKey::public_key_bits() const
    {
-   return DER_Encoder()
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
       .start_cons(SEQUENCE)
          .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(get_code_length()))
          .encode(static_cast<size_t>(get_t()))
          .end_cons()
       .encode(m_public_matrix, OCTET_STRING)
-      .end_cons()
-      .get_contents_unlocked();
+      .end_cons();
+   return output;
    }
 
 size_t McEliece_PublicKey::key_length() const
