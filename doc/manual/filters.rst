@@ -85,16 +85,13 @@ generator. If you want to, you can explicitly set up the random number
 generators and entropy sources you want to, however for 99% of cases
 ``AutoSeeded_RNG`` is preferable.
 
-``Pipe`` also has convenience methods for dealing with
-``std::iostream``. Here is an example of those, using the
-``Bzip_Compression`` filter (included as a module; if you have bzlib
-available, check the build instructions for how to enable it) to
-compress a file::
+``Pipe`` also has convenience methods for dealing with ``std::iostream``.
+Here is an example of this, using the bzip2 compression filter::
 
   std::ifstream in("data.bin", std::ios::binary)
   std::ofstream out("data.bin.bz2", std::ios::binary)
 
-  Pipe pipe(new Bzip_Compression);
+  Pipe pipe(new Compression_Filter("bzip2", 9));
 
   pipe.start_msg();
   in >> pipe;
@@ -113,7 +110,7 @@ reading it out later, we divert it directly to the file::
   std::ifstream in("data.bin", std::ios::binary)
   std::ofstream out("data.bin.bz2", std::ios::binary)
 
-  Pipe pipe(new Bzip_Compression, new DataSink_Stream(out));
+  Pipe pipe(new Compression_Filter("bzip2", 9), new DataSink_Stream(out));
 
   pipe.start_msg();
   in >> pipe;
