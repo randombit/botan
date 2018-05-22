@@ -23,7 +23,10 @@ std::vector<uint8_t> encode_x942_int(uint32_t n)
    {
    uint8_t n_buf[4] = { 0 };
    store_be(n, n_buf);
-   return DER_Encoder().encode(n_buf, 4, OCTET_STRING).get_contents_unlocked();
+
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(n_buf, 4, OCTET_STRING);
+   return output;
    }
 
 }

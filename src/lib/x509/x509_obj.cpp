@@ -29,14 +29,14 @@ struct Pss_params
 
 Pss_params decode_pss_params(const std::vector<uint8_t>& encoded_pss_params)
    {
+   const AlgorithmIdentifier default_hash("SHA-160", AlgorithmIdentifier::USE_NULL_PARAM);
+   const AlgorithmIdentifier default_mgf("MGF1", default_hash.BER_encode());
+
    Pss_params pss_parameter;
    BER_Decoder(encoded_pss_params)
       .start_cons(SEQUENCE)
-         .decode_optional(pss_parameter.hash_algo, ASN1_Tag(0), PRIVATE, AlgorithmIdentifier("SHA-160",
-                    AlgorithmIdentifier::USE_NULL_PARAM))
-         .decode_optional(pss_parameter.mask_gen_algo, ASN1_Tag(1), PRIVATE,
-                    AlgorithmIdentifier("MGF1", DER_Encoder().encode(AlgorithmIdentifier("SHA-160",
-                                        AlgorithmIdentifier::USE_NULL_PARAM)).get_contents_unlocked()))
+         .decode_optional(pss_parameter.hash_algo, ASN1_Tag(0), PRIVATE, default_hash)
+         .decode_optional(pss_parameter.mask_gen_algo, ASN1_Tag(1), PRIVATE, default_mgf)
          .decode_optional(pss_parameter.salt_len, ASN1_Tag(2), PRIVATE, size_t(20))
          .decode_optional(pss_parameter.trailer_field, ASN1_Tag(3), PRIVATE, size_t(1))
       .end_cons();
@@ -115,16 +115,6 @@ void X509_Object::decode_from(BER_Decoder& from)
       .end_cons();
 
    force_decode();
-   }
-
-/*
-* Return a BER encoded X.509 object
-*/
-std::vector<uint8_t> X509_Object::BER_encode() const
-   {
-   DER_Encoder der;
-   encode_into(der);
-   return der.get_contents_unlocked();
    }
 
 /*
@@ -284,13 +274,15 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
    {
    const std::vector<uint8_t> signature = signer->sign_message(tbs_bits, rng);
 
-   return DER_Encoder()
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
       .start_cons(SEQUENCE)
          .raw_bytes(tbs_bits)
          .encode(algo)
          .encode(signature, BIT_STRING)
-      .end_cons()
-   .get_contents_unlocked();
+      .end_cons();
+
+   return output;
    }
 
 namespace {

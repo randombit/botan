@@ -246,11 +246,12 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
       for(size_t i = 0; i != sig_parts.size(); ++i)
          sig_parts[i].binary_decode(&sig[m_part_size*i], m_part_size);
 
-      return DER_Encoder()
+      std::vector<uint8_t> output;
+      DER_Encoder(output)
          .start_cons(SEQUENCE)
          .encode_list(sig_parts)
-         .end_cons()
-         .get_contents_unlocked();
+         .end_cons();
+      return output;
       }
    else
       throw Internal_Error("PK_Signer: Invalid signature format enum");

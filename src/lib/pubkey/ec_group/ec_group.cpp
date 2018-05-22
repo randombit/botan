@@ -550,6 +550,10 @@ PointGFp EC_Group::zero_point() const
 std::vector<uint8_t>
 EC_Group::DER_encode(EC_Group_Encoding form) const
    {
+   std::vector<uint8_t> output;
+
+   DER_Encoder der(output);
+
    if(form == EC_DOMPAR_ENC_EXPLICIT)
       {
       const size_t ecpVers1 = 1;
@@ -557,8 +561,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
 
       const size_t p_bytes = get_p_bytes();
 
-      return DER_Encoder()
-         .start_cons(SEQUENCE)
+      der.start_cons(SEQUENCE)
             .encode(ecpVers1)
             .start_cons(SEQUENCE)
                .encode(curve_type)
@@ -573,8 +576,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
               .encode(get_base_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING)
             .encode(get_order())
             .encode(get_cofactor())
-         .end_cons()
-         .get_contents_unlocked();
+         .end_cons();
       }
    else if(form == EC_DOMPAR_ENC_OID)
       {
@@ -583,12 +585,18 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
          {
          throw Encoding_Error("Cannot encode EC_Group as OID because OID not set");
          }
-      return DER_Encoder().encode(oid).get_contents_unlocked();
+      der.encode(oid);
       }
    else if(form == EC_DOMPAR_ENC_IMPLICITCA)
-      return DER_Encoder().encode_null().get_contents_unlocked();
+      {
+      der.encode_null();
+      }
    else
+      {
       throw Internal_Error("EC_Group::DER_encode: Unknown encoding");
+      }
+
+   return output;
    }
 
 std::string EC_Group::PEM_encode() const

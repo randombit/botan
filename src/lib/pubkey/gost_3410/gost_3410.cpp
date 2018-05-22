@@ -35,16 +35,19 @@ std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const
       std::swap(bits[part_size+i], bits[2*part_size-1-i]);
       }
 
-   return DER_Encoder().encode(bits, OCTET_STRING).get_contents_unlocked();
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(bits, OCTET_STRING);
+   return output;
    }
 
 AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    {
-   std::vector<uint8_t> params =
-      DER_Encoder().start_cons(SEQUENCE)
+   std::vector<uint8_t> params;
+
+   DER_Encoder(params)
+      .start_cons(SEQUENCE)
          .encode(domain().get_curve_oid())
-         .end_cons()
-      .get_contents_unlocked();
+      .end_cons();
 
    return AlgorithmIdentifier(get_oid(), params);
    }

@@ -1,6 +1,6 @@
 /*
 * ASN.1 Internals
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,6 +11,14 @@
 #include <botan/internal/stl_util.h>
 
 namespace Botan {
+
+std::vector<uint8_t> ASN1_Object::BER_encode() const
+   {
+   std::vector<uint8_t> output;
+   DER_Encoder der(output);
+   this->encode_into(der);
+   return output;
+   }
 
 /*
 * Check a type invariant on BER data
@@ -132,11 +140,12 @@ std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& contents)
 
 std::vector<uint8_t> put_in_sequence(const uint8_t bits[], size_t len)
    {
-   return DER_Encoder()
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
       .start_cons(SEQUENCE)
          .raw_bytes(bits, len)
-      .end_cons()
-   .get_contents_unlocked();
+      .end_cons();
+   return output;
    }
 
 /*

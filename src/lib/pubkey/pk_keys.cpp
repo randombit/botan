@@ -37,12 +37,14 @@ std::string create_hex_fingerprint(const uint8_t bits[],
 
 std::vector<uint8_t> Public_Key::subject_public_key() const
    {
-   return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(algorithm_identifier())
-            .encode(public_key_bits(), BIT_STRING)
-         .end_cons()
-      .get_contents_unlocked();
+   std::vector<uint8_t> output;
+
+   DER_Encoder(output).start_cons(SEQUENCE)
+         .encode(algorithm_identifier())
+         .encode(public_key_bits(), BIT_STRING)
+      .end_cons();
+
+   return output;
    }
 
 /*

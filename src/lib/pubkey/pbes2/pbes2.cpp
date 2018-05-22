@@ -29,29 +29,30 @@ std::vector<uint8_t> encode_pbes2_params(const std::string& cipher,
                                       size_t iterations,
                                       size_t key_length)
    {
-   return DER_Encoder()
+   std::vector<uint8_t> output;
+
+   std::vector<uint8_t> pbkdf2_params;
+
+   DER_Encoder(pbkdf2_params)
       .start_cons(SEQUENCE)
-      .encode(
-         AlgorithmIdentifier("PKCS5.PBKDF2",
-            DER_Encoder()
-               .start_cons(SEQUENCE)
-                  .encode(salt, OCTET_STRING)
-                  .encode(iterations)
-                  .encode(key_length)
-                  .encode_if(
-                     prf != "HMAC(SHA-160)",
-                     AlgorithmIdentifier(prf, AlgorithmIdentifier::USE_NULL_PARAM))
-               .end_cons()
-            .get_contents_unlocked()
-            )
-         )
+         .encode(salt, OCTET_STRING)
+         .encode(iterations)
+         .encode(key_length)
+         .encode_if(prf != "HMAC(SHA-160)",
+                    AlgorithmIdentifier(prf, AlgorithmIdentifier::USE_NULL_PARAM))
+      .end_cons();
+
+   DER_Encoder(output)
+      .start_cons(SEQUENCE)
+      .encode(AlgorithmIdentifier("PKCS5.PBKDF2", pbkdf2_params))
       .encode(
          AlgorithmIdentifier(cipher,
             DER_Encoder().encode(iv, OCTET_STRING).get_contents_unlocked()
             )
          )
-      .end_cons()
-      .get_contents_unlocked();
+      .end_cons();
+
+   return output;
    }
 
 /*

@@ -10,6 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <vector>
+#include <functional>
 
 namespace Botan {
 
@@ -22,6 +23,25 @@ class ASN1_Object;
 class BOTAN_PUBLIC_API(2,0) DER_Encoder final
    {
    public:
+      /**
+      * DER encode, writing to an internal buffer
+      * Use get_contents or get_contents_unlocked to read the results
+      * after all encoding is completed.
+      */
+      DER_Encoder() = default;
+
+      /**
+      * DER encode, writing to @param vec
+      * If this constructor is used, get_contents* may not be called.
+      */
+      DER_Encoder(secure_vector<uint8_t>& vec);
+
+      /**
+      * DER encode, writing to @param vec
+      * If this constructor is used, get_contents* may not be called.
+      */
+      DER_Encoder(std::vector<uint8_t>& vec);
+
       secure_vector<uint8_t> get_contents();
 
       std::vector<uint8_t> get_contents_unlocked();
@@ -183,7 +203,8 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
             std::vector< secure_vector<uint8_t> > m_set_contents;
          };
 
-      secure_vector<uint8_t> m_contents;
+      std::function<void (const uint8_t[], size_t)> m_append_output_fn;
+      secure_vector<uint8_t> m_default_outbuf;
       std::vector<DER_Sequence> m_subsequences;
    };
 
