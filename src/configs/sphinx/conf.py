@@ -213,3 +213,7 @@ latex_show_urls = 'inline'
 
 # If false, no module index is generated.
 latex_domain_indices = False
+
+latex_elements = {
+    'printindex': '\\footnotesize\\raggedright\\printindex'
+}
