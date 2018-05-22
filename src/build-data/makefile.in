@@ -1,12 +1,13 @@
 # Paths to relevant programs
 
-CXX            = %{cxx} %{cxx_abi_flags}
+CXX            = %{cxx}
 LINKER         = %{linker}
 AR             = %{ar_command}
 PYTHON_EXE     = %{python_exe}
 
 # Compiler Flags
 
+ABI_FLAGS      = %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags}
 CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
@@ -19,7 +20,7 @@ POST_LINK_CMD  = %{post_link_cmd}
 LIB_LINKS_TO   = %{link_to}
 EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
 
-BUILD_FLAGS    = $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
+BUILD_FLAGS    = $(ABI_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{prefix}/%{libdir}
@@ -65,11 +66,11 @@ TESTOBJS = %{join test_objs}
 # Executable targets
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
-	$(EXE_LINK_CMD) $(LDFLAGS) $(CLIOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) $(LDFLAGS) $(CLIOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
 	$(POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(EXE_LINK_CMD) $(LDFLAGS) $(TESTOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) $(LDFLAGS) $(TESTOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
 	$(POST_LINK_CMD)
 
 %{if build_fuzzers}
@@ -98,7 +99,7 @@ fuzzer_corpus_zip: fuzzer_corpus
 %{if build_shared_lib}
 
 %{out_dir}/%{shared_lib_name}: $(LIBOBJS)
-	%{lib_link_cmd} $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
+	%{lib_link_cmd} $(ABI_FLAGS) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) %{output_to_exe}$@
 %{endif}
 %{if symlink_shared_lib}
 	cd %{out_dir} && ln -fs %{shared_lib_name} %{soname_base}
@@ -127,5 +128,5 @@ fuzzer_corpus_zip: fuzzer_corpus
 	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
-	$(EXE_LINK_CMD) %{obj} $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
 %{endfor}
