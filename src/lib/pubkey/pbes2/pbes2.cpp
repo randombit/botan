@@ -15,44 +15,154 @@
 #include <botan/oids.h>
 #include <botan/rng.h>
 
+#if defined(BOTAN_HAS_SCRYPT)
+   #include <botan/scrypt.h>
+#endif
+
 namespace Botan {
 
 namespace {
 
-/*
-* Encode PKCS#5 PBES2 parameters
-*/
-std::vector<uint8_t> encode_pbes2_params(const std::string& cipher,
-                                      const std::string& prf,
-                                      const secure_vector<uint8_t>& salt,
-                                      const secure_vector<uint8_t>& iv,
-                                      size_t iterations,
-                                      size_t key_length)
+SymmetricKey derive_key(const std::string& passphrase,
+                        const AlgorithmIdentifier& kdf_algo,
+                        size_t default_key_size)
    {
-   std::vector<uint8_t> output;
+   if(kdf_algo.get_oid() == OIDS::lookup("PKCS5.PBKDF2"))
+      {
+      secure_vector<uint8_t> salt;
+      size_t iterations = 0, key_length = 0;
 
-   std::vector<uint8_t> pbkdf2_params;
+      AlgorithmIdentifier prf_algo;
+      BER_Decoder(kdf_algo.get_parameters())
+         .start_cons(SEQUENCE)
+         .decode(salt, OCTET_STRING)
+         .decode(iterations)
+         .decode_optional(key_length, INTEGER, UNIVERSAL)
+         .decode_optional(prf_algo, SEQUENCE, CONSTRUCTED,
+                          AlgorithmIdentifier("HMAC(SHA-160)",
+                                              AlgorithmIdentifier::USE_NULL_PARAM))
+         .end_cons();
 
-   DER_Encoder(pbkdf2_params)
-      .start_cons(SEQUENCE)
-         .encode(salt, OCTET_STRING)
-         .encode(iterations)
-         .encode(key_length)
-         .encode_if(prf != "HMAC(SHA-160)",
-                    AlgorithmIdentifier(prf, AlgorithmIdentifier::USE_NULL_PARAM))
-      .end_cons();
+      if(salt.size() < 8)
+         throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
 
-   DER_Encoder(output)
-      .start_cons(SEQUENCE)
-      .encode(AlgorithmIdentifier("PKCS5.PBKDF2", pbkdf2_params))
-      .encode(
-         AlgorithmIdentifier(cipher,
-            DER_Encoder().encode(iv, OCTET_STRING).get_contents_unlocked()
-            )
-         )
-      .end_cons();
+      const std::string prf = OIDS::lookup(prf_algo.get_oid());
 
-   return output;
+      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
+
+      if(key_length == 0)
+         key_length = default_key_size;
+
+      return pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
+      }
+#if defined(BOTAN_HAS_SCRYPT)
+   else if(kdf_algo.get_oid() == OIDS::lookup("Scrypt"))
+      {
+      secure_vector<uint8_t> salt;
+      size_t N = 0, r = 0, p = 0;
+      size_t key_length = 0;
+
+      AlgorithmIdentifier prf_algo;
+      BER_Decoder(kdf_algo.get_parameters())
+         .start_cons(SEQUENCE)
+         .decode(salt, OCTET_STRING)
+         .decode(N)
+         .decode(r)
+         .decode(p)
+         .decode_optional(key_length, INTEGER, UNIVERSAL)
+         .end_cons();
+
+      if(key_length == 0)
+         key_length = default_key_size;
+
+      secure_vector<uint8_t> output(key_length);
+      scrypt(output.data(), output.size(), passphrase,
+             salt.data(), salt.size(), N, r, p);
+
+      return SymmetricKey(output);
+      }
+#endif
+   else
+      throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
+                           kdf_algo.get_oid().as_string());
+   }
+
+secure_vector<uint8_t> derive_key(const std::string& passphrase,
+                                  const std::string& digest,
+                                  RandomNumberGenerator& rng,
+                                  size_t* msec_in_iterations_out,
+                                  size_t iterations_if_msec_null,
+                                  size_t key_length,
+                                  AlgorithmIdentifier& kdf_algo)
+   {
+   const secure_vector<uint8_t> salt = rng.random_vec(12);
+
+   if(digest == "Scrypt")
+      {
+#if defined(BOTAN_HAS_SCRYPT)
+
+      Scrypt_Params params(32768, 8, 4);
+
+      if(msec_in_iterations_out)
+         params = Scrypt_Params(std::chrono::milliseconds(*msec_in_iterations_out));
+      else
+         params = Scrypt_Params(iterations_if_msec_null);
+
+      secure_vector<uint8_t> key(key_length);
+      scrypt(key.data(), key.size(), passphrase,
+             salt.data(), salt.size(), params);
+
+      std::vector<uint8_t> scrypt_params;
+      DER_Encoder(scrypt_params)
+         .start_cons(SEQUENCE)
+            .encode(salt, OCTET_STRING)
+            .encode(params.N())
+            .encode(params.r())
+            .encode(params.p())
+            .encode(key_length)
+         .end_cons();
+
+      kdf_algo = AlgorithmIdentifier(OIDS::lookup("Scrypt"), scrypt_params);
+      return key;
+#else
+      throw Not_Implemented("Scrypt is not available in this build");
+#endif
+      }
+   else
+      {
+      const std::string prf = "HMAC(" + digest + ")";
+
+      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
+
+      size_t iterations = iterations_if_msec_null;
+
+      secure_vector<uint8_t> key;
+
+      if(msec_in_iterations_out)
+         {
+         std::chrono::milliseconds msec(*msec_in_iterations_out);
+         key = pbkdf->derive_key(key_length, passphrase, salt.data(), salt.size(), msec, iterations).bits_of();
+         *msec_in_iterations_out = iterations;
+         }
+      else
+         {
+         key = pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
+         }
+
+      std::vector<uint8_t> pbkdf2_params;
+
+      DER_Encoder(pbkdf2_params)
+         .start_cons(SEQUENCE)
+            .encode(salt, OCTET_STRING)
+            .encode(iterations)
+            .encode(key_length)
+            .encode_if(prf != "HMAC(SHA-160)",
+                       AlgorithmIdentifier(prf, AlgorithmIdentifier::USE_NULL_PARAM))
+         .end_cons();
+
+      kdf_algo = AlgorithmIdentifier("PKCS5.PBKDF2", pbkdf2_params);
+      return key;
+      }
    }
 
 /*
@@ -64,16 +174,12 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
                      size_t* msec_in_iterations_out,
                      size_t iterations_if_msec_null,
                      const std::string& cipher,
-                     const std::string& digest,
+                     const std::string& prf,
                      RandomNumberGenerator& rng)
    {
-   const std::string prf = "HMAC(" + digest + ")";
-
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
-
-   const secure_vector<uint8_t> salt = rng.random_vec(12);
 
    if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
@@ -83,35 +189,37 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    if(!enc)
       throw Decoding_Error("PBE-PKCS5 cannot encrypt no cipher " + cipher);
 
-   std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
-
    const size_t key_length = enc->key_spec().maximum_keylength();
 
+   const secure_vector<uint8_t> iv = rng.random_vec(enc->default_nonce_length());
 
-   secure_vector<uint8_t> iv = rng.random_vec(enc->default_nonce_length());
+   AlgorithmIdentifier kdf_algo;
 
-   size_t iterations = iterations_if_msec_null;
+   const secure_vector<uint8_t> derived_key =
+      derive_key(passphrase, prf, rng,
+                 msec_in_iterations_out, iterations_if_msec_null,
+                 key_length, kdf_algo);
 
-   if(msec_in_iterations_out)
-      {
-      std::chrono::milliseconds msec(*msec_in_iterations_out);
-      enc->set_key(pbkdf->derive_key(key_length, passphrase, salt.data(), salt.size(), msec, iterations).bits_of());
-      *msec_in_iterations_out = iterations;
-      }
-   else
-      {
-      enc->set_key(pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations));
-      }
-
+   enc->set_key(derived_key);
    enc->start(iv);
-   secure_vector<uint8_t> buf = key_bits;
-   enc->finish(buf);
+   secure_vector<uint8_t> ctext = key_bits;
+   enc->finish(ctext);
 
-   AlgorithmIdentifier id(
-      OIDS::lookup("PBE-PKCS5v20"),
-      encode_pbes2_params(cipher, prf, salt, iv, iterations, key_length));
+   std::vector<uint8_t> pbes2_params;
 
-   return std::make_pair(id, unlock(buf));
+   DER_Encoder(pbes2_params)
+      .start_cons(SEQUENCE)
+      .encode(kdf_algo)
+      .encode(
+         AlgorithmIdentifier(cipher,
+            DER_Encoder().encode(iv, OCTET_STRING).get_contents_unlocked()
+            )
+         )
+      .end_cons();
+
+   AlgorithmIdentifier id(OIDS::lookup("PBE-PKCS5v20"), pbes2_params);
+
+   return std::make_pair(id, unlock(ctext));
    }
 
 
@@ -173,25 +281,6 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
          .decode(enc_algo)
       .end_cons();
 
-   AlgorithmIdentifier prf_algo;
-
-   if(kdf_algo.get_oid() != OIDS::lookup("PKCS5.PBKDF2"))
-      throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
-                           kdf_algo.get_oid().as_string());
-
-   secure_vector<uint8_t> salt;
-   size_t iterations = 0, key_length = 0;
-
-   BER_Decoder(kdf_algo.get_parameters())
-      .start_cons(SEQUENCE)
-         .decode(salt, OCTET_STRING)
-         .decode(iterations)
-         .decode_optional(key_length, INTEGER, UNIVERSAL)
-         .decode_optional(prf_algo, SEQUENCE, CONSTRUCTED,
-                          AlgorithmIdentifier("HMAC(SHA-160)",
-                                              AlgorithmIdentifier::USE_NULL_PARAM))
-      .end_cons();
-
    const std::string cipher = OIDS::lookup(enc_algo.get_oid());
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
@@ -199,24 +288,14 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
    if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
-   if(salt.size() < 8)
-      throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
-
    secure_vector<uint8_t> iv;
    BER_Decoder(enc_algo.get_parameters()).decode(iv, OCTET_STRING).verify_end();
-
-   const std::string prf = OIDS::lookup(prf_algo.get_oid());
-
-   std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 
    std::unique_ptr<Cipher_Mode> dec = Cipher_Mode::create(cipher, DECRYPTION);
    if(!dec)
       throw Decoding_Error("PBE-PKCS5 cannot decrypt no cipher " + cipher);
 
-   if(key_length == 0)
-      key_length = dec->key_spec().maximum_keylength();
-
-   dec->set_key(pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations));
+   dec->set_key(derive_key(passphrase, kdf_algo, dec->key_spec().maximum_keylength()));
 
    dec->start(iv);
 

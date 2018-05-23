@@ -8,9 +8,26 @@
 #define BOTAN_SCRYPT_H_
 
 #include <botan/types.h>
+#include <chrono>
 #include <string>
 
 namespace Botan {
+
+class Scrypt_Params
+   {
+   public:
+      Scrypt_Params(size_t N, size_t r, size_t p);
+
+      Scrypt_Params(std::chrono::milliseconds msec);
+
+      Scrypt_Params(size_t iterations);
+
+      size_t N() const { return m_N; }
+      size_t r() const { return m_r; }
+      size_t p() const { return m_p; }
+   private:
+      size_t m_N, m_r, m_p;
+   };
 
 /**
 * Scrypt key derivation function (RFC 7914)
@@ -32,6 +49,11 @@ void BOTAN_UNSTABLE_API scrypt(uint8_t output[], size_t output_len,
                                const std::string& password,
                                const uint8_t salt[], size_t salt_len,
                                size_t N, size_t r, size_t p);
+
+void BOTAN_UNSTABLE_API scrypt(uint8_t output[], size_t output_len,
+                               const std::string& password,
+                               const uint8_t salt[], size_t salt_len,
+                               const Scrypt_Params& params);
 
 }
 

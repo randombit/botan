@@ -500,6 +500,63 @@ std::vector<std::string> PK_Key_Generation_Test::possible_providers(
    return Test::provider_filter(pk_provider);
    }
 
+namespace {
+
+void test_pbe_roundtrip(Test::Result& result,
+                        const Botan::Private_Key& key,
+                        const std::string& pbe_algo,
+                        const std::string& passphrase)
+   {
+   try
+      {
+      Botan::DataSource_Memory data_src(
+         Botan::PKCS8::PEM_encode(key, Test::rng(), passphrase,
+                                  std::chrono::milliseconds(10),
+                                  pbe_algo));
+
+      std::unique_ptr<Botan::Private_Key> loaded(
+         Botan::PKCS8::load_key(data_src, Test::rng(), passphrase));
+
+      result.confirm("recovered private key from encrypted blob", loaded.get() != nullptr);
+      result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
+      try
+         {
+         result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
+         }
+      catch(Botan::Lookup_Error&) {}
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure("roundtrip encrypted PEM private key", e.what());
+      }
+
+   try
+      {
+      Botan::DataSource_Memory data_src(
+         Botan::PKCS8::BER_encode(key, Test::rng(), passphrase,
+                                  std::chrono::milliseconds(10),
+                                  pbe_algo));
+
+      std::unique_ptr<Botan::Private_Key> loaded(
+         Botan::PKCS8::load_key(data_src, Test::rng(), passphrase));
+
+      result.confirm("recovered private key from BER blob", loaded.get() != nullptr);
+      result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
+
+      try
+         {
+         result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
+         }
+      catch(Botan::Lookup_Error&) {}
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure("roundtrip encrypted BER private key", e.what());
+      }
+   }
+
+}
+
 std::vector<Test::Result> PK_Key_Generation_Test::run()
    {
    std::vector<Test::Result> results;
@@ -615,56 +672,14 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
 #if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_32)
 
-         const std::string pbe_algo = "PBE-PKCS5v20(AES-128/CBC,SHA-256)";
-         const std::string passphrase = Test::random_password();
-
-         try
-            {
-            Botan::DataSource_Memory data_src(
-               Botan::PKCS8::PEM_encode(key, Test::rng(), passphrase,
-                                        std::chrono::milliseconds(10),
-                                        pbe_algo));
-
-            std::unique_ptr<Botan::Private_Key> loaded(
-               Botan::PKCS8::load_key(data_src, Test::rng(), passphrase));
-
-            result.confirm("recovered private key from encrypted blob", loaded.get() != nullptr);
-            result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-            try
-               {
-               result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
-               }
-            catch(Botan::Lookup_Error&) {}
-            }
-         catch(std::exception& e)
-            {
-            result.test_failure("roundtrip encrypted PEM private key", e.what());
-            }
-
-         try
-            {
-            Botan::DataSource_Memory data_src(
-               Botan::PKCS8::BER_encode(key, Test::rng(), passphrase,
-                                        std::chrono::milliseconds(10),
-                                        pbe_algo));
-
-            std::unique_ptr<Botan::Private_Key> loaded(
-               Botan::PKCS8::load_key(data_src, Test::rng(), passphrase));
-
-            result.confirm("recovered private key from BER blob", loaded.get() != nullptr);
-            result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-
-            try
-               {
-               result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
-               }
-            catch(Botan::Lookup_Error&) {}
-            }
-         catch(std::exception& e)
-            {
-            result.test_failure("roundtrip encrypted BER private key", e.what());
-            }
+         test_pbe_roundtrip(result, key, "PBE-PKCS5v20(AES-128/CBC,SHA-256)", Test::random_password());
 #endif
+
+#if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SCRYPT)
+
+         test_pbe_roundtrip(result, key, "PBE-PKCS5v20(AES-128/CBC,Scrypt)", Test::random_password());
+#endif
+
          }
 
       result.end_timer();

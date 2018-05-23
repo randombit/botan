@@ -60,6 +60,79 @@ void scryptROMmix(size_t r, size_t N, uint8_t* B, secure_vector<uint8_t>& V)
 
 }
 
+Scrypt_Params::Scrypt_Params(size_t N, size_t r, size_t p) :
+   m_N(N), m_r(r), m_p(p)
+   {
+   BOTAN_ARG_CHECK(p <= 128, "Invalid scrypt p");
+   BOTAN_ARG_CHECK(N <= 4194304 && is_power_of_2(N), "Invalid scrypt N");
+   BOTAN_ARG_CHECK(r <= 64, "Invalid scrypt r");
+   }
+
+Scrypt_Params::Scrypt_Params(std::chrono::milliseconds msec)
+   {
+   /*
+   This mapping is highly subjective and machine specific
+   For simplicity we fix r=8 and p=4
+   */
+   m_r = 8;
+   m_p = 4;
+
+   if(msec.count() <= 10)
+      {
+      m_N = 4096;
+      m_p = 1;
+      }
+   else if(msec.count() <= 50)
+      {
+      m_N = 8192;
+      }
+   else if(msec.count() <= 100)
+      {
+      m_N = 16384;
+      }
+   else if(msec.count() <= 500)
+      {
+      m_N = 32768;
+      }
+   else
+      {
+      m_N = 65536;
+      }
+   }
+
+Scrypt_Params::Scrypt_Params(size_t iterations)
+   {
+   // This mapping is highly subjective and machine specific
+   m_r = 8;
+   m_p = 4;
+
+   if(iterations < 1000)
+      {
+      m_N = 8192;
+      }
+   else if(iterations < 5000)
+      {
+      m_N = 16384;
+      }
+   else if(iterations < 10000)
+      {
+      m_N = 32768;
+      }
+   else
+      {
+      m_N = 65536;
+      }
+   }
+
+void scrypt(uint8_t output[], size_t output_len,
+            const std::string& password,
+            const uint8_t salt[], size_t salt_len,
+            const Scrypt_Params& params)
+   {
+   scrypt(output, output_len, password, salt, salt_len,
+          params.N(), params.r(), params.p());
+   }
+
 void scrypt(uint8_t output[], size_t output_len,
             const std::string& password,
             const uint8_t salt[], size_t salt_len,
