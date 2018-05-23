@@ -613,9 +613,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
             result.test_failure("roundtrip BER private key", e.what());
             }
 
-#if defined(BOTAN_HAS_PKCS5_PBE2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_32)
+#if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_32)
 
-         const std::string pbe_algo = "PBE-PKCS5v20(AES-128,SHA-256)";
+         const std::string pbe_algo = "PBE-PKCS5v20(AES-128/CBC,SHA-256)";
          const std::string passphrase = Test::random_password();
 
          try

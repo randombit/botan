@@ -169,7 +169,7 @@ choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
    SCAN_Name request(pbe_algo);
    if(request.algo_name() != "PBE-PKCS5v20" || request.arg_count() != 2)
       throw Exception("Unsupported PBE " + pbe_algo);
-   return std::make_pair(request.arg(1), request.arg(0));
+   return std::make_pair(request.arg(0), request.arg(1));
    }
 
 }
