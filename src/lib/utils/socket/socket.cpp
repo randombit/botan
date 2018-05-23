@@ -83,7 +83,7 @@ class Asio_Socket final : public OS::Socket
          boost::system::error_code ec = boost::asio::error::would_block;
 
          boost::asio::async_write(m_tcp, boost::asio::buffer(buf, len),
-                                  [&ec](boost::system::error_code e, size_t got) { printf("wrote %d\n", got); ec = e; });
+                                  [&ec](boost::system::error_code e, size_t got) { ec = e; });
 
          while(ec == boost::asio::error::would_block) { m_io.run_one(); }
 
