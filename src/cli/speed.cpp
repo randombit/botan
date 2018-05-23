@@ -2150,20 +2150,34 @@ class Speed final : public Command
       void bench_scrypt(const std::string& /*provider*/,
                         std::chrono::milliseconds msec)
          {
-         std::unique_ptr<Timer> scrypt_timer = make_timer("scrypt");
 
-         uint8_t out[64];
-         uint8_t salt[8] = { 0 };
-
-         while(scrypt_timer->under(msec))
+         for(size_t N : { 8192, 16384, 32768 })
             {
-            scrypt_timer->run([&] {
-               Botan::scrypt(out, sizeof(out), "password",
-                             salt, sizeof(salt), 16384, 8, 1);
-               });
+            for(size_t r : { 1, 8 })
+               {
+               for(size_t p : { 1, 2, 4 })
+                  {
+                  std::unique_ptr<Timer> scrypt_timer = make_timer(
+                     "scrypt-" + std::to_string(N) + "-" +
+                     std::to_string(r) + "-" + std::to_string(p));
+
+                  uint8_t out[64];
+                  uint8_t salt[8];
+                  rng().randomize(salt, sizeof(salt));
+
+                  while(scrypt_timer->under(msec))
+                     {
+                     scrypt_timer->run([&] {
+                        Botan::scrypt(out, sizeof(out), "password",
+                                      salt, sizeof(salt), N, r, p);
+                        });
+                     }
+
+                  record_result(scrypt_timer);
+                  }
+               }
             }
 
-         record_result(scrypt_timer);
          }
 
 #endif
