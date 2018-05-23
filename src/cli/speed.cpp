@@ -2151,11 +2151,11 @@ class Speed final : public Command
                         std::chrono::milliseconds msec)
          {
 
-         for(size_t N : { 8192, 16384, 32768 })
+         for(size_t N : { 8192, 16384, 32768, 65536 })
             {
             for(size_t r : { 1, 8 })
                {
-               for(size_t p : { 1, 2, 4 })
+               for(size_t p : { 1, 4, 8 })
                   {
                   std::unique_ptr<Timer> scrypt_timer = make_timer(
                      "scrypt-" + std::to_string(N) + "-" +
