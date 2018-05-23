@@ -179,10 +179,14 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    {
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
-      throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
+      throw Encoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
 
    if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
-      throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
+      throw Encoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
+
+   const OID cipher_oid = OIDS::lookup(cipher);
+   if(cipher_oid.empty())
+      throw Encoding_Error("PBE-PKCS5 v2.0: No OID assigned for " + cipher);
 
    std::unique_ptr<Cipher_Mode> enc = Cipher_Mode::create(cipher, ENCRYPTION);
 
