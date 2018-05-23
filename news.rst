@@ -23,6 +23,8 @@ Version 2.7.0, Not Yet Released
 
 * Add support for Scrypt password hashing (GH #1570)
 
+* Add support for using Scrypt for private key encryption (GH #1574)
+
 * Optimizations for DES/3DES, approx 50% faster when used in certain
   modes such as CBC decrypt or CTR.
 
