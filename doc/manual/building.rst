@@ -53,12 +53,12 @@ system, and use that. It will print a display at the end showing which
 algorithms have and have not been enabled. For instance on one system
 we might see lines like::
 
-   INFO: Skipping, dependency failure - sessions_sqlite3
-   INFO: Skipping, incompatible CPU - mp_x86_32 simd_altivec
-   INFO: Skipping, incompatible OS - beos_stats cryptoapi_rng darwin_secrandom win32_stats
-   INFO: Skipping, incompatible compiler - mp_x86_32_msvc
-   INFO: Skipping, loaded only if needed by dependency - dyn_load mp_generic simd_scalar
-   INFO: Skipping, requires external dependency - boost bzip2 lzma sqlite3 tpm
+   INFO: Skipping (dependency failure): certstor_sqlite3 sessions_sqlite3
+   INFO: Skipping (incompatible CPU): aes_power8
+   INFO: Skipping (incompatible OS): darwin_secrandom getentropy win32_stats
+   INFO: Skipping (incompatible compiler): aes_armv8 pmull sha1_armv8 sha2_32_armv8
+   INFO: Skipping (no enabled compression schemes): compression
+   INFO: Skipping (requires external dependency): bearssl boost bzip2 lzma openssl sqlite3 tpm zlib
 
 The ones that are skipped because they are require an external
 dependency have to be explicitly asked for, because they rely on third
@@ -69,7 +69,7 @@ All available modules can be listed with ``--list-modules``.
 
 You can control which algorithms and modules are built using the
 options ``--enable-modules=MODS`` and ``--disable-modules=MODS``, for
-instance ``--enable-modules=zlib`` and ``--disable-modules=rc5,idea``.
+instance ``--enable-modules=zlib`` and ``--disable-modules=xtea,idea``.
 Modules not listed on the command line will simply be loaded if needed
 or if configured to load by default. If you use ``--minimized-build``,
 only the most core modules will be included; you can then explicitly
@@ -83,11 +83,10 @@ For instance::
  $ ./configure.py --minimized-build --enable-modules=rsa,eme_oaep,emsa_pssr
 
 will set up a build that only includes RSA, OAEP, PSS along with any
-required dependencies. A small subset of core features, including AES,
-SHA-2, HMAC, and the multiple precision integer library, are always
-loaded. Note that a minimized build does not include any random number
-generator, which is needed for example to generate keys, nonces and IVs.
-See :doc:`rng` on which random number generators are available.
+required dependencies. Note that a minimized build does not by default
+include any random number generator, which is needed for example to
+generate keys, nonces and IVs. See :doc:`rng` on which random number
+generators are available.
 
 The option ``--module-policy=POL`` enables modules required by and
 disables modules prohibited by a text policy in ``src/build-data/policy``.
@@ -102,7 +101,7 @@ Cross Compiling
 Cross compiling refers to building software on one type of host (say Linux
 x86-64) but creating a binary for some other type (say MinGW x86-32). This is
 completely supported by the build system. To extend the example, we must tell
-`configure.py` to use the MinGW tools:
+`configure.py` to use the MinGW tools::
 
  $ ./configure.py --os=mingw --cpu=x86_32 --cc-bin=i686-w64-mingw32-g++ --ar=i686-w64-mingw32-ar
  ...
@@ -314,6 +313,8 @@ by the user using
  - ``--with-openssl`` adds an engine that uses OpenSSL for some ciphers, hashes,
    and public key operations. OpenSSL 1.0.2 or later is supported. LibreSSL can
    also be used.
+
+ - ``--with-tpm`` adds support for using TPM hardware via the TrouSerS library.
 
  - ``--with-boost`` enables using some Boost libraries. In particular
    Boost.Filesystem is used for a few operations (but on most platforms, a
