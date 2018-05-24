@@ -9,6 +9,7 @@
 #include <botan/der_enc.h>
 #include <botan/data_src.h>
 #include <botan/internal/stl_util.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -28,11 +29,34 @@ void BER_Object::assert_is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_,
    {
    if(this->is_a(type_tag_, class_tag_) == false)
       {
-      throw BER_Decoding_Error("Tag mismatch when decoding " + descr + " got " +
-                               std::to_string(type_tag) + "/" +
-                               std::to_string(class_tag) + " expected " +
-                               std::to_string(type_tag_) + "/" +
-                               std::to_string(class_tag_));
+      std::stringstream msg;
+
+      msg << "Tag mismatch when decoding " << descr << " got ";
+
+      if(class_tag == UNIVERSAL || class_tag == CONSTRUCTED)
+         {
+         msg << asn1_tag_to_string(type_tag);
+         }
+      else
+         {
+         msg << std::to_string(type_tag);
+         }
+
+      msg << "/" << asn1_class_to_string(class_tag);
+      msg << " expected ";
+
+      if(class_tag_ == UNIVERSAL || class_tag_ == CONSTRUCTED)
+         {
+         msg << asn1_tag_to_string(type_tag_);
+         }
+      else
+         {
+         msg << std::to_string(type_tag_);
+         }
+
+      msg << "/" << asn1_class_to_string(class_tag_);
+
+      throw BER_Decoding_Error(msg.str());
       }
    }
 
@@ -50,6 +74,25 @@ void BER_Object::set_tagging(ASN1_Tag t, ASN1_Tag c)
    {
    type_tag = t;
    class_tag = c;
+   }
+
+std::string asn1_class_to_string(ASN1_Tag type)
+   {
+   switch(type)
+      {
+      case UNIVERSAL:
+         return "UNIVERSAL";
+      case CONSTRUCTED:
+         return "CONSTRUCTED";
+      case CONTEXT_SPECIFIC:
+         return "CONTEXT_SPECIFIC";
+      case APPLICATION:
+         return "APPLICATION";
+      case CONSTRUCTED | CONTEXT_SPECIFIC:
+         return "PRIVATE";
+      default:
+         return "CLASS(" + std::to_string(static_cast<size_t>(type)) + ")";
+      }
    }
 
 std::string asn1_tag_to_string(ASN1_Tag type)

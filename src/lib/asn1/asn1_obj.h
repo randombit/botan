@@ -56,7 +56,8 @@ enum ASN1_Tag : uint32_t {
    DIRECTORY_STRING = 0xFF01
 };
 
-std::string BOTAN_DLL asn1_tag_to_string(ASN1_Tag type);
+std::string BOTAN_UNSTABLE_API asn1_tag_to_string(ASN1_Tag type);
+std::string BOTAN_UNSTABLE_API asn1_class_to_string(ASN1_Tag type);
 
 /**
 * Basic ASN.1 Object Interface
