@@ -105,6 +105,22 @@ encrypted storage.
   password based encryption (or PBE) algorithm. If you don't specify a
   PBE, a sensible default will be used.
 
+  The currently supported PBE is PBES2 from PKCS5. Format is as follows:
+  `PBE-PKCS5v20(CIPHER,PBKDF)`. Cipher can be any block cipher with /CBC or /GCM
+  appended, for example "AES-128/CBC" or "Camellia-256/GCM". For best interop
+  with other systems, use AES in CBC mode. The PBKDF can be either the name of a
+  hash function (in which case PBKDF2 is used with that hash) or "Scrypt", which
+  causes the scrypt memory hard password hashing function to be used. Scrypt is
+  supported since version 2.7.0.
+
+  Use `PBE-PKCS5v20(AES-256/CBC,SHA-256)` if you want to ensure the keys can
+  be imported by different software packages. Use
+  `PBE-PKCS5v20(AES-256/GCM,Scrypt)` for best security assuming you do not
+  care about interop.
+
+  For ciphers you can use anything which has an OID defined for CBC or GCM mode.
+  Currently this includes 3DES, AES, Camellia, SM4, Serpent, and Twofish.
+
 .. cpp:function:: std::string PKCS8::PEM_encode(const Private_Key& key, \
    RandomNumberGenerator& rng, const std::string& pass, const std::string& pbe_algo = "")
 
