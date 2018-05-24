@@ -77,7 +77,10 @@ callgrind.*
 /*.pub
 /*.crt
 /*.txt
+/*.rst
 
 # Add back files from the toplevel
-!configure.py
-!license.txt
+!/news.rst
+!/readme.rst
+!/configure.py
+!/license.txt
