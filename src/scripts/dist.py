@@ -355,14 +355,18 @@ def main(args=None):
         all_files += [os.path.join(curdir, f) for f in files]
     all_files.sort(key=lambda f: (os.path.dirname(f), os.path.basename(f)))
 
-    version_file = None
+    def find_version_file():
 
-    # location of file with version information has moved over time
-    for possible_version_file in ['src/build-data/version.txt', 'version.txt', 'botan_version.py']:
-        full_path = os.path.join(output_basename, possible_version_file)
-        if os.access(full_path, os.R_OK):
-            version_file = full_path
-            break
+        # location of file with version information has moved over time
+        for possible_version_file in ['src/build-data/version.txt', 'version.txt', 'botan_version.py']:
+            full_path = os.path.join(output_basename, possible_version_file)
+            if os.access(full_path, os.R_OK):
+                return full_path
+
+        logging.error('Cannot locate version file')
+        return None
+
+    version_file = find_version_file()
 
     if not os.access(version_file, os.R_OK):
         logging.error('Cannot read %s' % (version_file))
