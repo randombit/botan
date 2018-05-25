@@ -50,8 +50,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
       unused_leaf = ((unused_leaf << 8) | *i);
       }
 
-   if(unused_leaf >= (1ull << (XMSS_PublicKey::m_xmss_params.tree_height() -
-                      1)))
+   if(unused_leaf >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
       {
       throw Integrity_Failure("XMSS private key leaf index out of "
                               "bounds.");
