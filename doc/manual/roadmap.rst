@@ -39,8 +39,8 @@ Performance Improvements
 The eventual goal would be performance parity with OpenSSL, but initial
 target is probably more like "no worse than 30% slower for any algorithm".
 
-[Major improvements were made in ECC and RSA performance were made
-between 2.4.0 and 2.7.0, measurement and optimization work is ongoing.]
+[Major improvements to ECC and RSA performance were made between 2.4.0
+and 2.7.0, measurement and optimization work is ongoing.]
 
 Elliptic Curve Pairings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -62,7 +62,7 @@ Initial work is focused on features which are included in TLS v1.3 but also
 available for TLS v1.2 (such as PSS signatures and FFDHE) as well as
 refactorings which will make the eventual implementation of v1.3 simpler.
 Assuming no source of dedicated funding appears, a full v1.3 implementation will
-likely not available until sometime in 2019.
+likely not be available until sometime in 2019.
 
 ASN.1 Redesign
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
