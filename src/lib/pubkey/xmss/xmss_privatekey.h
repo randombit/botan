@@ -113,7 +113,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        **/
       void set_unused_leaf_index(size_t idx)
          {
-         if(idx >= (1ull << (XMSS_PublicKey::m_xmss_params.tree_height() - 1)))
+         if(idx >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
             {
             throw Integrity_Failure("XMSS private key leaf index out of "
                                     "bounds.");
@@ -138,7 +138,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
          {
          size_t idx = (static_cast<std::atomic<size_t>&>(
                           *recover_global_leaf_index())).fetch_add(1);
-         if(idx >= (1ull << (XMSS_PublicKey::m_xmss_params.tree_height() - 1)))
+         if(idx >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
             {
             throw Integrity_Failure("XMSS private key, one time signatures "
                                     "exhausted.");
