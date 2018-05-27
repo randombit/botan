@@ -30,7 +30,8 @@ XMSS_WOTS_PublicKey::chain(secure_vector<uint8_t>& result,
 
       //Calculate tmp XOR bitmask
       adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_Mode);
-      xor_buf(result, hash.prf(seed, adrs.bytes()), result.size());
+      hash.prf(prf_output, seed, adrs.bytes());
+      xor_buf(result, prf_output, result.size());
 
       // Calculate key
       adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Key_Mode);
