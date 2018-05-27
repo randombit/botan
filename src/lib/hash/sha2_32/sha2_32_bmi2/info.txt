@@ -1,0 +1,10 @@
+<defines>
+SHA2_32_X86_BMI2 -> 20180526
+</defines>
+
+need_isa bmi2
+
+<cc>
+gcc
+clang
+</cc>
