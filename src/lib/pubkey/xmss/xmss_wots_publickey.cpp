@@ -20,6 +20,8 @@ XMSS_WOTS_PublicKey::chain(secure_vector<uint8_t>& result,
                            const secure_vector<uint8_t>& seed,
                            XMSS_Hash& hash)
    {
+   secure_vector<uint8_t> prf_output(hash.output_length());
+
    for(size_t i = start_idx;
          i < (start_idx + steps) && i < m_wots_params.wots_parameter();
          i++)
@@ -28,13 +30,15 @@ XMSS_WOTS_PublicKey::chain(secure_vector<uint8_t>& result,
 
       //Calculate tmp XOR bitmask
       adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_Mode);
-      xor_buf(result, hash.prf(seed, adrs.bytes()), result.size());
+      hash.prf(prf_output, seed, adrs.bytes());
+      xor_buf(result, prf_output, result.size());
 
       // Calculate key
       adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Key_Mode);
 
       //Calculate f(key, tmp XOR bitmask)
-      hash.f(result, hash.prf(seed, adrs.bytes()), result);
+      hash.prf(prf_output, seed, adrs.bytes());
+      hash.f(result, prf_output, result);
       }
    }
 
