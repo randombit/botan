@@ -18,6 +18,10 @@ Version 2.7.0, Not Yet Released
 * Improved performance of signature verification in ECGDSA, ECKCDSA,
   SM2 and GOST by 10-15%.
 
+* XMSS optimizations (GH #1583 #1585)
+
+* Add BMI2 optimized version of SHA-256, 40% faster on Skylake (GH #1584)
+
 * Allow the year to be up to 2200 in ASN.1 time objects. Previously this
   was limited to 2100. (GH #1536)
 
