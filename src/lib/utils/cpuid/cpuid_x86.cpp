@@ -121,6 +121,7 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
       X86_CPUID_SUBLEVEL(7, 0, cpuid);
 
       enum x86_CPUID_7_bits : uint64_t {
+         BMI1 = (1ULL << 3),
          AVX2 = (1ULL << 5),
          BMI2 = (1ULL << 8),
          AVX512F = (1ULL << 16),
@@ -132,8 +133,18 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
 
       if(flags7 & x86_CPUID_7_bits::AVX2)
          features_detected |= CPUID::CPUID_AVX2_BIT;
-      if(flags7 & x86_CPUID_7_bits::BMI2)
-         features_detected |= CPUID::CPUID_BMI2_BIT;
+      if(flags7 & x86_CPUID_7_bits::BMI1)
+         {
+         features_detected |= CPUID::CPUID_BMI1_BIT;
+         /*
+         We only set the BMI2 bit if BMI1 is also supported, so BMI2
+         code can safely use both extensions. No known processor
+         implements BMI2 but not BMI1.
+         */
+         if(flags7 & x86_CPUID_7_bits::BMI2)
+            features_detected |= CPUID::CPUID_BMI2_BIT;
+         }
+
       if(flags7 & x86_CPUID_7_bits::AVX512F)
          features_detected |= CPUID::CPUID_AVX512F_BIT;
       if(flags7 & x86_CPUID_7_bits::RDSEED)

@@ -98,6 +98,7 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          CPUID_RDTSC_BIT   = (1ULL << 10),
          CPUID_BMI2_BIT    = (1ULL << 11),
          CPUID_ADX_BIT     = (1ULL << 12),
+         CPUID_BMI1_BIT    = (1ULL << 13),
 
          // Crypto-specific ISAs
          CPUID_AESNI_BIT   = (1ULL << 16),
@@ -213,6 +214,12 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static bool has_avx512f()
          { return has_cpuid_bit(CPUID_AVX512F_BIT); }
+
+      /**
+      * Check if the processor supports BMI1
+      */
+      static bool has_bmi1()
+         { return has_cpuid_bit(CPUID_BMI1_BIT); }
 
       /**
       * Check if the processor supports BMI2
