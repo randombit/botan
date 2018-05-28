@@ -35,7 +35,6 @@ Public Key Crypto, Math
 * Curves for pairings (BN-256 is widely implemented)
 * Identity based encryption
 * BBS group signatures
-* Support Scrypt for private key encryption (RFC 7914)
 * Paillier homomorphic cryptosystem
 * Hashing onto an elliptic curve
 * SPHINCS-256
