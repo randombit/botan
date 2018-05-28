@@ -5,15 +5,13 @@ Botan (Japanese for peony) is a cryptography library written in C++11
 and released under the permissive `Simplified BSD
 <https://botan.randombit.net/license.txt>`_ license.
 
-Botan's goal is to be the best option for cryptography in new C++ code by
-offering the tools necessary to implement a range of practical systems, such as
-TLS/DTLS, PKIX certificate handling, PKCS#11 and TPM hardware support, password
-hashing, and post quantum crypto schemes. In addition to the C++, botan has a
-C89 API specifically designed to be easy to call from other languages. A Python
-binding using ctypes is included, and several other
-`language bindings <https://github.com/randombit/botan/wiki/Language-Bindings>`_
-are available.
-
+Botan's goal is to be the best option for cryptography in C++ by offering the
+tools necessary to implement a range of practical systems, such as TLS/DTLS,
+X.509 certificates, modern AEAD ciphers, PKCS#11 and TPM hardware support,
+password hashing, and post quantum crypto schemes. Botan also has a C89 API
+specifically designed to be easy to call from other languages. A Python binding
+using ctypes is included, and several other `language bindings
+<https://github.com/randombit/botan/wiki/Language-Bindings>`_ are available.
 Find the full feature list below.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
@@ -114,7 +112,7 @@ Old Release
 
 The 1.10 branch is the last version of the library written in C++98. It is no
 longer supported except for critical security updates (with all support ending
-in 2018), and the developers do not recommend its use anymore.
+in December 2018), and the developers do not recommend its use anymore.
 
 The latest 1.10 release is
 `1.10.17 <https://botan.randombit.net/releases/Botan-1.10.17.tgz>`_
@@ -133,8 +131,8 @@ Transport Layer Security (TLS) Protocol
   side only right now), encrypt-then-mac CBC, and extended master secret.
 * Supports authentication using preshared keys (PSK) or passwords (SRP)
 * Supports record encryption with ChaCha20Poly1305, AES/OCB, AES/GCM, AES/CCM,
-  Camellia/GCM, and legacy CBC ciphersuites with AES, Camellia, SEED, or 3DES.
-* Key exchange using Diffie-Hellman, ECDH, RSA, or CECPQ1
+  Camellia/GCM as well as legacy CBC ciphersuites.
+* Key exchange using CECPQ1, ECDH, FFDHE, or RSA
 
 Public Key Infrastructure
 ----------------------------------------
@@ -179,7 +177,7 @@ Other Useful Things
 * Simple compression API wrapping zlib, bzip2, and lzma libraries
 * RNG wrappers for system RNG and hardware RNGs
 * HMAC_DRBG and entropy collection system for userspace RNGs
-* PBKDF2 password based key derivation
+* Password based key derivation functions PBKDF2 and Scrypt
 * Password hashing function bcrypt and passhash9 (custom PBKDF scheme)
 * SRP-6a password authenticated key exchange
 * Key derivation functions including HKDF, KDF2, SP 800-108, SP 800-56A, SP 800-56C
