@@ -47,6 +47,9 @@ Version 2.7.0, Not Yet Released
 
 * The ``factor`` command runs much faster on larger inputs now.
 
+* Support for Windows Phone/UWP was deprecated starting in 2.5. This
+  deprecation has been reversed as it seems UWP is still actively used.
+
 * Support for Visual C++ 2013 is deprecated, and will be removed in Jan 2019.
 
 Version 2.6.0, 2018-04-10

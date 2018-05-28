@@ -38,8 +38,6 @@ in the source.
 
 - Platform support for Google Native Client
 
-- Platform support for Windows Phone
-
 - Support for PathScale and HP compilers
 
 - TLS: 3DES and SEED ciphersuites
