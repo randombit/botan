@@ -2121,13 +2121,17 @@ class Speed final : public Command
       void bench_xmss(const std::string& provider,
                       std::chrono::milliseconds msec)
          {
-         // H16 and H20 signatures take an hour or more to generate
+         /*
+         We only test H10 signatures here since already they are quite slow (a
+         few seconds per signature). On a fast machine, H16 signatures take 1-2
+         minutes to generate and H20 signatures take 5-10 minutes to generate
+         */
          std::vector<std::string> xmss_params
             {
-            "XMSS_SHA2-256_W16_H10",
-            "XMSS_SHA2-512_W16_H10",
-            "XMSS_SHAKE128_W16_H10",
-            "XMSS_SHAKE256_W16_H10",
+            "XMSS_SHA2-256_W16_H20",
+            "XMSS_SHA2-512_W16_H20",
+            "XMSS_SHAKE128_W16_H20",
+            "XMSS_SHAKE256_W16_H20",
             };
 
          for(std::string params : xmss_params)
