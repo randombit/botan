@@ -80,7 +80,8 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         # problem in Ubuntu packaged version, see
         # http://stackoverflow.com/questions/32779919/no-module-named-for-requests
         sudo apt-get remove python-requests python-openssl
-        sudo pip install requests sphinx pyopenssl
+        sudo pip install requests pyopenssl
+        sudo pip install sphinx==1.7.4
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
