@@ -21,9 +21,9 @@ class Cipher_Mode_Padding_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override
          {
-         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
-         const std::vector<uint8_t> expected = get_opt_bin(vars, "Out");
-         const size_t block_size = get_req_sz(vars, "Blocksize");
+         const std::vector<uint8_t> input    = vars.get_req_bin("In");
+         const std::vector<uint8_t> expected = vars.get_opt_bin("Out");
+         const size_t block_size = vars.get_req_sz("Blocksize");
 
          std::string algo = header;
 

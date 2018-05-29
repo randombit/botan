@@ -27,9 +27,9 @@ class Curve25519_Sclarmult_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         const std::vector<uint8_t> secret    = get_req_bin(vars, "Secret");
-         const std::vector<uint8_t> basepoint = get_req_bin(vars, "Basepoint");
-         const std::vector<uint8_t> expected  = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> secret    = vars.get_req_bin("Secret");
+         const std::vector<uint8_t> basepoint = vars.get_req_bin("Basepoint");
+         const std::vector<uint8_t> expected  = vars.get_req_bin("Out");
 
          std::vector<uint8_t> got(32);
          Botan::curve25519_donna(got.data(), secret.data(), basepoint.data());

@@ -40,10 +40,10 @@ class HOTP_KAT_Tests final : public Text_Based_Test
          if(!hash_test)
             return {result};
 
-         const std::vector<uint8_t> key = get_req_bin(vars, "Key");
-         const size_t otp = get_req_sz(vars, "OTP");
-         const uint64_t counter = get_req_sz(vars, "Counter");
-         const size_t digits = get_req_sz(vars, "Digits");
+         const std::vector<uint8_t> key = vars.get_req_bin("Key");
+         const size_t otp = vars.get_req_sz("OTP");
+         const uint64_t counter = vars.get_req_sz("Counter");
+         const size_t digits = vars.get_req_sz("Digits");
 
          Botan::HOTP hotp(key, hash_algo, digits);
 
@@ -95,11 +95,11 @@ class TOTP_KAT_Tests final : public Text_Based_Test
          if(!hash_test)
             return {result};
 
-         const std::vector<uint8_t> key = get_req_bin(vars, "Key");
-         const size_t otp = get_req_sz(vars, "OTP");
-         const size_t digits = get_req_sz(vars, "Digits");
-         const size_t timestep = get_req_sz(vars, "Timestep");
-         const std::string timestamp = get_req_str(vars, "Timestamp");
+         const std::vector<uint8_t> key = vars.get_req_bin("Key");
+         const size_t otp = vars.get_req_sz("OTP");
+         const size_t digits = vars.get_req_sz("Digits");
+         const size_t timestep = vars.get_req_sz("Timestep");
+         const std::string timestamp = vars.get_req_str("Timestamp");
 
          Botan::TOTP totp(key, hash_algo, digits, timestep);
 

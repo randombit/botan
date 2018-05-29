@@ -41,10 +41,10 @@ class Utility_Function_Tests final : public Text_Based_Test
 
          if(algo == "round_up")
             {
-            const size_t x = get_req_sz(vars, "In1");
-            const size_t to = get_req_sz(vars, "In2");
+            const size_t x = vars.get_req_sz("In1");
+            const size_t to = vars.get_req_sz("In2");
 
-            result.test_eq(algo, Botan::round_up(x, to), get_req_sz(vars, "Out"));
+            result.test_eq(algo, Botan::round_up(x, to), vars.get_req_sz("Out"));
 
             try
                {
@@ -55,10 +55,10 @@ class Utility_Function_Tests final : public Text_Based_Test
             }
          else if(algo == "round_down")
             {
-            const size_t x = get_req_sz(vars, "In1");
-            const size_t to = get_req_sz(vars, "In2");
+            const size_t x = vars.get_req_sz("In1");
+            const size_t to = vars.get_req_sz("In2");
 
-            result.test_eq(algo, Botan::round_down<size_t>(x, to), get_req_sz(vars, "Out"));
+            result.test_eq(algo, Botan::round_down<size_t>(x, to), vars.get_req_sz("Out"));
             result.test_eq(algo, Botan::round_down<size_t>(x, 0), x);
             }
 
@@ -228,8 +228,8 @@ class Poly_Double_Tests final : public Text_Based_Test
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
          Test::Result result("Polynomial doubling");
-         const std::vector<uint8_t> in  = get_req_bin(vars, "In");
-         const std::vector<uint8_t> out = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> in  = vars.get_req_bin("In");
+         const std::vector<uint8_t> out = vars.get_req_bin("Out");
 
          std::vector<uint8_t> b = in;
          Botan::poly_double_n(b.data(), b.size());
@@ -266,7 +266,7 @@ class Date_Format_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
-         const std::string date_str = get_req_str(vars, "Date");
+         const std::string date_str = vars.get_req_str("Date");
          Test::Result result("Date parsing");
 
          const std::vector<uint32_t> d = parse_date(date_str);
@@ -332,13 +332,13 @@ class Base64_Tests final : public Text_Based_Test
          Test::Result result("Base64");
 
          const bool is_valid = (type == "valid");
-         const std::string base64 = get_req_str(vars, "Base64");
+         const std::string base64 = vars.get_req_str("Base64");
 
          try
             {
             if(is_valid)
                {
-               const std::vector<uint8_t> binary = get_req_bin(vars, "Binary");
+               const std::vector<uint8_t> binary = vars.get_req_bin("Binary");
                result.test_eq("base64 decoding", Botan::base64_decode(base64), binary);
                result.test_eq("base64 encoding", Botan::base64_encode(binary), base64);
                }
@@ -409,8 +409,8 @@ class Charset_Tests final : public Text_Based_Test
          {
          Test::Result result("Charset");
 
-         const std::vector<uint8_t> in = get_req_bin(vars, "In");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> in = vars.get_req_bin("In");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Out");
 
          const std::string in_str(in.begin(), in.end());
 
@@ -533,8 +533,8 @@ class Hostname_Tests final : public Text_Based_Test
          {
          Test::Result result("Hostname Matching");
 
-         const std::string issued = get_req_str(vars, "Issued");
-         const std::string hostname = get_req_str(vars, "Hostname");
+         const std::string issued = vars.get_req_str("Issued");
+         const std::string hostname = vars.get_req_str("Hostname");
          const bool expected = (type == "Invalid") ? false : true;
 
          const std::string what = hostname + ((expected == true) ?

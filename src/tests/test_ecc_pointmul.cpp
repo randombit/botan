@@ -23,9 +23,9 @@ class ECC_Pointmult_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& group_id, const VarMap& vars) override
          {
-         const Botan::BigInt m = get_req_bn(vars, "m");
-         const Botan::BigInt X = get_req_bn(vars, "X");
-         const Botan::BigInt Y = get_req_bn(vars, "Y");
+         const Botan::BigInt m = vars.get_req_bn("m");
+         const Botan::BigInt X = vars.get_req_bn("X");
+         const Botan::BigInt Y = vars.get_req_bn("Y");
 
          Botan::EC_Group group(Botan::OIDS::lookup(group_id));
 

@@ -708,7 +708,7 @@ class ECC_Invalid_Key_Tests final : public Text_Based_Test
          {
          Test::Result result("ECC invalid keys");
 
-         const std::string encoded = get_req_str(vars, "SubjectPublicKey");
+         const std::string encoded = vars.get_req_str("SubjectPublicKey");
          Botan::DataSource_Memory key_data(Botan::hex_decode(encoded));
 
          try

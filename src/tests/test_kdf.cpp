@@ -36,10 +36,10 @@ class KDF_KAT_Tests final : public Text_Based_Test
             return result;
             }
 
-         const std::vector<uint8_t> salt = get_opt_bin(vars, "Salt");
-         const std::vector<uint8_t> secret = get_req_bin(vars, "Secret");
-         const std::vector<uint8_t> label = get_opt_bin(vars, "Label");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
+         const std::vector<uint8_t> salt = vars.get_opt_bin("Salt");
+         const std::vector<uint8_t> secret = vars.get_req_bin("Secret");
+         const std::vector<uint8_t> label = vars.get_opt_bin("Label");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          result.test_eq("name", kdf->name(), kdf_name);
          result.test_eq("derived key", kdf->derive_key(expected.size(), secret, salt, label), expected);
@@ -69,10 +69,10 @@ class HKDF_Expand_Label_Tests final : public Text_Based_Test
          {
          Test::Result result("HKDF-Expand-Label(" + hash_name + ")");
 
-         const std::vector<uint8_t> secret = get_req_bin(vars, "Secret");
-         const std::vector<uint8_t> hashval = get_req_bin(vars, "HashValue");
-         const std::string label = get_req_str(vars, "Label");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
+         const std::vector<uint8_t> secret = vars.get_req_bin("Secret");
+         const std::vector<uint8_t> hashval = vars.get_req_bin("HashValue");
+         const std::string label = vars.get_req_str("Label");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          Botan::secure_vector<uint8_t> output =
             Botan::hkdf_expand_label(hash_name,

@@ -35,8 +35,8 @@ class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const std::string group_id = get_req_str(vars, "Group");
-         const BigInt x = get_req_bn(vars, "X");
+         const std::string group_id = vars.get_req_str("Group");
+         const BigInt x = vars.get_req_bn("X");
          Botan::EC_Group group(Botan::OIDS::lookup(group_id));
 
          std::unique_ptr<Botan::Private_Key> key(new Botan::ECGDSA_PrivateKey(Test::rng(), group, x));
@@ -45,7 +45,7 @@ class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
+         return "EMSA1(" + vars.get_req_str("Hash") + ")";
          }
 
       Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override

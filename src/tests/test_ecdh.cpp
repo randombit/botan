@@ -36,14 +36,14 @@ class ECDH_KAT_Tests final : public PK_Key_Agreement_Test
             const VarMap& vars) override
          {
          Botan::EC_Group group(group_id);
-         const Botan::BigInt secret = get_req_bn(vars, "Secret");
+         const Botan::BigInt secret = vars.get_req_bn("Secret");
          std::unique_ptr<Botan::Private_Key> key(new Botan::ECDH_PrivateKey(Test::rng(), group, secret));
          return key;
          }
 
       std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override
          {
-         return get_req_bin(vars, "CounterKey");
+         return vars.get_req_bin("CounterKey");
          }
    };
 

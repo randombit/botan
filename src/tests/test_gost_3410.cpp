@@ -28,16 +28,16 @@ class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
-         const BigInt p = get_req_bn(vars, "P");
-         const BigInt a = get_req_bn(vars, "A");
-         const BigInt b = get_req_bn(vars, "B");
-         const BigInt Gx = get_req_bn(vars, "Gx");
-         const BigInt Gy = get_req_bn(vars, "Gy");
-         const BigInt order = get_req_bn(vars, "Order");
-         const BigInt cofactor = get_req_bn(vars, "Cofactor");
+         const BigInt p = vars.get_req_bn("P");
+         const BigInt a = vars.get_req_bn("A");
+         const BigInt b = vars.get_req_bn("B");
+         const BigInt Gx = vars.get_req_bn("Gx");
+         const BigInt Gy = vars.get_req_bn("Gy");
+         const BigInt order = vars.get_req_bn("Order");
+         const BigInt cofactor = vars.get_req_bn("Cofactor");
 
-         const BigInt Px = get_req_bn(vars, "Px");
-         const BigInt Py = get_req_bn(vars, "Py");
+         const BigInt Px = vars.get_req_bn("Px");
+         const BigInt Py = vars.get_req_bn("Py");
 
          Botan::EC_Group group(p, a, b, Gx, Gy, order, cofactor);
 
@@ -49,7 +49,7 @@ class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification
 
       std::string default_padding(const VarMap& vars) const override
          {
-         const std::string hash = get_req_str(vars, "Hash");
+         const std::string hash = vars.get_req_str("Hash");
          if(hash == "Raw")
             return hash;
          return "EMSA1(" + hash + ")";
@@ -66,15 +66,15 @@ class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const BigInt p = get_req_bn(vars, "P");
-         const BigInt a = get_req_bn(vars, "A");
-         const BigInt b = get_req_bn(vars, "B");
-         const BigInt Gx = get_req_bn(vars, "Gx");
-         const BigInt Gy = get_req_bn(vars, "Gy");
-         const BigInt order = get_req_bn(vars, "Order");
-         const BigInt cofactor = get_req_bn(vars, "Cofactor");
+         const BigInt p = vars.get_req_bn("P");
+         const BigInt a = vars.get_req_bn("A");
+         const BigInt b = vars.get_req_bn("B");
+         const BigInt Gx = vars.get_req_bn("Gx");
+         const BigInt Gy = vars.get_req_bn("Gy");
+         const BigInt order = vars.get_req_bn("Order");
+         const BigInt cofactor = vars.get_req_bn("Cofactor");
 
-         const BigInt x = get_req_bn(vars, "X");
+         const BigInt x = vars.get_req_bn("X");
 
          const Botan::OID oid("1.3.6.1.4.1.25258.2");
 
@@ -86,7 +86,7 @@ class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         const std::string hash = get_req_str(vars, "Hash");
+         const std::string hash = vars.get_req_str("Hash");
          if(hash == "Raw")
             return hash;
          return "EMSA1(" + hash + ")";

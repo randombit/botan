@@ -27,11 +27,11 @@ class Bcrypt_Tests final : public Text_Based_Test
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
          // Encoded as binary so we can test binary inputs
-         const std::vector<uint8_t> password_vec = get_req_bin(vars, "Password");
+         const std::vector<uint8_t> password_vec = vars.get_req_bin("Password");
          const std::string password(reinterpret_cast<const char*>(password_vec.data()),
                                     password_vec.size());
 
-         const std::string passhash = get_req_str(vars, "Passhash");
+         const std::string passhash = vars.get_req_str("Passhash");
 
          Test::Result result("bcrypt");
          result.test_eq("correct hash accepted", Botan::check_bcrypt(password, passhash), true);
@@ -81,12 +81,12 @@ class Passhash9_Tests final : public Text_Based_Test
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
          // Encoded as binary so we can test binary inputs
-         const std::vector<uint8_t> password_vec = get_req_bin(vars, "Password");
+         const std::vector<uint8_t> password_vec = vars.get_req_bin("Password");
          const std::string password(reinterpret_cast<const char*>(password_vec.data()),
                                     password_vec.size());
 
-         const std::string passhash = get_req_str(vars, "Passhash");
-         const std::size_t prf = get_req_sz(vars, "PRF");
+         const std::string passhash = vars.get_req_str("Passhash");
+         const std::size_t prf = vars.get_req_sz("PRF");
 
          Test::Result result("passhash9");
 

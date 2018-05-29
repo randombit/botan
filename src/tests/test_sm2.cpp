@@ -19,6 +19,24 @@ namespace Botan_Tests {
 
 namespace {
 
+std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars)
+   {
+   // group params
+   const BigInt p = vars.get_req_bn("P");
+   const BigInt a = vars.get_req_bn("A");
+   const BigInt b = vars.get_req_bn("B");
+   const BigInt xG = vars.get_req_bn("xG");
+   const BigInt yG = vars.get_req_bn("yG");
+   const BigInt order = vars.get_req_bn("Order");
+   const BigInt cofactor = vars.get_req_bn("Cofactor");
+   const BigInt x = vars.get_req_bn("x");
+
+   Botan::EC_Group domain(p, a, b, xG, yG, order, cofactor);
+
+   Botan::Null_RNG null_rng;
+   return std::unique_ptr<Botan::Private_Key>(new Botan::SM2_Signature_PrivateKey(null_rng, domain, x));
+   }
+
 class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
    {
    public:
@@ -31,7 +49,7 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         return get_req_str(vars, "Ident") + "," + get_opt_str(vars, "Hash", "SM3");
+         return vars.get_req_str("Ident") + "," + vars.get_opt_str("Hash", "SM3");
          }
 
       Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
@@ -41,21 +59,7 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         // group params
-         const BigInt p = get_req_bn(vars, "P");
-         const BigInt a = get_req_bn(vars, "A");
-         const BigInt b = get_req_bn(vars, "B");
-         const BigInt xG = get_req_bn(vars, "xG");
-         const BigInt yG = get_req_bn(vars, "yG");
-         const BigInt order = get_req_bn(vars, "Order");
-         const BigInt cofactor = get_req_bn(vars, "Cofactor");
-         const BigInt x = get_req_bn(vars, "x");
-
-         Botan::EC_Group domain(p, a, b, xG, yG, order, cofactor);
-
-         Botan::Null_RNG null_rng;
-         std::unique_ptr<Botan::Private_Key> key(new Botan::SM2_Signature_PrivateKey(null_rng, domain, x));
-         return key;
+         return load_sm2_private_key(vars);
          }
    };
 
@@ -73,7 +77,7 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         return get_opt_str(vars, "Hash", "SM3");
+         return vars.get_opt_str("Hash", "SM3");
          }
 
       bool clear_between_callbacks() const override { return false; }
@@ -85,21 +89,7 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         // group params
-         const BigInt p = get_req_bn(vars, "P");
-         const BigInt a = get_req_bn(vars, "A");
-         const BigInt b = get_req_bn(vars, "B");
-         const BigInt xG = get_req_bn(vars, "xG");
-         const BigInt yG = get_req_bn(vars, "yG");
-         const BigInt order = get_req_bn(vars, "Order");
-         const BigInt cofactor = get_req_bn(vars, "Cofactor");
-         const BigInt x = get_req_bn(vars, "x");
-
-         Botan::EC_Group domain(p, a, b, xG, yG, order, cofactor);
-
-         Botan::Null_RNG null_rng;
-         std::unique_ptr<Botan::Private_Key> key(new Botan::SM2_Encryption_PrivateKey(null_rng, domain, x));
-         return key;
+         return load_sm2_private_key(vars);
          }
    };
 

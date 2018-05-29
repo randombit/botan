@@ -31,12 +31,12 @@ class HMAC_DRBG_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
-         const std::vector<uint8_t> seed_input   = get_req_bin(vars, "EntropyInput");
-         const std::vector<uint8_t> reseed_input = get_req_bin(vars, "EntropyInputReseed");
-         const std::vector<uint8_t> expected     = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> seed_input   = vars.get_req_bin("EntropyInput");
+         const std::vector<uint8_t> reseed_input = vars.get_req_bin("EntropyInputReseed");
+         const std::vector<uint8_t> expected     = vars.get_req_bin("Out");
 
-         const std::vector<uint8_t> ad1 = get_opt_bin(vars, "AdditionalInput1");
-         const std::vector<uint8_t> ad2 = get_opt_bin(vars, "AdditionalInput2");
+         const std::vector<uint8_t> ad1 = vars.get_opt_bin("AdditionalInput1");
+         const std::vector<uint8_t> ad2 = vars.get_opt_bin("AdditionalInput2");
 
          Test::Result result("HMAC_DRBG(" + algo + ")");
 
@@ -81,12 +81,12 @@ class ChaCha_RNG_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         const std::vector<uint8_t> seed_input   = get_req_bin(vars, "EntropyInput");
-         const std::vector<uint8_t> reseed_input = get_req_bin(vars, "EntropyInputReseed");
-         const std::vector<uint8_t> expected     = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> seed_input   = vars.get_req_bin("EntropyInput");
+         const std::vector<uint8_t> reseed_input = vars.get_req_bin("EntropyInputReseed");
+         const std::vector<uint8_t> expected     = vars.get_req_bin("Out");
 
-         const std::vector<uint8_t> ad1 = get_opt_bin(vars, "AdditionalInput1");
-         const std::vector<uint8_t> ad2 = get_opt_bin(vars, "AdditionalInput2");
+         const std::vector<uint8_t> ad1 = vars.get_opt_bin("AdditionalInput1");
+         const std::vector<uint8_t> ad2 = vars.get_opt_bin("AdditionalInput2");
 
          Test::Result result("ChaCha_RNG");
 

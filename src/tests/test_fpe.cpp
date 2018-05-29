@@ -21,11 +21,11 @@ class FPE_FE1_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         const Botan::BigInt modulus  = get_req_bn(vars, "Mod");
-         const Botan::BigInt input    = get_req_bn(vars, "In");
-         const Botan::BigInt expected = get_req_bn(vars, "Out");
-         const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
-         const std::vector<uint8_t> tweak    = get_req_bin(vars, "Tweak");
+         const Botan::BigInt modulus  = vars.get_req_bn("Mod");
+         const Botan::BigInt input    = vars.get_req_bn("In");
+         const Botan::BigInt expected = vars.get_req_bn("Out");
+         const std::vector<uint8_t> key      = vars.get_req_bin("Key");
+         const std::vector<uint8_t> tweak    = vars.get_req_bin("Tweak");
 
          Test::Result result("FPE_FE1");
 

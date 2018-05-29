@@ -112,12 +112,12 @@ class NEWHOPE_Tests final : public Text_Based_Test
          {
          Test::Result result("NEWHOPE");
 
-         const std::vector<uint8_t> h_output_a = get_req_bin(vars, "H_OutputA");
-         const std::vector<uint8_t> h_output_b = get_req_bin(vars, "H_OutputB");
-         const std::vector<uint8_t> shared_key = get_req_bin(vars, "SharedKey");
+         const std::vector<uint8_t> h_output_a = vars.get_req_bin("H_OutputA");
+         const std::vector<uint8_t> h_output_b = vars.get_req_bin("H_OutputB");
+         const std::vector<uint8_t> shared_key = vars.get_req_bin("SharedKey");
 
-         NEWHOPE_RNG drbg_a(get_req_bin(vars, "DRBG_SeedA"));
-         NEWHOPE_RNG drbg_b(get_req_bin(vars, "DRBG_SeedB"));
+         NEWHOPE_RNG drbg_a(vars.get_req_bin("DRBG_SeedA"));
+         NEWHOPE_RNG drbg_b(vars.get_req_bin("DRBG_SeedB"));
 
          Botan::SHA_3_256 sha3;
 

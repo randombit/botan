@@ -256,9 +256,9 @@ class BigInt_Add_Test final : public Text_Based_Test
 
          using Botan::BigInt;
 
-         const BigInt a = get_req_bn(vars, "In1");
-         const BigInt b = get_req_bn(vars, "In2");
-         const BigInt c = get_req_bn(vars, "Output");
+         const BigInt a = vars.get_req_bn("In1");
+         const BigInt b = vars.get_req_bn("In2");
+         const BigInt c = vars.get_req_bn("Output");
 
          result.test_eq("a + b", a + b, c);
          result.test_eq("b + a", b + a, c);
@@ -287,9 +287,9 @@ class BigInt_Sub_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Subtraction");
 
-         const BigInt a = get_req_bn(vars, "In1");
-         const BigInt b = get_req_bn(vars, "In2");
-         const BigInt c = get_req_bn(vars, "Output");
+         const BigInt a = vars.get_req_bn("In1");
+         const BigInt b = vars.get_req_bn("In2");
+         const BigInt c = vars.get_req_bn("Output");
 
          result.test_eq("a - b", a - b, c);
 
@@ -312,9 +312,9 @@ class BigInt_Mul_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Multiply");
 
-         const BigInt a = get_req_bn(vars, "In1");
-         const BigInt b = get_req_bn(vars, "In2");
-         const BigInt c = get_req_bn(vars, "Output");
+         const BigInt a = vars.get_req_bn("In1");
+         const BigInt b = vars.get_req_bn("In2");
+         const BigInt c = vars.get_req_bn("Output");
 
          result.test_eq("a * b", a * b, c);
          result.test_eq("b * a", b * a, c);
@@ -342,8 +342,8 @@ class BigInt_Sqr_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Square");
 
-         const BigInt input = get_req_bn(vars, "Input");
-         const BigInt output = get_req_bn(vars, "Output");
+         const BigInt input = vars.get_req_bn("Input");
+         const BigInt output = vars.get_req_bn("Output");
 
          result.test_eq("a * a", input * input, output);
          result.test_eq("sqr(a)", square(input), output);
@@ -363,9 +363,9 @@ class BigInt_Div_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Divide");
 
-         const BigInt a = get_req_bn(vars, "In1");
-         const BigInt b = get_req_bn(vars, "In2");
-         const BigInt c = get_req_bn(vars, "Output");
+         const BigInt a = vars.get_req_bn("In1");
+         const BigInt b = vars.get_req_bn("In2");
+         const BigInt c = vars.get_req_bn("Output");
 
          result.test_eq("a / b", a / b, c);
 
@@ -388,9 +388,9 @@ class BigInt_Mod_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Mod");
 
-         const BigInt a = get_req_bn(vars, "In1");
-         const BigInt b = get_req_bn(vars, "In2");
-         const BigInt c = get_req_bn(vars, "Output");
+         const BigInt a = vars.get_req_bn("In1");
+         const BigInt b = vars.get_req_bn("In2");
+         const BigInt c = vars.get_req_bn("Output");
 
          result.test_eq("a % b", a % b, c);
 
@@ -422,9 +422,9 @@ class BigInt_GCD_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Mod");
 
-         const BigInt x = get_req_bn(vars, "X");
-         const BigInt y = get_req_bn(vars, "Y");
-         const BigInt expected = get_req_bn(vars, "GCD");
+         const BigInt x = vars.get_req_bn("X");
+         const BigInt y = vars.get_req_bn("Y");
+         const BigInt expected = vars.get_req_bn("GCD");
 
          const BigInt g = Botan::gcd(x, y);
 
@@ -444,9 +444,9 @@ class BigInt_Lshift_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Lshift");
 
-         const BigInt value = get_req_bn(vars, "Value");
-         const size_t shift = get_req_bn(vars, "Shift").to_u32bit();
-         const BigInt output = get_req_bn(vars, "Output");
+         const BigInt value = vars.get_req_bn("Value");
+         const size_t shift = vars.get_req_bn("Shift").to_u32bit();
+         const BigInt output = vars.get_req_bn("Output");
 
          result.test_eq("a << s", value << shift, output);
 
@@ -469,9 +469,9 @@ class BigInt_Rshift_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Rshift");
 
-         const BigInt value = get_req_bn(vars, "Value");
-         const size_t shift = get_req_bn(vars, "Shift").to_u32bit();
-         const BigInt output = get_req_bn(vars, "Output");
+         const BigInt value = vars.get_req_bn("Value");
+         const size_t shift = vars.get_req_bn("Shift").to_u32bit();
+         const BigInt output = vars.get_req_bn("Output");
 
          result.test_eq("a >> s", value >> shift, output);
 
@@ -494,10 +494,10 @@ class BigInt_Powmod_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Powmod");
 
-         const BigInt base = get_req_bn(vars, "Base");
-         const BigInt exponent = get_req_bn(vars, "Exponent");
-         const BigInt modulus = get_req_bn(vars, "Modulus");
-         const BigInt expected = get_req_bn(vars, "Output");
+         const BigInt base = vars.get_req_bn("Base");
+         const BigInt exponent = vars.get_req_bn("Exponent");
+         const BigInt modulus = vars.get_req_bn("Modulus");
+         const BigInt expected = vars.get_req_bn("Output");
 
          result.test_eq("power_mod", Botan::power_mod(base, exponent, modulus), expected);
 
@@ -550,7 +550,7 @@ class BigInt_IsPrime_Test final : public Text_Based_Test
             throw Test_Error("Bad header for prime test " + header);
             }
 
-         const BigInt value = get_req_bn(vars, "X");
+         const BigInt value = vars.get_req_bn("X");
          const bool is_prime = (header == "Prime");
 
          Test::Result result("BigInt Test " + header);
@@ -570,9 +570,9 @@ class BigInt_Ressol_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Ressol");
 
-         const Botan::BigInt a = get_req_bn(vars, "Input");
-         const Botan::BigInt p = get_req_bn(vars, "Modulus");
-         const Botan::BigInt exp = get_req_bn(vars, "Output");
+         const Botan::BigInt a = vars.get_req_bn("Input");
+         const Botan::BigInt p = vars.get_req_bn("Modulus");
+         const Botan::BigInt exp = vars.get_req_bn("Output");
 
          const Botan::BigInt a_sqrt = Botan::ressol(a, p);
 
@@ -599,9 +599,9 @@ class BigInt_InvMod_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt InvMod");
 
-         const Botan::BigInt a = get_req_bn(vars, "Input");
-         const Botan::BigInt mod = get_req_bn(vars, "Modulus");
-         const Botan::BigInt expected = get_req_bn(vars, "Output");
+         const Botan::BigInt a = vars.get_req_bn("Input");
+         const Botan::BigInt mod = vars.get_req_bn("Modulus");
+         const Botan::BigInt expected = vars.get_req_bn("Output");
 
          const Botan::BigInt a_inv = Botan::inverse_euclid(a, mod);
 
@@ -641,10 +641,10 @@ class BigInt_Rand_Test final : public Text_Based_Test
          {
          Test::Result result("BigInt Random");
 
-         const std::vector<uint8_t> seed = get_req_bin(vars, "Seed");
-         const Botan::BigInt min = get_req_bn(vars, "Min");
-         const Botan::BigInt max = get_req_bn(vars, "Max");
-         const Botan::BigInt expected = get_req_bn(vars, "Output");
+         const std::vector<uint8_t> seed = vars.get_req_bin("Seed");
+         const Botan::BigInt min = vars.get_req_bn("Min");
+         const Botan::BigInt max = vars.get_req_bn("Max");
+         const Botan::BigInt expected = vars.get_req_bn("Output");
 
          Fixed_Output_RNG rng(seed);
          Botan::BigInt generated = BigInt::random_integer(rng, min, max);
@@ -664,11 +664,11 @@ class DSA_ParamGen_Test final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override
          {
-         const std::vector<uint8_t> seed = get_req_bin(vars, "Seed");
-         const size_t offset = get_req_sz(vars, "Counter");
+         const std::vector<uint8_t> seed = vars.get_req_bin("Seed");
+         const size_t offset = vars.get_req_sz("Counter");
 
-         const Botan::BigInt exp_P = get_req_bn(vars, "P");
-         const Botan::BigInt exp_Q = get_req_bn(vars, "Q");
+         const Botan::BigInt exp_P = vars.get_req_bn("P");
+         const Botan::BigInt exp_Q = vars.get_req_bn("Q");
 
          const std::vector<std::string> header_parts = Botan::split_on(header, ',');
 

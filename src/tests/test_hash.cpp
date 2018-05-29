@@ -81,8 +81,8 @@ class Hash_Function_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
-         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> input    = vars.get_req_bin("In");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Out");
 
          Test::Result result(algo);
 
