@@ -1313,6 +1313,23 @@ class FFI_Unit_Tests final : public Test
             botan_mp_destroy(e);
             botan_mp_destroy(n);
 
+            size_t pkcs1_len = 0;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                  botan_privkey_rsa_get_privkey, (loaded_privkey, nullptr, &pkcs1_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
+
+            std::vector<uint8_t> pkcs1(pkcs1_len);
+            TEST_FFI_OK(botan_privkey_rsa_get_privkey, (loaded_privkey, pkcs1.data(), &pkcs1_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
+
+            botan_privkey_t privkey_from_pkcs1;
+            TEST_FFI_OK(botan_privkey_load_rsa_pkcs1, (&privkey_from_pkcs1, pkcs1.data(), pkcs1_len));
+            TEST_FFI_OK(botan_privkey_destroy, (privkey_from_pkcs1));
+
+            pkcs1_len = 0;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                  botan_privkey_rsa_get_privkey, (loaded_privkey, nullptr, &pkcs1_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+            pkcs1.resize(pkcs1_len);
+            TEST_FFI_OK(botan_privkey_rsa_get_privkey, (loaded_privkey, pkcs1.data(), &pkcs1_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+
             char namebuf[32] = { 0 };
             size_t name_len = sizeof(namebuf);
             if(TEST_FFI_OK(botan_pubkey_algo_name, (loaded_pubkey, namebuf, &name_len)))
