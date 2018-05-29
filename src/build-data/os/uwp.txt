@@ -10,9 +10,14 @@ doc_dir docs
 <target_features>
 win32
 winsock2
+crypto_ng
 
 rtlsecurezeromemory
 
 threads
 filesystem
 </target_features>
+
+<aliases>
+winphone
+</aliases>
