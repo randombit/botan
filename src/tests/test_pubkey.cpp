@@ -88,7 +88,7 @@ std::string PK_Test::choose_padding(const VarMap& vars,
    {
    if(pad_hdr != "")
       return pad_hdr;
-   return get_opt_str(vars, "Padding", this->default_padding(vars));
+   return vars.get_opt_str("Padding", this->default_padding(vars));
    }
 
 std::vector<std::string> PK_Test::possible_providers(const std::string& /*params*/)
@@ -99,8 +99,8 @@ std::vector<std::string> PK_Test::possible_providers(const std::string& /*params
 Test::Result
 PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
-   const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
-   const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
+   const std::vector<uint8_t> message   = vars.get_req_bin("Msg");
+   const std::vector<uint8_t> signature = vars.get_req_bin("Signature");
    const std::string padding = choose_padding(vars, pad_hdr);
 
    Test::Result result(algo_name() + "/" + padding + " signature generation");
@@ -143,9 +143,9 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
    for(auto const& sign_provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
-      if(vars.count("Nonce"))
+      if(vars.has_key("Nonce"))
          {
-         rng.reset(test_rng(get_req_bin(vars, "Nonce")));
+         rng.reset(test_rng(vars.get_req_bin("Nonce")));
          }
 
       std::unique_ptr<Botan::PK_Signer> signer;
@@ -187,11 +187,11 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
 Test::Result
 PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
-   const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
-   const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
+   const std::vector<uint8_t> message   = vars.get_req_bin("Msg");
+   const std::vector<uint8_t> signature = vars.get_req_bin("Signature");
    const std::string padding = choose_padding(vars, pad_hdr);
 
-   const bool expected_valid = (get_opt_sz(vars, "Valid", 1) == 1);
+   const bool expected_valid = (vars.get_opt_sz("Valid", 1) == 1);
 
    std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
 
@@ -231,10 +231,10 @@ Test::Result
 PK_Signature_NonVerification_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
    const std::string padding = choose_padding(vars, pad_hdr);
-   const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
+   const std::vector<uint8_t> message   = vars.get_req_bin("Msg");
    std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
 
-   const std::vector<uint8_t> invalid_signature = get_req_bin(vars, "InvalidSignature");
+   const std::vector<uint8_t> invalid_signature = vars.get_req_bin("InvalidSignature");
 
    Test::Result result(algo_name() + "/" + padding + " verify invalid signature");
 
@@ -259,8 +259,8 @@ PK_Signature_NonVerification_Test::run_one_test(const std::string& pad_hdr, cons
 Test::Result
 PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
-   const std::vector<uint8_t> plaintext  = get_req_bin(vars, "Msg");
-   const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
+   const std::vector<uint8_t> plaintext  = vars.get_req_bin("Msg");
+   const std::vector<uint8_t> ciphertext = vars.get_req_bin("Ciphertext");
    const std::string padding = choose_padding(vars, pad_hdr);
 
    Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " encryption");
@@ -315,9 +315,9 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
          }
 
       std::unique_ptr<Botan::RandomNumberGenerator> kat_rng;
-      if(vars.count("Nonce"))
+      if(vars.has_key("Nonce"))
          {
-         kat_rng.reset(test_rng(get_req_bin(vars, "Nonce")));
+         kat_rng.reset(test_rng(vars.get_req_bin("Nonce")));
          }
 
       if(padding == "Raw")
@@ -360,8 +360,8 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
 Test::Result
 PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
-   const std::vector<uint8_t> plaintext  = get_req_bin(vars, "Msg");
-   const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
+   const std::vector<uint8_t> plaintext  = vars.get_req_bin("Msg");
+   const std::vector<uint8_t> ciphertext = vars.get_req_bin("Ciphertext");
    const std::string padding = choose_padding(vars, pad_hdr);
 
    Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " decryption");
@@ -402,10 +402,10 @@ PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
 
 Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
    {
-   const std::vector<uint8_t> K = get_req_bin(vars, "K");
-   const std::vector<uint8_t> C0 = get_req_bin(vars, "C0");
-   const std::vector<uint8_t> salt = get_opt_bin(vars, "Salt");
-   const std::string kdf = get_req_str(vars, "KDF");
+   const std::vector<uint8_t> K = vars.get_req_bin("K");
+   const std::vector<uint8_t> C0 = vars.get_req_bin("C0");
+   const std::vector<uint8_t> salt = vars.get_opt_bin("Salt");
+   const std::string kdf = vars.get_req_str("KDF");
 
    Test::Result result(algo_name() + "/" + kdf + " KEM");
 
@@ -426,7 +426,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
       return result;
       }
 
-   Fixed_Output_RNG fixed_output_rng(get_req_bin(vars, "R"));
+   Fixed_Output_RNG fixed_output_rng(vars.get_req_bin("R"));
 
    Botan::secure_vector<uint8_t> produced_encap_key, shared_key;
    enc->encrypt(produced_encap_key,
@@ -462,8 +462,8 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
 
 Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, const VarMap& vars)
    {
-   const std::vector<uint8_t> shared = get_req_bin(vars, "K");
-   const std::string kdf = get_opt_str(vars, "KDF", default_kdf(vars));
+   const std::vector<uint8_t> shared = vars.get_req_bin("K");
+   const std::string kdf = vars.get_opt_str("KDF", default_kdf(vars));
 
    Test::Result result(algo_name() + "/" + kdf +
                        (header.empty() ? header : " " + header) +
@@ -472,7 +472,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
    std::unique_ptr<Botan::Private_Key> privkey = load_our_key(header, vars);
    const std::vector<uint8_t> pubkey = load_their_key(header, vars);
 
-   const size_t key_len = get_opt_sz(vars, "OutLen", 0);
+   const size_t key_len = vars.get_opt_sz("OutLen", 0);
 
    for(auto const& provider : possible_providers(algo_name()))
       {

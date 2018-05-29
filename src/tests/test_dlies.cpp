@@ -29,18 +29,18 @@ class DLIES_KAT_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& cipher_algo, const VarMap& vars) override
          {
-         const Botan::BigInt x1 = get_req_bn(vars, "X1");
-         const Botan::BigInt x2 = get_req_bn(vars, "X2");
+         const Botan::BigInt x1 = vars.get_req_bn("X1");
+         const Botan::BigInt x2 = vars.get_req_bn("X2");
 
-         const std::vector<uint8_t> input    = get_req_bin(vars, "Msg");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Ciphertext");
+         const std::vector<uint8_t> input    = vars.get_req_bin("Msg");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Ciphertext");
 
-         const std::string kdf_algo = get_req_str(vars, "Kdf");
-         const std::string mac_algo = get_req_str(vars, "Mac");
-         const size_t mac_key_len = get_req_sz(vars, "MacKeyLen");
-         const std::string group_name = get_req_str(vars, "Group");
+         const std::string kdf_algo = vars.get_req_str("Kdf");
+         const std::string mac_algo = vars.get_req_str("Mac");
+         const size_t mac_key_len = vars.get_req_sz("MacKeyLen");
+         const std::string group_name = vars.get_req_str("Group");
 
-         const std::vector<uint8_t> iv = get_opt_bin(vars, "IV");
+         const std::vector<uint8_t> iv = vars.get_opt_bin("IV");
 
          Test::Result result("DLIES " + cipher_algo);
 

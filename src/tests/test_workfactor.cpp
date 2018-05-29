@@ -21,8 +21,8 @@ class PK_Workfactor_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {
-         const size_t param_size  = get_req_sz(vars, "ParamSize");
-         const size_t exp_output  = get_req_sz(vars, "Workfactor");
+         const size_t param_size  = vars.get_req_sz("ParamSize");
+         const size_t exp_output  = vars.get_req_sz("Workfactor");
 
          size_t output = 0;
 

@@ -51,11 +51,11 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
-         const std::vector<uint8_t> buffer      = get_req_bin(vars, "Buffer");
-         const std::vector<uint8_t> protocol    = get_opt_bin(vars, "Protocol");
-         const std::vector<uint8_t> ciphersuite = get_opt_bin(vars, "Ciphersuite");
-         const std::string exception            = get_req_str(vars, "Exception");
-         const std::string expected_name        = get_opt_str(vars, "Name", "");
+         const std::vector<uint8_t> buffer      = vars.get_req_bin("Buffer");
+         const std::vector<uint8_t> protocol    = vars.get_opt_bin("Protocol");
+         const std::vector<uint8_t> ciphersuite = vars.get_opt_bin("Ciphersuite");
+         const std::string exception            = vars.get_req_str("Exception");
+         const std::string expected_name        = vars.get_opt_str("Name", "");
          const bool is_positive_test            = exception.empty();
 
          Test::Result result(algo + " parsing");
@@ -71,7 +71,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   }
                else if(algo == "client_hello")
                   {
-                  const std::string extensions = get_req_str(vars, "AdditionalData");
+                  const std::string extensions = vars.get_req_str("AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   Botan::TLS::Client_Hello message(buffer);
                   result.test_eq("Protocol version", message.version().to_string(), pv.to_string());
@@ -98,7 +98,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   }
                else if(algo == "server_hello")
                   {
-                  const std::string extensions = get_req_str(vars, "AdditionalData");
+                  const std::string extensions = vars.get_req_str("AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   Botan::TLS::Ciphersuite cs = Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1]));
                   Botan::TLS::Server_Hello message(buffer);

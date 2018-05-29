@@ -79,8 +79,8 @@ class TLS_CBC_Padding_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         const std::vector<uint8_t> record    = get_req_bin(vars, "Record");
-         const size_t output = get_req_sz(vars, "Output");
+         const std::vector<uint8_t> record    = vars.get_req_bin("Record");
+         const size_t output = vars.get_req_sz("Output");
 
          uint16_t res = Botan::TLS::check_tls_cbc_padding(record.data(), record.size());
 
@@ -163,10 +163,10 @@ class TLS_CBC_Tests final : public Text_Based_Test
          {
          Test::Result result("TLS CBC");
 
-         const size_t block_size = get_req_sz(vars, "Blocksize");
-         const size_t mac_len = get_req_sz(vars, "MACsize");
-         const std::vector<uint8_t> record = get_req_bin(vars, "Record");
-         const bool is_valid = get_req_sz(vars, "Valid") == 1;
+         const size_t block_size = vars.get_req_sz("Blocksize");
+         const size_t mac_len = vars.get_req_sz("MACsize");
+         const std::vector<uint8_t> record = vars.get_req_bin("Record");
+         const bool is_valid = vars.get_req_sz("Valid") == 1;
 
          // todo test permutations
          bool explicit_iv = true;

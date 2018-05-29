@@ -301,7 +301,7 @@ class ASN1_Time_Parsing_Tests final : public Text_Based_Test
          {
          Test::Result result("ASN.1 date parsing");
 
-         const std::string tspec = get_req_str(vars, "Tspec");
+         const std::string tspec = vars.get_req_str("Tspec");
 
          if(tag_str != "UTC" &&
             tag_str != "UTC.invalid" &&

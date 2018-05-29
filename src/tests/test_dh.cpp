@@ -35,10 +35,10 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
 
       std::unique_ptr<Botan::Private_Key> load_our_key(const std::string&, const VarMap& vars) override
          {
-         const Botan::BigInt p = get_req_bn(vars, "P");
-         const Botan::BigInt q = get_opt_bn(vars, "Q", 0);
-         const Botan::BigInt g = get_req_bn(vars, "G");
-         const Botan::BigInt x = get_req_bn(vars, "X");
+         const Botan::BigInt p = vars.get_req_bn("P");
+         const Botan::BigInt q = vars.get_opt_bn("Q", 0);
+         const Botan::BigInt g = vars.get_req_bn("G");
+         const Botan::BigInt x = vars.get_req_bn("X");
 
          Botan::DL_Group grp;
          if(q == 0)
@@ -56,10 +56,10 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
 
       std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override
          {
-         const Botan::BigInt p = get_req_bn(vars, "P");
-         const Botan::BigInt q = get_opt_bn(vars, "Q", 0);
-         const Botan::BigInt g = get_req_bn(vars, "G");
-         const Botan::BigInt y = get_req_bn(vars, "Y");
+         const Botan::BigInt p = vars.get_req_bn("P");
+         const Botan::BigInt q = vars.get_opt_bn("Q", 0);
+         const Botan::BigInt g = vars.get_req_bn("G");
+         const Botan::BigInt y = vars.get_req_bn("Y");
 
          Botan::DL_Group grp;
          if(q == 0)
@@ -124,10 +124,10 @@ class DH_Invalid_Key_Tests final : public Text_Based_Test
          {
          Test::Result result("DH invalid keys");
 
-         const Botan::BigInt p = get_req_bn(vars, "P");
-         const Botan::BigInt q = get_req_bn(vars, "Q");
-         const Botan::BigInt g = get_req_bn(vars, "G");
-         const Botan::BigInt pubkey = get_req_bn(vars, "InvalidKey");
+         const Botan::BigInt p = vars.get_req_bn("P");
+         const Botan::BigInt q = vars.get_req_bn("Q");
+         const Botan::BigInt g = vars.get_req_bn("G");
+         const Botan::BigInt pubkey = vars.get_req_bn("InvalidKey");
 
          Botan::DL_Group grp(p, q, g);
          std::unique_ptr<Botan::Public_Key> key(new Botan::DH_PublicKey(grp, pubkey));

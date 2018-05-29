@@ -38,10 +38,10 @@ class DSA_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const Botan::BigInt p = get_req_bn(vars, "P");
-         const Botan::BigInt q = get_req_bn(vars, "Q");
-         const Botan::BigInt g = get_req_bn(vars, "G");
-         const Botan::BigInt x = get_req_bn(vars, "X");
+         const Botan::BigInt p = vars.get_req_bn("P");
+         const Botan::BigInt q = vars.get_req_bn("Q");
+         const Botan::BigInt g = vars.get_req_bn("G");
+         const Botan::BigInt x = vars.get_req_bn("X");
 
          const Botan::DL_Group grp(p, q, g);
 
@@ -51,7 +51,7 @@ class DSA_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
+         return "EMSA1(" + vars.get_req_str("Hash") + ")";
          }
    };
 
@@ -70,10 +70,10 @@ class DSA_Verification_Tests final : public PK_Signature_Verification_Test
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
-         const Botan::BigInt p = get_req_bn(vars, "P");
-         const Botan::BigInt q = get_req_bn(vars, "Q");
-         const Botan::BigInt g = get_req_bn(vars, "G");
-         const Botan::BigInt y = get_req_bn(vars, "Y");
+         const Botan::BigInt p = vars.get_req_bn("P");
+         const Botan::BigInt q = vars.get_req_bn("Q");
+         const Botan::BigInt g = vars.get_req_bn("G");
+         const Botan::BigInt y = vars.get_req_bn("Y");
 
          const Botan::DL_Group grp(p, q, g);
 

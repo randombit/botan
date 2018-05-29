@@ -31,9 +31,9 @@ class RFC3394_Keywrap_Tests final : public Text_Based_Test
 
          try
             {
-            const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
-            const std::vector<uint8_t> key = get_req_bin(vars, "Key");
-            const std::vector<uint8_t> kek = get_req_bin(vars, "KEK");
+            const std::vector<uint8_t> expected = vars.get_req_bin("Output");
+            const std::vector<uint8_t> key = vars.get_req_bin("Key");
+            const std::vector<uint8_t> kek = vars.get_req_bin("KEK");
 
             const Botan::SymmetricKey kek_sym(kek);
             const Botan::secure_vector<uint8_t> key_l(key.begin(), key.end());
@@ -71,9 +71,9 @@ class NIST_Keywrap_Tests final : public Text_Based_Test
             if(typ != "KW" && typ != "KWP")
                throw Test_Error("Unknown type in NIST key wrap tests");
 
-            const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
-            const std::vector<uint8_t> input = get_req_bin(vars, "Input");
-            const std::vector<uint8_t> key = get_req_bin(vars, "Key");
+            const std::vector<uint8_t> expected = vars.get_req_bin("Output");
+            const std::vector<uint8_t> input = vars.get_req_bin("Input");
+            const std::vector<uint8_t> key = vars.get_req_bin("Key");
 
             std::unique_ptr<Botan::BlockCipher> bc =
                Botan::BlockCipher::create_or_throw("AES-" + std::to_string(key.size()*8));
@@ -138,8 +138,8 @@ class NIST_Keywrap_Invalid_Tests final : public Text_Based_Test
             if(typ != "KW" && typ != "KWP")
                throw Test_Error("Unknown type in NIST key wrap tests");
 
-            const std::vector<uint8_t> input = get_req_bin(vars, "Input");
-            const std::vector<uint8_t> key = get_req_bin(vars, "Key");
+            const std::vector<uint8_t> input = vars.get_req_bin("Input");
+            const std::vector<uint8_t> key = vars.get_req_bin("Key");
 
             std::unique_ptr<Botan::BlockCipher> bc =
                Botan::BlockCipher::create_or_throw("AES-" + std::to_string(key.size()*8));

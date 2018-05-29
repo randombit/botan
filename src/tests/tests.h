@@ -508,6 +508,42 @@ class Test
 #define BOTAN_REGISTER_TEST(type, Test_Class) \
    Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class)
 
+class VarMap
+   {
+   public:
+      void clear() { m_vars.clear(); }
+
+      void add(const std::string& key, const std::string& value)
+         {
+         m_vars[key] = value;
+         }
+
+      bool has_key(const std::string& key) const
+         {
+         return m_vars.count(key) == 1;
+         }
+
+      bool get_req_bool(const std::string& key) const;
+
+      std::vector<uint8_t> get_req_bin(const std::string& key) const;
+      std::vector<uint8_t> get_opt_bin(const std::string& key) const;
+
+#if defined(BOTAN_HAS_BIGINT)
+      Botan::BigInt get_req_bn(const std::string& key) const;
+      Botan::BigInt get_opt_bn(const std::string& key, const Botan::BigInt& def_value) const;
+#endif
+
+      std::string get_req_str(const std::string& key) const;
+      std::string get_opt_str(const std::string& key,
+                              const std::string& def_value) const;
+
+      size_t get_req_sz(const std::string& key) const;
+      size_t get_opt_sz(const std::string& key, const size_t def_value) const;
+
+   private:
+      std::unordered_map<std::string, std::string> m_vars;
+   };
+
 /*
 * A test based on reading an input file which contains key/value pairs
 * Special note: the last value in required_key (there must be at least
@@ -516,8 +552,8 @@ class Test
 * Calls run_one_test with the variables set. If an ini-style [header]
 * is used in the file, then header will be set to that value. This allows
 * splitting up tests between [valid] and [invalid] tests, or different
-* related algorithms tested in the same file. Use the protected get_XXX
-* functions to retrieve formatted values from the VarMap
+* related algorithms tested in the same file. Use the get_XXX functions
+* on VarMap to retrieve formatted values.
 *
 * If most of your tests are text-based but you find yourself with a few
 * odds-and-ends tests that you want to do, override run_final_tests which
@@ -537,7 +573,6 @@ class Text_Based_Test : public Test
 
       std::vector<Test::Result> run() override;
    protected:
-      typedef std::unordered_map<std::string, std::string> VarMap;
       std::string get_next_line();
 
       virtual Test::Result run_one_test(const std::string& header,
@@ -551,23 +586,6 @@ class Text_Based_Test : public Test
          return std::vector<Test::Result>();
          }
 
-      bool get_req_bool(const VarMap& vars, const std::string& key) const;
-
-      std::vector<uint8_t> get_req_bin(const VarMap& vars, const std::string& key) const;
-      std::vector<uint8_t> get_opt_bin(const VarMap& vars, const std::string& key) const;
-
-#if defined(BOTAN_HAS_BIGINT)
-      Botan::BigInt get_req_bn(const VarMap& vars, const std::string& key) const;
-      Botan::BigInt get_opt_bn(const VarMap& vars, const std::string& key, const Botan::BigInt& def_value) const;
-#endif
-
-      std::string get_req_str(const VarMap& vars, const std::string& key) const;
-      std::string get_opt_str(const VarMap& vars,
-                              const std::string& key,
-                              const std::string& def_value) const;
-
-      size_t get_req_sz(const VarMap& vars, const std::string& key) const;
-      size_t get_opt_sz(const VarMap& vars, const std::string& key, const size_t def_value) const;
    private:
       std::string m_data_src;
       std::set<std::string> m_required_keys;

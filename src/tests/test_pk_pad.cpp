@@ -40,9 +40,9 @@ class EME_Decoding_Tests final : public Text_Based_Test
             return result;
             }
 
-         const std::vector<uint8_t> ciphertext = get_req_bin(vars, "RawCiphertext");
-         const std::vector<uint8_t> plaintext = get_opt_bin(vars, "Plaintext");
-         const bool is_valid = get_req_bool(vars, "ValidInput");
+         const std::vector<uint8_t> ciphertext = vars.get_req_bin("RawCiphertext");
+         const std::vector<uint8_t> plaintext = vars.get_opt_bin("Plaintext");
+         const bool is_valid = vars.get_req_bool("ValidInput");
 
          if(is_valid == false)
             {

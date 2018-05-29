@@ -121,11 +121,11 @@ class OCB_Wide_KAT_Tests final : public Text_Based_Test
          {
          Test::Result result("OCB wide block KAT");
 
-         const std::vector<uint8_t> key = get_req_bin(vars, "Key");
-         const std::vector<uint8_t> nonce = get_req_bin(vars, "Nonce");
-         const std::vector<uint8_t> ad = get_req_bin(vars, "AD");
-         const std::vector<uint8_t> input = get_req_bin(vars, "In");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> key = vars.get_req_bin("Key");
+         const std::vector<uint8_t> nonce = vars.get_req_bin("Nonce");
+         const std::vector<uint8_t> ad = vars.get_req_bin("AD");
+         const std::vector<uint8_t> input = vars.get_req_bin("In");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Out");
 
          const size_t bs = key.size();
          Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
@@ -160,7 +160,7 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
          {
          Test::Result result("OCB wide block long test");
 
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          std::unique_ptr<Botan::BlockCipher> cipher;
          size_t bs = 0;
@@ -272,9 +272,9 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         const size_t keylen = get_req_sz(vars, "Keylen");
-         const size_t taglen = get_req_sz(vars, "Taglen");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
+         const size_t keylen = vars.get_req_sz("Keylen");
+         const size_t taglen = vars.get_req_sz("Taglen");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          // Test from RFC 7253 Appendix A
 

@@ -112,20 +112,20 @@ class ECIES_ISO_Tests final : public Text_Based_Test
          Test::Result result("ECIES-ISO");
 
          // get test vectors defined by ISO 18033
-         const Botan::PointGFp::Compression_Type compression_type = get_compression_type(get_req_str(vars, "format"));
-         const Botan::BigInt p = get_req_bn(vars, "p");
-         const Botan::BigInt a = get_req_bn(vars, "a");
-         const Botan::BigInt b = get_req_bn(vars, "b");
-         const Botan::BigInt mu = get_req_bn(vars, "mu");   // order
-         const Botan::BigInt nu = get_req_bn(vars, "nu");   // cofactor
-         const Botan::BigInt gx = get_req_bn(vars, "gx");   // base point x
-         const Botan::BigInt gy = get_req_bn(vars, "gy");   // base point y
-         const Botan::BigInt hx = get_req_bn(vars, "hx");   // x of public point of bob
-         const Botan::BigInt hy = get_req_bn(vars, "hy");   // y of public point of bob
-         const Botan::BigInt x = get_req_bn(vars, "x");   // private key of bob
-         const Botan::BigInt r = get_req_bn(vars, "r");   // (ephemeral) private key of alice
-         const std::vector<uint8_t> c0 = get_req_bin(vars, "C0");   // expected encoded (ephemeral) public key
-         const std::vector<uint8_t> k = get_req_bin(vars, "K");   // expected derived secret
+         const Botan::PointGFp::Compression_Type compression_type = get_compression_type(vars.get_req_str("format"));
+         const Botan::BigInt p = vars.get_req_bn("p");
+         const Botan::BigInt a = vars.get_req_bn("a");
+         const Botan::BigInt b = vars.get_req_bn("b");
+         const Botan::BigInt mu = vars.get_req_bn("mu");   // order
+         const Botan::BigInt nu = vars.get_req_bn("nu");   // cofactor
+         const Botan::BigInt gx = vars.get_req_bn("gx");   // base point x
+         const Botan::BigInt gy = vars.get_req_bn("gy");   // base point y
+         const Botan::BigInt hx = vars.get_req_bn("hx");   // x of public point of bob
+         const Botan::BigInt hy = vars.get_req_bn("hy");   // y of public point of bob
+         const Botan::BigInt x = vars.get_req_bn("x");   // private key of bob
+         const Botan::BigInt r = vars.get_req_bn("r");   // (ephemeral) private key of alice
+         const std::vector<uint8_t> c0 = vars.get_req_bin("C0");   // expected encoded (ephemeral) public key
+         const std::vector<uint8_t> k = vars.get_req_bin("K");   // expected derived secret
 
          const Botan::EC_Group domain(p, a, b, gx, gy, mu, nu);
 
@@ -203,23 +203,23 @@ class ECIES_Tests final : public Text_Based_Test
          {
          Test::Result result("ECIES");
 
-         const std::string curve = get_req_str(vars, "Curve");
-         const Botan::BigInt private_key_value = get_req_bn(vars, "PrivateKey");
-         const Botan::BigInt other_private_key_value = get_req_bn(vars, "OtherPrivateKey");
-         const std::string kdf = get_req_str(vars, "Kdf");
-         const std::string dem = get_req_str(vars, "Dem");
-         const size_t dem_key_len = get_req_sz(vars, "DemKeyLen");
-         const std::vector<uint8_t> iv = get_req_bin(vars, "Iv");
-         const std::string mac = get_req_str(vars, "Mac");
-         const size_t mac_key_len = get_req_sz(vars, "MacKeyLen");
-         const Botan::PointGFp::Compression_Type compression_type = get_compression_type(get_req_str(vars, "Format"));
-         const bool cofactor_mode = get_req_sz(vars, "CofactorMode") != 0;
-         const bool old_cofactor_mode = get_req_sz(vars, "OldCofactorMode") != 0;
-         const bool check_mode = get_req_sz(vars, "CheckMode") != 0;
-         const bool single_hash_mode = get_req_sz(vars, "SingleHashMode") != 0;
-         const std::string label = get_req_str(vars, "Label");
-         const std::vector<uint8_t> plaintext = get_req_bin(vars, "Plaintext");
-         const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
+         const std::string curve = vars.get_req_str("Curve");
+         const Botan::BigInt private_key_value = vars.get_req_bn("PrivateKey");
+         const Botan::BigInt other_private_key_value = vars.get_req_bn("OtherPrivateKey");
+         const std::string kdf = vars.get_req_str("Kdf");
+         const std::string dem = vars.get_req_str("Dem");
+         const size_t dem_key_len = vars.get_req_sz("DemKeyLen");
+         const std::vector<uint8_t> iv = vars.get_req_bin("Iv");
+         const std::string mac = vars.get_req_str("Mac");
+         const size_t mac_key_len = vars.get_req_sz("MacKeyLen");
+         const Botan::PointGFp::Compression_Type compression_type = get_compression_type(vars.get_req_str("Format"));
+         const bool cofactor_mode = vars.get_req_sz("CofactorMode") != 0;
+         const bool old_cofactor_mode = vars.get_req_sz("OldCofactorMode") != 0;
+         const bool check_mode = vars.get_req_sz("CheckMode") != 0;
+         const bool single_hash_mode = vars.get_req_sz("SingleHashMode") != 0;
+         const std::string label = vars.get_req_str("Label");
+         const std::vector<uint8_t> plaintext = vars.get_req_bin("Plaintext");
+         const std::vector<uint8_t> ciphertext = vars.get_req_bin("Ciphertext");
 
          const Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
          const Botan::EC_Group domain(curve);

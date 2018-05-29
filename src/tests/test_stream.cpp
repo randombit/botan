@@ -21,11 +21,11 @@ class Stream_Cipher_Tests final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
-         const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
-         const std::vector<uint8_t> nonce    = get_opt_bin(vars, "Nonce");
-         const size_t seek                   = get_opt_sz(vars, "Seek", 0);
-         std::vector<uint8_t> input          = get_opt_bin(vars, "In");
+         const std::vector<uint8_t> key      = vars.get_req_bin("Key");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Out");
+         const std::vector<uint8_t> nonce    = vars.get_opt_bin("Nonce");
+         const size_t seek                   = vars.get_opt_sz("Seek", 0);
+         std::vector<uint8_t> input          = vars.get_opt_bin("In");
 
          if(input.empty())
             {

@@ -44,14 +44,14 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         const std::vector<uint8_t> keygen_seed  = get_req_bin(vars, "McElieceSeed");
-         const std::vector<uint8_t> fprint_pub   = get_req_bin(vars, "PublicKeyFingerprint");
-         const std::vector<uint8_t> fprint_priv  = get_req_bin(vars, "PrivateKeyFingerprint");
-         const std::vector<uint8_t> encrypt_seed = get_req_bin(vars, "EncryptPRNGSeed");
-         const std::vector<uint8_t> ciphertext   = get_req_bin(vars, "Ciphertext");
-         const std::vector<uint8_t> shared_key   = get_req_bin(vars, "SharedKey");
-         const size_t keygen_n = get_req_sz(vars, "KeyN");
-         const size_t keygen_t = get_req_sz(vars, "KeyT");
+         const std::vector<uint8_t> keygen_seed  = vars.get_req_bin("McElieceSeed");
+         const std::vector<uint8_t> fprint_pub   = vars.get_req_bin("PublicKeyFingerprint");
+         const std::vector<uint8_t> fprint_priv  = vars.get_req_bin("PrivateKeyFingerprint");
+         const std::vector<uint8_t> encrypt_seed = vars.get_req_bin("EncryptPRNGSeed");
+         const std::vector<uint8_t> ciphertext   = vars.get_req_bin("Ciphertext");
+         const std::vector<uint8_t> shared_key   = vars.get_req_bin("SharedKey");
+         const size_t keygen_n = vars.get_req_sz("KeyN");
+         const size_t keygen_t = vars.get_req_sz("KeyT");
 
          Test::Result result("McEliece keygen");
          result.start_timer();
