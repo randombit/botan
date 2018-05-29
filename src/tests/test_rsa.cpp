@@ -18,6 +18,23 @@ namespace {
 
 #if defined(BOTAN_HAS_RSA)
 
+std::unique_ptr<Botan::Private_Key> load_rsa_private_key(const VarMap& vars)
+   {
+   const BigInt p = vars.get_req_bn("P");
+   const BigInt q = vars.get_req_bn("Q");
+   const BigInt e = vars.get_req_bn("E");
+
+   return std::unique_ptr<Botan::Private_Key>(new Botan::RSA_PrivateKey(p, q, e));
+   }
+
+std::unique_ptr<Botan::Public_Key> load_rsa_public_key(const VarMap& vars)
+   {
+   const BigInt n = vars.get_req_bn("N");
+   const BigInt e = vars.get_req_bn("E");
+
+   return std::unique_ptr<Botan::Public_Key>(new Botan::RSA_PublicKey(n, e));
+   }
+
 class RSA_ES_KAT_Tests final : public PK_Encryption_Decryption_Test
    {
    public:
@@ -30,12 +47,7 @@ class RSA_ES_KAT_Tests final : public PK_Encryption_Decryption_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const BigInt p = vars.get_req_bn("P");
-         const BigInt q = vars.get_req_bn("Q");
-         const BigInt e = vars.get_req_bn("E");
-
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
-         return key;
+         return load_rsa_private_key(vars);
          }
    };
 
@@ -54,12 +66,7 @@ class RSA_Decryption_KAT_Tests final : public PK_Decryption_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const BigInt p = vars.get_req_bn("P");
-         const BigInt q = vars.get_req_bn("Q");
-         const BigInt e = vars.get_req_bn("E");
-
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
-         return key;
+         return load_rsa_private_key(vars);
          }
    };
 
@@ -74,12 +81,7 @@ class RSA_KEM_Tests final : public PK_KEM_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const BigInt p = vars.get_req_bn("P");
-         const BigInt q = vars.get_req_bn("Q");
-         const BigInt e = vars.get_req_bn("E");
-
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
-         return key;
+         return load_rsa_private_key(vars);
          }
 
    };
@@ -101,12 +103,7 @@ class RSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const BigInt p = vars.get_req_bn("P");
-         const BigInt q = vars.get_req_bn("Q");
-         const BigInt e = vars.get_req_bn("E");
-
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
-         return key;
+         return load_rsa_private_key(vars);
          }
    };
 
@@ -134,12 +131,7 @@ class RSA_PSS_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const BigInt p = vars.get_req_bn("P");
-         const BigInt q = vars.get_req_bn("Q");
-         const BigInt e = vars.get_req_bn("E");
-
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
-         return key;
+         return load_rsa_private_key(vars);
          }
    };
 
@@ -167,12 +159,7 @@ class RSA_PSS_Raw_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const BigInt p = vars.get_req_bn("P");
-         const BigInt q = vars.get_req_bn("Q");
-         const BigInt e = vars.get_req_bn("E");
-
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
-         return key;
+         return load_rsa_private_key(vars);
          }
    };
 
@@ -192,11 +179,7 @@ class RSA_Signature_Verify_Tests final : public PK_Signature_Verification_Test
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
-         const BigInt n = vars.get_req_bn("N");
-         const BigInt e = vars.get_req_bn("E");
-
-         std::unique_ptr<Botan::Public_Key> key(new Botan::RSA_PublicKey(n, e));
-         return key;
+         return load_rsa_public_key(vars);
          }
    };
 
@@ -216,10 +199,7 @@ class RSA_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerifica
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
-         const BigInt n = vars.get_req_bn("N");
-         const BigInt e = vars.get_req_bn("E");
-         std::unique_ptr<Botan::Public_Key> key(new Botan::RSA_PublicKey(n, e));
-         return key;
+         return load_rsa_public_key(vars);
          }
    };
 
