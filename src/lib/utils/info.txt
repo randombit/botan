@@ -26,6 +26,7 @@ stl_compatibility.h
 
 <header:internal>
 bit_ops.h
+codec_base.h
 ct_utils.h
 donna128.h
 filesystem.h

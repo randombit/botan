@@ -36,7 +36,7 @@ size_t BOTAN_PUBLIC_API(2, 7) base32_encode(char output[],
 * Perform base32 encoding
 * @param input some input
 * @param input_length length of input in bytes
-* @return base32adecimal representation of input
+* @return base32 representation of input
 */
 std::string BOTAN_PUBLIC_API(2, 7) base32_encode(const uint8_t input[],
       size_t input_length);
@@ -44,7 +44,7 @@ std::string BOTAN_PUBLIC_API(2, 7) base32_encode(const uint8_t input[],
 /**
 * Perform base32 encoding
 * @param input some input
-* @return base32adecimal representation of input
+* @return base32 representation of input
 */
 template <typename Alloc>
 std::string base32_encode(const std::vector<uint8_t, Alloc>& input)
