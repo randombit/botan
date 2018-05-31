@@ -639,10 +639,11 @@ std::vector<uint8_t> VarMap::get_req_bin(
       {
       return Botan::hex_decode(i->second);
       }
-   catch(std::exception&)
+   catch(std::exception& e)
       {
-      throw Test_Error("Test invalid hex input '" + i->second + "'" +
-                       + " for key " + key);
+      std::ostringstream oss;
+      oss << "Bad input '" << i->second << "'" << " for key " << key << " - " << e.what();
+      throw Test_Error(oss.str());
       }
    }
 
