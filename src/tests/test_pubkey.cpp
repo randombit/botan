@@ -184,6 +184,12 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
    return result;
    }
 
+Botan::Signature_Format
+PK_Signature_Verification_Test::sig_format() const
+   {
+   return Botan::IEEE_1363;
+   }
+
 Test::Result
 PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {
@@ -203,24 +209,35 @@ PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const V
 
       try
          {
-         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, sig_format(), verify_provider));
          }
       catch(Botan::Lookup_Error&)
          {
-         result.test_note("Skipping verifying with " + verify_provider);
+         //result.test_note("Skipping verifying with " + verify_provider);
          }
 
       if(verifier)
          {
-         const bool verified = verifier->verify_message(message, signature);
-
-         if(expected_valid)
+         try
             {
-            result.test_eq("correct signature valid", verified, true);
-            check_invalid_signatures(result, *verifier, message, signature);
+            const bool verified = verifier->verify_message(message, signature);
+
+            if(expected_valid)
+               {
+               result.test_eq("correct signature valid with " + verify_provider, verified, true);
+
+               if(test_random_invalid_sigs())
+                  {
+                  check_invalid_signatures(result, *verifier, message, signature);
+                  }
+               }
+            else
+               result.test_eq("incorrect signature invalid", verified, false);
             }
-         else
-            result.test_eq("incorrect signature invalid", verified, false);
+         catch(std::exception& e)
+            {
+            result.test_failure("verification threw exception", e.what());
+            }
          }
       }
 
