@@ -41,6 +41,34 @@ class Curve25519_Sclarmult_Tests final : public Text_Based_Test
    };
 BOTAN_REGISTER_TEST("curve25519_scalar", Curve25519_Sclarmult_Tests);
 
+class Curve25519_Agreement_Tests final : public PK_Key_Agreement_Test
+   {
+   public:
+      Curve25519_Agreement_Tests() : PK_Key_Agreement_Test(
+         "X25519",
+         "pubkey/x25519.vec",
+         "Secret,CounterKey,K") {}
+
+      std::string default_kdf(const VarMap&) const override
+         {
+         return "Raw";
+         }
+
+      std::unique_ptr<Botan::Private_Key> load_our_key(const std::string&,
+                                                       const VarMap& vars) override
+         {
+         const std::vector<uint8_t> secret_vec = vars.get_req_bin("Secret");
+         Botan::secure_vector<uint8_t> secret(secret_vec.begin(), secret_vec.end());
+         return std::unique_ptr<Botan::Private_Key>(new Botan::Curve25519_PrivateKey(secret));
+         }
+
+      std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override
+         {
+         return vars.get_req_bin("CounterKey");
+         }
+   };
+BOTAN_REGISTER_TEST("curve25519_agreement", Curve25519_Agreement_Tests);
+
 class Curve25519_Roundtrip_Test final : public Test
    {
    public:

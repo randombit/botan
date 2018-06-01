@@ -28,6 +28,11 @@ class Ed25519_Verification_Tests : public PK_Signature_Verification_Test
          "pubkey/ed25519_verify.vec",
          "Pubkey,Msg,Signature", "Valid") {}
 
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
+
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
          const std::vector<uint8_t> pubkey = vars.get_req_bin("Pubkey");
@@ -46,6 +51,11 @@ class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test
             "Ed25519",
             "pubkey/ed25519.vec",
             "Privkey,Pubkey,Msg,Signature") {}
+
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
