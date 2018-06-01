@@ -185,7 +185,18 @@ class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_w
 
          const int res = ECDSA_do_verify(msg, msg_len, sig.get(), m_ossl_ec.get());
          if(res < 0)
+            {
+            int err = ERR_get_error();
+#if defined(EC_R_BAD_SIGNATURE)
+            if(ERR_GET_REASON(err) != EC_R_BAD_SIGNATURE)
+               throw OpenSSL_Error("ECDSA_do_verify", err);
+#elif defined(ECDSA_R_BAD_SIGNATURE)
+            if(ERR_GET_REASON(err) != ECDSA_R_BAD_SIGNATURE)
+               throw OpenSSL_Error("ECDSA_do_verify", err);
+#else
             throw OpenSSL_Error("ECDSA_do_verify");
+#endif
+            }
          return (res == 1);
          }
 

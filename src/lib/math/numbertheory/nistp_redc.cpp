@@ -221,6 +221,8 @@ const BigInt& prime_p224()
 
 void redc_p224(BigInt& x, secure_vector<word>& ws)
    {
+   static const size_t p224_limbs = (BOTAN_MP_WORD_BITS == 32) ? 7 : 4;
+
    BOTAN_UNUSED(ws);
 
    const int64_t X00 = get_uint32_t(x,  0);
@@ -249,6 +251,7 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    const int64_t S6 = 0xFFFFFFFF + X06 + X10 - X13;
 
    x.mask_bits(224);
+   x.shrink_to_fit(p224_limbs + 1);
 
    int64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
@@ -290,8 +293,6 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    set_words(x, 6, R0, 0);
 
    BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow in P-224 reduce");
-
-   static const size_t p224_limbs = (BOTAN_MP_WORD_BITS == 32) ? 7 : 4;
 
    static const word p224_mults[3][p224_limbs] = {
 #if (BOTAN_MP_WORD_BITS == 64)

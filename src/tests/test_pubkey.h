@@ -76,6 +76,10 @@ class PK_Signature_Verification_Test : public PK_Test
                                      const std::string& optional_keys = "")
          : PK_Test(algo, test_src, required_keys, optional_keys) {}
 
+      virtual Botan::Signature_Format sig_format() const;
+
+      virtual bool test_random_invalid_sigs() const { return true; }
+
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
    private:
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;

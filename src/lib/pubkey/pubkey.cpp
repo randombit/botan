@@ -1,5 +1,5 @@
 /*
-* (C) 1999-2010,2015 Jack Lloyd
+* (C) 1999-2010,2015,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -229,6 +229,29 @@ void PK_Signer::update(const uint8_t in[], size_t length)
    m_op->update(in, length);
    }
 
+namespace {
+
+std::vector<uint8_t> der_encode_signature(const std::vector<uint8_t>& sig,
+                                          size_t parts,
+                                          size_t part_size)
+   {
+   if(sig.size() % parts != 0 || sig.size() != parts * part_size)
+      throw Encoding_Error("Unexpected size for DER signature");
+
+   std::vector<BigInt> sig_parts(parts);
+   for(size_t i = 0; i != sig_parts.size(); ++i)
+      sig_parts[i].binary_decode(&sig[part_size*i], part_size);
+
+   std::vector<uint8_t> output;
+   DER_Encoder(output)
+      .start_cons(SEQUENCE)
+      .encode_list(sig_parts)
+      .end_cons();
+   return output;
+   }
+
+}
+
 std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
    {
    const std::vector<uint8_t> sig = unlock(m_op->sign(rng));
@@ -239,19 +262,7 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
       }
    else if(m_sig_format == DER_SEQUENCE)
       {
-      if(sig.size() % m_parts != 0 || sig.size() != m_parts * m_part_size)
-         throw Internal_Error("PK_Signer: DER signature sizes unexpected, cannot encode");
-
-      std::vector<BigInt> sig_parts(m_parts);
-      for(size_t i = 0; i != sig_parts.size(); ++i)
-         sig_parts[i].binary_decode(&sig[m_part_size*i], m_part_size);
-
-      std::vector<uint8_t> output;
-      DER_Encoder(output)
-         .start_cons(SEQUENCE)
-         .encode_list(sig_parts)
-         .end_cons();
-      return output;
+      return der_encode_signature(sig, m_parts, m_part_size);
       }
    else
       throw Internal_Error("PK_Signer: Invalid signature format enum");
@@ -305,6 +316,7 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
          BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
 
          size_t count = 0;
+
          while(ber_sig.more_items())
             {
             BigInt sig_part;
@@ -315,6 +327,15 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
 
          if(count != m_parts)
             throw Decoding_Error("PK_Verifier: signature size invalid");
+
+         const std::vector<uint8_t> reencoded =
+            der_encode_signature(real_sig, m_parts, m_part_size);
+
+         if(reencoded.size() != length ||
+            same_mem(reencoded.data(), sig, reencoded.size()) == false)
+            {
+            throw Decoding_Error("PK_Verifier: signature is not valid BER");
+            }
 
          return m_op->is_valid_signature(real_sig.data(), real_sig.size());
          }
