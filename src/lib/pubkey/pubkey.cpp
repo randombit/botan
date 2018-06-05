@@ -334,7 +334,7 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
          if(reencoded.size() != length ||
             same_mem(reencoded.data(), sig, reencoded.size()) == false)
             {
-            throw Decoding_Error("PK_Verifier: signature is not valid BER");
+            throw Decoding_Error("PK_Verifier: signature is not the canonical DER encoding");
             }
 
          return m_op->is_valid_signature(real_sig.data(), real_sig.size());
