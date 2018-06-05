@@ -120,6 +120,22 @@ def parse_options(args):
 
     return options
 
+def sphinx_supports_concurrency():
+    import re
+    from distutils.version import StrictVersion
+
+    proc = subprocess.Popen(['sphinx-build', '--version'],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if isinstance(output, bytes):
+        output = output.decode('ascii')
+    # Sphinx v1.1.3
+    # sphinx-build 1.7.4
+    match = re.match(r'^(?:[a-zA-Z_-]+) v?(([0-9]+)\.([0-9]+))', output)
+    # default to using concurrency when uncertain
+    version = StrictVersion(match.group(1)) if match else StrictVersion('1.2')
+    return version >= StrictVersion('1.2')
 
 def main(args=None):
     # pylint: disable=too-many-branches,too-many-locals
@@ -160,8 +176,9 @@ def main(args=None):
 
     if with_sphinx:
         sphinx_build = ['sphinx-build',
-                        '-c', cfg['sphinx_config_dir'],
-                        '-j', str(get_concurrency())]
+                        '-c', cfg['sphinx_config_dir']]
+        if sphinx_supports_concurrency():
+            sphinx_build += ['-j', str(get_concurrency())]
 
         cmds.append(sphinx_build + ['-b', 'html', manual_src, manual_output])
 
