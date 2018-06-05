@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/bigint.h>
    #include <botan/numthry.h>
+   #include <botan/reducer.h>
    #include <botan/pow_mod.h>
    #include <botan/parsing.h>
    #include "test_rng.h"
@@ -397,6 +398,9 @@ class BigInt_Mod_Test final : public Text_Based_Test
          BigInt e = a;
          e %= b;
          result.test_eq("a %= b", e, c);
+
+         const Botan::Modular_Reducer mod_b(b);
+         result.test_eq("Barrett", mod_b.reduce(a), c);
 
          // if b fits into a Botan::word test %= operator for words
          if(b.bytes() <= sizeof(Botan::word))
