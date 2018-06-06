@@ -256,6 +256,9 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      bool operator !() const { return (!is_nonzero()); }
 
+     BigInt& add(const word y[], size_t y_words, Sign sign);
+     BigInt& sub(const word y[], size_t y_words, Sign sign);
+
      /**
      * Multiply this with y
      * @param y the BigInt to multiply with this
@@ -724,10 +727,6 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
         size_t idx);
 
    private:
-
-      BigInt& add(const word y[], size_t y_words, Sign sign);
-      BigInt& sub(const word y[], size_t y_words, Sign sign);
-
       secure_vector<word> m_reg;
       Sign m_signedness = Positive;
    };

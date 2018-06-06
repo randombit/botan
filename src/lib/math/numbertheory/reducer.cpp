@@ -1,6 +1,6 @@
 /*
 * Modular Reducer
-* (C) 1999-2011 Jack Lloyd
+* (C) 1999-2011,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -35,43 +35,51 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
 
    const size_t x_sw = x.sig_words();
 
-   if(x_sw < m_mod_words || x.cmp(m_modulus, false) < 0)
+   if(x_sw >= (2*m_mod_words - 1) && x.cmp(m_modulus_2, false) >= 0)
+      {
+      // too big, fall back to normal division
+      return (x % m_modulus);
+      }
+
+   if(x_sw < m_mod_words - 1)
       {
       if(x.is_negative())
          return x + m_modulus; // make positive
       return x;
       }
-   else if(x.cmp(m_modulus_2, false) < 0)
+
+   secure_vector<word> ws;
+
+   BigInt t1(x.data() + (m_mod_words - 1), x_sw - (m_mod_words - 1));
+
+   t1.mul(m_mu, ws);
+   t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words + 1));
+
+   // TODO add masked mul to avoid computing high bits
+   t1.mul(m_modulus, ws);
+   t1.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
+
+   t1.rev_sub(x.data(), std::min(x_sw, m_mod_words + 1), ws);
+
+   if(t1.is_negative())
       {
-      secure_vector<word> ws;
+      if(ws.size() < m_mod_words + 2)
+         ws.resize(m_mod_words + 2);
+      clear_mem(ws.data(), ws.size());
 
-      BigInt t1(x.data() + m_mod_words - 1, x_sw - (m_mod_words - 1));
+      ws[m_mod_words + 1] = 1;
 
-      t1.mul(m_mu, ws);
-      t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words + 1));
-
-      t1.mul(m_modulus, ws);
-      t1.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
-
-      t1.rev_sub(x.data(), std::min(x_sw, m_mod_words + 1), ws);
-
-      if(t1.is_negative())
-         {
-         t1 += BigInt::power_of_2(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
-         }
-
-      t1.reduce_below(m_modulus, ws);
-
-      if(x.is_negative())
-         t1.rev_sub(m_modulus.data(), m_modulus.size(), ws);
-
-      return t1;
+      t1.add(ws.data(), m_mod_words + 2, BigInt::Positive);
       }
-   else
+
+   t1.reduce_below(m_modulus, ws);
+
+   if(x.is_negative() && t1.is_nonzero())
       {
-      // too big, fall back to normal division
-      return (x % m_modulus);
+      t1.rev_sub(m_modulus.data(), m_modulus.size(), ws);
       }
+
+   return t1;
    }
 
 }
