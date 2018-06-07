@@ -58,11 +58,13 @@ class Print_Help final : public Command
                }
             }
 
-         const std::map<std::string, std::string> groups_description
-            { { "encryption", "Encryption" },
+         const std::map<std::string, std::string> groups_description {
+            { "encryption", "Encryption" },
             { "compression", "Compression" },
+            { "codec", "Encoders/Decoders" },
             { "hash", "Hash Functions" },
             { "hmac", "HMAC" },
+            { "info", "Informational" },
             { "numtheory", "Number Theory" },
             { "passhash", "Password Hashing" },
             { "psk", "PSK Database" },
@@ -132,7 +134,7 @@ class Config_Info final : public Command
 
       std::string group() const override
          {
-         return "misc";
+         return "info";
          }
 
       std::string description() const override
@@ -178,7 +180,7 @@ class Version_Info final : public Command
 
       std::string group() const override
          {
-         return "misc";
+         return "info";
          }
 
       std::string description() const override
@@ -208,7 +210,7 @@ class Print_Cpuid final : public Command
 
       std::string group() const override
          {
-         return "misc";
+         return "info";
          }
 
       std::string description() const override
@@ -362,7 +364,7 @@ class Hex_Encode final : public Command
 
       std::string group() const override
          {
-         return "misc";
+         return "codec";
          }
 
       std::string description() const override
@@ -386,7 +388,7 @@ class Hex_Decode final : public Command
 
       std::string group() const override
          {
-         return "misc";
+         return "codec";
          }
 
       std::string description() const override
@@ -419,7 +421,7 @@ class Base64_Encode final : public Command
 
       std::string group() const override
          {
-         return "misc";
+         return "codec";
          }
 
       std::string description() const override
@@ -446,7 +448,7 @@ class Base64_Decode final : public Command
 
       std::string group() const override
          {
-         return "misc";
+         return "codec";
          }
 
       std::string description() const override

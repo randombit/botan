@@ -24,7 +24,7 @@ class ASN1_Printer final : public Command
 
       std::string group() const override
          {
-         return "misc";
+         return "codec";
          }
 
       std::string description() const override
