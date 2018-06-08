@@ -47,6 +47,12 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       BER_Decoder(const BER_Object& obj) :
          BER_Decoder(obj.bits(), obj.length()) {}
 
+      /**
+      * Set up to BER decode the data in obj
+      */
+      BER_Decoder(BER_Object&& obj) :
+         BER_Decoder(std::move(obj), nullptr) {}
+
       BER_Decoder(const BER_Decoder& other);
 
       BER_Decoder& operator=(const BER_Decoder&) = delete;
@@ -297,7 +303,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
             {
             if((class_tag & CONSTRUCTED) && (class_tag & CONTEXT_SPECIFIC))
                {
-               BER_Decoder(obj).decode(out, real_type).verify_end();
+               BER_Decoder(std::move(obj)).decode(out, real_type).verify_end();
                }
             else
                {
@@ -339,7 +345,7 @@ BER_Decoder& BER_Decoder::decode_optional(T& out,
       {
       if((class_tag & CONSTRUCTED) && (class_tag & CONTEXT_SPECIFIC))
          {
-         BER_Decoder(obj).decode(out).verify_end();
+         BER_Decoder(std::move(obj)).decode(out).verify_end();
          }
       else
          {
