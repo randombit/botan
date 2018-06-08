@@ -1,6 +1,6 @@
 /*
 * BER Decoder
-* (C) 1999-2008,2015,2017 Jack Lloyd
+* (C) 1999-2008,2015,2017,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -145,6 +145,51 @@ size_t find_eoc(DataSource* ber, size_t allow_indef)
    return length;
    }
 
+class DataSource_BERObject final : public DataSource
+   {
+   public:
+      size_t read(uint8_t out[], size_t length) override
+         {
+         BOTAN_ASSERT_NOMSG(m_offset <= m_obj.length());
+         const size_t got = std::min<size_t>(m_obj.length() - m_offset, length);
+         copy_mem(out, m_obj.bits() + m_offset, got);
+         m_offset += got;
+         return got;
+         }
+
+      size_t peek(uint8_t out[], size_t length, size_t peek_offset) const override
+         {
+         BOTAN_ASSERT_NOMSG(m_offset <= m_obj.length());
+         const size_t bytes_left = m_obj.length() - m_offset;
+
+         if(peek_offset >= bytes_left)
+            return 0;
+
+         const size_t got = std::min(bytes_left - peek_offset, length);
+         copy_mem(out, m_obj.bits() + peek_offset, got);
+         return got;
+         }
+
+      bool check_available(size_t n) override
+         {
+         BOTAN_ASSERT_NOMSG(m_offset <= m_obj.length());
+         return (n <= (m_obj.length() - m_offset));
+         }
+
+      bool end_of_data() const override
+         {
+         return get_bytes_read() == m_obj.length();
+         }
+
+      size_t get_bytes_read() const override { return m_offset; }
+
+      explicit DataSource_BERObject(BER_Object&& obj) : m_obj(std::move(obj)), m_offset(0) {}
+
+   private:
+      BER_Object m_obj;
+      size_t m_offset;
+   };
+
 }
 
 /*
@@ -225,12 +270,6 @@ BER_Object BER_Decoder::get_next_object()
    return next;
    }
 
-BER_Decoder& BER_Decoder::get_next(BER_Object& ber)
-   {
-   ber = get_next_object();
-   return (*this);
-   }
-
 /*
 * Push a object back into the stream
 */
@@ -241,18 +280,18 @@ void BER_Decoder::push_back(const BER_Object& obj)
    m_pushed = obj;
    }
 
-/*
-* Begin decoding a CONSTRUCTED type
-*/
-BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
-                                    ASN1_Tag class_tag)
+void BER_Decoder::push_back(BER_Object&& obj)
+   {
+   if(m_pushed.is_set())
+      throw Invalid_State("BER_Decoder: Only one push back is allowed");
+   m_pushed = std::move(obj);
+   }
+
+BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, ASN1_Tag(class_tag | CONSTRUCTED));
-
-   BER_Decoder result(obj.bits(), obj.length());
-   result.m_parent = this;
-   return result;
+   return BER_Decoder(std::move(obj), this);
    }
 
 /*
@@ -261,14 +300,17 @@ BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
 BER_Decoder& BER_Decoder::end_cons()
    {
    if(!m_parent)
-      throw Invalid_State("BER_Decoder::end_cons called with NULL parent");
+      throw Invalid_State("BER_Decoder::end_cons called with null parent");
    if(!m_source->end_of_data())
       throw Decoding_Error("BER_Decoder::end_cons called with data left");
    return (*m_parent);
    }
 
-BER_Decoder::BER_Decoder(const BER_Object& obj) : BER_Decoder(obj.bits(), obj.length())
+BER_Decoder::BER_Decoder(BER_Object&& obj, BER_Decoder* parent)
    {
+   m_data_src.reset(new DataSource_BERObject(std::move(obj)));
+   m_source = m_data_src.get();
+   m_parent = parent;
    }
 
 /*
@@ -340,43 +382,12 @@ BER_Decoder& BER_Decoder::decode_null()
    return (*this);
    }
 
-/*
-* Decode a BER encoded BOOLEAN
-*/
-BER_Decoder& BER_Decoder::decode(bool& out)
-   {
-   return decode(out, BOOLEAN, UNIVERSAL);
-   }
-
-/*
-* Decode a small BER encoded INTEGER
-*/
-BER_Decoder& BER_Decoder::decode(size_t& out)
-   {
-   return decode(out, INTEGER, UNIVERSAL);
-   }
-
-/*
-* Decode a BER encoded INTEGER
-*/
-BER_Decoder& BER_Decoder::decode(BigInt& out)
-   {
-   return decode(out, INTEGER, UNIVERSAL);
-   }
-
 BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out)
    {
    secure_vector<uint8_t> out_vec;
    decode(out_vec, OCTET_STRING);
    out = BigInt::decode(out_vec.data(), out_vec.size());
    return (*this);
-   }
-
-std::vector<uint8_t> BER_Decoder::get_next_octet_string()
-   {
-   std::vector<uint8_t> out_vec;
-   decode(out_vec, OCTET_STRING);
-   return out_vec;
    }
 
 /*
@@ -404,6 +415,8 @@ BER_Decoder& BER_Decoder::decode(size_t& out,
    {
    BigInt integer;
    decode(integer, type_tag, class_tag);
+
+   if(integer.is_negative())
 
    if(integer.bits() > 32)
       throw BER_Decoding_Error("Decoded integer value larger than expected");
