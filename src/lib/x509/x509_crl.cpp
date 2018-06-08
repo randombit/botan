@@ -143,7 +143,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
 
    if(next.is_a(SEQUENCE, CONSTRUCTED))
       {
-      BER_Decoder cert_list(next);
+      BER_Decoder cert_list(std::move(next));
 
       while(cert_list.more_items())
          {
@@ -156,7 +156,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
 
    if(next.is_a(0, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
-      BER_Decoder crl_options(next);
+      BER_Decoder crl_options(std::move(next));
       crl_options.decode(data->m_extensions).verify_end();
       next = tbs_crl.get_next_object();
       }

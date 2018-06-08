@@ -33,16 +33,24 @@ void BER_Object::assert_is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_,
 
       msg << "Tag mismatch when decoding " << descr << " got ";
 
-      if(class_tag == UNIVERSAL || class_tag == CONSTRUCTED)
+      if(class_tag == NO_OBJECT && type_tag == NO_OBJECT)
          {
-         msg << asn1_tag_to_string(type_tag);
+         msg << "EOF";
          }
       else
          {
-         msg << std::to_string(type_tag);
+         if(class_tag == UNIVERSAL || class_tag == CONSTRUCTED)
+            {
+            msg << asn1_tag_to_string(type_tag);
+            }
+         else
+            {
+            msg << std::to_string(type_tag);
+            }
+
+         msg << "/" << asn1_class_to_string(class_tag);
          }
 
-      msg << "/" << asn1_class_to_string(class_tag);
       msg << " expected ";
 
       if(class_tag_ == UNIVERSAL || class_tag_ == CONSTRUCTED)
@@ -90,6 +98,8 @@ std::string asn1_class_to_string(ASN1_Tag type)
          return "APPLICATION";
       case CONSTRUCTED | CONTEXT_SPECIFIC:
          return "PRIVATE";
+      case Botan::NO_OBJECT:
+         return "NO_OBJECT";
       default:
          return "CLASS(" + std::to_string(static_cast<size_t>(type)) + ")";
       }
@@ -152,6 +162,9 @@ std::string asn1_tag_to_string(ASN1_Tag type)
 
       case Botan::BOOLEAN:
          return "BOOLEAN";
+
+      case Botan::NO_OBJECT:
+         return "NO_OBJECT";
 
       default:
          return "TAG(" + std::to_string(static_cast<size_t>(type)) + ")";

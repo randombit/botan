@@ -68,7 +68,7 @@ void encode_length(std::vector<uint8_t>& encoded_length, size_t length)
 
 DER_Encoder::DER_Encoder(secure_vector<uint8_t>& vec)
    {
-   m_append_output_fn = [&vec](const uint8_t b[], size_t l)
+   m_append_output = [&vec](const uint8_t b[], size_t l)
       {
       vec.insert(vec.end(), b, b + l);
       };
@@ -76,7 +76,7 @@ DER_Encoder::DER_Encoder(secure_vector<uint8_t>& vec)
 
 DER_Encoder::DER_Encoder(std::vector<uint8_t>& vec)
    {
-   m_append_output_fn = [&vec](const uint8_t b[], size_t l)
+   m_append_output = [&vec](const uint8_t b[], size_t l)
       {
       vec.insert(vec.end(), b, b + l);
       };
@@ -154,7 +154,7 @@ secure_vector<uint8_t> DER_Encoder::get_contents()
    if(m_subsequences.size() != 0)
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
-   if(m_append_output_fn)
+   if(m_append_output)
       throw Invalid_State("DER_Encoder Cannot get contents when using output vector");
 
    secure_vector<uint8_t> output;
@@ -167,7 +167,7 @@ std::vector<uint8_t> DER_Encoder::get_contents_unlocked()
    if(m_subsequences.size() != 0)
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
-   if(m_append_output_fn)
+   if(m_append_output)
       throw Invalid_State("DER_Encoder Cannot get contents when using output vector");
 
    std::vector<uint8_t> output(m_default_outbuf.begin(), m_default_outbuf.end());
@@ -231,9 +231,9 @@ DER_Encoder& DER_Encoder::raw_bytes(const uint8_t bytes[], size_t length)
       {
       m_subsequences[m_subsequences.size()-1].add_bytes(bytes, length);
       }
-   else if(m_append_output_fn)
+   else if(m_append_output)
       {
-      m_append_output_fn(bytes, length);
+      m_append_output(bytes, length);
       }
    else
       {
@@ -257,10 +257,10 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
       {
       m_subsequences[m_subsequences.size()-1].add_bytes(hdr.data(), hdr.size(), rep, length);
       }
-   else if(m_append_output_fn)
+   else if(m_append_output)
       {
-      m_append_output_fn(hdr.data(), hdr.size());
-      m_append_output_fn(rep, length);
+      m_append_output(hdr.data(), hdr.size());
+      m_append_output(rep, length);
       }
    else
       {

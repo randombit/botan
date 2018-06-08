@@ -23,6 +23,8 @@ class ASN1_Object;
 class BOTAN_PUBLIC_API(2,0) DER_Encoder final
    {
    public:
+      typedef std::function<void (const uint8_t[], size_t)> append_fn;
+
       /**
       * DER encode, writing to an internal buffer
       * Use get_contents or get_contents_unlocked to read the results
@@ -41,6 +43,12 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
       * If this constructor is used, get_contents* may not be called.
       */
       DER_Encoder(std::vector<uint8_t>& vec);
+
+      /**
+      * DER encode, calling append to write output
+      * If this constructor is used, get_contents* may not be called.
+      */
+      DER_Encoder(append_fn append) : m_append_output(append) {}
 
       secure_vector<uint8_t> get_contents();
 
@@ -203,7 +211,7 @@ class BOTAN_PUBLIC_API(2,0) DER_Encoder final
             std::vector< secure_vector<uint8_t> > m_set_contents;
          };
 
-      std::function<void (const uint8_t[], size_t)> m_append_output_fn;
+      append_fn m_append_output;
       secure_vector<uint8_t> m_default_outbuf;
       std::vector<DER_Sequence> m_subsequences;
    };
