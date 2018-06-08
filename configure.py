@@ -683,7 +683,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
     for (key, val) in name_val_pairs.items():
         out.__dict__[key] = val
 
-    def lexed_tokens(): # Convert to an interator
+    def lexed_tokens(): # Convert to an iterator
         while True:
             token = lexer.get_token()
             if token != lexer.eof:
@@ -2164,7 +2164,7 @@ class ModulesChooser(object):
         successfully_loaded = set()
 
         for modname in self._to_load:
-            # This will try to recusively load all dependencies of modname
+            # This will try to recursively load all dependencies of modname
             ok, modules = self.resolve_dependencies(available_modules, dependency_table, modname)
             if ok:
                 successfully_loaded.add(modname)
