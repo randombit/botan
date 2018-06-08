@@ -98,7 +98,8 @@ Assume we want to calculate the SHA-1, Whirlpool and SHA-3 hash digests of the S
 Available Hash Functions
 ------------------------------
 
-The following cryptographic hash functions are implemented.
+The following cryptographic hash functions are implemented. If in doubt,
+any of Blake2b, SHA-384, or SHA-3 are good choices.
 
 BLAKE2b
 ^^^^^^^^^

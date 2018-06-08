@@ -37,14 +37,10 @@ https://keybase.io/jacklloyd, and some public PGP key servers.
 For all the details on building the library, read the
 `users manual <https://botan.randombit.net/manual>`_, but basically::
 
-  $ ./configure.py --help
-  $ ./configure.py [probably some options]
+  $ ./configure.py
   $ make
   $ ./botan-test
-  # lots of output...
-  Tests all ok
-  $ ./botan
-  # shows available commands
+  ...
   $ make install
 
 Botan can also be built into a single-file amalgamation for easy inclusion into
@@ -185,17 +181,3 @@ Other Useful Things
 * Format preserving encryption scheme FE1
 * Threshold secret sharing
 * NIST key wrapping
-
-Recommended Algorithms
-----------------------------------------
-
-* For encryption of network traffic use TLS v1.2
-* Packet encryption: AES-256/GCM, AES-256/OCB, Serpent/OCB, or ChaCha20Poly1305
-* General hash function: BLAKE2b, SHA-2, SHA-3, or Skein-512
-* Message authentication or PRF: HMAC with SHA-256
-* Key derivation function: KDF2 or HKDF
-* Public Key Encryption: RSA, 2048+ bit keys, with OAEP/SHA-256
-* Public Key Signatures: RSA, 2048+ bit keys with PSS/SHA-512,
-  or ECDSA using P-256/SHA-256 or P-521/SHA-512
-* Key Agreement: ECDH using P-256 or X25519. If you are concerned
-  about quantum computers, combine ECC with NewHope.

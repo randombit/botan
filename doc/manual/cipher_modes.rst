@@ -250,6 +250,8 @@ will be returned by :cpp:func:`get_cipher` if the named cipher is an AEAD mode).
 Available AEAD Modes
 -------------------------
 
+If in doubt about what to use, pick ChaCha20Poly1305, AES-256/GCM, or AES-256/SIV.
+
 ChaCha20Poly1305
 ~~~~~~~~~~~~~~~~~~
 
