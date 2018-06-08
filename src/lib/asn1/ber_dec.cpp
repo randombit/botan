@@ -417,6 +417,7 @@ BER_Decoder& BER_Decoder::decode(size_t& out,
    decode(integer, type_tag, class_tag);
 
    if(integer.is_negative())
+      throw BER_Decoding_Error("Decoded small integer value was negative");
 
    if(integer.bits() > 32)
       throw BER_Decoding_Error("Decoded integer value larger than expected");
