@@ -411,6 +411,9 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--with-external-libdir', metavar='DIR', default='',
                            help='use DIR for external libs')
 
+    build_group.add_option('--with-sysroot-dir', metavar='DIR', default='',
+                           help='use DIR for system root while cross-compiling')
+
     build_group.add_option('--with-openmp', default=False, action='store_true',
                            help='enable use of OpenMP')
 
@@ -1061,6 +1064,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'output_to_exe': '-o ',
                 'add_include_dir_option': '-I',
                 'add_lib_dir_option': '-L',
+                'add_sysroot_option': '',
                 'add_lib_option': '-l',
                 'add_framework_option': '-framework ',
                 'preproc_flags': '-E',
@@ -1086,6 +1090,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.add_include_dir_option = lex.add_include_dir_option
         self.add_lib_dir_option = lex.add_lib_dir_option
         self.add_lib_option = lex.add_lib_option
+        self.add_sysroot_option = lex.add_sysroot_option
         self.ar_command = lex.ar_command
         self.ar_options = lex.ar_options
         self.ar_output_to = lex.ar_output_to
@@ -1762,6 +1767,13 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     def cmake_escape(s):
         return s.replace('(', '\\(').replace(')', '\\)')
 
+    def sysroot_option():
+        if options.with_sysroot_dir == '':
+            return ''
+        if cc.add_sysroot_option == '':
+            logging.error("This compiler doesn't support --sysroot option")
+        return cc.add_sysroot_option + options.with_sysroot_dir
+
     def ar_command():
         if options.ar_command:
             return options.ar_command
@@ -1910,6 +1922,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'dash_c': cc.compile_flags,
 
         'cc_lang_flags': cc.cc_lang_flags(),
+        'cc_sysroot': sysroot_option(),
         'cc_compile_flags': options.cxxflags or cc.cc_compile_flags(options),
         'ldflags': options.ldflags or '',
         'cc_warning_flags': cc.cc_warning_flags(options),

@@ -61,6 +61,8 @@ Version 2.7.0, Not Yet Released
 * Implement Base32 encoding with template function to prepare
   refactoring of Base64. (GH #1541)
 
+* Added support for GCC's --sysroot option to configure.py for cross-compiling.
+
 Version 2.6.0, 2018-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

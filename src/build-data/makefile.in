@@ -7,7 +7,7 @@ PYTHON_EXE     = %{python_exe}
 
 # Compiler Flags
 
-ABI_FLAGS      = %{cxx_abi_flags}
+ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags}
 CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
