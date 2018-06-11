@@ -244,7 +244,7 @@ class RSA_Blinding_Tests final : public Test
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i)
             {
             std::vector<uint8_t> input(16);
-            input[input.size() - 1] = static_cast<uint8_t>(i);
+            input[input.size() - 1] = static_cast<uint8_t>(i | 1);
 
             signer.update(input);
 
