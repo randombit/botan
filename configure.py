@@ -1771,7 +1771,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         if options.with_sysroot_dir == '':
             return ''
         if cc.add_sysroot_option == '':
-            logging.error('This compiler doesn''t support --sysroot option')
+            logging.error("This compiler doesn't support --sysroot option")
         return cc.add_sysroot_option + options.with_sysroot_dir
 
     def ar_command():
