@@ -1064,7 +1064,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'output_to_exe': '-o ',
                 'add_include_dir_option': '-I',
                 'add_lib_dir_option': '-L',
-                'add_sysroot_option': '--sysroot=',
+                'add_sysroot_option': '',
                 'add_lib_option': '-l',
                 'add_framework_option': '-framework ',
                 'preproc_flags': '-E',
@@ -1767,6 +1767,13 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     def cmake_escape(s):
         return s.replace('(', '\\(').replace(')', '\\)')
 
+    def sysroot_option():
+        if options.with_sysroot_dir == '':
+            return ''
+        if cc.add_sysroot_option == '':
+            logging.error('This compiler doesn''t support --sysroot option')
+        return cc.add_sysroot_option + options.with_sysroot_dir
+
     def ar_command():
         if options.ar_command:
             return options.ar_command
@@ -1915,7 +1922,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'dash_c': cc.compile_flags,
 
         'cc_lang_flags': cc.cc_lang_flags(),
-        'cc_sysroot': cc.add_sysroot_option + options.with_sysroot_dir,
+        'cc_sysroot': sysroot_option(),
         'cc_compile_flags': options.cxxflags or cc.cc_compile_flags(options),
         'ldflags': options.ldflags or '',
         'cc_warning_flags': cc.cc_warning_flags(options),

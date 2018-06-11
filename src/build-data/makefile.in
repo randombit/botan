@@ -7,12 +7,12 @@ PYTHON_EXE     = %{python_exe}
 
 # Compiler Flags
 
-ABI_FLAGS      = %{cxx_abi_flags}
+ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags}
-CXXFLAGS       = %{cc_sysroot} %{cc_compile_flags}
+CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 SO_OBJ_FLAGS   = %{shared_flags}
-LDFLAGS        = %{cc_sysroot} %{ldflags}
+LDFLAGS        = %{ldflags}
 
 EXE_LINK_CMD   = %{exe_link_cmd}
 POST_LINK_CMD  = %{post_link_cmd}
