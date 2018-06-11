@@ -8,6 +8,7 @@
 */
 
 #include <botan/internal/mp_core.h>
+#include <botan/internal/mp_monty.h>
 #include <botan/internal/mp_madd.h>
 #include <botan/internal/mp_asmi.h>
 #include <botan/internal/ct_utils.h>
@@ -16,29 +17,19 @@
 
 namespace Botan {
 
+namespace {
+
 /*
-* Montgomery Reduction Algorithm
+* Montgomery reduction - product scanning form
+*
+* https://www.iacr.org/archive/ches2005/006.pdf
+* https://eprint.iacr.org/2013/882.pdf
+* https://www.microsoft.com/en-us/research/wp-content/uploads/1996/01/j37acmon.pdf
 */
-void bigint_monty_redc(word z[],
-                       const word p[], size_t p_size, word p_dash,
-                       word ws[], size_t ws_size)
+void bigint_monty_redc_generic(word z[], size_t z_size,
+                               const word p[], size_t p_size, word p_dash,
+                               word ws[])
    {
-   const size_t z_size = 2*(p_size+1);
-
-   BOTAN_ARG_CHECK(ws_size >= z_size, "workspace too small");
-
-   CT::poison(z, z_size);
-   CT::poison(p, p_size);
-   CT::poison(ws, 2*(p_size+1));
-
-   /*
-   Montgomery reduction - product scanning form
-
-   https://www.iacr.org/archive/ches2005/006.pdf
-   https://eprint.iacr.org/2013/882.pdf
-   https://www.microsoft.com/en-us/research/wp-content/uploads/1996/01/j37acmon.pdf
-   */
-
    word w2 = 0, w1 = 0, w0 = 0;
 
    w0 = z[0];
@@ -110,13 +101,43 @@ void bigint_monty_redc(word z[],
    CT::conditional_copy_mem(borrow, z, ws, ws + (p_size + 1), (p_size + 1));
    clear_mem(z + p_size, z_size - p_size - 2);
 
-   CT::unpoison(z, z_size);
-   CT::unpoison(p, p_size);
-   CT::unpoison(ws, 2*(p_size+1));
-
    // This check comes after we've used it but that's ok here
    CT::unpoison(&borrow, 1);
    BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow");
+   }
+
+}
+
+void bigint_monty_redc(word z[],
+                       const word p[], size_t p_size, word p_dash,
+                       word ws[], size_t ws_size)
+   {
+   const size_t z_size = 2*(p_size+1);
+
+   BOTAN_ARG_CHECK(ws_size >= z_size, "workspace too small");
+
+   CT::poison(z, z_size);
+   CT::poison(p, p_size);
+   CT::poison(ws, 2*(p_size+1));
+
+   if(p_size == 4)
+      bigint_monty_redc_4(z, p, p_dash, ws);
+   else if(p_size == 6)
+      bigint_monty_redc_6(z, p, p_dash, ws);
+   else if(p_size == 8)
+      bigint_monty_redc_8(z, p, p_dash, ws);
+   else if(p_size == 16)
+      bigint_monty_redc_16(z, p, p_dash, ws);
+   else if(p_size == 24)
+      bigint_monty_redc_24(z, p, p_dash, ws);
+   else if(p_size == 32)
+      bigint_monty_redc_32(z, p, p_dash, ws);
+   else
+      bigint_monty_redc_generic(z, z_size, p, p_size, p_dash, ws);
+
+   CT::unpoison(z, z_size);
+   CT::unpoison(p, p_size);
+   CT::unpoison(ws, 2*(p_size+1));
    }
 
 }

@@ -153,7 +153,7 @@
 * periodically reinitializes the sequence. This value specifies how often
 * a new sequence should be started.
 */
-#define BOTAN_BLINDING_REINIT_INTERVAL 32
+#define BOTAN_BLINDING_REINIT_INTERVAL 64
 
 /*
 * Userspace RNGs like HMAC_DRBG will reseed after a specified number
