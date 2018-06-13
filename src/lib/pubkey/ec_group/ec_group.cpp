@@ -84,9 +84,19 @@ class EC_Group_Data final
 
       BigInt mod_order(const BigInt& x) const { return m_mod_order.reduce(x); }
 
+      BigInt square_mod_order(const BigInt& x) const
+         {
+         return m_mod_order.square(x);
+         }
+
       BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const
          {
          return m_mod_order.multiply(x, y);
+         }
+
+      BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const
+         {
+         return m_mod_order.multiply(m_mod_order.multiply(x, y), z);
          }
 
       BigInt inverse_mod_order(const BigInt& x) const
@@ -477,9 +487,19 @@ BigInt EC_Group::mod_order(const BigInt& k) const
    return data().mod_order(k);
    }
 
+BigInt EC_Group::square_mod_order(const BigInt& x) const
+   {
+   return data().square_mod_order(x);
+   }
+
 BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y) const
    {
    return data().multiply_mod_order(x, y);
+   }
+
+BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const
+   {
+   return data().multiply_mod_order(x, y, z);
    }
 
 BigInt EC_Group::inverse_mod_order(const BigInt& x) const

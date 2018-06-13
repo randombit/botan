@@ -51,7 +51,8 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
    public:
 
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
-                                const std::string& emsa) :
+                                const std::string& emsa,
+                                RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_EMSA(emsa),
          m_group(ecdsa.domain()),
          m_x(ecdsa.private_value())
@@ -59,6 +60,9 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
          m_rfc6979_hash = hash_for_emsa(emsa);
 #endif
+
+         m_b = m_group.random_scalar(rng);
+         m_b_inv = m_group.inverse_mod_order(m_b);
          }
 
       size_t max_input_bits() const override { return m_group.get_order_bits(); }
@@ -75,6 +79,8 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
 #endif
 
       std::vector<BigInt> m_ws;
+
+      BigInt m_b, m_b_inv;
    };
 
 secure_vector<uint8_t>
@@ -89,12 +95,21 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    const BigInt k = m_group.random_scalar(rng);
 #endif
 
-   const BigInt k_inv = m_group.inverse_mod_order(k);
    const BigInt r = m_group.mod_order(
       m_group.blinded_base_point_multiply_x(k, rng, m_ws));
 
-   const BigInt xrm = m_group.mod_order(m_group.multiply_mod_order(m_x, r) + m);
-   const BigInt s = m_group.multiply_mod_order(k_inv, xrm);
+   const BigInt k_inv = m_group.inverse_mod_order(k);
+
+   /*
+   * Blind the input message and compute x*r+m as (x*r*b + m*b)/b
+   */
+   m_b = m_group.square_mod_order(m_b);
+   m_b_inv = m_group.square_mod_order(m_b_inv);
+
+   m = m_group.multiply_mod_order(m_b, m);
+   const BigInt xr = m_group.multiply_mod_order(m_x, m_b, r);
+
+   const BigInt s = m_group.multiply_mod_order(k_inv, xr + m, m_b_inv);
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero())
@@ -144,7 +159,7 @@ bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    const BigInt w = m_group.inverse_mod_order(s);
 
-   const BigInt u1 = m_group.multiply_mod_order(e, w);
+   const BigInt u1 = m_group.multiply_mod_order(m_group.mod_order(e), w);
    const BigInt u2 = m_group.multiply_mod_order(r, w);
    const PointGFp R = m_gy_mul.multi_exp(u1, u2);
 
@@ -198,7 +213,7 @@ ECDSA_PublicKey::create_verification_op(const std::string& params,
    }
 
 std::unique_ptr<PK_Ops::Signature>
-ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                       const std::string& params,
                                       const std::string& provider) const
    {
@@ -233,7 +248,7 @@ ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
 #endif
 
    if(provider == "base" || provider.empty())
-      return std::unique_ptr<PK_Ops::Signature>(new ECDSA_Signature_Operation(*this, params));
+      return std::unique_ptr<PK_Ops::Signature>(new ECDSA_Signature_Operation(*this, params, rng));
 
    throw Provider_Not_Found(algo_name(), provider);
    }

@@ -18,6 +18,14 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2018
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2018-06-13 (CVE-2018-0495): ECDSA side channel
+
+  A side channel in the ECDSA signature operation could allow a local attacker
+  to recover the secret key. Found by Keegan Ryan of NCC Group.
+
+  Fixed in 2.7.0. Due to a slight difference in code structure, versions before
+  2.5.0 are not affected by this issue.
+
 * 2018-04-10 (CVE-2018-9860): Memory overread in TLS CBC decryption
 
   An off by one error in TLS CBC decryption meant that for a particular
