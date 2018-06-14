@@ -350,6 +350,7 @@ class EC_Group_Info final : public Command
             output() << "P = " << std::hex << group.get_p() << "\n"
                      << "A = " << std::hex << group.get_a() << "\n"
                      << "B = " << std::hex << group.get_b() << "\n"
+                     << "N = " << std::hex << group.get_order() << "\n"
                      << "G = " << group.get_g_x() << "," << group.get_g_y() << "\n";
             }
 
