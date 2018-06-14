@@ -139,9 +139,9 @@ TLS Server/Client
 
 ``tls_ciphers --policy=default --version=tls1.2``
   Prints the list of ciphersuites that will be offered under a particular
-  policy/version. The policy can be any of the the strings "default", "suiteb",
-  "strict", or "all" to denote built-in policies, or it can name a file from
-  which a policy description will be read.
+  policy/version. The policy can be any of the the strings "default",
+  "suiteb_128", "suiteb_192", "strict", or "all" to denote built-in policies, or
+  it can name a file from which a policy description will be read.
 
 ``tls_client host --port=443 --print-certs --policy= --tls1.0 --tls1.1 --tls1.2 --session-db= --session-db-pass= --next-protocols= --type=tcp``
   Implements a testing TLS client, which connects to *host* via TCP or UDP on

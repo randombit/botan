@@ -110,9 +110,13 @@ class TLS_Ciphersuites final : public Command
             {
             policy.reset(new Botan::TLS::Policy);
             }
-         else if(policy_type == "suiteb")
+         else if(policy_type == "suiteb_128")
             {
             policy.reset(new Botan::TLS::NSA_Suite_B_128);
+            }
+         else if(policy_type == "suiteb_192")
+            {
+            policy.reset(new Botan::TLS::NSA_Suite_B_192);
             }
          else if(policy_type == "strict")
             {
