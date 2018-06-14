@@ -43,7 +43,7 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
                                                                const Modular_Reducer& mod_order) :
    m_base_point(base),
    m_mod_order(mod_order),
-   m_p_words(base.get_curve().get_p().size()),
+   m_p_words(base.get_curve().get_p().sig_words()),
    m_T_size(base.get_curve().get_p().bits() + PointGFp_SCALAR_BLINDING_BITS + 1)
    {
    std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
