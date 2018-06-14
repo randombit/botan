@@ -276,7 +276,7 @@ class Test_TLS_Policy_Text : public Test
          {
          Test::Result result("TLS Policy");
 
-         const std::vector<std::string> policies = { "default", "suiteb", "strict", "datagram", "bsi" };
+         const std::vector<std::string> policies = { "default", "suiteb_128", "suiteb_192", "strict", "datagram", "bsi" };
 
          for(std::string policy : policies)
             {
@@ -311,9 +311,13 @@ class Test_TLS_Policy_Text : public Test
             {
             policy.reset(new Botan::TLS::Policy);
             }
-         else if(policy_str == "suiteb")
+         else if(policy_str == "suiteb_128")
             {
             policy.reset(new Botan::TLS::NSA_Suite_B_128);
+            }
+         else if(policy_str == "suiteb_192")
+            {
+            policy.reset(new Botan::TLS::NSA_Suite_B_192);
             }
          else if(policy_str == "bsi")
             {

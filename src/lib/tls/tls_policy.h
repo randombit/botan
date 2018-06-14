@@ -310,6 +310,9 @@ typedef Policy Default_Policy;
 
 /**
 * NSA Suite B 128-bit security level (RFC 6460)
+*
+* @warning As of August 2015 NSA indicated only the 192-bit Suite B
+* should be used for all classification levels.
 */
 class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 : public Policy
    {
@@ -333,6 +336,39 @@ class BOTAN_PUBLIC_API(2,0) NSA_Suite_B_128 : public Policy
          { return {Group_Params::SECP256R1}; }
 
       size_t minimum_signature_strength() const override { return 128; }
+
+      bool allow_tls10()  const override { return false; }
+      bool allow_tls11()  const override { return false; }
+      bool allow_tls12()  const override { return true;  }
+      bool allow_dtls10() const override { return false; }
+      bool allow_dtls12() const override { return false; }
+   };
+
+/**
+* NSA Suite B 192-bit security level (RFC 6460)
+*/
+class BOTAN_PUBLIC_API(2,7) NSA_Suite_B_192 : public Policy
+   {
+   public:
+      std::vector<std::string> allowed_ciphers() const override
+         { return std::vector<std::string>({"AES-256/GCM"}); }
+
+      std::vector<std::string> allowed_signature_hashes() const override
+         { return std::vector<std::string>({"SHA-384"}); }
+
+      std::vector<std::string> allowed_macs() const override
+         { return std::vector<std::string>({"AEAD"}); }
+
+      std::vector<std::string> allowed_key_exchange_methods() const override
+         { return std::vector<std::string>({"ECDH"}); }
+
+      std::vector<std::string> allowed_signature_methods() const override
+         { return std::vector<std::string>({"ECDSA"}); }
+
+      std::vector<Group_Params> key_exchange_groups() const override
+         { return {Group_Params::SECP384R1}; }
+
+      size_t minimum_signature_strength() const override { return 192; }
 
       bool allow_tls10()  const override { return false; }
       bool allow_tls11()  const override { return false; }

@@ -252,7 +252,7 @@ def cli_timing_test_tests():
                 logging.error("Unexpected output in timing_test %s: %s", suite, line)
 
 def cli_tls_ciphersuite_tests():
-    policies = ['default', 'suiteb', 'strict', 'all']
+    policies = ['default', 'suiteb_128', 'suiteb_192', 'strict', 'all']
 
     versions = ['tls1.0', 'tls1.1', 'tls1.2']
 
@@ -261,7 +261,7 @@ def cli_tls_ciphersuite_tests():
     for policy in policies:
         for version in versions:
 
-            if policy in ['suiteb', 'strict'] and version != 'tls1.2':
+            if policy in ['suiteb_128', 'suiteb_192', 'strict'] and version != 'tls1.2':
                 continue
 
             output = test_cli("tls_ciphers", ["--version=" + version, "--policy=" + policy], None).split('\n')
