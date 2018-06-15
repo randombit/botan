@@ -100,9 +100,16 @@ word bigint_sub3(word z[],
 * Otherwise compute z = y - x
 * No borrow is possible since the result is always >= 0
 *
-* Returns 1 if x >= y or -1 if x < y
+* Returns 1 if x >= y or 0 if x < y
+* @param z output array of at least N words
+* @param x input array of N words
+* @param y input array of N words
+* @param N length of x and y
+* @param ws array of at least 2*N words
 */
-int32_t bigint_sub_abs(word z[], const word x[], const word y[], size_t size);
+word bigint_sub_abs(word z[],
+                    const word x[], const word y[], size_t N,
+                    word ws[]);
 
 /*
 * Shift Operations

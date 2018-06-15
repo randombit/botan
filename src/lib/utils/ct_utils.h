@@ -139,11 +139,11 @@ inline T is_lte(T a, T b)
    }
 
 template<typename T>
-inline void conditional_copy_mem(T value,
-                                 T* to,
-                                 const T* from0,
-                                 const T* from1,
-                                 size_t elems)
+inline T conditional_copy_mem(T value,
+                              T* to,
+                              const T* from0,
+                              const T* from1,
+                              size_t elems)
    {
    const T mask = CT::expand_mask(value);
 
@@ -151,6 +151,8 @@ inline void conditional_copy_mem(T value,
       {
       to[i] = CT::select(mask, from0[i], from1[i]);
       }
+
+   return mask;
    }
 
 template<typename T>
