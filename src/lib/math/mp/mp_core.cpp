@@ -92,6 +92,34 @@ word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
    return carry & mask;
    }
 
+void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size)
+   {
+   const size_t blocks = size - (size % 8);
+
+   word carry = 0;
+   word borrow = 0;
+
+   word t0[8] = { 0 };
+   word t1[8] = { 0 };
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      carry = word8_add3(t0, x + i, y + i, carry);
+      borrow = word8_sub3(t1, x + i, y + i, borrow);
+
+      for(size_t j = 0; j != 8; ++j)
+         x[i+j] = CT::select(mask, t0[j], t1[j]);
+      }
+
+   for(size_t i = blocks; i != size; ++i)
+      {
+      const word a = word_add(x[i], y[i], &carry);
+      const word s = word_sub(x[i], y[i], &borrow);
+
+      x[i] = CT::select(mask, a, s);
+      }
+   }
+
 void bigint_cnd_abs(word cnd, word x[], size_t size)
    {
    const word mask = CT::expand_mask(cnd);

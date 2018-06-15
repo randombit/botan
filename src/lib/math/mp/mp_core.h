@@ -27,18 +27,27 @@ BOTAN_TEST_API
 void bigint_cnd_swap(word cnd, word x[], word y[], size_t size);
 
 /*
-* If cond > 0 adds x[0:size] to y[0:size] and returns carry
+* If cond > 0 adds x[0:size] and y[0:size] and returns carry
 * Runs in constant time
 */
 BOTAN_TEST_API
 word bigint_cnd_add(word cnd, word x[], const word y[], size_t size);
 
 /*
-* If cond > 0 subs x[0:size] to y[0:size] and returns borrow
+* If cond > 0 subtracts x[0:size] and y[0:size] and returns borrow
 * Runs in constant time
 */
 BOTAN_TEST_API
 word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size);
+
+/*
+* Equivalent to
+*   bigint_cnd_add( mask, x, y, size);
+*   bigint_cnd_sub(~mask, x, y, size);
+*
+* Mask must be either 0 or all 1 bits
+*/
+void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size);
 
 /*
 * 2s complement absolute value
