@@ -92,6 +92,34 @@ word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
    return carry & mask;
    }
 
+void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size)
+   {
+   const size_t blocks = size - (size % 8);
+
+   word carry = 0;
+   word borrow = 0;
+
+   word t0[8] = { 0 };
+   word t1[8] = { 0 };
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      carry = word8_add3(t0, x + i, y + i, carry);
+      borrow = word8_sub3(t1, x + i, y + i, borrow);
+
+      for(size_t j = 0; j != 8; ++j)
+         x[i+j] = CT::select(mask, t0[j], t1[j]);
+      }
+
+   for(size_t i = blocks; i != size; ++i)
+      {
+      const word a = word_add(x[i], y[i], &carry);
+      const word s = word_sub(x[i], y[i], &borrow);
+
+      x[i] = CT::select(mask, a, s);
+      }
+   }
+
 void bigint_cnd_abs(word cnd, word x[], size_t size)
    {
    const word mask = CT::expand_mask(cnd);
@@ -211,18 +239,35 @@ void bigint_sub2_rev(word x[],  const word y[], size_t y_size)
    BOTAN_ASSERT(!borrow, "y must be greater than x");
    }
 
-int32_t bigint_sub_abs(word z[], const word x[], const word y[], size_t sz)
+word bigint_sub_abs(word z[],
+                    const word x[], const word y[], size_t N,
+                    word ws[])
    {
-   word borrow = bigint_sub3(z, x, sz, y, sz);
+   // Subtract in both direction then conditional copy out the result
 
-   CT::unpoison(borrow);
-   if(borrow)
+   word* ws0 = ws;
+   word* ws1 = ws + N;
+
+   word borrow0 = 0;
+   word borrow1 = 0;
+
+   const size_t blocks = N - (N % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
       {
-      bigint_sub3(z, y, sz, x, sz);
-      return -1;
+      borrow0 = word8_sub3(ws0 + i, x + i, y + i, borrow0);
+      borrow1 = word8_sub3(ws1 + i, y + i, x + i, borrow1);
       }
 
-   return 1;
+   for(size_t i = blocks; i != N; ++i)
+      {
+      ws0[i] = word_sub(x[i], y[i], &borrow0);
+      ws1[i] = word_sub(y[i], x[i], &borrow1);
+      }
+
+   word mask = CT::conditional_copy_mem(borrow1, z, ws0, ws1, N);
+
+   return CT::select<word>(mask, 0, 1);
    }
 
 /*

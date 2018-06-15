@@ -76,10 +76,13 @@ BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y,
    if(ws.size() < output_size)
       ws.resize(output_size);
 
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+   BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
+
    BigInt z(BigInt::Positive, output_size);
    bigint_mul(z.mutable_data(), z.size(),
-              x.data(), x.size(), x.sig_words(),
-              y.data(), y.size(), y.sig_words(),
+              x.data(), x.size(), std::min(m_p_words, x.size()),
+              y.data(), y.size(), std::min(m_p_words, y.size()),
               ws.data(), ws.size());
 
    bigint_monty_redc(z.mutable_data(),
@@ -98,9 +101,11 @@ BigInt Montgomery_Params::mul(const BigInt& x,
       ws.resize(output_size);
    BigInt z(BigInt::Positive, output_size);
 
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+
    bigint_mul(z.mutable_data(), z.size(),
-              x.data(), x.size(), x.sig_words(),
-              y.data(), y.size(), y.size(),
+              x.data(), x.size(), std::min(m_p_words, x.size()),
+              y.data(), y.size(), std::min(m_p_words, y.size()),
               ws.data(), ws.size());
 
    bigint_monty_redc(z.mutable_data(),
@@ -122,9 +127,11 @@ void Montgomery_Params::mul_by(BigInt& x,
    word* z_data = &ws[0];
    word* ws_data = &ws[output_size];
 
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+
    bigint_mul(z_data, output_size,
-              x.data(), x.size(), x.sig_words(),
-              y.data(), y.size(), y.size(),
+              x.data(), x.size(), std::min(m_p_words, x.size()),
+              y.data(), y.size(), std::min(m_p_words, y.size()),
               ws_data, output_size);
 
    bigint_monty_redc(z_data,
@@ -148,9 +155,11 @@ void Montgomery_Params::mul_by(BigInt& x,
    word* z_data = &ws[0];
    word* ws_data = &ws[output_size];
 
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+
    bigint_mul(z_data, output_size,
-              x.data(), x.size(), x.sig_words(),
-              y.data(), y.size(), y.sig_words(),
+              x.data(), x.size(), std::min(m_p_words, x.size()),
+              y.data(), y.size(), std::min(m_p_words, y.size()),
               ws_data, output_size);
 
    bigint_monty_redc(z_data,
@@ -171,13 +180,10 @@ BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const
 
    BigInt z(BigInt::Positive, output_size);
 
-   // assume x.sig_words() is at most p_words
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
 
-   const size_t x_words = (x.size() >= m_p_words) ? m_p_words : x.sig_words();
-
    bigint_sqr(z.mutable_data(), z.size(),
-              x.data(), x.size(), x_words,
+              x.data(), x.size(), std::min(m_p_words, x.size()),
               ws.data(), ws.size());
 
    bigint_monty_redc(z.mutable_data(),
@@ -198,8 +204,10 @@ void Montgomery_Params::square_this(BigInt& x,
    word* z_data = &ws[0];
    word* ws_data = &ws[output_size];
 
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+
    bigint_sqr(z_data, output_size,
-              x.data(), x.size(), x.sig_words(),
+              x.data(), x.size(), std::min(m_p_words, x.size()),
               ws_data, output_size);
 
    bigint_monty_redc(z_data,

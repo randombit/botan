@@ -1,9 +1,9 @@
 Side Channels
 =========================
 
-Many cryptographic systems can be broken by side channels. This document notes
-side channel protections which are currently implemented, as well as areas of
-the code which are known to be vulnerable to side channels. The latter are
+Many cryptographic systems can be easily broken by side channels. This document
+notes side channel protections which are currently implemented, as well as areas
+of the code which are known to be vulnerable to side channels. The latter are
 obviously all open for future improvement.
 
 The following text assumes the reader is already familiar with cryptographic
@@ -20,7 +20,7 @@ inverse with each decryption, both the mask and its inverse are simply squared
 to choose the next blinding factor. This is much faster than computing a fresh
 value each time, and the additional relation is thought to provide only minimal
 useful information for an attacker. Every BOTAN_BLINDING_REINIT_INTERVAL
-(default 32) operations, a new starting point is chosen.
+(default 64) operations, a new starting point is chosen.
 
 Exponent blinding uses new values for each signature.
 
@@ -109,17 +109,17 @@ Modular Exponentiation
 ------------------------
 
 Modular exponentiation uses a fixed window algorithm with Montgomery
-representation. A side channel silent table lookup is used to access the
-precomputed powers. See powm_mnt.cpp.
+representation. A side channel silent table lookup is used to access
+the precomputed powers. Currently the bit length of the exponent is
+leaked (with a granularity based on the window size, typically 4 bits)
+due to the number of loop iterations. See monty_exp.cpp
 
-The Karatsuba multiplication algorithm has some conditional branches that
-probably expose information through the branch predictor, but probably? does not
-expose a timing channel since the same amount of work is done on both sides of
-the conditional. There is certainly room for improvement here. See mp_karat.cpp
-for details.
+Karatsuba multiplication algorithm avoids any conditional branches; in
+cases where different operations must be performed it instead uses masked
+operations. See mp_karat.cpp for details.
 
-The Montgomery reduction is written (and tested) to run in constant time. See
-mp_monty.cpp.
+The Montgomery reduction is written (and tested) to run in constant time.
+The final reduction is handled with a masked subtraction. See mp_monty.cpp.
 
 ECC point decoding
 ----------------------

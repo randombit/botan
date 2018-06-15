@@ -1,6 +1,6 @@
 /*
 * Multiplication and Squaring
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2018 Jack Lloyd
 *     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -8,6 +8,7 @@
 
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_asmi.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/mem_ops.h>
 #include <botan/exceptn.h>
 
@@ -120,11 +121,10 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    */
 
    // First compute (X_lo - X_hi)*(Y_hi - Y_lo)
-   const int32_t cmp0 = bigint_sub_abs(z0, x0, x1, N2);
-   const int32_t cmp1 = bigint_sub_abs(z1, y1, y0, N2);
+   const word cmp0 = bigint_sub_abs(z0, x0, x1, N2, workspace);
+   const word cmp1 = bigint_sub_abs(z1, y1, y0, N2, workspace);
 
    karatsuba_mul(ws0, z0, z1, N2, ws1);
-   const bool is_negative = cmp0 != cmp1;
 
    // Compute X_lo * Y_lo
    karatsuba_mul(z0, x0, y0, N2, ws1);
@@ -138,10 +138,11 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    z_carry += bigint_add2_nc(z + N + N2, N2, &ws_carry, 1);
    bigint_add2_nc(z + N + N2, N2, &z_carry, 1);
 
-   if(is_negative)
-      bigint_sub2(z + N2, 2*N-N2, ws0, N);
-   else
-      bigint_add2_nc(z + N2, 2*N-N2, ws0, N);
+   clear_mem(workspace + N, N2);
+
+   const word neg_mask = CT::is_equal<word>(cmp0, cmp1);
+
+   bigint_cnd_addsub(neg_mask, z + N2, workspace, 2*N-N2);
    }
 
 /*
@@ -178,7 +179,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    clear_mem(workspace, 2*N);
 
    // See comment in karatsuba_mul
-   bigint_sub_abs(z0, x0, x1, N2);
+   bigint_sub_abs(z0, x0, x1, N2, workspace);
    karatsuba_sqr(ws0, z0, N2, ws1);
 
    karatsuba_sqr(z0, x0, N2, ws1);
