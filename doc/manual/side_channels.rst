@@ -109,8 +109,10 @@ Modular Exponentiation
 ------------------------
 
 Modular exponentiation uses a fixed window algorithm with Montgomery
-representation. A side channel silent table lookup is used to access the
-precomputed powers. See monty_exp.cpp
+representation. A side channel silent table lookup is used to access
+the precomputed powers. Currently the bit length of the exponent is
+leaked (with a granularity based on the window size, typically 4 bits)
+due to the number of loop iterations. See monty_exp.cpp
 
 Karatsuba multiplication algorithm avoids any conditional branches; in
 cases where different operations must be performed it instead uses masked
