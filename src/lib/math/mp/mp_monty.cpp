@@ -116,10 +116,6 @@ void bigint_monty_redc(word z[],
 
    BOTAN_ARG_CHECK(ws_size >= z_size, "workspace too small");
 
-   CT::poison(z, z_size);
-   CT::poison(p, p_size);
-   CT::poison(ws, 2*(p_size+1));
-
    if(p_size == 4)
       bigint_monty_redc_4(z, p, p_dash, ws);
    else if(p_size == 6)
@@ -134,10 +130,6 @@ void bigint_monty_redc(word z[],
       bigint_monty_redc_32(z, p, p_dash, ws);
    else
       bigint_monty_redc_generic(z, z_size, p, p_size, p_dash, ws);
-
-   CT::unpoison(z, z_size);
-   CT::unpoison(p, p_size);
-   CT::unpoison(ws, 2*(p_size+1));
    }
 
 }
