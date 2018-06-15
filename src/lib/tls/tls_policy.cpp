@@ -161,12 +161,16 @@ std::vector<Group_Params> Policy::key_exchange_groups() const
    {
    // Default list is ordered by performance
    return {
+
+#if defined(BOTAN_HAS_CURVE_25519)
       Group_Params::X25519,
+#endif
+
       Group_Params::SECP256R1,
-      Group_Params::SECP521R1,
-      Group_Params::SECP384R1,
       Group_Params::BRAINPOOL256R1,
+      Group_Params::SECP384R1,
       Group_Params::BRAINPOOL384R1,
+      Group_Params::SECP521R1,
       Group_Params::BRAINPOOL512R1,
 
       Group_Params::FFDHE_2048,
