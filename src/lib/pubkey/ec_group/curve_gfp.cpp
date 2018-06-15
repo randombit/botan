@@ -133,12 +133,9 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
    BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
 
-   const size_t x_words = (x.size() >= m_p_words) ? m_p_words : x.sig_words();
-   const size_t y_words = (y.size() >= m_p_words) ? m_p_words : y.sig_words();
-
    bigint_mul(z.mutable_data(), z.size(),
-              x.data(), x.size(), x_words,
-              y.data(), y.size(), y_words,
+              x.data(), x.size(), std::min(m_p_words, x.size()),
+              y.data(), y.size(), std::min(m_p_words, y.size()),
               ws.data(), ws.size());
 
    bigint_monty_redc(z.mutable_data(),
@@ -161,12 +158,9 @@ void CurveGFp_Montgomery::curve_mul_words(BigInt& z,
 
    BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
 
-   const size_t x_words = (x_size >= m_p_words) ? m_p_words : x_size;
-   const size_t y_words = (y.size() >= m_p_words) ? m_p_words : y.sig_words();
-
    bigint_mul(z.mutable_data(), z.size(),
-              x_w, x_size, x_words,
-              y.data(), y.size(), y_words,
+              x_w, x_size, std::min(m_p_words, x_size),
+              y.data(), y.size(), std::min(m_p_words, y.size()),
               ws.data(), ws.size());
 
    bigint_monty_redc(z.mutable_data(),
@@ -184,10 +178,10 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
    if(z.size() < output_size)
       z.grow_to(output_size);
 
-   const size_t x_words = (x.size() >= m_p_words) ? m_p_words : x.sig_words();
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
 
    bigint_sqr(z.mutable_data(), z.size(),
-              x.data(), x.size(), x_words,
+              x.data(), x.size(), std::min(m_p_words, x.size()),
               ws.data(), ws.size());
 
    bigint_monty_redc(z.mutable_data(),
@@ -279,12 +273,12 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    if(z.size() < output_size)
       z.grow_to(output_size);
 
-   const size_t x_words = (x.size() >= m_p_words) ? m_p_words : x.sig_words();
-   const size_t y_words = (y.size() >= m_p_words) ? m_p_words : y.sig_words();
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+   BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
 
    bigint_mul(z.mutable_data(), z.size(),
-              x.data(), x.size(), x_words,
-              y.data(), y.size(), y_words,
+              x.data(), x.size(), std::min(m_p_words, x.size()),
+              y.data(), y.size(), std::min(m_p_words, y.size()),
               ws.data(), ws.size());
 
    this->redc(z, ws);
@@ -303,12 +297,11 @@ void CurveGFp_NIST::curve_mul_words(BigInt& z,
    if(z.size() < output_size)
       z.grow_to(output_size);
 
-   const size_t x_words = (x_size >= m_p_words) ? m_p_words : x_size;
-   const size_t y_words = (y.size() >= m_p_words) ? m_p_words : y.sig_words();
+   BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
 
    bigint_mul(z.mutable_data(), z.size(),
-              x_w, x_size, x_words,
-              y.data(), y.size(), y_words,
+              x_w, x_size, std::min(m_p_words, x_size),
+              y.data(), y.size(), std::min(m_p_words, y.size()),
               ws.data(), ws.size());
 
    this->redc(z, ws);
@@ -324,10 +317,10 @@ void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
    if(z.size() < output_size)
       z.grow_to(output_size);
 
-   const size_t x_words = (x.size() >= m_p_words) ? m_p_words : x.sig_words();
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
 
    bigint_sqr(z.mutable_data(), output_size,
-              x.data(), x.size(), x_words,
+              x.data(), x.size(), std::min(m_p_words, x.size()),
               ws.data(), ws.size());
 
    this->redc(z, ws);
