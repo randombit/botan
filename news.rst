@@ -4,7 +4,7 @@ Release Notes
 Version 2.7.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* CVE-2018-0495 Avoid a side channel in ECDSA signature generation (GH #1604)
+* CVE-2018-12435 Avoid a side channel in ECDSA signature generation (GH #1604)
 
 * Avoid a side channel in RSA key generation due to use of a non-constant time
   gcd algorithm. (GH #1542 #1556)
