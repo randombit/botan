@@ -12,6 +12,8 @@ Version 2.7.0, Not Yet Released
 * Optimize prime generation, especially improving RSA key generation.
   (GH #1542)
 
+* Make Karatsuba multiplication and Montgomery field operations const time (GH #1606)
+
 * Optimizations for elliptic curve operations (GH #1534 #1531 #1546 #1547 #1550)
 
 * Add 24 word wide Comba multiplication, improving 3072-bit RSA and DH by
