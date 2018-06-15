@@ -281,7 +281,13 @@ class Test_TLS_Policy_Text : public Test
          for(std::string policy : policies)
             {
             const std::string from_policy_obj = tls_policy_string(policy);
-            const std::string from_file = read_tls_policy(policy);
+            std::string from_file = read_tls_policy(policy);
+
+#if !defined(BOTAN_HAS_CURVE_25519)
+            auto pos = from_file.find("x25519 ");
+            if(pos != std::string::npos)
+               from_file = from_file.replace(pos, 7, "");
+#endif
 
             result.test_eq("Values for TLS " + policy + " policy", from_file, from_policy_obj);
             }
