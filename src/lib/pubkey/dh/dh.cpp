@@ -40,16 +40,16 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
 
    if(x_arg == 0)
       {
-      m_x.randomize(rng, grp.exponent_bits());
+      const size_t exp_bits = grp.exponent_bits();
+      m_x.randomize(rng, exp_bits);
+      m_y = m_group.power_g_p(m_x, exp_bits);
       }
    else
       {
       m_x = x_arg;
-      }
 
-   if(m_y.is_zero())
-      {
-      m_y = m_group.power_g_p(m_x);
+      if(m_y == 0)
+         m_y = m_group.power_g_p(m_x, grp.p_bits());
       }
    }
 
@@ -62,7 +62,7 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
    {
    if(m_y.is_zero())
       {
-      m_y = m_group.power_g_p(m_x);
+      m_y = m_group.power_g_p(m_x, m_group.p_bits());
       }
    }
 
@@ -103,16 +103,16 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
 
 secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_len)
    {
-   BigInt x = BigInt::decode(w, w_len);
+   BigInt v = BigInt::decode(w, w_len);
 
-   if(x <= 1 || x >= m_p - 1)
+   if(v <= 1 || v >= m_p - 1)
       throw Invalid_Argument("DH agreement - invalid key provided");
 
-   x = m_blinder.blind(x);
-   x = m_powermod_x_p(x);
-   x = m_blinder.unblind(x);
+   v = m_blinder.blind(v);
+   v = m_powermod_x_p(v);
+   v = m_blinder.unblind(v);
 
-   return BigInt::encode_1363(x, m_p.bytes());
+   return BigInt::encode_1363(v, m_p.bytes());
    }
 
 }

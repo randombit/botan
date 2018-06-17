@@ -26,6 +26,7 @@ class DL_Group_Data final
          m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
          m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
          m_p_bits(p.bits()),
+         m_q_bits(q.bits()),
          m_estimated_strength(dl_work_factor(m_p_bits)),
          m_exponent_bits(dl_exponent_size(m_p_bits))
          {}
@@ -52,11 +53,21 @@ class DL_Group_Data final
       size_t p_bits() const { return m_p_bits; }
       size_t p_bytes() const { return (m_p_bits + 7) / 8; }
 
+      size_t q_bits() const
+         {
+         if(m_q_bits == 0)
+            throw Invalid_State("DL_Group::q_bits q value is unset on this group");
+         return m_q_bits;
+         }
+
       size_t estimated_strength() const { return m_estimated_strength; }
 
       size_t exponent_bits() const { return m_exponent_bits; }
 
-      BigInt power_g_p(const BigInt& k) const { return monty_execute(*m_monty, k); }
+      BigInt power_g_p(const BigInt& k, size_t max_k_bits) const
+         {
+         return monty_execute(*m_monty, k, max_k_bits);
+         }
 
    private:
       BigInt m_p;
@@ -66,6 +77,7 @@ class DL_Group_Data final
       std::shared_ptr<const Montgomery_Params> m_monty_params;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
+      size_t m_q_bits;
       size_t m_estimated_strength;
       size_t m_exponent_bits;
    };
@@ -413,6 +425,11 @@ size_t DL_Group::p_bytes() const
    return data().p_bytes();
    }
 
+size_t DL_Group::q_bits() const
+   {
+   return data().q_bits();
+   }
+
 size_t DL_Group::estimated_strength() const
    {
    return data().estimated_strength();
@@ -446,7 +463,12 @@ BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigI
 
 BigInt DL_Group::power_g_p(const BigInt& x) const
    {
-   return data().power_g_p(x);
+   return data().power_g_p(x, x.bits());
+   }
+
+BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const
+   {
+   return data().power_g_p(x, max_x_bits);
    }
 
 /*

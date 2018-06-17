@@ -524,6 +524,7 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
    const BigInt n_minus_1 = n - 1;
    const size_t s = low_zero_bits(n_minus_1);
    const BigInt nm1_s = n_minus_1 >> s;
+   const size_t n_bits = n.bits();
 
    const Modular_Reducer mod_n(n);
    auto monty_n = std::make_shared<Montgomery_Params>(n, mod_n);
@@ -536,7 +537,7 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
 
       auto powm_a_n = monty_precompute(monty_n, a, powm_window);
 
-      BigInt y = monty_execute(*powm_a_n, nm1_s);
+      BigInt y = monty_execute(*powm_a_n, nm1_s, n_bits);
 
       if(mr_witness(std::move(y), mod_n, n_minus_1, s))
          return false;

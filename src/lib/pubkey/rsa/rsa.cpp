@@ -202,6 +202,8 @@ class RSA_Private_Operation
    protected:
       size_t get_max_input_bits() const { return (m_mod_bits - 1); }
 
+      const size_t exp_blinding_bits = 64;
+
       explicit RSA_Private_Operation(const RSA_PrivateKey& rsa, RandomNumberGenerator& rng) :
          m_key(rsa),
          m_mod_p(m_key.get_p()),
@@ -213,8 +215,11 @@ class RSA_Private_Operation
                    rng,
                    [this](const BigInt& k) { return m_powermod_e_n(k); },
                    [this](const BigInt& k) { return inverse_mod(k, m_key.get_n()); }),
+         m_exp_blinding_bits(64),
          m_mod_bytes(m_key.get_n().bytes()),
-         m_mod_bits(m_key.get_n().bits())
+         m_mod_bits(m_key.get_n().bits()),
+         m_max_d1_bits(m_key.get_p().bits() + m_exp_blinding_bits),
+         m_max_d2_bits(m_key.get_q().bits() + m_exp_blinding_bits)
          {
          }
 
@@ -229,10 +234,9 @@ class RSA_Private_Operation
       BigInt private_op(const BigInt& m) const
          {
          const size_t powm_window = 4;
-         const size_t exp_blinding_bits = 64;
 
-         const BigInt d1_mask(m_blinder.rng(), exp_blinding_bits);
-         const BigInt d2_mask(m_blinder.rng(), exp_blinding_bits);
+         const BigInt d1_mask(m_blinder.rng(), m_exp_blinding_bits);
+         const BigInt d2_mask(m_blinder.rng(), m_exp_blinding_bits);
 
          const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
          const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
@@ -240,18 +244,18 @@ class RSA_Private_Operation
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
          auto future_j1 = std::async(std::launch::async, [this, &m, &masked_d1, powm_window]() {
                auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
-               return monty_execute(*powm_d1_p, masked_d1);
+               return monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
             });
 
          auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
-         BigInt j2 = monty_execute(*powm_d2_q, masked_d2);
+         BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
          BigInt j1 = future_j1.get();
 #else
          auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
          auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
 
-         BigInt j1 = monty_execute(*powm_d1_p, masked_d1);
-         BigInt j2 = monty_execute(*powm_d2_q, masked_d2);
+         BigInt j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
+         BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
 #endif
 
          j1 = m_mod_p.reduce(sub_mul(j1, j2, m_key.get_c()));
@@ -269,8 +273,11 @@ class RSA_Private_Operation
 
       Fixed_Exponent_Power_Mod m_powermod_e_n;
       Blinder m_blinder;
-      size_t m_mod_bytes;
-      size_t m_mod_bits;
+      const size_t m_exp_blinding_bits;
+      const size_t m_mod_bytes;
+      const size_t m_mod_bits;
+      const size_t m_max_d1_bits;
+      const size_t m_max_d2_bits;
    };
 
 class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,

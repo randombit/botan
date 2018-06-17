@@ -82,6 +82,8 @@ srp6_client_agree(const std::string& identifier,
                   const BigInt& B,
                   RandomNumberGenerator& rng)
    {
+   const size_t a_bits = 256;
+
    DL_Group group(group_id);
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
@@ -93,9 +95,9 @@ srp6_client_agree(const std::string& identifier,
 
    const BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
-   const BigInt a(rng, 256);
+   const BigInt a(rng, a_bits);
 
-   const BigInt A = group.power_g_p(a);
+   const BigInt A = group.power_g_p(a, a_bits);
 
    const BigInt u = hash_seq(hash_id, p_bytes, A, B);
 
@@ -117,7 +119,8 @@ BigInt generate_srp6_verifier(const std::string& identifier,
    const BigInt x = compute_x(hash_id, identifier, password, salt);
 
    DL_Group group(group_id);
-   return group.power_g_p(x);
+   // FIXME: x should be size of hash fn
+   return group.power_g_p(x, x.bits());
    }
 
 BigInt SRP6_Server_Session::step1(const BigInt& v,
@@ -125,19 +128,21 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
                                   const std::string& hash_id,
                                   RandomNumberGenerator& rng)
    {
+   const size_t b_bits = 256;
+
    DL_Group group(group_id);
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
 
    m_p_bytes = p.bytes();
    m_v = v;
-   m_b = BigInt(rng, 256);
+   m_b = BigInt(rng, b_bits);
    m_p = p;
    m_hash_id = hash_id;
 
    const BigInt k = hash_seq(hash_id, m_p_bytes, p, g);
 
-   m_B = group.mod_p(v*k + group.power_g_p(m_b));
+   m_B = group.mod_p(v*k + group.power_g_p(m_b, b_bits));
 
    return m_B;
    }

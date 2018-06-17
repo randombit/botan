@@ -23,7 +23,7 @@ class Montgomery_Exponentation_State
                                      size_t window_bits,
                                      bool const_time);
 
-      BigInt exponentiation(const BigInt& k) const;
+      BigInt exponentiation(const BigInt& k, size_t max_k_bits) const;
 
       BigInt exponentiation_vartime(const BigInt& k) const;
    private:
@@ -71,8 +71,8 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<c
 namespace {
 
 void const_time_lookup(secure_vector<word>& output,
-                        const std::vector<Montgomery_Int>& g,
-                        size_t nibble)
+                       const std::vector<Montgomery_Int>& g,
+                       size_t nibble)
    {
    const size_t words = output.size();
 
@@ -94,10 +94,12 @@ void const_time_lookup(secure_vector<word>& output,
 
 }
 
-BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar) const
+BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar, size_t max_k_bits) const
    {
-   const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
-   CT::unpoison(exp_nibbles);
+   BOTAN_DEBUG_ASSERT(scalar.bits() <= max_k_bits);
+   // TODO add a const-time implementation of above assert and use it in release builds
+
+   const size_t exp_nibbles = (max_k_bits + m_window_bits - 1) / m_window_bits;
 
    Montgomery_Int x(m_params, m_params->R1(), false);
 
@@ -159,9 +161,9 @@ monty_precompute(std::shared_ptr<const Montgomery_Params> params,
    }
 
 BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state,
-                     const BigInt& k)
+                     const BigInt& k, size_t max_k_bits)
    {
-   return precomputed_state.exponentiation(k);
+   return precomputed_state.exponentiation(k, max_k_bits);
    }
 
 BigInt monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_state,

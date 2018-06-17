@@ -28,13 +28,14 @@ monty_precompute(std::shared_ptr<const Montgomery_Params> params_p,
                  bool const_time = true);
 
 /*
-* Return g^x mod p
+* Return g^k mod p
 */
 BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state,
-                     const BigInt& k);
+                     const BigInt& k, size_t max_k_bits);
 
 /*
-* Return g^x mod p taking variable time
+* Return g^k mod p taking variable time depending on k
+* @warning only use this if k is public
 */
 BigInt monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_state,
                              const BigInt& k);

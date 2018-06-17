@@ -10,6 +10,7 @@
 #include <botan/numthry.h>
 #include <botan/monty.h>
 #include <botan/internal/monty_exp.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -26,7 +27,11 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
 
 BigInt Montgomery_Exponentiator::execute() const
    {
-   return monty_execute(*m_monty, m_e);
+   /*
+   This leaks size of e via loop iterations, not possible to fix without
+   breaking this API. Round up to avoid leaking fine details.
+   */
+   return monty_execute(*m_monty, m_e, round_up(m_e.bits(), 8));
    }
 
 Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
