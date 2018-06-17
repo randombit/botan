@@ -123,6 +123,9 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
 
       const uint32_t w = scalar.get_substring(2*i, 2);
 
+      // side channel here, we are relying on scalar blinding
+      // TODO use masked lookup
+
       if(w > 0)
          {
          const size_t idx = (3*i + w - 1)*2*m_p_words;
@@ -214,6 +217,7 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       {
       windows--;
       const uint32_t nibble = scalar.get_substring(windows*m_window_bits, m_window_bits);
+      // cache side channel here, we are relying on blinding...
       R.add(m_U[nibble], ws);
 
       /*
@@ -300,6 +304,7 @@ PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
 
       const uint8_t z12 = (4*z2_b) + z1_b;
 
+      // This function is not intended to be const time
       if(z12)
          {
          H.add_affine(m_M[z12-1], ws);
