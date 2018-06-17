@@ -34,17 +34,21 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
 
    if(m_x.is_zero())
       {
-      m_x.randomize(rng, group.exponent_bits());
+      const size_t exp_bits = m_group.exponent_bits();
+      m_x.randomize(rng, exp_bits);
+      m_y = m_group.power_g_p(m_x, exp_bits);
       }
-
-   m_y = m_group.power_g_p(m_x);
+   else
+      {
+      m_y = m_group.power_g_p(m_x, m_group.p_bits());
+      }
    }
 
 ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
                                        const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
-   m_y = m_group.power_g_p(m_x);
+   m_y = m_group.power_g_p(m_x, m_group.p_bits());
    }
 
 /*
@@ -103,7 +107,7 @@ ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
    const size_t k_bits = m_group.exponent_bits();
    const BigInt k(rng, k_bits);
 
-   const BigInt a = m_group.power_g_p(k);
+   const BigInt a = m_group.power_g_p(k, k_bits);
    const BigInt b = m_group.multiply_mod_p(m, m_powermod_y_p(k));
 
    return BigInt::encode_fixed_length_int_pair(a, b, m_group.p_bytes());

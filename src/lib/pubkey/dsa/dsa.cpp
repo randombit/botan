@@ -42,14 +42,14 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
    else
       m_x = x_arg;
 
-   m_y = m_group.power_g_p(m_x);
+   m_y = m_group.power_g_p(m_x, m_group.q_bits());
    }
 
 DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                                const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
-   m_y = m_group.power_g_p(m_x);
+   m_y = m_group.power_g_p(m_x, m_group.q_bits());
    }
 
 /*
@@ -111,7 +111,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    {
    const BigInt& q = m_group.get_q();
 
-   BigInt m(msg, msg_len, q.bits());
+   BigInt m(msg, msg_len, m_group.q_bits());
 
    while(m >= q)
       m -= q;
@@ -125,7 +125,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
    const BigInt k_inv = inverse_mod(k, q);
 
-   const BigInt r = m_mod_q.reduce(m_group.power_g_p(k));
+   const BigInt r = m_mod_q.reduce(m_group.power_g_p(k, m_group.q_bits()));
 
    /*
    * Blind the input message and compute x*r+m as (x*r*b + m*b)/b

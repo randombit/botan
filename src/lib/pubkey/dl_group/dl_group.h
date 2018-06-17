@@ -183,9 +183,23 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
 
       /**
       * Modular exponentiation
+      *
+      * @warning this function leaks the size of x via the number of
+      * loop iterations. Use the version taking the maximum size to
+      * avoid this.
+      *
       * @return (g^x) % p
       */
       BigInt power_g_p(const BigInt& x) const;
+
+      /**
+      * Modular exponentiation
+      * @param x the exponent
+      * @param max_x_bits x is assumed to be at most this many bits long.
+      *
+      * @return (g^x) % p
+      */
+      BigInt power_g_p(const BigInt& x, size_t max_x_bits) const;
 
       /**
       * Multi-exponentiate
@@ -209,6 +223,13 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * Same as get_p().bytes()
       */
       size_t p_bytes() const;
+
+      /**
+      * Return the size of q in bits
+      * Same as get_q().bits()
+      * Throws if q is unset
+      */
+      size_t q_bits() const;
 
       /**
       * Return size in bits of a secret exponent
