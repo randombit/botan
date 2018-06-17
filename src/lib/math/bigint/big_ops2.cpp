@@ -133,6 +133,9 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    if(t_sw > mod_sw || s_sw > mod_sw)
       throw Invalid_Argument("BigInt::mod_sub args larger than modulus");
 
+   BOTAN_DEBUG_ASSERT(*this < mod);
+   BOTAN_DEBUG_ASSERT(s < mod);
+
    int32_t relative_size = bigint_cmp(data(), t_sw, s.data(), s_sw);
 
    if(relative_size >= 0)
@@ -144,9 +147,11 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
       {
       // Otherwise we must sub s and then add p (or add (p - s) as here)
 
-      ws.resize(mod_sw + 1);
+      if(ws.size() < mod_sw)
+         ws.resize(mod_sw);
 
-      bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), s_sw);
+      word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), s_sw);
+      BOTAN_ASSERT_NOMSG(borrow == 0);
 
       if(m_reg.size() < mod_sw)
          grow_to(mod_sw);
