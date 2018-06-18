@@ -41,16 +41,11 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
       return (x % m_modulus);
       }
 
-   if(x_sw < m_mod_words - 1)
-      {
-      if(x.is_negative())
-         return x + m_modulus; // make positive
-      return x;
-      }
-
    secure_vector<word> ws;
 
-   BigInt t1(x.data() + (m_mod_words - 1), x_sw - (m_mod_words - 1));
+   BigInt t1 = x;
+   t1.set_sign(BigInt::Positive);
+   t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words - 1));
 
    t1.mul(m_mu, ws);
    t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words + 1));
