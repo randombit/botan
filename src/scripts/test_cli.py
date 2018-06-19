@@ -289,6 +289,7 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
     test_cli("asn1print", "--pem -", expected, input_pem)
 
 def cli_speed_tests():
+    # pylint: disable=too-many-branches
     output = test_cli("speed", ["--msec=1", "--buf-size=64,512", "AES-128"], None).split('\n')
 
     if len(output) % 4 != 0:
@@ -317,6 +318,32 @@ def cli_speed_tests():
 
     # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
     format_re = re.compile(r'^.* [0-9]+ ([A-Za-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
+
+    math_ops = ['mp_mul', 'random_prime', 'inverse_mod',
+                'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp']
+
+    format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
+    for op in math_ops:
+        output = test_cli("speed", ["--msec=15", op], None).split('\n')
+        for line in output:
+            if format_re.match(line) is None:
+                logging.error("Unexpected line %s", line)
+
+    output = test_cli("speed", ["--msec=5", "scrypt"], None).split('\n')
+
+    format_re = re.compile(r'^scrypt-[0-9]+-[0-9]+-[0-9]+ [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
+
+    output = test_cli("speed", ["--msec=5", "RNG"], None).split('\n')
+
+    # ChaCha_RNG generate buffer size 1024 bytes: 954.431 MiB/sec 4.01 cycles/byte (477.22 MiB in 500.00 ms)
+    format_re = re.compile(r'^.* generate buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
