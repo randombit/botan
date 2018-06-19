@@ -520,6 +520,21 @@ Test::Result test_mult_point()
    return result;
    }
 
+Test::Result test_mixed_points()
+   {
+   Test::Result result("ECC Unit");
+
+   Botan::EC_Group secp256r1("secp256r1");
+   Botan::EC_Group secp384r1("secp384r1");
+
+   const Botan::PointGFp& G256 = secp256r1.get_base_point();
+   const Botan::PointGFp& G384 = secp384r1.get_base_point();
+
+   result.test_throws("Mixing points from different groups",
+                      [&] { Botan::PointGFp p = G256 + G384; });
+   return result;
+   }
+
 Test::Result test_basic_operations()
    {
    Test::Result result("ECC Unit");
@@ -678,6 +693,7 @@ class ECC_Unit_Tests final : public Test
          results.push_back(test_point_mult());
          results.push_back(test_point_negative());
          results.push_back(test_mult_point());
+         results.push_back(test_mixed_points());
          results.push_back(test_basic_operations());
          results.push_back(test_enc_dec_compressed_160());
          results.push_back(test_enc_dec_compressed_256());

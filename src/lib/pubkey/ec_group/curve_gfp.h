@@ -201,25 +201,28 @@ class BOTAN_UNSTABLE_API CurveGFp final
          std::swap(m_repr, other.m_repr);
          }
 
+      /**
+      * Equality operator
+      * @param lhs a curve
+      * @param rhs a curve
+      * @return true iff lhs is the same as rhs
+      */
+      inline bool operator==(const CurveGFp& other) const
+         {
+         if(m_repr.get() == other.m_repr.get())
+            return true;
+
+         return (get_p() == other.get_p()) &&
+                (get_a() == other.get_a()) &&
+                (get_b() == other.get_b());
+         }
+
    private:
       static std::shared_ptr<CurveGFp_Repr>
          choose_repr(const BigInt& p, const BigInt& a, const BigInt& b);
 
       std::shared_ptr<CurveGFp_Repr> m_repr;
    };
-
-/**
-* Equality operator
-* @param lhs a curve
-* @param rhs a curve
-* @return true iff lhs is the same as rhs
-*/
-inline bool operator==(const CurveGFp& lhs, const CurveGFp& rhs)
-   {
-   return (lhs.get_p() == rhs.get_p()) &&
-          (lhs.get_a() == rhs.get_a()) &&
-          (lhs.get_b() == rhs.get_b());
-   }
 
 inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs)
    {
