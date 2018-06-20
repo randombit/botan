@@ -22,7 +22,7 @@ value each time, and the additional relation is thought to provide only minimal
 useful information for an attacker. Every BOTAN_BLINDING_REINIT_INTERVAL
 (default 64) operations, a new starting point is chosen.
 
-Exponent blinding uses new values for each signature.
+Exponent blinding uses new values for each signature, with 64 bit masks.
 
 RSA signing uses the CRT optimization, which is much faster but vulnerable to
 trivial fault attacks [RsaFault] which can result in the key being entirely
@@ -109,10 +109,13 @@ Modular Exponentiation
 ------------------------
 
 Modular exponentiation uses a fixed window algorithm with Montgomery
-representation. A side channel silent table lookup is used to access
-the precomputed powers. Currently the bit length of the exponent is
-leaked (with a granularity based on the window size, typically 4 bits)
-due to the number of loop iterations. See monty_exp.cpp
+representation. A side channel silent table lookup is used to access the
+precomputed powers. The caller provides the maximum possible bit length of the
+exponent, and the exponent is zero-padded as required. For example, in a DSA
+signature with 256-bit q, the caller will specify a maximum length of exponent
+of 256 bits, even if the k that was generated was 250 bits. This avoids leaking
+the length of the exponent through the number of loop iterations.
+See monty_exp.cpp and monty.cpp
 
 Karatsuba multiplication algorithm avoids any conditional branches; in
 cases where different operations must be performed it instead uses masked
@@ -120,6 +123,14 @@ operations. See mp_karat.cpp for details.
 
 The Montgomery reduction is written (and tested) to run in constant time.
 The final reduction is handled with a masked subtraction. See mp_monty.cpp.
+
+Barrett Reduction
+--------------------
+
+The Barrett reduction code is written to avoid input dependent branches.
+However the Barrett algorithm only works for inputs that are most the
+square of the modulus; larger values fall back to the schoolbook
+division algorithm which is not const time.
 
 ECC point decoding
 ----------------------
@@ -145,11 +156,11 @@ used in cases when the scalar is a secret.
 Both ``blinded_base_point_multiply`` and ``blinded_var_point_multiply`` apply
 side channel countermeasures. The scalar is masked by a multiple of the group
 order (this is commonly called Coron's first countermeasure [CoronDpa]),
-currently the multiplier is an 80 bit integer.
+currently the mask is an 80 bit random value.
 
 Botan stores all ECC points in Jacobian representation. This form allows faster
 computation by representing points (x,y) as (X,Y,Z) where x=X/Z^2 and
-y=Y/Z^3. As the representation is redundant, for any randomly chosen r,
+y=Y/Z^3. As the representation is redundant, for any randomly chosen non-zero r,
 (X*r^2,Y*r^3,Z*r) is an equivalent point. Changing the point values prevents an
 attacker from mounting attacks based on the input point remaining unchanged over
 multiple executions. This is commonly called Coron's third countermeasure, see
@@ -159,11 +170,16 @@ The base point multiplication algorithm is a comb-like technique which
 precomputes ``P^i,(2*P)^i,(3*P)^i`` for all ``i`` in the range of valid scalars.
 This means the scalar multiplication involves only point additions and no
 doublings, which may help against attacks which rely on distinguishing between
-point doublings and point additions.
+point doublings and point additions. The elements of the table are accessed
+by masked lookups, so as not to leak information about bits of the scalar
+via a cache side channel.
 
 The variable point multiplication algorithm uses a simple fixed-window
 exponentiation algorithm. Since this is normally invoked using untrusted points
-(eg in ECDH key exchange) it randomizes all inputs.
+(eg in ECDH key exchange) it randomizes all inputs to prevent attacks which are
+based on chosen input points. However currently the table access is not constant
+time, and leaks by a cache based side channel. The assumption is that scalar
+blinding prevents this from being exploitable.
 
 See point_gfp.cpp and point_mul.cpp
 
