@@ -19,6 +19,7 @@ namespace Botan_Tests {
 
 namespace {
 
+template<typename T>
 std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars)
    {
    // group params
@@ -34,7 +35,7 @@ std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars)
    Botan::EC_Group domain(p, a, b, xG, yG, order, cofactor);
 
    Botan::Null_RNG null_rng;
-   return std::unique_ptr<Botan::Private_Key>(new Botan::SM2_Signature_PrivateKey(null_rng, domain, x));
+   return std::unique_ptr<Botan::Private_Key>(new T(null_rng, domain, x));
    }
 
 class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
@@ -59,7 +60,7 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         return load_sm2_private_key(vars);
+         return load_sm2_private_key<Botan::SM2_Signature_PrivateKey>(vars);
          }
    };
 
@@ -89,7 +90,7 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         return load_sm2_private_key(vars);
+         return load_sm2_private_key<Botan::SM2_Encryption_PrivateKey>(vars);
          }
    };
 
