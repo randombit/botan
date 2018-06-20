@@ -179,19 +179,31 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
    m_coord_z = T3;
    }
 
-// Point addition
-void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
+void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& workspace)
    {
    BOTAN_ASSERT_NOMSG(m_curve == rhs.m_curve);
 
-   if(rhs.is_zero())
+   const size_t p_words = m_curve.get_p_words();
+   add(rhs.m_coord_x.data(), std::min(p_words, rhs.m_coord_x.size()),
+       rhs.m_coord_y.data(), std::min(p_words, rhs.m_coord_y.size()),
+       rhs.m_coord_z.data(), std::min(p_words, rhs.m_coord_z.size()),
+       workspace);
+   }
+
+void PointGFp::add(const word x_words[], size_t x_size,
+                   const word y_words[], size_t y_size,
+                   const word z_words[], size_t z_size,
+                   std::vector<BigInt>& ws_bn)
+   {
+   if(all_zeros(x_words, x_size) && all_zeros(z_words, z_size))
       return;
 
    if(is_zero())
       {
-      m_coord_x = rhs.m_coord_x;
-      m_coord_y = rhs.m_coord_y;
-      m_coord_z = rhs.m_coord_z;
+      // FIXME avoid the copy here
+      m_coord_x = BigInt(x_words, x_size);
+      m_coord_y = BigInt(y_words, y_size);
+      m_coord_z = BigInt(z_words, z_size);
       return;
       }
 
@@ -213,16 +225,16 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    const BigInt& p = m_curve.get_p();
 
-   m_curve.sqr(T0, rhs.m_coord_z, ws); // z2^2
+   m_curve.sqr(T0, z_words, z_size, ws); // z2^2
    m_curve.mul(T1, m_coord_x, T0, ws); // x1*z2^2
-   m_curve.mul(T3, rhs.m_coord_z, T0, ws); // z2^3
+   m_curve.mul(T3, z_words, z_size, T0, ws); // z2^3
    m_curve.mul(T2, m_coord_y, T3, ws); // y1*z2^3
 
    m_curve.sqr(T3, m_coord_z, ws); // z1^2
-   m_curve.mul(T4, rhs.m_coord_x, T3, ws); // x2*z1^2
+   m_curve.mul(T4, x_words, x_size, T3, ws); // x2*z1^2
 
    m_curve.mul(T5, m_coord_z, T3, ws); // z1^3
-   m_curve.mul(T0, rhs.m_coord_y, T5, ws); // y2*z1^3
+   m_curve.mul(T0, y_words, y_size, T5, ws); // y2*z1^3
 
    T4.mod_sub(T1, p, sub_ws); // x2*z1^2 - x1*z2^2
 
@@ -261,7 +273,7 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    m_coord_y.mod_sub(T3, p, sub_ws);
 
-   m_curve.mul(T3, m_coord_z, rhs.m_coord_z, ws);
+   m_curve.mul(T3, z_words, z_size, m_coord_z, ws);
    m_curve.mul(m_coord_z, T3, T4, ws);
    }
 

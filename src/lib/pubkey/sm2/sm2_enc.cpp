@@ -46,10 +46,13 @@ namespace {
 class SM2_Encryption_Operation final : public PK_Ops::Encryption
    {
    public:
-      SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key, const std::string& kdf_hash) :
+      SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key,
+                               RandomNumberGenerator& rng,
+                               const std::string& kdf_hash) :
          m_group(key.domain()),
-         m_mul_public_point(key.public_point()),
-         m_kdf_hash(kdf_hash)
+         m_kdf_hash(kdf_hash),
+         m_ws(PointGFp::WORKSPACE_SIZE),
+         m_mul_public_point(key.public_point(), rng, m_ws)
          {}
 
       size_t max_input_bits() const override
@@ -114,9 +117,10 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
 
    private:
       const EC_Group m_group;
-      PointGFp_Var_Point_Precompute m_mul_public_point;
       const std::string m_kdf_hash;
+
       std::vector<BigInt> m_ws;
+      PointGFp_Var_Point_Precompute m_mul_public_point;
    };
 
 class SM2_Decryption_Operation final : public PK_Ops::Decryption
@@ -213,14 +217,14 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
 }
 
 std::unique_ptr<PK_Ops::Encryption>
-SM2_Encryption_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
+SM2_Encryption_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
                                                const std::string& params,
                                                const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
       const std::string kdf_hash = (params.empty() ? "SM3" : params);
-      return std::unique_ptr<PK_Ops::Encryption>(new SM2_Encryption_Operation(*this, kdf_hash));
+      return std::unique_ptr<PK_Ops::Encryption>(new SM2_Encryption_Operation(*this, rng, kdf_hash));
       }
 
    throw Provider_Not_Found(algo_name(), provider);

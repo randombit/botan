@@ -41,18 +41,26 @@ class PointGFp_Base_Point_Precompute final
 class PointGFp_Var_Point_Precompute final
    {
    public:
-      PointGFp_Var_Point_Precompute(const PointGFp& point);
-
-      void randomize_repr(RandomNumberGenerator& rng,
-                          std::vector<BigInt>& ws);
+      PointGFp_Var_Point_Precompute(const PointGFp& point,
+                                    RandomNumberGenerator& rng,
+                                    std::vector<BigInt>& ws);
 
       PointGFp mul(const BigInt& k,
                    RandomNumberGenerator& rng,
                    const BigInt& group_order,
                    std::vector<BigInt>& ws) const;
    private:
-      size_t m_window_bits;
-      std::vector<PointGFp> m_U;
+      const CurveGFp m_curve;
+      const size_t m_p_words;
+      const size_t m_window_bits;
+
+      /*
+      * Table of 2^window_bits * 3*2*p_word words
+      * Kept in locked vector since the base point might be sensitive
+      * (normally isn't in most protocols but hard to say anything
+      * categorically.)
+      */
+      secure_vector<word> m_T;
    };
 
 class PointGFp_Multi_Point_Precompute final

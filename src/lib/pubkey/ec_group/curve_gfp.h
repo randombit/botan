@@ -55,8 +55,12 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
 
       virtual void from_curve_rep(BigInt& x, secure_vector<word>& ws) const = 0;
 
-      virtual void curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
-                             secure_vector<word>& ws) const = 0;
+      void curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
+                     secure_vector<word>& ws) const
+         {
+         BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+         curve_mul_words(z, x.data(), x.size(), y, ws);
+         }
 
       virtual void curve_mul_words(BigInt& z,
                                    const word x_words[],
@@ -64,8 +68,17 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
                                    const BigInt& y,
                                    secure_vector<word>& ws) const = 0;
 
-      virtual void curve_sqr(BigInt& z, const BigInt& x,
-                             secure_vector<word>& ws) const = 0;
+      void curve_sqr(BigInt& z, const BigInt& x,
+                             secure_vector<word>& ws) const
+         {
+         BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+         curve_sqr_words(z, x.data(), x.size(), ws);
+         }
+
+      virtual void curve_sqr_words(BigInt& z,
+                                   const word x_words[],
+                                   size_t x_size,
+                                   secure_vector<word>& ws) const = 0;
    };
 
 /**
@@ -170,6 +183,11 @@ class BOTAN_UNSTABLE_API CurveGFp final
       void sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const
          {
          m_repr->curve_sqr(z, x, ws);
+         }
+
+      void sqr(BigInt& z, const word x_w[], size_t x_size, secure_vector<word>& ws) const
+         {
+         m_repr->curve_sqr_words(z, x_w, x_size, ws);
          }
 
       BigInt mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const

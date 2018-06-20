@@ -26,7 +26,8 @@ Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base,
    m_order(order)
    {
    BOTAN_UNUSED(h);
-   m_point_mul.reset(new PointGFp_Var_Point_Precompute(base));
+   Null_RNG null_rng;
+   m_point_mul.reset(new PointGFp_Var_Point_Precompute(base, null_rng, m_ws));
    }
 
 Blinded_Point_Multiply::~Blinded_Point_Multiply()
@@ -159,56 +160,68 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    return R;
    }
 
-PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& point)
+PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& point,
+                                                             RandomNumberGenerator& rng,
+                                                             std::vector<BigInt>& ws) :
+   m_curve(point.get_curve()),
+   m_p_words(m_curve.get_p().sig_words()),
+   m_window_bits(4)
    {
-   m_window_bits = 4;
+   if(ws.size() < PointGFp::WORKSPACE_SIZE)
+      ws.resize(PointGFp::WORKSPACE_SIZE);
 
-   std::vector<BigInt> ws(PointGFp::WORKSPACE_SIZE);
+   std::vector<PointGFp> U(1U << m_window_bits);
+   U[0] = point.zero();
+   U[1] = point;
 
-   m_U.resize(1U << m_window_bits);
-   m_U[0] = point.zero();
-   m_U[1] = point;
-
-   for(size_t i = 2; i < m_U.size(); i += 2)
+   for(size_t i = 2; i < U.size(); i += 2)
       {
-      m_U[i] = m_U[i/2].double_of(ws);
-      m_U[i+1] = m_U[i].plus(point, ws);
+      U[i] = U[i/2].double_of(ws);
+      U[i+1] = U[i].plus(point, ws);
       }
-   }
 
-void PointGFp_Var_Point_Precompute::randomize_repr(RandomNumberGenerator& rng,
-                                                   std::vector<BigInt>& ws_bn)
-   {
-   if(ws_bn.size() < 7)
-      ws_bn.resize(7);
-
-   BigInt& mask = ws_bn[0];
-   BigInt& mask2 = ws_bn[1];
-   BigInt& mask3 = ws_bn[2];
-   BigInt& new_x = ws_bn[3];
-   BigInt& new_y = ws_bn[4];
-   BigInt& new_z = ws_bn[5];
-   secure_vector<word>& ws = ws_bn[6].get_word_vector();
-
-   const CurveGFp& curve = m_U[0].get_curve();
-
-   const size_t p_bits = curve.get_p().bits();
-
-   // Skipping zero point since it can't be randomized
-   for(size_t i = 1; i != m_U.size(); ++i)
+   // Hack to handle Blinded_Point_Multiply
+   if(rng.is_seeded())
       {
-      mask.randomize(rng, p_bits - 1, false);
-      // Easy way of ensuring mask != 0
-      mask.set_bit(0);
+      BigInt& mask = ws[0];
+      BigInt& mask2 = ws[1];
+      BigInt& mask3 = ws[2];
+      BigInt& new_x = ws[3];
+      BigInt& new_y = ws[4];
+      BigInt& new_z = ws[5];
+      secure_vector<word>& tmp = ws[6].get_word_vector();
 
-      curve.sqr(mask2, mask, ws);
-      curve.mul(mask3, mask, mask2, ws);
+      const CurveGFp& curve = U[0].get_curve();
 
-      curve.mul(new_x, m_U[i].get_x(), mask2, ws);
-      curve.mul(new_y, m_U[i].get_y(), mask3, ws);
-      curve.mul(new_z, m_U[i].get_z(), mask, ws);
+      const size_t p_bits = curve.get_p().bits();
 
-      m_U[i].swap_coords(new_x, new_y, new_z);
+      // Skipping zero point since it can't be randomized
+      for(size_t i = 1; i != U.size(); ++i)
+         {
+         mask.randomize(rng, p_bits - 1, false);
+         // Easy way of ensuring mask != 0
+         mask.set_bit(0);
+
+         curve.sqr(mask2, mask, tmp);
+         curve.mul(mask3, mask, mask2, tmp);
+
+         curve.mul(new_x, U[i].get_x(), mask2, tmp);
+         curve.mul(new_y, U[i].get_y(), mask3, tmp);
+         curve.mul(new_z, U[i].get_z(), mask, tmp);
+
+         U[i].swap_coords(new_x, new_y, new_z);
+         }
+      }
+
+   m_T.resize(U.size() * 3 * m_p_words);
+
+   word* p = &m_T[0];
+   for(size_t i = 0; i != U.size(); ++i)
+      {
+      U[i].get_x().encode_words(p              , m_p_words);
+      U[i].get_y().encode_words(p +   m_p_words, m_p_words);
+      U[i].get_z().encode_words(p + 2*m_p_words, m_p_words);
+      p += 3*m_p_words;
       }
    }
 
@@ -227,17 +240,20 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
    const BigInt scalar = k + group_order * mask;
 
    const size_t scalar_bits = scalar.bits();
+   const size_t elem_size = 3*m_p_words;
 
    size_t windows = round_up(scalar_bits, m_window_bits) / m_window_bits;
 
-   PointGFp R = m_U[0];
+   PointGFp R(m_curve);
 
    if(windows > 0)
       {
       windows--;
-      const uint32_t nibble = scalar.get_substring(windows*m_window_bits, m_window_bits);
+
       // cache side channel here, we are relying on blinding...
-      R.add(m_U[nibble], ws);
+      const uint32_t nibble = scalar.get_substring(windows*m_window_bits, m_window_bits);
+      const word* w = &m_T[nibble * elem_size];
+      R.add(w, m_p_words, w + m_p_words, m_p_words, w + 2*m_p_words, m_p_words, ws);
 
       /*
       Randomize after adding the first nibble as before the addition R
@@ -245,16 +261,18 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       representation of the zero point.
       */
       R.randomize_repr(rng);
+      }
 
-      while(windows)
-         {
-         R.mult2i(m_window_bits, ws);
+   while(windows)
+      {
+      R.mult2i(m_window_bits, ws);
 
-         const uint32_t inner_nibble = scalar.get_substring((windows-1)*m_window_bits, m_window_bits);
-         // cache side channel here, we are relying on blinding...
-         R.add(m_U[inner_nibble], ws);
-         windows--;
-         }
+      // cache side channel here, we are relying on blinding...
+      const uint32_t nibble = scalar.get_substring((windows-1)*m_window_bits, m_window_bits);
+      const word* w = &m_T[nibble * elem_size];
+      R.add(w, m_p_words, w + m_p_words, m_p_words, w + 2*m_p_words, m_p_words, ws);
+
+      windows--;
       }
 
    BOTAN_DEBUG_ASSERT(R.on_the_curve());

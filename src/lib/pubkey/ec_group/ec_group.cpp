@@ -557,8 +557,7 @@ PointGFp EC_Group::blinded_var_point_multiply(const PointGFp& point,
                                               RandomNumberGenerator& rng,
                                               std::vector<BigInt>& ws) const
    {
-   PointGFp_Var_Point_Precompute mul(point);
-   mul.randomize_repr(rng, ws);
+   PointGFp_Var_Point_Precompute mul(point, rng, ws);
    return mul.mul(k, rng, get_order(), ws);
    }
 
