@@ -231,7 +231,7 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
                                             std::vector<BigInt>& ws) const
    {
    if(k.is_negative())
-      throw Invalid_Argument("PointGFp_Base_Point_Precompute scalar must be positive");
+      throw Invalid_Argument("PointGFp_Var_Point_Precompute scalar must be positive");
    if(ws.size() < PointGFp::WORKSPACE_SIZE)
       ws.resize(PointGFp::WORKSPACE_SIZE);
 
@@ -239,21 +239,32 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
    const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS, false);
    const BigInt scalar = k + group_order * mask;
 
-   const size_t scalar_bits = scalar.bits();
    const size_t elem_size = 3*m_p_words;
+   const size_t window_elems = (1ULL << m_window_bits);
 
-   size_t windows = round_up(scalar_bits, m_window_bits) / m_window_bits;
-
+   size_t windows = round_up(scalar.bits(), m_window_bits) / m_window_bits;
    PointGFp R(m_curve);
+   secure_vector<word> e(elem_size);
 
    if(windows > 0)
       {
       windows--;
 
       // cache side channel here, we are relying on blinding...
-      const uint32_t nibble = scalar.get_substring(windows*m_window_bits, m_window_bits);
-      const word* w = &m_T[nibble * elem_size];
-      R.add(w, m_p_words, w + m_p_words, m_p_words, w + 2*m_p_words, m_p_words, ws);
+      const uint32_t w = scalar.get_substring(windows*m_window_bits, m_window_bits);
+
+      clear_mem(e.data(), e.size());
+      for(size_t i = 1; i != window_elems; ++i)
+         {
+         const word mask = CT::is_equal<word>(w, i);
+
+         for(size_t j = 0; j != elem_size; ++j)
+            {
+            e[j] |= mask & m_T[i * elem_size + j];
+            }
+         }
+
+      R.add(&e[0], m_p_words, &e[m_p_words], m_p_words, &e[2*m_p_words], m_p_words, ws);
 
       /*
       Randomize after adding the first nibble as before the addition R
@@ -268,9 +279,18 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       R.mult2i(m_window_bits, ws);
 
       // cache side channel here, we are relying on blinding...
-      const uint32_t nibble = scalar.get_substring((windows-1)*m_window_bits, m_window_bits);
-      const word* w = &m_T[nibble * elem_size];
-      R.add(w, m_p_words, w + m_p_words, m_p_words, w + 2*m_p_words, m_p_words, ws);
+      const uint32_t w = scalar.get_substring((windows-1)*m_window_bits, m_window_bits);
+
+      clear_mem(e.data(), e.size());
+      for(size_t i = 1; i != window_elems; ++i)
+         {
+         const word mask = CT::is_equal<word>(w, i);
+
+         for(size_t j = 0; j != elem_size; ++j)
+            e[j] |= mask & m_T[i * elem_size + j];
+         }
+
+      R.add(&e[0], m_p_words, &e[m_p_words], m_p_words, &e[2*m_p_words], m_p_words, ws);
 
       windows--;
       }

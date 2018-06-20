@@ -174,12 +174,12 @@ point doublings and point additions. The elements of the table are accessed
 by masked lookups, so as not to leak information about bits of the scalar
 via a cache side channel.
 
-The variable point multiplication algorithm uses a simple fixed-window
-exponentiation algorithm. Since this is normally invoked using untrusted points
-(eg in ECDH key exchange) it randomizes all inputs to prevent attacks which are
-based on chosen input points. However currently the table access is not constant
-time, and leaks by a cache based side channel. The assumption is that scalar
-blinding prevents this from being exploitable.
+The variable point multiplication algorithm uses a fixed-window algorithm. Since
+this is normally invoked using untrusted points (eg during ECDH key exchange) it
+randomizes all inputs to prevent attacks which are based on chosen input
+points. The table of precomputed multiples is accessed using a masked lookup
+which should not leak information about the secret scalar to an attacker who can
+mount a cache-based side channel attack.
 
 See point_gfp.cpp and point_mul.cpp
 
