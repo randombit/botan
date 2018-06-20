@@ -6,6 +6,7 @@
 */
 
 #include <botan/reducer.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -56,16 +57,19 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
 
    t1.rev_sub(x.data(), std::min(x_sw, m_mod_words + 1), ws);
 
-   if(t1.is_negative())
-      {
-      if(ws.size() < m_mod_words + 2)
-         ws.resize(m_mod_words + 2);
-      clear_mem(ws.data(), ws.size());
+   /*
+   * If t1 < 0 then we must add b^(k+1) where b = 2^w. To avoid a
+   * side channel perform the addition unconditionally, with ws set
+   * to either b^(k+1) or else 0.
+   */
+   const word t1_neg = t1.is_negative();
 
-      ws[m_mod_words + 1] = 1;
+   if(ws.size() < m_mod_words + 2)
+      ws.resize(m_mod_words + 2);
+   clear_mem(ws.data(), ws.size());
+   ws[m_mod_words + 1] = t1_neg;
 
-      t1.add(ws.data(), m_mod_words + 2, BigInt::Positive);
-      }
+   t1.add(ws.data(), m_mod_words + 2, BigInt::Positive);
 
    t1.reduce_below(m_modulus, ws);
 

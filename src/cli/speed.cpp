@@ -1603,29 +1603,31 @@ class Speed final : public Command
 
       void bench_bn_redc(const std::chrono::milliseconds runtime)
          {
-         Botan::BigInt p;
-         p.set_bit(521);
-         p--;
-
-         std::unique_ptr<Timer> barrett_timer = make_timer("Barrett");
-         std::unique_ptr<Timer> schoolbook_timer = make_timer("Schoolbook");
-
-         Botan::Modular_Reducer mod_p(p);
-
-         while(schoolbook_timer->under(runtime))
+         for(size_t bitsize : { 512, 1024, 2048, 4096 })
             {
-            const Botan::BigInt x(rng(), p.bits() * 2 - 2);
+            Botan::BigInt p(rng(), bitsize);
 
-            const Botan::BigInt r1 = barrett_timer->run(
-               [&] { return mod_p.reduce(x); });
-            const Botan::BigInt r2 = schoolbook_timer->run(
-               [&] { return x % p; });
+            std::string bit_str = std::to_string(bitsize);
+            std::unique_ptr<Timer> barrett_timer = make_timer("Barrett-" + bit_str);
+            std::unique_ptr<Timer> schoolbook_timer = make_timer("Schoolbook-" + bit_str);
 
-            BOTAN_ASSERT(r1 == r2, "Computed different results");
+            Botan::Modular_Reducer mod_p(p);
+
+            while(schoolbook_timer->under(runtime))
+               {
+               const Botan::BigInt x(rng(), p.bits() * 2 - 2);
+
+               const Botan::BigInt r1 = barrett_timer->run(
+                  [&] { return mod_p.reduce(x); });
+               const Botan::BigInt r2 = schoolbook_timer->run(
+                  [&] { return x % p; });
+
+               BOTAN_ASSERT(r1 == r2, "Computed different results");
+               }
+
+            record_result(barrett_timer);
+            record_result(schoolbook_timer);
             }
-
-         record_result(barrett_timer);
-         record_result(schoolbook_timer);
          }
 
       void bench_inverse_mod(const std::chrono::milliseconds runtime)
