@@ -47,20 +47,21 @@ void PointGFp::randomize_repr(RandomNumberGenerator& rng)
 
 void PointGFp::randomize_repr(RandomNumberGenerator& rng, secure_vector<word>& ws)
    {
-   if(BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS > 1)
-      {
-      BigInt mask;
-      while(mask.is_zero())
-         mask.randomize(rng, BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS, false);
+   const BigInt mask = BigInt::random_integer(rng, 2, m_curve.get_p());
 
-      //m_curve.to_rep(mask, ws);
-      const BigInt mask2 = m_curve.sqr_to_tmp(mask, ws);
-      const BigInt mask3 = m_curve.mul_to_tmp(mask2, mask, ws);
+   /*
+   * No reason to convert this to Montgomery representation first,
+   * just pretend the random mask was chosen as Redc(mask) and the
+   * random mask we generated above is in the Montgomery
+   * representation.
+   * //m_curve.to_rep(mask, ws);
+   */
+   const BigInt mask2 = m_curve.sqr_to_tmp(mask, ws);
+   const BigInt mask3 = m_curve.mul_to_tmp(mask2, mask, ws);
 
-      m_coord_x = m_curve.mul_to_tmp(m_coord_x, mask2, ws);
-      m_coord_y = m_curve.mul_to_tmp(m_coord_y, mask3, ws);
-      m_coord_z = m_curve.mul_to_tmp(m_coord_z, mask, ws);
-      }
+   m_coord_x = m_curve.mul_to_tmp(m_coord_x, mask2, ws);
+   m_coord_y = m_curve.mul_to_tmp(m_coord_y, mask3, ws);
+   m_coord_z = m_curve.mul_to_tmp(m_coord_z, mask, ws);
    }
 
 namespace {

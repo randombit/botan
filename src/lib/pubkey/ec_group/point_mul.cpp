@@ -179,9 +179,6 @@ PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& poi
 void PointGFp_Var_Point_Precompute::randomize_repr(RandomNumberGenerator& rng,
                                                    std::vector<BigInt>& ws_bn)
    {
-   if(BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS <= 1)
-      return;
-
    if(ws_bn.size() < 7)
       ws_bn.resize(7);
 
@@ -195,10 +192,12 @@ void PointGFp_Var_Point_Precompute::randomize_repr(RandomNumberGenerator& rng,
 
    const CurveGFp& curve = m_U[0].get_curve();
 
+   const size_t p_bits = curve.get_p().bits();
+
    // Skipping zero point since it can't be randomized
    for(size_t i = 1; i != m_U.size(); ++i)
       {
-      mask.randomize(rng, BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS, false);
+      mask.randomize(rng, p_bits - 1, false);
       // Easy way of ensuring mask != 0
       mask.set_bit(0);
 

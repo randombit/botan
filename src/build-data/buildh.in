@@ -136,13 +136,6 @@
 #define BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO 1
 
 /*
-* Set number of bits used to generate mask for blinding the
-* representation of an ECC point. Set to zero to disable this
-* side-channel countermeasure.
-*/
-#define BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS 80
-
-/*
 * Normally blinding is performed by choosing a random starting point (plus
 * its inverse, of a form appropriate to the algorithm being blinded), and
 * then choosing new blinding operands by successive squaring of both
