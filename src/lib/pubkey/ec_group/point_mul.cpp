@@ -100,12 +100,12 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
       throw Invalid_Argument("PointGFp_Base_Point_Precompute scalar must be positive");
 
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
-   const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS, false);
+   const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS);
 
    // Instead of reducing k mod group order should we alter the mask size??
    const BigInt scalar = m_mod_order.reduce(k) + group_order * mask;
 
-   size_t windows = round_up(scalar.bits(), 2) / 2;
+   const size_t windows = round_up(scalar.bits(), 2) / 2;
 
    const size_t elem_size = 2*m_p_words;
 
@@ -122,22 +122,10 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
 
    for(size_t i = 0; i != windows; ++i)
       {
-      const size_t base_addr = (3*i)*elem_size;
+      const size_t window = windows - i - 1;
+      const size_t base_addr = (3*window)*elem_size;
 
-      if(i == 5)
-         {
-         /*
-         * There is a small (1/1024) chance that the bottom 10 bits of the
-         * (randomized) scalar are all zero, in which case R is zero and so this
-         * randomization is ineffective. Instead we could randomize after the
-         * first non-zero exponent bits are processed, but that unfortunately
-         * introduces a side channel on the exponent, albeit likely not
-         * exploitable.
-         */
-         R.randomize_repr(rng, ws[0].get_word_vector());
-         }
-
-      const word w = scalar.get_substring(2*i, 2);
+      const word w = scalar.get_substring(2*window, 2);
 
       const word w_is_1 = CT::is_equal<word>(w, 1);
       const word w_is_2 = CT::is_equal<word>(w, 2);
@@ -153,6 +141,17 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
          }
 
       R.add_affine(&Wt[0], m_p_words, &Wt[m_p_words], m_p_words, ws);
+
+      if(i == 0)
+         {
+         /*
+         * Since we start with the top bit of the exponent we know the
+         * first window must have a non-zero element, and thus R is
+         * now a point other than the point at infinity.
+         */
+         BOTAN_DEBUG_ASSERT(w != 0);
+         R.randomize_repr(rng, ws[0].get_word_vector());
+         }
       }
 
    BOTAN_DEBUG_ASSERT(R.on_the_curve());
