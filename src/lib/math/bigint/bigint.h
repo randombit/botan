@@ -445,6 +445,12 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
         m_reg[i] = w;
         }
 
+     void set_words(const word w[], size_t len)
+        {
+        m_reg.resize(len);
+        copy_mem(mutable_data(), w, len);
+        }
+
      /**
      * Tests if the sign of the integer is negative
      * @result true, iff the integer has a negative sign

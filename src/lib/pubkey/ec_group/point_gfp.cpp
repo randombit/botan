@@ -95,9 +95,8 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
 
    if(is_zero())
       {
-      // FIXME avoid the copy here
-      m_coord_x = BigInt(x_words, x_size);
-      m_coord_y = BigInt(y_words, y_size);
+      m_coord_x.set_words(x_words, x_size);
+      m_coord_y.set_words(y_words, y_size);
       m_coord_z = m_curve.get_1_rep();
       return;
       }
@@ -178,10 +177,9 @@ void PointGFp::add(const word x_words[], size_t x_size,
 
    if(is_zero())
       {
-      // FIXME avoid the copy here
-      m_coord_x = BigInt(x_words, x_size);
-      m_coord_y = BigInt(y_words, y_size);
-      m_coord_z = BigInt(z_words, z_size);
+      m_coord_x.set_words(x_words, x_size);
+      m_coord_y.set_words(y_words, y_size);
+      m_coord_z.set_words(z_words, z_size);
       return;
       }
 
