@@ -271,7 +271,7 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       is zero, and we cannot effectively randomize the point
       representation of the zero point.
       */
-      R.randomize_repr(rng);
+      R.randomize_repr(rng, ws[0].get_word_vector());
       }
 
    while(windows)
