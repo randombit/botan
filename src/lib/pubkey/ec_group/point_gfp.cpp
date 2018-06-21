@@ -86,17 +86,6 @@ inline bool all_zeros(const word x[], size_t len)
 
 }
 
-void PointGFp::add_affine(const PointGFp& rhs, std::vector<BigInt>& workspace)
-   {
-   BOTAN_ASSERT_NOMSG(m_curve == rhs.m_curve);
-   BOTAN_DEBUG_ASSERT(rhs.is_affine());
-
-   const size_t p_words = m_curve.get_p_words();
-   add_affine(rhs.m_coord_x.data(), std::min(p_words, rhs.m_coord_x.size()),
-              rhs.m_coord_y.data(), std::min(p_words, rhs.m_coord_y.size()),
-              workspace);
-   }
-
 void PointGFp::add_affine(const word x_words[], size_t x_size,
                           const word y_words[], size_t y_size,
                           std::vector<BigInt>& ws_bn)
@@ -177,17 +166,6 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
 
    m_curve.mul(T3, m_coord_z, T4, ws);
    m_coord_z = T3;
-   }
-
-void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& workspace)
-   {
-   BOTAN_ASSERT_NOMSG(m_curve == rhs.m_curve);
-
-   const size_t p_words = m_curve.get_p_words();
-   add(rhs.m_coord_x.data(), std::min(p_words, rhs.m_coord_x.size()),
-       rhs.m_coord_y.data(), std::min(p_words, rhs.m_coord_y.size()),
-       rhs.m_coord_z.data(), std::min(p_words, rhs.m_coord_z.size()),
-       workspace);
    }
 
 void PointGFp::add(const word x_words[], size_t x_size,

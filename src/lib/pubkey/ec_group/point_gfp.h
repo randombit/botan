@@ -215,7 +215,17 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param other the point to add to *this
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add(const PointGFp& other, std::vector<BigInt>& workspace);
+      void add(const PointGFp& other, std::vector<BigInt>& workspace)
+         {
+         BOTAN_ASSERT_NOMSG(m_curve == other.m_curve);
+
+         const size_t p_words = m_curve.get_p_words();
+
+         add(other.m_coord_x.data(), std::min(p_words, other.m_coord_x.size()),
+             other.m_coord_y.data(), std::min(p_words, other.m_coord_y.size()),
+             other.m_coord_z.data(), std::min(p_words, other.m_coord_z.size()),
+             workspace);
+         }
 
       /**
       * Point addition. Array version.
@@ -224,8 +234,8 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param x_size size of x_words
       * @param y_words the words of the y coordinate of the other point
       * @param y_size size of y_words
-      * @param z_words the words of the y coordinate of the other point
-      * @param z_size size of y_words
+      * @param z_words the words of the z coordinate of the other point
+      * @param z_size size of z_words
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
       void add(const word x_words[], size_t x_size,
@@ -238,7 +248,16 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * @param other affine point to add - assumed to be affine!
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add_affine(const PointGFp& other, std::vector<BigInt>& workspace);
+      void add_affine(const PointGFp& other, std::vector<BigInt>& workspace)
+         {
+         BOTAN_ASSERT_NOMSG(m_curve == other.m_curve);
+         BOTAN_DEBUG_ASSERT(other.is_affine());
+
+         const size_t p_words = m_curve.get_p_words();
+         add_affine(other.m_coord_x.data(), std::min(p_words, other.m_coord_x.size()),
+                    other.m_coord_y.data(), std::min(p_words, other.m_coord_y.size()),
+                    workspace);
+         }
 
       /**
       * Point addition - mixed J+A. Array version.
