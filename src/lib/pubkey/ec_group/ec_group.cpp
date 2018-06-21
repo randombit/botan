@@ -16,7 +16,14 @@
 #include <botan/pem.h>
 #include <botan/reducer.h>
 #include <botan/mutex.h>
+#include <botan/rng.h>
 #include <vector>
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   #include <botan/system_rng.h>
+#elif defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
+   #include <botan/hmac_drbg.h>
+#endif
 
 namespace Botan {
 
@@ -311,8 +318,36 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
          .end_cons()
          .verify_end();
 
-      if(p.bits() < 64 || p.is_negative() || a.is_negative() || b.is_negative() || order <= 0 || cofactor <= 0)
-         throw Decoding_Error("Invalid ECC parameters");
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+      System_RNG rng;
+#elif defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
+      /*
+      * This is not ideal because the data is attacker controlled, but
+      * it seems like it would be difficult for someone to come up
+      * with an valid ASN.1 encoding where the prime happened to pass
+      * Miller-Rabin test with exactly the values chosen when
+      * HMAC_DRBG is seeded with the overall data.
+      */
+      HMAC_DRBG rng("SHA-256");
+      rng.add_entropy(bits, len);
+#else
+      Null_RNG rng;
+#endif
+
+      if(p.bits() < 64 || p.is_negative() || (is_prime(p, rng) == false))
+         throw Decoding_Error("Invalid ECC p parameter");
+
+      if(a.is_negative() || a >= p)
+         throw Decoding_Error("Invalid ECC a parameter");
+
+      if(b <= 0 || b >= p)
+         throw Decoding_Error("Invalid ECC b parameter");
+
+      if(order <= 0)
+         throw Decoding_Error("Invalid ECC order parameter");
+
+      if(cofactor <= 0 || cofactor >= 16)
+         throw Decoding_Error("Invalid ECC cofactor parameter");
 
       std::pair<BigInt, BigInt> base_xy = Botan::OS2ECP(base_pt.data(), base_pt.size(), p, a, b);
 
