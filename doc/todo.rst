@@ -140,6 +140,7 @@ Compat Headers
 FFI and Bindings
 ----------------------------------------
 
+* Expose FPE
 * Expose compression
 * Expose more of X.509 (CRLs, OCSP, cert signing, etc)
 * Expose TLS
