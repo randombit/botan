@@ -215,11 +215,11 @@ class RSA_Private_Operation
                    rng,
                    [this](const BigInt& k) { return m_powermod_e_n(k); },
                    [this](const BigInt& k) { return inverse_mod(k, m_key.get_n()); }),
-         m_exp_blinding_bits(64),
+         m_blinding_bits(64),
          m_mod_bytes(m_key.get_n().bytes()),
          m_mod_bits(m_key.get_n().bits()),
-         m_max_d1_bits(m_key.get_p().bits() + m_exp_blinding_bits),
-         m_max_d2_bits(m_key.get_q().bits() + m_exp_blinding_bits)
+         m_max_d1_bits(m_key.get_p().bits() + m_blinding_bits),
+         m_max_d2_bits(m_key.get_q().bits() + m_blinding_bits)
          {
          }
 
@@ -235,31 +235,42 @@ class RSA_Private_Operation
          {
          const size_t powm_window = 4;
 
-         const BigInt d1_mask(m_blinder.rng(), m_exp_blinding_bits);
-         const BigInt d2_mask(m_blinder.rng(), m_exp_blinding_bits);
-
-         const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
-         const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
+         const BigInt d1_mask(m_blinder.rng(), m_blinding_bits);
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-         auto future_j1 = std::async(std::launch::async, [this, &m, &masked_d1, powm_window]() {
+         auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask, powm_window]() {
+               const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
                auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
                return monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
             });
-
-         auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
-         BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
-         BigInt j1 = future_j1.get();
 #else
+         const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
          auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
-         auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
-
          BigInt j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
-         BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
 #endif
 
-         j1 = m_mod_p.reduce(sub_mul(j1, j2, m_key.get_c()));
+         const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
+         const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
+         auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
+         const BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
 
+         /*
+         * To recover the final value from the CRT representation (j1,j2)
+         * we use Garner's algorithm:
+         * c = q^-1 mod p (this is precomputed)
+         * h = c*(j1-j2) mod p
+         * m = j2 + h*q
+         */
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+         BigInt j1 = future_j1.get();
+#endif
+
+         /*
+         To prevent a side channel that allows detecting case where j1 < j2,
+         add p to j1 before reducing [computing c*(p+j1-j2) mod p]
+         */
+         j1 = m_mod_p.reduce(sub_mul(m_key.get_p() + j1, j2, m_key.get_c()));
          return mul_add(j1, m_key.get_q(), j2);
          }
 
@@ -273,7 +284,7 @@ class RSA_Private_Operation
 
       Fixed_Exponent_Power_Mod m_powermod_e_n;
       Blinder m_blinder;
-      const size_t m_exp_blinding_bits;
+      const size_t m_blinding_bits;
       const size_t m_mod_bytes;
       const size_t m_mod_bits;
       const size_t m_max_d1_bits;
