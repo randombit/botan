@@ -246,14 +246,29 @@ It is based on code by Mike Hamburg [VectorAes], see aes_ssse3.cpp. This same
 technique could be applied with NEON or AltiVec, and the paper suggests some
 optimizations for the AltiVec shuffle.
 
-On all other processors, a table lookup version derived from the original
-Rijndael code is used. This approach is relatively fast, but now known to be
-very vulnerable to side channels. To reduce the side channel signature, it uses
-only a 1K table (instead of 4 1K tables which is typical) and uses small tables
-in the first and last rounds. See [AesCacheColl] for one paper which analyzes a
-number of implementations including (an older version of) Botan. Botan already
-follows both of their suggested countermeasures, which increased the number of
-samples required from 2**13 to the only slightly less pitiful 2**19 samples.
+On all other processors, a table lookup version (T-tables) is used.  This
+approach is relatively fast, but known to be very vulnerable to side
+channels. To reduce the side channel signature, AES uses only 1K of tables
+(instead of 4 1K tables which is typical). The tables are computed at runtime
+whcih prevents an attacker from performing a Flush+Reload attack since the
+address of the tables is not fixed. Before each encryption/decryption operation,
+a value from each cache line of the T-table is read to compute a volatile
+value Z. This Z value is computed in such a way that it is always zero. Since
+the T-table itself is computed at runtime, it *should* be difficult for a
+compiler to deduce this fact. Then the Z value is xor'ed into the input block,
+preventing the compiler from eliding it. It is almost certain that this
+implementation is still vulnerable to a side channel attack; all these
+countermeasures do is increase the cost (in terms of samples required or
+analysis time) of an attack.
+
+If using AES in an environment where side channels are a concern and
+hardware instructions are not available, prefer AES-256. In the case
+of AES, a larger key increases the cost of (*but does not prevent*)
+side channel attacks based on cache usage. The paper [Aes256Sc]
+suggests it increase the samples required by a factor of roughly 6,
+though this analysis assumes a dedicated T4 table is used in the last
+round, an implementation technique Botan avoids precisely because such
+a table is notorious for leaking information.
 
 The Botan block cipher API already supports bitslicing implementations, so a
 const time 8x bitsliced AES could be integrated fairly easily.
@@ -375,6 +390,9 @@ the tests.
 
 References
 ---------------
+
+[Aes256Sc] Neve, Tiri "On the complexity of side-channel attacks on AES-256"
+(https://eprint.iacr.org/2007/318.pdf)
 
 [AesCacheColl] Bonneau, Mironov "Cache-Collision Timing Attacks Against AES"
 (http://www.jbonneau.com/doc/BM06-CHES-aes_cache_timing.pdf)
