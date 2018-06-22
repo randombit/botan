@@ -250,7 +250,7 @@ On all other processors, a table lookup version (T-tables) is used.  This
 approach is relatively fast, but known to be very vulnerable to side
 channels. To reduce the side channel signature, AES uses only 1K of tables
 (instead of 4 1K tables which is typical). The tables are computed at runtime
-whcih prevents an attacker from performing a Flush+Reload attack since the
+which prevents an attacker from performing a Flush+Reload attack since the
 address of the tables is not fixed. Before each encryption/decryption operation,
 a value from each cache line of the T-table is read to compute a volatile
 value Z. This Z value is computed in such a way that it is always zero. Since
