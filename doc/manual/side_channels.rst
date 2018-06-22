@@ -264,8 +264,11 @@ GCM
 On platforms that support a carryless multiply instruction (ARMv8 and recent x86),
 GCM is fast and constant time.
 
-On all other platforms, GCM uses a slow but constant time algorithm. There is
-also an SSSE3 variant of the same (still relatively slow) algorithm.
+On all other platforms, GCM uses an algorithm based on precomputing all powers
+of H from 1 to 128. Then for every bit of the input a mask is formed which
+allows conditionally adding that power without leaking information via a cache
+side channel. There is also an SSSE3 variant of this algorithm which is somewhat
+faster on processors which have SSSE3 but no AES-NI instructions.
 
 OCB
 -----------------------
