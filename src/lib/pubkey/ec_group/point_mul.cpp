@@ -250,7 +250,6 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       {
       windows--;
 
-      // cache side channel here, we are relying on blinding...
       const uint32_t w = scalar.get_substring(windows*m_window_bits, m_window_bits);
 
       clear_mem(e.data(), e.size());
@@ -278,7 +277,6 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       {
       R.mult2i(m_window_bits, ws);
 
-      // cache side channel here, we are relying on blinding...
       const uint32_t w = scalar.get_substring((windows-1)*m_window_bits, m_window_bits);
 
       clear_mem(e.data(), e.size());
