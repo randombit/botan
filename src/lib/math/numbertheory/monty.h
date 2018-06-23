@@ -94,6 +94,8 @@ class BOTAN_UNSTABLE_API Montgomery_Int final
 
       Montgomery_Int& square_this(secure_vector<word>& ws);
 
+      Montgomery_Int& square_this_n_times(secure_vector<word>& ws, size_t n);
+
       Montgomery_Int multiplicative_inverse() const;
 
       Montgomery_Int additive_inverse() const;

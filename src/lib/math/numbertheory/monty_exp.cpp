@@ -106,18 +106,17 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar, size
    secure_vector<word> e_bits(m_params->p_words());
    secure_vector<word> ws;
 
-   for(size_t i = exp_nibbles; i > 0; --i)
+   if(exp_nibbles > 0)
       {
-      for(size_t j = 0; j != m_window_bits; ++j)
-         {
-         x.square_this(ws);
-         }
-
-      const uint32_t nibble = scalar.get_substring(m_window_bits*(i-1), m_window_bits);
-
-      const_time_lookup(e_bits, m_g, nibble);
-
+      const_time_lookup(e_bits, m_g, scalar.get_substring(m_window_bits*(exp_nibbles-1), m_window_bits));
       x.mul_by(e_bits, ws);
+
+      for(size_t i = exp_nibbles - 1; i > 0; --i)
+         {
+         x.square_this_n_times(ws, m_window_bits);
+         const_time_lookup(e_bits, m_g, scalar.get_substring(m_window_bits*(i-1), m_window_bits));
+         x.mul_by(e_bits, ws);
+         }
       }
 
    x.const_time_unpoison();
@@ -134,17 +133,18 @@ BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scal
 
    secure_vector<word> ws;
 
-   for(size_t i = exp_nibbles; i > 0; --i)
+   if(exp_nibbles > 0)
       {
-      for(size_t j = 0; j != m_window_bits; ++j)
+      const uint32_t nibble = scalar.get_substring(m_window_bits*(exp_nibbles-1), m_window_bits);
+      x.mul_by(m_g[nibble], ws);
+
+      for(size_t i = exp_nibbles - 1; i > 0; --i)
          {
-         x.square_this(ws);
+         x.square_this_n_times(ws, m_window_bits);
+         const uint32_t nibble = scalar.get_substring(m_window_bits*(i-1), m_window_bits);
+         if(nibble > 0)
+            x.mul_by(m_g[nibble], ws);
          }
-
-      const uint32_t nibble = scalar.get_substring(m_window_bits*(i-1), m_window_bits);
-
-      if(nibble > 0)
-         x.mul_by(m_g[nibble], ws);
       }
 
    x.const_time_unpoison();

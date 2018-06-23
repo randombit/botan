@@ -375,6 +375,13 @@ Montgomery_Int& Montgomery_Int::operator*=(const secure_vector<word>& other)
    return mul_by(other, ws);
    }
 
+Montgomery_Int& Montgomery_Int::square_this_n_times(secure_vector<word>& ws, size_t n)
+   {
+   for(size_t i = 0; i != n; ++i)
+      m_params->square_this(m_v, ws);
+   return (*this);
+   }
+
 Montgomery_Int& Montgomery_Int::square_this(secure_vector<word>& ws)
    {
    m_params->square_this(m_v, ws);
