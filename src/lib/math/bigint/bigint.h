@@ -282,6 +282,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * Set *this to (*this + y) % mod
+     * This function assumes *this is >= 0 && < mod
      * @param y the BigInt to add - assumed y >= 0 and y < mod
      * @param mod the positive modulus
      * @param ws a temp workspace
@@ -290,6 +291,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * Set *this to (*this - y) % mod
+     * This function assumes *this is >= 0 && < mod
      * @param y the BigInt to subtract - assumed y >= 0 and y < mod
      * @param mod the positive modulus
      * @param ws a temp workspace
