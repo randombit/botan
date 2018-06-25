@@ -131,8 +131,8 @@ std::vector<std::string> impl_win32(const std::string& dir_path)
       const std::string cur_path = dir_list[0];
       dir_list.pop_front();
 
-      WIN32_FIND_DATA find_data;
-      HANDLE dir = ::FindFirstFile((cur_path + "/*").c_str(), &find_data);
+      WIN32_FIND_DATAA find_data;
+      HANDLE dir = ::FindFirstFileA((cur_path + "/*").c_str(), &find_data);
 
       if(dir != INVALID_HANDLE_VALUE)
          {
@@ -152,7 +152,7 @@ std::vector<std::string> impl_win32(const std::string& dir_path)
                out.push_back(full_path);
                }
             }
-         while(::FindNextFile(dir, &find_data));
+         while(::FindNextFileA(dir, &find_data));
          }
 
       ::FindClose(dir);
