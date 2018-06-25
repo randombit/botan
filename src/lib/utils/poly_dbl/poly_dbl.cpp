@@ -75,7 +75,7 @@ void poly_double_n(uint8_t out[], const uint8_t in[], size_t n)
       case 64:
          return poly_double<8, MinWeightPolynomial::P512>(out, in);
       case 128:
-         return poly_double<8, MinWeightPolynomial::P1024>(out, in);
+         return poly_double<16, MinWeightPolynomial::P1024>(out, in);
       default:
          throw Invalid_Argument("Unsupported size for poly_double_n");
       }
@@ -96,7 +96,7 @@ void poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n)
       case 64:
          return poly_double_le<8, MinWeightPolynomial::P512>(out, in);
       case 128:
-         return poly_double_le<8, MinWeightPolynomial::P1024>(out, in);
+         return poly_double_le<16, MinWeightPolynomial::P1024>(out, in);
       default:
          throw Invalid_Argument("Unsupported size for poly_double_n_le");
       }
