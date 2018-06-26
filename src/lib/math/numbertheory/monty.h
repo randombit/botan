@@ -40,6 +40,13 @@ class BOTAN_UNSTABLE_API Montgomery_Int final
                      const uint8_t bits[], size_t len,
                      bool redc_needed = true);
 
+      /**
+      * Create a Montgomery_Int
+      */
+      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
+                     const word words[], size_t len,
+                     bool redc_needed = true);
+
       bool operator==(const Montgomery_Int& other) const;
       bool operator!=(const Montgomery_Int& other) const { return (m_v != other.m_v); }
 

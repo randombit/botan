@@ -248,6 +248,19 @@ Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
       }
    }
 
+Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
+                               const word words[], size_t len,
+                               bool redc_needed) :
+   m_params(params),
+   m_v(words, len)
+   {
+   if(redc_needed)
+      {
+      secure_vector<word> ws;
+      m_v = m_params->mul(m_v % m_params->p(), m_params->R2(), ws);
+      }
+   }
+
 void Montgomery_Int::fix_size()
    {
    const size_t p_words = m_params->p_words();
