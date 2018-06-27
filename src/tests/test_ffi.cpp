@@ -409,8 +409,10 @@ class FFI_Unit_Tests final : public Test
             result.test_int_eq(tag_len, 16, "Expected GCM tag length");
 
             TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 12));
-            // GCM accepts any nonce size...
-            TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 0));
+            // GCM accepts any nonce size except zero
+            TEST_FFI_RC(0, botan_cipher_valid_nonce_length, (cipher_encrypt, 0));
+            TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 1));
+            TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 100009));
 
             // NIST test vector
             const std::vector<uint8_t> plaintext =

@@ -32,8 +32,7 @@ class BOTAN_PUBLIC_API(2,0) GCM_Mode : public AEAD_Mode
 
       Key_Length_Specification key_spec() const override;
 
-      // GCM supports arbitrary nonce lengths
-      bool valid_nonce_length(size_t) const override { return true; }
+      bool valid_nonce_length(size_t len) const override;
 
       size_t tag_size() const override { return m_tag_size; }
 

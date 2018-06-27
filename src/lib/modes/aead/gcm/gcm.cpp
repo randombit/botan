@@ -62,6 +62,12 @@ size_t GCM_Mode::update_granularity() const
    return GCM_BS;
    }
 
+bool GCM_Mode::valid_nonce_length(size_t len) const
+   {
+   // GCM does not support empty nonces
+   return (len > 0);
+   }
+
 Key_Length_Specification GCM_Mode::key_spec() const
    {
    return m_ctr->key_spec();
@@ -86,7 +92,8 @@ void GCM_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
 
 void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
-   // any size is valid for GCM nonce
+   if(!valid_nonce_length(nonce_len))
+      throw Invalid_IV_Length(name(), nonce_len);
 
    secure_vector<uint8_t> y0(GCM_BS);
 
