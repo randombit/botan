@@ -701,23 +701,48 @@ bool EC_Group::verify_public_element(const PointGFp& point) const
 bool EC_Group::verify_group(RandomNumberGenerator& rng,
                             bool) const
    {
-   //compute the discriminant
-   Modular_Reducer p(get_p());
-   BigInt discriminant = p.multiply(4, get_a());
-   discriminant += p.multiply(27, get_b());
-   discriminant = p.reduce(discriminant);
-   //check the discriminant
+   const BigInt& p = get_p();
+   const BigInt& a = get_a();
+   const BigInt& b = get_b();
+   const BigInt& order = get_order();
+   const PointGFp& base_point = get_base_point();
+
+   if(a < 0 || a >= p)
+      return false;
+   if(b <= 0 || b >= p)
+      return false;
+   if(order <= 0)
+      return false;
+
+   //check if field modulus is prime
+   if(!is_prime(p, rng, 128))
+      {
+      return false;
+      }
+
+   //check if order is prime
+   if(!is_prime(order, rng, 128))
+      {
+      return false;
+      }
+
+   //compute the discriminant: 4*a^3 + 27*b^2 which must be nonzero
+   const Modular_Reducer mod_p(p);
+
+   const BigInt discriminant = mod_p.reduce(
+      mod_p.multiply(4, mod_p.cube(a)) +
+      mod_p.multiply(27, mod_p.square(b)));
+
    if(discriminant == 0)
       {
       return false;
       }
+
    //check for valid cofactor
    if(get_cofactor() < 1)
       {
       return false;
       }
-
-   const PointGFp base_point = get_base_point();
 
    //check if the base point is on the curve
    if(!base_point.on_the_curve())
@@ -728,19 +753,12 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng,
       {
       return false;
       }
-
-   const BigInt& order = get_order();
-
-   //check if order is prime
-   if(!is_prime(order, rng, 128))
-      {
-      return false;
-      }
    //check if order of the base point is correct
    if(!(base_point * order).is_zero())
       {
       return false;
       }
+
    return true;
    }
 

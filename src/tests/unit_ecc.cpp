@@ -287,6 +287,8 @@ class EC_Group_Tests : public Test
             const Botan::EC_Group group(group_name);
 
             result.confirm("EC_Group is known", !group.get_curve_oid().empty());
+            result.confirm("EC_Group is considered valid", group.verify_group(Test::rng(), true));
+
             result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
 
