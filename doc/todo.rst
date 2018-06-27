@@ -39,6 +39,7 @@ Public Key Crypto, Math
 * Paillier homomorphic cryptosystem
 * Socialist Millionaires Protocol
 * Hashing onto an elliptic curve
+* SPAKE2+ (draft-irtf-cfrg-spake2)
 * SPHINCS-256
 * X448 and Ed448
 * FHMQV
