@@ -231,7 +231,7 @@ BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
 class Hash final : public Command
    {
    public:
-      Hash() : Command("hash --algo=SHA-256 --buf-size=4096 *files") {}
+      Hash() : Command("hash --algo=SHA-256 --buf-size=4096 --no-fsname *files") {}
 
       std::string group() const override
          {
@@ -254,6 +254,7 @@ class Hash final : public Command
             }
 
          const size_t buf_size = get_arg_sz("buf-size");
+         const bool no_fsname = flag_set("no-fsname");
 
          std::vector<std::string> files = get_arg_list("files");
          if(files.empty())
@@ -267,7 +268,12 @@ class Hash final : public Command
                {
                auto update_hash = [&](const uint8_t b[], size_t l) { hash_fn->update(b, l); };
                read_file(fsname, update_hash, buf_size);
-               output() << Botan::hex_encode(hash_fn->final()) << " " << fsname << "\n";
+               const std::string digest = Botan::hex_encode(hash_fn->final());
+
+               if(no_fsname)
+                  output() << digest << "\n";
+               else
+                  output() << digest << " " << fsname << "\n";
                }
             catch(CLI_IO_Error& e)
                {
