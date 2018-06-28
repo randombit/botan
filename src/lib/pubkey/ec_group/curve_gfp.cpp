@@ -60,6 +60,8 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
 
       size_t get_ws_size() const override { return 2*m_p_words + 4; }
 
+      void redc_mod_p(BigInt& z, secure_vector<word>& ws) const override;
+
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
 
       void to_curve_rep(BigInt& x, secure_vector<word>& ws) const override;
@@ -90,6 +92,11 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
       bool m_a_is_zero;
       bool m_a_is_minus_3;
    };
+
+void CurveGFp_Montgomery::redc_mod_p(BigInt& z, secure_vector<word>& ws) const
+   {
+   z.reduce_below(m_p, ws);
+   }
 
 BigInt CurveGFp_Montgomery::invert_element(const BigInt& x, secure_vector<word>& ws) const
    {
@@ -195,10 +202,10 @@ class CurveGFp_NIST : public CurveGFp_Repr
       bool is_one(const BigInt& x) const override { return x == 1; }
 
       void to_curve_rep(BigInt& x, secure_vector<word>& ws) const override
-         { redc(x, ws); }
+         { redc_mod_p(x, ws); }
 
       void from_curve_rep(BigInt& x, secure_vector<word>& ws) const override
-         { redc(x, ws); }
+         { redc_mod_p(x, ws); }
 
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
 
@@ -225,8 +232,6 @@ class CurveGFp_NIST : public CurveGFp_Repr
                            size_t x_size,
                            secure_vector<word>& ws) const override;
    private:
-      virtual void redc(BigInt& x, secure_vector<word>& ws) const = 0;
-
       // Curve parameters
       BigInt m_1;
       BigInt m_a, m_b;
@@ -259,7 +264,7 @@ void CurveGFp_NIST::curve_mul_words(BigInt& z,
               y.data(), y.size(), std::min(m_p_words, y.size()),
               ws.data(), ws.size());
 
-   this->redc(z, ws);
+   this->redc_mod_p(z, ws);
    }
 
 void CurveGFp_NIST::curve_sqr_words(BigInt& z, const word x[], size_t x_size,
@@ -276,7 +281,7 @@ void CurveGFp_NIST::curve_sqr_words(BigInt& z, const word x[], size_t x_size,
               x, x_size, std::min(m_p_words, x_size),
               ws.data(), ws.size());
 
-   this->redc(z, ws);
+   this->redc_mod_p(z, ws);
    }
 
 #if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
@@ -290,7 +295,7 @@ class CurveGFp_P192 final : public CurveGFp_NIST
       CurveGFp_P192(const BigInt& a, const BigInt& b) : CurveGFp_NIST(192, a, b) {}
       const BigInt& get_p() const override { return prime_p192(); }
    private:
-      void redc(BigInt& x, secure_vector<word>& ws) const override { redc_p192(x, ws); }
+      void redc_mod_p(BigInt& x, secure_vector<word>& ws) const override { redc_p192(x, ws); }
    };
 
 /**
@@ -302,7 +307,7 @@ class CurveGFp_P224 final : public CurveGFp_NIST
       CurveGFp_P224(const BigInt& a, const BigInt& b) : CurveGFp_NIST(224, a, b) {}
       const BigInt& get_p() const override { return prime_p224(); }
    private:
-      void redc(BigInt& x, secure_vector<word>& ws) const override { redc_p224(x, ws); }
+      void redc_mod_p(BigInt& x, secure_vector<word>& ws) const override { redc_p224(x, ws); }
    };
 
 /**
@@ -314,7 +319,7 @@ class CurveGFp_P256 final : public CurveGFp_NIST
       CurveGFp_P256(const BigInt& a, const BigInt& b) : CurveGFp_NIST(256, a, b) {}
       const BigInt& get_p() const override { return prime_p256(); }
    private:
-      void redc(BigInt& x, secure_vector<word>& ws) const override { redc_p256(x, ws); }
+      void redc_mod_p(BigInt& x, secure_vector<word>& ws) const override { redc_p256(x, ws); }
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
    };
 
@@ -389,7 +394,7 @@ class CurveGFp_P384 final : public CurveGFp_NIST
       CurveGFp_P384(const BigInt& a, const BigInt& b) : CurveGFp_NIST(384, a, b) {}
       const BigInt& get_p() const override { return prime_p384(); }
    private:
-      void redc(BigInt& x, secure_vector<word>& ws) const override { redc_p384(x, ws); }
+      void redc_mod_p(BigInt& x, secure_vector<word>& ws) const override { redc_p384(x, ws); }
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
    };
 
@@ -475,7 +480,7 @@ class CurveGFp_P521 final : public CurveGFp_NIST
       CurveGFp_P521(const BigInt& a, const BigInt& b) : CurveGFp_NIST(521, a, b) {}
       const BigInt& get_p() const override { return prime_p521(); }
    private:
-      void redc(BigInt& x, secure_vector<word>& ws) const override { redc_p521(x, ws); }
+      void redc_mod_p(BigInt& x, secure_vector<word>& ws) const override { redc_p521(x, ws); }
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
    };
 

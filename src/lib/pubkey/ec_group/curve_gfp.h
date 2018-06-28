@@ -49,6 +49,8 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
       */
       virtual const BigInt& get_1_rep() const = 0;
 
+      virtual void redc_mod_p(BigInt& z, secure_vector<word>& ws) const = 0;
+
       virtual BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const = 0;
 
       virtual void to_curve_rep(BigInt& x, secure_vector<word>& ws) const = 0;
@@ -168,6 +170,11 @@ class BOTAN_UNSTABLE_API CurveGFp final
          }
 
       // TODO: from_rep taking && ref
+
+      void redc_mod_p(BigInt& z, secure_vector<word>& ws) const
+         {
+         m_repr->redc_mod_p(z, ws);
+         }
 
       void mul(BigInt& z, const BigInt& x, const BigInt& y, secure_vector<word>& ws) const
          {

@@ -304,14 +304,14 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.mul(T1, m_coord_x, T0, ws);
    T1 <<= 2; // * 4
-   T1.reduce_below(p, sub_ws);
+   m_curve.redc_mod_p(T1, sub_ws);
 
    if(m_curve.a_is_zero())
       {
       // if a == 0 then 3*x^2 + a*z^4 is just 3*x^2
       m_curve.sqr(T4, m_coord_x, ws); // x^2
       T4 *= 3; // 3*x^2
-      T4.reduce_below(p, sub_ws);
+      m_curve.redc_mod_p(T4, sub_ws);
       }
    else if(m_curve.a_is_minus_3())
       {
@@ -331,7 +331,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
       m_curve.mul(T4, T2, T3, ws); // (x-z^2)*(x+z^2)
 
       T4 *= 3; // 3*(x-z^2)*(x+z^2)
-      T4.reduce_below(p, sub_ws);
+      m_curve.redc_mod_p(T4, sub_ws);
       }
    else
       {
@@ -350,7 +350,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.sqr(T3, T0, ws);
    T3 <<= 3;
-   T3.reduce_below(p, sub_ws);
+   m_curve.redc_mod_p(T3, sub_ws);
 
    T1.mod_sub(T2, p, sub_ws);
 
@@ -361,7 +361,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
    m_curve.mul(T2, m_coord_y, m_coord_z, ws);
    T2 <<= 1;
-   T2.reduce_below(p, sub_ws);
+   m_curve.redc_mod_p(T2, sub_ws);
 
    m_coord_y = T0;
    m_coord_z = T2;
