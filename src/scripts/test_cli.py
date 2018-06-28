@@ -332,7 +332,7 @@ def cli_tls_socket_tests():
 
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
-    tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--port=%d' % (server_port), server_cert, priv_key],
+    tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--max-clients=1', '--port=%d' % (server_port), server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     time.sleep(.5)
@@ -359,7 +359,7 @@ def cli_tls_socket_tests():
     if client_msg not in stdout:
         logging.error("Missing client message from stdout %s" % (stdout))
 
-    tls_server.terminate()
+    tls_server.communicate()
 
 
 def cli_speed_tests():

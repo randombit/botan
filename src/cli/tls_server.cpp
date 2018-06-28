@@ -27,7 +27,7 @@ namespace Botan_CLI {
 class TLS_Server final : public Command, public Botan::TLS::Callbacks
    {
    public:
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces=")
+      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces= --max-clients=0")
          {
          init_sockets();
          }
@@ -52,6 +52,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          const std::string server_crt = get_arg("cert");
          const std::string server_key = get_arg("key");
          const int port = get_arg_sz("port");
+         const size_t max_clients = get_arg_sz("max-clients");
          const std::string transport = get_arg("type");
          const std::string dump_traces_to = get_arg("dump-traces");
 
@@ -87,9 +88,13 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
 
          int server_fd = make_server_socket(port);
+         size_t clients_served = 0;
 
          while(true)
             {
+            if(max_clients > 0 && clients_served >= max_clients)
+               break;
+
             if(m_is_tcp)
                {
                m_socket = ::accept(server_fd, nullptr, nullptr);
@@ -110,6 +115,8 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                   }
                m_socket = server_fd;
                }
+
+            clients_served++;
 
             Botan::TLS::Server server(
                *this,
