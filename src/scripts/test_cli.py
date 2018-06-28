@@ -332,7 +332,8 @@ def cli_tls_socket_tests():
 
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
-    tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--max-clients=1', '--port=%d' % (server_port), server_cert, priv_key],
+    tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--max-clients=1',
+                                   '--port=%d' % (server_port), server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     time.sleep(.5)
@@ -392,7 +393,7 @@ def cli_speed_tests():
                 logging.error('Unexpected line %s', line)
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
-                "DH", "DSA", "ElGamal", "Ed25519", "Curve25519",
+                "DH", "DSA", "RSA", "XMSS", "ElGamal", "Ed25519", "Curve25519",
                 "NEWHOPE", "McEliece"]
 
     output = test_cli("speed", ["--msec=5"] + pk_algos, None).split('\n')
@@ -403,7 +404,7 @@ def cli_speed_tests():
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
 
-    math_ops = ['mp_mul', 'modexp', 'random_prime', 'inverse_mod',
+    math_ops = ['mp_mul', 'modexp', 'random_prime', 'inverse_mod', 'rfc3394', 'fpe_fe1',
                 'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp']
 
     format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
