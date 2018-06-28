@@ -159,9 +159,9 @@ countries, as well as a few that are included mostly due to their use in
 specific protocols such as PGP but not widely used elsewhere. The ciphers that
 seem best for new code are AES, Serpent, and Threefish-512.
 
-Avoid any 64-bit cipher in new code. There are combinatoric issues that affect
-any 64-bit cipher that render it insecure when large amounts of data are
-processed.
+.. warning:: Avoid any 64-bit block cipher in new designs. There are
+             combinatoric issues that affect any 64-bit cipher that render it
+             insecure when large amounts of data are processed.
 
 AES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -170,9 +170,11 @@ Comes in three variants, AES-128, AES-192, and AES-256.
 
 The standard 128-bit block cipher. Many modern platforms offer hardware
 acceleration. However, on platforms without hardware support, AES
-implementations typically are vulnerable to side channel attacks.
+implementations typically are vulnerable to side channel attacks. For x86
+systems with SSSE3 but without AES-NI, Botan has an implementation which avoids
+known side channels.
 
-If you are developing new code and have no particular opinion, pick AES.
+If you are developing new code and have no particular opinion, pick AES-256.
 
 Available if ``BOTAN_HAS_AES`` is defined.
 
