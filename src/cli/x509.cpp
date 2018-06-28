@@ -298,7 +298,7 @@ class Generate_PKCS10 final : public Command
    public:
       Generate_PKCS10()
          : Command("gen_pkcs10 key CN --country= --organization= "
-                   "--email= --dns= --key-pass= --hash=SHA-256 --emsa=") {}
+                   "--email= --dns= --ext-ku= --key-pass= --hash=SHA-256 --emsa=") {}
 
       std::string group() const override
          {
@@ -326,6 +326,11 @@ class Generate_PKCS10 final : public Command
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
          opts.more_dns     = Botan::split_on(get_arg("dns"), ',');
+
+         for(std::string ext_ku : Botan::split_on(get_arg("ext-ku"), ','))
+            {
+            opts.add_ex_constraint(ext_ku);
+            }
 
          std::string emsa = get_arg("emsa");
 
