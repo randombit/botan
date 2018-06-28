@@ -79,15 +79,14 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
                               RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_EMSA(emsa),
          m_group(dsa.get_group()),
-         m_x(dsa.get_x()),
-         m_mod_q(dsa.group_q())
+         m_x(dsa.get_x())
          {
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
          m_rfc6979_hash = hash_for_emsa(emsa);
 #endif
 
          m_b = BigInt::random_integer(rng, 2, dsa.group_q());
-         m_b_inv = inverse_mod(m_b, dsa.group_q());
+         m_b_inv = m_group.inverse_mod_q(m_b);
          }
 
       size_t max_input_bits() const override { return m_group.get_q().bits(); }
@@ -97,7 +96,6 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
    private:
       const DL_Group m_group;
       const BigInt& m_x;
-      Modular_Reducer m_mod_q;
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
       std::string m_rfc6979_hash;
 #endif
@@ -123,20 +121,20 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    const BigInt k = BigInt::random_integer(rng, 1, q);
 #endif
 
-   const BigInt k_inv = inverse_mod(k, q);
+   const BigInt k_inv = m_group.inverse_mod_q(k);
 
-   const BigInt r = m_mod_q.reduce(m_group.power_g_p(k, m_group.q_bits()));
+   const BigInt r = m_group.mod_q(m_group.power_g_p(k, m_group.q_bits()));
 
    /*
    * Blind the input message and compute x*r+m as (x*r*b + m*b)/b
    */
-   m_b = m_mod_q.square(m_b);
-   m_b_inv = m_mod_q.square(m_b_inv);
+   m_b = m_group.square_mod_q(m_b);
+   m_b_inv = m_group.square_mod_q(m_b_inv);
 
-   m = m_mod_q.multiply(m_b, m);
-   const BigInt xr = m_mod_q.multiply(m_mod_q.multiply(m_x, m_b), r);
+   m = m_group.multiply_mod_q(m_b, m);
+   const BigInt xr = m_group.multiply_mod_q(m_b, m_x, r);
 
-   const BigInt s = m_mod_q.multiply(m_b_inv, m_mod_q.multiply(k_inv, xr + m));
+   const BigInt s = m_group.multiply_mod_q(m_b_inv, k_inv, m_group.mod_q(xr+m));
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero())
@@ -155,8 +153,7 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
                                  const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
          m_group(dsa.get_group()),
-         m_y(dsa.get_y()),
-         m_mod_q(dsa.group_q())
+         m_y(dsa.get_y())
          {
          }
 
@@ -169,8 +166,6 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
    private:
       const DL_Group m_group;
       const BigInt& m_y;
-
-      Modular_Reducer m_mod_q;
    };
 
 bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
@@ -191,12 +186,12 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    s = inverse_mod(s, q);
 
-   const BigInt sr = m_mod_q.multiply(s, r);
-   const BigInt si = m_mod_q.multiply(s, i);
+   const BigInt sr = m_group.multiply_mod_q(s, r);
+   const BigInt si = m_group.multiply_mod_q(s, i);
 
    s = m_group.multi_exponentiate(si, m_y, sr);
 
-   return (m_mod_q.reduce(s) == r);
+   return (m_group.mod_q(s) == r);
    }
 
 }

@@ -23,13 +23,15 @@ class DL_Group_Data final
       DL_Group_Data(const BigInt& p, const BigInt& q, const BigInt& g) :
          m_p(p), m_q(q), m_g(g),
          m_mod_p(p),
+         m_mod_q(q),
          m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
          m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
          m_p_bits(p.bits()),
          m_q_bits(q.bits()),
          m_estimated_strength(dl_work_factor(m_p_bits)),
          m_exponent_bits(dl_exponent_size(m_p_bits))
-         {}
+         {
+         }
 
       ~DL_Group_Data() = default;
 
@@ -47,18 +49,24 @@ class DL_Group_Data final
          return m_mod_p.multiply(x, y);
          }
 
+      BigInt mod_q(const BigInt& x) const { return m_mod_q.reduce(x); }
+
+      BigInt multiply_mod_q(const BigInt& x, const BigInt& y) const
+         {
+         return m_mod_q.multiply(x, y);
+         }
+
+      BigInt square_mod_q(const BigInt& x) const
+         {
+         return m_mod_q.square(x);
+         }
+
       std::shared_ptr<const Montgomery_Params> monty_params_p() const
          { return m_monty_params; }
 
       size_t p_bits() const { return m_p_bits; }
+      size_t q_bits() const { return m_q_bits; }
       size_t p_bytes() const { return (m_p_bits + 7) / 8; }
-
-      size_t q_bits() const
-         {
-         if(m_q_bits == 0)
-            throw Invalid_State("DL_Group::q_bits q value is unset on this group");
-         return m_q_bits;
-         }
 
       size_t estimated_strength() const { return m_estimated_strength; }
 
@@ -69,11 +77,20 @@ class DL_Group_Data final
          return monty_execute(*m_monty, k, max_k_bits);
          }
 
+      bool q_is_set() const { return m_q_bits > 0; }
+
+      void assert_q_is_set(const std::string& function) const
+         {
+         if(q_is_set() == false)
+            throw Invalid_State("DL_Group::" + function + " q is not set for this group");
+         }
+
    private:
       BigInt m_p;
       BigInt m_q;
       BigInt m_g;
       Modular_Reducer m_mod_p;
+      Modular_Reducer m_mod_q;
       std::shared_ptr<const Montgomery_Params> m_monty_params;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
@@ -427,6 +444,7 @@ size_t DL_Group::p_bytes() const
 
 size_t DL_Group::q_bits() const
    {
+   data().assert_q_is_set("q_bits");
    return data().q_bits();
    }
 
@@ -454,6 +472,37 @@ BigInt DL_Group::mod_p(const BigInt& x) const
 BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const
    {
    return data().multiply_mod_p(x, y);
+   }
+
+BigInt DL_Group::inverse_mod_q(const BigInt& x) const
+   {
+   data().assert_q_is_set("inverse_mod_q");
+   // precompute??
+   return inverse_mod(x, get_q());
+   }
+
+BigInt DL_Group::mod_q(const BigInt& x) const
+   {
+   data().assert_q_is_set("mod_q");
+   return data().mod_q(x);
+   }
+
+BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y) const
+   {
+   data().assert_q_is_set("multiply_mod_q");
+   return data().multiply_mod_q(x, y);
+   }
+
+BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& z) const
+   {
+   data().assert_q_is_set("multiply_mod_q");
+   return data().multiply_mod_q(data().multiply_mod_q(x, y), z);
+   }
+
+BigInt DL_Group::square_mod_q(const BigInt& x) const
+   {
+   data().assert_q_is_set("square_mod_q");
+   return data().square_mod_q(x);
    }
 
 BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const

@@ -15,15 +15,21 @@ namespace Botan {
 */
 Modular_Reducer::Modular_Reducer(const BigInt& mod)
    {
-   if(mod <= 0)
+   if(mod < 0)
       throw Invalid_Argument("Modular_Reducer: modulus must be positive");
 
-   m_modulus = mod;
-   m_mod_words = m_modulus.sig_words();
+   // Left uninitialized if mod == 0
+   m_mod_words = 0;
 
-   m_modulus_2 = Botan::square(m_modulus);
+   if(mod > 0)
+      {
+      m_modulus = mod;
+      m_mod_words = m_modulus.sig_words();
 
-   m_mu = BigInt::power_of_2(2 * BOTAN_MP_WORD_BITS * m_mod_words) / m_modulus;
+      m_modulus_2 = Botan::square(m_modulus);
+
+      m_mu = BigInt::power_of_2(2 * BOTAN_MP_WORD_BITS * m_mod_words) / m_modulus;
+      }
    }
 
 /*
