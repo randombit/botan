@@ -9,6 +9,7 @@ import time
 import shutil
 import tempfile
 import re
+import random
 
 # pylint: disable=global-statement
 
@@ -146,6 +147,18 @@ mFvAZ/8wal0=
 
     test_cli("gen_dl_group", "--pbits=1043", pem)
 
+    dsa_grp = """-----BEGIN X9.42 DH PARAMETERS-----
+MIIBHgKBgQCyP1vosC/axliM2hmJ9EOSdd1zBkuzMP25CYD8PFkRVrPLr1ClSUtn
+eXTIsHToJ7d7sRwtidQGW9BrvUEyiAWE06W/wnLPxB3/g2/l/P2EhbNmNHAO7rV7
+ZVz/uKR4Xcvzxg9uk5MpT1VsxA8H6VEwzefNF1Rya92rqGgBTNT3/wKBgC7HLL8A
+Gu3tqJxTk1iNgojjOiSreLn6ihA8R8kQnRXDTNtDKz996KHGInfMBurUI1zPM3xq
+bHc0CvU1Nf87enhPIretzJcFgiCWrNFUIC25zPEjp0s3/ERHT4Bi1TABZ3j6YUEQ
+fnnj+9XriKKHf2WtX0T4FXorvnKq30m934rzAhUAvwhWDK3yZEmphc7dwl4/J3Zp
++MU=
+-----END X9.42 DH PARAMETERS-----"""
+
+    test_cli("gen_dl_group", ["--type=dsa", "--pbits=1024"], dsa_grp)
+
 def cli_key_tests():
 
     pem = """-----BEGIN PRIVATE KEY-----
@@ -211,6 +224,13 @@ def cli_rng_tests():
     test_cli("rng", "10", "D80F88F6ADBE65ACB10C")
     test_cli("rng", "16", "D80F88F6ADBE65ACB10C3602E67D985B")
     test_cli("rng", "10 6", "D80F88F6ADBE65ACB10C\n1B119CC068AF")
+
+def cli_pk_workfactor_tests():
+    test_cli("pk_workfactor", "1024", "80")
+    test_cli("pk_workfactor", "2048", "111")
+    test_cli("pk_workfactor", ["--type=rsa", "512"], "58")
+    test_cli("pk_workfactor", ["--type=dl", "512"], "58")
+    test_cli("pk_workfactor", ["--type=dl_exp", "512"], "128")
 
 def cli_ec_group_info_tests():
 
@@ -288,6 +308,63 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
 
     test_cli("asn1print", "--pem -", expected, input_pem)
 
+def cli_tls_socket_tests():
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+
+    client_msg = b'Client message %d\n' % (random.randint(0, 2**128))
+    server_port = random.randint(1024,65535)
+
+    priv_key = os.path.join(tmp_dir, 'priv.pem')
+    pub_key = os.path.join(tmp_dir, 'pub.pem')
+    ca_cert = os.path.join(tmp_dir, 'ca.crt')
+    crt_req = os.path.join(tmp_dir, 'crt.req')
+    server_cert = os.path.join(tmp_dir, 'server.crt')
+
+    test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
+
+    test_cli("gen_self_signed",
+             [priv_key, "CA", "--ca", "--country=VT",
+              "--dns=ca.example", "--hash=SHA-384", "--output="+ca_cert],
+             "")
+
+    test_cli("cert_verify", ca_cert, "Certificate did not validate - Cannot establish trust")
+
+    test_cli("gen_pkcs10", "%s localhost --output=%s" % (priv_key, crt_req))
+
+    test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
+
+    tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--port=%d' % (server_port), server_cert, priv_key],
+                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    time.sleep(.5)
+
+    tls_client = subprocess.Popen([CLI_PATH, 'tls_client', 'localhost', '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert)],
+                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    time.sleep(.5)
+
+    tls_client.stdin.write(client_msg)
+    tls_client.stdin.flush()
+
+    time.sleep(.5)
+
+    (stdout, stderr) = tls_client.communicate()
+
+    if len(stderr) != 0:
+        logging.error("Got unexpected stderr output %s" % (stderr))
+
+    if b'Certificate validation status: Verified' not in stdout:
+        logging.error('Failed to verify cert: %s' % (stdout))
+
+    if b'Handshake complete' not in stdout:
+        logging.error('Failed to complete handshake: %s' % (stdout))
+
+    if client_msg not in stdout:
+        logging.error("Missing client message from stdout %s" % (stdout))
+
+    tls_server.terminate()
+
+
 def cli_speed_tests():
     # pylint: disable=too-many-branches
     output = test_cli("speed", ["--msec=1", "--buf-size=64,512", "AES-128"], None).split('\n')
@@ -309,8 +386,15 @@ def cli_speed_tests():
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
 
+    output = test_cli("speed", ["--msec=1", "AES-128/GCM"], None).split('\n')
+    format_re_ks = re.compile(r'^AES-128/GCM\(16\) .* [0-9]+ key schedule/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+    format_re_cipher = re.compile(r'^AES-128/GCM\(16\) .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
+    for line in output:
+        if format_re_ks.match(line) is None:
+            if format_re_cipher.match(line) is None:
+                logging.error('Unexpected line %s', line)
 
-    pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA",
+    pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
                 "DH", "DSA", "ElGamal", "Ed25519", "Curve25519",
                 "NEWHOPE", "McEliece"]
 
@@ -322,7 +406,7 @@ def cli_speed_tests():
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
 
-    math_ops = ['mp_mul', 'random_prime', 'inverse_mod',
+    math_ops = ['mp_mul', 'modexp', 'random_prime', 'inverse_mod',
                 'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp']
 
     format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
@@ -344,6 +428,13 @@ def cli_speed_tests():
 
     # ChaCha_RNG generate buffer size 1024 bytes: 954.431 MiB/sec 4.01 cycles/byte (477.22 MiB in 500.00 ms)
     format_re = re.compile(r'^.* generate buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms')
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
+
+    # Entropy source rdseed output 128 bytes estimated entropy 0 in 0.02168 ms total samples 32
+    output = test_cli("speed", ["--msec=5", "entropy"], None).split('\n')
+    format_re = re.compile(r'^Entropy source [_a-z]+ output [0-9]+ bytes estimated entropy [0-9]+ in [0-9]+\.[0-9]+ ms .*total samples [0-9]+')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
@@ -385,6 +476,7 @@ def main(args=None):
     cli_rng_tests()
     cli_bcrypt_tests()
     cli_gen_dl_group_tests()
+    cli_pk_workfactor_tests()
     cli_ec_group_info_tests()
     cli_key_tests()
     cli_cc_enc_tests()
@@ -392,6 +484,7 @@ def main(args=None):
     cli_asn1_tests()
     cli_speed_tests()
     cli_tls_ciphersuite_tests()
+    cli_tls_socket_tests()
     #cli_psk_db_tests()
     end_time = time.time()
 

@@ -1538,8 +1538,8 @@ class Speed final : public Command
             const Botan::BigInt random_e(rng(), e_bits);
             const Botan::BigInt random_f(rng(), f_bits);
 
-            std::unique_ptr<Timer> e_timer = make_timer(group_bits_str + " short exponent", "", "modexp");
-            std::unique_ptr<Timer> f_timer = make_timer(group_bits_str + "  full exponent", "", "modexp");
+            std::unique_ptr<Timer> e_timer = make_timer(group_bits_str + " short exponent");
+            std::unique_ptr<Timer> f_timer = make_timer(group_bits_str + "  full exponent");
 
             while(f_timer->under(runtime))
                {
