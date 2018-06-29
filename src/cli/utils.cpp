@@ -118,6 +118,48 @@ class Print_Help final : public Command
 
 BOTAN_REGISTER_COMMAND("help", Print_Help);
 
+class Has_Command final : public Command
+   {
+   public:
+      Has_Command() : Command("has_command cmd") {}
+
+      std::string group() const override
+         {
+         return "info";
+         }
+
+      std::string description() const override
+         {
+         return "Test if a command is available";
+         }
+
+      void go() override
+         {
+         const std::string cmd = get_arg("cmd");
+
+         bool exists = false;
+         for(auto registered_cmd : Command::registered_cmds())
+            {
+            if(cmd == registered_cmd)
+               {
+               exists = true;
+               break;
+               }
+            }
+
+         if(verbose())
+            {
+            output() << "Command '" << cmd << "' is "
+                     << (exists ? "": "not ") << "available\n";
+            }
+
+         if(exists == false)
+            this->set_return_code(1);
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("has_command", Has_Command);
+
 class Config_Info final : public Command
    {
    public:
