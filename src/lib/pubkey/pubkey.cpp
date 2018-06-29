@@ -315,6 +315,8 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
          BER_Decoder decoder(sig, length);
          BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
 
+         BOTAN_ASSERT_NOMSG(m_parts != 0 && m_part_size != 0);
+
          size_t count = 0;
 
          while(ber_sig.more_items())
