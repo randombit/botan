@@ -198,6 +198,8 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                m_socket = -1;
                }
             }
+
+         ::close(server_fd);
          }
    private:
       int make_server_socket(uint16_t port)
