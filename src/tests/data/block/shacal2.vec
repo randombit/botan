@@ -1,3 +1,5 @@
+#test cpuid sse2 intel_sha
+
 [SHACAL2]
 
 # From Bouncy Castle

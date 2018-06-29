@@ -150,6 +150,8 @@ CPUID::bit_from_string(const std::string& tok)
       return {Botan::CPUID::CPUID_BMI2_BIT};
    if(tok == "adx")
       return {Botan::CPUID::CPUID_ADX_BIT};
+   if(tok == "intel_sha")
+      return {Botan::CPUID::CPUID_SHA_BIT};
 
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    if(tok == "altivec" || tok == "simd")
