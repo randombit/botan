@@ -1,6 +1,6 @@
 /*
 * Bcrypt Password Hashing
-* (C) 2010 Jack Lloyd
+* (C) 2010,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -89,7 +89,8 @@ std::vector<uint8_t> bcrypt_base64_decode(std::string input)
 
 std::string make_bcrypt(const std::string& pass,
                         const std::vector<uint8_t>& salt,
-                        uint16_t work_factor)
+                        uint16_t work_factor,
+                        char version)
    {
    static const uint8_t BCRYPT_MAGIC[8*3] = {
       0x4F, 0x72, 0x70, 0x68, 0x65, 0x61, 0x6E, 0x42,
@@ -116,7 +117,7 @@ std::string make_bcrypt(const std::string& pass,
    if(work_factor_str.length() == 1)
       work_factor_str = "0" + work_factor_str;
 
-   return "$2a$" + work_factor_str +
+   return "$2" + std::string(1, version) + "$" + work_factor_str +
           "$" + salt_b64.substr(0, 22) +
           bcrypt_base64_encode(ctext.data(), ctext.size() - 1);
    }
@@ -125,16 +126,30 @@ std::string make_bcrypt(const std::string& pass,
 
 std::string generate_bcrypt(const std::string& pass,
                             RandomNumberGenerator& rng,
-                            uint16_t work_factor)
+                            uint16_t work_factor,
+                            char version)
    {
-   return make_bcrypt(pass, unlock(rng.random_vec(16)), work_factor);
+   /*
+   2a, 2b and 2y are identical for our purposes because our implementation of 2a
+   never had the truncation or signed char bugs in the first place.
+   */
+
+   if(version != 'a' && version != 'b' && version != 'y')
+      throw Invalid_Argument("Unknown bcrypt version '" + std::string(1, version) + "'");
+   return make_bcrypt(pass, unlock(rng.random_vec(16)), work_factor, version);
    }
 
 bool check_bcrypt(const std::string& pass, const std::string& hash)
    {
    if(hash.size() != 60 ||
-      hash[0] != '$' || hash[1] != '2' || hash[2] != 'a' ||
-      hash[3] != '$' || hash[6] != '$')
+      hash[0] != '$' || hash[1] != '2' || hash[3] != '$' || hash[6] != '$')
+      {
+      return false;
+      }
+
+   const char bcrypt_version = hash[2];
+
+   if(bcrypt_version != 'a' && bcrypt_version != 'b' && bcrypt_version != 'y')
       {
       return false;
       }
@@ -145,7 +160,7 @@ bool check_bcrypt(const std::string& pass, const std::string& hash)
    if(salt.size() != 16)
       return false;
 
-   const std::string compare = make_bcrypt(pass, salt, workfactor);
+   const std::string compare = make_bcrypt(pass, salt, workfactor, bcrypt_version);
 
    return same_mem(hash.data(), compare.data(), compare.size());
    }
