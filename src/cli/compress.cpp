@@ -74,7 +74,7 @@ class Compress final : public Command
 
          const std::string out_file = output_filename(in_file, comp_type);
          std::ofstream out(out_file, std::ios::binary);
-         if(!in.good())
+         if(!out.good())
             {
             throw CLI_IO_Error("writing", out_file);
             }
