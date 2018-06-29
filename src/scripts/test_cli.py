@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import re
 import random
+import json
 
 # pylint: disable=global-statement
 
@@ -214,11 +215,57 @@ def cli_psk_db_tests():
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
 
     psk_db = os.path.join(tmp_dir, 'psk.db')
-    db_key = "909"*32
+    db_key1 = "909"*32
+    db_key2 = "451"*32
 
-    test_cli("psk_set", [psk_db, db_key, "name", "val"], "")
+    test_cli("psk_set", [psk_db, db_key1, "name", "F00FEE"], "")
+    test_cli("psk_set", [psk_db, db_key2, "name", "C00FEE11"], "")
+    test_cli("psk_set", [psk_db, db_key1, "name2", "50051029"], "")
+
+    test_cli("psk_get", [psk_db, db_key1, "name"], "F00FEE")
+    test_cli("psk_get", [psk_db, db_key2, "name"], "C00FEE11")
+
+    test_cli("psk_list", [psk_db, db_key1], "name\nname2")
+    test_cli("psk_list", [psk_db, db_key2], "name")
 
     shutil.rmtree(tmp_dir)
+
+def cli_compress_tests():
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+
+    input_file = os.path.join(tmp_dir, 'input.txt')
+    output_file = os.path.join(tmp_dir, 'input.txt.gz')
+
+    with open(input_file, 'w') as f:
+        f.write("hi there")
+        f.close()
+
+    test_cli("compress", input_file)
+
+    if os.access(output_file, os.R_OK) != True:
+        logging.error("Compression did not created expected output file")
+
+    is_py3 = sys.version_info[0] == 3
+
+    output_hdr = open(output_file, 'rb').read(2)
+
+    if is_py3:
+        if output_hdr[0] != 0x1F or output_hdr[1] != 0x8B:
+            logging.error("Did not see expected gzip header")
+    else:
+        if ord(output_hdr[0]) != 0x1F or ord(output_hdr[1]) != 0x8B:
+            logging.error("Did not see expected gzip header")
+
+    os.unlink(input_file)
+
+    test_cli("decompress", output_file)
+
+    if os.access(input_file, os.R_OK) != True:
+        logging.error("Decompression did not created expected output file")
+
+    recovered = open(input_file).read()
+    if recovered != "hi there":
+        logging.error("Decompression did not recover original input")
 
 def cli_rng_tests():
     test_cli("rng", "10", "D80F88F6ADBE65ACB10C")
@@ -365,6 +412,7 @@ def cli_tls_socket_tests():
 
 def cli_speed_tests():
     # pylint: disable=too-many-branches
+
     output = test_cli("speed", ["--msec=1", "--buf-size=64,512", "AES-128"], None).split('\n')
 
     if len(output) % 4 != 0:
@@ -393,8 +441,8 @@ def cli_speed_tests():
                 logging.error('Unexpected line %s', line)
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
-                "DH", "DSA", "RSA", "XMSS", "ElGamal", "Ed25519", "Curve25519",
-                "NEWHOPE", "McEliece"]
+                "DH", "DSA", "ElGamal", "Ed25519", "Curve25519", "NEWHOPE", "McEliece",
+                "RSA", "XMSS"]
 
     output = test_cli("speed", ["--msec=5"] + pk_algos, None).split('\n')
 
@@ -437,6 +485,18 @@ def cli_speed_tests():
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
 
+    output = test_cli("speed", ["--msec=5", "--format=json", "AES-128"], None)
+
+    json_blob = json.loads(output)
+    if len(json_blob) != 2:
+        logging.error("Unexpected size for JSON output")
+
+    for b in json_blob:
+        for field in ['algo', 'op', 'events', 'bps', 'buf_size', 'nanos']:
+            if field not in b:
+                logging.error('Missing field %s in JSON record %s' % (field, b))
+
+
 def main(args=None):
     if args is None:
         args = sys.argv
@@ -463,6 +523,8 @@ def main(args=None):
     CLI_PATH = args[1]
 
     start_time = time.time()
+    cli_compress_tests()
+    cli_psk_db_tests()
     cli_help_tests()
     cli_is_prime_tests()
     cli_factor_tests()
@@ -483,7 +545,6 @@ def main(args=None):
     cli_speed_tests()
     cli_tls_ciphersuite_tests()
     cli_tls_socket_tests()
-    #cli_psk_db_tests()
     end_time = time.time()
 
     print("Ran %d tests with %d failures in %.02f seconds" % (
