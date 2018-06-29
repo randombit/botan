@@ -132,8 +132,7 @@ BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scal
    if(exp_nibbles == 0)
       return 1;
 
-   const uint32_t nibble = scalar.get_substring(m_window_bits*(exp_nibbles-1), m_window_bits);
-   Montgomery_Int x = m_g[nibble];
+   Montgomery_Int x = m_g[scalar.get_substring(m_window_bits*(exp_nibbles-1), m_window_bits)];
 
    for(size_t i = exp_nibbles - 1; i > 0; --i)
       {

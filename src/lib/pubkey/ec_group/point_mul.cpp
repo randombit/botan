@@ -255,11 +255,11 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       clear_mem(e.data(), e.size());
       for(size_t i = 1; i != window_elems; ++i)
          {
-         const word mask = CT::is_equal<word>(w, i);
+         const word wmask = CT::is_equal<word>(w, i);
 
          for(size_t j = 0; j != elem_size; ++j)
             {
-            e[j] |= mask & m_T[i * elem_size + j];
+            e[j] |= wmask & m_T[i * elem_size + j];
             }
          }
 
@@ -282,10 +282,10 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       clear_mem(e.data(), e.size());
       for(size_t i = 1; i != window_elems; ++i)
          {
-         const word mask = CT::is_equal<word>(w, i);
+         const word wmask = CT::is_equal<word>(w, i);
 
          for(size_t j = 0; j != elem_size; ++j)
-            e[j] |= mask & m_T[i * elem_size + j];
+            e[j] |= wmask & m_T[i * elem_size + j];
          }
 
       R.add(&e[0], m_p_words, &e[m_p_words], m_p_words, &e[2*m_p_words], m_p_words, ws);
