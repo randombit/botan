@@ -488,7 +488,7 @@ def cli_speed_tests():
     output = test_cli("speed", ["--msec=5", "--format=json", "AES-128"], None)
 
     json_blob = json.loads(output)
-    if len(json_blob) != 2:
+    if len(json_blob) < 2:
         logging.error("Unexpected size for JSON output")
 
     for b in json_blob:
