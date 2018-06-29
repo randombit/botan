@@ -626,8 +626,8 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * @param rng a random number generator
-     * @param min the minimum value
-     * @param max the maximum value
+     * @param min the minimum value (must be non-negative)
+     * @param max the maximum value (must be non-negative and > min)
      * @return random integer in [min,max)
      */
      static BigInt random_integer(RandomNumberGenerator& rng,

@@ -45,6 +45,9 @@ void BigInt::randomize(RandomNumberGenerator& rng,
 BigInt BigInt::random_integer(RandomNumberGenerator& rng,
                               const BigInt& min, const BigInt& max)
    {
+   if(min.is_negative() || max.is_negative() || max <= min)
+      throw Invalid_Argument("BigInt::random_integer invalid range");
+
    BigInt r;
 
    const size_t bits = max.bits();
