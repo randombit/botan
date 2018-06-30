@@ -86,13 +86,10 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
 
 def check_for_command(cmd):
     cmdline = [CLI_PATH, 'has_command', cmd]
-    proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (stdout, stderr) = proc.communicate()
+    proc = subprocess.Popen(cmdline)
+    proc.communicate()
 
-    if proc.returncode == 0:
-        return True
-    else:
-        return False
+    return proc.returncode == 0
 
 def cli_help_tests():
     output = test_cli("help", None, None)
@@ -222,7 +219,7 @@ wGf/MGbgPebBLmozAANENw==
     shutil.rmtree(tmp_dir)
 
 def cli_psk_db_tests():
-    if check_for_command("psk_db") == False:
+    if not check_for_command("psk_db"):
         return
 
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
@@ -245,7 +242,7 @@ def cli_psk_db_tests():
 
 def cli_compress_tests():
 
-    if check_for_command("compress") == False:
+    if not check_for_command("compress"):
         return
 
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
