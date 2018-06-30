@@ -85,7 +85,7 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
     return output
 
 def check_for_command(cmd):
-    cmdline = [CLI_PATH, cmd]
+    cmdline = [CLI_PATH, 'has_command', cmd]
     proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
 
