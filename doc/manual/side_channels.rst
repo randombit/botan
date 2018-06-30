@@ -388,6 +388,29 @@ See header ct_utils.h.
 To check, install valgrind, configure the build with --with-valgrind, and run
 the tests.
 
+.. highlight:: shell
+
+There is also a test utility built into the command line util, `timing_test`,
+which runs an operation on several different inputs many times in order to
+detect simple timing differences. The output can be processed using the
+Mona timing report library (https://github.com/seecurity/mona-timing-report).
+To run a timing report (here for example pow_mod)::
+
+  $ ./botan timing_test pow_mod > pow_mod.raw
+
+This must be run from a checkout of the source, or otherwise ``--test-data-dir=``
+must be used to point to the expected input files.
+
+Build and run the Mona report as::
+
+  $ git clone https://github.com/seecurity/mona-timing-report.git
+  $ cd mona-timing-report
+  $ ant
+  $ java -jar ReportingTool.jar --lowerBound=0.4 --upperBound=0.5 --inputFile=pow_mod.raw --name=PowMod
+
+This will produce plots and an HTML file in subdirectory starting with
+``reports_`` followed by a representation of the current date and time.
+
 References
 ---------------
 
