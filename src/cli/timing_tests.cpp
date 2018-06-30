@@ -12,7 +12,7 @@
 *
 * (C) 2016 Juraj Somorovsky - juraj.somorovsky@hackmanit.de
 * (C) 2017 Neverhub
-* (C) 2017 Jack Lloyd
+* (C) 2017,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -34,6 +34,10 @@
 
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
+#endif
+
+#if defined(BOTAN_HAS_DL_GROUP)
+   #include <botan/dl_group.h>
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
@@ -74,7 +78,10 @@ class Timing_Test
                                       size_t warmup_runs,
                                       size_t measurement_runs);
 
-      virtual std::vector<uint8_t> prepare_input(std::string input) = 0;
+      virtual std::vector<uint8_t> prepare_input(std::string input)
+         {
+         return Botan::hex_decode(input);
+         }
 
       virtual ticks measure_critical_function(std::vector<uint8_t> input) = 0;
 
@@ -260,7 +267,6 @@ class ECDSA_Timing_Test final : public Timing_Test
    public:
       ECDSA_Timing_Test(std::string ecgroup);
 
-      std::vector<uint8_t> prepare_input(std::string input) override;
       ticks measure_critical_function(std::vector<uint8_t> input) override;
 
    private:
@@ -275,12 +281,6 @@ ECDSA_Timing_Test::ECDSA_Timing_Test(std::string ecgroup)
    , m_privkey(Timing_Test::timing_test_rng(), m_group)
    , m_x(m_privkey.private_value())
    {}
-
-std::vector<uint8_t> ECDSA_Timing_Test::prepare_input(std::string input)
-   {
-   const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
-   return input_vector;
-   }
 
 ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
    {
@@ -314,19 +314,12 @@ class ECC_Mul_Timing_Test final : public Timing_Test
          m_group(ecgroup)
          {}
 
-      std::vector<uint8_t> prepare_input(std::string input) override;
       ticks measure_critical_function(std::vector<uint8_t> input) override;
 
    private:
       const Botan::EC_Group m_group;
       std::vector<Botan::BigInt> m_ws;
    };
-
-std::vector<uint8_t> ECC_Mul_Timing_Test::prepare_input(std::string input)
-   {
-   const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
-   return input_vector;
-   }
 
 ticks ECC_Mul_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
    {
@@ -335,6 +328,36 @@ ticks ECC_Mul_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
    ticks start = get_ticks();
 
    const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, Timing_Test::timing_test_rng(), m_ws);
+
+   ticks end = get_ticks();
+
+   return (end - start);
+   }
+
+#endif
+
+#if defined(BOTAN_HAS_DL_GROUP)
+
+class Powmod_Timing_Test final : public Timing_Test
+   {
+   public:
+      Powmod_Timing_Test(const std::string& dl_group) : m_group(dl_group)
+         {
+         }
+
+      ticks measure_critical_function(std::vector<uint8_t> input) override;
+   private:
+      Botan::DL_Group m_group;
+   };
+
+ticks Powmod_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
+   {
+   const Botan::BigInt x(input.data(), input.size());
+   const size_t max_x_bits = m_group.p_bits();
+
+   ticks start = get_ticks();
+
+   const Botan::BigInt g_x_p = m_group.power_g_p(x, max_x_bits);
 
    ticks end = get_ticks();
 
@@ -353,18 +376,11 @@ class Invmod_Timing_Test final : public Timing_Test
          m_p = Botan::random_prime(timing_test_rng(), p_bits);
          }
 
-      std::vector<uint8_t> prepare_input(std::string input) override;
       ticks measure_critical_function(std::vector<uint8_t> input) override;
 
    private:
       Botan::BigInt m_p;
    };
-
-std::vector<uint8_t> Invmod_Timing_Test::prepare_input(std::string input)
-   {
-   const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
-   return input_vector;
-   }
 
 ticks Invmod_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
    {
@@ -514,6 +530,8 @@ class Timing_Test_Command final : public Command
                  "manger "
                  "ecdsa "
                  "ecc_mul "
+                 "inverse_mod "
+                 "pow_mod "
                  "lucky13sec3 "
                  "lucky13sec4sha1 "
                  "lucky13sec4sha256 "
@@ -558,6 +576,13 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::
    if(test_type == "inverse_mod")
       {
       return std::unique_ptr<Timing_Test>(new Invmod_Timing_Test(512));
+      }
+#endif
+
+#if defined(BOTAN_HAS_DL_GROUP)
+   if(test_type == "pow_mod")
+      {
+      return std::unique_ptr<Timing_Test>(new Powmod_Timing_Test("modp/ietf/1024"));
       }
 #endif
 
