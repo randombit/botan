@@ -423,6 +423,34 @@ def cli_tls_socket_tests():
 
     tls_server.communicate()
 
+def cli_pk_encrypt_tests():
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+
+    input_file = os.path.join(tmp_dir, 'input')
+    ctext_file = os.path.join(tmp_dir, 'ctext')
+    recovered_file = os.path.join(tmp_dir, 'recovered')
+    rsa_priv_key = os.path.join(tmp_dir, 'rsa.priv')
+    rsa_pub_key = os.path.join(tmp_dir, 'rsa.pub')
+
+    test_cli("keygen", ["--algo=RSA", "--params=2048", "--output=%s" % (rsa_priv_key)], "")
+    test_cli("pkcs8", ["--pub-out", "%s/rsa.priv" % (tmp_dir), "--output=%s" % (rsa_pub_key)], "")
+
+    # Generate a random input file
+    test_cli("rng", ["10", "16", "32", "--output=%s" % (input_file)], "")
+
+    # Because we used a fixed DRBG for each invocation the same ctext is generated each time
+    rng_output_hash = "32F5E7B61357DE8397EFDA1E598379DFD5EE21767BDF4E2A435F05117B836AC6"
+    ctext_hash = "DBF227237924EF2B2171B5B9A1C52C152C388E407CF3D32122A4984D471F8F77"
+
+    test_cli("hash", ["--no-fsname", "--algo=SHA-256", input_file], rng_output_hash)
+
+    # Encrypt and verify ciphertext is the expected value
+    test_cli("pk_encrypt", [rsa_pub_key, input_file, "--output=%s" % (ctext_file)], "")
+    test_cli("hash", ["--no-fsname", "--algo=SHA-256", ctext_file], ctext_hash)
+
+    # Decrypt and verify plaintext is recovered
+    test_cli("pk_decrypt", [rsa_priv_key, ctext_file, "--output=%s" % (recovered_file)], "")
+    test_cli("hash", ["--no-fsname", "--algo=SHA-256", recovered_file], rng_output_hash)
 
 def cli_speed_tests():
     # pylint: disable=too-many-branches
@@ -557,6 +585,7 @@ def main(args=None):
     cli_timing_test_tests()
     cli_asn1_tests()
     cli_speed_tests()
+    cli_pk_encrypt_tests()
     cli_tls_ciphersuite_tests()
     cli_tls_socket_tests()
     end_time = time.time()

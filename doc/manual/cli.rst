@@ -91,6 +91,14 @@ Public Key Cryptography
   Print raw elliptic curve domain parameters of the standarized curve *name*. If
   *pem* is set, the encoded domain is printed.
 
+``pk_encrypt --aead=AES-256/GCM rsa_pubkey datafile``
+  Encrypts ``datafile`` using the specified AEAD algorithm, under a key protected
+  by the specified RSA public key.
+
+``pk_decrypt rsa_privkey datafile``
+  Decrypts a file encrypted with ``pk_encrypt``. If the key is encrypted using a
+  password, it will be prompted for on the terminal.
+
 X.509
 ----------------------------------------------
 

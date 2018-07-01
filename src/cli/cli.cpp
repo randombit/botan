@@ -11,6 +11,10 @@
 #include <iostream>
 #include <fstream>
 
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   #include <termios.h>
+#endif
+
 namespace Botan_CLI {
 
 Command::Command(const std::string& cmd_spec) : m_spec(cmd_spec)
@@ -182,8 +186,8 @@ void Command::read_file(const std::string& input_file,
    }
 
 void Command::do_read_file(std::istream& in,
-                  std::function<void (uint8_t[], size_t)> consumer_fn,
-                  size_t buf_size) const
+                           std::function<void (uint8_t[], size_t)> consumer_fn,
+                           size_t buf_size) const
    {
    // Avoid an infinite loop on --buf-size=0
    std::vector<uint8_t> buf(buf_size == 0 ? 4096 : buf_size);
@@ -204,6 +208,36 @@ Botan::RandomNumberGenerator& Command::rng()
       }
 
    return *m_rng.get();
+   }
+
+std::string Command::get_passphrase(const std::string& prompt)
+   {
+   error_output() << prompt << ": " << std::flush;
+   std::string pass;
+
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+
+   struct termios old_flags;
+   ::tcgetattr(fileno(stdin), &old_flags);
+   struct termios noecho_flags = old_flags;
+   noecho_flags.c_lflag &= ~ECHO;
+   noecho_flags.c_lflag |= ECHONL;
+
+   if(::tcsetattr(fileno(stdin), TCSANOW, &noecho_flags) != 0)
+      throw CLI_Error("Clearing terminal echo bit failed");
+
+   std::getline(std::cin, pass);
+
+   if(::tcsetattr(::fileno(stdin), TCSANOW, &old_flags) != 0)
+      throw CLI_Error("Restoring terminal echo bit failed");
+#else
+
+   // TODO equivalent for Windows ...
+   std::getline(std::cin, pass);
+
+#endif
+
+   return pass;
    }
 
 // Registration code
