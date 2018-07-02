@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.7.0, Not Yet Released
+Version 2.7.0, 2018-07-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2018-12435 Avoid a side channel in ECDSA signature generation (GH #1604)
