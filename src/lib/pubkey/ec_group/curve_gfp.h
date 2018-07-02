@@ -228,9 +228,8 @@ class BOTAN_UNSTABLE_API CurveGFp final
 
       /**
       * Equality operator
-      * @param lhs a curve
-      * @param rhs a curve
-      * @return true iff lhs is the same as rhs
+      * @param other a curve
+      * @return true iff *this is the same as other
       */
       inline bool operator==(const CurveGFp& other) const
          {

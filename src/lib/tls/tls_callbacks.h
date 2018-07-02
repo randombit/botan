@@ -340,11 +340,11 @@ class BOTAN_PUBLIC_API(2,0) Compat_Callbacks final : public Callbacks
       typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
 
       /**
-       * @param output_fn is called with data for the outbound socket
+       * @param data_output_fn is called with data for the outbound socket
        *
        * @param app_data_cb is called when new application data is received
        *
-       * @param alert_cb is called when a TLS alert is received
+       * @param recv_alert_cb is called when a TLS alert is received
        *
        * @param hs_cb is called when a handshake is completed
        *

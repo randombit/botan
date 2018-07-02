@@ -16,7 +16,7 @@ namespace Botan {
 
 /**
 * Perform encoding using the base provided
-* @param encoding object giving access to the encodings specifications
+* @param base object giving access to the encodings specifications
 * @param output an array of at least base.encode_max_output bytes
 * @param input is some binary data
 * @param input_length length of input in bytes
