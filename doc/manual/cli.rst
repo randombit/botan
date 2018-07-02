@@ -1,5 +1,6 @@
 Command Line Interface
 ========================================
+.. highlight:: sh
 
 Outline
 ------------

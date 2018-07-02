@@ -78,10 +78,10 @@ def run_and_check(cmd_line, cwd=None):
         logging.error("Executing %s failed (%s)", ' '.join(cmd_line), e)
 
     if stdout:
-        logging.debug(stdout.decode())
+        logging.info(stdout.decode())
 
     if stderr:
-        logging.debug(stderr.decode())
+        logging.info(stderr.decode())
 
     if proc.returncode != 0:
         logging.info(stdout.decode())

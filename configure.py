@@ -1863,6 +1863,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'with_rst2man': options.with_rst2man,
         'sphinx_config_dir': source_paths.sphinx_config_dir,
         'with_doxygen': options.with_doxygen,
+        'maintainer_mode': options.maintainer_mode,
 
         'out_dir': build_dir,
         'build_dir': build_paths.build_dir,
