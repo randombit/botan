@@ -23,6 +23,7 @@ constraints.  So before release, do a complete build/test cycle:
  - Native or cross compile for Linux aarch64 and ppc64le
  - Native compile on FreeBSD x86-64
  - Native compile on at least one unusual platform (AIX, NetBSD, ...)
+ - Build the website content to detect any Doxygen problems
 
 Pre Release Checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -71,6 +72,13 @@ in a git repository::
   $ git push origin master
 
 A cron job updates the live site every 10 minutes.
+
+Push to GitHub
+^^^^^^^^^^^^^^^^^^
+
+Don't forget to also push tags::
+
+  $ git push origin --tags release-2 master
 
 Build The Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
