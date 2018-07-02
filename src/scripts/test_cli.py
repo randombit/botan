@@ -219,7 +219,7 @@ wGf/MGbgPebBLmozAANENw==
     shutil.rmtree(tmp_dir)
 
 def cli_psk_db_tests():
-    if not check_for_command("psk_db"):
+    if not check_for_command("psk_get"):
         return
 
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
