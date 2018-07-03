@@ -17,13 +17,13 @@ Ciphers, Hashes, PBKDF
 * Camellia using AES-NI
 * Serpent using AVX2 or SSSE3/pshufb
 * ChaCha20 using AVX2, NEON
-* XSalsa20-Poly1305 AEAD compatible with NaCl
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
 * Argon2 PBKDF (draft-irtf-cfrg-argon2)
 * bcrypt PBKDF
 * Skein-MAC
 * PMAC
+* SIV-PMAC
 * Extend Cascade_Cipher to support arbitrary number of ciphers
 * EME* tweakable block cipher (https://eprint.iacr.org/2004/125.pdf)
 * FFX format preserving encryption (NIST 800-38G)
@@ -38,7 +38,7 @@ Public Key Crypto, Math
 * BBS group signatures
 * Paillier homomorphic cryptosystem
 * Socialist Millionaires Protocol
-* Hashing onto an elliptic curve
+* Hashing onto an elliptic curve (draft-irtf-cfrg-hash-to-curve)
 * SPAKE2+ (draft-irtf-cfrg-spake2)
 * SPHINCS-256
 * X448 and Ed448
@@ -131,12 +131,7 @@ Cleanups
 Compat Headers
 ----------------
 
-* Write an OpenSSL-compatible TLS API stub so existing applications
-  can be converted more easily. Would require some networking code
-  since the OpenSSL API handles both crypto and IO. Use Asio, since it
-  is expected to be the base of future C++ standard network library.
-
-* Write a module exposing a NaCl/libsodium compatible API header.
+* OpenSSL compatible API headers: EVP, TLS, certificates, etc
 
 FFI and Bindings
 ----------------------------------------
@@ -146,6 +141,7 @@ FFI and Bindings
 * Expose more of X.509 (CRLs, OCSP, cert signing, etc)
 * Expose TLS
 * Write a CLI or HTTPS client in Python
+* Rust API
 
 Library Infrastructure
 ----------------------------------------
