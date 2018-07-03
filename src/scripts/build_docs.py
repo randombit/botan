@@ -175,8 +175,7 @@ def main(args=None):
         cmds.append(['doxygen', os.path.join(cfg['build_dir'], 'botan.doxy')])
 
     if with_sphinx:
-        sphinx_build = ['sphinx-build',
-                        '-c', cfg['sphinx_config_dir']]
+        sphinx_build = ['sphinx-build', '-q', '-c', cfg['sphinx_config_dir']]
         if sphinx_supports_concurrency():
             sphinx_build += ['-j', str(get_concurrency())]
 

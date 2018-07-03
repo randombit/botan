@@ -238,14 +238,12 @@ A PKCS#11 slot is usually a smart card reader that potentially contains a token.
       To instantiate this class a reference to a :cpp:class:`Module` object and a ``slot_id`` have to be passed
       to the constructor.
 
-To retrieve available slot ids this class has the following static method:
-
    .. cpp:function:: static std::vector<SlotId> get_available_slots(Module& module, bool token_present)
+
+      Retrieve available slot ids by calling this static method.
 
       The parameter ``token_present`` controls whether all slots or only slots with a
       token attached are returned by this method. This method calls :cpp:func:`C_GetSlotList()`.
-
-Further methods:
 
    .. cpp:function:: SlotInfo get_slot_info() const
 
@@ -266,7 +264,7 @@ Further methods:
 
    .. cpp:function:: void initialize(const std::string& label, const secure_string& so_pin) const
 
-      Calls :cpp:func:`C_InitToken` to initialize the token. The :cpp:func:`label` must not exceed 32 bytes.
+      Calls :cpp:func:`C_InitToken` to initialize the token. The ``label`` must not exceed 32 bytes.
       The current PIN of the security officer must be passed in ``so_pin`` if the token
       is reinitialized or if it's a factory new token, the ``so_pin`` that is passed will initially be set.
 
@@ -315,8 +313,10 @@ A session is a logical connection between an application and a token.
 
 .. cpp:class:: Session
 
-There are two constructors to create a new session and one constructor to take ownership
-of an existing session.
+   There are two constructors to create a new session and one constructor to
+   take ownership of an existing session. The destructor calls
+   :cpp:func:`C_Logout` if a user is logged in to this session and always
+   :cpp:func:`C_CloseSession`.
 
    .. cpp:function:: Session(Slot& slot, bool read_only)
 
@@ -332,8 +332,6 @@ of an existing session.
    .. cpp:function:: Session(Slot& slot, SessionHandle handle)
 
       Takes ownership of an existing session by passing :cpp:class:`Slot` and a session ``handle``.
-
-The destructor calls :cpp:func:`C_Logout` if a user is logged in to this session and always :cpp:func:`C_CloseSession`.
 
    .. cpp:function:: SessionHandle release()
 
@@ -1378,7 +1376,6 @@ Test results
 
 Error descriptions
 
-.. [1] CKR_TEMPLATE_INCOMPLETE (0xD0=208)
 .. [2] CKR_ARGUMENTS_BAD (0x7=7)
 .. [3] CKR_MECHANISM_INVALID (0x70=112)
 .. [4] CKR_FUNCTION_NOT_SUPPORTED (0x54=84)

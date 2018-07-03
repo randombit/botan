@@ -297,7 +297,7 @@ TLS Clients
          RandomNumberGenerator& rng, \
          const Server_Information& server_info = Server_Information(), \
          const Protocol_Version offer_version = Protocol_Version::latest_tls_version(), \
-         const std::vector<std::string>& next_protocols = {}, \
+         const std::vector<std::string>& next_protocols = std::vector<std::string>(), \
          size_t reserved_io_buffer_size = 16*1024 \
          )
 

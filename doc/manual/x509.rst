@@ -457,7 +457,7 @@ set of functions in ``x509path.h`` named ``x509_path_validate``:
    Usage_Type usage = Usage_Type::UNSPECIFIED, \
    std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now(), \
    std::chrono::milliseconds ocsp_timeout = std::chrono::milliseconds(0), \
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp = {})
+   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp = std::vector<std::shared_ptr<const OCSP::Response>>())
 
    The last five parameters are optional. ``hostname`` specifies a hostname which is
    matched against the subject DN in ``end_cert`` according to RFC 6125.
@@ -826,7 +826,7 @@ for certificate status information.
 
   .. cpp:function:: Certificate_Status_Code check_signature( \
                     const std::vector<Certificate_Store*>& trust_roots, \
-                    const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path = {}) const
+                    const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path = const std::vector<std::shared<const X509_Certificate>>()) const
 
      Find the issuing certificate of the OCSP response, and check the signature.
 
