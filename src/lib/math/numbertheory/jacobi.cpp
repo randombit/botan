@@ -14,12 +14,11 @@ namespace Botan {
 */
 int32_t jacobi(const BigInt& a, const BigInt& n)
    {
-   if(a.is_negative())
-      throw Invalid_Argument("jacobi: first argument must be non-negative");
    if(n.is_even() || n < 2)
       throw Invalid_Argument("jacobi: second argument must be odd and > 1");
 
-   BigInt x = a, y = n;
+   BigInt x = a % n;
+   BigInt y = n;
    int32_t J = 1;
 
    while(y > 1)

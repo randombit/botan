@@ -1,6 +1,6 @@
 /*
 * Number Theory Functions
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,8 +22,8 @@ class RandomNumberGenerator;
 * @return (a*b)+c
 */
 BigInt BOTAN_PUBLIC_API(2,0) mul_add(const BigInt& a,
-                         const BigInt& b,
-                         const BigInt& c);
+                                     const BigInt& b,
+                                     const BigInt& c);
 
 /**
 * Fused subtract-multiply
@@ -33,8 +33,8 @@ BigInt BOTAN_PUBLIC_API(2,0) mul_add(const BigInt& a,
 * @return (a-b)*c
 */
 BigInt BOTAN_PUBLIC_API(2,0) sub_mul(const BigInt& a,
-                         const BigInt& b,
-                         const BigInt& c);
+                                     const BigInt& b,
+                                     const BigInt& c);
 
 /**
 * Fused multiply-subtract
@@ -44,8 +44,8 @@ BigInt BOTAN_PUBLIC_API(2,0) sub_mul(const BigInt& a,
 * @return (a*b)-c
 */
 BigInt BOTAN_PUBLIC_API(2,0) mul_sub(const BigInt& a,
-                         const BigInt& b,
-                         const BigInt& c);
+                                     const BigInt& b,
+                                     const BigInt& c);
 
 /**
 * Return the absolute value
@@ -108,8 +108,8 @@ BigInt BOTAN_PUBLIC_API(2,0) ct_inverse_mod_odd_modulus(const BigInt& n, const B
 * Not const time
 */
 size_t BOTAN_PUBLIC_API(2,0) almost_montgomery_inverse(BigInt& result,
-                                           const BigInt& a,
-                                           const BigInt& b);
+                                                       const BigInt& a,
+                                                       const BigInt& b);
 
 /**
 * Call almost_montgomery_inverse and correct the result to a^-1 mod b
@@ -126,8 +126,7 @@ BigInt BOTAN_PUBLIC_API(2,0) normalized_montgomery_inverse(const BigInt& a, cons
 * @param n is an odd integer > 1
 * @return (n / m)
 */
-int32_t BOTAN_PUBLIC_API(2,0) jacobi(const BigInt& a,
-                        const BigInt& n);
+int32_t BOTAN_PUBLIC_API(2,0) jacobi(const BigInt& a, const BigInt& n);
 
 /**
 * Modular exponentation
@@ -137,8 +136,8 @@ int32_t BOTAN_PUBLIC_API(2,0) jacobi(const BigInt& a,
 * @return (b^x) % m
 */
 BigInt BOTAN_PUBLIC_API(2,0) power_mod(const BigInt& b,
-                           const BigInt& x,
-                           const BigInt& m);
+                                       const BigInt& x,
+                                       const BigInt& m);
 
 /**
 * Compute the square root of x modulo a prime using the
@@ -175,8 +174,17 @@ size_t BOTAN_PUBLIC_API(2,0) low_zero_bits(const BigInt& x);
 */
 bool BOTAN_PUBLIC_API(2,0) is_prime(const BigInt& n,
                                     RandomNumberGenerator& rng,
-                                    size_t prob = 56,
+                                    size_t prob = 64,
                                     bool is_random = false);
+
+/**
+* Test if the positive integer x is a perfect square ie if there
+* exists some positive integer y st y*y == x
+* See FIPS 186-4 sec C.4
+* @return 0 if the integer is not a perfect square, otherwise
+*         returns the positive y st y*y == x
+*/
+BigInt BOTAN_PUBLIC_API(2,8) is_perfect_square(const BigInt& x);
 
 inline bool quick_check_prime(const BigInt& n, RandomNumberGenerator& rng)
    { return is_prime(n, rng, 32); }
@@ -186,7 +194,6 @@ inline bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
 
 inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
    { return is_prime(n, rng, 80); }
-
 
 /**
 * Randomly generate a prime suitable for discrete logarithm parameters

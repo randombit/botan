@@ -32,11 +32,18 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
       }
    }
 
-/*
-* Barrett Reduction
-*/
 BigInt Modular_Reducer::reduce(const BigInt& x) const
    {
+   BigInt r;
+   secure_vector<word> ws;
+   reduce(r, x, ws);
+   return r;
+   }
+
+void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& ws) const
+   {
+   if(&t1 == &x)
+      throw Invalid_State("Modular_Reducer arguments cannot alias");
    if(m_mod_words == 0)
       throw Invalid_State("Modular_Reducer: Never initalized");
 
@@ -45,12 +52,11 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
    if(x_sw >= (2*m_mod_words - 1) && x.cmp(m_modulus_2, false) >= 0)
       {
       // too big, fall back to normal division
-      return (x % m_modulus);
+      t1 = x % m_modulus;
+      return;
       }
 
-   secure_vector<word> ws;
-
-   BigInt t1 = x;
+   t1 = x;
    t1.set_sign(BigInt::Positive);
    t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words - 1));
 
@@ -83,8 +89,6 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
       {
       t1.rev_sub(m_modulus.data(), m_modulus.size(), ws);
       }
-
-   return t1;
    }
 
 }
