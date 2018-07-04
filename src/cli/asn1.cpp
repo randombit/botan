@@ -20,7 +20,7 @@ namespace Botan_CLI {
 class ASN1_Printer final : public Command
    {
    public:
-      ASN1_Printer() : Command("asn1print --print-context-specific --print-limit=4096 --bin-limit=2048 --max-depth=64 --pem file") {}
+      ASN1_Printer() : Command("asn1print --skip-context-specific --print-limit=4096 --bin-limit=2048 --max-depth=64 --pem file") {}
 
       std::string group() const override
          {
@@ -49,7 +49,7 @@ class ASN1_Printer final : public Command
          const std::string input = get_arg("file");
          const size_t print_limit = get_arg_sz("print-limit");
          const size_t bin_limit = get_arg_sz("bin-limit");
-         const bool print_context_specific = flag_set("print-context-specific");
+         const bool print_context_specific = flag_set("skip-context-specific") == false;
          const size_t max_depth = get_arg_sz("max-depth");
 
          const size_t value_column = 60;
