@@ -33,7 +33,7 @@ namespace Botan_CLI {
 class PK_Keygen final : public Command
    {
    public:
-      PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out") {}
+      PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --provider= --der-out") {}
 
       std::string group() const override
          {
@@ -49,9 +49,10 @@ class PK_Keygen final : public Command
          {
          const std::string algo = get_arg("algo");
          const std::string params = get_arg("params");
+         const std::string provider = get_arg("provider");
 
-         std::unique_ptr<Botan::Private_Key>
-         key(Botan::create_private_key(algo, rng(), params));
+         std::unique_ptr<Botan::Private_Key> key =
+            Botan::create_private_key(algo, rng(), params, provider);
 
          if(!key)
             {

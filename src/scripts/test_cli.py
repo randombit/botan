@@ -432,7 +432,7 @@ def cli_pk_encrypt_tests():
     rsa_priv_key = os.path.join(tmp_dir, 'rsa.priv')
     rsa_pub_key = os.path.join(tmp_dir, 'rsa.pub')
 
-    test_cli("keygen", ["--algo=RSA", "--params=2048", "--output=%s" % (rsa_priv_key)], "")
+    test_cli("keygen", ["--algo=RSA", "--provider=base", "--params=2048", "--output=%s" % (rsa_priv_key)], "")
     test_cli("pkcs8", ["--pub-out", "%s/rsa.priv" % (tmp_dir), "--output=%s" % (rsa_pub_key)], "")
 
     # Generate a random input file
