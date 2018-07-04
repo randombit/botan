@@ -91,12 +91,39 @@ def check_for_command(cmd):
 
     return proc.returncode == 0
 
+def cli_config_tests():
+    prefix = test_cli("config", "prefix")
+    cflags = test_cli("config", "cflags")
+    ldflags = test_cli("config", "ldflags")
+    libs = test_cli("config", "libs")
+
+    if len(prefix) < 4 or prefix[0] != '/':
+        logging.error("Bad prefix %s" % (prefix))
+    if ("-I%s" % (prefix)) not in cflags:
+        logging.error("Bad cflags %s" % (cflags))
+    if ("-L%s" % (prefix)) not in ldflags:
+        logging.error("Bad ldflags %s" % (ldflags))
+    if "-lbotan-2" not in libs:
+        logging.error("Bad libs %s" % (libs))
+
 def cli_help_tests():
     output = test_cli("help", None, None)
 
     # Maybe test format somehow??
     if len(output) < 500:
         logging.error("Help output seems very short")
+
+def cli_version_tests():
+    output = test_cli("version", None, None)
+
+    version_re = re.compile(r'[0-9]\.[0-9]+\.[0-9]')
+    if not version_re.match(output):
+        logging.error("Unexpected version output %s" % (output))
+
+    output = test_cli("version", ["--full"], None, None)
+    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9] \(.* revision .*, distribution .*\)')
+    if not version_full_re.match(output):
+        logging.error("Unexpected version output %s" % (output))
 
 def cli_is_prime_tests():
     test_cli("is_prime", "5", "5 is probably prime")
@@ -130,6 +157,16 @@ def cli_hash_tests():
 
     test_cli("hash", "--algo=SHA-256",
              "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD -", "abc")
+
+def cli_hmac_tests():
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+
+    key_file = os.path.join(tmp_dir, 'hmac.key')
+
+    test_cli("rng", ["64", "--output=%s" % (key_file)], "")
+
+    test_cli("hmac", ["--no-fsname", "--hash=SHA-384", key_file, key_file],
+             "E3A8529377030B28A7DBDFC50DDEC8E4ECEFB6EA850D95EB785938CD3E3AFEF9EF8B08AF219C1496633193468AB755CB")
 
 def cli_bcrypt_tests():
     test_cli("gen_bcrypt", "--work-factor=4 s3kr1t",
@@ -452,6 +489,16 @@ def cli_pk_encrypt_tests():
     test_cli("pk_decrypt", [rsa_priv_key, ctext_file, "--output=%s" % (recovered_file)], "")
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", recovered_file], rng_output_hash)
 
+def cli_tls_client_hello_tests():
+
+    # pylint: disable=line-too-long
+    chello = "16030100cf010000cb03035b3cf2457b864d7bef2a4b1f84fc3ced2b68d9551f3455ffdd305af277a91bb200003a16b816b716ba16b9cca9cca8c02cc030c02bc02fc0adc0acc024c00ac028c014c023c009c027c013ccaa009f009ec09fc09e006b003900670033010000680000000e000c000009676d61696c2e636f6d000500050100000000000a001a0018001d0017001a0018001b0019001c01000101010201030104000b00020100000d00140012080508040806050106010401050306030403001600000017000000230000ff01000100"
+
+    output = test_cli("tls_client_hello", ["--hex", "-"], None, chello)
+
+    output_hash = "8EBFC3205ACFA98461128FE5D081D19254237AF84F7DAF000A3C992C3CF6DE44"
+    test_cli("hash", ["--no-fsname", "--algo=SHA-256", "-"], output_hash, output)
+
 def cli_speed_tests():
     # pylint: disable=too-many-branches
 
@@ -565,29 +612,35 @@ def main(args=None):
     CLI_PATH = args[1]
 
     start_time = time.time()
-    cli_compress_tests()
-    cli_psk_db_tests()
-    cli_help_tests()
-    cli_is_prime_tests()
-    cli_factor_tests()
-    cli_mod_inverse_tests()
+
+    cli_asn1_tests()
     cli_base64_tests()
-    cli_hex_tests()
+    cli_bcrypt_tests()
+    cli_cc_enc_tests()
+    cli_compress_tests()
+    cli_config_tests()
+    cli_ec_group_info_tests()
+    cli_factor_tests()
+    cli_gen_dl_group_tests()
     cli_gen_prime_tests()
     cli_hash_tests()
-    cli_rng_tests()
-    cli_bcrypt_tests()
-    cli_gen_dl_group_tests()
-    cli_pk_workfactor_tests()
-    cli_ec_group_info_tests()
+    cli_help_tests()
+    cli_hex_tests()
+    cli_hmac_tests()
+    cli_is_prime_tests()
     cli_key_tests()
-    cli_cc_enc_tests()
-    cli_timing_test_tests()
-    cli_asn1_tests()
-    cli_speed_tests()
+    cli_mod_inverse_tests()
     cli_pk_encrypt_tests()
+    cli_pk_workfactor_tests()
+    cli_psk_db_tests()
+    cli_rng_tests()
+    cli_speed_tests()
+    cli_timing_test_tests()
     cli_tls_ciphersuite_tests()
+    cli_tls_client_hello_tests()
     cli_tls_socket_tests()
+    cli_version_tests()
+
     end_time = time.time()
 
     print("Ran %d tests with %d failures in %.02f seconds" % (

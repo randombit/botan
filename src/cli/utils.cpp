@@ -596,7 +596,7 @@ BOTAN_REGISTER_COMMAND("check_bcrypt", Check_Bcrypt);
 class HMAC final : public Command
    {
    public:
-      HMAC() : Command("hmac --hash=SHA-256 --buf-size=4096 key *files") {}
+      HMAC() : Command("hmac --hash=SHA-256 --buf-size=4096 --no-fsname key *files") {}
 
       std::string group() const override
          {
@@ -610,6 +610,7 @@ class HMAC final : public Command
 
       void go() override
          {
+         const bool no_fsname = flag_set("no-fsname");
          const std::string hash_algo = get_arg("hash");
          std::unique_ptr<Botan::MessageAuthenticationCode> hmac =
             Botan::MessageAuthenticationCode::create("HMAC(" + hash_algo + ")");
@@ -631,7 +632,12 @@ class HMAC final : public Command
                {
                auto update_hmac = [&](const uint8_t b[], size_t l) { hmac->update(b, l); };
                read_file(fsname, update_hmac, buf_size);
-               output() << Botan::hex_encode(hmac->final()) << " " << fsname << "\n";
+               output() << Botan::hex_encode(hmac->final());
+
+               if(no_fsname == false)
+                  output() << " " << fsname;
+
+               output() << "\n";
                }
             catch(CLI_IO_Error& e)
                {
