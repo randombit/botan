@@ -469,6 +469,9 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--ack-vc2013-deprecated', action='store_true', default=False,
+                           help=optparse.SUPPRESS_HELP)
+
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
 
     docs_group.add_option('--with-documentation', action='store_true',
@@ -2933,7 +2936,10 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
 
     if ccinfo.basename == 'msvc':
         if major_version == 18:
-            logging.warning('MSVC 2013 support is deprecated and will be removed in a future release')
+            logging.warning('MSVC 2013 support is deprecated, and will be removed in Jan 2019')
+            if not options.ack_vc2013_deprecated:
+                logging.error('Acknowledge this deprecation by adding flag --ack-vc2013-deprecated')
+
     return cc_version
 
 def check_compiler_arch(options, ccinfo, archinfo, source_paths):

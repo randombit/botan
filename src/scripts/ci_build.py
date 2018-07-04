@@ -59,6 +59,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
              '--cc=%s' % (target_cc),
              '--os=%s' % (target_os)]
 
+    if target_cc == 'msvc':
+        flags += ['--ack-vc2013-deprecated']
+
     if target_cpu != None:
         flags += ['--cpu=%s' % (target_cpu)]
 
