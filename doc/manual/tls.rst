@@ -896,6 +896,11 @@ policy settings from a file.
         of chosen ciphertext oracle attacks which are all easily avoided by
         signing (as in PFS) instead of decrypting.
 
+     .. note::
+
+        In order to enable RSA, SRP, or PSK ciphersuites one must also enable
+        authentication method "IMPLICIT", see :cpp:func:`allowed_signature_methods`.
+
  .. cpp:function:: std::vector<std::string> allowed_signature_hashes() const
 
      Returns the list of hash algorithms we are willing to use for
@@ -915,11 +920,19 @@ policy settings from a file.
 
      Default: "ECDSA", "RSA"
 
-     Also allowed (disabled by default): "DSA", "" (empty string meaning anonymous)
+     Also allowed (disabled by default): "DSA", "IMPLICIT", "ANONYMOUS"
+
+     "IMPLICIT" enables ciphersuites which are authenticated not by a signature
+     but through a side-effect of the key exchange. In particular this setting
+     is required to enable PSK, SRP, and static RSA ciphersuites.
+
+     "ANONYMOUS" allows purely anonymous DH/ECDH key exchanges. **Enabling this
+     is not recommended**
 
      .. note::
 
-        DSA authentication is deprecated and will be removed in a future release.
+        Both DSA authentication and anonymous DH ciphersuites are deprecated,
+        and will be removed in a future release.
 
  .. cpp:function:: std::vector<Group_Params> key_exchange_groups() const
 
@@ -927,11 +940,11 @@ policy settings from a file.
      The default ordering puts the best performing ECC first.
 
      Default:
-     Group_Params::X25519, Group_Params::SECP256R1,
-     Group_Params::SECP521R1, Group_Params::SECP384R1,
-     Group_Params::BRAINPOOL256R1, Group_Params::BRAINPOOL384R1,
-     Group_Params::BRAINPOOL512R1, Group_Params::FFDHE_2048, 
-     Group_Params::FFDHE_3072, Group_Params::FFDHE_4096,
+     Group_Params::X25519,
+     Group_Params::SECP256R1, Group_Params::BRAINPOOL256R1,
+     Group_Params::SECP384R1, Group_Params::BRAINPOOL384R1,
+     Group_Params::SECP521R1, Group_Params::BRAINPOOL512R1,
+     Group_Params::FFDHE_2048, Group_Params::FFDHE_3072, Group_Params::FFDHE_4096,
      Group_Params::FFDHE_6144, Group_Params::FFDHE_8192
 
      No other values are currently defined.
