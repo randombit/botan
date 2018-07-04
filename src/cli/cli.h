@@ -118,6 +118,8 @@ class Command
          return flag_set("verbose");
          }
 
+      std::string get_passphrase(const std::string& prompt);
+
       bool flag_set(const std::string& flag_name) const;
 
       std::string get_arg(const std::string& opt_name) const;
