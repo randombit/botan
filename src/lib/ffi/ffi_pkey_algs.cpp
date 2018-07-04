@@ -1,12 +1,14 @@
 /*
 * (C) 2015,2017 Jack Lloyd
 * (C) 2017 Ribose Inc
+* (C) 2018 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/ffi.h>
 #include <botan/hash.h>
+#include <botan/pem.h>
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
@@ -282,6 +284,26 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
 #endif
    }
 
+int botan_privkey_load_rsa_pkcs1(botan_privkey_t* key,
+                           const uint8_t bits[],
+                           size_t len)
+   {
+#if defined(BOTAN_HAS_RSA)
+   *key = nullptr;
+
+   Botan::secure_vector<uint8_t> src(bits, bits + len);
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(Botan::AlgorithmIdentifier("RSA",
+                                                                Botan::AlgorithmIdentifier::USE_NULL_PARAM),
+                                                                src));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, bits, len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_pubkey_load_rsa(botan_pubkey_t* key,
                           botan_mp_t n, botan_mp_t e)
    {
@@ -330,6 +352,33 @@ int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t key)
 int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key)
    {
    return botan_pubkey_get_field(n, key, "n");
+   }
+
+int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key,
+                              uint8_t out[], size_t* out_len,
+                              uint32_t flags)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Private_Key, rsa_key, k, {
+      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<const Botan::RSA_PrivateKey*>(&k))
+      {
+         if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+            return write_vec_output(out, out_len, rsa->private_key_bits());
+         else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+            return write_str_output(out, out_len, Botan::PEM_Code::encode(rsa->private_key_bits(),
+                  "RSA PRIVATE KEY"));
+         else
+            return BOTAN_FFI_ERROR_BAD_FLAG;
+      }
+      else
+      {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+   });
+#else
+   BOTAN_UNUSED(rsa_key, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 /* DSA specific operations */
