@@ -21,6 +21,7 @@ aead
 kdf
 pbkdf
 pubkey
+pem
 bigint
 x509
 #tls
