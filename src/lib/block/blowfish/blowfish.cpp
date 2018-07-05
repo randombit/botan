@@ -345,7 +345,7 @@ void Blowfish::eks_key_schedule(const uint8_t key[], size_t length,
    {
 
    /*
-   * On a 2.8 GHz Core-i7, workfactor == 18 takes about 25 seconds to
+   * On a 4 GHz Skylake, workfactor == 18 takes about 15 seconds to
    * hash a password. This seems like a reasonable upper bound for the
    * time being.
    * Bcrypt allows up to work factor 31 (2^31 iterations)

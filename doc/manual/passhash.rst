@@ -86,7 +86,9 @@ Bcrypt provides outputs that look like this::
 Currently only the `2a` bcrypt format is supported.
 
 .. cpp:function:: std::string generate_bcrypt(const std::string& password, \
-   RandomNumberGenerator& rng, uint16_t work_factor = 10)
+                    RandomNumberGenerator& rng, \
+                    uint16_t work_factor = 10, \
+                    char bcrypt_version = "a")
 
    Takes the password to hash, a rng, and a work factor. Higher work
    factors increase the amount of time the algorithm runs, increasing
@@ -95,10 +97,18 @@ Currently only the `2a` bcrypt format is supported.
 
    The resulting password hash is returned as a string.
 
-   Work factor must be at least 4. The bcrypt format allows up to 31,
-   but Botan currently rejects all work factors greater than 18 since
-   even that work factor requires roughly 30 seconds of computation on
-   a fast machine.
+   Due to bugs affecting various implementations of bcrypt, several
+   different variants of the algorithm are defined. As of 2.7.0 Botan
+   supports generating (or checking) the 2a, 2b, and 2y variants.
+   Since Botan has never been affected by any of the bugs which
+   necessitated these version upgrades, all three versions are
+   identical beyond the version identifier. Which variant to use is
+   controlled by the ``bcrypt_version`` argument.
+
+   The bcrypt work factor must be at least 4. The bcrypt format allows
+   up to 31, but Botan currently rejects all work factors greater than
+   18 since even that work factor requires roughly 15 seconds of
+   computation on a fast machine.
 
 .. cpp:function:: bool check_bcrypt(const std::string& password, \
    const std::string& hash)
