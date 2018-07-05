@@ -352,6 +352,33 @@ support this there is a flag to ``configure.py`` called
 inserted into ``build/build.h`` which is (indirectly) included
 into every Botan header and source file.
 
+Enabling or Disabling Use of Certain OS Features
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Botan uses compile-time flags to enable or disable use of certain operating
+specific functions. You can also override these at build time if desired.
+
+The default feature flags are given in the files in ``src/build-data/os`` in the
+``target_features`` block. For example Linux defines flags like ``proc_fs``,
+``getauxval``, and ``sockets``.  The ``configure.py`` option
+``--list-os-features`` will display all the feature flags for all operating
+system targets.
+
+To disable a default-enabled flag, use ``--without-os-feature=feat1,feat2,...``
+
+To enable a flag that isn't otherwise enabled, use ``--with-os-feature=feat``.
+For example, modern Linux systems support the ``getentropy`` call, but it is not
+enabled by default because many older systems lack it. However if you know you
+will only deploy to recently updated systems you can use
+``--with-os-feature=getentropy`` to enable it.
+
+A special case if dynamic loading, which applications for certain environments
+will want to disable. There is no specific feature flag for this, but
+``--disable-modules=dyn_load`` will prevent it from being used.
+
+.. note:: Disabling ``dyn_load`` module will also disable the PKCS #11
+          wrapper, which relies on dynamic loading.
+
 Configuration Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
