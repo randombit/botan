@@ -184,11 +184,13 @@ will be returned by :cpp:func:`get_cipher` if the named cipher is an AEAD mode).
   .. cpp:function:: void start(const uint8_t nonce[], size_t nonce_len)
 
        Start processing a message, using *nonce* as the unique per-message
-       value.
+       value. It does not need to be random, simply unique (per key).
 
        .. warning::
-          With most AEADs, if the same nonce is ever used to encrypt two
-          different messages under the same key, all security is lost.
+          With almost all AEADs, if the same nonce is ever used to encrypt two
+          different messages under the same key, all security is lost. If
+          reliably generating unique nonces is difficult in your environment,
+          use SIV mode which retains security even if nonces are repeated.
 
   .. cpp:function:: void update(secure_vector<uint8_t>& buffer, size_t offset = 0)
 
@@ -303,5 +305,5 @@ CCM
 
 Available if ``BOTAN_HAS_AEAD_CCM`` is defined.
 
-Requires a 128-bit block cipher. This is a NIST standard mode but that is about
-all to recommenmd it. Prefer EAX.
+A composition of CTR mode and CBC-MAC. Requires a 128-bit block cipher. This is
+a NIST standard mode, but that is about all to recommend it. Prefer EAX.

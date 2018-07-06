@@ -9,6 +9,9 @@ operations such as authenticated encryption.
 
    In almost all cases, a bare block cipher is not what you should be using.
    You probably want an authenticated cipher mode instead (see :ref:`cipher_modes`)
+   This interface is used to build higher level operations (such as cipher
+   modes or MACs), or in the very rare situation where ECB is required,
+   eg for compatability with an existing system.
 
 .. cpp:class:: BlockCipher
 
@@ -157,7 +160,8 @@ Available Ciphers
 Botan includes a number of block ciphers that are specific to particular
 countries, as well as a few that are included mostly due to their use in
 specific protocols such as PGP but not widely used elsewhere. The ciphers that
-seem best for new code are AES, Serpent, and Threefish-512.
+seem best for new code are AES, Serpent, and Threefish-512. If you are
+developing new code and have no particular opinion, pick AES-256.
 
 .. warning:: Avoid any 64-bit block cipher in new designs. There are
              combinatoric issues that affect any 64-bit cipher that render it
@@ -173,8 +177,6 @@ acceleration. However, on platforms without hardware support, AES
 implementations typically are vulnerable to side channel attacks. For x86
 systems with SSSE3 but without AES-NI, Botan has an implementation which avoids
 known side channels.
-
-If you are developing new code and have no particular opinion, pick AES-256.
 
 Available if ``BOTAN_HAS_AES`` is defined.
 
@@ -230,8 +232,10 @@ Available if ``BOTAN_HAS_CASCADE`` is defined.
 DES, 3DES, DESX
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Originally designed by IBM and NSA in the 1970s. Very slow, but still common in
-some industries such as finance. Avoid in new code.
+Originally designed by IBM and NSA in the 1970s. Today, DES's 56-bit key renders
+it insecure to any well-resourced attacker. DESX and 3DES extend the key length,
+and are still thought to be secure, modulo the limitation of a 64-bit block.
+All are somewhat common in some industries such as finance. Avoid in new code.
 
 Available if ``BOTAN_HAS_DES`` is defined.
 
