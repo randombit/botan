@@ -1,6 +1,17 @@
 Release Notes
 ========================================
 
+Version 2.8.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Avoid a cache side channel in the AES key schedule
+
+* Add functions to load and save RSA keys in PKCS #1 format to FFI (GH #1621)
+
+* Add ``pk_encrypt`` and ``pk_decrypt`` CLI operations
+
+* Now ``asn1print`` CLI defaults to printing context-specific fields.
+
 Version 2.7.0, 2018-07-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
