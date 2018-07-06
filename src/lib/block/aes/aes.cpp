@@ -1,6 +1,6 @@
 /*
 * AES
-* (C) 1999-2010,2015,2017 Jack Lloyd
+* (C) 1999-2010,2015,2017,2018 Jack Lloyd
 *
 * Based on the public domain reference implementation by Paulo Baretto
 *
@@ -18,14 +18,14 @@
 * countermeasures are used which may be helpful in some situations:
 *
 * - Only a single 256-word T-table is used, with rotations applied.
-*   Most implementations use 4 T-tables which leaks much more
-*   information via cache usage.
+*   Most implementations use 4 (or sometimes 5) T-tables, which leaks
+*   much more information via cache usage.
 *
 * - The TE and TD tables are computed at runtime to avoid flush+reload
 *   attacks using clflush. As different processes will not share the
 *   same underlying table data, an attacker can't manipulate another
 *   processes cache lines via their shared reference to the library
-*   read only segment.
+*   read only segment. (However, prime+probe attacks are still possible.)
 *
 * - Each cache line of the lookup tables is accessed at the beginning
 *   of each call to encrypt or decrypt. (See the Z variable below)
@@ -188,7 +188,6 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
    BOTAN_ASSERT(EK.size() && ME.size() == 16, "Key was set");
 
    const size_t cache_line_size = CPUID::cache_line_size();
-
    const uint32_t* TE = AES_TE();
 
    // Hit every cache line of TE
@@ -269,6 +268,10 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       {
       Z |= TD[i];
       }
+   for(size_t i = 0; i < 256; i += cache_line_size)
+      {
+      Z |= SD[i];
+      }
    Z &= TD[99]; // this is zero, which hopefully the compiler cannot deduce
 
    for(size_t i = 0; i != blocks; ++i)
@@ -339,8 +342,24 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    // Can't happen, but make static analyzers happy
    BOTAN_ARG_CHECK(X == 4 || X == 6 || X == 8, "Invalid AES key size");
 
+   const uint32_t* TD = AES_TD();
+
+   // Prefetch TD and SE which are used later on in this function
+   volatile uint32_t Z = 0;
+   const size_t cache_line_size = CPUID::cache_line_size();
+
+   for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
+      {
+      Z |= TD[i];
+      }
+   for(size_t i = 0; i < 256; i += cache_line_size)
+      {
+      Z |= SE[i];
+      }
+   Z &= TD[99]; // this is zero, which hopefully the compiler cannot deduce
+
    for(size_t i = 0; i != X; ++i)
-      XEK[i] = load_be<uint32_t>(key, i);
+      XEK[i] = Z ^ load_be<uint32_t>(key, i);
 
    for(size_t i = X; i < 4*(rounds+1); i += X)
       {
@@ -367,8 +386,8 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    for(size_t i = 4; i != length + 24; ++i)
       {
-      XDK[i] = SE_word(XDK[i]);
-      XDK[i] = AES_T(AES_TD(), 0, XDK[i], XDK[i], XDK[i], XDK[i]);
+      XDK[i] = Z ^ SE_word(XDK[i]);
+      XDK[i] = AES_T(TD, 0, XDK[i], XDK[i], XDK[i], XDK[i]);
       }
 
    ME.resize(16);
