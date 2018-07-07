@@ -15,7 +15,7 @@ using ctypes is included, and several other `language bindings
 Find the full feature list below.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
-and contributions are welcome (read `doc/contributing.rst` for more info).
+and contributions are welcome (read ``doc/contributing.rst`` for more info).
 
 If you need help with a problem, please open an `issue on GitHub
 <https://github.com/randombit/botan/issues>`_ or email the
