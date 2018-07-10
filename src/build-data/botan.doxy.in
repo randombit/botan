@@ -165,6 +165,7 @@ PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
                          BOTAN_HAS_SHA2_32_X86_BMI2 \
                          BOTAN_HAS_SHACAL2_SIMD \
                          BOTAN_HAS_SHACAL2_X86 \
+                         BOTAN_HAS_SM4_ARMV8 \
                          BOTAN_HAS_THREEFISH_512_AVX2 \
                          BOTAN_DEPRECATED(msg)= \
                          BOTAN_PUBLIC_API(maj,min)=
