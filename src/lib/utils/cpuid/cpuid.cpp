@@ -64,10 +64,16 @@ std::string CPUID::to_string()
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    CPUID_PRINT(neon);
+   CPUID_PRINT(arm_sve);
+
    CPUID_PRINT(arm_sha1);
    CPUID_PRINT(arm_sha2);
    CPUID_PRINT(arm_aes);
    CPUID_PRINT(arm_pmull);
+   CPUID_PRINT(arm_sha2_512);
+   CPUID_PRINT(arm_sha3);
+   CPUID_PRINT(arm_sm3);
+   CPUID_PRINT(arm_sm4);
 #endif
 
 #undef CPUID_PRINT
@@ -168,6 +174,14 @@ CPUID::bit_from_string(const std::string& tok)
       return {Botan::CPUID::CPUID_ARM_AES_BIT};
    if(tok == "armv8pmull")
       return {Botan::CPUID::CPUID_ARM_PMULL_BIT};
+   if(tok == "armv8sha3")
+      return {Botan::CPUID::CPUID_ARM_SHA3_BIT};
+   if(tok == "armv8sha2_512")
+      return {Botan::CPUID::CPUID_ARM_SHA2_512_BIT};
+   if(tok == "armv8sm3")
+      return {Botan::CPUID::CPUID_ARM_SM3_BIT};
+   if(tok == "armv8sm4")
+      return {Botan::CPUID::CPUID_ARM_SM4_BIT};
 
 #else
    BOTAN_UNUSED(tok);
