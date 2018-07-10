@@ -93,10 +93,46 @@ The Botan MAC computation is split into five stages.
     otherwise.
 
 
-Code Example
+Code Examples
 ------------------------
 
-The following example code computes a AES-256 GMAC and subsequently verifies the tag.
+The following example computes an HMAC with a random key then verifies the tag.
+
+    #include <botan/mac.h>
+    #include <botan/hex.h>
+    #include <botan/system_rng.h>
+    #include <assert.h>
+
+    std::string compute_mac(const std::string& msg, const Botan::secure_vector<uint8_t>& key)
+       {
+       auto hmac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
+
+       hmac->set_key(key);
+       hmac->update(msg);
+
+       return Botan::hex_encode(hmac->final());
+       }
+
+    int main()
+       {
+       Botan::System_RNG rng;
+
+       const auto key = rng.random_vec(32); // 256 bit random key
+
+       // "Message" != "Mussage" so tags will also not match
+       std::string tag1 = compute_mac("Message", key);
+       std::string tag2 = compute_mac("Mussage", key);
+       assert(tag1 != tag2);
+
+       // Recomputing with original input message results in identical tag
+       std::string tag3 = compute_mac("Message", key);
+       assert(tag1 == tag3);
+       }
+
+
+The following example code computes a AES-256 GMAC and subsequently verifies the
+tag.  Unlike most other MACs, GMAC requires a nonce *which must not repeat or
+all security is lost*.
 
 .. code-block:: cpp
 
@@ -107,19 +143,19 @@ The following example code computes a AES-256 GMAC and subsequently verifies the
     int main()
        {
        const std::vector<uint8_t> key = Botan::hex_decode("1337133713371337133713371337133713371337133713371337133713371337");
-       const std::vector<uint8_t> iv = Botan::hex_decode("FFFFFFFFFFFFFFFFFFFFFFFF");
+       const std::vector<uint8_t> nonce = Botan::hex_decode("FFFFFFFFFFFFFFFFFFFFFFFF");
        const std::vector<uint8_t> data = Botan::hex_decode("6BC1BEE22E409F96E93D7E117393172A");
        std::unique_ptr<Botan::MessageAuthenticationCode> mac(Botan::MessageAuthenticationCode::create("GMAC(AES-256)"));
        if(!mac)
           return 1;
        mac->set_key(key);
-       mac->start(iv);
+       mac->start(nonce);
        mac->update(data);
        Botan::secure_vector<uint8_t> tag = mac->final();
        std::cout << mac->name() << ": " << Botan::hex_encode(tag) << std::endl;
 
        //Verify created MAC
-       mac->start(iv);
+       mac->start(nonce);
        mac->update(data);
        std::cout << "Verification: " << (mac->verify_mac(tag) ? "success" : "failure");
        return 0;
@@ -156,7 +192,7 @@ Available MACs
 ------------------------------------------
 
 Currently the following MAC algorithms are available in Botan. In new code,
-default to HMAC or CMAC.
+default to HMAC with a strong hash like SHA-256 or SHA-384.
 
 CBC-MAC
 ~~~~~~~~~~~~
@@ -179,8 +215,9 @@ GMAC
 ~~~~~~~~~~~~
 
 GMAC is related to the GCM authenticated cipher mode. It is quite slow unless
-hardware support for carryless multiplications is available. A new nonce must be
-used with each message authenticated, or otherwise all security is lost.
+hardware support for carryless multiplications is available. A new nonce
+must be used with **each** message authenticated, or otherwise all security is
+lost.7
 
 Available if ``BOTAN_HAS_GMAC`` is defined.
 
@@ -195,7 +232,7 @@ Poly1305
 ~~~~~~~~~~~~
 
 A polynomial mac (similar to GMAC). Very fast, but tricky to use safely. Forms
-part of the ChaCha20Poly1305 AEAD mode. A new key must be used for *each*
+part of the ChaCha20Poly1305 AEAD mode. A new key must be used for **each**
 message, or all security is lost.
 
 Available if ``BOTAN_HAS_POLY1305`` is defined.
@@ -203,7 +240,9 @@ Available if ``BOTAN_HAS_POLY1305`` is defined.
 SipHash
 ~~~~~~~~~~~~
 
-A modern and very fast PRF. Produces only a 64-bit output.
+A modern and very fast PRF. Produces only a 64-bit output. Defaults to
+"SipHash(2,4)" which is the recommended configuration, using 2 rounds for each
+input block and 4 rounds for finalization.
 
 Available if ``BOTAN_HAS_SIPHASH`` is defined.
 
@@ -214,4 +253,3 @@ A CBC-MAC variant sometimes used in finance. Always uses DES. Avoid unless
 required.
 
 Available if ``BOTAN_HAS_X919_MAC`` is defined.
-

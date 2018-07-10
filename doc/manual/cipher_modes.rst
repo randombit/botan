@@ -80,6 +80,10 @@ with PKCS#7 padding.
 .. warning::
    This example ignores the requirement to authenticate the ciphertext
 
+.. note::
+   Simply replacing the string "AES-128/CBC/PKCS7" string in the example below
+   with "AES-128/GCM" suffices to use authenticated encryption.
+
 .. code-block:: cpp
 
     #include <botan/rng.h>
