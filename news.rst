@@ -4,6 +4,8 @@ Release Notes
 Version 2.8.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add support for using the ARMv8 instructions for SM4 encryption (GH #1622)
+
 * Avoid a cache side channel in the AES key schedule
 
 * Add functions to load and save RSA keys in PKCS #1 format to FFI (GH #1621)
