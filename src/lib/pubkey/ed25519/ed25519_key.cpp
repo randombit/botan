@@ -19,10 +19,7 @@ namespace Botan {
 
 AlgorithmIdentifier Ed25519_PublicKey::algorithm_identifier() const
    {
-   // AlgorithmIdentifier::USE_NULL_PARAM puts 0x05 0x00 in parameters
-   // We want nothing
-   std::vector<uint8_t> empty;
-   return AlgorithmIdentifier(get_oid(), empty);
+   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 bool Ed25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
