@@ -130,6 +130,11 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
       PMULL_bit = (1 << 4),
       SHA1_bit  = (1 << 5),
       SHA2_bit  = (1 << 6),
+      SHA3_bit  = (1 << 17),
+      SM3_bit  = (1 << 18),
+      SM4_bit  = (1 << 19),
+      SHA2_512_bit  = (1 << 21),
+      SVE_bit = (1 << 22),
 
       ARCH_hwcap_neon   = 16, // AT_HWCAP
       ARCH_hwcap_crypto = 16, // AT_HWCAP
@@ -162,6 +167,19 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
       detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
    if(hwcap_crypto & ARM_hwcap_bit::SHA2_bit)
       detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
+
+#if defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   if(hwcap_crypto & ARM_hwcap_bit::SHA3_bit)
+      detected_features |= CPUID::CPUID_ARM_SHA3_BIT;
+   if(hwcap_crypto & ARM_hwcap_bit::SM3_bit)
+      detected_features |= CPUID::CPUID_ARM_SM3_BIT;
+   if(hwcap_crypto & ARM_hwcap_bit::SM4_bit)
+      detected_features |= CPUID::CPUID_ARM_SM4_BIT;
+   if(hwcap_crypto & ARM_hwcap_bit::SHA2_512_bit)
+      detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
+   if(hwcap_crypto & ARM_hwcap_bit::SVE_bit)
+      detected_features |= CPUID::CPUID_ARM_SVE_BIT;
+#endif
 
 #elif defined(BOTAN_TARGET_OS_IS_IOS)
 

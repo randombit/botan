@@ -114,11 +114,16 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
-         CPUID_ARM_NEON_BIT  = (1ULL << 0),
-         CPUID_ARM_AES_BIT   = (1ULL << 16),
-         CPUID_ARM_PMULL_BIT = (1ULL << 17),
-         CPUID_ARM_SHA1_BIT  = (1ULL << 18),
-         CPUID_ARM_SHA2_BIT  = (1ULL << 19),
+         CPUID_ARM_NEON_BIT      = (1ULL << 0),
+         CPUID_ARM_SVE_BIT       = (1ULL << 1),
+         CPUID_ARM_AES_BIT       = (1ULL << 16),
+         CPUID_ARM_PMULL_BIT     = (1ULL << 17),
+         CPUID_ARM_SHA1_BIT      = (1ULL << 18),
+         CPUID_ARM_SHA2_BIT      = (1ULL << 19),
+         CPUID_ARM_SHA3_BIT      = (1ULL << 20),
+         CPUID_ARM_SHA2_512_BIT  = (1ULL << 21),
+         CPUID_ARM_SM3_BIT       = (1ULL << 22),
+         CPUID_ARM_SM4_BIT       = (1ULL << 23),
 #endif
 
          CPUID_INITIALIZED_BIT = (1ULL << 63)
@@ -147,6 +152,12 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          { return has_cpuid_bit(CPUID_ARM_NEON_BIT); }
 
       /**
+      * Check if the processor supports ARMv8 SVE
+      */
+      static bool has_arm_sve()
+         { return has_cpuid_bit(CPUID_ARM_SVE_BIT); }
+
+      /**
       * Check if the processor supports ARMv8 SHA1
       */
       static bool has_arm_sha1()
@@ -169,6 +180,31 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static bool has_arm_pmull()
          { return has_cpuid_bit(CPUID_ARM_PMULL_BIT); }
+
+      /**
+      * Check if the processor supports ARMv8 SHA-512
+      */
+      static bool has_arm_sha2_512()
+         { return has_cpuid_bit(CPUID_ARM_SHA2_512_BIT); }
+
+      /**
+      * Check if the processor supports ARMv8 SHA-3
+      */
+      static bool has_arm_sha3()
+         { return has_cpuid_bit(CPUID_ARM_SHA3_BIT); }
+
+      /**
+      * Check if the processor supports ARMv8 SM3
+      */
+      static bool has_arm_sm3()
+         { return has_cpuid_bit(CPUID_ARM_SM3_BIT); }
+
+      /**
+      * Check if the processor supports ARMv8 SM4
+      */
+      static bool has_arm_sm4()
+         { return has_cpuid_bit(CPUID_ARM_SM4_BIT); }
+
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)

@@ -1,0 +1,9 @@
+<defines>
+SM4_ARMV8 -> 20180709
+</defines>
+
+need_isa armv8sm4
+
+<cc>
+gcc:8
+</cc>

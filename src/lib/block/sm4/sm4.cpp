@@ -1,12 +1,14 @@
 /*
 * SM4
 * (C) 2017 Ribose Inc
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/sm4.h>
 #include <botan/loadstor.h>
+#include <botan/cpuid.h>
 
 namespace Botan {
 
@@ -126,6 +128,11 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_RK.empty() == false);
 
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has_arm_sm4())
+      return sm4_armv8_encrypt(in, out, blocks);
+#endif
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t B0 = load_be<uint32_t>(in, 0);
@@ -155,6 +162,11 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_RK.empty() == false);
+
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has_arm_sm4())
+      return sm4_armv8_decrypt(in, out, blocks);
+#endif
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -217,6 +229,30 @@ void SM4::key_schedule(const uint8_t key[], size_t)
 void SM4::clear()
    {
    zap(m_RK);
+   }
+
+size_t SM4::parallelism() const
+   {
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has_arm_sm4())
+      {
+      return 4;
+      }
+#endif
+
+   return 1;
+   }
+
+std::string SM4::provider() const
+   {
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has_arm_sm4())
+      {
+      return "armv8";
+      }
+#endif
+
+   return "base";
    }
 
 }

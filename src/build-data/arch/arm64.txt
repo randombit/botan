@@ -12,4 +12,8 @@ armv8-a
 <isa_extensions>
 neon
 armv8crypto
+armv8sm3
+armv8sm4
+armv8sha3
+armv8sha512
 </isa_extensions>
