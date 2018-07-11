@@ -742,7 +742,13 @@ class Speed final : public Command
 
          for(std::string cpuid_to_clear : Botan::split_on(get_arg("clear-cpuid"), ','))
             {
-            for(auto bit : Botan::CPUID::bit_from_string(cpuid_to_clear))
+            auto bits = Botan::CPUID::bit_from_string(cpuid_to_clear);
+            if(bits.empty())
+               {
+               error_output() << "Warning don't know CPUID flag '" << cpuid_to_clear << "'\n";
+               }
+
+            for(auto bit : bits)
                {
                Botan::CPUID::clear_cpuid_bit(bit);
                }
