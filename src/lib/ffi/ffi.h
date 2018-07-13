@@ -1202,6 +1202,28 @@ int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
                          const uint8_t kek[], size_t kek_len,
                          uint8_t key[], size_t *key_len);
 
+/**
+* Format Preserving Encryption
+*/
+
+typedef struct botan_fpe_struct* botan_fpe_t;
+
+#define BOTAN_FPE_FLAG_FE1_COMPAT_MODE 1
+
+BOTAN_PUBLIC_API(2,8)
+int botan_fpe_fe1_init(botan_fpe_t* fpe, botan_mp_t n,
+                       const uint8_t key[], size_t key_len,
+                       size_t rounds, uint32_t flags);
+
+BOTAN_PUBLIC_API(2,8)
+int botan_fpe_destroy(botan_fpe_t fpe);
+
+BOTAN_PUBLIC_API(2,8)
+int botan_fpe_encrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len);
+
+BOTAN_PUBLIC_API(2,8)
+int botan_fpe_decrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len);
+
 /*
 * TLS (WIP)
 */

@@ -134,7 +134,8 @@ secure_vector<uint8_t> FPE_FE1::compute_tweak_mac(const uint8_t tweak[], size_t 
    m_mac->update(m_n_bytes.data(), m_n_bytes.size());
 
    m_mac->update_be(static_cast<uint32_t>(tweak_len));
-   m_mac->update(tweak, tweak_len);
+   if(tweak_len > 0)
+      m_mac->update(tweak, tweak_len);
 
    return m_mac->final();
    }
