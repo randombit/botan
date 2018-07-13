@@ -1972,6 +1972,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'with_openmp': options.with_openmp,
         'with_debug_asserts': options.with_debug_asserts,
         'test_mode': options.test_mode,
+        'optimize_for_size': options.optimize_for_size,
 
         'mod_list': sorted([m.basename for m in modules])
         }
