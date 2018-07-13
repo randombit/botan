@@ -79,6 +79,10 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_stream_ciphers());
          results.push_back(ffi_test_pkcs_hash_id());
 
+#if defined(BOTAN_HAS_FPE_FE1)
+         results.push_back(ffi_test_fpe());
+#endif
+
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
          results.push_back(ffi_test_keywrap());
 #endif
@@ -1202,6 +1206,43 @@ class FFI_Unit_Tests final : public Test
 
          std::vector<uint8_t> fingerprint(fingerprint_len);
          TEST_FFI_OK(botan_pubkey_fingerprint, (pub, "SHA-512", fingerprint.data(), &fingerprint_len));
+         }
+
+      Test::Result ffi_test_fpe()
+         {
+         Test::Result result("FFI FPE");
+
+         const uint8_t key[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+         botan_mp_t n, x;
+         botan_fpe_t fpe;
+
+         botan_mp_init(&n);
+         botan_mp_set_from_str(n, "1000000000");
+
+         botan_mp_init(&x);
+         botan_mp_set_from_str(x, "178051120");
+
+         TEST_FFI_OK(botan_fpe_fe1_init, (&fpe, n, key, sizeof(key), 5, 0));
+
+         TEST_FFI_OK(botan_fpe_encrypt, (fpe, x, nullptr, 0));
+
+         uint32_t xval = 0;
+         TEST_FFI_OK(botan_mp_to_uint32, (x, &xval));
+         result.test_eq("Expected FPE ciphertext", xval, size_t(605648666));
+
+         TEST_FFI_OK(botan_fpe_encrypt, (fpe, x, nullptr, 0));
+         TEST_FFI_OK(botan_fpe_decrypt, (fpe, x, nullptr, 0));
+         TEST_FFI_OK(botan_fpe_decrypt, (fpe, x, nullptr, 0));
+
+         TEST_FFI_OK(botan_mp_to_uint32, (x, &xval));
+         result.test_eq("FPE round trip", xval, size_t(178051120));
+
+         TEST_FFI_OK(botan_fpe_destroy, (fpe));
+         TEST_FFI_OK(botan_mp_destroy, (x));
+         TEST_FFI_OK(botan_mp_destroy, (n));
+
+         return result;
          }
 
       Test::Result ffi_test_keywrap()
