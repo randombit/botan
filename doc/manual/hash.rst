@@ -65,7 +65,7 @@ internal state is reset to begin hashing a new message.
 Code Example
 ------------
 
-Assume we want to calculate the SHA-1, Whirlpool and SHA-3 hash digests of the STDIN stream using the Botan library.
+Assume we want to calculate the SHA-256, SHA-384, and SHA-3 hash digests of the STDIN stream using the Botan library.
 
 .. code-block:: cpp
 
@@ -74,8 +74,8 @@ Assume we want to calculate the SHA-1, Whirlpool and SHA-3 hash digests of the S
     #include <iostream>
     int main ()
        {
-       std::unique_ptr<Botan::HashFunction> hash1(Botan::HashFunction::create("SHA-1"));
-       std::unique_ptr<Botan::HashFunction> hash2(Botan::HashFunction::create("Whirlpool"));
+       std::unique_ptr<Botan::HashFunction> hash1(Botan::HashFunction::create("SHA-256"));
+       std::unique_ptr<Botan::HashFunction> hash2(Botan::HashFunction::create("SHA-384"));
        std::unique_ptr<Botan::HashFunction> hash3(Botan::HashFunction::create("SHA-3"));
        std::vector<uint8_t> buf(2048);
 
@@ -89,8 +89,8 @@ Assume we want to calculate the SHA-1, Whirlpool and SHA-3 hash digests of the S
           hash2->update(buf.data(),readcount);
           hash3->update(buf.data(),readcount);
           }
-       std::cout << "SHA-1: " << Botan::hex_encode(hash1->final()) << std::endl;
-       std::cout << "Whirlpool: " << Botan::hex_encode(hash2->final()) << std::endl;
+       std::cout << "SHA-256: " << Botan::hex_encode(hash1->final()) << std::endl;
+       std::cout << "SHA-384: " << Botan::hex_encode(hash2->final()) << std::endl;
        std::cout << "SHA-3: " << Botan::hex_encode(hash3->final()) << std::endl;
        return 0;
        }
@@ -222,8 +222,9 @@ Tiger
 
 Available if ``BOTAN_HAS_TIGER`` is defined.
 
-An older 192-bit hash function, optimized for 64-bit systems. Seemingly secure
-but not widely used. Prefer Skein-512 or BLAKE2b in new code.
+An older 192-bit hash function, optimized for 64-bit systems. Possibly
+vulnerable to side channels due to its use of table lookups. Prefer Skein-512 or
+BLAKE2b in new code.
 
 Whirlpool
 ^^^^^^^^^^^^^^^
@@ -246,7 +247,7 @@ Parallel
 
 Available if ``BOTAN_HAS_PARALLEL_HASH`` is defined.
 
-Parallel simply concatenated multiple hash functions. For example
+Parallel simply concatenates multiple hash functions. For example
 "Parallel(SHA-256,SHA-512)" outputs a 256+512 bit hash created by hashing the
 input with both SHA-256 and SHA-512 and concatenating the outputs.
 

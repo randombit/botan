@@ -102,10 +102,13 @@ with PKCS#7 padding.
        std::unique_ptr<Botan::Cipher_Mode> enc = Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::ENCRYPTION);
        enc->set_key(key);
 
+       //generate fresh nonce (IV)
+       Botan::secure_vector<uint8_t> iv = rng.random_vec(enc->default_nonce_length());
+
+       // Copy input data to a buffer that will be encrypted
        Botan::secure_vector<uint8_t> pt(plaintext.data(), plaintext.data()+plaintext.length());
 
-       //generate fresh nonce (IV)
-       enc->start(rng.random_vec(enc->default_nonce_length()));
+       enc->start(iv);
        enc->finish(pt);
 
        std::cout << enc->name() << " with iv " << Botan::hex_encode(iv) << " " << Botan::hex_encode(pt) << "\n";
@@ -140,7 +143,7 @@ CFB
 
 Available if ``BOTAN_HAS_MODE_CFB`` is defined.
 
-CFB uses a block cipher to create a self-syncronizing stream cipher.  It is used
+CFB uses a block cipher to create a self-syncronizing stream cipher. It is used
 for example in the OpenPGP protocol. There is no reason to prefer it.
 
 XTS
@@ -301,8 +304,8 @@ Available if ``BOTAN_HAS_AEAD_SIV`` is defined.
 Requires a 128-bit block cipher. Unlike other AEADs, SIV is "misuse resistent";
 if a nonce is repeated, SIV retains security, with the exception that if the
 same nonce is used to encrypt the same message multiple times, an attacker can
-detect the duplicated message (this is because for identical plaintexts SIV
-will output the same ciphertext each time, in the case the nonce is repeated.)
+detect the fact that the message was duplicated (this is simply because if both
+the nonce and the message are reused, SIV will output identical ciphertexts).
 
 CCM
 ~~~~~

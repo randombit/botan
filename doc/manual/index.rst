@@ -14,6 +14,14 @@ source may not be required on your system.
 
    You can also download this manual as a `PDF <https://botan.randombit.net/manual/botan.pdf>`_.
 
+Examples
+----------
+
+Some examples of usage are included in this documentation. However a better
+source for example code is in the implementation of the
+`command line interface <https://github.com/randombit/botan/tree/master/src/cli>`_,
+which was intentionally written to act as practical examples of usage.
+
 Books and other references
 ----------------------------
 
@@ -36,11 +44,13 @@ Especially recommended are:
   by Alfred J. Menezes, Paul C. Van Oorschot, and Scott A. Vanstone
 
 If you're doing something non-trivial or unique, you might want to at
-the very least ask for review/input on a mailing list such as the
+the very least ask for review/input at a place such as the
 `metzdowd <http://www.metzdowd.com/mailman/listinfo/cryptography>`_ or
 `randombit <https://lists.randombit.net/mailman/listinfo/cryptography>`_
-crypto lists. And (if possible) pay a professional cryptographer or
-security company to review your design and code.
+mailing lists or the
+`cryptography stack exchange <https://crypto.stackexchange.com/>`_.
+And (if possible) pay a professional cryptographer or security company
+to review your design and code.
 
 
 .. toctree::
