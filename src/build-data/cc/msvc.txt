@@ -23,7 +23,7 @@ debug_info_flags "/Zi /FS"
 
 preproc_flags "/nologo /EP"
 
-lang_flags "/EHs /GR"
+lang_flags "/EHs /GR /D_ENABLE_EXTENDED_ALIGNED_STORAGE"
 warning_flags "/W4 /wd4250 /wd4251 /wd4275"
 
 visibility_build_flags "/DBOTAN_DLL=__declspec(dllexport)"
