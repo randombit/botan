@@ -29,11 +29,6 @@ in the source.
   MessageAuthenticationCode and HashFunction. So this only affects you if you
   are directly referencing `Botan::Buffered_Computation` in some way.
 
-- The SymmetricAlgorithm base class. Similarly to Buffered_Computation, in a
-  future release the class will be removed and its member functions copied to
-  classes which currently subclass it. This only affects your code if you
-  are referencing `Botan::SymmetricAlgorithm` directly.
-
 - Support for Visual C++ 2013
 
 - Platform support for Google Native Client
@@ -52,7 +47,7 @@ in the source.
 
 - Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
 
-- CBC-MAC, X9.19-MAC
+- CBC-MAC
 
 - PBKDF1 key derivation
 
