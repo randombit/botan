@@ -14,6 +14,7 @@ namespace Botan {
 
 namespace {
 
+BOTAN_ALIGNAS(64)
 const uint8_t SM4_SBOX[256] = {
 0xD6, 0x90, 0xE9, 0xFE, 0xCC, 0xE1, 0x3D, 0xB7, 0x16, 0xB6, 0x14, 0xC2, 0x28, 0xFB, 0x2C, 0x05,
 0x2B, 0x67, 0x9A, 0x76, 0x2A, 0xBE, 0x04, 0xC3, 0xAA, 0x44, 0x13, 0x26, 0x49, 0x86, 0x06, 0x99,
@@ -36,6 +37,7 @@ const uint8_t SM4_SBOX[256] = {
 /*
 * SM4_SBOX_T[j] == L(SM4_SBOX[j]).
 */
+BOTAN_ALIGNAS(64)
 const uint32_t SM4_SBOX_T[256] = {
    0x8ED55B5B, 0xD0924242, 0x4DEAA7A7, 0x06FDFBFB, 0xFCCF3333, 0x65E28787,
    0xC93DF4F4, 0x6BB5DEDE, 0x4E165858, 0x6EB4DADA, 0x44145050, 0xCAC10B0B,
@@ -112,12 +114,19 @@ inline uint32_t SM4_Tp(uint32_t b)
    return t ^ rotl<13>(t) ^ rotl<23>(t);
    }
 
-#define SM4_RNDS(k0,k1,k2,k3,F) do {        \
-         B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[k0]); \
-         B1 ^= F(B0 ^ B2 ^ B3 ^ m_RK[k1]); \
-         B2 ^= F(B0 ^ B1 ^ B3 ^ m_RK[k2]); \
-         B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[k3]); \
-      } while(0)
+#define SM4_E_RNDS(B, R, F) do {                           \
+   B##0 ^= F(B##1 ^ B##2 ^ B##3 ^ m_RK[4*R+0]);            \
+   B##1 ^= F(B##0 ^ B##2 ^ B##3 ^ m_RK[4*R+1]);            \
+   B##2 ^= F(B##0 ^ B##1 ^ B##3 ^ m_RK[4*R+2]);            \
+   B##3 ^= F(B##0 ^ B##1 ^ B##2 ^ m_RK[4*R+3]);            \
+   } while(0)
+
+#define SM4_D_RNDS(B, R, F) do {                           \
+   B##0 ^= F(B##1 ^ B##2 ^ B##3 ^ m_RK[4*R+3]);            \
+   B##1 ^= F(B##0 ^ B##2 ^ B##3 ^ m_RK[4*R+2]);            \
+   B##2 ^= F(B##0 ^ B##1 ^ B##3 ^ m_RK[4*R+1]);            \
+   B##3 ^= F(B##0 ^ B##1 ^ B##2 ^ m_RK[4*R+0]);            \
+   } while(0)
 
 }
 
@@ -133,6 +142,42 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       return sm4_armv8_encrypt(in, out, blocks);
 #endif
 
+   while(blocks >= 2)
+      {
+      uint32_t B0 = load_be<uint32_t>(in, 0);
+      uint32_t B1 = load_be<uint32_t>(in, 1);
+      uint32_t B2 = load_be<uint32_t>(in, 2);
+      uint32_t B3 = load_be<uint32_t>(in, 3);
+
+      uint32_t C0 = load_be<uint32_t>(in, 4);
+      uint32_t C1 = load_be<uint32_t>(in, 5);
+      uint32_t C2 = load_be<uint32_t>(in, 6);
+      uint32_t C3 = load_be<uint32_t>(in, 7);
+
+      SM4_E_RNDS(B, 0, SM4_T_slow);
+      SM4_E_RNDS(C, 0, SM4_T_slow);
+      SM4_E_RNDS(B, 1, SM4_T);
+      SM4_E_RNDS(C, 1, SM4_T);
+      SM4_E_RNDS(B, 2, SM4_T);
+      SM4_E_RNDS(C, 2, SM4_T);
+      SM4_E_RNDS(B, 3, SM4_T);
+      SM4_E_RNDS(C, 3, SM4_T);
+      SM4_E_RNDS(B, 4, SM4_T);
+      SM4_E_RNDS(C, 4, SM4_T);
+      SM4_E_RNDS(B, 5, SM4_T);
+      SM4_E_RNDS(C, 5, SM4_T);
+      SM4_E_RNDS(B, 6, SM4_T);
+      SM4_E_RNDS(C, 6, SM4_T);
+      SM4_E_RNDS(B, 7, SM4_T_slow);
+      SM4_E_RNDS(C, 7, SM4_T_slow);
+
+      store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t B0 = load_be<uint32_t>(in, 0);
@@ -140,14 +185,14 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t B2 = load_be<uint32_t>(in, 2);
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
-      SM4_RNDS( 0,  1,  2,  3, SM4_T_slow);
-      SM4_RNDS( 4,  5,  6,  7, SM4_T);
-      SM4_RNDS( 8,  9, 10, 11, SM4_T);
-      SM4_RNDS(12, 13, 14, 15, SM4_T);
-      SM4_RNDS(16, 17, 18, 19, SM4_T);
-      SM4_RNDS(20, 21, 22, 23, SM4_T);
-      SM4_RNDS(24, 25, 26, 27, SM4_T);
-      SM4_RNDS(28, 29, 30, 31, SM4_T_slow);
+      SM4_E_RNDS(B, 0, SM4_T_slow);
+      SM4_E_RNDS(B, 1, SM4_T);
+      SM4_E_RNDS(B, 2, SM4_T);
+      SM4_E_RNDS(B, 3, SM4_T);
+      SM4_E_RNDS(B, 4, SM4_T);
+      SM4_E_RNDS(B, 5, SM4_T);
+      SM4_E_RNDS(B, 6, SM4_T);
+      SM4_E_RNDS(B, 7, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0);
 
@@ -168,6 +213,42 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       return sm4_armv8_decrypt(in, out, blocks);
 #endif
 
+   while(blocks >= 2)
+      {
+      uint32_t B0 = load_be<uint32_t>(in, 0);
+      uint32_t B1 = load_be<uint32_t>(in, 1);
+      uint32_t B2 = load_be<uint32_t>(in, 2);
+      uint32_t B3 = load_be<uint32_t>(in, 3);
+
+      uint32_t C0 = load_be<uint32_t>(in, 4);
+      uint32_t C1 = load_be<uint32_t>(in, 5);
+      uint32_t C2 = load_be<uint32_t>(in, 6);
+      uint32_t C3 = load_be<uint32_t>(in, 7);
+
+      SM4_D_RNDS(B, 7, SM4_T_slow);
+      SM4_D_RNDS(C, 7, SM4_T_slow);
+      SM4_D_RNDS(B, 6, SM4_T);
+      SM4_D_RNDS(C, 6, SM4_T);
+      SM4_D_RNDS(B, 5, SM4_T);
+      SM4_D_RNDS(C, 5, SM4_T);
+      SM4_D_RNDS(B, 4, SM4_T);
+      SM4_D_RNDS(C, 4, SM4_T);
+      SM4_D_RNDS(B, 3, SM4_T);
+      SM4_D_RNDS(C, 3, SM4_T);
+      SM4_D_RNDS(B, 2, SM4_T);
+      SM4_D_RNDS(C, 2, SM4_T);
+      SM4_D_RNDS(B, 1, SM4_T);
+      SM4_D_RNDS(C, 1, SM4_T);
+      SM4_D_RNDS(B, 0, SM4_T_slow);
+      SM4_D_RNDS(C, 0, SM4_T_slow);
+
+      store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t B0 = load_be<uint32_t>(in, 0);
@@ -175,14 +256,14 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t B2 = load_be<uint32_t>(in, 2);
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
-      SM4_RNDS(31, 30, 29, 28, SM4_T_slow);
-      SM4_RNDS(27, 26, 25, 24, SM4_T);
-      SM4_RNDS(23, 22, 21, 20, SM4_T);
-      SM4_RNDS(19, 18, 17, 16, SM4_T);
-      SM4_RNDS(15, 14, 13, 12, SM4_T);
-      SM4_RNDS(11, 10,  9,  8, SM4_T);
-      SM4_RNDS( 7,  6,  5,  4, SM4_T);
-      SM4_RNDS( 3,  2,  1,  0, SM4_T_slow);
+      SM4_D_RNDS(B, 7, SM4_T_slow);
+      SM4_D_RNDS(B, 6, SM4_T);
+      SM4_D_RNDS(B, 5, SM4_T);
+      SM4_D_RNDS(B, 4, SM4_T);
+      SM4_D_RNDS(B, 3, SM4_T);
+      SM4_D_RNDS(B, 2, SM4_T);
+      SM4_D_RNDS(B, 1, SM4_T);
+      SM4_D_RNDS(B, 0, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0);
 
@@ -191,7 +272,8 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
    }
 
-#undef SM4_RNDS
+#undef SM4_E_RNDS
+#undef SM4_D_RNDS
 
 /*
 * SM4 Key Schedule
