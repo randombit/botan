@@ -69,7 +69,7 @@ class PK_Encrypt final : public Command
             };
          this->read_file(get_arg("datafile"), insert_fn);
 
-         const Botan::AlgorithmIdentifier hash_id(OAEP_HASH, Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+         const Botan::AlgorithmIdentifier hash_id(OAEP_HASH, Botan::AlgorithmIdentifier::USE_EMPTY_PARAM);
          const Botan::AlgorithmIdentifier pk_alg_id("RSA/OAEP", hash_id.BER_encode());
 
          Botan::PK_Encryptor_EME enc(*key, rng(), "OAEP(" + OAEP_HASH + ")");
@@ -154,30 +154,41 @@ class PK_Decrypt final : public Command
             }
          catch(Botan::Decoding_Error&)
             {
-            output() << "Parsing input file failed: invalid format?\n";
-            set_return_code(1);
-            return;
+            error_output() << "Parsing input file failed: invalid format?\n";
+            return set_return_code(1);
             }
 
          const std::string aead_algo = Botan::OIDS::lookup(aead_oid);
          if(aead_algo == "")
             {
-            output() << "Ciphertext was encrypted with an unknown algorithm";
-            set_return_code(1);
-            return;
+            error_output() << "Ciphertext was encrypted with an unknown algorithm";
+            return set_return_code(1);
             }
 
          if(pk_alg_id.get_oid() != Botan::OIDS::lookup("RSA/OAEP"))
             {
-            output() << "Ciphertext was encrypted with something other than RSA/OAEP";
-            set_return_code(1);
-            return;
+            error_output() << "Ciphertext was encrypted with something other than RSA/OAEP";
+            return set_return_code(1);
             }
 
-         Botan::AlgorithmIdentifier oaep_hash;
-         Botan::BER_Decoder(pk_alg_id.get_parameters()).decode(oaep_hash);
+         Botan::AlgorithmIdentifier oaep_hash_id;
+         Botan::BER_Decoder(pk_alg_id.get_parameters()).decode(oaep_hash_id);
 
-         Botan::PK_Decryptor_EME dec(*key, rng(), "OAEP(" + Botan::OIDS::lookup(oaep_hash.get_oid()) + ")");
+         const std::string oaep_hash = Botan::OIDS::lookup(oaep_hash_id.get_oid());
+
+         if(oaep_hash.empty())
+            {
+            error_output() << "Unknown hash function used with OAEP, OID " << oaep_hash_id.get_oid().as_string() << "\n";
+            return set_return_code(1);
+            }
+
+         if(oaep_hash_id.get_parameters().empty() == false)
+            {
+            error_output() << "Unknown OAEP parameters used\n";
+            return set_return_code(1);
+            }
+
+         Botan::PK_Decryptor_EME dec(*key, rng(), "OAEP(" + oaep_hash + ")");
 
          const Botan::secure_vector<uint8_t> file_key = dec.decrypt(encrypted_key);
 
@@ -196,9 +207,8 @@ class PK_Decrypt final : public Command
             }
          catch(Botan::Integrity_Failure&)
             {
-            output() << "Message authentication failure, possible ciphertext tampering\n";
-            set_return_code(1);
-            return;
+            error_output() << "Message authentication failure, possible ciphertext tampering\n";
+            return set_return_code(1);
             }
          }
    };

@@ -477,7 +477,7 @@ def cli_pk_encrypt_tests():
 
     # Because we used a fixed DRBG for each invocation the same ctext is generated each time
     rng_output_hash = "32F5E7B61357DE8397EFDA1E598379DFD5EE21767BDF4E2A435F05117B836AC6"
-    ctext_hash = "DBF227237924EF2B2171B5B9A1C52C152C388E407CF3D32122A4984D471F8F77"
+    ctext_hash = "BEA478C6D30CF0517AF6FC463D7CFDFB11AE2992ED744FF76E67612137780025"
 
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", input_file], rng_output_hash)
 
