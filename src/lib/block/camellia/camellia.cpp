@@ -544,10 +544,12 @@ namespace Camellia_F {
 
 /*
 * We use the slow byte-wise version of F in the first and last rounds
-* to help protect against timing attacks
+* to help protect against side channels analyzing cache hits on the
+* larger sbox tables.
 */
 uint64_t F_SLOW(uint64_t v, uint64_t K)
    {
+   BOTAN_ALIGNAS(64)
    static const uint8_t SBOX[256] = {
       0x70, 0x82, 0x2C, 0xEC, 0xB3, 0x27, 0xC0, 0xE5, 0xE4, 0x85, 0x57,
       0x35, 0xEA, 0x0C, 0xAE, 0x41, 0x23, 0xEF, 0x6B, 0x93, 0x45, 0x19,
