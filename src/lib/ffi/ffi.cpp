@@ -86,7 +86,11 @@ int botan_ffi_supports_api(uint32_t api_version)
 
    // Older versions that are still supported
 
-   // This is the 2.1/2.2 API
+   // This is the API introduced in 2.3
+   if(api_version == 20170815)
+      return BOTAN_FFI_SUCCESS;
+
+   // This is the API introduced in 2.1
    if(api_version == 20170327)
       return BOTAN_FFI_SUCCESS;
 

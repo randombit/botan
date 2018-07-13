@@ -145,6 +145,13 @@ class FFI_Unit_Tests final : public Test
          result.test_is_eq("Botan version datestamp", botan_version_datestamp(), Botan::version_datestamp());
          result.test_is_eq("FFI supports its own version", botan_ffi_supports_api(botan_ffi_api_version()), 0);
 
+         result.test_is_eq("FFI supports 2.0 version", botan_ffi_supports_api(20150515), 0);
+         result.test_is_eq("FFI supports 2.1 version", botan_ffi_supports_api(20170327), 0);
+         result.test_is_eq("FFI supports 2.3 version", botan_ffi_supports_api(20170815), 0);
+         result.test_is_eq("FFI supports 2.8 version", botan_ffi_supports_api(20180713), 0);
+
+         result.test_is_eq("FFI doesn't support bogus version", botan_ffi_supports_api(20160229), -1);
+
          const std::vector<uint8_t> mem1 = { 0xFF, 0xAA, 0xFF };
          const std::vector<uint8_t> mem2 = mem1;
          const std::vector<uint8_t> mem3 = { 0xFF, 0xA9, 0xFF };
