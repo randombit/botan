@@ -6,6 +6,13 @@ Version 2.8.0, Not Yet Released
 
 * Add support for using the ARMv8 instructions for SM4 encryption (GH #1622)
 
+* The default bcrypt work factor has been increased from 10 to 12.
+
+* The default algorithm used in passhash9 has changed from SHA-256 to SHA-512,
+  and the default work factor increased from 10 to 15.
+
+* Add functions to use FE1 format perserving encryption in FF (GH #1625)
+
 * Avoid a cache side channel in the AES key schedule
 
 * Add functions to load and save RSA keys in PKCS #1 format to FFI (GH #1621)

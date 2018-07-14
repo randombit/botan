@@ -33,7 +33,7 @@ class RandomNumberGenerator;
 */
 std::string BOTAN_PUBLIC_API(2,0) generate_bcrypt(const std::string& password,
                                                   RandomNumberGenerator& rng,
-                                                  uint16_t work_factor = 10,
+                                                  uint16_t work_factor = 12,
                                                   char version = 'a');
 
 /**

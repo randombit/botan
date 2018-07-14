@@ -114,6 +114,14 @@
    #include <botan/scrypt.h>
 #endif
 
+#if defined(BOTAN_HAS_BCRYPT)
+   #include <botan/bcrypt.h>
+#endif
+
+#if defined(BOTAN_HAS_PASSHASH9)
+   #include <botan/passhash9.h>
+#endif
+
 namespace Botan_CLI {
 
 namespace {
@@ -906,6 +914,18 @@ class Speed final : public Command
             else if(algo == "scrypt")
                {
                bench_scrypt(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_BCRYPT)
+            else if(algo == "bcrypt")
+               {
+               bench_bcrypt();
+               }
+#endif
+#if defined(BOTAN_HAS_PASSHASH9)
+            else if(algo == "passhash9")
+               {
+               bench_passhash9();
                }
 #endif
 
@@ -2153,6 +2173,51 @@ class Speed final : public Command
 
             record_result(keygen_timer);
             bench_pk_sig(*key, params, provider, "", msec);
+            }
+         }
+#endif
+
+#if defined(BOTAN_HAS_BCRYPT)
+
+      void bench_bcrypt()
+         {
+         const std::string password = "not a very good password";
+
+         for(uint8_t work_factor = 4; work_factor <= 14; ++work_factor)
+            {
+            std::unique_ptr<Timer> timer = make_timer("bcrypt wf=" + std::to_string(work_factor));
+
+            timer->run([&] {
+               Botan::generate_bcrypt(password, rng(), work_factor);
+                  });
+
+            record_result(timer);
+            }
+         }
+#endif
+
+#if defined(BOTAN_HAS_PASSHASH9)
+
+      void bench_passhash9()
+         {
+         const std::string password = "not a very good password";
+
+         for(uint8_t alg = 0; alg <= 4; ++alg)
+            {
+            if(Botan::is_passhash9_alg_supported(alg) == false)
+               continue;
+
+            for(uint8_t work_factor : { 10, 15 })
+               {
+               std::unique_ptr<Timer> timer = make_timer("passhash9 alg=" + std::to_string(alg) +
+                                                         " wf=" + std::to_string(work_factor));
+
+               timer->run([&] {
+                  Botan::generate_passhash9(password, rng(), work_factor, alg);
+                  });
+
+               record_result(timer);
+               }
             }
          }
 #endif

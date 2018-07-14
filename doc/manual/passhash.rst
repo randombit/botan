@@ -83,32 +83,54 @@ Bcrypt provides outputs that look like this::
 
   "$2a$12$7KIYdyv8Bp32WAvc.7YvI.wvRlyVn0HP/EhPmmOyMQA4YKxINO0p2"
 
-Currently only the `2a` bcrypt format is supported.
+.. note::
+
+   Due to the design of bcrypt, the password is effectively truncated at 72
+   characters; further characters are ignored and do not change the hash. To
+   support longer passwords, one common approach is to pre-hash the password
+   with SHA-256, then run bcrypt using the hex or base64 encoding of the hash as
+   the password. (Many bcrypt implementations truncate the password at the first
+   NULL character, so hashing the raw binary SHA-256 may cause problems. Botan's
+   bcrypt implementation will hash whatever values are given in the
+   ``std::string`` including any embedded NULLs so this is not an issue, but
+   might cause interop problems if another library needs to validate the
+   password hashes.)
 
 .. cpp:function:: std::string generate_bcrypt(const std::string& password, \
                     RandomNumberGenerator& rng, \
-                    uint16_t work_factor = 10, \
+                    uint16_t work_factor = 12, \
                     char bcrypt_version = "a")
 
-   Takes the password to hash, a rng, and a work factor. Higher work
-   factors increase the amount of time the algorithm runs, increasing
-   the cost of cracking attempts. The increase is exponential, so a
-   work factor of 10 takes roughly twice as long as work factor 9.
-
+   Takes the password to hash, a rng, and a work factor.
    The resulting password hash is returned as a string.
 
-   Due to bugs affecting various implementations of bcrypt, several
-   different variants of the algorithm are defined. As of 2.7.0 Botan
-   supports generating (or checking) the 2a, 2b, and 2y variants.
-   Since Botan has never been affected by any of the bugs which
-   necessitated these version upgrades, all three versions are
-   identical beyond the version identifier. Which variant to use is
-   controlled by the ``bcrypt_version`` argument.
+   Higher work factors increase the amount of time the algorithm runs,
+   increasing the cost of cracking attempts. The increase is exponential, so a
+   work factor of 12 takes roughly twice as long as work factor 11. The default
+   work factor was set to 10 up until the 2.8.0 release.
 
-   The bcrypt work factor must be at least 4. The bcrypt format allows
-   up to 31, but Botan currently rejects all work factors greater than
-   18 since even that work factor requires roughly 15 seconds of
-   computation on a fast machine.
+   It is recommended to set the work factor as high as your system can tolerate
+   (from a performance and latency perspective) since higher workfactors greatly
+   improve the security against GPU-based attacks.  For example, for protecting
+   high value administrator passwords, consider using work factor 15 or 16; at
+   these work factors each bcrypt computation takes several seconds. Since admin
+   logins will be relatively uncommon, it might be acceptable for each login
+   attempt to take some time. As of 2018, a good password cracking rig (with 8
+   NVIDIA 1080 cards) can attempt about 1 billion bcrypt computations per month
+   for work factor 13. For work factor 12, it can do twice as many.  For work
+   factor 15, it can do only one quarter as many attempts.
+
+   Due to bugs affecting various implementations of bcrypt, several different
+   variants of the algorithm are defined. As of 2.7.0 Botan supports generating
+   (or checking) the 2a, 2b, and 2y variants.  Since Botan has never been
+   affected by any of the bugs which necessitated these version upgrades, all
+   three versions are identical beyond the version identifier. Which variant to
+   use is controlled by the ``bcrypt_version`` argument.
+
+   The bcrypt work factor must be at least 4 (though at this work factor bcrypt
+   is not very secure). The bcrypt format allows up to 31, but Botan currently
+   rejects all work factors greater than 18 since even that work factor requires
+   roughly 15 seconds of computation on a fast machine.
 
 .. cpp:function:: bool check_bcrypt(const std::string& password, \
    const std::string& hash)
@@ -139,15 +161,15 @@ being a widely used password hash. Prefer bcrypt.
    for scrypt password hashes on Cisco systems.
 
 .. cpp:function:: std::string generate_passhash9(const std::string& password, \
-   RandomNumberGenerator& rng, uint16_t work_factor = 10, uint8_t alg_id = 1)
+   RandomNumberGenerator& rng, uint16_t work_factor = 15, uint8_t alg_id = 4)
 
    Functions much like ``generate_bcrypt``. The last parameter,
    ``alg_id``, specifies which PRF to use. Currently defined values are
    0: HMAC(SHA-1), 1: HMAC(SHA-256), 2: CMAC(Blowfish), 3: HMAC(SHA-384), 4: HMAC(SHA-512)
 
-   Currently, this performs 10000 * ``work_factor`` PBKDF2 iterations,
-   using 96 bits of salt taken from ``rng``. The iteration count is
-   encoded as a 16-bit integer and is multiplied by 10000.
+   The work factor must be greater than zero and less than 512. This performs
+   10000 * ``work_factor`` PBKDF2 iterations, using 96 bits of salt taken from
+   ``rng``. Using work factor of 10 or more is recommended.
 
 .. cpp:function:: bool check_passhash9(const std::string& password, \
    const std::string& hash)

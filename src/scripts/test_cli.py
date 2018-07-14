@@ -542,7 +542,7 @@ def cli_speed_tests():
             logging.error("Unexpected line %s", line)
 
     math_ops = ['mp_mul', 'modexp', 'random_prime', 'inverse_mod', 'rfc3394', 'fpe_fe1',
-                'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp']
+                'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'bcrypt', 'passhash9']
 
     format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
     for op in math_ops:

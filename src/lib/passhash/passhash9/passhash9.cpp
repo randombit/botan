@@ -46,6 +46,8 @@ std::string generate_passhash9(const std::string& pass,
                                uint16_t work_factor,
                                uint8_t alg_id)
    {
+   BOTAN_ARG_CHECK(work_factor > 0 && work_factor < 512, "Invalid Passhash9 work factor");
+
    std::unique_ptr<MessageAuthenticationCode> prf = get_pbkdf_prf(alg_id);
 
    if(!prf)
