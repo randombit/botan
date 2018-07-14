@@ -13,6 +13,10 @@ Version 2.8.0, Not Yet Released
 
 * Add functions to use FE1 format perserving encryption in FF (GH #1625)
 
+* Resolve a problem when building under Visual C++ 15.8 (GH #1624)
+
+* Optimizations for SM4
+
 * Avoid a cache side channel in the AES key schedule
 
 * Add functions to load and save RSA keys in PKCS #1 format to FFI (GH #1621)
