@@ -1,10 +1,10 @@
 
-FFI (C89) Interface
+FFI (C Binding)
 ========================================
 
 .. versionadded:: 1.11.14
 
-Botan's ffi module provides a C89 API intended to be easily usable with other
+Botan's ffi module provides a C89 binding intended to be easily usable with other
 language's foreign function interface (FFI) libraries. For instance the included
 Python wrapper uses Python's ``ctypes`` module and the C89 API. This API is of
 course also useful for programs written directly in C.
