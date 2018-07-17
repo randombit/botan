@@ -3,42 +3,101 @@
 Random Number Generators
 ========================================
 
-The base class ``RandomNumberGenerator`` is in the header ``botan/rng.h``.
+.. cpp:class:: RandomNumberGenerator
 
-The major interfaces are
+   The base class for all RNG objects, is declared in ``rng.h``.
 
-.. cpp:function:: void RandomNumberGenerator::randomize(uint8_t* output_array, size_t length)
+   .. cpp:function:: void RandomNumberGenerator::randomize(uint8_t* output_array, size_t length)
 
-  Places *length* random bytes into the provided buffer.
+      Places *length* random bytes into the provided buffer.
 
-.. cpp:function:: void RandomNumberGenerator::add_entropy(const uint8_t* data, size_t length)
+   .. cpp:function:: uint8_t next_byte()
 
-  Incorporates provided data into the state of the PRNG, if at all
-  possible.  This works for most RNG types, including the system and
-  TPM RNGs. But if the RNG doesn't support this operation, the data is
-  dropped, no error is indicated.
+      Return a single random byte
 
-.. cpp:function:: void RandomNumberGenerator::randomize_with_input(uint8_t* data, size_t length, \
-    const uint8_t* ad, size_t ad_len)
+   .. cpp:function:: void RandomNumberGenerator::randomize_with_input(uint8_t* data, size_t length, \
+                     const uint8_t* ad, size_t ad_len)
 
-  Like randomize, but first incorporates the additional input field
-  into the state of the RNG. The additional input could be anything which
-  parameterizes this request. Not all RNG types accept additional inputs.
+      Like randomize, but first incorporates the additional input field into the
+      state of the RNG. The additional input could be anything which
+      parameterizes this request. Not all RNG types accept additional inputs.
 
-.. cpp:function:: void RandomNumberGenerator::randomize_with_ts_input(uint8_t* data, size_t length)
+   .. cpp:function:: void RandomNumberGenerator::randomize_with_ts_input(uint8_t* data, size_t length)
 
-  Creates a buffer with some timestamp values and calls ``randomize_with_input``
+      Creates a buffer with some timestamp values and calls ``randomize_with_input``
 
-.. cpp:function:: uint8_t RandomNumberGenerator::next_byte()
+   .. cpp:function:: uint8_t RandomNumberGenerator::next_byte()
 
-  Generates a single random byte and returns it. Note that calling this
-  function several times is much slower than calling ``randomize`` once
-  to produce multiple bytes at a time.
+      Generates a single random byte and returns it. Note that calling this
+      function several times is much slower than calling ``randomize`` once to
+      produce multiple bytes at a time.
+
+   .. cpp:function:: void RandomNumberGenerator::add_entropy(const uint8_t* data, size_t length)
+
+      Incorporates provided data into the state of the PRNG, if at all possible.
+      This works for most RNG types, including the system and TPM RNGs. But if
+      the RNG doesn't support this operation, the data is dropped, no error is
+      indicated.
+
+   .. cpp:function:: void reseed_from_rng(RandomNumberGenerator& rng, \
+                     size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS)
+
+      Reseed by calling ``rng`` to acquire ``poll_bits`` data.
+
 
 RNG Types
 ----------------------------------------
 
-The following RNG types are included
+Several different RNG types are implemented. Some access hardware RNGs, which
+are only available on certain platforms. Others are mostly useful in specific
+situations.
+
+Generally prefer using either the system RNG, or else ``AutoSeeded_RNG`` which is
+intented to provide best possible behavior in a userspace PRNG.
+
+System_RNG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+On systems which support it, in ``system_rng.h`` you can access a shared
+reference to a process global instance of the system PRNG (using interfaces such
+as ``/dev/urandom``, ``arc4random``, or ``RtlGenRandom``):
+
+.. cpp:function:: RandomNumberGenerator& system_rng()
+
+   Returns a reference to the system RNG
+
+There is also a wrapper class ``System_RNG`` which simply invokes on
+the return value of ``system_rng()``. This is useful in situations where
+you may sometimes want to use the system RNG and a userspace RNG in others,
+for example::
+
+  std::unique_ptr<Botan::RandomNumberGenerator> rng;
+  #if defined(BOTAN_HAS_SYSTEM_RNG)
+  rng.reset(new System_RNG);
+  #else
+  rng.reset(new AutoSeeded_RNG);
+  #endif
+
+Unlike nearly any other object in Botan it is acceptable to share a single
+instance of ``System_RNG`` between threads, because the underlying RNG is itself
+thread safe due to being serialized by a mutex in the kernel itself.
+
+AutoSeeded_RNG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+AutoSeeded_RNG is type naming a 'best available' userspace PRNG. The
+exact definition of this has changed over time and may change in the
+future, fortunately there is no compatability concerns when changing
+any RNG since the only expectation is it produces bits
+indistinguishable from random.
+
+.. note:: Like most other classes in Botan, it is not safe to share an instance
+          of ``AutoSeeded_RNG`` among multiple threads without serialization.
+
+The current version uses HMAC_DRBG with either SHA-384 or SHA-256. The
+initial seed is generated either by the system PRNG (if available) or
+a default set of entropy sources. These are also used for periodic
+reseeding of the RNG state.
 
 HMAC_DRBG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -51,33 +110,64 @@ It can be instantiated with any HMAC but is typically used with
 SHA-256, SHA-384, or SHA-512, as these are the hash functions approved
 for this use by NIST.
 
-System_RNG
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+HMAC_DRBG's constructors are:
 
-In ``system_rng.h``, objects of ``System_RNG`` reference a single
-(process global) reference to the system PRNG (such as
-``/dev/urandom`` or ``CryptGenRandom``).
+.. cpp:class:: HMAC_DRBG
 
-You can also use the function ``system_rng()`` which returns a
-reference to the global handle to the system RNG.
+      .. cpp:function:: HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf, \
+                        RandomNumberGenerator& underlying_rng, \
+                        size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL, \
+                        size_t max_number_of_bytes_per_request = 64 * 1024)
 
-AutoSeeded_RNG
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         Creates a DRBG which will automatically reseed as required by making
+         calls to ``underlying_rng`` either after being invoked
+         ``reseed_interval`` times, or if use of ``fork`` system call is
+         detected.
 
-AutoSeeded_RNG is type naming a 'best available' userspace PRNG. The
-exact definition of this has changed over time and may change in the
-future, fortunately there is no compatability concerns when changing
-any RNG since the only expectation is it produces bits
-indistinguishable from random.
+         You can disable automatic reseeding by setting ``reseed_interval`` to
+         zero, in which case ``underlying_rng`` will only be invoked in the case
+         of ``fork``.
 
-Note well: like most other classes in Botan, it is not safe to share
-an instance of ``AutoSeeded_RNG`` among multiple threads without
-serialization.
+         The specification of HMAC DRBG requires that each invocation produce no
+         more than 64 kibibytes of data. However, the RNG interface allows
+         producing arbitrary amounts of data in a single request. To accomodate
+         this, ``HMAC_DRBG`` treats requests for more data as if they were
+         multiple requests each of (at most) the maximum size. You can specify a
+         smaller maximum size with ``max_number_of_bytes_per_request``. There is
+         normally no reason to do this.
 
-The current version uses the HMAC_DRBG with SHA-384 or SHA-256. The
-initial seed is generated either by the system PRNG (if available) or
-a default set of entropy sources. These are also used for periodic
-reseeding of the RNG state.
+      .. cpp:function:: HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf, \
+                        Entropy_Sources& entropy_sources, \
+                        size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL, \
+                        size_t max_number_of_bytes_per_request = 64 * 1024)
+
+         Like above function, but instead of an RNG taking a set of entropy
+         sources to seed from as required.
+
+      .. cpp:function:: HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf, \
+                        RandomNumberGenerator& underlying_rng, \
+                        Entropy_Sources& entropy_sources, \
+                        size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL, \
+                        size_t max_number_of_bytes_per_request = 64 * 1024)
+
+         Like above function, but taking both an RNG and a set of entropy
+         sources to seed from as required.
+
+      .. cpp:function:: HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf)
+
+         Creates an unseeded DRBG. You must explicitly provide seed data later
+         on in order to use this RNG. This is primarily useful for deterministic
+         key generation.
+
+         Since no source of data is available to automatically reseed, automatic
+         reseeding is disabled when this constructor is used. If the RNG object
+         detects that ``fork`` system call was used without it being
+         subsequently reseeded, it will throw an exception.
+
+      .. cpp:function:: HMAC_DRBG(const std::string& hmac_hash)
+
+         Like the constructor just taking a PRF, except instead of a PRF object,
+         a string specifying what hash to use with HMAC is provided.
 
 ChaCha_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
