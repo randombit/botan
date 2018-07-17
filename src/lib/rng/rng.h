@@ -173,8 +173,7 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
 typedef RandomNumberGenerator RNG;
 
 /**
-* Hardware_RNG has no members but exists to tag hardware RNG types
-* (PKCS11_RNG, TPM_RNG, RDRAND_RNG)
+* Hardware_RNG exists to tag hardware RNG types (PKCS11_RNG, TPM_RNG, RDRAND_RNG)
 */
 class BOTAN_PUBLIC_API(2,0) Hardware_RNG : public RandomNumberGenerator
    {
