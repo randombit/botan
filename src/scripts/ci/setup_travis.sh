@@ -36,10 +36,10 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
          fi
 
     elif [ "$BUILD_MODE" = "lint" ]; then
-        pip install --user pylint
+        pip install --user pylint==1.9.2
 
         sudo apt-get install python3-pip
-        pip3 install --user pylint
+        pip3 install --user pylint==1.9.2
 
     elif [ "$BUILD_MODE" = "coverage" ]; then
         sudo apt-get -qq update
