@@ -48,7 +48,7 @@ class BOTAN_PUBLIC_API(2,0) CCM_Mode : public AEAD_Mode
 
       const BlockCipher& cipher() const { return *m_cipher; }
 
-      void encode_length(size_t len, uint8_t out[]);
+      void encode_length(uint64_t len, uint8_t out[]);
 
       void inc(secure_vector<uint8_t>& C);
 
