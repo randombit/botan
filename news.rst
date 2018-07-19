@@ -6,6 +6,9 @@ Version 2.8.0, Not Yet Released
 
 * Add support for using the ARMv8 instructions for SM4 encryption (GH #1622)
 
+* Fixed a bug that caused CCM to fail with an exception when used with L=8
+  (GH #1631 #1632)
+
 * The default bcrypt work factor has been increased from 10 to 12.
 
 * The default algorithm used in passhash9 has changed from SHA-256 to SHA-512,
