@@ -353,11 +353,33 @@ void bigint_shl1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
       }
    }
 
+namespace {
+
+void bigint_shift_right_1(word x[], size_t x_size)
+   {
+   word carry = 0;
+   size_t top = x_size;
+
+   while(top)
+      {
+      word w = x[top-1];
+      x[top-1] = (w >> 1) | carry;
+      carry = (w << (BOTAN_MP_WORD_BITS - 1));
+
+      top--;
+      }
+   }
+
+}
+
 /*
 * Single Operand Right Shift
 */
 void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
    {
+   if(word_shift == 0 && bit_shift == 1)
+      return bigint_shift_right_1(x, x_size);
+
    if(x_size < word_shift)
       {
       clear_mem(x, x_size);
