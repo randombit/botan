@@ -1,6 +1,6 @@
 /*
 * CCM Mode Encryption
-* (C) 2013 Jack Lloyd
+* (C) 2013,2018 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -113,16 +113,17 @@ size_t CCM_Mode::process(uint8_t buf[], size_t sz)
    return 0; // no output until finished
    }
 
-void CCM_Mode::encode_length(size_t len, uint8_t out[])
+void CCM_Mode::encode_length(uint64_t len, uint8_t out[])
    {
    const size_t len_bytes = L();
 
-   BOTAN_ASSERT(len_bytes < sizeof(size_t), "Length field fits");
+   BOTAN_ASSERT_NOMSG(len_bytes >= 1 && len_bytes <= 8);
 
    for(size_t i = 0; i != len_bytes; ++i)
-      out[len_bytes-1-i] = get_byte(sizeof(size_t)-1-i, len);
+      out[len_bytes-1-i] = get_byte(sizeof(uint64_t)-1-i, len);
 
-   BOTAN_ASSERT((len >> (len_bytes*8)) == 0, "Message length fits in field");
+   if(len_bytes < 8 && (len >> (len_bytes*8)) > 0)
+      throw Encoding_Error("CCM message length too long to encode in L field");
    }
 
 void CCM_Mode::inc(secure_vector<uint8_t>& C)
