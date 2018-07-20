@@ -187,15 +187,24 @@ class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_w
          if(res < 0)
             {
             int err = ERR_get_error();
+
+            bool hard_error = true;
+
 #if defined(EC_R_BAD_SIGNATURE)
-            if(ERR_GET_REASON(err) != EC_R_BAD_SIGNATURE)
-               throw OpenSSL_Error("ECDSA_do_verify", err);
-#elif defined(ECDSA_R_BAD_SIGNATURE)
-            if(ERR_GET_REASON(err) != ECDSA_R_BAD_SIGNATURE)
-               throw OpenSSL_Error("ECDSA_do_verify", err);
-#else
-            throw OpenSSL_Error("ECDSA_do_verify");
+            if(ERR_GET_REASON(err) == EC_R_BAD_SIGNATURE)
+               hard_error = false;
 #endif
+#if defined(EC_R_POINT_AT_INFINITY)
+            if(ERR_GET_REASON(err) == EC_R_POINT_AT_INFINITY)
+               hard_error = false;
+#endif
+#if defined(ECDSA_R_BAD_SIGNATURE)
+            if(ERR_GET_REASON(err) == ECDSA_R_BAD_SIGNATURE)
+               hard_error = false;
+#endif
+
+            if(hard_error)
+               throw OpenSSL_Error("ECDSA_do_verify", err);
             }
          return (res == 1);
          }
