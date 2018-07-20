@@ -67,4 +67,10 @@ int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source)
       *dest = new botan_hash_struct(src.copy_state().release()); });
    }
 
+int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len)
+   {
+   return BOTAN_FFI_DO(Botan::HashFunction, hash, h, {
+      return write_str_output(name, name_len, h.name()); });
+   }
+
 }

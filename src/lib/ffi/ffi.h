@@ -214,6 +214,18 @@ BOTAN_PUBLIC_API(2,0) int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t ou
 BOTAN_PUBLIC_API(2,0) int botan_rng_reseed(botan_rng_t rng, size_t bits);
 
 /**
+* Add some seed material to a random number generator
+*
+* @param rng rng object
+* @param entropy the data to add
+* @param entropy_len length of entropy buffer
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_PUBLIC_API(2,8) int botan_rng_add_entropy(botan_rng_t rng,
+                                                const uint8_t* entropy,
+                                                size_t entropy_len);
+
+/**
 * Frees all resources of the random number generator object
 * @param rng rng object
 * @return always returns 0
@@ -296,9 +308,12 @@ BOTAN_PUBLIC_API(2,0) int botan_hash_clear(botan_hash_t hash);
 BOTAN_PUBLIC_API(2,0) int botan_hash_destroy(botan_hash_t hash);
 
 /**
-* TODO has no implementation
+* Get the name of this hash function
+* @param hash the object to read
+* @param name output buffer
+* @param name_len on input, the length of buffer, on success the number of bytes written
 */
-BOTAN_PUBLIC_API(2,0) int botan_hash_name(botan_hash_t hash, char* name, size_t name_len);
+BOTAN_PUBLIC_API(2,8) int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len);
 
 /*
 * Message Authentication type
@@ -360,6 +375,14 @@ BOTAN_PUBLIC_API(2,0) int botan_mac_final(botan_mac_t mac, uint8_t out[]);
 BOTAN_PUBLIC_API(2,0) int botan_mac_clear(botan_mac_t mac);
 
 /**
+* Get the name of this MAC
+* @param mac the object to read
+* @param name output buffer
+* @param name_len on input, the length of buffer, on success the number of bytes written
+*/
+BOTAN_PUBLIC_API(2,8) int botan_mac_name(botan_mac_t mac, char* name, size_t* name_len);
+
+/**
 * Frees all resources of the MAC object
 * @param mac mac object
 * @return always returns 0
@@ -376,6 +399,8 @@ typedef struct botan_cipher_struct* botan_cipher_t;
 #define BOTAN_CIPHER_INIT_FLAG_DECRYPT 1
 
 BOTAN_PUBLIC_API(2,0) int botan_cipher_init(botan_cipher_t* cipher, const char* name, uint32_t flags);
+
+BOTAN_PUBLIC_API(2,8) int botan_cipher_name(botan_cipher_t cipher, char* name, size_t* name_len);
 
 BOTAN_PUBLIC_API(2,0) int botan_cipher_valid_nonce_length(botan_cipher_t cipher, size_t nl);
 BOTAN_PUBLIC_API(2,0) int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_size);
@@ -493,7 +518,7 @@ typedef struct botan_block_cipher_struct* botan_block_cipher_t;
 * Initialize a block cipher object
 */
 BOTAN_PUBLIC_API(2,1) int botan_block_cipher_init(botan_block_cipher_t* bc,
-                                      const char* cipher_name);
+                                                  const char* cipher_name);
 
 /**
 * Destroy a block cipher object
@@ -510,7 +535,7 @@ BOTAN_PUBLIC_API(2,1) int botan_block_cipher_clear(botan_block_cipher_t bc);
 * Set the key for a block cipher instance
 */
 BOTAN_PUBLIC_API(2,1) int botan_block_cipher_set_key(botan_block_cipher_t bc,
-                                         const uint8_t key[], size_t len);
+                                                     const uint8_t key[], size_t len);
 
 /**
 * Return the positive block size of this block cipher, or negative to
@@ -519,14 +544,23 @@ BOTAN_PUBLIC_API(2,1) int botan_block_cipher_set_key(botan_block_cipher_t bc,
 BOTAN_PUBLIC_API(2,1) int botan_block_cipher_block_size(botan_block_cipher_t bc);
 
 BOTAN_PUBLIC_API(2,1) int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc,
-                                                const uint8_t in[],
-                                                uint8_t out[],
-                                                size_t blocks);
+                                                            const uint8_t in[],
+                                                            uint8_t out[],
+                                                            size_t blocks);
 
 BOTAN_PUBLIC_API(2,1) int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc,
-                                                const uint8_t in[],
-                                                uint8_t out[],
-                                                size_t blocks);
+                                                            const uint8_t in[],
+                                                            uint8_t out[],
+                                                            size_t blocks);
+
+/**
+* Get the name of this block cipher
+* @param cipher the object to read
+* @param name output buffer
+* @param name_len on input, the length of buffer, on success the number of bytes written
+*/
+BOTAN_PUBLIC_API(2,8) int botan_block_cipher_name(botan_block_cipher_t cipher,
+                                                  char* name, size_t* name_len);
 
 
 /*

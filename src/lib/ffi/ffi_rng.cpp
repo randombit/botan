@@ -51,4 +51,9 @@ int botan_rng_reseed(botan_rng_t rng, size_t bits)
    return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(Botan::system_rng(), bits); });
    }
 
+int botan_rng_add_entropy(botan_rng_t rng, const uint8_t* input, size_t len)
+   {
+   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.add_entropy(input, len); });
+   }
+
 }

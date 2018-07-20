@@ -193,4 +193,10 @@ int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tl)
    return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, { *tl = c.tag_size(); });
    }
 
+int botan_cipher_name(botan_cipher_t cipher, char* name, size_t* name_len)
+   {
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, {
+      return write_str_output(name, name_len, c.name()); });
+   }
+
 }

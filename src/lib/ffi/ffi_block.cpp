@@ -79,4 +79,10 @@ int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc,
    return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { b.decrypt_n(in, out, blocks); });
    }
 
+int botan_block_cipher_name(botan_block_cipher_t cipher, char* name, size_t* name_len)
+   {
+   return BOTAN_FFI_DO(Botan::BlockCipher, cipher, bc, {
+      return write_str_output(name, name_len, bc.name()); });
+   }
+
 }

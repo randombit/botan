@@ -61,4 +61,10 @@ int botan_mac_final(botan_mac_t mac, uint8_t out[])
    return BOTAN_FFI_DO(Botan::MessageAuthenticationCode, mac, m, { m.final(out); });
    }
 
+int botan_mac_name(botan_mac_t mac, char* name, size_t* name_len)
+   {
+   return BOTAN_FFI_DO(Botan::MessageAuthenticationCode, mac, m, {
+      return write_str_output(name, name_len, m.name()); });
+   }
+
 }
