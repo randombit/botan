@@ -147,8 +147,10 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(1))
-         .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()),
-                 OCTET_STRING)
+         .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()), OCTET_STRING)
+         .start_cons(ASN1_Tag(1), PRIVATE)
+            .encode(m_public_key.encode(PointGFp::Compression_Type::UNCOMPRESSED), BIT_STRING)
+         .end_cons()
       .end_cons()
       .get_contents();
    }
