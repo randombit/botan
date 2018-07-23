@@ -13,14 +13,13 @@ Ciphers, Hashes, PBKDF
 * Stiched AES-NI GCM mode
 * Bitsliced AES or Camellia
 * Compressed tables for AES
-* AES using vector permutes for NEON or AltiVec
+* AES using vector permutes for NEON
 * Camellia using AES-NI
 * Serpent using AVX2 or SSSE3/pshufb
 * ChaCha20 using AVX2, NEON
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
 * Argon2 PBKDF (draft-irtf-cfrg-argon2)
-* bcrypt PBKDF
 * Skein-MAC
 * PMAC
 * SIV-PMAC
@@ -39,12 +38,13 @@ Public Key Crypto, Math
 * Paillier homomorphic cryptosystem
 * Socialist Millionaires Protocol
 * Hashing onto an elliptic curve (draft-irtf-cfrg-hash-to-curve)
+* OPAQUE PAKE (draft-krawczyk-cfrg-opaque)
+* SPHINX password store (https://eprint.iacr.org/2018/695)
 * SPAKE2+ (draft-irtf-cfrg-spake2)
 * SPHINCS-256
 * X448 and Ed448
 * FHMQV
 * Use GLV decomposition to speed up secp256k1 operations
-* wNAF ECC point multiply
 * Recover ECDSA public key from signature/message pair (GH #664)
 
 Utility Functions
@@ -65,7 +65,7 @@ External Providers, Hardware Support
 * Extend OpenSSL provider (DH, HMAC, CMAC, GCM)
 * Support using BoringSSL instead of OpenSSL or LibreSSL
 * /dev/crypto provider (ciphers, hashes)
-* Windows CryptoAPI provider (ciphers, hashes, RSA)
+* Windows CryptoNG provider (ciphers, hashes)
 * Apple CommonCrypto
 * POWER8 crypto extensions (SHA-2, GCM)
 * Better TPM support: NVRAM, PCR measurements, sealing
@@ -112,16 +112,13 @@ New Protocols / Formats
 * NaCl compatible cryptobox functions
 * Off-The-Record v3 https://otr.cypherpunks.ca/
 * Fernet symmetric encryption (https://cryptography.io/en/latest/fernet/)
-* Some useful subset of OpenPGP
-  - Subset #1: symmetrically encrypted files
-
-    Not aiming to process arbitrary OpenPGP, but rather produce
-    something that happens to be readable by `gpg` and is relatively
-    simple to process for decryption. Require a 128-bit block cipher
-    and MDC packet.
-
-  - Subset #2: Process OpenPGP public keys
-  - Subset #3: Verification of OpenPGP signatures
+* Useful OpenPGP subset 1: symmetrically encrypted files.
+  Not aiming to process arbitrary OpenPGP, but rather produce
+  something that happens to be readable by `gpg` and is relatively
+  simple to process for decryption. Require a 128-bit block cipher and
+  MDC packet.
+* Useful OpenPGP subset 2: Process OpenPGP public keys
+* Useful OpenPGP subset 3: Verification of OpenPGP signatures
 
 Cleanups
 -----------
@@ -154,7 +151,6 @@ Build/Test
 
 * Create Docker image for Travis that runs 16.04 and has all
   the tools we need pre-installed.
-* Build/export Windows installer exe on AppVeyor
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
   debug info during CI
@@ -178,8 +174,9 @@ CLI
 
 * Change `tls_server` to be a tty<->socket app, like `tls_client` is,
   instead of a bogus echo server.
-* `encrypt` / `decrypt` tools providing password and/or public key
-  based file encryption
+* `encrypt` / `decrypt` tools providing password based file encryption
+* Clone of `minisign` signature utility
+* Implementation of `tlsdate`
 
 Documentation
 ----------------------------------------
