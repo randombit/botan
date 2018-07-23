@@ -14,7 +14,7 @@ Version 2.8.0, Not Yet Released
 * The default algorithm used in passhash9 has changed from SHA-256 to SHA-512,
   and the default work factor increased from 10 to 15.
 
-* Add functions to use FE1 format perserving encryption in FF (GH #1625)
+* Add functions to use FE1 format preserving encryption in FF (GH #1625)
 
 * Resolve a problem when building under Visual C++ 15.8 (GH #1624)
 
@@ -179,7 +179,7 @@ Version 2.5.0, 2018-04-02
 * Fix DSA/ECDSA handling of hashes longer than the group order (GH #1502 #986)
 
 * The default encoding of ECC public keys has changed from compressed
-  to uncompressed point representation. This improves compatability with
+  to uncompressed point representation. This improves compatibility with
   some common software packages including Golang's standard library.
   (GH #1480 #1483)
 
@@ -196,7 +196,7 @@ Version 2.5.0, 2018-04-02
   or CryptoNG libraries. (GH #1494)
 
 * Make it possible for PKCS10 requests to include custom extensions. This also
-  makes it possible to use muliple SubjectAlternativeNames of a single type in
+  makes it possible to use multiple SubjectAlternativeNames of a single type in
   a request, which was previously not possible. (GH #1429 #1428)
 
 * Add new optimized interface for FE1 format preserving encryption. By caching a
