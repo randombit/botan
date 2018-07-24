@@ -165,9 +165,25 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
             .end_cons()
             .verify_end();
 
+         std::vector<uint8_t> recode_ctext;
+         DER_Encoder(recode_ctext)
+            .start_cons(SEQUENCE)
+            .encode(x1)
+            .encode(y1)
+            .encode(C3, OCTET_STRING)
+            .encode(masked_msg, OCTET_STRING)
+            .end_cons();
+
+         if(recode_ctext.size() != ciphertext_len)
+            return secure_vector<uint8_t>();
+
+         if(same_mem(recode_ctext.data(), ciphertext, ciphertext_len) == false)
+            return secure_vector<uint8_t>();
+
          PointGFp C1 = group.point(x1, y1);
          C1.randomize_repr(m_rng);
 
+         // Here C1 is publically invalid, so no problem with early return:
          if(!C1.on_the_curve())
             return secure_vector<uint8_t>();
 
@@ -182,8 +198,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
          const BigInt x2 = dbC1.get_affine_x();
          const BigInt y2 = dbC1.get_affine_y();
 
-         std::vector<uint8_t> x2_bytes(p_bytes);
-         std::vector<uint8_t> y2_bytes(p_bytes);
+         secure_vector<uint8_t> x2_bytes(p_bytes);
+         secure_vector<uint8_t> y2_bytes(p_bytes);
          BigInt::encode_1363(x2_bytes.data(), x2_bytes.size(), x2);
          BigInt::encode_1363(y2_bytes.data(), y2_bytes.size(), y2);
 
