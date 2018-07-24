@@ -73,9 +73,11 @@ enum BOTAN_FFI_ERROR {
 
    BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE = -10,
    BOTAN_FFI_ERROR_EXCEPTION_THROWN = -20,
+   BOTAN_FFI_ERROR_OUT_OF_MEMORY = -21,
    BOTAN_FFI_ERROR_BAD_FLAG = -30,
    BOTAN_FFI_ERROR_NULL_POINTER = -31,
    BOTAN_FFI_ERROR_BAD_PARAMETER = -32,
+   BOTAN_FFI_ERROR_KEY_NOT_SET = -33,
    BOTAN_FFI_ERROR_NOT_IMPLEMENTED = -40,
    BOTAN_FFI_ERROR_INVALID_OBJECT = -50,
 
@@ -562,6 +564,18 @@ BOTAN_PUBLIC_API(2,1) int botan_block_cipher_decrypt_blocks(botan_block_cipher_t
 BOTAN_PUBLIC_API(2,8) int botan_block_cipher_name(botan_block_cipher_t cipher,
                                                   char* name, size_t* name_len);
 
+
+/**
+* Get the key length limits of this block cipher
+* @param cipher the object to read
+* @param out_minimum_keylength if non-NULL, will be set to minimum keylength of cipher
+* @param out_maximum_keylength if non-NULL, will be set to maximum keylength of cipher
+* @param out_keylength_modulo if non-NULL will be set to byte multiple of valid keys
+*/
+BOTAN_PUBLIC_API(2,8) int botan_block_cipher_query_keylen(botan_block_cipher_t,
+                                                          size_t* out_minimum_keylength,
+                                                          size_t* out_maximum_keylength,
+                                                          size_t* out_keylength_modulo);
 
 /*
 * Multiple precision integers

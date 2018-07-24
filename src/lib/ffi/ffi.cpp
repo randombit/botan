@@ -14,10 +14,10 @@
 
 namespace Botan_FFI {
 
-int ffi_error_exception_thrown(const char* func_name, const char* exn)
+int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc)
    {
-   fprintf(stderr, "in %s exception %s\n", func_name, exn);
-   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
+   fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc);
+   return rc;
    }
 
 }
@@ -48,6 +48,9 @@ const char* botan_error_description(int err)
       case BOTAN_FFI_ERROR_EXCEPTION_THROWN:
          return "Exception thrown";
 
+      case BOTAN_FFI_ERROR_OUT_OF_MEMORY:
+         return "Out of memory";
+
       case BOTAN_FFI_ERROR_BAD_FLAG:
          return "Bad flag";
 
@@ -56,6 +59,9 @@ const char* botan_error_description(int err)
 
       case BOTAN_FFI_ERROR_BAD_PARAMETER:
          return "Bad parameter";
+
+      case BOTAN_FFI_ERROR_KEY_NOT_SET:
+         return "Key not set on object";
 
       case BOTAN_FFI_ERROR_NOT_IMPLEMENTED:
          return "Not implemented";

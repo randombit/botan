@@ -43,7 +43,8 @@ struct botan_struct
    struct NAME final : public Botan_FFI::botan_struct<TYPE, MAGIC> { explicit NAME(TYPE* x) : botan_struct(x) {} }
 
 // Declared in ffi.cpp
-int ffi_error_exception_thrown(const char* func_name, const char* exn);
+int ffi_error_exception_thrown(const char* func_name, const char* exn,
+                               int rc = BOTAN_FFI_ERROR_EXCEPTION_THROWN);
 
 template<typename T, uint32_t M>
 T& safe_get(botan_struct<T,M>* p)
@@ -69,7 +70,15 @@ int ffi_guard_thunk(const char* func_name, Thunk thunk)
       }
    catch(std::bad_alloc&)
       {
-      return ffi_error_exception_thrown(func_name, "bad_alloc");
+      return ffi_error_exception_thrown(func_name, "bad_alloc", BOTAN_FFI_ERROR_OUT_OF_MEMORY);
+      }
+   catch(Botan::Key_Not_Set& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_KEY_NOT_SET);
+      }
+   catch(Botan::Invalid_Argument& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_BAD_PARAMETER);
       }
    catch(std::exception& e)
       {
