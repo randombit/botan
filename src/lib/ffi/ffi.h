@@ -385,6 +385,18 @@ BOTAN_PUBLIC_API(2,0) int botan_mac_clear(botan_mac_t mac);
 BOTAN_PUBLIC_API(2,8) int botan_mac_name(botan_mac_t mac, char* name, size_t* name_len);
 
 /**
+* Get the key length limits of this auth code
+* @param mac the object to read
+* @param out_minimum_keylength if non-NULL, will be set to minimum keylength of MAC
+* @param out_maximum_keylength if non-NULL, will be set to maximum keylength of MAC
+* @param out_keylength_modulo if non-NULL will be set to byte multiple of valid keys
+*/
+BOTAN_PUBLIC_API(2,8) int botan_mac_query_keylen(botan_mac_t mac,
+                                                 size_t* out_minimum_keylength,
+                                                 size_t* out_maximum_keylength,
+                                                 size_t* out_keylength_modulo);
+
+/**
 * Frees all resources of the MAC object
 * @param mac mac object
 * @return always returns 0
@@ -572,7 +584,7 @@ BOTAN_PUBLIC_API(2,8) int botan_block_cipher_name(botan_block_cipher_t cipher,
 * @param out_maximum_keylength if non-NULL, will be set to maximum keylength of cipher
 * @param out_keylength_modulo if non-NULL will be set to byte multiple of valid keys
 */
-BOTAN_PUBLIC_API(2,8) int botan_block_cipher_query_keylen(botan_block_cipher_t,
+BOTAN_PUBLIC_API(2,8) int botan_block_cipher_query_keylen(botan_block_cipher_t cipher,
                                                           size_t* out_minimum_keylength,
                                                           size_t* out_maximum_keylength,
                                                           size_t* out_keylength_modulo);
