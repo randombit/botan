@@ -11,6 +11,7 @@
 #include <botan/hex.h>
 #include <botan/base64.h>
 #include <cstdio>
+#include <cstdlib>
 
 namespace Botan_FFI {
 
