@@ -207,8 +207,9 @@ fnnj+9XriKKHf2WtX0T4FXorvnKq30m934rzAhUAvwhWDK3yZEmphc7dwl4/J3Zp
 def cli_key_tests():
 
     pem = """-----BEGIN PRIVATE KEY-----
-MD4CAQAwEAYHKoZIzj0CAQYFK4EEAAoEJzAlAgEBBCDYD4j2rb5lrLEMNgLmfZhb
-wGf/MGbgPebBLmozAANENw==
+MIGEAgEAMBAGByqGSM49AgEGBSuBBAAKBG0wawIBAQQg2A+I9q2+ZayxDDYC5n2Y
+W8Bn/zBm4D3mwS5qMwADRDehRANCAATwnDFqsjXL9SD/Rr1Vy4pb79PswXdQNZBN
+mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 -----END PRIVATE KEY-----"""
 
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
@@ -225,16 +226,16 @@ wGf/MGbgPebBLmozAANENw==
 
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
 
-    valid_sig = "xd3J9jtTBWFWA9ceVGYpmEB0A1DmOoxHRF7FpYW2ng/GYEH/HYljIfYzu/L5iTK6XfVePxeMr6ubCYCD9vFGIw=="
+    valid_sig = "nI4mI1ec14Y7nYUWs2edysAVvkob0TWpmGh5rrYWDA+/W9Fj0ZM21qJw8qa3/avAOIVBO6hoMEVmfJYXlS+ReA=="
 
-    test_cli("sign", "--provider=base %s %s" % (priv_key, priv_key), valid_sig)
+    test_cli("sign", "--provider=base %s %s" % (priv_key, pub_key), valid_sig)
 
-    test_cli("verify", [pub_key, priv_key, '-'],
+    test_cli("verify", [pub_key, pub_key, '-'],
              "Signature is valid", valid_sig)
 
-    test_cli("verify", [pub_key, priv_key, '-'],
+    test_cli("verify", [pub_key, pub_key, '-'],
              "Signature is invalid",
-             valid_sig.replace("W", "Z"))
+             valid_sig.replace("G", "H"))
 
     test_cli("gen_self_signed",
              [priv_key, "CA", "--ca", "--country=VT",
