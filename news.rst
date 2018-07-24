@@ -14,15 +14,23 @@ Version 2.8.0, Not Yet Released
 * The default algorithm used in passhash9 has changed from SHA-256 to SHA-512,
   and the default work factor increased from 10 to 15.
 
-* Add functions to use FE1 format preserving encryption in FF (GH #1625)
+* In ECC private keys, include the public key data for compatability with
+  GnuTLS (GH #1634 #1635)
+
+* Add functions to get name of cipher, hash and MAC objects to FFI.
+
+* Add functions to use FE1 format preserving encryption in FFI (GH #1625)
+
+* Add functions to load and save RSA keys in PKCS #1 format to FFI (GH #1621)
 
 * Resolve a problem when building under Visual C++ 15.8 (GH #1624)
+
+* Handle an error seen when verifying invalid ECDSA signatures using LibreSSL
+  on non x86-64 platforms (GH #1627 #1628)
 
 * Optimizations for SM4
 
 * Avoid a cache side channel in the AES key schedule
-
-* Add functions to load and save RSA keys in PKCS #1 format to FFI (GH #1621)
 
 * Add ``pk_encrypt`` and ``pk_decrypt`` CLI operations
 
