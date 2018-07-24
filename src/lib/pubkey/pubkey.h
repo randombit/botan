@@ -217,19 +217,12 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       * @param rng the rng to use
       * @return signature
       */
-      std::vector<uint8_t> sign_message(const std::vector<uint8_t>& in,
-                                     RandomNumberGenerator& rng)
-         { return sign_message(in.data(), in.size(), rng); }
-
-      /**
-      * Sign a message.
-      * @param in the message to sign
-      * @param rng the rng to use
-      * @return signature
-      */
-      std::vector<uint8_t> sign_message(const secure_vector<uint8_t>& in,
-                                     RandomNumberGenerator& rng)
-         { return sign_message(in.data(), in.size(), rng); }
+      template<typename Alloc>
+         std::vector<uint8_t> sign_message(const std::vector<uint8_t, Alloc>& in,
+                                           RandomNumberGenerator& rng)
+         {
+         return sign_message(in.data(), in.size(), rng);
+         }
 
       /**
       * Add a message part (single byte).
@@ -248,7 +241,11 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       * Add a message part.
       * @param in the message part to add
       */
-      void update(const std::vector<uint8_t>& in) { update(in.data(), in.size()); }
+      template<typename Alloc>
+      void update(const std::vector<uint8_t, Alloc>& in)
+         {
+         update(in.data(), in.size());
+         }
 
       /**
       * Add a message part.
@@ -347,8 +344,11 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
       * signature to be verified.
       * @param in the new message part
       */
-      void update(const std::vector<uint8_t>& in)
-         { update(in.data(), in.size()); }
+      template<typename Alloc>
+         void update(const std::vector<uint8_t, Alloc>& in)
+         {
+         update(in.data(), in.size());
+         }
 
       /**
       * Add a message part of the message corresponding to the
