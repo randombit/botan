@@ -206,7 +206,7 @@ void GHASH::update_associated_data(const uint8_t ad[], size_t length)
 
 void GHASH::update(const uint8_t input[], size_t length)
    {
-   BOTAN_ASSERT(m_ghash.size() == GCM_BS, "Key was set");
+   verify_key_set(m_ghash.size() == GCM_BS);
    m_text_len += length;
    ghash_update(m_ghash, input, length);
    }
