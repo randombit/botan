@@ -140,6 +140,11 @@ make_openssl_hash(const std::string& name)
       return MAKE_OPENSSL_HASH(EVP_md4);
 #endif
 
+#if defined(BOTAN_HAS_WHIRLPOOL) && !defined(OPENSSL_NO_WHIRLPOOL)
+   if(name == "Whirlpool")
+      return MAKE_OPENSSL_HASH(EVP_whirlpool);
+#endif
+
    return nullptr;
    }
 
