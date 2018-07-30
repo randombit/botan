@@ -101,6 +101,10 @@
   #include <botan/internal/openssl.h>
 #endif
 
+#if defined(BOTAN_HAS_AF_ALG)
+  #include <botan/internal/af_alg_hash.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
@@ -125,6 +129,13 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
 
       if(!provider.empty())
          return nullptr;
+      }
+#endif
+
+#if defined(BOTAN_HAS_AF_ALG)
+   if(provider == "af_alg")
+      {
+      return create_af_alg_hash(algo_spec);
       }
 #endif
 
@@ -354,7 +365,7 @@ HashFunction::create_or_throw(const std::string& algo,
 
 std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
    {
-   return probe_providers_of<HashFunction>(algo_spec, {"base", "bearssl", "openssl"});
+   return probe_providers_of<HashFunction>(algo_spec, {"base", "bearssl", "openssl", "af_alg"});
    }
 
 }

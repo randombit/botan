@@ -9,6 +9,7 @@ dev_random
 proc_fs
 clock_gettime
 getauxval
+af_alg
 
 sockets
 threads

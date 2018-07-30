@@ -1,0 +1,15 @@
+<defines>
+AF_ALG -> 20180424
+</defines>
+
+load_on request
+
+<os_features>
+af_alg
+</os_features>
+
+<header:internal>
+af_alg_hash.h
+af_alg_util.h
+</header:internal>
+
