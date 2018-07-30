@@ -106,10 +106,10 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    m_b = m_group.square_mod_order(m_b);
    m_b_inv = m_group.square_mod_order(m_b_inv);
 
-   m = m_group.multiply_mod_order(m_b, m);
-   const BigInt xr = m_group.multiply_mod_order(m_x, m_b, r);
+   m = m_group.multiply_mod_order(m_b, m_group.mod_order(m));
+   const BigInt xr_m = m_group.mod_order(m_group.multiply_mod_order(m_x, m_b, r) + m);
 
-   const BigInt s = m_group.multiply_mod_order(k_inv, xr + m, m_b_inv);
+   const BigInt s = m_group.multiply_mod_order(k_inv, xr_m, m_b_inv);
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero())
