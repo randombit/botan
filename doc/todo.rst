@@ -134,10 +134,11 @@ FFI and Bindings
 ----------------------------------------
 
 * Expose compression
-* Expose more of X.509 (CRLs, OCSP, cert signing, etc)
+* Expose more of X.509 (CRLs, PKCS10, OCSP, cert signing, etc)
 * Expose TLS
+* Expose TOTP/HOTP
+* Expose deterministic PRNG
 * Write a CLI or HTTPS client in Python
-* Rust API
 
 Library Infrastructure
 ----------------------------------------
