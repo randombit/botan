@@ -1,43 +1,35 @@
-Botan: Crypto and TLS for C++11
+Botan: Crypto and TLS for Modern C++
 ========================================
 
-Botan (Japanese for peony) is a cryptography library written in C++11
-and released under the permissive `Simplified BSD
-<https://botan.randombit.net/license.txt>`_ license.
+Botan (Japanese for peony) is a C++ cryptography library released under the
+permissive `Simplified BSD <https://botan.randombit.net/license.txt>`_ license.
 
 Botan's goal is to be the best option for cryptography in C++ by offering the
-tools necessary to implement a range of practical systems, such as TLS/DTLS,
+tools necessary to implement a range of practical systems, such as TLS protocol,
 X.509 certificates, modern AEAD ciphers, PKCS#11 and TPM hardware support,
-password hashing, and post quantum crypto schemes. Botan also has a C89 API
-specifically designed to be easy to call from other languages. A Python binding
-using ctypes is included, and several other `language bindings
+password hashing, and post quantum crypto schemes. The library also offers a C89
+API specifically designed to be easy to call from other languages. A Python
+binding using ctypes is included, and several other `language bindings
 <https://github.com/randombit/botan/wiki/Language-Bindings>`_ are available.
 Find the full feature list below.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
 and contributions are welcome (read ``doc/contributing.rst`` for more info).
-
-If you need help with a problem, please open an `issue on GitHub
+If you need help, please open an issue on `GitHub
 <https://github.com/randombit/botan/issues>`_ or email the
-`botan-devel mailing list
-<https://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
-
-New releases are announced on the
-`botan-announce mailing list
+`botan-devel mailing list <https://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
+New releases are announced on the `botan-announce mailing list
 <https://lists.randombit.net/mailman/listinfo/botan-announce/>`_.
 
-If you think you have found a security bug in Botan please contact
-Jack Lloyd by emailing jack@randombit.net. His PGP public key with
-fingerprint 4E60C73551AF2188DF0A5A6278E9804357123B60 can can be found
-in ``doc/pgpkey.txt`` in the distribution,
-https://keybase.io/jacklloyd, and some public PGP key servers.
+If you think you have found a security issue, see the `security page
+<https://botan.randombit.net/security.html>`_ for contact information.
 
 .. highlight:: none
 
 For all the details on building the library, read the
-`users manual <https://botan.randombit.net/manual>`_, but basically::
+`manual <https://botan.randombit.net/manual>`_, but in short::
 
-  $ ./configure.py
+  $ python ./configure.py
   $ make
   $ ./botan-test
   ...
@@ -87,9 +79,9 @@ All releases are signed with a
         Key fingerprint = 621D AF64 11E1 851C 4CF9  A2E1 6211 EBF1 EFBA DFBC
   uid                  Botan Distribution Key
 
-Some `distributions <https://github.com/randombit/botan/wiki/Distros>`_
-such as Arch, Fedora and Debian include packages for Botan. However
-these are often out of date; using the latest source release is recommended.
+Some `distributions <https://github.com/randombit/botan/wiki/Distros>`_ such as
+Fedora and Debian include packages for Botan. However these are at times out of
+date so using the latest source release is recommended.
 
 Current Stable Release
 ----------------------------------------
