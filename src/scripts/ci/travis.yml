@@ -6,7 +6,6 @@ os:
 
 dist: trusty
 sudo: required
-osx_image: 9.3
 
 compiler:
   - clang
@@ -45,6 +44,10 @@ matrix:
     - os: osx
       env: BUILD_MODE="sonar"
 
+    # XCode 9.4 ICEs on 32-bit ARM builds
+    - os: osx
+      env: BUILD_MODE="cross-arm32"
+
     # Run static, docs, lint, bsi, nist, fuzzers, coverage, valgrind,
     # sonar, sanitizer, minimized and non-ARM cross builds only on Linux/gcc.
     # The sanitizer builds under Clang run the tests very slowly and
@@ -79,7 +82,7 @@ matrix:
     - compiler: gcc
       env: BUILD_MODE="sonar"
 
-    # No ARM Clang compiler on Linux
+   # No ARM Clang compiler on Linux
     - os: linux
       compiler: clang
       env: BUILD_MODE="cross-arm32"
