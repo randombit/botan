@@ -6,7 +6,7 @@ Version 2.8.0, Not Yet Released
 
 * During primality testing, use a Lucas test in addition to Miller-Rabin. It is
   possible to construct a composite integer which passes n Miller-Rabin tests
-  with probability (1/4)**n. So for a incautious verifier using a small number
+  with probability (1/4)^n. So for a incautious verifier using a small number
   of tests (under 16 or so) it is possible if unlikely they would accept such a
   composite as prime. Adding a Lucas test precludes such an attack. (GH #1636)
 
