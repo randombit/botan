@@ -14,6 +14,7 @@
 #include <botan/internal/mp_core.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/monty_exp.h>
+#include <botan/internal/primality.h>
 #include <algorithm>
 
 namespace Botan {
@@ -434,78 +435,43 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
       }
    }
 
-namespace {
 
-bool mr_witness(BigInt&& y,
-                const Modular_Reducer& reducer_n,
-                const BigInt& n_minus_1, size_t s)
+BigInt is_perfect_square(const BigInt& C)
    {
-   if(y == 1 || y == n_minus_1)
-      return false;
+   if(C < 1)
+      throw Invalid_Argument("is_perfect_square requires C >= 1");
+   if(C == 1)
+      return 1;
 
-   for(size_t i = 1; i != s; ++i)
+   const size_t n = C.bits();
+   const size_t m = (n + 1) / 2;
+   const BigInt B = C + BigInt::power_of_2(m);
+
+   BigInt X = BigInt::power_of_2(m) - 1;
+   BigInt X2 = (X*X);
+
+   for(;;)
       {
-      y = reducer_n.square(y);
+      X = (X2 + C) / (2*X);
+      X2 = (X*X);
 
-      if(y == 1) // found a non-trivial square root
-         return true;
-
-      /*
-      -1 is the trivial square root of unity, so ``a`` is not a
-      witness for this number - give up
-      */
-      if(y == n_minus_1)
-         return false;
+      if(X2 < B)
+         break;
       }
 
-   return true; // is a witness
+   if(X2 == C)
+      return X;
+   else
+      return 0;
    }
-
-size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
-   {
-   const size_t base = (prob + 2) / 2; // worst case 4^-t error rate
-
-   /*
-   * If the candidate prime was maliciously constructed, we can't rely
-   * on arguments based on p being random.
-   */
-   if(random == false)
-      return base;
-
-   /*
-   * For randomly chosen numbers we can use the estimates from
-   * http://www.math.dartmouth.edu/~carlp/PDF/paper88.pdf
-   *
-   * These values are derived from the inequality for p(k,t) given on
-   * the second page.
-   */
-   if(prob <= 128)
-      {
-      if(n_bits >= 1536)
-         return 4; // < 2^-133
-      if(n_bits >= 1024)
-         return 6; // < 2^-133
-      if(n_bits >= 512)
-         return 12; // < 2^-129
-      if(n_bits >= 256)
-         return 29; // < 2^-128
-      }
-
-   /*
-   If the user desires a smaller error probability than we have
-   precomputed error estimates for, just fall back to using the worst
-   case error rate.
-   */
-   return base;
-   }
-
-}
 
 /*
 * Test for primality using Miller-Rabin
 */
-bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
-              size_t prob, bool is_random)
+bool is_prime(const BigInt& n,
+              RandomNumberGenerator& rng,
+              size_t prob,
+              bool is_random)
    {
    if(n == 2)
       return true;
@@ -520,47 +486,21 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
       return std::binary_search(PRIMES, PRIMES + PRIME_TABLE_SIZE, num);
       }
 
-   const size_t test_iterations =
-      mr_test_iterations(n.bits(), prob, is_random && rng.is_seeded());
+   const size_t t = miller_rabin_test_iterations(n.bits(), prob, is_random);
 
-   const BigInt n_minus_1 = n - 1;
-   const size_t s = low_zero_bits(n_minus_1);
-   const BigInt nm1_s = n_minus_1 >> s;
-   const size_t n_bits = n.bits();
+   Modular_Reducer mod_n(n);
 
-   const Modular_Reducer mod_n(n);
-   auto monty_n = std::make_shared<Montgomery_Params>(n, mod_n);
-
-   const size_t powm_window = 4;
-
-   for(size_t i = 0; i != test_iterations; ++i)
+   if(rng.is_seeded())
       {
-      BigInt a;
-
-      if(rng.is_seeded())
-         {
-         a = BigInt::random_integer(rng, 2, n_minus_1);
-         }
-      else
-         {
-         /*
-         * If passed a null RNG just use 2,3,5, ... as bases
-         *
-         * This is not ideal but in certain circumstances we need to
-         * test for primality but have no RNG available.
-         */
-         a = PRIMES[i];
-         }
-
-      auto powm_a_n = monty_precompute(monty_n, a, powm_window);
-
-      BigInt y = monty_execute(*powm_a_n, nm1_s, n_bits);
-
-      if(mr_witness(std::move(y), mod_n, n_minus_1, s))
+      if(is_miller_rabin_probable_prime(n, mod_n, rng, t) == false)
          return false;
-      }
 
-   return true;
+      return is_lucas_probable_prime(n, mod_n);
+      }
+   else
+      {
+      return is_bailie_psw_probable_prime(n, mod_n);
+      }
    }
 
 }

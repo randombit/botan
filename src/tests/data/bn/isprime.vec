@@ -32,6 +32,18 @@ X = 0xFCEEE64D4D40D734058A51944F2B53152FFE7F15
 
 X = 0xEE23CE225FDEE2080403C2358C17A72D57C5B7CBE171D6D2BA59FE82DAABA9D3
 
+# Prime with low Hamming weight
+X = 0xFF4C000000000000000000000000000000000001
+
+# Mersenne primes
+X = 0x1ffff
+X = 0x7ffff
+X = 0x1fffffffffffffff
+X = 0x1ffffffffffffffffffffff
+X = 0x7ffffffffffffffffffffffffff
+X = 0x7fffffffffffffffffffffffffffffff
+X = 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
 [NonPrime]
 X = 0
 X = 1

@@ -341,6 +341,21 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
       m_reg[length / WORD_BYTES] = (m_reg[length / WORD_BYTES] << 8) | buf[i];
    }
 
+void BigInt::ct_cond_assign(bool predicate, BigInt& other)
+   {
+   const size_t t_words = size();
+   const size_t o_words = other.size();
+
+   const size_t r_words = std::max(t_words, o_words);
+
+   const word mask = CT::expand_mask<word>(predicate);
+
+   for(size_t i = 0; i != r_words; ++i)
+      {
+      this->set_word_at(i, CT::select<word>(mask, other.word_at(i), this->word_at(i)));
+      }
+   }
+
 #if defined(BOTAN_HAS_VALGRIND)
 void BigInt::const_time_poison() const
    {

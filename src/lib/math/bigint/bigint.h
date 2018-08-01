@@ -616,6 +616,12 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void encode_words(word out[], size_t size) const;
 
+     /**
+     * If predicate is true assign other to *this
+     * Uses a masked operation to avoid side channels
+     */
+     void ct_cond_assign(bool predicate, BigInt& other);
+
 #if defined(BOTAN_HAS_VALGRIND)
      void const_time_poison() const;
      void const_time_unpoison() const;

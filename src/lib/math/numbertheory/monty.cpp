@@ -13,7 +13,7 @@ namespace Botan {
 Montgomery_Params::Montgomery_Params(const BigInt& p,
                                      const Modular_Reducer& mod_p)
    {
-   if(p.is_negative() || p.is_even())
+   if(p.is_even() || p < 3)
       throw Invalid_Argument("Montgomery_Params invalid modulus");
 
    m_p = p;

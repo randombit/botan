@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/bigint.h>
    #include <botan/numthry.h>
+   #include <botan/internal/primality.h>
    #include <botan/reducer.h>
    #include <botan/pow_mod.h>
    #include <botan/parsing.h>
@@ -559,11 +560,31 @@ class BigInt_IsPrime_Test final : public Text_Based_Test
 
          Test::Result result("BigInt Test " + header);
          result.test_eq("is_prime", Botan::is_prime(value, Test::rng()), is_prime);
+
          return result;
          }
    };
 
 BOTAN_REGISTER_TEST("bn_isprime", BigInt_IsPrime_Test);
+
+class BigInt_IsSquare_Test final : public Text_Based_Test
+   {
+   public:
+      BigInt_IsSquare_Test() : Text_Based_Test("bn/perfect_square.vec", "X,R") {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         const BigInt value = vars.get_req_bn("X");
+         const BigInt expected = vars.get_req_bn("R");
+         const BigInt computed = Botan::is_perfect_square(value);
+
+         Test::Result result("BigInt IsSquare");
+         result.test_eq("is_perfect_square", computed, expected);
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("bn_issquare", BigInt_IsSquare_Test);
 
 class BigInt_Ressol_Test final : public Text_Based_Test
    {
@@ -660,6 +681,47 @@ class BigInt_Rand_Test final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("bn_rand", BigInt_Rand_Test);
+
+class Lucas_Primality_Test final : public Test
+   {
+   public:
+
+      std::vector<Test::Result> run() override
+         {
+         const uint32_t lucas_max = (Test::run_long_tests() ? 100000 : 6000);
+
+         // OEIS A217120
+         std::set<uint32_t> lucas_pp{
+            323, 377, 1159, 1829, 3827, 5459, 5777, 9071, 9179,
+            10877, 11419, 11663, 13919, 14839, 16109, 16211, 18407, 18971,
+            19043, 22499, 23407, 24569, 25199, 25877, 26069, 27323, 32759,
+            34943, 35207, 39059, 39203, 39689, 40309, 44099, 46979, 47879,
+            50183, 51983, 53663, 56279, 58519, 60377, 63881, 69509, 72389,
+            73919, 75077, 77219, 79547, 79799, 82983, 84419, 86063, 90287,
+            94667, 97019, 97439,
+         };
+
+         Test::Result result("Lucas primality test");
+
+         for(uint32_t i = 3; i <= lucas_max; i += 2)
+            {
+            Botan::Modular_Reducer mod_i(i);
+            const bool passes_lucas = Botan::is_lucas_probable_prime(i, mod_i);
+            const bool is_prime = Botan::is_prime(i, Test::rng());
+
+            const bool is_lucas_pp = (is_prime == false && passes_lucas == true);
+
+            if(is_lucas_pp)
+               result.confirm("Lucas pseudoprime is in list", lucas_pp.count(i) == 1);
+            else
+               result.confirm("Lucas non-pseudoprime is not in list", lucas_pp.count(i) == 0);
+            }
+
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("bn_lucas", Lucas_Primality_Test);
 
 class DSA_ParamGen_Test final : public Text_Based_Test
    {

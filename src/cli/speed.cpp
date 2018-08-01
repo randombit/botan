@@ -92,6 +92,7 @@
    #include <botan/pow_mod.h>
    #include <botan/reducer.h>
    #include <botan/curve_nistp.h>
+   #include <botan/internal/primality.h>
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
@@ -944,6 +945,10 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
+            else if(algo == "primality_test")
+               {
+               bench_primality_tests(msec);
+               }
             else if(algo == "random_prime")
                {
                bench_random_prime(msec);
@@ -1697,6 +1702,38 @@ class Speed final : public Command
             record_result(monty_timer);
             record_result(ct_invmod_timer);
             record_result(powm_timer);
+            }
+         }
+
+      void bench_primality_tests(const std::chrono::milliseconds runtime)
+         {
+         for(size_t bits : { 256, 512, 1024 })
+            {
+            std::unique_ptr<Timer> mr_timer = make_timer("Miller-Rabin-" + std::to_string(bits));
+            std::unique_ptr<Timer> bpsw_timer = make_timer("Bailie-PSW-" + std::to_string(bits));
+            std::unique_ptr<Timer> lucas_timer = make_timer("Lucas-" + std::to_string(bits));
+
+            Botan::BigInt n = Botan::random_prime(rng(), bits);
+
+            while(lucas_timer->under(runtime))
+               {
+               Botan::Modular_Reducer mod_n(n);
+
+               mr_timer->run([&]() {
+                  return Botan::is_miller_rabin_probable_prime(n, mod_n, rng(), 2); });
+
+               bpsw_timer->run([&]() {
+                  return Botan::is_bailie_psw_probable_prime(n, mod_n); });
+
+               lucas_timer->run([&]() {
+                  return Botan::is_lucas_probable_prime(n, mod_n); });
+
+               n += 2;
+               }
+
+            record_result(mr_timer);
+            record_result(bpsw_timer);
+            record_result(lucas_timer);
             }
          }
 

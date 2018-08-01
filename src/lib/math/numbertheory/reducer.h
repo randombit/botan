@@ -47,6 +47,8 @@ class BOTAN_PUBLIC_API(2,0) Modular_Reducer
       BigInt cube(const BigInt& x) const
          { return multiply(x, this->square(x)); }
 
+      void reduce(BigInt& out, const BigInt& x, secure_vector<word>& ws) const;
+
       bool initialized() const { return (m_mod_words != 0); }
 
       Modular_Reducer() { m_mod_words = 0; }
