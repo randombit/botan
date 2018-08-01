@@ -6,6 +6,7 @@ os:
 
 dist: trusty
 sudo: required
+osx_image: 9.3
 
 compiler:
   - clang
