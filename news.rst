@@ -4,6 +4,12 @@ Release Notes
 Version 2.8.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* During primality testing, use a Lucas test in addition to Miller-Rabin. It is
+  possible to construct a composite integer which passes n Miller-Rabin tests
+  with probability (1/4)**n. So for a incautious verifier using a small number
+  of tests (under 16 or so) it is possible if unlikely they would accept such a
+  composite as prime. Adding a Lucas test precludes such an attack. (GH #1636)
+
 * Add support for using the ARMv8 instructions for SM4 encryption (GH #1622)
 
 * Fixed a bug that caused CCM to fail with an exception when used with L=8
@@ -14,7 +20,7 @@ Version 2.8.0, Not Yet Released
 * The default algorithm used in passhash9 has changed from SHA-256 to SHA-512,
   and the default work factor increased from 10 to 15.
 
-* In ECC private keys, include the public key data for compatability with
+* In ECC private keys, include the public key data for compatibility with
   GnuTLS (GH #1634 #1635)
 
 * Add functions to get name of cipher, hash and MAC objects to FFI.
