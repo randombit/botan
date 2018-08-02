@@ -790,7 +790,7 @@ BOTAN_PUBLIC_API(2,5) int botan_privkey_create_elgamal(
 /*
 * Input currently assumed to be PKCS #8 structure;
 * Set password to NULL to indicate no encryption expected
-* The rng parameter is unused and may be set to null
+* Starting in 2.8.0, the rng parameter is unused and may be set to null
 */
 BOTAN_PUBLIC_API(2,0) int botan_privkey_load(botan_privkey_t* key,
                                              botan_rng_t rng,
