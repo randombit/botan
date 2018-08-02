@@ -71,7 +71,6 @@
 
 #if defined(BOTAN_HAS_SM2)
   #include <botan/sm2.h>
-  #include <botan/sm2_enc.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)
@@ -152,10 +151,8 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-   if(alg_name == "SM2_Sig")
-      return std::unique_ptr<Public_Key>(new SM2_Signature_PublicKey(alg_id, key_bits));
-   if(alg_name == "SM2_Enc")
-      return std::unique_ptr<Public_Key>(new SM2_Encryption_PublicKey(alg_id, key_bits));
+   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+      return std::unique_ptr<Public_Key>(new SM2_PublicKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_XMSS)
@@ -230,10 +227,8 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-   if(alg_name == "SM2_Sig")
-      return std::unique_ptr<Private_Key>(new SM2_Signature_PrivateKey(alg_id, key_bits));
-   if(alg_name == "SM2_Enc")
-      return std::unique_ptr<Private_Key>(new SM2_Encryption_PrivateKey(alg_id, key_bits));
+   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+      return std::unique_ptr<Private_Key>(new SM2_PrivateKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
@@ -255,7 +250,7 @@ namespace {
 
 std::string default_ec_group_for(const std::string& alg_name)
    {
-   if(alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
+   if(alg_name == "SM2" || alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
       return "sm2p256v1";
    if(alg_name == "GOST-34.10")
       return "gost_256A";
@@ -341,6 +336,7 @@ create_private_key(const std::string& alg_name,
       alg_name == "ECDH" ||
       alg_name == "ECKCDSA" ||
       alg_name == "ECGDSA" ||
+      alg_name == "SM2" ||
       alg_name == "SM2_Sig" ||
       alg_name == "SM2_Enc" ||
       alg_name == "GOST-34.10")
@@ -368,10 +364,8 @@ create_private_key(const std::string& alg_name,
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-      if(alg_name == "SM2_Sig")
-         return std::unique_ptr<Private_Key>(new SM2_Signature_PrivateKey(rng, ec_group));
-      if(alg_name == "SM2_Enc")
-         return std::unique_ptr<Private_Key>(new SM2_Encryption_PrivateKey(rng, ec_group));
+      if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+         return std::unique_ptr<Private_Key>(new SM2_PrivateKey(rng, ec_group));
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)

@@ -9,7 +9,6 @@
 
 #if defined(BOTAN_HAS_SM2)
    #include <botan/sm2.h>
-   #include <botan/sm2_enc.h>
    #include "test_pubkey.h"
 #endif
 
@@ -19,7 +18,6 @@ namespace Botan_Tests {
 
 namespace {
 
-template<typename T>
 std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars)
    {
    // group params
@@ -35,7 +33,7 @@ std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars)
    Botan::EC_Group domain(p, a, b, xG, yG, order, cofactor);
 
    Botan::Null_RNG null_rng;
-   return std::unique_ptr<Botan::Private_Key>(new T(null_rng, domain, x));
+   return std::unique_ptr<Botan::Private_Key>(new Botan::SM2_PrivateKey(null_rng, domain, x));
    }
 
 class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
@@ -60,7 +58,7 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         return load_sm2_private_key<Botan::SM2_Signature_PrivateKey>(vars);
+         return load_sm2_private_key(vars);
          }
    };
 
@@ -90,13 +88,29 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         return load_sm2_private_key<Botan::SM2_Encryption_PrivateKey>(vars);
+         return load_sm2_private_key(vars);
          }
    };
 
 }
 
 BOTAN_REGISTER_TEST("sm2_enc", SM2_Encryption_KAT_Tests);
+
+class SM2_Keygen_Tests final : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override
+         {
+         return { "secp256r1", "sm2p256v1" };
+         }
+
+      std::string algo_name() const override
+         {
+         return "SM2";
+         }
+   };
+
+BOTAN_REGISTER_TEST("sm2_keygen", SM2_Keygen_Tests);
 
 
 #endif

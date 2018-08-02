@@ -5,41 +5,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/sm2_enc.h>
+#include <botan/sm2.h>
 #include <botan/internal/point_mul.h>
 #include <botan/pk_ops.h>
-#include <botan/keypair.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/kdf.h>
 #include <botan/hash.h>
 
 namespace Botan {
-
-bool SM2_Encryption_PrivateKey::check_key(RandomNumberGenerator& rng,
-                                          bool strong) const
-   {
-   if(!public_point().on_the_curve())
-      return false;
-
-   if(!strong)
-      return true;
-
-   return KeyPair::encryption_consistency_check(rng, *this, "SM3");
-   }
-
-SM2_Encryption_PrivateKey::SM2_Encryption_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                                     const secure_vector<uint8_t>& key_bits) :
-   EC_PrivateKey(alg_id, key_bits)
-   {
-   }
-
-SM2_Encryption_PrivateKey::SM2_Encryption_PrivateKey(RandomNumberGenerator& rng,
-                                                     const EC_Group& domain,
-                                                     const BigInt& x) :
-   EC_PrivateKey(rng, domain, x)
-   {
-   }
 
 namespace {
 
@@ -233,9 +207,9 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
 }
 
 std::unique_ptr<PK_Ops::Encryption>
-SM2_Encryption_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
-                                               const std::string& params,
-                                               const std::string& provider) const
+SM2_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
+                                    const std::string& params,
+                                    const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
@@ -247,9 +221,9 @@ SM2_Encryption_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
    }
 
 std::unique_ptr<PK_Ops::Decryption>
-SM2_Encryption_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                                const std::string& params,
-                                                const std::string& provider) const
+SM2_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
+                                     const std::string& params,
+                                     const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
