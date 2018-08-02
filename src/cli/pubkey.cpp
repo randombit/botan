@@ -117,7 +117,7 @@ std::string algo_default_emsa(const std::string& key)
 class PK_Fingerprint final : public Command
    {
    public:
-      PK_Fingerprint() : Command("fingerprint --algo=SHA-256 *keys") {}
+      PK_Fingerprint() : Command("fingerprint --no-fsname --algo=SHA-256 *keys") {}
 
       std::string group() const override
          {
@@ -132,12 +132,18 @@ class PK_Fingerprint final : public Command
       void go() override
          {
          const std::string hash_algo = get_arg("algo");
+         const bool no_fsname = flag_set("no-fsname");
 
          for(std::string key_file : get_arg_list("keys"))
             {
             std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_file));
 
-            output() << key_file << ": " << key->fingerprint_public(hash_algo) << "\n";
+            const std::string fprint = key->fingerprint_public(hash_algo);
+
+            if(no_fsname)
+               output() << fprint << "\n";
+            else
+               output() << key_file << ": " << fprint << "\n";
             }
          }
    };
