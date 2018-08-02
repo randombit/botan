@@ -10,6 +10,10 @@ Version 2.8.0, Not Yet Released
   of tests (under 16 or so) it is possible if unlikely they would accept such a
   composite as prime. Adding a Lucas test precludes such an attack. (GH #1636)
 
+* Previously SM2 had two distinct key types, one for signatures and another for
+  encryption. They have now been merged into a single key type since in practice
+  it seems the same key is at times used for both operations. (GH #1637)
+
 * Add support for using the ARMv8 instructions for SM4 encryption (GH #1622)
 
 * Fixed a bug that caused CCM to fail with an exception when used with L=8
@@ -28,6 +32,8 @@ Version 2.8.0, Not Yet Released
 * Add functions to use FE1 format preserving encryption in FFI (GH #1625)
 
 * Add functions to load and save RSA keys in PKCS #1 format to FFI (GH #1621)
+
+* The FFI function botan_privkey_load now ignores its rng argument.
 
 * Resolve a problem when building under Visual C++ 15.8 (GH #1624)
 
