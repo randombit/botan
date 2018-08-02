@@ -106,7 +106,7 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
-      std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj),Botan::system_rng(),  hash));
+      std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj), Botan::system_rng(), hash));
       *op = new botan_pk_op_sign_struct(pk.release());
       return BOTAN_FFI_SUCCESS;
       });
