@@ -429,7 +429,7 @@ Handshake_State::choose_sig_format(const Private_Key& key,
       {
       if(sig_algo == "RSA")
          {
-         const std::string padding = "EMSA3(Parallel(MD5,SHA-160))";
+         const std::string padding = "PKCS1v15(Parallel(MD5,SHA-160))";
          return std::make_pair(padding, IEEE_1363);
          }
       else if(sig_algo == "DSA" || sig_algo == "ECDSA")
@@ -489,7 +489,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
       if(key_type == "RSA")
          {
-         const std::string padding = "EMSA3(Parallel(MD5,SHA-160))";
+         const std::string padding = "PKCS1v15(Parallel(MD5,SHA-160))";
          return std::make_pair(padding, IEEE_1363);
          }
       else if(key_type == "DSA" || key_type == "ECDSA")

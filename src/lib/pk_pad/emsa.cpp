@@ -55,8 +55,9 @@ EMSA* get_emsa(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
    if(req.algo_name() == "EMSA_PKCS1" ||
-         req.algo_name() == "EMSA-PKCS1-v1_5" ||
-         req.algo_name() == "EMSA3")
+      req.algo_name() == "PKCS1v15" ||
+      req.algo_name() == "EMSA-PKCS1-v1_5" ||
+      req.algo_name() == "EMSA3")
       {
       if(req.arg_count() == 2 && req.arg(0) == "Raw")
          {
