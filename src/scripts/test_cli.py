@@ -264,6 +264,13 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 
     test_cli("cert_verify", ca_cert, "Certificate did not validate - Cannot establish trust")
 
+    cert_info = test_cli("cert_info", ['--fingerprint', ca_cert], None)
+
+    if cert_info.find('Subject: CN="CA",C="VT"') < 0:
+        logging.error('Unexpected output for cert_info command %s', cert_info)
+    if cert_info.find('Subject keyid: 69DD911C9EEE3400C67CBC3F3056CBE711BD56AF9495013F') < 0:
+        logging.error('Unexpected output for cert_info command %s', cert_info)
+
     test_cli("gen_pkcs10", "%s User --output=%s" % (priv_key, crt_req))
 
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, user_cert))
@@ -580,7 +587,8 @@ def cli_speed_tests():
             logging.error("Unexpected line %s", line)
 
     math_ops = ['mp_mul', 'modexp', 'random_prime', 'inverse_mod', 'rfc3394', 'fpe_fe1',
-                'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'bcrypt', 'passhash9']
+                'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'primality_test',
+                'bcrypt', 'passhash9']
 
     format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
     for op in math_ops:
