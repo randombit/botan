@@ -204,6 +204,7 @@ fnnj+9XriKKHf2WtX0T4FXorvnKq30m934rzAhUAvwhWDK3yZEmphc7dwl4/J3Zp
 
     test_cli("gen_dl_group", ["--type=dsa", "--pbits=1024"], dsa_grp)
 
+
 def cli_key_tests():
 
     pem = """-----BEGIN PRIVATE KEY-----
@@ -216,6 +217,9 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     pub_key = os.path.join(tmp_dir, 'pub.pem')
+    pub_der_key = os.path.join(tmp_dir, 'pub.der')
+    enc_pem = os.path.join(tmp_dir, 'priv_enc.pem')
+    enc_der = os.path.join(tmp_dir, 'priv_enc.der')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
     crt_req = os.path.join(tmp_dir, 'crt.req')
     user_cert = os.path.join(tmp_dir, 'user.crt')
@@ -225,6 +229,22 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
     test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
 
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
+    test_cli("pkcs8", "--pub-out --der-out --output=%s %s" % (pub_der_key, priv_key), "")
+
+    test_cli("pkcs8", "--pass-out=foof --der-out --output=%s %s" % (enc_der, priv_key), "")
+    test_cli("pkcs8", "--pass-out=foof --output=%s %s" % (enc_pem, priv_key), "")
+
+    dec_pem = test_cli("pkcs8", ["--pass-in=foof", enc_pem], None)
+    dec_der = test_cli("pkcs8", ["--pass-in=foof", enc_der], None)
+
+    if dec_pem != dec_der:
+        logging.error("Problem decrypting PKCS8 key")
+
+    test_cli("fingerprint", ['--no-fsname', pub_key],
+             "83:FC:67:87:30:C7:0C:9C:54:9A:E7:A1:FA:25:83:4C:77:A4:43:16:33:6D:47:3C:CE:4B:91:62:30:97:62:D4")
+
+    test_cli("fingerprint", ['--no-fsname', pub_der_key],
+             "83:FC:67:87:30:C7:0C:9C:54:9A:E7:A1:FA:25:83:4C:77:A4:43:16:33:6D:47:3C:CE:4B:91:62:30:97:62:D4")
 
     valid_sig = "nI4mI1ec14Y7nYUWs2edysAVvkob0TWpmGh5rrYWDA+/W9Fj0ZM21qJw8qa3/avAOIVBO6hoMEVmfJYXlS+ReA=="
 
@@ -330,6 +350,23 @@ def cli_pk_workfactor_tests():
     test_cli("pk_workfactor", ["--type=rsa", "512"], "58")
     test_cli("pk_workfactor", ["--type=dl", "512"], "58")
     test_cli("pk_workfactor", ["--type=dl_exp", "512"], "128")
+
+def cli_dl_group_info_tests():
+
+    dl_output = re.compile('(P|G) = [A-F0-9]+')
+
+    for bits in [1024,1536,2048,3072,4096,6144,8192]:
+        output = test_cli("dl_group_info", "modp/ietf/%d" % (bits))
+        lines = output.split('\n')
+
+        if len(lines) != 2:
+            logging.error('Unexpected output from dl_group_info')
+
+        for l in lines:
+            if dl_output.match(l) == None:
+                logging.error('Unexpected output from dl_group_info')
+
+
 
 def cli_ec_group_info_tests():
 
@@ -620,6 +657,7 @@ def main(args=None):
     cli_cc_enc_tests()
     cli_compress_tests()
     cli_config_tests()
+    cli_dl_group_info_tests()
     cli_ec_group_info_tests()
     cli_factor_tests()
     cli_gen_dl_group_tests()
