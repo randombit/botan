@@ -1723,7 +1723,7 @@ class FFI_Unit_Tests final : public Test
          size_t name_len = sizeof(namebuf);
 
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
-         result.test_eq(namebuf, namebuf, "SM2_Sig");
+         result.test_eq(namebuf, namebuf, "SM2");
 
          std::vector<uint8_t> message(1280), signature;
          TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
@@ -1814,7 +1814,7 @@ class FFI_Unit_Tests final : public Test
          size_t name_len = sizeof(namebuf);
 
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
-         result.test_eq(namebuf, namebuf, "SM2_Enc");
+         result.test_eq(namebuf, namebuf, "SM2");
 
          std::vector<uint8_t> message(32);
 

@@ -15,8 +15,13 @@
 
 namespace Botan {
 
-bool SM2_Signature_PrivateKey::check_key(RandomNumberGenerator& rng,
-                                         bool strong) const
+std::string SM2_PublicKey::algo_name() const
+   {
+   return "SM2";
+   }
+
+bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng,
+                               bool strong) const
    {
    if(!public_point().on_the_curve())
       return false;
@@ -24,19 +29,19 @@ bool SM2_Signature_PrivateKey::check_key(RandomNumberGenerator& rng,
    if(!strong)
       return true;
 
-   return KeyPair::signature_consistency_check(rng, *this, "SM3");
+   return KeyPair::signature_consistency_check(rng, *this, "user@example.com,SM3");
    }
 
-SM2_Signature_PrivateKey::SM2_Signature_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                                   const secure_vector<uint8_t>& key_bits) :
+SM2_PrivateKey::SM2_PrivateKey(const AlgorithmIdentifier& alg_id,
+                               const secure_vector<uint8_t>& key_bits) :
    EC_PrivateKey(alg_id, key_bits)
    {
    m_da_inv = domain().inverse_mod_order(m_private_key + 1);
    }
 
-SM2_Signature_PrivateKey::SM2_Signature_PrivateKey(RandomNumberGenerator& rng,
-                                                   const EC_Group& domain,
-                                                   const BigInt& x) :
+SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng,
+                               const EC_Group& domain,
+                               const BigInt& x) :
    EC_PrivateKey(rng, domain, x)
    {
    m_da_inv = domain.inverse_mod_order(m_private_key + 1);
@@ -80,7 +85,7 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
    {
    public:
 
-      SM2_Signature_Operation(const SM2_Signature_PrivateKey& sm2,
+      SM2_Signature_Operation(const SM2_PrivateKey& sm2,
                               const std::string& ident,
                               const std::string& hash) :
          m_group(sm2.domain()),
@@ -133,7 +138,7 @@ SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
 class SM2_Verification_Operation final : public PK_Ops::Verification
    {
    public:
-      SM2_Verification_Operation(const SM2_Signature_PublicKey& sm2,
+      SM2_Verification_Operation(const SM2_PublicKey& sm2,
                                  const std::string& ident,
                                  const std::string& hash) :
          m_group(sm2.domain()),
@@ -191,8 +196,8 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
 }
 
 std::unique_ptr<PK_Ops::Verification>
-SM2_Signature_PublicKey::create_verification_op(const std::string& params,
-                                                const std::string& provider) const
+SM2_PublicKey::create_verification_op(const std::string& params,
+                                      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
@@ -221,9 +226,9 @@ SM2_Signature_PublicKey::create_verification_op(const std::string& params,
    }
 
 std::unique_ptr<PK_Ops::Signature>
-SM2_Signature_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                              const std::string& params,
-                                              const std::string& provider) const
+SM2_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                    const std::string& params,
+                                    const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
