@@ -78,7 +78,7 @@ def main(args=None):
 
     build_dir = options.build_dir
 
-    if os.access(build_dir, os.X_OK) != True:
+    if not os.access(build_dir, os.X_OK):
         logging.debug('No build directory found')
         # No build dir: clean enough!
         return 0

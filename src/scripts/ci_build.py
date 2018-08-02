@@ -62,7 +62,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if target_cc == 'msvc':
         flags += ['--ack-vc2013-deprecated']
 
-    if target_cpu != None:
+    if target_cpu is not None:
         flags += ['--cpu=%s' % (target_cpu)]
 
     if target in ['shared', 'mini-shared']:
@@ -354,7 +354,7 @@ def main(args=None):
 
     root_dir = options.root_dir
 
-    if os.access(root_dir, os.R_OK) != True:
+    if not os.access(root_dir, os.R_OK):
         raise Exception('Bad root dir setting, dir %s not readable' % (root_dir))
 
     cmds = []
@@ -371,6 +371,10 @@ def main(args=None):
         # superfluous-parens: needed for Python3 compatible print statements
         # too-many-locals: variable counting differs from pylint3
         py2_flags = '--disable=superfluous-parens,too-many-locals'
+
+        # Some disabled rules specific to Python3
+        # useless-object-inheritance: complains about code still useful in Python2
+        py3_flags = '--disable=useless-object-inheritance'
 
         py_scripts = [
             'configure.py',
@@ -394,7 +398,7 @@ def main(args=None):
                 cmds.append(['python2', '-m', 'pylint'] + pylint_flags + [py2_flags, target_path])
 
             if use_python3:
-                cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [target_path])
+                cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags, target_path])
 
     else:
         config_flags, run_test_command, make_prefix = determine_flags(
@@ -430,7 +434,7 @@ def main(args=None):
             elif options.compiler_cache == 'clcache':
                 cmds.append(['clcache', '-s'])
 
-        if run_test_command != None:
+        if run_test_command is not None:
             cmds.append(run_test_command)
 
         if target in ['coverage', 'fuzzers']:

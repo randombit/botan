@@ -75,7 +75,7 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
 
     output = stdout.decode('ascii').strip()
 
-    if expected_output != None:
+    if expected_output is not None:
         if output != expected_output:
             logging.error("Got unexpected output running cmd %s %s", cmd, cmd_options)
             logging.info("Output lengths %d vs expected %d", len(output), len(expected_output))
@@ -321,7 +321,7 @@ def cli_compress_tests():
 
     test_cli("compress", input_file)
 
-    if os.access(output_file, os.R_OK) != True:
+    if not os.access(output_file, os.R_OK):
         logging.error("Compression did not created expected output file")
 
     is_py3 = sys.version_info[0] == 3
@@ -339,7 +339,7 @@ def cli_compress_tests():
 
     test_cli("decompress", output_file)
 
-    if os.access(input_file, os.R_OK) != True:
+    if not os.access(input_file, os.R_OK):
         logging.error("Decompression did not created expected output file")
 
     recovered = open(input_file).read()
@@ -362,7 +362,7 @@ def cli_dl_group_info_tests():
 
     dl_output = re.compile('(P|G) = [A-F0-9]+')
 
-    for bits in [1024,1536,2048,3072,4096,6144,8192]:
+    for bits in [1024, 1536, 2048, 3072, 4096, 6144, 8192]:
         output = test_cli("dl_group_info", "modp/ietf/%d" % (bits))
         lines = output.split('\n')
 
@@ -370,7 +370,7 @@ def cli_dl_group_info_tests():
             logging.error('Unexpected output from dl_group_info')
 
         for l in lines:
-            if dl_output.match(l) == None:
+            if not dl_output.match(l):
                 logging.error('Unexpected output from dl_group_info')
 
 
@@ -650,7 +650,7 @@ def main(args=None):
         logging.error("Usage: ./cli_tests.py path_to_botan_cli")
         return 1
 
-    if os.access(args[1], os.X_OK) != True:
+    if not os.access(args[1], os.X_OK):
         logging.error("Could not access/execute %s", args[1])
         return 2
 

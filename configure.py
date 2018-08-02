@@ -276,7 +276,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         else:
             raise InternalError("Unknown src info type '%s'" % (typ))
 
-def process_command_line(args): # pylint: disable=too-many-locals
+def process_command_line(args): # pylint: disable=too-many-locals,too-many-statements
     """
     Handle command line options
     Do not use logging in this method as command line options need to be
@@ -757,6 +757,7 @@ class ModuleInfo(InfoObject):
     """
 
     def __init__(self, infofile):
+        # pylint: disable=too-many-statements
         super(ModuleInfo, self).__init__(infofile)
         lex = lex_me_harder(
             infofile,
@@ -962,7 +963,7 @@ class ModuleInfo(InfoObject):
     def dependencies(self, osinfo):
         # base is an implicit dep for all submodules
         deps = ['base']
-        if self.parent_module != None:
+        if self.parent_module is not None:
             deps.append(self.parent_module)
 
         for req in self.requires:
@@ -1208,7 +1209,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         for what in mach_abi_groups():
             if what in self.mach_abi_linking:
                 flag = self.mach_abi_linking.get(what)
-                if flag != None and flag != '' and flag not in abi_link:
+                if flag is not None and flag != '' and flag not in abi_link:
                     abi_link.add(flag)
 
         if options.msvc_runtime:
@@ -1421,7 +1422,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         return False
 
     def building_shared_supported(self):
-        return self.soname_pattern_base != None
+        return self.soname_pattern_base is not None
 
     def enabled_features(self, options):
         feats = []
@@ -1469,7 +1470,7 @@ def guess_processor(archinfo):
     for info_part in system_cpu_info():
         if info_part:
             match = canon_processor(archinfo, info_part)
-            if match != None:
+            if match is not None:
                 logging.debug("Matched '%s' to processor '%s'" % (info_part, match))
                 return match, info_part
             else:
@@ -1730,13 +1731,13 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         """
         Figure out what external libraries/frameworks are needed based on selected modules
         """
-        if not (module_member_name == 'libs' or module_member_name == 'frameworks'):
+        if module_member_name not in ['libs', 'frameworks']:
             raise InternalError("Invalid argument")
 
         libs = set()
         for module in modules:
             for (osname, module_link_to) in getattr(module, module_member_name).items():
-                if osname == 'all' or osname == osinfo.basename:
+                if osname in ['all', osinfo.basename]:
                     libs |= set(module_link_to)
                 else:
                     match = re.match('^all!(.*)', osname)
@@ -1790,7 +1791,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         return osinfo.ar_command
 
     def choose_endian(arch_info, options):
-        if options.with_endian != None:
+        if options.with_endian is not None:
             return options.with_endian
 
         if options.cpu.endswith('eb') or options.cpu.endswith('be'):
@@ -1985,15 +1986,15 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
                                                 variables['static_suffix'])
 
     if options.build_shared_lib:
-        if osinfo.soname_pattern_base != None:
+        if osinfo.soname_pattern_base is not None:
             variables['soname_base'] = osinfo.soname_pattern_base.format(**variables)
             variables['shared_lib_name'] = variables['soname_base']
 
-        if osinfo.soname_pattern_abi != None:
+        if osinfo.soname_pattern_abi is not None:
             variables['soname_abi'] = osinfo.soname_pattern_abi.format(**variables)
             variables['shared_lib_name'] = variables['soname_abi']
 
-        if osinfo.soname_pattern_patch != None:
+        if osinfo.soname_pattern_patch is not None:
             variables['soname_patch'] = osinfo.soname_pattern_patch.format(**variables)
 
         variables['lib_link_cmd'] = variables['lib_link_cmd'].format(**variables)
@@ -2717,7 +2718,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
             return 'gcc'
         return None
 
-    if options.compiler is None and options.compiler_binary != None:
+    if options.compiler is None and options.compiler_binary is not None:
         options.compiler = deduce_compiler_type_from_cc_bin(options.compiler_binary)
 
     if options.compiler is None:
@@ -2841,7 +2842,7 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         if options.os != options.cpu:
             raise UserError('LLVM target requires both CPU and OS be set to llvm')
 
-    if options.build_fuzzers != None:
+    if options.build_fuzzers is not None:
         if options.build_fuzzers not in ['libfuzzer', 'afl', 'klee', 'test']:
             raise UserError('Bad value to --build-fuzzers')
 
@@ -2962,7 +2963,7 @@ def check_compiler_arch(options, ccinfo, archinfo, source_paths):
     return cc_output
 
 def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, template_vars, options):
-    # pylint: disable=too-many-locals,too-many-branches
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 
     try:
         robust_rmtree(build_paths.build_dir)

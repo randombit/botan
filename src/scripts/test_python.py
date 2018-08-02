@@ -17,6 +17,7 @@ def hex_decode(buf):
     return binascii.unhexlify(buf.encode('ascii'))
 
 def test():
+    # pylint: disable=too-many-statements
 
     def test_version():
 

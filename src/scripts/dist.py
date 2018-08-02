@@ -100,7 +100,7 @@ def gpg_sign(keyid, passphrase_file, files, detached=True):
     options = ['--armor', '--detach-sign'] if detached else ['--clearsign']
 
     gpg_cmd = ['gpg', '--batch'] + options + ['--local-user', keyid]
-    if passphrase_file != None:
+    if passphrase_file is not None:
         gpg_cmd[1:1] = ['--passphrase-file', passphrase_file]
 
     for filename in files:
@@ -248,7 +248,7 @@ def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file
     archive_hash = sha256.hexdigest().upper()
 
     logging.info('SHA-256(%s) = %s' % (output_archive, archive_hash))
-    if hash_file != None:
+    if hash_file is not None:
         hash_file.write("%s  %s\n" % (archive_hash, output_archive))
 
     return output_archive
@@ -259,7 +259,7 @@ def configure_logging(options):
             super(ExitOnErrorLogHandler, self).emit(record)
             # Exit script if and ERROR or worse occurred
             if record.levelno >= logging.ERROR:
-                if sys.exc_info()[2] != None:
+                if sys.exc_info()[2] is not None:
                     logging.info(traceback.format_exc())
                 sys.exit(1)
 
@@ -276,7 +276,7 @@ def configure_logging(options):
     logging.getLogger().setLevel(log_level())
 
 def main(args=None):
-    # pylint: disable=too-many-branches,too-many-locals
+    # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     if args is None:
         args = sys.argv[1:]
 
@@ -382,19 +382,19 @@ def main(args=None):
     output_files = []
 
     hash_file = None
-    if options.write_hash_file != None:
+    if options.write_hash_file is not None:
         hash_file = open(options.write_hash_file, 'w')
 
     for archive_type in archives:
         output_files.append(write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file))
 
-    if hash_file != None:
+    if hash_file is not None:
         hash_file.close()
 
     shutil.rmtree(output_basename)
 
     if options.pgp_key_id != 'none':
-        if options.write_hash_file != None:
+        if options.write_hash_file is not None:
             output_files += gpg_sign(options.pgp_key_id, options.pgp_passphrase_file,
                                      [options.write_hash_file], False)
         else:
