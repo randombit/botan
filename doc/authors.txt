@@ -1,35 +1,99 @@
-Jack Lloyd
-Daniel Neus (Rohde & Schwarz Cybersecurity)
-Falko Strenzke (cryptosource GmbH)
-Juraj Somorovsky (Hackmanit GmbH)
-Matthias Gierlings (Hackmanit GmbH)
-René Korthaus (Rohde & Schwarz Cybersecurity)
-Simon Warta (Kullo GmbH)
-Peter J Jones
-Justin Karneges
-Vaclav Ovsik
-Matthew Gregan
-Matt Johnston
-Luca Piccarreta
-Yves Jerschow
-FlexSecure GmbH
-Technische Universitat Darmstadt
-Martin Doering
-Manuel Hartl
-Christoph Ludwig
-Patrick Sona
-Projet SECRET, INRIA, Rocquencourt
-Bhaskar Biswas and Nicolas Sendrier
-cryptosource GmbH
-Markus Wanner
-Joel Low
-Daniel Seither (Kullo GmbH)
-Matej Kenda (TopIT d.o.o.)
-Uri Blumenthal
-Simon Cogliani
-Christian Mainka (Hackmanit GmbH)
-Kai Michaelis (Rohde & Schwarz Cybersecurity)
-Philipp Weber (Rohde & Schwarz Cybersecurity)
-Tobias @neverhub
+Alastair Houghton
 Alexander Bluhm (genua GmbH)
+Alex Gaynor
+Alf-André Walla
+Allan L. Bazinet
+Alon Bar-Lev
+Andrew Moon
+Antonio Coratelli
+Atanas Filyanov
+Baruch Burstein
+Bhaskar Biswas
+Bi11
+Bogdan Gusiev
+Chris Desjardins
+Christian Mainka (Hackmanit GmbH)
+Christopher Bläsius
+Christoph Ludwig
+cryptosource GmbH
+cynecx
+Dan Brown
+Daniel Neus (Rohde & Schwarz Cybersecurity)
+Daniel Seither (Kullo GmbH)
+Daniel Wyatt
+Eric Cornelius
+Erwan Chaussy
+etcimon
+Evgeny Pokhilko
+Fabian Weissberg
+Falko Strenzke (cryptosource GmbH)
+Felix Yan
+FlexSecure GmbH
+Florent Le Coz
+Francis Dupont
+Frank Schoenmann
+Google Inc
+Gustavo Serra Scalet
+guywithcrookedface
+Harry Reimann
+Hegedüs Márton Csaba
+Hubert Bugaj
+ilovezfs
+J08nY
+Jack Lloyd
+Jeffrey Walton
+Joel Low
+joerg
+Juraj Somorovsky (Hackmanit GmbH)
+Justin Karneges
+Kai Michaelis (Rohde & Schwarz Cybersecurity)
+Kirill A. Korinsky
+Konstantinos Kolelis
+Krzysztof Kwiatkowski
+Lauri Nurmi
+Luca Piccarreta
+Manuel Hartl
+Marcus Brinkmann
+Markus Wanner
+Martin Doering
+Matej Kenda (TopIT d.o.o.)
+Mathieu Souchaud
+Matthew Gregan
+Matthias Gierlings (Hackmanit GmbH)
+Matt Johnston
+Nathan Hourt
+Nicolas Sendrier
+Nuno Goncalves
+Ori Peleg
+Patrick Sona
+Patrick Wildt
+Patrik Fiedler
+Peter J Jones
 Philippe Lieser (Rohde & Schwarz Cybersecurity)
+Philipp Weber (Rohde & Schwarz Cybersecurity)
+Projet SECRET, INRIA, Rocquencourt
+René Korthaus (Rohde & Schwarz Cybersecurity)
+René Meusel
+Ribose Inc
+Robert Dailey
+Ryuhei Mori
+schregger
+Sergii Cherkavskyi
+seu
+Shlomi Fish
+Simon Cogliani
+Simon Warta (Kullo GmbH)
+slaviber
+souch
+t0b3
+tcely
+Technische Universitat Darmstadt
+Tobias @neverhub
+Tomasz Frydrych
+Uri Blumenthal
+Vaclav Ovsik
+Volker Aßmann
+Yuri
+Yves Jerschow
+Zoltan Gyarmati
+0xdefaced
