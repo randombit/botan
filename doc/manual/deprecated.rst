@@ -39,6 +39,8 @@ in the source.
 
 - TLS: Anonymous DH/ECDH ciphersuites
 
+- TLS: DHE-PSK ciphersuites
+
 - TLS: DSA ciphersuites/certs
 
 - TLS: static RSA key exchange ciphersuites
