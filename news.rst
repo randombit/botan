@@ -48,6 +48,8 @@ Version 2.8.0, Not Yet Released
 
 * Now ``asn1print`` CLI defaults to printing context-specific fields.
 
+* Use codec_base for Base64, which matches how Base32 is implemented (GH #1597)
+
 Version 2.7.0, 2018-07-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
