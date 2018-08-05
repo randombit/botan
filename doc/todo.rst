@@ -133,6 +133,7 @@ Compat Headers
 FFI and Bindings
 ----------------------------------------
 
+* Expose NewHope and CECPQ1
 * Expose compression
 * Expose more of X.509 (CRLs, PKCS10, OCSP, cert signing, etc)
 * Expose TLS
