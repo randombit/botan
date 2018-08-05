@@ -9,9 +9,8 @@
 #define BOTAN_CIPHER_MODE_H_
 
 #include <botan/secmem.h>
-#include <botan/key_spec.h>
+#include <botan/sym_algo.h>
 #include <botan/exceptn.h>
-#include <botan/symkey.h>
 #include <string>
 #include <vector>
 
@@ -26,11 +25,9 @@ enum Cipher_Dir : int { ENCRYPTION, DECRYPTION };
 /**
 * Interface for cipher modes
 */
-class BOTAN_PUBLIC_API(2,0) Cipher_Mode
+class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
    {
    public:
-      virtual ~Cipher_Mode() = default;
-
       /**
       * @return list of available providers for this algorithm, empty if not available
       * @param algo_spec algorithm name
@@ -159,14 +156,6 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode
       */
       virtual bool valid_nonce_length(size_t nonce_len) const = 0;
 
-      virtual std::string name() const = 0;
-
-      /**
-      * Zeroise all state
-      * See also reset_msg()
-      */
-      virtual void clear() = 0;
-
       /**
       * Resets just the message specific state and allows encrypting again under the existing key
       */
@@ -182,11 +171,6 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode
       * @return the size of the authentication tag used (in bytes)
       */
       virtual size_t tag_size() const { return 0; }
-
-      /**
-      * @return object describing limits on key size
-      */
-      virtual Key_Length_Specification key_spec() const = 0;
 
       /**
       * Check whether a given key length is valid for this algorithm.

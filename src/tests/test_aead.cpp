@@ -35,6 +35,15 @@ class AEAD_Tests final : public Text_Based_Test
          result.confirm("AEAD name is not empty", !enc->name().empty());
          result.confirm("AEAD default nonce size is accepted", enc->valid_nonce_length(enc->default_nonce_length()));
 
+         result.test_throws("Unkeyed object throws for encrypt",
+                            [&]() { Botan::secure_vector<uint8_t> buf; enc->finish(buf); });
+
+         if(enc->associated_data_requires_key())
+            {
+            result.test_throws("Unkeyed object throws for set AD",
+                               [&]() { Botan::secure_vector<uint8_t> ad(16); enc->set_associated_data(ad.data(), ad.size()); });
+            }
+
          // First some tests for reset() to make sure it resets what we need it to
          // set garbage values
          enc->set_key(mutate_vec(key));
@@ -133,6 +142,18 @@ class AEAD_Tests final : public Text_Based_Test
                result.test_eq("encrypt process", buf, expected);
                }
             }
+
+         enc->clear();
+
+         result.test_throws("Unkeyed object throws for encrypt after clear",
+                            [&]() { Botan::secure_vector<uint8_t> buf; enc->finish(buf); });
+
+         if(enc->associated_data_requires_key())
+            {
+            result.test_throws("Unkeyed object throws for set AD after clear",
+                               [&]() { Botan::secure_vector<uint8_t> ad(16); enc->set_associated_data(ad.data(), ad.size()); });
+            }
+
          return result;
          }
 
@@ -145,6 +166,15 @@ class AEAD_Tests final : public Text_Based_Test
          std::unique_ptr<Botan::AEAD_Mode> dec(Botan::AEAD_Mode::create(algo, Botan::DECRYPTION));
 
          result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
+
+         result.test_throws("Unkeyed object throws for decrypt",
+                            [&]() { Botan::secure_vector<uint8_t> buf; dec->finish(buf); });
+
+         if(dec->associated_data_requires_key())
+            {
+            result.test_throws("Unkeyed object throws for set AD",
+                               [&]() { Botan::secure_vector<uint8_t> ad(16); dec->set_associated_data(ad.data(), ad.size()); });
+            }
 
          // First some tests for reset() to make sure it resets what we need it to
          // set garbage values
@@ -314,6 +344,17 @@ class AEAD_Tests final : public Text_Based_Test
             result.test_failure("unexpected error while rejecting modified nonce", e.what());
             }
 
+         dec->clear();
+
+         result.test_throws("Unkeyed object throws for decrypt",
+                            [&]() { Botan::secure_vector<uint8_t> buf; dec->finish(buf); });
+
+         if(dec->associated_data_requires_key())
+            {
+            result.test_throws("Unkeyed object throws for set AD",
+                               [&]() { Botan::secure_vector<uint8_t> ad(16); dec->set_associated_data(ad.data(), ad.size()); });
+            }
+
          return result;
          }
 
@@ -356,9 +397,6 @@ class AEAD_Tests final : public Text_Based_Test
 
          // test dec
          result.merge(test_dec(key, nonce, expected, input, ad, algo));
-
-         enc->clear();
-         dec->clear();
 
          return result;
          }

@@ -231,7 +231,7 @@ void OCB_Mode::key_schedule(const uint8_t key[], size_t length)
 
 void OCB_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
    {
-   BOTAN_ASSERT(m_L, "A key was set");
+   verify_key_set(m_L != nullptr);
    m_ad_hash = ocb_hash(*m_L, *m_cipher, ad, ad_len);
    }
 
@@ -331,7 +331,7 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   BOTAN_ASSERT(m_L, "A key was set");
+   verify_key_set(m_L != nullptr);
 
    m_L->init(update_nonce(nonce, nonce_len));
    zeroise(m_checksum);
@@ -340,9 +340,9 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
    {
-   const size_t BS = block_size();
+   verify_key_set(m_L != nullptr);
 
-   BOTAN_ASSERT(m_L, "A key was set");
+   const size_t BS = block_size();
 
    while(blocks)
       {
@@ -370,6 +370,8 @@ size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
 
 void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   verify_key_set(m_L != nullptr);
+
    const size_t BS = block_size();
 
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
@@ -427,6 +429,8 @@ void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
    {
+   verify_key_set(m_L != nullptr);
+
    const size_t BS = block_size();
 
    while(blocks)
@@ -455,6 +459,8 @@ size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
 
 void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   verify_key_set(m_L != nullptr);
+
    const size_t BS = block_size();
 
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
