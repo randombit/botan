@@ -46,13 +46,15 @@ class OpenSSL_Cipher_Mode final : public Cipher_Mode
       const Cipher_Dir m_direction;
       size_t m_block_size;
       EVP_CIPHER_CTX* m_cipher;
+      bool m_key_set;
    };
 
 OpenSSL_Cipher_Mode::OpenSSL_Cipher_Mode(const std::string& name,
                                          const EVP_CIPHER* algo,
                                          Cipher_Dir direction) :
    m_mode_name(name),
-   m_direction(direction)
+   m_direction(direction),
+   m_key_set(false)
    {
    m_block_size = EVP_CIPHER_block_size(algo);
 
@@ -78,6 +80,8 @@ OpenSSL_Cipher_Mode::~OpenSSL_Cipher_Mode()
 
 void OpenSSL_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
+   verify_key_set(m_key_set);
+
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
    if(nonce_len)
@@ -89,6 +93,8 @@ void OpenSSL_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 size_t OpenSSL_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
    {
+   verify_key_set(m_key_set);
+
    if(msg_len == 0)
       return 0;
    if(msg_len > INT_MAX)
@@ -105,6 +111,8 @@ size_t OpenSSL_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
 void OpenSSL_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
                                  size_t offset)
    {
+   verify_key_set(m_key_set);
+
    BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");
    uint8_t* buf = buffer.data() + offset;
    const size_t buf_size = buffer.size() - offset;
@@ -150,6 +158,8 @@ size_t OpenSSL_Cipher_Mode::output_length(size_t input_length) const
 
 void OpenSSL_Cipher_Mode::clear()
    {
+   m_key_set = false;
+
    const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(m_cipher);
 
    if(!EVP_CIPHER_CTX_cleanup(m_cipher))
@@ -179,6 +189,7 @@ void OpenSSL_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
       throw OpenSSL_Error("EVP_CIPHER_CTX_set_key_length");
    if(!EVP_CipherInit_ex(m_cipher, nullptr, nullptr, key, nullptr, -1))
       throw OpenSSL_Error("EVP_CipherInit_ex key");
+   m_key_set = true;
    }
 
 }
