@@ -145,5 +145,5 @@ snail-mail address (S), and Bitcoin address (B).
   S: Bochum, Germany
 
   N: Erwan Chaussy
-  D: Base32
+  D: Base32, Base64 matching Base32 implementation
   S: France

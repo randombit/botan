@@ -67,8 +67,8 @@ std::string base64_encode(const std::vector<uint8_t, Alloc>& input)
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-size_t BOTAN_PUBLIC_API(2,0) base64_decode(uint8_t output[],
-                               const char input[],
+size_t BOTAN_PUBLIC_API(2,0) base64_decode(uint8_t out[],
+                               const char in[],
                                size_t input_length,
                                size_t& input_consumed,
                                bool final_inputs,
