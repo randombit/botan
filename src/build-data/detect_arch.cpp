@@ -57,6 +57,14 @@
 #elif defined(__s390__)
   S390
 
+#elif defined(__riscv)
+
+  #if defined(__LP64__)
+     RISCV64
+  #else
+     RISCV32
+  #endif
+
 #else
   UNKNOWN
 

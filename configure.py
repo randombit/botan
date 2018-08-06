@@ -2950,7 +2950,10 @@ def check_compiler_arch(options, ccinfo, archinfo, source_paths):
     abi_flags = ccinfo.mach_abi_link_flags(options).split(' ')
     cc_output = run_compiler_preproc(options, ccinfo, detect_version_source, 'UNKNOWN', abi_flags).lower()
 
-    if cc_output in ['', 'unknown']:
+    if cc_output == '':
+        cc_output = run_compiler_preproc(options, ccinfo, detect_version_source, 'UNKNOWN').lower()
+
+    if cc_output == 'unknown':
         logging.warning('Unable to detect target architecture via compiler macro checks')
         return None
 
