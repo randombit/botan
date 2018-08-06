@@ -40,6 +40,9 @@ Version 2.8.0, Not Yet Released
 * Handle an error seen when verifying invalid ECDSA signatures using LibreSSL
   on non x86-64 platforms (GH #1627 #1628)
 
+* Correct bugs which would cause CFB, OCB, and GCM modes to crash when they
+  were used in an unkeyed state. (GH #1639)
+
 * Optimizations for SM4
 
 * Avoid a cache side channel in the AES key schedule
