@@ -61,6 +61,13 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
       virtual void set_associated_data(const uint8_t ad[], size_t ad_len) = 0;
 
       /**
+      * Most AEADs require the key to be set prior to setting the AD
+      * A few allow the AD to be set even before the cipher is keyed.
+      * Such ciphers would return false from this function.
+      */
+      virtual bool associated_data_requires_key() const { return true; }
+
+      /**
       * Set associated data that is not included in the ciphertext but
       * that should be authenticated. Must be called after set_key and
       * before start.

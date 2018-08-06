@@ -23,13 +23,14 @@ CFB_Mode::CFB_Mode(BlockCipher* cipher, size_t feedback_bits) :
 void CFB_Mode::clear()
    {
    m_cipher->clear();
+   m_keystream.clear();
    reset();
    }
 
 void CFB_Mode::reset()
    {
    m_state.clear();
-   m_keystream.clear();
+   zeroise(m_keystream);
    }
 
 std::string CFB_Mode::name() const
@@ -73,12 +74,15 @@ bool CFB_Mode::valid_nonce_length(size_t n) const
 void CFB_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
+   m_keystream.resize(m_cipher->block_size());
    }
 
 void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
+
+   verify_key_set(m_keystream.size());
 
    if(nonce_len == 0)
       {
@@ -91,7 +95,6 @@ void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    else
       {
       m_state.assign(nonce, nonce + nonce_len);
-      m_keystream.resize(m_state.size());
       cipher().encrypt(m_state, m_keystream);
       m_keystream_pos = 0;
       }
@@ -113,6 +116,8 @@ void CFB_Mode::shift_register()
 
 size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    {
+   verify_key_set(m_keystream.size());
+
    const size_t shift = feedback();
 
    size_t left = sz;
@@ -175,6 +180,8 @@ inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len)
 
 size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    {
+   verify_key_set(m_keystream.size());
+
    const size_t shift = feedback();
 
    size_t left = sz;

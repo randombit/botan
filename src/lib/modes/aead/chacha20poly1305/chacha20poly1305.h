@@ -26,6 +26,8 @@ class BOTAN_PUBLIC_API(2,0) ChaCha20Poly1305_Mode : public AEAD_Mode
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
+      bool associated_data_requires_key() const override { return false; }
+
       std::string name() const override { return "ChaCha20Poly1305"; }
 
       size_t update_granularity() const override { return 64; }

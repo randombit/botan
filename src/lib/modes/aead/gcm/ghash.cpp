@@ -49,6 +49,8 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
                          const uint8_t input[],
                          size_t blocks)
    {
+   verify_key_set(m_HM.size());
+
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
       {
@@ -248,8 +250,8 @@ secure_vector<uint8_t> GHASH::nonce_hash(const uint8_t nonce[], size_t nonce_len
 
 void GHASH::clear()
    {
-   zeroise(m_H);
-   zeroise(m_HM);
+   zap(m_H);
+   zap(m_HM);
    reset();
    }
 
