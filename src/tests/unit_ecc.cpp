@@ -292,7 +292,7 @@ class EC_Group_Tests : public Test
             result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
 
-            result.confirm("Same group is same", group == group);
+            result.confirm("Same group is same", group == Botan::EC_Group(group_name));
 
             const Botan::EC_Group copy(group.get_p(), group.get_a(), group.get_b(),
                                        group.get_g_x(), group.get_g_y(),
