@@ -137,8 +137,6 @@ class Hash_Function_Tests final : public Text_Based_Test
                for(size_t i = 0; i != bytes_to_misalign; ++i)
                   misaligned.insert(misaligned.begin(), 0x23);
 
-               const size_t misalignment = reinterpret_cast<uintptr_t>(&misaligned[bytes_to_misalign]) % 16;
-               result.test_eq("Misaligned input to 15 % 16", misalignment, 15);
                hash->update(&misaligned[bytes_to_misalign], input.size());
                result.test_eq(provider, "hashing misaligned data", hash->final(), expected);
                }
