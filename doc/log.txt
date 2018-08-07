@@ -7,6 +7,15 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.18, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Avoid using ``cstdint`` types for C++98 compatability. (GH #1234)
+
+* Supporting compiling using LibreSSL (GH #1236)
+
+* Correct creation of CRLs using intermediate CA (GH #1242)
+
 Version 1.10.17, 1.10.17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
