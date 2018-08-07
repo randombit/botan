@@ -270,6 +270,20 @@ Unlike the other AEADs which are based on block ciphers, this mode is based on
 the ChaCha stream cipher and the Poly1305 authentication code. It is very fast
 on all modern platforms.
 
+ChaCha20Poly1305 supports 64-bit, 96-bit, and (since 2.8) 192-bit nonces. 64-bit nonces
+are the "classic" ChaCha20Poly1305 design. 96-bit nonces are used by the IETF standard
+version of ChaCha20Poly1305. And 192-bit nonces is the XChaCha20Poly1305 construction,
+which is somewhat less common.
+
+For best interop use the IETF version with 96-bit nonces. However 96 bits is small enough
+that it can be dangerous to generate nonces randomly if more than ~ 2^32 messages are
+encrypted under a single key, since if a nonce is ever reused ChaCha20Poly1305 becomes
+insecure. It is better to use a counter for the nonce in this case.
+
+If you are encrypting many messages under a single key and cannot maintain a counter for
+the nonce, prefer XChaCha20Poly1305 since a 192 bit nonce is large enough that random
+values are extremely unlikely to repeat.
+
 GCM
 ~~~~~
 

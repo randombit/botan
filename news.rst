@@ -10,6 +10,8 @@ Version 2.8.0, Not Yet Released
   of tests (under 16 or so) it is possible if unlikely they would accept such a
   composite as prime. Adding a Lucas test precludes such an attack. (GH #1636)
 
+* Add XChaCha and XChaCha20Poly1305 (GH #1640)
+
 * Previously SM2 had two distinct key types, one for signatures and another for
   encryption. They have now been merged into a single key type since in practice
   it seems the same key is at times used for both operations. (GH #1637)
@@ -38,6 +40,9 @@ Version 2.8.0, Not Yet Released
 * The FFI function botan_privkey_load now ignores its rng argument.
 
 * Resolve a problem when building under Visual C++ 15.8 (GH #1624)
+
+* Fix a bug in XSalsa20 (192-bit Salsa nonces) where if set_iv was called twice
+  without calling set_key, the resulting encryption was incorrect. (GH #1640)
 
 * Handle an error seen when verifying invalid ECDSA signatures using LibreSSL
   on non x86-64 platforms (GH #1627 #1628)
