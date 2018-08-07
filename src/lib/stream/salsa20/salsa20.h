@@ -40,6 +40,9 @@ class BOTAN_PUBLIC_API(2,0) Salsa20 final : public StreamCipher
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;
 
+      void initialize_state();
+
+      secure_vector<uint32_t> m_key;
       secure_vector<uint32_t> m_state;
       secure_vector<uint8_t> m_buffer;
       size_t m_position = 0;

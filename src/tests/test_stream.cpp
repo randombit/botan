@@ -88,12 +88,15 @@ class Stream_Cipher_Tests final : public Text_Based_Test
                }
 
             bool accepted_nonce_early = false;
-            try
+            if(nonce.size() > 0)
                {
-               cipher->set_iv(nonce.data(), nonce.size());
-               accepted_nonce_early = true;
+               try
+                  {
+                  cipher->set_iv(nonce.data(), nonce.size());
+                  accepted_nonce_early = true;
+                  }
+               catch(Botan::Invalid_State&) {}
                }
-            catch(Botan::Invalid_State&) {}
 
             cipher->set_key(key);
 
@@ -112,7 +115,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             not set. So, don't set the nonce now, to ensure the previous call
             had an effect.
             */
-            if(accepted_nonce_early == false)
+            if(nonce.size() > 0 && accepted_nonce_early == false)
                {
                cipher->set_iv(nonce.data(), nonce.size());
                }
@@ -133,6 +136,16 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             cipher->encrypt(buf);
             result.test_eq(provider, "encrypt", buf, expected);
             }
+
+            if(nonce.size() > 0)
+               {
+               std::vector<uint8_t> buf = input;
+               cipher->set_iv(nonce.data(), nonce.size());
+               if(seek != 0)
+                  cipher->seek(seek);
+               cipher->encrypt(buf);
+               result.test_eq(provider, "second encrypt", buf, expected);
+               }
 
             cipher->clear();
 

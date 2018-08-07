@@ -20,6 +20,7 @@ namespace Botan {
 * See draft-irtf-cfrg-chacha20-poly1305-03 for specification
 * If a nonce of 64 bits is used the older version described in
 * draft-agl-tls-chacha20poly1305-04 is used instead.
+* If a nonce of 192 bits is used, XChaCha20Poly1305 is selected.
 */
 class BOTAN_PUBLIC_API(2,0) ChaCha20Poly1305_Mode : public AEAD_Mode
    {
@@ -53,7 +54,7 @@ class BOTAN_PUBLIC_API(2,0) ChaCha20Poly1305_Mode : public AEAD_Mode
       size_t m_nonce_len = 0;
       size_t m_ctext_len = 0;
 
-      bool cfrg_version() const { return m_nonce_len == 12; }
+      bool cfrg_version() const { return m_nonce_len == 12 || m_nonce_len == 24; }
       void update_len(size_t len);
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;

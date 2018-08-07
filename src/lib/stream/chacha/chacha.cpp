@@ -1,6 +1,6 @@
 /*
 * ChaCha
-* (C) 2014 Jack Lloyd
+* (C) 2014,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,6 +11,53 @@
 #include <botan/cpuid.h>
 
 namespace Botan {
+
+namespace {
+
+#define CHACHA_QUARTER_ROUND(a, b, c, d) \
+      do {                               \
+      a += b; d ^= a; d = rotl<16>(d);   \
+      c += d; b ^= c; b = rotl<12>(b);   \
+      a += b; d ^= a; d = rotl<8>(d);    \
+      c += d; b ^= c; b = rotl<7>(b);    \
+      } while(0)
+
+/*
+* Generate HChaCha cipher stream (for XChaCha IV setup)
+*/
+void hchacha(uint32_t output[8], const uint32_t input[16], size_t rounds)
+   {
+   BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
+
+   uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
+            x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+            x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+            x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
+
+   for(size_t i = 0; i != rounds / 2; ++i)
+      {
+      CHACHA_QUARTER_ROUND(x00, x04, x08, x12);
+      CHACHA_QUARTER_ROUND(x01, x05, x09, x13);
+      CHACHA_QUARTER_ROUND(x02, x06, x10, x14);
+      CHACHA_QUARTER_ROUND(x03, x07, x11, x15);
+
+      CHACHA_QUARTER_ROUND(x00, x05, x10, x15);
+      CHACHA_QUARTER_ROUND(x01, x06, x11, x12);
+      CHACHA_QUARTER_ROUND(x02, x07, x08, x13);
+      CHACHA_QUARTER_ROUND(x03, x04, x09, x14);
+      }
+
+   output[0] = x00;
+   output[1] = x01;
+   output[2] = x02;
+   output[3] = x03;
+   output[4] = x12;
+   output[5] = x13;
+   output[6] = x14;
+   output[7] = x15;
+   }
+
+}
 
 ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
    {
@@ -46,17 +93,9 @@ void ChaCha::chacha_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
    for(size_t i = 0; i != 4; ++i)
       {
       uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
-             x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
-             x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
-             x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
-
-#define CHACHA_QUARTER_ROUND(a, b, c, d) \
-      do {                               \
-      a += b; d ^= a; d = rotl<16>(d);   \
-      c += d; b ^= c; b = rotl<12>(b);   \
-      a += b; d ^= a; d = rotl<8>(d);    \
-      c += d; b ^= c; b = rotl<7>(b);    \
-      } while(0)
+               x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+               x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+               x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
       for(size_t r = 0; r != rounds / 2; ++r)
          {
@@ -134,10 +173,7 @@ void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_position += length;
    }
 
-/*
-* ChaCha Key Schedule
-*/
-void ChaCha::key_schedule(const uint8_t key[], size_t length)
+void ChaCha::initialize_state()
    {
    static const uint32_t TAU[] =
       { 0x61707865, 0x3120646e, 0x79622d36, 0x6b206574 };
@@ -145,38 +181,61 @@ void ChaCha::key_schedule(const uint8_t key[], size_t length)
    static const uint32_t SIGMA[] =
       { 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574 };
 
-   const uint32_t* CONSTANTS = (length == 16) ? TAU : SIGMA;
+   m_state[4] = m_key[0];
+   m_state[5] = m_key[1];
+   m_state[6] = m_key[2];
+   m_state[7] = m_key[3];
 
-   // Repeat the key if 128 bits
-   const uint8_t* key2 = (length == 32) ? key + 16 : key;
+   if(m_key.size() == 4)
+      {
+      m_state[0] = TAU[0];
+      m_state[1] = TAU[1];
+      m_state[2] = TAU[2];
+      m_state[3] = TAU[3];
+
+      m_state[8] = m_key[0];
+      m_state[9] = m_key[1];
+      m_state[10] = m_key[2];
+      m_state[11] = m_key[3];
+      }
+   else
+      {
+      m_state[0] = SIGMA[0];
+      m_state[1] = SIGMA[1];
+      m_state[2] = SIGMA[2];
+      m_state[3] = SIGMA[3];
+
+      m_state[8] = m_key[4];
+      m_state[9] = m_key[5];
+      m_state[10] = m_key[6];
+      m_state[11] = m_key[7];
+      }
+
+   m_state[12] = 0;
+   m_state[13] = 0;
+   m_state[14] = 0;
+   m_state[15] = 0;
 
    m_position = 0;
+   }
+
+/*
+* ChaCha Key Schedule
+*/
+void ChaCha::key_schedule(const uint8_t key[], size_t length)
+   {
+   m_key.resize(length / 4);
+   load_le<uint32_t>(m_key.data(), key, m_key.size());
+
    m_state.resize(16);
    m_buffer.resize(4*64);
 
-   m_state[0] = CONSTANTS[0];
-   m_state[1] = CONSTANTS[1];
-   m_state[2] = CONSTANTS[2];
-   m_state[3] = CONSTANTS[3];
-
-   m_state[4] = load_le<uint32_t>(key, 0);
-   m_state[5] = load_le<uint32_t>(key, 1);
-   m_state[6] = load_le<uint32_t>(key, 2);
-   m_state[7] = load_le<uint32_t>(key, 3);
-
-   m_state[8] = load_le<uint32_t>(key2, 0);
-   m_state[9] = load_le<uint32_t>(key2, 1);
-   m_state[10] = load_le<uint32_t>(key2, 2);
-   m_state[11] = load_le<uint32_t>(key2, 3);
-
-   // Default all-zero IV
-   const uint8_t ZERO[8] = { 0 };
-   set_iv(ZERO, sizeof(ZERO));
+   set_iv(nullptr, 0);
    }
 
 bool ChaCha::valid_iv_length(size_t iv_len) const
    {
-   return (iv_len == 0 || iv_len == 8 || iv_len == 12);
+   return (iv_len == 0 || iv_len == 8 || iv_len == 12 || iv_len == 24);
    }
 
 void ChaCha::set_iv(const uint8_t iv[], size_t length)
@@ -186,8 +245,7 @@ void ChaCha::set_iv(const uint8_t iv[], size_t length)
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
-   m_state[12] = 0;
-   m_state[13] = 0;
+   initialize_state();
 
    if(length == 0)
       {
@@ -206,6 +264,29 @@ void ChaCha::set_iv(const uint8_t iv[], size_t length)
       m_state[14] = load_le<uint32_t>(iv, 1);
       m_state[15] = load_le<uint32_t>(iv, 2);
       }
+   else if(length == 24)
+      {
+      m_state[12] = load_le<uint32_t>(iv, 0);
+      m_state[13] = load_le<uint32_t>(iv, 1);
+      m_state[14] = load_le<uint32_t>(iv, 2);
+      m_state[15] = load_le<uint32_t>(iv, 3);
+
+      secure_vector<uint32_t> hc(8);
+      hchacha(hc.data(), m_state.data(), m_rounds);
+
+      m_state[ 4] = hc[0];
+      m_state[ 5] = hc[1];
+      m_state[ 6] = hc[2];
+      m_state[ 7] = hc[3];
+      m_state[ 8] = hc[4];
+      m_state[ 9] = hc[5];
+      m_state[10] = hc[6];
+      m_state[11] = hc[7];
+      m_state[12] = 0;
+      m_state[13] = 0;
+      m_state[14] = load_le<uint32_t>(iv, 4);
+      m_state[15] = load_le<uint32_t>(iv, 5);
+      }
 
    chacha_x4(m_buffer.data(), m_state.data(), m_rounds);
    m_position = 0;
@@ -213,6 +294,7 @@ void ChaCha::set_iv(const uint8_t iv[], size_t length)
 
 void ChaCha::clear()
    {
+   zap(m_key);
    zap(m_state);
    zap(m_buffer);
    m_position = 0;

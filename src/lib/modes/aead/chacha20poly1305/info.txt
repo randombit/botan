@@ -1,5 +1,5 @@
 <defines>
-AEAD_CHACHA20_POLY1305 -> 20141228
+AEAD_CHACHA20_POLY1305 -> 20180807
 </defines>
 
 <requires>
