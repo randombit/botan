@@ -14,6 +14,8 @@ Version 2.8.0, Not Yet Released
   encryption. They have now been merged into a single key type since in practice
   it seems the same key is at times used for both operations. (GH #1637)
 
+* The ``Cipher_Mode`` class now derives from ``SymmetricAlgorithm`` (GH #1639)
+
 * Add support for using the ARMv8 instructions for SM4 encryption (GH #1622)
 
 * Fixed a bug that caused CCM to fail with an exception when used with L=8
@@ -52,6 +54,10 @@ Version 2.8.0, Not Yet Released
 * Now ``asn1print`` CLI defaults to printing context-specific fields.
 
 * Use codec_base for Base64, which matches how Base32 is implemented (GH #1597)
+
+* When building under Visual C++ 2013, the user must acknowledge the upcoming
+  removal of support using the configure.py flag ``--ack-vc2013-deprecated``
+  (GH #1557)
 
 Version 2.7.0, 2018-07-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
