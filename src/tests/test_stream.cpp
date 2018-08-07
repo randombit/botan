@@ -82,6 +82,19 @@ class Stream_Cipher_Tests final : public Text_Based_Test
                result.test_success("Trying to seek failed because not implemented");
                }
 
+            if(!cipher->valid_iv_length(nonce.size()))
+               {
+               throw Test_Error("Invalid nonce for " + algo);
+               }
+
+            bool accepted_nonce_early = false;
+            try
+               {
+               cipher->set_iv(nonce.data(), nonce.size());
+               accepted_nonce_early = true;
+               }
+            catch(Botan::Invalid_State&) {}
+
             cipher->set_key(key);
 
             /*
@@ -93,26 +106,15 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             result.test_throws("Throws if invalid nonce size given",
                                [&]() { cipher->set_iv(nullptr, large_nonce_size); });
 
-            if(nonce.size())
+            /*
+            If the set_nonce call earlier succeded, then we require that it also
+            worked (ie saved the nonce for later use) even though the key was
+            not set. So, don't set the nonce now, to ensure the previous call
+            had an effect.
+            */
+            if(accepted_nonce_early == false)
                {
-               if(!cipher->valid_iv_length(nonce.size()))
-                  {
-                  throw Test_Error("Invalid nonce for " + algo);
-                  }
                cipher->set_iv(nonce.data(), nonce.size());
-               }
-            else
-               {
-               /*
-               * If no nonce was set then implicitly the cipher is using a
-               * null/empty nonce. Call set_iv with such a nonce to make sure
-               * set_iv accepts it.
-               */
-               if(!cipher->valid_iv_length(0))
-                  {
-                  throw Test_Error("Stream cipher " + algo + " requires nonce but none provided");
-                  }
-               cipher->set_iv(nullptr, 0);
                }
 
             if(seek != 0)

@@ -181,6 +181,8 @@ bool ChaCha::valid_iv_length(size_t iv_len) const
 
 void ChaCha::set_iv(const uint8_t iv[], size_t length)
    {
+   verify_key_set(m_state.empty() == false);
+
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 

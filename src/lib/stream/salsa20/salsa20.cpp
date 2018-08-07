@@ -172,6 +172,8 @@ void Salsa20::key_schedule(const uint8_t key[], size_t length)
 */
 void Salsa20::set_iv(const uint8_t iv[], size_t length)
    {
+   verify_key_set(m_state.empty() == false);
+
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
