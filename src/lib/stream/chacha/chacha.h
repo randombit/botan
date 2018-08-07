@@ -53,6 +53,8 @@ class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;
 
+      void initialize_state();
+
       void chacha_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds);
 
 #if defined(BOTAN_HAS_CHACHA_SSE2)
@@ -60,6 +62,7 @@ class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
 #endif
 
       size_t m_rounds;
+      secure_vector<uint32_t> m_key;
       secure_vector<uint32_t> m_state;
       secure_vector<uint8_t> m_buffer;
       size_t m_position = 0;
