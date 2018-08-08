@@ -18,8 +18,6 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
    {
    public:
-      StreamCipher* clone() const override { return new ChaCha(m_rounds); }
-
       /**
       * @param rounds number of rounds
       * @note Currently only 8, 12 or 20 rounds are supported, all others
@@ -41,14 +39,13 @@ class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
       */
       bool valid_iv_length(size_t iv_len) const override;
 
-      size_t default_iv_length() const override { return 24; }
+      size_t default_iv_length() const override;
 
-      Key_Length_Specification key_spec() const override
-         {
-         return Key_Length_Specification(16, 32, 16);
-         }
+      Key_Length_Specification key_spec() const override;
 
       void clear() override;
+
+      StreamCipher* clone() const override;
 
       std::string name() const override;
 

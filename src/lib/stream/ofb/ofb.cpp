@@ -37,6 +37,26 @@ std::string OFB::name() const
    return "OFB(" + m_cipher->name() + ")";
    }
 
+size_t OFB::default_iv_length() const
+   {
+   return m_cipher->block_size();
+   }
+
+bool OFB::valid_iv_length(size_t iv_len) const
+   {
+   return (iv_len <= m_cipher->block_size());
+   }
+
+Key_Length_Specification OFB::key_spec() const
+   {
+   return m_cipher->key_spec();
+   }
+
+OFB* OFB::clone() const
+   {
+   return new OFB(m_cipher->clone());
+   }
+
 void OFB::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
    while(length >= m_buffer.size() - m_buf_pos)

@@ -243,9 +243,26 @@ void Salsa20::set_iv(const uint8_t iv[], size_t length)
    m_position = 0;
    }
 
-/*
-* Return the name of this type
-*/
+bool Salsa20::valid_iv_length(size_t iv_len) const
+   {
+   return (iv_len == 0 || iv_len == 8 || iv_len == 24);
+   }
+
+size_t Salsa20::default_iv_length() const
+   {
+   return 24;
+   }
+
+Key_Length_Specification Salsa20::key_spec() const
+   {
+   return Key_Length_Specification(16, 32, 16);
+   }
+
+StreamCipher* Salsa20::clone() const
+   {
+   return new Salsa20;
+   }
+
 std::string Salsa20::name() const
    {
    return "Salsa20";

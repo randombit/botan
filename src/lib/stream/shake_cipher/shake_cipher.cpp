@@ -75,4 +75,24 @@ void SHAKE_128_Cipher::seek(uint64_t)
    {
    throw Not_Implemented("SHAKE_128_Cipher::seek");
    }
+
+Key_Length_Specification SHAKE_128_Cipher::key_spec() const
+   {
+   /*
+   In principle SHAKE can accept arbitrary length inputs, but this
+   does not seem required for a stream cipher.
+   */
+   return Key_Length_Specification(16, 160, 8);
+   }
+
+std::string SHAKE_128_Cipher::name() const
+   {
+   return "SHAKE-128";
+   }
+
+StreamCipher* SHAKE_128_Cipher::clone() const
+   {
+   return new SHAKE_128_Cipher;
+   }
+
 }

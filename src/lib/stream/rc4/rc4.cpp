@@ -29,6 +29,16 @@ void RC4::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_position += length;
    }
 
+StreamCipher* RC4::clone() const
+   {
+   return new RC4(m_SKIP);
+   }
+
+Key_Length_Specification RC4::key_spec() const
+   {
+   return Key_Length_Specification(1, 256);
+   }
+
 void RC4::set_iv(const uint8_t*, size_t length)
    {
    if(length > 0)

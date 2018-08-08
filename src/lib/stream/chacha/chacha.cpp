@@ -233,6 +233,21 @@ void ChaCha::key_schedule(const uint8_t key[], size_t length)
    set_iv(nullptr, 0);
    }
 
+size_t ChaCha::default_iv_length() const
+   {
+   return 24;
+   }
+
+Key_Length_Specification ChaCha::key_spec() const
+   {
+   return Key_Length_Specification(16, 32, 16);
+   }
+
+StreamCipher* ChaCha::clone() const
+   {
+   return new ChaCha(m_rounds);
+   }
+
 bool ChaCha::valid_iv_length(size_t iv_len) const
    {
    return (iv_len == 0 || iv_len == 8 || iv_len == 12 || iv_len == 24);
