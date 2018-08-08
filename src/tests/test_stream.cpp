@@ -57,6 +57,13 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             result.test_is_nonempty("provider", provider);
             result.test_eq(provider, cipher->name(), algo);
 
+            result.confirm("default iv length is valid", cipher->valid_iv_length(cipher->default_iv_length()));
+
+            if(cipher->default_iv_length() == 0)
+               {
+               result.confirm("if default iv length is zero, no iv supported", nonce.size() == 0);
+               }
+
             try
                {
                std::vector<uint8_t> buf(128);

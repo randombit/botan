@@ -25,6 +25,8 @@ class BOTAN_PUBLIC_API(2,0) Salsa20 final : public StreamCipher
       bool valid_iv_length(size_t iv_len) const override
          { return (iv_len == 0 || iv_len == 8 || iv_len == 24); }
 
+      size_t default_iv_length() const override { return 24; }
+
       Key_Length_Specification key_spec() const override
          {
          return Key_Length_Specification(16, 32, 16);

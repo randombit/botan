@@ -50,10 +50,20 @@ vector.
      the stream cipher. Some ciphers do not support IVs at all, and will return
      false for any value except zero.
 
+  .. cpp:function:: size_t valid_iv_length() const
+
+     Returns some default IV size, normally the largest IV supported by the
+     cipher.  If this function returns zero, then IVs are not supported any any
+     call to ``set_iv`` will fail.
+
   .. cpp:function:: void set_iv(const uint8_t*, size_t len)
 
      Load IV into the stream cipher state. This should happen after the key is
      set and before any operation (encrypt/decrypt/seek) is called.
+
+     If the cipher does not support IVs, then a call with ``len`` equal to zero
+     will be accepted and any other length will cause a ``Invalid_IV_Length``
+     exception.
 
   .. cpp:function:: void seek(uint64_t offset)
 

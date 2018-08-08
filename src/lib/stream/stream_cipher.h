@@ -101,6 +101,12 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       virtual void set_iv(const uint8_t iv[], size_t iv_len) = 0;
 
       /**
+      * Return the default (preferred) nonce length
+      * If this function returns 0, then this cipher does not support nonces
+      */
+      virtual size_t default_iv_length() const { return 0; }
+
+      /**
       * @param iv_len the length of the IV in bytes
       * @return if the length is valid for this algorithm
       */

@@ -34,10 +34,14 @@ class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
       /*
-      * ChaCha accepts 0, 8, or 12 byte IVs. The default IV is a 8 zero bytes.
+      * ChaCha accepts 0, 8, 12 or 24 byte IVs.
+      * The default IV is a 8 zero bytes.
       * An IV of length 0 is treated the same as the default zero IV.
+      * An IV of length 24 selects XChaCha mode
       */
       bool valid_iv_length(size_t iv_len) const override;
+
+      size_t default_iv_length() const override { return 24; }
 
       Key_Length_Specification key_spec() const override
          {

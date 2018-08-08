@@ -310,7 +310,7 @@ void ChaCha::seek(uint64_t offset)
    verify_key_set(m_state.empty() == false);
 
    // Find the block offset
-   uint64_t counter = offset / 64;
+   const uint64_t counter = offset / 64;
 
    uint8_t out[8];
 

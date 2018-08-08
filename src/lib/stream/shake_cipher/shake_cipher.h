@@ -36,8 +36,6 @@ class BOTAN_PUBLIC_API(2,0) SHAKE_128_Cipher final : public StreamCipher
       */
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
-      bool valid_iv_length(size_t iv_len) const override { return (iv_len == 0); }
-
       /**
       * In principle SHAKE can accept arbitrary length inputs, but this
       * does not seem required for a stream cipher.

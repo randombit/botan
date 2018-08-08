@@ -23,6 +23,8 @@ class BOTAN_PUBLIC_API(2,0) OFB final : public StreamCipher
 
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
+      size_t default_iv_length() const override { return m_cipher->block_size(); }
+
       bool valid_iv_length(size_t iv_len) const override
          { return (iv_len <= m_cipher->block_size()); }
 
