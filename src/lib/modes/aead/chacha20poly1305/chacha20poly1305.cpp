@@ -66,11 +66,11 @@ void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
    m_chacha->set_iv(nonce, nonce_len);
 
-   secure_vector<uint8_t> init(64); // zeros
-   m_chacha->encrypt(init);
+   secure_vector<uint8_t> first_block(64);
+   m_chacha->write_keystream(first_block.data(), first_block.size());
 
-   m_poly1305->set_key(init.data(), 32);
-   // Remainder of output is discard
+   m_poly1305->set_key(first_block.data(), 32);
+   // Remainder of first block is discarded
 
    m_poly1305->update(m_ad);
 

@@ -29,6 +29,8 @@ class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
 
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override;
 
+      void write_keystream(uint8_t out[], size_t len) override;
+
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
       /*

@@ -173,6 +173,24 @@ void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_position += length;
    }
 
+void ChaCha::write_keystream(uint8_t out[], size_t length)
+   {
+   verify_key_set(m_state.empty() == false);
+
+   while(length >= m_buffer.size() - m_position)
+      {
+      copy_mem(out, &m_buffer[m_position], m_buffer.size() - m_position);
+      length -= (m_buffer.size() - m_position);
+      out += (m_buffer.size() - m_position);
+      chacha_x4(m_buffer.data(), m_state.data(), m_rounds);
+      m_position = 0;
+      }
+
+   copy_mem(out, &m_buffer[m_position], length);
+
+   m_position += length;
+   }
+
 void ChaCha::initialize_state()
    {
    static const uint32_t TAU[] =

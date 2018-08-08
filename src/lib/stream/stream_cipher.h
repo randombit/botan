@@ -58,6 +58,17 @@ class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
       virtual void cipher(const uint8_t in[], uint8_t out[], size_t len) = 0;
 
       /**
+      * Write keystream bytes to a buffer
+      * @param out the byte array to hold the keystream
+      * @param len the length of out in bytes
+      */
+      virtual void write_keystream(uint8_t out[], size_t len)
+         {
+         clear_mem(out, len);
+         cipher1(out, len);
+         }
+
+      /**
       * Encrypt or decrypt a message
       * The message is encrypted/decrypted in place.
       * @param buf the plaintext / ciphertext
