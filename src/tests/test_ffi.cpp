@@ -92,6 +92,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_scrypt());
          results.push_back(ffi_test_mp(rng));
          results.push_back(ffi_test_pkcs_hash_id());
+         results.push_back(ffi_test_cert_validation());
 
 #if defined(BOTAN_HAS_AES)
          results.push_back(ffi_test_block_ciphers());
@@ -110,6 +111,7 @@ class FFI_Unit_Tests final : public Test
 #endif
 
 #endif
+
 
 #if defined(BOTAN_HAS_FPE_FE1)
          results.push_back(ffi_test_fpe());
@@ -213,7 +215,7 @@ class FFI_Unit_Tests final : public Test
          {
          Test::Result result("FFI RSA cert");
 
-#if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_X509_CERTIFICATES)
          botan_x509_cert_t cert;
          if(TEST_FFI_OK(botan_x509_cert_load_file, (&cert, Test::data_file("x509/ocsp/randombit.pem").c_str())))
             {
@@ -226,6 +228,54 @@ class FFI_Unit_Tests final : public Test
             }
 #endif
 
+         return result;
+         }
+
+      Test::Result ffi_test_cert_validation()
+         {
+         Test::Result result("FFI Cert validation");
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
+         botan_x509_cert_t root;
+         int rc;
+
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&root, Test::data_file("x509/nist/root.crt").c_str()));
+
+         botan_x509_cert_t end2;
+         botan_x509_cert_t sub2;
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&end2, Test::data_file("x509/nist/test02/end.crt").c_str()));
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub2, Test::data_file("x509/nist/test02/int.crt").c_str()));
+
+         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, NULL, 0));
+         result.confirm("Validation failed", rc == 5002);
+         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Signature error");
+
+         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, nullptr, 0, &root, 1, NULL, 0));
+         result.confirm("Validation failed", rc == 3000);
+         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
+
+         botan_x509_cert_t end7;
+         botan_x509_cert_t sub7;
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&end7, Test::data_file("x509/nist/test07/end.crt").c_str()));
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub7, Test::data_file("x509/nist/test07/int.crt").c_str()));
+
+         botan_x509_cert_t subs[2] = {sub2, sub7};
+         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, NULL, 0));
+         result.confirm("Validation failed", rc == 1001);
+         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc),
+                        "Hash function used is considered too weak for security");
+
+         TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, NULL, 80));
+         result.confirm("Validation passed", rc == 0);
+         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Verified");
+
+         TEST_FFI_OK(botan_x509_cert_destroy, (end2));
+         TEST_FFI_OK(botan_x509_cert_destroy, (sub2));
+         TEST_FFI_OK(botan_x509_cert_destroy, (end7));
+         TEST_FFI_OK(botan_x509_cert_destroy, (sub7));
+         TEST_FFI_OK(botan_x509_cert_destroy, (root));
+
+#endif
          return result;
          }
 
@@ -250,6 +300,14 @@ class FFI_Unit_Tests final : public Test
             date.resize(date_len - 1);
             TEST_FFI_OK(botan_x509_cert_get_time_expires, (cert, &date[0], &date_len));
             result.test_eq("cert valid until", date, "280119151800Z");
+
+            uint64_t not_before = 0;
+            TEST_FFI_OK(botan_x509_cert_not_before, (cert, &not_before));
+            result.confirm("cert not before", not_before == 1184858838);
+
+            uint64_t not_after = 0;
+            TEST_FFI_OK(botan_x509_cert_not_after, (cert, &not_after));
+            result.confirm("cert not after", not_after == 1831907880);
 
             size_t serial_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_serial_number, (cert, nullptr, &serial_len));

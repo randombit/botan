@@ -14,6 +14,7 @@ namespace Botan {
 
 /**
 * Certificate validation status code
+* Warning: reflect any changes to this in botan_cert_status_code in ffi.h
 */
 enum class Certificate_Status_Code {
    OK = 0,

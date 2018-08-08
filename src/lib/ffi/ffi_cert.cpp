@@ -1,5 +1,5 @@
 /*
-* (C) 2015,2017 Jack Lloyd
+* (C) 2015,2017,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,6 +10,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/x509cert.h>
+   #include <botan/x509path.h>
    #include <botan/data_src.h>
 #endif
 
@@ -157,6 +158,20 @@ int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t*
 #endif
    }
 
+int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoch)
+   {
+   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
+      *time_since_epoch = c.not_before().time_since_epoch();
+      });
+   }
+
+int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch)
+   {
+   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
+      *time_since_epoch = c.not_after().time_since_epoch();
+      });
+   }
+
 int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -219,6 +234,70 @@ int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname)
    BOTAN_UNUSED(cert);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
+   }
+
+int botan_x509_cert_verify(int* result_code,
+                           botan_x509_cert_t cert,
+                           botan_x509_cert_t* intermediates,
+                           size_t intermediates_len,
+                           botan_x509_cert_t* trusted,
+                           size_t trusted_len,
+                           const char* trusted_path,
+                           size_t required_strength)
+   {
+   if(required_strength == 0)
+      required_strength = 110;
+
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      std::vector<Botan::X509_Certificate> end_certs;
+
+      end_certs.push_back(safe_get(cert));
+      for(size_t i = 0; i != intermediates_len; ++i)
+         end_certs.push_back(safe_get(intermediates[i]));
+
+      std::unique_ptr<Botan::Certificate_Store> trusted_from_path;
+      std::unique_ptr<Botan::Certificate_Store_In_Memory> trusted_extra;
+      std::vector<Botan::Certificate_Store*> trusted_roots;
+
+      if(trusted_path)
+         {
+         trusted_from_path.reset(new Botan::Certificate_Store_In_Memory(trusted_path));
+         trusted_roots.push_back(trusted_from_path.get());
+         }
+
+      if(trusted_len > 0)
+         {
+         trusted_extra.reset(new Botan::Certificate_Store_In_Memory);
+         for(size_t i = 0; i != trusted_len; ++i)
+            {
+            trusted_extra->add_certificate(safe_get(trusted[i]));
+            }
+         trusted_roots.push_back(trusted_extra.get());
+         }
+
+      Botan::Path_Validation_Restrictions restrictions(false, required_strength);
+
+      auto validation_result = Botan::x509_path_validate(end_certs,
+                                                         restrictions,
+                                                         trusted_roots);
+
+      if(result_code)
+         *result_code = static_cast<int>(validation_result.result());
+
+      if(validation_result.successful_validation())
+         return 0;
+      else
+         return 1;
+      });
+   }
+
+const char* botan_x509_cert_validation_status(int code)
+   {
+   if(code < 0)
+      return nullptr;
+
+   Botan::Certificate_Status_Code sc = static_cast<Botan::Certificate_Status_Code>(code);
+   return Botan::to_string(sc);
    }
 
 }
