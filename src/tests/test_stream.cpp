@@ -62,6 +62,9 @@ class Stream_Cipher_Tests final : public Text_Based_Test
             if(cipher->default_iv_length() == 0)
                {
                result.confirm("if default iv length is zero, no iv supported", nonce.size() == 0);
+
+               // This should still succeed
+               cipher->set_iv(nullptr, 0);
                }
 
             try
