@@ -39,7 +39,7 @@ class Bcrypt_Tests final : public Text_Based_Test
          // self-test low levels for each test password
          for(uint16_t level = 4; level <= 6; ++level)
             {
-            const std::string gen_hash = generate_bcrypt(password, Test::rng(), level);
+            const std::string gen_hash = Botan::generate_bcrypt(password, Test::rng(), level);
             result.test_eq("generated hash accepted", Botan::check_bcrypt(password, gen_hash), true);
             }
 
@@ -58,9 +58,13 @@ class Bcrypt_Tests final : public Text_Based_Test
 
          for(uint16_t level = 4; level <= max_level; ++level)
             {
-            const std::string gen_hash = generate_bcrypt(password, Test::rng(), level);
+            const std::string gen_hash = Botan::generate_bcrypt(password, Test::rng(), level);
             result.test_eq("generated hash accepted", Botan::check_bcrypt(password, gen_hash), true);
             }
+
+         result.test_throws("Invalid bcrypt version rejected",
+                            "Invalid argument Unknown bcrypt version 'q'",
+                            []() { Botan::generate_bcrypt("pass", Test::rng(), 4, 'q'); });
 
          result.set_ns_consumed(Test::timestamp() - start);
 
