@@ -10,12 +10,16 @@
 
 #include <botan/block_cipher.h>
 
+#if defined(BOTAN_HAS_THREEFISH_512)
+  #include <botan/threefish_512.h>
+#endif
+
 namespace Botan_Tests {
 
 class Block_Cipher_Tests final : public Text_Based_Test
    {
    public:
-      Block_Cipher_Tests() : Text_Based_Test("block", "Key,In,Out", "Iterations") {}
+      Block_Cipher_Tests() : Text_Based_Test("block", "Key,In,Out", "Tweak,Iterations") {}
 
       std::vector<std::string> possible_providers(const std::string& algo) override
          {
@@ -27,6 +31,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
          const std::vector<uint8_t> key      = vars.get_req_bin("Key");
          const std::vector<uint8_t> input    = vars.get_req_bin("In");
          const std::vector<uint8_t> expected = vars.get_req_bin("Out");
+         const std::vector<uint8_t> tweak    = vars.get_opt_bin("Tweak");
          const size_t iterations             = vars.get_opt_sz("Iterations", 1);
 
          Test::Result result(algo);
@@ -86,6 +91,14 @@ class Block_Cipher_Tests final : public Text_Based_Test
             cipher->clear();
 
             cipher->set_key(key);
+
+            if(tweak.size() > 0)
+               {
+               Botan::Threefish_512* t512 = dynamic_cast<Botan::Threefish_512*>(cipher.get());
+               result.confirm("Only Threefish supports tweaks", t512);
+               if(t512)
+                  t512->set_tweak(tweak.data(), tweak.size());
+               }
 
             // Test that clone works and does not affect parent object
             std::unique_ptr<Botan::BlockCipher> clone(cipher->clone());
