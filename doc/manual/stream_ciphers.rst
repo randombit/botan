@@ -58,8 +58,10 @@ vector.
   .. cpp:function:: void seek(uint64_t offset)
 
      Sets the state of the stream cipher and keystream according to the passed
-     *offset*.  Therefore the key and the IV (if required) have to be set
-     beforehand.
+     *offset*, exactly as if *offset* bytes had first been encrypted. The key
+     and (if required) the IV have to be set before this can be called. Not all
+     ciphers support seeking; such objects will throw ``Not_Implemented`` in
+     this case.
 
   .. cpp:function:: void cipher(const uint8_t* in, uint8_t* out, size_t n)
 
@@ -112,13 +114,25 @@ The following code encrypts a provided plaintext using ChaCha20.
 Available Stream Ciphers
 ----------------------------
 
-Botan provides the following stream ciphers. If in doubt use CTR or ChaCha.
+Botan provides the following stream ciphers. If in doubt use ChaCha20 or CTR(AES-256).
 
 CTR-BE
 ~~~~~~~
 
 A cipher mode that converts a block cipher into a stream cipher. It offers
-parallel execution and can seek within the output stream.
+parallel execution and can seek within the output stream, both useful
+properties.
+
+CTR mode requires an IV which can be any length up to the block size of the
+underlying cipher. If it is shorter than the block size, sufficient zero bytes
+are appended.
+
+It is possible to choose the width of the counter portion, which can improve
+performance somewhat, but limits the maximum number of bytes that can safely be
+encrypted. Different protocols have different conventions for the width of the
+counter portion. This is done by specifying with width (which must be at least 4
+bytes, allowing to encrypt 2\ :sup:`32` blocks of data) for example
+"CTR(AES-256,8)" to select a 64-bit counter.
 
 (The ``-BE`` suffix refers to big-endian convention for the counter.
 This is the most common case.)
@@ -138,6 +152,10 @@ A very fast cipher, now widely deployed in TLS as part of the ChaCha20Poly1305
 AEAD. Can be used with 8 (fast but dangerous), 12 (balance), or 20 rounds
 (conservative). Even with 20 rounds, ChaCha is very fast. Use 20 rounds.
 
+ChaCha supports an optional IV (which defaults to all zeros). It can be of
+length 64, 96 or (since 2.8) 192 bits. Using ChaCha with a 192 bit nonce is also
+known as XChaCha.
+
 Available if ``BOTAN_HAS_CHACHA`` is defined.
 
 Salsa20
@@ -146,10 +164,8 @@ Salsa20
 An earlier iteration of the ChaCha design, this cipher is popular due to its use
 in the libsodium library. Prefer ChaCha.
 
-.. note::
-
-   The 'XSalsa20' variant of Salsa20 is also supported by the same class; this
-   is selected by using a 192-bit nonce instead of Salsa20's 64-bit nonce.
+Salsa supports an optional IV (which defaults to all zeros). It can be of length
+64 or 192 bits. Using Salsa with a 192 bit nonce is also known as XSalsa.
 
 Available if ``BOTAN_HAS_SALSA20`` is defined.
 
@@ -157,15 +173,20 @@ SHAKE-128
 ~~~~~~~~~~~~
 
 This is the SHAKE-128 XOF exposed as a stream cipher. It is slower than ChaCha
-and somewhat obscure.
+and somewhat obscure. It does not support IVs or seeking within the cipher
+stream.
 
 Available if ``BOTAN_HAS_SHAKE_CIPHER`` is defined.
 
 RC4
 ~~~~
 
-An old and very widely deployed stream cipher notable for its
-simplicity. Now broken. **Avoid in new code**
+An old and very widely deployed stream cipher notable for its simplicity. It
+does not support IVs or seeking within the cipher stream.
+
+.. warning::
+
+   RC4 is now badly broken. **Avoid in new code** and use only if required for
+   compatability with existing systems.
 
 Available if ``BOTAN_HAS_RC4`` is defined.
-
