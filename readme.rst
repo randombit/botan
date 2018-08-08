@@ -58,7 +58,7 @@ external build systems, see the manual for details.
     :target: https://scan.coverity.com/projects/624
     :alt: Coverity results
 
-.. image:: https://sonarcloud.io/api/project_badges/measure?project=botan&metric=ncloc
+.. image:: https://sonarcloud.io/api/project_badges/measure?project=botan&metric=alert_status
     :target: https://sonarcloud.io/dashboard/index/botan
     :alt: Sonarcloud analysis
 
