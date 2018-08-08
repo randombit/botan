@@ -205,12 +205,12 @@ class Block_Cipher_Fixed_Params : public BlockCipher
    {
    public:
       enum { BLOCK_SIZE = BS };
-      size_t block_size() const override { return BS; }
+      size_t block_size() const final override { return BS; }
 
       // override to take advantage of compile time constant block size
       void encrypt_n_xex(uint8_t data[],
                          const uint8_t mask[],
-                         size_t blocks) const override
+                         size_t blocks) const final override
          {
          xor_buf(data, mask, blocks * BS);
          encrypt_n(data, data, blocks);
@@ -219,14 +219,14 @@ class Block_Cipher_Fixed_Params : public BlockCipher
 
       void decrypt_n_xex(uint8_t data[],
                          const uint8_t mask[],
-                         size_t blocks) const override
+                         size_t blocks) const final override
          {
          xor_buf(data, mask, blocks * BS);
          decrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
          }
 
-      Key_Length_Specification key_spec() const override
+      Key_Length_Specification key_spec() const final override
          {
          return Key_Length_Specification(KMIN, KMAX, KMOD);
          }
