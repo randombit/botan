@@ -49,8 +49,6 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
                          const uint8_t input[],
                          size_t blocks)
    {
-   verify_key_set(m_HM.size());
-
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
       {
@@ -113,6 +111,8 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
 void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
                          const uint8_t input[], size_t length)
    {
+   verify_key_set(m_HM.size());
+
    /*
    This assumes if less than block size input then we're just on the
    final block and should pad with zeros
