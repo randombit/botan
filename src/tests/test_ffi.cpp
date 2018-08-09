@@ -1535,17 +1535,21 @@ class FFI_Unit_Tests final : public Test
             botan_pk_op_sign_t signer;
 
             std::vector<uint8_t> message(6, 6);
-            std::vector<uint8_t> signature(20 * 2);
+            std::vector<uint8_t> signature;
 
             if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "EMSA1(SHA-256)", 0)))
                {
                // TODO: break input into multiple calls to update
                TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
 
-               signature.resize(20 * 2); // TODO: no way to derive this from API
-               size_t sig_len = signature.size();
-               TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
+               size_t sig_len;
+               TEST_FFI_OK(botan_pk_op_sign_output_length, (signer, &sig_len));
                signature.resize(sig_len);
+
+               size_t output_sig_len = sig_len;
+               TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &output_sig_len));
+               result.test_lte("Output length is upper bound", output_sig_len, sig_len);
+               signature.resize(output_sig_len);
 
                TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
                }
@@ -1641,10 +1645,14 @@ class FFI_Unit_Tests final : public Test
             // TODO: break input into multiple calls to update
             TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
 
-            signature.resize(96); // TODO: no way to derive this from API
-            size_t sig_len = signature.size();
-            TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
+            size_t sig_len;
+            TEST_FFI_OK(botan_pk_op_sign_output_length, (signer, &sig_len));
+
             signature.resize(sig_len);
+
+            size_t output_sig_len = signature.size();
+            TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &output_sig_len));
+            signature.resize(output_sig_len);
 
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
             }
@@ -1733,8 +1741,11 @@ class FFI_Unit_Tests final : public Test
             // TODO: break input into multiple calls to update
             TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
 
-            signature.resize(96); // TODO: no way to derive this from API
-            size_t sig_len = signature.size();
+            size_t sig_len;
+            TEST_FFI_OK(botan_pk_op_sign_output_length, (signer, &sig_len));
+
+            signature.resize(sig_len);
+
             TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
             signature.resize(sig_len);
 
@@ -2039,8 +2050,11 @@ class FFI_Unit_Tests final : public Test
             {
             TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
 
-            signature.resize(128);
-            size_t sig_len = signature.size();
+            size_t sig_len;
+            TEST_FFI_OK(botan_pk_op_sign_output_length, (signer, &sig_len));
+
+            signature.resize(sig_len);
+
             TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
             signature.resize(sig_len);
 
