@@ -62,9 +62,9 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             result.test_eq("mode not authenticated", enc->authenticated(), false);
 
             result.test_throws("Unkeyed object throws for encrypt",
-                               [&]() { Botan::secure_vector<uint8_t> buf(16); enc->finish(buf); });
+                               [&]() { Botan::secure_vector<uint8_t> bad(16); enc->finish(bad); });
             result.test_throws("Unkeyed object throws for decrypt",
-                               [&]() { Botan::secure_vector<uint8_t> buf(16); dec->finish(buf); });
+                               [&]() { Botan::secure_vector<uint8_t> bad(16); dec->finish(bad); });
 
             if(algo.find("/CBC") != std::string::npos)
                {
@@ -178,9 +178,9 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             dec->clear();
 
             result.test_throws("Unkeyed object throws for encrypt after clear",
-                               [&]() { Botan::secure_vector<uint8_t> buf(16); enc->finish(buf); });
+                               [&]() { Botan::secure_vector<uint8_t> bad(16); enc->finish(bad); });
             result.test_throws("Unkeyed object throws for decrypt after clear",
-                               [&]() { Botan::secure_vector<uint8_t> buf(16); dec->finish(buf); });
+                               [&]() { Botan::secure_vector<uint8_t> bad(16); dec->finish(bad); });
             }
 
          return result;
