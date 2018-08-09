@@ -10,10 +10,6 @@
 
 #include <botan/block_cipher.h>
 
-#if defined(BOTAN_HAS_THREEFISH_512)
-  #include <botan/threefish_512.h>
-#endif
-
 namespace Botan_Tests {
 
 class Block_Cipher_Tests final : public Text_Based_Test
@@ -94,10 +90,11 @@ class Block_Cipher_Tests final : public Text_Based_Test
 
             if(tweak.size() > 0)
                {
-               Botan::Threefish_512* t512 = dynamic_cast<Botan::Threefish_512*>(cipher.get());
-               result.confirm("Only Threefish supports tweaks", t512);
-               if(t512)
-                  t512->set_tweak(tweak.data(), tweak.size());
+               Botan::Tweakable_Block_Cipher* tbc = dynamic_cast<Botan::Tweakable_Block_Cipher*>(cipher.get());
+               if(tbc == nullptr)
+                  result.test_failure("Tweak set in test data but cipher is not a Tweakable_Block_Cipher");
+               else
+                  tbc->set_tweak(tweak.data(), tweak.size());
                }
 
             // Test that clone works and does not affect parent object

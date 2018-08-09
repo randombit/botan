@@ -198,10 +198,26 @@ class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
    };
 
 /**
+* Tweakable block ciphers allow setting a tweak which is a non-keyed
+* value which affects the encryption/decryption operation.
+*/
+class BOTAN_PUBLIC_API(2,8) Tweakable_Block_Cipher : public BlockCipher
+   {
+   public:
+      /**
+      * Set the tweak value. This must be called after setting a key. The value
+      * persists until either set_tweak, set_key, or clear is called.
+      * Different algorithms support different tweak length(s). If called with
+      * an unsupported length, Invalid_Argument will be thrown.
+      */
+      virtual void set_tweak(const uint8_t tweak[], size_t len) = 0;
+   };
+
+/**
 * Represents a block cipher with a single fixed block size
 */
-template<size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1>
-class Block_Cipher_Fixed_Params : public BlockCipher
+template<size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1, typename BaseClass = BlockCipher>
+class Block_Cipher_Fixed_Params : public BaseClass
    {
    public:
       enum { BLOCK_SIZE = BS };
@@ -213,7 +229,7 @@ class Block_Cipher_Fixed_Params : public BlockCipher
                          size_t blocks) const final override
          {
          xor_buf(data, mask, blocks * BS);
-         encrypt_n(data, data, blocks);
+         this->encrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
          }
 
@@ -222,7 +238,7 @@ class Block_Cipher_Fixed_Params : public BlockCipher
                          size_t blocks) const final override
          {
          xor_buf(data, mask, blocks * BS);
-         decrypt_n(data, data, blocks);
+         this->decrypt_n(data, data, blocks);
          xor_buf(data, mask, blocks * BS);
          }
 

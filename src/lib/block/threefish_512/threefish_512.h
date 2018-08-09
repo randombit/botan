@@ -15,13 +15,14 @@ namespace Botan {
 /**
 * Threefish-512
 */
-class BOTAN_PUBLIC_API(2,0) Threefish_512 final : public Block_Cipher_Fixed_Params<64, 64>
+class BOTAN_PUBLIC_API(2,0) Threefish_512 final :
+   public Block_Cipher_Fixed_Params<64, 64, 0, 1, Tweakable_Block_Cipher>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
-      void set_tweak(const uint8_t tweak[], size_t len);
+      void set_tweak(const uint8_t tweak[], size_t len) override;
 
       void clear() override;
       std::string provider() const override;
