@@ -159,6 +159,10 @@ class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
+      BigInt get_n() const;
+
+      BigInt get_e() const;
+
       std::string algo_name() const override { return "RSA"; } // ???
 
       std::unique_ptr<PK_Ops::Signature>
@@ -167,9 +171,6 @@ class BOTAN_PUBLIC_API(2,0) TPM_PrivateKey final : public Private_Key
                              const std::string& provider) const override;
 
    private:
-      BigInt get_n() const;
-      BigInt get_e() const;
-
       TPM_Context& m_ctx;
       TSS_HKEY m_key;
 

@@ -175,6 +175,8 @@ class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
          return sig;
          }
 
+      size_t signature_length() const override { return 64; }
+
    private:
       std::vector<uint8_t> m_msg;
       const Ed25519_PrivateKey& m_key;
@@ -190,6 +192,8 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
          {
          m_hash = HashFunction::create_or_throw(hash);
          }
+
+      size_t signature_length() const override { return 64; }
 
       void update(const uint8_t msg[], size_t msg_len) override
          {

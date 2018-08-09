@@ -77,7 +77,7 @@ class BearSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification
    {
    public:
       BearSSL_ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const std::string& emsa) :
-         m_order_bits(ecdsa.domain().get_order().bits())
+         m_order_bits(ecdsa.domain().get_order_bits())
          {
          const int curve = BearSSL_EC_curve_for(ecdsa.domain().get_oid());
          if (curve < 0)
@@ -132,7 +132,8 @@ class BearSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature
    {
    public:
       BearSSL_ECDSA_Signing_Operation(const ECDSA_PrivateKey& ecdsa, const std::string& emsa) :
-         m_order_bits(ecdsa.domain().get_order().bits())
+         m_order_bits(ecdsa.domain().get_order_bits()),
+         m_order_bytes(ecdsa.domain().get_order_bytes())
          {
          const int curve = BearSSL_EC_curve_for(ecdsa.domain().get_oid());
          if(curve < 0)
@@ -175,12 +176,15 @@ class BearSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature
 
       size_t max_input_bits() const { return m_order_bits; }
 
+      size_t signature_length() const override { return 2*m_order_bytes; }
+
    private:
       br_ec_private_key m_key;
       std::unique_ptr<HashFunction> m_hf;
       secure_vector<uint8_t> m_x_buf;
       const br_hash_class *m_hash;
       size_t m_order_bits;
+      size_t m_order_bytes;
    };
 
 }

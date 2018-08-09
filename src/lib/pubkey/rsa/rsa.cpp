@@ -298,6 +298,8 @@ class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
 
       size_t max_input_bits() const override { return get_max_input_bits(); }
 
+      size_t signature_length() const override { return m_key.get_n().bytes(); }
+
       RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa, RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_EMSA(emsa),
          RSA_Private_Operation(rsa, rng)

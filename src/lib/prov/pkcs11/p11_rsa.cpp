@@ -206,6 +206,8 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature
          : m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding))
          {}
 
+      size_t signature_length() const override { return m_key.get_n().bytes(); }
+
       void update(const uint8_t msg[], size_t msg_len) override
          {
          if(!m_initialized)

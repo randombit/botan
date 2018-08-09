@@ -252,6 +252,22 @@ std::vector<uint8_t> der_encode_signature(const std::vector<uint8_t>& sig,
 
 }
 
+size_t PK_Signer::signature_length() const
+   {
+   if(m_sig_format == IEEE_1363)
+      {
+      return m_op->signature_length();
+      }
+   else if(m_sig_format == DER_SEQUENCE)
+      {
+      // This is a large over-estimate but its easier than computing
+      // the exact value
+      return m_op->signature_length() + (8 + 4*m_parts);
+      }
+   else
+      throw Internal_Error("PK_Signer: Invalid signature format enum");
+   }
+
 std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
    {
    const std::vector<uint8_t> sig = unlock(m_op->sign(rng));

@@ -100,6 +100,8 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
          return signature;
          }
 
+      size_t signature_length() const override { return 2*m_order.bytes(); }
+
    private:
       const PKCS11_EC_PrivateKey& m_key;
       const BigInt& m_order;

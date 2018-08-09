@@ -99,6 +99,11 @@ class BOTAN_PUBLIC_API(2,0) Signature
       */
       virtual secure_vector<uint8_t> sign(RandomNumberGenerator& rng) = 0;
 
+      /*
+      * Return an upper bound on the length of the output signature
+      */
+      virtual size_t signature_length() const = 0;
+
       virtual ~Signature() = default;
    };
 
