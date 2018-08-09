@@ -173,54 +173,10 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       virtual size_t tag_size() const { return 0; }
 
       /**
-      * Check whether a given key length is valid for this algorithm.
-      * @param length the key length to be checked.
-      * @return true if the key length is valid.
-      */
-      bool valid_keylength(size_t length) const
-         {
-         return key_spec().valid_keylength(length);
-         }
-
-      /**
-      * Set the symmetric key of this transform
-      * @param key contains the key material
-      */
-      template<typename Alloc>
-      void set_key(const std::vector<uint8_t, Alloc>& key)
-         {
-         set_key(key.data(), key.size());
-         }
-
-      /**
-      * Set the symmetric key of this transform
-      * @param key contains the key material
-      */
-      void set_key(const SymmetricKey& key)
-         {
-         set_key(key.begin(), key.length());
-         }
-
-      /**
-      * Set the symmetric key of this transform
-      * @param key contains the key material
-      * @param length in bytes of key param
-      */
-      void set_key(const uint8_t key[], size_t length)
-         {
-         if(!valid_keylength(length))
-            throw Invalid_Key_Length(name(), length);
-         key_schedule(key, length);
-         }
-
-      /**
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
       virtual std::string provider() const { return "base"; }
-
-   private:
-      virtual void key_schedule(const uint8_t key[], size_t length) = 0;
    };
 
 /**
