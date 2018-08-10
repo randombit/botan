@@ -1522,7 +1522,7 @@ class Speed final : public Command
 
       void bench_mp_mul(const std::chrono::milliseconds runtime)
          {
-         std::chrono::milliseconds runtime_per_size = runtime / 9;
+         std::chrono::milliseconds runtime_per_size = runtime;
          for(size_t bits : { 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096 })
             {
             std::unique_ptr<Timer> mul_timer = make_timer("BigInt mul " + std::to_string(bits));
@@ -1585,49 +1585,57 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
-      void bench_nistp_redc(const std::chrono::milliseconds total_runtime)
+      void bench_nistp_redc(const std::chrono::milliseconds runtime)
          {
          Botan::secure_vector<Botan::word> ws;
 
-         auto runtime = total_runtime / 5;
-
          std::unique_ptr<Timer> p192_timer = make_timer("P-192 redc");
+         Botan::BigInt r192(rng(), 192*2 - 1);
          while(p192_timer->under(runtime))
             {
-            Botan::BigInt r192(rng(), 192*2 - 1);
-            p192_timer->run([&]() { Botan::redc_p192(r192, ws); });
+            Botan::BigInt r = r192;
+            p192_timer->run([&]() { Botan::redc_p192(r, ws); });
+            r192 += 1;
             }
          record_result(p192_timer);
 
          std::unique_ptr<Timer> p224_timer = make_timer("P-224 redc");
+         Botan::BigInt r224(rng(), 224*2 - 1);
          while(p224_timer->under(runtime))
             {
-            Botan::BigInt r224(rng(), 224*2 - 1);
-            p224_timer->run([&]() { Botan::redc_p224(r224, ws); });
+            Botan::BigInt r = r224;
+            p224_timer->run([&]() { Botan::redc_p224(r, ws); });
+            r224 += 1;
             }
          record_result(p224_timer);
 
          std::unique_ptr<Timer> p256_timer = make_timer("P-256 redc");
+         Botan::BigInt r256(rng(), 256*2 - 1);
          while(p256_timer->under(runtime))
             {
-            Botan::BigInt r256(rng(), 256*2 - 1);
-            p256_timer->run([&]() { Botan::redc_p256(r256, ws); });
+            Botan::BigInt r = r256;
+            p256_timer->run([&]() { Botan::redc_p256(r, ws); });
+            r256 += 1;
             }
          record_result(p256_timer);
 
          std::unique_ptr<Timer> p384_timer = make_timer("P-384 redc");
+         Botan::BigInt r384(rng(), 384*2 - 1);
          while(p384_timer->under(runtime))
             {
-            Botan::BigInt r384(rng(), 384*2 - 1);
+            Botan::BigInt r = r384;
             p384_timer->run([&]() { Botan::redc_p384(r384, ws); });
+            r384 += 1;
             }
          record_result(p384_timer);
 
          std::unique_ptr<Timer> p521_timer = make_timer("P-521 redc");
+         Botan::BigInt r521(rng(), 521*2 - 1);
          while(p521_timer->under(runtime))
             {
-            Botan::BigInt r521(rng(), 521*2 - 1);
+            Botan::BigInt r = r521;
             p521_timer->run([&]() { Botan::redc_p521(r521, ws); });
+            r521 += 1;
             }
          record_result(p521_timer);
          }
@@ -2288,6 +2296,9 @@ class Speed final : public Command
                      }
 
                   record_result(scrypt_timer);
+
+                  if(scrypt_timer->events() == 1)
+                     break;
                   }
                }
             }
