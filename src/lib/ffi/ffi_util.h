@@ -136,10 +136,13 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
 
 inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len)
    {
+   if(out_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
    const size_t avail = *out_len;
    *out_len = buf_len;
 
-   if(avail >= buf_len)
+   if((avail >= buf_len) && (out != nullptr))
       {
       Botan::copy_mem(out, buf, buf_len);
       return BOTAN_FFI_SUCCESS;

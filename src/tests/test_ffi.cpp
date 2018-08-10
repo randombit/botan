@@ -372,14 +372,17 @@ class FFI_Unit_Tests final : public Test
             const std::vector<uint8_t> exp_ciphertext =
                Botan::hex_decode("e232cd6ef50047801ee681ec30f61d53cfd6b0bca02fd03c1b234baa10ea82ac9dab8b960926433a19ce6dea08677e34");
 
-            std::vector<uint8_t> ciphertext(16 + plaintext.size()); // TODO: no way to know this size from API
-
             size_t output_written = 0;
             size_t input_consumed = 0;
 
             // Test that after clear or final the object can be reused
             for(size_t r = 0; r != 2; ++r)
                {
+               size_t ctext_len;
+               TEST_FFI_OK(botan_cipher_output_length, (cipher_encrypt, plaintext.size(), &ctext_len));
+               result.test_eq("Expected size of padded message", ctext_len, plaintext.size() + 15);
+               std::vector<uint8_t> ciphertext(ctext_len);
+
                TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
                TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
                TEST_FFI_OK(botan_cipher_update, (cipher_encrypt, 0, ciphertext.data(), ciphertext.size(), &output_written,
@@ -397,13 +400,17 @@ class FFI_Unit_Tests final : public Test
 
                if(TEST_FFI_OK(botan_cipher_init, (&cipher_decrypt, "AES-128/CBC", BOTAN_CIPHER_INIT_FLAG_DECRYPT)))
                   {
-                  std::vector<uint8_t> decrypted(plaintext.size());
+                  size_t ptext_len;
+                  TEST_FFI_OK(botan_cipher_output_length, (cipher_decrypt, ciphertext.size(), &ptext_len));
+                  std::vector<uint8_t> decrypted(ptext_len);
 
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
                   TEST_FFI_OK(botan_cipher_update, (cipher_decrypt, BOTAN_CIPHER_UPDATE_FLAG_FINAL,
                                                     decrypted.data(), decrypted.size(),   &output_written,
                                                     ciphertext.data(), ciphertext.size(), &input_consumed));
+
+                  decrypted.resize(output_written);
 
                   result.test_eq("AES/CBC plaintext", decrypted, plaintext);
 

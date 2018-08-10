@@ -46,6 +46,8 @@ int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op)
 
 int botan_pk_op_encrypt_output_length(botan_pk_op_encrypt_t op, size_t ptext_len, size_t* ctext_len)
    {
+   if(ctext_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_DO(Botan::PK_Encryptor, op, o, { *ctext_len = o.ciphertext_length(ptext_len); });
    }
 
@@ -88,6 +90,8 @@ int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op)
 
 int botan_pk_op_decrypt_output_length(botan_pk_op_decrypt_t op, size_t ctext_len, size_t* ptext_len)
    {
+   if(ptext_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_DO(Botan::PK_Decryptor, op, o, { *ptext_len = o.plaintext_length(ctext_len); });
    }
 
