@@ -2023,11 +2023,13 @@ class FFI_Unit_Tests final : public Test
             if(TEST_FFI_OK(botan_mceies_encrypt, (pub, rng, "AES-256/OCB", plaintext.data(), plaintext.size(), ad, ad_len,
                                                   ciphertext.data(), &ciphertext_len)))
                {
-               std::vector<uint8_t> decrypted(plaintext.size());
+               std::vector<uint8_t> decrypted(ciphertext.size());
                size_t decrypted_len = plaintext_len;
 
                TEST_FFI_OK(botan_mceies_decrypt, (priv, "AES-256/OCB", ciphertext.data(), ciphertext.size(), ad, ad_len,
                                                   decrypted.data(), &decrypted_len));
+
+               decrypted.resize(decrypted_len);
 
                result.test_eq("MCIES plaintext", decrypted, plaintext);
                }
