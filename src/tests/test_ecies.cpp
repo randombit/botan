@@ -51,22 +51,22 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
                            const Botan::InitializationVector& iv, const std::string& label,
                            const std::vector<uint8_t>& plaintext, const std::vector<uint8_t>& ciphertext)
    {
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-   ecies_enc.set_other_key(other_private_key.public_point());
-   Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, Test::rng());
-   if(!iv.bits_of().empty())
-      {
-      ecies_enc.set_initialization_vector(iv);
-      ecies_dec.set_initialization_vector(iv);
-      }
-   if(!label.empty())
-      {
-      ecies_enc.set_label(label);
-      ecies_dec.set_label(label);
-      }
-
    try
       {
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
+      ecies_enc.set_other_key(other_private_key.public_point());
+      Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, Test::rng());
+      if(!iv.bits_of().empty())
+         {
+         ecies_enc.set_initialization_vector(iv);
+         ecies_dec.set_initialization_vector(iv);
+         }
+      if(!label.empty())
+         {
+         ecies_enc.set_label(label);
+         ecies_dec.set_label(label);
+         }
+
       const std::vector<uint8_t> encrypted = ecies_enc.encrypt(plaintext, Test::rng());
       if(!ciphertext.empty())
          {
