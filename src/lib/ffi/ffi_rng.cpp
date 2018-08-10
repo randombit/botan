@@ -32,10 +32,12 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
          {
          rng.reset(new Botan::AutoSeeded_RNG);
          }
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
       else if(rng_type_s == "user-threadsafe")
          {
          rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
          }
+#endif
       else
          {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
