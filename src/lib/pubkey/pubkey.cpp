@@ -96,6 +96,11 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 
 PK_Encryptor_EME::~PK_Encryptor_EME() { /* for unique_ptr */ }
 
+size_t PK_Encryptor_EME::ciphertext_length(size_t ptext_len) const
+   {
+   return m_op->ciphertext_length(ptext_len);
+   }
+
 std::vector<uint8_t>
 PK_Encryptor_EME::enc(const uint8_t in[], size_t length, RandomNumberGenerator& rng) const
    {
@@ -118,6 +123,11 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
    }
 
 PK_Decryptor_EME::~PK_Decryptor_EME() { /* for unique_ptr */ }
+
+size_t PK_Decryptor_EME::plaintext_length(size_t ctext_len) const
+   {
+   return m_op->plaintext_length(ctext_len);
+   }
 
 secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask,
                                                  const uint8_t in[], size_t in_len) const

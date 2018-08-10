@@ -302,6 +302,8 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       */
       PointGFp zero_point() const;
 
+      size_t point_size(PointGFp::Compression_Type format) const;
+
       PointGFp OS2ECP(const uint8_t bits[], size_t len) const;
 
       template<typename Alloc>

@@ -66,6 +66,11 @@ class BOTAN_PUBLIC_API(2,0) PK_Encryptor
       */
       virtual size_t maximum_input_size() const = 0;
 
+      /**
+      * Return an upper bound on the ciphertext length
+      */
+      virtual size_t ciphertext_length(size_t ctext_len) const = 0;
+
       PK_Encryptor() = default;
       virtual ~PK_Encryptor() = default;
 
@@ -139,6 +144,12 @@ class BOTAN_PUBLIC_API(2,0) PK_Decryptor
                         const uint8_t required_content_bytes[],
                         const uint8_t required_content_offsets[],
                         size_t required_contents) const;
+
+      /**
+      * Return an upper bound on the plaintext length for a particular
+      * ciphertext input length
+      */
+      virtual size_t plaintext_length(size_t ctext_len) const = 0;
 
       PK_Decryptor() = default;
       virtual ~PK_Decryptor() = default;
@@ -547,6 +558,12 @@ class BOTAN_PUBLIC_API(2,0) PK_Encryptor_EME final : public PK_Encryptor
 
       PK_Encryptor_EME& operator=(const PK_Encryptor_EME&) = delete;
       PK_Encryptor_EME(const PK_Encryptor_EME&) = delete;
+
+      /**
+      * Return an upper bound on the ciphertext length for a particular
+      * plaintext input length
+      */
+      size_t ciphertext_length(size_t ptext_len) const override;
    private:
       std::vector<uint8_t> enc(const uint8_t[], size_t,
                              RandomNumberGenerator& rng) const override;
@@ -585,6 +602,8 @@ class BOTAN_PUBLIC_API(2,0) PK_Decryptor_EME final : public PK_Decryptor
                        const std::string& provider = "") :
          PK_Decryptor_EME(key, system_rng(), eme, provider) {}
 #endif
+
+      size_t plaintext_length(size_t ptext_len) const override;
 
       ~PK_Decryptor_EME();
       PK_Decryptor_EME& operator=(const PK_Decryptor_EME&) = delete;

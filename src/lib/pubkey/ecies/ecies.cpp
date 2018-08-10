@@ -244,6 +244,8 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
       m_eph_public_key_bin = m_params.domain().OS2ECP(m_eph_public_key_bin).encode(ecies_params.compression_type());
       }
+   m_mac = m_params.create_mac();
+   m_cipher = m_params.create_cipher(ENCRYPTION);
    }
 
 /*
@@ -254,6 +256,21 @@ ECIES_Encryptor::ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_
    {
    }
 
+size_t ECIES_Encryptor::maximum_input_size() const
+   {
+   /*
+   ECIES should just be used for key transport so this (arbitrary) limit
+   seems sufficient
+   */
+   return 64;
+   }
+
+size_t ECIES_Encryptor::ciphertext_length(size_t ptext_len) const
+   {
+   return m_eph_public_key_bin.size() +
+          m_mac->output_length() +
+          m_cipher->output_length(ptext_len);
+   }
 
 /*
 * ECIES Encryption according to ISO 18033-2
@@ -268,35 +285,31 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[], size_t length, R
    const SymmetricKey secret_key = m_ka.derive_secret(m_eph_public_key_bin, m_other_point);
 
    // encryption
-   std::unique_ptr<Cipher_Mode> cipher = m_params.create_cipher(ENCRYPTION);
-   BOTAN_ASSERT(cipher != nullptr, "Cipher is found");
 
-   cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
+   m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
    if(m_iv.size() != 0)
       {
-      cipher->start(m_iv.bits_of());
+      m_cipher->start(m_iv.bits_of());
       }
    secure_vector<uint8_t> encrypted_data(data, data + length);
-   cipher->finish(encrypted_data);
+   m_cipher->finish(encrypted_data);
 
    // concat elements
-   std::unique_ptr<MessageAuthenticationCode> mac = m_params.create_mac();
-   BOTAN_ASSERT(mac != nullptr, "MAC is found");
 
-   secure_vector<uint8_t> out(m_eph_public_key_bin.size() + encrypted_data.size() + mac->output_length());
+   std::vector<uint8_t> out(m_eph_public_key_bin.size() + encrypted_data.size() + m_mac->output_length());
    buffer_insert(out, 0, m_eph_public_key_bin);
    buffer_insert(out, m_eph_public_key_bin.size(), encrypted_data);
 
    // mac
-   mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
-   mac->update(encrypted_data);
+   m_mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
+   m_mac->update(encrypted_data);
    if(!m_label.empty())
       {
-      mac->update(m_label);
+      m_mac->update(m_label);
       }
-   mac->final(out.data() + m_eph_public_key_bin.size() + encrypted_data.size());
+   m_mac->final(out.data() + m_eph_public_key_bin.size() + encrypted_data.size());
 
-   return unlock(out);
+   return out;
    }
 
 
@@ -317,6 +330,20 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
          throw Invalid_Argument("ECIES: gcd of cofactor and order must be 1 if check_mode is 0");
          }
       }
+
+   m_mac = m_params.create_mac();
+   m_cipher = m_params.create_cipher(DECRYPTION);
+   }
+
+size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const
+   {
+   const size_t point_size = m_params.domain().point_size(m_params.compression_type());
+   const size_t overhead = point_size + m_mac->output_length();
+
+   if(ctext_len < overhead)
+      return 0;
+
+   return m_cipher->output_length(ctext_len - overhead);
    }
 
 /**
@@ -324,25 +351,17 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
 */
 secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const
    {
-   size_t point_size = m_params.domain().get_p_bytes();
-   if(m_params.compression_type() != PointGFp::COMPRESSED)
-      {
-      point_size *= 2;		// uncompressed and hybrid contains x AND y
-      }
-   point_size += 1;			// format byte
+   const size_t point_size = m_params.domain().point_size(m_params.compression_type());
 
-   std::unique_ptr<MessageAuthenticationCode> mac = m_params.create_mac();
-   BOTAN_ASSERT(mac != nullptr, "MAC is found");
-
-   if(in_len < point_size + mac->output_length())
+   if(in_len < point_size + m_mac->output_length())
       {
       throw Decoding_Error("ECIES decryption: ciphertext is too short");
       }
 
    // extract data
    const std::vector<uint8_t> other_public_key_bin(in, in + point_size);	// the received (ephemeral) public key
-   const std::vector<uint8_t> encrypted_data(in + point_size, in + in_len - mac->output_length());
-   const std::vector<uint8_t> mac_data(in + in_len - mac->output_length(), in + in_len);
+   const std::vector<uint8_t> encrypted_data(in + point_size, in + in_len - m_mac->output_length());
+   const std::vector<uint8_t> mac_data(in + in_len - m_mac->output_length(), in + in_len);
 
    // ISO 18033: step a
    PointGFp other_public_key = m_params.domain().OS2ECP(other_public_key_bin);
@@ -358,25 +377,23 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const SymmetricKey secret_key = m_ka.derive_secret(other_public_key_bin, other_public_key);
 
    // validate mac
-   mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
-   mac->update(encrypted_data);
+   m_mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
+   m_mac->update(encrypted_data);
    if(!m_label.empty())
       {
-      mac->update(m_label);
+      m_mac->update(m_label);
       }
-   const secure_vector<uint8_t> calculated_mac = mac->final();
+   const secure_vector<uint8_t> calculated_mac = m_mac->final();
    valid_mask = CT::expand_mask<uint8_t>(constant_time_compare(mac_data.data(), calculated_mac.data(), mac_data.size()));
 
    if(valid_mask)
       {
       // decrypt data
-      std::unique_ptr<Cipher_Mode> cipher = m_params.create_cipher(DECRYPTION);
-      BOTAN_ASSERT(cipher != nullptr, "Cipher is found");
 
-      cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
+      m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
       if(m_iv.size() != 0)
          {
-         cipher->start(m_iv.bits_of());
+         m_cipher->start(m_iv.bits_of());
          }
       
       try
@@ -384,7 +401,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          // the decryption can fail:
          // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
          secure_vector<uint8_t> decrypted_data(encrypted_data.begin(), encrypted_data.end());
-         cipher->finish(decrypted_data);
+         m_cipher->finish(decrypted_data);
          return decrypted_data;
          }
       catch(...)

@@ -310,6 +310,10 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
       try
          {
          decrypted = decryptor->decrypt(ciphertext);
+
+         result.test_lte("Plaintext within length",
+                         decrypted.size(),
+                         decryptor->plaintext_length(ciphertext.size()));
          }
       catch(Botan::Exception& e)
          {
@@ -357,6 +361,10 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const Va
 
       const std::vector<uint8_t> generated_ciphertext =
          encryptor->encrypt(plaintext, kat_rng ? *kat_rng : Test::rng());
+
+      result.test_lte("Ciphertext within length",
+                      generated_ciphertext.size(),
+                      encryptor->ciphertext_length(plaintext.size()));
 
       if(enc_provider == "base")
          {

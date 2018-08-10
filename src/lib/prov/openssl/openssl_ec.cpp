@@ -232,7 +232,7 @@ class OpenSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
          m_order_bytes = (m_order_bits + 7) / 8;
          }
 
-      size_t signature_length() const { return 2*m_order_bytes; }
+      size_t signature_length() const override { return 2*m_order_bytes; }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator&) override

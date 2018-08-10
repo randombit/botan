@@ -328,6 +328,8 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
          {
          }
 
+      size_t plaintext_length(size_t) const override { return m_mod_bytes; }
+
       secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override
          {
          const BigInt m(msg, msg_len);
@@ -404,6 +406,8 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
          RSA_Public_Operation(rsa)
          {
          }
+
+      size_t ciphertext_length(size_t) const override { return m_n.bytes(); }
 
       size_t max_raw_input_bits() const override { return get_max_input_bits(); }
 

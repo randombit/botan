@@ -42,6 +42,8 @@ class BOTAN_PUBLIC_API(2,0) Encryption
 
       virtual size_t max_input_bits() const = 0;
 
+      virtual size_t ciphertext_length(size_t ptext_len) const = 0;
+
       virtual ~Encryption() = default;
    };
 
@@ -54,6 +56,8 @@ class BOTAN_PUBLIC_API(2,0) Decryption
       virtual secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
                                           const uint8_t ciphertext[],
                                           size_t ciphertext_len) = 0;
+
+      virtual size_t plaintext_length(size_t ctext_len) const = 0;
 
       virtual ~Decryption() = default;
    };

@@ -27,12 +27,23 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
          m_kdf_hash(kdf_hash),
          m_ws(PointGFp::WORKSPACE_SIZE),
          m_mul_public_point(key.public_point(), rng, m_ws)
-         {}
+         {
+         std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw(m_kdf_hash);
+         m_hash_size = hash->output_length();
+         }
 
       size_t max_input_bits() const override
          {
          // This is arbitrary, but assumes SM2 is used for key encapsulation
          return 512;
+         }
+
+      size_t ciphertext_length(size_t ptext_len) const override
+         {
+         const size_t elem_size = m_group.get_order_bytes();
+         const size_t der_overhead = 12;
+
+         return der_overhead + 2*elem_size + m_hash_size + ptext_len;
          }
 
       secure_vector<uint8_t> encrypt(const uint8_t msg[],
@@ -95,6 +106,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
 
       std::vector<BigInt> m_ws;
       PointGFp_Var_Point_Precompute m_mul_public_point;
+      size_t m_hash_size;
    };
 
 class SM2_Decryption_Operation final : public PK_Ops::Decryption
@@ -106,7 +118,24 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
          m_key(key),
          m_rng(rng),
          m_kdf_hash(kdf_hash)
-         {}
+         {
+         std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw(m_kdf_hash);
+         m_hash_size = hash->output_length();
+         }
+
+      size_t plaintext_length(size_t ptext_len) const override
+         {
+         /*
+         * This ignores the DER encoding and so overestimates the
+         * plaintext length by 12 bytes or so
+         */
+         const size_t elem_size = m_key.domain().get_order_bytes();
+
+         if(ptext_len < 2*elem_size + m_hash_size)
+            return 0;
+
+         return ptext_len - (2*elem_size + m_hash_size);
+         }
 
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
                                      const uint8_t ciphertext[],
@@ -202,6 +231,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
       RandomNumberGenerator& m_rng;
       const std::string m_kdf_hash;
       std::vector<BigInt> m_ws;
+      size_t m_hash_size;
    };
 
 }
