@@ -697,7 +697,7 @@ def main(args=None):
         start = time.time()
         fn()
         end = time.time()
-        #print("Ran %s in %.02f" % (fn.__name__, end-start))
+        logging.debug("Ran %s in %.02f", fn.__name__, end-start)
 
 
     end_time = time.time()
