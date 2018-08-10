@@ -187,6 +187,7 @@ void GHASH::key_schedule(const uint8_t key[], size_t length)
 
 void GHASH::start(const uint8_t nonce[], size_t len)
    {
+   BOTAN_ARG_CHECK(len == 16, "GHASH requires a 128-bit nonce");
    m_nonce.assign(nonce, nonce + len);
    m_ghash = m_H_ad;
    }
