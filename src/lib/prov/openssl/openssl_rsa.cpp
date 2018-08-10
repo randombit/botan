@@ -57,6 +57,8 @@ class OpenSSL_RSA_Encryption_Operation final : public PK_Ops::Encryption
          m_bits = 8 * (n_size() - pad_overhead) - 1;
          }
 
+      size_t ciphertext_length(size_t) const override { return ::RSA_size(m_openssl_rsa.get()); }
+
       size_t max_input_bits() const override { return m_bits; };
 
       secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len,
@@ -109,6 +111,8 @@ class OpenSSL_RSA_Decryption_Operation final : public PK_Ops::Decryption
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPrivateKey");
          }
+
+      size_t plaintext_length(size_t) const override { return ::RSA_size(m_openssl_rsa.get()); }
 
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
                                   const uint8_t msg[], size_t msg_len) override

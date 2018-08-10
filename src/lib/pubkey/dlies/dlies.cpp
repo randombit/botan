@@ -97,20 +97,17 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length,
 
 /**
 * Return the max size, in bytes, of a message
-* Not_Implemented if DLIES is used in XOR encryption mode
+* We assume DLIES is only used for key transport and limit the maximum size
+* to 512 bits
 */
 size_t DLIES_Encryptor::maximum_input_size() const
    {
-   if(m_cipher)
-      {
-      // no limit in block cipher mode
-      return std::numeric_limits<size_t>::max();
-      }
-   else
-      {
-      // No way to determine if the KDF will output enough bits for XORing with the plaintext?!
-      throw Not_Implemented("Not implemented for XOR encryption mode");
-      }
+   return 64;
+   }
+
+size_t DLIES_Encryptor::ciphertext_length(size_t ptext_len) const
+   {
+   return m_own_pub_key.size() + m_mac->output_length() + m_cipher->output_length(ptext_len);
    }
 
 DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
@@ -140,6 +137,14 @@ DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                                  size_t mac_key_length) :
    DLIES_Decryptor(own_priv_key, rng, kdf, nullptr, 0, mac, mac_key_length)
    {}
+
+size_t DLIES_Decryptor::plaintext_length(size_t ctext_len) const
+   {
+   if(ctext_len < m_pub_key_size + m_mac->output_length())
+      return 0; // will throw if attempted
+
+   return ctext_len - (m_pub_key_size + m_mac->output_length());
+   }
 
 secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
       const uint8_t msg[], size_t length) const

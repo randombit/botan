@@ -75,6 +75,8 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME
    {
    public:
 
+      size_t ciphertext_length(size_t) const override { return 2*m_group.p_bytes(); }
+
       size_t max_raw_input_bits() const override { return m_group.p_bits() - 1; }
 
       ElGamal_Encryption_Operation(const ElGamal_PublicKey& key, const std::string& eme);
@@ -123,6 +125,8 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME
       ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
                                    const std::string& eme,
                                    RandomNumberGenerator& rng);
+
+      size_t plaintext_length(size_t) const override { return m_group.p_bytes(); }
 
       secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override;
    private:

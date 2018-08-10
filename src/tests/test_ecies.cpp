@@ -279,10 +279,9 @@ Test::Result test_kdf_not_found()
          "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
          flags);
 
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-
-   result.test_throws("kdf not found", [ &ecies_enc ]()
+   result.test_throws("kdf not found", [&]()
       {
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
       ecies_enc.encrypt(std::vector<uint8_t>(8), Test::rng());
       });
 
@@ -304,10 +303,9 @@ Test::Result test_mac_not_found()
          "XYZMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
          flags);
 
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-
-   result.test_throws("mac not found", [ &ecies_enc ]()
+   result.test_throws("mac not found", [&]()
       {
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
       ecies_enc.encrypt(std::vector<uint8_t>(8), Test::rng());
       });
 
@@ -329,10 +327,9 @@ Test::Result test_cipher_not_found()
          "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
          flags);
 
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-
-   result.test_throws("cipher not found", [ &ecies_enc ]()
+   result.test_throws("cipher not found", [&]()
       {
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
       ecies_enc.encrypt(std::vector<uint8_t>(8), Test::rng());
       });
 

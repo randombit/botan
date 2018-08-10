@@ -526,6 +526,15 @@ const OID& EC_Group::get_curve_oid() const
    return data().oid();
    }
 
+size_t EC_Group::point_size(PointGFp::Compression_Type format) const
+   {
+   // Hybrid and standard format are (x,y), compressed is y, +1 format byte
+   if(format == PointGFp::COMPRESSED)
+      return (1 + get_p_bytes());
+   else
+      return (1 + 2*get_p_bytes());
+   }
+
 PointGFp EC_Group::OS2ECP(const uint8_t bits[], size_t len) const
    {
    return Botan::OS2ECP(bits, len, data().curve());
