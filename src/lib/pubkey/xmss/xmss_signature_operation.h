@@ -48,6 +48,8 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature,
 
       void update(const uint8_t msg[], size_t msg_len) override;
 
+      size_t signature_length() const override;
+
    private:
       /**
        * Algorithm 11: "treeSig"

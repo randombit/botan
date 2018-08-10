@@ -98,6 +98,8 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
          m_hash->update(m_za);
          }
 
+      size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
+
       void update(const uint8_t msg[], size_t msg_len) override
          {
          m_hash->update(msg, msg_len);

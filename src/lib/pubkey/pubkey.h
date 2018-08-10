@@ -264,11 +264,19 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       */
       std::vector<uint8_t> signature(RandomNumberGenerator& rng);
 
+
       /**
       * Set the output format of the signature.
       * @param format the signature format to use
       */
       void set_output_format(Signature_Format format) { m_sig_format = format; }
+
+      /**
+      * Return an upper bound on the length of the signatures this
+      * PK_Signer will produce
+      */
+      size_t signature_length() const;
+
    private:
       std::unique_ptr<PK_Ops::Signature> m_op;
       Signature_Format m_sig_format;

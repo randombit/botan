@@ -61,6 +61,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                       RandomNumberGenerator& rng) override;
 
+      size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
       size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
       bool has_prefix() override { return true; }

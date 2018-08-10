@@ -394,6 +394,11 @@ class TPM_Signing_Operation final : public PK_Ops::Signature
          {
          }
 
+      size_t signature_length() const override
+         {
+         return m_key.get_n().bytes();
+         }
+
       void update(const uint8_t msg[], size_t msg_len) override
          {
          m_hash->update(msg, msg_len);

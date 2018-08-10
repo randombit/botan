@@ -117,6 +117,11 @@ int botan_pk_op_sign_destroy(botan_pk_op_sign_t op)
    return BOTAN_FFI_CHECKED_DELETE(op);
    }
 
+int botan_pk_op_sign_output_length(botan_pk_op_sign_t op, size_t* olen)
+   {
+   return BOTAN_FFI_DO(Botan::PK_Signer, op, o, { *olen = o.signature_length(); });
+   }
+
 int botan_pk_op_sign_update(botan_pk_op_sign_t op, const uint8_t in[], size_t in_len)
    {
    return BOTAN_FFI_DO(Botan::PK_Signer, op, o, { o.update(in, in_len); });

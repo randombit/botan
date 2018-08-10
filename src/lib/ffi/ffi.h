@@ -1123,6 +1123,8 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
 
 BOTAN_PUBLIC_API(2,0) int botan_pk_op_sign_destroy(botan_pk_op_sign_t op);
 
+BOTAN_PUBLIC_API(2,8) int botan_pk_op_sign_output_length(botan_pk_op_sign_t op, size_t* olen);
+
 BOTAN_PUBLIC_API(2,0) int botan_pk_op_sign_update(botan_pk_op_sign_t op, const uint8_t in[], size_t in_len);
 
 BOTAN_PUBLIC_API(2,0)

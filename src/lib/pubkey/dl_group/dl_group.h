@@ -269,6 +269,13 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       size_t q_bits() const;
 
       /**
+      * Return the size of q in bytes
+      * Same as get_q().bytes()
+      * Throws if q is unset
+      */
+      size_t q_bytes() const;
+
+      /**
       * Return size in bits of a secret exponent
       *
       * This attempts to balance between the attack costs of NFS

@@ -89,7 +89,8 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_b_inv = m_group.inverse_mod_q(m_b);
          }
 
-      size_t max_input_bits() const override { return m_group.get_q().bits(); }
+      size_t signature_length() const override { return 2*m_group.q_bytes(); }
+      size_t max_input_bits() const override { return m_group.q_bits(); }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator& rng) override;
@@ -157,7 +158,7 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
          {
          }
 
-      size_t max_input_bits() const override { return m_group.get_q().bits(); }
+      size_t max_input_bits() const override { return m_group.q_bits(); }
 
       bool with_recovery() const override { return false; }
 

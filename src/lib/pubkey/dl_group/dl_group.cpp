@@ -67,6 +67,7 @@ class DL_Group_Data final
       size_t p_bits() const { return m_p_bits; }
       size_t q_bits() const { return m_q_bits; }
       size_t p_bytes() const { return (m_p_bits + 7) / 8; }
+      size_t q_bytes() const { return (m_q_bits + 7) / 8; }
 
       size_t estimated_strength() const { return m_estimated_strength; }
 
@@ -446,6 +447,12 @@ size_t DL_Group::q_bits() const
    {
    data().assert_q_is_set("q_bits");
    return data().q_bits();
+   }
+
+size_t DL_Group::q_bytes() const
+   {
+   data().assert_q_is_set("q_bytes");
+   return data().q_bytes();
    }
 
 size_t DL_Group::estimated_strength() const

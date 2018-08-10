@@ -157,6 +157,9 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
          signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::IEEE_1363, sign_provider));
 
          generated_signature = signer->sign_message(message, rng ? *rng : Test::rng());
+
+         result.test_lte("Generated signature within announced bound",
+                         generated_signature.size(), signer->signature_length());
          }
       catch(Botan::Lookup_Error&)
          {

@@ -205,6 +205,8 @@ class OpenSSL_RSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
             throw OpenSSL_Error("d2i_RSAPrivateKey");
          }
 
+      size_t signature_length() const override { return ::RSA_size(m_openssl_rsa.get()); }
+
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator&) override
          {
