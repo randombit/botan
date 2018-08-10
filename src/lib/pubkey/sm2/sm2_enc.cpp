@@ -41,7 +41,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
       size_t ciphertext_length(size_t ptext_len) const override
          {
          const size_t elem_size = m_group.get_order_bytes();
-         const size_t der_overhead = 12;
+         const size_t der_overhead = 16;
 
          return der_overhead + 2*elem_size + m_hash_size + ptext_len;
          }
