@@ -76,12 +76,25 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_mac());
          results.push_back(ffi_test_kdf(rng));
          results.push_back(ffi_test_mp(rng));
+         results.push_back(ffi_test_pkcs_hash_id());
+
+#if defined(BOTAN_HAS_AES)
          results.push_back(ffi_test_block_ciphers());
          results.push_back(ffi_test_ciphers_cbc());
+
+#if defined(BOTAN_HAS_AEAD_GCM)
          results.push_back(ffi_test_ciphers_aead_gcm());
+#endif
+
+#if defined(BOTAN_HAS_AEAD_EAX)
          results.push_back(ffi_test_ciphers_aead_eax());
+#endif
+
+#if defined(BOTAN_HAS_CTR_BE)
          results.push_back(ffi_test_stream_ciphers());
-         results.push_back(ffi_test_pkcs_hash_id());
+#endif
+
+#endif
 
 #if defined(BOTAN_HAS_FPE_FE1)
          results.push_back(ffi_test_fpe());
@@ -778,12 +791,16 @@ class FFI_Unit_Tests final : public Test
       Test::Result ffi_test_kdf(botan_rng_t rng)
          {
          Test::Result result("FFI KDF");
-         const std::vector<uint8_t> pbkdf_salt = Botan::hex_decode("ED1F39A0A7F3889AAF7E60743B3BC1CC2C738E60");
+         std::vector<uint8_t> outbuf;
+
          const std::string passphrase = "ltexmfeyylmlbrsyikaw";
+
+#if defined(BOTAN_HAS_PBKDF2) && defined(BOTAN_HAS_SHA1)
+         const std::vector<uint8_t> pbkdf_salt = Botan::hex_decode("ED1F39A0A7F3889AAF7E60743B3BC1CC2C738E60");
          const size_t pbkdf_out_len = 10;
          const size_t pbkdf_iterations = 1000;
 
-         std::vector<uint8_t> outbuf(pbkdf_out_len);
+         outbuf.resize(pbkdf_out_len);
 
          if(TEST_FFI_OK(botan_pbkdf, ("PBKDF2(SHA-1)",
                                       outbuf.data(), outbuf.size(),
@@ -807,8 +824,9 @@ class FFI_Unit_Tests final : public Test
 
          result.test_note("PBKDF timed 10 ms " + std::to_string(iters_10ms) + " iterations " +
                           "100 ms " + std::to_string(iters_100ms) + " iterations");
+#endif
 
-#if defined(BOTAN_HAS_KDF2)
+#if defined(BOTAN_HAS_KDF2) && defined(BOTAN_HAS_SHA1)
          const std::vector<uint8_t> kdf_secret = Botan::hex_decode("92167440112E");
          const std::vector<uint8_t> kdf_salt = Botan::hex_decode("45A9BEDED69163123D0348F5185F61ABFB1BF18D6AEA454F");
          const size_t kdf_out_len = 18;
