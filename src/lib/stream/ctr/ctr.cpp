@@ -205,13 +205,27 @@ void CTR_BE::seek(uint64_t offset)
    const size_t BS = m_block_size;
 
    // Set m_counter blocks to IV, IV + 1, ... IV + n
-   for(size_t i = 1; i != m_ctr_blocks; ++i)
-      {
-      buffer_insert(m_counter, i*BS, &m_counter[(i-1)*BS], BS);
 
-      for(size_t j = 0; j != m_ctr_size; ++j)
-         if(++m_counter[i*BS + (BS - 1 - j)])
-            break;
+   if(m_ctr_size == 4 && BS >= 8)
+      {
+      const uint32_t low32 = load_be<uint32_t>(&m_counter[BS-4], 0);
+      for(size_t i = 1; i != m_ctr_blocks; ++i)
+         {
+         copy_mem(&m_counter[i*BS], &m_counter[0], BS);
+         uint32_t c = low32 + i;
+         store_be(c, &m_counter[(BS-4)+i*BS]);
+         }
+      }
+   else
+      {
+      for(size_t i = 1; i != m_ctr_blocks; ++i)
+         {
+         buffer_insert(m_counter, i*BS, &m_counter[(i-1)*BS], BS);
+
+         for(size_t j = 0; j != m_ctr_size; ++j)
+            if(++m_counter[i*BS + (BS - 1 - j)])
+               break;
+         }
       }
 
    if(base_counter > 0)
