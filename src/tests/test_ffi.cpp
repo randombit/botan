@@ -52,6 +52,13 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_OK(botan_rng_destroy, (rng));
             }
 
+         if(TEST_FFI_OK(botan_rng_init, (&rng, "user-threadsafe")))
+            {
+            TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
+            TEST_FFI_OK(botan_rng_reseed, (rng, 256));
+            TEST_FFI_OK(botan_rng_destroy, (rng));
+            }
+
          if(TEST_FFI_OK(botan_rng_init, (&rng, "user")))
             {
             TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));

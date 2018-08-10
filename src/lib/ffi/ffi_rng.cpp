@@ -25,11 +25,21 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
       if(rng_type_s == "system")
+         {
          rng.reset(new Botan::System_RNG);
+         }
       else if(rng_type_s == "user")
+         {
          rng.reset(new Botan::AutoSeeded_RNG);
+         }
+      else if(rng_type_s == "user-threadsafe")
+         {
+         rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
+         }
       else
+         {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
 
       *rng_out = new botan_rng_struct(rng.release());
       return BOTAN_FFI_SUCCESS;
