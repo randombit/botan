@@ -70,6 +70,7 @@ class BotanPythonTests(unittest.TestCase):
     def test_hmac(self):
 
         hmac = botan2.message_authentication_code('HMAC(SHA-256)')
+        self.assertEqual(hmac.algo_name(), 'HMAC(SHA-256)')
         hmac.set_key(hex_decode('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'))
         hmac.update(hex_decode('616263'))
 
@@ -93,6 +94,7 @@ class BotanPythonTests(unittest.TestCase):
 
     def test_hash(self):
         h = botan2.hash_function('SHA-256')
+        self.assertEqual(h.algo_name(), 'SHA-256')
         assert h.output_length() == 32
         h.update('ignore this please')
         h.clear()
@@ -108,6 +110,13 @@ class BotanPythonTests(unittest.TestCase):
     def test_cipher(self):
         for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305']:
             enc = botan2.cipher(mode, encrypt=True)
+
+            if mode == 'AES-128/CTR-BE':
+                self.assertEqual(enc.algo_name(), 'CTR-BE(AES-128)')
+            elif mode == 'Serpent/GCM':
+                self.assertEqual(enc.algo_name(), 'Serpent/GCM(16)')
+            else:
+                self.assertEqual(enc.algo_name(), mode)
 
             (kmin, kmax) = enc.key_length()
 
@@ -151,10 +160,11 @@ class BotanPythonTests(unittest.TestCase):
     def test_rsa(self):
         rng = botan2.rng()
         rsapriv = botan2.private_key('RSA', '1024', rng)
-        rsapub = rsapriv.get_public_key()
+        self.assertEqual(rsapriv.algo_name(), 'RSA')
 
-        self.assertEqual(rsapub.estimated_strength(), 80)
+        rsapub = rsapriv.get_public_key()
         self.assertEqual(rsapub.algo_name(), 'RSA')
+        self.assertEqual(rsapub.estimated_strength(), 80)
 
         enc = botan2.pk_op_encrypt(rsapub, "OAEP(SHA-256)")
         dec = botan2.pk_op_decrypt(rsapriv, "OAEP(SHA-256)")

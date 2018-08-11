@@ -110,6 +110,9 @@ botan.botan_hash_init.errcheck = errcheck_for('botan_hash_init')
 botan.botan_hash_destroy.argtypes = [c_void_p]
 botan.botan_hash_destroy.errcheck = errcheck_for('botan_hash_destroy')
 
+botan.botan_hash_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+botan.botan_hash_name.errcheck = errcheck_for('botan_hash_name')
+
 botan.botan_hash_clear.argtypes = [c_void_p]
 botan.botan_hash_clear.errcheck = errcheck_for('botan_hash_clear')
 
@@ -128,6 +131,9 @@ botan.botan_mac_init.errcheck = errcheck_for('botan_mac_init')
 
 botan.botan_mac_destroy.argtypes = [c_void_p]
 botan.botan_mac_destroy.errcheck = errcheck_for('botan_mac_destroy')
+
+botan.botan_mac_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+botan.botan_mac_name.errcheck = errcheck_for('botan_mac_name')
 
 botan.botan_mac_clear.argtypes = [c_void_p]
 botan.botan_mac_clear.errcheck = errcheck_for('botan_mac_clear')
@@ -150,6 +156,9 @@ botan.botan_cipher_init.errcheck = errcheck_for('botan_cipher_init')
 
 botan.botan_cipher_destroy.argtypes = [c_void_p]
 botan.botan_cipher_destroy.errcheck = errcheck_for('botan_cipher_destroy')
+
+botan.botan_cipher_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+botan.botan_cipher_name.errcheck = errcheck_for('botan_cipher_name')
 
 botan.botan_cipher_get_default_nonce_length.argtypes = [c_void_p, POINTER(c_size_t)]
 botan.botan_cipher_get_default_nonce_length.errcheck = errcheck_for('botan_cipher_get_default_nonce_length')
@@ -225,6 +234,9 @@ botan.botan_pubkey_fingerprint.errcheck = errcheck_for('botan_pubkey_fingerprint
 
 botan.botan_privkey_create.argtypes = [c_void_p, c_char_p, c_char_p, c_void_p]
 botan.botan_privkey_create.errcheck = errcheck_for('botan_privkey_create')
+
+botan.botan_privkey_algo_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+botan.botan_privkey_algo_name.errcheck = errcheck_for('botan_privkey_algo_name')
 
 botan.botan_privkey_export_pubkey.argtypes = [c_void_p, c_void_p]
 botan.botan_privkey_export_pubkey.errcheck = errcheck_for('botan_privkey_export_pubkey')
@@ -454,6 +466,9 @@ class hash_function(object): # pylint: disable=invalid-name
     def __del__(self):
         botan.botan_hash_destroy(self.hash)
 
+    def algo_name(self):
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_hash_name(self.hash, b, bl))
+
     def clear(self):
         botan.botan_hash_clear(self.hash)
 
@@ -485,6 +500,9 @@ class message_authentication_code(object): # pylint: disable=invalid-name
     def clear(self):
         botan.botan_mac_clear(self.mac)
 
+    def algo_name(self):
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_mac_name(self.mac, b, bl))
+
     def output_length(self):
         l = c_size_t(0)
         botan.botan_mac_output_length(self.mac, byref(l))
@@ -509,6 +527,9 @@ class cipher(object): # pylint: disable=invalid-name
 
     def __del__(self):
         botan.botan_cipher_destroy(self.cipher)
+
+    def algo_name(self):
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_cipher_name(self.cipher, b, bl))
 
     def default_nonce_length(self):
         l = c_size_t(0)
@@ -693,6 +714,9 @@ class private_key(object): # pylint: disable=invalid-name
 
     def __del__(self):
         botan.botan_privkey_destroy(self.privkey)
+
+    def algo_name(self):
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_privkey_algo_name(self.privkey, b, bl))
 
     def get_public_key(self):
 
