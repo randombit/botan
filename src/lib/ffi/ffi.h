@@ -88,7 +88,7 @@ enum BOTAN_FFI_ERROR {
 * Convert an error code into a string. Returns "Unknown error"
 * if the error code is not a known one.
 */
-const char* botan_error_description(int err);
+BOTAN_PUBLIC_API(2,8) const char* botan_error_description(int err);
 
 /**
 * Return the version of the currently supported FFI API. This is

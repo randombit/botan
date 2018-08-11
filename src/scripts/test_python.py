@@ -80,6 +80,8 @@ def test():
         md5 = botan2.hash_function('MD5')
         assert md5.output_length() == 16
         md5.update('h')
+        md5.clear()
+        md5.update('h')
         md5.update('i')
         h1 = md5.final()
         print("md5 hash: %s (%s)\n" % (hex_encode(h1), '49f68a5c8493ec2c0bf489821c21fc3b'))
