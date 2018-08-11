@@ -85,10 +85,10 @@ int botan_block_cipher_name(botan_block_cipher_t cipher, char* name, size_t* nam
       return write_str_output(name, name_len, bc.name()); });
    }
 
-int botan_block_cipher_query_keylen(botan_block_cipher_t cipher,
-                                    size_t* out_minimum_keylength,
-                                    size_t* out_maximum_keylength,
-                                    size_t* out_keylength_modulo)
+int botan_block_cipher_get_keyspec(botan_block_cipher_t cipher,
+                                   size_t* out_minimum_keylength,
+                                   size_t* out_maximum_keylength,
+                                   size_t* out_keylength_modulo)
    {
    return BOTAN_FFI_DO(Botan::BlockCipher, cipher, bc, {
       if(out_minimum_keylength)

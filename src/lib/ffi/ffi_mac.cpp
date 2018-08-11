@@ -67,10 +67,10 @@ int botan_mac_name(botan_mac_t mac, char* name, size_t* name_len)
       return write_str_output(name, name_len, m.name()); });
    }
 
-int botan_mac_query_keylen(botan_mac_t mac,
-                           size_t* out_minimum_keylength,
-                           size_t* out_maximum_keylength,
-                           size_t* out_keylength_modulo)
+int botan_mac_get_keyspec(botan_mac_t mac,
+                          size_t* out_minimum_keylength,
+                          size_t* out_maximum_keylength,
+                          size_t* out_keylength_modulo)
    {
    return BOTAN_FFI_DO(Botan::MessageAuthenticationCode, mac, m, {
       if(out_minimum_keylength)

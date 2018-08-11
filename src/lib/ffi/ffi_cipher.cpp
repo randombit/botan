@@ -59,6 +59,21 @@ int botan_cipher_query_keylen(botan_cipher_t cipher,
       });
    }
 
+int botan_cipher_get_keyspec(botan_cipher_t cipher,
+                             size_t* out_minimum_keylength,
+                             size_t* out_maximum_keylength,
+                             size_t* out_keylength_modulo)
+   {
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, {
+      if(out_minimum_keylength)
+         *out_minimum_keylength = c.key_spec().minimum_keylength();
+      if(out_maximum_keylength)
+         *out_maximum_keylength = c.key_spec().maximum_keylength();
+      if(out_keylength_modulo)
+         *out_keylength_modulo = c.key_spec().keylength_multiple();
+      });
+   }
+
 int botan_cipher_set_key(botan_cipher_t cipher,
                          const uint8_t* key, size_t key_len)
    {

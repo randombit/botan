@@ -403,7 +403,7 @@ BOTAN_PUBLIC_API(2,8) int botan_mac_name(botan_mac_t mac, char* name, size_t* na
 * @param out_maximum_keylength if non-NULL, will be set to maximum keylength of MAC
 * @param out_keylength_modulo if non-NULL will be set to byte multiple of valid keys
 */
-BOTAN_PUBLIC_API(2,8) int botan_mac_query_keylen(botan_mac_t mac,
+BOTAN_PUBLIC_API(2,8) int botan_mac_get_keyspec(botan_mac_t mac,
                                                  size_t* out_minimum_keylength,
                                                  size_t* out_maximum_keylength,
                                                  size_t* out_keylength_modulo);
@@ -435,9 +435,15 @@ BOTAN_PUBLIC_API(2,0) int botan_cipher_get_tag_length(botan_cipher_t cipher, siz
 BOTAN_PUBLIC_API(2,0) int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl);
 BOTAN_PUBLIC_API(2,0) int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug);
 
+// Prefer botan_cipher_get_keyspec
 BOTAN_PUBLIC_API(2,0) int botan_cipher_query_keylen(botan_cipher_t,
                                         size_t* out_minimum_keylength,
                                         size_t* out_maximum_keylength);
+
+BOTAN_PUBLIC_API(2,8) int botan_cipher_get_keyspec(botan_cipher_t,
+                                                   size_t* min_keylen,
+                                                   size_t* max_keylen,
+                                                   size_t* mod_keylen);
 
 BOTAN_PUBLIC_API(2,0) int botan_cipher_set_key(botan_cipher_t cipher,
                                    const uint8_t* key, size_t key_len);
@@ -606,10 +612,10 @@ BOTAN_PUBLIC_API(2,8) int botan_block_cipher_name(botan_block_cipher_t cipher,
 * @param out_maximum_keylength if non-NULL, will be set to maximum keylength of cipher
 * @param out_keylength_modulo if non-NULL will be set to byte multiple of valid keys
 */
-BOTAN_PUBLIC_API(2,8) int botan_block_cipher_query_keylen(botan_block_cipher_t cipher,
-                                                          size_t* out_minimum_keylength,
-                                                          size_t* out_maximum_keylength,
-                                                          size_t* out_keylength_modulo);
+BOTAN_PUBLIC_API(2,8) int botan_block_cipher_get_keyspec(botan_block_cipher_t cipher,
+                                                         size_t* out_minimum_keylength,
+                                                         size_t* out_maximum_keylength,
+                                                         size_t* out_keylength_modulo);
 
 /*
 * Multiple precision integers

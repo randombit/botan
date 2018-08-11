@@ -548,12 +548,18 @@ class FFI_Unit_Tests final : public Test
             {
             size_t min_keylen = 0;
             size_t max_keylen = 0;
+            size_t mod_keylen = 0;
             size_t nonce_len = 0;
             size_t tag_len = 0;
 
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
             result.test_int_eq(min_keylen, 16, "Min key length");
             result.test_int_eq(max_keylen, 16, "Max key length");
+
+            TEST_FFI_OK(botan_cipher_get_keyspec, (cipher_encrypt, &min_keylen, &max_keylen, &mod_keylen));
+            result.test_int_eq(min_keylen, 16, "Min key length");
+            result.test_int_eq(max_keylen, 16, "Max key length");
+            result.test_int_eq(mod_keylen, 1, "Mod key length");
 
             TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &nonce_len));
             result.test_int_eq(nonce_len, 12, "Expected default EAX nonce length");
@@ -772,10 +778,10 @@ class FFI_Unit_Tests final : public Test
                }
 
             size_t min_keylen = 0, max_keylen = 0, mod_keylen = 0;
-            TEST_FFI_RC(0, botan_mac_query_keylen, (mac, nullptr, nullptr, nullptr));
-            TEST_FFI_RC(0, botan_mac_query_keylen, (mac, &min_keylen, nullptr, nullptr));
-            TEST_FFI_RC(0, botan_mac_query_keylen, (mac, nullptr, &max_keylen, nullptr));
-            TEST_FFI_RC(0, botan_mac_query_keylen, (mac, nullptr, nullptr, &mod_keylen));
+            TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, nullptr, nullptr, nullptr));
+            TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, &min_keylen, nullptr, nullptr));
+            TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, nullptr, &max_keylen, nullptr));
+            TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, nullptr, nullptr, &mod_keylen));
 
             result.test_eq("Expected min keylen", min_keylen, 0);
             result.test_eq("Expected max keylen", max_keylen, 4096);
@@ -933,10 +939,10 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_RC(16, botan_block_cipher_block_size, (cipher));
 
             size_t min_keylen = 0, max_keylen = 0, mod_keylen = 0;
-            TEST_FFI_RC(0, botan_block_cipher_query_keylen, (cipher, nullptr, nullptr, nullptr));
-            TEST_FFI_RC(0, botan_block_cipher_query_keylen, (cipher, &min_keylen, nullptr, nullptr));
-            TEST_FFI_RC(0, botan_block_cipher_query_keylen, (cipher, nullptr, &max_keylen, nullptr));
-            TEST_FFI_RC(0, botan_block_cipher_query_keylen, (cipher, nullptr, nullptr, &mod_keylen));
+            TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, nullptr, nullptr, nullptr));
+            TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, &min_keylen, nullptr, nullptr));
+            TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, nullptr, &max_keylen, nullptr));
+            TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, nullptr, nullptr, &mod_keylen));
 
             result.test_eq("Expected min keylen", min_keylen, 16);
             result.test_eq("Expected max keylen", max_keylen, 16);
