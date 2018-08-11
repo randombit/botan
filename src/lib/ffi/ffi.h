@@ -88,7 +88,7 @@ enum BOTAN_FFI_ERROR {
 * Convert an error code into a string. Returns "Unknown error"
 * if the error code is not a known one.
 */
-const char* botan_error_description(int err);
+BOTAN_PUBLIC_API(2,8) const char* botan_error_description(int err);
 
 /**
 * Return the version of the currently supported FFI API. This is
@@ -532,25 +532,6 @@ BOTAN_PUBLIC_API(2,0) int botan_kdf(const char* kdf_algo,
                         const uint8_t salt[], size_t salt_len,
                         const uint8_t label[], size_t label_len);
 
-/**
-* Create a password hash using Bcrypt
-* @param out buffer holding the password hash, should be of length 64 bytes
-* @param out_len the desired output length in bytes
-* @param password the password
-* @param rng a random number generator
-* @param work_factor how much work to do to slow down guessing attacks
-* @param flags should be 0 in current API revision, all other uses are reserved
-*       and return BOTAN_FFI_ERROR_BAD_FLAG
-* @return 0 on success, a negative value on failure
-
-* Output is formatted bcrypt $2a$...
-*/
-BOTAN_PUBLIC_API(2,0) int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
-                                    const char* password,
-                                    botan_rng_t rng,
-                                    size_t work_factor,
-                                    uint32_t flags);
-
 /*
 * Raw Block Cipher (PRP) interface
 */
@@ -736,6 +717,25 @@ BOTAN_PUBLIC_API(2,1) int botan_mp_clear_bit(botan_mp_t n, size_t bit);
 /* Bcrypt password hashing */
 
 /**
+* Create a password hash using Bcrypt
+* @param out buffer holding the password hash, should be of length 64 bytes
+* @param out_len the desired output length in bytes
+* @param password the password
+* @param rng a random number generator
+* @param work_factor how much work to do to slow down guessing attacks
+* @param flags should be 0 in current API revision, all other uses are reserved
+*       and return BOTAN_FFI_ERROR_BAD_FLAG
+* @return 0 on success, a negative value on failure
+
+* Output is formatted bcrypt $2a$...
+*/
+BOTAN_PUBLIC_API(2,0) int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
+                                    const char* password,
+                                    botan_rng_t rng,
+                                    size_t work_factor,
+                                    uint32_t flags);
+
+/**
 * Check a previously created password hash
 * @param pass the password to check against
 * @param hash the stored hash to check against
@@ -751,9 +751,9 @@ BOTAN_PUBLIC_API(2,0) int botan_bcrypt_is_valid(const char* pass, const char* ha
 typedef struct botan_privkey_struct* botan_privkey_t;
 
 BOTAN_PUBLIC_API(2,0) int botan_privkey_create(botan_privkey_t* key,
-                                   const char* algo_name,
-                                   const char* algo_params,
-                                   botan_rng_t rng);
+                                               const char* algo_name,
+                                               const char* algo_params,
+                                               botan_rng_t rng);
 
 #define BOTAN_CHECK_KEY_EXPENSIVE_TESTS 1
 
