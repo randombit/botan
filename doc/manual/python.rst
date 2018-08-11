@@ -15,13 +15,15 @@ Versioning
 ----------------------------------------
 .. py:function:: version_major()
 
-   Returns the major number of the library version (currently, 1)
+   Returns the major number of the library version.
+
 .. py:function:: version_minor()
 
-   Returns the minor number of the library version (currently, 11)
+   Returns the minor number of the library version.
+
 .. py:function:: version_patch()
 
-   Returns the patch number of the library version (currently, 14)
+   Returns the patch number of the library version.
 
 .. py:function:: version_string()
 
@@ -52,15 +54,21 @@ Hash Functions
 
     Algo is a string (eg 'SHA-1', 'SHA-384', 'Skein-512')
 
+    .. py:method:: algo_name()
+
+       Returns the name of this algorithm
+
     .. py:method:: clear()
 
        Clear state
 
     .. py:method:: output_length()
 
+       Return output length in bytes
+
     .. py:method:: update(x)
 
-                   Add some input
+       Add some input
 
     .. py:method:: final()
 
@@ -73,17 +81,25 @@ Message Authentication Codes
 
     Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')
 
+    .. py:method:: algo_name()
+
+       Returns the name of this algorithm
+
     .. py:method:: clear()
+
+       Clear internal state including the key
 
     .. py:method:: output_length()
 
+       Return the output length in bytes
+
     .. py:method:: set_key(key)
 
-                   Set the key
+       Set the key
 
     .. py:method:: update(x)
 
-                   Add some input
+       Add some input
 
     .. py:method:: final()
 
@@ -99,53 +115,59 @@ Ciphers
 
           Set the second param to False for decryption
 
+    .. py:method:: algo_name()
+
+       Returns the name of this algorithm
+
     .. py:method:: tag_length()
 
-                   Returns the tag length (0 for unauthenticated modes)
+       Returns the tag length (0 for unauthenticated modes)
 
     .. py:method:: default_nonce_length()
 
-                   Returns default nonce length
+       Returns default nonce length
 
     .. py:method:: update_granularity()
 
-                   Returns update block size. Call to update() must provide
-                   input of exactly this many bytes
+       Returns update block size. Call to update() must provide input
+       of exactly this many bytes
 
     .. py:method:: is_authenticated()
 
-                   Returns True if this is an AEAD mode
+       Returns True if this is an AEAD mode
 
     .. py:method:: valid_nonce_length(nonce_len)
 
-                   Returns True if nonce_len is a valid nonce len for
-                   this mode
+       Returns True if nonce_len is a valid nonce len for this mode
 
     .. py:method:: clear()
 
-                   Resets all state
+       Resets all state
 
     .. py:method:: set_key(key)
 
-                   Set the key
+       Set the key
+
+    .. py:method:: set_assoc_data(ad)
+
+       Sets the associated data. Fails if this is not an AEAD mode
 
     .. py:method:: start(nonce)
 
-                   Start processing a message using nonce
+       Start processing a message using nonce
 
     .. py:method:: update(txt)
 
-                   Consumes input text and returns output. Input text must be
-                   of update_granularity() length.  Alternately, always call
-                   finish with the entire message, avoiding calls to update
-                   entirely
+       Consumes input text and returns output. Input text must be of
+       update_granularity() length.  Alternately, always call finish
+       with the entire message, avoiding calls to update entirely
 
     .. py:method:: finish(txt = None)
 
-                   Finish processing (with an optional final input). May throw
-                   if message authentication checks fail, in which case all
-                   plaintext previously processed must be discarded. You may
-                   call finish() with the entire message
+       Finish processing (with an optional final input). May throw if
+       message authentication checks fail, in which case all plaintext
+       previously processed must be discarded. You may call finish()
+       with the entire message
 
 Bcrypt
 ----------------------------------------
@@ -160,12 +182,14 @@ Bcrypt
 
 PBKDF
 ----------------------------------------
-.. py:function:: pbkdf(algo, password, out_len, iterations = 100000, salt = rng().get(12))
 
-   Runs a PBKDF2 algo specified as a string (eg 'PBKDF2(SHA-256)', 'PBKDF2(CMAC(Blowfish))').
-   Runs with n iterations with meaning depending on the algorithm.
-   The salt can be provided or otherwise is randomly chosen. In any case it is returned
-   from the call.
+.. py:function:: pbkdf(algo, password, out_len, iterations = 100000, salt = None)
+
+   Runs a PBKDF2 algo specified as a string (eg 'PBKDF2(SHA-256)',
+   'PBKDF2(CMAC(Blowfish))').  Runs with specified iterations, with
+   meaning depending on the algorithm.  The salt can be provided or
+   otherwise is randomly chosen. In any case it is returned from the
+   call.
 
    Returns out_len bytes of output (or potentially less depending on
    the algorithm and the size of the request).
@@ -178,15 +202,44 @@ PBKDF
    milliseconds on whatever we're running on. Returns tuple of salt,
    iterations, and psk
 
+Scrypt
+---------------
+
+.. py:function:: scrypt(out_len, password, salt, N=1024, r=8, p=8)
+
+   Runs Scrypt key derivation function over the specified password
+   and salt using Scrypt parameters N, r, p.
+
 KDF
 ----------------------------------------
 .. py:function:: kdf(algo, secret, out_len, salt)
 
-Public Key
+   Performs a key derviation function (such as "HKDF(SHA-384)") over
+   the provided secret and salt values. Returns a value of the
+   specified length.
+
+Public and Private Keys
 ----------------------------------------
+
 .. py:class:: public_key(object)
 
   .. py:method:: fingerprint(hash = 'SHA-256')
+
+     Returns a hash of the public key
+
+  .. py:method:: algo_name()
+
+     Returns the algorithm name
+
+  .. py:method:: estimated_strength()
+
+     Returns the estimated strength of this key against known attacks
+     (NFS, Pollard's rho, etc)
+
+  .. py:method:: encoding(pem=False)
+
+     Returns the encoding of the key, PEM if set otherwise DER
+
 
 .. py:class:: private_key(algo, param, rng)
 
