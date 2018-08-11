@@ -60,6 +60,7 @@ class BotanPythonTests(unittest.TestCase):
     def test_bcrypt(self):
         r = botan2.rng()
         phash = botan2.bcrypt('testing', r)
+        self.assertTrue(isinstance(phash, str))
         self.assertTrue(phash.startswith("$2a$"))
 
         self.assertTrue(botan2.check_bcrypt('testing', phash))

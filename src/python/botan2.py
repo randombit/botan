@@ -395,6 +395,12 @@ def _ctype_str(s):
     else:
         return s.encode('utf-8')
 
+def _ctype_to_str(s):
+    if version_info[0] < 3:
+        return s.encode('utf-8')
+    else:
+        return s.decode('utf-8')
+
 def _ctype_bits(s):
     if version_info[0] < 3:
         if isinstance(s, str):
@@ -608,7 +614,7 @@ def bcrypt(passwd, rng_instance, work_factor=10):
     b = out.raw[0:int(out_len.value)-1]
     if b[-1] == '\x00':
         b = b[:-1]
-    return b.decode('ascii')
+    return _ctype_to_str(b)
 
 def check_bcrypt(passwd, passwd_hash):
     rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), _ctype_str(passwd_hash))
