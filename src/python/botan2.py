@@ -587,10 +587,10 @@ def bcrypt(passwd, rng_instance, work_factor=10):
     b = out.raw[0:int(out_len.value)-1]
     if b[-1] == '\x00':
         b = b[:-1]
-    return b
+    return b.decode('ascii')
 
 def check_bcrypt(passwd, passwd_hash):
-    rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), passwd_hash)
+    rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), _ctype_str(passwd_hash))
     return rc == 0
 
 #
