@@ -45,6 +45,16 @@ def test():
         print('x %s' % hex_encode(psk))
         print('y %s\n' % (hex_encode(botan2.pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt)[2])))
 
+    def test_scrypt():
+        scrypt = botan2.scrypt(10, '', '', 16, 1, 1)
+        print(hex_encode(scrypt))
+        assert hex_encode(scrypt) == "77d6576238657b203b19"
+
+        scrypt = botan2.scrypt(32, 'password', 'NaCl', 1024, 8, 16)
+        print(hex_encode(scrypt))
+        assert hex_encode(scrypt) == "fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162"
+
+
     def test_bcrypt():
         print("Testing Bcrypt...")
         r = botan2.rng()
@@ -248,6 +258,7 @@ def test():
     test_version()
     test_kdf()
     test_pbkdf()
+    test_scrypt()
     test_bcrypt()
     test_hmac()
     test_rng()

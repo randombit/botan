@@ -196,6 +196,11 @@ botan.botan_pbkdf_timed.argtypes = [c_char_p, POINTER(c_char), c_size_t, c_char_
                                     c_void_p, c_size_t, c_size_t, POINTER(c_size_t)]
 botan.botan_pbkdf_timed.errcheck = errcheck_for('botan_pbkdf_timed')
 
+# Scrypt
+botan.botan_scrypt.argtypes = [POINTER(c_char), c_size_t, c_char_p, POINTER(c_char), c_size_t,
+                               c_size_t, c_size_t, c_size_t]
+botan.botan_scrypt.errcheck = errcheck_for('botan_scrypt')
+
 # KDF
 botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t,
                             POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
@@ -383,14 +388,14 @@ def _ctype_bits(s):
         if isinstance(s, str):
             return s
         else:
-            raise Exception("Internal error - unexpected type provided to _ctype_bits")
+            raise Exception("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
     else:
         if isinstance(s, bytes):
             return s
         elif isinstance(s, str):
             return s.encode('utf-8')
         else:
-            raise Exception("Internal error - unexpected type provided to _ctype_bits")
+            raise Exception("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
 
 def _ctype_bufout(buf):
     if version_info[0] < 3:
@@ -591,18 +596,32 @@ def check_bcrypt(passwd, passwd_hash):
 #
 # PBKDF
 #
-def pbkdf(algo, password, out_len, iterations=10000, salt=rng().get(12)):
+def pbkdf(algo, password, out_len, iterations=10000, salt=None):
+    if salt is None:
+        salt = rng().get(12)
     out_buf = create_string_buffer(out_len)
     botan.botan_pbkdf(_ctype_str(algo), out_buf, out_len,
                       _ctype_str(password), salt, len(salt), iterations)
     return (salt, iterations, out_buf.raw)
 
-def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=rng().get(12)):
+def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=None):
+    if salt is None:
+        salt = rng().get(12)
     out_buf = create_string_buffer(out_len)
     iterations = c_size_t(0)
     botan.botan_pbkdf_timed(_ctype_str(algo), out_buf, out_len, _ctype_str(password),
                             salt, len(salt), ms_to_run, byref(iterations))
     return (salt, iterations.value, out_buf.raw)
+
+#
+# Scrypt
+#
+def scrypt(out_len, password, salt, n=1024, r=8, p=8):
+    out_buf = create_string_buffer(out_len)
+    botan.botan_scrypt(out_buf, out_len, _ctype_str(password),
+                       _ctype_bits(salt), len(salt), n, r, p)
+
+    return out_buf.raw
 
 #
 # KDF
