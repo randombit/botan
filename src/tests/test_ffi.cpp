@@ -45,17 +45,17 @@ class FFI_Unit_Tests final : public Test
 
          std::vector<uint8_t> outbuf(512);
 
-         if(TEST_FFI_OK(botan_rng_init, (&rng, "system")))
-            {
-            TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
-            TEST_FFI_OK(botan_rng_reseed, (rng, 256));
-            TEST_FFI_OK(botan_rng_destroy, (rng));
-            }
-
          if(TEST_FFI_OK(botan_rng_init, (&rng, "user-threadsafe")))
             {
             TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
             TEST_FFI_OK(botan_rng_reseed, (rng, 256));
+
+            botan_rng_t null_rng;
+            TEST_FFI_OK(botan_rng_init, (&null_rng, "null"));
+            TEST_FFI_RC(-20, botan_rng_reseed_from_rng, (rng, null_rng, 256));
+            TEST_FFI_RC(-20, botan_rng_get, (null_rng, outbuf.data(), outbuf.size()));
+            TEST_FFI_OK(botan_rng_destroy, (null_rng));
+
             TEST_FFI_OK(botan_rng_destroy, (rng));
             }
 
@@ -63,6 +63,13 @@ class FFI_Unit_Tests final : public Test
             {
             TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
             TEST_FFI_OK(botan_rng_reseed, (rng, 256));
+
+            botan_rng_t system_rng;
+            if(TEST_FFI_OK(botan_rng_init, (&system_rng, "system")))
+               {
+               TEST_FFI_OK(botan_rng_reseed_from_rng, (rng, system_rng, 256));
+               TEST_FFI_OK(botan_rng_destroy, (system_rng));
+               }
 
             uint8_t not_really_entropy[32] = { 0 };
             TEST_FFI_OK(botan_rng_add_entropy, (rng, not_really_entropy, 32));
@@ -82,6 +89,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_hash());
          results.push_back(ffi_test_mac());
          results.push_back(ffi_test_kdf(rng));
+         results.push_back(ffi_test_scrypt());
          results.push_back(ffi_test_mp(rng));
          results.push_back(ffi_test_pkcs_hash_id());
 
@@ -802,6 +810,25 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
+      Test::Result ffi_test_scrypt()
+         {
+         Test::Result result("FFI Scrypt");
+
+         std::vector<uint8_t> output(24);
+         const uint8_t salt[8] = { 0 };
+         const char* pass = "password";
+
+#if defined(BOTAN_HAS_SCRYPT)
+         TEST_FFI_OK(botan_scrypt, (output.data(), output.size(), pass, salt, sizeof(salt), 8, 1, 1));
+
+         result.test_eq("scrypt output", output, "4B9B888D695288E002CC4F9D90808A4D296A45CE4471AFBB");
+#else
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NOT_IMPLEMENTED,
+                     botan_scrypt, (output.data(), output.size(), pass, salt, sizeof(salt), 8, 1, 1));
+#endif
+         return result;
+         }
+
       Test::Result ffi_test_kdf(botan_rng_t rng)
          {
          Test::Result result("FFI KDF");
@@ -1470,6 +1497,12 @@ class FFI_Unit_Tests final : public Test
             char namebuf[32] = { 0 };
             size_t name_len = sizeof(namebuf);
             if(TEST_FFI_OK(botan_pubkey_algo_name, (loaded_pubkey, namebuf, &name_len)))
+               {
+               result.test_eq("algo name", std::string(namebuf), "RSA");
+               }
+
+            name_len = sizeof(namebuf);
+            if(TEST_FFI_OK(botan_privkey_algo_name, (loaded_privkey, namebuf, &name_len)))
                {
                result.test_eq("algo name", std::string(namebuf), "RSA");
                }

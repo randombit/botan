@@ -216,6 +216,18 @@ BOTAN_PUBLIC_API(2,0) int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t ou
 BOTAN_PUBLIC_API(2,0) int botan_rng_reseed(botan_rng_t rng, size_t bits);
 
 /**
+* Reseed a random number generator
+* Uses the System_RNG as a seed generator.
+*
+* @param rng rng object
+* @param bits number of bits to to reseed with
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_PUBLIC_API(2,8) int botan_rng_reseed_from_rng(botan_rng_t rng,
+                                                    botan_rng_t source_rng,
+                                                    size_t bits);
+
+/**
 * Add some seed material to a random number generator
 *
 * @param rng rng object
@@ -487,6 +499,14 @@ BOTAN_PUBLIC_API(2,0) int botan_pbkdf_timed(const char* pbkdf_algo,
                                 size_t milliseconds_to_run,
                                 size_t* out_iterations_used);
 
+
+/**
+* Derive a key using scrypt
+*/
+BOTAN_PUBLIC_API(2,8) int botan_scrypt(uint8_t out[], size_t out_len,
+                                       const char* passphrase,
+                                       const uint8_t salt[], size_t salt_len,
+                                       size_t N, size_t r, size_t p);
 /**
 * Derive a key
 * @param kdf_algo KDF algorithm, e.g., "SP800-56C"
@@ -814,6 +834,8 @@ BOTAN_PUBLIC_API(2,0) int botan_privkey_destroy(botan_privkey_t key);
 BOTAN_PUBLIC_API(2,0) int botan_privkey_export(botan_privkey_t key,
                                    uint8_t out[], size_t* out_len,
                                    uint32_t flags);
+
+BOTAN_PUBLIC_API(2,8) int botan_privkey_algo_name(botan_privkey_t key, char out[], size_t* out_len);
 
 /*
 * Set encryption_algo to NULL or "" to have the library choose a default (recommended)

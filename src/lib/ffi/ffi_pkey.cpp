@@ -123,6 +123,11 @@ int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
       });
    }
 
+int botan_privkey_algo_name(botan_privkey_t key, char out[], size_t* out_len)
+   {
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, { return write_str_output(out, out_len, k.algo_name()); });
+   }
+
 int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
    {
    return BOTAN_FFI_DO(Botan::Public_Key, key, k, { return write_str_output(out, out_len, k.algo_name()); });

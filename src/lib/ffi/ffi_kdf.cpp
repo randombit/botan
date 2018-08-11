@@ -14,6 +14,10 @@
   #include <botan/bcrypt.h>
 #endif
 
+#if defined(BOTAN_HAS_SCRYPT)
+  #include <botan/scrypt.h>
+#endif
+
 extern "C" {
 
 using namespace Botan_FFI;
@@ -56,6 +60,21 @@ int botan_kdf(const char* kdf_algo,
       kdf->kdf(out, out_len, secret, secret_len, salt, salt_len, label, label_len);
       return BOTAN_FFI_SUCCESS;
       });
+   }
+
+int botan_scrypt(uint8_t out[], size_t out_len,
+                 const char* passphrase,
+                 const uint8_t salt[], size_t salt_len,
+                 size_t N, size_t r, size_t p)
+   {
+#if defined(BOTAN_HAS_SCRYPT)
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      Botan::scrypt(out, out_len, passphrase, salt, salt_len, N, r, p);
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_bcrypt_generate(uint8_t* out, size_t* out_len,

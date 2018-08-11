@@ -32,6 +32,10 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
          {
          rng.reset(new Botan::AutoSeeded_RNG);
          }
+      else if(rng_type_s == "null")
+         {
+         rng.reset(new Botan::Null_RNG);
+         }
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
       else if(rng_type_s == "user-threadsafe")
          {
@@ -66,6 +70,11 @@ int botan_rng_reseed(botan_rng_t rng, size_t bits)
 int botan_rng_add_entropy(botan_rng_t rng, const uint8_t* input, size_t len)
    {
    return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.add_entropy(input, len); });
+   }
+
+int botan_rng_reseed_from_rng(botan_rng_t rng, botan_rng_t source_rng, size_t bits)
+   {
+   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(safe_get(source_rng), bits); });
    }
 
 }
