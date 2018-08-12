@@ -305,12 +305,15 @@ class OpenSSL_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
       OpenSSL_ECDH_KA_Operation(const ECDH_PrivateKey& ecdh, const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf), m_ossl_ec(::EC_KEY_new(), ::EC_KEY_free)
          {
+         m_value_size = ecdh.domain().get_p_bytes();
          const secure_vector<uint8_t> der = PKCS8_for_openssl(ecdh);
          const uint8_t* der_ptr = der.data();
          m_ossl_ec.reset(d2i_ECPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_ossl_ec)
             throw OpenSSL_Error("d2i_ECPrivateKey");
          }
+
+      size_t agreed_value_size() const override { return m_value_size; }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
@@ -348,6 +351,7 @@ class OpenSSL_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
 
    private:
       std::unique_ptr<EC_KEY, std::function<void (EC_KEY*)>> m_ossl_ec;
+      size_t m_value_size;
    };
 
 }
