@@ -114,7 +114,7 @@ int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* 
       else if(digit_base == 16)
          base = Botan::BigInt::Hexadecimal;
       else
-         throw FFI_Error("botan_mp_to_str invalid digit base");
+         throw FFI_Error("botan_mp_to_str invalid digit base", BOTAN_FFI_ERROR_BAD_PARAMETER);
 
       std::vector<uint8_t> hex = Botan::BigInt::encode(bn, base);
       hex.push_back(0); // null terminator

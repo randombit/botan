@@ -91,7 +91,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
       if(wf < 4 || wf > 18)
-         throw FFI_Error("Bad bcrypt work factor " + std::to_string(wf));
+         throw FFI_Error("Bad bcrypt work factor " + std::to_string(wf), BOTAN_FFI_ERROR_BAD_PARAMETER);
 
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       const std::string bcrypt = Botan::generate_bcrypt(pass, rng, static_cast<uint16_t>(wf));
