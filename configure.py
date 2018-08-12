@@ -2271,11 +2271,13 @@ def choose_link_method(options):
         # Symbolic link support on Windows was introduced in Windows 6.0 (Vista) and Python 3.2
         # Furthermore the SeCreateSymbolicLinkPrivilege is required in order to successfully create symlinks
         # So only try to use symlinks on Windows if explicitly requested
-        if req == 'symlink' and options.os == 'windows':
+
+        if options.os in ['windows', 'mingw', 'cygwin']:
+            if req == 'symlink':
+                yield 'symlink'
+        elif 'symlink' in os.__dict__:
             yield 'symlink'
-        # otherwise keep old conservative behavior
-        if 'symlink' in os.__dict__ and options.os != 'windows':
-            yield 'symlink'
+
         if 'link' in os.__dict__:
             yield 'hardlink'
         yield 'copy'
