@@ -221,6 +221,13 @@ int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
       });
    }
 
+int botan_pk_op_key_agreement_size(botan_pk_op_ka_t op, size_t* out_len)
+   {
+   return BOTAN_FFI_DO(Botan::PK_Key_Agreement, op, o, {
+      *out_len = o.agreed_value_size();
+      });
+   }
+
 int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                               uint8_t out[], size_t* out_len,
                               const uint8_t other_key[], size_t other_key_len,

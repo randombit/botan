@@ -210,6 +210,11 @@ PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&& other) :
    m_op(std::move(other.m_op))
    {}
 
+size_t PK_Key_Agreement::agreed_value_size() const
+   {
+   return m_op->agreed_value_size();
+   }
+
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
                                           const uint8_t in[], size_t in_len,
                                           const uint8_t salt[],

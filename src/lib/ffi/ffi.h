@@ -1203,6 +1203,8 @@ BOTAN_PUBLIC_API(2,0) int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op)
 BOTAN_PUBLIC_API(2,0) int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
                                                       uint8_t out[], size_t* out_len);
 
+BOTAN_PUBLIC_API(2,8) int botan_pk_op_key_agreement_size(botan_pk_op_ka_t op, size_t* out_len);
+
 BOTAN_PUBLIC_API(2,0)
 int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                               uint8_t out[], size_t* out_len,

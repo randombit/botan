@@ -412,7 +412,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
    };
 
 /**
-* Key used for key agreement
+* Object used for key agreement
 */
 class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
    {
@@ -454,7 +454,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
       PK_Key_Agreement& operator=(const PK_Key_Agreement&) = delete;
       PK_Key_Agreement(const PK_Key_Agreement&) = delete;
 
-      /*
+      /**
       * Perform Key Agreement Operation
       * @param key_len the desired key output size
       * @param in the other parties key
@@ -468,7 +468,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
                               const uint8_t params[],
                               size_t params_len) const;
 
-      /*
+      /**
       * Perform Key Agreement Operation
       * @param key_len the desired key output size
       * @param in the other parties key
@@ -485,7 +485,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
                            params, params_len);
          }
 
-      /*
+      /**
       * Perform Key Agreement Operation
       * @param key_len the desired key output size
       * @param in the other parties key
@@ -501,7 +501,7 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
                            params.length());
          }
 
-      /*
+      /**
       * Perform Key Agreement Operation
       * @param key_len the desired key output size
       * @param in the other parties key
@@ -515,6 +515,13 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
                            cast_char_ptr_to_uint8(params.data()),
                            params.length());
          }
+
+      /**
+      * Return the underlying size of the value that is agreed.
+      * If derive_key is called with a length of 0 with a "Raw"
+      * KDF, it will return a value of this size.
+      */
+      size_t agreed_value_size() const;
 
    private:
       std::unique_ptr<PK_Ops::Key_Agreement> m_op;

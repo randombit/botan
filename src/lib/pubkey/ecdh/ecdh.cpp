@@ -34,6 +34,8 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          m_l_times_priv = m_group.inverse_mod_order(m_group.get_cofactor()) * key.private_value();
          }
 
+      size_t agreed_value_size() const override { return m_group.get_p_bytes(); }
+
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
          PointGFp input_point = m_group.get_cofactor() * m_group.OS2ECP(w, w_len);

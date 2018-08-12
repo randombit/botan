@@ -118,8 +118,10 @@ class BOTAN_PUBLIC_API(2,0) Key_Agreement
    {
    public:
       virtual secure_vector<uint8_t> agree(size_t key_len,
-                                        const uint8_t other_key[], size_t other_key_len,
-                                        const uint8_t salt[], size_t salt_len) = 0;
+                                           const uint8_t other_key[], size_t other_key_len,
+                                           const uint8_t salt[], size_t salt_len) = 0;
+
+      virtual size_t agreed_value_size() const = 0;
 
       virtual ~Key_Agreement() = default;
    };

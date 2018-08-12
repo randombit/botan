@@ -93,6 +93,8 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
                    [this](const BigInt& k) { return m_powermod_x_p(inverse_mod(k, m_p)); })
          {}
 
+      size_t agreed_value_size() const override { return m_p.bytes(); }
+
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override;
    private:
       const BigInt& m_p;

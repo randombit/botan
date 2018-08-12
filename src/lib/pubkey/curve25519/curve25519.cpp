@@ -118,6 +118,8 @@ class Curve25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key) {}
 
+      size_t agreed_value_size() const { return 32; }
+
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
          return m_key.agree(w, w_len);

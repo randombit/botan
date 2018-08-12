@@ -64,6 +64,8 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          {
          }
 
+      size_t agreed_value_size() const { return m_key.domain().get_p_bytes(); }
+
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
          const EC_Group& group = m_key.domain();
