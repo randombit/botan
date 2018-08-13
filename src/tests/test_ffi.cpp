@@ -38,51 +38,14 @@ class FFI_Unit_Tests final : public Test
          {
          Test::Result result("FFI");
 
-         // RNG test and initialization
          botan_rng_t rng;
-
-         TEST_FFI_FAIL("invalid rng type", botan_rng_init, (&rng, "invalid_type"));
-
-         std::vector<uint8_t> outbuf(512);
-
-         if(TEST_FFI_OK(botan_rng_init, (&rng, "user-threadsafe")))
+         if(!TEST_FFI_OK(botan_rng_init, (&rng, "user")))
             {
-            TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
-            TEST_FFI_OK(botan_rng_reseed, (rng, 256));
-
-            botan_rng_t null_rng;
-            TEST_FFI_OK(botan_rng_init, (&null_rng, "null"));
-            TEST_FFI_RC(-20, botan_rng_reseed_from_rng, (rng, null_rng, 256));
-            TEST_FFI_RC(-20, botan_rng_get, (null_rng, outbuf.data(), outbuf.size()));
-            TEST_FFI_OK(botan_rng_destroy, (null_rng));
-
-            TEST_FFI_OK(botan_rng_destroy, (rng));
-            }
-
-         if(TEST_FFI_OK(botan_rng_init, (&rng, "user")))
-            {
-            TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
-            TEST_FFI_OK(botan_rng_reseed, (rng, 256));
-
-            botan_rng_t system_rng;
-            if(TEST_FFI_OK(botan_rng_init, (&system_rng, "system")))
-               {
-               TEST_FFI_OK(botan_rng_reseed_from_rng, (rng, system_rng, 256));
-               TEST_FFI_OK(botan_rng_destroy, (system_rng));
-               }
-
-            uint8_t not_really_entropy[32] = { 0 };
-            TEST_FFI_OK(botan_rng_add_entropy, (rng, not_really_entropy, 32));
-
-            // used for the rest of this function and destroyed at the end
-            }
-         else
-            {
-            result.test_note("Existing early due to missing FFI RNG");
             return {result};
             }
 
          std::vector<Test::Result> results;
+         results.push_back(ffi_test_rng());
          results.push_back(ffi_test_utils());
          results.push_back(ffi_test_errors());
          results.push_back(ffi_test_base64());
@@ -206,6 +169,60 @@ class FFI_Unit_Tests final : public Test
 
          TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), &outstr[0], BOTAN_FFI_HEX_LOWER_CASE));
          result.test_eq("lowercase hex", outstr, "aade01");
+         return result;
+         }
+
+      Test::Result ffi_test_rng()
+         {
+         Test::Result result("FFI RNG");
+
+         // RNG test and initialization
+         botan_rng_t rng;
+         botan_rng_t system_rng;
+         botan_rng_t rdrand_rng = nullptr;
+         botan_rng_t null_rng;
+
+         TEST_FFI_FAIL("invalid rng type", botan_rng_init, (&rng, "invalid_type"));
+
+         REQUIRE_FFI_OK(botan_rng_init, (&system_rng, "system"));
+         REQUIRE_FFI_OK(botan_rng_init, (&null_rng, "null"));
+
+         int rc = botan_rng_init(&rdrand_rng, "rdrand");
+         result.confirm("Either success or not implemented", rc == 0 || rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
+
+         std::vector<uint8_t> outbuf(512);
+
+         if(TEST_FFI_OK(botan_rng_init, (&rng, "user-threadsafe")))
+            {
+            TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
+            TEST_FFI_OK(botan_rng_reseed, (rng, 256));
+
+            TEST_FFI_RC(-20, botan_rng_reseed_from_rng, (rng, null_rng, 256));
+            if(rdrand_rng)
+               {
+               TEST_FFI_OK(botan_rng_reseed_from_rng, (rng, rdrand_rng, 256));
+               }
+            TEST_FFI_RC(-20, botan_rng_get, (null_rng, outbuf.data(), outbuf.size()));
+
+            TEST_FFI_OK(botan_rng_destroy, (rng));
+            }
+
+         if(TEST_FFI_OK(botan_rng_init, (&rng, "user")))
+            {
+            TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
+            TEST_FFI_OK(botan_rng_reseed, (rng, 256));
+
+            TEST_FFI_OK(botan_rng_reseed_from_rng, (rng, system_rng, 256));
+
+            uint8_t not_really_entropy[32] = { 0 };
+            TEST_FFI_OK(botan_rng_add_entropy, (rng, not_really_entropy, 32));
+            }
+
+         TEST_FFI_OK(botan_rng_destroy, (rng));
+         TEST_FFI_OK(botan_rng_destroy, (null_rng));
+         TEST_FFI_OK(botan_rng_destroy, (system_rng));
+         TEST_FFI_OK(botan_rng_destroy, (rdrand_rng));
+
          return result;
          }
 

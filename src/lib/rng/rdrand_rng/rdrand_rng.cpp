@@ -17,8 +17,14 @@ namespace Botan {
 
 RDRAND_RNG::RDRAND_RNG()
    {
-   if(!CPUID::has_rdrand())
+   if(!RDRAND_RNG::available())
       throw Exception("Current CPU does not support RDRAND instruction");
+   }
+
+//static
+bool RDRAND_RNG::available()
+   {
+   return CPUID::has_rdrand();
    }
 
 //static

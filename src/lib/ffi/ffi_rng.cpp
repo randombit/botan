@@ -10,6 +10,10 @@
 #include <botan/system_rng.h>
 #include <botan/auto_rng.h>
 
+#if defined(BOTAN_HAS_RDRAND_RNG)
+   #include <botan/rdrand_rng.h>
+#endif
+
 extern "C" {
 
 using namespace Botan_FFI;
@@ -36,15 +40,22 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
          {
          rng.reset(new Botan::Null_RNG);
          }
+#if defined(BOTAN_HAS_RDRAND_RNG)
+      else if(rng_type_s == "rdrand" && Botan::RDRAND_RNG::available())
+         {
+         rng.reset(new Botan::RDRAND_RNG);
+         }
+#endif
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
       else if(rng_type_s == "user-threadsafe")
          {
          rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
          }
 #endif
-      else
+
+      if(!rng)
          {
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
          }
 
       *rng_out = new botan_rng_struct(rng.release());

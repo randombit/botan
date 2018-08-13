@@ -8,12 +8,12 @@
 
 #include <botan/internal/rdrand.h>
 #include <botan/rdrand_rng.h>
-#include <botan/cpuid.h>
 
 namespace Botan {
 
-size_t Intel_Rdrand::poll(RandomNumberGenerator& rng) {
-   if(CPUID::has_rdrand() && BOTAN_ENTROPY_INTEL_RNG_POLLS > 0)
+size_t Intel_Rdrand::poll(RandomNumberGenerator& rng)
+   {
+   if(BOTAN_ENTROPY_INTEL_RNG_POLLS > 0 && RDRAND_RNG::available())
       {
       RDRAND_RNG rdrand_rng;
       secure_vector<uint8_t> buf(4 * BOTAN_ENTROPY_INTEL_RNG_POLLS);

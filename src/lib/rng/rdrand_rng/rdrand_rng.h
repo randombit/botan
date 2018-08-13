@@ -30,6 +30,11 @@ class BOTAN_PUBLIC_API(2,0) RDRAND_RNG final : public Hardware_RNG
       static uint32_t rdrand();
 
       /**
+      * Return true if RDRAND is available on the current processor
+      */
+      static bool available();
+
+      /**
       * Constructor will throw if CPU does not have RDRAND bit set
       */
       RDRAND_RNG();
