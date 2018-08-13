@@ -10,16 +10,16 @@ https://botan.randombit.net
 Botan is released under the Simplified BSD License (see license.txt)
 
 This module uses the ctypes module and is usable by programs running
-under at least CPython 2.7, CPython 3.4 and 3.5, or PyPy.
+under at least CPython 2.7, CPython 3.x, and PyPy
 
-It uses botan's ffi module, which exposes a C API.
-
-This version of the module requires FFI API version 20180713, which was
-introduced in Botan 2.8
+It uses botan's ffi module, which exposes a C API. This version of the
+module requires FFI API version 20180713, which was introduced in
+Botan 2.8
 
 """
 
-from ctypes import CDLL, POINTER, byref, c_void_p, c_size_t, c_uint32, c_int, c_char, c_char_p, create_string_buffer
+from ctypes import CDLL, POINTER, byref, create_string_buffer, \
+    c_void_p, c_size_t, c_uint8, c_uint32, c_int, c_char, c_char_p
 
 from sys import version_info
 from time import strptime, mktime
@@ -35,12 +35,16 @@ class BotanException(Exception):
 
     def __init__(self, message, rc=0):
 
+        self.__rc = rc
+
         if rc == 0:
             super(BotanException, self).__init__(message)
         else:
             descr = botan.botan_error_description(rc).decode('ascii')
             super(BotanException, self).__init__("%s: %d (%s)" % (message, rc, descr))
-        self.rc = rc
+
+    def error_code(self):
+        return self.__rc
 
 #
 # Module initialization
@@ -99,6 +103,12 @@ botan.botan_rng_destroy.errcheck = errcheck_for('botan_rng_destroy')
 
 botan.botan_rng_reseed.argtypes = [c_void_p, c_size_t]
 botan.botan_rng_reseed.errcheck = errcheck_for('botan_rng_reseed')
+
+botan.botan_rng_reseed_from_rng.argtypes = [c_void_p, c_void_p, c_size_t]
+botan.botan_rng_reseed_from_rng.errcheck = errcheck_for('botan_rng_reseed_from_rng')
+
+botan.botan_rng_add_entropy.argtypes = [c_void_p, c_char_p, c_size_t]
+botan.botan_rng_add_entropy.errcheck = errcheck_for('botan_rng_add_entropy')
 
 botan.botan_rng_get.argtypes = [c_void_p, POINTER(c_char), c_size_t]
 botan.botan_rng_get.errcheck = errcheck_for('botan_rng_get')
@@ -367,6 +377,126 @@ botan.botan_x509_cert_get_public_key.errcheck = errcheck_for('botan_x509_cert_ge
 botan.botan_x509_cert_get_subject_dn.argtypes = [c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)]
 botan.botan_x509_cert_get_subject_dn.errcheck = errcheck_for('botan_x509_cert_get_subject_dn')
 
+# MPI
+botan.botan_mp_init.argtypes = [c_void_p]
+botan.botan_mp_init.errcheck = errcheck_for('botan_mp_init')
+botan.botan_mp_destroy.argtypes = [c_void_p]
+botan.botan_mp_destroy.errcheck = errcheck_for('botan_mp_destroy')
+
+botan.botan_mp_to_hex.argtypes = [c_void_p, POINTER(c_char)]
+botan.botan_mp_to_hex.errcheck = errcheck_for('botan_mp_to_hex')
+botan.botan_mp_to_str.argtypes = [c_void_p, c_uint8, POINTER(c_char), POINTER(c_size_t)]
+botan.botan_mp_to_str.errcheck = errcheck_for('botan_mp_to_str')
+
+botan.botan_mp_clear.argtypes = [c_void_p]
+botan.botan_mp_clear.errcheck = errcheck_for('botan_mp_clear')
+
+botan.botan_mp_set_from_int.argtypes = [c_void_p, c_int]
+botan.botan_mp_set_from_int.errcheck = errcheck_for('botan_mp_set_from_int')
+botan.botan_mp_set_from_mp.argtypes = [c_void_p, c_void_p]
+botan.botan_mp_set_from_mp.errcheck = errcheck_for('botan_mp_set_from_mp')
+botan.botan_mp_set_from_str.argtypes = [c_void_p, POINTER(c_char)]
+botan.botan_mp_set_from_str.errcheck = errcheck_for('botan_mp_set_from_str')
+botan.botan_mp_set_from_radix_str.argtypes = [c_void_p, POINTER(c_char), c_size_t]
+botan.botan_mp_set_from_radix_str.errcheck = errcheck_for('botan_mp_set_from_radix_str')
+
+botan.botan_mp_num_bits.argtypes = [c_void_p, POINTER(c_size_t)]
+botan.botan_mp_num_bits.errcheck = errcheck_for('botan_mp_num_bits')
+botan.botan_mp_num_bytes.argtypes = [c_void_p, POINTER(c_size_t)]
+botan.botan_mp_num_bytes.errcheck = errcheck_for('botan_mp_num_bytes')
+
+botan.botan_mp_to_bin.argtypes = [c_void_p, POINTER(c_uint8)]
+botan.botan_mp_to_bin.errcheck = errcheck_for('botan_mp_to_bin')
+botan.botan_mp_from_bin.argtypes = [c_void_p, POINTER(c_uint8), c_size_t]
+botan.botan_mp_from_bin.errcheck = errcheck_for('botan_mp_from_bin')
+
+botan.botan_mp_to_uint32.argtypes = [c_void_p, POINTER(c_uint32)]
+botan.botan_mp_to_uint32.errcheck = errcheck_for('botan_mp_to_uint32')
+
+botan.botan_mp_is_positive.argtypes = [c_void_p]
+botan.botan_mp_is_positive.errcheck = errcheck_for('botan_mp_is_positive')
+
+botan.botan_mp_is_negative.argtypes = [c_void_p]
+botan.botan_mp_is_negative.errcheck = errcheck_for('botan_mp_is_negative')
+
+botan.botan_mp_flip_sign.argtypes = [c_void_p]
+botan.botan_mp_flip_sign.errcheck = errcheck_for('botan_mp_flip_sign')
+
+botan.botan_mp_is_zero.argtypes = [c_void_p]
+botan.botan_mp_is_zero.errcheck = errcheck_for('botan_mp_is_zero')
+botan.botan_mp_is_odd.argtypes = [c_void_p]
+botan.botan_mp_is_odd.errcheck = errcheck_for('botan_mp_is_odd')
+botan.botan_mp_is_even.argtypes = [c_void_p]
+botan.botan_mp_is_even.errcheck = errcheck_for('botan_mp_is_even')
+
+botan.botan_mp_add.argtypes = [c_void_p, c_void_p, c_void_p]
+botan.botan_mp_add.errcheck = errcheck_for('botan_mp_add')
+botan.botan_mp_sub.argtypes = [c_void_p, c_void_p, c_void_p]
+botan.botan_mp_sub.errcheck = errcheck_for('botan_mp_sub')
+botan.botan_mp_mul.argtypes = [c_void_p, c_void_p, c_void_p]
+botan.botan_mp_mul.errcheck = errcheck_for('botan_mp_mul')
+
+botan.botan_mp_div.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
+botan.botan_mp_div.errcheck = errcheck_for('botan_mp_div')
+
+botan.botan_mp_mod_mul.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
+botan.botan_mp_mod_mul.errcheck = errcheck_for('botan_mp_mod_mul')
+
+botan.botan_mp_equal.argtypes = [c_void_p, c_void_p]
+botan.botan_mp_equal.errcheck = errcheck_for('botan_mp_equal')
+
+botan.botan_mp_cmp.argtypes = [POINTER(c_int), c_void_p, c_void_p]
+botan.botan_mp_cmp.errcheck = errcheck_for('botan_mp_cmp')
+
+botan.botan_mp_swap.argtypes = [c_void_p, c_void_p]
+botan.botan_mp_swap.errcheck = errcheck_for('botan_mp_swap')
+
+botan.botan_mp_powmod.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
+botan.botan_mp_powmod.errcheck = errcheck_for('botan_mp_powmod')
+
+botan.botan_mp_lshift.argtypes = [c_void_p, c_void_p, c_size_t]
+botan.botan_mp_lshift.errcheck = errcheck_for('botan_mp_lshift')
+botan.botan_mp_rshift.argtypes = [c_void_p, c_void_p, c_size_t]
+botan.botan_mp_rshift.errcheck = errcheck_for('botan_mp_rshift')
+
+botan.botan_mp_mod_inverse.argtypes = [c_void_p, c_void_p, c_void_p]
+botan.botan_mp_mod_inverse.errcheck = errcheck_for('botan_mp_mod_inverse')
+
+botan.botan_mp_rand_bits.argtypes = [c_void_p, c_void_p, c_size_t]
+botan.botan_mp_rand_bits.errcheck = errcheck_for('botan_mp_rand_bits')
+
+botan.botan_mp_rand_range.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
+botan.botan_mp_rand_range.errcheck = errcheck_for('botan_mp_rand_range')
+
+botan.botan_mp_gcd.argtypes = [c_void_p, c_void_p, c_void_p]
+botan.botan_mp_gcd.errcheck = errcheck_for('botan_mp_gcd')
+
+botan.botan_mp_is_prime.argtypes = [c_void_p, c_void_p, c_size_t]
+botan.botan_mp_is_prime.errcheck = errcheck_for('botan_mp_is_prime')
+
+botan.botan_mp_get_bit.argtypes = [c_void_p, c_size_t]
+botan.botan_mp_get_bit.errcheck = errcheck_for('botan_mp_get_bit')
+
+botan.botan_mp_set_bit.argtypes = [c_void_p, c_size_t]
+botan.botan_mp_set_bit.errcheck = errcheck_for('botan_mp_set_bit')
+
+botan.botan_mp_clear_bit.argtypes = [c_void_p, c_size_t]
+botan.botan_mp_clear_bit.errcheck = errcheck_for('botan_mp_clear_bit')
+
+#
+# FPE
+#
+botan.botan_fpe_fe1_init.argtypes = [c_void_p, c_void_p, POINTER(c_char), c_size_t, c_size_t, c_uint32]
+botan.botan_fpe_fe1_init.errcheck = errcheck_for('botan_fpe_fe1_init')
+
+botan.botan_fpe_destroy.argtypes = [c_void_p]
+botan.botan_fpe_destroy.errcheck = errcheck_for('botan_fpe_destroy')
+
+botan.botan_fpe_encrypt.argtypes = [c_void_p, c_void_p, POINTER(c_char), c_size_t]
+botan.botan_fpe_encrypt.errcheck = errcheck_for('botan_fpe_encrypt')
+botan.botan_fpe_decrypt.argtypes = [c_void_p, c_void_p, POINTER(c_char), c_size_t]
+botan.botan_fpe_decrypt.errcheck = errcheck_for('botan_fpe_decrypt')
+
 #
 # Internal utilities
 #
@@ -442,140 +572,178 @@ def version_string():
 #
 # RNG
 #
-class rng(object): # pylint: disable=invalid-name
+class RandomNumberGenerator(object):
     # Can also use type "system"
     def __init__(self, rng_type='system'):
-        self.rng = c_void_p(0)
-        botan.botan_rng_init(byref(self.rng), _ctype_str(rng_type))
+        self.__obj = c_void_p(0)
+        botan.botan_rng_init(byref(self.__obj), _ctype_str(rng_type))
 
     def __del__(self):
-        botan.botan_rng_destroy(self.rng)
+        botan.botan_rng_destroy(self.__obj)
+
+    def handle_(self):
+        return self.__obj
 
     def reseed(self, bits=256):
-        botan.botan_rng_reseed(self.rng, bits)
+        botan.botan_rng_reseed(self.__obj, bits)
+
+    def reseed_from_rng(self, source_rng, bits=256):
+        botan.botan_rng_reseed_from_rng(self.__obj, source_rng.handle_(), bits)
+
+    def add_entropy(self, seed):
+        botan.botan_rng_add_entropy(self.__obj, _ctype_bits(seed), len(seed))
 
     def get(self, length):
         out = create_string_buffer(length)
         l = c_size_t(length)
-        botan.botan_rng_get(self.rng, out, l)
+        botan.botan_rng_get(self.__obj, out, l)
         return _ctype_bufout(out)
 
 #
 # Hash function
 #
-class hash_function(object): # pylint: disable=invalid-name
+class HashFunction(object):
     def __init__(self, algo):
         flags = c_uint32(0) # always zero in this API version
-        self.hash = c_void_p(0)
-        botan.botan_hash_init(byref(self.hash), _ctype_str(algo), flags)
+        self.__obj = c_void_p(0)
+        botan.botan_hash_init(byref(self.__obj), _ctype_str(algo), flags)
+
+        output_length = c_size_t(0)
+        botan.botan_hash_output_length(self.__obj, byref(output_length))
+        self.__output_length = output_length.value
 
     def __del__(self):
-        botan.botan_hash_destroy(self.hash)
+        botan.botan_hash_destroy(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_hash_name(self.hash, b, bl))
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_hash_name(self.__obj, b, bl))
 
     def clear(self):
-        botan.botan_hash_clear(self.hash)
+        botan.botan_hash_clear(self.__obj)
 
     def output_length(self):
-        l = c_size_t(0)
-        botan.botan_hash_output_length(self.hash, byref(l))
-        return l.value
+        return self.__output_length
 
     def update(self, x):
-        botan.botan_hash_update(self.hash, _ctype_bits(x), len(x))
+        botan.botan_hash_update(self.__obj, _ctype_bits(x), len(x))
 
     def final(self):
         out = create_string_buffer(self.output_length())
-        botan.botan_hash_final(self.hash, out)
+        botan.botan_hash_final(self.__obj, out)
         return _ctype_bufout(out)
 
 #
 # Message authentication codes
 #
-class message_authentication_code(object): # pylint: disable=invalid-name
+class MsgAuthCode(object):
     def __init__(self, algo):
         flags = c_uint32(0) # always zero in this API version
-        self.mac = c_void_p(0)
-        botan.botan_mac_init(byref(self.mac), _ctype_str(algo), flags)
+        self.__obj = c_void_p(0)
+        botan.botan_mac_init(byref(self.__obj), _ctype_str(algo), flags)
+
+        min_keylen = c_size_t(0)
+        max_keylen = c_size_t(0)
+        mod_keylen = c_size_t(0)
+        botan.botan_mac_get_keyspec(self.__obj, byref(min_keylen), byref(max_keylen), byref(mod_keylen))
+
+        self.__min_keylen = min_keylen.value
+        self.__max_keylen = max_keylen.value
+        self.__mod_keylen = mod_keylen.value
+
+        output_length = c_size_t(0)
+        botan.botan_mac_output_length(self.__obj, byref(output_length))
+        self.__output_length = output_length.value
 
     def __del__(self):
-        botan.botan_mac_destroy(self.mac)
+        botan.botan_mac_destroy(self.__obj)
 
     def clear(self):
-        botan.botan_mac_clear(self.mac)
+        botan.botan_mac_clear(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_mac_name(self.mac, b, bl))
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_mac_name(self.__obj, b, bl))
 
     def output_length(self):
-        l = c_size_t(0)
-        botan.botan_mac_output_length(self.mac, byref(l))
-        return l.value
+        return self.__output_length
+
+    def minimum_keylength(self):
+        return self.__min_keylen
+
+    def maximum_keylength(self):
+        return self.__max_keylen
 
     def set_key(self, key):
-        botan.botan_mac_set_key(self.mac, key, len(key))
+        botan.botan_mac_set_key(self.__obj, key, len(key))
 
     def update(self, x):
-        botan.botan_mac_update(self.mac, x, len(x))
+        botan.botan_mac_update(self.__obj, x, len(x))
 
     def final(self):
         out = create_string_buffer(self.output_length())
-        botan.botan_mac_final(self.mac, out)
+        botan.botan_mac_final(self.__obj, out)
         return _ctype_bufout(out)
 
-class cipher(object): # pylint: disable=invalid-name
+class SymmetricCipher(object):
     def __init__(self, algo, encrypt=True):
         flags = 0 if encrypt else 1
-        self.cipher = c_void_p(0)
-        botan.botan_cipher_init(byref(self.cipher), _ctype_str(algo), flags)
+        self.__obj = c_void_p(0)
+        botan.botan_cipher_init(byref(self.__obj), _ctype_str(algo), flags)
 
     def __del__(self):
-        botan.botan_cipher_destroy(self.cipher)
+        botan.botan_cipher_destroy(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_cipher_name(self.cipher, b, bl))
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_cipher_name(self.__obj, b, bl))
 
     def default_nonce_length(self):
         l = c_size_t(0)
-        botan.botan_cipher_get_default_nonce_length(self.cipher, byref(l))
+        botan.botan_cipher_get_default_nonce_length(self.__obj, byref(l))
         return l.value
 
     def update_granularity(self):
         l = c_size_t(0)
-        botan.botan_cipher_get_update_granularity(self.cipher, byref(l))
+        botan.botan_cipher_get_update_granularity(self.__obj, byref(l))
         return l.value
 
     def key_length(self):
         kmin = c_size_t(0)
         kmax = c_size_t(0)
-        botan.botan_cipher_query_keylen(self.cipher, byref(kmin), byref(kmax))
+        botan.botan_cipher_query_keylen(self.__obj, byref(kmin), byref(kmax))
         return kmin.value, kmax.value
+
+    def minimum_keylength(self):
+        l = c_size_t(0)
+        botan.botan_cipher_get_keyspec(self.__obj, byref(l), None, None)
+        return l.value
+
+    def maximum_keylength(self):
+        l = c_size_t(0)
+        botan.botan_cipher_get_keyspec(self.__obj, None, byref(l), None)
+        return l.value
 
     def tag_length(self):
         l = c_size_t(0)
-        botan.botan_cipher_get_tag_length(self.cipher, byref(l))
+        botan.botan_cipher_get_tag_length(self.__obj, byref(l))
         return l.value
 
     def is_authenticated(self):
         return self.tag_length() > 0
 
     def valid_nonce_length(self, nonce_len):
-        rc = botan.botan_cipher_valid_nonce_length(self.cipher, nonce_len)
+        rc = botan.botan_cipher_valid_nonce_length(self.__obj, nonce_len)
         return True if rc == 1 else False
 
     def clear(self):
-        botan.botan_cipher_clear(self.cipher)
+        botan.botan_cipher_clear(self.__obj)
 
     def set_key(self, key):
-        botan.botan_cipher_set_key(self.cipher, key, len(key))
+        botan.botan_cipher_set_key(self.__obj, key, len(key))
 
     def set_assoc_data(self, ad):
-        botan.botan_cipher_set_associated_data(self.cipher, ad, len(ad))
+        botan.botan_cipher_set_associated_data(self.__obj, ad, len(ad))
 
     def start(self, nonce):
-        botan.botan_cipher_start(self.cipher, nonce, len(nonce))
+        botan.botan_cipher_start(self.__obj, nonce, len(nonce))
 
     def _update(self, txt, final):
 
@@ -587,7 +755,7 @@ class cipher(object): # pylint: disable=invalid-name
         out_written = c_size_t(0)
         flags = c_uint32(1 if final else 0)
 
-        botan.botan_cipher_update(self.cipher, flags,
+        botan.botan_cipher_update(self.__obj, flags,
                                   out, out_sz, byref(out_written),
                                   _ctype_bits(inp), inp_sz, byref(inp_consumed))
 
@@ -601,8 +769,7 @@ class cipher(object): # pylint: disable=invalid-name
     def finish(self, txt=None):
         return self._update(txt, True)
 
-
-def bcrypt(passwd, rng_instance, work_factor=10):
+def bcrypt(passwd, rng_obj, work_factor=10):
     """
     Bcrypt password hashing
     """
@@ -610,7 +777,7 @@ def bcrypt(passwd, rng_instance, work_factor=10):
     out = create_string_buffer(out_len.value)
     flags = c_uint32(0)
     botan.botan_bcrypt_generate(out, byref(out_len), _ctype_str(passwd),
-                                rng_instance.rng, c_size_t(work_factor), flags)
+                                rng_obj.handle_(), c_size_t(work_factor), flags)
     b = out.raw[0:int(out_len.value)-1]
     if b[-1] == '\x00':
         b = b[:-1]
@@ -625,7 +792,7 @@ def check_bcrypt(passwd, passwd_hash):
 #
 def pbkdf(algo, password, out_len, iterations=10000, salt=None):
     if salt is None:
-        salt = rng().get(12)
+        salt = RandomNumberGenerator().get(12)
     out_buf = create_string_buffer(out_len)
     botan.botan_pbkdf(_ctype_str(algo), out_buf, out_len,
                       _ctype_str(password), salt, len(salt), iterations)
@@ -633,7 +800,7 @@ def pbkdf(algo, password, out_len, iterations=10000, salt=None):
 
 def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=None):
     if salt is None:
-        salt = rng().get(12)
+        salt = RandomNumberGenerator().get(12)
     out_buf = create_string_buffer(out_len)
     iterations = c_size_t(0)
     botan.botan_pbkdf_timed(_ctype_str(algo), out_buf, out_len, _ctype_str(password),
@@ -663,40 +830,46 @@ def kdf(algo, secret, out_len, salt, label):
     return out_buf.raw[0:int(out_sz.value)]
 
 #
-# Public and private keys
+# Public key
 #
-class public_key(object): # pylint: disable=invalid-name
+class PublicKey(object): # pylint: disable=invalid-name
     def __init__(self, obj=c_void_p(0)):
-        self.pubkey = obj
+        self.__obj = obj
 
     def __del__(self):
-        botan.botan_pubkey_destroy(self.pubkey)
+        botan.botan_pubkey_destroy(self.__obj)
+
+    def handle_(self):
+        return self.__obj
 
     def estimated_strength(self):
         r = c_size_t(0)
-        botan.botan_pubkey_estimated_strength(self.pubkey, byref(r))
+        botan.botan_pubkey_estimated_strength(self.__obj, byref(r))
         return r.value
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_pubkey_algo_name(self.pubkey, b, bl))
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_pubkey_algo_name(self.__obj, b, bl))
 
     def encoding(self, pem=False):
         flag = 1 if pem else 0
-        return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_pubkey_export(self.pubkey, b, bl, flag))
+        return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_pubkey_export(self.__obj, b, bl, flag))
 
     def fingerprint(self, hash_algorithm='SHA-256'):
 
-        n = hash_function(hash_algorithm).output_length()
+        n = HashFunction(hash_algorithm).output_length()
         buf = create_string_buffer(n)
         buf_len = c_size_t(n)
 
-        botan.botan_pubkey_fingerprint(self.pubkey, _ctype_str(hash_algorithm), buf, byref(buf_len))
+        botan.botan_pubkey_fingerprint(self.__obj, _ctype_str(hash_algorithm), buf, byref(buf_len))
         return _hex_encode(buf[0:int(buf_len.value)])
 
-class private_key(object): # pylint: disable=invalid-name
-    def __init__(self, algo, params, rng_instance):
+#
+# Private Key
+#
+class PrivateKey(object):
+    def __init__(self, algo, params, rng_obj):
 
-        self.privkey = c_void_p(0)
+        self.__obj = c_void_p(0)
 
         if algo == 'rsa':
             algo = 'RSA'
@@ -715,19 +888,22 @@ class private_key(object): # pylint: disable=invalid-name
             algo = 'McEliece'
             params = "%d,%d" % (params[0], params[1])
 
-        botan.botan_privkey_create(byref(self.privkey),
-                                   _ctype_str(algo), _ctype_str(params), rng_instance.rng)
+        botan.botan_privkey_create(byref(self.__obj),
+                                   _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
 
     def __del__(self):
-        botan.botan_privkey_destroy(self.privkey)
+        botan.botan_privkey_destroy(self.__obj)
+
+    def handle_(self):
+        return self.__obj
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_privkey_algo_name(self.privkey, b, bl))
+        return _call_fn_returning_string(32, lambda b, bl: botan.botan_privkey_algo_name(self.__obj, b, bl))
 
     def get_public_key(self):
 
         pub = c_void_p(0)
-        botan.botan_privkey_export_pubkey(byref(pub), self.privkey)
+        botan.botan_privkey_export_pubkey(byref(pub), self.__obj)
         return public_key(pub)
 
     def export(self):
@@ -736,91 +912,111 @@ class private_key(object): # pylint: disable=invalid-name
         buf = create_string_buffer(n)
         buf_len = c_size_t(n)
 
-        rc = botan.botan_privkey_export(self.privkey, buf, byref(buf_len))
+        rc = botan.botan_privkey_export(self.__obj, buf, byref(buf_len))
         if rc != 0:
             buf = create_string_buffer(buf_len.value)
-            botan.botan_privkey_export(self.privkey, buf, byref(buf_len))
+            botan.botan_privkey_export(self.__obj, buf, byref(buf_len))
         return buf[0:int(buf_len.value)]
 
-class pk_op_encrypt(object): # pylint: disable=invalid-name
+class PKEncrypt(object):
     def __init__(self, key, padding):
-        self.op = c_void_p(0)
+        self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        botan.botan_pk_op_encrypt_create(byref(self.op), key.pubkey, _ctype_str(padding), flags)
+        botan.botan_pk_op_encrypt_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
 
     def __del__(self):
-        botan.botan_pk_op_encrypt_destroy(self.op)
+        botan.botan_pk_op_encrypt_destroy(self.__obj)
 
-    def encrypt(self, msg, rng_instance):
+    def encrypt(self, msg, rng_obj):
         outbuf_sz = c_size_t(0)
-        botan.botan_pk_op_encrypt_output_length(self.op, len(msg), byref(outbuf_sz))
+        botan.botan_pk_op_encrypt_output_length(self.__obj, len(msg), byref(outbuf_sz))
         outbuf = create_string_buffer(outbuf_sz.value)
-        botan.botan_pk_op_encrypt(self.op, rng_instance.rng, outbuf, byref(outbuf_sz), msg, len(msg))
+        botan.botan_pk_op_encrypt(self.__obj, rng_obj.handle_(), outbuf, byref(outbuf_sz), msg, len(msg))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
 
-class pk_op_decrypt(object): # pylint: disable=invalid-name
+class PKDecrypt(object):
     def __init__(self, key, padding):
-        self.op = c_void_p(0)
+        self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        botan.botan_pk_op_decrypt_create(byref(self.op), key.privkey, _ctype_str(padding), flags)
+        botan.botan_pk_op_decrypt_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
 
     def __del__(self):
-        botan.botan_pk_op_decrypt_destroy(self.op)
+        botan.botan_pk_op_decrypt_destroy(self.__obj)
 
     def decrypt(self, msg):
         outbuf_sz = c_size_t(0)
-        botan.botan_pk_op_decrypt_output_length(self.op, len(msg), byref(outbuf_sz))
+        botan.botan_pk_op_decrypt_output_length(self.__obj, len(msg), byref(outbuf_sz))
         outbuf = create_string_buffer(outbuf_sz.value)
-        botan.botan_pk_op_decrypt(self.op, outbuf, byref(outbuf_sz), _ctype_bits(msg), len(msg))
+        botan.botan_pk_op_decrypt(self.__obj, outbuf, byref(outbuf_sz), _ctype_bits(msg), len(msg))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
-class pk_op_sign(object): # pylint: disable=invalid-name
+class PKSign(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
-        self.op = c_void_p(0)
+        self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        botan.botan_pk_op_sign_create(byref(self.op), key.privkey, _ctype_str(padding), flags)
+        botan.botan_pk_op_sign_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
 
     def __del__(self):
-        botan.botan_pk_op_sign_destroy(self.op)
+        botan.botan_pk_op_sign_destroy(self.__obj)
 
     def update(self, msg):
-        botan.botan_pk_op_sign_update(self.op, _ctype_str(msg), len(msg))
+        botan.botan_pk_op_sign_update(self.__obj, _ctype_str(msg), len(msg))
 
-    def finish(self, rng_instance):
+    def finish(self, rng_obj):
         outbuf_sz = c_size_t(0)
-        botan.botan_pk_op_sign_output_length(self.op, byref(outbuf_sz))
+        botan.botan_pk_op_sign_output_length(self.__obj, byref(outbuf_sz))
         outbuf = create_string_buffer(outbuf_sz.value)
-        botan.botan_pk_op_sign_finish(self.op, rng_instance.rng, outbuf, byref(outbuf_sz))
+        botan.botan_pk_op_sign_finish(self.__obj, rng_obj.handle_(), outbuf, byref(outbuf_sz))
         return outbuf.raw[0:int(outbuf_sz.value)]
 
-class pk_op_verify(object): # pylint: disable=invalid-name
+class PKVerify(object):
     def __init__(self, key, padding):
-        self.op = c_void_p(0)
+        self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        botan.botan_pk_op_verify_create(byref(self.op), key.pubkey, _ctype_str(padding), flags)
+        botan.botan_pk_op_verify_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
 
     def __del__(self):
-        botan.botan_pk_op_verify_destroy(self.op)
+        botan.botan_pk_op_verify_destroy(self.__obj)
 
     def update(self, msg):
-        botan.botan_pk_op_verify_update(self.op, _ctype_bits(msg), len(msg))
+        botan.botan_pk_op_verify_update(self.__obj, _ctype_bits(msg), len(msg))
 
     def check_signature(self, signature):
-        rc = botan.botan_pk_op_verify_finish(self.op, _ctype_bits(signature), len(signature))
+        rc = botan.botan_pk_op_verify_finish(self.__obj, _ctype_bits(signature), len(signature))
         if rc == 0:
             return True
         return False
 
+class PKKeyAgreement(object):
+    def __init__(self, key, kdf_name):
+        self.__obj = c_void_p(0)
+        flags = c_uint32(0) # always zero in this ABI
+        botan.botan_pk_op_key_agreement_create(byref(self.__obj), key.handle_(), kdf_name, flags)
+
+        self.m_public_value = _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_pk_op_key_agreement_export_public(key.handle_(), b, bl))
+
+    def __del__(self):
+        botan.botan_pk_op_key_agreement_destroy(self.__obj)
+
+    def public_value(self):
+        return self.m_public_value
+
+    def agree(self, other, key_len, salt):
+        return _call_fn_returning_vec(key_len, lambda b, bl:
+                                      botan.botan_pk_op_key_agreement(self.__obj, b, bl,
+                                                                      other, len(other),
+                                                                      salt, len(salt)))
 
 #
 # MCEIES encryption
 # Must be used with McEliece keys
 #
-def mceies_encrypt(mce, rng_instance, aead, pt, ad):
+def mceies_encrypt(mce, rng_obj, aead, pt, ad):
     return _call_fn_returning_vec(len(pt) + 1024, lambda b, bl:
-                                  botan.botan_mceies_encrypt(mce.pubkey,
-                                                             rng_instance.rng,
+                                  botan.botan_mceies_encrypt(mce.handle_(),
+                                                             rng_obj.handle_(),
                                                              _ctype_str(aead),
                                                              _ctype_bits(pt),
                                                              len(pt),
@@ -834,7 +1030,7 @@ def mceies_decrypt(mce, aead, ct, ad):
     #ll = c_size_t(ll)
 
     return _call_fn_returning_vec(len(ct), lambda b, bl:
-                                  botan.botan_mceies_decrypt(mce.privkey,
+                                  botan.botan_mceies_decrypt(mce.handle_(),
                                                              _ctype_str(aead),
                                                              _ctype_bits(ct),
                                                              len(ct),
@@ -842,49 +1038,29 @@ def mceies_decrypt(mce, aead, ct, ad):
                                                              len(ad),
                                                              b, bl))
 
-class pk_op_key_agreement(object): # pylint: disable=invalid-name
-    def __init__(self, key, kdf_name):
-        self.op = c_void_p(0)
-        flags = c_uint32(0) # always zero in this ABI
-        botan.botan_pk_op_key_agreement_create(byref(self.op), key.privkey, kdf_name, flags)
-
-        self.m_public_value = _call_fn_returning_vec(
-            0, lambda b, bl: botan.botan_pk_op_key_agreement_export_public(key.privkey, b, bl))
-
-    def __del__(self):
-        botan.botan_pk_op_key_agreement_destroy(self.op)
-
-    def public_value(self):
-        return self.m_public_value
-
-    def agree(self, other, key_len, salt):
-        return _call_fn_returning_vec(key_len, lambda b, bl:
-                                      botan.botan_pk_op_key_agreement(self.op, b, bl,
-                                                                      other, len(other),
-                                                                      salt, len(salt)))
 
 #
 # X.509 certificates
 #
-class x509_cert(object): # pylint: disable=invalid-name
+class X509Cert(object): # pylint: disable=invalid-name
     def __init__(self, filename=None, buf=None):
         if filename is None and buf is None:
             raise BotanException("No filename or buf given")
         if filename is not None and buf is not None:
             raise BotanException("Both filename and buf given")
         elif filename is not None:
-            self.x509_cert = c_void_p(0)
-            botan.botan_x509_cert_load_file(byref(self.x509_cert), _ctype_str(filename))
+            self.__obj = c_void_p(0)
+            botan.botan_x509_cert_load_file(byref(self.__obj), _ctype_str(filename))
         elif buf is not None:
-            self.x509_cert = c_void_p(0)
-            botan.botan_x509_cert_load(byref(self.x509_cert), _ctype_bits(buf), len(buf))
+            self.__obj = c_void_p(0)
+            botan.botan_x509_cert_load(byref(self.__obj), _ctype_bits(buf), len(buf))
 
     def __del__(self):
-        botan.botan_x509_cert_destroy(self.x509_cert)
+        botan.botan_x509_cert_destroy(self.__obj)
 
     def time_starts(self):
         starts = _call_fn_returning_string(
-            16, lambda b, bl: botan.botan_x509_cert_get_time_starts(self.x509_cert, b, bl))
+            16, lambda b, bl: botan.botan_x509_cert_get_time_starts(self.__obj, b, bl))
         if len(starts) == 13:
             # UTC time
             struct_time = strptime(starts, "%y%m%d%H%M%SZ")
@@ -898,7 +1074,7 @@ class x509_cert(object): # pylint: disable=invalid-name
 
     def time_expires(self):
         expires = _call_fn_returning_string(
-            16, lambda b, bl: botan.botan_x509_cert_get_time_expires(self.x509_cert, b, bl))
+            16, lambda b, bl: botan.botan_x509_cert_get_time_expires(self.__obj, b, bl))
         if len(expires) == 13:
             # UTC time
             struct_time = strptime(expires, "%y%m%d%H%M%SZ")
@@ -912,34 +1088,242 @@ class x509_cert(object): # pylint: disable=invalid-name
 
     def to_string(self):
         return _call_fn_returning_string(
-            4096, lambda b, bl: botan.botan_x509_cert_to_string(self.x509_cert, b, bl))
+            4096, lambda b, bl: botan.botan_x509_cert_to_string(self.__obj, b, bl))
 
     def fingerprint(self, hash_algo='SHA-256'):
-        n = hash_function(hash_algo).output_length() * 3
+        n = HashFunction(hash_algo).output_length() * 3
         return _call_fn_returning_string(
-            n, lambda b, bl: botan.botan_x509_cert_get_fingerprint(self.x509_cert, _ctype_str(hash_algo), b, bl))
+            n, lambda b, bl: botan.botan_x509_cert_get_fingerprint(self.__obj, _ctype_str(hash_algo), b, bl))
 
     def serial_number(self):
         return _call_fn_returning_vec(
-            32, lambda b, bl: botan.botan_x509_cert_get_serial_number(self.x509_cert, b, bl))
+            32, lambda b, bl: botan.botan_x509_cert_get_serial_number(self.__obj, b, bl))
 
     def authority_key_id(self):
         return _call_fn_returning_vec(
-            32, lambda b, bl: botan.botan_x509_cert_get_authority_key_id(self.x509_cert, b, bl))
+            32, lambda b, bl: botan.botan_x509_cert_get_authority_key_id(self.__obj, b, bl))
 
     def subject_key_id(self):
         return _call_fn_returning_vec(
-            32, lambda b, bl: botan.botan_x509_cert_get_subject_key_id(self.x509_cert, b, bl))
+            32, lambda b, bl: botan.botan_x509_cert_get_subject_key_id(self.__obj, b, bl))
 
     def subject_public_key_bits(self):
         return _call_fn_returning_vec(
-            512, lambda b, bl: botan.botan_x509_cert_get_public_key_bits(self.x509_cert, b, bl))
+            512, lambda b, bl: botan.botan_x509_cert_get_public_key_bits(self.__obj, b, bl))
 
     def subject_public_key(self):
         pub = c_void_p(0)
-        botan.botan_x509_cert_get_public_key(self.x509_cert, byref(pub))
+        botan.botan_x509_cert_get_public_key(self.__obj, byref(pub))
         return public_key(pub)
 
     def subject_dn(self, key, index):
         return _call_fn_returning_string(
-            0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.x509_cert, _ctype_str(key), index, b, bl))
+            0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.__obj, _ctype_str(key), index, b, bl))
+
+
+class MPI(object):
+
+    def __init__(self, initial_value=None):
+
+        self.__obj = c_void_p(0)
+        botan.botan_mp_init(byref(self.__obj))
+
+        if initial_value is None:
+            pass # left as zero
+        elif isinstance(initial_value, MPI):
+            botan.botan_mp_set_from_mp(self.__obj, initial_value.handle_())
+        elif isinstance(initial_value, str):
+            botan.botan_mp_set_from_str(self.__obj, _ctype_str(initial_value))
+        else:
+            # For int or long (or whatever else), try converting to string:
+            botan.botan_mp_set_from_str(self.__obj, _ctype_str(str(initial_value)))
+
+    def __del__(self):
+        botan.botan_mp_destroy(self.__obj)
+
+    def handle_(self):
+        return self.__obj
+
+    def __int__(self):
+        out = create_string_buffer(2*self.byte_count() + 1)
+        botan.botan_mp_to_hex(self.__obj, out)
+        val = int(out.value, 16)
+        if self.is_negative():
+            return -val
+        else:
+            return val
+
+    def __repr__(self):
+        # Should have a better size estimate than this ...
+        out_len = c_size_t(self.bit_count() // 2)
+        out = create_string_buffer(out_len.value)
+
+        botan.botan_mp_to_str(self.__obj, c_uint8(10), out, byref(out_len))
+
+        out = out.raw[0:int(out_len.value)]
+        if out[-1] == '\x00':
+            out = out[:-1]
+        s = _ctype_to_str(out)
+        if s[0] == '0':
+            return s[1:]
+        else:
+            return s
+
+    def is_negative(self):
+        rc = botan.botan_mp_is_negative(self.__obj)
+        return rc == 1
+
+    def flip_sign(self):
+        botan.botan_mp_flip_sign(self.__obj)
+
+    def cmp(self, other):
+        r = c_int(0)
+        botan.botan_mp_cmp(byref(r), self.__obj, other.handle_())
+        return r.value
+
+    def __eq__(self, other):
+        return self.cmp(other) == 0
+
+    def __ne__(self, other):
+        return self.cmp(other) != 0
+
+    def __lt__(self, other):
+        return self.cmp(other) < 0
+
+    def __le__(self, other):
+        return self.cmp(other) <= 0
+
+    def __gt__(self, other):
+        return self.cmp(other) > 0
+
+    def __ge__(self, other):
+        return self.cmp(other) >= 0
+
+    def __add__(self, other):
+        r = MPI()
+        botan.botan_mp_add(r.handle_(), self.__obj, other.handle_())
+        return r
+
+    def __iadd__(self, other):
+        botan.botan_mp_add(self.__obj, self.__obj, other.handle_())
+        return self
+
+    def __sub__(self, other):
+        r = MPI()
+        botan.botan_mp_sub(r.handle_(), self.__obj, other.handle_())
+        return r
+
+    def __isub__(self, other):
+        botan.botan_mp_sub(self.__obj, self.__obj, other.handle_())
+        return self
+
+    def __mul__(self, other):
+        r = MPI()
+        botan.botan_mp_mul(r.handle_(), self.__obj, other.handle_())
+        return r
+
+    def __imul__(self, other):
+        botan.botan_mp_mul(self.__obj, self.__obj, other.handle_())
+        return self
+
+    def __divmod__(self, other):
+        d = MPI()
+        q = MPI()
+        botan.botan_mp_div(d.handle_(), q.handle_(), self.__obj, other.handle_())
+        return (d, q)
+
+    def __mod__(self, other):
+        d = MPI()
+        q = MPI()
+        botan.botan_mp_div(d.handle_(), q.handle_(), self.__obj, other.handle_())
+        return q
+
+    def __lshift__(self, shift):
+        shift = c_size_t(shift)
+        r = MPI()
+        botan.botan_mp_lshift(r.handle_(), self.__obj, shift)
+        return r
+
+    def __ilshift__(self, shift):
+        shift = c_size_t(shift)
+        botan.botan_mp_lshift(self.__obj, self.__obj, shift)
+        return self
+
+    def __rshift__(self, shift):
+        shift = c_size_t(shift)
+        r = MPI()
+        botan.botan_mp_rshift(r.handle_(), self.__obj, shift)
+        return r
+
+    def __irshift__(self, shift):
+        shift = c_size_t(shift)
+        botan.botan_mp_rshift(self.__obj, self.__obj, shift)
+        return self
+
+    def pow_mod(self, exponent, modulus):
+        r = MPI()
+        botan.botan_mp_powmod(r.handle_(), self.__obj, exponent.handle_(), modulus.handle_())
+        return r
+
+    def is_prime(self, rng_obj, prob=128):
+        return botan.botan_mp_is_prime(self.__obj, rng_obj.handle_(), c_size_t(prob)) == 1
+
+    def inverse_mod(self, modulus):
+        r = MPI()
+        botan.botan_mp_mod_inverse(r.handle_(), self.__obj, modulus.handle_())
+        return r
+
+    def bit_count(self):
+        b = c_size_t(0)
+        botan.botan_mp_num_bits(self.__obj, byref(b))
+        return b.value
+
+    def byte_count(self):
+        b = c_size_t(0)
+        botan.botan_mp_num_bytes(self.__obj, byref(b))
+        return b.value
+
+    def get_bit(self, bit):
+        return botan.botan_mp_get_bit(self.__obj, c_size_t(bit)) == 1
+
+    def clear_bit(self, bit):
+        botan.botan_mp_clear_bit(self.__obj, c_size_t(bit))
+
+    def set_bit(self, bit):
+        botan.botan_mp_set_bit(self.__obj, c_size_t(bit))
+
+class FormatPreservingEncryptionFE1(object):
+
+    def __init__(self, modulus, key, rounds=5, compat_mode=False):
+        flags = c_uint32(1 if compat_mode else 0)
+        self.__obj = c_void_p(0)
+        botan.botan_fpe_fe1_init(byref(self.__obj), modulus.handle_(), key, len(key), c_size_t(rounds), flags)
+
+    def __del__(self):
+        botan.botan_fpe_destroy(self.__obj)
+
+    def encrypt(self, msg, tweak):
+        r = MPI(msg)
+        botan.botan_fpe_encrypt(self.__obj, r.handle_(), _ctype_bits(tweak), len(tweak))
+        return r
+
+    def decrypt(self, msg, tweak):
+        r = MPI(msg)
+        botan.botan_fpe_decrypt(self.__obj, r.handle_(), _ctype_bits(tweak), len(tweak))
+        return r
+
+# Typedefs for compat with older versions
+cipher = SymmetricCipher                  # pylint: disable=invalid-name
+rng = RandomNumberGenerator               # pylint: disable=invalid-name
+hash_function = HashFunction              # pylint: disable=invalid-name
+message_authentication_code = MsgAuthCode # pylint: disable=invalid-name
+
+x509_cert = X509Cert                      # pylint: disable=invalid-name
+public_key = PublicKey                    # pylint: disable=invalid-name
+private_key = PrivateKey                  # pylint: disable=invalid-name
+
+pk_op_encrypt = PKEncrypt                 # pylint: disable=invalid-name
+pk_op_decrypt = PKDecrypt                 # pylint: disable=invalid-name
+pk_op_sign = PKSign                       # pylint: disable=invalid-name
+pk_op_verify = PKVerify                   # pylint: disable=invalid-name
+pk_op_key_agreement = PKKeyAgreement      # pylint: disable=invalid-name

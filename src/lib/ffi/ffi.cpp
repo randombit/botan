@@ -24,6 +24,52 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc)
    return rc;
    }
 
+int ffi_guard_thunk(const char* func_name, std::function<int ()> thunk)
+   {
+   try
+      {
+      return thunk();
+      }
+   catch(std::bad_alloc&)
+      {
+      return ffi_error_exception_thrown(func_name, "bad_alloc", BOTAN_FFI_ERROR_OUT_OF_MEMORY);
+      }
+   catch(Botan_FFI::FFI_Error& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), e.error_code());
+      }
+   catch(Botan::Lookup_Error& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
+      }
+   catch(Botan::Invalid_Key_Length& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_INVALID_KEY_LENGTH);
+      }
+   catch(Botan::Key_Not_Set& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_KEY_NOT_SET);
+      }
+   catch(Botan::Invalid_Argument& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_BAD_PARAMETER);
+      }
+   catch(Botan::Not_Implemented& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
+      }
+   catch(std::exception& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what());
+      }
+   catch(...)
+      {
+      return ffi_error_exception_thrown(func_name, "unknown exception");
+      }
+
+   return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
+   }
+
 }
 
 extern "C" {
@@ -66,6 +112,9 @@ const char* botan_error_description(int err)
 
       case BOTAN_FFI_ERROR_KEY_NOT_SET:
          return "Key not set on object";
+
+      case BOTAN_FFI_ERROR_INVALID_KEY_LENGTH:
+         return "Invalid key length";
 
       case BOTAN_FFI_ERROR_NOT_IMPLEMENTED:
          return "Not implemented";
