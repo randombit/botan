@@ -21,7 +21,7 @@ Version 2.8.0, Not Yet Released
 * Add support for using the ARMv8 instructions for SM4 encryption (GH #1622)
 
 * The Python module has much better error checking and reporting, and offers new
-  functionality such as scrypt. (GH #1643)
+  functionality such as scrypt, MPI and FPE. (GH #1643 #1646)
 
 * Fixed a bug that caused CCM to fail with an exception when used with L=8
   (GH #1631 #1632)
