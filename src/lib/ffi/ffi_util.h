@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <functional>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 
@@ -69,40 +70,7 @@ T& safe_get(botan_struct<T,M>* p)
       throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
    }
 
-template<typename Thunk>
-int ffi_guard_thunk(const char* func_name, Thunk thunk)
-   {
-   try
-      {
-      return thunk();
-      }
-   catch(std::bad_alloc&)
-      {
-      return ffi_error_exception_thrown(func_name, "bad_alloc", BOTAN_FFI_ERROR_OUT_OF_MEMORY);
-      }
-   catch(Botan_FFI::FFI_Error& e)
-      {
-      return ffi_error_exception_thrown(func_name, e.what(), e.error_code());
-      }
-   catch(Botan::Key_Not_Set& e)
-      {
-      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_KEY_NOT_SET);
-      }
-   catch(Botan::Invalid_Argument& e)
-      {
-      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_BAD_PARAMETER);
-      }
-   catch(std::exception& e)
-      {
-      return ffi_error_exception_thrown(func_name, e.what());
-      }
-   catch(...)
-      {
-      return ffi_error_exception_thrown(func_name, "unknown exception");
-      }
-
-   return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
-   }
+int ffi_guard_thunk(const char* func_name, std::function<int ()>);
 
 template<typename T, uint32_t M, typename F>
 int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
