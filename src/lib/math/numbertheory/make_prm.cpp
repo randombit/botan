@@ -14,7 +14,7 @@ namespace Botan {
 
 namespace {
 
-class Prime_Sieve
+class Prime_Sieve final
    {
    public:
       Prime_Sieve(const BigInt& init_value) : m_sieve(PRIME_TABLE_SIZE)

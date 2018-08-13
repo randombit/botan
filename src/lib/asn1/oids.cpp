@@ -14,7 +14,7 @@ namespace OIDS {
 
 namespace {
 
-class OID_Map
+class OID_Map final
    {
    public:
       void add_oid(const OID& oid, const std::string& str)

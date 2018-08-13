@@ -14,7 +14,7 @@ namespace Botan {
 
 namespace {
 
-class Base64
+class Base64 final
    {
    public:
       static inline size_t encoding_bytes_in() BOTAN_NOEXCEPT
