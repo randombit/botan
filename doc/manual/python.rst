@@ -11,6 +11,10 @@ Python Binding
 The Python binding is based on the `ffi` module of botan and the
 `ctypes` module of the Python standard library.
 
+Starting in 2.8, the class names were renamed to match Python standard
+conventions. However aliases are defined which allow older code to
+continue to work; the older names are mentioned as "previously X".
+
 Versioning
 ----------------------------------------
 .. py:function:: version_major()
@@ -31,7 +35,10 @@ Versioning
 
 Random Number Generators
 ----------------------------------------
-.. py:class:: rng(rng_type = 'system')
+
+.. py:class:: RandomNumberGenerator(rng_type = 'system')
+
+     Previously ``rng``
 
      Type 'user' also allowed (userspace HKDF RNG seeded from system
      rng). The system RNG is very cheap to create, as just a single file
@@ -47,10 +54,22 @@ Random Number Generators
 
       Meaningless on system RNG, on userspace RNG causes a reseed/rekey
 
+   .. py:method:: reseed_from_rng(source_rng, bits = 256)
+
+      Take bits from the source RNG and use it to seed ``self``
+
+   .. py:method:: add_entropy(seed)
+
+      Add some unpredictable seed data to the RNG
+
+
 
 Hash Functions
 ----------------------------------------
-.. py:class:: hash_function(algo)
+
+.. py:class:: HashFunction(algo)
+
+    Previously ``hash_function``
 
     Algo is a string (eg 'SHA-1', 'SHA-384', 'Skein-512')
 
@@ -77,7 +96,10 @@ Hash Functions
 
 Message Authentication Codes
 ----------------------------------------
-.. py:class:: message_authentication_code(algo)
+
+.. py:class:: MsgAuthCode(algo)
+
+    Previously ``message_authentication_code``
 
     Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')
 
@@ -108,12 +130,15 @@ Message Authentication Codes
 
 Ciphers
 ----------------------------------------
-.. py:class:: cipher(object, algo, encrypt = True)
 
-          The algorithm is spcified as a string (eg 'AES-128/GCM',
-          'Serpent/OCB(12)', 'Threefish-512/EAX').
+.. py:class:: SymmetricCipher(object, algo, encrypt = True)
 
-          Set the second param to False for decryption
+       Previously ``cipher``
+
+       The algorithm is spcified as a string (eg 'AES-128/GCM',
+       'Serpent/OCB(12)', 'Threefish-512/EAX').
+
+       Set the second param to False for decryption
 
     .. py:method:: algo_name()
 
@@ -205,6 +230,8 @@ PBKDF
 Scrypt
 ---------------
 
+.. versionadded:: 2.8.0
+
 .. py:function:: scrypt(out_len, password, salt, N=1024, r=8, p=8)
 
    Runs Scrypt key derivation function over the specified password
@@ -218,10 +245,12 @@ KDF
    the provided secret and salt values. Returns a value of the
    specified length.
 
-Public and Private Keys
+Public Key
 ----------------------------------------
 
-.. py:class:: public_key(object)
+.. py:class:: PublicKey(object)
+
+  Previously ``public_key``
 
   .. py:method:: fingerprint(hash = 'SHA-256')
 
@@ -240,8 +269,12 @@ Public and Private Keys
 
      Returns the encoding of the key, PEM if set otherwise DER
 
+Private Key
+----------------------------------------
 
-.. py:class:: private_key(algo, param, rng)
+.. py:class:: PrivateKey(algo, param, rng)
+
+    Previously ``private_key``
 
     Constructor creates a new private key. The parameter type/value
     depends on the algorithm. For "rsa" is is the size of the key in
@@ -258,25 +291,36 @@ Public and Private Keys
 
 Public Key Operations
 ----------------------------------------
-.. py:class:: pk_op_encrypt(pubkey, padding)
+
+.. py:class:: PKEncrypt(pubkey, padding)
+
+    Previously ``pk_op_encrypt``
 
     .. py:method:: encrypt(msg, rng)
 
-.. py:class:: pk_op_decrypt(privkey, padding)
+.. py:class:: PKDecrypt(privkey, padding)
+
+    Previously ``pk_op_decrypt``
 
     .. py:method:: decrypt(msg)
 
-.. py:class:: pk_op_sign(privkey, hash_w_padding)
+.. py:class:: PKSign(privkey, hash_w_padding)
+
+    Previously ``pk_op_sign``
 
     .. py:method:: update(msg)
     .. py:method:: finish(rng)
 
-.. py:class:: pk_op_verify(pubkey, hash_w_padding)
+.. py:class:: PKVerify(pubkey, hash_w_padding)
+
+    Previously ``pk_op_verify``
 
     .. py:method:: update(msg)
     .. py:method:: check_signature(signature)
 
-.. py:class:: pk_op_key_agreement(privkey, kdf)
+.. py:class:: PKKeyAgreement(privkey, kdf)
+
+    Previously ``pk_op_key_agreement``
 
     .. py:method:: public_value()
 
@@ -285,4 +329,44 @@ Public Key Operations
     .. py:method:: agree(other, key_len, salt)
 
     Returns a key derived by the KDF.
+
+Multiple Precision Integers (MPI)
+-------------------------------------
+.. versionadded:: 2.8.0
+
+.. py:class:: MPI(initial_value=None)
+
+   Initialize an MPI object with specified value, left as zero otherwise.  The
+   ``initial_value`` should be an ``int``, ``str``, or ``MPI``.
+
+   Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are
+   defined.
+
+   .. py:method:: inverse_mod(modulus)
+
+      Return the inverse of ``self`` modulo modulus, or zero if no inverse exists
+
+   .. py:method:: is_prime(rng, prob=128)
+
+      Test if ``self`` is prime
+
+   .. py:method:: pow_mod(exponent, modulus):
+
+      Return ``self`` to the ``exponent`` power modulo ``modulus``
+
+Format Preserving Encryption (FE1 scheme)
+-----------------------------------------
+.. versionadded:: 2.8.0
+
+.. py:class:: FormatPreservingEncryptionFE1(modulus, key, rounds=5, compat_mode=False)
+
+   Initialize an instance for format preserving encryption
+
+   .. py:method:: encrypt(msg, tweak)
+
+      The msg should be a botan2.MPI or an object which can be converted to one
+
+   .. py:method:: decrypt(msg, tweak)
+
+      The msg should be a botan2.MPI or an object which can be converted to one
 

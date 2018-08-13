@@ -68,10 +68,12 @@ class BotanPythonTests(unittest.TestCase):
 
         self.assertTrue(botan2.check_bcrypt('test', '$2a$04$wjen1fAA.UW6UxthpKK.huyOoxvCR7ATRCVC4CBIEGVDOCtr8Oj1C'))
 
-    def test_hmac(self):
+    def test_mac(self):
 
         hmac = botan2.message_authentication_code('HMAC(SHA-256)')
         self.assertEqual(hmac.algo_name(), 'HMAC(SHA-256)')
+        self.assertEqual(hmac.minimum_keylength(), 0)
+        self.assertEqual(hmac.maximum_keylength(), 4096)
         hmac.set_key(hex_decode('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'))
         hmac.update(hex_decode('616263'))
 
@@ -92,6 +94,12 @@ class BotanPythonTests(unittest.TestCase):
 
         output3 = user_rng.get(1021)
         self.assertEqual(len(output3), 1021)
+
+        system_rng = botan2.rng('system')
+
+        user_rng.reseed_from_rng(system_rng, 256)
+
+        user_rng.add_entropy('seed material...')
 
     def test_hash(self):
         h = botan2.hash_function('SHA-256')
@@ -239,6 +247,98 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(cert.subject_dn('Country', 0), 'DE')
 
         self.assertTrue(cert.to_string().startswith("Version: 3"))
+
+    def test_mpi(self):
+        # pylint: disable=too-many-statements
+        z = botan2.MPI()
+        self.assertEqual(z.bit_count(), 0)
+        five = botan2.MPI('5')
+        self.assertEqual(five.bit_count(), 3)
+        big = botan2.MPI('0x85839682368923476892367235')
+        self.assertEqual(big.bit_count(), 104)
+        small = botan2.MPI(0xDEADBEEF)
+
+        self.assertEqual(int(small), 0xDEADBEEF)
+
+        self.assertEqual(int(small >> 16), 0xDEAD)
+
+        small >>= 15
+
+        self.assertEqual(int(small), 0x1BD5B)
+
+        small <<= 15
+
+        self.assertEqual(int(small), 0xDEAD8000)
+
+        ten = botan2.MPI(10)
+
+        self.assertEqual(ten, five + five)
+        self.assertNotEqual(ten, five)
+        self.assertTrue(five < ten)
+        self.assertTrue(five <= ten)
+
+        x = botan2.MPI(five)
+
+        self.assertEqual(x, five)
+
+        x += botan2.MPI(1)
+        self.assertNotEqual(x, five)
+
+        self.assertEqual(int(x * five), 30)
+
+        x *= five
+        x *= five
+        self.assertEqual(int(x), 150)
+
+        self.assertTrue(not x.is_negative())
+
+        x.flip_sign()
+        self.assertTrue(x.is_negative())
+        self.assertEqual(int(x), -150)
+
+        x.flip_sign()
+
+        x.set_bit(0)
+        self.assertTrue(int(x), 151)
+        self.assertTrue(x.get_bit(0))
+        self.assertTrue(x.get_bit(4))
+        self.assertFalse(x.get_bit(6))
+
+        x.clear_bit(4)
+        self.assertEqual(int(x), 135)
+
+        rng = botan2.RandomNumberGenerator()
+        self.assertFalse(x.is_prime(rng))
+
+        two = botan2.MPI(2)
+
+        x += two
+        self.assertTrue(x.is_prime(rng))
+
+        mod = x + two
+
+        inv = x.inverse_mod(mod)
+        self.assertEqual(int(inv), 69)
+        self.assertEqual(int((inv * x) % mod), 1)
+
+        p = inv.pow_mod(botan2.MPI(46), mod)
+        self.assertEqual(int(p), 42)
+
+    def test_fpe(self):
+
+        modulus = botan2.MPI('1000000000')
+        key = b'001122334455'
+
+        fpe = botan2.FormatPreservingEncryptionFE1(modulus, key)
+
+        value = botan2.MPI('392910392')
+        tweak = 'tweak value'
+
+        ctext = fpe.encrypt(value, tweak)
+
+        ptext = fpe.decrypt(ctext, tweak)
+
+        self.assertEqual(value, ptext)
 
 if __name__ == '__main__':
     unittest.main()
