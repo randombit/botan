@@ -881,7 +881,7 @@ Public Key Encryption/Decryption
                                   uint8_t out[], size_t* out_len, \
                                   uint8_t ciphertext[], size_t ciphertext_len)
 
-Signatures
+Signature Generation
 ----------------------------------------
 
 .. cpp:type:: opaque* botan_pk_op_sign_t
@@ -893,17 +893,33 @@ Signatures
                                       const char* hash_and_padding, \
                                       uint32_t flags)
 
+   Create a signature operator for the provided key. The padding string
+   specifies what hash function and padding should be used, for example
+   "PKCS1v15(SHA-256)" or "EMSA1(SHA-384)".
+
 .. cpp:function:: int botan_pk_op_sign_destroy(botan_pk_op_sign_t op)
+
+   Destroy an object created by :cpp:func:`botan_pk_op_sign_create`.
 
 .. cpp:function:: int botan_pk_op_sign_output_length(botan_pk_op_sign_t op, size_t* sig_len)
 
-   Writes the length of the 
+   Writes the length of the signatures that this signer will produce. This
+   allows properly sizing the buffer passed to
+   :cpp:func:`botan_pk_op_sign_finish`.
 
 .. cpp:function:: int botan_pk_op_sign_update(botan_pk_op_sign_t op, \
                                       const uint8_t in[], size_t in_len)
 
+   Add bytes of the message to be signed.
+
 .. cpp:function:: int botan_pk_op_sign_finish(botan_pk_op_sign_t op, botan_rng_t rng, \
                                       uint8_t sig[], size_t* sig_len)
+
+   Produce a signature over all of the bytes passed to :cpp:func:`botan_pk_op_sign_update`.
+   Afterwards, the sign operator is reset and may be used to sign a new message.
+
+Signature Verification
+----------------------------------------
 
 .. cpp:type:: opaque* botan_pk_op_verify_t
 
@@ -919,8 +935,13 @@ Signatures
 .. cpp:function:: int botan_pk_op_verify_update(botan_pk_op_verify_t op, \
                                         const uint8_t in[], size_t in_len)
 
+   Add bytes of the message to be verified
+
 .. cpp:function:: int botan_pk_op_verify_finish(botan_pk_op_verify_t op, \
                                         const uint8_t sig[], size_t sig_len)
+
+   Verify if the signature provided matches with the message provided as calls
+   to :cpp:func:`botan_pk_op_verify_update`.
 
 Key Agreement
 ----------------------------------------
