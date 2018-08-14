@@ -3179,10 +3179,8 @@ if __name__ == '__main__':
         logging.error("""%s
 An internal error occurred.
 
-Don't panic, this is probably not your fault!
-
-Please report the entire output at https://github.com/randombit/botan or email
-to the mailing list https://lists.randombit.net/mailman/listinfo/botan-devel
+Don't panic, this is probably not your fault! Please open an issue
+with the entire output at https://github.com/randombit/botan
 
 You'll meet friendly people happy to help!""" % traceback.format_exc())
 
