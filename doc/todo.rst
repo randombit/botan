@@ -138,6 +138,8 @@ FFI and Bindings
 * Expose more of X.509 (CRLs, PKCS10, OCSP, cert signing, etc)
 * Expose TLS
 * Expose TOTP/HOTP
+* Expose NIST key wrap with padding
+* Expose secret sharing
 * Expose deterministic PRNG
 * Write a CLI or HTTPS client in Python
 
