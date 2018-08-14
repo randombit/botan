@@ -262,6 +262,12 @@ std::chrono::system_clock::time_point X509_Time::to_std_timepoint() const
    return calendar_point(m_year, m_month, m_day, m_hour, m_minute, m_second).to_std_timepoint();
    }
 
+uint64_t X509_Time::time_since_epoch() const
+   {
+   auto tp = this->to_std_timepoint();
+   return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+   }
+
 /*
 * Compare two X509_Times for in various ways
 */

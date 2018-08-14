@@ -1235,7 +1235,12 @@ int botan_mceies_decrypt(botan_privkey_t mce_key,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t pt[], size_t* pt_len);
 
+/*
+* X.509 certificates
+**************************/
+
 typedef struct botan_x509_cert_struct* botan_x509_cert_t;
+
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert[], size_t cert_len);
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* filename);
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_destroy(botan_x509_cert_t cert);
@@ -1247,9 +1252,12 @@ int botan_x509_cert_gen_selfsigned(botan_x509_cert_t* cert,
                                    const char* common_name,
                                    const char* org_name);
 
-// TODO: return botan_time_struct instead
+// Prefer botan_x509_cert_not_before and botan_x509_cert_not_after
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len);
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len);
+
+BOTAN_PUBLIC_API(2,8) int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoch);
+BOTAN_PUBLIC_API(2,8) int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch);
 
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, uint8_t out[], size_t* out_len);
 
@@ -1295,6 +1303,30 @@ BOTAN_PUBLIC_API(2,0) int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, 
 * RFC 5280 wildcards also supported.
 */
 BOTAN_PUBLIC_API(2,5) int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname);
+
+/**
+* Returns 0 if the validation was successful, 1 if validation failed,
+* and negative on error. A status code with details is written to
+* *validation_result
+*
+* Intermediates or trusted lists can be null
+* Trusted path can be null
+*/
+BOTAN_PUBLIC_API(2,8) int botan_x509_cert_verify(
+   int* validation_result,
+   botan_x509_cert_t cert,
+   botan_x509_cert_t* intermediates,
+   size_t intermediates_len,
+   botan_x509_cert_t* trusted,
+   size_t trusted_len,
+   const char* trusted_path,
+   size_t required_strength);
+
+/**
+* Returns a pointer to a static character string explaining the status code,
+* or else NULL if unknown.
+*/
+BOTAN_PUBLIC_API(2,8) const char* botan_x509_cert_validation_status(int code);
 
 /**
  * Key wrapping as per RFC 3394
