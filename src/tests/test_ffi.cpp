@@ -1100,6 +1100,9 @@ class FFI_Unit_Tests final : public Test
          {
          Test::Result result("FFI MP");
 
+         char str_buf[1024] = { 0 };
+         size_t str_len = 0;
+
          botan_mp_t x;
          botan_mp_init(&x);
          TEST_FFI_RC(0, botan_mp_is_odd, (x));
@@ -1118,10 +1121,22 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
          result.test_eq("Expected size for MP 5", bn_bytes, 1);
 
+         botan_mp_set_from_int(x, 80);
+         TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
+         result.test_eq("Expected size for MP 80", bn_bytes, 1);
+
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_add", std::string(str_buf), "80");
+
          botan_mp_set_from_int(x, 259);
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
          result.test_eq("Expected size for MP 259", bn_bytes, 2);
 
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_add", std::string(str_buf), "259");
+         
          TEST_FFI_RC(1, botan_mp_is_odd, (x));
          TEST_FFI_RC(0, botan_mp_is_even, (x));
          TEST_FFI_RC(0, botan_mp_is_negative, (x));
@@ -1173,9 +1188,6 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_mp_num_bits, (x, &x_bits));
          result.test_eq("botan_mp_num_bits", x_bits, 9);
 
-         char str_buf[1024] = { 0 };
-         size_t str_len = 0;
-
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
          result.test_eq("botan_mp_to_hex", std::string(str_buf), "0103");
 
@@ -1218,7 +1230,7 @@ class FFI_Unit_Tests final : public Test
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (q, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_div_q", std::string(str_buf), "073701");
+         result.test_eq("botan_mp_div_q", std::string(str_buf), "73701");
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));

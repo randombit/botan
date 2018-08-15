@@ -79,6 +79,13 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * Create a BigInt from an integer in a byte array
+     * @param vec the byte vector holding the value
+     */
+     template<typename Alloc>
+     explicit BigInt(const std::vector<uint8_t, Alloc>& vec) : BigInt(vec.data(), vec.size()) {}
+
+     /**
+     * Create a BigInt from an integer in a byte array
      * @param buf the byte array holding the value
      * @param length size of buf
      * @param base is the number base of the integer in buf
@@ -423,6 +430,17 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      uint32_t to_u32bit() const;
 
      /**
+     * Convert this value to a decimal string.
+     * Warning: decimal conversions are relatively slow
+     */
+     std::string to_dec_string() const;
+
+     /**
+     * Convert this value to a hexadecimal string.
+     */
+     std::string to_hex_string() const;
+
+     /**
      * @param n the offset to get a byte from
      * @result byte at offset n
      */
@@ -655,10 +673,76 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      /**
      * Encode the integer value from a BigInt to a std::vector of bytes
      * @param n the BigInt to use as integer source
+     * @result secure_vector of bytes containing the bytes of the integer
+     */
+     static std::vector<uint8_t> encode(const BigInt& n)
+        {
+        std::vector<uint8_t> output(n.bytes());
+        n.binary_encode(output.data());
+        return output;
+        }
+
+     /**
+     * Encode the integer value from a BigInt to a secure_vector of bytes
+     * @param n the BigInt to use as integer source
+     * @result secure_vector of bytes containing the bytes of the integer
+     */
+     static secure_vector<uint8_t> encode_locked(const BigInt& n)
+        {
+        secure_vector<uint8_t> output(n.bytes());
+        n.binary_encode(output.data());
+        return output;
+        }
+
+     /**
+     * Encode the integer value from a BigInt to a byte array
+     * @param buf destination byte array for the encoded integer
+     * @param n the BigInt to use as integer source
+     */
+     static void encode(uint8_t buf[], const BigInt& n)
+        {
+        n.binary_encode(buf);
+        }
+
+     /**
+     * Create a BigInt from an integer in a byte array
+     * @param buf the binary value to load
+     * @param length size of buf
+     * @result BigInt representing the integer in the byte array
+     */
+     static BigInt decode(const uint8_t buf[], size_t length)
+        {
+        return BigInt(buf, length);
+        }
+
+     /**
+     * Create a BigInt from an integer in a byte array
+     * @param buf the binary value to load
+     * @result BigInt representing the integer in the byte array
+     */
+     static BigInt decode(const secure_vector<uint8_t>& buf)
+        {
+        return BigInt(buf);
+        }
+
+     /**
+     * Create a BigInt from an integer in a byte array
+     * @param buf the binary value to load
+     * @param base number-base of the integer in buf
+     * @result BigInt representing the integer in the byte array
+     */
+     static BigInt decode(const std::vector<uint8_t>& buf)
+        {
+        return BigInt(buf);
+        }
+
+     /**
+     * Encode the integer value from a BigInt to a std::vector of bytes
+     * @param n the BigInt to use as integer source
      * @param base number-base of resulting byte array representation
      * @result secure_vector of bytes containing the integer with given base
      */
-     static std::vector<uint8_t> encode(const BigInt& n, Base base = Binary);
+     static std::vector<uint8_t> encode(const BigInt& n, Base base);
 
      /**
      * Encode the integer value from a BigInt to a secure_vector of bytes
@@ -667,7 +751,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @result secure_vector of bytes containing the integer with given base
      */
      static secure_vector<uint8_t> encode_locked(const BigInt& n,
-                                              Base base = Binary);
+                                                 Base base);
 
      /**
      * Encode the integer value from a BigInt to a byte array
@@ -676,7 +760,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param n the BigInt to use as integer source
      * @param base number-base of resulting byte array representation
      */
-     static void encode(uint8_t buf[], const BigInt& n, Base base = Binary);
+     static void encode(uint8_t buf[], const BigInt& n, Base base);
 
      /**
      * Create a BigInt from an integer in a byte array
@@ -686,7 +770,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @result BigInt representing the integer in the byte array
      */
      static BigInt decode(const uint8_t buf[], size_t length,
-                          Base base = Binary);
+                          Base base);
 
      /**
      * Create a BigInt from an integer in a byte array
@@ -695,8 +779,10 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @result BigInt representing the integer in the byte array
      */
      static BigInt decode(const secure_vector<uint8_t>& buf,
-                          Base base = Binary)
+                          Base base)
         {
+        if(base == Binary)
+           return BigInt(buf);
         return BigInt::decode(buf.data(), buf.size(), base);
         }
 
@@ -706,9 +792,10 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param base number-base of the integer in buf
      * @result BigInt representing the integer in the byte array
      */
-     static BigInt decode(const std::vector<uint8_t>& buf,
-                          Base base = Binary)
+     static BigInt decode(const std::vector<uint8_t>& buf, Base base)
         {
+        if(base == Binary)
+           return BigInt(buf);
         return BigInt::decode(buf.data(), buf.size(), base);
         }
 

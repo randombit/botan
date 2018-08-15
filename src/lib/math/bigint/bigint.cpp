@@ -96,7 +96,7 @@ BigInt::BigInt(const uint8_t input[], size_t length, Base base)
 BigInt::BigInt(const uint8_t buf[], size_t length, size_t max_bits)
    {
    const size_t max_bytes = std::min(length, (max_bits + 7) / 8);
-   *this = decode(buf, max_bytes);
+   binary_decode(buf, max_bytes);
 
    const size_t b = this->bits();
    if(b > max_bits)

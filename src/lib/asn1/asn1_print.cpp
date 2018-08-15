@@ -174,7 +174,7 @@ void ASN1_Formatter::decode(std::ostream& output,
             data.decode(number, ENUMERATED, class_tag);
             }
 
-         std::vector<uint8_t> rep = BigInt::encode(number, BigInt::Binary);
+         std::vector<uint8_t> rep = BigInt::encode(number);
          if(rep.empty()) // if zero
             rep.resize(1);
 

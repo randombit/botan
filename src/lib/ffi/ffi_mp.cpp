@@ -67,7 +67,7 @@ int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix)
       const uint8_t* bytes = Botan::cast_char_ptr_to_uint8(str);
       const size_t len = strlen(str);
 
-      bn = Botan::BigInt::decode(bytes, len, base);
+      bn = Botan::BigInt(bytes, len, base);
       });
    }
 
@@ -99,26 +99,21 @@ int botan_mp_from_bin(botan_mp_t mp, const uint8_t bin[], size_t bin_len)
 int botan_mp_to_hex(const botan_mp_t mp, char* out)
    {
    return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
-      std::vector<uint8_t> hex = Botan::BigInt::encode(bn, Botan::BigInt::Hexadecimal);
-      std::memcpy(out, hex.data(), hex.size());
-      out[hex.size()] = 0; // null terminate
+      const std::string hex = bn.to_hex_string();
+      std::strcpy(out, hex.c_str());
       });
    }
 
 int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* out_len)
    {
    return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
-      Botan::BigInt::Base base;
-      if(digit_base == 0 || digit_base == 10)
-         base = Botan::BigInt::Decimal;
-      else if(digit_base == 16)
-         base = Botan::BigInt::Hexadecimal;
-      else
-         throw FFI_Error("botan_mp_to_str invalid digit base", BOTAN_FFI_ERROR_BAD_PARAMETER);
 
-      std::vector<uint8_t> hex = Botan::BigInt::encode(bn, base);
-      hex.push_back(0); // null terminator
-      return write_str_output(out, out_len, hex);
+      if(digit_base == 0 || digit_base == 10)
+         return write_str_output(out, out_len, bn.to_dec_string());
+      else if(digit_base == 16)
+         return write_str_output(out, out_len, bn.to_hex_string());
+      else
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
       });
    }
 

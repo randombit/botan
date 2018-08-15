@@ -12,6 +12,35 @@
 
 namespace Botan {
 
+std::string BigInt::to_dec_string() const
+   {
+   BigInt copy = *this;
+   copy.set_sign(Positive);
+
+   BigInt remainder;
+   std::vector<uint8_t> digits;
+
+   while(copy > 0)
+      {
+      divide(copy, 10, copy, remainder);
+      digits.push_back(static_cast<uint8_t>(remainder.word_at(0)));
+      }
+
+   std::string s;
+
+   for(auto i = digits.rbegin(); i != digits.rend(); ++i)
+      {
+      s.push_back(Charset::digit2char(*i));
+      }
+
+   return s;
+   }
+
+std::string BigInt::to_hex_string() const
+   {
+   return hex_encode(BigInt::encode(*this));
+   }
+
 /*
 * Encode a BigInt
 */
@@ -53,12 +82,15 @@ void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
 */
 std::vector<uint8_t> BigInt::encode(const BigInt& n, Base base)
    {
+   if(base == Binary)
+      return BigInt::encode(n);
+
    std::vector<uint8_t> output(n.encoded_size(base));
    encode(output.data(), n, base);
-   if(base != Binary)
-      for(size_t j = 0; j != output.size(); ++j)
-         if(output[j] == 0)
-            output[j] = '0';
+   for(size_t j = 0; j != output.size(); ++j)
+      if(output[j] == 0)
+         output[j] = '0';
+
    return output;
    }
 
@@ -67,12 +99,15 @@ std::vector<uint8_t> BigInt::encode(const BigInt& n, Base base)
 */
 secure_vector<uint8_t> BigInt::encode_locked(const BigInt& n, Base base)
    {
+   if(base == Binary)
+      return BigInt::encode_locked(n);
+
    secure_vector<uint8_t> output(n.encoded_size(base));
    encode(output.data(), n, base);
-   if(base != Binary)
-      for(size_t j = 0; j != output.size(); ++j)
-         if(output[j] == 0)
-            output[j] = '0';
+   for(size_t j = 0; j != output.size(); ++j)
+      if(output[j] == 0)
+         output[j] = '0';
+
    return output;
    }
 
