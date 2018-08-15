@@ -13,6 +13,7 @@
    #include <botan/hex.h>
    #include <botan/ffi.h>
    #include <botan/loadstor.h>
+   #include <set>
 #endif
 
 namespace Botan_Tests {
@@ -48,6 +49,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_rng());
          results.push_back(ffi_test_utils());
          results.push_back(ffi_test_errors());
+         results.push_back(ffi_test_hex());
          results.push_back(ffi_test_base64());
          results.push_back(ffi_test_hash());
          results.push_back(ffi_test_mac());
@@ -1064,6 +1066,21 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_RC(0, botan_mp_destroy, (mp));
             }
 
+         std::set<std::string> errors;
+         for(int i = -100; i != 50; ++i)
+            {
+            const char* err = botan_error_description(i);
+            result.confirm("Never a null pointer", err != nullptr);
+
+            std::string s(err);
+
+            if(s != "Unknown error")
+               {
+               result.confirm("No duplicate messages", errors.count(s) == 0);
+               errors.insert(s);
+               }
+            }
+
          return result;
          }
 
@@ -1086,12 +1103,49 @@ class FFI_Unit_Tests final : public Test
 
          const char* base64 = "U3VjaCBiYXNlNjQgd293IQ==";
          uint8_t out_bin[1024] = { 0 };
+
+         out_len = 3;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                     botan_base64_decode,
+                     (base64, strlen(base64), out_bin, &out_len));
+
+         result.test_eq("output length", out_len, 18);
+
          out_len = sizeof(out_bin);
          TEST_FFI_OK(botan_base64_decode, (base64, strlen(base64), out_bin, &out_len));
 
          result.test_eq("decoded string",
                         std::string(reinterpret_cast<const char*>(out_bin), out_len),
                         "Such base64 wow!");
+
+         return result;
+         }
+
+      Test::Result ffi_test_hex()
+         {
+         Test::Result result("FFI hex");
+
+         const uint8_t bin[4] = { 0xDE, 0xAD, 0xBE, 0xEF };
+         char hex_buf[16] = { 0 };
+
+         TEST_FFI_OK(botan_hex_encode, (bin, sizeof(bin), hex_buf, 0));
+
+         result.test_eq("encoded string", hex_buf, "DEADBEEF");
+
+         const char* hex = "67657420796572206A756D626F20736872696D70";
+         uint8_t out_bin[1024] = { 0 };
+         size_t out_len = 5;
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                     botan_hex_decode,
+                     (hex, strlen(hex), out_bin, &out_len));
+
+         out_len = sizeof(out_bin);
+         TEST_FFI_OK(botan_hex_decode, (hex, strlen(hex), out_bin, &out_len));
+
+         result.test_eq("decoded string",
+                        std::string(reinterpret_cast<const char*>(out_bin), out_len),
+                        "get yer jumbo shrimp");
 
          return result;
          }
