@@ -14,15 +14,10 @@
 
 namespace Botan {
 
-#if (BOTAN_MP_WORD_BITS == 8)
-  typedef uint16_t dword;
-  #define BOTAN_HAS_MP_DWORD
-#elif (BOTAN_MP_WORD_BITS == 16)
-  typedef uint32_t dword;
-  #define BOTAN_HAS_MP_DWORD
-#elif (BOTAN_MP_WORD_BITS == 32)
+#if (BOTAN_MP_WORD_BITS == 32)
   typedef uint64_t dword;
   #define BOTAN_HAS_MP_DWORD
+
 #elif (BOTAN_MP_WORD_BITS == 64)
   #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
     typedef uint128_t dword;
@@ -32,7 +27,7 @@ namespace Botan {
   #endif
 
 #else
-  #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
+  #error BOTAN_MP_WORD_BITS must be 32 or 64
 #endif
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_32) && (BOTAN_MP_WORD_BITS == 32)

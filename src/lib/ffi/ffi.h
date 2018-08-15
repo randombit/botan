@@ -646,6 +646,9 @@ BOTAN_PUBLIC_API(2,1) int botan_mp_is_zero(const botan_mp_t mp);
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_odd(const botan_mp_t mp);
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_even(const botan_mp_t mp);
 
+BOTAN_PUBLIC_API(2,8) int botan_mp_add_u32(botan_mp_t result, const botan_mp_t x, uint32_t y);
+BOTAN_PUBLIC_API(2,8) int botan_mp_sub_u32(botan_mp_t result, const botan_mp_t x, uint32_t y);
+
 BOTAN_PUBLIC_API(2,1) int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
 BOTAN_PUBLIC_API(2,1) int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
 BOTAN_PUBLIC_API(2,1) int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);

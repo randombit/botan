@@ -138,17 +138,52 @@ int botan_mp_destroy(botan_mp_t mp)
 
 int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) + safe_get(y); });
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res += safe_get(y);
+      else
+         res = safe_get(x) + safe_get(y);
+      });
    }
 
 int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) - safe_get(y); });
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res -= safe_get(y);
+      else
+         res = safe_get(x) - safe_get(y);
+      });
+   }
+
+int botan_mp_add_u32(botan_mp_t result, const botan_mp_t x, uint32_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res += static_cast<Botan::word>(y);
+      else
+         res = safe_get(x) + static_cast<Botan::word>(y);
+      });
+   }
+
+int botan_mp_sub_u32(botan_mp_t result, const botan_mp_t x, uint32_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res -= static_cast<Botan::word>(y);
+      else
+         res = safe_get(x) - static_cast<Botan::word>(y);
+      });
    }
 
 int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) * safe_get(y); });
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res *= safe_get(y);
+      else
+         res = safe_get(x) * safe_get(y);
+      });
    }
 
 int botan_mp_div(botan_mp_t quotient,

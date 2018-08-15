@@ -1121,7 +1121,7 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
          result.test_eq("Expected size for MP 5", bn_bytes, 1);
 
-         botan_mp_set_from_int(x, 80);
+         botan_mp_add_u32(x, x, 75);
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
          result.test_eq("Expected size for MP 80", bn_bytes, 1);
 
@@ -1129,7 +1129,9 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
          result.test_eq("botan_mp_add", std::string(str_buf), "80");
 
-         botan_mp_set_from_int(x, 259);
+         botan_mp_sub_u32(x, x, 80);
+         TEST_FFI_RC(1, botan_mp_is_zero, (x));
+         botan_mp_add_u32(x, x, 259);
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
          result.test_eq("Expected size for MP 259", bn_bytes, 2);
 
