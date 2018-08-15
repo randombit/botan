@@ -137,7 +137,7 @@ FFI and Bindings
 * Expose compression
 * Expose more of X.509 (CRLs, PKCS10, OCSP, cert signing, etc)
 * Expose TLS
-* Expose TOTP/HOTP
+* Expose TOTP
 * Expose NIST key wrap with padding
 * Expose secret sharing
 * Expose deterministic PRNG

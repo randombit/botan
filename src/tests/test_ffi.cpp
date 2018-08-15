@@ -1520,6 +1520,41 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
+      Test::Result ffi_test_hotp()
+         {
+         Test::Result result("FFI HOTP");
+
+         const std::vector<uint8_t> key = Botan::hex_decode("3132333435363738393031323334353637383930");
+         const size_t digits = 6;
+
+         botan_hotp_t hotp;
+         uint32_t hotp_val;
+
+         TEST_FFI_OK(botan_hotp_init, (&hotp, key.data(), key.size(), "SHA-1", digits));
+
+         TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 0));
+         result.confirm("Valid value for counter 0", hotp_val == 755224);
+         TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 1));
+         result.confirm("Valid value for counter 0", hotp_val == 287082);
+         TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 2));
+         result.confirm("Valid value for counter 0", hotp_val == 359152);
+         TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 0));
+         result.confirm("Valid value for counter 0", hotp_val == 755224);
+
+         uint64_t next_ctr = 0;
+
+         TEST_FFI_OK(botan_hotp_check, (hotp, &next_ctr, 755224, 0, 0));
+         result.confirm("HOTP resync", next_ctr == 1);
+         TEST_FFI_OK(botan_hotp_check, (hotp, nullptr, 359152, 2, 0));
+         TEST_FFI_RC(1, botan_hotp_check, (hotp, nullptr, 359152, 1, 0));
+         TEST_FFI_RC(1, botan_hotp_check, (hotp, &next_ctr, 359152, 0, 2));
+         result.confirm("HOTP resync", next_ctr == 3);
+
+         TEST_FFI_OK(botan_hotp_destroy, (hotp));
+
+         return result;
+         }
+
       Test::Result ffi_test_keywrap()
          {
          Test::Result result("FFI keywrap");
@@ -2377,7 +2412,7 @@ class FFI_Unit_Tests final : public Test
 
       Test::Result ffi_test_elgamal(botan_rng_t rng)
          {
-         Test::Result result("FFI ELGAMAL");
+         Test::Result result("FFI ElGamal");
 
          botan_privkey_t priv;
 

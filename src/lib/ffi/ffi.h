@@ -1440,6 +1440,42 @@ int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
                          uint8_t key[], size_t *key_len);
 
 /**
+* HOTP
+*/
+
+typedef struct botan_hotp_struct* botan_hotp_t;
+
+/**
+* Initialize an HOTP instance
+*/
+int botan_hotp_init(botan_hotp_t* hotp,
+                    const uint8_t key[], size_t key_len,
+                    const char* hash_algo,
+                    size_t digits);
+
+/**
+* Destroy a HOTP instance
+*/
+int botan_hotp_destroy(botan_hotp_t hotp);
+
+/**
+* Generate an HOTP code for the provided counter
+*/
+int botan_hotp_generate(botan_hotp_t hotp,
+                        uint32_t* hotp_code,
+                        uint64_t hotp_counter);
+
+/**
+* Verify an HOTP code
+*/
+int botan_hotp_check(botan_hotp_t hotp,
+                     uint64_t* next_hotp_counter,
+                     uint32_t hotp_code,
+                     uint64_t hotp_counter,
+                     size_t resync_range);
+
+
+/**
 * Format Preserving Encryption
 */
 

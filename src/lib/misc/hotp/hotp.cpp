@@ -39,9 +39,7 @@ HOTP::HOTP(const SymmetricKey& key, const std::string& hash_algo, size_t digits)
 
 uint32_t HOTP::generate_hotp(uint64_t counter)
    {
-   uint8_t counter8[8] = { 0 };
-   store_be(counter, counter8);
-   m_mac->update(counter8, sizeof(counter8));
+   m_mac->update_be(counter);
    const secure_vector<uint8_t> mac = m_mac->final();
 
    const size_t offset = mac[mac.size()-1] & 0x0F;
