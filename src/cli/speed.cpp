@@ -1589,6 +1589,7 @@ class Speed final : public Command
          {
          Botan::secure_vector<Botan::word> ws;
 
+#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
          std::unique_ptr<Timer> p192_timer = make_timer("P-192 redc");
          Botan::BigInt r192(rng(), 192*2 - 1);
          while(p192_timer->under(runtime))
@@ -1628,6 +1629,7 @@ class Speed final : public Command
             r384 += 1;
             }
          record_result(p384_timer);
+#endif
 
          std::unique_ptr<Timer> p521_timer = make_timer("P-521 redc");
          Botan::BigInt r521(rng(), 521*2 - 1);
