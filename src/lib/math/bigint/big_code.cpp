@@ -33,12 +33,19 @@ std::string BigInt::to_dec_string() const
       s.push_back(Charset::digit2char(*i));
       }
 
+   if(s.empty())
+      s += "0";
+
    return s;
    }
 
 std::string BigInt::to_hex_string() const
    {
-   return hex_encode(BigInt::encode(*this));
+   const std::vector<uint8_t> bits = BigInt::encode(*this);
+   if(bits.empty())
+      return "00";
+   else
+      return hex_encode(bits);
    }
 
 /*
