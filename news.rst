@@ -12,6 +12,8 @@ Version 2.8.0, Not Yet Released
 
 * Add XChaCha and XChaCha20Poly1305 (GH #1640)
 
+* Support for building with BOTAN_MP_WORD_BITS set to 8 or 16 has been removed.
+
 * Previously SM2 had two distinct key types, one for signatures and another for
   encryption. They have now been merged into a single key type since in practice
   it seems the same key is at times used for both operations. (GH #1637)

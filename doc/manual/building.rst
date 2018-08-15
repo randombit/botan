@@ -393,11 +393,10 @@ library. All of them begin with ``BOTAN_HAS_``. For example, if
 ``BOTAN_HAS_BLOWFISH`` is defined, then an application can include
 ``<botan/blowfish.h>`` and use the Blowfish class.
 
-``BOTAN_MP_WORD_BITS``: This macro controls the size of the words used
-for calculations with the MPI implementation in Botan. You can choose
-8, 16, 32, or 64. Normally this defaults to either 32 or 64, depending
-on the processor. Unless you are building for a 8 or 16-bit CPU, this
-isn't worth messing with.
+``BOTAN_MP_WORD_BITS``: This macro controls the size of the words used for
+calculations with the MPI implementation in Botan.  It must be set to either 32
+or 64 bits. The default is chosen based on the target processor. There is
+normally no reason to change this.
 
 ``BOTAN_DEFAULT_BUFFER_SIZE``: This constant is used as the size of
 buffers throughout Botan. The default should be fine for most
