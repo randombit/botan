@@ -728,7 +728,6 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      /**
      * Create a BigInt from an integer in a byte array
      * @param buf the binary value to load
-     * @param base number-base of the integer in buf
      * @result BigInt representing the integer in the byte array
      */
      static BigInt decode(const std::vector<uint8_t>& buf)
