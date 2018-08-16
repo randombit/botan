@@ -63,11 +63,10 @@ T& safe_get(botan_struct<T,M>* p)
    if(p->magic_ok() == false)
       throw FFI_Error("Bad magic in ffi object", BOTAN_FFI_ERROR_INVALID_OBJECT);
 
-   T* t = p->unsafe_get();
-   if(t)
+   if(T* t = p->unsafe_get())
       return *t;
-   else
-      throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
+
+   throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
    }
 
 int ffi_guard_thunk(const char* func_name, std::function<int ()>);
