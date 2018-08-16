@@ -10,7 +10,8 @@
 
 namespace Botan {
 
-HOTP::HOTP(const SymmetricKey& key, const std::string& hash_algo, size_t digits)
+HOTP::HOTP(const uint8_t key[], size_t key_len,
+           const std::string& hash_algo, size_t digits)
    {
    BOTAN_ARG_CHECK(digits == 6 || digits == 7 || digits == 8, "Invalid HOTP digits");
 
@@ -34,7 +35,7 @@ HOTP::HOTP(const SymmetricKey& key, const std::string& hash_algo, size_t digits)
    else
       throw Invalid_Argument("Unsupported HOTP hash function");
 
-   m_mac->set_key(key);
+   m_mac->set_key(key, key_len);
    }
 
 uint32_t HOTP::generate_hotp(uint64_t counter)

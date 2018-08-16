@@ -10,9 +10,10 @@
 
 namespace Botan {
 
-TOTP::TOTP(const SymmetricKey& key, const std::string& hash_algo,
+TOTP::TOTP(const uint8_t key[], size_t key_len,
+           const std::string& hash_algo,
            size_t digits, size_t time_step)
-   : m_hotp(key, hash_algo, digits)
+   : m_hotp(key, key_len, hash_algo, digits)
    , m_time_step(time_step)
    , m_unix_epoch(calendar_point(1970, 1, 1, 0, 0, 0).to_std_timepoint())
    {

@@ -1,6 +1,6 @@
 <defines>
-HOTP -> 20170513
-TOTP -> 20170519
+HOTP -> 20180816
+TOTP -> 20180816
 </defines>
 
 <requires>
