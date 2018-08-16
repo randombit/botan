@@ -284,7 +284,7 @@ int botan_x509_cert_verify(int* result_code,
       std::unique_ptr<Botan::Certificate_Store_In_Memory> trusted_extra;
       std::vector<Botan::Certificate_Store*> trusted_roots;
 
-      if(trusted_path)
+      if(trusted_path && *trusted_path)
          {
          trusted_from_path.reset(new Botan::Certificate_Store_In_Memory(trusted_path));
          trusted_roots.push_back(trusted_from_path.get());
