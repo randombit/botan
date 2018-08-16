@@ -1343,6 +1343,8 @@ BOTAN_PUBLIC_API(2,0) int botan_x509_cert_load(botan_x509_cert_t* cert_obj, cons
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* filename);
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_destroy(botan_x509_cert_t cert);
 
+BOTAN_PUBLIC_API(2,8) int botan_x509_cert_dup(botan_x509_cert_t* new_cert, botan_x509_cert_t cert);
+
 BOTAN_PUBLIC_API(2,0)
 int botan_x509_cert_gen_selfsigned(botan_x509_cert_t* cert,
                                    botan_privkey_t key,
@@ -1413,9 +1415,9 @@ BOTAN_PUBLIC_API(2,5) int botan_x509_cert_hostname_match(botan_x509_cert_t cert,
 BOTAN_PUBLIC_API(2,8) int botan_x509_cert_verify(
    int* validation_result,
    botan_x509_cert_t cert,
-   botan_x509_cert_t* intermediates,
+   const botan_x509_cert_t* intermediates,
    size_t intermediates_len,
-   botan_x509_cert_t* trusted,
+   const botan_x509_cert_t* trusted,
    size_t trusted_len,
    const char* trusted_path,
    size_t required_strength);

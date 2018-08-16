@@ -42,6 +42,24 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
 #endif
    }
 
+int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert)
+   {
+   if(!cert_obj)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(safe_get(cert)));
+      *cert_obj = new botan_x509_cert_struct(c.release());
+      return BOTAN_FFI_SUCCESS;
+      });
+
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[], size_t cert_bits_len)
    {
    if(!cert_obj || !cert_bits)
@@ -238,9 +256,9 @@ int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname)
 
 int botan_x509_cert_verify(int* result_code,
                            botan_x509_cert_t cert,
-                           botan_x509_cert_t* intermediates,
+                           const botan_x509_cert_t* intermediates,
                            size_t intermediates_len,
-                           botan_x509_cert_t* trusted,
+                           const botan_x509_cert_t* trusted,
                            size_t trusted_len,
                            const char* trusted_path,
                            size_t required_strength)
