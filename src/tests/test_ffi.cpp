@@ -1646,6 +1646,9 @@ class FFI_Unit_Tests final : public Test
             botan_mp_init(&n);
             botan_mp_init(&e);
 
+            TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_privkey_get_field, (p, priv, "quux"));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_pubkey_get_field, (p, pub, "quux"));
+
             TEST_FFI_OK(botan_privkey_rsa_get_p, (p, priv));
             TEST_FFI_OK(botan_privkey_rsa_get_q, (q, priv));
             TEST_FFI_OK(botan_privkey_rsa_get_d, (d, priv));
@@ -1799,10 +1802,14 @@ class FFI_Unit_Tests final : public Test
 
             botan_mp_t cmp;
             botan_mp_init(&cmp);
+            TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_privkey_get_field, (cmp, priv, "quux"));
+
             TEST_FFI_OK(botan_privkey_get_field, (cmp, priv, "x"));
             TEST_FFI_RC(1, botan_mp_equal, (cmp, x));
+
             TEST_FFI_OK(botan_privkey_get_field, (cmp, priv, "y"));
             TEST_FFI_RC(1, botan_mp_equal, (cmp, y));
+
             TEST_FFI_OK(botan_privkey_get_field, (cmp, priv, "p"));
             TEST_FFI_RC(1, botan_mp_equal, (cmp, p));
             botan_mp_destroy(cmp);
@@ -1911,6 +1918,9 @@ class FFI_Unit_Tests final : public Test
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_privkey_get_field, (private_scalar, priv, "quux"));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_pubkey_get_field, (private_scalar, pub, "quux"));
 
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));

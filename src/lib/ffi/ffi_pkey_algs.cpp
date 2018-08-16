@@ -117,7 +117,7 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
       else if(field == "e")
          return rsa->get_e();
       else
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         throw Botan_FFI::FFI_Error("Bad field", BOTAN_FFI_ERROR_BAD_PARAMETER);
       }
 #endif
 
@@ -134,7 +134,7 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
       else if(field == "y")
          return dl->get_y();
       else
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         throw Botan_FFI::FFI_Error("Bad field", BOTAN_FFI_ERROR_BAD_PARAMETER);
       }
 #endif
 
@@ -160,12 +160,13 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
       else if(field == "order")
          return ecc->domain().get_order();
       else
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         throw Botan_FFI::FFI_Error("Bad field", BOTAN_FFI_ERROR_BAD_PARAMETER);
       }
 #endif
 
    // Some other algorithm type not supported by this function
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+   throw Botan_FFI::FFI_Error("Field getter not implemented for this algorithm type",
+                              BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
    }
 
 Botan::BigInt privkey_get_field(const Botan::Private_Key& key,
@@ -215,8 +216,7 @@ Botan::BigInt privkey_get_field(const Botan::Private_Key& key,
       }
 #endif
 
-   // Some other algorithm type not supported by this function
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+   return pubkey_get_field(key, field);
    }
 
 }
