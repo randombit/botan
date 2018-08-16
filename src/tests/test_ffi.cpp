@@ -86,6 +86,14 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_keywrap());
 #endif
 
+#if defined(BOTAN_HAS_HOTP)
+         results.push_back(ffi_test_hotp());
+#endif
+
+#if defined(BOTAN_HAS_TOTP)
+         results.push_back(ffi_test_totp());
+#endif
+
 #if defined(BOTAN_HAS_RSA)
          results.push_back(ffi_test_rsa(rng));
          results.push_back(ffi_test_rsa_cert());
@@ -1520,6 +1528,33 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
+      Test::Result ffi_test_totp()
+         {
+         Test::Result result("FFI TOTP");
+
+         const std::vector<uint8_t> key = Botan::hex_decode("3132333435363738393031323334353637383930");
+         const size_t digits = 8;
+         const size_t timestep = 30;
+         botan_totp_t totp;
+
+         TEST_FFI_OK(botan_totp_init, (&totp, key.data(), key.size(), "SHA-1", digits, timestep));
+
+         uint32_t code;
+         TEST_FFI_OK(botan_totp_generate, (totp, &code, 59));
+         result.confirm("TOTP code", code == 94287082);
+
+         TEST_FFI_OK(botan_totp_generate, (totp, &code, 1111111109));
+         result.confirm("TOTP code 2", code == 7081804);
+
+         TEST_FFI_OK(botan_totp_check, (totp, 94287082, 59+60, 60));
+         TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59+31, 1));
+         TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59+61, 1));
+
+         TEST_FFI_OK(botan_totp_destroy, (totp));
+
+         return result;
+         }
+
       Test::Result ffi_test_hotp()
          {
          Test::Result result("FFI HOTP");
@@ -1547,7 +1582,7 @@ class FFI_Unit_Tests final : public Test
          result.confirm("HOTP resync", next_ctr == 1);
          TEST_FFI_OK(botan_hotp_check, (hotp, nullptr, 359152, 2, 0));
          TEST_FFI_RC(1, botan_hotp_check, (hotp, nullptr, 359152, 1, 0));
-         TEST_FFI_RC(1, botan_hotp_check, (hotp, &next_ctr, 359152, 0, 2));
+         TEST_FFI_OK(botan_hotp_check, (hotp, &next_ctr, 359152, 0, 2));
          result.confirm("HOTP resync", next_ctr == 3);
 
          TEST_FFI_OK(botan_hotp_destroy, (hotp));

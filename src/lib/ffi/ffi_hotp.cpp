@@ -34,10 +34,9 @@ int botan_hotp_init(botan_hotp_t* hotp,
 #if defined(BOTAN_HAS_HOTP)
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
 
-      *hotp = new botan_hotp_struct(new Botan::HOTP(
-                Botan::SymmetricKey(key, key_len),
-                hash_algo,
-                digits));
+      *hotp = new botan_hotp_struct(
+         new Botan::HOTP(key, key_len, hash_algo, digits));
+
       return BOTAN_FFI_SUCCESS;
       });
 #else

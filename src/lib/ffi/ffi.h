@@ -1448,6 +1448,7 @@ typedef struct botan_hotp_struct* botan_hotp_t;
 /**
 * Initialize an HOTP instance
 */
+BOTAN_PUBLIC_API(2,8)
 int botan_hotp_init(botan_hotp_t* hotp,
                     const uint8_t key[], size_t key_len,
                     const char* hash_algo,
@@ -1456,11 +1457,13 @@ int botan_hotp_init(botan_hotp_t* hotp,
 /**
 * Destroy a HOTP instance
 */
+BOTAN_PUBLIC_API(2,8)
 int botan_hotp_destroy(botan_hotp_t hotp);
 
 /**
 * Generate an HOTP code for the provided counter
 */
+BOTAN_PUBLIC_API(2,8)
 int botan_hotp_generate(botan_hotp_t hotp,
                         uint32_t* hotp_code,
                         uint64_t hotp_counter);
@@ -1468,11 +1471,55 @@ int botan_hotp_generate(botan_hotp_t hotp,
 /**
 * Verify an HOTP code
 */
+BOTAN_PUBLIC_API(2,8)
 int botan_hotp_check(botan_hotp_t hotp,
                      uint64_t* next_hotp_counter,
                      uint32_t hotp_code,
                      uint64_t hotp_counter,
                      size_t resync_range);
+
+
+/**
+* TOTP
+*/
+
+typedef struct botan_totp_struct* botan_totp_t;
+
+/**
+* Initialize an TOTP instance
+*/
+BOTAN_PUBLIC_API(2,8)
+int botan_totp_init(botan_totp_t* totp,
+                    const uint8_t key[], size_t key_len,
+                    const char* hash_algo,
+                    size_t digits,
+                    size_t time_step);
+
+/**
+* Destroy a TOTP instance
+*/
+BOTAN_PUBLIC_API(2,8)
+int botan_totp_destroy(botan_totp_t totp);
+
+/**
+* Generate an TOTP code for the provided counter
+*/
+BOTAN_PUBLIC_API(2,8)
+int botan_totp_generate(botan_totp_t totp,
+                        uint32_t* totp_code,
+                        uint64_t timestamp);
+
+/**
+* Verify an TOTP code
+* @param totp the TOTP object
+* @param clock_drift if non-null and otp code is valid,
+*        set to the drift between the two clocks.
+*/
+BOTAN_PUBLIC_API(2,8)
+int botan_totp_check(botan_totp_t totp,
+                     uint32_t totp_code,
+                     uint64_t timestamp,
+                     size_t acceptable_clock_drift);
 
 
 /**

@@ -42,6 +42,8 @@ Version 2.8.0, Not Yet Released
 
 * Add functions to load and save RSA keys in PKCS #1 format to FFI (GH #1621)
 
+* Add C interface for HOTP and TOTP algorithms.
+
 * The FFI function botan_privkey_load now ignores its rng argument.
 
 * Resolve a problem when building under Visual C++ 15.8 (GH #1624)
