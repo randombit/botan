@@ -1420,7 +1420,9 @@ BOTAN_PUBLIC_API(2,8) int botan_x509_cert_verify(
    const botan_x509_cert_t* trusted,
    size_t trusted_len,
    const char* trusted_path,
-   size_t required_strength);
+   size_t required_strength,
+   const char* hostname,
+   uint64_t reference_time);
 
 /**
 * Returns a pointer to a static character string explaining the status code,

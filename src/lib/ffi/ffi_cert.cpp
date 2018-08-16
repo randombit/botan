@@ -261,14 +261,21 @@ int botan_x509_cert_verify(int* result_code,
                            const botan_x509_cert_t* trusted,
                            size_t trusted_len,
                            const char* trusted_path,
-                           size_t required_strength)
+                           size_t required_strength,
+                           const char* hostname_cstr,
+                           uint64_t reference_time)
    {
    if(required_strength == 0)
       required_strength = 110;
 
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::vector<Botan::X509_Certificate> end_certs;
+      const std::string hostname((hostname_cstr == nullptr) ? "" : hostname_cstr);
+      const Botan::Usage_Type usage = Botan::Usage_Type::UNSPECIFIED;
+      const auto validation_time = reference_time == 0 ?
+         std::chrono::system_clock::now() :
+         std::chrono::system_clock::from_time_t(static_cast<time_t>(reference_time));
 
+      std::vector<Botan::X509_Certificate> end_certs;
       end_certs.push_back(safe_get(cert));
       for(size_t i = 0; i != intermediates_len; ++i)
          end_certs.push_back(safe_get(intermediates[i]));
@@ -297,7 +304,10 @@ int botan_x509_cert_verify(int* result_code,
 
       auto validation_result = Botan::x509_path_validate(end_certs,
                                                          restrictions,
-                                                         trusted_roots);
+                                                         trusted_roots,
+                                                         hostname,
+                                                         usage,
+                                                         validation_time);
 
       if(result_code)
          *result_code = static_cast<int>(validation_result.result());

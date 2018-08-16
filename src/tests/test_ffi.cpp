@@ -279,11 +279,11 @@ class FFI_Unit_Tests final : public Test
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&end2, Test::data_file("x509/nist/test02/end.crt").c_str()));
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub2, Test::data_file("x509/nist/test02/int.crt").c_str()));
 
-         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, NULL, 0));
+         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, nullptr, 0, nullptr, 0));
          result.confirm("Validation failed", rc == 5002);
          result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Signature error");
 
-         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, nullptr, 0, &root, 1, NULL, 0));
+         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, nullptr, 0, &root, 1, nullptr, 0, nullptr, 0));
          result.confirm("Validation failed", rc == 3000);
          result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
 
@@ -293,12 +293,12 @@ class FFI_Unit_Tests final : public Test
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub7, Test::data_file("x509/nist/test07/int.crt").c_str()));
 
          botan_x509_cert_t subs[2] = {sub2, sub7};
-         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, NULL, 0));
+         TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 0, nullptr, 0));
          result.confirm("Validation failed", rc == 1001);
          result.test_eq("Validation status string", botan_x509_cert_validation_status(rc),
                         "Hash function used is considered too weak for security");
 
-         TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, NULL, 80));
+         TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 80, nullptr, 0));
          result.confirm("Validation passed", rc == 0);
          result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Verified");
 
