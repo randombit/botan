@@ -1,5 +1,5 @@
 /*
-* (C) 2014,2015,2016 Jack Lloyd
+* (C) 2014,2015,2016,2018 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -44,9 +44,8 @@ class AEAD_Tests final : public Text_Based_Test
                                [&]() { enc->set_associated_data(ad.data(), ad.size()); });
             }
 
-         // First some tests for reset() to make sure it resets what we need it to
-         // set garbage values
-         enc->set_key(mutate_vec(key));
+         // Ensure that test resets AD and message state
+         enc->set_key(key);
          enc->set_ad(mutate_vec(ad));
          enc->start(mutate_vec(nonce));
 
@@ -57,7 +56,6 @@ class AEAD_Tests final : public Text_Based_Test
          enc->reset();
 
          // now try to encrypt with correct values
-         enc->set_key(key);
          enc->set_ad(ad);
          enc->start(nonce);
 
@@ -178,7 +176,7 @@ class AEAD_Tests final : public Text_Based_Test
 
          // First some tests for reset() to make sure it resets what we need it to
          // set garbage values
-         dec->set_key(mutate_vec(key));
+         dec->set_key(key);
          dec->set_ad(mutate_vec(ad));
          dec->start(mutate_vec(nonce));
 
@@ -192,7 +190,6 @@ class AEAD_Tests final : public Text_Based_Test
          try
             {
             // now try to decrypt with correct values
-            dec->set_key(key);
             dec->set_ad(ad);
             dec->start(nonce);
 
