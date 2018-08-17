@@ -46,10 +46,17 @@ class AEAD_Tests final : public Text_Based_Test
 
          // Ensure that test resets AD and message state
          enc->set_key(key);
-         enc->set_ad(mutate_vec(ad));
-         enc->start(mutate_vec(nonce));
 
          Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(enc->update_granularity());
+
+         if(algo.find("/SIV") == std::string::npos)
+            {
+            result.test_throws("Cannot process data until nonce is set (enc)",
+                               [&]() { enc->update(garbage); });
+            }
+
+         enc->set_ad(mutate_vec(ad));
+         enc->start(mutate_vec(nonce));
          enc->update(garbage);
 
          // reset message specific state
@@ -178,9 +185,17 @@ class AEAD_Tests final : public Text_Based_Test
          // set garbage values
          dec->set_key(key);
          dec->set_ad(mutate_vec(ad));
-         dec->start(mutate_vec(nonce));
 
          Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(dec->update_granularity());
+
+         if(algo.find("/SIV") == std::string::npos)
+            {
+            result.test_throws("Cannot process data until nonce is set (dec)",
+                               [&]() { dec->update(garbage); });
+            }
+
+         dec->start(mutate_vec(nonce));
+
          dec->update(garbage);
 
          // reset message specific state
