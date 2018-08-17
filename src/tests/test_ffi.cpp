@@ -585,6 +585,11 @@ class FFI_Unit_Tests final : public Test
             for(size_t r = 0; r != 2; ++r)
                {
                TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
+
+               // First use a nonce of the AAD, and ensure reset works
+               TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, aad.data(), aad.size()));
+               TEST_FFI_OK(botan_cipher_reset, (cipher_encrypt));
+
                TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
                TEST_FFI_OK(botan_cipher_update, (cipher_encrypt, 0,
                                                  ciphertext.data(), ciphertext.size(), &output_written,

@@ -41,6 +41,11 @@ int botan_cipher_clear(botan_cipher_t cipher)
    return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, { c.clear(); });
    }
 
+int botan_cipher_reset(botan_cipher_t cipher)
+   {
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, { c.reset(); });
+   }
+
 int botan_cipher_output_length(botan_cipher_t cipher, size_t in_len, size_t* out_len)
    {
    if(out_len == nullptr)

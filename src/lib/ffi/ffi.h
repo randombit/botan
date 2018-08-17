@@ -467,6 +467,16 @@ BOTAN_PUBLIC_API(2,0) int botan_cipher_set_key(botan_cipher_t cipher,
                                                const uint8_t* key, size_t key_len);
 
 /**
+* Reset the message specific state for this cipher.
+* Without resetting the keys, this resets the nonce, and any state
+* associated with any message bits that have been processed so far.
+*
+* It is conceptually equivalent to calling botan_cipher_clear followed
+* by botan_cipher_set_key with the original key.
+*/
+BOTAN_PUBLIC_API(2,8) int botan_cipher_reset(botan_cipher_t cipher);
+
+/**
 * Set the associated data. Will fail if cipher is not an AEAD
 */
 BOTAN_PUBLIC_API(2,0) int botan_cipher_set_associated_data(botan_cipher_t cipher,
