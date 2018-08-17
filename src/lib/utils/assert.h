@@ -38,6 +38,18 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_argument(const char* messag
    do { if(!(expr)) Botan::throw_invalid_argument(msg, BOTAN_CURRENT_FUNCTION, __FILE__); } while(0)
 
 /**
+* Called when an invalid state is encountered
+* Throws Invalid_State
+*/
+BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
+                                                           const char* func,
+                                                           const char* file);
+
+
+#define BOTAN_STATE_CHECK(expr)                                     \
+   do { if(!(expr)) Botan::throw_invalid_state(#expr, BOTAN_CURRENT_FUNCTION, __FILE__); } while(0)
+
+/**
 * Make an assertion
 */
 #define BOTAN_ASSERT(expr, assertion_made)                \

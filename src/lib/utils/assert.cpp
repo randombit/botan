@@ -15,10 +15,17 @@ void throw_invalid_argument(const char* message,
                             const char* file)
    {
    std::ostringstream format;
-
    format << message << " in " << func << ":" << file;
-
    throw Invalid_Argument(format.str());
+   }
+
+void throw_invalid_state(const char* expr,
+                         const char* func,
+                         const char* file)
+   {
+   std::ostringstream format;
+   format << "Invalid state: " << expr << " was false in " << func << ":" << file;
+   throw Invalid_State(format.str());
    }
 
 void assertion_failure(const char* expr_str,
