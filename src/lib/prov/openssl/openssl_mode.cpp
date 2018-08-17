@@ -47,6 +47,7 @@ class OpenSSL_Cipher_Mode final : public Cipher_Mode
       size_t m_block_size;
       EVP_CIPHER_CTX* m_cipher;
       bool m_key_set;
+      bool m_nonce_set;
    };
 
 OpenSSL_Cipher_Mode::OpenSSL_Cipher_Mode(const std::string& name,
@@ -54,7 +55,8 @@ OpenSSL_Cipher_Mode::OpenSSL_Cipher_Mode(const std::string& name,
                                          Cipher_Dir direction) :
    m_mode_name(name),
    m_direction(direction),
-   m_key_set(false)
+   m_key_set(false),
+   m_nonce_set(false)
    {
    m_block_size = EVP_CIPHER_block_size(algo);
 
@@ -89,11 +91,13 @@ void OpenSSL_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
       if(!EVP_CipherInit_ex(m_cipher, nullptr, nullptr, nullptr, nonce, -1))
          throw OpenSSL_Error("EVP_CipherInit_ex nonce");
       }
+   m_nonce_set = true;
    }
 
 size_t OpenSSL_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
    {
    verify_key_set(m_key_set);
+   BOTAN_STATE_CHECK(m_nonce_set);
 
    if(msg_len == 0)
       return 0;
