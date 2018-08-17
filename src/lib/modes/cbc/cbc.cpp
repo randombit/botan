@@ -15,9 +15,9 @@ namespace Botan {
 CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_cipher(cipher),
    m_padding(padding),
-   m_state(m_cipher->block_size())
+   m_block_size(cipher->block_size())
    {
-   if(m_padding && !m_padding->valid_blocksize(cipher->block_size()))
+   if(m_padding && !m_padding->valid_blocksize(m_block_size))
       throw Invalid_Argument("Padding " + m_padding->name() +
                              " cannot be used with " +
                              cipher->name() + "/CBC");
@@ -31,7 +31,7 @@ void CBC_Mode::clear()
 
 void CBC_Mode::reset()
    {
-   zeroise(m_state);
+   m_state.clear();
    }
 
 std::string CBC_Mode::name() const
@@ -79,6 +79,9 @@ void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    */
    if(nonce_len)
       m_state.assign(nonce, nonce + nonce_len);
+   else if(m_state.empty())
+      m_state.resize(m_cipher->block_size());
+   // else leave the state alone
    }
 
 size_t CBC_Encryption::minimum_final_size() const
@@ -96,6 +99,7 @@ size_t CBC_Encryption::output_length(size_t input_length) const
 
 size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    const size_t BS = block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "CBC input is full blocks");
@@ -205,6 +209,8 @@ size_t CBC_Decryption::minimum_final_size() const
 
 size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
+
    const size_t BS = block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");

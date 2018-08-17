@@ -66,7 +66,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             result.test_throws("Unkeyed object throws for decrypt",
                                [&]() { Botan::secure_vector<uint8_t> bad(16); dec->finish(bad); });
 
-            if(algo.find("/CBC") != std::string::npos)
+            if(algo.find("/CTR") == std::string::npos)
                {
                // can't test equal due to CBC padding
                result.test_lte("output_length", enc->output_length(input.size()), expected.size());
@@ -97,6 +97,13 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             // Test to make sure reset() resets what we need it to
             enc->set_key(mutate_vec(key));
             Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(enc->update_granularity());
+
+            if(algo.find("CTR") == std::string::npos)
+               {
+               result.test_throws("Cannot process data until nonce is set (enc)",
+                                  [&]() { enc->update(garbage); });
+               }
+
             enc->start(mutate_vec(nonce));
             enc->update(garbage);
 
@@ -140,6 +147,13 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             // Test to make sure reset() resets what we need it to
             dec->set_key(mutate_vec(key));
             garbage = Test::rng().random_vec(dec->update_granularity());
+
+            if(algo.find("CTR") == std::string::npos)
+               {
+               result.test_throws("Cannot process data until nonce is set (dec)",
+                                  [&]() { dec->update(garbage); });
+               }
+
             dec->start(mutate_vec(nonce));
             dec->update(garbage);
 

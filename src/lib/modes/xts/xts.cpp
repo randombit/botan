@@ -19,7 +19,6 @@ XTS_Mode::XTS_Mode(BlockCipher* cipher) : m_cipher(cipher)
       }
 
    m_tweak_cipher.reset(m_cipher->clone());
-   m_tweak.resize(update_granularity());
    }
 
 void XTS_Mode::clear()
@@ -31,7 +30,7 @@ void XTS_Mode::clear()
 
 void XTS_Mode::reset()
    {
-   zeroise(m_tweak);
+   m_tweak.clear();
    }
 
 std::string XTS_Mode::name() const
@@ -80,6 +79,7 @@ void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
+   m_tweak.resize(update_granularity());
    copy_mem(m_tweak.data(), nonce, nonce_len);
    m_tweak_cipher->encrypt(m_tweak.data());
 
@@ -106,6 +106,7 @@ size_t XTS_Encryption::output_length(size_t input_length) const
 
 size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher().block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
@@ -179,6 +180,7 @@ size_t XTS_Decryption::output_length(size_t input_length) const
 
 size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher().block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
