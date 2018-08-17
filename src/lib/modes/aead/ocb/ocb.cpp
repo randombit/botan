@@ -37,6 +37,8 @@ class L_computer final
          m_offset = offset;
          }
 
+      bool initialized() const { return m_offset.empty() == false; }
+
       const secure_vector<uint8_t>& star() const { return m_L_star; }
       const secure_vector<uint8_t>& dollar() const { return m_L_dollar; }
       const secure_vector<uint8_t>& offset() const { return m_offset; }
@@ -341,6 +343,7 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
    {
    verify_key_set(m_L != nullptr);
+   BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
 
@@ -430,6 +433,7 @@ void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
    {
    verify_key_set(m_L != nullptr);
+   BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
 

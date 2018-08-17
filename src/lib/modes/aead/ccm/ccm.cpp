@@ -109,6 +109,7 @@ void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 size_t CCM_Mode::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(m_nonce.size() > 0);
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
    return 0; // no output until finished
    }
