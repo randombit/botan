@@ -988,9 +988,19 @@ X.509 Certificates
 .. cpp:function:: int botan_x509_cert_load(botan_x509_cert_t* cert_obj, \
                                         const uint8_t cert[], size_t cert_len)
 
+   Load a certificate from the DER or PEM representation
+
 .. cpp:function:: int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* filename)
 
+   Load a certificate from a file.
+
+.. cpp:function:: int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert)
+
+   Create a new object that refers to the same certificate.
+
 .. cpp:function:: int botan_x509_cert_destroy(botan_x509_cert_t cert)
+
+   Destroy the certificate object
 
 .. cpp:function:: int botan_x509_cert_gen_selfsigned(botan_x509_cert_t* cert, \
                                              botan_privkey_t key, \
@@ -1000,33 +1010,62 @@ X.509 Certificates
 
 .. cpp:function:: int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len)
 
+   Return the time the certificate becomes valid, as a string in form
+   "YYYYMMDDHHMMSSZ" where Z is a literal character reflecting that this time is
+   relative to UTC. Prefer :cpp:func:`botan_x509_cert_not_before`.
+
 .. cpp:function:: int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len)
+
+   Return the time the certificate expires, as a string in form
+   "YYYYMMDDHHMMSSZ" where Z is a literal character reflecting that this time is
+   relative to UTC. Prefer :cpp:func:`botan_x509_cert_not_after`.
+
+.. cpp:function:: int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoch)
+
+   Return the time the certificate becomes valid, as seconds since epoch.
+
+.. cpp:function:: int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch)
+
+   Return the time the certificate expires, as seconds since epoch.
 
 .. cpp:function:: int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, uint8_t out[], size_t* out_len)
 
 .. cpp:function:: int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
 
+   Return the serial number of the certificate.
+
 .. cpp:function:: int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
+
+   Return the authority key ID set in the certificate, which may be empty.
 
 .. cpp:function:: int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
 
-.. cpp:function:: int botan_x509_cert_path_verify(botan_x509_cert_t cert, \
-                                          const char* ca_dir)
+   Return the subject key ID set in the certificate, which may be empty.
 
 .. cpp:function:: int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, \
                                                   uint8_t out[], size_t* out_len)
 
+   Get the serialized representation of the public key included in this certificate
+
 .. cpp:function:: int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
+
+   Get the public key included in this certificate as a newly allocated object
 
 .. cpp:function:: int botan_x509_cert_get_issuer_dn(botan_x509_cert_t cert, \
                                             const char* key, size_t index, \
                                             uint8_t out[], size_t* out_len)
 
+   Get a value from the issuer DN field.
+
 .. cpp:function:: int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert, \
                                              const char* key, size_t index, \
                                              uint8_t out[], size_t* out_len)
 
+   Get a value from the subject DN field.
+
 .. cpp:function:: int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len)
+
+   Format the certificate as a free-form string.
 
 .. cpp:enum:: botan_x509_cert_key_constraints
 
@@ -1036,3 +1075,41 @@ X.509 Certificates
    `CRL_SIGN`, `ENCIPHER_ONLY`, `DECIPHER_ONLY`.
 
 .. cpp:function:: int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage)
+
+
+.. cpp:function:: int botan_x509_cert_verify(int* validation_result, \
+                  botan_x509_cert_t cert, \
+                  const botan_x509_cert_t* intermediates, \
+                  size_t intermediates_len, \
+                  const botan_x509_cert_t* trusted, \
+                  size_t trusted_len, \
+                  const char* trusted_path, \
+                  size_t required_strength, \
+                  const char* hostname, \
+                  uint64_t reference_time)
+
+    Verify a certificate. Returns 0 if validation was successful, 1 if
+    unsuccessful, or negative on error.
+
+    Sets ``validation_result`` to a code that provides more information.
+
+    If not needed, set ``intermediates`` to NULL and ``intermediates_len`` to
+    zero.
+
+    If not needed, set ``trusted`` to NULL and ``trusted_len`` to zero.
+
+    The ``trusted_path`` refers to a directory where one or more trusted CA
+    certificates are stored. It may be NULL if not needed.
+
+    Set ``required_strength`` to indicate the minimum key and hash strength
+    that is allowed. For instance setting to 80 allows 1024-bit RSA and SHA-1.
+    Setting to 110 requires 2048-bit RSA and SHA-256 or higher. Set to zero
+    to accept a default.
+
+    Set ``reference_time`` to be the time which the certificate chain is
+    validated against. Use zero to use the current system clock.
+
+.. cpp:function:: const char* botan_x509_cert_validation_status(int code)
+
+   Return a (statically allocated) string associated with the verification
+   result.
