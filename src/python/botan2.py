@@ -19,7 +19,7 @@ Botan 2.8
 """
 
 from ctypes import CDLL, POINTER, byref, create_string_buffer, \
-    c_void_p, c_size_t, c_uint8, c_uint32, c_int, c_char, c_char_p
+    c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_char, c_char_p
 
 from sys import version_info
 from time import strptime, mktime
@@ -166,6 +166,9 @@ botan.botan_cipher_init.errcheck = errcheck_for('botan_cipher_init')
 
 botan.botan_cipher_destroy.argtypes = [c_void_p]
 botan.botan_cipher_destroy.errcheck = errcheck_for('botan_cipher_destroy')
+
+botan.botan_cipher_reset.argtypes = [c_void_p]
+botan.botan_cipher_reset.errcheck = errcheck_for('botan_cipher_reset')
 
 botan.botan_cipher_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
 botan.botan_cipher_name.errcheck = errcheck_for('botan_cipher_name')
@@ -498,6 +501,21 @@ botan.botan_fpe_decrypt.argtypes = [c_void_p, c_void_p, POINTER(c_char), c_size_
 botan.botan_fpe_decrypt.errcheck = errcheck_for('botan_fpe_decrypt')
 
 #
+# HOTP
+#
+botan.botan_hotp_init.argtype = [c_void_p, POINTER(c_char), c_size_t, c_char_p, c_size_t]
+botan.botan_hotp_init.errcheck = errcheck_for('botan_hotp_init')
+
+botan.botan_hotp_destroy.argtype = [c_void_p]
+botan.botan_hotp_destroy.errcheck = errcheck_for('botan_hotp_destroy')
+
+botan.botan_hotp_generate.argtype = [c_void_p, POINTER(c_uint32), c_uint64]
+botan.botan_hotp_generate.errcheck = errcheck_for('botan_hotp_generate')
+
+botan.botan_hotp_check.argtype = [c_void_p, POINTER(c_uint64), c_uint32, c_uint64, c_size_t]
+botan.botan_hotp_check.errcheck = errcheck_for('botan_hotp_check')
+
+#
 # Internal utilities
 #
 def _call_fn_returning_vec(guess, fn):
@@ -732,6 +750,9 @@ class SymmetricCipher(object):
     def valid_nonce_length(self, nonce_len):
         rc = botan.botan_cipher_valid_nonce_length(self.__obj, nonce_len)
         return True if rc == 1 else False
+
+    def reset(self):
+        botan.botan_cipher_reset(self.__obj)
 
     def clear(self):
         botan.botan_cipher_clear(self.__obj)
@@ -1311,6 +1332,27 @@ class FormatPreservingEncryptionFE1(object):
         r = MPI(msg)
         botan.botan_fpe_decrypt(self.__obj, r.handle_(), _ctype_bits(tweak), len(tweak))
         return r
+
+class HOTP(object):
+    def __init__(self, key, digest="SHA-1", digits=6):
+        self.__obj = c_void_p(0)
+        botan.botan_hotp_init(byref(self.__obj), key, len(key), _ctype_str(digest), digits)
+
+    def __del__(self):
+        botan.botan_hotp_destroy(self.__obj)
+
+    def generate(self, counter):
+        code = c_uint32(0)
+        botan.botan_hotp_generate(self.__obj, byref(code), counter)
+        return code.value
+
+    def check(self, code, counter, resync_range=0):
+        next = c_uint64(0)
+        rc = botan.botan_hotp_check(self.__obj, byref(next), code, counter, resync_range)
+        if rc == 0:
+            return (True,next.value)
+        else:
+            return (False,counter)
 
 # Typedefs for compat with older versions
 cipher = SymmetricCipher                  # pylint: disable=invalid-name

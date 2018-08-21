@@ -370,3 +370,25 @@ Format Preserving Encryption (FE1 scheme)
 
       The msg should be a botan2.MPI or an object which can be converted to one
 
+HOTP
+-----------------------------------------
+.. versionadded:: 2.8.0
+
+.. py:class:: HOTP(key, hash="SHA-1", digits=6)
+
+   .. py:method:: generate(counter)
+
+      Generate an HOTP code for the provided counter
+
+   .. py:method:: check(code, counter, resync_range=0)
+
+      Check if provided ``code`` is the correct code for ``counter``.
+      If ``resync_range`` is greater than zero, HOTP also checks
+      up to ``resync_range`` following counter values.
+
+      Returns a tuple of (bool,int) where the boolean indicates if the
+      code was valid, and the int indicates the next counter value
+      that should be used. If the code did not verify, the next
+      counter value is always identical to the counter that was passed
+      in. If the code did verify and resync_range was zero, then the
+      next counter will always be counter+1.
