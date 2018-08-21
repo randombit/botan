@@ -425,7 +425,7 @@ def cli_tls_ciphersuite_tests():
     for policy in policies:
         for version in versions:
 
-            if policy in ['suiteb_128', 'suiteb_192', 'strict'] and version != 'tls1.2':
+            if version != 'tls1.2' and policy != 'all':
                 continue
 
             output = test_cli("tls_ciphers", ["--version=" + version, "--policy=" + policy], None).split('\n')
@@ -648,8 +648,8 @@ def main(args=None):
 
     setup_logging(options)
 
-    if len(args) != 2:
-        logging.error("Usage: ./cli_tests.py path_to_botan_cli")
+    if len(args) < 2:
+        logging.error("Usage: ./cli_tests.py path_to_botan_cli [test_regex]")
         return 1
 
     if not os.access(args[1], os.X_OK):
@@ -658,6 +658,10 @@ def main(args=None):
 
     global CLI_PATH
     CLI_PATH = args[1]
+
+    test_regex = None
+    if len(args) == 3:
+        test_regex = re.compile(args[2])
 
     start_time = time.time()
 
@@ -694,10 +698,16 @@ def main(args=None):
         ]
 
     for fn in test_fns:
+        fn_name = fn.__name__
+
+        if test_regex is not None:
+            if test_regex.match(fn_name) is None:
+                continue
+
         start = time.time()
         fn()
         end = time.time()
-        logging.debug("Ran %s in %.02f", fn.__name__, end-start)
+        logging.debug("Ran %s in %.02f", fn_name, end-start)
 
 
     end_time = time.time()

@@ -45,16 +45,16 @@ std::vector<std::string> Policy::allowed_ciphers() const
       "ChaCha20Poly1305",
       "AES-256/GCM",
       "AES-128/GCM",
-      "AES-256/CCM",
-      "AES-128/CCM",
+      //"AES-256/CCM",
+      //"AES-128/CCM",
       //"AES-256/CCM(8)",
       //"AES-128/CCM(8)",
       //"Camellia-256/GCM",
       //"Camellia-128/GCM",
       //"ARIA-256/GCM",
       //"ARIA-128/GCM",
-      "AES-256",
-      "AES-128",
+      //"AES-256",
+      //"AES-128",
       //"Camellia-256",
       //"Camellia-128",
       //"SEED"
@@ -319,8 +319,8 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite& ciphersuite) const
 bool Policy::allow_client_initiated_renegotiation() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
-bool Policy::allow_tls10()  const { return true; }
-bool Policy::allow_tls11()  const { return true; }
+bool Policy::allow_tls10()  const { return false; }
+bool Policy::allow_tls11()  const { return false; }
 bool Policy::allow_tls12()  const { return true; }
 bool Policy::allow_dtls10() const { return false; }
 bool Policy::allow_dtls12() const { return true; }

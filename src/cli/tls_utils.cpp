@@ -34,6 +34,8 @@ class TLS_All_Policy final : public Botan::TLS::Policy
             "AES-128/CCM(8)",
             "Camellia-256/GCM",
             "Camellia-128/GCM",
+            "ARIA-256/GCM",
+            "ARIA-128/GCM",
             "AES-256",
             "AES-128",
             "Camellia-256",
@@ -52,6 +54,10 @@ class TLS_All_Policy final : public Botan::TLS::Policy
          {
          return { "ECDSA", "RSA", "DSA" };
          }
+
+      bool allow_tls10() const override { return false; }
+      bool allow_tls11() const override { return false; }
+      bool allow_tls12() const override { return true; }
    };
 
 class TLS_Ciphersuites final : public Command
