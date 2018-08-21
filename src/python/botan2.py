@@ -1347,12 +1347,12 @@ class HOTP(object):
         return code.value
 
     def check(self, code, counter, resync_range=0):
-        next = c_uint64(0)
-        rc = botan.botan_hotp_check(self.__obj, byref(next), code, counter, resync_range)
+        next_ctr = c_uint64(0)
+        rc = botan.botan_hotp_check(self.__obj, byref(next_ctr), code, counter, resync_range)
         if rc == 0:
-            return (True,next.value)
+            return (True, next_ctr.value)
         else:
-            return (False,counter)
+            return (False, counter)
 
 # Typedefs for compat with older versions
 cipher = SymmetricCipher                  # pylint: disable=invalid-name

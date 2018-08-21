@@ -348,10 +348,10 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(hotp.generate(1), 287082)
         self.assertEqual(hotp.generate(9), 520489)
 
-        self.assertEqual(hotp.check(520489, 8), (False,8))
-        self.assertEqual(hotp.check(520489, 8, 1), (True,10))
-        self.assertEqual(hotp.check(520489, 7, 2), (True,10))
-        self.assertEqual(hotp.check(520489, 0, 9), (True,10))
+        self.assertEqual(hotp.check(520489, 8), (False, 8))
+        self.assertEqual(hotp.check(520489, 8, 1), (True, 10))
+        self.assertEqual(hotp.check(520489, 7, 2), (True, 10))
+        self.assertEqual(hotp.check(520489, 0, 9), (True, 10))
 
 
 if __name__ == '__main__':
