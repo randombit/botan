@@ -71,6 +71,8 @@ Version 2.8.0, Not Yet Released
   removal of support using the configure.py flag ``--ack-vc2013-deprecated``
   (GH #1557)
 
+* Ignore additional but unused data in the X509v3 CRL Distribution Points extension
+
 Version 2.7.0, 2018-07-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
