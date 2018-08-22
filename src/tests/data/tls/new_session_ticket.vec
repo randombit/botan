@@ -14,7 +14,7 @@ Buffer = 0000000000051122334455
 Exception  =
 
 Buffer = 0001
-Exception = Invalid argument Decoding error: Session ticket message too short to be valid
+Exception = Session ticket message too short to be valid
 
 Buffer = 00010203000500
-Exception = Invalid argument Decoding error: Invalid SessionTicket: Expected 5 bytes remaining, only 1 left
+Exception = Invalid SessionTicket: Expected 5 bytes remaining, only 1 left

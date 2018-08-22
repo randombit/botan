@@ -148,7 +148,7 @@ class PSK_DB_Tests final : public Test
          result.test_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
 
          result.test_throws("exception if get called on non-existent PSK",
-                            "Invalid argument Named PSK not located",
+                            "Named PSK not located",
                             [&]() { db.get("name2"); });
 
          // test that redundant remove calls accepted
@@ -238,7 +238,7 @@ class PSK_DB_Tests final : public Test
          result.test_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
 
          result.test_throws("exception if get called on non-existent PSK",
-                            "Invalid argument Named PSK not located",
+                            "Named PSK not located",
                             [&]() { db.get("name2"); });
 
          // test that redundant remove calls accepted

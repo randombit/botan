@@ -89,7 +89,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
          std::unique_ptr<Botan::PK_Key_Agreement> kas(new Botan::PK_Key_Agreement(*privkey, rng(), "Raw"));
 
          result.test_throws("agreement input too big",
-                            "Invalid argument DH agreement - invalid key provided",
+                            "DH agreement - invalid key provided",
                             [&kas]()
             {
             const BigInt too_big("584580020955360946586837552585233629614212007514394561597561641914945762794672");
@@ -97,7 +97,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test
             });
 
          result.test_throws("agreement input too small",
-                            "Invalid argument DH agreement - invalid key provided",
+                            "DH agreement - invalid key provided",
                             [&kas]()
             {
             const BigInt too_small("1");

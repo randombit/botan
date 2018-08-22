@@ -97,7 +97,7 @@ secure_vector<uint8_t> PKCS8_decode(
       }
    catch(Decoding_Error& e)
       {
-      throw Decoding_Error("PKCS #8 private key decoding failed: " + std::string(e.what()));
+      throw Decoding_Error("PKCS #8 private key decoding", e);
       }
 
    try
@@ -126,7 +126,7 @@ secure_vector<uint8_t> PKCS8_decode(
       }
    catch(std::exception& e)
       {
-      throw Decoding_Error("PKCS #8 private key decoding failed: " + std::string(e.what()));
+      throw Decoding_Error("PKCS #8 private key decoding", e);
       }
    return key;
    }

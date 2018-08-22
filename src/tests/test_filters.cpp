@@ -216,11 +216,11 @@ class Filter_Tests final : public Test
 
          // can't explicitly insert a queue into the pipe because they are implicit
          result.test_throws("pipe error",
-                            "Invalid argument Pipe::append: SecureQueue cannot be used",
+                            "Pipe::append: SecureQueue cannot be used",
                             [&]() { pipe.append(queue_filter.get()); });
 
          result.test_throws("pipe error",
-                            "Invalid argument Pipe::prepend: SecureQueue cannot be used",
+                            "Pipe::prepend: SecureQueue cannot be used",
                             [&]() { pipe.prepend(queue_filter.get()); });
 
          pipe.append_filter(new Botan::BitBucket); // succeeds
@@ -266,7 +266,7 @@ class Filter_Tests final : public Test
                             [&]() { pipe.prepend_filter(filter.get()); });
 
          result.test_throws("pipe error",
-                            "Invalid argument Pipe::read: Invalid message number 100",
+                            "Pipe::read: Invalid message number 100",
                             [&]() { uint8_t b; size_t got = pipe.read(&b, 1, 100); BOTAN_UNUSED(got); });
 
          pipe.append(nullptr); // ignored
@@ -288,7 +288,7 @@ class Filter_Tests final : public Test
          mac_filter->set_iv(Botan::InitializationVector()); // ignored
 
          result.test_throws("Keyed_Filter::set_iv throws if not implemented",
-                            "Invalid argument IV length 1 is invalid for HMAC(SHA-256)",
+                            "IV length 1 is invalid for HMAC(SHA-256)",
                             [mac_filter]() { mac_filter->set_iv(Botan::InitializationVector("AA")); });
 
          Botan::Pipe pipe(mac_filter,

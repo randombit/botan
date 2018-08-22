@@ -101,7 +101,7 @@ Extensions::create_extn_obj(const OID& oid,
       }
    catch(Decoding_Error& e)
       {
-      throw Decoding_Error("Decoding X.509 extension " + oid.as_string() + " failed", e.what());
+      throw Decoding_Error("Decoding X.509 extension " + oid.as_string(), e);
       }
    return extn;
    }

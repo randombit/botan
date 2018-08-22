@@ -85,7 +85,7 @@ void X509_Object::load_data(DataSource& in)
       }
    catch(Decoding_Error& e)
       {
-      throw Decoding_Error(PEM_label() + " decoding failed: " + e.what());
+      throw Decoding_Error(PEM_label() + " decoding", e);
       }
    }
 

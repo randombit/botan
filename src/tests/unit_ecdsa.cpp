@@ -304,7 +304,7 @@ Test::Result test_encoding_options()
       auto invalid_format = static_cast<Botan::PointGFp::Compression_Type>(99);
 
       result.test_throws("Invalid point format throws",
-                         "Invalid argument Invalid point encoding for EC_PublicKey",
+                         "Invalid point encoding for EC_PublicKey",
                          [&] { key.set_point_encoding(invalid_format); });
       }
 

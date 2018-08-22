@@ -650,7 +650,7 @@ std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
       }
    catch(std::exception& e)
       {
-      throw Decoding_Error("X509_Certificate::load_subject_public_key", e.what());
+      throw Decoding_Error("X509_Certificate::load_subject_public_key", e);
       }
    }
 

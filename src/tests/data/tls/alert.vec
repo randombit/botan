@@ -14,11 +14,11 @@ Exception =
 
 Buffer = 0030
 Protocol = 0303
-Exception = Invalid argument Decoding error: Alert: Bad code for alert level
+Exception = Alert: Bad code for alert level
 
 Buffer = 02
-Exception = Invalid argument Decoding error: Alert: Bad size 1 for alert message
+Exception = Alert: Bad size 1 for alert message
 
 Buffer = 020101
-Exception = Invalid argument Decoding error: Alert: Bad size 3 for alert message
+Exception = Alert: Bad size 3 for alert message
 

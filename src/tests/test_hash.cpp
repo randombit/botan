@@ -47,7 +47,7 @@ class Invalid_Hash_Name_Tests final : public Test
          catch(Botan::Invalid_Argument& e)
             {
             const std::string msg = e.what();
-            const std::string full_msg = "Invalid argument " + expected_msg;
+            const std::string full_msg = "" + expected_msg;
             result.test_eq("expected error message", msg, full_msg);
             }
          catch(Botan::Lookup_Error& e)

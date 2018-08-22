@@ -24,25 +24,25 @@ Buffer =
 Protocol = 0303
 Ciphersuite = C030
 AdditionalData = 
-Exception = Invalid argument Decoding error: Server_Hello: Packet corrupted
+Exception = Server_Hello: Packet corrupted
 
 # incorrect, corrupted
 Buffer = 00
 Protocol = 0303
 Ciphersuite = C030
 AdditionalData = 
-Exception = Invalid argument Decoding error: Server_Hello: Packet corrupted
+Exception = Server_Hello: Packet corrupted
 
 # invalid extensions length
 Buffer = 03039f9cafa88664d9095f85dd64a39e5dd5c09f5a4a5362938af3718ee4e818af6a00c03000001cff01000100000b00040300010200230000000f00010100170000
 Protocol = 0303
 Ciphersuite = C030
 AdditionalData = 00170023FF01
-Exception = Invalid argument Decoding error: Bad extension size
+Exception = Bad extension size
 
 # invalid extension length
 Buffer = 03039f9cafa88664d9095f85dd64a39e5dd5c09f5a4a5362938af3718ee4e818af6a00c03000001aff01000100000b00040300010200230100000f00010100170000
 Protocol = 0303
 Ciphersuite = C030
 AdditionalData = 00170023FF01
-Exception = Invalid argument Decoding error: Invalid ServerHello: Expected 256 bytes remaining, only 9 left
+Exception = Invalid ServerHello: Expected 256 bytes remaining, only 9 left

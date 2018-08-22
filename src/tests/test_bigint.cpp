@@ -91,13 +91,13 @@ class BigInt_Unit_Tests final : public Test
          Test::Result result("BigInt prime generation");
 
          result.test_throws("Invalid bit size",
-                            "Invalid argument random_prime: Can't make a prime of 0 bits",
+                            "random_prime: Can't make a prime of 0 bits",
                             []() { Botan::random_prime(Test::rng(), 0); });
          result.test_throws("Invalid bit size",
-                            "Invalid argument random_prime: Can't make a prime of 1 bits",
+                            "random_prime: Can't make a prime of 1 bits",
                             []() { Botan::random_prime(Test::rng(), 1); });
          result.test_throws("Invalid arg",
-                            "Invalid argument random_prime Invalid value for equiv/modulo",
+                            "random_prime Invalid value for equiv/modulo",
                             []() { Botan::random_prime(Test::rng(), 2, 1, 0, 2); });
 
          BigInt p = Botan::random_prime(Test::rng(), 2);
