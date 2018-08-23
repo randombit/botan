@@ -126,6 +126,24 @@ BigInt operator*(const BigInt& x, const BigInt& y)
    }
 
 /*
+* Multiplication Operator
+*/
+BigInt operator*(const BigInt& x, word y)
+   {
+   const size_t x_sw = x.sig_words();
+
+   BigInt z(BigInt::Positive, x_sw + 1);
+
+   if(x_sw && y)
+      {
+      bigint_linmul3(z.mutable_data(), x.data(), x_sw, y);
+      z.set_sign(x.sign());
+      }
+
+   return z;
+   }
+
+/*
 * Division Operator
 */
 BigInt operator/(const BigInt& x, const BigInt& y)

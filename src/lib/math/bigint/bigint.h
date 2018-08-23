@@ -842,6 +842,9 @@ BigInt BOTAN_PUBLIC_API(2,0) operator-(const BigInt& x, const BigInt& y);
 BigInt BOTAN_PUBLIC_API(2,7) operator-(const BigInt& x, word y);
 
 BigInt BOTAN_PUBLIC_API(2,0) operator*(const BigInt& x, const BigInt& y);
+BigInt BOTAN_PUBLIC_API(2,8) operator*(const BigInt& x, word y);
+inline BigInt operator*(word x, const BigInt& y) { return y*x; }
+
 BigInt BOTAN_PUBLIC_API(2,0) operator/(const BigInt& x, const BigInt& d);
 BigInt BOTAN_PUBLIC_API(2,0) operator%(const BigInt& x, const BigInt& m);
 word   BOTAN_PUBLIC_API(2,0) operator%(const BigInt& x, word m);
