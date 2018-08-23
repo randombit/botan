@@ -206,7 +206,7 @@ Number Theory
 
 ``factor n``
   Factor the integer *n* using a combination of trial division by small primes, and Pollard's Rho algorithm.
-  It can in reasonable time factor integers up to 150 bits or so.
+  It can in reasonable time factor integers up to 110 bits or so.
 
 ``gen_prime --count=1 bits``
   Samples *count* primes with a length of *bits* bits.
