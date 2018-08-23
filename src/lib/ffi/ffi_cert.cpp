@@ -56,6 +56,7 @@ int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert)
       });
 
 #else
+   BOTAN_UNUSED(cert);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -92,7 +93,7 @@ int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
       return BOTAN_FFI_SUCCESS;
       });
 #else
-   BOTAN_UNUSED(cert, key);
+   BOTAN_UNUSED(cert);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -178,16 +179,26 @@ int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t*
 
 int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoch)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
       *time_since_epoch = c.not_before().time_since_epoch();
       });
+#else
+   BOTAN_UNUSED(cert, time_since_epoch);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
       *time_since_epoch = c.not_after().time_since_epoch();
       });
+#else
+   BOTAN_UNUSED(cert, time_since_epoch);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
@@ -268,6 +279,7 @@ int botan_x509_cert_verify(int* result_code,
    if(required_strength == 0)
       required_strength = 110;
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       const std::string hostname((hostname_cstr == nullptr) ? "" : hostname_cstr);
       const Botan::Usage_Type usage = Botan::Usage_Type::UNSPECIFIED;
@@ -317,6 +329,11 @@ int botan_x509_cert_verify(int* result_code,
       else
          return 1;
       });
+#else
+   BOTAN_UNUSED(result_code, cert, intermediates, intermediates_len, trusted);
+   BOTAN_UNUSED(trusted_len, trusted_path, hostname_cstr, reference_time);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 const char* botan_x509_cert_validation_status(int code)
@@ -324,8 +341,12 @@ const char* botan_x509_cert_validation_status(int code)
    if(code < 0)
       return nullptr;
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    Botan::Certificate_Status_Code sc = static_cast<Botan::Certificate_Status_Code>(code);
    return Botan::to_string(sc);
+#else
+   return nullptr;
+#endif
    }
 
 }
