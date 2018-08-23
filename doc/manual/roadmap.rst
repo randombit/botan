@@ -28,7 +28,6 @@ Adding support for databases storing encrypted PSKs and SRP credentials.
 
 ECC Refactoring
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Refactoring how elliptic curve groups are stored, sharing representation and
 allowing better precomputations (eg precomputing base point multiples).
 [Completed in 2.5.0]
@@ -46,7 +45,7 @@ Elliptic Curve Pairings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These are useful in many interesting protocols. Initially BN curves are the main
-target (particularly BN-256 for compatability with Go's bn256 module) but likely
+target (particularly BN-256 for compatibility with Go's bn256 module) but likely
 we'll also want BLS curves.
 
 TLS 1.3
@@ -66,11 +65,6 @@ likely not be available until sometime in 2019.
 
 ASN.1 Redesign
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. note::
-
-   This project has been deferred to 3.x as C++14 extended constexpr
-   will likely make it much easier to implement.
 
 The current ASN.1 library (DER_Encoder/BER_Decoder) does make it
 roughly possible to write C++ code matching the ASN.1 structures. But
@@ -94,13 +88,13 @@ generated code, so the two goals of the redesign seem to reinforce each other.
 Longer View (Future Major Release)
 ----------------------------------------
 
-Eventually (currently estimated for summer 2019), Botan 3.x will be
-released. This schedule allows some substantial time with Botan 2.x and 3.x
-supported simultaneously, to allow for application switch over.
+Eventually (currently estimated for 2020), Botan 3.x will be released. This
+schedule allows some substantial time with Botan 2.x and 3.x supported
+simultaneously, to allow for application switch over.
 
 This version will adopt C++17 and use new std types such as string_view,
 optional, and any, along with adopting memory span and guarded integer
 types. Likely C++17 constexpr will also be leveraged.
 
 In this future 3.x release, all deprecated features/APIs of 2.x will be removed.
-However outside of that, breaking API changes should be relatively minimal.
+Besides that, there should be no breaking API changes in the transition to 3.x

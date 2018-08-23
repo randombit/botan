@@ -36,9 +36,7 @@ Of course many other modern OSes such as OpenBSD, NetBSD, AIX, Solaris or QNX
 are also probably fine (Botan has been tested on all of them successfully in the
 past), but none of the core developers run these OSes and may not be able to
 help so much in debugging problems. Patches to improve the build for these
-platforms are welcome. Note that as a policy Botan does not support any OS which
-is not supported by its original vendor; any such EOLed systems that are still
-running are unpatched and insecure.
+platforms are welcome, as are any reports of successful use.
 
 In theory any working C++11 compiler is fine but in practice, we only test with
 GCC, Clang, and Visual C++.  There is support in the build system for several
@@ -50,7 +48,7 @@ properly.
 Branch Support Status
 -------------------------
 
-Following table provides the support status for Botan branches as of May 2018.
+Following table provides the support status for Botan branches as of August 2018.
 Any branch not listed here (including 1.11) is no longer supported.
 Dates in the future are approximate.
 
@@ -59,8 +57,7 @@ Branch         First Release  End of Active Development  End of Life
 ============== ============== ========================== ============
 1.8            2008-12-08     2010-08-31                 2016-02-13
 1.10           2011-06-20     2012-07-10                 2018-12-31
-2.x            2017-01-06     2019-01-01                 2021-12-31
-3.x (planned)  2019-07-01     2022-01-01                 2023-12-31
+2.x            2017-01-06     2020?                      2022 or later
 ============== ============== ========================== ============
 
 "Active development" refers to adding new features and optimizations. At the
