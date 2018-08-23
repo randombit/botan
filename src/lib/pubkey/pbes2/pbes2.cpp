@@ -23,6 +23,11 @@ namespace Botan {
 
 namespace {
 
+bool known_pbes_cipher_mode(const std::string& mode)
+   {
+   return (mode == "CBC" || mode == "GCM" || mode == "SIV");
+   }
+
 SymmetricKey derive_key(const std::string& passphrase,
                         const AlgorithmIdentifier& kdf_algo,
                         size_t default_key_size)
@@ -181,7 +186,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    if(cipher_spec.size() != 2)
       throw Encoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
 
-   if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
+   if(!known_pbes_cipher_mode(cipher_spec[1]))
       throw Encoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
    const OID cipher_oid = OIDS::lookup(cipher);
@@ -289,7 +294,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
-   if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
+   if(!known_pbes_cipher_mode(cipher_spec[1]))
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
    secure_vector<uint8_t> iv;
