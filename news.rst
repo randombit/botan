@@ -6,7 +6,8 @@ Version 2.8.0, Not Yet Released
 
 * Support for negotiating TLS versions 1.0 and 1.1 is disabled in the default
   TLS policy. In addition, support for negotiating TLS ciphersuites using CBC or
-  CCM mode is disabled by default.
+  CCM mode is disabled by default. Applications which need to interop with old
+  peers must enable these in their TLS policy object. (GH #1651)
 
 * During primality testing, use a Lucas test in addition to Miller-Rabin. It is
   possible to construct a composite integer which passes n Miller-Rabin tests
