@@ -104,7 +104,12 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
          {
          if(const Certificate_Extension* extn = get_extension_object(oid))
             {
-            if(const T* extn_as_T = dynamic_cast<const T*>(extn))
+            // Unknown_Extension oid_name is empty
+            if(extn->oid_name().empty())
+               {
+               return nullptr;
+               }
+            else if(const T* extn_as_T = dynamic_cast<const T*>(extn))
                {
                return extn_as_T;
                }
