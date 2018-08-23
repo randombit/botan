@@ -42,7 +42,7 @@ cert_path_ext_06$CA certificate not allowed to issue certs
 cert_path_ext_07$CA certificate not allowed to issue certs
 cert_path_ext_08$Certificate chain too long
 cert_path_ext_09$Verified
-cert_path_ext_10$CERTIFICATE decoding failed with Decoding X.509 extension 2.5.29.15 failed with BER: Tag mismatch when decoding usage constraint got SEQUENCE/CONSTRUCTED expected BIT STRING/UNIVERSAL
+cert_path_ext_10$Unknown critical extension encountered
 cert_path_ext_11$CA certificate not allowed to issue certs
 cert_path_ext_12$Certificate contains duplicate policy
 cert_path_ext_13$Unknown critical extension encountered
