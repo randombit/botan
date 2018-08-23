@@ -712,7 +712,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
 #if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SCRYPT)
 
-         test_pbe_roundtrip(result, key, "PBE-PKCS5v20(AES-128/CBC,Scrypt)", Test::random_password());
+         test_pbe_roundtrip(result, key, "PBES2(AES-128/CBC,Scrypt)", Test::random_password());
 #endif
 
          }

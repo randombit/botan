@@ -58,13 +58,13 @@ Public Key Cryptography
     - For DSA *params* specifies the DSA parameters. It defaults to dsa/botan/2048.
     - For EC algorithms *params* specifies the elliptic curve. It defaults to secp256r1.
 
-  The default *pbe* algorithm is "PBE-PKCS5v20(AES-256/CBC,SHA-256)".
+  The default *pbe* algorithm is "PBES2(AES-256/CBC,SHA-256)".
 
-  With PBE-PKCS5v20 you can select any CBC or GCM mode cipher which has an OID
+  With PBES2 scheme, you can select any CBC or GCM mode cipher which has an OID
   defined (such as 3DES, Camellia, SM4, Twofish or Serpent). However most other
   implementations support only AES or 3DES in CBC mode. You can also choose
   Scrypt instead of PBKDF2, by using "Scrypt" instead of the name of a hash
-  function, for example "PBE-PKCS5v20(AES-256/CBC,Scrypt)"
+  function, for example "PBES2(AES-256/CBC,Scrypt)"
 
 ``pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key``
   Open a PKCS #8 formatted key at *key*. If *key* is encrypted, the passphrase
