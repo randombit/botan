@@ -1,9 +1,9 @@
-allow_tls10 = true
-allow_tls11 = true
+allow_tls10 = false
+allow_tls11 = false
 allow_tls12 = true
 allow_dtls10 = false
 allow_dtls12 = true
-ciphers = ChaCha20Poly1305 AES-256/GCM AES-128/GCM AES-256/CCM AES-128/CCM AES-256 AES-128
+ciphers = ChaCha20Poly1305 AES-256/GCM AES-128/GCM
 macs = AEAD SHA-256 SHA-384 SHA-1
 signature_hashes = SHA-512 SHA-384 SHA-256
 signature_methods = ECDSA RSA

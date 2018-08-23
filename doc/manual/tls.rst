@@ -822,15 +822,18 @@ policy settings from a file.
 
      Cipher names without an explicit mode refers to CBC+HMAC ciphersuites.
 
-     Default value: "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM",
-     "AES-256/CCM", "AES-128/CCM", "AES-256", "AES-128"
+     Default value: "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM"
 
-     Also allowed: "AES-256/CCM(8)", "AES-128/CCM(8)",
+     Also allowed: "AES-256", "AES-128",
+     "AES-256/CCM", "AES-128/CCM", "AES-256/CCM(8)", "AES-128/CCM(8)",
      "Camellia-256/GCM", "Camellia-128/GCM", "ARIA-256/GCM", "ARIA-128/GCM",
      "Camellia-256", "Camellia-128"
 
      Also allowed (though currently experimental): "AES-128/OCB(12)",
      "AES-256/OCB(12)"
+
+     In versions up to 2.8.0, the CBC and CCM ciphersuites "AES-256",
+     "AES-128", "AES-256/CCM" and "AES-128/CCM" were enabled by default.
 
      Also allowed (although **not recommended**): "SEED", "3DES"
 
@@ -1050,6 +1053,20 @@ policy settings from a file.
      Diffie-Hellman.
 
      Default: 2048 bits
+
+.. cpp:function:: bool allow_tls10() const
+
+      Return true from here to allow TLS v1.0. Since 2.8.0, returns
+      ``false`` by default.
+
+.. cpp:function:: bool allow_tls11() const
+
+      Return true from here to allow TLS v1.1. Since 2.8.0, returns
+      ``false`` by default.
+
+.. cpp:function:: bool allow_tls12() const
+
+      Return true from here to allow TLS v1.2. Returns ``true`` by default.
 
 .. cpp:function:: size_t minimum_rsa_bits() const
 
