@@ -11,17 +11,24 @@ namespace Botan {
 Exception::Exception(const std::string& msg) : m_msg(msg)
    {}
 
+Exception::Exception(const std::string& msg, const std::exception& e) :
+   m_msg(msg + " failed with " + std::string(e.what()))
+   {}
+
 Exception::Exception(const char* prefix, const std::string& msg) :
    m_msg(std::string(prefix) + " " + msg)
    {}
 
 Invalid_Argument::Invalid_Argument(const std::string& msg) :
-   Exception("Invalid argument", msg)
+   Exception(msg)
    {}
 
 Invalid_Argument::Invalid_Argument(const std::string& msg, const std::string& where) :
-   Exception("Invalid argument", msg + " in " + where)
+   Exception(msg + " in " + where)
    {}
+
+Invalid_Argument::Invalid_Argument(const std::string& msg, const std::exception& e) :
+   Exception(msg, e) {}
 
 Lookup_Error::Lookup_Error(const std::string& type,
                            const std::string& algo,
@@ -76,11 +83,15 @@ Encoding_Error::Encoding_Error(const std::string& name) :
    {}
 
 Decoding_Error::Decoding_Error(const std::string& name) :
-   Invalid_Argument("Decoding error: " + name)
+   Invalid_Argument(name)
+   {}
+
+Decoding_Error::Decoding_Error(const std::string& msg, const std::exception& e) :
+   Invalid_Argument(msg, e)
    {}
 
 Decoding_Error::Decoding_Error(const std::string& name, const char* exception_message) :
-   Invalid_Argument("Decoding error: " + name + " failed with exception " + exception_message) {}
+   Invalid_Argument(name + " failed with exception " + exception_message) {}
 
 Integrity_Failure::Integrity_Failure(const std::string& msg) :
    Exception("Integrity failure: " + msg)

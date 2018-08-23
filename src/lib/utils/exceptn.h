@@ -23,6 +23,8 @@ class BOTAN_PUBLIC_API(2,0) Exception : public std::exception
       Exception(const char* prefix, const std::string& msg);
       explicit Exception(const std::string& msg);
       const char* what() const BOTAN_NOEXCEPT override { return m_msg.c_str(); }
+   protected:
+      Exception(const std::string& msg, const std::exception& e);
    private:
       std::string m_msg;
    };
@@ -36,7 +38,9 @@ class BOTAN_PUBLIC_API(2,0) Invalid_Argument : public Exception
       explicit Invalid_Argument(const std::string& msg);
 
       explicit Invalid_Argument(const std::string& msg, const std::string& where);
-};
+
+      Invalid_Argument(const std::string& msg, const std::exception& e);
+   };
 
 /**
 * Unsupported_Argument Exception
@@ -178,6 +182,8 @@ class BOTAN_PUBLIC_API(2,0) Decoding_Error : public Invalid_Argument
       explicit Decoding_Error(const std::string& name);
 
       Decoding_Error(const std::string& name, const char* exception_message);
+
+      Decoding_Error(const std::string& msg, const std::exception& e);
    };
 
 /**

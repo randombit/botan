@@ -47,7 +47,7 @@ class DL_Group_Tests final : public Test
          if(Test::options().undefined_behavior_allowed())
             {
             result.test_throws("Bad generator param",
-                               "Invalid argument DL_Group unknown PrimeType",
+                               "DL_Group unknown PrimeType",
                                []() {
                                auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
                                Botan::DL_Group dl(Test::rng(), invalid_type, 1024);
@@ -129,11 +129,11 @@ class DL_Group_Tests final : public Test
          const std::vector<uint8_t> working_seed = Botan::hex_decode("0000000000000000000000000000000000000021");
 
          result.test_throws("DSA seed does not generate group",
-                            "Invalid argument DL_Group: The seed given does not generate a DSA group",
+                            "DL_Group: The seed given does not generate a DSA group",
                             [&rng,&invalid_seed]() { Botan::DL_Group dsa(rng, invalid_seed, 1024, 160); });
 
          result.test_throws("DSA seed is too short",
-                            "Invalid argument Generating a DSA parameter set with a 160 bit long q requires a seed at least as many bits long",
+                            "Generating a DSA parameter set with a 160 bit long q requires a seed at least as many bits long",
                             [&rng,&short_seed]() { Botan::DL_Group dsa(rng, short_seed, 1024, 160); });
 
          // From FIPS 186-3 test data

@@ -5,4 +5,4 @@ Buffer =
 Exception = 
 
 Buffer = 01
-Exception = Invalid argument Decoding error: Bad Hello_Request, has non-zero size
+Exception = Bad Hello_Request, has non-zero size

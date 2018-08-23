@@ -10,17 +10,17 @@ Exception =
 
 # HelloVerify request has to contain at least 3 bytes
 Buffer = 0101
-Exception = Invalid argument Decoding error: Hello verify request too small
+Exception = Hello verify request too small
 
 # HelloVerify has to contain valid protocol version
 Buffer = 010100
-Exception = Invalid argument Decoding error: Unknown version from server in hello verify request
+Exception = Unknown version from server in hello verify request
 
 # HelloVerify has to contain valid number of bytes 
 Buffer = FEFD0000
-Exception = Invalid argument Decoding error: Bad length in hello verify request
+Exception = Bad length in hello verify request
 
 # HelloVerify has to contain valid number of bytes 
 Buffer = FEFD0500
-Exception = Invalid argument Decoding error: Bad length in hello verify request
+Exception = Bad length in hello verify request
 

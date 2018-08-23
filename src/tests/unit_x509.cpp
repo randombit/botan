@@ -565,7 +565,7 @@ Test::Result test_x509_authority_info_access_extension()
       {
       test_result.test_eq("Build CA certitiface with invalid encoding scheme EMSA1 for key type " +
          sk->algo_name(), e.what(),
-         "Invalid argument Encoding scheme with canonical name EMSA1 not supported for signature algorithm RSA");
+         "Encoding scheme with canonical name EMSA1 not supported for signature algorithm RSA");
       }
 #endif
 
@@ -591,7 +591,7 @@ Test::Result test_x509_authority_info_access_extension()
       {
       test_result.test_eq("Configured conflicting hash functions for CA",
             e.what(),
-            "Invalid argument Hash function from opts and hash_fn argument need to be identical");
+            "Hash function from opts and hash_fn argument need to be identical");
       }
 
    // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3

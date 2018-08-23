@@ -63,7 +63,7 @@ class Bcrypt_Tests final : public Text_Based_Test
             }
 
          result.test_throws("Invalid bcrypt version rejected",
-                            "Invalid argument Unknown bcrypt version 'q'",
+                            "Unknown bcrypt version 'q'",
                             []() { Botan::generate_bcrypt("pass", Test::rng(), 4, 'q'); });
 
          result.set_ns_consumed(Test::timestamp() - start);
@@ -138,11 +138,11 @@ class Passhash9_Tests final : public Text_Based_Test
                         Botan::is_passhash9_alg_supported(255) == false);
 
          result.test_throws("Throws if algorithm not supported",
-                            "Invalid argument Passhash9: Algorithm id 255 is not defined",
+                            "Passhash9: Algorithm id 255 is not defined",
                             []() { Botan::generate_passhash9("pass", Test::rng(), 3, 255); });
 
          result.test_throws("Throws if iterations is too high",
-                            "Invalid argument Requested passhash9 work factor 513 is too large",
+                            "Requested passhash9 work factor 513 is too large",
                             []() { Botan::check_passhash9("floof", "$9$AgIB3c5J3kvAuML84sZ5hWT9WzJtiYRPLCEARaujS7I6IKbNCwp0"); });
          return {result};
          }

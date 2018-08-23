@@ -24,17 +24,17 @@ Exception =
 #Incomplete algorithm
 Buffer = 06
 Protocol = 0303
-Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left
+Exception = Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left
 
 #Incomplete certificate
 Buffer = 0601000500
 Protocol = 0303
-Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 5 bytes remaining, only 1 left
+Exception = Invalid CertificateVerify: Expected 5 bytes remaining, only 1 left
 
 Buffer = 000200
 Protocol = 0302
-Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left
+Exception = Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left
 
 Buffer = 000200
 Protocol = 0301
-Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left
+Exception = Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left
