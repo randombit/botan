@@ -217,7 +217,7 @@ GMAC
 GMAC is related to the GCM authenticated cipher mode. It is quite slow unless
 hardware support for carryless multiplications is available. A new nonce
 must be used with **each** message authenticated, or otherwise all security is
-lost.7
+lost.
 
 Available if ``BOTAN_HAS_GMAC`` is defined.
 
