@@ -30,16 +30,15 @@ class BOTAN_PUBLIC_API(2,0) Serpent final : public Block_Cipher_Fixed_Params<16,
       size_t parallelism() const override { return 4; }
 
    private:
-#if defined(BOTAN_HAS_SERPENT_SIMD)
-      /**
-      * Encrypt 4 blocks in parallel using SSE2 or AltiVec
-      */
-      void simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const;
 
-      /**
-      * Decrypt 4 blocks in parallel using SSE2 or AltiVec
-      */
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+      void simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const;
       void simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const;
+#endif
+
+#if defined(BOTAN_HAS_SERPENT_AVX2)
+      void avx2_encrypt_8(const uint8_t in[64], uint8_t out[64]) const;
+      void avx2_decrypt_8(const uint8_t in[64], uint8_t out[64]) const;
 #endif
 
       void key_schedule(const uint8_t key[], size_t length) override;
