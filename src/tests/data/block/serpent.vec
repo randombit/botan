@@ -1,5 +1,5 @@
 
-#test cpuid simd
+#test cpuid simd avx2
 
 [Serpent]
 Key = 00000000000000000000000000000000
