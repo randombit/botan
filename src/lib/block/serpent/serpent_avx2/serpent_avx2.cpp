@@ -223,8 +223,33 @@ class SIMD_8x32 final
       static void transpose(SIMD_8x32& B0, SIMD_8x32& B1,
                             SIMD_8x32& B2, SIMD_8x32& B3)
          {
+         SIMD_4x32::transpose(B0.m_lo, B0.m_hi, B1.m_lo, B1.m_hi);
+         SIMD_4x32::transpose(B2.m_lo, B2.m_hi, B3.m_lo, B3.m_hi);
+         SIMD_8x32 T0 = SIMD_8x32(B0.m_lo, B2.m_lo);
+         SIMD_8x32 T1 = SIMD_8x32(B0.m_hi, B2.m_hi);
+         SIMD_8x32 T2 = SIMD_8x32(B1.m_lo, B3.m_lo);
+         SIMD_8x32 T3 = SIMD_8x32(B1.m_hi, B3.m_hi);
+
+         B0 = T0;
+         B1 = T1;
+         B2 = T2;
+         B3 = T3;
+         }
+
+      static void transpose_out(SIMD_8x32& B0, SIMD_8x32& B1,
+                                SIMD_8x32& B2, SIMD_8x32& B3)
+         {
          SIMD_4x32::transpose(B0.m_lo, B1.m_lo, B2.m_lo, B3.m_lo);
          SIMD_4x32::transpose(B0.m_hi, B1.m_hi, B2.m_hi, B3.m_hi);
+         SIMD_8x32 T0 = SIMD_8x32(B0.m_lo, B1.m_lo);
+         SIMD_8x32 T1 = SIMD_8x32(B2.m_lo, B3.m_lo);
+         SIMD_8x32 T2 = SIMD_8x32(B0.m_hi, B1.m_hi);
+         SIMD_8x32 T3 = SIMD_8x32(B2.m_hi, B3.m_hi);
+
+         B0 = T0;
+         B1 = T1;
+         B2 = T2;
+         B3 = T3;
          }
    public:
       SIMD_4x32 m_lo, m_hi;
@@ -273,99 +298,104 @@ class SIMD_8x32 final
 
 void Serpent::avx2_encrypt_8(const uint8_t in[64], uint8_t out[64]) const
    {
-   SIMD_32 B0 = SIMD_32::load_le(in);
-   SIMD_32 B1 = SIMD_32::load_le(in + 16);
-   SIMD_32 B2 = SIMD_32::load_le(in + 32);
-   SIMD_32 B3 = SIMD_32::load_le(in + 48);
+   SIMD_8x32 B0 = SIMD_8x32::load_le(in);
+   SIMD_8x32 B1 = SIMD_8x32::load_le(in + 32);
+   SIMD_8x32 B2 = SIMD_8x32::load_le(in + 64);
+   SIMD_8x32 B3 = SIMD_8x32::load_le(in + 96);
 
-   SIMD_32 C0 = SIMD_32::load_le(in + 64);
-   SIMD_32 C1 = SIMD_32::load_le(in + 64 + 16);
-   SIMD_32 C2 = SIMD_32::load_le(in + 64 + 32);
-   SIMD_32 C3 = SIMD_32::load_le(in + 64 + 48);
+   SIMD_8x32::transpose(B0, B1, B2, B3);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
-   SIMD_32::transpose(C0, C1, C2, C3);
+   key_xor( 0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 1,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 2,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 3,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 4,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 5,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 6,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 7,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 8,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 9,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(10,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(11,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(12,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(13,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(14,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(15,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(16,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(17,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(18,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(19,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(20,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(21,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(22,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(23,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(24,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(25,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(26,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(27,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(28,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(29,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(30,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(31,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); key_xor(32,B0,B1,B2,B3);
 
-#if 0
-   SIMD_8x32 Z0 = SIMD_8x32::load_le(in);
-   SIMD_8x32 Z1 = SIMD_8x32::load_le(in + 32);
-   SIMD_8x32 Z2 = SIMD_8x32::load_le(in + 64);
-   SIMD_8x32 Z3 = SIMD_8x32::load_le(in + 96);
-
-   SIMD_8x32::transpose(Z0, Z1, Z2, Z3);
-   #else
-   SIMD_8x32 Z0(B0,C0);
-   SIMD_8x32 Z1(B1,C1);
-   SIMD_8x32 Z2(B2,C2);
-   SIMD_8x32 Z3(B3,C3);
-   #endif
-
-   key_xor( 0,Z0,Z1,Z2,Z3); SBoxE1(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor( 1,Z0,Z1,Z2,Z3); SBoxE2(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor( 2,Z0,Z1,Z2,Z3); SBoxE3(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor( 3,Z0,Z1,Z2,Z3); SBoxE4(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor( 4,Z0,Z1,Z2,Z3); SBoxE5(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor( 5,Z0,Z1,Z2,Z3); SBoxE6(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor( 6,Z0,Z1,Z2,Z3); SBoxE7(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor( 7,Z0,Z1,Z2,Z3); SBoxE8(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-
-   
-   key_xor( 8,Z0,Z1,Z2,Z3); SBoxE1(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor( 9,Z0,Z1,Z2,Z3); SBoxE2(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(10,Z0,Z1,Z2,Z3); SBoxE3(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(11,Z0,Z1,Z2,Z3); SBoxE4(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(12,Z0,Z1,Z2,Z3); SBoxE5(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(13,Z0,Z1,Z2,Z3); SBoxE6(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(14,Z0,Z1,Z2,Z3); SBoxE7(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(15,Z0,Z1,Z2,Z3); SBoxE8(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-
-   key_xor(16,Z0,Z1,Z2,Z3); SBoxE1(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(17,Z0,Z1,Z2,Z3); SBoxE2(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(18,Z0,Z1,Z2,Z3); SBoxE3(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(19,Z0,Z1,Z2,Z3); SBoxE4(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(20,Z0,Z1,Z2,Z3); SBoxE5(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(21,Z0,Z1,Z2,Z3); SBoxE6(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(22,Z0,Z1,Z2,Z3); SBoxE7(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(23,Z0,Z1,Z2,Z3); SBoxE8(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-
-   key_xor(24,Z0,Z1,Z2,Z3); SBoxE1(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(25,Z0,Z1,Z2,Z3); SBoxE2(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(26,Z0,Z1,Z2,Z3); SBoxE3(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(27,Z0,Z1,Z2,Z3); SBoxE4(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(28,Z0,Z1,Z2,Z3); SBoxE5(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(29,Z0,Z1,Z2,Z3); SBoxE6(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(30,Z0,Z1,Z2,Z3); SBoxE7(Z0,Z1,Z2,Z3); transform(Z0,Z1,Z2,Z3);
-   key_xor(31,Z0,Z1,Z2,Z3); SBoxE8(Z0,Z1,Z2,Z3); key_xor(32,Z0,Z1,Z2,Z3);
-
-   B0 = Z0.m_lo;
-   B1 = Z1.m_lo;
-   B2 = Z2.m_lo;
-   B3 = Z3.m_lo;
-   C0 = Z0.m_hi;
-   C1 = Z1.m_hi;
-   C2 = Z2.m_hi;
-   C3 = Z3.m_hi;
-
-   SIMD_32::transpose(B0, B1, B2, B3);
-   SIMD_32::transpose(C0, C1, C2, C3);
-
+   SIMD_8x32::transpose_out(B0, B1, B2, B3);
    B0.store_le(out);
-   B1.store_le(out + 16);
-   B2.store_le(out + 32);
-   B3.store_le(out + 48);
-
-   C0.store_le(out + 64);
-   C1.store_le(out + 16 + 64);
-   C2.store_le(out + 32 + 64);
-   C3.store_le(out + 48 + 64);
+   B1.store_le(out + 32);
+   B2.store_le(out + 64);
+   B3.store_le(out + 96);
    }
 
-/*
-* SIMD Serpent Decryption of 4 blocks in parallel
-*/
 void Serpent::avx2_decrypt_8(const uint8_t in[64], uint8_t out[64]) const
    {
+   SIMD_8x32 B0 = SIMD_8x32::load_le(in);
+   SIMD_8x32 B1 = SIMD_8x32::load_le(in + 32);
+   SIMD_8x32 B2 = SIMD_8x32::load_le(in + 64);
+   SIMD_8x32 B3 = SIMD_8x32::load_le(in + 96);
 
+   SIMD_8x32::transpose(B0, B1, B2, B3);
+
+   key_xor(32,B0,B1,B2,B3);  SBoxD8(B0,B1,B2,B3); key_xor(31,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(30,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(29,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(28,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(27,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(26,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor(25,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor(24,B0,B1,B2,B3);
+
+   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor(23,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(22,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(21,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(20,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(19,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(18,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor(17,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor(16,B0,B1,B2,B3);
+
+   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor(15,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(14,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(13,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(12,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(11,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(10,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 9,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 8,B0,B1,B2,B3);
+
+   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor( 7,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor( 6,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor( 5,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor( 4,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor( 3,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor( 2,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 1,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 0,B0,B1,B2,B3);
+
+   SIMD_8x32::transpose_out(B0, B1, B2, B3);
+
+   B0.store_le(out);
+   B1.store_le(out + 32);
+   B2.store_le(out + 64);
+   B3.store_le(out + 96);
    }
 
 }

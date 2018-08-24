@@ -135,7 +135,7 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    verify_key_set(m_round_key.empty() == false);
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
-   if(CPUID::has_avx2() && false)
+   if(CPUID::has_avx2())
       {
       while(blocks >= 8)
          {
