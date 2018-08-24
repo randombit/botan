@@ -60,6 +60,8 @@ http_util # needed by x509 for OCSP online checks
 
 aes_ni
 aes_ssse3
+aes_armv8
+aes_power8
 serpent_simd
 threefish_512_avx2
 chacha_sse2

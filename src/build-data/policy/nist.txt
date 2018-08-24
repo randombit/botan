@@ -49,6 +49,8 @@ rfc3394
 # block
 aes_ni
 aes_ssse3
+aes_armv8
+aes_power8
 
 # hash
 sha1_sse2
