@@ -99,6 +99,7 @@ noekeon_simd
 seed
 serpent
 serpent_simd
+serpent_avx2
 shacal2
 shacal2_x86
 shacal2_simd
