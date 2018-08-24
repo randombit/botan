@@ -6,7 +6,7 @@
 
 #include <botan/serpent.h>
 #include <botan/internal/serpent_sbox.h>
-#include <botan/internal/simd_32.h>
+#include <immintrin.h>
 
 namespace Botan {
 
@@ -24,29 +24,17 @@ class SIMD_8x32 final
       SIMD_8x32(SIMD_8x32&& other) = default;
 #endif
 
-      SIMD_8x32() : m_lo(), m_hi()
+      SIMD_8x32()
          {
-         }
-
-      SIMD_8x32(const SIMD_4x32& l, const SIMD_4x32& h) : m_lo(l), m_hi(h)
-         {
+         m_avx2 = _mm256_setzero_si256();
          }
 
       /**
       * Load SIMD register with 8 32-bit elements
       */
-      explicit SIMD_8x32(const uint32_t B[8]) : m_lo(B), m_hi(B + 4)
+      explicit SIMD_8x32(const uint32_t B[8])
          {
-         }
-
-      /**
-      * Load SIMD register with 8 32-bit elements
-      */
-      SIMD_8x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3,
-                uint32_t B4, uint32_t B5, uint32_t B6, uint32_t B7) :
-         m_lo(B0, B1, B2, B3),
-         m_hi(B4, B5, B6, B7)
-         {
+         m_avx2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(B));
          }
 
       /**
@@ -54,8 +42,7 @@ class SIMD_8x32 final
       */
       static SIMD_8x32 splat(uint32_t B)
          {
-         SIMD_4x32 s = SIMD_4x32::splat(B);
-         return SIMD_8x32(s, s);
+         return SIMD_8x32(_mm256_set1_epi32(B));
          }
 
       /**
@@ -63,7 +50,7 @@ class SIMD_8x32 final
       */
       static SIMD_8x32 load_le(const uint8_t* in)
          {
-         return SIMD_8x32(SIMD_4x32::load_le(in), SIMD_4x32::load_le(in + 16));
+         return SIMD_8x32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
          }
 
       /**
@@ -71,7 +58,7 @@ class SIMD_8x32 final
       */
       static SIMD_8x32 load_be(const uint8_t* in)
          {
-         return SIMD_8x32(SIMD_4x32::load_be(in), SIMD_4x32::load_be(in + 16));
+         return load_le(in).bswap();
          }
 
       /**
@@ -79,8 +66,7 @@ class SIMD_8x32 final
       */
       void store_le(uint8_t out[]) const
          {
-         m_lo.store_le(out);
-         m_hi.store_le(out + 16);
+         _mm256_storeu_si256(reinterpret_cast<__m256i*>(out), m_avx2);
          }
 
       /**
@@ -88,8 +74,7 @@ class SIMD_8x32 final
       */
       void store_be(uint8_t out[]) const
          {
-         m_lo.store_be(out);
-         m_hi.store_be(out + 16);
+         bswap().store_le(out);
          }
 
       /**
@@ -99,7 +84,9 @@ class SIMD_8x32 final
       SIMD_8x32 rotl() const
          {
          static_assert(ROT > 0 && ROT < 32, "Invalid rotation constant");
-         return SIMD_8x32(m_lo.rotl<ROT>(), m_hi.rotl<ROT>());
+
+         return SIMD_8x32(_mm256_or_si256(_mm256_slli_epi32(m_avx2, static_cast<int>(ROT)),
+                                          _mm256_srli_epi32(m_avx2, static_cast<int>(32-ROT))));
          }
 
       /**
@@ -163,53 +150,48 @@ class SIMD_8x32 final
 
       void operator+=(const SIMD_8x32& other)
          {
-         m_lo += other.m_lo;
-         m_hi += other.m_hi;
+         m_avx2 = _mm256_add_epi32(m_avx2, other.m_avx2);
          }
 
       void operator-=(const SIMD_8x32& other)
          {
-         m_lo -= other.m_lo;
-         m_hi -= other.m_hi;
+         m_avx2 = _mm256_sub_epi32(m_avx2, other.m_avx2);
          }
 
       void operator^=(const SIMD_8x32& other)
          {
-         m_lo ^= other.m_lo;
-         m_hi ^= other.m_hi;
+         m_avx2 = _mm256_xor_si256(m_avx2, other.m_avx2);
          }
 
       void operator|=(const SIMD_8x32& other)
          {
-         m_lo |= other.m_lo;
-         m_hi |= other.m_hi;
+         m_avx2 = _mm256_or_si256(m_avx2, other.m_avx2);
          }
 
       void operator&=(const SIMD_8x32& other)
          {
-         m_lo &= other.m_lo;
-         m_hi &= other.m_hi;
+         m_avx2 = _mm256_and_si256(m_avx2, other.m_avx2);
          }
 
       template<int SHIFT> SIMD_8x32 shl() const
          {
-         return SIMD_8x32(m_lo.shl<SHIFT>(), m_hi.shl<SHIFT>());
+         return SIMD_8x32(_mm256_slli_epi32(m_avx2, SHIFT));
          }
 
       template<int SHIFT> SIMD_8x32 shr() const
          {
-         return SIMD_8x32(m_lo.shr<SHIFT>(), m_hi.shr<SHIFT>());
+         return SIMD_8x32(_mm256_srli_epi32(m_avx2, SHIFT));
          }
 
       SIMD_8x32 operator~() const
          {
-         return SIMD_8x32(~m_lo, ~m_hi);
+         return SIMD_8x32(_mm256_xor_si256(m_avx2, _mm256_set1_epi32(0xFFFFFFFF)));
          }
 
       // (~reg) & other
       SIMD_8x32 andc(const SIMD_8x32& other) const
          {
-         return SIMD_8x32(m_lo.andc(other.m_lo), m_hi.andc(other.m_hi));
+         return SIMD_8x32(_mm256_andnot_si256(m_avx2, other.m_avx2));
          }
 
       /**
@@ -217,28 +199,40 @@ class SIMD_8x32 final
       */
       SIMD_8x32 bswap() const
          {
-         return SIMD_8x32(m_lo.bswap(), m_hi.bswap());
+         const uint8_t BSWAP_MASK[32] = { 3, 2, 1, 0,
+                                          7, 6, 5, 4,
+                                          11, 10, 9, 8,
+                                          15, 14, 13, 12,
+                                          19, 18, 17, 16,
+                                          23, 22, 21, 20,
+                                          27, 26, 25, 24,
+                                          31, 30, 29, 28 };
+
+         const __m256i bswap = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(BSWAP_MASK));
+
+         const __m256i output = _mm256_shuffle_epi8(m_avx2, bswap);
+
+         return SIMD_8x32(output);
          }
 
       static void transpose(SIMD_8x32& B0, SIMD_8x32& B1,
                             SIMD_8x32& B2, SIMD_8x32& B3)
          {
-         SIMD_4x32::transpose(B0.m_lo, B0.m_hi, B1.m_lo, B1.m_hi);
-         SIMD_4x32::transpose(B2.m_lo, B2.m_hi, B3.m_lo, B3.m_hi);
-         SIMD_8x32 T0 = SIMD_8x32(B0.m_lo, B2.m_lo);
-         SIMD_8x32 T1 = SIMD_8x32(B0.m_hi, B2.m_hi);
-         SIMD_8x32 T2 = SIMD_8x32(B1.m_lo, B3.m_lo);
-         SIMD_8x32 T3 = SIMD_8x32(B1.m_hi, B3.m_hi);
+         const __m256i T0 = _mm256_unpacklo_epi32(B0.m_avx2, B1.m_avx2);
+         const __m256i T1 = _mm256_unpacklo_epi32(B2.m_avx2, B3.m_avx2);
+         const __m256i T2 = _mm256_unpackhi_epi32(B0.m_avx2, B1.m_avx2);
+         const __m256i T3 = _mm256_unpackhi_epi32(B2.m_avx2, B3.m_avx2);
 
-         B0 = T0;
-         B1 = T1;
-         B2 = T2;
-         B3 = T3;
+         B0.m_avx2 = _mm256_unpacklo_epi64(T0, T1);
+         B1.m_avx2 = _mm256_unpackhi_epi64(T0, T1);
+         B2.m_avx2 = _mm256_unpacklo_epi64(T2, T3);
+         B3.m_avx2 = _mm256_unpackhi_epi64(T2, T3);
          }
 
       static void transpose_out(SIMD_8x32& B0, SIMD_8x32& B1,
                                 SIMD_8x32& B2, SIMD_8x32& B3)
          {
+         /*
          SIMD_4x32::transpose(B0.m_lo, B1.m_lo, B2.m_lo, B3.m_lo);
          SIMD_4x32::transpose(B0.m_hi, B1.m_hi, B2.m_hi, B3.m_hi);
          SIMD_8x32 T0 = SIMD_8x32(B0.m_lo, B1.m_lo);
@@ -250,9 +244,21 @@ class SIMD_8x32 final
          B1 = T1;
          B2 = T2;
          B3 = T3;
+         */
+         const __m256i T0 = _mm256_unpacklo_epi32(B0.m_avx2, B1.m_avx2);
+         const __m256i T1 = _mm256_unpacklo_epi32(B2.m_avx2, B3.m_avx2);
+         const __m256i T2 = _mm256_unpackhi_epi32(B0.m_avx2, B1.m_avx2);
+         const __m256i T3 = _mm256_unpackhi_epi32(B2.m_avx2, B3.m_avx2);
+
+         B0.m_avx2 = _mm256_unpacklo_epi64(T0, T1);
+         B1.m_avx2 = _mm256_unpackhi_epi64(T0, T1);
+         B2.m_avx2 = _mm256_unpacklo_epi64(T2, T3);
+         B3.m_avx2 = _mm256_unpackhi_epi64(T2, T3);
          }
-   public:
-      SIMD_4x32 m_lo, m_hi;
+   private:
+      SIMD_8x32(__m256i x) : m_avx2(x) {}
+
+      __m256i m_avx2;
    };
 
 }
@@ -338,7 +344,7 @@ void Serpent::avx2_encrypt_8(const uint8_t in[64], uint8_t out[64]) const
    key_xor(30,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(31,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); key_xor(32,B0,B1,B2,B3);
 
-   SIMD_8x32::transpose_out(B0, B1, B2, B3);
+   SIMD_8x32::transpose(B0, B1, B2, B3);
    B0.store_le(out);
    B1.store_le(out + 32);
    B2.store_le(out + 64);
@@ -390,7 +396,7 @@ void Serpent::avx2_decrypt_8(const uint8_t in[64], uint8_t out[64]) const
    i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 1,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 0,B0,B1,B2,B3);
 
-   SIMD_8x32::transpose_out(B0, B1, B2, B3);
+   SIMD_8x32::transpose(B0, B1, B2, B3);
 
    B0.store_le(out);
    B1.store_le(out + 32);
