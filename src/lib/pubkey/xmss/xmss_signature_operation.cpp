@@ -54,8 +54,10 @@ XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash,
 
 size_t XMSS_Signature_Operation::signature_length() const
    {
-   // TODO bound this by the params
-   return 128*1024;
+   return sizeof(uint64_t) + // size of leaf index
+          m_xmss_params.element_size() +
+          m_xmss_params.len() * m_xmss_params.element_size() +
+          m_xmss_params.tree_height() * m_xmss_params.element_size();
    }
 
 wots_keysig_t
