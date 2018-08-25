@@ -17,6 +17,8 @@ Version 2.8.0, Not Yet Released
 
 * Add XChaCha and XChaCha20Poly1305 (GH #1640)
 
+* Add AVX2 implementation of Serpent (GH #1660)
+
 * C binding improvements. Added functions to get name and supported
   keylengths of cipher, hash and MAC objects, support for FE1 format
   preserving encryption (GH #1625 #1646), functions to load and save
@@ -47,6 +49,8 @@ Version 2.8.0, Not Yet Released
 
 * In ECC private keys, include the public key data for compatibility with
   GnuTLS (GH #1634 #1635)
+
+* It is now possible to encrypt private keys using SIV mode.
 
 * The FFI function botan_privkey_load now ignores its rng argument.
 
