@@ -15,7 +15,6 @@ Ciphers, Hashes, PBKDF
 * Compressed tables for AES
 * AES using vector permutes for NEON
 * Camellia using AES-NI
-* Serpent using AVX2 or SSSE3/pshufb
 * ChaCha20 using AVX2, NEON
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)

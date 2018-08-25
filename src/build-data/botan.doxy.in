@@ -160,6 +160,7 @@ PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
                          BOTAN_HAS_IDEA_SSE2 \
                          BOTAN_HAS_NOEKEON_SIMD \
                          BOTAN_HAS_SERPENT_SIMD \
+                         BOTAN_HAS_SERPENT_AVX2 \
                          BOTAN_HAS_SHA1_SSE2 \
                          BOTAN_HAS_SHA2_32_X86 \
                          BOTAN_HAS_SHA2_32_X86_BMI2 \

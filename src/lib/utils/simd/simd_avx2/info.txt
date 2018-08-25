@@ -1,0 +1,16 @@
+<defines>
+SIMD_AVX2 -> 20180824
+</defines>
+
+need_isa avx2
+
+<header:internal>
+simd_avx2.h
+</header:internal>
+
+<cc>
+gcc
+clang
+msvc
+icc
+</cc>

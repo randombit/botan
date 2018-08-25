@@ -2360,16 +2360,10 @@ class AmalgamationHeader(object):
         self.included_already = set()
         self.all_std_includes = set()
 
-        encoding_kwords = {}
-        if sys.version_info[0] == 3:
-            encoding_kwords['encoding'] = 'utf8'
-
         self.file_contents = {}
         for filepath in sorted(input_filepaths):
             try:
-                with open(filepath, **encoding_kwords) as f:
-                    raw_content = f.readlines()
-                contents = AmalgamationGenerator.strip_header_goop(filepath, raw_content)
+                contents = AmalgamationGenerator.read_header(filepath)
                 self.file_contents[os.path.basename(filepath)] = contents
             except IOError as e:
                 logging.error('Error processing file %s for amalgamation: %s' % (filepath, e))
@@ -2447,6 +2441,15 @@ class AmalgamationGenerator(object):
     _header_guard_pattern = re.compile('^#define BOTAN_.*_H_$')
 
     @staticmethod
+    def read_header(filepath):
+        encoding_kwords = {}
+        if sys.version_info[0] == 3:
+            encoding_kwords['encoding'] = 'utf8'
+        with open(filepath, **encoding_kwords) as f:
+            raw_content = f.readlines()
+            return AmalgamationGenerator.strip_header_goop(filepath, raw_content)
+
+    @staticmethod
     def strip_header_goop(header_name, header_lines):
         lines = copy.copy(header_lines) # defensive copy
 
@@ -2513,16 +2516,32 @@ class AmalgamationGenerator(object):
         logging.info('Writing amalgamation header to %s' % (header_name))
         pub_header_amalag.write_to_file(header_name, "BOTAN_AMALGAMATION_H_")
 
-        internal_headers = AmalgamationHeader(self._build_paths.internal_headers)
+        isa_headers = {}
+        internal_headers = []
+
+        def known_isa_header(hdr):
+            if hdr == 'simd_avx2.h':
+                return 'avx2'
+            return None
+
+        for hdr in self._build_paths.internal_headers:
+            isa = known_isa_header(os.path.basename(hdr))
+            if isa:
+                isa_headers[isa] = ''.join(AmalgamationGenerator.read_header(hdr))
+            else:
+                internal_headers.append(hdr)
+
+        internal_headers = AmalgamationHeader(internal_headers)
         header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_int_name))
         internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H_")
 
         header_files = [header_name, header_int_name]
         included_in_headers = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
-        return header_files, included_in_headers
+        return header_files, included_in_headers, isa_headers
 
-    def _generate_sources(self, amalgamation_headers, included_in_headers): #pylint: disable=too-many-locals,too-many-branches
+    def _generate_sources(self, amalgamation_headers, included_in_headers, isa_headers):
+        #pylint: disable=too-many-locals,too-many-branches
         encoding_kwords = {}
         if sys.version_info[0] == 3:
             encoding_kwords['encoding'] = 'utf8'
@@ -2541,6 +2560,14 @@ class AmalgamationGenerator(object):
             logging.info('Writing amalgamation source to %s' % (filepath))
             amalgamation_files[target] = open(filepath, 'w', **encoding_kwords)
 
+        def gcc_isa(isa):
+            if isa == 'sse41':
+                return 'sse4.1'
+            elif isa == 'sse42':
+                return 'ssse4.2'
+            else:
+                return isa
+
         for target, f in amalgamation_files.items():
             AmalgamationHeader.write_banner(f)
             f.write('\n')
@@ -2550,13 +2577,11 @@ class AmalgamationGenerator(object):
 
             for isa in self._isas_for_target(target):
 
-                if isa == 'sse41':
-                    isa = 'sse4.1'
-                elif isa == 'sse42':
-                    isa = 'ssse4.2'
+                if isa in isa_headers:
+                    f.write(isa_headers[isa])
 
                 f.write('#if defined(__GNUG__) && !defined(__clang__)\n')
-                f.write('#pragma GCC target ("%s")\n' % (isa))
+                f.write('#pragma GCC target ("%s")\n' % (gcc_isa(isa)))
                 f.write('#endif\n')
 
         # target to include header map
@@ -2588,8 +2613,8 @@ class AmalgamationGenerator(object):
         return set(amalgamation_sources.values())
 
     def generate(self):
-        amalgamation_headers, included_in_headers = self._generate_headers()
-        amalgamation_sources = self._generate_sources(amalgamation_headers, included_in_headers)
+        amalgamation_headers, included_in_headers, isa_headers = self._generate_headers()
+        amalgamation_sources = self._generate_sources(amalgamation_headers, included_in_headers, isa_headers)
         return (sorted(amalgamation_sources), sorted(amalgamation_headers))
 
 

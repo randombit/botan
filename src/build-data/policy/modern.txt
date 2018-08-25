@@ -63,6 +63,7 @@ aes_ssse3
 aes_armv8
 aes_power8
 serpent_simd
+serpent_avx2
 threefish_512_avx2
 chacha_sse2
 
