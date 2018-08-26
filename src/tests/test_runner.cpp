@@ -145,6 +145,10 @@ int Test_Runner::run(const Test_Options& opts)
       }
 
    output() << "Testing " << Botan::version_string() << "\n";
+
+   const std::string cpuid = Botan::CPUID::to_string();
+   if(cpuid.size() > 0)
+      output() << "CPU flags: " << cpuid << "\n";
    output() << "Starting tests";
 
    if(!opts.pkcs11_lib().empty())
