@@ -17,7 +17,7 @@ Version 2.8.0, Not Yet Released
 
 * Add XChaCha and XChaCha20Poly1305 (GH #1640)
 
-* Add AVX2 implementation of Serpent (GH #1660)
+* Add AVX2 implementations of ChaCha (GH #1662) and Serpent (GH #1660)
 
 * C binding improvements. Added functions to get name and supported
   keylengths of cipher, hash and MAC objects, support for FE1 format
