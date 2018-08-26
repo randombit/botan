@@ -268,55 +268,10 @@ class SIMD_4x32 final
       template<size_t ROT1, size_t ROT2, size_t ROT3>
       SIMD_4x32 rho() const
          {
-         SIMD_4x32 res;
-
-#if defined(BOTAN_SIMD_USE_SSE2)
-
-         res.m_sse = _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT1)),
-                                  _mm_srli_epi32(m_sse, static_cast<int>(ROT1)));
-         res.m_sse = _mm_xor_si128(
-            res.m_sse,
-            _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT2)),
-                         _mm_srli_epi32(m_sse, static_cast<int>(ROT2))));
-         res.m_sse = _mm_xor_si128(
-            res.m_sse,
-            _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT3)),
-                         _mm_srli_epi32(m_sse, static_cast<int>(ROT3))));
-
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
-
-         const unsigned int r1 = static_cast<unsigned int>(32-ROT1);
-         const unsigned int r2 = static_cast<unsigned int>(32-ROT2);
-         const unsigned int r3 = static_cast<unsigned int>(32-ROT3);
-         res.m_vmx = vec_rl(m_vmx, (__vector unsigned int){r1, r1, r1, r1});
-         res.m_vmx = vec_xor(res.m_vmx, vec_rl(m_vmx, (__vector unsigned int){r2, r2, r2, r2}));
-         res.m_vmx = vec_xor(res.m_vmx, vec_rl(m_vmx, (__vector unsigned int){r3, r3, r3, r3}));
-
-#elif defined(BOTAN_SIMD_USE_NEON)
-         res.m_neon = vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT1)),
-                                vshrq_n_u32(m_neon, static_cast<int>(ROT1)));
-
-         res.m_neon = veorq_u32(
-            res.m_neon,
-            vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT2)),
-                      vshrq_n_u32(m_neon, static_cast<int>(ROT2))));
-
-         res.m_neon = veorq_u32(
-            res.m_neon,
-            vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT3)),
-                      vshrq_n_u32(m_neon, static_cast<int>(ROT3))));
-
-#else
-
-         for(size_t i = 0; i != 4; ++i)
-            {
-            res.m_scalar[i] = Botan::rotr<ROT1>(m_scalar[i]) ^
-                              Botan::rotr<ROT2>(m_scalar[i]) ^
-                              Botan::rotr<ROT3>(m_scalar[i]);
-            }
-#endif
-
-         return res;
+         const SIMD_4x32 rot1 = this->rotr<ROT1>();
+         const SIMD_4x32 rot2 = this->rotr<ROT2>();
+         const SIMD_4x32 rot3 = this->rotr<ROT3>();
+         return (rot1 ^ rot2 ^ rot3);
          }
 
       /**
