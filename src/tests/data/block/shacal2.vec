@@ -1,4 +1,4 @@
-#test cpuid sse2 intel_sha
+#test cpuid intel_sha sse2
 
 [SHACAL2]
 

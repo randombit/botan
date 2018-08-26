@@ -1,5 +1,5 @@
 
-#test cpuid sse2 avx2
+#test cpuid avx2 sse2
 
 [ChaCha(8)]
 
