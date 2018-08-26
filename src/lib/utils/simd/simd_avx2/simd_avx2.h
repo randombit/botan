@@ -105,6 +105,18 @@ class SIMD_8x32 final
          return this->rotl<32-ROT>();
          }
 
+      template<size_t ROT1, size_t ROT2, size_t ROT3>
+      SIMD_8x32 rho() const
+         {
+         SIMD_8x32 res;
+
+         const SIMD_8x32 rot1 = this->rotr<ROT1>();
+         const SIMD_8x32 rot2 = this->rotr<ROT2>();
+         const SIMD_8x32 rot3 = this->rotr<ROT3>();
+
+         return rot1 ^ rot2 ^ rot3;
+         }
+
       SIMD_8x32 operator+(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -228,6 +240,21 @@ class SIMD_8x32 final
          }
 
       BOTAN_FUNC_ISA("avx2")
+      static void transpose(SIMD_8x32& B0, SIMD_8x32& B1,
+                            SIMD_8x32& B2, SIMD_8x32& B3,
+                            SIMD_8x32& B4, SIMD_8x32& B5,
+                            SIMD_8x32& B6, SIMD_8x32& B7)
+         {
+         transpose(B0, B1, B2, B3);
+         transpose(B4, B5, B6, B7);
+
+         swap_tops(B0, B4);
+         swap_tops(B1, B5);
+         swap_tops(B2, B6);
+         swap_tops(B3, B7);
+         }
+
+      BOTAN_FUNC_ISA("avx2")
       static void reset_registers()
          {
          _mm256_zeroupper();
@@ -241,10 +268,19 @@ class SIMD_8x32 final
 
       __m256i BOTAN_FUNC_ISA("avx2") handle() const { return m_avx2; }
 
+      BOTAN_FUNC_ISA("avx2")
+      SIMD_8x32(__m256i x) : m_avx2(x) {}
+
    private:
 
       BOTAN_FUNC_ISA("avx2")
-      SIMD_8x32(__m256i x) : m_avx2(x) {}
+      static void swap_tops(SIMD_8x32& A, SIMD_8x32& B)
+         {
+         SIMD_8x32 T0 = _mm256_permute2x128_si256(A.handle(), B.handle(), 0 + (2 << 4));
+         SIMD_8x32 T1 = _mm256_permute2x128_si256(A.handle(), B.handle(), 1 + (3 << 4));
+         A = T0;
+         B = T1;
+         }
 
       __m256i m_avx2;
    };

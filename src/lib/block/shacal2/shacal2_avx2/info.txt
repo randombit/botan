@@ -1,0 +1,11 @@
+<defines>
+SHACAL2_AVX2 -> 20180826
+</defines>
+
+<isa>
+avx2
+</isa>
+
+<requires>
+simd_avx2
+</requires>
