@@ -17,7 +17,6 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t input[16], size_t rou
 
    const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);
    __m256i* output_mm = reinterpret_cast<__m256i*>(output);
-   __m128i* output_mm128 = reinterpret_cast<__m128i*>(output);
 
    const __m256i input0 = _mm256_broadcastsi128_si256(_mm_loadu_si128(input_mm));
    const __m256i input1 = _mm256_broadcastsi128_si256(_mm_loadu_si128(input_mm + 1));
