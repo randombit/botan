@@ -47,6 +47,10 @@ in the source.
 
 - TLS: CCM_8 ciphersuites
 
+- TLS: TLSv1.0 and v1.1, DTLS v1.0
+
+- TLS: CBC ciphersuites
+
 - Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
 
 - CBC-MAC
