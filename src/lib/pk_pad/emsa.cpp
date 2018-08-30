@@ -81,25 +81,45 @@ EMSA* get_emsa(const std::string& algo_spec)
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PSSR)
-   if(req.algo_name() == "PSSR" ||
-      req.algo_name() == "EMSA-PSS" ||
-      req.algo_name() == "PSS-MGF1" ||
-      req.algo_name() == "EMSA4" ||
+   if(req.algo_name() == "PSS_Raw" ||
       req.algo_name() == "PSSR_Raw")
       {
-      if(req.arg_count_between(1, 3))
+      if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1")
          {
-         if(req.arg(1, "MGF1") != "MGF1")
-            return nullptr; // not supported
-
          if(auto h = HashFunction::create(req.arg(0)))
             {
-            const size_t salt_size = req.arg_as_integer(2, h->output_length());
-
-            if(req.algo_name() == "PSSR_Raw")
+            if(req.arg_count() == 3)
+               {
+               const size_t salt_size = req.arg_as_integer(2, 0);
                return new PSSR_Raw(h.release(), salt_size);
+               }
             else
+               {
+               return new PSSR_Raw(h.release());
+               }
+            }
+         }
+      }
+   
+   if(req.algo_name() == "PSS" ||
+      req.algo_name() == "PSSR" ||
+      req.algo_name() == "EMSA-PSS" ||
+      req.algo_name() == "PSS-MGF1" ||
+      req.algo_name() == "EMSA4")
+      {
+      if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1")
+         {
+         if(auto h = HashFunction::create(req.arg(0)))
+            {
+            if(req.arg_count() == 3)
+               {
+               const size_t salt_size = req.arg_as_integer(2, 0);
                return new PSSR(h.release(), salt_size);
+               }
+            else
+               {
+               return new PSSR(h.release());
+               }
             }
          }
       }
