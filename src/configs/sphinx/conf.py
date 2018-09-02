@@ -1,3 +1,4 @@
+# -* coding: utf-8 -*-
 # Sphinx configuration file
 
 import sys
@@ -46,7 +47,7 @@ version_patch = version_info['release_patch']
 
 is_website_build = check_for_tag('website')
 
-needs_sphinx = '1.1'
+needs_sphinx = '1.3'
 
 templates_path = ['templates']
 
