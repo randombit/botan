@@ -144,7 +144,7 @@ def main(args=None):
             f = open(config)
             cfg = json.load(f)
             f.close()
-        except OsError as e:
+        except OSError:
             logging.error('Failed to load build config - is build dir correct?')
             sys.exit(1)
 
