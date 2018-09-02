@@ -62,30 +62,16 @@ def copy_files(src_path, dest_dir):
 
 def run_and_check(cmd_line, cwd=None):
 
-    logging.debug("Executing %s", ' '.join(cmd_line))
-
-    stdout = None
-    stderr = None
+    logging.info("Starting %s", ' '.join(cmd_line))
 
     try:
-        proc = subprocess.Popen(cmd_line,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                cwd=cwd)
+        proc = subprocess.Popen(cmd_line, cwd=cwd)
 
-        (stdout, stderr) = proc.communicate()
+        proc.communicate()
     except OSError as e:
         logging.error("Executing %s failed (%s)", ' '.join(cmd_line), e)
 
-    if stdout:
-        logging.info(stdout.decode())
-
-    if stderr:
-        logging.info(stderr.decode())
-
     if proc.returncode != 0:
-        logging.info(stdout.decode())
-        logging.info(stderr.decode())
         logging.error("Error running %s", ' '.join(cmd_line))
         sys.exit(1)
 
@@ -151,8 +137,20 @@ def main(args=None):
     if options is None:
         return 1
 
-    with open(os.path.join(options.build_dir, 'build_config.json')) as f:
-        cfg = json.load(f)
+    def read_config(config):
+
+        try:
+
+            f = open(config)
+            cfg = json.load(f)
+            f.close()
+        except OsError as e:
+            logging.error('Failed to load build config - is build dir correct?')
+            sys.exit(1)
+
+        return cfg
+
+    cfg = read_config(os.path.join(options.build_dir, 'build_config.json'))
 
     with_docs = bool(cfg['with_documentation'])
     with_sphinx = bool(cfg['with_sphinx'])
