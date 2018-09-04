@@ -7,3 +7,7 @@ load_on vendor
 <header:internal>
 commoncrypto.h
 </header:internal>
+
+<os_features>
+commoncrypto
+</os_features>
