@@ -2041,14 +2041,14 @@ class ModulesChooser(object):
             self._modules, self._options.enabled_modules, self._options.disabled_modules)
 
     def _check_usable(self, module, modname):
-        if not module.compatible_os(self._osinfo, self._options):
+        if not module.compatible_cpu(self._archinfo, self._options):
+            self._not_using_because['incompatible CPU'].add(modname)
+            return False
+        elif not module.compatible_os(self._osinfo, self._options):
             self._not_using_because['incompatible OS'].add(modname)
             return False
         elif not module.compatible_compiler(self._ccinfo, self._cc_min_version, self._archinfo.basename):
             self._not_using_because['incompatible compiler'].add(modname)
-            return False
-        elif not module.compatible_cpu(self._archinfo, self._options):
-            self._not_using_because['incompatible CPU'].add(modname)
             return False
         return True
 
