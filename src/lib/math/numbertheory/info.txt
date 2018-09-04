@@ -2,8 +2,6 @@
 NUMBERTHEORY -> 20131128
 </defines>
 
-load_on auto
-
 <header:public>
 curve_nistp.h
 numthry.h

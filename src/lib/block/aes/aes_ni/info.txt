@@ -2,6 +2,4 @@
 AES_NI -> 20131128
 </defines>
 
-load_on auto
-
 need_isa aesni

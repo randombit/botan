@@ -2,8 +2,6 @@
 AEAD_SIV -> 20131202
 </defines>
 
-load_on auto
-
 <requires>
 cmac
 ctr

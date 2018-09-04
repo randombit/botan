@@ -2,8 +2,6 @@
 TLS -> 20150319
 </defines>
 
-load_on auto
-
 <header:public>
 credentials_manager.h
 tls_alert.h

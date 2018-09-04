@@ -2,8 +2,6 @@
 AES_SSSE3 -> 20131128
 </defines>
 
-load_on auto
-
 need_isa ssse3
 
 # Intel C++ can't deal with syntax for defining constants :(

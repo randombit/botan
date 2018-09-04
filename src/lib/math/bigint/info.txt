@@ -2,8 +2,6 @@
 BIGINT -> 20131128
 </defines>
 
-load_on auto
-
 <header:public>
 bigint.h
 divide.h
