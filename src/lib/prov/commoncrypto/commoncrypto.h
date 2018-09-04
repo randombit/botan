@@ -14,8 +14,6 @@
 #include <memory>
 #include <string>
 
-#include <CommonCrypto/CommonCrypto.h>
-
 namespace Botan {
 
 class HashFunction;
