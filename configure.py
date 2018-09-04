@@ -854,7 +854,7 @@ class ModuleInfo(InfoObject):
         for key, value in defines.items():
             if not re.match('^[0-9A-Za-z_]{3,30}$', key):
                 raise InternalError('Module defines key has invalid format: "%s"' % key)
-            if not re.match('^[0-9]{8}$', value):
+            if not re.match('^20[0-9]{6}$', value):
                 raise InternalError('Module defines value has invalid format: "%s"' % value)
 
     def cross_check(self, arch_info, cc_info, all_os_features):
