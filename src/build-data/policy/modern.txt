@@ -82,7 +82,6 @@ rdrand_rng
 system_rng
 
 # entropy sources
-darwin_secrandom
 dev_random
 proc_walk
 rdrand

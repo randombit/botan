@@ -32,10 +32,6 @@
   #include <botan/internal/proc_walk.h>
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
-  #include <botan/internal/darwin_secrandom.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
   #include <botan/internal/getentropy.h>
 #endif
@@ -83,13 +79,6 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    if(name == "rdseed")
       {
       return std::unique_ptr<Entropy_Source>(new Intel_Rdseed);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
-   if(name == "darwin_secrandom")
-      {
-      return std::unique_ptr<Entropy_Source>(new Darwin_SecRandom);
       }
 #endif
 
