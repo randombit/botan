@@ -40,6 +40,14 @@ def have_prog(prog):
             return True
     return False
 
+def find_rst2man():
+    possible_names = ['rst2man', 'rst2man.py']
+
+    for name in possible_names:
+        if have_prog(name):
+            return name
+    raise Exception("Was configured with rst2man but could not be located in PATH")
+
 def touch(fname):
     try:
         os.utime(fname, None)
@@ -123,8 +131,18 @@ def sphinx_supports_concurrency():
     version = StrictVersion(match.group(1)) if match else StrictVersion('1.2')
     return version >= StrictVersion('1.2')
 
+def read_config(config):
+    try:
+        f = open(config)
+        cfg = json.load(f)
+        f.close()
+    except OSError:
+        raise Exception('Failed to load build config %s - is build dir correct?' % (config))
+
+    return cfg
+
 def main(args=None):
-    # pylint: disable=too-many-branches,too-many-locals
+    # pylint: disable=too-many-branches
 
     if args is None:
         args = sys.argv
@@ -136,19 +154,6 @@ def main(args=None):
 
     if options is None:
         return 1
-
-    def read_config(config):
-
-        try:
-
-            f = open(config)
-            cfg = json.load(f)
-            f.close()
-        except OSError:
-            logging.error('Failed to load build config - is build dir correct?')
-            sys.exit(1)
-
-        return cfg
 
     cfg = read_config(os.path.join(options.build_dir, 'build_config.json'))
 
@@ -187,15 +192,6 @@ def main(args=None):
     else:
         # otherwise just copy it
         cmds.append(['cp', manual_src, manual_output])
-
-    def find_rst2man():
-        possible_names = ['rst2man', 'rst2man.py']
-
-        for name in possible_names:
-            if have_prog(name):
-                return name
-
-        raise Exception("Was configured with rst2man but could not be located in PATH")
 
     if with_rst2man:
         cmds.append([find_rst2man(),
