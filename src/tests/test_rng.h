@@ -29,6 +29,8 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          return !m_buf.empty();
          }
 
+      bool accepts_input() const override { return true; }
+
       size_t reseed(Botan::Entropy_Sources&,
                     size_t,
                     std::chrono::milliseconds) override
@@ -116,6 +118,8 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG
             }
          }
 
+      bool accepts_input() const override { return false; }
+
       void add_entropy(const uint8_t*, size_t) override
          {
          throw Botan::Exception("add_entropy() not supported by this RNG, test bug?");
@@ -146,6 +150,8 @@ class SeedCapturing_RNG final : public Botan::RandomNumberGenerator
          {
          throw Botan::Exception("SeedCapturing_RNG has no output");
          }
+
+      bool accepts_input() const override { return true; }
 
       void add_entropy(const uint8_t input[], size_t len) override
          {
@@ -191,6 +197,8 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator
          {
          return m_randomize_count;
          }
+
+      bool accepts_input() const override { return false; }
 
       bool is_seeded() const override
          {

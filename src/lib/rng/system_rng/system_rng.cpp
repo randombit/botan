@@ -51,6 +51,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
       void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
       bool is_seeded() const override { return true; }
+      bool accepts_input() const override { return false; }
       void clear() override { /* not possible */ }
       std::string name() const override { return "RtlGenRandom"; }
    private:
@@ -98,6 +99,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
          }
 
       bool is_seeded() const override { return true; }
+      bool accepts_input() const override { return false; }
       void clear() override { /* not possible */ }
       std::string name() const override { return "crypto_ng"; }
    private:
@@ -116,6 +118,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
          ::arc4random_buf(buf, len);
          }
 
+      bool accepts_input() const override { return false; }
       void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
       bool is_seeded() const override { return true; }
       void clear() override { /* not possible */ }
@@ -137,12 +140,19 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
          m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDWR | O_NOCTTY);
 
-         /*
-         Cannot open in read-write mode. Fall back to read-only,
-         calls to add_entropy will fail, but randomize will work
-         */
-         if(m_fd < 0)
+         if(m_fd >= 0)
+            {
+            m_writable = true;
+            }
+         else
+            {
+            /*
+            Cannot open in read-write mode. Fall back to read-only,
+            calls to add_entropy will fail, but randomize will work
+            */
             m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
+            m_writable = false;
+            }
 
          if(m_fd < 0)
             throw Exception("System_RNG failed to open RNG device");
@@ -157,10 +167,12 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void randomize(uint8_t buf[], size_t len) override;
       void add_entropy(const uint8_t in[], size_t length) override;
       bool is_seeded() const override { return true; }
+      bool accepts_input() const override { return m_writable; }
       void clear() override { /* not possible */ }
       std::string name() const override { return BOTAN_SYSTEM_RNG_DEVICE; }
    private:
       int m_fd;
+      bool m_writable;
    };
 
 void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
@@ -185,6 +197,9 @@ void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
 
 void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
    {
+   if(!m_writable)
+      return;
+
    while(len)
       {
       ssize_t got = ::write(m_fd, input, len);

@@ -57,6 +57,9 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RNG final : public Hardware_RNG
       /// Calls `C_SeedRandom` to add entropy to the random generation function of the token/middleware
       void add_entropy(const uint8_t in[], std::size_t length) override;
 
+      // C_SeedRandom may suceed
+      bool accepts_input() const override { return true; }
+
    private:
       const std::reference_wrapper<Session> m_session;
    };

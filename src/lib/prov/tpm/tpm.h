@@ -78,6 +78,8 @@ class BOTAN_PUBLIC_API(2,0) TPM_RNG final : public Hardware_RNG
    public:
       TPM_RNG(TPM_Context& ctx) : m_ctx(ctx) {}
 
+      bool accepts_input() const override { return true; }
+
       void add_entropy(const uint8_t in[], size_t in_len) override
          {
          m_ctx.stir_random(in, in_len);

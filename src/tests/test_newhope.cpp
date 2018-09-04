@@ -71,6 +71,8 @@ class NEWHOPE_RNG final : public Botan::RandomNumberGenerator
          return true;
          }
 
+      bool accepts_input() const override { return false; }
+
       void add_entropy(const uint8_t[], size_t) override
          {
          /* ignored */

@@ -42,6 +42,15 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       virtual void randomize(uint8_t output[], size_t length) = 0;
 
       /**
+      * Returns false if it is known that this RNG object is not able to accept
+      * externally provided inputs (via add_entropy, randomize_with_input, etc).
+      * In this case, any such provided inputs are ignored.
+      *
+      * If this function returns true, then inputs may or may not be accepted.
+      */
+      virtual bool accepts_input() const = 0;
+
+      /**
       * Incorporate some additional data into the RNG state. For
       * example adding nonces or timestamps from a peer's protocol
       * message can help hedge against VM state rollback attacks.
@@ -190,6 +199,8 @@ class BOTAN_PUBLIC_API(2,0) Null_RNG final : public RandomNumberGenerator
    public:
       bool is_seeded() const override { return false; }
 
+      bool accepts_input() const override { return false; }
+
       void clear() override {}
 
       void randomize(uint8_t[], size_t) override
@@ -215,6 +226,12 @@ class BOTAN_PUBLIC_API(2,0) Serialized_RNG final : public RandomNumberGenerator
          {
          lock_guard_type<mutex_type> lock(m_mutex);
          m_rng->randomize(out, len);
+         }
+
+      bool accepts_input() const override
+         {
+         lock_guard_type<mutex_type> lock(m_mutex);
+         return m_rng->accepts_input();
          }
 
       bool is_seeded() const override
