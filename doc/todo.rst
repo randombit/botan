@@ -129,7 +129,7 @@ Compat Headers
 
 * OpenSSL compatible API headers: EVP, TLS, certificates, etc
 
-FFI and Bindings
+New C APIs
 ----------------------------------------
 
 * Expose NewHope and CECPQ1
@@ -140,6 +140,13 @@ FFI and Bindings
 * Expose NIST key wrap with padding
 * Expose secret sharing
 * Expose deterministic PRNG
+
+Python
+----------------
+
+* Anywhere Pylint warnings too-many-locals, too-many-branches, or
+  too-many-statements are skipped, fix the code so Pylint no longer warns.
+
 * Write a CLI or HTTPS client in Python
 
 Library Infrastructure
