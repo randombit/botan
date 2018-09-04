@@ -111,7 +111,7 @@ For random scripts not typically run by an end-user (codegen, visualization, and
 so on) there isn't any need to worry about 2.6 and even just running under
 Python2 xor Python3 is acceptable if needed. Here it's fine to depend on any
 useful modules such as graphviz or matplotlib, regardless if it is available
-from a stock CPython install.
+from a stock CPython install. Prefer Python3 for new scripts of this sort.
 
 Build Tools and Hints
 ========================================
@@ -125,6 +125,12 @@ Supported values including "address" and "undefined" for GCC and
 Clang.  GCC also supports "iterator" (checked iterators), and Clang
 supports "memory" (MSan) and "coverage" (for fuzzing).
 
+On Linux if you have the ``lcov`` and ``gcov`` tools installed, then running
+``./src/scripts/ci_build.py coverage`` will produce a coverage enabled build,
+run the tests, test the fuzzers against a corpus, and produce an HTML report
+of total coverage. This coverage build requires the development headers for
+zlib, bzip2, liblzma, OpenSSL, TrouSerS (libtspi), and Sqlite3.
+
 Copyright Notice
 ========================================
 
@@ -132,15 +138,12 @@ At the top of any new file add a comment with a copyright and a reference to the
 license, for example::
 
   /*
-  * (C) 2015,2016 Copyright Holder
+  * (C) 2018 Copyright Holder
   * Botan is released under the Simplified BSD License (see license.txt)
   */
 
 If you are making a substantial or non-trivial change to an existing file, add
-or update your own copyright statement at the top of the file. If you are making
-a change in a new year not covered by your existing statement, add the
-year. Even if the years you are making the change are consecutive, avoid year
-ranges: specify each year separated by a comma.
+or update your own copyright statement at the top of each file.
 
 Style Conventions
 ========================================
