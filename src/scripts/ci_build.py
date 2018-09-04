@@ -170,12 +170,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         if target_os in ['osx', 'linux']:
             flags += ['--with-bzip2', '--with-sqlite', '--with-zlib']
 
+        if target_os in ['osx', 'ios']:
+            flags += ['--with-commoncrypto']
+
         if target_os == 'osx':
             # Test Boost on OS X
             flags += ['--with-boost']
             # Travis has 10.12 as default image
             flags += ['--with-os-features=getentropy']
-        elif target_os == 'linux':
+
+        if target_os == 'linux':
             flags += ['--with-lzma']
 
         if target_os == 'linux':

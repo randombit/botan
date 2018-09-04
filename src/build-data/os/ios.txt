@@ -10,6 +10,7 @@ posix1
 posix_mlock
 arc4random
 
+commoncrypto
 sockets
 threads
 filesystem
