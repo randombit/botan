@@ -93,7 +93,7 @@ std::string PK_Test::choose_padding(const VarMap& vars,
 
 std::vector<std::string> PK_Test::possible_providers(const std::string& /*params*/)
    {
-   return Test::provider_filter({ "base", "bearssl", "openssl", "tpm" });
+   return Test::provider_filter({ "base", "commoncrypto", "bearssl", "openssl", "tpm" });
    }
 
 Test::Result
@@ -531,7 +531,7 @@ std::vector<std::string> PK_Key_Generation_Test::possible_providers(
    const std::string& algo)
    {
    std::vector<std::string> pk_provider =
-      Botan::probe_provider_private_key(algo, { "base", "openssl", "tpm" });
+      Botan::probe_provider_private_key(algo, { "base", "commoncrypto", "openssl", "tpm" });
    return Test::provider_filter(pk_provider);
    }
 
