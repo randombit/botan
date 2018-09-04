@@ -231,7 +231,7 @@ def run_cmd(cmd, root_dir):
         print("Ran for %d seconds" % (time_taken))
 
     if proc.returncode != 0:
-        print("Command failed with error code %d" % (proc.returncode))
+        print("Command '%s' failed with error code %d" % (' '.join(cmd), proc.returncode))
 
         if cmd[0] not in ['lcov']:
             sys.exit(proc.returncode)
