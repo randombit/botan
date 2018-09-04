@@ -239,11 +239,6 @@ make_openssl_block_cipher(const std::string& name)
       return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_cast5_ecb, 1, 16, 1);
 #endif
 
-#if defined(BOTAN_HAS_IDEA) && !defined(OPENSSL_NO_IDEA)
-   if(name == "IDEA")
-      return MAKE_OPENSSL_BLOCK(EVP_idea_ecb);
-#endif
-
 #if defined(BOTAN_HAS_SEED) && !defined(OPENSSL_NO_SEED)
    if(name == "SEED")
       return MAKE_OPENSSL_BLOCK(EVP_seed_ecb);
