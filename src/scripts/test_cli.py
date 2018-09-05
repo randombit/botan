@@ -46,8 +46,6 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
 
     TESTS_RUN += 1
 
-    logging.debug("Running %s %s", cmd, cmd_options)
-
     fixed_drbg_seed = "802" * 32
 
     opt_list = []
@@ -59,6 +57,8 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
 
     drbg_options = ['--rng-type=drbg', '--drbg-seed=' + fixed_drbg_seed]
     cmdline = [CLI_PATH, cmd] + drbg_options + opt_list
+
+    logging.debug("Executing '%s'" % (' '.join([CLI_PATH, cmd] + opt_list)))
 
     stdout = None
     stderr = None
@@ -282,6 +282,26 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
              "Certificate did not validate - Certificate issuer not found")
 
     shutil.rmtree(tmp_dir)
+
+def cli_pbkdf_tune_tests():
+    if not check_for_command("pbkdf_tune"):
+        return
+
+    expected = re.compile(r'For (default|[1-9][0-9]*) ms selected Scrypt\([0-9]+,[0-9]+,[0-9]+\) using [0-9]+ MiB')
+
+    output = test_cli("pbkdf_tune", ["--check", "1", "10", "50", "default"], None).split('\n')
+
+    for line in output:
+        if expected.match(line) is None:
+            logging.error("Unexpected line '%s'" % (line))
+
+    expected_pbkdf2 = re.compile(r'For (default|[1-9][0-9]*) ms selected PBKDF2\(HMAC\(SHA-256\),[0-9]+\)')
+
+    output = test_cli("pbkdf_tune", ["--algo=PBKDF2(SHA-256)", "--check", "1", "10", "50", "default"], None).split('\n')
+
+    for line in output:
+        if expected_pbkdf2.match(line) is None:
+            logging.error("Unexpected line '%s'" % (line))
 
 def cli_psk_db_tests():
     if not check_for_command("psk_get"):
@@ -601,7 +621,7 @@ def cli_speed_tests():
 
     output = test_cli("speed", ["--msec=%d" % (msec), "scrypt"], None).split('\n')
 
-    format_re = re.compile(r'^scrypt-[0-9]+-[0-9]+-[0-9]+ [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+    format_re = re.compile(r'^scrypt-[0-9]+-[0-9]+-[0-9]+ \([0-9]+ MiB\) [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
 
     for line in output:
         if format_re.match(line) is None:
@@ -688,6 +708,7 @@ def main(args=None):
         cli_pk_encrypt_tests,
         cli_pk_workfactor_tests,
         cli_psk_db_tests,
+        cli_pbkdf_tune_tests,
         cli_rng_tests,
         cli_speed_tests,
         cli_timing_test_tests,
@@ -701,7 +722,7 @@ def main(args=None):
         fn_name = fn.__name__
 
         if test_regex is not None:
-            if test_regex.match(fn_name) is None:
+            if test_regex.search(fn_name) is None:
                 continue
 
         start = time.time()

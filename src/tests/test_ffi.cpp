@@ -2,6 +2,7 @@
 * (C) 2015 Jack Lloyd
 * (C) 2016 René Korthaus
 * (C) 2018 Ribose Inc, Krzysztof Kwiatkowski
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -924,6 +925,16 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_scrypt, (output.data(), output.size(), pass, salt, sizeof(salt), 8, 1, 1));
 
          result.test_eq("scrypt output", output, "4B9B888D695288E002CC4F9D90808A4D296A45CE4471AFBB");
+
+         size_t N, r, p;
+         TEST_FFI_OK(botan_pwdhash_timed, ("Scrypt", 50, &r, &p, &N, output.data(), output.size(),
+                                           "bunny", 5, salt, sizeof(salt)));
+
+         std::vector<uint8_t> cmp(output.size());
+
+         TEST_FFI_OK(botan_pwdhash, ("Scrypt", N, r, p, cmp.data(), cmp.size(),
+                                     "bunny", 5, salt, sizeof(salt)));
+         result.test_eq("recomputed scrypt", cmp, output);
 #else
          TEST_FFI_RC(BOTAN_FFI_ERROR_NOT_IMPLEMENTED,
                      botan_scrypt, (output.data(), output.size(), pass, salt, sizeof(salt), 8, 1, 1));

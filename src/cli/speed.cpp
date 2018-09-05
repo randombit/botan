@@ -1636,11 +1636,11 @@ class Speed final : public Command
             }
          }
 
-      void bench_pk_sig(const Botan::Private_Key& key,
-                        const std::string& nm,
-                        const std::string& provider,
-                        const std::string& padding,
-                        std::chrono::milliseconds msec)
+      size_t bench_pk_sig(const Botan::Private_Key& key,
+                          const std::string& nm,
+                          const std::string& provider,
+                          const std::string& padding,
+                          std::chrono::milliseconds msec)
          {
          std::vector<uint8_t> message, signature, bad_signature;
 
@@ -1690,8 +1690,12 @@ class Speed final : public Command
                }
             }
 
+         const size_t events = std::min(sig_timer->events(), ver_timer->events());
+
          record_result(sig_timer);
          record_result(ver_timer);
+
+         return events;
          }
 #endif
 
@@ -1925,7 +1929,8 @@ class Speed final : public Command
                }));
 
             record_result(keygen_timer);
-            bench_pk_sig(*key, params, provider, "", msec);
+            if(bench_pk_sig(*key, params, provider, "", msec) == 1)
+               break;
             }
          }
 #endif
@@ -1981,7 +1986,7 @@ class Speed final : public Command
                         std::chrono::milliseconds msec)
          {
 
-         for(size_t N : { 8192, 16384, 32768, 65536, 1 << 17, 1 << 18, 1 << 19 })
+         for(size_t N : { 8192, 16384, 32768, 65536 })
             {
             for(size_t r : { 1, 8, 16 })
                {
@@ -2006,10 +2011,8 @@ class Speed final : public Command
 
                   record_result(scrypt_timer);
 
-                  /*
                   if(scrypt_timer->events() == 1)
                      break;
-                  */
                   }
                }
             }
