@@ -1,5 +1,5 @@
 <defines>
-PBKDF -> 20150626
+PBKDF -> 20180902
 </defines>
 
 <requires>
@@ -8,5 +8,6 @@ hash
 </requires>
 
 <header:public>
+pwdhash.h
 pbkdf.h
 </header:public>
