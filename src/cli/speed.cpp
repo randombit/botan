@@ -21,6 +21,7 @@
 #include <botan/parsing.h>
 #include <botan/cpuid.h>
 #include <botan/internal/os_utils.h>
+#include <botan/internal/timer.h>
 #include <botan/version.h>
 
 #if defined(BOTAN_HAS_BIGINT)
@@ -125,304 +126,9 @@
 
 namespace Botan_CLI {
 
+using Botan::Timer;
+
 namespace {
-
-class Timer final
-   {
-   public:
-      Timer(const std::string& name,
-            const std::string& provider,
-            const std::string& doing,
-            uint64_t event_mult,
-            size_t buf_size,
-            double clock_cycle_ratio,
-            uint64_t clock_speed)
-         : m_name(name + ((provider.empty() || provider == "base") ? "" : " [" + provider + "]"))
-         , m_doing(doing)
-         , m_buf_size(buf_size)
-         , m_event_mult(event_mult)
-         , m_clock_cycle_ratio(clock_cycle_ratio)
-         , m_clock_speed(clock_speed)
-         {}
-
-      Timer(const Timer& other) = default;
-
-      static uint64_t get_system_timestamp_ns()
-         {
-         return Botan::OS::get_system_timestamp_ns();
-         }
-
-      static uint64_t get_cpu_cycle_counter()
-         {
-         return Botan::OS::get_processor_timestamp();
-         }
-
-      void start()
-         {
-         stop();
-         m_timer_start = Timer::get_system_timestamp_ns();
-         m_cpu_cycles_start = Timer::get_cpu_cycle_counter();
-         }
-
-      void stop();
-
-      bool under(std::chrono::milliseconds msec)
-         {
-         return (milliseconds() < msec.count());
-         }
-
-      class Timer_Scope final
-         {
-         public:
-            explicit Timer_Scope(Timer& timer)
-               : m_timer(timer)
-               {
-               m_timer.start();
-               }
-            ~Timer_Scope()
-               {
-               try
-                  {
-                  m_timer.stop();
-                  }
-               catch(...) {}
-               }
-         private:
-            Timer& m_timer;
-         };
-
-      template<typename F>
-      auto run(F f) -> decltype(f())
-         {
-         Timer_Scope timer(*this);
-         return f();
-         }
-
-      template<typename F>
-      void run_until_elapsed(std::chrono::milliseconds msec, F f)
-         {
-         while(this->under(msec))
-            {
-            run(f);
-            }
-         }
-
-      uint64_t value() const
-         {
-         return m_time_used;
-         }
-
-      double seconds() const
-         {
-         return milliseconds() / 1000.0;
-         }
-
-      double milliseconds() const
-         {
-         return value() / 1000000.0;
-         }
-
-      double ms_per_event() const
-         {
-         return milliseconds() / events();
-         }
-
-      uint64_t cycles_consumed() const
-         {
-         if(m_clock_speed != 0)
-            {
-            return (static_cast<double>(m_clock_speed) * value()) / 1000;
-            }
-         return m_cpu_cycles_used;
-         }
-
-      uint64_t events() const
-         {
-         return m_event_count * m_event_mult;
-         }
-
-      const std::string& get_name() const
-         {
-         return m_name;
-         }
-
-      const std::string& doing() const
-         {
-         return m_doing;
-         }
-
-      size_t buf_size() const
-         {
-         return m_buf_size;
-         }
-
-      double bytes_per_second() const
-         {
-         return seconds() > 0.0 ? events() / seconds() : 0.0;
-         }
-
-      double events_per_second() const
-         {
-         return seconds() > 0.0 ? events() / seconds() : 0.0;
-         }
-
-      double seconds_per_event() const
-         {
-         return events() > 0 ? seconds() / events() : 0.0;
-         }
-
-      void set_custom_msg(const std::string& s)
-         {
-         m_custom_msg = s;
-         }
-
-      bool operator<(const Timer& other) const
-         {
-         if(this->doing() != other.doing())
-            return (this->doing() < other.doing());
-
-         return (this->get_name() < other.get_name());
-         }
-
-      std::string to_string() const
-         {
-         if(m_custom_msg.size() > 0)
-            {
-            return m_custom_msg;
-            }
-         else if(this->buf_size() == 0)
-            {
-            return result_string_ops();
-            }
-         else
-            {
-            return result_string_bps();
-            }
-         }
-
-   private:
-      std::string result_string_bps() const;
-      std::string result_string_ops() const;
-
-      // const data
-      std::string m_name, m_doing;
-      size_t m_buf_size;
-      uint64_t m_event_mult;
-      double m_clock_cycle_ratio;
-      uint64_t m_clock_speed;
-
-      // set at runtime
-      std::string m_custom_msg;
-      uint64_t m_time_used = 0, m_timer_start = 0;
-      uint64_t m_event_count = 0;
-
-      uint64_t m_max_time = 0, m_min_time = 0;
-      uint64_t m_cpu_cycles_start = 0, m_cpu_cycles_used = 0;
-   };
-
-void Timer::stop()
-   {
-   if(m_timer_start)
-      {
-      const uint64_t now = Timer::get_system_timestamp_ns();
-
-      if(now > m_timer_start)
-         {
-         uint64_t dur = now - m_timer_start;
-
-         m_time_used += dur;
-
-         if(m_cpu_cycles_start != 0)
-            {
-            uint64_t cycles_taken = Timer::get_cpu_cycle_counter() - m_cpu_cycles_start;
-            if(cycles_taken > 0)
-               {
-               m_cpu_cycles_used += static_cast<size_t>(cycles_taken * m_clock_cycle_ratio);
-               }
-            }
-
-         if(m_event_count == 0)
-            {
-            m_min_time = m_max_time = dur;
-            }
-         else
-            {
-            m_max_time = std::max(m_max_time, dur);
-            m_min_time = std::min(m_min_time, dur);
-            }
-         }
-
-      m_timer_start = 0;
-      ++m_event_count;
-      }
-   }
-
-std::string Timer::result_string_bps() const
-   {
-   const size_t MiB = 1024 * 1024;
-
-   const double MiB_total = static_cast<double>(events()) / MiB;
-   const double MiB_per_sec = MiB_total / seconds();
-
-   std::ostringstream oss;
-   oss << get_name();
-
-   if(!doing().empty())
-      {
-      oss << " " << doing();
-      }
-
-   if(buf_size() > 0)
-      {
-      oss << " buffer size " << buf_size() << " bytes:";
-      }
-
-   if(events() == 0)
-      oss << " " << "N/A";
-   else
-      oss << " " << std::fixed << std::setprecision(3) << MiB_per_sec << " MiB/sec";
-
-   if(cycles_consumed() != 0)
-      {
-      const double cycles_per_byte = static_cast<double>(cycles_consumed()) / events();
-      oss << " " << std::fixed << std::setprecision(2) << cycles_per_byte << " cycles/byte";
-      }
-
-   oss << " (" << MiB_total << " MiB in " << milliseconds() << " ms)\n";
-
-   return oss.str();
-   }
-
-std::string Timer::result_string_ops() const
-   {
-   std::ostringstream oss;
-
-   oss << get_name() << " ";
-
-   if(events() == 0)
-      {
-      oss << "no events\n";
-      }
-   else
-      {
-      oss << static_cast<uint64_t>(events_per_second())
-          << ' ' << doing() << "/sec; "
-          << std::setprecision(2) << std::fixed
-          << ms_per_event() << " ms/op";
-
-      if(cycles_consumed() != 0)
-         {
-         const double cycles_per_op = static_cast<double>(cycles_consumed()) / events();
-         const size_t precision = (cycles_per_op < 10000) ? 2 : 0;
-         oss << " " << std::fixed << std::setprecision(precision) << cycles_per_op << " cycles/op";
-         }
-
-      oss << " (" << events() << " " << (events() == 1 ? "op" : "ops")
-          << " in " << milliseconds() << " ms)\n";
-      }
-
-   return oss.str();
-   }
 
 class JSON_Output final
    {
@@ -2275,15 +1981,16 @@ class Speed final : public Command
                         std::chrono::milliseconds msec)
          {
 
-         for(size_t N : { 8192, 16384, 32768, 65536 })
+         for(size_t N : { 8192, 16384, 32768, 65536, 1 << 17, 1 << 18, 1 << 19 })
             {
-            for(size_t r : { 1, 8 })
+            for(size_t r : { 1, 8, 16 })
                {
-               for(size_t p : { 1, 4, 8 })
+               for(size_t p : { 1, 4 })
                   {
                   std::unique_ptr<Timer> scrypt_timer = make_timer(
                      "scrypt-" + std::to_string(N) + "-" +
-                     std::to_string(r) + "-" + std::to_string(p));
+                     std::to_string(r) + "-" + std::to_string(p) +
+                     " (" + std::to_string(Botan::scrypt_memory_usage(N, r, p) / (1024*1024)) + " MiB)");
 
                   uint8_t out[64];
                   uint8_t salt[8];
@@ -2299,8 +2006,10 @@ class Speed final : public Command
 
                   record_result(scrypt_timer);
 
+                  /*
                   if(scrypt_timer->events() == 1)
                      break;
+                  */
                   }
                }
             }
