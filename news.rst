@@ -39,6 +39,9 @@ Version 2.8.0, Not Yet Released
 
 * Add support for using the ARMv8 instructions for SM4 encryption (GH #1622)
 
+* The entropy source using ``SecRandomCopyBytes`` has been removed as it was
+  redundant with other entropy sources (GH #1668)
+
 * The Python module has much better error checking and reporting, and offers new
   functionality such as scrypt, MPI and FPE. (GH #1643 #1646)
 
