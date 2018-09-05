@@ -1,6 +1,7 @@
 /*
 * PKCS #5 PBES2
 * (C) 1999-2008,2014 Jack Lloyd
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -51,13 +52,11 @@ SymmetricKey derive_key(const std::string& passphrase,
       if(salt.size() < 8)
          throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
 
-      const std::string prf = OIDS::lookup(prf_algo.get_oid());
-
-      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
-
       if(key_length == 0)
          key_length = default_key_size;
 
+      const std::string prf = OIDS::lookup(prf_algo.get_oid());
+      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
       return pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
       }
 #if defined(BOTAN_HAS_SCRYPT)
@@ -100,30 +99,54 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
                                   size_t key_length,
                                   AlgorithmIdentifier& kdf_algo)
    {
+   // TODO should be configurable
+   const size_t MAX_PBKDF_MEMORY = 32;
+
    const secure_vector<uint8_t> salt = rng.random_vec(12);
 
    if(digest == "Scrypt")
       {
 #if defined(BOTAN_HAS_SCRYPT)
 
-      Scrypt_Params params(32768, 8, 4);
+      std::unique_ptr<PasswordHashFamily> pwhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
+
+      std::unique_ptr<PasswordHash> pwhash;
 
       if(msec_in_iterations_out)
-         params = Scrypt_Params(std::chrono::milliseconds(*msec_in_iterations_out));
+         {
+         const std::chrono::milliseconds msec(*msec_in_iterations_out);
+         pwhash = pwhash_fam->tune(key_length, msec, MAX_PBKDF_MEMORY);
+         }
+      else if(iterations_if_msec_null <= 100000)
+         {
+         pwhash = pwhash_fam->default_params();
+         }
       else
-         params = Scrypt_Params(iterations_if_msec_null);
+         {
+         //const std::chrono::milliseconds msec(iterations_if_msec_null / 100000);
+         //pwhash = pwhash_fam->tune(key_length, msec, MAX_PBKDF_MEMORY);
+         pwhash = pwhash_fam->default_params();
+         }
 
       secure_vector<uint8_t> key(key_length);
-      scrypt(key.data(), key.size(), passphrase,
-             salt.data(), salt.size(), params);
+      pwhash->derive_key(key.data(), key.size(),
+                         passphrase.c_str(), passphrase.size(),
+                         salt.data(), salt.size());
+
+      const size_t N = pwhash->memory_param();
+      const size_t r = pwhash->iterations();
+      const size_t p = pwhash->parallelism();
+
+      if(msec_in_iterations_out)
+         *msec_in_iterations_out = 0;
 
       std::vector<uint8_t> scrypt_params;
       DER_Encoder(scrypt_params)
          .start_cons(SEQUENCE)
             .encode(salt, OCTET_STRING)
-            .encode(params.N())
-            .encode(params.r())
-            .encode(params.p())
+            .encode(N)
+            .encode(r)
+            .encode(p)
             .encode(key_length)
          .end_cons();
 
@@ -136,25 +159,35 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
    else
       {
       const std::string prf = "HMAC(" + digest + ")";
+      const std::string pbkdf_name = "PBKDF2(" + prf + ")";
 
-      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
+      std::unique_ptr<PasswordHashFamily> pwhash_fam = PasswordHashFamily::create(pbkdf_name);
+      if(!pwhash_fam)
+         throw Invalid_Argument("Unknown password hash digest " + digest);
 
-      size_t iterations = iterations_if_msec_null;
-
-      secure_vector<uint8_t> key;
+      std::unique_ptr<PasswordHash> pwhash;
 
       if(msec_in_iterations_out)
          {
-         std::chrono::milliseconds msec(*msec_in_iterations_out);
-         key = pbkdf->derive_key(key_length, passphrase, salt.data(), salt.size(), msec, iterations).bits_of();
-         *msec_in_iterations_out = iterations;
+         const std::chrono::milliseconds msec(*msec_in_iterations_out);
+         pwhash = pwhash_fam->tune(key_length, msec, MAX_PBKDF_MEMORY);
          }
       else
          {
-         key = pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
+         pwhash = pwhash_fam->from_params(iterations_if_msec_null);
          }
 
+      secure_vector<uint8_t> key(key_length);
+      pwhash->derive_key(key.data(), key.size(),
+                         passphrase.c_str(), passphrase.size(),
+                         salt.data(), salt.size());
+
       std::vector<uint8_t> pbkdf2_params;
+
+      const size_t iterations = pwhash->iterations();
+
+      if(msec_in_iterations_out)
+         *msec_in_iterations_out = iterations;
 
       DER_Encoder(pbkdf2_params)
          .start_cons(SEQUENCE)
