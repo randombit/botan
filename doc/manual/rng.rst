@@ -233,14 +233,11 @@ and entropy.
 
 The following entropy sources are currently used:
 
- * System RNG. This is simply however the system RNG is implemented on the
-   current system (arc4random, reading /dev/urandom, or RtlGenRandom).
- * RDRAND: is used if available, but not counted as contributing entropy
- * RDSEED: is used if available, but not counted as contributing entropy
- * Darwin SecRandomCopyBytes. This may be redundant with the system RNG
- * /dev/random and /dev/urandom. This may be redundant with the system RNG
- * getentropy, only used on OpenBSD currently
- * /proc walk: read files in /proc. Last ditch protection against
+ * The system RNG (``arc4random``, ``/dev/urandom``, or ``RtlGenRandom``).
+ * RDRAND and RSEED are used if available, but not counted as contributing entropy
+ * ``/dev/random`` and ``/dev/urandom``. This may be redundant with the system RNG
+ * ``getentropy``, only used on OpenBSD currently
+ * ``/proc`` walk: read files in ``/proc``. Last ditch protection against
    flawed system RNG.
  * Win32 stats: takes snapshot of current system processes. Last ditch
    protection against flawed system RNG.
