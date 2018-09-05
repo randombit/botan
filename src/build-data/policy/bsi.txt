@@ -65,7 +65,6 @@ sha2_32_x86
 sha2_32_armv8
 
 # entropy sources
-darwin_secrandom
 dev_random
 proc_walk
 rdrand
