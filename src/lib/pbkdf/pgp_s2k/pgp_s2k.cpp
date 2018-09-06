@@ -188,6 +188,11 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::default_params() const
    return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), 50331648));
    }
 
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_iterations(size_t iter) const
+   {
+   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), iter));
+   }
+
 RFC4880_S2K::RFC4880_S2K(HashFunction* hash, size_t iterations) :
    m_hash(hash),
    m_iterations(iterations)

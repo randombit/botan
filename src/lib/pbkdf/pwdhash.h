@@ -41,9 +41,13 @@ class BOTAN_PUBLIC_API(2,8) PasswordHash
 
       /**
       * Some password hashing algorithms have a parallelism parameter.
-      * If not supported by some algorithm, just returns 1
+      * If the algorithm does not support this notion, then the
+      * function returns zero. This allows distinguishing between a
+      * password hash which just does not support parallel operation,
+      * vs one that does support parallel operation but which has been
+      * configured to use a single lane.
       */
-      virtual size_t parallelism() const { return 1; }
+      virtual size_t parallelism() const { return 0; }
 
       /**
       * Returns an estimate of the total memory usage required to perform this
@@ -119,7 +123,7 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       */
       virtual std::unique_ptr<PasswordHash> tune(size_t output_len,
                                                  std::chrono::milliseconds msec,
-                                                 size_t max_memory_usage_mb = 128) const = 0;
+                                                 size_t max_memory_usage_mb = 0) const = 0;
 
       /**
       * Return some default parameter set for this PBKDF that should be good
@@ -127,6 +131,15 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       * processing power and attacks improve.
       */
       virtual std::unique_ptr<PasswordHash> default_params() const = 0;
+
+      /**
+      * Return a parameter chosen based on a rough approximation with the
+      * specified iteration count. The exact value this returns for a particular
+      * algorithm may change from over time. Think of it as an alternative to
+      * tune, where time is expressed in terms of PBKDF2 iterations rather than
+      * milliseconds.
+      */
+      virtual std::unique_ptr<PasswordHash> from_iterations(size_t iterations) const = 0;
 
       /**
       * Create a password hash using some scheme specific format.

@@ -43,7 +43,6 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    *
    * Compute stime(8192,1,1) as baseline and extrapolate
    */
-   //printf("max mem %d\n", max_memory_usage_mb);
 
    const size_t max_memory_usage = max_memory_usage_mb * 1024 * 1024;
    // Starting parameters
@@ -82,6 +81,8 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
          }
       }
 
+   // Now double N as many times as we can
+
    while(max_memory_usage == 0 || scrypt_memory_usage(N, r, p)*2 < max_memory_usage)
       {
       if(target_nsec / est_nsec >= 2)
@@ -93,6 +94,8 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
          break;
       }
 
+   // If we have extra runtime budget, increment p
+
    if(target_nsec / est_nsec > 2)
       p *= std::min<size_t>(1024, (target_nsec / est_nsec));
 
@@ -101,6 +104,23 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
 
 std::unique_ptr<PasswordHash> Scrypt_Family::from_params(size_t N, size_t r, size_t p) const
    {
+   return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
+   }
+
+std::unique_ptr<PasswordHash> Scrypt_Family::from_iterations(size_t iter) const
+   {
+   const size_t r = 8;
+   const size_t p = 1;
+
+   size_t N = 8192;
+
+   if(iter > 50000)
+      N = 16384;
+   if(iter > 100000)
+      N = 32768;
+   if(iter > 150000)
+      N = 65536;
+
    return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
    }
 

@@ -59,6 +59,8 @@ class BOTAN_PUBLIC_API(2,8) Scrypt_Family final : public PasswordHashFamily
 
       std::unique_ptr<PasswordHash> default_params() const override;
 
+      std::unique_ptr<PasswordHash> from_iterations(size_t iter) const override;
+
       std::unique_ptr<PasswordHash> from_params(
          size_t N, size_t r, size_t p) const override;
    };

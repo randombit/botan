@@ -99,9 +99,6 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
                                   size_t key_length,
                                   AlgorithmIdentifier& kdf_algo)
    {
-   // TODO should be configurable
-   const size_t MAX_PBKDF_MEMORY = 32;
-
    const secure_vector<uint8_t> salt = rng.random_vec(12);
 
    if(digest == "Scrypt")
@@ -115,7 +112,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
       if(msec_in_iterations_out)
          {
          const std::chrono::milliseconds msec(*msec_in_iterations_out);
-         pwhash = pwhash_fam->tune(key_length, msec, MAX_PBKDF_MEMORY);
+         pwhash = pwhash_fam->tune(key_length, msec);
          }
       else if(iterations_if_msec_null <= 100000)
          {
@@ -123,9 +120,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
          }
       else
          {
-         //const std::chrono::milliseconds msec(iterations_if_msec_null / 100000);
-         //pwhash = pwhash_fam->tune(key_length, msec, MAX_PBKDF_MEMORY);
-         pwhash = pwhash_fam->default_params();
+         pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
          }
 
       secure_vector<uint8_t> key(key_length);
@@ -170,11 +165,11 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
       if(msec_in_iterations_out)
          {
          const std::chrono::milliseconds msec(*msec_in_iterations_out);
-         pwhash = pwhash_fam->tune(key_length, msec, MAX_PBKDF_MEMORY);
+         pwhash = pwhash_fam->tune(key_length, msec);
          }
       else
          {
-         pwhash = pwhash_fam->from_params(iterations_if_msec_null);
+         pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
          }
 
       secure_vector<uint8_t> key(key_length);
