@@ -32,6 +32,8 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
          m_a = m_b = m_c = m_d = 0;
          }
 
+      bool accepts_input() const override { return true; }
+
       void add_entropy(const uint8_t data[], size_t len) override
          {
          for(size_t i = 0; i != len; ++i)

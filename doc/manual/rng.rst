@@ -36,6 +36,12 @@ Random Number Generators
       the RNG doesn't support this operation, the data is dropped, no error is
       indicated.
 
+   .. cpp:function:: bool accepts_input() const
+
+      This function returns ``false`` if it is known that this RNG object cannot
+      accept external inputs. In this case, any calls to
+      :cpp:func:`RandomNumberGenerator::add_entropy` will be ignored.
+
    .. cpp:function:: void reseed_from_rng(RandomNumberGenerator& rng, \
                      size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS)
 
