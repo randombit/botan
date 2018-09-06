@@ -632,6 +632,83 @@ class Hostname_Tests final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("hostname", Hostname_Tests);
 
+class ReadKV_Tests final : public Text_Based_Test
+   {
+   public:
+      ReadKV_Tests() : Text_Based_Test("utils/read_kv.vec", "Input,Expected") {}
+
+      Test::Result run_one_test(const std::string& status, const VarMap& vars) override
+         {
+         Test::Result result("read_kv");
+
+         const bool is_valid = (status == "Valid");
+
+         const std::string input = vars.get_req_str("Input");
+         const std::string expected = vars.get_req_str("Expected");
+
+         if(is_valid)
+            {
+            confirm_kv(result, Botan::read_kv(input), split_group(expected));
+            }
+         else
+            {
+            // In this case "expected" is the expected exception message
+            result.test_throws("Invalid key value input throws exception",
+                               expected,
+                               [&]() { Botan::read_kv(input); });
+            }
+         return result;
+         }
+
+   private:
+
+      std::vector<std::string> split_group(const std::string& str)
+         {
+         std::vector<std::string> elems;
+         if(str.empty()) return elems;
+
+         std::string substr;
+         for(auto i = str.begin(); i != str.end(); ++i)
+            {
+            if(*i == '|')
+               {
+               elems.push_back(substr);
+               substr.clear();
+               }
+            else
+               {
+               substr += *i;
+               }
+            }
+
+         if(!substr.empty())
+            elems.push_back(substr);
+
+         return elems;
+         }
+
+      void confirm_kv(Test::Result& result,
+                      const std::map<std::string, std::string>& kv,
+                      const std::vector<std::string>& expected)
+         {
+         if(!result.test_eq("expected size", expected.size() % 2, size_t(0)))
+            return;
+
+         for(size_t i = 0; i != expected.size(); i += 2)
+            {
+            auto j = kv.find(expected[i]);
+            if(result.confirm("Found key", j != kv.end()))
+               {
+               result.test_eq("Matching value", j->second, expected[i+1]);
+               }
+            }
+
+         result.test_eq("KV has same size as expected", kv.size(), expected.size()/2);
+         }
+   };
+
+BOTAN_REGISTER_TEST("util_read_kv", ReadKV_Tests);
+
 class CPUID_Tests final : public Test
    {
    public:
