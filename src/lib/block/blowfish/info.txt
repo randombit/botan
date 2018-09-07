@@ -1,3 +1,3 @@
 <defines>
-BLOWFISH -> 20180718
+BLOWFISH -> 20180907
 </defines>

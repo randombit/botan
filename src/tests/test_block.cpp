@@ -86,6 +86,17 @@ class Block_Cipher_Tests final : public Text_Based_Test
             cipher->encrypt(garbage);
             cipher->clear();
 
+            /*
+            * Different providers may have additional restrictions on key sizes.
+            * Avoid testing the cipher with a key size that it does not natively support.
+            */
+            if(!cipher->valid_keylength(key.size()))
+               {
+               result.test_note("Skipping test with provider " + provider +
+                                " as it does not support key length " + std::to_string(key.size()));
+               continue;
+               }
+
             cipher->set_key(key);
 
             if(tweak.size() > 0)
