@@ -807,9 +807,9 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_CIPHER_MODES)
-            else if(auto enc = Botan::Cipher_Mode::create(algo, Botan::ENCRYPTION))
+            else if(auto enc = Botan::Cipher_Mode::create(algo, Botan::ENCRYPTION, provider))
                {
-               auto dec = Botan::Cipher_Mode::create_or_throw(algo, Botan::DECRYPTION);
+               auto dec = Botan::Cipher_Mode::create_or_throw(algo, Botan::DECRYPTION, provider);
                bench_cipher_mode(*enc, *dec, msec, buf_sizes);
                }
 #endif
