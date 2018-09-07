@@ -16,14 +16,27 @@
 
 namespace Botan {
 
+class Cipher_Mode;
 class HashFunction;
+enum Cipher_Dir : int;
+typedef int32_t CCCryptorStatus;
 
-class BOTAN_PUBLIC_API(2,0) CommonCrypto_Error final : public Exception
-  {
-    public:
+class BOTAN_PUBLIC_API(2, 0) CommonCrypto_Error final : public Exception
+   {
+      std::string ccryptorstatus_to_string(CCCryptorStatus status);
+
+   public:
       CommonCrypto_Error(const std::string& what) :
-        Exception(what + " failed.") {}
-  };
+         Exception(what + " failed.") {}
+
+      CommonCrypto_Error(const std::string& what, int32_t status) :
+         Exception(what + std::string(" failed. Status: ") + ccryptorstatus_to_string(status)) {}
+   };
+
+/* Cipher Modes */
+
+Cipher_Mode*
+make_commoncrypto_cipher_mode(const std::string& name, Cipher_Dir direction);
 
 /* Hash */
 

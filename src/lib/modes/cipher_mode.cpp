@@ -35,6 +35,10 @@
   #include <botan/internal/openssl.h>
 #endif
 
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+  #include <botan/internal/commoncrypto.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<Cipher_Mode> Cipher_Mode::create_or_throw(const std::string& algo,
@@ -51,6 +55,19 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
                                                  Cipher_Dir direction,
                                                  const std::string& provider)
    {
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+   if(provider.empty() || provider == "commoncrypto")
+      {
+      std::unique_ptr<Cipher_Mode> commoncrypto_cipher(make_commoncrypto_cipher_mode(algo, direction));
+
+      if(commoncrypto_cipher)
+         return commoncrypto_cipher;
+
+      if(!provider.empty())
+         return std::unique_ptr<Cipher_Mode>();
+      }
+#endif
+
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider.empty() || provider == "openssl")
       {
@@ -172,7 +189,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 //static
 std::vector<std::string> Cipher_Mode::providers(const std::string& algo_spec)
    {
-   const std::vector<std::string>& possible = { "base", "openssl" };
+   const std::vector<std::string>& possible = { "base", "openssl", "commoncrypto" };
    std::vector<std::string> providers;
    for(auto&& prov : possible)
       {
