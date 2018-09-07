@@ -73,8 +73,6 @@ Version 2.8.0, Not Yet Released
 
 * Optimizations for SM4
 
-* The minimum keylength allowed for Blowfish has been increased to 64 bits.
-
 * Avoid a cache side channel in the AES key schedule
 
 * Add ``pk_encrypt`` and ``pk_decrypt`` CLI operations
