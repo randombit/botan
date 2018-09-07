@@ -6,23 +6,21 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_CERTSTOR_SQL)
-   #include <botan/certstor.h>
-   #include <botan/internal/filesystem.h>
-   #include <botan/pkcs8.h>
-   #include <botan/pk_keys.h>
-   #include <sstream>
-   #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
-      #include <botan/certstor_sqlite.h>
-      #include <botan/sqlite3.h>
-   #endif
+#include <botan/certstor.h>
+#include <botan/internal/filesystem.h>
+#include <botan/pkcs8.h>
+#include <botan/pk_keys.h>
+#include <sstream>
+#if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
+   #include <botan/certstor_sqlite.h>
+   #include <botan/sqlite3.h>
 #endif
 
 namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_CERTSTOR_SQL) && defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 struct CertificateAndKey
    {
