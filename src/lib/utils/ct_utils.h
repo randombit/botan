@@ -15,6 +15,7 @@
 #define BOTAN_TIMING_ATTACK_CM_H_
 
 #include <botan/secmem.h>
+#include <type_traits>
 #include <vector>
 
 #if defined(BOTAN_HAS_VALGRIND)
@@ -74,6 +75,22 @@ inline void unpoison(T& p)
 #endif
    }
 
+/* Mask generation */
+
+template<typename T>
+inline T expand_top_bit(T a)
+   {
+   static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
+   return static_cast<T>(0) - (a >> (sizeof(T)*8-1));
+   }
+
+template<typename T>
+inline T is_zero(T x)
+   {
+   static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
+   return expand_top_bit<T>(~x & (x - 1));
+   }
+
 /*
 * T should be an unsigned machine integer type
 * Expand to a mask used for other operations
@@ -85,26 +102,14 @@ inline void unpoison(T& p)
 template<typename T>
 inline T expand_mask(T x)
    {
-   T r = x;
-   // First fold r down to a single bit
-   for(size_t i = 1; i != sizeof(T)*8; i *= 2)
-      {
-      r = r | static_cast<T>(r >> i);
-      }
-   r &= 1;
-   r = static_cast<T>(~(r - 1));
-   return r;
-   }
-
-template<typename T>
-inline T expand_top_bit(T a)
-   {
-   return expand_mask<T>(a >> (sizeof(T)*8-1));
+   static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
+   return ~is_zero(x);
    }
 
 template<typename T>
 inline T select(T mask, T from0, T from1)
    {
+   static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
    return static_cast<T>((from0 & mask) | (from1 & ~mask));
    }
 
@@ -124,12 +129,6 @@ template<typename PredT, typename ValT>
 inline ValT val_or_zero(PredT pred_val, ValT val)
    {
    return select(CT::expand_mask<ValT>(pred_val), val, static_cast<ValT>(0));
-   }
-
-template<typename T>
-inline T is_zero(T x)
-   {
-   return static_cast<T>(~expand_mask(x));
    }
 
 template<typename T>

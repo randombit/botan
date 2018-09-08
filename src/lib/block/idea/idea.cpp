@@ -20,8 +20,7 @@ namespace {
 inline uint16_t mul(uint16_t x, uint16_t y)
    {
    const uint32_t P = static_cast<uint32_t>(x) * y;
-
-   const uint16_t Z_mask = static_cast<uint16_t>(CT::expand_mask(P) & 0xFFFF);
+   const uint16_t P_mask = static_cast<uint16_t>(CT::is_zero(P) & 0xFFFF);
 
    const uint32_t P_hi = P >> 16;
    const uint32_t P_lo = P & 0xFFFF;
@@ -30,7 +29,7 @@ inline uint16_t mul(uint16_t x, uint16_t y)
    const uint16_t r_1 = static_cast<uint16_t>((P_lo - P_hi) + carry);
    const uint16_t r_2 = 1 - x - y;
 
-   return CT::select(Z_mask, r_1, r_2);
+   return CT::select(P_mask, r_2, r_1);
    }
 
 /*
@@ -80,10 +79,10 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
          X3 += K[6*j+2];
          X4 = mul(X4, K[6*j+3]);
 
-         uint16_t T0 = X3;
+         const uint16_t T0 = X3;
          X3 = mul(X3 ^ X1, K[6*j+4]);
 
-         uint16_t T1 = X2;
+         const uint16_t T1 = X2;
          X2 = mul((X2 ^ X4) + X3, K[6*j+5]);
          X3 += X2;
 
