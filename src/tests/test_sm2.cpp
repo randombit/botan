@@ -46,6 +46,8 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
             "P,A,B,xG,yG,Order,Cofactor,Ident,Msg,x,Nonce,Signature",
             "Hash") {}
 
+      bool clear_between_callbacks() const override { return false; }
+
       std::string default_padding(const VarMap& vars) const override
          {
          return vars.get_req_str("Ident") + "," + vars.get_opt_str("Hash", "SM3");
