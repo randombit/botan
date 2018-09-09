@@ -1,0 +1,50 @@
+[Valid]
+Input =
+Expected =
+
+Input = K=V
+Expected = K|V
+
+Input = K=V,K2=C\,omma
+Expected = K|V|K2|C,omma
+
+Input = K=V,K2=C\,omma,Eq=1\=1\,orsoihear
+Expected = K|V|K2|C,omma|Eq|1=1,orsoihear
+
+Input = Key=Escape\\fromNewYork
+Expected = Key|Escape\fromNewYork
+
+Input = Key=,Empty=SoVery
+Expected = Key||Empty|SoVery
+
+Input = TheKey\==Equals,Normal=OK
+Expected = TheKey=|Equals|Normal|OK
+
+[Invalid]
+
+Input = K=V,K2=V,K=V2
+Expected = Bad KV spec duplicated key
+
+Input = K=V,K2=V,K2=V2,K=V2
+Expected = Bad KV spec duplicated key
+
+Input = K=V,,K2=V
+Expected = Bad KV spec empty key
+
+Input = K==V,K2=V
+Expected = Bad KV spec unexpected equals sign
+
+Input = K=V,K2==V
+Expected = Bad KV spec unexpected equals sign
+
+Input = K=V,K2=V,
+Expected = Bad KV spec
+
+Input = K=V,K2=V,Wut
+Expected = Bad KV spec incomplete string
+
+Input = =V,K2=V
+Expected = Bad KV spec empty key
+
+Input = V
+Expected = Bad KV spec incomplete string
