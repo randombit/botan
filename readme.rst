@@ -66,7 +66,7 @@ external build systems, see the manual for details.
     :target: https://bestpractices.coreinfrastructure.org/projects/531
     :alt: CII Best Practices statement
 
-Release Downloads
+Latest Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 See the `release notes <https://botan.randombit.net/news.html>`_ and
@@ -83,9 +83,6 @@ Some `distributions <https://github.com/randombit/botan/wiki/Distros>`_ such as
 Fedora and Debian include packages for Botan. However these are at times out of
 date so using the latest source release is recommended.
 
-Current Stable Release
-----------------------------------------
-
 Version 2 requires a C++11 compiler; GCC 4.8 and later, Clang 3.8 and later, and
 MSVC 2015/2017 are regularly tested. New releases of Botan 2 are made on a
 quarterly basis.
@@ -94,18 +91,6 @@ The latest 2.x release is
 `2.7.0 <https://botan.randombit.net/releases/Botan-2.7.0.tgz>`_
 `(sig) <https://botan.randombit.net/releases/Botan-2.7.0.tgz.asc>`_
 released on 2018-07-02
-
-Old Release
-----------------------------------------
-
-The 1.10 branch is the last version of the library written in C++98. It is no
-longer supported except for critical security updates (with all support ending
-in December 2018), and the developers do not recommend its use anymore.
-
-The latest 1.10 release is
-`1.10.17 <https://botan.randombit.net/releases/Botan-1.10.17.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-1.10.17.tgz.asc>`_
-released on 2017-10-02
 
 Find Enclosed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
