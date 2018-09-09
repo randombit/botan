@@ -98,12 +98,27 @@
   #include <botan/internal/openssl.h>
 #endif
 
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+  #include <botan/internal/commoncrypto.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<BlockCipher>
 BlockCipher::create(const std::string& algo,
                     const std::string& provider)
    {
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+   if(provider.empty() || provider == "commoncrypto")
+      {
+      if(auto bc = make_commoncrypto_block_cipher(algo))
+         return bc;
+
+      if(!provider.empty())
+         return nullptr;
+      }
+#endif
+
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider.empty() || provider == "openssl")
       {
@@ -115,7 +130,6 @@ BlockCipher::create(const std::string& algo,
       }
 #endif
 
-   // TODO: CommonCrypto
    // TODO: CryptoAPI
    // TODO: /dev/crypto
 
@@ -343,7 +357,7 @@ BlockCipher::create_or_throw(const std::string& algo,
 
 std::vector<std::string> BlockCipher::providers(const std::string& algo)
    {
-   return probe_providers_of<BlockCipher>(algo, { "base", "openssl" });
+   return probe_providers_of<BlockCipher>(algo, { "base", "openssl", "commoncrypto" });
    }
 
 }
