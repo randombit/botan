@@ -843,6 +843,88 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
 #endif
    }
 
+/* X25519 specific operations */
+
+int botan_privkey_load_x25519(botan_privkey_t* key,
+                              const uint8_t privkey[32])
+   {
+#if defined(BOTAN_HAS_X25519)
+   *key = nullptr;
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 32);
+      *key = new botan_privkey_struct(new Botan::X25519_PrivateKey(privkey_vec));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, privkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_load_x25519(botan_pubkey_t* key,
+                             const uint8_t pubkey[32])
+   {
+#if defined(BOTAN_HAS_X25519)
+   *key = nullptr;
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+      const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 32);
+      *key = new botan_pubkey_struct(new Botan::X25519_PublicKey(pubkey_vec));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_x25519_get_privkey(botan_privkey_t key,
+                                     uint8_t output[32])
+   {
+#if defined(BOTAN_HAS_X25519)
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      if(Botan::X25519_PrivateKey* x25519 = dynamic_cast<Botan::X25519_PrivateKey*>(&k))
+         {
+         const Botan::secure_vector<uint8_t>& x25519_key = x25519->get_x();
+         if(x25519_key.size() != 32)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(output, x25519_key.data(), x25519_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key,
+                                   uint8_t output[32])
+   {
+#if defined(BOTAN_HAS_X25519)
+   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
+      if(Botan::X25519_PublicKey* x25519 = dynamic_cast<Botan::X25519_PublicKey*>(&k))
+         {
+         const std::vector<uint8_t>& x25519_key = x25519->public_value();
+         if(x25519_key.size() != 32)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(output, x25519_key.data(), x25519_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_privkey_create_mceliece(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n, size_t t)
    {
    const std::string mce_params = std::to_string(n) + "," + std::to_string(t);

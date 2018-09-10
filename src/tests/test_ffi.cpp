@@ -133,6 +133,10 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_ed25519(rng));
 #endif
 
+#if defined(BOTAN_HAS_X25519)
+         results.push_back(ffi_test_x25519());
+#endif
+
          TEST_FFI_OK(botan_rng_destroy, (rng));
 
          results.push_back(result);
@@ -2390,6 +2394,60 @@ class FFI_Unit_Tests final : public Test
 
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_privkey_destroy, (priv));
+
+         return result;
+         }
+
+      Test::Result ffi_test_x25519()
+         {
+         Test::Result result("FFI X25519");
+
+         // From RFC 8037
+
+         const std::vector<uint8_t> a_pub_bits =
+            Botan::hex_decode("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f");
+         const std::vector<uint8_t> b_priv_bits =
+            Botan::hex_decode("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a");
+         const std::vector<uint8_t> b_pub_bits =
+            Botan::hex_decode("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a");
+         const std::vector<uint8_t> shared_secret_bits =
+            Botan::hex_decode("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
+
+         botan_privkey_t b_priv;
+         TEST_FFI_OK(botan_privkey_load_x25519, (&b_priv, b_priv_bits.data()));
+
+         std::vector<uint8_t> privkey_read(32);
+         TEST_FFI_OK(botan_privkey_x25519_get_privkey, (b_priv, privkey_read.data()));
+         result.test_eq("X25519 private key", privkey_read, b_priv_bits);
+
+         std::vector<uint8_t> pubkey_read(32);
+
+         botan_pubkey_t b_pub;
+         TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
+         TEST_FFI_OK(botan_pubkey_x25519_get_pubkey, (b_pub, pubkey_read.data()));
+         result.test_eq("X25519 public key b", pubkey_read, b_pub_bits);
+
+         botan_pubkey_t a_pub;
+         TEST_FFI_OK(botan_pubkey_load_x25519, (&a_pub, a_pub_bits.data()));
+         TEST_FFI_OK(botan_pubkey_x25519_get_pubkey, (a_pub, pubkey_read.data()));
+         result.test_eq("X25519 public key a", pubkey_read, a_pub_bits);
+
+         botan_pk_op_ka_t ka;
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka, b_priv, "Raw", 0));
+
+         std::vector<uint8_t> shared_output(32);
+         size_t shared_len = shared_output.size();
+         TEST_FFI_OK(botan_pk_op_key_agreement, (ka,
+                                                 shared_output.data(), &shared_len,
+                                                 a_pub_bits.data(), a_pub_bits.size(),
+                                                 nullptr, 0));
+
+         result.test_eq("Shared secret matches expected", shared_secret_bits, shared_output);
+
+         TEST_FFI_OK(botan_pubkey_destroy, (a_pub));
+         TEST_FFI_OK(botan_pubkey_destroy, (b_pub));
+         TEST_FFI_OK(botan_privkey_destroy, (b_priv));
+         TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka));
 
          return result;
          }
