@@ -82,7 +82,7 @@ void pgp_s2k(HashFunction& hash,
              size_t iterations)
    {
    if(iterations > 1 && salt_len == 0)
-      throw Invalid_Argument("OpenPGP_S2K requires a salt in iterated mode");
+      throw Invalid_Argument("OpenPGP S2K requires a salt in iterated mode");
 
    secure_vector<uint8_t> input_buf(salt_len + password_size);
    if(salt_len > 0)
@@ -137,8 +137,13 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
                           size_t iterations,
                           std::chrono::milliseconds msec) const
    {
-   if(iterations == 0 && msec.count() > 0) // FIXME
-      throw Not_Implemented("OpenPGP_S2K does not implemented timed KDF");
+   std::unique_ptr<PasswordHash> pwdhash;
+
+   if(iterations == 0)
+      {
+      RFC4880_S2K_Family s2k_params(m_hash->clone());
+      iterations = s2k_params.tune(output_len, msec, 0)->iterations();
+      }
 
    pgp_s2k(*m_hash, output_buf, output_len,
            password.c_str(), password.size(),
