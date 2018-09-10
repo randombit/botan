@@ -26,8 +26,9 @@ Version 2.8.0, Not Yet Released
   keylengths of cipher, hash and MAC objects, support for FE1 format
   preserving encryption (GH #1625 #1646), functions to load and save
   RSA keys in PKCS #1 format (GH #1621), HOTP and TOTP algorithms,
-  scrypt, certificate verification (GH #1647), and functions to get
-  the output length of public key operations (GH #1642).
+  scrypt, certificate verification (GH #1647), functions to get the
+  output length of public key operations (GH #1642), and functions for
+  loading and serializing X25519 keys (GH #1681)
 
 * Support for building with BOTAN_MP_WORD_BITS set to 8 or 16 has been removed.
 
