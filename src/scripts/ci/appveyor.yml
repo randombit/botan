@@ -4,9 +4,10 @@ clone_depth: 5
 environment:
 
   matrix:
-    # MSVC 2013 DLL x86-64
-    - MSVS: 2013
-      PLATFORM: x86_amd64
+
+    # MSVC 2015 DLL x86-32
+    - MSVS: 2015
+      PLATFORM: x86
       TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 

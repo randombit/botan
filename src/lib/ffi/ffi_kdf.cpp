@@ -67,7 +67,7 @@ int botan_pwdhash(
    if(password_len == 0)
       password_len = std::strlen(password);
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
 
       if(!pwdhash_fam)
@@ -102,7 +102,7 @@ int botan_pwdhash_timed(
    if(password_len == 0)
       password_len = std::strlen(password);
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
 
       auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
 
@@ -132,7 +132,7 @@ int botan_kdf(const char* kdf_algo,
               const uint8_t salt[], size_t salt_len,
               const uint8_t label[], size_t label_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_algo));
       kdf->kdf(out, out_len, secret, secret_len, salt, salt_len, label, label_len);
       return BOTAN_FFI_SUCCESS;
@@ -156,7 +156,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
                           uint32_t flags)
    {
 #if defined(BOTAN_HAS_BCRYPT)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(out == nullptr || out_len == nullptr || pass == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -178,7 +178,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
 int botan_bcrypt_is_valid(const char* pass, const char* hash)
    {
 #if defined(BOTAN_HAS_BCRYPT)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       return Botan::check_bcrypt(pass, hash) ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER;
       });
 #else

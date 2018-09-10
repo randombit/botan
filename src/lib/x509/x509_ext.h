@@ -233,10 +233,8 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
       Extensions(const Extensions&) = default;
       Extensions& operator=(const Extensions&) = default;
 
-#if !defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
       Extensions(Extensions&&) = default;
       Extensions& operator=(Extensions&&) = default;
-#endif
 
    private:
       static std::unique_ptr<Certificate_Extension>

@@ -47,10 +47,8 @@ class SIMD_4x32 final
       SIMD_4x32& operator=(const SIMD_4x32& other) = default;
       SIMD_4x32(const SIMD_4x32& other) = default;
 
-#if !defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
       SIMD_4x32& operator=(SIMD_4x32&& other) = default;
       SIMD_4x32(SIMD_4x32&& other) = default;
-#endif
 
       /**
       * Zero initialize SIMD register with 4 32-bit elements

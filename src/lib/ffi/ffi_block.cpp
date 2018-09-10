@@ -16,7 +16,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_block_cipher_struct, Botan::BlockCipher, 0x64C297
 
 int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(bc == nullptr || bc_name == nullptr || *bc_name == 0)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 

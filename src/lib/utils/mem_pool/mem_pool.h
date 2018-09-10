@@ -36,7 +36,7 @@ class Memory_Pool final
 
       void* allocate(size_t size);
 
-      bool deallocate(void* p, size_t size) BOTAN_NOEXCEPT;
+      bool deallocate(void* p, size_t size) noexcept;
 
       Memory_Pool(const Memory_Pool&) = delete;
 

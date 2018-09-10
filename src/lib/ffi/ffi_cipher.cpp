@@ -20,7 +20,7 @@ struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A
 
 int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const bool encrypt_p = ((flags & BOTAN_CIPHER_INIT_FLAG_MASK_DIRECTION) == BOTAN_CIPHER_INIT_FLAG_ENCRYPT);
       const Botan::Cipher_Dir dir = encrypt_p ? Botan::ENCRYPTION : Botan::DECRYPTION;
       std::unique_ptr<Botan::Cipher_Mode> mode(Botan::Cipher_Mode::create(cipher_name, dir));
@@ -88,7 +88,7 @@ int botan_cipher_set_key(botan_cipher_t cipher,
 int botan_cipher_start(botan_cipher_t cipher_obj,
                        const uint8_t* nonce, size_t nonce_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Cipher_Mode& cipher = safe_get(cipher_obj);
       cipher.start(nonce, nonce_len);
       cipher_obj->m_buf.reserve(cipher.update_granularity());
@@ -105,7 +105,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
                         size_t orig_input_size,
                         size_t* input_consumed)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
 
       size_t input_size = orig_input_size;
       size_t output_size = orig_output_size;

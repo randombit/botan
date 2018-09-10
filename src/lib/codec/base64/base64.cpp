@@ -17,29 +17,29 @@ namespace {
 class Base64 final
    {
    public:
-      static inline size_t encoding_bytes_in() BOTAN_NOEXCEPT
+      static inline size_t encoding_bytes_in() noexcept
          {
          return m_encoding_bytes_in;
          }
-      static inline size_t encoding_bytes_out() BOTAN_NOEXCEPT
+      static inline size_t encoding_bytes_out() noexcept
          {
          return m_encoding_bytes_out;
          }
 
-      static inline size_t decoding_bytes_in() BOTAN_NOEXCEPT
+      static inline size_t decoding_bytes_in() noexcept
          {
          return m_encoding_bytes_out;
          }
-      static inline size_t decoding_bytes_out() BOTAN_NOEXCEPT
+      static inline size_t decoding_bytes_out() noexcept
          {
          return m_encoding_bytes_in;
          }
 
-      static inline size_t bits_consumed() BOTAN_NOEXCEPT
+      static inline size_t bits_consumed() noexcept
          {
          return m_encoding_bits;
          }
-      static inline size_t remaining_bits_before_padding() BOTAN_NOEXCEPT
+      static inline size_t remaining_bits_before_padding() noexcept
          {
          return m_remaining_bits_before_padding;
          }
@@ -53,7 +53,7 @@ class Base64 final
          return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
          }
 
-      static void encode(char out[8], const uint8_t in[5]) BOTAN_NOEXCEPT
+      static void encode(char out[8], const uint8_t in[5]) noexcept
          {
          out[0] = Base64::m_bin_to_base64[(in[0] & 0xFC) >> 2];
          out[1] = Base64::m_bin_to_base64[((in[0] & 0x03) << 4) | (in[1] >> 4)];
@@ -61,7 +61,7 @@ class Base64 final
          out[3] = Base64::m_bin_to_base64[in[2] & 0x3F];
          }
 
-      static inline uint8_t lookup_binary_value(char input) BOTAN_NOEXCEPT
+      static inline uint8_t lookup_binary_value(char input) noexcept
          {
          return Base64::m_base64_to_bin[static_cast<uint8_t>(input)];
          }

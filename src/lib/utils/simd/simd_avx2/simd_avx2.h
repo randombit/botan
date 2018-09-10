@@ -19,10 +19,8 @@ class SIMD_8x32 final
       SIMD_8x32& operator=(const SIMD_8x32& other) = default;
       SIMD_8x32(const SIMD_8x32& other) = default;
 
-#if !defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
       SIMD_8x32& operator=(SIMD_8x32&& other) = default;
       SIMD_8x32(SIMD_8x32&& other) = default;
-#endif
 
       SIMD_8x32()
          {

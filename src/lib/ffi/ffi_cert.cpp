@@ -31,7 +31,7 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(cert_path));
       *cert_obj = new botan_x509_cert_struct(c.release());
       return BOTAN_FFI_SUCCESS;
@@ -49,7 +49,7 @@ int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert)
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(safe_get(cert)));
       *cert_obj = new botan_x509_cert_struct(c.release());
       return BOTAN_FFI_SUCCESS;
@@ -67,7 +67,7 @@ int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[],
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DataSource_Memory bits(cert_bits, cert_bits_len);
       std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(bits));
       *cert_obj = new botan_x509_cert_struct(c.release());
@@ -87,7 +87,7 @@ int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
    *key = nullptr;
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::Public_Key> publicKey = safe_get(cert).load_subject_public_key();
       *key = new botan_pubkey_struct(publicKey.release());
       return BOTAN_FFI_SUCCESS;
@@ -280,7 +280,7 @@ int botan_x509_cert_verify(int* result_code,
       required_strength = 110;
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const std::string hostname((hostname_cstr == nullptr) ? "" : hostname_cstr);
       const Botan::Usage_Type usage = Botan::Usage_Type::UNSPECIFIED;
       const auto validation_time = reference_time == 0 ?

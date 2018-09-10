@@ -17,29 +17,29 @@ namespace {
 class Base32 final
    {
    public:
-      static inline size_t encoding_bytes_in() BOTAN_NOEXCEPT
+      static inline size_t encoding_bytes_in() noexcept
          {
          return m_encoding_bytes_in;
          }
-      static inline size_t encoding_bytes_out() BOTAN_NOEXCEPT
+      static inline size_t encoding_bytes_out() noexcept
          {
          return m_encoding_bytes_out;
          }
 
-      static inline size_t decoding_bytes_in() BOTAN_NOEXCEPT
+      static inline size_t decoding_bytes_in() noexcept
          {
          return m_encoding_bytes_out;
          }
-      static inline size_t decoding_bytes_out() BOTAN_NOEXCEPT
+      static inline size_t decoding_bytes_out() noexcept
          {
          return m_encoding_bytes_in;
          }
 
-      static inline size_t bits_consumed() BOTAN_NOEXCEPT
+      static inline size_t bits_consumed() noexcept
          {
          return m_encoding_bits;
          }
-      static inline size_t remaining_bits_before_padding() BOTAN_NOEXCEPT
+      static inline size_t remaining_bits_before_padding() noexcept
          {
          return m_remaining_bits_before_padding;
          }
@@ -53,7 +53,7 @@ class Base32 final
          return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
          }
 
-      static void encode(char out[8], const uint8_t in[5]) BOTAN_NOEXCEPT
+      static void encode(char out[8], const uint8_t in[5]) noexcept
          {
          out[0] = Base32::m_bin_to_base32[(in[0] & 0xF8) >> 3];
          out[1] = Base32::m_bin_to_base32[((in[0] & 0x07) << 2) | (in[1] >> 6)];
@@ -65,7 +65,7 @@ class Base32 final
          out[7] = Base32::m_bin_to_base32[in[4] & 0x1F];
          }
 
-      static inline uint8_t lookup_binary_value(char input) BOTAN_NOEXCEPT
+      static inline uint8_t lookup_binary_value(char input) noexcept
          {
          return Base32::m_base32_to_bin[static_cast<uint8_t>(input)];
          }

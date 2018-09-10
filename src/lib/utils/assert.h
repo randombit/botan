@@ -35,7 +35,7 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_argument(const char* messag
 
 
 #define BOTAN_ARG_CHECK(expr, msg)                                      \
-   do { if(!(expr)) Botan::throw_invalid_argument(msg, BOTAN_CURRENT_FUNCTION, __FILE__); } while(0)
+   do { if(!(expr)) Botan::throw_invalid_argument(msg, __func__, __FILE__); } while(0)
 
 /**
 * Called when an invalid state is encountered
@@ -47,7 +47,7 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
 
 
 #define BOTAN_STATE_CHECK(expr)                                     \
-   do { if(!(expr)) Botan::throw_invalid_state(#expr, BOTAN_CURRENT_FUNCTION, __FILE__); } while(0)
+   do { if(!(expr)) Botan::throw_invalid_state(#expr, __func__, __FILE__); } while(0)
 
 /**
 * Make an assertion
@@ -57,7 +57,7 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
       if(!(expr))                                         \
          Botan::assertion_failure(#expr,                  \
                                   assertion_made,         \
-                                  BOTAN_CURRENT_FUNCTION, \
+                                  __func__,               \
                                   __FILE__,               \
                                   __LINE__);              \
    } while(0)
@@ -70,7 +70,7 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
       if(!(expr))                                         \
          Botan::assertion_failure(#expr,                  \
                                   "",                     \
-                                  BOTAN_CURRENT_FUNCTION, \
+                                  __func__,               \
                                   __FILE__,               \
                                   __LINE__);              \
    } while(0)
@@ -82,10 +82,10 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
    do {                                                    \
      if((expr1) != (expr2))                                \
        Botan::assertion_failure(#expr1 " == " #expr2,      \
-                                  assertion_made,          \
-                                  BOTAN_CURRENT_FUNCTION,  \
-                                  __FILE__,                \
-                                  __LINE__);               \
+                                assertion_made,            \
+                                __func__,                  \
+                                __FILE__,                  \
+                                __LINE__);                 \
    } while(0)
 
 /**
@@ -96,9 +96,9 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
      if((expr1) && !(expr2))                               \
        Botan::assertion_failure(#expr1 " implies " #expr2, \
                                 msg,                       \
-                                  BOTAN_CURRENT_FUNCTION,  \
-                                  __FILE__,                \
-                                  __LINE__);               \
+                                __func__,                  \
+                                __FILE__,                  \
+                                __LINE__);                 \
    } while(0)
 
 /**
@@ -109,7 +109,7 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
      if((ptr) == nullptr)                                  \
          Botan::assertion_failure(#ptr " is not null",     \
                                   "",                      \
-                                  BOTAN_CURRENT_FUNCTION,  \
+                                  __func__,                \
                                   __FILE__,                \
                                   __LINE__);               \
    } while(0)

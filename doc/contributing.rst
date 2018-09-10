@@ -197,8 +197,7 @@ Compiler Dependencies
 
 The library should always be as functional as possible when compiled with just
 C++11. However, feel free to use the C++11 language. Little mercy is given to
-sub-par C++11 compilers that don't actually implement the language (some
-temporary concessions are made for MSVC 2013).
+sub-par C++11 compilers that don't actually implement the language.
 
 Use of compiler extensions is fine whenever appropriate; this is typically
 restricted to a single file or an internal header. Compiler extensions used

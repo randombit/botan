@@ -271,7 +271,7 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
 #if defined(BOTAN_HAS_RSA)
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(safe_get(rsa_p),
                                                                 safe_get(rsa_q),
                                                                 safe_get(rsa_e)));
@@ -291,7 +291,7 @@ int botan_privkey_load_rsa_pkcs1(botan_privkey_t* key,
    *key = nullptr;
 
    Botan::secure_vector<uint8_t> src(bits, bits + len);
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::AlgorithmIdentifier alg_id("RSA", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
       *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(alg_id, src));
       return BOTAN_FFI_SUCCESS;
@@ -307,7 +307,7 @@ int botan_pubkey_load_rsa(botan_pubkey_t* key,
    {
 #if defined(BOTAN_HAS_RSA)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *key = new botan_pubkey_struct(new Botan::RSA_PublicKey(safe_get(n), safe_get(e)));
       return BOTAN_FFI_SUCCESS;
       });
@@ -393,7 +393,7 @@ int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t p
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
     }
 
-    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       Botan::DL_Group group(rng, Botan::DL_Group::Prime_Subgroup, pbits, qbits);
       *key = new botan_privkey_struct(new Botan::DSA_PrivateKey(rng, group));
@@ -411,7 +411,7 @@ int botan_privkey_load_dsa(botan_privkey_t* key,
 #if defined(BOTAN_HAS_DSA)
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
       *key = new botan_privkey_struct(new Botan::DSA_PrivateKey(null_rng, group, safe_get(x)));
@@ -429,7 +429,7 @@ int botan_pubkey_load_dsa(botan_pubkey_t* key,
 #if defined(BOTAN_HAS_DSA)
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
       *key = new botan_pubkey_struct(new Botan::DSA_PublicKey(group, safe_get(y)));
       return BOTAN_FFI_SUCCESS;
@@ -478,7 +478,7 @@ int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
                             const char* curve_name)
    {
 #if defined(BOTAN_HAS_ECDSA)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDSA_PublicKey> p_key;
 
       int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
@@ -498,7 +498,7 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key,
                              const char* curve_name)
    {
 #if defined(BOTAN_HAS_ECDSA)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDSA_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
       if(rc == BOTAN_FFI_SUCCESS)
@@ -530,7 +530,7 @@ int botan_privkey_create_elgamal(botan_privkey_t* key,
       ? Botan::DL_Group::Strong
       : Botan::DL_Group::Prime_Subgroup;
 
-    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       Botan::DL_Group group(rng, prime_type, pbits, qbits);
       *key = new botan_privkey_struct(new Botan::ElGamal_PrivateKey(rng, group));
@@ -547,7 +547,7 @@ int botan_pubkey_load_elgamal(botan_pubkey_t* key,
    {
 #if defined(BOTAN_HAS_ELGAMAL)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DL_Group group(safe_get(p), safe_get(g));
       *key = new botan_pubkey_struct(new Botan::ElGamal_PublicKey(group, safe_get(y)));
       return BOTAN_FFI_SUCCESS;
@@ -563,7 +563,7 @@ int botan_privkey_load_elgamal(botan_privkey_t* key,
    {
 #if defined(BOTAN_HAS_ELGAMAL)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(g));
       *key = new botan_privkey_struct(new Botan::ElGamal_PrivateKey(null_rng, group, safe_get(x)));
@@ -587,7 +587,7 @@ int botan_privkey_load_dh(botan_privkey_t* key,
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(g));
       *key = new botan_privkey_struct(new Botan::DH_PrivateKey(null_rng, group, safe_get(x)));
@@ -604,7 +604,7 @@ int botan_pubkey_load_dh(botan_pubkey_t* key,
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DL_Group group(safe_get(p), safe_get(g));
       *key = new botan_pubkey_struct(new Botan::DH_PublicKey(group, safe_get(y)));
       return BOTAN_FFI_SUCCESS;
@@ -636,7 +636,7 @@ int botan_pubkey_load_ecdh(botan_pubkey_t* key,
                            const char* curve_name)
    {
 #if defined(BOTAN_HAS_ECDH)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDH_PublicKey> p_key;
       int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
 
@@ -655,7 +655,7 @@ int botan_privkey_load_ecdh(botan_privkey_t* key,
                             const char* curve_name)
    {
 #if defined(BOTAN_HAS_ECDH)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDH_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
       if(rc == BOTAN_FFI_SUCCESS)
@@ -682,7 +682,7 @@ int botan_pubkey_sm2_compute_za(uint8_t out[],
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
 #if defined(BOTAN_HAS_SM2)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const Botan::Public_Key& pub_key = safe_get(key);
       const Botan::EC_PublicKey* ec_key = dynamic_cast<const Botan::EC_PublicKey*>(&pub_key);
 
@@ -712,7 +712,7 @@ int botan_pubkey_load_sm2(botan_pubkey_t* key,
                           const char* curve_name)
    {
 #if defined(BOTAN_HAS_SM2)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::SM2_PublicKey> p_key;
       if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
          {
@@ -732,7 +732,7 @@ int botan_privkey_load_sm2(botan_privkey_t* key,
                            const char* curve_name)
    {
 #if defined(BOTAN_HAS_SM2)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::SM2_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
 
@@ -768,7 +768,7 @@ int botan_privkey_load_ed25519(botan_privkey_t* key,
    {
 #if defined(BOTAN_HAS_ED25519)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 32);
       *key = new botan_privkey_struct(new Botan::Ed25519_PrivateKey(privkey_vec));
       return BOTAN_FFI_SUCCESS;
@@ -784,7 +784,7 @@ int botan_pubkey_load_ed25519(botan_pubkey_t* key,
    {
 #if defined(BOTAN_HAS_ED25519)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 32);
       *key = new botan_pubkey_struct(new Botan::Ed25519_PublicKey(pubkey_vec));
       return BOTAN_FFI_SUCCESS;
@@ -850,7 +850,7 @@ int botan_privkey_load_x25519(botan_privkey_t* key,
    {
 #if defined(BOTAN_HAS_X25519)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 32);
       *key = new botan_privkey_struct(new Botan::X25519_PrivateKey(privkey_vec));
       return BOTAN_FFI_SUCCESS;
@@ -866,7 +866,7 @@ int botan_pubkey_load_x25519(botan_pubkey_t* key,
    {
 #if defined(BOTAN_HAS_X25519)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 32);
       *key = new botan_pubkey_struct(new Botan::X25519_PublicKey(pubkey_vec));
       return BOTAN_FFI_SUCCESS;
@@ -937,7 +937,7 @@ int botan_mceies_decrypt(botan_privkey_t mce_key_obj,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t out[], size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Private_Key& key = safe_get(mce_key_obj);
 
 #if defined(BOTAN_HAS_MCELIECE) && defined(BOTAN_HAS_MCEIES)
@@ -960,7 +960,7 @@ int botan_mceies_encrypt(botan_pubkey_t mce_key_obj,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t out[], size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Public_Key& key = safe_get(mce_key_obj);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 

@@ -149,7 +149,7 @@ class BOTAN_PUBLIC_API(2,0) ObjectFinder final
 #endif
 
       /// Terminates a search for token and session objects (calls C_FindObjectsFinal)
-      ~ObjectFinder() BOTAN_NOEXCEPT;
+      ~ObjectFinder() noexcept;
 
       /**
       * Starts or continues a search for token and session objects that match a template, obtaining additional object handles (calls C_FindObjects)

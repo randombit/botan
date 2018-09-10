@@ -46,7 +46,7 @@ class RAII_LowLevel
 
          m_low_level->C_Initialize(&init_args);
          }
-      ~RAII_LowLevel() BOTAN_NOEXCEPT
+      ~RAII_LowLevel() noexcept
          {
          try
             {

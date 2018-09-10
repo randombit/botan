@@ -23,7 +23,7 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    return m_pool->allocate(n);
    }
 
-bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) BOTAN_NOEXCEPT
+bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) noexcept
    {
    if(!m_pool)
       return false;
