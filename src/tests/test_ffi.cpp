@@ -1490,11 +1490,26 @@ class FFI_Unit_Tests final : public Test
          const uint32_t pbkdf_msec = 100;
          size_t pbkdf_iters_out = 0;
 
+#if defined(BOTAN_HAS_SCRYPT)
+         const std::string pbe_hash = "Scrypt";
+#else
+         const std::string pbe_hash = "SHA-512";
+#endif
+
          TEST_FFI_OK(botan_privkey_export_encrypted_pbkdf_msec,
                      (priv, privkey.data(), &privkey_len, rng, "password",
-                      pbkdf_msec, &pbkdf_iters_out, "AES-256/GCM", "SHA-512", 0));
-         // PBKDF2 currently always rounds to multiple of 10,000
-         result.test_gte("Reasonable KDF iters", pbkdf_iters_out, 1000);
+                      pbkdf_msec, &pbkdf_iters_out, "AES-256/GCM", pbe_hash.c_str(), 0));
+
+         if(pbe_hash == "Scrypt")
+            {
+            result.test_eq("Scrypt iters set to zero in this API", pbkdf_iters_out, 0);
+            }
+         else
+            {
+            // PBKDF2 currently always rounds to multiple of 10,000
+            result.test_eq("Expected PBKDF2 iters", pbkdf_iters_out % 10000, 0);
+            }
+
          privkey.resize(privkey_len);
 
          TEST_FFI_OK(botan_privkey_load, (&copy, rng, privkey.data(), privkey.size(), "password"));
