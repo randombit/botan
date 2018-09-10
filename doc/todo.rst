@@ -65,7 +65,7 @@ External Providers, Hardware Support
 * Support using BoringSSL instead of OpenSSL or LibreSSL
 * /dev/crypto provider (ciphers, hashes)
 * Windows CryptoNG provider (ciphers, hashes)
-* Apple CommonCrypto
+* Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
 * POWER8 crypto extensions (SHA-2, GCM)
 * Better TPM support: NVRAM, PCR measurements, sealing
 * Intel SGX support

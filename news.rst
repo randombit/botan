@@ -4,8 +4,8 @@ Release Notes
 Version 2.8.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* CommonCrypto hashing support (MD4, MD5, SHA, SHA224, SHA256, SHA384, SHA512)
-  (GH #1667)
+* Add support for using Apple CommonCrypto library for hashing (GH #1667),
+  cipher modes (GH #1674) and block ciphers (GH #1673).
 
 * Support for negotiating TLS versions 1.0 and 1.1 is disabled in the default
   TLS policy. In addition, support for negotiating TLS ciphersuites using CBC or
