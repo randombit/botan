@@ -114,10 +114,6 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
          const std::chrono::milliseconds msec(*msec_in_iterations_out);
          pwhash = pwhash_fam->tune(key_length, msec);
          }
-      else if(iterations_if_msec_null <= 100000)
-         {
-         pwhash = pwhash_fam->default_params();
-         }
       else
          {
          pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
