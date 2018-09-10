@@ -90,19 +90,21 @@ CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo)
       {
       opts.algo = kCCAlgorithm3DES;
       opts.block_size = kCCBlockSize3DES;
-      opts.key_spec = Key_Length_Specification(kCCKeySize3DES);//, 16, 24, 8);
+      opts.key_spec = Key_Length_Specification(16, kCCKeySize3DES, 8);
       }
    else if(algo_name == "Blowfish")
       {
       opts.algo = kCCAlgorithmBlowfish;
       opts.block_size = kCCBlockSizeBlowfish;
-      opts.key_spec = Key_Length_Specification(kCCKeySizeMinBlowfish, kCCKeySizeMaxBlowfish);//, 1, 56, 1);
+      opts.key_spec = Key_Length_Specification(1, kCCKeySizeMaxBlowfish, 1);
       }
    else if(algo_name == "CAST-128")
       {
       opts.algo = kCCAlgorithmCAST;
       opts.block_size = kCCBlockSizeCAST;
-      opts.key_spec = Key_Length_Specification(kCCKeySizeMinCAST, kCCKeySizeMaxCAST);//, 1, 16, 1);
+      // Botan's base implementation of CAST does not support shorter keys
+      // so we limit its minimum key size to 11 here.
+      opts.key_spec = Key_Length_Specification(11, kCCKeySizeMaxCAST, 1);
       }
    else
       {
@@ -145,5 +147,41 @@ CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo)
       }
 
    return opts;
+   }
+
+
+void commoncrypto_adjust_key_size(const uint8_t key[], size_t length,
+                                  const CommonCryptor_Opts& opts, secure_vector<uint8_t>& full_key)
+   {
+
+   if(opts.algo == kCCAlgorithmBlowfish && length < 8)
+      {
+      size_t repeat;
+      switch(length)
+         {
+         case 1:
+            repeat = 8;
+            break;
+         case 2:
+            repeat = 4;
+            break;
+         case 3:
+            repeat = 3;
+            break;
+         default:
+            repeat = 2;
+            break;
+         }
+
+      full_key.resize(length * repeat);
+      for(int i=0; i<repeat; i++)
+         {
+         memcpy(full_key.data() + i * length, key, length);
+         }
+      }
+   else if(opts.algo == kCCAlgorithm3DES && length == 16)
+      {
+      full_key += std::make_pair(key, 8);
+      }
    }
 }

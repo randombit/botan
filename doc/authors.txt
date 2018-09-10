@@ -44,6 +44,7 @@ Jack Lloyd
 Jeffrey Walton
 Joel Low
 joerg
+Jose Luis Pereira (Fyde Inc.)
 Juraj Somorovsky (Hackmanit GmbH)
 Justin Karneges
 Kai Michaelis (Rohde & Schwarz Cybersecurity)
