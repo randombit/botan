@@ -552,13 +552,15 @@ BOTAN_PUBLIC_API(2,0) int botan_pbkdf_timed(const char* pbkdf_algo,
 
 /*
 * Derive a key from a passphrase
-* @param pbkdf_algo PBKDF algorithm, e.g., "PBKDF2(SHA-256)"
+* @param algo PBKDF algorithm, e.g., "PBKDF2(SHA-256)" or "Scrypt"
+* @param param1 the first PBKDF algorithm parameter
+* @param param2 the second PBKDF algorithm parameter (may be zero if unneeded)
+* @param param3 the third PBKDF algorithm parameter (may be zero if unneeded)
 * @param out buffer to store the derived key, must be of out_len bytes
 * @param out_len the desired length of the key to produce
 * @param passphrase the password to derive the key from
 * @param salt a randomly chosen salt
 * @param salt_len length of salt in bytes
-* @param iterations the number of iterations to use (use 10K or more)
 * @return 0 on success, a negative value on failure
 */
 int BOTAN_PUBLIC_API(2,8) botan_pwdhash(
