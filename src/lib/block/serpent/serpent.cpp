@@ -276,6 +276,13 @@ void Serpent::clear()
 
 std::string Serpent::provider() const
    {
+#if defined(BOTAN_HAS_SERPENT_AVX2)
+   if(CPUID::has_avx2())
+      {
+      return "avx2";
+      }
+#endif
+
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32())
       {
