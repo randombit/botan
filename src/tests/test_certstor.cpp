@@ -7,7 +7,8 @@
 #include "tests.h"
 #include <sstream>
 
-#if defined(BOTAN_HAS_X509) && defined(BOTAN_HAS_PUBKEY)
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   #include <botan/x509cert.h>
    #include <botan/certstor.h>
    #include <botan/internal/filesystem.h>
    #include <botan/pkcs8.h>
@@ -23,7 +24,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_X509) && defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 struct CertificateAndKey
    {
