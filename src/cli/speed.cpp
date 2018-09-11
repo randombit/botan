@@ -571,6 +571,8 @@ class Summary final
 
 std::vector<size_t> unique_buffer_sizes(const std::string& cmdline_arg)
    {
+   const size_t MAX_BUF_SIZE = 64*1024*1024;
+
    std::set<size_t> buf;
    for(std::string size_str : Botan::split_on(cmdline_arg, ','))
       {
@@ -588,8 +590,11 @@ std::vector<size_t> unique_buffer_sizes(const std::string& cmdline_arg)
          throw CLI_Usage_Error("Invalid integer value '" + size_str + "' for option buf-size");
          }
 
-      if(x == 0 || x > 16*1024*1024)
-         throw CLI_Usage_Error("Invalid integer value '" + size_str + "' for option buf-size");
+      if(x == 0)
+         throw CLI_Usage_Error("Cannot have a zero-sized buffer");
+
+      if(x > MAX_BUF_SIZE)
+         throw CLI_Usage_Error("Specified buffer size is too large");
 
       buf.insert(x);
       }
