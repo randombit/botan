@@ -1177,22 +1177,22 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             return self.visibility_attribute
         return ''
 
-    def mach_abi_link_flags(self, options, with_debug_info=None):
+    def mach_abi_link_flags(self, options, debug_mode=None):
         #pylint: disable=too-many-branches
 
         """
         Return the machine specific ABI flags
         """
 
-        if with_debug_info is None:
-            with_debug_info = options.with_debug_info
+        if debug_mode is None:
+            debug_mode = options.debug_mode
 
         def mach_abi_groups():
 
             yield 'all'
 
             if options.msvc_runtime is None:
-                if with_debug_info:
+                if debug_mode:
                     yield 'rt-debug'
                 else:
                     yield 'rt'
