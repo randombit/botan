@@ -31,6 +31,31 @@
 
 namespace Botan_CLI {
 
+class CLI_Policy : public Botan::TLS::Policy
+   {
+   public:
+
+      CLI_Policy(Botan::TLS::Protocol_Version req_version) : m_version(req_version) {}
+
+      std::vector<std::string> allowed_ciphers() const override
+         {
+         // Allow CBC mode only in versions which don't support AEADs
+         if(m_version.supports_aead_modes() == false)
+            {
+            return { "AES-256", "AES-128" };
+            }
+
+         return Botan::TLS::Policy::allowed_ciphers();
+         }
+
+      bool allow_tls10() const override { return m_version == Botan::TLS::Protocol_Version::TLS_V10; }
+      bool allow_tls11() const override { return m_version == Botan::TLS::Protocol_Version::TLS_V11; }
+      bool allow_tls12() const override { return m_version == Botan::TLS::Protocol_Version::TLS_V12; }
+
+   private:
+      Botan::TLS::Protocol_Version m_version;
+   };
+
 class TLS_Client final : public Command, public Botan::TLS::Callbacks
    {
    public:
@@ -101,11 +126,6 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             policy.reset(new Botan::TLS::Text_Policy(policy_stream));
             }
 
-         if(!policy)
-            {
-            policy.reset(new Botan::TLS::Policy);
-            }
-
          if(transport != "tcp" && transport != "udp")
             {
             throw CLI_Usage_Error("Invalid transport type '" + transport + "' for TLS");
@@ -115,19 +135,35 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          const std::vector<std::string> protocols_to_offer = Botan::split_on(next_protos, ',');
 
-         m_sockfd = connect_to_host(host, port, use_tcp);
-
-         using namespace std::placeholders;
-
-         auto version = policy->latest_supported_version(!use_tcp);
+         Botan::TLS::Protocol_Version version =
+            use_tcp ? Botan::TLS::Protocol_Version::TLS_V12 : Botan::TLS::Protocol_Version::DTLS_V12;
 
          if(flag_set("tls1.0"))
             {
             version = Botan::TLS::Protocol_Version::TLS_V10;
+            if(!policy)
+               policy.reset(new CLI_Policy(version));
             }
          else if(flag_set("tls1.1"))
             {
             version = Botan::TLS::Protocol_Version::TLS_V11;
+            if(!policy)
+               policy.reset(new CLI_Policy(version));
+            }
+         else if(flag_set("tls1.2"))
+            {
+            version = Botan::TLS::Protocol_Version::TLS_V12;
+            if(!policy)
+               policy.reset(new CLI_Policy(version));
+            }
+         else if(!policy)
+            {
+            policy.reset(new Botan::TLS::Policy);
+            }
+
+         if(policy->acceptable_protocol_version(version) == false)
+            {
+            throw CLI_Usage_Error("The policy specified does not allow the requested TLS version");
             }
 
          struct sockaddr_storage addrbuf;
@@ -138,6 +174,8 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             {
             hostname = host;
             }
+
+         m_sockfd = connect_to_host(host, port, use_tcp);
 
          Basic_Credentials_Manager creds(use_system_cert_store, trusted_CAs);
 

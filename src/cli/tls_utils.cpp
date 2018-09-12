@@ -55,8 +55,8 @@ class TLS_All_Policy final : public Botan::TLS::Policy
          return { "ECDSA", "RSA", "DSA" };
          }
 
-      bool allow_tls10() const override { return false; }
-      bool allow_tls11() const override { return false; }
+      bool allow_tls10() const override { return true; }
+      bool allow_tls11() const override { return true; }
       bool allow_tls12() const override { return true; }
    };
 
@@ -136,6 +136,12 @@ class TLS_Ciphersuites final : public Command
             {
             const std::string policy_txt = slurp_file_as_str(policy_type);
             policy.reset(new Botan::TLS::Text_Policy(policy_txt));
+            }
+
+         if(policy->acceptable_protocol_version(version) == false)
+            {
+            error_output() << "Error: the policy specified does not allow the given TLS version\n";
+            return;
             }
 
          for(uint16_t suite_id : policy->ciphersuite_list(version, with_srp))
