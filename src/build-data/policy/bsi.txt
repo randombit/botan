@@ -87,7 +87,8 @@ aria
 blowfish
 camellia
 cascade
-cast
+cast128
+cast256
 des
 gost_28147
 idea

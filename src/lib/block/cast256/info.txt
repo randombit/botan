@@ -1,0 +1,7 @@
+<defines>
+CAST_256 -> 20171203
+</defines>
+
+<requires>
+cast128
+</requires>
