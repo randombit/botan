@@ -93,7 +93,8 @@ win32_stats
 # Just say no to TLS 1.0
 tls_cbc
 
-cast
+cast128
+cast256
 des
 gost_28147
 idea

@@ -1,7 +1,6 @@
 <defines>
 CAST -> 20131128
 CAST_128 -> 20171203
-CAST_256 -> 20171203
 </defines>
 
 <header:internal>
@@ -10,5 +9,4 @@ cast_sboxes.h
 
 <header:public>
 cast128.h
-cast256.h
 </header:public>
