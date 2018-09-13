@@ -260,6 +260,9 @@ Available AEAD Modes
 -------------------------
 
 If in doubt about what to use, pick ChaCha20Poly1305, AES-256/GCM, or AES-256/SIV.
+Both ChaCha20Poly1305 and AES with GCM are widely implemented. SIV is somewhat
+more obscure (and is slower than either GCM or ChaCha20Poly1305), but has
+excellent security properites.
 
 ChaCha20Poly1305
 ~~~~~~~~~~~~~~~~~~

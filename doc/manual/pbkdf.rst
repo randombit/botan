@@ -28,11 +28,11 @@ the secret will be stored in memory that will not be zeroed.
       Run the PBKDF algorithm for the specified number of iterations,
       with the given salt, and write output to the buffer.
 
-   .. cpp:function:: void pbkdf_timed(uint8_t out[], size_t out_len,
-                         const std::string& passphrase,
-                         const uint8_t salt[], size_t salt_len,
-                         std::chrono::milliseconds msec,
-                         size_t& iterations) const;
+   .. cpp:function:: void pbkdf_timed(uint8_t out[], size_t out_len, \
+                         const std::string& passphrase, \
+                         const uint8_t salt[], size_t salt_len, \
+                         std::chrono::milliseconds msec, \
+                         size_t& iterations) const
 
       Choose (via short run-time benchmark) how many iterations to perform
       in order to run for roughly msec milliseconds. Writes the number
