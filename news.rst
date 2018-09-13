@@ -22,6 +22,8 @@ Version 2.8.0, Not Yet Released
 
 * Add AVX2 implementations of ChaCha (GH #1662) and Serpent (GH #1660)
 
+* Add a new password hashing interface in pwdhash.h (GH #1670)
+
 * C binding improvements. Added functions to get name and supported
   keylengths of cipher, hash and MAC objects, support for FE1 format
   preserving encryption (GH #1625 #1646), functions to load and save
