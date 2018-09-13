@@ -100,7 +100,7 @@ size_t AutoSeeded_RNG::reseed(Entropy_Sources& srcs,
 
 void AutoSeeded_RNG::randomize(uint8_t output[], size_t output_len)
    {
-   randomize_with_ts_input(output, output_len);
+   m_rng->randomize_with_ts_input(output, output_len);
    }
 
 void AutoSeeded_RNG::randomize_with_input(uint8_t output[], size_t output_len,
