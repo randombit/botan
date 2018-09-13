@@ -1,5 +1,5 @@
 <defines>
-SCRYPT -> 20180515
+SCRYPT -> 20180902
 </defines>
 
 <requires>

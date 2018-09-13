@@ -1,6 +1,7 @@
 /*
 * PBKDF2
 * (C) 1999-2007 Jack Lloyd
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,41 +9,115 @@
 #include <botan/pbkdf2.h>
 #include <botan/exceptn.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/timer.h>
 
 namespace Botan {
+
+namespace {
+
+void pbkdf2_set_key(MessageAuthenticationCode& prf,
+                    const char* password,
+                    size_t password_len)
+   {
+   try
+      {
+      prf.set_key(cast_char_ptr_to_uint8(password), password_len);
+      }
+   catch(Invalid_Key_Length&)
+      {
+      throw Exception("PBKDF2 cannot accept passphrase of the given size");
+      }
+   }
+
+}
 
 size_t
 pbkdf2(MessageAuthenticationCode& prf,
        uint8_t out[],
        size_t out_len,
-       const std::string& passphrase,
+       const std::string& password,
        const uint8_t salt[], size_t salt_len,
        size_t iterations,
        std::chrono::milliseconds msec)
    {
+   if(iterations == 0)
+      {
+      iterations = PBKDF2(prf, out_len, msec).iterations();
+      }
+
+   PBKDF2 pbkdf2(prf, iterations);
+
+   pbkdf2.derive_key(out, out_len,
+                     password.c_str(), password.size(),
+                     salt, salt_len);
+
+   return iterations;
+   }
+
+namespace {
+
+size_t tune_pbkdf2(MessageAuthenticationCode& prf,
+                   size_t output_length,
+                   uint32_t msec)
+   {
+   const size_t prf_sz = prf.output_length();
+   BOTAN_ASSERT_NOMSG(prf_sz > 0);
+   secure_vector<uint8_t> U(prf_sz);
+
+   const size_t trial_iterations = 10000;
+
+   // Short output ensures we only need a single PBKDF2 block
+
+   Timer timer("PBKDF2");
+
+   const std::chrono::milliseconds tune_msec(30);
+
+   prf.set_key(nullptr, 0);
+
+   timer.run_until_elapsed(tune_msec, [&]() {
+      uint8_t out[16] = { 0 };
+      uint8_t salt[16] = { 0 };
+      pbkdf2(prf, out, sizeof(out), salt, sizeof(salt), trial_iterations);
+      });
+
+   if(timer.events() == 0)
+      return trial_iterations;
+
+   const uint64_t duration_nsec = timer.value() / timer.events();
+
+   const uint64_t desired_nsec = static_cast<uint64_t>(msec) * 1000000;
+
+   if(duration_nsec > desired_nsec)
+      return trial_iterations;
+
+   const size_t blocks_needed = (output_length + prf_sz - 1) / prf_sz;
+
+   const size_t multiplier = (desired_nsec / duration_nsec / blocks_needed);
+
+   if(multiplier == 0)
+      return trial_iterations;
+   else
+      return trial_iterations * multiplier;
+   }
+
+}
+
+void pbkdf2(MessageAuthenticationCode& prf,
+            uint8_t out[],
+            size_t out_len,
+            const uint8_t salt[],
+            size_t salt_len,
+            size_t iterations)
+   {
    clear_mem(out, out_len);
 
    if(out_len == 0)
-      return 0;
-
-   try
-      {
-      prf.set_key(cast_char_ptr_to_uint8(passphrase.data()), passphrase.size());
-      }
-   catch(Invalid_Key_Length&)
-      {
-      throw Exception("PBKDF2 with " + prf.name() +
-                               " cannot accept passphrases of length " +
-                               std::to_string(passphrase.size()));
-      }
+      return;
 
    const size_t prf_sz = prf.output_length();
+   BOTAN_ASSERT_NOMSG(prf_sz > 0);
+
    secure_vector<uint8_t> U(prf_sz);
-
-   const size_t blocks_needed = round_up(out_len, prf_sz) / prf_sz;
-
-   std::chrono::microseconds usec_per_block =
-      std::chrono::duration_cast<std::chrono::microseconds>(msec) / blocks_needed;
 
    uint32_t counter = 1;
    while(out_len)
@@ -55,64 +130,93 @@ pbkdf2(MessageAuthenticationCode& prf,
 
       xor_buf(out, U.data(), prf_output);
 
-      if(iterations == 0)
+      for(size_t i = 1; i != iterations; ++i)
          {
-         /*
-         If no iterations set, run the first block to calibrate based
-         on how long hashing takes on whatever machine we're running on.
-         */
-
-         const auto start = std::chrono::high_resolution_clock::now();
-
-         iterations = 1; // the first iteration we did above
-
-         while(true)
-            {
-            prf.update(U);
-            prf.final(U.data());
-            xor_buf(out, U.data(), prf_output);
-            iterations++;
-
-            /*
-            Only break on relatively 'even' iterations. For one it
-            avoids confusion, and likely some broken implementations
-            break on getting completely randomly distributed values
-            */
-            if(iterations % 10000 == 0)
-               {
-               auto time_taken = std::chrono::high_resolution_clock::now() - start;
-               auto usec_taken = std::chrono::duration_cast<std::chrono::microseconds>(time_taken);
-               if(usec_taken > usec_per_block)
-                  break;
-               }
-            }
-         }
-      else
-         {
-         for(size_t i = 1; i != iterations; ++i)
-            {
-            prf.update(U);
-            prf.final(U.data());
-            xor_buf(out, U.data(), prf_output);
-            }
+         prf.update(U);
+         prf.final(U.data());
+         xor_buf(out, U.data(), prf_output);
          }
 
       out_len -= prf_output;
       out += prf_output;
       }
-
-   return iterations;
    }
 
+// PBKDF interface
 size_t
 PKCS5_PBKDF2::pbkdf(uint8_t key[], size_t key_len,
-                    const std::string& passphrase,
+                    const std::string& password,
                     const uint8_t salt[], size_t salt_len,
                     size_t iterations,
                     std::chrono::milliseconds msec) const
    {
-   return pbkdf2(*m_mac.get(), key, key_len, passphrase, salt, salt_len, iterations, msec);
+   if(iterations == 0)
+      {
+      iterations = PBKDF2(*m_mac, key_len, msec).iterations();
+      }
+
+   PBKDF2 pbkdf2(*m_mac, iterations);
+
+   pbkdf2.derive_key(key, key_len,
+                     password.c_str(), password.size(),
+                     salt, salt_len);
+
+   return iterations;
    }
 
+std::string PKCS5_PBKDF2::name() const
+   {
+   return "PBKDF2(" + m_mac->name() + ")";
+   }
+
+PBKDF* PKCS5_PBKDF2::clone() const
+   {
+   return new PKCS5_PBKDF2(m_mac->clone());
+   }
+
+// PasswordHash interface
+
+PBKDF2::PBKDF2(const MessageAuthenticationCode& prf, size_t olen, std::chrono::milliseconds msec) :
+   m_prf(prf.clone()),
+   m_iterations(tune_pbkdf2(*m_prf, olen, msec.count()))
+   {}
+
+std::string PBKDF2::to_string() const
+   {
+   return "PBKDF2(" + m_prf->name() + "," + std::to_string(m_iterations) + ")";
+   }
+
+void PBKDF2::derive_key(uint8_t out[], size_t out_len,
+                        const char* password, const size_t password_len,
+                        const uint8_t salt[], size_t salt_len) const
+   {
+   pbkdf2_set_key(*m_prf, password, password_len);
+   pbkdf2(*m_prf, out, out_len, salt, salt_len, m_iterations);
+   }
+
+std::string PBKDF2_Family::name() const
+   {
+   return "PBKDF2(" + m_prf->name() + ")";
+   }
+
+std::unique_ptr<PasswordHash> PBKDF2_Family::tune(size_t output_len, std::chrono::milliseconds msec, size_t) const
+   {
+   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, output_len, msec));
+   }
+
+std::unique_ptr<PasswordHash> PBKDF2_Family::default_params() const
+   {
+   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, 150000));
+   }
+
+std::unique_ptr<PasswordHash> PBKDF2_Family::from_params(size_t iter, size_t, size_t) const
+   {
+   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, iter));
+   }
+
+std::unique_ptr<PasswordHash> PBKDF2_Family::from_iterations(size_t iter) const
+   {
+   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, iter));
+   }
 
 }

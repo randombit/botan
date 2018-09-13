@@ -1,5 +1,5 @@
 <defines>
-UTIL_FUNCTIONS -> 20171003
+UTIL_FUNCTIONS -> 20180903
 </defines>
 
 load_on always
@@ -35,6 +35,7 @@ prefetch.h
 rounding.h
 safeint.h
 stl_util.h
+timer.h
 </header:internal>
 
 <requires>

@@ -17,6 +17,9 @@ namespace Botan {
 * Base class for PBKDF (password based key derivation function)
 * implementations. Converts a password into a key using a salt
 * and iterated hashing to make brute force attacks harder.
+*
+* Starting in 2.8 this functionality is also offered by PasswordHash.
+* The PBKDF interface may be removed in a future release.
 */
 class BOTAN_PUBLIC_API(2,0) PBKDF
    {

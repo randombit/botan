@@ -22,29 +22,97 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-int botan_pbkdf(const char* pbkdf_algo, uint8_t out[], size_t out_len,
+int botan_pbkdf(const char* algo, uint8_t out[], size_t out_len,
                 const char* pass, const uint8_t salt[], size_t salt_len,
                 size_t iterations)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
-      pbkdf->pbkdf_iterations(out, out_len, pass, salt, salt_len, iterations);
-      return BOTAN_FFI_SUCCESS;
-      });
+   return botan_pwdhash(algo,
+                        iterations,
+                        0,
+                        0,
+                        out, out_len,
+                        pass, std::strlen(pass),
+                        salt, salt_len);
    }
 
-int botan_pbkdf_timed(const char* pbkdf_algo,
+int botan_pbkdf_timed(const char* algo,
                       uint8_t out[], size_t out_len,
                       const char* password,
                       const uint8_t salt[], size_t salt_len,
                       size_t ms_to_run,
                       size_t* iterations_used)
    {
+   return botan_pwdhash_timed(algo,
+                              static_cast<uint32_t>(ms_to_run),
+                              iterations_used,
+                              nullptr,
+                              nullptr,
+                              out, out_len,
+                              password, std::strlen(password),
+                              salt, salt_len);
+   }
+
+int botan_pwdhash(
+   const char* algo,
+   size_t param1,
+   size_t param2,
+   size_t param3,
+   uint8_t out[],
+   size_t out_len,
+   const char* password,
+   size_t password_len,
+   const uint8_t salt[],
+   size_t salt_len)
+   {
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
-      pbkdf->pbkdf_timed(out, out_len, password, salt, salt_len,
-                         std::chrono::milliseconds(ms_to_run),
-                         *iterations_used);
+      auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
+
+      if(!pwdhash_fam)
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+
+      auto pwdhash = pwdhash_fam->from_params(param1, param2, param3);
+
+      pwdhash->derive_key(out, out_len,
+                          password, password_len,
+                          salt, salt_len);
+
+      return BOTAN_FFI_SUCCESS;
+      });
+   }
+
+int botan_pwdhash_timed(
+   const char* algo,
+   uint32_t msec,
+   size_t* param1,
+   size_t* param2,
+   size_t* param3,
+   uint8_t out[],
+   size_t out_len,
+   const char* password,
+   size_t password_len,
+   const uint8_t salt[],
+   size_t salt_len)
+   {
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+
+      auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
+
+      if(!pwdhash_fam)
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+
+      auto pwdhash = pwdhash_fam->tune(out_len, std::chrono::milliseconds(msec));
+
+      if(param1)
+         *param1 = pwdhash->iterations();
+      if(param2)
+         *param2 = pwdhash->parallelism();
+      if(param3)
+         *param3 = pwdhash->memory_param();
+
+      pwdhash->derive_key(out, out_len,
+                          password, password_len,
+                          salt, salt_len);
+
       return BOTAN_FFI_SUCCESS;
       });
    }
@@ -63,13 +131,13 @@ int botan_kdf(const char* kdf_algo,
    }
 
 int botan_scrypt(uint8_t out[], size_t out_len,
-                 const char* passphrase,
+                 const char* password,
                  const uint8_t salt[], size_t salt_len,
                  size_t N, size_t r, size_t p)
    {
 #if defined(BOTAN_HAS_SCRYPT)
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      Botan::scrypt(out, out_len, passphrase, salt, salt_len, N, r, p);
+      Botan::scrypt(out, out_len, password, strlen(password), salt, salt_len, N, r, p);
       return BOTAN_FFI_SUCCESS;
    });
 #else

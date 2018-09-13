@@ -1,33 +1,47 @@
 
 .. _pbkdf:
 
-PBKDF Algorithms
+Password Based Key Derivation
 ========================================
 
-There are various procedures for turning a passphrase into a arbitrary
-length key for use with a symmetric cipher. A general interface for
-such algorithms is presented in ``pbkdf.h``. The main function is
-``derive_key``, which takes a passphrase, a salt, an iteration count,
-and the desired length of the output key, and returns a key of that
-length, deterministically produced from the passphrase and salt. If an
-algorithm can't produce a key of that size, it will throw an exception
-(most notably, PKCS #5's PBKDF1 can only produce strings between 1 and
-$n$ bytes, where $n$ is the output size of the underlying hash
-function).
+Often one needs to convert a human readable password into a cryptographic
+key. It is useful to slow down the computation of these computations in order to
+reduce the speed of brute force search, thus they are parameterized in some
+way which allows their required computation to be tuned.
 
-The purpose of the iteration count is to make the algorithm take
-longer to compute the final key (reducing the speed of brute-force
-attacks of various kinds). Most standards recommend an iteration count
-of at least 10000. Currently defined PBKDF algorithms are
-"PBKDF1(digest)", "PBKDF2(digest)"; you can retrieve any of these
-using the ``get_pbkdf``, found in ``lookup.h``. As of this writing,
-"PBKDF2(SHA-256)" with at least 100000 iterations and a 16 byte salt
-is recommend for new applications.
+PBKDF
+---------
 
-.. cpp:function:: OctetString PBKDF::derive_key( \
-   size_t output_len, const std::string& passphrase, \
-   const uint8_t* salt, size_t salt_len, \
-   size_t iterations) const
+:cpp:class:`PBKDF` is the older API for this functionality, presented in header
+``pbkdf.h``. It does not support Scrypt, nor will it be able to support other
+future hashes (such as Argon2) that may be added in the future. In addition,
+this API requires the passphrase be entered as a ``std::string``, which means
+the secret will be stored in memory that will not be zeroed.
+
+.. cpp:class:: PBKDF
+
+   .. cpp:function:: void pbkdf_iterations(uint8_t out[], size_t out_len, \
+                            const std::string& passphrase, \
+                            const uint8_t salt[], size_t salt_len, \
+                            size_t iterations) const
+
+      Run the PBKDF algorithm for the specified number of iterations,
+      with the given salt, and write output to the buffer.
+
+   .. cpp:function:: void pbkdf_timed(uint8_t out[], size_t out_len,
+                         const std::string& passphrase,
+                         const uint8_t salt[], size_t salt_len,
+                         std::chrono::milliseconds msec,
+                         size_t& iterations) const;
+
+      Choose (via short run-time benchmark) how many iterations to perform
+      in order to run for roughly msec milliseconds. Writes the number
+      of iterations used to reference argument.
+
+   .. cpp:function:: OctetString derive_key( \
+               size_t output_len, const std::string& passphrase, \
+               const uint8_t* salt, size_t salt_len, \
+               size_t iterations) const
 
    Computes a key from *passphrase* and the *salt* (of length
    *salt_len* bytes) using an algorithm-specific interpretation of
@@ -41,62 +55,74 @@ is recommend for new applications.
    If you call this function again with the same parameters, you will
    get the same key.
 
-::
+PasswordHash
+--------------
 
-   PBKDF* pbkdf = get_pbkdf("PBKDF2(SHA-256)");
-   AutoSeeded_RNG rng;
+.. versionadded:: 2.8.0
 
-   secure_vector<uint8_t> salt = rng.random_vec(16);
-   OctetString aes256_key = pbkdf->derive_key(32, "password",
-                                              &salt[0], salt.size(),
-                                              10000);
+This API has two classes, one representing the algorithm (such as
+"PBKDF2(SHA-256)", or "Scrypt") and the other representing a specific instance
+of the problem which is fully specified (say "Scrypt" with N=8192,r=64,p=8).
 
-PBKDF1
-------------
+.. cpp:class:: PasswordHash
 
-PBKDF1 is an old scheme that can only produce an output length at most
-as long as the hash function. It is deprecated and will be removed in
-a future release.
+   .. cpp:function:: void derive_key(uint8_t out[], size_t out_len, \
+                     const char* password, const size_t password_len, \
+                     const uint8_t salt[], size_t salt_len) const
+
+      Derive a key, placing it into output
+
+   .. cpp:function:: std::string to_string() const
+
+      Return a descriptive string including the parameters (iteration count, etc)
+
+The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
+
+.. cpp:class:: PasswordHashFamily
+
+   .. cpp:function:: static std::unique_ptr<PasswordHashFamily> create(const std::string& what)
+
+      For example "PBKDF2(SHA-256)", "Scrypt", "OpenPGP-S2K(SHA-384)". Returns
+      null if not available.
+
+   .. cpp:function:: std::unique_ptr<PasswordHash> default_params() const
+
+      Create a default instance of the password hashing algorithm. Be warned the
+      value returned here may change from release to release.
+
+   .. cpp:function:: std::unique_ptr<PasswordHash> tune(size_t output_len, std::chrono::milliseconds msec) const
+
+      Return a password hash instance tuned to run for approximately ``msec``
+      millseconds when producing an output of length ``output_len``. (Accuracy
+      may vary, use the command line utility ``botan pbkdf_tune`` to check.)
+
+   .. cpp:function:: std::unique_ptr<PasswordHash> from_configuration( \
+         size_t i1, size_t i2 = 0, size_t i3 = 0, size_t i4 = 0, const char* cfg_str = nullptr) const
+
+      Return a new password hash instance based on some number of integer and
+      string parameters. Any values not used by a particular scheme should be
+      set to zero/null.
+
+Available Schemes
+----------------------
 
 PBKDF2
-------------
+^^^^^^^^^^^^
 
-PBKDF2 is a the "standard" password derivation scheme, widely
-implemented in many different libraries.
-
-OpenPGP S2K
--------------
-
-There are some oddities about OpenPGP's S2K algorithms that are
-documented here. For one thing, it uses the iteration count in a
-strange manner; instead of specifying how many times to iterate the
-hash, it tells how many *bytes* should be hashed in total
-(including the salt). So the exact iteration count will depend on the
-size of the salt (which is fixed at 8 bytes by the OpenPGP standard,
-though the implementation will allow any salt size) and the size of
-the passphrase.
-
-To get what OpenPGP calls "Simple S2K", set iterations to 0, and do
-not specify a salt. To get "Salted S2K", again leave the iteration
-count at 0, but give an 8-byte salt. "Salted and Iterated S2K"
-requires an 8-byte salt and some iteration count (this should be
-significantly larger than the size of the longest passphrase that
-might reasonably be used; somewhere from 1024 to 65536 would probably
-be about right). Using both a reasonably sized salt and a large
-iteration count is highly recommended to prevent password guessing
-attempts.
+PBKDF2 is the "standard" password derivation scheme, widely implemented in many
+different libraries. It uses HMAC internally.
 
 Scrypt
-----------
+^^^^^^^^^^
 
 Scrypt is a relatively newer design which is "memory hard" - in
 addition to requiring large amounts of CPU power it uses a large block
 of memory to compute the hash. This makes brute force attacks using
 ASICs substantially more expensive.
 
-Currently Scrypt uses a different interface from the standard PBKDF
-functions. This will be remedied in a future major release which
-redesigns the PBKDF interfaces.
+Scrypt is not supported through :cpp:class:`PBKDF`, only :cpp:class:`PasswordHash`,
+starting in 2.8.0. In addition, starting in version 2.7.0, scrypt is available
+with this function:
 
 .. cpp:function:: void scrypt(uint8_t output[], size_t output_len, \
                               const std::string& password, \
@@ -119,3 +145,34 @@ redesigns the PBKDF interfaces.
    that up to p processors can work in parallel.
 
    As a general recommendation, use N=32768, r=8, p=1
+
+OpenPGP S2K
+^^^^^^^^^^^^
+
+.. warning::
+
+   The OpenPGP algorithm is weak and strange, and should be avoided unless
+   implementing OpenPGP.
+
+There are some oddities about OpenPGP's S2K algorithms that are documented
+here. For one thing, it uses the iteration count in a strange manner; instead of
+specifying how many times to iterate the hash, it tells how many *bytes* should
+be hashed in total (including the salt). So the exact iteration count will
+depend on the size of the salt (which is fixed at 8 bytes by the OpenPGP
+standard, though the implementation will allow any salt size) and the size of
+the passphrase.
+
+To get what OpenPGP calls "Simple S2K", set iterations to 0, and do not specify
+a salt. To get "Salted S2K", again leave the iteration count at 0, but give an
+8-byte salt. "Salted and Iterated S2K" requires an 8-byte salt and some
+iteration count (this should be significantly larger than the size of the
+longest passphrase that might reasonably be used; somewhere from 1024 to 65536
+would probably be about right). Using both a reasonably sized salt and a large
+iteration count is highly recommended to prevent password guessing attempts.
+
+PBKDF1
+^^^^^^^^^^^^
+
+PBKDF1 is an old scheme that can only produce an output length at most
+as long as the hash function. It is deprecated and will be removed in
+a future release. It is not supported through :cpp:class:`PasswordHash`.
