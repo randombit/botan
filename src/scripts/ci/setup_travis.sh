@@ -84,7 +84,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         #
 
         sudo apt-get remove python-requests python-openssl python-roman
-        sudo pip install requests pyopenssl roman sphinx
+        sudo pip install requests pyopenssl roman sphinx==1.7.9
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
