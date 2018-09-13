@@ -31,7 +31,7 @@ int botan_pbkdf(const char* algo, uint8_t out[], size_t out_len,
                         0,
                         0,
                         out, out_len,
-                        pass, std::strlen(pass),
+                        pass, 0,
                         salt, salt_len);
    }
 
@@ -48,7 +48,7 @@ int botan_pbkdf_timed(const char* algo,
                               nullptr,
                               nullptr,
                               out, out_len,
-                              password, std::strlen(password),
+                              password, 0,
                               salt, salt_len);
    }
 
@@ -64,6 +64,12 @@ int botan_pwdhash(
    const uint8_t salt[],
    size_t salt_len)
    {
+   if(algo == nullptr || password == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   if(password_len == 0)
+      password_len = std::strlen(password);
+
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
       auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
 
@@ -93,6 +99,12 @@ int botan_pwdhash_timed(
    const uint8_t salt[],
    size_t salt_len)
    {
+   if(algo == nullptr || password == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   if(password_len == 0)
+      password_len = std::strlen(password);
+
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
 
       auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);

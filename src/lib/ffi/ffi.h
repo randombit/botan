@@ -559,6 +559,8 @@ BOTAN_PUBLIC_API(2,0) int botan_pbkdf_timed(const char* pbkdf_algo,
 * @param out buffer to store the derived key, must be of out_len bytes
 * @param out_len the desired length of the key to produce
 * @param passphrase the password to derive the key from
+* @param passphrase_len if > 0, specifies length of password. If len == 0, then
+*        strlen will be called on passphrase to compute the length.
 * @param salt a randomly chosen salt
 * @param salt_len length of salt in bytes
 * @return 0 on success, a negative value on failure
@@ -585,6 +587,8 @@ int BOTAN_PUBLIC_API(2,8) botan_pwdhash(
 * @param out buffer to store the derived key, must be of out_len bytes
 * @param out_len the desired length of the key to produce
 * @param passphrase the password to derive the key from
+* @param passphrase_len if > 0, specifies length of password. If len == 0, then
+*        strlen will be called on passphrase to compute the length.
 * @param salt a randomly chosen salt
 * @param salt_len length of salt in bytes
 * @return 0 on success, a negative value on failure
