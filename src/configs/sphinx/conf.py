@@ -47,7 +47,7 @@ version_patch = version_info['release_patch']
 
 is_website_build = check_for_tag('website')
 
-needs_sphinx = '1.3'
+needs_sphinx = '1.2'
 
 templates_path = ['templates']
 

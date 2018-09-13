@@ -1476,7 +1476,7 @@ int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
 typedef struct botan_hotp_struct* botan_hotp_t;
 
 /**
-* Initialize an HOTP instance
+* Initialize a HOTP instance
 */
 BOTAN_PUBLIC_API(2,8)
 int botan_hotp_init(botan_hotp_t* hotp,
@@ -1491,7 +1491,7 @@ BOTAN_PUBLIC_API(2,8)
 int botan_hotp_destroy(botan_hotp_t hotp);
 
 /**
-* Generate an HOTP code for the provided counter
+* Generate a HOTP code for the provided counter
 */
 BOTAN_PUBLIC_API(2,8)
 int botan_hotp_generate(botan_hotp_t hotp,
@@ -1499,7 +1499,7 @@ int botan_hotp_generate(botan_hotp_t hotp,
                         uint64_t hotp_counter);
 
 /**
-* Verify an HOTP code
+* Verify a HOTP code
 */
 BOTAN_PUBLIC_API(2,8)
 int botan_hotp_check(botan_hotp_t hotp,
@@ -1516,7 +1516,7 @@ int botan_hotp_check(botan_hotp_t hotp,
 typedef struct botan_totp_struct* botan_totp_t;
 
 /**
-* Initialize an TOTP instance
+* Initialize a TOTP instance
 */
 BOTAN_PUBLIC_API(2,8)
 int botan_totp_init(botan_totp_t* totp,
@@ -1532,7 +1532,10 @@ BOTAN_PUBLIC_API(2,8)
 int botan_totp_destroy(botan_totp_t totp);
 
 /**
-* Generate an TOTP code for the provided counter
+* Generate a TOTP code for the provided timestamp
+* @param totp the TOTP object
+* @param totp_code the OTP code will be written here
+* @param timestamp the current local timestamp
 */
 BOTAN_PUBLIC_API(2,8)
 int botan_totp_generate(botan_totp_t totp,
@@ -1540,10 +1543,12 @@ int botan_totp_generate(botan_totp_t totp,
                         uint64_t timestamp);
 
 /**
-* Verify an TOTP code
+* Verify a TOTP code
 * @param totp the TOTP object
-* @param clock_drift if non-null and otp code is valid,
-*        set to the drift between the two clocks.
+* @param totp_code the presented OTP
+* @param timestamp the current local timestamp
+* @param acceptable_clock_drift specifies the acceptable amount
+* of clock drift (in terms of time steps) between the two hosts.
 */
 BOTAN_PUBLIC_API(2,8)
 int botan_totp_check(botan_totp_t totp,
