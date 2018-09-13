@@ -84,6 +84,8 @@ Version 2.8.0, Not Yet Released
 
 * Use codec_base for Base64, which matches how Base32 is implemented (GH #1597)
 
+* The ``cast`` module has been split up into ``cast128`` and ``cast256`` (GH #1685)
+
 * When building under Visual C++ 2013, the user must acknowledge the upcoming
   removal of support using the configure.py flag ``--ack-vc2013-deprecated``
   (GH #1557)
