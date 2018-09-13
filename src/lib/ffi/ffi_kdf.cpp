@@ -8,14 +8,11 @@
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/pbkdf.h>
+#include <botan/pwdhash.h>
 #include <botan/kdf.h>
 
 #if defined(BOTAN_HAS_BCRYPT)
   #include <botan/bcrypt.h>
-#endif
-
-#if defined(BOTAN_HAS_SCRYPT)
-  #include <botan/scrypt.h>
 #endif
 
 extern "C" {
@@ -147,14 +144,10 @@ int botan_scrypt(uint8_t out[], size_t out_len,
                  const uint8_t salt[], size_t salt_len,
                  size_t N, size_t r, size_t p)
    {
-#if defined(BOTAN_HAS_SCRYPT)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      Botan::scrypt(out, out_len, password, strlen(password), salt, salt_len, N, r, p);
-      return BOTAN_FFI_SUCCESS;
-   });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_pwdhash("Scrypt", N, r, p,
+                        out, out_len,
+                        password, 0,
+                        salt, salt_len);
    }
 
 int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
