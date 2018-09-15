@@ -234,7 +234,7 @@ make_openssl_block_cipher(const std::string& name)
       return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_bf_ecb, 1, 56, 1);
 #endif
 
-#if defined(BOTAN_HAS_CAST) && !defined(OPENSSL_NO_CAST)
+#if defined(BOTAN_HAS_CAST_128) && !defined(OPENSSL_NO_CAST)
    if(name == "CAST-128")
       return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_cast5_ecb, 1, 16, 1);
 #endif
