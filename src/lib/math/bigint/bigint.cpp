@@ -163,18 +163,19 @@ void BigInt::encode_words(word out[], size_t size) const
 */
 uint32_t BigInt::get_substring(size_t offset, size_t length) const
    {
-   if(length > 32)
-      throw Invalid_Argument("BigInt::get_substring: Substring size " + std::to_string(length) + " too big");
+   if(length == 0 || length > 32)
+      throw Invalid_Argument("BigInt::get_substring invalid substring length");
 
-   uint64_t piece = 0;
-   for(size_t i = 0; i != 8; ++i)
-      {
-      const uint8_t part = byte_at((offset / 8) + (7-i));
-      piece = (piece << 8) | part;
-      }
-
-   const uint64_t mask = (static_cast<uint64_t>(1) << length) - 1;
+   const size_t byte_offset = offset / 8;
    const size_t shift = (offset % 8);
+   const uint32_t mask = 0xFFFFFFFF >> (32 - length);
+
+   const uint8_t b0 = byte_at(byte_offset);
+   const uint8_t b1 = byte_at(byte_offset + 1);
+   const uint8_t b2 = byte_at(byte_offset + 2);
+   const uint8_t b3 = byte_at(byte_offset + 3);
+   const uint8_t b4 = byte_at(byte_offset + 4);
+   const uint64_t piece = make_uint64(0, 0, 0, b4, b3, b2, b1, b0);
 
    return static_cast<uint32_t>((piece >> shift) & mask);
    }

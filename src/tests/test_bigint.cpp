@@ -36,6 +36,7 @@ class BigInt_Unit_Tests final : public Test
          results.push_back(test_random_prime());
          results.push_back(test_encode());
          results.push_back(test_bigint_io());
+         results.push_back(test_get_substring());
 
          return results;
          }
@@ -200,6 +201,34 @@ class BigInt_Unit_Tests final : public Test
             if(encoded_n1[i] != 0)
                {
                result.test_failure("encode_1363", "no zero byte");
+               }
+            }
+
+         return result;
+         }
+
+      Test::Result test_get_substring()
+         {
+         const size_t trials = 1000;
+
+         Test::Result result("BigInt get_substring");
+
+         const Botan::BigInt r(Test::rng(), 250);
+
+         for(size_t s = 1; s <= 32; ++s)
+            {
+            for(size_t trial = 0; trial != trials; ++trial)
+               {
+               const size_t offset = Test::rng().next_byte();
+
+               const uint32_t val = r.get_substring(offset, s);
+
+               Botan::BigInt t = r >> offset;
+               t.mask_bits(s);
+
+               const uint32_t cmp = t.to_u32bit();
+
+               result.test_eq("Same value", size_t(val), size_t(cmp));
                }
             }
 
