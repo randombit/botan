@@ -12,6 +12,7 @@ x86pc # for QNX
 bepc  # for Haiku
 
 i686
+i586
 i386
 </aliases>
 
