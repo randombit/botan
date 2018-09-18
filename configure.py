@@ -1799,7 +1799,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         elif options.cpu.endswith('el') or options.cpu.endswith('le'):
             return 'little'
 
-        logging.info('Defaulting to assuming %s endian', arch_info.endian)
+        if arch_info.endian:
+            logging.info('Defaulting to assuming %s endian', arch_info.endian)
         return arch_info.endian
 
     build_dir = options.with_build_dir or os.path.curdir
