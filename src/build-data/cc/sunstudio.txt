@@ -5,8 +5,8 @@ binary_name CC
 optimization_flags "-xO2"
 
 shared_flags "-KPIC"
-warning_flags "+w -erroff=truncwarn,wnoretvalue"
-lang_flags "-std=c++11 +p -features=extensions -D__FUNCTION__=__func__"
+warning_flags "+w -erroff=truncwarn,wnoretvalue,wlessrestrictedthrow"
+lang_flags "-std=c++11 +p -features=extensions"
 
 ar_command CC
 ar_options "-xar -o"
@@ -19,7 +19,7 @@ default -> "$(CXX) -G -h{soname_abi}"
 # Needed on some Linux distros
 linux      -> "-library=stlport4"
 
-sparc64    -> "-xarch=v9"
+sparc64    -> "-m64 -xarch=sparc"
 x86_64     -> "-m64"
 </mach_abi_linking>
 
