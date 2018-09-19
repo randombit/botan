@@ -34,12 +34,9 @@ inline size_t round_up(size_t n, size_t align_to)
 * @return n rounded down to a multiple of align_to
 */
 template<typename T>
-inline T round_down(T n, T align_to)
+inline constexpr T round_down(T n, T align_to)
    {
-   if(align_to == 0)
-      return n;
-
-   return (n - (n % align_to));
+   return (align_to == 0) ? n : (n - (n % align_to));
    }
 
 /**
