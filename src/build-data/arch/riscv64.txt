@@ -1,1 +1,2 @@
 family riscv
+endian little
