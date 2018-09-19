@@ -6,6 +6,7 @@ wordsize 64
 <aliases>
 powerpc64
 ppc64le
+ppc64el
 </aliases>
 
 <isa_extensions>
