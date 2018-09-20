@@ -115,13 +115,13 @@ class BOTAN_PUBLIC_API(2,8) PasswordHashFamily
       * @param output_length how long the output length will be
       * @param msec the desired execution time in milliseconds
       *
-      * @param max_memory_usage some password hash functions can use a tunable
+      * @param max_memory_usage_mb some password hash functions can use a tunable
       * amount of memory, in this case max_memory_usage limits the amount of RAM
       * the returned parameters will require, in mebibytes (2**20 bytes). It may
       * require some small amount above the request. Set to zero to place no
       * limit at all.
       */
-      virtual std::unique_ptr<PasswordHash> tune(size_t output_len,
+      virtual std::unique_ptr<PasswordHash> tune(size_t output_length,
                                                  std::chrono::milliseconds msec,
                                                  size_t max_memory_usage_mb = 0) const = 0;
 
