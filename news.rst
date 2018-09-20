@@ -77,7 +77,7 @@ Version 2.8.0, Not Yet Released
 * Correct bugs which would cause CFB, OCB, and GCM modes to crash when they
   were used in an unkeyed state. (GH #1639)
 
-* Optimizations for SM4
+* Optimizations for SM4 and Poly1305
 
 * Avoid a cache side channel in the AES key schedule
 

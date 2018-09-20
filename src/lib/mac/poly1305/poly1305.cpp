@@ -49,6 +49,9 @@ void poly1305_blocks(secure_vector<uint64_t>& X, const uint8_t *m, size_t blocks
    const uint64_t r1 = X[1];
    const uint64_t r2 = X[2];
 
+   const uint64_t M44 = 0xfffffffffff;
+   const uint64_t M42 = 0x3ffffffffff;
+
    uint64_t h0 = X[3+0];
    uint64_t h1 = X[3+1];
    uint64_t h2 = X[3+2];
@@ -56,27 +59,31 @@ void poly1305_blocks(secure_vector<uint64_t>& X, const uint8_t *m, size_t blocks
    const uint64_t s1 = r1 * (5 << 2);
    const uint64_t s2 = r2 * (5 << 2);
 
-   while(blocks--)
+   for(size_t i = 0; i != blocks; ++i)
       {
-      /* h += m[i] */
       const uint64_t t0 = load_le<uint64_t>(m, 0);
       const uint64_t t1 = load_le<uint64_t>(m, 1);
 
-      h0 += (( t0                    ) & 0xfffffffffff);
-      h1 += (((t0 >> 44) | (t1 << 20)) & 0xfffffffffff);
-      h2 += (((t1 >> 24)             ) & 0x3ffffffffff) | hibit;
+      h0 += (( t0                    ) & M44);
+      h1 += (((t0 >> 44) | (t1 << 20)) & M44);
+      h2 += (((t1 >> 24)             ) & M42) | hibit;
 
-      /* h *= r */
-      uint128_t d0 = uint128_t(h0) * r0 + uint128_t(h1) * s2 + uint128_t(h2) * s1;
-      uint128_t d1 = uint128_t(h0) * r1 + uint128_t(h1) * r0 + uint128_t(h2) * s2;
-      uint128_t d2 = uint128_t(h0) * r2 + uint128_t(h1) * r1 + uint128_t(h2) * r0;
+      const uint128_t d0 = uint128_t(h0) * r0 + uint128_t(h1) * s2 + uint128_t(h2) * s1;
+      const uint64_t c0 = carry_shift(d0, 44);
 
-      /* (partial) h %= p */
-      uint64_t     c = carry_shift(d0, 44); h0 = d0 & 0xfffffffffff;
-      d1 += c;     c = carry_shift(d1, 44); h1 = d1 & 0xfffffffffff;
-      d2 += c;     c = carry_shift(d2, 42); h2 = d2 & 0x3ffffffffff;
-      h0 += c * 5; c = carry_shift(h0, 44); h0 = h0 & 0xfffffffffff;
-      h1 += c;
+      const uint128_t d1 = uint128_t(h0) * r1 + uint128_t(h1) * r0 + uint128_t(h2) * s2 + c0;
+      const uint64_t c1 = carry_shift(d1, 44);
+
+      const uint128_t d2 = uint128_t(h0) * r2 + uint128_t(h1) * r1 + uint128_t(h2) * r0 + c1;
+      const uint64_t c2 = carry_shift(d2, 42);
+
+      h0 = d0 & M44;
+      h1 = d1 & M44;
+      h2 = d2 & M42;
+
+      h0 += c2 * 5;
+      h1 += carry_shift(h0, 44);
+      h0 = h0 & M44;
 
       m += 16;
       }
