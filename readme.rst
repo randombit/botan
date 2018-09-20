@@ -7,11 +7,10 @@ permissive `Simplified BSD <https://botan.randombit.net/license.txt>`_ license.
 Botan's goal is to be the best option for cryptography in C++ by offering the
 tools necessary to implement a range of practical systems, such as TLS protocol,
 X.509 certificates, modern AEAD ciphers, PKCS#11 and TPM hardware support,
-password hashing, and post quantum crypto schemes. The library also offers a C89
-API specifically designed to be easy to call from other languages. A Python
-binding using ctypes is included, and several other `language bindings
-<https://github.com/randombit/botan/wiki/Language-Bindings>`_ are available.
-Find the full feature list below.
+password hashing, and post quantum crypto schemes. The library also includes a C
+API for most functionality. A Python binding is included, and several other
+`language bindings <https://github.com/randombit/botan/wiki/Language-Bindings>`_
+are available.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
 and contributions are welcome. If you need help, please open an issue on
@@ -24,32 +23,13 @@ If you think you have found a security issue, see the `security page
 
 The latest release is
 `2.7.0 <https://botan.randombit.net/releases/Botan-2.7.0.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-2.7.0.tgz.asc>`_
+`(sig) <https://botan.randombit.net/releases/Botan-2.7.0.tgz.asc>`_,
 released on 2018-07-02.
+All releases are signed with a `PGP key <https://botan.randombit.net/pgpkey.txt>`_.
 See the `release notes <https://botan.randombit.net/news.html>`_ for
-what is new. Most `distributions <https://github.com/randombit/botan/wiki/Distros>`_
-such as Fedora, Debian and Arch include packages for Botan.
-
-.. highlight:: none
-
-All releases are signed with a
-`PGP key <https://botan.randombit.net/pgpkey.txt>`_::
-
-  pub   2048R/EFBADFBC 2004-10-30
-        Key fingerprint = 621D AF64 11E1 851C 4CF9  A2E1 6211 EBF1 EFBA DFBC
-  uid                  Botan Distribution Key
-
-For all the details on building the library, read the
-`documentation <https://botan.randombit.net/manual>`_, but in short::
-
-  $ python ./configure.py
-  $ make
-  $ ./botan-test
-  ...
-  $ make install
-
-Botan can also be built into a single-file amalgamation for easy inclusion into
-external build systems, see the manual for details.
+what is new. Botan is also available through most
+`distributions <https://github.com/randombit/botan/wiki/Distros>`_
+such as Fedora, Debian, Arch and Homebrew.
 
 .. image:: https://travis-ci.org/randombit/botan.svg?branch=master
     :target: https://travis-ci.org/randombit/botan
