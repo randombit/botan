@@ -16,6 +16,7 @@ Ciphers, Hashes, PBKDF
 * AES using vector permutes for NEON
 * Camellia using AES-NI
 * ChaCha20 using NEON
+* Poly1305 using AVX2
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
 * Argon2 PBKDF (draft-irtf-cfrg-argon2)
