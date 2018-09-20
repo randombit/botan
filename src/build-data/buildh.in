@@ -180,7 +180,7 @@
 * These control the RNG used by the system RNG interface
 */
 #define BOTAN_SYSTEM_RNG_DEVICE "/dev/urandom"
-#define BOTAN_SYSTEM_RNG_POLL_DEVICES { "/dev/urandom", "/dev/random", "/dev/srandom" }
+#define BOTAN_SYSTEM_RNG_POLL_DEVICES { "/dev/urandom", "/dev/random" }
 
 /*
 * This directory will be monitored by ProcWalking_EntropySource and
