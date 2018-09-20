@@ -59,6 +59,9 @@ Version 2.8.0, Not Yet Released
 * In ECC private keys, include the public key data for compatibility with
   GnuTLS (GH #1634 #1635)
 
+* Add support for using Linux ``getrandom`` syscall to access the system PRNG.
+  This is disabled by default, use ``--with-os-feature=getrandom`` to enable.
+
 * It is now possible to encrypt private keys using SIV mode.
 
 * The FFI function botan_privkey_load now ignores its rng argument.

@@ -19,6 +19,10 @@
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
    #include <stdlib.h>
 
+#elif defined(BOTAN_TARGET_OS_HAS_GETRANDOM)
+   #include <sys/random.h>
+   #include <errno.h>
+
 #elif defined(BOTAN_TARGET_OS_HAS_DEV_RANDOM)
    #include <sys/types.h>
    #include <sys/stat.h>
@@ -124,6 +128,41 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void clear() override { /* not possible */ }
       std::string name() const override { return "arc4random"; }
    };
+
+#elif defined(BOTAN_TARGET_OS_HAS_GETRANDOM)
+
+class System_RNG_Impl final : public RandomNumberGenerator
+   {
+   public:
+      // No constructor or destructor needed as no userland state maintained
+
+      void randomize(uint8_t buf[], size_t len) override
+         {
+         const unsigned int flags = 0;
+
+         while(len > 0)
+            {
+            const ssize_t got = ::getrandom(buf, len, flags);
+
+            if(got < 0)
+               {
+               if(errno == EINTR)
+                  continue;
+               throw Exception("System_RNG getrandom failed error " + std::to_string(errno));
+               }
+
+            buf += got;
+            len -= got;
+            }
+         }
+
+      bool accepts_input() const override { return false; }
+      void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
+      bool is_seeded() const override { return true; }
+      void clear() override { /* not possible */ }
+      std::string name() const override { return "getrandom"; }
+   };
+
 
 #elif defined(BOTAN_TARGET_OS_HAS_DEV_RANDOM)
 

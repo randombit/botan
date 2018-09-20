@@ -63,7 +63,7 @@ System_RNG
 
 On systems which support it, in ``system_rng.h`` you can access a shared
 reference to a process global instance of the system PRNG (using interfaces such
-as ``/dev/urandom``, ``arc4random``, or ``RtlGenRandom``):
+as ``/dev/urandom``, ``getrandom``, ``arc4random``, or ``RtlGenRandom``):
 
 .. cpp:function:: RandomNumberGenerator& system_rng()
 
