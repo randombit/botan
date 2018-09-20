@@ -32,6 +32,13 @@ def run_and_check(cmd_line, cwd=None):
         print(stderr)
         sys.exit(1)
 
+def rmtree_ignore_missing(path):
+    try:
+        shutil.rmtree(path)
+    except OSError:
+        # check errno?
+        pass
+
 def configure_build(botan_dir, build_dir):
 
     run_and_check([os.path.join(botan_dir, 'configure.py'),
@@ -74,8 +81,8 @@ def run_sphinx(botan_dir, tmp_dir, output_dir):
     run_and_check(sphinx_invoke + [sphinx_dir, output_dir])
     run_and_check(sphinx_invoke + [manual_dir, os.path.join(output_dir, 'manual')])
 
-    shutil.rmtree(os.path.join(output_dir, '.doctrees'))
-    shutil.rmtree(os.path.join(output_dir, 'manual', '.doctrees'))
+    rmtree_ignore_missing(os.path.join(output_dir, '.doctrees'))
+    rmtree_ignore_missing(os.path.join(output_dir, 'manual', '.doctrees'))
     os.remove(os.path.join(output_dir, '.buildinfo'))
     os.remove(os.path.join(output_dir, 'manual', '.buildinfo'))
 
