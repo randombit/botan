@@ -1,7 +1,7 @@
 Botan: Crypto and TLS for Modern C++
 ========================================
 
-Botan (Japanese for peony) is a C++ cryptography library released under the
+Botan (Japanese for peony flower) is a C++ cryptography library released under the
 permissive `Simplified BSD <https://botan.randombit.net/license.txt>`_ license.
 
 Botan's goal is to be the best option for cryptography in C++ by offering the
@@ -14,20 +14,33 @@ binding using ctypes is included, and several other `language bindings
 Find the full feature list below.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
-and contributions are welcome (read ``doc/contributing.rst`` for more info).
-If you need help, please open an issue on `GitHub
-<https://github.com/randombit/botan/issues>`_ or email the
+and contributions are welcome. If you need help, please open an issue on
+`GitHub <https://github.com/randombit/botan/issues>`_ or email the
 `botan-devel mailing list <https://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
 New releases are announced on the `botan-announce mailing list
 <https://lists.randombit.net/mailman/listinfo/botan-announce/>`_.
-
 If you think you have found a security issue, see the `security page
 <https://botan.randombit.net/security.html>`_ for contact information.
 
+The latest release is
+`2.7.0 <https://botan.randombit.net/releases/Botan-2.7.0.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-2.7.0.tgz.asc>`_
+released on 2018-07-02.
+See the `release notes <https://botan.randombit.net/news.html>`_ for
+what is new. Most `distributions <https://github.com/randombit/botan/wiki/Distros>`_
+such as Fedora, Debian and Arch include packages for Botan.
+
 .. highlight:: none
 
+All releases are signed with a
+`PGP key <https://botan.randombit.net/pgpkey.txt>`_::
+
+  pub   2048R/EFBADFBC 2004-10-30
+        Key fingerprint = 621D AF64 11E1 851C 4CF9  A2E1 6211 EBF1 EFBA DFBC
+  uid                  Botan Distribution Key
+
 For all the details on building the library, read the
-`manual <https://botan.randombit.net/manual>`_, but in short::
+`documentation <https://botan.randombit.net/manual>`_, but in short::
 
   $ python ./configure.py
   $ make
@@ -58,39 +71,9 @@ external build systems, see the manual for details.
     :target: https://scan.coverity.com/projects/624
     :alt: Coverity results
 
-.. image:: https://sonarcloud.io/api/project_badges/measure?project=botan&metric=alert_status
-    :target: https://sonarcloud.io/dashboard/index/botan
-    :alt: Sonarcloud analysis
-
 .. image:: https://bestpractices.coreinfrastructure.org/projects/531/badge
     :target: https://bestpractices.coreinfrastructure.org/projects/531
     :alt: CII Best Practices statement
-
-Latest Release
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-See the `release notes <https://botan.randombit.net/news.html>`_ and
-`security advisories <https://botan.randombit.net/security.html>`_
-
-All releases are signed with a
-`PGP key <https://botan.randombit.net/pgpkey.txt>`_::
-
-  pub   2048R/EFBADFBC 2004-10-30
-        Key fingerprint = 621D AF64 11E1 851C 4CF9  A2E1 6211 EBF1 EFBA DFBC
-  uid                  Botan Distribution Key
-
-Some `distributions <https://github.com/randombit/botan/wiki/Distros>`_ such as
-Fedora and Debian include packages for Botan. However these are at times out of
-date so using the latest source release is recommended.
-
-Version 2 requires a C++11 compiler; GCC 4.8 and later, Clang 3.8 and later, and
-MSVC 2015/2017 are regularly tested. New releases of Botan 2 are made on a
-quarterly basis.
-
-The latest 2.x release is
-`2.7.0 <https://botan.randombit.net/releases/Botan-2.7.0.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-2.7.0.tgz.asc>`_
-released on 2018-07-02
 
 Find Enclosed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -100,8 +83,8 @@ Transport Layer Security (TLS) Protocol
 
 * TLS v1.0, v1.1, and v1.2. The broken SSLv3 protocol is no longer supported.
 * DTLS v1.0 and v1.2 are adaptations of TLS to datagram operation.
-* Extensions include session tickets, SNI, ALPN, OCSP staple requests (client
-  side only right now), encrypt-then-mac CBC, and extended master secret.
+* Supported extensions include session tickets, SNI, ALPN, OCSP stapling,
+  encrypt-then-mac CBC, and extended master secret.
 * Supports authentication using preshared keys (PSK) or passwords (SRP)
 * Supports record encryption with ChaCha20Poly1305, AES/OCB, AES/GCM, AES/CCM,
   Camellia/GCM as well as legacy CBC ciphersuites.
@@ -121,7 +104,7 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH and ECDH key agreement
-* Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, and GOST 34.10-2001
+* Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, GOST 34.10-2001
 * Post-quantum signature scheme XMSS
 * Post-quantum key agreement schemes McEliece and NewHope
 * ElGamal encryption
@@ -130,16 +113,15 @@ Public Key Cryptography
 Ciphers, hashes, MACs, and checksums
 ----------------------------------------
 
-* Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
-* Cipher modes CTR, CBC, XTS, CFB, and OFB
+* Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, (X)ChaCha20Poly1305
+* Cipher modes CTR, CBC, XTS, CFB, OFB
 * Block ciphers AES, ARIA, Blowfish, Camellia, CAST-128, DES/3DES, GOST 28147,
   IDEA, Lion, Noekeon, SEED, Serpent, SHACAL2, SM4, Threefish-512, Twofish, XTEA
-* Stream ciphers ChaCha20, Salsa20/XSalsa20, SHAKE-128, and RC4
-* Hash functions SHA-1, SHA-2, SHA-3, RIPEMD-160, Skein-512,
-  BLAKE2b, SM3, Tiger, Whirlpool, GOST 34.11, MD5, MD4
-* Hash function combiners Parallel and Comb4P
+* Stream ciphers (X)ChaCha20, (X)Salsa20, SHAKE-128, RC4
+* Hash functions SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b,
+  Skein-512, SM3, Tiger, Whirlpool, GOST 34.11
 * Authentication codes HMAC, CMAC, Poly1305, SipHash, GMAC, X9.19 DES-MAC
-* Non-cryptographic checksums Adler32, CRC24, and CRC32
+* Non-cryptographic checksums Adler32, CRC24, CRC32
 
 Other Useful Things
 ----------------------------------------
@@ -149,8 +131,7 @@ Other Useful Things
 * Simple compression API wrapping zlib, bzip2, and lzma libraries
 * RNG wrappers for system RNG and hardware RNGs
 * HMAC_DRBG and entropy collection system for userspace RNGs
-* Password based key derivation functions PBKDF2 and Scrypt
-* Password hashing function bcrypt and passhash9 (custom PBKDF scheme)
+* Password hashing schemes PBKDF2, Scrypt, bcrypt
 * SRP-6a password authenticated key exchange
 * Key derivation functions including HKDF, KDF2, SP 800-108, SP 800-56A, SP 800-56C
 * HOTP and TOTP algorithms
