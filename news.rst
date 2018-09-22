@@ -74,6 +74,9 @@ Version 2.8.0, Not Yet Released
 * Handle an error seen when verifying invalid ECDSA signatures using LibreSSL
   on non x86-64 platforms (GH #1627 #1628)
 
+* Fix bugs in PKCS7 and X9.23 CBC padding schemes, which would ignore
+  the first byte in the event the padding took up the entire block. (GH #1690)
+
 * Correct bugs which would cause CFB, OCB, and GCM modes to crash when they
   were used in an unkeyed state. (GH #1639)
 
