@@ -1,6 +1,6 @@
 /*
 * CBC Padding Methods
-* (C) 1999-2007,2013 Jack Lloyd
+* (C) 1999-2007,2013,2018 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -51,26 +51,27 @@ void PKCS7_Padding::add_padding(secure_vector<uint8_t>& buffer,
 /*
 * Unpad with PKCS #7 Method
 */
-size_t PKCS7_Padding::unpad(const uint8_t block[], size_t size) const
+size_t PKCS7_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   CT::poison(block,size);
+   if(input_length <= 2)
+      return input_length;
+
+   CT::poison(input, input_length);
    size_t bad_input = 0;
-   const uint8_t last_byte = block[size-1];
+   const uint8_t last_byte = input[input_length-1];
 
-   bad_input |= CT::expand_mask<size_t>(last_byte > size);
+   bad_input |= CT::expand_mask<size_t>(last_byte > input_length);
 
-   size_t pad_pos = size - last_byte;
-   size_t i = size - 2;
-   while(i)
+   const size_t pad_pos = input_length - last_byte;
+
+   for(size_t i = 0; i != input_length - 1; ++i)
       {
-      bad_input |= (~CT::is_equal(block[i],last_byte)) & CT::expand_mask<uint8_t>(i >= pad_pos);
-      --i;
+      const uint8_t in_range = CT::expand_mask<uint8_t>(i >= pad_pos);
+      bad_input |= in_range & (~CT::is_equal(input[i], last_byte));
       }
 
-   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
-   CT::unpoison(block,size);
-   CT::unpoison(pad_pos);
-   return pad_pos;
+   CT::unpoison(input, input_length);
+   return CT::conditional_return(bad_input, input_length, pad_pos);
    }
 
 /*
@@ -92,25 +93,27 @@ void ANSI_X923_Padding::add_padding(secure_vector<uint8_t>& buffer,
 /*
 * Unpad with ANSI X9.23 Method
 */
-size_t ANSI_X923_Padding::unpad(const uint8_t block[], size_t size) const
+size_t ANSI_X923_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   CT::poison(block,size);
-   size_t bad_input = 0;
-   const size_t last_byte = block[size-1];
+   if(input_length <= 2)
+      return input_length;
 
-   bad_input |= CT::expand_mask<size_t>(last_byte > size);
+   CT::poison(input, input_length);
+   const size_t last_byte = input[input_length-1];
 
-   size_t pad_pos = size - last_byte;
-   size_t i = size - 2;
-   while(i)
+   uint8_t bad_input = 0;
+   bad_input |= CT::expand_mask<uint8_t>(last_byte > input_length);
+
+   const size_t pad_pos = input_length - last_byte;
+
+   for(size_t i = 0; i != input_length - 1; ++i)
       {
-      bad_input |= (~CT::is_zero(block[i])) & CT::expand_mask<uint8_t>(i >= pad_pos);
-      --i;
+      const uint8_t in_range = CT::expand_mask<uint8_t>(i >= pad_pos);
+      bad_input |= CT::expand_mask(input[i]) & in_range;
       }
-   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
-   CT::unpoison(block,size);
-   CT::unpoison(pad_pos);
-   return pad_pos;
+
+   CT::unpoison(input, input_length);
+   return CT::conditional_return(bad_input, input_length, pad_pos);
    }
 
 /*
@@ -129,28 +132,29 @@ void OneAndZeros_Padding::add_padding(secure_vector<uint8_t>& buffer,
 /*
 * Unpad with One and Zeros Method
 */
-size_t OneAndZeros_Padding::unpad(const uint8_t block[], size_t size) const
+size_t OneAndZeros_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   CT::poison(block, size);
+   if(input_length <= 2)
+      return input_length;
+
+   CT::poison(input, input_length);
+
    uint8_t bad_input = 0;
    uint8_t seen_one = 0;
-   size_t pad_pos = size - 1;
-   size_t i = size;
+   size_t pad_pos = input_length - 1;
+   size_t i = input_length;
 
    while(i)
       {
-      seen_one |= CT::is_equal<uint8_t>(block[i-1],0x80);
+      seen_one |= CT::is_equal<uint8_t>(input[i-1], 0x80);
       pad_pos -= CT::select<uint8_t>(~seen_one, 1, 0);
-      bad_input |= ~CT::is_zero<uint8_t>(block[i-1]) & ~seen_one;
+      bad_input |= ~CT::is_zero<uint8_t>(input[i-1]) & ~seen_one;
       i--;
       }
    bad_input |= ~seen_one;
 
-   CT::conditional_copy_mem(size_t(bad_input),&pad_pos,&size,&pad_pos,1);
-   CT::unpoison(block, size);
-   CT::unpoison(pad_pos);
-
-   return pad_pos;
+   CT::unpoison(input, input_length);
+   return CT::conditional_return(bad_input, input_length, pad_pos);
    }
 
 /*
@@ -171,25 +175,28 @@ void ESP_Padding::add_padding(secure_vector<uint8_t>& buffer,
 /*
 * Unpad with ESP Padding Method
 */
-size_t ESP_Padding::unpad(const uint8_t block[], size_t size) const
+size_t ESP_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   CT::poison(block,size);
+   if(input_length <= 2)
+      return input_length;
 
-   const size_t last_byte = block[size-1];
-   size_t bad_input = 0;
-   bad_input |= CT::expand_mask<size_t>(last_byte > size);
+   CT::poison(input, input_length);
 
-   size_t pad_pos = size - last_byte;
-   size_t i = size - 1;
+   const size_t last_byte = input[input_length-1];
+   uint8_t bad_input = 0;
+   bad_input |= CT::is_zero(last_byte) | CT::expand_mask<uint8_t>(last_byte > input_length);
+
+   const size_t pad_pos = input_length - last_byte;
+   size_t i = input_length - 1;
    while(i)
       {
-      bad_input |= ~CT::is_equal<uint8_t>(size_t(block[i-1]),size_t(block[i])-1) & CT::expand_mask<uint8_t>(i > pad_pos);
+      const uint8_t in_range = CT::expand_mask<uint8_t>(i > pad_pos);
+      bad_input |= (~CT::is_equal<uint8_t>(input[i-1], input[i]-1)) & in_range;
       --i;
       }
-   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
-   CT::unpoison(block, size);
-   CT::unpoison(pad_pos);
-   return pad_pos;
+
+   CT::unpoison(input, input_length);
+   return CT::conditional_return(bad_input, input_length, pad_pos);
    }
 
 

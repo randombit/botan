@@ -149,6 +149,14 @@ inline T is_lte(T a, T b)
    return CT::is_less(a, b) | CT::is_equal(a, b);
    }
 
+template<typename C, typename T>
+inline T conditional_return(C condvar, T left, T right)
+   {
+   const T val = CT::select(CT::expand_mask<T>(condvar), left, right);
+   CT::unpoison(val);
+   return val;
+   }
+
 template<typename T>
 inline T conditional_copy_mem(T value,
                               T* to,
