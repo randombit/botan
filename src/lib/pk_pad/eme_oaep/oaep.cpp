@@ -50,7 +50,7 @@ secure_vector<uint8_t> OAEP::pad(const uint8_t in[], size_t in_length,
 * OAEP Unpad Operation
 */
 secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
-                                const uint8_t in[], size_t in_length) const
+                                   const uint8_t in[], size_t in_length) const
    {
    /*
    Must be careful about error messages here; if an attacker can
@@ -61,8 +61,8 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
 
    Also have to be careful about timing attacks! Pointed out by Falko
    Strenzke.
-    
-   According to the standard (Section 7.1.1), the encryptor always 
+
+   According to the standard (Section 7.1.1), the encryptor always
    creates a message as follows:
       i. Concatenate a single octet with hexadecimal value 0x00,
          maskedSeed, and maskedDB to form an encoded message EM of
@@ -73,10 +73,8 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
    */
 
    uint8_t skip_first = CT::is_zero<uint8_t>(in[0]) & 0x01;
-   
-   secure_vector<uint8_t> input(in + skip_first, in + in_length);
 
-   CT::poison(input.data(), input.size());
+   secure_vector<uint8_t> input(in + skip_first, in + in_length);
 
    const size_t hlen = m_Phash.size();
 
@@ -88,11 +86,29 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
              input.data(), hlen,
              &input[hlen], input.size() - hlen);
 
+   return oaep_find_delim(valid_mask, input.data(), input.size(), m_Phash);
+   }
+
+secure_vector<uint8_t>
+oaep_find_delim(uint8_t& valid_mask,
+                const uint8_t input[], size_t input_len,
+                const secure_vector<uint8_t>& Phash)
+   {
+   const size_t hlen = Phash.size();
+
+   // Too short to be valid, reject immediately
+   if(input_len < 1 + 2*hlen)
+      {
+      return secure_vector<uint8_t>();
+      }
+
+   CT::poison(input, input_len);
+
    size_t delim_idx = 2 * hlen;
    uint8_t waiting_for_delim = 0xFF;
    uint8_t bad_input = 0;
 
-   for(size_t i = delim_idx; i < input.size(); ++i)
+   for(size_t i = delim_idx; i < input_len; ++i)
       {
       const uint8_t zero_m = CT::is_zero<uint8_t>(input[i]);
       const uint8_t one_m = CT::is_equal<uint8_t>(input[i], 1);
@@ -108,15 +124,17 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
-   bad_input |= CT::is_equal<uint8_t>(constant_time_compare(&input[hlen], m_Phash.data(), hlen), false);
+   bad_input |= CT::is_equal<uint8_t>(constant_time_compare(&input[hlen], Phash.data(), hlen), false);
 
-   CT::unpoison(input.data(), input.size());
+   delim_idx &= ~CT::expand_mask<size_t>(bad_input);
+
+   CT::unpoison(input, input_len);
    CT::unpoison(&bad_input, 1);
    CT::unpoison(&delim_idx, 1);
 
    valid_mask = ~bad_input;
 
-   secure_vector<uint8_t> output(input.begin() + delim_idx + 1, input.end());
+   secure_vector<uint8_t> output(input + delim_idx + 1, input + input_len);
    CT::cond_zero_mem(bad_input, output.data(), output.size());
 
    return output;

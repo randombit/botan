@@ -50,6 +50,11 @@ class BOTAN_PUBLIC_API(2,0) OAEP final : public EME
       std::unique_ptr<HashFunction> m_mgf1_hash;
    };
 
+secure_vector<uint8_t>
+BOTAN_TEST_API oaep_find_delim(uint8_t& valid_mask,
+                               const uint8_t input[], size_t input_len,
+                               const secure_vector<uint8_t>& Phash);
+
 }
 
 #endif
