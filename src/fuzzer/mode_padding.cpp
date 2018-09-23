@@ -62,6 +62,8 @@ size_t ref_oneandzero_unpad(const uint8_t in[], size_t len)
       {
       if(in[idx] == 0)
          {
+         if(idx == 0)
+            return len;
          idx -= 1;
          continue;
          }
