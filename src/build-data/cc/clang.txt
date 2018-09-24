@@ -18,7 +18,7 @@ default   -> address,undefined
 
 address   -> "-fsanitize=address"
 undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
-coverage  -> "-fsanitize-coverage=edge,indirect-calls,8bit-counters"
+coverage  -> "-fsanitize-coverage=edge,indirect-calls,trace-pc-guard,trace-cmp,trace-gep"
 memory    -> "-fsanitize=memory"
 </sanitizers>
 
