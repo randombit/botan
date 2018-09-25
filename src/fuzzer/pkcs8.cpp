@@ -15,8 +15,7 @@ void fuzz(const uint8_t in[], size_t len)
    try
       {
       Botan::DataSource_Memory input(in, len);
-      Botan::Null_RNG null_rng;
-      std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(input, null_rng));
+      std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(input);
       }
    catch(Botan::Exception& e) { }
 
