@@ -64,6 +64,13 @@ The following enum values are defined in the FFI header:
    An exception was thrown while processing this request, but no further
    details are available.
 
+   .. note::
+
+      If the environment variable ``BOTAN_FFI_PRINT_EXCEPTIONS`` is
+      set, then any exception which is caught by the FFI layer will
+      first print the exception message to stderr before returning an
+      error. This is sometimes useful for debugging.
+
 .. cpp:enumerator:: BOTAN_FFI_ERROR_OUT_OF_MEMORY = -21
 
    Memory allocation failed
@@ -125,7 +132,8 @@ Versioning
 
 .. cpp:function:: const char* botan_version_string()
 
-   Returns a free-from version string, e.g., 2.0.0
+   Returns a free-form string describing the version.  The return
+   value is a statically allocated string.
 
 .. cpp:function:: uint32_t botan_version_major()
 
@@ -141,9 +149,24 @@ Versioning
 
 .. cpp:function:: uint32_t botan_version_datestamp()
 
-   Returns the date this version was released as an integer, or 0
-   if an unreleased version
+   Returns the date this version was released as an integer YYYYMMDD,
+   or 0 if an unreleased version
 
+
+FFI Versions
+^^^^^^^^^^^^^
+
+This maps the FFI API version to the first version of the library that
+supported it.
+
+============== ===================
+FFI Version    Supported Starting
+============== ===================
+20180713       2.8.0
+20170815       2.3.0
+20170327       2.1.0
+20150515       2.0.0
+============== ===================
 
 Utility Functions
 ----------------------------------------
@@ -213,6 +236,8 @@ Random Number Generators
 
 Block Ciphers
 ----------------------------------------
+
+.. versionadded:: 2.1.0
 
 This is a 'raw' interface to ECB mode block ciphers. Most applications
 want the higher level cipher API which provides authenticated
