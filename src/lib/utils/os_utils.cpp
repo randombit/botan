@@ -26,7 +26,13 @@
   #include <setjmp.h>
   #include <unistd.h>
   #include <errno.h>
-#elif defined(BOTAN_TARGET_OS_HAS_WIN32)
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+  #include <sys/auxv.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_WIN32)
   #define NOMINMAX 1
   #include <windows.h>
 #endif
@@ -71,6 +77,17 @@ uint32_t OS::get_process_id()
    return 0; // truly no meaningful value
 #else
    #error "Missing get_process_id"
+#endif
+   }
+
+bool OS::running_in_privileged_state()
+   {
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) && defined(AT_SECURE)
+   return ::getauxval(AT_SECURE) != 0;
+#elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   return (::getuid() != ::geteuid()) || (::getgid() != ::getegid());
+#else
+   return false;
 #endif
    }
 
@@ -217,8 +234,11 @@ size_t OS::system_page_size()
 
 size_t OS::get_memory_locking_limit()
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(RLIMIT_MEMLOCK)
    /*
+   * If RLIMIT_MEMLOCK is not defined, likely the OS does not support
+   * unprivileged mlock calls.
+   *
    * Linux defaults to only 64 KiB of mlockable memory per process
    * (too small) but BSDs offer a small fraction of total RAM (more
    * than we need). Bound the total mlock size to 512 KiB which is
@@ -232,17 +252,19 @@ size_t OS::get_memory_locking_limit()
    /*
    * Allow override via env variable
    */
-   if(const char* env = std::getenv("BOTAN_MLOCK_POOL_SIZE"))
+   if(OS::running_in_privileged_state() == false)
       {
-      try
+      if(const char* env = std::getenv("BOTAN_MLOCK_POOL_SIZE"))
          {
-         const size_t user_req = std::stoul(env, nullptr);
-         mlock_requested = std::min(user_req, mlock_requested);
+         try
+            {
+            const size_t user_req = std::stoul(env, nullptr);
+            mlock_requested = std::min(user_req, mlock_requested);
+            }
+         catch(std::exception&) { /* ignore it */ }
          }
-      catch(std::exception&) { /* ignore it */ }
       }
 
-#if defined(RLIMIT_MEMLOCK)
    if(mlock_requested > 0)
       {
       struct ::rlimit limits;
@@ -258,13 +280,6 @@ size_t OS::get_memory_locking_limit()
 
       return std::min<size_t>(limits.rlim_cur, mlock_requested * 1024);
       }
-#else
-   /*
-   * If RLIMIT_MEMLOCK is not defined, likely the OS does not support
-   * unprivileged mlock calls.
-   */
-   return 0;
-#endif
 
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    SIZE_T working_min = 0, working_max = 0;
@@ -294,6 +309,7 @@ size_t OS::get_memory_locking_limit()
       }
 #endif
 
+   // Not supported on this platform
    return 0;
    }
 

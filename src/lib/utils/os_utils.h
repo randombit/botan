@@ -32,6 +32,12 @@ namespace OS {
 uint32_t BOTAN_TEST_API get_process_id();
 
 /**
+* Test if we are currently running with elevated permissions
+* eg setuid, setgid, or with POSIX caps set.
+*/
+bool running_in_privileged_state();
+
+/**
 * @return CPU processor clock, if available
 *
 * On Windows, calls QueryPerformanceCounter.
