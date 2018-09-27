@@ -315,7 +315,7 @@ size_t OS::get_memory_locking_limit()
 
 void* OS::allocate_locked_pages(size_t length)
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
 
 #if !defined(MAP_NOCORE)
    #define MAP_NOCORE 0
@@ -341,13 +341,11 @@ void* OS::allocate_locked_pages(size_t length)
    ::madvise(ptr, length, MADV_DONTDUMP);
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    if(::mlock(ptr, length) != 0)
       {
       ::munmap(ptr, length);
       return nullptr; // failed to lock
       }
-#endif
 
    ::memset(ptr, 0, length);
 
@@ -377,18 +375,16 @@ void OS::free_locked_pages(void* ptr, size_t length)
    if(ptr == nullptr || length == 0)
       return;
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    secure_scrub_memory(ptr, length);
-
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    ::munlock(ptr, length);
-#endif
-
    ::munmap(ptr, length);
+
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    secure_scrub_memory(ptr, length);
    ::VirtualUnlock(ptr, length);
    ::VirtualFree(ptr, 0, MEM_RELEASE);
+
 #else
    // Invalid argument because no way this pointer was allocated by us
    throw Invalid_Argument("Invalid ptr to free_locked_pages");
