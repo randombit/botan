@@ -218,17 +218,18 @@ std::string Command::get_passphrase(const std::string& prompt)
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
 
    struct termios old_flags;
-   ::tcgetattr(fileno(stdin), &old_flags);
+   int stdin_fd = fileno(stdin);
+   ::tcgetattr(stdin_fd, &old_flags);
    struct termios noecho_flags = old_flags;
    noecho_flags.c_lflag &= ~ECHO;
    noecho_flags.c_lflag |= ECHONL;
 
-   if(::tcsetattr(fileno(stdin), TCSANOW, &noecho_flags) != 0)
+   if(::tcsetattr(stdin_fd, TCSANOW, &noecho_flags) != 0)
       throw CLI_Error("Clearing terminal echo bit failed");
 
    std::getline(std::cin, pass);
 
-   if(::tcsetattr(::fileno(stdin), TCSANOW, &old_flags) != 0)
+   if(::tcsetattr(stdin_fd, TCSANOW, &old_flags) != 0)
       throw CLI_Error("Restoring terminal echo bit failed");
 #else
 
