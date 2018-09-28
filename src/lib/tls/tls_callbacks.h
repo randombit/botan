@@ -142,6 +142,18 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
           return std::chrono::milliseconds(0);
           }
 
+      /**
+       * Called by the TLS server whenever the client included the status_request extension (see RFC 6066, a.k.a OCSP stapling) in the ClientHello.
+       * In the current implementation no information from the contents of the status_request extension within the 
+       * ClientHello is available.
+       *
+       * @return the encoded OCSP response to be sent to the client which indicates the revocation status of the server certificate. Return an empty vector to indicate that no response is available, and thus suppress the Certificate_Status message.
+       */
+       virtual std::vector<uint8_t> tls_srv_provoide_cert_status_response() const
+       {
+          return std::vector<uint8_t>();
+       }
+
        /**
        * Optional callback with default impl: sign a message
        *

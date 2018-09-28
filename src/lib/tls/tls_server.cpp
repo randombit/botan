@@ -846,6 +846,14 @@ void Server::session_create(Server_Handshake_State& pending_state,
       pending_state.server_certs(new Certificate(pending_state.handshake_io(),
                                                  pending_state.hash(),
                                                  cert_chains[algo_used]));
+      if(pending_state.client_hello()->supports_cert_status_message() && callbacks().tls_srv_provoide_cert_status_response().size() > 0)
+      {
+        pending_state.server_cert_status(new Certificate_Status(
+              pending_state.handshake_io(),
+              pending_state.hash(),
+              callbacks().tls_srv_provoide_cert_status_response()
+              )); 
+      }
 
       private_key = m_creds.private_key_for(
          pending_state.server_certs()->cert_chain()[0],
