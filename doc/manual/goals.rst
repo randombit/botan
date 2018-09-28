@@ -60,14 +60,15 @@ the desired end result. Over time further progress is made in each.
 
 * Portability to modern systems. Botan does not run everywhere, and we actually
   do not want it to (see non-goals below). But we do want it to run on anything
-  that someone is deploying new applications on. That includes both major OSes
-  like Windows, Linux, and BSD and also relatively new OSes such as IncludeOS.
+  that someone is deploying new applications on. That includes both major
+  platforms like Windows, Linux, Android and iOS, and also promising new systems
+  such as IncludeOS and Fuchsia.
 
 * Well documented. Ideally every public API would have some place in the manual
   describing its usage.
 
 * Useful command line utility. The botan command line tool should be flexible
-  and featured enough to replace similar tools such as openssl for everyday
+  and featured enough to replace similar tools such as ``openssl`` for everyday
   users.
 
 Non-Goals
@@ -84,10 +85,9 @@ seek to address.
 
 * Implementing every crypto scheme in existence. The focus is on algorithms
   which are in practical use in systems deployed now, as well as promising
-  algorithms for future deployment. Many algorithms which were of interest 5-15
-  years ago but which never saw widespread deployment and have no compelling
-  benefit over other designs were originally implemented in the library but have
-  since been removed to simplify the codebase.
+  algorithms for future deployment. Many algorithms which were of interest
+  in the past but never saw widespread deployment and have no compelling
+  benefit over other designs have been removed to simplify the codebase.
 
 * Portable to obsolete systems. There is no reason for crypto software to
   support ancient OS platforms like SunOS or Windows 2000, since these unpatched
@@ -96,23 +96,23 @@ seek to address.
 
 * Portable to every C++ compiler ever made. Over time Botan moves forward to
   both take advantage of new language/compiler features, and to shed workarounds
-  for dealing with bugs in ancient compilers. The set of supported compilers is
-  fixed for each new release branch, for example Botan 2.x will always support
-  GCC 4.8. But a future 3.x release version will likely increase the required
-  versions for all compilers.
+  for dealing with bugs in ancient compilers, allowing further simplifications
+  in the codebase. The set of supported compilers is fixed for each new release
+  branch, for example Botan 2.x will always support GCC 4.8. But a future 3.x
+  release version will likely increase the required versions for all compilers.
 
 * FIPS 140 validation. The primary developer was (long ago) a consultant with a
   NIST approved testing lab. He does not have a positive view of the process or
-  results, at least when it comes to Level 1 software validations (a Level 4
-  validation is however the real deal). The only benefit of a Level 1 validation
-  is to allow for government sales, and the cost of validation includes enormous
-  amounts of time and money, adding 'checks' that are useless or actively
-  harmful, then freezing the software version so security updates cannot be
-  applied in the future. It does force a certain minimum standard (ie, FIPS
-  Level 1 does assure AES and RSA are probably implemented correctly) but this
-  is an issue of interop not security since Level 1 does not seriously consider
-  attacks of any kind. Any security budget would be far better spent on a review
-  from a specialized crypto consultancy, who would look for actual flaws.
+  results, particularly when it comes to Level 1 software validations. The only
+  benefit of a Level 1 validation is to allow for government sales, and the cost
+  of validation includes enormous amounts of time and money, adding 'checks'
+  that are useless or actively harmful, then freezing the software so security
+  updates cannot be applied in the future. It does force a certain minimum
+  standard (ie, FIPS Level 1 does assure AES and RSA are probably implemented
+  correctly) but this is an issue of interop not security since Level 1 does not
+  seriously consider attacks of any kind. Any security budget would be far
+  better spent on a review from a specialized crypto consultancy, who would look
+  for actual flaws.
 
   That said it would be easy to add a "FIPS 140" build mode to Botan, which just
   disabled all the builtin crypto and wrapped whatever the most recent OpenSSL
