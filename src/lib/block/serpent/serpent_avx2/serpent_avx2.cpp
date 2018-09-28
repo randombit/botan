@@ -50,7 +50,7 @@ namespace Botan {
       B0 = B0.rotr<13>();                                          \
    } while(0)
 
-void Serpent::avx2_encrypt_8(const uint8_t in[64], uint8_t out[64]) const
+void Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const
    {
    SIMD_8x32 B0 = SIMD_8x32::load_le(in);
    SIMD_8x32 B1 = SIMD_8x32::load_le(in + 32);
@@ -99,7 +99,7 @@ void Serpent::avx2_encrypt_8(const uint8_t in[64], uint8_t out[64]) const
    B3.store_le(out + 96);
    }
 
-void Serpent::avx2_decrypt_8(const uint8_t in[64], uint8_t out[64]) const
+void Serpent::avx2_decrypt_8(const uint8_t in[128], uint8_t out[128]) const
    {
    SIMD_8x32 B0 = SIMD_8x32::load_le(in);
    SIMD_8x32 B1 = SIMD_8x32::load_le(in + 32);
