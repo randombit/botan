@@ -128,7 +128,10 @@ inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], siz
       }
    else
       {
-      Botan::clear_mem(out, avail);
+      if(out != nullptr)
+         {
+         Botan::clear_mem(out, avail);
+         }
       return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
       }
    }

@@ -328,6 +328,9 @@ class FFI_Unit_Tests final : public Test
             size_t date_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_time_starts, (cert, nullptr, &date_len));
 
+            date_len = 8;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_time_starts, (cert, nullptr, &date_len));
+
             std::string date(date_len - 1, '0');
             TEST_FFI_OK(botan_x509_cert_get_time_starts, (cert, &date[0], &date_len));
             result.test_eq("cert valid from", date, "070719152718Z");
