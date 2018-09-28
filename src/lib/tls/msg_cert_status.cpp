@@ -41,23 +41,41 @@ Certificate_Status::Certificate_Status(Handshake_IO& io,
    {
    hash.update(io.send(*this));
    }
+Certificate_Status::Certificate_Status(Handshake_IO& io,
+                                       Handshake_Hash& hash,
+                                       std::vector<uint8_t> const& raw_response_bytes) :
+   m_raw_response_bytes(raw_response_bytes)
+   {
+   hash.update(io.send(*this));
+   }
 
 std::vector<uint8_t> Certificate_Status::serialize() const
    {
-   BOTAN_ASSERT_NONNULL(m_response);
-   const std::vector<uint8_t>& m_resp_bits = m_response->raw_bits();
+   const std::vector<uint8_t>* resp_bits;
+   if(m_raw_response_bytes.size() == 0)
+      {
+      BOTAN_ASSERT_NONNULL(m_response);
+      resp_bits = &m_response->raw_bits();
+      }
+   else
+      {
+      BOTAN_ASSERT(m_raw_response_bytes.size() != 0,
+                   "Encoded OCSP response for the TLS server's Certificate_Status message has zero length");
+      resp_bits = &m_raw_response_bytes;
+      }
 
-   if(m_resp_bits.size() > 0xFFFFFF) // unlikely
+   if(resp_bits->size() > 0xFFFFFF) // unlikely
       throw Encoding_Error("OCSP response too long to encode in TLS");
 
-   const uint32_t m_resp_bits_len = static_cast<uint32_t>(m_resp_bits.size());
+   const uint32_t resp_bits_len = static_cast<uint32_t>(resp_bits->size());
+
 
    std::vector<uint8_t> buf;
    buf.push_back(1); // type OCSP
    for(size_t i = 1; i < 4; ++i)
-      buf[i] = get_byte(i, m_resp_bits_len);
+      buf.push_back(get_byte(i, resp_bits_len));
 
-   buf += m_resp_bits;
+   buf += *resp_bits;
    return buf;
    }
 

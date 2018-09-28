@@ -395,9 +395,17 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
                          Handshake_Hash& hash,
                          std::shared_ptr<const OCSP::Response> response);
 
+      /*
+       * Create a Certificate_Status message using an already DER encoded OCSP response.
+       */
+      Certificate_Status(Handshake_IO& io,
+                         Handshake_Hash& hash,
+                         std::vector<uint8_t> const& raw_response_bytes );
+
    private:
       std::vector<uint8_t> serialize() const override;
       std::shared_ptr<const OCSP::Response> m_response;
+      std::vector<uint8_t> m_raw_response_bytes; /* alternative to m_response */
    };
 
 /**
