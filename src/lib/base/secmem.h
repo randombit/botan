@@ -88,7 +88,7 @@ operator!=(const secure_allocator<T>&, const secure_allocator<U>&)
 template<typename T> using secure_vector = std::vector<T, secure_allocator<T>>;
 template<typename T> using secure_deque = std::deque<T, secure_allocator<T>>;
 
-// For better compatability with 1.10 API
+// For better compatibility with 1.10 API
 template<typename T> using SecureVector = secure_vector<T>;
 
 template<typename T>

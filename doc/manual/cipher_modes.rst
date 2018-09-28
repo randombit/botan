@@ -28,12 +28,12 @@ All cipher mode implementations are are derived from the base class
 
   .. cpp:function:: size_t minimum_keylength() const
 
-     Return the smallest key length (in bytes) that is acceptible for the
+     Return the smallest key length (in bytes) that is acceptable for the
      algorithm.
 
   .. cpp:function:: size_t maximum_keylength() const
 
-     Return the largest key length (in bytes) that is acceptible for the
+     Return the largest key length (in bytes) that is acceptable for the
      algorithm.
 
   .. cpp:function:: void start_msg(const uint8_t* nonce, size_t nonce_len)
@@ -143,7 +143,7 @@ CFB
 
 Available if ``BOTAN_HAS_MODE_CFB`` is defined.
 
-CFB uses a block cipher to create a self-syncronizing stream cipher. It is used
+CFB uses a block cipher to create a self-synchronizing stream cipher. It is used
 for example in the OpenPGP protocol. There is no reason to prefer it.
 
 XTS
@@ -229,7 +229,7 @@ will be returned by :cpp:func:`get_cipher` if the named cipher is an AEAD mode).
           way that an attacker could observe the effects of.
 
           One simply way to assure this could never happen is to never
-          call update, and instead always marshall the entire message
+          call update, and instead always marshal the entire message
           into a single buffer and call finish on it when decrypting.
 
   .. cpp:function:: size_t update_granularity() const
@@ -262,7 +262,7 @@ Available AEAD Modes
 If in doubt about what to use, pick ChaCha20Poly1305, AES-256/GCM, or AES-256/SIV.
 Both ChaCha20Poly1305 and AES with GCM are widely implemented. SIV is somewhat
 more obscure (and is slower than either GCM or ChaCha20Poly1305), but has
-excellent security properites.
+excellent security properties.
 
 ChaCha20Poly1305
 ~~~~~~~~~~~~~~~~~~
@@ -318,7 +318,7 @@ SIV
 
 Available if ``BOTAN_HAS_AEAD_SIV`` is defined.
 
-Requires a 128-bit block cipher. Unlike other AEADs, SIV is "misuse resistent";
+Requires a 128-bit block cipher. Unlike other AEADs, SIV is "misuse resistant";
 if a nonce is repeated, SIV retains security, with the exception that if the
 same nonce is used to encrypt the same message multiple times, an attacker can
 detect the fact that the message was duplicated (this is simply because if both

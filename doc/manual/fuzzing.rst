@@ -53,7 +53,7 @@ Fuzzing with TLS-Attacker
 --------------------------
 
 TLS-Attacker (https://github.com/RUB-NDS/TLS-Attacker) includes a mode for fuzzing
-TLS servers. A prebuilt copy of TLS-Attacker is available in a git repo::
+TLS servers. A prebuilt copy of TLS-Attacker is available in a git repository::
 
   $ git clone --depth 1 https://github.com/randombit/botan-ci-tools.git
 

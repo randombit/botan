@@ -268,7 +268,7 @@ need to implement custom primitives using a PRP.
                                                      size_t* out_keylength_modulo)
 
    Return the limits on the key which can be provided to this cipher. If any of the
-   parameters are null, no output is written to that field. This allows retreiving only
+   parameters are null, no output is written to that field. This allows retrieving only
    (say) the maximum supported keylength, if that is the only information needed.
 
 .. cpp:function:: int botan_block_cipher_clear(botan_block_cipher_t bc)
@@ -402,7 +402,7 @@ Symmetric Ciphers
 
 .. cpp:function:: size_t botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_len)
 
-   Write the tag length of the cipher to ``tag_len``. This will be zero for non-authenticted
+   Write the tag length of the cipher to ``tag_len``. This will be zero for non-authenticated
    ciphers.
 
 .. cpp:function:: int botan_cipher_valid_nonce_length(botan_cipher_t cipher, size_t nl)

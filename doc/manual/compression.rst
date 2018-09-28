@@ -81,7 +81,7 @@ Supported values for `type` include `zlib` (raw zlib with no checksum),
 `deflate` (zlib's deflate format), `gzip`, `bz2`, and `lzma`. A null pointer
 will be returned if the algorithm is unavailable.
 
-To use a compression algorithm in a `Pipe` use the adaptor types
+To use a compression algorithm in a `Pipe` use the adapter types
 `Compression_Filter` and `Decompression_Filter` from `comp_filter.h`. The
 constructors of both filters take a `std::string` argument (passed to
 `make_compressor` or `make_decompressor`), the compression filter also takes a

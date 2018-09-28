@@ -11,7 +11,7 @@ operations such as authenticated encryption.
    You probably want an authenticated cipher mode instead (see :ref:`cipher_modes`)
    This interface is used to build higher level operations (such as cipher
    modes or MACs), or in the very rare situation where ECB is required,
-   eg for compatability with an existing system.
+   eg for compatibility with an existing system.
 
 .. cpp:class:: BlockCipher
 
@@ -45,12 +45,12 @@ operations such as authenticated encryption.
 
   .. cpp:function:: size_t minimum_keylength() const
 
-     Return the smallest key length (in bytes) that is acceptible for the
+     Return the smallest key length (in bytes) that is acceptable for the
      algorithm.
 
   .. cpp:function:: size_t maximum_keylength() const
 
-     Return the largest key length (in bytes) that is acceptible for the
+     Return the largest key length (in bytes) that is acceptable for the
      algorithm.
 
   .. cpp:function:: std::string name() const
@@ -79,7 +79,7 @@ operations such as authenticated encryption.
   .. cpp:function:: size_t parallel_bytes() const
 
      Returns ``parallelism`` multiplied by the block size as well as a small
-     fudge factor. That's because even ciphers that have no implicit parallism
+     fudge factor. That's because even ciphers that have no implicit parallelism
      typically see a small speedup for being called with several blocks due to
      caching effects.
 
@@ -205,7 +205,7 @@ Available if ``BOTAN_HAS_CAST128`` is defined.
 CAST-256
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A 128-bit cipher that was a contestent in the NIST AES competition.
+A 128-bit cipher that was a contestant in the NIST AES competition.
 Rarely used, and now deprecated in Botan. Use AES or Serpent instead.
 
 Available if ``BOTAN_HAS_CAST256`` is defined.
@@ -243,7 +243,7 @@ GOST-28147-89
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A old 64-bit Russian cipher. Possible security issues. Avoid unless
-compatability is needed.
+compatibility is needed.
 
 Available if ``BOTAN_HAS_GOST_28147_89`` is defined.
 

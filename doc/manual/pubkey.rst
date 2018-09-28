@@ -8,7 +8,7 @@ Key Objects
 ----------------------------------------
 
 Public and private keys are represented by classes ``Public_Key`` and it's
-subclass ``Private_Key``. The use of inheritence here means that a
+subclass ``Private_Key``. The use of inheritance here means that a
 ``Private_Key`` can be converted into a reference to a public key.
 
 None of the functions on ``Public_Key`` and ``Private_Key`` itself are
@@ -17,12 +17,12 @@ operations are *very insecure*. The only purpose of these functions is to
 provide a clean interface that higher level operations can be built on. So
 really the only thing you need to know is that when a function takes a
 reference to a ``Public_Key``, it can take any public key or private key, and
-similiarly for ``Private_Key``.
+similarly for ``Private_Key``.
 
 Types of ``Public_Key`` include ``RSA_PublicKey``, ``DSA_PublicKey``,
 ``ECDSA_PublicKey``, ``ECKCDSA_PublicKey``, ``ECGDSA_PublicKey``, ``DH_PublicKey``, ``ECDH_PublicKey``,
 ``Curve25519_PublicKey``, ``ElGamal_PublicKey``, ``McEliece_PublicKey``, ``XMSS_PublicKey``
-and ``GOST_3410_PublicKey``.  There are cooresponding ``Private_Key`` classes for each of these algorithms.
+and ``GOST_3410_PublicKey``.  There are corresponding ``Private_Key`` classes for each of these algorithms.
 
 .. _creating_new_private_keys:
 
@@ -138,7 +138,7 @@ Unencrypted serialization is also supported.
 
 .. warning::
 
-  In most situations, using unecrypted private key storage is a bad idea,
+  In most situations, using unencrypted private key storage is a bad idea,
   because anyone can come along and grab the private key without having to
   know any passwords or other secrets. Unless you have very particular
   security requirements, always use the versions that encrypt the key based on
@@ -236,7 +236,7 @@ To import and export public keys, use:
 
   These functions operate in the same way as the ones described in
   :ref:`serializing_private_keys`, except that no encryption option is
-  availabe.
+  available.
 
 .. _dl_group:
 
@@ -462,7 +462,7 @@ ElGamal; these use the EME class:
          RandomNumberGenerator& rng)
 
       Where *private_key* is the key to use for the key agreement. The system
-      paramters are specified in *ecies_params* and the RNG to use is passed in
+      parameters are specified in *ecies_params* and the RNG to use is passed in
       *rng*.
 
    .. cpp:function:: ECIES_Encryptor(RandomNumberGenerator& rng, \
@@ -595,7 +595,7 @@ Signatures are verified using
    .. cpp:function:: PK_Verifier(const Public_Key& pub_key, \
           const std::string& emsa, Signature_Format format = IEEE_1363)
 
-      Construct a new verifier for signatures assicated with public
+      Construct a new verifier for signatures associated with public
       key *pub_key*. The *emsa* and *format* should be the same as
       that used by the signer.
 
@@ -603,7 +603,7 @@ Signatures are verified using
    .. cpp:function:: void update(const std::vector<uint8_t>& in)
    .. cpp:function:: void update(uint8_t in)
 
-      Add further message data that is purportedly assocated with the
+      Add further message data that is purportedly associated with the
       signature that will be checked.
 
    .. cpp:function:: bool check_signature(const uint8_t* sig, size_t length)
@@ -767,7 +767,7 @@ McEliece
 --------------------------
 
 McEliece is a cryptographic scheme based on error correcting codes which is
-thought to be resistent to quantum computers. First proposed in 1978, it is fast
+thought to be resistant to quantum computers. First proposed in 1978, it is fast
 and patent-free. Variants have been proposed and broken, but with suitable
 parameters the original scheme remains secure. However the public keys are quite
 large, which has hindered deployment in the past.
@@ -782,7 +782,7 @@ http://www.cryptosource.de/docs/mceliece_in_botan.pdf
 Encryption in the McEliece scheme consists of choosing a message block of size
 `n`, encoding it in the error correcting code which is the public key, then
 adding `t` bit errors. The code is created such that knowing only the public
-key, decoding `t` errors is intractible, but with the additional knowledge of
+key, decoding `t` errors is intractable, but with the additional knowledge of
 the secret structure of the code a fast decoding technique exists.
 
 The McEliece implementation in HyMES, and also in Botan, uses an optimization to
@@ -816,7 +816,7 @@ In ``mcies.h`` there are functions for this combination:
                                                      const std::string& aead = "AES-256/OCB")
 
 For a given security level (SL) a McEliece key would use
-parameters n and t, and have the cooresponding key sizes listed:
+parameters n and t, and have the corresponding key sizes listed:
 
 +-----+------+-----+---------------+----------------+
 | SL  |   n  |   t | public key KB | private key KB |

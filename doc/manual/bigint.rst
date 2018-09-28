@@ -240,7 +240,7 @@ Number theoretic functions available include:
 .. cpp:function:: bool is_prime(BigInt n, RandomNumberGenerator& rng, \
                                 size_t prob = 56, double is_random = false)
 
-  Test *n* for primality using a probablistic algorithm (Miller-Rabin).  With
+  Test *n* for primality using a probabilistic algorithm (Miller-Rabin).  With
   this algorithm, there is some non-zero probability that true will be returned
   even if *n* is actually composite. Modifying *prob* allows you to decrease the
   chance of such a false positive, at the cost of increased runtime. Sufficient

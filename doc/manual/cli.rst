@@ -50,7 +50,7 @@ Public Key Cryptography
   key, it is recommended to encrypt it with a provided *passphrase*. *pbe* is
   the name of the desired encryption algorithm, which uses *pbe-millis*
   milliseconds to derive the encryption key from the passed
-  *passphrase*. Algorithm specific parameters, as the desired bitlength of an
+  *passphrase*. Algorithm specific parameters, as the desired bit length of an
   RSA key, can be passed with *params*.
 
     - For RSA *params* specifies the bit length of the RSA modulus. It defaults to 3072.
@@ -105,11 +105,11 @@ Public Key Cryptography
       in fact generate a valid DSA group, the command will fail.
 
 ``dl_group_info --pem name``
-  Print raw Diffie-Hellman parameters (p,g) of the standarized DH group
+  Print raw Diffie-Hellman parameters (p,g) of the standardized DH group
   *name*. If *pem* is set, the X9.42 encoded group is printed.
 
 ``ec_group_info --pem name``
-  Print raw elliptic curve domain parameters of the standarized curve *name*. If
+  Print raw elliptic curve domain parameters of the standardized curve *name*. If
   *pem* is set, the encoded domain is printed.
 
 ``pk_encrypt --aead=AES-256/GCM rsa_pubkey datafile``
@@ -160,7 +160,7 @@ X.509
   used, the certificate's fingerprint is also printed.
 
 ``cert_verify subject *ca_certs``
-  Verify if the provided X.509 certificate *subject* can be sucessfully
+  Verify if the provided X.509 certificate *subject* can be successfully
   validated. The list of trusted CA certificates is passed with *ca_certs*,
   which is a list of one or more certificates.
 
@@ -180,7 +180,7 @@ TLS Server/Client
   none of the TLS version flags is set, the latest supported version is
   chosen. The client honors the TLS policy defined in the *policy* file and
   prints all certificates in the chain, if *print-certs* is passed.
-  *next-protocols* is a comma seperated list and specifies the protocols to
+  *next-protocols* is a comma separated list and specifies the protocols to
   advertise with Application-Layer Protocol Negotiation (ALPN).
 
 ``tls_server cert key --port=443 --type=tcp --policy=``
@@ -268,7 +268,7 @@ Miscellaneous Commands
   Decode and print *file* with ASN.1 Basic Encoding Rules (BER).
 
 ``http_get url``
-  Retrieve ressource from the passed http *url*.
+  Retrieve resource from the passed http *url*.
 
 ``speed --msec=500 --provider= --buf-size=1024 algos``
   Measures the speed of the passed *algos*. If no *algos* are passed all

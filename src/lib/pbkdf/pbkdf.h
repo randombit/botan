@@ -219,7 +219,7 @@ class BOTAN_PUBLIC_API(2,0) PBKDF
    };
 
 /*
-* Compatability typedef
+* Compatibility typedef
 */
 typedef PBKDF S2K;
 

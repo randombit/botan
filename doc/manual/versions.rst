@@ -45,7 +45,7 @@ The build-time version information is defined in `botan/build.h`
    .. versionadded:: 1.10.1
 
    A macro expanding to a string that is set to a revision identifier
-   cooresponding to the source, or "unknown" if this could not be
+   corresponding to the source, or "unknown" if this could not be
    determined. It is set for all official releases, and for builds that
    originated from within a git checkout.
 
@@ -81,7 +81,7 @@ version checks, are included in `botan/version.h`
       Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH)
 
    It will return an empty string if the versions match, or otherwise
-   an error message indicating the discrepency. This only is useful in
+   an error message indicating the discrepancy. This only is useful in
    dynamic libraries, where it is possible to compile and run against
    different versions.
 

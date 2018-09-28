@@ -100,7 +100,7 @@ For configure.py (and helper scripts install.py, cleanup.py and build_docs.py)
 the target is stock (no modules outside the standard library) CPython 2.7 plus
 latest CPython 3.x. Support for CPython 2.6, PyPy, etc is great when viable (in
 the sense of not causing problems for 2.7 or 3.x, and not requiring huge blocks
-of version dependent code). As running this program succesfully is required for
+of version dependent code). As running this program successfully is required for
 a working build, making it as portable as possible is considered key.
 
 The python wrapper botan2.py targets CPython 2.7, 3.x, and latest PyPy. Note that
@@ -256,5 +256,5 @@ functionality which seem worth the trouble of maintaining an integration with.
 Examples of other external dependencies that would be appropriate include
 integration with system crypto (/dev/crypto, CommonCrypto, CryptoAPI, ...),
 potentially a parallelism framework such as Cilk (as part of a larger design for
-parallel message processing, say), or hypothentically use of a safe ASN.1 parser
+parallel message processing, say), or hypothetically use of a safe ASN.1 parser
 (that is, one written in a safe language like Rust or OCaml providing a C API).

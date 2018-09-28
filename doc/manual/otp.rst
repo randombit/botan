@@ -44,7 +44,7 @@ given to any other symmetric key or plaintext password.
 
     .. cpp:function:: uint32_t generate_hotp(uint64_t counter)
 
-       Return the OTP assosciated with a specific counter value.
+       Return the OTP associated with a specific counter value.
 
     .. cpp:function:: std::pair<bool,uint64_t> verify_hotp(uint32_t otp, \
                       uint64_t starting_counter, size_t resync_range = 0)

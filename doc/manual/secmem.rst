@@ -2,10 +2,10 @@
 Memory container
 ========================================
 
-A major concern with mixing modern multiuser OSes and cryptographic
+A major concern with mixing modern multi-user OSes and cryptographic
 code is that at any time the code (including secret keys) could be
 swapped to disk, where it can later be read by an attacker, or left
-floating around in memory for later retreval.
+floating around in memory for later retrieval.
 
 For this reason the library uses a ``std::vector`` with a custom
 allocator that will zero memory before deallocation, named via typedef
@@ -15,7 +15,7 @@ love.
 
 Some operating systems offer the ability to lock memory into RAM,
 preventing swapping from occurring. Typically this operation is
-restricted to privledged users (root or admin), however some OSes
+restricted to privileged users (root or admin), however some OSes
 including Linux and FreeBSD allow normal users to lock a small amount
 of memory. On these systems, allocations first attempt to allocate out
 of this small locked pool, and then if that fails will fall back to

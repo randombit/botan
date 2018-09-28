@@ -428,7 +428,7 @@ compiler whenever a C++ file is compiled. Typically this is used for
 setting include paths.
 
 ``botan config libs``: Print options for which libraries to link to
-(this will include a reference to the botan library iself).
+(this will include a reference to the botan library itself).
 
 Your ``Makefile`` can run ``botan config`` and get the options
 necessary for getting your application to compile and link, regardless

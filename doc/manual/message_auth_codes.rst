@@ -51,12 +51,12 @@ The Botan MAC computation is split into five stages.
 
   .. cpp:function:: size_t minimum_keylength() const
 
-     Return the smallest key length (in bytes) that is acceptible for the
+     Return the smallest key length (in bytes) that is acceptable for the
      algorithm.
 
   .. cpp:function:: size_t maximum_keylength() const
 
-     Return the largest key length (in bytes) that is acceptible for the
+     Return the largest key length (in bytes) that is acceptable for the
      algorithm.
 
   .. cpp:function:: void start(const uint8_t* nonce, size_t nonce_len)
@@ -199,7 +199,7 @@ CBC-MAC
 
 An older authentication code based on a block cipher. Serious security problems,
 in particular **insecure** if messages of several different lengths are
-authenticated. Avoid unless required for compatability.
+authenticated. Avoid unless required for compatibility.
 
 Available if ``BOTAN_HAS_CBC_MAC`` is defined.
 

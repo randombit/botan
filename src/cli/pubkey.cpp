@@ -341,7 +341,7 @@ class EC_Group_Info final : public Command
 
       std::string description() const override
          {
-         return "Print raw elliptic curve domain parameters of the standarized curve name";
+         return "Print raw elliptic curve domain parameters of the standardized curve name";
          }
 
       void go() override
@@ -382,7 +382,7 @@ class DL_Group_Info final : public Command
 
       std::string description() const override
          {
-         return "Print raw Diffie-Hellman parameters (p,g) of the standarized DH group name";
+         return "Print raw Diffie-Hellman parameters (p,g) of the standardized DH group name";
          }
 
       void go() override

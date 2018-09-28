@@ -93,7 +93,7 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
    .. cpp:function:: std::unique_ptr<PasswordHash> tune(size_t output_len, std::chrono::milliseconds msec) const
 
       Return a password hash instance tuned to run for approximately ``msec``
-      millseconds when producing an output of length ``output_len``. (Accuracy
+      milliseconds when producing an output of length ``output_len``. (Accuracy
       may vary, use the command line utility ``botan pbkdf_tune`` to check.)
 
    .. cpp:function:: std::unique_ptr<PasswordHash> from_configuration( \

@@ -1,4 +1,4 @@
-# There is no cooresponding type for this text policy but it is useful
+# There is no corresponding type for this text policy but it is useful
 # for interop testing and fuzz testing
 
 # It is based on the default policy, but allows 3DES, SHA-1 signatures,

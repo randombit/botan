@@ -21,7 +21,7 @@ in the source.
 
 - Using ``X509_Certificate::subject_info`` and ``issuer_info`` to access any
   information that is not included in the DN or subject alternative name. Prefer
-  using the specific accessor functions for other data, eg instead of
+  using the specific assessor functions for other data, eg instead of
   ``cert.subject_info("X509.Certificate.serial")`` use ``cert.serial_number()``.
 
 - The Buffered_Computation base class. In a future release the class will be

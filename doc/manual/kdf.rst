@@ -29,7 +29,7 @@ shared secret created using Diffie-Hellman key agreement.
 
    All variations on the same theme. Deterministically creates a
    uniform random value from *secret* and *salt*. Typically *salt* is
-   a lable or identifier, such as a session id.
+   a label or identifier, such as a session id.
 
 You can create a :cpp:class:`KDF` using
 
@@ -50,7 +50,7 @@ HKDF
 Defined in RFC 5869, HKDF uses HMAC to process inputs. Also available
 are variants HKDF-Extract and HKDF-Expand. HKDF is the combined
 Extract+Expand operation. Use the combined HKDF unless you need
-compatability with some other system.
+compatibility with some other system.
 
 Available if ``BOTAN_HAS_HKDF`` is defined.
 

@@ -2,7 +2,7 @@ AES Key Wrapping
 =================================
 
 NIST specifies two mechanisms for wrapping (encrypting) symmetric keys using
-another key. The first (and older, more widely supported) methd requres the
+another key. The first (and older, more widely supported) method requires the
 input be a multiple of 8 bytes long. The other allows any length input, though
 only up to 2**32 bytes.
 
@@ -55,6 +55,6 @@ This interface is defined in ``rfc3394.h``.
 .. cpp:function:: secure_vector<uint8_t> rfc3394_keyunwrap(const secure_vector<uint8_t>& key, \
                                                            const SymmetricKey& kek)
 
-  Unwrap a key wrapped wtih rfc3394_keywrap.
+  Unwrap a key wrapped with rfc3394_keywrap.
 
 

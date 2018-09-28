@@ -231,7 +231,7 @@ Whirlpool
 
 Available if ``BOTAN_HAS_WHIRLPOOL`` is defined.
 
-A 512-bit hash function standarized by ISO and NESSIE. Relatively slow, and due
+A 512-bit hash function standardized by ISO and NESSIE. Relatively slow, and due
 to the table based implementation it is (unlike almost all other hashes)
 potentially vulnerable to cache based side channels. Prefer Skein-512 or BLAKE2b
 in new code.

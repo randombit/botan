@@ -3,7 +3,7 @@ ABI Stability
 ====================
 
 Botan uses semantic versioning for the API; if API features are added the minor
-version increases, whereas if API compatability breaks occur the major version
+version increases, whereas if API compatibility breaks occur the major version
 is increased.
 
 However no guarantees about ABI are made between releases. Maintaining an ABI

@@ -130,7 +130,7 @@ The major certificate format in use today is X.509v3, used for instance in the
 
       Returns either an enumeration listing key constraints (what the
       associated key can be used for) or ``NO_CONSTRAINTS`` if the
-      relevent extension was not included. Example values are
+      relevant extension was not included. Example values are
       ``DIGITAL_SIGNATURE`` and ``KEY_CERT_SIGN``. More than one value
       might be specified.
 
@@ -423,7 +423,7 @@ certificates.
 
  .. cpp:function:: void affirm_cert(const X509_Certificate&)
 
-     Reverses the revokation for ``cert``
+     Reverses the revocation for ``cert``
 
  .. cpp:function:: std::vector<X509_CRL> generate_crls() const
 
@@ -446,7 +446,7 @@ implementation of this interface for sqlite3, and a subclass of
 Path Validation
 ----------------------------------------
 
-The process of validating a certfificate chain up to a trusted root is
+The process of validating a certificate chain up to a trusted root is
 called `path validation`, and in botan that operation is handled by a
 set of functions in ``x509path.h`` named ``x509_path_validate``:
 
@@ -467,13 +467,13 @@ set of functions in ``x509path.h`` named ``x509_path_validate``:
    ``UNSPECIFIED``. ``validation_time`` allows setting the time point at which all certificates
    are validated. This is really only useful for testing. The default is the
    current system clock's current time. ``ocsp_timeout`` sets the timeout for
-   OCSP requests. The default of 0 disables OCSP checks alltogether.
+   OCSP requests. The default of 0 disables OCSP checks completely.
    ``ocsp_resp`` allows adding additional OCSP responses retrieved from outside
    of the path validation. Note that OCSP online checks are done only
    as long as the http_util module was compiled in. Availability of online
    OCSP checks can be checked using the macro BOTAN_HAS_ONLINE_REVOCATION_CHECKS.
 
-   For the different flavours of ``x509_path_validate``, check ``x509path.h``.
+   For the different flavors of ``x509_path_validate``, check ``x509path.h``.
 
 The result of the validation is returned as a class:
 
@@ -508,7 +508,7 @@ The result of the validation is returned as a class:
      Returns the 'worst' error that occurred during validation. For
      instance, we do not want an expired certificate with an invalid
      signature to be reported to the user as being simply expired (a
-     relativly innocuous and common error) when the signature isn't
+     relatively innocuous and common error) when the signature isn't
      even valid.
 
   .. cpp:function:: const std::vector<std::set<Certificate_Status_Code>>& all_statuses() const
@@ -545,7 +545,7 @@ step. The two constructors are:
                                                  bool ocsp_all_intermediates = false)
 
     A variant of the above with some convenient defaults. The current
-    default `minimum_key_strength` of 80 roughly cooresponds to 1024
+    default `minimum_key_strength` of 80 roughly corresponds to 1024
     bit RSA. The set of trusted hashes is set to all SHA-2 variants,
     and, if `minimum_key_strength` is less than or equal to 80, then
     SHA-1 signatures will also be accepted.

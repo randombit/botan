@@ -56,7 +56,7 @@ are only available on certain platforms. Others are mostly useful in specific
 situations.
 
 Generally prefer using either the system RNG, or else ``AutoSeeded_RNG`` which is
-intented to provide best possible behavior in a userspace PRNG.
+intended to provide best possible behavior in a userspace PRNG.
 
 System_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -90,7 +90,7 @@ AutoSeeded_RNG
 
 AutoSeeded_RNG is type naming a 'best available' userspace PRNG. The
 exact definition of this has changed over time and may change in the
-future, fortunately there is no compatability concerns when changing
+future, fortunately there is no compatibility concerns when changing
 any RNG since the only expectation is it produces bits
 indistinguishable from random.
 
@@ -133,7 +133,7 @@ HMAC_DRBG's constructors are:
 
          The specification of HMAC DRBG requires that each invocation produce no
          more than 64 kibibytes of data. However, the RNG interface allows
-         producing arbitrary amounts of data in a single request. To accomodate
+         producing arbitrary amounts of data in a single request. To accommodate
          this, ``HMAC_DRBG`` treats requests for more data as if they were
          multiple requests each of (at most) the maximum size. You can specify a
          smaller maximum size with ``max_number_of_bytes_per_request``. There is
@@ -240,7 +240,7 @@ and entropy.
 The following entropy sources are currently used:
 
  * The system RNG (``arc4random``, ``/dev/urandom``, or ``RtlGenRandom``).
- * RDRAND and RSEED are used if available, but not counted as contributing entropy
+ * RDRAND and RDSEED are used if available, but not counted as contributing entropy
  * ``/dev/random`` and ``/dev/urandom``. This may be redundant with the system RNG
  * ``getentropy``, only used on OpenBSD currently
  * ``/proc`` walk: read files in ``/proc``. Last ditch protection against

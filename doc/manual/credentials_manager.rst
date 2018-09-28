@@ -53,7 +53,7 @@ implementation.
          const std::string& context)
 
       Return the certificate chain to use to identifier ourselves, if
-      we have one of type *cert_key_tye* and we would like to use a
+      we have one of type *cert_key_type* and we would like to use a
       certificate in this *type*/*context*.
 
    .. cpp:function:: Private_Key* private_key_for(const X509_Certificate& cert, \

@@ -136,7 +136,7 @@ during common operations.
 
       .. cpp:function:: PointGFp point_multiply(const BigInt& x, const PointGFp& pt, const BigInt& y) const
 
-         Multi-exponentation. Returns base_point*x + pt*y. Not constant time.
+         Multi-exponentiation. Returns base_point*x + pt*y. Not constant time.
          (Ordinarily used for signature verification.)
 
       .. cpp:function:: PointGFp blinded_base_point_multiply(const BigInt& k, \

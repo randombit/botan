@@ -11,7 +11,7 @@ machines.
 
 The general approach is to store, instead of the password, the output
 of a one way function of the password. Upon receiving an
-authentication request, the authenticator can recompute the one way
+authentication request, the authenticating party can recompute the one way
 function and compare the value just computed with the one that was
 stored. If they match, then the authentication request succeeds. But
 when an attacker gains access to the database, they only have the
@@ -32,7 +32,7 @@ inspection of the database.
 There are two solutions to these problems: salting and
 iteration. Salting refers to including, along with the password, a
 randomly chosen value which perturbs the one way function. Salting can
-reduce the effectivness of offline dictionary generation, because for
+reduce the effectiveness of offline dictionary generation, because for
 each potential password, an attacker would have to compute the one way
 function output for all possible salts. It also prevents the same
 password from producing the same output, as long as the salts do not
@@ -110,7 +110,7 @@ Bcrypt provides outputs that look like this::
    work factor was set to 10 up until the 2.8.0 release.
 
    It is recommended to set the work factor as high as your system can tolerate
-   (from a performance and latency perspective) since higher workfactors greatly
+   (from a performance and latency perspective) since higher work factors greatly
    improve the security against GPU-based attacks.  For example, for protecting
    high value administrator passwords, consider using work factor 15 or 16; at
    these work factors each bcrypt computation takes several seconds. Since admin
@@ -152,7 +152,7 @@ Passhash9 hashes look like::
   "$9$AAAKxwMGNPSdPkOKJS07Xutm3+1Cr3ytmbnkjO6LjHzCMcMQXvcT"
 
 This function should be secure with the proper parameters, and will remain in
-the library for the forseeable future, but it is specific to Botan rather than
+the library for the foreseeable future, but it is specific to Botan rather than
 being a widely used password hash. Prefer bcrypt.
 
 .. warning::

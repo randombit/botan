@@ -45,12 +45,12 @@ class :cpp:class:`StreamCipher` (`botan/stream_cipher.h`).
 
   .. cpp:function:: size_t minimum_keylength() const
 
-     Return the smallest key length (in bytes) that is acceptible for the
+     Return the smallest key length (in bytes) that is acceptable for the
      algorithm.
 
   .. cpp:function:: size_t maximum_keylength() const
 
-     Return the largest key length (in bytes) that is acceptible for the
+     Return the largest key length (in bytes) that is acceptable for the
      algorithm.
 
   .. cpp:function:: bool valid_iv_length(size_t iv_len) const
@@ -206,6 +206,6 @@ does not support IVs or seeking within the cipher stream.
 .. warning::
 
    RC4 is now badly broken. **Avoid in new code** and use only if required for
-   compatability with existing systems.
+   compatibility with existing systems.
 
 Available if ``BOTAN_HAS_RC4`` is defined.

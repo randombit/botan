@@ -47,7 +47,7 @@ class BOTAN_PUBLIC_API(2,2) TOTP final
       uint32_t generate_totp(std::chrono::system_clock::time_point time_point);
 
       /**
-      * Generate the OTP cooresponding the the provided "Unix timestamp" (ie
+      * Generate the OTP corresponding the the provided "Unix timestamp" (ie
       * number of seconds since midnight Jan 1, 1970)
       */
       uint32_t generate_totp(uint64_t unix_time);

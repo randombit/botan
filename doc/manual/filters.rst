@@ -10,7 +10,7 @@ Pipe/Filter Message Processing
     applications using it somewhat opaque because it is not obvious what this or
     that Pipe& object actually does (type of operation, number of messages
     output (if any!), and so on), whereas using say a HashFunction or AEAD_Mode
-    provides a much better idea in the code of what operation is occuring.
+    provides a much better idea in the code of what operation is occurring.
 
     This filter interface is no longer used within the library itself
     (outside a few dusty corners) and will likely not see any further major
@@ -40,7 +40,7 @@ Here is an example that uses a pipe to base64 encode some strings::
   std::string m1 = pipe.read_all_as_string(0); // "message1"
   std::string m2 = pipe.read_all_as_string(1); // "message2"
 
-Bytestreams in the pipe are grouped into messages; blocks of data that
+Byte streams in the pipe are grouped into messages; blocks of data that
 are processed in an identical fashion (ie, with the same sequence of
 filter operations). Messages are delimited by calls to ``start_msg``
 and ``end_msg``. Each message in a pipe has its own identifier, which
@@ -268,7 +268,7 @@ pointers (they will be added in order), or with an array of filter
 pointers and a ``size_t`` that tells ``Chain`` how many filters are in
 the array (again, they will be attached in order). Here's the example
 from the last section, using chain instead of relying on the implicit
-passthrough the other version used::
+pass through the other version used::
 
   Pipe pipe(new Fork(
                 new Chain(new Hash_Filter("SHA-256"), new Hex_Encoder),
