@@ -167,6 +167,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
 
       while(input_size >= ud && output_size >= ud)
          {
+         // FIXME we can use process here and avoid the copy
          copy_mem(mbuf.data(), input, ud);
          cipher.update(mbuf);
 

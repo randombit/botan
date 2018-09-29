@@ -2,6 +2,7 @@
 * CBC Mode
 * (C) 1999-2007,2013,2017 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -65,6 +66,7 @@ bool CBC_Mode::valid_nonce_length(size_t n) const
 void CBC_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
+   m_state.clear();
    }
 
 void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
@@ -124,6 +126,7 @@ size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
 
 void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
    const size_t BS = block_size();
@@ -155,6 +158,7 @@ size_t CTS_Encryption::output_length(size_t input_length) const
 
 void CTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    uint8_t* buf = buffer.data() + offset;
    const size_t sz = buffer.size() - offset;
@@ -237,6 +241,7 @@ size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
 
 void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
 
@@ -257,7 +262,7 @@ void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void CBC_Decryption::reset()
    {
-   zeroise(state());
+   CBC_Mode::reset();
    zeroise(m_tempbuf);
    }
 
@@ -273,6 +278,7 @@ size_t CTS_Decryption::minimum_final_size() const
 
 void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;

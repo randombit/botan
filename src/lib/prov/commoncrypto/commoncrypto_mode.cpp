@@ -120,6 +120,7 @@ void CommonCrypto_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
                                       size_t offset)
    {
    verify_key_set(m_key_set);
+   BOTAN_STATE_CHECK(m_nonce_set);
 
    BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");
    uint8_t* buf = buffer.data() + offset;
@@ -153,7 +154,10 @@ size_t CommonCrypto_Cipher_Mode::update_granularity() const
 
 size_t CommonCrypto_Cipher_Mode::minimum_final_size() const
    {
-   return 0;
+   if(m_direction == ENCRYPTION)
+      return 0;
+   else
+      return m_opts.block_size;
    }
 
 size_t CommonCrypto_Cipher_Mode::default_nonce_length() const
@@ -196,6 +200,9 @@ void CommonCrypto_Cipher_Mode::reset()
       {
       return;
       }
+
+   m_nonce_set = false;
+
    CCCryptorStatus status = CCCryptorReset(m_cipher, nullptr);
    if(status != kCCSuccess)
       {
@@ -220,6 +227,7 @@ void CommonCrypto_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
       }
 
    m_key_set = true;
+   m_nonce_set = false;
    }
 }
 
@@ -232,7 +240,7 @@ make_commoncrypto_cipher_mode(const std::string& name, Cipher_Dir direction)
       CommonCryptor_Opts opts = commoncrypto_opts_from_algo(name);
       return new CommonCrypto_Cipher_Mode(name, direction, opts);
       }
-   catch(CommonCrypto_Error e)
+   catch(CommonCrypto_Error& e)
       {
       return nullptr;
       }

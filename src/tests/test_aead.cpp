@@ -26,6 +26,8 @@ class AEAD_Tests final : public Text_Based_Test
                             const std::vector<uint8_t>& input, const std::vector<uint8_t>& expected,
                             const std::vector<uint8_t>& ad, const std::string& algo)
          {
+         const bool is_siv = algo.find("/SIV") != std::string::npos;
+
          Test::Result result(algo);
 
          std::unique_ptr<Botan::AEAD_Mode> enc(Botan::AEAD_Mode::create(algo, Botan::ENCRYPTION));
@@ -35,8 +37,16 @@ class AEAD_Tests final : public Text_Based_Test
          result.confirm("AEAD name is not empty", !enc->name().empty());
          result.confirm("AEAD default nonce size is accepted", enc->valid_nonce_length(enc->default_nonce_length()));
 
+         Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(enc->update_granularity());
+
+         if(is_siv == false)
+            {
+            result.test_throws("Unkeyed object throws for encrypt",
+                               [&]() { enc->update(garbage); });
+            }
+
          result.test_throws("Unkeyed object throws for encrypt",
-                            [&]() { Botan::secure_vector<uint8_t> buf; enc->finish(buf); });
+                            [&]() { enc->finish(garbage); });
 
          if(enc->associated_data_requires_key())
             {
@@ -47,9 +57,7 @@ class AEAD_Tests final : public Text_Based_Test
          // Ensure that test resets AD and message state
          enc->set_key(key);
 
-         Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(enc->update_granularity());
-
-         if(algo.find("/SIV") == std::string::npos)
+         if(is_siv == false)
             {
             result.test_throws("Cannot process data until nonce is set (enc)",
                                [&]() { enc->update(garbage); });
@@ -166,14 +174,24 @@ class AEAD_Tests final : public Text_Based_Test
                             const std::vector<uint8_t>& input, const std::vector<uint8_t>& expected,
                             const std::vector<uint8_t>& ad, const std::string& algo)
          {
+         const bool is_siv = algo.find("/SIV") != std::string::npos;
+
          Test::Result result(algo);
 
          std::unique_ptr<Botan::AEAD_Mode> dec(Botan::AEAD_Mode::create(algo, Botan::DECRYPTION));
 
          result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
 
+         Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(dec->update_granularity());
+
+         if(is_siv == false)
+            {
+            result.test_throws("Unkeyed object throws for decrypt",
+                               [&]() { dec->update(garbage); });
+            }
+
          result.test_throws("Unkeyed object throws for decrypt",
-                            [&]() { Botan::secure_vector<uint8_t> buf; dec->finish(buf); });
+                            [&]() { dec->finish(garbage); });
 
          if(dec->associated_data_requires_key())
             {
@@ -186,9 +204,7 @@ class AEAD_Tests final : public Text_Based_Test
          dec->set_key(key);
          dec->set_ad(mutate_vec(ad));
 
-         Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(dec->update_granularity());
-
-         if(algo.find("/SIV") == std::string::npos)
+         if(is_siv == false)
             {
             result.test_throws("Cannot process data until nonce is set (dec)",
                                [&]() { dec->update(garbage); });
