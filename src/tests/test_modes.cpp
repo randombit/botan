@@ -64,8 +64,24 @@ class Cipher_Mode_Tests final : public Text_Based_Test
             result.test_eq("enc and dec granularity is the same",
                            enc->update_granularity(), dec->update_granularity());
 
-            test_mode(result, algo, provider_ask, "encryption", *enc, key, nonce, input, expected);
-            test_mode(result, algo, provider_ask, "decryption", *dec, key, nonce, expected, input);
+            try
+               {
+               test_mode(result, algo, provider_ask, "encryption", *enc, key, nonce, input, expected);
+               }
+            catch(Botan::Exception& e)
+               {
+               result.test_failure("Encryption tests failed", e.what());
+               }
+
+            try
+               {
+               test_mode(result, algo, provider_ask, "decryption", *dec, key, nonce, expected, input);
+               }
+            catch(Botan::Exception& e)
+               {
+               result.test_failure("Decryption tests failed", e.what());
+               }
+
             }
 
          return result;
