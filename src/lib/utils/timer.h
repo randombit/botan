@@ -33,7 +33,7 @@ class BOTAN_TEST_API Timer final
          {}
 
       Timer(const std::string& name, size_t buf_size = 0) :
-         Timer(name, "", "", 1, buf_size, 0.0, 0.0)
+         Timer(name, "", "", 1, buf_size, 0.0, 0)
          {}
 
       Timer(const Timer& other) = default;
@@ -122,7 +122,7 @@ class BOTAN_TEST_API Timer final
          {
          if(m_clock_speed != 0)
             {
-            return (static_cast<double>(m_clock_speed) * value()) / 1000;
+            return static_cast<uint64_t>((m_clock_speed * value()) / 1000.0);
             }
          return m_cpu_cycles_used;
          }

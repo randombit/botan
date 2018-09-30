@@ -25,7 +25,7 @@ void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    {
    m_window_bits = Power_Mod::window_bits(m_exp.bits(), base.bits(), m_hints);
 
-   m_g.resize(1U << m_window_bits);
+   m_g.resize(static_cast<size_t>(1) << m_window_bits);
    m_g[0] = 1;
    m_g[1] = base;
 

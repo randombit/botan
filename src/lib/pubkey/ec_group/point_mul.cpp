@@ -170,7 +170,7 @@ PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& poi
    if(ws.size() < PointGFp::WORKSPACE_SIZE)
       ws.resize(PointGFp::WORKSPACE_SIZE);
 
-   std::vector<PointGFp> U(1U << m_window_bits);
+   std::vector<PointGFp> U(static_cast<size_t>(1) << m_window_bits);
    U[0] = point.zero();
    U[1] = point;
 
@@ -354,10 +354,10 @@ PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
          H.mult2i(2, ws);
          }
 
-      const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
-      const uint8_t z2_b = z2.get_substring(z_bits - i - 2, 2);
+      const uint32_t z1_b = z1.get_substring(z_bits - i - 2, 2);
+      const uint32_t z2_b = z2.get_substring(z_bits - i - 2, 2);
 
-      const uint8_t z12 = (4*z2_b) + z1_b;
+      const uint32_t z12 = (4*z2_b) + z1_b;
 
       // This function is not intended to be const time
       if(z12)

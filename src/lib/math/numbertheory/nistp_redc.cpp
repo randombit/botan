@@ -43,7 +43,7 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    BOTAN_ASSERT_EQUAL(carry, 0, "Final carry in P-521 reduction");
 
    // Now find the actual carry in bit 522
-   const uint8_t bit_522_set = x.word_at(p_full_words) >> (p_top_bits);
+   const word bit_522_set = x.word_at(p_full_words) >> p_top_bits;
 
 #if (BOTAN_MP_WORD_BITS == 64)
    static const word p521_words[9] = {

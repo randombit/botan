@@ -44,7 +44,7 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<c
    if(m_window_bits < 1 || m_window_bits > 12) // really even 8 is too large ...
       throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
 
-   const size_t window_size = (1U << m_window_bits);
+   const size_t window_size = (static_cast<size_t>(1) << m_window_bits);
 
    m_g.reserve(window_size);
 
@@ -233,10 +233,10 @@ BigInt monty_multi_exp(std::shared_ptr<const Montgomery_Params> params_p,
          H.square_this(ws);
          }
 
-      const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
-      const uint8_t z2_b = z2.get_substring(z_bits - i - 2, 2);
+      const uint32_t z1_b = z1.get_substring(z_bits - i - 2, 2);
+      const uint32_t z2_b = z2.get_substring(z_bits - i - 2, 2);
 
-      const uint8_t z12 = (4*z2_b) + z1_b;
+      const uint32_t z12 = (4*z2_b) + z1_b;
 
       H.mul_by(*M[z12], ws);
       }
