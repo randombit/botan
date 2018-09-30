@@ -17,6 +17,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
+#include <botan/version.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
    #include <botan/base64.h>
@@ -246,6 +247,51 @@ class Poly_Double_Tests final : public Text_Based_Test
 BOTAN_REGISTER_TEST("poly_dbl", Poly_Double_Tests);
 
 #endif
+
+class Version_Tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("Versions");
+
+         result.confirm("Version datestamp matches macro",
+                        Botan::version_datestamp() == BOTAN_VERSION_DATESTAMP);
+
+         const char* version_cstr = Botan::version_cstr();
+         std::string version_str = Botan::version_string();
+         result.test_eq("Same version string", version_str, std::string(version_cstr));
+
+         const char* sversion_cstr = Botan::short_version_cstr();
+         std::string sversion_str = Botan::short_version_string();
+         result.test_eq("Same short version string", sversion_str, std::string(sversion_cstr));
+
+         const std::string expected_sversion =
+            std::to_string(BOTAN_VERSION_MAJOR) + "." +
+            std::to_string(BOTAN_VERSION_MINOR) + "." +
+            std::to_string(BOTAN_VERSION_PATCH);
+
+         result.test_eq("Short version string has expected format",
+                        sversion_str, expected_sversion);
+
+         const std::string version_check_ok =
+            Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
+
+         result.confirm("Correct version no warning", version_check_ok.empty());
+
+         const std::string version_check_bad =
+            Botan::runtime_version_check(1, 19, 42);
+
+         const std::string expected_error =
+            "Warning: linked version (" + sversion_str + ") does not match version built against (1.19.42)\n";
+
+         result.test_eq("Expected warning text", version_check_bad, expected_error);
+
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("versioning", Version_Tests);
 
 class Date_Format_Tests final : public Text_Based_Test
    {
