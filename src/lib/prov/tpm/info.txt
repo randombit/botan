@@ -9,6 +9,7 @@ all -> tspi
 </libs>
 
 <requires>
+uuid
 hash_id
 rsa
 rng
