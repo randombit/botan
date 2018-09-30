@@ -1,6 +1,7 @@
 /*
 * (C) 2014,2015,2017 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -52,152 +53,202 @@ class Cipher_Mode_Tests final : public Text_Based_Test
 
             if(!enc || !dec)
                {
+               if(enc)
+                  result.test_failure("Provider " + provider_ask + " has encrypt but not decrypt");
+               if(dec)
+                  result.test_failure("Provider " + provider_ask + " has decrypt but not encrypt");
                result.note_missing(algo);
                return result;
                }
 
-            result.test_is_nonempty("provider", enc->provider());
-            result.test_eq("name", enc->name(), algo);
+            result.test_eq("enc and dec granularity is the same",
+                           enc->update_granularity(), dec->update_granularity());
 
-            result.test_eq("mode not authenticated", enc->authenticated(), false);
-
-            result.test_throws("Unkeyed object throws for encrypt",
-                               [&]() { Botan::secure_vector<uint8_t> bad(16); enc->finish(bad); });
-            result.test_throws("Unkeyed object throws for decrypt",
-                               [&]() { Botan::secure_vector<uint8_t> bad(16); dec->finish(bad); });
-
-            if(algo.find("/CTR") == std::string::npos)
+            try
                {
-               // can't test equal due to CBC padding
-               result.test_lte("output_length", enc->output_length(input.size()), expected.size());
-               result.test_gte("output_length", dec->output_length(expected.size()), input.size());
+               test_mode(result, algo, provider_ask, "encryption", *enc, key, nonce, input, expected);
                }
-            else
+            catch(Botan::Exception& e)
                {
-               // assume all other modes are not expanding (currently true)
-               result.test_eq("output_length", enc->output_length(input.size()), expected.size());
-               result.test_eq("output_length", dec->output_length(expected.size()), input.size());
+               result.test_failure("Encryption tests failed", e.what());
                }
 
-            // FFI currently requires this, so assure it is true for all modes
-            result.test_gte("enc buffer sizes ok", enc->update_granularity(), enc->minimum_final_size());
-            result.test_gte("dec buffer sizes ok", dec->update_granularity(), dec->minimum_final_size());
-
-            result.confirm("default nonce size is allowed",
-                           enc->valid_nonce_length(enc->default_nonce_length()));
-            result.confirm("default nonce size is allowed",
-                           dec->valid_nonce_length(dec->default_nonce_length()));
-
-            // Test that disallowed nonce sizes result in an exception
-            const size_t large_nonce_size = 65000;
-            result.test_eq("Large nonce not allowed", enc->valid_nonce_length(large_nonce_size), false);
-            result.test_throws("Large nonce causes exception",
-                               [&enc,large_nonce_size]() { enc->start(nullptr, large_nonce_size); });
-
-            // Test to make sure reset() resets what we need it to
-            enc->set_key(mutate_vec(key));
-            Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(enc->update_granularity());
-
-            if(algo.find("CTR") == std::string::npos)
+            try
                {
-               result.test_throws("Cannot process data until nonce is set (enc)",
-                                  [&]() { enc->update(garbage); });
+               test_mode(result, algo, provider_ask, "decryption", *dec, key, nonce, expected, input);
+               }
+            catch(Botan::Exception& e)
+               {
+               result.test_failure("Decryption tests failed", e.what());
                }
 
-            enc->start(mutate_vec(nonce));
-            enc->update(garbage);
-
-            enc->reset();
-
-            enc->set_key(key);
-            enc->start(nonce);
-
-            Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
-            // TODO: should first update if possible
-            enc->finish(buf);
-            result.test_eq("encrypt", buf, expected);
-
-            // additionally test process() if possible
-            size_t update_granularity = enc->update_granularity();
-            size_t input_length = input.size();
-            size_t min_final_bytes = enc->minimum_final_size();
-            if(input_length > (update_granularity + min_final_bytes))
-               {
-               // reset state first
-               enc->reset();
-
-               enc->start(nonce);
-               buf.assign(input.begin(), input.end());
-
-               // we can process at max input_length
-               const size_t max_blocks_to_process = (input_length - min_final_bytes) / update_granularity;
-               const size_t bytes_to_process = max_blocks_to_process * update_granularity;
-
-               const size_t bytes_written = enc->process(buf.data(), bytes_to_process);
-
-               result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
-
-               enc->finish(buf, bytes_to_process);
-               result.test_eq("encrypt", buf, expected);
-               }
-
-            // decryption
-            buf.assign(expected.begin(), expected.end());
-
-            // Test to make sure reset() resets what we need it to
-            dec->set_key(mutate_vec(key));
-            garbage = Test::rng().random_vec(dec->update_granularity());
-
-            if(algo.find("CTR") == std::string::npos)
-               {
-               result.test_throws("Cannot process data until nonce is set (dec)",
-                                  [&]() { dec->update(garbage); });
-               }
-
-            dec->start(mutate_vec(nonce));
-            dec->update(garbage);
-
-            dec->reset();
-
-            dec->set_key(key);
-            dec->start(nonce);
-            dec->finish(buf);
-            result.test_eq("decrypt", buf, input);
-
-            // additionally test process() if possible
-            update_granularity = dec->update_granularity();
-            input_length = expected.size();
-            min_final_bytes = dec->minimum_final_size();
-            if(input_length > (update_granularity + min_final_bytes))
-               {
-               // reset state first
-               dec->reset();
-
-               dec->start(nonce);
-               buf.assign(expected.begin(), expected.end());
-
-               // we can process at max input_length
-               const size_t max_blocks_to_process = (input_length - min_final_bytes) / update_granularity;
-               const size_t bytes_to_process = max_blocks_to_process * update_granularity;
-
-               const size_t bytes_written = dec->process(buf.data(), bytes_to_process);
-
-               result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
-
-               dec->finish(buf, bytes_to_process);
-               result.test_eq("decrypt", buf, input);
-               }
-
-            enc->clear();
-            dec->clear();
-
-            result.test_throws("Unkeyed object throws for encrypt after clear",
-                               [&]() { Botan::secure_vector<uint8_t> bad(16); enc->finish(bad); });
-            result.test_throws("Unkeyed object throws for decrypt after clear",
-                               [&]() { Botan::secure_vector<uint8_t> bad(16); dec->finish(bad); });
             }
 
          return result;
+         }
+
+   private:
+      void test_mode(Test::Result& result,
+                     const std::string& algo,
+                     const std::string& provider,
+                     const std::string& direction,
+                     Botan::Cipher_Mode& mode,
+                     const std::vector<uint8_t>& key,
+                     const std::vector<uint8_t>& nonce,
+                     const std::vector<uint8_t>& input,
+                     const std::vector<uint8_t>& expected)
+         {
+         const bool is_cbc = (algo.find("/CBC") != std::string::npos);
+         const bool is_ctr = (algo.find("CTR") != std::string::npos);
+
+         result.test_eq("name", mode.name(), algo);
+
+         // Some modes report base even if got from another provider
+         if(mode.provider() != "base")
+            {
+            result.test_eq("provider", mode.provider(), provider);
+            }
+
+         result.test_eq("mode not authenticated", mode.authenticated(), false);
+
+         const size_t update_granularity = mode.update_granularity();
+         const size_t min_final_bytes = mode.minimum_final_size();
+
+         // FFI currently requires this, so assure it is true for all modes
+         result.test_gte("buffer sizes ok", update_granularity, min_final_bytes);
+
+         result.test_throws("Unkeyed object throws", [&]() {
+            Botan::secure_vector<uint8_t> bad(update_granularity);
+            mode.finish(bad);
+            });
+
+         if(is_cbc)
+            {
+            // can't test equal due to CBC padding
+
+            if(direction == "encryption")
+               {
+               result.test_lte("output_length", mode.output_length(input.size()), expected.size());
+               }
+            else
+               {
+               result.test_gte("output_length", mode.output_length(input.size()), expected.size());
+               }
+            }
+         else
+            {
+            // assume all other modes are not expanding (currently true)
+            result.test_eq("output_length", mode.output_length(input.size()), expected.size());
+            }
+
+         result.confirm("default nonce size is allowed",
+                        mode.valid_nonce_length(mode.default_nonce_length()));
+
+         // Test that disallowed nonce sizes result in an exception
+         const size_t large_nonce_size = 65000;
+         result.test_eq("Large nonce not allowed", mode.valid_nonce_length(large_nonce_size), false);
+         result.test_throws("Large nonce causes exception",
+                            [&mode,large_nonce_size]() { mode.start(nullptr, large_nonce_size); });
+
+         Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(update_granularity);
+
+         // Test to make sure reset() resets what we need it to
+         result.test_throws("Cannot process data (update) until key is set",
+                            [&]() { mode.update(garbage); });
+         result.test_throws("Cannot process data (finish) until key is set",
+                            [&]() { mode.finish(garbage); });
+
+         mode.set_key(mutate_vec(key));
+
+         if(is_ctr == false)
+            {
+            result.test_throws("Cannot process data until nonce is set",
+                               [&]() { mode.update(garbage); });
+            }
+
+         mode.start(mutate_vec(nonce));
+         mode.reset();
+
+         if(is_ctr == false)
+            {
+            result.test_throws("Cannot process data until nonce is set (after start/reset)",
+                               [&]() { mode.update(garbage); });
+            }
+
+         mode.start(mutate_vec(nonce));
+         mode.update(garbage);
+
+         mode.reset();
+
+         mode.set_key(key);
+         mode.start(nonce);
+
+         Botan::secure_vector<uint8_t> buf;
+
+         buf.assign(input.begin(), input.end());
+         mode.finish(buf);
+         result.test_eq(direction + " all-in-one", buf, expected);
+
+         // additionally test update() and process() if possible
+         if(input.size() >= update_granularity + min_final_bytes)
+            {
+            const size_t max_blocks_to_process = (input.size() - min_final_bytes) / update_granularity;
+            const size_t bytes_to_process = max_blocks_to_process * update_granularity;
+
+            // test update, 1 block at a time
+            if(max_blocks_to_process > 1)
+               {
+               Botan::secure_vector<uint8_t> block(update_granularity);
+               buf.clear();
+
+               mode.start(nonce);
+               for(size_t i = 0; i != max_blocks_to_process; ++i)
+                  {
+                  block.assign(input.data() + i*update_granularity,
+                               input.data() + (i+1)*update_granularity);
+
+                  mode.update(block);
+                  buf += block;
+                  }
+
+               Botan::secure_vector<uint8_t> last_bits(input.data() + bytes_to_process, input.data() + input.size());
+               mode.finish(last_bits);
+               buf += last_bits;
+
+               result.test_eq(direction + " update-1", buf, expected);
+               }
+
+            // test update with maximum length input
+            buf.assign(input.data(), input.data() + bytes_to_process);
+            Botan::secure_vector<uint8_t> last_bits(input.data() + bytes_to_process, input.data() + input.size());
+
+            mode.start(nonce);
+            mode.update(buf);
+            mode.finish(last_bits);
+
+            buf += last_bits;
+
+            result.test_eq(direction + " update-all", buf, expected);
+
+            // test process with maximum length input
+            mode.start(nonce);
+            buf.assign(input.begin(), input.end());
+
+            const size_t bytes_written = mode.process(buf.data(), bytes_to_process);
+
+            result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
+
+            mode.finish(buf, bytes_to_process);
+            result.test_eq(direction + " process", buf, expected);
+            }
+
+         mode.clear();
+
+         result.test_throws("Unkeyed object throws after clear", [&]() {
+            Botan::secure_vector<uint8_t> bad(update_granularity);
+            mode.finish(bad);
+            });
+
          }
    };
 
