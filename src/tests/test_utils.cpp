@@ -30,6 +30,10 @@
    #include <botan/internal/poly_dbl.h>
 #endif
 
+#if defined(BOTAN_HAS_UUID)
+   #include <botan/uuid.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -752,6 +756,75 @@ class CPUID_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("cpuid", CPUID_Tests);
+
+#if defined(BOTAN_HAS_UUID)
+
+class UUID_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("UUID");
+
+         const Botan::UUID empty_uuid;
+         const Botan::UUID random_uuid1(Test::rng());
+         const Botan::UUID random_uuid2(Test::rng());
+         const Botan::UUID loaded_uuid(std::vector<uint8_t>(16, 4));
+
+         result.test_throws("Cannot load wrong number of bytes", []() { Botan::UUID u(std::vector<uint8_t>(15)); });
+
+         result.test_eq("Empty UUID is empty", empty_uuid.is_valid(), false);
+         result.confirm("Empty UUID equals self", empty_uuid == empty_uuid);
+
+         result.test_throws("Empty UUID cannot become a string", [&]() { empty_uuid.to_string(); });
+
+         result.test_eq("Random UUID not empty", random_uuid1.is_valid(), true);
+         result.test_eq("Random UUID not empty", random_uuid2.is_valid(), true);
+
+         result.confirm("Random UUIDs are distinct", random_uuid1 != random_uuid2);
+         result.confirm("Random UUIDs not equal to empty", random_uuid1 != empty_uuid);
+
+         const std::string uuid4_str = loaded_uuid.to_string();
+         result.test_eq("String matches expected", uuid4_str, "04040404-0404-0404-0404-040404040404");
+
+         const std::string uuid_r1_str = random_uuid1.to_string();
+         result.confirm("UUID from string matches", Botan::UUID(uuid_r1_str) == random_uuid1);
+
+         class AllSame_RNG : public Botan::RandomNumberGenerator
+            {
+            public:
+               AllSame_RNG(uint8_t b) : m_val(b) {}
+
+               void randomize(uint8_t out[], size_t len) override
+                  {
+                  std::memset(out, m_val, len);
+                  }
+
+               std::string name() const override { return "zeros"; }
+               bool accepts_input() const override { return false; }
+               void add_entropy(const uint8_t[], size_t) override {}
+               void clear() override {}
+               bool is_seeded() const override { return true; }
+            private:
+               uint8_t m_val;
+            };
+
+         AllSame_RNG zeros(0x00);
+         const Botan::UUID zero_uuid(zeros);
+         result.test_eq("Zero UUID matches expected", zero_uuid.to_string(), "00000000-0000-4000-8000-000000000000");
+
+         AllSame_RNG ones(0xFF);
+         const Botan::UUID ones_uuid(ones);
+         result.test_eq("Ones UUID matches expected", ones_uuid.to_string(), "FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF");
+
+         return {result};
+         }
+
+   };
+
+BOTAN_REGISTER_TEST("uuid", UUID_Tests);
+
+#endif
 
 }
 
