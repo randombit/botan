@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.8.0, Not Yet Released
+Version 2.8.0, 2018-10-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for using Apple CommonCrypto library for hashing (GH #1667),
