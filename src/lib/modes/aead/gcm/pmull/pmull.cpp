@@ -62,6 +62,12 @@ inline uint64x2_t gcm_reduce(uint32x4_t B0, uint32x4_t B1)
    }
 
 BOTAN_FUNC_ISA("+crypto")
+inline uint32x4_t vmull(uint64_t x, uint64_t y)
+   {
+   return reinterpret_cast<uint32x4_t>(vmull_p64(x, y));
+   }
+
+BOTAN_FUNC_ISA("+crypto")
 inline uint64x2_t gcm_multiply(uint64x2_t H, uint64x2_t x)
    {
    const uint32x4_t zero = vdupq_n_u32(0);
@@ -71,10 +77,10 @@ inline uint64x2_t gcm_multiply(uint64x2_t H, uint64x2_t x)
    const uint64_t H_hi = vgetq_lane_u64(H, 0);
    const uint64_t H_lo = vgetq_lane_u64(H, 1);
 
-   uint32x4_t T0 = (uint32x4_t)vmull_p64(x_hi, H_hi);
-   uint32x4_t T1 = (uint32x4_t)vmull_p64(x_lo, H_hi);
-   uint32x4_t T2 = (uint32x4_t)vmull_p64(x_hi, H_lo);
-   uint32x4_t T3 = (uint32x4_t)vmull_p64(x_lo, H_lo);
+   uint32x4_t T0 = vmull(x_hi, H_hi);
+   uint32x4_t T1 = vmull(x_lo, H_hi);
+   uint32x4_t T2 = vmull(x_hi, H_lo);
+   uint32x4_t T3 = vmull(x_lo, H_lo);
 
    T1 = veorq_u32(T1, T2);
    T0 = veorq_u32(T0, vextq_u32(zero, T1, 2));
@@ -105,19 +111,19 @@ inline uint64x2_t gcm_multiply_x4(uint64x2_t H1, uint64x2_t H2, uint64x2_t H3, u
    const uint64_t X4_hi = vgetq_lane_u64(X4, 0);
    const uint64_t X4_lo = vgetq_lane_u64(X4, 1);
 
-   const uint32x4_t H1_X1_lo = (uint32x4_t)vmull_p64(X1_lo, H1_lo);
-   const uint32x4_t H2_X2_lo = (uint32x4_t)vmull_p64(X2_lo, H2_lo);
-   const uint32x4_t H3_X3_lo = (uint32x4_t)vmull_p64(X3_lo, H3_lo);
-   const uint32x4_t H4_X4_lo = (uint32x4_t)vmull_p64(X4_lo, H4_lo);
+   const uint32x4_t H1_X1_lo = vmull(X1_lo, H1_lo);
+   const uint32x4_t H2_X2_lo = vmull(X2_lo, H2_lo);
+   const uint32x4_t H3_X3_lo = vmull(X3_lo, H3_lo);
+   const uint32x4_t H4_X4_lo = vmull(X4_lo, H4_lo);
 
    const uint32x4_t lo = veorq_u32(
       veorq_u32(H1_X1_lo, H2_X2_lo),
       veorq_u32(H3_X3_lo, H4_X4_lo));
 
-   const uint32x4_t H1_X1_hi = (uint32x4_t)vmull_p64(X1_hi, H1_hi);
-   const uint32x4_t H2_X2_hi = (uint32x4_t)vmull_p64(X2_hi, H2_hi);
-   const uint32x4_t H3_X3_hi = (uint32x4_t)vmull_p64(X3_hi, H3_hi);
-   const uint32x4_t H4_X4_hi = (uint32x4_t)vmull_p64(X4_hi, H4_hi);
+   const uint32x4_t H1_X1_hi = vmull(X1_hi, H1_hi);
+   const uint32x4_t H2_X2_hi = vmull(X2_hi, H2_hi);
+   const uint32x4_t H3_X3_hi = vmull(X3_hi, H3_hi);
+   const uint32x4_t H4_X4_hi = vmull(X4_hi, H4_hi);
 
    const uint32x4_t hi = veorq_u32(
       veorq_u32(H1_X1_hi, H2_X2_hi),
@@ -125,10 +131,10 @@ inline uint64x2_t gcm_multiply_x4(uint64x2_t H1, uint64x2_t H2, uint64x2_t H3, u
 
    uint32x4_t T0 = veorq_u32(lo, hi);
 
-   T0 = veorq_u32(T0, (uint32x4_t)vmull_p64(X1_hi ^ X1_lo, H1_hi ^ H1_lo));
-   T0 = veorq_u32(T0, (uint32x4_t)vmull_p64(X2_hi ^ X2_lo, H2_hi ^ H2_lo));
-   T0 = veorq_u32(T0, (uint32x4_t)vmull_p64(X3_hi ^ X3_lo, H3_hi ^ H3_lo));
-   T0 = veorq_u32(T0, (uint32x4_t)vmull_p64(X4_hi ^ X4_lo, H4_hi ^ H4_lo));
+   T0 = veorq_u32(T0, vmull(X1_hi ^ X1_lo, H1_hi ^ H1_lo));
+   T0 = veorq_u32(T0, vmull(X2_hi ^ X2_lo, H2_hi ^ H2_lo));
+   T0 = veorq_u32(T0, vmull(X3_hi ^ X3_lo, H3_hi ^ H3_lo));
+   T0 = veorq_u32(T0, vmull(X4_hi ^ X4_lo, H4_hi ^ H4_lo));
 
    const uint32x4_t zero = vdupq_n_u32(0);
    uint32x4_t B0 = veorq_u32(vextq_u32(zero, T0, 2), hi);

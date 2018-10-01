@@ -20,15 +20,14 @@ namespace Botan {
 BOTAN_FUNC_ISA("+crypto")
 void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t input8[], size_t blocks)
    {
-   uint32x4_t C0, C1, C2, C3;
-   uint32x4_t ABCD, ABCD_SAVED;
-   uint32_t   E0, E0_SAVED, E1;
+   uint32x4_t ABCD;
+   uint32_t E0;
 
-   // Load initial values
-   C0 = vdupq_n_u32(0x5A827999);
-   C1 = vdupq_n_u32(0x6ED9EBA1);
-   C2 = vdupq_n_u32(0x8F1BBCDC);
-   C3 = vdupq_n_u32(0xCA62C1D6);
+   // Load magic constants
+   const uint32x4_t C0 = vdupq_n_u32(0x5A827999);
+   const uint32x4_t C1 = vdupq_n_u32(0x6ED9EBA1);
+   const uint32x4_t C2 = vdupq_n_u32(0x8F1BBCDC);
+   const uint32x4_t C3 = vdupq_n_u32(0xCA62C1D6);
 
    ABCD = vld1q_u32(&digest[0]);
    E0 = digest[4];
@@ -38,12 +37,13 @@ void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8
 
    while (blocks)
       {
+      // Save current hash
+      const uint32x4_t ABCD_SAVED = ABCD;
+      const uint32_t E0_SAVED = E0;
+
       uint32x4_t MSG0, MSG1, MSG2, MSG3;
       uint32x4_t TMP0, TMP1;
-
-      // Save current hash
-      ABCD_SAVED = ABCD;
-      E0_SAVED = E0;
+      uint32_t E1;
 
       MSG0 = vld1q_u32(input32 + 0);
       MSG1 = vld1q_u32(input32 + 4);
