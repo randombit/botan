@@ -163,7 +163,7 @@ CPUID::bit_from_string(const std::string& tok)
    if(tok == "altivec" || tok == "simd")
       return {Botan::CPUID::CPUID_ALTIVEC_BIT};
    if(tok == "ppc_crypto")
-      return {Botan::CPUID::PPC_CRYPTO_BIT};
+      return {Botan::CPUID::CPUID_PPC_CRYPTO_BIT};
 
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    if(tok == "neon" || tok == "simd")
