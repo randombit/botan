@@ -213,7 +213,7 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
 
          std::vector<uint8_t> key(bs);
          for(size_t i = 0; i != bs; ++i)
-            key[i] = 0xA0 + i;
+            key[i] = static_cast<uint8_t>(0xA0 + i);
 
          enc.set_key(key);
 
@@ -225,7 +225,7 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
             {
             std::vector<uint8_t> S(i);
             for(size_t j = 0; j != S.size(); ++j)
-               S[j] = 0x50 + j;
+               S[j] = static_cast<uint8_t>(0x50 + j);
 
             Botan::store_be(static_cast<uint16_t>(3 * i + 1), &N[0]);
 

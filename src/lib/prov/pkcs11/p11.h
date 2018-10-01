@@ -1156,8 +1156,11 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             padded_label.insert(padded_label.end(), 32 - label.size(), ' ');
             }
 
-         return C_InitToken(slot_id, reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(so_pin.data())),
-                            so_pin.size(), reinterpret_cast< Utf8Char* >(const_cast< char* >(padded_label.c_str())), return_value);
+         return C_InitToken(slot_id,
+                            reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(so_pin.data())),
+                            static_cast<Ulong>(so_pin.size()),
+                            reinterpret_cast< Utf8Char* >(const_cast< char* >(padded_label.c_str())),
+                            return_value);
          }
 
       /**
@@ -1252,8 +1255,10 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                     ReturnValue* return_value = ThrowException) const
          {
          return C_SetPIN(session,
-                         reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(old_pin.data())), old_pin.size(),
-                         reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(new_pin.data())), new_pin.size(),
+                         reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(old_pin.data())),
+                         static_cast<Ulong>(old_pin.size()),
+                         reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(new_pin.data())),
+                         static_cast<Ulong>(new_pin.size()),
                          return_value);
          }
 
@@ -1423,7 +1428,9 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                    const std::vector<uint8_t, TAlloc>& pin,
                    ReturnValue* return_value = ThrowException) const
          {
-         return C_Login(session, user_type, reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(pin.data())), pin.size(),
+         return C_Login(session, user_type,
+                        reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(pin.data())),
+                        static_cast<Ulong>(pin.size()),
                         return_value);
          }
 
@@ -1583,8 +1590,11 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             getter_template.emplace_back(Attribute{ static_cast< CK_ATTRIBUTE_TYPE >(entry.first), nullptr, 0 });
             }
 
-         bool success = C_GetAttributeValue(session, object, const_cast< Attribute* >(getter_template.data()),
-                                            getter_template.size(), return_value);
+         bool success = C_GetAttributeValue(session,
+                                            object,
+                                            const_cast< Attribute* >(getter_template.data()),
+                                            static_cast<Ulong>(getter_template.size()),
+                                            return_value);
 
          if(!success)
             {
@@ -1600,7 +1610,9 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             i++;
             }
 
-         return C_GetAttributeValue(session, object, const_cast< Attribute* >(getter_template.data()), getter_template.size(),
+         return C_GetAttributeValue(session, object,
+                                    const_cast< Attribute* >(getter_template.data()),
+                                    static_cast<Ulong>(getter_template.size()),
                                     return_value);
          }
 
@@ -1658,7 +1670,9 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             setter_template.emplace_back(Attribute{ static_cast< CK_ATTRIBUTE_TYPE >(entry.first), entry.second.data(), static_cast<CK_ULONG>(entry.second.size()) });
             }
 
-         return C_SetAttributeValue(session, object, const_cast< Attribute* >(setter_template.data()), setter_template.size(),
+         return C_SetAttributeValue(session, object,
+                                    const_cast< Attribute* >(setter_template.data()),
+                                    static_cast<Ulong>(setter_template.size()),
                                     return_value);
          }
 
@@ -1790,7 +1804,10 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                      ReturnValue* return_value = ThrowException) const
          {
          Ulong encrypted_size = 0;
-         if(!C_Encrypt(session, const_cast<Byte*>((plaintext_data.data())), plaintext_data.size(), nullptr, &encrypted_size,
+         if(!C_Encrypt(session,
+                       const_cast<Byte*>((plaintext_data.data())),
+                       static_cast<Ulong>(plaintext_data.size()),
+                       nullptr, &encrypted_size,
                        return_value))
             {
             return false;
@@ -1917,7 +1934,10 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                      ReturnValue* return_value = ThrowException) const
          {
          Ulong decrypted_size = 0;
-         if(!C_Decrypt(session, const_cast<Byte*>((encrypted_data.data())), encrypted_data.size(), nullptr, &decrypted_size,
+         if(!C_Decrypt(session,
+                       const_cast<Byte*>((encrypted_data.data())),
+                       static_cast<Ulong>(encrypted_data.size()),
+                       nullptr, &decrypted_size,
                        return_value))
             {
             return false;
@@ -2197,7 +2217,10 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                         const std::vector<uint8_t, TAlloc>& part,
                         ReturnValue* return_value = ThrowException) const
          {
-         return C_SignUpdate(session, const_cast<Byte*>(part.data()), part.size(), return_value);
+         return C_SignUpdate(session,
+                             const_cast<Byte*>(part.data()),
+                             static_cast<Ulong>(part.size()),
+                             return_value);
          }
 
       /**

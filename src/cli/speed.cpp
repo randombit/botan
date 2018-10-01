@@ -291,7 +291,7 @@ std::vector<size_t> unique_buffer_sizes(const std::string& cmdline_arg)
          if(converted != size_str.size())
             throw CLI_Usage_Error("Invalid integer");
          }
-      catch(std::exception& e)
+      catch(std::exception&)
          {
          throw CLI_Usage_Error("Invalid integer value '" + size_str + "' for option buf-size");
          }

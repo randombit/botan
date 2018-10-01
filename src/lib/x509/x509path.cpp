@@ -389,7 +389,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
                                                 /*redirects*/1,
                                                 timeout);
                   }
-               catch(std::exception& e)
+               catch(std::exception&)
                   {
                   // log e.what() ?
                   }
@@ -476,7 +476,7 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
             {
             crls[i] = future_crls[i].get();
             }
-         catch(std::exception& e)
+         catch(std::exception&)
             {
             // crls[i] left null
             // todo: log exception e.what() ?

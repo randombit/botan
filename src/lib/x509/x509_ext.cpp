@@ -99,7 +99,7 @@ Extensions::create_extn_obj(const OID& oid,
       {
       extn->decode_inner(body);
       }
-   catch(Decoding_Error& e)
+   catch(Decoding_Error&)
       {
       extn.reset(new Cert_Extension::Unknown_Extension(oid, critical));
       extn->decode_inner(body);

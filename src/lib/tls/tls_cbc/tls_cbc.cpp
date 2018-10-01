@@ -141,7 +141,7 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data(const uint8_t ad[], size_
       {
       // AAD hack for EtM
       const uint16_t pt_size = make_uint16(assoc_data()[11], assoc_data()[12]);
-      const uint16_t enc_size = round_up(iv_size() + pt_size + 1, block_size());
+      const uint16_t enc_size = static_cast<uint16_t>(round_up(iv_size() + pt_size + 1, block_size()));
       assoc_data()[11] = get_byte<uint16_t>(0, enc_size);
       assoc_data()[12] = get_byte<uint16_t>(1, enc_size);
       }
@@ -231,7 +231,7 @@ uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len)
    * and allows up to 255 bytes.
    */
 
-   const uint16_t to_check = std::min<uint16_t>(256, record_len);
+   const uint16_t to_check = std::min<uint16_t>(256, static_cast<uint16_t>(record_len));
    const uint8_t pad_byte = record[record_len-1];
    const uint16_t pad_bytes = 1 + pad_byte;
 

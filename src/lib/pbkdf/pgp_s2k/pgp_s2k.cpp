@@ -20,7 +20,7 @@ uint8_t RFC4880_encode_count(size_t desired_iterations)
    for(size_t c = 0; c < 256; ++c)
       {
       // TODO could binary search
-      const uint32_t decoded_iter = RFC4880_decode_count(c);
+      const size_t decoded_iter = RFC4880_decode_count(static_cast<uint8_t>(c));
       if(decoded_iter >= desired_iterations)
          return static_cast<uint8_t>(c);
       }
@@ -178,7 +178,7 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len, std::c
    const size_t blocks_required = (output_len <= hash_size ? 1 : (output_len + hash_size - 1) / hash_size);
 
    const double bytes_to_be_hashed = (hash_bytes_per_second * (desired_nsec / 1000000000.0)) / blocks_required;
-   const size_t iterations = RFC4880_round_iterations(bytes_to_be_hashed);
+   const size_t iterations = RFC4880_round_iterations(static_cast<size_t>(bytes_to_be_hashed));
 
    return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), iterations));
    }

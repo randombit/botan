@@ -63,7 +63,7 @@ Memory_Pool::Memory_Pool(uint8_t* pool,
 
 void* Memory_Pool::allocate(size_t req)
    {
-   const size_t alignment = (1 << m_align_bit);
+   const size_t alignment = (static_cast<size_t>(1) << m_align_bit);
 
    if(req > m_pool_size)
       return nullptr;

@@ -12,7 +12,8 @@ Pre Release Testing
 Kick off a Coverity scan a day or so before the planned release.
 
 Do maintainer-mode builds with Clang and GCC to catch any warnings
-that should be corrected.
+that should be corrected. Also check Visual C++ build logs for any
+warnings that should be addressed.
 
 And remember that CI doesn't test everything. In particular, not all
 tests run under valgrind or on the qemu cross builds due to time

@@ -18,12 +18,12 @@ PKCS11_RNG::PKCS11_RNG(Session& session)
 
 void PKCS11_RNG::randomize(uint8_t output[], std::size_t length)
    {
-   module()->C_GenerateRandom(m_session.get().handle(), output, length);
+   module()->C_GenerateRandom(m_session.get().handle(), output, Ulong(length));
    }
 
 void PKCS11_RNG::add_entropy(const uint8_t in[], std::size_t length)
    {
-   module()->C_SeedRandom(m_session.get().handle(), const_cast<uint8_t*>(in), length);
+   module()->C_SeedRandom(m_session.get().handle(), const_cast<uint8_t*>(in), Ulong(length));
    }
 
 }

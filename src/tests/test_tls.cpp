@@ -191,7 +191,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
             else
                result.test_failure("Accepted invalid TLS-CBC ciphertext");
             }
-         catch(std::exception& e)
+         catch(std::exception&)
             {
             if(is_valid)
                result.test_failure("Rejected valid TLS-CBC ciphertext");

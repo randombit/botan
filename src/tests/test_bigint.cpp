@@ -167,7 +167,7 @@ class BigInt_Unit_Tests final : public Test
 
          for(auto sample : counts)
             {
-            const double count = sample.second;
+            const double count = static_cast<double>(sample.second);
             chi2 += ((count - expected)*(count - expected)) / expected;
             }
 

@@ -216,20 +216,21 @@ uint64_t OS::get_system_timestamp_ns()
 
 size_t OS::system_page_size()
    {
+   const size_t default_page_size = 4096;
+
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    long p = ::sysconf(_SC_PAGESIZE);
    if(p > 1)
       return static_cast<size_t>(p);
    else
-      return 4096;
+      return default_page_size;
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    SYSTEM_INFO sys_info;
    ::GetSystemInfo(&sys_info);
    return sys_info.dwPageSize;
+#else
+   return default_page_size;
 #endif
-
-   // default value
-   return 4096;
    }
 
 size_t OS::get_memory_locking_limit()

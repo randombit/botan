@@ -66,7 +66,7 @@ class MechanismWrapper final
       inline void set_ecdh_salt(const uint8_t salt[], size_t salt_len)
          {
          m_parameters->ecdh_params.pSharedData = const_cast<uint8_t*>(salt);
-         m_parameters->ecdh_params.ulSharedDataLen = salt_len;
+         m_parameters->ecdh_params.ulSharedDataLen = static_cast<Ulong>(salt_len);
          }
 
       /**
@@ -77,7 +77,7 @@ class MechanismWrapper final
       inline void set_ecdh_other_key(const uint8_t other_key[], size_t other_key_len)
          {
          m_parameters->ecdh_params.pPublicData = const_cast<uint8_t*>(other_key);
-         m_parameters->ecdh_params.ulPublicDataLen = other_key_len;
+         m_parameters->ecdh_params.ulPublicDataLen = static_cast<Ulong>(other_key_len);
          }
 
       /// @return a pointer to the CK_MECHANISM struct that can be passed to the cryptoki functions

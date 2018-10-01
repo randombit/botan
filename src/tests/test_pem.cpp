@@ -19,9 +19,7 @@ class PEM_Tests : public Test
          {
          Test::Result result("PEM encoding");
 
-         std::vector<uint8_t> vec(5);
-         for(size_t i = 0; i != vec.size(); ++i)
-            vec[i] = i;
+         std::vector<uint8_t> vec = { 0, 1, 2, 3, 4 };
 
          const std::string pem1 = Botan::PEM_Code::encode(vec, "BUNNY", 3);
 
