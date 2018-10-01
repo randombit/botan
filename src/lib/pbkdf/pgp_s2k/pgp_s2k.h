@@ -117,7 +117,7 @@ class BOTAN_PUBLIC_API(2,8) RFC4880_S2K final : public PasswordHash
       size_t iterations() const override { return m_iterations; }
 
       void derive_key(uint8_t out[], size_t out_len,
-                      const char* password, const size_t password_len,
+                      const char* password, size_t password_len,
                       const uint8_t salt[], size_t salt_len) const override;
 
    private:

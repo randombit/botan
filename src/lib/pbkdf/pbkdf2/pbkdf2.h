@@ -49,7 +49,7 @@ class BOTAN_PUBLIC_API(2,8) PBKDF2 final : public PasswordHash
       std::string to_string() const override;
 
       void derive_key(uint8_t out[], size_t out_len,
-                      const char* password, const size_t password_len,
+                      const char* password, size_t password_len,
                       const uint8_t salt[], size_t salt_len) const override;
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
