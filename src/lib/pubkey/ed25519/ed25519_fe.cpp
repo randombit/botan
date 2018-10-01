@@ -445,16 +445,16 @@ FE_25519 FE_25519::sqr_iter(const FE_25519& f, size_t iter)
       carry<25,19>(h9, h0);
       carry<26>(h0, h1);
 
-      f0 = h0;
-      f1 = h1;
-      f2 = h2;
-      f3 = h3;
-      f4 = h4;
-      f5 = h5;
-      f6 = h6;
-      f7 = h7;
-      f8 = h8;
-      f9 = h9;
+      f0 = static_cast<int32_t>(h0);
+      f1 = static_cast<int32_t>(h1);
+      f2 = static_cast<int32_t>(h2);
+      f3 = static_cast<int32_t>(h3);
+      f4 = static_cast<int32_t>(h4);
+      f5 = static_cast<int32_t>(h5);
+      f6 = static_cast<int32_t>(h6);
+      f7 = static_cast<int32_t>(h7);
+      f8 = static_cast<int32_t>(h8);
+      f9 = static_cast<int32_t>(h9);
       }
 
    return FE_25519(f0, f1, f2, f3, f4, f5, f6, f7, f8, f9);
@@ -627,16 +627,16 @@ void FE_25519::from_bytes(const uint8_t s[32])
    carry<26>(h6, h7);
    carry<26>(h8, h9);
 
-   m_fe[0] = h0;
-   m_fe[1] = h1;
-   m_fe[2] = h2;
-   m_fe[3] = h3;
-   m_fe[4] = h4;
-   m_fe[5] = h5;
-   m_fe[6] = h6;
-   m_fe[7] = h7;
-   m_fe[8] = h8;
-   m_fe[9] = h9;
+   m_fe[0] = static_cast<int32_t>(h0);
+   m_fe[1] = static_cast<int32_t>(h1);
+   m_fe[2] = static_cast<int32_t>(h2);
+   m_fe[3] = static_cast<int32_t>(h3);
+   m_fe[4] = static_cast<int32_t>(h4);
+   m_fe[5] = static_cast<int32_t>(h5);
+   m_fe[6] = static_cast<int32_t>(h6);
+   m_fe[7] = static_cast<int32_t>(h7);
+   m_fe[8] = static_cast<int32_t>(h8);
+   m_fe[9] = static_cast<int32_t>(h9);
    }
 
 /*

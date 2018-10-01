@@ -2002,7 +2002,7 @@ inline uint8_t equal(int8_t b, int8_t c)
    uint32_t y = x; /* 0: yes; 1..255: no */
    y -= 1; /* 4294967295: yes; 0..254: no */
    y >>= 31; /* 1: yes; 0: no */
-   return y;
+   return static_cast<uint8_t>(y);
    }
 
 inline int32_t equal32(int8_t b, int8_t c)
@@ -2014,7 +2014,7 @@ inline uint8_t negative(int8_t b)
    {
    uint64_t x = b; /* 18446744073709551361..18446744073709551615: yes; 0..255: no */
    x >>= 63; /* 1: yes; 0: no */
-   return x;
+   return static_cast<uint8_t>(x);
    }
 
 inline void ge_precomp_0(ge_precomp* h)

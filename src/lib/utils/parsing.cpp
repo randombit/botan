@@ -347,8 +347,9 @@ std::string tolower_string(const std::string& in)
    std::string s = in;
    for(size_t i = 0; i != s.size(); ++i)
       {
-      if(std::isalpha(static_cast<unsigned char>(s[i])))
-         s[i] = std::tolower(static_cast<unsigned char>(s[i]));
+      const int cu = static_cast<unsigned char>(s[i]);
+      if(std::isalpha(cu))
+         s[i] = static_cast<char>(std::tolower(cu));
       }
    return s;
    }

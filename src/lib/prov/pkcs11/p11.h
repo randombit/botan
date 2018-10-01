@@ -1204,7 +1204,10 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                      const std::vector<uint8_t, TAlloc>& pin,
                      ReturnValue* return_value = ThrowException) const
          {
-         return C_InitPIN(session, reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(pin.data())), pin.size(), return_value);
+         return C_InitPIN(session,
+                          reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(pin.data())),
+                          static_cast<Ulong>(pin.size()),
+                          return_value);
          }
 
       /**
@@ -1814,7 +1817,10 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          encrypted_data.resize(encrypted_size);
-         return C_Encrypt(session, const_cast<Byte*>(plaintext_data.data()), plaintext_data.size(), encrypted_data.data(),
+         return C_Encrypt(session,
+                          const_cast<Byte*>(plaintext_data.data()),
+                          static_cast<Ulong>(plaintext_data.size()),
+                          encrypted_data.data(),
                           &encrypted_size, return_value);
          }
 
@@ -1944,7 +1950,10 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          decrypted_data.resize(decrypted_size);
-         return C_Decrypt(session, const_cast<Byte*>(encrypted_data.data()), encrypted_data.size(), decrypted_data.data(),
+         return C_Decrypt(session,
+                          const_cast<Byte*>(encrypted_data.data()),
+                          static_cast<Ulong>(encrypted_data.size()),
+                          decrypted_data.data(),
                           &decrypted_size, return_value);
          }
 
@@ -2169,13 +2178,23 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                   ReturnValue* return_value = ThrowException) const
          {
          Ulong signature_size = 0;
-         if(!C_Sign(session, const_cast<Byte*>((data.data())), data.size(), nullptr, &signature_size, return_value))
+         if(!C_Sign(session,
+                    const_cast<Byte*>((data.data())),
+                    static_cast<Ulong>(data.size()),
+                    nullptr,
+                    &signature_size,
+                    return_value))
             {
             return false;
             }
 
          signature.resize(signature_size);
-         return C_Sign(session, const_cast<Byte*>(data.data()), data.size(), signature.data(), &signature_size, return_value);
+         return C_Sign(session,
+                       const_cast<Byte*>(data.data()),
+                       static_cast<Ulong>(data.size()),
+                       signature.data(),
+                       &signature_size,
+                       return_value);
          }
 
       /**
@@ -2392,7 +2411,12 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                     std::vector<uint8_t, TAllocB>& signature,
                     ReturnValue* return_value = ThrowException) const
          {
-         return C_Verify(session, const_cast<Byte*>(data.data()), data.size(), signature.data(), signature.size(), return_value);
+         return C_Verify(session,
+                         const_cast<Byte*>(data.data()),
+                         static_cast<Ulong>(data.size()),
+                         signature.data(),
+                         static_cast<Ulong>(signature.size()),
+                         return_value);
          }
 
       /**
@@ -2434,7 +2458,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                           std::vector<uint8_t, TAlloc> part,
                           ReturnValue* return_value = ThrowException) const
          {
-         return C_VerifyUpdate(session, part.data(), part.size(), return_value);
+         return C_VerifyUpdate(session, part.data(), static_cast<Ulong>(part.size()), return_value);
          }
 
       /**
