@@ -78,14 +78,14 @@ inline void unpoison(T& p)
 /* Mask generation */
 
 template<typename T>
-inline T expand_top_bit(T a)
+inline constexpr T expand_top_bit(T a)
    {
    static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
    return static_cast<T>(0) - (a >> (sizeof(T)*8-1));
    }
 
 template<typename T>
-inline T is_zero(T x)
+inline constexpr T is_zero(T x)
    {
    static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
    return expand_top_bit<T>(~x & (x - 1));
@@ -100,51 +100,51 @@ inline T is_zero(T x)
 * select.
 */
 template<typename T>
-inline T expand_mask(T x)
+inline constexpr T expand_mask(T x)
    {
    static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
    return ~is_zero(x);
    }
 
 template<typename T>
-inline T select(T mask, T from0, T from1)
+inline constexpr T select(T mask, T from0, T from1)
    {
    static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
    return static_cast<T>((from0 & mask) | (from1 & ~mask));
    }
 
 template<typename T>
-inline T select2(T mask0, T val0, T mask1, T val1, T val2)
+inline constexpr T select2(T mask0, T val0, T mask1, T val1, T val2)
    {
    return select<T>(mask0, val0, select<T>(mask1, val1, val2));
    }
 
 template<typename T>
-inline T select3(T mask0, T val0, T mask1, T val1, T mask2, T val2, T val3)
+inline constexpr T select3(T mask0, T val0, T mask1, T val1, T mask2, T val2, T val3)
    {
    return select2<T>(mask0, val0, mask1, val1, select<T>(mask2, val2, val3));
    }
 
 template<typename PredT, typename ValT>
-inline ValT val_or_zero(PredT pred_val, ValT val)
+inline constexpr ValT val_or_zero(PredT pred_val, ValT val)
    {
    return select(CT::expand_mask<ValT>(pred_val), val, static_cast<ValT>(0));
    }
 
 template<typename T>
-inline T is_equal(T x, T y)
+inline constexpr T is_equal(T x, T y)
    {
    return is_zero<T>(x ^ y);
    }
 
 template<typename T>
-inline T is_less(T a, T b)
+inline constexpr T is_less(T a, T b)
    {
    return expand_top_bit<T>(a ^ ((a^b) | ((a-b)^a)));
    }
 
 template<typename T>
-inline T is_lte(T a, T b)
+inline constexpr T is_lte(T a, T b)
    {
    return CT::is_less(a, b) | CT::is_equal(a, b);
    }

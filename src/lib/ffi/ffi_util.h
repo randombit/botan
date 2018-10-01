@@ -84,7 +84,7 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    }
 
 #define BOTAN_FFI_DO(T, obj, param, block)                              \
-   apply_fn(obj, BOTAN_CURRENT_FUNCTION,                                \
+   apply_fn(obj, __func__,                                \
             [=](T& param) -> int { do { block } while(0); return BOTAN_FFI_SUCCESS; })
 
 template<typename T, uint32_t M>
@@ -111,7 +111,7 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
       }
    }
 
-#define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, BOTAN_CURRENT_FUNCTION)
+#define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, __func__)
 
 inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len)
    {

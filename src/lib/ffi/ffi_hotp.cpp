@@ -32,7 +32,7 @@ int botan_hotp_init(botan_hotp_t* hotp,
    *hotp = nullptr;
 
 #if defined(BOTAN_HAS_HOTP)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
 
       *hotp = new botan_hotp_struct(
          new Botan::HOTP(key, key_len, hash_algo, digits));

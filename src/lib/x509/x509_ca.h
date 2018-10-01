@@ -199,10 +199,8 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       X509_CA(const X509_CA&) = delete;
       X509_CA& operator=(const X509_CA&) = delete;
 
-#if !defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
       X509_CA(X509_CA&&) = default;
       X509_CA& operator=(X509_CA&&) = default;
-#endif
 
       ~X509_CA();
 

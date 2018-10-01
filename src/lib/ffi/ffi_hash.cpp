@@ -16,7 +16,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_hash_struct, Botan::HashFunction, 0x1F0A4F84);
 
 int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(hash == nullptr || hash_name == nullptr || *hash_name == 0)
          return BOTAN_FFI_ERROR_NULL_POINTER;
       if(flags != 0)

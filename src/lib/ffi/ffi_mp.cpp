@@ -19,7 +19,7 @@ using namespace Botan_FFI;
 
 int botan_mp_init(botan_mp_t* mp_out)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(mp_out == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 

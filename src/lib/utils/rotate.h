@@ -18,7 +18,7 @@ namespace Botan {
 * @return input rotated left by ROT bits
 */
 template<size_t ROT, typename T>
-inline T rotl(T input)
+inline constexpr T rotl(T input)
    {
    static_assert(ROT > 0 && ROT < 8*sizeof(T), "Invalid rotation constant");
    return static_cast<T>((input << ROT) | (input >> (8*sizeof(T) - ROT)));
@@ -30,7 +30,7 @@ inline T rotl(T input)
 * @return input rotated right by ROT bits
 */
 template<size_t ROT, typename T>
-inline T rotr(T input)
+inline constexpr T rotr(T input)
    {
    static_assert(ROT > 0 && ROT < 8*sizeof(T), "Invalid rotation constant");
    return static_cast<T>((input >> ROT) | (input << (8*sizeof(T) - ROT)));

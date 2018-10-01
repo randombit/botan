@@ -18,7 +18,7 @@ Module::Module(const std::string& file_path, C_InitializeArgs init_args)
    reload(init_args);
    }
 
-Module::~Module() BOTAN_NOEXCEPT
+Module::~Module() noexcept
    {
    try
       {

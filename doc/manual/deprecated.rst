@@ -29,8 +29,6 @@ in the source.
   MessageAuthenticationCode and HashFunction. So this only affects you if you
   are directly referencing `Botan::Buffered_Computation` in some way.
 
-- Support for Visual C++ 2013
-
 - Platform support for Google Native Client
 
 - Support for PathScale and HP compilers

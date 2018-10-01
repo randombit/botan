@@ -90,7 +90,7 @@ ObjectFinder::ObjectFinder(Session& session, const std::vector<Attribute>& searc
                                search_template.size());
    }
 
-ObjectFinder::~ObjectFinder() BOTAN_NOEXCEPT
+ObjectFinder::~ObjectFinder() noexcept
    {
    try
       {

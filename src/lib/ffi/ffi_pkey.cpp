@@ -28,7 +28,7 @@ int botan_privkey_create(botan_privkey_t* key_obj,
                          const char* algo_params,
                          botan_rng_t rng_obj)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(key_obj == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -62,7 +62,7 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
 
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DataSource_Memory src(bits, len);
 
       std::unique_ptr<Botan::Private_Key> pkcs8;
@@ -95,7 +95,7 @@ int botan_pubkey_load(botan_pubkey_t* key,
    {
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DataSource_Memory src(bits, bits_len);
       std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(src));
 
@@ -114,7 +114,7 @@ int botan_pubkey_destroy(botan_pubkey_t key)
 
 int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::Public_Key>
          pubkey(Botan::X509::load_key(Botan::X509::BER_encode(safe_get(key_obj))));
 
@@ -265,7 +265,7 @@ int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash_fn,
 int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs_id[], size_t* pkcs_id_len)
    {
 #if defined(BOTAN_HAS_HASH_ID)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const std::vector<uint8_t> hash_id = Botan::pkcs_hash_id(hash_name);
       return write_output(pkcs_id, pkcs_id_len, hash_id.data(), hash_id.size());
       });

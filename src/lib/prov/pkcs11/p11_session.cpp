@@ -36,7 +36,7 @@ Session::Session(Slot& slot, SessionHandle handle)
       }
    }
 
-Session::~Session() BOTAN_NOEXCEPT
+Session::~Session() noexcept
    {
    try
       {

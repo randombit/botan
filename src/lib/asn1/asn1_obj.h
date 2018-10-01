@@ -102,11 +102,9 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       BER_Object& operator=(const BER_Object& other) = default;
 
-#if !defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
       BER_Object(BER_Object&& other) = default;
 
       BER_Object& operator=(BER_Object&& other) = default;
-#endif
 
       bool is_set() const { return type_tag != NO_OBJECT; }
 

@@ -136,7 +136,7 @@ void* Memory_Pool::allocate(size_t req)
    return nullptr;
    }
 
-bool Memory_Pool::deallocate(void* p, size_t n) BOTAN_NOEXCEPT
+bool Memory_Pool::deallocate(void* p, size_t n) noexcept
    {
    if(!ptr_in_pool(m_pool, m_pool_size, p, n))
       return false;

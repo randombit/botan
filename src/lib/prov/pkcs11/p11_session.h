@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(2,0) Session final
       Session& operator=(const Session& other) = delete;
 
       /// Logout user and close the session on destruction
-      ~Session() BOTAN_NOEXCEPT;
+      ~Session() noexcept;
 
       /// @return a reference to the slot
       inline const Slot& slot() const

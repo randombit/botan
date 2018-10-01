@@ -49,7 +49,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_ALIGNAS(64)
+alignas(64)
 const uint8_t SE[256] = {
    0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B,
    0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0,
@@ -74,7 +74,7 @@ const uint8_t SE[256] = {
    0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F,
    0xB0, 0x54, 0xBB, 0x16 };
 
-BOTAN_ALIGNAS(64)
+alignas(64)
 const uint8_t SD[256] = {
    0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E,
    0x81, 0xF3, 0xD7, 0xFB, 0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87,
@@ -99,15 +99,15 @@ const uint8_t SD[256] = {
    0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63,
    0x55, 0x21, 0x0C, 0x7D };
 
-inline uint8_t xtime(uint8_t s) { return static_cast<uint8_t>(s << 1) ^ ((s >> 7) * 0x1B); }
-inline uint8_t xtime4(uint8_t s) { return xtime(xtime(s)); }
-inline uint8_t xtime8(uint8_t s) { return xtime(xtime(xtime(s))); }
+inline constexpr uint8_t xtime(uint8_t s) { return static_cast<uint8_t>(s << 1) ^ ((s >> 7) * 0x1B); }
+inline constexpr uint8_t xtime4(uint8_t s) { return xtime(xtime(s)); }
+inline constexpr uint8_t xtime8(uint8_t s) { return xtime(xtime(xtime(s))); }
 
-inline uint8_t xtime3(uint8_t s) { return xtime(s) ^ s; }
-inline uint8_t xtime9(uint8_t s) { return xtime8(s) ^ s; }
-inline uint8_t xtime11(uint8_t s) { return xtime8(s) ^ xtime(s) ^ s; }
-inline uint8_t xtime13(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ s; }
-inline uint8_t xtime14(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ xtime(s); }
+inline constexpr uint8_t xtime3(uint8_t s) { return xtime(s) ^ s; }
+inline constexpr uint8_t xtime9(uint8_t s) { return xtime8(s) ^ s; }
+inline constexpr uint8_t xtime11(uint8_t s) { return xtime8(s) ^ xtime(s) ^ s; }
+inline constexpr uint8_t xtime13(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ s; }
+inline constexpr uint8_t xtime14(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ xtime(s); }
 
 inline uint32_t SE_word(uint32_t x)
    {

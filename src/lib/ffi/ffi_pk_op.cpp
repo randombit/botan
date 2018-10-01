@@ -31,7 +31,7 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
    if(flags != 0)
       return BOTAN_FFI_ERROR_BAD_FLAG;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
 
       std::unique_ptr<Botan::PK_Encryptor> pk(new Botan::PK_Encryptor_EME(safe_get(key_obj), Botan::system_rng(), padding));
@@ -76,7 +76,7 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
    if(flags != 0)
       return BOTAN_FFI_ERROR_BAD_FLAG;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
 
       std::unique_ptr<Botan::PK_Decryptor> pk(new Botan::PK_Decryptor_EME(safe_get(key_obj), Botan::system_rng(), padding));
@@ -120,7 +120,7 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
    if(flags != 0)
       return BOTAN_FFI_ERROR_BAD_FLAG;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
 
       std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj), Botan::system_rng(), hash));
@@ -165,7 +165,7 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op,
    if(flags != 0)
       return BOTAN_FFI_ERROR_BAD_FLAG;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
       std::unique_ptr<Botan::PK_Verifier> pk(new Botan::PK_Verifier(safe_get(key_obj), hash));
       *op = new botan_pk_op_verify_struct(pk.release());
@@ -206,7 +206,7 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op,
    if(flags != 0)
       return BOTAN_FFI_ERROR_BAD_FLAG;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
       std::unique_ptr<Botan::PK_Key_Agreement> pk(new Botan::PK_Key_Agreement(safe_get(key_obj), Botan::system_rng(), kdf));
       *op = new botan_pk_op_ka_struct(pk.release());

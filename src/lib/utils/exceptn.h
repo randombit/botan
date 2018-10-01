@@ -22,7 +22,7 @@ class BOTAN_PUBLIC_API(2,0) Exception : public std::exception
    public:
       Exception(const char* prefix, const std::string& msg);
       explicit Exception(const std::string& msg);
-      const char* what() const BOTAN_NOEXCEPT override { return m_msg.c_str(); }
+      const char* what() const noexcept override { return m_msg.c_str(); }
    protected:
       Exception(const std::string& msg, const std::exception& e);
    private:
