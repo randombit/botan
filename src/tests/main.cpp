@@ -97,7 +97,17 @@ int main(int argc, char* argv[])
 
       Botan_Tests::Test_Runner tests(std::cout);
 
-      return tests.run(opts);
+      int rc = tests.run(opts);
+
+#if defined(BOTAN_HAS_OPENSSL)
+      if(opts.provider().empty() || opts.provider() == "openssl")
+         {
+         ::ERR_free_strings();
+         ::ERR_remove_thread_state(nullptr);
+         }
+#endif
+
+      return rc;
       }
    catch(std::exception& e)
       {

@@ -171,15 +171,15 @@ class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_w
          std::unique_ptr<ECDSA_SIG, std::function<void (ECDSA_SIG*)>> sig(nullptr, ECDSA_SIG_free);
          sig.reset(::ECDSA_SIG_new());
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+         sig->r = BN_bin2bn(sig_bytes              , sig_len / 2, sig->r);
+         sig->s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, sig->s);
+#else
          BIGNUM* r = BN_bin2bn(sig_bytes              , sig_len / 2, nullptr);
          BIGNUM* s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, nullptr);
          if(r == nullptr || s == nullptr)
             throw OpenSSL_Error("BN_bin2bn sig s");
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
-         sig->r = r;
-         sig->s = s;
-#else
          ECDSA_SIG_set0(sig.get(), r, s);
 #endif
 
@@ -278,7 +278,15 @@ make_openssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params)
       {
       throw Lookup_Error("OpenSSL ECDSA does not support this curve");
       }
-   return std::unique_ptr<PK_Ops::Verification>(new OpenSSL_ECDSA_Verification_Operation(key, params, nid));
+
+   try
+      {
+      return std::unique_ptr<PK_Ops::Verification>(new OpenSSL_ECDSA_Verification_Operation(key, params, nid));
+      }
+   catch(OpenSSL_Error&)
+      {
+      throw Lookup_Error("OpenSSL ECDSA does not support this key");
+      }
    }
 
 std::unique_ptr<PK_Ops::Signature>
