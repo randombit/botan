@@ -103,9 +103,6 @@ branches:
     - release-2
     - coverity_scan
 
-notifications:
-  email: botan-commits@lists.randombit.net
-
 git:
   depth: 5
 
