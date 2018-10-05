@@ -2518,6 +2518,8 @@ class AmalgamationGenerator(object):
         internal_headers = []
 
         def known_isa_header(hdr):
+            if self._options.single_amalgamation_file:
+                return None
             if hdr == 'simd_avx2.h':
                 return 'avx2'
             return None
