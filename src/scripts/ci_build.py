@@ -77,6 +77,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         # much faster compiling via the amalgamation than individual files.
         flags += ['--amalgamation']
 
+        if target_cc == 'gcc':
+            flags += ['--single-amalgamation-file']
+
     if target in ['bsi', 'nist']:
         # Arbitrarily test disable static on module policy builds
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
