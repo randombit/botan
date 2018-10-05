@@ -6,6 +6,12 @@ Version 2.9.0, Not Yet Released
 
 * Support for Visual C++ 2013 has been removed (GH #1557 #1697)
 
+* Resolve a memory leak when verifying ECDSA signatures with versions
+  of OpenSSL before 1.1.0 (GH #1698)
+
+* Fix a bug introduced in 2.8.0 that caused compilation failure if using
+  a single amalgamation file with AVX2 enabled. (GH #1700)
+
 Version 2.8.0, 2018-10-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
