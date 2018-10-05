@@ -293,4 +293,6 @@ std::string Serpent::provider() const
    return "base";
    }
 
+#undef key_xor
+
 }
