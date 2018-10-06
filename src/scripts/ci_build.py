@@ -77,7 +77,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         # much faster compiling via the amalgamation than individual files.
         flags += ['--amalgamation']
 
-        if target_cc == 'clang':
+        if target_cc == 'msvc':
             flags += ['--single-amalgamation-file']
 
     if target in ['bsi', 'nist']:
