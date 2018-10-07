@@ -68,7 +68,7 @@ llvm    -> "-emit-llvm -fno-use-cxa-atexit"
 </cpu_flags>
 
 <mach_abi_linking>
-all!haiku -> "-pthread"
+all!haiku,llvm -> "-pthread"
 
 openmp  -> "-fopenmp"
 

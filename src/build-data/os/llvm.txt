@@ -1,8 +1,13 @@
 
 obj_suffix bc
 
+static_suffix bc
+program_suffix .bc
+
 ar_command llvm-link
 ar_options -o
+
+use_stack_protector no
 
 <target_features>
 filesystem
