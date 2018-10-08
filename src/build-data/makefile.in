@@ -3,6 +3,7 @@
 CXX            = %{cxx}
 LINKER         = %{linker}
 AR             = %{ar_command}
+AR_OPTIONS     = %{ar_options}
 PYTHON_EXE     = %{python_exe}
 
 # Compiler Flags
@@ -92,7 +93,7 @@ fuzzer_corpus_zip: fuzzer_corpus
 %{if build_static_lib}
 
 %{out_dir}/%{static_lib_name}: $(LIBOBJS)
-	$(AR) %{ar_options} %{ar_output_to}$@ $(LIBOBJS)
+	$(AR) $(AR_OPTIONS) %{ar_output_to}$@ $(LIBOBJS)
 
 %{endif}
 
