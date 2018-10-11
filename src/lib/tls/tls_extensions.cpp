@@ -527,14 +527,36 @@ std::vector<uint8_t> Certificate_Status_Request::serialize() const
 
 Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
                                                        uint16_t extension_size) :
-   m_server_side(false)
+   m_server_side(false) // This ctor is used by both client and server, so the information is wrong here. 
+                        // However, m_server_side is only evaluated when sending the object, thus the error 
+                        // made will not matter. However, a better modelling would be nice.
    {
    if(extension_size > 0)
       {
       const uint8_t type = reader.get_byte();
       if(type == 1)
          {
-         reader.discard_next(extension_size - 1); // fixme
+           extension_size -= 1;
+           size_t len_resp_id_list = reader.get_uint16_t();  
+           extension_size -= 2;
+           if(len_resp_id_list + 2 > extension_size)
+           {
+             throw Decoding_Error("Bad size of responder id list in Certificate_Status_Request extension");
+           }
+           m_ocsp_names = reader.get_fixed<uint8_t>(len_resp_id_list);
+           extension_size -= len_resp_id_list;
+           size_t len_requ_ext = reader.get_uint16_t();
+           extension_size -= 2;
+           if(len_requ_ext > extension_size)
+           {
+             throw Decoding_Error("Bad size of extensions in Certificate_Status_Request extension");
+           }
+           m_extension_bytes = reader.get_fixed<uint8_t>(len_requ_ext );
+           extension_size -= len_requ_ext;
+           if(extension_size != 0)
+           {
+             throw Decoding_Error("trailing bytes in Certificate_Status_Request extension");
+           }
          }
       else
          {
@@ -543,7 +565,7 @@ Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
       }
    }
 
-Certificate_Status_Request::Certificate_Status_Request(const std::vector<X509_DN>& ocsp_responder_ids,
+Certificate_Status_Request::Certificate_Status_Request(const std::vector<uint8_t>& ocsp_responder_ids,
                                                        const std::vector<std::vector<uint8_t>>& ocsp_key_ids) :
    m_ocsp_names(ocsp_responder_ids),
    m_ocsp_keys(ocsp_key_ids),

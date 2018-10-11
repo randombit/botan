@@ -826,13 +826,20 @@ void Server::session_create(Server_Handshake_State& pending_state,
       pending_state.server_certs(new Certificate(pending_state.handshake_io(),
                                                  pending_state.hash(),
                                                  cert_chains[algo_used]));
-      if(pending_state.client_hello()->supports_cert_status_message() && callbacks().tls_srv_provoide_cert_status_response().size() > 0)
+
+      if(pending_state.client_hello()->supports_cert_status_message())
       {
-        pending_state.server_cert_status(new Certificate_Status(
-              pending_state.handshake_io(),
-              pending_state.hash(),
-              callbacks().tls_srv_provoide_cert_status_response()
-              )); 
+        Certificate_Status_Request * csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
+        // csr is non-null if client_hello()->supports_cert_status_message()
+        std::vector<uint8_t> resp_bytes = callbacks().tls_srv_provoide_cert_status_response(cert_chains[algo_used], *csr);
+        if(resp_bytes.size() > 0)
+        {
+          pending_state.server_cert_status(new Certificate_Status(
+                pending_state.handshake_io(),
+                pending_state.hash(),
+                resp_bytes 
+                )); 
+        }
       }
 
       private_key = m_creds.private_key_for(
