@@ -12,6 +12,7 @@
 
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
+#include <botan/tls_extensions.h>
 #include <botan/pubkey.h>
 #include <functional>
 
@@ -19,6 +20,7 @@ namespace Botan {
 
 class Certificate_Store;
 class X509_Certificate;
+
 
 namespace OCSP {
 
@@ -149,7 +151,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @return the encoded OCSP response to be sent to the client which indicates the revocation status of the server certificate. Return an empty vector to indicate that no response is available, and thus suppress the Certificate_Status message.
        */
-       virtual std::vector<uint8_t> tls_srv_provoide_cert_status_response() const
+       virtual std::vector<uint8_t> tls_srv_provoide_cert_status_response(std::vector<X509_Certificate> const& , Certificate_Status_Request const& ) const
        {
           return std::vector<uint8_t>();
        }
