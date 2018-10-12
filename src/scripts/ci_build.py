@@ -290,6 +290,11 @@ def parse_args(args):
     parser.add_option('--without-python3', dest='use_python3', action='store_false',
                       help='Disable using python3')
 
+    parser.add_option('--with-pylint3', dest='use_pylint3', action='store_true', default=True,
+                      help='Enable using python3 pylint')
+    parser.add_option('--without-pylint3', dest='use_pylint3', action='store_false',
+                      help='Disable using python3 pylint')
+
     return parser.parse_args(args)
 
 def have_prog(prog):
@@ -320,16 +325,14 @@ def main(args=None):
 
     target = args[1]
 
-    py_interp = 'python'
-
     use_python2 = have_prog('python2')
 
     if options.use_python3 is None:
         use_python3 = have_prog('python3')
     else:
         use_python3 = options.use_python3
-        if use_python3:
-            py_interp = 'python3'
+
+    py_interp = 'python3' if use_python3 else 'python'
 
     if options.cc_bin is None:
         if options.cc == 'gcc':
@@ -401,7 +404,7 @@ def main(args=None):
             if use_python2:
                 cmds.append(['python2', '-m', 'pylint'] + pylint_flags + [py2_flags, target_path])
 
-            if use_python3:
+            if use_python3 and options.use_pylint3:
                 cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags, target_path])
 
     else:

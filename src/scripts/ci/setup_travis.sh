@@ -38,9 +38,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     elif [ "$BUILD_MODE" = "lint" ]; then
         pip install --user pylint==1.9.2
 
-        sudo apt-get install python3-pip
-        pip3 install --user pylint==1.9.2
-
     elif [ "$BUILD_MODE" = "coverage" ]; then
         sudo apt-get -qq update
         sudo apt-get install trousers libtspi-dev
