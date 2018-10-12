@@ -12,4 +12,5 @@ mingw -> ws2_32
 windows -> ws2_32.lib
 haiku -> network
 solaris -> socket,nsl
+qnx -> socket
 </libs>

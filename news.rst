@@ -12,6 +12,8 @@ Version 2.9.0, Not Yet Released
 * Fix a bug introduced in 2.8.0 that caused compilation failure if using
   a single amalgamation file with AVX2 enabled. (GH #1700)
 
+* Fix small issues when building for QNX
+
 Version 2.8.0, 2018-10-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
