@@ -28,6 +28,10 @@
   #include <errno.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+  #include <emscripten/emscripten.h>
+#endif
+
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
   #include <sys/auxv.h>
 #endif
@@ -157,6 +161,10 @@ uint64_t OS::get_high_resolution_clock()
    if(uint64_t cpu_clock = OS::get_processor_timestamp())
       return cpu_clock;
 
+#if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+   return emscripten_get_now();
+#endif
+
    /*
    If we got here either we either don't have an asm instruction
    above, or (for x86) RDTSC is not available at runtime. Try some
@@ -235,7 +243,7 @@ size_t OS::system_page_size()
 
 size_t OS::get_memory_locking_limit()
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(RLIMIT_MEMLOCK)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK) && defined(RLIMIT_MEMLOCK)
    /*
    * If RLIMIT_MEMLOCK is not defined, likely the OS does not support
    * unprivileged mlock calls.
@@ -392,7 +400,8 @@ void OS::free_locked_pages(void* ptr, size_t length)
 #endif
    }
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+
 namespace {
 
 static ::sigjmp_buf g_sigill_jmp_buf;
@@ -403,13 +412,14 @@ void botan_sigill_handler(int)
    }
 
 }
+
 #endif
 
 int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    {
    volatile int probe_result = -3;
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
    struct sigaction old_sigaction;
    struct sigaction sigaction;
 
@@ -453,6 +463,8 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
       probe_result = -1;
       }
 
+#else
+   BOTAN_UNUSED(probe_fn);
 #endif
 
    return probe_result;

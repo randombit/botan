@@ -42,6 +42,7 @@ linux         -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 freebsd       -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 default       -> "$(LINKER)"
 llvm          -> "llvm-link"
+emscripten    -> "em++"
 </binary_link_commands>
 
 <isa_flags>

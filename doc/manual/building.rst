@@ -239,6 +239,22 @@ For Android
 Instructions for building the library on Android can be found
 `here <https://www.danielseither.de/blog/2013/03/building-the-botan-library-for-android/>`_.
 
+Emscripten (WebAssembly)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To build for WebAssembly using Emscripten, try::
+
+  CXX=em++ ./configure.py --cc=clang --cpu=llvm --os=emscripten
+  make
+
+This will produce bitcode files ``botan-test.bc`` and ``botan.bc``
+along with a static archive ``libbotan-2.a`` which can linked with
+other modules.  To convert the tests into a WASM file which can be
+executed on a browser, use::
+
+  em++ -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=0 -s WASM=1 \
+     --preload-file src/tests/data botan-test.bc -o botan-test.html
+
 Other Build-Related Tasks
 ----------------------------------------
 

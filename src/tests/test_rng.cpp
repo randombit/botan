@@ -296,7 +296,11 @@ class Stateful_RNG_Tests : public Test
          pid_t pid = ::fork();
          if(pid == -1)
             {
+#if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+            result.test_note("failed to fork process");
+#else
             result.test_failure("failed to fork process");
+#endif
             return result;
             }
          else if(pid != 0)

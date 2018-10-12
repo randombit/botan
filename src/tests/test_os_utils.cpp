@@ -92,15 +92,15 @@ class OS_Utils_Tests final : public Test
 
          Test::Result result("OS::get_high_resolution_clock");
 
-         uint64_t hr_ts1 = Botan::OS::get_high_resolution_clock();
+         const uint64_t hr_ts1 = Botan::OS::get_high_resolution_clock();
          result.test_ne("high resolution timestamp value is never zero", hr_ts1, 0);
 
-         // do something that consumes a little time
-         Botan::OS::get_process_id();
+         size_t counts = 0;
+         while(counts < 100 && (Botan::OS::get_high_resolution_clock() == hr_ts1))
+            ++counts;
 
-         uint64_t hr_ts2 = Botan::OS::get_high_resolution_clock();
+         result.test_lt("high resolution clock eventually changes value", counts, 128);
 
-         result.test_ne("high resolution timestamp does not duplicate", hr_ts1, hr_ts2);
          return result;
          }
 

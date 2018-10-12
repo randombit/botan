@@ -1,0 +1,16 @@
+
+obj_suffix bc
+
+static_suffix a
+program_suffix .bc
+
+ar_command emar
+ar_options cr
+
+use_stack_protector no
+
+<target_features>
+filesystem
+dev_random
+posix1
+</target_features>

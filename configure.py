@@ -321,6 +321,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     target_group.add_option('--ar-command', dest='ar_command', metavar='AR', default=None,
                             help='set path to static archive creator')
 
+    target_group.add_option('--ar-options', dest='ar_options', metavar='AR_OPTIONS', default=None,
+                            help='set options for ar')
+
     target_group.add_option('--msvc-runtime', metavar='RT', default=None,
                             help='specify MSVC runtime (MT, MD, MTd, MDd)')
 
@@ -630,6 +633,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
 
     if options.ar_command is None:
         options.ar_command = os.getenv('AR')
+    if options.ar_options is None:
+        options.ar_options = os.getenv('AR_OPTIONS')
     if options.compiler_binary is None:
         options.compiler_binary = os.getenv('CXX')
     if options.cxxflags is None:
@@ -1941,7 +1946,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'post_link_cmd': '',
 
         'ar_command': ar_command(),
-        'ar_options': cc.ar_options or osinfo.ar_options,
+        'ar_options': options.ar_options or cc.ar_options or osinfo.ar_options,
         'ar_output_to': cc.ar_output_to,
 
         'link_to': ' '.join(
@@ -2863,11 +2868,15 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
 
-    if options.os == 'llvm' or options.cpu == 'llvm':
+    if options.cpu == 'llvm' or options.os in ['llvm', 'emscripten']:
         if options.compiler != 'clang':
             raise UserError('LLVM target requires using Clang')
-        if options.os != options.cpu:
-            raise UserError('LLVM target requires both CPU and OS be set to llvm')
+
+        if options.cpu != 'llvm':
+            raise UserError('LLVM target requires CPU target set to LLVM bitcode (llvm)')
+
+        if options.os not in ['llvm', 'emscripten']:
+            raise UserError('Target OS is not an LLVM bitcode target')
 
     if options.build_fuzzers is not None:
         if options.build_fuzzers not in ['libfuzzer', 'afl', 'klee', 'test']:

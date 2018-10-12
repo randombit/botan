@@ -11,6 +11,7 @@
 
 #include <botan/base64.h>
 #include <botan/hex.h>
+#include <botan/rng.h>
 
 #include <botan/pk_keys.h>
 #include <botan/x509_key.h>
