@@ -81,7 +81,7 @@ class Name_Constraint_Tests final : public Test
                }
 
             result.test_eq("validation result", path_result.result_string(), std::get<3>(t));
-            results.push_back(result);
+            results.emplace_back(result);
             }
 
          return results;
