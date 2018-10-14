@@ -147,3 +147,8 @@ snail-mail address (S), and Bitcoin address (B).
   N: Erwan Chaussy
   D: Base32, Base64 matching Base32 implementation
   S: France
+
+  N: Daniel Wyatt (on behalf of Ribose Inc)
+  E: daniel.wyatt@ribose.com
+  W: https://www.ribose.com/
+  D: SM3, Streebog, various minor contributions
