@@ -205,35 +205,45 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_S.empty() == false);
 
-   while(blocks >= 2)
+   while(blocks >= 4)
       {
-      uint32_t L0, R0, L1, R1;
-      load_be(in, L0, R0, L1, R1);
+      uint32_t L0, R0, L1, R1, L2, R2, L3, R3;
+      load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
 
       for(size_t r = 0; r != 16; r += 2)
          {
          L0 ^= m_P[r];
          L1 ^= m_P[r];
+         L2 ^= m_P[r];
+         L3 ^= m_P[r];
          R0 ^= BFF(L0, m_S);
          R1 ^= BFF(L1, m_S);
+         R2 ^= BFF(L2, m_S);
+         R3 ^= BFF(L3, m_S);
 
          R0 ^= m_P[r+1];
          R1 ^= m_P[r+1];
+         R2 ^= m_P[r+1];
+         R3 ^= m_P[r+1];
          L0 ^= BFF(R0, m_S);
          L1 ^= BFF(R1, m_S);
+         L2 ^= BFF(R2, m_S);
+         L3 ^= BFF(R3, m_S);
          }
 
       L0 ^= m_P[16]; R0 ^= m_P[17];
       L1 ^= m_P[16]; R1 ^= m_P[17];
+      L2 ^= m_P[16]; R2 ^= m_P[17];
+      L3 ^= m_P[16]; R3 ^= m_P[17];
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out, R0, L0, R1, L1, R2, L2, R3, L3);
 
-      in += 2*BLOCK_SIZE;
-      out += 2*BLOCK_SIZE;
-      blocks -= 2;
+      in += 4*BLOCK_SIZE;
+      out += 4*BLOCK_SIZE;
+      blocks -= 4;
       }
 
-   if(blocks)
+   while(blocks)
       {
       uint32_t L, R;
       load_be(in, L, R);
@@ -250,6 +260,10 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       L ^= m_P[16]; R ^= m_P[17];
 
       store_be(out, R, L);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      blocks--;
       }
    }
 
@@ -260,35 +274,46 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_S.empty() == false);
 
-   while(blocks >= 2)
+   while(blocks >= 4)
       {
-      uint32_t L0, R0, L1, R1;
-      load_be(in, L0, R0, L1, R1);
+      uint32_t L0, R0, L1, R1, L2, R2, L3, R3;
+      load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
 
       for(size_t r = 17; r != 1; r -= 2)
          {
          L0 ^= m_P[r];
          L1 ^= m_P[r];
+         L2 ^= m_P[r];
+         L3 ^= m_P[r];
          R0 ^= BFF(L0, m_S);
          R1 ^= BFF(L1, m_S);
+         R2 ^= BFF(L2, m_S);
+         R3 ^= BFF(L3, m_S);
 
          R0 ^= m_P[r-1];
          R1 ^= m_P[r-1];
+         R2 ^= m_P[r-1];
+         R3 ^= m_P[r-1];
+
          L0 ^= BFF(R0, m_S);
          L1 ^= BFF(R1, m_S);
+         L2 ^= BFF(R2, m_S);
+         L3 ^= BFF(R3, m_S);
          }
 
       L0 ^= m_P[1]; R0 ^= m_P[0];
       L1 ^= m_P[1]; R1 ^= m_P[0];
+      L2 ^= m_P[1]; R2 ^= m_P[0];
+      L3 ^= m_P[1]; R3 ^= m_P[0];
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out, R0, L0, R1, L1, R2, L2, R3, L3);
 
-      in += 2*BLOCK_SIZE;
-      out += 2*BLOCK_SIZE;
-      blocks -= 2;
+      in += 4*BLOCK_SIZE;
+      out += 4*BLOCK_SIZE;
+      blocks -= 4;
       }
 
-   if(blocks)
+   while(blocks)
       {
       uint32_t L, R;
       load_be(in, L, R);
@@ -305,6 +330,10 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       L ^= m_P[1]; R ^= m_P[0];
 
       store_be(out, R, L);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      blocks--;
       }
    }
 
