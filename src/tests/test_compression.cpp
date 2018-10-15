@@ -108,11 +108,11 @@ class Compression_Tests final : public Test
                result.test_lt("Zeros compresses much better than text", c1_z / 8, c1_t);
                result.test_lt("Text compresses much better than random", c1_t / 2, c1_r);
 
-               results.push_back(result);
+               results.emplace_back(result);
                }
             catch(std::exception& e)
                {
-               results.push_back(Test::Result::Failure("testing " + algo, e.what()));
+               results.emplace_back(Test::Result::Failure("testing " + algo, e.what()));
                }
             }
 
@@ -206,11 +206,11 @@ class CompressionCreate_Tests final : public Test
                   }
                result.test_ne("Not the same name after create_or_throw", c2->name(), d2->name());
 
-               results.push_back(result);
+               results.emplace_back(result);
                }
             catch(std::exception& e)
                {
-               results.push_back(Test::Result::Failure("testing " + algo, e.what()));
+               results.emplace_back(Test::Result::Failure("testing " + algo, e.what()));
                }
             }
 
@@ -222,7 +222,7 @@ class CompressionCreate_Tests final : public Test
             result.test_throws("lookup error",
                                "Unavailable Decompression bogocompress",
                                [&]() { Botan::Decompression_Algorithm::create_or_throw("bogocompress"); });
-            results.push_back(result);
+            results.emplace_back(result);
             }
 
          return results;

@@ -21,7 +21,7 @@ AttributeContainer::AttributeContainer(ObjectClass object_class)
 
 void AttributeContainer::add_class(ObjectClass object_class)
    {
-   m_numerics.push_back(static_cast< uint64_t >(object_class));
+   m_numerics.emplace_back(static_cast< uint64_t >(object_class));
    add_attribute(AttributeType::Class, reinterpret_cast< uint8_t* >(&m_numerics.back()), sizeof(ObjectClass));
    }
 

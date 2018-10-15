@@ -425,11 +425,11 @@ class ECIES_Unit_Tests final : public Test
             {
             try
                {
-               results.push_back(fns[ i ]());
+               results.emplace_back(fns[ i ]());
                }
             catch(std::exception& e)
                {
-               results.push_back(Test::Result::Failure("ECIES unit tests " + std::to_string(i), e.what()));
+               results.emplace_back(Test::Result::Failure("ECIES unit tests " + std::to_string(i), e.what()));
                }
             }
 
