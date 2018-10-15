@@ -17,7 +17,8 @@ namespace {
 class Prime_Sieve final
    {
    public:
-      Prime_Sieve(const BigInt& init_value) : m_sieve(PRIME_TABLE_SIZE)
+      Prime_Sieve(const BigInt& init_value, size_t sieve_size) :
+         m_sieve(std::min(sieve_size, PRIME_TABLE_SIZE))
          {
          for(size_t i = 0; i != m_sieve.size(); ++i)
             m_sieve[i] = static_cast<uint16_t>(init_value % PRIMES[i]);
@@ -133,7 +134,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
       // Force p to be equal to equiv mod modulo
       p += (modulo - (p % modulo)) + equiv;
 
-      Prime_Sieve sieve(p);
+      Prime_Sieve sieve(p, bits);
 
       size_t counter = 0;
       while(true)
@@ -201,7 +202,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
       p.set_bit(bits - 2);
       p.set_bit(0);
 
-      Prime_Sieve sieve(p);
+      Prime_Sieve sieve(p, bits);
 
       const word step = 2;
 
@@ -269,6 +270,9 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
       Generate q == 2 (mod 3)
 
       Otherwise [q == 1 (mod 3) case], 2*q+1 == 3 (mod 3) and not prime.
+
+      Initially allow a very high error prob (1/2**8) to allow for fast checks,
+      then if 2*q+1 turns out to be a prime go back and strongly check q.
       */
       q = random_prime(rng, bits - 1, 0, 2, 3, 8);
       p = (q << 1) + 1;
