@@ -14,6 +14,9 @@ Version 2.9.0, Not Yet Released
 
 * Fix small issues when building for QNX
 
+* Make configure.py parse_multiple_enable accept an empty list and
+  trailing/extra commas.
+
 Version 2.8.0, 2018-10-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

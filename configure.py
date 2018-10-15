@@ -619,7 +619,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     def parse_multiple_enable(modules):
         if modules is None:
             return []
-        return sorted(set(flatten([s.split(',') for s in modules])))
+
+        return sorted({m for m in flatten([s.split(',') for s in modules]) if m != ''})
 
     options.enabled_modules = parse_multiple_enable(options.enabled_modules)
     options.disabled_modules = parse_multiple_enable(options.disabled_modules)
