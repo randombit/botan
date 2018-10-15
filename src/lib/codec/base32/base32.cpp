@@ -1,13 +1,13 @@
 /*
 * Base32 Encoding and Decoding
 * (C) 2018 Erwan Chaussy
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/base32.h>
 #include <botan/internal/codec_base.h>
-#include <botan/exceptn.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {
@@ -17,6 +17,11 @@ namespace {
 class Base32 final
    {
    public:
+      static inline std::string name() noexcept
+         {
+         return "base32";
+         }
+
       static inline size_t encoding_bytes_in() noexcept
          {
          return m_encoding_bytes_in;
@@ -175,23 +180,7 @@ size_t base32_encode(char out[],
 std::string base32_encode(const uint8_t input[],
                           size_t input_length)
    {
-   const size_t output_length = Base32::encode_max_output(input_length);
-   std::string output(output_length, 0);
-
-   size_t consumed = 0;
-   size_t produced = 0;
-
-   if(output_length > 0)
-      {
-      produced = base32_encode(&output.front(),
-                               input, input_length,
-                               consumed, true);
-      }
-
-   BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
-   BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
-
-   return output;
+   return base_encode_to_string(Base32(), input, input_length);
    }
 
 size_t base32_decode(uint8_t out[],
@@ -209,14 +198,7 @@ size_t base32_decode(uint8_t output[],
                      size_t input_length,
                      bool ignore_ws)
    {
-   size_t consumed = 0;
-   size_t written = base32_decode(output, input, input_length,
-                                  consumed, true, ignore_ws);
-
-   if(consumed != input_length)
-      { throw Invalid_Argument("base32_decode: input did not have full bytes"); }
-
-   return written;
+   return base_decode_full(Base32(), output, input, input_length, ignore_ws);
    }
 
 size_t base32_decode(uint8_t output[],
@@ -230,16 +212,7 @@ secure_vector<uint8_t> base32_decode(const char input[],
                                      size_t input_length,
                                      bool ignore_ws)
    {
-   const size_t output_length = Base32::decode_max_output(input_length);
-   secure_vector<uint8_t> bin(output_length);
-
-   size_t written = base32_decode(bin.data(),
-                                  input,
-                                  input_length,
-                                  ignore_ws);
-
-   bin.resize(written);
-   return bin;
+   return base_decode_to_vec<secure_vector<uint8_t>>(Base32(), input, input_length, ignore_ws);
    }
 
 secure_vector<uint8_t> base32_decode(const std::string& input,

@@ -1,6 +1,7 @@
 /*
 * Base Encoding and Decoding
 * (C) 2018 Erwan Chaussy
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +10,7 @@
 #define BOTAN_BASE_CODEC_H_
 
 #include <botan/secmem.h>
+#include <botan/exceptn.h>
 #include <vector>
 #include <string>
 
@@ -79,10 +81,33 @@ size_t base_encode(Base&& base,
    return output_produced;
    }
 
+
+template <typename Base>
+std::string base_encode_to_string(Base&& base, const uint8_t input[], size_t input_length)
+   {
+   const size_t output_length = base.encode_max_output(input_length);
+   std::string output(output_length, 0);
+
+   size_t consumed = 0;
+   size_t produced = 0;
+
+   if(output_length > 0)
+      {
+      produced = base_encode(base, &output.front(),
+                                   input, input_length,
+                                   consumed, true);
+      }
+
+   BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
+   BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
+
+   return output;
+   }
+
 /**
 * Perform decoding using the base provided
 * @param base object giving access to the encodings specifications
-* @param output an array of at least base.decode_max_output bytes
+* @param output an array of at least Base::decode_max_output bytes
 * @param input some base input
 * @param input_length length of input in bytes
 * @param input_consumed is an output parameter which says how many
@@ -158,6 +183,36 @@ size_t base_decode(Base&& base,
    size_t written = (out_ptr - output) - base.bytes_to_remove(final_truncate);
 
    return written;
+   }
+
+template<typename Base>
+size_t base_decode_full(Base&& base, uint8_t output[], const char input[], size_t input_length, bool ignore_ws)
+   {
+   size_t consumed = 0;
+   const size_t written = base_decode(base, output, input, input_length, consumed, true, ignore_ws);
+
+   if(consumed != input_length)
+      {
+      throw Invalid_Argument(base.name() + " decoding failed, input did not have full bytes");
+      }
+
+   return written;
+   }
+
+template<typename Vector, typename Base>
+Vector base_decode_to_vec(Base&& base,
+                          const char input[],
+                          size_t input_length,
+                          bool ignore_ws)
+   {
+   const size_t output_length = base.decode_max_output(input_length);
+   Vector bin(output_length);
+
+   const size_t written =
+      base_decode_full(base, bin.data(), input, input_length, ignore_ws);
+
+   bin.resize(written);
+   return bin;
    }
 
 }
