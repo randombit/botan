@@ -152,7 +152,7 @@ XTS
 Available if ``BOTAN_HAS_MODE_XTS`` is defined.
 
 XTS is a mode specialized for encrypting disk storage. XTS requires all inputs
-be at least 1 byte longer than the native block size of the cipher.
+be at least one full block (16 bytes for AES).
 
 .. _aead:
 

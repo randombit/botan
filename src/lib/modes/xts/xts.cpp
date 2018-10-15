@@ -45,7 +45,7 @@ size_t XTS_Mode::update_granularity() const
 
 size_t XTS_Mode::minimum_final_size() const
    {
-   return cipher().block_size() + 1;
+   return cipher().block_size();
    }
 
 Key_Length_Specification XTS_Mode::key_spec() const

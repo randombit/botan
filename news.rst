@@ -9,6 +9,11 @@ Version 2.9.0, Not Yet Released
 * Resolve a memory leak when verifying ECDSA signatures with versions
   of OpenSSL before 1.1.0 (GH #1698)
 
+* Fix an error in XTS which prohibited encrypting values which were
+  exactly the same length as the underlying block size. Messages of
+  this size are allowed by the standard and other XTS implementations.
+  (GH #1706)
+
 * Fix a bug introduced in 2.8.0 that caused compilation failure if using
   a single amalgamation file with AVX2 enabled. (GH #1700)
 
