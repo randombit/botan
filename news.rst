@@ -6,6 +6,9 @@ Version 2.9.0, Not Yet Released
 
 * Support for Visual C++ 2013 has been removed (GH #1557 #1697)
 
+* Fix a bug that caused the TLS server to fail if the client supported
+  some signature algorithm which is not supported by Botan (GH #1708)
+
 * Resolve a memory leak when verifying ECDSA signatures with versions
   of OpenSSL before 1.1.0 (GH #1698)
 

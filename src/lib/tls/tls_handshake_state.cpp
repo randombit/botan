@@ -398,6 +398,11 @@ Handshake_State::choose_sig_format(const Private_Key& key,
 
       for(Signature_Scheme scheme : schemes)
          {
+         if(signature_scheme_is_known(scheme) == false)
+            {
+            continue;
+            }
+
          if(signature_algorithm_of_scheme(scheme) == sig_algo)
             {
             if(std::find(allowed.begin(), allowed.end(), scheme) != allowed.end())
@@ -451,7 +456,8 @@ bool supported_algos_include(
    {
    for(Signature_Scheme scheme : schemes)
       {
-      if(hash_function_of_scheme(scheme) == hash_type &&
+      if(signature_scheme_is_known(scheme) &&
+         hash_function_of_scheme(scheme) == hash_type &&
          signature_algorithm_of_scheme(scheme) == key_type)
          {
          return true;
