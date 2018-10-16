@@ -71,7 +71,7 @@ class BOTAN_UNSTABLE_API Extension
 /**
 * Server Name Indicator extension (RFC 3546)
 */
-class Server_Name_Indicator final : public Extension
+class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -98,7 +98,7 @@ class Server_Name_Indicator final : public Extension
 /**
 * SRP identifier extension (RFC 5054)
 */
-class SRP_Identifier final : public Extension
+class BOTAN_UNSTABLE_API SRP_Identifier final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -125,7 +125,7 @@ class SRP_Identifier final : public Extension
 /**
 * Renegotiation Indication Extension (RFC 5746)
 */
-class Renegotiation_Extension final : public Extension
+class BOTAN_UNSTABLE_API Renegotiation_Extension final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -154,7 +154,7 @@ class Renegotiation_Extension final : public Extension
 /**
 * ALPN (RFC 7301)
 */
-class Application_Layer_Protocol_Notification final : public Extension
+class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type() { return TLSEXT_ALPN; }
@@ -190,7 +190,7 @@ class Application_Layer_Protocol_Notification final : public Extension
 /**
 * Session Ticket Extension (RFC 5077)
 */
-class Session_Ticket final : public Extension
+class BOTAN_UNSTABLE_API Session_Ticket final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -230,7 +230,7 @@ class Session_Ticket final : public Extension
 /**
 * Supported Groups Extension (RFC 7919)
 */
-class Supported_Groups final : public Extension
+class BOTAN_UNSTABLE_API Supported_Groups final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -259,7 +259,7 @@ class Supported_Groups final : public Extension
 /**
 * Supported Point Formats Extension (RFC 4492)
 */
-class Supported_Point_Formats final : public Extension
+class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension
    {
    public:
       enum ECPointFormat : uint8_t {
@@ -292,7 +292,7 @@ class Supported_Point_Formats final : public Extension
 /**
 * Signature Algorithms Extension for TLS 1.2 (RFC 5246)
 */
-class Signature_Algorithms final : public Extension
+class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -318,7 +318,7 @@ class Signature_Algorithms final : public Extension
 /**
 * Used to indicate SRTP algorithms for DTLS (RFC 5764)
 */
-class SRTP_Protection_Profiles final : public Extension
+class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -344,7 +344,7 @@ class SRTP_Protection_Profiles final : public Extension
 /**
 * Extended Master Secret Extension (RFC 7627)
 */
-class Extended_Master_Secret final : public Extension
+class BOTAN_UNSTABLE_API Extended_Master_Secret final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -364,7 +364,7 @@ class Extended_Master_Secret final : public Extension
 /**
 * Encrypt-then-MAC Extension (RFC 7366)
 */
-class Encrypt_then_MAC final : public Extension
+class BOTAN_UNSTABLE_API Encrypt_then_MAC final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -384,7 +384,7 @@ class Encrypt_then_MAC final : public Extension
 /**
 * Certificate Status Request (RFC 6066)
 */
-class Certificate_Status_Request final : public Extension
+class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()

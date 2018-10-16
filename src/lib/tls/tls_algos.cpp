@@ -223,7 +223,7 @@ std::string hash_function_of_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("Unknown signature algorithm enum");
+   throw Invalid_State("hash_function_of_scheme: Unknown signature algorithm enum");
    }
 
 const std::vector<Signature_Scheme>& all_signature_schemes()
@@ -323,7 +323,7 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("Unknown signature algorithm enum");
+   throw Invalid_State("signature_algorithm_of_scheme: Unknown signature algorithm enum");
    }
 
 std::string sig_scheme_to_string(Signature_Scheme scheme)
@@ -373,7 +373,7 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("Unknown signature algorithm enum");
+   throw Invalid_State("sig_scheme_to_string: Unknown signature algorithm enum");
    }
 
 std::string padding_string_for_scheme(Signature_Scheme scheme)
@@ -418,7 +418,7 @@ std::string padding_string_for_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("Unknown signature algorithm enum");
+   throw Invalid_State("padding_string_for_scheme: Unknown signature algorithm enum");
    }
 
 }
