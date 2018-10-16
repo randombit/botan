@@ -131,8 +131,8 @@ def cli_is_prime_tests():
     test_cli("is_prime", "548950623407687320763", "548950623407687320763 is probably prime")
 
 def cli_gen_prime_tests():
-    test_cli("gen_prime", "64", "15568813029901363223")
-    test_cli("gen_prime", "128", "287193909494025008847286845478788769439")
+    test_cli("gen_prime", "64", "15568813029901363163")
+    test_cli("gen_prime", "128", "287193909494025008847286845478788766073")
 
 def cli_factor_tests():
     test_cli("factor", "97", "97: 97")
@@ -181,12 +181,12 @@ def cli_bcrypt_tests():
 def cli_gen_dl_group_tests():
 
     pem = """-----BEGIN X9.42 DH PARAMETERS-----
-MIIBJAKBgwS7QodscwdpuPdbHL7YeFP7yRjdqWovbwD+/zSd2OMswe82XnawKsSq
-FSCVAfsG75CBRZ2krSY8X/7zuIh8yoAPs87ZIQJmKJem/MdII7zndfnec+klKtHo
-FX2mOFzmndWJBXv4fwWLHEGIoeCamveL2+q1M8sakNicI7U2vUkX30CxAoGDArnH
-im+KLvXXL4uR97V/yDVx/Vf0Eu8Bqxkx6jFMiabzc4mhCJ+MHh2nH3U67PLAnTgR
-zCQcHevoOKd/ODychEHWwqP26aKCaRUS1DLq8U/qPL7L2pTMLYu27THt7HvKfA0D
-mMo6OGy9uFpJkaLVypD+LKEY/Bc540iRFQcW63ngpo0CFjgPiPatvmWssQw2AuZ9
+MIIBJAKBgwTw7LQiLkXJsrgMVQxTPlWaQlYz/raZ+5RtIZe4YluQgRQGPFADLZ/t
+TOYzuIzZJFOcdKtEtrVkxZRGSkjZwKFKLUD6fzSjoC2M2EHktK/y5HsvxBxL4tKr
+q1ffbyPQi+iBLYTZAXygvxj2vWyrvA+/w4nbt1fStCHTDhWjLWqFpV9nAoGDAKzA
+HUu/IRl7OiUtW/dz36gzEJnaYtz4ZtJl0FG8RJiOe02lD8myqW2sVzYqMvKD0LGx
+x9fdSKC1G+aZ/NWtqrQjb66Daf7b0ddDx+bfWTWJ2dOtZd8IL2rmQQJm+JogDi9i
+huVYFicDNQGzi+nEKAzrZ1L/VxtiSiw/qw0IyOuVtz8CFjgPiPatvmWssQw2AuZ9
 mFvAZ/8wal0=
 -----END X9.42 DH PARAMETERS-----"""
 
@@ -535,6 +535,10 @@ def cli_pk_encrypt_tests():
     rsa_pub_key = os.path.join(tmp_dir, 'rsa.pub')
 
     test_cli("keygen", ["--algo=RSA", "--provider=base", "--params=2048", "--output=%s" % (rsa_priv_key)], "")
+
+    key_hash = "891A3AA179639796B7A6348D2F1C3A8CC7E0FFED38BAE29143DF9B8A55391F28"
+    test_cli("hash", ["--no-fsname", "--algo=SHA-256", rsa_priv_key], key_hash)
+
     test_cli("pkcs8", ["--pub-out", "%s/rsa.priv" % (tmp_dir), "--output=%s" % (rsa_pub_key)], "")
 
     # Generate a random input file
@@ -542,7 +546,7 @@ def cli_pk_encrypt_tests():
 
     # Because we used a fixed DRBG for each invocation the same ctext is generated each time
     rng_output_hash = "32F5E7B61357DE8397EFDA1E598379DFD5EE21767BDF4E2A435F05117B836AC6"
-    ctext_hash = "BEA478C6D30CF0517AF6FC463D7CFDFB11AE2992ED744FF76E67612137780025"
+    ctext_hash = "5F45F360CF431C3E1BC126B1DB20CFE7A869AE7B67484A64F426A6349245EB51"
 
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", input_file], rng_output_hash)
 
