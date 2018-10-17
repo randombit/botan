@@ -59,28 +59,28 @@ bool Protocol_Version::known_version() const
 
 bool Protocol_Version::supports_negotiable_signature_algorithms() const
    {
-   return (m_version == Protocol_Version::TLS_V12 ||
-           m_version == Protocol_Version::DTLS_V12);
+   return (m_version != Protocol_Version::TLS_V10 &&
+           m_version != Protocol_Version::TLS_V11 &&
+           m_version != Protocol_Version::DTLS_V10);
    }
 
 bool Protocol_Version::supports_explicit_cbc_ivs() const
    {
-   return (m_version == Protocol_Version::TLS_V11 ||
-           m_version == Protocol_Version::TLS_V12 ||
-           m_version == Protocol_Version::DTLS_V10 ||
-           m_version == Protocol_Version::DTLS_V12);
+   return (m_version != Protocol_Version::TLS_V10);
    }
 
 bool Protocol_Version::supports_ciphersuite_specific_prf() const
    {
-   return (m_version == Protocol_Version::TLS_V12 ||
-           m_version == Protocol_Version::DTLS_V12);
+   return (m_version != Protocol_Version::TLS_V10 &&
+           m_version != Protocol_Version::TLS_V11 &&
+           m_version != Protocol_Version::DTLS_V10);
    }
 
 bool Protocol_Version::supports_aead_modes() const
    {
-   return (m_version == Protocol_Version::TLS_V12 ||
-           m_version == Protocol_Version::DTLS_V12);
+   return (m_version != Protocol_Version::TLS_V10 &&
+           m_version != Protocol_Version::TLS_V11 &&
+           m_version != Protocol_Version::DTLS_V10);
    }
 
 }
