@@ -472,6 +472,11 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--with-pkg-config', action='store_true', default=None,
+                           help=optparse.SUPPRESS_HELP)
+    build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
+                           help=optparse.SUPPRESS_HELP)
+
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
 
     docs_group.add_option('--with-documentation', action='store_true',
@@ -1370,6 +1375,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'library_name': 'botan{suffix}-{major}',
                 'shared_lib_symlinks': 'yes',
                 'default_compiler': 'gcc',
+                'uses_pkg_config': 'yes',
             })
 
         if lex.ar_command == 'ar' and lex.ar_options == '':
@@ -1418,6 +1424,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.use_stack_protector = (lex.use_stack_protector == "true")
         self.shared_lib_uses_symlinks = (lex.shared_lib_symlinks == 'yes')
         self.default_compiler = lex.default_compiler
+        self.uses_pkg_config = (lex.uses_pkg_config == 'yes')
 
     def matches_name(self, nm):
         if nm in self._aliases:
@@ -1762,11 +1769,13 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
     def innosetup_arch(os_name, arch):
         if os_name == 'windows':
-            inno_arch = {'x86_32': '', 'x86_64': 'x64', 'ia64': 'ia64'}
+            inno_arch = {'x86_32': '',
+                         'x86_64': 'x64',
+                         'ia64': 'ia64'}
             if arch in inno_arch:
                 return inno_arch[arch]
             else:
-                logging.warning('Unknown arch in innosetup_arch %s' % (arch))
+                logging.warning('Unknown arch %s in innosetup_arch' % (arch))
         return None
 
     def configure_command_line():
@@ -1978,11 +1987,10 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'test_mode': options.test_mode,
         'optimize_for_size': options.optimize_for_size,
 
-        'mod_list': sorted([m.basename for m in modules])
-        }
+        'mod_list': sorted([m.basename for m in modules]),
 
-    if options.os != 'windows':
-        variables['botan_pkgconfig'] = os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))
+        'botan_pkgconfig': os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))
+    }
 
     # The name is always set because Windows build needs it
     variables['static_lib_name'] = '%s%s.%s' % (variables['lib_prefix'], variables['libname'],
@@ -2785,6 +2793,8 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
             logging.info('Found rst2man (use --without-rst2man to disable)')
             options.with_rst2man = True
 
+    if options.with_pkg_config is None:
+        options.with_pkg_config = info_os[options.os].uses_pkg_config
 
 # Mutates `options`
 def canonicalize_options(options, info_os, info_arch):
@@ -3018,7 +3028,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
-    if 'botan_pkgconfig' in template_vars:
+    if options.with_pkg_config:
         write_template(template_vars['botan_pkgconfig'], in_build_data('botan.pc.in'))
 
     if options.os == 'windows':
