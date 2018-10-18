@@ -1987,10 +1987,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'test_mode': options.test_mode,
         'optimize_for_size': options.optimize_for_size,
 
-        'mod_list': sorted([m.basename for m in modules]),
-
-        'botan_pkgconfig': os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))
+        'mod_list': sorted([m.basename for m in modules])
     }
+
+    if options.with_pkg_config:
+        variables['botan_pkgconfig'] = os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))
 
     # The name is always set because Windows build needs it
     variables['static_lib_name'] = '%s%s.%s' % (variables['lib_prefix'], variables['libname'],
@@ -2751,6 +2752,14 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
             options.os = system_from_python
         logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
 
+    if options.os not in info_os:
+        def find_canonical_os_name(os_name_variant):
+            for (canonical_os_name, os_info) in info_os.items():
+                if os_info.matches_name(os_name_variant):
+                    return canonical_os_name
+            return os_name_variant # not found
+        options.os = find_canonical_os_name(options.os)
+
     def deduce_compiler_type_from_cc_bin(cc_bin):
         if cc_bin.find('clang') != -1 or cc_bin in ['emcc', 'em++']:
             return 'clang'
@@ -2799,13 +2808,6 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
 # Mutates `options`
 def canonicalize_options(options, info_os, info_arch):
     # pylint: disable=too-many-branches
-    if options.os not in info_os:
-        def find_canonical_os_name(os_name_variant):
-            for (canonical_os_name, os_info) in info_os.items():
-                if os_info.matches_name(os_name_variant):
-                    return canonical_os_name
-            return os_name_variant # not found
-        options.os = find_canonical_os_name(options.os)
 
     # canonical ARCH/CPU
     options.arch = canon_processor(info_arch, options.cpu)
@@ -3028,7 +3030,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
-    if options.with_pkg_config:
+    if 'botan_pkgconfig' in template_vars:
         write_template(template_vars['botan_pkgconfig'], in_build_data('botan.pc.in'))
 
     if options.os == 'windows':
