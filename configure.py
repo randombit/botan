@@ -1368,6 +1368,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'cli_exe_name': 'botan',
                 'lib_prefix': 'lib',
                 'library_name': 'botan{suffix}-{major}',
+                'shared_lib_symlinks': 'yes',
             })
 
         if lex.ar_command == 'ar' and lex.ar_options == '':
@@ -1414,6 +1415,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
         self.use_stack_protector = (lex.use_stack_protector == "true")
+        self.shared_lib_uses_symlinks = (lex.shared_lib_symlinks == 'yes')
 
     def matches_name(self, nm):
         if nm in self._aliases:
@@ -1815,11 +1817,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             return path
         return os.path.join(build_dir, path)
 
-    def shared_lib_uses_symlinks():
-        if options.os in ['windows', 'openbsd']:
-            return False
-        return True
-
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -1886,7 +1883,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'build_coverage' : options.with_coverage_info or options.with_coverage,
 
-        'symlink_shared_lib': options.build_shared_lib and shared_lib_uses_symlinks(),
+        'symlink_shared_lib': options.build_shared_lib and osinfo.shared_lib_uses_symlinks,
 
         'libobj_dir': build_paths.libobj_dir,
         'cliobj_dir': build_paths.cliobj_dir,

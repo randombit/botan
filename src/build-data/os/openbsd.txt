@@ -3,6 +3,8 @@ soname_pattern_base  "lib{libname}.so"
 soname_pattern_abi   "lib{libname}.so.{abi_rev}.{version_minor}"
 soname_pattern_patch "lib{libname}.so.{abi_rev}.{version_minor}"
 
+shared_lib_symlinks no
+
 <target_features>
 posix1
 posix_mlock

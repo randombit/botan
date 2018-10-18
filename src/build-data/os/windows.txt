@@ -6,6 +6,8 @@ obj_suffix obj
 static_suffix lib
 lib_prefix ''
 
+shared_lib_symlinks no
+
 # For historical reasons? the library does not have the major number on Windows
 # This should probably be fixed in a future major release.
 library_name 'botan{suffix}'
