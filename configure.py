@@ -472,6 +472,11 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--with-pkg-config', action='store_true', default=None,
+                           help=optparse.SUPPRESS_HELP)
+    build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
+                           help=optparse.SUPPRESS_HELP)
+
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
 
     docs_group.add_option('--with-documentation', action='store_true',
@@ -1368,6 +1373,9 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'cli_exe_name': 'botan',
                 'lib_prefix': 'lib',
                 'library_name': 'botan{suffix}-{major}',
+                'shared_lib_symlinks': 'yes',
+                'default_compiler': 'gcc',
+                'uses_pkg_config': 'yes',
             })
 
         if lex.ar_command == 'ar' and lex.ar_options == '':
@@ -1414,6 +1422,9 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
         self.use_stack_protector = (lex.use_stack_protector == "true")
+        self.shared_lib_uses_symlinks = (lex.shared_lib_symlinks == 'yes')
+        self.default_compiler = lex.default_compiler
+        self.uses_pkg_config = (lex.uses_pkg_config == 'yes')
 
     def matches_name(self, nm):
         if nm in self._aliases:
@@ -1758,11 +1769,13 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
     def innosetup_arch(os_name, arch):
         if os_name == 'windows':
-            inno_arch = {'x86_32': '', 'x86_64': 'x64', 'ia64': 'ia64'}
+            inno_arch = {'x86_32': '',
+                         'x86_64': 'x64',
+                         'ia64': 'ia64'}
             if arch in inno_arch:
                 return inno_arch[arch]
             else:
-                logging.warning('Unknown arch in innosetup_arch %s' % (arch))
+                logging.warning('Unknown arch %s in innosetup_arch' % (arch))
         return None
 
     def configure_command_line():
@@ -1814,11 +1827,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         if build_dir == os.path.curdir and options.os == 'mingw':
             return path
         return os.path.join(build_dir, path)
-
-    def shared_lib_uses_symlinks():
-        if options.os in ['windows', 'openbsd']:
-            return False
-        return True
 
     variables = {
         'version_major':  Version.major(),
@@ -1886,7 +1894,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'build_coverage' : options.with_coverage_info or options.with_coverage,
 
-        'symlink_shared_lib': options.build_shared_lib and shared_lib_uses_symlinks(),
+        'symlink_shared_lib': options.build_shared_lib and osinfo.shared_lib_uses_symlinks,
 
         'libobj_dir': build_paths.libobj_dir,
         'cliobj_dir': build_paths.cliobj_dir,
@@ -1980,9 +1988,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'optimize_for_size': options.optimize_for_size,
 
         'mod_list': sorted([m.basename for m in modules])
-        }
+    }
 
-    if options.os != 'windows':
+    if options.with_pkg_config:
         variables['botan_pkgconfig'] = os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))
 
     # The name is always set because Windows build needs it
@@ -2734,7 +2742,7 @@ def robust_makedirs(directory, max_retries=5):
 # This is for otions that have --with-XYZ and --without-XYZ. If user does not
 # set any of those, we choose a default here.
 # Mutates `options`
-def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disable=too-many-branches
+def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pylint: disable=too-many-branches
     if options.os is None:
         system_from_python = platform.system().lower()
         if re.match('^cygwin_.*', system_from_python):
@@ -2743,6 +2751,14 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
         else:
             options.os = system_from_python
         logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
+
+    if options.os not in info_os:
+        def find_canonical_os_name(os_name_variant):
+            for (canonical_os_name, os_info) in info_os.items():
+                if os_info.matches_name(os_name_variant):
+                    return canonical_os_name
+            return os_name_variant # not found
+        options.os = find_canonical_os_name(options.os)
 
     def deduce_compiler_type_from_cc_bin(cc_bin):
         if cc_bin.find('clang') != -1 or cc_bin in ['emcc', 'em++']:
@@ -2754,34 +2770,29 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
     if options.compiler is None and options.compiler_binary is not None:
         options.compiler = deduce_compiler_type_from_cc_bin(options.compiler_binary)
 
-    if options.compiler is None:
-        if options.os == 'windows':
-            if have_program('g++') and not have_program('cl'):
-                options.compiler = 'gcc'
-            else:
-                options.compiler = 'msvc'
-        elif options.os in ['darwin', 'freebsd', 'openbsd', 'ios']:
-            # Prefer Clang on these systems
-            if have_program('clang++'):
-                options.compiler = 'clang'
-            else:
-                options.compiler = 'gcc'
-                if options.os == 'openbsd':
-                    # The assembler shipping with OpenBSD 5.9 does not support avx2
-                    del info_cc['gcc'].isa_flags['avx2']
-        else:
-            options.compiler = 'gcc'
-
         if options.compiler is None:
-            logging.error('Could not guess which compiler to use, use --cc or CXX to set')
-        else:
-            logging.info('Guessing to use compiler %s (use --cc or CXX to set)' % (options.compiler))
+            logging.error("Could not figure out what compiler type '%s' is, use --cc to set" % (
+                options.compiler_binary))
+
+    if options.compiler is None:
+
+        options.compiler = info_os[options.os].default_compiler
+
+        if not have_program(info_cc[options.compiler].binary_name):
+            logging.error("Default compiler for system is %s but could not find binary '%s'; use --cc to set" % (
+                options.compiler, info_cc[options.compiler].binary_name))
+
+        logging.info('Guessing to use compiler %s (use --cc or CXX to set)' % (options.compiler))
 
     if options.cpu is None:
         (arch, cpu) = guess_processor(info_arch)
         options.arch = arch
         options.cpu = cpu
         logging.info('Guessing target processor is a %s (use --cpu to set)' % (options.arch))
+
+    # OpenBSD uses an old binutils that does not support AVX2
+    if options.os == 'openbsd':
+        del info_cc['gcc'].isa_flags['avx2']
 
     if options.with_documentation is True:
         if options.with_sphinx is None and have_program('sphinx-build'):
@@ -2791,17 +2802,12 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
             logging.info('Found rst2man (use --without-rst2man to disable)')
             options.with_rst2man = True
 
+    if options.with_pkg_config is None:
+        options.with_pkg_config = info_os[options.os].uses_pkg_config
 
 # Mutates `options`
 def canonicalize_options(options, info_os, info_arch):
     # pylint: disable=too-many-branches
-    if options.os not in info_os:
-        def find_canonical_os_name(os_name_variant):
-            for (canonical_os_name, os_info) in info_os.items():
-                if os_info.matches_name(os_name_variant):
-                    return canonical_os_name
-            return os_name_variant # not found
-        options.os = find_canonical_os_name(options.os)
 
     # canonical ARCH/CPU
     options.arch = canon_processor(info_arch, options.cpu)
@@ -3162,7 +3168,7 @@ def main(argv):
     logging.debug('Known CPU names: ' + ' '.join(
         sorted(flatten([[ainfo.basename] + ainfo.aliases for ainfo in info_arch.values()]))))
 
-    set_defaults_for_unset_options(options, info_arch, info_cc)
+    set_defaults_for_unset_options(options, info_arch, info_cc, info_os)
     canonicalize_options(options, info_os, info_arch)
     validate_options(options, info_os, info_cc, info_module_policies)
 
