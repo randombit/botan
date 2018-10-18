@@ -3,6 +3,8 @@ soname_pattern_base  "lib{libname}.{version_minor}.dylib"
 soname_pattern_abi   "lib{libname}.{version_minor}.{abi_rev}.dylib"
 soname_pattern_patch "lib{libname}.{version_minor}.{abi_rev}.{version_patch}.dylib"
 
+default_compiler clang
+
 doc_dir doc
 
 <target_features>

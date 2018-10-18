@@ -1369,6 +1369,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'lib_prefix': 'lib',
                 'library_name': 'botan{suffix}-{major}',
                 'shared_lib_symlinks': 'yes',
+                'default_compiler': 'gcc',
             })
 
         if lex.ar_command == 'ar' and lex.ar_options == '':
@@ -1416,6 +1417,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.target_features = lex.target_features
         self.use_stack_protector = (lex.use_stack_protector == "true")
         self.shared_lib_uses_symlinks = (lex.shared_lib_symlinks == 'yes')
+        self.default_compiler = lex.default_compiler
 
     def matches_name(self, nm):
         if nm in self._aliases:
@@ -2731,7 +2733,7 @@ def robust_makedirs(directory, max_retries=5):
 # This is for otions that have --with-XYZ and --without-XYZ. If user does not
 # set any of those, we choose a default here.
 # Mutates `options`
-def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disable=too-many-branches
+def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pylint: disable=too-many-branches
     if options.os is None:
         system_from_python = platform.system().lower()
         if re.match('^cygwin_.*', system_from_python):
@@ -2751,34 +2753,29 @@ def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disab
     if options.compiler is None and options.compiler_binary is not None:
         options.compiler = deduce_compiler_type_from_cc_bin(options.compiler_binary)
 
-    if options.compiler is None:
-        if options.os == 'windows':
-            if have_program('g++') and not have_program('cl'):
-                options.compiler = 'gcc'
-            else:
-                options.compiler = 'msvc'
-        elif options.os in ['darwin', 'freebsd', 'openbsd', 'ios']:
-            # Prefer Clang on these systems
-            if have_program('clang++'):
-                options.compiler = 'clang'
-            else:
-                options.compiler = 'gcc'
-                if options.os == 'openbsd':
-                    # The assembler shipping with OpenBSD 5.9 does not support avx2
-                    del info_cc['gcc'].isa_flags['avx2']
-        else:
-            options.compiler = 'gcc'
-
         if options.compiler is None:
-            logging.error('Could not guess which compiler to use, use --cc or CXX to set')
-        else:
-            logging.info('Guessing to use compiler %s (use --cc or CXX to set)' % (options.compiler))
+            logging.error("Could not figure out what compiler type '%s' is, use --cc to set" % (
+                options.compiler_binary))
+
+    if options.compiler is None:
+
+        options.compiler = info_os[options.os].default_compiler
+
+        if not have_program(info_cc[options.compiler].binary_name):
+            logging.error("Default compiler for system is %s but could not find binary '%s'; use --cc to set" % (
+                options.compiler, info_cc[options.compiler].binary_name))
+
+        logging.info('Guessing to use compiler %s (use --cc or CXX to set)' % (options.compiler))
 
     if options.cpu is None:
         (arch, cpu) = guess_processor(info_arch)
         options.arch = arch
         options.cpu = cpu
         logging.info('Guessing target processor is a %s (use --cpu to set)' % (options.arch))
+
+    # OpenBSD uses an old binutils that does not support AVX2
+    if options.os == 'openbsd':
+        del info_cc['gcc'].isa_flags['avx2']
 
     if options.with_documentation is True:
         if options.with_sphinx is None and have_program('sphinx-build'):
@@ -3159,7 +3156,7 @@ def main(argv):
     logging.debug('Known CPU names: ' + ' '.join(
         sorted(flatten([[ainfo.basename] + ainfo.aliases for ainfo in info_arch.values()]))))
 
-    set_defaults_for_unset_options(options, info_arch, info_cc)
+    set_defaults_for_unset_options(options, info_arch, info_cc, info_os)
     canonicalize_options(options, info_os, info_arch)
     validate_options(options, info_os, info_cc, info_module_policies)
 

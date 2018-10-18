@@ -8,6 +8,8 @@ lib_prefix ''
 
 shared_lib_symlinks no
 
+default_compiler msvc
+
 # For historical reasons? the library does not have the major number on Windows
 # This should probably be fixed in a future major release.
 library_name 'botan{suffix}'
