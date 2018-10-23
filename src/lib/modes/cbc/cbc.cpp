@@ -256,7 +256,7 @@ void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    buffer.resize(buffer.size() - pad_bytes); // remove padding
    if(pad_bytes == 0 && padding().name() != "NoPadding")
       {
-      throw Decoding_Error(name());
+      throw Decoding_Error("Invalid CBC padding");
       }
    }
 
