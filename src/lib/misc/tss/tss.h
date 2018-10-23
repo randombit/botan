@@ -9,6 +9,7 @@
 #define BOTAN_RTSS_H_
 
 #include <botan/secmem.h>
+#include <string>
 #include <vector>
 
 namespace Botan {
