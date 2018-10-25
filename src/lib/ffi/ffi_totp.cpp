@@ -41,7 +41,7 @@ int botan_totp_init(botan_totp_t* totp,
       return BOTAN_FFI_SUCCESS;
       });
 #else
-   BOTAN_UNUSED(totp, key, key_len, hash_algo, digits);
+   BOTAN_UNUSED(totp, key, key_len, hash_algo, digits, time_step);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -86,7 +86,7 @@ int botan_totp_check(botan_totp_t totp,
       });
 
 #else
-   BOTAN_UNUSED(totp, next_timestamp, totp_code, timestamp, resync_range);
+   BOTAN_UNUSED(totp, totp_code, timestamp, acceptable_clock_drift);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
