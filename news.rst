@@ -5,16 +5,13 @@ Version 2.9.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix bugs in TLS which caused negotiation failures when the client
-  used an unknown signature algorithm or version (GH #1711 #1709)
+  used an unknown signature algorithm or version (GH #1711 #1709 #1708)
 
 * Use a smaller sieve which improves performance of prime generation.
 
 * Add NEON implementation of ChaCha (GH #1719)
 
 * Support for Visual C++ 2013 has been removed (GH #1557 #1697)
-
-* Fix a bug that caused the TLS server to fail if the client supported
-  some signature algorithm which is not supported by Botan (GH #1708)
 
 * Resolve a memory leak when verifying ECDSA signatures with versions
   of OpenSSL before 1.1.0 (GH #1698)
