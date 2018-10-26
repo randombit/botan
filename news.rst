@@ -4,6 +4,13 @@ Release Notes
 Version 2.9.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix bugs in TLS which caused negotiation failures when the client
+  used an unknown signature algorithm or version (GH #1711 #1709)
+
+* Use a smaller sieve which improves performance of prime generation.
+
+* Add NEON implementation of ChaCha (GH #1719)
+
 * Support for Visual C++ 2013 has been removed (GH #1557 #1697)
 
 * Fix a bug that caused the TLS server to fail if the client supported
@@ -20,7 +27,14 @@ Version 2.9.0, Not Yet Released
 * Fix a bug introduced in 2.8.0 that caused compilation failure if using
   a single amalgamation file with AVX2 enabled. (GH #1700)
 
+* Add an explicit OS target for Emscripten and improve support for it.
+  (GH #1702)
+
 * Fix small issues when building for QNX
+
+* Add options to ``configure.py`` to disable generation of ``pkg-config``
+  file, and (for systems where ``pkg-config`` support defaults to off,
+  like Windows), to enable generating it. (GH #1268)
 
 * Make configure.py parse_multiple_enable accept an empty list and
   trailing/extra commas.
