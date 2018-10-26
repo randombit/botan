@@ -337,7 +337,7 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
 
     isa_extensions = [
         'SSE2', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX2',
-        'AES-NI', 'SHA',
+        'AES-NI', 'SHA-NI',
         'AltiVec', 'NEON', 'ARMv8Crypto']
 
     for isa_extn_name in isa_extensions:
