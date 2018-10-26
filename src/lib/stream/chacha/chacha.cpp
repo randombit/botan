@@ -81,6 +81,13 @@ std::string ChaCha::provider() const
       }
 #endif
 
+#if defined(BOTAN_HAS_CHACHA_NEON)
+   if(CPUID::has_neon())
+      {
+      return "neon";
+      }
+#endif
+
    return "base";
    }
 
@@ -101,6 +108,15 @@ void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
       {
       ChaCha::chacha_sse2_x4(output, input, rounds);
       ChaCha::chacha_sse2_x4(output + 4*64, input, rounds);
+      return;
+      }
+#endif
+
+#if defined(BOTAN_HAS_CHACHA_NEON)
+   if(CPUID::has_neon())
+      {
+      ChaCha::chacha_neon_x4(output, input, rounds);
+      ChaCha::chacha_neon_x4(output + 4*64, input, rounds);
       return;
       }
 #endif
