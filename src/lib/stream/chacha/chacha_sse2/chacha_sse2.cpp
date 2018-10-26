@@ -12,41 +12,41 @@ namespace Botan {
 
 //static
 BOTAN_FUNC_ISA("sse2")
-void ChaCha::chacha_sse2_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
+void ChaCha::chacha_sse2_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
 
-   const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);
+   const __m128i* state_mm = reinterpret_cast<const __m128i*>(state);
    __m128i* output_mm = reinterpret_cast<__m128i*>(output);
 
-   __m128i input0 = _mm_loadu_si128(input_mm);
-   __m128i input1 = _mm_loadu_si128(input_mm + 1);
-   __m128i input2 = _mm_loadu_si128(input_mm + 2);
-   __m128i input3 = _mm_loadu_si128(input_mm + 3);
+   __m128i state0 = _mm_loadu_si128(state_mm);
+   __m128i state1 = _mm_loadu_si128(state_mm + 1);
+   __m128i state2 = _mm_loadu_si128(state_mm + 2);
+   __m128i state3 = _mm_loadu_si128(state_mm + 3);
 
    // TODO: try transposing, which would avoid the permutations each round
 
 #define mm_rotl(r, n) \
    _mm_or_si128(_mm_slli_epi32(r, n), _mm_srli_epi32(r, 32-n))
 
-   __m128i r0_0 = input0;
-   __m128i r0_1 = input1;
-   __m128i r0_2 = input2;
-   __m128i r0_3 = input3;
+   __m128i r0_0 = state0;
+   __m128i r0_1 = state1;
+   __m128i r0_2 = state2;
+   __m128i r0_3 = state3;
 
-   __m128i r1_0 = input0;
-   __m128i r1_1 = input1;
-   __m128i r1_2 = input2;
+   __m128i r1_0 = state0;
+   __m128i r1_1 = state1;
+   __m128i r1_2 = state2;
    __m128i r1_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 1));
 
-   __m128i r2_0 = input0;
-   __m128i r2_1 = input1;
-   __m128i r2_2 = input2;
+   __m128i r2_0 = state0;
+   __m128i r2_1 = state1;
+   __m128i r2_2 = state2;
    __m128i r2_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 2));
 
-   __m128i r3_0 = input0;
-   __m128i r3_1 = input1;
-   __m128i r3_2 = input2;
+   __m128i r3_0 = state0;
+   __m128i r3_1 = state1;
+   __m128i r3_2 = state2;
    __m128i r3_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 3));
 
    for(size_t r = 0; r != rounds / 2; ++r)
@@ -204,27 +204,27 @@ void ChaCha::chacha_sse2_x4(uint8_t output[64*4], uint32_t input[16], size_t rou
       r3_3 = _mm_shuffle_epi32(r3_3, _MM_SHUFFLE(0, 3, 2, 1));
       }
 
-   r0_0 = _mm_add_epi32(r0_0, input0);
-   r0_1 = _mm_add_epi32(r0_1, input1);
-   r0_2 = _mm_add_epi32(r0_2, input2);
-   r0_3 = _mm_add_epi32(r0_3, input3);
+   r0_0 = _mm_add_epi32(r0_0, state0);
+   r0_1 = _mm_add_epi32(r0_1, state1);
+   r0_2 = _mm_add_epi32(r0_2, state2);
+   r0_3 = _mm_add_epi32(r0_3, state3);
 
-   r1_0 = _mm_add_epi32(r1_0, input0);
-   r1_1 = _mm_add_epi32(r1_1, input1);
-   r1_2 = _mm_add_epi32(r1_2, input2);
-   r1_3 = _mm_add_epi32(r1_3, input3);
+   r1_0 = _mm_add_epi32(r1_0, state0);
+   r1_1 = _mm_add_epi32(r1_1, state1);
+   r1_2 = _mm_add_epi32(r1_2, state2);
+   r1_3 = _mm_add_epi32(r1_3, state3);
    r1_3 = _mm_add_epi64(r1_3, _mm_set_epi32(0, 0, 0, 1));
 
-   r2_0 = _mm_add_epi32(r2_0, input0);
-   r2_1 = _mm_add_epi32(r2_1, input1);
-   r2_2 = _mm_add_epi32(r2_2, input2);
-   r2_3 = _mm_add_epi32(r2_3, input3);
+   r2_0 = _mm_add_epi32(r2_0, state0);
+   r2_1 = _mm_add_epi32(r2_1, state1);
+   r2_2 = _mm_add_epi32(r2_2, state2);
+   r2_3 = _mm_add_epi32(r2_3, state3);
    r2_3 = _mm_add_epi64(r2_3, _mm_set_epi32(0, 0, 0, 2));
 
-   r3_0 = _mm_add_epi32(r3_0, input0);
-   r3_1 = _mm_add_epi32(r3_1, input1);
-   r3_2 = _mm_add_epi32(r3_2, input2);
-   r3_3 = _mm_add_epi32(r3_3, input3);
+   r3_0 = _mm_add_epi32(r3_0, state0);
+   r3_1 = _mm_add_epi32(r3_1, state1);
+   r3_2 = _mm_add_epi32(r3_2, state2);
+   r3_3 = _mm_add_epi32(r3_3, state3);
    r3_3 = _mm_add_epi64(r3_3, _mm_set_epi32(0, 0, 0, 3));
 
    _mm_storeu_si128(output_mm + 0, r0_0);
@@ -249,9 +249,9 @@ void ChaCha::chacha_sse2_x4(uint8_t output[64*4], uint32_t input[16], size_t rou
 
 #undef mm_rotl
 
-   input[12] += 4;
-   if(input[12] < 4)
-      input[13]++;
+   state[12] += 4;
+   if(state[12] < 4)
+      state[13]++;
    }
 
 }
