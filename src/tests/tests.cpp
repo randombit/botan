@@ -626,8 +626,34 @@ std::string Test::random_password()
    return Botan::hex_encode(Test::rng().random_vec(len));
    }
 
-std::vector<uint8_t> VarMap::get_req_bin(
-      const std::string& key) const
+std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& key) const
+   {
+   auto i = m_vars.find(key);
+   if(i == m_vars.end())
+      {
+      throw Test_Error("Test missing variable " + key);
+      }
+
+   std::vector<std::vector<uint8_t>> bin_list;
+
+   for(auto&& part : Botan::split_on(i->second, ','))
+      {
+      try
+         {
+         bin_list.push_back(Botan::hex_decode(part));
+         }
+      catch(std::exception& e)
+         {
+         std::ostringstream oss;
+         oss << "Bad input '" << part << "'" << " in binary list key " << key << " - " << e.what();
+         throw Test_Error(oss.str());
+         }
+      }
+
+   return bin_list;
+   }
+
+std::vector<uint8_t> VarMap::get_req_bin(const std::string& key) const
    {
    auto i = m_vars.find(key);
    if(i == m_vars.end())
