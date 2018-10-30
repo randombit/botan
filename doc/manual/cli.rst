@@ -234,6 +234,23 @@ The PSK database commands are only available if sqlite3 support was compiled in.
     $ botan psk_list psk.db deadba55
     bunny
 
+Secret Sharing
+------------------
+
+Split a file into several shares.
+
+``tss_split M N data_file --id= --share-prefix=share --share-suffix=tss --hash=SHA-256``
+  Split a file into ``N`` pieces any ``M`` of which suffices to
+  recover the original input. The ID allows specifying a unique key ID
+  which may be up to 16 bytes long, this ensures that shares can be
+  uniquely matched.  If not specified a random 16 byte value is
+  used. A checksum can be appended to the data to help verify correct
+  recovery, this can be disabled using ``--hash=None``.
+
+``tss_recover *shares``
+  Recover some data split by ``tss_split``. If insufficient number of
+  shares are provided an error is printed.
+
 Data Encoding/Decoding
 ------------------------
 

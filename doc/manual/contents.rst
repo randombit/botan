@@ -30,6 +30,7 @@ Contents
    psk_db
    filters
    fpe
+   tss
    ecc
    compression
    pkcs11

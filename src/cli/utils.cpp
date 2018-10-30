@@ -70,6 +70,7 @@ class Print_Help final : public Command
             { "psk", "PSK Database" },
             { "pubkey", "Public Key Cryptography" },
             { "tls", "TLS" },
+            { "tss", "Secret Sharing" },
             { "x509", "X.509" },
             { "misc", "Miscellaneous" }
          };

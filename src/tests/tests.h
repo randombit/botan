@@ -528,6 +528,8 @@ class VarMap
       std::vector<uint8_t> get_req_bin(const std::string& key) const;
       std::vector<uint8_t> get_opt_bin(const std::string& key) const;
 
+      std::vector<std::vector<uint8_t>> get_req_bin_list(const std::string& key) const;
+
 #if defined(BOTAN_HAS_BIGINT)
       Botan::BigInt get_req_bn(const std::string& key) const;
       Botan::BigInt get_opt_bn(const std::string& key, const Botan::BigInt& def_value) const;
