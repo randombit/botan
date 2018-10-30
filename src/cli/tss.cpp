@@ -92,6 +92,15 @@ class TSS_Recover final : public Command
 
       void go() override
          {
+         const std::vector<std::string> share_names = get_arg_list("shares");
+
+         if(share_names.empty())
+            {
+            output() << help_text() << "\n";
+            this->set_return_code(1);
+            return;
+            }
+
          std::vector<Botan::RTSS_Share> shares;
 
          for(std::string share_fsname : get_arg_list("shares"))

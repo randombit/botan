@@ -40,7 +40,7 @@ def setup_logging(options):
     logging.getLogger().setLevel(log_level)
 
 
-def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
+def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_stderr=None):
     global TESTS_RUN
     global TESTS_FAILED
 
@@ -71,7 +71,11 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None):
         (stdout, stderr) = proc.communicate(cmd_input.encode())
 
     if stderr:
-        logging.error("Got output on stderr %s", stderr)
+        if expected_stderr is None:
+            logging.error("Got output on stderr %s", stderr)
+        else:
+            if stderr != expected_stderr:
+                logging.error("Got output on stderr %s which did not match expected value %s", stderr, expected_stderr)
 
     output = stdout.decode('ascii').strip()
 
@@ -525,6 +529,46 @@ def cli_tls_socket_tests():
 
     tls_server.communicate()
 
+def cli_tss_tests():
+
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+    data_file = os.path.join(tmp_dir, 'data')
+
+    exp_hash = "53B3C59276AE30EA7FD882268E80FD96AD80CC9FEB15F9FB940E7C4B5CF80B9E"
+
+    test_cli("rng", ["32", "--output=%s" % (data_file)], "")
+    test_cli("hash", ["--no-fsname", data_file], exp_hash)
+
+    M = 3
+    N = 5
+
+    test_cli("tss_split", [str(M), str(N), data_file, "--share-prefix=%s/split" % (tmp_dir)], "")
+
+    share_files = []
+
+    for i in range(1, N+1):
+        share = os.path.join(tmp_dir, "split%d.tss" % (i))
+        if not os.access(share, os.R_OK):
+            logging.error("Failed to create expected split file %s", share)
+        share_files.append(share)
+
+    rec5 = os.path.join(tmp_dir, "recovered_5")
+    test_cli("tss_recover", share_files + ["--output=%s" % (rec5)], "")
+    test_cli("hash", ["--no-fsname", rec5], exp_hash)
+
+    rec4 = os.path.join(tmp_dir, "recovered_4")
+    test_cli("tss_recover", share_files[1:] + ["--output=%s" % (rec4)], "")
+    test_cli("hash", ["--no-fsname", rec4], exp_hash)
+
+    rec3 = os.path.join(tmp_dir, "recovered_3")
+    test_cli("tss_recover", share_files[2:] + ["--output=%s" % (rec3)], "")
+    test_cli("hash", ["--no-fsname", rec3], exp_hash)
+
+    rec2 = os.path.join(tmp_dir, "recovered_2")
+    test_cli("tss_recover", share_files[3:] + ["--output=%s" % (rec2)], "", None,
+             b'Error: Insufficient shares to do TSS reconstruction\n')
+
+
 def cli_pk_encrypt_tests():
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
 
@@ -719,6 +763,7 @@ def main(args=None):
         cli_tls_ciphersuite_tests,
         cli_tls_client_hello_tests,
         cli_tls_socket_tests,
+        cli_tss_tests,
         cli_version_tests,
         ]
 
