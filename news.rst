@@ -21,6 +21,12 @@ Version 2.9.0, Not Yet Released
   this size are allowed by the standard and other XTS implementations.
   (GH #1706)
 
+* Resolve a bug in TSS which resulted in it using an incorrect length
+  field in the shares. Now the correct length is encoded, but either
+  correct or buggy lengths are accepted when decoding. (GH #1722)
+
+* Add CLI utils for threshold secret splitting. (GH #1722)
+
 * Fix a bug introduced in 2.8.0 that caused compilation failure if using
   a single amalgamation file with AVX2 enabled. (GH #1700)
 
