@@ -498,7 +498,7 @@ The result of the validation is returned as a class:
      If the validation was successful, returns the certificate which
      is acting as the trust root for *end_cert*.
 
-   .. cpp:function:: const std::vector<X509_Certificate>& cert_path() const
+  .. cpp:function:: const std::vector<X509_Certificate>& cert_path() const
 
      Returns the full certificate path starting with the end entity
      certificate and ending in the trust root.

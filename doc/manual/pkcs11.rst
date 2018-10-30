@@ -445,7 +445,7 @@ Attributes can be set in an :cpp:class:`AttributeContainer` by various ``add_`` 
 
       Add a bool attribute (e.g. :c:macro:`CKA_SENSITIVE` / :cpp:enumerator:`AttributeType::Sensitive`).
 
-    .. cpp:function:: template<typename T> void AttributeContainer::add_numeric(AttributeType attribute, T value)
+   .. cpp:function:: template<typename T> void AttributeContainer::add_numeric(AttributeType attribute, T value)
 
        Add a numeric attribute (e.g. :c:macro:`CKA_MODULUS_BITS` / :cpp:enumerator:`AttributeType::ModulusBits`).
 

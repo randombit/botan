@@ -866,7 +866,7 @@ policy settings from a file.
         protections against the Lucky13 attack are somewhat more
         effective for SHA-256 than SHA-384.
 
-.. cpp:function:: std::vector<std::string> allowed_key_exchange_methods() const
+ .. cpp:function:: std::vector<std::string> allowed_key_exchange_methods() const
 
      Returns the list of key exchange methods we are willing to use,
      in order of preference.
@@ -1054,37 +1054,37 @@ policy settings from a file.
 
      Default: 2048 bits
 
-.. cpp:function:: bool allow_tls10() const
+ .. cpp:function:: bool allow_tls10() const
 
       Return true from here to allow TLS v1.0. Since 2.8.0, returns
       ``false`` by default.
 
-.. cpp:function:: bool allow_tls11() const
+ .. cpp:function:: bool allow_tls11() const
 
       Return true from here to allow TLS v1.1. Since 2.8.0, returns
       ``false`` by default.
 
-.. cpp:function:: bool allow_tls12() const
+ .. cpp:function:: bool allow_tls12() const
 
       Return true from here to allow TLS v1.2. Returns ``true`` by default.
 
-.. cpp:function:: size_t minimum_rsa_bits() const
+ .. cpp:function:: size_t minimum_rsa_bits() const
 
      Minimum accepted RSA key size. Default 2048 bits.
 
-.. cpp:function:: size_t minimum_dsa_group_size() const
+ .. cpp:function:: size_t minimum_dsa_group_size() const
 
      Minimum accepted DSA key size. Default 2048 bits.
 
-.. cpp:function:: size_t minimum_ecdsa_group_size() const
+ .. cpp:function:: size_t minimum_ecdsa_group_size() const
 
      Minimum size for ECDSA keys (256 bits).
 
-.. cpp:function:: size_t minimum_ecdh_group_size() const
+ .. cpp:function:: size_t minimum_ecdh_group_size() const
 
      Minimum size for ECDH keys (255 bits).
 
-.. cpp:function:: void check_peer_key_acceptable(const Public_Key& public_key) const
+ .. cpp:function:: void check_peer_key_acceptable(const Public_Key& public_key) const
 
      Allows the policy to examine peer public keys. Throw an exception
      if the key should be rejected. Default implementation checks

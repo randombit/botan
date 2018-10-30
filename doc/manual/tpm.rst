@@ -61,7 +61,7 @@ match the TPM's behavior.
 
         The key_password is the password to the TPM key ?
 
-    .. cpp:function::  std::string register_key(TPM_Storage_Type storage_type)
+   .. cpp:function::  std::string register_key(TPM_Storage_Type storage_type)
 
         Registers a key with the TPM. The storage_type can be either
         `TPM_Storage_Type::User` or `TPM_Storage_Type::System`. If System, the
@@ -79,27 +79,27 @@ match the TPM's behavior.
 
         Returns a UUID which can be passed back to constructor below.
 
-    .. cpp:function::  TPM_PrivateKey(TPM_Context& ctx, const std::string& uuid, \
+   .. cpp:function::  TPM_PrivateKey(TPM_Context& ctx, const std::string& uuid, \
                                       TPM_Storage_Type storage_type)
 
         Load a registered key. The UUID was returned by the ``register_key`` function.
 
-    .. cpp:function::  std::vector<uint8_t> export_blob() const
+   .. cpp:function::  std::vector<uint8_t> export_blob() const
 
         Export the key as an encrypted blob. This blob can later be presented
         back to the same TPM to load the key.
 
-    .. cpp:function:: TPM_PrivateKey(TPM_Context& ctx, const std::vector<uint8_t>& blob)
+   .. cpp:function:: TPM_PrivateKey(TPM_Context& ctx, const std::vector<uint8_t>& blob)
 
         Load a TPM key previously exported as a blob with ``export_blob``.
 
-    .. cpp:function::  std::unique_ptr<Public_Key> public_key() const
+   .. cpp:function::  std::unique_ptr<Public_Key> public_key() const
 
          Return the public key associated with this TPM private key.
 
          TPM does not store public keys, nor does it support signature verification.
 
-     .. cpp:function:: TSS_HKEY handle() const
+   .. cpp:function:: TSS_HKEY handle() const
 
         Returns the bare TSS key handle. Use if you need to call the raw TSS API.
 
