@@ -539,14 +539,14 @@ def cli_tss_tests():
     test_cli("rng", ["32", "--output=%s" % (data_file)], "")
     test_cli("hash", ["--no-fsname", data_file], exp_hash)
 
-    M = 3
-    N = 5
+    m = 3
+    n = 5
 
-    test_cli("tss_split", [str(M), str(N), data_file, "--share-prefix=%s/split" % (tmp_dir)], "")
+    test_cli("tss_split", [str(m), str(n), data_file, "--share-prefix=%s/split" % (tmp_dir)], "")
 
     share_files = []
 
-    for i in range(1, N+1):
+    for i in range(1, n+1):
         share = os.path.join(tmp_dir, "split%d.tss" % (i))
         if not os.access(share, os.R_OK):
             logging.error("Failed to create expected split file %s", share)
