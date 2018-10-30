@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
    #include <botan/tss.h>
    #include <botan/hex.h>
+   #include <botan/rng.h>
    #include <fstream>
 #endif
 
@@ -43,7 +44,13 @@ class TSS_Split final : public Command
 
          Botan::secure_vector<uint8_t> secret = slurp_file_lvec(input);
 
-         const std::vector<uint8_t> id = Botan::hex_decode(id_str);
+         std::vector<uint8_t> id = Botan::hex_decode(id_str);
+
+         if(id.empty())
+            {
+            id.resize(16);
+            rng().randomize(id.data(), id.size());
+            }
 
          std::vector<Botan::RTSS_Share> shares =
             Botan::RTSS_Share::split(M, N, secret.data(), secret.size(), id, hash_algo, rng());
