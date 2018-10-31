@@ -27,7 +27,6 @@ void ChaCha20Poly1305_Mode::clear()
    {
    m_chacha->clear();
    m_poly1305->clear();
-   m_nonce_len = 0;
    reset();
    }
 
@@ -35,6 +34,7 @@ void ChaCha20Poly1305_Mode::reset()
    {
    m_ad.clear();
    m_ctext_len = 0;
+   m_nonce_len = 0;
    }
 
 void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length)
@@ -44,8 +44,8 @@ void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length)
 
 void ChaCha20Poly1305_Mode::set_associated_data(const uint8_t ad[], size_t length)
    {
-   if(m_ctext_len)
-      throw Exception("Too late to set AD for ChaCha20Poly1305");
+   if(m_ctext_len > 0 || m_nonce_len > 0)
+      throw Invalid_State("Cannot set AD for ChaCha20Poly1305 while processing a message");
    m_ad.assign(ad, ad + length);
    }
 
@@ -113,6 +113,7 @@ void ChaCha20Poly1305_Encryption::finish(secure_vector<uint8_t>& buffer, size_t 
    const secure_vector<uint8_t> mac = m_poly1305->final();
    buffer += std::make_pair(mac.data(), tag_size());
    m_ctext_len = 0;
+   m_nonce_len = 0;
    }
 
 size_t ChaCha20Poly1305_Decryption::process(uint8_t buf[], size_t sz)
@@ -156,6 +157,7 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<uint8_t>& buffer, size_t 
    const uint8_t* included_tag = &buf[remaining];
 
    m_ctext_len = 0;
+   m_nonce_len = 0;
 
    if(!constant_time_compare(mac.data(), included_tag, tag_size()))
       throw Integrity_Failure("ChaCha20Poly1305 tag check failed");

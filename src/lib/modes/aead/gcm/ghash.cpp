@@ -10,6 +10,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>
+#include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_GCM_CLMUL)
   #include <botan/internal/clmul.h>
@@ -194,6 +195,9 @@ void GHASH::start(const uint8_t nonce[], size_t len)
 
 void GHASH::set_associated_data(const uint8_t input[], size_t length)
    {
+   if(m_ghash.empty() == false)
+      throw Invalid_State("Too late to set AD in GHASH");
+
    zeroise(m_H_ad);
 
    ghash_update(m_H_ad, input, length);

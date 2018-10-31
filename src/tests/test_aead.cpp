@@ -70,9 +70,23 @@ class AEAD_Tests final : public Text_Based_Test
          // reset message specific state
          enc->reset();
 
-         // now try to encrypt with correct values
-         enc->set_ad(ad);
+         /*
+         Now try to set the AD *after* setting the nonce
+         For some modes this works, for others it does not.
+         */
          enc->start(nonce);
+
+         try
+            {
+            enc->set_ad(ad);
+            }
+         catch(Botan::Invalid_State&)
+            {
+            // ad after setting nonce rejected, in this case we need to reset
+            enc->reset();
+            enc->set_ad(ad);
+            enc->start(nonce);
+            }
 
          Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
 
@@ -221,8 +235,19 @@ class AEAD_Tests final : public Text_Based_Test
          try
             {
             // now try to decrypt with correct values
-            dec->set_ad(ad);
-            dec->start(nonce);
+
+            try
+               {
+               dec->start(nonce);
+               dec->set_ad(ad);
+               }
+            catch(Botan::Invalid_State&)
+               {
+               // ad after setting nonce rejected, in this case we need to reset
+               dec->reset();
+               dec->set_ad(ad);
+               dec->start(nonce);
+            }
 
             // test finish() with full input
             dec->finish(buf);
