@@ -36,9 +36,45 @@ All cipher mode implementations are are derived from the base class
      Return the largest key length (in bytes) that is acceptable for the
      algorithm.
 
+  .. cpp:function:: size_t default_nonce_length() const
+
+    Return the default (preferable) nonce size for this cipher mode.
+
+  .. cpp:function:: bool valid_nonce_length(size_t nonce_len) const
+
+    Return true if *nonce_len* is a valid length for a nonce with this
+    algorithm.
+
+  .. cpp:function:: bool authenticated() const
+
+    Return true if this cipher mode is authenticated
+
+  .. cpp:function:: size_t tag_size() const
+
+    Return the length in bytes of the authentication tag this algorithm
+    generates. If the mode is not authenticated, this will return 0. If the mode
+    is authenticated, it will return some positive value (typically somewhere
+    between 8 and 16).
+
+  .. cpp:function:: void clear()
+
+    Clear all internal state. The object will act exactly like one which was
+    just allocated.
+
+  .. cpp:function:: void reset()
+
+    Reset all message state. For example if you called :cpp:func:`start_msg`,
+    then :cpp:func:`process` to process some ciphertext, but then encounter an
+    IO error and must abandon the current message, you can call `reset`. The
+    object will retain the key (unlike calling :cpp:func:`clear` which also
+    resets the key) but the nonce and current message state will be erased.
+
   .. cpp:function:: void start_msg(const uint8_t* nonce, size_t nonce_len)
 
-    Set the IV (unique per-message nonce) of the mode of operation and prepare for message processing.
+    Set up for processing a new message. This function must be called with a new
+    random value for each message. For almost all modes (excepting SIV), if the
+    same nonce is ever used twice with the same key, the encryption scheme loses
+    its confidentiality and/or authenticity properties.
 
   .. cpp:function:: void start(const std::vector<uint8_t> nonce)
 
@@ -55,12 +91,14 @@ All cipher mode implementations are are derived from the base class
 
   .. cpp:function:: virtual size_t process(uint8_t* msg, size_t msg_len)
 
-    Process msg in place and returns bytes written. msg must be a multiple of :cpp:func:`update_granularity`.
+    Process msg in place and returns the number of bytes written. *msg* must
+    be a multiple of :cpp:func:`update_granularity`.
 
   .. cpp:function:: void update(secure_vector<uint8_t>& buffer, size_t offset = 0)
 
-    Continue processing a message in the buffer in place. The passed buffer's size must be a multiple of :cpp:func:`update_granularity`.
-    The first *offset* bytes of the buffer will be ignored.
+    Continue processing a message in the buffer in place. The passed buffer's
+    size must be a multiple of :cpp:func:`update_granularity`.  The first
+    *offset* bytes of the buffer will be ignored.
 
   .. cpp:function:: size_t minimum_final_size() const
 
@@ -138,21 +176,29 @@ ANSI X9.23
 OneAndZeros (ISO/IEC 7816-4)
   The first padding byte is set to 0x80, the remaining padding bytes are set to 0x00.
 
+Ciphertext stealing (CTS) is also implemented. This scheme allows the
+ciphertext to have the same length as the plaintext, however using CTS
+requires the input be at least one full block plus one byte. It is
+also less commonly implemented.
+
 CFB
 ~~~~~~~~~~~~
 
 Available if ``BOTAN_HAS_MODE_CFB`` is defined.
 
 CFB uses a block cipher to create a self-synchronizing stream cipher. It is used
-for example in the OpenPGP protocol. There is no reason to prefer it.
+for example in the OpenPGP protocol. There is no reason to prefer it, as it has
+worse performance characteristics than modes such as CTR or CBC.
 
 XTS
 ~~~~~~~~~
 
 Available if ``BOTAN_HAS_MODE_XTS`` is defined.
 
-XTS is a mode specialized for encrypting disk storage. XTS requires all inputs
-be at least one full block (16 bytes for AES).
+XTS is a mode specialized for encrypting disk or database storage
+where ciphertext expansion is not possible. XTS requires all inputs be
+at least one full block (16 bytes for AES), however for any acceptable
+input length, there is no ciphertext expansion.
 
 .. _aead:
 
@@ -284,8 +330,8 @@ encrypted under a single key, since if a nonce is ever reused ChaCha20Poly1305 b
 insecure. It is better to use a counter for the nonce in this case.
 
 If you are encrypting many messages under a single key and cannot maintain a counter for
-the nonce, prefer XChaCha20Poly1305 since a 192 bit nonce is large enough that random
-values are extremely unlikely to repeat.
+the nonce, prefer XChaCha20Poly1305 since a 192 bit nonce is large enough that randomly
+chosen nonces are extremely unlikely to repeat.
 
 GCM
 ~~~~~
