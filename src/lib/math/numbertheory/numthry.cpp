@@ -478,15 +478,17 @@ bool is_prime(const BigInt& n,
    if(n <= 1 || n.is_even())
       return false;
 
+   const size_t n_bits = n.bits();
+
    // Fast path testing for small numbers (<= 65521)
-   if(n <= PRIMES[PRIME_TABLE_SIZE-1])
+   if(n_bits <= 16)
       {
       const uint16_t num = static_cast<uint16_t>(n.word_at(0));
 
       return std::binary_search(PRIMES, PRIMES + PRIME_TABLE_SIZE, num);
       }
 
-   const size_t t = miller_rabin_test_iterations(n.bits(), prob, is_random);
+   const size_t t = miller_rabin_test_iterations(n_bits, prob, is_random);
 
    Modular_Reducer mod_n(n);
 
