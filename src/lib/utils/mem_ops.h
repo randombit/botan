@@ -10,6 +10,8 @@
 
 #include <botan/types.h>
 #include <cstring>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace Botan {
