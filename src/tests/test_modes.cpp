@@ -115,7 +115,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
          const size_t min_final_bytes = mode.minimum_final_size();
 
          // FFI currently requires this, so assure it is true for all modes
-         result.test_gte("buffer sizes ok", update_granularity, min_final_bytes);
+         result.test_gt("buffer sizes ok", update_granularity, min_final_bytes);
 
          result.test_throws("Unkeyed object throws", [&]() {
             Botan::secure_vector<uint8_t> bad(update_granularity);

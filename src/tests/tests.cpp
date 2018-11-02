@@ -316,6 +316,20 @@ bool Test::Result::test_gte(const std::string& what, size_t produced, size_t exp
    return test_success();
    }
 
+bool Test::Result::test_gt(const std::string& what, size_t produced, size_t expected)
+   {
+   if(produced <= expected)
+      {
+      std::ostringstream err;
+      err << m_who;
+      err << " " << what;
+      err << " unexpected result " << produced << " <= " << expected;
+      return test_failure(err.str());
+      }
+
+   return test_success();
+   }
+
 bool Test::Result::test_ne(const std::string& what, const std::string& str1, const std::string& str2)
    {
    if(str1 != str2)
