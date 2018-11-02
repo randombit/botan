@@ -2763,7 +2763,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
     def deduce_compiler_type_from_cc_bin(cc_bin):
         if cc_bin.find('clang') != -1 or cc_bin in ['emcc', 'em++']:
             return 'clang'
-        if cc_bin.find('-g++') != -1:
+        if cc_bin.find('-g++') != -1 or cc_bin.find('g++') != -1:
             return 'gcc'
         return None
 
