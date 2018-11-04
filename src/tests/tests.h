@@ -543,6 +543,8 @@ class VarMap
       size_t get_req_sz(const std::string& key) const;
       size_t get_opt_sz(const std::string& key, const size_t def_value) const;
 
+      uint64_t get_opt_u64(const std::string& key, const uint64_t def_value) const;
+
    private:
       std::unordered_map<std::string, std::string> m_vars;
    };
