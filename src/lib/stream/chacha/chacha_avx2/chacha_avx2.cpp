@@ -23,10 +23,12 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    const __m256i state2 = _mm256_broadcastsi128_si256(_mm_loadu_si128(state_mm + 2));
    const __m256i state3 = _mm256_broadcastsi128_si256(_mm_loadu_si128(state_mm + 3));
 
-   const __m256i CTR0 = _mm256_set_epi32(0, 0, 0, 0, 0, 0, 0, 4);
-   const __m256i CTR1 = _mm256_set_epi32(0, 0, 0, 1, 0, 0, 0, 5);
-   const __m256i CTR2 = _mm256_set_epi32(0, 0, 0, 2, 0, 0, 0, 6);
-   const __m256i CTR3 = _mm256_set_epi32(0, 0, 0, 3, 0, 0, 0, 7);
+   const uint32_t C = 0xFFFFFFFF - state[12];
+
+   const __m256i CTR0 = _mm256_set_epi32(0, 0,     0, 0, 0, 0, C < 4, 4);
+   const __m256i CTR1 = _mm256_set_epi32(0, 0, C < 1, 1, 0, 0, C < 5, 5);
+   const __m256i CTR2 = _mm256_set_epi32(0, 0, C < 2, 2, 0, 0, C < 6, 6);
+   const __m256i CTR3 = _mm256_set_epi32(0, 0, C < 3, 3, 0, 0, C < 7, 7);
 
    const __m256i shuf_rotl_16 = _mm256_set_epi8(13, 12, 15, 14, 9, 8, 11, 10, 5, 4, 7, 6, 1, 0, 3, 2,
                                                 13, 12, 15, 14, 9, 8, 11, 10, 5, 4, 7, 6, 1, 0, 3, 2);
@@ -39,22 +41,22 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    __m256i X0_0 = state0;
    __m256i X0_1 = state1;
    __m256i X0_2 = state2;
-   __m256i X0_3 = _mm256_add_epi64(state3, CTR0);
+   __m256i X0_3 = _mm256_add_epi32(state3, CTR0);
 
    __m256i X1_0 = state0;
    __m256i X1_1 = state1;
    __m256i X1_2 = state2;
-   __m256i X1_3 = _mm256_add_epi64(state3, CTR1);
+   __m256i X1_3 = _mm256_add_epi32(state3, CTR1);
 
    __m256i X2_0 = state0;
    __m256i X2_1 = state1;
    __m256i X2_2 = state2;
-   __m256i X2_3 = _mm256_add_epi64(state3, CTR2);
+   __m256i X2_3 = _mm256_add_epi32(state3, CTR2);
 
    __m256i X3_0 = state0;
    __m256i X3_1 = state1;
    __m256i X3_2 = state2;
-   __m256i X3_3 = _mm256_add_epi64(state3, CTR3);
+   __m256i X3_3 = _mm256_add_epi32(state3, CTR3);
 
    for(size_t r = 0; r != rounds / 2; ++r)
       {
@@ -215,25 +217,25 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    X0_1 = _mm256_add_epi32(X0_1, state1);
    X0_2 = _mm256_add_epi32(X0_2, state2);
    X0_3 = _mm256_add_epi32(X0_3, state3);
-   X0_3 = _mm256_add_epi64(X0_3, CTR0);
+   X0_3 = _mm256_add_epi32(X0_3, CTR0);
 
    X1_0 = _mm256_add_epi32(X1_0, state0);
    X1_1 = _mm256_add_epi32(X1_1, state1);
    X1_2 = _mm256_add_epi32(X1_2, state2);
    X1_3 = _mm256_add_epi32(X1_3, state3);
-   X1_3 = _mm256_add_epi64(X1_3, CTR1);
+   X1_3 = _mm256_add_epi32(X1_3, CTR1);
 
    X2_0 = _mm256_add_epi32(X2_0, state0);
    X2_1 = _mm256_add_epi32(X2_1, state1);
    X2_2 = _mm256_add_epi32(X2_2, state2);
    X2_3 = _mm256_add_epi32(X2_3, state3);
-   X2_3 = _mm256_add_epi64(X2_3, CTR2);
+   X2_3 = _mm256_add_epi32(X2_3, CTR2);
 
    X3_0 = _mm256_add_epi32(X3_0, state0);
    X3_1 = _mm256_add_epi32(X3_1, state1);
    X3_2 = _mm256_add_epi32(X3_2, state2);
    X3_3 = _mm256_add_epi32(X3_3, state3);
-   X3_3 = _mm256_add_epi64(X3_3, CTR3);
+   X3_3 = _mm256_add_epi32(X3_3, CTR3);
 
    _mm256_storeu_si256(output_mm     , _mm256_permute2x128_si256(X0_0, X0_1, 1 + (3 << 4)));
    _mm256_storeu_si256(output_mm +  1, _mm256_permute2x128_si256(X0_2, X0_3, 1 + (3 << 4)));

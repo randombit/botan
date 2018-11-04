@@ -1,0 +1,7 @@
+<defines>
+CHACHA_SIMD32 -> 20181104
+</defines>
+
+<requires>
+simd
+</requires>

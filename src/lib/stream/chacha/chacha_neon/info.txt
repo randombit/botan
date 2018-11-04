@@ -1,5 +1,0 @@
-<defines>
-CHACHA_NEON -> 20181026
-</defines>
-
-need_isa neon

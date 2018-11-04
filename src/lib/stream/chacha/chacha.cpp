@@ -74,17 +74,10 @@ std::string ChaCha::provider() const
       }
 #endif
 
-#if defined(BOTAN_HAS_CHACHA_SSE2)
-   if(CPUID::has_sse2())
+#if defined(BOTAN_HAS_CHACHA_SIMD32)
+   if(CPUID::has_simd_32())
       {
-      return "sse2";
-      }
-#endif
-
-#if defined(BOTAN_HAS_CHACHA_NEON)
-   if(CPUID::has_neon())
-      {
-      return "neon";
+      return "simd32";
       }
 #endif
 
@@ -103,20 +96,11 @@ void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
       }
 #endif
 
-#if defined(BOTAN_HAS_CHACHA_SSE2)
-   if(CPUID::has_sse2())
+#if defined(BOTAN_HAS_CHACHA_SIMD32)
+   if(CPUID::has_simd_32())
       {
-      ChaCha::chacha_sse2_x4(output, input, rounds);
-      ChaCha::chacha_sse2_x4(output + 4*64, input, rounds);
-      return;
-      }
-#endif
-
-#if defined(BOTAN_HAS_CHACHA_NEON)
-   if(CPUID::has_neon())
-      {
-      ChaCha::chacha_neon_x4(output, input, rounds);
-      ChaCha::chacha_neon_x4(output + 4*64, input, rounds);
+      ChaCha::chacha_simd32_x4(output, input, rounds);
+      ChaCha::chacha_simd32_x4(output + 4*64, input, rounds);
       return;
       }
 #endif
@@ -177,7 +161,7 @@ void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
       store_le(x15, output + 64 * i + 4 * 15);
 
       input[12]++;
-      input[13] += input[12] < i; // carry?
+      input[13] += (input[12] == 0);
       }
    }
 
