@@ -65,7 +65,8 @@ aes_power8
 serpent_simd
 serpent_avx2
 threefish_512_avx2
-chacha_sse2
+chacha_simd32
+chacha_avx2
 
 sha1_sse2
 sha1_x86

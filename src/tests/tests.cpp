@@ -697,7 +697,7 @@ std::string VarMap::get_opt_str(const std::string& key, const std::string& def_v
    return i->second;
    }
 
-bool VarMap::get_req_bool( const std::string& key) const
+bool VarMap::get_req_bool(const std::string& key) const
    {
    auto i = m_vars.find(key);
    if(i == m_vars.end())
@@ -719,7 +719,7 @@ bool VarMap::get_req_bool( const std::string& key) const
       }
    }
 
-size_t VarMap::get_req_sz( const std::string& key) const
+size_t VarMap::get_req_sz(const std::string& key) const
    {
    auto i = m_vars.find(key);
    if(i == m_vars.end())
@@ -729,7 +729,7 @@ size_t VarMap::get_req_sz( const std::string& key) const
    return Botan::to_u32bit(i->second);
    }
 
-size_t VarMap::get_opt_sz( const std::string& key, const size_t def_value) const
+size_t VarMap::get_opt_sz(const std::string& key, const size_t def_value) const
    {
    auto i = m_vars.find(key);
    if(i == m_vars.end())
@@ -739,8 +739,24 @@ size_t VarMap::get_opt_sz( const std::string& key, const size_t def_value) const
    return Botan::to_u32bit(i->second);
    }
 
-std::vector<uint8_t> VarMap::get_opt_bin(
-      const std::string& key) const
+uint64_t VarMap::get_opt_u64(const std::string& key, const uint64_t def_value) const
+   {
+   auto i = m_vars.find(key);
+   if(i == m_vars.end())
+      {
+      return def_value;
+      }
+   try
+      {
+      return std::stoull(i->second);
+      }
+   catch(std::exception&)
+      {
+      throw Test_Error("Invalid u64 value '" + i->second + "'");
+      }
+   }
+
+std::vector<uint8_t> VarMap::get_opt_bin(const std::string& key) const
    {
    auto i = m_vars.find(key);
    if(i == m_vars.end())
@@ -759,7 +775,7 @@ std::vector<uint8_t> VarMap::get_opt_bin(
       }
    }
 
-std::string VarMap::get_req_str( const std::string& key) const
+std::string VarMap::get_req_str(const std::string& key) const
    {
    auto i = m_vars.find(key);
    if(i == m_vars.end())
@@ -770,8 +786,7 @@ std::string VarMap::get_req_str( const std::string& key) const
    }
 
 #if defined(BOTAN_HAS_BIGINT)
-Botan::BigInt VarMap::get_req_bn(
-      const std::string& key) const
+Botan::BigInt VarMap::get_req_bn(const std::string& key) const
    {
    auto i = m_vars.find(key);
    if(i == m_vars.end())

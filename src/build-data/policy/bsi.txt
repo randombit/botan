@@ -121,7 +121,8 @@ cfb
 
 # stream
 chacha
-chacha_sse2
+chacha_simd32
+chacha_avx2
 ofb
 rc4
 salsa20
