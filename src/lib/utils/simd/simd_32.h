@@ -645,8 +645,6 @@ class SIMD_4x32 final
 #endif
    };
 
-typedef SIMD_4x32 SIMD_32;
-
 }
 
 #endif

@@ -13,10 +13,10 @@ namespace Botan {
 
 #define key_xor(round, B0, B1, B2, B3)                             \
    do {                                                            \
-      B0 ^= SIMD_32::splat(m_round_key[4*round  ]);                \
-      B1 ^= SIMD_32::splat(m_round_key[4*round+1]);                \
-      B2 ^= SIMD_32::splat(m_round_key[4*round+2]);                \
-      B3 ^= SIMD_32::splat(m_round_key[4*round+3]);                \
+      B0 ^= SIMD_4x32::splat(m_round_key[4*round  ]);              \
+      B1 ^= SIMD_4x32::splat(m_round_key[4*round+1]);              \
+      B2 ^= SIMD_4x32::splat(m_round_key[4*round+2]);              \
+      B3 ^= SIMD_4x32::splat(m_round_key[4*round+3]);              \
    } while(0)
 
 /*
@@ -55,12 +55,12 @@ namespace Botan {
 */
 void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const
    {
-   SIMD_32 B0 = SIMD_32::load_le(in);
-   SIMD_32 B1 = SIMD_32::load_le(in + 16);
-   SIMD_32 B2 = SIMD_32::load_le(in + 32);
-   SIMD_32 B3 = SIMD_32::load_le(in + 48);
+   SIMD_4x32 B0 = SIMD_4x32::load_le(in);
+   SIMD_4x32 B1 = SIMD_4x32::load_le(in + 16);
+   SIMD_4x32 B2 = SIMD_4x32::load_le(in + 32);
+   SIMD_4x32 B3 = SIMD_4x32::load_le(in + 48);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
+   SIMD_4x32::transpose(B0, B1, B2, B3);
 
    key_xor( 0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 1,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
@@ -98,7 +98,7 @@ void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const
    key_xor(30,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(31,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); key_xor(32,B0,B1,B2,B3);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
+   SIMD_4x32::transpose(B0, B1, B2, B3);
 
    B0.store_le(out);
    B1.store_le(out + 16);
@@ -111,12 +111,12 @@ void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const
 */
 void Serpent::simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const
    {
-   SIMD_32 B0 = SIMD_32::load_le(in);
-   SIMD_32 B1 = SIMD_32::load_le(in + 16);
-   SIMD_32 B2 = SIMD_32::load_le(in + 32);
-   SIMD_32 B3 = SIMD_32::load_le(in + 48);
+   SIMD_4x32 B0 = SIMD_4x32::load_le(in);
+   SIMD_4x32 B1 = SIMD_4x32::load_le(in + 16);
+   SIMD_4x32 B2 = SIMD_4x32::load_le(in + 32);
+   SIMD_4x32 B3 = SIMD_4x32::load_le(in + 48);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
+   SIMD_4x32::transpose(B0, B1, B2, B3);
 
    key_xor(32,B0,B1,B2,B3);  SBoxD8(B0,B1,B2,B3); key_xor(31,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(30,B0,B1,B2,B3);
@@ -154,7 +154,7 @@ void Serpent::simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const
    i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 1,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 0,B0,B1,B2,B3);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
+   SIMD_4x32::transpose(B0, B1, B2, B3);
 
    B0.store_le(out);
    B1.store_le(out + 16);

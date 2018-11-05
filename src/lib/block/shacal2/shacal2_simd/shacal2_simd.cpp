@@ -13,23 +13,23 @@ namespace Botan {
 namespace {
 
 inline
-void SHACAL2_Fwd(const SIMD_32& A, const SIMD_32& B, const SIMD_32& C, SIMD_32& D,
-                 const SIMD_32& E, const SIMD_32& F, const SIMD_32& G, SIMD_32& H,
+void SHACAL2_Fwd(const SIMD_4x32& A, const SIMD_4x32& B, const SIMD_4x32& C, SIMD_4x32& D,
+                 const SIMD_4x32& E, const SIMD_4x32& F, const SIMD_4x32& G, SIMD_4x32& H,
                  uint32_t RK)
    {
-   H += E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_32::splat(RK);
+   H += E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_4x32::splat(RK);
    D += H;
    H += A.rho<2,13,22>() + ((A & B) | ((A | B) & C));
    }
 
 inline
-void SHACAL2_Rev(const SIMD_32& A, const SIMD_32& B, const SIMD_32& C, SIMD_32& D,
-                 const SIMD_32& E, const SIMD_32& F, const SIMD_32& G, SIMD_32& H,
+void SHACAL2_Rev(const SIMD_4x32& A, const SIMD_4x32& B, const SIMD_4x32& C, SIMD_4x32& D,
+                 const SIMD_4x32& E, const SIMD_4x32& F, const SIMD_4x32& G, SIMD_4x32& H,
                  uint32_t RK)
    {
    H -= A.rho<2,13,22>() + ((A & B) | ((A | B) & C));
    D -= H;
-   H -= E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_32::splat(RK);
+   H -= E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_4x32::splat(RK);
    }
 
 }
