@@ -275,6 +275,13 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
+         #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
+
+         return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(ROT)),
+                                    vshrq_n_u32(m_neon, static_cast<int>(32-ROT))));
+
+         #else
+
          if(ROT == 8)
             {
             const uint8_t maskb[16] = { 3,0,1,2, 7,4,5,6, 11,8,9,10, 15,12,13,14 };
@@ -290,6 +297,8 @@ class SIMD_4x32 final
             return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(ROT)),
                                        vshrq_n_u32(m_neon, static_cast<int>(32-ROT))));
             }
+
+         #endif
 
 #else
          return SIMD_4x32(Botan::rotl<ROT>(m_scalar[0]),
