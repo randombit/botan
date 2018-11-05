@@ -9,7 +9,7 @@ Version 2.9.0, Not Yet Released
 
 * Use a smaller sieve which improves performance of prime generation.
 
-* Add NEON implementation of ChaCha (GH #1719)
+* Add NEON and AltiVec implementations of ChaCha (GH #1719 #1728)
 
 * Support for Visual C++ 2013 has been removed (GH #1557 #1697)
 
