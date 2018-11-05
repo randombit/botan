@@ -35,6 +35,13 @@ class SIMD_8x32 final
          }
 
       BOTAN_FUNC_ISA("avx2")
+      explicit SIMD_8x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3,
+                         uint32_t B4, uint32_t B5, uint32_t B6, uint32_t B7)
+         {
+         m_avx2 = _mm256_set_epi32(B7, B6, B5, B4, B3, B2, B1, B0);
+         }
+
+      BOTAN_FUNC_ISA("avx2")
       static SIMD_8x32 splat(uint32_t B)
          {
          return SIMD_8x32(_mm256_set1_epi32(B));
@@ -70,8 +77,25 @@ class SIMD_8x32 final
          {
          static_assert(ROT > 0 && ROT < 32, "Invalid rotation constant");
 
-         return SIMD_8x32(_mm256_or_si256(_mm256_slli_epi32(m_avx2, static_cast<int>(ROT)),
-                                          _mm256_srli_epi32(m_avx2, static_cast<int>(32-ROT))));
+         if(ROT == 8)
+            {
+            const __m256i shuf_rotl_8 = _mm256_set_epi8(14, 13, 12, 15, 10, 9, 8, 11, 6, 5, 4, 7, 2, 1, 0, 3,
+                                                        14, 13, 12, 15, 10, 9, 8, 11, 6, 5, 4, 7, 2, 1, 0, 3);
+
+            return SIMD_8x32(_mm256_shuffle_epi8(m_avx2, shuf_rotl_8));
+            }
+         else if(ROT == 16)
+            {
+            const __m256i shuf_rotl_16 = _mm256_set_epi8(13, 12, 15, 14, 9, 8, 11, 10, 5, 4, 7, 6, 1, 0, 3, 2,
+                                                         13, 12, 15, 14, 9, 8, 11, 10, 5, 4, 7, 6, 1, 0, 3, 2);
+
+            return SIMD_8x32(_mm256_shuffle_epi8(m_avx2, shuf_rotl_16));
+            }
+         else
+            {
+            return SIMD_8x32(_mm256_or_si256(_mm256_slli_epi32(m_avx2, static_cast<int>(ROT)),
+                                             _mm256_srli_epi32(m_avx2, static_cast<int>(32-ROT))));
+            }
          }
 
       template<size_t ROT>
@@ -202,6 +226,8 @@ class SIMD_8x32 final
          B2.m_avx2 = _mm256_unpacklo_epi64(T2, T3);
          B3.m_avx2 = _mm256_unpackhi_epi64(T2, T3);
          }
+
+      __m256i handle() const { return m_avx2; }
 
    private:
 
