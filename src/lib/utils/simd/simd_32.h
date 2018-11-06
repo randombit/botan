@@ -138,14 +138,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
-         uint32_t in32[4];
-         std::memcpy(in32, in, 16);
-         if(CPUID::is_big_endian())
-            {
-            bswap_4(in32);
-            }
-         return SIMD_4x32(vld1q_u32(in32));
-
+         SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
+         return CPUID::is_big_endian() ? l.bswap() : l;
 #else
          SIMD_4x32 out;
          Botan::load_le(out.m_scalar, static_cast<const uint8_t*>(in), 4);
@@ -170,13 +164,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
-         uint32_t in32[4];
-         std::memcpy(in32, in, 16);
-         if(CPUID::is_little_endian())
-            {
-            bswap_4(in32);
-            }
-         return SIMD_4x32(vld1q_u32(in32));
+         SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
+         return CPUID::is_little_endian() ? l.bswap() : l;
 
 #else
          SIMD_4x32 out;
@@ -207,14 +196,11 @@ class SIMD_4x32 final
 
          if(CPUID::is_big_endian())
             {
-            SIMD_4x32 swap = bswap();
-            swap.store_be(out);
+            bswap().store_le(out);
             }
          else
             {
-            uint32_t out32[4] = { 0 };
-            vst1q_u32(out32, m_neon);
-            copy_out_le(out, 16, out32);
+            vst1q_u8(out, vreinterpretq_u8_u32(m_neon));
             }
 #else
          Botan::store_le(out, m_scalar[0], m_scalar[1], m_scalar[2], m_scalar[3]);
@@ -243,14 +229,11 @@ class SIMD_4x32 final
 
          if(CPUID::is_little_endian())
             {
-            SIMD_4x32 swap = bswap();
-            swap.store_le(out);
+            bswap().store_le(out);
             }
          else
             {
-            uint32_t out32[4] = { 0 };
-            vst1q_u32(out32, m_neon);
-            copy_out_be(out, 16, out32);
+            vst1q_u8(out, vreinterpretq_u8_u32(m_neon));
             }
 
 #else
@@ -291,8 +274,31 @@ class SIMD_4x32 final
          return SIMD_4x32(vec_rl(m_vmx, (__vector unsigned int){r, r, r, r}));
 
 #elif defined(BOTAN_SIMD_USE_NEON)
+
+         #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
+
          return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(ROT)),
                                     vshrq_n_u32(m_neon, static_cast<int>(32-ROT))));
+
+         #else
+
+         if(ROT == 8)
+            {
+            const uint8_t maskb[16] = { 3,0,1,2, 7,4,5,6, 11,8,9,10, 15,12,13,14 };
+            const uint8x16_t mask = vld1q_u8(maskb);
+            return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(m_neon), mask)));
+            }
+         else if(ROT == 16)
+            {
+            return SIMD_4x32(vreinterpretq_u32_u16(vrev32q_u16(vreinterpretq_u16_u32(m_neon))));
+            }
+         else
+            {
+            return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(ROT)),
+                                       vshrq_n_u32(m_neon, static_cast<int>(32-ROT))));
+            }
+
+         #endif
 
 #else
          return SIMD_4x32(Botan::rotl<ROT>(m_scalar[0]),
@@ -538,15 +544,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
-         //return SIMD_4x32(vrev64q_u32(m_neon));
+         return SIMD_4x32(vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(m_neon))));
 
-         // FIXME this is really slow
-         SIMD_4x32 ror8 = this->rotr<8>();
-         SIMD_4x32 rol8 = this->rotl<8>();
-
-         const SIMD_4x32 mask1 = SIMD_4x32::splat(0xFF00FF00);
-         const SIMD_4x32 mask2 = SIMD_4x32::splat(0x00FF00FF);
-         return (ror8 & mask1) | (rol8 & mask2);
 #else
          // scalar
          return SIMD_4x32(reverse_bytes(m_scalar[0]),
