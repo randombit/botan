@@ -9,7 +9,12 @@ Version 2.9.0, Not Yet Released
 
 * Use a smaller sieve which improves performance of prime generation.
 
-* Add NEON and AltiVec implementations of ChaCha (GH #1719 #1728)
+* Fixed a bug that caused ChaCha to produce incorrect output after encrypting
+  256 GB. (GH #1728)
+
+* Add NEON and AltiVec implementations of ChaCha (GH #1719 #1728 #1729)
+
+* Optimize AVX2 ChaCha (GH #1730)
 
 * Support for Visual C++ 2013 has been removed (GH #1557 #1697)
 
