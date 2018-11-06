@@ -361,12 +361,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      bool is_zero() const
         {
-        const size_t sw = sig_words();
-
-        for(size_t i = 0; i != sw; ++i)
-           if(m_reg[i])
-              return false;
-        return true;
+        return (sig_words() == 0);
         }
 
      /**
