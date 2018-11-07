@@ -12,6 +12,7 @@
 #define BOTAN_ED25519_FE_H_
 
 #include <botan/mem_ops.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

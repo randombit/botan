@@ -122,7 +122,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
       std::chrono::system_clock::time_point from_timestring(const std::string& time_str)
          {
          if(time_str.size() != 19)
-            throw Invalid_Argument("Invalid TOTP timestamp string " + time_str);
+            throw Test_Error("Invalid TOTP timestamp string " + time_str);
          // YYYY-MM-DDTHH:MM:SS
          // 0123456789012345678
          const uint32_t year = Botan::to_u32bit(time_str.substr(0, 4));
