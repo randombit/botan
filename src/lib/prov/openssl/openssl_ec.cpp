@@ -171,7 +171,7 @@ class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_w
          std::unique_ptr<ECDSA_SIG, std::function<void (ECDSA_SIG*)>> sig(nullptr, ECDSA_SIG_free);
          sig.reset(::ECDSA_SIG_new());
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
          sig->r = BN_bin2bn(sig_bytes              , sig_len / 2, sig->r);
          sig->s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, sig->s);
 #else
@@ -243,7 +243,7 @@ class OpenSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
          if(!sig)
             throw OpenSSL_Error("ECDSA_do_sign");
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
          const BIGNUM* r = sig->r;
          const BIGNUM* s = sig->s;
 #else
