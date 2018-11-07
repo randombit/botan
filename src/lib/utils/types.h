@@ -15,6 +15,8 @@
 #include <cstddef> // IWYU pragma: export
 #include <cstdint> // IWYU pragma: export
 #include <memory> // IWYU pragma: export
+#include <stdexcept>
+#include <string>
 
 namespace Botan {
 
