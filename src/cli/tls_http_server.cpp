@@ -127,7 +127,7 @@ class HTTP_Parser
             headers[hdr_name] = hdr_val;
 
             if(headers.size() > 1024)
-               throw std::runtime_error("That's an awful lot of headers");
+               throw Botan::Invalid_Argument("Too many HTTP headers sent in request");
             }
 
          if(verb != "" && location != "")
