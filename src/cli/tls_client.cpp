@@ -330,7 +330,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          {
          if(cert_chain.empty())
             {
-            throw std::invalid_argument("Certificate chain was empty");
+            throw Botan::Invalid_Argument("Certificate chain was empty");
             }
 
          Botan::Path_Validation_Restrictions restrictions(
