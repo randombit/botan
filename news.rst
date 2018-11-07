@@ -7,6 +7,11 @@ Version 2.9.0, Not Yet Released
 * Fix bugs in TLS which caused negotiation failures when the client
   used an unknown signature algorithm or version (GH #1711 #1709 #1708)
 
+* Fix bug affecting GCM, EAX and ChaCha20Poly1305 where if the associated data
+  was set after starting a message, the new AD was not reflected in the produced
+  tag. Now with these modes setting an AD after beginning a message throws an
+  exception.
+
 * Use a smaller sieve which improves performance of prime generation.
 
 * Fixed a bug that caused ChaCha to produce incorrect output after encrypting
