@@ -126,31 +126,42 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    if(this->is_negative() || s.is_negative() || mod.is_negative())
       throw Invalid_Argument("BigInt::mod_sub expects all arguments are positive");
 
-   const size_t t_sw = sig_words();
-   const size_t s_sw = s.sig_words();
    const size_t mod_sw = mod.sig_words();
-
-   if(t_sw > mod_sw || s_sw > mod_sw)
-      throw Invalid_Argument("BigInt::mod_sub args larger than modulus");
 
    BOTAN_DEBUG_ASSERT(*this < mod);
    BOTAN_DEBUG_ASSERT(s < mod);
 
-   int32_t relative_size = bigint_cmp(data(), t_sw, s.data(), s_sw);
+   // We are assuming here that *this and s are no more than mod_sw words long
+   const size_t t_w = std::min(mod_sw, size());
+   const size_t s_w = std::min(mod_sw, s.size());
+
+   /*
+   TODO make this const time
+   */
+
+   int32_t relative_size = bigint_cmp(data(), t_w, s.data(), s_w);
 
    if(relative_size >= 0)
       {
-      // this >= s in which case just subtract
-      bigint_sub2(mutable_data(), t_sw, s.data(), s_sw);
+      /*
+      this >= s in which case just subtract
+
+      Here s_w might be > t_w because these values are just based on
+      the size of the buffer. But we know that because *this < s, then
+      this->sig_words() must be <= s.sig_words() so set the size of s
+      to the minimum of t and s words.
+      */
+      BOTAN_DEBUG_ASSERT(sig_words() <= s.sig_words());
+      bigint_sub2(mutable_data(), t_w, s.data(), std::min(t_w, s_w));
       }
    else
       {
-      // Otherwise we must sub s and then add p (or add (p - s) as here)
+       // Otherwise we must sub s and then add p (or add (p - s) as here)
 
       if(ws.size() < mod_sw)
          ws.resize(mod_sw);
 
-      word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), s_sw);
+      word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), s_w);
       BOTAN_ASSERT_NOMSG(borrow == 0);
 
       if(size() < mod_sw)
