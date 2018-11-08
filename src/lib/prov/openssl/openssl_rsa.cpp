@@ -160,7 +160,7 @@ class OpenSSL_RSA_Verification_Operation final : public PK_Ops::Verification_wit
 
       size_t max_input_bits() const override
          {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
          return ::BN_num_bits(m_openssl_rsa->n) - 1;
 #else
          return ::RSA_bits(m_openssl_rsa.get()) - 1;
@@ -234,7 +234,7 @@ class OpenSSL_RSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
 
       size_t max_input_bits() const override
          {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
          return ::BN_num_bits(m_openssl_rsa->n) - 1;
 #else
          return ::RSA_bits(m_openssl_rsa.get()) - 1;
