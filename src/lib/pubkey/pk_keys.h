@@ -12,6 +12,7 @@
 #include <botan/asn1_oid.h>
 #include <botan/alg_id.h>
 #include <botan/pk_ops_fwd.h>
+#include <string>
 
 namespace Botan {
 

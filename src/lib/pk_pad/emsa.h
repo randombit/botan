@@ -10,6 +10,7 @@
 
 #include <botan/secmem.h>
 #include <botan/alg_id.h>
+#include <string>
 
 namespace Botan {
 
