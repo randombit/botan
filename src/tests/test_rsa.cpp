@@ -223,6 +223,13 @@ class RSA_Blinding_Tests final : public Test
          {
          Test::Result result("RSA blinding");
 
+         /* This test makes only sense with the base provider, else skip it. */
+         if (provider_filter({"base"}).empty())
+            {
+            result.note_missing("base provider");
+            return std::vector<Test::Result> {result};
+            }
+
 #if defined(BOTAN_HAS_EMSA_RAW) || defined(BOTAN_HAS_EME_RAW)
          Botan::RSA_PrivateKey rsa(Test::rng(), 1024);
          Botan::Null_RNG null_rng;
@@ -239,7 +246,7 @@ class RSA_Blinding_Tests final : public Test
          */
 
          Botan::PK_Signer signer(rsa, Test::rng(), "Raw", Botan::IEEE_1363, "base"); // don't try this at home
-         Botan::PK_Verifier verifier(rsa, "Raw");
+         Botan::PK_Verifier verifier(rsa, "Raw", Botan::IEEE_1363, "base");
 
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i)
             {
@@ -266,7 +273,7 @@ class RSA_Blinding_Tests final : public Test
          * are used as an additional test on the blinders.
          */
 
-         Botan::PK_Encryptor_EME encryptor(rsa, Test::rng(), "Raw");   // don't try this at home
+         Botan::PK_Encryptor_EME encryptor(rsa, Test::rng(), "Raw", "base");   // don't try this at home
 
          /*
          Test blinding reinit interval
