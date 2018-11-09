@@ -247,7 +247,7 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    const int64_t S6 = 0xFFFFFFFF + X06 + X10 - X13;
 
    x.mask_bits(224);
-   x.shrink_to_fit(p224_limbs + 1);
+   x.resize(p224_limbs + 1);
 
    int64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
@@ -358,7 +358,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - X11 - X12 - X13;
 
    x.mask_bits(256);
-   x.shrink_to_fit(p256_limbs + 1);
+   x.resize(p256_limbs + 1);
 
    int64_t S = 0;
 
@@ -505,7 +505,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    const int64_t SB = 0xFFFFFFFF + X11 + X19 + X20 + X23 - X22;
 
    x.mask_bits(384);
-   x.shrink_to_fit(p384_limbs + 1);
+   x.resize(p384_limbs + 1);
 
    int64_t S = 0;
 
