@@ -87,7 +87,7 @@ namespace {
 * Treating this MPI as a sequence of 32-bit words in big-endian
 * order, return word i (or 0 if out of range)
 */
-inline uint32_t get_uint32_t(const BigInt& x, size_t i)
+inline uint32_t get_uint32(const BigInt& x, size_t i)
    {
 #if (BOTAN_MP_WORD_BITS == 32)
    return x.word_at(i);
@@ -120,18 +120,18 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p192_limbs = 192 / BOTAN_MP_WORD_BITS;
 
-   const uint64_t X00 = get_uint32_t(x,  0);
-   const uint64_t X01 = get_uint32_t(x,  1);
-   const uint64_t X02 = get_uint32_t(x,  2);
-   const uint64_t X03 = get_uint32_t(x,  3);
-   const uint64_t X04 = get_uint32_t(x,  4);
-   const uint64_t X05 = get_uint32_t(x,  5);
-   const uint64_t X06 = get_uint32_t(x,  6);
-   const uint64_t X07 = get_uint32_t(x,  7);
-   const uint64_t X08 = get_uint32_t(x,  8);
-   const uint64_t X09 = get_uint32_t(x,  9);
-   const uint64_t X10 = get_uint32_t(x, 10);
-   const uint64_t X11 = get_uint32_t(x, 11);
+   const uint64_t X00 = get_uint32(x,  0);
+   const uint64_t X01 = get_uint32(x,  1);
+   const uint64_t X02 = get_uint32(x,  2);
+   const uint64_t X03 = get_uint32(x,  3);
+   const uint64_t X04 = get_uint32(x,  4);
+   const uint64_t X05 = get_uint32(x,  5);
+   const uint64_t X06 = get_uint32(x,  6);
+   const uint64_t X07 = get_uint32(x,  7);
+   const uint64_t X08 = get_uint32(x,  8);
+   const uint64_t X09 = get_uint32(x,  9);
+   const uint64_t X10 = get_uint32(x, 10);
+   const uint64_t X11 = get_uint32(x, 11);
 
    const uint64_t S0 = X00 + X06 + X10;
    const uint64_t S1 = X01 + X07 + X11;
@@ -221,20 +221,20 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const int64_t X00 = get_uint32_t(x,  0);
-   const int64_t X01 = get_uint32_t(x,  1);
-   const int64_t X02 = get_uint32_t(x,  2);
-   const int64_t X03 = get_uint32_t(x,  3);
-   const int64_t X04 = get_uint32_t(x,  4);
-   const int64_t X05 = get_uint32_t(x,  5);
-   const int64_t X06 = get_uint32_t(x,  6);
-   const int64_t X07 = get_uint32_t(x,  7);
-   const int64_t X08 = get_uint32_t(x,  8);
-   const int64_t X09 = get_uint32_t(x,  9);
-   const int64_t X10 = get_uint32_t(x, 10);
-   const int64_t X11 = get_uint32_t(x, 11);
-   const int64_t X12 = get_uint32_t(x, 12);
-   const int64_t X13 = get_uint32_t(x, 13);
+   const int64_t X00 = get_uint32(x,  0);
+   const int64_t X01 = get_uint32(x,  1);
+   const int64_t X02 = get_uint32(x,  2);
+   const int64_t X03 = get_uint32(x,  3);
+   const int64_t X04 = get_uint32(x,  4);
+   const int64_t X05 = get_uint32(x,  5);
+   const int64_t X06 = get_uint32(x,  6);
+   const int64_t X07 = get_uint32(x,  7);
+   const int64_t X08 = get_uint32(x,  8);
+   const int64_t X09 = get_uint32(x,  9);
+   const int64_t X10 = get_uint32(x, 10);
+   const int64_t X11 = get_uint32(x, 11);
+   const int64_t X12 = get_uint32(x, 12);
+   const int64_t X13 = get_uint32(x, 13);
 
    // One full copy of P224 is added, so the result is always positive
 
@@ -330,22 +330,22 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const int64_t X00 = get_uint32_t(x,  0);
-   const int64_t X01 = get_uint32_t(x,  1);
-   const int64_t X02 = get_uint32_t(x,  2);
-   const int64_t X03 = get_uint32_t(x,  3);
-   const int64_t X04 = get_uint32_t(x,  4);
-   const int64_t X05 = get_uint32_t(x,  5);
-   const int64_t X06 = get_uint32_t(x,  6);
-   const int64_t X07 = get_uint32_t(x,  7);
-   const int64_t X08 = get_uint32_t(x,  8);
-   const int64_t X09 = get_uint32_t(x,  9);
-   const int64_t X10 = get_uint32_t(x, 10);
-   const int64_t X11 = get_uint32_t(x, 11);
-   const int64_t X12 = get_uint32_t(x, 12);
-   const int64_t X13 = get_uint32_t(x, 13);
-   const int64_t X14 = get_uint32_t(x, 14);
-   const int64_t X15 = get_uint32_t(x, 15);
+   const int64_t X00 = get_uint32(x,  0);
+   const int64_t X01 = get_uint32(x,  1);
+   const int64_t X02 = get_uint32(x,  2);
+   const int64_t X03 = get_uint32(x,  3);
+   const int64_t X04 = get_uint32(x,  4);
+   const int64_t X05 = get_uint32(x,  5);
+   const int64_t X06 = get_uint32(x,  6);
+   const int64_t X07 = get_uint32(x,  7);
+   const int64_t X08 = get_uint32(x,  8);
+   const int64_t X09 = get_uint32(x,  9);
+   const int64_t X10 = get_uint32(x, 10);
+   const int64_t X11 = get_uint32(x, 11);
+   const int64_t X12 = get_uint32(x, 12);
+   const int64_t X13 = get_uint32(x, 13);
+   const int64_t X14 = get_uint32(x, 14);
+   const int64_t X15 = get_uint32(x, 15);
 
    // Adds 6 * P-256 to prevent underflow
    const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - X11 - X12 - X13 - X14;
@@ -465,30 +465,30 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p384_limbs = (BOTAN_MP_WORD_BITS == 32) ? 12 : 6;
 
-   const int64_t X00 = get_uint32_t(x,  0);
-   const int64_t X01 = get_uint32_t(x,  1);
-   const int64_t X02 = get_uint32_t(x,  2);
-   const int64_t X03 = get_uint32_t(x,  3);
-   const int64_t X04 = get_uint32_t(x,  4);
-   const int64_t X05 = get_uint32_t(x,  5);
-   const int64_t X06 = get_uint32_t(x,  6);
-   const int64_t X07 = get_uint32_t(x,  7);
-   const int64_t X08 = get_uint32_t(x,  8);
-   const int64_t X09 = get_uint32_t(x,  9);
-   const int64_t X10 = get_uint32_t(x, 10);
-   const int64_t X11 = get_uint32_t(x, 11);
-   const int64_t X12 = get_uint32_t(x, 12);
-   const int64_t X13 = get_uint32_t(x, 13);
-   const int64_t X14 = get_uint32_t(x, 14);
-   const int64_t X15 = get_uint32_t(x, 15);
-   const int64_t X16 = get_uint32_t(x, 16);
-   const int64_t X17 = get_uint32_t(x, 17);
-   const int64_t X18 = get_uint32_t(x, 18);
-   const int64_t X19 = get_uint32_t(x, 19);
-   const int64_t X20 = get_uint32_t(x, 20);
-   const int64_t X21 = get_uint32_t(x, 21);
-   const int64_t X22 = get_uint32_t(x, 22);
-   const int64_t X23 = get_uint32_t(x, 23);
+   const int64_t X00 = get_uint32(x,  0);
+   const int64_t X01 = get_uint32(x,  1);
+   const int64_t X02 = get_uint32(x,  2);
+   const int64_t X03 = get_uint32(x,  3);
+   const int64_t X04 = get_uint32(x,  4);
+   const int64_t X05 = get_uint32(x,  5);
+   const int64_t X06 = get_uint32(x,  6);
+   const int64_t X07 = get_uint32(x,  7);
+   const int64_t X08 = get_uint32(x,  8);
+   const int64_t X09 = get_uint32(x,  9);
+   const int64_t X10 = get_uint32(x, 10);
+   const int64_t X11 = get_uint32(x, 11);
+   const int64_t X12 = get_uint32(x, 12);
+   const int64_t X13 = get_uint32(x, 13);
+   const int64_t X14 = get_uint32(x, 14);
+   const int64_t X15 = get_uint32(x, 15);
+   const int64_t X16 = get_uint32(x, 16);
+   const int64_t X17 = get_uint32(x, 17);
+   const int64_t X18 = get_uint32(x, 18);
+   const int64_t X19 = get_uint32(x, 19);
+   const int64_t X20 = get_uint32(x, 20);
+   const int64_t X21 = get_uint32(x, 21);
+   const int64_t X22 = get_uint32(x, 22);
+   const int64_t X23 = get_uint32(x, 23);
 
    // One copy of P-384 is added to prevent underflow
    const int64_t S0 = 0xFFFFFFFF + X00 + X12 + X20 + X21 - X23;
