@@ -20,7 +20,7 @@ BigInt& BigInt::add(const word y[], size_t y_sw, Sign y_sign)
       {
       const size_t reg_size = std::max(x_sw, y_sw) + 1;
 
-      if(m_reg.size() < reg_size)
+      if(size() < reg_size)
          grow_to(reg_size);
 
       bigint_add2(mutable_data(), reg_size - 1, y, y_sw);
@@ -38,7 +38,7 @@ BigInt& BigInt::add(const word y[], size_t y_sw, Sign y_sign)
          }
       else if(relative_size == 0)
          {
-         zeroise(m_reg);
+         this->clear();
          set_sign(Positive);
          }
       else if(relative_size > 0)
@@ -126,37 +126,48 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    if(this->is_negative() || s.is_negative() || mod.is_negative())
       throw Invalid_Argument("BigInt::mod_sub expects all arguments are positive");
 
-   const size_t t_sw = sig_words();
-   const size_t s_sw = s.sig_words();
    const size_t mod_sw = mod.sig_words();
-
-   if(t_sw > mod_sw || s_sw > mod_sw)
-      throw Invalid_Argument("BigInt::mod_sub args larger than modulus");
 
    BOTAN_DEBUG_ASSERT(*this < mod);
    BOTAN_DEBUG_ASSERT(s < mod);
 
-   int32_t relative_size = bigint_cmp(data(), t_sw, s.data(), s_sw);
+   // We are assuming here that *this and s are no more than mod_sw words long
+   const size_t t_w = std::min(mod_sw, size());
+   const size_t s_w = std::min(mod_sw, s.size());
+
+   /*
+   TODO make this const time
+   */
+
+   int32_t relative_size = bigint_cmp(data(), t_w, s.data(), s_w);
 
    if(relative_size >= 0)
       {
-      // this >= s in which case just subtract
-      bigint_sub2(mutable_data(), t_sw, s.data(), s_sw);
+      /*
+      this >= s in which case just subtract
+
+      Here s_w might be > t_w because these values are just based on
+      the size of the buffer. But we know that because *this < s, then
+      this->sig_words() must be <= s.sig_words() so set the size of s
+      to the minimum of t and s words.
+      */
+      BOTAN_DEBUG_ASSERT(sig_words() <= s.sig_words());
+      bigint_sub2(mutable_data(), t_w, s.data(), std::min(t_w, s_w));
       }
    else
       {
-      // Otherwise we must sub s and then add p (or add (p - s) as here)
+       // Otherwise we must sub s and then add p (or add (p - s) as here)
 
       if(ws.size() < mod_sw)
          ws.resize(mod_sw);
 
-      word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), s_sw);
+      word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), s_w);
       BOTAN_ASSERT_NOMSG(borrow == 0);
 
-      if(m_reg.size() < mod_sw)
+      if(size() < mod_sw)
          grow_to(mod_sw);
 
-      word carry = bigint_add2_nc(mutable_data(), m_reg.size(), ws.data(), mod_sw);
+      word carry = bigint_add2_nc(mutable_data(), size(), ws.data(), mod_sw);
       BOTAN_ASSERT_NOMSG(carry == 0);
       }
 
@@ -193,7 +204,7 @@ BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws)
       bigint_sub3(ws.data(), y, y_sw, this->data(), x_sw);
       }
 
-   m_reg.swap(ws);
+   this->swap_reg(ws);
 
    return (*this);
    }
@@ -239,7 +250,7 @@ BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws)
                  y.data(), y.size(), y_sw,
                  ws.data(), ws.size());
 
-      z_reg.swap(m_reg);
+      this->swap_reg(z_reg);
       }
 
    return (*this);
@@ -309,25 +320,22 @@ word BigInt::operator%=(word mod)
 
    if(is_power_of_2(mod))
        {
-       word result = (word_at(0) & (mod - 1));
-       clear();
-       grow_to(2);
-       m_reg[0] = result;
-       return result;
+       const word remainder = (word_at(0) & (mod - 1));
+       m_data.set_to_zero();
+       m_data.set_word_at(0, remainder);
+       return remainder;
        }
 
    word remainder = 0;
 
    for(size_t j = sig_words(); j > 0; --j)
       remainder = bigint_modop(remainder, word_at(j-1), mod);
-   clear();
-   grow_to(2);
 
    if(remainder && sign() == BigInt::Negative)
-      m_reg[0] = mod - remainder;
-   else
-      m_reg[0] = remainder;
+      remainder = mod - remainder;
 
+   m_data.set_to_zero();
+   m_data.set_word_at(0, remainder);
    set_sign(BigInt::Positive);
 
    return word_at(0);
@@ -351,10 +359,9 @@ BigInt& BigInt::operator<<=(size_t shift)
       */
       const size_t needed_size = words + shift_words + (shift_bits ? 1 : 0);
 
-      if(m_reg.size() < needed_size)
-         grow_to(needed_size);
+      m_data.grow_to(needed_size);
 
-      bigint_shl1(mutable_data(), words, shift_words, shift_bits);
+      bigint_shl1(m_data.mutable_data(), words, shift_words, shift_bits);
       }
 
    return (*this);
@@ -370,7 +377,8 @@ BigInt& BigInt::operator>>=(size_t shift)
       const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
                    shift_bits  = shift % BOTAN_MP_WORD_BITS;
 
-      bigint_shr1(mutable_data(), sig_words(), shift_words, shift_bits);
+      const size_t sw = sig_words();
+      bigint_shr1(m_data.mutable_data(), sw, shift_words, shift_bits);
 
       if(is_zero())
          set_sign(Positive);

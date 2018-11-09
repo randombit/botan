@@ -15,7 +15,7 @@ namespace Botan {
 
 BigInt::BigInt(const word words[], size_t length)
    {
-   m_reg.assign(words, words + length);
+   m_data.set_words(words, length);
    }
 
 /*
@@ -23,14 +23,16 @@ BigInt::BigInt(const word words[], size_t length)
 */
 BigInt::BigInt(uint64_t n)
    {
-   if(n == 0)
-      return;
+   if(n > 0)
+      {
+#if BOTAN_MP_WORD_BITS == 32
+      m_data.set_word_at(0, static_cast<word>(n));
+      m_data.set_word_at(1, static_cast<word>(n >> 32));
+#else
+      m_data.set_word_at(0, n);
+#endif
+      }
 
-   const size_t limbs_needed = sizeof(uint64_t) / sizeof(word);
-
-   m_reg.resize(limbs_needed);
-   for(size_t i = 0; i != limbs_needed; ++i)
-      m_reg[i] = ((n >> (i*BOTAN_MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
 /*
@@ -38,17 +40,8 @@ BigInt::BigInt(uint64_t n)
 */
 BigInt::BigInt(Sign s, size_t size)
    {
-   m_reg.resize(round_up(size, 8));
+   m_data.set_size(size);
    m_signedness = s;
-   }
-
-/*
-* Copy constructor
-*/
-BigInt::BigInt(const BigInt& other)
-   {
-   m_reg = other.m_reg;
-   m_signedness = other.m_signedness;
    }
 
 /*
@@ -158,6 +151,32 @@ void BigInt::encode_words(word out[], size_t size) const
    copy_mem(out, data(), words);
    }
 
+size_t BigInt::Data::calc_sig_words() const
+   {
+   size_t sig = m_reg.size();
+
+#if 0
+   // Const time, but slower ...
+
+   word seen_only_zeros = MP_WORD_MASK;
+   word sub = 1;
+
+   for(size_t i = 0; i != m_reg.size(); ++i)
+      {
+      const word w = m_reg[m_reg.size() - i - 1];
+      seen_only_zeros &= CT::is_zero(w);
+      sub &= seen_only_zeros;
+
+      sig -= sub;
+      }
+
+#else
+   while(sig && (m_reg[sig-1] == 0))
+      sig--;
+#endif
+   return sig;
+   }
+
 /*
 * Return bits {offset...offset+length}
 */
@@ -204,7 +223,8 @@ void BigInt::set_bit(size_t n)
    const size_t which = n / BOTAN_MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
    if(which >= size()) grow_to(which + 1);
-   m_reg[which] |= mask;
+
+   m_data.set_word_at(which, m_data.get_word_at(which) | mask);
    }
 
 /*
@@ -213,9 +233,9 @@ void BigInt::set_bit(size_t n)
 void BigInt::clear_bit(size_t n)
    {
    const size_t which = n / BOTAN_MP_WORD_BITS;
-   const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
+   const word mask = ~(static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS));
    if(which < size())
-      m_reg[which] &= ~mask;
+      m_data.set_word_at(which, m_data.get_word_at(which) & mask);
    }
 
 size_t BigInt::bytes() const
@@ -286,7 +306,7 @@ void BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
       if(borrow)
          break;
 
-      m_reg.swap(ws);
+      swap_reg(ws);
       }
    }
 
@@ -298,17 +318,6 @@ BigInt BigInt::abs() const
    BigInt x = (*this);
    x.set_sign(Positive);
    return x;
-   }
-
-void BigInt::grow_to(size_t n)
-   {
-   if(n > size())
-      {
-      if(n <= m_reg.capacity())
-         m_reg.resize(m_reg.capacity());
-      else
-         m_reg.resize(round_up(n, 8));
-      }
    }
 
 /*
@@ -329,17 +338,20 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
    const size_t WORD_BYTES = sizeof(word);
 
    clear();
-   m_reg.resize(round_up((length / WORD_BYTES) + 1, 8));
+   secure_vector<word> reg((round_up((length / WORD_BYTES) + 1, 8)));
 
+   // TODO can load a word at a time here
    for(size_t i = 0; i != length / WORD_BYTES; ++i)
       {
       const size_t top = length - WORD_BYTES*i;
       for(size_t j = WORD_BYTES; j > 0; --j)
-         m_reg[i] = (m_reg[i] << 8) | buf[top - j];
+         reg[i] = (reg[i] << 8) | buf[top - j];
       }
 
    for(size_t i = 0; i != length % WORD_BYTES; ++i)
-      m_reg[length / WORD_BYTES] = (m_reg[length / WORD_BYTES] << 8) | buf[i];
+      reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[i];
+
+   m_data.swap(reg);
    }
 
 void BigInt::ct_cond_assign(bool predicate, BigInt& other)
@@ -360,12 +372,12 @@ void BigInt::ct_cond_assign(bool predicate, BigInt& other)
 #if defined(BOTAN_HAS_VALGRIND)
 void BigInt::const_time_poison() const
    {
-   CT::poison(m_reg.data(), m_reg.size());
+   CT::poison(m_data.const_data(), m_data.size());
    }
 
 void BigInt::const_time_unpoison() const
    {
-   CT::unpoison(m_reg.data(), m_reg.size());
+   CT::unpoison(m_data.const_data(), m_data.size());
    }
 #endif
 
