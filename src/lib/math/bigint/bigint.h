@@ -570,6 +570,8 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
         m_data.shrink_to_fit(min_size);
         }
 
+     void resize(size_t s) { m_data.resize(s); }
+
      /**
      * Fill BigInt with a random number with size of bitsize
      *
@@ -908,6 +910,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
               {
               const size_t words = std::max(min_size, sig_words());
               m_reg.resize(words);
+              }
+
+           void resize(size_t s)
+              {
+              m_reg.resize(s);
               }
 
            void swap(Data& other)
