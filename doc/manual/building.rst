@@ -255,6 +255,20 @@ executed on a browser, use::
   em++ -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=0 -s WASM=1 \
      --preload-file src/tests/data botan-test.bc -o botan-test.html
 
+Supporting Older Distros
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some "stable" distributions, notably RHEL/CentOS, ship very obsolete
+versions of binutils, which do not support more recent CPU instructions.
+As a result when building you may receive errors like::
+
+   Error: no such instruction: `sha256rnds2 %xmm0,%xmm4,%xmm3'
+
+Depending on how old your binutils is, you may need to disable BMI2,
+AVX2, SHA-NI, and/or RDSEED. These can be disabled by passing the
+flags ``--disable-bmi2``, ``--disable-avx2``, ``--disable-sha-ni``,
+and ``--disable-rdseed`` to ``configure.py``.
+
 Other Build-Related Tasks
 ----------------------------------------
 
