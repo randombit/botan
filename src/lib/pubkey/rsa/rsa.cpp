@@ -375,7 +375,12 @@ class RSA_Public_Operation
          m_monty_n(std::make_shared<Montgomery_Params>(m_n))
          {}
 
-      size_t get_max_input_bits() const { return (m_n.bits() - 1); }
+      size_t get_max_input_bits() const
+         {
+         const size_t n_bits = m_n.bits();
+         BOTAN_ASSERT_NOMSG(n_bits >= 384);
+         return n_bits - 1;
+         }
 
    protected:
       BigInt public_op(const BigInt& m) const
