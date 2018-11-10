@@ -40,17 +40,16 @@ inline void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
       }
    }
 
-/*
-* If cond > 0 adds x[0:size] and y[0:size] and returns carry
-* Runs in constant time
-*/
-inline word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
+inline word bigint_cnd_add(word cnd, word x[], word x_size,
+                           const word y[], size_t y_size)
    {
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
    const word mask = CT::expand_mask(cnd);
 
    word carry = 0;
 
-   const size_t blocks = size - (size % 8);
+   const size_t blocks = y_size - (y_size % 8);
    word z[8] = { 0 };
 
    for(size_t i = 0; i != blocks; i += 8)
@@ -61,9 +60,15 @@ inline word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
          x[i+j] = CT::select(mask, z[j], x[i+j]);
       }
 
-   for(size_t i = blocks; i != size; ++i)
+   for(size_t i = blocks; i != y_size; ++i)
       {
       z[0] = word_add(x[i], y[i], &carry);
+      x[i] = CT::select(mask, z[0], x[i]);
+      }
+
+   for(size_t i = y_size; i != x_size; ++i)
+      {
+      z[0] = word_add(x[i], 0, &carry);
       x[i] = CT::select(mask, z[0], x[i]);
       }
 
@@ -71,16 +76,29 @@ inline word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
    }
 
 /*
+* If cond > 0 adds x[0:size] and y[0:size] and returns carry
+* Runs in constant time
+*/
+inline word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
+   {
+   return bigint_cnd_add(cnd, x, size, y, size);
+   }
+
+/*
 * If cond > 0 subtracts x[0:size] and y[0:size] and returns borrow
 * Runs in constant time
 */
-inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
+inline word bigint_cnd_sub(word cnd,
+                           word x[], size_t x_size,
+                           const word y[], size_t y_size)
    {
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
    const word mask = CT::expand_mask(cnd);
 
    word carry = 0;
 
-   const size_t blocks = size - (size % 8);
+   const size_t blocks = y_size - (y_size % 8);
    word z[8] = { 0 };
 
    for(size_t i = 0; i != blocks; i += 8)
@@ -91,14 +109,30 @@ inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
          x[i+j] = CT::select(mask, z[j], x[i+j]);
       }
 
-   for(size_t i = blocks; i != size; ++i)
+   for(size_t i = blocks; i != y_size; ++i)
       {
       z[0] = word_sub(x[i], y[i], &carry);
       x[i] = CT::select(mask, z[0], x[i]);
       }
 
+   for(size_t i = y_size; i != x_size; ++i)
+      {
+      z[0] = word_sub(x[i], 0, &carry);
+      x[i] = CT::select(mask, z[0], x[i]);
+      }
+
    return carry & mask;
    }
+
+/*
+* If cond > 0 adds x[0:size] and y[0:size] and returns carry
+* Runs in constant time
+*/
+inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
+   {
+   return bigint_cnd_sub(cnd, x, size, y, size);
+   }
+
 
 /*
 * Equivalent to
@@ -478,7 +512,10 @@ void bigint_monty_redc(word z[],
                        size_t ws_size);
 
 /**
-* Compare x and y returning early
+* Compare x and y
+* Return -1 if x < y
+* Return 0 if x == y
+* Return 1 if x > y
 */
 inline int32_t bigint_cmp(const word x[], size_t x_size,
                           const word y[], size_t y_size)
