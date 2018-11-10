@@ -227,6 +227,18 @@ class SIMD_8x32 final
          B3.m_avx2 = _mm256_unpackhi_epi64(T2, T3);
          }
 
+      BOTAN_FUNC_ISA("avx2")
+      static void reset_registers()
+         {
+         _mm256_zeroupper();
+         }
+
+      BOTAN_FUNC_ISA("avx2")
+      static void zero_registers()
+         {
+         _mm256_zeroall();
+         }
+
       __m256i handle() const { return m_avx2; }
 
    private:

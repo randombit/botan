@@ -77,6 +77,8 @@ inline void rotate_keys(__m256i& R0, __m256i& R1, __m256i R2)
 BOTAN_FUNC_ISA("avx2")
 void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   _mm256_zeroupper();
+
    const uint64_t* K = m_K.data();
    const uint64_t* T_64 = m_T.data();
 
@@ -241,6 +243,8 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
       _mm256_storeu_si256(out_mm++, X1);
       }
 
+   _mm256_zeroall();
+
 #undef THREEFISH_ENC_8_ROUNDS
 #undef THREEFISH_ROUND
 #undef THREEFISH_INJECT_KEY
@@ -252,6 +256,8 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 BOTAN_FUNC_ISA("avx2")
 void Threefish_512::avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+   _mm256_zeroupper();
+
    const uint64_t* K = m_K.data();
    const uint64_t* T_64 = m_T.data();
 
@@ -431,6 +437,8 @@ void Threefish_512::avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 #undef THREEFISH_DEC_2_8_ROUNDS
 #undef THREEFISH_ROUND_2
 #undef THREEFISH_INJECT_KEY_2
+
+   _mm256_zeroall();
    }
 
 }

@@ -13,6 +13,8 @@ namespace Botan {
 BOTAN_FUNC_ISA("avx2")
 void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rounds)
    {
+   SIMD_8x32::reset_registers();
+
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
    const SIMD_8x32 CTR0 = SIMD_8x32(0, 1, 2, 3, 4, 5, 6, 7);
 
@@ -201,6 +203,8 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    _mm256_storeu_si256(output_mm + 13, _mm256_permute2x128_si256(R10.handle(), R14.handle(), 1 + (3 << 4)));
    _mm256_storeu_si256(output_mm + 14, _mm256_permute2x128_si256(R03.handle(), R07.handle(), 1 + (3 << 4)));
    _mm256_storeu_si256(output_mm + 15, _mm256_permute2x128_si256(R11.handle(), R15.handle(), 1 + (3 << 4)));
+
+   SIMD_8x32::zero_registers();
 
    state[12] += 8;
    if(state[12] < 8)
