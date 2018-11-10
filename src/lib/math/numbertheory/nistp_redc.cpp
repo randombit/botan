@@ -194,19 +194,9 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
-   if(S == 0 && x.word_at(p192_limbs-1) < p192_mults[0][p192_limbs-1])
-      {
-      return;
-      }
-
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p192_mults[S], p192_limbs);
-
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-192 reduction");
-
-   if(borrow)
-      {
-      bigint_add2(x.mutable_data(), x.size() - 1, p192_mults[0], p192_limbs);
-      }
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+   bigint_cnd_add(borrow, x.mutable_data(), x.size(), p192_mults[0], p192_limbs);
    }
 
 const BigInt& prime_p224()
@@ -303,19 +293,9 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 
    };
 
-   if(S == 0 && x.word_at(p224_limbs-1) < p224_mults[0][p224_limbs-1])
-      {
-      return;
-      }
-
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p224_mults[S], p224_limbs);
-
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-224 reduction");
-
-   if(borrow)
-      {
-      bigint_add2(x.mutable_data(), x.size() - 1, p224_mults[0], p224_limbs);
-      }
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+   bigint_cnd_add(borrow, x.mutable_data(), x.size(), p224_mults[0], p224_limbs);
    }
 
 const BigInt& prime_p256()
@@ -405,7 +385,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    S += 5; // the top digits of 6*P-256
 
-   BOTAN_ASSERT(S >= 0 && S <= 10, "Expected overflow");
+   BOTAN_DEBUG_ASSERT(S >= 0 && S <= 10);
 
    /*
    This is a table of (i*P-256) % 2**256 for i in 1...10
@@ -438,19 +418,11 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
-   if(S == 0 && x.word_at(p256_limbs-1) < p256_mults[0][p256_limbs-1])
-      {
-      return;
-      }
+   CT::unpoison(S);
 
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p256_mults[S], p256_limbs);
-
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-256 reduction");
-
-   if(borrow)
-      {
-      bigint_add2(x.mutable_data(), x.size() - 1, p256_mults[0], p256_limbs);
-      }
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+   bigint_cnd_add(borrow, x.mutable_data(), x.size(), p256_mults[0], p256_limbs);
    }
 
 const BigInt& prime_p384()
@@ -598,19 +570,9 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
-   if(S == 0 && x.word_at(p384_limbs-1) < p384_mults[0][p384_limbs-1])
-      {
-      return;
-      }
-
    word borrow = bigint_sub2(x.mutable_data(), x.size(), p384_mults[S], p384_limbs);
-
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-384 reduction");
-
-   if(borrow)
-      {
-      bigint_add2(x.mutable_data(), x.size() - 1, p384_mults[0], p384_limbs);
-      }
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+   bigint_cnd_add(borrow, x.mutable_data(), x.size(), p384_mults[0], p384_limbs);
    }
 
 #endif
