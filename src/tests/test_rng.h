@@ -212,7 +212,12 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator
 
       void randomize(uint8_t out[], size_t out_len) override
          {
-         std::memset(out, 0x80, out_len);
+         /*
+         The HMAC_DRBG and ChaCha reseed KATs assume this RNG type
+         outputs all 0x80
+         */
+         for(size_t i = 0; i != out_len; ++i)
+            out[i] = 0x80;
          m_randomize_count++;
          }
 

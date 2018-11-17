@@ -111,7 +111,7 @@ size_t CommonCrypto_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
       {
       throw CommonCrypto_Error("CCCryptorUpdate", status);
       }
-   memcpy(msg, out.data(), outl);
+   copy_mem(msg, out.data(), outl);
 
    return outl;
    }
@@ -143,7 +143,7 @@ void CommonCrypto_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
       {
       buffer.resize(new_len);
       }
-   memcpy(buffer.data() - offset + written, out.data(), outl);
+   copy_mem(buffer.data() - offset + written, out.data(), outl);
    written += outl;
    }
 

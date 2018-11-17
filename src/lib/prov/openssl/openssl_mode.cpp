@@ -117,7 +117,7 @@ size_t OpenSSL_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
 
    if(!EVP_CipherUpdate(m_cipher, out.data(), &outl, msg, msg_len))
       throw OpenSSL_Error("EVP_CipherUpdate");
-   memcpy(msg, out.data(), outl);
+   copy_mem(msg, out.data(), outl);
    return outl;
    }
 
@@ -137,7 +137,7 @@ void OpenSSL_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
 
    if(!EVP_CipherFinal_ex(m_cipher, out.data(), &outl))
       throw OpenSSL_Error("EVP_CipherFinal_ex");
-   memcpy(buf + written, out.data(), outl);
+   copy_mem(buf + written, out.data(), outl);
    written += outl;
    buffer.resize(offset + written);
    }

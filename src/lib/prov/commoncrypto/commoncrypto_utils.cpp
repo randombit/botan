@@ -178,7 +178,7 @@ void commoncrypto_adjust_key_size(const uint8_t key[], size_t length,
       full_key.resize(length * repeat);
       for(int i=0; i<repeat; i++)
          {
-         memcpy(full_key.data() + i * length, key, length);
+         copy_mem(full_key.data() + i * length, key, length);
          }
       }
    else if(opts.algo == kCCAlgorithm3DES && length == 16)

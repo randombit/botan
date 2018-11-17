@@ -207,7 +207,7 @@ class BSD_Socket final : public OS::Socket
          m_socket = invalid_socket();
 
          addrinfo hints;
-         ::memset(&hints, 0, sizeof(addrinfo));
+         clear_mem(&hints, 1);
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_STREAM;
          addrinfo* res;

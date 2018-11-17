@@ -843,7 +843,8 @@ class UUID_Tests : public Test
 
                void randomize(uint8_t out[], size_t len) override
                   {
-                  std::memset(out, m_val, len);
+                  for(size_t i = 0; i != len; ++i)
+                     out[i] = m_val;
                   }
 
                std::string name() const override { return "zeros"; }

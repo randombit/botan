@@ -191,7 +191,7 @@ void TPM_Context::gen_random(uint8_t out[], size_t out_len)
    {
    BYTE* mem;
    TSPI_CHECK_SUCCESS(::Tspi_TPM_GetRandom(m_tpm, out_len, &mem));
-   std::memcpy(out, mem, out_len);
+   copy_mem(out, reinterpret_cast<const uint8_t*>(mem), out_len);
    TSPI_CHECK_SUCCESS(::Tspi_Context_FreeMemory(m_ctx, mem));
    }
 

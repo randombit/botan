@@ -35,9 +35,10 @@ static inline void addm(const uint8_t* m, uint64_t* h)
       }
    }
 
-inline void lps(uint64_t* block)
+inline void lps(uint64_t block[8])
    {
    uint8_t r[64];
+   // FIXME
    std::memcpy(r, block, 64);
 
    for(int i = 0; i < 8; ++i)
@@ -171,6 +172,7 @@ void Streebog::final_result(uint8_t output[])
    compress(m_buffer.data(), true);
 
    compress(reinterpret_cast<const uint8_t*>(m_S.data()), true);
+   // FIXME
    std::memcpy(output, &m_h[8 - output_length() / 8], output_length());
    clear();
    }

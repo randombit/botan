@@ -92,12 +92,12 @@ class MechanismWrapper final
          return m_padding_size;
          }
 
-      /// Holds the mechanism parameters for OEAP, PSS and ECDH
+      /// Holds the mechanism parameters for OAEP, PSS and ECDH
       union MechanismParameters
          {
          MechanismParameters()
             {
-            std::memset(this, 0, sizeof(MechanismParameters));
+            clear_mem(this, 1);
             }
 
          RsaPkcsOaepParams oaep_params;
