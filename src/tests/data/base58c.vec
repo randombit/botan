@@ -1,0 +1,24 @@
+
+[valid]
+
+Binary =
+Base58 = 3QJmnh
+
+Binary = 31
+Base58 = 6bdbJ1U
+
+Binary = 00010966776006953D5567439E5E39F86A0D273BEE
+Base58 = 16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM
+
+Binary = 6162636465666768696a6b6c6d6e6f707172737475767778797a
+Base58 = LWmP1W82eUos2HWzVn19rapmig4X5dqPWgGFLsUTJ
+
+[invalid]
+
+Base58 = 3vQB7B6MrGQZaxCuFg4oH
+
+Base58 = 39QB7B6MrGQZaxCuFg4oH
+
+Base58 = 3mJr7AoUXx2Wqd
+Base58 = 3mJr7AoUXx2Wqd
+Base58 = 4SU

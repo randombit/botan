@@ -49,7 +49,6 @@ Public Key Crypto, Math
 Utility Functions
 ------------------
 
-* base58 encoding
 
 Multiparty Protocols
 ----------------------
