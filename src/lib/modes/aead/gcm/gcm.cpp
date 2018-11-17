@@ -150,7 +150,7 @@ void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    uint8_t* buf = buffer.data() + offset;
 
    if(sz < tag_size())
-      throw Exception("Insufficient input for GCM decryption, tag missing");
+      throw Decoding_Error("Insufficient input for GCM decryption, tag missing");
 
    const size_t remaining = sz - tag_size();
 

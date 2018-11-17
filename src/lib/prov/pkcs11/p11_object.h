@@ -357,7 +357,7 @@ class BOTAN_PUBLIC_API(2,0) KeyProperties : public StorageObjectProperties
       */
       inline void set_allowed_mechanisms(const std::vector<MechanismType>&)
          {
-         throw Exception("Not implemented (KeyProperties::set_allowed_mechanisms)");
+         throw Not_Implemented("KeyProperties::set_allowed_mechanisms");
          }
 
       /// @return the key type of this key object
@@ -424,7 +424,7 @@ class BOTAN_PUBLIC_API(2,0) PublicKeyProperties : public KeyProperties
       */
       inline void set_wrap_template(const AttributeContainer&)
          {
-         throw Exception("Not implemented (PublicKeyProperties::set_wrap_template)");
+         throw Not_Implemented("PublicKeyProperties::set_wrap_template");
          }
 
       /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public	key
@@ -503,7 +503,7 @@ class BOTAN_PUBLIC_API(2,0) PrivateKeyProperties : public KeyProperties
       */
       inline void set_unwrap_template(const AttributeContainer&)
          {
-         throw Exception("Not implemented (PrivateKeyProperties::set_unwrap_template)");
+         throw Not_Implemented("PrivateKeyProperties::set_unwrap_template");
          }
 
       /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public	key
@@ -603,7 +603,7 @@ class BOTAN_PUBLIC_API(2,0) SecretKeyProperties final : public KeyProperties
       */
       inline void set_wrap_template(const AttributeContainer&)
          {
-         throw Exception("Not implemented (SecretKeyProperties::set_wrap_template)");
+         throw Not_Implemented("SecretKeyProperties::set_wrap_template");
          }
 
       /**
@@ -614,7 +614,7 @@ class BOTAN_PUBLIC_API(2,0) SecretKeyProperties final : public KeyProperties
       */
       inline void set_unwrap_template(const AttributeContainer&)
          {
-         throw Exception("Not implemented (SecretKeyProperties::set_unwrap_template)");
+         throw Not_Implemented("SecretKeyProperties::set_unwrap_template");
          }
    };
 

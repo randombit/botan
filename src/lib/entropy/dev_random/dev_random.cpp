@@ -47,15 +47,14 @@ Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnam
          either a bug in the application or file descriptor exhaustion.
          */
          if(errno != ENOENT && errno != EACCES)
-            throw Exception("Opening OS RNG device failed with errno " +
-                            std::to_string(errno));
+            throw System_Error("Opening OS RNG device failed", errno);
          }
       else
          {
          if(fd > FD_SETSIZE)
             {
             ::close(fd);
-            throw Exception("Open of OS RNG succeeded but fd is too large for fd_set");
+            throw Invalid_State("Open of OS RNG succeeded but returned fd is too large for fd_set");
             }
 
          m_dev_fds.push_back(fd);

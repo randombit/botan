@@ -634,19 +634,17 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
       /* Some certificates are rejected when executing the X509_Certificate constructor
        * by throwing a Decoding_Error exception.
        */
-      catch(const Botan::Decoding_Error& d)
+      catch(const Botan::Exception& e)
          {
-         result.test_eq(test_name + " path validation result", d.what(),
-                        expected_result);
-         }
-      catch(const Botan::X509_CRL::X509_CRL_Error& e)
-         {
-         result.test_eq(test_name + " path validation result", e.what(),
-                        expected_result);
-         }
-      catch(const std::exception& e)
-         {
-         result.test_failure(test_name, e.what());
+         if(e.error_type() == Botan::ErrorType::DecodingFailure)
+            {
+            result.test_eq(test_name + " path validation result", e.what(),
+                           expected_result);
+            }
+         else
+            {
+            result.test_failure(test_name, e.what());
+            }
          }
 
       result.end_timer();

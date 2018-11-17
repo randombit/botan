@@ -283,7 +283,7 @@ bool Text_Policy::get_bool(const std::string& key, bool def) const
       }
    else
       {
-      throw Exception("Invalid boolean '" + v + "'");
+      throw Decoding_Error("Invalid boolean '" + v + "'");
       }
    }
 

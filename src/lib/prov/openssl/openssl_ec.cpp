@@ -142,16 +142,16 @@ class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_w
                                                                             ::EC_GROUP_free);
 
          if(!grp)
-            throw OpenSSL_Error("EC_GROUP_new_by_curve_name");
+            throw OpenSSL_Error("EC_GROUP_new_by_curve_name", ERR_get_error());
 
          if(!::EC_KEY_set_group(m_ossl_ec.get(), grp.get()))
-            throw OpenSSL_Error("EC_KEY_set_group");
+            throw OpenSSL_Error("EC_KEY_set_group", ERR_get_error());
 
          const std::vector<uint8_t> enc = ecdsa.public_point().encode(PointGFp::UNCOMPRESSED);
          const uint8_t* enc_ptr = enc.data();
          EC_KEY* key_ptr = m_ossl_ec.get();
          if(!::o2i_ECPublicKey(&key_ptr, &enc_ptr, enc.size()))
-            throw OpenSSL_Error("o2i_ECPublicKey");
+            throw OpenSSL_Error("o2i_ECPublicKey", ERR_get_error());
 
          const EC_GROUP* group = ::EC_KEY_get0_group(m_ossl_ec.get());
          m_order_bits = ::EC_GROUP_get_degree(group);
@@ -178,7 +178,7 @@ class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_w
          BIGNUM* r = BN_bin2bn(sig_bytes              , sig_len / 2, nullptr);
          BIGNUM* s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, nullptr);
          if(r == nullptr || s == nullptr)
-            throw OpenSSL_Error("BN_bin2bn sig s");
+            throw OpenSSL_Error("BN_bin2bn sig s", ERR_get_error());
 
          ECDSA_SIG_set0(sig.get(), r, s);
 #endif
@@ -225,7 +225,7 @@ class OpenSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
          const uint8_t* der_ptr = der.data();
          m_ossl_ec.reset(d2i_ECPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_ossl_ec)
-            throw OpenSSL_Error("d2i_ECPrivateKey");
+            throw OpenSSL_Error("d2i_ECPrivateKey", ERR_get_error());
 
          const EC_GROUP* group = ::EC_KEY_get0_group(m_ossl_ec.get());
          m_order_bits = ::EC_GROUP_get_degree(group);
@@ -241,7 +241,7 @@ class OpenSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
          sig.reset(::ECDSA_do_sign(msg, msg_len, m_ossl_ec.get()));
 
          if(!sig)
-            throw OpenSSL_Error("ECDSA_do_sign");
+            throw OpenSSL_Error("ECDSA_do_sign", ERR_get_error());
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
          const BIGNUM* r = sig->r;
@@ -318,7 +318,7 @@ class OpenSSL_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          const uint8_t* der_ptr = der.data();
          m_ossl_ec.reset(d2i_ECPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_ossl_ec)
-            throw OpenSSL_Error("d2i_ECPrivateKey");
+            throw OpenSSL_Error("d2i_ECPrivateKey", ERR_get_error());
          }
 
       size_t agreed_value_size() const override { return m_value_size; }
@@ -331,13 +331,13 @@ class OpenSSL_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          EC_POINT* pub_key = ::EC_POINT_new(group);
 
          if(!pub_key)
-            throw OpenSSL_Error("EC_POINT_new");
+            throw OpenSSL_Error("EC_POINT_new", ERR_get_error());
 
          const int os2ecp_rc =
             ::EC_POINT_oct2point(group, pub_key, w, w_len, nullptr);
 
          if(os2ecp_rc != 1)
-            throw OpenSSL_Error("EC_POINT_oct2point");
+            throw OpenSSL_Error("EC_POINT_oct2point", ERR_get_error());
 
          const int ecdh_rc = ::ECDH_compute_key(out.data(),
                                                 out.size(),
@@ -346,7 +346,7 @@ class OpenSSL_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
                                                 /*KDF*/nullptr);
 
          if(ecdh_rc <= 0)
-            throw OpenSSL_Error("ECDH_compute_key");
+            throw OpenSSL_Error("ECDH_compute_key", ERR_get_error());
 
          const size_t ecdh_sz = static_cast<size_t>(ecdh_rc);
 

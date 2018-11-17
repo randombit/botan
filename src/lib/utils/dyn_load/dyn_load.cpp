@@ -23,8 +23,11 @@ namespace {
 void raise_runtime_loader_exception(const std::string& lib_name,
                                     const char* msg)
    {
-   throw Exception("Failed to load " + lib_name + ": " +
-                   (msg ? msg : "Unknown error"));
+   const std::string ex_msg =
+      "Failed to load " + lib_name + ": " +
+      (msg ? msg : "Unknown error");
+
+   throw System_Error(ex_msg, 0);
    }
 
 }
@@ -70,8 +73,8 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 #endif
 
    if(!addr)
-      throw Exception("Failed to resolve symbol " + symbol +
-                      " in " + m_lib_name);
+      throw Invalid_Argument("Failed to resolve symbol " + symbol +
+                             " in " + m_lib_name);
 
    return addr;
    }

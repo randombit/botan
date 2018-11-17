@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 #if defined(BOTAN_HAS_OPENSSL)
       if(opts.provider().empty() || opts.provider() == "openssl")
          {
-         ::ERR_free_strings();
+         ERR_free_strings();
          ::ERR_remove_thread_state(nullptr);
          }
 #endif

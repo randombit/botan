@@ -170,7 +170,7 @@ std::string X509_Object::hash_used_for_signature() const
 bool X509_Object::check_signature(const Public_Key* pub_key) const
    {
    if(!pub_key)
-      throw Exception("No key provided for " + PEM_label() + " signature check");
+      throw Invalid_Argument("No key provided for " + PEM_label() + " signature check");
    std::unique_ptr<const Public_Key> key(pub_key);
    return check_signature(*key);
    }

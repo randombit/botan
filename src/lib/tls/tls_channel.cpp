@@ -132,11 +132,11 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
       Protocol_Version active_version = active->version();
 
       if(active_version.is_datagram_protocol() != version.is_datagram_protocol())
-         throw Exception("Active state using version " +
-                                  active_version.to_string() +
-                                  " cannot change to " +
-                                  version.to_string() +
-                                  " in pending");
+         {
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                             "Active state using version " + active_version.to_string() +
+                             " cannot change to " + version.to_string() + " in pending");
+         }
       }
 
    if(!m_sequence_numbers)
@@ -190,7 +190,7 @@ void Channel::renegotiate(bool force_full_renegotiation)
       initiate_handshake(create_handshake_state(active->version()),
                          force_full_renegotiation);
    else
-      throw Exception("Cannot renegotiate on inactive connection");
+      throw Invalid_State("Cannot renegotiate on inactive connection");
    }
 
 void Channel::change_cipher_spec_reader(Connection_Side side)
@@ -550,7 +550,7 @@ void Channel::send_record_under_epoch(uint16_t epoch, uint8_t record_type,
 void Channel::send(const uint8_t buf[], size_t buf_size)
    {
    if(!is_active())
-      throw Exception("Data cannot be sent on inactive TLS connection");
+      throw Invalid_State("Data cannot be sent on inactive TLS connection");
 
    send_record_array(sequence_numbers().current_write_epoch(),
                      APPLICATION_DATA, buf, buf_size);
@@ -679,7 +679,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          {
          size_t context_size = context.length();
          if(context_size > 0xFFFF)
-            throw Exception("key_material_export context is too long");
+            throw Invalid_Argument("key_material_export context is too long");
          salt.push_back(get_byte(0, static_cast<uint16_t>(context_size)));
          salt.push_back(get_byte(1, static_cast<uint16_t>(context_size)));
          salt += to_byte_vector(context);
@@ -688,7 +688,9 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       return prf->derive_key(length, master_secret, salt, to_byte_vector(label));
       }
    else
-      throw Exception("Channel::key_material_export connection not active");
+      {
+      throw Invalid_State("Channel::key_material_export connection not active");
+      }
    }
 
 }

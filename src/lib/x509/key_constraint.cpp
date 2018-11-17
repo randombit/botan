@@ -93,7 +93,7 @@ void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
 
    if((constraints & permitted) != constraints)
       {
-      throw Exception("Invalid " + name + " constraints " + key_constraints_to_string(constraints));
+      throw Invalid_Argument("Invalid " + name + " constraints " + key_constraints_to_string(constraints));
       }
    }
 

@@ -143,7 +143,7 @@ class Test_Tests final : public Test
             {
             Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg",
-                                    []() { throw Botan::Exception("not the message"); });
+                                    []() { throw std::runtime_error("not the message"); });
             verify_failure("test_throws", result, test_result);
             }
 

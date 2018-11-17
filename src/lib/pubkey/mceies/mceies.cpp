@@ -83,7 +83,7 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
       const size_t nonce_len = aead->default_nonce_length();
 
       if(ct_len < mce_code_bytes + nonce_len + aead->tag_size())
-         throw Exception("Input message too small to be valid");
+         throw Decoding_Error("Input message too small to be valid");
 
       const secure_vector<uint8_t> mce_key = kem_op.decrypt(ct, mce_code_bytes, 64);
 
@@ -102,7 +102,7 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
       }
    catch(std::exception& e)
       {
-      throw Exception("mce_decrypt failed: " + std::string(e.what()));
+      throw Decoding_Error("mce_decrypt failed: " + std::string(e.what()));
       }
    }
 

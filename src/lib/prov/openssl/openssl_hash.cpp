@@ -21,7 +21,7 @@ class OpenSSL_HashFunction final : public HashFunction
          {
          const EVP_MD* algo = EVP_MD_CTX_md(m_md);
          if(!EVP_DigestInit_ex(m_md, algo, nullptr))
-            throw OpenSSL_Error("EVP_DigestInit_ex");
+            throw OpenSSL_Error("EVP_DigestInit_ex", ERR_get_error());
          }
 
       std::string provider() const override { return "openssl"; }
@@ -59,10 +59,10 @@ class OpenSSL_HashFunction final : public HashFunction
 #endif
 
          if(m_md == nullptr)
-            throw OpenSSL_Error("Can't allocate new context");
+            throw OpenSSL_Error("Can't allocate new context", ERR_get_error());
          EVP_MD_CTX_init(m_md);
          if(md && !EVP_DigestInit_ex(m_md, md, nullptr))
-            throw OpenSSL_Error("EVP_DigestInit_ex");
+            throw OpenSSL_Error("EVP_DigestInit_ex", ERR_get_error());
          }
 
       OpenSSL_HashFunction(EVP_MD_CTX* ctx) : m_md(ctx)
@@ -82,16 +82,16 @@ class OpenSSL_HashFunction final : public HashFunction
       void add_data(const uint8_t input[], size_t length) override
          {
          if(!EVP_DigestUpdate(m_md, input, length))
-            throw OpenSSL_Error("EVP_DigestUpdate");
+            throw OpenSSL_Error("EVP_DigestUpdate", ERR_get_error());
          }
 
       void final_result(uint8_t output[]) override
          {
          if(!EVP_DigestFinal_ex(m_md, output, nullptr))
-            throw OpenSSL_Error("EVP_DigestFinal_ex");
+            throw OpenSSL_Error("EVP_DigestFinal_ex", ERR_get_error());
          const EVP_MD* algo = EVP_MD_CTX_md(m_md);
          if(!EVP_DigestInit_ex(m_md, algo, nullptr))
-            throw OpenSSL_Error("EVP_DigestInit_ex");
+            throw OpenSSL_Error("EVP_DigestInit_ex", ERR_get_error());
          }
 
       std::string m_name;

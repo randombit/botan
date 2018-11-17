@@ -40,8 +40,8 @@ class TSS_Recovery_Tests final : public Text_Based_Test
                shares.push_back(Botan::RTSS_Share(v.data(), v.size()));
                }
 
-            auto reconstructed_secret = Botan::RTSS_Share::reconstruct(shares);
-            result.test_eq("Reconstructed secret correctly from all shares", reconstructed_secret, input);
+            auto reconstructed_secret_all = Botan::RTSS_Share::reconstruct(shares);
+            result.test_eq("Reconstructed secret correctly from all shares", reconstructed_secret_all, input);
 
             if(header == "Invalid")
                result.test_failure("Invalid shares should not result in recovery");
@@ -127,8 +127,8 @@ class TSS_Generation_Tests final : public Text_Based_Test
             result.test_eq("Expected share", shares[i].data(), expected_shares[i]);
             }
 
-         auto reconstructed_secret = Botan::RTSS_Share::reconstruct(shares);
-         result.test_eq("Reconstructed secret correctly from all shares", reconstructed_secret, input);
+         auto reconstructed_secret_all = Botan::RTSS_Share::reconstruct(shares);
+         result.test_eq("Reconstructed secret correctly from all shares", reconstructed_secret_all, input);
 
          if(N != M)
             {

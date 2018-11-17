@@ -37,10 +37,8 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t>
          {
          lzma_ret rc = ::lzma_code(streamp(), static_cast<lzma_action>(flags));
 
-         if(rc == LZMA_MEM_ERROR)
-            throw Exception("lzma memory allocation failed");
-         else if (rc != LZMA_OK && rc != LZMA_STREAM_END)
-            throw Exception("Lzma error");
+         if(rc != LZMA_OK && rc != LZMA_STREAM_END)
+            throw Compression_Error("lzma_code", ErrorType::LzmaError, rc);
 
          return (rc == LZMA_STREAM_END);
          }
@@ -64,10 +62,8 @@ class LZMA_Compression_Stream final : public LZMA_Stream
 
          lzma_ret rc = ::lzma_easy_encoder(streamp(), level, LZMA_CHECK_CRC64);
 
-         if(rc == LZMA_MEM_ERROR)
-            throw Exception("lzma memory allocation failed");
-         else if(rc != LZMA_OK)
-            throw Exception("lzma compress initialization failed");
+         if(rc != LZMA_OK)
+            throw Compression_Error("lzam_easy_encoder", ErrorType::LzmaError, rc);
          }
    };
 
@@ -79,10 +75,8 @@ class LZMA_Decompression_Stream final : public LZMA_Stream
          lzma_ret rc = ::lzma_stream_decoder(streamp(), UINT64_MAX,
                                              LZMA_TELL_UNSUPPORTED_CHECK);
 
-         if(rc == LZMA_MEM_ERROR)
-            throw Exception("lzma memory allocation failed");
-         else if(rc != LZMA_OK)
-            throw Exception("Bad setting in lzma_stream_decoder");
+         if(rc != LZMA_OK)
+            throw Compression_Error("lzma_stream_decoder", ErrorType::LzmaError, rc);
          }
    };
 

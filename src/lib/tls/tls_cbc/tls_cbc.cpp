@@ -129,7 +129,7 @@ std::vector<uint8_t> TLS_CBC_HMAC_AEAD_Mode::assoc_data_with_len(uint16_t len)
 void TLS_CBC_HMAC_AEAD_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
    {
    if(ad_len != 13)
-      throw Exception("Invalid TLS AEAD associated data length");
+      throw Invalid_Argument("Invalid TLS AEAD associated data length");
    m_ad.assign(ad, ad + ad_len);
    }
 

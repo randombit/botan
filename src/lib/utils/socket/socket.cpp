@@ -73,7 +73,7 @@ class Asio_Socket final : public OS::Socket
          if(ec)
             throw boost::system::system_error(ec);
          if(ec || m_tcp.is_open() == false)
-            throw Exception("Connection to host " + hostname + " failed");
+            throw System_Error("Connection to host " + hostname + " failed");
          }
 
       void write(const uint8_t buf[], size_t len) override
@@ -166,13 +166,13 @@ class BSD_Socket final : public OS::Socket
 
          if (::WSAStartup(wsa_version, &wsa_data) != 0)
             {
-            throw Exception("WSAStartup() failed: " + std::to_string(WSAGetLastError()));
+            throw System_Error("WSAStartup() failed", WSAGetLastError());
             }
 
          if (LOBYTE(wsa_data.wVersion) != 2 || HIBYTE(wsa_data.wVersion) != 2)
             {
             ::WSACleanup();
-            throw Exception("Could not find a usable version of Winsock.dll");
+            throw System_Error("Could not find a usable version of Winsock.dll");
             }
          }
 
@@ -190,7 +190,7 @@ class BSD_Socket final : public OS::Socket
       static void set_nonblocking(socket_type s)
          {
          if(::fcntl(s, F_SETFL, O_NONBLOCK) < 0)
-            throw Exception("Setting socket to non-blocking state failed");
+            throw System_Error("Setting socket to non-blocking state failed", errno);
          }
 
       static void socket_init() {}
@@ -212,9 +212,11 @@ class BSD_Socket final : public OS::Socket
          hints.ai_socktype = SOCK_STREAM;
          addrinfo* res;
 
-         if(::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res) != 0)
+         int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res);
+
+         if(rc != 0)
             {
-            throw Exception("Name resolution failed for " + hostname);
+            throw System_Error("Name resolution failed for " + hostname, rc);
             }
 
          for(addrinfo* rp = res; (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next)
@@ -252,7 +254,7 @@ class BSD_Socket final : public OS::Socket
                      socklen_t len = sizeof(socket_error);
 
                      if(::getsockopt(m_socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&socket_error), &len) < 0)
-                        throw Exception("Error calling getsockopt");
+                        throw System_Error("Error calling getsockopt", errno);
 
                      if(socket_error != 0)
                         {
@@ -274,8 +276,8 @@ class BSD_Socket final : public OS::Socket
 
          if(m_socket == invalid_socket())
             {
-            throw Exception("Connecting to " + hostname +
-                            " for service " + service + " failed");
+            throw System_Error("Connecting to " + hostname +
+                                " for service " + service + " failed", errno);
             }
          }
 
@@ -299,13 +301,12 @@ class BSD_Socket final : public OS::Socket
             int active = ::select(m_socket + 1, nullptr, &write_set, nullptr, &timeout);
 
             if(active == 0)
-               throw Exception("Timeout during socket write");
+               throw System_Error("Timeout during socket write");
 
             const size_t left = len - sent_so_far;
             socket_op_ret_type sent = ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), left, 0);
             if(sent < 0)
-               throw Exception("Socket write failed with error '" +
-                               std::string(::strerror(errno)) + "'");
+               throw System_Error("Socket write failed", errno);
             else
                sent_so_far += static_cast<size_t>(sent);
             }
@@ -321,13 +322,13 @@ class BSD_Socket final : public OS::Socket
          int active = ::select(m_socket + 1, &read_set, nullptr, nullptr, &timeout);
 
          if(active == 0)
-            throw Exception("Timeout during socket read");
+            throw System_Error("Timeout during socket read");
 
          socket_op_ret_type got = ::recv(m_socket, cast_uint8_ptr_to_char(buf), len, 0);
 
          if(got < 0)
-            throw Exception("Socket read failed with error '" +
-                            std::string(::strerror(errno)) + "'");
+            throw System_Error("Socket read failed", errno);
+
          return static_cast<size_t>(got);
          }
 

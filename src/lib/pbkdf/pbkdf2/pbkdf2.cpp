@@ -25,7 +25,7 @@ void pbkdf2_set_key(MessageAuthenticationCode& prf,
       }
    catch(Invalid_Key_Length&)
       {
-      throw Exception("PBKDF2 cannot accept passphrase of the given size");
+      throw Invalid_Argument("PBKDF2 cannot accept passphrase of the given size");
       }
    }
 

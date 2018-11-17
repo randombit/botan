@@ -71,7 +71,10 @@ void TLS::Callbacks::tls_verify_cert_chain(
                          ocsp_responses);
 
    if(!result.successful_validation())
-      throw Exception("Certificate validation failure: " + result.result_string());
+      {
+      throw TLS_Exception(Alert::BAD_CERTIFICATE,
+                          "Certificate validation failure: " + result.result_string());
+      }
    }
 
 std::vector<uint8_t> TLS::Callbacks::tls_sign_message(

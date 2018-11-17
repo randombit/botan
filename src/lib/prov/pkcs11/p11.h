@@ -2875,6 +2875,8 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_Error : public Exception
          Exception("PKCS11 error", what)
          {
          }
+
+      ErrorType error_type() const noexcept override { return ErrorType::Pkcs11Error; }
    };
 
 class BOTAN_PUBLIC_API(2,0) PKCS11_ReturnError final : public PKCS11_Error

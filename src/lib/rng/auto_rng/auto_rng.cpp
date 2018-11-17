@@ -67,7 +67,7 @@ void AutoSeeded_RNG::force_reseed()
 
    if(!m_rng->is_seeded())
       {
-      throw Exception("AutoSeeded_RNG reseeding failed");
+      throw Internal_Error("AutoSeeded_RNG reseeding failed");
       }
    }
 

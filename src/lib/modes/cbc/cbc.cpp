@@ -136,7 +136,7 @@ void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    padding().add_padding(buffer, bytes_in_final_block, BS);
 
    if((buffer.size()-offset) % BS)
-      throw Exception("Did not pad to full block size in " + name());
+      throw Internal_Error("Did not pad to full block size in " + name());
 
    update(buffer, offset);
    }

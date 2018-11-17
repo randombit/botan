@@ -75,8 +75,7 @@ XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(ots_algorithm_t oid)
          m_strength = 512;
          break;
       default:
-         throw Unsupported_Argument(
-            "Algorithm id does not match any XMSS WOTS algorithm id.");
+         throw Not_Implemented("Algorithm id does not match any known XMSS WOTS algorithm id.");
          break;
       }
 

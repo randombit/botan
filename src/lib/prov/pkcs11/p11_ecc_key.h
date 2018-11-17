@@ -186,7 +186,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_EC_PrivateKey : public virtual Private_Key,
          {
          if(m_public_key.is_zero())
             {
-            throw Exception("Public point not set. Inferring the public key from a PKCS#11 ec private key is not possible.");
+            throw Invalid_State("Public point not set. Inferring the public key from a PKCS#11 ec private key is not possible.");
             }
          return m_public_key;
          }

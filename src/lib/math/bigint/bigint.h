@@ -37,11 +37,14 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * DivideByZero Exception
+     *
+     * In a future release this exception will be removed and its usage
+     * replaced by Invalid_Argument
      */
-     class BOTAN_PUBLIC_API(2,0) DivideByZero final : public Exception
+     class BOTAN_PUBLIC_API(2,0) DivideByZero final : public Invalid_Argument
         {
         public:
-           DivideByZero() : Exception("BigInt divide by zero") {}
+           DivideByZero() : Invalid_Argument("BigInt divide by zero") {}
         };
 
      /**
