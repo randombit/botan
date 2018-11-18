@@ -820,7 +820,7 @@ class UUID_Tests : public Test
          result.test_throws("Cannot load wrong number of bytes", []() { Botan::UUID u(std::vector<uint8_t>(15)); });
 
          result.test_eq("Empty UUID is empty", empty_uuid.is_valid(), false);
-         result.confirm("Empty UUID equals self", empty_uuid == empty_uuid);
+         result.confirm("Empty UUID equals another empty UUID", empty_uuid == Botan::UUID());
 
          result.test_throws("Empty UUID cannot become a string", [&]() { empty_uuid.to_string(); });
 
