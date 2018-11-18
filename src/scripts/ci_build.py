@@ -121,8 +121,13 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         if target_os != 'linux' or target_cc != 'clang':
             raise Exception('Only Linux/clang supported in Sonar target currently')
 
+        # Use of -Os here is a little odd, but the issue is that the build time
+        # is quite long (because ccache from Xenial doesn't work right with
+        # these profiling flags) but we can't use --no-optimizations as that
+        # will make running the tests too slow.
         flags += ['--cc-abi-flags=-fprofile-instr-generate -fcoverage-mapping',
-                  '--disable-shared']
+                  '--disable-shared',
+                  '--optimize-for-size']
 
         make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
                        '--out-dir', 'bw-outputs']
