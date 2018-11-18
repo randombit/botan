@@ -150,7 +150,7 @@ class Test_Tests final : public Test
             {
             Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg",
-                                    []() { throw "not even a std::exception"; });
+                                    []() { throw std::string("not even a std::exception"); });
             verify_failure("test_throws", result, test_result);
             }
 
