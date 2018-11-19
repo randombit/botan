@@ -29,8 +29,8 @@ void ed25519_gen_keypair(uint8_t* pk, uint8_t* sk, const uint8_t seed[32])
    ge_scalarmult_base(pk, az);
 
    // todo copy_mem
-   memmove(sk, seed, 32);
-   memmove(sk + 32, pk, 32);
+   copy_mem(sk, seed, 32);
+   copy_mem(sk + 32, pk, 32);
    }
 
 void ed25519_sign(uint8_t sig[64],

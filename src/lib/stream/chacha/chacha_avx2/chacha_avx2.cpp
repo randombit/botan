@@ -183,7 +183,6 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    SIMD_8x32::transpose(R08, R09, R10, R11);
    SIMD_8x32::transpose(R12, R13, R14, R15);
 
-   memset(output, 0, 16*32);
    __m256i* output_mm = reinterpret_cast<__m256i*>(output);
 
    _mm256_storeu_si256(output_mm     , _mm256_permute2x128_si256(R00.handle(), R04.handle(), 0 + (2 << 4)));

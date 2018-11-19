@@ -213,7 +213,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
             }
 
          sockaddr_in socket_info;
-         ::memset(&socket_info, 0, sizeof(socket_info));
+         Botan::clear_mem(&socket_info, 1);
          socket_info.sin_family = AF_INET;
          socket_info.sin_port = htons(port);
 

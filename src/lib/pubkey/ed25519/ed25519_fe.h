@@ -30,16 +30,16 @@ class FE_25519
       FE_25519(int init = 0)
          {
          if(init != 0 && init != 1)
-            { throw Invalid_Argument("Invalid FE_25519 initial value"); }
-         memset(m_fe, 0, 10 * sizeof(int32_t));
+            throw Invalid_Argument("Invalid FE_25519 initial value");
+         clear_mem(m_fe, 10);
          m_fe[0] = init;
          }
 
       FE_25519(std::initializer_list<int32_t> x)
          {
          if(x.size() != 10)
-            { throw Invalid_Argument("Invalid FE_25519 initializer list"); }
-         memcpy(m_fe, x.begin(), 10 * sizeof(int32_t));
+            throw Invalid_Argument("Invalid FE_25519 initializer list");
+         copy_mem(m_fe, x.begin(), 10);
          }
 
       FE_25519(int64_t h0, int64_t h1, int64_t h2, int64_t h3, int64_t h4,

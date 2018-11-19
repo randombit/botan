@@ -110,7 +110,8 @@ class TLS_CBC_Tests final : public Text_Based_Test
 
             void final_result(uint8_t out[]) override
                {
-               std::memset(out, 0, m_mac_len);
+               for(size_t i = 0; i != m_mac_len; ++i)
+                  out[i] = 0;
                }
 
             Botan::Key_Length_Specification key_spec() const override
@@ -133,12 +134,12 @@ class TLS_CBC_Tests final : public Text_Based_Test
 
             void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
                {
-               std::memmove(out, in, blocks * m_bs);
+               Botan::copy_mem(out, in, blocks * m_bs);
                }
 
             void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
                {
-               std::memmove(out, in, blocks * m_bs);
+               Botan::copy_mem(out, in, blocks * m_bs);
                }
 
             size_t block_size() const override { return m_bs; }

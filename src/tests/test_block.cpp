@@ -137,7 +137,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
             // Now test misaligned buffers
             const size_t blocks = input.size() / cipher->block_size();
             buf.resize(input.size() + 1);
-            std::memcpy(buf.data() + 1, input.data(), input.size());
+            Botan::copy_mem(buf.data() + 1, input.data(), input.size());
 
             for(size_t i = 0; i != iterations; ++i)
                {
@@ -149,7 +149,7 @@ class Block_Cipher_Tests final : public Text_Based_Test
                            expected.data(), expected.size());
 
             // always decrypt expected ciphertext vs what we produced above
-            std::memcpy(buf.data() + 1, expected.data(), expected.size());
+            Botan::copy_mem(buf.data() + 1, expected.data(), expected.size());
 
             for(size_t i = 0; i != iterations; ++i)
                {

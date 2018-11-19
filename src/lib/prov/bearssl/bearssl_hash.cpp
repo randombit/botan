@@ -37,7 +37,7 @@ class BearSSL_HashFunction final : public HashFunction
       std::unique_ptr<HashFunction> copy_state() const override
          {
          std::unique_ptr<BearSSL_HashFunction> copy(new BearSSL_HashFunction(m_ctx.vtable, m_name));
-         memcpy(&copy->m_ctx, &m_ctx, sizeof(m_ctx));
+         std::memcpy(&copy->m_ctx, &m_ctx, sizeof(m_ctx));
          return std::move(copy);
          }
 

@@ -113,7 +113,7 @@ TSS_UUID to_tss_uuid(const UUID& uuid)
    static_assert(sizeof(TSS_UUID) == 16, "Expected size of packed UUID");
 
    TSS_UUID tss_uuid;
-   std::memcpy(&tss_uuid, uuid.binary_value().data(), 16);
+   typecast_copy(tss_uuid, uuid.binary_value().data());
    return tss_uuid;
    }
 
@@ -122,7 +122,7 @@ UUID from_tss_uuid(const TSS_UUID& tss_uuid)
    static_assert(sizeof(TSS_UUID) == 16, "Expected size of packed UUID");
 
    std::vector<uint8_t> mem(16);
-   std::memcpy(mem.data(), &tss_uuid, 16);
+   typecast_copy(mem.data(), tss_uuid);
    UUID uuid(std::move(mem));
    return uuid;
    }
@@ -191,7 +191,7 @@ void TPM_Context::gen_random(uint8_t out[], size_t out_len)
    {
    BYTE* mem;
    TSPI_CHECK_SUCCESS(::Tspi_TPM_GetRandom(m_tpm, out_len, &mem));
-   std::memcpy(out, mem, out_len);
+   copy_mem(out, reinterpret_cast<const uint8_t*>(mem), out_len);
    TSPI_CHECK_SUCCESS(::Tspi_Context_FreeMemory(m_ctx, mem));
    }
 
