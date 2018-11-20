@@ -23,7 +23,11 @@ namespace Botan {
 */
 inline uint16_t reverse_bytes(uint16_t val)
    {
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+   return __builtin_bswap16(val);
+#else
    return rotl<8>(val);
+#endif
    }
 
 /**
