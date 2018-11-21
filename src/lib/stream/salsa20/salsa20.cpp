@@ -111,14 +111,17 @@ void Salsa20::cipher(const uint8_t in[], uint8_t out[], size_t length)
 
    while(length >= m_buffer.size() - m_position)
       {
-      xor_buf(out, in, &m_buffer[m_position], m_buffer.size() - m_position);
-      length -= (m_buffer.size() - m_position);
-      in += (m_buffer.size() - m_position);
-      out += (m_buffer.size() - m_position);
+      const size_t available = m_buffer.size() - m_position;
+
+      xor_buf(out, in, &m_buffer[m_position], available);
       salsa_core(m_buffer.data(), m_state.data(), 20);
 
       ++m_state[8];
       m_state[9] += (m_state[8] == 0);
+
+      length -= available;
+      in += available;
+      out += available;
 
       m_position = 0;
       }
