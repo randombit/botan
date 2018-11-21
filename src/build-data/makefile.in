@@ -27,7 +27,7 @@ SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{prefix}/%{libdir}
 
 # The primary target
-all: libs cli docs tests
+all: libs cli tests docs
 
 # Executable targets
 CLI           = %{cli_exe}
