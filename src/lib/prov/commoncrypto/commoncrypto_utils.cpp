@@ -176,7 +176,7 @@ void commoncrypto_adjust_key_size(const uint8_t key[], size_t length,
          }
 
       full_key.resize(length * repeat);
-      for(int i=0; i<repeat; i++)
+      for(size_t i = 0; i < repeat; i++)
          {
          copy_mem(full_key.data() + i * length, key, length);
          }
