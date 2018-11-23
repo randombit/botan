@@ -110,7 +110,8 @@ template<typename T>
 inline constexpr T select(T mask, T from0, T from1)
    {
    static_assert(std::is_unsigned<T>::value, "unsigned integer type required");
-   return static_cast<T>((from0 & mask) | (from1 & ~mask));
+   //return static_cast<T>((from0 & mask) | (from1 & ~mask));
+   return static_cast<T>(from1 ^ (mask & (from0 ^ from1)));
    }
 
 template<typename T>
