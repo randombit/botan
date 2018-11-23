@@ -380,7 +380,7 @@ BigInt& BigInt::operator>>=(size_t shift)
       const size_t sw = sig_words();
       bigint_shr1(m_data.mutable_data(), sw, shift_words, shift_bits);
 
-      if(is_zero())
+      if(is_negative() && is_zero())
          set_sign(Positive);
       }
 
