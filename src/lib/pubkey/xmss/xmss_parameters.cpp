@@ -177,8 +177,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          m_wots_oid = XMSS_WOTS_Parameters::ots_algorithm_t::WOTSP_SHAKE256_W16;
          break;
       default:
-         throw Unsupported_Argument(
-            "Algorithm id does not match any XMSS algorithm id.");
+         throw Not_Implemented("Algorithm id does not match any known XMSS algorithm id.");
          break;
       }
    }

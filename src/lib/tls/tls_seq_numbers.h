@@ -79,7 +79,7 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers
 
       uint64_t next_read_sequence() override
          {
-         throw Exception("DTLS uses explicit sequence numbers");
+         throw Invalid_State("DTLS uses explicit sequence numbers");
          }
 
       bool already_seen(uint64_t sequence) const override

@@ -112,7 +112,7 @@ void Stateful_RNG::reseed_check()
       if(!is_seeded())
          {
          if(fork_detected)
-            throw Exception("Detected use of fork but cannot reseed DRBG");
+            throw Invalid_State("Detected use of fork but cannot reseed DRBG");
          else
             throw PRNG_Unseeded(name());
          }

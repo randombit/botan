@@ -105,6 +105,10 @@ Stream_IO_Error::Stream_IO_Error(const std::string& err) :
    Exception("I/O error: " + err)
    {}
 
+System_Error::System_Error(const std::string& msg, int err_code) :
+   Exception(msg + " error code " + std::to_string(err_code))
+   {}
+
 Self_Test_Failure::Self_Test_Failure(const std::string& err) :
    Internal_Error("Self test failed: " + err)
    {}

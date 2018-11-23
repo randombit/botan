@@ -150,7 +150,7 @@ class Stateful_RNG_Tests : public Test
 
                size_t poll(Botan::RandomNumberGenerator&) override
                   {
-                  throw Botan::Exception("polling not available");
+                  throw Botan::Not_Implemented("polling not available");
                   }
             };
 

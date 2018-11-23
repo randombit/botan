@@ -54,7 +54,7 @@ class Zlib_Compression_Stream : public Zlib_Stream
          int rc = ::deflateInit2(streamp(), level, Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY);
 
          if(rc != Z_OK)
-            throw Exception("zlib deflate initialization failed");
+            throw Compression_Error("deflateInit2", ErrorType::ZlibError, rc);
          }
 
       ~Zlib_Compression_Stream()
@@ -66,10 +66,8 @@ class Zlib_Compression_Stream : public Zlib_Stream
          {
          int rc = ::deflate(streamp(), flags);
 
-         if(rc == Z_MEM_ERROR)
-            throw Exception("zlib memory allocation failure");
-         else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
-            throw Exception("zlib deflate error " + std::to_string(rc));
+         if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
+            throw Compression_Error("zlib deflate", ErrorType::ZlibError, rc);
 
          return (rc == Z_STREAM_END);
          }
@@ -82,10 +80,8 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          {
          int rc = ::inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
 
-         if(rc == Z_MEM_ERROR)
-            throw Exception("zlib memory allocation failure");
-         else if(rc != Z_OK)
-            throw Exception("zlib inflate initialization failed");
+         if(rc != Z_OK)
+            throw Compression_Error("inflateInit2", ErrorType::ZlibError, rc);
          }
 
       ~Zlib_Decompression_Stream()
@@ -97,10 +93,8 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          {
          int rc = ::inflate(streamp(), flags);
 
-         if(rc == Z_MEM_ERROR)
-            throw Exception("zlib memory allocation failure");
-         else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
-            throw Exception("zlib inflate error " + std::to_string(rc));
+         if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
+            throw Compression_Error("zlib inflate", ErrorType::ZlibError, rc);
 
          return (rc == Z_STREAM_END);
          }
@@ -131,7 +125,7 @@ class Gzip_Compression_Stream final : public Zlib_Compression_Stream
 
          int rc = deflateSetHeader(streamp(), &m_header);
          if(rc != Z_OK)
-            throw Exception("setting gzip header failed");
+            throw Compression_Error("deflateSetHeader", ErrorType::ZlibError, rc);
          }
 
    private:

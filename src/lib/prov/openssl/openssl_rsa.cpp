@@ -52,7 +52,7 @@ class OpenSSL_RSA_Encryption_Operation final : public PK_Ops::Encryption
          const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
-            throw OpenSSL_Error("d2i_RSAPublicKey");
+            throw OpenSSL_Error("d2i_RSAPublicKey", ERR_get_error());
 
          m_bits = 8 * (n_size() - pad_overhead) - 1;
          }
@@ -86,7 +86,7 @@ class OpenSSL_RSA_Encryption_Operation final : public PK_Ops::Encryption
          int rc = ::RSA_public_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
                                        m_openssl_rsa.get(), m_padding);
          if(rc < 0)
-            throw OpenSSL_Error("RSA_public_encrypt");
+            throw OpenSSL_Error("RSA_public_encrypt", ERR_get_error());
 
          return outbuf;
          }
@@ -109,7 +109,7 @@ class OpenSSL_RSA_Decryption_Operation final : public PK_Ops::Decryption
          const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
-            throw OpenSSL_Error("d2i_RSAPrivateKey");
+            throw OpenSSL_Error("d2i_RSAPrivateKey", ERR_get_error());
          }
 
       size_t plaintext_length(size_t) const override { return ::RSA_size(m_openssl_rsa.get()); }
@@ -155,7 +155,7 @@ class OpenSSL_RSA_Verification_Operation final : public PK_Ops::Verification_wit
          const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
-            throw OpenSSL_Error("d2i_RSAPublicKey");
+            throw OpenSSL_Error("d2i_RSAPublicKey", ERR_get_error());
          }
 
       size_t max_input_bits() const override
@@ -206,7 +206,7 @@ class OpenSSL_RSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
          const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
-            throw OpenSSL_Error("d2i_RSAPrivateKey");
+            throw OpenSSL_Error("d2i_RSAPrivateKey", ERR_get_error());
          }
 
       size_t signature_length() const override { return ::RSA_size(m_openssl_rsa.get()); }
@@ -227,7 +227,7 @@ class OpenSSL_RSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
          int rc = ::RSA_private_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
                                         m_openssl_rsa.get(), RSA_NO_PADDING);
          if(rc < 0)
-            throw OpenSSL_Error("RSA_private_encrypt");
+            throw OpenSSL_Error("RSA_private_encrypt", ERR_get_error());
 
          return outbuf;
          }
@@ -286,20 +286,20 @@ make_openssl_rsa_private_key(RandomNumberGenerator& rng, size_t rsa_bits)
 
    std::unique_ptr<BIGNUM, std::function<void (BIGNUM*)>> bn(BN_new(), BN_free);
    if(!bn)
-      throw OpenSSL_Error("BN_new");
+      throw OpenSSL_Error("BN_new", ERR_get_error());
    if(!BN_set_word(bn.get(), RSA_F4))
-      throw OpenSSL_Error("BN_set_word");
+      throw OpenSSL_Error("BN_set_word", ERR_get_error());
 
    std::unique_ptr<RSA, std::function<void (RSA*)>> rsa(RSA_new(), RSA_free);
    if(!rsa)
-      throw OpenSSL_Error("RSA_new");
+      throw OpenSSL_Error("RSA_new", ERR_get_error());
    if(!RSA_generate_key_ex(rsa.get(), rsa_bits, bn.get(), nullptr))
-      throw OpenSSL_Error("RSA_generate_key_ex");
+      throw OpenSSL_Error("RSA_generate_key_ex", ERR_get_error());
 
    uint8_t* der = nullptr;
    int bytes = i2d_RSAPrivateKey(rsa.get(), &der);
    if(bytes < 0)
-      throw OpenSSL_Error("i2d_RSAPrivateKey");
+      throw OpenSSL_Error("i2d_RSAPrivateKey", ERR_get_error());
 
    const secure_vector<uint8_t> keydata(der, der + bytes);
    secure_scrub_memory(der, bytes);

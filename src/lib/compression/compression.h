@@ -9,11 +9,12 @@
 #define BOTAN_COMPRESSION_TRANSFORM_H_
 
 #include <botan/secmem.h>
+#include <botan/exceptn.h>
 #include <string>
 
 namespace Botan {
 
-/*
+/**
 * Interface for a compression algorithm.
 */
 class BOTAN_PUBLIC_API(2,0) Compression_Algorithm
@@ -132,6 +133,35 @@ class BOTAN_PUBLIC_API(2,0) Decompression_Algorithm
 
 BOTAN_PUBLIC_API(2,0) Compression_Algorithm* make_compressor(const std::string& type);
 BOTAN_PUBLIC_API(2,0) Decompression_Algorithm* make_decompressor(const std::string& type);
+
+/**
+* An error that occurred during compression (or decompression)
+*/
+class BOTAN_PUBLIC_API(2,9) Compression_Error : public Exception
+   {
+   public:
+
+      /**
+      * @param func_name the name of the compression API that was called
+      * (eg "BZ2_bzCompressInit" or "lzma_code")
+      * @param rc the error return code from the compression API. The
+      * interpretation of this value will depend on the library.
+      */
+     Compression_Error(const char* func_name, ErrorType type, int rc) :
+        Exception("Compression API " + std::string(func_name) +
+                  " failed with return code " + std::to_string(rc)),
+        m_type(type),
+        m_rc(rc)
+         {}
+
+      ErrorType error_type() const noexcept override { return m_type; }
+
+      int error_code() const noexcept override { return m_rc; }
+
+   private:
+      ErrorType m_type;
+      int m_rc;
+   };
 
 /**
 * Adapts a zlib style API

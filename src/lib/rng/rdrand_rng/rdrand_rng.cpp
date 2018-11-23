@@ -18,7 +18,7 @@ namespace Botan {
 RDRAND_RNG::RDRAND_RNG()
    {
    if(!RDRAND_RNG::available())
-      throw Exception("Current CPU does not support RDRAND instruction");
+      throw Invalid_State("Current CPU does not support RDRAND instruction");
    }
 
 //static

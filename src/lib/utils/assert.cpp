@@ -48,7 +48,7 @@ void assertion_failure(const char* expr_str,
 
    format << "@" << file << ":" << line;
 
-   throw Exception(format.str());
+   throw Internal_Error(format.str());
    }
 
 }

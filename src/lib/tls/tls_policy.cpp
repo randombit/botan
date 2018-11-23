@@ -486,7 +486,7 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
 
    if(ciphersuites.empty())
       {
-      throw Exception("Policy does not allow any available cipher suite");
+      throw Invalid_State("Policy does not allow any available cipher suite");
       }
 
    Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);

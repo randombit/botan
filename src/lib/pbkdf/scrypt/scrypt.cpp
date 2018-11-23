@@ -226,7 +226,7 @@ void scrypt(uint8_t output[], size_t output_len,
       }
    catch(Invalid_Key_Length&)
       {
-      throw Exception("Scrypt cannot accept passphrases of the provided length");
+      throw Invalid_Argument("Scrypt cannot accept passphrases of the provided length");
       }
 
    pbkdf2(*hmac_sha256.get(),

@@ -106,8 +106,11 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
    response_outer.decode(resp_status, ENUMERATED, UNIVERSAL);
 
+   /*
+   * FIXME: properly decode error responses
+   */
    if(resp_status != 0)
-      throw Exception("OCSP response status " + std::to_string(resp_status));
+      throw Decoding_Error("OCSP response status " + std::to_string(resp_status));
 
    if(response_outer.more_items())
       {

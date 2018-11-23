@@ -115,7 +115,7 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
                }
             else
                {
-               throw Exception("Exception::get_extension_object_as dynamic_cast failed");
+               throw Decoding_Error("Exception::get_extension_object_as dynamic_cast failed");
                }
             }
 

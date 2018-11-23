@@ -51,7 +51,7 @@ class OpenSSL_RC4 final : public StreamCipher
       void set_iv(const uint8_t*, size_t len) override
          {
          if(len > 0)
-            throw Exception("RC4 does not support an IV");
+            throw Invalid_IV_Length("RC4", len);
          }
 
       void seek(uint64_t) override

@@ -35,7 +35,7 @@ BigInt Blinder::blinding_nonce() const
 BigInt Blinder::blind(const BigInt& i) const
    {
    if(!m_reducer.initialized())
-      throw Exception("Blinder not initialized, cannot blind");
+      throw Invalid_State("Blinder not initialized, cannot blind");
 
    ++m_counter;
 
@@ -58,7 +58,7 @@ BigInt Blinder::blind(const BigInt& i) const
 BigInt Blinder::unblind(const BigInt& i) const
    {
    if(!m_reducer.initialized())
-      throw Exception("Blinder not initialized, cannot unblind");
+      throw Invalid_State("Blinder not initialized, cannot unblind");
 
    return m_reducer.multiply(i, m_d);
    }

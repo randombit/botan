@@ -214,12 +214,12 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
             TEST_FFI_OK(botan_rng_reseed, (rng, 256));
 
-            TEST_FFI_RC(-20, botan_rng_reseed_from_rng, (rng, null_rng, 256));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_rng_reseed_from_rng, (rng, null_rng, 256));
             if(rdrand_rng)
                {
                TEST_FFI_OK(botan_rng_reseed_from_rng, (rng, rdrand_rng, 256));
                }
-            TEST_FFI_RC(-20, botan_rng_get, (null_rng, outbuf.data(), outbuf.size()));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_rng_get, (null_rng, outbuf.data(), outbuf.size()));
 
             TEST_FFI_OK(botan_rng_destroy, (rng));
             }

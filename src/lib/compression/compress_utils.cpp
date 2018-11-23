@@ -39,7 +39,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
       auto i = m_current_allocs.find(ptr);
 
       if(i == m_current_allocs.end())
-         throw Exception("Compression_Alloc_Info::free got pointer not allocated by us");
+         throw Internal_Error("Compression_Alloc_Info::free got pointer not allocated by us");
 
       secure_scrub_memory(ptr, i->second);
       std::free(ptr);
@@ -190,7 +190,7 @@ void Stream_Decompression::finish(secure_vector<uint8_t>& buf, size_t offset)
       process(buf, offset, m_stream->finish_flag());
 
    if(m_stream.get())
-      throw Exception(name() + " finished but not at stream end");
+      throw Invalid_State(name() + " finished but not at stream end");
    }
 
 }

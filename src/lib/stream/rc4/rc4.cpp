@@ -42,7 +42,7 @@ Key_Length_Specification RC4::key_spec() const
 void RC4::set_iv(const uint8_t*, size_t length)
    {
    if(length > 0)
-      throw Exception("RC4 does not support an IV");
+      throw Invalid_IV_Length("RC4", length);
    }
 
 /*

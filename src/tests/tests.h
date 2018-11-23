@@ -45,6 +45,7 @@ class Test_Error final : public Botan::Exception
    {
    public:
       explicit Test_Error(const std::string& what) : Exception("Test error", what) {}
+      Botan::ErrorType error_type() const noexcept override { return Botan::ErrorType::Unknown; }
    };
 
 class Test_Options

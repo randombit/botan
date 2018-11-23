@@ -430,7 +430,7 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
 
    if(rc != 0)
-      throw Exception("run_cpu_instruction_probe sigaction failed");
+      throw System_Error("run_cpu_instruction_probe sigaction failed", errno);
 
    rc = sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
 
@@ -448,7 +448,7 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    // Restore old SIGILL handler, if any
    rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
    if(rc != 0)
-      throw Exception("run_cpu_instruction_probe sigaction restore failed");
+      throw System_Error("run_cpu_instruction_probe sigaction restore failed", errno);
 
 #elif defined(BOTAN_TARGET_OS_IS_WINDOWS) && defined(BOTAN_TARGET_COMPILER_IS_MSVC)
 

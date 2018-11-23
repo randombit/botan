@@ -25,6 +25,7 @@ class BOTAN_PUBLIC_API(2,0) TPM_Error final : public Exception
    {
    public:
       TPM_Error(const std::string& err) : Exception(err) {}
+      ErrorType error_type() const noexcept override { return ErrorType::TPMError; }
    };
 
 /**

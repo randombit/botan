@@ -74,7 +74,7 @@ class RAII_LowLevel
 
          if(slots.empty())
             {
-            throw Exception("No slot with attached token found");
+            throw Test_Error("No slot with attached token found");
             }
 
          return slots;
@@ -100,7 +100,7 @@ class RAII_LowLevel
          {
          if(!m_is_session_open)
             {
-            throw Exception("no open session");
+            throw Test_Error("no open session");
             }
          return m_session_handle;
          }
@@ -109,7 +109,7 @@ class RAII_LowLevel
          {
          if(!m_is_session_open)
             {
-            throw Exception("no open session");
+            throw Test_Error("no open session");
             }
 
          m_low_level.get()->C_CloseSession(m_session_handle);
@@ -120,12 +120,12 @@ class RAII_LowLevel
          {
          if(!m_is_session_open)
             {
-            throw Exception("no open session");
+            throw Test_Error("no open session");
             }
 
          if(m_is_logged_in)
             {
-            throw Exception("Already logged in");
+            throw Test_Error("Already logged in");
             }
 
          m_low_level.get()->C_Login(m_session_handle, user_type, pin);
@@ -136,7 +136,7 @@ class RAII_LowLevel
          {
          if(!m_is_logged_in)
             {
-            throw Exception("Not logged in");
+            throw Test_Error("Not logged in");
             }
 
          m_low_level.get()->C_Logout(m_session_handle);

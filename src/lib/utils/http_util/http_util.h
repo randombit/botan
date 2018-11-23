@@ -20,6 +20,20 @@ namespace Botan {
 
 namespace HTTP {
 
+/**
+* HTTP_Error Exception
+*/
+class BOTAN_PUBLIC_API(2,0) HTTP_Error final : public Exception
+   {
+   public:
+      explicit HTTP_Error(const std::string& msg) :
+         Exception("HTTP error " + msg)
+         {}
+
+      ErrorType error_type() const noexcept override { return ErrorType::HttpError; }
+
+   };
+
 class Response final
    {
    public:
@@ -44,7 +58,7 @@ class Response final
       void throw_unless_ok()
          {
          if(status_code() != 200)
-            throw Exception("HTTP error: " + status_message());
+            throw HTTP_Error(status_message());
          }
 
    private:
@@ -52,17 +66,6 @@ class Response final
       std::string m_status_message;
       std::vector<uint8_t> m_body;
       std::map<std::string, std::string> m_headers;
-   };
-
-/**
-* HTTP_Error Exception
-*/
-class BOTAN_PUBLIC_API(2,0) HTTP_Error final : public Exception
-   {
-   public:
-      explicit HTTP_Error(const std::string& msg) :
-         Exception("HTTP error " + msg)
-         {}
    };
 
 BOTAN_PUBLIC_API(2,0) std::ostream& operator<<(std::ostream& o, const Response& resp);

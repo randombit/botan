@@ -122,7 +122,7 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG
 
       void add_entropy(const uint8_t*, size_t) override
          {
-         throw Botan::Exception("add_entropy() not supported by this RNG, test bug?");
+         throw Test_Error("add_entropy() not supported by this RNG, test bug?");
          }
 
       std::string name() const override
@@ -148,7 +148,7 @@ class SeedCapturing_RNG final : public Botan::RandomNumberGenerator
    public:
       void randomize(uint8_t[], size_t) override
          {
-         throw Botan::Exception("SeedCapturing_RNG has no output");
+         throw Test_Error("SeedCapturing_RNG has no output");
          }
 
       bool accepts_input() const override { return true; }

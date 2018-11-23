@@ -90,7 +90,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       else if(our_side == false)
          m_aead->start(iv.bits_of());
 #else
-      throw Exception("Negotiated disabled TLS CBC+HMAC ciphersuite");
+      throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
       }
    else

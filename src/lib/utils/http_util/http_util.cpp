@@ -36,7 +36,7 @@ std::string http_transact(const std::string& hostname,
       {
       socket = OS::open_socket(hostname, "http", timeout);
       if(!socket)
-         throw Exception("No socket support enabled in build");
+         throw Not_Implemented("No socket support enabled in build");
       }
    catch(std::exception& e)
       {

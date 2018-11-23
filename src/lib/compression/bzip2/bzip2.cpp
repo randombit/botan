@@ -48,10 +48,8 @@ class Bzip2_Compression_Stream final : public Bzip2_Stream
 
          int rc = BZ2_bzCompressInit(streamp(), block_size, 0, 0);
 
-         if(rc == BZ_MEM_ERROR)
-            throw Exception("bzip memory allocation failure");
-         else if(rc != BZ_OK)
-            throw Exception("bzip compress initialization failed");
+         if(rc != BZ_OK)
+            throw Compression_Error("BZ2_bzCompressInit", ErrorType::Bzip2Error, rc);
          }
 
       ~Bzip2_Compression_Stream()
@@ -63,10 +61,8 @@ class Bzip2_Compression_Stream final : public Bzip2_Stream
          {
          int rc = BZ2_bzCompress(streamp(), flags);
 
-         if(rc == BZ_MEM_ERROR)
-            throw Exception("bzip memory allocation failure");
-         else if(rc < 0)
-            throw Exception("bzip compress error " + std::to_string(-rc));
+         if(rc < 0)
+            throw Compression_Error("BZ2_bzCompress", ErrorType::Bzip2Error, rc);
 
          return (rc == BZ_STREAM_END);
          }
@@ -79,10 +75,8 @@ class Bzip2_Decompression_Stream final : public Bzip2_Stream
          {
          int rc = BZ2_bzDecompressInit(streamp(), 0, 0);
 
-         if(rc == BZ_MEM_ERROR)
-            throw Exception("bzip memory allocation failure");
-         else if(rc != BZ_OK)
-            throw Exception("bzip decompress initialization failed");
+         if(rc != BZ_OK)
+            throw Compression_Error("BZ2_bzDecompressInit", ErrorType::Bzip2Error, rc);
          }
 
       ~Bzip2_Decompression_Stream()
@@ -94,10 +88,8 @@ class Bzip2_Decompression_Stream final : public Bzip2_Stream
          {
          int rc = BZ2_bzDecompress(streamp());
 
-         if(rc == BZ_MEM_ERROR)
-            throw Exception("bzip memory allocation failure");
-         else if(rc != BZ_OK && rc != BZ_STREAM_END)
-            throw Exception("bzip decompress error " + std::to_string(-rc));
+         if(rc != BZ_OK && rc != BZ_STREAM_END)
+            throw Compression_Error("BZ2_bzDecompress", ErrorType::Bzip2Error, rc);
 
          return (rc == BZ_STREAM_END);
          }
