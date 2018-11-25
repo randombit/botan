@@ -39,6 +39,10 @@ in the source.
 
 - TLS: DHE-PSK ciphersuites
 
+- TLS: SRP ciphersuites. All available TLS-SRP suites use obsolete
+  ciphers. It would be better to instead perform a standard TLS
+  negotiation, then a PAKE authentication within the TLS channel.
+
 - TLS: DSA ciphersuites/certs
 
 - TLS: static RSA key exchange ciphersuites
