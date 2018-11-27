@@ -314,7 +314,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      *
      * Assumes that *this is (if anything) only slightly larger than
      * mod and performs repeated subtractions. It should not be used if
-     * *this is much larger than mod, instead of modulo operator.
+     * *this is much larger than mod, instead use modulo operator.
      */
      void reduce_below(const BigInt& mod, secure_vector<word> &ws);
 
@@ -332,6 +332,20 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * values are identical return 0 [like Perl's <=> operator]
      */
      int32_t cmp(const BigInt& n, bool check_signs = true) const;
+
+     /**
+     * Compare this to another BigInt
+     * @param n the BigInt value to compare with
+     * @result true if this == n or false otherwise
+     */
+     bool is_equal(const BigInt& n) const;
+
+     /**
+     * Compare this to another BigInt
+     * @param n the BigInt value to compare with
+     * @result true if this < n or false otherwise
+     */
+     bool is_less_than(const BigInt& n) const;
 
      /**
      * Compare this to an integer
@@ -562,7 +576,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Increase internal register buffer to at least n words
      * @param n new size of register
      */
-     void grow_to(size_t n) { m_data.grow_to(n); }
+     void grow_to(size_t n) const { m_data.grow_to(n); }
 
      /**
      * Resize the vector to the minimum word size to hold the integer, or
@@ -896,7 +910,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
                  }
               }
 
-           void grow_to(size_t n)
+           void grow_to(size_t n) const
               {
               if(n > size())
                  {
@@ -954,7 +968,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
            size_t calc_sig_words() const;
 
-           secure_vector<word> m_reg;
+           mutable secure_vector<word> m_reg;
            mutable size_t m_sig_words = sig_words_npos;
         };
 
@@ -986,17 +1000,17 @@ BigInt BOTAN_PUBLIC_API(2,0) operator>>(const BigInt& x, size_t n);
 * Comparison Operators
 */
 inline bool operator==(const BigInt& a, const BigInt& b)
-   { return (a.cmp(b) == 0); }
+   { return a.is_equal(b); }
 inline bool operator!=(const BigInt& a, const BigInt& b)
-   { return (a.cmp(b) != 0); }
+   { return !a.is_equal(b); }
 inline bool operator<=(const BigInt& a, const BigInt& b)
    { return (a.cmp(b) <= 0); }
 inline bool operator>=(const BigInt& a, const BigInt& b)
    { return (a.cmp(b) >= 0); }
 inline bool operator<(const BigInt& a, const BigInt& b)
-   { return (a.cmp(b) < 0); }
+   { return a.is_less_than(b); }
 inline bool operator>(const BigInt& a, const BigInt& b)
-   { return (a.cmp(b) > 0); }
+   { return b.is_less_than(a); }
 
 inline bool operator==(const BigInt& a, word b)
    { return (a.cmp_word(b) == 0); }

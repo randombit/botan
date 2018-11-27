@@ -25,18 +25,14 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    const size_t p_top_bits = 521 % BOTAN_MP_WORD_BITS;
    const size_t p_words = p_full_words + 1;
 
-   const size_t x_sw = x.sig_words();
-
-   if(x_sw < p_words)
-      return; // already smaller
-
    if(ws.size() < p_words + 1)
       ws.resize(p_words + 1);
 
    clear_mem(ws.data(), ws.size());
-   bigint_shr2(ws.data(), x.data(), x_sw, p_full_words, p_top_bits);
+   bigint_shr2(ws.data(), x.data(), std::min(x.size(), 2*p_words), p_full_words, p_top_bits);
 
    x.mask_bits(521);
+   x.grow_to(p_words);
 
    // Word-level carry will be zero
    word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
@@ -45,13 +41,6 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    // Now find the actual carry in bit 522
    const word bit_522_set = x.word_at(p_full_words) >> p_top_bits;
 
-#if (BOTAN_MP_WORD_BITS == 64)
-   static const word p521_words[9] = {
-      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-      0x1FF };
-#endif
-
    /*
    * If bit 522 is set then we overflowed and must reduce. Otherwise, if the
    * top bit is set, it is possible we have x == 2**521 - 1 so check for that.
@@ -59,7 +48,12 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    if(bit_522_set)
       {
 #if (BOTAN_MP_WORD_BITS == 64)
-      bigint_sub2(x.mutable_data(), x.size(), p521_words, 9);
+      static const word p521_words[9] = {
+         0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+         0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+         0x1FF };
+
+      bigint_sub2(x.mutable_data(), p_words, p521_words, 9);
 #else
       x -= prime_p521();
 #endif
@@ -141,6 +135,7 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    const uint64_t S5 = X05 + X09 + X11;
 
    x.mask_bits(192);
+   x.resize(p192_limbs + 1);
 
    uint64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
@@ -194,9 +189,10 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
-   word borrow = bigint_sub2(x.mutable_data(), x.size(), p192_mults[S], p192_limbs);
+   BOTAN_ASSERT_NOMSG(x.size() == p192_limbs + 1);
+   word borrow = bigint_sub2(x.mutable_data(), p192_limbs + 1, p192_mults[S], p192_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-   bigint_cnd_add(borrow, x.mutable_data(), x.size(), p192_mults[0], p192_limbs);
+   bigint_cnd_add(borrow, x.mutable_data(), p192_limbs + 1, p192_mults[0], p192_limbs);
    }
 
 const BigInt& prime_p224()
@@ -293,9 +289,10 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 
    };
 
-   word borrow = bigint_sub2(x.mutable_data(), x.size(), p224_mults[S], p224_limbs);
+   BOTAN_ASSERT_NOMSG(x.size() == p224_limbs + 1);
+   word borrow = bigint_sub2(x.mutable_data(), p224_limbs + 1, p224_mults[S], p224_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-   bigint_cnd_add(borrow, x.mutable_data(), x.size(), p224_mults[0], p224_limbs);
+   bigint_cnd_add(borrow, x.mutable_data(), p224_limbs + 1, p224_mults[0], p224_limbs);
    }
 
 const BigInt& prime_p256()
@@ -420,9 +417,10 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    CT::unpoison(S);
 
-   word borrow = bigint_sub2(x.mutable_data(), x.size(), p256_mults[S], p256_limbs);
+   BOTAN_ASSERT_NOMSG(x.size() == p256_limbs + 1);
+   word borrow = bigint_sub2(x.mutable_data(), p256_limbs + 1, p256_mults[S], p256_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-   bigint_cnd_add(borrow, x.mutable_data(), x.size(), p256_mults[0], p256_limbs);
+   bigint_cnd_add(borrow, x.mutable_data(), p256_limbs + 1, p256_mults[0], p256_limbs);
    }
 
 const BigInt& prime_p384()
@@ -570,9 +568,10 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
-   word borrow = bigint_sub2(x.mutable_data(), x.size(), p384_mults[S], p384_limbs);
+   BOTAN_ASSERT_NOMSG(x.size() == p384_limbs + 1);
+   word borrow = bigint_sub2(x.mutable_data(), p384_limbs + 1, p384_mults[S], p384_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-   bigint_cnd_add(borrow, x.mutable_data(), x.size(), p384_mults[0], p384_limbs);
+   bigint_cnd_add(borrow, x.mutable_data(), p384_limbs + 1, p384_mults[0], p384_limbs);
    }
 
 #endif

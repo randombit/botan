@@ -15,6 +15,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/mp_asmi.h>
 #include <botan/internal/ct_utils.h>
+#include <algorithm>
 
 namespace Botan {
 
@@ -167,6 +168,46 @@ inline void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size)
 
       x[i] = CT::select(mask, a, s);
       }
+   }
+
+/*
+* Equivalent to
+*   bigint_cnd_add( mask, x, size, y, size);
+*   bigint_cnd_sub(~mask, x, size, z, size);
+*
+* Mask must be either 0 or all 1 bits
+*
+* Returns the carry or borrow resp
+*/
+inline word bigint_cnd_addsub(word mask, word x[],
+                              const word y[], const word z[],
+                              size_t size)
+   {
+   const size_t blocks = size - (size % 8);
+
+   word carry = 0;
+   word borrow = 0;
+
+   word t0[8] = { 0 };
+   word t1[8] = { 0 };
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      carry = word8_add3(t0, x + i, y + i, carry);
+      borrow = word8_sub3(t1, x + i, z + i, borrow);
+
+      for(size_t j = 0; j != 8; ++j)
+         x[i+j] = CT::select(mask, t0[j], t1[j]);
+      }
+
+   for(size_t i = blocks; i != size; ++i)
+      {
+      t0[0] = word_add(x[i], y[i], &carry);
+      t1[0] = word_sub(x[i], z[i], &borrow);
+      x[i] = CT::select(mask, t0[0], t1[0]);
+      }
+
+   return CT::select(mask, carry, borrow);
    }
 
 /*
@@ -331,7 +372,7 @@ inline word bigint_sub3(word z[],
 * Otherwise compute z = y - x
 * No borrow is possible since the result is always >= 0
 *
-* Returns 1 if x >= y or 0 if x < y
+* Returns ~0 if x >= y or 0 if x < y
 * @param z output array of at least N words
 * @param x input array of N words
 * @param y input array of N words
@@ -364,9 +405,7 @@ inline word bigint_sub_abs(word z[],
       ws1[i] = word_sub(y[i], x[i], &borrow1);
       }
 
-   word mask = CT::conditional_copy_mem(borrow1, z, ws0, ws1, N);
-
-   return CT::select<word>(mask, 0, 1);
+   return CT::conditional_copy_mem(borrow0, z, ws1, ws0, N);
    }
 
 /*
@@ -495,23 +534,6 @@ inline void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
    }
 
 /**
-* Montgomery Reduction
-* @param z integer to reduce, of size exactly 2*(p_size+1).
-           Output is in the first p_size+1 words, higher
-           words are set to zero.
-* @param p modulus
-* @param p_size size of p
-* @param p_dash Montgomery value
-* @param workspace array of at least 2*(p_size+1) words
-* @param ws_size size of workspace in words
-*/
-void bigint_monty_redc(word z[],
-                       const word p[], size_t p_size,
-                       word p_dash,
-                       word workspace[],
-                       size_t ws_size);
-
-/**
 * Compare x and y
 * Return -1 if x < y
 * Return 0 if x == y
@@ -520,24 +542,116 @@ void bigint_monty_redc(word z[],
 inline int32_t bigint_cmp(const word x[], size_t x_size,
                           const word y[], size_t y_size)
    {
-   if(x_size < y_size) { return (-bigint_cmp(y, y_size, x, x_size)); }
+   static_assert(sizeof(word) >= sizeof(uint32_t), "Size assumption");
 
-   while(x_size > y_size)
+   const uint32_t LT = static_cast<uint32_t>(-1);
+   const uint32_t EQ = 0;
+   const uint32_t GT = 1;
+
+   const size_t common_elems = std::min(x_size, y_size);
+
+   uint32_t result = EQ; // until found otherwise
+
+   for(size_t i = 0; i != common_elems; i++)
       {
-      if(x[x_size-1])
-         return 1;
-      x_size--;
+      const word is_eq = CT::is_equal(x[i], y[i]);
+      const word is_lt = CT::is_less(x[i], y[i]);
+      result = CT::select<uint32_t>(is_eq, result, CT::select<uint32_t>(is_lt, LT, GT));
       }
 
-   for(size_t i = x_size; i > 0; --i)
+   if(x_size < y_size)
       {
-      if(x[i-1] > y[i-1])
-         return 1;
-      if(x[i-1] < y[i-1])
-         return -1;
+      word mask = 0;
+      for(size_t i = x_size; i != y_size; i++)
+         mask |= y[i];
+
+      // If any bits were set in high part of y, then x < y
+      result = CT::select<uint32_t>(CT::is_zero(mask), result, LT);
+      }
+   else if(y_size < x_size)
+      {
+      word mask = 0;
+      for(size_t i = y_size; i != x_size; i++)
+         mask |= x[i];
+
+      // If any bits were set in high part of x, then x > y
+      result = CT::select<uint32_t>(CT::is_zero(mask), result, GT);
       }
 
-   return 0;
+   CT::unpoison(result);
+   BOTAN_DEBUG_ASSERT(result == LT || result == GT || result == EQ);
+   return static_cast<int32_t>(result);
+   }
+
+/**
+* Compare x and y
+* Return ~0 if x[0:x_size] < y[0:y_size] or 0 otherwise
+* If lt_or_equal is true, returns ~0 also for x == y
+*/
+inline word bigint_ct_is_lt(const word x[], size_t x_size,
+                            const word y[], size_t y_size,
+                            bool lt_or_equal = false)
+   {
+   const size_t common_elems = std::min(x_size, y_size);
+
+   word is_lt = CT::expand_mask<word>(lt_or_equal);
+
+   for(size_t i = 0; i != common_elems; i++)
+      {
+      const word eq = CT::is_equal(x[i], y[i]);
+      const word lt = CT::is_less(x[i], y[i]);
+      is_lt = CT::select(eq, is_lt, lt);
+      }
+
+   if(x_size < y_size)
+      {
+      word mask = 0;
+      for(size_t i = x_size; i != y_size; i++)
+         mask |= y[i];
+      // If any bits were set in high part of y, then is_lt should be forced true
+      is_lt |= ~CT::is_zero(mask);
+      }
+   else if(y_size < x_size)
+      {
+      word mask = 0;
+      for(size_t i = y_size; i != x_size; i++)
+         mask |= x[i];
+
+      // If any bits were set in high part of x, then is_lt should be false
+      is_lt &= CT::is_zero(mask);
+      }
+
+   CT::unpoison(is_lt);
+   return is_lt;
+   }
+
+inline word bigint_ct_is_eq(const word x[], size_t x_size,
+                            const word y[], size_t y_size)
+   {
+   const size_t common_elems = std::min(x_size, y_size);
+
+   word diff = 0;
+
+   for(size_t i = 0; i != common_elems; i++)
+      {
+      diff |= (x[i] ^ y[i]);
+      }
+
+   // If any bits were set in high part of x/y, then they are not equal
+   if(x_size < y_size)
+      {
+      for(size_t i = x_size; i != y_size; i++)
+         diff |= y[i];
+      }
+   else if(y_size < x_size)
+      {
+      for(size_t i = y_size; i != x_size; i++)
+         diff |= x[i];
+      }
+
+   const word is_equal = CT::is_zero(diff);
+   CT::unpoison(is_equal);
+   return is_equal;
    }
 
 /**
@@ -578,6 +692,9 @@ inline word bigint_divop(word n1, word n0, word d)
 */
 inline word bigint_modop(word n1, word n0, word d)
    {
+   if(d == 0)
+      throw Invalid_Argument("bigint_modop divide by zero");
+
 #if defined(BOTAN_HAS_MP_DWORD)
    return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) % d;
 #else
@@ -604,6 +721,23 @@ void bigint_comba_sqr8(word out[16], const word in[8]);
 void bigint_comba_sqr9(word out[18], const word in[9]);
 void bigint_comba_sqr16(word out[32], const word in[16]);
 void bigint_comba_sqr24(word out[48], const word in[24]);
+
+/**
+* Montgomery Reduction
+* @param z integer to reduce, of size exactly 2*(p_size+1).
+           Output is in the first p_size+1 words, higher
+           words are set to zero.
+* @param p modulus
+* @param p_size size of p
+* @param p_dash Montgomery value
+* @param workspace array of at least 2*(p_size+1) words
+* @param ws_size size of workspace in words
+*/
+void bigint_monty_redc(word z[],
+                       const word p[], size_t p_size,
+                       word p_dash,
+                       word workspace[],
+                       size_t ws_size);
 
 /*
 * High Level Multiplication/Squaring Interfaces
