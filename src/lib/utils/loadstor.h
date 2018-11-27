@@ -71,7 +71,7 @@ inline constexpr uint32_t make_uint32(uint8_t i0, uint8_t i1, uint8_t i2, uint8_
    }
 
 /**
-* Make a uint32_t from eight bytes
+* Make a uint64_t from eight bytes
 * @param i0 the first byte
 * @param i1 the second byte
 * @param i2 the third byte
