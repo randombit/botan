@@ -114,9 +114,41 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
    if(this->is_negative() || s.is_negative() || mod.is_negative())
       throw Invalid_Argument("BigInt::mod_add expects all arguments are positive");
 
-   // TODO add optimized version of this
-   *this += s;
-   this->reduce_below(mod, ws);
+   BOTAN_DEBUG_ASSERT(*this < mod);
+   BOTAN_DEBUG_ASSERT(s < mod);
+
+   /*
+   t + s or t + s - p == t - (p - s)
+
+   So first compute ws = p - s
+
+   Then compute t + s and t - ws
+
+   If t - ws does not borrow, then that is the correct valued
+   */
+
+   const size_t mod_sw = mod.sig_words();
+   BOTAN_ARG_CHECK(mod_sw > 0, "BigInt::mod_add modulus must be positive");
+
+   this->grow_to(mod_sw);
+   s.grow_to(mod_sw);
+
+   // First mod_sw for p - s, 2*mod_sw for bigint_addsub workspace
+   if(ws.size() < 3*mod_sw)
+      ws.resize(3*mod_sw);
+
+   word borrow = bigint_sub3(&ws[0], mod.data(), mod_sw, s.data(), mod_sw);
+   CT::unpoison(borrow);
+   BOTAN_ASSERT_NOMSG(borrow == 0);
+
+   // Compute t - ws
+   borrow = bigint_sub3(&ws[mod_sw], this->data(), mod_sw, &ws[0], mod_sw);
+
+   // Compute t + s
+   bigint_add3_nc(&ws[mod_sw*2], this->data(), mod_sw, s.data(), mod_sw);
+
+   CT::conditional_copy_mem(borrow, &ws[0], &ws[mod_sw*2], &ws[mod_sw], mod_sw);
+   set_words(&ws[0], mod_sw);
 
    return (*this);
    }
@@ -126,50 +158,30 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    if(this->is_negative() || s.is_negative() || mod.is_negative())
       throw Invalid_Argument("BigInt::mod_sub expects all arguments are positive");
 
-   const size_t mod_sw = mod.sig_words();
-
+   // We are assuming in this function that *this and s are no more than mod_sw words long
    BOTAN_DEBUG_ASSERT(*this < mod);
    BOTAN_DEBUG_ASSERT(s < mod);
 
-   // We are assuming here that *this and s are no more than mod_sw words long
-   const size_t t_w = std::min(mod_sw, size());
-   const size_t s_w = std::min(mod_sw, s.size());
+   const size_t mod_sw = mod.sig_words();
 
-   /*
-   TODO make this const time
-   */
+   this->grow_to(mod_sw);
+   s.grow_to(mod_sw);
 
-   int32_t relative_size = bigint_cmp(data(), t_w, s.data(), s_w);
+   if(ws.size() < mod_sw)
+      ws.resize(mod_sw);
 
-   if(relative_size >= 0)
-      {
-      /*
-      this >= s in which case just subtract
+   // is t < s or not?
+   const word is_lt = bigint_ct_is_lt(data(), mod_sw, s.data(), mod_sw);
 
-      Here s_w might be > t_w because these values are just based on
-      the size of the buffer. But we know that because *this < s, then
-      this->sig_words() must be <= s.sig_words() so set the size of s
-      to the minimum of t and s words.
-      */
-      BOTAN_DEBUG_ASSERT(sig_words() <= s.sig_words());
-      bigint_sub2(mutable_data(), t_w, s.data(), std::min(t_w, s_w));
-      }
-   else
-      {
-       // Otherwise we must sub s and then add p (or add (p - s) as here)
+   // ws = p - s
+   word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), mod_sw);
+   CT::unpoison(borrow);
+   BOTAN_ASSERT_NOMSG(borrow == 0);
 
-      if(ws.size() < mod_sw)
-         ws.resize(mod_sw);
-
-      word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), s_w);
-      BOTAN_ASSERT_NOMSG(borrow == 0);
-
-      if(size() < mod_sw)
-         grow_to(mod_sw);
-
-      word carry = bigint_add2_nc(mutable_data(), size(), ws.data(), mod_sw);
-      BOTAN_ASSERT_NOMSG(carry == 0);
-      }
+   // Compute either (t - s) or (t + (p - s)) depending on mask
+   word carry = bigint_cnd_addsub(is_lt, mutable_data(), ws.data(), s.data(), mod_sw);
+   CT::unpoison(carry);
+   BOTAN_ASSERT_NOMSG(carry == 0);
 
    return (*this);
    }
@@ -185,23 +197,17 @@ BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws)
 
    const size_t x_sw = this->sig_words();
 
-   const int32_t relative_size = bigint_cmp(y, y_sw, this->data(), x_sw);
+   // TODO use bigint_sub_abs or a new variant of it
 
    ws.resize(std::max(y_sw, x_sw) + 1);
    clear_mem(ws.data(), ws.size());
 
-   if(relative_size < 0)
+   word borrow = bigint_sub3(ws.data(), y, y_sw, this->data(), x_sw);
+
+   if(borrow)
       {
       bigint_sub3(ws.data(), this->data(), x_sw, y, y_sw);
       this->flip_sign();
-      }
-   else if(relative_size == 0)
-      {
-      ws.clear();
-      }
-   else if(relative_size > 0)
-      {
-      bigint_sub3(ws.data(), y, y_sw, this->data(), x_sw);
       }
 
    this->swap_reg(ws);

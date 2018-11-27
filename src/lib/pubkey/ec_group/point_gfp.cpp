@@ -341,6 +341,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
       m_curve.sqr(T4, m_coord_x, ws); // x^2
       T4 *= 3; // 3*x^2
+      T4.reduce_below(p, sub_ws);
       T4.mod_add(T3, p, sub_ws); // 3*x^2 + a*z^4
       }
 

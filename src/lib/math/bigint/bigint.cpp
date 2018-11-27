@@ -140,6 +140,33 @@ int32_t BigInt::cmp(const BigInt& other, bool check_signs) const
                      other.data(), other.sig_words());
    }
 
+bool BigInt::is_equal(const BigInt& other) const
+   {
+   if(this->sign() != other.sign())
+      return false;
+
+   return bigint_ct_is_eq(this->data(), this->sig_words(),
+                          other.data(), other.sig_words());
+   }
+
+bool BigInt::is_less_than(const BigInt& other) const
+   {
+   if(this->is_negative() && other.is_positive())
+      return true;
+
+   if(this->is_positive() && other.is_negative())
+      return false;
+
+   if(other.is_negative() && this->is_negative())
+      {
+      return !bigint_ct_is_lt(other.data(), other.sig_words(),
+                              this->data(), this->sig_words(), true);
+      }
+
+   return bigint_ct_is_lt(this->data(), this->sig_words(),
+                          other.data(), other.sig_words());
+   }
+
 void BigInt::encode_words(word out[], size_t size) const
    {
    const size_t words = sig_words();
@@ -155,25 +182,21 @@ size_t BigInt::Data::calc_sig_words() const
    {
    size_t sig = m_reg.size();
 
-#if 0
-   // Const time, but slower ...
-
-   word seen_only_zeros = MP_WORD_MASK;
    word sub = 1;
 
    for(size_t i = 0; i != m_reg.size(); ++i)
       {
       const word w = m_reg[m_reg.size() - i - 1];
-      seen_only_zeros &= CT::is_zero(w);
-      sub &= seen_only_zeros;
-
+      sub &= CT::is_zero(w);
       sig -= sub;
       }
 
-#else
-   while(sig && (m_reg[sig-1] == 0))
-      sig--;
-#endif
+   /*
+   * This depends on the data so is poisoned, but unpoison it here as
+   * later conditionals are made on the size.
+   */
+   CT::unpoison(sig);
+
    return sig;
    }
 
@@ -221,10 +244,14 @@ uint32_t BigInt::to_u32bit() const
 void BigInt::set_bit(size_t n)
    {
    const size_t which = n / BOTAN_MP_WORD_BITS;
-   const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
-   if(which >= size()) grow_to(which + 1);
 
-   m_data.set_word_at(which, m_data.get_word_at(which) | mask);
+   if(which >= size())
+      {
+      grow_to(which + 1);
+      }
+
+   const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
+   m_data.set_word_at(which, word_at(which) | mask);
    }
 
 /*
@@ -233,9 +260,12 @@ void BigInt::set_bit(size_t n)
 void BigInt::clear_bit(size_t n)
    {
    const size_t which = n / BOTAN_MP_WORD_BITS;
-   const word mask = ~(static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS));
+
    if(which < size())
-      m_data.set_word_at(which, m_data.get_word_at(which) & mask);
+      {
+      const word mask = ~(static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS));
+      m_data.set_word_at(which, word_at(which) & mask);
+      }
    }
 
 size_t BigInt::bytes() const
@@ -254,7 +284,10 @@ size_t BigInt::bits() const
       return 0;
 
    const size_t full_words = words - 1;
-   return (full_words * BOTAN_MP_WORD_BITS + high_bit(word_at(full_words)));
+   const size_t bits = (full_words * BOTAN_MP_WORD_BITS + high_bit(word_at(full_words)));
+   // Need to unpoison due to high_bit not being const time
+   CT::unpoison(bits);
+   return bits;
    }
 
 /*
@@ -303,6 +336,7 @@ void BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
       {
       word borrow = bigint_sub3(ws.data(), data(), p_words + 1, p.data(), p_words);
 
+      //CT::unpoison(borrow); // fixme
       if(borrow)
          break;
 

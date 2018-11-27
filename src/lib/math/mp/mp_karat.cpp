@@ -83,18 +83,21 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    {
    if(N < KARATSUBA_MULTIPLY_THRESHOLD || N % 2)
       {
-      if(N == 6)
-         return bigint_comba_mul6(z, x, y);
-      else if(N == 8)
-         return bigint_comba_mul8(z, x, y);
-      else if(N == 9)
-         return bigint_comba_mul9(z, x, y);
-      else if(N == 16)
-         return bigint_comba_mul16(z, x, y);
-      else if(N == 24)
-         return bigint_comba_mul24(z, x, y);
-      else
-         return basecase_mul(z, 2*N, x, N, y, N);
+      switch(N)
+         {
+         case 6:
+            return bigint_comba_mul6(z, x, y);
+         case 8:
+            return bigint_comba_mul8(z, x, y);
+         case 9:
+            return bigint_comba_mul9(z, x, y);
+         case 16:
+            return bigint_comba_mul16(z, x, y);
+         case 24:
+            return bigint_comba_mul24(z, x, y);
+         default:
+            return basecase_mul(z, 2*N, x, N, y, N);
+         }
       }
 
    const size_t N2 = N / 2;
@@ -123,6 +126,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    // First compute (X_lo - X_hi)*(Y_hi - Y_lo)
    const word cmp0 = bigint_sub_abs(z0, x0, x1, N2, workspace);
    const word cmp1 = bigint_sub_abs(z1, y1, y0, N2, workspace);
+   const word neg_mask = ~(cmp0 ^ cmp1);
 
    karatsuba_mul(ws0, z0, z1, N2, ws1);
 
@@ -140,8 +144,6 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
 
    clear_mem(workspace + N, N2);
 
-   const word neg_mask = CT::is_equal<word>(cmp0, cmp1);
-
    bigint_cnd_addsub(neg_mask, z + N2, workspace, 2*N-N2);
    }
 
@@ -152,18 +154,21 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    {
    if(N < KARATSUBA_SQUARE_THRESHOLD || N % 2)
       {
-      if(N == 6)
-         return bigint_comba_sqr6(z, x);
-      else if(N == 8)
-         return bigint_comba_sqr8(z, x);
-      else if(N == 9)
-         return bigint_comba_sqr9(z, x);
-      else if(N == 16)
-         return bigint_comba_sqr16(z, x);
-      else if(N == 24)
-         return bigint_comba_sqr24(z, x);
-      else
-         return basecase_sqr(z, 2*N, x, N);
+      switch(N)
+         {
+         case 6:
+            return bigint_comba_sqr6(z, x);
+         case 8:
+            return bigint_comba_sqr8(z, x);
+         case 9:
+            return bigint_comba_sqr9(z, x);
+         case 16:
+            return bigint_comba_sqr16(z, x);
+         case 24:
+            return bigint_comba_sqr24(z, x);
+         default:
+            return basecase_sqr(z, 2*N, x, N);
+         }
       }
 
    const size_t N2 = N / 2;

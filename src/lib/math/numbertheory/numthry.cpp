@@ -292,9 +292,8 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       throw BigInt::DivideByZero();
    if(mod.is_negative() || n.is_negative())
       throw Invalid_Argument("inverse_mod: arguments must be non-negative");
-
-   if(n.is_zero() || (n.is_even() && mod.is_even()))
-      return 0; // fast fail checks
+   if(n.is_zero())
+      return 0;
 
    if(mod.is_odd() && n < mod)
       return ct_inverse_mod_odd_modulus(n, mod);
