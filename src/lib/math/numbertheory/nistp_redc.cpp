@@ -32,6 +32,7 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    bigint_shr2(ws.data(), x.data(), std::min(x.size(), 2*p_words), p_full_words, p_top_bits);
 
    x.mask_bits(521);
+   x.grow_to(p_words);
 
    // Word-level carry will be zero
    word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
