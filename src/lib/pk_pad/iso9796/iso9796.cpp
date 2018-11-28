@@ -142,26 +142,29 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
 
    //recover msg1 and salt
    size_t msg1_offset = 1;
-   uint8_t waiting_for_delim = 0xFF;
-   uint8_t bad_input = 0;
+
+   auto waiting_for_delim = CT::Mask<uint8_t>::set();
+   auto bad_input = CT::Mask<uint8_t>::cleared();
+
    for(size_t j = 0; j < DB_size; ++j)
       {
-      const uint8_t one_m = CT::is_equal<uint8_t>(DB[j], 0x01);
-      const uint8_t zero_m = CT::is_zero(DB[j]);
-      const uint8_t add_m = waiting_for_delim & zero_m;
+      const auto is_zero = CT::Mask<uint8_t>::is_zero(DB[j]);
+      const auto is_one = CT::Mask<uint8_t>::is_equal(DB[j], 0x01);
 
-      bad_input |= waiting_for_delim & ~(zero_m | one_m);
-      msg1_offset += CT::select<uint8_t>(add_m, 1, 0);
+      const auto add_m = waiting_for_delim & is_zero;
 
-      waiting_for_delim &= zero_m;
+      bad_input |= waiting_for_delim & ~(is_zero | is_one);
+      msg1_offset += add_m.if_set_return(1);
+
+      waiting_for_delim &= is_zero;
       }
 
    //invalid, if delimiter 0x01 was not found or msg1_offset is too big
    bad_input |= waiting_for_delim;
-   bad_input |= CT::is_less(coded.size(), tLength + HASH_SIZE + msg1_offset + SALT_SIZE);
+   bad_input |= CT::Mask<size_t>::is_lt(coded.size(), tLength + HASH_SIZE + msg1_offset + SALT_SIZE);
 
    //in case that msg1_offset is too big, just continue with offset = 0.
-   msg1_offset = CT::select<size_t>(bad_input, 0, msg1_offset);
+   msg1_offset = CT::Mask<size_t>::expand(bad_input.value()).if_not_set_return(msg1_offset);
 
    CT::unpoison(coded.data(), coded.size());
    CT::unpoison(msg1_offset);
@@ -172,8 +175,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
                             coded.end() - tLength - HASH_SIZE);
 
    //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
-   const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE
-                           - SALT_SIZE - tLength - 1;
+   const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE - SALT_SIZE - tLength - 1;
    secure_vector<uint8_t> msg1raw;
    secure_vector<uint8_t> msg2;
    if(raw.size() > capacity)
@@ -188,7 +190,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
       }
    msg2 = hash->final();
 
-   uint64_t msg1rawLength = msg1raw.size();
+   const uint64_t msg1rawLength = msg1raw.size();
    hash->update_be(msg1rawLength * 8);
    hash->update(msg1raw);
    hash->update(msg2);
@@ -196,7 +198,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    secure_vector<uint8_t> H3 = hash->final();
 
    //compute H3(C*||msg1*||H(msg2)||S*) * indicates a recovered value
-   uint64_t msgLength = msg1.size();
+   const uint64_t msgLength = msg1.size();
    hash->update_be(msgLength * 8);
    hash->update(msg1);
    hash->update(msg2);
@@ -204,10 +206,10 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    secure_vector<uint8_t> H2 = hash->final();
 
    //check if H3 == H2
-   bad_input |= CT::is_equal<uint8_t>(constant_time_compare(H3.data(), H2.data(), HASH_SIZE), false);
+   bad_input |= CT::Mask<uint8_t>::is_zero(ct_compare_u8(H3.data(), H2.data(), HASH_SIZE));
 
    CT::unpoison(bad_input);
-   return (bad_input == 0);
+   return (bad_input.is_set() == false);
    }
 
 }

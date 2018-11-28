@@ -20,7 +20,7 @@ namespace {
 inline uint16_t mul(uint16_t x, uint16_t y)
    {
    const uint32_t P = static_cast<uint32_t>(x) * y;
-   const uint16_t P_mask = static_cast<uint16_t>(CT::is_zero(P) & 0xFFFF);
+   const auto P_mask = CT::Mask<uint16_t>(CT::Mask<uint32_t>::is_zero(P));
 
    const uint32_t P_hi = P >> 16;
    const uint32_t P_lo = P & 0xFFFF;
@@ -29,7 +29,7 @@ inline uint16_t mul(uint16_t x, uint16_t y)
    const uint16_t r_1 = static_cast<uint16_t>((P_lo - P_hi) + carry);
    const uint16_t r_2 = 1 - x - y;
 
-   return CT::select(P_mask, r_2, r_1);
+   return P_mask.select(r_2, r_1);;
    }
 
 /*

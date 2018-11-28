@@ -171,7 +171,7 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
       ws.resize(mod_sw);
 
    // is t < s or not?
-   const word is_lt = bigint_ct_is_lt(data(), mod_sw, s.data(), mod_sw);
+   const auto is_lt = bigint_ct_is_lt(data(), mod_sw, s.data(), mod_sw);
 
    // ws = p - s
    word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), mod_sw);

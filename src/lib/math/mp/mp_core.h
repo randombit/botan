@@ -30,14 +30,14 @@ const word MP_WORD_MAX = MP_WORD_MASK;
 */
 inline void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
    {
-   const word mask = CT::expand_mask(cnd);
+   const auto mask = CT::Mask<word>::expand(cnd);
 
    for(size_t i = 0; i != size; ++i)
       {
       const word a = x[i];
       const word b = y[i];
-      x[i] = CT::select(mask, b, a);
-      y[i] = CT::select(mask, a, b);
+      x[i] = mask.select(b, a);
+      y[i] = mask.select(a, b);
       }
    }
 
@@ -46,7 +46,7 @@ inline word bigint_cnd_add(word cnd, word x[], word x_size,
    {
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
 
-   const word mask = CT::expand_mask(cnd);
+   const auto mask = CT::Mask<word>::expand(cnd);
 
    word carry = 0;
 
@@ -56,24 +56,22 @@ inline word bigint_cnd_add(word cnd, word x[], word x_size,
    for(size_t i = 0; i != blocks; i += 8)
       {
       carry = word8_add3(z, x + i, y + i, carry);
-
-      for(size_t j = 0; j != 8; ++j)
-         x[i+j] = CT::select(mask, z[j], x[i+j]);
+      mask.select_n(x + i, z, x + i, 8);
       }
 
    for(size_t i = blocks; i != y_size; ++i)
       {
       z[0] = word_add(x[i], y[i], &carry);
-      x[i] = CT::select(mask, z[0], x[i]);
+      x[i] = mask.select(z[0], x[i]);
       }
 
    for(size_t i = y_size; i != x_size; ++i)
       {
       z[0] = word_add(x[i], 0, &carry);
-      x[i] = CT::select(mask, z[0], x[i]);
+      x[i] = mask.select(z[0], x[i]);
       }
 
-   return carry & mask;
+   return mask.if_set_return(carry);
    }
 
 /*
@@ -95,7 +93,7 @@ inline word bigint_cnd_sub(word cnd,
    {
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
 
-   const word mask = CT::expand_mask(cnd);
+   const auto mask = CT::Mask<word>::expand(cnd);
 
    word carry = 0;
 
@@ -105,24 +103,22 @@ inline word bigint_cnd_sub(word cnd,
    for(size_t i = 0; i != blocks; i += 8)
       {
       carry = word8_sub3(z, x + i, y + i, carry);
-
-      for(size_t j = 0; j != 8; ++j)
-         x[i+j] = CT::select(mask, z[j], x[i+j]);
+      mask.select_n(x + i, z, x + i, 8);
       }
 
    for(size_t i = blocks; i != y_size; ++i)
       {
       z[0] = word_sub(x[i], y[i], &carry);
-      x[i] = CT::select(mask, z[0], x[i]);
+      x[i] = mask.select(z[0], x[i]);
       }
 
    for(size_t i = y_size; i != x_size; ++i)
       {
       z[0] = word_sub(x[i], 0, &carry);
-      x[i] = CT::select(mask, z[0], x[i]);
+      x[i] = mask.select(z[0], x[i]);
       }
 
-   return carry & mask;
+   return mask.if_set_return(carry);
    }
 
 /*
@@ -142,7 +138,7 @@ inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
 *
 * Mask must be either 0 or all 1 bits
 */
-inline void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size)
+inline void bigint_cnd_addsub(CT::Mask<word> mask, word x[], const word y[], size_t size)
    {
    const size_t blocks = size - (size % 8);
 
@@ -158,7 +154,7 @@ inline void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size)
       borrow = word8_sub3(t1, x + i, y + i, borrow);
 
       for(size_t j = 0; j != 8; ++j)
-         x[i+j] = CT::select(mask, t0[j], t1[j]);
+         x[i+j] = mask.select(t0[j], t1[j]);
       }
 
    for(size_t i = blocks; i != size; ++i)
@@ -166,7 +162,7 @@ inline void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size)
       const word a = word_add(x[i], y[i], &carry);
       const word s = word_sub(x[i], y[i], &borrow);
 
-      x[i] = CT::select(mask, a, s);
+      x[i] = mask.select(a, s);
       }
    }
 
@@ -179,7 +175,7 @@ inline void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size)
 *
 * Returns the carry or borrow resp
 */
-inline word bigint_cnd_addsub(word mask, word x[],
+inline word bigint_cnd_addsub(CT::Mask<word> mask, word x[],
                               const word y[], const word z[],
                               size_t size)
    {
@@ -197,17 +193,17 @@ inline word bigint_cnd_addsub(word mask, word x[],
       borrow = word8_sub3(t1, x + i, z + i, borrow);
 
       for(size_t j = 0; j != 8; ++j)
-         x[i+j] = CT::select(mask, t0[j], t1[j]);
+         x[i+j] = mask.select(t0[j], t1[j]);
       }
 
    for(size_t i = blocks; i != size; ++i)
       {
       t0[0] = word_add(x[i], y[i], &carry);
       t1[0] = word_sub(x[i], z[i], &borrow);
-      x[i] = CT::select(mask, t0[0], t1[0]);
+      x[i] = mask.select(t0[0], t1[0]);
       }
 
-   return CT::select(mask, carry, borrow);
+   return mask.select(carry, borrow);
    }
 
 /*
@@ -217,13 +213,13 @@ inline word bigint_cnd_addsub(word mask, word x[],
 */
 inline void bigint_cnd_abs(word cnd, word x[], size_t size)
    {
-   const word mask = CT::expand_mask(cnd);
+   const auto mask = CT::Mask<word>::expand(cnd);
 
-   word carry = mask & 1;
+   word carry = mask.if_set_return(1);
    for(size_t i = 0; i != size; ++i)
       {
       const word z = word_add(~x[i], 0, &carry);
-      x[i] = CT::select(mask, z, x[i]);
+      x[i] = mask.select(z, x[i]);
       }
    }
 
@@ -379,9 +375,10 @@ inline word bigint_sub3(word z[],
 * @param N length of x and y
 * @param ws array of at least 2*N words
 */
-inline word bigint_sub_abs(word z[],
-                           const word x[], const word y[], size_t N,
-                           word ws[])
+inline CT::Mask<word>
+bigint_sub_abs(word z[],
+               const word x[], const word y[], size_t N,
+               word ws[])
    {
    // Subtract in both direction then conditional copy out the result
 
@@ -544,19 +541,20 @@ inline int32_t bigint_cmp(const word x[], size_t x_size,
    {
    static_assert(sizeof(word) >= sizeof(uint32_t), "Size assumption");
 
-   const uint32_t LT = static_cast<uint32_t>(-1);
-   const uint32_t EQ = 0;
-   const uint32_t GT = 1;
+   const word LT = static_cast<word>(-1);
+   const word EQ = 0;
+   const word GT = 1;
 
    const size_t common_elems = std::min(x_size, y_size);
 
-   uint32_t result = EQ; // until found otherwise
+   word result = EQ; // until found otherwise
 
    for(size_t i = 0; i != common_elems; i++)
       {
-      const word is_eq = CT::is_equal(x[i], y[i]);
-      const word is_lt = CT::is_less(x[i], y[i]);
-      result = CT::select<uint32_t>(is_eq, result, CT::select<uint32_t>(is_lt, LT, GT));
+      const auto is_eq = CT::Mask<word>::is_equal(x[i], y[i]);
+      const auto is_lt = CT::Mask<word>::is_lt(x[i], y[i]);
+
+      result = is_eq.select(result, is_lt.select(LT, GT));
       }
 
    if(x_size < y_size)
@@ -566,7 +564,7 @@ inline int32_t bigint_cmp(const word x[], size_t x_size,
          mask |= y[i];
 
       // If any bits were set in high part of y, then x < y
-      result = CT::select<uint32_t>(CT::is_zero(mask), result, LT);
+      result = CT::Mask<word>::is_zero(mask).select(result, LT);
       }
    else if(y_size < x_size)
       {
@@ -575,7 +573,7 @@ inline int32_t bigint_cmp(const word x[], size_t x_size,
          mask |= x[i];
 
       // If any bits were set in high part of x, then x > y
-      result = CT::select<uint32_t>(CT::is_zero(mask), result, GT);
+      result = CT::Mask<word>::is_zero(mask).select(result, GT);
       }
 
    CT::unpoison(result);
@@ -588,19 +586,20 @@ inline int32_t bigint_cmp(const word x[], size_t x_size,
 * Return ~0 if x[0:x_size] < y[0:y_size] or 0 otherwise
 * If lt_or_equal is true, returns ~0 also for x == y
 */
-inline word bigint_ct_is_lt(const word x[], size_t x_size,
-                            const word y[], size_t y_size,
-                            bool lt_or_equal = false)
+inline CT::Mask<word>
+bigint_ct_is_lt(const word x[], size_t x_size,
+                const word y[], size_t y_size,
+                bool lt_or_equal = false)
    {
    const size_t common_elems = std::min(x_size, y_size);
 
-   word is_lt = CT::expand_mask<word>(lt_or_equal);
+   auto is_lt = CT::Mask<word>::expand(lt_or_equal);
 
    for(size_t i = 0; i != common_elems; i++)
       {
-      const word eq = CT::is_equal(x[i], y[i]);
-      const word lt = CT::is_less(x[i], y[i]);
-      is_lt = CT::select(eq, is_lt, lt);
+      const auto eq = CT::Mask<word>::is_equal(x[i], y[i]);
+      const auto lt = CT::Mask<word>::is_lt(x[i], y[i]);
+      is_lt = eq.select_mask(is_lt, lt);
       }
 
    if(x_size < y_size)
@@ -609,7 +608,7 @@ inline word bigint_ct_is_lt(const word x[], size_t x_size,
       for(size_t i = x_size; i != y_size; i++)
          mask |= y[i];
       // If any bits were set in high part of y, then is_lt should be forced true
-      is_lt |= ~CT::is_zero(mask);
+      is_lt |= CT::Mask<word>::expand(mask);
       }
    else if(y_size < x_size)
       {
@@ -618,15 +617,15 @@ inline word bigint_ct_is_lt(const word x[], size_t x_size,
          mask |= x[i];
 
       // If any bits were set in high part of x, then is_lt should be false
-      is_lt &= CT::is_zero(mask);
+      is_lt &= CT::Mask<word>::is_zero(mask);
       }
 
-   CT::unpoison(is_lt);
    return is_lt;
    }
 
-inline word bigint_ct_is_eq(const word x[], size_t x_size,
-                            const word y[], size_t y_size)
+inline CT::Mask<word>
+bigint_ct_is_eq(const word x[], size_t x_size,
+                const word y[], size_t y_size)
    {
    const size_t common_elems = std::min(x_size, y_size);
 
@@ -649,9 +648,7 @@ inline word bigint_ct_is_eq(const word x[], size_t x_size,
          diff |= x[i];
       }
 
-   const word is_equal = CT::is_zero(diff);
-   CT::unpoison(is_equal);
-   return is_equal;
+   return CT::Mask<word>::is_zero(diff);
    }
 
 /**

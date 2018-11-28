@@ -37,10 +37,11 @@ PK_Decryptor::decrypt_or_random(const uint8_t in[],
    {
    const secure_vector<uint8_t> fake_pms = rng.random_vec(expected_pt_len);
 
-   uint8_t valid_mask = 0;
-   secure_vector<uint8_t> decoded = do_decrypt(valid_mask, in, length);
+   uint8_t decrypt_valid = 0;
+   secure_vector<uint8_t> decoded = do_decrypt(decrypt_valid, in, length);
 
-   valid_mask &= CT::is_equal(decoded.size(), expected_pt_len);
+   auto valid_mask = CT::Mask<uint8_t>::is_equal(decrypt_valid, 0xFF);
+   valid_mask &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_zero(decoded.size() ^ expected_pt_len));
 
    decoded.resize(expected_pt_len);
 
@@ -62,14 +63,13 @@ PK_Decryptor::decrypt_or_random(const uint8_t in[],
 
       BOTAN_ASSERT(off < expected_pt_len, "Offset in range of plaintext");
 
-      valid_mask &= CT::is_equal(decoded[off], exp);
+      auto eq = CT::Mask<uint8_t>::is_equal(decoded[off], exp);
+
+      valid_mask &= eq;
       }
 
-   CT::conditional_copy_mem(valid_mask,
-                            /*output*/decoded.data(),
-                            /*from0*/decoded.data(),
-                            /*from1*/fake_pms.data(),
-                            expected_pt_len);
+   // If valid_mask is false, assign fake pre master instead
+   valid_mask.select_n(decoded.data(), decoded.data(), fake_pms.data(), expected_pt_len);
 
    return decoded;
    }

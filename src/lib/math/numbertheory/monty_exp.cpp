@@ -85,10 +85,12 @@ void const_time_lookup(secure_vector<word>& output,
       BOTAN_ASSERT(vec.size() >= words,
                    "Word size as expected in const_time_lookup");
 
-      const word mask = CT::is_equal<word>(i, nibble);
+      const auto mask = CT::Mask<word>::is_equal(i, nibble);
 
       for(size_t w = 0; w != words; ++w)
-         output[w] |= (mask & vec[w]);
+         {
+         output[w] |= mask.if_set_return(vec[w]);
+         }
       }
    }
 

@@ -124,9 +124,9 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    */
 
    // First compute (X_lo - X_hi)*(Y_hi - Y_lo)
-   const word cmp0 = bigint_sub_abs(z0, x0, x1, N2, workspace);
-   const word cmp1 = bigint_sub_abs(z1, y1, y0, N2, workspace);
-   const word neg_mask = ~(cmp0 ^ cmp1);
+   const auto cmp0 = bigint_sub_abs(z0, x0, x1, N2, workspace);
+   const auto cmp1 = bigint_sub_abs(z1, y1, y0, N2, workspace);
+   const auto neg_mask = ~(cmp0 ^ cmp1);
 
    karatsuba_mul(ws0, z0, z1, N2, ws1);
 

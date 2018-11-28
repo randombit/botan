@@ -57,21 +57,30 @@ size_t PKCS7_Padding::unpad(const uint8_t input[], size_t input_length) const
       return input_length;
 
    CT::poison(input, input_length);
-   size_t bad_input = 0;
+
    const uint8_t last_byte = input[input_length-1];
 
-   bad_input |= CT::expand_mask<size_t>(last_byte > input_length);
+   /*
+   The input should == the block size so if the last byte exceeds
+   that then the padding is certainly invalid
+   */
+   auto bad_input = CT::Mask<size_t>::is_gt(last_byte, input_length);
 
    const size_t pad_pos = input_length - last_byte;
 
    for(size_t i = 0; i != input_length - 1; ++i)
       {
-      const uint8_t in_range = CT::expand_mask<uint8_t>(i >= pad_pos);
-      bad_input |= in_range & (~CT::is_equal(input[i], last_byte));
+      // Does this byte equal the expected pad byte?
+      const auto pad_eq = CT::Mask<size_t>::is_equal(input[i], last_byte);
+
+      // Ignore values that are not part of the padding
+      const auto in_range = CT::Mask<size_t>::is_gte(i, pad_pos);
+      bad_input |= in_range & (~pad_eq);
       }
 
    CT::unpoison(input, input_length);
-   return CT::conditional_return(bad_input, input_length, pad_pos);
+
+   return bad_input.select_and_unpoison(input_length, pad_pos);
    }
 
 /*
@@ -99,21 +108,24 @@ size_t ANSI_X923_Padding::unpad(const uint8_t input[], size_t input_length) cons
       return input_length;
 
    CT::poison(input, input_length);
+
    const size_t last_byte = input[input_length-1];
 
-   uint8_t bad_input = 0;
-   bad_input |= CT::expand_mask<uint8_t>(last_byte > input_length);
+   auto bad_input = CT::Mask<size_t>::is_gt(last_byte, input_length);
 
    const size_t pad_pos = input_length - last_byte;
 
    for(size_t i = 0; i != input_length - 1; ++i)
       {
-      const uint8_t in_range = CT::expand_mask<uint8_t>(i >= pad_pos);
-      bad_input |= CT::expand_mask(input[i]) & in_range;
+      // Ignore values that are not part of the padding
+      const auto in_range = CT::Mask<size_t>::is_gte(i, pad_pos);
+      const auto pad_is_nonzero = CT::Mask<size_t>::expand(input[i]);
+      bad_input |= pad_is_nonzero & in_range;
       }
 
    CT::unpoison(input, input_length);
-   return CT::conditional_return(bad_input, input_length, pad_pos);
+
+   return bad_input.select_and_unpoison(input_length, pad_pos);
    }
 
 /*
@@ -139,22 +151,26 @@ size_t OneAndZeros_Padding::unpad(const uint8_t input[], size_t input_length) co
 
    CT::poison(input, input_length);
 
-   uint8_t bad_input = 0;
-   uint8_t seen_one = 0;
+   auto bad_input = CT::Mask<uint8_t>::cleared();
+   auto seen_0x80 = CT::Mask<uint8_t>::cleared();
+
    size_t pad_pos = input_length - 1;
    size_t i = input_length;
 
    while(i)
       {
-      seen_one |= CT::is_equal<uint8_t>(input[i-1], 0x80);
-      pad_pos -= CT::select<uint8_t>(~seen_one, 1, 0);
-      bad_input |= ~CT::is_zero<uint8_t>(input[i-1]) & ~seen_one;
+      const auto is_0x80 = CT::Mask<uint8_t>::is_equal(input[i-1], 0x80);
+      const auto is_zero = CT::Mask<uint8_t>::is_zero(input[i-1]);
+
+      seen_0x80 |= is_0x80;
+      pad_pos -= seen_0x80.if_not_set_return(1);
+      bad_input |= ~seen_0x80 & ~is_zero;
       i--;
       }
-   bad_input |= ~seen_one;
+   bad_input |= ~seen_0x80;
 
    CT::unpoison(input, input_length);
-   return CT::conditional_return(bad_input, input_length, pad_pos);
+   return bad_input.select_and_unpoison(input_length, pad_pos);
    }
 
 /*
@@ -183,20 +199,23 @@ size_t ESP_Padding::unpad(const uint8_t input[], size_t input_length) const
    CT::poison(input, input_length);
 
    const size_t last_byte = input[input_length-1];
-   uint8_t bad_input = 0;
-   bad_input |= CT::is_zero(last_byte) | CT::expand_mask<uint8_t>(last_byte > input_length);
+
+   auto bad_input = CT::Mask<uint8_t>::is_zero(last_byte) |
+      CT::Mask<uint8_t>::is_gt(last_byte, input_length);
 
    const size_t pad_pos = input_length - last_byte;
    size_t i = input_length - 1;
    while(i)
       {
-      const uint8_t in_range = CT::expand_mask<uint8_t>(i > pad_pos);
-      bad_input |= (~CT::is_equal<uint8_t>(input[i-1], input[i]-1)) & in_range;
+      const auto in_range = CT::Mask<uint8_t>::is_gt(i, pad_pos);
+      const auto incrementing = CT::Mask<uint8_t>::is_equal(input[i-1], input[i]-1);
+
+      bad_input |= in_range & ~incrementing;
       --i;
       }
 
    CT::unpoison(input, input_length);
-   return CT::conditional_return(bad_input, input_length, pad_pos);
+   return bad_input.select_and_unpoison(input_length, pad_pos);
    }
 
 
