@@ -58,33 +58,33 @@ secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask,
 
    CT::poison(in, inlen);
 
-   uint8_t bad_input_m = 0;
-   uint8_t seen_zero_m = 0;
+   CT::Mask<uint8_t> bad_input_m = CT::Mask<uint8_t>::cleared();
+   CT::Mask<uint8_t> seen_zero_m = CT::Mask<uint8_t>::cleared();
    size_t delim_idx = 0;
 
-   bad_input_m |= ~CT::is_equal<uint8_t>(in[0], 0);
-   bad_input_m |= ~CT::is_equal<uint8_t>(in[1], 2);
+   bad_input_m |= ~CT::Mask<uint8_t>::is_equal(in[0], 0);
+   bad_input_m |= ~CT::Mask<uint8_t>::is_equal(in[1], 2);
 
    for(size_t i = 2; i < inlen; ++i)
       {
-      const uint8_t is_zero_m = CT::is_zero<uint8_t>(in[i]);
+      const auto is_zero_m = CT::Mask<uint8_t>::is_zero(in[i]);
 
-      delim_idx += CT::select<uint8_t>(~seen_zero_m, 1, 0);
+      delim_idx += seen_zero_m.if_not_set_return(1);
 
-      bad_input_m |= is_zero_m & CT::expand_mask<uint8_t>(i < 10);
+      bad_input_m |= is_zero_m & CT::Mask<uint8_t>(CT::Mask<size_t>::is_lt(i, 10));
       seen_zero_m |= is_zero_m;
       }
 
    bad_input_m |= ~seen_zero_m;
-   bad_input_m |= CT::is_less<size_t>(delim_idx, 8);
+   bad_input_m |= CT::Mask<uint8_t>(CT::Mask<size_t>::is_lt(delim_idx, 8));
 
    CT::unpoison(in, inlen);
    CT::unpoison(bad_input_m);
    CT::unpoison(delim_idx);
 
    secure_vector<uint8_t> output(&in[delim_idx + 2], &in[inlen]);
-   CT::cond_zero_mem(bad_input_m, output.data(), output.size());
-   valid_mask = ~bad_input_m;
+   bad_input_m.if_set_zero_out(output.data(), output.size());
+   valid_mask = ~bad_input_m.value();
    return output;
    }
 

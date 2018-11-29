@@ -128,9 +128,9 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
 
       const word w = scalar.get_substring(2*window, 2);
 
-      const word w_is_1 = CT::is_equal<word>(w, 1);
-      const word w_is_2 = CT::is_equal<word>(w, 2);
-      const word w_is_3 = CT::is_equal<word>(w, 3);
+      const auto w_is_1 = CT::Mask<word>::is_equal(w, 1);
+      const auto w_is_2 = CT::Mask<word>::is_equal(w, 2);
+      const auto w_is_3 = CT::Mask<word>::is_equal(w, 3);
 
       for(size_t j = 0; j != elem_size; ++j)
          {
@@ -138,7 +138,7 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
          const word w2 = m_W[base_addr + 1*elem_size + j];
          const word w3 = m_W[base_addr + 2*elem_size + j];
 
-         Wt[j] = CT::select3<word>(w_is_1, w1, w_is_2, w2, w_is_3, w3, 0);
+         Wt[j] = w_is_1.select(w1, w_is_2.select(w2, w_is_3.select(w3, 0)));
          }
 
       R.add_affine(&Wt[0], m_p_words, &Wt[m_p_words], m_p_words, ws);
@@ -255,11 +255,11 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       clear_mem(e.data(), e.size());
       for(size_t i = 1; i != window_elems; ++i)
          {
-         const word wmask = CT::is_equal<word>(w, i);
+         const auto wmask = CT::Mask<word>::is_equal(w, i);
 
          for(size_t j = 0; j != elem_size; ++j)
             {
-            e[j] |= wmask & m_T[i * elem_size + j];
+            e[j] |= wmask.if_set_return(m_T[i * elem_size + j]);
             }
          }
 
@@ -282,10 +282,12 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       clear_mem(e.data(), e.size());
       for(size_t i = 1; i != window_elems; ++i)
          {
-         const word wmask = CT::is_equal<word>(w, i);
+         const auto wmask = CT::Mask<word>::is_equal(w, i);
 
          for(size_t j = 0; j != elem_size; ++j)
-            e[j] |= wmask & m_T[i * elem_size + j];
+            {
+            e[j] |= wmask.if_set_return(m_T[i * elem_size + j]);
+            }
          }
 
       R.add(&e[0], m_p_words, &e[m_p_words], m_p_words, &e[2*m_p_words], m_p_words, ws);
