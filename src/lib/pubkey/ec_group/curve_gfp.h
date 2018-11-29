@@ -60,7 +60,7 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
       void curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
                      secure_vector<word>& ws) const
          {
-         BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+         BOTAN_DEBUG_ASSERT(x.sig_words() <= get_p_words());
          curve_mul_words(z, x.data(), x.size(), y, ws);
          }
 
@@ -73,7 +73,7 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr
       void curve_sqr(BigInt& z, const BigInt& x,
                              secure_vector<word>& ws) const
          {
-         BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+         BOTAN_DEBUG_ASSERT(x.sig_words() <= get_p_words());
          curve_sqr_words(z, x.data(), x.size(), ws);
          }
 

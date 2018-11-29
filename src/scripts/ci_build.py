@@ -111,6 +111,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             flags += ['--with-debug-info']
         else:
             flags += ['--with-sanitizers']
+        flags += ['--with-debug-asserts']
+
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
