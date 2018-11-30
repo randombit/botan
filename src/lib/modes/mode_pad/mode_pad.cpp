@@ -53,7 +53,7 @@ void PKCS7_Padding::add_padding(secure_vector<uint8_t>& buffer,
 */
 size_t PKCS7_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   if(input_length <= 2)
+   if(!valid_blocksize(input_length))
       return input_length;
 
    CT::poison(input, input_length);
@@ -104,7 +104,7 @@ void ANSI_X923_Padding::add_padding(secure_vector<uint8_t>& buffer,
 */
 size_t ANSI_X923_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   if(input_length <= 2)
+   if(!valid_blocksize(input_length))
       return input_length;
 
    CT::poison(input, input_length);
@@ -146,7 +146,7 @@ void OneAndZeros_Padding::add_padding(secure_vector<uint8_t>& buffer,
 */
 size_t OneAndZeros_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   if(input_length <= 2)
+   if(!valid_blocksize(input_length))
       return input_length;
 
    CT::poison(input, input_length);
@@ -170,7 +170,8 @@ size_t OneAndZeros_Padding::unpad(const uint8_t input[], size_t input_length) co
    bad_input |= ~seen_0x80;
 
    CT::unpoison(input, input_length);
-   return bad_input.select_and_unpoison(input_length, pad_pos);
+
+   return CT::Mask<size_t>::expand(bad_input).select_and_unpoison(input_length, pad_pos);
    }
 
 /*
@@ -193,7 +194,7 @@ void ESP_Padding::add_padding(secure_vector<uint8_t>& buffer,
 */
 size_t ESP_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   if(input_length <= 2)
+   if(!valid_blocksize(input_length))
       return input_length;
 
    CT::poison(input, input_length);

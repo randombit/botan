@@ -125,6 +125,16 @@ class Mask
          }
 
       /**
+      * Return a Mask<T> which is set if m is set
+      */
+      template<typename U>
+      static Mask<T> expand(Mask<U> m)
+         {
+         static_assert(sizeof(U) < sizeof(T), "sizes ok");
+         return ~Mask<T>::is_zero(m.value());
+         }
+
+      /**
       * Return a Mask<T> which is set if v is == 0 or cleared otherwise
       */
       static Mask<T> is_zero(T x)

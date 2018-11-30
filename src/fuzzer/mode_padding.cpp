@@ -130,25 +130,38 @@ uint16_t ref_tls_cbc_unpad(const uint8_t in[], size_t len)
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   Botan::PKCS7_Padding pkcs7;
-   const size_t ct_pkcs7 = pkcs7.unpad(in, len);
-   const size_t ref_pkcs7 = ref_pkcs7_unpad(in, len);
-   FUZZER_ASSERT_EQUAL(ct_pkcs7, ref_pkcs7);
+   static Botan::PKCS7_Padding pkcs7;
+   static Botan::ANSI_X923_Padding x923;
+   static Botan::OneAndZeros_Padding oneandzero;
+   static Botan::ESP_Padding esp;
 
-   Botan::ANSI_X923_Padding x923;
-   const size_t ct_x923 = x923.unpad(in, len);
-   const size_t ref_x923 = ref_x923_unpad(in, len);
-   FUZZER_ASSERT_EQUAL(ct_x923, ref_x923);
+   if(pkcs7.valid_blocksize(len))
+      {
+      const size_t ct_pkcs7 = pkcs7.unpad(in, len);
+      const size_t ref_pkcs7 = ref_pkcs7_unpad(in, len);
+      FUZZER_ASSERT_EQUAL(ct_pkcs7, ref_pkcs7);
+      }
 
-   Botan::OneAndZeros_Padding oneandzero;
-   const size_t ct_oneandzero = oneandzero.unpad(in, len);
-   const size_t ref_oneandzero = ref_oneandzero_unpad(in, len);
-   FUZZER_ASSERT_EQUAL(ct_oneandzero, ref_oneandzero);
+   if(x923.valid_blocksize(len))
+      {
+      const size_t ct_x923 = x923.unpad(in, len);
+      const size_t ref_x923 = ref_x923_unpad(in, len);
+      FUZZER_ASSERT_EQUAL(ct_x923, ref_x923);
+      }
 
-   Botan::ESP_Padding esp;
-   const size_t ct_esp = esp.unpad(in, len);
-   const size_t ref_esp = ref_esp_unpad(in, len);
-   FUZZER_ASSERT_EQUAL(ct_esp, ref_esp);
+   if(oneandzero.valid_blocksize(len))
+      {
+      const size_t ct_oneandzero = oneandzero.unpad(in, len);
+      const size_t ref_oneandzero = ref_oneandzero_unpad(in, len);
+      FUZZER_ASSERT_EQUAL(ct_oneandzero, ref_oneandzero);
+      }
+
+   if(esp.valid_blocksize(len))
+      {
+      const size_t ct_esp = esp.unpad(in, len);
+      const size_t ref_esp = ref_esp_unpad(in, len);
+      FUZZER_ASSERT_EQUAL(ct_esp, ref_esp);
+      }
 
    const uint16_t ct_cbc = Botan::TLS::check_tls_cbc_padding(in, len);
    const uint16_t ref_cbc = ref_tls_cbc_unpad(in, len);
