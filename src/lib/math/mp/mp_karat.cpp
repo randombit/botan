@@ -144,7 +144,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
 
    clear_mem(workspace + N, N2);
 
-   bigint_cnd_addsub(neg_mask, z + N2, workspace, 2*N-N2);
+   bigint_cnd_add_or_sub(neg_mask, z + N2, workspace, 2*N-N2);
    }
 
 /*

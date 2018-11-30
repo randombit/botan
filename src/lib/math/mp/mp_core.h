@@ -138,7 +138,7 @@ inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
 *
 * Mask must be either 0 or all 1 bits
 */
-inline void bigint_cnd_addsub(CT::Mask<word> mask, word x[], const word y[], size_t size)
+inline void bigint_cnd_add_or_sub(CT::Mask<word> mask, word x[], const word y[], size_t size)
    {
    const size_t blocks = size - (size % 8);
 
@@ -335,7 +335,7 @@ inline void bigint_sub2_rev(word x[], const word y[], size_t y_size)
    for(size_t i = blocks; i != y_size; ++i)
       x[i] = word_sub(y[i], x[i], &borrow);
 
-   BOTAN_ASSERT(!borrow, "y must be greater than x");
+   BOTAN_ASSERT(borrow == 0, "y must be greater than x");
    }
 
 /**
@@ -649,6 +649,39 @@ bigint_ct_is_eq(const word x[], size_t x_size,
       }
 
    return CT::Mask<word>::is_zero(diff);
+   }
+
+/**
+* Set z to abs(x-y), ie if x >= y, then compute z = x - y
+* Otherwise compute z = y - x
+* No borrow is possible since the result is always >= 0
+*
+* Return the relative size of x vs y (-1, 0, 1)
+*
+* @param z output array of max(x_size,y_size) words
+* @param x input param
+* @param x_size length of x
+* @param y input param
+* @param y_size length of y
+* @param ws array of at least 2*max(x_size,y_size) words
+*/
+inline int32_t
+bigint_sub_abs(word z[],
+               const word x[], size_t x_size,
+               const word y[], size_t y_size)
+   {
+   const int32_t relative_size = bigint_cmp(x, x_size, y, y_size);
+
+   // FIXME should be a const time swap
+   if(relative_size < 0)
+      {
+      std::swap(x, y);
+      std::swap(x_size, y_size);
+      }
+
+   bigint_sub3(z, x, x_size, y, y_size);
+
+   return relative_size;
    }
 
 /**
