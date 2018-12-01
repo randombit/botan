@@ -8,12 +8,9 @@
 #include "argparse.h"
 #include <botan/rng.h>
 #include <botan/parsing.h>
+#include <botan/internal/os_utils.h>
 #include <iostream>
 #include <fstream>
-
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
-   #include <termios.h>
-#endif
 
 namespace Botan_CLI {
 
@@ -210,33 +207,27 @@ Botan::RandomNumberGenerator& Command::rng()
    return *m_rng.get();
    }
 
+namespace {
+
+bool echo_suppression_supported()
+   {
+   auto echo = Botan::OS::suppress_echo_on_terminal();
+   return (echo != nullptr);
+   }
+
+}
+
 std::string Command::get_passphrase(const std::string& prompt)
    {
+   if(echo_suppression_supported() == false)
+      error_output() << "Warning: terminal echo suppression not enabled for this platform\n";
+
    error_output() << prompt << ": " << std::flush;
    std::string pass;
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
-
-   struct termios old_flags;
-   int stdin_fd = fileno(stdin);
-   ::tcgetattr(stdin_fd, &old_flags);
-   struct termios noecho_flags = old_flags;
-   noecho_flags.c_lflag &= ~ECHO;
-   noecho_flags.c_lflag |= ECHONL;
-
-   if(::tcsetattr(stdin_fd, TCSANOW, &noecho_flags) != 0)
-      throw CLI_Error("Clearing terminal echo bit failed");
+   auto echo_suppress = Botan::OS::suppress_echo_on_terminal();
 
    std::getline(std::cin, pass);
-
-   if(::tcsetattr(stdin_fd, TCSANOW, &old_flags) != 0)
-      throw CLI_Error("Restoring terminal echo bit failed");
-#else
-
-   // TODO equivalent for Windows ...
-   std::getline(std::cin, pass);
-
-#endif
 
    return pass;
    }

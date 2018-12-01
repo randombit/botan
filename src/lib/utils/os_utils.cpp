@@ -1,6 +1,6 @@
 /*
 * OS and machine specific utility functions
-* (C) 2015,2016,2017 Jack Lloyd
+* (C) 2015,2016,2017,2018 Jack Lloyd
 * (C) 2016 Daniel Neus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -26,6 +26,7 @@
   #include <setjmp.h>
   #include <unistd.h>
   #include <errno.h>
+  #include <termios.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
@@ -468,6 +469,59 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
 #endif
 
    return probe_result;
+   }
+
+std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
+   {
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   class POSIX_Echo_Suppression : public Echo_Suppression
+      {
+      public:
+         POSIX_Echo_Suppression()
+            {
+            m_stdin_fd = fileno(stdin);
+            if(::tcgetattr(m_stdin_fd, &m_old_termios) != 0)
+               throw Botan::System_Error("Getting terminal status failed", errno);
+
+            struct termios noecho_flags = m_old_termios;
+            noecho_flags.c_lflag &= ~ECHO;
+            noecho_flags.c_lflag |= ECHONL;
+
+            if(::tcsetattr(m_stdin_fd, TCSANOW, &noecho_flags) != 0)
+               throw Botan::System_Error("Clearing terminal echo bit failed", errno);
+            }
+
+         void reenable_echo() override
+            {
+            if(m_stdin_fd > 0)
+               {
+               if(::tcsetattr(m_stdin_fd, TCSANOW, &m_old_termios) != 0)
+                  throw Botan::System_Error("Restoring terminal echo bit failed", errno);
+               m_stdin_fd = -1;
+               }
+            }
+
+         ~POSIX_Echo_Suppression()
+            {
+            try
+               {
+               reenable_echo();
+               }
+            catch(...)
+               {
+               }
+            }
+
+      private:
+         int m_stdin_fd;
+         struct termios m_old_termios;
+      };
+
+   return std::unique_ptr<Echo_Suppression>(new POSIX_Echo_Suppression);
+#endif
+
+   // Not supported on this platform, return null
+   return std::unique_ptr<Echo_Suppression>();
    }
 
 }
