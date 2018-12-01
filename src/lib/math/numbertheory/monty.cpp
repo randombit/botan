@@ -312,17 +312,17 @@ BigInt Montgomery_Int::value() const
 
 Montgomery_Int Montgomery_Int::operator+(const Montgomery_Int& other) const
    {
-   BigInt z = m_v + other.m_v;
    secure_vector<word> ws;
-   z.reduce_below(m_params->p(), ws);
+   BigInt z = m_v;
+   z.mod_add(other.m_v, m_params->p(), ws);
    return Montgomery_Int(m_params, z, false);
    }
 
 Montgomery_Int Montgomery_Int::operator-(const Montgomery_Int& other) const
    {
-   BigInt z = m_v - other.m_v;
-   if(z.is_negative())
-      z += m_params->p();
+   secure_vector<word> ws;
+   BigInt z = m_v;
+   z.mod_sub(other.m_v, m_params->p(), ws);
    return Montgomery_Int(m_params, z, false);
    }
 
@@ -420,29 +420,25 @@ Montgomery_Int Montgomery_Int::additive_inverse() const
 
 Montgomery_Int& Montgomery_Int::mul_by_2(secure_vector<word>& ws)
    {
-   m_v <<= 1;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_mul(2, m_params->p(), ws);
    return (*this);
    }
 
 Montgomery_Int& Montgomery_Int::mul_by_3(secure_vector<word>& ws)
    {
-   m_v *= 3;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_mul(3, m_params->p(), ws);
    return (*this);
    }
 
 Montgomery_Int& Montgomery_Int::mul_by_4(secure_vector<word>& ws)
    {
-   m_v <<= 2;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_mul(4, m_params->p(), ws);
    return (*this);
    }
 
 Montgomery_Int& Montgomery_Int::mul_by_8(secure_vector<word>& ws)
    {
-   m_v <<= 3;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_mul(8, m_params->p(), ws);
    return (*this);
    }
 

@@ -328,7 +328,17 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      BigInt& mod_sub(const BigInt& y, const BigInt& mod, secure_vector<word>& ws);
 
      /**
-     * Return *this below mod
+     * Set *this to (*this * y) % mod
+     * This function assumes *this is >= 0 && < mod
+     * y should be small, less than 16
+     * @param y the small integer to multiply by
+     * @param mod the positive modulus
+     * @param ws a temp workspace
+     */
+     BigInt& mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws);
+
+     /**
+     * Return *this % mod
      *
      * Assumes that *this is (if anything) only slightly larger than
      * mod and performs repeated subtractions. It should not be used if
@@ -933,7 +943,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
               if(n > size())
                  {
                  if(n <= m_reg.capacity())
-                    m_reg.resize(m_reg.capacity());
+                    m_reg.resize(n);
                  else
                     m_reg.resize(n + (8 - (n % 8)));
                  }

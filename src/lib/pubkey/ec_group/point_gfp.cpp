@@ -2,7 +2,7 @@
 * Point arithmetic on elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008-2011,2012,2014,2015 Jack Lloyd
+*     2008-2011,2012,2014,2015,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -152,6 +152,7 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
 
    m_curve.sqr(m_coord_x, T0, ws);
    m_coord_x.mod_sub(T1, p, sub_ws);
+
    m_coord_x.mod_sub(T3, p, sub_ws);
    m_coord_x.mod_sub(T3, p, sub_ws);
 
@@ -303,15 +304,13 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    m_curve.sqr(T0, m_coord_y, ws);
 
    m_curve.mul(T1, m_coord_x, T0, ws);
-   T1 <<= 2; // * 4
-   m_curve.redc_mod_p(T1, sub_ws);
+   T1.mod_mul(4, p, sub_ws);
 
    if(m_curve.a_is_zero())
       {
       // if a == 0 then 3*x^2 + a*z^4 is just 3*x^2
       m_curve.sqr(T4, m_coord_x, ws); // x^2
-      T4 *= 3; // 3*x^2
-      m_curve.redc_mod_p(T4, sub_ws);
+      T4.mod_mul(3, p, sub_ws); // 3*x^2
       }
    else if(m_curve.a_is_minus_3())
       {
@@ -330,8 +329,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
       m_curve.mul(T4, T2, T3, ws); // (x-z^2)*(x+z^2)
 
-      T4 *= 3; // 3*(x-z^2)*(x+z^2)
-      m_curve.redc_mod_p(T4, sub_ws);
+      T4.mod_mul(3, p, sub_ws); // 3*(x-z^2)*(x+z^2)
       }
    else
       {
@@ -340,8 +338,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
       m_curve.mul(T3, m_curve.get_a_rep(), T4, ws); // a*z^4
 
       m_curve.sqr(T4, m_coord_x, ws); // x^2
-      T4 *= 3; // 3*x^2
-      T4.reduce_below(p, sub_ws);
+      T4.mod_mul(3, p, sub_ws);
       T4.mod_add(T3, p, sub_ws); // 3*x^2 + a*z^4
       }
 
@@ -350,8 +347,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    T2.mod_sub(T1, p, sub_ws);
 
    m_curve.sqr(T3, T0, ws);
-   T3 <<= 3;
-   m_curve.redc_mod_p(T3, sub_ws);
+   T3.mod_mul(8, p, sub_ws);
 
    T1.mod_sub(T2, p, sub_ws);
 
@@ -361,8 +357,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    m_coord_x = T2;
 
    m_curve.mul(T2, m_coord_y, m_coord_z, ws);
-   T2 <<= 1;
-   m_curve.redc_mod_p(T2, sub_ws);
+   T2.mod_mul(2, p, sub_ws);
 
    m_coord_y = T0;
    m_coord_z = T2;

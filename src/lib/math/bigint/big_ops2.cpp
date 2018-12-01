@@ -126,19 +126,39 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
       swap_reg(ws);
       }
 #else
-   // is t < s or not?
-   const auto is_lt = bigint_ct_is_lt(data(), mod_sw, s.data(), mod_sw);
-
-   // ws = p - s
-   const word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), mod_sw);
-
-   // Compute either (t - s) or (t + (p - s)) depending on mask
-   const word carry = bigint_cnd_addsub(is_lt, mutable_data(), ws.data(), s.data(), mod_sw);
-
-   BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
-   BOTAN_UNUSED(carry, borrow);
+   if(mod_sw == 4)
+      bigint_mod_sub_n<4>(mutable_data(), s.data(), mod.data(), ws.data());
+   else
+      bigint_mod_sub(mutable_data(), s.data(), mod.data(), mod_sw, ws.data());
 #endif
 
+   return (*this);
+   }
+
+BigInt& BigInt::mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws)
+   {
+   BOTAN_ARG_CHECK(this->is_negative() == false, "*this must be positive");
+   BOTAN_ARG_CHECK(y < 16, "y too large");
+
+   BOTAN_DEBUG_ASSERT(*this < mod);
+
+   switch(y)
+      {
+      case 2:
+         *this <<= 1;
+         break;
+      case 4:
+         *this <<= 2;
+         break;
+      case 8:
+         *this <<= 3;
+         break;
+      default:
+         *this *= static_cast<word>(y);
+         break;
+      }
+
+   this->reduce_below(mod, ws);
    return (*this);
    }
 

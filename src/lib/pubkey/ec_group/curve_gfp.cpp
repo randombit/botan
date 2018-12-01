@@ -60,8 +60,6 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
 
       size_t get_ws_size() const override { return 2*m_p_words + 4; }
 
-      void redc_mod_p(BigInt& z, secure_vector<word>& ws) const override;
-
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
 
       void to_curve_rep(BigInt& x, secure_vector<word>& ws) const override;
@@ -92,11 +90,6 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
       bool m_a_is_zero;
       bool m_a_is_minus_3;
    };
-
-void CurveGFp_Montgomery::redc_mod_p(BigInt& z, secure_vector<word>& ws) const
-   {
-   z.reduce_below(m_p, ws);
-   }
 
 BigInt CurveGFp_Montgomery::invert_element(const BigInt& x, secure_vector<word>& ws) const
    {
@@ -206,6 +199,8 @@ class CurveGFp_NIST : public CurveGFp_Repr
 
       void from_curve_rep(BigInt& x, secure_vector<word>& ws) const override
          { redc_mod_p(x, ws); }
+
+      virtual void redc_mod_p(BigInt& z, secure_vector<word>& ws) const = 0;
 
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
 

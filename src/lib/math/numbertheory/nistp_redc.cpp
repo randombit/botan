@@ -48,13 +48,14 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    if(bit_522_set)
       {
 #if (BOTAN_MP_WORD_BITS == 64)
-      static const word p521_words[9] = {
+      static const word p521_words[p_words] = {
          0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
          0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
          0x1FF };
 
-      bigint_sub2(x.mutable_data(), p_words, p521_words, 9);
+      bigint_sub2(x.mutable_data(), p_words, p521_words, p_words);
 #else
+      // FIXME use bigint_sub2
       x -= prime_p521();
 #endif
       }
@@ -575,6 +576,5 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    }
 
 #endif
-
 
 }
