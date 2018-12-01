@@ -128,6 +128,8 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
 #else
    if(mod_sw == 4)
       bigint_mod_sub_n<4>(mutable_data(), s.data(), mod.data(), ws.data());
+   else if(mod_sw == 6)
+      bigint_mod_sub_n<6>(mutable_data(), s.data(), mod.data(), ws.data());
    else
       bigint_mod_sub(mutable_data(), s.data(), mod.data(), mod_sw, ws.data());
 #endif
