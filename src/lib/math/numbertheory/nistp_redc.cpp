@@ -8,6 +8,7 @@
 #include <botan/curve_nistp.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_asmi.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -25,6 +26,20 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    const size_t p_top_bits = 521 % BOTAN_MP_WORD_BITS;
    const size_t p_words = p_full_words + 1;
 
+#if (BOTAN_MP_WORD_BITS == 64)
+   static const word p521_words[p_words] = {
+      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+      0x1FF };
+#else
+   static const word p521_words[p_words] = {
+      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+      0x1FF };
+#endif
+
    if(ws.size() < p_words + 1)
       ws.resize(p_words + 1);
 
@@ -38,40 +53,26 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
    BOTAN_ASSERT_EQUAL(carry, 0, "Final carry in P-521 reduction");
 
-   // Now find the actual carry in bit 522
-   const word bit_522_set = x.word_at(p_full_words) >> p_top_bits;
+   const word top_word = x.word_at(p_full_words);
 
    /*
-   * If bit 522 is set then we overflowed and must reduce. Otherwise, if the
-   * top bit is set, it is possible we have x == 2**521 - 1 so check for that.
+   * Check if we need to reduce modulo P
+   * There are two possible cases:
+   * - The result overflowed past 521 bits, in which case bit 522 will be set
+   * - The result is exactly 2**521 - 1
    */
-   if(bit_522_set)
-      {
-#if (BOTAN_MP_WORD_BITS == 64)
-      static const word p521_words[p_words] = {
-         0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-         0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-         0x1FF };
+   const auto bit_522_set = CT::Mask<word>::expand(top_word >> p_top_bits);
 
-      bigint_sub2(x.mutable_data(), p_words, p521_words, p_words);
-#else
-      // FIXME use bigint_sub2
-      x -= prime_p521();
-#endif
-      }
-   else if(x.word_at(p_full_words) >> (p_top_bits - 1))
-      {
-      /*
-      * Otherwise we must reduce if p is exactly 2^512-1
-      */
+   word and_512 = MP_WORD_MAX;
+   for(size_t i = 0; i != p_full_words; ++i)
+      and_512 &= x.word_at(i);
+   const auto all_512_low_bits_set = CT::Mask<word>::is_equal(and_512, MP_WORD_MAX);
+   const auto has_p521_top_word = CT::Mask<word>::is_equal(top_word, 0x1FF);
+   const auto is_p521 = all_512_low_bits_set & has_p521_top_word;
 
-      word possibly_521 = MP_WORD_MAX;
-      for(size_t i = 0; i != p_full_words; ++i)
-         possibly_521 &= x.word_at(i);
+   const auto needs_reduction = is_p521 | bit_522_set;
 
-      if(possibly_521 == MP_WORD_MAX)
-         x.reduce_below(prime_p521(), ws);
-      }
+   bigint_cnd_sub(needs_reduction.value(), x.mutable_data(), p521_words, p_words);
    }
 
 #if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
