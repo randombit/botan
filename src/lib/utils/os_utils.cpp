@@ -481,14 +481,14 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
             {
             m_stdin_fd = fileno(stdin);
             if(::tcgetattr(m_stdin_fd, &m_old_termios) != 0)
-               throw Botan::System_Error("Getting terminal status failed", errno);
+               throw System_Error("Getting terminal status failed", errno);
 
             struct termios noecho_flags = m_old_termios;
             noecho_flags.c_lflag &= ~ECHO;
             noecho_flags.c_lflag |= ECHONL;
 
             if(::tcsetattr(m_stdin_fd, TCSANOW, &noecho_flags) != 0)
-               throw Botan::System_Error("Clearing terminal echo bit failed", errno);
+               throw System_Error("Clearing terminal echo bit failed", errno);
             }
 
          void reenable_echo() override
@@ -496,7 +496,7 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
             if(m_stdin_fd > 0)
                {
                if(::tcsetattr(m_stdin_fd, TCSANOW, &m_old_termios) != 0)
-                  throw Botan::System_Error("Restoring terminal echo bit failed", errno);
+                  throw System_Error("Restoring terminal echo bit failed", errno);
                m_stdin_fd = -1;
                }
             }
@@ -518,6 +518,50 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
       };
 
    return std::unique_ptr<Echo_Suppression>(new POSIX_Echo_Suppression);
+
+#elif defined(BOTAN_TARGET_OS_HAS_WIN32)
+
+   class Win32_Echo_Suppression : public Echo_Suppression
+      {
+      public:
+         Win32_Echo_Suppression()
+            {
+            m_input_handle = ::GetStdHandle(STD_INPUT_HANDLE);
+            if(::GetConsoleMode(m_input_handle, &m_console_state) == 0)
+               throw System_Error("Getting console mode failed", ::GetLastError());
+
+            DWORD new_mode = ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT;
+            if(::SetConsoleMode(m_input_handle, new_mode) == 0)
+               throw System_Error("Setting console mode failed", ::GetLastError());
+            }
+
+         void reenable_echo() override
+            {
+            if(m_input_handle != INVALID_HANDLE_VALUE)
+               {
+               if(::SetConsoleMode(m_input_handle, m_console_state) == 0)
+                  throw System_Error("Setting console mode failed", ::GetLastError());
+               m_input_handle = INVALID_HANDLE_VALUE;
+               }
+            }
+
+         ~Win32_Echo_Suppression()
+            {
+            try
+               {
+               reenable_echo();
+               }
+            catch(...)
+               {
+               }
+            }
+
+      private:
+         HANDLE m_input_handle;
+         DWORD m_console_state;
+      };
+
+   return std::unique_ptr<Echo_Suppression>(new Win32_Echo_Suppression);
 #endif
 
    // Not supported on this platform, return null
