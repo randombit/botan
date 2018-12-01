@@ -207,6 +207,14 @@ Botan::RandomNumberGenerator& Command::rng()
    return *m_rng.get();
    }
 
+std::string Command::get_passphrase_arg(const std::string& prompt, const std::string& opt_name)
+   {
+   const std::string s = get_arg(opt_name);
+   if(s != "-")
+      return s;
+   return get_passphrase(prompt);
+   }
+
 namespace {
 
 bool echo_suppression_supported()

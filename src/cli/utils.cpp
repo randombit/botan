@@ -540,7 +540,7 @@ class Generate_Bcrypt final : public Command
 
       void go() override
          {
-         const std::string password = get_arg("password");
+         const std::string password = get_passphrase_arg("Passphrase to hash", "password");
          const size_t wf = get_arg_sz("work-factor");
 
          if(wf < 4 || wf > 18)
@@ -574,7 +574,7 @@ class Check_Bcrypt final : public Command
 
       void go() override
          {
-         const std::string password = get_arg("password");
+         const std::string password = get_passphrase_arg("Password to check", "password");
          const std::string hash = get_arg("hash");
 
          if(hash.length() != 60)
@@ -585,6 +585,9 @@ class Check_Bcrypt final : public Command
          const bool ok = Botan::check_bcrypt(password, hash);
 
          output() << "Password is " << (ok ? "valid" : "NOT valid") << std::endl;
+
+         if(ok == false)
+            set_return_code(1);
          }
    };
 

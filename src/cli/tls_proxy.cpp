@@ -453,7 +453,7 @@ class TLS_Proxy final : public Command
          std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-         const std::string sessions_passphrase = get_arg("session-db-pass");
+         const std::string sessions_passphrase = get_passphrase_arg("Session DB passphrase", "session-db-pass");
          const std::string sessions_db = get_arg("session-db");
 
          if(!sessions_db.empty())

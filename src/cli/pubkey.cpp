@@ -60,7 +60,7 @@ class PK_Keygen final : public Command
             throw CLI_Error_Unsupported("keygen", algo);
             }
 
-         const std::string pass = get_arg("passphrase");
+         const std::string pass = get_passphrase_arg("Key passphrase", "passphrase");
          const bool der_out = flag_set("der-out");
 
          const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
@@ -168,11 +168,11 @@ class PK_Sign final : public Command
 
       void go() override
          {
-         std::unique_ptr<Botan::Private_Key> key(
-            Botan::PKCS8::load_key(
-               get_arg("key"),
-               rng(),
-               get_arg("passphrase")));
+         const std::string key_file = get_arg("key");
+         const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "passphrase");
+
+         Botan::DataSource_Stream input(key_file);
+         std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(input, passphrase);;
 
          if(!key)
             {
@@ -265,9 +265,10 @@ class PKCS8_Tool final : public Command
 
       void go() override
          {
-         const std::string pass_in = get_arg("pass-in");
+         const std::string key_file = get_arg("key");
+         const std::string pass_in = get_passphrase_arg("Password for " + key_file, "pass-in");
 
-         Botan::DataSource_Memory key_src(slurp_file(get_arg("key")));
+         Botan::DataSource_Memory key_src(slurp_file(key_file));
          std::unique_ptr<Botan::Private_Key> key;
 
          if(pass_in.empty())
@@ -296,7 +297,7 @@ class PKCS8_Tool final : public Command
             }
          else
             {
-            const std::string pass_out = get_arg("pass-out");
+            const std::string pass_out = get_passphrase_arg("Passphrase to encrypt key", "pass-out");
 
             if(der_out)
                {
