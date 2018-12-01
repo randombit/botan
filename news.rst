@@ -21,6 +21,24 @@ Version 2.9.0, Not Yet Released
 
 * Optimize AVX2 ChaCha (GH #1730)
 
+* Const time improvements in BigInt and ECC arithmetic. (GH #1755 #1750 #1738)
+
+* Cache the significant words of a BigInt (GH #1734)
+
+* Simplify implementation of BigInt addition and subtraction (GH #1754)
+
+* Add CT::Mask type to simplify const-time programming (GH #1751)
+
+* Add new configure options ``--disable-bmi2``, ``--disable-rdrand``,
+  and ``--disable-rdseed`` to prevent use of those instruction sets.
+
+* Add error_type and error_code functions to Exception type (GH #1744)
+
+* When available, use RDRAND to generate the additional data in
+  Stateful_RNG::randomize_with_ts_input
+
+* Use vzeroall/vzeroupper intrinsics to avoid AVX2/SSE transition penalties.
+
 * Support for Visual C++ 2013 has been removed (GH #1557 #1697)
 
 * Resolve a memory leak when verifying ECDSA signatures with versions
@@ -34,6 +52,9 @@ Version 2.9.0, Not Yet Released
 * Resolve a bug in TSS which resulted in it using an incorrect length
   field in the shares. Now the correct length is encoded, but either
   correct or buggy lengths are accepted when decoding. (GH #1722)
+
+* Correct a bug when reducing a negative BigInt modulo a small power of 2.
+  (GH #1755)
 
 * Add CLI utils for threshold secret splitting. (GH #1722)
 
