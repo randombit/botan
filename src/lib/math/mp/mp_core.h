@@ -685,6 +685,47 @@ bigint_sub_abs(word z[],
    }
 
 /**
+* Set t to t-s modulo mod
+*
+* @param t first integer
+* @param s second integer
+* @param mod the modulus
+* @param mod_sw size of t, s, and mod
+* @param ws workspace of size mod_sw
+*/
+inline void
+bigint_mod_sub(word t[], const word s[], const word mod[], size_t mod_sw, word ws[])
+   {
+   // is t < s or not?
+   const auto is_lt = bigint_ct_is_lt(t, mod_sw, s, mod_sw);
+
+   // ws = p - s
+   const word borrow = bigint_sub3(ws, mod, mod_sw, s, mod_sw);
+
+   // Compute either (t - s) or (t + (p - s)) depending on mask
+   const word carry = bigint_cnd_addsub(is_lt, t, ws, s, mod_sw);
+
+   BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
+   BOTAN_UNUSED(carry, borrow);
+   }
+
+template<size_t N>
+inline void bigint_mod_sub_n(word t[], const word s[], const word mod[], word ws[])
+   {
+   // is t < s or not?
+   const auto is_lt = bigint_ct_is_lt(t, N, s, N);
+
+   // ws = p - s
+   const word borrow = bigint_sub3(ws, mod, N, s, N);
+
+   // Compute either (t - s) or (t + (p - s)) depending on mask
+   const word carry = bigint_cnd_addsub(is_lt, t, ws, s, N);
+
+   BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
+   BOTAN_UNUSED(carry, borrow);
+   }
+
+/**
 * Compute ((n1<<bits) + n0) / d
 */
 inline word bigint_divop(word n1, word n0, word d)

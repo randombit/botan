@@ -127,13 +127,20 @@ word operator%(const BigInt& n, word mod)
    if(mod == 1)
       return 0;
 
-   if(is_power_of_2(mod))
-      return (n.word_at(0) & (mod - 1));
-
    word remainder = 0;
 
-   for(size_t j = n.sig_words(); j > 0; --j)
-      remainder = bigint_modop(remainder, n.word_at(j-1), mod);
+   if(is_power_of_2(mod))
+      {
+      remainder = (n.word_at(0) & (mod - 1));
+      }
+   else
+      {
+      const size_t sw = n.sig_words();
+      for(size_t i = sw; i > 0; --i)
+         {
+         remainder = bigint_modop(remainder, n.word_at(i-1), mod);
+         }
+      }
 
    if(remainder && n.sign() == BigInt::Negative)
       return mod - remainder;

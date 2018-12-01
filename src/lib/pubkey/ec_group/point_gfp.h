@@ -180,8 +180,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
       * Is this the point at infinity?
       * @result true, if this point is at infinity, false otherwise.
       */
-      bool is_zero() const
-         { return (m_coord_x.is_zero() && m_coord_z.is_zero()); }
+      bool is_zero() const { return m_coord_z.is_zero(); }
 
       /**
       * Checks whether the point is to be found on the underlying
