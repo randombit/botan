@@ -28,12 +28,36 @@ In2 = -1
 Output = 2
 
 In1 = 1
+In2 = 2
+Output = -1
+
+In1 = 1
 In2 = -2
 Output = 3
 
 In1 = -1
 In2 = 2
 Output = -3
+
+In1 = -1
+In2 = -2
+Output = 1
+
+In1 = 2
+In2 = 1
+Output = 1
+
+In1 = 2
+In2 = -1
+Output = 3
+
+In1 = -2
+In2 = 1
+Output = -3
+
+In1 = -1
+In2 = -2
+Output = 1
 
 In1 = -3
 In2 = -1

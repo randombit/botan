@@ -1,6 +1,6 @@
 /*
 * BigInt
-* (C) 1999-2008,2012 Jack Lloyd
+* (C) 1999-2008,2012,2018 Jack Lloyd
 *     2007 FlexSecure
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -173,25 +173,37 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * += operator
      * @param y the BigInt to add to this
      */
-     BigInt& operator+=(const BigInt& y);
+     BigInt& operator+=(const BigInt& y)
+        {
+        return add(y.data(), y.sig_words(), y.sign());
+        }
 
      /**
      * += operator
      * @param y the word to add to this
      */
-     BigInt& operator+=(word y);
+     BigInt& operator+=(word y)
+        {
+        return add(&y, 1, Positive);
+        }
 
      /**
      * -= operator
      * @param y the BigInt to subtract from this
      */
-     BigInt& operator-=(const BigInt& y);
+     BigInt& operator-=(const BigInt& y)
+        {
+        return sub(y.data(), y.sig_words(), y.sign());
+        }
 
      /**
      * -= operator
      * @param y the word to subtract from this
      */
-     BigInt& operator-=(word y);
+     BigInt& operator-=(word y)
+        {
+        return sub(&y, 1, Positive);
+        }
 
      /**
      * *= operator
@@ -267,8 +279,14 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      bool operator !() const { return (!is_nonzero()); }
 
+     static BigInt add2(const BigInt& x, const word y[], size_t y_words, Sign y_sign);
+
      BigInt& add(const word y[], size_t y_words, Sign sign);
-     BigInt& sub(const word y[], size_t y_words, Sign sign);
+
+     BigInt& sub(const word y[], size_t y_words, Sign sign)
+        {
+        return add(y, y_words, sign == Positive ? Negative : Positive);
+        }
 
      /**
      * Multiply this with y
@@ -286,10 +304,10 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      /**
      * Set *this to y - *this
      * @param y the BigInt to subtract from as a sequence of words
-     * @param y_size length of y in words
+     * @param y_words length of y in words
      * @param ws a temp workspace
      */
-     BigInt& rev_sub(const word y[], size_t y_size, secure_vector<word>& ws);
+     BigInt& rev_sub(const word y[], size_t y_words, secure_vector<word>& ws);
 
      /**
      * Set *this to (*this + y) % mod
@@ -979,12 +997,30 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 /*
 * Arithmetic Operators
 */
-BigInt BOTAN_PUBLIC_API(2,0) operator+(const BigInt& x, const BigInt& y);
-BigInt BOTAN_PUBLIC_API(2,7) operator+(const BigInt& x, word y);
-inline BigInt operator+(word x, const BigInt& y) { return y + x; }
+inline BigInt operator+(const BigInt& x, const BigInt& y)
+   {
+   return BigInt::add2(x, y.data(), y.sig_words(), y.sign());
+   }
 
-BigInt BOTAN_PUBLIC_API(2,0) operator-(const BigInt& x, const BigInt& y);
-BigInt BOTAN_PUBLIC_API(2,7) operator-(const BigInt& x, word y);
+inline BigInt operator+(const BigInt& x, word y)
+   {
+   return BigInt::add2(x, &y, 1, BigInt::Positive);
+   }
+
+inline BigInt operator+(word x, const BigInt& y)
+   {
+   return y + x;
+   }
+
+inline BigInt operator-(const BigInt& x, const BigInt& y)
+   {
+   return BigInt::add2(x, y.data(), y.sig_words(), y.reverse_sign());
+   }
+
+inline BigInt operator-(const BigInt& x, word y)
+   {
+   return BigInt::add2(x, &y, 1, BigInt::Negative);
+   }
 
 BigInt BOTAN_PUBLIC_API(2,0) operator*(const BigInt& x, const BigInt& y);
 BigInt BOTAN_PUBLIC_API(2,8) operator*(const BigInt& x, word y);
