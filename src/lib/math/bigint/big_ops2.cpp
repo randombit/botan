@@ -293,18 +293,18 @@ word BigInt::operator%=(word mod)
    if(mod == 0)
       throw BigInt::DivideByZero();
 
-   if(is_power_of_2(mod))
-       {
-       const word remainder = (word_at(0) & (mod - 1));
-       m_data.set_to_zero();
-       m_data.set_word_at(0, remainder);
-       return remainder;
-       }
-
    word remainder = 0;
 
-   for(size_t j = sig_words(); j > 0; --j)
-      remainder = bigint_modop(remainder, word_at(j-1), mod);
+   if(is_power_of_2(mod))
+       {
+       remainder = (word_at(0) & (mod - 1));
+       }
+   else
+      {
+      const size_t sw = sig_words();
+      for(size_t i = sw; i > 0; --i)
+         remainder = bigint_modop(remainder, word_at(i-1), mod);
+      }
 
    if(remainder && sign() == BigInt::Negative)
       remainder = mod - remainder;
@@ -312,8 +312,7 @@ word BigInt::operator%=(word mod)
    m_data.set_to_zero();
    m_data.set_word_at(0, remainder);
    set_sign(BigInt::Positive);
-
-   return word_at(0);
+   return remainder;
    }
 
 /*
@@ -323,9 +322,9 @@ BigInt& BigInt::operator<<=(size_t shift)
    {
    if(shift)
       {
-      const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
-                   shift_bits  = shift % BOTAN_MP_WORD_BITS,
-                   words = sig_words();
+      const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
+      const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
+      const size_t words = size();
 
       /*
       * FIXME - if shift_words == 0 && the top shift_bits of the top word
@@ -351,9 +350,8 @@ BigInt& BigInt::operator>>=(size_t shift)
       {
       const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
       const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
-      const size_t sw = sig_words();
 
-      bigint_shr1(m_data.mutable_data(), sw, shift_words, shift_bits);
+      bigint_shr1(m_data.mutable_data(), m_data.size(), shift_words, shift_bits);
 
       if(is_negative() && is_zero())
          set_sign(Positive);

@@ -19,6 +19,18 @@ In1 = -0xE
 In2 = 0x7
 Output = 0x0
 
+In1 = -15
+In2 = 7
+Output = 6
+
+In1 = -15
+In2 = 8
+Output = 1
+
+In1 = -15
+In2 = 128
+Output = 113
+
 In1 = 0x0
 In2 = 0x1E8D2D00
 Output = 0x0

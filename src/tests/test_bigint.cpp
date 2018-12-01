@@ -433,12 +433,15 @@ class BigInt_Mod_Test final : public Text_Based_Test
          result.test_eq("Barrett", mod_b.reduce(a), c);
 
          // if b fits into a Botan::word test %= operator for words
-         if(b.bytes() <= sizeof(Botan::word))
+         if(b.sig_words() == 1)
             {
-            Botan::word b_word = b.word_at(0);
+            const Botan::word b_word = b.word_at(0);
+
             e = a;
             e %= b_word;
             result.test_eq("a %= b (as word)", e, c);
+
+            result.test_eq("a % b (as word)", a % b_word, c);
             }
 
          return result;
