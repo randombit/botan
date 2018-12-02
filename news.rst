@@ -14,6 +14,8 @@ Version 2.9.0, Not Yet Released
 
 * Use a smaller sieve which improves performance of prime generation.
 
+* Add a constant-time division algorithm (GH #1575)
+
 * Fixed a bug that caused ChaCha to produce incorrect output after encrypting
   256 GB. (GH #1728)
 
