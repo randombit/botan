@@ -1060,18 +1060,26 @@ std::vector<Test::Result> Text_Based_Test::run()
 
             if(result.tests_failed())
                {
-               if(header.empty())
-                  result.test_note("Test #" + std::to_string(test_cnt) + " failed");
-               else
-                  result.test_note("Test #" + std::to_string(test_cnt) + " " + header + " failed");
+               std::ostringstream oss;
+               oss << "Test # " << test_cnt << " ";
+               if(!header.empty())
+                  oss << header << " ";
+               oss << " failed [Key=" << vars.get_req_str(m_output_key) << "]";
+
+               result.test_note(oss.str());
                }
             results.push_back(result);
             }
          catch(std::exception& e)
             {
-            results.push_back(Test::Result::Failure(header_or_name,
-                                                    "test " + std::to_string(test_cnt) +
-                                                    " failed with exception '" + e.what() + "'"));
+            std::ostringstream oss;
+            oss << "Test # " << test_cnt << " ";
+            if(!header.empty())
+               oss << header << " ";
+            oss << " failed with exception '" << e.what() << "'";
+            oss << " [Key=" << vars.get_req_str(m_output_key) << "]";
+
+            results.push_back(Test::Result::Failure(header_or_name, oss.str()));
             }
 
          if(clear_between_callbacks())
