@@ -27,6 +27,7 @@
   #include <unistd.h>
   #include <errno.h>
   #include <termios.h>
+  #undef B0
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
