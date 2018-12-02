@@ -1,6 +1,6 @@
 /*
 * Division Algorithm
-* (C) 1999-2007,2012 Jack Lloyd
+* (C) 1999-2007,2012,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,6 +8,7 @@
 #include <botan/divide.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_madd.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -52,6 +53,36 @@ bool division_check(word q, word y2, word y1,
 
 }
 
+void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
+   {
+   const size_t x_words = x.sig_words();
+   const size_t y_words = y.sig_words();
+
+   const size_t x_bits = x.bits();
+
+   BigInt q(BigInt::Positive, x_words);
+   BigInt r(BigInt::Positive, y_words);
+
+   for(size_t i = 0; i != x_bits; ++i)
+      {
+      const size_t b = x_bits - 1 - i;
+      const bool x_b = x.get_bit(b);
+
+      r *= 2;
+      r.conditionally_set_bit(0, x_b);
+
+      // y <= r -> r >= y
+      const auto r_gte_y = bigint_ct_is_lt(y.data(), y_words, r.data(), r.size(), true);
+
+      q.conditionally_set_bit(b, r_gte_y.is_set());
+      bigint_cnd_sub(r_gte_y.value(), r.mutable_data(), r.size(), y.data(), y_words);
+      }
+
+   sign_fixup(x, y, q, r);
+   r_out = r;
+   q_out = q;
+   }
+
 /*
 * Solve x = q * y + r
 */
@@ -84,7 +115,8 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
       y <<= shifts;
       r <<= shifts;
 
-      const size_t n = r.sig_words() - 1, t = y_words - 1;
+      const size_t n = r.sig_words() - 1;
+      const size_t t = y_words - 1;
 
       if(n < t)
          throw Internal_Error("BigInt division word sizes");

@@ -414,7 +414,20 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Set bit at specified position
      * @param n bit position to set
      */
-     void set_bit(size_t n);
+     void set_bit(size_t n)
+        {
+        conditionally_set_bit(n, true);
+        }
+
+     /**
+     * Conditionally set bit at specified position. Note if set_it is
+     * false, nothing happens, and if the bit is already set, it
+     * remains set.
+     *
+     * @param n bit position to set
+     * @param set_it if the bit should be set
+     */
+     void conditionally_set_bit(size_t n, bool set_it);
 
      /**
      * Clear bit at specified position

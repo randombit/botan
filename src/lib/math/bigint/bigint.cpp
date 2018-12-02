@@ -241,7 +241,7 @@ uint32_t BigInt::to_u32bit() const
 /*
 * Set bit number n
 */
-void BigInt::set_bit(size_t n)
+void BigInt::conditionally_set_bit(size_t n, bool set_it)
    {
    const size_t which = n / BOTAN_MP_WORD_BITS;
 
@@ -250,7 +250,7 @@ void BigInt::set_bit(size_t n)
       grow_to(which + 1);
       }
 
-   const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
+   const word mask = static_cast<word>(set_it) << (n % BOTAN_MP_WORD_BITS);
    m_data.set_word_at(which, word_at(which) | mask);
    }
 
