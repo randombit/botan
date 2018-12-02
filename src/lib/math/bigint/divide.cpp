@@ -83,6 +83,43 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
    q_out = q;
    }
 
+void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
+   {
+   const size_t x_words = x.sig_words();
+   const size_t x_bits = x.bits();
+   const size_t y_words = 1;
+
+   BigInt q(BigInt::Positive, x_words);
+   uint32_t r = 0;
+
+   for(size_t i = 0; i != x_bits; ++i)
+      {
+      const size_t b = x_bits - 1 - i;
+      const bool x_b = x.get_bit(b);
+
+      r *= 2;
+      r += x_b;
+
+      const auto r_gte_y = CT::Mask<uint32_t>::is_gte(r, y);
+
+      q.conditionally_set_bit(b, r_gte_y.is_set());
+      r = r_gte_y.select(r - y, r);
+      }
+
+   if(x.sign() == BigInt::Negative)
+      {
+      q.flip_sign();
+      if(r != 0)
+         {
+         --q;
+         r = y - r;
+         }
+      }
+
+   r_out = static_cast<uint8_t>(r);
+   q_out = q;
+   }
+
 /*
 * Solve x = q * y + r
 */
