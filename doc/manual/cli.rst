@@ -15,6 +15,11 @@ If ``botan`` is run with an unknown command, or without any command, or with the
 command is run with the ``--help`` option (like ``botan <command> --help``)
 some information about the usage of the command is printed.
 
+Starting in version 2.9, commands that take a passphrase (such as
+``gen_bcrypt`` or ``pkcs8``) will also accept the literal `-` to mean
+ask for the passphrase on the terminal. If supported by the operating
+system, echo will be disabled while reading the passphrase.
+
 Hash Function
 ----------------
 ``hash --algo=SHA-256 --buf-size=4096 --no-fsname files``
