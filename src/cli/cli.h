@@ -124,6 +124,13 @@ class Command
 
       std::string get_arg(const std::string& opt_name) const;
 
+      /**
+      * Like get_arg but if the value is '-' then reads a passphrase from
+      * the terminal with echo suppressed.
+      */
+      std::string get_passphrase_arg(const std::string& prompt,
+                                     const std::string& opt_name);
+
       /*
       * Like get_arg() but if the argument was not specified or is empty, returns otherwise
       */

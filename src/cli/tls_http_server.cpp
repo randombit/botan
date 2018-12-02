@@ -531,7 +531,7 @@ class TLS_HTTP_Server final : public Command
          if(!sessions_db.empty())
             {
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-            const std::string sessions_passphrase = get_arg("session-db-pass");
+            const std::string sessions_passphrase = get_passphrase_arg("Session DB passphrase", "session-db-pass");
             session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
 #else
             throw CLI_Error_Unsupported("Sqlite3 support not available");

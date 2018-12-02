@@ -45,23 +45,25 @@ class Sign_Cert final : public Command
       void go() override
          {
          Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
-         std::unique_ptr<Botan::Private_Key> key;
-         const std::string pass = get_arg("ca-key-pass");
+
+         const std::string key_file = get_arg("ca_key");
+         const std::string pass = get_passphrase_arg("Password for " + key_file, "ca-key-pass");
          const std::string emsa = get_arg("emsa");
          const std::string hash = get_arg("hash");
 
+         std::unique_ptr<Botan::Private_Key> key;
          if(!pass.empty())
             {
-            key.reset(Botan::PKCS8::load_key(get_arg("ca_key"), rng(), pass));
+            key.reset(Botan::PKCS8::load_key(key_file, rng(), pass));
             }
          else
             {
-            key.reset(Botan::PKCS8::load_key(get_arg("ca_key"), rng()));
+            key.reset(Botan::PKCS8::load_key(key_file, rng()));
             }
 
          if(!key)
             {
-            throw CLI_Error("Failed to load key from " + get_arg("ca_key"));
+            throw CLI_Error("Failed to load key from " + key_file);
             }
 
          std::map<std::string, std::string> options;
@@ -251,7 +253,9 @@ class Gen_Self_Signed final : public Command
 
       void go() override
          {
-         std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(get_arg("key"), rng(), get_arg("key-pass")));
+         const std::string key_file = get_arg("key");
+         const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "key-pass");
+         std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(key_file, rng(), passphrase));
 
          if(!key)
             {

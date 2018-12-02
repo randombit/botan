@@ -1,6 +1,6 @@
 /*
 * OS specific utility functions
-* (C) 2015,2016,2017 Jack Lloyd
+* (C) 2015,2016,2017,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -116,6 +116,31 @@ void free_locked_pages(void* ptr, size_t length);
 * -1 illegal instruction detected
 */
 int BOTAN_TEST_API run_cpu_instruction_probe(std::function<int ()> probe_fn);
+
+/**
+* Represents a terminal state
+*/
+class BOTAN_UNSTABLE_API Echo_Suppression
+   {
+   public:
+      /**
+      * Reenable echo on this terminal. Can be safely called
+      * multiple times. May throw if an error occurs.
+      */
+      virtual void reenable_echo() = 0;
+
+      /**
+      * Implicitly calls reenable_echo, but swallows/ignored all
+      * errors which would leave the terminal in an invalid state.
+      */
+      virtual ~Echo_Suppression() = default;
+   };
+
+/**
+* Suppress echo on the terminal
+* Returns null if this operation is not supported on the current system.
+*/
+std::unique_ptr<Echo_Suppression> BOTAN_UNSTABLE_API suppress_echo_on_terminal();
 
 }
 
