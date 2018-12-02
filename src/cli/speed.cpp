@@ -26,6 +26,7 @@
 
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>
+   #include <botan/divide.h>
 #endif
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
@@ -653,6 +654,10 @@ class Speed final : public Command
                {
                bench_mp_mul(msec);
                }
+            else if(algo == "mp_div")
+               {
+               bench_mp_div(msec);
+               }
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
@@ -1261,6 +1266,46 @@ class Speed final : public Command
             record_result(sqr_timer);
             }
 
+         }
+
+      void bench_mp_div(const std::chrono::milliseconds runtime)
+         {
+         std::chrono::milliseconds runtime_per_size = runtime;
+
+         for(size_t n_bits : { 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096 })
+            {
+            const size_t q_bits = n_bits / 2;
+            const std::string bit_descr = std::to_string(n_bits) + "/" + std::to_string(q_bits);
+
+            std::unique_ptr<Timer> div_timer = make_timer("BigInt div " + bit_descr);
+            std::unique_ptr<Timer> ct_div_timer = make_timer("BigInt ct_div " + bit_descr);
+
+            Botan::BigInt y;
+            Botan::BigInt x;
+            Botan::secure_vector<Botan::word> ws;
+
+            Botan::BigInt q1, r1, q2, r2;
+
+            while(ct_div_timer->under(runtime_per_size))
+               {
+               x.randomize(rng(), n_bits);
+               y.randomize(rng(), q_bits);
+
+               div_timer->start();
+               Botan::divide(x, y, q1, r1);
+               div_timer->stop();
+
+               ct_div_timer->start();
+               Botan::ct_divide(x, y, q2, r2);
+               ct_div_timer->stop();
+
+               BOTAN_ASSERT_EQUAL(q1, q2, "Quotient ok");
+               BOTAN_ASSERT_EQUAL(r1, r2, "Remainder ok");
+               }
+
+            record_result(div_timer);
+            record_result(ct_div_timer);
+            }
          }
 
 #endif

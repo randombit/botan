@@ -656,7 +656,7 @@ def cli_speed_tests():
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
 
-    math_ops = ['mp_mul', 'modexp', 'random_prime', 'inverse_mod', 'rfc3394', 'fpe_fe1',
+    math_ops = ['mp_mul', 'mp_div', 'modexp', 'random_prime', 'inverse_mod', 'rfc3394', 'fpe_fe1',
                 'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'primality_test',
                 'bcrypt', 'passhash9']
 

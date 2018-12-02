@@ -1,5 +1,5 @@
 /*
-* (C) 2015,2016 Jack Lloyd
+* (C) 2015,2016,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -25,5 +25,11 @@ void fuzz(const uint8_t in[], size_t len)
    Botan::BigInt z = q*y + r;
 
    FUZZER_ASSERT_EQUAL(z, x);
+
+   Botan::BigInt ct_q, ct_r;
+   Botan::ct_divide(x, y, ct_q, ct_r);
+
+   FUZZER_ASSERT_EQUAL(q, ct_q);
+   FUZZER_ASSERT_EQUAL(r, ct_r);
    }
 

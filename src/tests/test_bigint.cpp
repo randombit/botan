@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/bigint.h>
    #include <botan/numthry.h>
+   #include <botan/divide.h>
    #include <botan/internal/primality.h>
    #include <botan/reducer.h>
    #include <botan/pow_mod.h>
@@ -404,6 +405,10 @@ class BigInt_Div_Test final : public Text_Based_Test
          e /= b;
          result.test_eq("a /= b", e, c);
 
+         Botan::BigInt ct_q, ct_r;
+         Botan::ct_divide(a, b, ct_q, ct_r);
+         result.test_eq("ct_divide q", ct_q, c);
+
          return result;
          }
    };
@@ -421,16 +426,16 @@ class BigInt_Mod_Test final : public Text_Based_Test
 
          const BigInt a = vars.get_req_bn("In1");
          const BigInt b = vars.get_req_bn("In2");
-         const BigInt c = vars.get_req_bn("Output");
+         const BigInt expected = vars.get_req_bn("Output");
 
-         result.test_eq("a % b", a % b, c);
+         result.test_eq("a % b", a % b, expected);
 
          BigInt e = a;
          e %= b;
-         result.test_eq("a %= b", e, c);
+         result.test_eq("a %= b", e, expected);
 
          const Botan::Modular_Reducer mod_b(b);
-         result.test_eq("Barrett", mod_b.reduce(a), c);
+         result.test_eq("Barrett", mod_b.reduce(a), expected);
 
          // if b fits into a Botan::word test %= operator for words
          if(b.sig_words() == 1)
@@ -439,10 +444,14 @@ class BigInt_Mod_Test final : public Text_Based_Test
 
             e = a;
             e %= b_word;
-            result.test_eq("a %= b (as word)", e, c);
+            result.test_eq("a %= b (as word)", e, expected);
 
-            result.test_eq("a % b (as word)", a % b_word, c);
+            result.test_eq("a % b (as word)", a % b_word, expected);
             }
+
+         Botan::BigInt ct_q, ct_r;
+         Botan::ct_divide(a, b, ct_q, ct_r);
+         result.test_eq("ct_divide r", ct_r, expected);
 
          return result;
          }
