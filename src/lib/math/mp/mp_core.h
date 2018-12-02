@@ -737,7 +737,8 @@ inline word bigint_divop(word n1, word n0, word d)
    return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) / d;
 #else
 
-   word high = n1 % d, quotient = 0;
+   word high = n1 % d;
+   word quotient = 0;
 
    for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
       {
