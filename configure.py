@@ -3135,6 +3135,9 @@ def main(argv):
 
     setup_logging(options)
 
+    logging.info('Configuring to build Botan %s (revision %s)' % (
+        Version.as_string(), Version.vc_rev()))
+
     source_paths = SourcePaths(os.path.dirname(argv[0]))
 
     info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
