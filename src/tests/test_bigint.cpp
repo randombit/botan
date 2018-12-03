@@ -405,6 +405,16 @@ class BigInt_Div_Test final : public Text_Based_Test
          e /= b;
          result.test_eq("a /= b", e, c);
 
+         if(b.bytes() == 1)
+            {
+            const uint8_t b8 = b.byte_at(0);
+
+            Botan::BigInt ct_q;
+            uint8_t ct_r;
+            Botan::ct_divide_u8(a, b8, ct_q, ct_r);
+            result.test_eq("ct_divide_u8 q", ct_q, c);
+            }
+
          Botan::BigInt ct_q, ct_r;
          Botan::ct_divide(a, b, ct_q, ct_r);
          result.test_eq("ct_divide q", ct_q, c);
@@ -447,6 +457,14 @@ class BigInt_Mod_Test final : public Text_Based_Test
             result.test_eq("a %= b (as word)", e, expected);
 
             result.test_eq("a % b (as word)", a % b_word, expected);
+            }
+
+         if(b.bytes() == 1)
+            {
+            Botan::BigInt ct_q;
+            Botan::uint8_t ct_r;
+            Botan::ct_divide_u8(a, b.byte_at(0), ct_q, ct_r);
+            result.test_eq("ct_divide_u8 r", ct_r, expected);
             }
 
          Botan::BigInt ct_q, ct_r;

@@ -40,6 +40,22 @@ void BOTAN_PUBLIC_API(2,9) ct_divide(const BigInt& x,
                                      BigInt& q,
                                      BigInt& r);
 
+/**
+* BigInt division, const time variant
+*
+* This runs with control flow independent of the values of x/y.
+* Warning: the loop bounds still leak the sizes of x and y.
+*
+* @param x an integer
+* @param y a non-zero integer
+* @param q will be set to x / y
+* @param r will be set to x % y
+*/
+void BOTAN_PUBLIC_API(2,9) ct_divide_u8(const BigInt& x,
+                                        uint8_t y,
+                                        BigInt& q,
+                                        uint8_t& r);
+
 }
 
 #endif

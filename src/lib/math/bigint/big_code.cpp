@@ -17,13 +17,13 @@ std::string BigInt::to_dec_string() const
    BigInt copy = *this;
    copy.set_sign(Positive);
 
-   BigInt remainder;
+   uint8_t remainder;
    std::vector<uint8_t> digits;
 
    while(copy > 0)
       {
-      divide(copy, 10, copy, remainder);
-      digits.push_back(static_cast<uint8_t>(remainder.word_at(0)));
+      ct_divide_u8(copy, 10, copy, remainder);
+      digits.push_back(remainder);
       }
 
    std::string s;
@@ -68,14 +68,13 @@ void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
    else if(base == Decimal)
       {
       BigInt copy = n;
-      BigInt remainder;
+      uint8_t remainder;
       copy.set_sign(Positive);
       const size_t output_size = n.encoded_size(Decimal);
       for(size_t j = 0; j != output_size; ++j)
          {
-         divide(copy, 10, copy, remainder);
-         output[output_size - 1 - j] =
-            Charset::digit2char(static_cast<uint8_t>(remainder.word_at(0)));
+         ct_divide_u8(copy, 10, copy, remainder);
+         output[output_size - 1 - j] = Charset::digit2char(remainder);
          if(copy.is_zero())
             break;
          }
