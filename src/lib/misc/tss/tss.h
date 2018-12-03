@@ -67,7 +67,7 @@ class BOTAN_PUBLIC_API(2,0) RTSS_Share final
 
       /**
       * @param data the shared data
-      * @parma len the length of data
+      * @param len the length of data
       */
       RTSS_Share(const uint8_t data[], size_t len);
 

@@ -144,6 +144,7 @@ class BOTAN_PUBLIC_API(2,9) Compression_Error : public Exception
       /**
       * @param func_name the name of the compression API that was called
       * (eg "BZ2_bzCompressInit" or "lzma_code")
+      * @param type what library this came from
       * @param rc the error return code from the compression API. The
       * interpretation of this value will depend on the library.
       */
