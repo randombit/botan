@@ -324,7 +324,7 @@ BigInt& BigInt::operator<<=(size_t shift)
       {
       const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
       const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
-      const size_t words = size();
+      const size_t words = sig_words();
 
       /*
       * FIXME - if shift_words == 0 && the top shift_bits of the top word
