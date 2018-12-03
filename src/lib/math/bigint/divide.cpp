@@ -20,13 +20,14 @@ namespace {
 */
 void sign_fixup(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r)
    {
-   if(x.sign() == BigInt::Negative)
+   if(x.sign() != y.sign())
+      q.flip_sign();
+
+   if(x.is_negative() && r.is_nonzero())
       {
-      q.flip_sign();
-      if(r.is_nonzero()) { --q; r = y.abs() - r; }
+      q -= 1;
+      r = y.abs() - r;
       }
-   if(y.sign() == BigInt::Negative)
-      q.flip_sign();
    }
 
 inline bool division_check(word q, word y2, word y1,
@@ -101,7 +102,7 @@ void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
       r = r_gte_y.select(r - y, r);
       }
 
-   if(x.sign() == BigInt::Negative)
+   if(x.is_negative())
       {
       q.flip_sign();
       if(r != 0)
@@ -117,8 +118,8 @@ void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
 
 BigInt ct_modulo(const BigInt& x, const BigInt& y)
    {
-   if(x.is_negative() || y.is_negative() || y.is_zero())
-      throw Invalid_Argument("ct_modulo requires x >= 0 and y > 0");
+   if(y.is_negative() || y.is_zero())
+      throw Invalid_Argument("ct_modulo requires y > 0");
 
    const size_t y_words = y.sig_words();
 
@@ -138,6 +139,14 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y)
       const bool r_gte_y = bigint_sub3(t.mutable_data(), r.data(), r.size(), y.data(), y_words) == 0;
 
       r.ct_cond_swap(r_gte_y, t);
+      }
+
+   if(x.is_negative())
+      {
+      if(r.is_nonzero())
+         {
+         r = y - r;
+         }
       }
 
    return r;
