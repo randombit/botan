@@ -15,6 +15,7 @@
 #include <botan/ber_dec.h>
 #include <botan/pow_mod.h>
 #include <botan/monty.h>
+#include <botan/divide.h>
 #include <botan/internal/monty_exp.h>
 
 #if defined(BOTAN_HAS_OPENSSL)
@@ -125,8 +126,8 @@ RSA_PrivateKey::RSA_PrivateKey(const BigInt& prime1,
       m_d = inverse_mod(m_e, phi_n);
       }
 
-   m_d1 = m_d % (m_p - 1);
-   m_d2 = m_d % (m_q - 1);
+   m_d1 = ct_modulo(m_d, m_p - 1);
+   m_d2 = ct_modulo(m_d, m_q - 1);
    }
 
 /*
@@ -157,8 +158,8 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    const BigInt phi_n = lcm(m_p - 1, m_q - 1);
    // FIXME: this uses binary ext gcd because phi_n is even
    m_d = inverse_mod(m_e, phi_n);
-   m_d1 = m_d % (m_p - 1);
-   m_d2 = m_d % (m_q - 1);
+   m_d1 = ct_modulo(m_d, m_p - 1);
+   m_d2 = ct_modulo(m_d, m_q - 1);
    m_c = inverse_mod(m_q, m_p);
    }
 
@@ -173,7 +174,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if(m_d < 2 || m_p < 3 || m_q < 3 || m_p*m_q != m_n)
       return false;
 
-   if(m_d1 != m_d % (m_p - 1) || m_d2 != m_d % (m_q - 1) || m_c != inverse_mod(m_q, m_p))
+   if(m_d1 != ct_modulo(m_d, m_p - 1) || m_d2 != ct_modulo(m_d, m_q - 1) || m_c != inverse_mod(m_q, m_p))
       return false;
 
    const size_t prob = (strong) ? 128 : 12;
@@ -183,7 +184,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
 
    if(strong)
       {
-      if((m_e * m_d) % lcm(m_p - 1, m_q - 1) != 1)
+      if(ct_modulo(m_e * m_d, lcm(m_p - 1, m_q - 1)) != 1)
          return false;
 
       return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-256)");

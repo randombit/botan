@@ -386,7 +386,16 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
    m_data.swap(reg);
    }
 
-void BigInt::ct_cond_assign(bool predicate, BigInt& other)
+void BigInt::ct_cond_swap(bool predicate, BigInt& other)
+   {
+   const size_t max_words = std::max(size(), other.size());
+   grow_to(max_words);
+   other.grow_to(max_words);
+
+   bigint_cnd_swap(predicate, this->mutable_data(), other.mutable_data(), max_words);
+   }
+
+void BigInt::ct_cond_assign(bool predicate, const BigInt& other)
    {
    const size_t t_words = size();
    const size_t o_words = other.size();

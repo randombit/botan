@@ -7,6 +7,7 @@
 
 #include <botan/reducer.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/divide.h>
 
 namespace Botan {
 
@@ -28,7 +29,7 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
 
       m_modulus_2 = Botan::square(m_modulus);
 
-      m_mu = BigInt::power_of_2(2 * BOTAN_MP_WORD_BITS * m_mod_words) / m_modulus;
+      m_mu = ct_divide(BigInt::power_of_2(2 * BOTAN_MP_WORD_BITS * m_mod_words), m_modulus);
       }
    }
 
@@ -51,8 +52,8 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
 
    if(x_sw >= (2*m_mod_words - 1) && x.cmp(m_modulus_2, false) >= 0)
       {
-      // too big, fall back to normal division
-      t1 = x % m_modulus;
+      // too big, fall back to slow boat division
+      t1 = ct_modulo(x, m_modulus);
       return;
       }
 
