@@ -5,6 +5,9 @@ Output = 1
 Record = 0A
 Output = 0
 
+Record = 01
+Output = 0
+
 Record = 0101
 Output = 2
 
@@ -31,6 +34,9 @@ Output = 0
 
 Record = 0903030303
 Output = 4
+
+Record = 04040404
+Output = 0
 
 Record = FFFFFFFFFFFFFFFFFF03030303
 Output = 4
