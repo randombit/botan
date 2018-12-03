@@ -9,6 +9,7 @@
 #include <botan/pow_mod.h>
 #include <botan/reducer.h>
 #include <botan/monty.h>
+#include <botan/divide.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/mp_core.h>
@@ -83,7 +84,7 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 */
 BigInt lcm(const BigInt& a, const BigInt& b)
    {
-   return ((a * b) / gcd(a, b));
+   return ct_divide(a * b, gcd(a, b));
    }
 
 /*
