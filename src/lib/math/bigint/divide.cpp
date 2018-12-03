@@ -9,6 +9,7 @@
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_madd.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -28,27 +29,22 @@ void sign_fixup(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r)
       q.flip_sign();
    }
 
-bool division_check(word q, word y2, word y1,
-                    word x3, word x2, word x1)
+inline bool division_check(word q, word y2, word y1,
+                           word x3, word x2, word x1)
    {
-   // Compute (y3,y2,y1) = (y2,y1) * q
+   /*
+   Compute (y3,y2,y1) = (y2,y1) * q
+   and return true if (y3,y2,y1) > (x3,x2,x1)
+   */
 
    word y3 = 0;
    y1 = word_madd2(q, y1, &y3);
    y2 = word_madd2(q, y2, &y3);
 
-   // Return (y3,y2,y1) >? (x3,x2,x1)
+   const word x[3] = { x1, x2, x3 };
+   const word y[3] = { y1, y2, y3 };
 
-   if(y3 > x3) return true;
-   if(y3 < x3) return false;
-
-   if(y2 > x2) return true;
-   if(y2 < x2) return false;
-
-   if(y1 > x1) return true;
-   if(y1 < x1) return false;
-
-   return false;
+   return bigint_ct_is_lt(x, 3, y, 3).is_set();
    }
 
 }
@@ -86,87 +82,84 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
 /*
 * Solve x = q * y + r
 */
-void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
+void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
    {
    if(y_arg.is_zero())
       throw BigInt::DivideByZero();
 
-   BigInt y = y_arg;
-   const size_t y_words = y.sig_words();
+   const size_t y_words = y_arg.sig_words();
 
-   r = x;
-   q = 0;
+   BigInt y = y_arg;
+
+   BigInt r = x;
+   BigInt q = 0;
 
    r.set_sign(BigInt::Positive);
    y.set_sign(BigInt::Positive);
 
-   int32_t compare = r.cmp(y);
+   if(r >= y)
+      {
+      // Calculate shifts needed to normalize y with high bit set
+      const size_t shifts = BOTAN_MP_WORD_BITS - high_bit(y.word_at(y_words-1));
 
-   if(compare == 0)
-      {
-      q = 1;
-      r = 0;
-      }
-   else if(compare > 0)
-      {
-      size_t shifts = 0;
-      word y_top = y.word_at(y.sig_words()-1);
-      while(y_top < MP_WORD_TOP_BIT) { y_top <<= 1; ++shifts; }
       y <<= shifts;
       r <<= shifts;
 
-      const size_t n = r.sig_words() - 1;
+      // we know y has not changed size, since we only shifted up to set high bit
       const size_t t = y_words - 1;
+      const size_t n = r.sig_words() - 1; // r may have changed size however
 
-      if(n < t)
-         throw Internal_Error("BigInt division word sizes");
+      BOTAN_ASSERT_NOMSG(n >= t);
 
       q.grow_to(n - t + 1);
 
       word* q_words = q.mutable_data();
 
-      if(n <= t)
+      BigInt shifted_y = y << (BOTAN_MP_WORD_BITS * (n-t));
+
+      while(r >= shifted_y)
          {
-         while(r > y) { r -= y; ++q; }
-         r >>= shifts;
-         sign_fixup(x, y_arg, q, r);
-         return;
+         r -= shifted_y;
+         q_words[n-t] += 1;
          }
-
-      BigInt temp = y << (BOTAN_MP_WORD_BITS * (n-t));
-
-      while(r >= temp) { r -= temp; q_words[n-t] += 1; }
 
       for(size_t j = n; j != t; --j)
          {
          const word x_j0  = r.word_at(j);
          const word x_j1 = r.word_at(j-1);
-         const word y_t  = y.word_at(t);
+         const word x_j2 = r.word_at(j-2);
+         const word y_t0  = y.word_at(t);
+         const word y_t1  = y.word_at(t-1);
 
-         if(x_j0 == y_t)
-            q_words[j-t-1] = MP_WORD_MAX;
-         else
-            q_words[j-t-1] = bigint_divop(x_j0, x_j1, y_t);
+         word qjt = (x_j0 == y_t0) ? MP_WORD_MAX : bigint_divop(x_j0, x_j1, y_t0);
 
-         while(division_check(q_words[j-t-1],
-                              y_t, y.word_at(t-1),
-                              x_j0, x_j1, r.word_at(j-2)))
+         while(division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2))
             {
-            q_words[j-t-1] -= 1;
+            qjt -= 1;
             }
 
-         r -= (q_words[j-t-1] * y) << (BOTAN_MP_WORD_BITS * (j-t-1));
+         shifted_y >>= BOTAN_MP_WORD_BITS;
+         // Now shifted_y == y << (BOTAN_MP_WORD_BITS * (j-t-1))
+
+         r -= qjt * shifted_y;
 
          if(r.is_negative())
             {
-            r += y << (BOTAN_MP_WORD_BITS * (j-t-1));
-            q_words[j-t-1] -= 1;
+            // overcorrected
+            qjt -= 1;
+            r += shifted_y;
             }
+
+         q_words[j-t-1] = qjt;
          }
+
       r >>= shifts;
       }
 
    sign_fixup(x, y_arg, q, r);
+
+   r_out = r;
+   q_out = q;
    }
 
 }
