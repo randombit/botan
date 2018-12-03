@@ -314,36 +314,69 @@ BigInt inverse_euclid(const BigInt& n, const BigInt& mod)
 
    BigInt u = mod, v = n;
    BigInt A = 1, B = 0, C = 0, D = 1;
+   BigInt T0, T1, T2;
 
    while(u.is_nonzero())
       {
       const size_t u_zero_bits = low_zero_bits(u);
       u >>= u_zero_bits;
-      for(size_t i = 0; i != u_zero_bits; ++i)
-         {
-         if(A.is_odd() || B.is_odd())
-            { A += n; B -= mod; }
-         A >>= 1; B >>= 1;
-         }
 
       const size_t v_zero_bits = low_zero_bits(v);
       v >>= v_zero_bits;
-      for(size_t i = 0; i != v_zero_bits; ++i)
+
+      const bool u_gte_v = (u >= v);
+
+      for(size_t i = 0; i != u_zero_bits; ++i)
          {
-         if(C.is_odd() || D.is_odd())
-            { C += n; D -= mod; }
-         C >>= 1; D >>= 1;
+         const bool needs_adjust = A.is_odd() || B.is_odd();
+
+         T0 = A + n;
+         T1 = B - mod;
+
+         A.ct_cond_assign(needs_adjust, T0);
+         B.ct_cond_assign(needs_adjust, T1);
+
+         A >>= 1;
+         B >>= 1;
          }
 
-      if(u >= v) { u -= v; A -= C; B -= D; }
-      else       { v -= u; C -= A; D -= B; }
+      for(size_t i = 0; i != v_zero_bits; ++i)
+         {
+         const bool needs_adjust = C.is_odd() || D.is_odd();
+         T0 = C + n;
+         T1 = D - mod;
+
+         C.ct_cond_assign(needs_adjust, T0);
+         D.ct_cond_assign(needs_adjust, T1);
+
+         C >>= 1;
+         D >>= 1;
+         }
+
+      T0 = u - v;
+      T1 = A - C;
+      T2 = B - D;
+
+      T0.cond_flip_sign(!u_gte_v);
+      T1.cond_flip_sign(!u_gte_v);
+      T2.cond_flip_sign(!u_gte_v);
+
+      u.ct_cond_assign(u_gte_v, T0);
+      A.ct_cond_assign(u_gte_v, T1);
+      B.ct_cond_assign(u_gte_v, T2);
+
+      v.ct_cond_assign(!u_gte_v, T0);
+      C.ct_cond_assign(!u_gte_v, T1);
+      D.ct_cond_assign(!u_gte_v, T2);
       }
 
    if(v != 1)
       return 0; // no modular inverse
 
-   while(D.is_negative()) D += mod;
-   while(D >= mod) D -= mod;
+   while(D.is_negative())
+      D += mod;
+   while(D >= mod)
+      D -= mod;
 
    return D;
    }
