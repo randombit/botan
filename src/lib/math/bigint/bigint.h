@@ -681,7 +681,13 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * If predicate is true assign other to *this
      * Uses a masked operation to avoid side channels
      */
-     void ct_cond_assign(bool predicate, BigInt& other);
+     void ct_cond_assign(bool predicate, const BigInt& other);
+
+     /**
+     * If predicate is true swap *this and other
+     * Uses a masked operation to avoid side channels
+     */
+     void ct_cond_swap(bool predicate, BigInt& other);
 
 #if defined(BOTAN_HAS_VALGRIND)
      void const_time_poison() const;

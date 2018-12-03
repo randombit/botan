@@ -56,6 +56,19 @@ void BOTAN_PUBLIC_API(2,9) ct_divide_u8(const BigInt& x,
                                         BigInt& q,
                                         uint8_t& r);
 
+/**
+* BigInt modulo, const time variant
+*
+* Using this function is (slightly) cheaper than calling ct_divide and
+* using only the remainder.
+*
+* @param x a non-negative integer
+* @param modulo a positive integer
+* @return result x % modulo
+*/
+BigInt BOTAN_PUBLIC_API(2,9) ct_modulo(const BigInt& x,
+                                       const BigInt& modulo);
+
 }
 
 #endif

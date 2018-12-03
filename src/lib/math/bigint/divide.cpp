@@ -58,6 +58,7 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
 
    BigInt q(BigInt::Positive, x_words);
    BigInt r(BigInt::Positive, y_words);
+   BigInt t(BigInt::Positive, y_words); // a temporary
 
    for(size_t i = 0; i != x_bits; ++i)
       {
@@ -67,11 +68,10 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
       r *= 2;
       r.conditionally_set_bit(0, x_b);
 
-      // y <= r -> r >= y
-      const auto r_gte_y = bigint_ct_is_lt(y.data(), y_words, r.data(), r.size(), true);
+      const bool r_gte_y = bigint_sub3(t.mutable_data(), r.data(), r.size(), y.data(), y_words) == 0;
 
-      q.conditionally_set_bit(b, r_gte_y.is_set());
-      bigint_cnd_sub(r_gte_y.value(), r.mutable_data(), r.size(), y.data(), y_words);
+      q.conditionally_set_bit(b, r_gte_y);
+      r.ct_cond_swap(r_gte_y, t);
       }
 
    sign_fixup(x, y, q, r);
@@ -83,7 +83,6 @@ void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
    {
    const size_t x_words = x.sig_words();
    const size_t x_bits = x.bits();
-   const size_t y_words = 1;
 
    BigInt q(BigInt::Positive, x_words);
    uint32_t r = 0;
@@ -114,6 +113,34 @@ void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
 
    r_out = static_cast<uint8_t>(r);
    q_out = q;
+   }
+
+BigInt ct_modulo(const BigInt& x, const BigInt& y)
+   {
+   if(x.is_negative() || y.is_negative() || y.is_zero())
+      throw Invalid_Argument("ct_modulo requires x >= 0 and y > 0");
+
+   const size_t y_words = y.sig_words();
+
+   const size_t x_bits = x.bits();
+
+   BigInt r(BigInt::Positive, y_words);
+   BigInt t(BigInt::Positive, y_words);
+
+   for(size_t i = 0; i != x_bits; ++i)
+      {
+      const size_t b = x_bits - 1 - i;
+      const bool x_b = x.get_bit(b);
+
+      r *= 2;
+      r.conditionally_set_bit(0, x_b);
+
+      const bool r_gte_y = bigint_sub3(t.mutable_data(), r.data(), r.size(), y.data(), y_words) == 0;
+
+      r.ct_cond_swap(r_gte_y, t);
+      }
+
+   return r;
    }
 
 /*
