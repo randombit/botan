@@ -202,16 +202,16 @@ size_t ESP_Padding::unpad(const uint8_t input[], size_t input_length) const
    const size_t last_byte = input[input_length-1];
 
    auto bad_input = CT::Mask<uint8_t>::is_zero(last_byte) |
-      CT::Mask<uint8_t>::is_gt(last_byte, input_length);
+      CT::Mask<uint8_t>::is_gt(last_byte, static_cast<uint8_t>(input_length));
 
    const size_t pad_pos = input_length - last_byte;
    size_t i = input_length - 1;
    while(i)
       {
-      const auto in_range = CT::Mask<uint8_t>::is_gt(i, pad_pos);
+      const auto in_range = CT::Mask<size_t>::is_gt(i, pad_pos);
       const auto incrementing = CT::Mask<uint8_t>::is_equal(input[i-1], input[i]-1);
 
-      bad_input |= in_range & ~incrementing;
+      bad_input |= CT::Mask<uint8_t>(in_range) & ~incrementing;
       --i;
       }
 

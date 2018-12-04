@@ -174,7 +174,7 @@ RTSS_Share::split(uint8_t M, uint8_t N,
       throw Encoding_Error("RTSS_Share::split secret too large for TSS format");
 
    // +1 byte for the share ID
-   const uint16_t share_len = secret.size() + 1;
+   const uint16_t share_len = static_cast<uint16_t>(secret.size() + 1);
 
    secure_vector<uint8_t> share_header(RTSS_HEADER_SIZE);
    copy_mem(&share_header[0], identifier.data(), identifier.size());
