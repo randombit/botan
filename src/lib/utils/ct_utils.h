@@ -95,7 +95,7 @@ class Mask
       * Derive a Mask from a Mask of a larger type
       */
       template<typename U>
-      Mask(Mask<U> o) : m_mask(o.value())
+      Mask(Mask<U> o) : m_mask(static_cast<T>(o.value()))
          {
          static_assert(sizeof(U) > sizeof(T), "sizes ok");
          }
@@ -105,7 +105,7 @@ class Mask
       */
       static Mask<T> set()
          {
-         return Mask<T>(~0);
+         return Mask<T>(static_cast<T>(~0));
          }
 
       /**
