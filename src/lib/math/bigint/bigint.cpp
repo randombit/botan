@@ -395,6 +395,13 @@ void BigInt::ct_cond_swap(bool predicate, BigInt& other)
    bigint_cnd_swap(predicate, this->mutable_data(), other.mutable_data(), max_words);
    }
 
+void BigInt::cond_flip_sign(bool predicate)
+   {
+   // FIXME!
+   if(predicate)
+      flip_sign();
+   }
+
 void BigInt::ct_cond_assign(bool predicate, const BigInt& other)
    {
    const size_t t_words = size();
@@ -412,6 +419,11 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other)
       const word o_word = other.word_at(i);
       const word t_word = this->word_at(i);
       this->set_word_at(i, mask.select(o_word, t_word));
+      }
+
+   if(sign() != other.sign())
+      {
+      cond_flip_sign(predicate);
       }
    }
 

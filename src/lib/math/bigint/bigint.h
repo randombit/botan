@@ -689,6 +689,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void ct_cond_swap(bool predicate, BigInt& other);
 
+     /**
+     * If predicate is true flip the sign of *this
+     */
+     void cond_flip_sign(bool predicate);
+
 #if defined(BOTAN_HAS_VALGRIND)
      void const_time_poison() const;
      void const_time_unpoison() const;
