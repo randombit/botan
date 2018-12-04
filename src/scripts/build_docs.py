@@ -129,7 +129,7 @@ def sphinx_supports_concurrency():
     match = re.match(r'^(?:[a-zA-Z_-]+) v?(([0-9]+)\.([0-9]+))', output)
     # default to using concurrency when uncertain
     version = StrictVersion(match.group(1)) if match else StrictVersion('1.2')
-    return version >= StrictVersion('1.2')
+    return version >= StrictVersion('1.4')
 
 def read_config(config):
     try:

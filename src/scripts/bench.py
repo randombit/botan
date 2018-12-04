@@ -129,7 +129,7 @@ def run_botan_bench(botan, runtime, buf_sizes, algo):
     runtime = .05
 
     cmd = [botan, 'speed', '--format=json', '--msec=%d' % int(runtime * 1000),
-           '--buf-size=%s' % (','.join(map(str, buf_sizes))), algo]
+           '--buf-size=%s' % (','.join([str(i) for i in buf_sizes])), algo]
     output = run_command(cmd)
     output = json.loads(output)
 
