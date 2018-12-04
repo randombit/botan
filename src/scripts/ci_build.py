@@ -41,17 +41,18 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if is_cross_target:
         if target_os == 'osx':
             target_os = 'ios'
-        elif target == 'cross-win32':
+        elif target == 'cross-win64':
             target_os = 'mingw'
 
     make_prefix = []
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    fast_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes',
+    fast_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
                   'hmac_drbg', 'hmac_drbg_unit',
                   'tls', 'ffi',
-                  'rsa_sign', 'rsa_verify', 'dh_kat', 'ecdsa_sign', 'curve25519_scalar',
+                  'rsa_sign', 'rsa_verify', 'dh_kat',
+                  'ecc_randomized', 'ecdh_kat', 'ecdsa_sign', 'curve25519_scalar',
                   'simd_32', 'os_utils', 'util', 'util_dates']
 
     install_prefix = os.path.join(tempfile.gettempdir(), 'botan-install')
@@ -94,7 +95,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if target == 'coverage':
         flags += ['--with-coverage-info', '--test-mode']
     if target == 'valgrind':
-        flags += ['--with-valgrind']
+        # valgrind in 16.04 has a bug with rdrand handling
+        flags += ['--with-valgrind', '--disable-rdrand']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
         test_cmd += fast_tests
     if target == 'fuzzers':
@@ -144,9 +146,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                 flags += ['--cpu=arm64', '--cc-abi-flags=-arch arm64 -stdlib=libc++']
             else:
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
-        elif target == 'cross-win32':
-            cc_bin = 'i686-w64-mingw32-g++'
-            flags += ['--cpu=x86_32', '--cc-abi-flags=-static', '--ar-command=i686-w64-mingw32-ar']
+        elif target == 'cross-win64':
+            # MinGW in 16.04 is lacking std::mutex for unknown reason
+            cc_bin = 'x86_64-w64-mingw32-g++'
+            flags += ['--cpu=x86_64', '--cc-abi-flags=-static',
+                      '--ar-command=x86_64-w64-mingw32-ar', '--without-os-feature=threads']
             test_cmd = [os.path.join(root_dir, 'botan-test.exe')]
             # No runtime prefix required for Wine
         else:
@@ -168,7 +172,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             elif target == 'cross-ppc64':
                 flags += ['--cpu=ppc64', '--with-endian=little']
                 cc_bin = 'powerpc64le-linux-gnu-g++'
-                test_prefix = ['qemu-ppc64le', '-L', '/usr/powerpc64le-linux-gnu/']
+                test_prefix = ['qemu-ppc64le', '-cpu', 'POWER8', '-L', '/usr/powerpc64le-linux-gnu/']
+            elif target == 'cross-mips64':
+                flags += ['--cpu=mips64', '--with-endian=big']
+                cc_bin = 'mips64-linux-gnuabi64-g++'
+                test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/']
             else:
                 raise Exception("Unknown cross target '%s' for Linux" % (target))
     else:
@@ -381,7 +389,7 @@ def main(args=None):
             raise Exception('No python interpreters found cannot lint')
 
         pylint_rc = '--rcfile=%s' % (os.path.join(root_dir, 'src/configs/pylint.rc'))
-        pylint_flags = [pylint_rc, '--reports=no', '--score=no']
+        pylint_flags = [pylint_rc, '--reports=no']
 
         # Some disabled rules specific to Python2
         # superfluous-parens: needed for Python3 compatible print statements
@@ -407,14 +415,13 @@ def main(args=None):
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py']
 
-        for target in py_scripts:
-            target_path = os.path.join(root_dir, target)
+        full_paths = [os.path.join(root_dir, s) for s in py_scripts]
 
-            if use_python2:
-                cmds.append(['python2', '-m', 'pylint'] + pylint_flags + [py2_flags, target_path])
+        if use_python2:
+            cmds.append(['python2', '-m', 'pylint'] + pylint_flags + [py2_flags] + full_paths)
 
-            if use_python3 and options.use_pylint3:
-                cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags, target_path])
+        if use_python3 and options.use_pylint3:
+            cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags] + full_paths)
 
     else:
         config_flags, run_test_command, make_prefix = determine_flags(

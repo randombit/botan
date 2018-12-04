@@ -4,7 +4,7 @@ os:
   - linux
   - osx
 
-dist: trusty
+dist: xenial
 sudo: required
 
 compiler:
@@ -19,14 +19,14 @@ env:
 
   matrix:
     - BUILD_MODE="shared"
-#    - BUILD_MODE="sonar"
     - BUILD_MODE="fuzzers"
     - BUILD_MODE="coverage"
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
     - BUILD_MODE="cross-arm32"
     - BUILD_MODE="cross-arm64"
-    - BUILD_MODE="cross-win32"
+    - BUILD_MODE="cross-mips64"
+    - BUILD_MODE="cross-win64"
     - BUILD_MODE="valgrind"
     - BUILD_MODE="static"
     - BUILD_MODE="mini-shared"
@@ -41,15 +41,12 @@ matrix:
     - os: osx
       compiler: gcc
 
-    - os: osx
-      env: BUILD_MODE="sonar"
-
     # XCode 9.4 ICEs on 32-bit ARM builds
     - os: osx
       env: BUILD_MODE="cross-arm32"
 
     # Run static, docs, lint, bsi, nist, fuzzers, coverage, valgrind,
-    # sonar, sanitizer, minimized and non-ARM cross builds only on Linux/gcc.
+    # sanitizer, minimized and non-ARM cross builds only on Linux/gcc.
     # The sanitizer builds under Clang run the tests very slowly and
     # cause CI timeouts.
 
@@ -72,15 +69,13 @@ matrix:
     - compiler: clang
       env: BUILD_MODE="mini-shared"
     - compiler: clang
-      env: BUILD_MODE="cross-win32"
+      env: BUILD_MODE="cross-win64"
     - compiler: clang
       env: BUILD_MODE="cross-ppc32"
     - compiler: clang
       env: BUILD_MODE="cross-ppc64"
-
-    # Use clang coverage for Sonar
-    - compiler: gcc
-      env: BUILD_MODE="sonar"
+    - compiler: clang
+      env: BUILD_MODE="cross-mips64"
 
    # No ARM Clang compiler on Linux
     - os: linux
@@ -102,21 +97,15 @@ branches:
     - master
     - release-2
     - coverity_scan
+    - travis-xenial
 
 git:
   depth: 5
 
 cache:
   ccache: true
-  directories:
-    - $HOME/.sonar/cache
 
 addons:
-  #sonarcloud:
-  #  organization: "randombit-github"
-  #  token:
-  #    secure: "JYwDxEZyCJ1aKLjAYB9YlyyIRkjeaY48iYqcMhmidx6/ploWXMbUzVpv5plLFbMGgeMy9sqa2I7Pbo7u3OdcBbbsogGtk/jomnjiauuNS6KcCHEEcVjBILfadxGJPL9F8/0KbcS2vnPpz/jVlRp18Uemud0yGGXXcDaY471sA50="
-
   coverity_scan:
     project:
       name: "randombit/botan"
