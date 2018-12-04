@@ -97,7 +97,6 @@ branches:
     - master
     - release-2
     - coverity_scan
-    - travis-xenial
 
 git:
   depth: 5
