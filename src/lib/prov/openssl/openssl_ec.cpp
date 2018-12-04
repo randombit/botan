@@ -328,20 +328,22 @@ class OpenSSL_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          const EC_GROUP* group = ::EC_KEY_get0_group(m_ossl_ec.get());
          const size_t out_len = (::EC_GROUP_get_degree(group) + 7) / 8;
          secure_vector<uint8_t> out(out_len);
-         EC_POINT* pub_key = ::EC_POINT_new(group);
+
+         std::unique_ptr<EC_POINT, std::function<void (EC_POINT*)>> pub_key(
+            ::EC_POINT_new(group), ::EC_POINT_free);
 
          if(!pub_key)
             throw OpenSSL_Error("EC_POINT_new", ERR_get_error());
 
          const int os2ecp_rc =
-            ::EC_POINT_oct2point(group, pub_key, w, w_len, nullptr);
+            ::EC_POINT_oct2point(group, pub_key.get(), w, w_len, nullptr);
 
          if(os2ecp_rc != 1)
             throw OpenSSL_Error("EC_POINT_oct2point", ERR_get_error());
 
          const int ecdh_rc = ::ECDH_compute_key(out.data(),
                                                 out.size(),
-                                                pub_key,
+                                                pub_key.get(),
                                                 m_ossl_ec.get(),
                                                 /*KDF*/nullptr);
 
