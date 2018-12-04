@@ -199,7 +199,7 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
       }
    for (i = 0; i < code_length; ++i)
       {
-      L[i] = Laux[i];
+      L[i] = static_cast<gf2m>(Laux[i]);
       }
    return result;
    }

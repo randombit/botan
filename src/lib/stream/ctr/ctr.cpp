@@ -142,7 +142,7 @@ void CTR_BE::add_counter(const uint64_t counter)
    if(ctr_size == 4)
       {
       size_t off = (BS - 4);
-      uint32_t low32 = counter + load_be<uint32_t>(&m_counter[off], 0);
+      uint32_t low32 = static_cast<uint32_t>(counter + load_be<uint32_t>(&m_counter[off], 0));
 
       for(size_t i = 0; i != ctr_blocks; ++i)
          {
@@ -217,7 +217,7 @@ void CTR_BE::seek(uint64_t offset)
       for(size_t i = 1; i != m_ctr_blocks; ++i)
          {
          copy_mem(&m_counter[i*BS], &m_counter[0], BS);
-         uint32_t c = low32 + i;
+         const uint32_t c = static_cast<uint32_t>(low32 + i);
          store_be(c, &m_counter[(BS-4)+i*BS]);
          }
       }

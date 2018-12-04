@@ -97,7 +97,7 @@ std::vector<uint8_t> Extensions::serialize() const
       if(extn.second->empty())
          continue;
 
-      const uint16_t extn_code = extn.second->type();
+      const uint16_t extn_code = static_cast<uint16_t>(extn.second->type());
 
       std::vector<uint8_t> extn_val = extn.second->serialize();
 
@@ -404,9 +404,11 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
 
 std::vector<uint8_t> Signature_Algorithms::serialize() const
    {
+   BOTAN_ASSERT(m_schemes.size() < 256, "Too many signature schemes");
+
    std::vector<uint8_t> buf;
 
-   const uint16_t len = m_schemes.size() * 2;
+   const uint16_t len = static_cast<uint16_t>(m_schemes.size() * 2);
 
    buf.push_back(get_byte(0, len));
    buf.push_back(get_byte(1, len));

@@ -56,7 +56,7 @@ XMSS_Common_Ops::create_l_tree(secure_vector<uint8_t>& result,
       {
       for(size_t i = 0; i < l >> 1; i++)
          {
-         adrs.set_tree_index(i);
+         adrs.set_tree_index(static_cast<uint32_t>(i));
          randomize_tree_hash(pk[i], pk[2 * i], pk[2 * i + 1], adrs, seed, hash);
          }
       if(l & 0x01)

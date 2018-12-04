@@ -717,38 +717,38 @@ void FE_25519::to_bytes(uint8_t s[32]) const
    Goal: Output h0+...+2^230 h9.
    */
 
-   s[0] = h0 >> 0;
-   s[1] = h0 >> 8;
-   s[2] = h0 >> 16;
-   s[3] = (h0 >> 24) | (h1 << 2);
-   s[4] = h1 >> 6;
-   s[5] = h1 >> 14;
-   s[6] = (h1 >> 22) | (h2 << 3);
-   s[7] = h2 >> 5;
-   s[8] = h2 >> 13;
-   s[9] = (h2 >> 21) | (h3 << 5);
-   s[10] = h3 >> 3;
-   s[11] = h3 >> 11;
-   s[12] = (h3 >> 19) | (h4 << 6);
-   s[13] = h4 >> 2;
-   s[14] = h4 >> 10;
-   s[15] = h4 >> 18;
-   s[16] = h5 >> 0;
-   s[17] = h5 >> 8;
-   s[18] = h5 >> 16;
-   s[19] = (h5 >> 24) | (h6 << 1);
-   s[20] = h6 >> 7;
-   s[21] = h6 >> 15;
-   s[22] = (h6 >> 23) | (h7 << 3);
-   s[23] = h7 >> 5;
-   s[24] = h7 >> 13;
-   s[25] = (h7 >> 21) | (h8 << 4);
-   s[26] = h8 >> 4;
-   s[27] = h8 >> 12;
-   s[28] = (h8 >> 20) | (h9 << 6);
-   s[29] = h9 >> 2;
-   s[30] = h9 >> 10;
-   s[31] = h9 >> 18;
+   s[0] = static_cast<uint8_t>(h0 >> 0);
+   s[1] = static_cast<uint8_t>(h0 >> 8);
+   s[2] = static_cast<uint8_t>(h0 >> 16);
+   s[3] = static_cast<uint8_t>((h0 >> 24) | (h1 << 2));
+   s[4] = static_cast<uint8_t>(h1 >> 6);
+   s[5] = static_cast<uint8_t>(h1 >> 14);
+   s[6] = static_cast<uint8_t>((h1 >> 22) | (h2 << 3));
+   s[7] = static_cast<uint8_t>(h2 >> 5);
+   s[8] = static_cast<uint8_t>(h2 >> 13);
+   s[9] = static_cast<uint8_t>((h2 >> 21) | (h3 << 5));
+   s[10] = static_cast<uint8_t>(h3 >> 3);
+   s[11] = static_cast<uint8_t>(h3 >> 11);
+   s[12] = static_cast<uint8_t>((h3 >> 19) | (h4 << 6));
+   s[13] = static_cast<uint8_t>(h4 >> 2);
+   s[14] = static_cast<uint8_t>(h4 >> 10);
+   s[15] = static_cast<uint8_t>(h4 >> 18);
+   s[16] = static_cast<uint8_t>(h5 >> 0);
+   s[17] = static_cast<uint8_t>(h5 >> 8);
+   s[18] = static_cast<uint8_t>(h5 >> 16);
+   s[19] = static_cast<uint8_t>((h5 >> 24) | (h6 << 1));
+   s[20] = static_cast<uint8_t>(h6 >> 7);
+   s[21] = static_cast<uint8_t>(h6 >> 15);
+   s[22] = static_cast<uint8_t>((h6 >> 23) | (h7 << 3));
+   s[23] = static_cast<uint8_t>(h7 >> 5);
+   s[24] = static_cast<uint8_t>(h7 >> 13);
+   s[25] = static_cast<uint8_t>((h7 >> 21) | (h8 << 4));
+   s[26] = static_cast<uint8_t>(h8 >> 4);
+   s[27] = static_cast<uint8_t>(h8 >> 12);
+   s[28] = static_cast<uint8_t>((h8 >> 20) | (h9 << 6));
+   s[29] = static_cast<uint8_t>(h9 >> 2);
+   s[30] = static_cast<uint8_t>(h9 >> 10);
+   s[31] = static_cast<uint8_t>(h9 >> 18);
    }
 
 }

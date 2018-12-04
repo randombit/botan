@@ -343,7 +343,7 @@ const X509_Certificate_Data& X509_Certificate::data() const
 
 uint32_t X509_Certificate::x509_version() const
    {
-   return data().m_version;
+   return static_cast<uint32_t>(data().m_version);
    }
 
 bool X509_Certificate::is_self_signed() const
@@ -447,7 +447,7 @@ bool X509_Certificate::is_CA_cert() const
 
 uint32_t X509_Certificate::path_limit() const
    {
-   return data().m_path_len_constraint;
+   return static_cast<uint32_t>(data().m_path_len_constraint);
    }
 
 Key_Constraints X509_Certificate::constraints() const
