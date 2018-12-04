@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# (C) 2017 Jack Lloyd
+# (C) 2017,2018 Jack Lloyd
 
 import sys
 import os
@@ -8,6 +8,7 @@ import subprocess
 import optparse
 import stat
 import multiprocessing
+import time
 
 def run_fuzzer_gdb(args):
     (fuzzer_bin, corpus_file) = args
@@ -97,7 +98,7 @@ def main(args=None):
 
     gdb_commands = None
 
-    pool = multiprocessing.Pool(None)
+    pool = multiprocessing.Pool(multiprocessing.cpu_count() * 2)
     chunk_size = 32 # arbitrary
 
     run_fuzzer_func = run_fuzzer_gdb if options.gdb else run_fuzzer
@@ -110,6 +111,8 @@ def main(args=None):
         # We have to do this hack because multiprocessing's Pool.map doesn't support
         # passing any initial arguments, just the single iteratable
         map_args = [(fuzzer_bin, f) for f in corpus_files]
+
+        start = time.time()
 
         for result in pool.map(run_fuzzer_func, map_args, chunk_size):
             (corpus_file, retcode, stdout, stderr) = result
@@ -126,11 +129,13 @@ def main(args=None):
                 print("Fuzzer %s produced stderr on input %s:\n%s" % (fuzzer, corpus_file, stderr))
                 stderr_count += 1
 
-        print("Tested fuzzer %s with %d test cases, %d crashes" % (fuzzer, len(corpus_files), crash_count))
+        duration = time.time() - start
+        print("Tested fuzzer %s with %d test cases, %d crashes in %.02f seconds" % (fuzzer, len(corpus_files), crash_count, duration))
         sys.stdout.flush()
 
+
     if crash_count > 0 or stderr_count > 0 or stdout_count > 0:
-        print("Ran fuzzer tests, %d crashes %d stdout %d stderr" % (crash_count, stdout_count, stderr_count))
+        print("Ran fuzzer tests, %d crashes %d stdout %d stderr" % (crash_count, stdout_count, stderr_count, duration))
         return 2
     return 0
 
