@@ -311,7 +311,7 @@ def main(args=None):
         try:
             logging.info('Creating release for version %s' % (target_version))
 
-            (major, minor, patch) = map(int, target_version.split('.'))
+            (major, minor, patch) = [int(x) for x in target_version.split('.')]
 
             assert target_version == '%d.%d.%d' % (major, minor, patch)
             target_version = target_version

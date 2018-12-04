@@ -16,6 +16,7 @@ import os
 import shutil
 import sys
 import subprocess
+import traceback
 
 def parse_command_line(args):
 
@@ -269,6 +270,5 @@ if __name__ == '__main__':
         sys.exit(main(sys.argv))
     except Exception as e: # pylint: disable=broad-except
         logging.error('Failure: %s' % (e))
-        import traceback
         logging.info(traceback.format_exc())
         sys.exit(1)

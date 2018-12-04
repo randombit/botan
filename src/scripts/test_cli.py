@@ -42,7 +42,6 @@ def setup_logging(options):
 
 def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_stderr=None):
     global TESTS_RUN
-    global TESTS_FAILED
 
     TESTS_RUN += 1
 
@@ -518,7 +517,7 @@ def cli_tls_socket_tests():
 
     (stdout, stderr) = tls_client.communicate()
 
-    if len(stderr) != 0: # pylint: disable=len-as-condition
+    if stderr:
         logging.error("Got unexpected stderr output %s" % (stderr))
 
     if b'Handshake complete' not in stdout:
