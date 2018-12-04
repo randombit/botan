@@ -75,6 +75,11 @@ static std::map<std::string, RSA_SignMechanism> SignMechanisms =
    {
       { "Raw", RSA_SignMechanism(MechanismType::RsaX509) },
 
+      { "EMSA1(SHA-1)", RSA_SignMechanism(MechanismType::DsaSha1) },
+      { "EMSA1(SHA-256)", RSA_SignMechanism(MechanismType::DsaSha256) },
+      { "EMSA1(SHA-384)", RSA_SignMechanism(MechanismType::DsaSha384) },
+      { "EMSA1(SHA-512)", RSA_SignMechanism(MechanismType::DsaSha512) },
+
       { "EMSA2(Raw)", RSA_SignMechanism(MechanismType::RsaX931) },
       { "EMSA2(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931) },
 
@@ -86,6 +91,12 @@ static std::map<std::string, RSA_SignMechanism> SignMechanisms =
       { "EMSA3(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs) },
       { "EMSA3(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs) },
 
+      { "EMSA_PKCS1(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs) },
+      { "EMSA_PKCS1(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs) },
+      { "EMSA_PKCS1(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs) },
+      { "EMSA_PKCS1(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs) },
+      { "EMSA_PKCS1(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs) },
+
       // RSASSA PKCS#1 PSS
       { "EMSA4(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss) },
       { "EMSA4(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss) },
@@ -93,6 +104,10 @@ static std::map<std::string, RSA_SignMechanism> SignMechanisms =
       { "EMSA4(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss) },
       { "EMSA4(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss) },
       { "EMSA4(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss) },
+
+      { "PSSR(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss) },
+      { "PSSR(SHA-384,MGF1,48)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss) },
+      { "PSSR(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss) },
 
       { "ISO9796", RSA_SignMechanism(MechanismType::Rsa9796) }
    };
