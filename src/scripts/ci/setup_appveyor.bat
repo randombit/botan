@@ -8,5 +8,4 @@ if %MSVS% == 2017 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Communi
 rem check compiler version
 cl
 
-git clone --depth 1 https://github.com/randombit/botan-ci-tools
-7z e botan-ci-tools/jom_1_1_2.zip
+set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%
