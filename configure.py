@@ -146,12 +146,12 @@ class Version(object):
             (stdout, stderr) = vc.communicate()
 
             if vc.returncode != 0:
-                logging.debug('Error getting rev from %s - %d (%s)'
-                              % (cmdname, vc.returncode, stderr))
+                logging.debug('Error getting rev from %s - %d (%s)',
+                              cmdname, vc.returncode, stderr)
                 return 'unknown'
 
             rev = str(stdout).strip()
-            logging.debug('%s reported revision %s' % (cmdname, rev))
+            logging.debug('%s reported revision %s', cmdname, rev)
 
             return '%s:%s' % (cmdname, rev)
         except OSError as e:
@@ -2529,7 +2529,7 @@ class AmalgamationGenerator(object):
         pub_header_amalag.write_to_file(header_name, "BOTAN_AMALGAMATION_H_")
 
         isa_headers = {}
-        internal_headers = []
+        internal_headers_list = []
 
         def known_isa_header(hdr):
             if self._options.single_amalgamation_file:
@@ -2543,9 +2543,9 @@ class AmalgamationGenerator(object):
             if isa:
                 isa_headers[isa] = ''.join(AmalgamationGenerator.read_header(hdr))
             else:
-                internal_headers.append(hdr)
+                internal_headers_list.append(hdr)
 
-        internal_headers = AmalgamationHeader(internal_headers)
+        internal_headers = AmalgamationHeader(internal_headers_list)
         header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_int_name))
         internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H_")
@@ -2820,10 +2820,10 @@ def canonicalize_options(options, info_os, info_arch):
     shared_libs_supported = options.os in info_os and info_os[options.os].building_shared_supported()
 
     if not shared_libs_supported:
-        if options.build_shared_lib is not None:
+        if options.build_shared_lib is True:
             logging.warning('Shared libs not supported on %s, disabling shared lib support' % (options.os))
             options.build_shared_lib = False
-        else:
+        elif options.build_shared_lib is None:
             logging.info('Shared libs not supported on %s, disabling shared lib support' % (options.os))
 
     if options.os == 'windows' and options.build_shared_lib is None and options.build_static_lib is None:
