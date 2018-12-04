@@ -46,6 +46,8 @@ Version 2.9.0, Not Yet Released
 * Resolve a memory leak when verifying ECDSA signatures with versions
   of OpenSSL before 1.1.0 (GH #1698)
 
+* Resolve a memory leak using ECDH via OpenSSL (GH #1767)
+
 * Fix an error in XTS which prohibited encrypting values which were
   exactly the same length as the underlying block size. Messages of
   this size are allowed by the standard and other XTS implementations.
@@ -67,6 +69,8 @@ Version 2.9.0, Not Yet Released
   (GH #1702)
 
 * Fix small issues when building for QNX
+
+* Switch the Travis CI build to using Ubuntu 16.04 (GH #1767)
 
 * Add options to ``configure.py`` to disable generation of ``pkg-config``
   file, and (for systems where ``pkg-config`` support defaults to off,
