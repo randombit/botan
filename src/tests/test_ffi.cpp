@@ -209,7 +209,15 @@ class FFI_Unit_Tests final : public Test
 
          std::vector<uint8_t> outbuf(512);
 
-         if(TEST_FFI_OK(botan_rng_init, (&rng, "user-threadsafe")))
+         rc = botan_rng_init(&rng, "user-threadsafe");
+         result.confirm("Either success or not implemented", rc == 0 || rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
+
+         if(rc != 0)
+            {
+            REQUIRE_FFI_OK(botan_rng_init, (&rng, "user"));
+            }
+
+         if(rc == 0)
             {
             TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
             TEST_FFI_OK(botan_rng_reseed, (rng, 256));
