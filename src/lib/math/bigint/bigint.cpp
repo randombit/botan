@@ -402,9 +402,15 @@ void BigInt::ct_cond_swap(bool predicate, BigInt& other)
 
 void BigInt::cond_flip_sign(bool predicate)
    {
-   // FIXME!
-   if(predicate)
-      flip_sign();
+   // This code is assuming Negative == 0, Positive == 1
+
+   const auto mask = CT::Mask<uint8_t>::expand(predicate);
+
+   const uint8_t current_sign = static_cast<uint8_t>(sign());
+
+   const uint8_t new_sign = mask.select(current_sign ^ 1, current_sign);
+
+   set_sign(static_cast<Sign>(new_sign));
    }
 
 void BigInt::ct_cond_assign(bool predicate, const BigInt& other)
