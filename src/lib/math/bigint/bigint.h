@@ -344,7 +344,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * mod and performs repeated subtractions. It should not be used if
      * *this is much larger than mod, instead use modulo operator.
      */
-     void reduce_below(const BigInt& mod, secure_vector<word> &ws);
+     size_t reduce_below(const BigInt& mod, secure_vector<word> &ws);
 
      /**
      * Zeroize the BigInt. The size of the underlying register is not

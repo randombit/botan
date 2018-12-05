@@ -317,7 +317,7 @@ BigInt BigInt::operator-() const
    return x;
    }
 
-void BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
+size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
    {
    if(p.is_negative())
       throw Invalid_Argument("BigInt::reduce_below mod must be positive");
@@ -332,14 +332,19 @@ void BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
 
    clear_mem(ws.data(), ws.size());
 
+   size_t reductions = 0;
+
    for(;;)
       {
       word borrow = bigint_sub3(ws.data(), data(), p_words + 1, p.data(), p_words);
       if(borrow)
          break;
 
+      ++reductions;
       swap_reg(ws);
       }
+
+   return reductions;
    }
 
 /*
