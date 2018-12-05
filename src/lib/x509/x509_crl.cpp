@@ -239,7 +239,7 @@ const std::vector<uint8_t>& X509_CRL::authority_key_id() const
 */
 uint32_t X509_CRL::crl_number() const
    {
-   return data().m_crl_number;
+   return static_cast<uint32_t>(data().m_crl_number);
    }
 
 /*

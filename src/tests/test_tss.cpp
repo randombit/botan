@@ -57,7 +57,7 @@ class TSS_Recovery_Tests final : public Text_Based_Test
                      auto reconstructed_secret = Botan::RTSS_Share::reconstruct(shares);
                      result.test_eq("Reconstructed secret correctly from reduced shares", reconstructed_secret, input);
                      }
-                  catch(Botan::Decoding_Error& e)
+                  catch(Botan::Decoding_Error&)
                      {
                      result.test_failure("Reconstruction failed with share count " + std::to_string(shares.size()));
                      }
@@ -104,8 +104,8 @@ class TSS_Generation_Tests final : public Text_Based_Test
          const std::vector<uint8_t> input = vars.get_req_bin("Input");
          const std::vector<uint8_t> id = vars.get_req_bin("Id");
          const std::vector<uint8_t> rng_data = vars.get_req_bin("RNG");
-         const size_t N = vars.get_req_sz("N");
-         const size_t M = vars.get_req_sz("M");
+         const uint8_t N = vars.get_req_u8("N");
+         const uint8_t M = vars.get_req_u8("M");
          const std::string hash = vars.get_req_str("Hash");
          const std::vector<std::vector<uint8_t>> expected_shares = vars.get_req_bin_list("Shares");
 

@@ -729,6 +729,22 @@ size_t VarMap::get_req_sz(const std::string& key) const
    return Botan::to_u32bit(i->second);
    }
 
+uint8_t VarMap::get_req_u8(const std::string& key) const
+   {
+   const size_t s = this->get_req_sz(key);
+   if(s > 256)
+      {
+      throw Test_Error("Invalid " + key + " expected uint8_t got " + std::to_string(s));
+      }
+   return static_cast<uint8_t>(s);
+   }
+
+uint32_t VarMap::get_req_u32(const std::string& key) const
+   {
+   return static_cast<uint32_t>(get_req_sz(key));
+   }
+
+
 size_t VarMap::get_opt_sz(const std::string& key, const size_t def_value) const
    {
    auto i = m_vars.find(key);
