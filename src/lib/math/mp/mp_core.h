@@ -663,7 +663,6 @@ bigint_ct_is_eq(const word x[], size_t x_size,
 * @param x_size length of x
 * @param y input param
 * @param y_size length of y
-* @param ws array of at least 2*max(x_size,y_size) words
 */
 inline int32_t
 bigint_sub_abs(word z[],

@@ -71,6 +71,7 @@ class BOTAN_PUBLIC_API(2,8) Scrypt_Family final : public PasswordHashFamily
 * @param output the output will be placed here
 * @param output_len length of output
 * @param password the user password
+* @param password_len length of password
 * @param salt the salt
 * @param salt_len length of salt
 * @param N the CPU/Memory cost parameter, must be power of 2
