@@ -14,8 +14,6 @@ Version 2.9.0, Not Yet Released
 
 * Use a smaller sieve which improves performance of prime generation.
 
-* Add a constant-time division algorithm (GH #1575)
-
 * Fixed a bug that caused ChaCha to produce incorrect output after encrypting
   256 GB. (GH #1728)
 
@@ -23,11 +21,13 @@ Version 2.9.0, Not Yet Released
 
 * Optimize AVX2 ChaCha (GH #1730)
 
-* Const time improvements in BigInt and ECC arithmetic. (GH #1755 #1750 #1738)
+* Const time improvements in BigInt and ECC arithmetic.
+  (GH #1738 #1750 #1754 #1755 #1757 #1758 #1759 #1762 #1765 #1770)
 
 * Cache the significant words of a BigInt (GH #1734)
 
-* Simplify implementation of BigInt addition and subtraction (GH #1754)
+* In the command line interface, add support for reading passphrases from the
+  terminal with echo disabled (GH #1756)
 
 * Add CT::Mask type to simplify const-time programming (GH #1751)
 
