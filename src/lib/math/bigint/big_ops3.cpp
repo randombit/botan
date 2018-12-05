@@ -63,8 +63,8 @@ BigInt operator*(const BigInt& x, const BigInt& y)
                  workspace.data(), workspace.size());
       }
 
-   if(x_sw && y_sw && x.sign() != y.sign())
-      z.flip_sign();
+   z.cond_flip_sign(x_sw > 0 && y_sw > 0 && x.sign() != y.sign());
+
    return z;
    }
 

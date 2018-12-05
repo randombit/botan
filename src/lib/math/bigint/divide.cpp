@@ -20,8 +20,7 @@ namespace {
 */
 void sign_fixup(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r)
    {
-   if(x.sign() != y.sign())
-      q.flip_sign();
+   q.cond_flip_sign(x.sign() != y.sign());
 
    if(x.is_negative() && r.is_nonzero())
       {

@@ -176,9 +176,7 @@ BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws)
 
    const int32_t relative_size = bigint_sub_abs(ws.data(), data(), x_sw, y, y_sw);
 
-   if(relative_size > 0)
-      this->flip_sign();
-
+   this->cond_flip_sign(relative_size > 0);
    this->swap_reg(ws);
 
    return (*this);
