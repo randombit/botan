@@ -154,6 +154,8 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y)
 
 /*
 * Solve x = q * y + r
+*
+* See Handbook of Applied Cryptography section 14.2.5
 */
 void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
    {
@@ -166,11 +168,12 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
 
    BigInt r = x;
    BigInt q = 0;
+   secure_vector<word> ws;
 
    r.set_sign(BigInt::Positive);
    y.set_sign(BigInt::Positive);
 
-   if(r >= y)
+   if(r.is_nonzero())
       {
       // Calculate shifts needed to normalize y with high bit set
       const size_t shifts = BOTAN_MP_WORD_BITS - high_bit(y.word_at(y_words-1));
@@ -180,7 +183,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
 
       // we know y has not changed size, since we only shifted up to set high bit
       const size_t t = y_words - 1;
-      const size_t n = r.sig_words() - 1; // r may have changed size however
+      const size_t n = std::max(t, r.sig_words() - 1); // r may have changed size however
 
       BOTAN_ASSERT_NOMSG(n >= t);
 
@@ -190,38 +193,35 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
 
       BigInt shifted_y = y << (BOTAN_MP_WORD_BITS * (n-t));
 
-      while(r >= shifted_y)
-         {
-         r -= shifted_y;
-         q_words[n-t] += 1;
-         }
+      // Set q_{n-t} to number of times r > shifted_y
+      q_words[n-t] = r.reduce_below(shifted_y, ws);
+
+      const word y_t0  = y.word_at(t);
+      const word y_t1  = y.word_at(t-1);
 
       for(size_t j = n; j != t; --j)
          {
          const word x_j0  = r.word_at(j);
          const word x_j1 = r.word_at(j-1);
          const word x_j2 = r.word_at(j-2);
-         const word y_t0  = y.word_at(t);
-         const word y_t1  = y.word_at(t-1);
 
-         word qjt = (x_j0 == y_t0) ? MP_WORD_MAX : bigint_divop(x_j0, x_j1, y_t0);
+         word qjt = bigint_divop(x_j0, x_j1, y_t0);
 
-         while(division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2))
-            {
-            qjt -= 1;
-            }
+         qjt = CT::Mask<word>::is_equal(x_j0, y_t0).select(MP_WORD_MAX, qjt);
+
+         // Per HAC 14.23, this operation is required at most twice
+         qjt -= division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2);
+         qjt -= division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2);
+         BOTAN_DEBUG_ASSERT(division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2) == false);
 
          shifted_y >>= BOTAN_MP_WORD_BITS;
          // Now shifted_y == y << (BOTAN_MP_WORD_BITS * (j-t-1))
 
          r -= qjt * shifted_y;
 
-         if(r.is_negative())
-            {
-            // overcorrected
-            qjt -= 1;
-            r += shifted_y;
-            }
+         // TODO this could be better
+         qjt -= r.is_negative();
+         r += static_cast<word>(r.is_negative()) * shifted_y;
 
          q_words[j-t-1] = qjt;
          }
