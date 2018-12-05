@@ -12,30 +12,39 @@ set -ev
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     if [ "$BUILD_MODE" = "valgrind" ]; then
+        sudo apt-get -qq update
         sudo apt-get install valgrind
 
     elif [ "$BUILD_MODE" = "cross-win64" ]; then
+        sudo apt-get -qq update
         sudo apt-get install wine g++-mingw-w64-x86-64
 
     elif [ "$BUILD_MODE" = "cross-arm32" ]; then
+        sudo apt-get -qq update
         sudo apt-get install qemu-user g++-arm-linux-gnueabihf
 
     elif [ "$BUILD_MODE" = "cross-arm64" ]; then
+        sudo apt-get -qq update
         sudo apt-get install qemu-user g++-aarch64-linux-gnu
 
     elif [ "$BUILD_MODE" = "cross-ppc32" ]; then
+        sudo apt-get -qq update
         sudo apt-get install qemu-user g++-powerpc-linux-gnu
 
     elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
+        sudo apt-get -qq update
         sudo apt-get install qemu-user g++-powerpc64le-linux-gnu
 
     elif [ "$BUILD_MODE" = "cross-mips64" ]; then
+        sudo apt-get -qq update
         sudo apt-get install qemu-user g++-mips64-linux-gnuabi64
 
     elif [ "$BUILD_MODE" = "lint" ]; then
+        sudo apt-get -qq update
         sudo apt-get install pylint
 
     elif [ "$BUILD_MODE" = "coverage" ]; then
+        sudo apt-get -qq update
         sudo apt-get install trousers libtspi-dev lcov python-coverage
 
         git clone --depth 1 https://github.com/randombit/botan-ci-tools
@@ -49,6 +58,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         pip install --user codecov==2.0.10
 
     elif [ "$BUILD_MODE" = "docs" ]; then
+        sudo apt-get -qq update
         sudo apt-get install doxygen python-docutils
 
         # Version of Sphinx in 16.04 is too old and dies on enum definitions
