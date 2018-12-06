@@ -138,9 +138,9 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
          }
 
       // setting to zero:
-      m_coord_x = 0;
+      m_coord_x.clear();
       m_coord_y = m_curve.get_1_rep();
-      m_coord_z = 0;
+      m_coord_z.clear();
       return;
       }
 
@@ -158,14 +158,13 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
 
    T3.mod_sub(m_coord_x, p, sub_ws);
 
-   T2 = m_coord_y;
    m_curve.mul(T2, T0, T3, ws);
-   m_curve.mul(T3, m_coord_y, T1, ws);
-   T2.mod_sub(T3, p, sub_ws);
-   m_coord_y = T2;
+   m_curve.mul(T0, m_coord_y, T1, ws);
+   T2.mod_sub(T0, p, sub_ws);
+   m_coord_y.swap(T2);
 
-   m_curve.mul(T3, m_coord_z, T4, ws);
-   m_coord_z = T3;
+   m_curve.mul(T0, m_coord_z, T4, ws);
+   m_coord_z.swap(T0);
    }
 
 void PointGFp::add(const word x_words[], size_t x_size,
@@ -226,9 +225,9 @@ void PointGFp::add(const word x_words[], size_t x_size,
          }
 
       // setting to zero:
-      m_coord_x = 0;
+      m_coord_x.clear();
       m_coord_y = m_curve.get_1_rep();
-      m_coord_z = 0;
+      m_coord_z.clear();
       return;
       }
 
@@ -354,13 +353,13 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    m_curve.mul(T0, T4, T1, ws);
    T0.mod_sub(T3, p, sub_ws);
 
-   m_coord_x = T2;
+   m_coord_x.swap(T2);
 
    m_curve.mul(T2, m_coord_y, m_coord_z, ws);
    T2.mod_mul(2, p, sub_ws);
 
-   m_coord_y = T0;
-   m_coord_z = T2;
+   m_coord_y.swap(T0);
+   m_coord_z.swap(T2);
    }
 
 // arithmetic operators

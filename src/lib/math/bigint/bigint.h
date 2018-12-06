@@ -350,7 +350,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Zeroize the BigInt. The size of the underlying register is not
      * modified.
      */
-     void clear() { m_data.set_to_zero(); }
+     void clear() { m_data.set_to_zero(); m_signedness = Positive; }
 
      /**
      * Compare this to another BigInt
