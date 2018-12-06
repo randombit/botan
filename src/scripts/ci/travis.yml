@@ -28,6 +28,7 @@ env:
     - BUILD_MODE="cross-arm64"
     - BUILD_MODE="cross-mips64"
     - BUILD_MODE="cross-win64"
+    - BUILD_MODE="gcc4.8"
     - BUILD_MODE="static"
     - BUILD_MODE="mini-shared"
     - BUILD_MODE="bsi"
@@ -76,6 +77,8 @@ matrix:
       env: BUILD_MODE="cross-ppc64"
     - compiler: clang
       env: BUILD_MODE="cross-mips64"
+    - compiler: clang
+      env: BUILD_MODE="gcc4.8"
 
    # No ARM Clang compiler on Linux
     - os: linux
