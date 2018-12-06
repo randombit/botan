@@ -553,10 +553,10 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      */
      void set_sign(Sign sign)
         {
-        if(is_zero())
-           m_signedness = Positive;
-        else
-           m_signedness = sign;
+        if(sign == Negative && is_zero())
+           sign = Positive;
+
+        m_signedness = sign;
         }
 
      /**
