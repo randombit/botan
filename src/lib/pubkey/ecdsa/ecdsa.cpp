@@ -58,7 +58,7 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_x(ecdsa.private_value())
          {
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-         m_rfc6979_hash = hash_for_emsa(emsa);
+         m_rfc6979.reset(new RFC6979_Nonce_Generator(hash_for_emsa(emsa), m_group.get_order(), m_x));
 #endif
 
          m_b = m_group.random_scalar(rng);
@@ -77,7 +77,7 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
       const BigInt& m_x;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-      std::string m_rfc6979_hash;
+      std::unique_ptr<RFC6979_Nonce_Generator> m_rfc6979;
 #endif
 
       std::vector<BigInt> m_ws;
@@ -92,7 +92,7 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    BigInt m(msg, msg_len, m_group.get_order_bits());
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-   const BigInt k = generate_rfc6979_nonce(m_x, m_group.get_order(), m, m_rfc6979_hash);
+   const BigInt k = m_rfc6979->nonce_for(m);
 #else
    const BigInt k = m_group.random_scalar(rng);
 #endif
