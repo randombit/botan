@@ -175,7 +175,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
    y.set_sign(BigInt::Positive);
 
    // Calculate shifts needed to normalize y with high bit set
-   const size_t shifts = BOTAN_MP_WORD_BITS - high_bit(y.word_at(y_words-1));
+   const size_t shifts = y.top_bits_free();
 
    y <<= shifts;
    r <<= shifts;
@@ -197,6 +197,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
 
    const word y_t0  = y.word_at(t);
    const word y_t1  = y.word_at(t-1);
+   BOTAN_DEBUG_ASSERT((y_t0 >> (BOTAN_MP_WORD_BITS-1)) == 1);
 
    for(size_t j = n; j != t; --j)
       {

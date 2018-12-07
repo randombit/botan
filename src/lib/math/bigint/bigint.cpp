@@ -273,9 +273,20 @@ size_t BigInt::bytes() const
    return round_up(bits(), 8) / 8;
    }
 
-/*
-* Count how many bits are being used
-*/
+size_t BigInt::top_bits_free() const
+   {
+   const size_t words = sig_words();
+
+   const word top_word = word_at(words - 1);
+
+   // Need to unpoison due to high_bit not being const time
+   CT::unpoison(top_word);
+
+   const size_t bits_used = high_bit(top_word);
+
+   return BOTAN_MP_WORD_BITS - bits_used;
+   }
+
 size_t BigInt::bits() const
    {
    const size_t words = sig_words();
@@ -283,12 +294,10 @@ size_t BigInt::bits() const
    if(words == 0)
       return 0;
 
-   const size_t full_words = words - 1;
-   const word top_word = word_at(full_words);
-   // Need to unpoison due to high_bit not being const time
-   CT::unpoison(top_word);
-   const size_t bits = (full_words * BOTAN_MP_WORD_BITS + high_bit(top_word));
-   return bits;
+   const size_t full_words = (words - 1) * BOTAN_MP_WORD_BITS;
+   const size_t top_bits = BOTAN_MP_WORD_BITS - top_bits_free();
+
+   return full_words + top_bits;
    }
 
 /*

@@ -408,17 +408,17 @@ bigint_sub_abs(word z[],
 /*
 * Shift Operations
 */
-inline void bigint_shl1(word x[], size_t x_size,
+inline void bigint_shl1(word x[], size_t x_size, size_t x_words,
                         size_t word_shift, size_t bit_shift)
    {
-   copy_mem(x + word_shift, x, x_size);
+   copy_mem(x + word_shift, x, x_words);
    clear_mem(x, word_shift);
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
    const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
-   for(size_t i = word_shift; i != x_size + word_shift + 1; ++i)
+   for(size_t i = word_shift; i != x_size; ++i)
       {
       const word w = x[i];
       x[i] = (w << bit_shift) | carry;
