@@ -320,8 +320,8 @@ BigInt BigInt::operator-() const
 
 size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
    {
-   if(p.is_negative())
-      throw Invalid_Argument("BigInt::reduce_below mod must be positive");
+   if(p.is_negative() || this->is_negative())
+      throw Invalid_Argument("BigInt::reduce_below both values must be positive");
 
    const size_t p_words = p.sig_words();
 
@@ -346,6 +346,29 @@ size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
       }
 
    return reductions;
+   }
+
+void BigInt::ct_reduce_below(const BigInt& mod, secure_vector<word>& ws, size_t bound)
+   {
+   if(mod.is_negative() || this->is_negative())
+      throw Invalid_Argument("BigInt::ct_reduce_below both values must be positive");
+
+   const size_t mod_words = mod.sig_words();
+
+   grow_to(mod_words);
+
+   const size_t sz = size();
+
+   ws.resize(sz);
+
+   clear_mem(ws.data(), sz);
+
+   for(size_t i = 0; i != bound; ++i)
+      {
+      word borrow = bigint_sub3(ws.data(), data(), sz, mod.data(), mod_words);
+
+      CT::Mask<word>::is_zero(borrow).select_n(mutable_data(), ws.data(), data(), sz);
+      }
    }
 
 /*
