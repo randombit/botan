@@ -411,89 +411,76 @@ bigint_sub_abs(word z[],
 inline void bigint_shl1(word x[], size_t x_size,
                         size_t word_shift, size_t bit_shift)
    {
-   if(word_shift)
-      {
-      copy_mem(x + word_shift, x, x_size);
-      clear_mem(x, word_shift);
-      }
+   copy_mem(x + word_shift, x, x_size);
+   clear_mem(x, word_shift);
 
-   if(bit_shift)
+   const auto carry_mask = CT::Mask<word>::expand(bit_shift);
+   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+
+   word carry = 0;
+   for(size_t i = word_shift; i != x_size + word_shift + 1; ++i)
       {
-      word carry = 0;
-      for(size_t j = word_shift; j != x_size + word_shift + 1; ++j)
-         {
-         word temp = x[j];
-         x[j] = (temp << bit_shift) | carry;
-         carry = (temp >> (BOTAN_MP_WORD_BITS - bit_shift));
-         }
+      const word w = x[i];
+      x[i] = (w << bit_shift) | carry;
+      carry = carry_mask.if_set_return(w >> carry_shift);
       }
    }
 
 inline void bigint_shr1(word x[], size_t x_size,
                         size_t word_shift, size_t bit_shift)
    {
-   if(x_size < word_shift)
+   const size_t top = x_size >= word_shift ? (x_size - word_shift) : 0;
+
+   copy_mem(x, x + word_shift, top);
+   clear_mem(x + top, std::min(word_shift, x_size));
+
+   const auto carry_mask = CT::Mask<word>::expand(bit_shift);
+   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+
+   word carry = 0;
+
+   for(size_t i = 0; i != top; ++i)
       {
-      clear_mem(x, x_size);
-      return;
-      }
-
-   if(word_shift)
-      {
-      copy_mem(x, x + word_shift, x_size - word_shift);
-      clear_mem(x + x_size - word_shift, word_shift);
-      }
-
-   if(bit_shift)
-      {
-      word carry = 0;
-
-      size_t top = x_size - word_shift;
-
-      while(top)
-         {
-         word w = x[top-1];
-         x[top-1] = (w >> bit_shift) | carry;
-         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
-
-         top--;
-         }
+      const word w = x[top - i - 1];
+      x[top-i-1] = (w >> bit_shift) | carry;
+      carry = carry_mask.if_set_return(w << carry_shift);
       }
    }
 
 inline void bigint_shl2(word y[], const word x[], size_t x_size,
                         size_t word_shift, size_t bit_shift)
    {
-   for(size_t j = 0; j != x_size; ++j)
-      y[j + word_shift] = x[j];
-   if(bit_shift)
+   copy_mem(y + word_shift, x, x_size);
+
+   const auto carry_mask = CT::Mask<word>::expand(bit_shift);
+   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+
+   word carry = 0;
+   for(size_t i = word_shift; i != x_size + word_shift + 1; ++i)
       {
-      word carry = 0;
-      for(size_t j = word_shift; j != x_size + word_shift + 1; ++j)
-         {
-         word w = y[j];
-         y[j] = (w << bit_shift) | carry;
-         carry = (w >> (BOTAN_MP_WORD_BITS - bit_shift));
-         }
+      const word w = y[i];
+      y[i] = (w << bit_shift) | carry;
+      carry = carry_mask.if_set_return(w >> carry_shift);
       }
    }
 
 inline void bigint_shr2(word y[], const word x[], size_t x_size,
                         size_t word_shift, size_t bit_shift)
    {
-   if(x_size < word_shift) return;
+   if(x_size < word_shift) // XXX
+      return;
 
-   for(size_t j = 0; j != x_size - word_shift; ++j)
-      y[j] = x[j + word_shift];
-   if(bit_shift)
+   copy_mem(y, x + word_shift, x_size - word_shift);
+
+   const auto carry_mask = CT::Mask<word>::expand(bit_shift);
+   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+
+   word carry = 0;
+   for(size_t i = x_size - word_shift; i > 0; --i)
       {
-      word carry = 0;
-      for(size_t j = x_size - word_shift; j > 0; --j)
-         {
-         word w = y[j-1];
-         y[j-1] = (w >> bit_shift) | carry;
-         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
-         }
+      word w = y[i-1];
+      y[i-1] = (w >> bit_shift) | carry;
+      carry = carry_mask.if_set_return(w << carry_shift);
       }
    }
 

@@ -318,23 +318,20 @@ word BigInt::operator%=(word mod)
 */
 BigInt& BigInt::operator<<=(size_t shift)
    {
-   if(shift)
-      {
-      const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
-      const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
-      const size_t words = sig_words();
+   const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
+   const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
+   const size_t words = sig_words();
 
-      /*
-      * FIXME - if shift_words == 0 && the top shift_bits of the top word
-      * are zero then we know that no additional word is needed and can
-      * skip the allocation.
-      */
-      const size_t needed_size = words + shift_words + (shift_bits ? 1 : 0);
+   /*
+   * FIXME - if shift_words == 0 && the top shift_bits of the top word
+   * are zero then we know that no additional word is needed and can
+   * skip the allocation.
+   */
+   const size_t needed_size = words + shift_words + (shift_bits ? 1 : 0);
 
-      m_data.grow_to(needed_size);
+   m_data.grow_to(needed_size);
 
-      bigint_shl1(m_data.mutable_data(), words, shift_words, shift_bits);
-      }
+   bigint_shl1(m_data.mutable_data(), words, shift_words, shift_bits);
 
    return (*this);
    }
@@ -344,16 +341,13 @@ BigInt& BigInt::operator<<=(size_t shift)
 */
 BigInt& BigInt::operator>>=(size_t shift)
    {
-   if(shift)
-      {
-      const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
-      const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
+   const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
+   const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
 
-      bigint_shr1(m_data.mutable_data(), m_data.size(), shift_words, shift_bits);
+   bigint_shr1(m_data.mutable_data(), m_data.size(), shift_words, shift_bits);
 
-      if(is_negative() && is_zero())
-         set_sign(Positive);
-      }
+   if(is_negative() && is_zero())
+      set_sign(Positive);
 
    return (*this);
    }
