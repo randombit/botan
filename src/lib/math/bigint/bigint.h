@@ -347,6 +347,18 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      size_t reduce_below(const BigInt& mod, secure_vector<word> &ws);
 
      /**
+     * Return *this % mod
+     *
+     * Assumes that *this is (if anything) only slightly larger than mod and
+     * performs repeated subtractions. It should not be used if *this is much
+     * larger than mod, instead use modulo operator.
+     *
+     * Performs exactly bound subtractions, so if *this is >= bound*mod then the
+     * result will not be fully reduced. If bound is zero, nothing happens.
+     */
+     void ct_reduce_below(const BigInt& mod, secure_vector<word> &ws, size_t bound);
+
+     /**
      * Zeroize the BigInt. The size of the underlying register is not
      * modified.
      */

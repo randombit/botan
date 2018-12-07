@@ -84,7 +84,8 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
 
    t1.add(ws.data(), m_mod_words + 2, BigInt::Positive);
 
-   t1.reduce_below(m_modulus, ws);
+   // Per HAC this step requires at most 2 subtractions
+   t1.ct_reduce_below(m_modulus, ws, 2);
 
    if(x.is_negative() && t1.is_nonzero())
       {
