@@ -284,9 +284,10 @@ size_t BigInt::bits() const
       return 0;
 
    const size_t full_words = words - 1;
-   const size_t bits = (full_words * BOTAN_MP_WORD_BITS + high_bit(word_at(full_words)));
+   const word top_word = word_at(full_words);
    // Need to unpoison due to high_bit not being const time
-   CT::unpoison(bits);
+   CT::unpoison(top_word);
+   const size_t bits = (full_words * BOTAN_MP_WORD_BITS + high_bit(top_word));
    return bits;
    }
 
