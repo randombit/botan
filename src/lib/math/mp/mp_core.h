@@ -467,16 +467,15 @@ inline void bigint_shl2(word y[], const word x[], size_t x_size,
 inline void bigint_shr2(word y[], const word x[], size_t x_size,
                         size_t word_shift, size_t bit_shift)
    {
-   if(x_size < word_shift) // XXX
-      return;
+   const size_t new_size = x_size < word_shift ? 0 : (x_size - word_shift);
 
-   copy_mem(y, x + word_shift, x_size - word_shift);
+   copy_mem(y, x + word_shift, new_size);
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
    const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
-   for(size_t i = x_size - word_shift; i > 0; --i)
+   for(size_t i = new_size; i > 0; --i)
       {
       word w = y[i-1];
       y[i-1] = (w >> bit_shift) | carry;
