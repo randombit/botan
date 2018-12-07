@@ -209,21 +209,20 @@ bool Test::Result::test_eq(const char* producer, const std::string& what,
       }
 
    std::vector<uint8_t> xor_diff(std::min(produced_size, expected_size));
-   size_t bits_different = 0;
+   size_t bytes_different = 0;
 
    for(size_t i = 0; i != xor_diff.size(); ++i)
       {
       xor_diff[i] = produced[i] ^ expected[i];
-      bits_different += Botan::hamming_weight(xor_diff[i]);
+      bytes_different += (xor_diff[i] > 0);
       }
 
    err << "\nProduced: " << Botan::hex_encode(produced, produced_size)
        << "\nExpected: " << Botan::hex_encode(expected, expected_size);
 
-   if(bits_different > 0)
+   if(bytes_different > 0)
       {
-      err << "\nXOR Diff: " << Botan::hex_encode(xor_diff)
-          << " (" << bits_different << " bits different)";
+      err << "\nXOR Diff: " << Botan::hex_encode(xor_diff);
       }
 
    return test_failure(err.str());

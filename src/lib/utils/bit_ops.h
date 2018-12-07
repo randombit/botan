@@ -72,23 +72,6 @@ inline size_t significant_bytes(T n)
    }
 
 /**
-* Compute Hamming weights
-* @param n an integer value
-* @return number of bits in n set to 1
-*/
-template<typename T>
-inline size_t hamming_weight(T n)
-   {
-   const uint8_t NIBBLE_WEIGHTS[] = {
-      0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
-
-   size_t weight = 0;
-   for(size_t i = 0; i != 2*sizeof(T); ++i)
-      weight += NIBBLE_WEIGHTS[(n >> (4*i)) & 0x0F];
-   return weight;
-   }
-
-/**
 * Count the trailing zero bits in n
 * @param n an integer value
 * @return maximum x st 2^x divides n
