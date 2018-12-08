@@ -180,13 +180,14 @@ void BigInt::encode_words(word out[], size_t size) const
 
 size_t BigInt::Data::calc_sig_words() const
    {
-   size_t sig = m_reg.size();
+   const size_t sz = m_reg.size();
+   size_t sig = sz;
 
    word sub = 1;
 
-   for(size_t i = 0; i != m_reg.size(); ++i)
+   for(size_t i = 0; i != sz; ++i)
       {
-      const word w = m_reg[m_reg.size() - i - 1];
+      const word w = m_reg[sz - i - 1];
       sub &= CT::Mask<word>::is_zero(w).value();
       sig -= sub;
       }
