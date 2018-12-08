@@ -92,13 +92,13 @@ inline uint32_t get_uint32(const BigInt& x, size_t i)
 #endif
    }
 
-inline void set_words(BigInt& x, size_t i, uint32_t R0, uint32_t R1)
+inline void set_words(word x[], size_t i, uint32_t R0, uint32_t R1)
    {
 #if (BOTAN_MP_WORD_BITS == 32)
-   x.set_word_at(i, R0);
-   x.set_word_at(i+1, R1);
+   x[i] = R0;
+   x[i+1] = R1;
 #else
-   x.set_word_at(i/2, (static_cast<uint64_t>(R1) << 32) | R0);
+   x[i/2] = (static_cast<uint64_t>(R1) << 32) | R0;
 #endif
    }
 
@@ -139,6 +139,8 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    x.mask_bits(192);
    x.resize(p192_limbs + 1);
 
+   word* xw = x.mutable_data();
+
    uint64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
 
@@ -150,7 +152,7 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 0, R0, R1);
+   set_words(xw, 0, R0, R1);
 
    S += S2;
    R0 = static_cast<uint32_t>(S);
@@ -160,7 +162,7 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 2, R0, R1);
+   set_words(xw, 2, R0, R1);
 
    S += S4;
    R0 = static_cast<uint32_t>(S);
@@ -170,7 +172,7 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 4, R0, R1);
+   set_words(xw, 4, R0, R1);
 
    // No underflow possible
 
@@ -237,6 +239,8 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    x.mask_bits(224);
    x.resize(p224_limbs + 1);
 
+   word* xw = x.mutable_data();
+
    int64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
 
@@ -248,7 +252,7 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 0, R0, R1);
+   set_words(xw, 0, R0, R1);
 
    S += S2;
    R0 = static_cast<uint32_t>(S);
@@ -258,7 +262,7 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 2, R0, R1);
+   set_words(xw, 2, R0, R1);
 
    S += S4;
    R0 = static_cast<uint32_t>(S);
@@ -268,13 +272,13 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 4, R0, R1);
+   set_words(xw, 4, R0, R1);
 
    S += S6;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 6, R0, 0);
+   set_words(xw, 6, R0, 0);
 
    BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow in P-224 reduce");
 
@@ -327,17 +331,19 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    const int64_t X15 = get_uint32(x, 15);
 
    // Adds 6 * P-256 to prevent underflow
-   const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - X11 - X12 - X13 - X14;
-   const int64_t S1 = 0xFFFFFFFF + X01 + X09 + X10 - X12 - X13 - X14 - X15;
-   const int64_t S2 = 0xFFFFFFFF + X02 + X10 + X11 - X13 - X14 - X15;
+   const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - (X11 + X12 + X13) - X14;
+   const int64_t S1 = 0xFFFFFFFF + X01 + X09 + X10 - X12 - (X13 + X14 + X15);
+   const int64_t S2 = 0xFFFFFFFF + X02 + X10 + X11 - (X13 + X14 + X15);
    const int64_t S3 = 0x00000005 + X03 + (X11 + X12)*2 + X13 - X15 - X08 - X09;
    const int64_t S4 = 0x00000000 + X04 + (X12 + X13)*2 + X14 - X09 - X10;
    const int64_t S5 = 0x00000000 + X05 + (X13 + X14)*2 + X15 - X10 - X11;
    const int64_t S6 = 0x00000006 + X06 + X13 + X14*3 + X15*2 - X08 - X09;
-   const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - X11 - X12 - X13;
+   const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - (X11 + X12 + X13);
 
    x.mask_bits(256);
    x.resize(p256_limbs + 1);
+
+   word* xw = x.mutable_data();
 
    int64_t S = 0;
 
@@ -351,7 +357,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 0, R0, R1);
+   set_words(xw, 0, R0, R1);
 
    S += S2;
    R0 = static_cast<uint32_t>(S);
@@ -361,7 +367,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 2, R0, R1);
+   set_words(xw, 2, R0, R1);
 
    S += S4;
    R0 = static_cast<uint32_t>(S);
@@ -371,7 +377,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 4, R0, R1);
+   set_words(xw, 4, R0, R1);
 
    S += S6;
    R0 = static_cast<uint32_t>(S);
@@ -380,7 +386,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    S += S7;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
-   set_words(x, 6, R0, R1);
+   set_words(xw, 6, R0, R1);
 
    S += 5; // the top digits of 6*P-256
 
@@ -479,6 +485,8 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    x.mask_bits(384);
    x.resize(p384_limbs + 1);
 
+   word* xw = x.mutable_data();
+
    int64_t S = 0;
 
    uint32_t R0 = 0, R1 = 0;
@@ -491,7 +499,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 0, R0, R1);
+   set_words(xw, 0, R0, R1);
 
    S += S2;
    R0 = static_cast<uint32_t>(S);
@@ -501,7 +509,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 2, R0, R1);
+   set_words(xw, 2, R0, R1);
 
    S += S4;
    R0 = static_cast<uint32_t>(S);
@@ -511,7 +519,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 4, R0, R1);
+   set_words(xw, 4, R0, R1);
 
    S += S6;
    R0 = static_cast<uint32_t>(S);
@@ -521,7 +529,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 6, R0, R1);
+   set_words(xw, 6, R0, R1);
 
    S += S8;
    R0 = static_cast<uint32_t>(S);
@@ -531,7 +539,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 8, R0, R1);
+   set_words(xw, 8, R0, R1);
 
    S += SA;
    R0 = static_cast<uint32_t>(S);
@@ -541,7 +549,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 10, R0, R1);
+   set_words(xw, 10, R0, R1);
 
    BOTAN_ASSERT(S >= 0 && S <= 4, "Expected overflow in P-384 reduction");
 
