@@ -8,6 +8,7 @@
 #include <botan/mdx_hash.h>
 #include <botan/exceptn.h>
 #include <botan/loadstor.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -20,13 +21,17 @@ MDx_HashFunction::MDx_HashFunction(size_t block_len,
                                    uint8_t cnt_size) :
    m_pad_char(bit_big_endian == true ? 0x80 : 0x01),
    m_counter_size(cnt_size),
+   m_block_bits(ceil_log2(block_len)),
    m_count_big_endian(byte_big_endian),
-   m_block_len(block_len),
    m_count(0),
-   m_buffer(m_block_len),
+   m_buffer(block_len),
    m_position(0)
    {
-   if(m_counter_size < 8 || m_counter_size > m_block_len)
+   if(!is_power_of_2(block_len))
+      throw Invalid_Argument("MDx_HashFunction block length must be a power of 2");
+   if(m_block_bits < 3 || m_block_bits > 16)
+      throw Invalid_Argument("MDx_HashFunction block size too large or too small");
+   if(m_counter_size < 8 || m_counter_size > block_len)
       throw Invalid_State("MDx_HashFunction invalid counter length");
    }
 
@@ -44,30 +49,33 @@ void MDx_HashFunction::clear()
 */
 void MDx_HashFunction::add_data(const uint8_t input[], size_t length)
    {
+   const size_t block_len = static_cast<size_t>(1) << m_block_bits;
+
    m_count += length;
 
    if(m_position)
       {
       buffer_insert(m_buffer, m_position, input, length);
 
-      if(m_position + length >= m_block_len)
+      if(m_position + length >= block_len)
          {
          compress_n(m_buffer.data(), 1);
-         input += (m_block_len - m_position);
-         length -= (m_block_len - m_position);
+         input += (block_len - m_position);
+         length -= (block_len - m_position);
          m_position = 0;
          }
       }
 
-   const size_t full_blocks = length / m_block_len;
-   const size_t remaining   = length % m_block_len;
+   // Just in case the compiler can't figure out block_len is a power of 2
+   const size_t full_blocks = length >> m_block_bits;
+   const size_t remaining   = length & (block_len - 1);
 
    if(full_blocks > 0)
       {
       compress_n(input, full_blocks);
       }
 
-   buffer_insert(m_buffer, m_position, input + full_blocks * m_block_len, remaining);
+   buffer_insert(m_buffer, m_position, input + full_blocks * block_len, remaining);
    m_position += remaining;
    }
 
@@ -76,16 +84,18 @@ void MDx_HashFunction::add_data(const uint8_t input[], size_t length)
 */
 void MDx_HashFunction::final_result(uint8_t output[])
    {
-   clear_mem(&m_buffer[m_position], m_block_len - m_position);
+   const size_t block_len = static_cast<size_t>(1) << m_block_bits;
+
+   clear_mem(&m_buffer[m_position], block_len - m_position);
    m_buffer[m_position] = m_pad_char;
 
-   if(m_position >= m_block_len - m_counter_size)
+   if(m_position >= block_len - m_counter_size)
       {
       compress_n(m_buffer.data(), 1);
       zeroise(m_buffer);
       }
 
-   write_count(&m_buffer[m_block_len - m_counter_size]);
+   write_count(&m_buffer[block_len - m_counter_size]);
 
    compress_n(m_buffer.data(), 1);
    copy_out(output);

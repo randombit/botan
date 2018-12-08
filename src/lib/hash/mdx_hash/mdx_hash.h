@@ -19,7 +19,8 @@ class BOTAN_PUBLIC_API(2,0) MDx_HashFunction : public HashFunction
    {
    public:
       /**
-      * @param block_length is the number of bytes per block
+      * @param block_length is the number of bytes per block, which must
+      *        be a power of 2 and at least 8.
       * @param big_byte_endian specifies if the hash uses big-endian bytes
       * @param big_bit_endian specifies if the hash uses big-endian bits
       * @param counter_size specifies the size of the counter var in bytes
@@ -57,8 +58,8 @@ class BOTAN_PUBLIC_API(2,0) MDx_HashFunction : public HashFunction
    private:
       const uint8_t m_pad_char;
       const uint8_t m_counter_size;
+      const uint8_t m_block_bits;
       const bool m_count_big_endian;
-      const size_t m_block_len;
 
       uint64_t m_count;
       secure_vector<uint8_t> m_buffer;
