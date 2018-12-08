@@ -152,9 +152,6 @@ word operator%(const BigInt& n, word mod)
 */
 BigInt operator<<(const BigInt& x, size_t shift)
    {
-   if(shift == 0)
-      return x;
-
    const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
                 shift_bits  = shift % BOTAN_MP_WORD_BITS;
 
@@ -170,15 +167,9 @@ BigInt operator<<(const BigInt& x, size_t shift)
 */
 BigInt operator>>(const BigInt& x, size_t shift)
    {
-   if(shift == 0)
-      return x;
-
    const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
    const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
    const size_t x_sw = x.sig_words();
-
-   if(shift_words >= x_sw)
-      return 0;
 
    BigInt y(x.sign(), x_sw - shift_words);
    bigint_shr2(y.mutable_data(), x.data(), x_sw, shift_words, shift_bits);

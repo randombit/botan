@@ -604,6 +604,13 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      size_t bits() const;
 
      /**
+     * Get the number of high bits unset in the top (allocated) word
+     * of this integer. Returns BOTAN_MP_WORD_BITS only iff *this is
+     * zero. Ignores sign.
+     */
+     size_t top_bits_free() const;
+
+     /**
      * Return a mutable pointer to the register
      * @result a pointer to the start of the internal register
      */
