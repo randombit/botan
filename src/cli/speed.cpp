@@ -1743,6 +1743,8 @@ class Speed final : public Command
          std::unique_ptr<Timer> sig_timer = make_timer(nm + " " + padding, provider, "sign");
          std::unique_ptr<Timer> ver_timer = make_timer(nm + " " + padding, provider, "verify");
 
+         size_t invalid_sigs = 0;
+
          while(ver_timer->under(msec) || sig_timer->under(msec))
             {
             if(signature.empty() || sig_timer->under(msec))
@@ -1768,7 +1770,7 @@ class Speed final : public Command
 
                if(!verified)
                   {
-                  error_output() << "Correct signature rejected in PK signature bench\n";
+                  invalid_sigs += 1;
                   }
 
                const bool verified_bad = ver_timer->run([&]
@@ -1782,6 +1784,9 @@ class Speed final : public Command
                   }
                }
             }
+
+         if(invalid_sigs > 0)
+            error_output() << invalid_sigs << " generated signatures rejected in PK signature bench\n";
 
          const size_t events = std::min(sig_timer->events(), ver_timer->events());
 
