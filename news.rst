@@ -24,7 +24,7 @@ Version 2.9.0, Not Yet Released
 * Many more operations in BigInt and ECC arithmetic are either fully const time
   or avoid problematic branches that could potentially be exploited in a side
   channel attack. (GH #1738 #1750 #1754 #1755 #1757 #1758 #1759 #1762 #1765
-  #1770 #1773)
+  #1770 #1773 #1774)
 
 * Cache the significant words of a BigInt (GH #1734)
 
