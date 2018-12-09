@@ -188,6 +188,8 @@ CLI
 * `encrypt` / `decrypt` tools providing password based file encryption
 * Clone of `minisign` signature utility
 * Implementation of `tlsdate`
+* Utils for base32 and base58 encoding
+* TOTP calculator
 
 Documentation
 ----------------------------------------
