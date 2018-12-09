@@ -33,7 +33,6 @@ class BigInt_Unit_Tests final : public Test
          std::vector<Test::Result> results;
 
          results.push_back(test_bigint_sizes());
-         results.push_back(test_random_integer());
          results.push_back(test_random_prime());
          results.push_back(test_encode());
          results.push_back(test_bigint_io());
@@ -133,51 +132,6 @@ class BigInt_Unit_Tests final : public Test
          result.test_eq("Safe prime size", safe_prime.bits(), safe_prime_bits);
          result.confirm("P is prime", Botan::is_prime(safe_prime, Test::rng()));
          result.confirm("(P-1)/2 is prime", Botan::is_prime((safe_prime - 1) / 2, Test::rng()));
-
-         return result;
-         }
-
-      Test::Result test_random_integer()
-         {
-         Test::Result result("BigInt::random_integer");
-
-         result.start_timer();
-
-         const size_t SAMPLES = 500000;
-
-         const uint64_t range_min = 0;
-         const uint64_t range_max = 100;
-
-         /*
-         * We have a range of 0...100 thus 100 degrees of freedom.
-         * This bound is 99.9% probability of non-uniform
-         */
-         const double CHI_CRIT = 148.230;
-
-         std::map<uint32_t, size_t> counts;
-
-         for(size_t i = 0; i != SAMPLES; ++i)
-            {
-            uint32_t r = BigInt::random_integer(Test::rng(), range_min, range_max).to_u32bit();
-            counts[r] += 1;
-            }
-
-         // Chi-square test
-         const double expected = static_cast<double>(SAMPLES) / (range_max - range_min);
-         double chi2 = 0;
-
-         for(auto sample : counts)
-            {
-            const double count = static_cast<double>(sample.second);
-            chi2 += ((count - expected)*(count - expected)) / expected;
-            }
-
-         if(chi2 >= CHI_CRIT)
-            result.test_failure("Failed Chi-square test, value " + std::to_string(chi2));
-         else
-            result.test_success("Passed Chi-square test, value " + std::to_string(chi2));
-
-         result.end_timer();
 
          return result;
          }
