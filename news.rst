@@ -29,6 +29,8 @@ Version 2.9.0, Not Yet Released
 * Several optimizations for BigInt and ECC, improving ECDSA performance by as
   much as 20%. (GH #1734 #1737 #1777 #1750 #1737)
 
+* Add base58 encoding/decoding
+
 * In the command line interface, add support for reading passphrases from the
   terminal with echo disabled (GH #1756)
 
