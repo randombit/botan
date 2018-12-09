@@ -381,49 +381,33 @@ BigInt inverse_euclid(const BigInt& n, const BigInt& mod)
    return D;
    }
 
-word monty_inverse(word input)
+word monty_inverse(word a)
    {
-   if(input == 0)
-      throw Invalid_Argument("monty_inverse: divide by zero");
+   if(a % 2 == 0)
+      throw Invalid_Argument("monty_inverse only valid for odd integers");
 
-   word b = input;
-   word x2 = 1, x1 = 0, y2 = 0, y1 = 1;
+   /*
+   * From "A New Algorithm for Inversion mod p^k" by Çetin Kaya Koç
+   * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
+   */
 
-   // First iteration, a = n+1
-   word q = bigint_divop(1, 0, b);
-   word r = (MP_WORD_MAX - q*b) + 1;
-   word x = x2 - q*x1;
-   word y = y2 - q*y1;
+   word b = 1;
+   word r = 0;
 
-   word a = b;
-   b = r;
-   x2 = x1;
-   x1 = x;
-   y2 = y1;
-   y1 = y;
-
-   while(b > 0)
+   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
       {
-      q = a / b;
-      r = a - q*b;
-      x = x2 - q*x1;
-      y = y2 - q*y1;
+      const word bi = b % 2;
+      r >>= 1;
+      r += bi << (BOTAN_MP_WORD_BITS - 1);
 
-      a = b;
-      b = r;
-      x2 = x1;
-      x1 = x;
-      y2 = y1;
-      y1 = y;
+      b -= a * bi;
+      b >>= 1;
       }
 
-   const word check = y2 * input;
-   BOTAN_ASSERT_EQUAL(check, 1, "monty_inverse result is inverse of input");
-
    // Now invert in addition space
-   y2 = (MP_WORD_MAX - y2) + 1;
+   r = (MP_WORD_MAX - r) + 1;
 
-   return y2;
+   return r;
    }
 
 /*

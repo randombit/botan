@@ -150,8 +150,8 @@ BigInt BOTAN_PUBLIC_API(2,0) power_mod(const BigInt& b,
 BigInt BOTAN_PUBLIC_API(2,0) ressol(const BigInt& x, const BigInt& p);
 
 /*
-* Compute -input^-1 mod 2^MP_WORD_BITS. Returns zero if input
-* is even. If input is odd, input and 2^n are relatively prime
+* Compute -input^-1 mod 2^MP_WORD_BITS. Throws an exception if input
+* is even. If input is odd, then input and 2^n are relatively prime
 * and an inverse exists.
 */
 word BOTAN_PUBLIC_API(2,0) monty_inverse(word input);
