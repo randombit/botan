@@ -27,6 +27,10 @@
    #include <botan/base32.h>
 #endif
 
+#if defined(BOTAN_HAS_BASE58_CODEC)
+   #include <botan/base58.h>
+#endif
+
 #if defined(BOTAN_HAS_POLY_DBL)
    #include <botan/internal/poly_dbl.h>
 #endif
@@ -456,6 +460,98 @@ class Base32_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("base32", Base32_Tests);
+
+#endif
+
+#if defined(BOTAN_HAS_BASE58_CODEC)
+
+class Base58_Tests final : public Text_Based_Test
+   {
+   public:
+      Base58_Tests() : Text_Based_Test("base58.vec", "Base58", "Binary") {}
+
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override
+         {
+         Test::Result result("Base58");
+
+         const bool is_valid = (type == "valid");
+         const std::string base58 = vars.get_req_str("Base58");
+
+         try
+            {
+            if(is_valid)
+               {
+               const std::vector<uint8_t> binary = vars.get_req_bin("Binary");
+               result.test_eq("base58 decoding", Botan::base58_decode(base58), binary);
+               result.test_eq("base58 encoding", Botan::base58_encode(binary), base58);
+               }
+            else
+               {
+               auto res = Botan::base58_decode(base58);
+               result.test_failure("decoded invalid base58 to " + Botan::hex_encode(res));
+               }
+            }
+         catch(std::exception& e)
+            {
+            if(is_valid)
+               {
+               result.test_failure("rejected valid base58", e.what());
+               }
+            else
+               {
+               result.test_note("rejected invalid base58");
+               }
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("base58", Base58_Tests);
+
+class Base58_Check_Tests final : public Text_Based_Test
+   {
+   public:
+      Base58_Check_Tests() : Text_Based_Test("base58c.vec", "Base58", "Binary") {}
+
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override
+         {
+         Test::Result result("Base58 Check");
+
+         const bool is_valid = (type == "valid");
+         const std::string base58 = vars.get_req_str("Base58");
+
+         try
+            {
+            if(is_valid)
+               {
+               const std::vector<uint8_t> binary = vars.get_req_bin("Binary");
+               result.test_eq("base58 decoding", Botan::base58_check_decode(base58), binary);
+               result.test_eq("base58 encoding", Botan::base58_check_encode(binary), base58);
+               }
+            else
+               {
+               auto res = Botan::base58_check_decode(base58);
+               result.test_failure("decoded invalid base58c to " + Botan::hex_encode(res));
+               }
+            }
+         catch(std::exception& e)
+            {
+            if(is_valid)
+               {
+               result.test_failure("rejected valid base58c", e.what());
+               }
+            else
+               {
+               result.test_note("rejected invalid base58c");
+               }
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("base58c", Base58_Check_Tests);
 
 #endif
 

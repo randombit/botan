@@ -1,0 +1,68 @@
+
+# Test data from https://github.com/nham/rust-base58/blob/master/src/lib.rs
+
+[valid]
+
+Binary =
+Base58 =
+
+Binary = 20
+Base58 = Z
+
+Binary = 2d
+Base58 = n
+
+Binary = 30
+Base58 = q
+
+Binary = 31
+Base58 = r
+
+Binary = 39
+Base58 = z
+
+Binary = 2D31
+Base58 = 4SU
+
+Binary = 3131
+Base58 = 4k8
+
+Binary = 616263
+Base58 = ZiCa
+
+Binary = 31323334353938373630
+Base58 = 3mJr7AoUXx2Wqd
+
+Binary = 6162636465666768696a6b6c6d6e6f707172737475767778797a
+Base58 = 3yxU3u1igY8WkgtjK92fbJQCd4BZiiT1v25f
+
+Binary = 00010966776006953D5567439E5E39F86A0D273BEED61967F6
+Base58 = 16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM
+
+Binary = 00616263
+Base58 = 1ZiCa
+
+Binary = 0000616263
+Base58 = 11ZiCa
+
+Binary = 000000616263
+Base58 = 111ZiCa
+
+Binary = 00000000616263
+Base58 = 1111ZiCa
+
+[invalid]
+
+Base58 = 0
+Base58 = O
+Base58 = I
+Base58 = l
+Base58 = 3mJr0
+Base58 = O3yxU
+Base58 = 3sNI
+Base58 = 4kl8
+Base58 = s!5<
+Base58 = t$@mX<*
+Base58 = AreYouEvenLookingAtThese?
+
+

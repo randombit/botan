@@ -1,0 +1,8 @@
+<defines>
+BASE58_CODEC -> 20181209
+</defines>
+
+<requires>
+sha2_32
+bigint
+</requires>
