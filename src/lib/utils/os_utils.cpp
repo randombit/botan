@@ -54,13 +54,16 @@ void secure_scrub_memory(void* ptr, size_t n)
 #elif defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
    ::explicit_bzero(ptr, n);
 
+#elif defined(BOTAN_TARGET_OS_HAS_EXPLICIT_MEMSET)
+   (void)::explicit_memset(ptr, 0, n);
+
 #elif defined(BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO) && (BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO == 1)
    /*
    Call memset through a static volatile pointer, which the compiler
    should not elide. This construct should be safe in conforming
    compilers, but who knows. I did confirm that on x86-64 GCC 6.1 and
    Clang 3.8 both create code that saves the memset address in the
-   data segment and uncondtionally loads and jumps to that address.
+   data segment and unconditionally loads and jumps to that address.
    */
    static void* (*const volatile memset_ptr)(void*, int, size_t) = std::memset;
    (memset_ptr)(ptr, 0, n);
