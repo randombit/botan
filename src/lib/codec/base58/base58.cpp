@@ -150,7 +150,7 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length)
       }
 
    std::vector<uint8_t> output(v.bytes() + leading_zeros);
-   v.binary_encode(&output[leading_zeros]);
+   v.binary_encode(output.data() + leading_zeros);
    return output;
    }
 
