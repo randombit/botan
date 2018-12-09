@@ -146,6 +146,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                 flags += ['--cpu=arm64', '--cc-abi-flags=-arch arm64 -stdlib=libc++']
             else:
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
+        elif target == 'cross-i386':
+            flags += ['--cpu=x86_32']
+
         elif target == 'cross-win64':
             # MinGW in 16.04 is lacking std::mutex for unknown reason
             cc_bin = 'x86_64-w64-mingw32-g++'

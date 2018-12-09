@@ -15,13 +15,17 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get -qq update
         sudo apt-get install valgrind
 
-    elif [ "$BUILD_MODE" = "cross-win64" ]; then
-        sudo apt-get -qq update
-        sudo apt-get install wine g++-mingw-w64-x86-64
-
     elif [ "$BUILD_MODE" = "gcc4.8" ]; then
         sudo apt-get -qq update
         sudo apt-get install g++-4.8
+
+    elif [ "$BUILD_MODE" = "cross-i386" ]; then
+        sudo apt-get -qq update
+        sudo apt-get install g++-multilib linux-libc-dev libc6-dev-i386
+
+    elif [ "$BUILD_MODE" = "cross-win64" ]; then
+        sudo apt-get -qq update
+        sudo apt-get install wine g++-mingw-w64-x86-64
 
     elif [ "$BUILD_MODE" = "cross-arm32" ]; then
         sudo apt-get -qq update
