@@ -22,6 +22,7 @@ env:
     - BUILD_MODE="fuzzers"
     - BUILD_MODE="coverage"
     - BUILD_MODE="valgrind"
+    - BUILD_MODE="cross-i386"
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
     - BUILD_MODE="cross-arm32"
@@ -77,6 +78,8 @@ matrix:
       env: BUILD_MODE="cross-ppc64"
     - compiler: clang
       env: BUILD_MODE="cross-mips64"
+    - compiler: clang
+      env: BUILD_MODE="cross-i386"
     - compiler: clang
       env: BUILD_MODE="gcc4.8"
 
