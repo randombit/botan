@@ -41,6 +41,8 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<c
    m_window_bits(window_bits == 0 ? 4 : window_bits),
    m_const_time(const_time)
    {
+   BOTAN_ARG_CHECK(g < m_params->p(), "Montygomery base too big");
+
    if(m_window_bits < 1 || m_window_bits > 12) // really even 8 is too large ...
       throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
 

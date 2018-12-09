@@ -230,8 +230,9 @@ Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params> pa
       }
    else
       {
+      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
       secure_vector<word> ws;
-      m_v = m_params->mul(v % m_params->p(), m_params->R2(), ws);
+      m_v = m_params->mul(v, m_params->R2(), ws);
       }
    }
 
@@ -243,8 +244,9 @@ Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
    {
    if(redc_needed)
       {
+      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
       secure_vector<word> ws;
-      m_v = m_params->mul(m_v % m_params->p(), m_params->R2(), ws);
+      m_v = m_params->mul(m_v, m_params->R2(), ws);
       }
    }
 
@@ -256,8 +258,9 @@ Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
    {
    if(redc_needed)
       {
+      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
       secure_vector<word> ws;
-      m_v = m_params->mul(m_v % m_params->p(), m_params->R2(), ws);
+      m_v = m_params->mul(m_v, m_params->R2(), ws);
       }
    }
 

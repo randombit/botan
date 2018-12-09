@@ -103,7 +103,8 @@ srp6_client_agree(const std::string& identifier,
 
    const BigInt x = compute_x(hash_id, identifier, password, salt);
 
-   const BigInt S = power_mod((B - (k * power_mod(g, x, p))) % p, (a + (u * x)), p);
+   const BigInt S = power_mod(group.mod_p(B - (k * power_mod(g, x, p))),
+                              group.mod_p(a + (u * x)), p);
 
    const SymmetricKey Sk(BigInt::encode_1363(S, p_bytes));
 

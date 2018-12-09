@@ -238,21 +238,26 @@ class RSA_Private_Operation
 
          const BigInt d1_mask(m_blinder.rng(), m_blinding_bits);
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+#if defined(BOTAN_TARGET_OS_HAS_THREADS) && !defined(BOTAN_HAS_VALGRIND)
+   #define BOTAN_RSA_USE_ASYNC
+#endif
+
+
+#if defined(BOTAN_RSA_USE_ASYNC)
          auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask, powm_window]() {
-               const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
-               auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
-               return monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
-            });
-#else
+#endif
          const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
-         auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
+         auto powm_d1_p = monty_precompute(m_monty_p, m_mod_p.reduce(m), powm_window);
          BigInt j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
+
+#if defined(BOTAN_RSA_USE_ASYNC)
+         return j1;
+         });
 #endif
 
          const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
          const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
-         auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
+         auto powm_d2_q = monty_precompute(m_monty_q, m_mod_q.reduce(m), powm_window);
          const BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
 
          /*
@@ -263,7 +268,7 @@ class RSA_Private_Operation
          * m = j2 + h*q
          */
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+#if defined(BOTAN_RSA_USE_ASYNC)
          BigInt j1 = future_j1.get();
 #endif
 

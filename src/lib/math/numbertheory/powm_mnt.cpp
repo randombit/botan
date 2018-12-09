@@ -22,7 +22,7 @@ void Montgomery_Exponentiator::set_exponent(const BigInt& exp)
 void Montgomery_Exponentiator::set_base(const BigInt& base)
    {
    size_t window_bits = Power_Mod::window_bits(m_e.bits(), base.bits(), m_hints);
-   m_monty = monty_precompute(m_monty_params, base, window_bits);
+   m_monty = monty_precompute(m_monty_params, m_mod_p.reduce(base), window_bits);
    }
 
 BigInt Montgomery_Exponentiator::execute() const
