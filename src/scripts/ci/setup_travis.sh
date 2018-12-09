@@ -21,7 +21,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     elif [ "$BUILD_MODE" = "gcc4.8" ]; then
         sudo apt-get -qq update
-        sudo apt-get install g++-4.8
+        sudo apt-get install g++-4.8-multilib
 
     elif [ "$BUILD_MODE" = "cross-arm32" ]; then
         sudo apt-get -qq update

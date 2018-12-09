@@ -184,6 +184,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
 
         if target == 'gcc4.8':
             cc_bin = 'g++-4.8'
+            flags += ['--cpu=x86_32']
 
         if target_os in ['osx', 'linux']:
             flags += ['--with-bzip2', '--with-sqlite', '--with-zlib']
