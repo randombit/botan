@@ -53,7 +53,7 @@ class Character_Table
             {
             const uint8_t b = static_cast<uint8_t>(m_alphabet[i]);
             BOTAN_ASSERT(m_tab[b] == 0x80, "No duplicate chars");
-            m_tab[b] = i;
+            m_tab[b] = static_cast<uint8_t>(i);
             }
          }
 

@@ -118,7 +118,8 @@ class TSS_Generation_Tests final : public Text_Based_Test
          Fixed_Output_RNG fixed_rng(rng_data);
 
          std::vector<Botan::RTSS_Share> shares =
-            Botan::RTSS_Share::split(M, N, input.data(), input.size(), id, hash, fixed_rng);
+            Botan::RTSS_Share::split(M, N, input.data(), static_cast<uint16_t>(input.size()),
+                                     id, hash, fixed_rng);
 
          result.test_eq("Expected number of shares", shares.size(), N);
 

@@ -41,13 +41,13 @@ class HOTP_KAT_Tests final : public Text_Based_Test
             return {result};
 
          const std::vector<uint8_t> key = vars.get_req_bin("Key");
-         const size_t otp = vars.get_req_sz("OTP");
+         const uint32_t otp = static_cast<uint32_t>(vars.get_req_sz("OTP"));
          const uint64_t counter = vars.get_req_sz("Counter");
          const size_t digits = vars.get_req_sz("Digits");
 
          Botan::HOTP hotp(key, hash_algo, digits);
 
-         result.test_eq("OTP", hotp.generate_hotp(counter), otp);
+         result.test_int_eq("OTP", hotp.generate_hotp(counter), otp);
 
          std::pair<bool, uint64_t> otp_res = hotp.verify_hotp(otp, counter, 0);
          result.test_eq("OTP verify result", otp_res.first, true);
@@ -96,7 +96,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
             return {result};
 
          const std::vector<uint8_t> key = vars.get_req_bin("Key");
-         const size_t otp = vars.get_req_sz("OTP");
+         const uint32_t otp = static_cast<uint32_t>(vars.get_req_sz("OTP"));
          const size_t digits = vars.get_req_sz("Digits");
          const size_t timestep = vars.get_req_sz("Timestep");
          const std::string timestamp = vars.get_req_str("Timestamp");
@@ -107,7 +107,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
          std::chrono::system_clock::time_point later_time = time + std::chrono::seconds(timestep);
          std::chrono::system_clock::time_point too_late = time + std::chrono::seconds(2*timestep);
 
-         result.test_eq("TOTP generate", totp.generate_totp(time), otp);
+         result.test_int_eq("TOTP generate", totp.generate_totp(time), otp);
 
          result.test_eq("TOTP verify valid", totp.verify_totp(otp, time, 0), true);
          result.test_eq("TOTP verify invalid", totp.verify_totp(otp ^ 1, time, 0), false);

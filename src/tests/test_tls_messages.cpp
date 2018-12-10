@@ -78,7 +78,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   std::vector<uint8_t> buf;
                   for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
                      {
-                     uint16_t u16type = type;
+                     uint16_t u16type = static_cast<uint16_t>(type);
                      buf.push_back(Botan::get_byte(0, u16type));
                      buf.push_back(Botan::get_byte(1, u16type));
                      }
@@ -107,7 +107,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                   std::vector<uint8_t> buf;
                   for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
                      {
-                     uint16_t u16type = type;
+                     uint16_t u16type = static_cast<uint16_t>(type);
                      buf.push_back(Botan::get_byte(0, u16type));
                      buf.push_back(Botan::get_byte(1, u16type));
                      }

@@ -71,7 +71,7 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
          for(size_t i = 0; i != ROUNDS; ++i)
             {
-            m_a += i;
+            m_a += static_cast<uint32_t>(i);
 
             m_a = Botan::rotl<9>(m_a);
             m_b ^= m_a;
@@ -184,7 +184,7 @@ int Test_Runner::run(const Test_Options& opts)
 
       const size_t failed = run_tests(req, i, opts.test_runs());
       if(failed > 0)
-         return failed;
+         return static_cast<int>(failed);
       }
 
    return 0;

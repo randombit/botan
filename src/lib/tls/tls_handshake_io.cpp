@@ -109,7 +109,7 @@ Stream_Handshake_IO::format(const std::vector<uint8_t>& msg,
 
    const size_t buf_size = msg.size();
 
-   send_buf[0] = type;
+   send_buf[0] = static_cast<uint8_t>(type);
 
    store_be24(&send_buf[1], buf_size);
 
@@ -354,7 +354,7 @@ Datagram_Handshake_IO::format_fragment(const uint8_t fragment[],
    {
    std::vector<uint8_t> send_buf(12 + frag_len);
 
-   send_buf[0] = type;
+   send_buf[0] = static_cast<uint8_t>(type);
 
    store_be24(&send_buf[1], msg_len);
 

@@ -199,13 +199,14 @@ size_t ESP_Padding::unpad(const uint8_t input[], size_t input_length) const
 
    CT::poison(input, input_length);
 
-   const size_t last_byte = input[input_length-1];
+   const uint8_t input_length_8 = static_cast<uint8_t>(input_length);
+   const uint8_t last_byte = input[input_length-1];
 
    auto bad_input = CT::Mask<uint8_t>::is_zero(last_byte) |
-      CT::Mask<uint8_t>::is_gt(last_byte, static_cast<uint8_t>(input_length));
+      CT::Mask<uint8_t>::is_gt(last_byte, input_length_8);
 
-   const size_t pad_pos = input_length - last_byte;
-   size_t i = input_length - 1;
+   const uint8_t pad_pos = input_length_8 - last_byte;
+   size_t i = input_length_8 - 1;
    while(i)
       {
       const auto in_range = CT::Mask<size_t>::is_gt(i, pad_pos);
@@ -216,7 +217,7 @@ size_t ESP_Padding::unpad(const uint8_t input[], size_t input_length) const
       }
 
    CT::unpoison(input, input_length);
-   return bad_input.select_and_unpoison(input_length, pad_pos);
+   return bad_input.select_and_unpoison(input_length_8, pad_pos);
    }
 
 

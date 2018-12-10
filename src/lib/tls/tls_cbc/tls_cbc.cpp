@@ -337,7 +337,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, 
    const uint16_t current_compressions = ((L2 + block_size - 1 - max_bytes_in_first_block) / block_size);
    // number of additional compressions we have to perform
    const uint16_t add_compressions = max_compresssions - current_compressions;
-   const uint8_t equal = CT::Mask<uint16_t>::is_equal(max_compresssions, current_compressions).if_set_return(1);
+   const uint16_t equal = CT::Mask<uint16_t>::is_equal(max_compresssions, current_compressions).if_set_return(1);
    // We compute the data length we need to achieve the number of compressions.
    // If there are no compressions, we just add 55/111 dummy bytes so that no
    // compression is performed.
@@ -365,8 +365,11 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
    if(use_encrypt_then_mac())
       {
       const size_t enc_size = record_len - tag_size();
+      const size_t enc_iv_size = enc_size + iv_size();
 
-      mac().update(assoc_data_with_len(iv_size() + enc_size));
+      BOTAN_ASSERT_NOMSG(enc_iv_size <= 0xFFFF);
+
+      mac().update(assoc_data_with_len(enc_iv_size));
       if(iv_size() > 0)
          {
          mac().update(cbc_state());
@@ -418,7 +421,10 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       (sending empty records, instead of 1/(n-1) splitting)
       */
 
-      const auto size_ok_mask = CT::Mask<uint16_t>::is_lte(tag_size() + pad_size, record_len);
+      // We know the cast cannot overflow as pad_size <= 256 && tag_size <= 32
+      const auto size_ok_mask = CT::Mask<uint16_t>::is_lte(
+         static_cast<uint16_t>(tag_size() + pad_size), record_len);
+
       pad_size = size_ok_mask.if_set_return(pad_size);
 
       CT::unpoison(record_contents, record_len);
