@@ -139,6 +139,8 @@ New C APIs
 * Expose NIST key wrap with padding
 * Expose secret sharing
 * Expose deterministic PRNG
+* base32
+* base58
 
 Python
 ----------------
@@ -163,6 +165,10 @@ Build/Test
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
   debug info during CI
+* Build for Android in CI
+* Support hardcoding all test vectors into the botan-test binary
+  so it can run as a standalone item (copied to a device, etc)
+* Run iOS binary under simulator in CI
 * Run the TPM tests against an emulator
   (https://github.com/PeterHuewe/tpm-emulator)
 * Add clang-tidy, clang-analyzer, cppcheck to CI
