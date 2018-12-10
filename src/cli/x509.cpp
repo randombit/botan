@@ -262,9 +262,9 @@ class Gen_Self_Signed final : public Command
             throw CLI_Error("Failed to load key from " + get_arg("key"));
             }
 
-         const size_t days = get_arg_sz("days");
+         const uint32_t lifetime = static_cast<uint32_t>(get_arg_sz("days") * 24 * 60 * 60);
 
-         Botan::X509_Cert_Options opts("", days * 24 * 60 * 60);
+         Botan::X509_Cert_Options opts("", lifetime);
 
          opts.common_name  = get_arg("CN");
          opts.country      = get_arg("country");

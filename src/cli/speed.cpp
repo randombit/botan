@@ -2121,13 +2121,13 @@ class Speed final : public Command
             if(Botan::is_passhash9_alg_supported(alg) == false)
                continue;
 
-            for(uint8_t work_factor : { 10, 15 })
+            for(auto work_factor : { 10, 15 })
                {
                std::unique_ptr<Timer> timer = make_timer("passhash9 alg=" + std::to_string(alg) +
                                                          " wf=" + std::to_string(work_factor));
 
                timer->run([&] {
-                  Botan::generate_passhash9(password, rng(), work_factor, alg);
+                  Botan::generate_passhash9(password, rng(), static_cast<uint8_t>(work_factor), alg);
                   });
 
                record_result(timer);

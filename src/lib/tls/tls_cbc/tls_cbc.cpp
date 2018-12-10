@@ -369,7 +369,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
 
       BOTAN_ASSERT_NOMSG(enc_iv_size <= 0xFFFF);
 
-      mac().update(assoc_data_with_len(enc_iv_size));
+      mac().update(assoc_data_with_len(static_cast<uint16_t>(enc_iv_size)));
       if(iv_size() > 0)
          {
          mac().update(cbc_state());
@@ -391,7 +391,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       cbc_decrypt_record(record_contents, enc_size);
 
       // 0 if padding was invalid, otherwise 1 + padding_bytes
-      uint16_t pad_size = check_tls_cbc_padding(record_contents, enc_size);
+      const uint16_t pad_size = check_tls_cbc_padding(record_contents, enc_size);
 
       // No oracle here, whoever sent us this had the key since MAC check passed
       if(pad_size == 0)
@@ -423,7 +423,8 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
 
       // We know the cast cannot overflow as pad_size <= 256 && tag_size <= 32
       const auto size_ok_mask = CT::Mask<uint16_t>::is_lte(
-         static_cast<uint16_t>(tag_size() + pad_size), record_len);
+         static_cast<uint16_t>(tag_size() + pad_size),
+         static_cast<uint16_t>(record_len));
 
       pad_size = size_ok_mask.if_set_return(pad_size);
 
