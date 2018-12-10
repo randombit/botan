@@ -749,7 +749,7 @@ class SymmetricCipher(object):
 
     def valid_nonce_length(self, nonce_len):
         rc = botan.botan_cipher_valid_nonce_length(self.__obj, nonce_len)
-        return True if rc == 1 else False
+        return rc == 1
 
     def reset(self):
         botan.botan_cipher_reset(self.__obj)
