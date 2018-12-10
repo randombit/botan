@@ -75,11 +75,6 @@ static std::map<std::string, RSA_SignMechanism> SignMechanisms =
    {
       { "Raw", RSA_SignMechanism(MechanismType::RsaX509) },
 
-      { "EMSA1(SHA-1)", RSA_SignMechanism(MechanismType::DsaSha1) },
-      { "EMSA1(SHA-256)", RSA_SignMechanism(MechanismType::DsaSha256) },
-      { "EMSA1(SHA-384)", RSA_SignMechanism(MechanismType::DsaSha384) },
-      { "EMSA1(SHA-512)", RSA_SignMechanism(MechanismType::DsaSha512) },
-
       { "EMSA2(Raw)", RSA_SignMechanism(MechanismType::RsaX931) },
       { "EMSA2(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931) },
 
