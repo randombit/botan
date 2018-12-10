@@ -29,6 +29,90 @@
 
 namespace Botan {
 
+namespace {
+
+PointGFp recover_ecdsa_public_key(const EC_Group& group,
+                                  const std::vector<uint8_t>& msg,
+                                  const BigInt& r,
+                                  const BigInt& s,
+                                  uint8_t v)
+   {
+   if(group.get_cofactor() != 1)
+      throw Invalid_Argument("ECDSA public key recovery only supported for prime order groups");
+
+   if(v > 4)
+      throw Invalid_Argument("Unexpected v param for ECDSA public key recovery");
+
+   const uint8_t y_odd = v % 2;
+   const uint8_t add_order = v >> 1;
+
+   const BigInt& group_order = group.get_order();
+   const size_t p_bytes = group.get_p_bytes();
+
+   try
+      {
+      const BigInt e(msg.data(), msg.size(), group.get_order_bits());
+      const BigInt r_inv = group.inverse_mod_order(r);
+
+      BigInt x = r + add_order*group_order;
+
+      std::vector<uint8_t> X(p_bytes + 1);
+
+      X[0] = 0x02 | y_odd;
+      BigInt::encode_1363(&X[1], p_bytes, x);
+
+      const PointGFp R = group.OS2ECP(X);
+
+      if((R*group_order).is_zero() == false)
+         throw Decoding_Error("Unable to recover ECDSA public key");
+
+      // Compute r_inv * (s*R - eG)
+      PointGFp_Multi_Point_Precompute RG_mul(R, group.get_base_point());
+      const BigInt ne = group.mod_order(group_order - e);
+      return r_inv * RG_mul.multi_exp(s, ne);
+      }
+   catch(...)
+      {
+      // continue on and throw
+      }
+
+   throw Decoding_Error("Failed to recover ECDSA public key from signature/msg pair");
+   }
+
+}
+
+ECDSA_PublicKey::ECDSA_PublicKey(const EC_Group& group,
+                                 const std::vector<uint8_t>& msg,
+                                 const BigInt& r,
+                                 const BigInt& s,
+                                 uint8_t v) :
+   EC_PublicKey(group, recover_ecdsa_public_key(group, msg, r, s, v)) {}
+
+
+uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg,
+                                        const BigInt& r,
+                                        const BigInt& s) const
+   {
+   for(uint8_t v = 0; v != 4; ++v)
+      {
+      try
+         {
+         PointGFp R = recover_ecdsa_public_key(this->domain(), msg, r, s, v);
+
+         if(R == this->public_point())
+            {
+            return v;
+            }
+         }
+      catch(Decoding_Error&)
+         {
+         // try the next v
+         }
+      }
+
+   throw Internal_Error("Could not determine ECDSA recovery parameter");
+   }
+
 bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
                                  bool strong) const
    {
