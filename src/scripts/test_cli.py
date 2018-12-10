@@ -71,7 +71,7 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
 
     if stderr:
         if expected_stderr is None:
-            logging.error("Got output on stderr %s", stderr)
+            logging.error("Got output on stderr %s (stdout was %s)", stderr, stdout)
         else:
             if stderr != expected_stderr:
                 logging.error("Got output on stderr %s which did not match expected value %s", stderr, expected_stderr)

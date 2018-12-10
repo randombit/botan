@@ -454,6 +454,7 @@ class Speed final : public Command
          else if(format != "default")
             throw CLI_Usage_Error("Unknown --format type '" + format + "'");
 
+#if defined(BOTAN_HAS_ECC_GROUP)
          if(ecc_groups.empty())
             {
             ecc_groups = { "secp256r1", "brainpool256r1",
@@ -465,6 +466,7 @@ class Speed final : public Command
             auto all = Botan::EC_Group::known_named_groups();
             ecc_groups.assign(all.begin(), all.end());
             }
+#endif
 
          std::vector<std::string> algos = get_arg_list("algos");
 
@@ -1860,15 +1862,20 @@ class Speed final : public Command
                {
                Botan::ECDSA_PrivateKey key(rng(), group);
 
-               std::vector<uint8_t> message(group.get_order_bytes());
+               std::vector<uint8_t> message(group.get_order_bits() / 8);
                rng().randomize(message.data(), message.size());
 
                Botan::PK_Signer signer(key, rng(), "Raw");
                signer.update(message);
                std::vector<uint8_t> signature = signer.signature(rng());
 
+               Botan::PK_Verifier verifier(key, "Raw", Botan::IEEE_1363, "base");
+               verifier.update(message);
+               BOTAN_ASSERT(verifier.check_signature(signature), "Valid signature");
+
                Botan::BigInt r(signature.data(), signature.size()/2);
                Botan::BigInt s(signature.data() + signature.size()/2, signature.size()/2);
+
                const uint8_t v = key.recovery_param(message, r, s);
 
                recovery_timer->run([&]() {

@@ -71,11 +71,7 @@ PointGFp recover_ecdsa_public_key(const EC_Group& group,
       const BigInt ne = group.mod_order(group_order - e);
       return r_inv * RG_mul.multi_exp(s, ne);
       }
-   catch(Illegal_Point&)
-      {
-      // continue on and throw
-      }
-   catch(Decoding_Error&)
+   catch(...)
       {
       // continue on and throw
       }
