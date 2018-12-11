@@ -161,7 +161,7 @@ inline void fmul(uint64_t out[5], const uint64_t in[5], const uint64_t in2[5])
    out[4] = r4;
    }
 
-inline void fsquare_times(uint64_t out[5], const uint64_t in[5], size_t count)
+inline void fsquare(uint64_t out[5], const uint64_t in[5], size_t count = 1)
    {
    uint64_t r0 = in[0];
    uint64_t r1 = in[1];
@@ -199,11 +199,6 @@ inline void fsquare_times(uint64_t out[5], const uint64_t in[5], size_t count)
    out[2] = r2;
    out[3] = r3;
    out[4] = r4;
-   }
-
-inline void fsquare(uint64_t out[5], const uint64_t in[5])
-   {
-   return fsquare_times(out, in, 1);
    }
 
 /* Take a little-endian, 32-byte number and expand it into polynomial form */
@@ -279,7 +274,6 @@ inline void fcontract(uint8_t *out, const uint64_t input[5])
 *   in_q_dash: short form, destroyed
 *   in_q_minus_q_dash: short form, preserved
 */
-
 void fmonty(uint64_t result_two_q_x[5],
             uint64_t result_two_q_z[5],
             uint64_t result_q_plus_q_dash_x[5],
@@ -327,15 +321,20 @@ void fmonty(uint64_t result_two_q_x[5],
 * This function performs the swap without leaking any side-channel
 * information.
 */
-void swap_conditional(uint64_t a[5], uint64_t b[5], uint64_t iswap)
+inline void swap_conditional(uint64_t a[5], uint64_t b[5],
+                             uint64_t c[5], uint64_t d[5],
+                             uint64_t iswap)
    {
-   const uint64_t swap = static_cast<uint64_t>(-static_cast<int64_t>(iswap));
+   const uint64_t swap = 0 - iswap;
 
    for(size_t i = 0; i < 5; ++i)
       {
-      const uint64_t x = swap & (a[i] ^ b[i]);
-      a[i] ^= x;
-      b[i] ^= x;
+      const uint64_t x0 = swap & (a[i] ^ b[i]);
+      const uint64_t x1 = swap & (c[i] ^ d[i]);
+      a[i] ^= x0;
+      b[i] ^= x0;
+      c[i] ^= x1;
+      d[i] ^= x1;
       }
    }
 
@@ -369,40 +368,31 @@ void cmult(uint64_t resultx[5], uint64_t resultz[5], const uint8_t n[32], const 
       const uint64_t bit6 = (n[31 - i] >> 1) & 1;
       const uint64_t bit7 = (n[31 - i] >> 0) & 1;
 
-      swap_conditional(c, a, bit0);
-      swap_conditional(d, b, bit0);
+      swap_conditional(c, a, d, b, bit0);
       fmonty(g, h, e, f, c, d, a, b, q);
 
-      swap_conditional(g, e, bit0 ^ bit1);
-      swap_conditional(h, f, bit0 ^ bit1);
+      swap_conditional(g, e, h, f, bit0 ^ bit1);
       fmonty(c, d, a, b, g, h, e, f, q);
 
-      swap_conditional(c, a, bit1 ^ bit2);
-      swap_conditional(d, b, bit1 ^ bit2);
+      swap_conditional(c, a, d, b, bit1 ^ bit2);
       fmonty(g, h, e, f, c, d, a, b, q);
 
-      swap_conditional(g, e, bit2 ^ bit3);
-      swap_conditional(h, f, bit2 ^ bit3);
+      swap_conditional(g, e, h, f, bit2 ^ bit3);
       fmonty(c, d, a, b, g, h, e, f, q);
 
-      swap_conditional(c, a, bit3 ^ bit4);
-      swap_conditional(d, b, bit3 ^ bit4);
+      swap_conditional(c, a, d, b, bit3 ^ bit4);
       fmonty(g, h, e, f, c, d, a, b, q);
 
-      swap_conditional(g, e, bit4 ^ bit5);
-      swap_conditional(h, f, bit4 ^ bit5);
+      swap_conditional(g, e, h, f, bit4 ^ bit5);
       fmonty(c, d, a, b, g, h, e, f, q);
 
-      swap_conditional(c, a, bit5 ^ bit6);
-      swap_conditional(d, b, bit5 ^ bit6);
+      swap_conditional(c, a, d, b, bit5 ^ bit6);
       fmonty(g, h, e, f, c, d, a, b, q);
 
-      swap_conditional(g, e, bit6 ^ bit7);
-      swap_conditional(h, f, bit6 ^ bit7);
+      swap_conditional(g, e, h, f, bit6 ^ bit7);
       fmonty(c, d, a, b, g, h, e, f, q);
 
-      swap_conditional(c, a, bit7);
-      swap_conditional(d, b, bit7);
+      swap_conditional(c, a, d, b, bit7);
       }
 
    copy_mem(resultx, c, 5);
@@ -420,34 +410,34 @@ void crecip(uint64_t out[5], const uint64_t z[5])
    uint64_t c[5];
    uint64_t t0[5];
 
-   /* 2 */ fsquare(a, z); // a = 2
-   /* 8 */ fsquare_times(t0, a, 2);
-   /* 9 */ fmul(b, t0, z); // b = 9
-   /* 11 */ fmul(a, b, a); // a = 11
-   /* 22 */ fsquare(t0, a);
-   /* 2^5 - 2^0 = 31 */ fmul(b, t0, b);
-   /* 2^10 - 2^5 */ fsquare_times(t0, b, 5);
-   /* 2^10 - 2^0 */ fmul(b, t0, b);
-   /* 2^20 - 2^10 */ fsquare_times(t0, b, 10);
-   /* 2^20 - 2^0 */ fmul(c, t0, b);
-   /* 2^40 - 2^20 */ fsquare_times(t0, c, 20);
-   /* 2^40 - 2^0 */ fmul(t0, t0, c);
-   /* 2^50 - 2^10 */ fsquare_times(t0, t0, 10);
-   /* 2^50 - 2^0 */ fmul(b, t0, b);
-   /* 2^100 - 2^50 */ fsquare_times(t0, b, 50);
-   /* 2^100 - 2^0 */ fmul(c, t0, b);
-   /* 2^200 - 2^100 */ fsquare_times(t0, c, 100);
-   /* 2^200 - 2^0 */ fmul(t0, t0, c);
-   /* 2^250 - 2^50 */ fsquare_times(t0, t0, 50);
-   /* 2^250 - 2^0 */ fmul(t0, t0, b);
-   /* 2^255 - 2^5 */ fsquare_times(t0, t0, 5);
-   /* 2^255 - 21 */ fmul(out, t0, a);
+   fsquare(a, z);       // 2
+   fsquare(t0, a, 2);   // 8
+   fmul(b, t0, z);      // 9
+   fmul(a, b, a);       // 11
+   fsquare(t0, a);      // 22
+   fmul(b, t0, b);      // 2^5 - 2^0 = 31
+   fsquare(t0, b, 5);   // 2^10 - 2^5
+   fmul(b, t0, b);      // 2^10 - 2^0
+   fsquare(t0, b, 10);  // 2^20 - 2^10
+   fmul(c, t0, b);      // 2^20 - 2^0
+   fsquare(t0, c, 20);  // 2^40 - 2^20
+   fmul(t0, t0, c);     // 2^40 - 2^0
+   fsquare(t0, t0, 10); // 2^50 - 2^10
+   fmul(b, t0, b);      // 2^50 - 2^0
+   fsquare(t0, b, 50);  // 2^100 - 2^50
+   fmul(c, t0, b);      // 2^100 - 2^0
+   fsquare(t0, c, 100); // 2^200 - 2^100
+   fmul(t0, t0, c);     // 2^200 - 2^0
+   fsquare(t0, t0, 50); // 2^250 - 2^50
+   fmul(t0, t0, b);     // 2^250 - 2^0
+   fsquare(t0, t0, 5);  // 2^255 - 2^5
+   fmul(out, t0, a);    // 2^255 - 21
    }
 
 }
 
 void
-curve25519_donna(uint8_t *mypublic, const uint8_t *secret, const uint8_t *basepoint)
+curve25519_donna(uint8_t mypublic[32], const uint8_t secret[32], const uint8_t basepoint[32])
    {
    CT::poison(secret, 32);
    CT::poison(basepoint, 32);
