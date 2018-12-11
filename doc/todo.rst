@@ -25,6 +25,8 @@ Ciphers, Hashes, PBKDF
 * Extend Cascade_Cipher to support arbitrary number of ciphers
 * EME* tweakable block cipher (https://eprint.iacr.org/2004/125.pdf)
 * FFX format preserving encryption (NIST 800-38G)
+* SHA-512 using BMI2+AVX2
+* Constant time DES using BMI2
 
 Public Key Crypto, Math
 ----------------------------------------
@@ -44,7 +46,6 @@ Public Key Crypto, Math
 * X448 and Ed448
 * FHMQV
 * Use GLV decomposition to speed up secp256k1 operations
-* Recover ECDSA public key from signature/message pair (GH #664)
 
 Utility Functions
 ------------------
