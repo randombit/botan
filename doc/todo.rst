@@ -22,11 +22,13 @@ Ciphers, Hashes, PBKDF
 * Skein-MAC
 * PMAC
 * SIV-PMAC
+* GCM-SIV (draft-irtf-cfrg-gcmsiv)
 * Extend Cascade_Cipher to support arbitrary number of ciphers
 * EME* tweakable block cipher (https://eprint.iacr.org/2004/125.pdf)
 * FFX format preserving encryption (NIST 800-38G)
 * SHA-512 using BMI2+AVX2
 * Constant time DES using BMI2
+* Threefish-1024
 
 Public Key Crypto, Math
 ----------------------------------------
