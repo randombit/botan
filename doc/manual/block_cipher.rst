@@ -302,7 +302,8 @@ SHACAL2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The 256-bit block cipher used inside SHA-256. Accepts up to a 512-bit key.
-Fast and seemingly very secure, but obscure. Standardized by NESSIE.
+Fast, especially when SIMD or SHA-2 acceleration instructions are available.
+Standardized by NESSIE but otherwise obscure.
 
 Available if ``BOTAN_HAS_SHACAL2`` is defined.
 
