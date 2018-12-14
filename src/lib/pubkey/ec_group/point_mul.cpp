@@ -141,18 +141,15 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
 
       for(size_t j = 0; j != elem_size; ++j)
          {
-         const word w1 = m_W[base_addr + 0*elem_size + j];
-         const word w2 = m_W[base_addr + 1*elem_size + j];
-         const word w3 = m_W[base_addr + 2*elem_size + j];
-         const word w4 = m_W[base_addr + 3*elem_size + j];
-         const word w5 = m_W[base_addr + 4*elem_size + j];
-         const word w6 = m_W[base_addr + 5*elem_size + j];
-         const word w7 = m_W[base_addr + 6*elem_size + j];
+         const word w1 = w_is_1.if_set_return(m_W[base_addr + 0*elem_size + j]);
+         const word w2 = w_is_2.if_set_return(m_W[base_addr + 1*elem_size + j]);
+         const word w3 = w_is_3.if_set_return(m_W[base_addr + 2*elem_size + j]);
+         const word w4 = w_is_4.if_set_return(m_W[base_addr + 3*elem_size + j]);
+         const word w5 = w_is_5.if_set_return(m_W[base_addr + 4*elem_size + j]);
+         const word w6 = w_is_6.if_set_return(m_W[base_addr + 5*elem_size + j]);
+         const word w7 = w_is_7.if_set_return(m_W[base_addr + 6*elem_size + j]);
 
-         const word wl = w_is_1.select(w1, w_is_2.select(w2, w_is_3.select(w3, 0)));
-         const word wr = w_is_4.select(w4, w_is_5.select(w5, w_is_6.select(w6, w_is_7.select(w7, 0))));
-
-         Wt[j] = wl | wr;
+         Wt[j] = w1 | w2 | w3 | w4 | w5 | w6 | w7;
          }
 
       R.add_affine(&Wt[0], m_p_words, &Wt[m_p_words], m_p_words, ws);
