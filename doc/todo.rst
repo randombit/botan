@@ -35,6 +35,7 @@ Public Key Crypto, Math
 
 * Abstract representation of ECC point elements to allow specific
   implementations of the field arithmetic depending upon the curve.
+* Use NAF (joint sparse form) for ECC multi-exponentiation
 * Curves for pairings (BN-256 is widely implemented)
 * Identity based encryption
 * BBS group signatures
