@@ -76,22 +76,26 @@ void const_time_lookup(secure_vector<word>& output,
                        const std::vector<Montgomery_Int>& g,
                        size_t nibble)
    {
+   BOTAN_ASSERT_NOMSG(g.size() % 2 == 0); // actually a power of 2
+
    const size_t words = output.size();
 
    clear_mem(output.data(), output.size());
 
-   for(size_t i = 0; i != g.size(); ++i)
+   for(size_t i = 0; i != g.size(); i += 2)
       {
-      const secure_vector<word>& vec = g[i].repr().get_word_vector();
+      const secure_vector<word>& vec_0 = g[i  ].repr().get_word_vector();
+      const secure_vector<word>& vec_1 = g[i+1].repr().get_word_vector();
 
-      BOTAN_ASSERT(vec.size() >= words,
-                   "Word size as expected in const_time_lookup");
+      BOTAN_ASSERT_NOMSG(vec_0.size() >= words && vec_1.size() >= words);
 
-      const auto mask = CT::Mask<word>::is_equal(i, nibble);
+      const auto mask_0 = CT::Mask<word>::is_equal(nibble, i);
+      const auto mask_1 = CT::Mask<word>::is_equal(nibble, i+1);
 
       for(size_t w = 0; w != words; ++w)
          {
-         output[w] |= mask.if_set_return(vec[w]);
+         output[w] |= mask_0.if_set_return(vec_0[w]);
+         output[w] |= mask_1.if_set_return(vec_1[w]);
          }
       }
    }
