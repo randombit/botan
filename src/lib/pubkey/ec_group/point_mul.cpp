@@ -57,25 +57,28 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
    * the size of the prime modulus. In all cases they are at most 1 bit
    * longer. The +1 compensates for this.
    */
-   const size_t T_bits = round_up(p_bits + PointGFp_SCALAR_BLINDING_BITS + 1, 2) / 2;
+   const size_t T_bits = round_up(p_bits + PointGFp_SCALAR_BLINDING_BITS + 1, WINDOW_BITS) / WINDOW_BITS;
 
-   std::vector<PointGFp> T(3*T_bits);
-   T.resize(3*T_bits);
+   std::vector<PointGFp> T(WINDOW_SIZE*T_bits);
 
-   T[0] = base;
-   T[1] = T[0];
-   T[1].mult2(ws);
-   T[2] = T[1];
-   T[2].add(T[0], ws);
+   PointGFp g = base;
+   PointGFp g4;
 
-   for(size_t i = 1; i != T_bits; ++i)
+   for(size_t i = 0; i != T_bits; i++)
       {
-      T[3*i+0] = T[3*i - 2];
-      T[3*i+0].mult2(ws);
-      T[3*i+1] = T[3*i+0];
-      T[3*i+1].mult2(ws);
-      T[3*i+2] = T[3*i+1];
-      T[3*i+2].add(T[3*i+0], ws);
+      PointGFp g2 = g.double_of(ws);
+      g4 = g2.double_of(ws);
+
+      T[7*i+0] = g;
+      T[7*i+1] = std::move(g2);
+      T[7*i+2] = T[7*i+1].plus(T[7*i+0], ws); // g2+g
+      T[7*i+3] = g4;
+      T[7*i+4] = T[7*i+3].plus(T[7*i+0], ws); // g4+g
+      T[7*i+5] = T[7*i+3].plus(T[7*i+1], ws); // g4+g2
+      T[7*i+6] = T[7*i+3].plus(T[7*i+2], ws); // g4+g2+g
+
+      g.swap(g4);
+      g.mult2(ws);
       }
 
    PointGFp::force_all_affine(T, ws[0].get_word_vector());
@@ -106,7 +109,7 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    // Instead of reducing k mod group order should we alter the mask size??
    const BigInt scalar = m_mod_order.reduce(k) + group_order * mask;
 
-   const size_t windows = round_up(scalar.bits(), 2) / 2;
+   const size_t windows = round_up(scalar.bits(), WINDOW_BITS) / WINDOW_BITS;
 
    const size_t elem_size = 2*m_p_words;
 
@@ -124,21 +127,32 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    for(size_t i = 0; i != windows; ++i)
       {
       const size_t window = windows - i - 1;
-      const size_t base_addr = (3*window)*elem_size;
+      const size_t base_addr = (WINDOW_SIZE*window)*elem_size;
 
-      const word w = scalar.get_substring(2*window, 2);
+      const word w = scalar.get_substring(WINDOW_BITS*window, WINDOW_BITS);
 
       const auto w_is_1 = CT::Mask<word>::is_equal(w, 1);
       const auto w_is_2 = CT::Mask<word>::is_equal(w, 2);
       const auto w_is_3 = CT::Mask<word>::is_equal(w, 3);
+      const auto w_is_4 = CT::Mask<word>::is_equal(w, 4);
+      const auto w_is_5 = CT::Mask<word>::is_equal(w, 5);
+      const auto w_is_6 = CT::Mask<word>::is_equal(w, 6);
+      const auto w_is_7 = CT::Mask<word>::is_equal(w, 7);
 
       for(size_t j = 0; j != elem_size; ++j)
          {
          const word w1 = m_W[base_addr + 0*elem_size + j];
          const word w2 = m_W[base_addr + 1*elem_size + j];
          const word w3 = m_W[base_addr + 2*elem_size + j];
+         const word w4 = m_W[base_addr + 3*elem_size + j];
+         const word w5 = m_W[base_addr + 4*elem_size + j];
+         const word w6 = m_W[base_addr + 5*elem_size + j];
+         const word w7 = m_W[base_addr + 6*elem_size + j];
 
-         Wt[j] = w_is_1.select(w1, w_is_2.select(w2, w_is_3.select(w3, 0)));
+         const word wl = w_is_1.select(w1, w_is_2.select(w2, w_is_3.select(w3, 0)));
+         const word wr = w_is_4.select(w4, w_is_5.select(w5, w_is_6.select(w6, w_is_7.select(w7, 0))));
+
+         Wt[j] = wl | wr;
          }
 
       R.add_affine(&Wt[0], m_p_words, &Wt[m_p_words], m_p_words, ws);
