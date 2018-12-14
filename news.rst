@@ -27,7 +27,7 @@ Version 2.9.0, Not Yet Released
   #1770 #1773 #1774 #1779 #1780)
 
 * Several optimizations for BigInt and ECC, improving ECDSA performance by as
-  much as 20%. (GH #1734 #1737 #1777 #1750 #1737)
+  much as 30%. (GH #1734 #1737 #1777 #1750 #1737 #1788)
 
 * Support recovering an ECDSA public key from a message/signature pair (GH #664 #1784)
 
