@@ -11,6 +11,7 @@
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -76,12 +77,12 @@ inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size)
          ws_bn[i].get_word_vector().resize(cap_size);
    }
 
-inline bool all_zeros(const word x[], size_t len)
+inline word all_zeros(const word x[], size_t len)
    {
    word z = 0;
    for(size_t i = 0; i != len; ++i)
       z |= x[i];
-   return (z == 0);
+   return CT::Mask<word>::is_zero(z).value();
    }
 
 }
@@ -90,8 +91,10 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
                           const word y_words[], size_t y_size,
                           std::vector<BigInt>& ws_bn)
    {
-   if(all_zeros(x_words, x_size) && all_zeros(y_words, y_size))
+   if(all_zeros(x_words, x_size) & all_zeros(y_words, y_size))
+      {
       return;
+      }
 
    if(is_zero())
       {
@@ -172,7 +175,7 @@ void PointGFp::add(const word x_words[], size_t x_size,
                    const word z_words[], size_t z_size,
                    std::vector<BigInt>& ws_bn)
    {
-   if(all_zeros(x_words, x_size) && all_zeros(z_words, z_size))
+   if(all_zeros(x_words, x_size) & all_zeros(z_words, z_size))
       return;
 
    if(is_zero())
