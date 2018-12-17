@@ -727,6 +727,10 @@ class Speed final : public Command
                {
                bench_ecc_ops(ecc_groups, msec);
                }
+            else if(algo == "ecc_init")
+               {
+               bench_ecc_init(ecc_groups, msec);
+               }
             else if(algo == "os2ecp")
                {
                bench_os2ecp(ecc_groups, msec);
@@ -1121,6 +1125,22 @@ class Speed final : public Command
             record_result(dbl_timer);
             record_result(add_timer);
             record_result(addf_timer);
+            }
+         }
+
+      void bench_ecc_init(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
+         {
+         for(std::string group_name : groups)
+            {
+            std::unique_ptr<Timer> timer = make_timer(group_name + " initialization");
+
+            while(timer->under(runtime))
+               {
+               Botan::EC_Group::clear_registered_curve_data();
+               timer->run([&]() { Botan::EC_Group group(group_name); });
+               }
+
+            record_result(timer);
             }
          }
 
