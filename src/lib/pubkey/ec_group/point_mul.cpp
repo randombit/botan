@@ -62,12 +62,14 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
    std::vector<PointGFp> T(WINDOW_SIZE*T_bits);
 
    PointGFp g = base;
-   PointGFp g4;
+   PointGFp g2, g4;
 
    for(size_t i = 0; i != T_bits; i++)
       {
-      PointGFp g2 = g.double_of(ws);
-      g4 = g2.double_of(ws);
+      g2 = g;
+      g2.mult2(ws);
+      g4 = g2;
+      g4.mult2(ws);
 
       T[7*i+0] = g;
       T[7*i+1] = std::move(g2);
@@ -103,11 +105,28 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    if(k.is_negative())
       throw Invalid_Argument("PointGFp_Base_Point_Precompute scalar must be positive");
 
-   // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
-   const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS);
-
    // Instead of reducing k mod group order should we alter the mask size??
-   const BigInt scalar = m_mod_order.reduce(k) + group_order * mask;
+   BigInt scalar = m_mod_order.reduce(k);
+
+   if(rng.is_seeded())
+      {
+      // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
+      const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS);
+      scalar += group_order * mask;
+      }
+   else
+      {
+      /*
+      When we don't have an RNG we cannot do scalar blinding. Instead use the
+      same trick as OpenSSL and add one or two copies of the order to normalize
+      the length of the scalar at order.bits()+1. This at least ensures the loop
+      bound does not leak information about the high bits of the scalar.
+      */
+      scalar += group_order;
+      if(scalar.bits() == group_order.bits())
+         scalar += group_order;
+      BOTAN_DEBUG_ASSERT(scalar.bits() == group_order.bits() + 1);
+      }
 
    const size_t windows = round_up(scalar.bits(), WINDOW_BITS) / WINDOW_BITS;
 
@@ -154,7 +173,7 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
 
       R.add_affine(&Wt[0], m_p_words, &Wt[m_p_words], m_p_words, ws);
 
-      if(i == 0)
+      if(i == 0 && rng.is_seeded())
          {
          /*
          * Since we start with the top bit of the exponent we know the
