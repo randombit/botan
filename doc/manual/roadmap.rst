@@ -6,7 +6,7 @@ Near Term Plans
 ----------------------------------------
 
 Here is an outline for the development plans over the next 12-18 months, as of
-November 2017.
+December 2018.
 
 TLS Hardening/Testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -15,31 +15,29 @@ Leverage TLS-Attacker better, for example using custom workflows. Add tests
 using BoringSSL's hacked Go TLS stack. Add interop testing with OpenSSL as part
 of CI. Improve fuzzer coverage.
 
-Expose TLS to C89 and Python
+Expose TLS at FFI layer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Exposing TLS to C would allow for many new applications to make use of Botan.
 
-Interface to PSK and SRP databases
+Multiparty Computation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Threshold key generation and signature schemes, homomorphic encryption, basic
+ZKP proof systems.
+
+Post-Quantum CCA2 Encryption
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Which scheme(s) to implement is open to question. HRSS is one possiblity.
+But providing at least one PQ-secure CCA2 encryption scheme would be very
+useful for TLS, PGP, and other protocols.
+
+Password Authenticated Key Exchanges
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Adding support for databases storing encrypted PSKs and SRP credentials.
-(PSK database support was added in 2.4.0)
-
-ECC Refactoring
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Refactoring how elliptic curve groups are stored, sharing representation and
-allowing better precomputations (eg precomputing base point multiples).
-[Completed in 2.5.0]
-
-Performance Improvements
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The eventual goal would be performance parity with OpenSSL, but initial
-target is probably more like "no worse than 30% slower for any algorithm".
-
-[Major improvements to ECC and RSA performance were made between 2.4.0
-and 2.7.0, measurement and optimization work is ongoing.]
+Adding support for modern PAKE algorithms (such as SPAKE2+ or OPAQUE),
+including encrypted database backed storage for verifiers.
 
 Elliptic Curve Pairings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -48,53 +46,35 @@ These are useful in many interesting protocols. Initially BN curves are the main
 target (particularly BN-256 for compatibility with Go's bn256 module) but likely
 we'll also want BLS curves.
 
+And possibly some functionality built on top of pairings, such as identity based
+encryption.
+
 TLS 1.3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The RFC process seems to be approaching consensus so hopefully there will be a
-final spec soon. The handshake differences are quite substantial, it's an open
+The handshake differences in v1.3 are quite substantial and it's an open
 question how to implement that without overly complicating the existing TLS
-v1.0-v1.2 handshake code. There will also be some API extensions required to
-support 0-RTT data.
-
-Initial work is focused on features which are included in TLS v1.3 but also
-available for TLS v1.2 (such as PSS signatures and FFDHE) as well as
-refactorings which will make the eventual implementation of v1.3 simpler.
-Assuming no source of dedicated funding appears, a full v1.3 implementation will
-likely not be available until sometime in 2019.
+v1.0-v1.2 handshake code. Assuming no source of dedicated funding appears, a
+full v1.3 implementation will likely not be available until at least Q4 2019.
 
 ASN.1 Redesign
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The current ASN.1 library (DER_Encoder/BER_Decoder) does make it
-roughly possible to write C++ code matching the ASN.1 structures. But
-it is not flexible enough for all cases and makes many unnecessary
-copies (and thus memory allocations) of the data as it works.
-
-It would be better to have a system that used (a simple subset of) ASN.1 to
-define the types as well as encoding/decoding logic. Then new types could be
-easily defined. This could also obviate the current code for handling OIDs, and
-allow representing the OIDs using the natural OID tree syntax of ASN.1.
-
-Another important feature will be supporting copy-free streaming decoding. That
-is, given a (ptr,len) range the decoding operation either returns an error
-(throws exception) or else the decoded object plus the number of bytes after ptr
-that contain the object, and it does so without making any allocations or
-copies.
-
-It will probably be easier to be consistently allocation free in machine
-generated code, so the two goals of the redesign seem to reinforce each other.
+Design and build a new ASN.1 encoding/decoding library which is easier to use
+and more efficient (fewer memory copies, etc). For at least 2.x this new ASN.1
+code will exist in parallel with the existing library to avoid breaking applications.
 
 Longer View (Future Major Release)
 ----------------------------------------
 
-Eventually (currently estimated for 2020), Botan 3.x will be released. This
-schedule allows some substantial time with Botan 2.x and 3.x supported
+Eventually (currently estimated for mid 2020), Botan 3.x will be released.
+This schedule allows some substantial time with Botan 2.x and 3.x supported
 simultaneously, to allow for application switch over.
 
 This version will adopt C++17 and use new std types such as string_view,
 optional, and any, along with adopting memory span and guarded integer
 types. Likely C++17 constexpr will also be leveraged.
 
-In this future 3.x release, all deprecated features/APIs of 2.x will be removed.
-Besides that, there should be no breaking API changes in the transition to 3.x
+In this future 3.x release, all deprecated features/APIs of 2.x (which notably
+includes TLS v1.0/v1.1 support) will be removed. Beyond explicitly deprecated
+functionality, there should be no breaking API changes in the transition to 3.x

@@ -57,6 +57,7 @@ Branch         First Release  End of Active Development  End of Life
 1.8            2008-12-08     2010-08-31                 2016-02-13
 1.10           2011-06-20     2012-07-10                 2018-12-31
 2.x            2017-01-06     2020?                      2022 or later
+3.x            2020?          ?                          ?
 ============== ============== ========================== ============
 
 "Active development" refers to adding new features and optimizations. At the
@@ -67,10 +68,3 @@ Getting Help
 
 To get help with Botan, open an issue on
 `GitHub <https://github.com/randombit/botan/issues>`_
-
-Custom Development or Support
------------------------------------------
-
-Jack Lloyd, the primary developer, is available for projects including custom
-development, extended support, developer training, and reviewing code or
-protocol specifications for security flaws. Email him for more information.
