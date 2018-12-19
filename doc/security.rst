@@ -18,6 +18,15 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2018
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2018-12-17 (CVE-2018-20187): Side channel during ECC key generation
+
+  A timing side channel during ECC key generation could leak information about
+  the high bits of the secret scalar. Such information allows an attacker to
+  perform a brute force attack on the key somewhat more efficiently than they
+  would otherwise. Found by Ján Jančár using ECTester.
+
+  Fixed in 2.8.0, all previous versions affected.
+
 * 2018-06-13 (CVE-2018-12435): ECDSA side channel
 
   A side channel in the ECDSA signature operation could allow a local attacker
