@@ -25,7 +25,7 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
   perform a brute force attack on the key somewhat more efficiently than they
   would otherwise. Found by Ján Jančár using ECTester.
 
-  Fixed in 2.8.0, all previous versions affected.
+  Introduced in 1.11.20, fixed in 2.8.0.
 
 * 2018-06-13 (CVE-2018-12435): ECDSA side channel
 
