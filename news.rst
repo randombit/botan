@@ -4,6 +4,10 @@ Release Notes
 Version 2.9.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* CVE-2018-20187 Address a side channel during ECC key generation,
+  which used an unblinded Montgomery ladder. As a result, a timing
+  attack can reveal information about the high bits of the secret key.
+
 * Fix bugs in TLS which caused negotiation failures when the client
   used an unknown signature algorithm or version (GH #1711 #1709 #1708)
 
