@@ -35,8 +35,13 @@ void poly_double(uint8_t out[], const uint8_t in[])
    const uint64_t POLY = static_cast<uint64_t>(P);
 
    const uint64_t carry = POLY * (W[0] >> 63);
-   for(size_t i = 0; i != LIMBS - 1; ++i)
-      W[i] = (W[i] << 1) ^ (W[i+1] >> 63);
+
+   if(LIMBS > 0)
+      {
+      for(size_t i = 0; i != LIMBS - 1; ++i)
+         W[i] = (W[i] << 1) ^ (W[i+1] >> 63);
+      }
+
    W[LIMBS-1] = (W[LIMBS-1] << 1) ^ carry;
 
    copy_out_be(out, LIMBS*8, W);
@@ -51,8 +56,13 @@ void poly_double_le(uint8_t out[], const uint8_t in[])
    const uint64_t POLY = static_cast<uint64_t>(P);
 
    const uint64_t carry = POLY * (W[LIMBS-1] >> 63);
-   for(size_t i = 0; i != LIMBS - 1; ++i)
-      W[LIMBS-1-i] = (W[LIMBS-1-i] << 1) ^ (W[LIMBS-2-i] >> 63);
+
+   if(LIMBS > 0)
+      {
+      for(size_t i = 0; i != LIMBS - 1; ++i)
+         W[LIMBS-1-i] = (W[LIMBS-1-i] << 1) ^ (W[LIMBS-2-i] >> 63);
+      }
+
    W[0] = (W[0] << 1) ^ carry;
 
    copy_out_le(out, LIMBS*8, W);

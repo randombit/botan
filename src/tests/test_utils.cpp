@@ -1,5 +1,5 @@
 /*
-* (C) 2015 Jack Lloyd
+* (C) 2015,2018 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 * (C) 2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
@@ -15,6 +15,7 @@
 #include <botan/calendar.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <botan/version.h>
@@ -235,6 +236,51 @@ class CT_Mask_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("ct_utils", CT_Mask_Tests);
+
+class BitOps_Tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         results.push_back(test_power_of_2());
+
+         return results;
+         }
+   private:
+      template<typename T>
+      void test_power_of_2(Test::Result& result, T val, bool expected)
+         {
+         result.test_eq("power_of_2(" + std::to_string(val) + ")", Botan::is_power_of_2<T>(val), expected);
+         }
+
+      Test::Result test_power_of_2()
+         {
+         Test::Result result("is_power_of_2");
+
+         test_power_of_2<uint32_t>(result, 0, false);
+         test_power_of_2<uint32_t>(result, 1, false);
+         test_power_of_2<uint32_t>(result, 2, true);
+         test_power_of_2<uint32_t>(result, 3, false);
+         test_power_of_2<uint32_t>(result, 0x8000, true);
+         test_power_of_2<uint32_t>(result, 0x8001, false);
+         test_power_of_2<uint32_t>(result, 0x8000000, true);
+
+         test_power_of_2<uint64_t>(result, 0, false);
+         test_power_of_2<uint64_t>(result, 1, false);
+         test_power_of_2<uint64_t>(result, 2, true);
+         test_power_of_2<uint64_t>(result, 3, false);
+         test_power_of_2<uint64_t>(result, 0x8000, true);
+         test_power_of_2<uint64_t>(result, 0x8001, false);
+         test_power_of_2<uint64_t>(result, 0x8000000, true);
+         test_power_of_2<uint64_t>(result, 0x100000000000, true);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("bit_ops", BitOps_Tests);
 
 #if defined(BOTAN_HAS_POLY_DBL)
 

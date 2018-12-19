@@ -12,7 +12,6 @@
 #include <botan/hex.h>
 #include <botan/parsing.h>
 #include <botan/internal/filesystem.h>
-#include <botan/internal/bit_ops.h>
 #include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_BIGINT)

@@ -24,7 +24,7 @@ namespace Botan {
 template<typename T>
 inline constexpr bool is_power_of_2(T arg)
    {
-   return ((arg != 0 && arg != 1) && ((arg & (arg-1)) == 0));
+   return ((arg != 0 && arg != 1) && ((arg & static_cast<T>(arg-1)) == 0));
    }
 
 /**
