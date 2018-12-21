@@ -354,20 +354,17 @@ inline Mask<T> conditional_copy_mem(T cnd,
    return mask;
    }
 
-inline secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length)
-   {
-   size_t leading_zeros = 0;
+/**
+* If bad_mask is unset, return in[delim_idx:input_length] copied to
+* new buffer. If bad_mask is set, return an all zero vector of
+* unspecified length.
+*/
+secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input,
+                                   const uint8_t input[],
+                                   size_t input_length,
+                                   size_t delim_idx);
 
-   auto only_zeros = Mask<uint8_t>::set();
-
-   for(size_t i = 0; i != length; ++i)
-      {
-      only_zeros &= CT::Mask<uint8_t>::is_zero(in[i]);
-      leading_zeros += only_zeros.if_set_return(1);
-      }
-
-   return secure_vector<uint8_t>(in + leading_zeros, in + length);
-   }
+secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length);
 
 inline secure_vector<uint8_t> strip_leading_zeros(const secure_vector<uint8_t>& in)
    {

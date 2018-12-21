@@ -8,57 +8,60 @@
 
 #if defined(BOTAN_HAS_PK_PADDING)
    #include <botan/emsa.h>
-   #include <botan/eme.h>
+#endif
+
+#if defined(BOTAN_HAS_EME_PKCS1v15)
+   #include <botan/eme_pkcs.h>
 #endif
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_PK_PADDING)
+#if defined(BOTAN_HAS_EME_PKCS1v15)
 
-class EME_Decoding_Tests final : public Text_Based_Test
+class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test
    {
    public:
-      EME_Decoding_Tests()
+      EME_PKCS1v15_Decoding_Tests()
          : Text_Based_Test(
-              "pk_pad_eme",
-              "RawCiphertext,ValidInput",
+              "pk_pad_eme/pkcs1.vec",
+              "RawCiphertext",
               "Plaintext") {}
 
-      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& hdr, const VarMap& vars) override
          {
-         Test::Result result(algo + " Decoding");
+         const bool is_valid = (hdr == "valid");
 
-         std::unique_ptr<Botan::EME> eme;
+         Test::Result result("PKCSv15 Decoding");
 
-         try
-            {
-            eme.reset(Botan::get_eme(algo));
-            }
-         catch(Botan::Lookup_Error&)
-            {
-            result.note_missing(algo);
-            return result;
-            }
+         Botan::EME_PKCS1v15 pkcs;
 
          const std::vector<uint8_t> ciphertext = vars.get_req_bin("RawCiphertext");
          const std::vector<uint8_t> plaintext = vars.get_opt_bin("Plaintext");
-         const bool is_valid = vars.get_req_bool("ValidInput");
 
          if(is_valid == false)
             {
-            result.test_eq("Plaintext value is empty for invalid EME inputs", plaintext.size(), 0);
+            result.test_eq("Plaintext value should be empty for invalid EME inputs", plaintext.size(), 0);
             }
 
          uint8_t valid_mask = 0;
          Botan::secure_vector<uint8_t> decoded =
-            eme->unpad(valid_mask, ciphertext.data(), ciphertext.size());
+            pkcs.unpad(valid_mask, ciphertext.data(), ciphertext.size());
 
          result.confirm("EME valid_mask has expected value", valid_mask == 0x00 || valid_mask == 0xFF);
          result.test_eq("EME decoding valid/invalid matches", valid_mask == 0xFF, is_valid);
 
-         if(is_valid && valid_mask == 0xFF)
+         if(valid_mask == 0xFF)
             {
             result.test_eq("EME decoded plaintext correct", decoded, plaintext);
+            }
+         else
+            {
+            bool all_zeros = true;
+            for(size_t i = 0; i != decoded.size(); ++i)
+               if(decoded[i] != 0)
+                  all_zeros = false;
+
+            result.confirm("On invalid padding output is all zero", all_zeros);
             }
 
          // TODO: also test that encoding is accepted
@@ -67,7 +70,7 @@ class EME_Decoding_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("pk_pad_eme", EME_Decoding_Tests);
+BOTAN_REGISTER_TEST("eme_pkcs1v15", EME_PKCS1v15_Decoding_Tests);
 
 class EMSA_unit_tests final : public Test
    {
