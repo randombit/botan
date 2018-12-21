@@ -7,6 +7,7 @@
 
 #include <botan/threefish_512.h>
 #include <botan/loadstor.h>
+#include <botan/rotate.h>
 #include <botan/cpuid.h>
 
 namespace Botan {

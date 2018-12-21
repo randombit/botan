@@ -7,6 +7,7 @@
 
 #include <botan/serpent.h>
 #include <botan/loadstor.h>
+#include <botan/rotate.h>
 #include <botan/internal/serpent_sbox.h>
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)

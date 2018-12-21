@@ -6,6 +6,7 @@
 */
 
 #include <botan/md4.h>
+#include <botan/rotate.h>
 
 namespace Botan {
 

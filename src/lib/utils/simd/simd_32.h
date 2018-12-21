@@ -26,6 +26,9 @@
 #elif defined(BOTAN_TARGET_SUPPORTS_NEON)
   #include <arm_neon.h>
   #define BOTAN_SIMD_USE_NEON
+
+#else
+  #include <botan/rotate.h>
 #endif
 
 namespace Botan {

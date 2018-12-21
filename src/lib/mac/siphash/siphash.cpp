@@ -6,6 +6,7 @@
 */
 
 #include <botan/siphash.h>
+#include <botan/rotate.h>
 
 namespace Botan {
 

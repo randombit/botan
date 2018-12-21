@@ -8,6 +8,7 @@
 #include <botan/cast128.h>
 #include <botan/internal/cast_sboxes.h>
 #include <botan/loadstor.h>
+#include <botan/rotate.h>
 
 namespace Botan {
 
