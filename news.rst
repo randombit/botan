@@ -25,10 +25,10 @@ Version 2.9.0, Not Yet Released
 
 * Optimize AVX2 ChaCha (GH #1730)
 
-* Many more operations in BigInt and ECC arithmetic are either fully const time
+* Many more operations in BigInt, ECC and RSA code paths are either fully const time
   or avoid problematic branches that could potentially be exploited in a side
   channel attack. (GH #1738 #1750 #1754 #1755 #1757 #1758 #1759 #1762 #1765
-  #1770 #1773 #1774 #1779 #1780)
+  #1770 #1773 #1774 #1779 #1780 #1794)
 
 * Several optimizations for BigInt and ECC, improving ECDSA performance by as
   much as 30%. (GH #1734 #1737 #1777 #1750 #1737 #1788)
