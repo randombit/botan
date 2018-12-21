@@ -8,6 +8,7 @@
 #include <botan/chacha.h>
 #include <botan/exceptn.h>
 #include <botan/loadstor.h>
+#include <botan/rotate.h>
 #include <botan/cpuid.h>
 
 namespace Botan {

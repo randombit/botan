@@ -8,6 +8,7 @@
 */
 
 #include <botan/sha160.h>
+#include <botan/rotate.h>
 #include <emmintrin.h>
 
 namespace Botan {

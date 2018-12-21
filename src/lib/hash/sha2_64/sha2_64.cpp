@@ -6,6 +6,7 @@
 */
 
 #include <botan/sha2_64.h>
+#include <botan/rotate.h>
 
 namespace Botan {
 

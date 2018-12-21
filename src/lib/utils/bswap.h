@@ -10,7 +10,6 @@
 #define BOTAN_BYTE_SWAP_H_
 
 #include <botan/types.h>
-#include <botan/rotate.h>
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
   #include <stdlib.h>
@@ -26,7 +25,7 @@ inline uint16_t reverse_bytes(uint16_t val)
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
    return __builtin_bswap16(val);
 #else
-   return rotl<8>(val);
+   return static_cast<uint16_t>((val << 8) | (val >> 8));
 #endif
    }
 

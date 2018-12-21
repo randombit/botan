@@ -6,6 +6,7 @@
 */
 
 #include <botan/sha160.h>
+#include <botan/rotate.h>
 #include <botan/cpuid.h>
 
 namespace Botan {

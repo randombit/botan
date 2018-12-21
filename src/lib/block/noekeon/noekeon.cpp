@@ -7,6 +7,7 @@
 
 #include <botan/noekeon.h>
 #include <botan/loadstor.h>
+#include <botan/rotate.h>
 #include <botan/cpuid.h>
 
 namespace Botan {

@@ -7,6 +7,7 @@
 
 #include <botan/camellia.h>
 #include <botan/loadstor.h>
+#include <botan/rotate.h>
 
 namespace Botan {
 

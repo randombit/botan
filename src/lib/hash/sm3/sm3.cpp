@@ -6,6 +6,7 @@
 */
 
 #include <botan/sm3.h>
+#include <botan/rotate.h>
 
 namespace Botan {
 

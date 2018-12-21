@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_SIMD_32)
    #include <botan/internal/simd_32.h>
    #include <botan/cpuid.h>
+   #include <botan/rotate.h>
 #endif
 
 namespace Botan_Tests {

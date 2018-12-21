@@ -10,6 +10,7 @@
 #include <botan/aes.h>
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>
+#include <botan/rotate.h>
 #include <type_traits>
 
 /*
