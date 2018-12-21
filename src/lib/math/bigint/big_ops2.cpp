@@ -76,8 +76,7 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
       ws.resize(3*mod_sw);
 
    word borrow = bigint_sub3(&ws[0], mod.data(), mod_sw, s.data(), mod_sw);
-   CT::unpoison(borrow);
-   BOTAN_ASSERT_NOMSG(borrow == 0);
+   BOTAN_DEBUG_ASSERT(borrow == 0);
 
    // Compute t - ws
    borrow = bigint_sub3(&ws[mod_sw], this->data(), mod_sw, &ws[0], mod_sw);

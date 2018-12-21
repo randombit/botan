@@ -98,12 +98,10 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
       ws[p_size + 1 + i] = word_sub(ws[i], p[i], &borrow);
    ws[2*p_size+1] = word_sub(ws[p_size], 0, &borrow);
 
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+
    CT::conditional_copy_mem(borrow, z, ws, ws + (p_size + 1), (p_size + 1));
    clear_mem(z + p_size, z_size - p_size - 2);
-
-   // This check comes after we've used it but that's ok here
-   CT::unpoison(&borrow, 1);
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow");
    }
 
 }
