@@ -1,11 +1,13 @@
-macro_name PORTLAND_GROUP
+macro_name PGI
 
-binary_name pgCC
+binary_name pgc++
 
-optimization_flags "-fast -Minline"
+optimization_flags "-O3"
 shared_flags "-fPIC"
 
+visibility_build_flags "-fvisibility=hidden"
+visibility_attribute '__attribute__((visibility("default")))'
+
 <so_link_commands>
-linux   -> "$(CXX) -shared -fPIC -Wl,-soname,{soname_abi}"
-solaris -> "$(CXX) -G -fPIC -Wl,-h,{soname_abi}"
+default -> "$(CXX) -shared -fPIC -Wl,-soname,{soname_abi}"
 </so_link_commands>
