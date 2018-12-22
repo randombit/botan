@@ -58,11 +58,6 @@ inline size_t high_bit(T n)
 
    for(size_t s = 8*sizeof(T) / 2; s > 0; s /= 2)
       {
-      /*
-      * The != 0 expression is not necessarily going to be const time,
-      * it will depend on the compiler and arch. GCC compiles this
-      * function to straight line code on x86-64, Aarch64 and ARM.
-      */
       const size_t z = s * ((~ct_is_zero(n >> s)) & 1);
       hb += z;
       n >>= z;
