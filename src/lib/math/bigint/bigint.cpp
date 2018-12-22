@@ -279,12 +279,7 @@ size_t BigInt::top_bits_free() const
    const size_t words = sig_words();
 
    const word top_word = word_at(words - 1);
-
-   // Need to unpoison due to high_bit not being const time
-   CT::unpoison(top_word);
-
    const size_t bits_used = high_bit(top_word);
-
    return BOTAN_MP_WORD_BITS - bits_used;
    }
 

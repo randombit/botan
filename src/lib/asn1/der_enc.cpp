@@ -32,7 +32,7 @@ void encode_tag(std::vector<uint8_t>& encoded_tag,
       }
    else
       {
-      size_t blocks = high_bit(type_tag) + 6;
+      size_t blocks = high_bit(static_cast<uint32_t>(type_tag)) + 6;
       blocks = (blocks - (blocks % 7)) / 7;
 
       BOTAN_ASSERT_NOMSG(blocks > 0);

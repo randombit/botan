@@ -36,10 +36,23 @@ inline constexpr bool is_power_of_2(T arg)
 template<typename T>
 inline size_t high_bit(T n)
    {
-   for(size_t i = 8*sizeof(T); i > 0; --i)
-      if((n >> (i - 1)) & 0x01)
-         return i;
-   return 0;
+   size_t hb = 0;
+
+   for(size_t s = 8*sizeof(T) / 2; s > 0; s /= 2)
+      {
+      /*
+      * The != 0 expression is not necessarily going to be const time,
+      * it will depend on the compiler and arch. GCC compiles this
+      * function to straight line code on x86-64, Aarch64 and ARM.
+      */
+      const size_t z = s * ((n >> s) != 0);
+      hb += z;
+      n >>= z;
+      }
+
+   hb += n;
+
+   return hb;
    }
 
 /**
@@ -79,10 +92,39 @@ inline size_t significant_bytes(T n)
 template<typename T>
 inline size_t ctz(T n)
    {
-   for(size_t i = 0; i != 8*sizeof(T); ++i)
-      if((n >> i) & 0x01)
-         return i;
-   return 8*sizeof(T);
+   /*
+   * If n == 0 then this function will compute 8*sizeof(T)-1, so
+   * initialize lb to 1 if n == 0 to produce the expected result.
+   */
+   size_t lb = (n == 0);
+
+   for(size_t s = 8*sizeof(T) / 2; s > 0; s /= 2)
+      {
+      const T mask = (static_cast<T>(1) << s) - 1;
+      const T n_bits = (n & mask) == 0;
+      lb += s * n_bits;
+      n >>= s * n_bits;
+      }
+
+   return lb;
+   }
+
+template<typename T>
+size_t ceil_log2(T x)
+   {
+   if(x >> (sizeof(T)*8-1))
+      return sizeof(T)*8;
+
+   size_t result = 0;
+   T compare = 1;
+
+   while(compare < x)
+      {
+      compare <<= 1;
+      result++;
+      }
+
+   return result;
    }
 
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
@@ -103,41 +145,7 @@ inline size_t ctz(uint64_t n)
    return __builtin_ctzll(n);
    }
 
-template<>
-inline size_t high_bit(uint32_t x)
-   {
-   if(x == 0)
-      return 0;
-   return (32 - __builtin_clz(x));
-   }
-
-template<>
-inline size_t high_bit(uint64_t x)
-   {
-   if(x == 0)
-      return 0;
-   return (64 - __builtin_clzll(x));
-   }
-
 #endif
-
-template<typename T>
-size_t ceil_log2(T x)
-   {
-   if(x >> (sizeof(T)*8-1))
-      return sizeof(T)*8;
-
-   size_t result = 0;
-   T compare = 1;
-
-   while(compare < x)
-      {
-      compare <<= 1;
-      result++;
-      }
-
-   return result;
-   }
 
 }
 
