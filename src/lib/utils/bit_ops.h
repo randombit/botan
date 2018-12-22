@@ -63,7 +63,7 @@ inline size_t high_bit(T n)
       * it will depend on the compiler and arch. GCC compiles this
       * function to straight line code on x86-64, Aarch64 and ARM.
       */
-      const size_t z = s * ((n >> s) != 0);
+      const size_t z = s * ((~ct_is_zero(n >> s)) & 1);
       hb += z;
       n >>= z;
       }
@@ -114,12 +114,12 @@ inline size_t ctz(T n)
    * If n == 0 then this function will compute 8*sizeof(T)-1, so
    * initialize lb to 1 if n == 0 to produce the expected result.
    */
-   size_t lb = (n == 0);
+   size_t lb = ct_is_zero(n) & 1;
 
    for(size_t s = 8*sizeof(T) / 2; s > 0; s /= 2)
       {
       const T mask = (static_cast<T>(1) << s) - 1;
-      const T n_bits = (n & mask) == 0;
+      const T n_bits = ct_is_zero(n & mask) & 1;
       lb += s * n_bits;
       n >>= s * n_bits;
       }
