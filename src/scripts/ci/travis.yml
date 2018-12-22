@@ -13,7 +13,7 @@ compiler:
 
 env:
   global:
-    - CCACHE_MAXSIZE=200M
+    - CCACHE_MAXSIZE=400M
 
   matrix:
     - BUILD_MODE="shared"
@@ -103,7 +103,7 @@ branches:
     - coverity_scan
 
 git:
-  depth: 5
+  depth: 3
 
 cache:
   ccache: true
