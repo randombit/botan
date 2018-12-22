@@ -17,6 +17,24 @@
 namespace Botan {
 
 /**
+* If top bit of arg is set, return ~0. Otherwise return 0.
+*/
+template<typename T>
+inline T expand_top_bit(T a)
+   {
+   return static_cast<T>(0) - (a >> (sizeof(T)*8-1));
+   }
+
+/**
+* If arg is zero, return ~0. Otherwise return 0
+*/
+template<typename T>
+inline T ct_is_zero(T x)
+   {
+   return expand_top_bit<T>(~x & (x - 1));
+   }
+
+/**
 * Power of 2 test. T should be an unsigned integer type
 * @param arg an integer value
 * @return true iff arg is 2^n for some n > 0
