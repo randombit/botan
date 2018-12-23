@@ -566,10 +566,12 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
       };
 
    return std::unique_ptr<Echo_Suppression>(new Win32_Echo_Suppression);
-#endif
+
+#else
 
    // Not supported on this platform, return null
    return std::unique_ptr<Echo_Suppression>();
+#endif
    }
 
 }
