@@ -72,9 +72,47 @@ inline Botan::RandomNumberGenerator& fuzzer_rng()
    #error "Build configured for AFL but not being compiled by AFL compiler"
 #endif
 
+#if defined(BOTAN_FUZZER_IS_TEST)
+
+#include <fstream>
+
+namespace {
+
+int fuzz_files(char* files[])
+   {
+   for(size_t i = 0; files[i]; ++i)
+      {
+      std::ifstream in(files[i]);
+
+      if(in.good())
+         {
+         std::vector<uint8_t> buf(max_fuzzer_input_size);
+         in.read((char*)buf.data(), buf.size());
+         const size_t got = std::cin.gcount();
+         buf.resize(got);
+         buf.shrink_to_fit();
+
+         LLVMFuzzerTestOneInput(buf.data(), got);
+         }
+      }
+
+   return 0;
+   }
+
+}
+
+#endif
+
 int main(int argc, char* argv[])
    {
    LLVMFuzzerInitialize(&argc, &argv);
+
+#if defined(BOTAN_FUZZER_IS_TEST)
+   if(argc > 1)
+      {
+      return fuzz_files(&argv[1]);
+      }
+#endif
 
 #if defined(__AFL_LOOP)
    while(__AFL_LOOP(1000))
