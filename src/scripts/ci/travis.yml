@@ -1,8 +1,8 @@
 language: cpp
 
 os:
-  - linux
   - osx
+  - linux
 
 dist: xenial
 sudo: required
