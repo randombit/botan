@@ -38,22 +38,7 @@ class BOTAN_TEST_API Timer final
 
       Timer(const Timer& other) = default;
 
-      static uint64_t get_system_timestamp_ns()
-         {
-         return Botan::OS::get_system_timestamp_ns();
-         }
-
-      static uint64_t get_cpu_cycle_counter()
-         {
-         return Botan::OS::get_processor_timestamp();
-         }
-
-      void start()
-         {
-         stop();
-         m_timer_start = Timer::get_system_timestamp_ns();
-         m_cpu_cycles_start = Timer::get_cpu_cycle_counter();
-         }
+      void start();
 
       void stop();
 
@@ -167,29 +152,9 @@ class BOTAN_TEST_API Timer final
          m_custom_msg = s;
          }
 
-      bool operator<(const Timer& other) const
-         {
-         if(this->doing() != other.doing())
-            return (this->doing() < other.doing());
+      bool operator<(const Timer& other) const;
 
-         return (this->get_name() < other.get_name());
-         }
-
-      std::string to_string() const
-         {
-         if(m_custom_msg.size() > 0)
-            {
-            return m_custom_msg;
-            }
-         else if(this->buf_size() == 0)
-            {
-            return result_string_ops();
-            }
-         else
-            {
-            return result_string_bps();
-            }
-         }
+      std::string to_string() const;
 
    private:
       std::string result_string_bps() const;
