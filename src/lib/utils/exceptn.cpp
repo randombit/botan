@@ -106,7 +106,8 @@ Stream_IO_Error::Stream_IO_Error(const std::string& err) :
    {}
 
 System_Error::System_Error(const std::string& msg, int err_code) :
-   Exception(msg + " error code " + std::to_string(err_code))
+   Exception(msg + " error code " + std::to_string(err_code)),
+   m_error_code(err_code)
    {}
 
 Self_Test_Failure::Self_Test_Failure(const std::string& err) :
