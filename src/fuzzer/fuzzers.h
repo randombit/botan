@@ -88,7 +88,7 @@ int fuzz_files(char* files[])
          {
          std::vector<uint8_t> buf(max_fuzzer_input_size);
          in.read((char*)buf.data(), buf.size());
-         const size_t got = std::cin.gcount();
+         const size_t got = in.gcount();
          buf.resize(got);
          buf.shrink_to_fit();
 
