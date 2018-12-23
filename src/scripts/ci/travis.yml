@@ -103,7 +103,7 @@ branches:
     - coverity_scan
 
 git:
-  depth: 3
+  depth: 10
 
 cache:
   ccache: true
