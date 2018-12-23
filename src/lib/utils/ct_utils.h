@@ -15,6 +15,7 @@
 #define BOTAN_CT_UTILS_H_
 
 #include <botan/secmem.h>
+#include <botan/internal/bit_ops.h>
 #include <type_traits>
 #include <vector>
 
@@ -139,7 +140,7 @@ class Mask
       */
       static Mask<T> is_zero(T x)
          {
-         return Mask<T>(expand_top_bit(~x & (x - 1)));
+         return Mask<T>(ct_is_zero<T>(x));
          }
 
       /**
@@ -155,7 +156,7 @@ class Mask
       */
       static Mask<T> is_lt(T x, T y)
          {
-         return Mask<T>(expand_top_bit(x^((x^y) | ((x-y)^x))));
+         return Mask<T>(expand_top_bit<T>(x^((x^y) | ((x-y)^x))));
          }
 
       /**
@@ -329,14 +330,6 @@ class Mask
          }
 
    private:
-      /**
-      * If top bit of arg is set, return ~0. Otherwise return 0.
-      */
-      static T expand_top_bit(T a)
-         {
-         return static_cast<T>(0) - (a >> (sizeof(T)*8-1));
-         }
-
       Mask(T m) : m_mask(m) {}
 
       T m_mask;
