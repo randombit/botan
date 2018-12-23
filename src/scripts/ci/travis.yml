@@ -17,8 +17,8 @@ env:
 
   matrix:
     - BUILD_MODE="shared"
-    - BUILD_MODE="fuzzers"
     - BUILD_MODE="coverage"
+    - BUILD_MODE="fuzzers"
     - BUILD_MODE="valgrind"
     - BUILD_MODE="cross-i386"
     - BUILD_MODE="cross-ppc32"
