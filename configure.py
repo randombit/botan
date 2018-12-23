@@ -437,6 +437,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
                            action='store_true', default=False,
                            help="Enable extra warnings")
 
+    build_group.add_option('--no-store-vc-rev', action='store_true', default=False,
+                           help=optparse.SUPPRESS_HELP)
+
     build_group.add_option('--with-python-versions', dest='python_version',
                            metavar='N.M',
                            default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
@@ -1832,7 +1835,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
         'version_patch':  Version.patch(),
-        'version_vc_rev': Version.vc_rev(),
+        'version_vc_rev': 'unknown' if options.no_store_vc_rev else Version.vc_rev(),
         'abi_rev':        Version.so_rev(),
 
         'version':        Version.as_string(),
