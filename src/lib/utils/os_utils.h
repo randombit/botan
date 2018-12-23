@@ -46,7 +46,7 @@ bool running_in_privileged_state();
 * Currently supported processors are x86, PPC, Alpha, SPARC, IA-64, S/390x, and HP-PA.
 * If no CPU cycle counter is available on this system, returns zero.
 */
-uint64_t BOTAN_TEST_API get_processor_timestamp();
+uint64_t BOTAN_TEST_API get_cpu_cycle_counter();
 
 /*
 * @return best resolution timestamp available

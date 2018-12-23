@@ -19,7 +19,7 @@ namespace {
 
 /*
 uint32_t get_process_id();
-uint64_t get_processor_timestamp();
+uint64_t get_cpu_cycle_counter();
 uint64_t get_system_timestamp_ns();
 size_t get_memory_locking_limit();
 void* allocate_locked_pages(size_t length);
@@ -35,7 +35,7 @@ class OS_Utils_Tests final : public Test
          std::vector<Test::Result> results;
 
          results.push_back(test_get_process_id());
-         results.push_back(test_get_processor_timestamp());
+         results.push_back(test_get_cpu_cycle_counter());
          results.push_back(test_get_high_resolution_clock());
          results.push_back(test_get_system_timestamp());
          results.push_back(test_memory_locking());
@@ -64,21 +64,21 @@ class OS_Utils_Tests final : public Test
          return result;
          }
 
-      Test::Result test_get_processor_timestamp()
+      Test::Result test_get_cpu_cycle_counter()
          {
-         Test::Result result("OS::get_processor_timestamp");
+         Test::Result result("OS::get_cpu_cycle_counter");
 
-         const uint64_t proc_ts1 = Botan::OS::get_processor_timestamp();
+         const uint64_t proc_ts1 = Botan::OS::get_cpu_cycle_counter();
 
          if(proc_ts1 == 0)
             {
-            const uint64_t proc_ts2 = Botan::OS::get_processor_timestamp();
+            const uint64_t proc_ts2 = Botan::OS::get_cpu_cycle_counter();
             result.test_is_eq("Disabled processor timestamp stays at zero", proc_ts1, proc_ts2);
             return result;
             }
 
          size_t counts = 0;
-         while(counts < 100 && (Botan::OS::get_processor_timestamp() == proc_ts1))
+         while(counts < 100 && (Botan::OS::get_cpu_cycle_counter() == proc_ts1))
             ++counts;
 
          result.test_lt("CPU cycle counter eventually changes value", counts, 10);

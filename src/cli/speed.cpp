@@ -440,7 +440,7 @@ class Speed final : public Command
 
          m_clock_cycle_ratio = 1.0 / m_clock_cycle_ratio;
 
-         if(m_clock_speed != 0 && Botan::OS::get_processor_timestamp() != 0)
+         if(m_clock_speed != 0 && Botan::OS::get_cpu_cycle_counter() != 0)
             {
             error_output() << "The --cpu-clock-speed option is only intended to be used on "
                               "platforms without access to a cycle counter.\n"

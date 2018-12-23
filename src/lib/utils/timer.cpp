@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/timer.h>
+#include <botan/internal/os_utils.h>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
@@ -15,7 +16,7 @@ void Timer::start()
    {
    stop();
    m_timer_start = OS::get_system_timestamp_ns();
-   m_cpu_cycles_start = OS::get_processor_timestamp();
+   m_cpu_cycles_start = OS::get_cpu_cycle_counter();
    }
 
 void Timer::stop()
@@ -24,7 +25,7 @@ void Timer::stop()
       {
       if(m_cpu_cycles_start != 0)
          {
-         const uint64_t cycles_taken = OS::get_processor_timestamp() - m_cpu_cycles_start;
+         const uint64_t cycles_taken = OS::get_cpu_cycle_counter() - m_cpu_cycles_start;
          if(cycles_taken > 0)
             {
             m_cpu_cycles_used += static_cast<size_t>(cycles_taken * m_clock_cycle_ratio);
