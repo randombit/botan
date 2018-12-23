@@ -103,7 +103,7 @@ def create_test(data):
         self.assertEqual(expected, actual)
     return do_test_expected
 
-def get_testdata(document):
+def get_testdata(document, max_tests):
     out = OrderedDict()
     for algorithm in document:
         if algorithm in SUPPORTED_ALGORITHMS:
@@ -122,16 +122,21 @@ def get_testdata(document):
                         out[testname][key] = value
                     out[testname]['Algorithm'] = algorithm
                     out[testname]['Direction'] = direction
+
+                if max_tests > 0 and testcase_number > max_tests:
+                    break
     return out
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="")
     parser.add_argument('cli_binary',
                         help='path to the botan cli binary')
+    parser.add_argument('--max-tests', type=int, default=20)
     parser.add_argument('unittest_args', nargs="*")
     args = parser.parse_args()
 
     cli_binary = args.cli_binary
+    max_tests = args.max_tests
 
     vecfile_cfb = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'modes', 'cfb.vec'))
     vecfile_gcm = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'gcm.vec'))
@@ -147,11 +152,11 @@ if __name__ == '__main__':
     #        print(str(i) + ":", testcase)
 
     testdata = OrderedDict()
-    append_ordered(testdata, get_testdata(vecfile_cfb.get_data()))
-    append_ordered(testdata, get_testdata(vecfile_gcm.get_data()))
-    append_ordered(testdata, get_testdata(vecfile_ocb.get_data()))
-    append_ordered(testdata, get_testdata(vecfile_xts.get_data()))
-    append_ordered(testdata, get_testdata(vecfile_chacha20poly1305.get_data()))
+    append_ordered(testdata, get_testdata(vecfile_cfb.get_data(), max_tests))
+    append_ordered(testdata, get_testdata(vecfile_gcm.get_data(), max_tests))
+    append_ordered(testdata, get_testdata(vecfile_ocb.get_data(), max_tests))
+    append_ordered(testdata, get_testdata(vecfile_xts.get_data(), max_tests))
+    append_ordered(testdata, get_testdata(vecfile_chacha20poly1305.get_data(), max_tests))
 
     #for testname in testdata:
     #    print(testname)
