@@ -13,7 +13,7 @@ compiler:
 
 env:
   global:
-    - CCACHE_MAXSIZE=750M
+    - CCACHE_MAXSIZE=800M
 
   matrix:
     - BUILD_MODE="shared"
