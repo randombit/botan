@@ -69,21 +69,6 @@ inline size_t high_bit(T n)
    }
 
 /**
-* Return the index of the lowest set bit
-* T is an unsigned integer type
-* @param n an integer value
-* @return index of the lowest set bit in n
-*/
-template<typename T>
-inline size_t low_bit(T n)
-   {
-   for(size_t i = 0; i != 8*sizeof(T); ++i)
-      if((n >> i) & 0x01)
-         return (i + 1);
-   return 0;
-   }
-
-/**
 * Return the number of significant bytes in n
 * @param n an integer value
 * @return number of significant bytes in n
@@ -91,10 +76,18 @@ inline size_t low_bit(T n)
 template<typename T>
 inline size_t significant_bytes(T n)
    {
-   for(size_t i = 0; i != sizeof(T); ++i)
-      if(get_byte(i, n))
-         return sizeof(T)-i;
-   return 0;
+   size_t b = 0;
+
+   for(size_t s = 8*sizeof(n) / 2; s >= 8; s /= 2)
+      {
+      const size_t z = s * (~ct_is_zero(n >> s) & 1);
+      b += z/8;
+      n >>= z;
+      }
+
+   b += (n != 0);
+
+   return b;
    }
 
 /**
@@ -114,9 +107,9 @@ inline size_t ctz(T n)
    for(size_t s = 8*sizeof(T) / 2; s > 0; s /= 2)
       {
       const T mask = (static_cast<T>(1) << s) - 1;
-      const T n_bits = ct_is_zero(n & mask) & 1;
-      lb += s * n_bits;
-      n >>= s * n_bits;
+      const T z = s * (ct_is_zero(n & mask) & 1);
+      lb += z;
+      n >>= z;
       }
 
    return lb;
@@ -140,25 +133,17 @@ size_t ceil_log2(T x)
    return result;
    }
 
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-
-template<>
-inline size_t ctz(uint32_t n)
+// Potentially variable time ctz used for OCB
+inline size_t var_ctz32(uint32_t n)
    {
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
    if(n == 0)
       return 32;
    return __builtin_ctz(n);
-   }
-
-template<>
-inline size_t ctz(uint64_t n)
-   {
-   if(n == 0)
-      return 64;
-   return __builtin_ctzll(n);
-   }
-
+#else
+   return ctz<uint32_t>(n);
 #endif
+   }
 
 }
 

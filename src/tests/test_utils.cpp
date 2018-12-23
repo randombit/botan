@@ -245,10 +245,60 @@ class BitOps_Tests final : public Test
          std::vector<Test::Result> results;
 
          results.push_back(test_power_of_2());
+         results.push_back(test_ctz());
+         results.push_back(test_sig_bytes());
 
          return results;
          }
    private:
+      template<typename T>
+      void test_ctz(Test::Result& result, T val, size_t expected)
+         {
+         result.test_eq("ctz(" + std::to_string(val) + ")", Botan::ctz<T>(val), expected);
+         }
+
+      Test::Result test_ctz()
+         {
+         Test::Result result("ctz");
+         test_ctz<uint32_t>(result, 0, 32);
+         test_ctz<uint32_t>(result, 1, 0);
+         test_ctz<uint32_t>(result, 0x80, 7);
+         test_ctz<uint32_t>(result, 0x8000000, 27);
+         test_ctz<uint32_t>(result, 0x8100000, 20);
+         test_ctz<uint32_t>(result, 0x80000000, 31);
+
+         return result;
+         }
+
+      template<typename T>
+      void test_sig_bytes(Test::Result& result, T val, size_t expected)
+         {
+         result.test_eq("significant_bytes(" + std::to_string(val) + ")",
+                        Botan::significant_bytes<T>(val), expected);
+         }
+
+      Test::Result test_sig_bytes()
+         {
+         Test::Result result("significant_bytes");
+         test_sig_bytes<uint32_t>(result, 0, 0);
+         test_sig_bytes<uint32_t>(result, 1, 1);
+         test_sig_bytes<uint32_t>(result, 0x80, 1);
+         test_sig_bytes<uint32_t>(result, 255, 1);
+         test_sig_bytes<uint32_t>(result, 256, 2);
+         test_sig_bytes<uint32_t>(result, 65535, 2);
+         test_sig_bytes<uint32_t>(result, 65536, 3);
+         test_sig_bytes<uint32_t>(result, 0x80000000, 4);
+
+         test_sig_bytes<uint64_t>(result, 0, 0);
+         test_sig_bytes<uint64_t>(result, 1, 1);
+         test_sig_bytes<uint64_t>(result, 0x80, 1);
+         test_sig_bytes<uint64_t>(result, 256, 2);
+         test_sig_bytes<uint64_t>(result, 0x80000000, 4);
+         test_sig_bytes<uint64_t>(result, 0x100000000, 5);
+
+         return result;
+         }
+
       template<typename T>
       void test_power_of_2(Test::Result& result, T val, bool expected)
          {
