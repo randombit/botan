@@ -8,7 +8,6 @@
 #define BOTAN_TIMER_H_
 
 #include <botan/types.h>
-#include <botan/internal/os_utils.h>
 #include <string>
 #include <chrono>
 
