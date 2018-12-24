@@ -247,7 +247,7 @@ class RSA_Private_Operation
          auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask, powm_window]() {
 #endif
          const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
-         auto powm_d1_p = monty_precompute(m_monty_p, m_mod_p.reduce(m), powm_window);
+         auto powm_d1_p = monty_precompute(m_monty_p, ct_modulo(m, m_key.get_p()), powm_window);
          BigInt j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
 
 #if defined(BOTAN_RSA_USE_ASYNC)
@@ -257,7 +257,7 @@ class RSA_Private_Operation
 
          const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
          const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
-         auto powm_d2_q = monty_precompute(m_monty_q, m_mod_q.reduce(m), powm_window);
+         auto powm_d2_q = monty_precompute(m_monty_q, ct_modulo(m, m_key.get_q()), powm_window);
          const BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
 
          /*
@@ -272,11 +272,7 @@ class RSA_Private_Operation
          BigInt j1 = future_j1.get();
 #endif
 
-         /*
-         To prevent a side channel that allows detecting case where j1 < j2,
-         add p to j1 before reducing [computing c*(p+j1-j2) mod p]
-         */
-         j1 = m_mod_p.reduce(sub_mul(m_key.get_p() + j1, j2, m_key.get_c()));
+         j1 = m_mod_p.multiply(j1 - j2, m_key.get_c());
          return mul_add(j1, m_key.get_q(), j2);
          }
 
