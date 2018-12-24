@@ -153,7 +153,7 @@ SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
 
    const BigInt r = m_group.mod_order(
       m_group.blinded_base_point_multiply_x(k, rng, m_ws) + e);
-   const BigInt s = m_group.multiply_mod_order(m_da_inv, (k - r*m_x));
+   const BigInt s = m_group.multiply_mod_order(m_da_inv, m_group.mod_order(k - r*m_x));
 
    return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order().bytes());
    }

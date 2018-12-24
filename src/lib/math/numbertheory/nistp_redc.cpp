@@ -176,8 +176,6 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 
    // No underflow possible
 
-   BOTAN_ASSERT(S <= 2, "Expected overflow in P-192 reduce");
-
    /*
    This is a table of (i*P-192) % 2**192 for i in 1...3
    */
@@ -192,6 +190,9 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
       {0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFC, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
 #endif
    };
+
+   CT::unpoison(S);
+   BOTAN_ASSERT(S <= 2, "Expected overflow");
 
    BOTAN_ASSERT_NOMSG(x.size() == p192_limbs + 1);
    word borrow = bigint_sub2(x.mutable_data(), p192_limbs + 1, p192_mults[S], p192_limbs);
@@ -280,8 +281,6 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 
    set_words(xw, 6, R0, 0);
 
-   BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow in P-224 reduce");
-
    static const word p224_mults[3][p224_limbs] = {
 #if (BOTAN_MP_WORD_BITS == 64)
     {0x0000000000000001, 0xFFFFFFFF00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
@@ -294,6 +293,9 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 #endif
 
    };
+
+   CT::unpoison(S);
+   BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow");
 
    BOTAN_ASSERT_NOMSG(x.size() == p224_limbs + 1);
    word borrow = bigint_sub2(x.mutable_data(), p224_limbs + 1, p224_mults[S], p224_limbs);
@@ -390,8 +392,6 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    S += 5; // the top digits of 6*P-256
 
-   BOTAN_DEBUG_ASSERT(S >= 0 && S <= 10);
-
    /*
    This is a table of (i*P-256) % 2**256 for i in 1...10
    */
@@ -424,6 +424,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    };
 
    CT::unpoison(S);
+   BOTAN_ASSERT(S >= 0 && S <= 10, "Expected overflow");
 
    BOTAN_ASSERT_NOMSG(x.size() == p256_limbs + 1);
    word borrow = bigint_sub2(x.mutable_data(), p256_limbs + 1, p256_mults[S], p256_limbs);
@@ -551,8 +552,6 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    set_words(xw, 10, R0, R1);
 
-   BOTAN_ASSERT(S >= 0 && S <= 4, "Expected overflow in P-384 reduction");
-
    /*
    This is a table of (i*P-384) % 2**384 for i in 1...4
    */
@@ -577,6 +576,9 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
 #endif
    };
+
+   CT::unpoison(S);
+   BOTAN_ASSERT(S >= 0 && S <= 4, "Expected overflow");
 
    BOTAN_ASSERT_NOMSG(x.size() == p384_limbs + 1);
    word borrow = bigint_sub2(x.mutable_data(), p384_limbs + 1, p384_mults[S], p384_limbs);

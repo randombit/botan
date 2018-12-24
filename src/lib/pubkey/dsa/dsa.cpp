@@ -10,6 +10,7 @@
 #include <botan/keypair.h>
 #include <botan/reducer.h>
 #include <botan/rng.h>
+#include <botan/divide.h>
 #include <botan/internal/pk_ops_impl.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
@@ -124,7 +125,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
    const BigInt k_inv = m_group.inverse_mod_q(k);
 
-   const BigInt r = m_group.mod_q(m_group.power_g_p(k, m_group.q_bits()));
+   const BigInt r = ct_modulo(m_group.power_g_p(k, m_group.q_bits()), m_group.get_q());
 
    /*
    * Blind the input message and compute x*r+m as (x*r*b + m*b)/b

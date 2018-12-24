@@ -280,6 +280,7 @@ size_t BigInt::top_bits_free() const
 
    const word top_word = word_at(words - 1);
    const size_t bits_used = high_bit(top_word);
+   CT::unpoison(bits_used);
    return BOTAN_MP_WORD_BITS - bits_used;
    }
 

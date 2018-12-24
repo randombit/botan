@@ -7,6 +7,7 @@
 
 #include <botan/reducer.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mp_core.h>
 #include <botan/divide.h>
 
 namespace Botan {
@@ -41,6 +42,31 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
    return r;
    }
 
+namespace {
+
+/*
+* Like if(cnd) x.rev_sub(...) but in const time
+*/
+void cnd_rev_sub(bool cnd, BigInt& x, const word y[], size_t y_sw, secure_vector<word>& ws)
+   {
+   if(x.sign() != BigInt::Positive)
+      throw Invalid_State("BigInt::sub_rev requires this is positive");
+
+   const size_t x_sw = x.sig_words();
+
+   const size_t max_words = std::max(x_sw, y_sw);
+   ws.resize(std::max(x_sw, y_sw));
+   clear_mem(ws.data(), ws.size());
+   x.grow_to(max_words);
+
+   const int32_t relative_size = bigint_sub_abs(ws.data(), x.data(), x_sw, y, y_sw);
+
+   x.cond_flip_sign((relative_size > 0) && cnd);
+   bigint_cnd_swap(cnd, x.mutable_data(), ws.data(), max_words);
+   }
+
+}
+
 void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& ws) const
    {
    if(&t1 == &x)
@@ -50,7 +76,7 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
 
    const size_t x_sw = x.sig_words();
 
-   if(x_sw >= (2*m_mod_words - 1) && x.cmp(m_modulus_2, false) >= 0)
+   if(x.cmp(m_modulus_2, false) >= 0)
       {
       // too big, fall back to slow boat division
       t1 = ct_modulo(x, m_modulus);
@@ -87,10 +113,7 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
    // Per HAC this step requires at most 2 subtractions
    t1.ct_reduce_below(m_modulus, ws, 2);
 
-   if(x.is_negative() && t1.is_nonzero())
-      {
-      t1.rev_sub(m_modulus.data(), m_modulus.size(), ws);
-      }
+   cnd_rev_sub(t1.is_nonzero() && x.is_negative(), t1, m_modulus.data(), m_modulus.size(), ws);
    }
 
 }
