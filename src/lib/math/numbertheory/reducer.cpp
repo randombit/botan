@@ -76,7 +76,7 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
 
    const size_t x_sw = x.sig_words();
 
-   if(x_sw >= (2*m_mod_words - 1) && x.cmp(m_modulus_2, false) >= 0)
+   if(x.cmp(m_modulus_2, false) >= 0)
       {
       // too big, fall back to slow boat division
       t1 = ct_modulo(x, m_modulus);
