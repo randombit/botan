@@ -54,7 +54,7 @@ class BOTAN_PUBLIC_API(2,0) Modular_Reducer
       Modular_Reducer() { m_mod_words = 0; }
       explicit Modular_Reducer(const BigInt& mod);
    private:
-      BigInt m_modulus, m_modulus_2, m_mu;
+      BigInt m_modulus, m_mu;
       size_t m_mod_words;
    };
 
