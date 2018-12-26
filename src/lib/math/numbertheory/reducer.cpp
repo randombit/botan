@@ -28,9 +28,9 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
       m_modulus = mod;
       m_mod_words = m_modulus.sig_words();
 
-      m_modulus_2 = Botan::square(m_modulus);
-
-      m_mu = ct_divide(BigInt::power_of_2(2 * BOTAN_MP_WORD_BITS * m_mod_words), m_modulus);
+      // Compute mu = floor(2^{2k} / m)
+      m_mu.set_bit(2 * BOTAN_MP_WORD_BITS * m_mod_words);
+      m_mu = ct_divide(m_mu, m_modulus);
       }
    }
 
@@ -76,7 +76,7 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
 
    const size_t x_sw = x.sig_words();
 
-   if(x.cmp(m_modulus_2, false) >= 0)
+   if(x_sw > 2*m_mod_words)
       {
       // too big, fall back to slow boat division
       t1 = ct_modulo(x, m_modulus);

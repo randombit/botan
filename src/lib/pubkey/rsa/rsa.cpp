@@ -234,6 +234,12 @@ class RSA_Private_Operation
 
       BigInt private_op(const BigInt& m) const
          {
+         /*
+         TODO
+           Consider using Montgomery reduction instead of Barrett, using
+           the "Smooth RSA-CRT" method. https://eprint.iacr.org/2007/039.pdf
+         */
+
          const size_t powm_window = 4;
 
          const BigInt d1_mask(m_blinder.rng(), m_blinding_bits);
@@ -242,12 +248,11 @@ class RSA_Private_Operation
    #define BOTAN_RSA_USE_ASYNC
 #endif
 
-
 #if defined(BOTAN_RSA_USE_ASYNC)
          auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask, powm_window]() {
 #endif
          const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
-         auto powm_d1_p = monty_precompute(m_monty_p, ct_modulo(m, m_key.get_p()), powm_window);
+         auto powm_d1_p = monty_precompute(m_monty_p, m_mod_p.reduce(m), powm_window);
          BigInt j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
 
 #if defined(BOTAN_RSA_USE_ASYNC)
@@ -257,8 +262,12 @@ class RSA_Private_Operation
 
          const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
          const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
-         auto powm_d2_q = monty_precompute(m_monty_q, ct_modulo(m, m_key.get_q()), powm_window);
+         auto powm_d2_q = monty_precompute(m_monty_q, m_mod_q.reduce(m), powm_window);
          const BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
+
+#if defined(BOTAN_RSA_USE_ASYNC)
+         BigInt j1 = future_j1.get();
+#endif
 
          /*
          * To recover the final value from the CRT representation (j1,j2)
@@ -266,13 +275,14 @@ class RSA_Private_Operation
          * c = q^-1 mod p (this is precomputed)
          * h = c*(j1-j2) mod p
          * m = j2 + h*q
+         *
+         * We must avoid leaking if j1 >= j2 or not, as doing so allows deriving
+         * information about the secret prime. Do this by first adding p to j1,
+         * which should ensure the subtraction of j2 does not underflow. But
+         * this may still underflow if p and q are imbalanced in size.
          */
 
-#if defined(BOTAN_RSA_USE_ASYNC)
-         BigInt j1 = future_j1.get();
-#endif
-
-         j1 = m_mod_p.multiply(j1 - j2, m_key.get_c());
+         j1 = m_mod_p.multiply(m_mod_p.reduce((m_key.get_p() + j1) - j2), m_key.get_c());
          return mul_add(j1, m_key.get_q(), j2);
          }
 

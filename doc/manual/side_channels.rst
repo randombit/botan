@@ -32,10 +32,11 @@ Barrett Reduction
 --------------------
 
 The Barrett reduction code is written to avoid input dependent branches. The
-Barrett algorithm only works for inputs that are most the square of the modulus;
-larger values fall back on a different (slower) division algorithm. This
-algorithm is also const time, but the branch allows detecting when a value
-larger than the square of the modulus was reduced.
+Barrett algorithm only works for inputs up to a certain size, and larger values
+fall back on a different (slower) division algorithm. This secondary algorithm
+is also const time, but the branch allows detecting when a value larger than
+2^{2k} was reduced, where k is the word length of the modulus. This leaks only
+the size of the two values, and not anything else about their value.
 
 RSA
 ----------------------
