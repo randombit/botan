@@ -657,12 +657,9 @@ bigint_sub_abs(word z[],
    {
    const int32_t relative_size = bigint_cmp(x, x_size, y, y_size);
 
-   // FIXME should be a const time swap
-   if(relative_size < 0)
-      {
-      std::swap(x, y);
-      std::swap(x_size, y_size);
-      }
+   // Swap if relative_size == -1
+   CT::conditional_swap_ptr(relative_size < 0, x, y);
+   CT::conditional_swap(relative_size < 0, x_size, y_size);
 
    /*
    * We know at this point that x >= y so if y_size is larger than

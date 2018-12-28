@@ -347,6 +347,29 @@ inline Mask<T> conditional_copy_mem(T cnd,
    return mask;
    }
 
+template<typename T>
+inline void conditional_swap(bool cnd, T& x, T& y)
+   {
+   const auto swap = CT::Mask<T>::expand(cnd);
+
+   T t0 = swap.select(y, x);
+   T t1 = swap.select(x, y);
+   x = t0;
+   y = t1;
+   }
+
+template<typename T>
+inline void conditional_swap_ptr(bool cnd, T& x, T& y)
+   {
+   uintptr_t xp = reinterpret_cast<uintptr_t>(x);
+   uintptr_t yp = reinterpret_cast<uintptr_t>(y);
+
+   conditional_swap<uintptr_t>(cnd, xp, yp);
+
+   x = reinterpret_cast<T>(xp);
+   y = reinterpret_cast<T>(yp);
+   }
+
 /**
 * If bad_mask is unset, return in[delim_idx:input_length] copied to
 * new buffer. If bad_mask is set, return an all zero vector of
