@@ -9,9 +9,12 @@
 
 #include <botan/types.h>
 #include <botan/mutex.h>
-#include <vector>
+#include <deque>
+#include <map>
 
 namespace Botan {
+
+class Bucket;
 
 class BOTAN_TEST_API Memory_Pool final
    {
@@ -20,37 +23,34 @@ class BOTAN_TEST_API Memory_Pool final
       * Initialize a memory pool. The memory is not owned by *this,
       * it must be freed by the caller.
       * @param pool the pool
-      * @param pool_size size of pool
+      * @param page_count size of pool in page_size chunks
       * @param page_size some nominal page size (does not need to match
       *        the system page size)
-      * @param min_allocation return null for allocs for smaller amounts
-      * @param max_allocation return null for allocs of larger amounts
-      * @param align_bit align all returned memory to (1<<align_bit) bytes
       */
       Memory_Pool(uint8_t* pool,
-                  size_t pool_size,
-                  size_t page_size,
-                  size_t min_allocation,
-                  size_t max_allocation,
-                  uint8_t align_bit);
+                  size_t page_count,
+                  size_t page_size);
+
+      ~Memory_Pool();
 
       void* allocate(size_t size);
 
       bool deallocate(void* p, size_t size) noexcept;
 
       Memory_Pool(const Memory_Pool&) = delete;
+      Memory_Pool(Memory_Pool&&) = delete;
 
       Memory_Pool& operator=(const Memory_Pool&) = delete;
+      Memory_Pool& operator=(Memory_Pool&&) = delete;
 
    private:
       const size_t m_page_size = 0;
-      const size_t m_min_alloc = 0;
-      const size_t m_max_alloc = 0;
-      const uint8_t m_align_bit = 0;
 
       mutex_type m_mutex;
 
-      std::vector<std::pair<size_t, size_t>> m_freelist;
+      std::deque<uint8_t*> m_free_pages;
+      std::map<size_t, std::deque<Bucket>> m_buckets_for;
+
       uint8_t* m_pool = nullptr;
       size_t m_pool_size = 0;
    };

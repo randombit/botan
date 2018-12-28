@@ -43,20 +43,19 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) no
 mlock_allocator::mlock_allocator()
    {
    const size_t mem_to_lock = OS::get_memory_locking_limit();
+   const size_t page_size = OS::system_page_size();
 
-   if(mem_to_lock)
+   if(mem_to_lock > 0 && mem_to_lock % page_size == 0)
       {
       m_locked_pages = static_cast<uint8_t*>(OS::allocate_locked_pages(mem_to_lock));
 
       if(m_locked_pages)
          {
          m_locked_pages_size = mem_to_lock;
+
          m_pool.reset(new Memory_Pool(m_locked_pages,
-                                      m_locked_pages_size,
-                                      OS::system_page_size(),
-                                      BOTAN_MLOCK_ALLOCATOR_MIN_ALLOCATION,
-                                      BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION,
-                                      4));
+                                      m_locked_pages_size / page_size,
+                                      page_size));
          }
       }
    }
