@@ -23,6 +23,7 @@
   #include <sys/resource.h>
   #include <sys/mman.h>
   #include <signal.h>
+  #include <stdlib.h>
   #include <setjmp.h>
   #include <unistd.h>
   #include <errno.h>
@@ -331,25 +332,16 @@ void* OS::allocate_locked_pages(size_t length)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
 
-#if !defined(MAP_NOCORE)
-   #define MAP_NOCORE 0
-#endif
+   const size_t page_size = OS::system_page_size();
 
-#if !defined(MAP_ANONYMOUS)
-   #define MAP_ANONYMOUS MAP_ANON
-#endif
-
-   void* ptr = ::mmap(nullptr,
-                      length,
-                      PROT_READ | PROT_WRITE,
-                      MAP_ANONYMOUS | MAP_SHARED | MAP_NOCORE,
-                      /*fd*/-1,
-                      /*offset*/0);
-
-   if(ptr == MAP_FAILED)
-      {
+   if(length % page_size != 0)
       return nullptr;
-      }
+
+   void* ptr = nullptr;
+   int rc = ::posix_memalign(&ptr, page_size, length);
+
+   if(rc != 0 || ptr == nullptr)
+      return nullptr;
 
 #if defined(MADV_DONTDUMP)
    ::madvise(ptr, length, MADV_DONTDUMP);
@@ -357,7 +349,7 @@ void* OS::allocate_locked_pages(size_t length)
 
    if(::mlock(ptr, length) != 0)
       {
-      ::munmap(ptr, length);
+      std::free(ptr);
       return nullptr; // failed to lock
       }
 
@@ -392,7 +384,7 @@ void OS::free_locked_pages(void* ptr, size_t length)
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    secure_scrub_memory(ptr, length);
    ::munlock(ptr, length);
-   ::munmap(ptr, length);
+   std::free(ptr);
 
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    secure_scrub_memory(ptr, length);
