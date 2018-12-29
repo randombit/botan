@@ -29,6 +29,7 @@ enum CRL_Code : uint32_t {
    CERTIFICATE_HOLD       = 6,
    REMOVE_FROM_CRL        = 8,
    PRIVLEDGE_WITHDRAWN    = 9,
+   PRIVILEGE_WITHDRAWN    = 9,
    AA_COMPROMISE          = 10,
 
    DELETE_CRL_ENTRY       = 0xFF00,
