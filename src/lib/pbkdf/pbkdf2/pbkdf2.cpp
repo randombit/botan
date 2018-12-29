@@ -64,19 +64,19 @@ size_t tune_pbkdf2(MessageAuthenticationCode& prf,
    BOTAN_ASSERT_NOMSG(prf_sz > 0);
    secure_vector<uint8_t> U(prf_sz);
 
-   const size_t trial_iterations = 10000;
+   const size_t trial_iterations = 2000;
 
    // Short output ensures we only need a single PBKDF2 block
 
    Timer timer("PBKDF2");
 
-   const std::chrono::milliseconds tune_msec(30);
+   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
    prf.set_key(nullptr, 0);
 
-   timer.run_until_elapsed(tune_msec, [&]() {
-      uint8_t out[16] = { 0 };
-      uint8_t salt[16] = { 0 };
+   timer.run_until_elapsed(tune_time, [&]() {
+      uint8_t out[12] = { 0 };
+      uint8_t salt[12] = { 0 };
       pbkdf2(prf, out, sizeof(out), salt, sizeof(salt), trial_iterations);
       });
 

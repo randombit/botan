@@ -31,8 +31,12 @@ class BOTAN_TEST_API Timer final
          , m_clock_speed(clock_speed)
          {}
 
-      Timer(const std::string& name, size_t buf_size = 0) :
-         Timer(name, "", "", 1, buf_size, 0.0, 0)
+      Timer(const std::string& name) :
+         Timer(name, "", "", 1, 0, 0.0, 0)
+         {}
+
+      Timer(const std::string& name, size_t buf_size) :
+         Timer(name, "", "", buf_size, buf_size, 0.0, 0)
          {}
 
       Timer(const Timer& other) = default;

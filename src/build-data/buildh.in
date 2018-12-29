@@ -214,6 +214,12 @@ Each read generates 32 bits of output
 #define BOTAN_ENTROPY_RDSEED_RETRIES 20
 
 /*
+* When a PBKDF is self-tuning parameters, it will attempt to take about this
+* amount of time to self-benchmark.
+*/
+#define BOTAN_PBKDF_TUNING_TIME std::chrono::milliseconds(10)
+
+/*
 * If no way of dynamically determining the cache line size for the
 * system exists, this value is used as the default. Used by the side
 * channel countermeasures rather than for alignment purposes, so it is
