@@ -23,7 +23,7 @@ void fuzz(const uint8_t in[], size_t in_len)
 
    while(in_len > 0)
       {
-      const uint8_t op = in[0] % 1;
+      const uint8_t op = in[0] % 2;
       size_t idx = (in[0] >> 1);
       in += 1;
       in_len -= 1;
