@@ -6,19 +6,35 @@
 
 #include "fuzzers.h"
 #include <botan/internal/mem_pool.h>
+#include <botan/internal/bit_ops.h>
 #include <vector>
 #include <map>
 #include <utility>
+
+namespace {
+
+size_t compute_expected_alignment(size_t plen)
+   {
+   if(Botan::is_power_of_2(plen))
+      {
+      return plen;
+      }
+   else
+      {
+      return 8;
+      }
+   }
+
+}
 
 void fuzz(const uint8_t in[], size_t in_len)
    {
    const size_t page_size = 4096;
    const size_t pages = 4;
-   const size_t expected_alignment = (1 << 4);
 
    static std::vector<uint8_t> raw_mem(page_size * pages);
 
-   Botan::Memory_Pool pool(raw_mem.data(), raw_mem.size(), page_size, 1, 128, 4);
+   Botan::Memory_Pool pool(raw_mem.data(), pages, page_size);
    std::map<uint8_t*, size_t> ptrs;
 
    while(in_len > 0)
@@ -35,18 +51,21 @@ void fuzz(const uint8_t in[], size_t in_len)
          in_len -= 1;
          }
 
+      //printf("%d %d\n", op, idx);
+
       if(op == 0)
          {
          const size_t plen = idx + 1; // ensure non-zero
          uint8_t* p = static_cast<uint8_t*>(pool.allocate(plen));
 
-         if(reinterpret_cast<uintptr_t>(p) % expected_alignment != 0)
-            {
-            FUZZER_WRITE_AND_CRASH("Pointer allocated non-aligned pointer " << p);
-            }
-
          if(p)
             {
+            const size_t expected_alignment = compute_expected_alignment(plen);
+            if(reinterpret_cast<uintptr_t>(p) % expected_alignment != 0)
+               {
+               FUZZER_WRITE_AND_CRASH("Pointer allocated non-aligned pointer " << p);
+               }
+
             //printf("alloc %d -> %p\n", plen, p);
 
             for(size_t i = 0; i != plen; ++i)
