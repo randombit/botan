@@ -50,10 +50,10 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    size_t r = 1;
    size_t p = 1;
 
-   Timer timer("Scrypt", 0);
-   const std::chrono::milliseconds tune_msec(30);
+   Timer timer("Scrypt");
+   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
 
-   timer.run_until_elapsed(tune_msec, [&]() {
+   timer.run_until_elapsed(tune_time, [&]() {
       uint8_t output[32] = { 0 };
       scrypt(output, sizeof(output), "test", 4, nullptr, 0, N, r, p);
       });
