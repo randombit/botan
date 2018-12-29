@@ -188,7 +188,7 @@ size_t BigInt::Data::calc_sig_words() const
    for(size_t i = 0; i != sz; ++i)
       {
       const word w = m_reg[sz - i - 1];
-      sub &= CT::Mask<word>::is_zero(w).value();
+      sub &= ct_is_zero(w);
       sig -= sub;
       }
 
@@ -245,12 +245,6 @@ uint32_t BigInt::to_u32bit() const
 void BigInt::conditionally_set_bit(size_t n, bool set_it)
    {
    const size_t which = n / BOTAN_MP_WORD_BITS;
-
-   if(which >= size())
-      {
-      grow_to(which + 1);
-      }
-
    const word mask = static_cast<word>(set_it) << (n % BOTAN_MP_WORD_BITS);
    m_data.set_word_at(which, word_at(which) | mask);
    }
