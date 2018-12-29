@@ -351,8 +351,8 @@ such a way that it is guaranteed that the compiler will not elide the
 'additional' (seemingly unnecessary) writes to zero out the memory.
 
 The function secure_scrub_memory (in mem_ops.cpp) uses some system specific
-trick to zero out an array. On Windows it uses the directly supported API
-function RtlSecureZeroMemory.
+trick to zero out an array. If possible an OS provided routine (such as
+``RtlSecureZeroMemory`` or ``explicit_bzero``) is used.
 
 On other platforms, by default the trick of referencing memset through a
 volatile function pointer is used. This approach is not guaranteed to work on
@@ -370,16 +370,15 @@ Botan's secure_vector type is a std::vector with a custom allocator. The
 allocator calls secure_scrub_memory before freeing memory.
 
 Some operating systems support an API call to lock a range of pages
-into memory, such that they will never be swapped out (mlock on POSIX,
-VirtualLock on Windows). On many POSIX systems mlock is only usable by
+into memory, such that they will never be swapped out (``mlock`` on POSIX,
+``VirtualLock`` on Windows). On many POSIX systems ``mlock`` is only usable by
 root, but on Linux, FreeBSD and possibly other systems a small amount
-of memory can be mlock'ed by processes without extra credentials.
+of memory can be locked by processes without extra credentials.
 
-If available, Botan uses such a region for storing key material. It is
-created in anonymous mapped memory (not disk backed), locked in
-memory, and scrubbed on free. This memory pool is used by
-secure_vector when available. It can be disabled at runtime setting
-the environment variable BOTAN_MLOCK_POOL_SIZE to 0.
+If available, Botan uses such a region for storing key material. A page-aligned
+block of memory is allocated and locked, then the memory is scrubbed before
+freeing. This memory pool is used by secure_vector when available. It can be
+disabled at runtime setting the environment variable BOTAN_MLOCK_POOL_SIZE to 0.
 
 Automated Analysis
 ---------------------
