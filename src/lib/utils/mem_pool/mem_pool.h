@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-class Memory_Pool final
+class BOTAN_TEST_API Memory_Pool final
    {
    public:
       /**
