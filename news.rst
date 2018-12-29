@@ -40,15 +40,19 @@ Version 2.9.0, Not Yet Released
 * In the command line interface, add support for reading passphrases from the
   terminal with echo disabled (GH #1756)
 
-* Add CT::Mask type to simplify const-time programming (GH #1751)
+* Add ``CT::Mask`` type to simplify const-time programming (GH #1751)
 
 * Add new configure options ``--disable-bmi2``, ``--disable-rdrand``,
   and ``--disable-rdseed`` to prevent use of those instruction sets.
 
-* Add error_type and error_code functions to Exception type (GH #1744)
+* Add ``error_type`` and ``error_code`` functions to Exception type (GH #1744)
+
+* Now on POSIX systems ``posix_memalign`` is used instead of ``mmap`` for
+  allocating the page-locked memory pool. This avoids issues with ``fork``.
+  (GH #602 #1798)
 
 * When available, use RDRAND to generate the additional data in
-  Stateful_RNG::randomize_with_ts_input
+  ``Stateful_RNG::randomize_with_ts_input``
 
 * Use vzeroall/vzeroupper intrinsics to avoid AVX2/SSE transition penalties.
 
@@ -68,7 +72,7 @@ Version 2.9.0, Not Yet Released
   field in the shares. Now the correct length is encoded, but either
   correct or buggy lengths are accepted when decoding. (GH #1722)
 
-* Correct a bug when reducing a negative BigInt modulo a small power of 2.
+* Correct a bug when reducing a negative ``BigInt`` modulo a small power of 2.
   (GH #1755)
 
 * Add CLI utils for threshold secret splitting. (GH #1722)
@@ -87,8 +91,8 @@ Version 2.9.0, Not Yet Released
   file, and (for systems where ``pkg-config`` support defaults to off,
   like Windows), to enable generating it. (GH #1268)
 
-* Make configure.py parse_multiple_enable accept an empty list and
-  trailing/extra commas.
+* Modify ``configure.py`` to accept empty lists or trailing/extra commas.
+  (GH #1705)
 
 Version 2.8.0, 2018-10-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
