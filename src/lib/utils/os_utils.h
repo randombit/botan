@@ -80,6 +80,14 @@ size_t get_memory_locking_limit();
 size_t system_page_size();
 
 /**
+* Read the value of an environment variable. Return nullptr if
+* no such variable is set. If the process seems to be running in
+* a privileged state (such as setuid) then always returns nullptr,
+* similiar to glibc's secure_getenv.
+*/
+const char* read_env_variable(const std::string& var_name);
+
+/**
 * Request so many bytes of page-aligned RAM locked into memory using
 * mlock, VirtualLock, or similar. Returns null on failure. The memory
 * returned is zeroed. Free it with free_locked_pages.

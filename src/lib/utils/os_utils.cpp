@@ -267,17 +267,14 @@ size_t OS::get_memory_locking_limit()
    /*
    * Allow override via env variable
    */
-   if(OS::running_in_privileged_state() == false)
+   if(const char* env = read_env_variable("BOTAN_MLOCK_POOL_SIZE"))
       {
-      if(const char* env = std::getenv("BOTAN_MLOCK_POOL_SIZE"))
+      try
          {
-         try
-            {
-            const size_t user_req = std::stoul(env, nullptr);
-            mlock_requested = std::min(user_req, mlock_requested);
-            }
-         catch(std::exception&) { /* ignore it */ }
+         const size_t user_req = std::stoul(env, nullptr);
+         mlock_requested = std::min(user_req, mlock_requested);
          }
+      catch(std::exception&) { /* ignore it */ }
       }
 
    if(mlock_requested > 0)
@@ -326,6 +323,14 @@ size_t OS::get_memory_locking_limit()
 
    // Not supported on this platform
    return 0;
+   }
+
+const char* OS::read_env_variable(const std::string& name)
+   {
+   if(running_in_privileged_state())
+      return nullptr;
+
+   return std::getenv(name.c_str());
    }
 
 void* OS::allocate_locked_pages(size_t length)
