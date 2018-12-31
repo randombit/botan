@@ -5,6 +5,7 @@ wordsize 64
 
 <aliases>
 powerpc64
+powerpc64le
 ppc64le
 ppc64el
 </aliases>
