@@ -38,7 +38,7 @@ namespace Botan {
     #define BOTAN_MP_USE_X86_32_MSVC_ASM
   #endif
 
-#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && (BOTAN_MP_WORD_BITS == 64) && (BOTAN_USE_GCC_INLINE_ASM)
+#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && (BOTAN_MP_WORD_BITS == 64) && defined(BOTAN_USE_GCC_INLINE_ASM)
   #define BOTAN_MP_USE_X86_64_ASM
 #endif
 
