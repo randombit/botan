@@ -60,7 +60,7 @@ inline T rotr_var(T input, size_t rot)
    return rot ? static_cast<T>((input >> rot) | (input << (sizeof(T)*8 - rot))) : input;
    }
 
-#if BOTAN_USE_GCC_INLINE_ASM
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_64) || defined(BOTAN_TARGET_ARCH_IS_X86_32)
 
