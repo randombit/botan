@@ -1,6 +1,6 @@
 /*
 * Byte Swapping Operations
-* (C) 1999-2011 Jack Lloyd
+* (C) 1999-2011,2018 Jack Lloyd
 * (C) 2007 Yves Jerschow
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -22,7 +22,7 @@ namespace Botan {
 */
 inline uint16_t reverse_bytes(uint16_t val)
    {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
    return __builtin_bswap16(val);
 #else
    return static_cast<uint16_t>((val << 8) | (val >> 8));
@@ -34,7 +34,7 @@ inline uint16_t reverse_bytes(uint16_t val)
 */
 inline uint32_t reverse_bytes(uint32_t val)
    {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
    return __builtin_bswap32(val);
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
@@ -63,7 +63,7 @@ inline uint32_t reverse_bytes(uint32_t val)
 */
 inline uint64_t reverse_bytes(uint64_t val)
    {
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
    return __builtin_bswap64(val);
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
