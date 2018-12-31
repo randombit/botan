@@ -31,18 +31,18 @@ Some (but not all) of the tier-2 platforms are tested by CI. Things should
 mostly work, and if problems are encountered, the Botan devs will probably be
 able to help. But they are not as well tested as tier-1.
 
-Of course many other modern OSes such as OpenBSD, NetBSD, AIX, Solaris or QNX
+Of course many other modern OSes such as QNX, AIX, OpenBSD, NetBSD, and Solaris
 are also probably fine (Botan has been tested on all of them successfully in the
 past), but none of the core developers run these OSes and may not be able to
 help so much in debugging problems. Patches to improve the build for these
 platforms are welcome, as are any reports of successful use.
 
-In theory any working C++11 compiler is fine but in practice, we only test with
-GCC, Clang, and Visual C++.  There is support in the build system for several
-commercial C++ compilers (Intel, PGI, Sun Studio, Ekopath, etc) all of which
-worked with older (C++98) versions of both the code and the compilers, but it is
-not known if the latest versions of these compilers can compile the library
-properly.
+In theory any working C++11 compiler is fine but in practice, we only regularly
+test with GCC, Clang, and Visual C++. Recent versions of IBM XLC will compile
+the library but occasionally codegen bugs occur. Several other compilers (such
+as Intel and PGI) are supported by the build system but are not tested by the
+developers and may have build or codegen problems. Patches to improve support
+for these compilers is welcome.
 
 Branch Support Status
 -------------------------
