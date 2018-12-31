@@ -107,7 +107,7 @@ inline size_t ctz(T n)
    for(size_t s = 8*sizeof(T) / 2; s > 0; s /= 2)
       {
       const T mask = (static_cast<T>(1) << s) - 1;
-      const T z = s * (ct_is_zero(n & mask) & 1);
+      const size_t z = s * (ct_is_zero(n & mask) & 1);
       lb += z;
       n >>= z;
       }

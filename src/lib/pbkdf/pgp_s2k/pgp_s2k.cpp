@@ -63,7 +63,7 @@ uint8_t RFC4880_encode_count(size_t desired_iterations)
 
    auto i = std::upper_bound(OPENPGP_S2K_ITERS, OPENPGP_S2K_ITERS + 256, desired_iterations);
 
-   return (i - OPENPGP_S2K_ITERS);
+   return static_cast<uint8_t>(i - OPENPGP_S2K_ITERS);
    }
 
 size_t RFC4880_decode_count(uint8_t iter)
