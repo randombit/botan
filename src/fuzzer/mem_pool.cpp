@@ -30,11 +30,14 @@ size_t compute_expected_alignment(size_t plen)
 void fuzz(const uint8_t in[], size_t in_len)
    {
    const size_t page_size = 4096;
-   const size_t pages = 4;
 
-   static std::vector<uint8_t> raw_mem(page_size * pages);
+   static std::vector<void*> raw_mem{malloc(page_size),
+                                     malloc(page_size),
+                                     malloc(page_size),
+                                     malloc(page_size)};
 
-   Botan::Memory_Pool pool(raw_mem.data(), pages, page_size);
+
+   Botan::Memory_Pool pool(raw_mem, page_size);
    std::map<uint8_t*, size_t> ptrs;
 
    while(in_len > 0)

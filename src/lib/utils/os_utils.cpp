@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 
@@ -306,18 +307,11 @@ size_t OS::get_memory_locking_limit()
    // But the information in the book seems to be inaccurate/outdated
    // I've tested this on Windows 8.1 x64, Windows 10 x64 and Windows 7 x86
    // On all three OS the value is 11 instead of 8
-   size_t overhead = OS::system_page_size() * 11ULL;
+   const size_t overhead = OS::system_page_size() * 11;
    if(working_min > overhead)
       {
-      size_t lockable_bytes = working_min - overhead;
-      if(lockable_bytes < (BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB * 1024ULL))
-         {
-         return lockable_bytes;
-         }
-      else
-         {
-         return BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB * 1024ULL;
-         }
+      const size_t lockable_bytes = working_min - overhead;
+      return std::min<size_t>(lockable_bytes, BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB * 1024);
       }
 #endif
 
@@ -333,73 +327,106 @@ const char* OS::read_env_variable(const std::string& name)
    return std::getenv(name.c_str());
    }
 
-void* OS::allocate_locked_pages(size_t length)
+std::vector<void*> OS::allocate_locked_pages(size_t count)
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+   std::vector<void*> result;
+   result.reserve(count);
 
    const size_t page_size = OS::system_page_size();
 
-   if(length % page_size != 0)
-      return nullptr;
+   for(size_t i = 0; i != count; ++i)
+      {
+      void* ptr = nullptr;
 
-   void* ptr = nullptr;
-   int rc = ::posix_memalign(&ptr, page_size, length);
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+      int rc = ::posix_memalign(&ptr, page_size, 2*page_size);
 
-   if(rc != 0 || ptr == nullptr)
-      return nullptr;
+      if(rc != 0 || ptr == nullptr)
+         continue;
+
+      // failed to lock
+      if(::mlock(ptr, page_size) != 0)
+         {
+         std::free(ptr);
+         continue;
+         }
 
 #if defined(MADV_DONTDUMP)
-   ::madvise(ptr, length, MADV_DONTDUMP);
+      // we ignore errors here, as DONTDUMP is just a bonus
+      ::madvise(ptr, page_size, MADV_DONTDUMP);
 #endif
 
-   if(::mlock(ptr, length) != 0)
-      {
-      std::free(ptr);
-      return nullptr; // failed to lock
-      }
-
-   ::memset(ptr, 0, length);
-
-   return ptr;
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
-   LPVOID ptr = ::VirtualAlloc(nullptr, length, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-   if(!ptr)
-      {
-      return nullptr;
+      ptr = ::VirtualAlloc(nullptr, 2*page_size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+
+      if(ptr == nullptr)
+         continue;
+
+      if(::VirtualLock(ptr, page_size) == 0)
+         {
+         ::VirtualFree(ptr, 0, MEM_RELEASE);
+         continue;
+         }
+#endif
+
+      if(ptr != nullptr)
+         {
+         // Make guard page following the data page
+         page_prohibit_access(static_cast<uint8_t*>(ptr) + page_size);
+
+         std::memset(ptr, 0, page_size);
+         result.push_back(ptr);
+         }
       }
 
-   if(::VirtualLock(ptr, length) == 0)
-      {
-      ::VirtualFree(ptr, 0, MEM_RELEASE);
-      return nullptr; // failed to lock
-      }
+   return result;
+   }
 
-   return ptr;
-#else
-   BOTAN_UNUSED(length);
-   return nullptr; /* not implemented */
+void OS::page_allow_access(void* page)
+   {
+   const size_t page_size = OS::system_page_size();
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   ::mprotect(page, page_size, PROT_READ | PROT_WRITE);
+#elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
+   DWORD old_perms = 0;
+   ::VirtualProtect(page, page_size, PAGE_READWRITE, &old_perms);
+   BOTAN_UNUSED(old_perms);
 #endif
    }
 
-void OS::free_locked_pages(void* ptr, size_t length)
+void OS::page_prohibit_access(void* page)
    {
-   if(ptr == nullptr || length == 0)
-      return;
+   const size_t page_size = OS::system_page_size();
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   ::mprotect(page, page_size, PROT_NONE);
+#elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
+   DWORD old_perms = 0;
+   ::VirtualProtect(page, page_size, PAGE_NOACCESS, &old_perms);
+   BOTAN_UNUSED(old_perms);
+#endif
+   }
+
+void OS::free_locked_pages(const std::vector<void*>& pages)
+   {
+   const size_t page_size = OS::system_page_size();
+
+   for(size_t i = 0; i != pages.size(); ++i)
+      {
+      void* ptr = pages[i];
+
+      secure_scrub_memory(ptr, page_size);
+
+      // ptr points to the data page, guard page follows
+      page_allow_access(static_cast<uint8_t*>(ptr) + page_size);
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-   secure_scrub_memory(ptr, length);
-   ::munlock(ptr, length);
-   std::free(ptr);
-
+      ::munlock(ptr, page_size);
+      std::free(ptr);
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
-   secure_scrub_memory(ptr, length);
-   ::VirtualUnlock(ptr, length);
-   ::VirtualFree(ptr, 0, MEM_RELEASE);
-
-#else
-   // Invalid argument because no way this pointer was allocated by us
-   throw Invalid_Argument("Invalid ptr to free_locked_pages");
+      ::VirtualUnlock(ptr, page_size);
+      ::VirtualFree(ptr, 0, MEM_RELEASE);
 #endif
+      }
    }
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)

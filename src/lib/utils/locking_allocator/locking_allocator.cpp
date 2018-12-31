@@ -47,15 +47,11 @@ mlock_allocator::mlock_allocator()
 
    if(mem_to_lock > 0 && mem_to_lock % page_size == 0)
       {
-      m_locked_pages = static_cast<uint8_t*>(OS::allocate_locked_pages(mem_to_lock));
+      m_locked_pages = OS::allocate_locked_pages(mem_to_lock / page_size);
 
-      if(m_locked_pages)
+      if(m_locked_pages.size() > 0)
          {
-         m_locked_pages_size = mem_to_lock;
-
-         m_pool.reset(new Memory_Pool(m_locked_pages,
-                                      m_locked_pages_size / page_size,
-                                      page_size));
+         m_pool.reset(new Memory_Pool(m_locked_pages, page_size));
          }
       }
    }
@@ -66,7 +62,7 @@ mlock_allocator::~mlock_allocator()
       {
       m_pool.reset();
       // OS::free_locked_pages scrubs the memory before free
-      OS::free_locked_pages(m_locked_pages, m_locked_pages_size);
+      OS::free_locked_pages(m_locked_pages);
       }
    }
 

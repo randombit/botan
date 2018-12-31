@@ -9,6 +9,7 @@
 
 #include <botan/types.h>
 #include <botan/mutex.h>
+#include <vector>
 #include <deque>
 #include <map>
 
@@ -22,13 +23,11 @@ class BOTAN_TEST_API Memory_Pool final
       /**
       * Initialize a memory pool. The memory is not owned by *this,
       * it must be freed by the caller.
-      * @param pool the pool
-      * @param page_count size of pool in page_size chunks
-      * @param page_size some nominal page size (does not need to match
-      *        the system page size)
+      * @param pages a list of pages to allocate from
+      * @param page_size the system page size, each page should
+      *        point to exactly this much memory.
       */
-      Memory_Pool(uint8_t* pool,
-                  size_t page_count,
+      Memory_Pool(const std::vector<void*>& pages,
                   size_t page_size);
 
       ~Memory_Pool();
@@ -50,9 +49,6 @@ class BOTAN_TEST_API Memory_Pool final
 
       std::deque<uint8_t*> m_free_pages;
       std::map<size_t, std::deque<Bucket>> m_buckets_for;
-
-      uint8_t* m_pool = nullptr;
-      size_t m_pool_size = 0;
    };
 
 }

@@ -35,8 +35,7 @@ class BOTAN_PUBLIC_API(2,0) mlock_allocator final
       ~mlock_allocator();
 
       std::unique_ptr<Memory_Pool> m_pool;
-      uint8_t* m_locked_pages = nullptr;
-      size_t m_locked_pages_size = 0;
+      std::vector<void*> m_locked_pages;
    };
 
 }
