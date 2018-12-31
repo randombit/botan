@@ -47,10 +47,14 @@ inline uint32_t reverse_bytes(uint32_t val)
    return val;
 
 #else
-
    // Generic implementation
-   return (rotr<8>(val) & 0xFF00FF00) | (rotl<8>(val) & 0x00FF00FF);
+   uint16_t hi = static_cast<uint16_t>(val >> 16);
+   uint16_t lo = static_cast<uint16_t>(val);
 
+   hi = reverse_bytes(hi);
+   lo = reverse_bytes(lo);
+
+   return (static_cast<uint32_t>(lo) << 16) | hi;
 #endif
    }
 
