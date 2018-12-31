@@ -54,6 +54,7 @@ class Test_Options
       Test_Options() = default;
 
       Test_Options(const std::vector<std::string>& requested_tests,
+                   const std::vector<std::string>& skip_tests,
                    const std::string& data_dir,
                    const std::string& pkcs11_lib,
                    const std::string& provider,
@@ -66,6 +67,7 @@ class Test_Options
                    bool abort_on_first_fail,
                    bool undefined_behavior_allowed) :
          m_requested_tests(requested_tests),
+         m_skip_tests(skip_tests.begin(), skip_tests.end()),
          m_data_dir(data_dir),
          m_pkcs11_lib(pkcs11_lib),
          m_provider(provider),
@@ -77,10 +79,14 @@ class Test_Options
          m_run_long_tests(run_long_tests),
          m_abort_on_first_fail(abort_on_first_fail),
          m_undefined_behavior_allowed(undefined_behavior_allowed)
-         {}
+         {
+         }
 
       const std::vector<std::string>& requested_tests() const
          { return m_requested_tests; }
+
+      const std::set<std::string>& skip_tests() const
+         { return m_skip_tests; }
 
       const std::string& data_dir() const { return m_data_dir; }
 
@@ -114,6 +120,7 @@ class Test_Options
 
    private:
       std::vector<std::string> m_requested_tests;
+      std::set<std::string> m_skip_tests;
       std::string m_data_dir;
       std::string m_pkcs11_lib;
       std::string m_provider;

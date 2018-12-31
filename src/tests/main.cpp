@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
       {
       const std::string arg_spec =
          "botan-test --verbose --help --data-dir= --pkcs11-lib= --provider= "
-         "--log-success --abort-on-first-fail --no-avoid-undefined "
+         "--log-success --abort-on-first-fail --no-avoid-undefined --skip-tests= "
          "--run-long-tests --run-online-tests --test-runs=1 --drbg-seed= "
          "*suites";
 
@@ -76,6 +76,7 @@ int main(int argc, char* argv[])
 
       const Botan_Tests::Test_Options opts(
          parser.get_arg_list("suites"),
+         parser.get_arg_list("skip-tests"),
          parser.get_arg_or("data-dir", "src/tests/data"),
          parser.get_arg("pkcs11-lib"),
          parser.get_arg("provider"),
