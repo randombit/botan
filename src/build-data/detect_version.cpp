@@ -16,9 +16,9 @@
    */
    MSVC _MSC_VER
 
-#elif defined(__xlC__)
+#elif defined(__ibmxl__)
 
-   XLC __xlC__
+   XLC __ibmxl_version__ __ibmxl_release__
 
 #elif defined(__clang__) && defined(__apple_build_version__)
 

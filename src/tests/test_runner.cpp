@@ -91,6 +91,7 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 int Test_Runner::run(const Test_Options& opts)
    {
    std::vector<std::string> req = opts.requested_tests();
+   const std::set<std::string> to_skip = opts.skip_tests();
 
    if(req.empty())
       {
@@ -99,9 +100,17 @@ int Test_Runner::run(const Test_Options& opts)
       run the "essentials" to smoke test, then everything else in
       alphabetical order.
       */
-      req = {"block", "stream", "hash", "mac", "modes", "aead",
-             "kdf", "pbkdf", "hmac_drbg", "util"
+
+      std::vector<std::string> default_first = {
+         "block", "stream", "hash", "mac", "modes", "aead",
+         "kdf", "pbkdf", "hmac_drbg", "util"
       };
+
+      for(auto s : default_first)
+         {
+         if(to_skip.count(s) == 0)
+            req.push_back(s);
+         }
 
       std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
 
@@ -122,6 +131,11 @@ int Test_Runner::run(const Test_Options& opts)
          }
 
       for(auto f : req)
+         {
+         all_others.erase(f);
+         }
+
+      for(const std::string& f : to_skip)
          {
          all_others.erase(f);
          }
