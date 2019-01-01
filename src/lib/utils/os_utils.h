@@ -10,6 +10,7 @@
 
 #include <botan/types.h>
 #include <functional>
+#include <string>
 
 namespace Botan {
 
