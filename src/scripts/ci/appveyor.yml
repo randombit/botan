@@ -11,12 +11,6 @@ environment:
       TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
-    # MSVC 2015 DLL x86-64
-    - MSVS: 2015
-      PLATFORM: x86_amd64
-      TARGET: shared
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-
     # MSVC 2017 DLL x86-32
     - MSVS: 2017
       PLATFORM: x86
@@ -35,16 +29,10 @@ environment:
       TARGET: static
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
-    # MSVC 2017 x86-64 w/debug iterators
-    - MSVS: 2017
-      PLATFORM: x86_amd64
-      TARGET: sanitizer
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
-    # MSVC 2019 static x86-64
+    # MSVC 2019 x86-64 w/debug iterators
     - MSVS: 2019
       PLATFORM: x86_amd64
-      TARGET: static
+      TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
 
 install:
