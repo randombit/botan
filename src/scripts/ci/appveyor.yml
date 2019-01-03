@@ -33,11 +33,17 @@ environment:
       TARGET: static
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
-    # MSVC 2017 w/debug iterators
+    # MSVC 2017 x86-64 w/debug iterators
     - MSVS: 2017
       PLATFORM: x86_amd64
       TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+    # MSVC 2019 static x86-64
+    - MSVS: 2019
+      PLATFORM: x86_amd64
+      TARGET: static
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
 
 install:
   - call src\scripts\ci\setup_appveyor.bat
