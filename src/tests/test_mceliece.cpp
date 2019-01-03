@@ -32,7 +32,7 @@ namespace {
 
 #if defined(BOTAN_HAS_MCELIECE)
 
-#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HASH_SHA2_64)
+#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64)
 class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
    {
    public:
