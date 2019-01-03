@@ -100,7 +100,7 @@ int botan_mp_to_hex(const botan_mp_t mp, char* out)
    {
    return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
       const std::string hex = bn.to_hex_string();
-      std::strcpy(out, hex.c_str());
+      std::memcpy(out, hex.c_str(), 1 + hex.size());
       });
    }
 
