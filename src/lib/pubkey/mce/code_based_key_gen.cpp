@@ -207,10 +207,8 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
 
 McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t ext_deg, uint32_t code_length, uint32_t t)
    {
-   uint32_t i, j, k, l;
-   std::unique_ptr<binary_matrix> R;
+   const size_t codimension = t * ext_deg;
 
-   uint32_t codimension = t * ext_deg;
    if(code_length <= codimension)
       {
       throw Invalid_Argument("invalid McEliece parameters");
@@ -220,22 +218,26 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
    //pick the support.........
    std::vector<gf2m> L(code_length);
 
-   for(i=0;i<code_length;i++)
+   for(size_t i = 0; i != L.size(); i++)
       {
-      L[i]=i;
+      L[i] = static_cast<gf2m>(i);
       }
    randomize_support(L, rng);
    polyn_gf2m g(sp_field); // create as zero
+
    bool success = false;
+   std::unique_ptr<binary_matrix> R;
+
    do
       {
       // create a random irreducible polynomial
       g = polyn_gf2m (t, rng, sp_field);
 
-      try{
-      R = generate_R(L,&g, sp_field, code_length, t);
-      success = true;
-      }
+      try
+         {
+         R = generate_R(L, &g, sp_field, code_length, t);
+         success = true;
+         }
       catch(const Invalid_State &)
          {
          }
@@ -253,12 +255,12 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
    //
    std::vector<uint32_t> H(bit_size_to_32bit_size(codimension) * code_length );
    uint32_t* sk = H.data();
-   for (i = 0; i < code_length; ++i)
+   for(size_t i = 0; i < code_length; ++i)
       {
-      for (l = 0; l < t; ++l)
+      for(size_t l = 0; l < t; ++l)
          {
-         k = (l * ext_deg) / 32;
-         j = (l * ext_deg) % 32;
+         const uint32_t k = (l * ext_deg) / 32;
+         const uint32_t j = (l * ext_deg) % 32;
          sk[k] ^= static_cast<uint32_t>(F[i].get_coef(l)) << j;
          if (j + ext_deg > 32)
             {
@@ -272,12 +274,12 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
    // inverse is needed
 
    std::vector<gf2m> Linv(code_length) ;
-   for (i = 0; i < code_length; ++i)
+   for (size_t i = 0; i != Linv.size(); ++i)
       {
       Linv[L[i]] = i;
       }
    std::vector<uint8_t> pubmat (R->m_elem.size() * 4);
-   for(i = 0; i < R->m_elem.size(); i++)
+   for(size_t i = 0; i < R->m_elem.size(); i++)
       {
       store_le(R->m_elem[i], &pubmat[i*4]);
       }
