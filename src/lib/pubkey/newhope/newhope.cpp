@@ -537,7 +537,10 @@ inline void encode_b(uint8_t* r, const poly* b, const poly* c)
    poly_tobytes(r, b);
    for(size_t i = 0; i < PARAM_N/4; i++)
       {
-      r[NEWHOPE_POLY_BYTES+i] = c->coeffs[4*i] | (c->coeffs[4*i+1] << 2) | (c->coeffs[4*i+2] << 4) | (c->coeffs[4*i+3] << 6);
+      r[NEWHOPE_POLY_BYTES+i] = static_cast<uint8_t>(c->coeffs[4*i] |
+                                                     (c->coeffs[4*i+1] << 2) |
+                                                     (c->coeffs[4*i+2] << 4) |
+                                                     (c->coeffs[4*i+3] << 6));
       }
    }
 
