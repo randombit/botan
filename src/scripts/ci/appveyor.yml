@@ -17,11 +17,13 @@ environment:
       TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
-    # MSVC 2017 DLL x86-32 + x86-64
+    # MSVC 2017 DLL x86-32
     - MSVS: 2017
       PLATFORM: x86
       TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+    # MSVC 2017 DLL x86-64
     - MSVS: 2017
       PLATFORM: x86_amd64
       TARGET: shared
