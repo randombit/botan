@@ -42,7 +42,13 @@ class TSS_Split final : public Command
          const size_t N = get_arg_sz("N");
          const size_t M = get_arg_sz("M");
 
+         if(M <= 1 || N <= 1 || M > N || N >= 255)
+            throw CLI_Usage_Error("Invalid N/M parameters for secret splitting");
+
          Botan::secure_vector<uint8_t> secret = slurp_file_lvec(input);
+
+         if(secret.size() > 0xFFFF)
+            throw CLI_Usage_Error("Secret is too large for this TSS format");
 
          std::vector<uint8_t> id = Botan::hex_decode(id_str);
 
@@ -53,7 +59,9 @@ class TSS_Split final : public Command
             }
 
          std::vector<Botan::RTSS_Share> shares =
-            Botan::RTSS_Share::split(M, N, secret.data(), secret.size(), id, hash_algo, rng());
+            Botan::RTSS_Share::split(static_cast<uint8_t>(M), static_cast<uint8_t>(N),
+                                     secret.data(), static_cast<uint16_t>(secret.size()),
+                                     id, hash_algo, rng());
 
          for(size_t i = 0; i != shares.size(); ++i)
             {
