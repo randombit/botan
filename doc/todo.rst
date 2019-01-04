@@ -176,6 +176,7 @@ Build/Test
 * Run the TPM tests against an emulator
   (https://github.com/PeterHuewe/tpm-emulator)
 * Add clang-tidy, clang-analyzer, cppcheck to CI
+* Add support for vxWorks
 * Add support for Fuschia OS
 * Add support for CloudABI
 
