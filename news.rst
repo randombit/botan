@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.9.0, Not Yet Released
+Version 2.9.0, 2019-01-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2018-20187 Address a side channel during ECC key generation,
