@@ -2963,6 +2963,8 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
         'xlc': r'^ *XLC ([0-9]+) ([0-9]+)$',
     }
 
+    unknown_pattern = r'UNKNOWN 0 0'
+
     if ccinfo.basename not in version_patterns:
         logging.info("No compiler version detection available for %s" % (ccinfo.basename))
         return "0.0"
@@ -2970,6 +2972,10 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
     detect_version_source = os.path.join(source_paths.build_data_dir, "detect_version.cpp")
 
     cc_output = run_compiler_preproc(options, ccinfo, detect_version_source, "0.0")
+
+    if re.search(unknown_pattern, cc_output) is not None:
+        logging.warning('Failed to get version for %s from macro check' % (ccinfo.basename))
+        return "0.0"
 
     match = re.search(version_patterns[ccinfo.basename], cc_output, flags=re.MULTILINE)
     if match is None:
