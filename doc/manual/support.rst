@@ -27,18 +27,19 @@ For Botan 2, the tier-2 supported platforms are
 * FreeBSD x86-64, Clang 3.8+
 * IncludeOS x86-32, Clang 3.8+
 
-Some (but not all) of the tier-2 platforms are tested by CI. Things should
-mostly work, and if problems are encountered, the Botan devs will probably be
-able to help. But they are not as well tested as tier-1.
+Some (but not all) of the tier-2 platforms are tested by CI. Everything should
+work, and if problems are encountered, the developers will probably be able to
+help. But they are not as carefully tested as tier-1.
 
-Of course many other modern OSes such as QNX, AIX, OpenBSD, NetBSD, and Solaris
-are also probably fine (Botan has been tested on all of them successfully in the
-past), but none of the core developers run these OSes and may not be able to
-help so much in debugging problems. Patches to improve the build for these
-platforms are welcome, as are any reports of successful use.
+Of course most other modern OSes such as QNX, AIX, OpenBSD, NetBSD, and Solaris
+also work just fine. Some are tested occasionally, usually just before a new
+release. But very little code specific to these platforms is written by the
+primary developers. For example, any functionality in the library which
+utilizes OpenBSD specific APIs was likely contributed by someone interested in
+that platform.
 
 In theory any working C++11 compiler is fine but in practice, we only regularly
-test with GCC, Clang, and Visual C++. Recent versions of IBM XLC will compile
+test with GCC, Clang, and Visual C++. Recent versions of IBM XLC can compile
 the library but occasionally codegen bugs occur. Several other compilers (such
 as Intel and PGI) are supported by the build system but are not tested by the
 developers and may have build or codegen problems. Patches to improve support
