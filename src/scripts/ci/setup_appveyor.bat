@@ -8,4 +8,6 @@ if %MSVS% == 2019 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Preview
 rem check compiler version
 cl
 
-set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%
+git clone --depth 1 https://github.com/randombit/botan-ci-tools
+
+set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%;botan-ci-tools

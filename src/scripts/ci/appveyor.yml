@@ -3,6 +3,10 @@ clone_depth: 5
 
 environment:
 
+  SCCACHE_DIR: C:\Users\appveyor\AppData\Local\Mozilla\sccache\cache
+  SCCACHE_CACHE_SIZE: 128M
+  APPVEYOR_CACHE_ENTRY_ZIP_ARGS: -t7z -m0=lzma -mx=9
+
   matrix:
 
     # MSVC 2015 DLL x86-32
@@ -35,26 +39,23 @@ environment:
       TARGET: static
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
-    # MSVC 2017 x86-64 w/debug iterators
-    - MSVS: 2017
-      PLATFORM: x86_amd64
-      TARGET: sanitizer
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
-    # MSVC 2019 static x86-64
+    # MSVC 2019 x86-64 w/debug iterators
     - MSVS: 2019
       PLATFORM: x86_amd64
-      TARGET: static
+      TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
 
 install:
   - call src\scripts\ci\setup_appveyor.bat
 
 build_script:
-  - python src\scripts\ci_build.py --os=windows --cc=msvc --without-python3 --make-tool=jom --cpu=%PLATFORM% %TARGET%
+  - python src\scripts\ci_build.py --os=windows --cc=msvc --without-python3 --compiler-cache=sccache --make-tool=jom --cpu=%PLATFORM% %TARGET%
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
   only:
     - master
     - release-2
+
+cache:
+  - C:\Users\appveyor\AppData\Local\Mozilla\sccache\cache
