@@ -120,13 +120,6 @@
 /* How much to allocate for a buffer of no particular size */
 #define BOTAN_DEFAULT_BUFFER_SIZE 1024
 
-/* Minimum and maximum sizes to allocate out of the mlock pool (bytes)
-   Default min is 16 as smaller values are easily bruteforceable and thus
-   likely not cryptographic keys.
-*/
-#define BOTAN_MLOCK_ALLOCATOR_MIN_ALLOCATION 16
-#define BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION 128
-
 /*
 * Total maximum amount of RAM (in KiB) we will lock into memory, even
 * if the OS would let us lock more

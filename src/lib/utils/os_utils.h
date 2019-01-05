@@ -11,6 +11,7 @@
 #include <botan/types.h>
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace Botan {
 
@@ -89,19 +90,37 @@ size_t system_page_size();
 const char* read_env_variable(const std::string& var_name);
 
 /**
-* Request so many bytes of page-aligned RAM locked into memory using
-* mlock, VirtualLock, or similar. Returns null on failure. The memory
-* returned is zeroed. Free it with free_locked_pages.
-* @param length requested allocation in bytes
+* Request @count pages of RAM which are locked into memory using mlock,
+* VirtualLock, or some similar OS specific API. Free it with free_locked_pages.
+*
+* Returns an empty list on failure. This function is allowed to return fewer
+* than @count pages.
+*
+* The contents of the allocated pages are undefined.
+*
+* Each page is preceded by and followed by a page which is marked
+* as noaccess, such that accessing it will cause a crash. This turns
+* out of bound reads/writes into crash events.
+*
+* @param count requested number of locked pages
 */
-void* allocate_locked_pages(size_t length);
+std::vector<void*> allocate_locked_pages(size_t count);
 
 /**
 * Free memory allocated by allocate_locked_pages
-* @param ptr a pointer returned by allocate_locked_pages
-* @param length length passed to allocate_locked_pages
+* @param pages a list of pages returned by allocate_locked_pages
 */
-void free_locked_pages(void* ptr, size_t length);
+void free_locked_pages(const std::vector<void*>& pages);
+
+/**
+* Set the MMU to prohibit access to this page
+*/
+void page_prohibit_access(void* page);
+
+/**
+* Set the MMU to allow R/W access to this page
+*/
+void page_allow_access(void* page);
 
 /**
 * Run a probe instruction to test for support for a CPU instruction.
