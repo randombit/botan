@@ -4,6 +4,10 @@ Release Notes
 Version 2.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Redesigned Memory_Pool class, which services allocations out of a
+  set of pages locked into memory (using mlock/VirtualLock). It is now
+  faster and with improved exploit mitigations. (GH #1800)
+
 Version 2.9.0, 2019-01-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
