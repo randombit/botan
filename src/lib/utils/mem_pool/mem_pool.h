@@ -49,6 +49,8 @@ class BOTAN_TEST_API Memory_Pool final
 
       std::deque<uint8_t*> m_free_pages;
       std::map<size_t, std::deque<Bucket>> m_buckets_for;
+      uintptr_t m_min_page_ptr;
+      uintptr_t m_max_page_ptr;
    };
 
 }

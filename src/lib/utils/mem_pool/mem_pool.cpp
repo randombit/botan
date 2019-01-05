@@ -1,5 +1,5 @@
 /*
-* (C) 2018 Jack Lloyd
+* (C) 2018,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -7,6 +7,7 @@
 #include <botan/internal/mem_pool.h>
 #include <botan/internal/os_utils.h>
 #include <botan/mem_ops.h>
+#include <algorithm>
 
 namespace Botan {
 
@@ -34,8 +35,7 @@ namespace Botan {
 *
 * Initially each page is in the free page list. Each page is used for just one
 * size of allocation, with requests bucketed into a small number of common
-* sizes. If the allocation would be too big, too small, or with too much slack,
-* it is rejected by the pool.
+* sizes. If the allocation would be too big or too small it is rejected by the pool.
 *
 * The free list is maintained by a bitmap, one per page/Bucket. Since each
 * Bucket only maintains objects of a single size, each bit set or clear
@@ -69,12 +69,12 @@ size_t choose_bucket(size_t n)
    {
    const size_t MINIMUM_ALLOCATION = 16;
    const size_t MAXIMUM_ALLOCATION = 256;
-   const size_t MAXIMUM_SLACK = 31;
 
-   if(n < MINIMUM_ALLOCATION|| n > MAXIMUM_ALLOCATION)
+   if(n < MINIMUM_ALLOCATION || n > MAXIMUM_ALLOCATION)
       return 0;
 
    // Need to tune these
+
    const size_t buckets[] = {
       16, 24, 32, 48, 64, 80, 96, 112, 128, 160, 192, 256, 0,
    };
@@ -83,9 +83,6 @@ size_t choose_bucket(size_t n)
       {
       if(n <= buckets[i])
          {
-         const size_t slack = buckets[i] - n;
-         if(slack > MAXIMUM_SLACK)
-            return 0;
          return buckets[i];
          }
       }
@@ -138,9 +135,27 @@ class BitMap final
 
       bool find_free(size_t* bit);
 
-      void free(size_t bit);
+      void free(size_t bit)
+         {
+         BOTAN_ASSERT_NOMSG(bit <= m_len);
+         const size_t w = bit / BITMASK_BITS;
+         BOTAN_ASSERT_NOMSG(w < m_bits.size());
+         const size_t mask = static_cast<bitmask_type>(1) << (bit % BITMASK_BITS);
+         m_bits[w] = m_bits[w] & (~mask);
+         }
 
-      bool empty() const;
+      bool empty() const
+         {
+         for(size_t i = 0; i != m_bits.size(); ++i)
+            {
+            if(m_bits[i] != 0)
+               {
+               return false;
+               }
+            }
+
+         return true;
+         }
 
   private:
 #if defined(BOTAN_ENABLE_DEBUG_ASSERTS)
@@ -151,7 +166,10 @@ class BitMap final
       enum { BITMASK_BITS = BOTAN_MP_WORD_BITS };
 #endif
 
+      static const size_t m_last_free_npos = -1;
+
       size_t m_len;
+      size_t m_last_free;
       bitmask_type m_main_mask;
       bitmask_type m_last_mask;
       std::vector<bitmask_type> m_bits;
@@ -176,28 +194,6 @@ bool BitMap::find_free(size_t* bit)
    return false;
    }
 
-void BitMap::free(size_t bit)
-   {
-   BOTAN_ASSERT_NOMSG(bit <= m_len);
-   const size_t w = bit / BITMASK_BITS;
-   BOTAN_ASSERT_NOMSG(w < m_bits.size());
-   const size_t mask = static_cast<bitmask_type>(1) << (bit % BITMASK_BITS);
-   m_bits[w] = m_bits[w] & (~mask);
-   }
-
-bool BitMap::empty() const
-   {
-   for(size_t i = 0; i != m_bits.size(); ++i)
-      {
-      if(m_bits[i] != 0)
-         {
-         return false;
-         }
-      }
-
-   return true;
-   }
-
 }
 
 class Bucket final
@@ -212,9 +208,44 @@ class Bucket final
          {
          }
 
-      uint8_t* alloc();
+      uint8_t* alloc()
+         {
+         if(m_is_full)
+            {
+            // I know I am full
+            return nullptr;
+            }
 
-      bool free(void* p);
+         size_t offset;
+         if(!m_bitmap.find_free(&offset))
+            {
+            // I just found out I am full
+            m_is_full = true;
+            return nullptr;
+            }
+
+         BOTAN_ASSERT(offset * m_item_size < m_page_size, "Offset is in range");
+         return m_range + m_item_size*offset;
+         }
+
+      bool free(void* p)
+         {
+         if(!in_this_bucket(p))
+            return false;
+
+         /*
+         Zero also any trailing bytes, which should not have been written to,
+         but maybe the user was bad and wrote past the end.
+         */
+         std::memset(p, 0, m_item_size);
+
+         const size_t offset = (reinterpret_cast<uintptr_t>(p) - reinterpret_cast<uintptr_t>(m_range)) / m_item_size;
+
+         m_bitmap.free(offset);
+         m_is_full = false;
+
+         return true;
+         }
 
       bool in_this_bucket(void* p) const
          {
@@ -231,7 +262,6 @@ class Bucket final
          return m_range;
          }
 
-
    private:
       size_t m_item_size;
       size_t m_page_size;
@@ -240,62 +270,36 @@ class Bucket final
       bool m_is_full;
    };
 
-
-uint8_t* Bucket::alloc()
-   {
-   if(m_is_full)
-      {
-      // I know I am full
-      return nullptr;
-      }
-
-   size_t offset;
-   if(!m_bitmap.find_free(&offset))
-      {
-      // I just found out I am full
-      m_is_full = true;
-      return nullptr;
-      }
-
-   BOTAN_ASSERT(offset * m_item_size < m_page_size, "Offset is in range");
-   return m_range + m_item_size*offset;
-   }
-
-bool Bucket::free(void* p)
-   {
-   if(!in_this_bucket(p))
-      return false;
-
-   /*
-   Zero also any trailing bytes, which should not have been written to,
-   but maybe the user was bad and wrote past the end.
-   */
-   std::memset(p, 0, m_item_size);
-
-   const size_t offset = (reinterpret_cast<uintptr_t>(p) - reinterpret_cast<uintptr_t>(m_range)) / m_item_size;
-
-   m_bitmap.free(offset);
-   m_is_full = false;
-
-   return true;
-   }
-
 Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) :
    m_page_size(page_size)
    {
+   m_min_page_ptr = ~static_cast<uintptr_t>(0);
+   m_max_page_ptr = 0;
+
    for(size_t i = 0; i != pages.size(); ++i)
       {
+      const uintptr_t p = reinterpret_cast<uintptr_t>(pages[i]);
+
+      m_min_page_ptr = std::min(p, m_min_page_ptr);
+      m_max_page_ptr = std::max(p, m_max_page_ptr);
+
       clear_bytes(pages[i], m_page_size);
-      OS::page_prohibit_access(pages[i]);
+      //OS::page_prohibit_access(pages[i]);
       m_free_pages.push_back(static_cast<uint8_t*>(pages[i]));
       }
+
+   /*
+   Right now this points to the start of the last page, adjust it to instead
+   point to the first byte of the following page
+   */
+   m_max_page_ptr += page_size;
    }
 
 Memory_Pool::~Memory_Pool()
    {
    for(size_t i = 0; i != m_free_pages.size(); ++i)
       {
-      OS::page_allow_access(m_free_pages[i]);
+      //OS::page_allow_access(m_free_pages[i]);
       }
    }
 
@@ -331,7 +335,7 @@ void* Memory_Pool::allocate(size_t n)
          {
          uint8_t* ptr = m_free_pages[0];
          m_free_pages.pop_front();
-         OS::page_allow_access(ptr);
+         //OS::page_allow_access(ptr);
          buckets.push_front(Bucket(ptr, m_page_size, n_bucket));
          void* p = buckets[0].alloc();
          BOTAN_ASSERT_NOMSG(p != nullptr);
@@ -345,6 +349,11 @@ void* Memory_Pool::allocate(size_t n)
 
 bool Memory_Pool::deallocate(void* p, size_t len) noexcept
    {
+   // Do a fast range check first, before taking the lock
+   const uintptr_t p_val = reinterpret_cast<uintptr_t>(p);
+   if(p_val < m_min_page_ptr || p_val > m_max_page_ptr)
+      return false;
+
    const size_t n_bucket = choose_bucket(len);
 
    if(n_bucket != 0)
