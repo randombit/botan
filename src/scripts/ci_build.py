@@ -72,10 +72,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if target in ['mini-static', 'mini-shared']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
-    if target == 'shared' and target_os != 'osx':
-        # Enabling amalgamation build for shared is somewhat arbitrary, but we want to test it
-        # somewhere. In addition the majority of the Windows builds are shared, and MSVC is
-        # much faster compiling via the amalgamation than individual files.
+    if target == 'static':
+        # Arbitrarily test amalgamation with the static lib builds
         flags += ['--amalgamation']
 
         if target_cc == 'msvc':
@@ -107,13 +105,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if target in ['fuzzers', 'coverage']:
         flags += ['--build-fuzzers=test']
     if target in ['fuzzers', 'sanitizer']:
-
-        # On VC iterator debugging comes from generic debug mode
-        if target_cc == 'msvc':
-            flags += ['--with-debug-info']
-        else:
-            flags += ['--with-sanitizers']
-        flags += ['--with-debug-asserts']
+        flags += ['--with-sanitizers', '--with-debug-asserts']
 
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
@@ -302,10 +294,10 @@ def parse_args(args):
     parser.add_option('--build-jobs', metavar='J', default=get_concurrency(),
                       help='Set number of jobs to run in parallel (default %default)')
 
-    parser.add_option('--compiler-cache', default=None,
-                      help='Set a compiler cache to use (ccache, clcache)')
+    parser.add_option('--compiler-cache', default=None, metavar='CC',
+                      help='Set a compiler cache to use (ccache, sccache, clcache)')
 
-    parser.add_option('--pkcs11-lib', default=None,
+    parser.add_option('--pkcs11-lib', default=None, metavar='LIB',
                       help='Set PKCS11 lib to use for testing')
 
     parser.add_option('--with-python3', dest='use_python3', action='store_true', default=None,
@@ -450,10 +442,15 @@ def main(args=None):
         if target == 'docs':
             cmds.append(make_cmd + ['docs'])
         else:
-            if options.compiler_cache == 'ccache':
-                cmds.append(['ccache', '--show-stats'])
-            elif options.compiler_cache == 'clcache':
-                cmds.append(['clcache', '-s'])
+
+            ccache_show_stats = {
+                'ccache': '--show-stats',
+                'sccache': '--show-stats',
+                'clcache': '-s'
+            }
+
+            if options.compiler_cache in ccache_show_stats:
+                cmds.append([options.compiler_cache, ccache_show_stats[options.compiler_cache]])
 
             make_targets = ['libs', 'cli', 'tests']
             if target in ['coverage', 'fuzzers']:
@@ -461,10 +458,8 @@ def main(args=None):
 
             cmds.append(make_prefix + make_cmd + make_targets)
 
-            if options.compiler_cache == 'ccache':
-                cmds.append(['ccache', '--show-stats'])
-            elif options.compiler_cache == 'clcache':
-                cmds.append(['clcache', '-s'])
+            if options.compiler_cache in ccache_show_stats:
+                cmds.append([options.compiler_cache, ccache_show_stats[options.compiler_cache]])
 
         if run_test_command is not None:
             cmds.append(run_test_command)

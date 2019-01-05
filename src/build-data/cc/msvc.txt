@@ -33,6 +33,12 @@ ar_command lib
 ar_options "/nologo"
 ar_output_to "/OUT:"
 
+<sanitizers>
+default -> iterator
+
+iterator -> "/D_ITERATOR_DEBUG_LEVEL=1"
+</sanitizers>
+
 <isa_flags>
 sse2   -> ""
 ssse3  -> ""
