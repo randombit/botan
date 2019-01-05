@@ -339,15 +339,25 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
       void* ptr = nullptr;
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-      int rc = ::posix_memalign(&ptr, page_size, 2*page_size);
 
-      if(rc != 0 || ptr == nullptr)
+#if !defined(MAP_NOCORE)
+   #define MAP_NOCORE 0
+#endif
+
+      ptr = ::mmap(nullptr, 2*page_size,
+                   PROT_READ | PROT_WRITE,
+                   MAP_ANONYMOUS | MAP_PRIVATE | MAP_NOCORE,
+                   /*fd=*/-1, /*offset=*/0);
+
+      if(ptr == MAP_FAILED)
+         {
          continue;
+         }
 
       // failed to lock
       if(::mlock(ptr, page_size) != 0)
          {
-         std::free(ptr);
+         ::munmap(ptr, 2*page_size);
          continue;
          }
 
@@ -421,7 +431,7 @@ void OS::free_locked_pages(const std::vector<void*>& pages)
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
       ::munlock(ptr, page_size);
-      std::free(ptr);
+      ::munmap(ptr, 2*page_size);
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
       ::VirtualUnlock(ptr, page_size);
       ::VirtualFree(ptr, 0, MEM_RELEASE);
