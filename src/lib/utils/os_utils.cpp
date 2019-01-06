@@ -45,6 +45,10 @@
   #include <windows.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_CAP_ENTER)
+  #include <sys/capsicum.h>
+#endif
+
 namespace Botan {
 
 // Not defined in OS namespace for historical reasons
@@ -99,6 +103,18 @@ bool OS::running_in_privileged_state()
    return (::getuid() != ::geteuid()) || (::getgid() != ::getegid());
 #else
    return false;
+#endif
+   }
+
+bool OS::sandbox_start()
+   {
+#if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
+   const static char *opts = "stdio rpath inet";
+   return (::pledge(opts, nullptr) == 0);
+#elif defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
+   return (::cap_enter() == 0);
+#else
+   return true;
 #endif
    }
 

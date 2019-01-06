@@ -87,6 +87,12 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
 
+	 if(!Botan::OS::sandbox_start())
+            {
+            error_output() << "Failed sandboxing\n";
+	    return;
+	    }
+
          int server_fd = make_server_socket(port);
          size_t clients_served = 0;
 
