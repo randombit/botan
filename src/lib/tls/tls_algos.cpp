@@ -1,5 +1,6 @@
 /*
 * (C) 2017 Jack Lloyd
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,7 +24,7 @@ std::string kdf_algo_to_string(KDF_Algo algo)
          return "SHA-384";
       }
 
-   throw Invalid_State("kdf_algo_to_string unknown enum value");
+   throw Invalid_Argument("kdf_algo_to_string unknown enum value");
    }
 
 std::string kex_method_to_string(Kex_Algo method)
@@ -48,7 +49,7 @@ std::string kex_method_to_string(Kex_Algo method)
          return "ECDHE_PSK";
       }
 
-   throw Invalid_State("kex_method_to_string unknown enum value");
+   throw Invalid_Argument("kex_method_to_string unknown enum value");
    }
 
 Kex_Algo kex_method_from_string(const std::string& str)
@@ -96,7 +97,7 @@ std::string auth_method_to_string(Auth_Method method)
          return "ANONYMOUS";
       }
 
-    throw Invalid_State("auth_method_to_string unknown enum value");
+    throw Invalid_Argument("auth_method_to_string unknown enum value");
    }
 
 Auth_Method auth_method_from_string(const std::string& str)
@@ -223,7 +224,7 @@ std::string hash_function_of_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("hash_function_of_scheme: Unknown signature algorithm enum");
+   throw Invalid_Argument("hash_function_of_scheme: Unknown signature algorithm enum");
    }
 
 const std::vector<Signature_Scheme>& all_signature_schemes()
@@ -323,7 +324,7 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("signature_algorithm_of_scheme: Unknown signature algorithm enum");
+   throw Invalid_Argument("signature_algorithm_of_scheme: Unknown signature algorithm enum");
    }
 
 std::string sig_scheme_to_string(Signature_Scheme scheme)
@@ -373,7 +374,7 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("sig_scheme_to_string: Unknown signature algorithm enum");
+   throw Invalid_Argument("sig_scheme_to_string: Unknown signature algorithm enum");
    }
 
 std::string padding_string_for_scheme(Signature_Scheme scheme)
@@ -418,7 +419,7 @@ std::string padding_string_for_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("padding_string_for_scheme: Unknown signature algorithm enum");
+   throw Invalid_Argument("padding_string_for_scheme: Unknown signature algorithm enum");
    }
 
 }

@@ -1,7 +1,7 @@
 /*
 * TLS Channels
 * (C) 2011,2012,2014,2015,2016 Jack Lloyd
-*     2016 Matthias Gierlings
+*     2016,2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -367,6 +367,11 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
    catch(Decoding_Error&)
       {
       send_fatal_alert(Alert::DECODE_ERROR);
+      throw;
+      }
+   catch(Invalid_Argument&)
+      {
+      send_fatal_alert(Alert::ILLEGAL_PARAMETER);
       throw;
       }
    catch(...)
