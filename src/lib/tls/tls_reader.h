@@ -1,6 +1,7 @@
 /*
 * TLS Data Reader
 * (C) 2010-2011,2014 Jack Lloyd
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,7 +9,8 @@
 #ifndef BOTAN_TLS_READER_H_
 #define BOTAN_TLS_READER_H_
 
-#include <botan/exceptn.h>
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/secmem.h>
 #include <botan/loadstor.h>
 #include <string>
@@ -168,9 +170,10 @@ class TLS_Data_Reader final
                                " left");
          }
 
-      Decoding_Error decode_error(const std::string& why) const
+      TLS_Exception decode_error(const std::string& why) const
          {
-         return Decoding_Error("Invalid " + std::string(m_typename) + ": " + why);
+         return TLS_Exception(Alert::DECODE_ERROR,
+                              "Invalid " + std::string(m_typename) + ": " + why);
          }
 
       const char* m_typename;
@@ -191,11 +194,13 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
    const size_t val_bytes = T_size * vals_size;
 
    if(tag_size != 1 && tag_size != 2)
-      throw Invalid_Argument("append_tls_length_value: invalid tag size");
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "append_tls_length_value: invalid tag size");
 
    if((tag_size == 1 && val_bytes > 255) ||
       (tag_size == 2 && val_bytes > 65535))
-      throw Invalid_Argument("append_tls_length_value: value too large");
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "append_tls_length_value: value too large");
 
    for(size_t i = 0; i != tag_size; ++i)
       buf.push_back(get_byte(sizeof(val_bytes)-tag_size+i, val_bytes));

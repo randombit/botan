@@ -1,6 +1,7 @@
 /*
 * TLS Handshake IO
 * (C) 2012,2014,2015 Jack Lloyd
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,8 +9,9 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_messages.h>
-#include <botan/exceptn.h>
 #include <chrono>
 
 namespace Botan {
@@ -68,14 +70,16 @@ void Stream_Handshake_IO::add_record(const std::vector<uint8_t>& record,
    else if(record_type == CHANGE_CIPHER_SPEC)
       {
       if(record.size() != 1 || record[0] != 1)
-         throw Decoding_Error("Invalid ChangeCipherSpec");
+         throw TLS_Exception(Alert::DECODE_ERROR, "Invalid ChangeCipherSpec");
 
       // Pretend it's a regular handshake message of zero length
       const uint8_t ccs_hs[] = { HANDSHAKE_CCS, 0, 0, 0 };
       m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
       }
    else
-      throw Decoding_Error("Unknown message type " + std::to_string(record_type) + " in handshake processing");
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Unknown message type " + std::to_string(record_type)
+                          + " in handshake processing");
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
@@ -225,7 +229,7 @@ void Datagram_Handshake_IO::add_record(const std::vector<uint8_t>& record,
       const size_t total_size = DTLS_HANDSHAKE_HEADER_LEN + fragment_length;
 
       if(record_size < total_size)
-         throw Decoding_Error("Bad lengths in DTLS header");
+         throw TLS_Exception(Alert::DECODE_ERROR, "Bad lengths in DTLS header");
 
       if(message_seq >= m_in_message_seq)
          {
@@ -294,13 +298,13 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
       }
 
    if(msg_type != m_msg_type || msg_length != m_msg_length || epoch != m_epoch)
-      throw Decoding_Error("Inconsistent values in fragmented DTLS handshake header");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Inconsistent values in fragmented DTLS handshake header");
 
    if(fragment_offset > m_msg_length)
-      throw Decoding_Error("Fragment offset past end of message");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Fragment offset past end of message");
 
    if(fragment_offset + fragment_length > m_msg_length)
-      throw Decoding_Error("Fragment overlaps past end of message");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Fragment overlaps past end of message");
 
    if(fragment_offset == 0 && fragment_length == m_msg_length)
       {
@@ -339,7 +343,8 @@ std::pair<Handshake_Type, std::vector<uint8_t>>
 Datagram_Handshake_IO::Handshake_Reassembly::message() const
    {
    if(!complete())
-      throw Internal_Error("Datagram_Handshake_IO - message not complete");
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Datagram_Handshake_IO - message not complete");
 
    return std::make_pair(static_cast<Handshake_Type>(m_msg_type), m_message);
    }

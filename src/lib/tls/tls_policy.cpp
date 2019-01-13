@@ -3,6 +3,7 @@
 * (C) 2004-2010,2012,2015,2016 Jack Lloyd
 *     2016 Christian Mainka
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,6 +11,7 @@
 #include <botan/tls_policy.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_algos.h>
+#include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
 #include <botan/pk_keys.h>
@@ -257,7 +259,7 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
 
    if(keylength < expected_keylength)
       throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                          "Peer sent " + 
+                          "Peer sent " +
                            std::to_string(keylength) + " bit " + algo_name + " key"
                            ", policy requires at least " +
                            std::to_string(expected_keylength));
@@ -276,7 +278,7 @@ bool Policy::send_fallback_scsv(Protocol_Version version) const
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    // Uses boolean optimization:
-   // First check the current version (left part), then if it is allowed 
+   // First check the current version (left part), then if it is allowed
    // (right part)
    // checks are ordered according to their probability
    return (
@@ -296,7 +298,8 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const
          return Protocol_Version::DTLS_V12;
       if(allow_dtls10())
          return Protocol_Version::DTLS_V10;
-      throw Invalid_State("Policy forbids all available DTLS version");
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Policy forbids all available DTLS version");
       }
    else
       {
@@ -306,7 +309,8 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const
          return Protocol_Version::TLS_V11;
       if(allow_tls10())
          return Protocol_Version::TLS_V10;
-      throw Invalid_State("Policy forbids all available TLS version");
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Policy forbids all available TLS version");
       }
    }
 
@@ -486,7 +490,8 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
 
    if(ciphersuites.empty())
       {
-      throw Invalid_State("Policy does not allow any available cipher suite");
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Policy does not allow any available cipher suite");
       }
 
    Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);

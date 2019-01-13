@@ -1,10 +1,13 @@
 /*
 * Certificate Request Message
 * (C) 2004-2006,2012 Jack Lloyd
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_messages.h>
 #include <botan/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
@@ -43,7 +46,7 @@ uint8_t cert_type_name_to_code(const std::string& name)
    if(name == "ECDSA")
       return 64;
 
-   throw Invalid_Argument("Unknown cert type " + name);
+   throw TLS_Exception(Alert::CERTIFICATE_UNKNOWN, "Unknown cert type " + name);
    }
 
 }
@@ -74,7 +77,7 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf,
                                  Protocol_Version version)
    {
    if(buf.size() < 4)
-      throw Decoding_Error("Certificate_Req: Bad certificate request");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Certificate_Req: Bad certificate request");
 
    TLS_Data_Reader reader("CertificateRequest", buf);
 
@@ -95,7 +98,7 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf,
       const std::vector<uint8_t> algs = reader.get_range_vector<uint8_t>(2, 2, 65534);
 
       if(algs.size() % 2 != 0)
-         throw Decoding_Error("Bad length for signature IDs in certificate request");
+         throw TLS_Exception(Alert::DECODE_ERROR, "Bad length for signature IDs in certificate request");
 
       for(size_t i = 0; i != algs.size(); i += 2)
          {
@@ -106,7 +109,7 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf,
    const uint16_t purported_size = reader.get_uint16_t();
 
    if(reader.remaining_bytes() != purported_size)
-      throw Decoding_Error("Inconsistent length in certificate request");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Inconsistent length in certificate request");
 
    while(reader.has_remaining())
       {

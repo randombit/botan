@@ -6,6 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_channel.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_messages.h>
@@ -190,7 +192,8 @@ void Channel::renegotiate(bool force_full_renegotiation)
       initiate_handshake(create_handshake_state(active->version()),
                          force_full_renegotiation);
    else
-      throw Invalid_State("Cannot renegotiate on inactive connection");
+      throw TLS_Exception(Alert::NO_RENEGOTIATION,
+                          "Cannot renegotiate on inactive connection");
    }
 
 void Channel::change_cipher_spec_reader(Connection_Side side)
@@ -201,7 +204,8 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
                 "Have received server hello");
 
    if(pending->server_hello()->compression_method() != 0)
-      throw Internal_Error("Negotiated unknown compression algorithm");
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Negotiated unknown compression algorithm");
 
    sequence_numbers().new_read_cipher_state();
 
@@ -230,7 +234,8 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
                 "Have received server hello");
 
    if(pending->server_hello()->compression_method() != 0)
-      throw Internal_Error("Negotiated unknown compression algorithm");
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Negotiated unknown compression algorithm");
 
    sequence_numbers().new_write_cipher_state();
 
@@ -684,7 +689,8 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          {
          size_t context_size = context.length();
          if(context_size > 0xFFFF)
-            throw Invalid_Argument("key_material_export context is too long");
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                                "key_material_export context is too long");
          salt.push_back(get_byte(0, static_cast<uint16_t>(context_size)));
          salt.push_back(get_byte(1, static_cast<uint16_t>(context_size)));
          salt += to_byte_vector(context);

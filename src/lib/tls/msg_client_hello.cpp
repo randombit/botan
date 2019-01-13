@@ -1,12 +1,14 @@
 /*
 * TLS Hello Request and Client Hello Messages
 * (C) 2004-2011,2015,2016 Jack Lloyd
-*     2016 Matthias Gierlings
+*     2016,2019 Matthias Gierlings
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_messages.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
@@ -65,7 +67,7 @@ Hello_Request::Hello_Request(Handshake_IO& io)
 Hello_Request::Hello_Request(const std::vector<uint8_t>& buf)
    {
    if(buf.size())
-      throw Decoding_Error("Bad Hello_Request, has non-zero size");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Bad Hello_Request, has non-zero size");
    }
 
 /*
@@ -125,7 +127,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 #else
    if(!client_settings.srp_identifier().empty())
       {
-      throw Invalid_State("Attempting to initiate SRP session but TLS-SRP support disabled");
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Attempting to initiate SRP session but TLS-SRP support disabled");
       }
 #endif
 
@@ -194,7 +196,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 #else
    if(!session.srp_identifier().empty())
       {
-      throw Invalid_State("Attempting to resume SRP session but TLS-SRP support disabled");
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Attempting to resume SRP session but TLS-SRP support disabled");
       }
 #endif
 
@@ -212,7 +214,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 void Client_Hello::update_hello_cookie(const Hello_Verify_Request& hello_verify)
    {
    if(!m_version.is_datagram_protocol())
-      throw Invalid_State("Cannot use hello cookie with stream protocol");
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Cannot use hello cookie with stream protocol");
 
    m_hello_cookie = hello_verify.cookie();
    }
@@ -253,7 +255,7 @@ std::vector<uint8_t> Client_Hello::serialize() const
 Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
    {
    if(buf.size() < 41)
-      throw Decoding_Error("Client_Hello: Packet corrupted");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Client_Hello: Packet corrupted");
 
    TLS_Data_Reader reader("ClientHello", buf);
 

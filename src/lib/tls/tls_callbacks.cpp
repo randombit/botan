@@ -2,11 +2,14 @@
 * TLS Callbacks
 * (C) 2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_alert.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_algos.h>
 #include <botan/x509path.h>
@@ -14,7 +17,6 @@
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 #include <botan/oids.h>
-#include <botan/tls_exceptn.h>
 #include <botan/internal/ct_utils.h>
 
 #if defined(BOTAN_HAS_CURVE_25519)
@@ -55,7 +57,8 @@ void TLS::Callbacks::tls_verify_cert_chain(
    const TLS::Policy& policy)
    {
    if(cert_chain.empty())
-      throw Invalid_Argument("Certificate chain was empty");
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Certificate chain was empty");
 
    Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
                                              policy.minimum_signature_strength());
@@ -167,7 +170,8 @@ std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_ecdh
       // X25519 is always compressed but sent as "uncompressed" in TLS
       our_public_value = priv_key.public_value();
 #else
-      throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Negotiated X25519 somehow, but it is disabled");
 #endif
       }
    else

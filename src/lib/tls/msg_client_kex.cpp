@@ -2,12 +2,15 @@
 * Client Key Exchange Message
 * (C) 2004-2010,2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/tls_messages.h>
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_messages.h>
 #include <botan/rng.h>
 
 #include <botan/internal/tls_reader.h>
@@ -93,7 +96,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(2, 1, 65535);
 
          if(reader.remaining_bytes())
-            throw Decoding_Error("Bad params size for DH key exchange");
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Bad params size for DH key exchange");
 
          const std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> dh_result =
             state.callbacks().tls_dh_agree(modulus, generator, peer_public_value, policy, rng);
@@ -113,7 +116,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          {
          const uint8_t curve_type = reader.get_byte();
          if(curve_type != 3)
-            throw Decoding_Error("Server sent non-named ECC curve");
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server sent non-named ECC curve");
 
          const Group_Params curve_id = static_cast<Group_Params>(reader.get_uint16_t());
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
@@ -127,8 +130,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const std::string curve_name = state.callbacks().tls_decode_group_param(curve_id);
 
          if(curve_name == "")
-            throw Decoding_Error("Server sent unknown named curve " +
-                                 std::to_string(static_cast<uint16_t>(curve_id)));
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Server sent unknown named curve " +
+                                std::to_string(static_cast<uint16_t>(curve_id)));
 
          const std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> ecdh_result =
             state.callbacks().tls_ecdh_agree(curve_name, peer_public_value, policy, rng,
@@ -193,7 +196,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 #endif
       else
          {
-         throw Internal_Error("Client_Key_Exchange: Unknown key exchange method was negotiated");
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Client_Key_Exchange: Unknown key exchange method was negotiated");
          }
 
       reader.assert_done();
@@ -206,7 +210,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          throw Unexpected_Message("No server kex message, but negotiated a key exchange that required it");
 
       if(!server_public_key)
-         throw Internal_Error("No server public key for RSA exchange");
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "No server public key for RSA exchange");
 
       if(auto rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key))
          {
@@ -249,10 +253,12 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
                    "RSA key exchange negotiated so server sent a certificate");
 
       if(!server_rsa_kex_key)
-         throw Internal_Error("Expected RSA kex but no server kex key set");
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Expected RSA kex but no server kex key set");
 
       if(!dynamic_cast<const RSA_PrivateKey*>(server_rsa_kex_key))
-         throw Internal_Error("Expected RSA key but got " + server_rsa_kex_key->algo_name());
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                             "Expected RSA key but got " + server_rsa_kex_key->algo_name());
 
       TLS_Data_Reader reader("ClientKeyExchange", contents);
       const std::vector<uint8_t> encrypted_pre_master = reader.get_range<uint8_t>(2, 0, 65535);
@@ -327,7 +333,8 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
 
          const std::vector<uint8_t> cecpq1_accept = reader.get_range<uint8_t>(2, 0, 65535);
          if(cecpq1_accept.size() != CECPQ1_ACCEPT_BYTES)
-            throw Decoding_Error("Invalid size for CECPQ1 accept message");
+            throw TLS_Exception(Alert::DECODE_ERROR,
+                                "Invalid size for CECPQ1 accept message");
 
          m_pre_master.resize(CECPQ1_SHARED_KEY_BYTES);
          CECPQ1_finish(m_pre_master.data(), cecpq1_offer, cecpq1_accept.data());
@@ -344,7 +351,8 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             dynamic_cast<const PK_Key_Agreement_Key*>(&private_key);
 
          if(!ka_key)
-            throw Internal_Error("Expected key agreement key type but got " +
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                                "Expected key agreement key type but got " +
                                  private_key.algo_name());
 
          std::vector<uint8_t> client_pubkey;
@@ -388,7 +396,8 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             }
          }
       else
-         throw Internal_Error("Client_Key_Exchange: Unknown key exchange negotiated");
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Client_Key_Exchange: Unknown key exchange negotiated");
       }
    }
 

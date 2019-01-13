@@ -1,10 +1,13 @@
 /*
 * Certificate Status
 * (C) 2016 Jack Lloyd
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_messages.h>
 #include <botan/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
@@ -20,16 +23,16 @@ namespace TLS {
 Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf)
    {
    if(buf.size() < 5)
-      throw Decoding_Error("Invalid Certificate_Status message: too small");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Invalid Certificate_Status message: too small");
 
    if(buf[0] != 1)
-      throw Decoding_Error("Unexpected Certificate_Status message: unexpected message type");
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Unexpected Certificate_Status message: unexpected message type");
 
    size_t len = make_uint32(0, buf[1], buf[2], buf[3]);
 
    // Verify the redundant length field...
    if(buf.size() != len + 4)
-      throw Decoding_Error("Invalid Certificate_Status: invalid length field");
+      throw TLS_Exception(Alert::DECODE_ERROR, "Invalid Certificate_Status: invalid length field");
 
    m_response = std::make_shared<OCSP::Response>(buf.data() + 4, buf.size() - 4);
    }

@@ -2,10 +2,13 @@
 * TLS Handshaking
 * (C) 2004-2006,2011,2012,2015,2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_record.h>
 #include <botan/tls_messages.h>
@@ -444,7 +447,8 @@ Handshake_State::choose_sig_format(const Private_Key& key,
          }
       }
 
-   throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                       sig_algo + " is invalid/unknown for TLS signatures");
    }
 
 namespace {
@@ -486,7 +490,8 @@ Handshake_State::parse_sig_format(const Public_Key& key,
    if(this->version().supports_negotiable_signature_algorithms() == false)
       {
       if(scheme != Signature_Scheme::NONE)
-         throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Counterparty sent hash/sig IDs with old version");
 
       /*
       There is no check on the acceptability of a v1.0/v1.1 hash type,
@@ -504,14 +509,17 @@ Handshake_State::parse_sig_format(const Public_Key& key,
          return std::make_pair(padding, DER_SEQUENCE);
          }
       else
-         throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                             key_type + " is invalid/unknown for TLS signatures");
       }
 
    if(scheme == Signature_Scheme::NONE)
-      throw Decoding_Error("Counterparty did not send hash/sig IDS");
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Counterparty did not send hash/sig IDS");
 
    if(key_type != signature_algorithm_of_scheme(scheme))
-      throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Counterparty sent inconsistent key and sig types");
 
    if(for_client_auth && !cert_req())
       {
@@ -546,7 +554,8 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       return std::make_pair(padding_string_for_scheme(scheme), DER_SEQUENCE);
       }
 
-   throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                       key_type + " is invalid/unknown for TLS signatures");
    }
 
 }

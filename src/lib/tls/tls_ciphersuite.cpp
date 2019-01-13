@@ -1,12 +1,14 @@
 /*
 * TLS Cipher Suite
 * (C) 2004-2010,2012,2013 Jack Lloyd
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_alert.h>
 #include <botan/tls_ciphersuite.h>
-#include <botan/exceptn.h>
+#include <botan/tls_exceptn.h>
 #include <botan/parsing.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
@@ -34,7 +36,8 @@ size_t Ciphersuite::nonce_bytes_from_handshake() const
          return 12;
       }
 
-   throw Invalid_State("In Ciphersuite::nonce_bytes_from_handshake invalid enum value");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                       "In Ciphersuite::nonce_bytes_from_handshake invalid enum value");
    }
 
 bool Ciphersuite::is_scsv(uint16_t suite)

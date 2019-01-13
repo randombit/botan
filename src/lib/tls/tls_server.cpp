@@ -6,6 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_server.h>
 #include <botan/tls_messages.h>
 #include <botan/internal/tls_handshake_state.h>
@@ -833,7 +835,8 @@ void Server::session_create(Server_Handshake_State& pending_state,
          sni_hostname);
 
       if(!private_key)
-         throw Internal_Error("No private key located for associated server cert");
+         throw TLS_Exception(Alert::CERTIFICATE_UNKNOWN,
+                             "No private key located for associated server cert");
       }
 
    if(pending_suite.kex_method() == Kex_Algo::STATIC_RSA)

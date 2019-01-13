@@ -2,12 +2,13 @@
 * TLS Record Handling
 * (C) 2012,2013,2014,2015,2016 Jack Lloyd
 *     2016 Juraj Somorovsky
-*     2016 Matthias Gierlings
+*     2016,2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/tls_record.h>
+#include <botan/tls_alert.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/loadstor.h>
@@ -90,7 +91,8 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       else if(our_side == false)
          m_aead->start(iv.bits_of());
 #else
-      throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
       }
    else
@@ -106,7 +108,8 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
          }
       else if(nonce_format() != Nonce_Format::AEAD_XOR_12)
          {
-         throw Invalid_State("Invalid AEAD nonce format used");
+         throw TLS_Exception(Alert::DECODE_ERROR,
+                             "Invalid AEAD nonce format used");
          }
       }
    }
@@ -142,7 +145,7 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
          }
       }
 
-   throw Invalid_State("Unknown nonce format specified");
+   throw TLS_Exception(Alert::DECODE_ERROR, "Unknown nonce format specified");
    }
 
 std::vector<uint8_t>
@@ -153,7 +156,8 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
       case Nonce_Format::CBC_MODE:
          {
          if(record_len < nonce_bytes_from_record())
-            throw Decoding_Error("Invalid CBC packet too short to be valid");
+            throw TLS_Exception(Alert::DECODE_ERROR,
+                                "Invalid CBC packet too short to be valid");
          std::vector<uint8_t> nonce(record, record + nonce_bytes_from_record());
          return nonce;
          }
@@ -167,14 +171,15 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
       case Nonce_Format::AEAD_IMPLICIT_4:
          {
          if(record_len < nonce_bytes_from_record())
-            throw Decoding_Error("Invalid AEAD packet too short to be valid");
+            throw TLS_Exception(Alert::DECODE_ERROR,
+                                "Invalid AEAD packet too short to be valid");
          std::vector<uint8_t> nonce = m_nonce;
          copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
          return nonce;
          }
       }
 
-   throw Invalid_State("Unknown nonce format specified");
+   throw TLS_Exception(Alert::DECODE_ERROR, "Unknown nonce format specified");
    }
 
 std::vector<uint8_t>

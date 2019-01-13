@@ -2,12 +2,15 @@
 * Server Key Exchange Message
 * (C) 2004-2010,2012,2015,2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
+*     2019 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/tls_messages.h>
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
@@ -94,7 +97,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       const std::vector<Group_Params> ec_groups = state.client_hello()->supported_ecc_curves();
 
       if(ec_groups.empty())
-         throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                             "Client sent no ECC extension but we negotiated ECDH");
 
       Group_Params shared_group = policy.choose_key_exchange_group(ec_groups);
 
@@ -110,7 +114,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          ecdh_public_val = x25519->public_value();
          m_kex_key.reset(x25519.release());
 #else
-         throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Negotiated X25519 somehow, but it is disabled");
 #endif
          }
       else
@@ -179,8 +184,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 #endif
    else if(kex_algo != Kex_Algo::PSK)
       {
-      throw Internal_Error("Server_Key_Exchange: Unknown kex type " +
-                           kex_method_to_string(kex_algo));
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Server_Key_Exchange: Unknown kex type " +
+                          kex_method_to_string(kex_algo));
       }
 
    if(state.ciphersuite().signature_used())
@@ -254,8 +260,9 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
       reader.get_range<uint8_t>(2, 1, 65535);
       }
    else if(kex_algo != Kex_Algo::PSK)
-      throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " +
-                           kex_method_to_string(kex_algo));
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Server_Key_Exchange: Unsupported kex type " +
+                          kex_method_to_string(kex_algo));
 
    m_params.assign(buf.data(), buf.data() + reader.read_so_far());
 
