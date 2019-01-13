@@ -166,10 +166,7 @@ class BitMap final
       enum { BITMASK_BITS = BOTAN_MP_WORD_BITS };
 #endif
 
-      static const size_t m_last_free_npos = -1;
-
       size_t m_len;
-      size_t m_last_free;
       bitmask_type m_main_mask;
       bitmask_type m_last_mask;
       std::vector<bitmask_type> m_bits;
