@@ -34,14 +34,6 @@ namespace OS {
 uint32_t BOTAN_TEST_API get_process_id();
 
 /**
-* Running current context in a sandboxed manner
-* Usually any sandbox solution might allow to
-* adjust down the permissions but never allow
-* to expand them.
-*/
-bool BOTAN_TEST_API sandbox_start();
-
-/**
 * Test if we are currently running with elevated permissions
 * eg setuid, setgid, or with POSIX caps set.
 */
