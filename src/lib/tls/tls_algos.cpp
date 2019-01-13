@@ -6,7 +6,8 @@
 */
 
 #include <botan/tls_algos.h>
-#include <botan/exceptn.h>
+#include <botan/tls_alert.h>
+#include <botan/tls_exceptn.h>
 
 namespace Botan {
 
@@ -24,7 +25,7 @@ std::string kdf_algo_to_string(KDF_Algo algo)
          return "SHA-384";
       }
 
-   throw Invalid_Argument("kdf_algo_to_string unknown enum value");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "kdf_algo_to_string unknown enum value");
    }
 
 std::string kex_method_to_string(Kex_Algo method)
@@ -49,7 +50,7 @@ std::string kex_method_to_string(Kex_Algo method)
          return "ECDHE_PSK";
       }
 
-   throw Invalid_Argument("kex_method_to_string unknown enum value");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "kex_method_to_string unknown enum value");
    }
 
 Kex_Algo kex_method_from_string(const std::string& str)
@@ -78,7 +79,7 @@ Kex_Algo kex_method_from_string(const std::string& str)
    if(str == "ECDHE_PSK")
       return Kex_Algo::ECDHE_PSK;
 
-   throw Invalid_Argument("Unknown kex method " + str);
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Unknown kex method " + str);
    }
 
 std::string auth_method_to_string(Auth_Method method)
@@ -97,7 +98,7 @@ std::string auth_method_to_string(Auth_Method method)
          return "ANONYMOUS";
       }
 
-    throw Invalid_Argument("auth_method_to_string unknown enum value");
+    throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "auth_method_to_string unknown enum value");
    }
 
 Auth_Method auth_method_from_string(const std::string& str)
@@ -113,7 +114,7 @@ Auth_Method auth_method_from_string(const std::string& str)
    if(str == "ANONYMOUS" || str == "")
       return Auth_Method::ANONYMOUS;
 
-   throw Invalid_Argument("Bad signature method " + str);
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Bad signature method " + str);
    }
 
 bool group_param_is_dh(Group_Params group)
@@ -224,7 +225,7 @@ std::string hash_function_of_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_Argument("hash_function_of_scheme: Unknown signature algorithm enum");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "hash_function_of_scheme: Unknown signature algorithm enum");
    }
 
 const std::vector<Signature_Scheme>& all_signature_schemes()
@@ -324,7 +325,7 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_Argument("signature_algorithm_of_scheme: Unknown signature algorithm enum");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "signature_algorithm_of_scheme: Unknown signature algorithm enum");
    }
 
 std::string sig_scheme_to_string(Signature_Scheme scheme)
@@ -374,7 +375,7 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_Argument("sig_scheme_to_string: Unknown signature algorithm enum");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "sig_scheme_to_string: Unknown signature algorithm enum");
    }
 
 std::string padding_string_for_scheme(Signature_Scheme scheme)
@@ -419,7 +420,7 @@ std::string padding_string_for_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_Argument("padding_string_for_scheme: Unknown signature algorithm enum");
+   throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "padding_string_for_scheme: Unknown signature algorithm enum");
    }
 
 }
