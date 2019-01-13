@@ -11,6 +11,8 @@
 #include <map>
 #include <utility>
 
+#include <stdlib.h>
+
 namespace {
 
 size_t compute_expected_alignment(size_t plen)
@@ -25,19 +27,71 @@ size_t compute_expected_alignment(size_t plen)
       }
    }
 
+struct RawPage
+   {
+   public:
+      RawPage(void* p) : m_p(p) {}
+      ~RawPage() { std::free(m_p); }
+
+      RawPage(const RawPage& other) = default;
+      RawPage& operator=(const RawPage& other) = default;
+
+      RawPage(RawPage&& other) : m_p(nullptr)
+         {
+         std::swap(m_p, other.m_p);
+         }
+
+      RawPage& operator=(RawPage&& other)
+         {
+         if(this != &other)
+            {
+            std::swap(m_p, other.m_p);
+            }
+         return (*this);
+         }
+
+      void* ptr() const { return m_p; }
+   private:
+      void* m_p;
+   };
+
+std::vector<RawPage> allocate_raw_pages(size_t count, size_t page_size)
+   {
+   std::vector<RawPage> pages;
+   pages.reserve(count);
+
+   for(size_t i = 0; i != count; ++i)
+      {
+      void* ptr = nullptr;
+
+      ::posix_memalign(&ptr, page_size, page_size);
+
+      if(ptr)
+         {
+         fprintf(stderr, "%p\n", ptr);
+         pages.push_back(RawPage(ptr));
+         }
+      }
+
+   return pages;
+   }
+
 }
 
 void fuzz(const uint8_t in[], size_t in_len)
    {
+   const size_t page_count = 4;
    const size_t page_size = 4096;
 
-   static std::vector<void*> raw_mem{malloc(page_size),
-                                     malloc(page_size),
-                                     malloc(page_size),
-                                     malloc(page_size)};
+   // static to avoid repeated allocations
+   static std::vector<RawPage> raw_mem = allocate_raw_pages(page_count, page_size);
 
+   std::vector<void*> mem_pages;
+   mem_pages.reserve(raw_mem.size());
+   for(size_t i = 0; i != raw_mem.size(); ++i)
+      mem_pages.push_back(raw_mem[i].ptr());
 
-   Botan::Memory_Pool pool(raw_mem, page_size);
+   Botan::Memory_Pool pool(mem_pages, page_size);
    std::map<uint8_t*, size_t> ptrs;
 
    while(in_len > 0)
@@ -64,9 +118,11 @@ void fuzz(const uint8_t in[], size_t in_len)
          if(p)
             {
             const size_t expected_alignment = compute_expected_alignment(plen);
-            if(reinterpret_cast<uintptr_t>(p) % expected_alignment != 0)
+            const size_t alignment = reinterpret_cast<uintptr_t>(p) % expected_alignment;
+            if(alignment != 0)
                {
-               FUZZER_WRITE_AND_CRASH("Pointer allocated non-aligned pointer " << p);
+               FUZZER_WRITE_AND_CRASH("Pointer allocated non-aligned pointer " << static_cast<void*>(p) << " for len " << plen
+                                      << " expected " << expected_alignment << " got " << alignment);
                }
 
             //printf("alloc %d -> %p\n", plen, p);
@@ -85,7 +141,7 @@ void fuzz(const uint8_t in[], size_t in_len)
             auto insert = ptrs.insert(std::make_pair(p, plen));
             if(insert.second == false)
                {
-               FUZZER_WRITE_AND_CRASH("Pointer " << p << " already existed\n");
+               FUZZER_WRITE_AND_CRASH("Pointer " << static_cast<void*>(p) << " already existed\n");
                }
 
             auto itr = insert.first;
@@ -98,8 +154,8 @@ void fuzz(const uint8_t in[], size_t in_len)
 
                if(ptr_before.first + ptr_before.second > p)
                   {
-                  FUZZER_WRITE_AND_CRASH("Previous " << ptr_before.first << "/" << ptr_before.second <<
-                                         " overlaps with new " << p);
+                  FUZZER_WRITE_AND_CRASH("Previous " << static_cast<void*>(ptr_before.first) << "/" << ptr_before.second <<
+                                         " overlaps with new " << static_cast<void*>(p));
                   }
                }
 
@@ -109,7 +165,8 @@ void fuzz(const uint8_t in[], size_t in_len)
                {
                if(p + plen > after->first)
                   {
-                  FUZZER_WRITE_AND_CRASH("New " << p << "/" << plen << " overlaps following " << after->first);
+                  FUZZER_WRITE_AND_CRASH("New " << static_cast<void*>(p) << "/" << plen
+                                         << " overlaps following " << static_cast<void*>(after->first));
                   }
                }
             }
