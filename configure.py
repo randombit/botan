@@ -2453,7 +2453,8 @@ class AmalgamationHeader(object):
 class AmalgamationGenerator(object):
     filename_prefix = 'botan_all'
 
-    _header_guard_pattern = re.compile('^#define BOTAN_.*_H_$')
+    _header_guard_pattern = re.compile(r'^#define BOTAN_.*_H_\s*$')
+    _header_endif_pattern = re.compile(r'^#endif\s*$')
 
     @staticmethod
     def read_header(filepath):
@@ -2478,7 +2479,7 @@ class AmalgamationGenerator(object):
 
         end_header_guard_index = None
         for index, line in enumerate(lines):
-            if line == '#endif\n':
+            if AmalgamationGenerator._header_endif_pattern.match(line):
                 end_header_guard_index = index # override with last found
         if end_header_guard_index is None:
             raise InternalError("No header guard end found in " + header_name)
