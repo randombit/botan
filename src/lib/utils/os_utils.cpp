@@ -303,7 +303,7 @@ size_t OS::get_memory_locking_limit()
 
    // According to Microsoft MSDN:
    // The maximum number of pages that a process can lock is equal to the number of pages in its minimum working set minus a small overhead
-   // In the book "Windows Internals Part 2": the maximum lockable pages are minimum working set size - 8 pages 
+   // In the book "Windows Internals Part 2": the maximum lockable pages are minimum working set size - 8 pages
    // But the information in the book seems to be inaccurate/outdated
    // I've tested this on Windows 8.1 x64, Windows 10 x64 and Windows 7 x86
    // On all three OS the value is 11 instead of 8

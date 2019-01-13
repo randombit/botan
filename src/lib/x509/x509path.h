@@ -205,7 +205,7 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
 * @param ocsp_resp additional OCSP responses to consider (eg from peer)
 * @return result of the path validation
 *   note: when enabled, OCSP check is softfail by default: if the OCSP server is not
-*   reachable, Path_Validation_Result::successful_validation() will return true. 
+*   reachable, Path_Validation_Result::successful_validation() will return true.
 *   Hardfail OCSP check can be achieve by also calling Path_Validation_Result::no_warnings().
 */
 Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(

@@ -240,7 +240,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
    {
    if(ecies_params.compression_type() != PointGFp::UNCOMPRESSED)
       {
-      // ISO 18033: step d 
+      // ISO 18033: step d
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
       m_eph_public_key_bin = m_params.domain().OS2ECP(m_eph_public_key_bin).encode(ecies_params.compression_type());
       }
@@ -372,7 +372,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       throw Decoding_Error("ECIES decryption: received public key is not on the curve");
       }
 
-   // ISO 18033: step e (and step f because get_affine_x (called by ECDH_KA_Operation::raw_agree) 
+   // ISO 18033: step e (and step f because get_affine_x (called by ECDH_KA_Operation::raw_agree)
    // throws Illegal_Transformation if the point is zero)
    const SymmetricKey secret_key = m_ka.derive_secret(other_public_key_bin, other_public_key);
 
@@ -395,7 +395,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          {
          m_cipher->start(m_iv.bits_of());
          }
-      
+
       try
          {
          // the decryption can fail:

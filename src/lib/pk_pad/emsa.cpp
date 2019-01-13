@@ -100,7 +100,7 @@ EMSA* get_emsa(const std::string& algo_spec)
             }
          }
       }
-   
+
    if(req.algo_name() == "PSS" ||
       req.algo_name() == "PSSR" ||
       req.algo_name() == "EMSA-PSS" ||
@@ -200,5 +200,3 @@ std::string hash_for_emsa(const std::string& algo_spec)
    }
 
 }
-
-

@@ -60,13 +60,13 @@ inline void rotate_keys(__m256i& R0, __m256i& R1, __m256i R2)
      X0 is X2 from the last round
      X1 becomes (X0[4],X1[1:3])
      X2 becomes (X1[4],X2[1:3])
- 
-   Uses 3 permutes and 2 blends, is there a faster way?   
+
+   Uses 3 permutes and 2 blends, is there a faster way?
    */
    __m256i T0 = _mm256_permute4x64_epi64(R0, _MM_SHUFFLE(0,0,0,0));
    __m256i T1 = _mm256_permute4x64_epi64(R1, _MM_SHUFFLE(0,3,2,1));
    __m256i T2 = _mm256_permute4x64_epi64(R2, _MM_SHUFFLE(0,3,2,1));
- 
+
    R0 = _mm256_blend_epi32(T1, T0, 0xC0);
    R1 = _mm256_blend_epi32(T2, T1, 0xC0);
    }
@@ -180,7 +180,7 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
    const __m256i* in_mm = reinterpret_cast<const __m256i*>(in);
    __m256i* out_mm = reinterpret_cast<__m256i*>(out);
-   
+
    while(blocks >= 2)
       {
       __m256i X0 = _mm256_loadu_si256(in_mm++);
@@ -215,7 +215,7 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
       blocks -= 2;
       }
-   
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m256i X0 = _mm256_loadu_si256(in_mm++);
@@ -403,7 +403,7 @@ void Threefish_512::avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
       blocks -= 2;
       }
-   
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m256i X0 = _mm256_loadu_si256(in_mm++);

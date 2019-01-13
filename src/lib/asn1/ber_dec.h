@@ -125,7 +125,7 @@ class BOTAN_PUBLIC_API(2,0) BER_Decoder final
       * @param out POD type reference where to copy object value
       * @param type_tag ASN1_Tag enum to assert type on object read
       * @param class_tag ASN1_Tag enum to assert class on object read (default: CONTEXT_SPECIFIC)
-      * @return this reference  
+      * @return this reference
       */
       template <typename T>
          BER_Decoder& get_next_value(T &out,

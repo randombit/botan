@@ -11,7 +11,7 @@
    #include <botan/x509path.h>
    #include <botan/certstor.h>
    #include <botan/calendar.h>
-   #include <botan/cert_status.h>   
+   #include <botan/cert_status.h>
    #include <fstream>
 #endif
 
@@ -164,7 +164,7 @@ class OCSP_Tests final : public Test
 
          const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = 
+         std::shared_ptr<const Botan::OCSP::Response> ocsp =
             std::make_shared<const Botan::OCSP::Response>(Botan::Certificate_Status_Code::OSCP_NO_REVOCATION_URL);
 
          Botan::Certificate_Store_In_Memory certstore;
@@ -177,7 +177,7 @@ class OCSP_Tests final : public Test
          if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
             {
             if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
-               {               
+               {
                result.confirm("Status warning", ocsp_status[0].count(Botan::Certificate_Status_Code::OSCP_NO_REVOCATION_URL));
                }
             }

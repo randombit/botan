@@ -158,7 +158,7 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
    {
    if (m_responses.empty())
       return m_dummy_response_status;
-      
+
    try
       {
       std::unique_ptr<Public_Key> pub_key(issuer.subject_public_key());

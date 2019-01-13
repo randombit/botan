@@ -135,7 +135,7 @@ class X509test_Path_Validation_Tests final : public Test
             Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
                      certs, restrictions, trusted,
                      "www.tls.test", Botan::Usage_Type::TLS_SERVER_AUTH,
-                     validation_time, 
+                     validation_time,
                      /* activate check_ocsp_online */ std::chrono::milliseconds(1000), {});
 
             if(path_result.successful_validation() && path_result.trust_root() != root)
@@ -152,7 +152,7 @@ class X509test_Path_Validation_Tests final : public Test
             result.test_eq("test warnings string", path_result.warnings_string(), "[0] OCSP URL not available");
 #endif
             result.end_timer();
-            results.push_back(result);  
+            results.push_back(result);
             }
 
          return results;

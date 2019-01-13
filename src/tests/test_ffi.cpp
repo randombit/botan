@@ -1237,7 +1237,7 @@ class FFI_Unit_Tests final : public Test
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
          result.test_eq("botan_mp_add", std::string(str_buf), "259");
-         
+
          TEST_FFI_RC(1, botan_mp_is_odd, (x));
          TEST_FFI_RC(0, botan_mp_is_even, (x));
          TEST_FFI_RC(0, botan_mp_is_negative, (x));
@@ -2708,4 +2708,3 @@ BOTAN_REGISTER_TEST("ffi", FFI_Unit_Tests);
 }
 
 }
-

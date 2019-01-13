@@ -42,7 +42,7 @@ void XTEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
       store_be(out + 4*BLOCK_SIZE*i, L0, R0, L1, R1, L2, R2, L3, R3);
       }
-      
+
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks_left; ++i)
       {
       uint32_t L, R;
@@ -90,7 +90,7 @@ void XTEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
       store_be(out + 4*BLOCK_SIZE*i, L0, R0, L1, R1, L2, R2, L3, R3);
       }
-      
+
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks_left; ++i)
       {
       uint32_t L, R;

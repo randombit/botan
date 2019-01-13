@@ -257,7 +257,7 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
 
    if(keylength < expected_keylength)
       throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                          "Peer sent " + 
+                          "Peer sent " +
                            std::to_string(keylength) + " bit " + algo_name + " key"
                            ", policy requires at least " +
                            std::to_string(expected_keylength));
@@ -276,7 +276,7 @@ bool Policy::send_fallback_scsv(Protocol_Version version) const
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    // Uses boolean optimization:
-   // First check the current version (left part), then if it is allowed 
+   // First check the current version (left part), then if it is allowed
    // (right part)
    // checks are ordered according to their probability
    return (

@@ -1029,7 +1029,7 @@ bool Path_Validation_Result::successful_validation() const
 
 bool Path_Validation_Result::no_warnings() const
    {
-   for(auto status_set_i : m_warnings) 
+   for(auto status_set_i : m_warnings)
       if(!status_set_i.empty())
          return false;
    return true;

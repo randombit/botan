@@ -334,7 +334,7 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
 Test::Result test_certstor_load_allcert()
    {
    Test::Result result("Certificate Store - Load every cert of every files");
-   // test_dir_bundled dir should contain only one file with 2 certificates 
+   // test_dir_bundled dir should contain only one file with 2 certificates
    // concatenated (ValidCert and root)
    const std::string test_dir_bundled = Test::data_dir() + "/x509/misc/bundledcertdir";
 
@@ -343,7 +343,7 @@ Test::Result test_certstor_load_allcert()
       result.test_note("load certs from dir: " + test_dir_bundled);
       // Certificate_Store_In_Memory constructor loads every cert of every files of the dir.
       Botan::Certificate_Store_In_Memory store(test_dir_bundled);
-      
+
       // X509_Certificate constructor loads only the first certificate found in the file.
       Botan::X509_Certificate root_cert(Test::data_dir() + "/x509/x509test/root.pem");
       Botan::X509_Certificate valid_cert(Test::data_dir() + "/x509/x509test/ValidCert.pem");
