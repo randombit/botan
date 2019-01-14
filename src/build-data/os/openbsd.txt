@@ -15,6 +15,7 @@ dev_random
 arc4random
 getentropy
 explicit_bzero
+pledge
 
 sockets
 threads

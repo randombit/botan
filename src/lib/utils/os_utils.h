@@ -122,6 +122,7 @@ void page_prohibit_access(void* page);
 */
 void page_allow_access(void* page);
 
+
 /**
 * Run a probe instruction to test for support for a CPU instruction.
 * Runs in system-specific env that catches illegal instructions; this

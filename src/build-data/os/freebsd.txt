@@ -10,6 +10,7 @@ clock_gettime
 dev_random
 arc4random
 explicit_bzero
+cap_enter
 
 sockets
 threads

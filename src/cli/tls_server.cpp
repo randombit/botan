@@ -7,6 +7,7 @@
 */
 
 #include "cli.h"
+#include "sandbox.h"
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && \
    (defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2))
@@ -86,6 +87,12 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
+
+	 if(!m_sandbox.init())
+            {
+            error_output() << "Failed sandboxing\n";
+	    return;
+	    }
 
          int server_fd = make_server_socket(port);
          size_t clients_served = 0;
@@ -323,6 +330,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
       bool m_is_tcp = false;
       std::string m_line_buf;
       std::list<std::string> m_pending_output;
+      Sandbox m_sandbox;
    };
 
 BOTAN_REGISTER_COMMAND("tls_server", TLS_Server);
