@@ -2545,7 +2545,8 @@ class AmalgamationGenerator(object):
         for hdr in self._build_paths.internal_headers:
             isa = known_isa_header(os.path.basename(hdr))
             if isa:
-                isa_headers[isa] = ''.join(AmalgamationGenerator.read_header(hdr))
+                isa_headers[isa] = ''.join([line for line in AmalgamationGenerator.read_header(hdr)
+                                            if AmalgamationHelper.is_botan_include(line) is None])
             else:
                 internal_headers_list.append(hdr)
 
