@@ -285,13 +285,13 @@ class SIMD_4x32 final
 
          #else
 
-         if(ROT == 8)
+         BOTAN_IF_CONSTEXPR(ROT == 8)
             {
             const uint8_t maskb[16] = { 3,0,1,2, 7,4,5,6, 11,8,9,10, 15,12,13,14 };
             const uint8x16_t mask = vld1q_u8(maskb);
             return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(m_neon), mask)));
             }
-         else if(ROT == 16)
+         else BOTAN_IF_CONSTEXPR(ROT == 16)
             {
             return SIMD_4x32(vreinterpretq_u32_u16(vrev32q_u16(vreinterpretq_u16_u32(m_neon))));
             }
