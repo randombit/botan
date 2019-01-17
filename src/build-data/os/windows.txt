@@ -29,7 +29,6 @@ rtlgenrandom
 rtlsecurezeromemory
 
 virtual_lock
-stl_filesystem_msvc
 
 threads
 filesystem
