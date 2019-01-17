@@ -23,6 +23,7 @@ secure_vector<uint8_t> aead_key(const secure_vector<uint8_t>& mk,
       return mk;
 
    secure_vector<uint8_t> r(aead.key_spec().maximum_keylength());
+   BOTAN_ASSERT_NOMSG(r.size() > 0);
    for(size_t i = 0; i != mk.size(); ++i)
       r[i % r.size()] ^= mk[i];
    return r;

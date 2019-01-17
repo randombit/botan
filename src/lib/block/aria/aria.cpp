@@ -280,12 +280,13 @@ void transform(const uint8_t in[], uint8_t out[], size_t blocks,
    }
 
 // n-bit right shift of Y XORed to X
-template <unsigned int N>
+template<size_t N>
 inline void ARIA_ROL128(const uint32_t X[4], const uint32_t Y[4], uint32_t KS[4])
    {
    // MSVC is not generating a "rotate immediate". Constify to help it along.
-   static const unsigned int Q = 4 - (N / 32);
-   static const unsigned int R = N % 32;
+   static const size_t Q = 4 - (N / 32);
+   static const size_t R = N % 32;
+   static_assert(R > 0 && R < 32, "Rotation in range for type");
    KS[0] = (X[0]) ^ ((Y[(Q  )%4])>>R) ^ ((Y[(Q+3)%4])<<(32-R));
    KS[1] = (X[1]) ^ ((Y[(Q+1)%4])>>R) ^ ((Y[(Q  )%4])<<(32-R));
    KS[2] = (X[2]) ^ ((Y[(Q+2)%4])>>R) ^ ((Y[(Q+1)%4])<<(32-R));

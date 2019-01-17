@@ -248,7 +248,7 @@ bool X509_Time::passes_sanity_check() const
 
       http://www.itu.int/ITU-T/studygroups/com17/languages/
       */
-      if (m_hour > 23 || m_minute > 59 || m_second > 59)
+      if(m_second > 59)
          {
          return false;
          }

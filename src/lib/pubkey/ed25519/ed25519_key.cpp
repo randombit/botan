@@ -47,7 +47,7 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key)
    if(secret_key.size() == 64)
       {
       m_private = secret_key;
-      m_public.assign(&m_private[32], &m_private[64]);
+      m_public.assign(m_private.begin() + 32, m_private.end());
       }
    else if(secret_key.size() == 32)
       {

@@ -112,8 +112,11 @@ BigInt random_prime(RandomNumberGenerator& rng,
       {
       for(;;)
          {
-         size_t idx = make_uint16(rng.next_byte(), rng.next_byte()) % PRIME_TABLE_SIZE;
-         uint16_t small_prime = PRIMES[idx];
+         // This is slightly biased, but for small primes it does not seem to matter
+         const uint8_t b0 = rng.next_byte();
+         const uint8_t b1 = rng.next_byte();
+         const size_t idx = make_uint16(b0, b1) % PRIME_TABLE_SIZE;
+         const uint16_t small_prime = PRIMES[idx];
 
          if(high_bit(small_prime) == bits)
             return small_prime;

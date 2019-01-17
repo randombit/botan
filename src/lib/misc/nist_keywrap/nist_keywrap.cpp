@@ -190,7 +190,7 @@ nist_key_unwrap_padded(const uint8_t input[],
 
    const size_t len = (ICV_out & 0xFFFFFFFF);
 
-   if(len > R.size() || len < R.size() - 8)
+   if(R.size() < 8 || len > R.size() || len < R.size() - 8)
       throw Integrity_Failure("NIST key unwrap failed");
 
    const size_t padding = R.size() - len;

@@ -79,7 +79,7 @@ XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(ots_algorithm_t oid)
          break;
       }
 
-   m_w == 16 ? m_lg_w = 4 : m_lg_w = 2;
+   m_lg_w = (m_w == 16) ? 4 : 2;
    m_len_1 = static_cast<size_t>(std::ceil((8 * element_size()) / m_lg_w));
    m_len_2 = static_cast<size_t>(
                 floor(log2(m_len_1 * (wots_parameter() - 1)) / m_lg_w) + 1);

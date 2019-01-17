@@ -114,6 +114,7 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
 
       gf2m tmp;
       tmp = gray_to_lex(current);
+      /// XXX double assignment, possible bug?
       if(tmp >= code_length) /* invalid root */
          {
          result[i] = i;
