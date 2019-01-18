@@ -1,10 +1,9 @@
 <defines>
-BOOST_FILESYSTEM -> 20131228
 BOOST_ASIO -> 20131228
 </defines>
 
 load_on vendor
 
 <libs>
-all -> boost_system,boost_filesystem
+all -> boost_system
 </libs>
