@@ -115,8 +115,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
          {
          if(idx >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
             {
-            throw Integrity_Failure("XMSS private key leaf index out of "
-                                    "bounds.");
+            throw Decoding_Error("XMSS private key leaf index out of bounds");
             }
          else
             {
@@ -140,8 +139,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
                           *recover_global_leaf_index())).fetch_add(1);
          if(idx >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
             {
-            throw Integrity_Failure("XMSS private key, one time signatures "
-                                    "exhausted.");
+            throw Decoding_Error("XMSS private key, one time signatures exhaused");
             }
          return idx;
          }

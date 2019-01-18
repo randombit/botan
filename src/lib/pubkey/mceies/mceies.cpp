@@ -97,7 +97,7 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
       aead->finish(pt, 0);
       return pt;
       }
-   catch(Integrity_Failure&)
+   catch(Invalid_Authentication_Tag&)
       {
       throw;
       }

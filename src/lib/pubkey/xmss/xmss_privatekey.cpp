@@ -37,7 +37,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
 
    if(raw_key.size() != size())
       {
-      throw Integrity_Failure("Invalid XMSS private key size detected.");
+      throw Decoding_Error("Invalid XMSS private key size detected.");
       }
 
    // extract & copy unused leaf index from raw_key.
@@ -52,8 +52,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
 
    if(unused_leaf >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
       {
-      throw Integrity_Failure("XMSS private key leaf index out of "
-                              "bounds.");
+      throw Decoding_Error("XMSS private key leaf index out of bounds");
       }
 
    begin = end;

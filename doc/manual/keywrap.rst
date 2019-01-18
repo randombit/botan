@@ -23,7 +23,7 @@ functions with AES, but any 128-bit cipher will do and some other implementation
 .. cpp:function:: secure_vector<uint8_t> nist_key_unwrap(const uint8_t input[], \
                   size_t input_len,  const BlockCipher& bc)
 
-   This unwraps the result of nist_key_wrap, or throw Integrity_Failure on error.
+   This unwraps the result of nist_key_wrap, or throw Invalid_Authentication_Tag on error.
 
 .. cpp:function:: std::vector<uint8_t> nist_key_wrap_padded(const uint8_t input[], \
                   size_t input_len, const BlockCipher& bc)
@@ -33,7 +33,7 @@ functions with AES, but any 128-bit cipher will do and some other implementation
 .. cpp:function:: secure_vector<uint8_t> nist_key_unwrap_padded(const uint8_t input[], \
                   size_t input_len, const BlockCipher& bc)
 
-   This unwraps the result of nist_key_wrap_padded, or throws Integrity_Failure
+   This unwraps the result of nist_key_wrap_padded, or throws Invalid_Authentication_Tag
    on error.
 
 RFC 3394 Interface

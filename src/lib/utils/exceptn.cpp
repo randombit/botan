@@ -93,8 +93,8 @@ Decoding_Error::Decoding_Error(const std::string& msg, const std::exception& e) 
 Decoding_Error::Decoding_Error(const std::string& name, const char* exception_message) :
    Invalid_Argument(name + " failed with exception " + exception_message) {}
 
-Integrity_Failure::Integrity_Failure(const std::string& msg) :
-   Exception("Integrity failure: " + msg)
+Invalid_Authentication_Tag::Invalid_Authentication_Tag(const std::string& msg) :
+   Exception("Invalid authentication tag: " + msg)
    {}
 
 Invalid_OID::Invalid_OID(const std::string& oid) :

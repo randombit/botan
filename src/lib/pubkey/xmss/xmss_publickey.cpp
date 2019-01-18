@@ -26,7 +26,7 @@ XMSS_PublicKey::XMSS_PublicKey(const std::vector<uint8_t>& raw_key)
    {
    if(raw_key.size() < size())
       {
-      throw Integrity_Failure("Invalid XMSS public key size detected.");
+      throw Decoding_Error("Invalid XMSS public key size detected.");
       }
 
    // extract & copy root from raw key.
@@ -49,7 +49,7 @@ XMSS_PublicKey::deserialize_xmss_oid(const std::vector<uint8_t>& raw_key)
    {
    if(raw_key.size() < 4)
       {
-      throw Integrity_Failure("XMSS signature OID missing.");
+      throw Decoding_Error("XMSS signature OID missing.");
       }
 
    // extract and convert algorithm id to enum type

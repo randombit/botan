@@ -125,7 +125,7 @@ nist_key_unwrap(const uint8_t input[],
    secure_vector<uint8_t> R = raw_nist_key_unwrap(input, input_len, bc, ICV_out);
 
    if(ICV_out != 0xA6A6A6A6A6A6A6A6)
-      throw Integrity_Failure("NIST key unwrap failed");
+      throw Invalid_Authentication_Tag("NIST key unwrap failed");
 
    return R;
    }
@@ -186,19 +186,19 @@ nist_key_unwrap_padded(const uint8_t input[],
       }
 
    if((ICV_out >> 32) != 0xA65959A6)
-      throw Integrity_Failure("NIST key unwrap failed");
+      throw Invalid_Authentication_Tag("NIST key unwrap failed");
 
    const size_t len = (ICV_out & 0xFFFFFFFF);
 
    if(R.size() < 8 || len > R.size() || len < R.size() - 8)
-      throw Integrity_Failure("NIST key unwrap failed");
+      throw Invalid_Authentication_Tag("NIST key unwrap failed");
 
    const size_t padding = R.size() - len;
 
    for(size_t i = 0; i != padding; ++i)
       {
       if(R[R.size() - i - 1] != 0)
-         throw Integrity_Failure("NIST key unwrap failed");
+         throw Invalid_Authentication_Tag("NIST key unwrap failed");
       }
 
    R.resize(R.size() - padding);

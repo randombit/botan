@@ -269,10 +269,19 @@ will be returned by :cpp:func:`get_cipher` if the named cipher is an AEAD mode).
        ever calling update is both efficient and convenient.
 
        .. note::
-          During decryption, finish will throw an instance of Integrity_Failure
-          if the MAC does not validate. If this occurs, all plaintext previously
-          output via calls to update must be destroyed and not used in any
-          way that an attacker could observe the effects of.
+
+          During decryption, if the supplied authentication tag does not
+          validate, finish will throw an instance of Invalid_Authentication_Tag
+          (aka Integrity_Failure, which was the name for this exception in
+          versions before 2.10, a typedef is included for compatability).
+
+          If this occurs, all plaintext previously output via calls to update
+          must be destroyed and not used in any way that an attacker could
+          observe the effects of. This could be anything from echoing the
+          plaintext back (perhaps in an error message), or by making an external
+          RPC whose destination or contents depend on the plaintext. The only
+          thing you can do is buffer it, and in the event of an invalid tag,
+          erase the previously decrypted content from memory.
 
           One simply way to assure this could never happen is to never
           call update, and instead always marshal the entire message
