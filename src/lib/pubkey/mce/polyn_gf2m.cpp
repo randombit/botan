@@ -124,7 +124,7 @@ void polyn_gf2m::realloc(uint32_t new_size)
    }
 
 polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2m_Field> sp_field)
-   :msp_field(sp_field), m_deg(-1)
+   :m_deg(-1), msp_field(sp_field)
    {
    if(mem_len % sizeof(gf2m))
       {
