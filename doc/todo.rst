@@ -29,6 +29,7 @@ Ciphers, Hashes, PBKDF
 * SHA-512 using BMI2+AVX2
 * Constant time DES using BMI2
 * Threefish-1024
+* SIMD evaluation of SHA-2 and SHA-3 compression functions
 
 Public Key Crypto, Math
 ----------------------------------------
@@ -53,6 +54,7 @@ Public Key Crypto, Math
 Utility Functions
 ------------------
 
+* Thread pool
 
 Multiparty Protocols
 ----------------------
