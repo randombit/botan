@@ -253,6 +253,9 @@ in raw binary. In many situations you'll want to perform a sequence of
 operations on multiple branches of the fork; in which case, use
 the filter described in :ref:`chain`.
 
+There is also a ``Threaded_Fork`` which acts the same as ``Fork``,
+except it runs each of the filters in its own thread.
+
 .. _chain:
 
 Chain
@@ -683,6 +686,10 @@ as simple as possible to write new filter types. There are four
 functions that need to be implemented by a class deriving from
 ``Filter``:
 
+.. cpp:function:: std::string Filter::name() const
+
+  This should just return a useful decription of the filter object.
+
 .. cpp:function:: void Filter::write(const uint8_t* input, size_t length)
 
   This function is what is called when a filter receives input for it
@@ -698,6 +705,12 @@ functions that need to be implemented by a class deriving from
   with whatever it wants to send along to the next filter. There is
   also a version of ``send`` taking a single byte argument, as a
   convenience.
+
+  .. note::
+
+     Normally a filter does not need to override ``send``, though it
+     can for special handling. It does however need to call this
+     function whenever it wants to produce output.
 
 .. cpp:function:: void Filter::start_msg()
 
