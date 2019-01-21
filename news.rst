@@ -8,6 +8,29 @@ Version 2.10.0, Not Yet Released
   set of pages locked into memory (using mlock/VirtualLock). It is now
   faster and with improved exploit mitigations. (GH #1800)
 
+* Add BMI2 implementations of SHA-512 and SHA-3 which improve performance by
+  25-35% on common CPUs. (GH #1815)
+
+* Rename the exception Integrity_Failure to Invalid_Authentication_Tag to make
+  its meaning and usage more clear. The old name remains as a typedef. (GH #1816)
+
+* Support for using Boost filesystem and MSVC's std::filesystem have been
+  removed, since already POSIX and Win32 versions had to be maintained for
+  portability. (GH #1814)
+
+* Add a facility for sandboxing the command line util. Currently FreeBSD
+  (Capsicum) and OpenBSD (pledge) sandboxes are supported. (GH #1808)
+
+* Use ``if constexpr`` when available.
+
+* Add support for using ``sccache`` to cache the Windows CI build (GH #1807)
+
+* Fix a compilation error when building the amalgamation outside of the original
+  source directory when AVX2 was enabled. (GH #1812)
+
+* Fix a crash when creating the amalgamation if a header file was edited on
+  Windows but then the amalgamation was built on Linux (GH #1763)
+
 Version 2.9.0, 2019-01-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
