@@ -359,7 +359,7 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
       send_fatal_alert(e.type());
       throw;
       }
-   catch(Integrity_Failure&)
+   catch(Invalid_Authentication_Tag&)
       {
       send_fatal_alert(Alert::BAD_RECORD_MAC);
       throw;

@@ -166,7 +166,7 @@ void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const uint8_t* included_tag = &buffer[remaining+offset];
 
    if(!constant_time_compare(mac.data(), included_tag, tag_size()))
-      throw Integrity_Failure("GCM tag check failed");
+      throw Invalid_Authentication_Tag("GCM tag check failed");
 
    buffer.resize(offset + remaining);
    }

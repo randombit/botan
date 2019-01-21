@@ -198,7 +198,7 @@ void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const secure_vector<uint8_t> T = S2V(buffer.data() + offset, buffer.size() - offset - V.size());
 
    if(!constant_time_compare(T.data(), V.data(), T.size()))
-      throw Integrity_Failure("SIV tag check failed");
+      throw Invalid_Authentication_Tag("SIV tag check failed");
 
    buffer.resize(buffer.size() - tag_size());
    }

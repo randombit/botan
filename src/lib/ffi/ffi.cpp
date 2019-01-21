@@ -62,6 +62,9 @@ int ffi_map_error_type(Botan::ErrorType err)
       case Botan::ErrorType::DecodingFailure:
          return BOTAN_FFI_ERROR_INVALID_INPUT;
 
+      case Botan::ErrorType::InvalidTag:
+         return BOTAN_FFI_ERROR_BAD_MAC;
+
       case Botan::ErrorType::InvalidKeyLength:
          return BOTAN_FFI_ERROR_INVALID_KEY_LENGTH;
       case Botan::ErrorType::LookupError:

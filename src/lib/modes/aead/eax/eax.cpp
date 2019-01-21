@@ -184,7 +184,7 @@ void EAX_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    mac ^= m_ad_mac;
 
    if(!constant_time_compare(mac.data(), included_tag, tag_size()))
-      throw Integrity_Failure("EAX tag check failed");
+      throw Invalid_Authentication_Tag("EAX tag check failed");
 
    buffer.resize(offset + remaining);
 

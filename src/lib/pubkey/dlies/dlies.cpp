@@ -192,7 +192,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
          try
             {
             // the decryption can fail:
-            // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
+            // e.g. Invalid_Authentication_Tag is thrown if GCM is used and the message does not have a valid tag
 
             if(m_iv.size())
                {

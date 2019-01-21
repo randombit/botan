@@ -263,7 +263,7 @@ void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    T ^= S0;
 
    if(!constant_time_compare(T.data(), buf_end, tag_size()))
-      throw Integrity_Failure("CCM tag check failed");
+      throw Invalid_Authentication_Tag("CCM tag check failed");
 
    buffer.resize(buffer.size() - tag_size());
    }

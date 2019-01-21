@@ -128,7 +128,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
             {
             cipher.finish(mbuf);
             }
-         catch(Integrity_Failure&)
+         catch(Invalid_Authentication_Tag&)
             {
             return BOTAN_FFI_ERROR_BAD_MAC;
             }

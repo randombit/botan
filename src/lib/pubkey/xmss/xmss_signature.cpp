@@ -19,7 +19,7 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
    if(raw_sig.size() != (xmss_params.len() + xmss_params.tree_height() + 1)
                         * xmss_params.element_size() + sizeof(m_leaf_idx))
    {
-      throw Integrity_Failure("XMSS signature size invalid.");
+      throw Decoding_Error("XMSS signature size invalid.");
    }
 
    for(size_t i = 0; i < 8; i++)
@@ -27,7 +27,7 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
 
    if(m_leaf_idx >= (1ull << xmss_params.tree_height()))
       {
-      throw Integrity_Failure("XMSS signature leaf index out of bounds.");
+      throw Decoding_Error("XMSS signature leaf index out of bounds.");
       }
 
    auto begin = raw_sig.begin() + sizeof(m_leaf_idx);

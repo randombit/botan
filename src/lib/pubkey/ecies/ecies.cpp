@@ -399,7 +399,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       try
          {
          // the decryption can fail:
-         // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
+         // e.g. Invalid_Authentication_Tag is thrown if GCM is used and the message does not have a valid tag
          secure_vector<uint8_t> decrypted_data(encrypted_data.begin(), encrypted_data.end());
          m_cipher->finish(decrypted_data);
          return decrypted_data;

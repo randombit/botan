@@ -45,7 +45,7 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const
          std::string pt_name(cast_uint8_ptr_to_char(name_bits.data()), name_bits.size());
          names.insert(pt_name);
          }
-      catch(Integrity_Failure&)
+      catch(Invalid_Authentication_Tag&)
          {
          }
       }

@@ -523,7 +523,7 @@ void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const uint8_t* included_tag = &buf[remaining];
 
    if(!constant_time_compare(mac.data(), included_tag, tag_size()))
-      throw Integrity_Failure("OCB tag check failed");
+      throw Invalid_Authentication_Tag("OCB tag check failed");
 
    // remove tag from end of message
    buffer.resize(remaining + offset);
