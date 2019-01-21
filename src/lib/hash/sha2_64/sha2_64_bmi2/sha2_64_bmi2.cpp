@@ -1,46 +1,13 @@
 /*
-* SHA-{384,512}
-* (C) 1999-2011,2015 Jack Lloyd
+* (C) 2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/sha2_64.h>
 #include <botan/rotate.h>
-#include <botan/cpuid.h>
 
 namespace Botan {
-
-namespace {
-
-std::string sha512_provider()
-   {
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2())
-      {
-      return "bmi2";
-      }
-#endif
-
-   return "base";
-   }
-
-}
-
-std::unique_ptr<HashFunction> SHA_384::copy_state() const
-   {
-   return std::unique_ptr<HashFunction>(new SHA_384(*this));
-   }
-
-std::unique_ptr<HashFunction> SHA_512::copy_state() const
-   {
-   return std::unique_ptr<HashFunction>(new SHA_512(*this));
-   }
-
-std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
-   {
-   return std::unique_ptr<HashFunction>(new SHA_512_256(*this));
-   }
 
 /*
 * SHA-512 F1 Function
@@ -60,23 +27,12 @@ std::unique_ptr<HashFunction> SHA_512_256::copy_state() const
       M1 += M2_sigma + M3 + M4_sigma;                                    \
    } while(0);
 
-/*
-* SHA-{384,512} Compression Function
-*/
-//static
-void SHA_512::compress_digest(secure_vector<uint64_t>& digest,
-                              const uint8_t input[], size_t blocks)
+void SHA_512::compress_digest_bmi2(secure_vector<uint64_t>& digest,
+                                   const uint8_t input[], size_t blocks)
    {
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2())
-      {
-      return compress_digest_bmi2(digest, input, blocks);
-      }
-#endif
-
    uint64_t A = digest[0], B = digest[1], C = digest[2],
-            D = digest[3], E = digest[4], F = digest[5],
-            G = digest[6], H = digest[7];
+          D = digest[3], E = digest[4], F = digest[5],
+          G = digest[6], H = digest[7];
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -192,89 +148,5 @@ void SHA_512::compress_digest(secure_vector<uint64_t>& digest,
    }
 
 #undef SHA2_64_F
-
-std::string SHA_512_256::provider() const
-   {
-   return sha512_provider();
-   }
-
-std::string SHA_384::provider() const
-   {
-   return sha512_provider();
-   }
-
-std::string SHA_512::provider() const
-   {
-   return sha512_provider();
-   }
-
-void SHA_512_256::compress_n(const uint8_t input[], size_t blocks)
-   {
-   SHA_512::compress_digest(m_digest, input, blocks);
-   }
-
-void SHA_384::compress_n(const uint8_t input[], size_t blocks)
-   {
-   SHA_512::compress_digest(m_digest, input, blocks);
-   }
-
-void SHA_512::compress_n(const uint8_t input[], size_t blocks)
-   {
-   SHA_512::compress_digest(m_digest, input, blocks);
-   }
-
-void SHA_512_256::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
-
-void SHA_384::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
-
-void SHA_512::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
-
-void SHA_512_256::clear()
-   {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0x22312194FC2BF72C;
-   m_digest[1] = 0x9F555FA3C84C64C2;
-   m_digest[2] = 0x2393B86B6F53B151;
-   m_digest[3] = 0x963877195940EABD;
-   m_digest[4] = 0x96283EE2A88EFFE3;
-   m_digest[5] = 0xBE5E1E2553863992;
-   m_digest[6] = 0x2B0199FC2C85B8AA;
-   m_digest[7] = 0x0EB72DDC81C52CA2;
-   }
-
-void SHA_384::clear()
-   {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0xCBBB9D5DC1059ED8;
-   m_digest[1] = 0x629A292A367CD507;
-   m_digest[2] = 0x9159015A3070DD17;
-   m_digest[3] = 0x152FECD8F70E5939;
-   m_digest[4] = 0x67332667FFC00B31;
-   m_digest[5] = 0x8EB44A8768581511;
-   m_digest[6] = 0xDB0C2E0D64F98FA7;
-   m_digest[7] = 0x47B5481DBEFA4FA4;
-   }
-
-void SHA_512::clear()
-   {
-   MDx_HashFunction::clear();
-   m_digest[0] = 0x6A09E667F3BCC908;
-   m_digest[1] = 0xBB67AE8584CAA73B;
-   m_digest[2] = 0x3C6EF372FE94F82B;
-   m_digest[3] = 0xA54FF53A5F1D36F1;
-   m_digest[4] = 0x510E527FADE682D1;
-   m_digest[5] = 0x9B05688C2B3E6C1F;
-   m_digest[6] = 0x1F83D9ABFB41BD6B;
-   m_digest[7] = 0x5BE0CD19137E2179;
-   }
 
 }

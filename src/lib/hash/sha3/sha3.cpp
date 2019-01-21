@@ -8,12 +8,20 @@
 #include <botan/sha3.h>
 #include <botan/rotate.h>
 #include <botan/exceptn.h>
+#include <botan/cpuid.h>
 
 namespace Botan {
 
 //static
 void SHA_3::permute(uint64_t A[25])
    {
+#if defined(BOTAN_HAS_SHA3_BMI2)
+   if(CPUID::has_bmi2())
+      {
+      return permute_bmi2(A);
+      }
+#endif
+
    static const uint64_t RC[24] = {
       0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
       0x8000000080008000, 0x000000000000808B, 0x0000000080000001,
@@ -196,6 +204,18 @@ SHA_3::SHA_3(size_t output_bits) :
 std::string SHA_3::name() const
    {
    return "SHA-3(" + std::to_string(m_output_bits) + ")";
+   }
+
+std::string SHA_3::provider() const
+   {
+#if defined(BOTAN_HAS_SHA3_BMI2)
+   if(CPUID::has_bmi2())
+      {
+      return "bmi2";
+      }
+#endif
+
+   return "base";
    }
 
 std::unique_ptr<HashFunction> SHA_3::copy_state() const

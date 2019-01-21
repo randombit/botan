@@ -1,0 +1,15 @@
+<defines>
+SHA2_64_BMI2 -> 20190117
+</defines>
+
+need_isa bmi2
+
+# Needs 64-bit registers to be useful
+<arch>
+x86_64
+</arch>
+
+<cc>
+gcc
+clang
+</cc>
