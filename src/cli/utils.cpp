@@ -29,10 +29,6 @@
    #include <botan/http_util.h>
 #endif
 
-#if defined(BOTAN_HAS_BCRYPT)
-   #include <botan/bcrypt.h>
-#endif
-
 namespace Botan_CLI {
 
 class Print_Help final : public Command
@@ -455,80 +451,6 @@ class Base64_Decode final : public Command
 BOTAN_REGISTER_COMMAND("base64_dec", Base64_Decode);
 
 #endif // base64
-
-#if defined(BOTAN_HAS_BCRYPT)
-
-class Generate_Bcrypt final : public Command
-   {
-   public:
-      Generate_Bcrypt() : Command("gen_bcrypt --work-factor=12 password") {}
-
-      std::string group() const override
-         {
-         return "passhash";
-         }
-
-      std::string description() const override
-         {
-         return "Calculate the bcrypt password digest of a given file";
-         }
-
-      void go() override
-         {
-         const std::string password = get_passphrase_arg("Passphrase to hash", "password");
-         const size_t wf = get_arg_sz("work-factor");
-
-         if(wf < 4 || wf > 18)
-            {
-            error_output() << "Invalid bcrypt work factor\n";
-            }
-         else
-            {
-            const uint16_t wf16 = static_cast<uint16_t>(wf);
-            output() << Botan::generate_bcrypt(password, rng(), wf16) << "\n";
-            }
-         }
-   };
-
-BOTAN_REGISTER_COMMAND("gen_bcrypt", Generate_Bcrypt);
-
-class Check_Bcrypt final : public Command
-   {
-   public:
-      Check_Bcrypt() : Command("check_bcrypt password hash") {}
-
-      std::string group() const override
-         {
-         return "passhash";
-         }
-
-      std::string description() const override
-         {
-         return "Checks a given bcrypt hash against hash";
-         }
-
-      void go() override
-         {
-         const std::string password = get_passphrase_arg("Password to check", "password");
-         const std::string hash = get_arg("hash");
-
-         if(hash.length() != 60)
-            {
-            error_output() << "Note: bcrypt '" << hash << "' has wrong length and cannot be valid\n";
-            }
-
-         const bool ok = Botan::check_bcrypt(password, hash);
-
-         output() << "Password is " << (ok ? "valid" : "NOT valid") << std::endl;
-
-         if(ok == false)
-            set_return_code(1);
-         }
-   };
-
-BOTAN_REGISTER_COMMAND("check_bcrypt", Check_Bcrypt);
-
-#endif // bcrypt
 
 #if defined(BOTAN_HAS_HMAC)
 
