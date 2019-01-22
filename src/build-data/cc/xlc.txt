@@ -18,7 +18,9 @@ default -> "$(CXX) -qmkshrobj"
 </so_link_commands>
 
 <sanitizers>
-default   -> "-qcheck=all"
+default   -> address
+
+all       -> "-qcheck=all"
 address   -> "-qcheck=bounds:stackclobber:unset"
 undefined -> "-qcheck=nullptr:divzero"
 </sanitizers>
