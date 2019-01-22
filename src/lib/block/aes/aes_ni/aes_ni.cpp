@@ -109,8 +109,6 @@ __m128i aes_256_key_expansion(__m128i key, __m128i key2)
 BOTAN_FUNC_ISA("ssse3,aes")
 void AES_128::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
@@ -188,8 +186,6 @@ void AES_128::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 BOTAN_FUNC_ISA("ssse3,aes")
 void AES_128::aesni_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_DK.empty() == false, "Key was set");
-
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
@@ -320,8 +316,6 @@ void AES_128::aesni_key_schedule(const uint8_t key[], size_t)
 BOTAN_FUNC_ISA("ssse3,aes")
 void AES_192::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
@@ -405,8 +399,6 @@ void AES_192::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 BOTAN_FUNC_ISA("ssse3,aes")
 void AES_192::aesni_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_DK.empty() == false, "Key was set");
-
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
@@ -540,8 +532,6 @@ void AES_192::aesni_key_schedule(const uint8_t key[], size_t)
 BOTAN_FUNC_ISA("ssse3,aes")
 void AES_256::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
@@ -631,8 +621,6 @@ void AES_256::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 BOTAN_FUNC_ISA("ssse3,aes")
 void AES_256::aesni_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_DK.empty() == false, "Key was set");
-
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 

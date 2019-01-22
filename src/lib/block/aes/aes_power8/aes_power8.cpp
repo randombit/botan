@@ -65,8 +65,6 @@ void StoreBlock(const __vector unsigned long long src, uint8_t* dest)
 BOTAN_FUNC_ISA("crypto")
 void AES_128::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const __vector unsigned long long K0  = LoadKey(&m_EK[0]);
    const __vector unsigned long long K1  = LoadKey(&m_EK[4]);
    const __vector unsigned long long K2  = LoadKey(&m_EK[8]);
@@ -105,8 +103,6 @@ void AES_128::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 BOTAN_FUNC_ISA("crypto")
 void AES_128::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const __vector unsigned long long K0  = LoadBlock(m_ME.data());
    const __vector unsigned long long K1  = LoadKey(&m_EK[36]);
    const __vector unsigned long long K2  = LoadKey(&m_EK[32]);
@@ -145,8 +141,6 @@ void AES_128::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 BOTAN_FUNC_ISA("crypto")
 void AES_192::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const __vector unsigned long long K0  = LoadKey(&m_EK[0]);
    const __vector unsigned long long K1  = LoadKey(&m_EK[4]);
    const __vector unsigned long long K2  = LoadKey(&m_EK[8]);
@@ -189,8 +183,6 @@ void AES_192::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 BOTAN_FUNC_ISA("crypto")
 void AES_192::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const __vector unsigned long long K0  = LoadBlock(m_ME.data());
    const __vector unsigned long long K1  = LoadKey(&m_EK[44]);
    const __vector unsigned long long K2  = LoadKey(&m_EK[40]);
@@ -233,7 +225,6 @@ void AES_192::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 BOTAN_FUNC_ISA("crypto")
 void AES_256::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
    const __vector unsigned long long K0  = LoadKey(&m_EK[0]);
    const __vector unsigned long long K1  = LoadKey(&m_EK[4]);
    const __vector unsigned long long K2  = LoadKey(&m_EK[8]);
@@ -280,8 +271,6 @@ void AES_256::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 BOTAN_FUNC_ISA("crypto")
 void AES_256::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const __vector unsigned long long K0  = LoadBlock(m_ME.data());
    const __vector unsigned long long K1  = LoadKey(&m_EK[52]);
    const __vector unsigned long long K2  = LoadKey(&m_EK[48]);

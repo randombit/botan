@@ -56,8 +56,6 @@ namespace Botan {
 BOTAN_FUNC_ISA("+crypto")
 void AES_128::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
    const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_ME.data());
 
@@ -124,8 +122,6 @@ void AES_128::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 BOTAN_FUNC_ISA("+crypto")
 void AES_128::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_DK.empty() == false, "Key was set");
-
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());
    const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_MD.data());
 
@@ -192,8 +188,6 @@ void AES_128::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 BOTAN_FUNC_ISA("+crypto")
 void AES_192::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
    const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_ME.data());
 
@@ -266,7 +260,6 @@ void AES_192::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 BOTAN_FUNC_ISA("+crypto")
 void AES_192::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_DK.empty() == false, "Key was set");
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());
    const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_MD.data());
 
@@ -339,8 +332,6 @@ void AES_192::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 BOTAN_FUNC_ISA("+crypto")
 void AES_256::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_EK.empty() == false, "Key was set");
-
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
    const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_ME.data());
 
@@ -419,8 +410,6 @@ void AES_256::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 BOTAN_FUNC_ISA("+crypto")
 void AES_256::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   BOTAN_ASSERT(m_DK.empty() == false, "Key was set");
-
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());
    const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_MD.data());
 
