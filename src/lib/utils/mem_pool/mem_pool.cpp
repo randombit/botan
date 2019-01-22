@@ -5,9 +5,12 @@
 */
 
 #include <botan/internal/mem_pool.h>
-#include <botan/internal/os_utils.h>
 #include <botan/mem_ops.h>
 #include <algorithm>
+
+#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 namespace Botan {
 
@@ -281,7 +284,9 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) :
       m_max_page_ptr = std::max(p, m_max_page_ptr);
 
       clear_bytes(pages[i], m_page_size);
-      //OS::page_prohibit_access(pages[i]);
+#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
+      OS::page_prohibit_access(pages[i]);
+#endif
       m_free_pages.push_back(static_cast<uint8_t*>(pages[i]));
       }
 
@@ -294,10 +299,12 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) :
 
 Memory_Pool::~Memory_Pool()
    {
+#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
    for(size_t i = 0; i != m_free_pages.size(); ++i)
       {
-      //OS::page_allow_access(m_free_pages[i]);
+      OS::page_allow_access(m_free_pages[i]);
       }
+#endif
    }
 
 void* Memory_Pool::allocate(size_t n)
@@ -332,7 +339,9 @@ void* Memory_Pool::allocate(size_t n)
          {
          uint8_t* ptr = m_free_pages[0];
          m_free_pages.pop_front();
-         //OS::page_allow_access(ptr);
+#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
+         OS::page_allow_access(ptr);
+#endif
          buckets.push_front(Bucket(ptr, m_page_size, n_bucket));
          void* p = buckets[0].alloc();
          BOTAN_ASSERT_NOMSG(p != nullptr);
@@ -366,6 +375,9 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept
             {
             if(bucket.empty())
                {
+#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
+               OS::page_prohibit_access(bucket.ptr());
+#endif
                m_free_pages.push_back(bucket.ptr());
 
                if(i != buckets.size() - 1)
