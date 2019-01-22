@@ -161,6 +161,15 @@ def cli_hash_tests():
     test_cli("hash", "--algo=SHA-256",
              "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD -", "abc")
 
+    test_cli("hash", ["--algo=SHA-256", "--format=base64"],
+             "ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0= -", "abc")
+
+    test_cli("hash", ["--algo=SHA-224", "--format=base58", "--no-fsname"],
+             "MuGc8HkSVyJjfMjPM5UQikPToBTzNucEghcGLe", "abc")
+
+    test_cli("hash", ["--algo=SHA-224", "--format=base58check", "--no-fsname"],
+             "3MmfMqgrhemdVa9bDAGfooukbviWtKMBx2xauL2RsyAe", "abc")
+
 def cli_hmac_tests():
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
 

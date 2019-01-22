@@ -17,10 +17,6 @@
 #include <iterator>
 #include <iomanip>
 
-#if defined(BOTAN_HAS_HASH)
-   #include <botan/hash.h>
-#endif
-
 #if defined(BOTAN_HAS_MAC)
    #include <botan/mac.h>
 #endif
@@ -268,67 +264,6 @@ class Print_Cpuid final : public Command
    };
 
 BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
-
-#if defined(BOTAN_HAS_HASH)
-
-class Hash final : public Command
-   {
-   public:
-      Hash() : Command("hash --algo=SHA-256 --buf-size=4096 --no-fsname *files") {}
-
-      std::string group() const override
-         {
-         return "hash";
-         }
-
-      std::string description() const override
-         {
-         return "Compute the message digest of given file(s)";
-         }
-
-      void go() override
-         {
-         const std::string hash_algo = get_arg("algo");
-         std::unique_ptr<Botan::HashFunction> hash_fn(Botan::HashFunction::create(hash_algo));
-
-         if(!hash_fn)
-            {
-            throw CLI_Error_Unsupported("hashing", hash_algo);
-            }
-
-         const size_t buf_size = get_arg_sz("buf-size");
-         const bool no_fsname = flag_set("no-fsname");
-
-         std::vector<std::string> files = get_arg_list("files");
-         if(files.empty())
-            {
-            files.push_back("-");
-            } // read stdin if no arguments on command line
-
-         for(const std::string& fsname : files)
-            {
-            try
-               {
-               auto update_hash = [&](const uint8_t b[], size_t l) { hash_fn->update(b, l); };
-               read_file(fsname, update_hash, buf_size);
-               const std::string digest = Botan::hex_encode(hash_fn->final());
-
-               if(no_fsname)
-                  output() << digest << "\n";
-               else
-                  output() << digest << " " << fsname << "\n";
-               }
-            catch(CLI_IO_Error& e)
-               {
-               error_output() << e.what() << "\n";
-               }
-            }
-         }
-   };
-
-BOTAN_REGISTER_COMMAND("hash", Hash);
-
-#endif
 
 class RNG final : public Command
    {
