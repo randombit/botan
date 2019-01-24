@@ -669,6 +669,18 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      void binary_encode(uint8_t buf[]) const;
 
      /**
+     * Store BigInt-value in a given byte array. If len is less than
+     * the size of the value, then it will be truncated. If len is
+     * greater than the size of the value, it will be zero-padded.
+     * If len exactly equals this->bytes(), this function behaves identically
+     * to binary_encode.
+     *
+     * @param buf destination byte array for the integer value
+     * @param len how many bytes to write
+     */
+     void binary_encode(uint8_t buf[], size_t len) const;
+
+     /**
      * Read integer value from a byte array with given size
      * @param buf byte array buffer containing the integer
      * @param length size of buf
@@ -676,10 +688,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      void binary_decode(const uint8_t buf[], size_t length);
 
      /**
-     * Read integer value from a byte array (secure_vector<uint8_t>)
-     * @param buf the array to load from
+     * Read integer value from a byte vector
+     * @param buf the vector to load from
      */
-     void binary_decode(const secure_vector<uint8_t>& buf)
+     template<typename Alloc>
+     void binary_decode(const std::vector<uint8_t, Alloc>& buf)
         {
         binary_decode(buf.data(), buf.size());
         }
@@ -687,7 +700,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      /**
      * @param base the base to measure the size for
      * @return size of this integer in base base
+     *
+     * Deprecated. This is only needed when using the `encode` and
+     * `encode_locked` functions, which are also deprecated.
      */
+     BOTAN_DEPRECATED("See comments on declaration")
      size_t encoded_size(Base base = Binary) const;
 
      /**
@@ -772,7 +789,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param buf destination byte array for the encoded integer
      * @param n the BigInt to use as integer source
      */
-     static void encode(uint8_t buf[], const BigInt& n)
+     static BOTAN_DEPRECATED("Use n.binary_encode") void encode(uint8_t buf[], const BigInt& n)
         {
         n.binary_encode(buf);
         }
@@ -793,17 +810,8 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param buf the binary value to load
      * @result BigInt representing the integer in the byte array
      */
-     static BigInt decode(const secure_vector<uint8_t>& buf)
-        {
-        return BigInt(buf);
-        }
-
-     /**
-     * Create a BigInt from an integer in a byte array
-     * @param buf the binary value to load
-     * @result BigInt representing the integer in the byte array
-     */
-     static BigInt decode(const std::vector<uint8_t>& buf)
+     template<typename Alloc>
+     static BigInt decode(const std::vector<uint8_t, Alloc>& buf)
         {
         return BigInt(buf);
         }
@@ -813,7 +821,12 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param n the BigInt to use as integer source
      * @param base number-base of resulting byte array representation
      * @result secure_vector of bytes containing the integer with given base
+     *
+     * Deprecated. If you need Binary, call the version of encode that doesn't
+     * take a Base. If you need Hex or Decimal output, use to_hex_string or
+     * to_dec_string resp.
      */
+     BOTAN_DEPRECATED("See comments on declaration")
      static std::vector<uint8_t> encode(const BigInt& n, Base base);
 
      /**
@@ -821,7 +834,12 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param n the BigInt to use as integer source
      * @param base number-base of resulting byte array representation
      * @result secure_vector of bytes containing the integer with given base
+     *
+     * Deprecated. If you need Binary, call the version of encode_locked that
+     * doesn't take a Base. If you need Hex or Decimal output, use to_hex_string
+     * or to_dec_string resp.
      */
+     BOTAN_DEPRECATED("See comments on declaration")
      static secure_vector<uint8_t> encode_locked(const BigInt& n,
                                                  Base base);
 
@@ -831,7 +849,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * value with given base
      * @param n the BigInt to use as integer source
      * @param base number-base of resulting byte array representation
+     *
+     * Deprecated. If you need Binary, call binary_encode. If you need
+     * Hex or Decimal output, use to_hex_string or to_dec_string resp.
      */
+     BOTAN_DEPRECATED("See comments on declaration")
      static void encode(uint8_t buf[], const BigInt& n, Base base);
 
      /**
@@ -850,21 +872,8 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param base number-base of the integer in buf
      * @result BigInt representing the integer in the byte array
      */
-     static BigInt decode(const secure_vector<uint8_t>& buf,
-                          Base base)
-        {
-        if(base == Binary)
-           return BigInt(buf);
-        return BigInt::decode(buf.data(), buf.size(), base);
-        }
-
-     /**
-     * Create a BigInt from an integer in a byte array
-     * @param buf the binary value to load
-     * @param base number-base of the integer in buf
-     * @result BigInt representing the integer in the byte array
-     */
-     static BigInt decode(const std::vector<uint8_t>& buf, Base base)
+     template<typename Alloc>
+     static BigInt decode(const std::vector<uint8_t, Alloc>& buf, Base base)
         {
         if(base == Binary)
            return BigInt(buf);

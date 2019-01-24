@@ -1,6 +1,6 @@
 /*
 * BigInt Base
-* (C) 1999-2011,2012,2014 Jack Lloyd
+* (C) 1999-2011,2012,2014,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -381,14 +381,34 @@ BigInt BigInt::abs() const
    return x;
    }
 
+void BigInt::binary_encode(uint8_t buf[]) const
+   {
+   this->binary_encode(buf, bytes());
+   }
+
 /*
 * Encode this number into bytes
 */
-void BigInt::binary_encode(uint8_t output[]) const
+void BigInt::binary_encode(uint8_t output[], size_t len) const
    {
-   const size_t sig_bytes = bytes();
-   for(size_t i = 0; i != sig_bytes; ++i)
-      output[sig_bytes-i-1] = byte_at(i);
+   const size_t full_words = len / sizeof(word);
+   const size_t extra_bytes = len % sizeof(word);
+
+   for(size_t i = 0; i != full_words; ++i)
+      {
+      const word w = word_at(i);
+      store_be(w, output + (len - (i+1)*sizeof(word)));
+      }
+
+   if(extra_bytes > 0)
+      {
+      const word w = word_at(full_words);
+
+      for(size_t i = 0; i != extra_bytes; ++i)
+         {
+         output[extra_bytes - i - 1] = get_byte(sizeof(word) - i - 1, w);
+         }
+      }
    }
 
 /*
@@ -396,21 +416,20 @@ void BigInt::binary_encode(uint8_t output[]) const
 */
 void BigInt::binary_decode(const uint8_t buf[], size_t length)
    {
-   const size_t WORD_BYTES = sizeof(word);
-
    clear();
-   secure_vector<word> reg((round_up((length / WORD_BYTES) + 1, 8)));
 
-   // TODO can load a word at a time here
-   for(size_t i = 0; i != length / WORD_BYTES; ++i)
+   const size_t full_words = length / sizeof(word);
+   const size_t extra_bytes = length % sizeof(word);
+
+   secure_vector<word> reg((round_up(full_words + 1, 8)));
+
+   for(size_t i = 0; i != full_words; ++i)
       {
-      const size_t top = length - WORD_BYTES*i;
-      for(size_t j = WORD_BYTES; j > 0; --j)
-         reg[i] = (reg[i] << 8) | buf[top - j];
+      reg[i] = load_be<word>(buf + length - sizeof(word)*(i+1), 0);
       }
 
-   for(size_t i = 0; i != length % WORD_BYTES; ++i)
-      reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[i];
+   for(size_t i = 0; i != length % sizeof(word); ++i)
+      reg[full_words] = (reg[full_words] << 8) | buf[i];
 
    m_data.swap(reg);
    }
