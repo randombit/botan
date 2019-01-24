@@ -9,7 +9,6 @@
 #if defined(BOTAN_HAS_HASH) && defined(BOTAN_HAS_HEX_CODEC)
    #include <botan/hash.h>
    #include <botan/hex.h>
-   #include <botan/base64.h>
 #endif
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
@@ -53,7 +52,7 @@ class Hash final : public Command
             return Botan::base64_encode(vec);
             }
 #endif
-#if defined(BOTAN_HAS_BASE64_CODEC)
+#if defined(BOTAN_HAS_BASE58_CODEC)
          else if(format == "base58")
             {
             return Botan::base58_encode(vec);
