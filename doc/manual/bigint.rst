@@ -9,14 +9,18 @@ declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
 
 .. cpp:class:: BigInt
 
+   .. cpp:function:: BigInt()
+
+      Create a BigInt with value zero
+
    .. cpp:function:: BigInt(uint64_t n)
 
       Create a BigInt with value *n*
 
    .. cpp:function:: BigInt(const std::string& str)
 
-      Create a BigInt from a string. By default decimal is
-      expected. With an 0x prefix instead it is treated as hexadecimal.
+      Create a BigInt from a string. By default decimal is expected. With an 0x
+      prefix instead it is treated as hexadecimal.
 
    .. cpp:function:: BigInt(const uint8_t buf[], size_t length)
 
@@ -199,9 +203,24 @@ declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
 
       Encode this BigInt as a big-endian integer. The sign is ignored.
 
+   .. cpp:function:: void binary_encode(uint8_t buf[], size_t len) const
+
+      Encode this BigInt as a big-endian integer. The sign is ignored.
+      If ``len`` is less than ``bytes()`` then only the low ``len``
+      bytes are output. If ``len`` is greater than ``bytes()`` then
+      the output is padded with leading zeros.
+
    .. cpp:function:: void binary_decode(uint8_t buf[])
 
       Decode this BigInt as a big-endian integer.
+
+   .. cpp:function:: std::string to_dec_string() const
+
+      Encode the integer as a decimal string.
+
+   .. cpp:function:: std::string to_hex_string() const
+
+      Encode the integer as a hexadecimal string.
 
 Number Theory
 ----------------------------------------

@@ -901,7 +901,9 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
 
      /**
      * Set output = vec[idx].m_reg in constant time
-     * All words of vec must have the same size
+     *
+     * All elements of vec must have the same size, and output must be
+     * pre-allocated with the same size.
      */
      static void const_time_lookup(
         secure_vector<word>& output,
