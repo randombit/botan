@@ -11,6 +11,12 @@ Version 2.10.0, Not Yet Released
 * Add BMI2 implementations of SHA-512 and SHA-3 which improve performance by
   25-35% on common CPUs. (GH #1815)
 
+* Some functions related to encoding and decoding BigInts have been deprecated.
+  (GH #1817)
+
+* Binary encoding and decoding of BigInts has been optimized by performing
+  word-size operations when possible. (GH #1817)
+
 * Rename the exception Integrity_Failure to Invalid_Authentication_Tag to make
   its meaning and usage more clear. The old name remains as a typedef. (GH #1816)
 
