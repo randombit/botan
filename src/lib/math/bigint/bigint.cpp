@@ -421,15 +421,18 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
    const size_t full_words = length / sizeof(word);
    const size_t extra_bytes = length % sizeof(word);
 
-   secure_vector<word> reg((round_up(full_words + 1, 8)));
+   secure_vector<word> reg((round_up(full_words + (extra_bytes > 0 ? 1 : 0), 8)));
 
    for(size_t i = 0; i != full_words; ++i)
       {
       reg[i] = load_be<word>(buf + length - sizeof(word)*(i+1), 0);
       }
 
-   for(size_t i = 0; i != length % sizeof(word); ++i)
-      reg[full_words] = (reg[full_words] << 8) | buf[i];
+   if(extra_bytes > 0)
+      {
+      for(size_t i = 0; i != extra_bytes; ++i)
+         reg[full_words] = (reg[full_words] << 8) | buf[i];
+      }
 
    m_data.swap(reg);
    }
