@@ -74,6 +74,7 @@ External Providers, Hardware Support
 * POWER8 crypto extensions (SHA-2, GCM)
 * Better TPM support: NVRAM, PCR measurements, sealing
 * Intel SGX support
+* Support Intel QuickAssist accelerator cards
 
 TLS
 ----------------------------------------
