@@ -16,10 +16,10 @@ namespace Botan {
 */
 std::ostream& operator<<(std::ostream& stream, const BigInt& n)
    {
-   BigInt::Base base = BigInt::Decimal;
+   size_t base = 10;
    if(stream.flags() & std::ios::hex)
-      base = BigInt::Hexadecimal;
-   else if(stream.flags() & std::ios::oct)
+      base = 16;
+   if(stream.flags() & std::ios::oct)
       throw Invalid_Argument("Octal output of BigInt not supported");
 
    if(n == 0)
@@ -28,12 +28,18 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
       {
       if(n < 0)
          stream.write("-", 1);
-      const std::vector<uint8_t> buffer = BigInt::encode(n, base);
+
+      std::string enc;
+
+      if(base == 10)
+         enc = n.to_dec_string();
+      else
+         enc = n.to_hex_string();
+
       size_t skip = 0;
-      while(skip < buffer.size() && buffer[skip] == '0')
+      while(skip < enc.size() && enc[skip] == '0')
          ++skip;
-      stream.write(cast_uint8_ptr_to_char(buffer.data()) + skip,
-                   buffer.size() - skip);
+      stream.write(&enc[skip], enc.size() - skip);
       }
    if(!stream.good())
       throw Stream_IO_Error("BigInt output operator has failed");

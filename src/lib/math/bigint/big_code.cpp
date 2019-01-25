@@ -1,6 +1,6 @@
 /*
 * BigInt Encoding/Decoding
-* (C) 1999-2010,2012 Jack Lloyd
+* (C) 1999-2010,2012,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -53,35 +53,27 @@ std::string BigInt::to_hex_string() const
 */
 void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
    {
-   if(base == Binary)
-      {
-      n.binary_encode(output);
-      }
-   else if(base == Hexadecimal)
-      {
-      secure_vector<uint8_t> binary(n.encoded_size(Binary));
-      n.binary_encode(binary.data());
-
-      hex_encode(cast_uint8_ptr_to_char(output),
-                 binary.data(), binary.size());
-      }
-   else if(base == Decimal)
-      {
-      BigInt copy = n;
-      uint8_t remainder;
-      copy.set_sign(Positive);
-      const size_t output_size = n.encoded_size(Decimal);
-      for(size_t j = 0; j != output_size; ++j)
-         {
-         ct_divide_u8(copy, 10, copy, remainder);
-         output[output_size - 1 - j] = Charset::digit2char(remainder);
-         if(copy.is_zero())
-            break;
-         }
-      }
-   else
-      throw Invalid_Argument("Unknown BigInt encoding method");
+   secure_vector<uint8_t> enc = n.encode_locked(base);
+   copy_mem(output, enc.data(), enc.size());
    }
+
+namespace {
+
+std::vector<uint8_t> str_to_vector(const std::string& s)
+   {
+   std::vector<uint8_t> v(s.size());
+   std::memcpy(v.data(), s.data(), s.size());
+   return v;
+   }
+
+secure_vector<uint8_t> str_to_lvector(const std::string& s)
+   {
+   secure_vector<uint8_t> v(s.size());
+   std::memcpy(v.data(), s.data(), s.size());
+   return v;
+   }
+
+}
 
 /*
 * Encode a BigInt
@@ -90,14 +82,12 @@ std::vector<uint8_t> BigInt::encode(const BigInt& n, Base base)
    {
    if(base == Binary)
       return BigInt::encode(n);
-
-   std::vector<uint8_t> output(n.encoded_size(base));
-   encode(output.data(), n, base);
-   for(size_t j = 0; j != output.size(); ++j)
-      if(output[j] == 0)
-         output[j] = '0';
-
-   return output;
+   else if(base == Hexadecimal)
+      return str_to_vector(n.to_hex_string());
+   else if(base == Decimal)
+      return str_to_vector(n.to_dec_string());
+   else
+      throw Invalid_Argument("Unknown BigInt encoding base");
    }
 
 /*
@@ -107,14 +97,12 @@ secure_vector<uint8_t> BigInt::encode_locked(const BigInt& n, Base base)
    {
    if(base == Binary)
       return BigInt::encode_locked(n);
-
-   secure_vector<uint8_t> output(n.encoded_size(base));
-   encode(output.data(), n, base);
-   for(size_t j = 0; j != output.size(); ++j)
-      if(output[j] == 0)
-         output[j] = '0';
-
-   return output;
+   else if(base == Hexadecimal)
+      return str_to_lvector(n.to_hex_string());
+   else if(base == Decimal)
+      return str_to_lvector(n.to_dec_string());
+   else
+      throw Invalid_Argument("Unknown BigInt encoding base");
    }
 
 /*
@@ -122,20 +110,21 @@ secure_vector<uint8_t> BigInt::encode_locked(const BigInt& n, Base base)
 */
 secure_vector<uint8_t> BigInt::encode_1363(const BigInt& n, size_t bytes)
    {
+   if(n.bytes() > bytes)
+      throw Encoding_Error("encode_1363: n is too large to encode properly");
+
    secure_vector<uint8_t> output(bytes);
-   BigInt::encode_1363(output.data(), output.size(), n);
+   n.binary_encode(output.data(), output.size());
    return output;
    }
 
 //static
 void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n)
    {
-   const size_t n_bytes = n.bytes();
-   if(n_bytes > bytes)
+   if(n.bytes() > bytes)
       throw Encoding_Error("encode_1363: n is too large to encode properly");
 
-   const size_t leading_0s = bytes - n_bytes;
-   encode(&output[leading_0s], n, Binary);
+   n.binary_encode(output, bytes);
    }
 
 /*
@@ -143,9 +132,11 @@ void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n)
 */
 secure_vector<uint8_t> BigInt::encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes)
    {
+   if(n1.bytes() > bytes || n2.bytes() > bytes)
+      throw Encoding_Error("encode_fixed_length_int_pair: values too large to encode properly");
    secure_vector<uint8_t> output(2 * bytes);
-   BigInt::encode_1363(output.data(), bytes, n1);
-   BigInt::encode_1363(output.data() + bytes, bytes, n2);
+   n1.binary_encode(output.data()        , bytes);
+   n2.binary_encode(output.data() + bytes, bytes);
    return output;
    }
 
@@ -156,7 +147,9 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base)
    {
    BigInt r;
    if(base == Binary)
+      {
       r.binary_decode(buf, length);
+      }
    else if(base == Hexadecimal)
       {
       secure_vector<uint8_t> binary;
