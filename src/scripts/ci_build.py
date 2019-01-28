@@ -53,7 +53,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                   'tls', 'ffi',
                   'rsa_sign', 'rsa_verify', 'dh_kat',
                   'ecc_randomized', 'ecdh_kat', 'ecdsa_sign', 'curve25519_scalar',
-                  'simd_32', 'os_utils', 'util', 'util_dates']
+                  'cpuid', 'simd_32', 'os_utils', 'util', 'util_dates']
 
     install_prefix = os.path.join(tempfile.gettempdir(), 'botan-install')
     flags = ['--prefix=%s' % (install_prefix),
