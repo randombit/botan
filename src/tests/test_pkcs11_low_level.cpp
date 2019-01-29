@@ -92,7 +92,7 @@ class RAII_LowLevel
          {
          Flags session_flags =  PKCS11::flags(Flag::SerialSession | Flag::RwSession);
          SessionHandle handle = open_session(session_flags);
-         login(UserType::User, PIN_SECVEC);
+         login(UserType::User, PIN());
          return handle;
          }
 
@@ -400,7 +400,7 @@ Test::Result test_c_init_token()
 
    auto sec_vec_binder = std::bind(
                             static_cast< bool (LowLevel::*)(SlotId, const secure_vector<uint8_t>&, const std::string&, ReturnValue*) const>
-                            (&LowLevel::C_InitToken<secure_allocator<uint8_t>>), *p11_low_level.get(), slot_vec.at(0), std::ref(SO_PIN_SECVEC),
+                            (&LowLevel::C_InitToken<secure_allocator<uint8_t>>), *p11_low_level.get(), slot_vec.at(0), SO_PIN(),
                             std::ref(label), std::placeholders::_1);
 
    return test_function("C_InitToken", sec_vec_binder);
@@ -518,7 +518,7 @@ Test::Result test_c_login_logout_security_officier()
    Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
    SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
-   return login_logout_helper(p11_low_level, session_handle, UserType::SO, SO_PIN);
+   return login_logout_helper(p11_low_level, session_handle, UserType::SO, PKCS11_SO_PIN);
    }
 
 Test::Result test_c_login_logout_user()
@@ -528,14 +528,14 @@ Test::Result test_c_login_logout_user()
    // R/O session
    Flags session_flags = PKCS11::flags(Flag::SerialSession);
    SessionHandle session_handle = p11_low_level.open_session(session_flags);
-   Test::Result result = login_logout_helper(p11_low_level, session_handle, UserType::User, PIN);
+   Test::Result result = login_logout_helper(p11_low_level, session_handle, UserType::User, PKCS11_USER_PIN);
    p11_low_level.close_session();
 
    // R/W session
    session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
    session_handle = p11_low_level.open_session(session_flags);
 
-   result.merge(login_logout_helper(p11_low_level, session_handle, UserType::User, PIN));
+   result.merge(login_logout_helper(p11_low_level, session_handle, UserType::User, PKCS11_USER_PIN));
 
    return result;
    }
@@ -548,11 +548,11 @@ Test::Result test_c_init_pin()
    Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
    SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
-   p11_low_level.login(UserType::SO, SO_PIN_SECVEC);
+   p11_low_level.login(UserType::SO, SO_PIN());
 
    auto sec_vec_binder = std::bind(
                             static_cast< bool (LowLevel::*)(SessionHandle, const secure_vector<uint8_t>&, ReturnValue*) const>
-                            (&LowLevel::C_InitPIN<secure_allocator<uint8_t>>), *p11_low_level.get(), session_handle, std::ref(PIN_SECVEC),
+                            (&LowLevel::C_InitPIN<secure_allocator<uint8_t>>), *p11_low_level.get(), session_handle, PIN(),
                             std::placeholders::_1);
 
    return test_function("C_InitPIN", sec_vec_binder);
@@ -580,13 +580,13 @@ Test::Result test_c_set_pin()
    const std::string test_pin("654321");
    const auto test_pin_secvec = secure_vector<uint8_t>(test_pin.begin(), test_pin.end());
 
-   PKCS11_BoundTestFunction set_pin_bind = get_pin_bind(PIN_SECVEC, test_pin_secvec);
-   PKCS11_BoundTestFunction revert_pin_bind = get_pin_bind(test_pin_secvec, PIN_SECVEC);
+   PKCS11_BoundTestFunction set_pin_bind = get_pin_bind(PIN(), test_pin_secvec);
+   PKCS11_BoundTestFunction revert_pin_bind = get_pin_bind(test_pin_secvec, PIN());
 
    Test::Result result = test_function("C_SetPIN", set_pin_bind, "C_SetPIN", revert_pin_bind);
 
    // change pin in "R / W User Functions" state
-   p11_low_level.login(UserType::User, PIN_SECVEC);
+   p11_low_level.login(UserType::User, PIN());
 
    result.merge(test_function("C_SetPIN", set_pin_bind, "C_SetPIN", revert_pin_bind));
    p11_low_level.logout();
@@ -594,10 +594,10 @@ Test::Result test_c_set_pin()
    // change so_pin in "R / W SO Functions" state
    const std::string test_so_pin = "87654321";
    secure_vector<uint8_t> test_so_pin_secvec(test_so_pin.begin(), test_so_pin.end());
-   p11_low_level.login(UserType::SO, SO_PIN_SECVEC);
+   p11_low_level.login(UserType::SO, SO_PIN());
 
-   PKCS11_BoundTestFunction set_so_pin_bind = get_pin_bind(SO_PIN_SECVEC, test_so_pin_secvec);
-   PKCS11_BoundTestFunction revert_so_pin_bind = get_pin_bind(test_so_pin_secvec, SO_PIN_SECVEC);
+   PKCS11_BoundTestFunction set_so_pin_bind = get_pin_bind(SO_PIN(), test_so_pin_secvec);
+   PKCS11_BoundTestFunction revert_so_pin_bind = get_pin_bind(test_so_pin_secvec, SO_PIN());
 
    result.merge(test_function("C_SetPIN", set_so_pin_bind, "C_SetPIN", revert_so_pin_bind));
 
@@ -651,7 +651,7 @@ Test::Result test_c_get_object_size()
    Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
    SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
-   p11_low_level.login(UserType::User, PIN_SECVEC);
+   p11_low_level.login(UserType::User, PIN());
 
    ObjectHandle object_handle = create_simple_data_object(p11_low_level);
    Ulong object_size = 0;
@@ -722,7 +722,7 @@ Test::Result test_c_set_attribute_value()
    Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
    SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
-   p11_low_level.login(UserType::User, PIN_SECVEC);
+   p11_low_level.login(UserType::User, PIN());
 
    ObjectHandle object_handle = create_simple_data_object(p11_low_level);
 
