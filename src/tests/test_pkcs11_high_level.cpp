@@ -74,7 +74,7 @@ class TestSession
          m_session.reset(new Session(*m_slot, false));
          if(login)
             {
-            m_session->login(UserType::User, PIN_SECVEC);
+            m_session->login(UserType::User, PIN());
             }
          }
       inline Session& session() const
@@ -145,7 +145,37 @@ Test::Result test_module_get_info()
    return result;
    }
 
-class Module_Tests final : public PKCS11_Test
+std::vector<Test::Result> run_pkcs11_tests(
+   const std::string& name,
+   std::vector<std::function<Test::Result()>>& fns)
+   {
+   std::vector<Test::Result> results;
+
+   for(size_t i = 0; i != fns.size(); ++i)
+      {
+      try
+         {
+         results.push_back(fns[ i ]());
+         }
+      catch(Botan::PKCS11::PKCS11_ReturnError& e)
+         {
+         results.push_back(Test::Result::Failure(name + " test " + std::to_string(i), e.what()));
+
+         if(e.get_return_value() == Botan::PKCS11::ReturnValue::PinIncorrect)
+            {
+            break; // Do not continue to not potentially lock the token
+            }
+         }
+      catch(std::exception& e)
+         {
+         results.push_back(Test::Result::Failure(name + " test " + std::to_string(i), e.what()));
+         }
+      }
+
+   return results;
+   }
+
+class Module_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -283,7 +313,7 @@ Test::Result test_get_mechanisms_info()
    return result;
    }
 
-class Slot_Tests final : public PKCS11_Test
+class Slot_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -380,11 +410,11 @@ Test::Result test_session_login_logout()
    Slot slot(module, slot_vec.at(0));
 
    Session session(slot, false);
-   session.login(UserType::User, PIN_SECVEC);
+   session.login(UserType::User, PIN());
    session.logoff();
    result.test_success("user login/logout succeeded");
 
-   session.login(UserType::SO, SO_PIN_SECVEC);
+   session.login(UserType::SO, SO_PIN());
    result.test_success("SO login succeeded");
 
    return result;
@@ -404,7 +434,7 @@ Test::Result test_session_info()
    result.test_is_eq("state is a read write public session", info.state,
                      static_cast<CK_STATE>(SessionState::RwPublicSession));
 
-   session.login(UserType::User, PIN_SECVEC);
+   session.login(UserType::User, PIN());
    info = session.get_info();
    result.test_is_eq("state is a read write user session", info.state,
                      static_cast<CK_STATE>(SessionState::RwUserFunctions));
@@ -412,13 +442,13 @@ Test::Result test_session_info()
    session.logoff();
    result.test_success("user login/logout succeeded");
 
-   session.login(UserType::SO, SO_PIN_SECVEC);
+   session.login(UserType::SO, SO_PIN());
    result.test_success("SO login succeeded");
 
    return result;
    }
 
-class Session_Tests final : public PKCS11_Test
+class Session_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -614,7 +644,7 @@ Test::Result test_object_copy()
    }
 #endif
 
-class Object_Tests final : public PKCS11_Test
+class Object_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -878,7 +908,7 @@ Test::Result test_rsa_sign_verify()
    return result;
    }
 
-class PKCS11_RSA_Tests final : public PKCS11_Test
+class PKCS11_RSA_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -1127,7 +1157,7 @@ Test::Result test_ecdsa_sign_verify()
    return result;
    }
 
-class PKCS11_ECDSA_Tests final : public PKCS11_Test
+class PKCS11_ECDSA_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -1358,7 +1388,7 @@ Test::Result test_ecdh_derive()
    return result;
    }
 
-class PKCS11_ECDH_Tests final : public PKCS11_Test
+class PKCS11_ECDH_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -1447,7 +1477,7 @@ Test::Result test_pkcs11_hmac_drbg()
    }
 #endif
 
-class PKCS11_RNG_Tests final : public PKCS11_Test
+class PKCS11_RNG_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -1477,10 +1507,10 @@ Test::Result test_set_pin()
    std::vector<SlotId> slot_vec = Slot::get_available_slots(module, true);
    Slot slot(module, slot_vec.at(0));
 
-   PKCS11::set_pin(slot, SO_PIN_SECVEC, TEST_PIN_SECVEC);
+   PKCS11::set_pin(slot, SO_PIN(), TEST_PIN());
    result.test_success("PIN set with SO_PIN to TEST_PIN");
 
-   PKCS11::set_pin(slot, SO_PIN_SECVEC, PIN_SECVEC);
+   PKCS11::set_pin(slot, SO_PIN(), PIN());
    result.test_success("PIN changed back with SO_PIN");
 
    return result;
@@ -1494,7 +1524,7 @@ Test::Result test_initialize()
    std::vector<SlotId> slot_vec = Slot::get_available_slots(module, true);
    Slot slot(module, slot_vec.at(0));
 
-   PKCS11::initialize_token(slot, "Botan PKCS#11 tests", SO_PIN_SECVEC, PIN_SECVEC);
+   PKCS11::initialize_token(slot, "Botan PKCS#11 tests", SO_PIN(), PIN());
    result.test_success("token initialized");
 
    return result;
@@ -1508,10 +1538,10 @@ Test::Result test_change_pin()
    std::vector<SlotId> slot_vec = Slot::get_available_slots(module, true);
    Slot slot(module, slot_vec.at(0));
 
-   PKCS11::change_pin(slot, PIN_SECVEC, TEST_PIN_SECVEC);
+   PKCS11::change_pin(slot, PIN(), TEST_PIN());
    result.test_success("PIN changed with PIN to TEST_PIN");
 
-   PKCS11::change_pin(slot, TEST_PIN_SECVEC, PIN_SECVEC);
+   PKCS11::change_pin(slot, TEST_PIN(), PIN());
    result.test_success("PIN changed back with TEST_PIN to PIN");
 
    return result;
@@ -1525,16 +1555,16 @@ Test::Result test_change_so_pin()
    std::vector<SlotId> slot_vec = Slot::get_available_slots(module, true);
    Slot slot(module, slot_vec.at(0));
 
-   PKCS11::change_so_pin(slot, SO_PIN_SECVEC, TEST_SO_PIN_SECVEC);
+   PKCS11::change_so_pin(slot, SO_PIN(), TEST_SO_PIN());
    result.test_success("SO_PIN changed with SO_PIN to TEST_SO_PIN");
 
-   PKCS11::change_so_pin(slot, TEST_SO_PIN_SECVEC, SO_PIN_SECVEC);
+   PKCS11::change_so_pin(slot, TEST_SO_PIN(), SO_PIN());
    result.test_success("SO_PIN changed back with TEST_SO_PIN to SO_PIN");
 
    return result;
    }
 
-class PKCS11_Token_Management_Tests final : public PKCS11_Test
+class PKCS11_Token_Management_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -1582,7 +1612,7 @@ Test::Result test_x509_import()
    return result;
    }
 
-class PKCS11_X509_Tests final : public PKCS11_Test
+class PKCS11_X509_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
