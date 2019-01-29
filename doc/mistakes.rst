@@ -19,12 +19,12 @@ Exceptions
 Constant ABI headaches from this, and it impacts performance and makes APIs
 harder to understand. Should have been handled with a result<> type instead.
 
-Virtual inheritence
+Virtual inheritance
 ---------------------
 
 This was used in the public key interfaces and the hierarchy is a tangle.
 Public and private keys should be distinct classes, with a function on private
-keys that creates a new object cooresponding to the public key.
+keys that creates a new object corresponding to the public key.
 
 Cipher Interface
 ------------------
@@ -48,3 +48,9 @@ parameters to the constructor, there is no way to find out.
 The problems with the Pipe API are documented, and it is no longer used within
 the library itself. But since many people seem to like it and many applications
 use it, we are stuck at least with maintaining it as it currently exists.
+
+License
+---------
+
+MIT is more widely used and doesn't have the ambiguity surrounding the
+various flavors of BSD.
