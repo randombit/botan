@@ -263,20 +263,9 @@ size_t OS::get_memory_locking_limit()
    * programs), but small enough that we should not cause problems
    * even if many processes are mlocking on the same machine.
    */
-   size_t mlock_requested = BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB;
+   const size_t user_req = read_env_variable_sz("BOTAN_MLOCK_POOL_SIZE", BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB);
 
-   /*
-   * Allow override via env variable
-   */
-   if(const char* env = read_env_variable("BOTAN_MLOCK_POOL_SIZE"))
-      {
-      try
-         {
-         const size_t user_req = std::stoul(env, nullptr);
-         mlock_requested = std::min(user_req, mlock_requested);
-         }
-      catch(std::exception&) { /* ignore it */ }
-      }
+   const size_t mlock_requested = std::min<size_t>(user_req, BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB);
 
    if(mlock_requested > 0)
       {
@@ -325,6 +314,21 @@ const char* OS::read_env_variable(const std::string& name)
       return nullptr;
 
    return std::getenv(name.c_str());
+   }
+
+size_t OS::read_env_variable_sz(const std::string& name, size_t def)
+   {
+   if(const char* env = read_env_variable(name))
+      {
+      try
+         {
+         const size_t val = std::stoul(env, nullptr);
+         return val;
+         }
+      catch(std::exception&) { /* ignore it */ }
+      }
+
+   return def;
    }
 
 std::vector<void*> OS::allocate_locked_pages(size_t count)

@@ -1,10 +1,11 @@
 <defines>
-THREAD_UTILS -> 20180112
+THREAD_UTILS -> 20190122
 </defines>
 
 <header:internal>
 barrier.h
 semaphore.h
+thread_pool.h
 </header:internal>
 
 <os_features>
