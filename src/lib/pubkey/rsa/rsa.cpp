@@ -249,6 +249,13 @@ class RSA_Private_Operation
 #endif
 
 #if defined(BOTAN_RSA_USE_ASYNC)
+         /*
+         * Precompute m.sig_words in the main thread before calling async. Otherwise
+         * the two threads race (during Modular_Reducer::reduce) and while the output
+         * is correct in both threads, helgrind warns.
+         */
+         m.sig_words();
+
          auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask, powm_window]() {
 #endif
          const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
