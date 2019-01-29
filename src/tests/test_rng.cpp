@@ -60,9 +60,19 @@ class Stateful_RNG_Tests : public Test
          results.push_back(test_broken_entropy_input());
          results.push_back(test_check_nonce());
          results.push_back(test_prediction_resistance());
-         results.push_back(test_fork_safety());
          results.push_back(test_randomize_with_ts_input());
          results.push_back(test_security_level());
+
+         /*
+         * This test uses the library in both parent and child processes. But
+         * this causes a race with other threads, where if any other test thread
+         * is holding the mlock pool mutex, it is killed after the fork. Then,
+         * in the child, any attempt to allocate or free memory will cause a
+         * deadlock.
+         */
+         if(Test::options().test_threads() == 1)
+            results.push_back(test_fork_safety());
+
          return results;
          }
 

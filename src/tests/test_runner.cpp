@@ -12,6 +12,10 @@
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>
 
+#if defined(BOTAN_HAS_THREAD_UTILS)
+   #include <botan/internal/thread_pool.h>
+#endif
+
 namespace Botan_Tests {
 
 Test_Runner::Test_Runner(std::ostream& out) : m_output(out) {}
@@ -196,7 +200,7 @@ int Test_Runner::run(const Test_Options& opts)
 
       Botan_Tests::Test::set_test_rng(std::move(rng));
 
-      const size_t failed = run_tests(req, i, opts.test_runs());
+      const size_t failed = run_tests(req, opts.test_threads(), i, opts.test_runs());
       if(failed > 0)
          return static_cast<int>(failed);
       }
@@ -236,9 +240,68 @@ std::string report_out(const std::vector<Botan_Tests::Test::Result>& results,
    return out.str();
    }
 
+std::vector<Test::Result> run_a_test(const std::string& test_name)
+   {
+   std::vector<Test::Result> results;
+
+   try
+      {
+      if(test_name == "simd_32" && Botan::CPUID::has_simd_32() == false)
+         {
+         results.push_back(Test::Result::Note(test_name, "SIMD not available on this platform"));
+         }
+      else if(std::unique_ptr<Test> test = Test::get_test(test_name))
+         {
+         std::vector<Test::Result> test_results = test->run();
+         results.insert(results.end(), test_results.begin(), test_results.end());
+         }
+      else
+         {
+         results.push_back(Test::Result::Note(test_name, "Test missing or unavailable"));
+         }
+      }
+   catch(std::exception& e)
+      {
+      results.push_back(Test::Result::Failure(test_name, e.what()));
+      }
+   catch(...)
+      {
+      results.push_back(Test::Result::Failure(test_name, "unknown exception"));
+      }
+
+   return results;
+   }
+
+std::string test_summary(size_t test_run, size_t tot_test_runs, uint64_t total_ns,
+                         size_t tests_ran, size_t tests_failed)
+   {
+   std::ostringstream oss;
+
+   if(test_run == 0 && tot_test_runs == 1)
+      oss << "Tests";
+   else
+      oss << "Test run " << (1+test_run) << "/" << tot_test_runs;
+
+   oss << " complete ran " << tests_ran << " tests in "
+            << Botan_Tests::Test::format_time(total_ns) << " ";
+
+   if(tests_failed > 0)
+      {
+      oss << tests_failed << " tests failed";
+      }
+   else if(tests_ran > 0)
+      {
+      oss << "all tests ok";
+      }
+
+   oss << "\n";
+   return oss.str();
+   }
+
 }
 
 size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
+                              size_t test_threads,
                               size_t test_run,
                               size_t tot_test_runs)
    {
@@ -246,60 +309,48 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
 
    const uint64_t start_time = Botan_Tests::Test::timestamp();
 
+   if(test_threads != 1)
+      {
+#if defined(BOTAN_HAS_THREAD_UTILS)
+      // If 0 then we let thread pool select the count
+      Botan::Thread_Pool pool(test_threads);
+
+      std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
+
+      for(auto const& test_name : tests_to_run)
+         {
+         m_fut_results.push_back(pool.run(run_a_test, test_name));
+         }
+
+      for(size_t i = 0; i != m_fut_results.size(); ++i)
+         {
+         output() << tests_to_run[i] << ':' << std::endl;
+         const std::vector<Test::Result> results = m_fut_results[i].get();
+         output() << report_out(results, tests_failed, tests_ran) << std::flush;
+         }
+
+      pool.shutdown();
+
+      const uint64_t total_ns = Botan_Tests::Test::timestamp() - start_time;
+
+      output() << test_summary(test_run, tot_test_runs, total_ns, tests_ran, tests_failed);
+
+      return tests_failed;
+#else
+      output() << "Running tests in multiple threads not enabled in this build\n";
+#endif
+      }
+
    for(auto const& test_name : tests_to_run)
       {
       output() << test_name << ':' << std::endl;
-
-      std::vector<Test::Result> results;
-
-      try
-         {
-         if(test_name == "simd_32" && Botan::CPUID::has_simd_32() == false)
-            {
-            results.push_back(Test::Result::Note(test_name, "SIMD not available on this platform"));
-            }
-         else if(Test* test = Test::get_test(test_name))
-            {
-            std::vector<Test::Result> test_results = test->run();
-            results.insert(results.end(), test_results.begin(), test_results.end());
-            }
-         else
-            {
-            results.push_back(Test::Result::Note(test_name, "Test missing or unavailable"));
-            }
-         }
-      catch(std::exception& e)
-         {
-         results.push_back(Test::Result::Failure(test_name, e.what()));
-         }
-      catch(...)
-         {
-         results.push_back(Test::Result::Failure(test_name, "unknown exception"));
-         }
-
+      const std::vector<Test::Result> results = run_a_test(test_name);
       output() << report_out(results, tests_failed, tests_ran) << std::flush;
       }
 
    const uint64_t total_ns = Botan_Tests::Test::timestamp() - start_time;
 
-   if(test_run == 0 && tot_test_runs == 1)
-      output() << "Tests";
-   else
-      output() << "Test run " << (1+test_run) << "/" << tot_test_runs;
-
-   output() << " complete ran " << tests_ran << " tests in "
-            << Botan_Tests::Test::format_time(total_ns) << " ";
-
-   if(tests_failed > 0)
-      {
-      output() << tests_failed << " tests failed";
-      }
-   else if(tests_ran > 0)
-      {
-      output() << "all tests ok";
-      }
-
-   output() << std::endl;
+   output() << test_summary(test_run, tot_test_runs, total_ns, tests_ran, tests_failed);
 
    return tests_failed;
    }

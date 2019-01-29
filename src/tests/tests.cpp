@@ -29,18 +29,6 @@
 
 namespace Botan_Tests {
 
-Test::Registration::Registration(const std::string& name, Test* test)
-   {
-   if(Test::global_registry().count(name) == 0)
-      {
-      Test::global_registry().insert(std::make_pair(name, std::unique_ptr<Test>(test)));
-      }
-   else
-      {
-      throw Test_Error("Duplicate registration of test '" + name + "'");
-      }
-   }
-
 void Test::Result::merge(const Result& other)
    {
    if(who() != other.who())
@@ -484,9 +472,9 @@ std::string Test::Result::result_string() const
 
 // static Test:: functions
 //static
-std::map<std::string, std::unique_ptr<Test>>& Test::global_registry()
+std::map<std::string, std::function<Test* ()>>& Test::global_registry()
    {
-   static std::map<std::string, std::unique_ptr<Test>> g_test_registry;
+   static std::map<std::string, std::function<Test* ()>> g_test_registry;
    return g_test_registry;
    }
 
@@ -504,12 +492,12 @@ std::set<std::string> Test::registered_tests()
    }
 
 //static
-Test* Test::get_test(const std::string& test_name)
+std::unique_ptr<Test> Test::get_test(const std::string& test_name)
    {
    auto i = Test::global_registry().find(test_name);
    if(i != Test::global_registry().end())
       {
-      return i->second.get();
+      return std::unique_ptr<Test>(i->second());
       }
    return nullptr;
    }
@@ -596,6 +584,14 @@ void Test::set_test_options(const Test_Options& opts)
 //static
 void Test::set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng)
    {
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   if(m_opts.test_threads() != 1)
+      {
+      m_test_rng.reset(new Botan::Serialized_RNG(rng.release()));
+      return;
+      }
+#endif
+
    m_test_rng.reset(rng.release());
    }
 
