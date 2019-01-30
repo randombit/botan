@@ -15,7 +15,7 @@ void Semaphore::release(size_t n)
    {
    for(size_t i = 0; i != n; ++i)
       {
-      lock_guard_type<std::mutex> lock(m_mutex);
+      std::lock_guard<std::mutex> lock(m_mutex);
 
       if(m_value++ < 0)
          {

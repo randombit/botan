@@ -11,7 +11,7 @@ namespace Botan {
 
 void Barrier::wait(size_t delta)
     {
-    lock_guard_type<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_value += delta;
     }
 
