@@ -15,7 +15,7 @@ void Semaphore::release(size_t n)
    {
    for(size_t i = 0; i != n; ++i)
       {
-      lock_guard_type<mutex_type> lock(m_mutex);
+      lock_guard_type<std::mutex> lock(m_mutex);
 
       if(m_value++ < 0)
          {
@@ -27,7 +27,7 @@ void Semaphore::release(size_t n)
 
 void Semaphore::acquire()
    {
-   std::unique_lock<mutex_type> lock(m_mutex);
+   std::unique_lock<std::mutex> lock(m_mutex);
    if(m_value-- <= 0)
        {
        m_cond.wait(lock, [this] { return m_wakeups > 0; });

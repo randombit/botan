@@ -11,13 +11,13 @@ namespace Botan {
 
 void Barrier::wait(size_t delta)
     {
-    lock_guard_type<mutex_type> lock(m_mutex);
+    lock_guard_type<std::mutex> lock(m_mutex);
     m_value += delta;
     }
 
 void Barrier::sync()
     {
-    std::unique_lock<mutex_type> lock(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
 
     if(m_value > 1)
         {
