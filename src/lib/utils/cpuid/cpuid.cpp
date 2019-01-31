@@ -13,9 +13,12 @@
 
 namespace Botan {
 
-uint64_t CPUID::g_processor_features = 0;
-size_t CPUID::g_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
-CPUID::Endian_status CPUID::g_endian_status = ENDIAN_UNKNOWN;
+//static
+CPUID::CPUID_Data& CPUID::state()
+   {
+   static BOTAN_THREAD_LOCAL CPUID::CPUID_Data g_cpuid;
+   return g_cpuid;
+   }
 
 bool CPUID::has_simd_32()
    {
@@ -90,36 +93,44 @@ void CPUID::print(std::ostream& o)
 //static
 void CPUID::initialize()
    {
-   g_processor_features = 0;
+   state() = CPUID_Data();
+   }
 
+CPUID::CPUID_Data::CPUID_Data()
+   {
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
     defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
     defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-   g_processor_features = CPUID::detect_cpu_features(&g_cache_line_size);
+   m_cache_line_size = 0;
+   m_processor_features = detect_cpu_features(&m_cache_line_size);
 
 #endif
 
-   g_endian_status = runtime_check_endian();
-   g_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
+   m_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
+
+   if(m_cache_line_size == 0)
+      m_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
+
+   m_endian_status = runtime_check_endian();
    }
 
 //static
-CPUID::Endian_status CPUID::runtime_check_endian()
+CPUID::Endian_Status CPUID::CPUID_Data::runtime_check_endian()
    {
    // Check runtime endian
    const uint32_t endian32 = 0x01234567;
    const uint8_t* e8 = reinterpret_cast<const uint8_t*>(&endian32);
 
-   Endian_status endian = ENDIAN_UNKNOWN;
+   CPUID::Endian_Status endian = CPUID::Endian_Status::Unknown;
 
    if(e8[0] == 0x01 && e8[1] == 0x23 && e8[2] == 0x45 && e8[3] == 0x67)
       {
-      endian = ENDIAN_BIG;
+      endian = CPUID::Endian_Status::Big;
       }
    else if(e8[0] == 0x67 && e8[1] == 0x45 && e8[2] == 0x23 && e8[3] == 0x01)
       {
-      endian = ENDIAN_LITTLE;
+      endian = CPUID::Endian_Status::Little;
       }
    else
       {
@@ -128,9 +139,9 @@ CPUID::Endian_status CPUID::runtime_check_endian()
 
    // If we were compiled with a known endian, verify it matches at runtime
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   BOTAN_ASSERT(endian == ENDIAN_LITTLE, "Build and runtime endian match");
+   BOTAN_ASSERT(endian == CPUID::Endian_Status::Little, "Build and runtime endian match");
 #elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   BOTAN_ASSERT(endian == ENDIAN_BIG, "Build and runtime endian match");
+   BOTAN_ASSERT(endian == CPUID::Endian_Status::Big, "Build and runtime endian match");
 #endif
 
    return endian;

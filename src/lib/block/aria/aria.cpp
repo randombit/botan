@@ -221,17 +221,18 @@ inline void ARIA_FE(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3)
 void transform(const uint8_t in[], uint8_t out[], size_t blocks,
                const secure_vector<uint32_t>& KS)
    {
-   // Hit every cache line of S1 and S2
+   /*
+   * Hit every cache line of S1, S2, X1, X2
+   *
+   * The initializer of Z ensures Z == 0xFFFFFFFF for any cache line
+   * size that is a power of 2 and <= 512
+   */
    const size_t cache_line_size = CPUID::cache_line_size();
 
-   /*
-   * This initializer ensures Z == 0xFFFFFFFF for any cache line size
-   * in {32,64,128,256,512}
-   */
    volatile uint32_t Z = 0x11101010;
    for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
       {
-      Z |= S1[i] | S2[i];
+      Z |= S1[i] | S2[i] | X1[i] | X2[i];
       }
 
    const size_t ROUNDS = (KS.size() / 4) - 1;

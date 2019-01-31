@@ -25,7 +25,7 @@ namespace Botan {
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
+uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
   #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)

@@ -131,6 +131,15 @@
 #endif
 
 /*
+* Define BOTAN_THREAD_LOCAL
+*/
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #define BOTAN_THREAD_LOCAL thread_local
+#else
+   #define BOTAN_THREAD_LOCAL /**/
+#endif
+
+/*
 * Define BOTAN_IF_CONSTEXPR
 */
 

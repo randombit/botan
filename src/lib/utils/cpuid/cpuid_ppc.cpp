@@ -33,7 +33,7 @@ namespace Botan {
 * PowerPC specific block: check for AltiVec using either
 * sysctl or by reading processor version number register.
 */
-uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
+uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    {
    BOTAN_UNUSED(cache_line_size);
 

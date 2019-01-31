@@ -102,7 +102,7 @@ uint64_t flags_by_ios_machine_type(const std::string& machine)
 
 #endif
 
-uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
+uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    {
    uint64_t detected_features = 0;
 

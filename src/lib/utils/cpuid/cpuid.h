@@ -65,21 +65,17 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static size_t cache_line_size()
          {
-         if(g_processor_features == 0)
-            {
-            initialize();
-            }
-         return g_cache_line_size;
+         return state().cache_line_size();
          }
 
       static bool is_little_endian()
          {
-         return endian_status() == ENDIAN_LITTLE;
+         return state().endian_status() == Endian_Status::Little;
          }
 
       static bool is_big_endian()
          {
-         return endian_status() == ENDIAN_BIG;
+         return state().endian_status() == Endian_Status::Big;
          }
 
       enum CPUID_bits : uint64_t {
@@ -309,8 +305,7 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static void clear_cpuid_bit(CPUID_bits bit)
          {
-         const uint64_t mask = ~(static_cast<uint64_t>(bit));
-         g_processor_features &= mask;
+         state().clear_cpuid_bit(static_cast<uint64_t>(bit));
          }
 
       /*
@@ -319,43 +314,56 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static bool has_cpuid_bit(CPUID_bits elem)
          {
-         if(g_processor_features == 0)
-            initialize();
-
          const uint64_t elem64 = static_cast<uint64_t>(elem);
-         return ((g_processor_features & elem64) == elem64);
+         return state().has_bit(elem64);
          }
 
       static std::vector<CPUID::CPUID_bits> bit_from_string(const std::string& tok);
    private:
-      enum Endian_status : uint32_t {
-         ENDIAN_UNKNOWN = 0x00000000,
-         ENDIAN_BIG     = 0x01234567,
-         ENDIAN_LITTLE  = 0x67452301,
+      enum class Endian_Status : uint32_t {
+         Unknown = 0x00000000,
+         Big     = 0x01234567,
+         Little  = 0x67452301,
       };
+
+      struct CPUID_Data
+         {
+         public:
+            CPUID_Data();
+
+            CPUID_Data(const CPUID_Data& other) = default;
+            CPUID_Data& operator=(const CPUID_Data& other) = default;
+
+            void clear_cpuid_bit(uint64_t bit)
+               {
+               m_processor_features &= ~bit;
+               }
+
+            bool has_bit(uint64_t bit) const
+               {
+               return (m_processor_features & bit) == bit;
+               }
+
+            uint64_t processor_features() const { return m_processor_features; }
+            Endian_Status endian_status() const { return m_endian_status; }
+            size_t cache_line_size() const { return m_cache_line_size; }
+
+         private:
+            static Endian_Status runtime_check_endian();
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
     defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
     defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-      static uint64_t detect_cpu_features(size_t* cache_line_size);
+            static uint64_t detect_cpu_features(size_t* cache_line_size);
 
 #endif
+            uint64_t m_processor_features;
+            size_t m_cache_line_size;
+            Endian_Status m_endian_status;
+         };
 
-      static Endian_status runtime_check_endian();
-
-      static Endian_status endian_status()
-         {
-         if(g_endian_status == ENDIAN_UNKNOWN)
-            {
-            g_endian_status = runtime_check_endian();
-            }
-         return g_endian_status;
-         }
-
-      static uint64_t g_processor_features;
-      static size_t g_cache_line_size;
-      static Endian_status g_endian_status;
+      static CPUID_Data& state();
    };
 
 }
