@@ -144,16 +144,15 @@ template<typename T> inline void typecast_copy(T out[], const uint8_t in[], size
 
 /**
 * Set memory to a fixed value
-* @param ptr a pointer to an array
+* @param ptr a pointer to an array of bytes
 * @param n the number of Ts pointed to by ptr
 * @param val the value to set each byte to
 */
-template<typename T>
-inline void set_mem(T* ptr, size_t n, uint8_t val)
+inline void set_mem(uint8_t* ptr, size_t n, uint8_t val)
    {
    if(n > 0)
       {
-      std::memset(ptr, val, sizeof(T)*n);
+      std::memset(ptr, val, n);
       }
    }
 
