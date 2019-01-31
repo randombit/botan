@@ -530,6 +530,38 @@ class Test
 #define BOTAN_REGISTER_TEST(type, Test_Class) \
    Test::Registration<Test_Class> reg_ ## Test_Class ## _tests(type)
 
+typedef Test::Result (*test_fn)();
+
+class FnTest : public Test
+   {
+   public:
+      FnTest(test_fn fn) : m_fn(fn) {}
+
+      std::vector<Test::Result> run() override
+         {
+         return {m_fn()};
+         }
+
+   private:
+      test_fn m_fn;
+   };
+
+class FnRegistration
+   {
+   public:
+      FnRegistration(const std::string& name, test_fn fn)
+         {
+         if(Test::global_registry().count(name) != 0)
+            throw Test_Error("Duplicate registration of test '" + name + "'");
+
+         auto maker = [=]() -> Test* { return new FnTest(fn); };
+         Test::global_registry().insert(std::make_pair(name, maker));
+         }
+   };
+
+#define BOTAN_REGISTER_TEST_FN(test_name, fn_name)       \
+   FnRegistration reg_ ## fn_name(test_name, fn_name)
+
 class VarMap
    {
    public:
