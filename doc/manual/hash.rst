@@ -22,6 +22,16 @@ internal state is reset to begin hashing a new message.
 
 .. cpp:class:: HashFunction
 
+  .. cpp:function:: static std::unique_ptr<HashFunction> create(const std::string& name)
+
+    Return a newly allocated hash function object, or nullptr if the
+    name is not recognized.
+
+  .. cpp:function:: static std::unique_ptr<HashFunction> create_or_throw(const std::string& name)
+
+    Like ``create`` except that it will throw an exception instead of
+    returning nullptr.
+
   .. cpp:function:: size_t output_length()
 
     Return the size (in *bytes*) of the output of this function.
@@ -110,6 +120,9 @@ A recently designed hash function. Very fast on 64-bit processors. Can output a
 hash of any length between 1 and 64 bytes, this is specified by passing a value
 to the constructor with the desired length.
 
+Named like "Blake2b" which selects default 512-bit output, or as
+"Blake2b(256)" to select 256 bits of output.
+
 GOST-34.11
 ^^^^^^^^^^^^^^^
 
@@ -182,13 +195,18 @@ Available if ``BOTAN_HAS_SHA3`` is defined.
 
 The new NIST standard hash. Fairly slow.
 
+Supports 224, 256, 384 or 512 bit outputs. SHA-3 is faster with
+smaller outputs.  Use as "SHA-3(256)" or "SHA-3(512)". Plain "SHA-3"
+selects default 512 bit output.
+
 SHAKE (SHAKE-128, SHAKE-256)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Available if ``BOTAN_HAS_SHAKE`` is defined.
 
-These are actually XOFs (extensible output functions) based on SHA-3, which can
-output a value of any length.
+These are actually XOFs (extensible output functions) based on SHA-3,
+which can output a value of any byte length. For example "SHAKE-128(1024)"
+will produce 1024 bits of output.
 
 SM3
 ^^^^^^^^^^^^^^^
@@ -204,9 +222,13 @@ Skein-512
 Available if ``BOTAN_HAS_SKEIN_512`` is defined.
 
 A contender for the NIST SHA-3 competition. Very fast on 64-bit systems.  Can
-output a hash of any length between 1 and 64 bytes. It also accepts a
+output a hash of any length between 1 and 64 bytes. It also accepts an optional
 "personalization string" which can create variants of the hash. This is useful
 for domain separation.
+
+To set a personalization string set the second param to any value,
+typically ASCII strings are used. Examples "Skein-512(256)" or
+"Skein-512(384,personalization_string)".
 
 Streebog (Streebog-256, Streebog-512)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -225,6 +247,10 @@ Available if ``BOTAN_HAS_TIGER`` is defined.
 An older 192-bit hash function, optimized for 64-bit systems. Possibly
 vulnerable to side channels due to its use of table lookups. Prefer Skein-512 or
 BLAKE2b in new code.
+
+Tiger supports variable length output (16, 20 or 24 bytes) and
+variable rounds (which must be at least 3). Default is 24 byte output
+and 3 rounds. Specify with names like "Tiger" or "Tiger(20,5)".
 
 Whirlpool
 ^^^^^^^^^^^^^^^
