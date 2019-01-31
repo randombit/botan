@@ -27,7 +27,7 @@ void HMAC::final_result(uint8_t mac[])
    verify_key_set(m_okey.empty() == false);
    m_hash->final(mac);
    m_hash->update(m_okey);
-   m_hash->update(mac, output_length());
+   m_hash->update(mac, m_hash_output_length);
    m_hash->final(mac);
    m_hash->update(m_ikey);
    }
@@ -38,27 +38,38 @@ Key_Length_Specification HMAC::key_spec() const
    return Key_Length_Specification(0, 4096);
    }
 
+size_t HMAC::output_length() const
+   {
+   return m_hash_output_length;
+   }
+
 /*
 * HMAC Key Schedule
 */
 void HMAC::key_schedule(const uint8_t key[], size_t length)
    {
-   m_hash->clear();
-
-   m_ikey.resize(m_hash->hash_block_size());
-   m_okey.resize(m_hash->hash_block_size());
-
    const uint8_t ipad = 0x36;
    const uint8_t opad = 0x5C;
 
-   std::fill(m_ikey.begin(), m_ikey.end(), ipad);
-   std::fill(m_okey.begin(), m_okey.end(), opad);
+   m_hash->clear();
 
-   if(length > m_hash->hash_block_size())
+   m_ikey.resize(m_hash_block_size);
+   set_mem(m_ikey.data(), m_hash_block_size, ipad);
+
+   m_okey.resize(m_hash_block_size);
+   set_mem(m_okey.data(), m_hash_block_size, opad);
+
+   if(length > m_hash_block_size)
       {
-      secure_vector<uint8_t> hmac_key = m_hash->process(key, length);
-      xor_buf(m_ikey, hmac_key, hmac_key.size());
-      xor_buf(m_okey, hmac_key, hmac_key.size());
+      m_hash->update(key, length);
+      m_hash->final(m_ikey.data());
+
+      xor_buf(m_okey.data(), m_ikey.data(), m_hash_output_length);
+
+      for(size_t i = 0; i != m_hash_output_length; ++i)
+         {
+         m_ikey[i] ^= ipad;
+         }
       }
    else
       {
@@ -98,9 +109,12 @@ MessageAuthenticationCode* HMAC::clone() const
 /*
 * HMAC Constructor
 */
-HMAC::HMAC(HashFunction* hash) : m_hash(hash)
+HMAC::HMAC(HashFunction* hash) :
+   m_hash(hash),
+   m_hash_output_length(m_hash->output_length()),
+   m_hash_block_size(m_hash->hash_block_size())
    {
-   BOTAN_ARG_CHECK(m_hash->hash_block_size() > 0,
+   BOTAN_ARG_CHECK(m_hash_block_size >= m_hash_output_length,
                    "HMAC is not compatible with this hash function");
    }
 
