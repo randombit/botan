@@ -90,6 +90,15 @@ size_t system_page_size();
 const char* read_env_variable(const std::string& var_name);
 
 /**
+* Read the value of an environment variable and convert it to an
+* integer. If not set or conversion fails, returns the default value.
+*
+* If the process seems to be running in a privileged state (such as setuid)
+* then always returns nullptr, similiar to glibc's secure_getenv.
+*/
+size_t read_env_variable_sz(const std::string& var_name, size_t def_value = 0);
+
+/**
 * Request @count pages of RAM which are locked into memory using mlock,
 * VirtualLock, or some similar OS specific API. Free it with free_locked_pages.
 *

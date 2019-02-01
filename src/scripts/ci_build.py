@@ -22,7 +22,7 @@ def get_concurrency():
 
     try:
         import multiprocessing
-        return max(def_concurrency, multiprocessing.cpu_count())
+        return multiprocessing.cpu_count()
     except ImportError:
         return def_concurrency
 
@@ -47,6 +47,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     make_prefix = []
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
+
+    if target in ['shared', 'static', 'sanitizer', 'gcc4.8', 'cross-i386', 'bsi', 'nist']:
+        test_cmd += ['--test-threads=%d' % (get_concurrency())]
 
     fast_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
                   'hmac_drbg', 'hmac_drbg_unit',
@@ -146,7 +149,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             cc_bin = 'x86_64-w64-mingw32-g++'
             flags += ['--cpu=x86_64', '--cc-abi-flags=-static',
                       '--ar-command=x86_64-w64-mingw32-ar', '--without-os-feature=threads']
-            test_cmd = [os.path.join(root_dir, 'botan-test.exe')]
+            test_cmd = [os.path.join(root_dir, 'botan-test.exe')] + test_cmd[1:]
             # No runtime prefix required for Wine
         else:
             # Build everything but restrict what is run

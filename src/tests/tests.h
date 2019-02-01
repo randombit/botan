@@ -60,6 +60,7 @@ class Test_Options
                    const std::string& provider,
                    const std::string& drbg_seed,
                    size_t test_runs,
+                   size_t test_threads,
                    bool verbose,
                    bool log_success,
                    bool run_online_tests,
@@ -73,6 +74,7 @@ class Test_Options
          m_provider(provider),
          m_drbg_seed(drbg_seed),
          m_test_runs(test_runs),
+         m_test_threads(test_threads),
          m_verbose(verbose),
          m_log_success(log_success),
          m_run_online_tests(run_online_tests),
@@ -97,6 +99,8 @@ class Test_Options
       const std::string& drbg_seed() const { return m_drbg_seed; }
 
       size_t test_runs() const { return m_test_runs; }
+
+      size_t test_threads() const { return m_test_threads; }
 
       bool log_success() const { return m_log_success; }
 
@@ -126,6 +130,7 @@ class Test_Options
       std::string m_provider;
       std::string m_drbg_seed;
       size_t m_test_runs;
+      size_t m_test_threads;
       bool m_verbose;
       bool m_log_success;
       bool m_run_online_tests;
@@ -436,22 +441,30 @@ class Test
             std::vector<std::string> m_log;
          };
 
-      class Registration final
-         {
-         public:
-            Registration(const std::string& name, Test* test);
-         };
-
       virtual ~Test() = default;
       virtual std::vector<Test::Result> run() = 0;
 
       virtual std::vector<std::string> possible_providers(const std::string&);
 
-      static std::map<std::string, std::unique_ptr<Test>>& global_registry();
+      template<typename Test_Class>
+      class Registration
+         {
+         public:
+            Registration(const std::string& name)
+               {
+               if(Test::global_registry().count(name) != 0)
+                  throw Test_Error("Duplicate registration of test '" + name + "'");
+
+               auto maker = []() -> Test* { return new Test_Class; };
+               Test::global_registry().insert(std::make_pair(name, maker));
+               }
+         };
+
+      static std::map<std::string, std::function<Test* ()>>& global_registry();
 
       static std::set<std::string> registered_tests();
 
-      static Test* get_test(const std::string& test_name);
+      static std::unique_ptr<Test> get_test(const std::string& test_name);
 
       static std::string data_file(const std::string& what);
 
@@ -515,7 +528,39 @@ class Test
 * Register the test with the runner
 */
 #define BOTAN_REGISTER_TEST(type, Test_Class) \
-   Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class)
+   Test::Registration<Test_Class> reg_ ## Test_Class ## _tests(type)
+
+typedef Test::Result (*test_fn)();
+
+class FnTest : public Test
+   {
+   public:
+      FnTest(test_fn fn) : m_fn(fn) {}
+
+      std::vector<Test::Result> run() override
+         {
+         return {m_fn()};
+         }
+
+   private:
+      test_fn m_fn;
+   };
+
+class FnRegistration
+   {
+   public:
+      FnRegistration(const std::string& name, test_fn fn)
+         {
+         if(Test::global_registry().count(name) != 0)
+            throw Test_Error("Duplicate registration of test '" + name + "'");
+
+         auto maker = [=]() -> Test* { return new FnTest(fn); };
+         Test::global_registry().insert(std::make_pair(name, maker));
+         }
+   };
+
+#define BOTAN_REGISTER_TEST_FN(test_name, fn_name)       \
+   FnRegistration reg_ ## fn_name(test_name, fn_name)
 
 class VarMap
    {

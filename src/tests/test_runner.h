@@ -26,8 +26,9 @@ class Test_Runner final
       std::ostream& output() const { return m_output; }
 
       size_t run_tests(const std::vector<std::string>& tests_to_run,
+                       size_t test_threads,
                        size_t test_run,
-                       const size_t tot_test_runs);
+                       size_t tot_test_runs);
 
       std::ostream& m_output;
    };
