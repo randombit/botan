@@ -11,6 +11,8 @@ i86pc # for Solaris
 x86pc # for QNX
 bepc  # for Haiku
 
+i686-at386 # for Hurd
+
 i686
 i586
 i386
