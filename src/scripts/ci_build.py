@@ -48,7 +48,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    if target in ['shared', 'static', 'sanitizer', 'gcc4.8', 'cross-i386', 'bsi', 'nist']:
+    if target in ['shared', 'static', 'sanitizer', 'fuzzers', 'gcc4.8', 'cross-i386', 'bsi', 'nist']:
         test_cmd += ['--test-threads=%d' % (get_concurrency())]
 
     fast_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',

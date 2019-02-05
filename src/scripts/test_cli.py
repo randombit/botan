@@ -11,6 +11,7 @@ import tempfile
 import re
 import random
 import json
+import threading
 
 # pylint: disable=global-statement
 
@@ -781,6 +782,8 @@ def main(args=None):
         cli_version_tests,
         ]
 
+    threads = []
+
     for fn in test_fns:
         fn_name = fn.__name__
 
@@ -788,11 +791,12 @@ def main(args=None):
             if test_regex.search(fn_name) is None:
                 continue
 
-        start = time.time()
-        fn()
-        end = time.time()
-        logging.debug("Ran %s in %.02f", fn_name, end-start)
+        thread = threading.Thread(target=fn)
+        thread.start()
+        threads.append(thread)
 
+    for thread in threads:
+        thread.join()
 
     end_time = time.time()
 
