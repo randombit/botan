@@ -76,11 +76,6 @@ arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
 </isa_flags>
 
-<cpu_flags_no_debug>
-x86_32 -> "-momit-leaf-frame-pointer"
-x86_64 -> "-momit-leaf-frame-pointer"
-</cpu_flags_no_debug>
-
 # Flags set here are included at compile and link time
 <mach_abi_linking>
 all!haiku,qnx -> "-pthread"
