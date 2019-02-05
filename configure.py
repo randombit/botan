@@ -309,13 +309,16 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     target_group.add_option('--cc-bin', dest='compiler_binary', metavar='BINARY',
                             help='set path to compiler binary')
 
-    target_group.add_option('--cc-abi-flags', metavar='FLAG', default='',
+    target_group.add_option('--cc-abi-flags', metavar='FLAGS', default='',
                             help='set compiler ABI flags')
 
-    target_group.add_option('--cxxflags', metavar='FLAG', default=None,
-                            help='set compiler flags')
+    target_group.add_option('--cxxflags', metavar='FLAGS', default=None,
+                            help='override all compiler flags')
 
-    target_group.add_option('--ldflags', metavar='FLAG',
+    target_group.add_option('--extra-cxxflags', metavar='FLAGS', default=None,
+                            help='set extra compiler flags')
+
+    target_group.add_option('--ldflags', metavar='FLAGS',
                             help='set linker flags', default=None)
 
     target_group.add_option('--ar-command', dest='ar_command', metavar='AR', default=None,
@@ -1313,6 +1316,9 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
                 if not (options.debug_mode or sanitizers_enabled):
                     yield self.cpu_flags_no_debug[options.arch]
+
+            if options.extra_cxxflags:
+                yield options.extra_cxxflags
 
         return (' '.join(gen_flags(with_debug_info, enable_optimizations))).strip()
 
