@@ -479,6 +479,16 @@ std::map<std::string, std::function<Test* ()>>& Test::global_registry()
    }
 
 //static
+void Test::register_test(const std::string& name,
+                         std::function<Test* ()> maker_fn)
+   {
+   if(Test::global_registry().count(name) != 0)
+      throw Test_Error("Duplicate registration of test '" + name + "'");
+
+   Test::global_registry().insert(std::make_pair(name, maker_fn));
+   }
+
+//static
 uint64_t Test::timestamp()
    {
    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();

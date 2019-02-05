@@ -446,19 +446,8 @@ class Test
 
       virtual std::vector<std::string> possible_providers(const std::string&);
 
-      template<typename Test_Class>
-      class Registration
-         {
-         public:
-            Registration(const std::string& name)
-               {
-               if(Test::global_registry().count(name) != 0)
-                  throw Test_Error("Duplicate registration of test '" + name + "'");
-
-               auto maker = []() -> Test* { return new Test_Class; };
-               Test::global_registry().insert(std::make_pair(name, maker));
-               }
-         };
+      static void register_test(const std::string& name,
+                                std::function<Test* ()> maker_fn);
 
       static std::map<std::string, std::function<Test* ()>>& global_registry();
 
@@ -527,8 +516,19 @@ class Test
 /*
 * Register the test with the runner
 */
-#define BOTAN_REGISTER_TEST(type, Test_Class) \
-   Test::Registration<Test_Class> reg_ ## Test_Class ## _tests(type)
+template<typename Test_Class>
+class TestClassRegistration
+   {
+   public:
+      TestClassRegistration(const std::string& name)
+         {
+         auto test_maker = []() -> Test* { return new Test_Class; };
+         Test::register_test(name, test_maker);
+         }
+   };
+
+#define BOTAN_REGISTER_TEST(name, Test_Class)                 \
+   TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(name)
 
 typedef Test::Result (*test_fn)();
 
@@ -546,21 +546,18 @@ class FnTest : public Test
       test_fn m_fn;
    };
 
-class FnRegistration
+class TestFnRegistration
    {
    public:
-      FnRegistration(const std::string& name, test_fn fn)
+      TestFnRegistration(const std::string& name, test_fn fn)
          {
-         if(Test::global_registry().count(name) != 0)
-            throw Test_Error("Duplicate registration of test '" + name + "'");
-
-         auto maker = [=]() -> Test* { return new FnTest(fn); };
-         Test::global_registry().insert(std::make_pair(name, maker));
+         auto test_maker = [=]() -> Test* { return new FnTest(fn); };
+         Test::register_test(name, test_maker);
          }
    };
 
-#define BOTAN_REGISTER_TEST_FN(test_name, fn_name)       \
-   FnRegistration reg_ ## fn_name(test_name, fn_name)
+#define BOTAN_REGISTER_TEST_FN(name, fn_name)         \
+   TestFnRegistration reg_ ## fn_name(name, fn_name)
 
 class VarMap
    {
