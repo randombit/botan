@@ -18,7 +18,12 @@
   PPC64
 
 #elif defined(__powerpc__) || defined(__ppc__) || defined(_ARCH_PPC)
-  PPC32
+
+  #if defined(__SPE__)
+     POWERPCSPE
+  #else
+     PPC32
+  #endif
 
 #elif defined(__mips__) || defined(__mips)
 
