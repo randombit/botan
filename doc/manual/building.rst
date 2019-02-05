@@ -88,15 +88,8 @@ include any random number generator, which is needed for example to
 generate keys, nonces and IVs. See :doc:`rng` on which random number
 generators are available.
 
-The option ``--module-policy=POL`` enables modules required by and
-disables modules prohibited by a text policy in ``src/build-data/policy``.
-Additional modules can be enabled if not prohibited by the policy.
-Currently available policies include ``bsi``, ``nist`` and ``modern``::
-
- $ ./configure.py --module-policy=bsi --enable-modules=tls,xts
-
 Cross Compiling
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 Cross compiling refers to building software on one type of host (say Linux
 x86-64) but creating a binary for some other type (say MinGW x86-32). This is
@@ -115,7 +108,7 @@ environment variables (instead of the `--cc-bin` and `--ar-command` options), as
 is commonly done with autoconf builds.
 
 On Unix
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------
 
 The basic build procedure on Unix and Unix-like systems is::
 
@@ -150,7 +143,7 @@ set your ``LD_LIBRARY_PATH`` shell variable to include the directory
 that the Botan libraries were installed into.
 
 On macOS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------
 
 A build on macOS works much like that on any other Unix-like system.
 
@@ -160,7 +153,7 @@ build flags. Do this with the `configure.py` flag `--cc-abi-flags`::
   --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
 
 On Windows
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------
 
 .. note::
 
@@ -194,7 +187,7 @@ your documentation and/or local expert for details).
 
 
 For iOS using XCode
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 For iOS, you typically build for 3 architectures: armv7 (32 bit, older
 iOS devices), armv8-a (64 bit, recent iOS devices) and x86_64 for
@@ -234,13 +227,13 @@ for all three architectures::
 The resulting static library can be linked to your app in Xcode.
 
 For Android
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 Instructions for building the library on Android can be found
 `here <https://www.danielseither.de/blog/2013/03/building-the-botan-library-for-android/>`_.
 
 Emscripten (WebAssembly)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
 To build for WebAssembly using Emscripten, try::
 
@@ -256,7 +249,7 @@ executed on a browser, use::
      --preload-file src/tests/data botan-test.bc -o botan-test.html
 
 Supporting Older Distros
-^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 Some "stable" distributions, notably RHEL/CentOS, ship very obsolete
 versions of binutils, which do not support more recent CPU instructions.
@@ -484,3 +477,436 @@ build step is required, just import botan2.py
 
 See :doc:`Python Bindings <python>` for more information about the
 Python bindings.
+
+Configure Script Options
+---------------------------
+
+--cpu=CPU
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the target CPU architecture. If not used, the arch of the current
+system is detected (using Python's platform module) and used.
+
+--os=OS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the target operating system.
+
+--cc=COMPILER
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the desired build compiler
+
+
+--cc-min-version=MAJOR.MINOR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the minimal version of the target
+compiler. Use --cc-min-version=0.0 to support all compiler
+versions. Default is auto detection.
+
+--cc-bin=BINARY
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set path to compiler binary
+
+--cc-abi-flags=FLAGS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set ABI flags, which for the purposes of this option mean options
+which should be passed to both the compiler and linker.
+
+--cxxflags=FLAGS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Override all compiler flags. This is equivalent to setting ``CXXFLAGS``
+in the environment.
+
+--extra-cxxflags=FLAGS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set extra compiler flags, which are appended to the default set.  This
+is useful if you want to set just one or two additional options but
+leave the normal logic for selecting flags alone.
+
+--ldflags=FLAGS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set flags to pass to the linker. This is equivalent to setting ``LDFLAGS``
+
+--ar-command=AR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the path to the tool to use to create static archives (``ar``).
+This is normally only used for cross-compilation.
+
+--ar-options=AR_OPTIONS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify the options to pass to ``ar``.
+
+--msvc-runtime=RT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify the MSVC runtime to use (MT, MD, MTd, or MDd). If not specified,
+picks either MD or MDd depending on if debug mode is set.
+
+--with-endian=ORDER
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Override the guess as to which endian the target system is.
+
+--with-os-features=FEAT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify an OS feature to enable. See ``src/build-data/os`` and
+``doc/os.rst`` for more information.
+
+--without-os-features=FEAT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify an OS feature to disable.
+
+--disable-sse2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of SSE2 intrinsics
+
+--disable-ssse3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of SSSE3 intrinsics
+
+--disable-sse4.1
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of SSE4.1 intrinsics
+
+--disable-sse4.2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of SSE4.2 intrinsics
+
+--disable-avx2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of AVX2 intrinsics
+
+--disable-bmi2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of BMI2 intrinsics
+
+--disable-rdrand
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of RDRAND intrinsics
+
+--disable-rdseed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of RDSEED intrinsics
+
+--disable-aes-ni
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of AES-NI intrinsics
+
+--disable-sha-ni
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of SHA-NI intrinsics
+
+--disable-altivec
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of AltiVec intrinsics
+
+--disable-neon
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of NEON intrinsics
+
+--disable-armv8crypto
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of ARMv8Crypto intrinsics
+
+--with-debug-info
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Include debug symbols.
+
+--with-sanitizers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable some default set of sanitizer checks. What exactly is enabled
+depends on the compiler.
+
+--enable-sanitizers=SAN
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable specific sanitizers. See ``src/build-data/cc`` for more information.
+
+--without-stack-protector
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable stack smashing protections. **not recommended**
+
+--with-coverage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add coverage info and disable optimizations
+
+--with-coverage-info
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add coverage info, but leave optimizations alone
+
+--disable-shared-library
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable building a shared library
+
+--disable-static-library
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable building static library
+
+--optimize-for-size
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optimize for code size.
+
+--no-optimizations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable all optimizations for debugging.
+
+--debug-mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable debug info and disable optimizations
+
+--amalgamation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use amalgamation to build
+
+--single-amalgamation-file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default the amalgamation file is split up into several files,
+because using intrinsics requires enabling the relevant instruction
+set extension. This option selects generating a single file instead.
+
+This requires either MSVC, or a fairly recent version of GCC/Clang
+which supports the ``target`` attribute.
+
+--with-build-dir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Setup the build in a specified directory instead of ``./build``
+
+--with-external-includedir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Search for includes in this directory.
+
+--with-external-libdir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add DIR to the link path
+
+--with-sysroot-dir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use specified dir for system root while cross-compiling
+
+--with-openmp
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable use of OpenMP
+
+--link-method=METHOD
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+During build setup a directory linking to each header file is created.
+Choose how the links are performed (options are "symlink", "hardlink",
+or "copy").
+
+--with-local-config=FILE
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Include the contents of FILE into the generated build.h
+
+--distribution-info=STRING
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set distribution specific version information
+
+--maintainer-mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable extra warnings and turn most warnings into errors
+
+--with-python-versions=N.M
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Where to install botan2.py. By default this is chosen to be the
+version of Python that is running ``configure.py``.
+
+--with-valgrind
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use valgrind API to perform additional checks. Not needed by end users.
+
+--unsafe-fuzzer-mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable essential checks for testing. **UNSAFE FOR PRODUCTION**
+
+--build-fuzzers=TYPE
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Select which interface the fuzzer uses. Options are "afl",
+"libfuzzer", "klee", or "test". The "test" mode builds fuzzers that
+read one input from stdin and then exit.
+
+--with-fuzzer-lib=LIB
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specify an additional library that fuzzer binaries must link with.
+
+--without-documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Skip building/installing documentation
+
+--with-sphinx
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use Sphinx to generate the handbook
+
+--with-pdf
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use Sphinx to generate PDF doc
+
+--with-rst2man
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use rst2man to generate a man page for the CLI
+
+--with-doxygen
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use Doxygen to generate API reference
+
+--module-policy=POL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The option ``--module-policy=POL`` enables modules required by and
+disables modules prohibited by a text policy in ``src/build-data/policy``.
+Additional modules can be enabled if not prohibited by the policy.
+Currently available policies include ``bsi``, ``nist`` and ``modern``::
+
+ $ ./configure.py --module-policy=bsi --enable-modules=tls,xts
+
+--enable-modules=MODS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable some specific modules
+
+--disable-modules=MODS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable some specific modules
+
+--minimized-build
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Start with the bare minimum. This is mostly useful in conjuction with
+`--enable-modules`` to get a build that has just the features a
+particular application requires.
+
+--with-boost
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use Boost.Asio for networking support. This primarily affects the
+command line utils.
+
+--with-bzip2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable bzip2 compression
+
+--with-lzma
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable lzma compression
+
+--with-zlib
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable using zlib compression
+
+--with-openssl
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable using OpenSSL for certain operations
+
+--with-commoncrypto
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable using CommonCrypto for certain operations
+
+--with-sqlite3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable using sqlite3 for data storage
+
+--with-tpm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable support for TPM
+
+--program-suffix=SUFFIX
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A string to append to all program binaries.
+
+--library-suffix=SUFFIX
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A string to append to all library names.
+
+--prefix=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the install prefix.
+
+--docdir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the documentation installation dir.
+
+--bindir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the binary installation dir.
+
+--libdir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the library installation dir.
+
+--mandir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the man page installation dir.
+
+--includedir=DIR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the include file installation dir.
