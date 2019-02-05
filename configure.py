@@ -1283,6 +1283,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         return self.lang_flags
 
     def cc_compile_flags(self, options, with_debug_info=None, enable_optimizations=None):
+        #pylint: disable=too-many-branches
+
         def gen_flags(with_debug_info, enable_optimizations):
 
             sanitizers_enabled = options.with_sanitizers or (len(options.enable_sanitizers) > 0)
