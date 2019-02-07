@@ -97,21 +97,40 @@ BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 
 namespace {
 
-std::string algo_default_emsa(const std::string& key)
-   {
-   if(key == "RSA")
+std::string choose_sig_padding(const std::string& key, const std::string& emsa, const std::string& hash)
+{
+   std::string emsa_or_default = [&]() -> std::string
       {
-      return "EMSA4";
-      } // PSS
-   else if(key == "ECDSA" || key == "DSA")
+      if(!emsa.empty())
+         {
+         return emsa;
+         }
+
+      if(key == "RSA")
+         {
+         return "EMSA4";
+         } // PSS
+      else if(key == "ECDSA" || key == "DSA")
+         {
+         return "EMSA1";
+         }
+      else if(key == "Ed25519")
+         {
+         return "";
+         }
+      else
+         {
+         return "EMSA1";
+         }
+      }();
+
+   if(emsa_or_default.empty())
       {
-      return "EMSA1";
+      return hash;
       }
-   else
-      {
-      return "EMSA1";
-      }
-   }
+
+   return emsa_or_default + "(" + hash + ")";
+}
 
 }
 
@@ -180,7 +199,7 @@ class PK_Sign final : public Command
             }
 
          const std::string sig_padding =
-            get_arg_or("emsa", algo_default_emsa(key->algo_name())) + "(" + get_arg("hash") + ")";
+            choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
 
          const Botan::Signature_Format format =
             flag_set("der-format") ? Botan::DER_SEQUENCE : Botan::IEEE_1363;
@@ -225,7 +244,7 @@ class PK_Verify final : public Command
             }
 
          const std::string sig_padding =
-            get_arg_or("emsa", algo_default_emsa(key->algo_name())) + "(" + get_arg("hash") + ")";
+            choose_sig_padding(key->algo_name(), get_arg("emsa"), get_arg("hash"));
 
          const Botan::Signature_Format format =
             flag_set("der-format") ? Botan::DER_SEQUENCE : Botan::IEEE_1363;
