@@ -11,6 +11,9 @@ Version 2.10.0, Not Yet Released
 * Add BMI2 implementations of SHA-512 and SHA-3 which improve performance by
   25-35% on common CPUs. (GH #1815)
 
+* Add a Thread_Pool class. It is now possible to run the tests in multiple
+  threads with `--test-threads=N`` flag. (GH #1819)
+
 * Some functions related to encoding and decoding BigInts have been deprecated.
   (GH #1817)
 
@@ -30,6 +33,19 @@ Version 2.10.0, Not Yet Released
 * Use ``if constexpr`` when available.
 
 * Add support for using ``sccache`` to cache the Windows CI build (GH #1807)
+
+* Add ``--extra-cxxflags`` option which allows adding compilation flags without
+  overriding the default set. (GH #1826)
+
+* Add ``--format=`` option to the ``hash`` cli which allows formatting the output
+  as base64 or base58, default output remains hex.
+
+* Minor HMAC optimizations.
+
+* Build fixes for GNU/Hurd.
+
+* Fix a bug that prevented generating or verifying Ed25519 signatures in the CLI
+  (GH #1828 #1829)
 
 * Fix a compilation error when building the amalgamation outside of the original
   source directory when AVX2 was enabled. (GH #1812)
