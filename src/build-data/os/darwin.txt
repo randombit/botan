@@ -21,6 +21,8 @@ commoncrypto
 sockets
 threads
 filesystem
+
+apple_keychain
 </target_features>
 
 <aliases>
