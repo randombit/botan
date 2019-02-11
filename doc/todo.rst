@@ -48,6 +48,7 @@ Public Key Crypto, Math
 * SPAKE2+ (draft-irtf-cfrg-spake2)
 * SPHINCS+
 * Dilithium lattice based signatures
+* Kyber lattice based KEM
 * X448 and Ed448
 * FHMQV
 * Use GLV decomposition to speed up secp256k1 operations
@@ -139,7 +140,6 @@ Compat Headers
 New C APIs
 ----------------------------------------
 
-* Expose NewHope and CECPQ1
 * X.509 CRL handling
 * PKCS10 requests
 * Certificate signing
