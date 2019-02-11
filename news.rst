@@ -4,15 +4,17 @@ Release Notes
 Version 2.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Redesigned Memory_Pool class, which services allocations out of a
-  set of pages locked into memory (using mlock/VirtualLock). It is now
+* Redesigned ``Memory_Pool`` class, which services allocations out of a
+  set of pages locked into memory (using ``mlock``/``VirtualLock``). It is now
   faster and with improved exploit mitigations. (GH #1800)
 
 * Add BMI2 implementations of SHA-512 and SHA-3 which improve performance by
   25-35% on common CPUs. (GH #1815)
 
-* Add a Thread_Pool class. It is now possible to run the tests in multiple
-  threads with `--test-threads=N`` flag. (GH #1819)
+* Add a ``Thread_Pool`` class. It is now possible to run the tests in multiple
+  threads with `--test-threads=N`` flag to select the number of threads to use.
+  Use ``--test-threads=0`` to run with as many CPU cores as are available on the
+  current system. The default remains single threaded. (GH #1819)
 
 * Some functions related to encoding and decoding BigInts have been deprecated.
   (GH #1817)
@@ -20,15 +22,15 @@ Version 2.10.0, Not Yet Released
 * Binary encoding and decoding of BigInts has been optimized by performing
   word-size operations when possible. (GH #1817)
 
-* Rename the exception Integrity_Failure to Invalid_Authentication_Tag to make
+* Rename the exception ``Integrity_Failure`` to ``Invalid_Authentication_Tag`` to make
   its meaning and usage more clear. The old name remains as a typedef. (GH #1816)
 
-* Support for using Boost filesystem and MSVC's std::filesystem have been
+* Support for using Boost ``filesystem`` and MSVC's ``std::filesystem`` have been
   removed, since already POSIX and Win32 versions had to be maintained for
   portability. (GH #1814)
 
 * Add a facility for sandboxing the command line util. Currently FreeBSD
-  (Capsicum) and OpenBSD (pledge) sandboxes are supported. (GH #1808)
+  (Capsicum) and OpenBSD (``pledge``) sandboxes are supported. (GH #1808)
 
 * Use ``if constexpr`` when available.
 
