@@ -62,8 +62,6 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
             return result;
             }
 
-         result.start_timer();
-
          Botan::HMAC_DRBG rng("SHA-384");
          rng.initialize_with(keygen_seed.data(), keygen_seed.size());
          Botan::McEliece_PrivateKey mce_priv(rng, keygen_n, keygen_t);
