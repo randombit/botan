@@ -18,17 +18,19 @@ SHAKE_128_Cipher::SHAKE_128_Cipher() :
 
 void SHAKE_128_Cipher::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
+   const size_t SHAKE_128_BYTERATE = (1600-256)/8;
+
    verify_key_set(m_state.empty() == false);
 
-   while(length >= m_buffer.size() - m_buf_pos)
+   while(length >= SHAKE_128_BYTERATE - m_buf_pos)
       {
-      xor_buf(out, in, &m_buffer[m_buf_pos], m_buffer.size() - m_buf_pos);
-      length -= (m_buffer.size() - m_buf_pos);
-      in += (m_buffer.size() - m_buf_pos);
-      out += (m_buffer.size() - m_buf_pos);
+      xor_buf(out, in, &m_buffer[m_buf_pos], SHAKE_128_BYTERATE - m_buf_pos);
+      length -= (SHAKE_128_BYTERATE - m_buf_pos);
+      in += (SHAKE_128_BYTERATE - m_buf_pos);
+      out += (SHAKE_128_BYTERATE - m_buf_pos);
 
       SHA_3::permute(m_state.data());
-      copy_out_le(m_buffer.data(), m_buffer.size(), m_state.data());
+      copy_out_le(m_buffer.data(), SHAKE_128_BYTERATE, m_state.data());
 
       m_buf_pos = 0;
       }
@@ -38,19 +40,13 @@ void SHAKE_128_Cipher::cipher(const uint8_t in[], uint8_t out[], size_t length)
 
 void SHAKE_128_Cipher::key_schedule(const uint8_t key[], size_t length)
    {
+   const size_t SHAKE_128_BITRATE = (1600-256);
    m_state.resize(25);
-   m_buffer.resize((1600 - 256) / 8);
+   m_buffer.resize(SHAKE_128_BITRATE/8);
    zeroise(m_state);
 
-   for(size_t i = 0; i < length/8; ++i)
-      {
-      m_state[i] ^= load_le<uint64_t>(key, i);
-      }
-
-   m_state[length/8] ^= 0x000000000000001F;
-   m_state[20]       ^= 0x8000000000000000;
-
-   SHA_3::permute(m_state.data());
+   const size_t S_pos = SHA_3::absorb(SHAKE_128_BITRATE, m_state, 0, key, length);
+   SHA_3::finish(SHAKE_128_BITRATE, m_state, S_pos, 0x1F, 0x80);
    copy_out_le(m_buffer.data(), m_buffer.size(), m_state.data());
    }
 
@@ -78,11 +74,7 @@ void SHAKE_128_Cipher::seek(uint64_t)
 
 Key_Length_Specification SHAKE_128_Cipher::key_spec() const
    {
-   /*
-   In principle SHAKE can accept arbitrary length inputs, but this
-   does not seem required for a stream cipher.
-   */
-   return Key_Length_Specification(16, 160, 8);
+   return Key_Length_Specification(1, 160);
    }
 
 std::string SHAKE_128_Cipher::name() const
