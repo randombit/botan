@@ -109,7 +109,7 @@ Available Hash Functions
 ------------------------------
 
 The following cryptographic hash functions are implemented. If in doubt,
-any of SHA-384, SHA-3, BLAKE2b, or Skein-512 are fine choices.
+any of SHA-384, SHA-3, or BLAKE2b are fine choices.
 
 BLAKE2b
 ^^^^^^^^^
@@ -204,9 +204,19 @@ SHAKE (SHAKE-128, SHAKE-256)
 
 Available if ``BOTAN_HAS_SHAKE`` is defined.
 
-These are actually XOFs (extensible output functions) based on SHA-3,
-which can output a value of any byte length. For example "SHAKE-128(1024)"
-will produce 1024 bits of output.
+These are actually XOFs (extensible output functions) based on SHA-3, which can
+output a value of any byte length. For example "SHAKE-128(1024)" will produce
+1024 bits of output. The specified length must be a multiple of 8. Not
+specifying an output length, "SHAKE-128" defaults to a 128-bit output and
+"SHAKE-256" defaults to a 256-bit output.
+
+.. warning::
+    In the case of SHAKE-128, the default output length in insufficient
+    to ensure security. The choice of default lengths was a bug which is
+    currently retained for compatability; they should have been 256 and
+    512 bits resp to match SHAKE's security level. Using the default
+    lengths with SHAKE is deprecated and will be removed in a future major
+    release. Instead, always specify the desired output length.
 
 SM3
 ^^^^^^^^^^^^^^^
@@ -214,7 +224,8 @@ SM3
 Available if ``BOTAN_HAS_SM3`` is defined.
 
 Chinese national hash function, 256 bit output. Widely used in industry there.
-Fast and seemingly secure.
+Fast and seemingly secure, but no reason to prefer it over SHA-2 or SHA-3 unless
+required.
 
 Skein-512
 ^^^^^^^^^^^^^^^
@@ -239,14 +250,18 @@ Newly designed Russian national hash function. Due to use of input-dependent
 table lookups, it is vulnerable to side channels. There is no reason to use it
 unless compatibility is needed.
 
+.. warning::
+   The Streebog Sbox has recently been revealed to have a hidden structure which
+   interacts with its linear layer in a way which may provide a backdoor when
+   used in certain ways. Avoid Streebog if at all possible.
+
 Tiger
 ^^^^^^^^^^^^^^^
 
 Available if ``BOTAN_HAS_TIGER`` is defined.
 
 An older 192-bit hash function, optimized for 64-bit systems. Possibly
-vulnerable to side channels due to its use of table lookups. Prefer Skein-512 or
-BLAKE2b in new code.
+vulnerable to side channels due to its use of table lookups.
 
 Tiger supports variable length output (16, 20 or 24 bytes) and
 variable rounds (which must be at least 3). Default is 24 byte output
@@ -258,9 +273,8 @@ Whirlpool
 Available if ``BOTAN_HAS_WHIRLPOOL`` is defined.
 
 A 512-bit hash function standardized by ISO and NESSIE. Relatively slow, and due
-to the table based implementation it is (unlike almost all other hashes)
-potentially vulnerable to cache based side channels. Prefer Skein-512 or BLAKE2b
-in new code.
+to the table based implementation it is potentially vulnerable to cache based
+side channels.
 
 Hash Function Combiners
 ---------------------------

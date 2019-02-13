@@ -14,6 +14,9 @@ in the source.
 
 - The headers ``botan.h``, ``init.h``, ``lookup.h``, ``threefish.h``, ``sm2_enc.h``
 
+- Using a default output length for "SHAKE-128" and "SHAKE-256". Instead,
+  always specify the desired output length.
+
 - All or nothing package transform (``package.h``)
 
 - The TLS constructors taking `std::function` for callbacks. Instead
