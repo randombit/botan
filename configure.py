@@ -1073,7 +1073,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             infofile,
             [],
             ['cpu_flags', 'cpu_flags_no_debug', 'so_link_commands', 'binary_link_commands',
-             'mach_abi_linking', 'isa_flags', 'sanitizers'],
+             'mach_abi_linking', 'isa_flags', 'sanitizers', 'lib_flags'],
             {
                 'binary_name': None,
                 'linker_name': None,
@@ -1121,6 +1121,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.debug_info_flags = lex.debug_info_flags
         self.isa_flags = lex.isa_flags
         self.lang_flags = lex.lang_flags
+        self.lib_flags = lex.lib_flags
         self.linker_name = lex.linker_name
         self.mach_abi_linking = lex.mach_abi_linking
         self.macro_name = lex.macro_name
@@ -1174,15 +1175,20 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         return " ".join(sorted(flags))
 
-    def gen_shared_flags(self, options):
+    def gen_lib_flags(self, options):
         """
-        Return the shared library build flags, if any
+        Return any flags specific to building the library
+        (vs the cli or tests)
         """
 
         def flag_builder():
             if options.build_shared_lib:
                 yield self.shared_flags
                 yield self.visibility_build_flags
+
+            if options.with_debug_info:
+                if 'debug' in self.lib_flags:
+                    yield self.lib_flags['debug']
 
         return ' '.join(list(flag_builder()))
 
@@ -1957,8 +1963,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'output_to_exe': cc.output_to_exe,
         'cc_macro': cc.macro_name,
 
-        'shared_flags': cc.gen_shared_flags(options),
-        'cmake_shared_flags': cmake_escape(cc.gen_shared_flags(options)),
+        'lib_flags': cc.gen_lib_flags(options),
+        'cmake_shared_flags': cmake_escape(cc.gen_lib_flags(options)),
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
         'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),

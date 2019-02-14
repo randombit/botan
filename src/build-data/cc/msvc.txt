@@ -53,6 +53,10 @@ rdseed -> ""
 sha    -> ""
 </isa_flags>
 
+<lib_flags>
+debug -> "/Fd botan-symbols.pdb"
+</lib_flags>
+
 <so_link_commands>
 default       -> "$(LINKER) /DLL"
 default-debug -> "$(LINKER) /DLL /DEBUG"

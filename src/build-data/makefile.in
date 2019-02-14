@@ -12,7 +12,7 @@ ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags}
 CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
-SO_OBJ_FLAGS   = %{shared_flags}
+LIB_FLAGS      = %{lib_flags}
 LDFLAGS        = %{ldflags}
 
 EXE_LINK_CMD   = %{exe_link_cmd}
@@ -111,7 +111,7 @@ fuzzer_corpus_zip: fuzzer_corpus
 
 %{for lib_build_info}
 %{obj}: %{src}
-	$(CXX) $(SO_OBJ_FLAGS) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
