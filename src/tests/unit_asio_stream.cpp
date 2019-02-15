@@ -51,11 +51,12 @@ class MockChannel
          }
 
    public:
-      std::size_t received_data(const uint8_t buf[], std::size_t buf_size)
+      std::size_t received_data(const uint8_t[], std::size_t buf_size)
          {
          if(bytes_till_complete_record_ < buf_size)
             {
             callbacks_.tls_record_received(0, TEST_DATA, TEST_DATA_SIZE);
+            active_ = true;  // claim to be active once a full record has been received (for handshake test)
             return 0;
             }
          bytes_till_complete_record_ -= buf_size;
@@ -162,6 +163,71 @@ namespace Botan_Tests {
 class ASIO_Stream_Tests final : public Test
    {
       using TestStream = Botan::Stream<MockSocket&, MockChannel>;
+
+      void test_sync_handshake(std::vector<Test::Result>& results)
+         {
+         MockSocket socket;
+         TestStream ssl{socket};
+
+         ssl.handshake();
+
+         Test::Result result("sync TLS handshake");
+         result.test_eq("feeds data into channel until active", ssl.channel().is_active(), true);
+         results.push_back(result);
+         }
+
+      void test_sync_handshake_error(std::vector<Test::Result>& results)
+         {
+         MockSocket socket;
+         TestStream ssl{socket};
+
+         const auto expected_ec = asio::error::host_unreachable;
+         socket.ec_             = expected_ec;
+
+         error_code ec;
+         ssl.handshake(ec);
+
+         Test::Result result("sync TLS handshake error");
+         result.test_eq("does not activate channel", ssl.channel().is_active(), false);
+         result.confirm("propagates error code", ec == expected_ec);
+         results.push_back(result);
+         }
+
+      void test_async_handshake(std::vector<Test::Result>& results)
+         {
+         MockSocket socket;
+         TestStream ssl{socket};
+
+         Test::Result result("async TLS handshake");
+
+         auto handler = [&](const boost::system::error_code&)
+            {
+            result.test_eq("feeds data into channel until active", ssl.channel().is_active(), true);
+            };
+
+         ssl.async_handshake(handler);
+         results.push_back(result);
+         }
+
+      void test_async_handshake_error(std::vector<Test::Result>& results)
+         {
+         MockSocket socket;
+         TestStream ssl{socket};
+
+         const auto expected_ec = asio::error::host_unreachable;
+         socket.ec_             = expected_ec;
+
+         Test::Result result("async TLS handshake error");
+
+         auto handler = [&](const boost::system::error_code &ec)
+            {
+            result.test_eq("does not activate channel", ssl.channel().is_active(), false);
+            result.confirm("propagates error code", ec == expected_ec);
+            };
+
+         ssl.async_handshake(handler);
+         results.push_back(result);
+         }
 
       void test_sync_read_some_success(std::vector<Test::Result>& results)
          {
@@ -403,6 +469,12 @@ class ASIO_Stream_Tests final : public Test
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
+
+         test_sync_handshake(results);
+         test_sync_handshake_error(results);
+
+         test_async_handshake(results);
+         test_async_handshake_error(results);
 
          test_sync_read_some_success(results);
          test_sync_read_some_large_socket_buffer(results);
