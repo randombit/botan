@@ -107,7 +107,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void clear() override { /* not possible */ }
       std::string name() const override { return "crypto_ng"; }
    private:
-      BCRYPT_ALG_HANDLE m_handle;
+      BCRYPT_ALG_HANDLE m_prov;
    };
 
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
