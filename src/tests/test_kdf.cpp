@@ -12,6 +12,7 @@
 
 #if defined(BOTAN_HAS_HKDF)
    #include <botan/hkdf.h>
+   #include <botan/hash.h>
 #endif
 
 namespace Botan_Tests {
@@ -73,6 +74,14 @@ class HKDF_Expand_Label_Tests final : public Text_Based_Test
          const std::vector<uint8_t> hashval = vars.get_req_bin("HashValue");
          const std::string label = vars.get_req_str("Label");
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
+
+         auto hash = Botan::HashFunction::create(hash_name);
+
+         if(!hash)
+            {
+            result.test_note("Skipping test due to missing hash");
+            return result;
+            }
 
          Botan::secure_vector<uint8_t> output =
             Botan::hkdf_expand_label(hash_name,

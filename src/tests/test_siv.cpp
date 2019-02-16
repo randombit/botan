@@ -34,8 +34,15 @@ class SIV_Tests final : public Text_Based_Test
 
          Test::Result result(algo + "/SIV");
 
-         std::unique_ptr<Botan::SIV_Mode> siv(
-            new Botan::SIV_Encryption(Botan::BlockCipher::create(algo).release()));
+         auto cipher = Botan::BlockCipher::create(algo);
+
+         if(!cipher)
+            {
+            result.test_note("Skipping test due to missing cipher");
+            return result;
+            }
+
+         std::unique_ptr<Botan::SIV_Mode> siv(new Botan::SIV_Encryption(cipher.release()));
 
          siv->set_key(key);
 

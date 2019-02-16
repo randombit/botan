@@ -10,7 +10,7 @@
 #include <botan/rotate.h>
 #include <botan/internal/serpent_sbox.h>
 
-#if defined(BOTAN_HAS_SERPENT_SIMD)
+#if defined(BOTAN_HAS_SERPENT_SIMD) || defined(BOTAN_HAS_SERPENT_AVX2)
   #include <botan/cpuid.h>
 #endif
 

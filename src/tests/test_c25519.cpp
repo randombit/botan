@@ -83,7 +83,7 @@ class Curve25519_Roundtrip_Test final : public Test
             Botan::Curve25519_PrivateKey a_priv_gen(Test::rng());
             Botan::Curve25519_PrivateKey b_priv_gen(Test::rng());
 
-#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM)
+#if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM)
             // Then serialize to encrypted storage
 
             const std::string a_pass = "alice pass";

@@ -196,7 +196,12 @@ std::string hash_for_emsa(const std::string& algo_spec)
       return pos_hash;
       }
 
-   return "SHA-512"; // safe default if nothing we understand
+   // If we don't understand what this is return a safe default
+#if defined(BOTAN_HAS_SHA2_64)
+   return "SHA-512";
+#else
+   return "SHA-256";
+#endif
    }
 
 }

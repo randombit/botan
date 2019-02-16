@@ -1511,9 +1511,15 @@ class FFI_Unit_Tests final : public Test
          const std::string pbe_hash = "SHA-512";
 #endif
 
+#if defined(BOTAN_HAS_GCM)
+         const std::string pbe_cipher = "AES-256/GCM";
+#else
+         const std::string pbe_cipher = "AES-256/CBC";
+#endif
+
          TEST_FFI_OK(botan_privkey_export_encrypted_pbkdf_msec,
                      (priv, privkey.data(), &privkey_len, rng, "password",
-                      pbkdf_msec, &pbkdf_iters_out, "AES-256/GCM", pbe_hash.c_str(), 0));
+                      pbkdf_msec, &pbkdf_iters_out, pbe_cipher.c_str(), pbe_hash.c_str(), 0));
 
          if(pbe_hash == "Scrypt")
             {

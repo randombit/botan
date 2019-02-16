@@ -115,11 +115,16 @@ class EMSA_unit_tests final : public Test
             {
             try
                {
+               const std::string hash_to_use = Botan::hash_for_emsa(pad);
                std::unique_ptr<Botan::EMSA> emsa_1(
-                  Botan::get_emsa(pad + "(" + Botan::hash_for_emsa(pad) + ")"));
+                  Botan::get_emsa(pad + "(" + hash_to_use + ")"));
                std::unique_ptr<Botan::EMSA> emsa_2(Botan::get_emsa(emsa_1->name()));
                name_tests.test_eq("EMSA_name_test for " + pad,
                      emsa_1->name(), emsa_2->name());
+               }
+            catch(Botan::Lookup_Error&)
+               {
+               name_tests.test_note("Skipping test due to missing hash");
                }
             catch(const std::exception& e)
                {
@@ -137,6 +142,10 @@ class EMSA_unit_tests final : public Test
                name_tests.test_failure("EMSA_name_test for " + pad + ": " +
                    "Could create EMSA with fantasy hash YYZ");
                }
+            catch(Botan::Lookup_Error&)
+               {
+               name_tests.test_note("Skipping test due to missing hash");
+               }
             catch(const std::exception& e)
                {
                name_tests.test_eq("EMSA_name_test for " + pad,
@@ -153,6 +162,10 @@ class EMSA_unit_tests final : public Test
                std::unique_ptr<Botan::EMSA> emsa_2(Botan::get_emsa(emsa_1->name()));
                name_tests.test_eq("EMSA_name_test for " + pad,
                      emsa_1->name(), emsa_2->name());
+               }
+            catch(Botan::Lookup_Error&)
+               {
+               name_tests.test_note("Skipping test due to missing hash");
                }
             catch(const std::exception& e)
                {

@@ -237,7 +237,7 @@ class ECIES_Tests final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("ecies", ECIES_Tests);
 
-#if defined(BOTAN_HAS_KDF1_18033) && defined(BOTAN_HAS_HMAC) && defined(BOTAN_HAS_AES)
+#if defined(BOTAN_HAS_KDF1_18033) && defined(BOTAN_HAS_HMAC) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_64)
 
 Test::Result test_other_key_not_set()
    {

@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/pbkdf.h>
+#include <botan/pwdhash.h>
 #include <botan/exceptn.h>
 #include <botan/scan_name.h>
 

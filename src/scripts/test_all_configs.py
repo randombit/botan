@@ -49,15 +49,18 @@ def try_to_run(cmdline):
 
     if failed:
         print("FAILURE")
+        print(stdout)
         print(stdout.decode('ascii'))
         print(stderr.decode('ascii'))
         sys.stdout.flush()
+        #sys.exit(1)
 
     return not failed
 
-def run_test_build(configure_py, modules, include, run_tests=False):
-    config = [configure_py]
+def run_test_build(configure_py, modules, include, jobs, run_tests):
+    config = [configure_py, '--without-documentation']
 
+    print(modules)
     if include:
         config.append('--minimized')
         if modules:
@@ -68,13 +71,13 @@ def run_test_build(configure_py, modules, include, run_tests=False):
     if try_to_run(config) is False:
         return False
 
-    if try_to_run(['make', '-j', str(get_concurrency())]) is False:
+    if try_to_run(['make', '-j', str(jobs)]) is False:
         return False
 
     if run_tests is False:
         return True
 
-    return try_to_run(['./botan-test'])
+    return try_to_run(['./botan-test', '--test-threads=%d' % (jobs)])
 
 def main(args):
 
@@ -83,6 +86,10 @@ def main(args):
     parser = optparse.OptionParser()
 
     parser.add_option('--run-tests', default=False, action='store_true')
+    parser.add_option('--jobs', default=get_concurrency(),
+                      help="jobs to run (default %default)")
+
+    jobs = get_concurrency()
 
     (options, args) = parser.parse_args(args)
 
@@ -92,7 +99,7 @@ def main(args):
     modules = get_module_list(configure_py)
 
     cant_disable = ['block', 'hash', 'hex', 'mac', 'modes', 'rng', 'stream', 'utils', 'cpuid', 'entropy']
-    always_include = ['sha2_32', 'sha2_64', 'aes']
+    always_include = ['thread_utils', 'sha2_64']#, 'sha2_64', 'aes']
 
     failed = []
 
@@ -103,17 +110,19 @@ def main(args):
         extra = []
         if module == 'auto_rng':
             extra.append('dev_random')
-        if run_test_build(configure_py, [module] + always_include + extra, True, run_tests) is False:
+        if run_test_build(configure_py, [module] + always_include + extra, True, jobs, run_tests) is False:
             failed.append(module)
 
     for module in sorted(modules):
         if module in cant_disable or module in always_include:
             continue
-        if run_test_build(configure_py, [module], False, run_tests) is False:
+        if run_test_build(configure_py, [module], False, jobs, run_tests) is False:
             failed.append(module)
 
-    print("Failed building with %s", ' '.join(failed))
-
+    if len(failed) > 0:
+        print("Failed building with %s" % (' '.join(failed)))
+    else:
+        print("All configurations ok")
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

@@ -16,6 +16,7 @@
 #include <botan/oids.h>
 #include <botan/aead.h>
 #include <botan/pem.h>
+#include <botan/rng.h>
 
 namespace Botan_CLI {
 

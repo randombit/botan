@@ -847,7 +847,7 @@ class TLS_Unit_Tests final : public Test
             test_all_versions("AES-128 RSA", results, *client_ses, *server_ses, *creds, "RSA", "AES-128", "SHA-256 SHA-1", etm_setting);
             test_all_versions("AES-128 ECDH", results, *client_ses, *server_ses, *creds, "ECDH", "AES-128", "SHA-256 SHA-1", etm_setting);
 
-#if defined(BOTAN_HAS_CAMELLIA)
+#if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_TLS_CBC)
             test_all_versions("Camellia-128 RSA", results, *client_ses, *server_ses,
                               *creds, "RSA", "Camellia-128", "SHA-256 SHA-1", etm_setting);
             test_all_versions("Camellia-256 RSA SHA-2", results, *client_ses, *server_ses,
@@ -903,8 +903,10 @@ class TLS_Unit_Tests final : public Test
 
          client_ses->remove_all();
 
-#if defined(BOTAN_HAS_CAMELLIA)
+#if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_TLS_CBC)
          test_modern_versions("Camellia-256 SHA-2", results, *client_ses, *server_ses, *creds, "RSA", "Camellia-256", "SHA-384 SHA-256");
+#endif
+#if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_GCM)
          test_modern_versions("Camellia-128/GCM ECDH", results, *client_ses, *server_ses, *creds, "ECDH", "Camellia-128/GCM", "AEAD");
 #endif
 
