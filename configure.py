@@ -1187,7 +1187,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 yield self.visibility_build_flags
 
             if options.with_debug_info:
-                print(self.lib_flags['debug'])
                 yield process_template_string(self.lib_flags['debug'], variables, self.infofile)
 
 
