@@ -84,7 +84,7 @@
 * Define BOTAN_MALLOC_FN
 */
 #if defined(__GNUG__) || defined(__clang__)
-  #define BOTAN_MALLOC_FN __attribute__ ((malloc))
+  #define BOTAN_MALLOC_FN __attribute__ ((malloc, returns_nonnull, alloc_size(1,2)))
 #elif defined(_MSC_VER)
   #define BOTAN_MALLOC_FN __declspec(restrict)
 #else
