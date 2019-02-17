@@ -1175,7 +1175,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
         return " ".join(sorted(flags))
 
-    def gen_lib_flags(self, options):
+    def gen_lib_flags(self, options, variables):
         """
         Return any flags specific to building the library
         (vs the cli or tests)
@@ -1187,8 +1187,9 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 yield self.visibility_build_flags
 
             if options.with_debug_info:
-                if 'debug' in self.lib_flags:
-                    yield self.lib_flags['debug']
+                print(self.lib_flags['debug'])
+                yield process_template_string(self.lib_flags['debug'], variables, self.infofile)
+
 
         return ' '.join(list(flag_builder()))
 
@@ -1521,7 +1522,7 @@ def read_textfile(filepath):
         return ''.join(f.readlines())
 
 
-def process_template(template_file, variables):
+def process_template_string(template_text, variables, template_source):
     # pylint: disable=too-many-branches,too-many-statements
 
     """
@@ -1620,11 +1621,14 @@ def process_template(template_file, variables):
             return self.value_pattern.sub(insert_value, output) + '\n'
 
     try:
-        return SimpleTemplate(variables).substitute(read_textfile(template_file))
+        return SimpleTemplate(variables).substitute(template_text)
     except KeyError as e:
-        logging.error('Unbound var %s in template %s' % (e, template_file))
+        logging.error('Unbound var %s in template %s' % (e, template_source))
     except Exception as e: # pylint: disable=broad-except
-        logging.error('Exception %s during template processing file %s' % (e, template_file))
+        logging.error('Exception %s during template processing file %s' % (e, template_source))
+
+def process_template(template_file, variables):
+    return process_template_string(read_textfile(template_file), variables, template_file)
 
 def yield_objectfile_list(sources, obj_dir, obj_suffix):
     obj_suffix = '.' + obj_suffix
@@ -1963,8 +1967,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'output_to_exe': cc.output_to_exe,
         'cc_macro': cc.macro_name,
 
-        'lib_flags': cc.gen_lib_flags(options),
-        'cmake_shared_flags': cmake_escape(cc.gen_lib_flags(options)),
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
         'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
@@ -2006,6 +2008,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'mod_list': sorted([m.basename for m in modules])
     }
+
+    variables['lib_flags'] = cc.gen_lib_flags(options, variables)
+    variables['cmake_shared_flags'] = cmake_escape(variables['lib_flags'])
 
     if options.with_pkg_config:
         variables['botan_pkgconfig'] = os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))
@@ -3160,8 +3165,9 @@ def main(argv):
 
     setup_logging(options)
 
-    logging.info('Configuring to build Botan %s (revision %s)' % (
-        Version.as_string(), Version.vc_rev()))
+    if not options.list_modules:
+        logging.info('Configuring to build Botan %s (revision %s)' % (
+            Version.as_string(), Version.vc_rev()))
 
     source_paths = SourcePaths(os.path.dirname(argv[0]))
 
