@@ -96,12 +96,16 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
       milliseconds when producing an output of length ``output_len``. (Accuracy
       may vary, use the command line utility ``botan pbkdf_tune`` to check.)
 
-   .. cpp:function:: std::unique_ptr<PasswordHash> from_configuration( \
-         size_t i1, size_t i2 = 0, size_t i3 = 0, size_t i4 = 0, const char* cfg_str = nullptr) const
-
-      Return a new password hash instance based on some number of integer and
-      string parameters. Any values not used by a particular scheme should be
-      set to zero/null.
+   .. cpp:function:: std::unique_ptr<PasswordHash> from_params( \
+         size_t i1, size_t i2 = 0, size_t i3 = 0) const
+         
+      Create a password hash using some scheme specific format.
+      Eg PBKDF2 and PGP-S2K set iterations in i1
+      Scrypt uses N,r,p in i{1-3}
+      Bcrypt-PBKDF just has iterations
+      Argon2{i,d,id} would use iterations, memory, parallelism for i{1-3}, and Argon2 type is part of the family.
+      
+      Values not needed should be set to 0.
 
 Available Schemes
 ----------------------
