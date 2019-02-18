@@ -363,7 +363,16 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
             Endian_Status m_endian_status;
          };
 
-      static CPUID_Data& state();
+      /*
+      * This global has to be wrapped in a function as otherwise MSVC
+      * building a DLL is unhappy as this interacts badly with the TLS
+      * mechanism.
+      */
+      static CPUID_Data& state()
+         {
+         static BOTAN_THREAD_LOCAL CPUID::CPUID_Data g_cpuid;
+         return g_cpuid;
+         }
    };
 
 }

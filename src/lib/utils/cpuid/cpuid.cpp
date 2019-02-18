@@ -13,13 +13,6 @@
 
 namespace Botan {
 
-//static
-CPUID::CPUID_Data& CPUID::state()
-   {
-   static BOTAN_THREAD_LOCAL CPUID::CPUID_Data g_cpuid;
-   return g_cpuid;
-   }
-
 bool CPUID::has_simd_32()
    {
 #if defined(BOTAN_TARGET_SUPPORTS_SSE2)
