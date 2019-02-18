@@ -29,6 +29,10 @@ Version 2.10.0, Not Yet Released
   removed, since already POSIX and Win32 versions had to be maintained for
   portability. (GH #1814)
 
+* Newly generated McEliece and XMSS keys now default to being encrypted using
+  SIV mode, support for which was added in 2.8.0. Previously GCM was used by
+  default for these algorithms.
+
 * Add a facility for sandboxing the command line util. Currently FreeBSD
   (Capsicum) and OpenBSD (``pledge``) sandboxes are supported. (GH #1808)
 

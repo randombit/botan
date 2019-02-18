@@ -159,13 +159,21 @@ choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
    {
    if(pbe_algo.empty())
       {
-      // Defaults:
+      /*
+      * For algorithms where we are using a non-RFC format anyway, default to
+      * SIV or GCM. For others (RSA, ECDSA, ...) default to something widely
+      * compatible.
+      */
       const bool nonstandard_pk = (key_algo == "McEliece" || key_algo == "XMSS");
 
-#if defined(BOTAN_HAS_GCM) && defined(BOTAN_HAS_SHA2_64)
       if(nonstandard_pk)
+         {
+#if defined(BOTAN_HAS_AEAD_SIV) && defined(BOTAN_HAS_SHA2_64)
+         return std::make_pair("AES-256/SIV", "SHA-512");
+#elif defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
          return std::make_pair("AES-256/GCM", "SHA-512");
 #endif
+         }
 
       // Default is something compatible with everyone else
       return std::make_pair("AES-256/CBC", "SHA-256");
