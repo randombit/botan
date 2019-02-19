@@ -59,6 +59,12 @@ class Stream : public StreamBase<Channel>
          : StreamBase<Channel>(std::forward<Args>(args)...),
            nextLayer_(std::forward<StreamLayer>(nextLayer)) {}
 
+      Stream(Stream &&other) = default;
+      Stream& operator=(Stream &&other) = default;
+
+      Stream(const Stream &other) = delete;
+      Stream& operator=(const Stream &other) = delete;
+
       //
       // -- -- accessor methods
       //
