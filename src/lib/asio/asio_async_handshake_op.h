@@ -10,7 +10,7 @@ namespace Botan {
 template <class Channel, class StreamLayer, class Handler>
 struct AsyncHandshakeOperation
    {
-      AsyncHandshakeOperation(Channel& channel, StreamCore& core,
+      AsyncHandshakeOperation(Channel* channel, StreamCore& core,
                               StreamLayer& nextLayer, Handler&& handler)
          : channel_(channel),
            core_(core),
@@ -36,7 +36,7 @@ struct AsyncHandshakeOperation
                boost::asio::buffer(core_.input_buffer_, bytesTransferred);
             try
                {
-               channel_.received_data(
+               channel_->received_data(
                   static_cast<const uint8_t*>(read_buffer.data()),
                   read_buffer.size());
                }
@@ -58,7 +58,7 @@ struct AsyncHandshakeOperation
             return;
             }
 
-         if(!channel_.is_active() && !ec)
+         if(!channel_->is_active() && !ec)
             {
             // we need more tls data from the socket
             nextLayer_.async_read_some(core_.input_buffer_, std::move(*this));
@@ -76,7 +76,7 @@ struct AsyncHandshakeOperation
          }
 
    private:
-      Channel& channel_;
+      Channel* channel_;
       StreamCore& core_;
       StreamLayer& nextLayer_;
       Handler handler_;

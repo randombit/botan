@@ -11,7 +11,7 @@ template <class Channel, class StreamLayer, class Handler,
           class MutableBufferSequence>
 struct AsyncReadOperation
    {
-      AsyncReadOperation(Channel& channel, StreamCore& core, StreamLayer& nextLayer,
+      AsyncReadOperation(Channel* channel, StreamCore& core, StreamLayer& nextLayer,
                          Handler&& handler, const MutableBufferSequence& buffers)
          : channel_(channel), core_(core), nextLayer_(nextLayer),
            handler_(std::forward<Handler>(handler)), buffers_(buffers) {}
@@ -35,8 +35,8 @@ struct AsyncReadOperation
                boost::asio::buffer(core_.input_buffer_, bytes_transferred);
             try
                {
-               channel_.received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                      read_buffer.size());
+               channel_->received_data(static_cast<const uint8_t*>(read_buffer.data()),
+                                       read_buffer.size());
                }
             catch(...)
                {
@@ -63,7 +63,7 @@ struct AsyncReadOperation
          }
 
    private:
-      Channel& channel_;
+      Channel* channel_;
       StreamCore& core_;
       StreamLayer& nextLayer_;
       Handler handler_;

@@ -23,15 +23,45 @@ class Stream : public StreamBase<Channel>
    {
    public:
       using next_layer_type = typename std::remove_reference<StreamLayer>::type;
-
       using lowest_layer_type = typename next_layer_type::lowest_layer_type;
-
       using executor_type = typename next_layer_type::executor_type;
+      using native_handle_type = typename std::add_pointer<Channel>::type;
 
+      enum handshake_type
+         {
+         client,
+         server
+         };
+
+   private:
+      void validate_handshake_type(handshake_type type)
+         {
+         if(type != handshake_type::client)
+            {
+            throw Not_Implemented("server-side TLS stream is not implemented");
+            }
+         }
+
+      bool validate_handshake_type(handshake_type type, boost::system::error_code& ec)
+         {
+         if(type != handshake_type::client)
+            {
+            ec = make_error_code(Botan::error::not_implemented);
+            return false;
+            }
+
+         return true;
+         }
+
+   public:
       template <typename... Args>
       Stream(StreamLayer nextLayer, Args&& ... args)
          : StreamBase<Channel>(std::forward<Args>(args)...),
            nextLayer_(std::forward<StreamLayer>(nextLayer)) {}
+
+      //
+      // -- -- accessor methods
+      //
 
       executor_type get_executor() noexcept { return nextLayer_.get_executor(); }
 
@@ -39,14 +69,80 @@ class Stream : public StreamBase<Channel>
       next_layer_type& next_layer() { return nextLayer_; }
 
       lowest_layer_type& lowest_layer() { return nextLayer_.lowest_layer(); }
+      const lowest_layer_type& lowest_layer() const { return nextLayer_.lowest_layer(); }
 
-      Channel& channel() { return this->channel_; }
+      native_handle_type native_handle() { return &this->channel_; }
 
-      const Channel& channel() const { return this->channel_; }
+      //
+      // -- -- configuration and callback setters
+      //
 
-      void handshake(boost::system::error_code& ec)
+      template<
+         typename VerifyCallback>
+      void set_verify_callback(VerifyCallback callback)
          {
-         while(!channel().is_active())
+         BOTAN_UNUSED(callback);
+         throw Not_Implemented("set_verify_callback is not implemented");
+         }
+
+      template<
+         typename VerifyCallback>
+      void set_verify_callback(VerifyCallback callback,
+                               boost::system::error_code& ec)
+         {
+         BOTAN_UNUSED(callback);
+         ec = make_error_code(Botan::error::not_implemented);
+         }
+
+      void set_verify_depth(int depth)
+         {
+         BOTAN_UNUSED(depth);
+         throw Not_Implemented("set_verify_depth is not implemented");
+         }
+
+      void set_verify_depth(int depth,
+                            boost::system::error_code& ec)
+         {
+         BOTAN_UNUSED(depth);
+         ec = make_error_code(Botan::error::not_implemented);
+         }
+
+      template <typename verify_mode>
+      void set_verify_mode(verify_mode v)
+         {
+         BOTAN_UNUSED(v);
+         throw Not_Implemented("set_verify_mode is not implemented");
+         }
+
+      template <typename verify_mode>
+      void set_verify_mode(verify_mode v,
+                           boost::system::error_code& ec)
+         {
+         BOTAN_UNUSED(v);
+         ec = make_error_code(Botan::error::not_implemented);
+         }
+
+      //
+      // -- -- handshake methods
+      //
+
+      void handshake(handshake_type type)
+         {
+         validate_handshake_type(type);
+
+         boost::system::error_code ec;
+         handshake(type, ec);
+         boost::asio::detail::throw_error(ec, "handshake");
+         }
+
+      void handshake(handshake_type type, boost::system::error_code& ec)
+         {
+         if(!validate_handshake_type(type, ec))
+            {
+            return;
+            }
+
+         while(!native_handle()->is_active())
             {
             writePendingTlsData(ec);
             if(ec)
@@ -64,8 +160,8 @@ class Stream : public StreamBase<Channel>
 
             try
                {
-               channel().received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                       read_buffer.size());
+               native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
+                                              read_buffer.size());
                }
             catch(...)
                {
@@ -77,21 +173,32 @@ class Stream : public StreamBase<Channel>
             }
          }
 
-      void handshake()
+      template<typename ConstBufferSequence>
+      void handshake(handshake_type type, const ConstBufferSequence& buffers)
          {
-         boost::system::error_code ec;
-         handshake(ec);
-         boost::asio::detail::throw_error(ec, "handshake");
+         BOTAN_UNUSED(type, buffers);
+         throw Not_Implemented("server-side TLS stream is not implemented");
+         }
+
+      template<typename ConstBufferSequence>
+      void handshake(handshake_type type,
+                     const ConstBufferSequence& buffers,
+                     boost::system::error_code& ec)
+         {
+         BOTAN_UNUSED(type, buffers);
+         ec = make_error_code(Botan::error::not_implemented);
          }
 
       template <typename HandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
                                     void(boost::system::error_code))
-      async_handshake(HandshakeHandler&& handler)
+      async_handshake(handshake_type type, HandshakeHandler&& handler)
          {
          // If you get an error on the following line it means that your handler does
          // not meet the documented type requirements for a HandshakeHandler.
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(HandshakeHandler, handler) type_check;
+
+         validate_handshake_type(type);
 
          boost::asio::async_completion<HandshakeHandler,
                void(boost::system::error_code)>
@@ -103,11 +210,29 @@ class Stream : public StreamBase<Channel>
          return init.result.get();
          }
 
+      template <typename ConstBufferSequence, typename BufferedHandshakeHandler>
+      BOOST_ASIO_INITFN_RESULT_TYPE(BufferedHandshakeHandler,
+                                    void(boost::system::error_code, std::size_t))
+      async_handshake(handshake_type type,
+                      const ConstBufferSequence& buffers,
+                      BufferedHandshakeHandler&& handler)
+         {
+         // If you get an error on the following line it means that your handler does
+         // not meet the documented type requirements for a BufferedHandshakeHandler.
+         BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(BufferedHandshakeHandler, handler) type_check;
+         BOTAN_UNUSED(type, buffers, handler);
+         throw Not_Implemented("buffered async handshake is not implemented");
+         }
+
+      //
+      // -- -- shutdown methods
+      //
+
       void shutdown(boost::system::error_code& ec)
          {
          try
             {
-            channel().close();
+            native_handle()->close();
             }
          catch(...)
             {
@@ -123,6 +248,20 @@ class Stream : public StreamBase<Channel>
          shutdown(ec);
          boost::asio::detail::throw_error(ec, "shutdown");
          }
+
+      template <typename ShutdownHandler>
+      void async_shutdown(ShutdownHandler&& handler)
+         {
+         // If you get an error on the following line it means that your handler does
+         // not meet the documented type requirements for a ShutdownHandler.
+         BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(ShutdownHandler, handler) type_check;
+         BOTAN_UNUSED(handler);
+         throw Not_Implemented("async shutdown is not implemented");
+         }
+
+      //
+      // -- -- I/O methods
+      //
 
       template <typename MutableBufferSequence>
       std::size_t read_some(const MutableBufferSequence& buffers,
@@ -143,8 +282,8 @@ class Stream : public StreamBase<Channel>
 
          try
             {
-            channel().received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                    read_buffer.size());
+            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
+                                           read_buffer.size());
             }
          catch(...)
             {
@@ -174,7 +313,7 @@ class Stream : public StreamBase<Channel>
 
          try
             {
-            channel().send(static_cast<const uint8_t*>(buffer.data()), buffer.size());
+            native_handle()->send(static_cast<const uint8_t*>(buffer.data()), buffer.size());
             }
          catch(...)
             {
@@ -212,8 +351,8 @@ class Stream : public StreamBase<Channel>
 
          try
             {
-            channel().send(static_cast<const uint8_t*>(buffer.data()),
-                           buffer.size());
+            native_handle()->send(static_cast<const uint8_t*>(buffer.data()),
+                                  buffer.size());
             }
          catch(...)
             {
@@ -264,7 +403,7 @@ class Stream : public StreamBase<Channel>
       create_async_handshake_op(Handler&& handler)
          {
          return Botan::AsyncHandshakeOperation<Channel, StreamLayer, Handler>(
-                   channel(), this->core_, nextLayer_, std::forward<Handler>(handler));
+                   native_handle(), this->core_, nextLayer_, std::forward<Handler>(handler));
          }
 
       template <typename Handler, typename MutableBufferSequence>
@@ -275,7 +414,7 @@ class Stream : public StreamBase<Channel>
          {
          return Botan::AsyncReadOperation<Channel, StreamLayer, Handler,
                 MutableBufferSequence>(
-                   channel(), this->core_, nextLayer_, std::forward<Handler>(handler),
+                   native_handle(), this->core_, nextLayer_, std::forward<Handler>(handler),
                    buffers);
          }
 

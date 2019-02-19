@@ -169,10 +169,10 @@ class ASIO_Stream_Tests final : public Test
          MockSocket socket;
          TestStream ssl{socket};
 
-         ssl.handshake();
+         ssl.handshake(TestStream::client);
 
          Test::Result result("sync TLS handshake");
-         result.test_eq("feeds data into channel until active", ssl.channel().is_active(), true);
+         result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
          results.push_back(result);
          }
 
@@ -185,10 +185,10 @@ class ASIO_Stream_Tests final : public Test
          socket.ec_             = expected_ec;
 
          error_code ec;
-         ssl.handshake(ec);
+         ssl.handshake(TestStream::client, ec);
 
          Test::Result result("sync TLS handshake error");
-         result.test_eq("does not activate channel", ssl.channel().is_active(), false);
+         result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
          result.confirm("propagates error code", ec == expected_ec);
          results.push_back(result);
          }
@@ -202,10 +202,10 @@ class ASIO_Stream_Tests final : public Test
 
          auto handler = [&](const boost::system::error_code&)
             {
-            result.test_eq("feeds data into channel until active", ssl.channel().is_active(), true);
+            result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
             };
 
-         ssl.async_handshake(handler);
+         ssl.async_handshake(TestStream::client, handler);
          results.push_back(result);
          }
 
@@ -221,11 +221,11 @@ class ASIO_Stream_Tests final : public Test
 
          auto handler = [&](const boost::system::error_code &ec)
             {
-            result.test_eq("does not activate channel", ssl.channel().is_active(), false);
+            result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
             result.confirm("propagates error code", ec == expected_ec);
             };
 
-         ssl.async_handshake(handler);
+         ssl.async_handshake(TestStream::client, handler);
          results.push_back(result);
          }
 
@@ -465,6 +465,7 @@ class ASIO_Stream_Tests final : public Test
          results.push_back(result);
          }
 
+
    public:
       std::vector<Test::Result> run() override
          {
@@ -498,6 +499,6 @@ class ASIO_Stream_Tests final : public Test
 
 BOTAN_REGISTER_TEST("asio_stream", ASIO_Stream_Tests);
 
-#endif
-
 }  // namespace Botan_Tests
+
+#endif
