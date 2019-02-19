@@ -78,7 +78,7 @@ struct MockSocket
    template <typename MutableBufferSequence>
    std::size_t read_some(const MutableBufferSequence& buffers, error_code& ec)
       {
-      ec = error_code;
+      ec = error;
       if(ec)
          {
          return 0;
@@ -89,7 +89,7 @@ struct MockSocket
    template <typename ConstBufferSequence>
    std::size_t write_some(const ConstBufferSequence& buffers, error_code& ec)
       {
-      ec = error_code;
+      ec = error;
       if(ec)
          {
          return 0;
@@ -101,20 +101,20 @@ struct MockSocket
    BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler, void(error_code, std::size_t))
    async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler)
       {
-      handler(error_code, read_some(buffers, error_code));
+      handler(error, read_some(buffers, error));
       }
 
    template <typename ConstBufferSequence, typename WriteHandler>
    BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler, void(error_code, std::size_t))
    async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler)
       {
-      handler(error_code, write_some(buffers, error_code));
+      handler(error, write_some(buffers, error));
       }
 
    using lowest_layer_type = MockSocket;
    using executor_type     = MockSocket;
 
-   error_code  error_code;
+   error_code  error;
    std::size_t buf_size;
    uint8_t     write_buf[TEST_DATA_SIZE];
    };
@@ -184,7 +184,7 @@ class ASIO_Stream_Tests final : public Test
          AsioStream ssl{socket};
 
          const auto expected_ec = asio::error::host_unreachable;
-         socket.error_code      = expected_ec;
+         socket.error           = expected_ec;
 
          error_code ec;
          ssl.handshake(AsioStream::client, ec);
@@ -202,7 +202,7 @@ class ASIO_Stream_Tests final : public Test
 
          Test::Result result("async TLS handshake");
 
-         auto handler = [&](const boost::system::error_code&)
+         auto handler = [&](const error_code&)
             {
             result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
             };
@@ -217,11 +217,11 @@ class ASIO_Stream_Tests final : public Test
          AsioStream ssl{socket};
 
          const auto expected_ec = asio::error::host_unreachable;
-         socket.error_code      = expected_ec;
+         socket.error           = expected_ec;
 
          Test::Result result("async TLS handshake error");
 
-         auto handler = [&](const boost::system::error_code &ec)
+         auto handler = [&](const error_code &ec)
             {
             result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
             result.confirm("propagates error code", ec == expected_ec);
@@ -270,7 +270,7 @@ class ASIO_Stream_Tests final : public Test
          MockSocket socket;
          AsioStream ssl{socket};
          const auto expected_ec = asio::error::eof;
-         socket.error_code      = expected_ec;
+         socket.error           = expected_ec;
 
          char       buf[128];
          error_code ec;
@@ -293,7 +293,7 @@ class ASIO_Stream_Tests final : public Test
 
          Test::Result result("async read_some success");
 
-         auto read_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto read_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.confirm("reads the correct data", contains(buf, TEST_DATA));
             result.test_eq("reads the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
@@ -314,7 +314,7 @@ class ASIO_Stream_Tests final : public Test
 
          Test::Result result("async read_some with large socket buffer");
 
-         auto read_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto read_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.confirm("reads the correct data", contains(buf, TEST_DATA));
             result.test_eq("reads the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
@@ -334,11 +334,11 @@ class ASIO_Stream_Tests final : public Test
          error_code ec;
 
          const auto expected_ec = asio::error::eof;
-         socket.error_code      = expected_ec;
+         socket.error           = expected_ec;
 
          Test::Result result("async read_some error");
 
-         auto read_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto read_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.test_eq("didn't transfer anything", bytes_transferred, 0);
             result.confirm("propagates error code", ec == expected_ec);
@@ -391,7 +391,7 @@ class ASIO_Stream_Tests final : public Test
          error_code ec;
 
          const auto expected_ec = asio::error::eof;
-         socket.error_code      = expected_ec;
+         socket.error           = expected_ec;
 
          auto bytes_transferred = asio::write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
@@ -410,7 +410,7 @@ class ASIO_Stream_Tests final : public Test
 
          Test::Result result("async write_some success");
 
-         auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto write_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             // socket.write_buf should contain the end of TEST_DATA, the start has already been overwritten
             const auto end_of_test_data = TEST_DATA + TEST_DATA_SIZE - socket.buf_size;
@@ -432,7 +432,7 @@ class ASIO_Stream_Tests final : public Test
 
          Test::Result result("async write_some with large socket buffer");
 
-         auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto write_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             // this test assumes that socket.buf_size is larger than TEST_DATA_SIZE
             result.confirm("writes the correct data", contains(TEST_DATA, socket.write_buf));
@@ -452,11 +452,11 @@ class ASIO_Stream_Tests final : public Test
          error_code ec;
 
          const auto expected_ec = asio::error::eof;
-         socket.error_code      = expected_ec;
+         socket.error           = expected_ec;
 
          Test::Result result("async write_some error");
 
-         auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto write_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.test_eq("didn't transfer anything", bytes_transferred, 0);
             result.confirm("propagates error code", ec == expected_ec);
@@ -530,7 +530,7 @@ class Async_Asio_Stream_Tests final : public Test
 
          Test::Result result("async TLS handshake");
 
-         auto handler = [&](const boost::system::error_code&)
+         auto handler = [&](const error_code&)
             {
             result.confirm("reads from socket", socket.nread() > 0);
             result.confirm("writes from socket", socket.nwrite() > 0);
@@ -557,7 +557,7 @@ class Async_Asio_Stream_Tests final : public Test
 
          Test::Result result("async TLS handshake error");
 
-         auto handler = [&](const boost::system::error_code &ec)
+         auto handler = [&](const error_code &ec)
             {
             result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
             result.confirm("propagates error code", (bool)ec);
@@ -582,7 +582,7 @@ class Async_Asio_Stream_Tests final : public Test
 
          Test::Result result("async read_some success");
 
-         auto read_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto read_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.confirm("reads the correct data", beast::string_view(data, TEST_DATA_SIZE) == test_data());
             result.test_eq("reads the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
@@ -609,7 +609,7 @@ class Async_Asio_Stream_Tests final : public Test
 
          Test::Result result("async read_some error");
 
-         auto read_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto read_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.test_eq("didn't transfer anything", bytes_transferred, 0);
             result.confirm("propagates error code", (bool)ec);
@@ -635,7 +635,7 @@ class Async_Asio_Stream_Tests final : public Test
 
          Test::Result result("async write_some success");
 
-         auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto write_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.confirm("writes the correct data", remote.str() == test_data());
             result.test_eq("writes the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
@@ -659,7 +659,7 @@ class Async_Asio_Stream_Tests final : public Test
 
          Test::Result result("async write_some error");
 
-         auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+         auto write_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.test_eq("didn't transfer anything", bytes_transferred, 0);
             result.confirm("propagates error code", (bool)ec);
