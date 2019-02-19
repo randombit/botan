@@ -1,3 +1,11 @@
+/*
+* TLS Stream Errors
+* (C) 2018-2019 Jack Lloyd
+*     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
 #ifndef BOTAN_ASIO_ERROR_H_
 #define BOTAN_ASIO_ERROR_H_
 
