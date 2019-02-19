@@ -1,13 +1,13 @@
 #ifndef BOTAN_ASIO_STREAM_H_
 #define BOTAN_ASIO_STREAM_H_
 
-#include <botan/asio_async_handshake_op.h>
-#include <botan/asio_async_read_op.h>
-#include <botan/asio_async_write_op.h>
-#include <botan/asio_convert_exceptions.h>
-#include <botan/asio_includes.h>
-#include <botan/asio_stream_base.h>
-#include <botan/asio_stream_core.h>
+#include <botan/internal/asio_async_handshake_op.h>
+#include <botan/internal/asio_async_read_op.h>
+#include <botan/internal/asio_async_write_op.h>
+#include <botan/internal/asio_convert_exceptions.h>
+#include <botan/internal/asio_includes.h>
+#include <botan/internal/asio_stream_base.h>
+#include <botan/internal/asio_stream_core.h>
 
 #include <memory>
 #include <thread>

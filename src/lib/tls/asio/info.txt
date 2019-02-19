@@ -5,6 +5,9 @@ ASIO -> 20181218
 <header:public>
 asio_stream.h
 asio_error.h
+</header:public>
+
+<header:internal>
 asio_async_handshake_op.h
 asio_async_read_op.h
 asio_async_write_op.h
@@ -12,7 +15,7 @@ asio_convert_exceptions.h
 asio_stream_base.h
 asio_stream_core.h
 asio_includes.h
-</header:public>
+</header:internal>
 
 <requires>
 boost

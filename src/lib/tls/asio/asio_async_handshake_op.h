@@ -1,10 +1,10 @@
 #ifndef BOTAN_ASIO_ASYNC_HANDSHAKE_OP_H_
 #define BOTAN_ASIO_ASYNC_HANDSHAKE_OP_H_
 
-#include <botan/asio_async_write_op.h>
-#include <botan/asio_convert_exceptions.h>
-#include <botan/asio_stream_core.h>
-#include <botan/asio_includes.h>
+#include <botan/internal/asio_async_write_op.h>
+#include <botan/internal/asio_convert_exceptions.h>
+#include <botan/internal/asio_stream_core.h>
+#include <botan/internal/asio_includes.h>
 
 namespace Botan {
 template <class Channel, class StreamLayer, class Handler>

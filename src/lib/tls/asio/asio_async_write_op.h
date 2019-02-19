@@ -1,8 +1,8 @@
 #ifndef BOTAN_ASIO_ASYNC_WRITE_OP_H_
 #define BOTAN_ASIO_ASYNC_WRITE_OP_H_
 
-#include <botan/asio_stream_core.h>
-#include <botan/asio_includes.h>
+#include <botan/internal/asio_stream_core.h>
+#include <botan/internal/asio_includes.h>
 
 namespace Botan {
 

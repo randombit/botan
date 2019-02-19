@@ -1,7 +1,7 @@
 #ifndef BOTAN_ASIO_STREAM_CORE_H_
 #define BOTAN_ASIO_STREAM_CORE_H_
 
-#include <botan/asio_includes.h>
+#include <botan/internal/asio_includes.h>
 #include <botan/tls_callbacks.h>
 #include <mutex>
 #include <vector>
