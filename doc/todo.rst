@@ -56,7 +56,7 @@ Public Key Crypto, Math
 Utility Functions
 ------------------
 
-* Thread pool
+* Make Memory_Pool more concurrent (currently uses a global lock)
 
 Multiparty Protocols
 ----------------------
