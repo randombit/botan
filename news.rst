@@ -4,6 +4,9 @@ Release Notes
 Version 2.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Added a new certificate store implementation that can access the
+  MacOS keychain certificate store. (GH #1830)
+
 * Redesigned ``Memory_Pool`` class, which services allocations out of a
   set of pages locked into memory (using ``mlock``/``VirtualLock``). It is now
   faster and with improved exploit mitigations. (GH #1800)
