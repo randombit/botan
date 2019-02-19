@@ -7,6 +7,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 template <class Channel, class StreamLayer, class Handler,
           class MutableBufferSequence>
 struct AsyncReadOperation
@@ -69,6 +71,9 @@ struct AsyncReadOperation
       Handler handler_;
       MutableBufferSequence buffers_;
    };
-} // namespace Botan
+
+}  // namespace TLS
+
+}  // namespace Botan
 
 #endif

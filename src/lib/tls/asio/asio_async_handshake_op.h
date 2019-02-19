@@ -7,6 +7,9 @@
 #include <botan/internal/asio_includes.h>
 
 namespace Botan {
+
+namespace TLS {
+
 template <class Channel, class StreamLayer, class Handler>
 struct AsyncHandshakeOperation
    {
@@ -81,6 +84,9 @@ struct AsyncHandshakeOperation
       StreamLayer& nextLayer_;
       Handler handler_;
    };
+
+}  // namespace TLS
+
 }  // namespace Botan
 
 #endif

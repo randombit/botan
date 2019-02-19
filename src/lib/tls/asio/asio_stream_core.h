@@ -7,6 +7,9 @@
 #include <vector>
 
 namespace Botan {
+
+namespace TLS {
+
 /**
  * Contains the buffers for reading/sending, and the needed botan callbacks
  */
@@ -99,6 +102,9 @@ struct StreamCore : public Botan::TLS::Callbacks
       Buffer receive_buffer_;
       Buffer send_buffer_;
    };
-} // namespace Botan
+
+}  // namespace TLS
+
+}  // namespace Botan
 
 #endif

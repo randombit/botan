@@ -33,7 +33,7 @@ bool contains(const void* a, const void* b) { return memcmp(a, b, sizeof(a)) == 
 class MockChannel
    {
    public:
-      MockChannel(Botan::StreamCore& core)
+      MockChannel(Botan::TLS::StreamCore& core)
          : callbacks_(core)
          , bytes_till_complete_record_(TEST_DATA_SIZE)
          , active_(false)
@@ -58,9 +58,9 @@ class MockChannel
       bool is_active() { return active_; }
 
    protected:
-      Botan::StreamCore& callbacks_;
-      std::size_t        bytes_till_complete_record_;  // number of bytes still to read before tls record is completed
-      bool               active_;
+      Botan::TLS::StreamCore& callbacks_;
+      std::size_t             bytes_till_complete_record_;  // number of bytes still to read before tls record is completed
+      bool                    active_;
    };
 
 /**
@@ -122,6 +122,8 @@ struct MockSocket
 
 namespace Botan {
 
+namespace TLS {
+
 /**
  * A specification of StreamBase for the MockChannel used in this test. It
  * matches the specifications for StreamBase<Botan::TLS::Client> and
@@ -146,6 +148,8 @@ class StreamBase<Botan_Tests::MockChannel>
       Botan_Tests::MockChannel channel_;
    };
 
+}  // namespace TLS
+
 }  // namespace Botan
 
 namespace Botan_Tests {
@@ -160,7 +164,7 @@ namespace Botan_Tests {
 */
 class ASIO_Stream_Tests final : public Test
    {
-      using AsioStream = Botan::Stream<MockSocket&, MockChannel>;
+      using AsioStream = Botan::TLS::Stream<MockSocket&, MockChannel>;
 
       void test_sync_handshake(std::vector<Test::Result>& results)
          {
@@ -506,7 +510,7 @@ namespace beast = boost::beast;
 */
 class Async_Asio_Stream_Tests final : public Test
    {
-      using AsioStream = Botan::Stream<beast::test::stream&, MockChannel>;
+      using AsioStream = Botan::TLS::Stream<beast::test::stream&, MockChannel>;
 
       beast::string_view test_data() const
          {

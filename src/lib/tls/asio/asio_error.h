@@ -7,6 +7,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 using error_code = boost::system::error_code;
 using error_category = boost::system::error_category;
 
@@ -135,7 +137,10 @@ inline error_code make_error_code(error c)
    {
    return error_code(static_cast<int>(c), botan_category());
    }
-}
+
+}  // namespace TLS
+
+}  // namespace Botan
 
 namespace boost {
 namespace system {
@@ -145,11 +150,12 @@ template<> struct is_error_code_enum<Botan::TLS::Alert::Type>
    static const bool value = true;
    };
 
-template<> struct is_error_code_enum<Botan::error>
+template<> struct is_error_code_enum<Botan::TLS::error>
    {
    static const bool value = true;
    };
-}
-}
+
+}  // namespace system
+}  // namespace boost
 
 #endif

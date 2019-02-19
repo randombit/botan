@@ -23,6 +23,8 @@ class context;
 
 namespace Botan {
 
+namespace TLS {
+
 /**
  * boost::asio compatible SSL/TLS stream based on TLS::Client or TLS::Server.
  */
@@ -54,7 +56,7 @@ class Stream : public StreamBase<Channel>
          {
          if(type != handshake_type::client)
             {
-            ec = make_error_code(Botan::error::not_implemented);
+            ec = make_error_code(Botan::TLS::error::not_implemented);
             return false;
             }
 
@@ -122,7 +124,7 @@ class Stream : public StreamBase<Channel>
                                boost::system::error_code& ec)
          {
          BOTAN_UNUSED(callback);
-         ec = make_error_code(Botan::error::not_implemented);
+         ec = make_error_code(Botan::TLS::error::not_implemented);
          }
 
       void set_verify_depth(int depth)
@@ -135,7 +137,7 @@ class Stream : public StreamBase<Channel>
                             boost::system::error_code& ec)
          {
          BOTAN_UNUSED(depth);
-         ec = make_error_code(Botan::error::not_implemented);
+         ec = make_error_code(Botan::TLS::error::not_implemented);
          }
 
       template <typename verify_mode>
@@ -150,7 +152,7 @@ class Stream : public StreamBase<Channel>
                            boost::system::error_code& ec)
          {
          BOTAN_UNUSED(v);
-         ec = make_error_code(Botan::error::not_implemented);
+         ec = make_error_code(Botan::TLS::error::not_implemented);
          }
 
       //
@@ -196,7 +198,7 @@ class Stream : public StreamBase<Channel>
                }
             catch(...)
                {
-               ec = Botan::convertException();
+               ec = Botan::TLS::convertException();
                return;
                }
 
@@ -217,7 +219,7 @@ class Stream : public StreamBase<Channel>
                      boost::system::error_code& ec)
          {
          BOTAN_UNUSED(type, buffers);
-         ec = make_error_code(Botan::error::not_implemented);
+         ec = make_error_code(Botan::TLS::error::not_implemented);
          }
 
       template <typename HandshakeHandler>
@@ -267,7 +269,7 @@ class Stream : public StreamBase<Channel>
             }
          catch(...)
             {
-            ec = Botan::convertException();
+            ec = Botan::TLS::convertException();
             return;
             }
          writePendingTlsData(ec);
@@ -318,7 +320,7 @@ class Stream : public StreamBase<Channel>
             }
          catch(...)
             {
-            ec = Botan::convertException();
+            ec = Botan::TLS::convertException();
             return 0;
             }
 
@@ -348,7 +350,7 @@ class Stream : public StreamBase<Channel>
             }
          catch(...)
             {
-            ec = Botan::convertException();
+            ec = Botan::TLS::convertException();
             return 0;
             }
 
@@ -388,7 +390,7 @@ class Stream : public StreamBase<Channel>
          catch(...)
             {
             // TODO: don't call directly
-            handler(Botan::convertException(), 0);
+            handler(Botan::TLS::convertException(), 0);
             return;
             }
 
@@ -430,35 +432,37 @@ class Stream : public StreamBase<Channel>
          }
 
       template <typename Handler>
-      Botan::AsyncHandshakeOperation<Channel, StreamLayer, Handler>
+      Botan::TLS::AsyncHandshakeOperation<Channel, StreamLayer, Handler>
       create_async_handshake_op(Handler&& handler)
          {
-         return Botan::AsyncHandshakeOperation<Channel, StreamLayer, Handler>(
+         return Botan::TLS::AsyncHandshakeOperation<Channel, StreamLayer, Handler>(
                    native_handle(), this->core_, nextLayer_, std::forward<Handler>(handler));
          }
 
       template <typename Handler, typename MutableBufferSequence>
-      Botan::AsyncReadOperation<Channel, StreamLayer, Handler,
+      Botan::TLS::AsyncReadOperation<Channel, StreamLayer, Handler,
             MutableBufferSequence>
             create_async_read_op(Handler&& handler,
                                  const MutableBufferSequence& buffers)
          {
-         return Botan::AsyncReadOperation<Channel, StreamLayer, Handler,
+         return Botan::TLS::AsyncReadOperation<Channel, StreamLayer, Handler,
                 MutableBufferSequence>(
                    native_handle(), this->core_, nextLayer_, std::forward<Handler>(handler),
                    buffers);
          }
 
       template <typename Handler>
-      Botan::AsyncWriteOperation<Handler>
+      Botan::TLS::AsyncWriteOperation<Handler>
       create_async_write_op(Handler&& handler, std::size_t plainBytesTransferred)
          {
-         return Botan::AsyncWriteOperation<Handler>(
+         return Botan::TLS::AsyncWriteOperation<Handler>(
                    this->core_, std::forward<Handler>(handler), plainBytesTransferred);
          }
 
       StreamLayer nextLayer_;
    };
+
+} // TLS
 
 } // namespace Botan
 

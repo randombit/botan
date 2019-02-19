@@ -6,6 +6,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 template <typename Handler>
 struct AsyncWriteOperation
    {
@@ -35,6 +37,9 @@ struct AsyncWriteOperation
    Handler handler_;
    std::size_t plainBytesTransferred_;
    };
+
+}  // namespace TLS
+
 }  // namespace Botan
 
 #endif

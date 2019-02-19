@@ -7,6 +7,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 template <class Channel>
 class StreamBase
    {
@@ -34,9 +36,9 @@ class StreamBase<Botan::TLS::Client>
       StreamBase& operator=(const StreamBase&) = delete;
 
    protected:
-      Botan::StreamCore    core_;
-      Botan::AutoSeeded_RNG rng_;
-      Botan::TLS::Client    channel_;
+      Botan::TLS::StreamCore core_;
+      Botan::AutoSeeded_RNG  rng_;
+      Botan::TLS::Client     channel_;
    };
 
 template <>
@@ -54,11 +56,13 @@ class StreamBase<Botan::TLS::Server>
       StreamBase& operator=(const StreamBase&) = delete;
 
    protected:
-      Botan::StreamCore    core_;
-      Botan::AutoSeeded_RNG rng_;
-      Botan::TLS::Server    channel_;
+      Botan::TLS::StreamCore core_;
+      Botan::AutoSeeded_RNG  rng_;
+      Botan::TLS::Server     channel_;
    };
 
-}  // namespace botan
+}  // namespace TLS
+
+}  // namespace Botan
 
 #endif
