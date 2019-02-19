@@ -13,14 +13,14 @@ struct AsyncWriteOperation
    {
    AsyncWriteOperation(StreamCore& core, Handler&& handler,
                        std::size_t plainBytesTransferred)
-      : core_(core),
-        handler_(std::forward<Handler>(handler)),
-        plainBytesTransferred_(plainBytesTransferred) {}
+      : m_core(core),
+        m_handler(std::forward<Handler>(handler)),
+        m_plainBytesTransferred(plainBytesTransferred) {}
 
    AsyncWriteOperation(AsyncWriteOperation&& right)
-      : core_(right.core_),
-        handler_(std::move(right.handler_)),
-        plainBytesTransferred_(right.plainBytesTransferred_) {}
+      : m_core(right.m_core),
+        m_handler(std::move(right.m_handler)),
+        m_plainBytesTransferred(right.m_plainBytesTransferred) {}
 
    ~AsyncWriteOperation() = default;
    AsyncWriteOperation(AsyncWriteOperation const&) = delete;
@@ -28,14 +28,14 @@ struct AsyncWriteOperation
    void operator()(boost::system::error_code ec,
                    std::size_t bytes_transferred = ~std::size_t(0))
       {
-      core_.consumeSendBuffer(bytes_transferred);
+      m_core.consumeSendBuffer(bytes_transferred);
       // TODO: make sure returning 0 in error case is correct here--core has already eaten the data
-      handler_(ec, ec ? 0 : plainBytesTransferred_);
+      m_handler(ec, ec ? 0 : m_plainBytesTransferred);
       }
 
-   StreamCore& core_;
-   Handler handler_;
-   std::size_t plainBytesTransferred_;
+   StreamCore& m_core;
+   Handler     m_handler;
+   std::size_t m_plainBytesTransferred;
    };
 
 }  // namespace TLS

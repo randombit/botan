@@ -29,7 +29,7 @@ namespace TLS {
  * boost::asio compatible SSL/TLS stream based on TLS::Client or TLS::Server.
  */
 template <class StreamLayer, class Channel>
-class Stream : public StreamBase<Channel>
+class Stream final : public StreamBase<Channel>
    {
    public:
       using next_layer_type = typename std::remove_reference<StreamLayer>::type;
@@ -67,11 +67,11 @@ class Stream : public StreamBase<Channel>
       template <typename... Args>
       Stream(StreamLayer&& nextLayer, Args&& ... args)
          : StreamBase<Channel>(std::forward<Args>(args)...),
-           nextLayer_(std::forward<StreamLayer>(nextLayer)) {}
+           m_nextLayer(std::forward<StreamLayer>(nextLayer)) {}
 
       Stream(StreamLayer&& nextLayer, boost::asio::ssl::context&)
          : StreamBase<Channel>(Botan::TLS::Session_Manager_Noop(), Botan::Credentials_Manager()),
-           nextLayer_(std::forward<StreamLayer>(nextLayer))
+           m_nextLayer(std::forward<StreamLayer>(nextLayer))
          {
          // Configuring a TLS stream via asio::ssl::context is not supported.
          // The corresponding configuration objects for Botan are:
@@ -96,15 +96,15 @@ class Stream : public StreamBase<Channel>
       // -- -- accessor methods
       //
 
-      executor_type get_executor() noexcept { return nextLayer_.get_executor(); }
+      executor_type get_executor() noexcept { return m_nextLayer.get_executor(); }
 
-      const next_layer_type& next_layer() const { return nextLayer_; }
-      next_layer_type& next_layer() { return nextLayer_; }
+      const next_layer_type& next_layer() const { return m_nextLayer; }
+      next_layer_type& next_layer() { return m_nextLayer; }
 
-      lowest_layer_type& lowest_layer() { return nextLayer_.lowest_layer(); }
-      const lowest_layer_type& lowest_layer() const { return nextLayer_.lowest_layer(); }
+      lowest_layer_type& lowest_layer() { return m_nextLayer.lowest_layer(); }
+      const lowest_layer_type& lowest_layer() const { return m_nextLayer.lowest_layer(); }
 
-      native_handle_type native_handle() { return &this->channel_; }
+      native_handle_type native_handle() { return &this->m_channel; }
 
       //
       // -- -- configuration and callback setters
@@ -184,8 +184,8 @@ class Stream : public StreamBase<Channel>
                }
 
             auto read_buffer = boost::asio::buffer(
-                                  this->core_.input_buffer_,
-                                  nextLayer_.read_some(this->core_.input_buffer_, ec));
+                                  this->m_core.input_buffer,
+                                  m_nextLayer.read_some(this->m_core.input_buffer, ec));
             if(ec)
                {
                return;
@@ -300,14 +300,14 @@ class Stream : public StreamBase<Channel>
       std::size_t read_some(const MutableBufferSequence& buffers,
                             boost::system::error_code& ec)
          {
-         if(this->core_.hasReceivedData())
+         if(this->m_core.hasReceivedData())
             {
-            return this->core_.copyReceivedData(buffers);
+            return this->m_core.copyReceivedData(buffers);
             }
 
          auto read_buffer = boost::asio::buffer(
-                               this->core_.input_buffer_,
-                               nextLayer_.read_some(this->core_.input_buffer_, ec));
+                               this->m_core.input_buffer,
+                               m_nextLayer.read_some(this->m_core.input_buffer, ec));
          if(ec)
             {
             return 0;
@@ -324,7 +324,7 @@ class Stream : public StreamBase<Channel>
             return 0;
             }
 
-         return this->core_.copyReceivedData(buffers);
+         return this->m_core.copyReceivedData(buffers);
          }
 
       template <typename MutableBufferSequence>
@@ -400,7 +400,7 @@ class Stream : public StreamBase<Channel>
          auto op = create_async_write_op(std::move(init.completion_handler),
                                          buffer.size());
 
-         boost::asio::async_write(nextLayer_, this->core_.sendBuffer(),
+         boost::asio::async_write(m_nextLayer, this->m_core.sendBuffer(),
                                   std::move(op));
          return init.result.get();
          }
@@ -425,9 +425,9 @@ class Stream : public StreamBase<Channel>
       size_t writePendingTlsData(boost::system::error_code& ec)
          {
          auto writtenBytes =
-            boost::asio::write(nextLayer_, this->core_.sendBuffer(), ec);
+            boost::asio::write(m_nextLayer, this->m_core.sendBuffer(), ec);
 
-         this->core_.consumeSendBuffer(writtenBytes);
+         this->m_core.consumeSendBuffer(writtenBytes);
          return writtenBytes;
          }
 
@@ -436,7 +436,7 @@ class Stream : public StreamBase<Channel>
       create_async_handshake_op(Handler&& handler)
          {
          return Botan::TLS::AsyncHandshakeOperation<Channel, StreamLayer, Handler>(
-                   native_handle(), this->core_, nextLayer_, std::forward<Handler>(handler));
+                   native_handle(), this->m_core, m_nextLayer, std::forward<Handler>(handler));
          }
 
       template <typename Handler, typename MutableBufferSequence>
@@ -447,7 +447,7 @@ class Stream : public StreamBase<Channel>
          {
          return Botan::TLS::AsyncReadOperation<Channel, StreamLayer, Handler,
                 MutableBufferSequence>(
-                   native_handle(), this->core_, nextLayer_, std::forward<Handler>(handler),
+                   native_handle(), this->m_core, m_nextLayer, std::forward<Handler>(handler),
                    buffers);
          }
 
@@ -456,10 +456,11 @@ class Stream : public StreamBase<Channel>
       create_async_write_op(Handler&& handler, std::size_t plainBytesTransferred)
          {
          return Botan::TLS::AsyncWriteOperation<Handler>(
-                   this->core_, std::forward<Handler>(handler), plainBytesTransferred);
+                   this->m_core, std::forward<Handler>(handler), plainBytesTransferred);
          }
 
-      StreamLayer nextLayer_;
+   protected:
+      StreamLayer m_nextLayer;
    };
 
 } // TLS

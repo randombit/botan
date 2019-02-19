@@ -15,16 +15,16 @@ struct AsyncHandshakeOperation
    {
       AsyncHandshakeOperation(Channel* channel, StreamCore& core,
                               StreamLayer& nextLayer, Handler&& handler)
-         : channel_(channel),
-           core_(core),
-           nextLayer_(nextLayer),
-           handler_(std::forward<Handler>(handler)) {}
+         : m_channel(channel),
+           m_core(core),
+           m_nextLayer(nextLayer),
+           m_handler(std::forward<Handler>(handler)) {}
 
       AsyncHandshakeOperation(AsyncHandshakeOperation&& right)
-         : channel_(right.channel_),
-           core_(right.core_),
-           nextLayer_(right.nextLayer_),
-           handler_(std::move(right.handler_)) {}
+         : m_channel(right.m_channel),
+           m_core(right.m_core),
+           m_nextLayer(right.m_nextLayer),
+           m_handler(std::move(right.m_handler)) {}
 
       ~AsyncHandshakeOperation() = default;
       AsyncHandshakeOperation(AsyncHandshakeOperation const&) = delete;
@@ -36,53 +36,53 @@ struct AsyncHandshakeOperation
          if(bytesTransferred > 0)
             {
             auto read_buffer =
-               boost::asio::buffer(core_.input_buffer_, bytesTransferred);
+               boost::asio::buffer(m_core.input_buffer, bytesTransferred);
             try
                {
-               channel_->received_data(
+               m_channel->received_data(
                   static_cast<const uint8_t*>(read_buffer.data()),
                   read_buffer.size());
                }
             catch(...)
                {
                ec = convertException();
-               handler_(ec);
+               m_handler(ec);
                return;
                }
             }
 
          // send tls packets
-         if(core_.hasDataToSend())
+         if(m_core.hasDataToSend())
             {
             AsyncWriteOperation<AsyncHandshakeOperation<Channel, StreamLayer, Handler>>
-                  op{core_, std::move(*this), 0};
-            boost::asio::async_write(nextLayer_, core_.sendBuffer(),
+                  op{m_core, std::move(*this), 0};
+            boost::asio::async_write(m_nextLayer, m_core.sendBuffer(),
                                      std::move(op));
             return;
             }
 
-         if(!channel_->is_active() && !ec)
+         if(!m_channel->is_active() && !ec)
             {
             // we need more tls data from the socket
-            nextLayer_.async_read_some(core_.input_buffer_, std::move(*this));
+            m_nextLayer.async_read_some(m_core.input_buffer, std::move(*this));
             return;
             }
 
          if(start)
             {
             // don't call the handler directly, similar to io_context.post
-            nextLayer_.async_read_some(
-               boost::asio::buffer(core_.input_buffer_, 0), std::move(*this));
+            m_nextLayer.async_read_some(
+               boost::asio::buffer(m_core.input_buffer, 0), std::move(*this));
             return;
             }
-         handler_(ec);
+         m_handler(ec);
          }
 
    private:
-      Channel* channel_;
-      StreamCore& core_;
-      StreamLayer& nextLayer_;
-      Handler handler_;
+      Channel*     m_channel;
+      StreamCore&  m_core;
+      StreamLayer& m_nextLayer;
+      Handler      m_handler;
    };
 
 }  // namespace TLS

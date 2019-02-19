@@ -23,12 +23,12 @@ class StreamBase<Botan::TLS::Client>
                  const Botan::TLS::Policy& policy = Botan::TLS::Strict_Policy{},
                  const Botan::TLS::Server_Information& serverInfo =
                     Botan::TLS::Server_Information{})
-         : channel_(core_,
-                    sessionManager,
-                    credentialsManager,
-                    policy,
-                    rng_,
-                    serverInfo)
+         : m_channel(m_core,
+                     sessionManager,
+                     credentialsManager,
+                     policy,
+                     m_rng,
+                     serverInfo)
          {
          }
 
@@ -36,9 +36,9 @@ class StreamBase<Botan::TLS::Client>
       StreamBase& operator=(const StreamBase&) = delete;
 
    protected:
-      Botan::TLS::StreamCore core_;
-      Botan::AutoSeeded_RNG  rng_;
-      Botan::TLS::Client     channel_;
+      Botan::TLS::StreamCore m_core;
+      Botan::AutoSeeded_RNG  m_rng;
+      Botan::TLS::Client     m_channel;
    };
 
 template <>
@@ -48,7 +48,7 @@ class StreamBase<Botan::TLS::Server>
       StreamBase(Botan::TLS::Session_Manager& sessionManager,
                  Botan::Credentials_Manager& credentialsManager,
                  const Botan::TLS::Policy& policy = Botan::TLS::Strict_Policy{})
-         : channel_(core_, sessionManager, credentialsManager, policy, rng_)
+         : m_channel(m_core, sessionManager, credentialsManager, policy, m_rng)
          {
          }
 
@@ -56,9 +56,9 @@ class StreamBase<Botan::TLS::Server>
       StreamBase& operator=(const StreamBase&) = delete;
 
    protected:
-      Botan::TLS::StreamCore core_;
-      Botan::AutoSeeded_RNG  rng_;
-      Botan::TLS::Server     channel_;
+      Botan::TLS::StreamCore m_core;
+      Botan::AutoSeeded_RNG  m_rng;
+      Botan::TLS::Server     m_channel;
    };
 
 }  // namespace TLS

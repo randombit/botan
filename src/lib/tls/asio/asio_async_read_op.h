@@ -15,13 +15,13 @@ struct AsyncReadOperation
    {
       AsyncReadOperation(Channel* channel, StreamCore& core, StreamLayer& nextLayer,
                          Handler&& handler, const MutableBufferSequence& buffers)
-         : channel_(channel), core_(core), nextLayer_(nextLayer),
-           handler_(std::forward<Handler>(handler)), buffers_(buffers) {}
+         : m_channel(channel), m_core(core), m_nextLayer(nextLayer),
+           m_handler(std::forward<Handler>(handler)), m_buffers(buffers) {}
 
       AsyncReadOperation(AsyncReadOperation&& right)
-         : channel_(right.channel_), core_(right.core_),
-           nextLayer_(right.nextLayer_), handler_(std::move(right.handler_)),
-           buffers_(right.buffers_) {}
+         : m_channel(right.m_channel), m_core(right.m_core),
+           m_nextLayer(right.m_nextLayer), m_handler(std::move(right.m_handler)),
+           m_buffers(right.m_buffers) {}
 
       ~AsyncReadOperation() = default;
       AsyncReadOperation(AsyncReadOperation const&) = delete;
@@ -34,42 +34,42 @@ struct AsyncReadOperation
          if(bytes_transferred > 0)
             {
             auto read_buffer =
-               boost::asio::buffer(core_.input_buffer_, bytes_transferred);
+               boost::asio::buffer(m_core.input_buffer, bytes_transferred);
             try
                {
-               channel_->received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                       read_buffer.size());
+               m_channel->received_data(static_cast<const uint8_t*>(read_buffer.data()),
+                                        read_buffer.size());
                }
             catch(...)
                {
                // TODO: don't call handler directly
-               handler_(convertException(), 0);
+               m_handler(convertException(), 0);
                return;
                }
             }
 
-         if(!core_.hasReceivedData() && !ec)
+         if(!m_core.hasReceivedData() && !ec)
             {
             // we need more tls packets from the socket
-            nextLayer_.async_read_some(core_.input_buffer_, std::move(*this));
+            m_nextLayer.async_read_some(m_core.input_buffer, std::move(*this));
             return;
             }
 
-         if(core_.hasReceivedData())
+         if(m_core.hasReceivedData())
             {
-            decodedBytes = core_.copyReceivedData(buffers_);
+            decodedBytes = m_core.copyReceivedData(m_buffers);
             ec = boost::system::error_code{};
             }
 
-         handler_(ec, decodedBytes);
+         m_handler(ec, decodedBytes);
          }
 
    private:
-      Channel* channel_;
-      StreamCore& core_;
-      StreamLayer& nextLayer_;
-      Handler handler_;
-      MutableBufferSequence buffers_;
+      Channel*              m_channel;
+      StreamCore&           m_core;
+      StreamLayer&          m_nextLayer;
+      Handler               m_handler;
+      MutableBufferSequence m_buffers;
    };
 
 }  // namespace TLS

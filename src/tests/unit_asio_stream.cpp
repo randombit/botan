@@ -34,33 +34,33 @@ class MockChannel
    {
    public:
       MockChannel(Botan::TLS::StreamCore& core)
-         : callbacks_(core)
-         , bytes_till_complete_record_(TEST_DATA_SIZE)
-         , active_(false)
+         : m_callbacks(core)
+         , m_bytes_till_complete_record(TEST_DATA_SIZE)
+         , m_active(false)
          {
          }
 
    public:
       std::size_t received_data(const uint8_t[], std::size_t buf_size)
          {
-         if(bytes_till_complete_record_ <= buf_size)
+         if(m_bytes_till_complete_record <= buf_size)
             {
-            callbacks_.tls_record_received(0, TEST_DATA, TEST_DATA_SIZE);
-            active_ = true;  // claim to be active once a full record has been received (for handshake test)
+            m_callbacks.tls_record_received(0, TEST_DATA, TEST_DATA_SIZE);
+            m_active = true;  // claim to be active once a full record has been received (for handshake test)
             return 0;
             }
-         bytes_till_complete_record_ -= buf_size;
-         return bytes_till_complete_record_;
+         m_bytes_till_complete_record -= buf_size;
+         return m_bytes_till_complete_record;
          }
 
-      void send(const uint8_t buf[], std::size_t buf_size) { callbacks_.tls_emit_data(buf, buf_size); }
+      void send(const uint8_t buf[], std::size_t buf_size) { m_callbacks.tls_emit_data(buf, buf_size); }
 
-      bool is_active() { return active_; }
+      bool is_active() { return m_active; }
 
    protected:
-      Botan::TLS::StreamCore& callbacks_;
-      std::size_t             bytes_till_complete_record_;  // number of bytes still to read before tls record is completed
-      bool                    active_;
+      Botan::TLS::StreamCore& m_callbacks;
+      std::size_t             m_bytes_till_complete_record;  // number of bytes still to read before tls record is completed
+      bool                    m_active;
    };
 
 /**
@@ -71,52 +71,52 @@ class MockChannel
 struct MockSocket
    {
    MockSocket(std::size_t buf_size = 64)
-      : buf_size_(buf_size)
+      : buf_size(buf_size)
       {
       }
 
    template <typename MutableBufferSequence>
    std::size_t read_some(const MutableBufferSequence& buffers, error_code& ec)
       {
-      ec = ec_;
+      ec = error_code;
       if(ec)
          {
          return 0;
          }
-      return std::min(asio::buffer_size(buffers), buf_size_);
+      return std::min(asio::buffer_size(buffers), buf_size);
       }
 
    template <typename ConstBufferSequence>
    std::size_t write_some(const ConstBufferSequence& buffers, error_code& ec)
       {
-      ec = ec_;
+      ec = error_code;
       if(ec)
          {
          return 0;
          }
-      return asio::buffer_copy(asio::buffer(write_buf_, buf_size_), buffers);
+      return asio::buffer_copy(asio::buffer(write_buf, buf_size), buffers);
       }
 
    template <typename MutableBufferSequence, typename ReadHandler>
    BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler, void(error_code, std::size_t))
    async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler)
       {
-      handler(ec_, read_some(buffers, ec_));
+      handler(error_code, read_some(buffers, error_code));
       }
 
    template <typename ConstBufferSequence, typename WriteHandler>
    BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler, void(error_code, std::size_t))
    async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler)
       {
-      handler(ec_, write_some(buffers, ec_));
+      handler(error_code, write_some(buffers, error_code));
       }
 
    using lowest_layer_type = MockSocket;
    using executor_type     = MockSocket;
 
-   error_code  ec_;
-   std::size_t buf_size_;
-   uint8_t     write_buf_[TEST_DATA_SIZE];
+   error_code  error_code;
+   std::size_t buf_size;
+   uint8_t     write_buf[TEST_DATA_SIZE];
    };
 }  // namespace Botan_Tests
 
@@ -135,7 +135,7 @@ class StreamBase<Botan_Tests::MockChannel>
    {
    public:
       StreamBase()
-         : channel_(core_)
+         : m_channel(m_core)
          {
          }
 
@@ -143,9 +143,9 @@ class StreamBase<Botan_Tests::MockChannel>
       StreamBase& operator=(const StreamBase&) = delete;
 
    protected:
-      StreamCore               core_;
-      Botan::AutoSeeded_RNG    rng_;
-      Botan_Tests::MockChannel channel_;
+      StreamCore               m_core;
+      Botan::AutoSeeded_RNG    m_rng;
+      Botan_Tests::MockChannel m_channel;
    };
 
 }  // namespace TLS
@@ -184,7 +184,7 @@ class ASIO_Stream_Tests final : public Test
          AsioStream ssl{socket};
 
          const auto expected_ec = asio::error::host_unreachable;
-         socket.ec_             = expected_ec;
+         socket.error_code      = expected_ec;
 
          error_code ec;
          ssl.handshake(AsioStream::client, ec);
@@ -217,7 +217,7 @@ class ASIO_Stream_Tests final : public Test
          AsioStream ssl{socket};
 
          const auto expected_ec = asio::error::host_unreachable;
-         socket.ec_             = expected_ec;
+         socket.error_code      = expected_ec;
 
          Test::Result result("async TLS handshake error");
 
@@ -270,7 +270,7 @@ class ASIO_Stream_Tests final : public Test
          MockSocket socket;
          AsioStream ssl{socket};
          const auto expected_ec = asio::error::eof;
-         socket.ec_             = expected_ec;
+         socket.error_code      = expected_ec;
 
          char       buf[128];
          error_code ec;
@@ -334,7 +334,7 @@ class ASIO_Stream_Tests final : public Test
          error_code ec;
 
          const auto expected_ec = asio::error::eof;
-         socket.ec_             = expected_ec;
+         socket.error_code      = expected_ec;
 
          Test::Result result("async read_some error");
 
@@ -358,9 +358,9 @@ class ASIO_Stream_Tests final : public Test
          auto bytes_transferred = asio::write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some success");
-         // socket.write_buf_ should contain the end of TEST_DATA, the start has already been overwritten
-         const auto end_of_test_data = TEST_DATA + TEST_DATA_SIZE - socket.buf_size_;
-         result.confirm("writes the correct data", contains(socket.write_buf_, end_of_test_data));
+         // socket.write_buf should contain the end of TEST_DATA, the start has already been overwritten
+         const auto end_of_test_data = TEST_DATA + TEST_DATA_SIZE - socket.buf_size;
+         result.confirm("writes the correct data", contains(socket.write_buf, end_of_test_data));
          result.test_eq("writes the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
          result.confirm("does not report an error", !ec);
 
@@ -376,8 +376,8 @@ class ASIO_Stream_Tests final : public Test
          auto bytes_transferred = asio::write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some with large socket buffer");
-         // this test assumes that socket.buf_size_ is larger than TEST_DATA_SIZE
-         result.confirm("writes the correct data", contains(TEST_DATA, socket.write_buf_));
+         // this test assumes that socket.buf_size is larger than TEST_DATA_SIZE
+         result.confirm("writes the correct data", contains(TEST_DATA, socket.write_buf));
          result.test_eq("writes the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
          result.confirm("does not report an error", !ec);
 
@@ -391,7 +391,7 @@ class ASIO_Stream_Tests final : public Test
          error_code ec;
 
          const auto expected_ec = asio::error::eof;
-         socket.ec_             = expected_ec;
+         socket.error_code      = expected_ec;
 
          auto bytes_transferred = asio::write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
@@ -412,9 +412,9 @@ class ASIO_Stream_Tests final : public Test
 
          auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
             {
-            // socket.write_buf_ should contain the end of TEST_DATA, the start has already been overwritten
-            const auto end_of_test_data = TEST_DATA + TEST_DATA_SIZE - socket.buf_size_;
-            result.confirm("writes the correct data", contains(socket.write_buf_, end_of_test_data));
+            // socket.write_buf should contain the end of TEST_DATA, the start has already been overwritten
+            const auto end_of_test_data = TEST_DATA + TEST_DATA_SIZE - socket.buf_size;
+            result.confirm("writes the correct data", contains(socket.write_buf, end_of_test_data));
             result.test_eq("writes the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
             result.confirm("does not report an error", !ec);
             };
@@ -434,8 +434,8 @@ class ASIO_Stream_Tests final : public Test
 
          auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
             {
-            // this test assumes that socket.buf_size_ is larger than TEST_DATA_SIZE
-            result.confirm("writes the correct data", contains(TEST_DATA, socket.write_buf_));
+            // this test assumes that socket.buf_size is larger than TEST_DATA_SIZE
+            result.confirm("writes the correct data", contains(TEST_DATA, socket.write_buf));
             result.test_eq("writes the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
             result.confirm("does not report an error", !ec);
             };
@@ -452,7 +452,7 @@ class ASIO_Stream_Tests final : public Test
          error_code ec;
 
          const auto expected_ec = asio::error::eof;
-         socket.ec_             = expected_ec;
+         socket.error_code      = expected_ec;
 
          Test::Result result("async write_some error");
 
