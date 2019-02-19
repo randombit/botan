@@ -22,7 +22,7 @@ struct AsyncReadOperation
            buffers_(right.buffers_) {}
 
       ~AsyncReadOperation() = default;
-      AsyncReadOperation(AsyncReadOperation&) = delete;
+      AsyncReadOperation(AsyncReadOperation const&) = delete;
 
       void operator()(boost::system::error_code ec,
                       std::size_t bytes_transferred = ~std::size_t(0))

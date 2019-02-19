@@ -21,7 +21,7 @@ struct AsyncWriteOperation
         plainBytesTransferred_(right.plainBytesTransferred_) {}
 
    ~AsyncWriteOperation() = default;
-   AsyncWriteOperation(AsyncWriteOperation&) = delete;
+   AsyncWriteOperation(AsyncWriteOperation const&) = delete;
 
    void operator()(boost::system::error_code ec,
                    std::size_t bytes_transferred = ~std::size_t(0))

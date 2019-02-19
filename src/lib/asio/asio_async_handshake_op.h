@@ -24,7 +24,7 @@ struct AsyncHandshakeOperation
            handler_(std::move(right.handler_)) {}
 
       ~AsyncHandshakeOperation() = default;
-      AsyncHandshakeOperation(AsyncHandshakeOperation&) = delete;
+      AsyncHandshakeOperation(AsyncHandshakeOperation const&) = delete;
 
       void operator()(boost::system::error_code ec,
                       std::size_t bytesTransferred = 0, int start = 0)
