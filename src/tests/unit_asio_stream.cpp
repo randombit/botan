@@ -7,21 +7,11 @@
 #include <botan/asio_stream.h>
 #include <botan/tls_callbacks.h>
 
+#include <boost/beast/experimental/test/stream.hpp>
+#include <boost/bind.hpp>
+
 namespace Botan_Tests {
 
-/**
-  Tests for Botan::Stream.
-
-  Tested Entities:
-  * Botan::Stream, including StreamCore and Async_*_Op
-
-  Mocked Entities:
-  * the stream's channel, i.e. TLS_Client or TLS_Server, pretends to perform TLS operations (noop) and provides the test
-    data to the stream
-  * the underlying network socket, claiming it read / wrote a number of bytes
-*/
-
-using namespace std::placeholders;
 namespace asio   = boost::asio;
 using error_code = boost::system::error_code;
 
@@ -53,7 +43,7 @@ class MockChannel
    public:
       std::size_t received_data(const uint8_t[], std::size_t buf_size)
          {
-         if(bytes_till_complete_record_ < buf_size)
+         if(bytes_till_complete_record_ <= buf_size)
             {
             callbacks_.tls_record_received(0, TEST_DATA, TEST_DATA_SIZE);
             active_ = true;  // claim to be active once a full record has been received (for handshake test)
@@ -160,16 +150,24 @@ class StreamBase<Botan_Tests::MockChannel>
 
 namespace Botan_Tests {
 
+/**
+  Synchronous tests for Botan::Stream.
+
+  This test validates the asynchronous behavior Botan::Stream, including its utility classes StreamCore and Async_*_Op.
+  The stream's channel, i.e. TLS_Client or TLS_Server, is mocked and pretends to perform TLS operations (noop) and
+  provides the test data to the stream.
+  The underlying network socket, claiming it read / wrote a number of bytes.
+*/
 class ASIO_Stream_Tests final : public Test
    {
-      using TestStream = Botan::Stream<MockSocket&, MockChannel>;
+      using AsioStream = Botan::Stream<MockSocket&, MockChannel>;
 
       void test_sync_handshake(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
 
-         ssl.handshake(TestStream::client);
+         ssl.handshake(AsioStream::client);
 
          Test::Result result("sync TLS handshake");
          result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
@@ -179,13 +177,13 @@ class ASIO_Stream_Tests final : public Test
       void test_sync_handshake_error(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
 
          const auto expected_ec = asio::error::host_unreachable;
          socket.ec_             = expected_ec;
 
          error_code ec;
-         ssl.handshake(TestStream::client, ec);
+         ssl.handshake(AsioStream::client, ec);
 
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
@@ -196,7 +194,7 @@ class ASIO_Stream_Tests final : public Test
       void test_async_handshake(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
 
          Test::Result result("async TLS handshake");
 
@@ -205,14 +203,14 @@ class ASIO_Stream_Tests final : public Test
             result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
             };
 
-         ssl.async_handshake(TestStream::client, handler);
+         ssl.async_handshake(AsioStream::client, handler);
          results.push_back(result);
          }
 
       void test_async_handshake_error(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
 
          const auto expected_ec = asio::error::host_unreachable;
          socket.ec_             = expected_ec;
@@ -225,14 +223,14 @@ class ASIO_Stream_Tests final : public Test
             result.confirm("propagates error code", ec == expected_ec);
             };
 
-         ssl.async_handshake(TestStream::client, handler);
+         ssl.async_handshake(AsioStream::client, handler);
          results.push_back(result);
          }
 
       void test_sync_read_some_success(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          char       buf[128];
          error_code ec;
 
@@ -249,7 +247,7 @@ class ASIO_Stream_Tests final : public Test
       void test_sync_read_some_large_socket_buffer(std::vector<Test::Result>& results)
          {
          MockSocket socket(512);
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          char       buf[128];
          error_code ec;
 
@@ -266,7 +264,7 @@ class ASIO_Stream_Tests final : public Test
       void test_sync_read_some_error(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          const auto expected_ec = asio::error::eof;
          socket.ec_             = expected_ec;
 
@@ -285,7 +283,7 @@ class ASIO_Stream_Tests final : public Test
       void test_async_read_some_success(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          char       buf[128];
          error_code ec;
 
@@ -306,7 +304,7 @@ class ASIO_Stream_Tests final : public Test
       void test_async_read_some_large_socket_buffer(std::vector<Test::Result>& results)
          {
          MockSocket socket(512);
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          char       buf[128];
          error_code ec;
 
@@ -327,7 +325,7 @@ class ASIO_Stream_Tests final : public Test
       void test_async_read_some_error(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          char       buf[128];
          error_code ec;
 
@@ -350,7 +348,7 @@ class ASIO_Stream_Tests final : public Test
       void test_sync_write_some_success(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          error_code ec;
 
          auto bytes_transferred = asio::write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), ec);
@@ -368,7 +366,7 @@ class ASIO_Stream_Tests final : public Test
       void test_sync_write_some_large_socket_buffer(std::vector<Test::Result>& results)
          {
          MockSocket socket(512);
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          error_code ec;
 
          auto bytes_transferred = asio::write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), ec);
@@ -385,7 +383,7 @@ class ASIO_Stream_Tests final : public Test
       void test_sync_write_some_error(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          error_code ec;
 
          const auto expected_ec = asio::error::eof;
@@ -403,7 +401,7 @@ class ASIO_Stream_Tests final : public Test
       void test_async_write_some_success(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          error_code ec;
 
          Test::Result result("async write_some success");
@@ -425,7 +423,7 @@ class ASIO_Stream_Tests final : public Test
       void test_async_write_some_large_socket_buffer(std::vector<Test::Result>& results)
          {
          MockSocket socket(512);
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          error_code ec;
 
          Test::Result result("async write_some with large socket buffer");
@@ -446,7 +444,7 @@ class ASIO_Stream_Tests final : public Test
       void test_async_write_some_error(std::vector<Test::Result>& results)
          {
          MockSocket socket;
-         TestStream ssl{socket};
+         AsioStream ssl{socket};
          error_code ec;
 
          const auto expected_ec = asio::error::eof;
@@ -497,7 +495,200 @@ class ASIO_Stream_Tests final : public Test
          }
    };
 
+namespace beast = boost::beast;
+/**
+  Asynchronous tests for Botan::Stream.
+
+  This test validates the asynchronous behavior Botan::Stream, including its utility classes StreamCore and Async_*_Op.
+  The stream's channel, i.e. TLS_Client or TLS_Server, is mocked and pretends to perform TLS operations (noop) and
+  provides the test data to the stream.
+  The underlying network socket is a beast::test::socket that mimics asynchronous IO.
+*/
+class Async_Asio_Stream_Tests final : public Test
+   {
+      using AsioStream = Botan::Stream<beast::test::stream&, MockChannel>;
+
+      beast::string_view test_data() const
+         {
+         return beast::string_view((const char*)TEST_DATA, TEST_DATA_SIZE);
+         }
+
+      void test_async_handshake(std::vector<Test::Result>& results)
+         {
+         asio::io_context ioc;
+         beast::test::stream socket{ioc}, remote{ioc};
+         socket.connect(remote);
+         socket.append(test_data());
+
+         AsioStream ssl{socket};
+         // mimic handshake initialization
+         ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
+
+         Test::Result result("async TLS handshake");
+
+         auto handler = [&](const boost::system::error_code&)
+            {
+            result.confirm("reads from socket", socket.nread() > 0);
+            result.confirm("writes from socket", socket.nwrite() > 0);
+            result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
+            };
+
+         ssl.async_handshake(AsioStream::client, handler);
+
+         socket.close_remote();
+         ioc.run();
+         results.push_back(result);
+         }
+
+      void test_async_handshake_error(std::vector<Test::Result>& results)
+         {
+         asio::io_context ioc;
+         beast::test::stream socket{ioc}, remote{ioc};
+         socket.connect(remote);
+         socket.close_remote();  // close socket right away
+
+         AsioStream ssl{socket};
+         // mimic handshake initialization
+         ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
+
+         Test::Result result("async TLS handshake error");
+
+         auto handler = [&](const boost::system::error_code &ec)
+            {
+            result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
+            result.confirm("propagates error code", (bool)ec);
+            };
+
+         ssl.async_handshake(AsioStream::client, handler);
+
+         ioc.run();
+         results.push_back(result);
+         }
+
+
+      void test_async_read_some_success(std::vector<Test::Result>& results)
+         {
+         asio::io_context ioc;
+         beast::test::stream socket{ioc};
+         socket.append(test_data());
+
+         AsioStream ssl{socket};
+         char       data[TEST_DATA_SIZE];
+         error_code ec;
+
+         Test::Result result("async read_some success");
+
+         auto read_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+            {
+            result.confirm("reads the correct data", beast::string_view(data, TEST_DATA_SIZE) == test_data());
+            result.test_eq("reads the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
+            result.confirm("does not report an error", !ec);
+            };
+
+         asio::mutable_buffer buf = asio::buffer(data, TEST_DATA_SIZE);
+         asio::async_read(ssl, buf, read_handler);
+
+         socket.close_remote();
+         ioc.run();
+         results.push_back(result);
+         }
+
+      void test_async_read_some_error(std::vector<Test::Result>& results)
+         {
+         asio::io_context ioc;
+         beast::test::stream socket{ioc};
+         // socket.append(test_data());  // no data to read -> EOF
+
+         AsioStream ssl{socket};
+         char       data[TEST_DATA_SIZE];
+         error_code ec;
+
+         Test::Result result("async read_some error");
+
+         auto read_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+            {
+            result.test_eq("didn't transfer anything", bytes_transferred, 0);
+            result.confirm("propagates error code", (bool)ec);
+            };
+
+         asio::mutable_buffer buf = asio::buffer(data, TEST_DATA_SIZE);
+         asio::async_read(ssl, buf, read_handler);
+
+         socket.close_remote();
+         ioc.run();
+         results.push_back(result);
+         }
+
+
+      void test_async_write_some_success(std::vector<Test::Result>& results)
+         {
+         asio::io_context ioc;
+         beast::test::stream socket{ioc}, remote{ioc};
+         socket.connect(remote);
+
+         AsioStream ssl{socket};
+         error_code ec;
+
+         Test::Result result("async write_some success");
+
+         auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+            {
+            result.confirm("writes the correct data", remote.str() == test_data());
+            result.test_eq("writes the correct amount of data", bytes_transferred, TEST_DATA_SIZE);
+            result.confirm("does not report an error", !ec);
+            };
+
+         asio::async_write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
+
+         ioc.run();
+         results.push_back(result);
+         }
+
+      void test_async_write_some_error(std::vector<Test::Result>& results)
+         {
+         asio::io_context ioc;
+         beast::test::stream socket{ioc}, remote{ioc};
+         //  socket.connect(remote);  // will cause connection_reset error
+
+         AsioStream ssl{socket};
+         error_code ec;
+
+         Test::Result result("async write_some error");
+
+         auto write_handler = [&](const boost::system::error_code &ec, std::size_t bytes_transferred)
+            {
+            result.test_eq("didn't transfer anything", bytes_transferred, 0);
+            result.confirm("propagates error code", (bool)ec);
+            };
+
+         asio::async_write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
+
+         ioc.run();
+         results.push_back(result);
+         }
+
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         test_async_handshake(results);
+         test_async_handshake_error(results);
+
+         test_async_read_some_success(results);
+         test_async_read_some_error(results);
+
+         test_async_write_some_success(results);
+         test_async_write_some_error(results);
+
+         return results;
+         }
+   };
+
+
 BOTAN_REGISTER_TEST("asio_stream", ASIO_Stream_Tests);
+
+BOTAN_REGISTER_TEST("async_asio_stream", Async_Asio_Stream_Tests);
 
 }  // namespace Botan_Tests
 
