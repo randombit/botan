@@ -13,6 +13,14 @@
 #include <thread>
 #include <type_traits>
 
+namespace boost {
+namespace asio {
+namespace ssl {
+class context;
+}
+}
+}
+
 namespace Botan {
 
 /**
@@ -55,15 +63,32 @@ class Stream : public StreamBase<Channel>
 
    public:
       template <typename... Args>
-      Stream(StreamLayer nextLayer, Args&& ... args)
+      Stream(StreamLayer&& nextLayer, Args&& ... args)
          : StreamBase<Channel>(std::forward<Args>(args)...),
            nextLayer_(std::forward<StreamLayer>(nextLayer)) {}
 
-      Stream(Stream &&other) = default;
-      Stream& operator=(Stream &&other) = default;
+      Stream(StreamLayer&& nextLayer, boost::asio::ssl::context&)
+         : StreamBase<Channel>(Botan::TLS::Session_Manager_Noop(), Botan::Credentials_Manager()),
+           nextLayer_(std::forward<StreamLayer>(nextLayer))
+         {
+         // Configuring a TLS stream via asio::ssl::context is not supported.
+         // The corresponding configuration objects for Botan are:
+         //   * TLS::Session_Manager
+         //   * Credentials_Manager
+         //   * TLS::Policy
+         //   * TLS::Server_Information
+         // It would be nice to have a masquarading wrapper that exposes an API
+         // compatible with asio::ssl::context for convenient drop-in replacement.
+         // For now, base your TLS configurations on the above mentioned classes.
+         throw Not_Implemented("cannot handle an asio::ssl::context");
+         }
 
-      Stream(const Stream &other) = delete;
-      Stream& operator=(const Stream &other) = delete;
+
+      Stream(Stream&& other) = default;
+      Stream& operator=(Stream&& other) = default;
+
+      Stream(const Stream& other) = delete;
+      Stream& operator=(const Stream& other) = delete;
 
       //
       // -- -- accessor methods
