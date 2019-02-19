@@ -50,7 +50,6 @@ struct AsyncReadOperation
                }
             catch(...)
                {
-               // TODO: don't call handler directly
                m_handler(convertException(), 0);
                return;
                }

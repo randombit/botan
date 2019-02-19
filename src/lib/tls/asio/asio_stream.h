@@ -390,21 +390,23 @@ class Stream final : public StreamBase<Channel>
             boost::asio::detail::buffer_sequence_adapter<
             boost::asio::const_buffer, ConstBufferSequence>::first(buffers);
 
+         boost::asio::async_completion<WriteHandler,
+               void(boost::system::error_code, std::size_t)>
+               init(handler);
+
          try
             {
+            // NOTE: This is not asynchronous: it encrypts the data synchronously.
+            // Only writing on the socket is asynchronous.
             native_handle()->send(static_cast<const uint8_t*>(buffer.data()),
                                   buffer.size());
             }
          catch(...)
             {
-            // TODO: don't call directly
-            handler(Botan::TLS::convertException(), 0);
-            return;
+            init.completion_handler(Botan::TLS::convertException(), 0);
+            return init.result.get();
             }
 
-         boost::asio::async_completion<WriteHandler,
-               void(boost::system::error_code, std::size_t)>
-               init(handler);
          auto op = create_async_write_op(std::move(init.completion_handler),
                                          buffer.size());
 
