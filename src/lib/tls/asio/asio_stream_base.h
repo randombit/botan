@@ -44,7 +44,7 @@ class StreamBase<Botan::TLS::Client>
    public:
       StreamBase(Botan::TLS::Session_Manager& sessionManager,
                  Botan::Credentials_Manager& credentialsManager,
-                 const Botan::TLS::Policy& policy = Botan::TLS::Strict_Policy{},
+                 const Botan::TLS::Policy& policy,
                  const Botan::TLS::Server_Information& serverInfo =
                     Botan::TLS::Server_Information{})
          : m_channel(m_core,
