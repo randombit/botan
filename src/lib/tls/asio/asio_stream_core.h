@@ -49,6 +49,8 @@ struct StreamCore : public Botan::TLS::Callbacks
       void tls_record_received(uint64_t, const uint8_t data[],
                                size_t size) override
          {
+         // TODO: It would be nice to avoid this buffer copy. However, we need to deal with the case that the receive
+         // buffer provided by the caller is smaller than the decrypted record.
          auto buffer = m_receive_buffer.dynamicBuffer.prepare(size);
          auto copySize =
             boost::asio::buffer_copy(buffer, boost::asio::buffer(data, size));

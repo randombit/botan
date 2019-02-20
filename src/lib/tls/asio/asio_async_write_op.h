@@ -33,11 +33,9 @@ struct AsyncWriteOperation
    ~AsyncWriteOperation() = default;
    AsyncWriteOperation(AsyncWriteOperation const&) = delete;
 
-   void operator()(boost::system::error_code ec,
-                   std::size_t bytes_transferred = ~std::size_t(0))
+   void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
       {
       m_core.consumeSendBuffer(bytes_transferred);
-      // TODO: make sure returning 0 in error case is correct here--core has already eaten the data
       m_handler(ec, ec ? 0 : m_plainBytesTransferred);
       }
 

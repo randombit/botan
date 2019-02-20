@@ -34,12 +34,11 @@ struct AsyncReadOperation
       ~AsyncReadOperation() = default;
       AsyncReadOperation(AsyncReadOperation const&) = delete;
 
-      void operator()(boost::system::error_code ec,
-                      std::size_t bytes_transferred = ~std::size_t(0))
+      void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
          {
          std::size_t decodedBytes = 0;
 
-         if(bytes_transferred > 0)
+         if(bytes_transferred > 0 && !ec)
             {
             auto read_buffer =
                boost::asio::buffer(m_core.input_buffer, bytes_transferred);
@@ -50,8 +49,7 @@ struct AsyncReadOperation
                }
             catch(...)
                {
-               m_handler(convertException(), 0);
-               return;
+               ec = convertException();
                }
             }
 
@@ -62,7 +60,7 @@ struct AsyncReadOperation
             return;
             }
 
-         if(m_core.hasReceivedData())
+         if(m_core.hasReceivedData() && !ec)
             {
             decodedBytes = m_core.copyReceivedData(m_buffers);
             ec = boost::system::error_code{};
