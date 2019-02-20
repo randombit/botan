@@ -202,6 +202,12 @@ class Stream final : public StreamBase<Channel>
       //
       // -- -- asio::ssl::stream compatibility methods
       //
+      //       The OpenSSL-based stream contains an operation flag that tells
+      //       the stream to either impersonate a TLS server or client. This
+      //       implementation defines those modes at compile time (via template
+      //       specialization of the StreamBase class) and merely checks the
+      //       flag's consistency before performing the respective handshakes.
+      //
 
       void handshake(handshake_type type)
          {
@@ -215,6 +221,15 @@ class Stream final : public StreamBase<Channel>
             {
             handshake(ec);
             }
+         }
+
+      template <typename HandshakeHandler>
+      BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
+                                    void(boost::system::error_code))
+      async_handshake(handshake_type type, HandshakeHandler&& handler)
+         {
+         validate_handshake_type(type);
+         return async_handshake(handler);
          }
 
       template<typename ConstBufferSequence>
@@ -235,15 +250,6 @@ class Stream final : public StreamBase<Channel>
             {
             ec = make_error_code(Botan::TLS::error::not_implemented);
             }
-         }
-
-      template <typename HandshakeHandler>
-      BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
-                                    void(boost::system::error_code))
-      async_handshake(handshake_type type, HandshakeHandler&& handler)
-         {
-         validate_handshake_type(type);
-         return async_handshake(handler);
          }
 
       template <typename ConstBufferSequence, typename BufferedHandshakeHandler>

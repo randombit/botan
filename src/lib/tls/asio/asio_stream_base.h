@@ -25,9 +25,13 @@ enum handshake_type
    };
 
 
-/* Base class for all Botan::TLS::Stream implementations.
+/** \brief Base class for all Botan::TLS::Stream implementations.
  *
+ * This template must be specialized for all the Botan::TLS::Channel to be used.
+ * Currently it only supports the Botan::TLS::Client channel that impersonates
+ * the client-side of a TLS connection.
  *
+ * TODO: create a Botan::TLS::Server specialization
  */
 template <class Channel>
 class StreamBase
@@ -58,6 +62,7 @@ class StreamBase<Botan::TLS::Client>
       using handshake_type = Botan::TLS::handshake_type;
 
    protected:
+      //! \brief validate the OpenSSL compatibility enum `handshake_type`
       void validate_handshake_type(handshake_type type)
          {
          if(type != handshake_type::client)
@@ -66,6 +71,7 @@ class StreamBase<Botan::TLS::Client>
             }
          }
 
+      //! \brief validate the OpenSSL compatibility enum `handshake_type`
       bool validate_handshake_type(handshake_type type, boost::system::error_code& ec)
          {
          if(type != handshake_type::client)
