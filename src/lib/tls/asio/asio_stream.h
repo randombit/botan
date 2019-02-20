@@ -45,31 +45,7 @@ class Stream final : public StreamBase<Channel>
       using executor_type = typename next_layer_type::executor_type;
       using native_handle_type = typename std::add_pointer<Channel>::type;
 
-      enum handshake_type
-         {
-         client,
-         server
-         };
-
-   private:
-      void validate_handshake_type(handshake_type type)
-         {
-         if(type != handshake_type::client)
-            {
-            throw Not_Implemented("server-side TLS stream is not implemented");
-            }
-         }
-
-      bool validate_handshake_type(handshake_type type, boost::system::error_code& ec)
-         {
-         if(type != handshake_type::client)
-            {
-            ec = make_error_code(Botan::TLS::error::not_implemented);
-            return false;
-            }
-
-         return true;
-         }
+      using StreamBase<Channel>::validate_handshake_type;
 
    public:
       template <typename... Args>
@@ -92,7 +68,6 @@ class Stream final : public StreamBase<Channel>
          // For now, base your TLS configurations on the above mentioned classes.
          throw Not_Implemented("cannot handle an asio::ssl::context");
          }
-
 
       Stream(Stream&& other) = default;
       Stream& operator=(Stream&& other) = default;
@@ -167,22 +142,15 @@ class Stream final : public StreamBase<Channel>
       // -- -- handshake methods
       //
 
-      void handshake(handshake_type type)
+      void handshake()
          {
-         validate_handshake_type(type);
-
          boost::system::error_code ec;
-         handshake(type, ec);
+         handshake(ec);
          boost::asio::detail::throw_error(ec, "handshake");
          }
 
-      void handshake(handshake_type type, boost::system::error_code& ec)
+      void handshake(boost::system::error_code& ec)
          {
-         if(!validate_handshake_type(type, ec))
-            {
-            return;
-            }
-
          while(!native_handle()->is_active())
             {
             writePendingTlsData(ec);
@@ -214,32 +182,12 @@ class Stream final : public StreamBase<Channel>
             }
          }
 
-      template<typename ConstBufferSequence>
-      void handshake(handshake_type type, const ConstBufferSequence& buffers)
-         {
-         BOTAN_UNUSED(type, buffers);
-         throw Not_Implemented("server-side TLS stream is not implemented");
-         }
-
-      template<typename ConstBufferSequence>
-      void handshake(handshake_type type,
-                     const ConstBufferSequence& buffers,
-                     boost::system::error_code& ec)
-         {
-         BOTAN_UNUSED(type, buffers);
-         ec = make_error_code(Botan::TLS::error::not_implemented);
-         }
-
       template <typename HandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
                                     void(boost::system::error_code))
-      async_handshake(handshake_type type, HandshakeHandler&& handler)
+      async_handshake(HandshakeHandler&& handler)
          {
-         // If you get an error on the following line it means that your handler does
-         // not meet the documented type requirements for a HandshakeHandler.
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(HandshakeHandler, handler) type_check;
-
-         validate_handshake_type(type);
 
          boost::asio::async_completion<HandshakeHandler,
                void(boost::system::error_code)>
@@ -251,17 +199,62 @@ class Stream final : public StreamBase<Channel>
          return init.result.get();
          }
 
+      //
+      // -- -- asio::ssl::stream compatibility methods
+      //
+
+      void handshake(handshake_type type)
+         {
+         validate_handshake_type(type);
+         handshake();
+         }
+
+      void handshake(handshake_type type, boost::system::error_code& ec)
+         {
+         if(validate_handshake_type(type, ec))
+            {
+            handshake(ec);
+            }
+         }
+
+      template<typename ConstBufferSequence>
+      void handshake(handshake_type type, const ConstBufferSequence& buffers)
+         {
+         BOTAN_UNUSED(buffers);
+         validate_handshake_type(type);
+         throw Not_Implemented("buffered handshake is not implemented");
+         }
+
+      template<typename ConstBufferSequence>
+      void handshake(handshake_type type,
+                     const ConstBufferSequence& buffers,
+                     boost::system::error_code& ec)
+         {
+         BOTAN_UNUSED(buffers);
+         if(validate_handshake_type(type, ec))
+            {
+            ec = make_error_code(Botan::TLS::error::not_implemented);
+            }
+         }
+
+      template <typename HandshakeHandler>
+      BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
+                                    void(boost::system::error_code))
+      async_handshake(handshake_type type, HandshakeHandler&& handler)
+         {
+         validate_handshake_type(type);
+         return async_handshake(handler);
+         }
+
       template <typename ConstBufferSequence, typename BufferedHandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(BufferedHandshakeHandler,
                                     void(boost::system::error_code, std::size_t))
-      async_handshake(handshake_type type,
-                      const ConstBufferSequence& buffers,
+      async_handshake(handshake_type type, const ConstBufferSequence& buffers,
                       BufferedHandshakeHandler&& handler)
          {
-         // If you get an error on the following line it means that your handler does
-         // not meet the documented type requirements for a BufferedHandshakeHandler.
+         BOTAN_UNUSED(buffers, handler);
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(BufferedHandshakeHandler, handler) type_check;
-         BOTAN_UNUSED(type, buffers, handler);
+         validate_handshake_type(type);
          throw Not_Implemented("buffered async handshake is not implemented");
          }
 
@@ -293,8 +286,6 @@ class Stream final : public StreamBase<Channel>
       template <typename ShutdownHandler>
       void async_shutdown(ShutdownHandler&& handler)
          {
-         // If you get an error on the following line it means that your handler does
-         // not meet the documented type requirements for a ShutdownHandler.
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(ShutdownHandler, handler) type_check;
          BOTAN_UNUSED(handler);
          throw Not_Implemented("async shutdown is not implemented");

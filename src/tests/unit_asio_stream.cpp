@@ -142,10 +142,21 @@ class StreamBase<Botan_Tests::MockChannel>
       StreamBase(const StreamBase&) = delete;
       StreamBase& operator=(const StreamBase&) = delete;
 
+      using handshake_type = Botan::TLS::handshake_type;
+
    protected:
       StreamCore               m_core;
       Botan::AutoSeeded_RNG    m_rng;
       Botan_Tests::MockChannel m_channel;
+
+      void validate_handshake_type(handshake_type)
+         {
+         }
+
+      bool validate_handshake_type(handshake_type, boost::system::error_code&)
+         {
+         return true;
+         }
    };
 
 }  // namespace TLS
@@ -171,7 +182,7 @@ class ASIO_Stream_Tests final : public Test
          MockSocket socket;
          AsioStream ssl{socket};
 
-         ssl.handshake(AsioStream::client);
+         ssl.handshake(AsioStream::handshake_type::client);
 
          Test::Result result("sync TLS handshake");
          result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
@@ -187,7 +198,7 @@ class ASIO_Stream_Tests final : public Test
          socket.error           = expected_ec;
 
          error_code ec;
-         ssl.handshake(AsioStream::client, ec);
+         ssl.handshake(AsioStream::handshake_type::client, ec);
 
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
@@ -207,7 +218,7 @@ class ASIO_Stream_Tests final : public Test
             result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
             };
 
-         ssl.async_handshake(AsioStream::client, handler);
+         ssl.async_handshake(AsioStream::handshake_type::client, handler);
          results.push_back(result);
          }
 
@@ -227,7 +238,7 @@ class ASIO_Stream_Tests final : public Test
             result.confirm("propagates error code", ec == expected_ec);
             };
 
-         ssl.async_handshake(AsioStream::client, handler);
+         ssl.async_handshake(AsioStream::handshake_type::client, handler);
          results.push_back(result);
          }
 
@@ -537,7 +548,7 @@ class Async_Asio_Stream_Tests final : public Test
             result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
             };
 
-         ssl.async_handshake(AsioStream::client, handler);
+         ssl.async_handshake(AsioStream::handshake_type::client, handler);
 
          socket.close_remote();
          ioc.run();
@@ -563,7 +574,7 @@ class Async_Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", (bool)ec);
             };
 
-         ssl.async_handshake(AsioStream::client, handler);
+         ssl.async_handshake(AsioStream::handshake_type::client, handler);
 
          ioc.run();
          results.push_back(result);
