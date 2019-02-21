@@ -56,6 +56,7 @@ Public Key Crypto, Math
 Utility Functions
 ------------------
 
+* Add a memory span type
 * Make Memory_Pool more concurrent (currently uses a global lock)
 
 Multiparty Protocols
