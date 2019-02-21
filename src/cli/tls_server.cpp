@@ -111,7 +111,10 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                struct sockaddr_in from;
                socklen_t from_len = sizeof(sockaddr_in);
 
-               if(::recvfrom(server_fd, nullptr, 0, MSG_PEEK, reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
+               // macOS handles zero size buffers differently - it will return 0 even if there's no incoming data,
+               // and after that connect() will fail as sockaddr_in from is not initialized
+               int dummy;
+               if(::recvfrom(server_fd, &dummy, sizeof(dummy), MSG_PEEK, reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
                   {
                   throw CLI_Error("Could not peek next packet");
                   }
