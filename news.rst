@@ -14,6 +14,8 @@ Version 2.10.0, Not Yet Released
 * Add BMI2 implementations of SHA-512 and SHA-3 which improve performance by
   25-35% on common CPUs. (GH #1815)
 
+* Unroll SHA-3 computation improving performance by 10-12% (GH #1838)
+
 * Add a ``Thread_Pool`` class. It is now possible to run the tests in multiple
   threads with `--test-threads=N`` flag to select the number of threads to use.
   Use ``--test-threads=0`` to run with as many CPU cores as are available on the
