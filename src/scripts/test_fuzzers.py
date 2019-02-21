@@ -148,6 +148,7 @@ def main(args=None):
             duration = time.time() - start
             print("Tested fuzzer %s with %d test cases, %d crashes in %.02f seconds" % (
                 fuzzer, len(corpus_files), crash_count, duration))
+            crash_count = 0
             sys.stdout.flush()
     else:
         for fuzzer in sorted(list(fuzzers_with_corpus)):
@@ -175,6 +176,7 @@ def main(args=None):
 
             print("Tested fuzzer %s with %d test cases, %d crashes in %.02f seconds" % (
                 fuzzer, len(corpus_files), crash_count, duration))
+            crash_count = 0
 
     if crash_count > 0 or stderr_count > 0 or stdout_count > 0:
         print("Ran fuzzer tests, %d crashes %d stdout %d stderr" % (crash_count, stdout_count, stderr_count))
