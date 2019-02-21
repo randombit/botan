@@ -64,11 +64,11 @@ std::vector<RawPage> allocate_raw_pages(size_t count, size_t page_size)
       {
       void* ptr = nullptr;
 
-      ::posix_memalign(&ptr, page_size, page_size);
+      int rc = ::posix_memalign(&ptr, page_size, page_size);
+      FUZZER_ASSERT_EQUAL(rc, 0);
 
       if(ptr)
          {
-         fprintf(stderr, "%p\n", ptr);
          pages.push_back(RawPage(ptr));
          }
       }
