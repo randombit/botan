@@ -1,4 +1,4 @@
-#cpuid bmi2
+#test cpuid bmi2
 
 [SHA-3(224)]
 In =
