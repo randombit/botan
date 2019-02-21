@@ -17,6 +17,7 @@
 #include <botan/internal/asio_stream_base.h>
 #include <botan/internal/asio_stream_core.h>
 
+#include <algorithm>
 #include <memory>
 #include <thread>
 #include <type_traits>
@@ -345,13 +346,19 @@ class Stream final : public StreamBase<Channel>
       std::size_t write_some(const ConstBufferSequence& buffers,
                              boost::system::error_code& ec)
          {
-         boost::asio::const_buffer buffer =
-            boost::asio::detail::buffer_sequence_adapter<
-            boost::asio::const_buffer, ConstBufferSequence>::first(buffers);
+         std::size_t sent = 0;
 
          try
             {
-            native_handle()->send(static_cast<const uint8_t*>(buffer.data()), buffer.size());
+            for(auto it = boost::asio::buffer_sequence_begin(buffers);
+                  sent < MAX_PLAINTEXT_SIZE && it != boost::asio::buffer_sequence_end(buffers);
+                  it++)
+               {
+               const std::size_t to_send =
+                  std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, boost::asio::buffer_size(*it));
+               native_handle()->send(static_cast<const uint8_t*>(it->data()), to_send);
+               sent += to_send;
+               }
             }
          catch(...)
             {
@@ -364,7 +371,7 @@ class Stream final : public StreamBase<Channel>
             {
             return 0;
             }
-         return buffer.size();
+         return sent;
          }
 
       template <typename ConstBufferSequence>
@@ -383,20 +390,25 @@ class Stream final : public StreamBase<Channel>
          {
          BOOST_ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
 
-         boost::asio::const_buffer buffer =
-            boost::asio::detail::buffer_sequence_adapter<
-            boost::asio::const_buffer, ConstBufferSequence>::first(buffers);
-
          boost::asio::async_completion<WriteHandler,
                void(boost::system::error_code, std::size_t)>
                init(handler);
+
+         std::size_t sent = 0;
 
          try
             {
             // NOTE: This is not asynchronous: it encrypts the data synchronously.
             // Only writing on the socket is asynchronous.
-            native_handle()->send(static_cast<const uint8_t*>(buffer.data()),
-                                  buffer.size());
+            for(auto it = boost::asio::buffer_sequence_begin(buffers);
+                  sent < MAX_PLAINTEXT_SIZE && it != boost::asio::buffer_sequence_end(buffers);
+                  it++)
+               {
+               const std::size_t to_send =
+                  std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, boost::asio::buffer_size(*it));
+               native_handle()->send(static_cast<const uint8_t*>(it->data()), to_send);
+               sent += to_send;
+               }
             }
          catch(...)
             {
@@ -404,11 +416,9 @@ class Stream final : public StreamBase<Channel>
             return init.result.get();
             }
 
-         auto op = create_async_write_op(std::move(init.completion_handler),
-                                         buffer.size());
+         auto op = create_async_write_op(std::move(init.completion_handler), sent);
 
-         boost::asio::async_write(m_nextLayer, this->m_core.sendBuffer(),
-                                  std::move(op));
+         boost::asio::async_write(m_nextLayer, this->m_core.sendBuffer(), std::move(op));
          return init.result.get();
          }
 
