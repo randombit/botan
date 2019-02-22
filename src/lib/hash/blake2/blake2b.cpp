@@ -1,5 +1,5 @@
 /*
-* Blake2b
+* BLAKE2b
 * (C) 2016 cynecx
 * (C) 2017 Jack Lloyd
 *
@@ -31,7 +31,7 @@ const uint64_t blake2b_IV[BLAKE2B_IVU64COUNT] = {
 
 }
 
-Blake2b::Blake2b(size_t output_bits) :
+BLAKE2b::BLAKE2b(size_t output_bits) :
    m_output_bits(output_bits),
    m_buffer(BLAKE2B_BLOCKBYTES),
    m_bufpos(0),
@@ -39,13 +39,13 @@ Blake2b::Blake2b(size_t output_bits) :
    {
    if(output_bits == 0 || output_bits > 512 || output_bits % 8 != 0)
       {
-      throw Invalid_Argument("Bad output bits size for Blake2b");
+      throw Invalid_Argument("Bad output bits size for BLAKE2b");
       }
 
    state_init();
    }
 
-void Blake2b::state_init()
+void BLAKE2b::state_init()
    {
    copy_mem(m_H.data(), blake2b_IV, BLAKE2B_IVU64COUNT);
    m_H[0] ^= 0x01010000 ^ static_cast<uint8_t>(output_length());
@@ -85,7 +85,7 @@ inline void ROUND(uint64_t* v, const uint64_t* M)
 
 }
 
-void Blake2b::compress(const uint8_t* input, size_t blocks, uint64_t increment)
+void BLAKE2b::compress(const uint8_t* input, size_t blocks, uint64_t increment)
    {
    for(size_t b = 0; b != blocks; ++b)
       {
@@ -131,7 +131,7 @@ void Blake2b::compress(const uint8_t* input, size_t blocks, uint64_t increment)
       }
    }
 
-void Blake2b::add_data(const uint8_t input[], size_t length)
+void BLAKE2b::add_data(const uint8_t input[], size_t length)
    {
    if(length == 0)
       return;
@@ -170,7 +170,7 @@ void Blake2b::add_data(const uint8_t input[], size_t length)
       }
    }
 
-void Blake2b::final_result(uint8_t output[])
+void BLAKE2b::final_result(uint8_t output[])
    {
    if(m_bufpos != BLAKE2B_BLOCKBYTES)
       clear_mem(&m_buffer[m_bufpos], BLAKE2B_BLOCKBYTES - m_bufpos);
@@ -180,22 +180,22 @@ void Blake2b::final_result(uint8_t output[])
    clear();
    }
 
-std::string Blake2b::name() const
+std::string BLAKE2b::name() const
    {
-   return "Blake2b(" + std::to_string(m_output_bits) + ")";
+   return "BLAKE2b(" + std::to_string(m_output_bits) + ")";
    }
 
-HashFunction* Blake2b::clone() const
+HashFunction* BLAKE2b::clone() const
    {
-   return new Blake2b(m_output_bits);
+   return new BLAKE2b(m_output_bits);
    }
 
-std::unique_ptr<HashFunction> Blake2b::copy_state() const
+std::unique_ptr<HashFunction> BLAKE2b::copy_state() const
    {
-   return std::unique_ptr<HashFunction>(new Blake2b(*this));
+   return std::unique_ptr<HashFunction>(new BLAKE2b(*this));
    }
 
-void Blake2b::clear()
+void BLAKE2b::clear()
    {
    zeroise(m_H);
    zeroise(m_buffer);
