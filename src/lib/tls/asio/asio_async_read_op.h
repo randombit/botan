@@ -17,22 +17,22 @@ namespace Botan {
 
 namespace TLS {
 
-template <class Channel, class StreamLayer, class Handler,
-          class MutableBufferSequence>
+template <class Handler, class StreamLayer, class Channel, class MutableBufferSequence>
 struct AsyncReadOperation
    {
-      AsyncReadOperation(Channel* channel, StreamCore& core, StreamLayer& nextLayer,
-                         Handler&& handler, const MutableBufferSequence& buffers)
-         : m_channel(channel), m_core(core), m_nextLayer(nextLayer),
-           m_handler(std::forward<Handler>(handler)), m_buffers(buffers) {}
+      template <class HandlerT>
+      AsyncReadOperation(HandlerT&& handler,
+                         StreamLayer& nextLayer,
+                         Channel* channel,
+                         StreamCore& core,
+                         const MutableBufferSequence& buffers)
+         : m_handler(std::forward<HandlerT>(handler))
+         , m_nextLayer(nextLayer)
+         , m_channel(channel)
+         , m_core(core)
+         , m_buffers(buffers) {}
 
-      AsyncReadOperation(AsyncReadOperation&& right)
-         : m_channel(right.m_channel), m_core(right.m_core),
-           m_nextLayer(right.m_nextLayer), m_handler(std::move(right.m_handler)),
-           m_buffers(right.m_buffers) {}
-
-      ~AsyncReadOperation() = default;
-      AsyncReadOperation(AsyncReadOperation const&) = delete;
+      AsyncReadOperation(AsyncReadOperation&&) = default;
 
       void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
          {
@@ -70,10 +70,10 @@ struct AsyncReadOperation
          }
 
    private:
+      Handler               m_handler;
+      StreamLayer&          m_nextLayer;
       Channel*              m_channel;
       StreamCore&           m_core;
-      StreamLayer&          m_nextLayer;
-      Handler               m_handler;
       MutableBufferSequence m_buffers;
    };
 

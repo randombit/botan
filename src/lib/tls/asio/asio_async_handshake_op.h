@@ -18,24 +18,21 @@ namespace Botan {
 
 namespace TLS {
 
-template <class Channel, class StreamLayer, class Handler>
+template <class Handler, class StreamLayer, class Channel>
 struct AsyncHandshakeOperation
    {
-      AsyncHandshakeOperation(Channel* channel, StreamCore& core,
-                              StreamLayer& nextLayer, Handler&& handler)
-         : m_channel(channel),
-           m_core(core),
-           m_nextLayer(nextLayer),
-           m_handler(std::forward<Handler>(handler)) {}
+      template<class HandlerT>
+      AsyncHandshakeOperation(
+         HandlerT&& handler,
+         StreamLayer& nextLayer,
+         Channel* channel,
+         StreamCore& core)
+         : m_handler(std::forward<HandlerT>(handler))
+         , m_nextLayer(nextLayer)
+         , m_channel(channel)
+         , m_core(core) {}
 
-      AsyncHandshakeOperation(AsyncHandshakeOperation&& right)
-         : m_channel(right.m_channel),
-           m_core(right.m_core),
-           m_nextLayer(right.m_nextLayer),
-           m_handler(std::move(right.m_handler)) {}
-
-      ~AsyncHandshakeOperation() = default;
-      AsyncHandshakeOperation(AsyncHandshakeOperation const&) = delete;
+      AsyncHandshakeOperation(AsyncHandshakeOperation&&) = default;
 
       void operator()(boost::system::error_code ec,
                       std::size_t bytesTransferred = 0, int start = 0)
@@ -62,10 +59,9 @@ struct AsyncHandshakeOperation
          // send tls packets
          if(m_core.hasDataToSend())
             {
-            AsyncWriteOperation<AsyncHandshakeOperation<Channel, StreamLayer, Handler>>
-                  op{m_core, std::move(*this), 0};
-            boost::asio::async_write(m_nextLayer, m_core.sendBuffer(),
-                                     std::move(op));
+            AsyncWriteOperation<AsyncHandshakeOperation<typename std::decay<Handler>::type, StreamLayer, Channel>>
+                  op{std::move(*this), m_core, 0};
+            boost::asio::async_write(m_nextLayer, m_core.sendBuffer(), std::move(op));
             return;
             }
 
@@ -87,10 +83,10 @@ struct AsyncHandshakeOperation
          }
 
    private:
+      Handler      m_handler;
+      StreamLayer& m_nextLayer;
       Channel*     m_channel;
       StreamCore&  m_core;
-      StreamLayer& m_nextLayer;
-      Handler      m_handler;
    };
 
 }  // namespace TLS

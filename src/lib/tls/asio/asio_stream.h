@@ -156,17 +156,13 @@ class Stream final : public StreamBase<Channel>
             {
             writePendingTlsData(ec);
             if(ec)
-               {
-               return;
-               }
+               { return; }
 
             auto read_buffer = boost::asio::buffer(
                                   this->m_core.input_buffer,
                                   m_nextLayer.read_some(this->m_core.input_buffer, ec));
             if(ec)
-               {
-               return;
-               }
+               { return; }
 
             try
                {
@@ -190,11 +186,14 @@ class Stream final : public StreamBase<Channel>
          {
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(HandshakeHandler, handler) type_check;
 
-         boost::asio::async_completion<HandshakeHandler,
-               void(boost::system::error_code)>
-               init(handler);
+         boost::asio::async_completion<HandshakeHandler, void(boost::system::error_code)> init(handler);
 
-         auto op = create_async_handshake_op(std::move(init.completion_handler));
+         AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, StreamLayer, Channel>
+         op{std::move(init.completion_handler),
+            m_nextLayer,
+            native_handle(),
+            this->m_core
+           };
          op(boost::system::error_code{}, 0, 1);
 
          return init.result.get();
@@ -219,9 +218,7 @@ class Stream final : public StreamBase<Channel>
       void handshake(handshake_type type, boost::system::error_code& ec)
          {
          if(validate_handshake_type(type, ec))
-            {
-            handshake(ec);
-            }
+            { handshake(ec); }
          }
 
       template <typename HandshakeHandler>
@@ -230,7 +227,7 @@ class Stream final : public StreamBase<Channel>
       async_handshake(handshake_type type, HandshakeHandler&& handler)
          {
          validate_handshake_type(type);
-         return async_handshake(handler);
+         return async_handshake(std::forward<HandshakeHandler>(handler));
          }
 
       template<typename ConstBufferSequence>
@@ -248,9 +245,7 @@ class Stream final : public StreamBase<Channel>
          {
          BOTAN_UNUSED(buffers);
          if(validate_handshake_type(type, ec))
-            {
-            ec = make_error_code(Botan::TLS::error::not_implemented);
-            }
+            { ec = make_error_code(Botan::TLS::error::not_implemented); }
          }
 
       template <typename ConstBufferSequence, typename BufferedHandshakeHandler>
@@ -307,17 +302,13 @@ class Stream final : public StreamBase<Channel>
                             boost::system::error_code& ec)
          {
          if(this->m_core.hasReceivedData())
-            {
-            return this->m_core.copyReceivedData(buffers);
-            }
+            { return this->m_core.copyReceivedData(buffers); }
 
          auto read_buffer = boost::asio::buffer(
                                this->m_core.input_buffer,
                                m_nextLayer.read_some(this->m_core.input_buffer, ec));
          if(ec)
-            {
-            return 0;
-            }
+            { return 0; }
 
          try
             {
@@ -367,10 +358,10 @@ class Stream final : public StreamBase<Channel>
             }
 
          writePendingTlsData(ec);
+
          if(ec)
-            {
-            return 0;
-            }
+            { return 0; }
+
          return sent;
          }
 
@@ -390,9 +381,7 @@ class Stream final : public StreamBase<Channel>
          {
          BOOST_ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
 
-         boost::asio::async_completion<WriteHandler,
-               void(boost::system::error_code, std::size_t)>
-               init(handler);
+         boost::asio::async_completion<WriteHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
          std::size_t sent = 0;
 
@@ -416,9 +405,12 @@ class Stream final : public StreamBase<Channel>
             return init.result.get();
             }
 
-         auto op = create_async_write_op(std::move(init.completion_handler), sent);
-
+         Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type>
+         op{std::move(init.completion_handler),
+            this->m_core,
+            sent};
          boost::asio::async_write(m_nextLayer, this->m_core.sendBuffer(), std::move(op));
+
          return init.result.get();
          }
 
@@ -429,51 +421,26 @@ class Stream final : public StreamBase<Channel>
          {
          BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
 
-         boost::asio::async_completion<ReadHandler,
-               void(boost::system::error_code, std::size_t)>
-               init(handler);
+         boost::asio::async_completion<ReadHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
-         auto op = create_async_read_op(std::move(init.completion_handler), buffers);
+         AsyncReadOperation<typename std::decay<ReadHandler>::type, StreamLayer, Channel, MutableBufferSequence>
+         op{std::move(init.completion_handler),
+            m_nextLayer,
+            native_handle(),
+            this->m_core,
+            buffers};
          op(boost::system::error_code{}, 0);
+
          return init.result.get();
          }
 
    protected:
       size_t writePendingTlsData(boost::system::error_code& ec)
          {
-         auto writtenBytes =
-            boost::asio::write(m_nextLayer, this->m_core.sendBuffer(), ec);
+         auto writtenBytes = boost::asio::write(m_nextLayer, this->m_core.sendBuffer(), ec);
 
          this->m_core.consumeSendBuffer(writtenBytes);
          return writtenBytes;
-         }
-
-      template <typename Handler>
-      Botan::TLS::AsyncHandshakeOperation<Channel, StreamLayer, Handler>
-      create_async_handshake_op(Handler&& handler)
-         {
-         return Botan::TLS::AsyncHandshakeOperation<Channel, StreamLayer, Handler>(
-                   native_handle(), this->m_core, m_nextLayer, std::forward<Handler>(handler));
-         }
-
-      template <typename Handler, typename MutableBufferSequence>
-      Botan::TLS::AsyncReadOperation<Channel, StreamLayer, Handler,
-            MutableBufferSequence>
-            create_async_read_op(Handler&& handler,
-                                 const MutableBufferSequence& buffers)
-         {
-         return Botan::TLS::AsyncReadOperation<Channel, StreamLayer, Handler,
-                MutableBufferSequence>(
-                   native_handle(), this->m_core, m_nextLayer, std::forward<Handler>(handler),
-                   buffers);
-         }
-
-      template <typename Handler>
-      Botan::TLS::AsyncWriteOperation<Handler>
-      create_async_write_op(Handler&& handler, std::size_t plainBytesTransferred)
-         {
-         return Botan::TLS::AsyncWriteOperation<Handler>(
-                   this->m_core, std::forward<Handler>(handler), plainBytesTransferred);
          }
 
    protected:

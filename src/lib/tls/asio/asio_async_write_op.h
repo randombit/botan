@@ -19,19 +19,15 @@ namespace TLS {
 template <typename Handler>
 struct AsyncWriteOperation
    {
-   AsyncWriteOperation(StreamCore& core, Handler&& handler,
+   template <class HandlerT>
+   AsyncWriteOperation(HandlerT&& handler,
+                       StreamCore& core,
                        std::size_t plainBytesTransferred)
-      : m_core(core),
-        m_handler(std::forward<Handler>(handler)),
-        m_plainBytesTransferred(plainBytesTransferred) {}
+      : m_handler(std::forward<HandlerT>(handler))
+      , m_core(core)
+      , m_plainBytesTransferred(plainBytesTransferred) {}
 
-   AsyncWriteOperation(AsyncWriteOperation&& right)
-      : m_core(right.m_core),
-        m_handler(std::move(right.m_handler)),
-        m_plainBytesTransferred(right.m_plainBytesTransferred) {}
-
-   ~AsyncWriteOperation() = default;
-   AsyncWriteOperation(AsyncWriteOperation const&) = delete;
+   AsyncWriteOperation(AsyncWriteOperation&&) = default;
 
    void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
       {
@@ -39,8 +35,8 @@ struct AsyncWriteOperation
       m_handler(ec, ec ? 0 : m_plainBytesTransferred);
       }
 
-   StreamCore& m_core;
    Handler     m_handler;
+   StreamCore& m_core;
    std::size_t m_plainBytesTransferred;
    };
 
