@@ -189,9 +189,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        if target_os == 'osx':
-            # Test Boost on OS X
+        if target_os == 'osx' or target == 'coverage':
             flags += ['--with-boost']
+
+        if target_os == 'osx':
             # Travis has 10.12 as default image
             flags += ['--with-os-features=getentropy']
 
