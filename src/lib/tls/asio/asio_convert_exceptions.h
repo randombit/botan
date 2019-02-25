@@ -22,103 +22,103 @@ inline boost::system::error_code convertException()
       {
       throw;
       }
-   catch(Botan::TLS::Unexpected_Message& e)
+   catch(const Botan::TLS::Unexpected_Message&)
       {
       return make_error_code(Botan::TLS::error::unexpected_message);
       }
-   catch(Botan::TLS::TLS_Exception& e)
+   catch(const Botan::TLS::TLS_Exception& e)
       {
       return make_error_code(e.type());
       }
-   catch(Botan::Unsupported_Argument& e)
+   catch(const Botan::Unsupported_Argument&)
       {
       return make_error_code(Botan::TLS::error::unsupported_argument);
       }
-   catch(Botan::Invalid_Key_Length& e)
+   catch(const Botan::Invalid_Key_Length&)
       {
       return make_error_code(Botan::TLS::error::invalid_key_length);
       }
-   catch(Botan::Invalid_IV_Length& e)
+   catch(const Botan::Invalid_IV_Length&)
       {
       return make_error_code(Botan::TLS::error::invalid_iv_length);
       }
-   catch(Botan::Invalid_Algorithm_Name& e)
+   catch(const Botan::Invalid_Algorithm_Name&)
       {
       return make_error_code(Botan::TLS::error::invalid_algorithm_name);
       }
-   catch(Botan::Encoding_Error& e)
+   catch(const Botan::Encoding_Error&)
       {
       return make_error_code(Botan::TLS::error::encoding_error);
       }
-   catch(Botan::Invalid_OID& e)
+   catch(const Botan::Invalid_OID&)
       {
       return make_error_code(Botan::TLS::error::invalid_oid);
       }
-   catch(Botan::Decoding_Error& e)
+   catch(const Botan::Decoding_Error&)
       {
       return make_error_code(Botan::TLS::error::decoding_error);
       }
-   catch(Botan::Invalid_Argument& e)
+   catch(const Botan::Invalid_Argument&)
       {
       return make_error_code(Botan::TLS::error::invalid_argument);
       }
-   catch(Botan::Key_Not_Set& e)
+   catch(const Botan::Key_Not_Set&)
       {
       return make_error_code(Botan::TLS::error::key_not_set);
       }
-   catch(Botan::PRNG_Unseeded& e)
+   catch(const Botan::PRNG_Unseeded&)
       {
       return make_error_code(Botan::TLS::error::prng_unseeded);
       }
-   catch(Botan::Policy_Violation& e)
+   catch(const Botan::Policy_Violation&)
       {
       return make_error_code(Botan::TLS::error::policy_violation);
       }
-   catch(Botan::Invalid_State& e)
+   catch(const Botan::Invalid_State&)
       {
       return make_error_code(Botan::TLS::error::invalid_state);
       }
-   catch(Botan::Algorithm_Not_Found& e)
+   catch(const Botan::Algorithm_Not_Found&)
       {
       return make_error_code(Botan::TLS::error::algorithm_not_found);
       }
-   catch(Botan::Provider_Not_Found& e)
+   catch(const Botan::Provider_Not_Found&)
       {
       return make_error_code(Botan::TLS::error::provider_not_found);
       }
-   catch(Botan::Lookup_Error& e)
+   catch(const Botan::Lookup_Error&)
       {
       return make_error_code(Botan::TLS::error::lookup_error);
       }
-   catch(Botan::Self_Test_Failure& e)
+   catch(const Botan::Self_Test_Failure&)
       {
       return make_error_code(Botan::TLS::error::self_test_failure);
       }
-   catch(Botan::Internal_Error& e)
+   catch(const Botan::Internal_Error&)
       {
       return make_error_code(Botan::TLS::error::internal_error);
       }
-   catch(Botan::No_Provider_Found& e)
+   catch(const Botan::No_Provider_Found&)
       {
       return make_error_code(Botan::TLS::error::no_provider_found);
       }
-   catch(Botan::Integrity_Failure& e)
+   catch(const Botan::Integrity_Failure&)
       {
       return make_error_code(Botan::TLS::error::integrity_failure);
       }
-   catch(Botan::Stream_IO_Error& e)
+   catch(const Botan::Stream_IO_Error&)
       {
       return make_error_code(Botan::TLS::error::stream_io_error);
       }
-   catch(Botan::Not_Implemented& e)
+   catch(const Botan::Not_Implemented&)
       {
       return make_error_code(Botan::TLS::error::not_implemented);
       }
-   catch(Botan::Exception& e)
+   catch(const Botan::Exception&)
       {
       return make_error_code(Botan::TLS::error::unknown);
       }
-   catch(std::exception& e)
+   catch(const std::exception&)
       {
       return make_error_code(Botan::TLS::error::unknown);
       }

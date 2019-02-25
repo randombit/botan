@@ -169,7 +169,7 @@ class Stream final : public StreamBase<Channel>
                native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
                                               read_buffer.size());
                }
-            catch(...)
+            catch(const std::exception &ex)
                {
                ec = Botan::TLS::convertException();
                return;
@@ -270,7 +270,7 @@ class Stream final : public StreamBase<Channel>
             {
             native_handle()->close();
             }
-         catch(...)
+         catch(const std::exception &ex)
             {
             ec = Botan::TLS::convertException();
             return;
@@ -315,7 +315,7 @@ class Stream final : public StreamBase<Channel>
             native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
                                            read_buffer.size());
             }
-         catch(...)
+         catch(const std::exception &ex)
             {
             ec = Botan::TLS::convertException();
             return 0;
@@ -351,7 +351,7 @@ class Stream final : public StreamBase<Channel>
                sent += to_send;
                }
             }
-         catch(...)
+         catch(const std::exception &ex)
             {
             ec = Botan::TLS::convertException();
             return 0;
@@ -399,7 +399,7 @@ class Stream final : public StreamBase<Channel>
                sent += to_send;
                }
             }
-         catch(...)
+         catch(const std::exception &)
             {
             init.completion_handler(Botan::TLS::convertException(), 0);
             return init.result.get();

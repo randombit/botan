@@ -48,7 +48,7 @@ struct AsyncHandshakeOperation
                   static_cast<const uint8_t*>(read_buffer.data()),
                   read_buffer.size());
                }
-            catch(...)
+            catch(const std::exception &)
                {
                ec = convertException();
                m_handler(ec);
