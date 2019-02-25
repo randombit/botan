@@ -108,7 +108,7 @@ class Stream final : public StreamBase<Channel>
                                boost::system::error_code& ec)
          {
          BOTAN_UNUSED(callback);
-         ec = make_error_code(Botan::TLS::error::not_implemented);
+         ec = Botan::TLS::error::not_implemented;
          }
 
       void set_verify_depth(int depth)
@@ -121,7 +121,7 @@ class Stream final : public StreamBase<Channel>
                             boost::system::error_code& ec)
          {
          BOTAN_UNUSED(depth);
-         ec = make_error_code(Botan::TLS::error::not_implemented);
+         ec = Botan::TLS::error::not_implemented;
          }
 
       template <typename verify_mode>
@@ -136,7 +136,7 @@ class Stream final : public StreamBase<Channel>
                            boost::system::error_code& ec)
          {
          BOTAN_UNUSED(v);
-         ec = make_error_code(Botan::TLS::error::not_implemented);
+         ec = Botan::TLS::error::not_implemented;
          }
 
       //
@@ -245,7 +245,7 @@ class Stream final : public StreamBase<Channel>
          {
          BOTAN_UNUSED(buffers);
          if(validate_handshake_type(type, ec))
-            { ec = make_error_code(Botan::TLS::error::not_implemented); }
+            { ec = Botan::TLS::error::not_implemented; }
          }
 
       template <typename ConstBufferSequence, typename BufferedHandshakeHandler>

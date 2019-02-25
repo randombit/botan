@@ -1,5 +1,5 @@
 <defines>
-ASIO -> 20181218
+TLS_ASIO_STREAM -> 20181218
 </defines>
 
 <header:public>

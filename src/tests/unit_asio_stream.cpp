@@ -1,6 +1,12 @@
-#include "tests.h"
+/*
+* TLS ASIO Stream Wrapper
+* (C) 2018-2019 Jack Lloyd
+*     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
 
-#include <iostream>
+#include "tests.h"
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
 

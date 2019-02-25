@@ -77,7 +77,7 @@ class StreamBase<Botan::TLS::Client>
          {
          if(type != handshake_type::client)
             {
-            ec = make_error_code(Botan::TLS::error::invalid_argument);
+            ec = Botan::TLS::error::invalid_argument;
             return false;
             }
 

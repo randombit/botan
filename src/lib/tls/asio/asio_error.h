@@ -17,35 +17,6 @@ namespace Botan {
 
 namespace TLS {
 
-using error_code = boost::system::error_code;
-using error_category = boost::system::error_category;
-
-// TLS Alerts
-struct BotanAlertCategory : error_category
-   {
-   const char* name() const noexcept override
-      {
-      return "asio.botan.tls.alert";
-      }
-
-   std::string message(int ev) const override
-      {
-      Botan::TLS::Alert alert(static_cast<Botan::TLS::Alert::Type>(ev));
-      return alert.type_string();
-      }
-   };
-
-inline const BotanAlertCategory& botan_alert_category() noexcept
-   {
-   static BotanAlertCategory category;
-   return category;
-   }
-
-inline error_code make_error_code(Botan::TLS::Alert::Type c)
-   {
-   return error_code(static_cast<int>(c), botan_alert_category());
-   }
-
 enum class error
    {
    unexpected_message = 1,
@@ -72,6 +43,31 @@ enum class error
    not_implemented,
    unknown
    };
+
+using error_code = boost::system::error_code;
+using error_category = boost::system::error_category;
+
+namespace detail {
+// TLS Alerts
+struct BotanAlertCategory : error_category
+   {
+   const char* name() const noexcept override
+      {
+      return "asio.botan.tls.alert";
+      }
+
+   std::string message(int ev) const override
+      {
+      Botan::TLS::Alert alert(static_cast<Botan::TLS::Alert::Type>(ev));
+      return alert.type_string();
+      }
+   };
+
+inline const BotanAlertCategory& botan_alert_category() noexcept
+   {
+   static BotanAlertCategory category;
+   return category;
+   }
 
 struct BotanErrorCategory : error_category
    {
@@ -140,14 +136,19 @@ inline const BotanErrorCategory& botan_category() noexcept
    static BotanErrorCategory category;
    return category;
    }
+} // namespace detail
+
+inline error_code make_error_code(Botan::TLS::Alert::Type c)
+   {
+   return error_code(static_cast<int>(c), detail::botan_alert_category());
+   }
 
 inline error_code make_error_code(error c)
    {
-   return error_code(static_cast<int>(c), botan_category());
+   return error_code(static_cast<int>(c), detail::botan_category());
    }
 
 }  // namespace TLS
-
 }  // namespace Botan
 
 namespace boost {
