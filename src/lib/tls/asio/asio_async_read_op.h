@@ -40,14 +40,13 @@ struct AsyncReadOperation
 
          if(bytes_transferred > 0 && !ec)
             {
-            auto read_buffer =
-               boost::asio::buffer(m_core.input_buffer, bytes_transferred);
+            boost::asio::const_buffer read_buffer {m_core.input_buffer.data(), bytes_transferred};
             try
                {
                m_channel->received_data(static_cast<const uint8_t*>(read_buffer.data()),
                                         read_buffer.size());
                }
-            catch(const std::exception &)
+            catch(const std::exception&)
                {
                ec = convertException();
                }

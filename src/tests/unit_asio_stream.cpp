@@ -214,7 +214,7 @@ class Asio_Stream_Tests final : public Test
          uint8_t           buf[buf_size];
          error_code        ec;
 
-         auto bytes_transferred = asio::read(ssl, asio::buffer(buf, sizeof(buf)), ec);
+         auto bytes_transferred = asio::read(ssl, asio::mutable_buffer(buf, sizeof(buf)), ec);
 
          Test::Result result("sync read_some success");
          result.confirm("reads the correct data", contains(buf, TEST_DATA, buf_size));
@@ -236,8 +236,8 @@ class Asio_Stream_Tests final : public Test
          std::vector<asio::mutable_buffer> data;
          uint8_t buf1[TEST_DATA_SIZE/2];
          uint8_t buf2[TEST_DATA_SIZE/2];
-         data.emplace_back(asio::buffer(buf1, TEST_DATA_SIZE/2));
-         data.emplace_back(asio::buffer(buf2, TEST_DATA_SIZE/2));
+         data.emplace_back(asio::mutable_buffer(buf1, TEST_DATA_SIZE/2));
+         data.emplace_back(asio::mutable_buffer(buf2, TEST_DATA_SIZE/2));
 
          auto bytes_transferred = asio::read(ssl, data, ec);
 
@@ -265,7 +265,7 @@ class Asio_Stream_Tests final : public Test
          uint8_t    buf[128];
          error_code ec;
 
-         auto bytes_transferred = asio::read(ssl, asio::buffer(buf, sizeof(buf)), ec);
+         auto bytes_transferred = asio::read(ssl, asio::mutable_buffer(buf, sizeof(buf)), ec);
 
          Test::Result result("sync read_some error");
          result.test_eq("didn't transfer anything", bytes_transferred, 0);
@@ -293,7 +293,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("does not report an error", !ec);
             };
 
-         asio::mutable_buffer buf = asio::buffer(data, TEST_DATA_SIZE);
+         asio::mutable_buffer buf {data, TEST_DATA_SIZE};
          asio::async_read(ssl, buf, read_handler);
 
          socket.close_remote();
@@ -313,8 +313,8 @@ class Asio_Stream_Tests final : public Test
          std::vector<asio::mutable_buffer> data;
          uint8_t buf1[TEST_DATA_SIZE/2];
          uint8_t buf2[TEST_DATA_SIZE/2];
-         data.emplace_back(asio::buffer(buf1, TEST_DATA_SIZE/2));
-         data.emplace_back(asio::buffer(buf2, TEST_DATA_SIZE/2));
+         data.emplace_back(asio::mutable_buffer(buf1, TEST_DATA_SIZE/2));
+         data.emplace_back(asio::mutable_buffer(buf2, TEST_DATA_SIZE/2));
 
          Test::Result result("async read_some buffer sequence");
 
@@ -352,7 +352,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", (bool)ec);
             };
 
-         asio::mutable_buffer buf = asio::buffer(data, TEST_DATA_SIZE);
+         asio::mutable_buffer buf {data, TEST_DATA_SIZE};
          asio::async_read(ssl, buf, read_handler);
 
          socket.close_remote();
@@ -369,7 +369,7 @@ class Asio_Stream_Tests final : public Test
          AsioStream ssl{socket};
          error_code ec;
 
-         auto bytes_transferred = asio::write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+         auto bytes_transferred = asio::write(ssl, asio::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some success");
          result.confirm("writes the correct data", remote.str() == test_data());
@@ -394,10 +394,10 @@ class Asio_Stream_Tests final : public Test
          random_data.back() = '5';
 
          std::vector<asio::const_buffer> data;
-         data.emplace_back(asio::buffer(random_data.data(), 1));
+         data.emplace_back(asio::const_buffer(random_data.data(), 1));
          for(std::size_t i = 1; i < random_data.size(); i += 1024)
             {
-            data.emplace_back(asio::buffer(random_data.data() + i, 1024));
+            data.emplace_back(asio::const_buffer(random_data.data() + i, 1024));
             }
 
          auto bytes_transferred = asio::write(ssl, data, ec);
@@ -425,7 +425,7 @@ class Asio_Stream_Tests final : public Test
          AsioStream ssl{socket};
          error_code ec;
 
-         auto bytes_transferred = asio::write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+         auto bytes_transferred = asio::write(ssl, asio::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some error");
          result.test_eq("didn't transfer anything", bytes_transferred, 0);
@@ -452,7 +452,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("does not report an error", !ec);
             };
 
-         asio::async_write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
+         asio::async_write(ssl, asio::const_buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
 
          ioc.run();
          results.push_back(result);
@@ -473,10 +473,10 @@ class Asio_Stream_Tests final : public Test
          random_data.back() = '5';
 
          std::vector<asio::const_buffer> src;
-         src.emplace_back(asio::buffer(random_data.data(), 1));
+         src.emplace_back(asio::const_buffer(random_data.data(), 1));
          for(std::size_t i = 1; i < random_data.size(); i += 1024)
             {
-            src.emplace_back(asio::buffer(random_data.data() + i, 1024));
+            src.emplace_back(asio::const_buffer(random_data.data() + i, 1024));
             }
 
          Test::Result result("async write_some buffer sequence");
@@ -516,7 +516,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", (bool)ec);
             };
 
-         asio::async_write(ssl, asio::buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
+         asio::async_write(ssl, asio::const_buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
 
          ioc.run();
          results.push_back(result);

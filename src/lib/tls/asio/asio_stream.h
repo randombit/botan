@@ -158,9 +158,12 @@ class Stream final : public StreamBase<Channel>
             if(ec)
                { return; }
 
-            auto read_buffer = boost::asio::buffer(
-                                  this->m_core.input_buffer,
-                                  m_nextLayer.read_some(this->m_core.input_buffer, ec));
+            boost::asio::const_buffer read_buffer
+               {
+               this->m_core.input_buffer.data(),
+               m_nextLayer.read_some(this->m_core.input_buffer, ec)
+               };
+
             if(ec)
                { return; }
 
@@ -169,7 +172,7 @@ class Stream final : public StreamBase<Channel>
                native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
                                               read_buffer.size());
                }
-            catch(const std::exception &ex)
+            catch(const std::exception& ex)
                {
                ec = Botan::TLS::convertException();
                return;
@@ -189,11 +192,8 @@ class Stream final : public StreamBase<Channel>
          boost::asio::async_completion<HandshakeHandler, void(boost::system::error_code)> init(handler);
 
          AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, StreamLayer, Channel>
-         op{std::move(init.completion_handler),
-            m_nextLayer,
-            native_handle(),
-            this->m_core
-           };
+         op{std::move(init.completion_handler), m_nextLayer, native_handle(), this->m_core};
+
          op(boost::system::error_code{}, 0, 1);
 
          return init.result.get();
@@ -270,7 +270,7 @@ class Stream final : public StreamBase<Channel>
             {
             native_handle()->close();
             }
-         catch(const std::exception &ex)
+         catch(const std::exception& ex)
             {
             ec = Botan::TLS::convertException();
             return;
@@ -304,9 +304,11 @@ class Stream final : public StreamBase<Channel>
          if(this->m_core.hasReceivedData())
             { return this->m_core.copyReceivedData(buffers); }
 
-         auto read_buffer = boost::asio::buffer(
-                               this->m_core.input_buffer,
-                               m_nextLayer.read_some(this->m_core.input_buffer, ec));
+         boost::asio::const_buffer read_buffer =
+            {
+            this->m_core.input_buffer.data(),
+            m_nextLayer.read_some(this->m_core.input_buffer, ec)
+            };
          if(ec)
             { return 0; }
 
@@ -315,7 +317,7 @@ class Stream final : public StreamBase<Channel>
             native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
                                            read_buffer.size());
             }
-         catch(const std::exception &ex)
+         catch(const std::exception& ex)
             {
             ec = Botan::TLS::convertException();
             return 0;
@@ -351,7 +353,7 @@ class Stream final : public StreamBase<Channel>
                sent += to_send;
                }
             }
-         catch(const std::exception &ex)
+         catch(const std::exception& ex)
             {
             ec = Botan::TLS::convertException();
             return 0;
@@ -399,7 +401,7 @@ class Stream final : public StreamBase<Channel>
                sent += to_send;
                }
             }
-         catch(const std::exception &)
+         catch(const std::exception&)
             {
             init.completion_handler(Botan::TLS::convertException(), 0);
             return init.result.get();

@@ -40,15 +40,14 @@ struct AsyncHandshakeOperation
          // process tls packets from socket first
          if(bytesTransferred > 0)
             {
-            auto read_buffer =
-               boost::asio::buffer(m_core.input_buffer, bytesTransferred);
+            boost::asio::const_buffer read_buffer {m_core.input_buffer.data(), bytesTransferred};
             try
                {
                m_channel->received_data(
                   static_cast<const uint8_t*>(read_buffer.data()),
                   read_buffer.size());
                }
-            catch(const std::exception &)
+            catch(const std::exception&)
                {
                ec = convertException();
                m_handler(ec);
@@ -76,7 +75,7 @@ struct AsyncHandshakeOperation
             {
             // don't call the handler directly, similar to io_context.post
             m_nextLayer.async_read_some(
-               boost::asio::buffer(m_core.input_buffer, 0), std::move(*this));
+               boost::asio::mutable_buffer(m_core.input_buffer.data(), 0), std::move(*this));
             return;
             }
          m_handler(ec);

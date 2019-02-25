@@ -13,6 +13,7 @@
 #include <botan/tls_client.h>
 #include <botan/tls_server.h>
 #include <botan/asio_error.h>
+#include <botan/internal/asio_stream_core.h>
 
 namespace Botan {
 

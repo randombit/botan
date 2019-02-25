@@ -42,7 +42,7 @@ struct StreamCore : public Botan::TLS::Callbacks
          {
          auto buffer = m_send_buffer.dynamicBuffer.prepare(size);
          auto copySize =
-            boost::asio::buffer_copy(buffer, boost::asio::buffer(data, size));
+            boost::asio::buffer_copy(buffer, boost::asio::const_buffer(data, size));
          m_send_buffer.dynamicBuffer.commit(copySize);
          }
 
@@ -53,7 +53,7 @@ struct StreamCore : public Botan::TLS::Callbacks
          // buffer provided by the caller is smaller than the decrypted record.
          auto buffer = m_receive_buffer.dynamicBuffer.prepare(size);
          auto copySize =
-            boost::asio::buffer_copy(buffer, boost::asio::buffer(data, size));
+            boost::asio::buffer_copy(buffer, boost::asio::const_buffer(data, size));
          m_receive_buffer.dynamicBuffer.commit(copySize);
          }
 
