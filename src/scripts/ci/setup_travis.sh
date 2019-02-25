@@ -53,7 +53,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     elif [ "$BUILD_MODE" = "coverage" ]; then
         sudo apt-get -qq update
-        sudo apt-get install trousers libtspi-dev lcov python-coverage
+        sudo apt-get install trousers libtspi-dev lcov python-coverage libboost-all-dev
 
         git clone --depth 1 https://github.com/randombit/botan-ci-tools
 
