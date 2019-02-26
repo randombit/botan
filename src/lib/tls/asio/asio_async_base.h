@@ -46,6 +46,7 @@ struct AsyncBase
          {
          if(!isContinuation)
             {
+            // \note(toesterreich): Is this ok to do with bind_handler? Do we need placeholders?
             boost::asio::post(boost::asio::bind_executor(
                                  m_work.get_executor(), boost::beast::bind_handler(std::move(m_handler), args...))
                              );

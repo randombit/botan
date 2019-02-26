@@ -60,11 +60,10 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
          // send tls packets
          if(m_core.hasDataToSend())
             {
-            // TODO comment: plainBytesTransferred is 0 here because...  we construct a write operation to use it only
-            // as a handler for our async_write call, not for actually calling it.  However, once
-            // AsyncWriteOperation::operator() is called as the handler, it will consume the send buffer and call (this)
-            // as it's own handler. Now we know that AsyncHandshakeOperation::operator() checks bytesTransferred first.
-            // We want it to NOT receive data into the channel, hence we set plainBytesTransferred to 0 here.
+            // \note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`).
+            //        This operation will eventually call `*this` as its own handler, passing the 0 back to this call
+            //        operator. This is necessary because, the check of `bytesTransferred > 0` assumes that
+            //        `bytesTransferred` bytes were just read and are in the cores input_buffer for further processing.
             AsyncWriteOperation<
             AsyncHandshakeOperation<typename std::decay<Handler>::type, Stream, Allocator>,
                                     Stream,
