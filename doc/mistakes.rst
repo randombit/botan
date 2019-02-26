@@ -13,6 +13,14 @@ later). Then an expressive C++ API could be built on top of the C API. This
 would have given us a stable ABI, allowed C applications to use the library, and
 (these days) make it easier to progressively rewrite the library in Rust.
 
+Public Algorithm Specific Classes
+------------------------------------
+
+Classes like AES_128 and SHA_256 should never have been exposed to applications.
+Intead such operations should have been accessible only via the higher level
+interfaces (here BlockCipher and HashFunction). This would substantially reduce
+the overall API and ABI surface.
+
 Exceptions
 -----------
 
