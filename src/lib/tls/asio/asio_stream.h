@@ -191,10 +191,9 @@ class Stream final : public StreamBase<Channel>
 
          boost::asio::async_completion<HandshakeHandler, void(boost::system::error_code)> init(handler);
 
-         AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, StreamLayer, Channel>
-         op{std::move(init.completion_handler), m_nextLayer, native_handle(), this->m_core};
-
-         op(boost::system::error_code{}, 0, 1);
+         AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, Stream>
+         op{std::move(init.completion_handler), *this, this->m_core};
+         op({}, 0, false);
 
          return init.result.get();
          }
@@ -407,8 +406,9 @@ class Stream final : public StreamBase<Channel>
             return init.result.get();
             }
 
-         Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type>
+         Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
          op{std::move(init.completion_handler),
+            *this,
             this->m_core,
             sent};
          boost::asio::async_write(m_nextLayer, this->m_core.sendBuffer(), std::move(op));
@@ -425,13 +425,12 @@ class Stream final : public StreamBase<Channel>
 
          boost::asio::async_completion<ReadHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
-         AsyncReadOperation<typename std::decay<ReadHandler>::type, StreamLayer, Channel, MutableBufferSequence>
+         AsyncReadOperation<typename std::decay<ReadHandler>::type, Stream, MutableBufferSequence>
          op{std::move(init.completion_handler),
-            m_nextLayer,
-            native_handle(),
+            *this,
             this->m_core,
             buffers};
-         op(boost::system::error_code{}, 0);
+         op({}, 0, false);
 
          return init.result.get();
          }

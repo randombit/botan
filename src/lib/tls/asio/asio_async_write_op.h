@@ -11,32 +11,42 @@
 
 #include <botan/internal/asio_stream_core.h>
 #include <botan/internal/asio_includes.h>
+#include <botan/internal/asio_async_base.h>
 
 namespace Botan {
 
 namespace TLS {
 
-template <typename Handler>
-struct AsyncWriteOperation
+template <typename Handler, class Stream, class Allocator = std::allocator<void>>
+struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
    {
    template <class HandlerT>
    AsyncWriteOperation(HandlerT&& handler,
+                       Stream& stream,
                        StreamCore& core,
                        std::size_t plainBytesTransferred)
-      : m_handler(std::forward<HandlerT>(handler))
+      : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
+           std::forward<HandlerT>(handler),
+           stream.get_executor())
+      , m_stream(stream)
       , m_core(core)
-      , m_plainBytesTransferred(plainBytesTransferred) {}
+      , m_plainBytesTransferred(plainBytesTransferred)
+      {
+      }
 
    AsyncWriteOperation(AsyncWriteOperation&&) = default;
 
-   void operator()(boost::system::error_code ec, std::size_t bytes_transferred)
+   using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::allocator_type;
+   using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::executor_type;
+
+   void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true)
       {
       m_core.consumeSendBuffer(bytes_transferred);
-      m_handler(ec, ec ? 0 : m_plainBytesTransferred);
+      this->invoke(isContinuation, ec, ec ? 0 : m_plainBytesTransferred);
       }
 
-   Handler     m_handler;
-   StreamCore& m_core;
+   Stream&      m_stream;
+   StreamCore&  m_core;
    std::size_t m_plainBytesTransferred;
    };
 

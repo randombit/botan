@@ -18,24 +18,28 @@ namespace Botan {
 
 namespace TLS {
 
-template <class Handler, class StreamLayer, class Channel>
-struct AsyncHandshakeOperation
+template <class Handler, class Stream, class Allocator = std::allocator<void>>
+struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
    {
       template<class HandlerT>
       AsyncHandshakeOperation(
          HandlerT&& handler,
-         StreamLayer& nextLayer,
-         Channel* channel,
+         Stream& stream,
          StreamCore& core)
-         : m_handler(std::forward<HandlerT>(handler))
-         , m_nextLayer(nextLayer)
-         , m_channel(channel)
-         , m_core(core) {}
+         : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
+              std::forward<HandlerT>(handler),
+              stream.get_executor())
+         , m_stream(stream)
+         , m_core(core)
+         {
+         }
 
       AsyncHandshakeOperation(AsyncHandshakeOperation&&) = default;
 
-      void operator()(boost::system::error_code ec,
-                      std::size_t bytesTransferred = 0, int start = 0)
+      using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::allocator_type;
+      using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::executor_type;
+
+      void operator()(boost::system::error_code ec, std::size_t bytesTransferred, bool isContinuation = true)
          {
          // process tls packets from socket first
          if(bytesTransferred > 0)
@@ -43,14 +47,12 @@ struct AsyncHandshakeOperation
             boost::asio::const_buffer read_buffer {m_core.input_buffer.data(), bytesTransferred};
             try
                {
-               m_channel->received_data(
-                  static_cast<const uint8_t*>(read_buffer.data()),
-                  read_buffer.size());
+               m_stream.native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
                }
             catch(const std::exception&)
                {
                ec = convertException();
-               m_handler(ec);
+               this->invoke(isContinuation, ec);
                return;
                }
             }
@@ -58,33 +60,32 @@ struct AsyncHandshakeOperation
          // send tls packets
          if(m_core.hasDataToSend())
             {
-            AsyncWriteOperation<AsyncHandshakeOperation<typename std::decay<Handler>::type, StreamLayer, Channel>>
-                  op{std::move(*this), m_core, 0};
-            boost::asio::async_write(m_nextLayer, m_core.sendBuffer(), std::move(op));
+            // TODO comment: plainBytesTransferred is 0 here because...  we construct a write operation to use it only
+            // as a handler for our async_write call, not for actually calling it.  However, once
+            // AsyncWriteOperation::operator() is called as the handler, it will consume the send buffer and call (this)
+            // as it's own handler. Now we know that AsyncHandshakeOperation::operator() checks bytesTransferred first.
+            // We want it to NOT receive data into the channel, hence we set plainBytesTransferred to 0 here.
+            AsyncWriteOperation<
+            AsyncHandshakeOperation<typename std::decay<Handler>::type, Stream, Allocator>,
+                                    Stream,
+                                    Allocator>
+                                    op{std::move(*this), m_stream, m_core, 0};
+            boost::asio::async_write(m_stream.next_layer(), m_core.sendBuffer(), std::move(op));
             return;
             }
 
-         if(!m_channel->is_active() && !ec)
+         // we need more tls data from the socket
+         if(!m_stream.native_handle()->is_active() && !ec)
             {
-            // we need more tls data from the socket
-            m_nextLayer.async_read_some(m_core.input_buffer, std::move(*this));
+            m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
             return;
             }
 
-         if(start)
-            {
-            // don't call the handler directly, similar to io_context.post
-            m_nextLayer.async_read_some(
-               boost::asio::mutable_buffer(m_core.input_buffer.data(), 0), std::move(*this));
-            return;
-            }
-         m_handler(ec);
+         this->invoke(isContinuation, ec);
          }
 
    private:
-      Handler      m_handler;
-      StreamLayer& m_nextLayer;
-      Channel*     m_channel;
+      Stream&      m_stream;
       StreamCore&  m_core;
    };
 

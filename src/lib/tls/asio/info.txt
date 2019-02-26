@@ -8,6 +8,7 @@ asio_error.h
 </header:public>
 
 <header:internal>
+asio_async_base.h
 asio_async_handshake_op.h
 asio_async_read_op.h
 asio_async_write_op.h
