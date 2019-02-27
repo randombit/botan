@@ -38,7 +38,7 @@ namespace TLS {
  * boost::asio compatible SSL/TLS stream based on TLS::Client or TLS::Server.
  */
 template <class StreamLayer, class Channel>
-class Stream final : public StreamBase<Channel>
+class Stream : public StreamBase<Channel>
    {
    public:
       using next_layer_type = typename std::remove_reference<StreamLayer>::type;
@@ -50,7 +50,7 @@ class Stream final : public StreamBase<Channel>
 
    public:
       template <typename... Args>
-      Stream(StreamLayer&& nextLayer, Args&& ... args)
+      explicit Stream(StreamLayer&& nextLayer, Args&& ... args)
          : StreamBase<Channel>(std::forward<Args>(args)...),
            m_nextLayer(std::forward<StreamLayer>(nextLayer)) {}
 
@@ -444,7 +444,6 @@ class Stream final : public StreamBase<Channel>
          return writtenBytes;
          }
 
-   protected:
       StreamLayer m_nextLayer;
    };
 

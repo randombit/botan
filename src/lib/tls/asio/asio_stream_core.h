@@ -40,10 +40,9 @@ struct StreamCore : public Botan::TLS::Callbacks
 
       void tls_emit_data(const uint8_t data[], size_t size) override
          {
-         auto buffer = m_send_buffer.dynamicBuffer.prepare(size);
-         auto copySize =
-            boost::asio::buffer_copy(buffer, boost::asio::const_buffer(data, size));
-         m_send_buffer.dynamicBuffer.commit(copySize);
+         m_send_buffer.dynamicBuffer.commit(boost::asio::buffer_copy(
+                                               m_send_buffer.dynamicBuffer.prepare(size),
+                                               boost::asio::buffer(data, size)));
          }
 
       void tls_record_received(uint64_t, const uint8_t data[],
