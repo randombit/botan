@@ -45,10 +45,8 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
 
       void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true)
          {
-         m_ec = ec;
          reenter(this)
             {
-
             if(bytes_transferred > 0 && !ec)
                {
                boost::asio::const_buffer read_buffer{m_core.input_buffer.data(), bytes_transferred};
@@ -78,10 +76,12 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
 
             if(!isContinuation)
                {
+               m_ec_store = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
+               ec = m_ec_store;
                }
 
-            this->invoke_now(m_ec, m_decodedBytes);
+            this->invoke_now(ec, m_decodedBytes);
             }
          }
 
@@ -90,7 +90,7 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
       StreamCore&           m_core;
       MutableBufferSequence m_buffers;
 
-      boost::system::error_code m_ec;
+      boost::system::error_code m_ec_store;
       size_t                    m_decodedBytes;
    };
 
