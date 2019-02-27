@@ -18,7 +18,7 @@
 
 namespace Botan_Tests {
 
-namespace asio   = boost::asio;
+namespace net    = boost::asio;
 using error_code = boost::system::error_code;
 
 constexpr uint8_t     TEST_DATA[] = "The story so far: In the beginning the Universe was created. "
@@ -114,18 +114,19 @@ namespace Botan_Tests {
   provides the test data to the stream.
   The underlying network socket, claiming it read / wrote a number of bytes.
 */
+
 class Asio_Stream_Tests final : public Test
    {
       using TestStream = boost::beast::test::stream;
+      using FailCount = boost::beast::test::fail_count;
       using AsioStream = Botan::TLS::Stream<TestStream&, MockChannel>;
 
       boost::string_view test_data() const { return boost::string_view((const char*)TEST_DATA, TEST_DATA_SIZE); }
 
       void test_sync_handshake(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc};
-         socket.append(test_data());
+         net::io_context ioc;
+         TestStream      socket{ioc, test_data()};
 
          AsioStream ssl{socket};
 
@@ -138,10 +139,12 @@ class Asio_Stream_Tests final : public Test
 
       void test_sync_handshake_error(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
+         net::io_context ioc;
+         // fail right away
+         FailCount  fc{0, net::error::eof};
+         TestStream socket{ioc, fc}, remote{ioc};
+
          socket.connect(remote);
-         socket.close_remote();  // close socket right away
 
          AsioStream ssl{socket};
          // mimic handshake initialization
@@ -158,10 +161,10 @@ class Asio_Stream_Tests final : public Test
 
       void test_async_handshake(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
+         net::io_context ioc;
+         TestStream      socket{ioc, test_data()}, remote{ioc};
+
          socket.connect(remote);
-         socket.append(test_data());
 
          AsioStream ssl{socket};
          // mimic handshake initialization
@@ -185,10 +188,12 @@ class Asio_Stream_Tests final : public Test
 
       void test_async_handshake_error(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
+         net::io_context ioc;
+         // fail right away
+         FailCount  fc{0, net::error::eof};
+         TestStream socket{ioc, fc}, remote{ioc};
+
          socket.connect(remote);
-         socket.close_remote();  // close socket right away
 
          AsioStream ssl{socket};
          // mimic handshake initialization
@@ -210,9 +215,8 @@ class Asio_Stream_Tests final : public Test
 
       void test_sync_read_some_success(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc};
-         socket.append(test_data());
+         net::io_context ioc;
+         TestStream      socket{ioc, test_data()};
 
          AsioStream ssl{socket};
 
@@ -220,7 +224,7 @@ class Asio_Stream_Tests final : public Test
          uint8_t           buf[buf_size];
          error_code        ec;
 
-         auto bytes_transferred = asio::read(ssl, asio::mutable_buffer(buf, sizeof(buf)), ec);
+         auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, sizeof(buf)), ec);
 
          Test::Result result("sync read_some success");
          result.confirm("reads the correct data", contains(buf, TEST_DATA, buf_size));
@@ -232,20 +236,19 @@ class Asio_Stream_Tests final : public Test
 
       void test_sync_read_some_buffer_sequence(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc};
-         socket.append(test_data());
+         net::io_context ioc;
+         TestStream      socket{ioc, test_data()};
 
          AsioStream ssl{socket};
          error_code ec;
 
-         std::vector<asio::mutable_buffer> data;
+         std::vector<net::mutable_buffer> data;
          uint8_t buf1[TEST_DATA_SIZE/2];
          uint8_t buf2[TEST_DATA_SIZE/2];
-         data.emplace_back(asio::mutable_buffer(buf1, TEST_DATA_SIZE/2));
-         data.emplace_back(asio::mutable_buffer(buf2, TEST_DATA_SIZE/2));
+         data.emplace_back(net::mutable_buffer(buf1, TEST_DATA_SIZE/2));
+         data.emplace_back(net::mutable_buffer(buf2, TEST_DATA_SIZE/2));
 
-         auto bytes_transferred = asio::read(ssl, data, ec);
+         auto bytes_transferred = net::read(ssl, data, ec);
 
          Test::Result result("sync read_some buffer sequence");
 
@@ -260,18 +263,19 @@ class Asio_Stream_Tests final : public Test
 
       void test_sync_read_some_error(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
+         net::io_context ioc;
+         // fail right away
+         FailCount  fc{0, net::error::eof};
+         TestStream socket{ioc, fc}, remote{ioc};
 
          socket.connect(remote);
-         socket.close_remote();  // close socket right away
 
          AsioStream ssl{socket};
 
          uint8_t    buf[128];
          error_code ec;
 
-         auto bytes_transferred = asio::read(ssl, asio::mutable_buffer(buf, sizeof(buf)), ec);
+         auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, sizeof(buf)), ec);
 
          Test::Result result("sync read_some error");
          result.test_eq("didn't transfer anything", bytes_transferred, 0);
@@ -282,9 +286,8 @@ class Asio_Stream_Tests final : public Test
 
       void test_async_read_some_success(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc};
-         socket.append(test_data());
+         net::io_context ioc;
+         TestStream      socket{ioc, test_data()};
 
          AsioStream ssl{socket};
          uint8_t    data[TEST_DATA_SIZE];
@@ -299,8 +302,8 @@ class Asio_Stream_Tests final : public Test
             result.confirm("does not report an error", !ec);
             };
 
-         asio::mutable_buffer buf {data, TEST_DATA_SIZE};
-         asio::async_read(ssl, buf, read_handler);
+         net::mutable_buffer buf {data, TEST_DATA_SIZE};
+         net::async_read(ssl, buf, read_handler);
 
          socket.close_remote();
          ioc.run();
@@ -309,18 +312,17 @@ class Asio_Stream_Tests final : public Test
 
       void test_async_read_some_buffer_sequence(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc};
-         socket.append(test_data());
+         net::io_context ioc;
+         TestStream      socket{ioc, test_data()};
 
          AsioStream ssl{socket};
          error_code ec;
 
-         std::vector<asio::mutable_buffer> data;
+         std::vector<net::mutable_buffer> data;
          uint8_t buf1[TEST_DATA_SIZE/2];
          uint8_t buf2[TEST_DATA_SIZE/2];
-         data.emplace_back(asio::mutable_buffer(buf1, TEST_DATA_SIZE/2));
-         data.emplace_back(asio::mutable_buffer(buf2, TEST_DATA_SIZE/2));
+         data.emplace_back(net::mutable_buffer(buf1, TEST_DATA_SIZE/2));
+         data.emplace_back(net::mutable_buffer(buf2, TEST_DATA_SIZE/2));
 
          Test::Result result("async read_some buffer sequence");
 
@@ -333,7 +335,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("does not report an error", !ec);
             };
 
-         asio::async_read(ssl, data, read_handler);
+         net::async_read(ssl, data, read_handler);
 
          socket.close_remote();
          ioc.run();
@@ -342,9 +344,10 @@ class Asio_Stream_Tests final : public Test
 
       void test_async_read_some_error(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc};
-         // socket.append(test_data());  // no data to read -> EOF
+         net::io_context ioc;
+         // fail right away
+         FailCount  fc{0, net::error::eof};
+         TestStream socket{ioc, fc};
 
          AsioStream ssl{socket};
          uint8_t    data[TEST_DATA_SIZE];
@@ -358,8 +361,8 @@ class Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", (bool)ec);
             };
 
-         asio::mutable_buffer buf {data, TEST_DATA_SIZE};
-         asio::async_read(ssl, buf, read_handler);
+         net::mutable_buffer buf {data, TEST_DATA_SIZE};
+         net::async_read(ssl, buf, read_handler);
 
          socket.close_remote();
          ioc.run();
@@ -368,14 +371,14 @@ class Asio_Stream_Tests final : public Test
 
       void test_sync_write_some_success(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
+         net::io_context ioc;
+         TestStream      socket{ioc}, remote{ioc};
          socket.connect(remote);
 
          AsioStream ssl{socket};
          error_code ec;
 
-         auto bytes_transferred = asio::write(ssl, asio::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+         auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some success");
          result.confirm("writes the correct data", remote.str() == test_data());
@@ -387,8 +390,8 @@ class Asio_Stream_Tests final : public Test
 
       void test_sync_write_some_buffer_sequence(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
+         net::io_context ioc;
+         TestStream      socket{ioc}, remote{ioc};
          socket.connect(remote);
 
          AsioStream ssl{socket};
@@ -399,14 +402,14 @@ class Asio_Stream_Tests final : public Test
          random_data.fill('4');  // chosen by fair dice roll
          random_data.back() = '5';
 
-         std::vector<asio::const_buffer> data;
-         data.emplace_back(asio::const_buffer(random_data.data(), 1));
+         std::vector<net::const_buffer> data;
+         data.emplace_back(net::const_buffer(random_data.data(), 1));
          for(std::size_t i = 1; i < random_data.size(); i += 1024)
             {
-            data.emplace_back(asio::const_buffer(random_data.data() + i, 1024));
+            data.emplace_back(net::const_buffer(random_data.data() + i, 1024));
             }
 
-         auto bytes_transferred = asio::write(ssl, data, ec);
+         auto bytes_transferred = net::write(ssl, data, ec);
 
          Test::Result result("sync write_some buffer sequence");
 
@@ -424,14 +427,17 @@ class Asio_Stream_Tests final : public Test
 
       void test_sync_write_some_error(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
-         // socket.connect(remote);
+         net::io_context ioc;
+         // fail right away
+         FailCount  fc{0, net::error::eof};
+         TestStream socket{ioc, fc}, remote{ioc};
+
+         socket.connect(remote);
 
          AsioStream ssl{socket};
          error_code ec;
 
-         auto bytes_transferred = asio::write(ssl, asio::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+         auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
 
          Test::Result result("sync write_some error");
          result.test_eq("didn't transfer anything", bytes_transferred, 0);
@@ -442,8 +448,8 @@ class Asio_Stream_Tests final : public Test
 
       void test_async_write_some_success(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
+         net::io_context ioc;
+         TestStream      socket{ioc}, remote{ioc};
          socket.connect(remote);
 
          AsioStream ssl{socket};
@@ -458,7 +464,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("does not report an error", !ec);
             };
 
-         asio::async_write(ssl, asio::const_buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
+         net::async_write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
 
          ioc.run();
          results.push_back(result);
@@ -466,8 +472,8 @@ class Asio_Stream_Tests final : public Test
 
       void test_async_write_some_buffer_sequence(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
+         net::io_context ioc;
+         TestStream      socket{ioc}, remote{ioc};
          socket.connect(remote);
 
          AsioStream ssl{socket};
@@ -478,11 +484,11 @@ class Asio_Stream_Tests final : public Test
          random_data.fill('4');  // chosen by fair dice roll
          random_data.back() = '5';
 
-         std::vector<asio::const_buffer> src;
-         src.emplace_back(asio::const_buffer(random_data.data(), 1));
+         std::vector<net::const_buffer> src;
+         src.emplace_back(net::const_buffer(random_data.data(), 1));
          for(std::size_t i = 1; i < random_data.size(); i += 1024)
             {
-            src.emplace_back(asio::const_buffer(random_data.data() + i, 1024));
+            src.emplace_back(net::const_buffer(random_data.data() + i, 1024));
             }
 
          Test::Result result("async write_some buffer sequence");
@@ -499,7 +505,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("does not report an error", !ec);
             };
 
-         asio::async_write(ssl, src, write_handler);
+         net::async_write(ssl, src, write_handler);
 
          ioc.run();
          results.push_back(result);
@@ -507,9 +513,11 @@ class Asio_Stream_Tests final : public Test
 
       void test_async_write_some_error(std::vector<Test::Result>& results)
          {
-         asio::io_context    ioc;
-         TestStream socket{ioc}, remote{ioc};
-         //  socket.connect(remote);  // will cause connection_reset error
+         net::io_context ioc;
+         // fail right away
+         FailCount  fc{0, net::error::eof};
+         TestStream socket{ioc, fc}, remote{ioc};
+         socket.connect(remote);
 
          AsioStream ssl{socket};
          error_code ec;
@@ -522,7 +530,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", (bool)ec);
             };
 
-         asio::async_write(ssl, asio::const_buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
+         net::async_write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
 
          ioc.run();
          results.push_back(result);
