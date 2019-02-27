@@ -17,11 +17,11 @@ namespace Botan {
 
 namespace TLS {
 
-template <class Handler, class Executor, class Allocator>
+template <class Handler, class Executor1, class Allocator>
 struct AsyncBase
    {
       using allocator_type = boost::asio::associated_allocator_t<Handler, Allocator>;
-      using executor_type = boost::asio::associated_executor_t<Handler, Executor>;
+      using executor_type = boost::asio::associated_executor_t<Handler, Executor1>;
 
       allocator_type get_allocator() const noexcept
          {
@@ -30,14 +30,14 @@ struct AsyncBase
 
       executor_type get_executor() const noexcept
          {
-         return boost::asio::get_associated_executor(m_handler, m_work.get_executor());
+         return boost::asio::get_associated_executor(m_handler, m_work_guard_1.get_executor());
          }
 
    protected:
       template <class HandlerT>
-      AsyncBase(HandlerT&& handler, const Executor& executor)
+      AsyncBase(HandlerT&& handler, const Executor1& executor)
          : m_handler(std::forward<HandlerT>(handler))
-         , m_work(executor)
+         , m_work_guard_1(executor)
          {
          }
 
@@ -48,20 +48,20 @@ struct AsyncBase
             {
             // \note(toesterreich): Is this ok to do with bind_handler? Do we need placeholders?
             boost::asio::post(boost::asio::bind_executor(
-                                 m_work.get_executor(), boost::beast::bind_handler(std::move(m_handler), args...))
+                                 m_work_guard_1.get_executor(), boost::beast::bind_handler(std::move(m_handler), args...))
                              );
 
-            m_work.reset();
+            m_work_guard_1.reset();
             }
          else
             {
             m_handler(std::forward<Args>(args)...);
-            m_work.reset();
+            m_work_guard_1.reset();
             }
          }
 
       Handler m_handler;
-      boost::asio::executor_work_guard<executor_type> m_work;
+      boost::asio::executor_work_guard<Executor1> m_work_guard_1;
    };
 }
 }
