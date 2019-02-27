@@ -44,12 +44,9 @@ enum class error
    unknown
    };
 
-using error_code = boost::system::error_code;
-using error_category = boost::system::error_category;
-
 namespace detail {
 // TLS Alerts
-struct BotanAlertCategory : error_category
+struct BotanAlertCategory : boost::system::error_category
    {
    const char* name() const noexcept override
       {
@@ -69,7 +66,7 @@ inline const BotanAlertCategory& botan_alert_category() noexcept
    return category;
    }
 
-struct BotanErrorCategory : error_category
+struct BotanErrorCategory : boost::system::error_category
    {
    const char* name() const noexcept override
       {
@@ -138,14 +135,14 @@ inline const BotanErrorCategory& botan_category() noexcept
    }
 } // namespace detail
 
-inline error_code make_error_code(Botan::TLS::Alert::Type c)
+inline boost::system::error_code make_error_code(Botan::TLS::Alert::Type c)
    {
-   return error_code(static_cast<int>(c), detail::botan_alert_category());
+   return boost::system::error_code(static_cast<int>(c), detail::botan_alert_category());
    }
 
-inline error_code make_error_code(error c)
+inline boost::system::error_code make_error_code(error c)
    {
-   return error_code(static_cast<int>(c), detail::botan_category());
+   return boost::system::error_code(static_cast<int>(c), detail::botan_category());
    }
 
 }  // namespace TLS

@@ -11,6 +11,7 @@
 
 #include <boost/beast/core/bind_handler.hpp>
 
+#include <boost/asio/coroutine.hpp>
 #include <botan/internal/asio_includes.h>
 
 namespace Botan {
@@ -18,7 +19,7 @@ namespace Botan {
 namespace TLS {
 
 template <class Handler, class Executor1, class Allocator>
-struct AsyncBase
+struct AsyncBase : boost::asio::coroutine
    {
       using allocator_type = boost::asio::associated_allocator_t<Handler, Allocator>;
       using executor_type = boost::asio::associated_executor_t<Handler, Executor1>;
@@ -42,22 +43,10 @@ struct AsyncBase
          }
 
       template<class... Args>
-      void invoke(bool isContinuation, Args&& ... args)
+      void invoke_now(Args&& ... args)
          {
-         if(!isContinuation)
-            {
-            // \note(toesterreich): Is this ok to do with bind_handler? Do we need placeholders?
-            boost::asio::post(boost::asio::bind_executor(
-                                 m_work_guard_1.get_executor(), boost::beast::bind_handler(std::move(m_handler), args...))
-                             );
-
-            m_work_guard_1.reset();
-            }
-         else
-            {
-            m_handler(std::forward<Args>(args)...);
-            m_work_guard_1.reset();
-            }
+         m_handler(std::forward<Args>(args)...);
+         m_work_guard_1.reset();
          }
 
       Handler m_handler;

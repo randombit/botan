@@ -9,9 +9,11 @@
 #ifndef BOTAN_ASIO_ASYNC_WRITE_OP_H_
 #define BOTAN_ASIO_ASYNC_WRITE_OP_H_
 
-#include <botan/internal/asio_stream_core.h>
-#include <botan/internal/asio_includes.h>
 #include <botan/internal/asio_async_base.h>
+#include <botan/internal/asio_includes.h>
+#include <botan/internal/asio_stream_core.h>
+
+#include <boost/asio/yield.hpp>
 
 namespace Botan {
 
@@ -41,19 +43,33 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
 
    void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true)
       {
-      m_core.consumeSendBuffer(bytes_transferred);
-      // the size of the sent TLS record can differ from the size of the payload due to TLS encryption. We need to tell
-      // the handler how many bytes of the original data we already processed.
-      this->invoke(isContinuation, ec, ec ? 0 : m_plainBytesTransferred);
+      m_ec = ec;
+      reenter(this)
+         {
+         m_core.consumeSendBuffer(bytes_transferred);
+
+         if(!isContinuation)
+            {
+            yield m_stream.next_layer().async_write_some(boost::asio::const_buffer(), std::move(*this));
+            }
+
+         // the size of the sent TLS record can differ from the size of the payload due to TLS encryption. We need to tell
+         // the handler how many bytes of the original data we already processed.
+         this->invoke_now(m_ec, m_ec ? 0 : m_plainBytesTransferred);
+         }
       }
 
-   Stream&      m_stream;
-   StreamCore&  m_core;
+   Stream&     m_stream;
+   StreamCore& m_core;
    std::size_t m_plainBytesTransferred;
+
+   boost::system::error_code m_ec;
    };
 
 }  // namespace TLS
 
 }  // namespace Botan
+
+#include <boost/asio/unyield.hpp>
 
 #endif

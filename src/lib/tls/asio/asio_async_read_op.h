@@ -14,6 +14,8 @@
 #include <botan/internal/asio_includes.h>
 #include <botan/internal/asio_stream_core.h>
 
+#include <boost/asio/yield.hpp>
+
 namespace Botan {
 
 namespace TLS {
@@ -32,6 +34,7 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
          , m_stream(stream)
          , m_core(core)
          , m_buffers(buffers)
+         , m_decodedBytes(0)
          {
          }
 
@@ -42,46 +45,59 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
 
       void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true)
          {
-         std::size_t decodedBytes = 0;
-
-         if(bytes_transferred > 0 && !ec)
+         m_ec = ec;
+         reenter(this)
             {
-            boost::asio::const_buffer read_buffer{m_core.input_buffer.data(), bytes_transferred};
-            try
+
+            if(bytes_transferred > 0 && !ec)
                {
-               m_stream.native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                                       read_buffer.size());
+               boost::asio::const_buffer read_buffer{m_core.input_buffer.data(), bytes_transferred};
+               try
+                  {
+                  m_stream.native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
+                                                          read_buffer.size());
+                  }
+               catch(const std::exception&)
+                  {
+                  ec = convertException();
+                  }
                }
-            catch(const std::exception&)
+
+            if(!m_core.hasReceivedData() && !ec)
                {
-               ec = convertException();
+               // we need more tls packets from the socket
+               m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
+               return;
                }
-            }
 
-         if(!m_core.hasReceivedData() && !ec)
-            {
-            // we need more tls packets from the socket
-            m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
-            return;
-            }
+            if(m_core.hasReceivedData() && !ec)
+               {
+               m_decodedBytes = m_core.copyReceivedData(m_buffers);
+               ec = {};
+               }
 
-         if(m_core.hasReceivedData() && !ec)
-            {
-            decodedBytes = m_core.copyReceivedData(m_buffers);
-            ec = {};
-            }
+            if(!isContinuation)
+               {
+               yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
+               }
 
-         this->invoke(isContinuation, ec, decodedBytes);
+            this->invoke_now(m_ec, m_decodedBytes);
+            }
          }
 
    private:
       Stream&               m_stream;
       StreamCore&           m_core;
       MutableBufferSequence m_buffers;
+
+      boost::system::error_code m_ec;
+      size_t                    m_decodedBytes;
    };
 
 }  // namespace TLS
 
 }  // namespace Botan
+
+#include <boost/asio/unyield.hpp>
 
 #endif
