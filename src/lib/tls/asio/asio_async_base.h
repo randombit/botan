@@ -9,8 +9,6 @@
 #ifndef BOTAN_ASIO_ASYNC_BASE_H_
 #define BOTAN_ASIO_ASYNC_BASE_H_
 
-#include <boost/beast/core/bind_handler.hpp>
-
 #include <boost/asio/coroutine.hpp>
 #include <botan/internal/asio_includes.h>
 
