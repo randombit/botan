@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
       const std::string arg_spec =
          "botan-test --verbose --help --data-dir= --pkcs11-lib= --provider= "
          "--log-success --abort-on-first-fail --no-avoid-undefined --skip-tests= "
-         "--test-threads=1 --run-long-tests --run-online-tests --test-runs=1 --drbg-seed= "
+         "--test-threads=1 --run-long-tests --run-online-tests --use-mlock-pool --test-runs=1 --drbg-seed= "
          "*suites";
 
       Botan_CLI::Argument_Parser parser(arg_spec);
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_THREADS)
       // The mlock pool becomes a major contention point when many
       // threads are running.
-      if(parser.get_arg_sz("test-threads") != 1)
+      if(parser.get_arg_sz("test-threads") != 1 && !parser.flag_set("use-mlock-pool"))
          {
          ::setenv("BOTAN_MLOCK_POOL_SIZE", "0", 1);
          }

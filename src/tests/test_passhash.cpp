@@ -54,7 +54,7 @@ class Bcrypt_Tests final : public Text_Based_Test
 
          const std::string password = "ag00d1_2BE5ur3";
 
-         const uint16_t max_level = (Test::run_long_tests() ? 15 : 10);
+         const uint16_t max_level = (Test::run_long_tests() ? 13 : 10);
 
          for(uint16_t level = 4; level <= max_level; ++level)
             {

@@ -48,7 +48,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    if target in ['shared', 'static', 'sanitizer', 'fuzzers', 'gcc4.8', 'cross-i386', 'bsi', 'nist']:
+    if target in ['shared', 'static', 'coverage', 'sanitizer', 'fuzzers', 'gcc4.8', 'cross-i386', 'bsi', 'nist']:
         test_cmd += ['--test-threads=%d' % (get_concurrency())]
 
     fast_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
@@ -95,6 +95,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
 
     if target == 'coverage':
         flags += ['--with-coverage-info', '--test-mode']
+        test_cmd += ['--use-mlock-pool']
     if target == 'valgrind':
         # valgrind in 16.04 has a bug with rdrand handling
         flags += ['--with-valgrind', '--disable-rdrand']
