@@ -9,6 +9,11 @@
 #ifndef BOTAN_ASIO_ASYNC_BASE_H_
 #define BOTAN_ASIO_ASYNC_BASE_H_
 
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+
+#include <boost/version.hpp>
+#if BOOST_VERSION > 106600
+
 #include <boost/asio/coroutine.hpp>
 #include <botan/internal/asio_includes.h>
 
@@ -53,4 +58,6 @@ struct AsyncBase : boost::asio::coroutine
 }
 }
 
-#endif
+#endif // BOOST_VERSION
+#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+#endif // BOTAN_ASIO_ASYNC_BASE_H_

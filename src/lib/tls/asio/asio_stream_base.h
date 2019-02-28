@@ -9,6 +9,11 @@
 #ifndef BOTAN_ASIO_STREAM_BASE_H_
 #define BOTAN_ASIO_STREAM_BASE_H_
 
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+
+#include <boost/version.hpp>
+#if BOOST_VERSION > 106600
+
 #include <botan/auto_rng.h>
 #include <botan/tls_client.h>
 #include <botan/tls_server.h>
@@ -93,4 +98,6 @@ class StreamBase<Botan::TLS::Client>
 
 }  // namespace Botan
 
-#endif
+#endif // BOOST_VERSION
+#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+#endif // BOTAN_ASIO_STREAM_BASE_H_

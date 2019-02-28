@@ -9,6 +9,11 @@
 #ifndef BOTAN_ASIO_CONVERT_EXCEPTIONS_H_
 #define BOTAN_ASIO_CONVERT_EXCEPTIONS_H_
 
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+
+#include <boost/version.hpp>
+#if BOOST_VERSION > 106600
+
 #include <botan/asio_error.h>
 #include <botan/tls_exceptn.h>
 
@@ -128,4 +133,6 @@ inline boost::system::error_code convertException()
 
 }  // namespace Botan
 
-#endif
+#endif // BOOST_VERSION
+#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+#endif // BOTAN_ASIO_CONVERT_EXCEPTIONS_H_

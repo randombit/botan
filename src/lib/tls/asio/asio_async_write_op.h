@@ -9,6 +9,11 @@
 #ifndef BOTAN_ASIO_ASYNC_WRITE_OP_H_
 #define BOTAN_ASIO_ASYNC_WRITE_OP_H_
 
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+
+#include <boost/version.hpp>
+#if BOOST_VERSION > 106600
+
 #include <botan/internal/asio_async_base.h>
 #include <botan/internal/asio_includes.h>
 #include <botan/internal/asio_stream_core.h>
@@ -73,4 +78,6 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
 
 #include <boost/asio/unyield.hpp>
 
-#endif
+#endif // BOOST_VERSION
+#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+#endif // BOTAN_ASIO_ASYNC_WRITE_OP_H_

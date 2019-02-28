@@ -9,6 +9,11 @@
 #ifndef BOTAN_ASIO_STREAM_CORE_H_
 #define BOTAN_ASIO_STREAM_CORE_H_
 
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+
+#include <boost/version.hpp>
+#if BOOST_VERSION > 106600
+
 #include <botan/internal/asio_includes.h>
 #include <botan/tls_callbacks.h>
 #include <mutex>
@@ -116,4 +121,6 @@ struct StreamCore : public Botan::TLS::Callbacks
 
 }  // namespace Botan
 
-#endif
+#endif // BOOST_VERSION
+#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+#endif // BOTAN_ASIO_STREAM_CORE_H_

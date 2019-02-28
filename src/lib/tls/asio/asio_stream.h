@@ -9,6 +9,11 @@
 #ifndef BOTAN_ASIO_STREAM_H_
 #define BOTAN_ASIO_STREAM_H_
 
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+
+#include <boost/version.hpp>
+#if BOOST_VERSION > 106600
+
 #include <botan/internal/asio_async_handshake_op.h>
 #include <botan/internal/asio_async_read_op.h>
 #include <botan/internal/asio_async_write_op.h>
@@ -451,4 +456,6 @@ class Stream : public StreamBase<Channel>
 
 } // namespace Botan
 
-#endif
+#endif // BOOST_VERSION
+#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+#endif // BOTAN_ASIO_STREAM_H_

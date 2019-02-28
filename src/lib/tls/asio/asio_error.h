@@ -9,6 +9,11 @@
 #ifndef BOTAN_ASIO_ERROR_H_
 #define BOTAN_ASIO_ERROR_H_
 
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+
+#include <boost/version.hpp>
+#if BOOST_VERSION > 106600
+
 #include <boost/system/system_error.hpp>
 
 #include <botan/tls_alert.h>
@@ -164,4 +169,6 @@ template<> struct is_error_code_enum<Botan::TLS::error>
 }  // namespace system
 }  // namespace boost
 
-#endif
+#endif // BOOST_VERSION
+#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+#endif // BOTAN_ASIO_ERROR_H_
