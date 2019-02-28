@@ -2009,7 +2009,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     }
 
     variables['lib_flags'] = cc.gen_lib_flags(options, variables)
-    variables['cmake_shared_flags'] = cmake_escape(variables['lib_flags'])
+    variables['cmake_lib_flags'] = cmake_escape(variables['lib_flags'])
 
     if options.with_pkg_config:
         variables['botan_pkgconfig'] = os.path.join(build_paths.build_dir, 'botan-%d.pc' % (Version.major()))
