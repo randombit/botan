@@ -51,6 +51,9 @@ Version 2.10.0, Not Yet Released
 * Add ``--format=`` option to the ``hash`` cli which allows formatting the output
   as base64 or base58, default output remains hex.
 
+* Add ``base58_enc`` and ``base58_dec`` cli utils for base58 encoding/decoding.
+  (GH #1848)
+
 * Minor HMAC optimizations.
 
 * Build fixes for GNU/Hurd.
