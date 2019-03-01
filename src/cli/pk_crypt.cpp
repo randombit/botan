@@ -189,12 +189,18 @@ class PK_Decrypt final : public Command
             return set_return_code(1);
             }
 
-         Botan::PK_Decryptor_EME dec(*key, rng(), "OAEP(" + oaep_hash + ")");
-
-         const Botan::secure_vector<uint8_t> file_key = dec.decrypt(encrypted_key);
-
          std::unique_ptr<Botan::AEAD_Mode> aead =
             Botan::AEAD_Mode::create_or_throw(aead_algo, Botan::DECRYPTION);
+
+         const size_t expected_keylen = aead->key_spec().maximum_keylength();
+
+         Botan::PK_Decryptor_EME dec(*key, rng(), "OAEP(" + oaep_hash + ")");
+
+         const Botan::secure_vector<uint8_t> file_key =
+            dec.decrypt_or_random(encrypted_key.data(),
+                                  encrypted_key.size(),
+                                  expected_keylen,
+                                  rng());
 
          aead->set_key(file_key);
          aead->set_associated_data_vec(encrypted_key);

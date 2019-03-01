@@ -150,6 +150,13 @@ def cli_base64_tests():
     test_cli("base64_enc", "-", "YmVlcyE=", "bees!")
     test_cli("base64_dec", "-", "bees!", "YmVlcyE=")
 
+def cli_base58_tests():
+    test_cli("base58_enc", "-", "C6sRAr4", "bees!")
+    test_cli("base58_dec", "-", "bees!", "C6sRAr4")
+
+    test_cli("base58_enc", ["--check", "-"], "Cjv15cdjaBc", "F00F")
+    test_cli("base58_dec", ["--check", "-"], "F00F", "Cjv15cdjaBc")
+
 def cli_hex_tests():
     test_cli("hex_enc", "-", "6265657321", "bees!")
     test_cli("hex_dec", "-", "bees!", "6265657321")
@@ -750,6 +757,7 @@ def main(args=None):
     test_fns = [
         cli_asn1_tests,
         cli_asn1_tests,
+        cli_base58_tests,
         cli_base64_tests,
         cli_bcrypt_tests,
         cli_cc_enc_tests,
