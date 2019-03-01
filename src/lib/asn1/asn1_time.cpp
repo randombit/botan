@@ -53,7 +53,7 @@ void X509_Time::decode_from(BER_Decoder& source)
 std::string X509_Time::to_string() const
    {
    if(time_is_set() == false)
-      throw Invalid_State("X509_Time::as_string: No time set");
+      throw Invalid_State("X509_Time::to_string: No time set");
 
    uint32_t full_year = m_year;
 

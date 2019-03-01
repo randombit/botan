@@ -89,7 +89,7 @@ SymmetricKey derive_key(const std::string& passphrase,
 #endif
    else
       throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
-                           kdf_algo.get_oid().as_string());
+                           kdf_algo.get_oid().to_string());
    }
 
 secure_vector<uint8_t> derive_key(const std::string& passphrase,

@@ -236,7 +236,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * Return the OID of these domain parameters
       * @result the OID as a string
       */
-      std::string BOTAN_DEPRECATED("Use get_curve_oid") get_oid() const { return get_curve_oid().as_string(); }
+      std::string BOTAN_DEPRECATED("Use get_curve_oid") get_oid() const { return get_curve_oid().to_string(); }
 
       /**
       * Return the OID of these domain parameters

@@ -152,11 +152,11 @@ void ASN1_Formatter::decode(std::ostream& output,
          std::string out = OIDS::lookup(oid);
          if(out.empty())
             {
-            out = oid.as_string();
+            out = oid.to_string();
             }
          else
             {
-            out += " [" + oid.as_string() + "]";
+            out += " [" + oid.to_string() + "]";
             }
 
          output << format(type_tag, class_tag, level, length, out);

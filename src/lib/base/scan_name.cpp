@@ -123,7 +123,7 @@ std::string SCAN_Name::arg(size_t i) const
    {
    if(i >= arg_count())
       throw Invalid_Argument("SCAN_Name::arg " + std::to_string(i) +
-                             " out of range for '" + as_string() + "'");
+                             " out of range for '" + to_string() + "'");
    return m_args[i];
    }
 

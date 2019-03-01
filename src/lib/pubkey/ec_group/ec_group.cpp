@@ -351,7 +351,7 @@ EC_Group::EC_Group(const OID& domain_oid)
    {
    this->m_data = ec_group_data().lookup(domain_oid);
    if(!this->m_data)
-      throw Invalid_Argument("Unknown EC_Group " + domain_oid.as_string());
+      throw Invalid_Argument("Unknown EC_Group " + domain_oid.to_string());
    }
 
 EC_Group::EC_Group(const std::string& str)

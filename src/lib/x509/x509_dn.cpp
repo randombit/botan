@@ -61,7 +61,7 @@ std::multimap<std::string, std::string> X509_DN::contents() const
       std::string str_value = OIDS::oid2str(i.first);
 
       if(str_value.empty())
-         str_value = i.first.as_string();
+         str_value = i.first.to_string();
       multimap_insert(retval, str_value, i.second.value());
       }
    return retval;

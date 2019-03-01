@@ -798,7 +798,7 @@ std::string X509_Certificate::to_string() const
       {
       out << "Policies: " << "\n";
       for(auto oid : policies)
-         out << "   " << oid.as_string() << "\n";
+         out << "   " << oid.to_string() << "\n";
       }
 
    const std::vector<OID>& ex_constraints = this->extended_key_usage();
@@ -810,7 +810,7 @@ std::string X509_Certificate::to_string() const
          const std::string oid_str = OIDS::oid2str(oid);
 
          if(oid_str.empty())
-            out << "   " << oid.as_string() << "\n";
+            out << "   " << oid.to_string() << "\n";
          else
             out << "   " << oid_str << "\n";
          }
@@ -877,7 +877,7 @@ std::string X509_Certificate::to_string() const
    catch(Decoding_Error&)
       {
       const AlgorithmIdentifier& alg_id = this->subject_public_key_algo();
-      out << "Failed to decode key with oid " << alg_id.get_oid().as_string() << "\n";
+      out << "Failed to decode key with oid " << alg_id.get_oid().to_string() << "\n";
       }
 
    return out.str();
