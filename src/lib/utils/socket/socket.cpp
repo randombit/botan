@@ -31,10 +31,7 @@
   #include <fcntl.h>
 
 #elif defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
-  #define NOMINMAX 1
-  #include <winsock2.h>
   #include <ws2tcpip.h>
-  #include <windows.h>
 #endif
 
 namespace Botan {
@@ -72,7 +69,7 @@ class Asio_Socket final : public OS::Socket
 
          if(ec)
             throw boost::system::system_error(ec);
-         if(ec || m_tcp.is_open() == false)
+         if(m_tcp.is_open() == false)
             throw System_Error("Connection to host " + hostname + " failed");
          }
 
@@ -82,8 +79,8 @@ class Asio_Socket final : public OS::Socket
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
-         boost::asio::async_write(m_tcp, boost::asio::buffer(buf, len),
-                                  [&ec](boost::system::error_code e, size_t) { ec = e; });
+         m_tcp.async_send(boost::asio::buffer(buf, len),
+                           [&ec](boost::system::error_code e, size_t) { ec = e; });
 
          while(ec == boost::asio::error::would_block) { m_io.run_one(); }
 
@@ -100,11 +97,8 @@ class Asio_Socket final : public OS::Socket
          boost::system::error_code ec = boost::asio::error::would_block;
          size_t got = 0;
 
-         auto read_cb = [&](const boost::system::error_code cb_ec, size_t cb_got) {
-            ec = cb_ec; got = cb_got;
-         };
-
-         m_tcp.async_read_some(boost::asio::buffer(buf, len), read_cb);
+         m_tcp.async_read_some(boost::asio::buffer(buf, len),
+                               [&](boost::system::error_code cb_ec, size_t cb_got) { ec = cb_ec; got = cb_got; });
 
          while(ec == boost::asio::error::would_block) { m_io.run_one(); }
 
