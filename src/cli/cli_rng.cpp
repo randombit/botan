@@ -9,6 +9,7 @@
 #include <botan/entropy_src.h>
 #include <botan/cpuid.h>
 #include <botan/hex.h>
+#include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>
@@ -85,5 +86,48 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
 
    throw CLI_Error_Unsupported("RNG", rng_type);
    }
+
+class RNG final : public Command
+   {
+   public:
+      RNG() : Command("rng --system --rdrand --auto --entropy --drbg --drbg-seed= *bytes") {}
+
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Sample random bytes from the specified rng";
+         }
+
+      void go() override
+         {
+         std::string type = get_arg("rng-type");
+
+         if(type.empty())
+            {
+            for(std::string flag : { "system", "rdrand", "auto", "entropy", "drbg" })
+               {
+               if(flag_set(flag))
+                  {
+                  type = flag;
+                  break;
+                  }
+               }
+            }
+
+         const std::string drbg_seed = get_arg("drbg-seed");
+         std::unique_ptr<Botan::RandomNumberGenerator> rng = cli_make_rng(type, drbg_seed);
+
+         for(const std::string& req : get_arg_list("bytes"))
+            {
+            output() << Botan::hex_encode(rng->random_vec(Botan::to_u32bit(req))) << "\n";
+            }
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("rng", RNG);
 
 }

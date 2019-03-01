@@ -27,9 +27,7 @@ uint32_t sha256_d_checksum(const uint8_t input[], size_t input_length)
    sha256->update(checksum);
    sha256->final(checksum);
 
-   checksum.resize(4);
-   uint32_t c = load_be<uint32_t>(checksum.data(), 0);
-   return c;
+   return load_be<uint32_t>(checksum.data(), 0);
    }
 
 class Character_Table
@@ -140,7 +138,12 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length)
 
    for(size_t i = leading_zeros; i != input_length; ++i)
       {
-      size_t idx = base58.code_for(input[i]);
+      const char c = input[i];
+
+      if(c == ' ' || c == '\n')
+         continue;
+
+      const size_t idx = base58.code_for(c);
 
       if(idx == 0x80)
          throw Decoding_Error("Invalid base58");
