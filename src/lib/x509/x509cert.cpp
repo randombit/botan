@@ -793,7 +793,7 @@ std::string X509_Certificate::to_string() const
          out << "   Decipher Only\n";
       }
 
-   const std::vector<OID> policies = this->certificate_policy_oids();
+   const std::vector<OID>& policies = this->certificate_policy_oids();
    if(!policies.empty())
       {
       out << "Policies: " << "\n";
@@ -801,12 +801,19 @@ std::string X509_Certificate::to_string() const
          out << "   " << oid.as_string() << "\n";
       }
 
-   std::vector<OID> ex_constraints = this->extended_key_usage();
+   const std::vector<OID>& ex_constraints = this->extended_key_usage();
    if(!ex_constraints.empty())
       {
       out << "Extended Constraints:\n";
-      for(size_t i = 0; i != ex_constraints.size(); i++)
-         out << "   " << OIDS::oid2str(ex_constraints[i]) << "\n";
+      for(auto&& oid : ex_constraints)
+         {
+         const std::string oid_str = OIDS::oid2str(oid);
+
+         if(oid_str.empty())
+            out << "   " << oid.as_string() << "\n";
+         else
+            out << "   " << oid_str << "\n";
+         }
       }
 
    const NameConstraints& name_constraints = this->name_constraints();
@@ -839,7 +846,7 @@ std::string X509_Certificate::to_string() const
    if(!ocsp_responder().empty())
       out << "OCSP responder " << ocsp_responder() << "\n";
 
-   std::vector<std::string> ca_issuers = this->ca_issuers();
+   const std::vector<std::string> ca_issuers = this->ca_issuers();
    if(!ca_issuers.empty())
       {
       out << "CA Issuers:\n";
