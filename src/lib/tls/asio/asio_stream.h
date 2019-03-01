@@ -396,13 +396,15 @@ class Stream : public StreamBase<Channel>
             // NOTE: This is not asynchronous: it encrypts the data synchronously.
             // Only writing on the socket is asynchronous.
             for(auto it = boost::asio::buffer_sequence_begin(buffers);
-                  sent < MAX_PLAINTEXT_SIZE && it != boost::asio::buffer_sequence_end(buffers);
+                  it != boost::asio::buffer_sequence_end(buffers);
                   it++)
                {
-               const std::size_t to_send =
-                  std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, boost::asio::buffer_size(*it));
-               native_handle()->send(static_cast<const uint8_t*>(it->data()), to_send);
-               sent += to_send;
+               if(sent >= MAX_PLAINTEXT_SIZE) return;
+               boost::asio::const_buffer buffer = *it;
+               const auto amount =
+                  std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, buffer.size());
+               native_handle()->send(static_cast<const uint8_t*>(buffer.data()), amount);
+               sent += amount;
                }
             }
          catch(const std::exception&)
