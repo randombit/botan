@@ -26,18 +26,18 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
    public:
       enum xmss_algorithm_t
          {
-         XMSS_SHA2_256_W16_H10 = 0x01000001,
-         XMSS_SHA2_256_W16_H16 = 0x02000002,
-         XMSS_SHA2_256_W16_H20 = 0x03000003,
-         XMSS_SHA2_512_W16_H10 = 0x04000004,
-         XMSS_SHA2_512_W16_H16 = 0x05000005,
-         XMSS_SHA2_512_W16_H20 = 0x06000006,
-         XMSS_SHAKE128_W16_H10 = 0x07000007,
-         XMSS_SHAKE128_W16_H16 = 0x08000008,
-         XMSS_SHAKE128_W16_H20 = 0x09000009,
-         XMSS_SHAKE256_W16_H10 = 0x0a00000a,
-         XMSS_SHAKE256_W16_H16 = 0x0b00000b,
-         XMSS_SHAKE256_W16_H20 = 0x0c00000c
+         XMSS_SHA2_10_256 = 0x00000001,
+         XMSS_SHA2_16_256 = 0x00000002,
+         XMSS_SHA2_20_256 = 0x00000003,
+         XMSS_SHA2_10_512 = 0x00000004,
+         XMSS_SHA2_16_512 = 0x00000005,
+         XMSS_SHA2_20_512 = 0x00000006,
+         XMSS_SHAKE_10_256 = 0x00000007,
+         XMSS_SHAKE_16_256 = 0x00000008,
+         XMSS_SHAKE_20_256 = 0x00000009,
+         XMSS_SHAKE_10_512 = 0x0000000a,
+         XMSS_SHAKE_16_512 = 0x0000000b,
+         XMSS_SHAKE_20_512 = 0x0000000c
          };
 
       static xmss_algorithm_t xmss_id_from_string(const std::string& algo_name);

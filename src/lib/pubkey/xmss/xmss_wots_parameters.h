@@ -29,10 +29,10 @@ class XMSS_WOTS_Parameters final
    public:
       enum ots_algorithm_t
          {
-         WOTSP_SHA2_256_W16 = 0x01000001,
-         WOTSP_SHA2_512_W16 = 0x02000002,
-         WOTSP_SHAKE128_W16 = 0x03000003,
-         WOTSP_SHAKE256_W16 = 0x04000004
+         WOTSP_SHA2_256 = 0x00000001,
+         WOTSP_SHA2_512 = 0x00000002,
+         WOTSP_SHAKE_256 = 0x00000003,
+         WOTSP_SHAKE_512 = 0x00000004
          };
 
       XMSS_WOTS_Parameters(const std::string& algo_name);
