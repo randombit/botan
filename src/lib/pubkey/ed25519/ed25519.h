@@ -38,18 +38,11 @@ class BOTAN_PUBLIC_API(2,2) Ed25519_PublicKey : public virtual Public_Key
       Ed25519_PublicKey(const AlgorithmIdentifier& alg_id,
                         const std::vector<uint8_t>& key_bits);
 
-      /**
-      * Create a Ed25519 Public Key.
-      * @param pub 32-byte raw public key
-      */
-      explicit Ed25519_PublicKey(const std::vector<uint8_t>& pub) : m_public(pub) {}
+      template<typename Alloc>
+      Ed25519_PublicKey(const std::vector<uint8_t, Alloc>& pub) :
+         Ed25519_PublicKey(pub.data(), pub.size()) {}
 
-      /**
-      * Create a Ed25519 Public Key.
-      * @param pub 32-byte raw public key
-      */
-      explicit Ed25519_PublicKey(const secure_vector<uint8_t>& pub) :
-         m_public(pub.begin(), pub.end()) {}
+      Ed25519_PublicKey(const uint8_t pub_key[], size_t len);
 
       std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string& params,
