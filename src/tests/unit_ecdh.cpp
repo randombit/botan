@@ -54,7 +54,7 @@ class ECDH_Unit_Tests final : public Test
 
                if(!result.test_eq("same derived key", alice_key.bits_of(), bob_key.bits_of()))
                   {
-                  result.test_note("Keys where " + alice_key.as_string() + " and " + bob_key.as_string());
+                  result.test_note("Keys where " + alice_key.to_string() + " and " + bob_key.to_string());
                   }
                }
             catch(Botan::Lookup_Error& e)

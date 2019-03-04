@@ -60,12 +60,12 @@ Test::Result test_odd_parity()
    return result;
    }
 
-Test::Result test_as_string()
+Test::Result test_to_string()
    {
    Test::Result result("OctetString");
 
    Botan::OctetString os("0123456789ABCDEF");
-   result.test_eq("OctetString::as_string() returns correct string", os.as_string(), "0123456789ABCDEF");
+   result.test_eq("OctetString::to_string() returns correct string", os.to_string(), "0123456789ABCDEF");
 
    return result;
    }
@@ -139,7 +139,7 @@ class OctetString_Tests final : public Test
             test_from_hex,
             test_from_byte,
             test_odd_parity,
-            test_as_string,
+            test_to_string,
             test_xor,
             test_equality,
             test_append

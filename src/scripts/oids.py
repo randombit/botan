@@ -104,7 +104,7 @@ namespace OIDS {
 
 std::string lookup(const OID& oid)
    {
-   const std::string oid_str = oid.as_string();
+   const std::string oid_str = oid.to_string();
 %s
 
    return std::string();

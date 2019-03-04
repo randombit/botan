@@ -91,7 +91,7 @@ size_t X942_PRF::kdf(uint8_t key[], size_t key_len,
 X942_PRF::X942_PRF(const std::string& oid)
    {
    if(OIDS::have_oid(oid))
-      m_key_wrap_oid = OIDS::lookup(oid).as_string();
+      m_key_wrap_oid = OIDS::lookup(oid).to_string();
    else
       m_key_wrap_oid = oid;
    }

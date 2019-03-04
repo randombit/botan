@@ -253,12 +253,12 @@ bool Test::Result::test_eq(const std::string& what,
 
    if(produced == expected)
       {
-      out << " produced expected result " << produced.as_string();
+      out << " produced expected result " << produced.to_string();
       return test_success(out.str());
       }
    else
       {
-      out << " produced unexpected result '" << produced.as_string() << "' expected '" << expected.as_string() << "'";
+      out << " produced unexpected result '" << produced.to_string() << "' expected '" << expected.to_string() << "'";
       return test_failure(out.str());
       }
    }

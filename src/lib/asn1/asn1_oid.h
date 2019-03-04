@@ -45,7 +45,10 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       * Get this OID as a string
       * @return string representing this OID
       */
-      std::string as_string() const { return this->to_string(); }
+      std::string BOTAN_DEPRECATED("Use OID::to_string") as_string() const
+         {
+         return this->to_string();
+         }
 
       /**
       * Get this OID as a string

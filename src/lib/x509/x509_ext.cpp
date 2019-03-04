@@ -29,7 +29,7 @@ Extensions::create_extn_obj(const OID& oid,
                             bool critical,
                             const std::vector<uint8_t>& body)
    {
-   const std::string oid_str = oid.as_string();
+   const std::string oid_str = oid.to_string();
 
    std::unique_ptr<Certificate_Extension> extn;
 
@@ -557,7 +557,7 @@ void Extended_Key_Usage::decode_inner(const std::vector<uint8_t>& in)
 void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
    for(size_t i = 0; i != m_oids.size(); ++i)
-      subject.add("X509v3.ExtendedKeyUsage", m_oids[i].as_string());
+      subject.add("X509v3.ExtendedKeyUsage", m_oids[i].to_string());
    }
 
 /*
@@ -761,7 +761,7 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in)
 void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
    for(size_t i = 0; i != m_oids.size(); ++i)
-      info.add("X509v3.CertificatePolicies", m_oids[i].as_string());
+      info.add("X509v3.CertificatePolicies", m_oids[i].to_string());
    }
 
 void Certificate_Policies::validate(

@@ -179,7 +179,7 @@ class PK_Decrypt final : public Command
 
          if(oaep_hash.empty())
             {
-            error_output() << "Unknown hash function used with OAEP, OID " << oaep_hash_id.get_oid().as_string() << "\n";
+            error_output() << "Unknown hash function used with OAEP, OID " << oaep_hash_id.get_oid().to_string() << "\n";
             return set_return_code(1);
             }
 

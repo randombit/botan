@@ -144,7 +144,7 @@ std::string X509_Object::hash_used_for_signature() const
    if(sig_info.size() == 1 && sig_info[0] == "Ed25519")
       return "SHA-512";
    else if(sig_info.size() != 2)
-      throw Internal_Error("Invalid name format found for " + oid.as_string());
+      throw Internal_Error("Invalid name format found for " + oid.to_string());
 
    if(sig_info[1] == "EMSA4")
       {
