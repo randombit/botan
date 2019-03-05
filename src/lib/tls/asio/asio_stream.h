@@ -308,18 +308,11 @@ class Stream : public StreamBase<Channel>
          if(this->m_core.hasReceivedData())
             { return this->m_core.copyReceivedData(buffers); }
 
-         boost::asio::const_buffer read_buffer =
-            {
-            this->m_core.input_buffer.data(),
-            m_nextLayer.read_some(this->m_core.input_buffer, ec)
-            };
-         if(ec)
-            { return 0; }
-
          try
             {
-            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                           read_buffer.size());
+            tls_decrypt_some(ec);
+            if(ec)
+               { return 0; }
             }
          catch(const std::exception& ex)
             {
@@ -343,21 +336,12 @@ class Stream : public StreamBase<Channel>
       std::size_t write_some(const ConstBufferSequence& buffers,
                              boost::system::error_code& ec)
          {
-         std::size_t sent = 0;
-
+         std::size_t sent;
          try
             {
-            for(auto it = boost::asio::buffer_sequence_begin(buffers);
-                  sent < MAX_PLAINTEXT_SIZE && it != boost::asio::buffer_sequence_end(buffers);
-                  it++)
-               {
-               const std::size_t to_send =
-                  std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, boost::asio::buffer_size(*it));
-               native_handle()->send(static_cast<const uint8_t*>(it->data()), to_send);
-               sent += to_send;
-               }
+            sent = tls_encrypt_some(buffers);
             }
-         catch(const std::exception& ex)
+         catch(const std::exception&)
             {
             ec = Botan::TLS::convertException();
             return 0;
@@ -389,23 +373,10 @@ class Stream : public StreamBase<Channel>
 
          boost::asio::async_completion<WriteHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
-         std::size_t sent = 0;
-
+         std::size_t sent;
          try
             {
-            // NOTE: This is not asynchronous: it encrypts the data synchronously.
-            // Only writing on the socket is asynchronous.
-            for(auto it = boost::asio::buffer_sequence_begin(buffers);
-                  it != boost::asio::buffer_sequence_end(buffers);
-                  it++)
-               {
-               if(sent >= MAX_PLAINTEXT_SIZE) return;
-               boost::asio::const_buffer buffer = *it;
-               const auto amount =
-                  std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, buffer.size());
-               native_handle()->send(static_cast<const uint8_t*>(buffer.data()), amount);
-               sent += amount;
-               }
+            sent = tls_encrypt_some(buffers);
             }
          catch(const std::exception&)
             {
@@ -449,6 +420,45 @@ class Stream : public StreamBase<Channel>
 
          this->m_core.consumeSendBuffer(writtenBytes);
          return writtenBytes;
+         }
+
+      void tls_decrypt_some(boost::system::error_code& ec)
+         {
+         boost::asio::const_buffer read_buffer =
+            {
+            this->m_core.input_buffer.data(),
+            m_nextLayer.read_some(this->m_core.input_buffer, ec)
+            };
+
+         if(ec)
+            { return; }
+
+         native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
+                                        read_buffer.size());
+         }
+
+      template <typename ConstBufferSequence>
+      std::size_t tls_encrypt_some(const ConstBufferSequence& buffers)
+         {
+         std::size_t sent = 0;
+         // NOTE: This is not asynchronous: it encrypts the data synchronously.
+         // Only writing on the socket is asynchronous.
+         for(auto it = boost::asio::buffer_sequence_begin(buffers);
+               it != boost::asio::buffer_sequence_end(buffers);
+               it++)
+            {
+            if(sent >= MAX_PLAINTEXT_SIZE)
+               {
+               return 0;
+               }
+            boost::asio::const_buffer buffer = *it;
+            const auto amount =
+               std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, buffer.size());
+            native_handle()->send(static_cast<const uint8_t*>(buffer.data()), amount);
+            sent += amount;
+            }
+
+         return sent;
          }
 
       StreamLayer m_nextLayer;
