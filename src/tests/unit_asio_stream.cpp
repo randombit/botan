@@ -671,7 +671,7 @@ class Asio_Stream_Tests final : public Test
 
          auto write_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
-            result.test_eq("didn't transfer anything", bytes_transferred, 0);
+            result.test_eq("committed some bytes to the core", bytes_transferred, TEST_DATA_SIZE);
             result.confirm("propagates error code", ec == net::error::eof);
             };
 

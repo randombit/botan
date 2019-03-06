@@ -379,6 +379,8 @@ class Stream : public StreamBase<Channel>
             }
          catch(const std::exception&)
             {
+            // we can't be sure how many bytes were commited here, so clear the send_buffer and try again
+            this->m_core.clearSendBuffer();
             Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
             op{std::move(init.completion_handler),
                *this,

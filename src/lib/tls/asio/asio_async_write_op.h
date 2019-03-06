@@ -51,10 +51,11 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
          {
          m_core.consumeSendBuffer(bytes_transferred);
 
-         if(m_core.hasDataToSend() && !ec){
-            boost::asio::async_write(m_stream.next_layer(), m_core.sendBuffer(), std::move(*this));
+         if(m_core.hasDataToSend() && !ec)
+            {
+            m_stream.next_layer().async_write_some(m_core.sendBuffer(), std::move(*this));
             return;
-         }
+            }
 
          if(!isContinuation)
             {
@@ -65,7 +66,7 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
 
          // the size of the sent TLS record can differ from the size of the payload due to TLS encryption. We need to tell
          // the handler how many bytes of the original data we already processed.
-         this->complete_now(ec, ec ? 0 : m_plainBytesTransferred);
+         this->complete_now(ec, m_plainBytesTransferred);
          }
       }
 

@@ -106,6 +106,11 @@ struct StreamCore : public Botan::TLS::Callbacks
          m_send_buffer.dynamicBuffer.consume(bytesConsumed);
          }
 
+      void clearSendBuffer()
+         {
+         consumeSendBuffer(m_send_buffer.dynamicBuffer.size());
+         }
+
    private:
       // Buffer space used to read input intended for the engine.
       std::vector<uint8_t> m_input_buffer_space;
