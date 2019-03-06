@@ -39,20 +39,16 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
               stream.get_executor())
          , m_stream(stream)
          , m_core(core)
-         , m_ec(ec)
          {
+         this->operator()(ec, std::size_t(0), false);
          }
 
       AsyncHandshakeOperation(AsyncHandshakeOperation&&) = default;
-
-      using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::allocator_type;
-      using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::executor_type;
 
       void operator()(boost::system::error_code ec, std::size_t bytesTransferred, bool isContinuation = true)
          {
          reenter(this)
             {
-            if(ec) { m_ec = ec; }
             // process tls packets from socket first
             if(bytesTransferred > 0)
                {
@@ -63,12 +59,12 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                   }
                catch(const std::exception&)
                   {
-                  m_ec = convertException();
+                  ec = convertException();
                   }
                }
 
             // send tls packets
-            if(m_core.hasDataToSend() && !m_ec)
+            if(m_core.hasDataToSend() && !ec)
                {
                // \note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`).
                //        This operation will eventually call `*this` as its own handler, passing the 0 back to this call
@@ -79,12 +75,11 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                                        Stream,
                                        Allocator>
                                        op{std::move(*this), m_stream, m_core, 0};
-               boost::asio::async_write(m_stream.next_layer(), m_core.sendBuffer(), std::move(op));
                return;
                }
 
             // we need more tls data from the socket
-            if(!m_stream.native_handle()->is_active() && !m_ec)
+            if(!m_stream.native_handle()->is_active() && !ec)
                {
                m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
                return;
@@ -95,10 +90,12 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                // this 0 byte read completes immediately. `yield` causes the coroutine to reenter the function after
                // this read, enabling us to call the handler, while respecting asios guarantee that the handler will not
                // be called without an intermediate initiating function
+               m_ec = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
+               ec = m_ec;
                }
 
-            this->invoke_now(m_ec);
+            this->complete_now(ec);
             }
          }
 

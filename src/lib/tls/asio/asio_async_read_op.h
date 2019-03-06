@@ -41,21 +41,17 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
          , m_core(core)
          , m_buffers(buffers)
          , m_decodedBytes(0)
-         , m_ec(ec)
          {
+         this->operator()(ec, m_decodedBytes, false);
          }
 
       AsyncReadOperation(AsyncReadOperation&&) = default;
-
-      using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::allocator_type;
-      using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::executor_type;
 
       void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true)
          {
          reenter(this)
             {
-            if(ec) { m_ec = ec; }
-            if(bytes_transferred > 0 && !m_ec)
+            if(bytes_transferred > 0 && !ec)
                {
                boost::asio::const_buffer read_buffer{m_core.input_buffer.data(), bytes_transferred};
                try
@@ -65,29 +61,31 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
                   }
                catch(const std::exception&)
                   {
-                  m_ec = convertException();
+                  ec = convertException();
                   }
                }
 
-            if(!m_core.hasReceivedData() && !m_ec)
+            if(!m_core.hasReceivedData() && !ec)
                {
                // we need more tls packets from the socket
                m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
                return;
                }
 
-            if(m_core.hasReceivedData() && !m_ec)
+            if(m_core.hasReceivedData() && !ec)
                {
                m_decodedBytes = m_core.copyReceivedData(m_buffers);
-               m_ec = {};
+               ec = {};
                }
 
             if(!isContinuation)
                {
+               m_ec = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
+               ec = m_ec;
                }
 
-            this->invoke_now(m_ec, m_decodedBytes);
+            this->complete_now(ec, m_decodedBytes);
             }
          }
 

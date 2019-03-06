@@ -46,7 +46,7 @@ struct AsyncBase : boost::asio::coroutine
          }
 
       template<class... Args>
-      void invoke_now(Args&& ... args)
+      void complete_now(Args&& ... args)
          {
          m_handler(std::forward<Args>(args)...);
          m_work_guard_1.reset();

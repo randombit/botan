@@ -198,7 +198,6 @@ class Stream : public StreamBase<Channel>
 
          AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, Stream>
          op{std::move(init.completion_handler), *this, this->m_core};
-         op({}, std::size_t(0), false);
 
          return init.result.get();
          }
@@ -386,7 +385,6 @@ class Stream : public StreamBase<Channel>
                this->m_core,
                std::size_t(0),
                Botan::TLS::convertException()};
-            boost::asio::async_write(m_nextLayer, this->m_core.sendBuffer(), std::move(op));
             return init.result.get();
             }
 
@@ -395,7 +393,6 @@ class Stream : public StreamBase<Channel>
             *this,
             this->m_core,
             sent};
-         boost::asio::async_write(m_nextLayer, this->m_core.sendBuffer(), std::move(op));
 
          return init.result.get();
          }
@@ -414,7 +411,6 @@ class Stream : public StreamBase<Channel>
             *this,
             this->m_core,
             buffers};
-         op({}, std::size_t(0), false);
 
          return init.result.get();
          }

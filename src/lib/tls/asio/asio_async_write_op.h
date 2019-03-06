@@ -39,14 +39,11 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
       , m_stream(stream)
       , m_core(core)
       , m_plainBytesTransferred(plainBytesTransferred)
-      , m_ec(ec)
       {
+      this->operator()(ec, std::size_t(0), false);
       }
 
    AsyncWriteOperation(AsyncWriteOperation&&) = default;
-
-   using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::allocator_type;
-   using typename AsyncBase<Handler, typename Stream::executor_type, Allocator>::executor_type;
 
    void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true)
       {
@@ -54,16 +51,21 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
          {
          m_core.consumeSendBuffer(bytes_transferred);
 
-         if(ec) { m_ec = ec; }
+         if(m_core.hasDataToSend() && !ec){
+            boost::asio::async_write(m_stream.next_layer(), m_core.sendBuffer(), std::move(*this));
+            return;
+         }
 
          if(!isContinuation)
             {
+            m_ec = ec;
             yield m_stream.next_layer().async_write_some(boost::asio::const_buffer(), std::move(*this));
+            ec = m_ec;
             }
 
          // the size of the sent TLS record can differ from the size of the payload due to TLS encryption. We need to tell
          // the handler how many bytes of the original data we already processed.
-         this->invoke_now(m_ec, m_ec ? 0 : m_plainBytesTransferred);
+         this->complete_now(ec, ec ? 0 : m_plainBytesTransferred);
          }
       }
 
