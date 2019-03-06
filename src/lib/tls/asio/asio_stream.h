@@ -198,7 +198,7 @@ class Stream : public StreamBase<Channel>
 
          AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, Stream>
          op{std::move(init.completion_handler), *this, this->m_core};
-         op({}, 0, false);
+         op({}, std::size_t(0), false);
 
          return init.result.get();
          }
@@ -380,7 +380,7 @@ class Stream : public StreamBase<Channel>
             }
          catch(const std::exception&)
             {
-            init.completion_handler(Botan::TLS::convertException(), 0);
+            init.completion_handler(Botan::TLS::convertException(), std::size_t(0));
             return init.result.get();
             }
 
@@ -408,7 +408,7 @@ class Stream : public StreamBase<Channel>
             *this,
             this->m_core,
             buffers};
-         op({}, 0, false);
+         op({}, std::size_t(0), false);
 
          return init.result.get();
          }
