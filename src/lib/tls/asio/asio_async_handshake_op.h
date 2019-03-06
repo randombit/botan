@@ -32,12 +32,14 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
       AsyncHandshakeOperation(
          HandlerT&& handler,
          Stream& stream,
-         StreamCore& core)
+         StreamCore& core,
+         const boost::system::error_code& ec = {})
          : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
               std::forward<HandlerT>(handler),
               stream.get_executor())
          , m_stream(stream)
          , m_core(core)
+         , m_ec(ec)
          {
          }
 
@@ -50,6 +52,7 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
          {
          reenter(this)
             {
+            if(ec) { m_ec = ec; }
             // process tls packets from socket first
             if(bytesTransferred > 0)
                {
@@ -60,12 +63,12 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                   }
                catch(const std::exception&)
                   {
-                  ec = convertException();
+                  m_ec = convertException();
                   }
                }
 
             // send tls packets
-            if(m_core.hasDataToSend() && !ec)
+            if(m_core.hasDataToSend() && !m_ec)
                {
                // \note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`).
                //        This operation will eventually call `*this` as its own handler, passing the 0 back to this call
@@ -81,7 +84,7 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                }
 
             // we need more tls data from the socket
-            if(!m_stream.native_handle()->is_active() && !ec)
+            if(!m_stream.native_handle()->is_active() && !m_ec)
                {
                m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
                return;
@@ -92,12 +95,10 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                // this 0 byte read completes immediately. `yield` causes the coroutine to reenter the function after
                // this read, enabling us to call the handler, while respecting asios guarantee that the handler will not
                // be called without an intermediate initiating function
-               m_ec_store = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
-               ec = m_ec_store;
                }
 
-            this->invoke_now(ec);
+            this->invoke_now(m_ec);
             }
          }
 
@@ -105,7 +106,7 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
       Stream&     m_stream;
       StreamCore& m_core;
 
-      boost::system::error_code m_ec_store;
+      boost::system::error_code m_ec;
    };
 
 }  // namespace TLS

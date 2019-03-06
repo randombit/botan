@@ -31,13 +31,15 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
    AsyncWriteOperation(HandlerT&& handler,
                        Stream& stream,
                        StreamCore& core,
-                       std::size_t plainBytesTransferred)
+                       std::size_t plainBytesTransferred,
+                       const boost::system::error_code& ec = {})
       : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
            std::forward<HandlerT>(handler),
            stream.get_executor())
       , m_stream(stream)
       , m_core(core)
       , m_plainBytesTransferred(plainBytesTransferred)
+      , m_ec(ec)
       {
       }
 
@@ -52,24 +54,24 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
          {
          m_core.consumeSendBuffer(bytes_transferred);
 
+         if(ec) { m_ec = ec; }
+
          if(!isContinuation)
             {
-            m_ec_store = ec;
             yield m_stream.next_layer().async_write_some(boost::asio::const_buffer(), std::move(*this));
-            ec = m_ec_store;
             }
 
          // the size of the sent TLS record can differ from the size of the payload due to TLS encryption. We need to tell
          // the handler how many bytes of the original data we already processed.
-         this->invoke_now(ec, ec ? 0 : m_plainBytesTransferred);
+         this->invoke_now(m_ec, m_ec ? 0 : m_plainBytesTransferred);
          }
       }
 
    Stream&     m_stream;
    StreamCore& m_core;
-   std::size_t m_plainBytesTransferred;
 
-   boost::system::error_code m_ec_store;
+   std::size_t m_plainBytesTransferred;
+   boost::system::error_code m_ec;
    };
 
 }  // namespace TLS

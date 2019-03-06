@@ -32,7 +32,8 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
       AsyncReadOperation(HandlerT&& handler,
                          Stream& stream,
                          StreamCore& core,
-                         const MutableBufferSequence& buffers)
+                         const MutableBufferSequence& buffers,
+                         const boost::system::error_code& ec = {})
          : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
               std::forward<HandlerT>(handler),
               stream.get_executor())
@@ -40,6 +41,7 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
          , m_core(core)
          , m_buffers(buffers)
          , m_decodedBytes(0)
+         , m_ec(ec)
          {
          }
 
@@ -52,7 +54,8 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
          {
          reenter(this)
             {
-            if(bytes_transferred > 0 && !ec)
+            if(ec) { m_ec = ec; }
+            if(bytes_transferred > 0 && !m_ec)
                {
                boost::asio::const_buffer read_buffer{m_core.input_buffer.data(), bytes_transferred};
                try
@@ -62,31 +65,29 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
                   }
                catch(const std::exception&)
                   {
-                  ec = convertException();
+                  m_ec = convertException();
                   }
                }
 
-            if(!m_core.hasReceivedData() && !ec)
+            if(!m_core.hasReceivedData() && !m_ec)
                {
                // we need more tls packets from the socket
                m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
                return;
                }
 
-            if(m_core.hasReceivedData() && !ec)
+            if(m_core.hasReceivedData() && !m_ec)
                {
                m_decodedBytes = m_core.copyReceivedData(m_buffers);
-               ec = {};
+               m_ec = {};
                }
 
             if(!isContinuation)
                {
-               m_ec_store = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
-               ec = m_ec_store;
                }
 
-            this->invoke_now(ec, m_decodedBytes);
+            this->invoke_now(m_ec, m_decodedBytes);
             }
          }
 
@@ -95,8 +96,8 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
       StreamCore&           m_core;
       MutableBufferSequence m_buffers;
 
-      boost::system::error_code m_ec_store;
       size_t                    m_decodedBytes;
+      boost::system::error_code m_ec;
    };
 
 }  // namespace TLS

@@ -380,7 +380,13 @@ class Stream : public StreamBase<Channel>
             }
          catch(const std::exception&)
             {
-            init.completion_handler(Botan::TLS::convertException(), std::size_t(0));
+            Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
+            op{std::move(init.completion_handler),
+               *this,
+               this->m_core,
+               std::size_t(0),
+               Botan::TLS::convertException()};
+            boost::asio::async_write(m_nextLayer, this->m_core.sendBuffer(), std::move(op));
             return init.result.get();
             }
 
