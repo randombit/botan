@@ -395,6 +395,8 @@ class CurveGFp_P384 final : public CurveGFp_NIST
 
 BigInt CurveGFp_P384::invert_element(const BigInt& x, secure_vector<word>& ws) const
    {
+   // From https://briansmith.org/ecc-inversion-addition-chains-01
+
    BigInt r, x2, x3, x15, x30, tmp, rl;
 
    r = x;
@@ -481,6 +483,8 @@ class CurveGFp_P521 final : public CurveGFp_NIST
 
 BigInt CurveGFp_P521::invert_element(const BigInt& x, secure_vector<word>& ws) const
    {
+   // Addition chain from https://eprint.iacr.org/2014/852.pdf section
+
    BigInt r;
    BigInt rl;
    BigInt a7;
