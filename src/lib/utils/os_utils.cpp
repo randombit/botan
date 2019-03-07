@@ -383,14 +383,12 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
          }
 #endif
 
-      if(ptr != nullptr)
-         {
-         // Make guard page following the data page
-         page_prohibit_access(static_cast<uint8_t*>(ptr) + page_size);
+      std::memset(ptr, 0, 2*page_size); // zero both data and guard pages
 
-         std::memset(ptr, 0, page_size);
-         result.push_back(ptr);
-         }
+      // Make guard page following the data page
+      page_prohibit_access(static_cast<uint8_t*>(ptr) + page_size);
+
+      result.push_back(ptr);
       }
 
    return result;

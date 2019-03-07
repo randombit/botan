@@ -364,28 +364,48 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept
 
    if(n_bucket != 0)
       {
-      lock_guard_type<mutex_type> lock(m_mutex);
-
-      std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
-
-      for(size_t i = 0; i != buckets.size(); ++i)
+      try
          {
-         Bucket& bucket = buckets[i];
-         if(bucket.free(p))
-            {
-            if(bucket.empty())
-               {
-#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-               OS::page_prohibit_access(bucket.ptr());
-#endif
-               m_free_pages.push_back(bucket.ptr());
+         lock_guard_type<mutex_type> lock(m_mutex);
 
-               if(i != buckets.size() - 1)
-                  std::swap(buckets.back(), buckets[i]);
-               buckets.pop_back();
+         std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
+
+         for(size_t i = 0; i != buckets.size(); ++i)
+            {
+            Bucket& bucket = buckets[i];
+            if(bucket.free(p))
+               {
+               if(bucket.empty())
+                  {
+#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
+                  OS::page_prohibit_access(bucket.ptr());
+#endif
+                  m_free_pages.push_back(bucket.ptr());
+
+                  if(i != buckets.size() - 1)
+                     std::swap(buckets.back(), buckets[i]);
+                  buckets.pop_back();
+                  }
+               return true;
                }
-            return true;
             }
+         }
+      catch(...)
+         {
+         /*
+         * The only exception throws that can occur in the above code are from
+         * either the STL or BOTAN_ASSERT failures. In either case, such an
+         * error indicates a logic error or data corruption in the memory
+         * allocator such that it is no longer safe to continue executing.
+         *
+         * Since this function is noexcept, simply letting the exception escape
+         * is sufficient for terminate to be called. However in this scenario
+         * it is implementation defined if any stack unwinding is performed.
+         * Since stack unwinding could cause further memory deallocations this
+         * could result in further corruption in this allocator state. To prevent
+         * this, call terminate directly.
+         */
+         std::terminate();
          }
       }
 
