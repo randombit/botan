@@ -369,7 +369,7 @@ loaded key. If the key check fails a respective error is thrown.
     #include <botan/x509cert.h>
     #include <botan/auto_rng.h>
     #include <botan/rng.h>
-    
+
     int main()
        {
        Botan::X509_Certificate cert("cert.pem");
@@ -841,36 +841,43 @@ using ``botan speed McEliece``
 eXtended Merkle Signature Scheme (XMSS)
 ----------------------------------------
 
-Botan implements the single tree version of  the eXtended Merkle Signature
+Botan implements the single tree version of the eXtended Merkle Signature
 Scheme (XMSS) using Winternitz One Time Signatures+ (WOTS+). The implementation
-is based on IETF Internet-Draft "XMSS: Extended Hash-Based Signatures".
+is based on RFC 8391 "XMSS: eXtended Merkle Signature Scheme", available at
+https://datatracker.ietf.org/doc/rfc8391/.
 
 XMSS uses the Botan interfaces for public key cryptography.
 The following algorithms are implemented:
 
-1. XMSS_SHA2-256_W16_H10
-#. XMSS_SHA2-256_W16_H16
-#. XMSS_SHA2-256_W16_H20
-#. XMSS_SHA2-512_W16_H10
-#. XMSS_SHA2-512_W16_H16
-#. XMSS_SHA2-512_W16_H20
-#. XMSS_SHAKE128_W16_H10
-#. XMSS_SHAKE128_W16_H10
-#. XMSS_SHAKE128_W16_H10
-#. XMSS_SHAKE256_W16_H10
-#. XMSS_SHAKE256_W16_H10
-#. XMSS_SHAKE256_W16_H10
+1. XMSS_SHA2_10_256
+# XMSS_SHA2_16_256
+# XMSS_SHA2_20_256
+# XMSS_SHA2_10_512
+# XMSS_SHA2_16_512
+# XMSS_SHA2_20_512
+# XMSS_SHAKE_10_256
+# XMSS_SHAKE_16_256
+# XMSS_SHAKE_20_256
+# XMSS_SHAKE_10_512
+# XMSS_SHAKE_16_512
+# XMSS_SHAKE_20_512
 
+The algorithm name contains the hash function name, tree height and digest
+width defined by the corresponding parameter set. Choosing `XMSS_SHA2_10_256`
+for instance will use the SHA2-256 hash function to generate a tree of height
+ten.
 
 Code Example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following code snippet shows a minimum example on how to create an XMSS
-public/private key pair and how to use these keys to create and verify a signature:
+public/private key pair and how to use these keys to create and verify a
+signature:
 
 .. code-block:: cpp
 
-    #include <botan/botan.h>
+    #include <iostream>
+    #include <botan/secmem.h>
     #include <botan/auto_rng.h>
     #include <botan/xmss.h>
 
@@ -882,7 +889,7 @@ public/private key pair and how to use these keys to create and verify a signatu
        // create a new public/private key pair using SHA2 256 as hash
        // function and a tree height of 10.
        Botan::XMSS_PrivateKey private_key(
-          Botan::XMSS_Parameters::xmss_algorithm_t::XMSS_SHA2_256_W16_H10,
+          Botan::XMSS_Parameters::xmss_algorithm_t::XMSS_SHA2_10_256,
           rng);
        Botan::XMSS_PublicKey public_key(private_key);
 
