@@ -1,6 +1,6 @@
 /*
  * XMSS WOTS Parameters
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2018 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
