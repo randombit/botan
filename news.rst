@@ -38,6 +38,10 @@ Version 2.10.0, Not Yet Released
   SIV mode, support for which was added in 2.8.0. Previously GCM was used by
   default for these algorithms.
 
+* Use ``arc4random`` on Android systems (GH #1851)
+
+* Fix the encoding of PGP-S2K iteration counts (GH #1853 #1854)
+
 * Add a facility for sandboxing the command line util. Currently FreeBSD
   (Capsicum) and OpenBSD (``pledge``) sandboxes are supported. (GH #1808)
 
