@@ -214,6 +214,9 @@ class PGP_S2K_Iter_Test final : public Test
             const size_t dec = Botan::RFC4880_decode_count(static_cast<uint8_t>(c));
             const size_t comp_dec = (16 + (c & 0x0F)) << ((c >> 4) + 6);
             result.test_eq("Decoded value matches PGP formula", dec, comp_dec);
+
+            const size_t enc = Botan::RFC4880_encode_count(comp_dec);
+            result.test_eq("Encoded value matches PGP formula", enc, c);
             }
 
          uint8_t last_enc = 0;
