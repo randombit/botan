@@ -34,7 +34,7 @@ class XMSS_Signature_Tests final : public PK_Signature_Generation_Test
             {
             const std::string params = vars.get_req_str("Params");
 
-            if(params == "SHAKE128_10_256")
+            if(params == "SHAKE_10_256")
                {
                return false;
                }
