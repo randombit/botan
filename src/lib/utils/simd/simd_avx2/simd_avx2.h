@@ -239,7 +239,7 @@ class SIMD_8x32 final
          _mm256_zeroall();
          }
 
-      __m256i handle() const { return m_avx2; }
+      __m256i BOTAN_FUNC_ISA("avx2") handle() const { return m_avx2; }
 
    private:
 
