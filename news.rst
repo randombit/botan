@@ -4,6 +4,12 @@ Release Notes
 Version 2.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Warning: XMSS currently implements draft-06 which is not compatible with the
+  final RFC 8391 specification. A PR is open to fix this, however it will break
+  all current uses of XMSS. If you are currently using XMSS please comment at
+  https://github.com/randombit/botan/pull/1858. Otherwise the PR will be merged
+  and support for draft-06 will be removed starting in 2.11.
+
 * Added a new certificate store implementation that can access the
   MacOS keychain certificate store. (GH #1830)
 
