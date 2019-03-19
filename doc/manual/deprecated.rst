@@ -36,26 +36,6 @@ in the source.
 
 - Support for PathScale and HP compilers
 
-- TLS: 3DES and SEED ciphersuites
-
-- TLS: Anonymous DH/ECDH ciphersuites
-
-- TLS: DHE-PSK ciphersuites
-
-- TLS: SRP ciphersuites. All available TLS-SRP suites use obsolete
-  ciphers. It would be better to instead perform a standard TLS
-  negotiation, then a PAKE authentication within the TLS channel.
-
-- TLS: DSA ciphersuites/certs
-
-- TLS: static RSA key exchange ciphersuites
-
-- TLS: CCM_8 ciphersuites
-
-- TLS: TLSv1.0 and v1.1, DTLS v1.0
-
-- TLS: CBC ciphersuites
-
 - Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
 
 - CBC-MAC
@@ -63,8 +43,6 @@ in the source.
 - PBKDF1 key derivation
 
 - GCM support for 64-bit tags
-
-- Old (Google specific) ChaCha20 TLS ciphersuites
 
 - Weak or rarely used ECC builtin groups including "secp160k1", "secp160r1",
   "secp160r2", "secp192k1", "secp192r1", "secp224k1", "secp224r1",
@@ -74,3 +52,31 @@ in the source.
 - All built in MODP groups < 2048 bits
 
 - All pre-created DSA groups
+
+TLS Protocol Deprecations
+---------------------------
+
+The following TLS protocol features are deprecated and will be removed
+in a future major release:
+
+- Support for TLSv1.0/v1.1 and DTLS v1.0
+
+- All support for DSA ciphersuites/certificates
+
+- All CBC mode ciphersuites. This includes all available 3DES and SEED
+  ciphersuites. This implies also removing Encrypt-then-MAC extension.
+
+- All ciphersuites using DH key exchange (DHE-DSS, DHE-RSA, DHE-PSK, anon DH)
+
+- All ciphersuites using static RSA key exchange
+
+- All anonymous (DH/ECDH) ciphersuites. This does not include PSK and
+  ECDHE-PSK, which will be retained.
+
+- SRP ciphersuites. This is implied by the removal of CBC mode, since
+  all available SRP ciphersuites use CBC. To avoid use of obsolete
+  ciphers, it would be better to instead perform a standard TLS
+  negotiation, then a PAKE authentication within (and bound to) the
+  TLS channel.
+
+- OCB ciphersuites using 128-bit keys
