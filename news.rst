@@ -23,7 +23,7 @@ Version 2.10.0, Not Yet Released
 * Unroll SHA-3 computation improving performance by 10-12% (GH #1838)
 
 * Add a ``Thread_Pool`` class. It is now possible to run the tests in multiple
-  threads with `--test-threads=N`` flag to select the number of threads to use.
+  threads with ``--test-threads=N`` flag to select the number of threads to use.
   Use ``--test-threads=0`` to run with as many CPU cores as are available on the
   current system. The default remains single threaded. (GH #1819)
 
@@ -63,6 +63,22 @@ Version 2.10.0, Not Yet Released
 
 * Add ``base58_enc`` and ``base58_dec`` cli utils for base58 encoding/decoding.
   (GH #1848)
+
+* Avoid using ``-momit-leaf-frame-pointer`` flags, since ``-fomit-frame-pointer``
+  is already the default with recent versions of GCC.
+
+* Fix XLC sanitizer flags.
+
+* Rename ``Blake2b`` class to ``BLAKE2b`` to match the official name. There is
+  a typedef for compat.
+
+* Fix a bug where loading a raw ``Ed25519_PublicKey`` of incorrect length would
+  lead to a crash. (GH #1850)
+
+* Fix a bug that caused compilation problems using CryptoNG PRNG. (GH #1832)
+
+* Extended SHAKE-128 cipher to support any key between 1 and 160 bytes, instead
+  of only multiples of 8 bytes.
 
 * Minor HMAC optimizations.
 
