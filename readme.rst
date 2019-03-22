@@ -85,7 +85,7 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH and ECDH key agreement
-* Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, GOST 34.10-2001
+* Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, GOST 34.10
 * Post-quantum signature scheme XMSS
 * Post-quantum key agreement schemes McEliece and NewHope
 * ElGamal encryption
@@ -100,7 +100,7 @@ Ciphers, hashes, MACs, and checksums
   IDEA, Lion, Noekeon, SEED, Serpent, SHACAL2, SM4, Threefish-512, Twofish, XTEA
 * Stream ciphers (X)ChaCha20, (X)Salsa20, SHAKE-128, RC4
 * Hash functions SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b,
-  Skein-512, SM3, Tiger, Whirlpool, GOST 34.11
+  Skein-512, SM3, Tiger, Whirlpool, GOST 34.11-94, GOST 34.11-2012
 * Authentication codes HMAC, CMAC, Poly1305, SipHash, GMAC, X9.19 DES-MAC
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 
