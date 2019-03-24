@@ -64,6 +64,8 @@ Version 2.10.0, Not Yet Released
 * Add ``base58_enc`` and ``base58_dec`` cli utils for base58 encoding/decoding.
   (GH #1848)
 
+* Enable ``getentropy`` by default on macOS (GH #1862)
+
 * Avoid using ``-momit-leaf-frame-pointer`` flags, since ``-fomit-frame-pointer``
   is already the default with recent versions of GCC.
 
