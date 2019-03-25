@@ -99,6 +99,9 @@ class Stream : public StreamBase<Channel>
       // -- -- configuration and callback setters
       //
 
+      /**
+       * @throws Not_Implemented
+       */
       template<
          typename VerifyCallback>
       void set_verify_callback(VerifyCallback callback)
@@ -107,6 +110,10 @@ class Stream : public StreamBase<Channel>
          throw Not_Implemented("set_verify_callback is not implemented");
          }
 
+      /**
+       * Not Implemented.
+       * @param ec Will be set to `Botan::TLS::error::not_implemented`
+       */
       template<
          typename VerifyCallback>
       void set_verify_callback(VerifyCallback callback,
@@ -116,12 +123,19 @@ class Stream : public StreamBase<Channel>
          ec = Botan::TLS::error::not_implemented;
          }
 
+      /**
+       * @throws Not_Implemented
+       */
       void set_verify_depth(int depth)
          {
          BOTAN_UNUSED(depth);
          throw Not_Implemented("set_verify_depth is not implemented");
          }
 
+      /**
+       * Not Implemented.
+       * @param ec Will be set to `Botan::TLS::error::not_implemented`
+       */
       void set_verify_depth(int depth,
                             boost::system::error_code& ec)
          {
@@ -129,6 +143,9 @@ class Stream : public StreamBase<Channel>
          ec = Botan::TLS::error::not_implemented;
          }
 
+      /**
+       * @throws Not_Implemented
+       */
       template <typename verify_mode>
       void set_verify_mode(verify_mode v)
          {
@@ -136,6 +153,10 @@ class Stream : public StreamBase<Channel>
          throw Not_Implemented("set_verify_mode is not implemented");
          }
 
+      /**
+       * Not Implemented.
+       * @param ec Will be set to `Botan::TLS::error::not_implemented`
+       */
       template <typename verify_mode>
       void set_verify_mode(verify_mode v,
                            boost::system::error_code& ec)
@@ -148,6 +169,11 @@ class Stream : public StreamBase<Channel>
       // -- -- handshake methods
       //
 
+      /**
+       * Performs SSL handshaking.
+       * The function call will block until handshaking is complete or an error occurs.
+       * @throws boost::system::system_error if error occured
+       */
       void handshake()
          {
          boost::system::error_code ec;
@@ -155,6 +181,11 @@ class Stream : public StreamBase<Channel>
          boost::asio::detail::throw_error(ec, "handshake");
          }
 
+      /**
+       * Performs SSL handshaking.
+       * The function call will block until handshaking is complete or an error occurs.
+       * @param ec Set to indicate what error occurred, if any.
+       */
       void handshake(boost::system::error_code& ec)
          {
          while(!native_handle()->is_active())
@@ -187,6 +218,12 @@ class Stream : public StreamBase<Channel>
             }
          }
 
+      /**
+       * Starts an asynchronous SSL handshake.
+       * This function call always returns immediately.
+       * @param handler The handler to be called when the handshake operation completes.
+       *                The equivalent function signature of the handler must be: void(boost::system::error_code)
+       */
       template <typename HandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
                                     void(boost::system::error_code))
@@ -212,18 +249,39 @@ class Stream : public StreamBase<Channel>
       //       flag's consistency before performing the respective handshakes.
       //
 
+      /**
+       * Performs SSL handshaking.
+       * The function call will block until handshaking is complete or an error occurs.
+       * @param type The type of handshaking to be performed, i.e. as a client or as a server.
+       * @throws boost::system::system_error if error occured
+       * @throws Invalid_Argument if handshake_type could not be validated
+       */
       void handshake(handshake_type type)
          {
          validate_handshake_type(type);
          handshake();
          }
 
+      /**
+       * Performs SSL handshaking.
+       * The function call will block until handshaking is complete or an error occurs.
+       * @param type The type of handshaking to be performed, i.e. as a client or as a server.
+       * @param ec Set to indicate what error occurred, if any.
+       */
       void handshake(handshake_type type, boost::system::error_code& ec)
          {
          if(validate_handshake_type(type, ec))
             { handshake(ec); }
          }
 
+      /**
+       * Starts an asynchronous SSL handshake.
+       * This function call always returns immediately.
+       * @param type The type of handshaking to be performed, i.e. as a client or as a server.
+       * @param handler The handler to be called when the handshake operation completes.
+       *                The equivalent function signature of the handler must be: void(boost::system::error_code)
+       * @throws Invalid_Argument if handshake_type could not be validated
+       */
       template <typename HandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
                                     void(boost::system::error_code))
@@ -233,6 +291,9 @@ class Stream : public StreamBase<Channel>
          return async_handshake(std::forward<HandshakeHandler>(handler));
          }
 
+      /**
+       * @throws Not_Implemented
+       */
       template<typename ConstBufferSequence>
       void handshake(handshake_type type, const ConstBufferSequence& buffers)
          {
@@ -241,6 +302,10 @@ class Stream : public StreamBase<Channel>
          throw Not_Implemented("buffered handshake is not implemented");
          }
 
+      /**
+       * Not Implemented.
+       * @param ec Will be set to `Botan::TLS::error::not_implemented`
+       */
       template<typename ConstBufferSequence>
       void handshake(handshake_type type,
                      const ConstBufferSequence& buffers,
@@ -251,6 +316,9 @@ class Stream : public StreamBase<Channel>
             { ec = Botan::TLS::error::not_implemented; }
          }
 
+      /**
+       * @throws Not_Implemented
+       */
       template <typename ConstBufferSequence, typename BufferedHandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(BufferedHandshakeHandler,
                                     void(boost::system::error_code, std::size_t))
@@ -267,6 +335,11 @@ class Stream : public StreamBase<Channel>
       // -- -- shutdown methods
       //
 
+      /**
+       * Shut down SSL on the stream.
+       * The function call will block until SSL has been shut down or an error occurs.
+       * @param ec Set to indicate what error occured, if any.
+       */
       void shutdown(boost::system::error_code& ec)
          {
          try
@@ -281,6 +354,11 @@ class Stream : public StreamBase<Channel>
          writePendingTlsData(ec);
          }
 
+      /**
+       * Shut down SSL on the stream.
+       * The function call will block until SSL has been shut down or an error occurs.
+       * @throws boost::system::system_error if error occured
+       */
       void shutdown()
          {
          boost::system::error_code ec;
@@ -288,6 +366,12 @@ class Stream : public StreamBase<Channel>
          boost::asio::detail::throw_error(ec, "shutdown");
          }
 
+      /**
+       * Asynchronously shut down SSL on the stream.
+       * This function call always returns immediately.
+       * @param handler The handler to be called when the handshake operation completes.
+       *                The equivalent function signature of the handler must be: void(boost::system::error_code)
+       */
       template <typename ShutdownHandler>
       void async_shutdown(ShutdownHandler&& handler)
          {
@@ -300,6 +384,13 @@ class Stream : public StreamBase<Channel>
       // -- -- I/O methods
       //
 
+      /**
+       * Read some data from the stream. The function call will block until one or more bytes of data has
+       * been read successfully, or until an error occurs.
+       * @param buffers The buffers into which the data will be read.
+       * @param ec Set to indicate what error occured, if any.
+       * @return The number of bytes read. Returns 0 if an error occurred.
+       */
       template <typename MutableBufferSequence>
       std::size_t read_some(const MutableBufferSequence& buffers,
                             boost::system::error_code& ec)
@@ -322,6 +413,13 @@ class Stream : public StreamBase<Channel>
          return this->m_core.copyReceivedData(buffers);
          }
 
+      /**
+       * Read some data from the stream. The function call will block until one or more bytes of data has
+       * been read successfully, or until an error occurs.
+       * @param buffers The buffers into which the data will be read.
+       * @return The number of bytes read. Returns 0 if an error occurred.
+       * @throws boost::system::system_error if error occured
+       */
       template <typename MutableBufferSequence>
       std::size_t read_some(const MutableBufferSequence& buffers)
          {
@@ -331,6 +429,13 @@ class Stream : public StreamBase<Channel>
          return n;
          }
 
+      /**
+       * Write some data to the stream. The function call will block until one or more bytes of data has been written
+       * successfully, or until an error occurs.
+       * @param buffers The data to be written.
+       * @param ec Set to indicate what error occurred, if any.
+       * @return The number of bytes written.
+       */
       template <typename ConstBufferSequence>
       std::size_t write_some(const ConstBufferSequence& buffers,
                              boost::system::error_code& ec)
@@ -354,6 +459,13 @@ class Stream : public StreamBase<Channel>
          return sent;
          }
 
+      /**
+       * Write some data to the stream. The function call will block until one or more bytes of data has been written
+       * successfully, or until an error occurs.
+       * @param buffers The data to be written.
+       * @return The number of bytes written.
+       * @throws boost::system::system_error if error occured
+       */
       template <typename ConstBufferSequence>
       std::size_t write_some(const ConstBufferSequence& buffers)
          {
@@ -363,6 +475,13 @@ class Stream : public StreamBase<Channel>
          return n;
          }
 
+      /**
+       * Start an asynchronous write. The function call always returns immediately.
+       * @param buffers The data to be written.
+       * @param handler The handler to be called when the write operation completes. Copies will be made of the handler
+       *        as required. The equivalent function signature of the handler must be:
+       *        void(boost::system::error_code, std::size_t)
+       */
       template <typename ConstBufferSequence, typename WriteHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
                                     void(boost::system::error_code, std::size_t))
@@ -399,6 +518,15 @@ class Stream : public StreamBase<Channel>
          return init.result.get();
          }
 
+      /**
+       * Start an asynchronous read. The function call always returns immediately.
+       * @param buffers The buffers into which the data will be read. Although the buffers object may be copied as
+       *                 necessary, ownership of the underlying buffers is retained by the caller, which must guarantee
+       *                 that they remain valid until the handler is called.
+       * @param handler The handler to be called when the read operation completes.
+       *                The equivalent function signature of the handler must be:
+       *                void(boost::system::error_code, std::size_t)
+       */
       template <typename MutableBufferSequence, typename ReadHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
                                     void(boost::system::error_code, std::size_t))
