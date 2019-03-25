@@ -207,7 +207,7 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
                {
                std::unique_ptr<T> ext(new T);
                ext->decode_inner(extn_info->second.bits());
-               return std::move(ext);
+               return ext;
                }
             }
          return nullptr;
