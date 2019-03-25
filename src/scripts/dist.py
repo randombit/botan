@@ -206,7 +206,20 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
     open(version_file, 'w').write(''.join(list(content_rewriter())))
 
 def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file):
-    output_archive = output_basename + '.' + archive_type
+
+    def archive_suffix(archive_type):
+        if archive_type == 'tgz':
+            return 'tgz'
+        elif archive_type == 'tbz':
+            return 'tar.bz2'
+        elif archive_type == 'txz':
+            return 'tar.xz'
+        elif archive_type == 'tar':
+            return 'tar'
+        else:
+            raise Exception("Unknown archive type '%s'" % (archive_type))
+
+    output_archive = output_basename + '.' + archive_suffix(archive_type)
     logging.info('Writing archive "%s"' % (output_archive))
 
     remove_file_if_exists(output_archive)
@@ -217,6 +230,8 @@ def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file
             return 'w:gz'
         elif archive_type == 'tbz':
             return 'w:bz2'
+        elif archive_type == 'txz':
+            return 'w:xz'
         elif archive_type == 'tar':
             return 'w'
         else:
@@ -231,7 +246,8 @@ def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file
                                fileobj=open(output_archive, 'wb'))
     else:
         archive = tarfile.open(output_basename + '.tar',
-                               write_mode(archive_type))
+                               write_mode(archive_type),
+                               fileobj=open(output_archive, 'wb'))
 
     for f in all_files:
         tarinfo = archive.gettarinfo(f)
@@ -292,7 +308,7 @@ def main(args=None):
 
     archives = options.archive_types.split(',') if options.archive_types != '' else []
     for archive_type in archives:
-        if archive_type not in ['tar', 'tgz', 'tbz']:
+        if archive_type not in ['tar', 'tgz', 'tbz', 'txz']:
             logging.error('Unknown archive type "%s"' % (archive_type))
 
     if args[0] == 'snapshot':
