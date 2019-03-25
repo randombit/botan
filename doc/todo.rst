@@ -199,6 +199,8 @@ FIPS 140 Build
 CLI
 ----------------------------------------
 
+* Add a ``--completion`` option to dump autocomplete info, write
+  support for autocompletion in bash/zsh.
 * Change `tls_server` to be a tty<->socket app, like `tls_client` is,
   instead of a bogus echo server.
 * `encrypt` / `decrypt` tools providing password based file encryption
