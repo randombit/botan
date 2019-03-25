@@ -40,6 +40,8 @@ class BOTAN_TEST_API Thread_Pool
 
       void shutdown();
 
+      size_t worker_count() const { return m_workers.size(); }
+
       Thread_Pool(const Thread_Pool&) = delete;
       Thread_Pool& operator=(const Thread_Pool&) = delete;
 
