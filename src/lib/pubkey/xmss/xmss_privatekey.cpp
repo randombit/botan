@@ -18,7 +18,6 @@
 
 #include <botan/xmss_privatekey.h>
 #include <botan/internal/xmss_signature_operation.h>
-#include <cmath>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/thread_pool.h>
@@ -32,10 +31,15 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
      m_wots_priv_key(m_wots_params.oid(), m_public_seed),
      m_index_reg(XMSS_Index_Registry::get_instance())
    {
-   BOTAN_ASSERT(sizeof(size_t) >= std::ceil(
-      static_cast<float>(XMSS_PublicKey::m_xmss_params.tree_height()) / 8.f),
-      "System type \"size_t\" not big enough to support"
-      " leaf index.");
+   /*
+   The code requires sizeof(size_t) >= ceil(tree_height / 8)
+
+   Maximum supported tree height is 20, ceil(20/8) == 3, so 4 byte
+   size_t is sufficient for all defined parameters, or even a
+   (hypothetical) tree height 32, which would be extremely slow to
+   compute.
+   */
+   static_assert(sizeof(size_t) >= 4, "size_t is big enough to support leaf index");
 
    if(raw_key.size() != size())
       {

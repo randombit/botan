@@ -6,7 +6,6 @@
  **/
 
 #include <botan/internal/xmss_signature.h>
-#include <cmath>
 
 namespace Botan {
 
