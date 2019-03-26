@@ -46,7 +46,8 @@ std::unique_ptr<HashFunction> Skein_512::copy_state() const
    copy->m_buffer = this->m_buffer;
    copy->m_buf_pos = this->m_buf_pos;
 
-   return copy;
+   // work around GCC 4.8 bug
+   return std::unique_ptr<HashFunction>(copy.release());
    }
 
 void Skein_512::clear()
