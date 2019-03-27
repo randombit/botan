@@ -277,7 +277,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                m_line_buf.clear();
                }
             }
-         };
+         }
 
       void tls_emit_data(const uint8_t buf[], size_t length) override
          {

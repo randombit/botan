@@ -333,7 +333,7 @@ BigInt CurveGFp_P256::invert_element(const BigInt& x, secure_vector<word>& ws) c
    curve_sqr(r, p4, ws);
    for(size_t i = 0; i != 3; ++i)
       curve_sqr_tmp(r, tmp, ws);
-   curve_mul(p8, r, p4, ws);;
+   curve_mul(p8, r, p4, ws);
 
    curve_sqr(r, p8, ws);
    for(size_t i = 0; i != 7; ++i)

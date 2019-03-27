@@ -191,7 +191,7 @@ class PK_Sign final : public Command
          const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "passphrase");
 
          Botan::DataSource_Stream input(key_file);
-         std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(input, passphrase);;
+         std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(input, passphrase);
 
          if(!key)
             {
