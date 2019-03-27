@@ -14,9 +14,8 @@
 #include <boost/version.hpp>
 #if BOOST_VERSION > 106600
 
-#include <botan/auto_rng.h>
 #include <botan/tls_client.h>
-#include <botan/tls_server.h>
+#include <botan/asio_context.h>
 #include <botan/asio_error.h>
 #include <botan/internal/asio_stream_core.h>
 
@@ -48,17 +47,13 @@ template <>
 class StreamBase<Botan::TLS::Client>
    {
    public:
-      StreamBase(Botan::TLS::Session_Manager& sessionManager,
-                 Botan::Credentials_Manager& credentialsManager,
-                 const Botan::TLS::Policy& policy,
-                 const Botan::TLS::Server_Information& serverInfo =
-                    Botan::TLS::Server_Information{})
+      StreamBase(Context& context)
          : m_channel(m_core,
-                     sessionManager,
-                     credentialsManager,
-                     policy,
-                     m_rng,
-                     serverInfo)
+                     *context.sessionManager,
+                     *context.credentialsManager,
+                     *context.policy,
+                     *context.randomNumberGenerator,
+                     context.serverInfo)
          {
          }
 
@@ -90,7 +85,6 @@ class StreamBase<Botan::TLS::Client>
          }
 
       Botan::TLS::StreamCore m_core;
-      Botan::AutoSeeded_RNG  m_rng;
       Botan::TLS::Client     m_channel;
    };
 

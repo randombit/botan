@@ -72,18 +72,18 @@ class ThrowingMockChannel : public MockChannel
    {
    public:
       ThrowingMockChannel(Botan::TLS::StreamCore& core) : MockChannel(core)
-      {
-      }
+         {
+         }
 
-   std::size_t received_data(const uint8_t[], std::size_t)
-      {
-      throw Botan::TLS::Unexpected_Message("test_error");
-      }
+      std::size_t received_data(const uint8_t[], std::size_t)
+         {
+         throw Botan::TLS::Unexpected_Message("test_error");
+         }
 
-   void send(const uint8_t[], std::size_t)
-      {
-      throw Botan::TLS::Unexpected_Message("test_error");
-      }
+      void send(const uint8_t[], std::size_t)
+         {
+         throw Botan::TLS::Unexpected_Message("test_error");
+         }
    };
 }
 
@@ -101,7 +101,7 @@ template <>
 class StreamBase<Botan_Tests::MockChannel>
    {
    public:
-      StreamBase()
+      StreamBase(Context& /*ignored*/)
          : m_channel(m_core)
          {
          }
@@ -113,7 +113,6 @@ class StreamBase<Botan_Tests::MockChannel>
 
    protected:
       StreamCore               m_core;
-      Botan::AutoSeeded_RNG    m_rng;
       Botan_Tests::MockChannel m_channel;
 
       void validate_handshake_type(handshake_type) {}
@@ -125,8 +124,8 @@ template <>
 class StreamBase<Botan_Tests::ThrowingMockChannel> : public StreamBase<Botan_Tests::MockChannel>
    {
    public:
-      StreamBase()
-         : m_channel(m_core)
+      StreamBase(Context& c)
+         : StreamBase<Botan_Tests::MockChannel>(c), m_channel(m_core)
          {
          }
 
@@ -157,17 +156,16 @@ class Asio_Stream_Tests final : public Test
    {
       using TestStream = boost::beast::test::stream;
       using FailCount = boost::beast::test::fail_count;
-      using AsioStream = Botan::TLS::Stream<TestStream&, MockChannel>;
-      using ThrowingAsioStream = Botan::TLS::Stream<TestStream&, ThrowingMockChannel>;
+      using AsioStream = Botan::TLS::Stream<TestStream, MockChannel>;
+      using ThrowingAsioStream = Botan::TLS::Stream<TestStream, ThrowingMockChannel>;
 
       boost::string_view test_data() const { return boost::string_view((const char*)TEST_DATA, TEST_DATA_SIZE); }
 
       void test_sync_handshake(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc, test_data()};
-
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, test_data());
 
          ssl.handshake(AsioStream::handshake_type::client);
 
@@ -181,11 +179,12 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          // fail right away
          FailCount  fc{0, net::error::eof};
-         TestStream socket{ioc, fc}, remote{ioc};
+         TestStream remote{ioc};
 
-         socket.connect(remote);
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, fc);
+         ssl.next_layer().connect(remote);
 
-         AsioStream ssl{socket};
          // mimic handshake initialization
          ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
 
@@ -201,11 +200,11 @@ class Asio_Stream_Tests final : public Test
       void test_sync_handshake_throw(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream socket{ioc, test_data()}, remote{ioc};
+         TestStream remote{ioc};
 
-         socket.connect(remote);
-
-         ThrowingAsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         ThrowingAsioStream ssl(ctx, ioc, test_data());
+         ssl.next_layer().connect(remote);
 
          error_code ec;
          ssl.handshake(AsioStream::handshake_type::client, ec);
@@ -219,11 +218,12 @@ class Asio_Stream_Tests final : public Test
       void test_async_handshake(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc, test_data()}, remote{ioc};
+         TestStream      remote{ioc};
 
-         socket.connect(remote);
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, test_data());
+         ssl.next_layer().connect(remote);
 
-         AsioStream ssl{socket};
          // mimic handshake initialization
          ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
 
@@ -231,14 +231,14 @@ class Asio_Stream_Tests final : public Test
 
          auto handler = [&](const error_code&)
             {
-            result.confirm("reads from socket", socket.nread() > 0);
-            result.confirm("writes from socket", socket.nwrite() > 0);
+            result.confirm("reads from socket", ssl.next_layer().nread() > 0);
+            result.confirm("writes from socket", ssl.next_layer().nwrite() > 0);
             result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
             };
 
          ssl.async_handshake(AsioStream::handshake_type::client, handler);
 
-         socket.close_remote();
+         ssl.next_layer().close_remote();
          ioc.run();
          results.push_back(result);
          }
@@ -248,11 +248,12 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          // fail right away
          FailCount  fc{0, net::error::eof};
-         TestStream socket{ioc, fc}, remote{ioc};
+         TestStream remote{ioc};
 
-         socket.connect(remote);
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, fc);
+         ssl.next_layer().connect(remote);
 
-         AsioStream ssl{socket};
          // mimic handshake initialization
          ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
 
@@ -273,11 +274,11 @@ class Asio_Stream_Tests final : public Test
       void test_async_handshake_throw(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream socket{ioc, test_data()}, remote{ioc};
+         TestStream      remote{ioc};
 
-         socket.connect(remote);
-
-         ThrowingAsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         ThrowingAsioStream ssl(ctx, ioc, test_data());
+         ssl.next_layer().connect(remote);
 
          Test::Result result("async TLS handshake throw");
 
@@ -296,9 +297,9 @@ class Asio_Stream_Tests final : public Test
       void test_sync_read_some_success(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc, test_data()};
 
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, test_data());
 
          const std::size_t buf_size = 128;
          uint8_t           buf[buf_size];
@@ -317,9 +318,9 @@ class Asio_Stream_Tests final : public Test
       void test_sync_read_some_buffer_sequence(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc, test_data()};
 
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, test_data());
          error_code ec;
 
          std::vector<net::mutable_buffer> data;
@@ -346,11 +347,11 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          // fail right away
          FailCount  fc{0, net::error::eof};
-         TestStream socket{ioc, fc}, remote{ioc};
+         TestStream remote{ioc};
 
-         socket.connect(remote);
-
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, fc);
+         ssl.next_layer().connect(remote);
 
          uint8_t    buf[128];
          error_code ec;
@@ -367,11 +368,11 @@ class Asio_Stream_Tests final : public Test
       void test_sync_read_some_throw(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream socket{ioc, test_data()}, remote{ioc};
+         TestStream remote{ioc};
 
-         socket.connect(remote);
-
-         ThrowingAsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         ThrowingAsioStream ssl(ctx, ioc, test_data());
+         ssl.next_layer().connect(remote);
 
          uint8_t    buf[128];
          error_code ec;
@@ -388,9 +389,10 @@ class Asio_Stream_Tests final : public Test
       void test_async_read_some_success(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc, test_data()};
+         TestStream      remote{ioc};
 
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, test_data());
          uint8_t    data[TEST_DATA_SIZE];
          error_code ec;
 
@@ -406,7 +408,7 @@ class Asio_Stream_Tests final : public Test
          net::mutable_buffer buf {data, TEST_DATA_SIZE};
          net::async_read(ssl, buf, read_handler);
 
-         socket.close_remote();
+         ssl.next_layer().close_remote();
          ioc.run();
          results.push_back(result);
          }
@@ -414,9 +416,8 @@ class Asio_Stream_Tests final : public Test
       void test_async_read_some_buffer_sequence(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc, test_data()};
-
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, test_data());
          error_code ec;
 
          std::vector<net::mutable_buffer> data;
@@ -438,7 +439,7 @@ class Asio_Stream_Tests final : public Test
 
          net::async_read(ssl, data, read_handler);
 
-         socket.close_remote();
+         ssl.next_layer().close_remote();
          ioc.run();
          results.push_back(result);
          }
@@ -448,9 +449,8 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          // fail right away
          FailCount  fc{0, net::error::eof};
-         TestStream socket{ioc, fc};
-
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, fc);
          uint8_t    data[TEST_DATA_SIZE];
          error_code ec;
 
@@ -465,7 +465,7 @@ class Asio_Stream_Tests final : public Test
          net::mutable_buffer buf {data, TEST_DATA_SIZE};
          net::async_read(ssl, buf, read_handler);
 
-         socket.close_remote();
+         ssl.next_layer().close_remote();
          ioc.run();
          results.push_back(result);
          }
@@ -473,9 +473,8 @@ class Asio_Stream_Tests final : public Test
       void test_async_read_some_throw(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream socket{ioc, test_data()};
-
-         ThrowingAsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         ThrowingAsioStream ssl(ctx, ioc, test_data());
          uint8_t    data[TEST_DATA_SIZE];
          error_code ec;
 
@@ -490,7 +489,7 @@ class Asio_Stream_Tests final : public Test
          net::mutable_buffer buf {data, TEST_DATA_SIZE};
          net::async_read(ssl, buf, read_handler);
 
-         socket.close_remote();
+         ssl.next_layer().close_remote();
          ioc.run();
          results.push_back(result);
          }
@@ -498,10 +497,11 @@ class Asio_Stream_Tests final : public Test
       void test_sync_write_some_success(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc}, remote{ioc};
-         socket.connect(remote);
+         TestStream      remote{ioc};
 
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc);
+         ssl.next_layer().connect(remote);
          error_code ec;
 
          auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
@@ -517,10 +517,11 @@ class Asio_Stream_Tests final : public Test
       void test_sync_write_some_buffer_sequence(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc}, remote{ioc};
-         socket.connect(remote);
+         TestStream      remote{ioc};
 
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc);
+         ssl.next_layer().connect(remote);
          error_code ec;
 
          // this should be Botan::TLS::MAX_PLAINTEXT_SIZE + 1024 + 1
@@ -545,7 +546,7 @@ class Asio_Stream_Tests final : public Test
          result.confirm("writes the correct data",
                         contains(remote.buffer().data().data(), random_data.data(), random_data.size()));
          result.test_eq("writes the correct amount of data", bytes_transferred, random_data.size());
-         result.test_eq("correct number of writes", socket.nwrite(), 2);
+         result.test_eq("correct number of writes", ssl.next_layer().nwrite(), 2);
          result.confirm("does not report an error", !ec);
 
          results.push_back(result);
@@ -556,11 +557,12 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          // fail right away
          FailCount  fc{0, net::error::eof};
-         TestStream socket{ioc, fc}, remote{ioc};
+         TestStream remote{ioc};
 
-         socket.connect(remote);
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, fc);
+         ssl.next_layer().connect(remote);
 
-         AsioStream ssl{socket};
          error_code ec;
 
          auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
@@ -575,11 +577,11 @@ class Asio_Stream_Tests final : public Test
       void test_sync_write_some_throw(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream socket{ioc}, remote{ioc};
+         TestStream remote{ioc};
 
-         socket.connect(remote);
-
-         ThrowingAsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         ThrowingAsioStream ssl(ctx, ioc);
+         ssl.next_layer().connect(remote);
          error_code ec;
 
          auto bytes_transferred = net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
@@ -594,10 +596,11 @@ class Asio_Stream_Tests final : public Test
       void test_async_write_some_success(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc}, remote{ioc};
-         socket.connect(remote);
+         TestStream      remote{ioc};
 
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc);
+         ssl.next_layer().connect(remote);
          error_code ec;
 
          Test::Result result("async write_some success");
@@ -618,10 +621,11 @@ class Asio_Stream_Tests final : public Test
       void test_async_write_some_buffer_sequence(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream      socket{ioc}, remote{ioc};
-         socket.connect(remote);
+         TestStream      remote{ioc};
 
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc);
+         ssl.next_layer().connect(remote);
          error_code ec;
 
          // this should be Botan::TLS::MAX_PLAINTEXT_SIZE + 1024 + 1
@@ -646,7 +650,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("writes the correct data",
                            contains(remote.buffer().data().data(), random_data.data(), random_data.size()));
             result.test_eq("writes the correct amount of data", bytes_transferred, random_data.size());
-            result.test_eq("correct number of writes", socket.nwrite(), 2);
+            result.test_eq("correct number of writes", ssl.next_layer().nwrite(), 2);
             result.confirm("does not report an error", !ec);
             };
 
@@ -661,10 +665,11 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          // fail right away
          FailCount  fc{0, net::error::eof};
-         TestStream socket{ioc, fc}, remote{ioc};
-         socket.connect(remote);
+         TestStream remote{ioc};
 
-         AsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc, fc);
+         ssl.next_layer().connect(remote);
          error_code ec;
 
          Test::Result result("async write_some error");
@@ -684,10 +689,11 @@ class Asio_Stream_Tests final : public Test
       void test_async_write_throw(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         TestStream socket{ioc}, remote{ioc};
-         socket.connect(remote);
+         TestStream remote{ioc};
 
-         ThrowingAsioStream ssl{socket};
+         Botan::TLS::Context ctx;
+         ThrowingAsioStream ssl(ctx, ioc);
+         ssl.next_layer().connect(remote);
          error_code ec;
 
          Test::Result result("async write_some throw");

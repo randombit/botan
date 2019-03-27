@@ -21,6 +21,7 @@
 #include <botan/internal/asio_includes.h>
 #include <botan/internal/asio_stream_base.h>
 #include <botan/internal/asio_stream_core.h>
+#include <botan/asio_context.h>
 
 #include <algorithm>
 #include <memory>
@@ -40,7 +41,9 @@ namespace Botan {
 namespace TLS {
 
 /**
- * boost::asio compatible SSL/TLS stream based on TLS::Client or TLS::Server.
+ * boost::asio compatible SSL/TLS stream
+ *
+ * Currently only the TLS::Client specialization is implemented.
  */
 template <class StreamLayer, class Channel>
 class Stream : public StreamBase<Channel>
@@ -55,25 +58,13 @@ class Stream : public StreamBase<Channel>
 
    public:
       template <typename... Args>
-      explicit Stream(StreamLayer&& nextLayer, Args&& ... args)
-         : StreamBase<Channel>(std::forward<Args>(args)...),
-           m_nextLayer(std::forward<StreamLayer>(nextLayer)) {}
+      explicit Stream(Context& context, Args&& ... args)
+         : StreamBase<Channel>(context), m_nextLayer(std::forward<Args>(args)...) {}
 
-      Stream(StreamLayer&& nextLayer, boost::asio::ssl::context&)
-         : StreamBase<Channel>(Botan::TLS::Session_Manager_Noop(), Botan::Credentials_Manager()),
-           m_nextLayer(std::forward<StreamLayer>(nextLayer))
-         {
-         // Configuring a TLS stream via asio::ssl::context is not supported.
-         // The corresponding configuration objects for Botan are:
-         //   * TLS::Session_Manager
-         //   * Credentials_Manager
-         //   * TLS::Policy
-         //   * TLS::Server_Information
-         // It would be nice to have a masquarading wrapper that exposes an API
-         // compatible with asio::ssl::context for convenient drop-in replacement.
-         // For now, base your TLS configurations on the above mentioned classes.
-         throw Not_Implemented("cannot handle an asio::ssl::context");
-         }
+      // overload for boost::asio::ssl::stream compatibility
+      template <typename Arg>
+      explicit Stream(Arg&& arg, Context& context)
+         : StreamBase<Channel>(context), m_nextLayer(std::forward<Arg>(arg)) {}
 
       Stream(Stream&& other) = default;
       Stream& operator=(Stream&& other) = default;
