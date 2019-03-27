@@ -1145,6 +1145,21 @@ TLS Ciphersuites
 
      Return the authentication algorithm of this ciphersuite
 
+ .. cpp:function:: bool acceptable_ciphersuite(const Ciphersuite& suite) const
+
+     Return true if ciphersuite is accepted by the policy.
+
+     Allows an application to reject any ciphersuites, which are
+     undesirable for whatever reason without having to reimplement
+     :cpp:func:`TLS::Ciphersuite::ciphersuite_list`
+
+ .. cpp:function:: std::vector<uint16_t> ciphersuite_list(Protocol_Version version, bool have_srp) const
+
+     Return allowed ciphersuites in order of preference
+
+     Allows an application to have full control over ciphersuites
+     by returning desired ciphersuites in preference order.
+
 .. _tls_alerts:
 
 TLS Alerts
