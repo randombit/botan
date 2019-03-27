@@ -11,9 +11,9 @@
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
 
 /*
-* On Darwin and OpenBSD ppc, use sysctl to detect AltiVec
+* On macOS and OpenBSD ppc, use sysctl to detect AltiVec
 */
-#if defined(BOTAN_TARGET_OS_IS_DARWIN)
+#if defined(BOTAN_TARGET_OS_IS_MACOS)
   #include <sys/sysctl.h>
 #elif defined(BOTAN_TARGET_OS_IS_OPENBSD)
   #include <sys/param.h>
@@ -37,8 +37,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    {
    BOTAN_UNUSED(cache_line_size);
 
-#if defined(BOTAN_TARGET_OS_IS_DARWIN) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
-   // On Darwin/OS X and OpenBSD, use sysctl
+#if defined(BOTAN_TARGET_OS_IS_MACOS) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   // On macOS and OpenBSD, use sysctl
 
    int sels[2] = {
 #if defined(BOTAN_TARGET_OS_IS_OPENBSD)

@@ -25,7 +25,7 @@ namespace Botan {
 *  - x86 features using CPUID. x86 is also the only processor with
 *    accurate cache line detection currently.
 *
-*  - PowerPC AltiVec detection on Linux, NetBSD, OpenBSD, and Darwin
+*  - PowerPC AltiVec detection on Linux, NetBSD, OpenBSD, and macOS
 *
 *  - ARM NEON and crypto extensions detection. On Linux and Android
 *    systems which support getauxval, that is used to access CPU

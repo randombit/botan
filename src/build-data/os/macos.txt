@@ -27,7 +27,7 @@ apple_keychain
 </target_features>
 
 <aliases>
-macos
+darwin
 macosx
 osx
 </aliases>

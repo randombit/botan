@@ -210,12 +210,12 @@ def main(args):
 
     copy_executable(cfg['cli_exe'], prepend_destdir(os.path.join(bin_dir, cfg['cli_exe_name'])))
 
-    # On Darwin, if we are using shared libraries and we install, we should fix
+    # On MacOS, if we are using shared libraries and we install, we should fix
     # up the library name, otherwise the botan command won't work; ironically
     # we only need to do this because we previously changed it from a setting
     # that would be correct for installation to one that lets us run it from
     # the build directory
-    if target_os == 'darwin' and build_shared_lib:
+    if target_os == 'macos' and build_shared_lib:
         soname_abi = cfg['soname_abi']
 
         subprocess.check_call(['install_name_tool',

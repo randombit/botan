@@ -7,7 +7,7 @@
 
 #include <botan/internal/getentropy.h>
 
-#if defined(BOTAN_TARGET_OS_IS_DARWIN)
+#if defined(BOTAN_TARGET_OS_IS_MACOS)
    #include <sys/random.h>
 #else
    #include <unistd.h>
