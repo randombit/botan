@@ -11,6 +11,6 @@ certstor_macos.h
 </header:public>
 
 <frameworks>
-darwin -> CoreFoundation
-darwin -> Security
+macos -> CoreFoundation
+macos -> Security
 </frameworks>

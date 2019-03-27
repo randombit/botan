@@ -250,7 +250,7 @@ void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
 
          /*
          * This is seen on OS X CI, despite the fact that the man page
-         * for Darwin urandom explicitly states that writing to it is
+         * for macOS urandom explicitly states that writing to it is
          * supported, and write(2) does not document EPERM at all.
          * But in any case EPERM seems indicative of a policy decision
          * by the OS or sysadmin that additional entropy is not wanted

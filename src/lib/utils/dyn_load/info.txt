@@ -13,6 +13,6 @@ win32
 android -> dl
 linux -> dl
 solaris -> dl
-darwin -> dl
+macos -> dl
 hurd -> dl
 </libs>

@@ -106,7 +106,7 @@ class Version(object):
 
     @staticmethod
     def packed():
-         # Used on Darwin for dylib versioning
+         # Used on macOS for dylib versioning
         return Version.major() * 1000 + Version.minor()
 
     @staticmethod
@@ -1861,8 +1861,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'distribution_info': options.distribution_info,
 
-        'darwin_so_compat_ver': '%s.%s.0' % (Version.packed(), Version.so_rev()),
-        'darwin_so_current_ver': '%s.%s.%s' % (Version.packed(), Version.so_rev(), Version.patch()),
+        'macos_so_compat_ver': '%s.%s.0' % (Version.packed(), Version.so_rev()),
+        'macos_so_current_ver': '%s.%s.%s' % (Version.packed(), Version.so_rev(), Version.patch()),
 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
