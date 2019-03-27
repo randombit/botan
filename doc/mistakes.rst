@@ -21,6 +21,9 @@ Intead such operations should have been accessible only via the higher level
 interfaces (here BlockCipher and HashFunction). This would substantially reduce
 the overall API and ABI surface.
 
+These interfaces are now deprecated, and perhaps will be able to be
+removed eventually.
+
 Exceptions
 -----------
 

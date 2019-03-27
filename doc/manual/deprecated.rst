@@ -9,6 +9,9 @@ use case if you want to make sure your code continues to work.
 This is in addition to specific API calls marked with BOTAN_DEPRECATED
 in the source.
 
+- Directly using an algorithm class like ``AES_128`` or ``SHA_256``. Instead
+  create the objects via a ``T::create`` call.
+
 - Directly accessing the member variables of types calendar_point, ASN1_Attribute,
   AlgorithmIdentifier, and BER_Object
 
