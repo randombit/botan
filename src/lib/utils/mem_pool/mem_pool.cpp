@@ -62,8 +62,28 @@ namespace Botan {
 * and that page being writable again, maximizing chances of crashing after a
 * use-after-free.
 *
+* Future work
+* -------------
+*
+* The allocator is protected by a global lock. It would be good to break this
+* up, since almost all of the work can actually be done in parallel especially
+* when allocating objects of different sizes (which can't possibly share a
+* bucket).
+*
 * It may be worthwhile to optimize deallocation by storing the Buckets in order
 * (by pointer value) which would allow binary search to find the owning bucket.
+*
+* A useful addition would be to randomize the allocations. Memory_Pool would be
+* changed to receive also a RandomNumberGenerator& object (presumably the system
+* RNG, or maybe a ChaCha_RNG seeded with system RNG). Then the bucket to use and
+* the offset within the bucket would be chosen randomly, instead of using first fit.
+*
+* Right now we don't make any provision for threading, so if two threads both
+* allocate 32 byte values one after the other, the two allocations will likely
+* share a cache line. Ensuring that distinct threads will (tend to) use distinct
+* buckets would reduce this.
+*
+* Supporting a realloc-style API may be useful.
 */
 
 namespace {
