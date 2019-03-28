@@ -27,6 +27,10 @@ Version 2.10.0, Not Yet Released
   Use ``--test-threads=0`` to run with as many CPU cores as are available on the
   current system. The default remains single threaded. (GH #1819)
 
+* XMSS signatures now uses a global thread pool instead of spawning new threads
+  for each usage. This improves signature generation performance by between 10%
+  and 60% depending on architecture and core count. (GH #1864)
+
 * Some functions related to encoding and decoding BigInts have been deprecated.
   (GH #1817)
 
@@ -52,6 +56,12 @@ Version 2.10.0, Not Yet Released
   (Capsicum) and OpenBSD (``pledge``) sandboxes are supported. (GH #1808)
 
 * Use ``if constexpr`` when available.
+
+* Disable building shared libs on iOS as it was broken and it is not clear shared
+  libraries are ever useful on iOS (GH #1865)
+
+* Renamed the ``darwin`` build target to ``macos``. This should not cause any
+  user-visible change. (GH #1866)
 
 * Add support for using ``sccache`` to cache the Windows CI build (GH #1807)
 
