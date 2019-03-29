@@ -12,6 +12,12 @@
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && \
    (defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2))
 
+#if defined(SO_USER_COOKIE)
+#define SOCKET_ID 1
+#else
+#define SOCKET_ID 0
+#endif
+
 #include <botan/tls_server.h>
 #include <botan/tls_policy.h>
 #include <botan/hex.h>
@@ -28,7 +34,11 @@ namespace Botan_CLI {
 class TLS_Server final : public Command, public Botan::TLS::Callbacks
    {
    public:
+#if SOCKET_ID
+      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces= --max-clients=0 -socket-id=0")
+#else
       TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces= --max-clients=0")
+#endif
          {
          init_sockets();
          }
@@ -56,6 +66,9 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          const size_t max_clients = get_arg_sz("max-clients");
          const std::string transport = get_arg("type");
          const std::string dump_traces_to = get_arg("dump-traces");
+#if SOCKET_ID
+	 m_socket_id = get_arg_sz("socket-id");
+#endif
 
          if(transport != "tcp" && transport != "udp")
             {
@@ -244,6 +257,19 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                throw CLI_Error("listen failed");
                }
             }
+	 if(m_socket_id > 0)
+            {
+#if SOCKET_ID
+// Other oses could have other means to trace sockets
+#if defined(SO_USER_COOKIE)
+            if(::setsockopt(fd, SOL_SOCKET, SO_USER_COOKIE, reinterpret_cast<const void *>(&m_socket_id), sizeof(m_socket_id)) != 0)
+               {
+               // Failed but not world-ending issue
+               output() << "set socket cookie id failed" << std::endl;
+	       }
+#endif
+#endif
+	    }
          return fd;
          }
 
@@ -331,6 +357,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
 
       int m_socket = -1;
       bool m_is_tcp = false;
+      uint32_t m_socket_id = 0;
       std::string m_line_buf;
       std::list<std::string> m_pending_output;
       Sandbox m_sandbox;
