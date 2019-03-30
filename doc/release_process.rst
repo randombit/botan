@@ -19,7 +19,7 @@ And remember that CI doesn't test everything. In particular, not all
 tests run under valgrind or on the qemu cross builds due to time
 constraints.  So before release, do a complete build/test cycle:
 
- - Running under valgrind (remember `--with-valgrind` flag)
+ - Running under valgrind (remember ``--with-valgrind`` flag)
  - Using Clang sanitizers (ASan + UbSan)
  - Native or cross compile for Linux aarch64 and ppc64le
  - Native compile on FreeBSD x86-64
