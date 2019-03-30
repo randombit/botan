@@ -75,6 +75,7 @@ External Providers, Hardware Support
 * Windows CryptoNG provider (ciphers, hashes)
 * Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
 * POWER8 crypto extensions (SHA-2, GCM)
+* POWER9 on-chip RNG (DARN)
 * Better TPM support: NVRAM, PCR measurements, sealing
 * Intel SGX support
 * Support Intel QuickAssist accelerator cards
