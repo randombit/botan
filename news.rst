@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.10.0, Not Yet Released
+Version 2.10.0, 2019-03-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Notice: the developers plan to switch from gzip to xz compression for
