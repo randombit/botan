@@ -42,7 +42,7 @@ docs: %{doc_stamp_file}
 # Misc targets
 
 %{if make_supports_phony}
-.PHONY = all cli libs tests docs clean distclean install
+.PHONY: all cli libs tests docs clean distclean install
 %{endif}
 
 %{doc_stamp_file}: %{doc_dir}/manual/*.rst
