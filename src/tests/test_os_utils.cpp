@@ -37,6 +37,7 @@ class OS_Utils_Tests final : public Test
          results.push_back(test_get_process_id());
          results.push_back(test_get_cpu_cycle_counter());
          results.push_back(test_get_high_resolution_clock());
+	 results.push_back(test_get_cpu_numbers());
          results.push_back(test_get_system_timestamp());
          results.push_back(test_memory_locking());
          results.push_back(test_cpu_instruction_probe());
@@ -108,6 +109,18 @@ class OS_Utils_Tests final : public Test
 
          return result;
          }
+
+      Test::Result test_get_cpu_numbers()
+         {
+         Test::Result result("OS::get_cpu_total/OS::get_cpu_available");
+
+	 size_t tt = Botan::OS::get_cpu_total();
+	 size_t ta = Botan::OS::get_cpu_available();
+
+	 result.test_lte("get_cpu_available not greater than total", ta, tt);
+
+	 return result;
+	 }
 
       Test::Result test_get_system_timestamp()
          {

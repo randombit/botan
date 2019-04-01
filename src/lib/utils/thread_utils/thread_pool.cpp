@@ -22,7 +22,7 @@ Thread_Pool::Thread_Pool(size_t pool_size)
    {
    if(pool_size == 0)
       {
-      pool_size = std::thread::hardware_concurrency();
+      pool_size = OS::get_cpu_available();
 
       /*
       * For large machines don't create too many threads, unless
