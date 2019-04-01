@@ -389,17 +389,9 @@ class Stream : public StreamBase<Channel>
          if(this->m_core.hasReceivedData())
             { return this->m_core.copyReceivedData(buffers); }
 
-         try
-            {
-            tls_decrypt_some(ec);
-            if(ec)
-               { return 0; }
-            }
-         catch(const std::exception& ex)
-            {
-            ec = Botan::TLS::convertException();
-            return 0;
-            }
+         tls_decrypt_some(ec);
+         if(ec)
+            { return 0; }
 
          return this->m_core.copyReceivedData(buffers);
          }
@@ -432,18 +424,11 @@ class Stream : public StreamBase<Channel>
                              boost::system::error_code& ec)
          {
          std::size_t sent;
-         try
-            {
-            sent = tls_encrypt_some(buffers);
-            }
-         catch(const std::exception&)
-            {
-            ec = Botan::TLS::convertException();
-            return 0;
-            }
+         sent = tls_encrypt_some(buffers, ec);
+         if(ec)
+            { return 0; }
 
          writePendingTlsData(ec);
-
          if(ec)
             { return 0; }
 
@@ -483,28 +468,19 @@ class Stream : public StreamBase<Channel>
          boost::asio::async_completion<WriteHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
          std::size_t sent;
-         try
-            {
-            sent = tls_encrypt_some(buffers);
-            }
-         catch(const std::exception&)
+         boost::system::error_code ec;
+         sent = tls_encrypt_some(buffers, ec);
+         if(ec)
             {
             // we can't be sure how many bytes were commited here, so clear the send_buffer and try again
             this->m_core.clearSendBuffer();
             Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
-            op{std::move(init.completion_handler),
-               *this,
-               this->m_core,
-               std::size_t(0),
-               Botan::TLS::convertException()};
+            op{std::move(init.completion_handler), *this, this->m_core, std::size_t(0), ec};
             return init.result.get();
             }
 
          Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
-         op{std::move(init.completion_handler),
-            *this,
-            this->m_core,
-            sent};
+         op{std::move(init.completion_handler), *this, this->m_core, sent};
 
          return init.result.get();
          }
@@ -556,12 +532,20 @@ class Stream : public StreamBase<Channel>
          if(ec)
             { return; }
 
-         native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                        read_buffer.size());
+         try
+            {
+            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
+                                           read_buffer.size());
+            }
+         catch(const std::exception& ex)
+            {
+            ec = Botan::TLS::convertException();
+            }
          }
 
       template <typename ConstBufferSequence>
-      std::size_t tls_encrypt_some(const ConstBufferSequence& buffers)
+      std::size_t tls_encrypt_some(const ConstBufferSequence& buffers,
+                                   boost::system::error_code& ec)
          {
          std::size_t sent = 0;
          // NOTE: This is not asynchronous: it encrypts the data synchronously.
@@ -571,13 +555,20 @@ class Stream : public StreamBase<Channel>
                it++)
             {
             if(sent >= MAX_PLAINTEXT_SIZE)
-               {
-               return 0;
-               }
+               { return 0; }
+
             boost::asio::const_buffer buffer = *it;
             const auto amount =
                std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, buffer.size());
-            native_handle()->send(static_cast<const uint8_t*>(buffer.data()), amount);
+            try
+               {
+               native_handle()->send(static_cast<const uint8_t*>(buffer.data()), amount);
+               }
+            catch(const std::exception&)
+               {
+               ec = Botan::TLS::convertException();
+               return 0;
+               }
             sent += amount;
             }
 
