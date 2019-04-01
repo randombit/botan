@@ -14,6 +14,7 @@
 #include <boost/version.hpp>
 #if BOOST_VERSION > 106600
 
+#include <boost/beast/core/flat_buffer.hpp>
 #include <botan/internal/asio_includes.h>
 #include <botan/tls_callbacks.h>
 #include <mutex>
@@ -28,26 +29,16 @@ namespace TLS {
  */
 struct StreamCore : public Botan::TLS::Callbacks
    {
-      struct Buffer
-         {
-         Buffer() : dynamicBuffer(data_buffer) {}
-         std::vector<uint8_t> data_buffer;
-         boost::asio::dynamic_vector_buffer<
-         uint8_t, typename decltype(data_buffer)::allocator_type>
-         dynamicBuffer;
-         };
-
       StreamCore()
          : m_input_buffer_space(17 * 1024, '\0'), // enough for a TLS Datagram
-           input_buffer(boost::asio::buffer(m_input_buffer_space)) {}
+           input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size()) {}
 
       virtual ~StreamCore() = default;
 
       void tls_emit_data(const uint8_t data[], size_t size) override
          {
-         m_send_buffer.dynamicBuffer.commit(boost::asio::buffer_copy(
-                                               m_send_buffer.dynamicBuffer.prepare(size),
-                                               boost::asio::buffer(data, size)));
+         m_send_buffer.commit(
+            boost::asio::buffer_copy(m_send_buffer.prepare(size), boost::asio::buffer(data, size)));
          }
 
       void tls_record_received(uint64_t, const uint8_t data[],
@@ -55,10 +46,10 @@ struct StreamCore : public Botan::TLS::Callbacks
          {
          // TODO: It would be nice to avoid this buffer copy. However, we need to deal with the case that the receive
          // buffer provided by the caller is smaller than the decrypted record.
-         auto buffer = m_receive_buffer.dynamicBuffer.prepare(size);
+         auto buffer = m_receive_buffer.prepare(size);
          auto copySize =
             boost::asio::buffer_copy(buffer, boost::asio::const_buffer(data, size));
-         m_receive_buffer.dynamicBuffer.commit(copySize);
+         m_receive_buffer.commit(copySize);
          }
 
       void tls_alert(Botan::TLS::Alert alert) override
@@ -82,40 +73,40 @@ struct StreamCore : public Botan::TLS::Callbacks
 
       bool hasReceivedData() const
          {
-         return m_receive_buffer.dynamicBuffer.size() > 0;
+         return m_receive_buffer.size() > 0;
          }
 
       template <typename MutableBufferSequence>
       std::size_t copyReceivedData(MutableBufferSequence buffers)
          {
          const auto copiedBytes =
-            boost::asio::buffer_copy(buffers, m_receive_buffer.dynamicBuffer.data());
-         m_receive_buffer.dynamicBuffer.consume(copiedBytes);
+            boost::asio::buffer_copy(buffers, m_receive_buffer.data());
+         m_receive_buffer.consume(copiedBytes);
          return copiedBytes;
          }
 
-      bool hasDataToSend() const { return m_send_buffer.dynamicBuffer.size() > 0; }
+      bool hasDataToSend() const { return m_send_buffer.size() > 0; }
 
       boost::asio::const_buffer sendBuffer() const
          {
-         return m_send_buffer.dynamicBuffer.data();
+         return m_send_buffer.data();
          }
 
       void consumeSendBuffer(std::size_t bytesConsumed)
          {
-         m_send_buffer.dynamicBuffer.consume(bytesConsumed);
+         m_send_buffer.consume(bytesConsumed);
          }
 
       void clearSendBuffer()
          {
-         consumeSendBuffer(m_send_buffer.dynamicBuffer.size());
+         consumeSendBuffer(m_send_buffer.size());
          }
 
    private:
       // Buffer space used to read input intended for the engine.
-      std::vector<uint8_t> m_input_buffer_space;
-      Buffer               m_receive_buffer;
-      Buffer               m_send_buffer;
+      std::vector<uint8_t>      m_input_buffer_space;
+      boost::beast::flat_buffer m_receive_buffer;
+      boost::beast::flat_buffer m_send_buffer;
 
    public:
       // A buffer that may be used to read input intended for the engine.
