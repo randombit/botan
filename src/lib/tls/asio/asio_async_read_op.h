@@ -53,6 +53,7 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
             {
             if(bytes_transferred > 0 && !ec)
                {
+               // We have transferred encrypted data from the socket, now hand it to the channel.
                boost::asio::const_buffer read_buffer{m_core.input_buffer.data(), bytes_transferred};
                try
                   {
@@ -65,21 +66,23 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
                   }
                }
 
-            if(!m_core.hasReceivedData() && !ec)
+            if(!m_core.hasReceivedData() && !ec && boost::asio::buffer_size(m_buffers) > 0)
                {
-               // we need more tls packets from the socket
+               // The channel did not decrypt a complete record yet, we need more data from the socket.
                m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
                return;
                }
 
             if(m_core.hasReceivedData() && !ec)
                {
+               // The channel has decrypted a TLS record, now copy it to the output buffers.
                m_decodedBytes = m_core.copyReceivedData(m_buffers);
-               ec = {};
                }
 
             if(!isContinuation)
                {
+               // Make sure the handler is not called without an intermediate initiating function.
+               // "Reading" into a zero-byte buffer will "return" immediately.
                m_ec = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
                ec = m_ec;

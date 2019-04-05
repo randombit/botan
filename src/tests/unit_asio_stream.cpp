@@ -386,6 +386,28 @@ class Asio_Stream_Tests final : public Test
          results.push_back(result);
          }
 
+      void test_sync_read_zero_buffer(std::vector<Test::Result>& results)
+      {
+         net::io_context ioc;
+
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc);
+
+         const std::size_t buf_size = 128;
+         uint8_t           buf[buf_size];
+         error_code        ec;
+
+         auto bytes_transferred = net::read(ssl, net::mutable_buffer(buf, std::size_t(0)), ec);
+
+         Test::Result result("sync read_some into zero-size buffer");
+         result.test_eq("reads the correct amount of data", bytes_transferred, 0);
+         // This relies on an implementation detail of TestStream: A "real" asio::tcp::stream
+         // would block here. TestStream sets error_code::eof.
+         result.confirm("does not report an error", !ec);
+
+         results.push_back(result);
+      }
+
       void test_async_read_some_success(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
@@ -493,6 +515,34 @@ class Asio_Stream_Tests final : public Test
          ioc.run();
          results.push_back(result);
          }
+
+      void test_async_read_zero_buffer(std::vector<Test::Result>& results)
+      {
+         net::io_context ioc;
+         TestStream      remote{ioc};
+
+         Botan::TLS::Context ctx;
+         AsioStream ssl(ctx, ioc);
+         uint8_t    data[TEST_DATA_SIZE];
+         error_code ec;
+
+         Test::Result result("async read_some into zero-size buffer");
+
+         auto read_handler = [&](const error_code &ec, std::size_t bytes_transferred)
+            {
+            result.test_eq("reads the correct amount of data", bytes_transferred, 0);
+            // This relies on an implementation detail of TestStream: A "real" asio::tcp::stream
+            // would block here. TestStream sets error_code::eof.
+            result.confirm("does not report an error", !ec);
+            };
+
+         net::mutable_buffer buf {data, std::size_t(0)};
+         net::async_read(ssl, buf, read_handler);
+
+         ssl.next_layer().close_remote();
+         ioc.run();
+         results.push_back(result);
+      }
 
       void test_sync_write_some_success(std::vector<Test::Result>& results)
          {
@@ -727,11 +777,13 @@ class Asio_Stream_Tests final : public Test
          test_sync_read_some_buffer_sequence(results);
          test_sync_read_some_error(results);
          test_sync_read_some_throw(results);
+         test_sync_read_zero_buffer(results);
 
          test_async_read_some_success(results);
          test_async_read_some_buffer_sequence(results);
          test_async_read_some_error(results);
          test_async_read_some_throw(results);
+         test_async_read_zero_buffer(results);
 
          test_sync_write_some_success(results);
          test_sync_write_some_buffer_sequence(results);
