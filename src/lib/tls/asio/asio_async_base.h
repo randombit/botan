@@ -48,8 +48,8 @@ struct AsyncBase : boost::asio::coroutine
       template<class... Args>
       void complete_now(Args&& ... args)
          {
-         m_handler(std::forward<Args>(args)...);
          m_work_guard_1.reset();
+         m_handler(std::forward<Args>(args)...);
          }
 
       Handler m_handler;
