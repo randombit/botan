@@ -41,6 +41,12 @@
 
 #include "credentials.h"
 
+#if BOOST_VERSION >= 107000
+#define GET_IO_SERVICE(s) ((boost::asio::io_context&)(s).get_executor().context())
+#else
+#define GET_IO_SERVICE(s) ((s).get_io_service())
+#endif
+
 namespace Botan_CLI {
 
 namespace {
@@ -435,7 +441,7 @@ class TLS_Asio_HTTP_Server final
       session::pointer make_session()
          {
          return session::create(
-                   m_acceptor.get_io_service(),
+                   GET_IO_SERVICE(m_acceptor),
                    m_session_manager,
                    m_creds,
                    m_policy);
