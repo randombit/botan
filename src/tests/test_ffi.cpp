@@ -215,6 +215,7 @@ class FFI_Unit_Tests final : public Test
          if(rc != 0)
             {
             REQUIRE_FFI_OK(botan_rng_init, (&rng, "user"));
+            REQUIRE_FFI_OK(botan_rng_destroy, (rng));
             }
 
          if(rc == 0)
