@@ -52,6 +52,12 @@ BOTAN_PUBLIC_API(2,0) secure_vector<uint8_t> decode(DataSource& pem,
                                                     std::string& label);
 
 /**
+* Decode all PEM data
+* @param source a datasource containing multiple PEMs
+*/
+BOTAN_PUBLIC_API(2,11) std::vector<secure_vector<uint8_t>> decode_all(DataSource& source);
+
+/**
 * Decode PEM data
 * @param pem a string containing PEM encoded data
 * @param label is set to the PEM label found for later inspection

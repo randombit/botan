@@ -123,6 +123,23 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label)
    return base64_decode(b64.data(), b64.size());
    }
 
+std::vector<secure_vector<uint8_t>> decode_all(DataSource& source)
+   {
+   std::vector<secure_vector<uint8_t>> pems;
+
+   while(!source.end_of_data())
+      {
+      std::string label;
+      try
+         {
+         pems.push_back(decode(source, label));
+         }
+      catch(const Decoding_Error&) {}
+      }
+
+   return pems;
+   }
+
 secure_vector<uint8_t> decode_check_label(const std::string& pem,
                                           const std::string& label_want)
    {
