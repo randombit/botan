@@ -6,7 +6,7 @@ Near Term Plans
 ----------------------------------------
 
 Here is an outline for the development plans over the next 12-18 months, as of
-December 2018.
+April 2019.
 
 TLS Hardening/Testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -19,12 +19,6 @@ Expose TLS at FFI layer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Exposing TLS to C would allow for many new applications to make use of Botan.
-
-Multiparty Computation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Threshold key generation and signature schemes, homomorphic encryption, basic
-ZKP proof systems.
 
 Post-Quantum CCA2 Encryption
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -49,14 +43,6 @@ we'll also want BLS curves.
 And possibly some functionality built on top of pairings, such as identity based
 encryption.
 
-TLS 1.3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The handshake differences in v1.3 are quite substantial and it's an open
-question how to implement that without overly complicating the existing TLS
-v1.0-v1.2 handshake code. Assuming no source of dedicated funding appears, a
-full v1.3 implementation will likely not be available until at least Q4 2019.
-
 ASN.1 Redesign
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -73,8 +59,10 @@ simultaneously, to allow for application switch over.
 
 This version will adopt C++17 and use new std types such as string_view,
 optional, and any, along with adopting memory span and guarded integer
-types. Likely C++17 constexpr will also be leveraged.
+types.
 
 In this future 3.x release, all deprecated features/APIs of 2.x (which notably
 includes TLS v1.0/v1.1 support) will be removed. Beyond explicitly deprecated
 functionality, there should be no breaking API changes in the transition to 3.x
+
+Botan 3.x will likely be the first version to support TLS 1.3.
