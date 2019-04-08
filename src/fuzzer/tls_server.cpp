@@ -109,6 +109,41 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager
       std::unique_ptr<Botan::Private_Key> m_rsa_key;
    };
 
+class Fuzzer_TLS_Policy : public Botan::TLS::Policy
+   {
+   public:
+      std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version,
+                                             bool have_srp) const
+         {
+         std::vector<uint16_t> ciphersuites;
+
+         for(auto&& suite : Botan::TLS::Ciphersuite::all_known_ciphersuites())
+            {
+            if(suite.valid() == false)
+               continue;
+
+            // Are we doing SRP?
+            if(!have_srp && suite.kex_method() == Botan::TLS::Kex_Algo::SRP_SHA)
+               continue;
+
+            if(!version.supports_aead_modes())
+               {
+               // Are we doing AEAD in a non-AEAD version?
+               if(suite.mac_algo() == "AEAD")
+                  continue;
+
+               // Older (v1.0/v1.1) versions also do not support any hash but SHA-1
+               if(suite.mac_algo() != "SHA-1")
+                  continue;
+               }
+
+            ciphersuites.push_back(suite.ciphersuite_code());
+            }
+
+         return ciphersuites;
+         }
+   };
+
 class Fuzzer_TLS_Server_Callbacks : public Botan::TLS::Callbacks
    {
    public:
@@ -168,7 +203,7 @@ void fuzz(const uint8_t in[], size_t len)
       return;
 
    Botan::TLS::Session_Manager_Noop session_manager;
-   Botan::TLS::Policy policy;
+   Fuzzer_TLS_Policy policy;
    Botan::TLS::Server_Information info("server.name", 443);
    Fuzzer_TLS_Server_Creds creds;
    Fuzzer_TLS_Server_Callbacks callbacks;
