@@ -12,7 +12,7 @@
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
 
 #include <boost/version.hpp>
-#if BOOST_VERSION > 106600
+#if BOOST_VERSION >= 106600
 
 #include <boost/asio/coroutine.hpp>
 #include <botan/internal/asio_includes.h>
