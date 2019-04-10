@@ -170,7 +170,10 @@ PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
                          BOTAN_HAS_SM4_ARMV8 \
                          BOTAN_HAS_THREEFISH_512_AVX2 \
                          BOTAN_DEPRECATED(msg)= \
-                         BOTAN_PUBLIC_API(maj,min)=
+                         BOTAN_PUBLIC_API(maj,min)= \
+                         BOTAN_HAS_TLS \
+                         BOTAN_HAS_BOOST_ASIO \
+                         BOOST_VERSION=106600
 
 
 EXPAND_AS_DEFINED      =
