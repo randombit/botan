@@ -423,8 +423,7 @@ class Stream : public StreamBase<Channel>
       std::size_t write_some(const ConstBufferSequence& buffers,
                              boost::system::error_code& ec)
          {
-         std::size_t sent;
-         sent = tls_encrypt_some(buffers, ec);
+         std::size_t sent = tls_encrypt_some(buffers, ec);
          if(ec)
             { return 0; }
 
@@ -438,6 +437,7 @@ class Stream : public StreamBase<Channel>
       /**
        * Write some data to the stream. The function call will block until one or more bytes of data has been written
        * successfully, or until an error occurs.
+       *
        * @param buffers The data to be written.
        * @return The number of bytes written.
        * @throws boost::system::system_error if error occured
@@ -453,6 +453,7 @@ class Stream : public StreamBase<Channel>
 
       /**
        * Start an asynchronous write. The function call always returns immediately.
+       *
        * @param buffers The data to be written.
        * @param handler The handler to be called when the write operation completes. Copies will be made of the handler
        *        as required. The equivalent function signature of the handler must be:
@@ -467,12 +468,12 @@ class Stream : public StreamBase<Channel>
 
          boost::asio::async_completion<WriteHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
-         std::size_t sent;
          boost::system::error_code ec;
-         sent = tls_encrypt_some(buffers, ec);
+         std::size_t sent = tls_encrypt_some(buffers, ec);
          if(ec)
             {
-            // we can't be sure how many bytes were commited here, so clear the send_buffer and try again
+            // we cannot be sure how many bytes were committed here
+            // so clear the send_buffer and let the AsyncWriteOperation call the handler with the error_code set
             this->m_core.clearSendBuffer();
             Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
             op{std::move(init.completion_handler), *this, this->m_core, std::size_t(0), ec};
@@ -487,11 +488,12 @@ class Stream : public StreamBase<Channel>
 
       /**
        * Start an asynchronous read. The function call always returns immediately.
+       *
        * @param buffers The buffers into which the data will be read. Although the buffers object may be copied as
-       *                 necessary, ownership of the underlying buffers is retained by the caller, which must guarantee
-       *                 that they remain valid until the handler is called.
-       * @param handler The handler to be called when the read operation completes.
-       *                The equivalent function signature of the handler must be:
+       *                necessary, ownership of the underlying buffers is retained by the caller, which must guarantee
+       *                that they remain valid until the handler is called.
+       * @param handler The handler to be called when the read operation completes. The equivalent function signature of
+       *                the handler must be:
        *                void(boost::system::error_code, std::size_t)
        */
       template <typename MutableBufferSequence, typename ReadHandler>
@@ -504,11 +506,7 @@ class Stream : public StreamBase<Channel>
          boost::asio::async_completion<ReadHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
          AsyncReadOperation<typename std::decay<ReadHandler>::type, Stream, MutableBufferSequence>
-         op{std::move(init.completion_handler),
-            *this,
-            this->m_core,
-            buffers};
-
+         op{std::move(init.completion_handler), *this, this->m_core, buffers};
          return init.result.get();
          }
 
@@ -549,7 +547,7 @@ class Stream : public StreamBase<Channel>
          {
          std::size_t sent = 0;
          // NOTE: This is not asynchronous: it encrypts the data synchronously.
-         // Only writing on the socket is asynchronous.
+         // Only writing to the socket is asynchronous.
          for(auto it = boost::asio::buffer_sequence_begin(buffers);
                it != boost::asio::buffer_sequence_end(buffers);
                it++)
@@ -578,9 +576,9 @@ class Stream : public StreamBase<Channel>
       StreamLayer m_nextLayer;
    };
 
-} // TLS
+}  // namespace TLS
 
-} // namespace Botan
+}  // namespace Botan
 
 #endif // BOOST_VERSION
 #endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO

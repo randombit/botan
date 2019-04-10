@@ -28,6 +28,14 @@ namespace TLS {
 template <class Handler, class Stream, class Allocator = std::allocator<void>>
 struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
    {
+      /**
+       * Construct and invoke an AsyncHandshakeOperation.
+       *
+       * @param handler Handler function to be called upon completion.
+       * @param stream The stream from which the data will be read
+       * @param core The stream's core; used to extract decrypted data.
+       * @param ec Optional error code; used to report an error to the handler function.
+       */
       template<class HandlerT>
       AsyncHandshakeOperation(
          HandlerT&& handler,
@@ -49,8 +57,8 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
          {
          reenter(this)
             {
-            // process tls packets from socket first
-            if(bytesTransferred > 0)
+            // Provide TLS data from the core to the TLS::Channel
+            if(bytesTransferred > 0 && !ec)
                {
                boost::asio::const_buffer read_buffer {m_core.input_buffer.data(), bytesTransferred};
                try
@@ -63,13 +71,13 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                   }
                }
 
-            // send tls packets
+            // Write TLS data that TLS::Channel has provided to the core
             if(m_core.hasDataToSend() && !ec)
                {
-               // \note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`).
-               //        This operation will eventually call `*this` as its own handler, passing the 0 back to this call
-               //        operator. This is necessary because, the check of `bytesTransferred > 0` assumes that
-               //        `bytesTransferred` bytes were just read and are in the cores input_buffer for further processing.
+               // Note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`).
+               // This operation will eventually call `*this` as its own handler, passing the 0 back to this call
+               // operator. This is necessary because the check of `bytesTransferred > 0` assumes that
+               // `bytesTransferred` bytes were just read and are in the core's input_buffer for further processing.
                AsyncWriteOperation<
                AsyncHandshakeOperation<typename std::decay<Handler>::type, Stream, Allocator>,
                                        Stream,
@@ -78,7 +86,7 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                return;
                }
 
-            // we need more tls data from the socket
+            // Read more data from the socket
             if(!m_stream.native_handle()->is_active() && !ec)
                {
                m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
@@ -87,9 +95,8 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
 
             if(!isContinuation)
                {
-               // this 0 byte read completes immediately. `yield` causes the coroutine to reenter the function after
-               // this read, enabling us to call the handler, while respecting asios guarantee that the handler will not
-               // be called without an intermediate initiating function
+               // Make sure the handler is not called without an intermediate initiating function.
+               // "Reading" into a zero-byte buffer will complete immediately.
                m_ec = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
                ec = m_ec;

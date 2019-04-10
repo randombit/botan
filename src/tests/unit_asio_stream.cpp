@@ -144,14 +144,13 @@ class StreamBase<Botan_Tests::ThrowingMockChannel> : public StreamBase<Botan_Tes
 namespace Botan_Tests {
 
 /**
-  Synchronous tests for Botan::Stream.
-
-  This test validates the asynchronous behavior Botan::Stream, including its utility classes StreamCore and Async_*_Op.
-  The stream's channel, i.e. TLS_Client or TLS_Server, is mocked and pretends to perform TLS operations (noop) and
-  provides the test data to the stream.
-  The underlying network socket, claiming it read / wrote a number of bytes.
-*/
-
+ * Synchronous tests for Botan::Stream.
+ *
+ * This test validates the asynchronous behavior Botan::Stream, including its utility classes StreamCore and Async_*_Op.
+ * The stream's channel, i.e. TLS_Client or TLS_Server, is mocked and pretends to perform TLS operations (noop) and
+ * provides the test data to the stream.
+ * The underlying network socket, claiming it read / wrote a number of bytes.
+ */
 class Asio_Stream_Tests final : public Test
    {
       using TestStream = boost::beast::test::stream;

@@ -35,14 +35,13 @@ struct StreamCore : public Botan::TLS::Callbacks
 
       virtual ~StreamCore() = default;
 
-      void tls_emit_data(const uint8_t data[], size_t size) override
+      void tls_emit_data(const uint8_t data[], std::size_t size) override
          {
          m_send_buffer.commit(
             boost::asio::buffer_copy(m_send_buffer.prepare(size), boost::asio::buffer(data, size)));
          }
 
-      void tls_record_received(uint64_t, const uint8_t data[],
-                               size_t size) override
+      void tls_record_received(uint64_t, const uint8_t data[], std::size_t size) override
          {
          // TODO: It would be nice to avoid this buffer copy. However, we need to deal with the case that the receive
          // buffer provided by the caller is smaller than the decrypted record.
@@ -60,8 +59,7 @@ struct StreamCore : public Botan::TLS::Callbacks
             }
          }
 
-      std::chrono::milliseconds
-      tls_verify_cert_chain_ocsp_timeout() const override
+      std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const override
          {
          return std::chrono::milliseconds(1000);
          }

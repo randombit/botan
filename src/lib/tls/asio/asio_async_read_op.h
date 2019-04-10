@@ -28,6 +28,15 @@ namespace TLS {
 template <class Handler, class Stream, class MutableBufferSequence, class Allocator = std::allocator<void>>
 struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
    {
+      /**
+       * Construct and invoke an AsyncWriteOperation.
+       *
+       * @param handler Handler function to be called upon completion.
+       * @param stream The stream from which the data will be read
+       * @param core The stream's core; used to extract decrypted data.
+       * @param buffers The buffers into which the data will be read.
+       * @param ec Optional error code; used to report an error to the handler function.
+       */
       template <class HandlerT>
       AsyncReadOperation(HandlerT&& handler,
                          Stream& stream,
@@ -42,7 +51,7 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
          , m_buffers(buffers)
          , m_decodedBytes(0)
          {
-         this->operator()(ec, m_decodedBytes, false);
+         this->operator()(ec, std::size_t(0), false);
          }
 
       AsyncReadOperation(AsyncReadOperation&&) = default;
@@ -82,7 +91,7 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
             if(!isContinuation)
                {
                // Make sure the handler is not called without an intermediate initiating function.
-               // "Reading" into a zero-byte buffer will "return" immediately.
+               // "Reading" into a zero-byte buffer will complete immediately.
                m_ec = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
                ec = m_ec;
@@ -97,7 +106,7 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
       StreamCore&           m_core;
       MutableBufferSequence m_buffers;
 
-      size_t                    m_decodedBytes;
+      std::size_t               m_decodedBytes;
       boost::system::error_code m_ec;
    };
 

@@ -29,8 +29,7 @@ enum handshake_type
    server
    };
 
-
-/** \brief Base class for all Botan::TLS::Stream implementations.
+/** Base class for all Botan::TLS::Stream implementations.
  *
  * This template must be specialized for all the Botan::TLS::Channel to be used.
  * Currently it only supports the Botan::TLS::Client channel that impersonates
