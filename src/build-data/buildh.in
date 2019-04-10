@@ -38,6 +38,10 @@
 #define BOTAN_LIB_LINK "%{link_to}"
 #define BOTAN_LINK_FLAGS "%{cxx_abi_flags}"
 
+%{if system_cert_bundle}
+#define BOTAN_SYSTEM_CERT_BUNDLE "%{system_cert_bundle}"
+%{endif}
+
 #ifndef BOTAN_DLL
   #define BOTAN_DLL %{visibility_attribute}
 #endif
