@@ -62,39 +62,39 @@ K = 10A2403DB42A8743CB989DE86E668D168CBE6046
 #
 #public class RSA_KEM {
 #
-#	public static void main(String[] args) throws InvalidCipherTextException {
-#		// Generate RSA key pair
-#		RSAKeyPairGenerator        rsaGen = new RSAKeyPairGenerator();
-#		rsaGen.init(new RSAKeyGenerationParameters(BigInteger.valueOf(65537), new SecureRandom(), 2048, 5));
-#		AsymmetricCipherKeyPair    keys   = rsaGen.generateKeyPair();
+#    public static void main(String[] args) throws InvalidCipherTextException {
+#        // Generate RSA key pair
+#        RSAKeyPairGenerator        rsaGen = new RSAKeyPairGenerator();
+#        rsaGen.init(new RSAKeyGenerationParameters(BigInteger.valueOf(65537), new SecureRandom(), 2048, 5));
+#        AsymmetricCipherKeyPair    keys   = rsaGen.generateKeyPair();
 #
-#		// Set RSA-KEM parameters
-#		RSAKeyEncapsulation     kem;
-#		//KDF1BytesGenerator      kdf = new KDF1BytesGenerator(new SHA1Digest());
-#		KDF2BytesGenerator      kdf = new KDF2BytesGenerator(new SHA1Digest());
-#		SecureRandom            rnd = new SecureRandom();
-#		byte[]                  encKey = new byte[256];
-#		byte[]                  randElem = new byte[256];
-#		KeyParameter            sessKey;
+#        // Set RSA-KEM parameters
+#        RSAKeyEncapsulation     kem;
+#        //KDF1BytesGenerator      kdf = new KDF1BytesGenerator(new SHA1Digest());
+#        KDF2BytesGenerator      kdf = new KDF2BytesGenerator(new SHA1Digest());
+#        SecureRandom            rnd = new SecureRandom();
+#        byte[]                  encKey = new byte[256];
+#        byte[]                  randElem = new byte[256];
+#        KeyParameter            sessKey;
 #
-#		// Run RSA-KEM
-#		kem = new RSAKeyEncapsulation(kdf, rnd);
+#        // Run RSA-KEM
+#        kem = new RSAKeyEncapsulation(kdf, rnd);
 #
-#		kem.init(keys.getPublic());
-#		sessKey = (KeyParameter)kem.encrypt(encKey, 0, 256);
+#        kem.init(keys.getPublic());
+#        sessKey = (KeyParameter)kem.encrypt(encKey, 0, 256);
 #
-#		RSAEngine rsaEngine = new RSAEngine();
-#		rsaEngine.init(false, (CipherParameters) keys.getPrivate());
-#		randElem = rsaEngine.processBlock(encKey, 0, 256);
+#        RSAEngine rsaEngine = new RSAEngine();
+#        rsaEngine.init(false, (CipherParameters) keys.getPrivate());
+#        randElem = rsaEngine.processBlock(encKey, 0, 256);
 #
-#		System.out.println("E = 65537");
-#		System.out.println("P = " + ((RSAPrivateCrtKeyParameters) keys.getPrivate()).getP());
-#		System.out.println("Q = " + ((RSAPrivateCrtKeyParameters) keys.getPrivate()).getQ());
-#		System.out.println("R = " + Hex.toHexString( randElem ).toUpperCase());
-#		System.out.println("C0 = " + Hex.toHexString( encKey ).toUpperCase());
-#		System.out.println("KDF = KDF2(SHA-1)");
-#		System.out.println("K = " + Hex.toHexString( sessKey.getKey() ).toUpperCase());
-#	}
+#        System.out.println("E = 65537");
+#        System.out.println("P = " + ((RSAPrivateCrtKeyParameters) keys.getPrivate()).getP());
+#        System.out.println("Q = " + ((RSAPrivateCrtKeyParameters) keys.getPrivate()).getQ());
+#        System.out.println("R = " + Hex.toHexString( randElem ).toUpperCase());
+#        System.out.println("C0 = " + Hex.toHexString( encKey ).toUpperCase());
+#        System.out.println("KDF = KDF2(SHA-1)");
+#        System.out.println("K = " + Hex.toHexString( sessKey.getKey() ).toUpperCase());
+#    }
 #
 #}
 

@@ -136,10 +136,10 @@ uint64_t OS::get_cpu_cycle_counter()
       asm volatile("mftbu %0" : "=r" (rtc_high2));
 
       if(rtc_high == rtc_high2)
-	 {
+         {
          rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
          break;
-	 }
+         }
       }
 
 #elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)

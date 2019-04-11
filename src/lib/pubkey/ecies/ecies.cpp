@@ -125,7 +125,7 @@ PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key,
       return PK_Key_Agreement(ECIES_PrivateKey(*ecdh_key), rng, "Raw");
       }
 
-   return PK_Key_Agreement(private_key, rng, "Raw");		// use default implementation
+   return PK_Key_Agreement(private_key, rng, "Raw");        // use default implementation
    }
 }
 
@@ -233,7 +233,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
                                  RandomNumberGenerator& rng) :
    m_ka(private_key, ecies_params, true, rng),
    m_params(ecies_params),
-   m_eph_public_key_bin(private_key.public_value()),	// returns the uncompressed public key, see conversion below
+   m_eph_public_key_bin(private_key.public_value()),    // returns the uncompressed public key, see conversion below
    m_iv(),
    m_other_point(),
    m_label()
@@ -359,7 +359,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       }
 
    // extract data
-   const std::vector<uint8_t> other_public_key_bin(in, in + point_size);	// the received (ephemeral) public key
+   const std::vector<uint8_t> other_public_key_bin(in, in + point_size);    // the received (ephemeral) public key
    const std::vector<uint8_t> encrypted_data(in + point_size, in + in_len - m_mac->output_length());
    const std::vector<uint8_t> mac_data(in + in_len - m_mac->output_length(), in + in_len);
 

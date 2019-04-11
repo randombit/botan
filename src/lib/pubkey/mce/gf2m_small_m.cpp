@@ -19,23 +19,23 @@ namespace Botan {
 namespace {
 
 unsigned int prim_poly[MAX_EXT_DEG + 1] = {
-   01,		/* extension degree 0 (!) never used */
-   03,		/* extension degree 1 (!) never used */
-   07, 		/* extension degree 2 */
-   013, 		/* extension degree 3 */
-   023, 		/* extension degree 4 */
-   045, 		/* extension degree 5 */
-   0103, 		/* extension degree 6 */
-   0203, 		/* extension degree 7 */
-   0435, 		/* extension degree 8 */
-   01041, 		/* extension degree 9 */
-   02011,		/* extension degree 10 */
-   04005,		/* extension degree 11 */
-   010123,		/* extension degree 12 */
-   020033,		/* extension degree 13 */
-   042103,		/* extension degree 14 */
-   0100003,		/* extension degree 15 */
-   0210013		/* extension degree 16 */
+   01,       /* extension degree 0 (!) never used */
+   03,       /* extension degree 1 (!) never used */
+   07,       /* extension degree 2 */
+   013,      /* extension degree 3 */
+   023,      /* extension degree 4 */
+   045,      /* extension degree 5 */
+   0103,     /* extension degree 6 */
+   0203,     /* extension degree 7 */
+   0435,     /* extension degree 8 */
+   01041,    /* extension degree 9 */
+   02011,    /* extension degree 10 */
+   04005,    /* extension degree 11 */
+   010123,   /* extension degree 12 */
+   020033,   /* extension degree 13 */
+   042103,   /* extension degree 14 */
+   0100003,  /* extension degree 15 */
+   0210013   /* extension degree 16 */
 };
 
 std::vector<gf2m> gf_exp_table(size_t deg, gf2m prime_poly)

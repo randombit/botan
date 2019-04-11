@@ -3,52 +3,52 @@
 ########### Block cipher mode ###########
 
 #public static void main(String[] args) throws InvalidCipherTextException {
-#		// 2048-bit MODP Group. RFC3526
-#		BigInteger g = new BigInteger( "2", 10 );
-#		BigInteger p = new BigInteger( "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A0879"
-#		+ "8E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
-#		+ "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F"
-#		+ "83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
-#		+ "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA0510"
-#		+ "15728E5A8AACAA68FFFFFFFFFFFFFFFF", 16 );
-#		
-#		DHParameters dhParams = new DHParameters( p, g );
-#		
-#		// alice priv key
-#		BigInteger xAlice = new BigInteger( "A01E167DE1013D6859E6CB068B7BF272C1D49DC764AD7676BFA0D85177", 16 );
-#		DHPrivateKeyParameters alicePriv = new DHPrivateKeyParameters( xAlice, dhParams );
-#		
-#		// alice pub key
-#		BigInteger yAlice = g.modPow(xAlice, p);
-#		DHPublicKeyParameters alicePub = new DHPublicKeyParameters( yAlice, dhParams );
-#		
-#		// bob priv key
-#		BigInteger xBob = new BigInteger( "8DD88BDC19AC1403A3FC3A0FC63D360F1062E3494177DC27F7EBCBD4A7", 16 );
-#		
-#		// bob pub key
-#		BigInteger yBob = g.modPow(xBob, p);
-#		DHPublicKeyParameters bobPub = new DHPublicKeyParameters( yBob, dhParams );
-#		
-#		// DLIES
-#		byte[] d = new byte[ 0 ];		//  the derivation parameter for the KDF function
-#		byte[] e = new byte[ 0 ];		// the encoding parameter for the KDF function
-#		int macKeySize = 256;
-#		int cipherKeySize = 256;
-#		byte[] iv = new byte[ 16 ];
-#		CipherParameters cipherParams = new ParametersWithIV( new IESWithCipherParameters( d, e, macKeySize, cipherKeySize ), iv );
-#		
-#		IESEngine dlies =
-#			new IESEngine( new DHBasicAgreement(), new KDF2BytesGenerator( new SHA256Digest() ), new HMac( new SHA256Digest() ), new PaddedBufferedBlockCipher( new CBCBlockCipher(
-#				new AESEngine() ) ) );
-#		dlies.init( true, alicePriv, bobPub, cipherParams );
-#				
-#		byte[] message = Hex.decode( "00" );
-#		byte[] result = dlies.processBlock( message, 0, message.length );
-#		
-#		byte[] ephPublicKey = alicePub.getY().toByteArray();
-#		byte[] out = Arrays.concatenate( ephPublicKey, result );
-#				
-#		System.out.println( Hex.toHexString( out ) );
+#        // 2048-bit MODP Group. RFC3526
+#        BigInteger g = new BigInteger( "2", 10 );
+#        BigInteger p = new BigInteger( "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A0879"
+#        + "8E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
+#        + "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F"
+#        + "83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
+#        + "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA0510"
+#        + "15728E5A8AACAA68FFFFFFFFFFFFFFFF", 16 );
+#
+#        DHParameters dhParams = new DHParameters( p, g );
+#
+#        // alice priv key
+#        BigInteger xAlice = new BigInteger( "A01E167DE1013D6859E6CB068B7BF272C1D49DC764AD7676BFA0D85177", 16 );
+#        DHPrivateKeyParameters alicePriv = new DHPrivateKeyParameters( xAlice, dhParams );
+#
+#        // alice pub key
+#        BigInteger yAlice = g.modPow(xAlice, p);
+#        DHPublicKeyParameters alicePub = new DHPublicKeyParameters( yAlice, dhParams );
+#
+#        // bob priv key
+#        BigInteger xBob = new BigInteger( "8DD88BDC19AC1403A3FC3A0FC63D360F1062E3494177DC27F7EBCBD4A7", 16 );
+#
+#        // bob pub key
+#        BigInteger yBob = g.modPow(xBob, p);
+#        DHPublicKeyParameters bobPub = new DHPublicKeyParameters( yBob, dhParams );
+#
+#        // DLIES
+#        byte[] d = new byte[ 0 ];        //  the derivation parameter for the KDF function
+#        byte[] e = new byte[ 0 ];        // the encoding parameter for the KDF function
+#        int macKeySize = 256;
+#        int cipherKeySize = 256;
+#        byte[] iv = new byte[ 16 ];
+#        CipherParameters cipherParams = new ParametersWithIV( new IESWithCipherParameters( d, e, macKeySize, cipherKeySize ), iv );
+#
+#        IESEngine dlies =
+#            new IESEngine( new DHBasicAgreement(), new KDF2BytesGenerator( new SHA256Digest() ), new HMac( new SHA256Digest() ), new PaddedBufferedBlockCipher( new CBCBlockCipher(
+#                new AESEngine() ) ) );
+#        dlies.init( true, alicePriv, bobPub, cipherParams );
+#
+#        byte[] message = Hex.decode( "00" );
+#        byte[] result = dlies.processBlock( message, 0, message.length );
+#
+#        byte[] ephPublicKey = alicePub.getY().toByteArray();
+#        byte[] out = Arrays.concatenate( ephPublicKey, result );
+#
+#        System.out.println( Hex.toHexString( out ) );
 
 [AES-256/CBC]
 
@@ -482,53 +482,53 @@ Ciphertext = 57dfafa0d81ac3aaca2570ad13cccd127239f4ee04843bb738234588f0daea53ccd
 [XOR]
 
 #public static void main(String[] args) throws InvalidCipherTextException {
-#		BigInteger g = new BigInteger( "2", 10 );
-#		BigInteger p = new BigInteger( "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A0879"
-#		+ "8E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
-#		+ "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F"
-#		+ "83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
-#		+ "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA0510"
-#		+ "15728E5A8AACAA68FFFFFFFFFFFFFFFF", 16 );
-#		
-#		DHParameters dhParams = new DHParameters( p, g );
-#		
-#		// alice priv key
-#		BigInteger xAlice = new BigInteger( "A01E167DE1013D6859E6CB068B7BF272C1D49DC764AD7676BFA0D85177", 16 );
-#		DHPrivateKeyParameters alicePriv = new DHPrivateKeyParameters( xAlice, dhParams );
-#		
-#		// alice pub key
-#		BigInteger yAlice = g.modPow(xAlice, p);
-#		DHPublicKeyParameters alicePub = new DHPublicKeyParameters( yAlice, dhParams );
-#		
-#		// bob priv key
-#		BigInteger xBob = new BigInteger( "8DD88BDC19AC1403A3FC3A0FC63D360F1062E3494177DC27F7EBCBD4A7", 16 );
-#		
-#		// bob pub key
-#		BigInteger yBob = g.modPow(xBob, p);
-#		DHPublicKeyParameters bobPub = new DHPublicKeyParameters( yBob, dhParams );
-#		
-#		// DLIES
-#		byte[] d = new byte[ 0 ];		//  the derivation parameter for the KDF function
-#		byte[] e = new byte[ 0 ];		// the encoding parameter for the KDF function
-#		int macKeySize = 160;
-#		int cipherKeySize = 256;
-#		byte[] iv = new byte[ 16 ];
-#		CipherParameters cipherParams = new ParametersWithIV( new IESWithCipherParameters( d, e, macKeySize, cipherKeySize ), iv );
-#		
-#		IESEngine dlies =
-#			new IESEngine( new DHBasicAgreement(), new KDF2BytesGenerator( new SHA256Digest() ), new HMac( new SHA256Digest() ) );
-#		dlies.init( true, alicePriv, bobPub, cipherParams );
-#				
-#		byte[] message = Hex.decode( "00" );
-#		byte[] result = dlies.processBlock( message, 0, message.length );
-#		
-#		byte[] ephPublicKey = alicePub.getY().toByteArray();
-#		byte[] out = Arrays.concatenate( ephPublicKey, result );
-#				
-#		System.out.println( Hex.toHexString( out ) );
-#	}
+#        BigInteger g = new BigInteger( "2", 10 );
+#        BigInteger p = new BigInteger( "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A0879"
+#        + "8E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
+#        + "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F"
+#        + "83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
+#        + "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA0510"
+#        + "15728E5A8AACAA68FFFFFFFFFFFFFFFF", 16 );
+#
+#        DHParameters dhParams = new DHParameters( p, g );
+#
+#        // alice priv key
+#        BigInteger xAlice = new BigInteger( "A01E167DE1013D6859E6CB068B7BF272C1D49DC764AD7676BFA0D85177", 16 );
+#        DHPrivateKeyParameters alicePriv = new DHPrivateKeyParameters( xAlice, dhParams );
+#
+#        // alice pub key
+#        BigInteger yAlice = g.modPow(xAlice, p);
+#        DHPublicKeyParameters alicePub = new DHPublicKeyParameters( yAlice, dhParams );
+#
+#        // bob priv key
+#        BigInteger xBob = new BigInteger( "8DD88BDC19AC1403A3FC3A0FC63D360F1062E3494177DC27F7EBCBD4A7", 16 );
+#
+#        // bob pub key
+#        BigInteger yBob = g.modPow(xBob, p);
+#        DHPublicKeyParameters bobPub = new DHPublicKeyParameters( yBob, dhParams );
+#
+#        // DLIES
+#        byte[] d = new byte[ 0 ];        //  the derivation parameter for the KDF function
+#        byte[] e = new byte[ 0 ];        // the encoding parameter for the KDF function
+#        int macKeySize = 160;
+#        int cipherKeySize = 256;
+#        byte[] iv = new byte[ 16 ];
+#        CipherParameters cipherParams = new ParametersWithIV( new IESWithCipherParameters( d, e, macKeySize, cipherKeySize ), iv );
+#
+#        IESEngine dlies =
+#            new IESEngine( new DHBasicAgreement(), new KDF2BytesGenerator( new SHA256Digest() ), new HMac( new SHA256Digest() ) );
+#        dlies.init( true, alicePriv, bobPub, cipherParams );
+#
+#        byte[] message = Hex.decode( "00" );
+#        byte[] result = dlies.processBlock( message, 0, message.length );
+#
+#        byte[] ephPublicKey = alicePub.getY().toByteArray();
+#        byte[] out = Arrays.concatenate( ephPublicKey, result );
+#
+#        System.out.println( Hex.toHexString( out ) );
+#    }
 
-####### KDF2
+####### Kdf2
 
 Kdf = KDF2(SHA-512)
 Mac = HMAC(SHA-512)

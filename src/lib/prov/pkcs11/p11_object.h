@@ -427,7 +427,7 @@ class BOTAN_PUBLIC_API(2,0) PublicKeyProperties : public KeyProperties
          throw Not_Implemented("PublicKeyProperties::set_wrap_template");
          }
 
-      /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public	key
+      /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public key
       inline void set_public_key_info(const std::vector<uint8_t>& pubkey_info)
          {
          add_binary(AttributeType::PublicKeyInfo, pubkey_info);
@@ -506,7 +506,7 @@ class BOTAN_PUBLIC_API(2,0) PrivateKeyProperties : public KeyProperties
          throw Not_Implemented("PrivateKeyProperties::set_unwrap_template");
          }
 
-      /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public	key
+      /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public key
       inline void set_public_key_info(const std::vector<uint8_t>& pubkey_info)
          {
          add_binary(AttributeType::PublicKeyInfo, pubkey_info);

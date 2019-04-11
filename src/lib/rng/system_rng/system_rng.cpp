@@ -8,27 +8,27 @@
 #include <botan/system_rng.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_RTLGENRANDOM)
-  #include <botan/dyn_load.h>
-  #define NOMINMAX 1
-  #define _WINSOCKAPI_ // stop windows.h including winsock.h
-  #include <windows.h>
+#include <botan/dyn_load.h>
+#define NOMINMAX 1
+#define _WINSOCKAPI_ // stop windows.h including winsock.h
+#include <windows.h>
 
 #elif defined(BOTAN_TARGET_OS_HAS_CRYPTO_NG)
-   #include <bcrypt.h>
+#include <bcrypt.h>
 
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
-   #include <stdlib.h>
+#include <stdlib.h>
 
 #elif defined(BOTAN_TARGET_OS_HAS_GETRANDOM)
-   #include <sys/random.h>
-   #include <errno.h>
+#include <sys/random.h>
+#include <errno.h>
 
 #elif defined(BOTAN_TARGET_OS_HAS_DEV_RANDOM)
-   #include <sys/types.h>
-   #include <sys/stat.h>
-   #include <fcntl.h>
-   #include <unistd.h>
-   #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 #endif
 
 namespace Botan {
@@ -173,9 +173,9 @@ class System_RNG_Impl final : public RandomNumberGenerator
    public:
       System_RNG_Impl()
          {
-         #ifndef O_NOCTTY
-            #define O_NOCTTY 0
-         #endif
+#ifndef O_NOCTTY
+#define O_NOCTTY 0
+#endif
 
          m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDWR | O_NOCTTY);
 
@@ -256,9 +256,9 @@ void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
          * by the OS or sysadmin that additional entropy is not wanted
          * in the system pool, so we accept that and return here,
          * since there is no corrective action possible.
-	 *
-	 * In Linux EBADF or EPERM is returned if m_fd is not opened for
-	 * writing.
+         *
+         * In Linux EBADF or EPERM is returned if m_fd is not opened for
+         * writing.
          */
          if(errno == EPERM || errno == EBADF)
             return;

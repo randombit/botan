@@ -75,7 +75,7 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, uint32_t bits,
    RSA_PublicKeyGenerationProperties pub_key_props(bits);
    pub_key_props.set_encrypt(true);
    pub_key_props.set_verify(true);
-   pub_key_props.set_token(false);	// don't create a persistent public key object
+   pub_key_props.set_token(false);    // don't create a persistent public key object
 
    ObjectHandle pub_key_handle = CK_INVALID_HANDLE;
    ObjectHandle priv_key_handle = CK_INVALID_HANDLE;
@@ -112,8 +112,8 @@ secure_vector<uint8_t> PKCS11_RSA_PrivateKey::private_key_bits() const
 
 
 namespace {
-// note:	multiple-part decryption operations (with C_DecryptUpdate/C_DecryptFinal)
-//			are not supported (PK_Ops::Decryption does not provide an `update` method)
+// note: multiple-part decryption operations (with C_DecryptUpdate/C_DecryptFinal)
+// are not supported (PK_Ops::Decryption does not provide an `update` method)
 class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
    {
    public:
@@ -167,8 +167,8 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
       Blinder m_blinder;
    };
 
-// note:	multiple-part encryption operations (with C_EncryptUpdate/C_EncryptFinal)
-//			are not supported (PK_Ops::Encryption does not provide an `update` method)
+// note: multiple-part encryption operations (with C_EncryptUpdate/C_EncryptFinal)
+// are not supported (PK_Ops::Encryption does not provide an `update` method)
 class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption
    {
    public:

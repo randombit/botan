@@ -9,16 +9,16 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-   #include <botan/bigint.h>
-   #include <botan/numthry.h>
-   #include <botan/curve_nistp.h>
-   #include <botan/pk_keys.h>
-   #include <botan/point_gfp.h>
-   #include <botan/ec_group.h>
-   #include <botan/reducer.h>
-   #include <botan/hex.h>
-   #include <botan/data_src.h>
-   #include <botan/x509_key.h>
+#include <botan/bigint.h>
+#include <botan/numthry.h>
+#include <botan/curve_nistp.h>
+#include <botan/pk_keys.h>
+#include <botan/point_gfp.h>
+#include <botan/ec_group.h>
+#include <botan/reducer.h>
+#include <botan/hex.h>
+#include <botan/data_src.h>
+#include <botan/x509_key.h>
 #endif
 
 namespace Botan_Tests {
@@ -36,21 +36,21 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, BigIn
    Botan::BigInt x = 0;
 
    auto flip_prob = [](size_t i) -> double
-      {
-      if(i % 64 == 0)
-         {
-         return .5;
-         }
-      if(i % 32 == 0)
-         {
-         return .4;
-         }
-      if(i % 8 == 0)
-         {
-         return .05;
-         }
-      return .01;
-      };
+                       {
+                       if(i % 64 == 0)
+                          {
+                          return .5;
+                          }
+                       if(i % 32 == 0)
+                          {
+                          return .4;
+                          }
+                       if(i % 8 == 0)
+                          {
+                          return .05;
+                          }
+                       return .01;
+                       };
 
    bool active = rng.next_byte() % 2;
    for(size_t i = 0; i != bits; ++i)
@@ -192,42 +192,32 @@ class NIST_Curve_Reduction_Tests final : public Test
          // Using lambdas here to avoid strange UbSan warning (#1370)
 
 #if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
-         results.push_back(random_redc_test(
-	    "P-384",
-	    Botan::prime_p384(),
-	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
-	        {
-		Botan::redc_p384(p, ws);
-		}));
-         results.push_back(random_redc_test(
-	    "P-256",
-	    Botan::prime_p256(),
-	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
-	        {
-		Botan::redc_p256(p, ws);
-		}));
-         results.push_back(random_redc_test(
-	    "P-224",
-	    Botan::prime_p224(),
-	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
-	        {
-		Botan::redc_p224(p, ws);
-		}));
-         results.push_back(random_redc_test(
-	    "P-192",
-	    Botan::prime_p192(),
-	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
-	        {
-		Botan::redc_p192(p, ws);
-		}));
+         results.push_back(random_redc_test("P-384", Botan::prime_p384(),
+                              [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+                                 {
+                                 Botan::redc_p384(p, ws);
+                                 }));
+         results.push_back(random_redc_test("P-256", Botan::prime_p256(),
+                              [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+                                 {
+                                 Botan::redc_p256(p, ws);
+                                 }));
+         results.push_back(random_redc_test("P-224", Botan::prime_p224(),
+                              [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+                                 {
+                                 Botan::redc_p224(p, ws);
+                                 }));
+         results.push_back(random_redc_test("P-192", Botan::prime_p192(),
+                              [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+                                 {
+                                 Botan::redc_p192(p, ws);
+                                 }));
 #endif
-         results.push_back(random_redc_test(
-	    "P-521",
-	    Botan::prime_p521(),
-	    [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
-	        {
-	        Botan::redc_p521(p, ws);
-	        }));
+         results.push_back(random_redc_test("P-521", Botan::prime_p521(),
+                              [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
+                                 {
+                                 Botan::redc_p521(p, ws);
+                                 }));
 
          return results;
          }
@@ -259,7 +249,7 @@ class NIST_Curve_Reduction_Tests final : public Test
             redc_fn(v3, ws);
 
             if(!result.test_eq("reference redc", v1, v2) ||
-                  !result.test_eq("specialized redc", v2, v3))
+               !result.test_eq("specialized redc", v2, v3))
                {
                result.test_note("failing input" + Botan::hex_encode(Botan::BigInt::encode(x)));
                }
@@ -349,8 +339,8 @@ class EC_Group_Tests : public Test
          const Botan::PointGFp zero = group.zero_point();
 
          for(auto scheme : { Botan::PointGFp::UNCOMPRESSED,
-                             Botan::PointGFp::COMPRESSED,
-                             Botan::PointGFp::HYBRID })
+                  Botan::PointGFp::COMPRESSED,
+                  Botan::PointGFp::HYBRID })
             {
             result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)), pt);
             result.test_eq("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)), zero);
@@ -421,8 +411,8 @@ class EC_Group_Tests : public Test
          result.confirm("zero times anything is the zero point", (zero * 39193).is_zero());
 
          for(auto scheme : { Botan::PointGFp::UNCOMPRESSED,
-                             Botan::PointGFp::COMPRESSED,
-                             Botan::PointGFp::HYBRID })
+                  Botan::PointGFp::COMPRESSED,
+                  Botan::PointGFp::HYBRID })
             {
             const std::vector<uint8_t> v = zero.encode(scheme);
             result.test_eq("encoded/decode rt works", group.OS2ECP(v), zero);
