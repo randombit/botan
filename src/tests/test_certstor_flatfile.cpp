@@ -21,7 +21,7 @@ namespace {
 
 Test::Result open_certificate_store()
    {
-   Test::Result result("linux Certificate Store - Open Store");
+   Test::Result result("Flatfile Certificate Store - Open Store");
 
    try
       {
@@ -42,7 +42,7 @@ Test::Result open_certificate_store()
 
 Test::Result find_certificate_by_pubkey_sha1()
    {
-   Test::Result result("linux Certificate Store - Find Certificate by SHA1(pubkey)");
+   Test::Result result("Flatfile Certificate Store - Find Certificate by SHA1(pubkey)");
 
    try
       {
@@ -74,7 +74,7 @@ Test::Result find_certificate_by_pubkey_sha1()
 
 Test::Result find_cert_by_subject_dn()
    {
-   Test::Result result("linux Certificate Store - Find Certificate by subject DN");
+   Test::Result result("Flatfile Certificate Store - Find Certificate by subject DN");
 
    try
       {
@@ -102,7 +102,7 @@ Test::Result find_cert_by_subject_dn()
 
 Test::Result find_cert_by_subject_dn_and_key_id()
    {
-   Test::Result result("linux Certificate Store - Find Certificate by subject DN and key ID");
+   Test::Result result("Flatfile Certificate Store - Find Certificate by subject DN and key ID");
 
    try
       {
@@ -130,7 +130,7 @@ Test::Result find_cert_by_subject_dn_and_key_id()
 
 Test::Result find_certs_by_subject_dn_and_key_id()
    {
-   Test::Result result("linux Certificate Store - Find Certificates by subject DN and key ID");
+   Test::Result result("Flatfile Certificate Store - Find Certificates by subject DN and key ID");
 
    try
       {
@@ -159,7 +159,7 @@ Test::Result find_certs_by_subject_dn_and_key_id()
 
 Test::Result find_all_subjects()
    {
-   Test::Result result("linux Certificate Store - Find all Certificate Subjects");
+   Test::Result result("Flatfile Certificate Store - Find all Certificate Subjects");
 
    try
       {
@@ -194,7 +194,7 @@ Test::Result find_all_subjects()
 
 Test::Result no_certificate_matches()
    {
-   Test::Result result("linux Certificate Store - can deal with no matches (regression test)");
+   Test::Result result("Flatfile Certificate Store - can deal with no matches (regression test)");
 
    try
       {
@@ -221,7 +221,7 @@ Test::Result no_certificate_matches()
    return result;
    }
 
-class Certstor_Linux_Tests final : public Test
+class Certstor_Flatfile_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -240,7 +240,7 @@ class Certstor_Linux_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("certstor_linux", Certstor_Linux_Tests);
+BOTAN_REGISTER_TEST("certstor_flatfile", Certstor_Flatfile_Tests);
 
 }
 
