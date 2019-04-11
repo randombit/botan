@@ -239,7 +239,7 @@ class Gen_Self_Signed final : public Command
    public:
       Gen_Self_Signed()
          : Command("gen_self_signed key CN --country= --dns= "
-                   "--organization= --email= --days=365 --key-pass= --ca --hash=SHA-256 --emsa= --der") {}
+                   "--organization= --email= --path-limit=1 --days=365 --key-pass= --ca --hash=SHA-256 --emsa= --der") {}
 
       std::string group() const override
          {
@@ -280,7 +280,7 @@ class Gen_Self_Signed final : public Command
 
          if(flag_set("ca"))
             {
-            opts.CA_key();
+            opts.CA_key(get_arg_sz("path-limit"));
             }
 
          Botan::X509_Certificate cert = Botan::X509::create_self_signed_cert(opts, *key, get_arg("hash"), rng());
@@ -302,7 +302,7 @@ class Generate_PKCS10 final : public Command
    public:
       Generate_PKCS10()
          : Command("gen_pkcs10 key CN --country= --organization= "
-                   "--email= --dns= --ext-ku= --key-pass= --hash=SHA-256 --emsa=") {}
+                   "--ca --path-limit=1 --email= --dns= --ext-ku= --key-pass= --hash=SHA-256 --emsa=") {}
 
       std::string group() const override
          {
@@ -330,6 +330,11 @@ class Generate_PKCS10 final : public Command
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
          opts.more_dns     = Botan::split_on(get_arg("dns"), ',');
+
+         if(flag_set("ca"))
+            {
+            opts.CA_key(get_arg_sz("path-limit"));
+            }
 
          for(std::string ext_ku : Botan::split_on(get_arg("ext-ku"), ','))
             {

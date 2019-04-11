@@ -438,6 +438,33 @@ def cli_cc_enc_tests():
     test_cli("cc_encrypt", ["8028028028028029", "pass"], "4308989841607208")
     test_cli("cc_decrypt", ["4308989841607208", "pass"], "8028028028028027")
 
+def cli_cert_issuance_tests():
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+
+    root_key = os.path.join(tmp_dir, 'root.key')
+    root_crt = os.path.join(tmp_dir, 'root.crt')
+    int_key = os.path.join(tmp_dir, 'int.key')
+    int_crt = os.path.join(tmp_dir, 'int.crt')
+    int_csr = os.path.join(tmp_dir, 'int.csr')
+    leaf_key = os.path.join(tmp_dir, 'leaf.key')
+    leaf_crt = os.path.join(tmp_dir, 'leaf.crt')
+    leaf_csr = os.path.join(tmp_dir, 'leaf.csr')
+
+    test_cli("keygen", ["--params=2048", "--output=" + root_key], "")
+    test_cli("keygen", ["--params=2048", "--output=" + int_key], "")
+    test_cli("keygen", ["--params=2048", "--output=" + leaf_key], "")
+
+    test_cli("gen_self_signed",
+             [root_key, "Root", "--ca", "--path-limit=2", "--output="+root_crt], "")
+
+    test_cli("gen_pkcs10", "%s Intermediate --ca --output=%s" % (int_key, int_csr))
+    test_cli("sign_cert", "%s %s %s --output=%s" % (root_crt, root_key, int_csr, int_crt))
+
+    test_cli("gen_pkcs10", "%s Leaf --output=%s" % (leaf_key, leaf_csr))
+    test_cli("sign_cert", "%s %s %s --output=%s" % (int_crt, int_key, leaf_csr, leaf_crt))
+
+    test_cli("cert_verify" "%s %s %s" % (leaf_crt, int_crt, root_crt), "Certificate passes validation checks")
+
 def cli_timing_test_tests():
 
     timing_tests = ["bleichenbacher", "manger",
@@ -761,6 +788,7 @@ def main(args=None):
         cli_base64_tests,
         cli_bcrypt_tests,
         cli_cc_enc_tests,
+        cli_cert_issuance_tests,
         cli_compress_tests,
         cli_config_tests,
         cli_dl_group_info_tests,
