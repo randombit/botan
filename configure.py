@@ -354,6 +354,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
 
     build_group = optparse.OptionGroup(parser, 'Build options')
 
+    build_group.add_option('--system-cert-bundle', metavar='PATH', default=None,
+                           help='set path to trusted CA bundle')
+
     build_group.add_option('--with-debug-info', action='store_true', default=False, dest='with_debug_info',
                            help='include debug symbols')
 
@@ -1995,6 +1998,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'os_features': osinfo.enabled_features(options),
         'os_name': osinfo.basename,
         'cpu_features': arch.supported_isa_extensions(cc, options),
+        'system_cert_bundle': options.system_cert_bundle,
 
         'fuzzer_mode': options.unsafe_fuzzer_mode,
         'fuzzer_type': options.build_fuzzers.upper() if options.build_fuzzers else '',
@@ -2827,6 +2831,23 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
 
     if options.with_pkg_config is None:
         options.with_pkg_config = info_os[options.os].uses_pkg_config
+
+    if options.system_cert_bundle is None:
+        default_paths = [
+            '/etc/ssl/certs/ca-certificates.crt', # Ubuntu, Arch
+            '/etc/ssl/ca-bundle.pem', # SuSE
+            '/etc/ssl/cert.pem', # OpenBSD, FreeBSD
+        ]
+
+        for path in default_paths:
+            if os.access(path, os.R_OK):
+                logging.info('Using %s as system certificate store', path)
+                options.system_cert_bundle = path
+                break
+    else:
+        if not os.access(options.system_cert_bundle, os.R_OK):
+            logging.warning('Provided system cert bundle path %s not found, ignoring', options.system_cert_bundle)
+            options.system_cert_bundle = None
 
 # Mutates `options`
 def canonicalize_options(options, info_os, info_arch):

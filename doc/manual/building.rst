@@ -703,6 +703,12 @@ set extension. This option selects generating a single file instead.
 This requires either MSVC, or a fairly recent version of GCC/Clang
 which supports the ``target`` attribute.
 
+--system-cert-bundle
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set a path to a file containing one or more trusted CA certificates in
+PEM format. If not given, some default locations are checked.
+
 --with-build-dir=DIR
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

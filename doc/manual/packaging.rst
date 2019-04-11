@@ -12,6 +12,20 @@ In most environments, zlib, bzip2, and sqlite are already installed, so there is
 no reason to not include support for them in Botan as well. Build with options
 ``--with-zlib --with-bzip2 --with-sqlite3`` to enable these features.
 
+Even though OpenSSL is also typically already installed, using
+``--with-openssl`` by default is *not recommended*. OpenSSL is sometimes faster
+and sometimes slower than Botan, and the relative speeds vary depending on the
+algorithm and CPU.
+
+Set Path to the System CA bundle
+---------------------------------
+
+Most Unix/Linux systems maintain a list of trusted CA certificates at some well
+known path like ``/etc/ssl/certs/ca-certificates.crt`` or
+``/etc/ssl/cert.pem``. Unfortunately the exact path varies between systems. Use
+``--system-cert-bundle=PATH`` to set this path. If the option is not used,
+``configure.py`` tries a list of known locations.
+
 Set Distribution Info
 ------------------------
 
