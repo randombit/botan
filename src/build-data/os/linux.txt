@@ -10,8 +10,6 @@ proc_fs
 clock_gettime
 getauxval
 
-linux_certstore
-
 # not enabled by default as only available in newer kernel/glibc
 #getrandom
 

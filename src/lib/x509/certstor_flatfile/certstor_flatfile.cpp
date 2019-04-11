@@ -14,16 +14,22 @@
 
 namespace Botan {
 namespace {
-std::vector<secure_vector<uint8_t>> decode_all(DataSource& source)
+std::vector<std::vector<uint8_t>> decode_all_certificates(DataSource& source)
    {
-   std::vector<secure_vector<uint8_t>> pems;
+   std::vector<std::vector<uint8_t>> pems;
 
    while(!source.end_of_data())
       {
       std::string label;
+      std::vector<uint8_t> cert;
       try
          {
-         pems.push_back(PEM_Code::decode(source, label));
+         cert = unlock(PEM_Code::decode(source, label));
+
+         if(label == "CERTIFICATE" || label == "X509 CERTIFICATE" || label == "TRUSTED CERTIFICATE")
+            {
+            pems.push_back(cert);
+            }
          }
       catch(const Decoding_Error&) {}
       }
@@ -32,27 +38,33 @@ std::vector<secure_vector<uint8_t>> decode_all(DataSource& source)
    }
 }
 
-Flatfile_Certificate_Store::Flatfile_Certificate_Store()
-   {
-   }
-
 Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file)
    {
    if(file.empty())
       {
-      return;
+      throw Invalid_Argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store invalid file path");
       }
 
    DataSource_Stream file_stream(file);
 
-   for(const secure_vector<uint8_t> der : decode_all(file_stream))
+   for(const std::vector<uint8_t> der : decode_all_certificates(file_stream))
       {
       std::shared_ptr<const X509_Certificate> cert = std::make_shared<const X509_Certificate>(der.data(), der.size());
+
+      if(!cert->is_self_signed() || !cert->is_CA_cert())
+         {
+         throw Invalid_Argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store certificate is not self-signed CA");
+         }
 
       m_all_subjects.push_back(cert->subject_dn());
       m_dn_to_cert.emplace(cert->subject_dn(), cert);
       m_pubkey_sha1_to_cert.emplace(cert->subject_public_key_bitstring_sha1(), cert);
       m_subject_dn_sha256_to_cert.emplace(cert->raw_subject_dn_sha256(), cert);
+      }
+
+   if(m_all_subjects.empty())
+      {
+      throw Invalid_Argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store cert file is empty");
       }
    }
 

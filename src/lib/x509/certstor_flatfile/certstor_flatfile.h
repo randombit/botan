@@ -19,11 +19,13 @@ namespace Botan {
 /**
 * Certificate Store that is backed by a file of PEMs of trusted CAs.
 */
-class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store : public Certificate_Store
+class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certificate_Store
    {
    public:
-      Flatfile_Certificate_Store();
-
+      /**
+      * Construct a new Certificate_Store given a file path to a file including
+      * PEMs of trusted self-signed CAs.
+      */
       Flatfile_Certificate_Store(const std::string& file);
 
       Flatfile_Certificate_Store(const Flatfile_Certificate_Store&) = default;
@@ -59,9 +61,6 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store : public Certificate_St
       std::shared_ptr<const X509_Certificate>
       find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
-      /**
-       * @throws Botan::Not_Implemented
-       */
       std::shared_ptr<const X509_Certificate>
       find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
 
