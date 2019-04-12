@@ -4,6 +4,25 @@ Release Notes
 Version 2.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add a certificate store for Linux/Unix systems. (GH #1885)
+
+* Fix verification rooted in a v1 certificate which previously would fail.
+  (GH #1890)
+
+* It is now possible to create intermediate CA certificates using the
+  command line interface. (GH #1879 #1889)
+
+* Add a new build time option to set where the system stores trusted
+  certificates. (GH #1888)
+
+* When available use sysconf to detect the number of CPUs (GH #1877)
+
+* Fix a memory leak in the tests (GH #1886)
+
+* Fix an issue building with the new Boost 1.70 (GH #1881 #1880)
+
+* Fix the makefile .PHONY syntax (GH #1874)
+
 Version 2.10.0, 2019-03-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
