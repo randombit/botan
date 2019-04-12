@@ -7,7 +7,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_CERTSTOR_FLATFILE) && defined(BOTAN_SYSTEM_CERT_BUNDLE)
+#if defined(BOTAN_HAS_CERTSTOR_FLATFILE)
 
 #include "test_certstor_utils.h"
 #include <botan/certstor_flatfile.h>
@@ -19,6 +19,11 @@ namespace Botan_Tests {
 
 namespace {
 
+std::string get_valid_ca_bundle_path()
+   {
+   return Test::data_file("x509/misc/certstor/valid_ca_bundle.pem");
+   }
+
 Test::Result open_certificate_store()
    {
    Test::Result result("Flatfile Certificate Store - Open Store");
@@ -26,7 +31,7 @@ Test::Result open_certificate_store()
    try
       {
       result.start_timer();
-      Botan::Flatfile_Certificate_Store unused(BOTAN_SYSTEM_CERT_BUNDLE);
+      Botan::Flatfile_Certificate_Store unused(get_valid_ca_bundle_path());
       result.end_timer();
       result.test_gt("found some certificates", unused.all_subjects().size(), 0);
       }
@@ -47,7 +52,7 @@ Test::Result find_certificate_by_pubkey_sha1()
    try
       {
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(BOTAN_SYSTEM_CERT_BUNDLE);
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert_by_pubkey_sha1(get_key_id());
       result.end_timer();
 
@@ -65,7 +70,7 @@ Test::Result find_certificate_by_pubkey_sha1()
 
    result.test_throws("on invalid SHA1 hash data", [&]
       {
-      Botan::Flatfile_Certificate_Store certstore(BOTAN_SYSTEM_CERT_BUNDLE);
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       certstore.find_cert_by_pubkey_sha1({});
       });
 
@@ -81,7 +86,7 @@ Test::Result find_cert_by_subject_dn()
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(BOTAN_SYSTEM_CERT_BUNDLE);
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
       result.end_timer();
 
@@ -109,7 +114,7 @@ Test::Result find_cert_by_subject_dn_and_key_id()
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(BOTAN_SYSTEM_CERT_BUNDLE);
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert(dn, get_key_id());
       result.end_timer();
 
@@ -137,7 +142,7 @@ Test::Result find_certs_by_subject_dn_and_key_id()
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(BOTAN_SYSTEM_CERT_BUNDLE);
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto certs = certstore.find_all_certs(dn, get_key_id());
       result.end_timer();
 
@@ -164,7 +169,7 @@ Test::Result find_all_subjects()
    try
       {
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(BOTAN_SYSTEM_CERT_BUNDLE);
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto subjects = certstore.all_subjects();
       result.end_timer();
 
@@ -202,7 +207,7 @@ Test::Result no_certificate_matches()
       auto kid = get_unknown_key_id();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(BOTAN_SYSTEM_CERT_BUNDLE);
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
 
       auto certs = certstore.find_all_certs(dn, kid);
       auto cert = certstore.find_cert(dn, kid);
