@@ -7,10 +7,10 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_CERTSTOR_MACOS)
+#if defined(BOTAN_HAS_CERTSTOR_FLATFILE)
 
 #include "test_certstor_utils.h"
-#include <botan/certstor_macos.h>
+#include <botan/certstor_flatfile.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/hex.h>
@@ -19,15 +19,26 @@ namespace Botan_Tests {
 
 namespace {
 
+std::string get_valid_ca_bundle_path()
+   {
+   return Test::data_file("x509/misc/certstor/valid_ca_bundle.pem");
+   }
+
+std::string get_ca_bundle_containing_user_cert()
+   {
+   return Test::data_file("x509/misc/certstor/ca_bundle_containing_non_ca.pem");
+   }
+
 Test::Result open_certificate_store()
    {
-   Test::Result result("macOS Certificate Store - Open Keychain");
+   Test::Result result("Flatfile Certificate Store - Open Store");
 
    try
       {
       result.start_timer();
-      Botan::Certificate_Store_MacOS unused;
+      Botan::Flatfile_Certificate_Store unused(get_valid_ca_bundle_path());
       result.end_timer();
+      result.test_gt("found some certificates", unused.all_subjects().size(), 0);
       }
    catch(std::exception& e)
       {
@@ -41,19 +52,19 @@ Test::Result open_certificate_store()
 
 Test::Result find_certificate_by_pubkey_sha1()
    {
-   Test::Result result("macOS Certificate Store - Find Certificate by SHA1(pubkey)");
+   Test::Result result("Flatfile Certificate Store - Find Certificate by SHA1(pubkey)");
 
    try
       {
       result.start_timer();
-      Botan::Certificate_Store_MacOS certstore;
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert_by_pubkey_sha1(get_key_id());
       result.end_timer();
 
       if(result.test_not_null("found certificate", cert.get()))
          {
          auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_is_eq("exactly one CN", cns.size(), 1ul);
+         result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), "DST Root CA X3");
          }
       }
@@ -64,7 +75,7 @@ Test::Result find_certificate_by_pubkey_sha1()
 
    result.test_throws("on invalid SHA1 hash data", [&]
       {
-      Botan::Certificate_Store_MacOS certstore;
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       certstore.find_cert_by_pubkey_sha1({});
       });
 
@@ -73,21 +84,21 @@ Test::Result find_certificate_by_pubkey_sha1()
 
 Test::Result find_cert_by_subject_dn()
    {
-   Test::Result result("macOS Certificate Store - Find Certificate by subject DN");
+   Test::Result result("Flatfile Certificate Store - Find Certificate by subject DN");
 
    try
       {
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Certificate_Store_MacOS certstore;
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
       result.end_timer();
 
       if(result.test_not_null("found certificate", cert.get()))
          {
          auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_is_eq("exactly one CN", cns.size(), 1ul);
+         result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), "DST Root CA X3");
          }
       }
@@ -101,21 +112,21 @@ Test::Result find_cert_by_subject_dn()
 
 Test::Result find_cert_by_subject_dn_and_key_id()
    {
-   Test::Result result("macOS Certificate Store - Find Certificate by subject DN and key ID");
+   Test::Result result("Flatfile Certificate Store - Find Certificate by subject DN and key ID");
 
    try
       {
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Certificate_Store_MacOS certstore;
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert(dn, get_key_id());
       result.end_timer();
 
       if(result.test_not_null("found certificate", cert.get()))
          {
          auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_is_eq("exactly one CN", cns.size(), 1ul);
+         result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), "DST Root CA X3");
          }
       }
@@ -129,14 +140,14 @@ Test::Result find_cert_by_subject_dn_and_key_id()
 
 Test::Result find_certs_by_subject_dn_and_key_id()
    {
-   Test::Result result("macOS Certificate Store - Find Certificates by subject DN and key ID");
+   Test::Result result("Flatfile Certificate Store - Find Certificates by subject DN and key ID");
 
    try
       {
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Certificate_Store_MacOS certstore;
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto certs = certstore.find_all_certs(dn, get_key_id());
       result.end_timer();
 
@@ -144,7 +155,7 @@ Test::Result find_certs_by_subject_dn_and_key_id()
             result.test_eq("exactly one certificate", certs.size(), 1))
          {
          auto cns = certs.front()->subject_dn().get_attribute("CN");
-         result.test_is_eq("exactly one CN", cns.size(), 1ul);
+         result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), "DST Root CA X3");
          }
       }
@@ -158,12 +169,12 @@ Test::Result find_certs_by_subject_dn_and_key_id()
 
 Test::Result find_all_subjects()
    {
-   Test::Result result("macOS Certificate Store - Find all Certificate Subjects");
+   Test::Result result("Flatfile Certificate Store - Find all Certificate Subjects");
 
    try
       {
       result.start_timer();
-      Botan::Certificate_Store_MacOS certstore;
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto subjects = certstore.all_subjects();
       result.end_timer();
 
@@ -193,7 +204,7 @@ Test::Result find_all_subjects()
 
 Test::Result no_certificate_matches()
    {
-   Test::Result result("macOS Certificate Store - can deal with no matches (regression test)");
+   Test::Result result("Flatfile Certificate Store - can deal with no matches (regression test)");
 
    try
       {
@@ -201,7 +212,7 @@ Test::Result no_certificate_matches()
       auto kid = get_unknown_key_id();
 
       result.start_timer();
-      Botan::Certificate_Store_MacOS certstore;
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
 
       auto certs = certstore.find_all_certs(dn, kid);
       auto cert = certstore.find_cert(dn, kid);
@@ -220,37 +231,25 @@ Test::Result no_certificate_matches()
    return result;
    }
 
-Test::Result certificate_matching_with_dn_normalization()
+Test::Result certstore_contains_user_certificate()
    {
-   Test::Result result("macOS Certificate Store - normalization of X.509 DN (regression test)");
+   Test::Result result("Flatfile Certificate Store - rejects bundles with non-CA certs");
 
    try
       {
-      auto dn  = get_skewed_dn();
-
       result.start_timer();
-      Botan::Certificate_Store_MacOS certstore;
-
-      auto certs = certstore.find_all_certs(dn, std::vector<uint8_t>());
-      auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
-      result.end_timer();
-
-      if(result.confirm("find_all_certs did find the skewed DN", !certs.empty()) &&
-            result.confirm("find_cert did find the skewed DN", cert != nullptr))
-         {
-         result.test_eq("it is the correct cert", certs.front()->subject_dn().get_first_attribute("CN"), "DST Root CA X3");
-         result.test_eq("it is the correct cert", cert->subject_dn().get_first_attribute("CN"), "DST Root CA X3");
-         }
+      Botan::Flatfile_Certificate_Store certstore(get_ca_bundle_containing_user_cert());
+      result.test_failure("CA bundle with non-CA certs should be rejected");
       }
-   catch(std::exception& e)
+   catch(Botan::Invalid_Argument&)
       {
-      result.test_failure(e.what());
+      result.test_success();
       }
 
    return result;
    }
 
-class Certstor_macOS_Tests final : public Test
+class Certstor_Flatfile_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
@@ -264,13 +263,13 @@ class Certstor_macOS_Tests final : public Test
          results.push_back(find_certs_by_subject_dn_and_key_id());
          results.push_back(find_all_subjects());
          results.push_back(no_certificate_matches());
-         results.push_back(certificate_matching_with_dn_normalization());
+         results.push_back(certstore_contains_user_certificate());
 
          return results;
          }
    };
 
-BOTAN_REGISTER_TEST("certstor_macos", Certstor_macOS_Tests);
+BOTAN_REGISTER_TEST("certstor_flatfile", Certstor_Flatfile_Tests);
 
 }
 

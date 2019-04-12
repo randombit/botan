@@ -1,0 +1,12 @@
+<defines>
+CERTSTOR_FLATFILE -> 20190410
+</defines>
+
+<os_features>
+filesystem
+</os_features>
+
+<header:public>
+certstor_flatfile.h
+</header:public>
+
