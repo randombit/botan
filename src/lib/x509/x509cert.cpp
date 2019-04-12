@@ -201,10 +201,13 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    if(v3_exts_data.is_a(3, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
+      // Path validation will reject a v1/v2 cert with v3 extensions
       BER_Decoder(v3_exts_data).decode(data->m_v3_extensions).verify_end();
       }
    else if(v3_exts_data.is_set())
+      {
       throw BER_Bad_Tag("Unknown tag in X.509 cert", v3_exts_data.tagging());
+      }
 
    // Now cache some fields from the extensions
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Key_Usage>())
@@ -442,11 +445,17 @@ const std::vector<uint8_t>& X509_Certificate::raw_subject_dn() const
 
 bool X509_Certificate::is_CA_cert() const
    {
+   if(data().m_version < 3 && data().m_self_signed)
+      return true;
+
    return data().m_is_ca_certificate;
    }
 
 uint32_t X509_Certificate::path_limit() const
    {
+   if(data().m_version < 3 && data().m_self_signed)
+      return 32; // in theory infinite, but this is more than enough
+
    return static_cast<uint32_t>(data().m_path_len_constraint);
    }
 
