@@ -24,6 +24,11 @@ std::string get_valid_ca_bundle_path()
    return Test::data_file("x509/misc/certstor/valid_ca_bundle.pem");
    }
 
+std::string get_ca_bundle_containing_user_cert()
+   {
+   return Test::data_file("x509/misc/certstor/ca_bundle_containing_non_ca.pem");
+   }
+
 Test::Result open_certificate_store()
    {
    Test::Result result("Flatfile Certificate Store - Open Store");
@@ -226,6 +231,24 @@ Test::Result no_certificate_matches()
    return result;
    }
 
+Test::Result certstore_contains_user_certificate()
+   {
+   Test::Result result("Flatfile Certificate Store - rejects bundles with non-CA certs");
+
+   try
+      {
+      result.start_timer();
+      Botan::Flatfile_Certificate_Store certstore(get_ca_bundle_containing_user_cert());
+      result.test_failure("CA bundle with non-CA certs should be rejected");
+      }
+   catch(Botan::Invalid_Argument&)
+      {
+      result.test_success();
+      }
+
+   return result;
+   }
+
 class Certstor_Flatfile_Tests final : public Test
    {
    public:
@@ -240,6 +263,7 @@ class Certstor_Flatfile_Tests final : public Test
          results.push_back(find_certs_by_subject_dn_and_key_id());
          results.push_back(find_all_subjects());
          results.push_back(no_certificate_matches());
+         results.push_back(certstore_contains_user_certificate());
 
          return results;
          }
