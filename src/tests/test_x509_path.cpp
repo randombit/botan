@@ -482,7 +482,65 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run()
 
 BOTAN_REGISTER_TEST("x509_path_rsa_pss", PSS_Path_Validation_Tests);
 
+class Validate_V1Cert_Test final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override;
+   };
+
+std::vector<Test::Result> Validate_V1Cert_Test::run()
+   {
+   if(Botan::has_filesystem_impl() == false)
+      {
+      return {Test::Result::Note("BSI path validation",
+                                 "Skipping due to missing filesystem access")};
+      }
+
+   std::vector<Test::Result> results;
+
+   const std::string root_crt = Test::data_file("/x509/misc/v1ca/root.pem");
+   const std::string int_crt  = Test::data_file("/x509/misc/v1ca/int.pem");
+   const std::string ee_crt   = Test::data_file("/x509/misc/v1ca/ee.pem");
+
+   auto validation_time =
+      Botan::calendar_point(2019, 4, 19, 23, 0, 0).to_std_timepoint();
+
+   Botan::X509_Certificate root(root_crt);
+   Botan::X509_Certificate intermediate(int_crt);
+   Botan::X509_Certificate ee_cert(ee_crt);
+
+   Botan::Certificate_Store_In_Memory trusted;
+   trusted.add_certificate(root);
+
+   std::vector<Botan::X509_Certificate> chain = { ee_cert, intermediate };
+
+   Botan::Path_Validation_Restrictions restrictions;
+   Botan::Path_Validation_Result validation_result =
+      Botan::x509_path_validate(chain, restrictions, trusted, "",
+                                Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+   Test::Result result("Verifying using v1 certificate");
+   result.test_eq("Path validation result",
+                  validation_result.result_string(), "Verified");
+
+   Botan::Certificate_Store_In_Memory empty;
+
+   std::vector<Botan::X509_Certificate> new_chain = { ee_cert, intermediate, root };
+
+   Botan::Path_Validation_Result validation_result2 =
+      Botan::x509_path_validate(new_chain, restrictions, empty, "",
+                                Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+   result.test_eq("Path validation result",
+                  validation_result2.result_string(), "Cannot establish trust");
+
+   return {result};
+   }
+
+BOTAN_REGISTER_TEST("x509_v1_ca", Validate_V1Cert_Test);
+
 class BSI_Path_Validation_Tests final : public Test
+
    {
    public:
       std::vector<Test::Result> run() override;
@@ -532,7 +590,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
       std::vector<Botan::X509_Certificate> certs;
 
       auto validation_time =
-            Botan::calendar_point(2017, 8, 19, 12, 0, 0).to_std_timepoint();
+         Botan::calendar_point(2017, 8, 19, 12, 0, 0).to_std_timepoint();
 
       // By convention: if CRL is a substring if the directory name,
       // we need to check the CRLs
