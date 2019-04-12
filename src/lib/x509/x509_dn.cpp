@@ -12,6 +12,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/oids.h>
 #include <ostream>
+#include <sstream>
 #include <cctype>
 
 namespace Botan {
@@ -283,6 +284,13 @@ std::string to_short_form(const OID& oid)
    }
 
 }
+
+std::string X509_DN::to_string() const
+   {
+   std::ostringstream out;
+   out << *this;
+   return out.str();
+   }
 
 std::ostream& operator<<(std::ostream& out, const X509_DN& dn)
    {

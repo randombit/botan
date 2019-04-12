@@ -38,7 +38,7 @@ std::vector<std::vector<uint8_t>> decode_all_certificates(DataSource& source)
    }
 }
 
-Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file)
+Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file, bool ignore_non_ca)
    {
    if(file.empty())
       {
@@ -51,15 +51,23 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file)
       {
       std::shared_ptr<const X509_Certificate> cert = std::make_shared<const X509_Certificate>(der.data(), der.size());
 
-      if(!cert->is_self_signed() || !cert->is_CA_cert())
+      /*
+      * Various weird or misconfigured system roots include intermediate certificates,
+      * or even stranger certificates which are not valid for cert issuance at all.
+      * Previously this code would error on such cases as an obvious misconfiguration,
+      * but we cannot fix the trust store. So instead just ignore any such certificate.
+      */
+      if(cert->is_self_signed() && cert->is_CA_cert())
          {
-         throw Invalid_Argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store certificate is not self-signed CA");
+         m_all_subjects.push_back(cert->subject_dn());
+         m_dn_to_cert.emplace(cert->subject_dn(), cert);
+         m_pubkey_sha1_to_cert.emplace(cert->subject_public_key_bitstring_sha1(), cert);
+         m_subject_dn_sha256_to_cert.emplace(cert->raw_subject_dn_sha256(), cert);
          }
-
-      m_all_subjects.push_back(cert->subject_dn());
-      m_dn_to_cert.emplace(cert->subject_dn(), cert);
-      m_pubkey_sha1_to_cert.emplace(cert->subject_public_key_bitstring_sha1(), cert);
-      m_subject_dn_sha256_to_cert.emplace(cert->raw_subject_dn_sha256(), cert);
+      else if(!ignore_non_ca)
+         {
+         throw Invalid_Argument("Flatfile_Certificate_Store received non CA cert " + cert->subject_dn().to_string());
+         }
       }
 
    if(m_all_subjects.empty())

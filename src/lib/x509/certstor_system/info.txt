@@ -1,0 +1,8 @@
+<defines>
+CERTSTOR_SYSTEM -> 20190411
+</defines>
+
+<os_features>
+apple_keychain
+filesystem
+</os_features>
