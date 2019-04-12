@@ -65,8 +65,7 @@ class Test_Options
                    bool log_success,
                    bool run_online_tests,
                    bool run_long_tests,
-                   bool abort_on_first_fail,
-                   bool undefined_behavior_allowed) :
+                   bool abort_on_first_fail) :
          m_requested_tests(requested_tests),
          m_skip_tests(skip_tests.begin(), skip_tests.end()),
          m_data_dir(data_dir),
@@ -79,8 +78,7 @@ class Test_Options
          m_log_success(log_success),
          m_run_online_tests(run_online_tests),
          m_run_long_tests(run_long_tests),
-         m_abort_on_first_fail(abort_on_first_fail),
-         m_undefined_behavior_allowed(undefined_behavior_allowed)
+         m_abort_on_first_fail(abort_on_first_fail)
          {
          }
 
@@ -112,16 +110,6 @@ class Test_Options
 
       bool verbose() const { return m_verbose; }
 
-      bool undefined_behavior_allowed() const
-         {
-#if defined(BOTAN_HAS_SANITIZER_UNDEFINED)
-         return m_undefined_behavior_allowed;
-#else
-         BOTAN_UNUSED(m_undefined_behavior_allowed);
-         return true;
-#endif
-         }
-
    private:
       std::vector<std::string> m_requested_tests;
       std::set<std::string> m_skip_tests;
@@ -136,7 +124,6 @@ class Test_Options
       bool m_run_online_tests;
       bool m_run_long_tests;
       bool m_abort_on_first_fail;
-      bool m_undefined_behavior_allowed;
    };
 
 /*

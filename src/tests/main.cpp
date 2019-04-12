@@ -96,8 +96,7 @@ int main(int argc, char* argv[])
          parser.flag_set("log-success"),
          parser.flag_set("run-online-tests"),
          parser.flag_set("run-long-tests"),
-         parser.flag_set("abort-on-first-fail"),
-         parser.flag_set("no-avoid-undefined"));
+         parser.flag_set("abort-on-first-fail"));
 
 #if defined(BOTAN_HAS_OPENSSL)
       if(opts.provider().empty() || opts.provider() == "openssl")

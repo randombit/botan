@@ -1,2 +1,0 @@
-src:*dl_group.cpp
-src:*ecc_key.cpp

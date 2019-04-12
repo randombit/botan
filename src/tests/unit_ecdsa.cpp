@@ -299,14 +299,13 @@ Test::Result test_encoding_options()
    result.test_eq("Hybrid point same size as uncompressed",
                   enc_uncompressed.size(), enc_hybrid.size());
 
-   if(Test::options().undefined_behavior_allowed())
-      {
-      auto invalid_format = static_cast<Botan::PointGFp::Compression_Type>(99);
+#if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
+   auto invalid_format = static_cast<Botan::PointGFp::Compression_Type>(99);
 
-      result.test_throws("Invalid point format throws",
-                         "Invalid point encoding for EC_PublicKey",
-                         [&] { key.set_point_encoding(invalid_format); });
-      }
+   result.test_throws("Invalid point format throws",
+		   "Invalid point encoding for EC_PublicKey",
+		   [&] { key.set_point_encoding(invalid_format); });
+#endif
 
    return result;
    }
