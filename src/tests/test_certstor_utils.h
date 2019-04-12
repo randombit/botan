@@ -8,9 +8,13 @@
 #ifndef BOTAN_TEST_CERT_STORE_UTILS_H_
 #define BOTAN_TEST_CERT_STORE_UTILS_H_
 
-#include <botan/ber_dec.h>
-#include <botan/der_enc.h>
-#include <botan/hex.h>
+#include <string>
+#include <vector>
+
+#include <botan/build.h>
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
 #include <botan/x509_dn.h>
 
 namespace Botan_Tests {
@@ -27,5 +31,7 @@ Botan::X509_DN get_skewed_dn();
 
 std::vector<uint8_t> get_unknown_key_id();
 }
+
 #endif
 
+#endif

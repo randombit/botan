@@ -7,10 +7,10 @@
 
 #include "test_certstor_utils.h"
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
 #include <botan/ber_dec.h>
-#include <botan/der_enc.h>
 #include <botan/hex.h>
-#include <botan/x509_dn.h>
 
 namespace Botan_Tests {
 
@@ -68,3 +68,4 @@ std::vector<uint8_t> get_unknown_key_id()
    }
 }
 
+#endif
