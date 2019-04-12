@@ -44,15 +44,14 @@ class DL_Group_Tests final : public Test
                             "DL_Group uninitialized",
                             []() { Botan::DL_Group dl; dl.get_p(); });
 
-         if(Test::options().undefined_behavior_allowed())
-            {
-            result.test_throws("Bad generator param",
-                               "DL_Group unknown PrimeType",
-                               []() {
-                               auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
-                               Botan::DL_Group dl(Test::rng(), invalid_type, 1024);
-                               });
-            }
+#if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
+	 result.test_throws("Bad generator param",
+			 "DL_Group unknown PrimeType",
+			 []() {
+			 auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
+			 Botan::DL_Group dl(Test::rng(), invalid_type, 1024);
+			 });
+#endif
 
          return result;
          }
