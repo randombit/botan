@@ -41,6 +41,7 @@ Contents
    cli
    side_channels
    packaging
+   configure
    fuzzing
    deprecated
    abi

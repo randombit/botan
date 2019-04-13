@@ -9,6 +9,10 @@ use case if you want to make sure your code continues to work.
 This is in addition to specific API calls marked with BOTAN_DEPRECATED
 in the source.
 
+- Configuring a build (with ``configure.py``) using Python2. In a future
+  major release, Python3 will be required. This will not affect the Python
+  module, which will continue to support Python2 for the forseeable future.
+
 - Directly using an algorithm class like ``AES_128`` or ``SHA_256``. Instead
   create the objects via a ``T::create`` call.
 
