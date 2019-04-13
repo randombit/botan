@@ -297,7 +297,7 @@ class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_
             std::cout << "Client requested hostname '" << m_hostname << "'" << std::endl;
             }
 
-         auto onConnect = [this](boost::system::error_code ec, tcp::resolver::iterator endpoint)
+         auto onConnect = [this](boost::system::error_code ec, tcp::resolver::iterator /*endpoint*/)
             {
             if(ec)
                {

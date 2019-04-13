@@ -239,7 +239,7 @@ class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_As
          tls_emit_data(nullptr, 0); // initiate another write if needed
          }
 
-      std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override
+      std::string tls_server_choose_app_protocol(const std::vector<std::string>& /*client_protos*/) override
          {
          return "http/1.1";
          }
@@ -347,7 +347,7 @@ class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_As
          return true;
          }
 
-      void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message)
+      void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override
          {
          if(message.type() == Botan::TLS::CLIENT_HELLO)
             {
