@@ -6,6 +6,9 @@ Version 2.11.0, Not Yet Released
 
 * Add a certificate store for Linux/Unix systems. (GH #1885)
 
+* Add a generic ``System_Certificate_Store`` which wraps either macOS
+  or Linux certificate stores. (GH #1893)
+
 * Fix verification rooted in a v1 certificate which previously would fail.
   (GH #1890)
 
@@ -20,6 +23,8 @@ Version 2.11.0, Not Yet Released
 * Fix a memory leak in the tests (GH #1886)
 
 * Fix an issue building with the new Boost 1.70 (GH #1881 #1880)
+
+* Fix an issue with UbSan in the tests (GH #1892)
 
 * Fix the makefile .PHONY syntax (GH #1874)
 
