@@ -571,6 +571,21 @@ def cli_tls_socket_tests():
 
     tls_server.communicate()
 
+def cli_trust_root_tests():
+
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+    pem_file = os.path.join(tmp_dir, 'pems')
+    dn_file = os.path.join(tmp_dir, 'dns')
+
+    test_cli("trust_roots", ['--dn-only', '--output=%s' % (dn_file)], "")
+
+    dn_re = re.compile('(.+=\".+\")(,.+=\".+\")')
+    for line in open(dn_file):
+        if dn_re.match(line) is None:
+            logging.error("Unexpected DN line %s", line)
+
+    test_cli("trust_roots", ['--output=%s' % (pem_file)], "")
+
 def cli_tss_tests():
 
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
@@ -783,7 +798,6 @@ def main(args=None):
 
     test_fns = [
         cli_asn1_tests,
-        cli_asn1_tests,
         cli_base58_tests,
         cli_base64_tests,
         cli_bcrypt_tests,
@@ -803,16 +817,17 @@ def main(args=None):
         cli_is_prime_tests,
         cli_key_tests,
         cli_mod_inverse_tests,
+        cli_pbkdf_tune_tests,
         cli_pk_encrypt_tests,
         cli_pk_workfactor_tests,
         cli_psk_db_tests,
-        cli_pbkdf_tune_tests,
         cli_rng_tests,
         cli_speed_tests,
         cli_timing_test_tests,
         cli_tls_ciphersuite_tests,
         cli_tls_client_hello_tests,
         cli_tls_socket_tests,
+        cli_trust_root_tests,
         cli_tss_tests,
         cli_version_tests,
         ]

@@ -23,7 +23,65 @@
    #include <botan/ocsp.h>
 #endif
 
+#if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
+   #include <botan/certstor_system.h>
+#endif
+
 namespace Botan_CLI {
+
+#if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
+
+class Trust_Root_Info final : public Command
+   {
+   public:
+      Trust_Root_Info() : Command("trust_roots --dn --dn-only --display") {}
+
+      std::string group() const override
+         {
+         return "x509";
+         }
+
+      std::string description() const override
+         {
+         return "List certs in the system trust store";
+         }
+
+      void go() override
+         {
+         Botan::System_Certificate_Store trust_roots;
+
+         const auto dn_list = trust_roots.all_subjects();
+
+         if(flag_set("dn-only"))
+            {
+            for(auto dn : dn_list)
+               output() << dn << "\n";
+            }
+         else
+            {
+            for(auto dn : dn_list)
+               {
+               // Some certstores have more than one cert with a particular DN
+               for(auto cert : trust_roots.find_all_certs(dn, std::vector<uint8_t>()))
+                  {
+                  if(flag_set("dn"))
+                     output() << "# " << dn << "\n";
+
+                  if(flag_set("display"))
+                     output() << cert->to_string() << "\n";
+
+                  output() << cert->PEM_encode() << "\n";
+                  }
+               }
+
+            }
+         }
+
+   };
+
+BOTAN_REGISTER_COMMAND("trust_roots", Trust_Root_Info);
+
+#endif
 
 class Sign_Cert final : public Command
    {

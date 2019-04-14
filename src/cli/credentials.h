@@ -13,6 +13,10 @@
 #include <botan/data_src.h>
 #include <memory>
 
+#if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
+   #include <botan/certstor_system.h>
+#endif
+
 inline bool value_exists(const std::vector<std::string>& vec,
                          const std::string& val)
    {
@@ -30,23 +34,19 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
    {
    public:
       Basic_Credentials_Manager(bool use_system_store,
-                                const std::string& ca_paths)
+                                const std::string& ca_path)
          {
-         std::vector<std::string> paths;
+         if(ca_path.empty() == false)
+            {
+            m_certstores.push_back(std::make_shared<Botan::Certificate_Store_In_Memory>(ca_path));
+            }
 
-         if(ca_paths.empty() == false)
-            paths.push_back(ca_paths);
-
+#if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
          if(use_system_store)
             {
-            paths.push_back("/etc/ssl/certs");
-            paths.push_back("/usr/share/ca-certificates");
+            m_certstores.push_back(std::make_shared<Botan::System_Certificate_Store>());
             }
-
-         if(paths.empty() == false)
-            {
-            load_certstores(paths);
-            }
+#endif
          }
 
       Basic_Credentials_Manager(Botan::RandomNumberGenerator& rng,
@@ -72,21 +72,6 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
          // TODO: attempt to validate chain ourselves
 
          m_creds.push_back(cert);
-         }
-
-      void load_certstores(const std::vector<std::string>& paths)
-         {
-         try
-            {
-            for(auto const& path : paths)
-               {
-               std::shared_ptr<Botan::Certificate_Store> cs(new Botan::Certificate_Store_In_Memory(path));
-               m_certstores.push_back(cs);
-               }
-            }
-         catch(std::exception&)
-            {
-            }
          }
 
       std::vector<Botan::Certificate_Store*>

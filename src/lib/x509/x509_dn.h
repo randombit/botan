@@ -51,6 +51,8 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
 
       bool empty() const { return m_rdn.empty(); }
 
+      std::string to_string() const;
+
       const std::vector<std::pair<OID,ASN1_String>>& dn_info() const { return m_rdn; }
 
       std::multimap<OID, std::string> get_attributes() const;
