@@ -40,7 +40,7 @@
   #include <emscripten/emscripten.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
   #include <sys/auxv.h>
 #endif
 
@@ -92,6 +92,19 @@ uint32_t OS::get_process_id()
    return 0; // truly no meaningful value
 #else
    #error "Missing get_process_id"
+#endif
+   }
+
+unsigned long OS::get_auxval(unsigned long id)
+   {
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+   return ::getauxval(id);
+#elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
+   unsigned long auxinfo = 0;
+   ::elf_aux_info(id, &auxinfo, sizeof(auxinfo));
+   return auxinfo;
+#else
+   return 0;
 #endif
    }
 
