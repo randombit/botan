@@ -9,6 +9,8 @@
 #ifndef BOTAN_ASIO_INCLUDES_H_
 #define BOTAN_ASIO_INCLUDES_H_
 
+#include <botan/build.h>
+
 #ifdef BOTAN_HAS_BOOST_ASIO
 
    // We need to define BOOST_ASIO_DISABLE_SERIAL_PORT before any asio imports. Otherwise asio will include <termios.h>,

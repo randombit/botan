@@ -9,6 +9,8 @@
 #ifndef BOTAN_ASIO_ASYNC_HANDSHAKE_OP_H_
 #define BOTAN_ASIO_ASYNC_HANDSHAKE_OP_H_
 
+#include <botan/build.h>
+
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
 
 #include <boost/version.hpp>
