@@ -63,6 +63,8 @@ struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor
          {
          reenter(this)
             {
+            // mark the number of encrypted bytes sent to the network as "consumed"
+            // Note: bytes_transferred will be zero on first call
             m_core.consumeSendBuffer(bytes_transferred);
 
             if(m_core.hasDataToSend() && !ec)

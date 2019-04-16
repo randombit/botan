@@ -549,7 +549,8 @@ class Stream : public StreamBase<Channel>
          {
          std::size_t sent = 0;
          // NOTE: This is not asynchronous: it encrypts the data synchronously.
-         // Only writing to the socket is asynchronous.
+         // The data encrypted by native_handle()->send() is synchronously stored in the send_buffer of m_core,
+         // but is not actually written to the wire, yet.
          for(auto it = boost::asio::buffer_sequence_begin(buffers);
                it != boost::asio::buffer_sequence_end(buffers);
                it++)

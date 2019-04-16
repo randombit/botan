@@ -64,7 +64,7 @@ struct AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_
             {
             if(bytes_transferred > 0 && !ec)
                {
-               // We have transferred encrypted data from the socket, now hand it to the channel.
+               // We have received encrypted data from the network, now hand it to TLS::Channel for decryption.
                boost::asio::const_buffer read_buffer{m_core.input_buffer.data(), bytes_transferred};
                try
                   {
