@@ -59,9 +59,9 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
          {
          reenter(this)
             {
-            // Provide encrypted TLS data received from the network to TLS::Channel for decryption
             if(bytesTransferred > 0 && !ec)
                {
+               // Provide encrypted TLS data received from the network to TLS::Channel for decryption
                boost::asio::const_buffer read_buffer {m_core.input_buffer.data(), bytesTransferred};
                try
                   {
@@ -73,9 +73,10 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                   }
                }
 
-            // Write encrypted TLS data provided by the TLS::Channel on the wire
             if(m_core.hasDataToSend() && !ec)
                {
+               // Write encrypted TLS data provided by the TLS::Channel on the wire
+
                // Note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`).
                // This operation will eventually call `*this` as its own handler, passing the 0 back to this call
                // operator. This is necessary because the check of `bytesTransferred > 0` assumes that
@@ -88,9 +89,9 @@ struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::exec
                return;
                }
 
-            // Read more encrypted TLS data from the network
             if(!m_stream.native_handle()->is_active() && !ec)
                {
+               // Read more encrypted TLS data from the network
                m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
                return;
                }

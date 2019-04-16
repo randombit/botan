@@ -18,6 +18,7 @@
    #define BOOST_ASIO_DISABLE_SERIAL_PORT
    #include <boost/asio.hpp>
    #include <boost/asio/buffer.hpp>
+   #include <boost/asio/coroutine.hpp>
    #include <boost/asio/ip/tcp.hpp>
 
 #endif // BOTAN_HAS_BOOST_ASIO

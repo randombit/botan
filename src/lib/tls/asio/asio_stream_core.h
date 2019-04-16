@@ -19,6 +19,7 @@
 #include <boost/beast/core/flat_buffer.hpp>
 #include <botan/internal/asio_includes.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_magic.h>
 #include <mutex>
 #include <vector>
 
@@ -32,21 +33,23 @@ namespace TLS {
 struct StreamCore : public Botan::TLS::Callbacks
    {
       StreamCore()
-         : m_input_buffer_space(17 * 1024, '\0'), // enough for a TLS Datagram
+         : m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0'),
            input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size()) {}
 
       virtual ~StreamCore() = default;
 
       void tls_emit_data(const uint8_t data[], std::size_t size) override
          {
+         // Provide the encrypted TLS data in the sendBuffer. Actually sending the data is done
+         // using (async_)write_some either in the stream or in an async operation.
          m_send_buffer.commit(
             boost::asio::buffer_copy(m_send_buffer.prepare(size), boost::asio::buffer(data, size)));
          }
 
       void tls_record_received(uint64_t, const uint8_t data[], std::size_t size) override
          {
-         // TODO: It would be nice to avoid this buffer copy. However, we need to deal with the case that the receive
-         // buffer provided by the caller is smaller than the decrypted record.
+         // TODO: It would be nice to avoid this buffer copy. However, we need to deal with the case
+         // that the receive buffer provided by the caller is smaller than the decrypted record.
          auto buffer = m_receive_buffer.prepare(size);
          auto copySize =
             boost::asio::buffer_copy(buffer, boost::asio::const_buffer(data, size));
@@ -68,6 +71,7 @@ struct StreamCore : public Botan::TLS::Callbacks
 
       bool tls_session_established(const Botan::TLS::Session&) override
          {
+         // TODO: it should be possible to configure this in the using application (via callback?)
          return true;
          }
 

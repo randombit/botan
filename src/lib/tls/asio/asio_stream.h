@@ -13,6 +13,7 @@
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
 
+// first version to be compatible with Networking TS (N4656) and boost::beast
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
@@ -29,14 +30,6 @@
 #include <memory>
 #include <thread>
 #include <type_traits>
-
-namespace boost {
-namespace asio {
-namespace ssl {
-class context;
-}
-}
-}
 
 namespace Botan {
 
@@ -95,8 +88,7 @@ class Stream : public StreamBase<Channel>
       /**
        * @throws Not_Implemented
        */
-      template<
-         typename VerifyCallback>
+      template<typename VerifyCallback>
       void set_verify_callback(VerifyCallback callback)
          {
          BOTAN_UNUSED(callback);
@@ -107,8 +99,7 @@ class Stream : public StreamBase<Channel>
        * Not Implemented.
        * @param ec Will be set to `Botan::TLS::error::not_implemented`
        */
-      template<
-         typename VerifyCallback>
+      template<typename VerifyCallback>
       void set_verify_callback(VerifyCallback callback,
                                boost::system::error_code& ec)
          {
@@ -183,7 +174,7 @@ class Stream : public StreamBase<Channel>
          {
          while(!native_handle()->is_active())
             {
-            writePendingTlsData(ec);
+            sendPendingEncryptedData(ec);
             if(ec)
                { return; }
 
@@ -207,7 +198,7 @@ class Stream : public StreamBase<Channel>
                return;
                }
 
-            writePendingTlsData(ec);
+            sendPendingEncryptedData(ec);
             }
          }
 
@@ -344,7 +335,7 @@ class Stream : public StreamBase<Channel>
             ec = Botan::TLS::convertException();
             return;
             }
-         writePendingTlsData(ec);
+         sendPendingEncryptedData(ec);
          }
 
       /**
@@ -371,6 +362,8 @@ class Stream : public StreamBase<Channel>
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(ShutdownHandler, handler) type_check;
          BOTAN_UNUSED(handler);
          throw Not_Implemented("async shutdown is not implemented");
+         // TODO: Implement a subclass of AsyncBase that calls native_handle()->close() and writes pending data from
+         // the core to the network, e.g. using AsyncWriteOperation.
          }
 
       //
@@ -391,7 +384,7 @@ class Stream : public StreamBase<Channel>
          if(this->m_core.hasReceivedData())
             { return this->m_core.copyReceivedData(buffers); }
 
-         tls_decrypt_some(ec);
+         tls_receive_some(ec);
          if(ec)
             { return 0; }
 
@@ -401,6 +394,7 @@ class Stream : public StreamBase<Channel>
       /**
        * Read some data from the stream. The function call will block until one or more bytes of data has
        * been read successfully, or until an error occurs.
+       *
        * @param buffers The buffers into which the data will be read.
        * @return The number of bytes read. Returns 0 if an error occurred.
        * @throws boost::system::system_error if error occured
@@ -417,6 +411,7 @@ class Stream : public StreamBase<Channel>
       /**
        * Write some data to the stream. The function call will block until one or more bytes of data has been written
        * successfully, or until an error occurs.
+       *
        * @param buffers The data to be written.
        * @param ec Set to indicate what error occurred, if any.
        * @return The number of bytes written.
@@ -429,7 +424,7 @@ class Stream : public StreamBase<Channel>
          if(ec)
             { return 0; }
 
-         writePendingTlsData(ec);
+         sendPendingEncryptedData(ec);
          if(ec)
             { return 0; }
 
@@ -513,7 +508,7 @@ class Stream : public StreamBase<Channel>
          }
 
    protected:
-      size_t writePendingTlsData(boost::system::error_code& ec)
+      size_t sendPendingEncryptedData(boost::system::error_code& ec)
          {
          auto writtenBytes = boost::asio::write(m_nextLayer, this->m_core.sendBuffer(), ec);
 
@@ -521,7 +516,7 @@ class Stream : public StreamBase<Channel>
          return writtenBytes;
          }
 
-      void tls_decrypt_some(boost::system::error_code& ec)
+      void tls_receive_some(boost::system::error_code& ec)
          {
          boost::asio::const_buffer read_buffer =
             {

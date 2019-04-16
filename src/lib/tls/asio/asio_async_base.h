@@ -16,7 +16,6 @@
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
-#include <boost/asio/coroutine.hpp>
 #include <botan/internal/asio_includes.h>
 
 namespace Botan {
@@ -56,6 +55,10 @@ namespace TLS {
  * as `async_read_some`, with and empty buffer, set the object itself as the handler, and `yield`. As a result, the call
  * operator will be invoked again, this time as a continuation, and will jump to the location where it yielded before
  * using `reenter`. It is now safe to call the handler function via `complete_now`.
+ *
+ * \tparam Handler Type of the completion handler
+ * \tparam Executor1 Type of the asio executor (usually derived from the lower layer)
+ * \tparam Allocator Type of the allocator to be used
  */
 template <class Handler, class Executor1, class Allocator>
 struct AsyncBase : boost::asio::coroutine
