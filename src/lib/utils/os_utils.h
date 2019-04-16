@@ -53,6 +53,8 @@ uint64_t BOTAN_TEST_API get_cpu_cycle_counter();
 size_t BOTAN_TEST_API get_cpu_total();
 size_t BOTAN_TEST_API get_cpu_available();
 
+unsigned long get_auxval(unsigned long);
+
 /*
 * @return best resolution timestamp available
 *

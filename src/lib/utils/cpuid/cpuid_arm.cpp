@@ -9,10 +9,7 @@
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
 
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
-  #include <sys/auxv.h>
-
-#elif defined(BOTAN_TARGET_OS_IS_IOS)
+#if defined(BOTAN_TARGET_OS_IS_IOS)
   #include <sys/types.h>
   #include <sys/sysctl.h>
 
@@ -106,7 +103,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    {
    uint64_t detected_features = 0;
 
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    /*
    * On systems with getauxval these bits should normally be defined
    * in bits/auxv.h but some buggy? glibc installs seem to miss them.
@@ -142,6 +139,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    };
 
 #if defined(AT_DCACHEBSIZE)
+   // Exists only on Linux
    const unsigned long dcache_line = ::getauxval(AT_DCACHEBSIZE);
 
    // plausibility check
@@ -149,7 +147,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
       *cache_line_size = static_cast<size_t>(dcache_line);
 #endif
 
-   const unsigned long hwcap_neon = ::getauxval(ARM_hwcap_bit::ARCH_hwcap_neon);
+   const unsigned long hwcap_neon = OS::get_auxval(ARM_hwcap_bit::ARCH_hwcap_neon);
    if(hwcap_neon & ARM_hwcap_bit::NEON_bit)
       detected_features |= CPUID::CPUID_ARM_NEON_BIT;
 
@@ -158,7 +156,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    It doesn't seem worth optimizing this out, since getauxval is
    just reading a field in the ELF header.
    */
-   const unsigned long hwcap_crypto = ::getauxval(ARM_hwcap_bit::ARCH_hwcap_crypto);
+   const unsigned long hwcap_crypto = OS::get_auxval(ARM_hwcap_bit::ARCH_hwcap_crypto);
    if(hwcap_crypto & ARM_hwcap_bit::AES_bit)
       detected_features |= CPUID::CPUID_ARM_AES_BIT;
    if(hwcap_crypto & ARM_hwcap_bit::PMULL_bit)
