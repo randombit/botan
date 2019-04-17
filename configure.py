@@ -779,12 +779,12 @@ class ModuleInfo(InfoObject):
         lex = lex_me_harder(
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
-             'os_features', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
+             'os_features', 'arch', 'isa', 'cc', 'libs', 'frameworks',
+             'comment', 'warning'
             ],
             ['defines'],
             {
-                'load_on': 'auto',
-                'need_isa': ''
+                'load_on': 'auto'
             })
 
         def check_header_duplicates(header_list_public, header_list_internal):
@@ -840,7 +840,7 @@ class ModuleInfo(InfoObject):
         self.frameworks = convert_lib_list(lex.frameworks)
         self.libs = convert_lib_list(lex.libs)
         self.load_on = lex.load_on
-        self.need_isa = lex.need_isa.split(',') if lex.need_isa else []
+        self.isa = lex.isa
         self.os_features = lex.os_features
         self.requires = lex.requires
         self.warning = ' '.join(lex.warning) if lex.warning else None
@@ -911,7 +911,7 @@ class ModuleInfo(InfoObject):
         arch_name = archinfo.basename
         cpu_name = options.cpu
 
-        for isa in self.need_isa:
+        for isa in self.isa:
             if isa in options.disable_intrinsics:
                 return False # explicitly disabled
 
@@ -945,7 +945,7 @@ class ModuleInfo(InfoObject):
     def compatible_compiler(self, ccinfo, cc_min_version, arch):
         # Check if this compiler supports the flags we need
         def supported_isa_flags(ccinfo, arch):
-            for isa in self.need_isa:
+            for isa in self.isa:
                 if ccinfo.isa_flags_for(isa, arch) is None:
                     return False
             return True
@@ -1687,7 +1687,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
         if src in module_that_owns:
             module = module_that_owns[src]
-            isas = module.need_isa
+            isas = module.isa
             if 'simd' in module.dependencies(osinfo):
                 isas.append('simd')
 
@@ -2524,8 +2524,8 @@ class AmalgamationGenerator(object):
     def _target_for_module(self, mod):
         target = ''
         if not self._options.single_amalgamation_file:
-            if mod.need_isa != []:
-                target = '_'.join(sorted(mod.need_isa))
+            if mod.isa != []:
+                target = '_'.join(sorted(mod.isa))
                 if target == 'sse2' and self._options.arch == 'x86_64':
                     target = '' # SSE2 is always available on x86-64
 
@@ -2538,7 +2538,7 @@ class AmalgamationGenerator(object):
             # Only first module for target is considered. Does this make sense?
             if self._target_for_module(mod) == target:
                 out = set()
-                for isa in mod.need_isa:
+                for isa in mod.isa:
                     if isa == 'aesni':
                         isa = "aes,ssse3,pclmul"
                     elif isa == 'rdrand':

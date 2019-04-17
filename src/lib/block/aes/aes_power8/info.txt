@@ -6,4 +6,6 @@ AES_POWER8 -> 20180223
 ppc64
 </arch>
 
-need_isa ppccrypto
+<isa>
+ppccrypto
+</isa>

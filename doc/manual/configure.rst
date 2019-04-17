@@ -58,7 +58,7 @@ Makefile, ``build.h`` and other artifacts.
 When Modifying ``configure.py``
 --------------------------------
 
-For now, any changes to``configure.py`` must work under both CPython 2.7 and
+For now, any changes to ``configure.py`` must work under both CPython 2.7 and
 CPython 3.x. In a future major release, support for CPython2 will be dropped,
 but until then if making modifications verify the code works as expected on
 both versions.
@@ -163,6 +163,7 @@ Lists:
    in the source tree but might be replaced by an external version. This is used
    for the PKCS11 headers.
  * ``arch`` is a list of architectures this module may be used on.
+ * ``isa`` lists ISA features which must be enabled to use this module.
  * ``cc`` is a list of compilers which can be used with this module. If the
    compiler name is suffixed with a version (like "gcc:5.0") then only compilers
    with that minimum version can use the module.
@@ -181,7 +182,6 @@ Maps:
 Variables:
  * ``load_on`` Can take on values ``never``, ``always``, ``auto``, ``dep`` or ``vendor``.
    TODO describe the behavior of these
- * ``need_isa`` SHOULD BE A LIST
 
 An example::
 
@@ -282,7 +282,8 @@ Maps:
  * ``cpu_flags`` used to emit CPU specific flags, for example LLVM
    bitcode target uses ``-emit-llvm`` flag. Rarely needed.
  * ``isa_flags`` maps from CPU extensions (like NEON or AES-NI) to
-   compiler flags which enable that extension.
+   compiler flags which enable that extension. These have the same name
+   as the ISA flags listed in the architecture files.
  * ``lib_flags`` has a single possible entry "debug" which if set maps
    to additional flags to pass when building a debug library.
    Rarely needed.

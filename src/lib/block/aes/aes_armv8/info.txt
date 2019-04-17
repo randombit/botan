@@ -2,7 +2,9 @@
 AES_ARMV8 -> 20170903
 </defines>
 
-need_isa armv8crypto
+<isa>
+armv8crypto
+</isa>
 
 <cc>
 gcc:5

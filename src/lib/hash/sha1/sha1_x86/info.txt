@@ -2,7 +2,11 @@
 SHA1_X86_SHA_NI -> 20170518
 </defines>
 
-need_isa sha,ssse3,sse41
+<isa>
+sha
+ssse3
+sse41
+</isa>
 
 <cc>
 clang:3.9

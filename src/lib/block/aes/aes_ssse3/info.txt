@@ -2,7 +2,9 @@
 AES_SSSE3 -> 20131128
 </defines>
 
-need_isa ssse3
+<isa>
+ssse3
+</isa>
 
 # Intel C++ can't deal with syntax for defining constants :(
 <cc>

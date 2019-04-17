@@ -2,7 +2,9 @@
 SHA2_32_ARMV8 -> 20170117
 </defines>
 
-need_isa armv8crypto
+<isa>
+armv8crypto
+</isa>
 
 <cc>
 gcc:4.9

@@ -2,7 +2,9 @@
 GCM_CLMUL_SSSE3 -> 20171020
 </defines>
 
-need_isa ssse3
+<isa>
+ssse3
+</isa>
 
 <header:internal>
 clmul_ssse3.h
