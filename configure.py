@@ -779,10 +779,8 @@ class ModuleInfo(InfoObject):
         lex = lex_me_harder(
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
-             'os_features', 'arch', 'isa', 'cc', 'libs', 'frameworks',
-             'comment', 'warning'
-            ],
-            ['defines'],
+             'os_features', 'arch', 'isa', 'cc', 'comment', 'warning'],
+            ['defines', 'libs', 'frameworks'],
             {
                 'load_on': 'auto'
             })
@@ -815,26 +813,19 @@ class ModuleInfo(InfoObject):
             self.header_internal = lex.header_internal
         self.header_external = lex.header_external
 
-        # Coerce to more useful types
-        def convert_lib_list(l):
-            if len(l) % 3 != 0:
-                raise InternalError("Bad <libs> in module %s" % (self.basename))
-            result = {}
+        def convert_lib_list(libs):
+            out = {}
+            for (os,libs) in libs.items():
+                out[os] = libs.split(',')
+            return out
 
-            for sep in l[1::3]:
-                if sep != '->':
-                    raise InternalError("Bad <libs> in module %s" % (self.basename))
-
-            for (targetlist, vallist) in zip(l[::3], l[2::3]):
-                vals = vallist.split(',')
-                for target in targetlist.split(','):
-                    result[target] = result.setdefault(target, []) + vals
-            return result
+        def combine_lines(c):
+            return ' '.join(c) if c else None
 
         # Convert remaining lex result to members
         self.arch = lex.arch
         self.cc = lex.cc
-        self.comment = ' '.join(lex.comment) if lex.comment else None
+        self.comment = combine_lines(lex.comment)
         self._defines = lex.defines
         self._validate_defines_content(self._defines)
         self.frameworks = convert_lib_list(lex.frameworks)
@@ -843,7 +834,7 @@ class ModuleInfo(InfoObject):
         self.isa = lex.isa
         self.os_features = lex.os_features
         self.requires = lex.requires
-        self.warning = ' '.join(lex.warning) if lex.warning else None
+        self.warning = combine_lines(lex.warning)
 
         # Modify members
         self.source = [normalize_source_path(os.path.join(self.lives_in, s)) for s in self.source]
