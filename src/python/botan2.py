@@ -232,6 +232,9 @@ botan.botan_kdf.errcheck = errcheck_for('botan_kdf')
 botan.botan_pubkey_destroy.argtypes = [c_void_p]
 botan.botan_pubkey_destroy.errcheck = errcheck_for('botan_pubkey_destroy')
 
+botan.botan_pubkey_load.argtypes = [c_void_p, POINTER(c_char), c_size_t]
+botan.botan_pubkey_load.errcheck = errcheck_for('botan_pubkey_load')
+
 botan.botan_pubkey_estimated_strength.argtypes = [c_void_p, POINTER(c_size_t)]
 botan.botan_pubkey_estimated_strength.errcheck = errcheck_for('botan_pubkey_estimated_strength')
 
@@ -247,6 +250,9 @@ botan.botan_pubkey_fingerprint.errcheck = errcheck_for('botan_pubkey_fingerprint
 
 botan.botan_privkey_create.argtypes = [c_void_p, c_char_p, c_char_p, c_void_p]
 botan.botan_privkey_create.errcheck = errcheck_for('botan_privkey_create')
+
+botan.botan_privkey_load.argtypes = [c_void_p, c_void_p, POINTER(c_char), c_size_t, POINTER(c_char)]
+botan.botan_privkey_load.errcheck = errcheck_for('botan_privkey_load')
 
 botan.botan_privkey_algo_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
 botan.botan_privkey_algo_name.errcheck = errcheck_for('botan_privkey_algo_name')
@@ -530,7 +536,7 @@ def _call_fn_returning_vec(guess, fn):
     assert buf_len.value <= len(buf)
     return buf.raw[0:int(buf_len.value)]
 
-def _call_fn_returning_string(guess, fn):
+def _call_fn_returning_str(guess, fn):
     # Assumes that anything called with this is returning plain ASCII strings
     # (base64 data, algorithm names, etc)
     v = _call_fn_returning_vec(guess, fn)
@@ -634,7 +640,7 @@ class HashFunction(object):
         botan.botan_hash_destroy(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_hash_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_hash_name(self.__obj, b, bl))
 
     def clear(self):
         botan.botan_hash_clear(self.__obj)
@@ -679,7 +685,7 @@ class MsgAuthCode(object):
         botan.botan_mac_clear(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_mac_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_mac_name(self.__obj, b, bl))
 
     def output_length(self):
         return self.__output_length
@@ -711,7 +717,7 @@ class SymmetricCipher(object):
         botan.botan_cipher_destroy(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_cipher_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_cipher_name(self.__obj, b, bl))
 
     def default_nonce_length(self):
         l = c_size_t(0)
@@ -854,8 +860,15 @@ def kdf(algo, secret, out_len, salt, label):
 # Public key
 #
 class PublicKey(object): # pylint: disable=invalid-name
+
     def __init__(self, obj=c_void_p(0)):
         self.__obj = obj
+
+    @classmethod
+    def load(cls, val):
+        obj = c_void_p(0)
+        botan.botan_pubkey_load(byref(obj), val, len(val))
+        return PublicKey(obj)
 
     def __del__(self):
         botan.botan_pubkey_destroy(self.__obj)
@@ -869,11 +882,13 @@ class PublicKey(object): # pylint: disable=invalid-name
         return r.value
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_pubkey_algo_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_pubkey_algo_name(self.__obj, b, bl))
 
     def export(self, pem=False):
-        flag = 1 if pem else 0
-        return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_pubkey_export(self.__obj, b, bl, flag))
+        if pem:
+            return _call_fn_returning_str(4096, lambda b, bl: botan.botan_pubkey_export(self.__obj, b, bl, 1))
+        else:
+            return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_pubkey_export(self.__obj, b, bl, 0))
 
     def encoding(self, pem=False):
         return self.export(pem)
@@ -897,10 +912,19 @@ class PublicKey(object): # pylint: disable=invalid-name
 # Private Key
 #
 class PrivateKey(object):
-    def __init__(self, algo, params, rng_obj):
 
-        self.__obj = c_void_p(0)
+    def __init__(self, obj=c_void_p(0)):
+        self.__obj = obj
 
+    @classmethod
+    def load(cls, val, passphrase=""):
+        obj = c_void_p(0)
+        rng_obj = c_void_p(0) # unused in recent versions
+        botan.botan_privkey_load(byref(obj), rng_obj, val, len(val), _ctype_str(passphrase))
+        return PrivateKey(obj)
+
+    @classmethod
+    def create(cls, algo, params, rng_obj):
         if algo == 'rsa':
             algo = 'RSA'
             params = "%d" % (params)
@@ -918,8 +942,10 @@ class PrivateKey(object):
             algo = 'McEliece'
             params = "%d,%d" % (params[0], params[1])
 
-        botan.botan_privkey_create(byref(self.__obj),
-                                   _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
+        obj = c_void_p(0)
+
+        botan.botan_privkey_create(byref(obj), _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
+        return PrivateKey(obj)
 
     def __del__(self):
         botan.botan_privkey_destroy(self.__obj)
@@ -928,13 +954,12 @@ class PrivateKey(object):
         return self.__obj
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_privkey_algo_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_privkey_algo_name(self.__obj, b, bl))
 
     def get_public_key(self):
-
         pub = c_void_p(0)
         botan.botan_privkey_export_pubkey(byref(pub), self.__obj)
-        return public_key(pub)
+        return PublicKey(pub)
 
     def to_der(self):
         return self.export(False)
@@ -943,8 +968,10 @@ class PrivateKey(object):
         return self.export(True)
 
     def export(self, pem=False):
-        flag = 1 if pem else 0
-        return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_privkey_export(self.__obj, b, bl, flag))
+        if pem:
+            return _call_fn_returning_str(4096, lambda b, bl: botan.botan_privkey_export(self.__obj, b, bl, 1))
+        else:
+            return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_privkey_export(self.__obj, b, bl, 0))
 
 class PKEncrypt(object):
     def __init__(self, key, padding):
@@ -1087,7 +1114,7 @@ class X509Cert(object): # pylint: disable=invalid-name
         botan.botan_x509_cert_destroy(self.__obj)
 
     def time_starts(self):
-        starts = _call_fn_returning_string(
+        starts = _call_fn_returning_str(
             16, lambda b, bl: botan.botan_x509_cert_get_time_starts(self.__obj, b, bl))
         if len(starts) == 13:
             # UTC time
@@ -1101,7 +1128,7 @@ class X509Cert(object): # pylint: disable=invalid-name
         return datetime.fromtimestamp(mktime(struct_time))
 
     def time_expires(self):
-        expires = _call_fn_returning_string(
+        expires = _call_fn_returning_str(
             16, lambda b, bl: botan.botan_x509_cert_get_time_expires(self.__obj, b, bl))
         if len(expires) == 13:
             # UTC time
@@ -1115,12 +1142,12 @@ class X509Cert(object): # pylint: disable=invalid-name
         return datetime.fromtimestamp(mktime(struct_time))
 
     def to_string(self):
-        return _call_fn_returning_string(
+        return _call_fn_returning_str(
             4096, lambda b, bl: botan.botan_x509_cert_to_string(self.__obj, b, bl))
 
     def fingerprint(self, hash_algo='SHA-256'):
         n = HashFunction(hash_algo).output_length() * 3
-        return _call_fn_returning_string(
+        return _call_fn_returning_str(
             n, lambda b, bl: botan.botan_x509_cert_get_fingerprint(self.__obj, _ctype_str(hash_algo), b, bl))
 
     def serial_number(self):
@@ -1142,10 +1169,10 @@ class X509Cert(object): # pylint: disable=invalid-name
     def subject_public_key(self):
         pub = c_void_p(0)
         botan.botan_x509_cert_get_public_key(self.__obj, byref(pub))
-        return public_key(pub)
+        return PublicKey(pub)
 
     def subject_dn(self, key, index):
-        return _call_fn_returning_string(
+        return _call_fn_returning_str(
             0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.__obj, _ctype_str(key), index, b, bl))
 
 
