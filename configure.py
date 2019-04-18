@@ -865,7 +865,7 @@ class ModuleInfo(InfoObject):
             if not re.match('^20[0-9]{6}$', value):
                 raise InternalError('Module defines value has invalid format: "%s"' % value)
 
-    def cross_check(self, arch_info, cc_info, all_os_features):
+    def cross_check(self, arch_info, cc_info, all_os_features, all_isa_extn):
 
         for feat in set(flatten([o.split(',') for o in self.os_features])):
             if feat not in all_os_features:
@@ -879,9 +879,14 @@ class ModuleInfo(InfoObject):
                     pass
                 else:
                     raise InternalError('Module %s mentions unknown compiler %s' % (self.infofile, supp_cc))
+
         for supp_arch in self.arch:
             if supp_arch not in arch_info:
                 raise InternalError('Module %s mentions unknown arch %s' % (self.infofile, supp_arch))
+
+        for isa in self.isa:
+            if isa not in all_isa_extn:
+                raise InternalError('Module %s uses unknown ISA extension %s' % (self.infofile, isa))
 
     def sources(self):
         return self.source
@@ -1134,6 +1139,28 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.visibility_attribute = lex.visibility_attribute
         self.visibility_build_flags = lex.visibility_build_flags
         self.warning_flags = lex.warning_flags
+
+    def cross_check(self, os_info, arch_info, all_isas):
+
+        for isa in self.isa_flags:
+            if ":" in isa:
+                (arch, isa) = isa.split(":")
+                if isa not in all_isas:
+                    raise InternalError('Compiler %s has flags for unknown ISA %s' % (self.infofile, isa))
+                if arch not in arch_info:
+                    raise InternalError('Compiler %s has flags for unknown arch/ISA %s:%s' % (self.infofile, arch, isa))
+
+        for os in self.binary_link_commands:
+            if os in ["default", "default-debug"]:
+                continue
+            if os not in os_info:
+                raise InternalError("Compiler %s has binary_link_command for unknown OS %s" % (self.infofile, os))
+
+        for os in self.so_link_commands:
+            if os in ["default", "default-debug"]:
+                continue
+            if os not in os_info:
+                raise InternalError("Compiler %s has so_link_command for unknown OS %s" % (self.infofile, os))
 
     def isa_flags_for(self, isa, arch):
         if isa in self.isa_flags:
@@ -3176,7 +3203,7 @@ def main(argv):
 
     setup_logging(options)
 
-    if not options.list_modules:
+    if not options.list_modules and not options.list_os_features:
         logging.info('Configuring to build Botan %s (revision %s)' % (
             Version.as_string(), Version.vc_rev()))
 
@@ -3195,12 +3222,16 @@ def main(argv):
     info_module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
 
     all_os_features = sorted(set(flatten([o.target_features for o in info_os.values()])))
+    all_defined_isas = set(flatten([a.isa_extensions for a in info_arch.values()]))
 
     if options.list_os_features:
         return list_os_features(all_os_features, info_os)
 
     for mod in info_modules.values():
-        mod.cross_check(info_arch, info_cc, all_os_features)
+        mod.cross_check(info_arch, info_cc, all_os_features, all_defined_isas)
+
+    for cc in info_cc.values():
+        cc.cross_check(info_os, info_arch, all_defined_isas)
 
     for policy in info_module_policies.values():
         policy.cross_check(info_modules)

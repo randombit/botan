@@ -287,8 +287,11 @@ Maps:
  * ``lib_flags`` has a single possible entry "debug" which if set maps
    to additional flags to pass when building a debug library.
    Rarely needed.
- * ``mach_abi_linking`` specifies flags to enable when building and linking
-   on a particular CPU. This is usually flags that modify ABI.
+ * ``mach_abi_linking`` specifies flags to enable when building and
+   linking on a particular CPU. This is usually flags that modify
+   ABI. There is a special syntax supported here
+   "all!os1,arch1,os2,arch2" which allows setting ABI flags which are
+   used for all but the named operating systems and/or architectures.
  * ``sanitizers`` is a map of sanitizers the compiler supports. It must
    include "default" which is a list of sanitizers to include by default
    when sanitizers are requested. The other keys should map to compiler
@@ -312,14 +315,16 @@ Variables:
   * ``add_sysroot_option``
   * ``add_lib_option`` (default "-l") gives the compiler option to
     link in a library.
-  * ``add_framework_option``
+  * ``add_framework_option`` (default "-framework") gives the compiler option
+    to add a macOS framework.
   * ``preproc_flags`` (default "-E") gives the compiler option used to run
     the preprocessor.
   * ``compile_flags`` (default "-c") gives the compiler option used to compile a file.
   * ``debug_info_flags`` (default "-g") gives the compiler option used to enable debug info.
   * ``optimization_flags`` gives the compiler optimization flags to use.
   * ``size_optimization_flags`` gives compiler optimization flags to use when
-    compiling for size.
+    compiling for size. If not set then ``--optimize-for-size`` will use
+    the default optimization flags.
   * ``sanitizer_optimization_flags`` gives compiler optimization flags to use
     when building with sanitizers.
   * ``coverage_flags`` gives the compiler flags to use when generating coverage
