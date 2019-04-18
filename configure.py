@@ -674,18 +674,18 @@ class LexerError(InternalError):
     def __str__(self):
         return '%s at %s:%d' % (self.msg, self.lexfile, self.line)
 
-
-def parse_lex_dict(as_list):
+def parse_lex_dict(as_list, map_name, infofile):
     if len(as_list) % 3 != 0:
         raise InternalError("Lex dictionary has invalid format (input not divisible by 3): %s" % as_list)
 
     result = {}
     for key, sep, value in [as_list[3*i:3*i+3] for i in range(0, len(as_list)//3)]:
         if sep != '->':
-            raise InternalError("Lex dictionary has invalid format")
+            raise InternalError("Map %s in %s has invalid format" % (map_name, infofile))
+        if key in result:
+            raise InternalError("Duplicate map entry %s in map %s file %s" % (key, map_name, infofile))
         result[key] = value
     return result
-
 
 def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
     """
@@ -745,7 +745,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
             raise LexerError('Bad token "%s"' % (token), infofile, lexer.lineno)
 
     for group in allowed_maps:
-        out.__dict__[group] = parse_lex_dict(out.__dict__[group])
+        out.__dict__[group] = parse_lex_dict(out.__dict__[group], group, infofile)
 
     return out
 
