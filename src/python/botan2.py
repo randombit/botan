@@ -257,7 +257,7 @@ botan.botan_privkey_export_pubkey.errcheck = errcheck_for('botan_privkey_export_
 botan.botan_privkey_destroy.argtypes = [c_void_p]
 botan.botan_privkey_destroy.errcheck = errcheck_for('botan_privkey_destroy')
 
-botan.botan_privkey_export.argtypes = [c_void_p, POINTER(c_char), c_void_p]
+botan.botan_privkey_export.argtypes = [c_void_p, POINTER(c_char), c_void_p, c_uint32]
 botan.botan_privkey_export.errcheck = errcheck_for('botan_privkey_export')
 
 # PK Encryption
@@ -871,9 +871,18 @@ class PublicKey(object): # pylint: disable=invalid-name
     def algo_name(self):
         return _call_fn_returning_string(32, lambda b, bl: botan.botan_pubkey_algo_name(self.__obj, b, bl))
 
-    def encoding(self, pem=False):
+    def export(self, pem=False):
         flag = 1 if pem else 0
         return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_pubkey_export(self.__obj, b, bl, flag))
+
+    def encoding(self, pem=False):
+        return self.export(pem)
+
+    def to_der(self):
+        return self.export(False)
+
+    def to_pem(self):
+        return self.export(True)
 
     def fingerprint(self, hash_algorithm='SHA-256'):
 
@@ -927,17 +936,15 @@ class PrivateKey(object):
         botan.botan_privkey_export_pubkey(byref(pub), self.__obj)
         return public_key(pub)
 
-    def export(self):
+    def to_der(self):
+        return self.export(False)
 
-        n = 4096
-        buf = create_string_buffer(n)
-        buf_len = c_size_t(n)
+    def to_pem(self):
+        return self.export(True)
 
-        rc = botan.botan_privkey_export(self.__obj, buf, byref(buf_len))
-        if rc != 0:
-            buf = create_string_buffer(buf_len.value)
-            botan.botan_privkey_export(self.__obj, buf, byref(buf_len))
-        return buf[0:int(buf_len.value)]
+    def export(self, pem=False):
+        flag = 1 if pem else 0
+        return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_privkey_export(self.__obj, b, bl, flag))
 
 class PKEncrypt(object):
     def __init__(self, key, padding):
