@@ -171,9 +171,21 @@ class BotanPythonTests(unittest.TestCase):
         rsapriv = botan2.private_key('RSA', '1024', rng)
         self.assertEqual(rsapriv.algo_name(), 'RSA')
 
+        priv_pem = rsapriv.to_pem()
+        priv_der = rsapriv.to_der()
+
+        self.assertEqual(priv_pem[0:28], b"-----BEGIN PRIVATE KEY-----\n")
+        self.assertTrue(len(priv_pem) > len(priv_der))
+
         rsapub = rsapriv.get_public_key()
         self.assertEqual(rsapub.algo_name(), 'RSA')
         self.assertEqual(rsapub.estimated_strength(), 80)
+
+        pub_pem = rsapub.to_pem()
+        pub_der = rsapub.to_der()
+
+        self.assertEqual(pub_pem[0:27], b"-----BEGIN PUBLIC KEY-----\n")
+        self.assertTrue(len(pub_pem) > len(pub_der))
 
         enc = botan2.pk_op_encrypt(rsapub, "OAEP(SHA-256)")
         dec = botan2.pk_op_decrypt(rsapriv, "OAEP(SHA-256)")
