@@ -213,7 +213,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         priv_pem = rsapriv.to_pem()
         priv_der = rsapriv.to_der()
 
-        self.assertEqual(priv_pem[0:28], b"-----BEGIN PRIVATE KEY-----\n")
+        self.assertEqual(priv_pem[0:28], "-----BEGIN PRIVATE KEY-----\n")
         self.assertTrue(len(priv_pem) > len(priv_der))
 
         rsapub = rsapriv.get_public_key()
@@ -223,7 +223,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         pub_pem = rsapub.to_pem()
         pub_der = rsapub.to_der()
 
-        self.assertEqual(pub_pem[0:27], b"-----BEGIN PUBLIC KEY-----\n")
+        self.assertEqual(pub_pem[0:27], "-----BEGIN PUBLIC KEY-----\n")
         self.assertTrue(len(pub_pem) > len(pub_der))
 
         enc = botan2.PKEncrypt(rsapub, "OAEP(SHA-256)")
