@@ -259,10 +259,13 @@ def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file
         archive.addfile(tarinfo, open(f, 'rb'))
     archive.close()
 
+    archive_contents = open(output_archive, 'rb').read()
+
     sha256 = hashlib.new('sha256')
-    sha256.update(open(output_archive, 'rb').read())
+    sha256.update(archive_contents)
     archive_hash = sha256.hexdigest().upper()
 
+    logging.info('%s is %.2f MiB' % (output_archive, len(archive_contents) / (1024.0*1024.0)))
     logging.info('SHA-256(%s) = %s' % (output_archive, archive_hash))
     if hash_file is not None:
         hash_file.write("%s  %s\n" % (archive_hash, output_archive))
