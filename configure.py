@@ -815,8 +815,8 @@ class ModuleInfo(InfoObject):
 
         def convert_lib_list(libs):
             out = {}
-            for (os,libs) in libs.items():
-                out[os] = libs.split(',')
+            for (os_name, lib_list) in libs.items():
+                out[os_name] = lib_list.split(',')
             return out
 
         def combine_lines(c):
@@ -1150,17 +1150,17 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 if arch not in arch_info:
                     raise InternalError('Compiler %s has flags for unknown arch/ISA %s:%s' % (self.infofile, arch, isa))
 
-        for os in self.binary_link_commands:
-            if os in ["default", "default-debug"]:
+        for os_name in self.binary_link_commands:
+            if os_name in ["default", "default-debug"]:
                 continue
-            if os not in os_info:
-                raise InternalError("Compiler %s has binary_link_command for unknown OS %s" % (self.infofile, os))
+            if os_name not in os_info:
+                raise InternalError("Compiler %s has binary_link_command for unknown OS %s" % (self.infofile, os_name))
 
-        for os in self.so_link_commands:
-            if os in ["default", "default-debug"]:
+        for os_name in self.so_link_commands:
+            if os_name in ["default", "default-debug"]:
                 continue
-            if os not in os_info:
-                raise InternalError("Compiler %s has so_link_command for unknown OS %s" % (self.infofile, os))
+            if os_name not in os_info:
+                raise InternalError("Compiler %s has so_link_command for unknown OS %s" % (self.infofile, os_name))
 
     def isa_flags_for(self, isa, arch):
         if isa in self.isa_flags:
