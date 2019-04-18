@@ -2,7 +2,9 @@
 RDRAND_RNG -> 20160619
 </defines>
 
-need_isa rdrand
+<isa>
+rdrand
+</isa>
 
 <cc>
 gcc

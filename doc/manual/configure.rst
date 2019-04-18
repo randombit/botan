@@ -58,7 +58,7 @@ Makefile, ``build.h`` and other artifacts.
 When Modifying ``configure.py``
 --------------------------------
 
-For now, any changes to``configure.py`` must work under both CPython 2.7 and
+For now, any changes to ``configure.py`` must work under both CPython 2.7 and
 CPython 3.x. In a future major release, support for CPython2 will be dropped,
 but until then if making modifications verify the code works as expected on
 both versions.
@@ -163,6 +163,7 @@ Lists:
    in the source tree but might be replaced by an external version. This is used
    for the PKCS11 headers.
  * ``arch`` is a list of architectures this module may be used on.
+ * ``isa`` lists ISA features which must be enabled to use this module.
  * ``cc`` is a list of compilers which can be used with this module. If the
    compiler name is suffixed with a version (like "gcc:5.0") then only compilers
    with that minimum version can use the module.
@@ -181,7 +182,6 @@ Maps:
 Variables:
  * ``load_on`` Can take on values ``never``, ``always``, ``auto``, ``dep`` or ``vendor``.
    TODO describe the behavior of these
- * ``need_isa`` SHOULD BE A LIST
 
 An example::
 
@@ -282,12 +282,16 @@ Maps:
  * ``cpu_flags`` used to emit CPU specific flags, for example LLVM
    bitcode target uses ``-emit-llvm`` flag. Rarely needed.
  * ``isa_flags`` maps from CPU extensions (like NEON or AES-NI) to
-   compiler flags which enable that extension.
+   compiler flags which enable that extension. These have the same name
+   as the ISA flags listed in the architecture files.
  * ``lib_flags`` has a single possible entry "debug" which if set maps
    to additional flags to pass when building a debug library.
    Rarely needed.
- * ``mach_abi_linking`` specifies flags to enable when building and linking
-   on a particular CPU. This is usually flags that modify ABI.
+ * ``mach_abi_linking`` specifies flags to enable when building and
+   linking on a particular CPU. This is usually flags that modify
+   ABI. There is a special syntax supported here
+   "all!os1,arch1,os2,arch2" which allows setting ABI flags which are
+   used for all but the named operating systems and/or architectures.
  * ``sanitizers`` is a map of sanitizers the compiler supports. It must
    include "default" which is a list of sanitizers to include by default
    when sanitizers are requested. The other keys should map to compiler
@@ -311,14 +315,16 @@ Variables:
   * ``add_sysroot_option``
   * ``add_lib_option`` (default "-l") gives the compiler option to
     link in a library.
-  * ``add_framework_option``
+  * ``add_framework_option`` (default "-framework") gives the compiler option
+    to add a macOS framework.
   * ``preproc_flags`` (default "-E") gives the compiler option used to run
     the preprocessor.
   * ``compile_flags`` (default "-c") gives the compiler option used to compile a file.
   * ``debug_info_flags`` (default "-g") gives the compiler option used to enable debug info.
   * ``optimization_flags`` gives the compiler optimization flags to use.
   * ``size_optimization_flags`` gives compiler optimization flags to use when
-    compiling for size.
+    compiling for size. If not set then ``--optimize-for-size`` will use
+    the default optimization flags.
   * ``sanitizer_optimization_flags`` gives compiler optimization flags to use
     when building with sanitizers.
   * ``coverage_flags`` gives the compiler flags to use when generating coverage

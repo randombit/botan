@@ -2,4 +2,6 @@
 IDEA_SSE2 -> 20131128
 </defines>
 
-need_isa sse2
+<isa>
+sse2
+</isa>

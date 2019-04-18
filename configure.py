@@ -674,18 +674,18 @@ class LexerError(InternalError):
     def __str__(self):
         return '%s at %s:%d' % (self.msg, self.lexfile, self.line)
 
-
-def parse_lex_dict(as_list):
+def parse_lex_dict(as_list, map_name, infofile):
     if len(as_list) % 3 != 0:
         raise InternalError("Lex dictionary has invalid format (input not divisible by 3): %s" % as_list)
 
     result = {}
     for key, sep, value in [as_list[3*i:3*i+3] for i in range(0, len(as_list)//3)]:
         if sep != '->':
-            raise InternalError("Lex dictionary has invalid format")
+            raise InternalError("Map %s in %s has invalid format" % (map_name, infofile))
+        if key in result:
+            raise InternalError("Duplicate map entry %s in map %s file %s" % (key, map_name, infofile))
         result[key] = value
     return result
-
 
 def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
     """
@@ -745,7 +745,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
             raise LexerError('Bad token "%s"' % (token), infofile, lexer.lineno)
 
     for group in allowed_maps:
-        out.__dict__[group] = parse_lex_dict(out.__dict__[group])
+        out.__dict__[group] = parse_lex_dict(out.__dict__[group], group, infofile)
 
     return out
 
@@ -779,12 +779,10 @@ class ModuleInfo(InfoObject):
         lex = lex_me_harder(
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
-             'os_features', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
-            ],
-            ['defines'],
+             'os_features', 'arch', 'isa', 'cc', 'comment', 'warning'],
+            ['defines', 'libs', 'frameworks'],
             {
-                'load_on': 'auto',
-                'need_isa': ''
+                'load_on': 'auto'
             })
 
         def check_header_duplicates(header_list_public, header_list_internal):
@@ -815,35 +813,28 @@ class ModuleInfo(InfoObject):
             self.header_internal = lex.header_internal
         self.header_external = lex.header_external
 
-        # Coerce to more useful types
-        def convert_lib_list(l):
-            if len(l) % 3 != 0:
-                raise InternalError("Bad <libs> in module %s" % (self.basename))
-            result = {}
+        def convert_lib_list(libs):
+            out = {}
+            for (os_name, lib_list) in libs.items():
+                out[os_name] = lib_list.split(',')
+            return out
 
-            for sep in l[1::3]:
-                if sep != '->':
-                    raise InternalError("Bad <libs> in module %s" % (self.basename))
-
-            for (targetlist, vallist) in zip(l[::3], l[2::3]):
-                vals = vallist.split(',')
-                for target in targetlist.split(','):
-                    result[target] = result.setdefault(target, []) + vals
-            return result
+        def combine_lines(c):
+            return ' '.join(c) if c else None
 
         # Convert remaining lex result to members
         self.arch = lex.arch
         self.cc = lex.cc
-        self.comment = ' '.join(lex.comment) if lex.comment else None
+        self.comment = combine_lines(lex.comment)
         self._defines = lex.defines
         self._validate_defines_content(self._defines)
         self.frameworks = convert_lib_list(lex.frameworks)
         self.libs = convert_lib_list(lex.libs)
         self.load_on = lex.load_on
-        self.need_isa = lex.need_isa.split(',') if lex.need_isa else []
+        self.isa = lex.isa
         self.os_features = lex.os_features
         self.requires = lex.requires
-        self.warning = ' '.join(lex.warning) if lex.warning else None
+        self.warning = combine_lines(lex.warning)
 
         # Modify members
         self.source = [normalize_source_path(os.path.join(self.lives_in, s)) for s in self.source]
@@ -874,7 +865,7 @@ class ModuleInfo(InfoObject):
             if not re.match('^20[0-9]{6}$', value):
                 raise InternalError('Module defines value has invalid format: "%s"' % value)
 
-    def cross_check(self, arch_info, cc_info, all_os_features):
+    def cross_check(self, arch_info, cc_info, all_os_features, all_isa_extn):
 
         for feat in set(flatten([o.split(',') for o in self.os_features])):
             if feat not in all_os_features:
@@ -888,9 +879,14 @@ class ModuleInfo(InfoObject):
                     pass
                 else:
                     raise InternalError('Module %s mentions unknown compiler %s' % (self.infofile, supp_cc))
+
         for supp_arch in self.arch:
             if supp_arch not in arch_info:
                 raise InternalError('Module %s mentions unknown arch %s' % (self.infofile, supp_arch))
+
+        for isa in self.isa:
+            if isa not in all_isa_extn:
+                raise InternalError('Module %s uses unknown ISA extension %s' % (self.infofile, isa))
 
     def sources(self):
         return self.source
@@ -911,7 +907,7 @@ class ModuleInfo(InfoObject):
         arch_name = archinfo.basename
         cpu_name = options.cpu
 
-        for isa in self.need_isa:
+        for isa in self.isa:
             if isa in options.disable_intrinsics:
                 return False # explicitly disabled
 
@@ -945,7 +941,7 @@ class ModuleInfo(InfoObject):
     def compatible_compiler(self, ccinfo, cc_min_version, arch):
         # Check if this compiler supports the flags we need
         def supported_isa_flags(ccinfo, arch):
-            for isa in self.need_isa:
+            for isa in self.isa:
                 if ccinfo.isa_flags_for(isa, arch) is None:
                     return False
             return True
@@ -1143,6 +1139,28 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.visibility_attribute = lex.visibility_attribute
         self.visibility_build_flags = lex.visibility_build_flags
         self.warning_flags = lex.warning_flags
+
+    def cross_check(self, os_info, arch_info, all_isas):
+
+        for isa in self.isa_flags:
+            if ":" in isa:
+                (arch, isa) = isa.split(":")
+                if isa not in all_isas:
+                    raise InternalError('Compiler %s has flags for unknown ISA %s' % (self.infofile, isa))
+                if arch not in arch_info:
+                    raise InternalError('Compiler %s has flags for unknown arch/ISA %s:%s' % (self.infofile, arch, isa))
+
+        for os_name in self.binary_link_commands:
+            if os_name in ["default", "default-debug"]:
+                continue
+            if os_name not in os_info:
+                raise InternalError("Compiler %s has binary_link_command for unknown OS %s" % (self.infofile, os_name))
+
+        for os_name in self.so_link_commands:
+            if os_name in ["default", "default-debug"]:
+                continue
+            if os_name not in os_info:
+                raise InternalError("Compiler %s has so_link_command for unknown OS %s" % (self.infofile, os_name))
 
     def isa_flags_for(self, isa, arch):
         if isa in self.isa_flags:
@@ -1687,7 +1705,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
         if src in module_that_owns:
             module = module_that_owns[src]
-            isas = module.need_isa
+            isas = module.isa
             if 'simd' in module.dependencies(osinfo):
                 isas.append('simd')
 
@@ -2524,8 +2542,8 @@ class AmalgamationGenerator(object):
     def _target_for_module(self, mod):
         target = ''
         if not self._options.single_amalgamation_file:
-            if mod.need_isa != []:
-                target = '_'.join(sorted(mod.need_isa))
+            if mod.isa != []:
+                target = '_'.join(sorted(mod.isa))
                 if target == 'sse2' and self._options.arch == 'x86_64':
                     target = '' # SSE2 is always available on x86-64
 
@@ -2538,7 +2556,7 @@ class AmalgamationGenerator(object):
             # Only first module for target is considered. Does this make sense?
             if self._target_for_module(mod) == target:
                 out = set()
-                for isa in mod.need_isa:
+                for isa in mod.isa:
                     if isa == 'aesni':
                         isa = "aes,ssse3,pclmul"
                     elif isa == 'rdrand':
@@ -3185,7 +3203,7 @@ def main(argv):
 
     setup_logging(options)
 
-    if not options.list_modules:
+    if not options.list_modules and not options.list_os_features:
         logging.info('Configuring to build Botan %s (revision %s)' % (
             Version.as_string(), Version.vc_rev()))
 
@@ -3204,12 +3222,16 @@ def main(argv):
     info_module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
 
     all_os_features = sorted(set(flatten([o.target_features for o in info_os.values()])))
+    all_defined_isas = set(flatten([a.isa_extensions for a in info_arch.values()]))
 
     if options.list_os_features:
         return list_os_features(all_os_features, info_os)
 
     for mod in info_modules.values():
-        mod.cross_check(info_arch, info_cc, all_os_features)
+        mod.cross_check(info_arch, info_cc, all_os_features, all_defined_isas)
+
+    for cc in info_cc.values():
+        cc.cross_check(info_os, info_arch, all_defined_isas)
 
     for policy in info_module_policies.values():
         policy.cross_check(info_modules)

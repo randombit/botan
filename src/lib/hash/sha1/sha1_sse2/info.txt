@@ -2,4 +2,6 @@
 SHA1_SSE2 -> 20160803
 </defines>
 
-need_isa sse2
+<isa>
+sse2
+</isa>

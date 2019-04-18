@@ -6,7 +6,10 @@ SHACAL2_X86 -> 20170814
 shacal2
 </requires>
 
-need_isa sha,ssse3
+<isa>
+sha
+ssse3
+</isa>
 
 <cc>
 gcc:5.0
