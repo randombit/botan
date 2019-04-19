@@ -102,6 +102,12 @@ class BotanPythonTests(unittest.TestCase):
         user_rng.add_entropy('seed material...')
 
     def test_hash(self):
+
+        try:
+            h = botan2.HashFunction('NoSuchHash')
+        except botan2.BotanException as e:
+            self.assertEqual(str(e), "botan_hash_init failed: -40 (Not implemented)")
+
         h = botan2.HashFunction('SHA-256')
         self.assertEqual(h.algo_name(), 'SHA-256')
         assert h.output_length() == 32
