@@ -397,6 +397,17 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertEqual(value, ptext)
 
+    def test_keywrap(self):
+        key = hex_decode('00112233445566778899aabbccddeeff')
+        kek = hex_decode('000102030405060708090a0b0c0d0e0f')
+
+        wrapped = botan2.nist_key_wrap(kek, key)
+        self.assertEqual(hex_encode(wrapped), '1fa68b0a8112b447aef34bd8fb5a7b829d3e862371d2cfe5')
+
+        self.assertEqual(len(wrapped), 16+8)
+        unwrapped = botan2.nist_key_unwrap(kek, wrapped)
+        self.assertEqual(hex_encode(unwrapped), '00112233445566778899aabbccddeeff')
+
     def test_hotp(self):
 
         hotp = botan2.HOTP(b'12345678901234567890')
