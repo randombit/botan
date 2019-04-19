@@ -100,7 +100,7 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 
         decl = "    ffi_api(dll.%s," % (fn_name)
         if len(fn_args) > 4:
-            decl += "\n        "
+            decl += "\n            "
         else:
             decl += ' '
 
