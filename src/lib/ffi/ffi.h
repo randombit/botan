@@ -806,9 +806,6 @@ BOTAN_PUBLIC_API(2,1) int botan_mp_is_positive(const botan_mp_t mp);
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_negative(const botan_mp_t mp);
 
 BOTAN_PUBLIC_API(2,1) int botan_mp_flip_sign(botan_mp_t mp);
-/*
-BOTAN_PUBLIC_API(2,1) int botan_mp_set_negative(botan_mp_t mp);
-*/
 
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_zero(const botan_mp_t mp);
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_odd(const botan_mp_t mp);
