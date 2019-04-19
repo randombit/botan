@@ -10,11 +10,13 @@ This is in addition to specific API calls marked with BOTAN_DEPRECATED
 in the source.
 
 - Configuring a build (with ``configure.py``) using Python2. In a future
-  major release, Python3 will be required. This will not affect the Python
-  module, which will continue to support Python2 for the forseeable future.
+  major release, Python3 will be required.
+
+- Using the Python wrapper with Python2.
 
 - Directly using an algorithm class like ``AES_128`` or ``SHA_256``. Instead
-  create the objects via a ``T::create`` call.
+  create the objects via a ``T::create`` call. A future major release may
+  make such declarations private.
 
 - Directly accessing the member variables of types calendar_point, ASN1_Attribute,
   AlgorithmIdentifier, and BER_Object
