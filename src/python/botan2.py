@@ -19,7 +19,7 @@ Botan 2.8
 """
 
 from ctypes import CDLL, POINTER, byref, create_string_buffer, \
-    c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_char, c_char_p
+    c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_char_p
 
 from sys import version_info
 from time import strptime, mktime
@@ -96,93 +96,93 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_rng_reseed, [c_void_p, c_size_t])
     ffi_api(dll.botan_rng_reseed_from_rng, [c_void_p, c_void_p, c_size_t])
     ffi_api(dll.botan_rng_add_entropy, [c_void_p, c_char_p, c_size_t])
-    ffi_api(dll.botan_rng_get, [c_void_p, POINTER(c_char), c_size_t])
+    ffi_api(dll.botan_rng_get, [c_void_p, c_char_p, c_size_t])
 
     # Hash function
     ffi_api(dll.botan_hash_init, [c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_hash_destroy, [c_void_p])
-    ffi_api(dll.botan_hash_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_hash_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_hash_clear, [c_void_p])
     ffi_api(dll.botan_hash_output_length, [c_void_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_hash_update, [c_void_p, POINTER(c_char), c_size_t])
-    ffi_api(dll.botan_hash_final, [c_void_p, POINTER(c_char)])
+    ffi_api(dll.botan_hash_update, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_hash_final, [c_void_p, c_char_p])
 
     # MAC
     ffi_api(dll.botan_mac_init, [c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_mac_destroy, [c_void_p])
-    ffi_api(dll.botan_mac_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_mac_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_mac_clear, [c_void_p])
     ffi_api(dll.botan_mac_output_length, [c_void_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_mac_set_key, [c_void_p, POINTER(c_char), c_size_t])
-    ffi_api(dll.botan_mac_update, [c_void_p, POINTER(c_char), c_size_t])
-    ffi_api(dll.botan_mac_final, [c_void_p, POINTER(c_char)])
+    ffi_api(dll.botan_mac_set_key, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_mac_update, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_mac_final, [c_void_p, c_char_p])
 
     # Cipher
     ffi_api(dll.botan_cipher_init, [c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_cipher_destroy, [c_void_p])
     ffi_api(dll.botan_cipher_reset, [c_void_p])
-    ffi_api(dll.botan_cipher_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_cipher_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_cipher_get_default_nonce_length, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_cipher_get_update_granularity, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_cipher_get_tag_length, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_cipher_valid_nonce_length, [c_void_p, c_size_t])
     ffi_api(dll.botan_cipher_clear, [c_void_p])
-    ffi_api(dll.botan_cipher_set_key, [c_void_p, POINTER(c_char), c_size_t])
-    ffi_api(dll.botan_cipher_set_associated_data, [c_void_p, POINTER(c_char), c_size_t])
-    ffi_api(dll.botan_cipher_start, [c_void_p, POINTER(c_char), c_size_t])
+    ffi_api(dll.botan_cipher_set_key, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_cipher_set_associated_data, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_cipher_start, [c_void_p, c_char_p, c_size_t])
 
     ffi_api(dll.botan_cipher_update,
             [c_void_p, c_uint32,
-             POINTER(c_char), c_size_t, POINTER(c_size_t),
-             POINTER(c_char), c_size_t, POINTER(c_size_t)])
+             c_char_p, c_size_t, POINTER(c_size_t),
+             c_char_p, c_size_t, POINTER(c_size_t)])
 
     # Bcrypt
-    ffi_api(dll.botan_bcrypt_generate, [POINTER(c_char), POINTER(c_size_t),
+    ffi_api(dll.botan_bcrypt_generate, [c_char_p, POINTER(c_size_t),
                                         c_char_p, c_void_p, c_size_t, c_uint32])
 
     ffi_api(dll.botan_bcrypt_is_valid, [c_char_p, c_char_p])
 
     # PBKDF
-    ffi_api(dll.botan_pbkdf, [c_char_p, POINTER(c_char), c_size_t, c_char_p, c_void_p, c_size_t, c_size_t])
+    ffi_api(dll.botan_pbkdf, [c_char_p, c_char_p, c_size_t, c_char_p, c_void_p, c_size_t, c_size_t])
 
     ffi_api(dll.botan_pbkdf_timed,
-            [c_char_p, POINTER(c_char), c_size_t, c_char_p,
+            [c_char_p, c_char_p, c_size_t, c_char_p,
              c_void_p, c_size_t, c_size_t, POINTER(c_size_t)])
 
     # Scrypt
     ffi_api(dll.botan_scrypt,
-            [POINTER(c_char), c_size_t, c_char_p, POINTER(c_char), c_size_t,
+            [c_char_p, c_size_t, c_char_p, c_char_p, c_size_t,
              c_size_t, c_size_t, c_size_t])
 
     # KDF
     ffi_api(dll.botan_kdf,
-            [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t,
-             POINTER(c_char), c_size_t, POINTER(c_char), c_size_t])
+            [c_char_p, c_char_p, c_size_t, c_char_p, c_size_t,
+             c_char_p, c_size_t, c_char_p, c_size_t])
 
     # Public key
     ffi_api(dll.botan_pubkey_destroy, [c_void_p])
-    ffi_api(dll.botan_pubkey_load, [c_void_p, POINTER(c_char), c_size_t])
+    ffi_api(dll.botan_pubkey_load, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_pubkey_estimated_strength, [c_void_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_pubkey_algo_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
-    ffi_api(dll.botan_pubkey_export, [c_void_p, POINTER(c_char), POINTER(c_size_t), c_uint32])
+    ffi_api(dll.botan_pubkey_algo_name, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_pubkey_export, [c_void_p, c_char_p, POINTER(c_size_t), c_uint32])
 
     ffi_api(dll.botan_pubkey_fingerprint,
-            [c_void_p, c_char_p, POINTER(c_char), POINTER(c_size_t)])
+            [c_void_p, c_char_p, c_char_p, POINTER(c_size_t)])
 
     ffi_api(dll.botan_privkey_create, [c_void_p, c_char_p, c_char_p, c_void_p])
-    ffi_api(dll.botan_privkey_load, [c_void_p, c_void_p, POINTER(c_char), c_size_t, POINTER(c_char)])
-    ffi_api(dll.botan_privkey_algo_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_privkey_load, [c_void_p, c_void_p, c_char_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_privkey_algo_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_privkey_export_pubkey, [c_void_p, c_void_p])
     ffi_api(dll.botan_privkey_destroy, [c_void_p])
-    ffi_api(dll.botan_privkey_export, [c_void_p, POINTER(c_char), c_void_p, c_uint32])
+    ffi_api(dll.botan_privkey_export, [c_void_p, c_char_p, c_void_p, c_uint32])
 
     # PK Encryption
     ffi_api(dll.botan_pk_op_encrypt_create, [c_void_p, c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_pk_op_encrypt_output_length, [c_void_p, c_size_t, POINTER(c_size_t)])
     ffi_api(dll.botan_pk_op_encrypt_destroy, [c_void_p])
     ffi_api(dll.botan_pk_op_encrypt,
-            [c_void_p, c_void_p, POINTER(c_char), POINTER(c_size_t),
-             POINTER(c_char), c_size_t])
+            [c_void_p, c_void_p, c_char_p, POINTER(c_size_t),
+             c_char_p, c_size_t])
 
     # PK Decryption
     ffi_api(dll.botan_pk_op_decrypt_create, [c_void_p, c_void_p, c_char_p, c_uint32])
@@ -191,67 +191,67 @@ def _set_prototypes(dll):
 
     ffi_api(dll.botan_pk_op_decrypt,
             [c_void_p,
-             POINTER(c_char), POINTER(c_size_t),
-             POINTER(c_char), c_size_t])
+             c_char_p, POINTER(c_size_t),
+             c_char_p, c_size_t])
 
     # PK Signatures
     ffi_api(dll.botan_pk_op_sign_create, [c_void_p, c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_pk_op_sign_destroy, [c_void_p])
-    ffi_api(dll.botan_pk_op_sign_update, [c_void_p, POINTER(c_char), c_size_t])
-    ffi_api(dll.botan_pk_op_sign_finish, [c_void_p, c_void_p, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_pk_op_sign_update, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_pk_op_sign_finish, [c_void_p, c_void_p, c_char_p, POINTER(c_size_t)])
 
     # PK Verification
     ffi_api(dll.botan_pk_op_verify_create, [c_void_p, c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_pk_op_verify_destroy, [c_void_p])
-    ffi_api(dll.botan_pk_op_verify_update, [c_void_p, POINTER(c_char), c_size_t])
-    ffi_api(dll.botan_pk_op_verify_finish, [c_void_p, POINTER(c_char), c_size_t])
+    ffi_api(dll.botan_pk_op_verify_update, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_pk_op_verify_finish, [c_void_p, c_char_p, c_size_t])
 
     # MCEIES
     ffi_api(dll.botan_mceies_encrypt,
-            [c_void_p, c_void_p, c_char_p, POINTER(c_char), c_size_t,
-             POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)])
+            [c_void_p, c_void_p, c_char_p, c_char_p, c_size_t,
+             c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
 
     ffi_api(dll.botan_mceies_decrypt,
-            [c_void_p, c_char_p, POINTER(c_char), c_size_t,
-             POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)])
+            [c_void_p, c_char_p, c_char_p, c_size_t,
+             c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
 
     # Key Agreement
-    ffi_api(dll.botan_pk_op_key_agreement_export_public, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_pk_op_key_agreement_export_public, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_pk_op_key_agreement_create, [c_void_p, c_void_p, c_char_p, c_uint32])
     ffi_api(dll.botan_pk_op_key_agreement_destroy, [c_void_p])
 
     ffi_api(dll.botan_pk_op_key_agreement,
-            [c_void_p, POINTER(c_char), POINTER(c_size_t),
-             POINTER(c_char), c_size_t, POINTER(c_char), c_size_t])
+            [c_void_p, c_char_p, POINTER(c_size_t),
+             c_char_p, c_size_t, c_char_p, c_size_t])
 
     # X509 certs
     ffi_api(dll.botan_x509_cert_load_file, [POINTER(c_void_p), c_char_p])
-    ffi_api(dll.botan_x509_cert_load, [POINTER(c_void_p), POINTER(c_char), c_size_t])
+    ffi_api(dll.botan_x509_cert_load, [POINTER(c_void_p), c_char_p, c_size_t])
     ffi_api(dll.botan_x509_cert_destroy, [c_void_p])
-    ffi_api(dll.botan_x509_cert_get_time_starts, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_get_time_expires, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_to_string, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_get_time_starts, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_get_time_expires, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_to_string, [c_void_p, c_char_p, POINTER(c_size_t)])
 
     ffi_api(dll.botan_x509_cert_get_fingerprint,
-            [c_void_p, c_char_p, POINTER(c_char), POINTER(c_size_t)])
+            [c_void_p, c_char_p, c_char_p, POINTER(c_size_t)])
 
-    ffi_api(dll.botan_x509_cert_get_serial_number, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_get_authority_key_id, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_get_subject_key_id, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_cert_get_public_key_bits, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_get_serial_number, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_get_authority_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_get_subject_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_get_public_key_bits, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_public_key, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_cert_get_subject_dn, [c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_get_subject_dn, [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
 
     # MPI
     ffi_api(dll.botan_mp_init, [c_void_p])
     ffi_api(dll.botan_mp_destroy, [c_void_p])
-    ffi_api(dll.botan_mp_to_hex, [c_void_p, POINTER(c_char)])
-    ffi_api(dll.botan_mp_to_str, [c_void_p, c_uint8, POINTER(c_char), POINTER(c_size_t)])
+    ffi_api(dll.botan_mp_to_hex, [c_void_p, c_char_p])
+    ffi_api(dll.botan_mp_to_str, [c_void_p, c_uint8, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_mp_clear, [c_void_p])
     ffi_api(dll.botan_mp_set_from_int, [c_void_p, c_int])
     ffi_api(dll.botan_mp_set_from_mp, [c_void_p, c_void_p])
-    ffi_api(dll.botan_mp_set_from_str, [c_void_p, POINTER(c_char)])
-    ffi_api(dll.botan_mp_set_from_radix_str, [c_void_p, POINTER(c_char), c_size_t])
+    ffi_api(dll.botan_mp_set_from_str, [c_void_p, c_char_p])
+    ffi_api(dll.botan_mp_set_from_radix_str, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_mp_num_bits, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_mp_num_bytes, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_mp_to_bin, [c_void_p, POINTER(c_uint8)])
@@ -286,15 +286,15 @@ def _set_prototypes(dll):
     #
     # FPE
     #
-    ffi_api(dll.botan_fpe_fe1_init, [c_void_p, c_void_p, POINTER(c_char), c_size_t, c_size_t, c_uint32])
+    ffi_api(dll.botan_fpe_fe1_init, [c_void_p, c_void_p, c_char_p, c_size_t, c_size_t, c_uint32])
     ffi_api(dll.botan_fpe_destroy, [c_void_p])
-    ffi_api(dll.botan_fpe_encrypt, [c_void_p, c_void_p, POINTER(c_char), c_size_t])
-    ffi_api(dll.botan_fpe_decrypt, [c_void_p, c_void_p, POINTER(c_char), c_size_t])
+    ffi_api(dll.botan_fpe_encrypt, [c_void_p, c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_fpe_decrypt, [c_void_p, c_void_p, c_char_p, c_size_t])
 
     #
     # HOTP
     #
-    ffi_api(dll.botan_hotp_init, [c_void_p, POINTER(c_char), c_size_t, c_char_p, c_size_t])
+    ffi_api(dll.botan_hotp_init, [c_void_p, c_char_p, c_size_t, c_char_p, c_size_t])
     ffi_api(dll.botan_hotp_destroy, [c_void_p])
     ffi_api(dll.botan_hotp_generate, [c_void_p, POINTER(c_uint32), c_uint64])
     ffi_api(dll.botan_hotp_check, [c_void_p, POINTER(c_uint64), c_uint32, c_uint64, c_size_t])
@@ -995,7 +995,7 @@ class MPI(object):
             return val
 
     def __repr__(self):
-        # FIXME should have a better size estimate than this ...
+        # Should have a better size estimate than this ...
         out_len = c_size_t(self.bit_count() // 2)
         out = create_string_buffer(out_len.value)
 
