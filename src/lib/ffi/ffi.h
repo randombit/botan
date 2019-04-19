@@ -806,7 +806,6 @@ BOTAN_PUBLIC_API(2,1) int botan_mp_is_positive(const botan_mp_t mp);
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_negative(const botan_mp_t mp);
 
 BOTAN_PUBLIC_API(2,1) int botan_mp_flip_sign(botan_mp_t mp);
-//BOTAN_PUBLIC_API(2,1) int botan_mp_set_negative(botan_mp_t mp);
 
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_zero(const botan_mp_t mp);
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_odd(const botan_mp_t mp);
@@ -845,7 +844,7 @@ BOTAN_PUBLIC_API(2,1) int botan_mp_cmp(int* result, const botan_mp_t x, const bo
 */
 BOTAN_PUBLIC_API(2,1) int botan_mp_swap(botan_mp_t x, botan_mp_t y);
 
-// Return (base^exponent) % modulus
+/* Return (base^exponent) % modulus */
 BOTAN_PUBLIC_API(2,1) int botan_mp_powmod(botan_mp_t out, const botan_mp_t base, const botan_mp_t exponent, const botan_mp_t modulus);
 
 BOTAN_PUBLIC_API(2,1) int botan_mp_lshift(botan_mp_t out, const botan_mp_t in, size_t shift);
@@ -1440,14 +1439,7 @@ BOTAN_PUBLIC_API(2,0) int botan_x509_cert_destroy(botan_x509_cert_t cert);
 
 BOTAN_PUBLIC_API(2,8) int botan_x509_cert_dup(botan_x509_cert_t* new_cert, botan_x509_cert_t cert);
 
-BOTAN_PUBLIC_API(2,0)
-int botan_x509_cert_gen_selfsigned(botan_x509_cert_t* cert,
-                                   botan_privkey_t key,
-                                   botan_rng_t rng,
-                                   const char* common_name,
-                                   const char* org_name);
-
-// Prefer botan_x509_cert_not_before and botan_x509_cert_not_after
+/* Prefer botan_x509_cert_not_before and botan_x509_cert_not_after */
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len);
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len);
 
@@ -1477,7 +1469,7 @@ int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert,
 
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len);
 
-// Must match values of Key_Constraints in key_constraints.h
+/* Must match values of Key_Constraints in key_constraints.h */
 enum botan_x509_cert_key_constraints {
    NO_CONSTRAINTS     = 0,
    DIGITAL_SIGNATURE  = 32768,
@@ -1648,66 +1640,6 @@ int botan_fpe_encrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size
 BOTAN_PUBLIC_API(2,8)
 int botan_fpe_decrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len);
 
-/*
-* TLS (WIP)
-*/
-#if defined(BOTAN_HAS_TLS) && 0
-
-typedef struct botan_tls_session_struct* botan_tls_session_t;
-
-BOTAN_TEST_API int botan_tls_session_decrypt(botan_tls_session_t* session,
-                                        const uint8_t key[], size_t key_len,
-                                        const uint8_t blob[], size_t blob_len);
-
-BOTAN_TEST_API int botan_tls_session_get_version(botan_tls_session_t session, uint16_t* tls_version);
-BOTAN_TEST_API int botan_tls_session_get_ciphersuite(botan_tls_session_t session, uint16_t* ciphersuite);
-BOTAN_TEST_API int botan_tls_session_encrypt(botan_tls_session_t session, botan_rng_t rng, uint8_t key[], size_t* key_len);
-
-BOTAN_TEST_API int botan_tls_session_get_peer_certs(botan_tls_session_t session, botan_x509_cert_t certs[], size_t* cert_len);
-
-// TODO: peer certs, validation, ...
-
-typedef struct botan_tls_channel_struct* botan_tls_channel_t;
-
-typedef void (*botan_tls_channel_output_fn)(void* application_data, const uint8_t* data, size_t data_len);
-
-typedef void (*botan_tls_channel_data_cb)(void* application_data, const uint8_t* data, size_t data_len);
-
-typedef void (*botan_tls_channel_alert_cb)(void* application_data, uint16_t alert_code);
-
-typedef void (*botan_tls_channel_session_established)(void* application_data,
-                                                      botan_tls_channel_t channel,
-                                                      botan_tls_session_t session);
-
-BOTAN_TEST_API int botan_tls_channel_init_client(botan_tls_channel_t* channel,
-                                            botan_tls_channel_output_fn output_fn,
-                                            botan_tls_channel_data_cb data_cb,
-                                            botan_tls_channel_alert_cb alert_cb,
-                                            botan_tls_channel_session_established session_cb,
-                                            const char* server_name);
-
-BOTAN_TEST_API int botan_tls_channel_init_server(botan_tls_channel_t* channel,
-                                            botan_tls_channel_output_fn output_fn,
-                                            botan_tls_channel_data_cb data_cb,
-                                            botan_tls_channel_alert_cb alert_cb,
-                                            botan_tls_channel_session_established session_cb);
-
-BOTAN_TEST_API int botan_tls_channel_received_data(botan_tls_channel_t chan,
-                                              const uint8_t input[], size_t len);
-
-/**
-* Returns 0 for client, 1 for server, negative for error
-*/
-BOTAN_TEST_API int botan_tls_channel_type(botan_tls_channel_t chan);
-
-BOTAN_TEST_API int botan_tls_channel_send(botan_tls_channel_t chan,
-                                     const uint8_t input[], size_t len);
-
-BOTAN_TEST_API int botan_tls_channel_close(botan_tls_channel_t chan);
-
-BOTAN_TEST_API int botan_tls_channel_destroy(botan_tls_channel_t chan);
-
-#endif
 #ifdef __cplusplus
 }
 #endif
