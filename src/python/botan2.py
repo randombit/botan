@@ -92,9 +92,6 @@ def _set_prototypes(dll):
 
     # These are generated using src/scripts/ffi_decls.py:
     ffi_api(dll.botan_constant_time_compare, [c_char_p, c_char_p, c_size_t])
-
-    ffi_api(dll.botan_same_mem, [c_char_p, c_char_p, c_size_t])
-
     ffi_api(dll.botan_scrub_mem, [c_void_p, c_size_t])
 
     ffi_api(dll.botan_hex_encode, [c_char_p, c_size_t, c_char_p, c_uint32])
