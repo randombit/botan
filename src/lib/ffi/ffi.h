@@ -1442,13 +1442,6 @@ BOTAN_PUBLIC_API(2,0) int botan_x509_cert_destroy(botan_x509_cert_t cert);
 
 BOTAN_PUBLIC_API(2,8) int botan_x509_cert_dup(botan_x509_cert_t* new_cert, botan_x509_cert_t cert);
 
-BOTAN_PUBLIC_API(2,0)
-int botan_x509_cert_gen_selfsigned(botan_x509_cert_t* cert,
-                                   botan_privkey_t key,
-                                   botan_rng_t rng,
-                                   const char* common_name,
-                                   const char* org_name);
-
 /* Prefer botan_x509_cert_not_before and botan_x509_cert_not_after */
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len);
 BOTAN_PUBLIC_API(2,0) int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len);

@@ -35,12 +35,12 @@ def to_ctype(typ, is_ptr):
     else:
         if typ == 'void':
             return 'c_void_p'
-        elif typ in ['char']:
+        elif typ in ['char', 'uint8_t']: # hack
             return 'c_char_p'
         elif typ == 'size_t':
             return 'POINTER(c_size_t)'
-        elif typ == 'uint8_t':
-            return 'POINTER(c_uint8)'
+        #elif typ == 'uint8_t':
+        #    return 'POINTER(c_uint8)'
         elif typ == 'uint32_t':
             return 'POINTER(c_uint32)'
         elif typ == 'uint64_t':
@@ -49,6 +49,8 @@ def to_ctype(typ, is_ptr):
             return 'POINTER(c_int)'
 
     raise Exception("Unknown type %s/%d" % (typ, is_ptr))
+
+GROUP = None
 
 class FuncDefVisitor(c_ast.NodeVisitor):
     def visit_FuncDecl(self, node):
@@ -63,6 +65,20 @@ class FuncDefVisitor(c_ast.NodeVisitor):
 
         # all functions returning ints:
         fn_name = node.type.declname
+
+        fn_group = fn_name.split('_')[1]
+        if fn_group == 'privkey':
+            fn_group = 'pubkey' # hack
+
+        global GROUP
+
+        if fn_group != GROUP:
+            if fn_group in ['rng', 'hash', 'mac', 'cipher', 'block', 'mp', 'pubkey', 'pk', 'x509', 'hotp', 'totp', 'fpe']:
+                print("\n    # ", fn_group.upper())
+            else:
+                print("")
+            GROUP = fn_group
+
 
         fn_args = []
 
@@ -82,10 +98,15 @@ class FuncDefVisitor(c_ast.NodeVisitor):
             ctype = to_ctype(typ, is_ptr)
             fn_args.append(ctype)
 
+        decl = "    ffi_api(dll.%s," % (fn_name)
         if len(fn_args) > 4:
-            print("   ffi_api(_dll.%s,\n        %s)" % (fn_name, fn_args))
+            decl += "\n        "
         else:
-            print("   ffi_api(_dll.%s, %s)" % (fn_name, fn_args))
+            decl += ' '
+
+        decl += '[' + ', '.join(fn_args) + '])'
+
+        print(decl)
 
 ast = parse_file(ffi_header, use_cpp=True, cpp_args=['-Ibuild/include', '-std=c89', '-DBOTAN_DLL='])
 v = FuncDefVisitor()
