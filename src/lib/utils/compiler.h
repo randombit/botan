@@ -6,7 +6,7 @@
 */
 
 /* This header is included in both C++ and C (via ffi.h) and should only
-   contain macro definitions.
+   contain macro definitions. Avoid C++ style // comments in this file.
 */
 
 #ifndef BOTAN_UTIL_COMPILER_FLAGS_H_
@@ -105,7 +105,7 @@
     #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
 
   #elif defined(__GNUG__)
-    // msg supported since GCC 4.5, earliest we support is 4.8
+    /* msg supported since GCC 4.5, earliest we support is 4.8 */
     #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
   #endif
 

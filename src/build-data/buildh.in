@@ -215,7 +215,10 @@ Each read generates 32 bits of output
 */
 #define BOTAN_ENTROPY_INTEL_RNG_POLLS 32
 
-// According to Intel, RDRAND is guaranteed to generate a random number within 10 retries on a working CPU
+/*
+According to Intel, RDRAND is guaranteed to generate a random
+number within 10 retries on a working CPU
+*/
 #define BOTAN_ENTROPY_RDRAND_RETRIES 10
 
 /*
@@ -255,11 +258,11 @@ Each read generates 32 bits of output
   #elif defined(BOTAN_HAS_SHA1)
     #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-1)"
   #endif
-  // Otherwise, no hash found: leave BOTAN_AUTO_RNG_HMAC undefined
+  /* Otherwise, no hash found: leave BOTAN_AUTO_RNG_HMAC undefined */
 
 #endif
 
-// Check for a common build problem:
+/* Check for a common build problem */
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_64) && ((defined(_MSC_VER) && !defined(_WIN64)) || \
                                              (defined(__clang__) && !defined(__x86_64__)) || \
