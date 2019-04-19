@@ -58,7 +58,7 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(hex_encode(scrypt), "fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162")
 
     def test_bcrypt(self):
-        r = botan2.rng()
+        r = botan2.RandomNumberGenerator()
         phash = botan2.bcrypt('testing', r)
         self.assertTrue(isinstance(phash, str))
         self.assertTrue(phash.startswith("$2a$"))
@@ -70,7 +70,7 @@ class BotanPythonTests(unittest.TestCase):
 
     def test_mac(self):
 
-        hmac = botan2.message_authentication_code('HMAC(SHA-256)')
+        hmac = botan2.MsgAuthCode('HMAC(SHA-256)')
         self.assertEqual(hmac.algo_name(), 'HMAC(SHA-256)')
         self.assertEqual(hmac.minimum_keylength(), 0)
         self.assertEqual(hmac.maximum_keylength(), 4096)
@@ -83,7 +83,7 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(hex_encode(expected), hex_encode(produced))
 
     def test_rng(self):
-        user_rng = botan2.rng("user")
+        user_rng = botan2.RandomNumberGenerator("user")
 
         output1 = user_rng.get(32)
         output2 = user_rng.get(32)
@@ -95,14 +95,14 @@ class BotanPythonTests(unittest.TestCase):
         output3 = user_rng.get(1021)
         self.assertEqual(len(output3), 1021)
 
-        system_rng = botan2.rng('system')
+        system_rng = botan2.RandomNumberGenerator('system')
 
         user_rng.reseed_from_rng(system_rng, 256)
 
         user_rng.add_entropy('seed material...')
 
     def test_hash(self):
-        h = botan2.hash_function('SHA-256')
+        h = botan2.HashFunction('SHA-256')
         self.assertEqual(h.algo_name(), 'SHA-256')
         assert h.output_length() == 32
         h.update('ignore this please')
@@ -118,7 +118,7 @@ class BotanPythonTests(unittest.TestCase):
 
     def test_cipher(self):
         for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305']:
-            enc = botan2.cipher(mode, encrypt=True)
+            enc = botan2.SymmetricCipher(mode, encrypt=True)
 
             if mode == 'AES-128/CTR-BE':
                 self.assertEqual(enc.algo_name(), 'CTR-BE(AES-128)')
@@ -131,7 +131,7 @@ class BotanPythonTests(unittest.TestCase):
 
             self.assertTrue(kmin <= kmax)
 
-            rng = botan2.rng()
+            rng = botan2.RandomNumberGenerator()
             iv = rng.get(enc.default_nonce_length())
             key = rng.get(kmax)
             pt = rng.get(21)
@@ -144,7 +144,7 @@ class BotanPythonTests(unittest.TestCase):
 
             ct = enc.finish(pt)
 
-            dec = botan2.cipher(mode, encrypt=False)
+            dec = botan2.SymmetricCipher(mode, encrypt=False)
             dec.set_key(key)
             dec.start(iv)
             decrypted = dec.finish(ct)
@@ -153,28 +153,67 @@ class BotanPythonTests(unittest.TestCase):
 
 
     def test_mceliece(self):
-        rng = botan2.rng()
-        mce_priv = botan2.private_key('mce', [2960, 57], rng)
+        rng = botan2.RandomNumberGenerator()
+        mce_priv = botan2.PrivateKey.create('mce', [2960, 57], rng)
         mce_pub = mce_priv.get_public_key()
         self.assertEqual(mce_pub.estimated_strength(), 128)
 
         mce_plaintext = rng.get(16)
         mce_ad = rng.get(48)
-        mce_ciphertext = botan2.mceies_encrypt(mce_pub, botan2.rng(), 'ChaCha20Poly1305', mce_plaintext, mce_ad)
+        mce_ciphertext = botan2.mceies_encrypt(mce_pub, rng, 'ChaCha20Poly1305', mce_plaintext, mce_ad)
 
         mce_decrypt = botan2.mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
 
         self.assertEqual(mce_plaintext, mce_decrypt)
 
+    def test_rsa_load_store(self):
+
+        rsa_priv_pem = """-----BEGIN PRIVATE KEY-----
+MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBALWtiBjcofJW/4+r
+CIjQZn2V3yCYsNIBpMdVkNPr36FZ3ZHGSv2ggmCe+IWy0fTcBVyP+fo3HC8zmOC2
+EsYDFRExyB2zIsjRXlPrVrTfcyXwUEaInLJQId5CguFrmyj1y7K43ezg+OTop39n
+TyaukrciCSCh++Q/UQOanHnR8ctrAgMBAAECgYBPfKySgBmk31ZyA7k4rsFgye01
+JEkcoNZ41iGG7ujJffl4maLew9a3MmZ2jI3azVbVMDMFPA5rQm5tRowBMYEJ5oBc
+LP4AP41Lujfa+vua6l3t94bAV+CufZiY0297FcPbGqNu+xSQ2Bol2uHh9mrcgQUs
+fevA50KOLR9hv4zH6QJBAPCOKiExONtVhJn8qVPCBlJ8Vjjnt9Uno5EzMBAKMbZi
+OySkGwo9/9LUWO03r7tjrGSy5jJk+iOrcLeDl6zETfkCQQDBV6PpD/3ccQ1IfWcw
+jG8yik0bIuXgrD0uW4g8Cvj+05wrv7RYPHuFtj3Rtb94YjtgYn7QvjH7y88XmTC4
+2k2DAkEA4E9Ae7kBUoz42/odDswyxwHICMIRyoJu5Ht9yscmufH5Ql6AFFnhzf9S
+eMjfZfY4j6G+Q6mjElXQAl+DtIdMSQJBAJzdMkuBggI8Zv6NYA9voThsJSsDIWcr
+12epM9sjO+nkXizQmM2OJNnThkyDHRna+Tm2MBXEemFEdn06+ODBnWkCQQChAbG4
+255RiCuYdrfiTPF/WLtvRyGd1LRwHcYIW4mJFPzxYAMTwQKbppLAnxw73vyef/zC
+2BgXEW02tjRBtgZ+
+-----END PRIVATE KEY-----
+"""
+
+        rsa_pub_pem = """-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC1rYgY3KHyVv+PqwiI0GZ9ld8g
+mLDSAaTHVZDT69+hWd2Rxkr9oIJgnviFstH03AVcj/n6NxwvM5jgthLGAxURMcgd
+syLI0V5T61a033Ml8FBGiJyyUCHeQoLha5so9cuyuN3s4Pjk6Kd/Z08mrpK3Igkg
+ofvkP1EDmpx50fHLawIDAQAB
+-----END PUBLIC KEY-----
+"""
+
+        rsapriv = botan2.PrivateKey.load(rsa_priv_pem)
+
+        self.assertEqual(rsapriv.to_pem(), rsa_priv_pem)
+
+        rsapub = rsapriv.get_public_key()
+        self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
+
+        rsapub = botan2.PublicKey.load(rsa_pub_pem)
+        self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
+
     def test_rsa(self):
-        rng = botan2.rng()
-        rsapriv = botan2.private_key('RSA', '1024', rng)
+        # pylint: disable=too-many-locals
+        rng = botan2.RandomNumberGenerator()
+        rsapriv = botan2.PrivateKey.create('RSA', '1024', rng)
         self.assertEqual(rsapriv.algo_name(), 'RSA')
 
         priv_pem = rsapriv.to_pem()
         priv_der = rsapriv.to_der()
 
-        self.assertEqual(priv_pem[0:28], b"-----BEGIN PRIVATE KEY-----\n")
+        self.assertEqual(priv_pem[0:28], "-----BEGIN PRIVATE KEY-----\n")
         self.assertTrue(len(priv_pem) > len(priv_der))
 
         rsapub = rsapriv.get_public_key()
@@ -184,11 +223,11 @@ class BotanPythonTests(unittest.TestCase):
         pub_pem = rsapub.to_pem()
         pub_der = rsapub.to_der()
 
-        self.assertEqual(pub_pem[0:27], b"-----BEGIN PUBLIC KEY-----\n")
+        self.assertEqual(pub_pem[0:27], "-----BEGIN PUBLIC KEY-----\n")
         self.assertTrue(len(pub_pem) > len(pub_der))
 
-        enc = botan2.pk_op_encrypt(rsapub, "OAEP(SHA-256)")
-        dec = botan2.pk_op_decrypt(rsapriv, "OAEP(SHA-256)")
+        enc = botan2.PKEncrypt(rsapub, "OAEP(SHA-256)")
+        dec = botan2.PKDecrypt(rsapriv, "OAEP(SHA-256)")
 
         symkey = rng.get(32)
         ctext = enc.encrypt(symkey, rng)
@@ -197,13 +236,13 @@ class BotanPythonTests(unittest.TestCase):
 
         self.assertEqual(ptext, symkey)
 
-        signer = botan2.pk_op_sign(rsapriv, 'EMSA4(SHA-384)')
+        signer = botan2.PKSign(rsapriv, 'EMSA4(SHA-384)')
 
         signer.update('messa')
         signer.update('ge')
-        sig = signer.finish(botan2.rng())
+        sig = signer.finish(botan2.RandomNumberGenerator())
 
-        verify = botan2.pk_op_verify(rsapub, 'EMSA4(SHA-384)')
+        verify = botan2.PKVerify(rsapub, 'EMSA4(SHA-384)')
 
         verify.update('mess')
         verify.update('age')
@@ -217,16 +256,16 @@ class BotanPythonTests(unittest.TestCase):
         self.assertTrue(verify.check_signature(sig))
 
     def test_dh(self):
-        a_rng = botan2.rng('user')
-        b_rng = botan2.rng('user')
+        a_rng = botan2.RandomNumberGenerator('user')
+        b_rng = botan2.RandomNumberGenerator('user')
 
         for dh_grp in ['secp256r1', 'curve25519']:
             dh_kdf = 'KDF2(SHA-384)'.encode('utf-8')
-            a_dh_priv = botan2.private_key('ecdh', dh_grp, a_rng)
-            b_dh_priv = botan2.private_key('ecdh', dh_grp, b_rng)
+            a_dh_priv = botan2.PrivateKey.create('ecdh', dh_grp, a_rng)
+            b_dh_priv = botan2.PrivateKey.create('ecdh', dh_grp, b_rng)
 
-            a_dh = botan2.pk_op_key_agreement(a_dh_priv, dh_kdf)
-            b_dh = botan2.pk_op_key_agreement(b_dh_priv, dh_kdf)
+            a_dh = botan2.PKKeyAgreement(a_dh_priv, dh_kdf)
+            b_dh = botan2.PKKeyAgreement(b_dh_priv, dh_kdf)
 
             a_dh_pub = a_dh.public_value()
             b_dh_pub = b_dh.public_value()
@@ -239,7 +278,7 @@ class BotanPythonTests(unittest.TestCase):
             self.assertEqual(a_key, b_key)
 
     def test_certs(self):
-        cert = botan2.x509_cert(filename="src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt")
+        cert = botan2.X509Cert(filename="src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt")
         pubkey = cert.subject_public_key()
 
         self.assertEqual(pubkey.algo_name(), 'ECDSA')

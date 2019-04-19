@@ -88,6 +88,10 @@ def errcheck_for(fn_name):
         raise BotanException('%s failed' % (fn_name), rc)
     return errcheck
 
+def _botan_ffi_api(fn, args):
+    fn.argtypes = args
+    fn.errcheck = errcheck_for(fn.__name__)
+
 botan.botan_version_string.argtypes = []
 botan.botan_version_string.restype = c_char_p
 
@@ -95,425 +99,213 @@ botan.botan_error_description.argtypes = [c_int]
 botan.botan_error_description.restype = c_char_p
 
 # RNG
-botan.botan_rng_init.argtypes = [c_void_p, c_char_p]
-botan.botan_rng_init.errcheck = errcheck_for('botan_rng_init')
-
-botan.botan_rng_destroy.argtypes = [c_void_p]
-botan.botan_rng_destroy.errcheck = errcheck_for('botan_rng_destroy')
-
-botan.botan_rng_reseed.argtypes = [c_void_p, c_size_t]
-botan.botan_rng_reseed.errcheck = errcheck_for('botan_rng_reseed')
-
-botan.botan_rng_reseed_from_rng.argtypes = [c_void_p, c_void_p, c_size_t]
-botan.botan_rng_reseed_from_rng.errcheck = errcheck_for('botan_rng_reseed_from_rng')
-
-botan.botan_rng_add_entropy.argtypes = [c_void_p, c_char_p, c_size_t]
-botan.botan_rng_add_entropy.errcheck = errcheck_for('botan_rng_add_entropy')
-
-botan.botan_rng_get.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_rng_get.errcheck = errcheck_for('botan_rng_get')
+_botan_ffi_api(botan.botan_rng_init, [c_void_p, c_char_p])
+_botan_ffi_api(botan.botan_rng_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_rng_reseed, [c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_rng_reseed_from_rng, [c_void_p, c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_rng_add_entropy, [c_void_p, c_char_p, c_size_t])
+_botan_ffi_api(botan.botan_rng_get, [c_void_p, POINTER(c_char), c_size_t])
 
 # Hash function
-botan.botan_hash_init.argtypes = [c_void_p, c_char_p, c_uint32]
-botan.botan_hash_init.errcheck = errcheck_for('botan_hash_init')
-
-botan.botan_hash_destroy.argtypes = [c_void_p]
-botan.botan_hash_destroy.errcheck = errcheck_for('botan_hash_destroy')
-
-botan.botan_hash_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_hash_name.errcheck = errcheck_for('botan_hash_name')
-
-botan.botan_hash_clear.argtypes = [c_void_p]
-botan.botan_hash_clear.errcheck = errcheck_for('botan_hash_clear')
-
-botan.botan_hash_output_length.argtypes = [c_void_p, POINTER(c_size_t)]
-botan.botan_hash_output_length.errcheck = errcheck_for('botan_hash_output_length')
-
-botan.botan_hash_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_hash_update.errcheck = errcheck_for('botan_hash_update')
-
-botan.botan_hash_final.argtypes = [c_void_p, POINTER(c_char)]
-botan.botan_hash_final.errcheck = errcheck_for('botan_hash_final')
+_botan_ffi_api(botan.botan_hash_init, [c_void_p, c_char_p, c_uint32])
+_botan_ffi_api(botan.botan_hash_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_hash_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_hash_clear, [c_void_p])
+_botan_ffi_api(botan.botan_hash_output_length, [c_void_p, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_hash_update, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_hash_final, [c_void_p, POINTER(c_char)])
 
 # MAC
-botan.botan_mac_init.argtypes = [c_void_p, c_char_p, c_uint32]
-botan.botan_mac_init.errcheck = errcheck_for('botan_mac_init')
-
-botan.botan_mac_destroy.argtypes = [c_void_p]
-botan.botan_mac_destroy.errcheck = errcheck_for('botan_mac_destroy')
-
-botan.botan_mac_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_mac_name.errcheck = errcheck_for('botan_mac_name')
-
-botan.botan_mac_clear.argtypes = [c_void_p]
-botan.botan_mac_clear.errcheck = errcheck_for('botan_mac_clear')
-
-botan.botan_mac_output_length.argtypes = [c_void_p, POINTER(c_size_t)]
-botan.botan_mac_output_length.errcheck = errcheck_for('botan_mac_output_length')
-
-botan.botan_mac_set_key.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_mac_set_key.errcheck = errcheck_for('botan_mac_set_key')
-
-botan.botan_mac_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_mac_update.errcheck = errcheck_for('botan_mac_update')
-
-botan.botan_mac_final.argtypes = [c_void_p, POINTER(c_char)]
-botan.botan_mac_final.errcheck = errcheck_for('botan_mac_final')
+_botan_ffi_api(botan.botan_mac_init, [c_void_p, c_char_p, c_uint32])
+_botan_ffi_api(botan.botan_mac_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_mac_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_mac_clear, [c_void_p])
+_botan_ffi_api(botan.botan_mac_output_length, [c_void_p, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_mac_set_key, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_mac_update, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_mac_final, [c_void_p, POINTER(c_char)])
 
 # Cipher
-botan.botan_cipher_init.argtypes = [c_void_p, c_char_p, c_uint32]
-botan.botan_cipher_init.errcheck = errcheck_for('botan_cipher_init')
+_botan_ffi_api(botan.botan_cipher_init, [c_void_p, c_char_p, c_uint32])
+_botan_ffi_api(botan.botan_cipher_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_cipher_reset, [c_void_p])
+_botan_ffi_api(botan.botan_cipher_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_cipher_get_default_nonce_length, [c_void_p, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_cipher_get_update_granularity, [c_void_p, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_cipher_get_tag_length, [c_void_p, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_cipher_valid_nonce_length, [c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_cipher_clear, [c_void_p])
+_botan_ffi_api(botan.botan_cipher_set_key, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_cipher_set_associated_data, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_cipher_start, [c_void_p, POINTER(c_char), c_size_t])
 
-botan.botan_cipher_destroy.argtypes = [c_void_p]
-botan.botan_cipher_destroy.errcheck = errcheck_for('botan_cipher_destroy')
-
-botan.botan_cipher_reset.argtypes = [c_void_p]
-botan.botan_cipher_reset.errcheck = errcheck_for('botan_cipher_reset')
-
-botan.botan_cipher_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_cipher_name.errcheck = errcheck_for('botan_cipher_name')
-
-botan.botan_cipher_get_default_nonce_length.argtypes = [c_void_p, POINTER(c_size_t)]
-botan.botan_cipher_get_default_nonce_length.errcheck = errcheck_for('botan_cipher_get_default_nonce_length')
-
-botan.botan_cipher_get_update_granularity.argtypes = [c_void_p, POINTER(c_size_t)]
-botan.botan_cipher_get_update_granularity.errcheck = errcheck_for('botan_cipher_get_update_granularity')
-
-botan.botan_cipher_get_tag_length.argtypes = [c_void_p, POINTER(c_size_t)]
-botan.botan_cipher_get_tag_length.errcheck = errcheck_for('botan_cipher_get_tag_length')
-
-botan.botan_cipher_valid_nonce_length.argtypes = [c_void_p, c_size_t]
-botan.botan_cipher_valid_nonce_length.errcheck = errcheck_for('botan_cipher_valid_nonce_length')
-
-botan.botan_cipher_clear.argtypes = [c_void_p]
-botan.botan_cipher_clear.errcheck = errcheck_for('botan_cipher_clear')
-
-botan.botan_cipher_set_key.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_cipher_set_key.errcheck = errcheck_for('botan_cipher_set_key')
-
-botan.botan_cipher_set_associated_data.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_cipher_set_associated_data.errcheck = errcheck_for('botan_cipher_set_associated_data')
-
-botan.botan_cipher_start.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_cipher_start.errcheck = errcheck_for('botan_cipher_start')
-
-botan.botan_cipher_update.argtypes = [c_void_p, c_uint32,
-                                      POINTER(c_char), c_size_t, POINTER(c_size_t),
-                                      POINTER(c_char), c_size_t, POINTER(c_size_t)]
-botan.botan_cipher_update.errcheck = errcheck_for('botan_cipher_update')
+_botan_ffi_api(botan.botan_cipher_update,
+               [c_void_p, c_uint32,
+                POINTER(c_char), c_size_t, POINTER(c_size_t),
+                POINTER(c_char), c_size_t, POINTER(c_size_t)])
 
 # Bcrypt
-botan.botan_bcrypt_generate.argtypes = [POINTER(c_char), POINTER(c_size_t),
-                                        c_char_p, c_void_p, c_size_t, c_uint32]
-botan.botan_bcrypt_generate.errcheck = errcheck_for('botan_bcrypt_generate')
+_botan_ffi_api(botan.botan_bcrypt_generate, [POINTER(c_char), POINTER(c_size_t),
+                                             c_char_p, c_void_p, c_size_t, c_uint32])
 
-botan.botan_bcrypt_is_valid.argtypes = [c_char_p, c_char_p]
-botan.botan_bcrypt_is_valid.errcheck = errcheck_for('botan_bcrypt_is_valid')
+_botan_ffi_api(botan.botan_bcrypt_is_valid, [c_char_p, c_char_p])
 
 # PBKDF
-botan.botan_pbkdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, c_char_p, c_void_p, c_size_t, c_size_t]
-botan.botan_pbkdf.errcheck = errcheck_for('botan_pbkdf')
+_botan_ffi_api(botan.botan_pbkdf, [c_char_p, POINTER(c_char), c_size_t, c_char_p, c_void_p, c_size_t, c_size_t])
 
-botan.botan_pbkdf_timed.argtypes = [c_char_p, POINTER(c_char), c_size_t, c_char_p,
-                                    c_void_p, c_size_t, c_size_t, POINTER(c_size_t)]
-botan.botan_pbkdf_timed.errcheck = errcheck_for('botan_pbkdf_timed')
+_botan_ffi_api(botan.botan_pbkdf_timed,
+               [c_char_p, POINTER(c_char), c_size_t, c_char_p,
+                c_void_p, c_size_t, c_size_t, POINTER(c_size_t)])
 
 # Scrypt
-botan.botan_scrypt.argtypes = [POINTER(c_char), c_size_t, c_char_p, POINTER(c_char), c_size_t,
-                               c_size_t, c_size_t, c_size_t]
-botan.botan_scrypt.errcheck = errcheck_for('botan_scrypt')
+_botan_ffi_api(botan.botan_scrypt,
+               [POINTER(c_char), c_size_t, c_char_p, POINTER(c_char), c_size_t,
+                c_size_t, c_size_t, c_size_t])
 
 # KDF
-botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t,
-                            POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
-botan.botan_kdf.errcheck = errcheck_for('botan_kdf')
+_botan_ffi_api(botan.botan_kdf,
+               [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t,
+                POINTER(c_char), c_size_t, POINTER(c_char), c_size_t])
 
 # Public key
-botan.botan_pubkey_destroy.argtypes = [c_void_p]
-botan.botan_pubkey_destroy.errcheck = errcheck_for('botan_pubkey_destroy')
+_botan_ffi_api(botan.botan_pubkey_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_pubkey_load, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_pubkey_estimated_strength, [c_void_p, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_pubkey_algo_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_pubkey_export, [c_void_p, POINTER(c_char), POINTER(c_size_t), c_uint32])
 
-botan.botan_pubkey_estimated_strength.argtypes = [c_void_p, POINTER(c_size_t)]
-botan.botan_pubkey_estimated_strength.errcheck = errcheck_for('botan_pubkey_estimated_strength')
+_botan_ffi_api(botan.botan_pubkey_fingerprint,
+               [c_void_p, c_char_p, POINTER(c_char), POINTER(c_size_t)])
 
-botan.botan_pubkey_algo_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_pubkey_algo_name.errcheck = errcheck_for('botan_pubkey_algo_name')
-
-botan.botan_pubkey_export.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t), c_uint32]
-botan.botan_pubkey_export.errcheck = errcheck_for('botan_pubkey_export')
-
-botan.botan_pubkey_fingerprint.argtypes = [c_void_p, c_char_p,
-                                           POINTER(c_char), POINTER(c_size_t)]
-botan.botan_pubkey_fingerprint.errcheck = errcheck_for('botan_pubkey_fingerprint')
-
-botan.botan_privkey_create.argtypes = [c_void_p, c_char_p, c_char_p, c_void_p]
-botan.botan_privkey_create.errcheck = errcheck_for('botan_privkey_create')
-
-botan.botan_privkey_algo_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_privkey_algo_name.errcheck = errcheck_for('botan_privkey_algo_name')
-
-botan.botan_privkey_export_pubkey.argtypes = [c_void_p, c_void_p]
-botan.botan_privkey_export_pubkey.errcheck = errcheck_for('botan_privkey_export_pubkey')
-
-botan.botan_privkey_destroy.argtypes = [c_void_p]
-botan.botan_privkey_destroy.errcheck = errcheck_for('botan_privkey_destroy')
-
-botan.botan_privkey_export.argtypes = [c_void_p, POINTER(c_char), c_void_p, c_uint32]
-botan.botan_privkey_export.errcheck = errcheck_for('botan_privkey_export')
+_botan_ffi_api(botan.botan_privkey_create, [c_void_p, c_char_p, c_char_p, c_void_p])
+_botan_ffi_api(botan.botan_privkey_load, [c_void_p, c_void_p, POINTER(c_char), c_size_t, POINTER(c_char)])
+_botan_ffi_api(botan.botan_privkey_algo_name, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_privkey_export_pubkey, [c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_privkey_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_privkey_export, [c_void_p, POINTER(c_char), c_void_p, c_uint32])
 
 # PK Encryption
-botan.botan_pk_op_encrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
-botan.botan_pk_op_encrypt_create.errcheck = errcheck_for('botan_pk_op_encrypt_create')
-
-botan.botan_pk_op_encrypt_output_length.argtypes = [c_void_p, c_size_t, POINTER(c_size_t)]
-botan.botan_pk_op_encrypt_output_length.errcheck = errcheck_for('botan_pk_op_encrypt_output_length')
-
-botan.botan_pk_op_encrypt_destroy.argtypes = [c_void_p]
-botan.botan_pk_op_encrypt_destroy.errcheck = errcheck_for('botan_pk_op_encrypt_destroy')
-
-botan.botan_pk_op_encrypt.argtypes = [c_void_p, c_void_p,
-                                      POINTER(c_char), POINTER(c_size_t),
-                                      POINTER(c_char), c_size_t]
-botan.botan_pk_op_encrypt.errcheck = errcheck_for('botan_pk_op_encrypt')
+_botan_ffi_api(botan.botan_pk_op_encrypt_create, [c_void_p, c_void_p, c_char_p, c_uint32])
+_botan_ffi_api(botan.botan_pk_op_encrypt_output_length, [c_void_p, c_size_t, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_pk_op_encrypt_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_pk_op_encrypt,
+               [c_void_p, c_void_p, POINTER(c_char), POINTER(c_size_t),
+                POINTER(c_char), c_size_t])
 
 # PK Decryption
-botan.botan_pk_op_decrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
-botan.botan_pk_op_decrypt_create.errcheck = errcheck_for('botan_pk_op_decrypt_create')
+_botan_ffi_api(botan.botan_pk_op_decrypt_create, [c_void_p, c_void_p, c_char_p, c_uint32])
+_botan_ffi_api(botan.botan_pk_op_decrypt_output_length, [c_void_p, c_size_t, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_pk_op_decrypt_destroy, [c_void_p])
 
-botan.botan_pk_op_decrypt_output_length.argtypes = [c_void_p, c_size_t, POINTER(c_size_t)]
-botan.botan_pk_op_decrypt_output_length.errcheck = errcheck_for('botan_pk_op_decrypt_output_length')
-
-botan.botan_pk_op_decrypt_destroy.argtypes = [c_void_p]
-botan.botan_pk_op_decrypt_destroy.errcheck = errcheck_for('botan_pk_op_decrypt_destroy')
-
-botan.botan_pk_op_decrypt.argtypes = [c_void_p,
-                                      POINTER(c_char), POINTER(c_size_t),
-                                      POINTER(c_char), c_size_t]
-botan.botan_pk_op_decrypt.errcheck = errcheck_for('botan_pk_op_encrypt')
+_botan_ffi_api(botan.botan_pk_op_decrypt,
+               [c_void_p,
+                POINTER(c_char), POINTER(c_size_t),
+                POINTER(c_char), c_size_t])
 
 # PK Signatures
-botan.botan_pk_op_sign_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
-botan.botan_pk_op_sign_create.errcheck = errcheck_for('botan_pk_op_sign_create')
-
-botan.botan_pk_op_sign_destroy.argtypes = [c_void_p]
-botan.botan_pk_op_sign_destroy.errcheck = errcheck_for('botan_pk_op_sign_destroy')
-
-botan.botan_pk_op_sign_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_pk_op_sign_update.errcheck = errcheck_for('botan_pk_op_sign_update')
-
-botan.botan_pk_op_sign_finish.argtypes = [c_void_p, c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_pk_op_sign_finish.errcheck = errcheck_for('botan_pk_op_sign_finish')
+_botan_ffi_api(botan.botan_pk_op_sign_create, [c_void_p, c_void_p, c_char_p, c_uint32])
+_botan_ffi_api(botan.botan_pk_op_sign_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_pk_op_sign_update, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_pk_op_sign_finish, [c_void_p, c_void_p, POINTER(c_char), POINTER(c_size_t)])
 
 # PK Verification
-botan.botan_pk_op_verify_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
-botan.botan_pk_op_verify_create.errcheck = errcheck_for('botan_pk_op_verify_create')
-
-botan.botan_pk_op_verify_destroy.argtypes = [c_void_p]
-botan.botan_pk_op_verify_destroy.errcheck = errcheck_for('botan_pk_op_verify_destroy')
-
-botan.botan_pk_op_verify_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_pk_op_verify_update.errcheck = errcheck_for('botan_pk_op_verify_update')
-
-botan.botan_pk_op_verify_finish.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_pk_op_verify_finish.errcheck = errcheck_for('botan_pk_op_verify_finish')
+_botan_ffi_api(botan.botan_pk_op_verify_create, [c_void_p, c_void_p, c_char_p, c_uint32])
+_botan_ffi_api(botan.botan_pk_op_verify_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_pk_op_verify_update, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_pk_op_verify_finish, [c_void_p, POINTER(c_char), c_size_t])
 
 # MCEIES
-botan.botan_mceies_encrypt.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_char), c_size_t,
-                                       POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_mceies_encrypt.errcheck = errcheck_for('botan_mceies_encrypt')
+_botan_ffi_api(botan.botan_mceies_encrypt,
+               [c_void_p, c_void_p, c_char_p, POINTER(c_char), c_size_t,
+                POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)])
 
-botan.botan_mceies_decrypt.argtypes = [c_void_p, c_char_p, POINTER(c_char), c_size_t,
-                                       POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_mceies_decrypt.errcheck = errcheck_for('botan_mceies_decrypt')
+_botan_ffi_api(botan.botan_mceies_decrypt,
+               [c_void_p, c_char_p, POINTER(c_char), c_size_t,
+                POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)])
 
 # Key Agreement
-botan.botan_pk_op_key_agreement_export_public.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_pk_op_key_agreement_export_public.errcheck = errcheck_for('botan_pk_op_key_agreement_export_public')
+_botan_ffi_api(botan.botan_pk_op_key_agreement_export_public, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_pk_op_key_agreement_create, [c_void_p, c_void_p, c_char_p, c_uint32])
+_botan_ffi_api(botan.botan_pk_op_key_agreement_destroy, [c_void_p])
 
-botan.botan_pk_op_key_agreement_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
-botan.botan_pk_op_key_agreement_create.errcheck = errcheck_for('botan_pk_op_key_agreement_create')
-
-botan.botan_pk_op_key_agreement_destroy.argtypes = [c_void_p]
-botan.botan_pk_op_key_agreement_destroy.errcheck = errcheck_for('botan_pk_op_key_agreement_destroy')
-
-botan.botan_pk_op_key_agreement.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t),
-                                            POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
-botan.botan_pk_op_key_agreement.errcheck = errcheck_for('botan_pk_op_key_agreement')
+_botan_ffi_api(botan.botan_pk_op_key_agreement,
+               [c_void_p, POINTER(c_char), POINTER(c_size_t),
+                POINTER(c_char), c_size_t, POINTER(c_char), c_size_t])
 
 # X509 certs
-botan.botan_x509_cert_load_file.argtypes = [POINTER(c_void_p), c_char_p]
-botan.botan_x509_cert_load_file.errcheck = errcheck_for('botan_x509_cert_load_file')
+_botan_ffi_api(botan.botan_x509_cert_load_file, [POINTER(c_void_p), c_char_p])
+_botan_ffi_api(botan.botan_x509_cert_load, [POINTER(c_void_p), POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_x509_cert_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_x509_cert_get_time_starts, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_x509_cert_get_time_expires, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_x509_cert_to_string, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
 
-botan.botan_x509_cert_load.argtypes = [POINTER(c_void_p), POINTER(c_char), c_size_t]
-botan.botan_x509_cert_load.errcheck = errcheck_for('botan_x509_cert_load')
+_botan_ffi_api(botan.botan_x509_cert_get_fingerprint,
+               [c_void_p, c_char_p, POINTER(c_char), POINTER(c_size_t)])
 
-botan.botan_x509_cert_destroy.argtypes = [c_void_p]
-botan.botan_x509_cert_destroy.errcheck = errcheck_for('botan_x509_cert_destroy')
-
-botan.botan_x509_cert_get_time_starts.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_get_time_starts.errcheck = errcheck_for('botan_x509_cert_get_time_starts')
-
-botan.botan_x509_cert_get_time_expires.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_get_time_expires.errcheck = errcheck_for('botan_x509_cert_get_time_expires')
-
-botan.botan_x509_cert_to_string.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_to_string.errcheck = errcheck_for('botan_x509_cert_to_string')
-
-botan.botan_x509_cert_get_fingerprint.argtypes = [c_void_p, c_char_p,
-                                                  POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_get_fingerprint.errcheck = errcheck_for('botan_x509_cert_get_fingerprint')
-
-botan.botan_x509_cert_get_serial_number.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_get_serial_number.errcheck = errcheck_for('botan_x509_cert_get_serial_number')
-
-botan.botan_x509_cert_get_authority_key_id.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_get_authority_key_id.errcheck = errcheck_for('botan_x509_cert_get_authority_key_id')
-
-botan.botan_x509_cert_get_subject_key_id.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_get_subject_key_id.errcheck = errcheck_for('botan_x509_cert_get_subject_key_id')
-
-botan.botan_x509_cert_get_public_key_bits.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_get_public_key_bits.errcheck = errcheck_for('botan_x509_cert_get_public_key_bits')
-
-botan.botan_x509_cert_get_public_key.argtypes = [c_void_p, c_void_p]
-botan.botan_x509_cert_get_public_key.errcheck = errcheck_for('botan_x509_cert_get_public_key')
-
-botan.botan_x509_cert_get_subject_dn.argtypes = [c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_x509_cert_get_subject_dn.errcheck = errcheck_for('botan_x509_cert_get_subject_dn')
+_botan_ffi_api(botan.botan_x509_cert_get_serial_number, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_x509_cert_get_authority_key_id, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_x509_cert_get_subject_key_id, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_x509_cert_get_public_key_bits, [c_void_p, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_x509_cert_get_public_key, [c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_x509_cert_get_subject_dn, [c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)])
 
 # MPI
-botan.botan_mp_init.argtypes = [c_void_p]
-botan.botan_mp_init.errcheck = errcheck_for('botan_mp_init')
-botan.botan_mp_destroy.argtypes = [c_void_p]
-botan.botan_mp_destroy.errcheck = errcheck_for('botan_mp_destroy')
-
-botan.botan_mp_to_hex.argtypes = [c_void_p, POINTER(c_char)]
-botan.botan_mp_to_hex.errcheck = errcheck_for('botan_mp_to_hex')
-botan.botan_mp_to_str.argtypes = [c_void_p, c_uint8, POINTER(c_char), POINTER(c_size_t)]
-botan.botan_mp_to_str.errcheck = errcheck_for('botan_mp_to_str')
-
-botan.botan_mp_clear.argtypes = [c_void_p]
-botan.botan_mp_clear.errcheck = errcheck_for('botan_mp_clear')
-
-botan.botan_mp_set_from_int.argtypes = [c_void_p, c_int]
-botan.botan_mp_set_from_int.errcheck = errcheck_for('botan_mp_set_from_int')
-botan.botan_mp_set_from_mp.argtypes = [c_void_p, c_void_p]
-botan.botan_mp_set_from_mp.errcheck = errcheck_for('botan_mp_set_from_mp')
-botan.botan_mp_set_from_str.argtypes = [c_void_p, POINTER(c_char)]
-botan.botan_mp_set_from_str.errcheck = errcheck_for('botan_mp_set_from_str')
-botan.botan_mp_set_from_radix_str.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-botan.botan_mp_set_from_radix_str.errcheck = errcheck_for('botan_mp_set_from_radix_str')
-
-botan.botan_mp_num_bits.argtypes = [c_void_p, POINTER(c_size_t)]
-botan.botan_mp_num_bits.errcheck = errcheck_for('botan_mp_num_bits')
-botan.botan_mp_num_bytes.argtypes = [c_void_p, POINTER(c_size_t)]
-botan.botan_mp_num_bytes.errcheck = errcheck_for('botan_mp_num_bytes')
-
-botan.botan_mp_to_bin.argtypes = [c_void_p, POINTER(c_uint8)]
-botan.botan_mp_to_bin.errcheck = errcheck_for('botan_mp_to_bin')
-botan.botan_mp_from_bin.argtypes = [c_void_p, POINTER(c_uint8), c_size_t]
-botan.botan_mp_from_bin.errcheck = errcheck_for('botan_mp_from_bin')
-
-botan.botan_mp_to_uint32.argtypes = [c_void_p, POINTER(c_uint32)]
-botan.botan_mp_to_uint32.errcheck = errcheck_for('botan_mp_to_uint32')
-
-botan.botan_mp_is_positive.argtypes = [c_void_p]
-botan.botan_mp_is_positive.errcheck = errcheck_for('botan_mp_is_positive')
-
-botan.botan_mp_is_negative.argtypes = [c_void_p]
-botan.botan_mp_is_negative.errcheck = errcheck_for('botan_mp_is_negative')
-
-botan.botan_mp_flip_sign.argtypes = [c_void_p]
-botan.botan_mp_flip_sign.errcheck = errcheck_for('botan_mp_flip_sign')
-
-botan.botan_mp_is_zero.argtypes = [c_void_p]
-botan.botan_mp_is_zero.errcheck = errcheck_for('botan_mp_is_zero')
-botan.botan_mp_is_odd.argtypes = [c_void_p]
-botan.botan_mp_is_odd.errcheck = errcheck_for('botan_mp_is_odd')
-botan.botan_mp_is_even.argtypes = [c_void_p]
-botan.botan_mp_is_even.errcheck = errcheck_for('botan_mp_is_even')
-
-botan.botan_mp_add.argtypes = [c_void_p, c_void_p, c_void_p]
-botan.botan_mp_add.errcheck = errcheck_for('botan_mp_add')
-botan.botan_mp_sub.argtypes = [c_void_p, c_void_p, c_void_p]
-botan.botan_mp_sub.errcheck = errcheck_for('botan_mp_sub')
-botan.botan_mp_mul.argtypes = [c_void_p, c_void_p, c_void_p]
-botan.botan_mp_mul.errcheck = errcheck_for('botan_mp_mul')
-
-botan.botan_mp_div.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
-botan.botan_mp_div.errcheck = errcheck_for('botan_mp_div')
-
-botan.botan_mp_mod_mul.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
-botan.botan_mp_mod_mul.errcheck = errcheck_for('botan_mp_mod_mul')
-
-botan.botan_mp_equal.argtypes = [c_void_p, c_void_p]
-botan.botan_mp_equal.errcheck = errcheck_for('botan_mp_equal')
-
-botan.botan_mp_cmp.argtypes = [POINTER(c_int), c_void_p, c_void_p]
-botan.botan_mp_cmp.errcheck = errcheck_for('botan_mp_cmp')
-
-botan.botan_mp_swap.argtypes = [c_void_p, c_void_p]
-botan.botan_mp_swap.errcheck = errcheck_for('botan_mp_swap')
-
-botan.botan_mp_powmod.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
-botan.botan_mp_powmod.errcheck = errcheck_for('botan_mp_powmod')
-
-botan.botan_mp_lshift.argtypes = [c_void_p, c_void_p, c_size_t]
-botan.botan_mp_lshift.errcheck = errcheck_for('botan_mp_lshift')
-botan.botan_mp_rshift.argtypes = [c_void_p, c_void_p, c_size_t]
-botan.botan_mp_rshift.errcheck = errcheck_for('botan_mp_rshift')
-
-botan.botan_mp_mod_inverse.argtypes = [c_void_p, c_void_p, c_void_p]
-botan.botan_mp_mod_inverse.errcheck = errcheck_for('botan_mp_mod_inverse')
-
-botan.botan_mp_rand_bits.argtypes = [c_void_p, c_void_p, c_size_t]
-botan.botan_mp_rand_bits.errcheck = errcheck_for('botan_mp_rand_bits')
-
-botan.botan_mp_rand_range.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
-botan.botan_mp_rand_range.errcheck = errcheck_for('botan_mp_rand_range')
-
-botan.botan_mp_gcd.argtypes = [c_void_p, c_void_p, c_void_p]
-botan.botan_mp_gcd.errcheck = errcheck_for('botan_mp_gcd')
-
-botan.botan_mp_is_prime.argtypes = [c_void_p, c_void_p, c_size_t]
-botan.botan_mp_is_prime.errcheck = errcheck_for('botan_mp_is_prime')
-
-botan.botan_mp_get_bit.argtypes = [c_void_p, c_size_t]
-botan.botan_mp_get_bit.errcheck = errcheck_for('botan_mp_get_bit')
-
-botan.botan_mp_set_bit.argtypes = [c_void_p, c_size_t]
-botan.botan_mp_set_bit.errcheck = errcheck_for('botan_mp_set_bit')
-
-botan.botan_mp_clear_bit.argtypes = [c_void_p, c_size_t]
-botan.botan_mp_clear_bit.errcheck = errcheck_for('botan_mp_clear_bit')
+_botan_ffi_api(botan.botan_mp_init, [c_void_p])
+_botan_ffi_api(botan.botan_mp_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_mp_to_hex, [c_void_p, POINTER(c_char)])
+_botan_ffi_api(botan.botan_mp_to_str, [c_void_p, c_uint8, POINTER(c_char), POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_mp_clear, [c_void_p])
+_botan_ffi_api(botan.botan_mp_set_from_int, [c_void_p, c_int])
+_botan_ffi_api(botan.botan_mp_set_from_mp, [c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_set_from_str, [c_void_p, POINTER(c_char)])
+_botan_ffi_api(botan.botan_mp_set_from_radix_str, [c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_mp_num_bits, [c_void_p, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_mp_num_bytes, [c_void_p, POINTER(c_size_t)])
+_botan_ffi_api(botan.botan_mp_to_bin, [c_void_p, POINTER(c_uint8)])
+_botan_ffi_api(botan.botan_mp_from_bin, [c_void_p, POINTER(c_uint8), c_size_t])
+_botan_ffi_api(botan.botan_mp_to_uint32, [c_void_p, POINTER(c_uint32)])
+_botan_ffi_api(botan.botan_mp_is_positive, [c_void_p])
+_botan_ffi_api(botan.botan_mp_is_negative, [c_void_p])
+_botan_ffi_api(botan.botan_mp_flip_sign, [c_void_p])
+_botan_ffi_api(botan.botan_mp_is_zero, [c_void_p])
+_botan_ffi_api(botan.botan_mp_is_odd, [c_void_p])
+_botan_ffi_api(botan.botan_mp_is_even, [c_void_p])
+_botan_ffi_api(botan.botan_mp_add, [c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_sub, [c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_mul, [c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_div, [c_void_p, c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_mod_mul, [c_void_p, c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_equal, [c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_cmp, [POINTER(c_int), c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_swap, [c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_powmod, [c_void_p, c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_lshift, [c_void_p, c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_mp_rshift, [c_void_p, c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_mp_mod_inverse, [c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_rand_bits, [c_void_p, c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_mp_rand_range, [c_void_p, c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_gcd, [c_void_p, c_void_p, c_void_p])
+_botan_ffi_api(botan.botan_mp_is_prime, [c_void_p, c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_mp_get_bit, [c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_mp_set_bit, [c_void_p, c_size_t])
+_botan_ffi_api(botan.botan_mp_clear_bit, [c_void_p, c_size_t])
 
 #
 # FPE
 #
-botan.botan_fpe_fe1_init.argtypes = [c_void_p, c_void_p, POINTER(c_char), c_size_t, c_size_t, c_uint32]
-botan.botan_fpe_fe1_init.errcheck = errcheck_for('botan_fpe_fe1_init')
-
-botan.botan_fpe_destroy.argtypes = [c_void_p]
-botan.botan_fpe_destroy.errcheck = errcheck_for('botan_fpe_destroy')
-
-botan.botan_fpe_encrypt.argtypes = [c_void_p, c_void_p, POINTER(c_char), c_size_t]
-botan.botan_fpe_encrypt.errcheck = errcheck_for('botan_fpe_encrypt')
-botan.botan_fpe_decrypt.argtypes = [c_void_p, c_void_p, POINTER(c_char), c_size_t]
-botan.botan_fpe_decrypt.errcheck = errcheck_for('botan_fpe_decrypt')
+_botan_ffi_api(botan.botan_fpe_fe1_init, [c_void_p, c_void_p, POINTER(c_char), c_size_t, c_size_t, c_uint32])
+_botan_ffi_api(botan.botan_fpe_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_fpe_encrypt, [c_void_p, c_void_p, POINTER(c_char), c_size_t])
+_botan_ffi_api(botan.botan_fpe_decrypt, [c_void_p, c_void_p, POINTER(c_char), c_size_t])
 
 #
 # HOTP
 #
-botan.botan_hotp_init.argtype = [c_void_p, POINTER(c_char), c_size_t, c_char_p, c_size_t]
-botan.botan_hotp_init.errcheck = errcheck_for('botan_hotp_init')
-
-botan.botan_hotp_destroy.argtype = [c_void_p]
-botan.botan_hotp_destroy.errcheck = errcheck_for('botan_hotp_destroy')
-
-botan.botan_hotp_generate.argtype = [c_void_p, POINTER(c_uint32), c_uint64]
-botan.botan_hotp_generate.errcheck = errcheck_for('botan_hotp_generate')
-
-botan.botan_hotp_check.argtype = [c_void_p, POINTER(c_uint64), c_uint32, c_uint64, c_size_t]
-botan.botan_hotp_check.errcheck = errcheck_for('botan_hotp_check')
+_botan_ffi_api(botan.botan_hotp_init, [c_void_p, POINTER(c_char), c_size_t, c_char_p, c_size_t])
+_botan_ffi_api(botan.botan_hotp_destroy, [c_void_p])
+_botan_ffi_api(botan.botan_hotp_generate, [c_void_p, POINTER(c_uint32), c_uint64])
+_botan_ffi_api(botan.botan_hotp_check, [c_void_p, POINTER(c_uint64), c_uint32, c_uint64, c_size_t])
 
 #
 # Internal utilities
@@ -530,7 +322,7 @@ def _call_fn_returning_vec(guess, fn):
     assert buf_len.value <= len(buf)
     return buf.raw[0:int(buf_len.value)]
 
-def _call_fn_returning_string(guess, fn):
+def _call_fn_returning_str(guess, fn):
     # Assumes that anything called with this is returning plain ASCII strings
     # (base64 data, algorithm names, etc)
     v = _call_fn_returning_vec(guess, fn)
@@ -634,7 +426,7 @@ class HashFunction(object):
         botan.botan_hash_destroy(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_hash_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_hash_name(self.__obj, b, bl))
 
     def clear(self):
         botan.botan_hash_clear(self.__obj)
@@ -679,7 +471,7 @@ class MsgAuthCode(object):
         botan.botan_mac_clear(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_mac_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_mac_name(self.__obj, b, bl))
 
     def output_length(self):
         return self.__output_length
@@ -711,7 +503,7 @@ class SymmetricCipher(object):
         botan.botan_cipher_destroy(self.__obj)
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_cipher_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_cipher_name(self.__obj, b, bl))
 
     def default_nonce_length(self):
         l = c_size_t(0)
@@ -854,8 +646,15 @@ def kdf(algo, secret, out_len, salt, label):
 # Public key
 #
 class PublicKey(object): # pylint: disable=invalid-name
+
     def __init__(self, obj=c_void_p(0)):
         self.__obj = obj
+
+    @classmethod
+    def load(cls, val):
+        obj = c_void_p(0)
+        botan.botan_pubkey_load(byref(obj), _ctype_bits(val), len(val))
+        return PublicKey(obj)
 
     def __del__(self):
         botan.botan_pubkey_destroy(self.__obj)
@@ -869,11 +668,13 @@ class PublicKey(object): # pylint: disable=invalid-name
         return r.value
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_pubkey_algo_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_pubkey_algo_name(self.__obj, b, bl))
 
     def export(self, pem=False):
-        flag = 1 if pem else 0
-        return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_pubkey_export(self.__obj, b, bl, flag))
+        if pem:
+            return _call_fn_returning_str(4096, lambda b, bl: botan.botan_pubkey_export(self.__obj, b, bl, 1))
+        else:
+            return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_pubkey_export(self.__obj, b, bl, 0))
 
     def encoding(self, pem=False):
         return self.export(pem)
@@ -897,10 +698,19 @@ class PublicKey(object): # pylint: disable=invalid-name
 # Private Key
 #
 class PrivateKey(object):
-    def __init__(self, algo, params, rng_obj):
 
-        self.__obj = c_void_p(0)
+    def __init__(self, obj=c_void_p(0)):
+        self.__obj = obj
 
+    @classmethod
+    def load(cls, val, passphrase=""):
+        obj = c_void_p(0)
+        rng_obj = c_void_p(0) # unused in recent versions
+        botan.botan_privkey_load(byref(obj), rng_obj, _ctype_bits(val), len(val), _ctype_str(passphrase))
+        return PrivateKey(obj)
+
+    @classmethod
+    def create(cls, algo, params, rng_obj):
         if algo == 'rsa':
             algo = 'RSA'
             params = "%d" % (params)
@@ -918,8 +728,10 @@ class PrivateKey(object):
             algo = 'McEliece'
             params = "%d,%d" % (params[0], params[1])
 
-        botan.botan_privkey_create(byref(self.__obj),
-                                   _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
+        obj = c_void_p(0)
+
+        botan.botan_privkey_create(byref(obj), _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
+        return PrivateKey(obj)
 
     def __del__(self):
         botan.botan_privkey_destroy(self.__obj)
@@ -928,13 +740,12 @@ class PrivateKey(object):
         return self.__obj
 
     def algo_name(self):
-        return _call_fn_returning_string(32, lambda b, bl: botan.botan_privkey_algo_name(self.__obj, b, bl))
+        return _call_fn_returning_str(32, lambda b, bl: botan.botan_privkey_algo_name(self.__obj, b, bl))
 
     def get_public_key(self):
-
         pub = c_void_p(0)
         botan.botan_privkey_export_pubkey(byref(pub), self.__obj)
-        return public_key(pub)
+        return PublicKey(pub)
 
     def to_der(self):
         return self.export(False)
@@ -943,8 +754,10 @@ class PrivateKey(object):
         return self.export(True)
 
     def export(self, pem=False):
-        flag = 1 if pem else 0
-        return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_privkey_export(self.__obj, b, bl, flag))
+        if pem:
+            return _call_fn_returning_str(4096, lambda b, bl: botan.botan_privkey_export(self.__obj, b, bl, 1))
+        else:
+            return _call_fn_returning_vec(4096, lambda b, bl: botan.botan_privkey_export(self.__obj, b, bl, 0))
 
 class PKEncrypt(object):
     def __init__(self, key, padding):
@@ -1087,7 +900,7 @@ class X509Cert(object): # pylint: disable=invalid-name
         botan.botan_x509_cert_destroy(self.__obj)
 
     def time_starts(self):
-        starts = _call_fn_returning_string(
+        starts = _call_fn_returning_str(
             16, lambda b, bl: botan.botan_x509_cert_get_time_starts(self.__obj, b, bl))
         if len(starts) == 13:
             # UTC time
@@ -1101,7 +914,7 @@ class X509Cert(object): # pylint: disable=invalid-name
         return datetime.fromtimestamp(mktime(struct_time))
 
     def time_expires(self):
-        expires = _call_fn_returning_string(
+        expires = _call_fn_returning_str(
             16, lambda b, bl: botan.botan_x509_cert_get_time_expires(self.__obj, b, bl))
         if len(expires) == 13:
             # UTC time
@@ -1115,12 +928,12 @@ class X509Cert(object): # pylint: disable=invalid-name
         return datetime.fromtimestamp(mktime(struct_time))
 
     def to_string(self):
-        return _call_fn_returning_string(
+        return _call_fn_returning_str(
             4096, lambda b, bl: botan.botan_x509_cert_to_string(self.__obj, b, bl))
 
     def fingerprint(self, hash_algo='SHA-256'):
         n = HashFunction(hash_algo).output_length() * 3
-        return _call_fn_returning_string(
+        return _call_fn_returning_str(
             n, lambda b, bl: botan.botan_x509_cert_get_fingerprint(self.__obj, _ctype_str(hash_algo), b, bl))
 
     def serial_number(self):
@@ -1142,10 +955,10 @@ class X509Cert(object): # pylint: disable=invalid-name
     def subject_public_key(self):
         pub = c_void_p(0)
         botan.botan_x509_cert_get_public_key(self.__obj, byref(pub))
-        return public_key(pub)
+        return PublicKey(pub)
 
     def subject_dn(self, key, index):
-        return _call_fn_returning_string(
+        return _call_fn_returning_str(
             0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.__obj, _ctype_str(key), index, b, bl))
 
 

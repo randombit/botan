@@ -272,22 +272,34 @@ Public Key
 Private Key
 ----------------------------------------
 
-.. py:class:: PrivateKey(algo, param, rng)
+.. py:class:: PrivateKey
 
     Previously ``private_key``
 
-    Constructor creates a new private key. The parameter type/value
-    depends on the algorithm. For "rsa" is is the size of the key in
-    bits.  For "ecdsa" and "ecdh" it is a group name (for instance
-    "secp256r1"). For "ecdh" there is also a special case for group
-    "curve25519" (which is actually a completely distinct key type
-    with a non-standard encoding).
+    .. py:classmethod:: create(algo, param, rng)
+
+       Creates a new private key. The parameter type/value depends on
+       the algorithm. For "rsa" is is the size of the key in bits.
+       For "ecdsa" and "ecdh" it is a group name (for instance
+       "secp256r1"). For "ecdh" there is also a special case for group
+       "curve25519" (which is actually a completely distinct key type
+       with a non-standard encoding).
+
+    .. py:classmethod:: load(val, passphrase="")
+
+       Load a private key (DER or PEM formats accepted)
 
     .. py:method:: get_public_key()
 
-    Return a public_key object
+       Return a public_key object
 
-    .. py:method:: export()
+    .. py:method:: to_pem()
+
+       Return the PEM encoded private key (unencrypted)
+
+    .. py:method:: to_der()
+
+       Return the PEM encoded private key (unencrypted)
 
 Public Key Operations
 ----------------------------------------
