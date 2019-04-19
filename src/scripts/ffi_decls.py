@@ -64,7 +64,7 @@ class FuncDefVisitor(c_ast.NodeVisitor):
         # all functions returning ints:
         fn_name = node.type.declname
 
-        fn_args = [fn_name]
+        fn_args = []
 
         for param in node.args.params:
 
@@ -82,7 +82,10 @@ class FuncDefVisitor(c_ast.NodeVisitor):
             ctype = to_ctype(typ, is_ptr)
             fn_args.append(ctype)
 
-        print(fn_args)
+        if len(fn_args) > 4:
+            print("   ffi_api(_dll.%s,\n        %s)" % (fn_name, fn_args))
+        else:
+            print("   ffi_api(_dll.%s, %s)" % (fn_name, fn_args))
 
 ast = parse_file(ffi_header, use_cpp=True, cpp_args=['-Ibuild/include', '-std=c89', '-DBOTAN_DLL='])
 v = FuncDefVisitor()
