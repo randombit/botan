@@ -108,19 +108,24 @@ class BotanPythonTests(unittest.TestCase):
         except botan2.BotanException as e:
             self.assertEqual(str(e), "botan_hash_init failed: -40 (Not implemented)")
 
-        h = botan2.HashFunction('SHA-256')
-        self.assertEqual(h.algo_name(), 'SHA-256')
-        assert h.output_length() == 32
-        h.update('ignore this please')
-        h.clear()
-        h.update('a')
-        h1 = h.final()
+        sha256 = botan2.HashFunction('SHA-256')
+        self.assertEqual(sha256.algo_name(), 'SHA-256')
+        self.assertEqual(sha256.output_length(), 32)
+        self.assertEqual(sha256.block_size(), 64)
+        sha256.update('ignore this please')
+        sha256.clear()
+        sha256.update('a')
+        hash1 = sha256.final()
 
-        self.assertEqual(hex_encode(h1), "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb")
+        self.assertEqual(hex_encode(hash1), "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb")
 
-        h.update(hex_decode('616263'))
-        h2 = h.final()
+        sha256.update(hex_decode('61'))
+        sha256_2 = sha256.copy_state()
+        sha256.update(hex_decode('6263'))
+        h2 = sha256.final()
         self.assertEqual(hex_encode(h2), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+
+        self.assertEqual(hex_encode(sha256_2.final()), hex_encode(hash1))
 
     def test_cipher(self):
         for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305']:

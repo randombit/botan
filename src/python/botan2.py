@@ -393,6 +393,11 @@ _DLL = _set_prototypes(_load_botan_dll(BOTAN_FFI_VERSION))
 #
 # Internal utilities
 #
+def _call_fn_returning_sz(fn):
+    sz = c_size_t(0)
+    rc = fn(byref(sz))
+    return sz.value
+
 def _call_fn_returning_vec(guess, fn):
 
     buf = create_string_buffer(guess)
@@ -497,16 +502,24 @@ class RandomNumberGenerator(object):
 #
 class HashFunction(object):
     def __init__(self, algo):
-        flags = c_uint32(0) # always zero in this API version
-        self.__obj = c_void_p(0)
-        _DLL.botan_hash_init(byref(self.__obj), _ctype_str(algo), flags)
 
-        output_length = c_size_t(0)
-        _DLL.botan_hash_output_length(self.__obj, byref(output_length))
-        self.__output_length = output_length.value
+        if isinstance(algo, c_void_p):
+            self.__obj = algo
+        else:
+            flags = c_uint32(0) # always zero in this API version
+            self.__obj = c_void_p(0)
+            _DLL.botan_hash_init(byref(self.__obj), _ctype_str(algo), flags)
+
+        self.__output_length = _call_fn_returning_sz(lambda l: _DLL.botan_hash_output_length(self.__obj, l))
+        self.__block_size = _call_fn_returning_sz(lambda l: _DLL.botan_hash_block_size(self.__obj, l))
 
     def __del__(self):
         _DLL.botan_hash_destroy(self.__obj)
+
+    def copy_state(self):
+        copy = c_void_p(0)
+        _DLL.botan_hash_copy_state(byref(copy), self.__obj)
+        return HashFunction(copy)
 
     def algo_name(self):
         return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_hash_name(self.__obj, b, bl))
@@ -516,6 +529,9 @@ class HashFunction(object):
 
     def output_length(self):
         return self.__output_length
+
+    def block_size(self):
+        return self.__block_size
 
     def update(self, x):
         _DLL.botan_hash_update(self.__obj, _ctype_bits(x), len(x))
