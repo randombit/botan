@@ -206,7 +206,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
       size_t size() const override
          {
          return XMSS_PublicKey::size() +
-                sizeof(uint64_t) +
+                sizeof(uint32_t) +
                 2 * XMSS_PublicKey::m_xmss_params.element_size();
          }
 

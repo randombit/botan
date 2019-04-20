@@ -48,7 +48,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
    // extract & copy unused leaf index from raw_key.
    uint64_t unused_leaf = 0;
    auto begin = (raw_key.begin() + XMSS_PublicKey::size());
-   auto end = raw_key.begin() + XMSS_PublicKey::size() + sizeof(uint64_t);
+   auto end = raw_key.begin() + XMSS_PublicKey::size() + sizeof(uint32_t);
 
    for(auto& i = begin; i != end; i++)
       {
@@ -294,7 +294,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
    secure_vector<uint8_t> result(pk.begin(), pk.end());
    result.reserve(size());
 
-   for(int i = 7; i >= 0; i--)
+   for(int i = 3; i >= 0; i--)
       {
       result.push_back(
          static_cast<uint8_t>(
