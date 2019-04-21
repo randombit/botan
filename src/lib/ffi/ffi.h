@@ -99,7 +99,7 @@ BOTAN_PUBLIC_API(2,8) const char* botan_error_description(int err);
 * expressed in the form YYYYMMDD of the release date of this version
 * of the API.
 */
-BOTAN_PUBLIC_API(2,0) uint32_t botan_ffi_api_version();
+BOTAN_PUBLIC_API(2,0) uint32_t botan_ffi_api_version(void);
 
 /**
 * Return 0 (ok) if the version given is one this library supports.
@@ -110,28 +110,28 @@ BOTAN_PUBLIC_API(2,0) int botan_ffi_supports_api(uint32_t api_version);
 /**
 * Return a free-form version string, e.g., 2.0.0
 */
-BOTAN_PUBLIC_API(2,0) const char* botan_version_string();
+BOTAN_PUBLIC_API(2,0) const char* botan_version_string(void);
 
 /**
 * Return the major version of the library
 */
-BOTAN_PUBLIC_API(2,0) uint32_t botan_version_major();
+BOTAN_PUBLIC_API(2,0) uint32_t botan_version_major(void);
 
 /**
 * Return the minor version of the library
 */
-BOTAN_PUBLIC_API(2,0) uint32_t botan_version_minor();
+BOTAN_PUBLIC_API(2,0) uint32_t botan_version_minor(void);
 
 /**
 * Return the patch version of the library
 */
-BOTAN_PUBLIC_API(2,0) uint32_t botan_version_patch();
+BOTAN_PUBLIC_API(2,0) uint32_t botan_version_patch(void);
 
 /**
 * Return the date this version was released as
 * an integer, or 0 if an unreleased version
 */
-BOTAN_PUBLIC_API(2,0) uint32_t botan_version_datestamp();
+BOTAN_PUBLIC_API(2,0) uint32_t botan_version_datestamp(void);
 
 /**
 * Returns 0 if x[0..len] == y[0..len], or otherwise -1
