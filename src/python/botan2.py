@@ -395,7 +395,7 @@ _DLL = _set_prototypes(_load_botan_dll(BOTAN_FFI_VERSION))
 #
 def _call_fn_returning_sz(fn):
     sz = c_size_t(0)
-    rc = fn(byref(sz))
+    fn(byref(sz))
     return sz.value
 
 def _call_fn_returning_vec(guess, fn):
@@ -1278,13 +1278,13 @@ def nist_key_wrap(kek, key):
     output = create_string_buffer(len(key) + 8)
     out_len = c_size_t(len(output))
     _DLL.botan_key_wrap3394(key, len(key), kek, len(kek), output, byref(out_len))
-    return output[0:out_len.value]
+    return output[0:int(out_len.value)]
 
 def nist_key_unwrap(kek, wrapped):
     output = create_string_buffer(len(wrapped))
     out_len = c_size_t(len(output))
     _DLL.botan_key_unwrap3394(wrapped, len(wrapped), kek, len(kek), output, byref(out_len))
-    return output[0:out_len.value]
+    return output[0:int(out_len.value)]
 
 # Typedefs for compat with older versions
 # Will be removed in a future major release

@@ -104,7 +104,7 @@ class BotanPythonTests(unittest.TestCase):
     def test_hash(self):
 
         try:
-            h = botan2.HashFunction('NoSuchHash')
+            _h = botan2.HashFunction('NoSuchHash')
         except botan2.BotanException as e:
             self.assertEqual(str(e), "botan_hash_init failed: -40 (Not implemented)")
 
