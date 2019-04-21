@@ -402,6 +402,20 @@ ofvkP1EDmpx50fHLawIDAQAB
         p = inv.pow_mod(botan2.MPI(46), mod)
         self.assertEqual(int(p), 42)
 
+    def test_mpi_random(self):
+        rng = botan2.RandomNumberGenerator()
+
+        u = botan2.MPI.random(rng, 512)
+        self.assertEqual(u.bit_count(), 512)
+
+        l = u >> 32
+        self.assertEqual(l.bit_count(), 512-32)
+
+        for _i in range(10):
+            x = botan2.MPI.random_range(rng, l, u)
+            self.assertTrue(x < u)
+            self.assertTrue(x > l)
+
     def test_fpe(self):
 
         modulus = botan2.MPI('1000000000')

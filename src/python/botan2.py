@@ -1143,6 +1143,18 @@ class MPI(object):
             # For int or long (or whatever else), try converting to string:
             _DLL.botan_mp_set_from_str(self.__obj, _ctype_str(str(initial_value)))
 
+    @classmethod
+    def random(cls, rng_obj, bits):
+        bn = MPI()
+        _DLL.botan_mp_rand_bits(bn.handle_(), rng_obj.handle_(), c_size_t(bits))
+        return bn
+
+    @classmethod
+    def random_range(cls, rng_obj, lower, upper):
+        bn = MPI()
+        _DLL.botan_mp_rand_range(bn.handle_(), rng_obj.handle_(), lower.handle_(), upper.handle_())
+        return bn
+
     def __del__(self):
         _DLL.botan_mp_destroy(self.__obj)
 
@@ -1177,6 +1189,20 @@ class MPI(object):
     def is_negative(self):
         rc = _DLL.botan_mp_is_negative(self.__obj)
         return rc == 1
+
+    def is_positive(self):
+        rc = _DLL.botan_mp_is_positive(self.__obj)
+        return rc == 1
+
+    def is_zero(self):
+        rc = _DLL.botan_mp_is_zero(self.__obj)
+        return rc == 1
+
+    def is_odd(self):
+        return self.get_bit(0) == 1
+
+    def is_even(self):
+        return self.get_bit(0) == 0
 
     def flip_sign(self):
         _DLL.botan_mp_flip_sign(self.__obj)
