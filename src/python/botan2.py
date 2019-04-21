@@ -396,7 +396,7 @@ _DLL = _set_prototypes(_load_botan_dll(BOTAN_FFI_VERSION))
 def _call_fn_returning_sz(fn):
     sz = c_size_t(0)
     fn(byref(sz))
-    return sz.value
+    return int(sz.value)
 
 def _call_fn_returning_vec(guess, fn):
 
@@ -496,6 +496,70 @@ class RandomNumberGenerator(object):
         l = c_size_t(length)
         _DLL.botan_rng_get(self.__obj, out, l)
         return _ctype_bufout(out)
+
+#
+# Block cipher
+#
+class BlockCipher(object):
+    def __init__(self, algo):
+
+        if isinstance(algo, c_void_p):
+            self.__obj = algo
+        else:
+            flags = c_uint32(0) # always zero in this API version
+            self.__obj = c_void_p(0)
+            _DLL.botan_block_cipher_init(byref(self.__obj), _ctype_str(algo), flags)
+
+        min_keylen = c_size_t(0)
+        max_keylen = c_size_t(0)
+        mod_keylen = c_size_t(0)
+        _DLL.botan_block_cipher_get_keyspec(self.__obj, byref(min_keylen), byref(max_keylen), byref(mod_keylen))
+
+        self.__min_keylen = min_keylen.value
+        self.__max_keylen = max_keylen.value
+        self.__mod_keylen = mod_keylen.value
+
+        self.__block_size = _DLL.botan_block_cipher_block_size(self.__obj)
+
+    def __del__(self):
+        _DLL.botan_block_cipher_destroy(self.__obj)
+
+    def set_key(self, key):
+        _DLL.botan_block_cipher_set_key(self.__obj, key, len(key))
+
+    def encrypt(self, pt):
+        if len(pt) % self.block_size() != 0:
+            raise Exception("Invalid input must be multiple of block size")
+
+        blocks = c_size_t(len(pt) // self.block_size())
+        output = create_string_buffer(len(pt))
+        _DLL.botan_block_cipher_encrypt_blocks(self.__obj, pt, output, blocks)
+        return output
+
+    def decrypt(self, ct):
+        if len(ct) % self.block_size() != 0:
+            raise Exception("Invalid input must be multiple of block size")
+
+        blocks = c_size_t(len(ct) // self.block_size())
+        output = create_string_buffer(len(ct))
+        _DLL.botan_block_cipher_decrypt_blocks(self.__obj, ct, output, blocks)
+        return output
+
+    def algo_name(self):
+        return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_block_cipher_name(self.__obj, b, bl))
+
+    def clear(self):
+        _DLL.botan_block_cipher_clear(self.__obj)
+
+    def block_size(self):
+        return self.__block_size
+
+    def minimum_keylength(self):
+        return self.__min_keylen
+
+    def maximum_keylength(self):
+        return self.__max_keylen
+
 
 #
 # Hash function

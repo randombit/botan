@@ -25,6 +25,22 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(botan2.version_major(), 2)
         self.assertTrue(botan2.version_minor() >= 8)
 
+    def test_block_cipher(self):
+        aes = botan2.BlockCipher("AES-128")
+        self.assertEqual(aes.algo_name(), "AES-128")
+        self.assertEqual(aes.block_size(), 16)
+        self.assertEqual(aes.minimum_keylength(), 16)
+        self.assertEqual(aes.maximum_keylength(), 16)
+
+        aes.set_key(hex_decode("000102030405060708090a0b0c0d0e0f"))
+        ct = aes.encrypt(hex_decode("00112233445566778899aabbccddeeff"))
+
+        self.assertEqual(hex_encode(ct), "69c4e0d86a7b0430d8cdb78070b4c55a")
+
+        pt = aes.decrypt(ct)
+
+        self.assertEqual(hex_encode(pt), "00112233445566778899aabbccddeeff")
+
     def test_kdf(self):
 
         secret = hex_decode('6FD4C3C0F38E5C7A6F83E99CD9BD')
