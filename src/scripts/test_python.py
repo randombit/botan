@@ -25,6 +25,22 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(botan2.version_major(), 2)
         self.assertTrue(botan2.version_minor() >= 8)
 
+    def test_block_cipher(self):
+        aes = botan2.BlockCipher("AES-128")
+        self.assertEqual(aes.algo_name(), "AES-128")
+        self.assertEqual(aes.block_size(), 16)
+        self.assertEqual(aes.minimum_keylength(), 16)
+        self.assertEqual(aes.maximum_keylength(), 16)
+
+        aes.set_key(hex_decode("000102030405060708090a0b0c0d0e0f"))
+        ct = aes.encrypt(hex_decode("00112233445566778899aabbccddeeff"))
+
+        self.assertEqual(hex_encode(ct), "69c4e0d86a7b0430d8cdb78070b4c55a")
+
+        pt = aes.decrypt(ct)
+
+        self.assertEqual(hex_encode(pt), "00112233445566778899aabbccddeeff")
+
     def test_kdf(self):
 
         secret = hex_decode('6FD4C3C0F38E5C7A6F83E99CD9BD')
@@ -104,23 +120,28 @@ class BotanPythonTests(unittest.TestCase):
     def test_hash(self):
 
         try:
-            h = botan2.HashFunction('NoSuchHash')
+            _h = botan2.HashFunction('NoSuchHash')
         except botan2.BotanException as e:
             self.assertEqual(str(e), "botan_hash_init failed: -40 (Not implemented)")
 
-        h = botan2.HashFunction('SHA-256')
-        self.assertEqual(h.algo_name(), 'SHA-256')
-        assert h.output_length() == 32
-        h.update('ignore this please')
-        h.clear()
-        h.update('a')
-        h1 = h.final()
+        sha256 = botan2.HashFunction('SHA-256')
+        self.assertEqual(sha256.algo_name(), 'SHA-256')
+        self.assertEqual(sha256.output_length(), 32)
+        self.assertEqual(sha256.block_size(), 64)
+        sha256.update('ignore this please')
+        sha256.clear()
+        sha256.update('a')
+        hash1 = sha256.final()
 
-        self.assertEqual(hex_encode(h1), "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb")
+        self.assertEqual(hex_encode(hash1), "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb")
 
-        h.update(hex_decode('616263'))
-        h2 = h.final()
+        sha256.update(hex_decode('61'))
+        sha256_2 = sha256.copy_state()
+        sha256.update(hex_decode('6263'))
+        h2 = sha256.final()
         self.assertEqual(hex_encode(h2), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+
+        self.assertEqual(hex_encode(sha256_2.final()), hex_encode(hash1))
 
     def test_cipher(self):
         for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305']:
@@ -381,6 +402,20 @@ ofvkP1EDmpx50fHLawIDAQAB
         p = inv.pow_mod(botan2.MPI(46), mod)
         self.assertEqual(int(p), 42)
 
+    def test_mpi_random(self):
+        rng = botan2.RandomNumberGenerator()
+
+        u = botan2.MPI.random(rng, 512)
+        self.assertEqual(u.bit_count(), 512)
+
+        l = u >> 32
+        self.assertEqual(l.bit_count(), 512-32)
+
+        for _i in range(10):
+            x = botan2.MPI.random_range(rng, l, u)
+            self.assertTrue(x < u)
+            self.assertTrue(x > l)
+
     def test_fpe(self):
 
         modulus = botan2.MPI('1000000000')
@@ -396,6 +431,17 @@ ofvkP1EDmpx50fHLawIDAQAB
         ptext = fpe.decrypt(ctext, tweak)
 
         self.assertEqual(value, ptext)
+
+    def test_keywrap(self):
+        key = hex_decode('00112233445566778899aabbccddeeff')
+        kek = hex_decode('000102030405060708090a0b0c0d0e0f')
+
+        wrapped = botan2.nist_key_wrap(kek, key)
+        self.assertEqual(hex_encode(wrapped), '1fa68b0a8112b447aef34bd8fb5a7b829d3e862371d2cfe5')
+
+        self.assertEqual(len(wrapped), 16+8)
+        unwrapped = botan2.nist_key_unwrap(kek, wrapped)
+        self.assertEqual(hex_encode(unwrapped), '00112233445566778899aabbccddeeff')
 
     def test_hotp(self):
 

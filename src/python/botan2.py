@@ -92,9 +92,6 @@ def _set_prototypes(dll):
 
     # These are generated using src/scripts/ffi_decls.py:
     ffi_api(dll.botan_constant_time_compare, [c_char_p, c_char_p, c_size_t])
-
-    ffi_api(dll.botan_same_mem, [c_char_p, c_char_p, c_size_t])
-
     ffi_api(dll.botan_scrub_mem, [c_void_p, c_size_t])
 
     ffi_api(dll.botan_hex_encode, [c_char_p, c_size_t, c_char_p, c_uint32])
@@ -396,6 +393,11 @@ _DLL = _set_prototypes(_load_botan_dll(BOTAN_FFI_VERSION))
 #
 # Internal utilities
 #
+def _call_fn_returning_sz(fn):
+    sz = c_size_t(0)
+    fn(byref(sz))
+    return int(sz.value)
+
 def _call_fn_returning_vec(guess, fn):
 
     buf = create_string_buffer(guess)
@@ -496,20 +498,92 @@ class RandomNumberGenerator(object):
         return _ctype_bufout(out)
 
 #
+# Block cipher
+#
+class BlockCipher(object):
+    def __init__(self, algo):
+
+        if isinstance(algo, c_void_p):
+            self.__obj = algo
+        else:
+            flags = c_uint32(0) # always zero in this API version
+            self.__obj = c_void_p(0)
+            _DLL.botan_block_cipher_init(byref(self.__obj), _ctype_str(algo), flags)
+
+        min_keylen = c_size_t(0)
+        max_keylen = c_size_t(0)
+        mod_keylen = c_size_t(0)
+        _DLL.botan_block_cipher_get_keyspec(self.__obj, byref(min_keylen), byref(max_keylen), byref(mod_keylen))
+
+        self.__min_keylen = min_keylen.value
+        self.__max_keylen = max_keylen.value
+        self.__mod_keylen = mod_keylen.value
+
+        self.__block_size = _DLL.botan_block_cipher_block_size(self.__obj)
+
+    def __del__(self):
+        _DLL.botan_block_cipher_destroy(self.__obj)
+
+    def set_key(self, key):
+        _DLL.botan_block_cipher_set_key(self.__obj, key, len(key))
+
+    def encrypt(self, pt):
+        if len(pt) % self.block_size() != 0:
+            raise Exception("Invalid input must be multiple of block size")
+
+        blocks = c_size_t(len(pt) // self.block_size())
+        output = create_string_buffer(len(pt))
+        _DLL.botan_block_cipher_encrypt_blocks(self.__obj, pt, output, blocks)
+        return output
+
+    def decrypt(self, ct):
+        if len(ct) % self.block_size() != 0:
+            raise Exception("Invalid input must be multiple of block size")
+
+        blocks = c_size_t(len(ct) // self.block_size())
+        output = create_string_buffer(len(ct))
+        _DLL.botan_block_cipher_decrypt_blocks(self.__obj, ct, output, blocks)
+        return output
+
+    def algo_name(self):
+        return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_block_cipher_name(self.__obj, b, bl))
+
+    def clear(self):
+        _DLL.botan_block_cipher_clear(self.__obj)
+
+    def block_size(self):
+        return self.__block_size
+
+    def minimum_keylength(self):
+        return self.__min_keylen
+
+    def maximum_keylength(self):
+        return self.__max_keylen
+
+
+#
 # Hash function
 #
 class HashFunction(object):
     def __init__(self, algo):
-        flags = c_uint32(0) # always zero in this API version
-        self.__obj = c_void_p(0)
-        _DLL.botan_hash_init(byref(self.__obj), _ctype_str(algo), flags)
 
-        output_length = c_size_t(0)
-        _DLL.botan_hash_output_length(self.__obj, byref(output_length))
-        self.__output_length = output_length.value
+        if isinstance(algo, c_void_p):
+            self.__obj = algo
+        else:
+            flags = c_uint32(0) # always zero in this API version
+            self.__obj = c_void_p(0)
+            _DLL.botan_hash_init(byref(self.__obj), _ctype_str(algo), flags)
+
+        self.__output_length = _call_fn_returning_sz(lambda l: _DLL.botan_hash_output_length(self.__obj, l))
+        self.__block_size = _call_fn_returning_sz(lambda l: _DLL.botan_hash_block_size(self.__obj, l))
 
     def __del__(self):
         _DLL.botan_hash_destroy(self.__obj)
+
+    def copy_state(self):
+        copy = c_void_p(0)
+        _DLL.botan_hash_copy_state(byref(copy), self.__obj)
+        return HashFunction(copy)
 
     def algo_name(self):
         return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_hash_name(self.__obj, b, bl))
@@ -519,6 +593,9 @@ class HashFunction(object):
 
     def output_length(self):
         return self.__output_length
+
+    def block_size(self):
+        return self.__block_size
 
     def update(self, x):
         _DLL.botan_hash_update(self.__obj, _ctype_bits(x), len(x))
@@ -1066,6 +1143,18 @@ class MPI(object):
             # For int or long (or whatever else), try converting to string:
             _DLL.botan_mp_set_from_str(self.__obj, _ctype_str(str(initial_value)))
 
+    @classmethod
+    def random(cls, rng_obj, bits):
+        bn = MPI()
+        _DLL.botan_mp_rand_bits(bn.handle_(), rng_obj.handle_(), c_size_t(bits))
+        return bn
+
+    @classmethod
+    def random_range(cls, rng_obj, lower, upper):
+        bn = MPI()
+        _DLL.botan_mp_rand_range(bn.handle_(), rng_obj.handle_(), lower.handle_(), upper.handle_())
+        return bn
+
     def __del__(self):
         _DLL.botan_mp_destroy(self.__obj)
 
@@ -1100,6 +1189,20 @@ class MPI(object):
     def is_negative(self):
         rc = _DLL.botan_mp_is_negative(self.__obj)
         return rc == 1
+
+    def is_positive(self):
+        rc = _DLL.botan_mp_is_positive(self.__obj)
+        return rc == 1
+
+    def is_zero(self):
+        rc = _DLL.botan_mp_is_zero(self.__obj)
+        return rc == 1
+
+    def is_odd(self):
+        return self.get_bit(0) == 1
+
+    def is_even(self):
+        return self.get_bit(0) == 0
 
     def flip_sign(self):
         _DLL.botan_mp_flip_sign(self.__obj)
@@ -1260,6 +1363,18 @@ class HOTP(object):
             return (True, next_ctr.value)
         else:
             return (False, counter)
+
+def nist_key_wrap(kek, key):
+    output = create_string_buffer(len(key) + 8)
+    out_len = c_size_t(len(output))
+    _DLL.botan_key_wrap3394(key, len(key), kek, len(kek), output, byref(out_len))
+    return output[0:int(out_len.value)]
+
+def nist_key_unwrap(kek, wrapped):
+    output = create_string_buffer(len(wrapped))
+    out_len = c_size_t(len(output))
+    _DLL.botan_key_unwrap3394(wrapped, len(wrapped), kek, len(kek), output, byref(out_len))
+    return output[0:int(out_len.value)]
 
 # Typedefs for compat with older versions
 # Will be removed in a future major release
