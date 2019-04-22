@@ -76,6 +76,14 @@ Also, try building and testing it on whatever hardware you have handy,
 especially non-x86 platforms, or especially C++11 compilers other than the
 regularly tested GCC, Clang, and Visual Studio compilers.
 
+FFI Additions
+----------------
+
+If adding a new function declaration to ``ffi.h``, the same PR must
+also add the same declaration in the Python binding ``botan2.py``, in
+addition the new API functionality must be exposed to Python and a
+test written in Python.
+
 Git Usage
 ========================================
 
