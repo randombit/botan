@@ -104,11 +104,11 @@ const char* read_env_variable(const std::string& var_name);
 size_t read_env_variable_sz(const std::string& var_name, size_t def_value = 0);
 
 /**
-* Request @count pages of RAM which are locked into memory using mlock,
+* Request @param count pages of RAM which are locked into memory using mlock,
 * VirtualLock, or some similar OS specific API. Free it with free_locked_pages.
 *
 * Returns an empty list on failure. This function is allowed to return fewer
-* than @count pages.
+* than @param count pages.
 *
 * The contents of the allocated pages are undefined.
 *
