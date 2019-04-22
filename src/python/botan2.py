@@ -68,9 +68,8 @@ def _load_botan_dll(expected_version):
     raise BotanException("Could not find a usable Botan shared object library")
 
 def _errcheck(rc, fn, _args):
-    # No idea what to do if return value isn't an int, just return it
-    if not isinstance(rc, int):
-        return rc
+    # This errcheck should only be used for int-returning functions
+    assert isinstance(rc, int)
 
     if rc >= 0:
         return rc
@@ -82,10 +81,23 @@ def _set_prototypes(dll):
     # pylint: disable=too-many-statements,line-too-long
     def ffi_api(fn, args):
         fn.argtypes = args
+        fn.restype = c_int
         fn.errcheck = _errcheck
 
     dll.botan_version_string.argtypes = []
     dll.botan_version_string.restype = c_char_p
+
+    dll.botan_version_string.argtypes = []
+    dll.botan_version_string.restype = c_char_p
+
+    dll.botan_version_major.argtypes = []
+    dll.botan_version_major.restype = c_uint32
+
+    dll.botan_version_minor.argtypes = []
+    dll.botan_version_minor.restype = c_uint32
+
+    dll.botan_version_patch.argtypes = []
+    dll.botan_version_patch.restype = c_uint32
 
     dll.botan_error_description.argtypes = [c_int]
     dll.botan_error_description.restype = c_char_p
@@ -356,6 +368,9 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_verify,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
 
+    dll.botan_x509_cert_validation_status.argtypes = [c_int]
+    dll.botan_x509_cert_validation_status.restype = c_char_p
+
     ffi_api(dll.botan_key_wrap3394,
             [c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_key_unwrap3394,
@@ -456,13 +471,13 @@ def _hex_encode(buf):
 # Versions
 #
 def version_major():
-    return _DLL.botan_version_major()
+    return int(_DLL.botan_version_major())
 
 def version_minor():
-    return _DLL.botan_version_minor()
+    return int(_DLL.botan_version_minor())
 
 def version_patch():
-    return _DLL.botan_version_patch()
+    return int(_DLL.botan_version_patch())
 
 def version_string():
     return _DLL.botan_version_string().decode('ascii')
