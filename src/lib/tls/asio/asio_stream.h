@@ -11,8 +11,6 @@
 
 #include <botan/build.h>
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
-
 // first version to be compatible with Networking TS (N4656) and boost::beast
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
@@ -579,5 +577,4 @@ class Stream : public StreamBase<Channel>
 }  // namespace Botan
 
 #endif // BOOST_VERSION
-#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
 #endif // BOTAN_ASIO_STREAM_H_

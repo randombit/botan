@@ -11,8 +11,6 @@
 
 #include <botan/build.h>
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
-
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
@@ -172,5 +170,4 @@ template<> struct is_error_code_enum<Botan::TLS::error>
 }  // namespace boost
 
 #endif // BOOST_VERSION
-#endif // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
 #endif // BOTAN_ASIO_ERROR_H_

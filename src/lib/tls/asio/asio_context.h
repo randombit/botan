@@ -11,8 +11,6 @@
 
 #include <botan/build.h>
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
-
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
@@ -38,5 +36,4 @@ struct Context
 }  // namespace Botan
 
 #endif  // BOOST_VERSION
-#endif  // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
 #endif  // BOTAN_ASIO_TLS_CONTEXT_H_
