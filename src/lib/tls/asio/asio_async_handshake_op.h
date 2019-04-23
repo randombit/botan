@@ -15,7 +15,6 @@
 #if BOOST_VERSION >= 106600
 
 #include <botan/internal/asio_async_write_op.h>
-#include <botan/internal/asio_convert_exceptions.h>
 #include <botan/internal/asio_includes.h>
 #include <botan/internal/asio_stream_core.h>
 

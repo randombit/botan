@@ -68,6 +68,11 @@ class MockChannel
 class ThrowingMockChannel : public MockChannel
    {
    public:
+      static boost::system::error_code expected_ec()
+         {
+         return Botan::TLS::Alert::UNEXPECTED_MESSAGE;
+         }
+
       ThrowingMockChannel(Botan::TLS::StreamCore& core) : MockChannel(core)
          {
          }
@@ -83,6 +88,7 @@ class ThrowingMockChannel : public MockChannel
          }
    };
 }
+
 
 namespace Botan {
 
@@ -207,7 +213,7 @@ class Asio_Stream_Tests final : public Test
 
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
-         result.confirm("propagates error code", ec == Botan::TLS::error::unexpected_message);
+         result.confirm("propagates error code", ec == ThrowingMockChannel::expected_ec());
          results.push_back(result);
          }
 
@@ -281,7 +287,7 @@ class Asio_Stream_Tests final : public Test
          auto handler = [&](const error_code &ec)
             {
             result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
-            result.confirm("propagates error code", ec == Botan::TLS::error::unexpected_message);
+            result.confirm("propagates error code", ec == ThrowingMockChannel::expected_ec());
             };
 
          ssl.async_handshake(Botan::TLS::CLIENT, handler);
@@ -377,7 +383,7 @@ class Asio_Stream_Tests final : public Test
 
          Test::Result result("sync read_some throw");
          result.test_eq("didn't transfer anything", bytes_transferred, 0);
-         result.confirm("propagates error code", ec == Botan::TLS::error::unexpected_message);
+         result.confirm("propagates error code", ec == ThrowingMockChannel::expected_ec());
 
          results.push_back(result);
          }
@@ -497,7 +503,7 @@ class Asio_Stream_Tests final : public Test
          auto read_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.test_eq("didn't transfer anything", bytes_transferred, 0);
-            result.confirm("propagates error code", ec == Botan::TLS::error::unexpected_message);
+            result.confirm("propagates error code", ec == ThrowingMockChannel::expected_ec());
             };
 
          net::mutable_buffer buf {data, TEST_DATA_SIZE};
@@ -629,7 +635,7 @@ class Asio_Stream_Tests final : public Test
 
          Test::Result result("sync write_some throw");
          result.test_eq("didn't transfer anything", bytes_transferred, 0);
-         result.confirm("propagates error code", ec == Botan::TLS::error::unexpected_message);
+         result.confirm("propagates error code", ec == ThrowingMockChannel::expected_ec());
 
          results.push_back(result);
          }
@@ -738,7 +744,7 @@ class Asio_Stream_Tests final : public Test
          auto write_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.test_eq("didn't transfer anything", bytes_transferred, 0);
-            result.confirm("propagates error code", ec == Botan::TLS::error::unexpected_message);
+            result.confirm("propagates error code", ec == ThrowingMockChannel::expected_ec());
             };
 
          net::async_write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);

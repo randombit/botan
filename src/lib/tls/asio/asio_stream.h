@@ -15,10 +15,11 @@
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
+#include <botan/asio_error.h>
+
 #include <botan/internal/asio_async_handshake_op.h>
 #include <botan/internal/asio_async_read_op.h>
 #include <botan/internal/asio_async_write_op.h>
-#include <botan/internal/asio_convert_exceptions.h>
 #include <botan/internal/asio_includes.h>
 #include <botan/internal/asio_stream_base.h>
 #include <botan/internal/asio_stream_core.h>
@@ -95,14 +96,14 @@ class Stream : public StreamBase<Channel>
 
       /**
        * Not Implemented.
-       * @param ec Will be set to `Botan::TLS::error::not_implemented`
+       * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
       template<typename VerifyCallback>
       void set_verify_callback(VerifyCallback callback,
                                boost::system::error_code& ec)
          {
          BOTAN_UNUSED(callback);
-         ec = Botan::TLS::error::not_implemented;
+         ec = Botan::ErrorType::NotImplemented;
          }
 
       /**
@@ -116,13 +117,13 @@ class Stream : public StreamBase<Channel>
 
       /**
        * Not Implemented.
-       * @param ec Will be set to `Botan::TLS::error::not_implemented`
+       * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
       void set_verify_depth(int depth,
                             boost::system::error_code& ec)
          {
          BOTAN_UNUSED(depth);
-         ec = Botan::TLS::error::not_implemented;
+         ec = Botan::ErrorType::NotImplemented;
          }
 
       /**
@@ -137,14 +138,14 @@ class Stream : public StreamBase<Channel>
 
       /**
        * Not Implemented.
-       * @param ec Will be set to `Botan::TLS::error::not_implemented`
+       * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
       template <typename verify_mode>
       void set_verify_mode(verify_mode v,
                            boost::system::error_code& ec)
          {
          BOTAN_UNUSED(v);
-         ec = Botan::TLS::error::not_implemented;
+         ec = Botan::ErrorType::NotImplemented;
          }
 
       //
@@ -286,7 +287,7 @@ class Stream : public StreamBase<Channel>
 
       /**
        * Not Implemented.
-       * @param ec Will be set to `Botan::TLS::error::not_implemented`
+       * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
       template<typename ConstBufferSequence>
       void handshake(Connection_Side side,
@@ -295,7 +296,7 @@ class Stream : public StreamBase<Channel>
          {
          BOTAN_UNUSED(buffers);
          if(validate_connection_side(side, ec))
-            { ec = Botan::TLS::error::not_implemented; }
+            { ec = Botan::ErrorType::NotImplemented; }
          }
 
       /**

@@ -69,7 +69,7 @@ class StreamBase<Botan::TLS::Client>
          {
          if(side != CLIENT)
             {
-            ec = Botan::TLS::error::invalid_argument;
+            ec = Botan::ErrorType::InvalidArgument;
             return false;
             }
 

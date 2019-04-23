@@ -72,6 +72,8 @@ enum class ErrorType {
 
 };
 
+std::string BOTAN_PUBLIC_API(2,0) to_string(ErrorType type);
+
 /**
 * Base class for all exceptions thrown by the library
 */
