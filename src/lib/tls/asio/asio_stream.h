@@ -191,9 +191,19 @@ class Stream : public StreamBase<Channel>
                native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
                                               read_buffer.size());
                }
-            catch(const std::exception& ex)
+            catch(const TLS_Exception& e)
                {
-               ec = Botan::TLS::convertException();
+               ec = e.type();
+               return;
+               }
+            catch(const Botan::Exception& e)
+               {
+               ec = e.error_type();
+               return;
+               }
+            catch(const std::exception &)
+               {
+               ec = Botan::ErrorType::Unknown;
                return;
                }
 
@@ -329,11 +339,22 @@ class Stream : public StreamBase<Channel>
             {
             native_handle()->close();
             }
-         catch(const std::exception& ex)
+         catch(const TLS_Exception& e)
             {
-            ec = Botan::TLS::convertException();
+            ec = e.type();
             return;
             }
+         catch(const Botan::Exception& e)
+            {
+            ec = e.error_type();
+            return;
+            }
+         catch(const std::exception &)
+            {
+            ec = Botan::ErrorType::Unknown;
+            return;
+            }
+
          sendPendingEncryptedData(ec);
          }
 
@@ -531,9 +552,20 @@ class Stream : public StreamBase<Channel>
             native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
                                            read_buffer.size());
             }
-         catch(const std::exception& ex)
+         catch(const TLS_Exception& e)
             {
-            ec = Botan::TLS::convertException();
+            ec = e.type();
+            return;
+            }
+         catch(const Botan::Exception& e)
+            {
+            ec = e.error_type();
+            return;
+            }
+         catch(const std::exception &)
+            {
+            ec = Botan::ErrorType::Unknown;
+            return;
             }
          }
 
@@ -559,9 +591,19 @@ class Stream : public StreamBase<Channel>
                {
                native_handle()->send(static_cast<const uint8_t*>(buffer.data()), amount);
                }
-            catch(const std::exception&)
+            catch(const TLS_Exception& e)
                {
-               ec = Botan::TLS::convertException();
+               ec = e.type();
+               return 0;
+               }
+            catch(const Botan::Exception& e)
+               {
+               ec = e.error_type();
+               return 0;
+               }
+            catch(const std::exception &)
+               {
+               ec = Botan::ErrorType::Unknown;
                return 0;
                }
             sent += amount;

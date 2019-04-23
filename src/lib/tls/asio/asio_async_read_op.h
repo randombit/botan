@@ -14,6 +14,7 @@
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
+#include <botan/asio_error.h>
 #include <botan/internal/asio_async_base.h>
 #include <botan/internal/asio_includes.h>
 #include <botan/internal/asio_stream_core.h>
@@ -69,9 +70,17 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
                   m_stream.native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
                                                           read_buffer.size());
                   }
-               catch(const std::exception&)
+               catch(const TLS_Exception& e)
                   {
-                  ec = convertException();
+                  ec = e.type();
+                  }
+               catch(const Botan::Exception& e)
+                  {
+                  ec = e.error_type();
+                  }
+               catch(...)
+                  {
+                  ec = Botan::ErrorType::Unknown;
                   }
                }
 

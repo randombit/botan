@@ -54,7 +54,7 @@ struct BotanErrorCategory : boost::system::error_category
 
    std::string message(int ev) const override
       {
-          return Botan::to_string(static_cast<Botan::ErrorType>(ev));
+      return Botan::to_string(static_cast<Botan::ErrorType>(ev));
       }
    };
 
@@ -95,29 +95,6 @@ template<> struct is_error_code_enum<Botan::ErrorType>
 
 }  // namespace system
 }  // namespace boost
-
-namespace Botan {
-namespace TLS {
-
-inline boost::system::error_code convertException()
-   {
-   try
-      {
-      throw;
-      }
-   catch(const TLS_Exception& e)
-      {
-      return e.type();
-      }
-   catch(const Botan::Exception& e)
-      {
-      return e.error_type();
-      }
-   }
-
-}  // namespace system
-}  // namespace boost
-
 
 #endif // BOOST_VERSION
 #endif // BOTAN_ASIO_ERROR_H_
