@@ -28,8 +28,9 @@ namespace TLS {
 /**
  * Contains the buffers for reading/sending, and the needed botan callbacks
  */
-struct StreamCore : public Botan::TLS::Callbacks
+class StreamCore : public Botan::TLS::Callbacks
    {
+   public:
       StreamCore()
          : m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0'),
            input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size()) {}

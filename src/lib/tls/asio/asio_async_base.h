@@ -59,8 +59,9 @@ namespace TLS {
  * \tparam Allocator Type of the allocator to be used
  */
 template <class Handler, class Executor1, class Allocator>
-struct AsyncBase : boost::asio::coroutine
+class AsyncBase : public boost::asio::coroutine
    {
+   public:
       using allocator_type = boost::asio::associated_allocator_t<Handler, Allocator>;
       using executor_type = boost::asio::associated_executor_t<Handler, Executor1>;
 

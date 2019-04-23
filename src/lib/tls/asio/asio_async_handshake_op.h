@@ -26,8 +26,9 @@ namespace Botan {
 namespace TLS {
 
 template <class Handler, class Stream, class Allocator = std::allocator<void>>
-struct AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
+class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
    {
+   public:
       /**
        * Construct and invoke an AsyncHandshakeOperation.
        *

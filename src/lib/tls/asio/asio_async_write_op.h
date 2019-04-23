@@ -25,8 +25,9 @@ namespace Botan {
 namespace TLS {
 
 template <typename Handler, class Stream, class Allocator = std::allocator<void>>
-struct AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
+class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
    {
+   public:
       /**
        * Construct and invoke an AsyncWriteOperation.
        *
