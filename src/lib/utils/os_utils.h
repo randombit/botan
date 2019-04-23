@@ -53,7 +53,15 @@ uint64_t BOTAN_TEST_API get_cpu_cycle_counter();
 size_t BOTAN_TEST_API get_cpu_total();
 size_t BOTAN_TEST_API get_cpu_available();
 
-unsigned long get_auxval(unsigned long);
+/**
+* Return the ELF auxiliary vector cooresponding to the given ID.
+* This only makes sense on Unix-like systems and is currently
+* only supported on Linux, Android, and FreeBSD.
+*
+* Returns zero if not supported on the current system or if
+* the id provided is not known.
+*/
+unsigned long get_auxval(unsigned long id);
 
 /*
 * @return best resolution timestamp available
