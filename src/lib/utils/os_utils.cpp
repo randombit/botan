@@ -104,6 +104,7 @@ unsigned long OS::get_auxval(unsigned long id)
    ::elf_aux_info(id, &auxinfo, sizeof(auxinfo));
    return auxinfo;
 #else
+   BOTAN_UNUSED(id);
    return 0;
 #endif
    }
