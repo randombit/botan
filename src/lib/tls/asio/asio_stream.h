@@ -47,7 +47,7 @@ class Stream : public StreamBase<Channel>
       using executor_type = typename next_layer_type::executor_type;
       using native_handle_type = typename std::add_pointer<Channel>::type;
 
-      using StreamBase<Channel>::validate_handshake_type;
+      using StreamBase<Channel>::validate_connection_side;
 
    public:
       template <typename... Args>
@@ -236,11 +236,11 @@ class Stream : public StreamBase<Channel>
        * The function call will block until handshaking is complete or an error occurs.
        * @param type The type of handshaking to be performed, i.e. as a client or as a server.
        * @throws boost::system::system_error if error occured
-       * @throws Invalid_Argument if handshake_type could not be validated
+       * @throws Invalid_Argument if Connection_Side could not be validated
        */
-      void handshake(handshake_type type)
+      void handshake(Connection_Side side)
          {
-         validate_handshake_type(type);
+         validate_connection_side(side);
          handshake();
          }
 
@@ -250,9 +250,9 @@ class Stream : public StreamBase<Channel>
        * @param type The type of handshaking to be performed, i.e. as a client or as a server.
        * @param ec Set to indicate what error occurred, if any.
        */
-      void handshake(handshake_type type, boost::system::error_code& ec)
+      void handshake(Connection_Side side, boost::system::error_code& ec)
          {
-         if(validate_handshake_type(type, ec))
+         if(validate_connection_side(side, ec))
             { handshake(ec); }
          }
 
@@ -262,14 +262,14 @@ class Stream : public StreamBase<Channel>
        * @param type The type of handshaking to be performed, i.e. as a client or as a server.
        * @param handler The handler to be called when the handshake operation completes.
        *                The equivalent function signature of the handler must be: void(boost::system::error_code)
-       * @throws Invalid_Argument if handshake_type could not be validated
+       * @throws Invalid_Argument if Connection_Side could not be validated
        */
       template <typename HandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
                                     void(boost::system::error_code))
-      async_handshake(handshake_type type, HandshakeHandler&& handler)
+      async_handshake(Connection_Side side, HandshakeHandler&& handler)
          {
-         validate_handshake_type(type);
+         validate_connection_side(side);
          return async_handshake(std::forward<HandshakeHandler>(handler));
          }
 
@@ -277,10 +277,10 @@ class Stream : public StreamBase<Channel>
        * @throws Not_Implemented
        */
       template<typename ConstBufferSequence>
-      void handshake(handshake_type type, const ConstBufferSequence& buffers)
+      void handshake(Connection_Side side, const ConstBufferSequence& buffers)
          {
          BOTAN_UNUSED(buffers);
-         validate_handshake_type(type);
+         validate_connection_side(side);
          throw Not_Implemented("buffered handshake is not implemented");
          }
 
@@ -289,12 +289,12 @@ class Stream : public StreamBase<Channel>
        * @param ec Will be set to `Botan::TLS::error::not_implemented`
        */
       template<typename ConstBufferSequence>
-      void handshake(handshake_type type,
+      void handshake(Connection_Side side,
                      const ConstBufferSequence& buffers,
                      boost::system::error_code& ec)
          {
          BOTAN_UNUSED(buffers);
-         if(validate_handshake_type(type, ec))
+         if(validate_connection_side(side, ec))
             { ec = Botan::TLS::error::not_implemented; }
          }
 
@@ -304,12 +304,12 @@ class Stream : public StreamBase<Channel>
       template <typename ConstBufferSequence, typename BufferedHandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(BufferedHandshakeHandler,
                                     void(boost::system::error_code, std::size_t))
-      async_handshake(handshake_type type, const ConstBufferSequence& buffers,
+      async_handshake(Connection_Side side, const ConstBufferSequence& buffers,
                       BufferedHandshakeHandler&& handler)
          {
          BOTAN_UNUSED(buffers, handler);
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(BufferedHandshakeHandler, handler) type_check;
-         validate_handshake_type(type);
+         validate_connection_side(side);
          throw Not_Implemented("buffered async handshake is not implemented");
          }
 

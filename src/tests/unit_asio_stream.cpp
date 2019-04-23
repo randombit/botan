@@ -109,15 +109,13 @@ class StreamBase<Botan_Tests::MockChannel>
       StreamBase(const StreamBase&) = delete;
       StreamBase& operator=(const StreamBase&) = delete;
 
-      using handshake_type = Botan::TLS::handshake_type;
-
    protected:
       StreamCore               m_core;
       Botan_Tests::MockChannel m_channel;
 
-      void validate_handshake_type(handshake_type) {}
+      void validate_connection_side(Connection_Side) {}
 
-      bool validate_handshake_type(handshake_type, boost::system::error_code&) { return true; }
+      bool validate_connection_side(Connection_Side, boost::system::error_code&) { return true; }
    };
 
 template <>
@@ -132,7 +130,6 @@ class StreamBase<Botan_Tests::ThrowingMockChannel> : public StreamBase<Botan_Tes
       StreamBase(const StreamBase&) = delete;
       StreamBase& operator=(const StreamBase&) = delete;
 
-      using handshake_type = Botan::TLS::handshake_type;
    protected:
       Botan_Tests::ThrowingMockChannel m_channel;
    };
@@ -166,7 +163,7 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          AsioStream ssl(ctx, ioc, test_data());
 
-         ssl.handshake(AsioStream::handshake_type::client);
+         ssl.handshake(Botan::TLS::CLIENT);
 
          Test::Result result("sync TLS handshake");
          result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
@@ -188,7 +185,7 @@ class Asio_Stream_Tests final : public Test
          ssl.native_handle()->send(TEST_DATA, TEST_DATA_SIZE);
 
          error_code ec;
-         ssl.handshake(AsioStream::handshake_type::client, ec);
+         ssl.handshake(Botan::TLS::CLIENT, ec);
 
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
@@ -206,7 +203,7 @@ class Asio_Stream_Tests final : public Test
          ssl.next_layer().connect(remote);
 
          error_code ec;
-         ssl.handshake(AsioStream::handshake_type::client, ec);
+         ssl.handshake(Botan::TLS::CLIENT, ec);
 
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
@@ -235,7 +232,7 @@ class Asio_Stream_Tests final : public Test
             result.test_eq("feeds data into channel until active", ssl.native_handle()->is_active(), true);
             };
 
-         ssl.async_handshake(AsioStream::handshake_type::client, handler);
+         ssl.async_handshake(Botan::TLS::CLIENT, handler);
 
          ssl.next_layer().close_remote();
          ioc.run();
@@ -264,7 +261,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", ec == net::error::eof);
             };
 
-         ssl.async_handshake(AsioStream::handshake_type::client, handler);
+         ssl.async_handshake(Botan::TLS::CLIENT, handler);
 
          ioc.run();
          results.push_back(result);
@@ -287,7 +284,7 @@ class Asio_Stream_Tests final : public Test
             result.confirm("propagates error code", ec == Botan::TLS::error::unexpected_message);
             };
 
-         ssl.async_handshake(AsioStream::handshake_type::client, handler);
+         ssl.async_handshake(Botan::TLS::CLIENT, handler);
 
          ioc.run();
          results.push_back(result);

@@ -14,20 +14,15 @@
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
-#include <botan/tls_client.h>
 #include <botan/asio_context.h>
 #include <botan/asio_error.h>
 #include <botan/internal/asio_stream_core.h>
+#include <botan/tls_client.h>
+#include <botan/tls_magic.h>
 
 namespace Botan {
 
 namespace TLS {
-
-enum handshake_type
-   {
-   client,
-   server
-   };
 
 /** Base class for all Botan::TLS::Stream implementations.
  *
@@ -59,22 +54,20 @@ class StreamBase<Botan::TLS::Client>
       StreamBase(const StreamBase&) = delete;
       StreamBase& operator=(const StreamBase&) = delete;
 
-      using handshake_type = Botan::TLS::handshake_type;
-
    protected:
-      //! \brief validate the OpenSSL compatibility enum `handshake_type`
-      void validate_handshake_type(handshake_type type)
+      //! \brief validate the connection side (OpenSSL compatibility)
+      void validate_connection_side(Connection_Side side)
          {
-         if(type != handshake_type::client)
+         if(side != CLIENT)
             {
-            throw Invalid_Argument("wrong handshake_type");
+            throw Invalid_Argument("wrong connection_side");
             }
          }
 
-      //! \brief validate the OpenSSL compatibility enum `handshake_type`
-      bool validate_handshake_type(handshake_type type, boost::system::error_code& ec)
+      //! \brief validate the connection side (OpenSSL compatibility)
+      bool validate_connection_side(Connection_Side side, boost::system::error_code& ec)
          {
-         if(type != handshake_type::client)
+         if(side != CLIENT)
             {
             ec = Botan::TLS::error::invalid_argument;
             return false;
