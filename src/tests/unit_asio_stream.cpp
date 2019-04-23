@@ -29,9 +29,6 @@ constexpr uint8_t     TEST_DATA[] = "The story so far: In the beginning the Univ
 constexpr std::size_t TEST_DATA_SIZE = 142;
 static_assert(sizeof(TEST_DATA) == TEST_DATA_SIZE, "size of TEST_DATA must match TEST_DATA_SIZE");
 
-// use memcmp to check if the data in a is a prefix of the data in b
-bool contains(const void* a, const void* b, const std::size_t size) { return memcmp(a, b, size) == 0; }
-
 /**
  * Mocked Botan::TLS::Channel. Pretends to perform TLS operations and triggers appropriate callbacks in StreamCore.
  */
@@ -154,6 +151,9 @@ class Asio_Stream_Tests final : public Test
       using FailCount = boost::beast::test::fail_count;
       using AsioStream = Botan::TLS::Stream<TestStream, MockChannel>;
       using ThrowingAsioStream = Botan::TLS::Stream<TestStream, ThrowingMockChannel>;
+
+      // use memcmp to check if the data in a is a prefix of the data in b
+      bool contains(const void* a, const void* b, const std::size_t size) { return memcmp(a, b, size) == 0; }
 
       boost::string_view test_data() const { return boost::string_view((const char*)TEST_DATA, TEST_DATA_SIZE); }
 
@@ -412,7 +412,6 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          AsioStream ssl(ctx, ioc, test_data());
          uint8_t    data[TEST_DATA_SIZE];
-         error_code ec;
 
          Test::Result result("async read_some success");
 
@@ -436,7 +435,6 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          Botan::TLS::Context ctx;
          AsioStream ssl(ctx, ioc, test_data());
-         error_code ec;
 
          std::vector<net::mutable_buffer> data;
          uint8_t buf1[TEST_DATA_SIZE/2];
@@ -470,7 +468,6 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          AsioStream ssl(ctx, ioc, fc);
          uint8_t    data[TEST_DATA_SIZE];
-         error_code ec;
 
          Test::Result result("async read_some error");
 
@@ -494,7 +491,6 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          uint8_t    data[TEST_DATA_SIZE];
-         error_code ec;
 
          Test::Result result("async read_some throw");
 
@@ -520,7 +516,6 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          AsioStream ssl(ctx, ioc);
          uint8_t    data[TEST_DATA_SIZE];
-         error_code ec;
 
          Test::Result result("async read_some into zero-size buffer");
 
@@ -647,7 +642,6 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
-         error_code ec;
 
          Test::Result result("async write_some success");
 
@@ -672,7 +666,6 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
-         error_code ec;
 
          // this should be Botan::TLS::MAX_PLAINTEXT_SIZE + 1024 + 1
          std::array<uint8_t, 17 * 1024 + 1> random_data;
@@ -716,7 +709,6 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
-         error_code ec;
 
          Test::Result result("async write_some error");
 
@@ -740,7 +732,6 @@ class Asio_Stream_Tests final : public Test
          Botan::TLS::Context ctx;
          ThrowingAsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
-         error_code ec;
 
          Test::Result result("async write_some throw");
 
