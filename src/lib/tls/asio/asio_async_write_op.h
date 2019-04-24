@@ -16,7 +16,6 @@
 
 #include <botan/internal/asio_async_base.h>
 #include <botan/internal/asio_includes.h>
-#include <botan/internal/asio_stream_core.h>
 
 #include <boost/asio/yield.hpp>
 
@@ -43,7 +42,7 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
       template <class HandlerT>
       AsyncWriteOperation(HandlerT&& handler,
                           Stream& stream,
-                          StreamCore& core,
+                          typename Stream::StreamCore& core,
                           std::size_t plainBytesTransferred,
                           const boost::system::error_code& ec = {})
          : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
@@ -89,7 +88,7 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
 
    private:
       Stream&     m_stream;
-      StreamCore& m_core;
+      typename Stream::StreamCore& m_core;
 
       std::size_t               m_plainBytesTransferred;
       boost::system::error_code m_ec;

@@ -17,7 +17,6 @@
 #include <botan/asio_error.h>
 #include <botan/internal/asio_async_write_op.h>
 #include <botan/internal/asio_includes.h>
-#include <botan/internal/asio_stream_core.h>
 
 #include <boost/asio/yield.hpp>
 
@@ -41,7 +40,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
       AsyncHandshakeOperation(
          HandlerT&& handler,
          Stream& stream,
-         StreamCore& core,
+         typename Stream::StreamCore& core,
          const boost::system::error_code& ec = {})
          : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
               std::forward<HandlerT>(handler),
@@ -118,7 +117,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
 
    private:
       Stream&     m_stream;
-      StreamCore& m_core;
+      typename Stream::StreamCore& m_core;
 
       boost::system::error_code m_ec;
    };

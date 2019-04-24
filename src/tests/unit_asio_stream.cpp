@@ -35,12 +35,10 @@ static_assert(sizeof(TEST_DATA) == TEST_DATA_SIZE, "size of TEST_DATA must match
 class MockChannel
    {
    public:
-      MockChannel(Botan::TLS::StreamCore& core)
+      MockChannel(Botan::TLS::Callbacks& core)
          : m_callbacks(core)
          , m_bytes_till_complete_record(TEST_DATA_SIZE)
-         , m_active(false)
-         {
-         }
+         , m_active(false) {}
 
    public:
       std::size_t received_data(const uint8_t[], std::size_t buf_size)
@@ -60,9 +58,13 @@ class MockChannel
       bool is_active() { return m_active; }
 
    protected:
-      Botan::TLS::StreamCore& m_callbacks;
+      Botan::TLS::Callbacks& m_callbacks;
       std::size_t m_bytes_till_complete_record;  // number of bytes still to read before tls record is completed
       bool        m_active;
+
+      Botan::TLS::Session_Manager_Noop m_session_manager;
+      Botan::Null_RNG m_rng;
+      Botan::TLS::Default_Policy m_policy;
    };
 
 class ThrowingMockChannel : public MockChannel
@@ -73,7 +75,7 @@ class ThrowingMockChannel : public MockChannel
          return Botan::TLS::Alert::UNEXPECTED_MESSAGE;
          }
 
-      ThrowingMockChannel(Botan::TLS::StreamCore& core) : MockChannel(core)
+      ThrowingMockChannel(Botan::TLS::Callbacks& core) : MockChannel(core)
          {
          }
 
@@ -87,61 +89,35 @@ class ThrowingMockChannel : public MockChannel
          throw Botan::TLS::Unexpected_Message("test_error");
          }
    };
-}
 
+using TestStream = boost::beast::test::stream;
+using FailCount = boost::beast::test::fail_count;
 
-namespace Botan {
-
-namespace TLS {
-
-/**
- * A specification of StreamBase for the MockChannel used in this test. It
- * matches the specifications for StreamBase<Botan::TLS::Client> and
- * StreamBase<Botan::TLS::Server> except for the underlying channel type and the
- * simplified constructor.
- */
-template <>
-class StreamBase<Botan_Tests::MockChannel>
+class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel>
    {
    public:
-      StreamBase(Context& /*ignored*/)
-         : m_channel(m_core)
+      template <typename... Args>
+      AsioStream(Botan::TLS::Context& context, Args&& ... args)
+         : Stream(context, args...)
          {
+         m_channel = std::unique_ptr<MockChannel>(new MockChannel(m_core));
          }
 
-      StreamBase(const StreamBase&) = delete;
-      StreamBase& operator=(const StreamBase&) = delete;
-
-   protected:
-      StreamCore               m_core;
-      Botan_Tests::MockChannel m_channel;
-
-      void validate_connection_side(Connection_Side) {}
-
-      bool validate_connection_side(Connection_Side, boost::system::error_code&) { return true; }
+      virtual ~AsioStream() = default;
    };
 
-template <>
-class StreamBase<Botan_Tests::ThrowingMockChannel> : public StreamBase<Botan_Tests::MockChannel>
+class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockChannel>
    {
    public:
-      StreamBase(Context& c)
-         : StreamBase<Botan_Tests::MockChannel>(c), m_channel(m_core)
+      template <typename... Args>
+      ThrowingAsioStream(Botan::TLS::Context& context, Args&& ... args)
+         : Stream(context, args...)
          {
+         m_channel = std::unique_ptr<ThrowingMockChannel>(new ThrowingMockChannel(m_core));
          }
 
-      StreamBase(const StreamBase&) = delete;
-      StreamBase& operator=(const StreamBase&) = delete;
-
-   protected:
-      Botan_Tests::ThrowingMockChannel m_channel;
+      virtual ~ThrowingAsioStream() = default;
    };
-
-}  // namespace TLS
-
-}  // namespace Botan
-
-namespace Botan_Tests {
 
 /**
  * Synchronous tests for Botan::Stream.
@@ -153,11 +129,6 @@ namespace Botan_Tests {
  */
 class Asio_Stream_Tests final : public Test
    {
-      using TestStream = boost::beast::test::stream;
-      using FailCount = boost::beast::test::fail_count;
-      using AsioStream = Botan::TLS::Stream<TestStream, MockChannel>;
-      using ThrowingAsioStream = Botan::TLS::Stream<TestStream, ThrowingMockChannel>;
-
       // use memcmp to check if the data in a is a prefix of the data in b
       bool contains(const void* a, const void* b, const std::size_t size) { return memcmp(a, b, size) == 0; }
 
@@ -389,7 +360,7 @@ class Asio_Stream_Tests final : public Test
          }
 
       void test_sync_read_zero_buffer(std::vector<Test::Result>& results)
-      {
+         {
          net::io_context ioc;
 
          Botan::TLS::Context ctx;
@@ -408,7 +379,7 @@ class Asio_Stream_Tests final : public Test
          result.confirm("does not report an error", !ec);
 
          results.push_back(result);
-      }
+         }
 
       void test_async_read_some_success(std::vector<Test::Result>& results)
          {
@@ -515,7 +486,7 @@ class Asio_Stream_Tests final : public Test
          }
 
       void test_async_read_zero_buffer(std::vector<Test::Result>& results)
-      {
+         {
          net::io_context ioc;
          TestStream      remote{ioc};
 
@@ -539,7 +510,7 @@ class Asio_Stream_Tests final : public Test
          ssl.next_layer().close_remote();
          ioc.run();
          results.push_back(result);
-      }
+         }
 
       void test_sync_write_some_success(std::vector<Test::Result>& results)
          {

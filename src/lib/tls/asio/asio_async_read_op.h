@@ -17,7 +17,6 @@
 #include <botan/asio_error.h>
 #include <botan/internal/asio_async_base.h>
 #include <botan/internal/asio_includes.h>
-#include <botan/internal/asio_stream_core.h>
 
 #include <boost/asio/yield.hpp>
 
@@ -41,7 +40,7 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
       template <class HandlerT>
       AsyncReadOperation(HandlerT&& handler,
                          Stream& stream,
-                         StreamCore& core,
+                         typename Stream::StreamCore& core,
                          const MutableBufferSequence& buffers,
                          const boost::system::error_code& ec = {})
          : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
@@ -112,7 +111,7 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
 
    private:
       Stream&               m_stream;
-      StreamCore&           m_core;
+      typename Stream::StreamCore& m_core;
       MutableBufferSequence m_buffers;
 
       std::size_t               m_decodedBytes;
