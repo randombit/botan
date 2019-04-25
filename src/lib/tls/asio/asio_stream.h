@@ -44,27 +44,35 @@ namespace TLS {
  *
  * Currently only the TLS::Client specialization is implemented.
  *
- * \tparam StreamLayer type of the next layer, usually a network socket
- * \tparam ChannelT type of the native_handle, defaults to Botan::TLS::Channel, only needed for testing purposes
+ * @tparam StreamLayer type of the next layer, usually a network socket
+ * @tparam ChannelT type of the native_handle, defaults to Botan::TLS::Channel, only needed for testing purposes
  */
 template <class StreamLayer, class ChannelT = Channel>
 class Stream
    {
    public:
-      using next_layer_type = typename std::remove_reference<StreamLayer>::type;
-      using lowest_layer_type = typename next_layer_type::lowest_layer_type;
-      using executor_type = typename next_layer_type::executor_type;
-      using native_handle_type = typename std::add_pointer<ChannelT>::type;
+      //
+      // -- -- construction
+      //
 
-   public:
       template <typename... Args>
       explicit Stream(Context& context, Args&& ... args)
-         : m_context(context), m_nextLayer(std::forward<Args>(args)...) {}
+         : m_context(context)
+         , m_nextLayer(std::forward<Args>(args)...)
+         , m_core(m_receive_buffer, m_send_buffer)
+         , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
+         , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
+         {}
 
       // overload for boost::asio::ssl::stream compatibility
       template <typename Arg>
       explicit Stream(Arg&& arg, Context& context)
-         : m_context(context), m_nextLayer(std::forward<Arg>(arg)) {}
+         : m_context(context)
+         , m_nextLayer(std::forward<Arg>(arg))
+         , m_core(m_receive_buffer, m_send_buffer)
+         , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
+         , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
+         {}
 
       virtual ~Stream() = default;
 
@@ -75,8 +83,13 @@ class Stream
       Stream& operator=(const Stream& other) = delete;
 
       //
-      // -- -- accessor methods
+      // -- -- boost::asio compatible accessor methods
       //
+
+      using next_layer_type = typename std::remove_reference<StreamLayer>::type;
+      using lowest_layer_type = typename next_layer_type::lowest_layer_type;
+      using executor_type = typename next_layer_type::executor_type;
+      using native_handle_type = typename std::add_pointer<ChannelT>::type;
 
       executor_type get_executor() noexcept { return m_nextLayer.get_executor(); }
 
@@ -157,6 +170,43 @@ class Stream
          }
 
       //
+      // -- -- accessor methods for send and receive buffers
+      //
+
+      const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
+      boost::asio::const_buffer sendBuffer() const { return m_send_buffer.data(); }  // TODO: really .data() ?
+
+      /**
+       * Check if decrypted data is available in the receive buffer
+       */
+      bool hasReceivedData() const { return m_receive_buffer.size() > 0; }
+
+      /**
+       * Copy decrypted data into the user-provided buffer
+       */
+      template <typename MutableBufferSequence>
+      std::size_t copyReceivedData(MutableBufferSequence buffers)
+         {
+         // Note: It would be nice to avoid this buffer copy. This could be achieved by equipping the StreamCore with
+         // the user's desired target buffer once a read is started, and reading directly into that buffer in tls_record
+         // received. However, we need to deal with the case that the receive buffer provided by the caller is smaller
+         // than the decrypted record, so this optimization might not be worth the additional complexity.
+         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_receive_buffer.data());
+         m_receive_buffer.consume(copiedBytes);
+         return copiedBytes;
+         }
+
+      /**
+       * Check if encrypted data is available in the send buffer
+       */
+      bool hasDataToSend() const { return m_send_buffer.size() > 0; }
+
+      /**
+       * Mark bytes in the send buffer as consumed, removing them from the buffer
+       */
+      void consumeSendBuffer(std::size_t bytesConsumed) { m_send_buffer.consume(bytesConsumed); }
+
+      //
       // -- -- handshake methods
       //
 
@@ -190,11 +240,7 @@ class Stream
             if(ec)
                { return; }
 
-            boost::asio::const_buffer read_buffer
-               {
-               this->m_core.input_buffer.data(),
-               m_nextLayer.read_some(this->m_core.input_buffer, ec)
-               };
+            boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
 
             if(ec)
                { return; }
@@ -244,7 +290,7 @@ class Stream
          boost::asio::async_completion<HandshakeHandler, void(boost::system::error_code)> init(handler);
 
          AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, Stream>
-         op{std::move(init.completion_handler), *this, this->m_core};
+         op{std::move(init.completion_handler), *this};
 
          return init.result.get();
          }
@@ -341,14 +387,14 @@ class Stream
       std::size_t read_some(const MutableBufferSequence& buffers,
                             boost::system::error_code& ec)
          {
-         if(this->m_core.hasReceivedData())
-            { return this->m_core.copyReceivedData(buffers); }
+         if(hasReceivedData())
+            { return copyReceivedData(buffers); }
 
          tls_receive_some(ec);
          if(ec)
             { return 0; }
 
-         return this->m_core.copyReceivedData(buffers);
+         return copyReceivedData(buffers);
          }
 
       /**
@@ -429,16 +475,16 @@ class Stream
          std::size_t sent = tls_encrypt_some(buffers, ec);
          if(ec)
             {
-            // we cannot be sure how many bytes were committed here
-            // so clear the send_buffer and let the AsyncWriteOperation call the handler with the error_code set
-            this->m_core.clearSendBuffer();
+            // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
+            // AsyncWriteOperation call the handler with the error_code set
+            consumeSendBuffer(m_send_buffer.size());
             Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
-            op{std::move(init.completion_handler), *this, this->m_core, std::size_t(0), ec};
+            op{std::move(init.completion_handler), *this, std::size_t(0), ec};
             return init.result.get();
             }
 
          Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
-         op{std::move(init.completion_handler), *this, this->m_core, sent};
+         op{std::move(init.completion_handler), *this, sent};
 
          return init.result.get();
          }
@@ -463,39 +509,40 @@ class Stream
          boost::asio::async_completion<ReadHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
          AsyncReadOperation<typename std::decay<ReadHandler>::type, Stream, MutableBufferSequence>
-         op{std::move(init.completion_handler), *this, this->m_core, buffers};
+         op{std::move(init.completion_handler), *this, buffers};
          return init.result.get();
          }
 
-      // TODO: remove StreamCore from public interface
+   protected:
       /**
-       * Contains the buffers for reading/sending, and the needed botan callbacks
+       * Helper class that implements Botan::TLS::Callbacks
+       *
+       * This class is provided to the stream's native_handle (Botan::TLS::Channel) and implements the callback
+       * functions triggered by the native_handle.
+       *
+       * @param receive_buffer reference to the buffer where decrypted data should be placed
+       * @param send_buffer reference to the buffer where encrypted data should be placed
        */
       class StreamCore : public Botan::TLS::Callbacks
          {
          public:
-            StreamCore()
-               : m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0'),
-                 input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size()) {}
+            StreamCore(boost::beast::flat_buffer& receive_buffer, boost::beast::flat_buffer& send_buffer)
+               : m_receive_buffer(receive_buffer), m_send_buffer(send_buffer) {}
 
             virtual ~StreamCore() = default;
 
             void tls_emit_data(const uint8_t data[], std::size_t size) override
                {
-               // Provide the encrypted TLS data in the sendBuffer. Actually sending the data is done
-               // using (async_)write_some either in the stream or in an async operation.
                m_send_buffer.commit(
-                  boost::asio::buffer_copy(m_send_buffer.prepare(size), boost::asio::buffer(data, size)));
+                  boost::asio::buffer_copy(m_send_buffer.prepare(size), boost::asio::buffer(data, size))
+               );
                }
 
             void tls_record_received(uint64_t, const uint8_t data[], std::size_t size) override
                {
-               // TODO: It would be nice to avoid this buffer copy. However, we need to deal with the case
-               // that the receive buffer provided by the caller is smaller than the decrypted record.
-               auto buffer = m_receive_buffer.prepare(size);
-               auto copySize =
-                  boost::asio::buffer_copy(buffer, boost::asio::const_buffer(data, size));
-               m_receive_buffer.commit(copySize);
+               m_receive_buffer.commit(
+                  boost::asio::buffer_copy(m_receive_buffer.prepare(size), boost::asio::const_buffer(data, size))
+               );
                }
 
             void tls_alert(Botan::TLS::Alert alert) override
@@ -517,49 +564,10 @@ class Stream
                return true;
                }
 
-            bool hasReceivedData() const
-               {
-               return m_receive_buffer.size() > 0;
-               }
-
-            template <typename MutableBufferSequence>
-            std::size_t copyReceivedData(MutableBufferSequence buffers)
-               {
-               const auto copiedBytes =
-                  boost::asio::buffer_copy(buffers, m_receive_buffer.data());
-               m_receive_buffer.consume(copiedBytes);
-               return copiedBytes;
-               }
-
-            bool hasDataToSend() const { return m_send_buffer.size() > 0; }
-
-            boost::asio::const_buffer sendBuffer() const
-               {
-               return m_send_buffer.data();
-               }
-
-            void consumeSendBuffer(std::size_t bytesConsumed)
-               {
-               m_send_buffer.consume(bytesConsumed);
-               }
-
-            void clearSendBuffer()
-               {
-               consumeSendBuffer(m_send_buffer.size());
-               }
-
-         private:
-            // Buffer space used to read input intended for the engine.
-            std::vector<uint8_t>      m_input_buffer_space;
-            boost::beast::flat_buffer m_receive_buffer;
-            boost::beast::flat_buffer m_send_buffer;
-
-         public:
-            // A buffer that may be used to read input intended for the engine.
-            const boost::asio::mutable_buffer input_buffer;
+            boost::beast::flat_buffer& m_receive_buffer;
+            boost::beast::flat_buffer& m_send_buffer;
          };
 
-   protected:
       // TODO: explain, note: c++17 makes this much better with constexpr if
       template<class T = ChannelT>
       typename std::enable_if<!std::is_same<Channel, T>::value>::type
@@ -571,11 +579,11 @@ class Stream
          {
          assert(side == CLIENT);
          m_channel = std::unique_ptr<Client>(new Client(m_core,
-                          *m_context.sessionManager,
-                          *m_context.credentialsManager,
-                          *m_context.policy,
-                          *m_context.randomNumberGenerator,
-                          m_context.serverInfo));
+                                             *m_context.sessionManager,
+                                             *m_context.credentialsManager,
+                                             *m_context.policy,
+                                             *m_context.randomNumberGenerator,
+                                             m_context.serverInfo));
          }
 
       //! \brief validate the connection side (OpenSSL compatibility)
@@ -601,27 +609,22 @@ class Stream
 
       size_t sendPendingEncryptedData(boost::system::error_code& ec)
          {
-         auto writtenBytes = boost::asio::write(m_nextLayer, this->m_core.sendBuffer(), ec);
+         auto writtenBytes = boost::asio::write(m_nextLayer, sendBuffer(), ec);
 
-         this->m_core.consumeSendBuffer(writtenBytes);
+         consumeSendBuffer(writtenBytes);
          return writtenBytes;
          }
 
       void tls_receive_some(boost::system::error_code& ec)
          {
-         boost::asio::const_buffer read_buffer =
-            {
-            this->m_core.input_buffer.data(),
-            m_nextLayer.read_some(this->m_core.input_buffer, ec)
-            };
+         boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
 
          if(ec)
             { return; }
 
          try
             {
-            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                           read_buffer.size());
+            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
             }
          catch(const TLS_Exception& e)
             {
@@ -685,8 +688,16 @@ class Stream
 
       Context                   m_context;
       StreamLayer               m_nextLayer;
+
+      boost::beast::flat_buffer m_receive_buffer;
+      boost::beast::flat_buffer m_send_buffer;
+
       StreamCore                m_core;
       std::unique_ptr<ChannelT> m_channel;
+
+      // Buffer space used to read input intended for the core
+      std::vector<uint8_t>              m_input_buffer_space;
+      const boost::asio::mutable_buffer m_input_buffer;
    };
 
 }  // namespace TLS

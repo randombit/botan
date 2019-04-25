@@ -33,20 +33,17 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
        *
        * @param handler Handler function to be called upon completion.
        * @param stream The stream from which the data will be read
-       * @param core The stream's core; used to extract decrypted data.
        * @param ec Optional error code; used to report an error to the handler function.
        */
       template<class HandlerT>
       AsyncHandshakeOperation(
          HandlerT&& handler,
          Stream& stream,
-         typename Stream::StreamCore& core,
          const boost::system::error_code& ec = {})
          : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
               std::forward<HandlerT>(handler),
               stream.get_executor())
          , m_stream(stream)
-         , m_core(core)
          {
          this->operator()(ec, std::size_t(0), false);
          }
@@ -60,10 +57,12 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
             if(bytesTransferred > 0 && !ec)
                {
                // Provide encrypted TLS data received from the network to TLS::Channel for decryption
-               boost::asio::const_buffer read_buffer {m_core.input_buffer.data(), bytesTransferred};
+               boost::asio::const_buffer read_buffer {m_stream.input_buffer().data(), bytesTransferred};
                try
                   {
-                  m_stream.native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
+                  m_stream.native_handle()->received_data(
+                     static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size()
+                  );
                   }
                catch(const TLS_Exception& e)
                   {
@@ -79,26 +78,26 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                   }
                }
 
-            if(m_core.hasDataToSend() && !ec)
+            if(m_stream.hasDataToSend() && !ec)
                {
                // Write encrypted TLS data provided by the TLS::Channel on the wire
 
-               // Note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`).
-               // This operation will eventually call `*this` as its own handler, passing the 0 back to this call
-               // operator. This is necessary because the check of `bytesTransferred > 0` assumes that
-               // `bytesTransferred` bytes were just read and are in the core's input_buffer for further processing.
+               // Note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`). This
+               // operation will eventually call `*this` as its own handler, passing the 0 back to this call operator.
+               // This is necessary because the check of `bytesTransferred > 0` assumes that `bytesTransferred` bytes
+               // were just read and are available in input_buffer for further processing.
                AsyncWriteOperation<
                AsyncHandshakeOperation<typename std::decay<Handler>::type, Stream, Allocator>,
                                        Stream,
                                        Allocator>
-                                       op{std::move(*this), m_stream, m_core, 0};
+                                       op{std::move(*this), m_stream, 0};
                return;
                }
 
             if(!m_stream.native_handle()->is_active() && !ec)
                {
                // Read more encrypted TLS data from the network
-               m_stream.next_layer().async_read_some(m_core.input_buffer, std::move(*this));
+               m_stream.next_layer().async_read_some(m_stream.input_buffer(), std::move(*this));
                return;
                }
 
@@ -116,9 +115,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
          }
 
    private:
-      Stream&     m_stream;
-      typename Stream::StreamCore& m_core;
-
+      Stream&                   m_stream;
       boost::system::error_code m_ec;
    };
 

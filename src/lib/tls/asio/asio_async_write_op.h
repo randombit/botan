@@ -32,7 +32,6 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
        *
        * @param handler Handler function to be called upon completion.
        * @param stream The stream from which the data will be read
-       * @param core The stream's core; used to extract decrypted data.
        * @param plainBytesTransferred Number of bytes to be reported to the user-provided handler function as
        *                              bytes_transferred. This needs to be provided since the amount of plaintext data
        *                              consumed from the input buffer can differ from the amount of encrypted data written
@@ -42,14 +41,12 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
       template <class HandlerT>
       AsyncWriteOperation(HandlerT&& handler,
                           Stream& stream,
-                          typename Stream::StreamCore& core,
                           std::size_t plainBytesTransferred,
                           const boost::system::error_code& ec = {})
          : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
               std::forward<HandlerT>(handler),
               stream.get_executor())
          , m_stream(stream)
-         , m_core(core)
          , m_plainBytesTransferred(plainBytesTransferred)
          {
          this->operator()(ec, std::size_t(0), false);
@@ -63,11 +60,11 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
             {
             // mark the number of encrypted bytes sent to the network as "consumed"
             // Note: bytes_transferred will be zero on first call
-            m_core.consumeSendBuffer(bytes_transferred);
+            m_stream.consumeSendBuffer(bytes_transferred);
 
-            if(m_core.hasDataToSend() && !ec)
+            if(m_stream.hasDataToSend() && !ec)
                {
-               m_stream.next_layer().async_write_some(m_core.sendBuffer(), std::move(*this));
+               m_stream.next_layer().async_write_some(m_stream.sendBuffer(), std::move(*this));
                return;
                }
 
@@ -87,9 +84,7 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
          }
 
    private:
-      Stream&     m_stream;
-      typename Stream::StreamCore& m_core;
-
+      Stream&                   m_stream;
       std::size_t               m_plainBytesTransferred;
       boost::system::error_code m_ec;
    };
