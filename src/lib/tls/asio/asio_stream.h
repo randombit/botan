@@ -1,5 +1,5 @@
 /*
-* TLS ASIO Stream Wrapper
+* TLS ASIO Stream
 * (C) 2018-2019 Jack Lloyd
 *     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
 *
@@ -15,32 +15,30 @@
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
-#include <botan/asio_error.h>
-
-#include <botan/internal/asio_async_handshake_op.h>
-#include <botan/internal/asio_async_read_op.h>
-#include <botan/internal/asio_async_write_op.h>
-#include <botan/internal/asio_includes.h>
+#include <botan/asio_async_ops.h>
 #include <botan/asio_context.h>
+#include <botan/asio_error.h>
 
 #include <botan/tls_callbacks.h>
 #include <botan/tls_channel.h>
 #include <botan/tls_client.h>
 #include <botan/tls_magic.h>
 
+// We need to define BOOST_ASIO_DISABLE_SERIAL_PORT before any asio imports. Otherwise asio will include <termios.h>,
+// which interferes with Botan's amalgamation by defining macros like 'B0' and 'FF1'.
+#define BOOST_ASIO_DISABLE_SERIAL_PORT
+#include <boost/asio.hpp>
 #include <boost/beast/core/flat_buffer.hpp>
 
 #include <algorithm>
 #include <memory>
-#include <thread>
 #include <type_traits>
 
 namespace Botan {
-
 namespace TLS {
 
 /**
- * boost::asio compatible SSL/TLS stream
+ * @brief boost::asio compatible SSL/TLS stream
  *
  * Currently only the TLS::Client specialization is implemented.
  *
@@ -99,15 +97,13 @@ class Stream
       lowest_layer_type& lowest_layer() { return m_nextLayer.lowest_layer(); }
       const lowest_layer_type& lowest_layer() const { return m_nextLayer.lowest_layer(); }
 
-      native_handle_type native_handle() { return m_channel.get(); }
+      native_handle_type native_handle() { return m_native_handle.get(); }
 
       //
       // -- -- configuration and callback setters
       //
 
-      /**
-       * @throws Not_Implemented
-       */
+      //! @throws Not_Implemented
       template<typename VerifyCallback>
       void set_verify_callback(VerifyCallback callback)
          {
@@ -127,9 +123,7 @@ class Stream
          ec = Botan::ErrorType::NotImplemented;
          }
 
-      /**
-       * @throws Not_Implemented
-       */
+      //! @throws Not_Implemented
       void set_verify_depth(int depth)
          {
          BOTAN_UNUSED(depth);
@@ -147,9 +141,7 @@ class Stream
          ec = Botan::ErrorType::NotImplemented;
          }
 
-      /**
-       * @throws Not_Implemented
-       */
+      //! @throws Not_Implemented
       template <typename verify_mode>
       void set_verify_mode(verify_mode v)
          {
@@ -176,14 +168,10 @@ class Stream
       const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
       boost::asio::const_buffer sendBuffer() const { return m_send_buffer.data(); }  // TODO: really .data() ?
 
-      /**
-       * Check if decrypted data is available in the receive buffer
-       */
+      //! @brief Check if decrypted data is available in the receive buffer
       bool hasReceivedData() const { return m_receive_buffer.size() > 0; }
 
-      /**
-       * Copy decrypted data into the user-provided buffer
-       */
+      //! @brief Copy decrypted data into the user-provided buffer
       template <typename MutableBufferSequence>
       std::size_t copyReceivedData(MutableBufferSequence buffers)
          {
@@ -196,14 +184,10 @@ class Stream
          return copiedBytes;
          }
 
-      /**
-       * Check if encrypted data is available in the send buffer
-       */
+      //! @brief Check if encrypted data is available in the send buffer
       bool hasDataToSend() const { return m_send_buffer.size() > 0; }
 
-      /**
-       * Mark bytes in the send buffer as consumed, removing them from the buffer
-       */
+      //! @brief Mark bytes in the send buffer as consumed, removing them from the buffer
       void consumeSendBuffer(std::size_t bytesConsumed) { m_send_buffer.consume(bytesConsumed); }
 
       //
@@ -211,11 +195,12 @@ class Stream
       //
 
       /**
-       * Performs SSL handshaking.
+       * @brief Performs SSL handshaking.
+       *
        * The function call will block until handshaking is complete or an error occurs.
+       *
        * @param type The type of handshaking to be performed, i.e. as a client or as a server.
-       * @throws boost::system::system_error if error occured
-       * @throws Invalid_Argument if Connection_Side could not be validated
+       * @throws boost::system::system_error if error occured, or if the chosen Connection_Side is not available
        */
       void handshake(Connection_Side side)
          {
@@ -225,14 +210,18 @@ class Stream
          }
 
       /**
-       * Performs SSL handshaking.
+       * @brief Performs SSL handshaking.
+       *
        * The function call will block until handshaking is complete or an error occurs.
+       *
        * @param type The type of handshaking to be performed, i.e. as a client or as a server.
        * @param ec Set to indicate what error occurred, if any.
        */
       void handshake(Connection_Side side, boost::system::error_code& ec)
          {
-         setup_channel(side);
+         setup_native_handle(side, ec);
+         if(ec)
+            { return; }
 
          while(!native_handle()->is_active())
             {
@@ -241,14 +230,12 @@ class Stream
                { return; }
 
             boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
-
             if(ec)
                { return; }
 
             try
                {
-               native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()),
-                                              read_buffer.size());
+               native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
                }
             catch(const TLS_Exception& e)
                {
@@ -271,8 +258,10 @@ class Stream
          }
 
       /**
-       * Starts an asynchronous SSL handshake.
+       * @brief Starts an asynchronous SSL handshake.
+       *
        * This function call always returns immediately.
+       *
        * @param type The type of handshaking to be performed, i.e. as a client or as a server.
        * @param handler The handler to be called when the handshake operation completes.
        *                The equivalent function signature of the handler must be: void(boost::system::error_code)
@@ -285,19 +274,20 @@ class Stream
          {
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(HandshakeHandler, handler) type_check;
 
-         setup_channel(side);
+         boost::system::error_code ec;
+         setup_native_handle(side, ec);
+         // If ec is set by setup_native_handle, the AsyncHandshakeOperation created below will do nothing but call the
+         // handler with the error_code set appropriately - no need to early return here.
 
          boost::asio::async_completion<HandshakeHandler, void(boost::system::error_code)> init(handler);
 
-         AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, Stream>
-         op{std::move(init.completion_handler), *this};
+         detail::AsyncHandshakeOperation<typename std::decay<HandshakeHandler>::type, Stream>
+         op{std::move(init.completion_handler), *this, ec};
 
          return init.result.get();
          }
 
-      /**
-       * @throws Not_Implemented
-       */
+      //! @throws Not_Implemented
       template <typename ConstBufferSequence, typename BufferedHandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(BufferedHandshakeHandler,
                                     void(boost::system::error_code, std::size_t))
@@ -306,7 +296,6 @@ class Stream
          {
          BOTAN_UNUSED(buffers, handler);
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(BufferedHandshakeHandler, handler) type_check;
-         validate_connection_side(side);
          throw Not_Implemented("buffered async handshake is not implemented");
          }
 
@@ -315,8 +304,10 @@ class Stream
       //
 
       /**
-       * Shut down SSL on the stream.
+       * @brief Shut down SSL on the stream.
+       *
        * The function call will block until SSL has been shut down or an error occurs.
+       *
        * @param ec Set to indicate what error occured, if any.
        */
       void shutdown(boost::system::error_code& ec)
@@ -345,8 +336,10 @@ class Stream
          }
 
       /**
-       * Shut down SSL on the stream.
+       * @brief Shut down SSL on the stream.
+       *
        * The function call will block until SSL has been shut down or an error occurs.
+       *
        * @throws boost::system::system_error if error occured
        */
       void shutdown()
@@ -357,8 +350,10 @@ class Stream
          }
 
       /**
-       * Asynchronously shut down SSL on the stream.
+       * @brief Asynchronously shut down SSL on the stream.
+       *
        * This function call always returns immediately.
+       *
        * @param handler The handler to be called when the handshake operation completes.
        *                The equivalent function signature of the handler must be: void(boost::system::error_code)
        */
@@ -377,8 +372,11 @@ class Stream
       //
 
       /**
-       * Read some data from the stream. The function call will block until one or more bytes of data has
-       * been read successfully, or until an error occurs.
+       * @brief Read some data from the stream.
+       *
+       * The function call will block until one or more bytes of data has been read successfully, or until an error
+       * occurs.
+       *
        * @param buffers The buffers into which the data will be read.
        * @param ec Set to indicate what error occured, if any.
        * @return The number of bytes read. Returns 0 if an error occurred.
@@ -398,8 +396,10 @@ class Stream
          }
 
       /**
-       * Read some data from the stream. The function call will block until one or more bytes of data has
-       * been read successfully, or until an error occurs.
+       * @brief Read some data from the stream.
+       *
+       * The function call will block until one or more bytes of data has been read successfully, or until an error
+       * occurs.
        *
        * @param buffers The buffers into which the data will be read.
        * @return The number of bytes read. Returns 0 if an error occurred.
@@ -415,8 +415,10 @@ class Stream
          }
 
       /**
-       * Write some data to the stream. The function call will block until one or more bytes of data has been written
-       * successfully, or until an error occurs.
+       * @brief Write some data to the stream.
+       *
+       * The function call will block until one or more bytes of data has been written successfully, or until an error
+       * occurs.
        *
        * @param buffers The data to be written.
        * @param ec Set to indicate what error occurred, if any.
@@ -438,8 +440,10 @@ class Stream
          }
 
       /**
-       * Write some data to the stream. The function call will block until one or more bytes of data has been written
-       * successfully, or until an error occurs.
+       * @brief Write some data to the stream.
+       *
+       * The function call will block until one or more bytes of data has been written successfully, or until an error
+       * occurs.
        *
        * @param buffers The data to be written.
        * @return The number of bytes written.
@@ -455,7 +459,7 @@ class Stream
          }
 
       /**
-       * Start an asynchronous write. The function call always returns immediately.
+       * @brief Start an asynchronous write. The function call always returns immediately.
        *
        * @param buffers The data to be written.
        * @param handler The handler to be called when the write operation completes. Copies will be made of the handler
@@ -478,19 +482,19 @@ class Stream
             // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
             // AsyncWriteOperation call the handler with the error_code set
             consumeSendBuffer(m_send_buffer.size());
-            Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
+            detail::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
             op{std::move(init.completion_handler), *this, std::size_t(0), ec};
             return init.result.get();
             }
 
-         Botan::TLS::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
+         detail::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
          op{std::move(init.completion_handler), *this, sent};
 
          return init.result.get();
          }
 
       /**
-       * Start an asynchronous read. The function call always returns immediately.
+       * @brief Start an asynchronous read. The function call always returns immediately.
        *
        * @param buffers The buffers into which the data will be read. Although the buffers object may be copied as
        *                necessary, ownership of the underlying buffers is retained by the caller, which must guarantee
@@ -508,14 +512,14 @@ class Stream
 
          boost::asio::async_completion<ReadHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
-         AsyncReadOperation<typename std::decay<ReadHandler>::type, Stream, MutableBufferSequence>
+         detail::AsyncReadOperation<typename std::decay<ReadHandler>::type, Stream, MutableBufferSequence>
          op{std::move(init.completion_handler), *this, buffers};
          return init.result.get();
          }
 
    protected:
       /**
-       * Helper class that implements Botan::TLS::Callbacks
+       * @brief Helper class that implements Botan::TLS::Callbacks
        *
        * This class is provided to the stream's native_handle (Botan::TLS::Channel) and implements the callback
        * functions triggered by the native_handle.
@@ -568,43 +572,40 @@ class Stream
             boost::beast::flat_buffer& m_send_buffer;
          };
 
-      // TODO: explain, note: c++17 makes this much better with constexpr if
+      // This is a helper construct to allow mocking the native_handle in test code. It is activated by explicitly
+      // specifying a (mocked) channel type template parameter when constructing the stream and does not attempt to
+      // instantiate the native_handle.
+      // Note: once we have C++17 we can achieve this much more elegantly using constexpr if.
       template<class T = ChannelT>
       typename std::enable_if<!std::is_same<Channel, T>::value>::type
-      setup_channel(Connection_Side) {}
+      setup_native_handle(Connection_Side, boost::system::error_code&) {}
 
+      /**
+       * @brief Create the native handle.
+       *
+       * Depending on the desired connection side, this function will create a Botan::TLS::Client or a
+       * Botan::TLS::Server.
+       *
+       * @param side The desired connection side (client or server)
+       * @param ec Set to NotImplemented when side is SERVER - currently only CLIENT is implemented
+       */
       template<class T = ChannelT>
       typename std::enable_if<std::is_same<Channel, T>::value>::type
-      setup_channel(Connection_Side side)
+      setup_native_handle(Connection_Side side, boost::system::error_code& ec)
          {
-         assert(side == CLIENT);
-         m_channel = std::unique_ptr<Client>(new Client(m_core,
-                                             *m_context.sessionManager,
-                                             *m_context.credentialsManager,
-                                             *m_context.policy,
-                                             *m_context.randomNumberGenerator,
-                                             m_context.serverInfo));
-         }
-
-      //! \brief validate the connection side (OpenSSL compatibility)
-      void validate_connection_side(Connection_Side side)
-         {
-         if(side != CLIENT)
+         if(side == CLIENT)
             {
-            throw Invalid_Argument("wrong connection_side");
+            m_native_handle = std::unique_ptr<Client>(new Client(m_core,
+                              *m_context.sessionManager,
+                              *m_context.credentialsManager,
+                              *m_context.policy,
+                              *m_context.randomNumberGenerator,
+                              m_context.serverInfo));
             }
-         }
-
-      //! \brief validate the connection side (OpenSSL compatibility)
-      bool validate_connection_side(Connection_Side side, boost::system::error_code& ec)
-         {
-         if(side != CLIENT)
+         else
             {
-            ec = Botan::ErrorType::InvalidArgument;
-            return false;
+            ec = Botan::ErrorType::NotImplemented;
             }
-
-         return true;
          }
 
       size_t sendPendingEncryptedData(boost::system::error_code& ec)
@@ -693,7 +694,7 @@ class Stream
       boost::beast::flat_buffer m_send_buffer;
 
       StreamCore                m_core;
-      std::unique_ptr<ChannelT> m_channel;
+      std::unique_ptr<ChannelT> m_native_handle;
 
       // Buffer space used to read input intended for the core
       std::vector<uint8_t>              m_input_buffer_space;
@@ -701,7 +702,6 @@ class Stream
    };
 
 }  // namespace TLS
-
 }  // namespace Botan
 
 #endif // BOOST_VERSION

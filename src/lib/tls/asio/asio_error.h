@@ -23,8 +23,7 @@
 namespace Botan {
 namespace TLS {
 
-namespace detail {
-// TLS Alerts
+//! @brief An error category for TLS alerts
 struct BotanAlertCategory : boost::system::error_category
    {
    const char* name() const noexcept override
@@ -45,6 +44,14 @@ inline const BotanAlertCategory& botan_alert_category() noexcept
    return category;
    }
 
+inline boost::system::error_code make_error_code(Botan::TLS::Alert::Type c)
+   {
+   return boost::system::error_code(static_cast<int>(c), Botan::TLS::botan_alert_category());
+   }
+
+}  // namespace TLS
+
+//! @brief An error category for errors from Botan (other than TLS alerts)
 struct BotanErrorCategory : boost::system::error_category
    {
    const char* name() const noexcept override
@@ -64,18 +71,9 @@ inline const BotanErrorCategory& botan_category() noexcept
    return category;
    }
 
-} // namespace detail
-
-inline boost::system::error_code make_error_code(Botan::TLS::Alert::Type c)
-   {
-   return boost::system::error_code(static_cast<int>(c), detail::botan_alert_category());
-   }
-
-}  // namespace TLS
-
 inline boost::system::error_code make_error_code(Botan::ErrorType e)
    {
-   return boost::system::error_code(static_cast<int>(e), Botan::TLS::detail::botan_category());
+   return boost::system::error_code(static_cast<int>(e), Botan::botan_category());
    }
 
 }  // namespace Botan

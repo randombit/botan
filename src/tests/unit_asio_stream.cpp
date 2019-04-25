@@ -1,5 +1,5 @@
 /*
-* TLS ASIO Stream Wrapper
+* TLS ASIO Stream Unit Tests
 * (C) 2018-2019 Jack Lloyd
 *     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
 *
@@ -101,7 +101,7 @@ class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel>
       AsioStream(Botan::TLS::Context& context, Args&& ... args)
          : Stream(context, args...)
          {
-         m_channel = std::unique_ptr<MockChannel>(new MockChannel(m_core));
+         m_native_handle = std::unique_ptr<MockChannel>(new MockChannel(m_core));
          }
 
       virtual ~AsioStream() = default;
@@ -114,7 +114,7 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
       ThrowingAsioStream(Botan::TLS::Context& context, Args&& ... args)
          : Stream(context, args...)
          {
-         m_channel = std::unique_ptr<ThrowingMockChannel>(new ThrowingMockChannel(m_core));
+         m_native_handle = std::unique_ptr<ThrowingMockChannel>(new ThrowingMockChannel(m_core));
          }
 
       virtual ~ThrowingAsioStream() = default;
