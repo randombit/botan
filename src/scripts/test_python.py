@@ -25,6 +25,17 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(botan2.version_major(), 2)
         self.assertTrue(botan2.version_minor() >= 8)
 
+        self.assertTrue(botan2.ffi_api_version() >= 20180713)
+
+    def test_compare(self):
+
+        x = "1234"
+        y = "1234"
+        z = "1233"
+        self.assertTrue(botan2.const_time_compare(x, y))
+        self.assertFalse(botan2.const_time_compare(x, z))
+        self.assertFalse(botan2.const_time_compare(x, x + z))
+
     def test_block_cipher(self):
         aes = botan2.BlockCipher("AES-128")
         self.assertEqual(aes.algo_name(), "AES-128")
@@ -181,7 +192,7 @@ class BotanPythonTests(unittest.TestCase):
 
     def test_mceliece(self):
         rng = botan2.RandomNumberGenerator()
-        mce_priv = botan2.PrivateKey.create('mce', [2960, 57], rng)
+        mce_priv = botan2.PrivateKey.create('McEliece', '2960,57', rng)
         mce_pub = mce_priv.get_public_key()
         self.assertEqual(mce_pub.estimated_strength(), 128)
 
@@ -230,6 +241,38 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         rsapub = botan2.PublicKey.load(rsa_pub_pem)
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
+
+        n = 0xB5AD8818DCA1F256FF8FAB0888D0667D95DF2098B0D201A4C75590D3EBDFA159DD91C64AFDA082609EF885B2D1F4DC055C8FF9FA371C2F3398E0B612C603151131C81DB322C8D15E53EB56B4DF7325F05046889CB25021DE4282E16B9B28F5CBB2B8DDECE0F8E4E8A77F674F26AE92B7220920A1FBE43F51039A9C79D1F1CB6B
+        e = 0x10001
+
+        rsapub2 = botan2.PublicKey.load_rsa(n, e)
+        self.assertEqual(rsapub2.to_pem(), rsa_pub_pem)
+
+        self.assertEqual(rsapub2.get_field("n"), n)
+        self.assertEqual(rsapub2.get_field("e"), e)
+
+    def test_key_crypto(self):
+        rng = botan2.RandomNumberGenerator()
+        rsapriv = botan2.PrivateKey.create('RSA', '1024', rng)
+        passphrase = "super secret tell noone"
+
+        pem = rsapriv.export_encrypted(passphrase, rng, True, msec=10)
+        pem2 = rsapriv.export_encrypted(passphrase, rng, True, msec=10, cipher="AES-128/SIV")
+        pem3 = rsapriv.export_encrypted(passphrase, rng, True, msec=10, cipher="AES-128/SIV", pbkdf="Scrypt")
+
+    def test_check_key(self):
+        # valid (if rather small) RSA key
+        n = 273279220906618527352827457840955116141
+        e = 0x10001
+
+        rng = botan2.RandomNumberGenerator()
+
+        rsapub = botan2.PublicKey.load_rsa(n, e)
+        self.assertTrue(rsapub.check_key(rng))
+
+        # invalid
+        rsapub = botan2.PublicKey.load_rsa(n - 1, e)
+        self.assertFalse(rsapub.check_key(rng))
 
     def test_rsa(self):
         # pylint: disable=too-many-locals
@@ -282,27 +325,73 @@ ofvkP1EDmpx50fHLawIDAQAB
         verify.update('message')
         self.assertTrue(verify.check_signature(sig))
 
-    def test_dh(self):
+    def test_ecdsa(self):
+        rng = botan2.RandomNumberGenerator()
+
+        hash = 'EMSA1(SHA-256)'
+        group = 'secp256r1'
+        msg = 'test message'
+
+        priv = botan2.PrivateKey.create('ECDSA', group, rng)
+        pub = priv.get_public_key()
+        self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
+        self.assertEqual(pub.get_field('public_y'), priv.get_field('public_y'))
+
+        signer = botan2.PKSign(priv, hash)
+        signer.update(msg)
+        signature = signer.finish(rng)
+
+        verifier = botan2.PKVerify(pub, hash)
+        verifier.update(msg)
+        self.assertTrue(verifier.check_signature(signature))
+
+        pub_x = pub.get_field('public_x')
+        pub_y = priv.get_field('public_y')
+        pub2 = botan2.PublicKey.load_ecdsa(group, pub_x, pub_y)
+        verifier = botan2.PKVerify(pub2, hash)
+        verifier.update(msg)
+        self.assertTrue(verifier.check_signature(signature))
+
+        priv2 = botan2.PrivateKey.load_ecdsa(group, priv.get_field('x'))
+        signer = botan2.PKSign(priv2, hash)
+        # sign empty message
+        signature = signer.finish(rng)
+
+        # verify empty message
+        self.assertTrue(verifier.check_signature(signature))
+
+
+    def test_ecdh(self):
         a_rng = botan2.RandomNumberGenerator('user')
         b_rng = botan2.RandomNumberGenerator('user')
 
-        for dh_grp in ['secp256r1', 'curve25519']:
-            dh_kdf = 'KDF2(SHA-384)'.encode('utf-8')
-            a_dh_priv = botan2.PrivateKey.create('ecdh', dh_grp, a_rng)
-            b_dh_priv = botan2.PrivateKey.create('ecdh', dh_grp, b_rng)
+        # XXX why need the encode here?? should be handled in wrapper
+        kdf = 'KDF2(SHA-384)'.encode('utf-8')
 
-            a_dh = botan2.PKKeyAgreement(a_dh_priv, dh_kdf)
-            b_dh = botan2.PKKeyAgreement(b_dh_priv, dh_kdf)
+        for grp in ['secp256r1', 'secp384r1', 'brainpool256r1']:
+            a_priv = botan2.PrivateKey.create('ECDH', grp, a_rng)
+            b_priv = botan2.PrivateKey.create('ECDH', grp, b_rng)
 
-            a_dh_pub = a_dh.public_value()
-            b_dh_pub = b_dh.public_value()
+            a_op = botan2.PKKeyAgreement(a_priv, kdf)
+            b_op = botan2.PKKeyAgreement(b_priv, kdf)
+
+            a_pub = a_op.public_value()
+            b_pub = b_op.public_value()
 
             salt = a_rng.get(8) + b_rng.get(8)
 
-            a_key = a_dh.agree(b_dh_pub, 32, salt)
-            b_key = b_dh.agree(a_dh_pub, 32, salt)
+            a_key = a_op.agree(b_pub, 32, salt)
+            b_key = b_op.agree(a_pub, 32, salt)
 
             self.assertEqual(a_key, b_key)
+
+            a_pem = a_priv.to_pem()
+
+            a_priv_x = a_priv.get_field('x')
+
+            new_a = botan2.PrivateKey.load_ecdh(grp, a_priv_x)
+
+            self.assertEqual(a_pem, new_a.to_pem())
 
     def test_certs(self):
         cert = botan2.X509Cert(filename="src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt")
@@ -335,6 +424,9 @@ ofvkP1EDmpx50fHLawIDAQAB
         big = botan2.MPI('0x85839682368923476892367235')
         self.assertEqual(big.bit_count(), 104)
         small = botan2.MPI(0xDEADBEEF)
+
+        self.assertEqual(hex_encode(small.to_bytes()), "deadbeef")
+        self.assertEqual(hex_encode(big.to_bytes()), "85839682368923476892367235")
 
         self.assertEqual(int(small), 0xDEADBEEF)
 
