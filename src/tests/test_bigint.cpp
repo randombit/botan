@@ -438,7 +438,7 @@ class BigInt_GCD_Test final : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         Test::Result result("BigInt Mod");
+         Test::Result result("BigInt GCD");
 
          const BigInt x = vars.get_req_bn("X");
          const BigInt y = vars.get_req_bn("Y");
