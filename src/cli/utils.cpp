@@ -17,6 +17,10 @@
    #include <botan/http_util.h>
 #endif
 
+#if defined(BOTAN_HAS_UUID)
+   #include <botan/uuid.h>
+#endif
+
 namespace Botan_CLI {
 
 class Print_Help final : public Command
@@ -248,6 +252,34 @@ class Print_Cpuid final : public Command
    };
 
 BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
+
+#if defined(BOTAN_HAS_UUID)
+
+class Print_UUID final : public Command
+   {
+   public:
+      Print_UUID() : Command("uuid") {}
+
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Print a random UUID";
+         }
+
+      void go() override
+         {
+         Botan::UUID uuid(rng());
+         output() << uuid.to_string() << "\n";
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("uuid", Print_UUID);
+
+#endif
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
 

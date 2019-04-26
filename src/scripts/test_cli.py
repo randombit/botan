@@ -659,6 +659,18 @@ def cli_pk_encrypt_tests():
     test_cli("pk_decrypt", [rsa_priv_key, ctext_file, "--output=%s" % (recovered_file)], "")
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", recovered_file], rng_output_hash)
 
+def cli_uuid_tests():
+    fixed_drbg_seed = "802" * 32
+
+    test_cli("uuid", ['--rng-type=drbg', '--drbg-seed=' + fixed_drbg_seed], "D80F88F6-ADBE-45AC-B10C-3602E67D985B")
+
+    uuid_re = re.compile(r'[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}')
+
+    output = test_cli("uuid", [])
+
+    if uuid_re.match(output) is None:
+        logging.error('Bad uuid output %s' % (output))
+
 def cli_tls_client_hello_tests():
 
     # pylint: disable=line-too-long
@@ -829,6 +841,7 @@ def main(args=None):
         cli_tls_socket_tests,
         cli_trust_root_tests,
         cli_tss_tests,
+        cli_uuid_tests,
         cli_version_tests,
         ]
 
