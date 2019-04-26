@@ -2892,6 +2892,11 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_ReturnError final : public PKCS11_Error
          return m_return_val;
          }
 
+      int error_code() const noexcept override
+         {
+         return static_cast<int>(m_return_val);
+         }
+
    private:
       const ReturnValue m_return_val;
    };
