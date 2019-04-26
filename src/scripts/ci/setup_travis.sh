@@ -78,6 +78,6 @@ elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
 
     if [ "$BUILD_MODE" = "shared" ]; then
         # Current image has Boost 1.67 and we need 1.69+
-        brew upgrade boost
+        HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade boost
     fi
 fi
