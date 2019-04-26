@@ -166,7 +166,7 @@ class Stream
       //
 
       const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
-      boost::asio::const_buffer sendBuffer() const { return m_send_buffer.data(); }  // TODO: really .data() ?
+      boost::asio::const_buffer sendBuffer() const { return m_send_buffer.data(); }
 
       //! @brief Check if decrypted data is available in the receive buffer
       bool hasReceivedData() const { return m_receive_buffer.size() > 0; }
@@ -313,20 +313,18 @@ class Stream
          catch(const TLS_Exception& e)
             {
             ec = e.type();
-            return;
             }
          catch(const Botan::Exception& e)
             {
             ec = e.error_type();
-            return;
             }
          catch(const std::exception&)
             {
             ec = Botan::ErrorType::Unknown;
-            return;
             }
 
-         sendPendingEncryptedData(ec);
+         if(!ec)
+            { sendPendingEncryptedData(ec); }
          }
 
       /**
@@ -382,11 +380,28 @@ class Stream
          if(hasReceivedData())
             { return copyReceivedData(buffers); }
 
-         tls_receive_some(ec);
+         boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
          if(ec)
             { return 0; }
 
-         return copyReceivedData(buffers);
+         try
+            {
+            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
+            }
+         catch(const TLS_Exception& e)
+            {
+            ec = e.type();
+            }
+         catch(const Botan::Exception& e)
+            {
+            ec = e.error_type();
+            }
+         catch(const std::exception&)
+            {
+            ec = Botan::ErrorType::Unknown;
+            }
+
+         return !ec ? copyReceivedData(buffers) : 0;
          }
 
       /**
@@ -598,40 +613,12 @@ class Stream
 
       size_t sendPendingEncryptedData(boost::system::error_code& ec)
          {
-         if (ec)
+         if(ec)
             { return 0; }
 
          auto writtenBytes = boost::asio::write(m_nextLayer, sendBuffer(), ec);
          consumeSendBuffer(writtenBytes);
          return writtenBytes;
-         }
-
-      void tls_receive_some(boost::system::error_code& ec)
-         {
-         boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
-
-         if(ec)
-            { return; }
-
-         try
-            {
-            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
-            }
-         catch(const TLS_Exception& e)
-            {
-            ec = e.type();
-            return;
-            }
-         catch(const Botan::Exception& e)
-            {
-            ec = e.error_type();
-            return;
-            }
-         catch(const std::exception&)
-            {
-            ec = Botan::ErrorType::Unknown;
-            return;
-            }
          }
 
       template <typename ConstBufferSequence>
