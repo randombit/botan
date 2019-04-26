@@ -220,15 +220,12 @@ class Stream
       void handshake(Connection_Side side, boost::system::error_code& ec)
          {
          setup_native_handle(side, ec);
-         if(ec)
-            { return; }
 
-         while(!native_handle()->is_active())
+         // send client hello, which was written to the send buffer on client instantiation
+         sendPendingEncryptedData(ec);
+
+         while(!native_handle()->is_active() && !ec)
             {
-            sendPendingEncryptedData(ec);
-            if(ec)
-               { return; }
-
             boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
             if(ec)
                { return; }
@@ -240,17 +237,14 @@ class Stream
             catch(const TLS_Exception& e)
                {
                ec = e.type();
-               return;
                }
             catch(const Botan::Exception& e)
                {
                ec = e.error_type();
-               return;
                }
             catch(const std::exception&)
                {
                ec = Botan::ErrorType::Unknown;
-               return;
                }
 
             sendPendingEncryptedData(ec);
@@ -422,21 +416,15 @@ class Stream
        *
        * @param buffers The data to be written.
        * @param ec Set to indicate what error occurred, if any.
-       * @return The number of bytes written.
+       * @return The number of bytes processed from the input buffers.
        */
       template <typename ConstBufferSequence>
       std::size_t write_some(const ConstBufferSequence& buffers,
                              boost::system::error_code& ec)
          {
-         std::size_t sent = tls_encrypt_some(buffers, ec);
-         if(ec)
-            { return 0; }
-
+         tls_encrypt(buffers, ec);
          sendPendingEncryptedData(ec);
-         if(ec)
-            { return 0; }
-
-         return sent;
+         return !ec ? boost::asio::buffer_size(buffers) : 0;
          }
 
       /**
@@ -476,7 +464,7 @@ class Stream
          boost::asio::async_completion<WriteHandler, void(boost::system::error_code, std::size_t)> init(handler);
 
          boost::system::error_code ec;
-         std::size_t sent = tls_encrypt_some(buffers, ec);
+         tls_encrypt(buffers, ec);
          if(ec)
             {
             // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
@@ -488,7 +476,7 @@ class Stream
             }
 
          detail::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
-         op{std::move(init.completion_handler), *this, sent};
+         op{std::move(init.completion_handler), *this, boost::asio::buffer_size(buffers)};
 
          return init.result.get();
          }
@@ -610,8 +598,10 @@ class Stream
 
       size_t sendPendingEncryptedData(boost::system::error_code& ec)
          {
-         auto writtenBytes = boost::asio::write(m_nextLayer, sendBuffer(), ec);
+         if (ec)
+            { return 0; }
 
+         auto writtenBytes = boost::asio::write(m_nextLayer, sendBuffer(), ec);
          consumeSendBuffer(writtenBytes);
          return writtenBytes;
          }
@@ -645,46 +635,33 @@ class Stream
          }
 
       template <typename ConstBufferSequence>
-      std::size_t tls_encrypt_some(const ConstBufferSequence& buffers,
-                                   boost::system::error_code& ec)
+      void tls_encrypt(const ConstBufferSequence& buffers, boost::system::error_code& ec)
          {
-         std::size_t sent = 0;
          // NOTE: This is not asynchronous: it encrypts the data synchronously.
          // The data encrypted by native_handle()->send() is synchronously stored in the send_buffer of m_core,
          // but is not actually written to the wire, yet.
          for(auto it = boost::asio::buffer_sequence_begin(buffers);
-               it != boost::asio::buffer_sequence_end(buffers);
+               !ec && it != boost::asio::buffer_sequence_end(buffers);
                it++)
             {
-            if(sent >= MAX_PLAINTEXT_SIZE)
-               { return 0; }
-
-            boost::asio::const_buffer buffer = *it;
-            const auto amount =
-               std::min<std::size_t>(MAX_PLAINTEXT_SIZE - sent, buffer.size());
+            const boost::asio::const_buffer buffer = *it;
             try
                {
-               native_handle()->send(static_cast<const uint8_t*>(buffer.data()), amount);
+               native_handle()->send(static_cast<const uint8_t*>(buffer.data()), buffer.size());
                }
             catch(const TLS_Exception& e)
                {
                ec = e.type();
-               return 0;
                }
             catch(const Botan::Exception& e)
                {
                ec = e.error_type();
-               return 0;
                }
             catch(const std::exception&)
                {
                ec = Botan::ErrorType::Unknown;
-               return 0;
                }
-            sent += amount;
             }
-
-         return sent;
          }
 
       Context                   m_context;
