@@ -74,5 +74,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache boost
+    # Cannot use HOMEBREW_NO_AUTO_UPDATE=1 as we need a new Boost
+    brew install ccache boost
 fi
