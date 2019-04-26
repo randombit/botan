@@ -89,11 +89,10 @@ def main(args):
     parser.add_option('--jobs', default=get_concurrency(),
                       help="jobs to run (default %default)")
 
-    jobs = get_concurrency()
-
     (options, args) = parser.parse_args(args)
 
     run_tests = options.run_tests
+    jobs = int(options.jobs)
 
     configure_py = './configure.py'
     modules = get_module_list(configure_py)

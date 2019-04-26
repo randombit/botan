@@ -25,6 +25,7 @@ constraints.  So before release, do a complete build/test cycle:
  - Native compile on FreeBSD x86-64
  - Native compile on at least one unusual platform (AIX, NetBSD, ...)
  - Build the website content to detect any Doxygen problems
+ - Test many build configurations (using `src/scripts/test_all_configs.py`)
 
 Pre Release Checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

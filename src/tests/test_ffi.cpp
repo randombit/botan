@@ -87,11 +87,11 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_keywrap());
 #endif
 
-#if defined(BOTAN_HAS_HOTP)
+#if defined(BOTAN_HAS_HOTP) && defined(BOTAN_HAS_SHA1)
          results.push_back(ffi_test_hotp());
 #endif
 
-#if defined(BOTAN_HAS_TOTP)
+#if defined(BOTAN_HAS_TOTP) && defined(BOTAN_HAS_SHA1)
          results.push_back(ffi_test_totp());
 #endif
 
@@ -109,7 +109,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_ecdsa_cert());
 #endif
 
-#if defined(BOTAN_HAS_ECDH)
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_KDF2) && defined(BOTAN_HAS_SHA2_32)
          results.push_back(ffi_test_ecdh(rng));
 #endif
 
@@ -122,7 +122,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_mceliece(rng));
 #endif
 
-#if defined(BOTAN_HAS_ELGAMAL)
+#if defined(BOTAN_HAS_ELGAMAL) && defined(BOTAN_HAS_EME_RAW)
          results.push_back(ffi_test_elgamal(rng));
 #endif
 
@@ -281,7 +281,7 @@ class FFI_Unit_Tests final : public Test
       Test::Result ffi_test_cert_validation()
          {
          Test::Result result("FFI Cert validation");
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA)
 
          botan_x509_cert_t root;
          int rc;
@@ -470,6 +470,7 @@ class FFI_Unit_Tests final : public Test
          {
          Test::Result result("FFI CBC cipher");
 
+#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_CBC)
          botan_cipher_t cipher_encrypt, cipher_decrypt;
 
          if(TEST_FFI_OK(botan_cipher_init, (&cipher_encrypt, "AES-128/CBC/PKCS7", BOTAN_CIPHER_INIT_FLAG_ENCRYPT)))
@@ -536,6 +537,7 @@ class FFI_Unit_Tests final : public Test
 
             TEST_FFI_OK(botan_cipher_destroy, (cipher_encrypt));
             }
+#endif
 
          return result;
          }
@@ -1420,8 +1422,6 @@ class FFI_Unit_Tests final : public Test
 
       void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_privkey_t priv, botan_rng_t rng)
          {
-         const size_t pbkdf_iter = 1000;
-
          // export public key
          size_t pubkey_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pubkey_export, (pub, nullptr, &pubkey_len,
@@ -1476,6 +1476,9 @@ class FFI_Unit_Tests final : public Test
 
          TEST_FFI_OK(botan_privkey_load, (&copy, rng, privkey.data(), privkey.size(), nullptr));
          botan_privkey_destroy(copy);
+
+#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_PBES2)
+         const size_t pbkdf_iter = 1000;
 
          // export private key encrypted
          privkey_len = 0;
@@ -1535,6 +1538,7 @@ class FFI_Unit_Tests final : public Test
 
          TEST_FFI_OK(botan_privkey_load, (&copy, rng, privkey.data(), privkey.size(), "password"));
          botan_privkey_destroy(copy);
+#endif
 
          // calculate fingerprint
          size_t strength = 0;
@@ -1790,6 +1794,7 @@ class FFI_Unit_Tests final : public Test
                result.test_eq("algo name", std::string(namebuf), "RSA");
                }
 
+#if defined(BOTAN_HAS_EME_OAEP)
             botan_pk_op_encrypt_t encrypt;
 
             if(TEST_FFI_OK(botan_pk_op_encrypt_create, (&encrypt, loaded_pubkey, "OAEP(SHA-256)", 0)))
@@ -1825,6 +1830,7 @@ class FFI_Unit_Tests final : public Test
 
                TEST_FFI_OK(botan_pk_op_encrypt_destroy, (encrypt));
                }
+#endif
 
             TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
