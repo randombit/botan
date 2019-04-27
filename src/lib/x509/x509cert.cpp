@@ -287,6 +287,13 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
          }
       else
          {
+         /*
+         If a parse error or unknown algorithm is encountered, default
+         to assuming it is self signed. We have no way of being certain but
+         that is usually the default case (self-issued is rare in practice).
+         */
+         data->m_self_signed = true;
+
          try
             {
             std::unique_ptr<Public_Key> pub_key(X509::load_key(data->m_subject_public_key_bits_seq));
@@ -297,6 +304,10 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
                sig_status == Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN)
                {
                data->m_self_signed = true;
+               }
+            else
+               {
+               data->m_self_signed = false;
                }
             }
          catch(...)

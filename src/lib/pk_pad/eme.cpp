@@ -14,7 +14,7 @@
 #include <botan/oaep.h>
 #endif
 
-#if defined(BOTAN_HAS_EME_PKCS1v15)
+#if defined(BOTAN_HAS_EME_PKCS1)
 #include <botan/eme_pkcs.h>
 #endif
 
@@ -31,7 +31,7 @@ EME* get_eme(const std::string& algo_spec)
       return new EME_Raw;
 #endif
 
-#if defined(BOTAN_HAS_EME_PKCS1v15)
+#if defined(BOTAN_HAS_EME_PKCS1)
    if(algo_spec == "PKCS1v15" || algo_spec == "EME-PKCS1-v1_5")
       return new EME_PKCS1v15;
 #endif

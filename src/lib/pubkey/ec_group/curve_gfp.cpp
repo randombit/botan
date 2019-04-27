@@ -279,8 +279,6 @@ void CurveGFp_NIST::curve_sqr_words(BigInt& z, const word x[], size_t x_size,
    this->redc_mod_p(z, ws);
    }
 
-#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
-
 /**
 * The NIST P-192 curve
 */
@@ -466,8 +464,6 @@ BigInt CurveGFp_P384::invert_element(const BigInt& x, secure_vector<word>& ws) c
    return r;
    }
 
-#endif
-
 /**
 * The NIST P-521 curve
 */
@@ -555,7 +551,6 @@ BigInt CurveGFp_P521::invert_element(const BigInt& x, secure_vector<word>& ws) c
 std::shared_ptr<CurveGFp_Repr>
 CurveGFp::choose_repr(const BigInt& p, const BigInt& a, const BigInt& b)
    {
-#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
    if(p == prime_p192())
       return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P192(a, b));
    if(p == prime_p224())
@@ -564,8 +559,6 @@ CurveGFp::choose_repr(const BigInt& p, const BigInt& a, const BigInt& b)
       return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P256(a, b));
    if(p == prime_p384())
       return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P384(a, b));
-#endif
-
    if(p == prime_p521())
       return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P521(a, b));
 

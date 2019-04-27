@@ -185,13 +185,13 @@ class NIST_Curve_Reduction_Tests final : public Test
    {
    public:
       typedef std::function<void (Botan::BigInt&, Botan::secure_vector<Botan::word>&)> reducer_fn;
+
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
 
          // Using lambdas here to avoid strange UbSan warning (#1370)
 
-#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
          results.push_back(random_redc_test("P-384", Botan::prime_p384(),
                               [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
                                  {
@@ -212,7 +212,6 @@ class NIST_Curve_Reduction_Tests final : public Test
                                  {
                                  Botan::redc_p192(p, ws);
                                  }));
-#endif
          results.push_back(random_redc_test("P-521", Botan::prime_p521(),
                               [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void
                                  {

@@ -75,8 +75,6 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    bigint_cnd_sub(needs_reduction.value(), x.mutable_data(), p521_words, p_words);
    }
 
-#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
-
 namespace {
 
 /**
@@ -585,7 +583,5 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p384_limbs + 1, p384_mults[0], p384_limbs);
    }
-
-#endif
 
 }

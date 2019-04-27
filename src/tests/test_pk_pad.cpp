@@ -10,13 +10,13 @@
    #include <botan/emsa.h>
 #endif
 
-#if defined(BOTAN_HAS_EME_PKCS1v15)
+#if defined(BOTAN_HAS_EME_PKCS1)
    #include <botan/eme_pkcs.h>
 #endif
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_EME_PKCS1v15)
+#if defined(BOTAN_HAS_EME_PKCS1)
 
 class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test
    {

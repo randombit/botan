@@ -906,7 +906,7 @@ class TLS_Unit_Tests final : public Test
 #if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_TLS_CBC)
          test_modern_versions("Camellia-256 SHA-2", results, *client_ses, *server_ses, *creds, "RSA", "Camellia-256", "SHA-384 SHA-256");
 #endif
-#if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_GCM)
+#if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM)
          test_modern_versions("Camellia-128/GCM ECDH", results, *client_ses, *server_ses, *creds, "ECDH", "Camellia-128/GCM", "AEAD");
 #endif
 
@@ -975,7 +975,7 @@ class TLS_Unit_Tests final : public Test
 
          test_modern_versions("AES-128/GCM PSK", results, *client_ses, *server_ses, *creds, "PSK", "AES-128/GCM");
 
-#if defined(BOTAN_HAS_CCM)
+#if defined(BOTAN_HAS_AEAD_CCM)
          test_modern_versions("AES-128/CCM PSK", results, *client_ses, *server_ses, *creds, "PSK", "AES-128/CCM");
          test_modern_versions("AES-128/CCM-8 PSK", results, *client_ses, *server_ses, *creds, "PSK", "AES-128/CCM(8)");
 #endif
