@@ -151,6 +151,8 @@ New C APIs
 * Expose deterministic PRNG
 * base32
 * base58
+* DL_Group
+* EC_Group
 
 Python
 ----------------
