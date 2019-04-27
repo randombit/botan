@@ -470,7 +470,7 @@ class FFI_Unit_Tests final : public Test
          {
          Test::Result result("FFI CBC cipher");
 
-#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_CBC)
+#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_MODE_CBC)
          botan_cipher_t cipher_encrypt, cipher_decrypt;
 
          if(TEST_FFI_OK(botan_cipher_init, (&cipher_encrypt, "AES-128/CBC/PKCS7", BOTAN_CIPHER_INIT_FLAG_ENCRYPT)))
@@ -1477,7 +1477,7 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_privkey_load, (&copy, rng, privkey.data(), privkey.size(), nullptr));
          botan_privkey_destroy(copy);
 
-#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_PBES2)
+#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_PKCS5_PBES2)
          const size_t pbkdf_iter = 1000;
 
          // export private key encrypted
@@ -1514,7 +1514,7 @@ class FFI_Unit_Tests final : public Test
          const std::string pbe_hash = "SHA-512";
 #endif
 
-#if defined(BOTAN_HAS_GCM)
+#if defined(BOTAN_HAS_AEAD_GCM)
          const std::string pbe_cipher = "AES-256/GCM";
 #else
          const std::string pbe_cipher = "AES-256/CBC";

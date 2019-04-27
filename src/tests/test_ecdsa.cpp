@@ -129,7 +129,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          return "EMSA1(" + hash + ")";
          }
 
-#if !defined(BOTAN_HAS_RFC6979)
+#if !defined(BOTAN_HAS_RFC6979_GENERATOR)
       Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
          {
          // probabilistic ecdsa signature generation extracts more random than just the nonce,

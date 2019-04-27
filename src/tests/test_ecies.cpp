@@ -16,7 +16,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_ECIES) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_CBC)
+#if defined(BOTAN_HAS_ECIES) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_MODE_CBC)
 
 using Flags = Botan::ECIES_Flags;
 

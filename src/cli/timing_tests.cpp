@@ -44,7 +44,7 @@
    #include <botan/system_rng.h>
 #endif
 
-#if defined(BOTAN_HAS_AUTO_SEEDED_RNG)
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>
 #endif
 
@@ -96,7 +96,7 @@ class Timing_Test
          {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
          return Botan::system_rng();
-#elif defined(BOTAN_HAS_AUTO_SEEDED_RNG)
+#elif defined(BOTAN_HAS_AUTO_SEEDING_RNG)
          static AutoSeeded_RNG static_timing_test_rng(Botan::Entropy_Sources::global_sources(), 0);
          return static_timing_test_rng;
 #else
@@ -107,7 +107,7 @@ class Timing_Test
 
    };
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1v15) && defined(BOTAN_HAS_EME_RAW)
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_HAS_EME_RAW)
 
 class Bleichenbacker_Timing_Test final : public Timing_Test
    {
@@ -544,7 +544,7 @@ BOTAN_REGISTER_COMMAND("timing_test", Timing_Test_Command);
 
 std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::string& test_type)
    {
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1v15) && defined(BOTAN_HAS_EME_RAW)
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_HAS_EME_RAW)
    if(test_type == "bleichenbacher")
       {
       return std::unique_ptr<Timing_Test>(new Bleichenbacker_Timing_Test(2048));
