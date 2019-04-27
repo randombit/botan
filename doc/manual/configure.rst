@@ -77,6 +77,9 @@ to the output unmodified. The template elements are:
    many variables for various purposes, this allows getting their value within
    the output. If a variable is not defined, an error occurs.
 
+   If a variable reference ends with ``|upper``, the value is uppercased before
+   being inserted into the template output.
+
  * Iteration, ``%{for variable} block %{endfor}``. This iterates over a list and
    repeats the block as many times as it is included. Variables within the block
    are expanded. The two template elements ``%{for ...}`` and ``%{endfor}`` must
