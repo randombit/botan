@@ -77,7 +77,9 @@ def _errcheck(rc, fn, _args):
 
 def _set_prototypes(dll):
     # pylint: disable=too-many-statements,line-too-long
-    def ffi_api(fn, args, allowed_errors = [-10]):
+    def ffi_api(fn, args, allowed_errors=None):
+        if allowed_errors is None:
+            allowed_errors = [-10]
         fn.argtypes = args
         fn.restype = c_int
         fn.errcheck = _errcheck
@@ -452,6 +454,8 @@ def _ctype_bits(s):
     if version_info[0] < 3:
         if isinstance(s, str):
             return s
+        elif isinstance(s, unicode): # pylint: disable=undefined-variable
+            return s.decode('utf-8')
         else:
             raise Exception("Internal error - unexpected type %s provided to _ctype_bits" % (type(s).__name__))
     else:
@@ -498,7 +502,7 @@ def const_time_compare(x, y):
     if len_x != len_y:
         return False
     rc = _DLL.botan_constant_time_compare(_ctype_bits(x), _ctype_bits(y), c_size_t(len_x))
-    return (rc == 0)
+    return rc == 0
 
 #
 # RNG
@@ -1088,7 +1092,7 @@ class PrivateKey(object):
         else:
             return _call_fn_returning_vec(4096, lambda b, bl: _DLL.botan_privkey_export(self.__obj, b, bl, 0))
 
-    def export_encrypted(self, passphrase, rng_obj, pem=False, msec=300, cipher=None, pbkdf=None):
+    def export_encrypted(self, passphrase, rng_obj, pem=False, msec=300, cipher=None, pbkdf=None): # pylint: disable=redefined-outer-name
         flags = 1 if pem else 0
         msec = c_uint32(msec)
         _iters = c_size_t(0)
@@ -1181,7 +1185,7 @@ class PKKeyAgreement(object):
     def __init__(self, key, kdf_name):
         self.__obj = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        _DLL.botan_pk_op_key_agreement_create(byref(self.__obj), key.handle_(), kdf_name, flags)
+        _DLL.botan_pk_op_key_agreement_create(byref(self.__obj), key.handle_(), _ctype_str(kdf_name), flags)
 
         self.m_public_value = _call_fn_returning_vec(
             0, lambda b, bl: _DLL.botan_pk_op_key_agreement_export_public(key.handle_(), b, bl))

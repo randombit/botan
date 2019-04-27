@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-(C) 2015,2017,2018 Jack Lloyd
+(C) 2015,2017,2018,2019 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -17,6 +17,7 @@ def hex_decode(buf):
     return binascii.unhexlify(buf.encode('ascii'))
 
 class BotanPythonTests(unittest.TestCase):
+    # pylint: disable=too-many-public-methods
 
     def test_version(self):
         version_str = botan2.version_string()
@@ -242,7 +243,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         rsapub = botan2.PublicKey.load(rsa_pub_pem)
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
 
-        n = 0xB5AD8818DCA1F256FF8FAB0888D0667D95DF2098B0D201A4C75590D3EBDFA159DD91C64AFDA082609EF885B2D1F4DC055C8FF9FA371C2F3398E0B612C603151131C81DB322C8D15E53EB56B4DF7325F05046889CB25021DE4282E16B9B28F5CBB2B8DDECE0F8E4E8A77F674F26AE92B7220920A1FBE43F51039A9C79D1F1CB6B
+        n = 0xB5AD8818DCA1F256FF8FAB0888D0667D95DF2098B0D201A4C75590D3EBDFA159DD91C64AFDA082609EF885B2D1F4DC055C8FF9FA371C2F3398E0B612C603151131C81DB322C8D15E53EB56B4DF7325F05046889CB25021DE4282E16B9B28F5CBB2B8DDECE0F8E4E8A77F674F26AE92B7220920A1FBE43F51039A9C79D1F1CB6B # pylint: disable=line-too-long
         e = 0x10001
 
         rsapub2 = botan2.PublicKey.load_rsa(n, e)
@@ -253,12 +254,23 @@ ofvkP1EDmpx50fHLawIDAQAB
 
     def test_key_crypto(self):
         rng = botan2.RandomNumberGenerator()
-        rsapriv = botan2.PrivateKey.create('RSA', '1024', rng)
+        priv = botan2.PrivateKey.create('RSA', '1024', rng)
         passphrase = "super secret tell noone"
 
-        pem = rsapriv.export_encrypted(passphrase, rng, True, msec=10)
-        pem2 = rsapriv.export_encrypted(passphrase, rng, True, msec=10, cipher="AES-128/SIV")
-        pem3 = rsapriv.export_encrypted(passphrase, rng, True, msec=10, cipher="AES-128/SIV", pbkdf="Scrypt")
+        for is_pem in [True, False]:
+            ref_val = priv.export(is_pem)
+
+            enc1 = priv.export_encrypted(passphrase, rng, True, msec=10)
+            dec1 = botan2.PrivateKey.load(enc1, passphrase)
+            self.assertEqual(dec1.export(is_pem), ref_val)
+
+            pem2 = priv.export_encrypted(passphrase, rng, True, msec=10, cipher="AES-128/SIV")
+            dec2 = botan2.PrivateKey.load(pem2, passphrase)
+            self.assertEqual(dec2.export(is_pem), ref_val)
+
+            pem3 = priv.export_encrypted(passphrase, rng, True, msec=10, cipher="AES-128/GCM", pbkdf="Scrypt")
+            dec3 = botan2.PrivateKey.load(pem3, passphrase)
+            self.assertEqual(dec3.export(is_pem), ref_val)
 
     def test_check_key(self):
         # valid (if rather small) RSA key
@@ -328,7 +340,7 @@ ofvkP1EDmpx50fHLawIDAQAB
     def test_ecdsa(self):
         rng = botan2.RandomNumberGenerator()
 
-        hash = 'EMSA1(SHA-256)'
+        hash_fn = 'EMSA1(SHA-256)'
         group = 'secp256r1'
         msg = 'test message'
 
@@ -337,23 +349,23 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
         self.assertEqual(pub.get_field('public_y'), priv.get_field('public_y'))
 
-        signer = botan2.PKSign(priv, hash)
+        signer = botan2.PKSign(priv, hash_fn)
         signer.update(msg)
         signature = signer.finish(rng)
 
-        verifier = botan2.PKVerify(pub, hash)
+        verifier = botan2.PKVerify(pub, hash_fn)
         verifier.update(msg)
         self.assertTrue(verifier.check_signature(signature))
 
         pub_x = pub.get_field('public_x')
         pub_y = priv.get_field('public_y')
         pub2 = botan2.PublicKey.load_ecdsa(group, pub_x, pub_y)
-        verifier = botan2.PKVerify(pub2, hash)
+        verifier = botan2.PKVerify(pub2, hash_fn)
         verifier.update(msg)
         self.assertTrue(verifier.check_signature(signature))
 
         priv2 = botan2.PrivateKey.load_ecdsa(group, priv.get_field('x'))
-        signer = botan2.PKSign(priv2, hash)
+        signer = botan2.PKSign(priv2, hash_fn)
         # sign empty message
         signature = signer.finish(rng)
 
@@ -362,11 +374,11 @@ ofvkP1EDmpx50fHLawIDAQAB
 
 
     def test_ecdh(self):
+        # pylint: disable=too-many-locals
         a_rng = botan2.RandomNumberGenerator('user')
         b_rng = botan2.RandomNumberGenerator('user')
 
-        # XXX why need the encode here?? should be handled in wrapper
-        kdf = 'KDF2(SHA-384)'.encode('utf-8')
+        kdf = 'KDF2(SHA-384)'
 
         for grp in ['secp256r1', 'secp384r1', 'brainpool256r1']:
             a_priv = botan2.PrivateKey.create('ECDH', grp, a_rng)
