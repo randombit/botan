@@ -21,11 +21,16 @@ Version 2.11.0, Not Yet Released
 * New ``trust_roots`` CLI that examines the system certificate store.
   (GH #1893)
 
-* Fix several issues with the Python wrapper (GH #1899 #1901 #1902 #1904)
+* Fix bugs and add many new features in the Python wrapper.
+  (GH #1899 #1900 #1901 #1902 #1903 #1904 #1906 #1907 #1915)
+
+* Various FFI interfaces which are redundant with other APIs are now
+  deprecated. The deprecation message suggests the alternate API to use.
+  (GH #1915)
 
 * Document the build system
 
-* When available use sysconf to detect the number of CPUs (GH #1877)
+* When available use POSIX ``sysconf`` to detect the number of CPUs (GH #1877)
 
 * Use FreeBSD's ``elf_aux_info`` to detect ARM and POWER CPU features
   (GH #1895)
