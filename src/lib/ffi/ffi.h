@@ -794,9 +794,9 @@ BOTAN_PUBLIC_API(2,1) int botan_mp_from_bin(const botan_mp_t mp, const uint8_t v
 BOTAN_PUBLIC_API(2,1) int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val);
 
 /**
-* This function is not well named. Returns 1 iff mp is greater than
-* *or equal to* zero. Use botan_mp_is_negative to detect negative
-* numbers, botan_mp_is_zero to check for zero.
+* This function should have been named mp_is_non_negative. Returns 1
+* iff mp is greater than *or equal to* zero. Use botan_mp_is_negative
+* to detect negative numbers, botan_mp_is_zero to check for zero.
 */
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_positive(const botan_mp_t mp);
 
@@ -808,8 +808,11 @@ BOTAN_PUBLIC_API(2,1) int botan_mp_is_negative(const botan_mp_t mp);
 BOTAN_PUBLIC_API(2,1) int botan_mp_flip_sign(botan_mp_t mp);
 
 BOTAN_PUBLIC_API(2,1) int botan_mp_is_zero(const botan_mp_t mp);
-BOTAN_PUBLIC_API(2,1) int botan_mp_is_odd(const botan_mp_t mp);
-BOTAN_PUBLIC_API(2,1) int botan_mp_is_even(const botan_mp_t mp);
+
+BOTAN_PUBLIC_API(2,1) BOTAN_DEPRECATED("Use botan_mp_get_bit(0)")
+int botan_mp_is_odd(const botan_mp_t mp);
+BOTAN_PUBLIC_API(2,1) BOTAN_DEPRECATED("Use botan_mp_get_bit(0)")
+int botan_mp_is_even(const botan_mp_t mp);
 
 BOTAN_PUBLIC_API(2,8) int botan_mp_add_u32(botan_mp_t result, const botan_mp_t x, uint32_t y);
 BOTAN_PUBLIC_API(2,8) int botan_mp_sub_u32(botan_mp_t result, const botan_mp_t x, uint32_t y);
@@ -936,12 +939,16 @@ BOTAN_PUBLIC_API(2,0) int botan_privkey_create(botan_privkey_t* key,
 
 BOTAN_PUBLIC_API(2,0) int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags);
 
-BOTAN_PUBLIC_API(2,0) int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits);
-BOTAN_PUBLIC_API(2,0) int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params);
-BOTAN_PUBLIC_API(2,0) int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params);
-BOTAN_PUBLIC_API(2,0) int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);
-BOTAN_PUBLIC_API(2,0) int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* param);
-
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_create")
+int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_create")
+int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_create")
+int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_create")
+int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_create")
+int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* param);
 
 /**
  * Generates DSA key pair. Gives to a caller control over key length
@@ -1102,11 +1109,16 @@ BOTAN_PUBLIC_API(2,8) int botan_privkey_load_rsa_pkcs1(botan_privkey_t* key,
                                                        const uint8_t bits[],
                                                        size_t len);
 
-BOTAN_PUBLIC_API(2,0) int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t rsa_key);
-BOTAN_PUBLIC_API(2,0) int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t rsa_key);
-BOTAN_PUBLIC_API(2,0) int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t rsa_key);
-BOTAN_PUBLIC_API(2,0) int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t rsa_key);
-BOTAN_PUBLIC_API(2,0) int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t rsa_key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_get_field")
+int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t rsa_key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_get_field")
+int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t rsa_key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_get_field")
+int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t rsa_key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_get_field")
+int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t rsa_key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_get_field")
+int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t rsa_key);
 
 BOTAN_PUBLIC_API(2,8) int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key,
                                                         uint8_t out[], size_t* out_len,
@@ -1116,8 +1128,10 @@ BOTAN_PUBLIC_API(2,0) int botan_pubkey_load_rsa(botan_pubkey_t* key,
                                                 botan_mp_t n,
                                                 botan_mp_t e);
 
-BOTAN_PUBLIC_API(2,0) int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t rsa_key);
-BOTAN_PUBLIC_API(2,0) int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t rsa_key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_pubkey_get_field")
+int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t rsa_key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_pubkey_get_field")
+int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t rsa_key);
 
 /*
 * Algorithm specific key operations: DSA
@@ -1134,12 +1148,17 @@ BOTAN_PUBLIC_API(2,0) int botan_pubkey_load_dsa(botan_pubkey_t* key,
                                     botan_mp_t g,
                                     botan_mp_t y);
 
-BOTAN_PUBLIC_API(2,0) int botan_privkey_dsa_get_x(botan_mp_t n, botan_privkey_t key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_privkey_get_field")
+int botan_privkey_dsa_get_x(botan_mp_t n, botan_privkey_t key);
 
-BOTAN_PUBLIC_API(2,0) int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key);
-BOTAN_PUBLIC_API(2,0) int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key);
-BOTAN_PUBLIC_API(2,0) int botan_pubkey_dsa_get_g(botan_mp_t d, botan_pubkey_t key);
-BOTAN_PUBLIC_API(2,0) int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_pubkey_get_field")
+int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_pubkey_get_field")
+int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_pubkey_get_field")
+int botan_pubkey_dsa_get_g(botan_mp_t d, botan_pubkey_t key);
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Use botan_pubkey_get_field")
+int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key);
 
 /*
 * Loads Diffie Hellman private key
@@ -1283,13 +1302,13 @@ int botan_privkey_load_sm2(botan_privkey_t* key,
                            const botan_mp_t scalar,
                            const char* curve_name);
 
-BOTAN_PUBLIC_API(2,2)
+BOTAN_PUBLIC_API(2,2) BOTAN_DEPRECATED("Use botan_pubkey_load_sm2")
 int botan_pubkey_load_sm2_enc(botan_pubkey_t* key,
                               const botan_mp_t public_x,
                               const botan_mp_t public_y,
                               const char* curve_name);
 
-BOTAN_PUBLIC_API(2,2)
+BOTAN_PUBLIC_API(2,2) BOTAN_DEPRECATED("Use botan_privkey_load_sm2")
 int botan_privkey_load_sm2_enc(botan_privkey_t* key,
                                const botan_mp_t scalar,
                                const char* curve_name);
@@ -1412,7 +1431,7 @@ BOTAN_PUBLIC_API(2,0) int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs
 * @param mce_key must be a McEliece key
 * ct_len should be pt_len + n/8 + a few?
 */
-BOTAN_PUBLIC_API(2,0)
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Poorly specified, avoid in new code")
 int botan_mceies_encrypt(botan_pubkey_t mce_key,
                          botan_rng_t rng,
                          const char* aead,
@@ -1420,7 +1439,7 @@ int botan_mceies_encrypt(botan_pubkey_t mce_key,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t ct[], size_t* ct_len);
 
-BOTAN_PUBLIC_API(2,0)
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Poorly specified, avoid in new code")
 int botan_mceies_decrypt(botan_privkey_t mce_key,
                          const char* aead,
                          const uint8_t ct[], size_t ct_len,
