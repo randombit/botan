@@ -372,6 +372,40 @@ ofvkP1EDmpx50fHLawIDAQAB
         # verify empty message
         self.assertTrue(verifier.check_signature(signature))
 
+    def test_sm2(self):
+        rng = botan2.RandomNumberGenerator()
+
+        hash_fn = 'EMSA1(SM3)'
+        group = 'sm2p256v1'
+        msg = 'test message'
+
+        priv = botan2.PrivateKey.create('SM2', group, rng)
+        pub = priv.get_public_key()
+        self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
+        self.assertEqual(pub.get_field('public_y'), priv.get_field('public_y'))
+
+        signer = botan2.PKSign(priv, hash_fn)
+        signer.update(msg)
+        signature = signer.finish(rng)
+
+        verifier = botan2.PKVerify(pub, hash_fn)
+        verifier.update(msg)
+        self.assertTrue(verifier.check_signature(signature))
+
+        pub_x = pub.get_field('public_x')
+        pub_y = priv.get_field('public_y')
+        pub2 = botan2.PublicKey.load_sm2(group, pub_x, pub_y)
+        verifier = botan2.PKVerify(pub2, hash_fn)
+        verifier.update(msg)
+        self.assertTrue(verifier.check_signature(signature))
+
+        priv2 = botan2.PrivateKey.load_sm2(group, priv.get_field('x'))
+        signer = botan2.PKSign(priv2, hash_fn)
+        # sign empty message
+        signature = signer.finish(rng)
+
+        # verify empty message
+        self.assertTrue(verifier.check_signature(signature))
 
     def test_ecdh(self):
         # pylint: disable=too-many-locals
