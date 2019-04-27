@@ -3206,6 +3206,7 @@ def main(argv):
     if not options.list_modules and not options.list_os_features:
         logging.info('Configuring to build Botan %s (revision %s)' % (
             Version.as_string(), Version.vc_rev()))
+        logging.info('Running under %s', sys.version.replace('\n', ''))
 
     source_paths = SourcePaths(os.path.dirname(argv[0]))
 
