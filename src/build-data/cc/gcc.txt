@@ -82,7 +82,6 @@ all!haiku,qnx -> "-pthread"
 
 openmp  -> "-fopenmp"
 
-mips64  -> "-mabi=64"
 s390    -> "-m31"
 s390x   -> "-m64"
 sparc32 -> "-m32 -mno-app-regs"
