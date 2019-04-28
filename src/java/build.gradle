@@ -1,0 +1,30 @@
+
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+group 'net.randombit.Botan'
+version '2.0.0-SNAPSHOT'
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+    
+    
+}
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(dir: '/opt/java/lib', include: ['*.jar'])
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}

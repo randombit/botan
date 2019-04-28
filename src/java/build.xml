@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="botan" default="all">
+  
+  
+  <property file="botan.properties"/>
+
+
+
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="700m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/*.rbc/**"/>
+    <exclude name="**/*.yarb/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.war"/>
+    <include name="*.swc"/>
+    <include name="*.zip"/>
+    <include name="*.egg"/>
+    <include name="*.ane"/>
+    <include name="*.jar"/>
+    <include name="*.ear"/>
+    <include name="*.klib"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <exclude name="**/?*.java"/>
+    <exclude name="**/?*.form"/>
+    <exclude name="**/?*.class"/>
+    <exclude name="**/?*.groovy"/>
+    <exclude name="**/?*.scala"/>
+    <exclude name="**/?*.flex"/>
+    <exclude name="**/?*.kt"/>
+    <exclude name="**/?*.clj"/>
+    <exclude name="**/?*.aj"/>
+  </patternset>
+  
+  <!-- JDK definitions -->
+  
+  <property name="jdk.bin.13" value="${jdk.home.13}/bin"/>
+
+  <path id="jdk.classpath.13">
+    <fileset dir="${botan.panama}"/>
+    <fileset dir="${jdk.home.13}">
+      <include name="../java!/java.base"/>
+      <include name="../java!/java.compiler"/>
+      <include name="../java!/java.datatransfer"/>
+      <include name="../java!/java.desktop"/>
+      <include name="../java!/java.instrument"/>
+      <include name="../java!/java.logging"/>
+      <include name="../java!/java.management"/>
+      <include name="../java!/java.management.rmi"/>
+      <include name="../java!/java.naming"/>
+      <include name="../java!/java.net.http"/>
+      <include name="../java!/java.prefs"/>
+      <include name="../java!/java.rmi"/>
+      <include name="../java!/java.scripting"/>
+      <include name="../java!/java.se"/>
+      <include name="../java!/java.security.jgss"/>
+      <include name="../java!/java.security.sasl"/>
+      <include name="../java!/java.smartcardio"/>
+      <include name="../java!/java.sql"/>
+      <include name="../java!/java.sql.rowset"/>
+      <include name="../java!/java.transaction.xa"/>
+      <include name="../java!/java.xml"/>
+      <include name="../java!/java.xml.crypto"/>
+      <include name="../java!/jdk.accessibility"/>
+      <include name="../java!/jdk.aot"/>
+      <include name="../java!/jdk.attach"/>
+      <include name="../java!/jdk.charsets"/>
+      <include name="../java!/jdk.compiler"/>
+      <include name="../java!/jdk.crypto.cryptoki"/>
+      <include name="../java!/jdk.crypto.ec"/>
+      <include name="../java!/jdk.dynalink"/>
+      <include name="../java!/jdk.editpad"/>
+      <include name="../java!/jdk.hotspot.agent"/>
+      <include name="../java!/jdk.httpserver"/>
+      <include name="../java!/jdk.internal.clang"/>
+      <include name="../java!/jdk.internal.ed"/>
+      <include name="../java!/jdk.internal.jvmstat"/>
+      <include name="../java!/jdk.internal.le"/>
+      <include name="../java!/jdk.internal.opt"/>
+      <include name="../java!/jdk.internal.vm.ci"/>
+      <include name="../java!/jdk.internal.vm.compiler"/>
+      <include name="../java!/jdk.internal.vm.compiler.management"/>
+      <include name="../java!/jdk.jartool"/>
+      <include name="../java!/jdk.javadoc"/>
+      <include name="../java!/jdk.jcmd"/>
+      <include name="../java!/jdk.jconsole"/>
+      <include name="../java!/jdk.jdeps"/>
+      <include name="../java!/jdk.jdi"/>
+      <include name="../java!/jdk.jdwp.agent"/>
+      <include name="../java!/jdk.jextract"/>
+      <include name="../java!/jdk.jfr"/>
+      <include name="../java!/jdk.jlink"/>
+      <include name="../java!/jdk.jshell"/>
+      <include name="../java!/jdk.jsobject"/>
+      <include name="../java!/jdk.jstatd"/>
+      <include name="../java!/jdk.localedata"/>
+      <include name="../java!/jdk.management"/>
+      <include name="../java!/jdk.management.agent"/>
+      <include name="../java!/jdk.management.jfr"/>
+      <include name="../java!/jdk.naming.dns"/>
+      <include name="../java!/jdk.naming.rmi"/>
+      <include name="../java!/jdk.net"/>
+      <include name="../java!/jdk.pack"/>
+      <include name="../java!/jdk.rmic"/>
+      <include name="../java!/jdk.scripting.nashorn"/>
+      <include name="../java!/jdk.scripting.nashorn.shell"/>
+      <include name="../java!/jdk.sctp"/>
+      <include name="../java!/jdk.security.auth"/>
+      <include name="../java!/jdk.security.jgss"/>
+      <include name="../java!/jdk.unsupported"/>
+      <include name="../java!/jdk.unsupported.desktop"/>
+      <include name="../java!/jdk.xml.dom"/>
+      <include name="../java!/jdk.zipfs"/>
+    </fileset>
+  </path>
+  
+  <property name="project.jdk.home" value="${jdk.home.13}"/>
+  <property name="project.jdk.bin" value="${jdk.bin.13}"/>
+  <property name="project.jdk.classpath" value="jdk.classpath.13"/>
+  
+  
+  <!-- Project Libraries -->
+  
+  <path id="library.gradle:_junit:junit:4.12.classpath">
+    <pathelement location="${basedir}/../../../../.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar"/>
+  </path>
+  
+  <path id="library.gradle:_org.hamcrest:hamcrest-core:1.3.classpath">
+    <pathelement location="${basedir}/../../../../.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar"/>
+  </path>
+  <!-- Register Custom Compiler Taskdefs -->
+  <property name="javac2.home" value="${idea.home}/lib"/>
+  <path id="javac2.classpath">
+    <fileset dir="${javac2.home}">
+      <include name="javac2.jar"/>
+      <include name="jdom.jar"/>
+      <include name="asm-all*.jar"/>
+      <include name="forms-*.jar"/>
+    </fileset>
+  </path>
+  <target name="register.custom.compilers">
+    <taskdef name="javac2" classname="com.intellij.ant.Javac2" classpathref="javac2.classpath"/>
+    <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="javac2.classpath"/>
+  </target>
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module java -->
+  
+  <dirname property="module.java.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.java" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.java" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.java" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.java" value="-encoding UTF-8 -source 12 -target 12 ${compiler.args}"/>
+  
+  <property name="java.output.dir" value="${module.java.basedir}/out/production/java"/>
+  <property name="java.testoutput.dir" value="${module.java.basedir}/out/test/java"/>
+  
+  <path id="java.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="java.module.production.classpath">
+    <path refid="${module.jdk.classpath.java}"/>
+  </path>
+  
+  <path id="java.runtime.production.module.classpath">
+    <pathelement location="${java.output.dir}"/>
+  </path>
+  
+  <path id="java.module.classpath">
+    <path refid="${module.jdk.classpath.java}"/>
+    <pathelement location="${java.output.dir}"/>
+  </path>
+  
+  <path id="java.runtime.module.classpath">
+    <pathelement location="${java.testoutput.dir}"/>
+    <pathelement location="${java.output.dir}"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.java">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.java">
+    <patternset refid="excluded.from.module.java"/>
+  </patternset>
+  
+  
+  <target name="compile.module.java" depends="compile.module.java.production,compile.module.java.tests" description="Compile module java"/>
+  
+  <target name="compile.module.java.production" depends="register.custom.compilers" description="Compile module java; production classes"/>
+  
+  <target name="compile.module.java.tests" depends="register.custom.compilers,compile.module.java.production" description="compile module java; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.java" description="cleanup module">
+    <delete dir="${java.output.dir}"/>
+    <delete dir="${java.testoutput.dir}"/>
+  </target>
+  
+  
+  <!-- Module java.main -->
+  
+  <dirname property="module.java.main.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.java.main" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.java.main" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.java.main" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.java.main" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="java.main.output.dir" value="${module.java.main.basedir}/build/classes/java/main"/>
+  <property name="java.main.testoutput.dir" value="${module.java.main.basedir}/build/classes/java/main"/>
+  
+  <path id="java.main.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="java.main.module.production.classpath">
+    <path refid="${module.jdk.classpath.java.main}"/>
+    <pathelement location="${basedir}/libs/botan2.jar"/>
+    <pathelement location="${basedir}/../../../../../../opt/java/lib/jrt-fs.jar"/>
+  </path>
+  
+  <path id="java.main.runtime.production.module.classpath">
+    <pathelement location="${java.main.output.dir}"/>
+    <pathelement location="${basedir}/libs/botan2.jar"/>
+    <pathelement location="${basedir}/../../../../../../opt/java/lib/jrt-fs.jar"/>
+  </path>
+  
+  <path id="java.main.module.classpath">
+    <path refid="${module.jdk.classpath.java.main}"/>
+    <pathelement location="${java.main.output.dir}"/>
+    <pathelement location="${basedir}/libs/botan2.jar"/>
+    <pathelement location="${basedir}/../../../../../../opt/java/lib/jrt-fs.jar"/>
+  </path>
+  
+  <path id="java.main.runtime.module.classpath">
+    <pathelement location="${java.main.output.dir}"/>
+    <pathelement location="${basedir}/libs/botan2.jar"/>
+    <pathelement location="${basedir}/../../../../../../opt/java/lib/jrt-fs.jar"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.java.main">
+    <patternset refid="ignored.files"/>
+    <exclude name="test/**"/>
+    <exclude name="test/java/**"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.java.main">
+    <patternset refid="excluded.from.module.java.main"/>
+  </patternset>
+  
+  <path id="java.main.module.sourcepath">
+    <dirset dir="${module.java.main.basedir}">
+      <include name="src"/>
+      <include name="src/main/java"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.java.main" depends="compile.module.java.main.production,compile.module.java.main.tests" description="Compile module java.main"/>
+  
+  <target name="compile.module.java.main.production" depends="register.custom.compilers" description="Compile module java.main; production classes">
+    <mkdir dir="${java.main.output.dir}"/>
+    <javac2 destdir="${java.main.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.java.main}/javac">
+      <compilerarg line="${compiler.args.java.main}"/>
+      <bootclasspath refid="java.main.module.bootclasspath"/>
+      <classpath refid="java.main.module.production.classpath"/>
+      <src refid="java.main.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.java.main"/>
+    </javac2>
+    
+    <copy todir="${java.main.output.dir}">
+      <fileset dir="${module.java.main.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.java.main.basedir}/src/main/java">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.java.main.tests" depends="register.custom.compilers,compile.module.java.main.production" description="compile module java.main; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.java.main" description="cleanup module">
+    <delete dir="${java.main.output.dir}"/>
+    <delete dir="${java.main.testoutput.dir}"/>
+  </target>
+  
+  
+  <!-- Module java.test -->
+  
+  <dirname property="module.java.test.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.java.test" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.java.test" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.java.test" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.java.test" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="java.test.output.dir" value="undefined"/>
+  <property name="java.test.testoutput.dir" value="${module.java.test.basedir}/build/classes/java/test"/>
+  
+  <path id="java.test.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="java.test.module.production.classpath">
+    <path refid="${module.jdk.classpath.java.test}"/>
+    <pathelement location="${java.main.output.dir}"/>
+    <pathelement location="${basedir}/libs/botan2.jar"/>
+    <pathelement location="${basedir}/../../../../../../opt/java/lib/jrt-fs.jar"/>
+    <path refid="library.gradle:_junit:junit:4.12.classpath"/>
+    <path refid="library.gradle:_org.hamcrest:hamcrest-core:1.3.classpath"/>
+  </path>
+  
+  <path id="java.test.runtime.production.module.classpath">
+    <path refid="java.main.runtime.production.module.classpath"/>
+    <pathelement location="${basedir}/libs/botan2.jar"/>
+    <pathelement location="${basedir}/../../../../../../opt/java/lib/jrt-fs.jar"/>
+    <path refid="library.gradle:_junit:junit:4.12.classpath"/>
+    <path refid="library.gradle:_org.hamcrest:hamcrest-core:1.3.classpath"/>
+  </path>
+ <path id="botan.test.classpath">
+   <path refid="java.test.runtime.production.module.classpath"/>
+   <pathelement location="${project.test.output}"></pathelement>
+ </path>
+  <path id="java.test.module.classpath">
+    <path refid="${module.jdk.classpath.java.test}"/>
+    <pathelement location="${java.main.output.dir}"/>
+    <pathelement location="${basedir}/libs/botan2.jar"/>
+    <pathelement location="${basedir}/../../../../../../opt/java/lib/jrt-fs.jar"/>
+    <path refid="library.gradle:_junit:junit:4.12.classpath"/>
+    <path refid="library.gradle:_org.hamcrest:hamcrest-core:1.3.classpath"/>
+  </path>
+  
+  <path id="java.test.runtime.module.classpath">
+    <pathelement location="${java.test.testoutput.dir}"/>
+    <path refid="java.main.runtime.module.classpath"/>
+    <pathelement location="${basedir}/libs/botan2.jar"/>
+    <pathelement location="${basedir}/../../../../../../opt/java/lib/jrt-fs.jar"/>
+    <path refid="library.gradle:_junit:junit:4.12.classpath"/>
+    <path refid="library.gradle:_org.hamcrest:hamcrest-core:1.3.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.java.test">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.java.test">
+    <patternset refid="excluded.from.module.java.test"/>
+  </patternset>
+  
+  <path id="java.test.module.test.sourcepath">
+    <dirset dir="${module.java.test.basedir}/src/test">
+      <include name="java"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.java.test" depends="compile.module.java.test.production,compile.module.java.test.tests" description="Compile module java.test"/>
+  
+  <target name="compile.module.java.test.production" depends="register.custom.compilers,compile.module.java.main" description="Compile module java.test; production classes"/>
+  
+  <target name="compile.module.java.test.tests" depends="register.custom.compilers,compile.module.java.test.production" description="compile module java.test; test classes" unless="skip.tests">
+    <mkdir dir="${java.test.testoutput.dir}"/>
+    <javac2 destdir="${java.test.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.java.test}/javac">
+      <compilerarg line="${compiler.args.java.test}"/>
+      <bootclasspath refid="java.test.module.bootclasspath"/>
+      <classpath refid="java.test.module.classpath"/>
+      <src refid="java.test.module.test.sourcepath"/>
+      <patternset refid="excluded.from.compilation.java.test"/>
+    </javac2>
+    
+    <copy todir="${java.test.testoutput.dir}">
+      <fileset dir="${module.java.test.basedir}/src/test/java">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="clean.module.java.test" description="cleanup module">
+    <delete dir="${java.test.output.dir}"/>
+    <delete dir="${java.test.testoutput.dir}"/>
+  </target>
+
+  <target name="dist" depends="compile.module.java, compile.module.java.test">
+    <mkdir dir="${project.dist.output}"/>
+    <jar destfile="${project.dist.output}/${project.name}-${project.version}-SNAPSHOT.jar">
+      <fileset dir="${project.source.output}"/>
+    </jar>
+
+    <jar destfile="${project.dist.output}/test-${project.name}-${project.version}-SNAPSHOT.jar">
+      <fileset dir="${project.test.output}"/>
+    </jar>
+
+
+  </target>
+
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  <target name="clean.dirs">
+    <delete dir="${project.build.dir}" />
+  </target>
+  
+  <target name="clean" depends="clean.module.java, clean.module.java.main, clean.module.java.test, clean.dirs" description="cleanup all"/>
+  
+  <target name="build.modules" depends="init, clean, compile.module.java, compile.module.java.main, compile.module.java.test" description="build all modules"/>
+  
+  <target name="all" depends="build.modules, dist" description="build all"/>
+
+  <target name="test" depends="all">
+
+    <junit printsummary="yes"
+           jvm="/opt/java/bin/java"
+           haltonfailure="yes"
+           fork="yes">
+
+      <classpath refid="botan.test.classpath"/>
+
+      <test name="HMacUnitTest"
+            haltonfailure="no" outfile="./test/result">
+
+        <formatter type="plain"/>
+        <formatter type="xml"/>
+
+      </test>
+
+    </junit>
+  </target>
+</project>
