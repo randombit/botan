@@ -164,17 +164,17 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
                   }
                }
 
-            if(!m_stream.hasReceivedData() && !ec && boost::asio::buffer_size(m_buffers) > 0)
+            if(!m_stream.has_received_data() && !ec && boost::asio::buffer_size(m_buffers) > 0)
                {
                // The channel did not decrypt a complete record yet, we need more data from the socket.
                m_stream.next_layer().async_read_some(m_stream.input_buffer(), std::move(*this));
                return;
                }
 
-            if(m_stream.hasReceivedData() && !ec)
+            if(m_stream.has_received_data() && !ec)
                {
                // The channel has decrypted a TLS record, now copy it to the output buffers.
-               m_decodedBytes = m_stream.copyReceivedData(m_buffers);
+               m_decodedBytes = m_stream.copy_received_data(m_buffers);
                }
 
             if(!isContinuation)
@@ -234,11 +234,11 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
             {
             // mark the number of encrypted bytes sent to the network as "consumed"
             // Note: bytes_transferred will be zero on first call
-            m_stream.consumeSendBuffer(bytes_transferred);
+            m_stream.consume_send_buffer(bytes_transferred);
 
-            if(m_stream.hasDataToSend() && !ec)
+            if(m_stream.has_data_to_send() && !ec)
                {
-               m_stream.next_layer().async_write_some(m_stream.sendBuffer(), std::move(*this));
+               m_stream.next_layer().async_write_some(m_stream.send_buffer(), std::move(*this));
                return;
                }
 
@@ -317,7 +317,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                   }
                }
 
-            if(m_stream.hasDataToSend() && !ec)
+            if(m_stream.has_data_to_send() && !ec)
                {
                // Write encrypted TLS data provided by the TLS::Channel on the wire
 

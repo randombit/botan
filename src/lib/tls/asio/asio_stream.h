@@ -49,9 +49,8 @@ template <class StreamLayer, class ChannelT = Channel>
 class Stream
    {
    public:
-      //
-      // -- -- construction
-      //
+      //! \name construction
+      //! @{
 
       template <typename... Args>
       explicit Stream(Context& context, Args&& ... args)
@@ -80,9 +79,9 @@ class Stream
       Stream(const Stream& other) = delete;
       Stream& operator=(const Stream& other) = delete;
 
-      //
-      // -- -- boost::asio compatible accessor methods
-      //
+      //! @}
+      //! \name boost::asio accessor methods
+      //! @{
 
       using next_layer_type = typename std::remove_reference<StreamLayer>::type;
       using lowest_layer_type = typename next_layer_type::lowest_layer_type;
@@ -99,9 +98,9 @@ class Stream
 
       native_handle_type native_handle() { return m_native_handle.get(); }
 
-      //
-      // -- -- configuration and callback setters
-      //
+      //! @}
+      //! \name configuration and callback setters
+      //! @{
 
       //! @throws Not_Implemented
       template<typename VerifyCallback>
@@ -161,38 +160,9 @@ class Stream
          ec = Botan::ErrorType::NotImplemented;
          }
 
-      //
-      // -- -- accessor methods for send and receive buffers
-      //
-
-      const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
-      boost::asio::const_buffer sendBuffer() const { return m_send_buffer.data(); }
-
-      //! @brief Check if decrypted data is available in the receive buffer
-      bool hasReceivedData() const { return m_receive_buffer.size() > 0; }
-
-      //! @brief Copy decrypted data into the user-provided buffer
-      template <typename MutableBufferSequence>
-      std::size_t copyReceivedData(MutableBufferSequence buffers)
-         {
-         // Note: It would be nice to avoid this buffer copy. This could be achieved by equipping the StreamCore with
-         // the user's desired target buffer once a read is started, and reading directly into that buffer in tls_record
-         // received. However, we need to deal with the case that the receive buffer provided by the caller is smaller
-         // than the decrypted record, so this optimization might not be worth the additional complexity.
-         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_receive_buffer.data());
-         m_receive_buffer.consume(copiedBytes);
-         return copiedBytes;
-         }
-
-      //! @brief Check if encrypted data is available in the send buffer
-      bool hasDataToSend() const { return m_send_buffer.size() > 0; }
-
-      //! @brief Mark bytes in the send buffer as consumed, removing them from the buffer
-      void consumeSendBuffer(std::size_t bytesConsumed) { m_send_buffer.consume(bytesConsumed); }
-
-      //
-      // -- -- handshake methods
-      //
+      //! @}
+      //! \name handshake methods
+      //! @{
 
       /**
        * @brief Performs SSL handshaking.
@@ -222,7 +192,7 @@ class Stream
          setup_native_handle(side, ec);
 
          // send client hello, which was written to the send buffer on client instantiation
-         sendPendingEncryptedData(ec);
+         send_pending_encrypted_data(ec);
 
          while(!native_handle()->is_active() && !ec)
             {
@@ -247,7 +217,7 @@ class Stream
                ec = Botan::ErrorType::Unknown;
                }
 
-            sendPendingEncryptedData(ec);
+            send_pending_encrypted_data(ec);
             }
          }
 
@@ -288,19 +258,20 @@ class Stream
       async_handshake(Connection_Side side, const ConstBufferSequence& buffers,
                       BufferedHandshakeHandler&& handler)
          {
-         BOTAN_UNUSED(buffers, handler);
+         BOTAN_UNUSED(side, buffers, handler);
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(BufferedHandshakeHandler, handler) type_check;
          throw Not_Implemented("buffered async handshake is not implemented");
          }
 
-      //
-      // -- -- shutdown methods
-      //
+      //! @}
+      //! \name shutdown methods
+      //! @{
 
       /**
        * @brief Shut down SSL on the stream.
        *
-       * The function call will block until SSL has been shut down or an error occurs.
+       * This function is used to shut down SSL on the stream. The function call will block until SSL has been shut down
+       * or an error occurs. Note that this will not close the lowest layer.
        *
        * @param ec Set to indicate what error occured, if any.
        */
@@ -324,13 +295,14 @@ class Stream
             }
 
          if(!ec)
-            { sendPendingEncryptedData(ec); }
+            { send_pending_encrypted_data(ec); }
          }
 
       /**
        * @brief Shut down SSL on the stream.
        *
-       * The function call will block until SSL has been shut down or an error occurs.
+       * This function is used to shut down SSL on the stream. The function call will block until SSL has been shut down
+       * or an error occurs. Note that this will not close the lowest layer.
        *
        * @throws boost::system::system_error if error occured
        */
@@ -359,9 +331,9 @@ class Stream
          // the core to the network, e.g. using AsyncWriteOperation.
          }
 
-      //
-      // -- -- I/O methods
-      //
+      //! @}
+      //! \name I/O methods
+      //! @{
 
       /**
        * @brief Read some data from the stream.
@@ -377,8 +349,8 @@ class Stream
       std::size_t read_some(const MutableBufferSequence& buffers,
                             boost::system::error_code& ec)
          {
-         if(hasReceivedData())
-            { return copyReceivedData(buffers); }
+         if(has_received_data())
+            { return copy_received_data(buffers); }
 
          boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
          if(ec)
@@ -401,7 +373,7 @@ class Stream
             ec = Botan::ErrorType::Unknown;
             }
 
-         return !ec ? copyReceivedData(buffers) : 0;
+         return !ec ? copy_received_data(buffers) : 0;
          }
 
       /**
@@ -438,7 +410,7 @@ class Stream
                              boost::system::error_code& ec)
          {
          tls_encrypt(buffers, ec);
-         sendPendingEncryptedData(ec);
+         send_pending_encrypted_data(ec);
          return !ec ? boost::asio::buffer_size(buffers) : 0;
          }
 
@@ -484,7 +456,7 @@ class Stream
             {
             // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
             // AsyncWriteOperation call the handler with the error_code set
-            consumeSendBuffer(m_send_buffer.size());
+            consume_send_buffer(m_send_buffer.size());
             detail::AsyncWriteOperation<typename std::decay<WriteHandler>::type, Stream>
             op{std::move(init.completion_handler), *this, std::size_t(0), ec};
             return init.result.get();
@@ -520,7 +492,13 @@ class Stream
          return init.result.get();
          }
 
+      //! @}
+
    protected:
+      template <typename> friend class detail::AsyncWriteOperation;
+      template <typename> friend class detail::AsyncReadOperation;
+      template <typename> friend class detail::AsyncHandshakeOperation;
+
       /**
        * @brief Helper class that implements Botan::TLS::Callbacks
        *
@@ -554,10 +532,7 @@ class Stream
 
             void tls_alert(Botan::TLS::Alert alert) override
                {
-               if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
-                  {
-                  // TODO
-                  }
+               BOTAN_UNUSED(alert);
                }
 
             std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const override
@@ -574,6 +549,31 @@ class Stream
             boost::beast::flat_buffer& m_receive_buffer;
             boost::beast::flat_buffer& m_send_buffer;
          };
+
+      const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
+      boost::asio::const_buffer send_buffer() const { return m_send_buffer.data(); }
+
+      //! @brief Check if decrypted data is available in the receive buffer
+      bool has_received_data() const { return m_receive_buffer.size() > 0; }
+
+      //! @brief Copy decrypted data into the user-provided buffer
+      template <typename MutableBufferSequence>
+      std::size_t copy_received_data(MutableBufferSequence buffers)
+         {
+         // Note: It would be nice to avoid this buffer copy. This could be achieved by equipping the StreamCore with
+         // the user's desired target buffer once a read is started, and reading directly into that buffer in tls_record
+         // received. However, we need to deal with the case that the receive buffer provided by the caller is smaller
+         // than the decrypted record, so this optimization might not be worth the additional complexity.
+         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_receive_buffer.data());
+         m_receive_buffer.consume(copiedBytes);
+         return copiedBytes;
+         }
+
+      //! @brief Check if encrypted data is available in the send buffer
+      bool has_data_to_send() const { return m_send_buffer.size() > 0; }
+
+      //! @brief Mark bytes in the send buffer as consumed, removing them from the buffer
+      void consume_send_buffer(std::size_t bytesConsumed) { m_send_buffer.consume(bytesConsumed); }
 
       // This is a helper construct to allow mocking the native_handle in test code. It is activated by explicitly
       // specifying a (mocked) channel type template parameter when constructing the stream and does not attempt to
@@ -607,17 +607,19 @@ class Stream
             }
          else
             {
+            // TODO: First steps in order to support the server side of this stream would be to instantiate a
+            // Botan::TLS::Server instance as the stream's native_handle and implement the handshake appropriately.
             ec = Botan::ErrorType::NotImplemented;
             }
          }
 
-      size_t sendPendingEncryptedData(boost::system::error_code& ec)
+      size_t send_pending_encrypted_data(boost::system::error_code& ec)
          {
          if(ec)
             { return 0; }
 
-         auto writtenBytes = boost::asio::write(m_nextLayer, sendBuffer(), ec);
-         consumeSendBuffer(writtenBytes);
+         auto writtenBytes = boost::asio::write(m_nextLayer, send_buffer(), ec);
+         consume_send_buffer(writtenBytes);
          return writtenBytes;
          }
 
