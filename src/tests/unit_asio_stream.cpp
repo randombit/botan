@@ -10,12 +10,12 @@
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
 
+#include <botan/asio_stream.h>
+#include <botan/tls_callbacks.h>
+
 // first boost version to include boost/beast/experimental/test/stream.hpp
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106800
-
-#include <botan/asio_stream.h>
-#include <botan/tls_callbacks.h>
 
 #include <boost/beast/experimental/test/stream.hpp>
 #include <boost/bind.hpp>
@@ -133,7 +133,10 @@ class Asio_Stream_Tests final : public Test
       // use memcmp to check if the data in a is a prefix of the data in b
       bool contains(const void* a, const void* b, const std::size_t size) { return memcmp(a, b, size) == 0; }
 
-      boost::string_view test_data() const { return boost::string_view((const char*)TEST_DATA, TEST_DATA_SIZE); }
+      boost::string_view test_data() const
+         {
+         return boost::string_view(reinterpret_cast<const char*>(TEST_DATA), TEST_DATA_SIZE);
+         }
 
       void test_sync_handshake(std::vector<Test::Result>& results)
          {
@@ -764,7 +767,7 @@ class Asio_Stream_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("asio_stream", Asio_Stream_Tests);
+BOTAN_REGISTER_TEST("tls_asio_stream", Asio_Stream_Tests);
 
 }  // namespace Botan_Tests
 
