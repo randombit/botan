@@ -9,6 +9,8 @@
 
 #if defined(BOTAN_HAS_CERTSTOR_MACOS)
    #include <botan/certstor_macos.h>
+#elif defined(BOTAN_HAS_CERTSTOR_WINDOWS)
+   #include <botan/certstor_windows.h>
 #elif defined(BOTAN_HAS_CERTSTOR_FLATFILE) && defined(BOTAN_SYSTEM_CERT_BUNDLE)
    #include <botan/certstor_flatfile.h>
 #endif
@@ -19,6 +21,8 @@ System_Certificate_Store::System_Certificate_Store()
    {
 #if defined(BOTAN_HAS_CERTSTOR_MACOS)
    m_system_store = std::make_shared<Certificate_Store_MacOS>();
+#elif defined(BOTAN_HAS_CERTSTOR_WINDOWS)
+   m_system_store = std::make_shared<Certificate_Store_Windows>();
 #elif defined(BOTAN_HAS_CERTSTOR_FLATFILE) && defined(BOTAN_SYSTEM_CERT_BUNDLE)
    m_system_store = std::make_shared<Flatfile_Certificate_Store>(BOTAN_SYSTEM_CERT_BUNDLE, true);
 #else
