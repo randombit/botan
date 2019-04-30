@@ -1,6 +1,6 @@
 /*
 * SRP-6a (RFC 5054 compatatible)
-* (C) 2011,2012 Jack Lloyd
+* (C) 2011,2012,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -82,9 +82,22 @@ srp6_client_agree(const std::string& identifier,
                   const BigInt& B,
                   RandomNumberGenerator& rng)
    {
-   const size_t a_bits = 256;
-
    DL_Group group(group_id);
+   const size_t a_bits = group.exponent_bits();
+
+   return srp6_client_agree(identifier, password, group, hash_id, salt, B, a_bits, rng);
+   }
+
+std::pair<BigInt, SymmetricKey>
+srp6_client_agree(const std::string& identifier,
+                  const std::string& password,
+                  const DL_Group& group,
+                  const std::string& hash_id,
+                  const std::vector<uint8_t>& salt,
+                  const BigInt& B,
+                  const size_t a_bits,
+                  RandomNumberGenerator& rng)
+   {
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
 
@@ -117,10 +130,18 @@ BigInt generate_srp6_verifier(const std::string& identifier,
                               const std::string& group_id,
                               const std::string& hash_id)
    {
-   const BigInt x = compute_x(hash_id, identifier, password, salt);
-
    DL_Group group(group_id);
-   // FIXME: x should be size of hash fn
+   return generate_srp6_verifier(identifier, password, salt, group, hash_id);
+   }
+
+BigInt generate_srp6_verifier(const std::string& identifier,
+                              const std::string& password,
+                              const std::vector<uint8_t>& salt,
+                              const DL_Group& group,
+                              const std::string& hash_id)
+   {
+   const BigInt x = compute_x(hash_id, identifier, password, salt);
+   // FIXME: x should be size of hash fn so avoid computing x.bits() here
    return group.power_g_p(x, x.bits());
    }
 
@@ -129,9 +150,18 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
                                   const std::string& hash_id,
                                   RandomNumberGenerator& rng)
    {
-   const size_t b_bits = 256;
-
    DL_Group group(group_id);
+   const size_t b_bits = group.exponent_bits();
+
+   return this->step1(v, group, hash_id, b_bits, rng);
+   }
+
+BigInt SRP6_Server_Session::step1(const BigInt& v,
+                                  const DL_Group& group,
+                                  const std::string& hash_id,
+                                  size_t b_bits,
+                                  RandomNumberGenerator& rng)
+   {
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
 

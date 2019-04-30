@@ -253,7 +253,7 @@ class Test
 
                if(produced == expected)
                   {
-                  out << " produced expected result " << produced;
+                  out << " produced expected result";
                   return test_success(out.str());
                   }
                else
