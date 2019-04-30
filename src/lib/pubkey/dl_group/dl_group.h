@@ -56,7 +56,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * the default values from the file policy.cpp will be used. For instance,
       * use "modp/ietf/3072".
       */
-      DL_Group(const std::string& name);
+      explicit DL_Group(const std::string& name);
 
       /**
       * Create a new group randomly.
