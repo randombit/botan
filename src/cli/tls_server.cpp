@@ -135,7 +135,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                peek_len = sizeof(dummy);
 #endif
 
-               if(::recvfrom(server_fd, peek_buf, peek_len, MSG_PEEK, reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
+               if(::recvfrom(server_fd, static_cast<char*>(peek_buf), peek_len, MSG_PEEK, reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
                   {
                   throw CLI_Error("Could not peek next packet");
                   }
