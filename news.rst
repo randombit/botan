@@ -4,6 +4,9 @@ Release Notes
 Version 2.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add a ``boost::asio`` TLS stream compatible with ``boost::asio::ssl``.
+  (GH #1839)
+
 * Add a certificate store for Linux/Unix systems. (GH #1885)
 
 * Add a generic ``System_Certificate_Store`` which wraps either macOS
