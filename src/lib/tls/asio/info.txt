@@ -1,0 +1,15 @@
+<defines>
+TLS_ASIO_STREAM -> 20181218
+</defines>
+
+<header:public>
+asio_context.h
+asio_stream.h
+asio_error.h
+asio_async_ops.h
+</header:public>
+
+<requires>
+boost
+tls
+</requires>
