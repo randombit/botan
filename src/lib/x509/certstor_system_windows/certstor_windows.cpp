@@ -143,44 +143,29 @@ Certificate_Store_Windows::find_cert_by_pubkey_sha1(
     const std::vector<uint8_t> &key_hash) const
 {
     if(key_hash.size() != 20)
-      {
-      throw Invalid_Argument("Flatfile_Certificate_Store::find_cert_by_pubkey_sha1 invalid hash");
-      }
-
-    // auto internalCerts = _certs.get();
-    // auto lookUp        = std::find_if(
-    //     internalCerts.begin(), internalCerts.end(),
-    //     [&](decltype(internalCerts)::value_type value) {
-    //         auto str = value->fingerprint();
-    //         str.erase(std::remove(str.begin(), str.end(), ':'), str.end());
-    //         return convertTo<ByteBuffer>(str) == key_hash;
-    //     });
-    // if (*lookUp != nullptr) {
-    //     return *lookUp;
-    // }
-
-    auto windowsCertStore = CertOpenSystemStore(0, TEXT("CA"));
-    if (!windowsCertStore) {
-        throw Decoding_Error(
-                "failed to open windows certificate store 'CA' (Error Code: " + std::to_string(::GetLastError()) + ")");
+    {
+        throw Invalid_Argument("Certificate_Store_Windows::find_cert_by_pubkey_sha1 invalid hash");
     }
 
-    const CRYPT_HASH_BLOB blob {key_hash.size(), const_cast<BYTE*>(key_hash.data())};
-    // dvault::Hash    hash = dvault::Hash::fromHex(
-    //     HashAlgorithm::SHA1, reinterpret_cast<const char *>(key_hash.data()));
+    std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
+    for (auto &store_name : cert_store_names) {
+        auto windows_cert_store = CertOpenSystemStore(0, store_name.c_str());
+        if (!windows_cert_store) {
+            throw Decoding_Error(
+                "failed to open windows certificate store 'CA' (Error Code: " + std::to_string(::GetLastError()) + ")");
+        }
 
-    // blob.pbData      = reinterpret_cast<BYTE*>(hash_data);
-    // blob.cbData      = key_hash.size();
-    auto certContext = CertFindCertificateInStore(
-        windowsCertStore, (PKCS_7_ASN_ENCODING | X509_ASN_ENCODING), 0,
-        CERT_FIND_SHA1_HASH, &blob, nullptr);
+        CRYPT_HASH_BLOB blob;
+        blob.cbData = static_cast<DWORD>(key_hash.size());
+        blob.pbData = const_cast<BYTE*>(key_hash.data());
 
-    CertCloseStore(windowsCertStore, 0);
+        auto cert_context = lookup_cert_by_hash_blob(blob, store_name);
 
-    if (certContext) {
-        X509_Certificate cert(certContext->pbCertEncoded, certContext->cbCertEncoded);
-        CertFreeCertificateContext(certContext);
-        return std::shared_ptr<X509_Certificate>(&cert);
+        if (cert_context) {
+            auto cert = std::make_shared<X509_Certificate>(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
+            CertFreeCertificateContext(cert_context);
+            return cert;
+        }
     }
 
     return nullptr;
@@ -188,14 +173,14 @@ Certificate_Store_Windows::find_cert_by_pubkey_sha1(
 
 std::shared_ptr<const X509_Certificate>
 Certificate_Store_Windows::find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const
-   {
-   BOTAN_UNUSED(subject_hash);
-   throw Not_Implemented("Certificate_Store_Windows::find_cert_by_raw_subject_dn_sha256");
-   }
+{
+    BOTAN_UNUSED(subject_hash);
+    throw Not_Implemented("Certificate_Store_Windows::find_cert_by_raw_subject_dn_sha256");
+}
 
 std::shared_ptr<const X509_CRL> Certificate_Store_Windows::find_crl_for(const X509_Certificate& subject) const
-   {
-   BOTAN_UNUSED(subject);
-   return {};
-   }
+{
+    BOTAN_UNUSED(subject);
+    throw Not_Implemented("Certificate_Store_Windows::find_crl_for");
+}
 }
