@@ -8,6 +8,7 @@
 
 #include <botan/certstor_windows.h>
 
+#include <vector>
 #include <Windows.h>
 #include <Wincrypt.h>
 
@@ -17,27 +18,30 @@ Certificate_Store_Windows::Certificate_Store_Windows()
 {}
 
 std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
-   {
-   return {};
-   }
-
-std::shared_ptr<const X509_Certificate>
-Certificate_Store_Windows::find_cert(const Botan::X509_DN &          subject_dn,
-                                     const std::vector<uint8_t> &key_id) const
 {
-    auto commonName = subject_dn.get_attribute("CN");
-
-    if (commonName.empty())
-        {
-        return nullptr; // certificate not found
+    std::vector<X509_DN> subject_dns;
+    std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
+    for (auto &store_name : cert_store_names)
+    {
+        auto windows_cert_store = CertOpenSystemStore(0, store_name.c_str());
+        if (!windows_cert_store) {
+            throw Decoding_Error(
+                "failed to open windows certificate store '" + store_name +
+                "' to get all_subjects (Error Code: " +
+                std::to_string(::GetLastError()) + ")");
         }
-
-    if (commonName.size() != 1)
+        PCCERT_CONTEXT cert_context = nullptr;
+        while(cert_context = CertEnumCertificatesInStore(windows_cert_store, cert_context))
         {
-        throw Lookup_Error("ambiguous certificate result");
+            if (cert_context) {
+                X509_Certificate cert(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
+                subject_dns.push_back(cert.subject_dn());
+            }
         }
+    }
 
-    const auto &certName = commonName[0];
+    return subject_dns;
+}
 
     std::vector<std::string> certStoreNames{"MY", "Root", "Trust", "CA"};
     for (auto &storeName : certStoreNames) {
