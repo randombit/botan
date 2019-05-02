@@ -43,44 +43,101 @@ std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
     return subject_dns;
 }
 
-    std::vector<std::string> certStoreNames{"MY", "Root", "Trust", "CA"};
-    for (auto &storeName : certStoreNames) {
-        auto windowsCertStore = CertOpenSystemStore(0, storeName.c_str());
-        if (!windowsCertStore) {
-            throw Decoding_Error(
-                "failed to open windows certificate store '" + storeName +
-                "' to find_cert (Error Code: " +
-                std::to_string(::GetLastError()) + ")");
-        }
 
-        PCCERT_CONTEXT pCertContext = CertFindCertificateInStore(
-            windowsCertStore, PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
-            CERT_UNICODE_IS_RDN_ATTRS_FLAG, CERT_FIND_SUBJECT_STR_A,
-            certName.c_str(), nullptr);
+PCCERT_CONTEXT lookup_cert_by_name(const std::string& cert_name, const std::string& cert_store_name, PCCERT_CONTEXT prevContext = nullptr)
+{
+    auto windows_cert_store = CertOpenSystemStore(0, cert_store_name.c_str());
+    if (!windows_cert_store) {
+        throw Decoding_Error(
+            "failed to open windows certificate store '" + cert_store_name +
+            "' to find_cert (Error Code: " +
+            std::to_string(::GetLastError()) + ")");
+    }
 
-        CertCloseStore(windowsCertStore, 0);
+    PCCERT_CONTEXT cert_context = CertFindCertificateInStore(
+                                      windows_cert_store, PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
+                                      CERT_UNICODE_IS_RDN_ATTRS_FLAG, CERT_FIND_SUBJECT_STR_A,
+                                      cert_name.c_str(), prevContext);
 
-        if (pCertContext) {
-            X509_Certificate cert(pCertContext->pbCertEncoded, pCertContext->cbCertEncoded);
-            CertFreeCertificateContext(pCertContext);
+    CertCloseStore(windows_cert_store, 0);
 
-            if (cert.subject_dn() == subject_dn) {
-                return std::shared_ptr<X509_Certificate>(&cert);
+    return cert_context;
+}
+
+PCCERT_CONTEXT lookup_cert_by_hash_blob(const CRYPT_HASH_BLOB& hash_blob, const std::string& cert_store_name, PCCERT_CONTEXT prevContext = nullptr)
+{
+    auto windows_cert_store = CertOpenSystemStore(0, cert_store_name.c_str());
+    if (!windows_cert_store) {
+        throw Decoding_Error(
+            "failed to open windows certificate store '" + cert_store_name +
+            "' to find_cert (Error Code: " +
+            std::to_string(::GetLastError()) + ")");
+    }
+
+    PCCERT_CONTEXT cert_context = CertFindCertificateInStore(
+                                      windows_cert_store, PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
+                                      0, CERT_FIND_KEY_IDENTIFIER,
+                                      &hash_blob, prevContext);
+
+    CertCloseStore(windows_cert_store, 0);
+
+    return cert_context;
+}
+
+std::shared_ptr<const X509_Certificate>
+Certificate_Store_Windows::find_cert(const Botan::X509_DN &          subject_dn,
+                                     const std::vector<uint8_t> &key_id) const
+{
+    const auto certs = find_all_certs(subject_dn, key_id);
+    return certs.empty() ? nullptr : certs.front();
+}
+
+bool already_contains_key_id(
+    const std::vector<std::shared_ptr<const X509_Certificate>>& certs, const std::vector<uint8_t>& key_id)
+{
+    return std::any_of(certs.begin(), certs.end(),
+    [&](std::shared_ptr<const X509_Certificate> c) {
+        return c->subject_key_id() == key_id;
+    });
+}
+
+std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_Windows::find_all_certs(
+            const X509_DN& subject_dn,
+            const std::vector<uint8_t>& key_id) const
+{
+    auto common_name = subject_dn.get_attribute("CN");
+
+    if (common_name.empty())
+    {
+        return {}; // certificate not found
+    }
+
+    if (common_name.size() != 1)
+    {
+        throw Lookup_Error("ambiguous certificate result");
+    }
+
+    const auto &cert_name = common_name[0];
+
+    std::vector<std::shared_ptr<const X509_Certificate>> certs;
+    std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
+    for (auto &store_name : cert_store_names) {
+        PCCERT_CONTEXT cert_context = nullptr;
+        while (cert_context = lookup_cert_by_name(cert_name, store_name, cert_context)) {
+            if (cert_context) {
+                auto cert = std::make_shared<X509_Certificate>(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
+                if (cert->subject_dn() == subject_dn &&
+                        (key_id.empty() || (cert->subject_key_id() == key_id && !already_contains_key_id(certs, key_id))))
+                {
+                    certs.push_back(cert);
+                }
             }
         }
     }
 
-    return nullptr;
+    return certs;
 }
 
-std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_Windows::find_all_certs(
-         const X509_DN& subject_dn,
-         const std::vector<uint8_t>& key_id) const
-{
-    BOTAN_UNUSED(subject_dn);
-    BOTAN_UNUSED(key_id);
-    return {};
-}
 std::shared_ptr<const Botan::X509_Certificate>
 Certificate_Store_Windows::find_cert_by_pubkey_sha1(
     const std::vector<uint8_t> &key_hash) const
