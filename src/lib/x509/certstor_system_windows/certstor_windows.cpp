@@ -14,82 +14,103 @@
 
 namespace Botan {
 
+/**
+ * Abstract RAII wrapper for PCCERT_CONTEXT and HCERTSTORE
+ * The Windows API partly takes care of those pointers destructions itself.
+ * Especially, iteratively calling `CertFindCertificateInStore` with the previous PCCERT_CONTEXT
+ * will free the context and return a new one. In this case, this guard takes care of freeing the context
+ * in case of an exception and at the end of the iterative process.
+ */
+template<class T>
+class Handle_Guard
+{
+public:
+    Handle_Guard(T context)
+        : m_context(context)
+    {
+    }
+
+    Handle_Guard(const Handle_Guard<T>& rhs) = delete;
+    Handle_Guard(Handle_Guard<T>&& rhs) :
+        m_context(std::move(rhs.m_context))
+    {
+        rhs.m_context = nullptr;
+    }
+
+    ~Handle_Guard() { close<T>(); }
+
+    operator bool() const { return m_context != nullptr; }
+
+    bool assign(T context)
+    {
+        m_context = context;
+        return m_context != nullptr;
+    }
+
+    T& get() { return m_context; }
+
+    const T& get() const { return m_context; }
+
+    T operator->() { return m_context; }
+
+private:
+    template<class T>
+    void close() {
+        static_assert(false, "Handle_Guard is not available for this type");
+    }
+
+    template<>
+    void close<PCCERT_CONTEXT> () {
+        if(m_context)
+        {
+            CertFreeCertificateContext(m_context);
+        }
+    }
+
+    template<>
+    void close<HCERTSTORE> () {
+        if(m_context)
+        {
+            CertCloseStore(m_context, 0);
+        }
+    }
+
+    T m_context;
+};
+
 Certificate_Store_Windows::Certificate_Store_Windows()
 {}
 
-std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
+HCERTSTORE openCertStore(const std::string& cert_store_name)
 {
-    std::vector<X509_DN> subject_dns;
-    std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
-    for (auto &store_name : cert_store_names)
-    {
-        auto windows_cert_store = CertOpenSystemStore(0, store_name.c_str());
-        if (!windows_cert_store) {
-            throw Decoding_Error(
-                "failed to open windows certificate store '" + store_name +
-                "' to get all_subjects (Error Code: " +
-                std::to_string(::GetLastError()) + ")");
-        }
-        PCCERT_CONTEXT cert_context = nullptr;
-        while(cert_context = CertEnumCertificatesInStore(windows_cert_store, cert_context))
-        {
-            if (cert_context) {
-                X509_Certificate cert(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
-                subject_dns.push_back(cert.subject_dn());
-            }
-        }
+    auto store = CertOpenSystemStore(0, cert_store_name.c_str());
+    if (!store) {
+        throw Decoding_Error(
+            "failed to open windows certificate store '" + cert_store_name +
+            "' (Error Code: " +
+            std::to_string(::GetLastError()) + ")");
     }
-
-    return subject_dns;
+    return store;
 }
-
 
 PCCERT_CONTEXT lookup_cert_by_name(const std::string& cert_name, const std::string& cert_store_name, PCCERT_CONTEXT prevContext = nullptr)
 {
-    auto windows_cert_store = CertOpenSystemStore(0, cert_store_name.c_str());
-    if (!windows_cert_store) {
-        throw Decoding_Error(
-            "failed to open windows certificate store '" + cert_store_name +
-            "' to find_cert (Error Code: " +
-            std::to_string(::GetLastError()) + ")");
-    }
+    Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(cert_store_name);
 
-    PCCERT_CONTEXT cert_context = CertFindCertificateInStore(
-                                      windows_cert_store, PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
-                                      CERT_UNICODE_IS_RDN_ATTRS_FLAG, CERT_FIND_SUBJECT_STR_A,
-                                      cert_name.c_str(), prevContext);
-
-    CertCloseStore(windows_cert_store, 0);
-
-    return cert_context;
+    return CertFindCertificateInStore(
+            windows_cert_store.get(), PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
+            CERT_UNICODE_IS_RDN_ATTRS_FLAG, CERT_FIND_SUBJECT_STR_A,
+            cert_name.c_str(), prevContext);
 }
 
 PCCERT_CONTEXT lookup_cert_by_hash_blob(const CRYPT_HASH_BLOB& hash_blob, const std::string& cert_store_name, PCCERT_CONTEXT prevContext = nullptr)
 {
-    auto windows_cert_store = CertOpenSystemStore(0, cert_store_name.c_str());
-    if (!windows_cert_store) {
-        throw Decoding_Error(
-            "failed to open windows certificate store '" + cert_store_name +
-            "' to find_cert (Error Code: " +
-            std::to_string(::GetLastError()) + ")");
-    }
+    Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(cert_store_name);
 
-    PCCERT_CONTEXT cert_context = CertFindCertificateInStore(
-                                      windows_cert_store, PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
-                                      0, CERT_FIND_KEY_IDENTIFIER,
-                                      &hash_blob, prevContext);
-
-    CertCloseStore(windows_cert_store, 0);
-
-    return cert_context;
-}
-
-std::shared_ptr<const X509_Certificate>
-Certificate_Store_Windows::find_cert(const Botan::X509_DN &          subject_dn,
-                                     const std::vector<uint8_t> &key_id) const
-{
-    const auto certs = find_all_certs(subject_dn, key_id);
-    return certs.empty() ? nullptr : certs.front();
+    return CertFindCertificateInStore(
+            windows_cert_store.get(), PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
+            0, CERT_FIND_KEY_IDENTIFIER,
+            &hash_blob, prevContext);
 }
 
 bool already_contains_key_id(
@@ -101,40 +122,63 @@ bool already_contains_key_id(
     });
 }
 
+std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
+{
+    std::vector<X509_DN> subject_dns;
+    const std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
+    for (auto &store_name : cert_store_names)
+    {
+        Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(store_name.c_str());
+        Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
+
+        // Handle_Guard::assign exchanges the underlying pointer. No RAII is needed here, because the Windows API takes care of
+        // freeing the previous context.
+        while(cert_context.assign(CertEnumCertificatesInStore(windows_cert_store.get(), cert_context.get())))
+        {
+            if (cert_context) {
+                X509_Certificate cert(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
+                subject_dns.push_back(cert.subject_dn());
+            }
+        }
+    }
+
+    return subject_dns;
+}
+
+std::shared_ptr<const X509_Certificate>
+Certificate_Store_Windows::find_cert(const Botan::X509_DN &          subject_dn,
+                                     const std::vector<uint8_t> &key_id) const
+{
+    const auto certs = find_all_certs(subject_dn, key_id);
+    return certs.empty() ? nullptr : certs.front();
+}
+
 std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_Windows::find_all_certs(
             const X509_DN& subject_dn,
             const std::vector<uint8_t>& key_id) const
 {
     auto common_name = subject_dn.get_attribute("CN");
 
-    if (common_name.empty())
-    {
-        return {}; // certificate not found
-    }
-
-    if (common_name.size() != 1)
-    {
-        throw Lookup_Error("ambiguous certificate result");
-    }
+    if (common_name.empty()) { return {}; }
+    if (common_name.size() != 1) { throw Lookup_Error("ambiguous certificate result"); }
 
     const auto &cert_name = common_name[0];
 
     std::vector<std::shared_ptr<const X509_Certificate>> certs;
-    std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
-    for (auto &store_name : cert_store_names) {
-        PCCERT_CONTEXT cert_context = nullptr;
-        while (cert_context = lookup_cert_by_name(cert_name, store_name, cert_context)) {
-            if (cert_context) {
-                auto cert = std::make_shared<X509_Certificate>(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
-                if (cert->subject_dn() == subject_dn &&
-                        (key_id.empty() || (cert->subject_key_id() == key_id && !already_contains_key_id(certs, key_id))))
-                {
-                    certs.push_back(cert);
-                }
+    const std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
+    for (auto &store_name : cert_store_names)
+    {
+        Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
+        while(cert_context.assign(lookup_cert_by_name(cert_name, store_name, cert_context.get())))
+        {
+            auto cert = std::make_shared<X509_Certificate>(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
+            if (cert->subject_dn() == subject_dn &&
+                    (key_id.empty() || (cert->subject_key_id() == key_id && !already_contains_key_id(certs, key_id))))
+            {
+                certs.push_back(cert);
             }
         }
     }
-
     return certs;
 }
 
@@ -147,23 +191,16 @@ Certificate_Store_Windows::find_cert_by_pubkey_sha1(
         throw Invalid_Argument("Certificate_Store_Windows::find_cert_by_pubkey_sha1 invalid hash");
     }
 
-    std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
+    const std::vector<std::string> cert_store_names{"MY", "Root", "Trust", "CA"};
     for (auto &store_name : cert_store_names) {
-        auto windows_cert_store = CertOpenSystemStore(0, store_name.c_str());
-        if (!windows_cert_store) {
-            throw Decoding_Error(
-                "failed to open windows certificate store 'CA' (Error Code: " + std::to_string(::GetLastError()) + ")");
-        }
-
         CRYPT_HASH_BLOB blob;
         blob.cbData = static_cast<DWORD>(key_hash.size());
         blob.pbData = const_cast<BYTE*>(key_hash.data());
 
-        auto cert_context = lookup_cert_by_hash_blob(blob, store_name);
+        Handle_Guard<PCCERT_CONTEXT> cert_context = lookup_cert_by_hash_blob(blob, store_name);
 
         if (cert_context) {
             auto cert = std::make_shared<X509_Certificate>(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
-            CertFreeCertificateContext(cert_context);
             return cert;
         }
     }
