@@ -69,7 +69,6 @@ Multiparty Protocols
 External Providers, Hardware Support
 ----------------------------------------
 
-* Access to system certificate stores (Windows, OS X)
 * Extend OpenSSL provider (DH, HMAC, CMAC, GCM)
 * Support using BoringSSL instead of OpenSSL or LibreSSL
 * /dev/crypto provider (ciphers, hashes)

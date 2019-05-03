@@ -158,6 +158,34 @@ Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certs
    return result;
    }
 
+Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore)
+   {
+   Test::Result result("System Certificate Store - Find all Certificates by subject DN");
+
+   try
+      {
+      auto dn = get_dn();
+
+      result.start_timer();
+      auto certs = certstore.find_all_certs(dn, std::vector<uint8_t>());
+      result.end_timer();
+
+      if(result.confirm("result not empty", !certs.empty()) &&
+            result.test_eq("exactly one certificate", certs.size(), 1))
+         {
+         auto cns = certs.front()->subject_dn().get_attribute("CN");
+         result.test_is_eq("exactly one CN", cns.size(), size_t(1));
+         result.test_eq("CN", cns.front(), "DST Root CA X3");
+         }
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure(e.what());
+      }
+
+   return result;
+   }
+
 Test::Result find_all_subjects(Botan::Certificate_Store& certstore)
    {
    Test::Result result("System Certificate Store - Find all Certificate Subjects");
@@ -286,6 +314,7 @@ class Certstor_System_Tests final : public Test
          results.push_back(find_cert_by_subject_dn(*system));
          results.push_back(find_cert_by_utf8_subject_dn(*system));
          results.push_back(find_cert_by_subject_dn_and_key_id(*system));
+         results.push_back(find_all_certs_by_subject_dn(*system));
          results.push_back(find_certs_by_subject_dn_and_key_id(*system));
          results.push_back(find_all_subjects(*system));
          results.push_back(no_certificate_matches(*system));
