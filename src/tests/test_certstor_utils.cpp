@@ -24,7 +24,7 @@ Botan::X509_DN read_dn(const std::string hex)
 
 Botan::X509_DN get_dn()
    {
-   // Public key fingerprint of "DST Root CA X3"
+   // ASN.1 encoded subject DN of "DST Root CA X3"
    // This certificate is in the standard "System Roots" of any macOS setup,
    // serves as the trust root of botan.randombit.net and expires on
    // Thursday, 30. September 2021 at 16:01:15 Central European Summer Time

@@ -76,6 +76,33 @@ Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore)
    return result;
    }
 
+Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore)
+   {
+   Test::Result result("System Certificate Store - Find Certificate by UTF8 subject DN");
+
+   try
+      {
+      auto dn = get_utf8_dn();
+
+      result.start_timer();
+      auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
+      result.end_timer();
+
+      if(result.test_not_null("found certificate", cert.get()))
+         {
+         auto cns = cert->subject_dn().get_attribute("CN");
+         result.test_is_eq("exactly one CN", cns.size(), size_t(1));
+         result.test_eq("CN", cns.front(), "D-TRUST Root CA 3 2013");
+         }
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure(e.what());
+      }
+
+   return result;
+   }
+
 Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certstore)
    {
    Test::Result result("System Certificate Store - Find Certificate by subject DN and key ID");
@@ -257,6 +284,7 @@ class Certstor_System_Tests final : public Test
 
          results.push_back(find_certificate_by_pubkey_sha1(*system));
          results.push_back(find_cert_by_subject_dn(*system));
+         results.push_back(find_cert_by_utf8_subject_dn(*system));
          results.push_back(find_cert_by_subject_dn_and_key_id(*system));
          results.push_back(find_certs_by_subject_dn_and_key_id(*system));
          results.push_back(find_all_subjects(*system));
