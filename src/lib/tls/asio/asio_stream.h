@@ -495,9 +495,9 @@ class Stream
       //! @}
 
    protected:
-      template <typename> friend class detail::AsyncWriteOperation;
-      template <typename> friend class detail::AsyncReadOperation;
-      template <typename> friend class detail::AsyncHandshakeOperation;
+      template <class H, class S, class M, class A> friend class detail::AsyncReadOperation;
+      template <class H, class S, class A> friend class detail::AsyncWriteOperation;
+      template <class H, class S, class A> friend class detail::AsyncHandshakeOperation;
 
       /**
        * @brief Helper class that implements Botan::TLS::Callbacks
