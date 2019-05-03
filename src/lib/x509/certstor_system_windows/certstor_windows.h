@@ -13,7 +13,7 @@
 
 namespace Botan {
 /**
-* Certificate Store that is backed by a file of PEMs of trusted CAs.
+* Certificate Store that is backed by the system trust store on Windows.
 */
 class BOTAN_PUBLIC_API(2, 11) Certificate_Store_Windows final : public Certificate_Store
    {
@@ -60,7 +60,8 @@ class BOTAN_PUBLIC_API(2, 11) Certificate_Store_Windows final : public Certifica
       find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
 
       /**
-       * TODO
+       * Not Yet Implemented
+       * @return nullptr;
        */
       std::shared_ptr<const X509_CRL> find_crl_for(const X509_Certificate& subject) const override;
    };

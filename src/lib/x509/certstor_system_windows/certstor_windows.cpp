@@ -231,6 +231,6 @@ Certificate_Store_Windows::find_cert_by_raw_subject_dn_sha256(const std::vector<
 std::shared_ptr<const X509_CRL> Certificate_Store_Windows::find_crl_for(const X509_Certificate& subject) const
    {
    BOTAN_UNUSED(subject);
-   throw Not_Implemented("Certificate_Store_Windows::find_crl_for");
+   return {};
    }
 }
