@@ -11,5 +11,5 @@ certstor_windows.h
 </header:public>
 
 <libs>
-all!windows -> crypto
+windows -> crypto
 </libs>

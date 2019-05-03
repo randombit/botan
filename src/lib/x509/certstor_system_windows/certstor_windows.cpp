@@ -11,24 +11,24 @@
 
 #include <array>
 #include <vector>
-#include <iostream>
 
 #define NOMINMAX 1
 #define _WINSOCKAPI_ // stop windows.h including winsock.h
 #include <Windows.h>
 #include <Wincrypt.h>
 
+namespace Botan {
 namespace {
 
-const std::array<std::string, 4> cert_store_names{"MY", "Root", "Trust", "CA"};
+const std::array<const char*, 2> cert_store_names{"Root", "CA"};
 
-HCERTSTORE openCertStore(const std::string& cert_store_name)
+HCERTSTORE openCertStore(const char* cert_store_name)
    {
-   auto store = CertOpenSystemStore(0, cert_store_name.c_str());
+   auto store = CertOpenSystemStore(NULL, cert_store_name);
    if(!store)
       {
       throw Botan::Internal_Error(
-         "failed to open windows certificate store '" + cert_store_name +
+         "failed to open windows certificate store '" + std::string(cert_store_name) +
          "' (Error Code: " +
          std::to_string(::GetLastError()) + ")");
       }
@@ -128,15 +128,14 @@ class Handle_Guard
    };
 }
 
-namespace Botan {
 Certificate_Store_Windows::Certificate_Store_Windows() {}
 
 std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
    {
    std::vector<X509_DN> subject_dns;
-   for(auto& store_name : ::cert_store_names)
+   for(auto& store_name : cert_store_names)
       {
-      Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(store_name.c_str());
+      Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(store_name);
       Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
 
       // Handle_Guard::assign exchanges the underlying pointer. No RAII is needed here, because the Windows API takes care of
@@ -172,7 +171,7 @@ std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_Windows::
    blob.pbData = reinterpret_cast<BYTE*>(dn_data.data());
 
    std::vector<std::shared_ptr<const X509_Certificate>> certs;
-   for(auto& store_name : ::cert_store_names)
+   for(auto& store_name : cert_store_names)
       {
       Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(store_name);
       Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
@@ -204,7 +203,7 @@ Certificate_Store_Windows::find_cert_by_pubkey_sha1(
    blob.cbData = static_cast<DWORD>(key_hash.size());
    blob.pbData = const_cast<BYTE*>(key_hash.data());
 
-   for(auto& store_name : ::cert_store_names)
+   for(auto& store_name : cert_store_names)
       {
       Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(store_name);
       Handle_Guard<PCCERT_CONTEXT> cert_context = CertFindCertificateInStore(
