@@ -5,7 +5,7 @@ Version 2.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add a ``boost::asio`` TLS stream compatible with ``boost::asio::ssl``.
-  (GH #1839)
+  (GH #1839 #1927)
 
 * Add a certificate store for Linux/Unix systems. (GH #1885)
 
