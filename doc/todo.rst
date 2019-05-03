@@ -30,6 +30,7 @@ Ciphers, Hashes, PBKDF
 * Constant time DES using BMI2
 * Threefish-1024
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
+* Adiantum
 
 Public Key Crypto, Math
 ----------------------------------------
