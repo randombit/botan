@@ -42,32 +42,28 @@ namespace Botan {
   #define BOTAN_MP_USE_X86_64_ASM
 #endif
 
-#if defined(BOTAN_MP_USE_X86_32_ASM) || defined(BOTAN_MP_USE_X86_64_ASM)
-  #define ASM(x) x "\n\t"
-#endif
-
 /*
 * Word Multiply/Add
 */
 inline word word_madd2(word a, word b, word* c)
    {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(
-      ASM("mull %[b]")
-      ASM("addl %[c],%[a]")
-      ASM("adcl $0,%[carry]")
-
+   asm(R"(
+      mull %[b]
+      addl %[c],%[a]
+      adcl $0,%[carry]
+      )"
       : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*c)
       : "0"(a), "1"(b), [c]"g"(*c) : "cc");
 
    return a;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-      asm(
-      ASM("mulq %[b]")
-      ASM("addq %[c],%[a]")
-      ASM("adcq $0,%[carry]")
-
+      asm(R"(
+         mulq %[b]
+         addq %[c],%[a]
+         adcq $0,%[carry]
+      )"
       : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*c)
       : "0"(a), "1"(b), [c]"g"(*c) : "cc");
 
@@ -98,30 +94,28 @@ inline word word_madd2(word a, word b, word* c)
 inline word word_madd3(word a, word b, word c, word* d)
    {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(
-      ASM("mull %[b]")
+   asm(R"(
+      mull %[b]
 
-      ASM("addl %[c],%[a]")
-      ASM("adcl $0,%[carry]")
+      addl %[c],%[a]
+      adcl $0,%[carry]
 
-      ASM("addl %[d],%[a]")
-      ASM("adcl $0,%[carry]")
-
+      addl %[d],%[a]
+      adcl $0,%[carry]
+      )"
       : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*d)
       : "0"(a), "1"(b), [c]"g"(c), [d]"g"(*d) : "cc");
 
    return a;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(
-      ASM("mulq %[b]")
-
-      ASM("addq %[c],%[a]")
-      ASM("adcq $0,%[carry]")
-
-      ASM("addq %[d],%[a]")
-      ASM("adcq $0,%[carry]")
-
+   asm(R"(
+      mulq %[b]
+      addq %[c],%[a]
+      adcq $0,%[carry]
+      addq %[d],%[a]
+      adcq $0,%[carry]
+      )"
       : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*d)
       : "0"(a), "1"(b), [c]"g"(c), [d]"g"(*d) : "cc");
 
@@ -148,10 +142,6 @@ inline word word_madd3(word a, word b, word c, word* d)
    return lo;
 #endif
    }
-
-#if defined(ASM)
-  #undef ASM
-#endif
 
 }
 
