@@ -112,7 +112,7 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
    {
    public:
       /**
-       * Construct and invoke an AsyncWriteOperation.
+       * Construct and invoke an AsyncReadOperation.
        *
        * @param handler Handler function to be called upon completion.
        * @param stream The stream from which the data will be read
