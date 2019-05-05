@@ -175,24 +175,52 @@ inline void des_decrypt_x2(uint32_t& L0r, uint32_t& R0r,
 
 inline void des_IP(uint32_t& L, uint32_t& R, const uint8_t block[])
    {
-   uint64_t T = (DES_IPTAB1[block[0]]     ) | (DES_IPTAB1[block[1]] << 1) |
-                (DES_IPTAB1[block[2]] << 2) | (DES_IPTAB1[block[3]] << 3) |
-                (DES_IPTAB1[block[4]] << 4) | (DES_IPTAB1[block[5]] << 5) |
-                (DES_IPTAB1[block[6]] << 6) | (DES_IPTAB2[block[7]]     );
+   // IP sequence by Wei Dai, taken from public domain Crypto++
+   L = load_be<uint32_t>(block, 0);
+   R = load_be<uint32_t>(block, 1);
 
-   L = static_cast<uint32_t>(T >> 32);
-   R = static_cast<uint32_t>(T);
+   uint32_t T;
+   R = rotl<4>(R);
+   T = (L ^ R) & 0xF0F0F0F0;
+   L ^= T;
+   R = rotr<20>(R ^ T);
+   T = (L ^ R) & 0xFFFF0000;
+   L ^= T;
+   R = rotr<18>(R ^ T);
+   T = (L ^ R) & 0x33333333;
+   L ^= T;
+   R = rotr<6>(R ^ T);
+   T = (L ^ R) & 0x00FF00FF;
+   L ^= T;
+   R = rotl<9>(R ^ T);
+   T = (L ^ R) & 0xAAAAAAAA;
+   L = rotl<1>(L ^ T);
+   R ^= T;
    }
 
 inline void des_FP(uint32_t L, uint32_t R, uint8_t out[])
    {
-   uint64_t T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-                (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-                (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-                (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
-   T = rotl<32>(T);
+   // FP sequence by Wei Dai, taken from public domain Crypto++
+   uint32_t T;
 
-   store_be(T, out);
+   R = rotr<1>(R);
+   T = (L ^ R) & 0xAAAAAAAA;
+   R ^= T;
+   L = rotr<9>(L ^ T);
+   T = (L ^ R) & 0x00FF00FF;
+   R ^= T;
+   L = rotl<6>(L ^ T);
+   T = (L ^ R) & 0x33333333;
+   R ^= T;
+   L = rotl<18>(L ^ T);
+   T = (L ^ R) & 0xFFFF0000;
+   R ^= T;
+   L = rotl<20>(L ^ T);
+   T = (L ^ R) & 0xF0F0F0F0;
+   R ^= T;
+   L = rotr<4>(L ^ T);
+
+   store_be(out, R, L);
    }
 
 }
