@@ -719,15 +719,16 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
 #if defined(BOTAN_MP_USE_X86_32_ASM)
    word z0 = 0, z1 = 0;
 
-   asm ("mull %[y]"
+   asm("mull %[y]"
         : "=a"(z0),"=d"(z1)
         : "a"(x), [y]"rm"(y)
         : "cc");
 
-   asm(ASM("addl %[z0],%[w0]")
-       ASM("adcl %[z1],%[w1]")
-       ASM("adcl $0,%[w2]")
-
+   asm(R"(
+       addl %[z0],%[w0]
+       adcl %[z1],%[w1]
+       adcl $0,%[w2]
+       )"
        : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
        : [z0]"r"(z0), [z1]"r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
        : "cc");
@@ -736,15 +737,16 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
 
    word z0 = 0, z1 = 0;
 
-   asm ("mulq %[y]"
+   asm("mulq %[y]"
         : "=a"(z0),"=d"(z1)
         : "a"(x), [y]"rm"(y)
         : "cc");
 
-   asm(ASM("addq %[z0],%[w0]")
-       ASM("adcq %[z1],%[w1]")
-       ASM("adcq $0,%[w2]")
-
+   asm(R"(
+       addq %[z0],%[w0]
+       adcq %[z1],%[w1]
+       adcq $0,%[w2]
+       )"
        : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
        : [z0]"r"(z0), [z1]"r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
        : "cc");
@@ -764,22 +766,22 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
 inline void word3_add(word* w2, word* w1, word* w0, word x)
    {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(
-      ASM("addl %[x],%[w0]")
-      ASM("adcl $0,%[w1]")
-      ASM("adcl $0,%[w2]")
-
+   asm(R"(
+      addl %[x],%[w0]
+      adcl $0,%[w1]
+      adcl $0,%[w2]
+      )"
       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
       : [x]"r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
 
-   asm(
-      ASM("addq %[x],%[w0]")
-      ASM("adcq $0,%[w1]")
-      ASM("adcq $0,%[w2]")
-
+   asm(R"(
+      addq %[x],%[w0]
+      adcq $0,%[w1]
+      adcq $0,%[w2]
+      )"
       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
       : [x]"r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
@@ -803,20 +805,20 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
 
    word z0 = 0, z1 = 0;
 
-   asm ("mull %[y]"
+   asm("mull %[y]"
         : "=a"(z0),"=d"(z1)
         : "a"(x), [y]"rm"(y)
         : "cc");
 
-   asm(
-      ASM("addl %[z0],%[w0]")
-      ASM("adcl %[z1],%[w1]")
-      ASM("adcl $0,%[w2]")
+   asm(R"(
+      addl %[z0],%[w0]
+      adcl %[z1],%[w1]
+      adcl $0,%[w2]
 
-      ASM("addl %[z0],%[w0]")
-      ASM("adcl %[z1],%[w1]")
-      ASM("adcl $0,%[w2]")
-
+      addl %[z0],%[w0]
+      adcl %[z1],%[w1]
+      adcl $0,%[w2]
+      )"
       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
       : [z0]"r"(z0), [z1]"r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
@@ -825,20 +827,20 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
 
    word z0 = 0, z1 = 0;
 
-   asm ("mulq %[y]"
+   asm("mulq %[y]"
         : "=a"(z0),"=d"(z1)
         : "a"(x), [y]"rm"(y)
         : "cc");
 
-   asm(
-      ASM("addq %[z0],%[w0]")
-      ASM("adcq %[z1],%[w1]")
-      ASM("adcq $0,%[w2]")
+   asm(R"(
+      addq %[z0],%[w0]
+      adcq %[z1],%[w1]
+      adcq $0,%[w2]
 
-      ASM("addq %[z0],%[w0]")
-      ASM("adcq %[z1],%[w1]")
-      ASM("adcq $0,%[w2]")
-
+      addq %[z0],%[w0]
+      adcq %[z1],%[w1]
+      adcq $0,%[w2]
+      )"
       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
       : [z0]"r"(z0), [z1]"r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
