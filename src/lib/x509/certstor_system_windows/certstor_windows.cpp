@@ -162,26 +162,37 @@ std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_Windows::
          const X509_DN& subject_dn,
          const std::vector<uint8_t>& key_id) const
    {
-   std::vector<uint8_t> dn_data;
-   DER_Encoder encoder(dn_data);
-   subject_dn.encode_into(encoder);
-
-   CERT_NAME_BLOB blob;
-   blob.cbData = static_cast<DWORD>(dn_data.size());
-   blob.pbData = reinterpret_cast<BYTE*>(dn_data.data());
-
+   _CRYPTOAPI_BLOB blob;
+   DWORD find_type;
    std::vector<std::shared_ptr<const X509_Certificate>> certs;
+   std::vector<uint8_t> dn_data;
+
+   if(key_id.empty())
+      {
+      find_type = CERT_FIND_SUBJECT_NAME;
+      DER_Encoder encoder(dn_data);
+      subject_dn.encode_into(encoder);
+      blob.cbData = static_cast<DWORD>(dn_data.size());
+      blob.pbData = reinterpret_cast<BYTE*>(dn_data.data());
+      }
+   else
+      {
+      find_type = CERT_FIND_KEY_IDENTIFIER;
+      blob.cbData = static_cast<DWORD>(key_id.size());
+      blob.pbData = const_cast<BYTE*>(key_id.data());
+      }
+
    for(auto& store_name : cert_store_names)
       {
       Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(store_name);
       Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
       while(cert_context.assign(CertFindCertificateInStore(
                                    windows_cert_store.get(), PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
-                                   NULL, CERT_FIND_SUBJECT_NAME,
+                                   NULL, find_type,
                                    &blob, cert_context.get())))
          {
          auto cert = std::make_shared<X509_Certificate>(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
-         if(!already_contains_certificate(certs, cert) && (key_id.empty() || cert->subject_key_id() == key_id))
+         if(!already_contains_certificate(certs, cert) && (key_id.empty() || cert->subject_dn() == subject_dn))
             {
             certs.push_back(cert);
             }
@@ -208,7 +219,7 @@ Certificate_Store_Windows::find_cert_by_pubkey_sha1(
       Handle_Guard<HCERTSTORE> windows_cert_store = openCertStore(store_name);
       Handle_Guard<PCCERT_CONTEXT> cert_context = CertFindCertificateInStore(
                windows_cert_store.get(), PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
-               0, CERT_FIND_KEY_IDENTIFIER,
+               NULL, CERT_FIND_KEY_IDENTIFIER,
                &blob, nullptr);
 
       if(cert_context)

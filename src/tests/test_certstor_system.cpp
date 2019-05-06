@@ -296,6 +296,7 @@ class Certstor_System_Tests final : public Test
             }
          catch(Botan::Not_Implemented& e)
             {
+            BOTAN_UNUSED(e);
             open_result.test_note("Skipping due to not available in current build");
             return {open_result};
             }
