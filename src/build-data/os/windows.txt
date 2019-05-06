@@ -32,6 +32,8 @@ virtual_lock
 
 threads
 filesystem
+
+certificate_store
 </target_features>
 
 <aliases>
