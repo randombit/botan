@@ -123,6 +123,7 @@ New Protocols / Formats
 * Off-The-Record v3 https://otr.cypherpunks.ca/
 * Certificate Management Protocol (RFC 5273); requires CMS
 * Fernet symmetric encryption (https://cryptography.io/en/latest/fernet/)
+* RNCryptor format (https://github.com/RNCryptor/RNCryptor)
 * Useful OpenPGP subset 1: symmetrically encrypted files.
   Not aiming to process arbitrary OpenPGP, but rather produce
   something that happens to be readable by `gpg` and is relatively
