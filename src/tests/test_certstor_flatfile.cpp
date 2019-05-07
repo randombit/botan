@@ -110,6 +110,35 @@ Test::Result find_cert_by_subject_dn()
    return result;
    }
 
+Test::Result find_cert_by_utf8_subject_dn()
+   {
+   Test::Result result("Flatfile Certificate Store - Find Certificate by UTF8 subject DN");
+
+   try
+      {
+      auto dn = get_utf8_dn();
+
+      result.start_timer();
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
+
+      result.end_timer();
+
+      if(result.test_not_null("found certificate", cert.get()))
+         {
+         auto cns = cert->subject_dn().get_attribute("CN");
+         result.test_is_eq("exactly one CN", cns.size(), size_t(1));
+         result.test_eq("CN", cns.front(), "D-TRUST Root Class 3 CA 2 EV 2009");
+         }
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure(e.what());
+      }
+
+   return result;
+   }
+
 Test::Result find_cert_by_subject_dn_and_key_id()
    {
    Test::Result result("Flatfile Certificate Store - Find Certificate by subject DN and key ID");
@@ -259,6 +288,7 @@ class Certstor_Flatfile_Tests final : public Test
          results.push_back(open_certificate_store());
          results.push_back(find_certificate_by_pubkey_sha1());
          results.push_back(find_cert_by_subject_dn());
+         results.push_back(find_cert_by_utf8_subject_dn());
          results.push_back(find_cert_by_subject_dn_and_key_id());
          results.push_back(find_certs_by_subject_dn_and_key_id());
          results.push_back(find_all_subjects());

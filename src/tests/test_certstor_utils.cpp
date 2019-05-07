@@ -33,6 +33,16 @@ Botan::X509_DN get_dn()
                   "4341205833");
    }
 
+Botan::X509_DN get_utf8_dn()
+   {
+   // ASN.1 encoded subject DN of "D-TRUST Root Class 3 CA 2 EV 2009"
+   // This DN contains UTF8-encoded strings
+   // expires on 05. November 2029 at 8:50:46 UTC
+   return read_dn("3050310B300906035504061302444531153013060355040A0C0C442D54727"
+                  "5737420476D6248312A302806035504030C21442D545255535420526F6F74"
+                  "20436C617373203320434120322045562032303039");
+   }
+
 std::vector<uint8_t> get_key_id()
    {
    // this is the same as the public key SHA1
