@@ -60,7 +60,7 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file, 
       if(cert->is_self_signed() && cert->is_CA_cert())
          {
          m_all_subjects.push_back(cert->subject_dn());
-         m_dn_to_cert.emplace(cert->subject_dn(), cert);
+         m_dn_to_cert[cert->subject_dn()].push_back(cert);
          m_pubkey_sha1_to_cert.emplace(cert->subject_public_key_bitstring_sha1(), cert);
          m_subject_dn_sha256_to_cert.emplace(cert->raw_subject_dn_sha256(), cert);
          }
@@ -94,23 +94,22 @@ std::vector<std::shared_ptr<const X509_Certificate>> Flatfile_Certificate_Store:
          const X509_DN& subject_dn,
          const std::vector<uint8_t>& key_id) const
    {
-   const auto found_range = m_dn_to_cert.equal_range(subject_dn);
+   std::vector<std::shared_ptr<const X509_Certificate>> found_certs;
+   try
+      {
+      const auto certs = m_dn_to_cert.at(subject_dn);
 
-   if(found_range.first == m_dn_to_cert.end())
+      for(auto cert : certs)
+         {
+         if(key_id.empty() || key_id == cert->subject_key_id())
+            {
+            found_certs.push_back(cert);
+            }
+         }
+      }
+   catch(const std::out_of_range&)
       {
       return {};
-      }
-
-   std::vector<std::shared_ptr<const X509_Certificate>> found_certs;
-
-   for(auto i = found_range.first; i != found_range.second; ++i)
-      {
-      const std::shared_ptr<const X509_Certificate> cert = i->second;
-
-      if(key_id.empty() || key_id == cert->subject_key_id())
-         {
-         found_certs.push_back(cert);
-         }
       }
 
    return found_certs;

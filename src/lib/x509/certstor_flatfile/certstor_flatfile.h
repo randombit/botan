@@ -76,7 +76,7 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certific
 
    private:
       std::vector<X509_DN> m_all_subjects;
-      std::multimap<X509_DN, std::shared_ptr<const X509_Certificate>> m_dn_to_cert;
+      std::map<X509_DN, std::vector<std::shared_ptr<const X509_Certificate>>> m_dn_to_cert;
       std::map<std::vector<uint8_t>, std::shared_ptr<const X509_Certificate>> m_pubkey_sha1_to_cert;
       std::map<std::vector<uint8_t>, std::shared_ptr<const X509_Certificate>> m_subject_dn_sha256_to_cert;
    };

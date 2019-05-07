@@ -23,6 +23,8 @@ Botan::X509_DN read_dn(const std::string hex);
 
 Botan::X509_DN get_dn();
 
+Botan::X509_DN get_utf8_dn();
+
 std::vector<uint8_t> get_key_id();
 
 Botan::X509_DN get_unknown_dn();
