@@ -447,7 +447,7 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
        Callbacks callbacks;
        Botan::AutoSeeded_RNG rng;
        Botan::TLS::Session_Manager_In_Memory session_mgr(rng);
-       Botan::Client_Credentials creds;
+       Client_Credentials creds;
        Botan::TLS::Strict_Policy policy;
 
        // open the tls connection
@@ -605,7 +605,7 @@ The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
        Callbacks callbacks;
        Botan::AutoSeeded_RNG rng;
        Botan::TLS::Session_Manager_In_Memory session_mgr(rng);
-       Botan::Client_Credentials creds;
+       Server_Credentials creds;
        Botan::TLS::Strict_Policy policy;
 
        // accept tls connection from client
