@@ -31,6 +31,10 @@ Version 2.11.0, Not Yet Released
   deprecated. The deprecation message suggests the alternate API to use.
   (GH #1915)
 
+* Remove use of table lookups for IP/FP transforms in DES (GH #1928)
+
+* Improve the tests for SRP6 (GH #1917 #1923)
+
 * Document the build system
 
 * When available use POSIX ``sysconf`` to detect the number of CPUs (GH #1877)
@@ -43,6 +47,10 @@ Version 2.11.0, Not Yet Released
 * Fix an issue building with the new Boost 1.70 (GH #1881 #1880)
 
 * Fix an issue with UbSan in the tests (GH #1892)
+
+* Remove use of ``-mabi`` flag when building on MIPS64 (GH #1918)
+
+* Make it possible to specify additional libraries in ``LDFLAGS`` (GH #1916)
 
 * Fix the makefile .PHONY syntax (GH #1874)
 
