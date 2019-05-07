@@ -184,16 +184,54 @@ bool operator<(const X509_DN& dn1, const X509_DN& dn2)
    auto attr1 = dn1.get_attributes();
    auto attr2 = dn2.get_attributes();
 
-   if(attr1.size() < attr2.size()) return true;
-   if(attr1.size() > attr2.size()) return false;
+   // If they are not the same size, choose the smaller as the "lessor"
+   if(attr1.size() < attr2.size())
+      return true;
+   if(attr1.size() > attr2.size())
+      return false;
 
-   for(auto p1 = attr1.begin(); p1 != attr1.end(); ++p1)
+   // We know they are the same # of elements, now compare the OIDs:
+   auto p1 = attr1.begin();
+   auto p2 = attr2.begin();
+
+   while(p1 != attr1.end() && p2 != attr2.end())
       {
-      auto p2 = attr2.find(p1->first);
-      if(p2 == attr2.end())       return false;
-      if(p1->second > p2->second) return false;
-      if(p1->second < p2->second) return true;
+      if(p1->first != p2->first)
+         {
+         return (p1->first < p2->first);
+         }
+
+      ++p1;
+      ++p2;
       }
+
+   // We know this is true because maps have the same size
+   BOTAN_ASSERT_NOMSG(p1 == attr1.end());
+   BOTAN_ASSERT_NOMSG(p2 == attr2.end());
+
+   // Now we know all elements have the same OIDs, compare
+   // their string values:
+
+   p1 = attr1.begin();
+   p2 = attr2.begin();
+   while(p1 != attr1.end() && p2 != attr2.end())
+      {
+      BOTAN_DEBUG_ASSERT(p1->first == p2->first);
+
+      // They may be binary different but same by X.500 rules, check this
+      if(!x500_name_cmp(p1->second, p2->second))
+         {
+         // If they are not (by X.500) the same string, pick the
+         // lexicographic first as the lessor
+         return (p1->second < p2->second);
+         }
+
+      ++p1;
+      ++p2;
+      }
+
+   // if we reach here, then the DNs should be identical
+   BOTAN_DEBUG_ASSERT(dn1 == dn2);
    return false;
    }
 
@@ -250,7 +288,10 @@ void X509_DN::decode_from(BER_Decoder& source)
          OID oid;
          ASN1_String str;
 
-         rdn.start_cons(SEQUENCE).decode(oid).decode(str).end_cons();
+         rdn.start_cons(SEQUENCE)
+            .decode(oid)
+            .decode(str) // TODO support Any
+            .end_cons().verify_end("Invalid X509_DN, data follows RDN");
 
          add_attribute(oid, str);
          }
