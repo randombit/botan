@@ -5,5 +5,6 @@ BOOST_ASIO -> 20131228
 load_on vendor
 
 <libs>
-all -> boost_system
+all!windows -> boost_system
+windows -> boost_system.lib
 </libs>
