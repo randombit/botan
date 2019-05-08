@@ -271,6 +271,13 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool support_cert_status_message() const;
 
       /**
+      * Indicate if client certificate authentication is required.
+      * If true, then a cert will be requested and if the client does
+      * not send a certificate the connection will be closed.
+      */
+      virtual bool require_client_certificate_authentication() const;
+
+      /**
       * Return allowed ciphersuites, in order of preference
       */
       virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version,
@@ -524,6 +531,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool negotiate_encrypt_then_mac() const override;
 
       bool support_cert_status_message() const override;
+
+      bool require_client_certificate_authentication() const override;
 
       size_t minimum_ecdh_group_size() const override;
 

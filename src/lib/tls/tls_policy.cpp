@@ -329,6 +329,7 @@ bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
 bool Policy::support_cert_status_message() const { return true; }
+bool Policy::require_client_certificate_authentication() const { return false; }
 
 // 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
 size_t Policy::dtls_initial_timeout() const { return 1*1000; }

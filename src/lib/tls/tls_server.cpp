@@ -321,7 +321,6 @@ Server::Server(output_fn output,
    {
    }
 
-
 Server::Server(output_fn output,
                data_cb got_data_cb,
                alert_cb recv_alert_cb,
@@ -511,6 +510,10 @@ void Server::process_certificate_msg(Server_Handshake_State& pending_state,
                                      const std::vector<uint8_t>& contents)
    {
    pending_state.client_certs(new Certificate(contents, policy()));
+
+   if(pending_state.client_certs()->empty() && policy().require_client_certificate_authentication())
+      throw TLS_Exception(Alert::CERTIFICATE_REQUIRED, "Policy requires client send a certificate, but it did not");
+
    pending_state.set_expected_next(CLIENT_KEX);
    }
 
@@ -857,7 +860,11 @@ void Server::session_create(Server_Handshake_State& pending_state,
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());
       }
 
-   if(!client_auth_CAs.empty() && pending_state.ciphersuite().signature_used())
+   const bool request_cert =
+      (client_auth_CAs.empty() == false) ||
+      policy().require_client_certificate_authentication();
+
+   if(request_cert && pending_state.ciphersuite().signature_used())
       {
       pending_state.cert_req(
          new Certificate_Req(pending_state.handshake_io(),
