@@ -92,6 +92,22 @@ Botan::X509_Cert_Options req_opts2(const std::string& sig_padding = "")
    return opts;
    }
 
+Botan::X509_Cert_Options req_opts3(const std::string& sig_padding = "")
+{
+   Botan::X509_Cert_Options opts("Test User 2/US/Botan Project/Testing");
+
+   opts.uri = "https://botan.randombit.net";
+   opts.dns = "botan.randombit.net";
+   opts.email = "testing@randombit.net";
+   opts.set_padding_scheme(sig_padding);
+
+   opts.more_org_units.push_back("IT");
+   opts.more_org_units.push_back("Security");
+   opts.more_dns.push_back("www.botan.randombit.net");
+
+   return opts;
+}
+
 std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    {
    const std::string params = [&]
@@ -695,6 +711,15 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
                                    hash_fn,
                                    Test::rng());
 
+   // /* Create user #3's key and cert request */
+   std::unique_ptr<Botan::Private_Key> user3_key(make_a_private_key(sig_algo));
+
+   Botan::PKCS10_Request user3_req =
+      Botan::X509::create_cert_req(req_opts3(sig_padding),
+                                   *user3_key,
+                                   hash_fn,
+                                   Test::rng());
+
    /* Create the CA object */
    Botan::X509_CA ca(ca_cert, ca_key, {{"padding",sig_padding}}, hash_fn, Test::rng());
 
@@ -711,6 +736,11 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    Botan::X509_Certificate user2_cert =
       ca.sign_request(user2_req, Test::rng(),
+                      from_date(-1, 01, 01),
+                      from_date(2, 01, 01));
+
+   Botan::X509_Certificate user3_cert =
+      ca.sign_request(user3_req, Test::rng(),
                       from_date(-1, 01, 01),
                       from_date(2, 01, 01));
 
@@ -746,10 +776,18 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_eq("issuer info Orga", user1_issuer_dn.get_first_attribute("O"), ca_opts().organization);
    result.test_eq("issuer info OrgaUnit", user1_issuer_dn.get_first_attribute("OU"), ca_opts().org_unit);
 
+   const Botan::X509_DN& user3_subject_dn = user3_cert.subject_dn();
+   result.test_eq("subject OrgaUnit count", user3_subject_dn.get_attribute("OU").size(), req_opts3(sig_algo).more_org_units.size() + 1);
+   result.test_eq("subject OrgaUnit #2", user3_subject_dn.get_attribute("OU").at(1), req_opts3(sig_algo).more_org_units.at(0));
+
    const Botan::AlternativeName& user1_altname = user1_cert.subject_alt_name();
    result.test_eq("subject alt email", user1_altname.get_first_attribute("RFC822"), "testing@randombit.net");
-   result.test_eq("subject alt email", user1_altname.get_first_attribute("DNS"), "botan.randombit.net");
-   result.test_eq("subject alt email", user1_altname.get_first_attribute("URI"), "https://botan.randombit.net");
+   result.test_eq("subject alt dns", user1_altname.get_first_attribute("DNS"), "botan.randombit.net");
+   result.test_eq("subject alt uri", user1_altname.get_first_attribute("URI"), "https://botan.randombit.net");
+
+   const Botan::AlternativeName& user3_altname = user3_cert.subject_alt_name();
+   result.test_eq("subject alt dns count", user3_altname.get_attribute("DNS").size(), req_opts3(sig_algo).more_dns.size() + 1);
+   result.test_eq("subject alt dns #2", user3_altname.get_attribute("DNS").at(1), req_opts3(sig_algo).more_dns.at(0));
 
    const Botan::X509_CRL crl1 = ca.new_crl(Test::rng());
 

@@ -711,6 +711,10 @@ of these as possible should be filled it (especially an email
 address), though the only required ones are ``common_name`` and
 ``country``.
 
+Additionally there are a small selection of ``std::vector<std::string>``
+members, which allow space for repeating elements:
+``more_org_units`` and ``more_dns``.
+
 There is another value that is only useful when creating a PKCS #10
 request, which is called ``challenge``. This is a challenge password,
 which you can later use to request certificate revocation (*if* the CA

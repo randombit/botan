@@ -45,6 +45,11 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       std::string org_unit;
 
       /**
+       * additional subject organizational units.
+       */
+      std::vector<std::string> more_org_units;
+
+      /**
       * the subject locality
       */
       std::string locality;
@@ -79,6 +84,9 @@ class BOTAN_PUBLIC_API(2,0) X509_Cert_Options final
       */
       std::string dns;
 
+      /**
+       * additional subject DNS entries.
+       */
       std::vector<std::string> more_dns;
 
       /**
