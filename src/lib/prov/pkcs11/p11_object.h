@@ -35,12 +35,8 @@ class BOTAN_PUBLIC_API(2,0) AttributeContainer
 
       virtual ~AttributeContainer() = default;
 
-/* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
-   Everything else we target should support it */
-#if !defined( _MSC_VER ) || ( _MSC_VER >= 1900 )
       AttributeContainer(AttributeContainer&& other) = default;
       AttributeContainer& operator=(AttributeContainer&& other) = default;
-#endif
 
       // Warning when implementing copy/assignment: m_attributes contains pointers to the other members which must be updated after a copy
       AttributeContainer(const AttributeContainer& other) = delete;
@@ -139,14 +135,10 @@ class BOTAN_PUBLIC_API(2,0) ObjectFinder final
       ObjectFinder(Session& session, const std::vector<Attribute>& search_template);
 
       ObjectFinder(const ObjectFinder& other) = default;
-      ObjectFinder& operator=(const ObjectFinder& other) = default;
+      ObjectFinder& operator=(const ObjectFinder& other) = delete;
 
-/* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
-   Everything else we target should support it */
-#if !defined( _MSC_VER ) || ( _MSC_VER >= 1900 )
       ObjectFinder(ObjectFinder&& other) = default;
-      ObjectFinder& operator=(ObjectFinder&& other) = default;
-#endif
+      ObjectFinder& operator=(ObjectFinder&& other) = delete;
 
       /// Terminates a search for token and session objects (calls C_FindObjectsFinal)
       ~ObjectFinder() noexcept;
@@ -657,7 +649,7 @@ class BOTAN_PUBLIC_API(2,0) Object
       Object(Session& session, const ObjectProperties& obj_props);
 
       Object(const Object&) = default;
-      Object& operator=(const Object&) = default;
+      Object& operator=(const Object&) = delete;
       virtual ~Object() = default;
 
       /// Searches for all objects of the given type that match `search_template`

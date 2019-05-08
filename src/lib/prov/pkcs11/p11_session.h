@@ -38,12 +38,8 @@ class BOTAN_PUBLIC_API(2,0) Session final
       /// Takes ownership of a session
       Session(Slot& slot, SessionHandle handle);
 
-/* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
-   Everything else we target should support it */
-#if !defined( _MSC_VER ) || ( _MSC_VER >= 1900 )
       Session(Session&& other) = default;
-      Session& operator=(Session&& other) = default;
-#endif
+      Session& operator=(Session&& other) = delete;
 
       // Dtor calls C_CloseSession() and eventually C_Logout. A copy could close the session while the origin still exists
       Session(const Session& other) = delete;
