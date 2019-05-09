@@ -136,6 +136,9 @@ std::string asn1_tag_to_string(ASN1_Tag type)
       case Botan::BMP_STRING:
          return "BMP STRING";
 
+      case Botan::UNIVERSAL_STRING:
+         return "UNIVERSAL STRING";
+
       case Botan::UTC_TIME:
          return "UTC TIME";
 

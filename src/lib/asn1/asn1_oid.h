@@ -78,7 +78,7 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       * Construct an OID from a string.
       * @param str a string in the form "a.b.c" etc., where a,b,c are numbers
       */
-      OID(const std::string& str = "");
+      explicit OID(const std::string& str = "");
 
       explicit OID(std::initializer_list<uint32_t> init) : m_id(init) {}
    private:

@@ -28,7 +28,7 @@ class OID_Map final
          lock_guard_type<mutex_type> lock(m_mutex);
          auto i = m_str2oid.find(str);
          if(i == m_str2oid.end())
-            m_str2oid.insert(std::make_pair(str, oid.to_string()));
+            m_str2oid.insert(std::make_pair(str, oid));
          }
 
       void add_oid2str(const OID& oid, const std::string& str)
