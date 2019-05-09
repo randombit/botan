@@ -90,7 +90,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
 class RNG final : public Command
    {
    public:
-      RNG() : Command("rng --system --rdrand --auto --entropy --drbg --drbg-seed= *bytes") {}
+      RNG() : Command("rng --format=hex --system --rdrand --auto --entropy --drbg --drbg-seed= *bytes") {}
 
       std::string group() const override
          {
@@ -104,6 +104,7 @@ class RNG final : public Command
 
       void go() override
          {
+         const std::string format = get_arg("format");
          std::string type = get_arg("rng-type");
 
          if(type.empty())
@@ -123,7 +124,17 @@ class RNG final : public Command
 
          for(const std::string& req : get_arg_list("bytes"))
             {
-            output() << Botan::hex_encode(rng->random_vec(Botan::to_u32bit(req))) << "\n";
+            const size_t req_len = Botan::to_u32bit(req);
+            const auto blob = rng->random_vec(req_len);
+
+            if(format == "binary" || format == "raw")
+               {
+               output().write(reinterpret_cast<const char*>(blob.data()), blob.size());
+               }
+            else
+               {
+               output() << format_blob(format, blob) << "\n";
+               }
             }
          }
    };

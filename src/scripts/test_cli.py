@@ -390,6 +390,10 @@ def cli_rng_tests():
     test_cli("rng", "16", "D80F88F6ADBE65ACB10C3602E67D985B")
     test_cli("rng", "10 6", "D80F88F6ADBE65ACB10C\n1B119CC068AF")
 
+    test_cli("rng", ['--format=base64', '10'], "2A+I9q2+ZayxDA==")
+    test_cli("rng", ['--format=base58', '10'], "D93XRyVfxqs7oR")
+    test_cli("rng", ['--format=base58check', '10'], "2NS1jYUq92TyGFVnhVLa")
+
 def cli_pk_workfactor_tests():
     test_cli("pk_workfactor", "1024", "80")
     test_cli("pk_workfactor", "2048", "111")

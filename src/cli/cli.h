@@ -122,6 +122,15 @@ class Command
 
       bool flag_set(const std::string& flag_name) const;
 
+      static std::string format_blob(const std::string& format, const uint8_t bits[], size_t len);
+
+      template<typename Alloc>
+      static std::string format_blob(const std::string& format,
+                                     const std::vector<uint8_t, Alloc>& vec)
+         {
+         return format_blob(format, vec.data(), vec.size());
+         }
+
       std::string get_arg(const std::string& opt_name) const;
 
       /**
