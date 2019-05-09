@@ -62,7 +62,7 @@ inline void log_exception(const char* where, const std::exception& e)
 * This is an incomplete and highly buggy HTTP request parser. It is just
 * barely sufficient to handle a GET request sent by a browser.
 */
-class HTTP_Parser
+class HTTP_Parser final
    {
    public:
       class Request

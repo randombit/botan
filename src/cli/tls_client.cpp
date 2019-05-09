@@ -31,7 +31,7 @@
 
 namespace Botan_CLI {
 
-class CLI_Policy : public Botan::TLS::Policy
+class CLI_Policy final : public Botan::TLS::Policy
    {
    public:
 
