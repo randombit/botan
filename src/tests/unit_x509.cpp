@@ -418,6 +418,23 @@ Test::Result test_crl_dn_name()
    return result;
    }
 
+Test::Result test_rsa_oaep()
+   {
+   Test::Result result("RSA OAEP decoding");
+
+#if defined(BOTAN_HAS_RSA)
+   Botan::X509_Certificate cert(Test::data_file("x509/misc/rsa_oaep.pem"));
+
+   auto public_key = cert.load_subject_public_key();
+   result.test_not_null("Decoding RSA-OAEP worked", public_key.get());
+   auto pk_info = cert.subject_public_key_algo();
+
+   result.test_eq("RSA-OAEP OID", pk_info.get_oid().to_string(), Botan::OIDS::lookup("RSA/OAEP").to_string());
+#endif
+
+   return result;
+   }
+
 Test::Result test_x509_decode_list()
    {
    Test::Result result("X509_Certificate list decode");
@@ -1598,6 +1615,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_x509_bmpstring());
          results.push_back(test_crl_dn_name());
          results.push_back(test_x509_decode_list());
+         results.push_back(test_rsa_oaep());
          results.push_back(test_x509_authority_info_access_extension());
 #endif
 
