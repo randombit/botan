@@ -82,7 +82,7 @@ BigInt BOTAN_PUBLIC_API(2,0)
 * @param identifier a username or other client identifier
 * @param password the secret used to authenticate user
 * @param salt a randomly chosen value, at least 128 bits long
-* @param group_id specifies the shared SRP group
+* @param group specifies the shared SRP group
 * @param hash_id specifies a secure hash function
 */
 BigInt BOTAN_PUBLIC_API(2,11)

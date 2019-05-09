@@ -32,12 +32,8 @@ class BOTAN_PUBLIC_API(2,0) Module final
       */
       Module(const std::string& file_path, C_InitializeArgs init_args = { nullptr, nullptr, nullptr, nullptr, static_cast< CK_FLAGS >(Flag::OsLockingOk), nullptr });
 
-/* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
-   Everything else we target should support it */
-#if !defined( _MSC_VER ) || ( _MSC_VER >= 1900 )
       Module(Module&& other) = default;
-      Module& operator=(Module&& other) = default;
-#endif
+      Module& operator=(Module&& other) = delete;
 
       // Dtor calls C_Finalize(). A copy could be deleted while the origin still exists
       // Furthermore std::unique_ptr member -> not copyable

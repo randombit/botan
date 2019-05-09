@@ -45,9 +45,8 @@ class BOTAN_TEST_API Thread_Pool
       Thread_Pool(const Thread_Pool&) = delete;
       Thread_Pool& operator=(const Thread_Pool&) = delete;
 
-      // Does this work?
-      Thread_Pool(Thread_Pool&&) = default;
-      Thread_Pool& operator=(Thread_Pool&&) = default;
+      Thread_Pool(Thread_Pool&&) = delete;
+      Thread_Pool& operator=(Thread_Pool&&) = delete;
 
       /*
       * Enqueue some work
