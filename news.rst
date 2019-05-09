@@ -15,6 +15,10 @@ Version 2.11.0, Not Yet Released
 * Fix verification rooted in a v1 certificate which previously would fail.
   (GH #1890)
 
+* Fix X509_DN::operator< which could erronously return true in both
+  directions (ie, DN1 < DN2 && DN2 < DN1). This would break STL
+  containers using a DN as the key. (GH #1938)
+
 * It is now possible to create intermediate CA certificates using the
   command line interface. (GH #1879 #1889)
 
@@ -51,6 +55,8 @@ Version 2.11.0, Not Yet Released
 * Remove use of ``-mabi`` flag when building on MIPS64 (GH #1918)
 
 * Make it possible to specify additional libraries in ``LDFLAGS`` (GH #1916)
+
+* Fix some warnings from Clang 8 (GH #1941)
 
 * Fix the makefile .PHONY syntax (GH #1874)
 
