@@ -176,17 +176,13 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
                throw Decoding_Error("Algorithm identifier mismatch");
                }
             }
-         if(public_key_info[1] == "OAEP")
-            {
-            throw Decoding_Error("Decoding subject public keys of type RSAES-OAEP is currently not supported");
-            }
          }
       else
          {
          // oid = rsaEncryption -> parameters field MUST contain NULL
          if(public_key_alg_id != AlgorithmIdentifier(public_key_alg_id.get_oid(), AlgorithmIdentifier::USE_NULL_PARAM))
             {
-            throw Decoding_Error("Parameters field MUST contain NULL");
+            throw Decoding_Error("RSA algorithm parameters field MUST contain NULL");
             }
          }
       }
