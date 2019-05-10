@@ -12,6 +12,18 @@
 #include <iostream>
 #include <fstream>
 
+#if defined(BOTAN_HAS_HEX_CODEC)
+   #include <botan/hex.h>
+#endif
+
+#if defined(BOTAN_HAS_BASE64_CODEC)
+   #include <botan/base64.h>
+#endif
+
+#if defined(BOTAN_HAS_BASE58_CODEC)
+   #include <botan/base58.h>
+#endif
+
 namespace Botan_CLI {
 
 Command::Command(const std::string& cmd_spec) : m_spec(cmd_spec)
@@ -238,6 +250,39 @@ std::string Command::get_passphrase(const std::string& prompt)
    std::getline(std::cin, pass);
 
    return pass;
+   }
+
+//static
+std::string Command::format_blob(const std::string& format,
+                                 const uint8_t bits[], size_t len)
+   {
+#if defined(BOTAN_HAS_HEX_CODEC)
+   if(format == "hex")
+      {
+      return Botan::hex_encode(bits, len);
+      }
+#endif
+
+#if defined(BOTAN_HAS_BASE64_CODEC)
+   if(format == "base64")
+      {
+      return Botan::base64_encode(bits, len);
+      }
+#endif
+
+#if defined(BOTAN_HAS_BASE58_CODEC)
+   if(format == "base58")
+      {
+      return Botan::base58_encode(bits, len);
+      }
+   if(format == "base58check")
+      {
+      return Botan::base58_check_encode(bits, len);
+      }
+#endif
+
+   // If we supported format, we would have already returned
+   throw CLI_Usage_Error("Unknown or unsupported format type");
    }
 
 // Registration code
