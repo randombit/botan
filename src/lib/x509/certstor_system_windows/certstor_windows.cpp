@@ -118,7 +118,7 @@ Cert_Vector search_cert_stores(const _CRYPTOAPI_BLOB& blob, const DWORD& find_ty
                                bool return_on_first_found)
    {
    Cert_Vector certs;
-   for(auto& store_name : cert_store_names)
+   for(const auto store_name : cert_store_names)
       {
       Handle_Guard<HCERTSTORE> windows_cert_store = open_cert_store(store_name);
       Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
@@ -188,7 +188,7 @@ Certificate_Store_Windows::Certificate_Store_Windows() {}
 std::vector<X509_DN> Certificate_Store_Windows::all_subjects() const
    {
    std::vector<X509_DN> subject_dns;
-   for(auto& store_name : cert_store_names)
+   for(const auto store_name : cert_store_names)
       {
       Handle_Guard<HCERTSTORE> windows_cert_store = open_cert_store(store_name);
       Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
@@ -230,7 +230,7 @@ Cert_Pointer Certificate_Store_Windows::find_cert_by_pubkey_sha1(const std::vect
    blob.cbData = static_cast<DWORD>(key_hash.size());
    blob.pbData = const_cast<BYTE*>(key_hash.data());
 
-   auto filter = [&](const Cert_Vector&, Cert_Pointer) { return true; };
+   auto filter = [](const Cert_Vector&, Cert_Pointer) { return true; };
 
    const auto certs = search_cert_stores(blob, CERT_FIND_KEY_IDENTIFIER, filter, true);
    return certs.empty() ? nullptr : certs.front();
