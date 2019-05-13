@@ -93,6 +93,9 @@ class Handle_Guard
          {
          if(m_context)
             {
+            // second parameter is a flag that tells the store how to deallocate memory
+            // using the default "0", this function works like decreasing the reference counter
+            // in a shared_ptr
             CertCloseStore(m_context, 0);
             }
          }
@@ -245,6 +248,7 @@ Cert_Pointer Certificate_Store_Windows::find_cert_by_raw_subject_dn_sha256(
 
 std::shared_ptr<const X509_CRL> Certificate_Store_Windows::find_crl_for(const X509_Certificate& subject) const
    {
+   // TODO: this could be implemented by using the CertFindCRLInStore function
    BOTAN_UNUSED(subject);
    return {};
    }
