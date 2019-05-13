@@ -849,21 +849,21 @@ https://datatracker.ietf.org/doc/rfc8391/.
 XMSS uses the Botan interfaces for public key cryptography.
 The following algorithms are implemented:
 
-1. XMSS_SHA2_10_256
-# XMSS_SHA2_16_256
-# XMSS_SHA2_20_256
-# XMSS_SHA2_10_512
-# XMSS_SHA2_16_512
-# XMSS_SHA2_20_512
-# XMSS_SHAKE_10_256
-# XMSS_SHAKE_16_256
-# XMSS_SHAKE_20_256
-# XMSS_SHAKE_10_512
-# XMSS_SHAKE_16_512
-# XMSS_SHAKE_20_512
+1. XMSS-SHA2_10_256
+# XMSS-SHA2_16_256
+# XMSS-SHA2_20_256
+# XMSS-SHA2_10_512
+# XMSS-SHA2_16_512
+# XMSS-SHA2_20_512
+# XMSS-SHAKE_10_256
+# XMSS-SHAKE_16_256
+# XMSS-SHAKE_20_256
+# XMSS-SHAKE_10_512
+# XMSS-SHAKE_16_512
+# XMSS-SHAKE_20_512
 
 The algorithm name contains the hash function name, tree height and digest
-width defined by the corresponding parameter set. Choosing `XMSS_SHA2_10_256`
+width defined by the corresponding parameter set. Choosing `XMSS-SHA2_10_256`
 for instance will use the SHA2-256 hash function to generate a tree of height
 ten.
 

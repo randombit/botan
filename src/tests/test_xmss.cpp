@@ -109,7 +109,7 @@ class XMSS_Keygen_Tests final : public PK_Key_Generation_Test
    public:
       std::vector<std::string> keygen_params() const override
          {
-         return { "XMSS_SHA2_10_256" };
+         return { "XMSS-SHA2_10_256" };
          }
       std::string algo_name() const override
          {
