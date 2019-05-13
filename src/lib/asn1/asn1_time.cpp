@@ -217,7 +217,8 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
 */
 bool X509_Time::passes_sanity_check() const
    {
-   if(m_year < 1950 || m_year > 2200)
+   // AppVeyor's trust store includes a cert with expiration date in 3016 ...
+   if(m_year < 1950 || m_year > 3100)
       return false;
    if(m_month == 0 || m_month > 12)
       return false;

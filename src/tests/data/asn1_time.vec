@@ -20,6 +20,7 @@ Tspec = 21000101000060Z
 Tspec = 21000101005900Z
 Tspec = 21000101230000Z
 Tspec = 22001231235960Z
+Tspec = 22010131053030Z
 
 [Generalized.invalid]
 
@@ -34,4 +35,6 @@ Tspec = 21000101006000Z
 Tspec = 21000101240000Z
 Tspec = 21000101990000Z
 Tspec = 21000229000000Z
-Tspec = 22010131053030Z
+
+# Valid date but year out of allowed range
+Tspec = 31010131053030Z
