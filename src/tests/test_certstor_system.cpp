@@ -172,9 +172,9 @@ Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore)
 
       // check for duplications
       sort(certs.begin(), certs.end());
-      for(int i = 1; i < certs.size(); ++i)
+      for(size_t i = 1; i < certs.size(); ++i)
          {
-         if(certs[i=1] == certs[i])
+         if(certs[i-1] == certs[i])
             {
             result.test_failure("find_all_certs produced duplicated result");
             }
