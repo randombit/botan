@@ -9,8 +9,10 @@ Version 2.11.0, Not Yet Released
 
 * Add a certificate store for Linux/Unix systems. (GH #1885 #1936)
 
-* Add a generic ``System_Certificate_Store`` which wraps either macOS
-  or Linux certificate stores. (GH #1893)
+* Add a certificate store for Windows systems. (GH #1931)
+
+* Add a generic ``System_Certificate_Store`` which wraps Windows, macOS,
+  and Linux certificate stores. (GH #1893)
 
 * Fix verification rooted in a v1 certificate which previously would fail.
   (GH #1890)
@@ -34,6 +36,17 @@ Version 2.11.0, Not Yet Released
 * Various FFI interfaces which are redundant with other APIs are now
   deprecated. The deprecation message suggests the alternate API to use.
   (GH #1915)
+
+* Fix decoding of RSA-OAEP certificates. (GH #1943 #1944)
+
+* Allow setting multiple organization unit fields in a certificate or
+  certificate request. (GH #1939)
+
+* Increase the maximum allowed year in ASN1_Time to 3100. This works
+  around a problem parsing certs in AppVeyor's trust store.
+
+* Add ``--format`` option to ``rng`` CLI command allowing to format
+  as base64, base58 or binary in addition to hex. (GH #1945)
 
 * Remove use of table lookups for IP/FP transforms in DES (GH #1928)
 
