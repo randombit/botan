@@ -12,6 +12,7 @@ arc4random
 explicit_bzero
 cap_enter
 elf_aux_info
+getentropy
 
 sockets
 threads
