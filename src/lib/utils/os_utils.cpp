@@ -393,7 +393,11 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
 
 #if !defined(MAP_NOCORE)
+#if defined(MAP_CONCEAL)
+   #define MAP_NOCORE MAP_CONCEAL
+#else
    #define MAP_NOCORE 0
+#endif
 #endif
 
       ptr = ::mmap(nullptr, 2*page_size,
