@@ -110,7 +110,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       * tied to the session and a later renegotiation of the same
       * session can choose a new protocol.
       */
-      std::string application_protocol() const { return m_next_protocol; }
+      std::string application_protocol() const override { return m_next_protocol; }
 
    private:
       std::vector<X509_Certificate>

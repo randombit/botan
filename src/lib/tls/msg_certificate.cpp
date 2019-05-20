@@ -31,7 +31,7 @@ Certificate::Certificate(Handshake_IO& io,
 /**
 * Deserialize a Certificate message
 */
-Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& /*policy_currently_unused*/)
+Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& policy)
    {
    if(buf.size() < 3)
       throw Decoding_Error("Certificate: Message malformed");
@@ -40,6 +40,10 @@ Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& /*policy
 
    if(total_size != buf.size() - 3)
       throw Decoding_Error("Certificate: Message malformed");
+
+   const size_t max_size = policy.maximum_certificate_chain_size();
+   if(max_size > 0 && total_size > max_size)
+      throw Decoding_Error("Certificate chain exceeds policy specified maximum size");
 
    const uint8_t* certs = buf.data() + 3;
 

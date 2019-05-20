@@ -92,8 +92,9 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_suites(policy.ciphersuite_list(m_version, !client_settings.srp_identifier().empty())),
    m_comp_methods(1)
    {
-   BOTAN_ASSERT(policy.acceptable_protocol_version(client_settings.protocol_version()),
-                "Our policy accepts the version we are offering");
+   if(!policy.acceptable_protocol_version(m_version))
+      throw Internal_Error("Offering " + m_version.to_string() +
+                           " but our own policy does not accept it");
 
    /*
    * Place all empty extensions in front to avoid a bug in some systems
@@ -106,7 +107,9 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Encrypt_then_MAC);
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
-   m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
+
+   if(client_settings.hostname() != "")
+      m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
 
    if(policy.support_cert_status_message())
       m_extensions.add(new Certificate_Status_Request({}, {}));
@@ -163,6 +166,10 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_suites(policy.ciphersuite_list(m_version, (session.srp_identifier() != ""))),
    m_comp_methods(1)
    {
+   if(!policy.acceptable_protocol_version(m_version))
+      throw Internal_Error("Offering " + m_version.to_string() +
+                           " but our own policy does not accept it");
+
    if(!value_exists(m_suites, session.ciphersuite_code()))
       m_suites.push_back(session.ciphersuite_code());
 
@@ -273,7 +280,7 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
 
    m_comp_methods = reader.get_range_vector<uint8_t>(1, 1, 255);
 
-   m_extensions.deserialize(reader);
+   m_extensions.deserialize(reader, Connection_Side::SERVER);
 
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
       {

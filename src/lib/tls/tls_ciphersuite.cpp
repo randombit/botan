@@ -57,6 +57,18 @@ bool Ciphersuite::ecc_ciphersuite() const
           auth_method() == Auth_Method::ECDSA;
    }
 
+bool Ciphersuite::usable_in_version(Protocol_Version version) const
+   {
+   if(!version.supports_aead_modes())
+      {
+      // Old versions do not support AEAD, or any MAC but SHA-1
+      if(mac_algo() != "SHA-1")
+         return false;
+      }
+
+   return true;
+   }
+
 bool Ciphersuite::cbc_ciphersuite() const
    {
    return (mac_algo() != "AEAD");
@@ -76,6 +88,19 @@ Ciphersuite Ciphersuite::by_id(uint16_t suite)
    if(s != all_suites.end() && s->ciphersuite_code() == suite)
       {
       return *s;
+      }
+
+   return Ciphersuite(); // some unknown ciphersuite
+   }
+
+Ciphersuite Ciphersuite::from_name(const std::string& name)
+   {
+   const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
+
+   for(auto suite : all_suites)
+      {
+      if(suite.to_string() == name)
+         return suite;
       }
 
    return Ciphersuite(); // some unknown ciphersuite

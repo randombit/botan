@@ -6,7 +6,7 @@
 */
 
 #include <botan/tls_alert.h>
-#include <botan/exceptn.h>
+#include <botan/tls_exceptn.h>
 
 namespace Botan {
 
@@ -15,13 +15,13 @@ namespace TLS {
 Alert::Alert(const secure_vector<uint8_t>& buf)
    {
    if(buf.size() != 2)
-      throw Decoding_Error("Alert: Bad size " + std::to_string(buf.size()) +
-                           " for alert message");
+      throw Decoding_Error("Bad size (" + std::to_string(buf.size()) +
+                           ") for TLS alert message");
 
    if(buf[0] == 1)      m_fatal = false;
    else if(buf[0] == 2) m_fatal = true;
    else
-      throw Decoding_Error("Alert: Bad code for alert level");
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Bad code for TLS alert level");
 
    const uint8_t dc = buf[1];
 
@@ -103,6 +103,8 @@ std::string Alert::type_string() const
          return "bad_certificate_hash_value";
       case UNKNOWN_PSK_IDENTITY:
          return "unknown_psk_identity";
+      case CERTIFICATE_REQUIRED:
+         return "certificate_required";
       case NO_APPLICATION_PROTOCOL:
          return "no_application_protocol";
 

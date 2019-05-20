@@ -138,7 +138,7 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type)
                        "Unknown TLS handshake message type " + std::to_string(type));
    }
 
-std::string handshake_mask_to_string(uint32_t mask)
+std::string handshake_mask_to_string(uint32_t mask, char combiner)
    {
    const Handshake_Type types[] = {
       HELLO_VERIFY_REQUEST,
@@ -165,7 +165,7 @@ std::string handshake_mask_to_string(uint32_t mask)
       if(mask & bitmask_for_handshake_type(t))
          {
          if(!empty)
-            o << ",";
+            o << combiner;
          o << handshake_type_to_string(t);
          empty = false;
          }
@@ -304,10 +304,9 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    const bool ok = (m_hand_expecting_mask & mask) != 0; // overlap?
 
    if(!ok)
-      throw Unexpected_Message("Unexpected state transition in handshake, got type " +
-                               std::to_string(handshake_msg) +
-                               " expected " + handshake_mask_to_string(m_hand_expecting_mask) +
-                               " received " + handshake_mask_to_string(m_hand_received_mask));
+      throw Unexpected_Message("Unexpected state transition in handshake, expected " +
+                               handshake_mask_to_string(m_hand_expecting_mask, '|') +
+                               " received " + handshake_mask_to_string(m_hand_received_mask, '+'));
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition
@@ -385,18 +384,18 @@ Handshake_State::choose_sig_format(const Private_Key& key,
       {
       const std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
 
-      std::vector<Signature_Scheme> schemes =
+      std::vector<Signature_Scheme> requested =
          (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
 
-      if(schemes.empty())
+      if(requested.empty())
          {
          // Implicit SHA-1
-         schemes.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
-         schemes.push_back(Signature_Scheme::ECDSA_SHA1);
-         schemes.push_back(Signature_Scheme::DSA_SHA1);
+         requested.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
+         requested.push_back(Signature_Scheme::ECDSA_SHA1);
+         requested.push_back(Signature_Scheme::DSA_SHA1);
          }
 
-      for(Signature_Scheme scheme : schemes)
+      for(Signature_Scheme scheme : allowed)
          {
          if(signature_scheme_is_known(scheme) == false)
             {
@@ -405,7 +404,7 @@ Handshake_State::choose_sig_format(const Private_Key& key,
 
          if(signature_algorithm_of_scheme(scheme) == sig_algo)
             {
-            if(std::find(allowed.begin(), allowed.end(), scheme) != allowed.end())
+            if(std::find(requested.begin(), requested.end(), scheme) != requested.end())
                {
                chosen_scheme = scheme;
                break;
@@ -528,11 +527,15 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       for_client_auth ? cert_req()->signature_schemes() :
       client_hello()->signature_schemes();
 
+   if(!signature_scheme_is_known(scheme))
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Peer sent unknown signature scheme");
+
    const std::string hash_algo = hash_function_of_scheme(scheme);
 
    if(!supported_algos_include(supported_algos, key_type, hash_algo))
       {
-      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                           "TLS signature extension did not allow for " +
                           key_type + "/" + hash_algo + " signature");
       }

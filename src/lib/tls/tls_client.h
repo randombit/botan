@@ -132,7 +132,7 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension
       */
-      const std::string& application_protocol() const { return m_application_protocol; }
+      std::string application_protocol() const override { return m_application_protocol; }
    private:
       void init(const Protocol_Version& protocol_version,
                 const std::vector<std::string>& next_protocols);

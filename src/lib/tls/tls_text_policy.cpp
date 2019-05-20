@@ -80,6 +80,11 @@ bool Text_Policy::include_time_in_hello_random() const
    return get_bool("include_time_in_hello_random", Policy::include_time_in_hello_random());
    }
 
+bool Text_Policy::require_client_certificate_authentication() const
+   {
+   return get_bool("require_client_certificate_authentication", Policy::require_client_certificate_authentication());
+   }
+
 bool Text_Policy::allow_client_initiated_renegotiation() const
    {
    return get_bool("allow_client_initiated_renegotiation", Policy::allow_client_initiated_renegotiation());

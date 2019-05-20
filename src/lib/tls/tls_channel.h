@@ -198,6 +198,8 @@ class BOTAN_PUBLIC_API(2,0) Channel
       */
       bool timeout_check();
 
+      virtual std::string application_protocol() const = 0;
+
    protected:
 
       virtual void process_handshake_msg(const Handshake_State* active_state,

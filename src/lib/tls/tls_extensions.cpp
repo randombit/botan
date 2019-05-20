@@ -16,8 +16,10 @@ namespace TLS {
 
 namespace {
 
-Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size)
+Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size, Connection_Side side)
    {
+   BOTAN_UNUSED(side);
+
    switch(code)
       {
       case TLSEXT_SERVER_NAME_INDICATION:
@@ -65,7 +67,7 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size)
 
 }
 
-void Extensions::deserialize(TLS_Data_Reader& reader)
+void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side side)
    {
    if(reader.has_remaining())
       {
@@ -79,9 +81,14 @@ void Extensions::deserialize(TLS_Data_Reader& reader)
          const uint16_t extension_code = reader.get_uint16_t();
          const uint16_t extension_size = reader.get_uint16_t();
 
-         Extension* extn = make_extension(reader,
-                                          extension_code,
-                                          extension_size);
+         const auto type = static_cast<Handshake_Extension_Type>(extension_code);
+
+         if(m_extensions.find(type) != m_extensions.end())
+            throw TLS_Exception(TLS::Alert::DECODE_ERROR,
+                                "Peer sent duplicated extensions");
+
+         Extension* extn = make_extension(
+            reader, extension_code, extension_size, side);
 
          this->add(extn);
          }
@@ -258,6 +265,9 @@ Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification
 
       if(bytes_remaining < p.size() + 1)
          throw Decoding_Error("Bad encoding of ALPN, length field too long");
+
+      if(p.empty())
+         throw Decoding_Error("Empty ALPN protocol not allowed");
 
       bytes_remaining -= (p.size() + 1);
 

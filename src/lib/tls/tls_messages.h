@@ -98,6 +98,8 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       const std::vector<uint8_t>& session_id() const { return m_session_id; }
 
+      const std::vector<uint8_t>& compression_methods() const { return m_comp_methods; }
+
       const std::vector<uint16_t>& ciphersuites() const { return m_suites; }
 
       bool offered_suite(uint16_t ciphersuite) const;
@@ -387,7 +389,9 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
    public:
       Handshake_Type type() const override { return CERTIFICATE_STATUS; }
 
-      std::shared_ptr<const OCSP::Response> response() const { return m_response; }
+      //std::shared_ptr<const OCSP::Response> response() const { return m_response; }
+
+      const std::vector<uint8_t>& response() const { return m_response; }
 
       Certificate_Status(const std::vector<uint8_t>& buf);
 
@@ -397,7 +401,7 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message
 
    private:
       std::vector<uint8_t> serialize() const override;
-      std::shared_ptr<const OCSP::Response> m_response;
+      std::vector<uint8_t> m_response;
    };
 
 /**

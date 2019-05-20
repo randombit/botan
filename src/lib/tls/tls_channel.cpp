@@ -187,8 +187,13 @@ void Channel::renegotiate(bool force_full_renegotiation)
       return;
 
    if(auto active = active_state())
+      {
+      if(force_full_renegotiation == false)
+         force_full_renegotiation = !policy().allow_resumption_for_renegotiation();
+
       initiate_handshake(create_handshake_state(active->version()),
                          force_full_renegotiation);
+      }
    else
       throw Invalid_State("Cannot renegotiate on inactive connection");
    }
@@ -334,12 +339,41 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "TLS plaintext record is larger than allowed maximum");
 
+         if(auto pending = pending_state())
+            {
+            if(pending->server_hello() != nullptr && record_version != pending->version())
+               {
+               throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                   "Received unexpected record version");
+               }
+            }
+         else if(auto active = active_state())
+            {
+            if(record_version != active->version())
+               {
+               throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                   "Received unexpected record version");
+               }
+            }
+         else
+            {
+            // For initial records just check for basic sanity
+            if(record_version.major_version() != 3 &&
+               record_version.major_version() != 0xFE)
+               {
+               throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                   "Received unexpected record version in initial record");
+               }
+            }
+
          if(record_type == HANDSHAKE || record_type == CHANGE_CIPHER_SPEC)
             {
             process_handshake_ccs(record_data, record_sequence, record_type, record_version);
             }
          else if(record_type == APPLICATION_DATA)
             {
+            if(pending_state() != nullptr)
+               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Can't interleave application and handshake data");
             process_application_data(record_sequence, record_data);
             }
          else if(record_type == ALERT)
@@ -444,13 +478,7 @@ void Channel::process_application_data(uint64_t seq_no, const secure_vector<uint
    if(!active_state())
       throw Unexpected_Message("Application data before handshake done");
 
-   /*
-   * OpenSSL among others sends empty records in versions
-   * before TLS v1.1 in order to randomize the IV of the
-   * following record. Avoid spurious callbacks.
-   */
-   if(record.size() > 0)
-      callbacks().tls_record_received(seq_no, record.data(), record.size());
+   callbacks().tls_record_received(seq_no, record.data(), record.size());
    }
 
 void Channel::process_alert(const secure_vector<uint8_t>& record)
@@ -483,7 +511,7 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch
    {
    BOTAN_ASSERT(m_pending_state || m_active_state, "Some connection state exists");
 
-   Protocol_Version record_version =
+   const Protocol_Version record_version =
       (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
 
    Record_Message record_message(record_type, 0, input, length);
@@ -520,18 +548,29 @@ void Channel::send_record_array(uint16_t epoch, uint8_t type, const uint8_t inpu
 
    if(type == APPLICATION_DATA && m_active_state->version().supports_explicit_cbc_ivs() == false)
       {
-      write_record(cipher_state.get(), epoch, type, input, 1);
-      input += 1;
-      length -= 1;
+      while(length)
+         {
+         write_record(cipher_state.get(), epoch, type, input, 1);
+         input += 1;
+         length -= 1;
+
+         const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
+         write_record(cipher_state.get(), epoch, type, input, sending);
+
+         input += sending;
+         length -= sending;
+         }
       }
-
-   while(length)
+   else
       {
-      const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
-      write_record(cipher_state.get(), epoch, type, input, sending);
+      while(length)
+         {
+         const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
+         write_record(cipher_state.get(), epoch, type, input, sending);
 
-      input += sending;
-      length -= sending;
+         input += sending;
+         length -= sending;
+         }
       }
    }
 

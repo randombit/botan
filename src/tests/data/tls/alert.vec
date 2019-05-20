@@ -14,11 +14,11 @@ Exception =
 
 Buffer = 0030
 Protocol = 0303
-Exception = Alert: Bad code for alert level
+Exception = Bad code for TLS alert level
 
 Buffer = 02
-Exception = Alert: Bad size 1 for alert message
+Exception = Bad size (1) for TLS alert message
 
 Buffer = 020101
-Exception = Alert: Bad size 3 for alert message
+Exception = Bad size (3) for TLS alert message
 

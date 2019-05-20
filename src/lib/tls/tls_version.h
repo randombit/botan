@@ -82,6 +82,11 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       uint8_t minor_version() const { return get_byte(1, m_version); }
 
       /**
+      * @return the version code
+      */
+      uint16_t version_code() const { return m_version; }
+
+      /**
       * @return human-readable description of this version
       */
       std::string to_string() const;

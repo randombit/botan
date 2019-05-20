@@ -1,0 +1,104 @@
+{
+    "LooseErrorTests": {
+        "AppDataBeforeHandshake": "BoGo expects different error before vs after CCS",
+        "AppDataBeforeHandshake-Empty": "Invalid record message",
+        "ServerHelloBogusCipher": "Unexpected error",
+        "Garbage": "Decoding error",
+        "Resume-Client-CipherMismatch": "Unexpected error",
+        "InvalidECDHPoint-Server": "Unexpected error",
+        "NoSharedCipher": "Unexpected error"
+    },
+
+    "DisabledTests": {
+        "TicketSessionIDLength-33-TLS*": "This test seems to be broken? Ask BoGo people",
+        "Renegotiate-SameClientVersion": "BoGo requires resumption use wrong version (?)",
+        "ClientAuth-Sign-Negotiate-*": "BoGo seems to be behaving badly here",
+        "Renegotiate-Server-Forbidden": "Is this restriction BoringSSL specific?",
+        "Resume-Client-Mismatch-*": "Need to investigate",
+        "Resume-Client-NoResume-TLS1-TLS11": "Need to investigate",
+        "Resume-Client-NoResume-TLS1-TLS12": "Need to investigate",
+        "Resume-Client-NoResume-TLS11-TLS12": "Need to investigate",
+
+        "*KeyUpdate*": "No TLS 1.3",
+        "*TLS13*": "No TLS 1.3",
+        "Server-JDK11*": "No TLS 1.3",
+        "*Binder*": "No TLS 1.3",
+        "PartialEncryptedExtensionsWithServerHello": "No TLS 1.3",
+        "Client-RejectJDK11DowngradeRandom": "No TLS 1.3",
+        "FragmentedClientVersion": "No TLS 1.3",
+
+        "ConflictingVersionNegotiation*": "No support for 1.3 version extension",
+        "VersionNegotiationExtension*": "No support for 1.3 version extension",
+        "IgnoreClientVersionOrder": "No support for 1.3 version extension",
+        "NoSupportedVersions": "No support for 1.3 version extension",
+
+        "DuplicateCertCompressionExt*": "No support for 1.3 cert compression extension",
+
+        "Downgrade*": "The 1.3 downgrade indicator is not implemented",
+
+        "*SSL3*": "No SSLv3",
+        "*SSLv3*": "No SSLv3",
+
+        "*NPN*": "No support for NPN",
+        "ALPNServer-Preferred-*": "No support for NPN",
+
+        "*SignedCertificateTimestamp*": "No support for SCT",
+        "*SCT*": "No support for SCT",
+
+        "*NULL-SHA*": "No support for NULL ciphers",
+        "*GREASE*": "No support for GREASE",
+        "QUICTransportParams*": "No support for QUIC",
+        "*ChannelID*": "No support for ChannelID",
+        "*TokenBinding*": "No support for Token Binding",
+        "ClientHelloPadding": "No support for client hello padding extension",
+        "TLSUnique*": "Not supported",
+        "*CECPQ2*": "Not implemented",
+        "*P-224*": "P-224 not supported in TLS",
+        "*V2ClientHello*": "No support for SSLv2 client hellos",
+        "*Ed25519*": "Ed25519 not implemented in TLS",
+        "Http*": "Stack does not have detection logic for HTTP",
+        "*FalseStart*": "Botan doesn't do false start",
+        "MaxSendFragment*": "Maximum fragment extension not supported",
+        "ExportKeyingMaterial-EmptyContext*": "No support for this",
+
+        "CheckLeafCurve": "Botan ignores this",
+
+        "OCSPStapling-Server-*": "Server doesn't support OCSP stapling currently",
+
+        "CipherNegotiation-2": "No support for cipher equivalence classes",
+        "CipherNegotiation-3": "No support for cipher equivalence classes",
+        "CipherNegotiation-4": "No support for cipher equivalence classes",
+        "CipherNegotiation-5": "No support for cipher equivalence classes",
+        "CipherNegotiation-8": "No support for cipher equivalence classes",
+
+        "ALPNServer-SelectEmpty-*": "Botan treats empty ALPN from callback as a decline",
+
+        "ServerAuth-Verify-ECDSA-P521-SHA512-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
+        "ServerAuth-Verify-ECDSA-SHA1-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
+        "ClientAuth-Verify-ECDSA-P521-SHA512-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
+        "ClientAuth-Verify-ECDSA-SHA1-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
+
+        "CurveTest-Client-Compressed*": "Point compression is supported, which BoGo doesn't expect",
+        "PointFormat-Client-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
+        "CurveTest-Server-Compressed*": "Point compression is supported, which BoGo doesn't expect",
+        "PointFormat-Server-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
+
+        "RSAPSSSupport-ConfigNoPSS-NoCerts-TLS12-Client": "Not possible to disable PSS",
+        "RSAPSSSupport-ConfigNoPSS-TLS12-Client": "Not possible to disable PSS",
+        "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-Client": "Not possible to disable PSS",
+        "RSAPSSSupport-Default-NoCerts-TLS12-Client": "Not possible to disable PSS",
+        "RSAPSSSupport-ConfigNoPSS-NoCerts-TLS12-Server": "Not possible to disable PSS",
+        "RSAPSSSupport-ConfigNoPSS-TLS12-Server": "Not possible to disable PSS",
+        "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-Server": "Not possible to disable PSS",
+        "RSAPSSSupport-Default-NoCerts-TLS12-Server": "Not possible to disable PSS",
+
+        "*DTLS*": "Shim needs to get support for packeted BIO",
+        "UnsolicitedServerNameAck*": "The shim always sends SNI so test doesn't work",
+
+        "Renegotiate-Client-Packed": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
+        "SendHalfHelloRequest*PackHandshake": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
+        "PartialClientFinishedWithClientHello": "Need to check for buffered messages when CCS (bug)",
+        "SendOCSPResponseOnResume-TLS12": "Not supported by Botan (bug)",
+        "ECDSAKeyUsage-TLS12": "Botan ignores KeyUsage (bug)"
+    }
+}
