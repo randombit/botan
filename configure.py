@@ -481,6 +481,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--build-bogo-shim', action='store_true', default=False,
+                           help=optparse.SUPPRESS_HELP)
+
     build_group.add_option('--with-pkg-config', action='store_true', default=None,
                            help=optparse.SUPPRESS_HELP)
     build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
@@ -1869,6 +1872,16 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             return path
         return os.path.join(build_dir, path)
 
+    def all_targets():
+        yield 'libs'
+        yield 'cli'
+        yield 'tests'
+        yield 'docs'
+        if options.build_fuzzers:
+            yield 'fuzzers'
+        if options.build_bogo_shim:
+            yield 'bogo_shim'
+
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -1884,6 +1897,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'macos_so_compat_ver': '%s.%s.0' % (Version.packed(), Version.so_rev()),
         'macos_so_current_ver': '%s.%s.%s' % (Version.packed(), Version.so_rev(), Version.patch()),
+
+        'all_targets': ' '.join(all_targets()),
 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
@@ -2012,6 +2027,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'include_paths': build_paths.format_include_paths(cc, options.with_external_includedir),
         'module_defines': sorted(flatten([m.defines() for m in modules])),
+
+        'build_bogo_shim': options.build_bogo_shim,
+        'bogo_shim_src': os.path.join(source_paths.src_dir, 'bogo_shim', 'bogo_shim.cpp'),
 
         'os_features': osinfo.enabled_features(options),
         'os_name': osinfo.basename,

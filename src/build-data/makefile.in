@@ -27,7 +27,7 @@ SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{prefix}/%{libdir}
 
 # The primary target
-all: libs cli tests docs
+all: %{all_targets}
 
 # Executable targets
 CLI           = %{cli_exe}
@@ -78,13 +78,23 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 
 FUZZERS = %{fuzzer_bin}
 
-fuzzers: libs $(FUZZERS)
+fuzzers: $(LIBRARIES) $(FUZZERS)
 
 fuzzer_corpus:
 	git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
 
 fuzzer_corpus_zip: fuzzer_corpus
 	./src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
+
+%{endif}
+
+%{if build_bogo_shim}
+
+bogo_shim: %{out_dir}/botan_bogo_shim
+
+# BoGo shim
+%{out_dir}/botan_bogo_shim: %{bogo_shim_src} $(LIBRARIES)
+	$(CXX) $(BUILD_FLAGS) %{include_paths} %{bogo_shim_src} $(EXE_LINKS_TO) $(LDFLAGS) %{output_to_exe}$@
 
 %{endif}
 
