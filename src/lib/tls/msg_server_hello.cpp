@@ -163,7 +163,7 @@ Server_Hello::Server_Hello(const std::vector<uint8_t>& buf)
 
    m_comp_method = reader.get_byte();
 
-   m_extensions.deserialize(reader);
+   m_extensions.deserialize(reader, Connection_Side::CLIENT);
    }
 
 /*

@@ -256,6 +256,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
 
       TLS_Data_Reader reader("ClientKeyExchange", contents);
       const std::vector<uint8_t> encrypted_pre_master = reader.get_range<uint8_t>(2, 0, 65535);
+      reader.assert_done();
 
       PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
 
@@ -386,6 +387,8 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             */
             m_pre_master = rng.random_vec(ka_key->public_value().size());
             }
+
+         reader.assert_done();
          }
       else
          throw Internal_Error("Client_Key_Exchange: Unknown key exchange negotiated");

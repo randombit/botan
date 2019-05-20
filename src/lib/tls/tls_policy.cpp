@@ -25,6 +25,8 @@ std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const
 
    for(Signature_Scheme scheme : all_signature_schemes())
       {
+      if(signature_scheme_is_known(scheme) == false)
+         continue;
       const bool sig_allowed = allowed_signature_method(signature_algorithm_of_scheme(scheme));
       const bool hash_allowed = allowed_signature_hash(hash_function_of_scheme(scheme));
 
@@ -57,7 +59,7 @@ std::vector<std::string> Policy::allowed_ciphers() const
       //"AES-128",
       //"Camellia-256",
       //"Camellia-128",
-      //"SEED"
+      //"SEED",
       //"3DES",
       };
    }
@@ -292,19 +294,19 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const
    {
    if(datagram)
       {
-      if(allow_dtls12())
+      if(acceptable_protocol_version(Protocol_Version::DTLS_V12))
          return Protocol_Version::DTLS_V12;
-      if(allow_dtls10())
+      if(acceptable_protocol_version(Protocol_Version::DTLS_V10))
          return Protocol_Version::DTLS_V10;
       throw Invalid_State("Policy forbids all available DTLS version");
       }
    else
       {
-      if(allow_tls12())
+      if(acceptable_protocol_version(Protocol_Version::TLS_V12))
          return Protocol_Version::TLS_V12;
-      if(allow_tls11())
+      if(acceptable_protocol_version(Protocol_Version::TLS_V11))
          return Protocol_Version::TLS_V11;
-      if(allow_tls10())
+      if(acceptable_protocol_version(Protocol_Version::TLS_V10))
          return Protocol_Version::TLS_V10;
       throw Invalid_State("Policy forbids all available TLS version");
       }
@@ -329,6 +331,13 @@ bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 bool Policy::negotiate_encrypt_then_mac() const { return true; }
 bool Policy::support_cert_status_message() const { return true; }
+bool Policy::allow_resumption_for_renegotiation() const { return true; }
+bool Policy::only_resume_with_exact_version() const { return true; }
+bool Policy::require_client_certificate_authentication() const { return false; }
+bool Policy::request_client_certificate_authentication() const { return require_client_certificate_authentication(); }
+bool Policy::abort_connection_on_undesired_renegotiation() const { return false; }
+
+size_t Policy::maximum_certificate_chain_size() const { return 0; }
 
 // 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
 size_t Policy::dtls_initial_timeout() const { return 1*1000; }
@@ -431,7 +440,11 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
    for(auto&& suite : Ciphersuite::all_known_ciphersuites())
       {
       // Can we use it?
-      if(suite.valid() == false)
+      if(!suite.valid())
+         continue;
+
+      // Can we use it in this version?
+      if(!suite.usable_in_version(version))
          continue;
 
       // Is it acceptable to the policy?
@@ -441,17 +454,6 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
       // Are we doing SRP?
       if(!have_srp && suite.kex_method() == Kex_Algo::SRP_SHA)
          continue;
-
-      if(!version.supports_aead_modes())
-         {
-         // Are we doing AEAD in a non-AEAD version?
-         if(suite.mac_algo() == "AEAD")
-            continue;
-
-         // Older (v1.0/v1.1) versions also do not support any hash but SHA-1
-         if(suite.mac_algo() != "SHA-1")
-            continue;
-         }
 
       if(!value_exists(kex, suite.kex_algo()))
          continue; // unsupported key exchange

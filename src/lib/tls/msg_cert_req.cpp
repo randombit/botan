@@ -57,7 +57,7 @@ Certificate_Req::Certificate_Req(Handshake_IO& io,
                                  const std::vector<X509_DN>& ca_certs,
                                  Protocol_Version version) :
    m_names(ca_certs),
-   m_cert_key_types({ "RSA", "DSA", "ECDSA" })
+   m_cert_key_types({ "RSA", "ECDSA", "DSA" })
    {
    if(version.supports_negotiable_signature_algorithms())
       {

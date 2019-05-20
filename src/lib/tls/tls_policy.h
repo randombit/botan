@@ -125,6 +125,14 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool allow_server_initiated_renegotiation() const;
 
       /**
+      * If true, a request to renegotiate will close the connection with
+      * a fatal alert. Otherwise, a warning alert is sent.
+      */
+      virtual bool abort_connection_on_undesired_renegotiation() const;
+
+      virtual bool only_resume_with_exact_version() const;
+
+      /**
       * Allow TLS v1.0
       */
       virtual bool allow_tls10() const;
@@ -271,6 +279,19 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool support_cert_status_message() const;
 
       /**
+      * Indicate if client certificate authentication is required.
+      * If true, then a cert will be requested and if the client does
+      * not send a certificate the connection will be closed.
+      */
+      virtual bool require_client_certificate_authentication() const;
+
+      /**
+      * Indicate if client certificate authentication is requested.
+      * If true, then a cert will be requested.
+      */
+      virtual bool request_client_certificate_authentication() const;
+
+      /**
       * Return allowed ciphersuites, in order of preference
       */
       virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version,
@@ -290,6 +311,14 @@ class BOTAN_PUBLIC_API(2,0) Policy
       * @return the maximum timeout for DTLS
       */
       virtual size_t dtls_maximum_timeout() const;
+
+      /**
+      * @return the maximum size of the certificate chain, in bytes.
+      * Return 0 to disable this and accept any size.
+      */
+      virtual size_t maximum_certificate_chain_size() const;
+
+      virtual bool allow_resumption_for_renegotiation() const;
 
       /**
       * Convert this policy to a printable format.
@@ -524,6 +553,8 @@ class BOTAN_PUBLIC_API(2,0) Text_Policy : public Policy
       bool negotiate_encrypt_then_mac() const override;
 
       bool support_cert_status_message() const override;
+
+      bool require_client_certificate_authentication() const override;
 
       size_t minimum_ecdh_group_size() const override;
 

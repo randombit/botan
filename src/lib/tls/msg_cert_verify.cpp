@@ -51,6 +51,7 @@ Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf,
       }
 
    m_signature = reader.get_range<uint8_t>(2, 0, 65535);
+   reader.assert_done();
    }
 
 /*

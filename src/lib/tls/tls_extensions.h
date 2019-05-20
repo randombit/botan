@@ -1,6 +1,6 @@
 /*
 * TLS Extensions
-* (C) 2011,2012,2016,2018 Jack Lloyd
+* (C) 2011,2012,2016,2018,2019 Jack Lloyd
 * (C) 2016 Juraj Somorovsky
 * (C) 2016 Matthias Gierlings
 *
@@ -11,6 +11,7 @@
 #define BOTAN_TLS_EXTENSIONS_H_
 
 #include <botan/tls_algos.h>
+#include <botan/tls_magic.h>
 #include <botan/secmem.h>
 #include <botan/x509_dn.h>
 #include <vector>
@@ -471,7 +472,7 @@ class BOTAN_UNSTABLE_API Extensions final
 
       std::vector<uint8_t> serialize() const;
 
-      void deserialize(TLS_Data_Reader& reader);
+      void deserialize(TLS_Data_Reader& reader, Connection_Side side);
 
       /**
       * Remvoe an extension from this extensions object, if it exists.
@@ -482,7 +483,10 @@ class BOTAN_UNSTABLE_API Extensions final
 
       Extensions() = default;
 
-      explicit Extensions(TLS_Data_Reader& reader) { deserialize(reader); }
+      Extensions(TLS_Data_Reader& reader, Connection_Side side)
+         {
+         deserialize(reader, side);
+         }
 
    private:
       Extensions(const Extensions&) = delete;

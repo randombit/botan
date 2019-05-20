@@ -123,17 +123,15 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
                else if(algo == "cert_status")
                   {
                   Botan::TLS::Certificate_Status message(buffer);
-                  std::shared_ptr<const Botan::OCSP::Response> resp = message.response();
 
-                  if(result.confirm("Decoded response", resp != nullptr))
+                  Botan::OCSP::Response resp(message.response());
+
+                  const std::vector<std::string> CNs = resp.signer_name().get_attribute("CN");
+
+                  // This is not requird by OCSP protocol, we are just using it as a test here
+                  if(result.test_eq("OCSP response has signer name", CNs.size(), 1))
                      {
-                     const std::vector<std::string> CNs = resp->signer_name().get_attribute("CN");
-
-                     // This is not requird by OCSP protocol, we are just using it as a test here
-                     if(result.test_eq("OCSP response has signer name", CNs.size(), 1))
-                        {
-                        result.test_eq("Expected name", CNs[0], expected_name);
-                        }
+                     result.test_eq("Expected name", CNs[0], expected_name);
                      }
                   }
                else

@@ -153,7 +153,7 @@ uint16_t choose_ciphersuite(
    const Policy& policy,
    Protocol_Version version,
    Credentials_Manager& creds,
-   const std::map<std::string, std::vector<X509_Certificate> >& cert_chains,
+   const std::map<std::string, std::vector<X509_Certificate>>& cert_chains,
    const Client_Hello& client_hello)
    {
    const bool our_choice = policy.server_uses_own_ciphersuite_preferences();
@@ -264,17 +264,17 @@ uint16_t choose_ciphersuite(
                        "Can't agree on a ciphersuite with client");
    }
 
-std::map<std::string, std::vector<X509_Certificate> >
+std::map<std::string, std::vector<X509_Certificate>>
 get_server_certs(const std::string& hostname,
                  Credentials_Manager& creds)
    {
-   const char* cert_types[] = { "RSA", "DSA", "ECDSA", nullptr };
+   const char* cert_types[] = { "RSA", "ECDSA", "DSA", nullptr };
 
-   std::map<std::string, std::vector<X509_Certificate> > cert_chains;
+   std::map<std::string, std::vector<X509_Certificate>> cert_chains;
 
    for(size_t i = 0; cert_types[i]; ++i)
       {
-      std::vector<X509_Certificate> certs =
+      const std::vector<X509_Certificate> certs =
          creds.cert_chain_single_type(cert_types[i], "tls-server", hostname);
 
       if(!certs.empty())
@@ -320,7 +320,6 @@ Server::Server(output_fn output,
    m_choose_next_protocol(next_proto)
    {
    }
-
 
 Server::Server(output_fn output,
                data_cb got_data_cb,
@@ -372,6 +371,72 @@ void Server::initiate_handshake(Handshake_State& state,
    Hello_Request hello_req(state.handshake_io());
    }
 
+namespace {
+
+Protocol_Version select_version(const Botan::TLS::Policy& policy,
+                                Protocol_Version client_offer,
+                                Protocol_Version active_version,
+                                bool is_fallback)
+   {
+   const Protocol_Version latest_supported =
+      policy.latest_supported_version(client_offer.is_datagram_protocol());
+
+   if(is_fallback)
+      {
+      if(latest_supported > client_offer)
+         throw TLS_Exception(Alert::INAPPROPRIATE_FALLBACK,
+                              "Client signalled fallback SCSV, possible attack");
+      }
+
+   const bool initial_handshake = (active_version.valid() == false);
+
+   const bool client_offer_acceptable =
+      client_offer.known_version() && policy.acceptable_protocol_version(client_offer);
+
+   if(!initial_handshake)
+      {
+      /*
+      * If this is a renegotiation, and the client has offered a
+      * later version than what it initially negotiated, negotiate
+      * the old version. This matches OpenSSL's behavior. If the
+      * client is offering a version earlier than what it initially
+      * negotiated, reject as a probable attack.
+      */
+      if(active_version > client_offer)
+         {
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                              "Client negotiated " +
+                              active_version.to_string() +
+                              " then renegotiated with " +
+                              client_offer.to_string());
+         }
+      else
+         {
+         return active_version;
+         }
+      }
+   else if(client_offer_acceptable)
+      {
+      return client_offer;
+      }
+   else if(!client_offer.known_version() || client_offer > latest_supported)
+      {
+      /*
+      The client offered some version newer than the latest we
+      support.  Offer them the best we know.
+      */
+      return latest_supported;
+      }
+   else
+      {
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                           "Client version " + client_offer.to_string() +
+                           " is unacceptable by policy");
+      }
+   }
+
+}
+
 /*
 * Process a CLIENT HELLO Message
 */
@@ -395,71 +460,21 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
       }
 
    pending_state.client_hello(new Client_Hello(contents));
-   const Protocol_Version client_version = pending_state.client_hello()->version();
+   const Protocol_Version client_offer = pending_state.client_hello()->version();
 
-   if(client_version.major_version() < 3)
+   if(client_offer.major_version() < 3)
       throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered version with major version under 3");
-   if(client_version.major_version() == 3 && client_version.minor_version() == 0)
+   if(client_offer.major_version() == 3 && client_offer.minor_version() == 0)
       throw TLS_Exception(Alert::PROTOCOL_VERSION, "SSLv3 is not supported");
 
-   Protocol_Version negotiated_version;
+   const Protocol_Version negotiated_version =
+      select_version(policy(), client_offer,
+                     active_state ? active_state->version() : Protocol_Version(),
+                     pending_state.client_hello()->sent_fallback_scsv());
 
-   const Protocol_Version latest_supported =
-      policy().latest_supported_version(client_version.is_datagram_protocol());
-
-   if((initial_handshake && client_version.known_version()) ||
-      (!initial_handshake && client_version == active_state->version()))
-      {
-      /*
-      Common cases: new client hello with some known version, or a
-      renegotiation using the same version as previously
-      negotiated.
-      */
-
-      negotiated_version = client_version;
-      }
-   else if(!initial_handshake && (client_version != active_state->version()))
-      {
-      /*
-      * If this is a renegotiation, and the client has offered a
-      * later version than what it initially negotiated, negotiate
-      * the old version. This matches OpenSSL's behavior. If the
-      * client is offering a version earlier than what it initially
-      * negotiated, reject as a probable attack.
-      */
-      if(active_state->version() > client_version)
-         {
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                              "Client negotiated " +
-                              active_state->version().to_string() +
-                              " then renegotiated with " +
-                              client_version.to_string());
-         }
-      else
-         negotiated_version = active_state->version();
-      }
-   else
-      {
-      /*
-      New negotiation using a version we don't know. Offer them the
-      best we currently know and support
-      */
-      negotiated_version = latest_supported;
-      }
-
-   if(!policy().acceptable_protocol_version(negotiated_version))
-      {
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                           "Client version " + negotiated_version.to_string() +
-                           " is unacceptable by policy");
-      }
-
-   if(pending_state.client_hello()->sent_fallback_scsv())
-      {
-      if(latest_supported > client_version)
-         throw TLS_Exception(Alert::INAPPROPRIATE_FALLBACK,
-                              "Client signalled fallback SCSV, possible attack");
-      }
+   const auto compression_methods = pending_state.client_hello()->compression_methods();
+   if(!value_exists(compression_methods, uint8_t(0)))
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Client did not offer NULL compression");
 
    secure_renegotiation_check(pending_state.client_hello());
 
@@ -511,6 +526,11 @@ void Server::process_certificate_msg(Server_Handshake_State& pending_state,
                                      const std::vector<uint8_t>& contents)
    {
    pending_state.client_certs(new Certificate(contents, policy()));
+
+   // CERTIFICATE_REQUIRED would make more sense but BoGo expects handshake failure alert
+   if(pending_state.client_certs()->empty() && policy().require_client_certificate_authentication())
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Policy requires client send a certificate, but it did not");
+
    pending_state.set_expected_next(CLIENT_KEX);
    }
 
@@ -767,7 +787,7 @@ void Server::session_resume(Server_Handshake_State& pending_state,
 void Server::session_create(Server_Handshake_State& pending_state,
                             bool have_session_ticket_key)
    {
-   std::map<std::string, std::vector<X509_Certificate> > cert_chains;
+   std::map<std::string, std::vector<X509_Certificate>> cert_chains;
 
    const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
 
@@ -782,10 +802,10 @@ void Server::session_create(Server_Handshake_State& pending_state,
       * find any certs for the requested name but did find at
       * least one cert to use in general. That avoids sending an
       * unrecognized_name when a server is configured for purely
-      * anonymous operation.
+      * anonymous/PSK operation.
       */
       if(!cert_chains.empty())
-         send_alert(Alert(Alert::UNRECOGNIZED_NAME));
+         send_warning_alert(Alert::UNRECOGNIZED_NAME);
       }
 
    const uint16_t ciphersuite = choose_ciphersuite(policy(), pending_state.version(),
@@ -857,7 +877,11 @@ void Server::session_create(Server_Handshake_State& pending_state,
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());
       }
 
-   if(!client_auth_CAs.empty() && pending_state.ciphersuite().signature_used())
+   const bool request_cert =
+      (client_auth_CAs.empty() == false) ||
+      policy().request_client_certificate_authentication();
+
+   if(request_cert && pending_state.ciphersuite().signature_used())
       {
       pending_state.cert_req(
          new Certificate_Req(pending_state.handshake_io(),

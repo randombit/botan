@@ -23,9 +23,10 @@ namespace {
 class Client_Handshake_State final : public Handshake_State
    {
    public:
-      // using Handshake_State::Handshake_State;
-
-      Client_Handshake_State(Handshake_IO* io, Callbacks& cb) : Handshake_State(io, cb) {}
+      Client_Handshake_State(Handshake_IO* io, Callbacks& cb) :
+         Handshake_State(io, cb),
+         m_is_reneg(false)
+         {}
 
       const Public_Key& get_server_public_key() const
          {
@@ -33,13 +34,26 @@ class Client_Handshake_State final : public Handshake_State
          return *server_public_key.get();
          }
 
-      bool is_a_resumption() const { return (resume_master_secret.empty() == false); }
+      bool is_a_resumption() const { return (resumed_session != nullptr); }
+
+      bool is_a_renegotiation() const { return m_is_reneg; }
+
+      const secure_vector<uint8_t>& resume_master_secret() const
+         {
+         BOTAN_STATE_CHECK(is_a_resumption());
+         return resumed_session->master_secret();
+         }
+
+      const std::vector<X509_Certificate>& resume_peer_certs() const
+         {
+         BOTAN_STATE_CHECK(is_a_resumption());
+         return resumed_session->peer_certs();
+         }
 
       std::unique_ptr<Public_Key> server_public_key;
-
       // Used during session resumption
-      secure_vector<uint8_t> resume_master_secret;
-      std::vector<X509_Certificate> resume_peer_certs;
+      std::unique_ptr<Session> resumed_session;
+      bool m_is_reneg = false;
    };
 
 }
@@ -123,8 +137,9 @@ std::vector<X509_Certificate>
 Client::get_peer_cert_chain(const Handshake_State& state) const
    {
    const Client_Handshake_State& cstate = dynamic_cast<const Client_Handshake_State&>(state);
-   if(cstate.resume_peer_certs.size() > 0)
-      return cstate.resume_peer_certs;
+
+   if(cstate.is_a_resumption())
+      return cstate.resume_peer_certs();
 
    if(state.server_certs())
       return state.server_certs()->cert_chain();
@@ -137,7 +152,8 @@ Client::get_peer_cert_chain(const Handshake_State& state) const
 void Client::initiate_handshake(Handshake_State& state,
                                 bool force_full_renegotiation)
    {
-   send_client_hello(state, force_full_renegotiation, state.version());
+   send_client_hello(state, force_full_renegotiation,
+                     policy().latest_supported_version(state.version().is_datagram_protocol()));
    }
 
 void Client::send_client_hello(Handshake_State& state_base,
@@ -154,16 +170,23 @@ void Client::send_client_hello(Handshake_State& state_base,
 
    if(!force_full_renegotiation && !m_info.empty())
       {
-      Session session_info;
-      if(session_manager().load_from_server_info(m_info, session_info))
+      std::unique_ptr<Session> session_info(new Session);;
+      if(session_manager().load_from_server_info(m_info, *session_info))
          {
          /*
-         Ensure that the session protocol type matches what we want to use
+         Ensure that the session protocol cipher and version are acceptable
          If not skip the resume and establish a new session
          */
-         if(version == session_info.version() && policy().acceptable_ciphersuite(session_info.ciphersuite()))
+         const bool exact_version = session_info->version() == version;
+         const bool ok_version =
+            (session_info->version().is_datagram_protocol() == version.is_datagram_protocol()) &&
+            policy().acceptable_protocol_version(session_info->version());
+
+         const bool session_version_ok = policy().only_resume_with_exact_version() ? exact_version : ok_version;
+
+         if(policy().acceptable_ciphersuite(session_info->ciphersuite()) && session_version_ok)
             {
-            if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
+            if(srp_identifier == "" || session_info->srp_identifier() == srp_identifier)
                {
                state.client_hello(
                   new Client_Hello(state.handshake_io(),
@@ -172,11 +195,10 @@ void Client::send_client_hello(Handshake_State& state_base,
                                    callbacks(),
                                    rng(),
                                    secure_renegotiation_data_for_client_hello(),
-                                   session_info,
+                                   *session_info,
                                    next_protocols));
 
-               state.resume_master_secret = session_info.master_secret();
-               state.resume_peer_certs = session_info.peer_certs();
+               state.resumed_session = std::move(session_info);
                }
             }
          }
@@ -215,19 +237,33 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       // Ignore request entirely if we are currently negotiating a handshake
       if(state.client_hello())
-         return;
+         {
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Cannot renegotiate during a handshake");
+         }
 
       if(policy().allow_server_initiated_renegotiation())
          {
-         if(!secure_renegotiation_supported() && policy().allow_insecure_renegotiation() == false)
-            send_warning_alert(Alert::NO_RENEGOTIATION);
+         if(secure_renegotiation_supported() || policy().allow_insecure_renegotiation())
+            {
+            state.m_is_reneg = true;
+            this->initiate_handshake(state, true);
+            }
          else
-            this->initiate_handshake(state, false);
+            {
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Client policy prohibits insecure renegotiation");
+            }
          }
       else
          {
-         // RFC 5746 section 4.2
-         send_warning_alert(Alert::NO_RENEGOTIATION);
+         if(policy().abort_connection_on_undesired_renegotiation())
+            {
+            throw TLS_Exception(Alert::NO_RENEGOTIATION, "Client policy prohibits renegotiation");
+            }
+         else
+            {
+            // RFC 5746 section 4.2
+            send_warning_alert(Alert::NO_RENEGOTIATION);
+            }
          }
 
       return;
@@ -257,6 +293,12 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                              "Server replied with ciphersuite we didn't send");
          }
 
+      if(!Ciphersuite::by_id(state.server_hello()->ciphersuite()).usable_in_version(state.server_hello()->version()))
+         {
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Server replied using a ciphersuite not allowed in version it offered");
+         }
+
       if(Ciphersuite::is_scsv(state.server_hello()->ciphersuite()))
          {
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -265,7 +307,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       if(state.server_hello()->compression_method() != 0)
          {
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Server replied with non-null compression method");
          }
 
@@ -283,10 +325,10 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          // Server sent us back an extension we did not send!
 
          std::ostringstream msg;
-         msg << "Server replied with " << diff.size() << " unsupported extensions:";
+         msg << "Server replied with unsupported extensions:";
          for(auto&& d : diff)
             msg << " " << static_cast<int>(d);
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, msg.str());
+         throw TLS_Exception(Alert::UNSUPPORTED_EXTENSION, msg.str());
          }
 
       if(uint16_t srtp = state.server_hello()->srtp_profile())
@@ -319,10 +361,26 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server resumed session but with wrong version");
 
-         state.compute_session_keys(state.resume_master_secret);
+         if(state.server_hello()->supports_extended_master_secret() &&
+            !state.resumed_session->supports_extended_master_secret())
+            {
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                "Server resumed session but added extended master secret");
+            }
+
+         if(!state.server_hello()->supports_extended_master_secret() &&
+            state.resumed_session->supports_extended_master_secret())
+            {
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                "Server resumed session and removed extended master secret");
+            }
+
+         state.compute_session_keys(state.resume_master_secret());
 
          if(state.server_hello()->supports_session_ticket())
+            {
             state.set_expected_next(NEW_SESSION_TICKET);
+            }
          else
             {
             state.set_expected_next(HANDSHAKE_CCS);
@@ -332,8 +390,25 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          {
          // new session
 
-         state.resume_master_secret.clear();
-         state.resume_peer_certs.clear();
+         if(active_state)
+            {
+            // Here we are testing things that should not change during a renegotation,
+            // even if the server creates a new session. Howerver they might change
+            // in a resumption scenario.
+
+            if(active_state->version() != state.server_hello()->version())
+               throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                   "Server changed version after renegotiation");
+
+            if(state.server_hello()->supports_extended_master_secret() !=
+               active_state->server_hello()->supports_extended_master_secret())
+               {
+               throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                   "Server changed its mind about extended master secret");
+               }
+            }
+
+         state.resumed_session.reset(); // non-null if we were attempting a resumption
 
          if(state.client_hello()->version().is_datagram_protocol() !=
             state.server_hello()->version().is_datagram_protocol())
@@ -372,7 +447,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                depending on if it has an identity hint for us.
 
                (EC)DHE_PSK always sends a server key exchange for the
-               DH exchange portion.
+               DH exchange portion, and is covered by block below
             */
 
             state.set_expected_next(SERVER_KEX);
@@ -406,7 +481,17 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       in case an OCSP response was also available
       */
 
-      std::unique_ptr<Public_Key> peer_key(server_certs[0].subject_public_key());
+      X509_Certificate server_cert = server_certs[0];
+
+      if(active_state && active_state->server_certs())
+         {
+         X509_Certificate current_cert = active_state->server_certs()->cert_chain().at(0);
+
+         if(current_cert != server_cert)
+            throw TLS_Exception(Alert::BAD_CERTIFICATE, "Server certificate changed during renegotiation");
+         }
+
+      std::unique_ptr<Public_Key> peer_key(server_cert.subject_public_key());
 
       const std::string expected_key_type =
          state.ciphersuite().signature_used() ? state.ciphersuite().sig_algo() : "RSA";
@@ -444,9 +529,13 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                               m_info.hostname(),
                                               policy());
             }
+         catch(TLS_Exception& e)
+            {
+            throw;
+            }
          catch(std::exception& e)
             {
-            throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
+            throw TLS_Exception(Alert::INTERNAL_ERROR, e.what());
             }
          }
       }
@@ -466,7 +555,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == SERVER_KEX)
       {
-      state.set_expected_next(CERTIFICATE_REQUEST); // optional
+      if(state.ciphersuite().psk_ciphersuite() == false)
+         state.set_expected_next(CERTIFICATE_REQUEST); // optional
       state.set_expected_next(SERVER_HELLO_DONE);
 
       state.server_kex(
@@ -505,7 +595,15 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
             std::vector<std::shared_ptr<const OCSP::Response>> ocsp;
             if(state.server_cert_status() != nullptr)
-               ocsp.push_back(state.server_cert_status()->response());
+               {
+               try {
+                   ocsp.push_back(std::make_shared<OCSP::Response>(state.server_cert_status()->response()));
+               }
+               catch(Decoding_Error&)
+                  {
+                  // ignore it here because it might be our fault
+                  }
+               }
 
             callbacks().tls_verify_cert_chain(state.server_certs()->cert_chain(),
                                               ocsp,
@@ -514,9 +612,13 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                               m_info.hostname(),
                                               policy());
             }
+         catch(TLS_Exception& e)
+            {
+            throw;
+            }
          catch(std::exception& e)
             {
-            throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
+            throw TLS_Exception(Alert::INTERNAL_ERROR, e.what());
             }
          }
 

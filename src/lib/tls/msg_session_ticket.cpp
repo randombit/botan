@@ -40,6 +40,7 @@ New_Session_Ticket::New_Session_Ticket(const std::vector<uint8_t>& buf)
 
    m_ticket_lifetime_hint = reader.get_uint32_t();
    m_ticket = reader.get_range<uint8_t>(2, 0, 65535);
+   reader.assert_done();
    }
 
 std::vector<uint8_t> New_Session_Ticket::serialize() const
