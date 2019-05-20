@@ -20,6 +20,7 @@ env:
     - BUILD_MODE="coverage"
     - BUILD_MODE="fuzzers"
     - BUILD_MODE="valgrind"
+    - BUILD_MODE="bogo"
     - BUILD_MODE="cross-i386"
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
@@ -80,6 +81,8 @@ matrix:
       env: BUILD_MODE="cross-i386"
     - compiler: clang
       env: BUILD_MODE="gcc4.8"
+    - compiler: clang
+      env: BUILD_MODE="bogo"
 
    # No ARM Clang compiler on Linux
     - os: linux
