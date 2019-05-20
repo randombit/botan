@@ -397,7 +397,12 @@ class RSA_Public_Operation
       size_t get_max_input_bits() const
          {
          const size_t n_bits = m_n.bits();
-         BOTAN_ASSERT_NOMSG(n_bits >= 384);
+         /*
+         Make Coverity happy that n_bits - 1 won't underflow
+
+         5 bit minimum: smallest possible RSA key is 3*5
+         */
+         BOTAN_ASSERT_NOMSG(n_bits >= 5);
          return n_bits - 1;
          }
 
