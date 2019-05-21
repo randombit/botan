@@ -719,12 +719,14 @@ Setup the build in a specified directory instead of ``./build``
 --with-external-includedir=DIR
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Search for includes in this directory.
+Search for includes in this directory. Provide this parameter multiple times to
+define multiple additional include directories.
 
 --with-external-libdir=DIR
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Add DIR to the link path
+Add DIR to the link path. Provide this parameter multiple times to define
+multiple additional library link directories.
 
 --with-sysroot-dir=DIR
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
