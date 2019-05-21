@@ -420,6 +420,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-external-libdir', metavar='DIR', default=[],
                            help='use DIR for external libs', action='append')
 
+    build_group.add_option('--with-external-compile-definition', default=[], action='append',
+                           help='set compile-time definition like KEY[=VALUE]')
+
     build_group.add_option('--with-sysroot-dir', metavar='DIR', default='',
                            help='use DIR for system root while cross-compiling')
 
@@ -1084,6 +1087,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'output_to_exe': '-o ',
                 'add_include_dir_option': '-I',
                 'add_lib_dir_option': '-L',
+                'add_compile_definition_option': '-D',
                 'add_sysroot_option': '',
                 'add_lib_option': '-l',
                 'add_framework_option': '-framework ',
@@ -1110,6 +1114,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.add_include_dir_option = lex.add_include_dir_option
         self.add_lib_dir_option = lex.add_lib_dir_option
         self.add_lib_option = lex.add_lib_option
+        self.add_compile_definition_option = lex.add_compile_definition_option
         self.add_sysroot_option = lex.add_sysroot_option
         self.ar_command = lex.ar_command
         self.ar_options = lex.ar_options
@@ -1351,6 +1356,9 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
             if options.extra_cxxflags:
                 yield options.extra_cxxflags
+
+            for definition in options.with_external_compile_definition:
+                yield self.add_compile_definition_option + definition
 
         return (' '.join(gen_flags(with_debug_info, enable_optimizations))).strip()
 
