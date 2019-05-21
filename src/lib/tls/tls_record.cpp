@@ -67,7 +67,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                          std::move(mac),
                          suite.cipher_keylen(),
                          suite.mac_keylen(),
-                         version.supports_explicit_cbc_ivs(),
+                         version,
                          uses_encrypt_then_mac));
          }
       else
@@ -77,7 +77,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                          std::move(mac),
                          suite.cipher_keylen(),
                          suite.mac_keylen(),
-                         version.supports_explicit_cbc_ivs(),
+                         version,
                          uses_encrypt_then_mac));
          }
 

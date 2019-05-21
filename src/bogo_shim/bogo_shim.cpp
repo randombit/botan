@@ -16,6 +16,7 @@
 #include <botan/tls_algos.h>
 #include <botan/data_src.h>
 #include <botan/pkcs8.h>
+#include <botan/loadstor.h>
 #include <botan/oids.h>
 #include <botan/chacha_rng.h>
 #include <botan/base64.h>
@@ -49,20 +50,23 @@ int shim_output(const std::string& s, int rc = 0)
    return rc;
    }
 
-void shim_exit_with_error(const std::string& s, int rc = 1)
-   {
-   std::cerr << s << "\n";
-   std::exit(rc);
-   }
-
 void shim_log(const std::string& s)
    {
    if(::getenv("BOTAN_BOGO_SHIM_LOG"))
       {
-      static FILE* f = fopen("/tmp/bogo_shim.log", "w");
-      fprintf(f, "%d: %s\n", (int)time(nullptr), s.c_str());
-      fflush(f);
+      static FILE* log = std::fopen("/tmp/bogo_shim.log", "w");
+      struct timeval tv;
+      ::gettimeofday(&tv, nullptr);
+      std::fprintf(log, "%zu.%lu: %s\n", tv.tv_sec, tv.tv_usec, s.c_str());
+      std::fflush(log);
       }
+   }
+
+void BOTAN_NORETURN shim_exit_with_error(const std::string& s, int rc = 1)
+   {
+   shim_log("Exiting with " + s);
+   std::cerr << s << "\n";
+   std::exit(rc);
    }
 
 std::string map_to_bogo_error(const std::string& e)
@@ -73,6 +77,8 @@ std::string map_to_bogo_error(const std::string& e)
          { "Bad Hello_Request, has non-zero size", ":BAD_HELLO_REQUEST:" },
          { "Bad code for TLS alert level", ":UNKNOWN_ALERT_TYPE:" },
          { "Bad extension size", ":DECODE_ERROR:" },
+         { "Bad length in hello verify request", ":DECODE_ERROR:" },
+         { "Bad lengths in DTLS header", ":BAD_HANDSHAKE_RECORD:" },
          { "Bad signature on server key exchange", ":BAD_SIGNATURE:" },
          { "Bad size (1) for TLS alert message", ":BAD_ALERT:" },
          { "Bad size (4) for TLS alert message", ":BAD_ALERT:" },
@@ -89,6 +95,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Client policy prohibits renegotiation", ":NO_RENEGOTIATION:" },
          { "Client resumed extended ms session without sending extension", ":RESUMED_EMS_SESSION_WITHOUT_EMS_EXTENSION:" },
          { "Client signalled fallback SCSV, possible attack", ":INAPPROPRIATE_FALLBACK:" },
+         { "Client version DTLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Client version TLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Client version TLS v1.1 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Client: No certificates sent by server", ":DECODE_ERROR:" },
@@ -97,6 +104,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Finished message didn't verify", ":DIGEST_CHECK_FAILED:" },
          { "Inconsistent length in certificate request", ":DECODE_ERROR:" },
+         { "Inconsistent values in fragmented DTLS handshake header", ":FRAGMENT_MISMATCH:" },
          { "Invalid CertificateRequest: Length field outside parameters", ":DECODE_ERROR:" },
          { "Invalid CertificateVerify: Extra bytes at end of message", ":DECODE_ERROR:" },
          { "Invalid Certificate_Status: invalid length field", ":DECODE_ERROR:" },
@@ -121,6 +129,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Server changed version after renegotiation", ":WRONG_SSL_VERSION:" },
          { "Server downgraded version after renegotiation", ":WRONG_SSL_VERSION:" },
          { "Server replied using a ciphersuite not allowed in version it offered", ":WRONG_CIPHER_RETURNED:" },
+         { "Server replied with DTLS-SRTP alg we did not send", ":BAD_SRTP_PROTECTION_PROFILE_LIST:" },
          { "Server replied with ciphersuite we didn't send", ":WRONG_CIPHER_RETURNED:" },
          { "Server replied with later version than client offered", ":UNSUPPORTED_PROTOCOL:" },
          { "Server replied with non-null compression method", ":UNSUPPORTED_COMPRESSION_ALGORITHM:" },
@@ -138,6 +147,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Server sent bad values for secure renegotiation", ":RENEGOTIATION_MISMATCH:" },
          { "Server version TLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Server version TLS v1.1 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
+         { "Server version DTLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Server_Hello_Done: Must be empty, and is not", ":DECODE_ERROR:" },
          { "Simulated OCSP callback failure", ":OCSP_CB_ERROR:" },
          { "Simulating cert verify callback failure", ":CERT_CB_ERROR:" },
@@ -166,6 +176,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Unexpected state transition in handshake, expected server_key_exchange|server_hello_done received certificate_request", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 43", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 44", ":UNEXPECTED_MESSAGE:" },
+         { "Unknown TLS handshake message type 45", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 46", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 53", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 54", ":UNEXPECTED_MESSAGE:" },
@@ -269,9 +280,14 @@ class Shim_Socket final
          while(sent_so_far != len)
             {
             const size_t left = len - sent_so_far;
-            socket_op_ret_type sent = ::send(m_socket, Botan::cast_uint8_ptr_to_char(&buf[sent_so_far]), left, 0);
+            socket_op_ret_type sent = ::send(m_socket, Botan::cast_uint8_ptr_to_char(&buf[sent_so_far]), left, MSG_NOSIGNAL);
             if(sent < 0)
-               throw Shim_Exception("Socket write failed", errno);
+               {
+               if(errno == EPIPE)
+                  return;
+               else
+                  throw Shim_Exception("Socket write failed", errno);
+               }
             else
                sent_so_far += static_cast<size_t>(sent);
             }
@@ -281,8 +297,7 @@ class Shim_Socket final
          {
          if(m_socket < 0)
             throw Shim_Exception("Socket was bad on read");
-         socket_op_ret_type got = ::recv(m_socket, Botan::cast_uint8_ptr_to_char(buf), len, 0);
-         //shim_log("Read returned " + std::to_string(got));
+         socket_op_ret_type got = ::read(m_socket, Botan::cast_uint8_ptr_to_char(buf), len);
 
          if(got < 0)
             {
@@ -645,7 +660,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       //"max-send-fragment",
       "max-version",
       "min-version",
-      //"mtu",
+      "mtu",
       "port",
       "read-size",
       "resume-count",
@@ -872,9 +887,15 @@ class Shim_Policy final : public Botan::TLS::Policy
          return (!m_args.flag_set("no-tls12"));
          }
 
-      //bool allow_dtls10() const override;
+      bool allow_dtls10() const override
+         {
+         return true; // ???
+         }
 
-      //bool allow_dtls12() const override;
+      bool allow_dtls12() const override
+         {
+         return true; // ???
+         }
 
       //Botan::TLS::Group_Params default_dh_group() const override;
 
@@ -894,7 +915,22 @@ class Shim_Policy final : public Botan::TLS::Policy
 
       //uint32_t session_ticket_lifetime() const override;
 
-      //std::vector<uint16_t> srtp_profiles() const override;
+      std::vector<uint16_t> srtp_profiles() const override
+         {
+         if(m_args.option_used("srtp-profiles"))
+            {
+            std::string srtp = m_args.get_string_opt("srtp-profiles");
+
+            if(srtp == "SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32")
+               return {1,2};
+            else if(srtp == "SRTP_AES128_CM_SHA1_80")
+               return {1};
+            else
+               shim_exit_with_error("unknown srtp-profiles");
+            }
+         else
+            return {};
+         }
 
       bool only_resume_with_exact_version() const override
          {
@@ -944,7 +980,10 @@ class Shim_Policy final : public Botan::TLS::Policy
       std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version,
                                              bool have_srp) const override;
 
-      //size_t dtls_default_mtu() const override;
+      size_t dtls_default_mtu() const override
+         {
+         return m_args.get_int_opt_or_else("mtu", 1232);
+         }
 
       //size_t dtls_initial_timeout() const override;
 
@@ -1152,8 +1191,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          m_is_datagram(args.flag_set("dtls")),
          m_warning_alerts(0),
          m_empty_records(0),
-         m_should_exit(false),
-         m_first_write_pending(true),
          m_sent_close(false)
          {}
 
@@ -1164,8 +1201,24 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
       void tls_emit_data(const uint8_t data[], size_t size) override
          {
-         //shim_log("Emit data len" + std::to_string(size));
-         m_socket.write(data, size);
+         if(m_is_datagram)
+            {
+            shim_log("sending record of len " + std::to_string(size));
+            const uint8_t hdr[5] = {
+               'P',
+               static_cast<uint8_t>((size >> 24) & 0xFF),
+               static_cast<uint8_t>((size >> 16) & 0xFF),
+               static_cast<uint8_t>((size >> 8) & 0xFF),
+               static_cast<uint8_t>(size & 0xFF),
+            };
+
+            m_socket.write(hdr, sizeof(hdr));
+            m_socket.write(data, size);
+            }
+         else
+            {
+            m_socket.write(data, size);
+            }
          }
 
       void tls_record_received(uint64_t /*seq_no*/, const uint8_t data[], size_t size) override
@@ -1181,19 +1234,11 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             {
             m_empty_records = 0;
             }
-         shim_log("Got a record len " + std::to_string(size));
-         if(m_first_write_pending)
-            {
-
-            //m_channel->send("hello");
-            m_first_write_pending = false;
-            }
 
          std::vector<uint8_t> buf(data, data + size);
          for(size_t i = 0; i != size; ++i)
             buf[i] ^= 0xFF;
 
-         shim_log("Sending " + std::to_string(size) + " bytes of blob");
          m_channel->send(buf);
          }
 
@@ -1296,30 +1341,30 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          if(m_args.option_used("expect-no-session-id"))
             {
             if(session.session_id().size() > 0)
-               shim_exit_with_error("GOT UNEXPECTED SESSION ID");
+               shim_exit_with_error("Unexpected session ID");
             }
 
          if(m_args.option_used("expect-version"))
             {
             if(session.version().version_code() != m_args.get_int_opt("expect-version"))
-               shim_exit_with_error("UNEXPECTED VERSION");
+               shim_exit_with_error("Unexpected version");
             }
 
          if(m_args.flag_set("expect-secure-renegotiation"))
             {
             if(m_channel->secure_renegotiation_supported() == false)
-               shim_exit_with_error("EXPECTED SECURE RENEGOTIATION");
+               shim_exit_with_error("Expected secure renegotiation");
             }
          else if(m_args.flag_set("expect-no-secure-renegotiation"))
             {
             if(m_channel->secure_renegotiation_supported() == true)
-               shim_exit_with_error("EXPECTED NO SECURE RENEGOTIATION");
+               shim_exit_with_error("Expected no secure renegotation");
             }
 
          if(m_args.flag_set("expect-extended-master-secret"))
             {
             if(session.supports_extended_master_secret() == false)
-               shim_exit_with_error("NO ETM");
+               shim_exit_with_error("Expected extended maseter secret");
             }
 
          return true;
@@ -1338,8 +1383,8 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             const std::string label = m_args.get_string_opt("export-label");
             const std::string context = m_args.get_string_opt("export-context");
             const auto exported = m_channel->key_material_export(label, context, length);
+            shim_log("Sending " + std::to_string(length) + " bytes of key material");
             m_channel->send(exported.bits_of());
-            shim_log("Sending " + std::to_string(length) + " bytes of export");
             }
 
          const std::string alpn = m_channel->application_protocol();
@@ -1373,11 +1418,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             }
          }
 
-      bool should_exit() const
-         {
-         return m_should_exit;
-         }
-
    private:
       Botan::TLS::Channel* m_channel;
       const Shim_Arguments& m_args;
@@ -1386,8 +1426,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
       const bool m_is_datagram;
       size_t m_warning_alerts;
       size_t m_empty_records;
-      bool m_should_exit;
-      bool m_first_write_pending;
       bool m_sent_close;
    };
 
@@ -1409,8 +1447,12 @@ int main(int /*argc*/, char* argv[])
       const bool is_server = args->flag_set("server");
       const bool is_datagram = args->flag_set("dtls");
 
+      const size_t buf_size = args->get_int_opt_or_else("read-size", 18*1024);
+
+      /*
       if(is_datagram)
          throw Shim_Exception("No support for DTLS yet", 89);
+      */
 
       Botan::ChaCha_RNG rng(Botan::secure_vector<uint8_t>(64));
       Botan::TLS::Session_Manager_In_Memory session_manager(rng, 1024);
@@ -1419,6 +1461,8 @@ int main(int /*argc*/, char* argv[])
       for(size_t i = 0; i != resume_count+1; ++i)
          {
          Shim_Socket socket("localhost", port);
+
+         shim_log("Connection " + std::to_string(i+1) + "/" + std::to_string(resume_count+1));
 
          Shim_Policy policy(*args);
          Shim_Callbacks callbacks(*args, socket, policy);
@@ -1446,24 +1490,64 @@ int main(int /*argc*/, char* argv[])
 
          callbacks.set_channel(chan.get());
 
-         shim_log("Starting read loop");
+         std::vector<uint8_t> buf(buf_size);
 
-         std::vector<uint8_t> buf(args->get_int_opt_or_else("read-size", 18*1024));
-         size_t need_to_read = 5; // header len
-
-         while(!callbacks.should_exit())
+         for(;;)
             {
-            size_t got = socket.read(buf.data(), buf.size());
-            if(got == 0)
+            if(is_datagram)
                {
-               shim_log("EOF on socket");
-               break;
+               uint8_t opcode;
+               size_t got = socket.read(&opcode, 1);
+               if(got == 0)
+                  {
+                  shim_log("EOF on socket");
+                  break;
+                  }
+
+               if(opcode == 'P')
+                  {
+                  uint8_t len_bytes[4];
+                  if(socket.read(len_bytes, sizeof(len_bytes)) != 4)
+                     shim_exit_with_error("Short read getting packet len");
+
+                  size_t packet_len = Botan::load_be<uint32_t>(len_bytes, 0);
+
+                  if(buf.size() < packet_len)
+                     buf.resize(packet_len);
+                  if(socket.read(buf.data(), packet_len) != packet_len)
+                     shim_exit_with_error("Short read getting packet data " + std::to_string(packet_len));
+
+                  chan->received_data(buf.data(), packet_len);
+                  }
+               else if(opcode == 'T')
+                  {
+                  uint8_t timeout_ack = 't';
+
+                  uint8_t timeout_bytes[8];
+                  if(socket.read(timeout_bytes, sizeof(timeout_bytes)) != 8)
+                     shim_exit_with_error("Short read getting timeout value");
+
+                  const uint64_t nsec = Botan::load_be<uint64_t>(timeout_bytes, 0);
+
+                  shim_log("Timeout nsec " + std::to_string(nsec));
+
+                  // FIXME handle this!
+
+                  socket.write(&timeout_ack, 1); // ack it anyway
+                  }
+               else
+                  shim_exit_with_error("Unknown opcode " + std::to_string(opcode));
                }
-
-            need_to_read = chan->received_data(buf.data(), got);
-
-            if(need_to_read == 0)
-               need_to_read = 5;
+            else
+               {
+               size_t got = socket.read(buf.data(), buf.size());
+               if(got == 0)
+                  {
+                  shim_log("EOF on socket");
+                  break;
+                  }
+               chan->received_data(buf.data(), got);
+               }
             }
 
          if(args->option_used("expect-total-renegotiations"))
@@ -1475,6 +1559,7 @@ int main(int /*argc*/, char* argv[])
                                     std::to_string(policy.sessions_established() - 1) +
                                     " exp " + std::to_string(exp));
             }
+         shim_log("End of resume loop");
          }
 
       }

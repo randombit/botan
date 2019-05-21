@@ -39,18 +39,6 @@ uint64_t steady_clock_ms()
       std::chrono::steady_clock::now().time_since_epoch()).count();
    }
 
-size_t split_for_mtu(size_t mtu, size_t msg_size)
-   {
-   const size_t DTLS_HEADERS_SIZE = 25; // DTLS record+handshake headers
-
-   const size_t parts = (msg_size + mtu) / mtu;
-
-   if(parts + DTLS_HEADERS_SIZE > mtu)
-      return parts + 1;
-
-   return parts;
-   }
-
 }
 
 Protocol_Version Stream_Handshake_IO::initial_record_version() const
@@ -425,17 +413,15 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
       }
    else
       {
-      const size_t parts = split_for_mtu(m_mtu, msg_bits.size());
-
-      const size_t parts_size = (msg_bits.size() + parts) / parts;
-
       size_t frag_offset = 0;
+
+      const size_t DTLS_HANDSHAKE_HEADERS = 32;
+      const size_t ciphersuite_overhead = (epoch > 0) ? 32 : 0;
+      const size_t max_rec_size = m_mtu - DTLS_HANDSHAKE_HEADERS - ciphersuite_overhead;
 
       while(frag_offset != msg_bits.size())
          {
-         const size_t frag_len =
-            std::min<size_t>(msg_bits.size() - frag_offset,
-                             parts_size);
+         const size_t frag_len = std::min<size_t>(msg_bits.size() - frag_offset, max_rec_size);
 
          m_send_hs(epoch,
                    HANDSHAKE,

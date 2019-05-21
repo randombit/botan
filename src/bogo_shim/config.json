@@ -51,12 +51,15 @@
         "*FalseStart*": "Botan doesn't do false start",
         "MaxSendFragment*": "Maximum fragment extension not supported",
         "ExportKeyingMaterial-EmptyContext*": "No support for this",
+
         "Peek-*": "No peek API",
+        "*OldCallback*": "OpenSSL/BoringSSL specific",
 
         "CheckLeafCurve": "Botan ignores this",
 
         "OCSPStapling-Server-*": "Server doesn't support OCSP stapling currently",
-        "UnsolicitedCertificateExtensions-TLS*":  "Server doesn't support OCSP stapling currently",
+        "UnsolicitedCertificateExtensions-TLS*": "Server doesn't support OCSP stapling currently",
+        "ServerOCSPCallback": "Server doesn't support OCSP stapling currently",
 
         "CipherNegotiation-2": "No support for cipher equivalence classes",
         "CipherNegotiation-3": "No support for cipher equivalence classes",
@@ -75,9 +78,12 @@
         "Resume-Client-NoResume-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS1-TLS12": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS11-TLS12": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-NoResume-TLS1-TLS12-DTLS": "BoGo expects resumption attempt sends latest version",
+
         "Resume-Client-Mismatch-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-Mismatch-TLS1-TLS12": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-Mismatch-TLS11-TLS12": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-Mismatch-TLS1-TLS12-DTLS": "BoGo expects resumption attempt sends latest version",
 
         "CurveTest-Client-Compressed*": "Point compression is supported, which BoGo doesn't expect",
         "PointFormat-Client-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
@@ -93,11 +99,34 @@
         "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-Server": "Not possible to disable PSS",
         "RSAPSSSupport-Default-NoCerts-TLS12-Server": "Not possible to disable PSS",
 
-        "*DTLS*": "Shim is missing DTLS support",
-        "SRTP*":  "Shim is missing DTLS support",
-        "SendSplitAlert*": "Shim is missing DTLS support",
-        "StrayChangeCipherSpec": "Shim is missing DTLS support",
-        "MTU*": "Shim is missing DTLS support",
+        "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected",
+        "DTLS-Replay*": "Needs analysis",
+        "DTLS-Retransmit*": "Shim needs timeout support",
+
+        "AppDataAfterChangeCipherSpec-DTLS*": "Needs investigation",
+        "BadChangeCipherSpec-DTLS-*": "Needs investigation",
+        "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
+        "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
+        "DisableEverything-DTLS": "Needs investigation",
+        "LargeCiphertext-DTLS": "Needs investigation",
+        "MajorVersionTolerance-DTLS": "Needs investigation",
+        "MinimumVersion-Client-TLS12-TLS1-DTLS": "Needs investigation",
+        "MinimumVersion-Server-TLS12-TLS1-DTLS": "Needs investigation",
+        "MixCompleteMessageWithFragments-DTLS": "Needs investigation",
+        "NoSupportedVersions-DTLS": "Needs investigation",
+        "ReorderHandshakeFragments-Small-DTLS": "Needs investigation",
+        "SendUnencryptedFinished-DTLS": "Needs investigation",
+        "VersionNegotiation-Client-TLS1-TLS12-DTLS": "Needs investigation",
+        "VersionNegotiation-Server-TLS1-TLS12-DTLS": "Needs investigation",
+        "VersionTooLow-DTLS": "Needs investigation",
+
+        "MTUExceeded": "BoringSSL splits DTLS handshakes differently",
+
+        "ClientOCSPCallback-FailNoStaple-*-DTLS*": "Alert problem",
+        "MinimumVersion-Client2-TLS12-TLS1-DTLS": "Alert problem",
+        "SendBogusAlertType-DTLS": "Alert problem",
+        "TrailingMessageData-*-DTLS*": "Alert problem",
+        "WrongMessageType-*-DTLS*": "Alert problem",
 
         "Renegotiate-Client-Packed": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
         "SendHalfHelloRequest*PackHandshake": "Packing HelloRequest with Finished loses the HelloRequest (bug)",

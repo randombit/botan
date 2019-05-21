@@ -170,13 +170,12 @@ class TLS_CBC_Tests final : public Text_Based_Test
          const bool is_valid = vars.get_req_sz("Valid") == 1;
 
          // todo test permutations
-         bool explicit_iv = true;
          bool encrypt_then_mac = false;
 
          Botan::TLS::TLS_CBC_HMAC_AEAD_Decryption tls_cbc(
             std::unique_ptr<Botan::BlockCipher>(new Noop_Block_Cipher(block_size)),
             std::unique_ptr<Botan::MessageAuthenticationCode>(new ZeroMac(mac_len)),
-            0, 0, explicit_iv, encrypt_then_mac);
+            0, 0, Botan::TLS::Protocol_Version::TLS_V11, encrypt_then_mac);
 
          tls_cbc.set_key(std::vector<uint8_t>(0));
          std::vector<uint8_t> ad(13);
