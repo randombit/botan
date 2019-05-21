@@ -51,12 +51,15 @@
         "*FalseStart*": "Botan doesn't do false start",
         "MaxSendFragment*": "Maximum fragment extension not supported",
         "ExportKeyingMaterial-EmptyContext*": "No support for this",
+
         "Peek-*": "No peek API",
+        "*OldCallback*": "OpenSSL/BoringSSL specific",
 
         "CheckLeafCurve": "Botan ignores this",
 
         "OCSPStapling-Server-*": "Server doesn't support OCSP stapling currently",
-        "UnsolicitedCertificateExtensions-TLS*":  "Server doesn't support OCSP stapling currently",
+        "UnsolicitedCertificateExtensions-TLS*": "Server doesn't support OCSP stapling currently",
+        "ServerOCSPCallback": "Server doesn't support OCSP stapling currently",
 
         "CipherNegotiation-2": "No support for cipher equivalence classes",
         "CipherNegotiation-3": "No support for cipher equivalence classes",
@@ -116,6 +119,8 @@
         "VersionNegotiation-Client-TLS1-TLS12-DTLS": "Needs investigation",
         "VersionNegotiation-Server-TLS1-TLS12-DTLS": "Needs investigation",
         "VersionTooLow-DTLS": "Needs investigation",
+
+        "MTUExceeded": "BoringSSL splits DTLS handshakes differently",
 
         "ClientOCSPCallback-FailNoStaple-*-DTLS*": "Alert problem",
         "MinimumVersion-Client2-TLS12-TLS1-DTLS": "Alert problem",

@@ -660,7 +660,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       //"max-send-fragment",
       "max-version",
       "min-version",
-      //"mtu",
+      "mtu",
       "port",
       "read-size",
       "resume-count",
@@ -980,7 +980,10 @@ class Shim_Policy final : public Botan::TLS::Policy
       std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version,
                                              bool have_srp) const override;
 
-      //size_t dtls_default_mtu() const override;
+      size_t dtls_default_mtu() const override
+         {
+         return m_args.get_int_opt_or_else("mtu", 1232);
+         }
 
       //size_t dtls_initial_timeout() const override;
 
