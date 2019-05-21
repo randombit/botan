@@ -69,7 +69,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if target in ['shared', 'mini-shared']:
         flags += ['--disable-static']
 
-    if target in ['static', 'mini-static', 'fuzzers'] or target_os in ['ios', 'mingw']:
+    if target in ['static', 'mini-static', 'fuzzers', 'bogo'] or target_os in ['ios', 'mingw']:
         flags += ['--disable-shared']
 
     if target in ['mini-static', 'mini-shared']:
@@ -92,6 +92,15 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
         test_cmd = None
+
+    if target == 'bogo':
+        flags += ['--build-bogo-shim']
+        runner_dir = os.path.abspath(os.path.join(root_dir, 'boringssl', 'ssl', 'test', 'runner'))
+
+        test_cmd = ['indir:%s' % (runner_dir),
+                    'go', 'test', '-allow-unimplemented', '-pipe',
+                    '-shim-path', os.path.abspath(os.path.join(root_dir, 'botan_bogo_shim')),
+                    '-shim-config', os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config.json'))]
 
     if target == 'coverage':
         flags += ['--with-coverage-info', '--test-mode']
@@ -236,12 +245,16 @@ def run_cmd(cmd, root_dir):
     sub_env = os.environ.copy()
     sub_env['LD_LIBRARY_PATH'] = root_dir
     sub_env['PYTHONPATH'] = os.path.join(root_dir, 'src/python')
+    cwd = None
 
     redirect_stdout = None
     if len(cmd) > 3 and cmd[-2] == '>':
         redirect_stdout = open(cmd[-1], 'w')
         cmd = cmd[:-2]
-    proc = subprocess.Popen(cmd, close_fds=True, env=sub_env, stdout=redirect_stdout)
+    if len(cmd) > 1 and cmd[0].startswith('indir:'):
+        cwd = cmd[0][6:]
+        cmd = cmd[1:]
+    proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout)
     proc.communicate()
 
     time_taken = int(time.time() - start)
@@ -452,9 +465,14 @@ def main(args=None):
             if options.compiler_cache in ccache_show_stats:
                 cmds.append([options.compiler_cache, ccache_show_stats[options.compiler_cache]])
 
-            make_targets = ['libs', 'cli', 'tests']
+            make_targets = ['libs']
+            if target in ['bogo']:
+                make_targets += ['bogo_shim']
+            else:
+                make_targets += ['tests', 'cli']
+
             if target in ['coverage', 'fuzzers']:
-                make_targets += ['fuzzers', 'fuzzer_corpus_zip']
+                make_targets += ['tests', 'cli', 'fuzzers', 'fuzzer_corpus_zip']
 
             cmds.append(make_prefix + make_cmd + make_targets)
 

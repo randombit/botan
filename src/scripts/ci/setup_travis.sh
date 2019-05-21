@@ -65,6 +65,12 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
         pip install --user codecov==2.0.10
 
+    elif [ "$BUILD_MODE" = "bogo" ]; then
+        sudo apt-get -qq update
+        sudo apt-get install golang-1.10
+
+        git clone --depth 1 --branch runner-changes https://github.com/randombit/boringssl.git
+
     elif [ "$BUILD_MODE" = "docs" ]; then
         sudo apt-get -qq update
         sudo apt-get install doxygen python-docutils
