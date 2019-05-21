@@ -34,14 +34,17 @@
   #include <errno.h>
   #include <termios.h>
   #undef B0
+  extern "C" char **environ;
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
   #include <emscripten/emscripten.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_IS_ANDROID) || \
+  defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
   #include <sys/auxv.h>
+  #include <elf.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
@@ -99,6 +102,23 @@ unsigned long OS::get_auxval(unsigned long id)
    {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
    return ::getauxval(id);
+#elif defined(BOTAN_TARGET_OS_IS_ANDROID)
+   char  **p = environ;
+
+   while (*p++!=nullptr);
+
+   Elf32_auxv_t *e = reinterpret_cast<Elf32_auxv_t *>(p);
+
+   while (e!=nullptr)
+      {
+      if (e->a_type == 0)
+        continue;
+      if (e->a_type == id)
+        return e->a_un.a_val;
+      e++;
+      }
+
+   return 0;
 #elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    unsigned long auxinfo = 0;
    ::elf_aux_info(id, &auxinfo, sizeof(auxinfo));
@@ -111,8 +131,8 @@ unsigned long OS::get_auxval(unsigned long id)
 
 bool OS::running_in_privileged_state()
    {
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) && defined(AT_SECURE)
-   return ::getauxval(AT_SECURE) != 0;
+#if defined(AT_SECURE)
+   return OS::get_auxval(AT_SECURE) != 0;
 #elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
    return (::getuid() != ::geteuid()) || (::getgid() != ::getegid());
 #else
