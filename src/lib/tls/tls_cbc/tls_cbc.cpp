@@ -28,7 +28,7 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
                                                std::unique_ptr<MessageAuthenticationCode> mac,
                                                size_t cipher_keylen,
                                                size_t mac_keylen,
-                                               bool use_explicit_iv,
+                                               Protocol_Version version,
                                                bool use_encrypt_then_mac) :
    m_cipher_name(cipher->name()),
    m_mac_name(mac->name()),
@@ -39,7 +39,9 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
    m_tag_size = mac->output_length();
    m_block_size = cipher->block_size();
 
-   m_iv_size = use_explicit_iv ? m_block_size : 0;
+   m_iv_size = version.supports_explicit_cbc_ivs() ? m_block_size : 0;
+
+   m_is_datagram = version.is_datagram_protocol();
 
    m_mac = std::move(mac);
 
@@ -342,8 +344,8 @@ void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, 
    // If there are no compressions, we just add 55/111 dummy bytes so that no
    // compression is performed.
    const uint16_t data_len = block_size * add_compressions + equal * max_bytes_in_first_block;
-   secure_vector<uint8_t> data(data_len);
-   mac().update(unlock(data));
+   std::vector<uint8_t> data(data_len);
+   mac().update(data);
    // we do not need to clear the MAC since the connection is broken anyway
    }
 
@@ -460,6 +462,14 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       else
          {
          perform_additional_compressions(record_len, pad_size);
+
+         /*
+         * In DTLS case we have to finish computing the MAC since we require the
+         * MAC state be reset for future packets. This extra timing channel may
+         * be exploitable in a Lucky13 variant.
+         */
+         if(is_datagram_protocol())
+            mac().final(mac_buf);
          throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
          }
       }
