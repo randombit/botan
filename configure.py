@@ -420,8 +420,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-external-libdir', metavar='DIR', default=[],
                            help='use DIR for external libs', action='append')
 
-    build_group.add_option('--with-external-compile-definition', default=[], action='append',
-                           help='set compile-time definition like KEY[=VALUE]')
+    build_group.add_option('--with-external-compile-definition', metavar='DEFINE', default=[],
+                           help='set compile-time definition like KEY[=VALUE]', action='append')
 
     build_group.add_option('--with-sysroot-dir', metavar='DIR', default='',
                            help='use DIR for system root while cross-compiling')
