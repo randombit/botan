@@ -5,7 +5,7 @@ Version 2.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add a shim allowing testing Botan against the BoringSSL test suite.
-  (GH #1954 #1955)
+  (GH #1954 #1955 #1956)
 
 * Add a ``boost::asio`` TLS stream compatible with ``boost::asio::ssl``.
   (GH #1839 #1927)
