@@ -255,12 +255,12 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
             out += [self.fuzzer_output_dir]
         return out
 
-    def format_include_paths(self, cc, external_include):
+    def format_include_paths(self, cc, external_includes):
         dash_i = cc.add_include_dir_option
         output = dash_i + self.include_dir
         if self.external_headers:
             output += ' ' + dash_i + self.external_include_dir
-        if external_include:
+        for external_include in external_includes:
             output += ' ' + dash_i + external_include
         return output
 
@@ -414,8 +414,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-build-dir', metavar='DIR', default='',
                            help='setup the build in DIR')
 
-    build_group.add_option('--with-external-includedir', metavar='DIR', default='',
-                           help='use DIR for external includes')
+    build_group.add_option('--with-external-includedir', metavar='DIR', default=[],
+                           help='use DIR for external includes', action='append')
 
     build_group.add_option('--with-external-libdir', metavar='DIR', default='',
                            help='use DIR for external libs')
