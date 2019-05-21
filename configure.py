@@ -417,8 +417,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-external-includedir', metavar='DIR', default=[],
                            help='use DIR for external includes', action='append')
 
-    build_group.add_option('--with-external-libdir', metavar='DIR', default='',
-                           help='use DIR for external libs')
+    build_group.add_option('--with-external-libdir', metavar='DIR', default=[],
+                           help='use DIR for external libs', action='append')
 
     build_group.add_option('--with-sysroot-dir', metavar='DIR', default='',
                            help='use DIR for system root while cross-compiling')
@@ -1783,7 +1783,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     """
 
     def external_link_cmd():
-        return (' ' + cc.add_lib_dir_option + options.with_external_libdir) if options.with_external_libdir else ''
+        return ' '.join([cc.add_lib_dir_option + libdir for libdir in options.with_external_libdir])
 
     def link_to(module_member_name):
         """
@@ -2004,8 +2004,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
-        'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
-        'exe_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
+        'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + ' ' + external_link_cmd(),
+        'exe_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + ' ' + external_link_cmd(),
         'post_link_cmd': '',
 
         'ar_command': ar_command(),
