@@ -75,9 +75,12 @@
         "Resume-Client-NoResume-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS1-TLS12": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS11-TLS12": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-NoResume-TLS1-TLS12-DTLS": "BoGo expects resumption attempt sends latest version",
+
         "Resume-Client-Mismatch-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-Mismatch-TLS1-TLS12": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-Mismatch-TLS11-TLS12": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-Mismatch-TLS1-TLS12-DTLS": "BoGo expects resumption attempt sends latest version",
 
         "CurveTest-Client-Compressed*": "Point compression is supported, which BoGo doesn't expect",
         "PointFormat-Client-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
@@ -93,11 +96,9 @@
         "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-Server": "Not possible to disable PSS",
         "RSAPSSSupport-Default-NoCerts-TLS12-Server": "Not possible to disable PSS",
 
-        "*DTLS*": "Shim is missing DTLS support",
-        "SRTP*":  "Shim is missing DTLS support",
-        "SendSplitAlert*": "Shim is missing DTLS support",
-        "StrayChangeCipherSpec": "Shim is missing DTLS support",
-        "MTU*": "Shim is missing DTLS support",
+        "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected",
+        "DTLS-Replay*": "Needs analysis",
+        "DTLS-Retransmit*": "Shim needs timeout support",
 
         "Renegotiate-Client-Packed": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
         "SendHalfHelloRequest*PackHandshake": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
