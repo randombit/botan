@@ -2512,7 +2512,7 @@ class AmalgamationGenerator(object):
     filename_prefix = 'botan_all'
 
     _header_guard_pattern = re.compile(r'^#define BOTAN_.*_H_\s*$')
-    _header_endif_pattern = re.compile(r'^#endif\s*$')
+    _header_endif_pattern = re.compile(r'^#endif.*$')
 
     @staticmethod
     def read_header(filepath):
