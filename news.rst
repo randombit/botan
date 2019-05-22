@@ -5,7 +5,9 @@ Version 2.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add a shim allowing testing Botan against the BoringSSL test suite.
-  (GH #1954 #1955 #1956 #1959)
+  (GH #1954 #1955 #1956 #1959 #1966)
+
+* Add support for OCSP stapling on server side. (GH #1703 #1967)
 
 * Add a ``boost::asio`` TLS stream compatible with ``boost::asio::ssl``.
   (GH #1839 #1927)
