@@ -59,6 +59,14 @@ Version 2.11.0, Not Yet Released
 
 * When available use POSIX ``sysconf`` to detect the number of CPUs (GH #1877)
 
+* Add functionality to handle Boost naming conventions on different platforms,
+  especially affecting Windows. Enable Boost in AppVeyor builds. (GH #1964)
+
+* Add alternate implementation of ``getauxval`` for older Android (GH #1962)
+
+* Add ``configure.py`` option allowing to set arbitrary macros during build.
+  (GH #1960)
+
 * Use FreeBSD's ``elf_aux_info`` to detect ARM and POWER CPU features
   (GH #1895)
 
