@@ -34,7 +34,6 @@
   #include <errno.h>
   #include <termios.h>
   #undef B0
-  extern "C" char **environ;
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
@@ -44,12 +43,16 @@
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_IS_ANDROID) || \
   defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
   #include <sys/auxv.h>
-  #include <elf.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
   #define NOMINMAX 1
   #include <windows.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_IS_ANDROID)
+  #include <elf.h>
+  extern "C" char **environ;
 #endif
 
 namespace Botan {
