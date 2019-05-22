@@ -1814,7 +1814,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
             if len(adjusted_libnames) > 1:
                 logging.warning('Ambiguous boost library names: %s' % ', '.join(adjusted_libnames))
-            if len(adjusted_libnames) > 0:
+            if len(adjusted_libnames) == 1:
                 logging.debug('Replacing boost library name %s -> %s' % (info_txt_libname, adjusted_libnames[0]))
                 return adjusted_libnames[0]
 
