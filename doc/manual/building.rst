@@ -728,6 +728,13 @@ define multiple additional include directories.
 Add DIR to the link path. Provide this parameter multiple times to define
 multiple additional library link directories.
 
+--define-build-macro
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set a compile-time pre-processor definition (i.e. add a -D... to the compiler
+invocations). Provide this parameter multiple times to add multiple compile-time
+definitions. Both KEY=VALUE and KEY (without specific value) are supported.
+
 --with-sysroot-dir=DIR
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
