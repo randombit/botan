@@ -88,6 +88,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Certificate chain exceeds policy specified maximum size", ":EXCESSIVE_MESSAGE_SIZE:" },
          { "Certificate key type did not match ciphersuite", ":WRONG_CERTIFICATE_TYPE:" },
          { "Certificate: Message malformed", ":DECODE_ERROR:" },
+         { "Channel::key_material_export cannot export during renegotiation", "failed to export keying material" },
          { "Client cert verify failed", ":BAD_SIGNATURE:" },
          { "Client did not offer NULL compression", ":INVALID_COMPRESSION_LIST:" },
          { "Client offered version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
@@ -145,9 +146,9 @@ std::string map_to_bogo_error(const std::string& e)
          { "Server sent ECC curve prohibited by policy", ":WRONG_CURVE:" },
          { "Server sent an unsupported extension", ":UNEXPECTED_EXTENSION:" },
          { "Server sent bad values for secure renegotiation", ":RENEGOTIATION_MISMATCH:" },
+         { "Server version DTLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Server version TLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Server version TLS v1.1 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
-         { "Server version DTLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:" },
          { "Server_Hello_Done: Must be empty, and is not", ":DECODE_ERROR:" },
          { "Simulated OCSP callback failure", ":OCSP_CB_ERROR:" },
          { "Simulating cert verify callback failure", ":CERT_CB_ERROR:" },
@@ -569,6 +570,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       "no-tls11",
       "no-tls12",
       "no-tls13", // implict due to 1.3 not being implemented
+      "on-resume-no-ticket",
       //"on-resume-verify-fail",
       //"partial-write",
       //"peek-then-read",
@@ -585,13 +587,13 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       "server",
       "server-preference",
       //"set-ocsp-in-callback",
-      //"shim-shuts-down",
+      "shim-shuts-down",
       "shim-writes-first",
       //"tls-unique",
       "use-custom-verify-callback",
-      //"use-early-callback",
+      "use-early-callback",
       "use-export-context",
-      //"use-exporter-between-reads",
+      "use-exporter-between-reads",
       "use-ocsp-callback",
       //"use-old-client-cert-callback",
       //"use-ticket-callback",
@@ -1136,8 +1138,11 @@ class Shim_Credentials final : public Botan::Credentials_Manager
                               const std::string& context,
                               const std::string& identity) override
          {
-         if(!m_args.flag_set("no-ticket") && type == "tls-server" && context == "session-ticket")
-            return Botan::SymmetricKey("ABCDEF0123456789");
+         if(type == "tls-server" && context == "session-ticket")
+            {
+            if(!m_args.flag_set("no-ticket") && !m_args.flag_set("on-resume-no-ticket"))
+               return Botan::SymmetricKey("ABCDEF0123456789");
+            }
 
          if(identity != m_psk_identity)
             throw Shim_Exception("Unexpected PSK identity");
@@ -1191,7 +1196,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          m_is_datagram(args.flag_set("dtls")),
          m_warning_alerts(0),
          m_empty_records(0),
-         m_sent_close(false)
+         m_got_close(false)
          {}
 
       void set_channel(Botan::TLS::Channel* channel)
@@ -1223,7 +1228,6 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
       void tls_record_received(uint64_t /*seq_no*/, const uint8_t data[], size_t size) override
          {
-
          if(size == 0)
             {
             m_empty_records += 1;
@@ -1321,10 +1325,13 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
                shim_exit_with_error(":TOO_MANY_WARNING_ALERTS:");
             }
 
-         if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY && m_sent_close == false)
+         if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
             {
-            m_channel->send_alert(alert);
-            m_sent_close = true;
+            if(m_got_close == false)
+               {
+               m_channel->send_alert(alert);
+               m_got_close = true;
+               }
             }
          }
 
@@ -1401,6 +1408,9 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
                                             "Unexpected ALPN protocol");
             }
 
+         if(m_args.flag_set("shim-shuts-down"))
+            m_channel->close();
+
          if(m_args.flag_set("write-different-record-sizes"))
             {
             static const size_t record_sizes[] = {
@@ -1426,7 +1436,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
       const bool m_is_datagram;
       size_t m_warning_alerts;
       size_t m_empty_records;
-      bool m_sent_close;
+      bool m_got_close;
    };
 
 }
@@ -1545,6 +1555,11 @@ int main(int /*argc*/, char* argv[])
                   {
                   shim_log("EOF on socket");
                   break;
+                  }
+
+               if(args->flag_set("use-exporter-between-reads") && chan->is_active())
+                  {
+                  chan->key_material_export("some label", "some context", 42);
                   }
                chan->received_data(buf.data(), got);
                }

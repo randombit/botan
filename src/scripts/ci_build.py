@@ -98,7 +98,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         runner_dir = os.path.abspath(os.path.join(root_dir, 'boringssl', 'ssl', 'test', 'runner'))
 
         test_cmd = ['indir:%s' % (runner_dir),
-                    'go', 'test', '-allow-unimplemented', '-pipe',
+                    'go', 'test', '-pipe',
                     '-num-workers', str(4*get_concurrency()),
                     '-shim-path', os.path.abspath(os.path.join(root_dir, 'botan_bogo_shim')),
                     '-shim-config', os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config.json'))]
