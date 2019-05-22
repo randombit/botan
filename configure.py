@@ -488,6 +488,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
                            help=optparse.SUPPRESS_HELP)
     build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
                            help=optparse.SUPPRESS_HELP)
+    build_group.add_option('--boost-library-name', dest='boost_libnames', default=[],
+                           help="file name of some boost library to link", action='append')
 
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
 
@@ -1785,6 +1787,23 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
     def external_link_cmd():
         return (' ' + cc.add_lib_dir_option + options.with_external_libdir) if options.with_external_libdir else ''
 
+    def adjust_library_name(libname):
+        """
+        Apply custom library name mappings where necessary
+        """
+
+        # potentially map boost library names to the associated name provided
+        # via ./configure.py --boost-library-name <build/platform specific name>
+        if options.boost_libnames and 'boost_' in libname:
+            new_libname = list(filter(lambda l: libname in l, options.boost_libnames))
+            if len(new_libname) > 1:
+                logging.warning('Ambiguous boost library names: %s' % ', '.join(new_libname))
+            if len(new_libname) > 0:
+                logging.debug('Replacing boost library name %s -> %s' % (libname, new_libname[0]))
+                return new_libname[0]
+
+        return libname
+
     def link_to(module_member_name):
         """
         Figure out what external libraries/frameworks are needed based on selected modules
@@ -1804,7 +1823,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
                         if osinfo.basename not in exceptions:
                             libs |= set(module_link_to)
 
-        return sorted(libs)
+        return sorted([ adjust_library_name(lib) for lib in libs ])
 
     def choose_mp_bits():
         mp_bits = arch.wordsize # allow command line override?
