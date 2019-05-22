@@ -37,6 +37,10 @@ class Server_Handshake_State final : public Handshake_State
       void set_resume_certs(const std::vector<X509_Certificate>& certs)
          { m_resume_peer_certs = certs; }
 
+      void mark_as_resumption() { m_is_a_resumption = true; }
+
+      bool is_a_resumption() const { return m_is_a_resumption; }
+
    private:
       // Used by the server only, in case of RSA key exchange. Not owned
       Private_Key* m_server_rsa_kex_key = nullptr;
@@ -46,6 +50,8 @@ class Server_Handshake_State final : public Handshake_State
       * a server-initiated renegotiation
       */
       bool m_allow_session_resumption = true;
+
+      bool m_is_a_resumption = false;
 
       std::vector<X509_Certificate> m_resume_peer_certs;
    };
@@ -740,6 +746,7 @@ void Server::session_resume(Server_Handshake_State& pending_state,
 
    secure_renegotiation_check(pending_state.server_hello());
 
+   pending_state.mark_as_resumption();
    pending_state.compute_session_keys(session_info.master_secret());
    pending_state.set_resume_certs(session_info.peer_certs());
 
@@ -847,7 +854,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
                                                  pending_state.hash(),
                                                  cert_chains[algo_used]));
 
-      if(pending_state.client_hello()->supports_cert_status_message())
+      if(pending_state.client_hello()->supports_cert_status_message() && pending_state.is_a_resumption() == false)
          {
          auto csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
          // csr is non-null if client_hello()->supports_cert_status_message()

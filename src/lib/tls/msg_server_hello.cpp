@@ -110,10 +110,6 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    if(client_hello.supports_extended_master_secret())
       m_extensions.add(new Extended_Master_Secret);
 
-   // Sending the extension back does not commit us to sending a stapled response
-   if(client_hello.supports_cert_status_message() && policy.support_cert_status_message())
-      m_extensions.add(new Certificate_Status_Request);
-
    if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
       {
       Ciphersuite c = resumed_session.ciphersuite();

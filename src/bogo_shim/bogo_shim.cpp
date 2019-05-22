@@ -152,6 +152,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Server_Hello_Done: Must be empty, and is not", ":DECODE_ERROR:" },
          { "Simulated OCSP callback failure", ":OCSP_CB_ERROR:" },
          { "Simulating cert verify callback failure", ":CERT_CB_ERROR:" },
+         { "Simulating failure from OCSP response callback", ":OCSP_CB_ERROR:" },
          { "TLS plaintext record is larger than allowed maximum", ":DATA_LENGTH_TOO_LONG:" },
          { "TLS signature extension did not allow for RSA/SHA-256 signature", ":WRONG_SIGNATURE_TYPE:", },
          { "Test requires rejecting cert", ":CERTIFICATE_VERIFY_FAILED:" },
@@ -432,6 +433,8 @@ class Shim_Arguments final
 
       bool option_used(const std::string& key) const
          {
+         if(m_all_options.count(key) == 0)
+            throw Shim_Exception("Invalid option " + key);
          if(m_parsed_opts.find(key) != m_parsed_opts.end())
             return true;
          if(m_parsed_int_vec_opts.find(key) != m_parsed_int_vec_opts.end())
@@ -586,7 +589,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       "send-alert",
       "server",
       "server-preference",
-      //"set-ocsp-in-callback",
+      "set-ocsp-in-callback",
       "shim-shuts-down",
       "shim-writes-first",
       //"tls-unique",
@@ -639,7 +642,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       "expect-ocsp-response",
       //"expect-quic-transport-params",
       //"expect-signed-cert-timestamps",
-      //"ocsp-response",
+      "ocsp-response",
       //"quic-transport-params",
       //"signed-cert-timestamps",
       //"ticket-key", /* we use a different ticket format from Boring */
@@ -975,7 +978,12 @@ class Shim_Policy final : public Botan::TLS::Policy
       bool support_cert_status_message() const override
          {
          if(m_args.flag_set("server"))
-            return false;
+            {
+            if(!m_args.option_used("ocsp-response"))
+               return false;
+            if(m_args.flag_set("decline-ocsp-callback"))
+               return false;
+            }
          return true;
          }
 
@@ -1226,6 +1234,23 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             }
          }
 
+      std::vector<uint8_t> tls_srv_provide_cert_status_response(const std::vector<Botan::X509_Certificate>&,
+                                                                const Botan::TLS::Certificate_Status_Request&) const override
+          {
+          if(m_args.flag_set("use-ocsp-callback") && m_args.flag_set("fail-ocsp-callback"))
+             throw std::runtime_error("Simulating failure from OCSP response callback");
+
+          if(m_args.flag_set("decline-ocsp-callback"))
+             return {};
+
+          if(m_args.option_used("ocsp-response"))
+             {
+             return m_args.get_b64_opt("ocsp-response");
+             }
+
+          return {};
+          }
+
       void tls_record_received(uint64_t /*seq_no*/, const uint8_t data[], size_t size) override
          {
          if(size == 0)
@@ -1345,10 +1370,16 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
          m_policy.incr_session_established();
 
-         if(m_args.option_used("expect-no-session-id"))
+         if(m_args.flag_set("expect-no-session-id"))
             {
-            if(session.session_id().size() > 0)
-               shim_exit_with_error("Unexpected session ID");
+            // BoGo expects that ticket issuance implies no stateful session...
+            if(!m_args.flag_set("server") && session.session_id().size() > 0)
+               shim_exit_with_error("Unexpectedly got a session ID");
+            }
+         else if(m_args.flag_set("expect-session-id"))
+            {
+            if(session.session_id().empty())
+               shim_exit_with_error("Unexpectedly got no session ID");
             }
 
          if(m_args.option_used("expect-version"))

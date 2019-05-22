@@ -40,6 +40,7 @@
         "*SignedCertificateTimestamp*": "No support for SCT",
         "*SCT*": "No support for SCT",
         "Renegotiation-ChangeAuthProperties": "No support for SCT",
+        "UnsolicitedCertificateExtensions-TLS*": "No support for SCT",
 
         "*NULL-SHA*": "No support for NULL ciphers",
         "*GREASE*": "No support for GREASE",
@@ -75,10 +76,6 @@
         "TLS*-NoTicket-NoAccept": "BoGo expects that if ticket is issued stateful resumption is impossible",
 
         "CheckLeafCurve": "Botan ignores this",
-
-        "OCSPStapling-Server-*": "Server doesn't support OCSP stapling currently",
-        "UnsolicitedCertificateExtensions-TLS*": "Server doesn't support OCSP stapling currently",
-        "ServerOCSPCallback*": "Server doesn't support OCSP stapling currently",
 
         "CertificateVerificationDoesNotFailOnResume*": "Botan doesn't support reverify on resume",
         "CertificateVerificationFailsOnResume*": "Botan doesn't support reverify on resume",
