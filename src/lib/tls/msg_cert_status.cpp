@@ -42,17 +42,25 @@ Certificate_Status::Certificate_Status(Handshake_IO& io,
    hash.update(io.send(*this));
    }
 
+Certificate_Status::Certificate_Status(Handshake_IO& io,
+                                       Handshake_Hash& hash,
+                                       const std::vector<uint8_t>& raw_response_bytes) :
+   m_response(raw_response_bytes)
+   {
+   hash.update(io.send(*this));
+   }
+
 std::vector<uint8_t> Certificate_Status::serialize() const
    {
    if(m_response.size() > 0xFFFFFF) // unlikely
       throw Encoding_Error("OCSP response too long to encode in TLS");
 
-   const uint32_t m_response_len = static_cast<uint32_t>(m_response.size());
+   const uint32_t response_len = static_cast<uint32_t>(m_response.size());
 
    std::vector<uint8_t> buf;
    buf.push_back(1); // type OCSP
    for(size_t i = 1; i < 4; ++i)
-      buf[i] = get_byte(i, m_response_len);
+      buf.push_back(get_byte(i, response_len));
 
    buf += m_response;
    return buf;

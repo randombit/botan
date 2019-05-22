@@ -34,7 +34,7 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size,
          return new Supported_Groups(reader, size);
 
       case TLSEXT_CERT_STATUS_REQUEST:
-         return new Certificate_Status_Request(reader, size);
+         return new Certificate_Status_Request(reader, size, side);
 
       case TLSEXT_EC_POINT_FORMATS:
          return new Supported_Point_Formats(reader, size);
@@ -538,15 +538,19 @@ std::vector<uint8_t> Certificate_Status_Request::serialize() const
    }
 
 Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
-                                                       uint16_t extension_size) :
-   m_server_side(false)
+                                                       uint16_t extension_size,
+                                                       Connection_Side side) :
+   m_server_side(side == SERVER)
    {
    if(extension_size > 0)
       {
       const uint8_t type = reader.get_byte();
       if(type == 1)
          {
-         reader.discard_next(extension_size - 1); // fixme
+         size_t len_resp_id_list = reader.get_uint16_t();
+         m_ocsp_names = reader.get_fixed<uint8_t>(len_resp_id_list);
+         size_t len_requ_ext = reader.get_uint16_t();
+         m_extension_bytes = reader.get_fixed<uint8_t>(len_requ_ext );
          }
       else
          {
@@ -555,7 +559,7 @@ Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
       }
    }
 
-Certificate_Status_Request::Certificate_Status_Request(const std::vector<X509_DN>& ocsp_responder_ids,
+Certificate_Status_Request::Certificate_Status_Request(const std::vector<uint8_t>& ocsp_responder_ids,
                                                        const std::vector<std::vector<uint8_t>>& ocsp_key_ids) :
    m_ocsp_names(ocsp_responder_ids),
    m_ocsp_keys(ocsp_key_ids),

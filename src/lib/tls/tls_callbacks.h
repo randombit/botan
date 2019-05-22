@@ -31,6 +31,7 @@ namespace TLS {
 class Handshake_Message;
 class Policy;
 class Extensions;
+class Certificate_Status_Request;
 
 /**
 * Encapsulates the callbacks that a TLS channel will make which are due to
@@ -140,6 +141,24 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        virtual std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
           {
           return std::chrono::milliseconds(0);
+          }
+
+      /**
+       * Called by the TLS server whenever the client included the
+       * status_request extension (see RFC 6066, a.k.a OCSP stapling)
+       * in the ClientHello.
+       *
+       * @return the encoded OCSP response to be sent to the client which
+       * indicates the revocation status of the server certificate. Return an
+       * empty vector to indicate that no response is available, and thus
+       * suppress the Certificate_Status message.
+       */
+       virtual std::vector<uint8_t> tls_provide_cert_status(const std::vector<X509_Certificate>& chain,
+                                                            const Certificate_Status_Request& csr) const
+          {
+          BOTAN_UNUSED(chain);
+          BOTAN_UNUSED(csr);
+          return std::vector<uint8_t>();
           }
 
        /**

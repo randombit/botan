@@ -397,17 +397,29 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
 
       bool empty() const override { return false; }
 
+      const std::vector<uint8_t>& get_responder_id_list() const
+         {
+         return m_ocsp_names;
+         }
+
+      const std::vector<uint8_t>& get_request_extensions() const
+         {
+         return m_extension_bytes;
+         }
+
       // Server generated version: empty
       Certificate_Status_Request();
 
       // Client version, both lists can be empty
-      Certificate_Status_Request(const std::vector<X509_DN>& ocsp_responder_ids,
+      Certificate_Status_Request(const std::vector<uint8_t>& ocsp_responder_ids,
                                  const std::vector<std::vector<uint8_t>>& ocsp_key_ids);
 
-      Certificate_Status_Request(TLS_Data_Reader& reader, uint16_t extension_size);
+      Certificate_Status_Request(TLS_Data_Reader& reader,
+                                 uint16_t extension_size,
+                                 Connection_Side side);
    private:
-      std::vector<X509_DN> m_ocsp_names;
-      std::vector<std::vector<uint8_t>> m_ocsp_keys;
+      std::vector<uint8_t> m_ocsp_names;
+      std::vector<std::vector<uint8_t>> m_ocsp_keys; // is this field really needed
       std::vector<uint8_t> m_extension_bytes;
       bool m_server_side;
    };
