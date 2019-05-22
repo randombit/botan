@@ -859,7 +859,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
          auto csr = pending_state.client_hello()->extensions().get<Certificate_Status_Request>();
          // csr is non-null if client_hello()->supports_cert_status_message()
          BOTAN_ASSERT_NOMSG(csr != nullptr);
-         const auto resp_bytes = callbacks().tls_srv_provide_cert_status_response(cert_chains[algo_used], *csr);
+         const auto resp_bytes = callbacks().tls_provide_cert_status(cert_chains[algo_used], *csr);
          if(resp_bytes.size() > 0)
             {
             pending_state.server_cert_status(new Certificate_Status(

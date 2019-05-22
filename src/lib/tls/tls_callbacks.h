@@ -153,8 +153,8 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * empty vector to indicate that no response is available, and thus
        * suppress the Certificate_Status message.
        */
-       virtual std::vector<uint8_t> tls_srv_provide_cert_status_response(const std::vector<X509_Certificate>& chain,
-                                                                         const Certificate_Status_Request& csr) const
+       virtual std::vector<uint8_t> tls_provide_cert_status(const std::vector<X509_Certificate>& chain,
+                                                            const Certificate_Status_Request& csr) const
           {
           BOTAN_UNUSED(chain);
           BOTAN_UNUSED(csr);
