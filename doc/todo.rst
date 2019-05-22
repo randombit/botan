@@ -89,7 +89,6 @@ TLS
 * Make TLS v1.0 and v1.1 optional at build time
 * Make RSA optional at build time
 * Make finite field DH optional at build time
-* TLS OCSP stapling (RFC 6066)
 * Authentication using TOFU (sqlite3 storage)
 * Certificate pinning (using TACK?)
 * Certificate Transparency
