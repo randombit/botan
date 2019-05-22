@@ -414,7 +414,9 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
       Certificate_Status_Request(const std::vector<uint8_t>& ocsp_responder_ids,
                                  const std::vector<std::vector<uint8_t>>& ocsp_key_ids);
 
-      Certificate_Status_Request(TLS_Data_Reader& reader, uint16_t extension_size);
+      Certificate_Status_Request(TLS_Data_Reader& reader,
+                                 uint16_t extension_size,
+                                 Connection_Side side);
    private:
       std::vector<uint8_t> m_ocsp_names;
       std::vector<std::vector<uint8_t>> m_ocsp_keys; // is this field really needed

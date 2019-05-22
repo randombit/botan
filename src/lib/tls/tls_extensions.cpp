@@ -34,7 +34,7 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size,
          return new Supported_Groups(reader, size);
 
       case TLSEXT_CERT_STATUS_REQUEST:
-         return new Certificate_Status_Request(reader, size);
+         return new Certificate_Status_Request(reader, size, side);
 
       case TLSEXT_EC_POINT_FORMATS:
          return new Supported_Point_Formats(reader, size);
@@ -538,37 +538,19 @@ std::vector<uint8_t> Certificate_Status_Request::serialize() const
    }
 
 Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
-                                                       uint16_t extension_size) :
-   m_server_side(false) // This ctor is used by both client and server, so the information is wrong here. 
-                        // However, m_server_side is only evaluated when sending the object, thus the error 
-                        // made will not matter. However, a better modelling would be nice.
+                                                       uint16_t extension_size,
+                                                       Connection_Side side) :
+   m_server_side(side == SERVER)
    {
    if(extension_size > 0)
       {
       const uint8_t type = reader.get_byte();
       if(type == 1)
          {
-           extension_size -= 1;
-           size_t len_resp_id_list = reader.get_uint16_t();  
-           extension_size -= 2;
-           if(len_resp_id_list + 2 > extension_size)
-           {
-             throw Decoding_Error("Bad size of responder id list in Certificate_Status_Request extension");
-           }
-           m_ocsp_names = reader.get_fixed<uint8_t>(len_resp_id_list);
-           extension_size -= len_resp_id_list;
-           size_t len_requ_ext = reader.get_uint16_t();
-           extension_size -= 2;
-           if(len_requ_ext > extension_size)
-           {
-             throw Decoding_Error("Bad size of extensions in Certificate_Status_Request extension");
-           }
-           m_extension_bytes = reader.get_fixed<uint8_t>(len_requ_ext );
-           extension_size -= len_requ_ext;
-           if(extension_size != 0)
-           {
-             throw Decoding_Error("trailing bytes in Certificate_Status_Request extension");
-           }
+         size_t len_resp_id_list = reader.get_uint16_t();
+         m_ocsp_names = reader.get_fixed<uint8_t>(len_resp_id_list);
+         size_t len_requ_ext = reader.get_uint16_t();
+         m_extension_bytes = reader.get_fixed<uint8_t>(len_requ_ext );
          }
       else
          {
