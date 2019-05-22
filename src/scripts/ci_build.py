@@ -202,6 +202,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         if target_os == 'osx' or target == 'coverage':
             flags += ['--with-boost']
 
+        if target_os == 'windows' and target in ['shared', 'static']:
+            # ./configure.py needs extra hand-holding for boost on windows
+            boost_root = os.environ['BOOST_ROOT']
+            boost_libs = os.environ['BOOST_LIBRARYDIR']
+            boost_system = os.environ['BOOST_SYSTEM_LIBRARY']
+            flags += ['--with-boost',
+                      '--with-external-includedir', boost_root,
+                      '--with-external-libdir', boost_libs,
+                      '--boost-library-name', boost_system]
+
         if target_os == 'linux':
             flags += ['--with-lzma']
 
