@@ -786,6 +786,15 @@ read one input from stdin and then exit.
 
 Specify an additional library that fuzzer binaries must link with.
 
+--boost-library-name
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Provide an alternative name for a boost library. Depending on the platform and
+boost's build configuration these library names differ significantly (see `here
+<https://www.boost.org/doc/libs/1_70_0/more/getting_started/unix-variants.html#library-naming>`_).
+The provided library name must be suitable as identifier in a linker parameter,
+e.g on unix: ``boost_system`` or windows: ``libboost_regex-vc71-x86-1_70.lib``.
+
 --without-documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
