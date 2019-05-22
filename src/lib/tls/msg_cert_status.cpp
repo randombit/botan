@@ -41,10 +41,11 @@ Certificate_Status::Certificate_Status(Handshake_IO& io,
    {
    hash.update(io.send(*this));
    }
+
 Certificate_Status::Certificate_Status(Handshake_IO& io,
                                        Handshake_Hash& hash,
-                                       std::vector<uint8_t> const& raw_response_bytes) :
-   m_raw_response_bytes(raw_response_bytes)
+                                       const std::vector<uint8_t>& raw_response_bytes) :
+   m_response(raw_response_bytes)
    {
    hash.update(io.send(*this));
    }

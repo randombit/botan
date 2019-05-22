@@ -12,7 +12,6 @@
 
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
-#include <botan/tls_extensions.h>
 #include <botan/pubkey.h>
 #include <functional>
 
@@ -20,7 +19,6 @@ namespace Botan {
 
 class Certificate_Store;
 class X509_Certificate;
-
 
 namespace OCSP {
 
@@ -33,6 +31,7 @@ namespace TLS {
 class Handshake_Message;
 class Policy;
 class Extensions;
+class Certificate_Status_Request;
 
 /**
 * Encapsulates the callbacks that a TLS channel will make which are due to
@@ -145,16 +144,22 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
           }
 
       /**
-       * Called by the TLS server whenever the client included the status_request extension (see RFC 6066, a.k.a OCSP stapling) in the ClientHello.
-       * In the current implementation no information from the contents of the status_request extension within the 
-       * ClientHello is available.
+       * Called by the TLS server whenever the client included the
+       * status_request extension (see RFC 6066, a.k.a OCSP stapling)
+       * in the ClientHello.
        *
-       * @return the encoded OCSP response to be sent to the client which indicates the revocation status of the server certificate. Return an empty vector to indicate that no response is available, and thus suppress the Certificate_Status message.
+       * @return the encoded OCSP response to be sent to the client which
+       * indicates the revocation status of the server certificate. Return an
+       * empty vector to indicate that no response is available, and thus
+       * suppress the Certificate_Status message.
        */
-       virtual std::vector<uint8_t> tls_srv_provoide_cert_status_response(std::vector<X509_Certificate> const& , Certificate_Status_Request const& ) const
-       {
+       virtual std::vector<uint8_t> tls_srv_provide_cert_status_response(const std::vector<X509_Certificate>& chain,
+                                                                         const Certificate_Status_Request& csr) const
+          {
+          BOTAN_UNUSED(chain);
+          BOTAN_UNUSED(csr);
           return std::vector<uint8_t>();
-       }
+          }
 
        /**
        * Optional callback with default impl: sign a message

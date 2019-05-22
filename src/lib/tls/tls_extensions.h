@@ -397,16 +397,15 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
 
       bool empty() const override { return false; }
 
-      std::vector<uint8_t> get_responder_id_list() const
-      {
-        return m_ocsp_names;
-      }
-      
-      std::vector<uint8_t> get_request_extensions() const 
-      {
-        return m_extension_bytes;
-      }
+      const std::vector<uint8_t>& get_responder_id_list() const
+         {
+         return m_ocsp_names;
+         }
 
+      const std::vector<uint8_t>& get_request_extensions() const
+         {
+         return m_extension_bytes;
+         }
 
       // Server generated version: empty
       Certificate_Status_Request();
