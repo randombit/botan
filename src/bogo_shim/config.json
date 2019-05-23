@@ -141,12 +141,12 @@
 
         "MTUExceeded": "BoringSSL splits DTLS handshakes differently",
 
-        "MinimumVersion-Client-TLS12-TLS1-DTLS": "Alert problem",
-        "ClientOCSPCallback-FailNoStaple-*-DTLS*": "Alert problem",
-        "MinimumVersion-Client2-TLS12-TLS1-DTLS": "Alert problem",
-        "SendBogusAlertType-DTLS": "Alert problem",
-        "TrailingMessageData-*-DTLS*": "Alert problem",
-        "WrongMessageType-*-DTLS*": "Alert problem",
+        "MinimumVersion-Client-TLS12-TLS1-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "ClientOCSPCallback-FailNoStaple-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "MinimumVersion-Client2-TLS12-TLS1-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "SendBogusAlertType-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "TrailingMessageData-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "WrongMessageType-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
 
         "Renegotiate-Client-Packed": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
         "SendHalfHelloRequest*PackHandshake": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
