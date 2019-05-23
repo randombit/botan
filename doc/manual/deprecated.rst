@@ -72,6 +72,9 @@ in a future major release:
 
 - All support for DSA ciphersuites/certificates
 
+- Support for point compression in TLS. This is supported in v1.2 but
+  removed in v1.3. For simplicity it will be removed in v1.2 also.
+
 - Support for using SHA-1 to sign TLS v1.2 ServerKeyExchange.
 
 - All CBC mode ciphersuites. This includes all available 3DES and SEED
