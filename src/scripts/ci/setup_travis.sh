@@ -53,9 +53,10 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     elif [ "$BUILD_MODE" = "coverage" ]; then
         sudo apt-get -qq update
-        sudo apt-get install trousers libtspi-dev lcov python-coverage libboost-all-dev
+        sudo apt-get install trousers libtspi-dev lcov python-coverage libboost-all-dev golang-1.10
 
         git clone --depth 1 https://github.com/randombit/botan-ci-tools
+        git clone --depth 1 --branch runner-changes https://github.com/randombit/boringssl.git
 
         # FIXME use distro softhsm2 package instead
         # need to figure out ownership problem
@@ -64,12 +65,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
 
         pip install --user codecov==2.0.10
-
-    elif [ "$BUILD_MODE" = "bogo" ]; then
-        sudo apt-get -qq update
-        sudo apt-get install golang-1.10
-
-        git clone --depth 1 --branch runner-changes https://github.com/randombit/boringssl.git
 
     elif [ "$BUILD_MODE" = "docs" ]; then
         sudo apt-get -qq update

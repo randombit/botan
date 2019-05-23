@@ -69,7 +69,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if target in ['shared', 'mini-shared']:
         flags += ['--disable-static']
 
-    if target in ['static', 'mini-static', 'fuzzers', 'bogo'] or target_os in ['ios', 'mingw']:
+    if target in ['static', 'mini-static', 'fuzzers'] or target_os in ['ios', 'mingw']:
         flags += ['--disable-shared']
 
     if target in ['mini-static', 'mini-shared']:
@@ -93,18 +93,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
         test_cmd = None
 
-    if target == 'bogo':
-        flags += ['--build-bogo-shim']
-        runner_dir = os.path.abspath(os.path.join(root_dir, 'boringssl', 'ssl', 'test', 'runner'))
-
-        test_cmd = ['indir:%s' % (runner_dir),
-                    'go', 'test', '-pipe',
-                    '-num-workers', str(4*get_concurrency()),
-                    '-shim-path', os.path.abspath(os.path.join(root_dir, 'botan_bogo_shim')),
-                    '-shim-config', os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config.json'))]
-
     if target == 'coverage':
-        flags += ['--with-coverage-info', '--test-mode']
+        flags += ['--with-coverage-info', '--test-mode', '--build-bogo-shim']
     if target == 'valgrind':
         # valgrind in 16.04 has a bug with rdrand handling
         flags += ['--with-valgrind', '--disable-rdrand']
@@ -254,8 +244,8 @@ def run_cmd(cmd, root_dir):
 
     cmd = [os.path.expandvars(elem) for elem in cmd]
     sub_env = os.environ.copy()
-    sub_env['LD_LIBRARY_PATH'] = root_dir
-    sub_env['PYTHONPATH'] = os.path.join(root_dir, 'src/python')
+    sub_env['LD_LIBRARY_PATH'] = os.path.abspath(root_dir)
+    sub_env['PYTHONPATH'] = os.path.abspath(os.path.join(root_dir, 'src/python'))
     cwd = None
 
     redirect_stdout = None
@@ -476,14 +466,13 @@ def main(args=None):
             if options.compiler_cache in ccache_show_stats:
                 cmds.append([options.compiler_cache, ccache_show_stats[options.compiler_cache]])
 
-            make_targets = ['libs']
-            if target in ['bogo']:
-                make_targets += ['bogo_shim']
-            else:
-                make_targets += ['tests', 'cli']
+            make_targets = ['libs', 'tests', 'cli']
 
             if target in ['coverage', 'fuzzers']:
                 make_targets += ['tests', 'cli', 'fuzzers', 'fuzzer_corpus_zip']
+
+            if target in ['coverage']:
+                make_targets += ['bogo_shim']
 
             cmds.append(make_prefix + make_cmd + make_targets)
 
@@ -492,6 +481,15 @@ def main(args=None):
 
         if run_test_command is not None:
             cmds.append(run_test_command)
+
+        if target == 'coverage':
+            runner_dir = os.path.abspath(os.path.join(root_dir, 'boringssl', 'ssl', 'test', 'runner'))
+
+            cmds.append(['indir:%s' % (runner_dir),
+                         'go', 'test', '-pipe',
+                         '-num-workers', str(4*get_concurrency()),
+                         '-shim-path', os.path.abspath(os.path.join(root_dir, 'botan_bogo_shim')),
+                         '-shim-config', os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config.json'))])
 
         if target in ['coverage', 'fuzzers']:
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_fuzzers.py'),
@@ -524,7 +522,7 @@ def main(args=None):
             cmds.append(['llvm-cov', 'show', './botan-test',
                          '-instr-profile=botan.profdata',
                          '>', 'build/cov_report.txt'])
-            sonar_config = os.path.join(root_dir, os.path.join(root_dir, 'src/configs/sonar-project.properties'))
+            sonar_config = os.path.join(root_dir, 'src/configs/sonar-project.properties')
             cmds.append(['sonar-scanner',
                          '-Dproject.settings=%s' % (sonar_config),
                          '-Dsonar.login=$SONAR_TOKEN'])
