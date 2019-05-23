@@ -126,7 +126,6 @@
         "AppDataAfterChangeCipherSpec-DTLS*": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
-        "LargeCiphertext-DTLS": "Needs investigation",
         "MixCompleteMessageWithFragments-DTLS": "Needs investigation",
         "ReorderHandshakeFragments-Small-DTLS": "Needs investigation",
         "SendUnencryptedFinished-DTLS": "Needs investigation",

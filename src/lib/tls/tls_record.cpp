@@ -442,8 +442,12 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
                                           readbuf[DTLS_HEADER_SIZE-1]);
 
    if(record_size > MAX_CIPHERTEXT_SIZE)
-      throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                          "Got message that exceeds maximum size");
+      {
+      // Too large to be valid, ignore it
+      readbuf.clear();
+      *rec.get_type() = NO_RECORD;
+      return 0;
+      }
 
    if(fill_buffer_to(readbuf, raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(), DTLS_HEADER_SIZE + record_size))
       {
