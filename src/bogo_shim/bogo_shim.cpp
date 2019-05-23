@@ -119,6 +119,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Message authentication failure", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "OS2ECP: Unknown format type 251", ":BAD_ECPOINT:" },
          { "Policy forbids all available TLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
+         { "Policy forbids all available DTLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
          { "Policy refuses to accept signing with any hash supported by peer", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Policy requires client send a certificate, but it did not", ":PEER_DID_NOT_RETURN_A_CERTIFICATE:" },
          { "Received a record that exceeds maximum size", ":ENCRYPTED_LENGTH_TOO_LONG:" },
@@ -879,27 +880,27 @@ class Shim_Policy final : public Botan::TLS::Policy
 
       bool allow_tls10() const override
          {
-         return (!m_args.flag_set("no-tls1"));
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls1");
          }
 
       bool allow_tls11() const override
          {
-         return (!m_args.flag_set("no-tls11"));
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls11");
          }
 
       bool allow_tls12() const override
          {
-         return (!m_args.flag_set("no-tls12"));
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls12");
          }
 
       bool allow_dtls10() const override
          {
-         return true; // ???
+         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls1");
          }
 
       bool allow_dtls12() const override
          {
-         return true; // ???
+         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls12");
          }
 
       //Botan::TLS::Group_Params default_dh_group() const override;
@@ -1489,11 +1490,6 @@ int main(int /*argc*/, char* argv[])
       const bool is_datagram = args->flag_set("dtls");
 
       const size_t buf_size = args->get_int_opt_or_else("read-size", 18*1024);
-
-      /*
-      if(is_datagram)
-         throw Shim_Exception("No support for DTLS yet", 89);
-      */
 
       Botan::ChaCha_RNG rng(Botan::secure_vector<uint8_t>(64));
       Botan::TLS::Session_Manager_In_Memory session_manager(rng, 1024);
