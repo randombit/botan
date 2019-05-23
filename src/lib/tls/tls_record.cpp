@@ -434,6 +434,7 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
    if(rec.get_protocol_version()->is_datagram_protocol() == false)
       {
       readbuf.clear();
+      *rec.get_type() = NO_RECORD;
       return 0;
       }
 
@@ -448,6 +449,7 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
       {
       // Truncated packet?
       readbuf.clear();
+      *rec.get_type() = NO_RECORD;
       return 0;
       }
 
@@ -464,6 +466,7 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
    if(sequence_numbers && sequence_numbers->already_seen(*rec.get_sequence()))
       {
       readbuf.clear();
+      *rec.get_type() = NO_RECORD;
       return 0;
       }
 
@@ -473,6 +476,8 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
       {
       rec.get_data().assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
       readbuf.clear();
+      if(sequence_numbers)
+         sequence_numbers->read_accept(*rec.get_sequence());
       return 0; // got a full record
       }
 

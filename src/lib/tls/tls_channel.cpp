@@ -332,6 +332,10 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
          BOTAN_ASSERT(input_size == 0 || needed == 0,
                       "Got a full record or consumed all input");
 
+         // Ignore invalid records in DTLS
+         if(m_is_datagram && *record.get_type() == NO_RECORD)
+            return 0;
+
          if(input_size == 0 && needed != 0)
             return needed; // need more data to complete record
 

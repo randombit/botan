@@ -123,7 +123,6 @@
 
         "DTLS-Retransmit*": "Shim needs timeout support",
 
-        "DTLS-Replay*": "Needs investigation",
         "AppDataAfterChangeCipherSpec-DTLS*": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
