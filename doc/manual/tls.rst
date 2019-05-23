@@ -1600,3 +1600,112 @@ Server Code Example
        // send data to the tls client using server.send_data()
        // ...
        }
+
+TLS Stream
+----------------------------------------
+
+:cpp:class:`TLS::Stream` offers a Boost.Asio compatible wrapper around :cpp:class:`TLS::Client`.
+It can be used as an alternative to Boost.Asio's `ssl::stream <https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio/reference/ssl__stream.html>`_ with minor adjustments to the using code.
+It offers the following interface:
+
+.. cpp:class:: template <class StreamLayer, class ChannelT> TLS::Stream
+
+   *StreamLayer* specifies the type of the stream's *next layer*, for example a `Boost.Asio TCP socket <https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio/reference/ip__tcp/socket.html>`_.
+   *ChannelT* is the type of the stream's *native handle*; it defaults to :cpp:class:`TLS::Channel` and should not be specified manually.
+
+   .. cpp:function:: template <typename... Args> \
+                     explicit Stream(Context& context, Args&& ... args)
+
+   Construct a new TLS stream.
+   The *context* parameter will be used to set up the underlying *native handle*, i.e. the :ref:`TLS::Client <tls_client>`, when :cpp:func:`handshake` is called.
+   The further *args* will be forwarded to the *next layer*'s constructor.
+
+   .. cpp:function:: template <typename... Args> \
+                     explicit Stream(Arg&& arg, Context& context)
+
+   Convenience constructor for :cpp:class:`boost::asio::ssl::stream` compatibility.
+   The parameters have the same meaning as for the first constructor, but their order is changed and only one argument can be passed to the *next layer* constructor.
+
+
+   .. cpp:function:: void handshake(Connection_Side side, boost::system::error_code& ec)
+
+   Set up the *native handle* and perform the TLS handshake.
+   As only the client side of the stream is currently implemented, *side* should be ``Connection_Side::CLIENT``.
+
+   .. cpp:function:: void handshake(Connection_Side side)
+
+   Overload of :cpp:func:`handshake` that throws an exception if an error occurs.
+
+   .. cpp:function:: template <typename HandshakeHandler> \
+                     DEDUCED async_handshake(Connection_Side side, HandshakeHandler&& handler)
+
+   Asynchronous variant of :cpp:func:`handshake`.
+   The function returns immediately and calls the *handler* callback function after performing asynchronous I/O to complete the TLS handshake.
+   The return type is an automatically deduced specialization of :cpp:class:`boost::asio::async_result`, depending on the *HandshakeHandler* type.
+
+
+   .. cpp:function:: void shutdown(boost::system::error_code& ec)
+
+   Calls :ref:`close <TLS::Channel::close>` on the native handle and writes the TLS alert to the *next layer*.
+
+   .. cpp:function:: void shutdown()
+
+   Overload of :cpp:func:`shutdown` that throws an exception if an error occurs.
+
+
+   .. cpp:function:: template <typename MutableBufferSequence> \
+                     std::size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec)
+
+   Reads encrypted data from the *next layer*, decrypts it, and writes it into the provided *buffers*.
+   If an error occurs, *error_code* is set.
+   Returns the number of bytes read.
+
+   .. cpp:function:: template <typename MutableBufferSequence> \
+                     std::size_t read_some(const MutableBufferSequence& buffers)
+
+   Overload of :cpp:func:`read_some` that throws an exception if an error occurs.
+
+   .. cpp:function:: template <typename MutableBufferSequence, typename ReadHandler> \
+                     DEDUCED async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler)
+
+   Asynchronous variant of :cpp:func:`read_some`.
+   The function returns immediately and calls the *handler* callback function after writing the decrypted data into the provided *buffers*.
+   The return type is an automatically deduced specialization of :cpp:class:`boost::asio::async_result`, depending on the *ReadHandler* type.
+   *ReadHandler* should suffice the `requirements to a Boost.Asio read handler <https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio/reference/ReadHandler.html>`_.
+
+
+   .. cpp:function:: template <typename ConstBufferSequence> \
+                     std::size_t write_some(const ConstBufferSequence& buffers, boost::system::error_code& ec)
+
+   Encrypts data from the provided *buffers* and writes it to the *next layer*.
+   If an error occurs, *error_code* is set.
+   Returns the number of bytes written.
+
+   .. cpp:function:: template <typename ConstBufferSequence> \
+                     std::size_t write_some(const ConstBufferSequence& buffers)
+
+   Overload of :cpp:func:`write_some` that throws an exception rather than setting an error code.
+
+   .. cpp:function:: template <typename ConstBufferSequence, typename WriteHandler> \
+                     DEDUCED async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler)
+
+   Asynchronous variant of :cpp:func:`write_some`.
+   The function returns immediately and calls the *handler* callback function after writing the encrypted data to the *next layer*.
+   The return type is an automatically deduced specialization of :cpp:class:`boost::asio::async_result`, depending on the *WriteHandler* type.
+   *WriteHandler* should suffice the `requirements to a Boost.Asio write handler <https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio/reference/WriteHandler.html>`_.
+
+.. cpp:struct:: TLS::Context
+
+   A helper struct to collect the initialization parameters for the Stream's underlying *native handle* (see :cpp:func:`TLS::Client`).
+   `TLS::Context` is defined as
+
+   .. code-block:: cpp
+
+      struct Context
+         {
+         Credentials_Manager*   credentialsManager;
+         RandomNumberGenerator* randomNumberGenerator;
+         Session_Manager*       sessionManager;
+         Policy*                policy;
+         Server_Information     serverInfo;
+         };

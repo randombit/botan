@@ -119,3 +119,4 @@ Other Useful Things
 * Format preserving encryption scheme FE1
 * Threshold secret sharing
 * NIST key wrapping
+* Boost.Asio compatible TLS client stream
