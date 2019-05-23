@@ -33,6 +33,7 @@ int ffi_map_error_type(Botan::ErrorType err)
       {
       case Botan::ErrorType::Unknown:
          return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
+
       case Botan::ErrorType::SystemError:
       case Botan::ErrorType::IoError:
       case Botan::ErrorType::OpenSSLError:
@@ -42,6 +43,7 @@ int ffi_map_error_type(Botan::ErrorType err)
       case Botan::ErrorType::ZlibError:
       case Botan::ErrorType::Bzip2Error:
       case Botan::ErrorType::LzmaError:
+      case Botan::ErrorType::DatabaseError:
          return BOTAN_FFI_ERROR_SYSTEM_ERROR;
 
       case Botan::ErrorType::NotImplemented:

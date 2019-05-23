@@ -62,6 +62,8 @@ enum class ErrorType {
    Pkcs11Error,
    /** An error when interacting with a TPM device */
    TPMError,
+   /** An error when interacting with a database */
+   DatabaseError,
 
    /** An error when interacting with zlib */
    ZlibError = 300,

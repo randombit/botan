@@ -67,24 +67,23 @@ Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, const std::s
    int rc = ::sqlite3_prepare_v2(db, base_sql.c_str(), -1, &m_stmt, nullptr);
 
    if(rc != SQLITE_OK)
-      throw SQL_DB_Error("sqlite3_prepare failed " + base_sql +
-                         ", code " + std::to_string(rc));
+      throw SQL_DB_Error("sqlite3_prepare failed on " + base_sql, rc);
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::string& val)
    {
    int rc = ::sqlite3_bind_text(m_stmt, column, val.c_str(), -1, SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
-      throw SQL_DB_Error("sqlite3_bind_text failed, code " + std::to_string(rc));
+      throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, size_t val)
    {
-   if(val != static_cast<size_t>(static_cast<int>(val))) // is this legit?
+   if(val != static_cast<size_t>(static_cast<int>(val))) // is this cast legit?
       throw SQL_DB_Error("sqlite3 cannot store " + std::to_string(val) + " without truncation");
    int rc = ::sqlite3_bind_int(m_stmt, column, val);
    if(rc != SQLITE_OK)
-      throw SQL_DB_Error("sqlite3_bind_int failed, code " + std::to_string(rc));
+      throw SQL_DB_Error("sqlite3_bind_int failed", rc);
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_clock::time_point time)
@@ -97,14 +96,14 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<uin
    {
    int rc = ::sqlite3_bind_blob(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
-      throw SQL_DB_Error("sqlite3_bind_text failed, code " + std::to_string(rc));
+      throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const uint8_t* p, size_t len)
    {
    int rc = ::sqlite3_bind_blob(m_stmt, column, p, len, SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
-      throw SQL_DB_Error("sqlite3_bind_text failed, code " + std::to_string(rc));
+      throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
 
 std::pair<const uint8_t*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int column)
