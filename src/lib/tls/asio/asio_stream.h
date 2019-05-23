@@ -229,7 +229,7 @@ class Stream
        * @param type The type of handshaking to be performed, i.e. as a client or as a server.
        * @param handler The handler to be called when the handshake operation completes.
        *                The equivalent function signature of the handler must be: void(boost::system::error_code)
-       * @throws Invalid_Argument if Connection_Side could not be validated
+       * @throws NotImplemented if Connection_Side is not CLIENT
        */
       template <typename HandshakeHandler>
       BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
