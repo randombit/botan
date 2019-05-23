@@ -1646,7 +1646,7 @@ It offers the following interface:
 
    .. cpp:function:: void shutdown(boost::system::error_code& ec)
 
-   Calls :ref:`close <TLS::Channel::close>` on the native handle and writes the TLS alert to the *next layer*.
+   Calls :cpp:func:`TLS::Channel::close` on the native handle and writes the TLS alert to the *next layer*.
 
    .. cpp:function:: void shutdown()
 
@@ -1696,7 +1696,7 @@ It offers the following interface:
 
 .. cpp:struct:: TLS::Context
 
-   A helper struct to collect the initialization parameters for the Stream's underlying *native handle* (see :cpp:func:`TLS::Client`).
+   A helper struct to collect the initialization parameters for the Stream's underlying *native handle* (see :cpp:class:`TLS::Client`).
    `TLS::Context` is defined as
 
    .. code-block:: cpp
