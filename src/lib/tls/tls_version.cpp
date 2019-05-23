@@ -32,7 +32,7 @@ std::string Protocol_Version::to_string() const
 
 bool Protocol_Version::is_datagram_protocol() const
    {
-   return major_version() == 254;
+   return major_version() > 250;
    }
 
 bool Protocol_Version::operator>(const Protocol_Version& other) const

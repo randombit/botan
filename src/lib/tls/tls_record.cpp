@@ -343,7 +343,9 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
 
    *rec.get_protocol_version() = Protocol_Version(readbuf[1], readbuf[2]);
 
-   BOTAN_ASSERT(!rec.get_protocol_version()->is_datagram_protocol(), "Expected TLS");
+   if(rec.get_protocol_version()->is_datagram_protocol())
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                          "Expected TLS but got a record with DTLS version");
 
    const size_t record_size = make_uint16(readbuf[TLS_HEADER_SIZE-2],
                                          readbuf[TLS_HEADER_SIZE-1]);
@@ -429,7 +431,11 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
 
    *rec.get_protocol_version() = Protocol_Version(readbuf[1], readbuf[2]);
 
-   BOTAN_ASSERT(rec.get_protocol_version()->is_datagram_protocol(), "Expected DTLS");
+   if(rec.get_protocol_version()->is_datagram_protocol() == false)
+      {
+      readbuf.clear();
+      return 0;
+      }
 
    const size_t record_size = make_uint16(readbuf[DTLS_HEADER_SIZE-2],
                                           readbuf[DTLS_HEADER_SIZE-1]);

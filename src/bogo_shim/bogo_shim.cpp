@@ -71,6 +71,8 @@ void BOTAN_NORETURN shim_exit_with_error(const std::string& s, int rc = 1)
 
 std::string map_to_bogo_error(const std::string& e)
    {
+   shim_log("Original error " + e);
+
    static const std::unordered_map<std::string, std::string> err_map
       {
          { "Application data before handshake done", ":APPLICATION_DATA_INSTEAD_OF_HANDSHAKE:" },
@@ -91,7 +93,8 @@ std::string map_to_bogo_error(const std::string& e)
          { "Channel::key_material_export cannot export during renegotiation", "failed to export keying material" },
          { "Client cert verify failed", ":BAD_SIGNATURE:" },
          { "Client did not offer NULL compression", ":INVALID_COMPRESSION_LIST:" },
-         { "Client offered version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
+         { "Client offered TLS version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
+         { "Client offered DTLS version with major version 0xFF",  ":UNSUPPORTED_PROTOCOL:" },
          { "Client policy prohibits insecure renegotiation", ":RENEGOTIATION_MISMATCH:" },
          { "Client policy prohibits renegotiation", ":NO_RENEGOTIATION:" },
          { "Client resumed extended ms session without sending extension", ":RESUMED_EMS_SESSION_WITHOUT_EMS_EXTENSION:" },
@@ -103,6 +106,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Counterparty sent inconsistent key and sig types", ":WRONG_SIGNATURE_TYPE:" },
          { "Empty ALPN protocol not allowed", ":PARSE_TLSEXT:" },
          { "Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
+         { "Expected TLS but got a record with DTLS version", ":WRONG_VERSION_NUMBER:" },
          { "Finished message didn't verify", ":DIGEST_CHECK_FAILED:" },
          { "Inconsistent length in certificate request", ":DECODE_ERROR:" },
          { "Inconsistent values in fragmented DTLS handshake header", ":FRAGMENT_MISMATCH:" },
@@ -993,7 +997,7 @@ class Shim_Policy final : public Botan::TLS::Policy
 
       size_t dtls_default_mtu() const override
          {
-         return m_args.get_int_opt_or_else("mtu", 1232);
+         return m_args.get_int_opt_or_else("mtu", 1500);
          }
 
       //size_t dtls_initial_timeout() const override;

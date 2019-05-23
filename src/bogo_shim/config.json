@@ -120,18 +120,17 @@
         "RSAPSSSupport-Default-NoCerts-TLS12-Server": "Not possible to disable PSS",
 
         "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected",
-        "DTLS-Replay*": "Needs analysis",
+
         "DTLS-Retransmit*": "Shim needs timeout support",
 
+        "DTLS-Replay*": "Needs investigation",
         "AppDataAfterChangeCipherSpec-DTLS*": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
         "LargeCiphertext-DTLS": "Needs investigation",
-        "MajorVersionTolerance-DTLS": "Needs investigation",
         "MixCompleteMessageWithFragments-DTLS": "Needs investigation",
         "ReorderHandshakeFragments-Small-DTLS": "Needs investigation",
         "SendUnencryptedFinished-DTLS": "Needs investigation",
-        "VersionTooLow-DTLS": "Needs investigation",
 
         "Shutdown-Shim-ApplicationData*": "Needs investigation",
         "Shutdown-Shim-HelloRequest-CannotHandshake*": "Needs investigation",
