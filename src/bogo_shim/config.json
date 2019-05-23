@@ -94,6 +94,8 @@
         "ClientAuth-Verify-ECDSA-P521-SHA512-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
         "ClientAuth-Verify-ECDSA-SHA1-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
 
+        "AppDataAfterChangeCipherSpec-DTLS*": "BoringSSL DTLS drops out of order AppData, we reject",
+
         "*Renegotiate-Server-Forbidden*": "Testing some BoringSSL specific restriction",
         "Resume-Client-NoResume-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS1-TLS12": "BoGo expects resumption attempt sends latest version",
@@ -123,12 +125,10 @@
 
         "DTLS-Retransmit*": "Shim needs timeout support",
 
-        "AppDataAfterChangeCipherSpec-DTLS*": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
         "MixCompleteMessageWithFragments-DTLS": "Needs investigation",
         "ReorderHandshakeFragments-Small-DTLS": "Needs investigation",
-        "SendUnencryptedFinished-DTLS": "Needs investigation",
 
         "Shutdown-Shim-ApplicationData*": "Needs investigation",
         "Shutdown-Shim-HelloRequest-CannotHandshake*": "Needs investigation",
@@ -147,7 +147,10 @@
 
         "Renegotiate-Client-Packed": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
         "SendHalfHelloRequest*PackHandshake": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
+
         "PartialClientFinishedWithClientHello": "Need to check for buffered messages when CCS (bug)",
+        "SendUnencryptedFinished-DTLS": "Need to check for buffered messages when CCS (bug)",
+
         "SendOCSPResponseOnResume-TLS12": "Not supported by Botan (bug)",
         "ECDSAKeyUsage-TLS12": "Botan ignores KeyUsage (bug)",
         "RSAKeyUsage-*": "Botan ignores KeyUsage (bug)"
