@@ -189,6 +189,9 @@ void Datagram_Handshake_IO::add_record(const std::vector<uint8_t>& record,
 
    if(record_type == CHANGE_CIPHER_SPEC)
       {
+      if(record.size() != 1 || record[0] != 1)
+         throw Decoding_Error("Invalid ChangeCipherSpec");
+
       // TODO: check this is otherwise empty
       m_ccs_epochs.insert(epoch);
       return;
