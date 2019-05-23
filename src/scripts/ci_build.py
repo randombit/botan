@@ -486,10 +486,10 @@ def main(args=None):
             runner_dir = os.path.abspath(os.path.join(root_dir, 'boringssl', 'ssl', 'test', 'runner'))
 
             cmds.append(['indir:%s' % (runner_dir),
-                        'go', 'test', '-pipe',
-                        '-num-workers', str(4*get_concurrency()),
-                        '-shim-path', os.path.abspath(os.path.join(root_dir, 'botan_bogo_shim')),
-                        '-shim-config', os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config.json'))])
+                         'go', 'test', '-pipe',
+                         '-num-workers', str(4*get_concurrency()),
+                         '-shim-path', os.path.abspath(os.path.join(root_dir, 'botan_bogo_shim')),
+                         '-shim-config', os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config.json'))])
 
         if target in ['coverage', 'fuzzers']:
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_fuzzers.py'),
