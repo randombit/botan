@@ -24,7 +24,7 @@
         "ConflictingVersionNegotiation*": "No support for 1.3 version extension",
         "VersionNegotiationExtension*": "No support for 1.3 version extension",
         "IgnoreClientVersionOrder": "No support for 1.3 version extension",
-        "NoSupportedVersions": "No support for 1.3 version extension",
+        "NoSupportedVersions*": "No support for 1.3 version extension",
 
         "DuplicateCertCompressionExt*": "No support for 1.3 cert compression extension",
 
@@ -94,6 +94,8 @@
         "ClientAuth-Verify-ECDSA-P521-SHA512-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
         "ClientAuth-Verify-ECDSA-SHA1-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
 
+        "AppDataAfterChangeCipherSpec-DTLS*": "BoringSSL DTLS drops out of order AppData, we reject",
+
         "*Renegotiate-Server-Forbidden*": "Testing some BoringSSL specific restriction",
         "Resume-Client-NoResume-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS1-TLS12": "BoGo expects resumption attempt sends latest version",
@@ -120,25 +122,13 @@
         "RSAPSSSupport-Default-NoCerts-TLS12-Server": "Not possible to disable PSS",
 
         "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected",
-        "DTLS-Replay*": "Needs analysis",
+
         "DTLS-Retransmit*": "Shim needs timeout support",
 
-        "AppDataAfterChangeCipherSpec-DTLS*": "Needs investigation",
-        "BadChangeCipherSpec-DTLS-*": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
-        "DisableEverything-DTLS": "Needs investigation",
-        "LargeCiphertext-DTLS": "Needs investigation",
-        "MajorVersionTolerance-DTLS": "Needs investigation",
-        "MinimumVersion-Client-TLS12-TLS1-DTLS": "Needs investigation",
-        "MinimumVersion-Server-TLS12-TLS1-DTLS": "Needs investigation",
         "MixCompleteMessageWithFragments-DTLS": "Needs investigation",
-        "NoSupportedVersions-DTLS": "Needs investigation",
         "ReorderHandshakeFragments-Small-DTLS": "Needs investigation",
-        "SendUnencryptedFinished-DTLS": "Needs investigation",
-        "VersionNegotiation-Client-TLS1-TLS12-DTLS": "Needs investigation",
-        "VersionNegotiation-Server-TLS1-TLS12-DTLS": "Needs investigation",
-        "VersionTooLow-DTLS": "Needs investigation",
 
         "Shutdown-Shim-ApplicationData*": "Needs investigation",
         "Shutdown-Shim-HelloRequest-CannotHandshake*": "Needs investigation",
@@ -148,15 +138,19 @@
 
         "MTUExceeded": "BoringSSL splits DTLS handshakes differently",
 
-        "ClientOCSPCallback-FailNoStaple-*-DTLS*": "Alert problem",
-        "MinimumVersion-Client2-TLS12-TLS1-DTLS": "Alert problem",
-        "SendBogusAlertType-DTLS": "Alert problem",
-        "TrailingMessageData-*-DTLS*": "Alert problem",
-        "WrongMessageType-*-DTLS*": "Alert problem",
+        "MinimumVersion-Client-TLS12-TLS1-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "ClientOCSPCallback-FailNoStaple-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "MinimumVersion-Client2-TLS12-TLS1-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "SendBogusAlertType-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "TrailingMessageData-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "WrongMessageType-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
 
         "Renegotiate-Client-Packed": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
         "SendHalfHelloRequest*PackHandshake": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
+
         "PartialClientFinishedWithClientHello": "Need to check for buffered messages when CCS (bug)",
+        "SendUnencryptedFinished-DTLS": "Need to check for buffered messages when CCS (bug)",
+
         "SendOCSPResponseOnResume-TLS12": "Not supported by Botan (bug)",
         "ECDSAKeyUsage-TLS12": "Botan ignores KeyUsage (bug)",
         "RSAKeyUsage-*": "Botan ignores KeyUsage (bug)"

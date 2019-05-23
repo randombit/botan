@@ -343,7 +343,9 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
 
    *rec.get_protocol_version() = Protocol_Version(readbuf[1], readbuf[2]);
 
-   BOTAN_ASSERT(!rec.get_protocol_version()->is_datagram_protocol(), "Expected TLS");
+   if(rec.get_protocol_version()->is_datagram_protocol())
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                          "Expected TLS but got a record with DTLS version");
 
    const size_t record_size = make_uint16(readbuf[TLS_HEADER_SIZE-2],
                                          readbuf[TLS_HEADER_SIZE-1]);
@@ -429,19 +431,29 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
 
    *rec.get_protocol_version() = Protocol_Version(readbuf[1], readbuf[2]);
 
-   BOTAN_ASSERT(rec.get_protocol_version()->is_datagram_protocol(), "Expected DTLS");
+   if(rec.get_protocol_version()->is_datagram_protocol() == false)
+      {
+      readbuf.clear();
+      *rec.get_type() = NO_RECORD;
+      return 0;
+      }
 
    const size_t record_size = make_uint16(readbuf[DTLS_HEADER_SIZE-2],
                                           readbuf[DTLS_HEADER_SIZE-1]);
 
    if(record_size > MAX_CIPHERTEXT_SIZE)
-      throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                          "Got message that exceeds maximum size");
+      {
+      // Too large to be valid, ignore it
+      readbuf.clear();
+      *rec.get_type() = NO_RECORD;
+      return 0;
+      }
 
    if(fill_buffer_to(readbuf, raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(), DTLS_HEADER_SIZE + record_size))
       {
       // Truncated packet?
       readbuf.clear();
+      *rec.get_type() = NO_RECORD;
       return 0;
       }
 
@@ -458,6 +470,7 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
    if(sequence_numbers && sequence_numbers->already_seen(*rec.get_sequence()))
       {
       readbuf.clear();
+      *rec.get_type() = NO_RECORD;
       return 0;
       }
 
@@ -467,6 +480,8 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
       {
       rec.get_data().assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
       readbuf.clear();
+      if(sequence_numbers)
+         sequence_numbers->read_accept(*rec.get_sequence());
       return 0; // got a full record
       }
 

@@ -71,6 +71,8 @@ void BOTAN_NORETURN shim_exit_with_error(const std::string& s, int rc = 1)
 
 std::string map_to_bogo_error(const std::string& e)
    {
+   shim_log("Original error " + e);
+
    static const std::unordered_map<std::string, std::string> err_map
       {
          { "Application data before handshake done", ":APPLICATION_DATA_INSTEAD_OF_HANDSHAKE:" },
@@ -91,7 +93,8 @@ std::string map_to_bogo_error(const std::string& e)
          { "Channel::key_material_export cannot export during renegotiation", "failed to export keying material" },
          { "Client cert verify failed", ":BAD_SIGNATURE:" },
          { "Client did not offer NULL compression", ":INVALID_COMPRESSION_LIST:" },
-         { "Client offered version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
+         { "Client offered TLS version with major version under 3", ":UNSUPPORTED_PROTOCOL:" },
+         { "Client offered DTLS version with major version 0xFF",  ":UNSUPPORTED_PROTOCOL:" },
          { "Client policy prohibits insecure renegotiation", ":RENEGOTIATION_MISMATCH:" },
          { "Client policy prohibits renegotiation", ":NO_RENEGOTIATION:" },
          { "Client resumed extended ms session without sending extension", ":RESUMED_EMS_SESSION_WITHOUT_EMS_EXTENSION:" },
@@ -103,6 +106,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Counterparty sent inconsistent key and sig types", ":WRONG_SIGNATURE_TYPE:" },
          { "Empty ALPN protocol not allowed", ":PARSE_TLSEXT:" },
          { "Encoding error: Cannot encode PSS string, output length too small", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
+         { "Expected TLS but got a record with DTLS version", ":WRONG_VERSION_NUMBER:" },
          { "Finished message didn't verify", ":DIGEST_CHECK_FAILED:" },
          { "Inconsistent length in certificate request", ":DECODE_ERROR:" },
          { "Inconsistent values in fragmented DTLS handshake header", ":FRAGMENT_MISMATCH:" },
@@ -119,6 +123,7 @@ std::string map_to_bogo_error(const std::string& e)
          { "Message authentication failure", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "OS2ECP: Unknown format type 251", ":BAD_ECPOINT:" },
          { "Policy forbids all available TLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
+         { "Policy forbids all available DTLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
          { "Policy refuses to accept signing with any hash supported by peer", ":NO_COMMON_SIGNATURE_ALGORITHMS:" },
          { "Policy requires client send a certificate, but it did not", ":PEER_DID_NOT_RETURN_A_CERTIFICATE:" },
          { "Received a record that exceeds maximum size", ":ENCRYPTED_LENGTH_TOO_LONG:" },
@@ -879,27 +884,27 @@ class Shim_Policy final : public Botan::TLS::Policy
 
       bool allow_tls10() const override
          {
-         return (!m_args.flag_set("no-tls1"));
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls1");
          }
 
       bool allow_tls11() const override
          {
-         return (!m_args.flag_set("no-tls11"));
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls11");
          }
 
       bool allow_tls12() const override
          {
-         return (!m_args.flag_set("no-tls12"));
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls12");
          }
 
       bool allow_dtls10() const override
          {
-         return true; // ???
+         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls1");
          }
 
       bool allow_dtls12() const override
          {
-         return true; // ???
+         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls12");
          }
 
       //Botan::TLS::Group_Params default_dh_group() const override;
@@ -992,7 +997,7 @@ class Shim_Policy final : public Botan::TLS::Policy
 
       size_t dtls_default_mtu() const override
          {
-         return m_args.get_int_opt_or_else("mtu", 1232);
+         return m_args.get_int_opt_or_else("mtu", 1500);
          }
 
       //size_t dtls_initial_timeout() const override;
@@ -1489,11 +1494,6 @@ int main(int /*argc*/, char* argv[])
       const bool is_datagram = args->flag_set("dtls");
 
       const size_t buf_size = args->get_int_opt_or_else("read-size", 18*1024);
-
-      /*
-      if(is_datagram)
-         throw Shim_Exception("No support for DTLS yet", 89);
-      */
 
       Botan::ChaCha_RNG rng(Botan::secure_vector<uint8_t>(64));
       Botan::TLS::Session_Manager_In_Memory session_manager(rng, 1024);

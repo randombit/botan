@@ -468,10 +468,18 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
    pending_state.client_hello(new Client_Hello(contents));
    const Protocol_Version client_offer = pending_state.client_hello()->version();
 
-   if(client_offer.major_version() < 3)
-      throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered version with major version under 3");
-   if(client_offer.major_version() == 3 && client_offer.minor_version() == 0)
-      throw TLS_Exception(Alert::PROTOCOL_VERSION, "SSLv3 is not supported");
+   if(client_offer.is_datagram_protocol())
+      {
+      if(client_offer.major_version() == 0xFF)
+         throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered DTLS version with major version 0xFF");
+      }
+   else
+      {
+      if(client_offer.major_version() < 3)
+         throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered TLS version with major version under 3");
+      if(client_offer.major_version() == 3 && client_offer.minor_version() == 0)
+         throw TLS_Exception(Alert::PROTOCOL_VERSION, "SSLv3 is not supported");
+      }
 
    const Protocol_Version negotiated_version =
       select_version(policy(), client_offer,
