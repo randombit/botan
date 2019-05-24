@@ -251,7 +251,7 @@ std::vector<uint8_t> Client_Hello::serialize() const
    * renegotiating with a modern server)
    */
 
-   buf += m_extensions.serialize();
+   buf += m_extensions.serialize(Connection_Side::CLIENT);
 
    return buf;
    }

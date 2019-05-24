@@ -64,7 +64,7 @@ class BOTAN_UNSTABLE_API Extension
       /**
       * @return serialized binary for the extension
       */
-      virtual std::vector<uint8_t> serialize() const = 0;
+      virtual std::vector<uint8_t> serialize(Connection_Side whoami) const = 0;
 
       /**
       * @return if we should encode this extension or not
@@ -93,7 +93,7 @@ class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
 
       std::string host_name() const { return m_sni_host_name; }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return m_sni_host_name.empty(); }
    private:
@@ -120,7 +120,7 @@ class BOTAN_UNSTABLE_API SRP_Identifier final : public Extension
 
       std::string identifier() const { return m_srp_identifier; }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return m_srp_identifier.empty(); }
    private:
@@ -150,7 +150,7 @@ class BOTAN_UNSTABLE_API Renegotiation_Extension final : public Extension
       const std::vector<uint8_t>& renegotiation_info() const
          { return m_reneg_data; }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return false; } // always send this
    private:
@@ -186,7 +186,7 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
       Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
                                               uint16_t extension_size);
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return m_protocols.empty(); }
    private:
@@ -225,7 +225,7 @@ class BOTAN_UNSTABLE_API Session_Ticket final : public Extension
       */
       Session_Ticket(TLS_Data_Reader& reader, uint16_t extension_size);
 
-      std::vector<uint8_t> serialize() const override { return m_ticket; }
+      std::vector<uint8_t> serialize(Connection_Side) const override { return m_ticket; }
 
       bool empty() const override { return false; }
    private:
@@ -247,7 +247,7 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension
       std::vector<Group_Params> ec_groups() const;
       std::vector<Group_Params> dh_groups() const;
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       explicit Supported_Groups(const std::vector<Group_Params>& groups);
 
@@ -279,7 +279,7 @@ class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       explicit Supported_Point_Formats(bool prefer_compressed) :
          m_prefers_compressed(prefer_compressed) {}
@@ -308,7 +308,7 @@ class BOTAN_UNSTABLE_API Signature_Algorithms final : public Extension
 
       const std::vector<Signature_Scheme>& supported_schemes() const { return m_schemes; }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return m_schemes.empty(); }
 
@@ -334,7 +334,7 @@ class BOTAN_UNSTABLE_API SRTP_Protection_Profiles final : public Extension
 
       const std::vector<uint16_t>& profiles() const { return m_pp; }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return m_pp.empty(); }
 
@@ -358,7 +358,7 @@ class BOTAN_UNSTABLE_API Extended_Master_Secret final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return false; }
 
@@ -378,7 +378,7 @@ class BOTAN_UNSTABLE_API Encrypt_then_MAC final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return false; }
 
@@ -398,7 +398,7 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return false; }
 
@@ -413,7 +413,7 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
          }
 
       // Server generated version: empty
-      Certificate_Status_Request();
+      Certificate_Status_Request() {}
 
       // Client version, both lists can be empty
       Certificate_Status_Request(const std::vector<uint8_t>& ocsp_responder_ids,
@@ -426,7 +426,6 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
       std::vector<uint8_t> m_ocsp_names;
       std::vector<std::vector<uint8_t>> m_ocsp_keys; // is this field really needed
       std::vector<uint8_t> m_extension_bytes;
-      bool m_server_side;
    };
 
 /**
@@ -440,13 +439,13 @@ class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
       bool empty() const override { return m_versions.empty(); }
 
       Supported_Versions(Protocol_Version version, const Policy& policy);
 
-      Supported_Versions(Protocol_Version version) : m_server_side(true)
+      Supported_Versions(Protocol_Version version)
          {
          m_versions.push_back(version);
          }
@@ -460,7 +459,6 @@ class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
       const std::vector<Protocol_Version> versions() const { return m_versions; }
    private:
       std::vector<Protocol_Version> m_versions;
-      bool m_server_side;
    };
 
 /**
@@ -473,7 +471,7 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
                         TLS_Data_Reader& reader,
                         uint16_t extension_size);
 
-      std::vector<uint8_t> serialize() const override; // always fails
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override; // always fails
 
       const std::vector<uint8_t>& value() { return m_value; }
 
@@ -521,7 +519,7 @@ class BOTAN_UNSTABLE_API Extensions final
          return nullptr;
          }
 
-      std::vector<uint8_t> serialize() const;
+      std::vector<uint8_t> serialize(Connection_Side whoami) const;
 
       void deserialize(TLS_Data_Reader& reader, Connection_Side from);
 

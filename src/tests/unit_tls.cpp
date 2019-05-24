@@ -335,7 +335,7 @@ class TLS_Handshake_Test final
 
             Botan::TLS::Handshake_Extension_Type type() const override { return static_type(); }
 
-            std::vector<uint8_t> serialize() const override { return m_buf; }
+            std::vector<uint8_t> serialize(Botan::TLS::Connection_Side) const override { return m_buf; }
 
             const std::vector<uint8_t>& value() const { return m_buf; }
 

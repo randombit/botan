@@ -97,7 +97,7 @@ void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side from)
       }
    }
 
-std::vector<uint8_t> Extensions::serialize() const
+std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const
    {
    std::vector<uint8_t> buf(2); // 2 bytes for length field
 
@@ -108,7 +108,7 @@ std::vector<uint8_t> Extensions::serialize() const
 
       const uint16_t extn_code = static_cast<uint16_t>(extn.second->type());
 
-      std::vector<uint8_t> extn_val = extn.second->serialize();
+      const std::vector<uint8_t> extn_val = extn.second->serialize(whoami);
 
       buf.push_back(get_byte(0, extn_code));
       buf.push_back(get_byte(1, extn_code));
@@ -156,7 +156,7 @@ Unknown_Extension::Unknown_Extension(Handshake_Extension_Type type,
    {
    }
 
-std::vector<uint8_t> Unknown_Extension::serialize() const
+std::vector<uint8_t> Unknown_Extension::serialize(Connection_Side /*whoami*/) const
    {
    throw Invalid_State("Cannot encode an unknown TLS extension");
    }
@@ -193,7 +193,7 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
       }
    }
 
-std::vector<uint8_t> Server_Name_Indicator::serialize() const
+std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side /*whoami*/) const
    {
    std::vector<uint8_t> buf;
 
@@ -222,7 +222,7 @@ SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
       throw Decoding_Error("Bad encoding for SRP identifier extension");
    }
 
-std::vector<uint8_t> SRP_Identifier::serialize() const
+std::vector<uint8_t> SRP_Identifier::serialize(Connection_Side /*whoami*/) const
    {
    std::vector<uint8_t> buf;
 
@@ -241,7 +241,7 @@ Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
       throw Decoding_Error("Bad encoding for secure renegotiation extn");
    }
 
-std::vector<uint8_t> Renegotiation_Extension::serialize() const
+std::vector<uint8_t> Renegotiation_Extension::serialize(Connection_Side /*whoami*/) const
    {
    std::vector<uint8_t> buf;
    append_tls_length_value(buf, m_reneg_data, 1);
@@ -286,7 +286,7 @@ const std::string& Application_Layer_Protocol_Notification::single_protocol() co
    return m_protocols[0];
    }
 
-std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize() const
+std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connection_Side /*whoami*/) const
    {
    std::vector<uint8_t> buf(2);
 
@@ -333,7 +333,7 @@ std::vector<Group_Params> Supported_Groups::dh_groups() const
    return dh;
    }
 
-std::vector<uint8_t> Supported_Groups::serialize() const
+std::vector<uint8_t> Supported_Groups::serialize(Connection_Side /*whoami*/) const
    {
    std::vector<uint8_t> buf(2);
 
@@ -372,7 +372,7 @@ Supported_Groups::Supported_Groups(TLS_Data_Reader& reader,
       }
    }
 
-std::vector<uint8_t> Supported_Point_Formats::serialize() const
+std::vector<uint8_t> Supported_Point_Formats::serialize(Connection_Side /*whoami*/) const
    {
    // if this extension is sent, it MUST include uncompressed (RFC 4492, section 5.1)
    if(m_prefers_compressed)
@@ -414,7 +414,7 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
       }
    }
 
-std::vector<uint8_t> Signature_Algorithms::serialize() const
+std::vector<uint8_t> Signature_Algorithms::serialize(Connection_Side /*whoami*/) const
    {
    BOTAN_ASSERT(m_schemes.size() < 256, "Too many signature schemes");
 
@@ -470,7 +470,7 @@ SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,
       throw Decoding_Error("Unhandled non-empty MKI for SRTP protection extension");
    }
 
-std::vector<uint8_t> SRTP_Protection_Profiles::serialize() const
+std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoami*/) const
    {
    std::vector<uint8_t> buf;
 
@@ -496,7 +496,7 @@ Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader&,
       throw Decoding_Error("Invalid extended_master_secret extension");
    }
 
-std::vector<uint8_t> Extended_Master_Secret::serialize() const
+std::vector<uint8_t> Extended_Master_Secret::serialize(Connection_Side /*whoami*/) const
    {
    return std::vector<uint8_t>();
    }
@@ -508,16 +508,16 @@ Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader&,
       throw Decoding_Error("Invalid encrypt_then_mac extension");
    }
 
-std::vector<uint8_t> Encrypt_then_MAC::serialize() const
+std::vector<uint8_t> Encrypt_then_MAC::serialize(Connection_Side /*whoami*/) const
    {
    return std::vector<uint8_t>();
    }
 
-std::vector<uint8_t> Certificate_Status_Request::serialize() const
+std::vector<uint8_t> Certificate_Status_Request::serialize(Connection_Side whoami) const
    {
    std::vector<uint8_t> buf;
 
-   if(m_server_side)
+   if(whoami == Connection_Side::SERVER)
       return buf; // server reply is empty
 
    /*
@@ -541,18 +541,22 @@ std::vector<uint8_t> Certificate_Status_Request::serialize() const
 
 Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
                                                        uint16_t extension_size,
-                                                       Connection_Side from) :
-   m_server_side(from == SERVER)
+                                                       Connection_Side from)
    {
-   if(extension_size > 0)
+   if(from == Connection_Side::SERVER)
+      {
+      if(extension_size != 0)
+         throw Decoding_Error("Server sent non-empty Certificate_Status_Request extension");
+      }
+   else if(extension_size > 0)
       {
       const uint8_t type = reader.get_byte();
       if(type == 1)
          {
-         size_t len_resp_id_list = reader.get_uint16_t();
+         const size_t len_resp_id_list = reader.get_uint16_t();
          m_ocsp_names = reader.get_fixed<uint8_t>(len_resp_id_list);
-         size_t len_requ_ext = reader.get_uint16_t();
-         m_extension_bytes = reader.get_fixed<uint8_t>(len_requ_ext );
+         const size_t len_requ_ext = reader.get_uint16_t();
+         m_extension_bytes = reader.get_fixed<uint8_t>(len_requ_ext);
          }
       else
          {
@@ -564,22 +568,15 @@ Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
 Certificate_Status_Request::Certificate_Status_Request(const std::vector<uint8_t>& ocsp_responder_ids,
                                                        const std::vector<std::vector<uint8_t>>& ocsp_key_ids) :
    m_ocsp_names(ocsp_responder_ids),
-   m_ocsp_keys(ocsp_key_ids),
-   m_server_side(false)
+   m_ocsp_keys(ocsp_key_ids)
    {
-
    }
 
-Certificate_Status_Request::Certificate_Status_Request() : m_server_side(true)
-   {
-
-   }
-
-std::vector<uint8_t> Supported_Versions::serialize() const
+std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
    {
    std::vector<uint8_t> buf;
 
-   if(m_server_side)
+   if(whoami == Connection_Side::SERVER)
       {
       BOTAN_ASSERT_NOMSG(m_versions.size() == 1);
       buf.push_back(m_versions[0].major_version());
@@ -587,6 +584,7 @@ std::vector<uint8_t> Supported_Versions::serialize() const
       }
    else
       {
+      BOTAN_ASSERT_NOMSG(m_versions.size() >= 1);
       const uint8_t len = static_cast<uint8_t>(m_versions.size() * 2);
 
       buf.push_back(len);
@@ -601,8 +599,7 @@ std::vector<uint8_t> Supported_Versions::serialize() const
    return buf;
    }
 
-Supported_Versions::Supported_Versions(Protocol_Version offer, const Policy& policy) :
-   m_server_side(false)
+Supported_Versions::Supported_Versions(Protocol_Version offer, const Policy& policy)
    {
    if(offer.is_datagram_protocol())
       {
@@ -628,17 +625,19 @@ Supported_Versions::Supported_Versions(TLS_Data_Reader& reader,
    {
    if(from == Connection_Side::SERVER)
       {
-      m_server_side = true;
+      if(extension_size != 2)
+         throw Decoding_Error("Server sent invalid supported_versions extension");
       m_versions.push_back(Protocol_Version(reader.get_uint16_t()));
       }
    else
       {
-      m_server_side = false;
-
       auto versions = reader.get_range<uint16_t>(1, 1, 127);
 
       for(auto v : versions)
          m_versions.push_back(Protocol_Version(v));
+
+      if(extension_size != 1+2*versions.size())
+         throw Decoding_Error("Client sent invalid supported_versions extension");
       }
    }
 

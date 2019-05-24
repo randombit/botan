@@ -180,7 +180,7 @@ std::vector<uint8_t> Server_Hello::serialize() const
 
    buf.push_back(m_comp_method);
 
-   buf += m_extensions.serialize();
+   buf += m_extensions.serialize(Connection_Side::SERVER);
 
    return buf;
    }
