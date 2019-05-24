@@ -235,7 +235,6 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       {
       Hello_Request hello_request(contents);
 
-      // Ignore request entirely if we are currently negotiating a handshake
       if(state.client_hello())
          {
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Cannot renegotiate during a handshake");

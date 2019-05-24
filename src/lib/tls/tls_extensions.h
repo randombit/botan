@@ -483,7 +483,6 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
    private:
       Handshake_Extension_Type m_type;
       std::vector<uint8_t> m_value;
-
    };
 
 /**
