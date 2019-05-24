@@ -21,13 +21,11 @@
         "EarlyDataEnabled*": "No TLS 1.3",
         "DelegatedCredentials*": "No TLS 1.3",
         "ExportTrafficSecrets-*": "No TLS 1.3",
-
-        "ConflictingVersionNegotiation*": "No support for 1.3 version extension",
-        "VersionNegotiationExtension*": "No support for 1.3 version extension",
-        "IgnoreClientVersionOrder": "No support for 1.3 version extension",
-        "NoSupportedVersions*": "No support for 1.3 version extension",
+        "IgnoreClientVersionOrder": "No TLS 1.3",
 
         "DuplicateCertCompressionExt*": "No support for 1.3 cert compression extension",
+
+        "SupportedVersionSelection-TLS12": "We just ignore the version extension in this case",
 
         "Downgrade*": "The 1.3 downgrade indicator is not implemented",
 

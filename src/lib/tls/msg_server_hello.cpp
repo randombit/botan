@@ -159,7 +159,7 @@ Server_Hello::Server_Hello(const std::vector<uint8_t>& buf)
 
    m_comp_method = reader.get_byte();
 
-   m_extensions.deserialize(reader, Connection_Side::CLIENT);
+   m_extensions.deserialize(reader, Connection_Side::SERVER);
    }
 
 /*
@@ -180,7 +180,7 @@ std::vector<uint8_t> Server_Hello::serialize() const
 
    buf.push_back(m_comp_method);
 
-   buf += m_extensions.serialize();
+   buf += m_extensions.serialize(Connection_Side::SERVER);
 
    return buf;
    }
