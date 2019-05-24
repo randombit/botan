@@ -1,6 +1,6 @@
 /*
 * TLS Record Handling
-* (C) 2012,2013,2014,2015,2016 Jack Lloyd
+* (C) 2012,2013,2014,2015,2016,2019 Jack Lloyd
 *     2016 Juraj Somorovsky
 *     2016 Matthias Gierlings
 *
@@ -33,26 +33,22 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  bool uses_encrypt_then_mac) :
    m_start_time(std::chrono::system_clock::now())
    {
-   SymmetricKey mac_key, cipher_key;
-   InitializationVector iv;
-
-   if(side == CLIENT)
-      {
-      cipher_key = keys.client_cipher_key();
-      iv = keys.client_iv();
-      mac_key = keys.client_mac_key();
-      }
-   else
-      {
-      cipher_key = keys.server_cipher_key();
-      iv = keys.server_iv();
-      mac_key = keys.server_mac_key();
-      }
-
-   m_nonce = unlock(iv.bits_of());
    m_nonce_format = suite.nonce_format();
    m_nonce_bytes_from_record = suite.nonce_bytes_from_record(version);
    m_nonce_bytes_from_handshake = suite.nonce_bytes_from_handshake();
+
+   secure_vector<uint8_t> aead_key;
+
+   if(side == CLIENT)
+      {
+      aead_key = keys.client_aead_key();
+      m_nonce = keys.client_nonce();
+      }
+   else
+      {
+      aead_key = keys.server_aead_key();
+      m_nonce = keys.server_nonce();
+      }
 
    BOTAN_ASSERT_NOMSG(m_nonce.size() == m_nonce_bytes_from_handshake);
 
@@ -84,10 +80,10 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                          uses_encrypt_then_mac));
          }
 
-      m_aead->set_key(cipher_key + mac_key);
+      m_aead->set_key(aead_key);
 
       if(our_side == false)
-         m_aead->start(iv.bits_of());
+         m_aead->start(m_nonce);
 #else
       throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
@@ -95,17 +91,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    else
       {
       m_aead = AEAD_Mode::create_or_throw(suite.cipher_algo(), our_side ? ENCRYPTION : DECRYPTION);
-
-      m_aead->set_key(cipher_key + mac_key);
-
-      if(nonce_format() == Nonce_Format::AEAD_IMPLICIT_4)
-         {
-         m_nonce.resize(m_nonce.size() + 8);
-         }
-      else if(nonce_format() != Nonce_Format::AEAD_XOR_12)
-         {
-         throw Invalid_State("Invalid AEAD nonce format used");
-         }
+      m_aead->set_key(aead_key);
       }
    }
 
@@ -134,7 +120,9 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
          }
       case Nonce_Format::AEAD_IMPLICIT_4:
          {
-         std::vector<uint8_t> nonce = m_nonce;
+         BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
+         std::vector<uint8_t> nonce(12);
+         copy_mem(&nonce[0], m_nonce.data(), 4);
          store_be(seq, &nonce[nonce_bytes_from_handshake()]);
          return nonce;
          }
@@ -164,9 +152,11 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
          }
       case Nonce_Format::AEAD_IMPLICIT_4:
          {
+         BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
          if(record_len < nonce_bytes_from_record())
             throw Decoding_Error("Invalid AEAD packet too short to be valid");
-         std::vector<uint8_t> nonce = m_nonce;
+         std::vector<uint8_t> nonce(12);
+         copy_mem(&nonce[0], m_nonce.data(), 4);
          copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
          return nonce;
          }

@@ -8,7 +8,7 @@
 #ifndef BOTAN_TLS_SESSION_KEYS_H_
 #define BOTAN_TLS_SESSION_KEYS_H_
 
-#include <botan/symkey.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 
@@ -23,34 +23,24 @@ class Session_Keys final
    {
    public:
       /**
-      * @return client encipherment key
+      * @return client AEAD key
       */
-      const SymmetricKey& client_cipher_key() const { return m_c_cipher; }
+      const secure_vector<uint8_t>& client_aead_key() const { return m_c_aead; }
 
       /**
-      * @return client encipherment key
+      * @return server AEAD key
       */
-      const SymmetricKey& server_cipher_key() const { return m_s_cipher; }
+      const secure_vector<uint8_t>& server_aead_key() const { return m_s_aead; }
 
       /**
-      * @return client MAC key
+      * @return client nonce
       */
-      const SymmetricKey& client_mac_key() const { return m_c_mac; }
+      const std::vector<uint8_t>& client_nonce() const { return m_c_nonce; }
 
       /**
-      * @return server MAC key
+      * @return server nonce
       */
-      const SymmetricKey& server_mac_key() const { return m_s_mac; }
-
-      /**
-      * @return client IV
-      */
-      const InitializationVector& client_iv() const { return m_c_iv; }
-
-      /**
-      * @return server IV
-      */
-      const InitializationVector& server_iv() const { return m_s_iv; }
+      const std::vector<uint8_t>& server_nonce() const { return m_s_nonce; }
 
       /**
       * @return TLS master secret
@@ -70,8 +60,8 @@ class Session_Keys final
 
    private:
       secure_vector<uint8_t> m_master_sec;
-      SymmetricKey m_c_cipher, m_s_cipher, m_c_mac, m_s_mac;
-      InitializationVector m_c_iv, m_s_iv;
+      secure_vector<uint8_t> m_c_aead, m_s_aead;
+      std::vector<uint8_t> m_c_nonce, m_s_nonce;
    };
 
 }

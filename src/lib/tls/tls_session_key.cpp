@@ -1,6 +1,6 @@
 /*
 * TLS Session Key
-* (C) 2004-2006,2011,2016 Jack Lloyd
+* (C) 2004-2006,2011,2016,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -48,17 +48,17 @@ Session_Keys::Session_Keys(const Handshake_State* state,
       }
    else
       {
-      secure_vector<uint8_t> salt;
-      secure_vector<uint8_t> label;
+      std::vector<uint8_t> salt;
+      std::vector<uint8_t> label;
       if(extended_master_secret)
          {
-         label += std::make_pair(EXT_MASTER_SECRET_MAGIC, sizeof(EXT_MASTER_SECRET_MAGIC));
+         label.assign(EXT_MASTER_SECRET_MAGIC, EXT_MASTER_SECRET_MAGIC + sizeof(EXT_MASTER_SECRET_MAGIC));
          salt += state->hash().final(state->version(),
                                      state->ciphersuite().prf_algo());
          }
       else
          {
-         label += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
+         label.assign(MASTER_SECRET_MAGIC, MASTER_SECRET_MAGIC + sizeof(MASTER_SECRET_MAGIC));
          salt += state->client_hello()->random();
          salt += state->server_hello()->random();
          }
@@ -66,32 +66,34 @@ Session_Keys::Session_Keys(const Handshake_State* state,
       m_master_sec = prf->derive_key(48, pre_master_secret, salt, label);
       }
 
-   secure_vector<uint8_t> salt;
-   secure_vector<uint8_t> label;
-   label += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
+   std::vector<uint8_t> salt;
+   std::vector<uint8_t> label;
+   label.assign(KEY_GEN_MAGIC, KEY_GEN_MAGIC + sizeof(KEY_GEN_MAGIC));
    salt += state->server_hello()->random();
    salt += state->client_hello()->random();
 
-   SymmetricKey keyblock = prf->derive_key(prf_gen, m_master_sec, salt, label);
+   const secure_vector<uint8_t> prf_output = prf->derive_key(
+      prf_gen,
+      m_master_sec.data(), m_master_sec.size(),
+      salt.data(), salt.size(),
+      label.data(), label.size());
 
-   const uint8_t* key_data = keyblock.begin();
+   const uint8_t* key_data = prf_output.data();
 
-   m_c_mac = SymmetricKey(key_data, mac_keylen);
-   key_data += mac_keylen;
+   m_c_aead.resize(mac_keylen + cipher_keylen);
+   m_s_aead.resize(mac_keylen + cipher_keylen);
 
-   m_s_mac = SymmetricKey(key_data, mac_keylen);
-   key_data += mac_keylen;
+   copy_mem(&m_c_aead[0], key_data, mac_keylen);
+   copy_mem(&m_s_aead[0], key_data + mac_keylen, mac_keylen);
 
-   m_c_cipher = SymmetricKey(key_data, cipher_keylen);
-   key_data += cipher_keylen;
+   copy_mem(&m_c_aead[mac_keylen], key_data + 2*mac_keylen, cipher_keylen);
+   copy_mem(&m_s_aead[mac_keylen], key_data + 2*mac_keylen + cipher_keylen, cipher_keylen);
 
-   m_s_cipher = SymmetricKey(key_data, cipher_keylen);
-   key_data += cipher_keylen;
+   m_c_nonce.resize(cipher_nonce_bytes);
+   m_s_nonce.resize(cipher_nonce_bytes);
 
-   m_c_iv = InitializationVector(key_data, cipher_nonce_bytes);
-   key_data += cipher_nonce_bytes;
-
-   m_s_iv = InitializationVector(key_data, cipher_nonce_bytes);
+   copy_mem(&m_c_nonce[0], key_data + 2*(mac_keylen + cipher_keylen), cipher_nonce_bytes);
+   copy_mem(&m_s_nonce[0], key_data + 2*(mac_keylen + cipher_keylen) + cipher_nonce_bytes, cipher_nonce_bytes);
    }
 
 }
