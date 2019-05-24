@@ -8,6 +8,8 @@ Version 2.11.0, Not Yet Released
   and fix a number of bugs in TLS found using it.
   (GH #1954 #1955 #1956 #1959 #1966 #1970)
 
+* Add support for the TLS v1.3 supported_versions extension. (GH #1976)
+
 * Add support for OCSP stapling on server side. (GH #1703 #1967)
 
 * Add a ``boost::asio`` TLS stream compatible with ``boost::asio::ssl``.
