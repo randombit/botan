@@ -377,6 +377,10 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             else
                m_pre_master = shared_secret;
             }
+         catch(Invalid_Argument& e)
+            {
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER, e.what());
+            }
          catch(std::exception &)
             {
             /*

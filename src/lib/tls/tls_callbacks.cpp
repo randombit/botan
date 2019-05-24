@@ -119,7 +119,7 @@ std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_dh_a
     * advantage to bogus keys anyway.
     */
    if(Y <= 1 || Y >= p - 1)
-      throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                           "Server sent bad DH key for DHE exchange");
 
    DL_Group group(p, g);

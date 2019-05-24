@@ -65,8 +65,8 @@ void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints, bool disable_mon
 */
 void Power_Mod::set_base(const BigInt& b) const
    {
-   if(b.is_zero() || b.is_negative())
-      throw Invalid_Argument("Power_Mod::set_base: arg must be > 0");
+   if(b.is_negative())
+      throw Invalid_Argument("Power_Mod::set_base: arg must be non-negative");
 
    if(!m_core)
       throw Internal_Error("Power_Mod::set_base: m_core was NULL");

@@ -441,7 +441,8 @@ void Channel::process_handshake_ccs(const secure_vector<uint8_t>& record,
             else if(epoch == sequence_numbers().current_read_epoch() - 1)
                {
                BOTAN_ASSERT(m_active_state, "Have active state here");
-               m_active_state->handshake_io().add_record(unlock(record),
+               m_active_state->handshake_io().add_record(record.data(),
+                                                         record.size(),
                                                          record_type,
                                                          record_sequence);
                }
@@ -460,7 +461,8 @@ void Channel::process_handshake_ccs(const secure_vector<uint8_t>& record,
    // May have been created in above conditional
    if(m_pending_state)
       {
-      m_pending_state->handshake_io().add_record(unlock(record),
+      m_pending_state->handshake_io().add_record(record.data(),
+                                                 record.size(),
                                                  record_type,
                                                  record_sequence);
 
