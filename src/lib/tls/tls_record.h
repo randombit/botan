@@ -68,9 +68,9 @@ class Connection_Cipher_State final
       std::unique_ptr<AEAD_Mode> m_aead;
 
       std::vector<uint8_t> m_nonce;
-      Nonce_Format m_nonce_format = Nonce_Format::CBC_MODE;
-      size_t m_nonce_bytes_from_handshake = 0;
-      size_t m_nonce_bytes_from_record = 0;
+      Nonce_Format m_nonce_format;
+      size_t m_nonce_bytes_from_handshake;
+      size_t m_nonce_bytes_from_record;
    };
 
 class Record final

@@ -50,8 +50,11 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       }
 
    m_nonce = unlock(iv.bits_of());
-   m_nonce_bytes_from_handshake = m_nonce.size();
    m_nonce_format = suite.nonce_format();
+   m_nonce_bytes_from_record = suite.nonce_bytes_from_record(version);
+   m_nonce_bytes_from_handshake = suite.nonce_bytes_from_handshake();
+
+   BOTAN_ASSERT_NOMSG(m_nonce.size() == m_nonce_bytes_from_handshake);
 
    if(nonce_format() == Nonce_Format::CBC_MODE)
       {
@@ -83,11 +86,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
       m_aead->set_key(cipher_key + mac_key);
 
-      m_nonce_bytes_from_record = 0;
-
-      if(version.supports_explicit_cbc_ivs())
-         m_nonce_bytes_from_record = m_nonce_bytes_from_handshake;
-      else if(our_side == false)
+      if(our_side == false)
          m_aead->start(iv.bits_of());
 #else
       throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
@@ -101,7 +100,6 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
       if(nonce_format() == Nonce_Format::AEAD_IMPLICIT_4)
          {
-         m_nonce_bytes_from_record = 8;
          m_nonce.resize(m_nonce.size() + 8);
          }
       else if(nonce_format() != Nonce_Format::AEAD_XOR_12)

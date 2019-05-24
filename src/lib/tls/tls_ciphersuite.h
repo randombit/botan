@@ -114,6 +114,8 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
 
       size_t nonce_bytes_from_handshake() const;
 
+      size_t nonce_bytes_from_record(Protocol_Version version) const;
+
       Nonce_Format nonce_format() const { return m_nonce_format; }
 
       size_t mac_keylen() const { return m_mac_keylen; }
