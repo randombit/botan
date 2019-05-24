@@ -269,11 +269,12 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
    }
 
 Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
-                                             const X509_Certificate& subject,
-                                             std::chrono::system_clock::time_point ref_time) const
+      const X509_Certificate& subject,
+      std::chrono::system_clock::time_point ref_time,
+      std::chrono::seconds max_age) const
    {
-   if (m_responses.empty())
-      return m_dummy_response_status;
+   if(m_responses.empty())
+      { return m_dummy_response_status; }
 
    for(const auto& response : m_responses)
       {
@@ -282,18 +283,23 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
          X509_Time x509_ref_time(ref_time);
 
          if(response.cert_status() == 1)
-            return Certificate_Status_Code::CERT_IS_REVOKED;
+            { return Certificate_Status_Code::CERT_IS_REVOKED; }
 
          if(response.this_update() > x509_ref_time)
-            return Certificate_Status_Code::OCSP_NOT_YET_VALID;
+            { return Certificate_Status_Code::OCSP_NOT_YET_VALID; }
 
-         if(response.next_update().time_is_set() && x509_ref_time > response.next_update())
-            return Certificate_Status_Code::OCSP_HAS_EXPIRED;
+         if(response.next_update().time_is_set())
+            {
+            if(x509_ref_time > response.next_update())
+               { return Certificate_Status_Code::OCSP_HAS_EXPIRED; }
+            }
+         else if(max_age > std::chrono::seconds::zero() && ref_time - response.this_update().to_std_timepoint() > max_age)
+            { return Certificate_Status_Code::OCSP_IS_TOO_OLD; }
 
          if(response.cert_status() == 0)
-            return Certificate_Status_Code::OCSP_RESPONSE_GOOD;
+            { return Certificate_Status_Code::OCSP_RESPONSE_GOOD; }
          else
-            return Certificate_Status_Code::OCSP_BAD_STATUS;
+            { return Certificate_Status_Code::OCSP_BAD_STATUS; }
          }
       }
 

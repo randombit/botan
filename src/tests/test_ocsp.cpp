@@ -154,6 +154,37 @@ class OCSP_Tests final : public Test
          return result;
          }
 
+      Test::Result test_response_verification_too_old()
+         {
+         Test::Result result("OCSP request check if too old");
+
+         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+
+         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
+
+         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+
+         Botan::Certificate_Store_In_Memory certstore;
+         certstore.add_certificate(trust_root);
+
+         // Some arbitrary time within the validity period of the test certs
+         const auto valid_time = Botan::calendar_point(2016, 11, 20, 8, 30, 0).to_std_timepoint();
+         const auto max_age = std::chrono::hours(1);
+         const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, max_age);
+
+         if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
+            {
+            if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
+               {
+               result.confirm("Status good", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+               }
+            }
+
+         return result;
+         }
+
       Test::Result test_response_verification_softfail()
          {
          Test::Result result("OCSP request softfail check");
@@ -225,6 +256,7 @@ class OCSP_Tests final : public Test
          results.push_back(test_response_parsing());
          results.push_back(test_response_certificate_access());
          results.push_back(test_response_verification());
+         results.push_back(test_response_verification_too_old());
          results.push_back(test_response_verification_softfail());
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)

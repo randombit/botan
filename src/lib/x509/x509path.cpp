@@ -204,7 +204,8 @@ CertificatePathStatusCodes
 PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                  const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
                  const std::vector<Certificate_Store*>& trusted_certstores,
-                 std::chrono::system_clock::time_point ref_time)
+                 std::chrono::system_clock::time_point ref_time,
+                 std::chrono::seconds max_age)
    {
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_ocsp cert_path empty");
@@ -227,7 +228,7 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
             if(ocsp_signature_status == Certificate_Status_Code::OCSP_SIGNATURE_OK)
                {
                // Signature ok, so check the claimed status
-               Certificate_Status_Code ocsp_status = ocsp_responses.at(i)->status_for(*ca, *subject, ref_time);
+               Certificate_Status_Code ocsp_status = ocsp_responses.at(i)->status_for(*ca, *subject, ref_time, max_age);
                status.insert(ocsp_status);
                }
             else

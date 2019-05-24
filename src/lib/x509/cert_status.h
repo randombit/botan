@@ -48,6 +48,7 @@ enum class Certificate_Status_Code {
    OCSP_HAS_EXPIRED = 2003,
    CRL_NOT_YET_VALID = 2004,
    CRL_HAS_EXPIRED = 2005,
+   OCSP_IS_TOO_OLD = 2006,
 
    // Chain generation problems
    CERT_ISSUER_NOT_FOUND = 3000,
