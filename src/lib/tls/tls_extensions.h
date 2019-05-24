@@ -28,6 +28,7 @@ class Policy;
 
 class TLS_Data_Reader;
 
+// This will become an enum class in a future major release
 enum Handshake_Extension_Type {
    TLSEXT_SERVER_NAME_INDICATION = 0,
    TLSEXT_CERT_STATUS_REQUEST    = 5,

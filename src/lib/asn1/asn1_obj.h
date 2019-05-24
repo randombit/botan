@@ -18,6 +18,7 @@ class DER_Encoder;
 
 /**
 * ASN.1 Type and Class Tags
+* This will become an enum class in a future major release
 */
 enum ASN1_Tag : uint32_t {
    UNIVERSAL        = 0x00,
