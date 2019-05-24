@@ -1222,16 +1222,15 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          if(m_is_datagram)
             {
             shim_log("sending record of len " + std::to_string(size));
-            const uint8_t hdr[5] = {
-               'P',
-               static_cast<uint8_t>((size >> 24) & 0xFF),
-               static_cast<uint8_t>((size >> 16) & 0xFF),
-               static_cast<uint8_t>((size >> 8) & 0xFF),
-               static_cast<uint8_t>(size & 0xFF),
-            };
 
-            m_socket.write(hdr, sizeof(hdr));
-            m_socket.write(data, size);
+            std::vector<uint8_t> packet(size + 5);
+
+            packet[0] = 'P';
+            for(size_t i = 0; i != 4; ++i)
+               packet[i+1] = static_cast<uint8_t>((size >> (24-8*i)) & 0xFF);
+            std::memcpy(packet.data() + 5, data, size);
+
+            m_socket.write(packet.data(), packet.size());
             }
          else
             {

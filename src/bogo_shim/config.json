@@ -75,7 +75,7 @@
 
         "TLS*-NoTicket-NoAccept": "BoGo expects that if ticket is issued stateful resumption is impossible",
 
-        "CheckLeafCurve": "Botan ignores this",
+        "CheckLeafCurve": "Botan doesn't care what curve an ECDSA cert uses",
 
         "CertificateVerificationDoesNotFailOnResume*": "Botan doesn't support reverify on resume",
         "CertificateVerificationFailsOnResume*": "Botan doesn't support reverify on resume",
@@ -95,6 +95,7 @@
         "ClientAuth-Verify-ECDSA-SHA1-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
 
         "AppDataAfterChangeCipherSpec-DTLS*": "BoringSSL DTLS drops out of order AppData, we reject",
+        "MTUExceeded": "BoringSSL splits DTLS handshakes differently",
 
         "*Renegotiate-Server-Forbidden*": "Testing some BoringSSL specific restriction",
         "Resume-Client-NoResume-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
@@ -121,8 +122,6 @@
         "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-Server": "Not possible to disable PSS",
         "RSAPSSSupport-Default-NoCerts-TLS12-Server": "Not possible to disable PSS",
 
-        "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected",
-
         "DTLS-Retransmit*": "Shim needs timeout support",
 
         "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
@@ -136,14 +135,7 @@
         "Unclean-Shutdown": "Needs investigation",
         "Unclean-Shutdown-Alert": "Needs investigation",
 
-        "MTUExceeded": "BoringSSL splits DTLS handshakes differently",
-
-        "MinimumVersion-Client-TLS12-TLS1-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
-        "ClientOCSPCallback-FailNoStaple-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
-        "MinimumVersion-Client2-TLS12-TLS1-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
-        "SendBogusAlertType-DTLS": "Client sends expected alert, server doesn't receive it. Needs investigation",
-        "TrailingMessageData-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
-        "WrongMessageType-*-DTLS*": "Client sends expected alert, server doesn't receive it. Needs investigation",
+        "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected (bug)",
 
         "Renegotiate-Client-Packed": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
         "SendHalfHelloRequest*PackHandshake": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
