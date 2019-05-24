@@ -78,6 +78,9 @@ Stream_Handshake_IO::get_next_record(bool)
          {
          Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
 
+         if(type == HANDSHAKE_NONE)
+            throw Decoding_Error("Invalid handshake message type");
+
          std::vector<uint8_t> contents(m_queue.begin() + 4,
                                        m_queue.begin() + length);
 
