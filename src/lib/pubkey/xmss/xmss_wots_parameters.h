@@ -1,6 +1,6 @@
 /*
  * XMSS WOTS Parameters
- * (C) 2016 Matthias Gierlings
+ * (C) 2016,2018 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -19,20 +19,19 @@ namespace Botan {
  * Descibes a signature method for XMSS Winternitz One Time Signatures,
  * as defined in:
  * [1] XMSS: Extended Hash-Based Signatures,
- *     draft-itrf-cfrg-xmss-hash-based-signatures-06
- *     Release: July 2016.
- *     https://datatracker.ietf.org/doc/
- *     draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
+ *     Request for Comments: 8391
+ *     Release: May 2018.
+ *     https://datatracker.ietf.org/doc/rfc8391/
  **/
 class XMSS_WOTS_Parameters final
    {
    public:
       enum ots_algorithm_t
          {
-         WOTSP_SHA2_256_W16 = 0x01000001,
-         WOTSP_SHA2_512_W16 = 0x02000002,
-         WOTSP_SHAKE128_W16 = 0x03000003,
-         WOTSP_SHAKE256_W16 = 0x04000004
+         WOTSP_SHA2_256 = 0x00000001,
+         WOTSP_SHA2_512 = 0x00000002,
+         WOTSP_SHAKE_256 = 0x00000003,
+         WOTSP_SHAKE_512 = 0x00000004
          };
 
       XMSS_WOTS_Parameters(const std::string& algo_name);

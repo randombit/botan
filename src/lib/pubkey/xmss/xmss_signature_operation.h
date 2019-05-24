@@ -1,6 +1,6 @@
 /*
  * XMSS Signature Operation
- * (C) 2016,2017 Matthias Gierlings
+ * (C) 2016,2017,2018 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -27,10 +27,9 @@ namespace Botan {
  * defined in:
  *
  * [1] XMSS: Extended Hash-Based Signatures,
- *     draft-itrf-cfrg-xmss-hash-based-signatures-06
- *     Release: July 2016.
- *     https://datatracker.ietf.org/doc/
- *     draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
+ *     Request for Comments: 8391
+ *     Release: May 2018.
+ *     https://datatracker.ietf.org/doc/rfc8391/
  **/
 class XMSS_Signature_Operation final : public virtual PK_Ops::Signature,
                                        public XMSS_Common_Ops

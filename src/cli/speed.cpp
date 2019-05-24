@@ -2087,10 +2087,10 @@ class Speed final : public Command
          */
          std::vector<std::string> xmss_params
             {
-            "XMSS_SHA2-256_W16_H10",
-            "XMSS_SHA2-512_W16_H10",
-            "XMSS_SHAKE128_W16_H10",
-            "XMSS_SHAKE256_W16_H10",
+            "XMSS-SHA2_10_256",
+            "XMSS-SHAKE_10_256",
+            "XMSS-SHA2_10_512",
+            "XMSS-SHAKE_10_512",
             };
 
          for(std::string params : xmss_params)

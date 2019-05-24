@@ -318,7 +318,7 @@ create_private_key(const std::string& alg_name,
    if(alg_name == "XMSS")
       {
       return std::unique_ptr<Private_Key>(
-         new XMSS_PrivateKey(XMSS_Parameters(params.empty() ? "XMSS_SHA2-512_W16_H10" : params).oid(), rng));
+         new XMSS_PrivateKey(XMSS_Parameters(params.empty() ? "XMSS-SHA2_10_512" : params).oid(), rng));
       }
 #endif
 

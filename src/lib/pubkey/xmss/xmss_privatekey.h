@@ -1,6 +1,6 @@
 /*
  * XMSS_PrivateKey.h
- * (C) 2016,2017 Matthias Gierlings
+ * (C) 2016,2017,2018 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -29,11 +29,10 @@ namespace Botan {
  * The XMSS private key does not support the X509 and PKCS7 standard. Instead
  * the raw format described in [1] is used.
  *
- *   [1] XMSS: Extended Hash-Based Signatures,
- *       draft-itrf-cfrg-xmss-hash-based-signatures-06
- *       Release: July 2016.
- *       https://datatracker.ietf.org/doc/
- *       draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
+ * [1] XMSS: Extended Hash-Based Signatures,
+ *     Request for Comments: 8391
+ *     Release: May 2018.
+ *     https://datatracker.ietf.org/doc/rfc8391/
  **/
 class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKey,
    public XMSS_Common_Ops,
@@ -207,7 +206,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
       size_t size() const override
          {
          return XMSS_PublicKey::size() +
-                sizeof(uint64_t) +
+                sizeof(uint32_t) +
                 2 * XMSS_PublicKey::m_xmss_params.element_size();
          }
 
