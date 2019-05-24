@@ -809,7 +809,7 @@ class Shim_Policy final : public Botan::TLS::Policy
                }
 
             // BoGo gets sad if these are not included in our signature_algorithms extension
-            if(!m_args.flag_set("server") && m_args.test_name() != "VerifyPreferences-Enforced")
+            if(!m_args.flag_set("server"))
                {
                schemes.push_back(Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA256);
                schemes.push_back(Botan::TLS::Signature_Scheme::ECDSA_SHA256);
@@ -824,13 +824,6 @@ class Shim_Policy final : public Botan::TLS::Policy
             for(size_t pref : m_args.get_int_vec_opt("verify-prefs"))
                {
                schemes.push_back(static_cast<Botan::TLS::Signature_Scheme>(pref));
-               }
-
-            // BoGo gets sad if these are not included in our signature_algorithms extension
-            if(!m_args.flag_set("server") && m_args.test_name() != "VerifyPreferences-Enforced")
-               {
-               schemes.push_back(Botan::TLS::Signature_Scheme::RSA_PKCS1_SHA256);
-               schemes.push_back(Botan::TLS::Signature_Scheme::ECDSA_SHA256);
                }
 
             return schemes;
