@@ -210,7 +210,7 @@ class Shim_Exception final : public std::exception
       Shim_Exception(const std::string& msg, int rc = 1) :
          m_msg(msg), m_rc(rc) {}
 
-      const char* what() const noexcept { return m_msg.c_str(); }
+      const char* what() const noexcept override { return m_msg.c_str(); }
 
       int rc() const { return m_rc; }
    private:
@@ -1572,7 +1572,7 @@ int main(int /*argc*/, char* argv[])
 
                   if(buf.size() < packet_len)
                      buf.resize(packet_len);
-                  shim.read_exactly(buf.data(), packet_len);
+                  socket.read_exactly(buf.data(), packet_len);
 
                   chan->received_data(buf.data(), packet_len);
                   }
