@@ -9,62 +9,64 @@
 namespace Botan {
 
 std::string to_string(ErrorType type)
-{
-   switch(type)
    {
-   case ErrorType::Unknown:
-      return "Unknown";
-   case ErrorType::SystemError:
-      return "SystemError";
-   case ErrorType::NotImplemented:
-      return "NotImplemented";
-   case ErrorType::OutOfMemory:
-      return "OutOfMemory";
-   case ErrorType::InternalError:
-      return "InternalError";
-   case ErrorType::IoError:
-      return "IoError";
-   case ErrorType::InvalidObjectState :
-      return "InvalidObjectState";
-   case ErrorType::KeyNotSet:
-      return "KeyNotSet";
-   case ErrorType::InvalidArgument:
-      return "InvalidArgument";
-   case ErrorType::InvalidKeyLength:
-      return "InvalidKeyLength";
-   case ErrorType::InvalidNonceLength:
-      return "InvalidNonceLength";
-   case ErrorType::LookupError:
-      return "LookupError";
-   case ErrorType::EncodingFailure:
-      return "EncodingFailure";
-   case ErrorType::DecodingFailure:
-      return "DecodingFailure";
-   case ErrorType::TLSError:
-      return "TLSError";
-   case ErrorType::HttpError:
-      return "HttpError";
-   case ErrorType::InvalidTag:
-      return "InvalidTag";
-   case ErrorType::OpenSSLError :
-      return "OpenSSLError";
-   case ErrorType::CommonCryptoError:
-      return "CommonCryptoError";
-   case ErrorType::Pkcs11Error:
-      return "Pkcs11Error";
-   case ErrorType::TPMError:
-      return "TPMError";
-   case ErrorType::ZlibError :
-      return "ZlibError";
-   case ErrorType::Bzip2Error:
-      return "Bzip2Error" ;
-   case ErrorType::LzmaError:
-      return "LzmaError";
+   switch(type)
+      {
+      case ErrorType::Unknown:
+         return "Unknown";
+      case ErrorType::SystemError:
+         return "SystemError";
+      case ErrorType::NotImplemented:
+         return "NotImplemented";
+      case ErrorType::OutOfMemory:
+         return "OutOfMemory";
+      case ErrorType::InternalError:
+         return "InternalError";
+      case ErrorType::IoError:
+         return "IoError";
+      case ErrorType::InvalidObjectState :
+         return "InvalidObjectState";
+      case ErrorType::KeyNotSet:
+         return "KeyNotSet";
+      case ErrorType::InvalidArgument:
+         return "InvalidArgument";
+      case ErrorType::InvalidKeyLength:
+         return "InvalidKeyLength";
+      case ErrorType::InvalidNonceLength:
+         return "InvalidNonceLength";
+      case ErrorType::LookupError:
+         return "LookupError";
+      case ErrorType::EncodingFailure:
+         return "EncodingFailure";
+      case ErrorType::DecodingFailure:
+         return "DecodingFailure";
+      case ErrorType::TLSError:
+         return "TLSError";
+      case ErrorType::HttpError:
+         return "HttpError";
+      case ErrorType::InvalidTag:
+         return "InvalidTag";
+      case ErrorType::OpenSSLError :
+         return "OpenSSLError";
+      case ErrorType::CommonCryptoError:
+         return "CommonCryptoError";
+      case ErrorType::Pkcs11Error:
+         return "Pkcs11Error";
+      case ErrorType::TPMError:
+         return "TPMError";
+      case ErrorType::DatabaseError:
+         return "DatabaseError";
+      case ErrorType::ZlibError :
+         return "ZlibError";
+      case ErrorType::Bzip2Error:
+         return "Bzip2Error" ;
+      case ErrorType::LzmaError:
+         return "LzmaError";
+      }
 
-   default:
-      return "unrecognized botan error";
+   // No default case in above switch so compiler warns
+   return "Unrecognized Botan error";
    }
-}
 
 Exception::Exception(const std::string& msg) : m_msg(msg)
    {}
