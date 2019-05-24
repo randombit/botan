@@ -316,6 +316,25 @@ class Shim_Socket final
          return static_cast<size_t>(got);
          }
 
+      void read_exactly(uint8_t buf[], size_t len)
+         {
+         if(m_socket < 0)
+            throw Shim_Exception("Socket was bad on read");
+
+         while(len > 0)
+            {
+            socket_op_ret_type got = ::read(m_socket, Botan::cast_uint8_ptr_to_char(buf), len);
+
+            if(got == 0)
+               throw Shim_Exception("Socket read EOF");
+            else if(got < 0)
+               throw Shim_Exception("Socket read failed: " + std::string(strerror(errno)));
+
+            buf += static_cast<size_t>(got);
+            len -= static_cast<size_t>(got);
+            }
+         }
+
    private:
       socket_type m_socket;
    };
@@ -1547,15 +1566,13 @@ int main(int /*argc*/, char* argv[])
                if(opcode == 'P')
                   {
                   uint8_t len_bytes[4];
-                  if(socket.read(len_bytes, sizeof(len_bytes)) != 4)
-                     shim_exit_with_error("Short read getting packet len");
+                  socket.read_exactly(len_bytes, sizeof(len_bytes));
 
                   size_t packet_len = Botan::load_be<uint32_t>(len_bytes, 0);
 
                   if(buf.size() < packet_len)
                      buf.resize(packet_len);
-                  if(socket.read(buf.data(), packet_len) != packet_len)
-                     shim_exit_with_error("Short read getting packet data " + std::to_string(packet_len));
+                  shim.read_exactly(buf.data(), packet_len);
 
                   chan->received_data(buf.data(), packet_len);
                   }
@@ -1564,8 +1581,7 @@ int main(int /*argc*/, char* argv[])
                   uint8_t timeout_ack = 't';
 
                   uint8_t timeout_bytes[8];
-                  if(socket.read(timeout_bytes, sizeof(timeout_bytes)) != 8)
-                     shim_exit_with_error("Short read getting timeout value");
+                  socket.read_exactly(timeout_bytes, sizeof(timeout_bytes));
 
                   const uint64_t nsec = Botan::load_be<uint64_t>(timeout_bytes, 0);
 
