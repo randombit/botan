@@ -57,11 +57,13 @@ inline void log_error(const char* where, const boost::system::error_code& error)
 
 inline void log_binary_message(const char* where, const uint8_t buf[], size_t buf_len)
    {
+   BOTAN_UNUSED(where, buf, buf_len);
    //std::cout << where << ' ' << Botan::hex_encode(buf, buf_len) << std::endl;
    }
 
 void log_text_message(const char* where,  const uint8_t buf[], size_t buf_len)
    {
+   BOTAN_UNUSED(where, buf, buf_len);
    //const char* c = reinterpret_cast<const char*>(buf);
    //std::cout << where << ' ' << std::string(c, c + buf_len)  << std::endl;
    }
