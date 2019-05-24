@@ -121,6 +121,8 @@ std::string map_to_bogo_error(const std::string& e)
          { "Invalid authentication tag: ChaCha20Poly1305 tag check failed", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "Invalid authentication tag: GCM tag check failed", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
          { "Message authentication failure", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:" },
+         { "No shared TLS version", ":UNSUPPORTED_PROTOCOL:" },
+         { "No shared DTLS version", ":UNSUPPORTED_PROTOCOL:" },
          { "OS2ECP: Unknown format type 251", ":BAD_ECPOINT:" },
          { "Policy forbids all available TLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
          { "Policy forbids all available DTLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:" },
@@ -895,29 +897,52 @@ class Shim_Policy final : public Botan::TLS::Policy
          return allow_client_initiated_renegotiation(); // same logic
          }
 
+      bool allow_version(Botan::TLS::Protocol_Version version) const
+         {
+         if(m_args.option_used("min-version"))
+            {
+            const uint16_t min_version_16 = static_cast<uint16_t>(m_args.get_int_opt("min-version"));
+            Botan::TLS::Protocol_Version min_version(min_version_16 >> 8, min_version_16 & 0xFF);
+            if(min_version > version)
+               return false;
+            }
+
+         if(m_args.option_used("max-version"))
+            {
+            const uint16_t max_version_16 = static_cast<uint16_t>(m_args.get_int_opt("max-version"));
+            Botan::TLS::Protocol_Version max_version(max_version_16 >> 8, max_version_16 & 0xFF);
+            if(version > max_version)
+               return false;
+            }
+
+         return version.known_version();
+         }
+
       bool allow_tls10() const override
          {
-         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls1");
+         return !m_args.flag_set("dtls") &&
+            !m_args.flag_set("no-tls1") &&
+            allow_version(Botan::TLS::Protocol_Version::TLS_V10);
          }
 
       bool allow_tls11() const override
          {
-         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls11");
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls11") && allow_version(Botan::TLS::Protocol_Version::TLS_V11);
          }
 
       bool allow_tls12() const override
          {
-         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls12");
+         return !m_args.flag_set("dtls") && !m_args.flag_set("no-tls12") && allow_version(Botan::TLS::Protocol_Version::TLS_V12);
          }
 
       bool allow_dtls10() const override
          {
-         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls1");
+         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls1") && allow_version(Botan::TLS::Protocol_Version::DTLS_V10);
          }
 
       bool allow_dtls12() const override
          {
-         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls12");
+         return m_args.flag_set("dtls") && !m_args.flag_set("no-tls12") && allow_version(Botan::TLS::Protocol_Version::DTLS_V12);
          }
 
       //Botan::TLS::Group_Params default_dh_group() const override;
@@ -958,30 +983,6 @@ class Shim_Policy final : public Botan::TLS::Policy
       bool only_resume_with_exact_version() const override
          {
          return false;
-         }
-
-      bool acceptable_protocol_version(Botan::TLS::Protocol_Version version) const override
-         {
-         if(!Botan::TLS::Policy::acceptable_protocol_version(version))
-            return false;
-
-         if(m_args.option_used("min-version"))
-            {
-            const uint16_t min_version_16 = static_cast<uint16_t>(m_args.get_int_opt("min-version"));
-            Botan::TLS::Protocol_Version min_version(min_version_16 >> 8, min_version_16 & 0xFF);
-            if(min_version > version)
-               return false;
-            }
-
-         if(m_args.option_used("max-version"))
-            {
-            const uint16_t max_version_16 = static_cast<uint16_t>(m_args.get_int_opt("max-version"));
-            Botan::TLS::Protocol_Version max_version(max_version_16 >> 8, max_version_16 & 0xFF);
-            if(version > max_version)
-               return false;
-            }
-
-         return version.known_version();
          }
 
       bool send_fallback_scsv(Botan::TLS::Protocol_Version) const override

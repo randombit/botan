@@ -108,6 +108,8 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
 
+   m_extensions.add(new Supported_Versions(m_version, policy));
+
    if(client_settings.hostname() != "")
       m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
 
@@ -280,7 +282,7 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
 
    m_comp_methods = reader.get_range_vector<uint8_t>(1, 1, 255);
 
-   m_extensions.deserialize(reader, Connection_Side::SERVER);
+   m_extensions.deserialize(reader, Connection_Side::CLIENT);
 
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
       {
@@ -295,15 +297,6 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
          // add fake extension
          m_extensions.add(new Renegotiation_Extension());
          }
-      }
-
-   // Parsing complete, now any additional decoding checks
-
-   if(m_version.supports_negotiable_signature_algorithms() == false)
-      {
-      if(m_extensions.has<Signature_Algorithms>())
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Client sent signature_algorithms extension in version that doesn't support it");
       }
    }
 
@@ -384,6 +377,13 @@ std::vector<uint8_t> Client_Hello::renegotiation_info() const
    if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
       return reneg->renegotiation_info();
    return std::vector<uint8_t>();
+   }
+
+std::vector<Protocol_Version> Client_Hello::supported_versions() const
+   {
+   if(Supported_Versions* versions = m_extensions.get<Supported_Versions>())
+      return versions->versions();
+   return {};
    }
 
 bool Client_Hello::supports_session_ticket() const

@@ -751,6 +751,12 @@ class TLS_Unit_Tests final : public Test
          policy.set("key_exchange_methods", kex_policy);
          policy.set("negotiate_encrypt_then_mac", etm_policy);
 
+         policy.set("allow_tls10", "true");
+         policy.set("allow_tls11", "true");
+         policy.set("allow_tls12", "true");
+         policy.set("allow_dtls10", "true");
+         policy.set("allow_dtls12", "true");
+
          if(kex_policy.find("RSA") != std::string::npos)
             {
             policy.set("signature_methods", "IMPLICIT");
@@ -798,6 +804,11 @@ class TLS_Unit_Tests final : public Test
          policy.set("ciphers", cipher_policy);
          policy.set("macs", mac_policy);
          policy.set("key_exchange_methods", kex_policy);
+         policy.set("allow_tls10", "false");
+         policy.set("allow_tls11", "false");
+         policy.set("allow_tls12", "true");
+         policy.set("allow_dtls10", "false");
+         policy.set("allow_dtls12", "true");
 
          if(kex_policy.find("RSA") != std::string::npos)
             {

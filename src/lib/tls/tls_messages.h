@@ -94,6 +94,8 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
 
       Protocol_Version version() const { return m_version; }
 
+      std::vector<Protocol_Version> supported_versions() const;
+
       const std::vector<uint8_t>& random() const { return m_random; }
 
       const std::vector<uint8_t>& session_id() const { return m_session_id; }

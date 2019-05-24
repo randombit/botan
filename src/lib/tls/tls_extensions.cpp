@@ -9,6 +9,7 @@
 #include <botan/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_policy.h>
 
 namespace Botan {
 
@@ -16,10 +17,8 @@ namespace TLS {
 
 namespace {
 
-Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size, Connection_Side side)
+Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size, Connection_Side from)
    {
-   BOTAN_UNUSED(side);
-
    switch(code)
       {
       case TLSEXT_SERVER_NAME_INDICATION:
@@ -34,7 +33,7 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size,
          return new Supported_Groups(reader, size);
 
       case TLSEXT_CERT_STATUS_REQUEST:
-         return new Certificate_Status_Request(reader, size, side);
+         return new Certificate_Status_Request(reader, size, from);
 
       case TLSEXT_EC_POINT_FORMATS:
          return new Supported_Point_Formats(reader, size);
@@ -59,6 +58,9 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size,
 
       case TLSEXT_SESSION_TICKET:
          return new Session_Ticket(reader, size);
+
+      case TLSEXT_SUPPORTED_VERSIONS:
+         return new Supported_Versions(reader, size, from);
       }
 
    return new Unknown_Extension(static_cast<Handshake_Extension_Type>(code),
@@ -67,7 +69,7 @@ Extension* make_extension(TLS_Data_Reader& reader, uint16_t code, uint16_t size,
 
 }
 
-void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side side)
+void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side from)
    {
    if(reader.has_remaining())
       {
@@ -88,7 +90,7 @@ void Extensions::deserialize(TLS_Data_Reader& reader, Connection_Side side)
                                 "Peer sent duplicated extensions");
 
          Extension* extn = make_extension(
-            reader, extension_code, extension_size, side);
+            reader, extension_code, extension_size, from);
 
          this->add(extn);
          }
@@ -539,8 +541,8 @@ std::vector<uint8_t> Certificate_Status_Request::serialize() const
 
 Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
                                                        uint16_t extension_size,
-                                                       Connection_Side side) :
-   m_server_side(side == SERVER)
+                                                       Connection_Side from) :
+   m_server_side(from == SERVER)
    {
    if(extension_size > 0)
       {
@@ -571,6 +573,81 @@ Certificate_Status_Request::Certificate_Status_Request(const std::vector<uint8_t
 Certificate_Status_Request::Certificate_Status_Request() : m_server_side(true)
    {
 
+   }
+
+std::vector<uint8_t> Supported_Versions::serialize() const
+   {
+   std::vector<uint8_t> buf;
+
+   if(m_server_side)
+      {
+      BOTAN_ASSERT_NOMSG(m_versions.size() == 1);
+      buf.push_back(m_versions[0].major_version());
+      buf.push_back(m_versions[0].minor_version());
+      }
+   else
+      {
+      const uint8_t len = static_cast<uint8_t>(m_versions.size() * 2);
+
+      buf.push_back(len);
+
+      for(Protocol_Version version : m_versions)
+         {
+         buf.push_back(get_byte(0, version.major_version()));
+         buf.push_back(get_byte(1, version.minor_version()));
+         }
+      }
+
+   return buf;
+   }
+
+Supported_Versions::Supported_Versions(Protocol_Version offer, const Policy& policy) :
+   m_server_side(false)
+   {
+   if(offer.is_datagram_protocol())
+      {
+      if(offer >= Protocol_Version::DTLS_V12 && policy.allow_dtls12())
+         m_versions.push_back(Protocol_Version::DTLS_V12);
+      if(offer >= Protocol_Version::DTLS_V10 && policy.allow_dtls10())
+         m_versions.push_back(Protocol_Version::DTLS_V10);
+      }
+   else
+      {
+      if(offer >= Protocol_Version::TLS_V12 && policy.allow_tls12())
+         m_versions.push_back(Protocol_Version::TLS_V12);
+      if(offer >= Protocol_Version::TLS_V11 && policy.allow_tls11())
+         m_versions.push_back(Protocol_Version::TLS_V11);
+      if(offer >= Protocol_Version::TLS_V10 && policy.allow_tls10())
+         m_versions.push_back(Protocol_Version::TLS_V10);
+      }
+   }
+
+Supported_Versions::Supported_Versions(TLS_Data_Reader& reader,
+                                       uint16_t extension_size,
+                                       Connection_Side from)
+   {
+   if(from == Connection_Side::SERVER)
+      {
+      m_server_side = true;
+      m_versions.push_back(Protocol_Version(reader.get_uint16_t()));
+      }
+   else
+      {
+      m_server_side = false;
+
+      auto versions = reader.get_range<uint16_t>(1, 1, 127);
+
+      for(auto v : versions)
+         m_versions.push_back(Protocol_Version(v));
+      }
+   }
+
+bool Supported_Versions::supports(Protocol_Version version) const
+   {
+   for(auto v : m_versions)
+      if(version == v)
+         return true;
+   return false;
    }
 
 }

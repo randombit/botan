@@ -12,6 +12,7 @@
 
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
+#include <botan/tls_version.h>
 #include <botan/secmem.h>
 #include <botan/x509_dn.h>
 #include <vector>
@@ -22,6 +23,8 @@
 namespace Botan {
 
 namespace TLS {
+
+class Policy;
 
 class TLS_Data_Reader;
 
@@ -41,6 +44,8 @@ enum Handshake_Extension_Type {
    TLSEXT_EXTENDED_MASTER_SECRET = 23,
 
    TLSEXT_SESSION_TICKET         = 35,
+
+   TLSEXT_SUPPORTED_VERSIONS     = 43,
 
    TLSEXT_SAFE_RENEGOTIATION     = 65281,
 };
@@ -425,6 +430,40 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension
    };
 
 /**
+* Supported Versions from RFC 8446
+*/
+class BOTAN_UNSTABLE_API Supported_Versions final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_SUPPORTED_VERSIONS; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<uint8_t> serialize() const override;
+
+      bool empty() const override { return m_versions.empty(); }
+
+      Supported_Versions(Protocol_Version version, const Policy& policy);
+
+      Supported_Versions(Protocol_Version version) : m_server_side(true)
+         {
+         m_versions.push_back(version);
+         }
+
+      Supported_Versions(TLS_Data_Reader& reader,
+                         uint16_t extension_size,
+                         Connection_Side from);
+
+      bool supports(Protocol_Version version) const;
+
+      const std::vector<Protocol_Version> versions() const { return m_versions; }
+   private:
+      std::vector<Protocol_Version> m_versions;
+      bool m_server_side;
+   };
+
+/**
 * Unknown extensions are deserialized as this type
 */
 class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
@@ -484,7 +523,7 @@ class BOTAN_UNSTABLE_API Extensions final
 
       std::vector<uint8_t> serialize() const;
 
-      void deserialize(TLS_Data_Reader& reader, Connection_Side side);
+      void deserialize(TLS_Data_Reader& reader, Connection_Side from);
 
       /**
       * Remvoe an extension from this extensions object, if it exists.
