@@ -454,7 +454,10 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
 
    if(initial_handshake == false && policy().allow_client_initiated_renegotiation() == false)
       {
-      send_warning_alert(Alert::NO_RENEGOTIATION);
+      if(policy().abort_connection_on_undesired_renegotiation())
+         throw TLS_Exception(Alert::NO_RENEGOTIATION, "Server policy prohibits renegotiation");
+      else
+         send_warning_alert(Alert::NO_RENEGOTIATION);
       return;
       }
 
