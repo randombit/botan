@@ -57,7 +57,7 @@ void shim_log(const std::string& s)
       static FILE* log = std::fopen("/tmp/bogo_shim.log", "w");
       struct timeval tv;
       ::gettimeofday(&tv, nullptr);
-      std::fprintf(log, "%lld.%lu: %s\n", tv.tv_sec, tv.tv_usec, s.c_str());
+      std::fprintf(log, "%lld.%lu: %s\n", static_cast<unsigned long long>(tv.tv_sec), tv.tv_usec, s.c_str());
       std::fflush(log);
       }
    }
