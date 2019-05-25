@@ -37,18 +37,8 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    m_nonce_bytes_from_record = suite.nonce_bytes_from_record(version);
    m_nonce_bytes_from_handshake = suite.nonce_bytes_from_handshake();
 
-   secure_vector<uint8_t> aead_key;
-
-   if(side == CLIENT)
-      {
-      aead_key = keys.client_aead_key();
-      m_nonce = keys.client_nonce();
-      }
-   else
-      {
-      aead_key = keys.server_aead_key();
-      m_nonce = keys.server_nonce();
-      }
+   const secure_vector<uint8_t>& aead_key = keys.aead_key(side);
+   m_nonce = keys.nonce(side);
 
    BOTAN_ASSERT_NOMSG(m_nonce.size() == m_nonce_bytes_from_handshake);
 
