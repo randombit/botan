@@ -211,14 +211,14 @@ void write_record(secure_vector<uint8_t>& output,
       return;
       }
 
-   AEAD_Mode* aead = cs->aead();
+   AEAD_Mode& aead = cs->aead();
    std::vector<uint8_t> aad = cs->format_ad(seq, msg.get_type(), version, static_cast<uint16_t>(msg.get_size()));
 
-   const size_t ctext_size = aead->output_length(msg.get_size());
+   const size_t ctext_size = aead.output_length(msg.get_size());
 
    const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
 
-   aead->set_ad(aad);
+   aead.set_ad(aad);
 
    const std::vector<uint8_t> nonce = cs->aead_nonce(seq, rng);
 
@@ -235,8 +235,8 @@ void write_record(secure_vector<uint8_t>& output,
    const size_t header_size = output.size();
    output += std::make_pair(msg.get_data(), msg.get_size());
 
-   aead->start(nonce);
-   aead->finish(output, header_size);
+   aead.start(nonce);
+   aead.finish(output, header_size);
 
    BOTAN_ASSERT(output.size() < MAX_CIPHERTEXT_SIZE,
                 "Produced ciphertext larger than protocol allows");
@@ -270,8 +270,7 @@ void decrypt_record(secure_vector<uint8_t>& output,
                     Record_Type record_type,
                     Connection_Cipher_State& cs)
    {
-   AEAD_Mode* aead = cs.aead();
-   BOTAN_ASSERT(aead, "Cannot decrypt without cipher");
+   AEAD_Mode& aead = cs.aead();
 
    const std::vector<uint8_t> nonce = cs.aead_nonce(record_contents, record_len, record_sequence);
    const uint8_t* msg = &record_contents[cs.nonce_bytes_from_record()];
@@ -284,23 +283,23 @@ void decrypt_record(secure_vector<uint8_t>& output,
    * tools which are attempting automated detection of padding oracles,
    * including older versions of TLS-Attacker.
    */
-   if(msg_length < aead->minimum_final_size())
+   if(msg_length < aead.minimum_final_size())
       throw TLS_Exception(Alert::BAD_RECORD_MAC, "AEAD packet is shorter than the tag");
 
-   const size_t ptext_size = aead->output_length(msg_length);
+   const size_t ptext_size = aead.output_length(msg_length);
 
-   aead->set_associated_data_vec(
+   aead.set_associated_data_vec(
       cs.format_ad(record_sequence,
                    static_cast<uint8_t>(record_type),
                    record_version,
                    static_cast<uint16_t>(ptext_size))
       );
 
-   aead->start(nonce);
+   aead.start(nonce);
 
    const size_t offset = output.size();
    output += std::make_pair(msg, msg_length);
-   aead->finish(output, offset);
+   aead.finish(output, offset);
    }
 
 size_t read_tls_record(secure_vector<uint8_t>& readbuf,

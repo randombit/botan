@@ -42,7 +42,11 @@ class Connection_Cipher_State final
                               const Session_Keys& keys,
                               bool uses_encrypt_then_mac);
 
-      AEAD_Mode* aead() { return m_aead.get(); }
+      AEAD_Mode& aead()
+         {
+         BOTAN_ASSERT_NONNULL(m_aead.get());
+         return *m_aead.get();
+         }
 
       std::vector<uint8_t> aead_nonce(uint64_t seq, RandomNumberGenerator& rng);
 
