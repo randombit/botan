@@ -70,10 +70,6 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                          uses_encrypt_then_mac));
          }
 
-      m_aead->set_key(aead_key);
-
-      if(our_side == false)
-         m_aead->start(m_nonce);
 #else
       throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
@@ -81,8 +77,9 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    else
       {
       m_aead = AEAD_Mode::create_or_throw(suite.cipher_algo(), our_side ? ENCRYPTION : DECRYPTION);
-      m_aead->set_key(aead_key);
       }
+
+   m_aead->set_key(aead_key);
    }
 
 std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNumberGenerator& rng)
@@ -128,6 +125,12 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
       {
       case Nonce_Format::CBC_MODE:
          {
+         if(nonce_bytes_from_record() == 0 && m_nonce.size())
+            {
+            std::vector<uint8_t> nonce;
+            nonce.swap(m_nonce);
+            return nonce;
+            }
          if(record_len < nonce_bytes_from_record())
             throw Decoding_Error("Invalid CBC packet too short to be valid");
          std::vector<uint8_t> nonce(record, record + nonce_bytes_from_record());
