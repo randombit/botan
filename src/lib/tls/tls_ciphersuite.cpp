@@ -37,6 +37,30 @@ size_t Ciphersuite::nonce_bytes_from_handshake() const
    throw Invalid_State("In Ciphersuite::nonce_bytes_from_handshake invalid enum value");
    }
 
+size_t Ciphersuite::nonce_bytes_from_record(Protocol_Version version) const
+   {
+   switch(m_nonce_format)
+      {
+      case Nonce_Format::CBC_MODE:
+         {
+         if(version.supports_explicit_cbc_ivs())
+            {
+            return cipher_algo() == "3DES" ? 8 : 16;
+            }
+         else
+            {
+            return 0;
+            }
+         }
+      case Nonce_Format::AEAD_IMPLICIT_4:
+         return 8;
+      case Nonce_Format::AEAD_XOR_12:
+         return 0;
+      }
+
+   throw Invalid_State("In Ciphersuite::nonce_bytes_from_handshake invalid enum value");
+   }
+
 bool Ciphersuite::is_scsv(uint16_t suite)
    {
    // TODO: derive from IANA file in script

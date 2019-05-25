@@ -18,6 +18,7 @@ struct CRL_Entry_Data;
 
 /**
 * X.509v2 CRL Reason Code.
+* This will become an enum class in a future major release
 */
 enum CRL_Code : uint32_t {
    UNSPECIFIED            = 0,

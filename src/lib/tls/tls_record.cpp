@@ -1,6 +1,6 @@
 /*
 * TLS Record Handling
-* (C) 2012,2013,2014,2015,2016 Jack Lloyd
+* (C) 2012,2013,2014,2015,2016,2019 Jack Lloyd
 *     2016 Juraj Somorovsky
 *     2016 Matthias Gierlings
 *
@@ -33,25 +33,14 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  bool uses_encrypt_then_mac) :
    m_start_time(std::chrono::system_clock::now())
    {
-   SymmetricKey mac_key, cipher_key;
-   InitializationVector iv;
-
-   if(side == CLIENT)
-      {
-      cipher_key = keys.client_cipher_key();
-      iv = keys.client_iv();
-      mac_key = keys.client_mac_key();
-      }
-   else
-      {
-      cipher_key = keys.server_cipher_key();
-      iv = keys.server_iv();
-      mac_key = keys.server_mac_key();
-      }
-
-   m_nonce = unlock(iv.bits_of());
-   m_nonce_bytes_from_handshake = m_nonce.size();
    m_nonce_format = suite.nonce_format();
+   m_nonce_bytes_from_record = suite.nonce_bytes_from_record(version);
+   m_nonce_bytes_from_handshake = suite.nonce_bytes_from_handshake();
+
+   const secure_vector<uint8_t>& aead_key = keys.aead_key(side);
+   m_nonce = keys.nonce(side);
+
+   BOTAN_ASSERT_NOMSG(m_nonce.size() == m_nonce_bytes_from_handshake);
 
    if(nonce_format() == Nonce_Format::CBC_MODE)
       {
@@ -81,14 +70,6 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                          uses_encrypt_then_mac));
          }
 
-      m_aead->set_key(cipher_key + mac_key);
-
-      m_nonce_bytes_from_record = 0;
-
-      if(version.supports_explicit_cbc_ivs())
-         m_nonce_bytes_from_record = m_nonce_bytes_from_handshake;
-      else if(our_side == false)
-         m_aead->start(iv.bits_of());
 #else
       throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
@@ -96,19 +77,9 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    else
       {
       m_aead = AEAD_Mode::create_or_throw(suite.cipher_algo(), our_side ? ENCRYPTION : DECRYPTION);
-
-      m_aead->set_key(cipher_key + mac_key);
-
-      if(nonce_format() == Nonce_Format::AEAD_IMPLICIT_4)
-         {
-         m_nonce_bytes_from_record = 8;
-         m_nonce.resize(m_nonce.size() + 8);
-         }
-      else if(nonce_format() != Nonce_Format::AEAD_XOR_12)
-         {
-         throw Invalid_State("Invalid AEAD nonce format used");
-         }
       }
+
+   m_aead->set_key(aead_key);
    }
 
 std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNumberGenerator& rng)
@@ -136,7 +107,9 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
          }
       case Nonce_Format::AEAD_IMPLICIT_4:
          {
-         std::vector<uint8_t> nonce = m_nonce;
+         BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
+         std::vector<uint8_t> nonce(12);
+         copy_mem(&nonce[0], m_nonce.data(), 4);
          store_be(seq, &nonce[nonce_bytes_from_handshake()]);
          return nonce;
          }
@@ -152,6 +125,12 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
       {
       case Nonce_Format::CBC_MODE:
          {
+         if(nonce_bytes_from_record() == 0 && m_nonce.size())
+            {
+            std::vector<uint8_t> nonce;
+            nonce.swap(m_nonce);
+            return nonce;
+            }
          if(record_len < nonce_bytes_from_record())
             throw Decoding_Error("Invalid CBC packet too short to be valid");
          std::vector<uint8_t> nonce(record, record + nonce_bytes_from_record());
@@ -166,9 +145,11 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
          }
       case Nonce_Format::AEAD_IMPLICIT_4:
          {
+         BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
          if(record_len < nonce_bytes_from_record())
             throw Decoding_Error("Invalid AEAD packet too short to be valid");
-         std::vector<uint8_t> nonce = m_nonce;
+         std::vector<uint8_t> nonce(12);
+         copy_mem(&nonce[0], m_nonce.data(), 4);
          copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
          return nonce;
          }
@@ -233,14 +214,14 @@ void write_record(secure_vector<uint8_t>& output,
       return;
       }
 
-   AEAD_Mode* aead = cs->aead();
+   AEAD_Mode& aead = cs->aead();
    std::vector<uint8_t> aad = cs->format_ad(seq, msg.get_type(), version, static_cast<uint16_t>(msg.get_size()));
 
-   const size_t ctext_size = aead->output_length(msg.get_size());
+   const size_t ctext_size = aead.output_length(msg.get_size());
 
    const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
 
-   aead->set_ad(aad);
+   aead.set_ad(aad);
 
    const std::vector<uint8_t> nonce = cs->aead_nonce(seq, rng);
 
@@ -257,8 +238,8 @@ void write_record(secure_vector<uint8_t>& output,
    const size_t header_size = output.size();
    output += std::make_pair(msg.get_data(), msg.get_size());
 
-   aead->start(nonce);
-   aead->finish(output, header_size);
+   aead.start(nonce);
+   aead.finish(output, header_size);
 
    BOTAN_ASSERT(output.size() < MAX_CIPHERTEXT_SIZE,
                 "Produced ciphertext larger than protocol allows");
@@ -292,8 +273,7 @@ void decrypt_record(secure_vector<uint8_t>& output,
                     Record_Type record_type,
                     Connection_Cipher_State& cs)
    {
-   AEAD_Mode* aead = cs.aead();
-   BOTAN_ASSERT(aead, "Cannot decrypt without cipher");
+   AEAD_Mode& aead = cs.aead();
 
    const std::vector<uint8_t> nonce = cs.aead_nonce(record_contents, record_len, record_sequence);
    const uint8_t* msg = &record_contents[cs.nonce_bytes_from_record()];
@@ -306,23 +286,23 @@ void decrypt_record(secure_vector<uint8_t>& output,
    * tools which are attempting automated detection of padding oracles,
    * including older versions of TLS-Attacker.
    */
-   if(msg_length < aead->minimum_final_size())
+   if(msg_length < aead.minimum_final_size())
       throw TLS_Exception(Alert::BAD_RECORD_MAC, "AEAD packet is shorter than the tag");
 
-   const size_t ptext_size = aead->output_length(msg_length);
+   const size_t ptext_size = aead.output_length(msg_length);
 
-   aead->set_associated_data_vec(
+   aead.set_associated_data_vec(
       cs.format_ad(record_sequence,
                    static_cast<uint8_t>(record_type),
                    record_version,
                    static_cast<uint16_t>(ptext_size))
       );
 
-   aead->start(nonce);
+   aead.start(nonce);
 
    const size_t offset = output.size();
    output += std::make_pair(msg, msg_length);
-   aead->finish(output, offset);
+   aead.finish(output, offset);
    }
 
 size_t read_tls_record(secure_vector<uint8_t>& readbuf,

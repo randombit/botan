@@ -94,8 +94,8 @@ void TLS_CBC_HMAC_AEAD_Mode::key_schedule(const uint8_t key[], size_t keylen)
    if(keylen != m_cipher_keylen + m_mac_keylen)
       throw Invalid_Key_Length(name(), keylen);
 
-   cbc().set_key(&key[0], m_cipher_keylen);
-   mac().set_key(&key[m_cipher_keylen], m_mac_keylen);
+   mac().set_key(&key[0], m_mac_keylen);
+   cbc().set_key(&key[m_mac_keylen], m_cipher_keylen);
    }
 
 void TLS_CBC_HMAC_AEAD_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)

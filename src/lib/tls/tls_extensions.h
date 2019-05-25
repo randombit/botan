@@ -28,6 +28,7 @@ class Policy;
 
 class TLS_Data_Reader;
 
+// This will become an enum class in a future major release
 enum Handshake_Extension_Type {
    TLSEXT_SERVER_NAME_INDICATION = 0,
    TLSEXT_CERT_STATUS_REQUEST    = 5,
@@ -482,7 +483,6 @@ class BOTAN_UNSTABLE_API Unknown_Extension final : public Extension
    private:
       Handshake_Extension_Type m_type;
       std::vector<uint8_t> m_value;
-
    };
 
 /**
