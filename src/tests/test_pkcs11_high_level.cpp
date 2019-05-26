@@ -831,9 +831,6 @@ Test::Result test_rsa_encrypt_decrypt()
       Botan::PK_Decryptor_EME decryptor(keypair.second, Test::rng(), padding);
       auto decrypted = decryptor.decrypt(encrypted);
 
-      // some token / middlewares do not remove the padding bytes
-      decrypted.resize(plaintext.size());
-
       result.test_eq("RSA PKCS11 encrypt and decrypt: " + padding, decrypted, plaintext);
       };
 

@@ -1950,11 +1950,16 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          decrypted_data.resize(decrypted_size);
-         return C_Decrypt(session,
-                          const_cast<Byte*>(encrypted_data.data()),
-                          static_cast<Ulong>(encrypted_data.size()),
-                          decrypted_data.data(),
-                          &decrypted_size, return_value);
+         if(!C_Decrypt(session,
+                       const_cast<Byte*>(encrypted_data.data()),
+                       static_cast<Ulong>(encrypted_data.size()),
+                       decrypted_data.data(),
+                       &decrypted_size, return_value))
+            {
+            return false;
+            }
+         decrypted_data.resize(decrypted_size);
+         return true;
          }
 
       /**
