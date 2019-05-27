@@ -2199,12 +2199,17 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          signature.resize(signature_size);
-         return C_Sign(session,
+         if (!C_Sign(session,
                        const_cast<Byte*>(data.data()),
                        static_cast<Ulong>(data.size()),
                        signature.data(),
                        &signature_size,
-                       return_value);
+                       return_value))
+            {
+            return false;
+            }
+         signature.resize(signature_size);
+         return true;
          }
 
       /**
