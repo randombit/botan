@@ -1817,11 +1817,16 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          encrypted_data.resize(encrypted_size);
-         return C_Encrypt(session,
+         if (!C_Encrypt(session,
                           const_cast<Byte*>(plaintext_data.data()),
                           static_cast<Ulong>(plaintext_data.size()),
                           encrypted_data.data(),
-                          &encrypted_size, return_value);
+                          &encrypted_size, return_value))
+            {
+            return false;
+            }
+         encrypted_data.resize(encrypted_size);
+         return true;
          }
 
       /**
