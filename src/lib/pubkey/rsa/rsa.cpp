@@ -256,7 +256,7 @@ class RSA_Private_Operation
          */
          m.sig_words();
 
-         auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask, powm_window]() {
+         auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask]() {
 #endif
          const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
          auto powm_d1_p = monty_precompute(m_monty_p, m_mod_p.reduce(m), powm_window);
