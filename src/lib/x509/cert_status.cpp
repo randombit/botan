@@ -46,6 +46,8 @@ const char* to_string(Certificate_Status_Code code)
          return "OCSP is not yet valid";
       case Certificate_Status_Code::OCSP_HAS_EXPIRED:
          return "OCSP response has expired";
+      case Certificate_Status_Code::OCSP_IS_TOO_OLD:
+         return "OCSP response is too old";
       case Certificate_Status_Code::CRL_NOT_YET_VALID:
          return "CRL response is not yet valid";
       case Certificate_Status_Code::CRL_HAS_EXPIRED:
