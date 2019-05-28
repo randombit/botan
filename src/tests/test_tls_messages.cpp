@@ -35,8 +35,8 @@ Test::Result test_hello_verify_request()
    // Compute HMAC
    std::unique_ptr<Botan::MessageAuthenticationCode> hmac(Botan::MessageAuthenticationCode::create("HMAC(SHA-256)"));
    hmac->set_key(sk);
-   hmac->update_be(size_t(0));
-   hmac->update_be(size_t(0));
+   hmac->update_be(uint64_t(0)); // length of client hello
+   hmac->update_be(uint64_t(0)); // length of client identity
    std::vector<uint8_t> test = unlock(hmac->final());
 
    result.test_eq("Cookie comparison", hfr.cookie(), test);
