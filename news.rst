@@ -4,6 +4,8 @@ Release Notes
 Version 2.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add Argon2 password hash (GH #1981 #459)
+
 * Add a shim allowing testing Botan against the BoringSSL test suite,
   and fix a number of bugs in TLS found using it.
   (GH #1954 #1955 #1956 #1959 #1966 #1970)
