@@ -186,6 +186,9 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Server_Name_Indicator(session.server_info().hostname()));
    m_extensions.add(new Session_Ticket(session.session_ticket()));
 
+   if(policy.support_cert_status_message())
+      m_extensions.add(new Certificate_Status_Request({}, {}));
+
    std::unique_ptr<Supported_Groups> supported_groups(new Supported_Groups(policy.key_exchange_groups()));
 
    if(supported_groups->ec_groups().size() > 0)

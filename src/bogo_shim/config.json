@@ -141,7 +141,6 @@
         "PartialClientFinishedWithClientHello": "Need to check for buffered messages when CCS (bug)",
         "SendUnencryptedFinished-DTLS": "Need to check for buffered messages when CCS (bug)",
 
-        "SendOCSPResponseOnResume-TLS12": "Not supported by Botan (bug)",
         "ECDSAKeyUsage-TLS12": "Botan ignores KeyUsage (bug)",
         "RSAKeyUsage-*": "Botan ignores KeyUsage (bug)"
     }
