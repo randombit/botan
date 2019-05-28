@@ -124,9 +124,47 @@ class OCSP_Tests final : public Test
          return result;
          }
 
-      Test::Result test_response_verification()
+      Test::Result test_response_verification_with_next_update_without_max_age()
          {
-         Test::Result result("OCSP request check");
+         Test::Result result("OCSP request check with next_update w/o max_age");
+
+         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+
+         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
+
+         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+
+         Botan::Certificate_Store_In_Memory certstore;
+         certstore.add_certificate(trust_root);
+
+         auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
+                               const Botan::Certificate_Status_Code expected)
+            {
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+
+            return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
+                   result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
+                   result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
+                                  ocsp_status[0].count(expected));
+            };
+
+         check_ocsp(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_NOT_YET_VALID);
+         check_ocsp(Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
+         check_ocsp(Botan::calendar_point(2016, 11, 20, 8, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
+         check_ocsp(Botan::calendar_point(2016, 11, 28, 8, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
+
+         return result;
+         }
+
+      Test::Result test_response_verification_with_next_update_with_max_age()
+         {
+         Test::Result result("OCSP request check with next_update with max_age");
 
          std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/randombit.pem");
          std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
@@ -140,23 +178,34 @@ class OCSP_Tests final : public Test
          certstore.add_certificate(trust_root);
 
          // Some arbitrary time within the validity period of the test certs
-         const auto valid_time = Botan::calendar_point(2016, 11, 20, 8, 30, 0).to_std_timepoint();
-         const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+         const auto max_age = std::chrono::minutes(59);
 
-         if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
+         auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
+                               const Botan::Certificate_Status_Code expected)
             {
-            if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
-               {
-               result.confirm("Status good", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
-               }
-            }
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time, max_age);
+
+            return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
+                   result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
+                   result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
+                                  ocsp_status[0].count(expected));
+            };
+
+         check_ocsp(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_NOT_YET_VALID);
+         check_ocsp(Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
+         check_ocsp(Botan::calendar_point(2016, 11, 20, 8, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
+         check_ocsp(Botan::calendar_point(2016, 11, 28, 8, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
 
          return result;
          }
 
-      Test::Result test_response_verification_too_old()
+      Test::Result test_response_verification_without_next_update_with_max_age()
          {
-         Test::Result result("OCSP request check with validity timeout");
+         Test::Result result("OCSP request check w/o next_update with max_age");
 
          std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
          std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
@@ -185,12 +234,46 @@ class OCSP_Tests final : public Test
 
          check_ocsp(Botan::calendar_point(2019, 5, 28, 7, 0, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_NOT_YET_VALID);
-
          check_ocsp(Botan::calendar_point(2019, 5, 28, 7, 30, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
-
          check_ocsp(Botan::calendar_point(2019, 5, 28, 8, 0, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_IS_TOO_OLD);
+
+         return result;
+         }
+
+      Test::Result test_response_verification_without_next_update_without_max_age()
+         {
+         Test::Result result("OCSP request check w/o next_update w/o max_age");
+
+         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+
+         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
+
+         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
+
+         Botan::Certificate_Store_In_Memory certstore;
+         certstore.add_certificate(trust_root);
+
+         auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
+                               const Botan::Certificate_Status_Code expected)
+            {
+            const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
+
+            return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
+                   result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
+                   result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
+                                  ocsp_status[0].count(expected));
+            };
+
+         check_ocsp(Botan::calendar_point(2019, 5, 28, 7, 0, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_NOT_YET_VALID);
+         check_ocsp(Botan::calendar_point(2019, 5, 28, 7, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
+         check_ocsp(Botan::calendar_point(2019, 5, 28, 8, 0, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
 
          return result;
          }
@@ -265,8 +348,10 @@ class OCSP_Tests final : public Test
          results.push_back(test_request_encoding());
          results.push_back(test_response_parsing());
          results.push_back(test_response_certificate_access());
-         results.push_back(test_response_verification());
-         results.push_back(test_response_verification_too_old());
+         results.push_back(test_response_verification_with_next_update_without_max_age());
+         results.push_back(test_response_verification_with_next_update_with_max_age());
+         results.push_back(test_response_verification_without_next_update_with_max_age());
+         results.push_back(test_response_verification_without_next_update_without_max_age());
          results.push_back(test_response_verification_softfail());
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
