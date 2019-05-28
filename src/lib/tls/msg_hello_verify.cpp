@@ -38,9 +38,9 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& client_he
    std::unique_ptr<MessageAuthenticationCode> hmac(MessageAuthenticationCode::create("HMAC(SHA-256)"));
    hmac->set_key(secret_key);
 
-   hmac->update_be(client_hello_bits.size());
+   hmac->update_be(static_cast<uint64_t>(client_hello_bits.size()));
    hmac->update(client_hello_bits);
-   hmac->update_be(client_identity.size());
+   hmac->update_be(static_cast<uint64_t>(client_identity.size()));
    hmac->update(client_identity);
 
    m_cookie = unlock(hmac->final());

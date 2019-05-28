@@ -1,0 +1,8 @@
+<defines>
+ARGON2 -> 20190527
+</defines>
+
+<requires>
+blake2
+</requires>
+
