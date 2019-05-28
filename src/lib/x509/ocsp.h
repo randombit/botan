@@ -139,17 +139,21 @@ class BOTAN_PUBLIC_API(2,0) Response final
        * @param issuer issuer certificate
        * @param subject subject certificate
        * @param ref_time the reference time
+       * @param max_age the maximum age the response should be considered valid
+       *                if next_update is not set
        * @return OCSP status code, possible values:
        *         CERT_IS_REVOKED,
        *         OCSP_NOT_YET_VALID,
        *         OCSP_HAS_EXPIRED,
+       *         OCSP_IS_TOO_OLD,
        *         OCSP_RESPONSE_GOOD,
        *         OCSP_BAD_STATUS,
        *         OCSP_CERT_NOT_LISTED
        */
       Certificate_Status_Code status_for(const X509_Certificate& issuer,
                                          const X509_Certificate& subject,
-                                         std::chrono::system_clock::time_point ref_time = std::chrono::system_clock::now()) const;
+                                         std::chrono::system_clock::time_point ref_time = std::chrono::system_clock::now(),
+                                         std::chrono::seconds max_age = std::chrono::seconds::zero()) const;
 
       /**
        * @return the certificate chain, if provided in response

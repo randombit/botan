@@ -352,7 +352,8 @@ CertificatePathStatusCodes
 BOTAN_PUBLIC_API(2,0) check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                      const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
                      const std::vector<Certificate_Store*>& certstores,
-                     std::chrono::system_clock::time_point ref_time);
+                     std::chrono::system_clock::time_point ref_time,
+                     std::chrono::seconds max_age = std::chrono::seconds::zero());
 
 /**
 * Check CRLs for revocation information
