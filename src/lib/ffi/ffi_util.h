@@ -82,7 +82,11 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    if(o->magic_ok() == false)
       return BOTAN_FFI_ERROR_INVALID_OBJECT;
 
-   return ffi_guard_thunk(func_name, [&]() { return func(*o->unsafe_get()); });
+   T* p = o->unsafe_get();
+   if(p == nullptr)
+      return BOTAN_FFI_ERROR_INVALID_OBJECT;
+
+   return ffi_guard_thunk(func_name, [&]() { return func(*p); });
    }
 
 #define BOTAN_FFI_DO(T, obj, param, block)                              \
