@@ -74,7 +74,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement
          attributes.add_bool(AttributeType::Extractable, true);
          attributes.add_numeric(AttributeType::Class, static_cast< CK_OBJECT_CLASS >(ObjectClass::SecretKey));
          attributes.add_numeric(AttributeType::KeyType, static_cast< CK_KEY_TYPE >(KeyType::GenericSecret));
-         attributes.add_numeric(AttributeType::ValueLen, key_len);
+         attributes.add_numeric(AttributeType::ValueLen, static_cast< CK_ULONG >(key_len));
          m_key.module()->C_DeriveKey(m_key.session().handle(), m_mechanism.data(), m_key.handle(), attributes.data(),
                                      attributes.count(), &secret_handle);
 
