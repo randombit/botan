@@ -191,8 +191,11 @@ typedef struct botan_rng_struct* botan_rng_t;
 * Initialize a random number generator object
 * @param rng rng object
 * @param rng_type type of the rng, possible values:
-*    "system": System_RNG, "user": AutoSeeded_RNG
-* Set rng_type to null or empty string to let the library choose
+*    "system": system RNG
+*    "user": userspace RNG
+*    "user-threadsafe": userspace RNG, with internal locking
+*    "rdrand": directly read RDRAND
+* Set rng_type to null to let the library choose some default.
 */
 BOTAN_PUBLIC_API(2,0) int botan_rng_init(botan_rng_t* rng, const char* rng_type);
 
