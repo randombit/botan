@@ -128,7 +128,7 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
 
 std::unique_ptr<PasswordHash> Argon2_Family::default_params() const
    {
-   return this->from_params(64*1024*1024, 3, 4);
+   return this->from_params(128*1024, 1, 1);
    }
 
 std::unique_ptr<PasswordHash> Argon2_Family::from_iterations(size_t iter) const
@@ -139,7 +139,7 @@ std::unique_ptr<PasswordHash> Argon2_Family::from_iterations(size_t iter) const
    mapping from iteration count to params
    */
    const size_t M = iter;
-   const size_t t = 3;
+   const size_t t = 1;
    const size_t p = 1;
    return this->from_params(M, t, p);
    }

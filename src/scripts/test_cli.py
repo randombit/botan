@@ -322,6 +322,14 @@ def cli_pbkdf_tune_tests():
         if expected_pbkdf2.match(line) is None:
             logging.error("Unexpected line '%s'" % (line))
 
+    expected_argon2 = re.compile(r'For (default|[1-9][0-9]*) ms selected Argon2id\([0-9]+,[0-9]+,[0-9]+\)')
+
+    output = test_cli("pbkdf_tune", ["--algo=Argon2id", "--check", "1", "10", "50", "default"], None).split('\n')
+
+    for line in output:
+        if expected_argon2.match(line) is None:
+            logging.error("Unexpected line '%s'" % (line))
+
 def cli_psk_db_tests():
     if not check_for_command("psk_get"):
         return
