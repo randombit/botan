@@ -26,7 +26,7 @@ class Generate_Bcrypt final : public Command
 
       std::string description() const override
          {
-         return "Calculate the bcrypt password digest of a given file";
+         return "Calculate bcrypt password hash";
          }
 
       void go() override
@@ -60,7 +60,7 @@ class Check_Bcrypt final : public Command
 
       std::string description() const override
          {
-         return "Checks a given bcrypt hash against hash";
+         return "Verify bcrypt password hash";
          }
 
       void go() override

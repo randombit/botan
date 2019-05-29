@@ -20,6 +20,10 @@
    #include <botan/scrypt.h>
 #endif
 
+#if defined(BOTAN_HAS_ARGON2)
+   #include <botan/argon2.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string& algo_spec,
@@ -49,6 +53,21 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
    if(req.algo_name() == "Scrypt")
       {
       return std::unique_ptr<PasswordHashFamily>(new Scrypt_Family);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ARGON2)
+   if(req.algo_name() == "Argon2d")
+      {
+      return std::unique_ptr<PasswordHashFamily>(new Argon2_Family(0));
+      }
+   else if(req.algo_name() == "Argon2i")
+      {
+      return std::unique_ptr<PasswordHashFamily>(new Argon2_Family(1));
+      }
+   else if(req.algo_name() == "Argon2id")
+      {
+      return std::unique_ptr<PasswordHashFamily>(new Argon2_Family(2));
       }
 #endif
 
