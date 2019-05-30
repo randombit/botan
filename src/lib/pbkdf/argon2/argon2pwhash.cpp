@@ -76,8 +76,8 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
 
    // Tune with a large memory otherwise we measure cache vs RAM speeds and underestimate
    // costs for larger params
-   size_t M = 32*1024; // in KiB
-   size_t p = 1;
+   const size_t tune_M = 256*1024; // in KiB
+   const size_t p = 1;
    size_t t = 1;
 
    Timer timer("Argon2");
@@ -85,13 +85,15 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
 
    timer.run_until_elapsed(tune_time, [&]() {
       uint8_t output[32] = { 0 };
-      argon2(output, sizeof(output), "test", 4, nullptr, 0, nullptr, 0, nullptr, 0, m_family, p, M, t);
+      argon2(output, sizeof(output), "test", 4, nullptr, 0, nullptr, 0, nullptr, 0, m_family, p, tune_M, t);
       });
 
    if(timer.events() == 0 || timer.value() == 0)
       return default_params();
 
-   const uint64_t measured_time = timer.value() / timer.events();
+   size_t M = 4*1024;
+
+   const uint64_t measured_time = timer.value() / (timer.events() * (tune_M / M));
 
    const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
 
@@ -109,7 +111,7 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
 
    if(est_nsec < target_nsec && M < max_kib)
       {
-      const size_t desired_cost_increase = ((target_nsec + est_nsec - 1) / est_nsec);
+      const size_t desired_cost_increase = (target_nsec + est_nsec - 1) / est_nsec;
       const size_t mem_headroom = max_kib / M;
 
       const size_t M_mult = std::min(desired_cost_increase, mem_headroom);
@@ -119,7 +121,7 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
 
    if(est_nsec < target_nsec)
       {
-      const size_t desired_cost_increase = ((target_nsec + est_nsec - 1) / est_nsec);
+      const size_t desired_cost_increase = (target_nsec + est_nsec - 1) / est_nsec;
       t *= desired_cost_increase;
       }
 

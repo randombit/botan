@@ -112,7 +112,7 @@ Other Useful Things
 * Simple compression API wrapping zlib, bzip2, and lzma libraries
 * RNG wrappers for system RNG and hardware RNGs
 * HMAC_DRBG and entropy collection system for userspace RNGs
-* Password hashing schemes PBKDF2, Scrypt, bcrypt
+* Password hashing schemes PBKDF2, Argon2, Scrypt, bcrypt
 * SRP-6a password authenticated key exchange
 * Key derivation functions including HKDF, KDF2, SP 800-108, SP 800-56A, SP 800-56C
 * HOTP and TOTP algorithms
