@@ -137,7 +137,7 @@ class Pwdhash_Tests : public Test
                result.end_timer();
                }
             else
-               result.test_failure("No such algo " + pwdhash);
+               result.test_note("No such algo " + pwdhash);
 
             results.push_back(result);
             }
