@@ -109,9 +109,19 @@ class BOTAN_PUBLIC_API(2,0) Exception : public std::exception
       */
       virtual int error_code() const noexcept { return 0; }
 
-   protected:
+      /**
+      * Avoid throwing base Exception, use a subclass
+      */
       explicit Exception(const std::string& msg);
+
+      /**
+      * Avoid throwing base Exception, use a subclass
+      */
       Exception(const char* prefix, const std::string& msg);
+
+      /**
+      * Avoid throwing base Exception, use a subclass
+      */
       Exception(const std::string& msg, const std::exception& e);
 
    private:
