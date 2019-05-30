@@ -150,6 +150,14 @@ with this function:
 
    As a general recommendation, use N=32768, r=8, p=1
 
+Argon2
+^^^^^^^^^^
+
+.. versionadded:: 2.11.0
+
+Argon2 is the winner of the PHC (Password Hashing Competition) and
+provides a tunable memory hard PBKDF.
+
 OpenPGP S2K
 ^^^^^^^^^^^^
 

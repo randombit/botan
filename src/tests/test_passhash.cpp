@@ -14,6 +14,11 @@
    #include <botan/passhash9.h>
 #endif
 
+#if defined(BOTAN_HAS_ARGON2)
+   #include <botan/argon2.h>
+   #include "test_rng.h"
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -73,6 +78,54 @@ class Bcrypt_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("bcrypt", Bcrypt_Tests);
+
+#endif
+
+#if defined(BOTAN_HAS_ARGON2)
+class Argon2_Tests final : public Text_Based_Test
+   {
+   public:
+      Argon2_Tests() : Text_Based_Test("passhash/argon2.vec", "Password,Passhash", "Mode,M,T,P,Salt,OutLen") {}
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override
+         {
+         const std::string password = vars.get_req_str("Password");
+         const std::string passhash = vars.get_req_str("Passhash");
+
+         Test::Result result("Argon2 password hash");
+
+         if(header == "Verify")
+            {
+            const bool accepted = Botan::argon2_check_pwhash(password.data(), password.size(), passhash);
+            result.test_eq("correct hash accepted", accepted, true);
+            }
+         else if(header == "Generate")
+            {
+            const std::vector<uint8_t> salt = vars.get_req_bin("Salt");
+            const size_t y = vars.get_req_sz("Mode");
+            const size_t M = vars.get_req_sz("M");
+            const size_t t = vars.get_req_sz("T");
+            const size_t p = vars.get_req_sz("P");
+            const size_t out_len = vars.get_req_sz("OutLen");
+
+            Fixed_Output_RNG rng(salt);
+
+            const std::string generated = Botan::argon2_generate_pwhash(password.data(), password.size(),
+                                                                        rng,
+                                                                        p, M, t, y, salt.size(), out_len);
+
+            result.test_eq("expected hash generated", generated, passhash);
+            const bool accepted = Botan::argon2_check_pwhash(password.data(), password.size(), generated);
+            result.test_eq("generated hash accepted", accepted, true);
+            }
+         else
+            throw Test_Error("Unexpected header in Argon2 password hash test file");
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("argon2_pass", Argon2_Tests);
 
 #endif
 

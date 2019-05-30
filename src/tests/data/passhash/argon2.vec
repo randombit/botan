@@ -1,0 +1,38 @@
+
+[Verify]
+Password = pass
+Passhash = $argon2i$v=19$m=8,t=1,p=1$YWFhYWFhYWE$3ney028aI7naIJ/5U///1ICfSVF0Ta4jh2SpJ1jhsCE
+
+Password = pass
+Passhash = $argon2d$v=19$m=8,t=1,p=1$YWFhYWFhYWE$0WM+IC/fpCF2boiNXmu0lnBXDAKes/BHiYuq9abKsWQ
+
+Password = pass
+Passhash = $argon2id$v=19$m=8,t=1,p=1$YWFhYWFhYWE$tPAla38/iYe0rtvQKVaPv04WYar67QEGlc4fhxU185s
+
+[Generate]
+Password = pass
+Mode = 2
+M = 8
+T = 1
+P = 1
+Salt = 313233343536373839616263646566
+OutLen = 32
+Passhash = $argon2id$v=19$m=8,t=1,p=1$MTIzNDU2Nzg5YWJjZGVm$+iAchMa6urtGUvqS2c2ly5SxSb3Jj9S/nq4SZaIgLaI
+
+Password = pass
+Mode = 0
+M = 8192
+T = 3
+P = 1
+Salt = 313233343536373839616263646566
+OutLen = 32
+Passhash = $argon2d$v=19$m=8192,t=3,p=1$MTIzNDU2Nzg5YWJjZGVm$6C4pewOLgibFqWOo9mKTN2xV8KBRq7wjD8PM7DsoV0k
+
+Password = pass
+Mode = 1
+M = 8192
+T = 3
+P = 1
+Salt = 313233343536373839616263646566
+OutLen = 32
+Passhash = $argon2i$v=19$m=8192,t=3,p=1$MTIzNDU2Nzg5YWJjZGVm$7iO3QHobBZHBgjSM+u92dRHJeKpsMdbZ+sLxPjcm9MI

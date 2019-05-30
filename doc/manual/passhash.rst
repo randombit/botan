@@ -65,8 +65,50 @@ designs, such as scrypt, explicitly attempt to provide this. The
 bcrypt approach requires over 4 KiB of RAM (for the Blowfish key
 schedule) and may also make some hardware attacks more expensive.
 
-Botan provides two techniques for password hashing, bcrypt and
-passhash9.
+Botan provides three techniques for password hashing: Argon2, bcrypt, and
+passhash9 (based on PBKDF2).
+
+Argon2
+----------------------------------------
+
+.. versionadded:: 2.11.0
+
+Argon2 is the winner of the PHC (Password Hashing Competition) and provides
+a tunable memory hard password hash. It has a standard string encoding, which looks like::
+
+  "$argon2i$v=19$m=8192,t=10,p=3$YWFhYWFhYWE$itkWB9ODqTd85wUsoib7pfpVTNGMOu0ZJan1odl25V8"
+
+Argon2 has three tunable parameters: ``M``, ``p``, and ``t``. ``M`` gives the
+total memory consumption of the algorithm in kilobytes. Increasing ``p``
+increases the available parallelism of the computation. The ``t`` parameter
+gives the number of passes which are made over the data.
+
+.. note::
+   Currently Botan does not make use of ``p`` > 1, so it is best to set it to 1
+   to minimize any advantage to highly parallel cracking attempts.
+
+There are three variants of Argon2, namely Argon2d, Argon2i and Argon2id.
+Argon2d uses data dependent table lookups with may leak information about the
+password via side channel attacks, and is **not recommended** for password
+hashing. Argon2i uses data independent table lookups and is immune to these
+attacks, but at the cost of requiring higher ``t`` for security. Argon2id uses a
+hybrid approach which is thought to be highly secure. The algorithm designers
+recommend using Argon2id with ``t`` and ``p`` both equal to 1 and ``M`` set to
+the largest amount of memory usable in your environment.
+
+.. cpp:function:: std::string argon2_generate_pwhash(const char* password, size_t password_len, \
+                          RandomNumberGenerator& rng, \
+                          size_t p, size_t M, size_t t, \
+                          size_t y = 2, size_t salt_len = 16, size_t output_len = 32)
+
+   Generate an Argon2 hash of the specified password. The ``y`` parameter specifies
+   the variant: 0 for Argon2d, 1 for Argon2i, and 2 for Argon2id.
+
+.. cpp:function:: bool argon2_check_pwhash(const char* password, size_t password_len, \
+                                           const std::string& hash)
+
+   Verify an Argon2 password hash against the provided password. Returns false if
+   the input hash seems malformed or if the computed hash does not match.
 
 Bcrypt
 ----------------------------------------
@@ -153,7 +195,7 @@ Passhash9 hashes look like::
 
 This function should be secure with the proper parameters, and will remain in
 the library for the foreseeable future, but it is specific to Botan rather than
-being a widely used password hash. Prefer bcrypt.
+being a widely used password hash. Prefer bcrypt or Argon2.
 
 .. warning::
 
