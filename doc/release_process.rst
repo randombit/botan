@@ -17,15 +17,16 @@ warnings that should be addressed.
 
 And remember that CI doesn't test everything. In particular, not all
 tests run under valgrind or on the qemu cross builds due to time
-constraints.  So before release, do a complete build/test cycle:
+constraints. So before release:
 
- - Running under valgrind (remember ``--with-valgrind`` flag)
+ - Run under valgrind, building with ``--with-valgrind`` flag
  - Using Clang sanitizers (ASan + UbSan)
  - Native or cross compile for Linux aarch64 and ppc64le
  - Native compile on FreeBSD x86-64
  - Native compile on at least one unusual platform (AIX, NetBSD, ...)
  - Build the website content to detect any Doxygen problems
  - Test many build configurations (using `src/scripts/test_all_configs.py`)
+ - Build/test SoftHSM
 
 Pre Release Checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
