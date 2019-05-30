@@ -48,7 +48,8 @@ secure_vector<uint8_t> argon2_H0(HashFunction& blake2b,
    return blake2b.final();
    }
 
-void Htick(uint8_t output[],
+void Htick(secure_vector<uint8_t>& T,
+           uint8_t output[],
            size_t output_len,
            HashFunction& blake2b,
            const secure_vector<uint8_t>& H0,
@@ -56,27 +57,25 @@ void Htick(uint8_t output[],
    {
    BOTAN_ASSERT_NOMSG(output_len % 64 == 0);
 
-   secure_vector<uint8_t> B(blake2b.output_length());
-
    blake2b.update_le<uint32_t>(output_len);
    blake2b.update(H0);
    blake2b.update_le<uint32_t>(p0);
    blake2b.update_le<uint32_t>(p1);
 
-   blake2b.final(&B[0]);
+   blake2b.final(&T[0]);
 
    while(output_len > 64)
       {
-      copy_mem(output, &B[0], 32);
+      copy_mem(output, &T[0], 32);
       output_len -= 32;
       output += 32;
 
-      blake2b.update(B);
-      blake2b.final(&B[0]);
+      blake2b.update(T);
+      blake2b.final(&T[0]);
       }
 
    if(output_len > 0)
-      copy_mem(output, &B[0], output_len);
+      copy_mem(output, &T[0], output_len);
    }
 
 void extract_key(uint8_t output[], size_t output_len,
@@ -125,6 +124,7 @@ void init_blocks(secure_vector<uint64_t>& B,
    BOTAN_ASSERT_NOMSG(B.size() >= threads*256);
 
    secure_vector<uint8_t> H(1024);
+   secure_vector<uint8_t> T(blake2b.output_length());
 
    for(size_t i = 0; i != threads; ++i)
       {
@@ -132,14 +132,14 @@ void init_blocks(secure_vector<uint64_t>& B,
 
       BOTAN_ASSERT_NOMSG(B.size() >= 128*(B_off+2));
 
-      Htick(&H[0], H.size(), blake2b, H0, 0, i);
+      Htick(T, &H[0], H.size(), blake2b, H0, 0, i);
 
       for(size_t j = 0; j != 128; ++j)
          {
          B[128*B_off+j] = load_le<uint64_t>(H.data(), j);
          }
 
-      Htick(&H[0], H.size(), blake2b, H0, 1, i);
+      Htick(T, &H[0], H.size(), blake2b, H0, 1, i);
 
       for(size_t j = 0; j != 128; ++j)
          {
@@ -150,16 +150,16 @@ void init_blocks(secure_vector<uint64_t>& B,
 
 inline void blamka_G(uint64_t& A, uint64_t& B, uint64_t& C, uint64_t& D)
    {
-   A += B + 2*(A & 0xFFFFFFFF)*(B & 0xFFFFFFFF);
+   A += B + (static_cast<uint64_t>(2) * static_cast<uint32_t>(A)) * static_cast<uint32_t>(B);
    D = rotr<32>(A ^ D);
 
-   C += D + 2*(C & 0xFFFFFFFF) * (D & 0xFFFFFFFF);
+   C += D + (static_cast<uint64_t>(2) * static_cast<uint32_t>(C)) * static_cast<uint32_t>(D);
    B = rotr<24>(B ^ C);
 
-   A += B + 2*(A & 0xFFFFFFFF) * (B & 0xFFFFFFFF);
+   A += B + (static_cast<uint64_t>(2) * static_cast<uint32_t>(A)) * static_cast<uint32_t>(B);
    D = rotr<16>(A ^ D);
 
-   C += D + 2*(C & 0xFFFFFFFF) * (D & 0xFFFFFFFF);
+   C += D + (static_cast<uint64_t>(2) * static_cast<uint32_t>(C)) * static_cast<uint32_t>(D);
    B = rotr<63>(B ^ C);
    }
 
@@ -179,13 +179,12 @@ inline void blamka(uint64_t& V0, uint64_t& V1, uint64_t& V2, uint64_t& V3,
    blamka_G(V3, V4, V9, VE);
    }
 
-void process_block_xor(secure_vector<uint64_t>& B,
+void process_block_xor(secure_vector<uint64_t>& T,
+                       secure_vector<uint64_t>& B,
                        size_t offset,
                        size_t prev,
                        size_t new_offset)
    {
-   secure_vector<uint64_t> T(128);
-
    for(size_t i = 0; i != 128; ++i)
       T[i] = B[128*prev+i] ^ B[128*new_offset+i];
 
@@ -209,11 +208,12 @@ void process_block_xor(secure_vector<uint64_t>& B,
       B[128*offset + i] ^= T[i] ^ B[128*prev+i] ^ B[128*new_offset+i];
    }
 
-void gen_2i_addresses(secure_vector<uint64_t>& B,
+void gen_2i_addresses(secure_vector<uint64_t>& T, secure_vector<uint64_t>& B,
                       size_t n, size_t lane, size_t slice, size_t memory,
                       size_t time, size_t mode, size_t cnt)
    {
    BOTAN_ASSERT_NOMSG(B.size() == 128);
+   BOTAN_ASSERT_NOMSG(T.size() == 128);
 
    clear_mem(B.data(), B.size());
    B[0] = n;
@@ -226,7 +226,7 @@ void gen_2i_addresses(secure_vector<uint64_t>& B,
 
    for(size_t r = 0; r != 2; ++r)
       {
-      secure_vector<uint64_t> T = B;
+      copy_mem(T.data(), B.data(), B.size());
 
       for(size_t i = 0; i != 128; i += 16)
          {
@@ -285,7 +285,8 @@ uint32_t index_alpha(uint64_t random,
    return ref_lane*lanes + (s + m - (p+1)) % lanes;
    }
 
-void process_block_argon2d(secure_vector<uint64_t>& B,
+void process_block_argon2d(secure_vector<uint64_t>& T,
+                           secure_vector<uint64_t>& B,
                            size_t n, size_t slice, size_t lane,
                            size_t lanes, size_t segments, size_t threads)
    {
@@ -304,13 +305,14 @@ void process_block_argon2d(secure_vector<uint64_t>& B,
       const uint64_t random = B.at(128*prev);
       const size_t new_offset = index_alpha(random, lanes, segments, threads, n, slice, lane, index);
 
-      process_block_xor(B, offset, prev, new_offset);
+      process_block_xor(T, B, offset, prev, new_offset);
 
       index += 1;
       }
    }
 
-void process_block_argon2i(secure_vector<uint64_t>& B,
+void process_block_argon2i(secure_vector<uint64_t>& T,
+                           secure_vector<uint64_t>& B,
                            size_t n, size_t slice, size_t lane,
                            size_t lanes, size_t segments, size_t threads, uint8_t mode,
                            size_t memory, size_t time)
@@ -322,7 +324,7 @@ void process_block_argon2i(secure_vector<uint64_t>& B,
    secure_vector<uint64_t> addresses(128);
    size_t address_counter = 1;
 
-   gen_2i_addresses(addresses, n, lane, slice, memory, time, mode, address_counter);
+   gen_2i_addresses(T, addresses, n, lane, slice, memory, time, mode, address_counter);
 
    while(index < segments)
       {
@@ -335,13 +337,13 @@ void process_block_argon2i(secure_vector<uint64_t>& B,
       if(index > 0 && index % 128 == 0)
          {
          address_counter += 1;
-         gen_2i_addresses(addresses, n, lane, slice, memory, time, mode, address_counter);
+         gen_2i_addresses(T, addresses, n, lane, slice, memory, time, mode, address_counter);
          }
 
       const uint64_t random = addresses[index % 128];
       const size_t new_offset = index_alpha(random, lanes, segments, threads, n, slice, lane, index);
 
-      process_block_xor(B, offset, prev, new_offset);
+      process_block_xor(T, B, offset, prev, new_offset);
 
       index += 1;
       }
@@ -356,6 +358,7 @@ void process_blocks(secure_vector<uint64_t>& B,
    const size_t lanes = memory / threads;
    const size_t segments = lanes / SYNC_POINTS;
 
+   secure_vector<uint64_t> T(128);
    for(size_t n = 0; n != t; ++n)
       {
       for(size_t slice = 0; slice != SYNC_POINTS; ++slice)
@@ -364,9 +367,9 @@ void process_blocks(secure_vector<uint64_t>& B,
          for(size_t lane = 0; lane != threads; ++lane)
             {
             if(mode == 1 || (mode == 2 && n == 0 && slice < SYNC_POINTS/2))
-               process_block_argon2i(B, n, slice, lane, lanes, segments, threads, mode, memory, t);
+               process_block_argon2i(T, B, n, slice, lane, lanes, segments, threads, mode, memory, t);
             else
-               process_block_argon2d(B, n, slice, lane, lanes, segments, threads);
+               process_block_argon2d(T, B, n, slice, lane, lanes, segments, threads);
             }
          }
       }

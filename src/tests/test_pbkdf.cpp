@@ -88,48 +88,56 @@ class Pwdhash_Tests : public Test
          {
          std::vector<Test::Result> results;
 
-         for(std::string pwdhash : { "Scrypt", "PBKDF2(SHA-256)", "OpenPGP-S2K(SHA-384)"})
+         for(std::string pwdhash : { "Scrypt", "PBKDF2(SHA-256)", "OpenPGP-S2K(SHA-384)", "Argon2d", "Argon2i", "Argon2id" })
             {
             Test::Result result("Pwdhash " + pwdhash);
             auto pwdhash_fam = Botan::PasswordHashFamily::create(pwdhash);
 
             if(pwdhash_fam)
                {
+               result.start_timer();
+
                const std::vector<uint8_t> salt(8);
                const std::string password = "test";
 
-               auto pwdhash_tune = pwdhash_fam->tune(32, std::chrono::milliseconds(50));
+               auto tuned_pwhash = pwdhash_fam->tune(32, std::chrono::milliseconds(10));
 
                std::vector<uint8_t> output1(32);
-               pwdhash_tune->derive_key(output1.data(), output1.size(),
+               tuned_pwhash->derive_key(output1.data(), output1.size(),
                                         password.c_str(), password.size(),
                                         salt.data(), salt.size());
 
                std::unique_ptr<Botan::PasswordHash> pwhash;
 
-               if(pwdhash_fam->name() == "Scrypt")
+               if(pwdhash_fam->name() == "Scrypt" || pwdhash_fam->name().find("Argon2") == 0)
                   {
-                  pwhash = pwdhash_fam->from_params(pwdhash_tune->memory_param(),
-                                                    pwdhash_tune->iterations(),
-                                                    pwdhash_tune->parallelism());
+                  pwhash = pwdhash_fam->from_params(tuned_pwhash->memory_param(),
+                                                    tuned_pwhash->iterations(),
+                                                    tuned_pwhash->parallelism());
                   }
                else
                   {
-                  pwhash = pwdhash_fam->from_params(pwdhash_tune->iterations());
+                  pwhash = pwdhash_fam->from_params(tuned_pwhash->iterations());
                   }
 
                std::vector<uint8_t> output2(32);
-               pwdhash_tune->derive_key(output2.data(), output2.size(),
-                                        password.c_str(), password.size(),
-                                        salt.data(), salt.size());
+               pwhash->derive_key(output2.data(), output2.size(),
+                                  password.c_str(), password.size(),
+                                  salt.data(), salt.size());
 
                result.test_eq("PasswordHash produced same output when run with same params",
                               output1, output2);
 
+               auto default_pwhash = pwdhash_fam->default_params();
+               std::vector<uint8_t> output3(32);
+               default_pwhash->derive_key(output3.data(), output3.size(),
+                                          password.c_str(), password.size(),
+                                          salt.data(), salt.size());
 
-               //auto pwdhash_tuned = pwdhash_fam->tune(32, std::chrono::milliseconds(150));
-
+               result.end_timer();
                }
+            else
+               result.test_note("No such algo " + pwdhash);
 
             results.push_back(result);
             }

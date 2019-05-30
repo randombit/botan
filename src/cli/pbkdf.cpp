@@ -18,7 +18,7 @@ namespace Botan_CLI {
 class PBKDF_Tune final : public Command
    {
    public:
-      PBKDF_Tune() : Command("pbkdf_tune --algo=Scrypt --max-mem=160 --output-len=32 --check *times") {}
+      PBKDF_Tune() : Command("pbkdf_tune --algo=Scrypt --max-mem=256 --output-len=32 --check *times") {}
 
       std::string group() const override
          {

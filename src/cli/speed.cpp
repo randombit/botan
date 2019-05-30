@@ -121,6 +121,10 @@
    #include <botan/scrypt.h>
 #endif
 
+#if defined(BOTAN_HAS_ARGON2)
+   #include <botan/argon2.h>
+#endif
+
 #if defined(BOTAN_HAS_BCRYPT)
    #include <botan/bcrypt.h>
 #endif
@@ -644,6 +648,12 @@ class Speed final : public Command
             else if(algo == "scrypt")
                {
                bench_scrypt(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_ARGON2)
+            else if(algo == "argon2")
+               {
+               bench_argon2(provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_BCRYPT)
@@ -2191,6 +2201,42 @@ class Speed final : public Command
                }
             }
 
+         }
+
+#endif
+
+#if defined(BOTAN_HAS_ARGON2)
+
+      void bench_argon2(const std::string& /*provider*/,
+                        std::chrono::milliseconds msec)
+         {
+         for(size_t M : { 8*1024, 64*1024, 256*1024 })
+            {
+            for(size_t t : { 1, 2, 4 })
+               {
+               for(size_t p : { 1 })
+                  {
+                  std::unique_ptr<Timer> timer = make_timer(
+                     "Argon2id M=" + std::to_string(M) + " t=" + std::to_string(t) + " p=" + std::to_string(p));
+
+                  const size_t mode = 2;
+                  uint8_t out[64];
+                  uint8_t salt[16];
+                  rng().randomize(salt, sizeof(salt));
+
+                  while(timer->under(msec))
+                     {
+                     timer->run([&] {
+                                Botan::argon2(out, sizeof(out), "password", 8,
+                                              salt, sizeof(salt), nullptr, 0, nullptr, 0,
+                                              mode, p, M, t);
+                                });
+                     }
+
+                  record_result(timer);
+                  }
+               }
+            }
          }
 
 #endif

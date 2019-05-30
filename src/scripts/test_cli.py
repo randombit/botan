@@ -197,6 +197,16 @@ def cli_bcrypt_tests():
     test_cli("check_bcrypt", "santa $2a$04$gHX4Qg7pDSJuXiPXnmt8leyb.FFzX1Bv4rXwIj2cPSakJ8zNnhIka",
              "Password is NOT valid")
 
+def cli_argon2_tests():
+    password = "s3kr1t"
+    expected = "$argon2id$v=19$m=8,t=1,p=1$2A+I9q2+ZayxDDYC5n2YWw$/Lhx+Jbtlpw+Kxpskfv7+AKhBL/5ebalTJkVC1O5+1E"
+    test_cli("gen_argon2", ['--mem=8', password], expected)
+    test_cli("gen_argon2", ['--mem=8', '--t=1', password], expected)
+    test_cli("gen_argon2", ['--mem=8', '--t=1', '--p=1', password], expected)
+
+    test_cli("check_argon2", [password, expected], "Password is valid")
+    test_cli("check_argon2", ["guessing", expected], "Password is NOT valid")
+
 def cli_gen_dl_group_tests():
 
     pem = """-----BEGIN X9.42 DH PARAMETERS-----
@@ -320,6 +330,14 @@ def cli_pbkdf_tune_tests():
 
     for line in output:
         if expected_pbkdf2.match(line) is None:
+            logging.error("Unexpected line '%s'" % (line))
+
+    expected_argon2 = re.compile(r'For (default|[1-9][0-9]*) ms selected Argon2id\([0-9]+,[0-9]+,[0-9]+\)')
+
+    output = test_cli("pbkdf_tune", ["--algo=Argon2id", "--check", "1", "10", "50", "default"], None).split('\n')
+
+    for line in output:
+        if expected_argon2.match(line) is None:
             logging.error("Unexpected line '%s'" % (line))
 
 def cli_psk_db_tests():
@@ -733,7 +751,7 @@ def cli_speed_tests():
     math_ops = ['mp_mul', 'mp_div', 'mp_div10', 'modexp', 'random_prime', 'inverse_mod',
                 'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'ecc_init',
                 'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'primality_test',
-                'bcrypt', 'passhash9']
+                'bcrypt', 'passhash9', 'argon2']
 
     format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
     for op in math_ops:
@@ -813,6 +831,7 @@ def main(args=None):
     start_time = time.time()
 
     test_fns = [
+        cli_argon2_tests,
         cli_asn1_tests,
         cli_base58_tests,
         cli_base64_tests,
