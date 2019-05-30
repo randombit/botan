@@ -11,6 +11,7 @@ import tempfile
 import re
 import random
 import json
+import binascii
 
 # pylint: disable=global-statement
 
@@ -39,13 +40,13 @@ def setup_logging(options):
     logging.getLogger().addHandler(lh)
     logging.getLogger().setLevel(log_level)
 
+def random_port_number():
+    return random.randint(1024, 65535)
 
-def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_stderr=None):
+def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_stderr=None, use_drbg=True):
     global TESTS_RUN
 
     TESTS_RUN += 1
-
-    fixed_drbg_seed = "802" * 32
 
     opt_list = []
 
@@ -54,7 +55,12 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
     elif isinstance(cmd_options, list):
         opt_list = cmd_options
 
-    drbg_options = ['--rng-type=drbg', '--drbg-seed=' + fixed_drbg_seed]
+    if use_drbg:
+        fixed_drbg_seed = "802" * 32
+        drbg_options = ['--rng-type=drbg', '--drbg-seed=' + fixed_drbg_seed]
+    else:
+        drbg_options = []
+
     cmdline = [CLI_PATH, cmd] + drbg_options + opt_list
 
     logging.debug("Executing '%s'" % (' '.join([CLI_PATH, cmd] + opt_list)))
@@ -94,7 +100,7 @@ def check_for_command(cmd):
 
     return proc.returncode == 0
 
-def cli_config_tests():
+def cli_config_tests(_tmp_dir):
     prefix = test_cli("config", "prefix")
     cflags = test_cli("config", "cflags")
     ldflags = test_cli("config", "ldflags")
@@ -109,14 +115,14 @@ def cli_config_tests():
     if "-lbotan-2" not in libs:
         logging.error("Bad libs %s" % (libs))
 
-def cli_help_tests():
+def cli_help_tests(_tmp_dir):
     output = test_cli("help", None, None)
 
     # Maybe test format somehow??
     if len(output) < 500:
         logging.error("Help output seems very short")
 
-def cli_version_tests():
+def cli_version_tests(_tmp_dir):
     output = test_cli("version", None, None)
 
     version_re = re.compile(r'[0-9]\.[0-9]+\.[0-9]')
@@ -128,40 +134,40 @@ def cli_version_tests():
     if not version_full_re.match(output):
         logging.error("Unexpected version output %s" % (output))
 
-def cli_is_prime_tests():
+def cli_is_prime_tests(_tmp_dir):
     test_cli("is_prime", "5", "5 is probably prime")
     test_cli("is_prime", "9", "9 is composite")
     test_cli("is_prime", "548950623407687320763", "548950623407687320763 is probably prime")
 
-def cli_gen_prime_tests():
+def cli_gen_prime_tests(_tmp_dir):
     test_cli("gen_prime", "64", "15568813029901363163")
     test_cli("gen_prime", "128", "287193909494025008847286845478788766073")
 
-def cli_factor_tests():
+def cli_factor_tests(_tmp_dir):
     test_cli("factor", "97", "97: 97")
     test_cli("factor", "9753893489562389", "9753893489562389: 21433 455087644733")
     test_cli("factor", "12019502040659149507", "12019502040659149507: 3298628633 3643787579")
 
-def cli_mod_inverse_tests():
+def cli_mod_inverse_tests(_tmp_dir):
     test_cli("mod_inverse", "97 802", "339")
     test_cli("mod_inverse", "98 802", "0")
 
-def cli_base64_tests():
+def cli_base64_tests(_tmp_dir):
     test_cli("base64_enc", "-", "YmVlcyE=", "bees!")
     test_cli("base64_dec", "-", "bees!", "YmVlcyE=")
 
-def cli_base58_tests():
+def cli_base58_tests(_tmp_dir):
     test_cli("base58_enc", "-", "C6sRAr4", "bees!")
     test_cli("base58_dec", "-", "bees!", "C6sRAr4")
 
     test_cli("base58_enc", ["--check", "-"], "Cjv15cdjaBc", "F00F")
     test_cli("base58_dec", ["--check", "-"], "F00F", "Cjv15cdjaBc")
 
-def cli_hex_tests():
+def cli_hex_tests(_tmp_dir):
     test_cli("hex_enc", "-", "6265657321", "bees!")
     test_cli("hex_dec", "-", "bees!", "6265657321")
 
-def cli_hash_tests():
+def cli_hash_tests(_tmp_dir):
     test_cli("hash", "--algo=SHA-256",
              "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855 -", "")
 
@@ -177,9 +183,7 @@ def cli_hash_tests():
     test_cli("hash", ["--algo=SHA-224", "--format=base58check", "--no-fsname"],
              "3MmfMqgrhemdVa9bDAGfooukbviWtKMBx2xauL2RsyAe", "abc")
 
-def cli_hmac_tests():
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
-
+def cli_hmac_tests(tmp_dir):
     key_file = os.path.join(tmp_dir, 'hmac.key')
 
     test_cli("rng", ["64", "--output=%s" % (key_file)], "")
@@ -187,7 +191,7 @@ def cli_hmac_tests():
     test_cli("hmac", ["--no-fsname", "--hash=SHA-384", key_file, key_file],
              "E3A8529377030B28A7DBDFC50DDEC8E4ECEFB6EA850D95EB785938CD3E3AFEF9EF8B08AF219C1496633193468AB755CB")
 
-def cli_bcrypt_tests():
+def cli_bcrypt_tests(_tmp_dir):
     test_cli("gen_bcrypt", "--work-factor=4 s3kr1t",
              "$2a$04$0.8G7o08XYwvBBWA3l0WUujtwoGZgGDzVSN8fNkNqXikcK4A3lHPS")
 
@@ -197,7 +201,7 @@ def cli_bcrypt_tests():
     test_cli("check_bcrypt", "santa $2a$04$gHX4Qg7pDSJuXiPXnmt8leyb.FFzX1Bv4rXwIj2cPSakJ8zNnhIka",
              "Password is NOT valid")
 
-def cli_argon2_tests():
+def cli_argon2_tests(_tmp_dir):
     password = "s3kr1t"
     expected = "$argon2id$v=19$m=8,t=1,p=1$2A+I9q2+ZayxDDYC5n2YWw$/Lhx+Jbtlpw+Kxpskfv7+AKhBL/5ebalTJkVC1O5+1E"
     test_cli("gen_argon2", ['--mem=8', password], expected)
@@ -207,7 +211,7 @@ def cli_argon2_tests():
     test_cli("check_argon2", [password, expected], "Password is valid")
     test_cli("check_argon2", ["guessing", expected], "Password is NOT valid")
 
-def cli_gen_dl_group_tests():
+def cli_gen_dl_group_tests(_tmp_dir):
 
     pem = """-----BEGIN X9.42 DH PARAMETERS-----
 MIIBJAKBgwTw7LQiLkXJsrgMVQxTPlWaQlYz/raZ+5RtIZe4YluQgRQGPFADLZ/t
@@ -234,15 +238,13 @@ fnnj+9XriKKHf2WtX0T4FXorvnKq30m934rzAhUAvwhWDK3yZEmphc7dwl4/J3Zp
     test_cli("gen_dl_group", ["--type=dsa", "--pbits=1024"], dsa_grp)
 
 
-def cli_key_tests():
+def cli_key_tests(tmp_dir):
 
     pem = """-----BEGIN PRIVATE KEY-----
 MIGEAgEAMBAGByqGSM49AgEGBSuBBAAKBG0wawIBAQQg2A+I9q2+ZayxDDYC5n2Y
 W8Bn/zBm4D3mwS5qMwADRDehRANCAATwnDFqsjXL9SD/Rr1Vy4pb79PswXdQNZBN
 mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 -----END PRIVATE KEY-----"""
-
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     pub_key = os.path.join(tmp_dir, 'pub.pem')
@@ -310,9 +312,7 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
     test_cli("cert_verify", user_cert,
              "Certificate did not validate - Certificate issuer not found")
 
-    shutil.rmtree(tmp_dir)
-
-def cli_pbkdf_tune_tests():
+def cli_pbkdf_tune_tests(_tmp_dir):
     if not check_for_command("pbkdf_tune"):
         return
 
@@ -340,11 +340,9 @@ def cli_pbkdf_tune_tests():
         if expected_argon2.match(line) is None:
             logging.error("Unexpected line '%s'" % (line))
 
-def cli_psk_db_tests():
+def cli_psk_db_tests(tmp_dir):
     if not check_for_command("psk_get"):
         return
-
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
 
     psk_db = os.path.join(tmp_dir, 'psk.db')
     db_key1 = "909"*32
@@ -360,14 +358,10 @@ def cli_psk_db_tests():
     test_cli("psk_list", [psk_db, db_key1], "name\nname2")
     test_cli("psk_list", [psk_db, db_key2], "name")
 
-    shutil.rmtree(tmp_dir)
-
-def cli_compress_tests():
+def cli_compress_tests(tmp_dir):
 
     if not check_for_command("compress"):
         return
-
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
 
     input_file = os.path.join(tmp_dir, 'input.txt')
     output_file = os.path.join(tmp_dir, 'input.txt.gz')
@@ -403,7 +397,7 @@ def cli_compress_tests():
     if recovered != "hi there":
         logging.error("Decompression did not recover original input")
 
-def cli_rng_tests():
+def cli_rng_tests(_tmp_dir):
     test_cli("rng", "10", "D80F88F6ADBE65ACB10C")
     test_cli("rng", "16", "D80F88F6ADBE65ACB10C3602E67D985B")
     test_cli("rng", "10 6", "D80F88F6ADBE65ACB10C\n1B119CC068AF")
@@ -412,14 +406,34 @@ def cli_rng_tests():
     test_cli("rng", ['--format=base58', '10'], "D93XRyVfxqs7oR")
     test_cli("rng", ['--format=base58check', '10'], "2NS1jYUq92TyGFVnhVLa")
 
-def cli_pk_workfactor_tests():
+    hex_10 = re.compile('[A-F0-9]{20}')
+
+    for rng in ['system', 'auto', 'entropy']:
+        output = test_cli("rng", ["10", '--%s' % (rng)], use_drbg=False)
+        if output == "D80F88F6ADBE65ACB10C":
+            logging.error('RNG produced DRBG output')
+        if hex_10.match(output) is None:
+            logging.error('Unexpected RNG output %s' % (output))
+
+    has_rdrand = test_cli("cpuid", []).find(' rdrand ') > 0
+
+    if has_rdrand:
+        output = test_cli("rng", ["10", '--rdrand'], use_drbg=False)
+
+        if output == "D80F88F6ADBE65ACB10C":
+            logging.error('RDRAND produced DRBG output')
+        if hex_10.match(output) is None:
+            logging.error('Unexpected RNG output %s' % (output))
+
+
+def cli_pk_workfactor_tests(_tmp_dir):
     test_cli("pk_workfactor", "1024", "80")
     test_cli("pk_workfactor", "2048", "111")
     test_cli("pk_workfactor", ["--type=rsa", "512"], "58")
     test_cli("pk_workfactor", ["--type=dl", "512"], "58")
     test_cli("pk_workfactor", ["--type=dl_exp", "512"], "128")
 
-def cli_dl_group_info_tests():
+def cli_dl_group_info_tests(_tmp_dir):
 
     dl_output = re.compile('(P|G) = [A-F0-9]+')
 
@@ -436,7 +450,7 @@ def cli_dl_group_info_tests():
 
 
 
-def cli_ec_group_info_tests():
+def cli_ec_group_info_tests(_tmp_dir):
 
     # pylint: disable=line-too-long
     secp256r1_info = """P = FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF
@@ -456,13 +470,23 @@ gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1AiEA
     test_cli("ec_group_info", "secp256r1", secp256r1_info)
     test_cli("ec_group_info", "--pem secp256r1", secp256r1_pem)
 
-def cli_cc_enc_tests():
+def cli_cpuid_tests(_tmp_dir):
+    cpuid_output = test_cli("cpuid", [])
+
+    if not cpuid_output.startswith('CPUID flags: '):
+        logging.error('Unexpected cpuid output %s' % (cpuid_output))
+
+    flag_re = re.compile('[a-z0-9_]+')
+    flags = cpuid_output[13:].split(' ')
+    for flag in flags:
+        if flag_re.match(flag) is None:
+            logging.error('Unexpected CPUID flag name %s' % (flag))
+
+def cli_cc_enc_tests(_tmp_dir):
     test_cli("cc_encrypt", ["8028028028028029", "pass"], "4308989841607208")
     test_cli("cc_decrypt", ["4308989841607208", "pass"], "8028028028028027")
 
-def cli_cert_issuance_tests():
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
-
+def cli_cert_issuance_tests(tmp_dir):
     root_key = os.path.join(tmp_dir, 'root.key')
     root_crt = os.path.join(tmp_dir, 'root.crt')
     int_key = os.path.join(tmp_dir, 'int.key')
@@ -487,7 +511,7 @@ def cli_cert_issuance_tests():
 
     test_cli("cert_verify" "%s %s %s" % (leaf_crt, int_crt, root_crt), "Certificate passes validation checks")
 
-def cli_timing_test_tests():
+def cli_timing_test_tests(_tmp_dir):
 
     timing_tests = ["bleichenbacher", "manger",
                     "ecdsa", "ecc_mul", "inverse_mod", "pow_mod",
@@ -503,7 +527,7 @@ def cli_timing_test_tests():
             if output_re.match(line) is None:
                 logging.error("Unexpected output in timing_test %s: %s", suite, line)
 
-def cli_tls_ciphersuite_tests():
+def cli_tls_ciphersuite_tests(_tmp_dir):
     policies = ['default', 'suiteb_128', 'suiteb_192', 'strict', 'all']
 
     versions = ['tls1.0', 'tls1.1', 'tls1.2']
@@ -522,7 +546,7 @@ def cli_tls_ciphersuite_tests():
                 if ciphersuite_re.match(line) is None:
                     logging.error("Unexpected ciphersuite line %s", line)
 
-def cli_asn1_tests():
+def cli_asn1_tests(_tmp_dir):
     input_pem = """-----BEGIN BLOB-----
 MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
 -----END BLOB------
@@ -539,11 +563,9 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
 
     test_cli("asn1print", "--pem -", expected, input_pem)
 
-def cli_tls_socket_tests():
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
-
+def cli_tls_socket_tests(tmp_dir):
     client_msg = b'Client message %d\n' % (random.randint(0, 2**128))
-    server_port = random.randint(1024, 65535)
+    server_port = random_port_number()
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
@@ -593,9 +615,125 @@ def cli_tls_socket_tests():
 
     tls_server.communicate()
 
-def cli_trust_root_tests():
+def cli_tls_http_server_tests(tmp_dir):
+    if not check_for_command("tls_http_server"):
+        return
 
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+    from http.client import HTTPSConnection
+    import ssl
+
+    server_port = random_port_number()
+
+    priv_key = os.path.join(tmp_dir, 'priv.pem')
+    ca_cert = os.path.join(tmp_dir, 'ca.crt')
+    crt_req = os.path.join(tmp_dir, 'crt.req')
+    server_cert = os.path.join(tmp_dir, 'server.crt')
+
+    test_cli("keygen", ["--algo=ECDSA", "--params=secp384r1", "--output=" + priv_key], "")
+
+    test_cli("gen_self_signed",
+             [priv_key, "CA", "--ca", "--country=VT",
+              "--dns=ca.example", "--hash=SHA-384", "--output="+ca_cert],
+             "")
+
+    test_cli("gen_pkcs10", "%s localhost --output=%s" % (priv_key, crt_req))
+
+    test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
+
+    tls_server = subprocess.Popen([CLI_PATH, 'tls_http_server',
+                                   '--port=%d' % (server_port), server_cert, priv_key],
+                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    time.sleep(.5)
+
+    context = ssl.create_default_context(cafile=ca_cert)
+    conn = HTTPSConnection('localhost', port=server_port, context=context)
+    conn.request("GET", "/")
+    resp = conn.getresponse()
+
+    if resp.status != 200:
+        logging.error('Unexpected response status %d' % (resp.status))
+
+    body = str(resp.read())
+
+    if body.find('TLS negotiation with Botan 2.') < 0:
+        logging.error('Unexpected response body')
+
+    tls_server.terminate()
+
+def cli_tls_proxy_tests(tmp_dir):
+    # pylint: disable=too-many-locals
+    if not check_for_command("tls_proxy"):
+        return
+
+    from http.client import HTTPSConnection
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    import ssl
+    import threading
+
+    server_port = random_port_number()
+    proxy_port = random_port_number()
+
+    while server_port == proxy_port:
+        proxy_port = random_port_number()
+
+    priv_key = os.path.join(tmp_dir, 'priv.pem')
+    ca_cert = os.path.join(tmp_dir, 'ca.crt')
+    crt_req = os.path.join(tmp_dir, 'crt.req')
+    server_cert = os.path.join(tmp_dir, 'server.crt')
+
+    test_cli("keygen", ["--algo=ECDSA", "--params=secp384r1", "--output=" + priv_key], "")
+
+    test_cli("gen_self_signed",
+             [priv_key, "CA", "--ca", "--country=VT",
+              "--dns=ca.example", "--hash=SHA-384", "--output="+ca_cert],
+             "")
+
+    test_cli("gen_pkcs10", "%s localhost --output=%s" % (priv_key, crt_req))
+
+    test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
+
+    tls_proxy = subprocess.Popen([CLI_PATH, 'tls_proxy', str(proxy_port), '127.0.0.1', str(server_port),
+                                  server_cert, priv_key, '--output=/tmp/proxy.err'],
+                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    time.sleep(.5)
+
+    server_response = binascii.hexlify(os.urandom(32))
+
+    def run_http_server():
+        class Handler(BaseHTTPRequestHandler):
+
+            def do_GET(self): # pylint: disable=invalid-name
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(server_response)
+
+        httpd = HTTPServer(('', server_port), Handler)
+        httpd.serve_forever()
+
+    http_thread = threading.Thread(target=run_http_server)
+    http_thread.daemon = True
+    http_thread.start()
+
+    time.sleep(.5)
+
+    context = ssl.create_default_context(cafile=ca_cert)
+    conn = HTTPSConnection('localhost', port=proxy_port, context=context)
+    conn.request("GET", "/")
+    resp = conn.getresponse()
+
+    if resp.status != 200:
+        logging.error('Unexpected response status %d' % (resp.status))
+
+    body = resp.read()
+
+    if body != server_response:
+        logging.error('Unexpected response from server %s' % (body))
+
+    tls_proxy.terminate()
+
+def cli_trust_root_tests(tmp_dir):
     pem_file = os.path.join(tmp_dir, 'pems')
     dn_file = os.path.join(tmp_dir, 'dns')
 
@@ -608,9 +746,7 @@ def cli_trust_root_tests():
 
     test_cli("trust_roots", ['--output=%s' % (pem_file)], "")
 
-def cli_tss_tests():
-
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
+def cli_tss_tests(tmp_dir):
     data_file = os.path.join(tmp_dir, 'data')
 
     exp_hash = "53B3C59276AE30EA7FD882268E80FD96AD80CC9FEB15F9FB940E7C4B5CF80B9E"
@@ -648,9 +784,7 @@ def cli_tss_tests():
              b'Error: Insufficient shares to do TSS reconstruction\n')
 
 
-def cli_pk_encrypt_tests():
-    tmp_dir = tempfile.mkdtemp(prefix='botan_cli')
-
+def cli_pk_encrypt_tests(tmp_dir):
     input_file = os.path.join(tmp_dir, 'input')
     ctext_file = os.path.join(tmp_dir, 'ctext')
     recovered_file = os.path.join(tmp_dir, 'recovered')
@@ -681,7 +815,7 @@ def cli_pk_encrypt_tests():
     test_cli("pk_decrypt", [rsa_priv_key, ctext_file, "--output=%s" % (recovered_file)], "")
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", recovered_file], rng_output_hash)
 
-def cli_uuid_tests():
+def cli_uuid_tests(_tmp_dir):
     fixed_drbg_seed = "802" * 32
 
     test_cli("uuid", ['--rng-type=drbg', '--drbg-seed=' + fixed_drbg_seed], "D80F88F6-ADBE-45AC-B10C-3602E67D985B")
@@ -693,7 +827,7 @@ def cli_uuid_tests():
     if uuid_re.match(output) is None:
         logging.error('Bad uuid output %s' % (output))
 
-def cli_tls_client_hello_tests():
+def cli_tls_client_hello_tests(_tmp_dir):
 
     # pylint: disable=line-too-long
     chello = "16030100cf010000cb03035b3cf2457b864d7bef2a4b1f84fc3ced2b68d9551f3455ffdd305af277a91bb200003a16b816b716ba16b9cca9cca8c02cc030c02bc02fc0adc0acc024c00ac028c014c023c009c027c013ccaa009f009ec09fc09e006b003900670033010000680000000e000c000009676d61696c2e636f6d000500050100000000000a001a0018001d0017001a0018001b0019001c01000101010201030104000b00020100000d00140012080508040806050106010401050306030403001600000017000000230000ff01000100"
@@ -703,7 +837,7 @@ def cli_tls_client_hello_tests():
     output_hash = "8EBFC3205ACFA98461128FE5D081D19254237AF84F7DAF000A3C992C3CF6DE44"
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", "-"], output_hash, output)
 
-def cli_speed_tests():
+def cli_speed_tests(_tmp_dir):
     # pylint: disable=too-many-branches
 
     msec = 1
@@ -840,6 +974,7 @@ def main(args=None):
         cli_cert_issuance_tests,
         cli_compress_tests,
         cli_config_tests,
+        cli_cpuid_tests,
         cli_dl_group_info_tests,
         cli_ec_group_info_tests,
         cli_factor_tests,
@@ -861,6 +996,8 @@ def main(args=None):
         cli_timing_test_tests,
         cli_tls_ciphersuite_tests,
         cli_tls_client_hello_tests,
+        cli_tls_http_server_tests,
+        cli_tls_proxy_tests,
         cli_tls_socket_tests,
         cli_trust_root_tests,
         cli_tss_tests,
@@ -876,10 +1013,11 @@ def main(args=None):
                 continue
 
         start = time.time()
-        fn()
+        tmp_dir = tempfile.mkdtemp(prefix='botan_cli_')
+        fn(tmp_dir)
+        shutil.rmtree(tmp_dir)
         end = time.time()
         logging.debug("Ran %s in %.02f", fn_name, end-start)
-
 
     end_time = time.time()
 
