@@ -682,7 +682,7 @@ def cli_tls_http_server_tests(tmp_dir):
         logging.error("Unexpected return code from https_server %d", rc)
 
 def cli_tls_proxy_tests(tmp_dir):
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-statements
     if not check_for_command("tls_proxy"):
         return
 
@@ -754,7 +754,7 @@ def cli_tls_proxy_tests(tmp_dir):
 
     context = ssl.create_default_context(cafile=ca_cert)
 
-    for i in range(2):
+    for _i in range(2):
         conn = HTTPSConnection('localhost', port=proxy_port, context=context)
         conn.request("GET", "/")
         resp = conn.getresponse()
