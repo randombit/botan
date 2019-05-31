@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+"""
+(C) 2018,2019 Jack Lloyd
+
+Botan is released under the Simplified BSD License (see license.txt)
+"""
+
 import subprocess
 import sys
 import os
@@ -646,7 +652,7 @@ def cli_tls_http_server_tests(tmp_dir):
 
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
-    tls_server = subprocess.Popen([CLI_PATH, 'tls_http_server',
+    tls_server = subprocess.Popen([CLI_PATH, 'tls_http_server', '--max-clients=1',
                                    '--port=%d' % (server_port), server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -665,7 +671,9 @@ def cli_tls_http_server_tests(tmp_dir):
     if body.find('TLS negotiation with Botan 2.') < 0:
         logging.error('Unexpected response body')
 
-    tls_server.terminate()
+    rc = tls_server.wait()
+    if rc != 0:
+        logging.error("Unexpected return code from https_server %d", rc)
 
 def cli_tls_proxy_tests(tmp_dir):
     # pylint: disable=too-many-locals
@@ -714,7 +722,7 @@ def cli_tls_proxy_tests(tmp_dir):
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
     tls_proxy = subprocess.Popen([CLI_PATH, 'tls_proxy', str(proxy_port), '127.0.0.1', str(server_port),
-                                  server_cert, priv_key, '--output=/tmp/proxy.err'],
+                                  server_cert, priv_key, '--output=/tmp/proxy.err', '--max-clients=1'],
                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     time.sleep(.5)
@@ -751,7 +759,9 @@ def cli_tls_proxy_tests(tmp_dir):
     if body != server_response:
         logging.error('Unexpected response from server %s' % (body))
 
-    tls_proxy.terminate()
+    rc = tls_proxy.wait()
+    if rc != 0:
+        logging.error('Unexpected return code %d', rc)
 
 def cli_trust_root_tests(tmp_dir):
     pem_file = os.path.join(tmp_dir, 'pems')
