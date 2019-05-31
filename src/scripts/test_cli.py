@@ -619,7 +619,13 @@ def cli_tls_http_server_tests(tmp_dir):
     if not check_for_command("tls_http_server"):
         return
 
-    from http.client import HTTPSConnection
+    try:
+        from http.client import HTTPSConnection
+    except ImportError:
+        try:
+            from httplib import HTTPSConnection
+        except ImportError:
+            return
     import ssl
 
     server_port = random_port_number()
@@ -666,8 +672,22 @@ def cli_tls_proxy_tests(tmp_dir):
     if not check_for_command("tls_proxy"):
         return
 
-    from http.client import HTTPSConnection
-    from http.server import HTTPServer, BaseHTTPRequestHandler
+    try:
+        from http.client import HTTPSConnection
+    except ImportError:
+        try:
+            from httplib import HTTPSConnection
+        except ImportError:
+            return
+
+    try:
+        from httpx.server import HTTPServer, BaseHTTPRequestHandler
+    except ImportError:
+        try:
+            from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+        except ImportError:
+            return
+
     import ssl
     import threading
 
