@@ -652,7 +652,7 @@ def cli_tls_http_server_tests(tmp_dir):
 
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
-    tls_server = subprocess.Popen([CLI_PATH, 'tls_http_server', '--max-clients=1',
+    tls_server = subprocess.Popen([CLI_PATH, 'tls_http_server', '--max-clients=2',
                                    '--port=%d' % (server_port), server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -670,6 +670,12 @@ def cli_tls_http_server_tests(tmp_dir):
 
     if body.find('TLS negotiation with Botan 2.') < 0:
         logging.error('Unexpected response body')
+
+    conn.request("POST", "/logout")
+    resp = conn.getresponse()
+
+    if resp.status != 405:
+        logging.error('Unexpected response status %d' % (resp.status))
 
     rc = tls_server.wait()
     if rc != 0:
@@ -722,7 +728,7 @@ def cli_tls_proxy_tests(tmp_dir):
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
     tls_proxy = subprocess.Popen([CLI_PATH, 'tls_proxy', str(proxy_port), '127.0.0.1', str(server_port),
-                                  server_cert, priv_key, '--output=/tmp/proxy.err', '--max-clients=1'],
+                                  server_cert, priv_key, '--output=/tmp/proxy.err', '--max-clients=2'],
                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     time.sleep(.5)
@@ -747,17 +753,19 @@ def cli_tls_proxy_tests(tmp_dir):
     time.sleep(.5)
 
     context = ssl.create_default_context(cafile=ca_cert)
-    conn = HTTPSConnection('localhost', port=proxy_port, context=context)
-    conn.request("GET", "/")
-    resp = conn.getresponse()
 
-    if resp.status != 200:
-        logging.error('Unexpected response status %d' % (resp.status))
+    for i in range(2):
+        conn = HTTPSConnection('localhost', port=proxy_port, context=context)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
 
-    body = resp.read()
+        if resp.status != 200:
+            logging.error('Unexpected response status %d' % (resp.status))
 
-    if body != server_response:
-        logging.error('Unexpected response from server %s' % (body))
+        body = resp.read()
+
+        if body != server_response:
+            logging.error('Unexpected response from server %s' % (body))
 
     rc = tls_proxy.wait()
     if rc != 0:
