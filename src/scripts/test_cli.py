@@ -13,7 +13,7 @@ import random
 import json
 import binascii
 
-# pylint: disable=global-statement
+# pylint: disable=global-statement,unused-argument
 
 CLI_PATH = None
 TESTS_RUN = 0
@@ -681,7 +681,7 @@ def cli_tls_proxy_tests(tmp_dir):
             return
 
     try:
-        from httpx.server import HTTPServer, BaseHTTPRequestHandler
+        from http.server import HTTPServer, BaseHTTPRequestHandler
     except ImportError:
         try:
             from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
