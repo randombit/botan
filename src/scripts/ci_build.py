@@ -354,16 +354,16 @@ def main(args=None):
 
     target = args[1]
 
-    py_interp = 'python'
-
     use_python2 = have_prog('python2')
 
     if options.use_python3 is None:
         use_python3 = have_prog('python3')
     else:
         use_python3 = options.use_python3
-        if use_python3:
-            py_interp = 'python3'
+
+    py_interp = 'python'
+    if use_python3:
+        py_interp = 'python3'
 
     if options.cc_bin is None:
         if options.cc == 'gcc':
