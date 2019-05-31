@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <atomic>
 
 #define _GLIBCXX_HAVE_GTHR_DEFAULT
 #include <boost/asio.hpp>
@@ -57,6 +58,27 @@ inline void log_exception(const char* where, const std::exception& e)
    {
    std::cout << where << ' ' << e.what() << std::endl;
    }
+
+class ServerStatus
+   {
+   public:
+      ServerStatus(size_t max_clients) : m_max_clients(max_clients), m_clients_serviced(0) {}
+
+      bool should_exit() const
+         {
+         if(m_max_clients == 0)
+            return false;
+
+         return clients_serviced() >= m_max_clients;
+         }
+
+      void client_serviced() { m_clients_serviced++; }
+
+      size_t clients_serviced() const { return m_clients_serviced.load(); }
+   private:
+      size_t m_max_clients;
+      std::atomic<size_t> m_clients_serviced;
+   };
 
 /*
 * This is an incomplete and highly buggy HTTP request parser. It is just
@@ -198,8 +220,7 @@ class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_As
          {
          if(error)
             {
-            stop();
-            return;
+            return stop();
             }
 
          try
@@ -209,8 +230,7 @@ class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_As
          catch(Botan::Exception& e)
             {
             log_exception("TLS connection failed", e);
-            stop();
-            return;
+            return stop();
             }
 
          m_client_socket.async_read_some(
@@ -226,8 +246,7 @@ class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_As
          {
          if(error)
             {
-            stop();
-            return;
+            return stop();
             }
 
          m_s2c.clear();
@@ -272,11 +291,7 @@ class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_As
       void handle_http_request(const HTTP_Parser::Request& request) override
          {
          std::ostringstream response;
-         if(request.verb() != "GET")
-            {
-            response << "HTTP/1.0 405 Method Not Allowed\r\n\r\nNo POST for you";
-            }
-         else
+         if(request.verb() == "GET")
             {
             if(request.location() == "/" || request.location() == "/status")
                {
@@ -294,8 +309,12 @@ class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_As
                }
             else
                {
-               response << "HTTP/1.0 404 Not Found\r\n\r\nSorry, no";
+               response << "HTTP/1.0 404 Not Found\r\n\r\n";
                }
+            }
+         else
+            {
+            response << "HTTP/1.0 405 Method Not Allowed\r\n\r\n";
             }
 
          const std::string response_str = response.str();
@@ -420,11 +439,13 @@ class TLS_Asio_HTTP_Server final
          boost::asio::io_service& io, unsigned short port,
          Botan::Credentials_Manager& creds,
          Botan::TLS::Policy& policy,
-         Botan::TLS::Session_Manager& session_mgr)
+         Botan::TLS::Session_Manager& session_mgr,
+         size_t max_clients)
          : m_acceptor(io, tcp::endpoint(tcp::v4(), port))
          , m_creds(creds)
          , m_policy(policy)
          , m_session_manager(session_mgr)
+         , m_status(max_clients)
          {
          session::pointer new_session = make_session();
 
@@ -455,13 +476,18 @@ class TLS_Asio_HTTP_Server final
             new_session->start();
             new_session = make_session();
 
-            m_acceptor.async_accept(
-               new_session->client_socket(),
-               boost::bind(
-                  &TLS_Asio_HTTP_Server::handle_accept,
-                  this,
-                  new_session,
-                  boost::asio::placeholders::error));
+            m_status.client_serviced();
+
+            if(m_status.should_exit() == false)
+               {
+               m_acceptor.async_accept(
+                  new_session->client_socket(),
+                  boost::bind(
+                     &TLS_Asio_HTTP_Server::handle_accept,
+                     this,
+                     new_session,
+                     boost::asio::placeholders::error));
+               }
             }
          }
 
@@ -470,6 +496,7 @@ class TLS_Asio_HTTP_Server final
       Botan::Credentials_Manager& m_creds;
       Botan::TLS::Policy& m_policy;
       Botan::TLS::Session_Manager& m_session_manager;
+      ServerStatus m_status;
    };
 
 }
@@ -478,7 +505,7 @@ class TLS_HTTP_Server final : public Command
    {
    public:
       TLS_HTTP_Server() : Command("tls_http_server server_cert server_key "
-                                  "--port=443 --policy= --threads=0 "
+                                  "--port=443 --policy= --threads=0 --max-clients=0 "
                                   "--session-db= --session-db-pass=") {}
 
       std::string group() const override
@@ -508,6 +535,7 @@ class TLS_HTTP_Server final : public Command
          const std::string server_key = get_arg("server_key");
 
          const size_t num_threads = thread_count();
+         const size_t max_clients = get_arg_sz("max-clients");
 
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
@@ -551,7 +579,7 @@ class TLS_HTTP_Server final : public Command
 
          boost::asio::io_service io;
 
-         TLS_Asio_HTTP_Server server(io, listen_port, creds, *policy, *session_mgr);
+         TLS_Asio_HTTP_Server server(io, listen_port, creds, *policy, *session_mgr, max_clients);
 
          std::vector<std::shared_ptr<std::thread>> threads;
 

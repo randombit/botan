@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <atomic>
 
 #define _GLIBCXX_HAVE_GTHR_DEFAULT
 #include <boost/asio.hpp>
@@ -45,17 +46,17 @@ namespace {
 
 using boost::asio::ip::tcp;
 
-inline void log_exception(const char* where, const std::exception& e)
+void log_exception(const char* where, const std::exception& e)
    {
    std::cout << where << ' ' << e.what() << std::endl;
    }
 
-inline void log_error(const char* where, const boost::system::error_code& error)
+void log_error(const char* where, const boost::system::error_code& error)
    {
    std::cout << where << ' ' << error.message() << std::endl;
    }
 
-inline void log_binary_message(const char* where, const uint8_t buf[], size_t buf_len)
+void log_binary_message(const char* where, const uint8_t buf[], size_t buf_len)
    {
    BOTAN_UNUSED(where, buf, buf_len);
    //std::cout << where << ' ' << Botan::hex_encode(buf, buf_len) << std::endl;
@@ -68,11 +69,32 @@ void log_text_message(const char* where,  const uint8_t buf[], size_t buf_len)
    //std::cout << where << ' ' << std::string(c, c + buf_len)  << std::endl;
    }
 
+class ServerStatus
+   {
+   public:
+      ServerStatus(size_t max_clients) : m_max_clients(max_clients), m_clients_serviced(0) {}
+
+      bool should_exit() const
+         {
+         if(m_max_clients == 0)
+            return false;
+
+         return clients_serviced() >= m_max_clients;
+         }
+
+      void client_serviced() { m_clients_serviced++; }
+
+      size_t clients_serviced() const { return m_clients_serviced.load(); }
+   private:
+      size_t m_max_clients;
+      std::atomic<size_t> m_clients_serviced;
+   };
+
 class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_session>,
                                 public Botan::TLS::Callbacks
    {
    public:
-      enum { readbuf_size = 4 * 1024 };
+      enum { readbuf_size = 17 * 1024 };
 
       typedef boost::shared_ptr<tls_proxy_session> pointer;
 
@@ -106,12 +128,16 @@ class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_
 
       void stop()
          {
-         /*
-         Don't need to talk to the server anymore
-         Client socket is closed during write callback
-         */
-         m_server_socket.close();
-         m_tls.close();
+         if(m_is_closed == false)
+            {
+            /*
+            Don't need to talk to the server anymore
+            Client socket is closed during write callback
+            */
+            m_server_socket.close();
+            m_tls.close();
+            m_is_closed = true;
+            }
          }
 
    private:
@@ -290,14 +316,7 @@ class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_
 
       bool tls_session_established(const Botan::TLS::Session& session) override
          {
-         //std::cout << "Handshake from client complete" << std::endl;
-
          m_hostname = session.server_info().hostname();
-
-         if(m_hostname != "")
-            {
-            std::cout << "Client requested hostname '" << m_hostname << "'" << std::endl;
-            }
 
          auto onConnect = [this](boost::system::error_code ec, tcp::resolver::iterator /*endpoint*/)
             {
@@ -320,10 +339,6 @@ class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_
             m_tls.close();
             return;
             }
-         else
-            {
-            std::cout << "Alert " << alert.type_string() << std::endl;
-            }
          }
 
       boost::asio::io_service::strand m_strand;
@@ -344,6 +359,8 @@ class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_
       std::vector<uint8_t> m_s2p;
       std::vector<uint8_t> m_p2s;
       std::vector<uint8_t> m_p2s_pending;
+
+      bool m_is_closed = false;
    };
 
 class tls_proxy_server final
@@ -356,12 +373,14 @@ class tls_proxy_server final
          tcp::resolver::iterator endpoints,
          Botan::Credentials_Manager& creds,
          Botan::TLS::Policy& policy,
-         Botan::TLS::Session_Manager& session_mgr)
+         Botan::TLS::Session_Manager& session_mgr,
+         size_t max_clients)
          : m_acceptor(io, tcp::endpoint(tcp::v4(), port))
          , m_server_endpoints(endpoints)
          , m_creds(creds)
          , m_policy(policy)
          , m_session_manager(session_mgr)
+         , m_status(max_clients)
          {
          session::pointer new_session = make_session();
 
@@ -393,13 +412,18 @@ class tls_proxy_server final
             new_session->start();
             new_session = make_session();
 
-            m_acceptor.async_accept(
-               new_session->client_socket(),
-               boost::bind(
-                  &tls_proxy_server::handle_accept,
-                  this,
-                  new_session,
-                  boost::asio::placeholders::error));
+            m_status.client_serviced();
+
+            if(m_status.should_exit() == false)
+               {
+               m_acceptor.async_accept(
+                  new_session->client_socket(),
+                  boost::bind(
+                     &tls_proxy_server::handle_accept,
+                     this,
+                     new_session,
+                     boost::asio::placeholders::error));
+               }
             }
          }
 
@@ -409,6 +433,7 @@ class tls_proxy_server final
       Botan::Credentials_Manager& m_creds;
       Botan::TLS::Policy& m_policy;
       Botan::TLS::Session_Manager& m_session_manager;
+      ServerStatus m_status;
    };
 
 }
@@ -417,7 +442,7 @@ class TLS_Proxy final : public Command
    {
    public:
       TLS_Proxy() : Command("tls_proxy listen_port target_host target_port server_cert server_key "
-                               "--threads=0 --session-db= --session-db-pass=") {}
+                               "--threads=0 --max-clients=0 --session-db= --session-db-pass=") {}
 
       std::string group() const override
          {
@@ -448,6 +473,7 @@ class TLS_Proxy final : public Command
          const std::string server_key = get_arg("server_key");
 
          const size_t num_threads = thread_count();
+         const size_t max_clients = get_arg_sz("max-clients");
 
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
@@ -474,7 +500,7 @@ class TLS_Proxy final : public Command
             session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
             }
 
-         tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, *session_mgr);
+         tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, *session_mgr, max_clients);
 
          std::vector<std::shared_ptr<std::thread>> threads;
 
