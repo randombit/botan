@@ -32,7 +32,7 @@ namespace {
 class PBKDF_KAT_Tests final : public Text_Based_Test
    {
    public:
-      PBKDF_KAT_Tests() : Text_Based_Test("pbkdf", "Iterations,Salt,Passphrase,Output", "OutputLen") {}
+      PBKDF_KAT_Tests() : Text_Based_Test("pbkdf", "Iterations,Salt,Passphrase,Output") {}
 
       Test::Result run_one_test(const std::string& pbkdf_name, const VarMap& vars) override
          {
@@ -40,7 +40,7 @@ class PBKDF_KAT_Tests final : public Text_Based_Test
          const std::vector<uint8_t> salt = vars.get_req_bin("Salt");
          const std::string passphrase = vars.get_req_str("Passphrase");
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
-         const size_t outlen = vars.get_opt_sz("OutputLen", expected.size());
+         const size_t outlen = expected.size();
 
          Test::Result result(pbkdf_name);
          std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create(pbkdf_name));
