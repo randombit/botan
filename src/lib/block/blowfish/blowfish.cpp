@@ -374,7 +374,7 @@ void Blowfish::key_expansion(const uint8_t key[],
 */
 void Blowfish::salted_set_key(const uint8_t key[], size_t length,
                               const uint8_t salt[], size_t salt_length,
-                              size_t workfactor)
+                              size_t workfactor, bool salt_first)
    {
    BOTAN_ARG_CHECK(salt_length > 0 && salt_length % 4 == 0,
                    "Invalid salt length for Blowfish salted key schedule");
@@ -398,8 +398,16 @@ void Blowfish::salted_set_key(const uint8_t key[], size_t length,
 
       for(size_t r = 0; r != rounds; ++r)
          {
-         key_expansion(key, length, nullptr, 0);
-         key_expansion(salt, salt_length, nullptr, 0);
+         if(salt_first)
+            {
+            key_expansion(salt, salt_length, nullptr, 0);
+            key_expansion(key, length, nullptr, 0);
+            }
+         else
+            {
+            key_expansion(key, length, nullptr, 0);
+            key_expansion(salt, salt_length, nullptr, 0);
+            }
          }
       }
    }

@@ -24,6 +24,10 @@
    #include <botan/argon2.h>
 #endif
 
+#if defined(BOTAN_HAS_PBKDF_BCRYPT)
+   #include <botan/bcrypt_pbkdf.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string& algo_spec,
@@ -68,6 +72,13 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string
    else if(req.algo_name() == "Argon2id")
       {
       return std::unique_ptr<PasswordHashFamily>(new Argon2_Family(2));
+      }
+#endif
+
+#if defined(BOTAN_HAS_PBKDF_BCRYPT)
+   if(req.algo_name() == "Bcrypt-PBKDF")
+      {
+      return std::unique_ptr<PasswordHashFamily>(new Bcrypt_PBKDF_Family);
       }
 #endif
 

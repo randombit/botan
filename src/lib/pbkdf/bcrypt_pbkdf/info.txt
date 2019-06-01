@@ -1,0 +1,8 @@
+<defines>
+PBKDF_BCRYPT -> 20190531
+</defines>
+
+<requires>
+blowfish
+sha2_64
+</requires>

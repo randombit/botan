@@ -26,7 +26,7 @@ class BOTAN_PUBLIC_API(2,0) Blowfish final : public Block_Cipher_Fixed_Params<8,
       */
       void salted_set_key(const uint8_t key[], size_t key_length,
                           const uint8_t salt[], size_t salt_length,
-                          size_t workfactor);
+                          const size_t workfactor, bool salt_first = false);
 
       BOTAN_DEPRECATED("Use Blowfish::salted_set_key taking salt length")
       void eks_key_schedule(const uint8_t key[], size_t key_length,
