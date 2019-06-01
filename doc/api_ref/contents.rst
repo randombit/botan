@@ -1,13 +1,10 @@
 
-Contents
-========================================
+API Reference
+===================
 
 .. toctree::
+   :maxdepth: 1
 
-   index
-   goals
-   support
-   building
    versions
    secmem
    rng
@@ -38,11 +35,3 @@ Contents
    otp
    ffi
    python
-   cli
-   side_channels
-   packaging
-   configure
-   fuzzing
-   deprecated
-   abi
-   roadmap
