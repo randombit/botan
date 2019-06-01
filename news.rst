@@ -4,7 +4,9 @@ Release Notes
 Version 2.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add Argon2 password hash (GH #1981 #459)
+* Add Argon2 PBKDF/password hash (GH #459 #1981 #1987)
+
+* Add Bcrypt-PBKDF password hash (#1990)
 
 * Add a shim allowing testing Botan against the BoringSSL test suite,
   and fix a number of bugs in TLS found using it.
@@ -13,6 +15,8 @@ Version 2.11.0, Not Yet Released
 * Add support for the TLS v1.3 supported_versions extension. (GH #1976)
 
 * Add support for OCSP stapling on server side. (GH #1703 #1967)
+
+* Add ability to set the maximum allowed age of an OCSP response (GH #1974)
 
 * Add a ``boost::asio`` TLS stream compatible with ``boost::asio::ssl``.
   (GH #1839 #1927)
@@ -90,6 +94,8 @@ Version 2.11.0, Not Yet Released
 * Fix some warnings from Clang 8 (GH #1941)
 
 * Fix the makefile .PHONY syntax (GH #1874)
+
+* Fix build issue with SoftHSM 2.5.0 (GH #1986)
 
 Version 2.10.0, 2019-03-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
