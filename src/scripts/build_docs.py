@@ -56,17 +56,28 @@ def touch(fname):
 
 def copy_files(src_path, dest_dir):
 
+    logging.debug("Copying %s to %s", src_path, dest_dir)
+
     file_mode = os.stat(src_path).st_mode
+
+    try:
+        os.mkdir(dest_dir)
+    except OSError:
+        pass
 
     if stat.S_ISREG(file_mode):
         logging.debug("Copying file %s to %s", src_path, dest_dir)
         shutil.copy(src_path, dest_dir)
     else:
         for f in os.listdir(src_path):
+            print(f)
             src_file = os.path.join(src_path, f)
-            dest_file = os.path.join(dest_dir, f)
-            logging.debug("Copying dir %s to %s", src_file, dest_file)
-            shutil.copyfile(src_file, dest_file)
+            file_mode = os.stat(src_file).st_mode
+            if stat.S_ISREG(file_mode):
+                dest_file = os.path.join(dest_dir, f)
+                shutil.copyfile(src_file, dest_file)
+            elif stat.S_ISDIR(file_mode):
+                copy_files(os.path.join(src_path, f), os.path.join(dest_dir, f))
 
 def run_and_check(cmd_line, cwd=None):
 
