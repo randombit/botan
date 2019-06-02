@@ -1,9 +1,11 @@
+Reading List
+================
 
 These are papers, articles and books that are interesting or useful from the
 perspective of crypto implementation.
 
 Papers
-==================
+--------
 
 Implementation Techniques
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,7 +64,7 @@ Public Key Side Channels
   https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Zertifizierung/Interpretationen/AIS_46_ECCGuide_e_pdf.pdf
 
 Books
-=======
+------
 
 * "Handbook of Elliptic and Hyperelliptic Curve Cryptography"
   Cohen and Frey https://www.hyperelliptic.org/HEHCC/
@@ -72,7 +74,7 @@ Books
   Covers code, lattice, and hash based cryptography
 
 Standards
-============
+-----------
 
 * IEEE 1363 http://grouper.ieee.org/groups/1363/
   Very influential early in the library lifetime, so a lot of terminology used

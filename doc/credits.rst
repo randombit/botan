@@ -8,6 +8,8 @@ and beautification by scripts. The fields are name (N), email (E),
 web-address (W), PGP key ID and fingerprint (P), description (D),
 snail-mail address (S), and Bitcoin address (B).
 
+.. highlight:: none
+
 ::
 
   N: Alexander Bluhm

@@ -1,6 +1,9 @@
 
+Notes for New Contributors
+===================================
+
 Source Code Layout
-=================================================
+-------------------------------------------------
 
 Under ``src`` there are directories
 
@@ -15,7 +18,7 @@ Under ``src`` there are directories
 * ``python/botan2.py`` is the Python ctypes wrapper
 
 Library Layout
-========================================
+----------------------------------------
 
 * ``base`` defines some high level types
 * ``utils`` contains various utility functions and types
@@ -47,7 +50,7 @@ Library Layout
   secret sharing, all or nothing transform, and others
 
 Sending patches
-========================================
+----------------------------------------
 
 All contributions should be submitted as pull requests via GitHub
 (https://github.com/randombit/botan). If you are planning a large
@@ -85,7 +88,7 @@ addition the new API functionality must be exposed to Python and a
 test written in Python.
 
 Git Usage
-========================================
+----------------------------------------
 
 Do *NOT* merge ``master`` into your topic branch, this creates
 needless commits and noise in history. Instead, as needed, rebase your
@@ -100,7 +103,7 @@ probably be a single commit. Only split commits as needed to help with
 review/understanding of the change.
 
 Python
-========================================
+----------------------------------------
 
 Scripts should be in Python whenever possible.
 
@@ -122,7 +125,7 @@ useful modules such as graphviz or matplotlib, regardless if it is available
 from a stock CPython install. Prefer Python3 for new scripts of this sort.
 
 Build Tools and Hints
-========================================
+----------------------------------------
 
 If you don't already use it for all your C/C++ development, install
 ``ccache`` now and configure a large cache on a fast disk. It allows for
@@ -140,7 +143,7 @@ of total coverage. This coverage build requires the development headers for
 zlib, bzip2, liblzma, OpenSSL, TrouSerS (libtspi), and Sqlite3.
 
 Copyright Notice
-========================================
+----------------------------------------
 
 At the top of any new file add a comment with a copyright and a reference to the
 license, for example::
@@ -154,7 +157,7 @@ If you are making a substantial or non-trivial change to an existing file, add
 or update your own copyright statement at the top of each file.
 
 Style Conventions
-========================================
+----------------------------------------
 
 When writing your code remember the need for it to be easily understood by
 reviewers and auditors, both at the time of the patch submission and in the
@@ -198,10 +201,10 @@ Use ``::`` to explicitly refer to the global namespace (eg, when calling an OS
 or external library function like ``::select`` or ``::sqlite3_open``).
 
 Use of External Dependencies
-========================================
+----------------------------------------
 
 Compiler Dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 The library should always be as functional as possible when compiled with just
 C++11. However, feel free to use the C++11 language. Little mercy is given to
@@ -220,7 +223,7 @@ into something with a conditional jump, but code intended to be const-time
 should in any case be annotated so it can be checked at runtime with tools.
 
 Operating System Dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you're adding a small OS dependency in some larger piece of code, try to
 contain the actual non-portable operations to utils/os_utils.* and then call
@@ -235,7 +238,7 @@ or for Windows Vista/2008 Server (the oldest versions still supported by
 Microsoft).
 
 Library Dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Any external library dependency - even optional ones - is met with as one PR
 submitter put it "great skepticism".

@@ -195,7 +195,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         self.testobj_dir = os.path.join(self.build_dir, 'obj', 'test')
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
-        self.doc_output_dir_manual = os.path.join(self.doc_output_dir, 'manual')
+        self.handbook_output_dir = os.path.join(self.doc_output_dir, 'handbook')
         self.doc_output_dir_doxygen = os.path.join(self.doc_output_dir, 'doxygen') if options.with_doxygen else None
 
         self.include_dir = os.path.join(self.build_dir, 'include')
@@ -246,7 +246,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
             self.botan_include_dir,
             self.internal_include_dir,
             self.external_include_dir,
-            self.doc_output_dir_manual,
+            self.handbook_output_dir,
         ]
         if self.doc_output_dir_doxygen:
             out += [self.doc_output_dir_doxygen]
@@ -1994,7 +1994,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'fuzzer_output_dir': build_paths.fuzzer_output_dir if build_paths.fuzzer_output_dir else '',
         'doc_output_dir': build_paths.doc_output_dir,
-        'doc_output_dir_manual': build_paths.doc_output_dir_manual,
+        'handbook_output_dir': build_paths.handbook_output_dir,
         'doc_output_dir_doxygen': build_paths.doc_output_dir_doxygen,
 
         'os': options.os,
@@ -3202,7 +3202,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
 
     if options.with_rst2man:
         rst2man_file = os.path.join(build_paths.build_dir, 'botan.rst')
-        cli_doc = os.path.join(source_paths.doc_dir, 'manual/cli.rst')
+        cli_doc = os.path.join(source_paths.doc_dir, 'cli.rst')
 
         cli_doc_contents = open(cli_doc).readlines()
 

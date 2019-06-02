@@ -1,6 +1,8 @@
 Release Process and Checklist
 ========================================
 
+.. highlight:: shell
+
 .. note::
 
    This information is only useful if you are a developer of botan who

@@ -87,7 +87,7 @@ For instance::
 will set up a build that only includes RSA, OAEP, PSS along with any
 required dependencies. Note that a minimized build does not by default
 include any random number generator, which is needed for example to
-generate keys, nonces and IVs. See :doc:`rng` on which random number
+generate keys, nonces and IVs. See :doc:`api_ref/rng` on which random number
 generators are available.
 
 Cross Compiling
@@ -477,8 +477,8 @@ Building the Python wrappers
 The Python wrappers for Botan use ctypes and the C89 API so no special
 build step is required, just import botan2.py
 
-See :doc:`Python Bindings <python>` for more information about the
-Python bindings.
+See :doc:`Python Bindings <api_ref/python>` for more information about
+the Python bindings.
 
 Configure Script Options
 ---------------------------

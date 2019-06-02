@@ -1,6 +1,8 @@
 One Time Passwords
 ========================
 
+.. versionadded:: 2.2.0
+
 One time password schemes are a user authentication method that relies on a
 fixed secret key which is used to derive a sequence of short passwords, each of
 which is accepted only once. Commonly this is used to implement two-factor
