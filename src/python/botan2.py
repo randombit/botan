@@ -1415,6 +1415,9 @@ class MPI(object):
         _DLL.botan_mp_cmp(byref(r), self.__obj, other.handle_())
         return r.value
 
+    def __hash__(self):
+        return hash(to_bytes())
+
     def __eq__(self, other):
         return self.cmp(other) == 0
 
