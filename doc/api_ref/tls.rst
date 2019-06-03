@@ -85,7 +85,7 @@ information about the connection.
      exception which will send a close message to the counterparty and
      reset the connection state.
 
- .. cpp::function:: void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain, \
+ .. cpp:function:: void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain, \
                    const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses, \
                    const std::vector<Certificate_Store*>& trusted_roots, \
                    Usage_Type usage, \
@@ -120,7 +120,7 @@ information about the connection.
      being authenticated using this certificate chain. It can be consulted
      for values such as allowable signature methods and key sizes.
 
- .. cpp::function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
+ .. cpp:function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
 
      Called by default `tls_verify_cert_chain` to set timeout for online OCSP requests
      on the certificate chain. Return 0 to disable OCSP. Current default is 0.
