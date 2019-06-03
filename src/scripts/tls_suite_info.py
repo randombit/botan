@@ -118,7 +118,6 @@ def to_ciphersuite_info(code, name):
     if cipher_algo in ['AES', 'Camellia', 'ARIA']:
         cipher_algo += '-%d' % (cipher_keylen*8)
 
-    modestr = ''
     mode = ''
 
     if cipher[0] == 'CHACHA20' and cipher[1] == 'POLY1305':
@@ -136,14 +135,9 @@ def to_ciphersuite_info(code, name):
 
     if mode == 'CBC':
         return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, mac_algo, mac_keylen[mac_algo], mac_algo, 'CBC_MODE')
-
     elif mode == 'OCB':
         return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, "AEAD", 0, mac_algo, 'AEAD_XOR_12')
-
     else:
-        iv_bytes_from_hs = 4
-        iv_bytes_from_rec = 8
-
         return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, "AEAD", 0, mac_algo, 'AEAD_IMPLICIT_4')
 
 def open_input(args):
@@ -214,7 +208,6 @@ def main(args = None):
     ciphersuite_re = re.compile(' +0x([0-9a-fA-F][0-9a-fA-F]),0x([0-9a-fA-F][0-9a-fA-F]) + TLS_([A-Za-z_0-9]+) ')
 
     suites = {}
-    suite_codes = {}
 
     contents = ''
 
@@ -342,6 +335,8 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
         out = open(options.output, 'w')
         out.write(suite_info)
         out.close()
+
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())

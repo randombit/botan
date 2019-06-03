@@ -80,6 +80,11 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
+    if len(args) <= 1:
+        sizes = [4, 6, 8, 9, 16, 24]
+    else:
+        sizes = map(int, args[1:])
+
     print("""/*
 * Comba Multiplication and Squaring
 *
@@ -94,7 +99,7 @@ def main(args = None):
 namespace Botan {
 """ % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d")))
 
-    for n in [4,6,8,9,16,24]:
+    for n in sizes:
         print("/*\n* Comba %dx%d Squaring\n*/" % (n, n))
         print("void bigint_comba_sqr%d(word z[%d], const word x[%d])" % (n, 2*n, n))
         print("   {")

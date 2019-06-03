@@ -333,7 +333,6 @@ def main(args=None):
             (major, minor, patch) = [int(x) for x in target_version.split('.')]
 
             assert target_version == '%d.%d.%d' % (major, minor, patch)
-            target_version = target_version
         except ValueError as e:
             logging.error('Invalid version number %s' % (target_version))
 

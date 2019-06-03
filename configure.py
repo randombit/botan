@@ -1290,7 +1290,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                     raise UserError('No flags defined for sanitizer %s in %s' % (s, self.basename))
 
                 if s == 'default':
-                    abi_link.update([self.sanitizers[s] for s in default_san])
+                    abi_link.update([self.sanitizers[x] for x in default_san])
                 else:
                     abi_link.add(self.sanitizers[s])
 

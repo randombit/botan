@@ -8,7 +8,7 @@ Automatically generate declarations for the FFI layer
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-from pycparser import c_parser, c_ast, parse_file
+from pycparser import c_ast, parse_file
 
 ffi_header = 'src/lib/ffi/ffi.h'
 

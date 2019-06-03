@@ -92,6 +92,7 @@ def main(args = None):
                 else:
                     print("FAIL %s" % (script))
                 sys.stdout.flush()
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())
