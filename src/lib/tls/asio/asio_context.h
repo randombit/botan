@@ -19,6 +19,7 @@
 #include <botan/credentials_manager.h>
 #include <botan/ocsp.h>
 #include <botan/rng.h>
+#include <botan/tls_callbacks.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_server_info.h>
 #include <botan/tls_session_manager.h>
@@ -26,19 +27,27 @@
 namespace Botan {
 namespace TLS {
 
+namespace detail {
+template <typename FunT>
+struct fn_signature_helper : public std::false_type {};
+
+template <typename R, typename D, typename... Args>
+struct fn_signature_helper<R(D::*)(Args...)>
+   {
+   using type = std::function<R(Args...)>;
+   };
+}  // namespace detail
+
 /**
  * A helper class to initialize and configure Botan::TLS::Stream
  */
 class Context
    {
    public:
-      using Verify_Callback = std::function<
-                              void(const std::vector<X509_Certificate>&,
-                                   const std::vector<std::shared_ptr<const OCSP::Response>>&,
-                                   const std::vector<Certificate_Store*>&,
-                                   Usage_Type,
-                                   const std::string&,
-                                   const TLS::Policy&)>;
+      // statically extract the function signature type from Callbacks::tls_verify_cert_chain
+      // and reuse it as an std::function<> for the verify callback signature
+      using Verify_Callback =
+         detail::fn_signature_helper<decltype(&Callbacks::tls_verify_cert_chain)>::type;
 
       Context(Credentials_Manager*   credentialsManager,
               RandomNumberGenerator* randomNumberGenerator,
