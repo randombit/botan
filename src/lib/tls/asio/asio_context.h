@@ -46,6 +46,10 @@ class Context
    public:
       // statically extract the function signature type from Callbacks::tls_verify_cert_chain
       // and reuse it as an std::function<> for the verify callback signature
+      /**
+       * The signature of the callback function should correspond to the signature of
+       * Callbacks::tls_verify_cert_chain
+       */
       using Verify_Callback =
          detail::fn_signature_helper<decltype(&Callbacks::tls_verify_cert_chain)>::type;
 
@@ -72,6 +76,8 @@ class Context
        * This changes the verify_callback in the stream's TLS::Context, and hence the tls_verify_cert_chain callback
        * used in the handshake.
        * Using this function is equivalent to setting the callback via @see Botan::TLS::Stream::set_verify_callback
+       *
+       * @note This function should only be called before initiating the TLS handshake
        */
       void set_verify_callback(Verify_Callback callback)
          {
@@ -93,8 +99,8 @@ class Context
 
       Server_Information     serverInfo;
       Verify_Callback        verifyCallback;
-
    };
+
 }  // namespace TLS
 }  // namespace Botan
 

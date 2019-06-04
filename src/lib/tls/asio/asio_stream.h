@@ -55,8 +55,8 @@ class Stream
        /**
         * @brief Construct a new Stream
         *
-        * @param context The context parameter is be used to set up the underlying native handle. Using code is
-        *                responsible for lifetime management of the context and must ensure that is is available for the
+        * @param context The context parameter is used to set up the underlying native handle. Using code is
+        *                responsible for lifetime management of the context and must ensure that it is available for the
         *                lifetime of the stream.
         * @param args Arguments to be forwarded to the construction of the next layer.
         */
@@ -75,8 +75,8 @@ class Stream
         * Convenience overload for boost::asio::ssl::stream compatibility.
         *
         * @param arg This argument is forwarded to the construction of the next layer.
-        * @param context The context parameter is be used to set up the underlying native handle. Using code is
-        *                responsible for lifetime management of the context and must ensure that is is available for the
+        * @param context The context parameter is used to set up the underlying native handle. Using code is
+        *                responsible for lifetime management of the context and must ensure that is available for the
         *                lifetime of the stream.
         */
       template <typename Arg>
@@ -125,6 +125,8 @@ class Stream
        * This changes the verify_callback in the stream's TLS::Context, and hence the tls_verify_cert_chain callback
        * used in the handshake.
        * Using this function is equivalent to setting the callback via @see Botan::TLS::Context::set_verify_callback
+       *
+       * @note This function should only be called before initiating the TLS handshake
        */
       void set_verify_callback(Context::Verify_Callback callback)
          {
@@ -132,10 +134,7 @@ class Stream
          }
 
       /**
-       * @brief Override the tls_verify_cert_chain callback
-       *
-       * This changes the verify_callback in the stream's TLS::Context, and hence the tls_verify_cert_chain callback
-       * used in the handshake.
+       * @brief Compatibility overload of @ref set_verify_callback
        *
        * @param ec This parameter is unused.
        */
