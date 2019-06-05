@@ -47,9 +47,9 @@ def check_subprocess_results(subproc, name):
         if stderr != '':
             logging.error(stderr)
         raise Exception('Running %s failed' % (name))
-    else:
-        if stderr != '':
-            logging.warning(stderr)
+
+    if stderr != '':
+        logging.warning(stderr)
 
     return raw_stdout
 

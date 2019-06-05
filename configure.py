@@ -2830,8 +2830,8 @@ def robust_makedirs(directory, max_retries=5):
         except OSError as e:
             if e.errno == errno.EEXIST:
                 raise
-            else:
-                time.sleep(0.1)
+
+        time.sleep(0.1)
 
     # Final attempt, pass any exceptions up to caller.
     os.makedirs(directory)
