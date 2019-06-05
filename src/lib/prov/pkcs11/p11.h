@@ -1817,11 +1817,16 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          encrypted_data.resize(encrypted_size);
-         return C_Encrypt(session,
+         if (!C_Encrypt(session,
                           const_cast<Byte*>(plaintext_data.data()),
                           static_cast<Ulong>(plaintext_data.size()),
                           encrypted_data.data(),
-                          &encrypted_size, return_value);
+                          &encrypted_size, return_value))
+            {
+            return false;
+            }
+         encrypted_data.resize(encrypted_size);
+         return true;
          }
 
       /**
@@ -1950,11 +1955,16 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          decrypted_data.resize(decrypted_size);
-         return C_Decrypt(session,
-                          const_cast<Byte*>(encrypted_data.data()),
-                          static_cast<Ulong>(encrypted_data.size()),
-                          decrypted_data.data(),
-                          &decrypted_size, return_value);
+         if(!C_Decrypt(session,
+                       const_cast<Byte*>(encrypted_data.data()),
+                       static_cast<Ulong>(encrypted_data.size()),
+                       decrypted_data.data(),
+                       &decrypted_size, return_value))
+            {
+            return false;
+            }
+         decrypted_data.resize(decrypted_size);
+         return true;
          }
 
       /**
@@ -2189,12 +2199,17 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          signature.resize(signature_size);
-         return C_Sign(session,
+         if (!C_Sign(session,
                        const_cast<Byte*>(data.data()),
                        static_cast<Ulong>(data.size()),
                        signature.data(),
                        &signature_size,
-                       return_value);
+                       return_value))
+            {
+            return false;
+            }
+         signature.resize(signature_size);
+         return true;
          }
 
       /**
@@ -2290,7 +2305,12 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
             }
 
          signature.resize(signature_size);
-         return C_SignFinal(session, signature.data(), &signature_size, return_value);
+         if (!C_SignFinal(session, signature.data(), &signature_size, return_value))
+            {
+            return false;
+            }
+         signature.resize(signature_size);
+         return true;
          }
 
       /**
