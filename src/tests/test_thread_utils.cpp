@@ -25,21 +25,39 @@ Test::Result thread_pool()
    // Using lots of threads since here the works spend most of the time sleeping
    Botan::Thread_Pool pool(16);
 
-   auto sleep_and_return = [](size_t x) -> size_t {
+   auto sleep_or_throw = [](size_t x) -> size_t {
       std::this_thread::sleep_for(std::chrono::milliseconds((x*97)%127));
+
+      if(x % 2 == 0)
+         throw x;
       return x;
       };
 
    std::vector<std::future<size_t>> futures;
    for(size_t i = 0; i != 100; ++i)
       {
-      auto fut = pool.run(sleep_and_return, i);
+      auto fut = pool.run(sleep_or_throw, i);
       futures.push_back(std::move(fut));
       }
 
    for(size_t i = 0; i != futures.size(); ++i)
       {
-      result.test_eq("Expected return value", futures[i].get(), i);
+      if(i % 2 == 0)
+         {
+         try
+            {
+            futures[i].get();
+            result.test_failure("Expected future to throw");
+            }
+         catch(size_t x)
+            {
+            result.test_eq("Expected thrown value", x, i);
+            }
+         }
+      else
+         {
+         result.test_eq("Expected return value", futures[i].get(), i);
+         }
       }
 
    pool.shutdown();
