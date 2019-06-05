@@ -70,7 +70,6 @@ def copy_files(src_path, dest_dir):
         shutil.copy(src_path, dest_dir)
     else:
         for f in os.listdir(src_path):
-            print(f)
             src_file = os.path.join(src_path, f)
             file_mode = os.stat(src_file).st_mode
             if stat.S_ISREG(file_mode):
