@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/cipher_filter.h>
+#include <botan/filters.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {

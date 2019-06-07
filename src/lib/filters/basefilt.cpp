@@ -1,20 +1,12 @@
 /*
-* Basic Filters
 * (C) 1999-2007 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/basefilt.h>
-#include <botan/key_filt.h>
+#include <botan/filters.h>
 
 namespace Botan {
-
-void Keyed_Filter::set_iv(const InitializationVector& iv)
-   {
-   if(iv.length() != 0)
-      throw Invalid_IV_Length(name(), iv.length());
-   }
 
 /*
 * Chain Constructor
@@ -40,11 +32,6 @@ Chain::Chain(Filter* filters[], size_t count)
          }
    }
 
-std::string Chain::name() const
-   {
-   return "Chain";
-   }
-
 /*
 * Fork Constructor
 */
@@ -60,11 +47,6 @@ Fork::Fork(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
 Fork::Fork(Filter* filters[], size_t count)
    {
    set_next(filters, count);
-   }
-
-std::string Fork::name() const
-   {
-   return "Fork";
    }
 
 }

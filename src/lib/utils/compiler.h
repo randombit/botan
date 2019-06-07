@@ -100,19 +100,26 @@
 
   #if defined(__clang__)
     #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
+    #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("message \"this header is deprecated\"")
 
   #elif defined(_MSC_VER)
     #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
+    #define BOTAN_DEPRECATED_HEADER(hdr) __pragma("message \"this header is deprecated\"")
 
   #elif defined(__GNUG__)
     /* msg supported since GCC 4.5, earliest we support is 4.8 */
     #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
+    #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("GCC warning \"this header is deprecated\"")
   #endif
 
 #endif
 
 #if !defined(BOTAN_DEPRECATED)
   #define BOTAN_DEPRECATED(msg)
+#endif
+
+#if !defined(BOTAN_DEPRECATED_HEADER)
+  #define BOTAN_DEPRECATED_HEADER(hdr)
 #endif
 
 /*

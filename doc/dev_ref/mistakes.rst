@@ -27,6 +27,13 @@ the overall API and ABI surface.
 These interfaces are now deprecated, and perhaps will be able to be
 removed eventually.
 
+Header Directories
+-------------------
+
+It would have been better to install all headers as ``X/header.h``
+where ``X`` is the base dir in the source, eg ``block/aes128.h``,
+``hash/md5.h``, ...
+
 Exceptions
 -----------
 

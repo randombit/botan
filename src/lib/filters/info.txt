@@ -1,18 +1,21 @@
 <defines>
 FILTERS -> 20160415
+CODEC_FILTERS -> 20131128
 </defines>
 
 <header:public>
 basefilt.h
-buf_filt.h
-data_snk.h
 comp_filter.h
+cipher_filter.h
+buf_filt.h
+key_filt.h
+
+secqueue.h
+
+data_snk.h
 filter.h
 filters.h
-key_filt.h
 pipe.h
-secqueue.h
-cipher_filter.h
 </header:public>
 
 <header:internal>
@@ -21,4 +24,5 @@ out_buf.h
 
 <requires>
 modes
+base64
 </requires>

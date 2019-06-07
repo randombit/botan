@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/b64_filt.h>
+#include <botan/filters.h>
 #include <botan/base64.h>
 #include <botan/exceptn.h>
 #include <algorithm>

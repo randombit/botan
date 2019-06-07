@@ -16,13 +16,7 @@
    #include <botan/pipe.h>
    #include <botan/filters.h>
    #include <botan/data_snk.h>
-   #include <botan/comp_filter.h>
    #include <botan/cipher_filter.h>
-#endif
-
-#if defined(BOTAN_HAS_CODEC_FILTERS)
-   #include <botan/hex_filt.h>
-   #include <botan/b64_filt.h>
 #endif
 
 #if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
