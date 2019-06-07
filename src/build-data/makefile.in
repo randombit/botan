@@ -1,3 +1,6 @@
+
+# This makefile was generated using '%{command_line}'
+
 # Paths to relevant programs
 
 CXX            = %{cxx}
