@@ -1052,7 +1052,11 @@ def main(args=None):
 
         start = time.time()
         tmp_dir = tempfile.mkdtemp(prefix='botan_cli_')
-        fn(tmp_dir)
+        try:
+            fn(tmp_dir)
+        except Exception as e: # pylint: disable=broad-except
+            logging.error("Test %s threw exception: %s", fn_name, e)
+
         shutil.rmtree(tmp_dir)
         end = time.time()
         logging.debug("Ran %s in %.02f", fn_name, end-start)
