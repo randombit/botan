@@ -2491,12 +2491,14 @@ class AmalgamationHeader(object):
         if name in self.included_already:
             return
 
-        if name == 'botan.h':
-            return
-
         self.included_already.add(name)
 
         if name not in self.file_contents:
+            return
+
+        depr_marker = 'BOTAN_DEPRECATED_HEADER(%s)\n' % (name)
+        if depr_marker in self.file_contents[name]:
+            logging.debug("Ignoring deprecated header %s", name)
             return
 
         for line in self.file_contents[name]:
