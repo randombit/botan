@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/buf_filt.h>
+#include <botan/filters.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/rounding.h>
 #include <botan/exceptn.h>

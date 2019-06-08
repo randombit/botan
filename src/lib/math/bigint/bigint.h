@@ -905,7 +905,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * All elements of vec must have the same size, and output must be
      * pre-allocated with the same size.
      */
-     static void const_time_lookup(
+     static void BOTAN_DEPRECATED("No longer in use") const_time_lookup(
         secure_vector<word>& output,
         const std::vector<BigInt>& vec,
         size_t idx);

@@ -1,8 +1,6 @@
 <defines>
-CODEC_FILTERS -> 20131128
 </defines>
 
 <requires>
-base64
 filters
 </requires>

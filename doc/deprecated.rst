@@ -21,7 +21,19 @@ in the source.
 - Directly accessing the member variables of types calendar_point, ASN1_Attribute,
   AlgorithmIdentifier, and BER_Object
 
-- The headers ``botan.h``, ``init.h``, ``lookup.h``, ``threefish.h``, ``sm2_enc.h``
+- The following headers are currently public, but will be completely
+  removed in a future major release: ``botan.h``, ``init.h``,
+  ``lookup.h``, ``threefish.h``, ``sm2_enc.h``, ``datastor.h``,
+  ``basefilt.h``, ``hex_filt.h``, ``b64_filt.h``, ``comp_filter.h``,
+  ``key_filt.h``, ``buf_filt.h``, ``cipher_filter.h``
+
+- The following headers are currently public, but will be made
+  internal in a future major release, and no longer usable by
+  applications: ``rotate.h``, ``loadstor.h``, ``mul128.h``,
+  ``dyn_load.h``, ``atomic.h``, ``blinding.h``, ``gf2m_small_m.h``,
+  ``locking_allocator.h``, ``polyn_gf2m.h`,, ``parsing.h``,
+  ``rfc6979.h``, ``divide.h``, ``charset.h``, ``secqueue.h``,
+  ``buf_filt.h``, ``keypair.h``, ``http_util.h``, ``scan_name.h``
 
 - Using a default output length for "SHAKE-128" and "SHAKE-256". Instead,
   always specify the desired output length.
