@@ -53,22 +53,24 @@ class Context
       using Verify_Callback =
          detail::fn_signature_helper<decltype(&Callbacks::tls_verify_cert_chain)>::type;
 
-      Context(Credentials_Manager*   credentialsManager,
-              RandomNumberGenerator* randomNumberGenerator,
-              Session_Manager*       sessionManager,
-              Policy*                policy,
-              Server_Information     serverInfo = Server_Information()) :
-         credentialsManager(credentialsManager),
-         randomNumberGenerator(randomNumberGenerator),
-         sessionManager(sessionManager),
-         policy(policy),
-         serverInfo(serverInfo)
+      Context(Credentials_Manager&   credentials_manager,
+              RandomNumberGenerator& rng,
+              Session_Manager&       session_manager,
+              Policy&                policy,
+              Server_Information     server_info = Server_Information()) :
+         m_credentials_manager(credentials_manager),
+         m_rng(rng),
+         m_session_manager(session_manager),
+         m_policy(policy),
+         m_server_info(server_info)
          {}
 
-      Context(const Context& other) = delete;
-      Context& operator=(const Context& other) = delete;
-      Context(Context&& other) = default;
-      Context& operator=(Context&& other) = default;
+      virtual ~Context() = default;
+
+      Context(Context&&)                 = default;
+      Context(const Context&)            = delete;
+      Context& operator=(const Context&) = delete;
+      Context& operator=(Context&&)      = delete;
 
       /**
        * @brief Override the tls_verify_cert_chain callback
@@ -81,24 +83,34 @@ class Context
        */
       void set_verify_callback(Verify_Callback callback)
          {
-         verifyCallback = std::move(callback);
+         m_verify_callback = std::move(callback);
          }
 
       bool has_verify_callback() const
          {
-         return static_cast<bool>(verifyCallback);
+         return static_cast<bool>(m_verify_callback);
+         }
+
+      const Verify_Callback& get_verify_callback() const
+         {
+         return m_verify_callback;
+         }
+
+      void set_server_info(const Server_Information& server_info)
+         {
+         m_server_info = server_info;
          }
 
    protected:
       template <class S, class C> friend class Stream;
 
-      Credentials_Manager*   credentialsManager;
-      RandomNumberGenerator* randomNumberGenerator;
-      Session_Manager*       sessionManager;
-      Policy*                policy;
+      Credentials_Manager&   m_credentials_manager;
+      RandomNumberGenerator& m_rng;
+      Session_Manager&       m_session_manager;
+      Policy&                m_policy;
 
-      Server_Information     serverInfo;
-      Verify_Callback        verifyCallback;
+      Server_Information     m_server_info;
+      Verify_Callback        m_verify_callback;
    };
 
 }  // namespace TLS

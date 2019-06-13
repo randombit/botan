@@ -52,14 +52,14 @@ class Stream
       //! \name construction
       //! @{
 
-       /**
-        * @brief Construct a new Stream
-        *
-        * @param context The context parameter is used to set up the underlying native handle. Using code is
-        *                responsible for lifetime management of the context and must ensure that it is available for the
-        *                lifetime of the stream.
-        * @param args Arguments to be forwarded to the construction of the next layer.
-        */
+      /**
+       * @brief Construct a new Stream
+       *
+       * @param context The context parameter is used to set up the underlying native handle. Using code is
+       *                responsible for lifetime management of the context and must ensure that it is available for the
+       *                lifetime of the stream.
+       * @param args Arguments to be forwarded to the construction of the next layer.
+       */
       template <typename... Args>
       explicit Stream(Context& context, Args&& ... args)
          : m_context(context)
@@ -69,16 +69,16 @@ class Stream
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
 
-       /**
-        * @brief Construct a new Stream
-        *
-        * Convenience overload for boost::asio::ssl::stream compatibility.
-        *
-        * @param arg This argument is forwarded to the construction of the next layer.
-        * @param context The context parameter is used to set up the underlying native handle. Using code is
-        *                responsible for lifetime management of the context and must ensure that is available for the
-        *                lifetime of the stream.
-        */
+      /**
+       * @brief Construct a new Stream
+       *
+       * Convenience overload for boost::asio::ssl::stream compatibility.
+       *
+       * @param arg This argument is forwarded to the construction of the next layer.
+       * @param context The context parameter is used to set up the underlying native handle. Using code is
+       *                responsible for lifetime management of the context and must ensure that is available for the
+       *                lifetime of the stream.
+       */
       template <typename Arg>
       explicit Stream(Arg&& arg, Context& context)
          : m_context(context)
@@ -576,7 +576,7 @@ class Stream
                {
                if(m_tls_context.has_verify_callback())
                   {
-                  m_tls_context.verifyCallback(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
+                  m_tls_context.get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
                   }
                else
                   {
@@ -637,12 +637,13 @@ class Stream
          {
          if(side == CLIENT)
             {
-            m_native_handle = std::unique_ptr<Client>(new Client(m_core,
-                              *m_context.sessionManager,
-                              *m_context.credentialsManager,
-                              *m_context.policy,
-                              *m_context.randomNumberGenerator,
-                              m_context.serverInfo));
+            m_native_handle = std::unique_ptr<Client>(
+                                 new Client(m_core,
+                                            m_context.m_session_manager,
+                                            m_context.m_credentials_manager,
+                                            m_context.m_policy,
+                                            m_context.m_rng,
+                                            m_context.m_server_info));
             }
          else
             {

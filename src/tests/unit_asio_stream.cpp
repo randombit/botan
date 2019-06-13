@@ -62,10 +62,6 @@ class MockChannel
       Botan::TLS::Callbacks& m_callbacks;
       std::size_t m_bytes_till_complete_record;  // number of bytes still to read before tls record is completed
       bool        m_active;
-
-      Botan::TLS::Session_Manager_Noop m_session_manager;
-      Botan::Null_RNG m_rng;
-      Botan::TLS::Default_Policy m_policy;
    };
 
 class ThrowingMockChannel : public MockChannel
@@ -121,15 +117,6 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
    };
 
 /**
- * Mocked Botan::TLS::Context. It is broken, but never used since the Channel is mocked as well.
- */
-class MockContext : public Botan::TLS::Context
-   {
-   public:
-      MockContext() : Botan::TLS::Context(nullptr, nullptr, nullptr, nullptr) {}
-   };
-
-/**
  * Synchronous tests for Botan::Stream.
  *
  * This test validates the asynchronous behavior Botan::Stream, including its utility classes StreamCore and Async_*_Op.
@@ -139,6 +126,16 @@ class MockContext : public Botan::TLS::Context
  */
 class Asio_Stream_Tests final : public Test
    {
+      Botan::Credentials_Manager m_credentials_manager;
+      Botan::Null_RNG m_rng;
+      Botan::TLS::Session_Manager_Noop m_session_manager;
+      Botan::TLS::Default_Policy m_policy;
+
+      Botan::TLS::Context get_context()
+         {
+         return Botan::TLS::Context(m_credentials_manager, m_rng, m_session_manager, m_policy);
+         }
+
       // use memcmp to check if the data in a is a prefix of the data in b
       bool contains(const void* a, const void* b, const std::size_t size) { return memcmp(a, b, size) == 0; }
 
@@ -150,7 +147,7 @@ class Asio_Stream_Tests final : public Test
       void test_sync_handshake(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
 
          ssl.handshake(Botan::TLS::CLIENT);
@@ -167,7 +164,7 @@ class Asio_Stream_Tests final : public Test
          FailCount  fc{0, net::error::eof};
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
@@ -188,7 +185,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -206,7 +203,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream      remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -236,7 +233,7 @@ class Asio_Stream_Tests final : public Test
          FailCount  fc{0, net::error::eof};
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
@@ -262,7 +259,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream      remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -284,7 +281,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
 
          const std::size_t buf_size = 128;
@@ -305,7 +302,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
          error_code ec;
 
@@ -335,7 +332,7 @@ class Asio_Stream_Tests final : public Test
          FailCount  fc{0, net::error::eof};
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
@@ -356,7 +353,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          ssl.next_layer().connect(remote);
 
@@ -376,7 +373,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
 
          const std::size_t buf_size = 128;
@@ -399,7 +396,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream      remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
          uint8_t    data[TEST_DATA_SIZE];
 
@@ -423,7 +420,7 @@ class Asio_Stream_Tests final : public Test
       void test_async_read_some_buffer_sequence(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
 
          std::vector<net::mutable_buffer> data;
@@ -455,7 +452,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          // fail right away
          FailCount  fc{0, net::error::eof};
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          uint8_t    data[TEST_DATA_SIZE];
 
@@ -478,7 +475,7 @@ class Asio_Stream_Tests final : public Test
       void test_async_read_some_throw(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc, test_data());
          uint8_t    data[TEST_DATA_SIZE];
 
@@ -503,7 +500,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream      remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          uint8_t    data[TEST_DATA_SIZE];
 
@@ -530,7 +527,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream      remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
          error_code ec;
@@ -550,7 +547,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream      remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
          error_code ec;
@@ -590,7 +587,7 @@ class Asio_Stream_Tests final : public Test
          FailCount  fc{0, net::error::eof};
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
@@ -610,7 +607,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
          error_code ec;
@@ -629,7 +626,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream      remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
 
@@ -653,7 +650,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream      remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
 
@@ -696,7 +693,7 @@ class Asio_Stream_Tests final : public Test
          FailCount  fc{0, net::error::eof};
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          ssl.next_layer().connect(remote);
 
@@ -719,7 +716,7 @@ class Asio_Stream_Tests final : public Test
          net::io_context ioc;
          TestStream remote{ioc};
 
-         Botan_Tests::MockContext ctx;
+         auto ctx = get_context();
          ThrowingAsioStream ssl(ctx, ioc);
          ssl.next_layer().connect(remote);
 

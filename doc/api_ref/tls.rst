@@ -1699,10 +1699,10 @@ It offers the following interface:
 
    A helper class to initialize and configure the Stream's underlying *native handle* (see :cpp:class:`TLS::Client`).
 
-   .. cpp:function:: Context(Credentials_Manager*   credentialsManager, \
-                             RandomNumberGenerator* randomNumberGenerator, \
-                             Session_Manager*       sessionManager, \
-                             Policy*                policy, \
+   .. cpp:function:: Context(Credentials_Manager&   credentialsManager, \
+                             RandomNumberGenerator& randomNumberGenerator, \
+                             Session_Manager&       sessionManager, \
+                             Policy&                policy, \
                              Server_Information     serverInfo = Server_Information())
 
    Constructor for TLS::Context.
@@ -1755,10 +1755,10 @@ Stream Code Example
                 boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
                 http::request<http::string_body>         req)
             : request_(req)
-            , ctx_(&credentials_mgr_,
-                   &rng_,
-                   &session_mgr_,
-                   &policy_,
+            , ctx_(credentials_mgr_,
+                   rng_,
+                   session_mgr_,
+                   policy_,
                    Botan::TLS::Server_Information())
             , stream_(io_context, ctx_)
             {
