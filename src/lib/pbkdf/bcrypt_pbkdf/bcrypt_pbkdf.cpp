@@ -12,7 +12,7 @@
 namespace Botan {
 
 void Bcrypt_PBKDF::derive_key(uint8_t output[], size_t output_len,
-                              const char* password, const size_t password_len,
+                              const char* password, size_t password_len,
                               const uint8_t salt[], size_t salt_len) const
    {
    bcrypt_pbkdf(output, output_len,

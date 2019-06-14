@@ -97,7 +97,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    // If we have extra runtime budget, increment p
 
    if(target_nsec / est_nsec > 2)
-      p *= std::min<size_t>(1024, (target_nsec / est_nsec));
+      p *= std::min<uint64_t>(1024, (target_nsec / est_nsec));
 
    return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
    }

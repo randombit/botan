@@ -19,7 +19,7 @@ Argon2::Argon2(uint8_t family, size_t M, size_t t, size_t p) :
    {}
 
 void Argon2::derive_key(uint8_t output[], size_t output_len,
-                        const char* password, const size_t password_len,
+                        const char* password, size_t password_len,
                         const uint8_t salt[], size_t salt_len) const
    {
    argon2(output, output_len,
@@ -111,17 +111,17 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
 
    if(est_nsec < target_nsec && M < max_kib)
       {
-      const size_t desired_cost_increase = (target_nsec + est_nsec - 1) / est_nsec;
-      const size_t mem_headroom = max_kib / M;
+      const uint64_t desired_cost_increase = (target_nsec + est_nsec - 1) / est_nsec;
+      const uint64_t mem_headroom = max_kib / M;
 
-      const size_t M_mult = std::min(desired_cost_increase, mem_headroom);
+      const uint64_t M_mult = std::min(desired_cost_increase, mem_headroom);
       M *= M_mult;
       est_nsec *= M_mult;
       }
 
    if(est_nsec < target_nsec)
       {
-      const size_t desired_cost_increase = (target_nsec + est_nsec - 1) / est_nsec;
+      const uint64_t desired_cost_increase = (target_nsec + est_nsec - 1) / est_nsec;
       t *= desired_cost_increase;
       }
 
