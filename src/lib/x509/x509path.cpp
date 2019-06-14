@@ -205,7 +205,7 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
                  const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
                  const std::vector<Certificate_Store*>& trusted_certstores,
                  std::chrono::system_clock::time_point ref_time,
-                 std::chrono::seconds max_age)
+                 std::chrono::seconds max_ocsp_age)
    {
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_ocsp cert_path empty");
@@ -228,7 +228,7 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
             if(ocsp_signature_status == Certificate_Status_Code::OCSP_SIGNATURE_OK)
                {
                // Signature ok, so check the claimed status
-               Certificate_Status_Code ocsp_status = ocsp_responses.at(i)->status_for(*ca, *subject, ref_time, max_age);
+               Certificate_Status_Code ocsp_status = ocsp_responses.at(i)->status_for(*ca, *subject, ref_time, max_ocsp_age);
                status.insert(ocsp_status);
                }
             else
@@ -351,7 +351,8 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
                         const std::vector<Certificate_Store*>& trusted_certstores,
                         std::chrono::system_clock::time_point ref_time,
                         std::chrono::milliseconds timeout,
-                        bool ocsp_check_intermediate_CAs)
+                        bool ocsp_check_intermediate_CAs,
+                        std::chrono::seconds max_ocsp_age)
    {
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_ocsp_online cert_path empty");
@@ -410,7 +411,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
       ocsp_responses.push_back(ocsp_response_futures[i].get());
       }
 
-   return PKIX::check_ocsp(cert_path, ocsp_responses, trusted_certstores, ref_time);
+   return PKIX::check_ocsp(cert_path, ocsp_responses, trusted_certstores, ref_time, max_ocsp_age);
    }
 
 CertificatePathStatusCodes
@@ -876,7 +877,7 @@ Path_Validation_Result x509_path_validate(
 
       if(ocsp_resp.size() > 0)
          {
-         ocsp_status = PKIX::check_ocsp(cert_path, ocsp_resp, trusted_roots, ref_time);
+         ocsp_status = PKIX::check_ocsp(cert_path, ocsp_resp, trusted_roots, ref_time, restrictions.max_ocsp_age());
          }
 
       if(ocsp_status.empty() && ocsp_timeout != std::chrono::milliseconds(0))
@@ -958,14 +959,16 @@ Path_Validation_Result x509_path_validate(
    }
 
 Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
-                                                           size_t key_strength,
-                                                           bool ocsp_intermediates) :
+      size_t key_strength,
+      bool ocsp_intermediates,
+      std::chrono::seconds max_ocsp_age) :
    m_require_revocation_information(require_rev),
    m_ocsp_all_intermediates(ocsp_intermediates),
-   m_minimum_key_strength(key_strength)
+   m_minimum_key_strength(key_strength),
+   m_max_ocsp_age(max_ocsp_age)
    {
    if(key_strength <= 80)
-      m_trusted_hashes.insert("SHA-160");
+      { m_trusted_hashes.insert("SHA-160"); }
 
    m_trusted_hashes.insert("SHA-224");
    m_trusted_hashes.insert("SHA-256");
