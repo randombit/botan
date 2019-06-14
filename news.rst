@@ -19,7 +19,7 @@ Version 2.11.0, Not Yet Released
 * Add ability to set the maximum allowed age of an OCSP response (GH #1974)
 
 * Add a ``boost::asio`` TLS stream compatible with ``boost::asio::ssl``.
-  (GH #1839 #1927)
+  (GH #1839 #1927 #1992)
 
 * Add a certificate store for Linux/Unix systems. (GH #1885 #1936)
 
@@ -30,6 +30,9 @@ Version 2.11.0, Not Yet Released
 
 * Fix verification rooted in a v1 certificate which previously would fail.
   (GH #1890)
+
+* Add ability to specify the maximum age of an OCSP response which does not
+  have the nextUpdate field set. (GH #1974 #1995)
 
 * Fix X509_DN::operator< which could erronously return true in both
   directions (ie, DN1 < DN2 && DN2 < DN1). This would break STL
