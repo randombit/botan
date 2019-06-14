@@ -85,7 +85,7 @@ information about the connection.
      exception which will send a close message to the counterparty and
      reset the connection state.
 
- .. cpp::function:: void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain, \
+ .. cpp:function:: void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain, \
                    const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses, \
                    const std::vector<Certificate_Store*>& trusted_roots, \
                    Usage_Type usage, \
@@ -120,7 +120,7 @@ information about the connection.
      being authenticated using this certificate chain. It can be consulted
      for values such as allowable signature methods and key sizes.
 
- .. cpp::function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
+ .. cpp:function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
 
      Called by default `tls_verify_cert_chain` to set timeout for online OCSP requests
      on the certificate chain. Return 0 to disable OCSP. Current default is 0.
@@ -1618,6 +1618,7 @@ It offers the following interface:
 
    Construct a new TLS stream.
    The *context* parameter will be used to set up the underlying *native handle*, i.e. the :ref:`TLS::Client <tls_client>`, when :cpp:func:`handshake` is called.
+   Using code must ensure the context is kept alive for the lifetime of the stream.
    The further *args* will be forwarded to the *next layer*'s constructor.
 
    .. cpp:function:: template <typename... Args> \
@@ -1694,22 +1695,23 @@ It offers the following interface:
    The return type is an automatically deduced specialization of :cpp:class:`boost::asio::async_result`, depending on the *WriteHandler* type.
    *WriteHandler* should suffice the `requirements to a Boost.Asio write handler <https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio/reference/WriteHandler.html>`_.
 
-.. cpp:struct:: TLS::Context
+.. cpp:class:: TLS::Context
 
-   A helper struct to collect the initialization parameters for the Stream's underlying *native handle* (see :cpp:class:`TLS::Client`).
-   `TLS::Context` is defined as
+   A helper class to initialize and configure the Stream's underlying *native handle* (see :cpp:class:`TLS::Client`).
 
-   .. code-block:: cpp
+   .. cpp:function:: Context(Credentials_Manager&   credentialsManager, \
+                             RandomNumberGenerator& randomNumberGenerator, \
+                             Session_Manager&       sessionManager, \
+                             Policy&                policy, \
+                             Server_Information     serverInfo = Server_Information())
 
-      struct Context
-         {
-         Credentials_Manager*   credentialsManager;
-         RandomNumberGenerator* randomNumberGenerator;
-         Session_Manager*       sessionManager;
-         Policy*                policy;
-         Server_Information     serverInfo;
-         };
+   Constructor for TLS::Context.
 
+   .. cpp:function:: void set_verify_callback(Verify_Callback_T callback)
+
+   Set a user-defined callback function for certificate chain verification. This
+   will cause the stream to override the default implementation of the
+   :cpp:func:`tls_verify_cert_chain` callback.
 
 Stream Code Example
 ^^^^^^^^^^^^^^^^^^^^
@@ -1753,11 +1755,11 @@ Stream Code Example
                 boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
                 http::request<http::string_body>         req)
             : request_(req)
-            , ctx_{&credentials_mgr_,
-                   &rng_,
-                   &session_mgr_,
-                   &policy_,
-                   Botan::TLS::Server_Information()}
+            , ctx_(credentials_mgr_,
+                   rng_,
+                   session_mgr_,
+                   policy_,
+                   Botan::TLS::Server_Information())
             , stream_(io_context, ctx_)
             {
             boost::asio::async_connect(stream_.lowest_layer(), endpoint_iterator,

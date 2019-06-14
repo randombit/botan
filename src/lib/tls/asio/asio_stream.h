@@ -52,21 +52,38 @@ class Stream
       //! \name construction
       //! @{
 
+      /**
+       * @brief Construct a new Stream
+       *
+       * @param context The context parameter is used to set up the underlying native handle. Using code is
+       *                responsible for lifetime management of the context and must ensure that it is available for the
+       *                lifetime of the stream.
+       * @param args Arguments to be forwarded to the construction of the next layer.
+       */
       template <typename... Args>
       explicit Stream(Context& context, Args&& ... args)
          : m_context(context)
          , m_nextLayer(std::forward<Args>(args)...)
-         , m_core(m_receive_buffer, m_send_buffer)
+         , m_core(m_receive_buffer, m_send_buffer, m_context)
          , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
 
-      // overload for boost::asio::ssl::stream compatibility
+      /**
+       * @brief Construct a new Stream
+       *
+       * Convenience overload for boost::asio::ssl::stream compatibility.
+       *
+       * @param arg This argument is forwarded to the construction of the next layer.
+       * @param context The context parameter is used to set up the underlying native handle. Using code is
+       *                responsible for lifetime management of the context and must ensure that is available for the
+       *                lifetime of the stream.
+       */
       template <typename Arg>
       explicit Stream(Arg&& arg, Context& context)
          : m_context(context)
          , m_nextLayer(std::forward<Arg>(arg))
-         , m_core(m_receive_buffer, m_send_buffer)
+         , m_core(m_receive_buffer, m_send_buffer, m_context)
          , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
@@ -102,24 +119,29 @@ class Stream
       //! \name configuration and callback setters
       //! @{
 
-      //! @throws Not_Implemented
-      template<typename VerifyCallback>
-      void set_verify_callback(VerifyCallback callback)
+      /**
+       * @brief Override the tls_verify_cert_chain callback
+       *
+       * This changes the verify_callback in the stream's TLS::Context, and hence the tls_verify_cert_chain callback
+       * used in the handshake.
+       * Using this function is equivalent to setting the callback via @see Botan::TLS::Context::set_verify_callback
+       *
+       * @note This function should only be called before initiating the TLS handshake
+       */
+      void set_verify_callback(Context::Verify_Callback callback)
          {
-         BOTAN_UNUSED(callback);
-         throw Not_Implemented("set_verify_callback is not implemented");
+         m_context.set_verify_callback(std::move(callback));
          }
 
       /**
-       * Not Implemented.
-       * @param ec Will be set to `Botan::ErrorType::NotImplemented`
+       * @brief Compatibility overload of @ref set_verify_callback
+       *
+       * @param ec This parameter is unused.
        */
-      template<typename VerifyCallback>
-      void set_verify_callback(VerifyCallback callback,
-                               boost::system::error_code& ec)
+      void set_verify_callback(Context::Verify_Callback callback, boost::system::error_code& ec)
          {
-         BOTAN_UNUSED(callback);
-         ec = Botan::ErrorType::NotImplemented;
+         BOTAN_UNUSED(ec);
+         m_context.set_verify_callback(std::move(callback));
          }
 
       //! @throws Not_Implemented
@@ -133,8 +155,7 @@ class Stream
        * Not Implemented.
        * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
-      void set_verify_depth(int depth,
-                            boost::system::error_code& ec)
+      void set_verify_depth(int depth, boost::system::error_code& ec)
          {
          BOTAN_UNUSED(depth);
          ec = Botan::ErrorType::NotImplemented;
@@ -153,8 +174,7 @@ class Stream
        * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
       template <typename verify_mode>
-      void set_verify_mode(verify_mode v,
-                           boost::system::error_code& ec)
+      void set_verify_mode(verify_mode v, boost::system::error_code& ec)
          {
          BOTAN_UNUSED(v);
          ec = Botan::ErrorType::NotImplemented;
@@ -511,8 +531,8 @@ class Stream
       class StreamCore : public Botan::TLS::Callbacks
          {
          public:
-            StreamCore(boost::beast::flat_buffer& receive_buffer, boost::beast::flat_buffer& send_buffer)
-               : m_receive_buffer(receive_buffer), m_send_buffer(send_buffer) {}
+            StreamCore(boost::beast::flat_buffer& receive_buffer, boost::beast::flat_buffer& send_buffer, Context& context)
+               : m_receive_buffer(receive_buffer), m_send_buffer(send_buffer), m_tls_context(context) {}
 
             virtual ~StreamCore() = default;
 
@@ -546,8 +566,27 @@ class Stream
                return true;
                }
 
+            void tls_verify_cert_chain(
+               const std::vector<X509_Certificate>& cert_chain,
+               const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
+               const std::vector<Certificate_Store*>& trusted_roots,
+               Usage_Type usage,
+               const std::string& hostname,
+               const TLS::Policy& policy) override
+               {
+               if(m_tls_context.has_verify_callback())
+                  {
+                  m_tls_context.get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
+                  }
+               else
+                  {
+                  Callbacks::tls_verify_cert_chain(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
+                  }
+               }
+
             boost::beast::flat_buffer& m_receive_buffer;
             boost::beast::flat_buffer& m_send_buffer;
+            Context& m_tls_context;
          };
 
       const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
@@ -598,12 +637,13 @@ class Stream
          {
          if(side == CLIENT)
             {
-            m_native_handle = std::unique_ptr<Client>(new Client(m_core,
-                              *m_context.sessionManager,
-                              *m_context.credentialsManager,
-                              *m_context.policy,
-                              *m_context.randomNumberGenerator,
-                              m_context.serverInfo));
+            m_native_handle = std::unique_ptr<Client>(
+                                 new Client(m_core,
+                                            m_context.m_session_manager,
+                                            m_context.m_credentials_manager,
+                                            m_context.m_policy,
+                                            m_context.m_rng,
+                                            m_context.m_server_info));
             }
          else
             {
@@ -653,7 +693,7 @@ class Stream
             }
          }
 
-      Context                   m_context;
+      Context&                  m_context;
       StreamLayer               m_nextLayer;
 
       boost::beast::flat_buffer m_receive_buffer;
