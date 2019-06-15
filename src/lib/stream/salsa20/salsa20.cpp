@@ -12,8 +12,6 @@
 
 namespace Botan {
 
-namespace {
-
 #define SALSA20_QUARTER_ROUND(x1, x2, x3, x4)    \
    do {                                          \
       x2 ^= rotl<7>(x1 + x4);                    \
@@ -25,7 +23,8 @@ namespace {
 /*
 * Generate HSalsa20 cipher stream (for XSalsa20 IV setup)
 */
-void hsalsa20(uint32_t output[8], const uint32_t input[16])
+//static
+void Salsa20::hsalsa20(uint32_t output[8], const uint32_t input[16])
    {
    uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
             x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
@@ -54,8 +53,6 @@ void hsalsa20(uint32_t output[8], const uint32_t input[16])
    output[6] = x08;
    output[7] = x09;
    }
-
-}
 
 /*
 * Generate Salsa20 cipher stream
