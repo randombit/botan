@@ -117,7 +117,6 @@ New Protocols / Formats
 * Roughtime client (https://roughtime.googlesource.com/roughtime/)
 * PKCS7 / Cryptographic Message Syntax
 * PKCS12 / PFX
-* NaCl compatible cryptobox functions
 * Off-The-Record v3 https://otr.cypherpunks.ca/
 * Certificate Management Protocol (RFC 5273); requires CMS
 * Fernet symmetric encryption (https://cryptography.io/en/latest/fernet/)

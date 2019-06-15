@@ -36,6 +36,7 @@ class Sodium_API_Tests : public Test
          results.push_back(secretbox_xsalsa20poly1305_detached());
          results.push_back(shorthash_siphash24());
          results.push_back(stream_chacha20());
+         results.push_back(stream_chacha20_ietf());
          results.push_back(stream_salsa20());
          results.push_back(stream_xchacha20());
          results.push_back(stream_xsalsa20());
@@ -236,6 +237,13 @@ class Sodium_API_Tests : public Test
          result.test_eq("ctext_len", size_t(ctext_len), ctext.size());
          result.test_eq("ctext", ctext, "9F07E7BE5551387A98BA977C732D0809998877ABA156DDC68F8344098F68B9");
 
+         unsigned long long recovered_len = 0;
+         result.test_rc_ok("decrypt", Botan::Sodium::crypto_aead_chacha20poly1305_decrypt(
+                              recovered.data(), &recovered_len, nullptr,
+                              ctext.data(), ctext.size(), ad.data(), ad.size(), nonce.data(), key.data()));
+
+         result.test_eq("recovered", recovered, in);
+
          return result;
          }
 
@@ -282,6 +290,13 @@ class Sodium_API_Tests : public Test
 
          result.test_eq("ctext_len", size_t(ctext_len), ctext.size());
          result.test_eq("ctext", ctext, "9F07E7BE5551387A98BA977C732D083679F1FB9843FD81E26D962888296954");
+
+         unsigned long long recovered_len = 0;
+         result.test_rc_ok("decrypt", Botan::Sodium::crypto_aead_chacha20poly1305_ietf_decrypt(
+                              recovered.data(), &recovered_len, nullptr,
+                              ctext.data(), ctext.size(), ad.data(), ad.size(), nonce.data(), key.data()));
+
+         result.test_eq("recovered", recovered, in);
 
          return result;
          }
@@ -331,6 +346,13 @@ class Sodium_API_Tests : public Test
          result.test_eq("ctext_len", size_t(ctext_len), ctext.size());
          result.test_eq("ctext", ctext, "789e9689e5208d7fd9e1f3c5b5341fb2f7033812ac9ebd3745e2c99c7bbfeb");
 
+         unsigned long long recovered_len = 0;
+         result.test_rc_ok("decrypt", Botan::Sodium::crypto_aead_xchacha20poly1305_ietf_decrypt(
+                              recovered.data(), &recovered_len, nullptr,
+                              ctext.data(), ctext.size(), ad.data(), ad.size(), nonce.data(), key.data()));
+
+         result.test_eq("recovered", recovered, in);
+
          return result;
          }
 
@@ -349,6 +371,13 @@ class Sodium_API_Tests : public Test
          result.test_eq("expected mac", mac,
                         "69D4A21E226BF0D348CB9A847C01CF24E93E8AC30D7C951704B936F82F795A624B470E23ABD33AC8700E797F0F2A499B932BAC7D283BBBB37D8FECF70D5E08A7");
 
+         result.test_rc_ok("verify",
+                           Botan::Sodium::crypto_auth_hmacsha512_verify(mac.data(), in.data(), in.size(), key.data()));
+
+         mac[0] ^= 1;
+         result.test_rc_fail("verify", "invalid mac",
+                             Botan::Sodium::crypto_auth_hmacsha512_verify(mac.data(), in.data(), in.size(), key.data()));
+
          return result;
          }
 
@@ -365,6 +394,13 @@ class Sodium_API_Tests : public Test
          result.test_eq("expected mac", mac,
                         "69D4A21E226BF0D348CB9A847C01CF24E93E8AC30D7C951704B936F82F795A62");
 
+         result.test_rc_ok("verify",
+                           Botan::Sodium::crypto_auth_hmacsha512256_verify(mac.data(), in.data(), in.size(), key.data()));
+
+         mac[0] ^= 1;
+         result.test_rc_fail("verify", "invalid mac",
+                             Botan::Sodium::crypto_auth_hmacsha512256_verify(mac.data(), in.data(), in.size(), key.data()));
+
          return result;
          }
 
@@ -380,6 +416,13 @@ class Sodium_API_Tests : public Test
 
          result.test_eq("expected mac", mac,
                         "A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181");
+
+         result.test_rc_ok("verify",
+                           Botan::Sodium::crypto_auth_hmacsha256_verify(mac.data(), in.data(), in.size(), key.data()));
+
+         mac[0] ^= 1;
+         result.test_rc_fail("verify", "invalid mac",
+                             Botan::Sodium::crypto_auth_hmacsha256_verify(mac.data(), in.data(), in.size(), key.data()));
 
          return result;
          }
@@ -575,6 +618,26 @@ class Sodium_API_Tests : public Test
 
          std::vector<uint8_t> xor_output(32);
          Botan::Sodium::crypto_stream_chacha20_xor(xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
+         result.test_eq("stream", xor_output, std::vector<uint8_t>(32)); // all zeros
+
+         return result;
+         }
+
+      Test::Result stream_chacha20_ietf()
+         {
+         Test::Result result("crypto_stream_chacha20");
+
+         const std::vector<uint8_t> key = Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
+         const std::vector<uint8_t> nonce = Botan::hex_decode("000102030405060708090A0B0C");
+         const std::vector<uint8_t> expected = Botan::hex_decode(
+            "103AF111C18B549D39248FB07D60C29A95D1DB88D892F7B4AF709A5FD47A9E4B");
+
+         std::vector<uint8_t> output(32);
+         Botan::Sodium::crypto_stream_chacha20_ietf(output.data(), output.size(), nonce.data(), key.data());
+         result.test_eq("stream", output, expected);
+
+         std::vector<uint8_t> xor_output(32);
+         Botan::Sodium::crypto_stream_chacha20_ietf_xor(xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
          result.test_eq("stream", xor_output, std::vector<uint8_t>(32)); // all zeros
 
          return result;

@@ -117,7 +117,11 @@ void Sodium::sodium_add(uint8_t a[], const uint8_t b[], size_t len)
 void* Sodium::sodium_malloc(size_t size)
    {
    const uint64_t len = size;
-   uint8_t* p = static_cast<uint8_t*>(std::calloc(size + len, 1));
+
+   if(size + sizeof(len) < size)
+      return nullptr;
+
+   uint8_t* p = static_cast<uint8_t*>(std::calloc(size + sizeof(len), 1));
    store_le(len, p);
    return p + 8;
    }
