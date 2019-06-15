@@ -6,7 +6,9 @@ Version 2.11.0, Not Yet Released
 
 * Add Argon2 PBKDF/password hash (GH #459 #1981 #1987)
 
-* Add Bcrypt-PBKDF password hash (#1990)
+* Add Bcrypt-PBKDF password hash (GH #1990)
+
+* Add a libsodium compat layer in sodium.h (GH #1996)
 
 * Add a shim allowing testing Botan against the BoringSSL test suite,
   and fix a number of bugs in TLS found using it.
