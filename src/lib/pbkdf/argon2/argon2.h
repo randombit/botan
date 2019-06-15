@@ -89,7 +89,7 @@ void BOTAN_PUBLIC_API(2,11) argon2(uint8_t output[], size_t output_len,
                                    const uint8_t salt[], size_t salt_len,
                                    const uint8_t key[], size_t key_len,
                                    const uint8_t ad[], size_t ad_len,
-                                   size_t y, size_t p, size_t M, size_t t);
+                                   uint8_t y, size_t p, size_t M, size_t t);
 
 std::string BOTAN_PUBLIC_API(2,11)
    argon2_generate_pwhash(const char* password, size_t password_len,

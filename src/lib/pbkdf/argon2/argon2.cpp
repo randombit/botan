@@ -26,23 +26,23 @@ secure_vector<uint8_t> argon2_H0(HashFunction& blake2b,
    {
    const uint8_t v = 19; // Argon2 version code
 
-   blake2b.update_le<uint32_t>(p);
-   blake2b.update_le<uint32_t>(output_len);
-   blake2b.update_le<uint32_t>(M);
-   blake2b.update_le<uint32_t>(t);
-   blake2b.update_le<uint32_t>(v);
-   blake2b.update_le<uint32_t>(y);
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(p));
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(output_len));
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(M));
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(t));
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(v));
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(y));
 
-   blake2b.update_le<uint32_t>(password_len);
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(password_len));
    blake2b.update(cast_char_ptr_to_uint8(password), password_len);
 
-   blake2b.update_le<uint32_t>(salt_len);
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(salt_len));
    blake2b.update(salt, salt_len);
 
-   blake2b.update_le<uint32_t>(key_len);
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(key_len));
    blake2b.update(key, key_len);
 
-   blake2b.update_le<uint32_t>(ad_len);
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(ad_len));
    blake2b.update(ad, ad_len);
 
    return blake2b.final();
@@ -57,10 +57,10 @@ void Htick(secure_vector<uint8_t>& T,
    {
    BOTAN_ASSERT_NOMSG(output_len % 64 == 0);
 
-   blake2b.update_le<uint32_t>(output_len);
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(output_len));
    blake2b.update(H0);
-   blake2b.update_le<uint32_t>(p0);
-   blake2b.update_le<uint32_t>(p1);
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(p0));
+   blake2b.update_le<uint32_t>(static_cast<uint32_t>(p1));
 
    blake2b.final(&T[0]);
 
@@ -282,7 +282,7 @@ uint32_t index_alpha(uint64_t random,
    p = (p * p) >> 32;
    p = (p * m) >> 32;
 
-   return ref_lane*lanes + (s + m - (p+1)) % lanes;
+   return static_cast<uint32_t>(ref_lane*lanes + (s + m - (p+1)) % lanes);
    }
 
 void process_block_argon2d(secure_vector<uint64_t>& T,
@@ -353,7 +353,7 @@ void process_blocks(secure_vector<uint64_t>& B,
                     size_t t,
                     size_t memory,
                     size_t threads,
-                    size_t mode)
+                    uint8_t mode)
    {
    const size_t lanes = memory / threads;
    const size_t segments = lanes / SYNC_POINTS;
@@ -383,7 +383,7 @@ void argon2(uint8_t output[], size_t output_len,
             const uint8_t salt[], size_t salt_len,
             const uint8_t key[], size_t key_len,
             const uint8_t ad[], size_t ad_len,
-            size_t mode, size_t threads, size_t M, size_t t)
+            uint8_t mode, size_t threads, size_t M, size_t t)
    {
    BOTAN_ARG_CHECK(mode == 0 || mode == 1 || mode == 2, "Unknown Argon2 mode parameter");
    BOTAN_ARG_CHECK(output_len >= 4, "Invalid Argon2 output length");

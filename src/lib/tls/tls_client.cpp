@@ -528,7 +528,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                               m_info.hostname(),
                                               policy());
             }
-         catch(TLS_Exception& e)
+         catch(TLS_Exception&)
             {
             throw;
             }
@@ -611,7 +611,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                               m_info.hostname(),
                                               policy());
             }
-         catch(TLS_Exception& e)
+         catch(TLS_Exception&)
             {
             throw;
             }
