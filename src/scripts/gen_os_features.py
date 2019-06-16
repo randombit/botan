@@ -31,7 +31,6 @@ parser.add_argument('--verbose', dest='verbose', action='store_const',
 args = parser.parse_args()
 
 def update_os():
-    PAGE_TITLE="Botan OS information"
     TABLE_TITLE="OS Features"
 
     files = []
@@ -42,7 +41,7 @@ def update_os():
         print("No info.txt files found.")
         sys.exit(1)
 
-    f1 = open(os.path.join(botan_root, 'doc', 'os.rst'), 'w+')    
+    f1 = open(os.path.join(botan_root, 'doc', 'dev_ref', 'os.rst'), 'w+')
 
     all_features = set()
     oss = {}
@@ -63,12 +62,8 @@ def update_os():
     if args.verbose:
         print(featurelist)
 
-    print(PAGE_TITLE, file=f1)
-    print("========================================", file=f1)
-    print("", file=f1)
-
     print(TABLE_TITLE, file=f1)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^", file=f1)
+    print("========================================", file=f1)
     print("", file=f1)
 
     print("A summary of OS features as defined in ``src/build-data/os``.", file=f1)
