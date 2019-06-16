@@ -17,6 +17,7 @@ posix_mlock
 arc4random
 getentropy
 dev_random
+clock_gettime
 
 commoncrypto
 sockets
