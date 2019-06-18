@@ -379,7 +379,6 @@ Datagram_Handshake_IO::format(const std::vector<uint8_t>& msg,
    return format_w_seq(msg, type, m_in_message_seq - 1);
    }
 
-
 std::vector<uint8_t>
 Datagram_Handshake_IO::send(const Handshake_Message& msg)
    {
@@ -391,6 +390,13 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
       {
       m_send_hs(epoch, CHANGE_CIPHER_SPEC, msg_bits);
       return std::vector<uint8_t>(); // not included in handshake hashes
+      }
+   else if(msg_type == HELLO_VERIFY_REQUEST)
+      {
+      // This message is not included in the handshake hashes
+      send_message(m_out_message_seq, epoch, msg_type, msg_bits);
+      m_out_message_seq += 1;
+      return std::vector<uint8_t>();
       }
 
    // Note: not saving CCS, instead we know it was there due to change in epoch

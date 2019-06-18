@@ -176,6 +176,11 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
             return Botan::SymmetricKey("AABBCCDDEEFF012345678012345678");
             }
 
+         if(type == "tls-server" && context == "dtls-cookie-secret")
+            {
+            return Botan::SymmetricKey("4AEA5EAD279CADEB537A594DA0E9DE3A");
+            }
+
          if(context == "server.example.com" && type == "tls-client")
             {
             return Botan::SymmetricKey("20B602D1475F2DF888FCB60D2AE03AFD");

@@ -493,8 +493,9 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
 
    pending_state.client_hello(new Client_Hello(contents));
    const Protocol_Version client_offer = pending_state.client_hello()->version();
+   const bool datagram = client_offer.is_datagram_protocol();
 
-   if(client_offer.is_datagram_protocol())
+   if(datagram)
       {
       if(client_offer.major_version() == 0xFF)
          throw TLS_Exception(Alert::PROTOCOL_VERSION, "Client offered DTLS version with major version 0xFF");
@@ -507,19 +508,54 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
          throw TLS_Exception(Alert::PROTOCOL_VERSION, "SSLv3 is not supported");
       }
 
+   /*
+   * BoGo test suite expects that we will send the hello verify with a record
+   * version matching the version that is eventually negotiated. This is wrong
+   * but harmless, so go with it. Also doing the version negotiation step first
+   * allows to immediately close the connection with an alert if the client has
+   * offered a version that we are not going to negotiate anyway, instead of
+   * making them first do the cookie exchange and then telling them no.
+   *
+   * There is no issue with amplification here, since the alert is just 2 bytes.
+   */
    const Protocol_Version negotiated_version =
       select_version(policy(), client_offer,
                      active_state ? active_state->version() : Protocol_Version(),
                      pending_state.client_hello()->sent_fallback_scsv(),
                      pending_state.client_hello()->supported_versions());
 
+   pending_state.set_version(negotiated_version);
+
    const auto compression_methods = pending_state.client_hello()->compression_methods();
    if(!value_exists(compression_methods, uint8_t(0)))
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Client did not offer NULL compression");
 
-   secure_renegotiation_check(pending_state.client_hello());
+   if(initial_handshake && datagram)
+      {
+      SymmetricKey cookie_secret;
 
-   pending_state.set_version(negotiated_version);
+      try
+         {
+         cookie_secret = m_creds.psk("tls-server", "dtls-cookie-secret", "");
+         }
+      catch(...) {}
+
+      if(cookie_secret.size() > 0)
+         {
+         const std::string client_identity = callbacks().tls_peer_network_identity();
+         Hello_Verify_Request verify(pending_state.client_hello()->cookie_input_data(), client_identity, cookie_secret);
+
+         if(pending_state.client_hello()->cookie() != verify.cookie())
+            {
+            pending_state.handshake_io().send(verify);
+            pending_state.client_hello(nullptr);
+            pending_state.set_expected_next(CLIENT_HELLO);
+            return;
+            }
+         }
+      }
+
+   secure_renegotiation_check(pending_state.client_hello());
 
    callbacks().tls_examine_extensions(pending_state.client_hello()->extensions(), CLIENT);
 

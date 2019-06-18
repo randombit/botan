@@ -53,7 +53,7 @@ class BOTAN_UNSTABLE_API Hello_Verify_Request final : public Handshake_Message
       std::vector<uint8_t> serialize() const override;
       Handshake_Type type() const override { return HELLO_VERIFY_REQUEST; }
 
-      std::vector<uint8_t> cookie() const { return m_cookie; }
+      const std::vector<uint8_t>& cookie() const { return m_cookie; }
 
       explicit Hello_Verify_Request(const std::vector<uint8_t>& buf);
 
@@ -145,6 +145,10 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
       std::vector<uint16_t> srtp_profiles() const;
 
       void update_hello_cookie(const Hello_Verify_Request& hello_verify);
+
+      const std::vector<uint8_t>& cookie() const { return m_hello_cookie; }
+
+      std::vector<uint8_t> cookie_input_data() const;
 
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }

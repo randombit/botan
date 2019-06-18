@@ -1170,6 +1170,11 @@ class Shim_Credentials final : public Botan::Credentials_Manager
                return Botan::SymmetricKey("ABCDEF0123456789");
             }
 
+         if(type == "tls-server" && context == "dtls-cookie-secret")
+            {
+            return Botan::SymmetricKey("F00FB00FD00F100F700F");
+            }
+
          if(identity != m_psk_identity)
             throw Shim_Exception("Unexpected PSK identity");
          return m_psk;
