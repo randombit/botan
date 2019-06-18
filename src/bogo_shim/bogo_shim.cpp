@@ -725,7 +725,6 @@ class Shim_Policy final : public Botan::TLS::Policy
       Shim_Policy(const Shim_Arguments& args) : m_args(args), m_sessions(0) {}
 
       void incr_session_established() { m_sessions += 1; }
-      size_t sessions_established() const { return m_sessions; }
 
       std::vector<std::string> allowed_ciphers() const override
          {
@@ -1223,8 +1222,11 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          m_is_datagram(args.flag_set("dtls")),
          m_warning_alerts(0),
          m_empty_records(0),
+         m_sessions_established(0),
          m_got_close(false)
          {}
+
+      size_t sessions_established() const { return m_sessions_established; }
 
       void set_channel(Botan::TLS::Channel* channel)
          {
@@ -1387,6 +1389,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          // probably need tests here?
 
          m_policy.incr_session_established();
+         m_sessions_established++;
 
          if(m_args.flag_set("expect-no-session-id"))
             {
@@ -1485,6 +1488,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
       const bool m_is_datagram;
       size_t m_warning_alerts;
       size_t m_empty_records;
+      size_t m_sessions_established;
       bool m_got_close;
    };
 
@@ -1610,9 +1614,9 @@ int main(int /*argc*/, char* argv[])
             {
             const size_t exp = args->get_int_opt("expect-total-renegotiations");
 
-            if(exp != policy.sessions_established() - 1)
+            if(exp != callbacks.sessions_established() - 1)
                throw Shim_Exception("Unexpected number of renegotiations: saw " +
-                                    std::to_string(policy.sessions_established() - 1) +
+                                    std::to_string(callbacks.sessions_established() - 1) +
                                     " exp " + std::to_string(exp));
             }
          shim_log("End of resume loop");
