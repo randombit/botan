@@ -59,6 +59,8 @@ in the source.
 
 - Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
 
+- GOST 34.11-94 hash
+
 - CBC-MAC
 
 - PBKDF1 key derivation
@@ -66,7 +68,7 @@ in the source.
 - GCM support for 64-bit tags
 
 - Weak or rarely used ECC builtin groups including "secp160k1", "secp160r1",
-  "secp160r2", "secp192k1", "secp192r1", "secp224k1", "secp224r1",
+  "secp160r2", "secp192k1", "secp224k1",
   "brainpool160r1", "brainpool192r1", "brainpool224r1", "brainpool320r1",
   "x962_p192v2", "x962_p192v3", "x962_p239v1", "x962_p239v2", "x962_p239v3".
 
