@@ -12,7 +12,7 @@ namespace Botan {
 
 namespace {
 
-inline void SHA3_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
+inline void SHA3_BMI2_round(uint64_t T[25], const uint64_t A[25], uint64_t RC)
    {
    const uint64_t C0 = A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20];
    const uint64_t C1 = A[1] ^ A[6] ^ A[11] ^ A[16] ^ A[21];
@@ -101,8 +101,8 @@ void SHA_3::permute_bmi2(uint64_t A[25])
 
    for(size_t i = 0; i != 24; i += 2)
       {
-      SHA3_round(T, A, RC[i+0]);
-      SHA3_round(A, T, RC[i+1]);
+      SHA3_BMI2_round(T, A, RC[i+0]);
+      SHA3_BMI2_round(A, T, RC[i+1]);
       }
    }
 
