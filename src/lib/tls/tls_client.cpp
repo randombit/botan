@@ -279,7 +279,6 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       state.set_expected_next(HELLO_VERIFY_REQUEST); // might get it again
 
       Hello_Verify_Request hello_verify_request(contents);
-
       state.hello_verify_request(hello_verify_request);
       }
    else if(type == SERVER_HELLO)

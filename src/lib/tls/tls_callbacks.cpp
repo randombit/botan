@@ -33,6 +33,11 @@ std::string TLS::Callbacks::tls_server_choose_app_protocol(const std::vector<std
    return "";
    }
 
+std::string TLS::Callbacks::tls_peer_network_identity()
+   {
+   return "";
+   }
+
 void TLS::Callbacks::tls_modify_extensions(Extensions&, Connection_Side)
    {
    }

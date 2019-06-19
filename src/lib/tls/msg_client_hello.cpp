@@ -259,6 +259,25 @@ std::vector<uint8_t> Client_Hello::serialize() const
    return buf;
    }
 
+std::vector<uint8_t> Client_Hello::cookie_input_data() const
+   {
+   std::vector<uint8_t> buf;
+
+   buf.push_back(m_version.major_version());
+   buf.push_back(m_version.minor_version());
+   buf += m_random;
+
+   append_tls_length_value(buf, m_session_id, 1);
+
+   append_tls_length_value(buf, m_suites, 2);
+   append_tls_length_value(buf, m_comp_methods, 1);
+
+   // Here we don't serialize the extensions since the client extensions
+   // may contain values we don't know how to serialize back.
+
+   return buf;
+   }
+
 /*
 * Read a counterparty client hello
 */

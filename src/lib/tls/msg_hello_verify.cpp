@@ -35,7 +35,7 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& client_he
                                            const std::string& client_identity,
                                            const SymmetricKey& secret_key)
    {
-   std::unique_ptr<MessageAuthenticationCode> hmac(MessageAuthenticationCode::create("HMAC(SHA-256)"));
+   std::unique_ptr<MessageAuthenticationCode> hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
    hmac->set_key(secret_key);
 
    hmac->update_be(static_cast<uint64_t>(client_hello_bits.size()));
@@ -43,7 +43,8 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& client_he
    hmac->update_be(static_cast<uint64_t>(client_identity.size()));
    hmac->update(client_identity);
 
-   m_cookie = unlock(hmac->final());
+   m_cookie.resize(hmac->output_length());
+   hmac->final(m_cookie.data());
    }
 
 std::vector<uint8_t> Hello_Verify_Request::serialize() const

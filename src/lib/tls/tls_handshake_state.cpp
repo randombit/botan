@@ -203,8 +203,16 @@ void Handshake_State::hello_verify_request(const Hello_Verify_Request& hello_ver
 
 void Handshake_State::client_hello(Client_Hello* client_hello)
    {
-   m_client_hello.reset(client_hello);
-   note_message(*m_client_hello);
+   if(client_hello == nullptr)
+      {
+      m_client_hello.reset();
+      hash().reset();
+      }
+   else
+      {
+      m_client_hello.reset(client_hello);
+      note_message(*m_client_hello);
+      }
    }
 
 void Handshake_State::server_hello(Server_Hello* server_hello)
@@ -304,9 +312,11 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    const bool ok = (m_hand_expecting_mask & mask) != 0; // overlap?
 
    if(!ok)
+      {
       throw Unexpected_Message("Unexpected state transition in handshake, expected " +
                                handshake_mask_to_string(m_hand_expecting_mask, '|') +
                                " received " + handshake_mask_to_string(m_hand_received_mask, '+'));
+      }
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition

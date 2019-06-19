@@ -129,9 +129,26 @@ authentication.
     is to generate a random key the first time ``psk`` is called to
     retrieve the session ticket key, cache it for later use in the
     ``Credentials_Manager``, and simply let it be thrown away when the
-    process terminates.
+    process terminates. See :rfc:`4507` for more information about TLS
+    session tickets.
 
-    See :rfc:`4507` for more information about TLS session tickets.
+    A similar special case exists for DTLS cookie verification. In
+    this case *type* will be "tls-server" and *context* is
+    "dtls-cookie-secret". If no key is returned, then DTLS cookies are
+    not used. Similar to the session ticket key, the DTLS cookie
+    secret can be chosen during server startup and rotated at any time
+    with no ill effect.
+
+    .. warning::
+
+       If DTLS cookies are not used then the server is prone to be
+       abused as a DoS amplifier, where the attacker sends a
+       relatively small client hello in a UDP packet with a forged
+       return address, and then the server replies to the victim with
+       several messages that are larger. This not only hides the
+       attackers address from the victim, but increases their
+       effective bandwidth. This is not an issue when using DTLS over
+       SCTP or TCP.
 
 .. cpp:function:: std::string psk_identity_hint(const std::string& type, \
                                                 const std::string& context)

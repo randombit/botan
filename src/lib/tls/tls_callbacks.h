@@ -314,6 +314,18 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        virtual std::string tls_decode_group_param(Group_Params group_param);
 
        /**
+       * Optional callback: return peer network identity
+       *
+       * There is no expected or specified format. The only expectation is this
+       * function will return a unique value. For example returning the peer
+       * host IP and port.
+       *
+       * This is used to bind the DTLS cookie to a particular network identity.
+       * It is only called if the dtls-cookie-secret PSK is also defined.
+       */
+       virtual std::string tls_peer_network_identity();
+
+       /**
        * Optional callback: error logging. (not currently called)
        * @param err An error message related to this connection.
        */
