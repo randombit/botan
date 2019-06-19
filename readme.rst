@@ -78,6 +78,7 @@ Public Key Infrastructure
 * PKIX certificate path validation, including name constraints.
 * OCSP request creation and response handling
 * PKCS #10 certificate request generation and processing
+* Access to Windows, macOS and Unix system certificate stores
 * SQL database backed certificate store
 
 Public Key Cryptography
