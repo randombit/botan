@@ -10,6 +10,9 @@ Version 2.11.0, Not Yet Released
 
 * Add a libsodium compat layer in sodium.h (GH #1996)
 
+* Add server side support for issuing DTLS HelloVerifyRequest messages
+  (GH #1999)
+
 * Add a shim allowing testing Botan against the BoringSSL test suite,
   and fix a number of bugs in TLS found using it.
   (GH #1954 #1955 #1956 #1959 #1966 #1970)
