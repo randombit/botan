@@ -4,7 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SANDBOX_H_
+#ifndef BOTAN_CLI_SANDBOX_H_
+#define BOTAN_CLI_SANDBOX_H_
 
 #include <string>
 
@@ -13,15 +14,19 @@ namespace Botan_CLI {
 class Sandbox
    {
    public:
-	   explicit Sandbox();
-	   bool init();
-	   virtual ~Sandbox();
-	   const std::string& name() const
-              {
-              return m_name;
-	      } 
+      explicit Sandbox();
+      virtual ~Sandbox();
+
+      bool init();
+
+      const std::string& name() const
+         {
+         return m_name;
+         }
+
    private:
-	   std::string m_name;
+      std::string m_name;
    };
 }
+
 #endif

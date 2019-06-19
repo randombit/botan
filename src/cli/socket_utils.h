@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SOCKET_H_
-#define BOTAN_SOCKET_H_
+#ifndef BOTAN_CLI_SOCKET_UTILS_H_
+#define BOTAN_CLI_SOCKET_UTILS_H_
 
 #include <botan/build.h>
 #include "cli_exceptions.h"

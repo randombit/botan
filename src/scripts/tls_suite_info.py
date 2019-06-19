@@ -146,7 +146,7 @@ def open_input(args):
     if len(args) == 1:
         try:
             return open('tls-parameters.txt')
-        except:
+        except OSError:
             pass
 
         import urllib2

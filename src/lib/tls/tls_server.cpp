@@ -227,7 +227,7 @@ uint16_t choose_ciphersuite(
                client_sig_methods.push_back(Signature_Scheme::DSA_SHA1);
                }
 
-            bool we_support_some_hash_by_client = true;
+            bool we_support_some_hash_by_client = false;
 
             for(Signature_Scheme scheme : client_sig_methods)
                {

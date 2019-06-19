@@ -270,7 +270,6 @@ def main(args = None):
     str2oid = {}
     dn_ub = {}
     sig2pads = defaultdict(set)
-    enc2pads = defaultdict(set)
     cur_hdr = None
 
     for line in oid_lines:
@@ -324,6 +323,7 @@ def main(args = None):
     elif args[1] == "pads":
         print format_pads_as_map(sig2pads)
 
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())

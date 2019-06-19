@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ARGPARSE_H_
-#define BOTAN_ARGPARSE_H_
+#ifndef BOTAN_CLI_ARGPARSE_H_
+#define BOTAN_CLI_ARGPARSE_H_
 
 #include <string>
 #include <map>

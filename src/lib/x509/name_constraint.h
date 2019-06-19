@@ -102,7 +102,7 @@ class BOTAN_PUBLIC_API(2,0) GeneralSubtree final : public ASN1_Object
       * @param min minimum path length
       * @param max maximum path length
       */
-      GeneralSubtree(GeneralName base, size_t min, size_t max)
+      GeneralSubtree(const GeneralName& base, size_t min, size_t max)
       : m_base(base), m_minimum(min), m_maximum(max)
       {}
 
@@ -119,7 +119,7 @@ class BOTAN_PUBLIC_API(2,0) GeneralSubtree final : public ASN1_Object
       /**
       * @return name
       */
-      GeneralName base() const { return m_base; }
+      const GeneralName& base() const { return m_base; }
 
       /**
       * @return minimum path length

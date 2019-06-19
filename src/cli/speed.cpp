@@ -510,6 +510,7 @@ class Speed final : public Command
 
             if(false)
                {
+               // Since everything might be disabled, need a block to else if from
                }
 #if defined(BOTAN_HAS_HASH)
             else if(Botan::HashFunction::providers(algo).size() > 0)
