@@ -40,7 +40,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
    */
    static_assert(sizeof(size_t) >= 4, "size_t is big enough to support leaf index");
 
-   if(raw_key.size() != size())
+   if(raw_key.size() != XMSS_PrivateKey::size())
       {
       throw Decoding_Error("Invalid XMSS private key size detected.");
       }
