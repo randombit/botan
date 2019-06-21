@@ -19,6 +19,8 @@ Version 2.11.0, Not Yet Released
 
 * Add support for the TLS v1.3 supported_versions extension. (GH #1976)
 
+* Add Ed25519ph compatible with RFC 8032 (GH #1699 #2000)
+
 * Add support for OCSP stapling on server side. (GH #1703 #1967)
 
 * Add a ``boost::asio`` TLS stream compatible with ``boost::asio::ssl``.
@@ -91,6 +93,9 @@ Version 2.11.0, Not Yet Released
 
 * Use FreeBSD's ``elf_aux_info`` to detect ARM and POWER CPU features
   (GH #1895)
+
+* Use FreeBSD's ``PROT_MAX`` to prevent mmap regions from being made executable
+  later. (GH #2001)
 
 * Fix a memory leak in the tests (GH #1886)
 
