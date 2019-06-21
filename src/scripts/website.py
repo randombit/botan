@@ -119,7 +119,7 @@ def main(args):
 
     if os.access(os.path.join(botan_dir, 'configure.py'), os.X_OK) is False:
         print("Can't find configure.py in %s", botan_dir)
-        sys.exit(1)
+        return 1
 
     if output_dir is None:
         cwd = os.getcwd()
@@ -145,7 +145,7 @@ def main(args):
                 pass
             else:
                 print("Error removing dir", e)
-                sys.exit(1)
+                return 1
 
     configure_build(botan_dir, tmp_dir)
     run_doxygen(tmp_dir, output_dir)
@@ -159,6 +159,8 @@ def main(args):
     favicon.close()
 
     shutil.rmtree(tmp_dir)
+
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
