@@ -422,9 +422,13 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
    #define MAP_NOCORE 0
 #endif
 #endif
+#if !defined(PROT_MAX)
+   #define PROT_MAX(p) 0
+#endif
+      int pflags = PROT_READ | PROT_WRITE;
 
       ptr = ::mmap(nullptr, 2*page_size,
-                   PROT_READ | PROT_WRITE,
+                   pflags | PROT_MAX(pflags),
                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_NOCORE,
                    /*fd=*/-1, /*offset=*/0);
 
