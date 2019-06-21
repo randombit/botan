@@ -31,6 +31,8 @@ Version 2.11.0, Not Yet Released
 * Add a generic ``System_Certificate_Store`` which wraps Windows, macOS,
   and Linux certificate stores. (GH #1893)
 
+* Add support for RFC 8032 compatible Ed25519ph (GH #2000)
+
 * Fix verification rooted in a v1 certificate which previously would fail.
   (GH #1890)
 
@@ -69,6 +71,9 @@ Version 2.11.0, Not Yet Released
   as base64, base58 or binary in addition to hex. (GH #1945)
 
 * Remove use of table lookups for IP/FP transforms in DES (GH #1928)
+
+* XMSS now follows RFC 8391 which is incompatible with previous
+  versions, which followed draft-6. (GH #1858)
 
 * Improve the tests for SRP6 (GH #1917 #1923)
 
