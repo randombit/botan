@@ -142,12 +142,6 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
 
    for(auto const& sign_provider : possible_providers(algo_name()))
       {
-      std::unique_ptr<Botan::RandomNumberGenerator> rng;
-      if(vars.has_key("Nonce"))
-         {
-         rng.reset(test_rng(vars.get_req_bin("Nonce")));
-         }
-
       std::unique_ptr<Botan::PK_Signer> signer;
 
       std::vector<uint8_t> generated_signature;
@@ -156,7 +150,15 @@ PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const Var
          {
          signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::IEEE_1363, sign_provider));
 
-         generated_signature = signer->sign_message(message, rng ? *rng : Test::rng());
+         if(vars.has_key("Nonce"))
+            {
+            std::unique_ptr<Botan::RandomNumberGenerator> rng(test_rng(vars.get_req_bin("Nonce")));
+            generated_signature = signer->sign_message(message, *rng);
+            }
+         else
+            {
+            generated_signature = signer->sign_message(message, Test::rng());
+            }
 
          result.test_lte("Generated signature within announced bound",
                          generated_signature.size(), signer->signature_length());

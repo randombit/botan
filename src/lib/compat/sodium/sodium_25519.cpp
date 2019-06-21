@@ -27,7 +27,7 @@ int Sodium::crypto_sign_ed25519_detached(uint8_t sig[],
                                          size_t msg_len,
                                          const uint8_t sk[32])
    {
-   ed25519_sign(sig, msg, msg_len, sk);
+   ed25519_sign(sig, msg, msg_len, sk, nullptr, 0);
 
    if(sig_len)
       *sig_len = 64;
@@ -39,7 +39,7 @@ int Sodium::crypto_sign_ed25519_verify_detached(const uint8_t sig[64],
                                                 size_t msg_len,
                                                 const uint8_t pk[32])
    {
-   const bool ok = ed25519_verify(msg, msg_len, sig, pk);
+   const bool ok = ed25519_verify(msg, msg_len, sig, pk, nullptr, 0);
    return ok ? 0 : -1;
    }
 

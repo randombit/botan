@@ -34,8 +34,9 @@ void ed25519_gen_keypair(uint8_t* pk, uint8_t* sk, const uint8_t seed[32])
    }
 
 void ed25519_sign(uint8_t sig[64],
-                  const uint8_t* m, size_t mlen,
-                  const uint8_t* sk)
+                  const uint8_t m[], size_t mlen,
+                  const uint8_t sk[64],
+                  const uint8_t domain_sep[], size_t domain_sep_len)
    {
    uint8_t az[64];
    uint8_t nonce[64];
@@ -49,6 +50,7 @@ void ed25519_sign(uint8_t sig[64],
    az[31] &= 63;
    az[31] |= 64;
 
+   sha.update(domain_sep, domain_sep_len);
    sha.update(az + 32, 32);
    sha.update(m, mlen);
    sha.final(nonce);
@@ -56,6 +58,7 @@ void ed25519_sign(uint8_t sig[64],
    sc_reduce(nonce);
    ge_scalarmult_base(sig, nonce);
 
+   sha.update(domain_sep, domain_sep_len);
    sha.update(sig, 32);
    sha.update(sk + 32, 32);
    sha.update(m, mlen);
@@ -67,7 +70,8 @@ void ed25519_sign(uint8_t sig[64],
 
 bool ed25519_verify(const uint8_t* m, size_t mlen,
                     const uint8_t sig[64],
-                    const uint8_t* pk)
+                    const uint8_t* pk,
+                    const uint8_t domain_sep[], size_t domain_sep_len)
    {
    uint8_t h[64];
    uint8_t rcheck[32];
@@ -83,6 +87,7 @@ bool ed25519_verify(const uint8_t* m, size_t mlen,
       return false;
       }
 
+   sha.update(domain_sep, domain_sep_len);
    sha.update(sig, 32);
    sha.update(pk, 32);
    sha.update(m, mlen);
