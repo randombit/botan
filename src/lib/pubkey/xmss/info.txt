@@ -1,5 +1,5 @@
 <defines>
-XMSS -> 20161008
+XMSS_RFC8391 -> 20190623
 </defines>
 
 <header:public>
