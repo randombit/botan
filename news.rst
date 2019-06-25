@@ -10,6 +10,9 @@ Version 2.11.0, Not Yet Released
 
 * Add a libsodium compat layer in sodium.h (GH #1996)
 
+* XMSS now follows RFC 8391 which is incompatible with previous versions, which
+  had followed draft 6. (GH #1858 #2003)
+
 * Add server side support for issuing DTLS HelloVerifyRequest messages
   (GH #1999)
 
@@ -73,9 +76,6 @@ Version 2.11.0, Not Yet Released
   as base64, base58 or binary in addition to hex. (GH #1945)
 
 * Remove use of table lookups for IP/FP transforms in DES (GH #1928)
-
-* XMSS now follows RFC 8391 which is incompatible with previous
-  versions, which followed draft-6. (GH #1858)
 
 * Improve the tests for SRP6 (GH #1917 #1923)
 
