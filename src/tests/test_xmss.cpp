@@ -7,7 +7,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_XMSS)
+#if defined(BOTAN_HAS_XMSS_RFC8391)
    #include <botan/xmss.h>
    #include "test_pubkey.h"
 #endif
@@ -16,7 +16,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_XMSS)
+#if defined(BOTAN_HAS_XMSS_RFC8391)
 
 class XMSS_Signature_Tests final : public PK_Signature_Generation_Test
    {

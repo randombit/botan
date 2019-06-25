@@ -65,7 +65,7 @@
   #include <botan/mceliece.h>
 #endif
 
-#if defined(BOTAN_HAS_XMSS)
+#if defined(BOTAN_HAS_XMSS_RFC8391)
   #include <botan/xmss.h>
 #endif
 
@@ -155,7 +155,7 @@ load_public_key(const AlgorithmIdentifier& alg_id,
       return std::unique_ptr<Public_Key>(new SM2_PublicKey(alg_id, key_bits));
 #endif
 
-#if defined(BOTAN_HAS_XMSS)
+#if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS")
       return std::unique_ptr<Public_Key>(new XMSS_PublicKey(key_bits));
 #endif
@@ -236,7 +236,7 @@ load_private_key(const AlgorithmIdentifier& alg_id,
       return std::unique_ptr<Private_Key>(new ElGamal_PrivateKey(alg_id, key_bits));
 #endif
 
-#if defined(BOTAN_HAS_XMSS)
+#if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS")
       return std::unique_ptr<Private_Key>(new XMSS_PrivateKey(key_bits));
 #endif
@@ -314,7 +314,7 @@ create_private_key(const std::string& alg_name,
       }
 #endif
 
-#if defined(BOTAN_HAS_XMSS)
+#if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS")
       {
       return std::unique_ptr<Private_Key>(

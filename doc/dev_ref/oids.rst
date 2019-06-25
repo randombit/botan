@@ -11,10 +11,11 @@ Values currently assigned are::
   publicKey   OBJECT IDENTIFIER ::= { randombit 1 }
 
   mceliece    OBJECT IDENTIFIER ::= { publicKey 3 }
-  -- {publicKey 4 } previously used as private X25519
-  xmss        OBJECT IDENTIFIER ::= { publicKey 5 }
+  -- { publicKey 4 } previously used as private X25519
+  -- { publicKey 5 } previously used for XMSS draft 6
   gost-3410-with-sha256 OBJECT IDENTIFIER ::= { publicKey 6 1 }
   kyber       OBJECT IDENTIFIER ::= { publicKey 7 }
+  xmss        OBJECT IDENTIFIER ::= { publicKey 8 }
 
   symmetricKey OBJECT IDENTIFIER ::= { randombit 3 }
 

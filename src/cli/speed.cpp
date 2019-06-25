@@ -633,7 +633,7 @@ class Speed final : public Command
                bench_mceliece(provider, msec);
                }
 #endif
-#if defined(BOTAN_HAS_XMSS)
+#if defined(BOTAN_HAS_XMSS_RFC8391)
             else if(algo == "XMSS")
                {
                bench_xmss(provider, msec);
@@ -2087,7 +2087,7 @@ class Speed final : public Command
          }
 #endif
 
-#if defined(BOTAN_HAS_XMSS)
+#if defined(BOTAN_HAS_XMSS_RFC8391)
       void bench_xmss(const std::string& provider,
                       std::chrono::milliseconds msec)
          {
