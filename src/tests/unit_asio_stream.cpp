@@ -13,11 +13,19 @@
 #include <botan/asio_stream.h>
 #include <botan/tls_callbacks.h>
 
-// first boost version to include boost/beast/experimental/test/stream.hpp
+// The boost::beast::test::stream we use is available starting from boost
+// version 1.68, so we cannot run these tests with a smaller version.
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106800
 
+// boost::beast::test::stream's include path has been changed in boost version
+// 1.70.
+#if BOOST_VERSION < 107000
 #include <boost/beast/experimental/test/stream.hpp>
+#else
+#include <boost/beast/_experimental/test/stream.hpp>
+#endif
+
 #include <boost/bind.hpp>
 
 namespace Botan_Tests {
@@ -87,7 +95,15 @@ class ThrowingMockChannel : public MockChannel
          }
    };
 
-using TestStream = boost::beast::test::stream;
+// Unfortunately, boost::beast::test::stream keeps lowest_layer_type private and
+// only friends boost::asio::ssl::stream. We need to make our own.
+class TestStream : public boost::beast::test::stream
+   {
+   public:
+      using boost::beast::test::stream::stream;
+      using lowest_layer_type = boost::beast::test::stream;
+   };
+
 using FailCount = boost::beast::test::fail_count;
 
 class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel>
