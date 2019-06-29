@@ -10,4 +10,5 @@ cl
 
 git clone --depth 1 https://github.com/randombit/botan-ci-tools
 
+rem include QtCreator bin dir to get jom
 set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%;botan-ci-tools
