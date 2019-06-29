@@ -673,6 +673,28 @@ and a ECDSA signature using EMSA1 with SHA-256. Subsequently the computed signat
     }
 
 
+Ed25519 Variants
+^^^^^^^^^^^^^^^^^^
+
+Most signature schemes in Botan follow a hash-then-sign paradigm. That is, the
+entire message is digested to a fixed length representative using a collision
+resistant hash function, and then the digest is signed. Ed25519 instead signs
+the message directly. This is beneficial, in that the Ed25519 design should
+remain secure even in the (extremely unlikely) event that a collision attack on
+SHA-512 is found. However it means the entire message must be buffered in
+memory, which can be a problem for many applications which might need to sign
+large inputs. To use this variety of Ed25519, use a padding name of "Pure".
+
+Ed25519ph (pre-hashed) instead hashes the message with SHA-512 and then signs
+the digest plus a special prefix specified in RFC 8032. To use it, specify
+padding name "Ed25519ph".
+
+Another variant of pre-hashing is used by GnuPG. There the message is digested
+with any hash function, then the digest is signed. To use it, specify any valid
+hash function. Even if SHA-512 is used, this variant is not compatible with
+Ed25519ph.
+
+For best interop with other systems, prefer "Ed25519ph".
 
 Key Agreement
 ---------------------------------
