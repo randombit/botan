@@ -21,8 +21,8 @@ Implementation Techniques
   for aes_ssse3.
 
 * "Elliptic curves and their implementation" Langley
-   http://www.imperialviolet.org/2010/12/04/ecc.html
-   Describes sparse representations for ECC math
+  http://www.imperialviolet.org/2010/12/04/ecc.html
+  Describes sparse representations for ECC math
 
 Random Number Generation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,7 +50,7 @@ Public Key Side Channels
   http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.98.1028&rep=rep1&type=pdf
 
 * "Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
-   Coron http://www.jscoron.fr/publications/dpaecc.pdf
+  Coron http://www.jscoron.fr/publications/dpaecc.pdf
 
 * "Further Results and Considerations on Side Channel Attacks on RSA"
   Klima, Rosa https://eprint.iacr.org/2002/071
