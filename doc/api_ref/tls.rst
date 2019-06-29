@@ -409,15 +409,21 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
      * TLS client authentication is disabled. See src/lib/tls/credentials_manager.h.
      */
     class Client_Credentials : public Botan::Credentials_Manager
-    {
+       {
        public:
+          Client_Credentials()
+             {
+             // Here we base trust on the system managed trusted CA list
+             m_stores.push_back(new Botan::System_Certificate_Store);
+             }
+
           std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
              const std::string& type,
              const std::string& context) override
              {
-             // return a list of certificates of CAs we trust for tls server certificates,
-             // e.g., all the certificates in the local directory "cas"
-             return { new Botan::Certificate_Store_In_Memory("cas") };
+             // return a list of certificates of CAs we trust for tls server certificates
+             // ownership of the pointers remains with Credentials_Manager
+             return m_stores;
              }
 
           std::vector<Botan::X509_Certificate> cert_chain(
@@ -439,6 +445,9 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
              // associated with the leaf certificate here
              return nullptr;
              }
+
+       private:
+           std::vector<Botan::Certificate_Store*> m_stores;
     };
 
     int main()

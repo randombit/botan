@@ -9,6 +9,8 @@ contributions to the library
 
    contributing
    configure
+   test_framework
+   continuous_integration
    fuzzing
    release_process
    todo

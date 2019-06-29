@@ -88,4 +88,4 @@ have the signature:
 
 ``void fuzz(const uint8_t in[], size_t len)``
 
-After adding your fuzzer, rerun `./configure.py` and build.
+After adding your fuzzer, rerun ``./configure.py`` and build.

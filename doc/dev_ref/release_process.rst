@@ -1,6 +1,10 @@
 Release Process and Checklist
 ========================================
 
+Releases are done quarterly, normally on the first non-holiday Monday
+of January, April, July and October. A feature freeze goes into effect
+starting 9 days before the release.
+
 .. highlight:: shell
 
 .. note::
@@ -87,6 +91,9 @@ Don't forget to also push tags::
 
 Build The Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+   We haven't distributed Windows binaries for some time.
 
 On Windows, run ``configure.py`` to setup a build::
 

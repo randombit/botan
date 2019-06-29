@@ -7,11 +7,13 @@ permissive `Simplified BSD <https://botan.randombit.net/license.txt>`_ license.
 Botan's goal is to be the best option for cryptography in C++ by offering the
 tools necessary to implement a range of practical systems, such as TLS protocol,
 X.509 certificates, modern AEAD ciphers, PKCS#11 and TPM hardware support,
-password hashing, and post quantum crypto schemes.
-See the `documentation <https://botan.randombit.net/manual>`_ for more information.
-
-A Python binding is included, and several other `language bindings
+password hashing, and post quantum crypto schemes. A Python binding is included,
+and several other `language bindings
 <https://github.com/randombit/botan/wiki/Language-Bindings>`_ are available.
+It is used in many `open source and commercial products <https://github.com/randombit/botan/wiki/Users>`_.
+
+See the `documentation <https://botan.randombit.net/handbook>`_ for more
+information about included features.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
 and contributions are welcome. If you need help, please open an issue on

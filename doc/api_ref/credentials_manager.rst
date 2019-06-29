@@ -3,21 +3,30 @@ Credentials Manager
 ==================================================
 
 A ``Credentials_Manager`` is a way to abstract how the application
-stores credentials in a way that is usable by protocol
-implementations. Currently the main user is the :doc:`tls`
-implementation.
+stores credentials. The main user is the :doc:`tls` implementation.
 
 .. cpp:class:: Credentials_Manager
 
-   .. cpp:function:: std::vector<X509_Certificate> \
+   .. cpp:function:: std::vector<Certificate_Store*> \
          trusted_certificate_authorities( \
          const std::string& type, \
          const std::string& context)
 
-      Return the list of trusted certificate authorities.
+      Return the list of certificate stores, each of which is assumed
+      to contain (only) trusted certificate authorities. The
+      ``Credentials_Manager`` retains ownership of the
+      Certificate_Store pointers.
+
+      .. note::
+
+         It would have been a better API to return a vector of
+         ``shared_ptr`` here.  This may change in a future major release.
 
       When *type* is "tls-client", *context* will be the hostname of
-      the server, or empty if the hostname is not known.
+      the server, or empty if the hostname is not known. This allows
+      using a different set of certificate stores in different contexts,
+      for example using the system certificate store unless contacting
+      one particular server which uses a cert issued by an internal CA.
 
       When *type* is "tls-server", the *context* will again be the
       hostname of the server, or empty if the client did not send a
@@ -38,6 +47,11 @@ implementation.
       Return the certificate chain to use to identify ourselves. The
       ``acceptable_CAs`` parameter gives a list of CAs the peer trusts.
       This may be empty.
+
+      .. warning::
+         If this function returns a certificate that is not one of the
+         types given in ``cert_key_types`` confusing handshake
+         failures will result.
 
    .. cpp:function:: std::vector<X509_Certificate> cert_chain( \
          const std::vector<std::string>& cert_key_types, \
@@ -79,6 +93,14 @@ SRP Authentication
 ``Credentials_Manager`` contains the hooks used by TLS clients and
 servers for SRP authentication.
 
+.. note::
+
+   Support for TLS-SRP is deprecated, and will be removed in a future
+   major release. When that occurs these APIs will be removed. Prefer
+   instead performing a standard TLS handshake, then perform a PAKE
+   authentication inside of (and cryptographically bound to) the TLS
+   channel.
+
 .. cpp:function:: bool attempt_srp(const std::string& type, \
                                    const std::string& context)
 
@@ -108,8 +130,7 @@ servers for SRP authentication.
 Preshared Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TLS and some other protocols support the use of pre shared keys for
-authentication.
+TLS supports the use of pre shared keys for authentication.
 
 .. cpp:function:: SymmetricKey psk(const std::string& type, \
                                    const std::string& context, \

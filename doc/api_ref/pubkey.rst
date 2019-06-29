@@ -41,6 +41,17 @@ call
   A constructor that creates a new random RSA private key with a modulus
   of length *bits*.
 
+  RSA key generation is relatively slow, and can take an unpredictable
+  amount of time. Generating a 2048 bit RSA key might take 5 to 10
+  seconds on a slow machine like a Raspberry Pi 2. Even on a fast
+  desktop it might take up to half a second. In a GUI blocking for
+  that long can be a problem. The usual approach is to perform key
+  generation in a new thread, with a animated modal UI element so the
+  user knows the application is still alive. If you wish to provide a
+  progress estimate things get a bit complicated but some library
+  users documented their approach in
+  `a blog post <https://medium.com/nexenio/indicating-progress-of-rsa-key-pair-generation-the-practical-approach-a049ba829dbe>`_.
+
 Algorithms based on the discrete-logarithm problem use what is called a
 *group*; a group can safely be used with many keys, and for some operations,
 like key agreement, the two keys *must* use the same group.  There are
@@ -673,6 +684,28 @@ and a ECDSA signature using EMSA1 with SHA-256. Subsequently the computed signat
     }
 
 
+Ed25519 Variants
+^^^^^^^^^^^^^^^^^^
+
+Most signature schemes in Botan follow a hash-then-sign paradigm. That is, the
+entire message is digested to a fixed length representative using a collision
+resistant hash function, and then the digest is signed. Ed25519 instead signs
+the message directly. This is beneficial, in that the Ed25519 design should
+remain secure even in the (extremely unlikely) event that a collision attack on
+SHA-512 is found. However it means the entire message must be buffered in
+memory, which can be a problem for many applications which might need to sign
+large inputs. To use this variety of Ed25519, use a padding name of "Pure".
+
+Ed25519ph (pre-hashed) instead hashes the message with SHA-512 and then signs
+the digest plus a special prefix specified in RFC 8032. To use it, specify
+padding name "Ed25519ph".
+
+Another variant of pre-hashing is used by GnuPG. There the message is digested
+with any hash function, then the digest is signed. To use it, specify any valid
+hash function. Even if SHA-512 is used, this variant is not compatible with
+Ed25519ph.
+
+For best interop with other systems, prefer "Ed25519ph".
 
 Key Agreement
 ---------------------------------
@@ -763,6 +796,8 @@ applies the key derivation function KDF2(SHA-256) with 256 bit output length to 
      }
 
 
+.. _mceliece:
+
 McEliece
 --------------------------
 
@@ -843,8 +878,8 @@ eXtended Merkle Signature Scheme (XMSS)
 
 Botan implements the single tree version of the eXtended Merkle Signature
 Scheme (XMSS) using Winternitz One Time Signatures+ (WOTS+). The implementation
-is based on RFC 8391 "XMSS: eXtended Merkle Signature Scheme", available at
-https://datatracker.ietf.org/doc/rfc8391/.
+is based on `RFC 8391 "XMSS: eXtended Merkle Signature Scheme"
+<https://tools.ietf.org/html/rfc8391>`_.
 
 XMSS uses the Botan interfaces for public key cryptography.
 The following algorithms are implemented:

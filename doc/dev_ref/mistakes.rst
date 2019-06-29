@@ -1,6 +1,6 @@
 
-Mistakes
-===========
+Mistakes Were Made
+===================
 
 These are mistakes made early on in the project's history which are difficult to
 fix now, but mentioned in the hope they may serve as an example for others.
