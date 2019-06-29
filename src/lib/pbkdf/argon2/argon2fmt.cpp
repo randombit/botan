@@ -26,7 +26,7 @@ std::string strip_padding(std::string s)
 std::string argon2_generate_pwhash(const char* password, size_t password_len,
                                    RandomNumberGenerator& rng,
                                    size_t p, size_t M, size_t t,
-                                   size_t y, size_t salt_len, size_t output_len)
+                                   uint8_t y, size_t salt_len, size_t output_len)
    {
    std::vector<uint8_t> salt(salt_len);
    rng.randomize(salt.data(), salt.size());
@@ -62,7 +62,7 @@ bool argon2_check_pwhash(const char* password, size_t password_len,
    if(parts.size() != 5)
       return false;
 
-   size_t family = 0;
+   uint8_t family = 0;
 
    if(parts[0] == "argon2d")
       family = 0;

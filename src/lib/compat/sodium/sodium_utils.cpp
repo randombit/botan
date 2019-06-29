@@ -133,7 +133,7 @@ void Sodium::sodium_free(void* ptr)
 
    uint8_t* p = static_cast<uint8_t*>(ptr) - 8;
    const uint64_t len = load_le<uint64_t>(p, 0);
-   secure_scrub_memory(ptr, len);
+   secure_scrub_memory(ptr, static_cast<size_t>(len));
    std::free(p);
    }
 

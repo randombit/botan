@@ -2211,6 +2211,8 @@ class Speed final : public Command
       void bench_argon2(const std::string& /*provider*/,
                         std::chrono::milliseconds msec)
          {
+         const uint8_t mode = 2; // Argon2id
+
          for(size_t M : { 8*1024, 64*1024, 256*1024 })
             {
             for(size_t t : { 1, 2, 4 })
@@ -2220,7 +2222,6 @@ class Speed final : public Command
                   std::unique_ptr<Timer> timer = make_timer(
                      "Argon2id M=" + std::to_string(M) + " t=" + std::to_string(t) + " p=" + std::to_string(p));
 
-                  const size_t mode = 2;
                   uint8_t out[64];
                   uint8_t salt[16];
                   rng().randomize(salt, sizeof(salt));

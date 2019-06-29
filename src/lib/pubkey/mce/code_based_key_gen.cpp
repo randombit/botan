@@ -253,18 +253,18 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
    // speed up the syndrome computation)
    //
    //
-   std::vector<uint32_t> H(bit_size_to_32bit_size(codimension) * code_length );
+   std::vector<uint32_t> H(bit_size_to_32bit_size(codimension) * code_length);
    uint32_t* sk = H.data();
    for(size_t i = 0; i < code_length; ++i)
       {
       for(size_t l = 0; l < t; ++l)
          {
-         const uint32_t k = (l * ext_deg) / 32;
-         const uint32_t j = (l * ext_deg) % 32;
+         const size_t k = (l * ext_deg) / 32;
+         const size_t j = (l * ext_deg) % 32;
          sk[k] ^= static_cast<uint32_t>(F[i].get_coef(l)) << j;
-         if (j + ext_deg > 32)
+         if(j + ext_deg > 32)
             {
-            sk[k + 1] ^= F[i].get_coef( l) >> (32 - j);
+            sk[k + 1] ^= F[i].get_coef(l) >> (32 - j);
             }
          }
       sk += bit_size_to_32bit_size(codimension);
@@ -274,9 +274,9 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
    // inverse is needed
 
    std::vector<gf2m> Linv(code_length) ;
-   for (size_t i = 0; i != Linv.size(); ++i)
+   for(size_t i = 0; i != Linv.size(); ++i)
       {
-      Linv[L[i]] = i;
+      Linv[L[i]] = static_cast<gf2m>(i);
       }
    std::vector<uint8_t> pubmat (R->m_elem.size() * 4);
    for(size_t i = 0; i < R->m_elem.size(); i++)

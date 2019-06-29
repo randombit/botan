@@ -15,6 +15,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/code_based_util.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/loadstor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/rng.h>
@@ -121,25 +122,26 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const
       .encode(m_public_matrix, OCTET_STRING)
       .encode(m_g.encode(), OCTET_STRING); // g as octet string
    enc.start_cons(SEQUENCE);
-   for(uint32_t i = 0; i < m_sqrtmod.size(); i++)
+   for(size_t i = 0; i < m_sqrtmod.size(); i++)
       {
       enc.encode(m_sqrtmod[i].encode(), OCTET_STRING);
       }
    enc.end_cons();
    secure_vector<uint8_t> enc_support;
-   for(uint32_t i = 0; i < m_Linv.size(); i++)
+
+   for(uint16_t Linv : m_Linv)
       {
-      enc_support.push_back(m_Linv[i] >> 8);
-      enc_support.push_back(m_Linv[i]);
+      enc_support.push_back(get_byte(0, Linv));
+      enc_support.push_back(get_byte(1, Linv));
       }
    enc.encode(enc_support, OCTET_STRING);
    secure_vector<uint8_t> enc_H;
-   for(uint32_t i = 0; i < m_coeffs.size(); i++)
+   for(uint32_t coef : m_coeffs)
       {
-      enc_H.push_back(m_coeffs[i] >> 24);
-      enc_H.push_back(m_coeffs[i] >> 16);
-      enc_H.push_back(m_coeffs[i] >> 8);
-      enc_H.push_back(m_coeffs[i]);
+      enc_H.push_back(get_byte(0, coef));
+      enc_H.push_back(get_byte(1, coef));
+      enc_H.push_back(get_byte(2, coef));
+      enc_H.push_back(get_byte(3, coef));
       }
    enc.encode(enc_H, OCTET_STRING);
    enc.end_cons();

@@ -149,7 +149,7 @@ class BitMap final
       BitMap(size_t bits) : m_len(bits)
          {
          m_bits.resize((bits + BITMASK_BITS - 1) / BITMASK_BITS);
-         m_main_mask = ~static_cast<bitmask_type>(0);
+         m_main_mask = static_cast<bitmask_type>(0) - 1; // all bits set
          m_last_mask = m_main_mask;
 
          if(bits % BITMASK_BITS != 0)
@@ -163,7 +163,7 @@ class BitMap final
          BOTAN_ASSERT_NOMSG(bit <= m_len);
          const size_t w = bit / BITMASK_BITS;
          BOTAN_ASSERT_NOMSG(w < m_bits.size());
-         const size_t mask = static_cast<bitmask_type>(1) << (bit % BITMASK_BITS);
+         const bitmask_type mask = static_cast<bitmask_type>(1) << (bit % BITMASK_BITS);
          m_bits[w] = m_bits[w] & (~mask);
          }
 
@@ -203,7 +203,7 @@ bool BitMap::find_free(size_t* bit)
       if((m_bits[i] & mask) != mask)
          {
          size_t free_bit = find_set_bit(~m_bits[i]);
-         const size_t bmask = static_cast<bitmask_type>(1) << (free_bit % BITMASK_BITS);
+         const bitmask_type bmask = static_cast<bitmask_type>(1) << (free_bit % BITMASK_BITS);
          BOTAN_ASSERT_NOMSG((m_bits[i] & bmask) == 0);
          m_bits[i] |= bmask;
          *bit = BITMASK_BITS*i + free_bit;

@@ -95,7 +95,7 @@ std::string BOTAN_PUBLIC_API(2,11)
    argon2_generate_pwhash(const char* password, size_t password_len,
                           RandomNumberGenerator& rng,
                           size_t p, size_t M, size_t t,
-                          size_t y = 2, size_t salt_len = 16, size_t output_len = 32);
+                          uint8_t y = 2, size_t salt_len = 16, size_t output_len = 32);
 
 /**
 * Check a previously created password hash
