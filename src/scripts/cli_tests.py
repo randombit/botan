@@ -113,7 +113,7 @@ def get_testdata(document, max_tests):
                 for direction in ['encrypt', 'decrypt']:
                     testname = "{} no {:0>3} ({})".format(
                         algorithm.lower(), testcase_number, direction)
-                    testname = re.sub("[^-a-z0-9-]", "_", testname)
+                    testname = re.sub("[^a-z0-9-]", "_", testname)
                     testname = re.sub("_+", "_", testname)
                     testname = testname.strip("_")
                     out[testname] = {}

@@ -24,9 +24,9 @@ class BotanPythonTests(unittest.TestCase):
         self.assertTrue(version_str.startswith('Botan '))
 
         self.assertEqual(botan2.version_major(), 2)
-        self.assertTrue(botan2.version_minor() >= 8)
+        self.assertGreaterEqual(botan2.version_minor(), 8)
 
-        self.assertTrue(botan2.ffi_api_version() >= 20180713)
+        self.assertGreaterEqual(botan2.ffi_api_version(), 20180713)
 
     def test_compare(self):
 
@@ -168,7 +168,7 @@ class BotanPythonTests(unittest.TestCase):
 
             (kmin, kmax) = enc.key_length()
 
-            self.assertTrue(kmin <= kmax)
+            self.assertLessEqual(kmin, kmax)
 
             rng = botan2.RandomNumberGenerator()
             iv = rng.get(enc.default_nonce_length())
@@ -296,7 +296,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         priv_der = rsapriv.to_der()
 
         self.assertEqual(priv_pem[0:28], "-----BEGIN PRIVATE KEY-----\n")
-        self.assertTrue(len(priv_pem) > len(priv_der))
+        self.assertGreater(len(priv_pem), len(priv_der))
 
         rsapub = rsapriv.get_public_key()
         self.assertEqual(rsapub.algo_name(), 'RSA')
@@ -306,7 +306,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         pub_der = rsapub.to_der()
 
         self.assertEqual(pub_pem[0:27], "-----BEGIN PUBLIC KEY-----\n")
-        self.assertTrue(len(pub_pem) > len(pub_der))
+        self.assertGreater(len(pub_pem), len(pub_der))
 
         enc = botan2.PKEncrypt(rsapub, "OAEP(SHA-256)")
         dec = botan2.PKDecrypt(rsapriv, "OAEP(SHA-256)")
@@ -490,8 +490,8 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertEqual(ten, five + five)
         self.assertNotEqual(ten, five)
-        self.assertTrue(five < ten)
-        self.assertTrue(five <= ten)
+        self.assertLess(five, ten)
+        self.assertLessEqual(five, ten)
 
         x = botan2.MPI(five)
 
@@ -551,8 +551,8 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         for _i in range(10):
             x = botan2.MPI.random_range(rng, l, u)
-            self.assertTrue(x < u)
-            self.assertTrue(x > l)
+            self.assertLess(x, u)
+            self.assertGreater(x, l)
 
     def test_fpe(self):
 

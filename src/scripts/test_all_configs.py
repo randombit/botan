@@ -100,6 +100,7 @@ def main(args):
     cant_disable = ['block', 'hash', 'hex', 'mac', 'modes', 'rng', 'stream', 'utils', 'cpuid', 'entropy']
     always_include = ['thread_utils', 'sha2_64']#, 'sha2_64', 'aes']
 
+    fails = 0
     failed = []
 
     for module in sorted(modules):
@@ -111,17 +112,21 @@ def main(args):
             extra.append('dev_random')
         if run_test_build(configure_py, [module] + always_include + extra, True, jobs, run_tests) is False:
             failed.append(module)
+            fails += 1
 
     for module in sorted(modules):
         if module in cant_disable or module in always_include:
             continue
         if run_test_build(configure_py, [module], False, jobs, run_tests) is False:
             failed.append(module)
+            fails += 1
 
     if len(failed) > 0:
         print("Failed building with %s" % (' '.join(failed)))
     else:
         print("All configurations ok")
+
+    return fails
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
