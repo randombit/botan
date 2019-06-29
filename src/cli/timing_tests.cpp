@@ -44,7 +44,7 @@
    #include <botan/system_rng.h>
 #endif
 
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG) && defined(BOTAN_AUTO_RNG_HMAC)
    #include <botan/auto_rng.h>
 #endif
 
@@ -96,8 +96,8 @@ class Timing_Test
          {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
          return Botan::system_rng();
-#elif defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-         static AutoSeeded_RNG static_timing_test_rng(Botan::Entropy_Sources::global_sources(), 0);
+#elif defined(BOTAN_HAS_AUTO_SEEDING_RNG) && defined(BOTAN_AUTO_RNG_HMAC)
+         static Botan::AutoSeeded_RNG static_timing_test_rng;
          return static_timing_test_rng;
 #else
          // we could just use SHA-256 in OFB mode for these purposes

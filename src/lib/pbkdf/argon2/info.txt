@@ -4,5 +4,6 @@ ARGON2 -> 20190527
 
 <requires>
 blake2
+base64
 </requires>
 
