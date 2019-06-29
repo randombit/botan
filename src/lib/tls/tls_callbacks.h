@@ -137,6 +137,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        /**
        * Called by default `tls_verify_cert_chain` to get the timeout to use for OCSP
        * requests. Return 0 to disable online OCSP checks.
+       *
+       * This function should not be "const" since the implementation might need
+       * to perform some side effecting operation to compute the result.
        */
        virtual std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
           {
@@ -154,7 +157,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * suppress the Certificate_Status message.
        */
        virtual std::vector<uint8_t> tls_provide_cert_status(const std::vector<X509_Certificate>& chain,
-                                                            const Certificate_Status_Request& csr) const
+                                                            const Certificate_Status_Request& csr)
           {
           BOTAN_UNUSED(chain);
           BOTAN_UNUSED(csr);
