@@ -535,15 +535,15 @@ Multiple Precision Integers
 
 .. cpp:function:: int botan_mp_add(botan_mp_t result, botan_mp_t x, botan_mp_t y)
 
-   Add two ``botan_mp_t``s and store the output in ``result``.
+   Add two ``botan_mp_t`` and store the output in ``result``.
 
 .. cpp:function:: int botan_mp_sub(botan_mp_t result, botan_mp_t x, botan_mp_t y)
 
-   Subtract two ``botan_mp_t``s and store the output in ``result``.
+   Subtract two ``botan_mp_t`` and store the output in ``result``.
 
 .. cpp:function:: int botan_mp_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y)
 
-   Multiply two ``botan_mp_t``s and store the output in ``result``.
+   Multiply two ``botan_mp_t`` and store the output in ``result``.
 
 .. cpp:function:: int botan_mp_div(botan_mp_t quotient, botan_mp_t remainder, \
                            botan_mp_t x, botan_mp_t y)
@@ -677,23 +677,42 @@ Public Key Creation, Import and Export
 
 .. cpp:function:: int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits)
 
-.. cpp:function:: int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params)
+   Create an RSA key of the given size
 
-.. cpp:function:: int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params)
+.. cpp:function:: int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* curve)
+
+   Create a ECDSA key of using a named curve
+
+.. cpp:function:: int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* curve)
+
+   Create a ECDH key of using a named curve
 
 .. cpp:function:: int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t)
 
+   Create a McEliece key using the specified parameters. See
+   :ref:`mceliece` for details on choosing parameters.
+
 .. cpp:function:: int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* params)
+
+   Create a finite field Diffie-Hellman key using the specified named group, for example
+   "modp/ietf/3072".
 
 .. cpp:function:: int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng, \
                                  const uint8_t bits[], size_t len, \
                                  const char* password)
 
+   Load a private key. If the key is encrypted, ``password`` will be
+   used to attempt decryption.
+
 .. cpp:function:: int botan_privkey_destroy(botan_privkey_t key)
+
+   Destroy the object.
 
 .. cpp:function:: int botan_privkey_export(botan_privkey_t key, \
                                    uint8_t out[], size_t* out_len, \
                                    uint32_t flags)
+
+   Export a public key. If flags is 1 then PEM format is used.
 
 .. cpp:function:: int botan_privkey_export_encrypted(botan_privkey_t key, \
                                              uint8_t out[], size_t* out_len, \
@@ -732,13 +751,20 @@ Public Key Creation, Import and Export
    Encrypt a private key. The PBKDF function runs for the specified number of iterations.
    At least 100,000 is recommended.
 
+.. cpp:function:: int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in)
+
+.. cpp:function:: int botan_privkey_get_field(botan_mp_t output, \
+                                      botan_privkey_t key, \
+                                      const char* field_name)
+
+    Read an algorithm specific field from the private key object, placing it into output.
+    For example "p" or "q" for RSA keys, or "x" for DSA keys or ECC keys.
+
 .. cpp:type:: opaque* botan_pubkey_t
 
    An opaque data type for a public key. Don't mess with it.
 
 .. cpp:function:: int botan_pubkey_load(botan_pubkey_t* key, const uint8_t bits[], size_t len)
-
-.. cpp:function:: int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in)
 
 .. cpp:function:: int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
 
@@ -757,14 +783,6 @@ Public Key Creation, Import and Export
 
     Read an algorithm specific field from the public key object, placing it into output.
     For example "n" or "e" for RSA keys or "p", "q", "g", and "y" for DSA keys.
-
-.. cpp:function:: int botan_privkey_get_field(botan_mp_t output, \
-                                      botan_privkey_t key, \
-                                      const char* field_name)
-
-    Read an algorithm specific field from the private key object, placing it into output.
-    For example "p" or "q" for RSA keys, or "x" for DSA keys or ECC keys.
-
 
 RSA specific functions
 ----------------------------------------

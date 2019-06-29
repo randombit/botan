@@ -796,6 +796,8 @@ applies the key derivation function KDF2(SHA-256) with 256 bit output length to 
      }
 
 
+.. _mceliece:
+
 McEliece
 --------------------------
 
