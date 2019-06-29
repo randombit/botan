@@ -41,6 +41,17 @@ call
   A constructor that creates a new random RSA private key with a modulus
   of length *bits*.
 
+  RSA key generation is relatively slow, and can take an unpredictable
+  amount of time. Generating a 2048 bit RSA key might take 5 to 10
+  seconds on a slow machine like a Raspberry Pi 2. Even on a fast
+  desktop it might take up to half a second. In a GUI blocking for
+  that long can be a problem. The usual approach is to perform key
+  generation in a new thread, with a animated modal UI element so the
+  user knows the application is still alive. If you wish to provide a
+  progress estimate things get a bit complicated but some library
+  users documented their approach in
+  `a blog post <https://medium.com/nexenio/indicating-progress-of-rsa-key-pair-generation-the-practical-approach-a049ba829dbe>`_.
+
 Algorithms based on the discrete-logarithm problem use what is called a
 *group*; a group can safely be used with many keys, and for some operations,
 like key agreement, the two keys *must* use the same group.  There are
@@ -865,8 +876,8 @@ eXtended Merkle Signature Scheme (XMSS)
 
 Botan implements the single tree version of the eXtended Merkle Signature
 Scheme (XMSS) using Winternitz One Time Signatures+ (WOTS+). The implementation
-is based on RFC 8391 "XMSS: eXtended Merkle Signature Scheme", available at
-https://datatracker.ietf.org/doc/rfc8391/.
+is based on `RFC 8391 "XMSS: eXtended Merkle Signature Scheme"
+<https://tools.ietf.org/html/rfc8391>`_.
 
 XMSS uses the Botan interfaces for public key cryptography.
 The following algorithms are implemented:
