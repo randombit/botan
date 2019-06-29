@@ -18,8 +18,9 @@ stores credentials. The main user is the :doc:`tls` implementation.
       Certificate_Store pointers.
 
       .. note::
-         It would have been a better API to return ``shared_ptr``s here.
-         This may change in a future major release.
+
+         It would have been a better API to return a vector of
+         ``shared_ptr`` here.  This may change in a future major release.
 
       When *type* is "tls-client", *context* will be the hostname of
       the server, or empty if the hostname is not known. This allows

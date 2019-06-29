@@ -116,7 +116,7 @@ The major certificate format in use today is X.509v3, used for instance in the
       extension. Also will return true if the extended key usage extension is
       not used in the current certificate.
 
-  .. cpp:function: std::vector<OID> extended_key_usage() const
+  .. cpp:function:: std::vector<OID> extended_key_usage() const
 
       Return the list of extended key usages. May be empty.
 
