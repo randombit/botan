@@ -92,7 +92,7 @@ size_t tune_pbkdf2(MessageAuthenticationCode& prf,
 
    const size_t blocks_needed = (output_length + prf_sz - 1) / prf_sz;
 
-   const size_t multiplier = (desired_nsec / duration_nsec / blocks_needed);
+   const size_t multiplier = static_cast<size_t>(desired_nsec / duration_nsec / blocks_needed);
 
    if(multiplier == 0)
       return trial_iterations;

@@ -115,14 +115,14 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
       const uint64_t mem_headroom = max_kib / M;
 
       const uint64_t M_mult = std::min(desired_cost_increase, mem_headroom);
-      M *= M_mult;
+      M *= static_cast<size_t>(M_mult);
       est_nsec *= M_mult;
       }
 
    if(est_nsec < target_nsec)
       {
       const uint64_t desired_cost_increase = (target_nsec + est_nsec - 1) / est_nsec;
-      t *= desired_cost_increase;
+      t *= static_cast<size_t>(desired_cost_increase);
       }
 
    return this->from_params(M, t, p);

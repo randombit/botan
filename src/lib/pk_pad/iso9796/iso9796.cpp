@@ -18,7 +18,11 @@ namespace Botan {
 namespace {
 
 secure_vector<uint8_t> iso9796_encoding(const secure_vector<uint8_t>& msg,
-                                     size_t output_bits, std::unique_ptr<HashFunction>& hash, size_t SALT_SIZE, bool implicit, RandomNumberGenerator& rng)
+                                        size_t output_bits,
+                                        std::unique_ptr<HashFunction>& hash,
+                                        size_t SALT_SIZE,
+                                        bool implicit,
+                                        RandomNumberGenerator& rng)
    {
    const size_t output_length = (output_bits + 7) / 8;
 
@@ -36,16 +40,15 @@ secure_vector<uint8_t> iso9796_encoding(const secure_vector<uint8_t>& msg,
       }
 
    //calculate message capacity
-   const size_t capacity = output_length
-                           - HASH_SIZE - SALT_SIZE - tLength - 1;
+   const size_t capacity = output_length - HASH_SIZE - SALT_SIZE - tLength - 1;
 
    //msg1 is the recoverable and msg2 the unrecoverable message part.
    secure_vector<uint8_t> msg1;
    secure_vector<uint8_t> msg2;
    if(msg.size() > capacity)
       {
-      msg1 = secure_vector<uint8_t> (msg.begin(), msg.begin() + capacity);
-      msg2 = secure_vector<uint8_t> (msg.begin() + capacity, msg.end());
+      msg1 = secure_vector<uint8_t>(msg.begin(), msg.begin() + capacity);
+      msg2 = secure_vector<uint8_t>(msg.begin() + capacity, msg.end());
       hash->update(msg2);
       }
    else
@@ -55,9 +58,9 @@ secure_vector<uint8_t> iso9796_encoding(const secure_vector<uint8_t>& msg,
    msg2 = hash->final();
 
    //compute H(C||msg1 ||H(msg2)||S)
-   uint64_t msgLength = msg1.size();
+   const size_t msgLength = msg1.size();
    secure_vector<uint8_t> salt = rng.random_vec(SALT_SIZE);
-   hash->update_be(msgLength * 8);
+   hash->update_be(static_cast<uint64_t>(msgLength) * 8);
    hash->update(msg1);
    hash->update(msg2);
    hash->update(salt);
@@ -66,8 +69,7 @@ secure_vector<uint8_t> iso9796_encoding(const secure_vector<uint8_t>& msg,
    secure_vector<uint8_t> EM(output_length);
 
    //compute message offset.
-   size_t offset = output_length - HASH_SIZE - SALT_SIZE - tLength
-                   - msgLength - 1;
+   const size_t offset = output_length - HASH_SIZE - SALT_SIZE - tLength - msgLength - 1;
 
    //insert message border (0x01), msg1 and salt into the output buffer
    EM[offset] = 0x01;
@@ -243,7 +245,8 @@ secure_vector<uint8_t> ISO_9796_DS2::raw_data()
  *  ISO-9796-2 scheme 2 encode operation
  */
 secure_vector<uint8_t> ISO_9796_DS2::encoding_of(const secure_vector<uint8_t>& msg,
-      size_t output_bits, RandomNumberGenerator& rng)
+                                                 size_t output_bits,
+                                                 RandomNumberGenerator& rng)
    {
    return iso9796_encoding(msg, output_bits, m_hash, m_SALT_SIZE, m_implicit, rng);
    }
@@ -254,7 +257,7 @@ secure_vector<uint8_t> ISO_9796_DS2::encoding_of(const secure_vector<uint8_t>& m
 bool ISO_9796_DS2::verify(const secure_vector<uint8_t>& const_coded,
                           const secure_vector<uint8_t>& raw, size_t key_bits)
    {
-   return iso9796_verification(const_coded,raw,key_bits,m_hash,m_SALT_SIZE);
+   return iso9796_verification(const_coded, raw, key_bits, m_hash, m_SALT_SIZE);
    }
 
 /*

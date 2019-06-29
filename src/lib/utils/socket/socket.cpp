@@ -144,6 +144,7 @@ class BSD_Socket final : public OS::Socket
 #if defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
       typedef SOCKET socket_type;
       typedef int socket_op_ret_type;
+      typedef int socklen_type;
       static socket_type invalid_socket() { return INVALID_SOCKET; }
       static void close_socket(socket_type s) { ::closesocket(s); }
       static std::string get_last_socket_error() { return std::to_string(::WSAGetLastError()); }
@@ -183,6 +184,7 @@ class BSD_Socket final : public OS::Socket
 #else
       typedef int socket_type;
       typedef ssize_t socket_op_ret_type;
+      typedef socklen_t socklen_type;
       static socket_type invalid_socket() { return -1; }
       static void close_socket(socket_type s) { ::close(s); }
       static std::string get_last_socket_error() { return ::strerror(errno); }
@@ -234,7 +236,7 @@ class BSD_Socket final : public OS::Socket
 
             set_nonblocking(m_socket);
 
-            int err = ::connect(m_socket, rp->ai_addr, rp->ai_addrlen);
+            int err = ::connect(m_socket, rp->ai_addr, static_cast<socklen_type>(rp->ai_addrlen));
 
             if(err == -1)
                {
@@ -244,7 +246,8 @@ class BSD_Socket final : public OS::Socket
                   struct timeval timeout_tv = make_timeout_tv();
                   fd_set write_set;
                   FD_ZERO(&write_set);
-                  FD_SET(m_socket, &write_set);
+                  // Weirdly, Winsock uses a SOCKET type but wants FD_SET to get an int instead
+                  FD_SET(static_cast<int>(m_socket), &write_set);
 
                   active = ::select(m_socket + 1, nullptr, &write_set, nullptr, &timeout_tv);
 
@@ -336,8 +339,8 @@ class BSD_Socket final : public OS::Socket
       struct timeval make_timeout_tv() const
          {
          struct timeval tv;
-         tv.tv_sec = m_timeout.count() / 1000000;
-         tv.tv_usec = m_timeout.count() % 1000000;
+         tv.tv_sec = static_cast<time_t>(m_timeout.count() / 1000000);
+         tv.tv_usec = static_cast<long>(m_timeout.count() % 1000000);;
          return tv;
          }
 

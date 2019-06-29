@@ -117,7 +117,7 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
       /// XXX double assignment, possible bug?
       if(tmp >= code_length) /* invalid root */
          {
-         result[i] = i;
+         result[i] = static_cast<gf2m>(i);
          }
       result[i] = Linv[tmp];
       }
@@ -197,7 +197,7 @@ secure_vector<uint8_t> mceliece_decrypt(
    uint32_t syndrome_byte_vec_size = syndrome_byte_vec.size();
    for(uint32_t i = 0; i < syndrome_byte_vec_size; i++)
       {
-      syndrome_byte_vec[i] = syndrome_vec[i/4] >> (8* (i % 4));
+      syndrome_byte_vec[i] = static_cast<uint8_t>(syndrome_vec[i/4] >> (8* (i % 4)));
       }
 
    syndrome_polyn = polyn_gf2m(t-1, syndrome_byte_vec.data(), bit_size_to_byte_size(codimension), key.get_goppa_polyn().get_sp_field());

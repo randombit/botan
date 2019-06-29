@@ -57,12 +57,12 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
 
    const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
 
-   const size_t desired_increase = target_nsec / measured_time;
+   const uint64_t desired_increase = target_nsec / measured_time;
 
    if(desired_increase == 0)
       return this->from_iterations(starting_iter);
 
-   return this->from_iterations(desired_increase * starting_iter);
+   return this->from_iterations(static_cast<size_t>(desired_increase * starting_iter));
    }
 
 std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::default_params() const

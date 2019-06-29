@@ -18,7 +18,7 @@ namespace Botan {
 
 namespace {
 
-unsigned int prim_poly[MAX_EXT_DEG + 1] = {
+gf2m prim_poly[MAX_EXT_DEG + 1] = {
    01,       /* extension degree 0 (!) never used */
    03,       /* extension degree 1 (!) never used */
    07,       /* extension degree 2 */
@@ -35,7 +35,6 @@ unsigned int prim_poly[MAX_EXT_DEG + 1] = {
    020033,   /* extension degree 13 */
    042103,   /* extension degree 14 */
    0100003,  /* extension degree 15 */
-   0210013   /* extension degree 16 */
 };
 
 std::vector<gf2m> gf_exp_table(size_t deg, gf2m prime_poly)
@@ -72,9 +71,9 @@ std::vector<gf2m> gf_log_table(size_t deg, const std::vector<gf2m>& exp)
    std::vector<gf2m> tab(1 << deg);
 
    tab[0] = (1 << deg) - 1; // log of 0 is the order by convention
-   for (size_t i = 0; i < tab.size(); ++i)
+   for(size_t i = 0; i < tab.size(); ++i)
       {
-      tab[exp[i]] = i;
+      tab[exp[i]] = static_cast<gf2m>(i);
       }
    return tab;
    }
