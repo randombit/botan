@@ -447,7 +447,7 @@ void Channel::process_handshake_ccs(const secure_vector<uint8_t>& record,
                                                          record_sequence);
                }
             }
-         else if(record_sequence == 0)
+         else
             {
             create_handshake_state(record_version);
             }
