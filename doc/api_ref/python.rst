@@ -14,6 +14,7 @@ The Python binding is based on the `ffi` module of botan and the
 Starting in 2.8, the class names were renamed to match Python standard
 conventions. However aliases are defined which allow older code to
 continue to work; the older names are mentioned as "previously X".
+These aliases will be removed in a future major release.
 
 Versioning
 ----------------------------------------
@@ -40,15 +41,15 @@ Random Number Generators
 
      Previously ``rng``
 
-     Type 'user' also allowed (userspace HKDF RNG seeded from system
+     Type 'user' also allowed (userspace HMAC_DRBG seeded from system
      rng). The system RNG is very cheap to create, as just a single file
      handle or CSP handle is kept open, from first use until shutdown,
      no matter how many 'system' rng instances are created. Thus it is
-     easy to use the RNG in a one-off way, with `botan.rng().get(32)`.
+     easy to use the RNG in a one-off way, with `botan.RandomNumberGenerator().get(32)`.
 
    .. py:method:: get(length)
 
-      Return some bits
+      Return some bytes
 
    .. py:method:: reseed(bits = 256)
 
@@ -62,8 +63,6 @@ Random Number Generators
 
       Add some unpredictable seed data to the RNG
 
-
-
 Hash Functions
 ----------------------------------------
 
@@ -71,7 +70,7 @@ Hash Functions
 
     Previously ``hash_function``
 
-    Algo is a string (eg 'SHA-1', 'SHA-384', 'Skein-512')
+    The ``algo`` param is a string (eg 'SHA-1', 'SHA-384', 'BLAKE2b')
 
     .. py:method:: algo_name()
 
@@ -196,6 +195,7 @@ Ciphers
 
 Bcrypt
 ----------------------------------------
+
 .. py:function:: bcrypt(passwd, rng, work_factor = 10)
 
    Provided the password and an RNG object, returns a bcrypt string
@@ -239,6 +239,7 @@ Scrypt
 
 KDF
 ----------------------------------------
+
 .. py:function:: kdf(algo, secret, out_len, salt)
 
    Performs a key derviation function (such as "HKDF(SHA-384)") over
@@ -251,6 +252,73 @@ Public Key
 .. py:class:: PublicKey(object)
 
   Previously ``public_key``
+
+  .. py:classmethod:: load(val)
+
+     Load a public key. The value should be a PEM or DER blob.
+
+  .. py:classmethod:: load_rsa(n, e)
+
+     Load an RSA public key giving the modulus and public exponent
+     as integers.
+
+  .. py:classmethod:: load_dsa(p, q, g, y)
+
+     Load an DSA public key giving the parameters and public value
+     as integers.
+
+  .. py:classmethod:: load_dh(p, g, y)
+
+     Load an Diffie-Hellman public key giving the parameters and
+     public value as integers.
+
+  .. py:classmethod:: load_elgamal(p, q, g, y)
+
+     Load an ElGamal public key giving the parameters and
+     public value as integers.
+
+  .. py:classmethod:: load_ecdsa(curve, pub_x, pub_y)
+
+     Load an ECDSA public key giving the curve as a string
+     (like "secp256r1") and the public point as a pair of
+     integers giving the affine coordinates.
+
+  .. py:classmethod:: load_ecdh(curve, pub_x, pub_y)
+
+     Load an ECDH public key giving the curve as a string
+     (like "secp256r1") and the public point as a pair of
+     integers giving the affine coordinates.
+
+  .. py:classmethod:: load_sm2(curve, pub_x, pub_y)
+
+     Load a SM2 public key giving the curve as a string (like
+     "sm2p256v1") and the public point as a pair of integers giving
+     the affine coordinates.
+
+  .. py:method:: check_key(rng_obj, strong=True):
+
+     Test the key for consistency. If ``strong`` is ``True`` then
+     more expensive tests are performed.
+
+  .. py:method:: export(pem=False)
+
+     Exports the public key using the usual X.509 SPKI representation.
+     If ``pem`` is True, the result is a PEM encoded string. Otherwise
+     it is a binary DER value.
+
+  .. py:method:: to_der()
+
+     Like ``self.export(False)``
+
+  .. py:method:: to_pem()
+
+     Like ``self.export(True)``
+
+  .. py:method:: get_field(field_name)
+
+     Return an integer field related to the public key. The valid field names
+     vary depending on the algorithm. For example RSA public modulus can be
+     extracted with ``rsa_key.get_field("n")``.
 
   .. py:method:: fingerprint(hash = 'SHA-256')
 
@@ -265,41 +333,101 @@ Public Key
      Returns the estimated strength of this key against known attacks
      (NFS, Pollard's rho, etc)
 
-  .. py:method:: encoding(pem=False)
-
-     Returns the encoding of the key, PEM if set otherwise DER
-
 Private Key
 ----------------------------------------
 
 .. py:class:: PrivateKey
 
-    Previously ``private_key``
+  Previously ``private_key``
 
-    .. py:classmethod:: create(algo, param, rng)
+  .. py:classmethod:: create(algo, param, rng)
 
-       Creates a new private key. The parameter type/value depends on
-       the algorithm. For "rsa" is is the size of the key in bits.
-       For "ecdsa" and "ecdh" it is a group name (for instance
-       "secp256r1"). For "ecdh" there is also a special case for group
-       "curve25519" (which is actually a completely distinct key type
-       with a non-standard encoding).
+     Creates a new private key. The parameter type/value depends on
+     the algorithm. For "rsa" is is the size of the key in bits.
+     For "ecdsa" and "ecdh" it is a group name (for instance
+     "secp256r1"). For "ecdh" there is also a special case for group
+     "curve25519" (which is actually a completely distinct key type
+     with a non-standard encoding).
 
-    .. py:classmethod:: load(val, passphrase="")
+  .. py:classmethod:: load(val, passphrase="")
 
-       Load a private key (DER or PEM formats accepted)
+     Return a private key (DER or PEM formats accepted)
 
-    .. py:method:: get_public_key()
+  .. py:classmethod:: load_rsa(p, q, e)
 
-       Return a public_key object
+     Return a private RSA key
 
-    .. py:method:: to_pem()
+  .. py:classmethod:: load_dsa(p, q, g, x)
 
-       Return the PEM encoded private key (unencrypted)
+     Return a private DSA key
 
-    .. py:method:: to_der()
+  .. py:classmethod:: load_dh(p, g, x)
 
-       Return the PEM encoded private key (unencrypted)
+     Return a private DH key
+
+  .. py:classmethod:: load_elgamal(p, q, g, x)
+
+     Return a private ElGamal key
+
+  .. py:classmethod:: load_ecdsa(curve, x)
+
+     Return a private ECDSA key
+
+  .. py:classmethod:: load_ecdh(curve, x)
+
+     Return a private ECDH key
+
+  .. py:classmethod:: load_sm2(curve, x)
+
+     Return a private SM2 key
+
+  .. py:method:: get_public_key()
+
+     Return a public_key object
+
+  .. py:method:: to_pem()
+
+     Return the PEM encoded private key (unencrypted)
+
+  .. py:method:: to_der()
+
+     Return the PEM encoded private key (unencrypted)
+
+  .. py:method:: check_key(rng_obj, strong=True):
+
+     Test the key for consistency. If ``strong`` is ``True`` then
+     more expensive tests are performed.
+
+  .. py:method:: algo_name()
+
+     Returns the algorithm name
+
+  .. py:method:: export(pem=False)
+
+     Exports the private key in PKCS8 format. If ``pem`` is True, the
+     result is a PEM encoded string. Otherwise it is a binary DER
+     value. The key will not be encrypted.
+
+  .. py:method:: export_encrypted(passphrase, rng, pem=False, msec=300, cipher=None, pbkdf=None)
+
+     Exports the private key in PKCS8 format, encrypted using the
+     provided passphrase. If ``pem`` is True, the result is a PEM
+     encoded string. Otherwise it is a binary DER value.
+
+  .. py:method:: to_der()
+
+     Like ``self.export(False)``
+
+  .. py:method:: to_pem()
+
+     Like ``self.export(True)``
+
+  .. py:method:: get_field(field_name)
+
+     Return an integer field related to the public key. The valid field names
+     vary depending on the algorithm. For example first RSA secret prime can be
+     extracted with ``rsa_key.get_field("p")``. This function can also be
+     used to extract the public parameters.
 
 Public Key Operations
 ----------------------------------------
