@@ -13,7 +13,13 @@ stores credentials. The main user is the :doc:`tls` implementation.
          const std::string& context)
 
       Return the list of certificate stores, each of which is assumed
-      to contain (only) trusted certificate authorities.
+      to contain (only) trusted certificate authorities. The
+      ``Credentials_Manager`` retains ownership of the
+      Certificate_Store pointers.
+
+      .. note::
+         It would have been a better API to return ``shared_ptr``s here.
+         This may change in a future major release.
 
       When *type* is "tls-client", *context* will be the hostname of
       the server, or empty if the hostname is not known. This allows
