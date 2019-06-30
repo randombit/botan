@@ -185,7 +185,7 @@ class BOTAN_PUBLIC_API(2,0) GF2m_Field
          return m_gf_multiplicative_order;
          }
 
-      gf2m get_extension_degree() const
+      size_t get_extension_degree() const
          {
          return m_gf_extension_degree;
          }
@@ -206,7 +206,8 @@ class BOTAN_PUBLIC_API(2,0) GF2m_Field
          return static_cast<gf2m>(((d) & gf_ord()) + ((d) >> get_extension_degree()));
          }
 
-      gf2m m_gf_extension_degree, m_gf_multiplicative_order;
+      const size_t m_gf_extension_degree;
+      const gf2m m_gf_multiplicative_order;
       const std::vector<gf2m>& m_gf_log_table;
       const std::vector<gf2m>& m_gf_exp_table;
    };

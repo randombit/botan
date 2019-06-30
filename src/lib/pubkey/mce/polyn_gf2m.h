@@ -73,7 +73,7 @@ class polyn_gf2m
       polyn_gf2m(int t, RandomNumberGenerator& rng, std::shared_ptr<GF2m_Field> sp_field);
 
       std::shared_ptr<GF2m_Field> get_sp_field() const
-         { return msp_field; }
+         { return m_sp_field; }
 
       gf2m& operator[](size_t i) { return coeff[i]; }
 
@@ -153,7 +153,7 @@ class polyn_gf2m
       secure_vector<gf2m> coeff;
 
       // public member variable:
-      std::shared_ptr<GF2m_Field> msp_field;
+      std::shared_ptr<GF2m_Field> m_sp_field;
    };
 
 gf2m random_gf2m(RandomNumberGenerator& rng);

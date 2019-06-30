@@ -91,7 +91,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          const std::string sessions_db = get_arg("session-db");
          const std::string host = get_arg("host");
-         const uint16_t port = static_cast<uint16_t>(get_arg_sz("port"));
+         const uint16_t port = get_arg_u16("port");
          const std::string transport = get_arg("type");
          const std::string next_protos = get_arg("next-protocols");
          std::string policy_file = get_arg("policy");

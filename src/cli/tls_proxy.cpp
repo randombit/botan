@@ -465,7 +465,7 @@ class TLS_Proxy final : public Command
 
       void go() override
          {
-         const size_t listen_port = get_arg_sz("listen_port");
+         const uint16_t listen_port = get_arg_u16("listen_port");
          const std::string target = get_arg("target_host");
          const std::string target_port = get_arg("target_port");
 

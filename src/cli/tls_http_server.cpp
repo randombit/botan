@@ -529,7 +529,7 @@ class TLS_HTTP_Server final : public Command
 
       void go() override
          {
-         const size_t listen_port = get_arg_sz("port");
+         const uint16_t listen_port = get_arg_u16("port");
 
          const std::string server_crt = get_arg("server_cert");
          const std::string server_key = get_arg("server_key");
