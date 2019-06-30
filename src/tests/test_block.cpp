@@ -15,7 +15,7 @@ namespace Botan_Tests {
 class Block_Cipher_Tests final : public Text_Based_Test
    {
    public:
-      Block_Cipher_Tests() : Text_Based_Test("block", "Key,In,Out", "Tweak,Iterations") {}
+      Block_Cipher_Tests() : Text_Based_Test("block", "Key,In,Out", "Tweak,Iterations,LGTM2") {}
 
       std::vector<std::string> possible_providers(const std::string& algo) override
          {
