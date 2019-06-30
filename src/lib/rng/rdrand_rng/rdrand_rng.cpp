@@ -67,20 +67,64 @@ uint32_t RDRAND_RNG::rdrand_status(bool& ok)
    return r;
    }
 
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
+
+namespace {
+
+BOTAN_FUNC_ISA("rdrnd")
+uint64_t rdrand64()
+   {
+   for(;;)
+      {
+      uint64_t r = 0;
+
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
+      int cf = 0;
+
+      // Encoding of rdrand %rax
+      asm(".byte 0x48, 0x0F, 0xC7, 0xF0; adcl $0,%1" :
+          "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
+#else
+      int cf = _rdrand64_step(&r);
+#endif
+      if(1 == cf)
+         {
+         return r;
+         }
+      }
+
+   return 0;
+   }
+
+}
+
+#endif
+
 void RDRAND_RNG::randomize(uint8_t out[], size_t out_len)
    {
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
+   while(out_len >= 8)
+      {
+      const uint64_t r = rdrand64();
+
+      store_le(r, out);
+      out += 8;
+      out_len -= 8;
+      }
+#endif
+
    while(out_len >= 4)
       {
-      uint32_t r = RDRAND_RNG::rdrand();
+      const uint32_t r = RDRAND_RNG::rdrand();
 
       store_le(r, out);
       out += 4;
       out_len -= 4;
       }
 
-   if(out_len) // between 1 and 3 trailing bytes
+   if(out_len) // final trailing bytes, at most 3
       {
-      uint32_t r = RDRAND_RNG::rdrand();
+      const uint32_t r = RDRAND_RNG::rdrand();
       for(size_t i = 0; i != out_len; ++i)
          out[i] = get_byte(i, r);
       }
