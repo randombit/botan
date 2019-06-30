@@ -42,9 +42,9 @@ void mceliece_encrypt(secure_vector<uint8_t>& ciphertext_out,
                       RandomNumberGenerator& rng);
 
 McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator &rng,
-                                          uint32_t ext_deg,
-                                          uint32_t code_length,
-                                          uint32_t t);
+                                          size_t ext_deg,
+                                          size_t code_length,
+                                          size_t t);
 
 }
 

@@ -147,6 +147,10 @@ class Command
 
       size_t get_arg_sz(const std::string& opt_name) const;
 
+      uint16_t get_arg_u16(const std::string& opt_name) const;
+
+      uint32_t get_arg_u32(const std::string& opt_name) const;
+
       std::vector<std::string> get_arg_list(const std::string& what) const;
 
       /*

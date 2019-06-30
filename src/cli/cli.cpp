@@ -128,6 +128,22 @@ size_t Command::get_arg_sz(const std::string& opt_name) const
    return m_args->get_arg_sz(opt_name);
    }
 
+uint16_t Command::get_arg_u16(const std::string& opt_name) const
+   {
+   const size_t val = get_arg_sz(opt_name);
+   if(static_cast<uint16_t>(val) != val)
+      throw CLI_Usage_Error("Argument " + opt_name + " has value out of allowed range");
+   return static_cast<uint16_t>(val);
+   }
+
+uint32_t Command::get_arg_u32(const std::string& opt_name) const
+   {
+   const size_t val = get_arg_sz(opt_name);
+   if(static_cast<uint32_t>(val) != val)
+      throw CLI_Usage_Error("Argument " + opt_name + " has value out of allowed range");
+   return static_cast<uint32_t>(val);
+   }
+
 std::vector<std::string> Command::get_arg_list(const std::string& what) const
    {
    return m_args->get_arg_list(what);

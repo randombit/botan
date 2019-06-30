@@ -62,7 +62,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          {
          const std::string server_crt = get_arg("cert");
          const std::string server_key = get_arg("key");
-         const int port = get_arg_sz("port");
+         const uint16_t port = get_arg_u16("port");
          const size_t max_clients = get_arg_sz("max-clients");
          const std::string transport = get_arg("type");
          const std::string dump_traces_to = get_arg("dump-traces");

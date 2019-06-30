@@ -22,37 +22,43 @@ namespace {
 class binary_matrix final
    {
    public:
-      binary_matrix(uint32_t m_rown, uint32_t m_coln);
+      binary_matrix(size_t m_rown, size_t m_coln);
 
-      void row_xor(uint32_t a, uint32_t b);
+      void row_xor(size_t a, size_t b);
       secure_vector<int> row_reduced_echelon_form();
 
       /**
       * return the coefficient out of F_2
       */
-      uint32_t coef(uint32_t i, uint32_t j)
+      uint32_t coef(size_t i, size_t j)
          {
          return (m_elem[(i) * m_rwdcnt + (j) / 32] >> (j % 32)) & 1;
          }
 
-      void set_coef_to_one(uint32_t i, uint32_t j)
+      void set_coef_to_one(size_t i, size_t j)
          {
          m_elem[(i) * m_rwdcnt + (j) / 32] |= (static_cast<uint32_t>(1) << ((j) % 32)) ;
          }
 
-      void toggle_coeff(uint32_t i, uint32_t j)
+      void toggle_coeff(size_t i, size_t j)
          {
          m_elem[(i) * m_rwdcnt + (j) / 32] ^= (static_cast<uint32_t>(1) << ((j) % 32)) ;
          }
 
-      //private:
-      uint32_t m_rown;  // number of rows.
-      uint32_t m_coln; // number of columns.
-      uint32_t m_rwdcnt; // number of words in a row
+      size_t rows() const { return m_rown; }
+
+      size_t columns() const { return m_coln; }
+
+   private:
+      size_t m_rown;  // number of rows.
+      size_t m_coln; // number of columns.
+      size_t m_rwdcnt; // number of words in a row
+   public:
+      // TODO this should be private
       std::vector<uint32_t> m_elem;
    };
 
-binary_matrix::binary_matrix (uint32_t rown, uint32_t coln)
+binary_matrix::binary_matrix(size_t rown, size_t coln)
    {
    m_coln = coln;
    m_rown = rown;
@@ -60,39 +66,41 @@ binary_matrix::binary_matrix (uint32_t rown, uint32_t coln)
    m_elem = std::vector<uint32_t>(m_rown * m_rwdcnt);
    }
 
-void binary_matrix::row_xor(uint32_t a, uint32_t b)
+void binary_matrix::row_xor(size_t a, size_t b)
    {
-   uint32_t i;
-   for(i=0;i<m_rwdcnt;i++)
+   for(size_t i = 0; i != m_rwdcnt; i++)
       {
-      m_elem[a*m_rwdcnt+i]^=m_elem[b*m_rwdcnt+i];
+      m_elem[a*m_rwdcnt+i] ^= m_elem[b*m_rwdcnt+i];
       }
    }
 
 //the matrix is reduced from LSB...(from right)
 secure_vector<int> binary_matrix::row_reduced_echelon_form()
    {
-   uint32_t i, failcnt, findrow, max=m_coln - 1;
-
    secure_vector<int> perm(m_coln);
-   for(i=0;i<m_coln;i++)
+   for(size_t i = 0; i != m_coln; i++)
       {
-      perm[i]=i;//initialize permutation.
+      perm[i] = i;//initialize permutation.
       }
-   failcnt = 0;
 
-   for(i=0;i<m_rown;i++,max--)
+   uint32_t failcnt = 0;
+
+   uint32_t max = m_coln - 1;
+   for(size_t i = 0; i != m_rown; i++, max--)
       {
-      findrow=0;
-      for(uint32_t j=i;j<m_rown;j++)
+      uint32_t findrow = 0;
+      for(size_t j = i; j != m_rown; j++)
          {
-         if(coef(j,max))
+         if(coef(j, max))
             {
-            if (i!=j)//not needed as ith row is 0 and jth row is 1.
-               row_xor(i,j);//xor to the row.(swap)?
+            if(i != j) //not needed as ith row is 0 and jth row is 1.
+               {
+               row_xor(i ,j);//xor to the row.(swap)?
+               }
+
             findrow=1;
             break;
-            }//largest value found (end if)
+            } //largest value found (end if)
          }
 
       if(!findrow)//if no row with a 1 found then swap last column and the column with no 1 down.
@@ -110,7 +118,7 @@ secure_vector<int> binary_matrix::row_reduced_echelon_form()
       else
          {
          perm[i+m_coln - m_rown] = max;
-         for(uint32_t j=i+1;j<m_rown;j++)//fill the column downwards with 0's
+         for(size_t j=i+1;j<m_rown;j++)//fill the column downwards with 0's
             {
             if(coef(j,(max)))
                {
@@ -132,7 +140,7 @@ secure_vector<int> binary_matrix::row_reduced_echelon_form()
 
 void randomize_support(std::vector<gf2m>& L, RandomNumberGenerator& rng)
    {
-   for(uint32_t i = 0; i != L.size(); ++i)
+   for(size_t i = 0; i != L.size(); ++i)
       {
       gf2m rnd = random_gf2m(rng);
 
@@ -149,21 +157,20 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
    //m- The extension degree of the GF
    //g- The generator polynomial.
    gf2m x,y;
-   uint32_t i,j,k,r,n;
+   uint32_t r;
    std::vector<int> Laux(code_length);
-   n=code_length;
    r=t*sp_field->get_extension_degree();
 
-   binary_matrix H(r, n) ;
+   binary_matrix H(r, code_length);
 
-   for(i=0;i< n;i++)
+   for(size_t i = 0; i != code_length; i++)
       {
       x = g->eval(lex_to_gray(L[i]));//evaluate the polynomial at the point L[i].
       x = sp_field->gf_inv(x);
       y = x;
-      for(j=0;j<t;j++)
+      for(size_t j=0;j<t;j++)
          {
-         for(k=0;k<sp_field->get_extension_degree();k++)
+         for(size_t k=0;k<sp_field->get_extension_degree();k++)
             {
             if(y & (1<<k))
                {
@@ -182,10 +189,10 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
       throw Invalid_State("could not bring matrix in row reduced echelon form");
       }
 
-   std::unique_ptr<binary_matrix> result(new binary_matrix(n-r,r)) ;
-   for (i = 0; i < (*result).m_rown; ++i)
+   std::unique_ptr<binary_matrix> result(new binary_matrix(code_length-r, r)) ;
+   for(size_t i = 0; i < result->rows(); ++i)
       {
-      for (j = 0; j < (*result).m_coln; ++j)
+      for(size_t j = 0; j < result->columns(); ++j)
          {
          if (H.coef(j,perm[i]))
             {
@@ -193,11 +200,12 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
             }
          }
       }
-   for (i = 0; i < code_length; ++i)
+   for(size_t i = 0; i < code_length; ++i)
       {
       Laux[i] = L[perm[i]];
       }
-   for (i = 0; i < code_length; ++i)
+
+   for(size_t i = 0; i < code_length; ++i)
       {
       L[i] = static_cast<gf2m>(Laux[i]);
       }
@@ -205,7 +213,7 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
    }
 }
 
-McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t ext_deg, uint32_t code_length, uint32_t t)
+McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator & rng, size_t ext_deg, size_t code_length, size_t t)
    {
    const size_t codimension = t * ext_deg;
 
@@ -213,7 +221,8 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
       {
       throw Invalid_Argument("invalid McEliece parameters");
       }
-   std::shared_ptr<GF2m_Field> sp_field ( new GF2m_Field(ext_deg ));
+
+   std::shared_ptr<GF2m_Field> sp_field(new GF2m_Field(ext_deg));
 
    //pick the support.........
    std::vector<gf2m> L(code_length);
@@ -278,7 +287,7 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
       {
       Linv[L[i]] = static_cast<gf2m>(i);
       }
-   std::vector<uint8_t> pubmat (R->m_elem.size() * 4);
+   std::vector<uint8_t> pubmat(R->m_elem.size() * 4);
    for(size_t i = 0; i < R->m_elem.size(); i++)
       {
       store_le(R->m_elem[i], &pubmat[i*4]);
