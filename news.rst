@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.11.0, Not Yet Released
+Version 2.11.0, 2019-07-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add Argon2 PBKDF/password hash (GH #459 #1981 #1987)
