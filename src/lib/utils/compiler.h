@@ -65,7 +65,7 @@
 /*
 * Define BOTAN_FUNC_ISA
 */
-#if (defined(__GNUG__) && !defined(__clang__)) || (BOTAN_CLANG_VERSION > 38)
+#if (defined(__GNUC__) && !defined(__clang__)) || (BOTAN_CLANG_VERSION > 38)
   #define BOTAN_FUNC_ISA(isa) __attribute__ ((target(isa)))
 #else
   #define BOTAN_FUNC_ISA(isa)
@@ -74,7 +74,7 @@
 /*
 * Define BOTAN_WARN_UNUSED_RESULT
 */
-#if defined(__GNUG__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
   #define BOTAN_WARN_UNUSED_RESULT __attribute__ ((warn_unused_result))
 #else
   #define BOTAN_WARN_UNUSED_RESULT
@@ -88,7 +88,7 @@
   #define BOTAN_MALLOC_FN __attribute__ ((malloc))
 #elif defined(__clang__) || (BOTAN_GCC_VERSION >= 500)
   #define BOTAN_MALLOC_FN __attribute__ ((malloc, returns_nonnull, alloc_size(1,2)))
-#elif defined(__GNUG__)
+#elif defined(__GNUC__)
   #define BOTAN_MALLOC_FN __attribute__ ((malloc, alloc_size(1,2)))
 #elif defined(_MSC_VER)
   #define BOTAN_MALLOC_FN __declspec(restrict)
@@ -109,7 +109,7 @@
     #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
     #define BOTAN_DEPRECATED_HEADER(hdr) __pragma("message \"this header is deprecated\"")
 
-  #elif defined(__GNUG__)
+  #elif defined(__GNUC__)
     /* msg supported since GCC 4.5, earliest we support is 4.8 */
     #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
     #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("GCC warning \"this header is deprecated\"")
@@ -130,7 +130,7 @@
 */
 #if !defined(BOTAN_NORETURN)
 
-  #if defined (__clang__) || defined (__GNUG__)
+  #if defined (__clang__) || defined (__GNUC__)
     #define BOTAN_NORETURN __attribute__ ((__noreturn__))
 
   #elif defined (_MSC_VER)
