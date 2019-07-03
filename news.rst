@@ -1,12 +1,15 @@
 Release Notes
 ========================================
 
+Version 2.12.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Version 2.11.0, 2019-07-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add Argon2 PBKDF/password hash (GH #459 #1981 #1987)
+* Add Argon2 PBKDF and password hash (GH #459 #1981 #1987)
 
-* Add Bcrypt-PBKDF password hash (GH #1990)
+* Add Bcrypt-PBKDF (GH #1990)
 
 * Add a libsodium compat layer in sodium.h (GH #1996)
 
@@ -36,15 +39,13 @@ Version 2.11.0, 2019-07-01
 * Add a generic ``System_Certificate_Store`` which wraps Windows, macOS,
   and Linux certificate stores. (GH #1893)
 
-* Add support for RFC 8032 compatible Ed25519ph (GH #2000)
-
 * Fix verification rooted in a v1 certificate which previously would fail.
   (GH #1890)
 
 * Add ability to specify the maximum age of an OCSP response which does not
   have the nextUpdate field set. (GH #1974 #1995)
 
-* Fix X509_DN::operator< which could erronously return true in both
+* Fix X509_DN::operator< which could erroneously return true in both
   directions (ie, DN1 < DN2 && DN2 < DN1). This would break STL
   containers using a DN as the key. (GH #1938)
 
