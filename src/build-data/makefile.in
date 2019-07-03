@@ -70,7 +70,7 @@ TESTOBJS = %{join test_objs}
 # Executable targets
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
-	$(EXE_LINK_CMD) $(ABI_FLAGS) $(LDFLAGS) $(CLIOBJS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(EXE_LINK_CMD) $(ABI_FLAGS) $(CLIOBJS) $(EXE_LINKS_TO) $(LDFLAGS) %{output_to_exe}$@
 	$(POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
