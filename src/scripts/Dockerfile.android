@@ -1,0 +1,22 @@
+FROM debian:stretch AS debian
+ARG SDK
+RUN apt-get update && apt-get -y --no-install-recommends install \
+	libboost-all-dev \
+	make \
+	python3-sphinx
+
+RUN mkdir -p /botan/android
+WORKDIR /botan
+COPY --from=bitriseio/android-ndk /opt/android-ndk android-ndk
+COPY configure.py configure.py
+COPY src src
+COPY doc doc
+COPY license.txt license.txt
+COPY news.rst news.rst
+ENV PATH=$PATH:android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/
+RUN ./configure.py --prefix=android/arm --os=android --cpu=arm --cc=clang --cc-bin=armv7a-linux-androideabi${SDK}-clang++ --ar-command=arm-linux-androideabi-ar --with-sphinx
+RUN make -j`getconf _NPROCESSORS_ONLN`
+RUN make install && make clean
+RUN ./configure.py --prefix=android/arm64 --os=android --cpu=arm64 --cc=clang --cc-bin=aarch64-linux-android${SDK}-clang++ --ar-command=aarch64-linux-android-ar --with-sphinx
+RUN make -j`getconf _NPROCESSORS_ONLN`
+RUN make install
