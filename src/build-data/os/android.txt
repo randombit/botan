@@ -15,6 +15,9 @@ dev_random
 # for all min API levels. Use --without-os-feature=getauxval to disable
 getauxval
 
+# Added in API 28
+#getentropy
+
 sockets
 threads
 filesystem

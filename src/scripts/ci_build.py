@@ -163,13 +163,15 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                 cc_bin = os.path.join(toolchain_dir, 'armv7a-linux-androideabi%d-clang++' % (api_lvl))
                 flags += ['--cpu=armv7',
                           '--ar-command=%s' % (os.path.join(toolchain_dir, 'arm-linux-androideabi-ar'))]
-
-                if api_lvl < 18:
-                    flags += ['--without-os-features=getauxval']
             elif target == 'cross-android-arm64':
                 cc_bin = os.path.join(toolchain_dir, 'aarch64-linux-android%d-clang++' % (api_lvl))
                 flags += ['--cpu=arm64',
                           '--ar-command=%s' % (os.path.join(toolchain_dir, 'aarch64-linux-android-ar'))]
+
+            if api_lvl < 18:
+                flags += ['--without-os-features=getauxval']
+            if api_lvl >= 28:
+                flags += ['--with-os-features=getentropy']
 
         elif target == 'cross-i386':
             flags += ['--cpu=x86_32']
