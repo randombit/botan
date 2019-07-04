@@ -308,7 +308,9 @@ void decrypt_record(secure_vector<uint8_t>& output,
    }
 
 size_t read_tls_record(secure_vector<uint8_t>& readbuf,
-                       Record_Raw_Input& raw_input,
+                       const uint8_t input[],
+                       size_t input_len,
+                       size_t& consumed,
                        Record& rec,
                        Connection_Sequence_Numbers* sequence_numbers,
                        get_cipherstate_fn get_cipherstate)
@@ -316,7 +318,7 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
    if(readbuf.size() < TLS_HEADER_SIZE) // header incomplete?
       {
       if(size_t needed = fill_buffer_to(readbuf,
-                                        raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(),
+                                        input, input_len, consumed,
                                         TLS_HEADER_SIZE))
          return needed;
 
@@ -341,7 +343,7 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
                           "Received a completely empty record");
 
    if(size_t needed = fill_buffer_to(readbuf,
-                                     raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(),
+                                     input, input_len, consumed,
                                      TLS_HEADER_SIZE + record_size))
       return needed;
 
@@ -395,14 +397,16 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
    }
 
 size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
-                        Record_Raw_Input& raw_input,
+                        const uint8_t input[],
+                        size_t input_len,
+                        size_t& consumed,
                         Record& rec,
                         Connection_Sequence_Numbers* sequence_numbers,
                         get_cipherstate_fn get_cipherstate)
    {
    if(readbuf.size() < DTLS_HEADER_SIZE) // header incomplete?
       {
-      if(fill_buffer_to(readbuf, raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(), DTLS_HEADER_SIZE))
+      if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE))
          {
          readbuf.clear();
          return 0;
@@ -431,7 +435,7 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
       return 0;
       }
 
-   if(fill_buffer_to(readbuf, raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(), DTLS_HEADER_SIZE + record_size))
+   if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE + record_size))
       {
       // Truncated packet?
       readbuf.clear();
@@ -498,18 +502,21 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
 
 }
 
-size_t read_record(secure_vector<uint8_t>& readbuf,
-                   Record_Raw_Input& raw_input,
+size_t read_record(bool is_datagram,
+                   secure_vector<uint8_t>& readbuf,
+                   const uint8_t input[],
+                   size_t input_len,
+                   size_t& consumed,
                    Record& rec,
                    Connection_Sequence_Numbers* sequence_numbers,
                    get_cipherstate_fn get_cipherstate)
    {
-   if(raw_input.is_datagram())
-      return read_dtls_record(readbuf, raw_input, rec,
-                              sequence_numbers, get_cipherstate);
+   if(is_datagram)
+      return read_dtls_record(readbuf, input, input_len, consumed,
+                              rec, sequence_numbers, get_cipherstate);
    else
-      return read_tls_record(readbuf, raw_input, rec,
-                             sequence_numbers, get_cipherstate);
+      return read_tls_record(readbuf, input, input_len, consumed,
+                             rec, sequence_numbers, get_cipherstate);
    }
 
 }

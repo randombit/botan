@@ -312,11 +312,13 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
 
          size_t consumed = 0;
 
-         Record_Raw_Input raw_input(input, input_size, consumed, m_is_datagram);
          Record record(record_data, &record_sequence, &record_version, &record_type);
          const size_t needed =
-            read_record(m_readbuf,
-                        raw_input,
+            read_record(m_is_datagram,
+                        m_readbuf,
+                        input,
+                        input_size,
+                        consumed,
                         record,
                         m_sequence_numbers.get(),
                         [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); });

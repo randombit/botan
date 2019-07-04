@@ -105,31 +105,6 @@ class Record final
       size_t m_size;
    };
 
-class Record_Raw_Input final
-   {
-   public:
-      Record_Raw_Input(const uint8_t* data, size_t size, size_t& consumed,
-                       bool is_datagram)
-         : m_data(data), m_size(size), m_consumed(consumed),
-           m_is_datagram(is_datagram) {}
-
-      const uint8_t*& get_data() { return m_data; }
-
-      size_t& get_size() { return m_size; }
-
-      size_t& get_consumed() { return m_consumed; }
-      void set_consumed(size_t consumed) { m_consumed = consumed; }
-
-      bool is_datagram() { return m_is_datagram; }
-
-   private:
-      const uint8_t* m_data;
-      size_t m_size;
-      size_t& m_consumed;
-      bool m_is_datagram;
-   };
-
-
 /**
 * Create a TLS record
 * @param write_buffer the output record is placed here
@@ -157,8 +132,11 @@ typedef std::function<std::shared_ptr<Connection_Cipher_State> (uint16_t)> get_c
 * Decode a TLS record
 * @return zero if full message, else number of bytes still needed
 */
-size_t read_record(secure_vector<uint8_t>& read_buffer,
-                   Record_Raw_Input& raw_input,
+size_t read_record(bool is_datagram,
+                   secure_vector<uint8_t>& read_buffer,
+                   const uint8_t input[],
+                   size_t input_len,
+                   size_t& consumed,
                    Record& rec,
                    Connection_Sequence_Numbers* sequence_numbers,
                    get_cipherstate_fn get_cipherstate);
