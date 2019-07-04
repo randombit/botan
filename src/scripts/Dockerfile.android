@@ -3,8 +3,7 @@ ARG ANDORID_SDK_VER
 ARG ANDROID_ARCH
 ARG ANDROID_TOOLCHAIN_SUF
 RUN apt-get update && apt-get -y --no-install-recommends install \
-	make \
-	python3-sphinx
+	make
 
 RUN mkdir -p /botan/android
 WORKDIR /botan
@@ -15,6 +14,6 @@ COPY doc doc
 COPY license.txt license.txt
 COPY news.rst news.rst
 ENV PATH=$PATH:android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/
-RUN ./configure.py --prefix=android/arm --os=android --cpu=${ANDROID_ARCH} --cc=clang --cc-bin=armv7a-linux-android${ANDROID_TOOLCHAIN_SUF}${SDK}-clang++ --ar-command=arm-linux-android${ANDROID_TOOLCHAIN_SUF}-ar --with-sphinx
+RUN ./configure.py --prefix=android/arm --os=android --cpu=${ANDROID_ARCH} --cc=clang --cc-bin=armv7a-linux-android${ANDROID_TOOLCHAIN_SUF}${SDK}-clang++ --ar-command=arm-linux-android${ANDROID_TOOLCHAIN_SUF}-ar
 RUN make -j`getconf _NPROCESSORS_ONLN`
 RUN make install
