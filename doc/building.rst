@@ -256,7 +256,7 @@ Docker
 To build android version, there is the possibility to use
 the docker way::
 
-  sudo SDK=21 src/scripts/docker-android.sh
+  sudo ANDROID_SDK_VER=21 ANDROID_ARCH=arm64 src/scripts/docker-android.sh
 
 This will produce the docker-builds/android folder containing
 each architecture compiled.

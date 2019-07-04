@@ -438,9 +438,6 @@ def main(args=None):
         if use_python3 and options.use_pylint3:
             cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags] + full_paths)
 
-    elif target == 'docker-android':
-        full_path = os.path.join(root_dir, 'src/scripts/docker-android.sh')
-        cmds.append(['sh', full_path])
     else:
         config_flags, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
