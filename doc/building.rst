@@ -250,6 +250,17 @@ executed on a browser, use::
   em++ -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=0 -s WASM=1 \
      --preload-file src/tests/data botan-test.bc -o botan-test.html
 
+Docker
+--------
+
+To build android version, there is the possibility to use
+the docker way::
+
+  sudo ANDROID_SDK_VER=21 ANDROID_ARCH=arm64 src/scripts/docker-android.sh
+
+This will produce the docker-builds/android folder containing
+each architecture compiled.
+
 Supporting Older Distros
 --------------------------
 
