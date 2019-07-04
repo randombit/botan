@@ -145,16 +145,14 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
         elif target_os == 'android':
 
-            if os.getenv('ANDROID_NDK') is None:
+            ndk = os.getenv('ANDROID_NDK')
+            if ndk is None:
                 raise Exception('Android CI build requires ANDROID_NDK env variable be set')
 
-            if os.getenv('ANDROID_API_LEVEL') is None:
+            api_lvl = int(os.getenv('ANDROID_API_LEVEL', '0'))
+            if api_lvl == 0:
                 # If not set arbitrarily choose API 16 (Android 4.1) for ARMv7 and 28 (Android 9) for AArch64
                 api_lvl = 16 if target == 'cross-android-arm32' else 28
-            else:
-                api_lvl = int(os.getenv('ANDROID_API_LEVEL'))
-
-            ndk = os.getenv('ANDROID_NDK')
 
             toolchain_dir = os.path.join(ndk, 'toolchains/llvm/prebuilt/linux-x86_64/bin')
             test_cmd = None
