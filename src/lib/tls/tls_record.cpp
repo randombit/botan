@@ -189,41 +189,43 @@ inline void append_u16_len(secure_vector<uint8_t>& output, size_t len_field)
 }
 
 void write_record(secure_vector<uint8_t>& output,
-                  Record_Message msg,
+                  uint8_t record_type,
                   Protocol_Version version,
-                  uint64_t seq,
+                  uint64_t record_sequence,
+                  const uint8_t* message,
+                  size_t message_len,
                   Connection_Cipher_State* cs,
                   RandomNumberGenerator& rng)
    {
    output.clear();
 
-   output.push_back(msg.get_type());
+   output.push_back(record_type);
    output.push_back(version.major_version());
    output.push_back(version.minor_version());
 
    if(version.is_datagram_protocol())
       {
       for(size_t i = 0; i != 8; ++i)
-         output.push_back(get_byte(i, seq));
+         output.push_back(get_byte(i, record_sequence));
       }
 
    if(!cs) // initial unencrypted handshake records
       {
-      append_u16_len(output, msg.get_size());
-      output.insert(output.end(), msg.get_data(), msg.get_data() + msg.get_size());
+      append_u16_len(output, message_len);
+      output.insert(output.end(), message, message + message_len);
       return;
       }
 
    AEAD_Mode& aead = cs->aead();
-   std::vector<uint8_t> aad = cs->format_ad(seq, msg.get_type(), version, static_cast<uint16_t>(msg.get_size()));
+   std::vector<uint8_t> aad = cs->format_ad(record_sequence, record_type, version, static_cast<uint16_t>(message_len));
 
-   const size_t ctext_size = aead.output_length(msg.get_size());
+   const size_t ctext_size = aead.output_length(message_len);
 
    const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
 
    aead.set_ad(aad);
 
-   const std::vector<uint8_t> nonce = cs->aead_nonce(seq, rng);
+   const std::vector<uint8_t> nonce = cs->aead_nonce(record_sequence, rng);
 
    append_u16_len(output, rec_size);
 
@@ -236,7 +238,7 @@ void write_record(secure_vector<uint8_t>& output,
       }
 
    const size_t header_size = output.size();
-   output += std::make_pair(msg.get_data(), msg.get_size());
+   output += std::make_pair(message, message_len);
 
    aead.start(nonce);
    aead.finish(output, header_size);

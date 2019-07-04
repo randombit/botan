@@ -520,12 +520,12 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch
    const Protocol_Version record_version =
       (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
 
-   Record_Message record_message(record_type, 0, input, length);
-
    TLS::write_record(m_writebuf,
-                     record_message,
+                     record_type,
                      record_version,
                      sequence_numbers().next_write_sequence(epoch),
+                     input,
+                     length,
                      cipher_state,
                      m_rng);
 

@@ -105,27 +105,6 @@ class Record final
       size_t m_size;
    };
 
-class Record_Message final
-   {
-   public:
-      Record_Message(const uint8_t* data, size_t size)
-         : m_type(0), m_sequence(0), m_data(data), m_size(size) {}
-      Record_Message(uint8_t type, uint64_t sequence, const uint8_t* data, size_t size)
-         : m_type(type), m_sequence(sequence), m_data(data),
-           m_size(size) {}
-
-      uint8_t& get_type() { return m_type; }
-      uint64_t& get_sequence() { return m_sequence; }
-      const uint8_t* get_data() { return m_data; }
-      size_t& get_size() { return m_size; }
-
-   private:
-      uint8_t m_type;
-      uint64_t m_sequence;
-      const uint8_t* m_data;
-      size_t m_size;
-};
-
 class Record_Raw_Input final
    {
    public:
@@ -154,16 +133,20 @@ class Record_Raw_Input final
 /**
 * Create a TLS record
 * @param write_buffer the output record is placed here
-* @param rec_msg is the plaintext message
-* @param version is the protocol version
-* @param msg_sequence is the sequence number
+* @param record_type the record layer type
+* @param record_version the record layer version
+* @param record_sequence the record layer sequence number
+* @param message the record contents
+* @param message_len is size of message
 * @param cipherstate is the writing cipher state
 * @param rng is a random number generator
 */
 void write_record(secure_vector<uint8_t>& write_buffer,
-                  Record_Message rec_msg,
-                  Protocol_Version version,
-                  uint64_t msg_sequence,
+                  uint8_t record_type,
+                  Protocol_Version record_version,
+                  uint64_t record_sequence,
+                  const uint8_t* message,
+                  size_t message_len,
                   Connection_Cipher_State* cipherstate,
                   RandomNumberGenerator& rng);
 
