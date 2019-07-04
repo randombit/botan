@@ -14,6 +14,7 @@ compiler:
 env:
   global:
     - CCACHE_MAXSIZE=800M
+    - ANDROID_NDK=android-ndk-r20
 
   matrix:
     - BUILD_MODE="shared"
@@ -27,6 +28,8 @@ env:
     - BUILD_MODE="cross-arm64"
     - BUILD_MODE="cross-mips64"
     - BUILD_MODE="cross-win64"
+    - BUILD_MODE="cross-android-arm32"
+    - BUILD_MODE="cross-android-arm64"
     - BUILD_MODE="gcc4.8"
     - BUILD_MODE="static"
     - BUILD_MODE="mini-shared"
@@ -62,6 +65,7 @@ matrix:
       env: BUILD_MODE="docs"
     - compiler: clang
       env: BUILD_MODE="coverage"
+
     - compiler: clang
       env: BUILD_MODE="fuzzers"
     - compiler: clang
@@ -88,6 +92,18 @@ matrix:
     - os: linux
       compiler: clang
       env: BUILD_MODE="cross-arm64"
+
+   # Android NDK is Linux only
+    - os: osx
+      env: BUILD_MODE="cross-android-arm32"
+    - os: osx
+      env: BUILD_MODE="cross-android-arm64"
+    - os: linux
+      compiler: gcc
+      env: BUILD_MODE="cross-android-arm32"
+    - os: linux
+      compiler: gcc
+      env: BUILD_MODE="cross-android-arm64"
 
 install:
   - ./src/scripts/ci/setup_travis.sh
