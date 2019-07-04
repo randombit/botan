@@ -11,9 +11,13 @@ compiler:
   - clang
   - gcc
 
+services:
+  - docker
+
 env:
   global:
     - CCACHE_MAXSIZE=800M
+    - SDK=21
 
   matrix:
     - BUILD_MODE="shared"
@@ -34,6 +38,7 @@ env:
     - BUILD_MODE="nist"
     - BUILD_MODE="docs"
     - BUILD_MODE="lint"
+    - BUILD_MODE="docker-android"
 
 matrix:
   exclude:
@@ -88,6 +93,9 @@ matrix:
     - os: linux
       compiler: clang
       env: BUILD_MODE="cross-arm64"
+    # No docker build on osx
+    - os: osx
+      env: BUILD_MODE="docker-android"
 
 install:
   - ./src/scripts/ci/setup_travis.sh
