@@ -6,4 +6,4 @@ extraction:
   cpp:
     configure:
       command:
-        - ./configure.py
+        - ./configure.py --build-bogo-shim --build-fuzzers=test --with-zlib --with-bzip2 --with-lzma --with-openssl --with-sqlite3 --no-store-vc-rev
