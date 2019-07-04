@@ -43,6 +43,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             target_os = 'ios'
         elif target == 'cross-win64':
             target_os = 'mingw'
+        elif target in ['cross-android-arm32', 'cross-android-arm64']:
+            target_os = 'android'
 
     make_prefix = []
     test_prefix = []
@@ -141,6 +143,34 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                 flags += ['--cpu=arm64', '--cc-abi-flags=-arch arm64 -stdlib=libc++']
             else:
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
+        elif target_os == 'android':
+
+            ndk = os.getenv('ANDROID_NDK')
+            if ndk is None:
+                raise Exception('Android CI build requires ANDROID_NDK env variable be set')
+
+            api_lvl = int(os.getenv('ANDROID_API_LEVEL', '0'))
+            if api_lvl == 0:
+                # If not set arbitrarily choose API 16 (Android 4.1) for ARMv7 and 28 (Android 9) for AArch64
+                api_lvl = 16 if target == 'cross-android-arm32' else 28
+
+            toolchain_dir = os.path.join(ndk, 'toolchains/llvm/prebuilt/linux-x86_64/bin')
+            test_cmd = None
+
+            if target == 'cross-android-arm32':
+                cc_bin = os.path.join(toolchain_dir, 'armv7a-linux-androideabi%d-clang++' % (api_lvl))
+                flags += ['--cpu=armv7',
+                          '--ar-command=%s' % (os.path.join(toolchain_dir, 'arm-linux-androideabi-ar'))]
+            elif target == 'cross-android-arm64':
+                cc_bin = os.path.join(toolchain_dir, 'aarch64-linux-android%d-clang++' % (api_lvl))
+                flags += ['--cpu=arm64',
+                          '--ar-command=%s' % (os.path.join(toolchain_dir, 'aarch64-linux-android-ar'))]
+
+            if api_lvl < 18:
+                flags += ['--without-os-features=getauxval']
+            if api_lvl >= 28:
+                flags += ['--with-os-features=getentropy']
+
         elif target == 'cross-i386':
             flags += ['--cpu=x86_32']
 
@@ -255,6 +285,11 @@ def run_cmd(cmd, root_dir):
     if len(cmd) > 1 and cmd[0].startswith('indir:'):
         cwd = cmd[0][6:]
         cmd = cmd[1:]
+    while len(cmd) > 1 and cmd[0].startswith('env:') and cmd[0].find('=') > 0:
+        env_key, env_val = cmd[0][4:].split('=')
+        sub_env[env_key] = env_val
+        cmd = cmd[1:]
+
     proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout)
     proc.communicate()
 

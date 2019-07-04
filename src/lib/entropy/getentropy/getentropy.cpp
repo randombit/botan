@@ -7,10 +7,10 @@
 
 #include <botan/internal/getentropy.h>
 
-#if defined(BOTAN_TARGET_OS_IS_MACOS)
-   #include <sys/random.h>
-#else
+#if defined(BOTAN_TARGET_OS_IS_OPENBSD) || defined(BOTAN_TARGET_OS_IS_FREEBSD)
    #include <unistd.h>
+#else
+   #include <sys/random.h>
 #endif
 
 namespace Botan {
