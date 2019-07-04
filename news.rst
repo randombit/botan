@@ -4,6 +4,12 @@ Release Notes
 Version 2.12.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Avoid using __GNUG__ in headers that may be consumed by a C compiler (GH #2013)
+
+* Add a script to help with building on Android (GH #2016 #513)
+
+* Add Android build to Travis CI (GH #2017)
+
 Version 2.11.0, 2019-07-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
