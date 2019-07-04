@@ -17,13 +17,15 @@ services:
 env:
   global:
     - CCACHE_MAXSIZE=800M
-    - SDK=21
+    - ANDROID_SDK_VER=21
 
   matrix:
     - BUILD_MODE="shared"
     - BUILD_MODE="coverage"
     - BUILD_MODE="fuzzers"
     - BUILD_MODE="valgrind"
+    - ANDROID_ARCH=arm ANDROID_TOOLCHAIN_SUF=eabi BUILD_MODE="docker-android"
+    - ANDROID_ARCH=arm64 BUILD_MODE="docker-android"
     - BUILD_MODE="cross-i386"
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
@@ -38,7 +40,6 @@ env:
     - BUILD_MODE="nist"
     - BUILD_MODE="docs"
     - BUILD_MODE="lint"
-    - BUILD_MODE="docker-android"
 
 matrix:
   exclude:
@@ -95,6 +96,9 @@ matrix:
       env: BUILD_MODE="cross-arm64"
     # No docker build on osx
     - os: osx
+      env: BUILD_MODE="docker-android"
+    # Nor for gcc's
+    - compiler: gcc
       env: BUILD_MODE="docker-android"
 
 install:
