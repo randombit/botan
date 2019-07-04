@@ -11,21 +11,15 @@ compiler:
   - clang
   - gcc
 
-services:
-  - docker
-
 env:
   global:
     - CCACHE_MAXSIZE=800M
-    - ANDROID_SDK_VER=21
 
   matrix:
     - BUILD_MODE="shared"
     - BUILD_MODE="coverage"
     - BUILD_MODE="fuzzers"
     - BUILD_MODE="valgrind"
-    - BUILD_MODE="android-arm7"
-    - BUILD_MODE="android-aarch64"
     - BUILD_MODE="cross-i386"
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
@@ -94,18 +88,6 @@ matrix:
     - os: linux
       compiler: clang
       env: BUILD_MODE="cross-arm64"
-    # No docker build on osx
-    - os: osx
-      env: BUILD_MODE="android-arm7"
-    - os: osx
-      env: BUILD_MODE="android-aarch64"
-    # Nor for gcc's
-    - os: linux
-      compiler: gcc
-      env: BUILD_MODE="android-arm7"
-    - os: linux
-      compiler: gcc
-      env: BUILD_MODE="android-aarch64"
 
 install:
   - ./src/scripts/ci/setup_travis.sh
