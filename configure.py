@@ -652,21 +652,27 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
 
     options.disable_intrinsics = parse_multiple_enable(options.disable_intrinsics)
 
-    # Take some values from environment, if not set on command line
-
-    if options.ar_command is None:
-        options.ar_command = os.getenv('AR')
-    if options.ar_options is None:
-        options.ar_options = os.getenv('AR_OPTIONS')
-    if options.compiler_binary is None:
-        options.compiler_binary = os.getenv('CXX')
-    if options.cxxflags is None:
-        options.cxxflags = os.getenv('CXXFLAGS')
-    if options.ldflags is None:
-        options.ldflags = os.getenv('LDFLAGS')
-
     return options
 
+def take_options_from_env(options):
+    # Take some values from environment, if not set on command line
+
+    def update_from_env(val, var, name):
+        if val is None:
+            val = os.getenv(var)
+            if val is not None:
+                logging.info('Implicit --%s=%s due to environment variable %s', name, val, var)
+
+        return val
+
+    if os.getenv('CXX') and options.compiler_binary is None and options.compiler is not None:
+        logging.info('CXX environment variable is set which will override compiler path')
+
+    options.ar_command = update_from_env(options.ar_command, 'AR', 'ar-command')
+    options.ar_options = update_from_env(options.ar_options, 'AR_OPTIONS', 'ar-options')
+    options.compiler_binary = update_from_env(options.compiler_binary, 'CXX', 'cc-bin')
+    options.cxxflags = update_from_env(options.cxxflags, 'CXXFLAGS', 'cxxflags')
+    options.ldflags = update_from_env(options.ldflags, 'LDFLAGS', 'ldflags')
 
 class LexResult(object):
     pass
@@ -3258,11 +3264,6 @@ def main(argv):
 
     setup_logging(options)
 
-    if not options.list_modules and not options.list_os_features:
-        logging.info('Configuring to build Botan %s (revision %s)' % (
-            Version.as_string(), Version.vc_rev()))
-        logging.info('Running under %s', sys.version.replace('\n', ''))
-
     source_paths = SourcePaths(os.path.dirname(argv[0]))
 
     info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
@@ -3293,6 +3294,11 @@ def main(argv):
         policy.cross_check(info_modules)
 
     logging.info('%s invoked with options "%s"', argv[0], ' '.join(argv[1:]))
+    logging.info('Configuring to build Botan %s (revision %s)' % (
+        Version.as_string(), Version.vc_rev()))
+    logging.info('Running under %s', sys.version.replace('\n', ''))
+
+    take_options_from_env(options)
 
     logging.info('Autodetected platform information: OS="%s" machine="%s" proc="%s"',
                  platform.system(), platform.machine(), platform.processor())
