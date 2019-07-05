@@ -230,27 +230,24 @@ void GHASH::add_final_block(secure_vector<uint8_t>& hash,
    ghash_update(hash, final_block, GCM_BS);
    }
 
-secure_vector<uint8_t> GHASH::final()
+void GHASH::final(uint8_t mac[], size_t mac_len)
    {
+   BOTAN_ARG_CHECK(mac_len > 0 && mac_len <= 16, "GHASH output length");
    add_final_block(m_ghash, m_ad_len, m_text_len);
 
-   secure_vector<uint8_t> mac;
-   mac.swap(m_ghash);
+   for(size_t i = 0; i != mac_len; ++i)
+      mac[i] = m_ghash[i] ^ m_nonce[i];
 
-   mac ^= m_nonce;
+   m_ghash.clear();
    m_text_len = 0;
-   return mac;
    }
 
-secure_vector<uint8_t> GHASH::nonce_hash(const uint8_t nonce[], size_t nonce_len)
+void GHASH::nonce_hash(secure_vector<uint8_t>& y0, const uint8_t nonce[], size_t nonce_len)
    {
    BOTAN_ASSERT(m_ghash.size() == 0, "nonce_hash called during wrong time");
-   secure_vector<uint8_t> y0(GCM_BS);
 
    ghash_update(y0, nonce, nonce_len);
    add_final_block(y0, 0, nonce_len);
-
-   return y0;
    }
 
 void GHASH::clear()

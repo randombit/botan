@@ -95,24 +95,25 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   secure_vector<uint8_t> y0(GCM_BS);
+   m_y0.resize(GCM_BS);
 
    if(nonce_len == 12)
       {
-      copy_mem(y0.data(), nonce, nonce_len);
-      y0[15] = 1;
+      copy_mem(m_y0.data(), nonce, nonce_len);
+      m_y0[15] = 1;
       }
    else
       {
-      y0 = m_ghash->nonce_hash(nonce, nonce_len);
+      m_ghash->nonce_hash(m_y0, nonce, nonce_len);
       }
 
-   m_ctr->set_iv(y0.data(), y0.size());
+   m_ctr->set_iv(m_y0.data(), m_y0.size());
 
-   zeroise(y0);
-   m_ctr->encipher(y0);
+   zeroise(m_y0);
+   m_ctr->encipher(m_y0);
 
-   m_ghash->start(y0.data(), y0.size());
+   m_ghash->start(m_y0.data(), m_y0.size());
+   m_y0.clear();
    }
 
 size_t GCM_Encryption::process(uint8_t buf[], size_t sz)
@@ -131,8 +132,10 @@ void GCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    m_ctr->cipher(buf, buf, sz);
    m_ghash->update(buf, sz);
-   auto mac = m_ghash->final();
-   buffer += std::make_pair(mac.data(), tag_size());
+
+   uint8_t mac[16] = { 0 };
+   m_ghash->final(mac, tag_size());
+   buffer += std::make_pair(mac, tag_size());
    }
 
 size_t GCM_Decryption::process(uint8_t buf[], size_t sz)
@@ -161,11 +164,12 @@ void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
       m_ctr->cipher(buf, buf, remaining);
       }
 
-   auto mac = m_ghash->final();
+   uint8_t mac[16] = { 0 };
+   m_ghash->final(mac, tag_size());
 
    const uint8_t* included_tag = &buffer[remaining+offset];
 
-   if(!constant_time_compare(mac.data(), included_tag, tag_size()))
+   if(!constant_time_compare(mac, included_tag, tag_size()))
       throw Invalid_Authentication_Tag("GCM tag check failed");
 
    buffer.resize(offset + remaining);

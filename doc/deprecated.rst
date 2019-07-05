@@ -33,7 +33,7 @@ in the source.
   ``dyn_load.h``, ``atomic.h``, ``blinding.h``, ``gf2m_small_m.h``,
   ``locking_allocator.h``, ``polyn_gf2m.h`,, ``parsing.h``,
   ``rfc6979.h``, ``divide.h``, ``charset.h``, ``secqueue.h``,
-  ``buf_filt.h``, ``keypair.h``, ``http_util.h``, ``scan_name.h``
+  ``keypair.h``, ``http_util.h``, ``scan_name.h``, ``ghash.h``
 
 - Using a default output length for "SHAKE-128" and "SHAKE-256". Instead,
   always specify the desired output length.
