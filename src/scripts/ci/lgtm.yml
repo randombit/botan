@@ -16,7 +16,6 @@ queries:
  - include: cpp/uninitialized-local
  - include: cpp/static-buffer-overflow
  - include: cpp/suspicious-sizeof
- - include: cpp/suspicious-pointer-scaling
  - include: cpp/suspicious-pointer-scaling-void
  - include: cpp/declaration-hides-variable
  - include: cpp/empty-if
