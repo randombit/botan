@@ -60,7 +60,7 @@ we might see lines like::
    INFO: Skipping (incompatible OS): darwin_secrandom getentropy win32_stats
    INFO: Skipping (incompatible compiler): aes_armv8 pmull sha1_armv8 sha2_32_armv8
    INFO: Skipping (no enabled compression schemes): compression
-   INFO: Skipping (requires external dependency): bearssl boost bzip2 lzma openssl sqlite3 tpm zlib
+   INFO: Skipping (requires external dependency): boost bzip2 lzma openssl sqlite3 tpm zlib
 
 The ones that are skipped because they are require an external
 dependency have to be explicitly asked for, because they rely on third
