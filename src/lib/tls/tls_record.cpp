@@ -316,9 +316,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
    {
    if(readbuf.size() < TLS_HEADER_SIZE) // header incomplete?
       {
-      if(size_t needed = fill_buffer_to(readbuf,
-                                        input, input_len, consumed,
-                                        TLS_HEADER_SIZE))
+      if(size_t needed = fill_buffer_to(readbuf, input, input_len, consumed, TLS_HEADER_SIZE))
          {
          return Record_Header(needed);
          }
@@ -343,9 +341,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       throw TLS_Exception(Alert::DECODE_ERROR,
                           "Received a completely empty record");
 
-   if(size_t needed = fill_buffer_to(readbuf,
-                                     input, input_len, consumed,
-                                     TLS_HEADER_SIZE + record_size))
+   if(size_t needed = fill_buffer_to(readbuf, input, input_len, consumed, TLS_HEADER_SIZE + record_size))
       {
       return Record_Header(needed);
       }
@@ -370,8 +366,6 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       epoch = 0;
       }
 
-   uint8_t* record_contents = &readbuf[TLS_HEADER_SIZE];
-
    if(epoch == 0) // Unencrypted initial handshake
       {
       recbuf.assign(&readbuf[TLS_HEADER_SIZE], &readbuf[TLS_HEADER_SIZE + record_size]);
@@ -385,7 +379,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
    BOTAN_ASSERT(cs, "Have cipherstate for this epoch");
 
    decrypt_record(recbuf,
-                  record_contents,
+                  &readbuf[TLS_HEADER_SIZE],
                   record_size,
                   sequence,
                   version,
@@ -459,8 +453,6 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
       return Record_Header(0);
       }
 
-   uint8_t* record_contents = &readbuf[DTLS_HEADER_SIZE];
-
    if(epoch == 0) // Unencrypted initial handshake
       {
       recbuf.assign(&readbuf[DTLS_HEADER_SIZE], &readbuf[DTLS_HEADER_SIZE + record_size]);
@@ -478,7 +470,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
       BOTAN_ASSERT(cs, "Have cipherstate for this epoch");
 
       decrypt_record(recbuf,
-                     record_contents,
+                     &readbuf[DTLS_HEADER_SIZE],
                      record_size,
                      sequence,
                      version,
