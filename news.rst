@@ -6,9 +6,11 @@ Version 2.12.0, Not Yet Released
 
 * The BearSSL provider has been removed (GH #2020)
 
+* Add support for 64-bit version of RDRAND, doubling performance on x86-64 (GH #934 #2022)
+
 * Cleanups in TLS record layer (GH #2021)
 
-* Avoid using __GNUG__ in headers that may be consumed by a C compiler (GH #2013)
+* Avoid using ``__GNUG__`` in headers that may be consumed by a C compiler (GH #2013)
 
 * Add a script to help with building on Android (GH #2016 #513)
 
