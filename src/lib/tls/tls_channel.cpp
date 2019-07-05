@@ -305,21 +305,19 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
       {
       while(!is_closed() && input_size)
          {
-         secure_vector<uint8_t> record_data;
-         uint64_t record_sequence = 0;
-         Record_Type record_type = NO_RECORD;
-         Protocol_Version record_version;
-
          size_t consumed = 0;
 
-         Record_Raw_Input raw_input(input, input_size, consumed, m_is_datagram);
-         Record record(record_data, &record_sequence, &record_version, &record_type);
-         const size_t needed =
-            read_record(m_readbuf,
-                        raw_input,
-                        record,
+         const Record_Header record =
+            read_record(m_is_datagram,
+                        m_readbuf,
+                        input,
+                        input_size,
+                        consumed,
+                        m_record_buf,
                         m_sequence_numbers.get(),
                         [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); });
+
+         const size_t needed = record.needed();
 
          BOTAN_ASSERT(consumed > 0, "Got to eat something");
 
@@ -332,20 +330,20 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
          BOTAN_ASSERT(input_size == 0 || needed == 0,
                       "Got a full record or consumed all input");
 
-         // Ignore invalid records in DTLS
-         if(m_is_datagram && *record.get_type() == NO_RECORD)
-            return 0;
-
          if(input_size == 0 && needed != 0)
             return needed; // need more data to complete record
 
-         if(record_data.size() > MAX_PLAINTEXT_SIZE)
+         // Ignore invalid records in DTLS
+         if(m_is_datagram && record.type() == NO_RECORD)
+            return 0;
+
+         if(m_record_buf.size() > MAX_PLAINTEXT_SIZE)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "TLS plaintext record is larger than allowed maximum");
 
          if(auto pending = pending_state())
             {
-            if(pending->server_hello() != nullptr && record_version != pending->version())
+            if(pending->server_hello() != nullptr && record.version() != pending->version())
                {
                throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                    "Received unexpected record version");
@@ -353,7 +351,7 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
             }
          else if(auto active = active_state())
             {
-            if(record_version != active->version())
+            if(record.version() != active->version())
                {
                throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                    "Received unexpected record version");
@@ -362,31 +360,31 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
          else
             {
             // For initial records just check for basic sanity
-            if(record_version.major_version() != 3 &&
-               record_version.major_version() != 0xFE)
+            if(record.version().major_version() != 3 &&
+               record.version().major_version() != 0xFE)
                {
                throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                    "Received unexpected record version in initial record");
                }
             }
 
-         if(record_type == HANDSHAKE || record_type == CHANGE_CIPHER_SPEC)
+         if(record.type() == HANDSHAKE || record.type() == CHANGE_CIPHER_SPEC)
             {
-            process_handshake_ccs(record_data, record_sequence, record_type, record_version);
+            process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version());
             }
-         else if(record_type == APPLICATION_DATA)
+         else if(record.type() == APPLICATION_DATA)
             {
             if(pending_state() != nullptr)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Can't interleave application and handshake data");
-            process_application_data(record_sequence, record_data);
+            process_application_data(record.sequence(), m_record_buf);
             }
-         else if(record_type == ALERT)
+         else if(record.type() == ALERT)
             {
-            process_alert(record_data);
+            process_alert(m_record_buf);
             }
-         else if(record_type != NO_RECORD)
+         else if(record.type() != NO_RECORD)
             throw Unexpected_Message("Unexpected record type " +
-                                     std::to_string(record_type) +
+                                     std::to_string(record.type()) +
                                      " from counterparty");
          }
 
@@ -520,12 +518,12 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch
    const Protocol_Version record_version =
       (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
 
-   Record_Message record_message(record_type, 0, input, length);
-
    TLS::write_record(m_writebuf,
-                     record_message,
+                     record_type,
                      record_version,
                      sequence_numbers().next_write_sequence(epoch),
+                     input,
+                     length,
                      cipher_state,
                      m_rng);
 

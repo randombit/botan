@@ -303,6 +303,7 @@ class BOTAN_PUBLIC_API(2,0) Channel
       /* I/O buffers */
       secure_vector<uint8_t> m_writebuf;
       secure_vector<uint8_t> m_readbuf;
+      secure_vector<uint8_t> m_record_buf;
    };
 
 }
