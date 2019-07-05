@@ -200,21 +200,21 @@ for an iOS device.
 
 To cross compile for armv7, configure and make with::
 
-   $ ./configure.py --os=ios --prefix="iphone-32" --cpu=armv7 --cc=clang \
-                    --cc-abi-flags="-arch armv7"
-   xcrun --sdk iphoneos make install
+  $ ./configure.py --os=ios --prefix="iphone-32" --cpu=armv7 --cc=clang \
+                   --cc-abi-flags="-arch armv7"
+  $ xcrun --sdk iphoneos make install
 
 To cross compile for armv8-a, configure and make with::
 
-   $ ./configure.py --os=ios --prefix="iphone-64" --cpu=armv8-a --cc=clang \
-                    --cc-abi-flags="-arch arm64"
-   xcrun --sdk iphoneos make install
+  $ ./configure.py --os=ios --prefix="iphone-64" --cpu=armv8-a --cc=clang \
+                   --cc-abi-flags="-arch arm64"
+  $ xcrun --sdk iphoneos make install
 
 To compile for the iPhone Simulator, configure and make with::
 
-   $ ./configure.py --os=ios --prefix="iphone-simulator" --cpu=x86_64 --cc=clang \
-                    --cc-abi-flags="-arch x86_64"
-   xcrun --sdk iphonesimulator make install
+  $ ./configure.py --os=ios --prefix="iphone-simulator" --cpu=x86_64 --cc=clang \
+                   --cc-abi-flags="-arch x86_64"
+  $ xcrun --sdk iphonesimulator make install
 
 Now create the universal binary and confirm the library is compiled
 for all three architectures::
@@ -231,8 +231,22 @@ The resulting static library can be linked to your app in Xcode.
 For Android
 ---------------------
 
-Instructions for building the library on Android can be found
-`in this blog post <https://www.danielseither.de/blog/2013/03/building-the-botan-library-for-android/>`_.
+Modern versions of Android NDK use Clang and support C++11. Simply
+configure using the appropriate NDK compiler::
+
+  $ export CXX=/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++
+  $ ./configure.py --os=android --cc=clang --cpu=arm64
+
+Docker
+^^^^^^^^^^^
+
+To build android version, there is the possibility to use
+the docker way::
+
+  sudo ANDROID_SDK_VER=21 ANDROID_ARCH=arm64 src/scripts/docker-android.sh
+
+This will produce the docker-builds/android folder containing
+each architecture compiled.
 
 Emscripten (WebAssembly)
 ---------------------------
@@ -249,17 +263,6 @@ executed on a browser, use::
 
   em++ -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=0 -s WASM=1 \
      --preload-file src/tests/data botan-test.bc -o botan-test.html
-
-Docker
---------
-
-To build android version, there is the possibility to use
-the docker way::
-
-  sudo ANDROID_SDK_VER=21 ANDROID_ARCH=arm64 src/scripts/docker-android.sh
-
-This will produce the docker-builds/android folder containing
-each architecture compiled.
 
 Supporting Older Distros
 --------------------------
