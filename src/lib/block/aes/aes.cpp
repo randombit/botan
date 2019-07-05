@@ -430,6 +430,20 @@ size_t aes_parallelism()
       }
 #endif
 
+#if defined(BOTAN_HAS_AES_POWER8)
+   if(CPUID::has_ppc_crypto())
+      {
+      return 4;
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      return 4;
+      }
+#endif
+
    return 1;
    }
 
