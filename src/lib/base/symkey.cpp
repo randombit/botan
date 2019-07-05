@@ -26,8 +26,11 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 */
 OctetString::OctetString(const std::string& hex_string)
    {
-   m_data.resize(1 + hex_string.length() / 2);
-   m_data.resize(hex_decode(m_data.data(), hex_string));
+   if(!hex_string.empty())
+      {
+      m_data.resize(1 + hex_string.length() / 2);
+      m_data.resize(hex_decode(m_data.data(), hex_string));
+      }
    }
 
 /*
