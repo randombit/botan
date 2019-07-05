@@ -19,9 +19,7 @@
 
 namespace Botan {
 
-const word MP_WORD_MASK = ~static_cast<word>(0);
-const word MP_WORD_TOP_BIT = static_cast<word>(1) << (8*sizeof(word) - 1);
-const word MP_WORD_MAX = MP_WORD_MASK;
+const word MP_WORD_MAX = ~static_cast<word>(0);
 
 /*
 * If cond == 0, does nothing.
@@ -731,7 +729,7 @@ inline word bigint_divop(word n1, word n0, word d)
 
    for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
       {
-      word high_top_bit = (high & MP_WORD_TOP_BIT);
+      const word high_top_bit = high >> (BOTAN_MP_WORD_BITS-1);
 
       high <<= 1;
       high |= (n0 >> (BOTAN_MP_WORD_BITS-1-i)) & 1;
