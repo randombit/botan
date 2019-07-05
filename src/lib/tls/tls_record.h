@@ -77,32 +77,50 @@ class Connection_Cipher_State final
       size_t m_nonce_bytes_from_record;
    };
 
-class Record final
+class Record_Header final
    {
    public:
-      Record(secure_vector<uint8_t>& data,
-             uint64_t* sequence,
-             Protocol_Version* protocol_version,
-             Record_Type* type)
-         : m_data(data), m_sequence(sequence), m_protocol_version(protocol_version),
-           m_type(type), m_size(data.size()) {}
+      Record_Header(uint64_t sequence,
+                    Protocol_Version version,
+                    Record_Type type) :
+         m_needed(0),
+         m_sequence(sequence),
+         m_version(version),
+         m_type(type)
+         {}
 
-      secure_vector<uint8_t>& get_data() { return m_data; }
+      Record_Header(size_t needed) :
+         m_needed(needed),
+         m_sequence(0),
+         m_version(Protocol_Version()),
+         m_type(NO_RECORD)
+         {}
 
-      Protocol_Version* get_protocol_version() { return m_protocol_version; }
+      size_t needed() const { return m_needed; }
 
-      uint64_t* get_sequence() { return m_sequence; }
+      Protocol_Version version() const
+         {
+         BOTAN_ASSERT_NOMSG(m_needed == 0);
+         return m_version;
+         }
 
-      Record_Type* get_type() { return m_type; }
+      uint64_t sequence() const
+         {
+         BOTAN_ASSERT_NOMSG(m_needed == 0);
+         return m_sequence;
+         }
 
-      size_t& get_size() { return m_size; }
+      Record_Type type() const
+         {
+         BOTAN_ASSERT_NOMSG(m_needed == 0);
+         return m_type;
+         }
 
    private:
-      secure_vector<uint8_t>& m_data;
-      uint64_t* m_sequence;
-      Protocol_Version* m_protocol_version;
-      Record_Type* m_type;
-      size_t m_size;
+      size_t m_needed;
+      uint64_t m_sequence;
+      Protocol_Version m_version;
+      Record_Type m_type;
    };
 
 /**
@@ -132,14 +150,14 @@ typedef std::function<std::shared_ptr<Connection_Cipher_State> (uint16_t)> get_c
 * Decode a TLS record
 * @return zero if full message, else number of bytes still needed
 */
-size_t read_record(bool is_datagram,
-                   secure_vector<uint8_t>& read_buffer,
-                   const uint8_t input[],
-                   size_t input_len,
-                   size_t& consumed,
-                   Record& rec,
-                   Connection_Sequence_Numbers* sequence_numbers,
-                   get_cipherstate_fn get_cipherstate);
+Record_Header read_record(bool is_datagram,
+                          secure_vector<uint8_t>& read_buffer,
+                          const uint8_t input[],
+                          size_t input_len,
+                          size_t& consumed,
+                          secure_vector<uint8_t>& record_buf,
+                          Connection_Sequence_Numbers* sequence_numbers,
+                          get_cipherstate_fn get_cipherstate);
 
 }
 

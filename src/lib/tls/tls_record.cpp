@@ -302,37 +302,38 @@ void decrypt_record(secure_vector<uint8_t>& output,
 
    aead.start(nonce);
 
-   const size_t offset = output.size();
-   output += std::make_pair(msg, msg_length);
-   aead.finish(output, offset);
+   output.assign(msg, msg + msg_length);
+   aead.finish(output, 0);
    }
 
-size_t read_tls_record(secure_vector<uint8_t>& readbuf,
-                       const uint8_t input[],
-                       size_t input_len,
-                       size_t& consumed,
-                       Record& rec,
-                       Connection_Sequence_Numbers* sequence_numbers,
-                       get_cipherstate_fn get_cipherstate)
+Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
+                              const uint8_t input[],
+                              size_t input_len,
+                              size_t& consumed,
+                              secure_vector<uint8_t>& recbuf,
+                              Connection_Sequence_Numbers* sequence_numbers,
+                              get_cipherstate_fn get_cipherstate)
    {
    if(readbuf.size() < TLS_HEADER_SIZE) // header incomplete?
       {
       if(size_t needed = fill_buffer_to(readbuf,
                                         input, input_len, consumed,
                                         TLS_HEADER_SIZE))
-         return needed;
+         {
+         return Record_Header(needed);
+         }
 
       BOTAN_ASSERT_EQUAL(readbuf.size(), TLS_HEADER_SIZE, "Have an entire header");
       }
 
-   *rec.get_protocol_version() = Protocol_Version(readbuf[1], readbuf[2]);
+   const Protocol_Version version(readbuf[1], readbuf[2]);
 
-   if(rec.get_protocol_version()->is_datagram_protocol())
+   if(version.is_datagram_protocol())
       throw TLS_Exception(Alert::PROTOCOL_VERSION,
                           "Expected TLS but got a record with DTLS version");
 
    const size_t record_size = make_uint16(readbuf[TLS_HEADER_SIZE-2],
-                                         readbuf[TLS_HEADER_SIZE-1]);
+                                          readbuf[TLS_HEADER_SIZE-1]);
 
    if(record_size > MAX_CIPHERTEXT_SIZE)
       throw TLS_Exception(Alert::RECORD_OVERFLOW,
@@ -345,25 +346,27 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
    if(size_t needed = fill_buffer_to(readbuf,
                                      input, input_len, consumed,
                                      TLS_HEADER_SIZE + record_size))
-      return needed;
+      {
+      return Record_Header(needed);
+      }
 
    BOTAN_ASSERT_EQUAL(static_cast<size_t>(TLS_HEADER_SIZE) + record_size,
                       readbuf.size(),
                       "Have the full record");
 
-   *rec.get_type() = static_cast<Record_Type>(readbuf[0]);
+   const Record_Type type = static_cast<Record_Type>(readbuf[0]);
 
    uint16_t epoch = 0;
 
+   uint64_t sequence = 0;
    if(sequence_numbers)
       {
-      *rec.get_sequence() = sequence_numbers->next_read_sequence();
+      sequence = sequence_numbers->next_read_sequence();
       epoch = sequence_numbers->current_read_epoch();
       }
    else
       {
       // server initial handshake case
-      *rec.get_sequence() = 0;
       epoch = 0;
       }
 
@@ -371,9 +374,9 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
 
    if(epoch == 0) // Unencrypted initial handshake
       {
-      rec.get_data().assign(readbuf.begin() + TLS_HEADER_SIZE, readbuf.begin() + TLS_HEADER_SIZE + record_size);
+      recbuf.assign(&readbuf[TLS_HEADER_SIZE], &readbuf[TLS_HEADER_SIZE + record_size]);
       readbuf.clear();
-      return 0; // got a full record
+      return Record_Header(sequence, version, type);
       }
 
    // Otherwise, decrypt, check MAC, return plaintext
@@ -381,47 +384,46 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
 
    BOTAN_ASSERT(cs, "Have cipherstate for this epoch");
 
-   decrypt_record(rec.get_data(),
+   decrypt_record(recbuf,
                   record_contents,
                   record_size,
-                  *rec.get_sequence(),
-                  *rec.get_protocol_version(),
-                  *rec.get_type(),
+                  sequence,
+                  version,
+                  type,
                   *cs);
 
    if(sequence_numbers)
-      sequence_numbers->read_accept(*rec.get_sequence());
+      sequence_numbers->read_accept(sequence);
 
    readbuf.clear();
-   return 0;
+   return Record_Header(sequence, version, type);
    }
 
-size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
-                        const uint8_t input[],
-                        size_t input_len,
-                        size_t& consumed,
-                        Record& rec,
-                        Connection_Sequence_Numbers* sequence_numbers,
-                        get_cipherstate_fn get_cipherstate)
+Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
+                               const uint8_t input[],
+                               size_t input_len,
+                               size_t& consumed,
+                               secure_vector<uint8_t>& recbuf,
+                               Connection_Sequence_Numbers* sequence_numbers,
+                               get_cipherstate_fn get_cipherstate)
    {
    if(readbuf.size() < DTLS_HEADER_SIZE) // header incomplete?
       {
       if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE))
          {
          readbuf.clear();
-         return 0;
+         return Record_Header(0);
          }
 
       BOTAN_ASSERT_EQUAL(readbuf.size(), DTLS_HEADER_SIZE, "Have an entire header");
       }
 
-   *rec.get_protocol_version() = Protocol_Version(readbuf[1], readbuf[2]);
+   const Protocol_Version version(readbuf[1], readbuf[2]);
 
-   if(rec.get_protocol_version()->is_datagram_protocol() == false)
+   if(version.is_datagram_protocol() == false)
       {
       readbuf.clear();
-      *rec.get_type() = NO_RECORD;
-      return 0;
+      return Record_Header(0);
       }
 
    const size_t record_size = make_uint16(readbuf[DTLS_HEADER_SIZE-2],
@@ -431,44 +433,41 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
       {
       // Too large to be valid, ignore it
       readbuf.clear();
-      *rec.get_type() = NO_RECORD;
-      return 0;
+      return Record_Header(0);
       }
 
    if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE + record_size))
       {
       // Truncated packet?
       readbuf.clear();
-      *rec.get_type() = NO_RECORD;
-      return 0;
+      return Record_Header(0);
       }
 
    BOTAN_ASSERT_EQUAL(static_cast<size_t>(DTLS_HEADER_SIZE) + record_size, readbuf.size(),
                       "Have the full record");
 
-   *rec.get_type() = static_cast<Record_Type>(readbuf[0]);
+   const Record_Type type = static_cast<Record_Type>(readbuf[0]);
 
    uint16_t epoch = 0;
 
-   *rec.get_sequence() = load_be<uint64_t>(&readbuf[3], 0);
-   epoch = (*rec.get_sequence() >> 48);
+   const uint64_t sequence = load_be<uint64_t>(&readbuf[3], 0);
+   epoch = (sequence >> 48);
 
-   if(sequence_numbers && sequence_numbers->already_seen(*rec.get_sequence()))
+   if(sequence_numbers && sequence_numbers->already_seen(sequence))
       {
       readbuf.clear();
-      *rec.get_type() = NO_RECORD;
-      return 0;
+      return Record_Header(0);
       }
 
    uint8_t* record_contents = &readbuf[DTLS_HEADER_SIZE];
 
    if(epoch == 0) // Unencrypted initial handshake
       {
-      rec.get_data().assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
+      recbuf.assign(&readbuf[DTLS_HEADER_SIZE], &readbuf[DTLS_HEADER_SIZE + record_size]);
       readbuf.clear();
       if(sequence_numbers)
-         sequence_numbers->read_accept(*rec.get_sequence());
-      return 0; // got a full record
+         sequence_numbers->read_accept(sequence);
+      return Record_Header(sequence, version, type);
       }
 
    try
@@ -478,45 +477,44 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
 
       BOTAN_ASSERT(cs, "Have cipherstate for this epoch");
 
-      decrypt_record(rec.get_data(),
+      decrypt_record(recbuf,
                      record_contents,
                      record_size,
-                     *rec.get_sequence(),
-                     *rec.get_protocol_version(),
-                     *rec.get_type(),
+                     sequence,
+                     version,
+                     type,
                      *cs);
       }
    catch(std::exception&)
       {
       readbuf.clear();
-      *rec.get_type() = NO_RECORD;
-      return 0;
+      return Record_Header(0);
       }
 
    if(sequence_numbers)
-      sequence_numbers->read_accept(*rec.get_sequence());
+      sequence_numbers->read_accept(sequence);
 
    readbuf.clear();
-   return 0;
+   return Record_Header(sequence, version, type);
    }
 
 }
 
-size_t read_record(bool is_datagram,
-                   secure_vector<uint8_t>& readbuf,
-                   const uint8_t input[],
-                   size_t input_len,
-                   size_t& consumed,
-                   Record& rec,
-                   Connection_Sequence_Numbers* sequence_numbers,
-                   get_cipherstate_fn get_cipherstate)
+Record_Header read_record(bool is_datagram,
+                          secure_vector<uint8_t>& readbuf,
+                          const uint8_t input[],
+                          size_t input_len,
+                          size_t& consumed,
+                          secure_vector<uint8_t>& recbuf,
+                          Connection_Sequence_Numbers* sequence_numbers,
+                          get_cipherstate_fn get_cipherstate)
    {
    if(is_datagram)
       return read_dtls_record(readbuf, input, input_len, consumed,
-                              rec, sequence_numbers, get_cipherstate);
+                              recbuf, sequence_numbers, get_cipherstate);
    else
       return read_tls_record(readbuf, input, input_len, consumed,
-                             rec, sequence_numbers, get_cipherstate);
+                             recbuf, sequence_numbers, get_cipherstate);
    }
 
 }
