@@ -24,7 +24,6 @@ def get_module_list(configure_py):
         raise Exception("Running configure.py --list-modules failed")
 
     modules = [s.decode('ascii') for s in stdout.split()]
-    modules.remove('bearssl') # can't test
     modules.remove('tpm') # can't test
     modules.remove('base') # can't remove
     return modules

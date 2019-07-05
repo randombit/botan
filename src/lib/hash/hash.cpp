@@ -93,10 +93,6 @@
   #include <botan/blake2b.h>
 #endif
 
-#if defined(BOTAN_HAS_BEARSSL)
-  #include <botan/internal/bearssl.h>
-#endif
-
 #if defined(BOTAN_HAS_OPENSSL)
   #include <botan/internal/openssl.h>
 #endif
@@ -126,17 +122,6 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(provider.empty() || provider == "openssl")
       {
       if(auto hash = make_openssl_hash(algo_spec))
-         return hash;
-
-      if(!provider.empty())
-         return nullptr;
-      }
-#endif
-
-#if defined(BOTAN_HAS_BEARSSL)
-   if(provider.empty() || provider == "bearssl")
-      {
-      if(auto hash = make_bearssl_hash(algo_spec))
          return hash;
 
       if(!provider.empty())
@@ -368,7 +353,7 @@ HashFunction::create_or_throw(const std::string& algo,
 
 std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
    {
-   return probe_providers_of<HashFunction>(algo_spec, {"base", "bearssl", "openssl", "commoncrypto"});
+   return probe_providers_of<HashFunction>(algo_spec, {"base", "openssl", "commoncrypto"});
    }
 
 }

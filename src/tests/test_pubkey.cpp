@@ -93,7 +93,7 @@ std::string PK_Test::choose_padding(const VarMap& vars,
 
 std::vector<std::string> PK_Test::possible_providers(const std::string& /*params*/)
    {
-   return Test::provider_filter({ "base", "commoncrypto", "bearssl", "openssl", "tpm" });
+   return Test::provider_filter({ "base", "commoncrypto", "openssl", "tpm" });
    }
 
 Test::Result
