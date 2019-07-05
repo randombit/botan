@@ -368,7 +368,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
 
    if(epoch == 0) // Unencrypted initial handshake
       {
-      recbuf.assign(&readbuf[TLS_HEADER_SIZE], &readbuf[TLS_HEADER_SIZE + record_size]);
+      recbuf.assign(readbuf.begin() + TLS_HEADER_SIZE, readbuf.begin() + TLS_HEADER_SIZE + record_size);
       readbuf.clear();
       return Record_Header(sequence, version, type);
       }
@@ -455,7 +455,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
 
    if(epoch == 0) // Unencrypted initial handshake
       {
-      recbuf.assign(&readbuf[DTLS_HEADER_SIZE], &readbuf[DTLS_HEADER_SIZE + record_size]);
+      recbuf.assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
       readbuf.clear();
       if(sequence_numbers)
          sequence_numbers->read_accept(sequence);
