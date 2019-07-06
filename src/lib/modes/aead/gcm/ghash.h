@@ -22,7 +22,15 @@ class BOTAN_PUBLIC_API(2,0) GHASH final : public SymmetricAlgorithm
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len);
 
-      secure_vector<uint8_t> nonce_hash(const uint8_t nonce[], size_t len);
+      secure_vector<uint8_t> BOTAN_DEPRECATED("Use other impl")
+         nonce_hash(const uint8_t nonce[], size_t nonce_len)
+         {
+         secure_vector<uint8_t> y0(GCM_BS);
+         nonce_hash(y0, nonce, nonce_len);
+         return y0;
+         }
+
+      void nonce_hash(secure_vector<uint8_t>& y0, const uint8_t nonce[], size_t len);
 
       void start(const uint8_t nonce[], size_t len);
 
@@ -36,7 +44,14 @@ class BOTAN_PUBLIC_API(2,0) GHASH final : public SymmetricAlgorithm
       */
       void update_associated_data(const uint8_t ad[], size_t len);
 
-      secure_vector<uint8_t> final();
+      secure_vector<uint8_t> BOTAN_DEPRECATED("Use version taking output params") final()
+         {
+         secure_vector<uint8_t> mac(GCM_BS);
+         final(mac.data(), mac.size());
+         return mac;
+         }
+
+      void final(uint8_t out[], size_t out_len);
 
       Key_Length_Specification key_spec() const override
          { return Key_Length_Specification(16); }
