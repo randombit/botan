@@ -129,9 +129,10 @@ void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
 
    if(final_bytes)
       {
-      secure_vector<uint8_t> last_block(GCM_BS);
-      copy_mem(last_block.data(), input + full_blocks * GCM_BS, final_bytes);
-      gcm_multiply(ghash, last_block.data(), 1);
+      uint8_t last_block[GCM_BS] = { 0 };
+      copy_mem(last_block, input + full_blocks * GCM_BS, final_bytes);
+      gcm_multiply(ghash, last_block, 1);
+      secure_scrub_memory(last_block, final_bytes);
       }
    }
 
