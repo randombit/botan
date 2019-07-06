@@ -4,6 +4,8 @@ Release Notes
 Version 2.12.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* GCM performance improvements (GH #2024)
+
 * The BearSSL provider has been removed (GH #2020)
 
 * Add support for 64-bit version of RDRAND, doubling performance on x86-64 (GH #934 #2022)
