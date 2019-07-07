@@ -48,7 +48,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    if target in ['shared', 'static', 'sanitizer', 'fuzzers', 'gcc4.8', 'cross-i386', 'bsi', 'nist']:
+    if target in ['shared', 'static', 'sanitizer', 'fuzzers', 'gcc4.8', 'cross-i386', 'bsi', 'nist', 'hugetlb']:
         test_cmd += ['--test-threads=%d' % (get_concurrency())]
 
     fast_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
@@ -216,6 +216,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             test_cmd += ['--run-long-tests', '--run-online-tests']
             if pkcs11_lib and os.access(pkcs11_lib, os.R_OK):
                 test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
+
+        if target == 'hugetlb':
+            flags += ['--with-os-feature=hugetlb']
 
     if ccache is None:
         flags += ['--cc-bin=%s' % (cc_bin)]

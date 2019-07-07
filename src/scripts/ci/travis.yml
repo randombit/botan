@@ -28,6 +28,7 @@ env:
     - BUILD_MODE="cross-mips64"
     - BUILD_MODE="cross-win64"
     - BUILD_MODE="gcc4.8"
+    - BUILD_MODE="hugetlb"
     - BUILD_MODE="static"
     - BUILD_MODE="mini-shared"
     - BUILD_MODE="bsi"
@@ -88,6 +89,11 @@ matrix:
     - os: linux
       compiler: clang
       env: BUILD_MODE="cross-arm64"
+   # No huge pages feature on osx
+    - os: osx
+      env: BUILD_MODE="hugetlb"
+    - compiler: clang
+      env: BUILD_MODE="hugetlb"
 
 install:
   - ./src/scripts/ci/setup_travis.sh
