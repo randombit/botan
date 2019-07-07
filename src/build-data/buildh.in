@@ -128,7 +128,11 @@
 * Total maximum amount of RAM (in KiB) we will lock into memory, even
 * if the OS would let us lock more
 */
-#define BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB 512
+#if !defined(BOTAN_TARGET_OS_HAS_HUGETLB)
+  #define BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB 512
+#else
+  #define BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB 4096
+#endif
 
 /*
 * If BOTAN_MEM_POOL_USE_MMU_PROTECTIONS is defined, the Memory_Pool

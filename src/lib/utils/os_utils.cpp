@@ -319,6 +319,15 @@ size_t OS::system_page_size()
 #endif
    }
 
+size_t OS::system_large_page_size()
+   {
+#if defined(PPC64) || defined(SPARC64)
+   return 1UL<<22;
+#else
+   return 1UL<<21;
+#endif
+   }
+
 size_t OS::get_memory_locking_limit()
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK) && defined(RLIMIT_MEMLOCK)
@@ -407,7 +416,11 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
    std::vector<void*> result;
    result.reserve(count);
 
+#if !defined(BOTAN_TARGET_OS_HAS_HUGETLB)
    const size_t page_size = OS::system_page_size();
+#else
+   const size_t page_size = OS::system_large_page_size();
+#endif
 
    for(size_t i = 0; i != count; ++i)
       {
@@ -447,6 +460,17 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
 #if defined(MADV_DONTDUMP)
       // we ignore errors here, as DONTDUMP is just a bonus
       ::madvise(ptr, page_size, MADV_DONTDUMP);
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_HUGETLB)
+#if defined(MADV_HUGEPAGE)
+      // Attempt to migrate this locked page to huge page
+      if(::madvise(ptr, page_size, MADV_HUGEPAGE) != 0)
+         {
+         ::munmap(ptr, 2*page_size);
+         continue;
+         }
+#endif
 #endif
 
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)

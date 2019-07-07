@@ -95,6 +95,12 @@ size_t get_memory_locking_limit();
 size_t system_page_size();
 
 /**
+ * Return the large page size supported per architecture
+ * Most of the time it is 2MB
+ */
+size_t system_large_page_size();
+
+/**
 * Read the value of an environment variable. Return nullptr if
 * no such variable is set. If the process seems to be running in
 * a privileged state (such as setuid) then always returns nullptr,

@@ -43,7 +43,11 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) no
 mlock_allocator::mlock_allocator()
    {
    const size_t mem_to_lock = OS::get_memory_locking_limit();
+#if !defined(BOTAN_TARGET_OS_HAS_HUGETLB)
    const size_t page_size = OS::system_page_size();
+#else
+   const size_t page_size = OS::system_large_page_size();
+#endif
 
    if(mem_to_lock > 0 && mem_to_lock % page_size == 0)
       {

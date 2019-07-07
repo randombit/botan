@@ -13,6 +13,10 @@ getauxval
 # not enabled by default as only available in newer kernel/glibc
 #getrandom
 
+# to remain optional, user ought to know if transparent page is enabled (at least madvise)
+# cpu supporting the proper size (e.g.: pse for x86)
+#hugetlb
+
 sockets
 threads
 filesystem
