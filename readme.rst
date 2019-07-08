@@ -58,6 +58,10 @@ such as Fedora, Debian, Arch and Homebrew.
     :target: https://scan.coverity.com/projects/624
     :alt: Coverity results
 
+.. image:: https://repology.org/badge/tiny-repos/botan.svg
+    :target: https://repology.org/project/botan/versions
+    :alt: Packaging status
+
 .. image:: https://bestpractices.coreinfrastructure.org/projects/531/badge
     :target: https://bestpractices.coreinfrastructure.org/projects/531
     :alt: CII Best Practices statement
