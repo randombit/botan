@@ -47,7 +47,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get -qq update
         sudo apt-get install qemu-user g++-mips64-linux-gnuabi64
 
-    elif [ "$BUILD_MODE" = "cross-android-arm32" -o "$BUILD_MODE" = "cross-android-arm64" ]; then
+    elif [ "$BUILD_MODE" = "cross-android-arm32" ] || [ "$BUILD_MODE" = "cross-android-arm64" ]; then
         wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux-x86_64.zip
         unzip -qq "$ANDROID_NDK"-linux-x86_64.zip
 
