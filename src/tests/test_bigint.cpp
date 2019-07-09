@@ -446,7 +446,8 @@ class BigInt_GCD_Test final : public Text_Based_Test
 
          const BigInt g = Botan::gcd(x, y);
 
-         result.test_eq("gcd", expected, g);
+         result.test_eq("gcd", g, expected);
+
          return result;
          }
    };
