@@ -122,8 +122,8 @@ void GMAC::final_result(uint8_t mac[])
        {
        m_ghash->update_associated_data(m_aad_buf.data(), m_aad_buf_pos);
        }
-   secure_vector<uint8_t> result = m_ghash->final();
-   copy_mem(mac, result.data(), result.size());
+
+   m_ghash->final(mac, output_length());
    clear();
    }
 
