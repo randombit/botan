@@ -2,6 +2,8 @@ macro_name PGI
 
 binary_name pgc++
 
+lang_flags "-std=c++11"
+
 optimization_flags "-O3"
 shared_flags "-fPIC"
 
