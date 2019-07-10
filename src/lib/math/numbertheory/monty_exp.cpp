@@ -54,11 +54,9 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<c
 
    m_g.push_back(Montgomery_Int(m_params, g));
 
-   const Montgomery_Int& monty_g = m_g[1];
-
    for(size_t i = 2; i != window_size; ++i)
       {
-      m_g.push_back(monty_g * m_g[i - 1]);
+      m_g.push_back(m_g[1] * m_g[i - 1]);
       }
 
    // Resize each element to exactly p words
