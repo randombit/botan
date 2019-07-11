@@ -33,6 +33,8 @@ class Handshake_IO
 
       virtual std::vector<uint8_t> send(const Handshake_Message& msg) = 0;
 
+      virtual std::vector<uint8_t> send_under_epoch(const Handshake_Message& msg, uint16_t epoch) = 0;
+
       virtual bool timeout_check() = 0;
 
       virtual std::vector<uint8_t> format(
@@ -75,6 +77,8 @@ class Stream_Handshake_IO final : public Handshake_IO
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
 
+      std::vector<uint8_t> send_under_epoch(const Handshake_Message& msg, uint16_t epoch) override;
+
       std::vector<uint8_t> format(
          const std::vector<uint8_t>& handshake_msg,
          Handshake_Type handshake_type) const override;
@@ -115,6 +119,8 @@ class Datagram_Handshake_IO final : public Handshake_IO
       bool timeout_check() override;
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
+
+      std::vector<uint8_t> send_under_epoch(const Handshake_Message& msg, uint16_t epoch) override;
 
       std::vector<uint8_t> format(
          const std::vector<uint8_t>& handshake_msg,

@@ -27,8 +27,10 @@ Channel::Channel(Callbacks& callbacks,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng,
                  const Policy& policy,
+                 bool is_server,
                  bool is_datagram,
                  size_t reserved_io_buffer_size) :
+   m_is_server(is_server),
    m_is_datagram(is_datagram),
    m_callbacks(callbacks),
    m_session_manager(session_manager),
@@ -46,8 +48,10 @@ Channel::Channel(output_fn out,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng,
                  const Policy& policy,
+                 bool is_server,
                  bool is_datagram,
                  size_t io_buf_sz) :
+    m_is_server(is_server),
     m_is_datagram(is_datagram),
     m_compat_callbacks(new Compat_Callbacks(
                           /*
@@ -81,6 +85,21 @@ void Channel::reset_state()
    m_readbuf.clear();
    m_write_cipher_states.clear();
    m_read_cipher_states.clear();
+   }
+
+void Channel::reset_active_association_state()
+   {
+   // This operation only makes sense for DTLS
+   BOTAN_ASSERT_NOMSG(m_is_datagram);
+   m_active_state.reset();
+   m_read_cipher_states.clear();
+   m_write_cipher_states.clear();
+
+   m_write_cipher_states[0] = nullptr;
+   m_read_cipher_states[0] = nullptr;
+
+   if(m_sequence_numbers)
+      m_sequence_numbers->reset();
    }
 
 Channel::~Channel()
@@ -271,7 +290,14 @@ bool Channel::is_closed() const
    * received a connection. This case is detectable by also lacking
    * m_sequence_numbers
    */
-   return (m_sequence_numbers != nullptr);
+   if(m_is_server)
+      {
+      return (m_sequence_numbers != nullptr);
+      }
+   else
+      {
+      return true;
+      }
    }
 
 void Channel::activate_session()
@@ -301,11 +327,15 @@ size_t Channel::received_data(const std::vector<uint8_t>& buf)
 
 size_t Channel::received_data(const uint8_t input[], size_t input_size)
    {
+   const bool allow_epoch0_restart = m_is_datagram && m_is_server && policy().allow_dtls_epoch0_restart();
+
    try
       {
       while(!is_closed() && input_size)
          {
          size_t consumed = 0;
+
+         auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
 
          const Record_Header record =
             read_record(m_is_datagram,
@@ -315,7 +345,8 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
                         consumed,
                         m_record_buf,
                         m_sequence_numbers.get(),
-                        [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); });
+                        get_epoch,
+                        allow_epoch0_restart);
 
          const size_t needed = record.needed();
 
@@ -335,20 +366,41 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
 
          // Ignore invalid records in DTLS
          if(m_is_datagram && record.type() == NO_RECORD)
+            {
             return 0;
+            }
 
          if(m_record_buf.size() > MAX_PLAINTEXT_SIZE)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "TLS plaintext record is larger than allowed maximum");
 
+
+         const bool epoch0_restart = m_is_datagram && record.epoch() == 0 && active_state();
+         BOTAN_ASSERT_IMPLICATION(epoch0_restart, allow_epoch0_restart, "Allowed state");
+
+         const bool initial_record = epoch0_restart || (!pending_state() && !active_state());
+
          if(record.type() != ALERT)
             {
-            if(auto pending = pending_state())
+            if(initial_record)
+               {
+               // For initial records just check for basic sanity
+               if(record.version().major_version() != 3 &&
+                  record.version().major_version() != 0xFE)
+                  {
+                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                      "Received unexpected record version in initial record");
+                  }
+               }
+            else if(auto pending = pending_state())
                {
                if(pending->server_hello() != nullptr && record.version() != pending->version())
                   {
-                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                      "Received unexpected record version");
+                  if(record.version() != pending->version())
+                     {
+                     throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                         "Received unexpected record version");
+                     }
                   }
                }
             else if(auto active = active_state())
@@ -359,21 +411,11 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
                                       "Received unexpected record version");
                   }
                }
-            else
-               {
-               // For initial records just check for basic sanity
-               if(record.version().major_version() != 3 &&
-                  record.version().major_version() != 0xFE)
-                  {
-                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                      "Received unexpected record version in initial record");
-                  }
-               }
             }
 
          if(record.type() == HANDSHAKE || record.type() == CHANGE_CIPHER_SPEC)
             {
-            process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version());
+            process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
             }
          else if(record.type() == APPLICATION_DATA)
             {
@@ -418,12 +460,13 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
 void Channel::process_handshake_ccs(const secure_vector<uint8_t>& record,
                                     uint64_t record_sequence,
                                     Record_Type record_type,
-                                    Protocol_Version record_version)
+                                    Protocol_Version record_version,
+                                    bool epoch0_restart)
    {
    if(!m_pending_state)
       {
       // No pending handshake, possibly new:
-      if(record_version.is_datagram_protocol())
+      if(record_version.is_datagram_protocol() && !epoch0_restart)
          {
          if(m_sequence_numbers)
             {
@@ -475,7 +518,10 @@ void Channel::process_handshake_ccs(const secure_vector<uint8_t>& record,
             break;
 
          process_handshake_msg(active_state(), *pending,
-                               msg.first, msg.second);
+                               msg.first, msg.second, epoch0_restart);
+
+         if(!m_pending_state)
+            break;
          }
       }
    }
@@ -511,7 +557,6 @@ void Channel::process_alert(const secure_vector<uint8_t>& record)
        reset_state();
        }
     }
-
 
 void Channel::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch,
                            uint8_t record_type, const uint8_t input[], size_t length)

@@ -399,7 +399,8 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
                                size_t& consumed,
                                secure_vector<uint8_t>& recbuf,
                                Connection_Sequence_Numbers* sequence_numbers,
-                               get_cipherstate_fn get_cipherstate)
+                               get_cipherstate_fn get_cipherstate,
+                               bool allow_epoch0_restart)
    {
    if(readbuf.size() < DTLS_HEADER_SIZE) // header incomplete?
       {
@@ -442,12 +443,12 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
 
    const Record_Type type = static_cast<Record_Type>(readbuf[0]);
 
-   uint16_t epoch = 0;
-
    const uint64_t sequence = load_be<uint64_t>(&readbuf[3], 0);
-   epoch = (sequence >> 48);
+   const uint16_t epoch = (sequence >> 48);
 
-   if(sequence_numbers && sequence_numbers->already_seen(sequence))
+   const bool already_seen = sequence_numbers && sequence_numbers->already_seen(sequence);
+
+   if(already_seen && !(epoch == 0 && allow_epoch0_restart))
       {
       readbuf.clear();
       return Record_Header(0);
@@ -499,11 +500,12 @@ Record_Header read_record(bool is_datagram,
                           size_t& consumed,
                           secure_vector<uint8_t>& recbuf,
                           Connection_Sequence_Numbers* sequence_numbers,
-                          get_cipherstate_fn get_cipherstate)
+                          get_cipherstate_fn get_cipherstate,
+                          bool allow_epoch0_restart)
    {
    if(is_datagram)
       return read_dtls_record(readbuf, input, input_len, consumed,
-                              recbuf, sequence_numbers, get_cipherstate);
+                              recbuf, sequence_numbers, get_cipherstate, allow_epoch0_restart);
    else
       return read_tls_record(readbuf, input, input_len, consumed,
                              recbuf, sequence_numbers, get_cipherstate);

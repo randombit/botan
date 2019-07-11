@@ -70,8 +70,8 @@ Client::Client(Callbacks& callbacks,
                const Protocol_Version& offer_version,
                const std::vector<std::string>& next_protos,
                size_t io_buf_sz) :
-   Channel(callbacks, session_manager, rng, policy, offer_version.is_datagram_protocol(),
-           io_buf_sz),
+   Channel(callbacks, session_manager, rng, policy,
+           false, offer_version.is_datagram_protocol(), io_buf_sz),
    m_creds(creds),
    m_info(info)
    {
@@ -91,7 +91,7 @@ Client::Client(output_fn data_output_fn,
                const std::vector<std::string>& next_protos,
                size_t io_buf_sz) :
    Channel(data_output_fn, proc_cb, recv_alert_cb, hs_cb, Channel::handshake_msg_cb(),
-           session_manager, rng, policy, offer_version.is_datagram_protocol(), io_buf_sz),
+           session_manager, rng, policy, false, offer_version.is_datagram_protocol(), io_buf_sz),
    m_creds(creds),
    m_info(info)
    {
@@ -111,7 +111,7 @@ Client::Client(output_fn data_output_fn,
                const Protocol_Version& offer_version,
                const std::vector<std::string>& next_protos) :
    Channel(data_output_fn, proc_cb, recv_alert_cb, hs_cb, hs_msg_cb,
-           session_manager, rng, policy, offer_version.is_datagram_protocol()),
+           session_manager, rng, policy, false, offer_version.is_datagram_protocol()),
    m_creds(creds),
    m_info(info)
    {
@@ -227,8 +227,11 @@ void Client::send_client_hello(Handshake_State& state_base,
 void Client::process_handshake_msg(const Handshake_State* active_state,
                                    Handshake_State& state_base,
                                    Handshake_Type type,
-                                   const std::vector<uint8_t>& contents)
+                                   const std::vector<uint8_t>& contents,
+                                   bool epoch0_restart)
    {
+   BOTAN_ASSERT_NOMSG(epoch0_restart == false); // only happens on server side
+
    Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
 
    if(type == HELLO_REQUEST && active_state)

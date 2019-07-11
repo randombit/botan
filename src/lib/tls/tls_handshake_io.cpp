@@ -113,6 +113,11 @@ Stream_Handshake_IO::format(const std::vector<uint8_t>& msg,
    return send_buf;
    }
 
+std::vector<uint8_t> Stream_Handshake_IO::send_under_epoch(const Handshake_Message& /*msg*/, uint16_t /*epoch*/)
+   {
+   throw Invalid_State("Not possible to send under arbitrary epoch with stream based TLS");
+   }
+
 std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg)
    {
    const std::vector<uint8_t> msg_bits = msg.serialize();
@@ -261,7 +266,9 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete())
+      {
       return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
+      }
 
    m_in_message_seq += 1;
 
@@ -379,11 +386,15 @@ Datagram_Handshake_IO::format(const std::vector<uint8_t>& msg,
    return format_w_seq(msg, type, m_in_message_seq - 1);
    }
 
+std::vector<uint8_t> Datagram_Handshake_IO::send(const Handshake_Message& msg)
+   {
+   return this->send_under_epoch(msg, m_seqs.current_write_epoch());
+   }
+
 std::vector<uint8_t>
-Datagram_Handshake_IO::send(const Handshake_Message& msg)
+Datagram_Handshake_IO::send_under_epoch(const Handshake_Message& msg, uint16_t epoch)
    {
    const std::vector<uint8_t> msg_bits = msg.serialize();
-   const uint16_t epoch = m_seqs.current_write_epoch();
    const Handshake_Type msg_type = msg.type();
 
    if(msg_type == HANDSHAKE_CCS)
