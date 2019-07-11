@@ -107,6 +107,7 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
          CPUID_ALTIVEC_BIT    = (1ULL << 0),
          CPUID_PPC_CRYPTO_BIT = (1ULL << 1),
+         CPUID_DARN_BIT       = (1ULL << 2),
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
@@ -137,6 +138,12 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static bool has_ppc_crypto()
          { return has_cpuid_bit(CPUID_PPC_CRYPTO_BIT); }
+
+      /**
+      * Check if the processor supports POWER9 DARN RNG
+      */
+      static bool has_darn_rng()
+         { return has_cpuid_bit(CPUID_DARN_BIT); }
 
 #endif
 

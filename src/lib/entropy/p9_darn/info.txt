@@ -1,0 +1,19 @@
+<defines>
+ENTROPY_SRC_DARN -> 20180610
+</defines>
+
+<header:internal>
+p9_darn.h
+</header:internal>
+
+<cc>
+gcc:7.0
+</cc>
+
+<isa>
+power9
+</isa>
+
+<arch>
+ppc64
+</arch>
