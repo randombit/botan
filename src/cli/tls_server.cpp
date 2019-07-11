@@ -35,7 +35,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
    {
    public:
 #if SOCKET_ID
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces= --max-clients=0 -socket-id=0")
+      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces= --max-clients=0 --socket-id=0")
 #else
       TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces= --max-clients=0")
 #endif
@@ -67,7 +67,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          const std::string transport = get_arg("type");
          const std::string dump_traces_to = get_arg("dump-traces");
 #if SOCKET_ID
-	 m_socket_id = get_arg_sz("socket-id");
+         m_socket_id = get_arg_sz("socket-id");
 #endif
 
          if(transport != "tcp" && transport != "udp")
@@ -101,11 +101,11 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
 
-	 if(!m_sandbox.init())
+         if(!m_sandbox.init())
             {
             error_output() << "Failed sandboxing\n";
-	    return;
-	    }
+            return;
+            }
 
          int server_fd = make_server_socket(port);
          size_t clients_served = 0;
@@ -265,19 +265,19 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                throw CLI_Error("listen failed");
                }
             }
-	 if(m_socket_id > 0)
+         if(m_socket_id > 0)
             {
 #if SOCKET_ID
-// Other oses could have other means to trace sockets
+            // Other oses could have other means to trace sockets
 #if defined(SO_USER_COOKIE)
             if(::setsockopt(fd, SOL_SOCKET, SO_USER_COOKIE, reinterpret_cast<const void *>(&m_socket_id), sizeof(m_socket_id)) != 0)
                {
                // Failed but not world-ending issue
                output() << "set socket cookie id failed" << std::endl;
-	       }
+               }
 #endif
 #endif
-	    }
+            }
          return fd;
          }
 

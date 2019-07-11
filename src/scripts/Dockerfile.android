@@ -2,9 +2,7 @@ FROM debian:stretch AS debian
 ARG ANDORID_SDK_VER
 ARG ANDROID_ARCH
 ARG ANDROID_TOOLCHAIN_SUF
-RUN apt-get update && apt-get -y --no-install-recommends install \
-	make
-
+RUN apt-get update && apt-get -y --no-install-recommends install make
 RUN mkdir -p /botan/android
 WORKDIR /botan
 COPY --from=bitriseio/android-ndk /opt/android-ndk android-ndk

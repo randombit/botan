@@ -58,7 +58,7 @@ avx2    -> "-mavx2"
 bmi2    -> "-mbmi -mbmi2"
 aesni   -> "-maes -mpclmul -mssse3"
 rdrand  -> "-mrdrnd"
-rdseed	-> "-mrdseed"
+rdseed  -> "-mrdseed"
 sha     -> "-msha"
 altivec -> "-maltivec"
 
