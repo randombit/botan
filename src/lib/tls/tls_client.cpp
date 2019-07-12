@@ -309,6 +309,12 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                              "Server replied with non-null compression method");
          }
 
+      if(state.client_hello()->version() > state.server_hello()->version())
+         {
+         if(state.server_hello()->random_signals_downgrade())
+            throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Downgrade attack detected");
+         }
+
       auto client_extn = state.client_hello()->extension_types();
       auto server_extn = state.server_hello()->extension_types();
 

@@ -297,6 +297,8 @@ class BOTAN_UNSTABLE_API Server_Hello final : public Handshake_Message
          return false;
          }
 
+      bool random_signals_downgrade() const;
+
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const Policy& policy,
