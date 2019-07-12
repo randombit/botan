@@ -27,7 +27,8 @@
 
         "SupportedVersionSelection-TLS12": "We just ignore the version extension in this case",
 
-        "Downgrade*": "The 1.3 downgrade indicator is not implemented",
+        "Downgrade-*-Client-Ignore": "Not possible to ignore downgrade indicator",
+        "Downgrade-TLS12-*": "Not a downgrade when we don't support v1.3",
 
         "*SSL3*": "No SSLv3",
         "*SSLv3*": "No SSLv3",
