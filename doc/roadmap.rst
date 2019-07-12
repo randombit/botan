@@ -11,9 +11,8 @@ June 2019.
 TLS Hardening/Testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Leverage TLS-Attacker better, for example using custom workflows. Add tests
-using BoringSSL's hacked Go TLS stack. Add interop testing with OpenSSL as part
-of CI. Improve fuzzer coverage.
+Leverage TLS-Attacker better, for example using custom workflows. Add
+interop testing with OpenSSL as part of CI. Improve fuzzer coverage.
 
 Expose TLS at FFI layer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
