@@ -341,30 +341,33 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "TLS plaintext record is larger than allowed maximum");
 
-         if(auto pending = pending_state())
+         if(record.type() != ALERT)
             {
-            if(pending->server_hello() != nullptr && record.version() != pending->version())
+            if(auto pending = pending_state())
                {
-               throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                   "Received unexpected record version");
+               if(pending->server_hello() != nullptr && record.version() != pending->version())
+                  {
+                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                      "Received unexpected record version");
+                  }
                }
-            }
-         else if(auto active = active_state())
-            {
-            if(record.version() != active->version())
+            else if(auto active = active_state())
                {
-               throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                   "Received unexpected record version");
+               if(record.version() != active->version())
+                  {
+                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                      "Received unexpected record version");
+                  }
                }
-            }
-         else
-            {
-            // For initial records just check for basic sanity
-            if(record.version().major_version() != 3 &&
-               record.version().major_version() != 0xFE)
+            else
                {
-               throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                   "Received unexpected record version in initial record");
+               // For initial records just check for basic sanity
+               if(record.version().major_version() != 3 &&
+                  record.version().major_version() != 0xFE)
+                  {
+                  throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                      "Received unexpected record version in initial record");
+                  }
                }
             }
 
