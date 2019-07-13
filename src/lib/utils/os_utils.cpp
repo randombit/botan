@@ -47,6 +47,7 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
   #define NOMINMAX 1
+  #define _WINSOCKAPI_ // stop windows.h including winsock.h
   #include <windows.h>
 #endif
 
