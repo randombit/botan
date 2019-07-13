@@ -10,6 +10,7 @@
 
 #include <botan/types.h>
 #include <cstring>
+#include <type_traits>
 #include <vector>
 
 namespace Botan {
@@ -113,6 +114,15 @@ template<typename T> inline void clear_mem(T* ptr, size_t n)
    clear_bytes(ptr, sizeof(T)*n);
    }
 
+
+
+// is_trivially_copyable is missing in g++ < 5.0
+#if !__clang__ && __GNUG__ && __GNUC__ < 5
+#define IS_TRIVIALLY_COPYABLE(T) true
+#else
+#define IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
+#endif
+
 /**
 * Copy memory
 * @param out the destination array
@@ -121,6 +131,7 @@ template<typename T> inline void clear_mem(T* ptr, size_t n)
 */
 template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
    {
+   static_assert(std::is_trivial<typename std::decay<T>::type>::value, "");
    if(n > 0)
       {
       std::memmove(out, in, sizeof(T)*n);
@@ -129,11 +140,13 @@ template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
 
 template<typename T> inline void typecast_copy(uint8_t out[], T in[], size_t N)
    {
+   static_assert(IS_TRIVIALLY_COPYABLE(T), "");
    std::memcpy(out, in, sizeof(T)*N);
    }
 
 template<typename T> inline void typecast_copy(T out[], const uint8_t in[], size_t N)
    {
+   static_assert(std::is_trivial<T>::value, "");
    std::memcpy(out, in, sizeof(T)*N);
    }
 
@@ -144,7 +157,16 @@ template<typename T> inline void typecast_copy(uint8_t out[], T in)
 
 template<typename T> inline void typecast_copy(T& out, const uint8_t in[])
    {
+   static_assert(std::is_trivial<typename std::decay<T>::type>::value, "");
    typecast_copy(&out, in, 1);
+   }
+
+template <class To, class From> inline To typecast_copy(const From *src) noexcept
+   {
+   static_assert(IS_TRIVIALLY_COPYABLE(From) && std::is_trivial<To>::value, "");
+   To dst;
+   std::memcpy(&dst, src, sizeof(To));
+   return dst;
    }
 
 /**
