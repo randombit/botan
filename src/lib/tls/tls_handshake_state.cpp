@@ -144,6 +144,7 @@ std::string handshake_mask_to_string(uint32_t mask, char combiner)
       HELLO_VERIFY_REQUEST,
       HELLO_REQUEST,
       CLIENT_HELLO,
+      SERVER_HELLO,
       CERTIFICATE,
       CERTIFICATE_URL,
       CERTIFICATE_STATUS,
@@ -313,9 +314,21 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
 
    if(!ok)
       {
-      throw Unexpected_Message("Unexpected state transition in handshake, expected " +
-                               handshake_mask_to_string(m_hand_expecting_mask, '|') +
-                               " received " + handshake_mask_to_string(m_hand_received_mask, '+'));
+      const uint32_t seen_so_far = m_hand_received_mask & ~mask;
+
+      std::ostringstream msg;
+
+      msg << "Unexpected state transition in handshake got a " << handshake_type_to_string(handshake_msg);
+
+      if(m_hand_expecting_mask == 0)
+         msg << " not expecting messages";
+      else
+         msg << " expected " << handshake_mask_to_string(m_hand_expecting_mask, '|');
+
+      if(seen_so_far != 0)
+         msg << " seen " << handshake_mask_to_string(seen_so_far, '+');
+
+      throw Unexpected_Message(msg.str());
       }
 
    /* We don't know what to expect next, so force a call to

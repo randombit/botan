@@ -167,24 +167,23 @@ std::string map_to_bogo_error(const std::string& e)
          { "Test requires rejecting cert", ":CERTIFICATE_VERIFY_FAILED:" },
          { "Unexpected ALPN protocol", ":INVALID_ALPN_PROTOCOL:" },
          { "Unexpected record type 42 from counterparty", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected  received hello_request", ":UNEXPECTED_MESSAGE:" },
-         { "Unexpected state transition in handshake, expected  received server_key_exchange", ":BAD_HELLO_REQUEST:" },
-         { "Unexpected state transition in handshake, expected certificate received certificate_status", ":UNEXPECTED_MESSAGE:" },
-         { "Unexpected state transition in handshake, expected certificate received client_hello+client_key_exchange", ":UNEXPECTED_MESSAGE:" },
-         { "Unexpected state transition in handshake, expected certificate_request|server_hello_done received certificate+certificate_status+server_key_exchange", ":UNEXPECTED_MESSAGE:" },
-         { "Unexpected state transition in handshake, expected certificate_verify received client_hello+certificate+client_key_exchange+change_cipher_spec", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected change_cipher_spec received certificate+certificate_status+server_hello_done+new_session_ticket+finished", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected change_cipher_spec received certificate+certificate_status+server_key_exchange+server_hello_done+new_session_ticket+finished", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected change_cipher_spec received client_hello+client_key_exchange+finished", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected change_cipher_spec received client_hello+finished", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected change_cipher_spec received finished", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected client_key_exchange received client_hello+change_cipher_spec", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected new_session_ticket received certificate+certificate_status+server_hello_done+change_cipher_spec", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected new_session_ticket received certificate+certificate_status+server_key_exchange+server_hello_done+change_cipher_spec", ":UNEXPECTED_RECORD:" },
-         { "Unexpected state transition in handshake, expected server_hello_done received server_key_exchange+certificate_request", ":UNEXPECTED_MESSAGE:" },
-         { "Unexpected state transition in handshake, expected server_key_exchange received certificate", ":WRONG_CIPHER_RETURNED:" },
-         { "Unexpected state transition in handshake, expected server_key_exchange received certificate+certificate_status+server_hello_done", ":UNEXPECTED_MESSAGE:" },
-         { "Unexpected state transition in handshake, expected server_key_exchange|server_hello_done received certificate_request", ":UNEXPECTED_MESSAGE:" },
+
+         { "Unexpected state transition in handshake got a certificate_request expected server_hello_done seen server_hello+server_key_exchange", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a certificate_request expected server_key_exchange|server_hello_done seen server_hello", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a certificate_status expected certificate seen server_hello", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a change_cipher_spec expected certificate_verify seen client_hello+certificate+client_key_exchange", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a change_cipher_spec expected client_key_exchange seen client_hello", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a change_cipher_spec expected new_session_ticket seen server_hello+certificate+certificate_status+server_key_exchange+server_hello_done", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a client_key_exchange expected certificate seen client_hello", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen client_hello", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen client_hello+client_key_exchange", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen server_hello", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a finished expected change_cipher_spec seen server_hello+certificate+certificate_status+server_key_exchange+server_hello_done+new_session_ticket", ":UNEXPECTED_RECORD:" },
+         { "Unexpected state transition in handshake got a hello_request expected server_hello", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a server_hello_done expected server_key_exchange seen server_hello+certificate+certificate_status", ":UNEXPECTED_MESSAGE:" },
+         { "Unexpected state transition in handshake got a server_key_exchange not expecting messages", ":BAD_HELLO_REQUEST:" },
+         { "Unexpected state transition in handshake got a server_key_exchange expected certificate_request|server_hello_done seen server_hello+certificate+certificate_status", ":UNEXPECTED_MESSAGE:" },
+
          { "Unknown TLS handshake message type 43", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 44", ":UNEXPECTED_MESSAGE:" },
          { "Unknown TLS handshake message type 45", ":UNEXPECTED_MESSAGE:" },
@@ -205,7 +204,7 @@ std::string map_to_bogo_error(const std::string& e)
    if(err_map_i != err_map.end())
       return err_map_i->second;
 
-   return "Unmapped error: " + e;
+   return "Unmapped error: '" + e + "'";
    }
 
 class Shim_Exception final : public std::exception
