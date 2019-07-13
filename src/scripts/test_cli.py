@@ -677,7 +677,11 @@ def cli_tls_http_server_tests(tmp_dir):
     if resp.status != 405:
         logging.error('Unexpected response status %d' % (resp.status))
 
-    rc = tls_server.wait()
+    if sys.version_info.major >= 3:
+        rc = tls_server.wait(5) # pylint: disable=too-many-function-args
+    else:
+        rc = tls_server.wait()
+
     if rc != 0:
         logging.error("Unexpected return code from https_server %d", rc)
 
@@ -767,7 +771,11 @@ def cli_tls_proxy_tests(tmp_dir):
         if body != server_response:
             logging.error('Unexpected response from server %s' % (body))
 
-    rc = tls_proxy.wait()
+    if sys.version_info.major >= 3:
+        rc = tls_proxy.wait(5) # pylint: disable=too-many-function-args
+    else:
+        rc = tls_proxy.wait()
+
     if rc != 0:
         logging.error('Unexpected return code %d', rc)
 
@@ -1050,6 +1058,8 @@ def main(args=None):
             if test_regex.search(fn_name) is None:
                 continue
 
+        logging.info("Running %s" % (fn_name))
+
         start = time.time()
         tmp_dir = tempfile.mkdtemp(prefix='botan_cli_')
         try:
@@ -1059,7 +1069,7 @@ def main(args=None):
 
         shutil.rmtree(tmp_dir)
         end = time.time()
-        logging.debug("Ran %s in %.02f", fn_name, end-start)
+        logging.debug("Ran %s in %.02f sec", fn_name, end-start)
 
     end_time = time.time()
 
