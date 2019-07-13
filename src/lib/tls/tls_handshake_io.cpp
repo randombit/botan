@@ -105,12 +105,20 @@ Stream_Handshake_IO::format(const std::vector<uint8_t>& msg,
 
    store_be24(&send_buf[1], buf_size);
 
-   if (msg.size() > 0)
+   if(msg.size() > 0)
       {
       copy_mem(&send_buf[4], msg.data(), msg.size());
       }
 
    return send_buf;
+   }
+
+std::vector<uint8_t> Stream_Handshake_IO::send_under_epoch(const Handshake_Message& msg, uint16_t epoch)
+   {
+   if(epoch != m_seqs.current_write_epoch())
+      throw Invalid_State("Not possible to send under arbitrary epoch with stream based TLS");
+
+   send(msg);
    }
 
 std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg)
@@ -261,7 +269,9 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete())
+      {
       return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
+      }
 
    m_in_message_seq += 1;
 
@@ -356,7 +366,7 @@ Datagram_Handshake_IO::format_fragment(const uint8_t fragment[],
    store_be24(&send_buf[6], frag_offset);
    store_be24(&send_buf[9], frag_len);
 
-   if (frag_len > 0)
+   if(frag_len > 0)
       {
       copy_mem(&send_buf[12], fragment, frag_len);
       }
@@ -379,11 +389,15 @@ Datagram_Handshake_IO::format(const std::vector<uint8_t>& msg,
    return format_w_seq(msg, type, m_in_message_seq - 1);
    }
 
+std::vector<uint8_t> Datagram_Handshake_IO::send(const Handshake_Message& msg)
+   {
+   return this->send_under_epoch(msg, m_seqs.current_write_epoch());
+   }
+
 std::vector<uint8_t>
-Datagram_Handshake_IO::send(const Handshake_Message& msg)
+Datagram_Handshake_IO::send_under_epoch(const Handshake_Message& msg, uint16_t epoch)
    {
    const std::vector<uint8_t> msg_bits = msg.serialize();
-   const uint16_t epoch = m_seqs.current_write_epoch();
    const Handshake_Type msg_type = msg.type();
 
    if(msg_type == HANDSHAKE_CCS)
