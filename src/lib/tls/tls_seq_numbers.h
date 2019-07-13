@@ -31,11 +31,14 @@ class Connection_Sequence_Numbers
 
       virtual bool already_seen(uint64_t seq) const = 0;
       virtual void read_accept(uint64_t seq) = 0;
+
+      virtual void reset() = 0;
    };
 
 class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers
    {
    public:
+      Stream_Sequence_Numbers() { Stream_Sequence_Numbers::reset(); }
       void new_read_cipher_state() override { m_read_seq_no = 0; m_read_epoch++; }
       void new_write_cipher_state() override { m_write_seq_no = 0; m_write_epoch++; }
 
@@ -47,17 +50,35 @@ class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers
 
       bool already_seen(uint64_t) const override { return false; }
       void read_accept(uint64_t) override { m_read_seq_no++; }
+
+      void reset()
+         {
+         m_write_seq_no = 0;
+         m_read_seq_no = 0;
+         m_read_epoch = 0;
+         m_write_epoch = 0;
+         }
    private:
-      uint64_t m_write_seq_no = 0;
-      uint64_t m_read_seq_no = 0;
-      uint16_t m_read_epoch = 0;
-      uint16_t m_write_epoch = 0;
+      uint64_t m_write_seq_no;
+      uint64_t m_read_seq_no;
+      uint16_t m_read_epoch;
+      uint16_t m_write_epoch;
    };
 
 class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers
    {
    public:
-      Datagram_Sequence_Numbers() { m_write_seqs[0] = 0; }
+      Datagram_Sequence_Numbers() { Datagram_Sequence_Numbers::reset(); }
+
+      void reset()
+         {
+         m_write_seqs.clear();
+         m_write_seqs[0] = 0;
+         m_write_epoch = 0;
+         m_read_epoch = 0;
+         m_window_highest = 0;
+         m_window_bits = 0;
+         }
 
       void new_read_cipher_state() override { m_read_epoch++; }
 
