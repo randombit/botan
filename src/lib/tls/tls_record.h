@@ -110,6 +110,11 @@ class Record_Header final
          return m_sequence;
          }
 
+      uint16_t epoch() const
+         {
+         return static_cast<uint16_t>(sequence() >> 48);
+         }
+
       Record_Type type() const
          {
          BOTAN_ASSERT_NOMSG(m_needed == 0);
@@ -157,7 +162,8 @@ Record_Header read_record(bool is_datagram,
                           size_t& consumed,
                           secure_vector<uint8_t>& record_buf,
                           Connection_Sequence_Numbers* sequence_numbers,
-                          get_cipherstate_fn get_cipherstate);
+                          get_cipherstate_fn get_cipherstate,
+                          bool allow_epoch0_restart);
 
 }
 

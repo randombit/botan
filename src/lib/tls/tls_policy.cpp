@@ -336,6 +336,7 @@ bool Policy::only_resume_with_exact_version() const { return true; }
 bool Policy::require_client_certificate_authentication() const { return false; }
 bool Policy::request_client_certificate_authentication() const { return require_client_certificate_authentication(); }
 bool Policy::abort_connection_on_undesired_renegotiation() const { return false; }
+bool Policy::allow_dtls_epoch0_restart() const { return false; }
 
 size_t Policy::maximum_certificate_chain_size() const { return 0; }
 

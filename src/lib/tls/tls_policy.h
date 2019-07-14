@@ -292,6 +292,12 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual bool request_client_certificate_authentication() const;
 
       /**
+      * If true, then allow a DTLS client to restart a connection to the
+      * same server association as described in section 4.2.8 of the DTLS RFC
+      */
+      virtual bool allow_dtls_epoch0_restart() const;
+
+      /**
       * Return allowed ciphersuites, in order of preference
       */
       virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version,

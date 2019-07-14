@@ -303,7 +303,7 @@ Server::Server(Callbacks& callbacks,
                bool is_datagram,
                size_t io_buf_sz) :
    Channel(callbacks, session_manager, rng, policy,
-           is_datagram, io_buf_sz),
+           true, is_datagram, io_buf_sz),
    m_creds(creds)
    {
    }
@@ -321,7 +321,7 @@ Server::Server(output_fn output,
                size_t io_buf_sz) :
    Channel(output, got_data_cb, recv_alert_cb, hs_cb,
            Channel::handshake_msg_cb(), session_manager,
-           rng, policy, is_datagram, io_buf_sz),
+           rng, policy, true, is_datagram, io_buf_sz),
    m_creds(creds),
    m_choose_next_protocol(next_proto)
    {
@@ -339,7 +339,7 @@ Server::Server(output_fn output,
                next_protocol_fn next_proto,
                bool is_datagram) :
    Channel(output, got_data_cb, recv_alert_cb, hs_cb, hs_msg_cb,
-           session_manager, rng, policy, is_datagram),
+           session_manager, rng, policy, true, is_datagram),
    m_creds(creds),
    m_choose_next_protocol(next_proto)
    {
@@ -471,9 +471,12 @@ Protocol_Version select_version(const Botan::TLS::Policy& policy,
 */
 void Server::process_client_hello_msg(const Handshake_State* active_state,
                                       Server_Handshake_State& pending_state,
-                                      const std::vector<uint8_t>& contents)
+                                      const std::vector<uint8_t>& contents,
+                                      bool epoch0_restart)
    {
-   const bool initial_handshake = !active_state;
+   BOTAN_ASSERT_IMPLICATION(epoch0_restart, active_state != nullptr, "Can't restart with a dead connection");
+
+   const bool initial_handshake = epoch0_restart || !active_state;
 
    if(initial_handshake == false && policy().allow_client_initiated_renegotiation() == false)
       {
@@ -547,12 +550,26 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
 
          if(pending_state.client_hello()->cookie() != verify.cookie())
             {
-            pending_state.handshake_io().send(verify);
+            if(epoch0_restart)
+               pending_state.handshake_io().send_under_epoch(verify, 0);
+            else
+               pending_state.handshake_io().send(verify);
+
             pending_state.client_hello(nullptr);
             pending_state.set_expected_next(CLIENT_HELLO);
             return;
             }
          }
+      else if(epoch0_restart)
+         {
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Reuse of DTLS association requires DTLS cookie secret be set");
+         }
+      }
+
+   if(epoch0_restart)
+      {
+      // If we reached here then we were able to verify the cookie
+      reset_active_association_state();
       }
 
    secure_renegotiation_check(pending_state.client_hello());
@@ -749,7 +766,8 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
 void Server::process_handshake_msg(const Handshake_State* active_state,
                                    Handshake_State& state_base,
                                    Handshake_Type type,
-                                   const std::vector<uint8_t>& contents)
+                                   const std::vector<uint8_t>& contents,
+                                   bool epoch0_restart)
    {
    Server_Handshake_State& state = dynamic_cast<Server_Handshake_State&>(state_base);
    state.confirm_transition_to(type);
@@ -769,7 +787,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
    switch(type)
       {
       case CLIENT_HELLO:
-         return this->process_client_hello_msg(active_state, state, contents);
+         return this->process_client_hello_msg(active_state, state, contents, epoch0_restart);
 
       case CERTIFICATE:
          return this->process_certificate_msg(state, contents);
