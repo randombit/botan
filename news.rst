@@ -6,6 +6,9 @@ Version 2.12.0, Not Yet Released
 
 * GCM performance improvements (GH #2024)
 
+* In DTLS server, support a client crashing and then reconnecting from
+  the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
+
 * Add support for the TLS v1.3 downgrade indicator. (GH #2027)
 
 * The BearSSL provider has been removed (GH #2020)
@@ -16,9 +19,9 @@ Version 2.12.0, Not Yet Released
 
 * Avoid using ``__GNUG__`` in headers that may be consumed by a C compiler (GH #2013)
 
-* Add a script to help with building on Android (GH #2016 #513)
+* Add a script to help with building for Android, using Docker (GH #2016 #2033 #513)
 
-* Add Android build to Travis CI (GH #2017)
+* Add Android NDK build to Travis CI (GH #2017)
 
 Version 2.11.0, 2019-07-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
