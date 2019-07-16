@@ -105,19 +105,22 @@ unsigned long OS::get_auxval(unsigned long id)
    {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
    return ::getauxval(id);
-#elif defined(BOTAN_TARGET_OS_IS_ANDROID)
-   char  **p = environ;
+#elif defined(BOTAN_TARGET_OS_IS_ANDROID) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
 
-   while (*p++!=nullptr);
+   if(id == 0)
+      return 0;
 
-   Elf32_auxv_t *e = reinterpret_cast<Elf32_auxv_t *>(p);
+   char **p = environ;
 
-   while (e!=nullptr)
+   while(*p++ != nullptr)
+      ;
+
+   Elf32_auxv_t *e = reinterpret_cast<Elf32_auxv_t*>(p);
+
+   while(e != nullptr)
       {
-      if (e->a_type == 0)
-        continue;
-      if (e->a_type == id)
-        return e->a_un.a_val;
+      if(e->a_type == id)
+         return e->a_un.a_val;
       e++;
       }
 
