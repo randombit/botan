@@ -12,7 +12,7 @@ PYTHON_EXE     = %{python_exe}
 # Compiler Flags
 
 ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
-LANG_FLAGS     = %{cc_lang_flags}
+LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
 CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 LIB_FLAGS      = %{lib_flags}

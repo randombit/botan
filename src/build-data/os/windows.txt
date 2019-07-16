@@ -21,6 +21,10 @@ soname_pattern_base "{libname}.dll"
 install_root c:\\Botan
 doc_dir docs
 
+<feature_macros>
+_WIN32_WINNT=0x0600
+</feature_macros>
+
 <target_features>
 win32
 winsock2

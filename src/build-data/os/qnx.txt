@@ -10,3 +10,7 @@ sockets
 threads
 filesystem
 </target_features>
+
+<feature_macros>
+_QNX_SOURCE
+</feature_macros>

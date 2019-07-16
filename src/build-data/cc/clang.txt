@@ -79,5 +79,4 @@ ppc64   -> "-m64"
 
 macos   -> "-stdlib=libc++"
 ios     -> "-stdlib=libc++"
-netbsd  -> "-D_NETBSD_SOURCE"
 </mach_abi_linking>

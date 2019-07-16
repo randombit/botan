@@ -712,7 +712,7 @@ def lex_me_harder(infofile, allowed_groups, allowed_maps, name_val_pairs):
         return group.replace(':', '_')
 
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
-    lexer.wordchars += ':.<>/,-!?+*' # handle various funky chars in info.txt
+    lexer.wordchars += '=:.<>/,-!?+*' # handle various funky chars in info.txt
 
     groups = allowed_groups + allowed_maps
     for group in groups:
@@ -1406,7 +1406,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         super(OsInfo, self).__init__(infofile)
         lex = lex_me_harder(
             infofile,
-            ['aliases', 'target_features'],
+            ['aliases', 'target_features', 'feature_macros'],
             [],
             {
                 'program_suffix': '',
@@ -1482,6 +1482,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.shared_lib_uses_symlinks = (lex.shared_lib_symlinks == 'yes')
         self.default_compiler = lex.default_compiler
         self.uses_pkg_config = (lex.uses_pkg_config == 'yes')
+        self.feature_macros = lex.feature_macros
 
     def matches_name(self, nm):
         if nm in self._aliases:
@@ -1505,6 +1506,12 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 feats.append(feat)
 
         return sorted(feats)
+
+    def macros(self, cc):
+        value = [cc.add_compile_definition_option + define
+                 for define in self.feature_macros]
+
+        return ' '.join(value)
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
@@ -2036,6 +2043,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'dash_c': cc.compile_flags,
 
         'cc_lang_flags': cc.cc_lang_flags(),
+        'os_feature_macros': osinfo.macros(cc),
         'cc_sysroot': sysroot_option(),
         'cc_compile_flags': options.cxxflags or cc.cc_compile_flags(options),
         'ldflags': options.ldflags or '',
