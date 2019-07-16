@@ -105,19 +105,22 @@ unsigned long OS::get_auxval(unsigned long id)
    {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
    return ::getauxval(id);
-#elif defined(BOTAN_TARGET_OS_IS_ANDROID)
-   char  **p = environ;
+#elif defined(BOTAN_TARGET_OS_IS_ANDROID) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
 
-   while (*p++!=nullptr);
+   if(id == 0)
+      return 0;
 
-   Elf32_auxv_t *e = reinterpret_cast<Elf32_auxv_t *>(p);
+   char **p = environ;
 
-   while (e!=nullptr)
+   while(*p++ != nullptr)
+      ;
+
+   Elf32_auxv_t *e = reinterpret_cast<Elf32_auxv_t*>(p);
+
+   while(e != nullptr)
       {
-      if (e->a_type == 0)
-        continue;
-      if (e->a_type == id)
-        return e->a_un.a_val;
+      if(e->a_type == id)
+         return e->a_un.a_val;
       e++;
       }
 
@@ -206,32 +209,28 @@ uint64_t OS::get_cpu_cycle_counter()
 
 size_t OS::get_cpu_total()
    {
-   size_t tt = 1;
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(_SC_NPROCESSORS_CONF)
-   long res;
-   if ((res = ::sysconf(_SC_NPROCESSORS_CONF)) <= 0)
-     {
-          return 1;
-     }
-     tt = static_cast<size_t>(res);
-#elif defined(BOTAN_TARGET_OS_HAS_THREADS)
-     tt = static_cast<size_t>(std::thread::hardware_concurrency());
+   const long res = ::sysconf(_SC_NPROCESSORS_CONF);
+   if(res > 0)
+      return static_cast<size_t>(res);
 #endif
-     return tt;
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   return static_cast<size_t>(std::thread::hardware_concurrency());
+#else
+   return 1;
+#endif
    }
 
 size_t OS::get_cpu_available()
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(_SC_NPROCESSORS_ONLN)
-   long res;
-   if ((res = ::sysconf(_SC_NPROCESSORS_ONLN)) <= 0)
-     {
-       return 1;
-     }
-   return static_cast<size_t>(res);
-#else
-   return get_cpu_total();
+   const long res = ::sysconf(_SC_NPROCESSORS_ONLN);
+   if(res > 0)
+      return static_cast<size_t>(res);
 #endif
+
+   return OS::get_cpu_total();
    }
 
 uint64_t OS::get_high_resolution_clock()
