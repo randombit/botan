@@ -2888,8 +2888,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
             logging.error("Could not figure out what compiler type '%s' is, use --cc to set" % (
                 options.compiler_binary))
 
-    if options.compiler is None:
-
+    if options.compiler is None and options.os in info_os:
         options.compiler = info_os[options.os].default_compiler
 
         if not have_program(info_cc[options.compiler].binary_name):
@@ -2916,7 +2915,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
             logging.info('Found rst2man (use --without-rst2man to disable)')
             options.with_rst2man = True
 
-    if options.with_pkg_config is None:
+    if options.with_pkg_config is None and options.os in info_os:
         options.with_pkg_config = info_os[options.os].uses_pkg_config
 
     if options.system_cert_bundle is None:
