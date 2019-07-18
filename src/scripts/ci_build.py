@@ -175,10 +175,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             flags += ['--cpu=x86_32']
 
         elif target == 'cross-win64':
-            # MinGW in 16.04 is lacking std::mutex for unknown reason
-            cc_bin = 'x86_64-w64-mingw32-g++'
+            cc_bin = 'x86_64-w64-mingw32-g++-win32'
             flags += ['--cpu=x86_64', '--cc-abi-flags=-static',
-                      '--ar-command=x86_64-w64-mingw32-ar', '--without-os-feature=threads']
+                      '--ar-command=x86_64-w64-mingw32-ar']
             test_cmd = [os.path.join(root_dir, 'botan-test.exe')] + test_cmd[1:]
             # No runtime prefix required for Wine
         else:
