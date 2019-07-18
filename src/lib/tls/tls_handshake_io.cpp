@@ -426,6 +426,8 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
                                                       Handshake_Type msg_type,
                                                       const std::vector<uint8_t>& msg_bits)
    {
+   const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
+
    const std::vector<uint8_t> no_fragment =
       format_w_seq(msg_bits, msg_type, msg_seq);
 
@@ -437,22 +439,34 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
       {
       size_t frag_offset = 0;
 
-      const size_t DTLS_HANDSHAKE_HEADERS = 32;
-      const size_t ciphersuite_overhead = (epoch > 0) ? 32 : 0;
-      const size_t max_rec_size = m_mtu - DTLS_HANDSHAKE_HEADERS - ciphersuite_overhead;
+      /**
+      * Largest possible overhead is for SHA-384 CBC ciphers, with 16 byte IV,
+      * 16+ for padding and 48 bytes for MAC. 128 is probably a strict
+      * over-estimate here. When CBC ciphers are removed this can be reduced
+      * since AEAD modes have no padding, at most 16 byte mac, and smaller
+      * per-record nonce.
+      */
+      const size_t ciphersuite_overhead = (epoch > 0) ? 128 : 0;
+      const size_t header_overhead = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_LEN;
+
+      if(m_mtu <= (header_overhead + ciphersuite_overhead))
+         throw Invalid_Argument("DTLS MTU is too small to send headers");
+
+      const size_t max_rec_size = m_mtu - (header_overhead + ciphersuite_overhead);
 
       while(frag_offset != msg_bits.size())
          {
          const size_t frag_len = std::min<size_t>(msg_bits.size() - frag_offset, max_rec_size);
 
-         m_send_hs(epoch,
-                   HANDSHAKE,
-                   format_fragment(&msg_bits[frag_offset],
-                                   frag_len,
-                                   static_cast<uint16_t>(frag_offset),
-                                   static_cast<uint16_t>(msg_bits.size()),
-                                   msg_type,
-                                   msg_seq));
+         const std::vector<uint8_t> frag =
+            format_fragment(&msg_bits[frag_offset],
+                            frag_len,
+                            static_cast<uint16_t>(frag_offset),
+                            static_cast<uint16_t>(msg_bits.size()),
+                            msg_type,
+                            msg_seq);
+
+         m_send_hs(epoch, HANDSHAKE, frag);
 
          frag_offset += frag_len;
          }
