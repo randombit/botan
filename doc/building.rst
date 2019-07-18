@@ -98,12 +98,17 @@ x86-64) but creating a binary for some other type (say MinGW x86-32). This is
 completely supported by the build system. To extend the example, we must tell
 `configure.py` to use the MinGW tools::
 
- $ ./configure.py --os=mingw --cpu=x86_32 --cc-bin=i686-w64-mingw32-g++ --ar=i686-w64-mingw32-ar
+ $ ./configure.py --os=mingw --cpu=x86_32 --cc-bin=i686-w64-mingw32-g++ --ar-command=i686-w64-mingw32-ar
  ...
  $ make
  ...
  $ file botan.exe
  botan.exe: PE32 executable (console) Intel 80386, for MS Windows
+
+.. note::
+   For whatever reason, some distributions of MinGW lack support for
+   threading or mutexes in the C++ standard library. You can work around
+   this by disabling thread support using ``--without-os-feature=threads``
 
 You can also specify the alternate tools by setting the `CXX` and `AR`
 environment variables (instead of the `--cc-bin` and `--ar-command` options), as
