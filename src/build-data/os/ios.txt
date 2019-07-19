@@ -13,6 +13,7 @@ arc4random
 commoncrypto
 sockets
 threads
+thread_local
 filesystem
 </target_features>
 

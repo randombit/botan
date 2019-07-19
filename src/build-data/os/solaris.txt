@@ -9,6 +9,7 @@ dev_random
 proc_fs
 
 threads
+thread_local
 sockets
 filesystem
 </target_features>

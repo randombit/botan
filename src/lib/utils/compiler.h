@@ -145,10 +145,14 @@
 /*
 * Define BOTAN_THREAD_LOCAL
 */
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-   #define BOTAN_THREAD_LOCAL thread_local
-#else
-   #define BOTAN_THREAD_LOCAL /**/
+#if !defined(BOTAN_THREAD_LOCAL)
+
+  #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_TARGET_OS_HAS_THREAD_LOCAL)
+    #define BOTAN_THREAD_LOCAL thread_local
+  #else
+    #define BOTAN_THREAD_LOCAL /**/
+  #endif
+
 #endif
 
 /*

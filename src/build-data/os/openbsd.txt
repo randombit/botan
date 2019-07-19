@@ -19,5 +19,6 @@ pledge
 
 sockets
 threads
+thread_local
 filesystem
 </target_features>

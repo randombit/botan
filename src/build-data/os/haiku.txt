@@ -15,6 +15,7 @@ dev_random
 
 sockets
 threads
+thread_local
 filesystem
 </target_features>
 

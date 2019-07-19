@@ -23,5 +23,6 @@ rtlgenrandom
 virtual_lock
 
 threads
+thread_local
 filesystem
 </target_features>

@@ -15,6 +15,7 @@ crypto_ng
 rtlsecurezeromemory
 
 threads
+thread_local
 filesystem
 </target_features>
 

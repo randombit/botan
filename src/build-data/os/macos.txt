@@ -22,6 +22,7 @@ clock_gettime
 commoncrypto
 sockets
 threads
+thread_local
 filesystem
 
 apple_keychain

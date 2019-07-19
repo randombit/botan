@@ -9,6 +9,7 @@ clock_gettime
 
 sockets
 threads
+thread_local
 filesystem
 </target_features>
 

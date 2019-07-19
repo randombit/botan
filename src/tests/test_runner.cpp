@@ -311,7 +311,7 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
 
    if(test_threads != 1)
       {
-#if defined(BOTAN_HAS_THREAD_UTILS)
+#if defined(BOTAN_HAS_THREAD_UTILS) && defined(BOTAN_TARGET_OS_HAS_THREAD_LOCAL)
       // If 0 then we let thread pool select the count
       Botan::Thread_Pool pool(test_threads);
 
