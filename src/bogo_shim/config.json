@@ -94,7 +94,6 @@
         "ClientAuth-Verify-ECDSA-SHA1-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
 
         "AppDataAfterChangeCipherSpec-DTLS*": "BoringSSL DTLS drops out of order AppData, we reject",
-        "MTUExceeded": "BoringSSL splits DTLS handshakes differently",
 
         "Resume-Client-NoResume-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-NoResume-TLS1-TLS12": "BoGo expects resumption attempt sends latest version",
@@ -106,19 +105,11 @@
         "Resume-Client-Mismatch-TLS11-TLS12": "BoGo expects resumption attempt sends latest version",
         "Resume-Client-Mismatch-TLS1-TLS12-DTLS": "BoGo expects resumption attempt sends latest version",
 
-        "CurveTest-Client-Compressed*": "Point compression is supported, which BoGo doesn't expect",
-        "PointFormat-Client-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
-        "CurveTest-Server-Compressed*": "Point compression is supported, which BoGo doesn't expect",
-        "PointFormat-Server-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
+        "CurveTest-*-Compressed*": "Point compression is supported, which BoGo doesn't expect",
+        "PointFormat-*-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
 
-        "RSAPSSSupport-ConfigNoPSS-NoCerts-TLS12-Client": "Not possible to disable PSS",
-        "RSAPSSSupport-ConfigNoPSS-TLS12-Client": "Not possible to disable PSS",
-        "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-Client": "Not possible to disable PSS",
-        "RSAPSSSupport-Default-NoCerts-TLS12-Client": "Not possible to disable PSS",
-        "RSAPSSSupport-ConfigNoPSS-NoCerts-TLS12-Server": "Not possible to disable PSS",
-        "RSAPSSSupport-ConfigNoPSS-TLS12-Server": "Not possible to disable PSS",
-        "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-Server": "Not possible to disable PSS",
-        "RSAPSSSupport-Default-NoCerts-TLS12-Server": "Not possible to disable PSS",
+        "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-*": "Needs investigation",
+        "RSAPSSSupport-Default-NoCerts-TLS12-*": "Needs investigation",
 
         "DTLS-Retransmit*": "Shim needs timeout support",
 
