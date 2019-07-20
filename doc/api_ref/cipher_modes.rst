@@ -210,10 +210,6 @@ encryption, message authentication, and the ability to authenticate additional
 data that is not included in the ciphertext (such as a sequence number or
 header). It is a subclass of :cpp:class:`Cipher_Mode`.
 
-The AEAD interface can be used directly, or as part of the filter system by
-using :cpp:class:`AEAD_Filter` (a subclass of :cpp:class:`Keyed_Filter` which
-will be returned by :cpp:func:`get_cipher` if the named cipher is an AEAD mode).
-
 .. cpp:class:: AEAD_Mode
 
   .. cpp:function:: void set_key(const SymmetricKey& key)
