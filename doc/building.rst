@@ -78,7 +78,7 @@ only the most core modules will be included; you can then explicitly
 enable things that you want to use with ``--enable-modules``. This is
 useful for creating a minimal build targeting to a specific
 application, especially in conjunction with the amalgamation option;
-see :ref:`amalgamation`.
+see :ref:`amalgamation` and :ref:`minimized_builds`.
 
 For instance::
 
@@ -498,6 +498,43 @@ build step is required, just import botan2.py
 
 See :doc:`Python Bindings <api_ref/python>` for more information about
 the Python bindings.
+
+.. _minimized_builds:
+
+Minimized Builds
+--------------------
+
+Many developers wish to configure a minimized build which contains only the
+specific features their application will use. In general this is straighforward:
+use ``--minimized-build`` plus ``--enable-modules=`` to enable the specific modules
+you wish to use. Any such configurations should build and pass the tests; if you
+encounter a case where it doesn't please file an issue.
+
+The only trick is knowing which features you want to enable. The most common
+difficulty comes with entropy sources. By default, none are enabled, which means
+if you attempt to use ``AutoSeeded_RNG``, it will fail. The easiest resolution
+is to also enable ``system_rng`` which can act as either an entropy source or
+used directly as the RNG.
+
+If you are building for x86, ARM, or POWER, it can be beneficial to enable
+hardware support for the relevant instruction sets with modules such as
+``aes_ni`` and ``clmul`` for x86, or ``aes_armv8``, ``pmull``, and
+``sha2_32_armv8`` on ARMv8. SIMD optimizations such as ``chacha_avx2`` also can
+provide substantial performance improvements.
+
+.. note::
+   In a future release, hardware specific modules will be enabled by default if
+   the underlying "base" module is enabled.
+
+If you are building a TLS application, you may (or may not) want to include
+``tls_cbc`` which enables support for CBC ciphersuites. If ``tls_cbc`` is
+disabled, then it will not be possible to negotiate TLS v1.0/v1.1. In general
+this should be considered a feature; only enable this if you need backward
+compatability with obsolete clients or servers.
+
+For TLS another useful feature which is not enabled by default is the
+ChaCha20Poly1305 ciphersuites. To enable these, add ``chacha20poly1305``.
+
 
 Configure Script Options
 ---------------------------
