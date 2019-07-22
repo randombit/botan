@@ -35,9 +35,9 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
    {
    public:
 #if SOCKET_ID
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces= --max-clients=0 --socket-id=0")
+      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
 #else
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces= --max-clients=0")
+      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0")
 #endif
          {
          init_sockets();

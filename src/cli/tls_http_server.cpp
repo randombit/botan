@@ -505,7 +505,7 @@ class TLS_HTTP_Server final : public Command
    {
    public:
       TLS_HTTP_Server() : Command("tls_http_server server_cert server_key "
-                                  "--port=443 --policy= --threads=0 --max-clients=0 "
+                                  "--port=443 --policy=default --threads=0 --max-clients=0 "
                                   "--session-db= --session-db-pass=") {}
 
       std::string group() const override

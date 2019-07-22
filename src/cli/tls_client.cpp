@@ -60,7 +60,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
    {
    public:
       TLS_Client()
-         : Command("tls_client host --port=443 --print-certs --policy= "
+         : Command("tls_client host --port=443 --print-certs --policy=default "
                    "--tls1.0 --tls1.1 --tls1.2 "
                    "--skip-system-cert-store --trusted-cas= "
                    "--session-db= --session-db-pass= --next-protocols= --type=tcp")
