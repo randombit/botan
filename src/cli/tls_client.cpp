@@ -27,7 +27,7 @@
 #include <memory>
 
 #include "socket_utils.h"
-#include "credentials.h"
+#include "tls_helpers.h"
 
 namespace Botan_CLI {
 
@@ -94,7 +94,6 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          const uint16_t port = get_arg_u16("port");
          const std::string transport = get_arg("type");
          const std::string next_protos = get_arg("next-protocols");
-         std::string policy_file = get_arg("policy");
          const bool use_system_cert_store = flag_set("skip-system-cert-store") == false;
          const std::string trusted_CAs = get_arg("trusted-cas");
 
@@ -113,18 +112,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
             }
 
-         std::unique_ptr<Botan::TLS::Policy> policy;
-
-         if(policy_file.size() > 0)
-            {
-            std::ifstream policy_stream(policy_file);
-            if(!policy_stream.good())
-               {
-               error_output() << "Failed reading policy file\n";
-               return;
-               }
-            policy.reset(new Botan::TLS::Text_Policy(policy_stream));
-            }
+         auto policy = load_tls_policy(get_arg("policy"));
 
          if(transport != "tcp" && transport != "udp")
             {
