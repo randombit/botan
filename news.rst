@@ -17,6 +17,10 @@ Version 2.12.0, Not Yet Released
 
 * Cleanups in TLS record layer (GH #2021)
 
+* Support setting TLS policies in CLIs like ``tls_client`` and ``tls_proxy_server`` (GH #2047)
+
+* Fix typos in some OCSP enums which used "OSCP" instead. (GH #2048)
+
 * Avoid using ``__GNUG__`` in headers that may be consumed by a C compiler (GH #2013)
 
 * Add a script to help with building for Android, using Docker (GH #2016 #2033 #513)
