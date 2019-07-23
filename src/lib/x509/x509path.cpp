@@ -374,7 +374,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
       if(subject->ocsp_responder() == "")
          {
          ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const OCSP::Response> {
-                  return std::make_shared<const OCSP::Response>(Certificate_Status_Code::OSCP_NO_REVOCATION_URL);
+                  return std::make_shared<const OCSP::Response>(Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
                   }));
          }
       else
@@ -396,7 +396,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
                   // log e.what() ?
                   }
                if (http.status_code() != 200)
-                  return std::make_shared<const OCSP::Response>(Certificate_Status_Code::OSCP_SERVER_NOT_AVAILABLE);
+                  return std::make_shared<const OCSP::Response>(Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
                // Check the MIME type?
 
                return std::make_shared<const OCSP::Response>(http.body());
@@ -785,8 +785,8 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
          for(auto&& code : ocsp[i])
             {
             if(code == Certificate_Status_Code::OCSP_RESPONSE_GOOD ||
-               code == Certificate_Status_Code::OSCP_NO_REVOCATION_URL ||  // softfail
-               code == Certificate_Status_Code::OSCP_SERVER_NOT_AVAILABLE) // softfail
+               code == Certificate_Status_Code::OCSP_NO_REVOCATION_URL ||  // softfail
+               code == Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE) // softfail
                {
                had_ocsp = true;
                }

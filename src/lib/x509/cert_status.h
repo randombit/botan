@@ -30,6 +30,10 @@ enum class Certificate_Status_Code {
    FIRST_WARNING_STATUS = 500,
    CERT_SERIAL_NEGATIVE = 500,
    DN_TOO_LONG = 501,
+   OCSP_NO_REVOCATION_URL = 502,
+   OCSP_SERVER_NOT_AVAILABLE = 503,
+
+   // Typo versions of above - will be removed in future major release
    OSCP_NO_REVOCATION_URL = 502,
    OSCP_SERVER_NOT_AVAILABLE = 503,
 
