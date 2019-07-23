@@ -40,7 +40,7 @@
    #include <botan/tls_session_manager_sqlite.h>
 #endif
 
-#include "credentials.h"
+#include "tls_helpers.h"
 
 #if BOOST_VERSION >= 107000
 #define GET_IO_SERVICE(s) ((boost::asio::io_context&)(s).get_executor().context())
@@ -505,7 +505,7 @@ class TLS_HTTP_Server final : public Command
    {
    public:
       TLS_HTTP_Server() : Command("tls_http_server server_cert server_key "
-                                  "--port=443 --policy= --threads=0 --max-clients=0 "
+                                  "--port=443 --policy=default --threads=0 --max-clients=0 "
                                   "--session-db= --session-db-pass=") {}
 
       std::string group() const override
@@ -539,24 +539,7 @@ class TLS_HTTP_Server final : public Command
 
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
-         std::unique_ptr<Botan::TLS::Policy> policy;
-
-         const std::string policy_file = get_arg("policy");
-         if(policy_file.size() > 0)
-            {
-            std::ifstream policy_stream(policy_file);
-            if(!policy_stream.good())
-               {
-               error_output() << "Failed reading policy file\n";
-               return;
-               }
-            policy.reset(new Botan::TLS::Text_Policy(policy_stream));
-            }
-
-         if(!policy)
-            {
-            policy.reset(new Botan::TLS::Policy);
-            }
+         auto policy = load_tls_policy(get_arg("policy"));
 
          std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
 

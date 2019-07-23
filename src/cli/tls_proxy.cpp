@@ -32,7 +32,7 @@
    #include <botan/tls_session_manager_sqlite.h>
 #endif
 
-#include "credentials.h"
+#include "tls_helpers.h"
 
 #if BOOST_VERSION >= 107000
 #define GET_IO_SERVICE(s) ((boost::asio::io_context&)(s).get_executor().context())
@@ -442,7 +442,7 @@ class TLS_Proxy final : public Command
    {
    public:
       TLS_Proxy() : Command("tls_proxy listen_port target_host target_port server_cert server_key "
-                               "--threads=0 --max-clients=0 --session-db= --session-db-pass=") {}
+                               "--policy=default --threads=0 --max-clients=0 --session-db= --session-db-pass=") {}
 
       std::string group() const override
          {
@@ -477,7 +477,7 @@ class TLS_Proxy final : public Command
 
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
-         Botan::TLS::Policy policy; // TODO: Read policy from text file
+         auto policy = load_tls_policy(get_arg("policy"));
 
          boost::asio::io_service io;
 
@@ -500,7 +500,7 @@ class TLS_Proxy final : public Command
             session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
             }
 
-         tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, *session_mgr, max_clients);
+         tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, *policy, *session_mgr, max_clients);
 
          std::vector<std::shared_ptr<std::thread>> threads;
 
