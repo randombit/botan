@@ -430,11 +430,19 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
    #define PROT_MAX(p) 0
 #endif
       const int pflags = PROT_READ | PROT_WRITE;
+#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+// On Darwin, tagging anonymous pages allows vmmap to track these.
+// Allowed from 240 to 255 for userland applications, taken an hardcoded
+// value for now even though it can possibly intersect.
+      const int locked_fd = (255<<24);
+#else
+      const int locked_fd = -1;
+#endif
 
       ptr = ::mmap(nullptr, 2*page_size,
                    pflags | PROT_MAX(pflags),
                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_NOCORE,
-                   /*fd=*/-1, /*offset=*/0);
+                   /*fd=*/locked_fd, /*offset=*/0);
 
       if(ptr == MAP_FAILED)
          {
