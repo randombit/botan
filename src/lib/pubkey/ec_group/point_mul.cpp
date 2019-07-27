@@ -12,6 +12,12 @@
 
 namespace Botan {
 
+namespace {
+
+const size_t PointGFp_SCALAR_BLINDING_BITS = 80;
+
+}
+
 PointGFp multi_exponentiate(const PointGFp& x, const BigInt& z1,
                             const PointGFp& y, const BigInt& z2)
    {

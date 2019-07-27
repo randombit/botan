@@ -13,8 +13,6 @@ namespace Botan {
 
 class Modular_Reducer;
 
-static const size_t PointGFp_SCALAR_BLINDING_BITS = 80;
-
 class PointGFp_Base_Point_Precompute final
    {
    public:
