@@ -91,6 +91,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
          set_unused_leaf_index(idx_leaf);
          }
 
+      bool stateful_operation() const override { return true; }
+
       /**
        * Retrieves the last unused leaf index of the private key. Reusing a leaf
        * by utilizing leaf indices lower than the last unused leaf index will

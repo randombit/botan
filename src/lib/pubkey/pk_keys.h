@@ -176,6 +176,8 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
       Private_Key& operator=(const Private_Key& other) = default;
       virtual ~Private_Key() = default;
 
+      virtual bool stateful_operation() const { return false; }
+
       /**
       * @return BER encoded private key bits
       */

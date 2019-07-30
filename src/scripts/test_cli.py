@@ -318,6 +318,40 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
     test_cli("cert_verify", user_cert,
              "Certificate did not validate - Certificate issuer not found")
 
+def cli_xmss_sign_tests(tmp_dir):
+    priv_key = os.path.join(tmp_dir, 'priv.pem')
+    pub_key = os.path.join(tmp_dir, 'pub.pem')
+    pub_key2 = os.path.join(tmp_dir, 'pub2.pem')
+    msg = os.path.join(tmp_dir, 'input')
+    sig1 = os.path.join(tmp_dir, 'sig1')
+    sig2 = os.path.join(tmp_dir, 'sig2')
+
+    test_cli("rng", ['--output=%s' % (msg)], "")
+    test_cli("hash", ["--no-fsname", msg], "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")
+
+    test_cli("keygen", ["--algo=XMSS", "--output=%s" % (priv_key)], "")
+    test_cli("hash", ["--no-fsname", priv_key], "32397312E3FAC9D6396C55FEEFFF11EE195E2D2D5B34279D2544AF27763B0946")
+
+    test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key, priv_key), "")
+    test_cli("fingerprint", ['--no-fsname', pub_key],
+             "E2:BE:C8:6D:CF:4B:5D:67:AB:A1:C1:F8:36:79:D5:3B:D8:17:D5:E3:5B:BE:29:08:03:7E:6E:07:27:4E:16:46")
+
+    # verify the key is updated after each signature:
+    test_cli("sign", [priv_key, msg, "--output=%s" % (sig1)], "")
+    test_cli("verify", [pub_key, msg, sig1], "Signature is valid")
+    test_cli("hash", ["--no-fsname", sig1], "04AF45451C7A9AF2D828E1AD6EC262E012436F4087C5DA6F32C689D781E597D0")
+    test_cli("hash", ["--no-fsname", priv_key], "649E54D334F78A6AAAE34CFABF62121C74909D80E4DC2FA240A6EE1848526094")
+
+    test_cli("sign", [priv_key, msg, "--output=%s" % (sig2)], "")
+    test_cli("verify", [pub_key, msg, sig2], "Signature is valid")
+    test_cli("hash", ["--no-fsname", sig2], "0785A6AD54CC7D01F2BE2BC6463A3EAA1159792E52210ED754992C5068E8F24F")
+    test_cli("hash", ["--no-fsname", priv_key], "04483FA5367A7340F4BF6160FABD5742258009E05F9584E8D9732660B132608E")
+
+    # private key updates, public key is unchanged:
+    test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key2, priv_key), "")
+    test_cli("fingerprint", ['--no-fsname', pub_key2],
+             "E2:BE:C8:6D:CF:4B:5D:67:AB:A1:C1:F8:36:79:D5:3B:D8:17:D5:E3:5B:BE:29:08:03:7E:6E:07:27:4E:16:46")
+
 def cli_pbkdf_tune_tests(_tmp_dir):
     if not check_for_command("pbkdf_tune"):
         return
@@ -1032,6 +1066,7 @@ def main(args=None):
         cli_hmac_tests,
         cli_is_prime_tests,
         cli_key_tests,
+        cli_xmss_sign_tests,
         cli_mod_inverse_tests,
         cli_pbkdf_tune_tests,
         cli_pk_encrypt_tests,

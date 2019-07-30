@@ -21,6 +21,8 @@
 #include <botan/workfactor.h>
 #include <botan/data_src.h>
 
+#include <fstream>
+
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
 #endif
@@ -215,6 +217,15 @@ class PK_Sign final : public Command
          this->read_file(get_arg("file"), onData);
 
          output() << Botan::base64_encode(signer.signature(rng())) << "\n";
+
+         if(key->stateful_operation())
+            {
+            std::ofstream updated_key(key_file);
+            if(passphrase.empty())
+               updated_key << Botan::PKCS8::PEM_encode(*key);
+            else
+               updated_key << Botan::PKCS8::PEM_encode(*key, rng(), passphrase);
+            }
          }
    };
 
