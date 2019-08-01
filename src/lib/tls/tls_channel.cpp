@@ -35,7 +35,8 @@ Channel::Channel(Callbacks& callbacks,
    m_callbacks(callbacks),
    m_session_manager(session_manager),
    m_policy(policy),
-   m_rng(rng)
+   m_rng(rng),
+   m_has_been_closed(false)
    {
    init(reserved_io_buffer_size);
    }
@@ -63,7 +64,8 @@ Channel::Channel(output_fn out,
     m_callbacks(*m_compat_callbacks.get()),
     m_session_manager(session_manager),
     m_policy(policy),
-    m_rng(rng)
+    m_rng(rng),
+    m_has_been_closed(false)
     {
     init(io_buf_sz);
     }
@@ -281,23 +283,7 @@ bool Channel::is_active() const
 
 bool Channel::is_closed() const
    {
-   if(active_state() || pending_state())
-      return false;
-
-   /*
-   * If no active or pending state, then either we had a connection
-   * and it has been closed, or we are a server which has never
-   * received a connection. This case is detectable by also lacking
-   * m_sequence_numbers
-   */
-   if(m_is_server)
-      {
-      return (m_sequence_numbers != nullptr);
-      }
-   else
-      {
-      return true;
-      }
+   return m_has_been_closed;
    }
 
 void Channel::activate_session()
@@ -331,7 +317,7 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
 
    try
       {
-      while(!is_closed() && input_size)
+      while(input_size)
          {
          size_t consumed = 0;
 
@@ -415,10 +401,14 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
 
          if(record.type() == HANDSHAKE || record.type() == CHANGE_CIPHER_SPEC)
             {
+            if(m_has_been_closed)
+               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received handshake data after connection closure");
             process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
             }
          else if(record.type() == APPLICATION_DATA)
             {
+            if(m_has_been_closed)
+               throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Received application data after connection closure");
             if(pending_state() != nullptr)
                throw TLS_Exception(Alert::UNEXPECTED_MESSAGE, "Can't interleave application and handshake data");
             process_application_data(record.sequence(), m_record_buf);
@@ -554,7 +544,7 @@ void Channel::process_alert(const secure_vector<uint8_t>& record)
 
     if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
        {
-       reset_state();
+       m_has_been_closed = true;
        }
     }
 
@@ -670,8 +660,13 @@ void Channel::send_alert(const Alert& alert)
       if(auto active = active_state())
          m_session_manager.remove_entry(active->server_hello()->session_id());
 
-   if(alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal())
+   if(alert.is_fatal())
       reset_state();
+
+   if(alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal())
+      {
+      m_has_been_closed = true;
+      }
    }
 
 void Channel::secure_renegotiation_check(const Client_Hello* client_hello)
