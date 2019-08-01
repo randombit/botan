@@ -558,6 +558,31 @@ Test::Result test_x509_authority_info_access_extension()
    return result;
    }
 
+Test::Result test_verify_gost2012_cert()
+   {
+   Test::Result result("X509 GOST-2012 certificates");
+
+   try
+      {
+      Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
+      Botan::X509_Certificate root_int(Test::data_file("x509/gost/gost_int.pem"));
+
+      Botan::Certificate_Store_In_Memory trusted;
+      trusted.add_certificate(root_cert);
+
+      const Botan::Path_Validation_Restrictions restrictions(false, 128, false, {"Streebog-256"});
+      const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(root_int, restrictions, trusted);
+
+      result.confirm("GOST certificate validates", validation_result.successful_validation());
+      }
+   catch(const Botan::Decoding_Error& e)
+      {
+      result.test_failure(e.what());
+      }
+
+   return result;
+   }
+
 /*
  * @brief checks the configurability of the EMSA4(RSA-PSS) signature scheme
  *
@@ -1617,6 +1642,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_x509_decode_list());
          results.push_back(test_rsa_oaep());
          results.push_back(test_x509_authority_info_access_extension());
+         results.push_back(test_verify_gost2012_cert());
 #endif
 
          results.push_back(test_x509_dates());

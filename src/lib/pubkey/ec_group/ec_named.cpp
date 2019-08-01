@@ -114,7 +114,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::EC_group_info(const OID& oid)
                                 "0xF1FD178C0B3AD58F10126DE8CE42435B53DC67E140D2BF941FFDD459C6D655E1",
                                 oid);
    // gost_256A
-   if(oid == OID{1,2,643,2,2,35,1})
+   if(oid == OID{1,2,643,2,2,35,1} || oid == OID{1,2,643,2,2,36,0} || oid == OID{1,2,643,7,1,2,1,1,1})
       return load_EC_group_info("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD97",
                                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD94",
                                 "0xA6",

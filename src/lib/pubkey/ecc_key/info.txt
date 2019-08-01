@@ -1,5 +1,6 @@
 <defines>
 ECC_PUBLIC_KEY_CRYPTO -> 20131128
+ECC_KEY -> 20190801
 </defines>
 
 <requires>

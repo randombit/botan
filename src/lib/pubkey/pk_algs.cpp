@@ -146,7 +146,7 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-   if(alg_name == "GOST-34.10")
+   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512")
       return std::unique_ptr<Public_Key>(new GOST_3410_PublicKey(alg_id, key_bits));
 #endif
 
@@ -222,7 +222,7 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-   if(alg_name == "GOST-34.10")
+   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512")
       return std::unique_ptr<Private_Key>(new GOST_3410_PrivateKey(alg_id, key_bits));
 #endif
 

@@ -197,8 +197,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    else
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
 
-   const Signature_Format format =
-      (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+   const Signature_Format format = pub_key.default_x509_signature_format();
 
    if(padding == "EMSA4")
       {
@@ -369,7 +368,7 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(AlgorithmIdentifier& s
                                                           const std::string& hash_fn,
                                                           const std::string& padding_algo)
    {
-   const Signature_Format format = (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
+   const Signature_Format format = key.default_x509_signature_format();
 
    const std::string emsa = choose_sig_algo(sig_algo, key, hash_fn, padding_algo);
 

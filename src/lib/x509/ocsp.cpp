@@ -170,7 +170,7 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
          return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
 
       std::string padding = sig_info[1];
-      Signature_Format format = (pub_key->message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+      const Signature_Format format = pub_key->default_x509_signature_format();
 
       PK_Verifier verifier(*pub_key, padding, format);
 
