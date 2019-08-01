@@ -562,6 +562,7 @@ Test::Result test_verify_gost2012_cert()
    {
    Test::Result result("X509 GOST-2012 certificates");
 
+#if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG)
    try
       {
       Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
@@ -579,6 +580,7 @@ Test::Result test_verify_gost2012_cert()
       {
       result.test_failure(e.what());
       }
+#endif
 
    return result;
    }
