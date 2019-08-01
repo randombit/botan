@@ -17,6 +17,9 @@ namespace Botan {
 
 BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size)
    {
+   if(elems == 0 || elem_size == 0)
+      return nullptr;
+
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
    if(void* p = mlock_allocator::instance().allocate(elems, elem_size))
       return p;
