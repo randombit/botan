@@ -9,16 +9,17 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-#include <botan/bigint.h>
-#include <botan/numthry.h>
-#include <botan/curve_nistp.h>
-#include <botan/pk_keys.h>
-#include <botan/point_gfp.h>
-#include <botan/ec_group.h>
-#include <botan/reducer.h>
-#include <botan/hex.h>
-#include <botan/data_src.h>
-#include <botan/x509_key.h>
+  #include <botan/bigint.h>
+  #include <botan/numthry.h>
+  #include <botan/curve_nistp.h>
+  #include <botan/pk_keys.h>
+  #include <botan/point_gfp.h>
+  #include <botan/ec_group.h>
+  #include <botan/reducer.h>
+  #include <botan/hex.h>
+  #include <botan/data_src.h>
+  #include <botan/x509_key.h>
+  #include <botan/oids.h>
 #endif
 
 namespace Botan_Tests {
@@ -273,7 +274,9 @@ class EC_Group_Tests : public Test
             {
             Test::Result result("EC_Group " + group_name);
 
-            const Botan::EC_Group group(group_name);
+            const Botan::OID oid = Botan::OIDS::lookup(group_name);
+
+            const Botan::EC_Group group(oid);
 
             result.confirm("EC_Group is known", !group.get_curve_oid().empty());
             result.confirm("EC_Group is considered valid", group.verify_group(Test::rng(), true));
