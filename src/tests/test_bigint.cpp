@@ -453,6 +453,34 @@ class BigInt_GCD_Test final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("bn_gcd", BigInt_GCD_Test);
 
+class BigInt_Jacobi_Test final : public Text_Based_Test
+   {
+   public:
+      BigInt_Jacobi_Test() : Text_Based_Test("bn/jacobi.vec", "A,N,J") {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         Test::Result result("BigInt Jacobi");
+
+         const BigInt a = vars.get_req_bn("A");
+         const BigInt n = vars.get_req_bn("N");
+         const std::string expected = vars.get_req_str("J");
+
+         const int32_t j = Botan::jacobi(a, n);
+
+         if(j == 0)
+            result.test_eq("jacobi", expected, "0");
+         else if(j == -1)
+            result.test_eq("jacobi", expected, "-1");
+         else
+            result.test_eq("jacobi", expected, "1");
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("bn_jacobi", BigInt_Jacobi_Test);
+
 class BigInt_Lshift_Test final : public Text_Based_Test
    {
    public:
