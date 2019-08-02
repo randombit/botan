@@ -53,6 +53,9 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PublicKey : public virtual EC_PublicKey
       size_t message_part_size() const override
          { return domain().get_order().bytes(); }
 
+      Signature_Format default_x509_signature_format() const
+         { return IEEE_1363; }
+
       std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string& params,
                                 const std::string& provider) const override;

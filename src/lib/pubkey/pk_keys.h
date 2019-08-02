@@ -19,6 +19,11 @@ namespace Botan {
 class RandomNumberGenerator;
 
 /**
+* The two types of signature format supported by Botan.
+*/
+enum Signature_Format { IEEE_1363, DER_SEQUENCE };
+
+/**
 * Public Key Base Class.
 */
 class BOTAN_PUBLIC_API(2,0) Public_Key
@@ -117,6 +122,11 @@ class BOTAN_PUBLIC_API(2,0) Public_Key
       * @return size of the message parts in bits
       */
       virtual size_t message_part_size() const { return 0; }
+
+      virtual Signature_Format default_x509_signature_format() const
+         {
+         return (this->message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+         }
 
       /**
       * This is an internal library function exposed on key types.
