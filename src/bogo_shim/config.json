@@ -88,11 +88,6 @@
 
         "ALPNServer-SelectEmpty-*": "Botan treats empty ALPN from callback as a decline",
 
-        "ServerAuth-Verify-ECDSA-P521-SHA512-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
-        "ServerAuth-Verify-ECDSA-SHA1-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
-        "ClientAuth-Verify-ECDSA-P521-SHA512-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
-        "ClientAuth-Verify-ECDSA-SHA1-TLS12": "BoringSSL will sign SHA-1 and SHA-512 with ECDSA but not accept them.",
-
         "AppDataAfterChangeCipherSpec-DTLS*": "BoringSSL DTLS drops out of order AppData, we reject",
 
         "Resume-Client-NoResume-TLS1-TLS11": "BoGo expects resumption attempt sends latest version",
@@ -115,15 +110,6 @@
 
         "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
-        "MixCompleteMessageWithFragments-DTLS": "Needs investigation",
-        "ReorderHandshakeFragments-Small-DTLS": "Needs investigation",
-
-        "Shutdown-Shim-ApplicationData*": "Needs investigation",
-        "Shutdown-Shim-HelloRequest-CannotHandshake*": "Needs investigation",
-        "Shutdown-Shim-HelloRequest-Reject*": "Needs investigation",
-        "Shutdown-Shim-Renegotiate-Server-Forbidden*":  "Needs investigation",
-        "Unclean-Shutdown": "Needs investigation",
-        "Unclean-Shutdown-Alert": "Needs investigation",
 
         "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected (bug)",
 

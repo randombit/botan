@@ -132,6 +132,8 @@ std::string map_to_bogo_error(const std::string& e)
          { "Received a record that exceeds maximum size", ":ENCRYPTED_LENGTH_TOO_LONG:" },
          { "Received unexpected record version in initial record", ":WRONG_VERSION_NUMBER:" },
          { "Received unexpected record version", ":WRONG_VERSION_NUMBER:" },
+         { "Received application data after connection closure", ":APPLICATION_DATA_ON_SHUTDOWN:" },
+         { "Received handshake data after connection closure", ":NO_RENEGOTIATION:" },
          { "Server certificate changed during renegotiation", ":SERVER_CERT_CHANGED:" },
          { "Server changed its mind about extended master secret", ":RENEGOTIATION_EMS_MISMATCH:" },
          { "Server changed its mind about secure renegotiation", ":RENEGOTIATION_MISMATCH:" },
@@ -1238,12 +1240,14 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
          m_channel = channel;
          }
 
+      bool saw_close_notify() const { return m_got_close; }
+
       void tls_emit_data(const uint8_t data[], size_t size) override
          {
+         shim_log("sending record of len " + std::to_string(size));
+
          if(m_is_datagram)
             {
-            shim_log("sending record of len " + std::to_string(size));
-
             std::vector<uint8_t> packet(size + 5);
 
             packet[0] = 'P';
@@ -1288,6 +1292,8 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             {
             m_empty_records = 0;
             }
+
+         shim_log("Reflecting application_data len " + std::to_string(size));
 
          std::vector<uint8_t> buf(data, data + size);
          for(size_t i = 0; i != size; ++i)
@@ -1361,11 +1367,19 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
       void tls_alert(Botan::TLS::Alert alert) override
          {
-         shim_log("Got an alert " + alert.type_string());
+         if(alert.is_fatal())
+            shim_log("Got a fatal alert " + alert.type_string());
+         else
+            shim_log("Got a warning alert " + alert.type_string());
 
          if(alert.type() == Botan::TLS::Alert::RECORD_OVERFLOW)
             {
             shim_exit_with_error(":TLSV1_ALERT_RECORD_OVERFLOW:");
+            }
+
+         if(alert.type() == Botan::TLS::Alert::DECOMPRESSION_FAILURE)
+            {
+            shim_exit_with_error(":SSLV3_ALERT_DECOMPRESSION_FAILURE:");
             }
 
          if(!alert.is_fatal())
@@ -1377,11 +1391,16 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
 
          if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
             {
-            if(m_got_close == false)
+            if(m_got_close == false && !m_args.flag_set("shim-shuts-down"))
                {
+               shim_log("Sending return close notify");
                m_channel->send_alert(alert);
-               m_got_close = true;
                }
+            m_got_close = true;
+            }
+         else if(alert.is_fatal())
+            {
+            shim_exit_with_error("Unexpected fatal alert " + alert.type_string());
             }
          }
 
@@ -1466,7 +1485,10 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks
             }
 
          if(m_args.flag_set("shim-shuts-down"))
+            {
+            shim_log("Shim shutting down");
             m_channel->close();
+            }
 
          if(m_args.flag_set("write-different-record-sizes"))
             {
@@ -1607,12 +1629,23 @@ int main(int /*argc*/, char* argv[])
                   break;
                   }
 
+               shim_log("Got packet of " + std::to_string(got));
+
                if(args->flag_set("use-exporter-between-reads") && chan->is_active())
                   {
                   chan->key_material_export("some label", "some context", 42);
                   }
-               chan->received_data(buf.data(), got);
+               const size_t needed = chan->received_data(buf.data(), got);
+
+               if(needed)
+                  shim_log("Short read still need " + std::to_string(needed));
                }
+            }
+
+         if(args->flag_set("check-close-notify"))
+            {
+            if(!callbacks.saw_close_notify())
+               throw Shim_Exception("Unexpected SSL_shutdown result: -1 != 1");
             }
 
          if(args->option_used("expect-total-renegotiations"))
