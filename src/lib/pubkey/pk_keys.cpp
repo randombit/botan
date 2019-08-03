@@ -52,13 +52,12 @@ std::vector<uint8_t> Public_Key::subject_public_key() const
 */
 OID Public_Key::get_oid() const
    {
-   try {
-      return OIDS::lookup(algo_name());
-      }
-   catch(Lookup_Error&)
-      {
+   const OID oid = OIDS::lookup(algo_name());
+
+   if(oid.empty())
       throw Lookup_Error("PK algo " + algo_name() + " has no defined OIDs");
-      }
+
+   return oid;
    }
 
 secure_vector<uint8_t> Private_Key::private_key_info() const

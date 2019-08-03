@@ -304,7 +304,9 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
            algo_name == "ECDSA" ||
            algo_name == "ECGDSA" ||
            algo_name == "ECKCDSA" ||
-           algo_name == "GOST-34.10")
+           algo_name == "GOST-34.10" ||
+           algo_name == "GOST-34.10-2012-256" ||
+           algo_name == "GOST-34.10-2012-512")
       {
       padding = "EMSA1(" + hash_fn + ")";
       }

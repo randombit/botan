@@ -40,6 +40,11 @@ std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const
    return output;
    }
 
+std::string GOST_3410_PublicKey::algo_name() const
+   {
+   return "GOST-34.10-2012-" + std::to_string(domain().get_p_bits());
+   }
+
 AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    {
    std::vector<uint8_t> params;

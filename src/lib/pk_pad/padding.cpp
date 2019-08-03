@@ -24,6 +24,8 @@ const std::map<const std::string, std::vector<std::string>> allowed_signature_pa
    { "ECGDSA", {"EMSA1"} },
    { "ECKCDSA", {"EMSA1"} },
    { "GOST-34.10", {"EMSA1"} },
+   { "GOST-34.10-2012-256", {"EMSA1"} },
+   { "GOST-34.10-2012-512", {"EMSA1"} },
    { "RSA", {"EMSA4", "EMSA3"} },
    };
 

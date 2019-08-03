@@ -68,25 +68,31 @@ std::string key_constraints_to_string(Key_Constraints constraints)
 * Make sure the given key constraints are permitted for the given key type
 */
 void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
-                                                      Key_Constraints constraints)
+                                                Key_Constraints constraints)
    {
    const std::string name = pub_key.algo_name();
 
    size_t permitted = 0;
 
-   if(name == "DH" || name == "ECDH")
+   const bool can_agree = (name == "DH" || name == "ECDH");
+   const bool can_encrypt = (name == "RSA" || name == "ElGamal");
+
+   const bool can_sign =
+      (name == "RSA" || name == "DSA" ||
+       name == "ECDSA" || name == "ECGDSA" || name == "ECKCDSA" || name == "Ed25519" ||
+       name == "GOST-34.10" || name == "GOST-34.10-2012-256" || name == "GOST-34.10-2012-512");
+
+   if(can_agree)
       {
       permitted |= KEY_AGREEMENT | ENCIPHER_ONLY | DECIPHER_ONLY;
       }
 
-   if(name == "RSA" || name == "ElGamal")
+   if(can_encrypt)
       {
       permitted |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
       }
 
-   if(name == "RSA" || name == "DSA" ||
-      name == "ECDSA" || name == "ECGDSA" || name == "ECKCDSA" || name == "GOST-34.10" ||
-      name == "Ed25519")
+   if(can_sign)
       {
       permitted |= DIGITAL_SIGNATURE | NON_REPUDIATION | KEY_CERT_SIGN | CRL_SIGN;
       }

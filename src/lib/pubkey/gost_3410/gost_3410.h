@@ -42,7 +42,7 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PublicKey : public virtual EC_PublicKey
       * Get this keys algorithm name.
       * @result this keys algorithm name
       */
-      std::string algo_name() const override { return "GOST-34.10"; }
+      std::string algo_name() const override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
