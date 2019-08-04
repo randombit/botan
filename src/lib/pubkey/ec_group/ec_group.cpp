@@ -361,8 +361,8 @@ EC_Group::EC_Group(const std::string& str)
 
    try
       {
-      OID oid = OIDS::lookup(str);
-      if(oid.empty() == false)
+      OID oid = OIDS::str2oid_or_empty(str);
+      if(oid.has_value())
          m_data = ec_group_data().lookup(oid);
       }
    catch(Invalid_OID&)

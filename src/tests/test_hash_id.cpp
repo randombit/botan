@@ -52,7 +52,7 @@ class PKCS_HashID_Test final : public Test
                {
                const std::vector<uint8_t> pkcs_id = Botan::pkcs_hash_id(hash_fn);
 
-               const Botan::OID oid = Botan::OIDS::lookup(hash_fn);
+               const Botan::OID oid = Botan::OIDS::str2oid_or_throw(hash_fn);
                const Botan::AlgorithmIdentifier alg(oid, Botan::AlgorithmIdentifier::USE_NULL_PARAM);
                const std::vector<uint8_t> dummy_hash(hash_len);
 

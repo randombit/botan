@@ -786,7 +786,7 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const
    DER_Encoder(output)
       .start_cons(SEQUENCE)
       .start_cons(SEQUENCE)
-      .encode(OIDS::lookup("PKIX.OCSP"))
+      .encode(OIDS::str2oid_or_throw("PKIX.OCSP"))
       .add_object(ASN1_Tag(6), CONTEXT_SPECIFIC, url.value())
       .end_cons()
       .end_cons();
@@ -805,7 +805,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
 
       info.decode(oid);
 
-      if(oid == OIDS::lookup("PKIX.OCSP"))
+      if(oid == OIDS::str2oid_or_throw("PKIX.OCSP"))
          {
          BER_Object name = info.get_next_object();
 
@@ -815,7 +815,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
             }
 
          }
-      if(oid == OIDS::lookup("PKIX.CertificateAuthorityIssuers"))
+      if(oid == OIDS::str2oid_or_throw("PKIX.CertificateAuthorityIssuers"))
          {
          BER_Object name = info.get_next_object();
 

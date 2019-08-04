@@ -26,8 +26,8 @@ Test::Result test_add_have_OID()
 
    result.test_eq("OID 'botan-test-oid1' added successfully", Botan::OIDS::have_oid("botan-test-oid1"), true);
 
-   result.test_eq("name of OID '1.2.345.6.666' is 'botan-test-oid1'", Botan::OIDS::name_of(Botan::OID("1.2.345.6.666"),
-                  "botan-test-oid1"), true);
+   result.test_eq("name of OID '1.2.345.6.666' is 'botan-test-oid1'",
+                  Botan::OIDS::oid2str_or_throw(Botan::OID("1.2.345.6.666")), "botan-test-oid1");
 
    return result;
    }
@@ -42,8 +42,8 @@ Test::Result test_add_have_OID_str()
 
    result.test_eq("OID 'botan-test-oid2' added successfully", Botan::OIDS::have_oid("botan-test-oid2"), true);
 
-   result.test_eq("name of OID '1.2.345.6.777' is 'botan-test-oid2'", Botan::OIDS::name_of(Botan::OID("1.2.345.6.777"),
-                  "botan-test-oid2"), true);
+   result.test_eq("name of OID '1.2.345.6.777' is 'botan-test-oid2'",
+                  Botan::OIDS::oid2str_or_throw(Botan::OID("1.2.345.6.777")), "botan-test-oid2");
    return result;
    }
 
@@ -51,21 +51,25 @@ Test::Result test_add_and_lookup()
    {
    Test::Result result("OID add and lookup");
 
-   result.test_eq("OIDS::lookup returns empty string for non-existent OID object",
-                  Botan::OIDS::lookup(Botan::OID("1.2.345.6.888")), std::string());
+   result.test_eq("OIDS::oid2str_or_empty returns empty string for non-existent OID object",
+                  Botan::OIDS::oid2str_or_empty(Botan::OID("1.2.345.6.888")), std::string());
 
-   result.test_eq("OIDS::lookup returns empty OID for non-existent OID name", Botan::OIDS::lookup("botan-test-oid3").to_string(), Botan::OID().to_string());
+   result.test_eq("OIDS::str2oid_or_empty returns empty OID for non-existent OID name",
+                  Botan::OIDS::str2oid_or_empty("botan-test-oid3").to_string(), Botan::OID().to_string());
 
    // add oid -> string mapping
    Botan::OIDS::add_oid2str(Botan::OID("1.2.345.6.888"), "botan-test-oid3");
-   result.test_eq("", Botan::OIDS::lookup(Botan::OID("1.2.345.6.888")), "botan-test-oid3");
+   result.test_eq("Lookup works after adding the OID",
+                  Botan::OIDS::oid2str_or_throw(Botan::OID("1.2.345.6.888")), "botan-test-oid3");
 
    // still returns empty OID
-   result.test_eq("OIDS::lookup still returns empty OID without adding name mapping", Botan::OIDS::lookup("botan-test-oid3").to_string(), Botan::OID().to_string());
+   result.test_eq("OIDS::str2oid_or_empty still returns empty OID without adding name mapping",
+                  Botan::OIDS::str2oid_or_empty("botan-test-oid3").to_string(), Botan::OID().to_string());
 
    // add string -> oid mapping
    Botan::OIDS::add_str2oid(Botan::OID("1.2.345.6.888"), "botan-test-oid3");
-   Botan::OIDS::lookup("botan-test-oid3");
+   result.test_eq("OIDS::str2oid_or_empty returns value after adding name mapping",
+                  Botan::OIDS::str2oid_or_empty("botan-test-oid3").to_string(), Botan::OID({1,2,345,6,888}).to_string());
 
    return result;
    }

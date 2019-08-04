@@ -99,7 +99,7 @@ AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const Private_Key& key,
 
 
    AlgorithmIdentifier sig_algo;
-   sig_algo.oid = OIDS::lookup( key.algo_name() + "/" + name() );
+   sig_algo.oid = OIDS::str2oid_or_throw(key.algo_name() + "/" + name());
    // for RSA PKCSv1.5 parameters "SHALL" be NULL as configured by
    // RSA_PublicKey::algorithm_identifier()
    sig_algo.parameters = key.algorithm_identifier().parameters;

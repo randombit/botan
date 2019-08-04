@@ -205,7 +205,7 @@ AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
 
    AlgorithmIdentifier sig_algo;
    // hardcoded as RSA is the only valid algorithm for EMSA4 at the moment
-   sig_algo.oid = OIDS::lookup( "RSA/EMSA4" );
+   sig_algo.oid = OIDS::str2oid_or_throw("RSA/EMSA4");
 
    const AlgorithmIdentifier hash_id(cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM);
    const AlgorithmIdentifier mgf_id("MGF1", hash_id.BER_encode());

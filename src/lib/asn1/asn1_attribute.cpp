@@ -25,7 +25,7 @@ Attribute::Attribute(const OID& attr_oid, const std::vector<uint8_t>& attr_value
 */
 Attribute::Attribute(const std::string& attr_oid,
                      const std::vector<uint8_t>& attr_value) :
-   oid(OIDS::lookup(attr_oid)),
+   oid(OIDS::str2oid_or_throw(attr_oid)),
    parameters(attr_value)
    {}
 
