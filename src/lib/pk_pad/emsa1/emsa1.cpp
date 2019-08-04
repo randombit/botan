@@ -109,15 +109,20 @@ AlgorithmIdentifier EMSA1::config_for_x509(const Private_Key& key,
          " not supported for signature algorithm " + key.algo_name());
       }
 
+   const std::string sig_name = key.algo_name() + "/" + name();
    AlgorithmIdentifier sig_algo;
-   sig_algo.oid = OIDS::lookup( key.algo_name() + "/" + name() );
+   sig_algo.oid = OIDS::lookup(sig_name);
+   if(sig_algo.oid.empty())
+      throw Lookup_Error("No OID defined for " + sig_name);
 
    std::string algo_name = key.algo_name();
    if(algo_name == "DSA" ||
       algo_name == "ECDSA" ||
       algo_name == "ECGDSA" ||
       algo_name == "ECKCDSA" ||
-      algo_name == "GOST-34.10")
+      algo_name == "GOST-34.10" ||
+      algo_name == "GOST-34.10-2012-256" ||
+      algo_name == "GOST-34.10-2012-512")
       {
       // for DSA, ECDSA, GOST parameters "SHALL" be empty
       sig_algo.parameters = {};

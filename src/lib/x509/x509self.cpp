@@ -62,6 +62,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    const std::vector<uint8_t> pub_key = X509::BER_encode(key);
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, sig_opts, rng, hash_fn, sig_algo));
+   BOTAN_ASSERT_NOMSG(sig_algo.get_oid().has_value());
    load_info(opts, subject_dn, subject_alt);
 
    Extensions extensions = opts.extensions;

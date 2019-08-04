@@ -252,8 +252,10 @@ std::string default_ec_group_for(const std::string& alg_name)
    {
    if(alg_name == "SM2" || alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
       return "sm2p256v1";
-   if(alg_name == "GOST-34.10")
+   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256")
       return "gost_256A";
+   if(alg_name == "GOST-34.10-2012-512")
+      return "gost_512A";
    if(alg_name == "ECGDSA")
       return "brainpool256r1";
    return "secp256r1";
@@ -339,7 +341,9 @@ create_private_key(const std::string& alg_name,
       alg_name == "SM2" ||
       alg_name == "SM2_Sig" ||
       alg_name == "SM2_Enc" ||
-      alg_name == "GOST-34.10")
+      alg_name == "GOST-34.10" ||
+      alg_name == "GOST-34.10-2012-256" ||
+      alg_name == "GOST-34.10-2012-512")
       {
       const EC_Group ec_group(params.empty() ? default_ec_group_for(alg_name) : params);
 
@@ -359,7 +363,7 @@ create_private_key(const std::string& alg_name,
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-      if(alg_name == "GOST-34.10")
+      if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512")
          return std::unique_ptr<Private_Key>(new GOST_3410_PrivateKey(rng, ec_group));
 #endif
 
