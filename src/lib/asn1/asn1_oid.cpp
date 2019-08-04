@@ -10,8 +10,67 @@
 #include <botan/ber_dec.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/parsing.h>
+#include <botan/oids.h>
+#include <algorithm>
 
 namespace Botan {
+
+namespace {
+
+// returns empty on invalid
+std::vector<uint32_t> parse_oid_str(const std::string& oid)
+   {
+   try
+      {
+      std::string elem;
+      std::vector<uint32_t> oid_elems;
+
+      for(char c : oid)
+         {
+         if(c == '.')
+            {
+            if(elem.empty())
+               return std::vector<uint32_t>();
+            oid_elems.push_back(to_u32bit(elem));
+            elem.clear();
+            }
+         else
+            {
+            elem += c;
+            }
+         }
+
+      if(elem.empty())
+         return std::vector<uint32_t>();
+      oid_elems.push_back(to_u32bit(elem));
+
+      if(oid_elems.size() < 2)
+         return std::vector<uint32_t>();
+
+      return oid_elems;
+      }
+   catch(Invalid_Argument&) // thrown by to_u32bit
+      {
+      return std::vector<uint32_t>();
+      }
+   }
+
+}
+
+//static
+OID OID::from_string(const std::string& str)
+   {
+   if(str.empty())
+      throw Invalid_Argument("OID::from_string argument must be non-empty");
+
+   // first try as a dotted decimal OID string:
+   std::vector<uint32_t> raw = parse_oid_str(str);
+
+   if(raw.empty() == false)
+      return OID(std::move(raw));
+
+   return OIDS::str2oid_or_throw(str);
+   }
 
 /*
 * ASN.1 OID Constructor
@@ -20,28 +79,13 @@ OID::OID(const std::string& oid_str)
    {
    if(!oid_str.empty())
       {
-      try
-         {
-         m_id = parse_asn1_oid(oid_str);
-         }
-      catch(...)
-         {
-         throw Invalid_OID(oid_str);
-         }
+      m_id = parse_oid_str(oid_str);
 
       if(m_id.size() < 2 || m_id[0] > 2)
          throw Invalid_OID(oid_str);
       if((m_id[0] == 0 || m_id[0] == 1) && m_id[1] > 39)
          throw Invalid_OID(oid_str);
       }
-   }
-
-/*
-* Clear the current OID
-*/
-void OID::clear()
-   {
-   m_id.clear();
    }
 
 /*
@@ -60,43 +104,13 @@ std::string OID::to_string() const
    }
 
 /*
-* OID equality comparison
-*/
-bool OID::operator==(const OID& oid) const
-   {
-   if(m_id.size() != oid.m_id.size())
-      return false;
-   for(size_t i = 0; i != m_id.size(); ++i)
-      if(m_id[i] != oid.m_id[i])
-         return false;
-   return true;
-   }
-
-/*
 * Append another component to the OID
 */
-OID& OID::operator+=(uint32_t component)
+OID operator+(const OID& oid, uint32_t new_component)
    {
-   m_id.push_back(component);
-   return (*this);
-   }
-
-/*
-* Append another component to the OID
-*/
-OID operator+(const OID& oid, uint32_t component)
-   {
-   OID new_oid(oid);
-   new_oid += component;
-   return new_oid;
-   }
-
-/*
-* OID inequality comparison
-*/
-bool operator!=(const OID& a, const OID& b)
-   {
-   return !(a == b);
+   std::vector<uint32_t> val = oid.get_components();
+   val.push_back(new_component);
+   return OID(std::move(val));
    }
 
 /*
@@ -104,21 +118,11 @@ bool operator!=(const OID& a, const OID& b)
 */
 bool operator<(const OID& a, const OID& b)
    {
-   const std::vector<uint32_t>& oid1 = a.get_id();
-   const std::vector<uint32_t>& oid2 = b.get_id();
+   const std::vector<uint32_t>& oid1 = a.get_components();
+   const std::vector<uint32_t>& oid2 = b.get_components();
 
-   if(oid1.size() < oid2.size())
-      return true;
-   if(oid1.size() > oid2.size())
-      return false;
-   for(size_t i = 0; i != oid1.size(); ++i)
-      {
-      if(oid1[i] < oid2[i])
-         return true;
-      if(oid1[i] > oid2[i])
-         return false;
-      }
-   return false;
+   return std::lexicographical_compare(oid1.begin(), oid1.end(),
+                                       oid2.begin(), oid2.end());
    }
 
 /*
@@ -172,7 +176,7 @@ void OID::decode_from(BER_Decoder& decoder)
       throw BER_Decoding_Error("OID encoding is too short");
       }
 
-   clear();
+   m_id.clear();
    m_id.push_back(bits[0] / 40);
    m_id.push_back(bits[0] % 40);
 

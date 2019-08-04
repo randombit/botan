@@ -1,6 +1,6 @@
 /*
 * ASN.1 OID
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -20,6 +20,35 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
    {
    public:
+
+      /**
+      * Create an uninitialied OID object
+      */
+      explicit OID() {}
+
+      /**
+      * Construct an OID from a string.
+      * @param str a string in the form "a.b.c" etc., where a,b,c are numbers
+      */
+      explicit OID(const std::string& str);
+
+      /**
+      * Initialize an OID from a sequence of integer values
+      */
+      explicit OID(std::initializer_list<uint32_t> init) : m_id(init) {}
+
+      /**
+      * Initialize an OID from a vector of integer values
+      */
+      explicit OID(std::vector<uint32_t>&& init) : m_id(init) {}
+
+      /**
+      * Construct an OID from a string.
+      * @param str a string in the form "a.b.c" etc., where a,b,c are numbers
+      *        or any known OID name (for example "RSA" or "X509v3.SubjectKeyIdentifier")
+      */
+      static OID from_string(const std::string& str);
+
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
 
@@ -39,7 +68,9 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       * Get this OID as list (vector) of its components.
       * @return vector representing this OID
       */
-      const std::vector<uint32_t>& get_id() const { return m_id; }
+      const std::vector<uint32_t>& get_components() const { return m_id; }
+
+      //const std::vector<uint32_t>& get_id() const { return get_components(); }
 
       /**
       * Get this OID as a string
@@ -60,27 +91,27 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       * Compare two OIDs.
       * @return true if they are equal, false otherwise
       */
-      bool operator==(const OID&) const;
+      bool operator==(const OID& other) const
+         {
+         return m_id == other.m_id;
+         }
 
       /**
       * Reset this instance to an empty OID.
       */
-      void clear();
+      void BOTAN_DEPRECATED("Avoid mutation of OIDs") clear() { m_id.clear(); }
 
       /**
       * Add a component to this OID.
       * @param new_comp the new component to add to the end of this OID
       * @return reference to *this
       */
-      OID& operator+=(uint32_t new_comp);
+      OID& BOTAN_DEPRECATED("Avoid mutation of OIDs") operator+=(uint32_t new_comp)
+         {
+         m_id.push_back(new_comp);
+         return (*this);
+         }
 
-      /**
-      * Construct an OID from a string.
-      * @param str a string in the form "a.b.c" etc., where a,b,c are numbers
-      */
-      explicit OID(const std::string& str = "");
-
-      explicit OID(std::initializer_list<uint32_t> init) : m_id(init) {}
    private:
       std::vector<uint32_t> m_id;
    };
@@ -98,7 +129,10 @@ OID BOTAN_PUBLIC_API(2,0) operator+(const OID& oid, uint32_t new_comp);
 * @param b the second OID
 * @return true if a is not equal to b
 */
-bool BOTAN_PUBLIC_API(2,0) operator!=(const OID& a, const OID& b);
+inline bool operator!=(const OID& a, const OID& b)
+   {
+   return !(a == b);
+   }
 
 /**
 * Compare two OIDs.
