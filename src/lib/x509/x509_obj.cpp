@@ -202,15 +202,15 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    if(padding == "EMSA4")
       {
       // "MUST contain RSASSA-PSS-params"
-      if(signature_algorithm().parameters.empty())
+      if(signature_algorithm().get_parameters().empty())
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      Pss_params pss_parameter = decode_pss_params(signature_algorithm().parameters);
+      Pss_params pss_parameter = decode_pss_params(signature_algorithm().get_parameters());
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      const std::string hash_algo = OIDS::oid2str_or_throw(pss_parameter.hash_algo.oid);
+      const std::string hash_algo = OIDS::oid2str_or_throw(pss_parameter.hash_algo.get_oid());
       if(hash_algo != "SHA-160" &&
          hash_algo != "SHA-224" &&
          hash_algo != "SHA-256" &&
@@ -220,7 +220,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          return Certificate_Status_Code::UNTRUSTED_HASH;
          }
 
-      const std::string mgf_algo = OIDS::oid2str_or_throw(pss_parameter.mask_gen_algo.oid);
+      const std::string mgf_algo = OIDS::oid2str_or_throw(pss_parameter.mask_gen_algo.get_oid());
       if(mgf_algo != "MGF1")
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -228,7 +228,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
 
       // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
       // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      if(pss_parameter.mask_gen_hash.oid != pss_parameter.hash_algo.oid)
+      if(pss_parameter.mask_gen_hash.get_oid() != pss_parameter.hash_algo.get_oid())
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
@@ -238,7 +238,6 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      // salt_len is actually not used for verification. Length is inferred from the signature
       padding += "(" + hash_algo + "," + mgf_algo + "," + std::to_string(pss_parameter.salt_len) + ")";
       }
 

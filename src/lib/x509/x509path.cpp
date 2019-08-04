@@ -116,14 +116,14 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
 
       std::unique_ptr<Public_Key> issuer_key(issuer->subject_public_key());
 
-      // Check the signature algorithm
-      if(OIDS::oid2str_or_empty(subject->signature_algorithm().oid).empty())
+      // Check the signature algorithm is known
+      if(OIDS::oid2str_or_empty(subject->signature_algorithm().get_oid()).empty())
          {
          status.insert(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN);
          }
-      // only perform the following checks if the signature algorithm is known
       else
          {
+         // only perform the following checks if the signature algorithm is known
          if(!issuer_key)
             {
             status.insert(Certificate_Status_Code::CERT_PUBKEY_INVALID);
