@@ -8,7 +8,6 @@
 
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
-   #include <botan/oids.h>
 #endif
 
 namespace Botan_Tests {
@@ -29,7 +28,7 @@ class ECC_Pointmult_Tests final : public Text_Based_Test
          const Botan::BigInt X = vars.get_req_bn("X");
          const Botan::BigInt Y = vars.get_req_bn("Y");
 
-         Botan::EC_Group group(Botan::OIDS::str2oid_or_throw(group_id));
+         Botan::EC_Group group(Botan::OID::from_string(group_id));
 
          const Botan::PointGFp& base_point = group.get_base_point();
 

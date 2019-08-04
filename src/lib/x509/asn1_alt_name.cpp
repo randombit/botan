@@ -75,7 +75,7 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
 
    for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
       {
-      multimap_insert(names, OIDS::oid2str_or_raw(i->first), i->second.value());
+      multimap_insert(names, i->first.to_formatted_string(), i->second.value());
       }
 
    return names;

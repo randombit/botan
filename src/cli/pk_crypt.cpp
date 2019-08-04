@@ -59,7 +59,7 @@ class PK_Encrypt final : public Command
          if(!aead)
             throw CLI_Usage_Error("The AEAD '" + aead_algo + "' is not available");
 
-         const Botan::OID aead_oid = Botan::OIDS::str2oid_or_empty(aead_algo);
+         const Botan::OID aead_oid = Botan::OID::from_string(aead_algo);
          if(aead_oid.empty())
             throw CLI_Usage_Error("No OID defined for AEAD '" + aead_algo + "'");
 
@@ -166,7 +166,7 @@ class PK_Decrypt final : public Command
             return set_return_code(1);
             }
 
-         if(pk_alg_id.get_oid() != Botan::OIDS::str2oid_or_throw("RSA/OAEP"))
+         if(pk_alg_id.get_oid() != Botan::OID::from_string("RSA/OAEP"))
             {
             error_output() << "Ciphertext was encrypted with something other than RSA/OAEP";
             return set_return_code(1);

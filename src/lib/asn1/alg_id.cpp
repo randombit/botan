@@ -26,7 +26,7 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
                                          const std::vector<uint8_t>& param) :
-   AlgorithmIdentifier(OIDS::str2oid_or_throw(alg_id), param)
+   AlgorithmIdentifier(OID::from_string(alg_id), param)
    {}
 
 /*
@@ -48,7 +48,7 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
                                          Encoding_Option option) :
-   oid(OIDS::str2oid_or_throw(alg_id)),
+   oid(OID::from_string(alg_id)),
    parameters()
    {
    const uint8_t DER_NULL[] = { 0x05, 0x00 };

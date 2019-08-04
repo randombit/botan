@@ -82,10 +82,16 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
          }
 
       /**
-      * Get this OID as a string
+      * Get this OID as a dotted-decimal string
       * @return string representing this OID
       */
       std::string to_string() const;
+
+      /**
+      * If there is a known name associated with this OID, return that.
+      * Otherwise return the result of to_string
+      */
+      std::string to_formatted_string() const;
 
       /**
       * Compare two OIDs.

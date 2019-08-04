@@ -7,7 +7,6 @@
 
 #include <botan/prf_x942.h>
 #include <botan/der_enc.h>
-#include <botan/oids.h>
 #include <botan/hash.h>
 #include <botan/loadstor.h>
 #include <algorithm>
@@ -37,7 +36,6 @@ size_t X942_PRF::kdf(uint8_t key[], size_t key_len,
                      const uint8_t label[], size_t label_len) const
    {
    std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
-   const OID kek_algo(m_key_wrap_oid);
 
    secure_vector<uint8_t> h;
    secure_vector<uint8_t> in;
@@ -56,7 +54,7 @@ size_t X942_PRF::kdf(uint8_t key[], size_t key_len,
          DER_Encoder().start_cons(SEQUENCE)
 
             .start_cons(SEQUENCE)
-               .encode(kek_algo)
+               .encode(m_key_wrap_oid)
                .raw_bytes(encode_x942_int(counter))
             .end_cons()
 
@@ -85,15 +83,9 @@ size_t X942_PRF::kdf(uint8_t key[], size_t key_len,
    return offset;
    }
 
-/*
-* X9.42 Constructor
-*/
-X942_PRF::X942_PRF(const std::string& oid)
+std::string X942_PRF::name() const
    {
-   if(OIDS::have_oid(oid))
-      m_key_wrap_oid = OIDS::str2oid_or_empty(oid).to_string();
-   else
-      m_key_wrap_oid = oid;
+   return "X9.42-PRF(" + m_key_wrap_oid.to_formatted_string() + ")";
    }
 
 }

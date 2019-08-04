@@ -10,7 +10,6 @@
 #include <botan/x509_ca.h>
 #include <botan/der_enc.h>
 #include <botan/pubkey.h>
-#include <botan/oids.h>
 #include <botan/hash.h>
 
 namespace Botan {
@@ -35,7 +34,7 @@ void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
 
    subject_dn.add_attribute("X520.SerialNumber", opts.serial_number);
    subject_alt = AlternativeName(opts.email, opts.uri, opts.dns, opts.ip);
-   subject_alt.add_othername(OIDS::str2oid_or_throw("PKIX.XMPPAddr"),
+   subject_alt.add_othername(OID::from_string("PKIX.XMPPAddr"),
                              opts.xmpp, UTF8_STRING);
 
    for(auto dns : opts.more_dns)
