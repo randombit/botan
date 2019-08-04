@@ -37,7 +37,7 @@ class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          {
          const std::string group_id = vars.get_req_str("Group");
          const BigInt x = vars.get_req_bn("X");
-         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+         Botan::EC_Group group(Botan::OIDS::str2oid_or_throw(group_id));
 
          std::unique_ptr<Botan::Private_Key> key(new Botan::ECGDSA_PrivateKey(Test::rng(), group, x));
          return key;

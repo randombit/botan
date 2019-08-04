@@ -117,7 +117,7 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
       std::unique_ptr<Public_Key> issuer_key(issuer->subject_public_key());
 
       // Check the signature algorithm
-      if(OIDS::lookup(subject->signature_algorithm().oid).empty())
+      if(OIDS::oid2str_or_empty(subject->signature_algorithm().oid).empty())
          {
          status.insert(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN);
          }
@@ -298,8 +298,11 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
 
          for(const auto& extension : crls[i]->extensions().extensions())
             {
+            // XXX this is wrong - the OID might be defined but the extention not full parsed
+            // for example see #1652
+
             // is the extension critical and unknown?
-            if(extension.second && OIDS::lookup(extension.first->oid_of()) == "")
+            if(extension.second && OIDS::oid2str_or_empty(extension.first->oid_of()) == "")
                {
                /* NIST Certificate Path Valiadation Testing document: "When an implementation does not recognize a critical extension in the
                 * crlExtensions field, it shall assume that identified certificates have been revoked and are no longer valid"

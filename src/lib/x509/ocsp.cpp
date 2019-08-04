@@ -164,7 +164,7 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
       std::unique_ptr<Public_Key> pub_key(issuer.subject_public_key());
 
       const std::vector<std::string> sig_info =
-         split_on(OIDS::lookup(m_sig_algo.get_oid()), '/');
+         split_on(OIDS::oid2str_or_throw(m_sig_algo.get_oid()), '/');
 
       if(sig_info.size() != 2 || sig_info[0] != pub_key->algo_name())
          return Certificate_Status_Code::OCSP_RESPONSE_INVALID;

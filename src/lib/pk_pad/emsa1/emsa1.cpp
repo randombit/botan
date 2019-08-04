@@ -111,9 +111,7 @@ AlgorithmIdentifier EMSA1::config_for_x509(const Private_Key& key,
 
    const std::string sig_name = key.algo_name() + "/" + name();
    AlgorithmIdentifier sig_algo;
-   sig_algo.oid = OIDS::lookup(sig_name);
-   if(sig_algo.oid.empty())
-      throw Lookup_Error("No OID defined for " + sig_name);
+   sig_algo.oid = OIDS::str2oid_or_throw(key.algo_name() + "/" + name());
 
    std::string algo_name = key.algo_name();
    if(algo_name == "DSA" ||

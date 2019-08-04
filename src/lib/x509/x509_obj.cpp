@@ -139,7 +139,7 @@ std::vector<uint8_t> X509_Object::tbs_data() const
 std::string X509_Object::hash_used_for_signature() const
    {
    const OID& oid = m_sig_algo.get_oid();
-   const std::vector<std::string> sig_info = split_on(OIDS::lookup(oid), '/');
+   const std::vector<std::string> sig_info = split_on(OIDS::oid2str_or_throw(oid), '/');
 
    if(sig_info.size() == 1 && sig_info[0] == "Ed25519")
       return "SHA-512";
@@ -148,7 +148,7 @@ std::string X509_Object::hash_used_for_signature() const
 
    if(sig_info[1] == "EMSA4")
       {
-      return OIDS::lookup(decode_pss_params(signature_algorithm().get_parameters()).hash_algo.get_oid());
+      return OIDS::oid2str_or_throw(decode_pss_params(signature_algorithm().get_parameters()).hash_algo.get_oid());
       }
    else
       {
@@ -184,7 +184,7 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
 Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key) const
    {
    const std::vector<std::string> sig_info =
-      split_on(OIDS::lookup(m_sig_algo.get_oid()), '/');
+      split_on(OIDS::oid2str_or_throw(m_sig_algo.get_oid()), '/');
 
    if(sig_info.size() < 1 || sig_info.size() > 2 || sig_info[0] != pub_key.algo_name())
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -210,7 +210,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
       Pss_params pss_parameter = decode_pss_params(signature_algorithm().parameters);
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      const std::string hash_algo = OIDS::lookup(pss_parameter.hash_algo.oid);
+      const std::string hash_algo = OIDS::oid2str_or_throw(pss_parameter.hash_algo.oid);
       if(hash_algo != "SHA-160" &&
          hash_algo != "SHA-224" &&
          hash_algo != "SHA-256" &&
@@ -220,7 +220,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          return Certificate_Status_Code::UNTRUSTED_HASH;
          }
 
-      const std::string mgf_algo = OIDS::lookup(pss_parameter.mask_gen_algo.oid);
+      const std::string mgf_algo = OIDS::oid2str_or_throw(pss_parameter.mask_gen_algo.oid);
       if(mgf_algo != "MGF1")
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -354,7 +354,7 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
       }
    else
       {
-      sig_algo = AlgorithmIdentifier(OIDS::lookup("Ed25519"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      sig_algo = AlgorithmIdentifier(OIDS::str2oid_or_throw("Ed25519"), AlgorithmIdentifier::USE_EMPTY_PARAM);
       return "Pure";
       }
    }

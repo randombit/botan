@@ -274,7 +274,7 @@ class EC_Group_Tests : public Test
             {
             Test::Result result("EC_Group " + group_name);
 
-            const Botan::OID oid = Botan::OIDS::lookup(group_name);
+            const Botan::OID oid = Botan::OIDS::str2oid_or_throw(group_name);
 
             const Botan::EC_Group group(oid);
 

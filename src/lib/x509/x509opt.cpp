@@ -49,7 +49,7 @@ void X509_Cert_Options::add_ex_constraint(const OID& oid)
 */
 void X509_Cert_Options::add_ex_constraint(const std::string& oid_str)
    {
-   ex_constraints.push_back(OIDS::lookup(oid_str));
+   ex_constraints.push_back(OIDS::str2oid_or_throw(oid_str));
    }
 
 /*
