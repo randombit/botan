@@ -126,22 +126,6 @@ std::string OIDS::oid2str_or_throw(const OID& oid)
    return s;
    }
 
-std::string OIDS::oid2str_or_raw(const OID& oid)
-   {
-   const std::string s = OIDS::oid2str_or_empty(oid);
-   if(s.empty())
-      return oid.to_string();
-   return s;
-   }
-
-OID OIDS::str2oid_or_throw(const std::string& name)
-   {
-   const OID o = OIDS::str2oid_or_empty(name);
-   if(o.empty())
-      throw Lookup_Error("No OID associated with name " + name);
-   return o;
-   }
-
 bool OIDS::have_oid(const std::string& name)
    {
    return OID_Map::global_registry().have_oid(name);

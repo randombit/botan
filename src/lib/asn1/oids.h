@@ -46,16 +46,13 @@ BOTAN_UNSTABLE_API std::string oid2str_or_empty(const OID& oid);
 BOTAN_UNSTABLE_API OID str2oid_or_empty(const std::string& name);
 
 BOTAN_UNSTABLE_API std::string oid2str_or_throw(const OID& oid);
-BOTAN_UNSTABLE_API OID str2oid_or_throw(const std::string& name);
-
-BOTAN_UNSTABLE_API std::string oid2str_or_raw(const OID& oid);
 
 /**
 * See if an OID exists in the internal table.
 * @param oid the oid to check for
 * @return true if the oid is registered
 */
-BOTAN_UNSTABLE_API bool have_oid(const std::string& oid);
+BOTAN_UNSTABLE_API bool BOTAN_DEPRECATED("Just lookup the value instead") have_oid(const std::string& oid);
 
 /**
 * Tests whether the specified OID stands for the specified name.
@@ -63,9 +60,9 @@ BOTAN_UNSTABLE_API bool have_oid(const std::string& oid);
 * @param name the name to check
 * @return true if the specified OID stands for the specified name
 */
-inline bool BOTAN_DEPRECATED("Use oid == str2oid_or_throw(name)") name_of(const OID& oid, const std::string& name)
+inline bool BOTAN_DEPRECATED("Use oid == OID::from_string(name)") name_of(const OID& oid, const std::string& name)
    {
-   return (oid == str2oid_or_throw(name));
+   return (oid == str2oid_or_empty(name));
    }
 
 inline std::string BOTAN_DEPRECATED("Use oid2str_or_empty") lookup(const OID& oid)
