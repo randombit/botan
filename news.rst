@@ -13,7 +13,7 @@ Version 2.12.0, Not Yet Released
 
 * Add support for the TLS v1.3 downgrade indicator. (GH #2027)
 
-* Modifications to support GOST 34.10-2012 signatures (GH #2055 #1860 #1897)
+* Modifications to support GOST 34.10-2012 signatures (GH #2055 #2056 #1860 #1897)
 
 * The BearSSL provider has been removed (GH #2020)
 
