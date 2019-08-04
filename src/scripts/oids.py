@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 """
 (C) 2016 Jack Lloyd
@@ -293,7 +293,7 @@ def main(args = None):
         nam = match.group(2)
 
         if oid in str2oid:
-            print "Duplicated OID", oid, name, oid2str[oid]
+            print("Duplicated OID", oid, name, oid2str[oid])
             sys.exit() # hard error
         else:
             oid2str[oid] = nam
@@ -310,18 +310,17 @@ def main(args = None):
                 sig2pads[pad_match.group(1)].add(pad_match.group(2))
 
         if nam in str2oid:
-            #print "Duplicated name", nam, oid, str2oid[nam]
             #str2oid[nam] = oid
             pass
         else:
             str2oid[nam] = oid
 
     if args[1] == "oids":
-        print format_as_map(oid2str, str2oid)
+        print(format_as_map(oid2str, str2oid))
     elif args[1] == "dn_ub":
-        print format_dn_ub_as_map(dn_ub,oid2str)
+        print(format_dn_ub_as_map(dn_ub,oid2str))
     elif args[1] == "pads":
-        print format_pads_as_map(sig2pads)
+        print(format_pads_as_map(sig2pads))
 
     return 0
 
