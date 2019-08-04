@@ -67,7 +67,11 @@ std::multimap<std::string, std::string> X509_DN::contents() const
 
 bool X509_DN::has_field(const std::string& attr) const
    {
-   return has_field(OIDS::str2oid_or_throw(deref_info_field(attr)));
+   const OID o = OIDS::str2oid_or_empty(deref_info_field(attr));
+   if(o.has_value())
+      return has_field(o);
+   else
+      return false;
    }
 
 bool X509_DN::has_field(const OID& oid) const
