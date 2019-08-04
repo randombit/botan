@@ -203,14 +203,11 @@ AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
          " not supported for signature algorithm " + key.algo_name());
       }
 
-   AlgorithmIdentifier sig_algo;
-   // hardcoded as RSA is the only valid algorithm for EMSA4 at the moment
-   sig_algo.oid = OIDS::str2oid_or_throw("RSA/EMSA4");
-
    const AlgorithmIdentifier hash_id(cert_hash_name, AlgorithmIdentifier::USE_NULL_PARAM);
    const AlgorithmIdentifier mgf_id("MGF1", hash_id.BER_encode());
 
-   DER_Encoder(sig_algo.parameters)
+   std::vector<uint8_t> parameters;
+   DER_Encoder(parameters)
       .start_cons(SEQUENCE)
       .start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC).encode(hash_id).end_cons()
       .start_cons(ASN1_Tag(1), CONTEXT_SPECIFIC).encode(mgf_id).end_cons()
@@ -218,7 +215,8 @@ AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
       .start_cons(ASN1_Tag(3), CONTEXT_SPECIFIC).encode(size_t(1)).end_cons() // trailer field
       .end_cons();
 
-   return sig_algo;
+   // hardcoded as RSA is the only valid algorithm for EMSA4 at the moment
+   return AlgorithmIdentifier("RSA/EMSA4", parameters);
    }
 
 PSSR_Raw::PSSR_Raw(HashFunction* h) :

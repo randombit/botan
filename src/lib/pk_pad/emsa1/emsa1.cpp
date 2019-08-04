@@ -109,11 +109,10 @@ AlgorithmIdentifier EMSA1::config_for_x509(const Private_Key& key,
          " not supported for signature algorithm " + key.algo_name());
       }
 
-   const std::string sig_name = key.algo_name() + "/" + name();
-   AlgorithmIdentifier sig_algo;
-   sig_algo.oid = OIDS::str2oid_or_throw(key.algo_name() + "/" + name());
+   const OID oid = OIDS::str2oid_or_throw(key.algo_name() + "/" + name());
 
-   std::string algo_name = key.algo_name();
+   const std::string algo_name = key.algo_name();
+   std::vector<uint8_t> parameters;
    if(algo_name == "DSA" ||
       algo_name == "ECDSA" ||
       algo_name == "ECGDSA" ||
@@ -123,14 +122,13 @@ AlgorithmIdentifier EMSA1::config_for_x509(const Private_Key& key,
       algo_name == "GOST-34.10-2012-512")
       {
       // for DSA, ECDSA, GOST parameters "SHALL" be empty
-      sig_algo.parameters = {};
       }
    else
       {
-      sig_algo.parameters = key.algorithm_identifier().parameters;
+      parameters = key.algorithm_identifier().get_parameters();
       }
 
-   return sig_algo;
+   return AlgorithmIdentifier(oid, parameters);
    }
 
 }
