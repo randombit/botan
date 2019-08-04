@@ -129,7 +129,7 @@ def format_dn_ub_map(dn_ub, oid2str):
     for k in sorted(dn_ub.keys()):
         v = dn_ub[k]
 
-        s += '   { Botan::OID("%s"), %s }, // %s\n' % (k,v,oid2str[k])
+        s += '   { Botan::OID({%s}), %s }, // %s\n' % (k.replace('.',','),v,oid2str[k])
 
     # delete last ',' and \n
     idx = s.rfind(',')
@@ -156,6 +156,7 @@ def format_dn_ub_as_map(dn_ub, oid2str):
 #include <map>
 
 namespace {
+
 /**
  * Upper bounds for the length of distinguished name fields as given in RFC 5280, Appendix A.
  * Only OIDS recognized by botan are considered, so far.
