@@ -26,7 +26,7 @@ in the source.
   ``lookup.h``, ``threefish.h``, ``sm2_enc.h``, ``datastor.h``,
   ``basefilt.h``, ``hex_filt.h``, ``b64_filt.h``, ``comp_filter.h``,
   ``key_filt.h``, ``buf_filt.h``, ``cipher_filter.h``,
-  ``tls_blocking.h``, ``pbkdf1.h``
+  ``tls_blocking.h``, ``pbkdf1.h``, ``xmss_key_pair.h``,
 
 - The following headers are currently public, but will be made
   internal in a future major release, and no longer usable by
@@ -36,16 +36,17 @@ in the source.
   ``rfc6979.h``, ``divide.h``, ``charset.h``, ``secqueue.h``,
   ``keypair.h``, ``http_util.h``, ``scan_name.h``, ``ghash.h``,
   ``tls_extensions.h``, ``tls_messages.h``, ``tls_algos.h``,
-  ``tls_magic.h``,
-  ``stl_compatability.h``, ``bswap.h``, ``calendar.h``,
-  ``curve_nistp.h``, ``curve_gfp.h``,
-  ``eme.h``, ``eme_pkcs.h``, ``eme_raw.h``, ``oaep.h``,
-  ``emsa1.h``, ``emsa.h``, ``emsa_pkcs1.h``, ``emsa_raw.h``, ``emsa_x931.h``,
-  ``hash_id.h``, ``iso9796.h``, ``pssr.h``,
-  ``kdf1.h``, ``kdf1_iso18033.h``, ``kdf2.h``, ``sp800_108.h``, ``sp800_56a.h``,
-  ``sp800_56c.h``, ``prf_tls.h``, ``prf_x942.h``,
-  ``mode_pad.h``, ``monty.h``, ``mul128.h``, ``pbes2.h``, ``pbkdf2.h``, ``pk_ops.h``,
-  ``pow_mod.h``, ``reducer.h``, ``stream_mode.h``, ``workfactor.h``
+  ``tls_magic.h``, ``oids.h``, ``stl_compatability.h``, ``bswap.h``,
+  ``calendar.h``, ``curve_nistp.h``, ``curve_gfp.h``, ``eme.h``,
+  ``eme_pkcs.h``, ``eme_raw.h``, ``oaep.h``, ``emsa1.h``, ``emsa.h``,
+  ``emsa_pkcs1.h``, ``emsa_raw.h``, ``emsa_x931.h``, ``hash_id.h``,
+  ``iso9796.h``, ``pssr.h``, ``kdf1.h``, ``kdf1_iso18033.h``,
+  ``kdf2.h``, ``sp800_108.h``, ``sp800_56a.h``, ``sp800_56c.h``,
+  ``prf_tls.h``, ``prf_x942.h``, ``mode_pad.h``, ``monty.h``,
+  ``mul128.h``, ``pbes2.h``, ``pbkdf2.h``, ``pk_ops.h``,
+  ``pow_mod.h``, ``reducer.h``, ``stream_mode.h``, ``workfactor.h``,
+  ``xmss_common_ops.h``, ``xmss_tools.h``, ``xmss_hash.h``,
+  ``xmss_tools.h``,
 
 - Using a default output length for "SHAKE-128" and "SHAKE-256". Instead,
   always specify the desired output length.
