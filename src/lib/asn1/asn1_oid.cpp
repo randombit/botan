@@ -67,10 +67,13 @@ OID OID::from_string(const std::string& str)
    // first try as a dotted decimal OID string:
    std::vector<uint32_t> raw = parse_oid_str(str);
 
-   if(raw.empty() == false)
+   if(raw.size() > 0)
       return OID(std::move(raw));
 
-   return OIDS::str2oid_or_throw(str);
+   const OID o = OIDS::str2oid_or_empty(name);
+   if(o.empty())
+      throw Lookup_Error("No OID associated with name " + name);
+   return o;
    }
 
 /*
@@ -106,7 +109,10 @@ std::string OID::to_string() const
 
 std::string OID::to_formatted_string() const
    {
-   return OIDS::oid2str_or_raw(*this);
+   const std::string s = OIDS::oid2str_or_empty(oid);
+   if(!s.empty())
+      return s;
+   return this->to_string();
    }
 
 /*

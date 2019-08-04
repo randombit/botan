@@ -4,6 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#define BOTAN_NO_DEPRECATED_WARNINGS
+
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ASN1)
