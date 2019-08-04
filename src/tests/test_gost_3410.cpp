@@ -8,7 +8,6 @@
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    #include <botan/gost_3410.h>
-   #include <botan/oids.h>
    #include "test_pubkey.h"
 #endif
 

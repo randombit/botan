@@ -13,7 +13,6 @@
 #include <botan/ocsp.h>
 #include <botan/dh.h>
 #include <botan/ecdh.h>
-#include <botan/oids.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/ct_utils.h>
 
@@ -177,7 +176,7 @@ std::pair<secure_vector<uint8_t>, std::vector<uint8_t>> TLS::Callbacks::tls_ecdh
       }
    else
       {
-      EC_Group group(OIDS::str2oid_or_throw(curve_name));
+      EC_Group group(OID::from_string(curve_name));
       ECDH_PublicKey peer_key(group, group.OS2ECP(peer_public_value));
       policy.check_peer_key_acceptable(peer_key);
       ECDH_PrivateKey priv_key(rng, group);

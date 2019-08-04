@@ -8,7 +8,6 @@
 #include <botan/emsa_pkcs1.h>
 #include <botan/hash_id.h>
 #include <botan/exceptn.h>
-#include <botan/oids.h>
 #include <botan/pk_keys.h>
 #include <botan/internal/padding.h>
 
@@ -99,7 +98,7 @@ AlgorithmIdentifier EMSA_PKCS1v15::config_for_x509(const Private_Key& key,
 
    // for RSA PKCSv1.5 parameters "SHALL" be NULL
 
-   const OID oid = OIDS::str2oid_or_throw(key.algo_name() + "/" + name());
+   const OID oid = OID::from_string(key.algo_name() + "/" + name());
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_NULL_PARAM);
    }
 

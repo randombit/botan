@@ -16,6 +16,10 @@
 #include <limits>
 #include <set>
 
+#if defined(BOTAN_HAS_ASN1)
+  #include <botan/asn1_oid.h>
+#endif
+
 namespace Botan {
 
 uint16_t to_uint16(const std::string& str)

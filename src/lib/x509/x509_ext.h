@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Extension
       /*
       * @return specific OID name
       * If possible OIDS table should match oid_name to OIDS, ie
-      * OIDS::lookup(ext->oid_name()) == ext->oid_of()
+      * OID::from_string(ext->oid_name()) == ext->oid_of()
       * Should return empty string if OID is not known
       */
       virtual std::string oid_name() const = 0;

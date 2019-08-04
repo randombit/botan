@@ -427,7 +427,7 @@ Test::Result test_rsa_oaep()
    result.test_not_null("Decoding RSA-OAEP worked", public_key.get());
    auto pk_info = cert.subject_public_key_algo();
 
-   result.test_eq("RSA-OAEP OID", pk_info.get_oid().to_string(), Botan::OIDS::str2oid_or_throw("RSA/OAEP").to_string());
+   result.test_eq("RSA-OAEP OID", pk_info.get_oid().to_string(), Botan::OID::from_string("RSA/OAEP").to_string());
 #endif
 
    return result;
@@ -1390,7 +1390,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    // include a custom extension in the request
    Botan::Extensions req_extensions;
    const Botan::OID oid("1.2.3.4.5.6.7.8.9.1");
-   const Botan::OID ku_oid = Botan::OIDS::str2oid_or_throw("X509v3.KeyUsage");
+   const Botan::OID ku_oid = Botan::OID::from_string("X509v3.KeyUsage");
    req_extensions.add(new String_Extension("AAAAAAAAAAAAAABCDEF"), false);
    opts.extensions = req_extensions;
    opts.set_padding_scheme(sig_padding);

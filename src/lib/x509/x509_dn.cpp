@@ -23,7 +23,7 @@ namespace Botan {
 void X509_DN::add_attribute(const std::string& type,
                             const std::string& str)
    {
-   add_attribute(OIDS::str2oid_or_throw(type), str);
+   add_attribute(OID::from_string(type), str);
    }
 
 /*
@@ -59,8 +59,7 @@ std::multimap<std::string, std::string> X509_DN::contents() const
 
    for(auto& i : m_rdn)
       {
-      const std::string str_value = OIDS::oid2str_or_raw(i.first);
-      multimap_insert(retval, str_value, i.second.value());
+      multimap_insert(retval, i.first.to_formatted_string(), i.second.value());
       }
    return retval;
    }
@@ -87,7 +86,7 @@ bool X509_DN::has_field(const OID& oid) const
 
 std::string X509_DN::get_first_attribute(const std::string& attr) const
    {
-   const OID oid = OIDS::str2oid_or_throw(deref_info_field(attr));
+   const OID oid = OID::from_string(deref_info_field(attr));
    return get_first_attribute(oid).value();
    }
 
@@ -109,7 +108,7 @@ ASN1_String X509_DN::get_first_attribute(const OID& oid) const
 */
 std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    {
-   const OID oid = OIDS::str2oid_or_throw(deref_info_field(attr));
+   const OID oid = OID::from_string(deref_info_field(attr));
 
    std::vector<std::string> values;
 
@@ -305,7 +304,7 @@ namespace {
 
 std::string to_short_form(const OID& oid)
    {
-   const std::string long_id = OIDS::oid2str_or_raw(oid);
+   const std::string long_id = oid.to_formatted_string();
 
    if(long_id == "X520.CommonName")
       return "CN";

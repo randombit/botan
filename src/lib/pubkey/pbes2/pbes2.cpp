@@ -34,7 +34,7 @@ SymmetricKey derive_key(const std::string& passphrase,
                         const AlgorithmIdentifier& kdf_algo,
                         size_t default_key_size)
    {
-   if(kdf_algo.get_oid() == OIDS::str2oid_or_throw("PKCS5.PBKDF2"))
+   if(kdf_algo.get_oid() == OID::from_string("PKCS5.PBKDF2"))
       {
       secure_vector<uint8_t> salt;
       size_t iterations = 0, key_length = 0;
@@ -61,7 +61,7 @@ SymmetricKey derive_key(const std::string& passphrase,
       return pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
       }
 #if defined(BOTAN_HAS_SCRYPT)
-   else if(kdf_algo.get_oid() == OIDS::str2oid_or_throw("Scrypt"))
+   else if(kdf_algo.get_oid() == OID::from_string("Scrypt"))
       {
       secure_vector<uint8_t> salt;
       size_t N = 0, r = 0, p = 0;
@@ -142,7 +142,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
             .encode(key_length)
          .end_cons();
 
-      kdf_algo = AlgorithmIdentifier(OIDS::str2oid_or_throw("Scrypt"), scrypt_params);
+      kdf_algo = AlgorithmIdentifier(OID::from_string("Scrypt"), scrypt_params);
       return key;
 #else
       throw Not_Implemented("Scrypt is not available in this build");
@@ -251,7 +251,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
          )
       .end_cons();
 
-   AlgorithmIdentifier id(OIDS::str2oid_or_throw("PBE-PKCS5v20"), pbes2_params);
+   AlgorithmIdentifier id(OID::from_string("PBE-PKCS5v20"), pbes2_params);
 
    return std::make_pair(id, unlock(ctext));
    }

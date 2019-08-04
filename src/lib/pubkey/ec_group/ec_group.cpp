@@ -13,7 +13,6 @@
 #include <botan/internal/primality.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/reducer.h>
 #include <botan/mutex.h>
@@ -361,11 +360,11 @@ EC_Group::EC_Group(const std::string& str)
 
    try
       {
-      OID oid = OIDS::str2oid_or_empty(str);
+      const OID oid = OID::from_string(str);
       if(oid.has_value())
          m_data = ec_group_data().lookup(oid);
       }
-   catch(Invalid_OID&)
+   catch(...)
       {
       }
 
