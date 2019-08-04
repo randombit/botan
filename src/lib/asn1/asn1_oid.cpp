@@ -70,9 +70,9 @@ OID OID::from_string(const std::string& str)
    if(raw.size() > 0)
       return OID(std::move(raw));
 
-   const OID o = OIDS::str2oid_or_empty(name);
+   const OID o = OIDS::str2oid_or_empty(str);
    if(o.empty())
-      throw Lookup_Error("No OID associated with name " + name);
+      throw Lookup_Error("No OID associated with name " + str);
    return o;
    }
 
@@ -109,7 +109,7 @@ std::string OID::to_string() const
 
 std::string OID::to_formatted_string() const
    {
-   const std::string s = OIDS::oid2str_or_empty(oid);
+   const std::string s = OIDS::oid2str_or_empty(*this);
    if(!s.empty())
       return s;
    return this->to_string();

@@ -329,7 +329,7 @@ def main(args = None):
     elif args[1] == "pads":
         print(format_pads_as_map(sig2pads))
     else:
-        print("Unknown command")
+        print("Unknown command: try oids, dn_ub, or pads")
 
     return 0
 
