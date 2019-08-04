@@ -360,7 +360,8 @@ class BOTAN_PUBLIC_API(2,0) Not_Implemented final : public Exception
 
 /*
    The following exception types are still in use for compatability reasons,
-   but are deprecated and will be removed in a future major release
+   but are deprecated and will be removed in a future major release.
+   Instead catch the base class.
 */
 
 /**
