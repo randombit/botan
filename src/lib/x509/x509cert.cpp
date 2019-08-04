@@ -147,8 +147,8 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    AlgorithmIdentifier public_key_alg_id;
    BER_Decoder(public_key).decode(public_key_alg_id).discard_remaining();
 
-   std::vector<std::string> public_key_info =
-      split_on(OIDS::oid2str_or_throw(public_key_alg_id.get_oid()), '/');
+   const std::vector<std::string> public_key_info =
+      split_on(OIDS::oid2str_or_empty(public_key_alg_id.get_oid()), '/');
 
    if(!public_key_info.empty() && public_key_info[0] == "RSA")
       {

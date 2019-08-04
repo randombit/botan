@@ -201,7 +201,7 @@ std::vector<uint32_t> parse_asn1_oid(const std::string& oid)
 #if defined(BOTAN_HAS_ASN1)
    return OID(oid).get_components();
 #else
-   throw Not_Supported("ASN1 support not available");
+   throw Not_Implemented("ASN1 support not available");
 #endif
    }
 
