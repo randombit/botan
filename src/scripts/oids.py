@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 """
 (C) 2016 Jack Lloyd
@@ -129,7 +129,7 @@ def format_dn_ub_map(dn_ub, oid2str):
     for k in sorted(dn_ub.keys()):
         v = dn_ub[k]
 
-        s += '   { Botan::OID("%s"), %s }, // %s\n' % (k,v,oid2str[k])
+        s += '   { Botan::OID({%s}), %s }, // %s\n' % (k.replace('.',','),v,oid2str[k])
 
     # delete last ',' and \n
     idx = s.rfind(',')
@@ -156,6 +156,7 @@ def format_dn_ub_as_map(dn_ub, oid2str):
 #include <map>
 
 namespace {
+
 /**
  * Upper bounds for the length of distinguished name fields as given in RFC 5280, Appendix A.
  * Only OIDS recognized by botan are considered, so far.
@@ -219,30 +220,36 @@ def format_pads_as_map(sig_dict):
 */
 
 #include <botan/internal/padding.h>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 #include <algorithm>
 
 namespace Botan {
 
-const std::map<const std::string, std::vector<std::string>> allowed_signature_paddings =
+namespace {
+
+const std::unordered_map<const std::string, std::vector<std::string>> allowed_signature_paddings =
    {
    %s
    };
 
-__attribute__((visibility("default"))) const std::vector<std::string> get_sig_paddings(const std::string algo)
+}
+
+const std::vector<std::string> get_sig_paddings(const std::string algo)
    {
-   if(allowed_signature_paddings.count(algo) > 0)
-      return allowed_signature_paddings.at(algo);
+   auto i = allowed_signature_paddings.find(algo);
+   if(i != allowed_signature_paddings.end())
+      return i->second;
    return {};
    }
 
 bool sig_algo_and_pad_ok(const std::string algo, std::string padding)
    {
-   std::vector<std::string> pads = get_sig_paddings(algo);
+   const std::vector<std::string> pads = get_sig_paddings(algo);
    return std::find(pads.begin(), pads.end(), padding) != pads.end();
    }
+
 }
 """ % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"),
        format_set_map(sig_dict))
@@ -293,7 +300,7 @@ def main(args = None):
         nam = match.group(2)
 
         if oid in str2oid:
-            print "Duplicated OID", oid, name, oid2str[oid]
+            print("Duplicated OID", oid, name, oid2str[oid])
             sys.exit() # hard error
         else:
             oid2str[oid] = nam
@@ -310,18 +317,19 @@ def main(args = None):
                 sig2pads[pad_match.group(1)].add(pad_match.group(2))
 
         if nam in str2oid:
-            #print "Duplicated name", nam, oid, str2oid[nam]
             #str2oid[nam] = oid
             pass
         else:
             str2oid[nam] = oid
 
     if args[1] == "oids":
-        print format_as_map(oid2str, str2oid)
+        print(format_as_map(oid2str, str2oid))
     elif args[1] == "dn_ub":
-        print format_dn_ub_as_map(dn_ub,oid2str)
+        print(format_dn_ub_as_map(dn_ub,oid2str))
     elif args[1] == "pads":
-        print format_pads_as_map(sig2pads)
+        print(format_pads_as_map(sig2pads))
+    else:
+        print("Unknown command: try oids, dn_ub, or pads")
 
     return 0
 

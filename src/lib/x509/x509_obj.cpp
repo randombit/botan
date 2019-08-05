@@ -7,7 +7,6 @@
 
 #include <botan/x509_obj.h>
 #include <botan/pubkey.h>
-#include <botan/oids.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
@@ -139,7 +138,7 @@ std::vector<uint8_t> X509_Object::tbs_data() const
 std::string X509_Object::hash_used_for_signature() const
    {
    const OID& oid = m_sig_algo.get_oid();
-   const std::vector<std::string> sig_info = split_on(OIDS::lookup(oid), '/');
+   const std::vector<std::string> sig_info = split_on(oid.to_formatted_string(), '/');
 
    if(sig_info.size() == 1 && sig_info[0] == "Ed25519")
       return "SHA-512";
@@ -148,7 +147,8 @@ std::string X509_Object::hash_used_for_signature() const
 
    if(sig_info[1] == "EMSA4")
       {
-      return OIDS::lookup(decode_pss_params(signature_algorithm().get_parameters()).hash_algo.get_oid());
+      const OID hash_oid = decode_pss_params(signature_algorithm().get_parameters()).hash_algo.get_oid();
+      return hash_oid.to_formatted_string();
       }
    else
       {
@@ -184,7 +184,7 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
 Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key) const
    {
    const std::vector<std::string> sig_info =
-      split_on(OIDS::lookup(m_sig_algo.get_oid()), '/');
+      split_on(m_sig_algo.get_oid().to_formatted_string(), '/');
 
    if(sig_info.size() < 1 || sig_info.size() > 2 || sig_info[0] != pub_key.algo_name())
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -202,15 +202,15 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    if(padding == "EMSA4")
       {
       // "MUST contain RSASSA-PSS-params"
-      if(signature_algorithm().parameters.empty())
+      if(signature_algorithm().get_parameters().empty())
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      Pss_params pss_parameter = decode_pss_params(signature_algorithm().parameters);
+      Pss_params pss_parameter = decode_pss_params(signature_algorithm().get_parameters());
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      const std::string hash_algo = OIDS::lookup(pss_parameter.hash_algo.oid);
+      const std::string hash_algo = pss_parameter.hash_algo.get_oid().to_formatted_string();
       if(hash_algo != "SHA-160" &&
          hash_algo != "SHA-224" &&
          hash_algo != "SHA-256" &&
@@ -220,7 +220,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          return Certificate_Status_Code::UNTRUSTED_HASH;
          }
 
-      const std::string mgf_algo = OIDS::lookup(pss_parameter.mask_gen_algo.oid);
+      const std::string mgf_algo = pss_parameter.mask_gen_algo.get_oid().to_formatted_string();
       if(mgf_algo != "MGF1")
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -228,7 +228,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
 
       // For MGF1, it is strongly RECOMMENDED that the underlying hash function be the same as the one identified by hashAlgorithm
       // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
-      if(pss_parameter.mask_gen_hash.oid != pss_parameter.hash_algo.oid)
+      if(pss_parameter.mask_gen_hash.get_oid() != pss_parameter.hash_algo.get_oid())
          {
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
@@ -238,7 +238,6 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
          }
 
-      // salt_len is actually not used for verification. Length is inferred from the signature
       padding += "(" + hash_algo + "," + mgf_algo + "," + std::to_string(pss_parameter.salt_len) + ")";
       }
 
@@ -354,7 +353,7 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
       }
    else
       {
-      sig_algo = AlgorithmIdentifier(OIDS::lookup("Ed25519"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      sig_algo = AlgorithmIdentifier(OID::from_string("Ed25519"), AlgorithmIdentifier::USE_EMPTY_PARAM);
       return "Pure";
       }
    }

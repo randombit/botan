@@ -16,6 +16,10 @@
 #include <limits>
 #include <set>
 
+#if defined(BOTAN_HAS_ASN1)
+  #include <botan/asn1_oid.h>
+#endif
+
 namespace Botan {
 
 uint16_t to_uint16(const std::string& str)
@@ -194,32 +198,11 @@ std::string string_join(const std::vector<std::string>& strs, char delim)
 */
 std::vector<uint32_t> parse_asn1_oid(const std::string& oid)
    {
-   std::string substring;
-   std::vector<uint32_t> oid_elems;
-
-   for(auto i = oid.begin(); i != oid.end(); ++i)
-      {
-      char c = *i;
-
-      if(c == '.')
-         {
-         if(substring.empty())
-            throw Invalid_OID(oid);
-         oid_elems.push_back(to_u32bit(substring));
-         substring.clear();
-         }
-      else
-         substring += c;
-      }
-
-   if(substring.empty())
-      throw Invalid_OID(oid);
-   oid_elems.push_back(to_u32bit(substring));
-
-   if(oid_elems.size() < 2)
-      throw Invalid_OID(oid);
-
-   return oid_elems;
+#if defined(BOTAN_HAS_ASN1)
+   return OID(oid).get_components();
+#else
+   throw Not_Supported("ASN1 support not available");
+#endif
    }
 
 /*

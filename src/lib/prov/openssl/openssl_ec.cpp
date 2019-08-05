@@ -10,7 +10,6 @@
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
   #include <botan/der_enc.h>
   #include <botan/pkcs8.h>
-  #include <botan/oids.h>
   #include <botan/internal/pk_ops_impl.h>
 #endif
 
@@ -90,7 +89,7 @@ int OpenSSL_EC_nid_for(const OID& oid)
    if(oid.empty())
       return -1;
 
-   const std::string name = OIDS::lookup(oid);
+   const std::string name = oid.to_formatted_string();
 
    if(name == "secp192r1")
       return OpenSSL_EC_curve_builtin(NID_X9_62_prime192v1);

@@ -69,10 +69,14 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
    std::multimap<std::string, std::string> names;
 
    for(auto i = m_alt_info.begin(); i != m_alt_info.end(); ++i)
+      {
       multimap_insert(names, i->first, i->second);
+      }
 
    for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
-      multimap_insert(names, OIDS::lookup(i->first), i->second.value());
+      {
+      multimap_insert(names, i->first.to_formatted_string(), i->second.value());
+      }
 
    return names;
    }

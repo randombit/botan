@@ -12,7 +12,6 @@
 #if defined(BOTAN_HAS_ECDSA)
    #include "test_pubkey.h"
    #include <botan/ecdsa.h>
-   #include <botan/oids.h>
 #endif
 
 namespace Botan_Tests {
@@ -39,7 +38,7 @@ class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test
          const std::string group_id = vars.get_req_str("Group");
          const BigInt px = vars.get_req_bn("Px");
          const BigInt py = vars.get_req_bn("Py");
-         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+         Botan::EC_Group group(Botan::OID::from_string(group_id));
 
          const Botan::PointGFp public_point = group.point(px, py);
 
@@ -79,7 +78,7 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
          const std::string group_id = vars.get_req_str("Group");
          const BigInt px = vars.get_req_bn("Px");
          const BigInt py = vars.get_req_bn("Py");
-         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+         Botan::EC_Group group(Botan::OID::from_string(group_id));
 
          const Botan::PointGFp public_point = group.point(px, py);
 
@@ -115,7 +114,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          {
          const std::string group_id = vars.get_req_str("Group");
          const BigInt x = vars.get_req_bn("X");
-         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+         Botan::EC_Group group(Botan::OID::from_string(group_id));
 
          std::unique_ptr<Botan::Private_Key> key(new Botan::ECDSA_PrivateKey(Test::rng(), group, x));
          return key;
@@ -218,7 +217,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
          Test::Result result("ECDSA invalid keys");
 
          const std::string group_id = vars.get_req_str("Group");
-         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+         Botan::EC_Group group(Botan::OID::from_string(group_id));
          const Botan::BigInt x = vars.get_req_bn("InvalidKeyX");
          const Botan::BigInt y = vars.get_req_bn("InvalidKeyY");
 

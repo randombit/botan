@@ -147,8 +147,8 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    AlgorithmIdentifier public_key_alg_id;
    BER_Decoder(public_key).decode(public_key_alg_id).discard_remaining();
 
-   std::vector<std::string> public_key_info =
-      split_on(OIDS::oid2str(public_key_alg_id.get_oid()), '/');
+   const std::vector<std::string> public_key_info =
+      split_on(OIDS::oid2str_or_empty(public_key_alg_id.get_oid()), '/');
 
    if(!public_key_info.empty() && public_key_info[0] == "RSA")
       {
@@ -500,7 +500,7 @@ bool X509_Certificate::allowed_usage(Key_Constraints usage) const
 
 bool X509_Certificate::allowed_extended_usage(const std::string& usage) const
    {
-   return allowed_extended_usage(OIDS::str2oid(usage));
+   return allowed_extended_usage(OID::from_string(usage));
    }
 
 bool X509_Certificate::allowed_extended_usage(const OID& usage) const
@@ -552,7 +552,7 @@ bool X509_Certificate::has_constraints(Key_Constraints constraints) const
 
 bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
    {
-   return has_ex_constraint(OIDS::str2oid(ex_constraint));
+   return has_ex_constraint(OID::from_string(ex_constraint));
    }
 
 bool X509_Certificate::has_ex_constraint(const OID& usage) const
@@ -566,7 +566,7 @@ bool X509_Certificate::has_ex_constraint(const OID& usage) const
 */
 bool X509_Certificate::is_critical(const std::string& ex_name) const
    {
-   return v3_extensions().critical_extension_set(OIDS::str2oid(ex_name));
+   return v3_extensions().critical_extension_set(OID::from_string(ex_name));
    }
 
 std::string X509_Certificate::ocsp_responder() const
@@ -695,7 +695,7 @@ std::vector<std::string> lookup_oids(const std::vector<OID>& oids)
 
    for(const OID& oid : oids)
       {
-      out.push_back(OIDS::oid2str(oid));
+      out.push_back(oid.to_formatted_string());
       }
    return out;
    }
@@ -823,12 +823,7 @@ std::string X509_Certificate::to_string() const
       out << "Extended Constraints:\n";
       for(auto&& oid : ex_constraints)
          {
-         const std::string oid_str = OIDS::oid2str(oid);
-
-         if(oid_str.empty())
-            out << "   " << oid.to_string() << "\n";
-         else
-            out << "   " << oid_str << "\n";
+         out << "   " << oid.to_formatted_string() << "\n";
          }
       }
 
@@ -873,8 +868,7 @@ std::string X509_Certificate::to_string() const
    if(!crl_distribution_point().empty())
       out << "CRL " << crl_distribution_point() << "\n";
 
-   out << "Signature algorithm: " <<
-      OIDS::oid2str(this->signature_algorithm().get_oid()) << "\n";
+   out << "Signature algorithm: " << this->signature_algorithm().get_oid().to_formatted_string() << "\n";
 
    out << "Serial number: " << hex_encode(this->serial_number()) << "\n";
 

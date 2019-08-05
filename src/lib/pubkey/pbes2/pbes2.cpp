@@ -34,7 +34,7 @@ SymmetricKey derive_key(const std::string& passphrase,
                         const AlgorithmIdentifier& kdf_algo,
                         size_t default_key_size)
    {
-   if(kdf_algo.get_oid() == OIDS::lookup("PKCS5.PBKDF2"))
+   if(kdf_algo.get_oid() == OID::from_string("PKCS5.PBKDF2"))
       {
       secure_vector<uint8_t> salt;
       size_t iterations = 0, key_length = 0;
@@ -56,12 +56,12 @@ SymmetricKey derive_key(const std::string& passphrase,
       if(key_length == 0)
          key_length = default_key_size;
 
-      const std::string prf = OIDS::lookup(prf_algo.get_oid());
+      const std::string prf = OIDS::oid2str_or_throw(prf_algo.get_oid());
       std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
       return pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
       }
 #if defined(BOTAN_HAS_SCRYPT)
-   else if(kdf_algo.get_oid() == OIDS::lookup("Scrypt"))
+   else if(kdf_algo.get_oid() == OID::from_string("Scrypt"))
       {
       secure_vector<uint8_t> salt;
       size_t N = 0, r = 0, p = 0;
@@ -142,7 +142,7 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
             .encode(key_length)
          .end_cons();
 
-      kdf_algo = AlgorithmIdentifier(OIDS::lookup("Scrypt"), scrypt_params);
+      kdf_algo = AlgorithmIdentifier(OID::from_string("Scrypt"), scrypt_params);
       return key;
 #else
       throw Not_Implemented("Scrypt is not available in this build");
@@ -214,7 +214,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    if(!known_pbes_cipher_mode(cipher_spec[1]))
       throw Encoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
-   const OID cipher_oid = OIDS::lookup(cipher);
+   const OID cipher_oid = OIDS::str2oid_or_empty(cipher);
    if(cipher_oid.empty())
       throw Encoding_Error("PBE-PKCS5 v2.0: No OID assigned for " + cipher);
 
@@ -251,7 +251,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
          )
       .end_cons();
 
-   AlgorithmIdentifier id(OIDS::lookup("PBE-PKCS5v20"), pbes2_params);
+   AlgorithmIdentifier id(OID::from_string("PBE-PKCS5v20"), pbes2_params);
 
    return std::make_pair(id, unlock(ctext));
    }
@@ -315,7 +315,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
          .decode(enc_algo)
       .end_cons();
 
-   const std::string cipher = OIDS::lookup(enc_algo.get_oid());
+   const std::string cipher = OIDS::oid2str_or_throw(enc_algo.get_oid());
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);

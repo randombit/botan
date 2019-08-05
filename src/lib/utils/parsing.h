@@ -95,7 +95,8 @@ std::string string_join(const std::vector<std::string>& strs,
 * @param oid the OID in string form
 * @return OID components
 */
-BOTAN_PUBLIC_API(2,0) std::vector<uint32_t> parse_asn1_oid(const std::string& oid);
+BOTAN_PUBLIC_API(2,0) std::vector<uint32_t>
+BOTAN_DEPRECATED("Use OID::from_string(oid).get_components()") parse_asn1_oid(const std::string& oid);
 
 /**
 * Compare two names using the X.509 comparison algorithm

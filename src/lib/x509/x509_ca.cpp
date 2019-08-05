@@ -40,7 +40,7 @@ X509_CA::X509_CA(const X509_Certificate& c,
    // constructor without additional options: use the padding used in the CA certificate
    // sig_oid_str = <sig_alg>/<padding>, so padding with all its options will look
    // like a cipher mode to the scanner
-   std::string sig_oid_str = OIDS::lookup(c.signature_algorithm().oid);
+   std::string sig_oid_str = OIDS::oid2str_or_throw(c.signature_algorithm().get_oid());
    SCAN_Name scanner(sig_oid_str);
    std::string pad = scanner.cipher_mode();
    if(!pad.empty())

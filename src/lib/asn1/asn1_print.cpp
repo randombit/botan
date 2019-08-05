@@ -149,7 +149,7 @@ void ASN1_Formatter::decode(std::ostream& output,
          OID oid;
          data.decode(oid);
 
-         std::string out = OIDS::lookup(oid);
+         std::string out = OIDS::oid2str_or_empty(oid);
          if(out.empty())
             {
             out = oid.to_string();

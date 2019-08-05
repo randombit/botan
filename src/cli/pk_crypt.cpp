@@ -59,7 +59,7 @@ class PK_Encrypt final : public Command
          if(!aead)
             throw CLI_Usage_Error("The AEAD '" + aead_algo + "' is not available");
 
-         const Botan::OID aead_oid = Botan::OIDS::lookup(aead_algo);
+         const Botan::OID aead_oid = Botan::OID::from_string(aead_algo);
          if(aead_oid.empty())
             throw CLI_Usage_Error("No OID defined for AEAD '" + aead_algo + "'");
 
@@ -159,14 +159,14 @@ class PK_Decrypt final : public Command
             return set_return_code(1);
             }
 
-         const std::string aead_algo = Botan::OIDS::lookup(aead_oid);
+         const std::string aead_algo = Botan::OIDS::oid2str_or_empty(aead_oid);
          if(aead_algo == "")
             {
             error_output() << "Ciphertext was encrypted with an unknown algorithm";
             return set_return_code(1);
             }
 
-         if(pk_alg_id.get_oid() != Botan::OIDS::lookup("RSA/OAEP"))
+         if(pk_alg_id.get_oid() != Botan::OID::from_string("RSA/OAEP"))
             {
             error_output() << "Ciphertext was encrypted with something other than RSA/OAEP";
             return set_return_code(1);
@@ -175,7 +175,7 @@ class PK_Decrypt final : public Command
          Botan::AlgorithmIdentifier oaep_hash_id;
          Botan::BER_Decoder(pk_alg_id.get_parameters()).decode(oaep_hash_id);
 
-         const std::string oaep_hash = Botan::OIDS::lookup(oaep_hash_id.get_oid());
+         const std::string oaep_hash = Botan::OIDS::oid2str_or_empty(oaep_hash_id.get_oid());
 
          if(oaep_hash.empty())
             {

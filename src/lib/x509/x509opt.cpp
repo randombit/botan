@@ -6,7 +6,6 @@
 */
 
 #include <botan/x509self.h>
-#include <botan/oids.h>
 #include <botan/parsing.h>
 #include <chrono>
 
@@ -49,7 +48,7 @@ void X509_Cert_Options::add_ex_constraint(const OID& oid)
 */
 void X509_Cert_Options::add_ex_constraint(const std::string& oid_str)
    {
-   ex_constraints.push_back(OIDS::lookup(oid_str));
+   ex_constraints.push_back(OID::from_string(oid_str));
    }
 
 /*

@@ -10,7 +10,6 @@
 #include <botan/ber_dec.h>
 #include <botan/x509_ext.h>
 #include <botan/hash.h>
-#include <botan/oids.h>
 
 namespace Botan {
 
@@ -39,7 +38,8 @@ bool CertID::is_id_for(const X509_Certificate& issuer,
       if(BigInt::decode(subject.serial_number()) != m_subject_serial)
          return false;
 
-      std::unique_ptr<HashFunction> hash(HashFunction::create(OIDS::lookup(m_hash_id.get_oid())));
+      const std::string hash_algo = m_hash_id.get_oid().to_formatted_string();
+      std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw(hash_algo);
 
       if(m_issuer_dn_hash != unlock(hash->process(subject.raw_issuer_dn())))
          return false;
