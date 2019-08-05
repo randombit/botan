@@ -86,8 +86,6 @@
 #if defined(__ibmxl__)
   // XLC pretends to be both Clang and GCC, but is neither
   #define BOTAN_MALLOC_FN __attribute__ ((malloc))
-#elif defined(__clang__) || (BOTAN_GCC_VERSION >= 500)
-  #define BOTAN_MALLOC_FN __attribute__ ((malloc, returns_nonnull, alloc_size(1,2)))
 #elif defined(__GNUC__)
   #define BOTAN_MALLOC_FN __attribute__ ((malloc, alloc_size(1,2)))
 #elif defined(_MSC_VER)
