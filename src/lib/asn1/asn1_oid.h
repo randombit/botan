@@ -70,7 +70,7 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       */
       const std::vector<uint32_t>& get_components() const { return m_id; }
 
-      //const std::vector<uint32_t>& get_id() const { return get_components(); }
+      const std::vector<uint32_t>& get_id() const { return get_components(); }
 
       /**
       * Get this OID as a string
@@ -112,7 +112,7 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       * @param new_comp the new component to add to the end of this OID
       * @return reference to *this
       */
-      OID& BOTAN_DEPRECATED("Avoid mutation of OIDs") operator+=(uint32_t new_comp)
+      BOTAN_DEPRECATED("Avoid mutation of OIDs") OID& operator+=(uint32_t new_comp)
          {
          m_id.push_back(new_comp);
          return (*this);
