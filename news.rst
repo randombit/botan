@@ -9,6 +9,13 @@ Version 2.12.0, Not Yet Released
 * In DTLS server, support a client crashing and then reconnecting from
   the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
 
+* Optimize DTLS MTU splitting to split precisely to the set MTU (GH #2042)
+
+* Improve the error messages generated when an invalid TLS state transition occurs
+  (GH #2030)
+
+* Add some new APIs on ``OID`` objects (GH #2057)
+
 * Fix some edge cases around TLS close_notify support. (GH #2054)
 
 * Add support for the TLS v1.3 downgrade indicator. (GH #2027)
@@ -25,7 +32,19 @@ Version 2.12.0, Not Yet Released
 
 * Fix typos in some OCSP enums which used "OSCP" instead. (GH #2048)
 
+* In the Python module, avoid trying to load DLLs for names that don't match the current
+  platform (GH #2062 #2059)
+
+* In the Python module, also look for ``botan.dll`` so Python wrapper can run on Windows.
+  (GH #2059 #2060)
+
+* Now the minimum Windows target is set to Windows 7 (GH #2036 #2028)
+
 * Avoid using ``__GNUG__`` in headers that may be consumed by a C compiler (GH #2013)
+
+* Fix a bug which caused amalgamation builds to fail on iOS (GH #2045)
+
+* Support disabling thread local storage, needed for building on old iOS (GH #2045)p
 
 * Add a script to help with building for Android, using Docker (GH #2016 #2033 #513)
 
