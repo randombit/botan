@@ -21,7 +21,7 @@ Botan 2.8
 from ctypes import CDLL, POINTER, byref, create_string_buffer, \
     c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char_p
 
-from sys import version_info
+from sys import version_info, platform
 from time import strptime, mktime
 from binascii import hexlify
 from datetime import datetime
@@ -52,8 +52,16 @@ class BotanException(Exception):
 
 def _load_botan_dll(expected_version):
 
-    possible_dll_names = ['libbotan-2.dylib', 'libbotan-2.so', 'botan.dll'] + \
-        ['libbotan-2.so.%d' % (v) for v in reversed(range(8, 16))]
+    possible_dll_names = []
+
+    if platform in ['win32', 'cygwin', 'msys']:
+        possible_dll_names.append('botan.dll')
+    elif platform in ['darwin', 'macos']:
+        possible_dll_names.append('libbotan-2.dylib')
+    else:
+        # assumed to be some Unix/Linux system
+        possible_dll_names.append('libbotan-2.so')
+        possible_dll_names += ['libbotan-2.so.%d' % (v) for v in reversed(range(8, 16))]
 
     for dll_name in possible_dll_names:
         try:
