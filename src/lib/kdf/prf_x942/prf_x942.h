@@ -11,6 +11,8 @@
 #include <botan/kdf.h>
 #include <botan/asn1_oid.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(prf_x942.h)
+
 namespace Botan {
 
 /**

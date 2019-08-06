@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+BOTAN_FUTURE_INTERNAL_HEADER(scan_name.h)
+
 namespace Botan {
 
 /**

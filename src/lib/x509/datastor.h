@@ -15,6 +15,8 @@
 #include <vector>
 #include <map>
 
+BOTAN_FUTURE_INTERNAL_HEADER(datastor.h)
+
 namespace Botan {
 
 /**

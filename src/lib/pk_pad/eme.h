@@ -11,6 +11,8 @@
 #include <botan/secmem.h>
 #include <string>
 
+BOTAN_FUTURE_INTERNAL_HEADER(eme.h)
+
 namespace Botan {
 
 class RandomNumberGenerator;

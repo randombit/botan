@@ -8,6 +8,10 @@
 #ifndef BOTAN_TLS_PROTOCOL_MAGIC_H_
 #define BOTAN_TLS_PROTOCOL_MAGIC_H_
 
+#include <botan/types.h>
+
+//BOTAN_FUTURE_INTERNAL_HEADER(tls_magic.h)
+
 namespace Botan {
 
 namespace TLS {

@@ -10,6 +10,7 @@
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/tls_messages.h>
 #include <botan/exceptn.h>
+#include <botan/loadstor.h>
 #include <chrono>
 
 namespace Botan {

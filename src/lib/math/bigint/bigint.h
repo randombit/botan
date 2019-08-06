@@ -12,7 +12,6 @@
 #include <botan/types.h>
 #include <botan/secmem.h>
 #include <botan/exceptn.h>
-#include <botan/loadstor.h>
 #include <iosfwd>
 
 namespace Botan {
@@ -497,11 +496,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * @param n the offset to get a byte from
      * @result byte at offset n
      */
-     uint8_t byte_at(size_t n) const
-        {
-        return get_byte(sizeof(word) - (n % sizeof(word)) - 1,
-                        word_at(n / sizeof(word)));
-        }
+     uint8_t byte_at(size_t n) const;
 
      /**
      * Return the word at a specified position of the internal register

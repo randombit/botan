@@ -17,6 +17,8 @@
 #include <utility>
 #include <string>
 
+//BOTAN_FUTURE_INTERNAL_HEADER(gf2m_small_m.h)
+
 namespace Botan {
 
 class RandomNumberGenerator;

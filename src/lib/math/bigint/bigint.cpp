@@ -10,6 +10,7 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
@@ -104,6 +105,12 @@ BigInt::BigInt(const uint8_t buf[], size_t length, size_t max_bits)
 BigInt::BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit)
    {
    randomize(rng, bits, set_high_bit);
+   }
+
+uint8_t BigInt::byte_at(size_t n) const
+   {
+   return get_byte(sizeof(word) - (n % sizeof(word)) - 1,
+                   word_at(n / sizeof(word)));
    }
 
 int32_t BigInt::cmp_word(word other) const

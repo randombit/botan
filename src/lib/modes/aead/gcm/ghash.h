@@ -10,6 +10,8 @@
 
 #include <botan/sym_algo.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(ghash.h)
+
 namespace Botan {
 
 /**

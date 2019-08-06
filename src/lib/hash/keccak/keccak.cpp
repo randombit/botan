@@ -8,6 +8,7 @@
 #include <botan/keccak.h>
 #include <botan/sha3.h>
 #include <botan/exceptn.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

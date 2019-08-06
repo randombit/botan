@@ -12,6 +12,8 @@
 #include <botan/aead.h>
 #include <botan/sym_algo.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(gcm.h)
+
 namespace Botan {
 
 class BlockCipher;

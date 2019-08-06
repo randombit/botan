@@ -355,11 +355,6 @@ class TLS_Handshake_Test final
                                                    (side == Botan::TLS::CLIENT) ? client_extn : server_extn,
                                                    6, 1);
                }
-
-            Test_Extension(Botan::TLS::TLS_Data_Reader& reader, uint16_t)
-               {
-               m_buf = reader.get_range_vector<uint8_t>(1, 6, 6);
-               }
          private:
             std::vector<uint8_t> m_buf;
          };

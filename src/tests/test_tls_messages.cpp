@@ -14,6 +14,7 @@
    #include <botan/tls_handshake_msg.h>
    #include <botan/tls_messages.h>
    #include <botan/tls_alert.h>
+   #include <botan/loadstor.h>
 #endif
 
 namespace Botan_Tests {

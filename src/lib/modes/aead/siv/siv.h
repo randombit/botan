@@ -12,6 +12,8 @@
 #include <botan/aead.h>
 #include <botan/stream_cipher.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(siv.h)
+
 namespace Botan {
 
 class BlockCipher;

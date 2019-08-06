@@ -6,6 +6,7 @@
 */
 
 #include <botan/md5.h>
+#include <botan/loadstor.h>
 #include <botan/rotate.h>
 
 namespace Botan {

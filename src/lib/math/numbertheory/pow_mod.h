@@ -10,6 +10,8 @@
 
 #include <botan/bigint.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(pow_mod.h)
+
 namespace Botan {
 
 class Modular_Exponentiator;

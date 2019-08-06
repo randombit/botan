@@ -12,6 +12,8 @@
 #include <string>
 #include <memory>
 
+BOTAN_FUTURE_INTERNAL_HEADER(blake2b.h)
+
 namespace Botan {
 
 /**

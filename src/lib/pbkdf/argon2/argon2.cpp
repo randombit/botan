@@ -5,6 +5,7 @@
 */
 
 #include <botan/argon2.h>
+#include <botan/loadstor.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
 #include <botan/rotate.h>
@@ -26,23 +27,23 @@ secure_vector<uint8_t> argon2_H0(HashFunction& blake2b,
    {
    const uint8_t v = 19; // Argon2 version code
 
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(p));
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(output_len));
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(M));
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(t));
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(v));
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(y));
+   blake2b.update_le(static_cast<uint32_t>(p));
+   blake2b.update_le(static_cast<uint32_t>(output_len));
+   blake2b.update_le(static_cast<uint32_t>(M));
+   blake2b.update_le(static_cast<uint32_t>(t));
+   blake2b.update_le(static_cast<uint32_t>(v));
+   blake2b.update_le(static_cast<uint32_t>(y));
 
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(password_len));
+   blake2b.update_le(static_cast<uint32_t>(password_len));
    blake2b.update(cast_char_ptr_to_uint8(password), password_len);
 
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(salt_len));
+   blake2b.update_le(static_cast<uint32_t>(salt_len));
    blake2b.update(salt, salt_len);
 
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(key_len));
+   blake2b.update_le(static_cast<uint32_t>(key_len));
    blake2b.update(key, key_len);
 
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(ad_len));
+   blake2b.update_le(static_cast<uint32_t>(ad_len));
    blake2b.update(ad, ad_len);
 
    return blake2b.final();
@@ -57,10 +58,10 @@ void Htick(secure_vector<uint8_t>& T,
    {
    BOTAN_ASSERT_NOMSG(output_len % 64 == 0);
 
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(output_len));
+   blake2b.update_le(static_cast<uint32_t>(output_len));
    blake2b.update(H0);
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(p0));
-   blake2b.update_le<uint32_t>(static_cast<uint32_t>(p1));
+   blake2b.update_le(static_cast<uint32_t>(p0));
+   blake2b.update_le(static_cast<uint32_t>(p1));
 
    blake2b.final(&T[0]);
 

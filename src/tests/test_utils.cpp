@@ -16,6 +16,7 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/cpuid.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <botan/version.h>

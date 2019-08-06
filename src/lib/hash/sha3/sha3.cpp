@@ -6,6 +6,7 @@
 */
 
 #include <botan/sha3.h>
+#include <botan/loadstor.h>
 #include <botan/rotate.h>
 #include <botan/exceptn.h>
 #include <botan/cpuid.h>

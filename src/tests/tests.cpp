@@ -13,6 +13,7 @@
 #include <botan/parsing.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/stl_util.h>
+#include <botan/cpuid.h>
 
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>
@@ -959,10 +960,10 @@ std::string strip_ws(const std::string& in)
    return in.substr(first_c, last_c - first_c + 1);
    }
 
-std::vector<Botan::CPUID::CPUID_bits>
+std::vector<uint64_t>
 parse_cpuid_bits(const std::vector<std::string>& tok)
    {
-   std::vector<Botan::CPUID::CPUID_bits> bits;
+   std::vector<uint64_t> bits;
    for(size_t i = 1; i < tok.size(); ++i)
       {
       const std::vector<Botan::CPUID::CPUID_bits> more = Botan::CPUID::bit_from_string(tok[i]);
@@ -1065,8 +1066,9 @@ std::vector<Test::Result> Text_Based_Test::run()
             Test::Result result = run_one_test(header, vars);
             if(m_cpu_flags.size() > 0)
                {
-               for(auto const& cpuid_bit : m_cpu_flags)
+               for(auto const& cpuid_u64 : m_cpu_flags)
                   {
+                  Botan::CPUID::CPUID_bits cpuid_bit = static_cast<Botan::CPUID::CPUID_bits>(cpuid_u64);
                   if(Botan::CPUID::has_cpuid_bit(cpuid_bit))
                      {
                      Botan::CPUID::clear_cpuid_bit(cpuid_bit);
