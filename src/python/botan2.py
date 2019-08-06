@@ -52,7 +52,7 @@ class BotanException(Exception):
 
 def _load_botan_dll(expected_version):
 
-    possible_dll_names = ['libbotan-2.dylib', 'libbotan-2.so'] + \
+    possible_dll_names = ['libbotan-2.dylib', 'libbotan-2.so', 'botan.dll'] + \
         ['libbotan-2.so.%d' % (v) for v in reversed(range(8, 16))]
 
     for dll_name in possible_dll_names:

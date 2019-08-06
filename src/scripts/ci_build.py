@@ -224,13 +224,15 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
 
         if target_os == 'windows' and target in ['shared', 'static']:
             # ./configure.py needs extra hand-holding for boost on windows
-            boost_root = os.environ['BOOST_ROOT']
-            boost_libs = os.environ['BOOST_LIBRARYDIR']
-            boost_system = os.environ['BOOST_SYSTEM_LIBRARY']
-            flags += ['--with-boost',
-                      '--with-external-includedir', boost_root,
-                      '--with-external-libdir', boost_libs,
-                      '--boost-library-name', boost_system]
+            boost_root = os.environ.get('BOOST_ROOT')
+            boost_libs = os.environ.get('BOOST_LIBRARYDIR')
+            boost_system = os.environ.get('BOOST_SYSTEM_LIBRARY')
+
+            if boost_root and boost_libs and boost_system:
+                flags += ['--with-boost',
+                          '--with-external-includedir', boost_root,
+                          '--with-external-libdir', boost_libs,
+                          '--boost-library-name', boost_system]
 
         if target_os == 'linux':
             flags += ['--with-lzma']
@@ -381,7 +383,10 @@ def main(args=None):
         print('Skipping build COVERITY_SCAN_BRANCH set in environment')
         return 0
 
-    (options, args) = parse_args(args or sys.argv)
+    if args is None:
+        args = sys.argv
+    print("Invoked as '%s'" % (' '.join(args)))
+    (options, args) = parse_args(args)
 
     if len(args) != 2:
         print('Usage: %s [options] target' % (args[0]))
@@ -543,10 +548,15 @@ def main(args=None):
 
         if target in ['shared', 'coverage']:
 
-            if use_python2:
-                cmds.append(['python2', '-b', python_tests])
-            if use_python3:
-                cmds.append(['python3', '-b', python_tests])
+            if options.os == 'windows':
+                if options.cpu == 'x86':
+                    # Python on AppVeyor is a 32-bit binary so only test for 32-bit
+                    cmds.append([py_interp, '-b', python_tests])
+            else:
+                if use_python2:
+                    cmds.append(['python2', '-b', python_tests])
+                if use_python3:
+                    cmds.append(['python3', '-b', python_tests])
 
         if target in ['shared', 'static', 'bsi', 'nist']:
             cmds.append(make_cmd + ['install'])
