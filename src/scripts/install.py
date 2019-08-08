@@ -230,16 +230,16 @@ def main(args):
         copy_file(cfg['botan_pkgconfig'],
                   prepend_destdir(os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig']))))
 
-    if 'ffi' in cfg['mod_list']:
-        for ver in cfg['python_version'].split(','):
-            py_lib_path = os.path.join(lib_dir, 'python%s' % (ver), 'site-packages')
-            logging.debug('Installing python module to %s' % (py_lib_path))
-            makedirs(prepend_destdir(py_lib_path))
-
-            py_dir = cfg['python_dir']
-
-            copy_file(os.path.join(py_dir, 'botan2.py'),
-                      prepend_destdir(os.path.join(py_lib_path, 'botan2.py')))
+#    if 'ffi' in cfg['mod_list']:
+#        for ver in cfg['python_version'].split(','):
+#            py_lib_path = os.path.join(lib_dir, 'python%s' % (ver), 'site-packages')
+#            logging.debug('Installing python module to %s' % (py_lib_path))
+#            makedirs(prepend_destdir(py_lib_path))
+#
+#            py_dir = cfg['python_dir']
+#
+#            copy_file(os.path.join(py_dir, 'botan2.py'),
+#                      prepend_destdir(os.path.join(py_lib_path, 'botan2.py')))
 
     if cfg['with_documentation']:
         target_doc_dir = os.path.join(options.prefix, options.docdir,
