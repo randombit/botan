@@ -38,14 +38,6 @@ The AppVeyor build uses ``sccache`` as a compiler cache. Since that is not
 available in the AppVeyor images it takes a precompiled copy checked into the
 ``botan-ci-tools`` repo.
 
-Kullo CI
-----------
-
-This was the initial CI system and tests Linux, macOS, Windows, and Android
-builds. Notably this is currently the only CI system Botan uses which has an
-Android build enabled. It does not use ``ci_build.py``. This system is
-maintained by @webmaster128
-
 LGTM
 ---------
 
