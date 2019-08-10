@@ -42,10 +42,6 @@ such as Fedora, Debian, Arch and Homebrew.
     :target: https://ci.appveyor.com/project/randombit/botan/branch/master
     :alt: AppVeyor CI status
 
-.. image:: https://botan-ci.kullo.net/badge
-    :target: https://botan-ci.kullo.net/
-    :alt: Kullo CI status
-
 .. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
     :target: https://codecov.io/github/randombit/botan
     :alt: Code coverage report
