@@ -17,7 +17,7 @@
 #include <utility>
 #include <string>
 
-//BOTAN_FUTURE_INTERNAL_HEADER(gf2m_small_m.h)
+//BOTAN_FUTURE_INTERNAL_HEADER(polyn_gf2m.h)
 
 namespace Botan {
 
