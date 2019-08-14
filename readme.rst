@@ -50,6 +50,10 @@ such as Fedora, Debian, Arch and Homebrew.
     :target: https://lgtm.com/projects/g/randombit/botan/alerts/
     :alt: LGTM alerts
 
+.. image:: https://oss-fuzz-build-logs.storage.googleapis.com/badges/botan.svg
+    :target: https://oss-fuzz.com/coverage-report/job/libfuzzer_asan_botan/latest
+    :alt: OSS-Fuzz status
+
 .. image:: https://scan.coverity.com/projects/624/badge.svg
     :target: https://scan.coverity.com/projects/624
     :alt: Coverity results
