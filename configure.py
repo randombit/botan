@@ -449,6 +449,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--no-store-vc-rev', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--no-install-python-module', action='store_true', default=False,
+                           help='skip installing Python module')
+
     build_group.add_option('--with-python-versions', dest='python_version',
                            metavar='N.M',
                            default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
@@ -2024,6 +2027,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'python_exe': os.path.basename(sys.executable),
         'python_version': options.python_version,
+        'install_python_module': not options.no_install_python_module,
 
         'cxx': (options.compiler_binary or cc.binary_name),
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
