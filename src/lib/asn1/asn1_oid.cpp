@@ -64,16 +64,16 @@ OID OID::from_string(const std::string& str)
    if(str.empty())
       throw Invalid_Argument("OID::from_string argument must be non-empty");
 
-   // first try as a dotted decimal OID string:
+   const OID o = OIDS::str2oid_or_empty(str);
+   if(o.has_value())
+      return o;
+
    std::vector<uint32_t> raw = parse_oid_str(str);
 
    if(raw.size() > 0)
       return OID(std::move(raw));
 
-   const OID o = OIDS::str2oid_or_empty(str);
-   if(o.empty())
-      throw Lookup_Error("No OID associated with name " + str);
-   return o;
+   throw Lookup_Error("No OID associated with name " + str);
    }
 
 /*
