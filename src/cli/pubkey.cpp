@@ -1,5 +1,6 @@
 /*
-* (C) 2010,2014,2015 Jack Lloyd
+* (C) 2010,2014,2015,2019 Jack Lloyd
+* (C) 2019 Matthias Gierlings
 * (C) 2015 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -216,7 +217,7 @@ class PK_Sign final : public Command
             };
          this->read_file(get_arg("file"), onData);
 
-         output() << Botan::base64_encode(signer.signature(rng())) << "\n";
+         std::vector<uint8_t> sig { signer.signature(rng()) };
 
          if(key->stateful_operation())
             {
@@ -226,6 +227,8 @@ class PK_Sign final : public Command
             else
                updated_key << Botan::PKCS8::PEM_encode(*key, rng(), passphrase);
             }
+
+         output() << Botan::base64_encode(sig) << "\n";
          }
    };
 
