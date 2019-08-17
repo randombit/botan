@@ -35,6 +35,7 @@ Ciphers, Hashes, PBKDF
 Public Key Crypto, Math
 ----------------------------------------
 
+* Short vector optimization for BigInt
 * Abstract representation of ECC point elements to allow specific
   implementations of the field arithmetic depending upon the curve.
 * Use NAF (joint sparse form) for ECC multi-exponentiation
