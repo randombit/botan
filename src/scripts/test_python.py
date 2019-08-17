@@ -283,8 +283,10 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertTrue(rsapub.check_key(rng))
 
         # invalid
-        rsapub = botan2.PublicKey.load_rsa(n - 1, e)
-        self.assertFalse(rsapub.check_key(rng))
+        try:
+            rsapub = botan2.PublicKey.load_rsa(n - 1, e)
+        except botan2.BotanException as e:
+            self.assertEqual(str(e), "botan_pubkey_load_rsa failed: -1 (Invalid input)")
 
     def test_rsa(self):
         # pylint: disable=too-many-locals

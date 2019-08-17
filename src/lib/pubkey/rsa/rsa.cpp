@@ -110,6 +110,8 @@ const BigInt& RSA_PublicKey::get_e() const { return m_public->get_e(); }
 
 void RSA_PublicKey::init(BigInt&& n, BigInt&& e)
    {
+   if(n.is_negative() || n.is_even() || e.is_negative() || e.is_even())
+      throw Decoding_Error("Invalid RSA public key parameters");
    m_public = std::make_shared<RSA_Public_Data>(std::move(n), std::move(e));
    }
 
