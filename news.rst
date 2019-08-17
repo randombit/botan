@@ -34,6 +34,9 @@ Version 2.12.0, Not Yet Released
 
 * Fix typos in some OCSP enums which used "OSCP" instead. (GH #2048)
 
+* The tests now run in multithreaded mode by default. Provde option ``--test-threads=1`` to
+  return to previous single-threaded behavior. (GH #2071)
+
 * In the Python module, avoid trying to load DLLs for names that don't match the current
   platform (GH #2062 #2059)
 
