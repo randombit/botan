@@ -39,6 +39,7 @@ Montgomery_Params::Montgomery_Params(const BigInt& p)
 
    const BigInt r = BigInt::power_of_2(m_p_words * BOTAN_MP_WORD_BITS);
 
+   // It might be faster to use ct_modulo here vs setting up Barrett reduction?
    Modular_Reducer mod_p(p);
 
    m_r1 = mod_p.reduce(r);
