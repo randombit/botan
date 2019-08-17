@@ -240,8 +240,8 @@ int botan_pubkey_get_field(botan_mp_t output,
    }
 
 int botan_privkey_get_field(botan_mp_t output,
-                                      botan_privkey_t key,
-                                      const char* field_name_cstr)
+                            botan_privkey_t key,
+                            const char* field_name_cstr)
    {
    if(field_name_cstr == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
