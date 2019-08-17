@@ -306,12 +306,11 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
                               size_t tot_test_runs)
    {
    size_t tests_ran = 0, tests_failed = 0;
-
    const uint64_t start_time = Botan_Tests::Test::timestamp();
 
+#if defined(BOTAN_HAS_THREAD_UTILS) && defined(BOTAN_TARGET_OS_HAS_THREAD_LOCAL)
    if(test_threads != 1)
       {
-#if defined(BOTAN_HAS_THREAD_UTILS) && defined(BOTAN_TARGET_OS_HAS_THREAD_LOCAL)
       // If 0 then we let thread pool select the count
       Botan::Thread_Pool pool(test_threads);
 
@@ -336,9 +335,12 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
       output() << test_summary(test_run, tot_test_runs, total_ns, tests_ran, tests_failed);
 
       return tests_failed;
-#else
-      output() << "Running tests in multiple threads not enabled in this build\n";
+      }
 #endif
+
+   if(test_threads > 1)
+      {
+      output() << "Running tests in multiple threads not enabled in this build\n";
       }
 
    for(auto const& test_name : tests_to_run)
