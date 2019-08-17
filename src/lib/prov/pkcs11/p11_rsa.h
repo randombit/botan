@@ -12,6 +12,7 @@
 #include <botan/p11_session.h>
 #include <botan/p11_object.h>
 #include <botan/pk_keys.h>
+#include <botan/bigint.h>
 
 #if defined(BOTAN_HAS_RSA)
 #include <botan/rsa.h>
@@ -63,8 +64,7 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKeyImportProperties final : public PublicK
    };
 
 /// Represents a PKCS#11 RSA public key
-class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PublicKey : public RSA_PublicKey,
-   public Object
+class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PublicKey : public Object, public RSA_PublicKey
    {
    public:
       static const ObjectClass Class = ObjectClass::PublicKey;
@@ -170,9 +170,8 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKeyGenerationProperties final : public Pr
    };
 
 /// Represents a PKCS#11 RSA private key
-class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final : public Private_Key,
-   public RSA_PublicKey,
-   public Object
+class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
+   public Object, public Private_Key, public RSA_PublicKey
    {
    public:
       static const ObjectClass Class = ObjectClass::PrivateKey;
