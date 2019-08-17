@@ -13,7 +13,6 @@
 #include <botan/workfactor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/pow_mod.h>
 #include <botan/monty.h>
 #include <botan/divide.h>
 #include <botan/internal/monty_exp.h>
@@ -211,10 +210,10 @@ class RSA_Private_Operation
          m_mod_q(m_key.get_q()),
          m_monty_p(std::make_shared<Montgomery_Params>(m_key.get_p(), m_mod_p)),
          m_monty_q(std::make_shared<Montgomery_Params>(m_key.get_q(), m_mod_q)),
-         m_powermod_e_n(m_key.get_e(), m_key.get_n()),
+         m_monty_n(std::make_shared<Montgomery_Params>(m_key.get_n())),
          m_blinder(m_key.get_n(),
                    rng,
-                   [this](const BigInt& k) { return m_powermod_e_n(k); },
+                   [this](const BigInt& k) { return public_op(k); },
                    [this](const BigInt& k) { return inverse_mod(k, m_key.get_n()); }),
          m_blinding_bits(64),
          m_mod_bytes(m_key.get_n().bytes()),
@@ -222,6 +221,13 @@ class RSA_Private_Operation
          m_max_d1_bits(m_key.get_p().bits() + m_blinding_bits),
          m_max_d2_bits(m_key.get_q().bits() + m_blinding_bits)
          {
+         }
+
+      BigInt public_op(const BigInt& m) const
+         {
+         const size_t powm_window = 1;
+         auto powm_m_n = monty_precompute(m_monty_n, m, powm_window, false);
+         return monty_execute_vartime(*powm_m_n, m_key.get_e());
          }
 
       BigInt blinded_private_op(const BigInt& m) const
@@ -300,8 +306,8 @@ class RSA_Private_Operation
       Modular_Reducer m_mod_q;
       std::shared_ptr<const Montgomery_Params> m_monty_p;
       std::shared_ptr<const Montgomery_Params> m_monty_q;
+      std::shared_ptr<const Montgomery_Params> m_monty_n;
 
-      Fixed_Exponent_Power_Mod m_powermod_e_n;
       Blinder m_blinder;
       const size_t m_blinding_bits;
       const size_t m_mod_bytes;
@@ -330,7 +336,7 @@ class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
          {
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
-         const BigInt c = m_powermod_e_n(x);
+         const BigInt c = public_op(x);
          BOTAN_ASSERT(m == c, "RSA sign consistency check");
          return BigInt::encode_1363(x, m_mod_bytes);
          }
@@ -353,7 +359,7 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
          {
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
-         const BigInt c = m_powermod_e_n(x);
+         const BigInt c = public_op(x);
          BOTAN_ASSERT(m == c, "RSA decrypt consistency check");
          return BigInt::encode_1363(x, m_mod_bytes);
          }
@@ -376,7 +382,7 @@ class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KD
          {
          const BigInt m(encap_key, len);
          const BigInt x = blinded_private_op(m);
-         const BigInt c = m_powermod_e_n(x);
+         const BigInt c = public_op(x);
          BOTAN_ASSERT(m == c, "RSA KEM consistency check");
          return BigInt::encode_1363(x, m_mod_bytes);
          }
