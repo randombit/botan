@@ -8,7 +8,8 @@ if %MSVS% == 2019 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Preview
 rem check compiler version
 cl
 
-git clone --depth 1 https://github.com/randombit/botan-ci-tools
+appveyor DownloadFile https://github.com/mozilla/sccache/releases/download/%SCCACHE_VERSION%/sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
+tar -xf sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
 
-rem include QtCreator bin dir to get jom
-set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%;botan-ci-tools
+REM include QtCreator bin dir to get jom
+set PATH=%PATH%;C:\Qt\Tools\QtCreator\bin;sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc
