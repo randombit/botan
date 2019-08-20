@@ -318,7 +318,16 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
 
       for(auto const& test_name : tests_to_run)
          {
-         m_fut_results.push_back(pool.run(run_a_test, test_name));
+         if(test_name.substr(0, 6) == "pkcs11")
+            {
+            // Run all PKCS11 tests on the main thread because they need to
+            // be serialized with respect to each other.
+            m_fut_results.push_back(std::async(std::launch::deferred, run_a_test, test_name));
+            }
+         else
+            {
+            m_fut_results.push_back(pool.run(run_a_test, test_name));
+            }
          }
 
       for(size_t i = 0; i != m_fut_results.size(); ++i)
