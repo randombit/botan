@@ -5,6 +5,7 @@ environment:
 
   SCCACHE_DIR: C:\Users\appveyor\AppData\Local\Mozilla\sccache\cache
   SCCACHE_CACHE_SIZE: 128M
+  SCCACHE_VERSION: 0.2.10
   APPVEYOR_CACHE_ENTRY_ZIP_ARGS: -t7z -m0=lzma -mx=9
 
   matrix:
