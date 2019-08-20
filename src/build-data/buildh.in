@@ -210,24 +210,6 @@
 #define BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS 20
 
 /*
-How many times to read from the RDRAND/RDSEED RNGs.
-Each read generates 32 bits of output
-*/
-#define BOTAN_ENTROPY_INTEL_RNG_POLLS 32
-
-/*
-According to Intel, RDRAND is guaranteed to generate a random
-number within 10 retries on a working CPU
-*/
-#define BOTAN_ENTROPY_RDRAND_RETRIES 10
-
-/*
-* RdSeed is not guaranteed to generate a random number within a specific number of retries
-* Define the number of retries here
-*/
-#define BOTAN_ENTROPY_RDSEED_RETRIES 20
-
-/*
 * When a PBKDF is self-tuning parameters, it will attempt to take about this
 * amount of time to self-benchmark.
 */
