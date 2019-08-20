@@ -816,8 +816,11 @@ def pbkdf(algo, password, out_len, iterations=10000, salt=None):
         salt = RandomNumberGenerator().get(12)
 
     out_buf = create_string_buffer(out_len)
-    _DLL.botan_pbkdf(_ctype_str(algo), out_buf, out_len,
-                     _ctype_str(password), salt, len(salt), iterations)
+
+    _DLL.botan_pwdhash(_ctype_str(algo), iterations, 0, 0,
+                       out_buf, out_len,
+                       _ctype_str(password), len(password),
+                       salt, len(salt))
     return (salt, iterations, out_buf.raw)
 
 def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=None):
@@ -826,8 +829,12 @@ def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=None):
 
     out_buf = create_string_buffer(out_len)
     iterations = c_size_t(0)
-    _DLL.botan_pbkdf_timed(_ctype_str(algo), out_buf, out_len, _ctype_str(password),
-                           salt, len(salt), ms_to_run, byref(iterations))
+
+    _DLL.botan_pwdhash_timed(_ctype_str(algo), c_uint32(ms_to_run),
+                             byref(iterations), None, None,
+                             out_buf, out_len,
+                             _ctype_str(password), len(password),
+                             salt, len(salt))
     return (salt, iterations.value, out_buf.raw)
 
 #
@@ -835,8 +842,10 @@ def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=None):
 #
 def scrypt(out_len, password, salt, n=1024, r=8, p=8):
     out_buf = create_string_buffer(out_len)
-    _DLL.botan_scrypt(out_buf, out_len, _ctype_str(password),
-                      _ctype_bits(salt), len(salt), n, r, p)
+    _DLL.botan_pwdhash(_ctype_str("Scrypt"), n, r, p,
+                       out_buf, out_len,
+                       _ctype_str(password), len(password),
+                       _ctype_bits(salt), len(salt))
 
     return out_buf.raw
 
