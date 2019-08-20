@@ -15,6 +15,8 @@ namespace PKCS11 {
 Module::Module(const std::string& file_path, C_InitializeArgs init_args)
    : m_file_path(file_path)
    {
+   if(file_path.empty())
+      throw Invalid_Argument("PKCS11 no module path specified");
    reload(init_args);
    }
 
