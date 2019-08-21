@@ -74,6 +74,17 @@ int main(int argc, char* argv[])
          return 0;
          }
 
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_HAS_THREAD_UTILS)
+      /*
+      The mlock pool becomes a major contention point when many threads are running,
+      so disable it unless it was explicitly asked for via setting the env variable
+      */
+      if(parser.get_arg_sz("test-threads") != 1)
+         {
+         ::setenv("BOTAN_MLOCK_POOL_SIZE", "0", /*overwrite=*/0);
+         }
+#endif
+
       const Botan_Tests::Test_Options opts(
          parser.get_arg_list("suites"),
          parser.get_arg_list("skip-tests"),
