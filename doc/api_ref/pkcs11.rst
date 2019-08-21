@@ -1281,7 +1281,9 @@ Test results
 +-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
 | CardOS 5.3                          | mostly works                              | Windows 10, 64-bit, version 1709                  | API Version 5.4.9.77 (Cryptoki v2.11)             |  2.4.0, Cryptoki v2.40                            | [52]_                                             |
 +-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
-| Gemalto IDPrime MD 3840             | mostly works                              | Windows 10, 64-bit, version 1709                  | IDGo 800, v1.2.4 (Cryptoki v2.20)                 |  2.4.0, Cryptoki v2.40                            | [53]_                                             |
+| CardOS 5.3                          | mostly works                              | Windows 10, 64-bit, version 1903                  | API Version 5.5.1 (Cryptoki v2.11)                |  2.12.0 unreleased, Cryptoki v2.40                | [53]_                                             |
++-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
+| Gemalto IDPrime MD 3840             | mostly works                              | Windows 10, 64-bit, version 1709                  | IDGo 800, v1.2.4 (Cryptoki v2.20)                 |  2.4.0, Cryptoki v2.40                            | [54]_                                             |
 +-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
 | SoftHSM 2.3.0 (OpenSSL 1.0.2g)      | works                                     | Windows 10, 64-bit, version 1709                  | Cryptoki v2.40                                    |  2.4.0, Cryptoki v2.40                            |                                                   |
 +-------------------------------------+-------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+---------------------------------------------------+
@@ -1360,7 +1362,23 @@ Test results
 
  - rng_add_entropy [5]_
 
-.. [53] Failing operations for Gemalto IDPrime MD 3840
+.. [53] Failing operations for CardOS 5.3 (middelware 5.5.1)
+
+ - ecdh_privkey_export [2]_
+ - ecdh_generate_private_key [35]_
+ - ecdsa_privkey_export [2]_
+ - ecdsa_generate_private_key [36]_
+ - c_copy_object [4]_
+
+ - object_copy [4]_
+
+ - rng_add_entropy [5]_
+
+ - rsa_sign_verify [3]_
+ - rsa_privkey_export [2]_
+ - rsa_generate_private_key [9]_
+
+.. [54] Failing operations for Gemalto IDPrime MD 3840
 
  - session_login_logout [2]_
  - session_info [2]_
@@ -1385,6 +1403,7 @@ Error descriptions
 .. [6] CKM_X9_42_DH_KEY_PAIR_GEN | CKR_DEVICE_ERROR (0x30=48)
 .. [7] CKR_TEMPLATE_INCONSISTENT (0xD1=209)
 .. [8] CKR_ENCRYPTED_DATA_INVALID | CKM_SHA256_RSA_PKCS (0x40=64)
+.. [9] CKR_TEMPLATE_INCOMPLETE (0xD0=208)
 
 .. [20] Test fails due to unsupported copy function (CKR_FUNCTION_NOT_SUPPORTED)
 .. [21] Generating private key for extraction with property extractable fails (CKR_ARGUMENTS_BAD)
@@ -1396,3 +1415,5 @@ Error descriptions
 .. [32] Invalid argument OS2ECP: Unknown format type 155
 .. [33] Invalid argument OS2ECP: Unknown format type 92
 .. [34] Invalid argument OS2ECP: Unknown format type 57
+.. [35] Invalid argument OS2ECP: Unknown format type 82
+.. [36] Invalid argument OS2ECP: Unknown format type 102
