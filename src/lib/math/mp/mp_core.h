@@ -482,9 +482,9 @@ inline void bigint_shr2(word y[], const word x[], size_t x_size,
    }
 
 /*
-* Linear Multiply
+* Linear Multiply - returns the carry
 */
-inline void bigint_linmul2(word x[], size_t x_size, word y)
+inline word BOTAN_WARN_UNUSED_RESULT bigint_linmul2(word x[], size_t x_size, word y)
    {
    const size_t blocks = x_size - (x_size % 8);
 
@@ -496,7 +496,7 @@ inline void bigint_linmul2(word x[], size_t x_size, word y)
    for(size_t i = blocks; i != x_size; ++i)
       x[i] = word_madd2(x[i], y, &carry);
 
-   x[x_size] = carry;
+   return carry;
    }
 
 inline void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
