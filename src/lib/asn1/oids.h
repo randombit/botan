@@ -65,12 +65,18 @@ inline bool BOTAN_DEPRECATED("Use oid == OID::from_string(name)") name_of(const 
    return (oid == str2oid_or_empty(name));
    }
 
-inline std::string BOTAN_DEPRECATED("Use oid2str_or_empty") lookup(const OID& oid)
+/**
+* Prefer oid2str_or_empty
+*/
+inline std::string lookup(const OID& oid)
    {
    return oid2str_or_empty(oid);
    }
 
-inline OID BOTAN_DEPRECATED("Use str2oid_or_empty") lookup(const std::string& name)
+/**
+* Prefer str2oid_or_empty
+*/
+inline OID lookup(const std::string& name)
    {
    return str2oid_or_empty(name);
    }
