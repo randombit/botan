@@ -35,14 +35,14 @@ RSA_PublicKeyGenerationProperties::RSA_PublicKeyGenerationProperties(Ulong bits)
    }
 
 PKCS11_RSA_PublicKey::PKCS11_RSA_PublicKey(Session& session, ObjectHandle handle)
-   : Object(session, handle)
+   : Object(session, handle),
+     RSA_PublicKey(BigInt::decode(get_attribute_value(AttributeType::Modulus)),
+                   BigInt::decode(get_attribute_value(AttributeType::PublicExponent)))
    {
-   m_n = BigInt::decode(get_attribute_value(AttributeType::Modulus));
-   m_e = BigInt::decode(get_attribute_value(AttributeType::PublicExponent));
    }
 
 PKCS11_RSA_PublicKey::PKCS11_RSA_PublicKey(Session& session, const RSA_PublicKeyImportProperties& pubkey_props)
-   : RSA_PublicKey(pubkey_props.modulus(), pubkey_props.pub_exponent()), Object(session, pubkey_props)
+   : Object(session, pubkey_props), RSA_PublicKey(pubkey_props.modulus(), pubkey_props.pub_exponent())
    {}
 
 
@@ -55,22 +55,22 @@ RSA_PrivateKeyImportProperties::RSA_PrivateKeyImportProperties(const BigInt& mod
 
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, ObjectHandle handle)
-   : Object(session, handle)
+   : Object(session, handle),
+     RSA_PublicKey(BigInt::decode(get_attribute_value(AttributeType::Modulus)),
+                   BigInt::decode(get_attribute_value(AttributeType::PublicExponent)))
    {
-   m_n = BigInt::decode(get_attribute_value(AttributeType::Modulus));
-   m_e = BigInt::decode(get_attribute_value(AttributeType::PublicExponent));
    }
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, const RSA_PrivateKeyImportProperties& priv_key_props)
-   : Object(session, priv_key_props)
+   : Object(session, priv_key_props),
+     RSA_PublicKey(priv_key_props.modulus(),
+                   BigInt::decode(get_attribute_value(AttributeType::PublicExponent)))
    {
-   m_n = priv_key_props.modulus();
-   m_e = BigInt::decode(get_attribute_value(AttributeType::PublicExponent));
    }
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, uint32_t bits,
-      const RSA_PrivateKeyGenerationProperties& priv_key_props)
-   : RSA_PublicKey(), Object(session)
+                                             const RSA_PrivateKeyGenerationProperties& priv_key_props)
+   : Object(session), RSA_PublicKey()
    {
    RSA_PublicKeyGenerationProperties pub_key_props(bits);
    pub_key_props.set_encrypt(true);
@@ -86,8 +86,9 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, uint32_t bits,
 
    this->reset_handle(priv_key_handle);
 
-   m_n = BigInt::decode(get_attribute_value(AttributeType::Modulus));
-   m_e = BigInt::decode(get_attribute_value(AttributeType::PublicExponent));
+   BigInt n = BigInt::decode(get_attribute_value(AttributeType::Modulus));
+   BigInt e = BigInt::decode(get_attribute_value(AttributeType::PublicExponent));
+   RSA_PublicKey::init(std::move(n), std::move(e));
    }
 
 RSA_PrivateKey PKCS11_RSA_PrivateKey::export_key() const
