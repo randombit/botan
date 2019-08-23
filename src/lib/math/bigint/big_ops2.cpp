@@ -320,7 +320,7 @@ BigInt& BigInt::operator<<=(size_t shift)
 
    const size_t bits_free = top_bits_free();
 
-   const size_t new_size = size + shift_words + (bits_free < shift);
+   const size_t new_size = size + shift_words + (bits_free < shift_bits);
 
    m_data.grow_to(new_size);
 
