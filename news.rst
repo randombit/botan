@@ -6,7 +6,7 @@ Version 2.12.0, Not Yet Released
 
 * GCM performance improvements (GH #2024)
 
-* RSA signature performance improvements (GH #2068)
+* RSA signature performance improvements (GH #2068 #2070)
 
 * In DTLS server, support a client crashing and then reconnecting from
   the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
