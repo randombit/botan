@@ -132,12 +132,12 @@ int32_t BigInt::cmp(const BigInt& other, bool check_signs) const
          return 1;
 
       if(other.is_negative() && this->is_negative())
-         return (-bigint_cmp(this->data(), this->sig_words(),
-                             other.data(), other.sig_words()));
+         return (-bigint_cmp(this->data(), this->size(),
+                             other.data(), other.size()));
       }
 
-   return bigint_cmp(this->data(), this->sig_words(),
-                     other.data(), other.sig_words());
+   return bigint_cmp(this->data(), this->size(),
+                     other.data(), other.size());
    }
 
 bool BigInt::is_equal(const BigInt& other) const
