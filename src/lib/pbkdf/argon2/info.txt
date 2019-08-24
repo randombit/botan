@@ -1,5 +1,5 @@
 <defines>
-ARGON2 -> 20190527
+ARGON2 -> 20190824
 </defines>
 
 <requires>
