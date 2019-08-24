@@ -129,7 +129,12 @@ void extract_key(uint8_t output[], size_t output_len,
             }
          }
 
-      if(output_len > 0)
+      if(output_len == 64)
+         {
+         blake2b->update(T);
+         blake2b->final(output);
+         }
+      else
          {
          std::unique_ptr<HashFunction> blake2b_f = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
          blake2b_f->update(T);
