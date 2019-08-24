@@ -1,12 +1,11 @@
 /*
 * Number Theory Functions
-* (C) 1999-2011,2016,2018 Jack Lloyd
+* (C) 1999-2011,2016,2018,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/numthry.h>
-#include <botan/pow_mod.h>
 #include <botan/reducer.h>
 #include <botan/monty.h>
 #include <botan/divide.h>
@@ -427,29 +426,34 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
       return 0;
       }
 
-   Power_Mod pow_mod(mod);
+   Modular_Reducer reduce_mod(mod);
+
+   const size_t exp_bits = exp.bits();
+
+   if(mod.is_odd())
+      {
+      const size_t powm_window = 4;
+
+      auto monty_mod = std::make_shared<Montgomery_Params>(mod, reduce_mod);
+      auto powm_base_mod = monty_precompute(monty_mod, reduce_mod.reduce(base), powm_window);
+      return monty_execute(*powm_base_mod, exp, exp_bits);
+      }
 
    /*
-   * Calling set_base before set_exponent means we end up using a
-   * minimal window. This makes sense given that here we know that any
-   * precomputation is wasted.
+   Support for even modulus is just a convenience and not considered
+   cryptographically important, so this implementation is slow ...
    */
+   BigInt accum = 1;
+   BigInt g = reduce_mod.reduce(base);
+   BigInt t;
 
-   if(base.is_negative())
+   for(size_t i = 0; i != exp_bits; ++i)
       {
-      pow_mod.set_base(-base);
-      pow_mod.set_exponent(exp);
-      if(exp.is_even())
-         return pow_mod.execute();
-      else
-         return (mod - pow_mod.execute());
+      t = reduce_mod.multiply(g, accum);
+      g = reduce_mod.square(g);
+      accum.ct_cond_assign(exp.get_bit(i), t);
       }
-   else
-      {
-      pow_mod.set_base(base);
-      pow_mod.set_exponent(exp);
-      return pow_mod.execute();
-      }
+   return accum;
    }
 
 

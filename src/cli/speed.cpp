@@ -91,7 +91,6 @@
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/numthry.h>
-   #include <botan/pow_mod.h>
    #include <botan/reducer.h>
    #include <botan/curve_nistp.h>
    #include <botan/internal/primality.h>
@@ -1528,9 +1527,6 @@ class Speed final : public Command
             std::unique_ptr<Timer> invmod_timer = make_timer("binext-" + bit_str);
             std::unique_ptr<Timer> monty_timer = make_timer("monty-" + bit_str);
             std::unique_ptr<Timer> ct_invmod_timer = make_timer("ct-" + bit_str);
-            std::unique_ptr<Timer> powm_timer = make_timer("powm-" + bit_str);
-
-            Botan::Fixed_Exponent_Power_Mod powm_p(p - 2, p);
 
             while(invmod_timer->under(runtime))
                {
@@ -1545,18 +1541,13 @@ class Speed final : public Command
                const Botan::BigInt x_inv3 = ct_invmod_timer->run(
                   [&] { return Botan::ct_inverse_mod_odd_modulus(x, p); });
 
-               const Botan::BigInt x_inv4 = powm_timer->run(
-                  [&] { return powm_p(x); });
-
                BOTAN_ASSERT_EQUAL(x_inv1, x_inv2, "Same result");
                BOTAN_ASSERT_EQUAL(x_inv1, x_inv3, "Same result");
-               BOTAN_ASSERT_EQUAL(x_inv1, x_inv4, "Same result");
                }
 
             record_result(invmod_timer);
             record_result(monty_timer);
             record_result(ct_invmod_timer);
-            record_result(powm_timer);
             }
          }
 

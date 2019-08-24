@@ -12,7 +12,6 @@ monty.h
 
 <header:internal>
 primality.h
-def_powm.h
 monty_exp.h
 </header:internal>
 
