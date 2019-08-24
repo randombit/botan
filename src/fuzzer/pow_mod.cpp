@@ -7,7 +7,6 @@
 #include "fuzzers.h"
 #include <botan/numthry.h>
 #include <botan/reducer.h>
-#include <botan/pow_mod.h>
 
 namespace {
 
