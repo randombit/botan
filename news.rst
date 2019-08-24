@@ -8,6 +8,8 @@ Version 2.12.0, Not Yet Released
 
 * RSA signature performance improvements (GH #2068 #2070)
 
+* Support Argon2 outputs longer than 64 bytes (GH #2079 #2078)
+
 * In DTLS server, support a client crashing and then reconnecting from
   the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
 
