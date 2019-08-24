@@ -103,15 +103,43 @@ void extract_key(uint8_t output[], size_t output_len,
    if(output_len <= 64)
       {
       std::unique_ptr<HashFunction> blake2b = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
-
       blake2b->update_le(static_cast<uint32_t>(output_len));
       blake2b->update(sum8.data(), sum8.size());
-
       blake2b->final(output);
       }
    else
       {
-      throw Not_Implemented("todo");
+      secure_vector<uint8_t> T(64);
+
+      std::unique_ptr<HashFunction> blake2b = HashFunction::create_or_throw("BLAKE2b(512)");
+      blake2b->update_le(static_cast<uint32_t>(output_len));
+      blake2b->update(sum8.data(), sum8.size());
+      blake2b->final(&T[0]);
+
+      while(output_len > 64)
+         {
+         copy_mem(output, &T[0], 32);
+         output_len -= 32;
+         output += 32;
+
+         if(output_len > 64)
+            {
+            blake2b->update(T);
+            blake2b->final(&T[0]);
+            }
+         }
+
+      if(output_len == 64)
+         {
+         blake2b->update(T);
+         blake2b->final(output);
+         }
+      else
+         {
+         std::unique_ptr<HashFunction> blake2b_f = HashFunction::create_or_throw("BLAKE2b(" + std::to_string(output_len*8) + ")");
+         blake2b_f->update(T);
+         blake2b_f->final(output);
+         }
       }
    }
 
