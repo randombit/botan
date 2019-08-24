@@ -15,7 +15,6 @@
 #include <botan/pk_ops.h>
 #include <botan/rng.h>
 #include <botan/blinding.h>
-#include <botan/pow_mod.h>
 
 namespace Botan {
 
@@ -124,9 +123,8 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
                                       RandomNumberGenerator& rng)
          : m_key(key),
            m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
-           m_powermod(m_key.get_e(), m_key.get_n()),
            m_blinder(m_key.get_n(), rng,
-                     [ this ](const BigInt& k) { return m_powermod(k); },
+                     [ this ](const BigInt& k) { return power_mod(k, m_key.get_e(), m_key.get_n()); },
                      [ this ](const BigInt& k) { return inverse_mod(k, m_key.get_n()); })
          {
          m_bits = m_key.get_n().bits() - 1;
@@ -164,7 +162,6 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
       const PKCS11_RSA_PrivateKey& m_key;
       MechanismWrapper m_mechanism;
       size_t m_bits = 0;
-      Fixed_Exponent_Power_Mod m_powermod;
       Blinder m_blinder;
    };
 
