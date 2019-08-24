@@ -148,6 +148,8 @@ Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints, bool disable_monty)
    set_modulus(n, hints, disable_monty);
    }
 
+Power_Mod::~Power_Mod() { /* for ~unique_ptr */ }
+
 /*
 * Power_Mod Copy Constructor
 */
