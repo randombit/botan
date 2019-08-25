@@ -19,6 +19,10 @@
 #include <botan/rng.h>
 #include <vector>
 
+#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+  #include <botan/internal/ec_h2c.h>
+#endif
+
 namespace Botan {
 
 class EC_Group_Data final
@@ -613,6 +617,15 @@ PointGFp EC_Group::OS2ECP(const uint8_t bits[], size_t len) const
 
 PointGFp EC_Group::point(const BigInt& x, const BigInt& y) const
    {
+   #if 0
+   BigInt l = (x*x*x + x*get_a() + get_b()) % get_p();
+   BigInt r = (y*y) % get_p();
+
+   if(l != r)
+      {
+      printf("invalid point in EC_Group::point\n");
+      }
+#endif
    // TODO: randomize the representation?
    return PointGFp(data().curve(), x, y);
    }
@@ -658,6 +671,46 @@ PointGFp EC_Group::blinded_var_point_multiply(const PointGFp& point,
 PointGFp EC_Group::zero_point() const
    {
    return PointGFp(data().curve());
+   }
+
+PointGFp EC_Group::hash_to_curve(const std::string& hash_fn,
+                                 const uint8_t input[],
+                                 size_t input_len,
+                                 const std::string& domain,
+                                 bool random_oracle) const
+   {
+   return this->hash_to_curve(hash_fn,
+                              input,
+                              input_len,
+                              reinterpret_cast<const uint8_t*>(domain.c_str()),
+                              domain.size(),
+                              random_oracle);
+   }
+
+PointGFp EC_Group::hash_to_curve(const std::string& hash_fn,
+                                 const uint8_t input[],
+                                 size_t input_len,
+                                 const uint8_t domain_sep[],
+                                 size_t domain_sep_len,
+                                 bool random_oracle) const
+   {
+#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+
+   // Only have SSWU currently
+   if(get_a().is_zero() || get_b().is_zero() || get_p() % 4 == 1)
+      {
+      throw Not_Implemented("EC_Group::hash_to_curve not available for this curve type");
+      }
+
+   return hash_to_curve_sswu(*this, hash_fn,
+                             input, input_len,
+                             domain_sep, domain_sep_len,
+                             random_oracle);
+
+#else
+   BOTAN_UNUSED(hash_fn, random_oracle, input, input_len, domain_sep, domain_sep_len);
+   throw Not_Implemented("EC_Group::hash_to_curve functionality not available in this configuration");
+#endif
    }
 
 std::vector<uint8_t>

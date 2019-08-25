@@ -433,6 +433,11 @@ Montgomery_Int Montgomery_Int::square(secure_vector<word>& ws) const
    return Montgomery_Int(m_params, m_params->sqr(m_v, ws), false);
    }
 
+Montgomery_Int Montgomery_Int::cube(secure_vector<word>& ws) const
+   {
+   return Montgomery_Int(m_params, m_params->sqr(m_v, ws), false);
+   }
+
 Montgomery_Int Montgomery_Int::multiplicative_inverse() const
    {
    secure_vector<word> ws;

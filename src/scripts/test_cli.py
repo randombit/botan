@@ -1147,12 +1147,12 @@ def cli_speed_pk_tests(_tmp_dir):
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
                 "DH", "DSA", "ElGamal", "Ed25519", "Curve25519", "NEWHOPE", "McEliece",
-                "RSA", "RSA_keygen", "XMSS"]
+                "RSA", "RSA_keygen", "XMSS", "ec_h2c"]
 
     output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
 
     # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
-    format_re = re.compile(r'^.* [0-9]+ ([A-Za-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
+    format_re = re.compile(r'^.* [0-9]+ ([A-Za-z0-9 ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)

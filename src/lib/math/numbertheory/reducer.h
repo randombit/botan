@@ -32,6 +32,13 @@ class BOTAN_PUBLIC_API(2,0) Modular_Reducer
          { return reduce(x * y); }
 
       /**
+      * Multiply mod p
+      * @return (x * y * z) % p
+      */
+      BigInt multiply(const BigInt& x, const BigInt& y, const BigInt& z) const
+         { return multiply(x, multiply(y, z)); }
+
+      /**
       * Square mod p
       * @param x the value to square
       * @return (x * x) % p

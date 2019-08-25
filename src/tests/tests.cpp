@@ -1093,7 +1093,7 @@ std::vector<Test::Result> Text_Based_Test::run()
                oss << "Test # " << test_cnt << " ";
                if(!header.empty())
                   oss << header << " ";
-               oss << " failed [Key=" << vars.get_req_str(m_output_key) << "]";
+               oss << " failed [" << m_output_key << "=" << vars.get_req_str(m_output_key) << "]";
 
                result.test_note(oss.str());
                }
@@ -1105,8 +1105,8 @@ std::vector<Test::Result> Text_Based_Test::run()
             oss << "Test # " << test_cnt << " ";
             if(!header.empty())
                oss << header << " ";
-            oss << " failed with exception '" << e.what() << "'";
-            oss << " [Key=" << vars.get_req_str(m_output_key) << "]";
+            oss << "[" << m_output_key << "=" << vars.get_req_str(m_output_key) << "]"
+                << " failed with exception '" << e.what() << "'";
 
             results.push_back(Test::Result::Failure(header_or_name, oss.str()));
             }
