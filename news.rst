@@ -10,6 +10,9 @@ Version 2.12.0, Not Yet Released
 
 * Support Argon2 outputs longer than 64 bytes (GH #2079 #2078)
 
+* Correct a bug in CAST-128 which caused incorrect computation using
+  11, 13, 14, or 15 byte keys. (GH #2081)
+
 * In DTLS server, support a client crashing and then reconnecting from
   the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
 

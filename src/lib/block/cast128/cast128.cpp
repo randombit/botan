@@ -210,9 +210,12 @@ void CAST_128::key_schedule(const uint8_t key[], size_t length)
    m_MK.resize(48);
    m_RK.resize(48);
 
+   secure_vector<uint8_t> key16(16);
+   copy_mem(key16.data(), key, length);
+
    secure_vector<uint32_t> X(4);
-   for(size_t i = 0; i != length; ++i)
-      X[i/4] = (X[i/4] << 8) + key[i];
+   for(size_t i = 0; i != 4; ++i)
+      X[i] = load_be<uint32_t>(key16.data(), i);
 
    cast_ks(m_MK, X);
 
