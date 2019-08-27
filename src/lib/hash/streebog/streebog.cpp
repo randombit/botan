@@ -194,10 +194,11 @@ void Streebog::compress_64(const uint64_t M[], bool last_block)
          {
          const uint64_t m = force_le(M[i]);
          const uint64_t hi = force_le(m_S[i]);
-         const uint64_t t = hi + m;
+         const uint64_t t = hi + m + carry;
 
-         m_S[i] = force_le(t + carry);
-         carry = (t < hi ? 1 : 0) | (t < m ? 1 : 0);
+         m_S[i] = force_le(t);
+         if(t != m)
+            carry = (t < m);
          }
       }
    }
