@@ -6,14 +6,6 @@ ENTROPY_SRC_DARN -> 20180610
 p9_darn.h
 </header:internal>
 
-<cc>
-gcc:7.0
-</cc>
-
-<isa>
-power9
-</isa>
-
 <arch>
 ppc64
 </arch>
