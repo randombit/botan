@@ -13,6 +13,9 @@ Version 2.12.0, Not Yet Released
 * Correct a bug in CAST-128 which caused incorrect computation using
   11, 13, 14, or 15 byte keys. (GH #2081)
 
+* Fix a bug which would cause Streebog to produce incorrect outputs for
+  certain messages (GH #2082 #2083)
+
 * In DTLS server, support a client crashing and then reconnecting from
   the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
 
