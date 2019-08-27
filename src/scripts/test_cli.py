@@ -149,6 +149,29 @@ def cli_gen_prime_tests(_tmp_dir):
     test_cli("gen_prime", "64", "15568813029901363163")
     test_cli("gen_prime", "128", "287193909494025008847286845478788766073")
 
+def cli_entropy_tests(_tmp_dir):
+    output = test_cli("entropy", ["all"], None)
+
+    status_re = re.compile('Polling [a-z0-9_]+ gathered [0-9]+ bytes in [0-9]+ outputs with estimated entropy [0-9]+')
+    unavail_re = re.compile('Source [a-z0-9_]+ is unavailable')
+    output_re = re.compile('[A-F0-9]+(\.\.\.)?')
+
+    status_next = True
+
+    for i,line in zip(range(len(output)), output.split('\n')):
+        if status_next:
+            if status_re.match(line) is not None:
+                status_next = False
+            elif unavail_re.match(line) is not None:
+                pass
+            else:
+                logging.error('Unexpected status line %s', line)
+                status_next = False
+        else:
+            if output_re.match(line) is None:
+                logging.error('Unexpected sample line %s', line)
+            status_next = True
+
 def cli_factor_tests(_tmp_dir):
     test_cli("factor", "97", "97: 97")
     test_cli("factor", "9753893489562389", "9753893489562389: 21433 455087644733")
@@ -1057,6 +1080,7 @@ def main(args=None):
         cli_cpuid_tests,
         cli_dl_group_info_tests,
         cli_ec_group_info_tests,
+        cli_entropy_tests,
         cli_factor_tests,
         cli_gen_dl_group_tests,
         cli_gen_prime_tests,
