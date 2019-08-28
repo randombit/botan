@@ -36,6 +36,10 @@ Version 2.12.0, Not Yet Released
 
 * Add support for 64-bit version of RDRAND, doubling performance on x86-64 (GH #934 #2022)
 
+* Add support for the POWER9 hardware random number generator (GH #2026)
+
+* Add a new ``entropy`` cli which allows sampling the output of the entropy sources.
+
 * Cleanups in TLS record layer (GH #2021)
 
 * Support setting TLS policies in CLIs like ``tls_client`` and ``tls_proxy_server`` (GH #2047)
