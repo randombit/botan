@@ -25,8 +25,13 @@
 #include <botan/tls_server.h>
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
-#include <botan/auto_rng.h>
 #include <botan/hex.h>
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   #include <botan/system_rng.h>
+#else
+   #include <botan/auto_rng.h>
+#endif
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
    #include <botan/tls_session_manager_sqlite.h>
@@ -348,7 +353,11 @@ class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_
       tcp::socket m_client_socket;
       tcp::socket m_server_socket;
 
-      Botan::AutoSeeded_RNG m_rng; // RNG per connection
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+      Botan::System_RNG m_rng;
+#else
+      Botan::AutoSeeded_RNG m_rng;
+#endif
       Botan::TLS::Server m_tls;
       std::string m_hostname;
 
