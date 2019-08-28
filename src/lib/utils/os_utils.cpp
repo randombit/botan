@@ -55,6 +55,10 @@
   extern "C" char **environ;
 #endif
 
+#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+  #include <mach/vm_statistics.h>
+#endif
+
 namespace Botan {
 
 // Not defined in OS namespace for historical reasons
@@ -401,6 +405,30 @@ size_t OS::read_env_variable_sz(const std::string& name, size_t def)
    return def;
    }
 
+int OS::get_locked_fd()
+   {
+#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+// On Darwin, tagging anonymous pages allows vmmap to track these.
+// Allowed from 240 to 255 for userland applications, taken an hardcoded
+// value for now even though it can possibly intersect.
+   static constexpr int default_locked_fd = VM_MAKE_TAG(255);
+   int locked_fd = default_locked_fd;
+
+   if (const char *locked_env = read_env_variable("BOTAN_LOCKED_FD"))
+      {
+      long locked_fdl = std::strtol(locked_env, nullptr, 10);
+      if (locked_fdl < 100 || locked_fdl > 255)
+         {
+         locked_fdl = default_locked_fd;
+         }
+         locked_fd = static_cast<int>(locked_fdl);
+      }
+   return VM_MAKE_TAG(locked_fd);
+#else
+   return -1;
+#endif
+   }
+
 std::vector<void*> OS::allocate_locked_pages(size_t count)
    {
    std::vector<void*> result;
@@ -430,14 +458,7 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
    #define PROT_MAX(p) 0
 #endif
       const int pflags = PROT_READ | PROT_WRITE;
-#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
-// On Darwin, tagging anonymous pages allows vmmap to track these.
-// Allowed from 240 to 255 for userland applications, taken an hardcoded
-// value for now even though it can possibly intersect.
-      const int locked_fd = (255<<24);
-#else
-      const int locked_fd = -1;
-#endif
+      const int locked_fd = get_locked_fd();
 
       ptr = ::mmap(nullptr, 2*page_size,
                    pflags | PROT_MAX(pflags),
