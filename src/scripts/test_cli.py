@@ -154,11 +154,15 @@ def cli_entropy_tests(_tmp_dir):
 
     status_re = re.compile('Polling [a-z0-9_]+ gathered [0-9]+ bytes in [0-9]+ outputs with estimated entropy [0-9]+')
     unavail_re = re.compile('Source [a-z0-9_]+ is unavailable')
-    output_re = re.compile('[A-F0-9]+(\.\.\.)?')
+    comp_re = re.compile('Sample from [a-z0-9_]+ was .* compressed from [0-9]+ bytes to [0-9]+ bytes')
+    output_re = re.compile(r'[A-F0-9]+(...)?')
 
     status_next = True
 
-    for i,line in zip(range(len(output)), output.split('\n')):
+    for line in output.split('\n'):
+        if comp_re.match(line):
+            continue
+
         if status_next:
             if status_re.match(line) is not None:
                 status_next = False
