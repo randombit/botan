@@ -58,6 +58,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    enum PPC_hwcap_bit {
       ALTIVEC_bit  = (1 << 28),
       CRYPTO_bit   = (1 << 25),
+      DARN_bit     = (1 << 21),
 
       ARCH_hwcap_altivec = 16, // AT_HWCAP
       ARCH_hwcap_crypto  = 26, // AT_HWCAP2
@@ -72,6 +73,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    const unsigned long hwcap_crypto = OS::get_auxval(PPC_hwcap_bit::ARCH_hwcap_crypto);
    if(hwcap_crypto & PPC_hwcap_bit::CRYPTO_bit)
      detected_features |= CPUID::CPUID_PPC_CRYPTO_BIT;
+   if(hwcap_crypto & PPC_hwcap_bit::DARN_bit)
+     detected_features |= CPUID::CPUID_DARN_BIT;
 
    return detected_features;
 

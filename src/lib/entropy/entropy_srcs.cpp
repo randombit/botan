@@ -20,6 +20,10 @@
   #include <botan/internal/rdseed.h>
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_DARN)
+  #include <botan/internal/p9_darn.h>
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
   #include <botan/internal/dev_random.h>
 #endif
@@ -80,6 +84,13 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    if(name == "rdseed")
       {
       return std::unique_ptr<Entropy_Source>(new Intel_Rdseed);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ENTROPY_SRC_DARN)
+   if(name == "p9_darn")
+      {
+      return std::unique_ptr<Entropy_Source>(new POWER9_DARN);
       }
 #endif
 

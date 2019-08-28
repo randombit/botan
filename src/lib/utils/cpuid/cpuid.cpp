@@ -63,6 +63,7 @@ std::string CPUID::to_string()
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    CPUID_PRINT(altivec);
    CPUID_PRINT(ppc_crypto);
+   CPUID_PRINT(darn_rng);
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
