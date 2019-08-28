@@ -111,8 +111,6 @@ const char* read_env_variable(const std::string& var_name);
 */
 size_t read_env_variable_sz(const std::string& var_name, size_t def_value = 0);
 
-int get_locked_fd();
-
 /**
 * Request count pages of RAM which are locked into memory using mlock,
 * VirtualLock, or some similar OS specific API. Free it with free_locked_pages.
