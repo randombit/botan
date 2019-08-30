@@ -1,6 +1,6 @@
 /*
 * TLS Server Proxy
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2019 Jack Lloyd
 * (C) 2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -26,12 +26,6 @@
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
 #include <botan/hex.h>
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   #include <botan/system_rng.h>
-#else
-   #include <botan/auto_rng.h>
-#endif
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
    #include <botan/tls_session_manager_sqlite.h>
@@ -156,11 +150,12 @@ class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_
          , m_server_endpoints(endpoints)
          , m_client_socket(io)
          , m_server_socket(io)
+         , m_rng(cli_make_rng())
          , m_tls(*this,
                  session_manager,
                  credentials,
                  policy,
-                 m_rng) {}
+                 *m_rng) {}
 
       void client_read(const boost::system::error_code& error,
                        size_t bytes_transferred)
@@ -353,11 +348,7 @@ class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_
       tcp::socket m_client_socket;
       tcp::socket m_server_socket;
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-      Botan::System_RNG m_rng;
-#else
-      Botan::AutoSeeded_RNG m_rng;
-#endif
+      std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
       Botan::TLS::Server m_tls;
       std::string m_hostname;
 
