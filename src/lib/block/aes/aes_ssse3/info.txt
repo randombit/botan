@@ -10,10 +10,9 @@ ssse3
 simd
 </requires>
 
-# Intel C++ can't deal with syntax for defining constants :(
 <cc>
 gcc
 clang
-msvc
+msvc:19.10 # VC 2017
 sunstudio
 </cc>

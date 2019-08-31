@@ -24,7 +24,7 @@
   #define BOTAN_SIMD_USE_ALTIVEC
 
 #elif defined(BOTAN_TARGET_SUPPORTS_NEON)
-  #include <arm_simd.h>
+  #include <arm_neon.h>
   #define BOTAN_SIMD_USE_NEON
 
 #else
