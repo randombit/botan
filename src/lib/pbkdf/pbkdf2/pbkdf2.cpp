@@ -60,6 +60,9 @@ size_t tune_pbkdf2(MessageAuthenticationCode& prf,
                    size_t output_length,
                    uint32_t msec)
    {
+   if(output_length == 0)
+      output_length = 1;
+
    const size_t prf_sz = prf.output_length();
    BOTAN_ASSERT_NOMSG(prf_sz > 0);
    secure_vector<uint8_t> U(prf_sz);
@@ -109,6 +112,9 @@ void pbkdf2(MessageAuthenticationCode& prf,
             size_t salt_len,
             size_t iterations)
    {
+   if(iterations == 0)
+      throw Invalid_Argument("PBKDF2: Invalid iteration count");
+
    clear_mem(out, out_len);
 
    if(out_len == 0)
