@@ -16,6 +16,9 @@ Version 2.12.0, Not Yet Released
 * Fix a bug which would cause Streebog to produce incorrect outputs for
   certain messages (GH #2082 #2083)
 
+* Fix a bug which would cause PBKDF2 to go into a very long loop if
+  it was requested to use an iteration count of 0. (GH #2090 #2088)
+
 * In DTLS server, support a client crashing and then reconnecting from
   the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
 
@@ -56,6 +59,9 @@ Version 2.12.0, Not Yet Released
   (GH #2059 #2060)
 
 * Now the minimum Windows target is set to Windows 7 (GH #2036 #2028)
+
+* Add ``BOTAN_FORCE_INLINE`` macro to resolve a performance issue with BLAKE2b on MSVC
+  (GH #2092 #2089)
 
 * Avoid using ``__GNUG__`` in headers that may be consumed by a C compiler (GH #2013)
 
