@@ -39,16 +39,6 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
       }
 #endif
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
-   if(rng_type == "rdrand")
-      {
-      if(Botan::CPUID::has_rdrand())
-         return std::unique_ptr<Botan::RandomNumberGenerator>(new Botan::RDRAND_RNG);
-      else
-         throw CLI_Error("RDRAND instruction not supported on this processor");
-      }
-#endif
-
    const std::vector<uint8_t> drbg_seed = Botan::hex_decode(hex_drbg_seed);
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
@@ -68,7 +58,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
 #endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
-   if(rng_type == "drbg")
+   if(rng_type == "drbg" || (rng_type.empty() && drbg_seed.empty() == false))
       {
       std::unique_ptr<Botan::MessageAuthenticationCode> mac =
          Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
@@ -84,7 +74,20 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
       }
 #endif
 
-   throw CLI_Error_Unsupported("RNG", rng_type);
+#if defined(BOTAN_HAS_RDRAND_RNG)
+   if(rng_type == "rdrand" || rng_type.empty())
+      {
+      if(Botan::CPUID::has_rdrand())
+         return std::unique_ptr<Botan::RandomNumberGenerator>(new Botan::RDRAND_RNG);
+      else if(rng_type.empty() == false)
+         throw CLI_Error("RDRAND instruction not supported on this processor");
+      }
+#endif
+
+   if(rng_type.empty())
+      throw CLI_Error_Unsupported("No random number generator seems to be available in the current build");
+   else
+      throw CLI_Error_Unsupported("RNG", rng_type);
    }
 
 class RNG final : public Command

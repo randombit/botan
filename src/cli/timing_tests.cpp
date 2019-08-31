@@ -12,7 +12,7 @@
 *
 * (C) 2016 Juraj Somorovsky - juraj.somorovsky@hackmanit.de
 * (C) 2017 Neverhub
-* (C) 2017,2018 Jack Lloyd
+* (C) 2017,2018,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,6 +22,7 @@
 #include <sstream>
 #include <fstream>
 
+#include <botan/rng.h>
 #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_BIGINT)
@@ -38,14 +39,6 @@
 
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
-#endif
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   #include <botan/system_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG) && defined(BOTAN_AUTO_RNG_HMAC)
-   #include <botan/auto_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_RAW)
@@ -70,7 +63,16 @@ typedef uint64_t ticks;
 class Timing_Test
    {
    public:
-      Timing_Test() = default;
+      Timing_Test()
+         {
+         /*
+         A constant seed is ok here since the timing test rng just needs to be
+         "random" but not cryptographically secure - even std::rand() would be ok.
+         */
+         const std::string drbg_seed(64, '*');
+         m_rng = cli_make_rng("", drbg_seed); // throws if it can't find anything to use
+         }
+
       virtual ~Timing_Test() = default;
 
       std::vector<std::vector<ticks>> execute_evaluation(
@@ -92,19 +94,13 @@ class Timing_Test
          return Botan::OS::get_high_resolution_clock();
          }
 
-      static Botan::RandomNumberGenerator& timing_test_rng()
+      Botan::RandomNumberGenerator& timing_test_rng()
          {
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-         return Botan::system_rng();
-#elif defined(BOTAN_HAS_AUTO_SEEDING_RNG) && defined(BOTAN_AUTO_RNG_HMAC)
-         static Botan::AutoSeeded_RNG static_timing_test_rng;
-         return static_timing_test_rng;
-#else
-         // we could just use SHA-256 in OFB mode for these purposes
-         throw CLI_Error("Timing tests require a PRNG");
-#endif
+         return (*m_rng);
          }
 
+   private:
+      std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
    };
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_HAS_EME_RAW)
@@ -113,22 +109,22 @@ class Bleichenbacker_Timing_Test final : public Timing_Test
    {
    public:
       Bleichenbacker_Timing_Test(size_t keysize)
-         : m_privkey(Timing_Test::timing_test_rng(), keysize)
+         : m_privkey(timing_test_rng(), keysize)
          , m_pubkey(m_privkey)
-         , m_enc(m_pubkey, Timing_Test::timing_test_rng(), "Raw")
-         , m_dec(m_privkey, Timing_Test::timing_test_rng(), "PKCS1v15") {}
+         , m_enc(m_pubkey, timing_test_rng(), "Raw")
+         , m_dec(m_privkey, timing_test_rng(), "PKCS1v15") {}
 
       std::vector<uint8_t> prepare_input(std::string input) override
          {
          const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
-         const std::vector<uint8_t> encrypted = m_enc.encrypt(input_vector, Timing_Test::timing_test_rng());
+         const std::vector<uint8_t> encrypted = m_enc.encrypt(input_vector, timing_test_rng());
          return encrypted;
          }
 
       ticks measure_critical_function(std::vector<uint8_t> input) override
          {
          const ticks start = get_ticks();
-         m_dec.decrypt_or_random(input.data(), m_ctext_length, m_expected_content_size, Timing_Test::timing_test_rng());
+         m_dec.decrypt_or_random(input.data(), m_ctext_length, m_expected_content_size, timing_test_rng());
          const ticks end = get_ticks();
          return (end - start);
          }
@@ -157,15 +153,15 @@ class Manger_Timing_Test final : public Timing_Test
    {
    public:
       Manger_Timing_Test(size_t keysize)
-         : m_privkey(Timing_Test::timing_test_rng(), keysize)
+         : m_privkey(timing_test_rng(), keysize)
          , m_pubkey(m_privkey)
-         , m_enc(m_pubkey, Timing_Test::timing_test_rng(), m_encrypt_padding)
-         , m_dec(m_privkey, Timing_Test::timing_test_rng(), m_decrypt_padding) {}
+         , m_enc(m_pubkey, timing_test_rng(), m_encrypt_padding)
+         , m_dec(m_privkey, timing_test_rng(), m_decrypt_padding) {}
 
       std::vector<uint8_t> prepare_input(std::string input) override
          {
          const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
-         const std::vector<uint8_t> encrypted = m_enc.encrypt(input_vector, Timing_Test::timing_test_rng());
+         const std::vector<uint8_t> encrypted = m_enc.encrypt(input_vector, timing_test_rng());
          return encrypted;
          }
 
@@ -278,7 +274,7 @@ class ECDSA_Timing_Test final : public Timing_Test
 
 ECDSA_Timing_Test::ECDSA_Timing_Test(std::string ecgroup)
    : m_group(ecgroup)
-   , m_privkey(Timing_Test::timing_test_rng(), m_group)
+   , m_privkey(timing_test_rng(), m_group)
    , m_x(m_privkey.private_value())
    {}
 
@@ -292,7 +288,7 @@ ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
    //The following ECDSA operations involve and should not leak any information about k.
 
    const Botan::BigInt k_inv = m_group.inverse_mod_order(k);
-   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, Timing_Test::timing_test_rng(), m_ws);
+   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, timing_test_rng(), m_ws);
    const Botan::BigInt r = m_group.mod_order(k_times_P.get_affine_x());
    const Botan::BigInt s = m_group.multiply_mod_order(k_inv, mul_add(m_x, r, msg));
 
@@ -327,7 +323,7 @@ ticks ECC_Mul_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
 
    ticks start = get_ticks();
 
-   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, Timing_Test::timing_test_rng(), m_ws);
+   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, timing_test_rng(), m_ws);
 
    ticks end = get_ticks();
 

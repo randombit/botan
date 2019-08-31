@@ -28,7 +28,7 @@ class Argument_Parser;
 
 /* Declared in cli_rng.cpp */
 std::unique_ptr<Botan::RandomNumberGenerator>
-cli_make_rng(const std::string& type, const std::string& hex_drbg_seed);
+cli_make_rng(const std::string& type = "", const std::string& hex_drbg_seed = "");
 
 class Command
    {
