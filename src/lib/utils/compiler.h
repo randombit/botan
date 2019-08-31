@@ -178,6 +178,23 @@
 #endif
 
 /*
+* Define BOTAN_FORCE_INLINE
+*/
+#if !defined(BOTAN_FORCE_INLINE)
+
+  #if defined (__clang__) || defined (__GNUC__)
+    #define BOTAN_FORCE_INLINE __attribute__ ((__always_inline__))
+
+  #elif defined (_MSC_VER)
+    #define BOTAN_FORCE_INLINE __forceinline
+
+  #else
+    #define BOTAN_FORCE_INLINE inline
+  #endif
+
+#endif
+
+/*
 * Define BOTAN_PARALLEL_SIMD_FOR
 */
 #if !defined(BOTAN_PARALLEL_SIMD_FOR)

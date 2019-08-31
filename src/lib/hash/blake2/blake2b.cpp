@@ -55,8 +55,8 @@ void BLAKE2b::state_init()
 
 namespace {
 
-inline void G(uint64_t& a, uint64_t& b, uint64_t& c, uint64_t& d,
-              uint64_t M0, uint64_t M1)
+BOTAN_FORCE_INLINE void G(uint64_t& a, uint64_t& b, uint64_t& c, uint64_t& d,
+                          uint64_t M0, uint64_t M1)
    {
    a = a + b + M0;
    d = rotr<32>(d ^ a);
@@ -70,7 +70,7 @@ inline void G(uint64_t& a, uint64_t& b, uint64_t& c, uint64_t& d,
 
 template<size_t i0, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5, size_t i6, size_t i7,
          size_t i8, size_t i9, size_t iA, size_t iB, size_t iC, size_t iD, size_t iE, size_t iF>
-inline void ROUND(uint64_t* v, const uint64_t* M)
+BOTAN_FORCE_INLINE void ROUND(uint64_t* v, const uint64_t* M)
    {
    G(v[ 0], v[ 4], v[ 8], v[12], M[i0], M[i1]);
    G(v[ 1], v[ 5], v[ 9], v[13], M[i2], M[i3]);
