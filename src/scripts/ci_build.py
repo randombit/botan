@@ -26,7 +26,7 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
-def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, root_dir, pkcs11_lib):
+def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, root_dir, pkcs11_lib, use_gdb):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
     """
@@ -97,7 +97,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         test_cmd = None
 
     if target == 'coverage':
-        flags += ['--with-coverage-info', '--test-mode', '--build-bogo-shim']
+        flags += ['--with-coverage-info', '--with-debug-info', '--test-mode', '--build-bogo-shim']
     if target == 'valgrind':
         # valgrind in 16.04 has a bug with rdrand handling
         flags += ['--with-valgrind', '--disable-rdrand']
@@ -262,7 +262,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     if test_cmd is None:
         run_test_command = None
     else:
-        run_test_command = test_prefix + test_cmd
+        if use_gdb:
+            (cmd, args) = test_cmd[0], test_cmd[1:]
+            args += ['--skip-tests=os_utils']
+            run_test_command = test_prefix + ['gdb', cmd,
+                                              '-ex', 'run %s' % (' '.join(args)),
+                                              '-ex', 'bt',
+                                              '-ex', 'quit']
+        else:
+            run_test_command = test_prefix + test_cmd
+
 
     return flags, run_test_command, make_prefix
 
@@ -361,6 +370,9 @@ def parse_args(args):
                       help='Enable using python3 pylint')
     parser.add_option('--without-pylint3', dest='use_pylint3', action='store_false',
                       help='Disable using python3 pylint')
+
+    parser.add_option('--run-under-gdb', dest='use_gdb', action='store_true', default=False,
+                      help='Run test suite under gdb and capture backtrace')
 
     return parser.parse_args(args)
 
@@ -483,7 +495,7 @@ def main(args=None):
         config_flags, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
             options.cc_bin, options.compiler_cache, root_dir,
-            options.pkcs11_lib)
+            options.pkcs11_lib, options.use_gdb)
 
         cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
 

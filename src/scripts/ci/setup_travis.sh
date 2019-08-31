@@ -56,19 +56,18 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get install pylint
 
     elif [ "$BUILD_MODE" = "coverage" ]; then
+        # need updated softhsm to avoid https://github.com/opendnssec/SoftHSMv2/issues/239
+        sudo add-apt-repository -y ppa:pkg-opendnssec/ppa
         sudo apt-get -qq update
-        sudo apt-get install trousers libtspi-dev lcov python-coverage libboost-all-dev golang-1.10
-
-        git clone --depth 1 https://github.com/randombit/botan-ci-tools
+        sudo apt-get install softhsm2 trousers libtspi-dev lcov python-coverage libboost-all-dev golang-1.10 gdb
+        pip install --user codecov==2.0.10
         git clone --depth 1 --branch runner-changes https://github.com/randombit/boringssl.git
 
-        # FIXME use distro softhsm2 package instead
-        # need to figure out ownership problem
-        # Installs prebuilt SoftHSMv2 binaries into /tmp
-        tar -C / -xvjf botan-ci-tools/softhsm2-trusty-bin.tar.bz2
-        /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
+        sudo chgrp -R "$(id -g)" /var/lib/softhsm/ /etc/softhsm
+        sudo mkdir /var/lib/softhsm/tokens
+        sudo chmod g+w /var/lib/softhsm/tokens
 
-        pip install --user codecov==2.0.10
+        softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
 
     elif [ "$BUILD_MODE" = "docs" ]; then
         sudo apt-get -qq update
