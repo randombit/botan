@@ -6,6 +6,10 @@ AES_SSSE3 -> 20131128
 ssse3
 </isa>
 
+<requires>
+simd
+</requires>
+
 # Intel C++ can't deal with syntax for defining constants :(
 <cc>
 gcc

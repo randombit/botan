@@ -1,6 +1,6 @@
 /*
 * AES using SSSE3
-* (C) 2010,2016 Jack Lloyd
+* (C) 2010,2016,2019 Jack Lloyd
 *
 * This is more or less a direct translation of public domain x86-64
 * assembly written by Mike Hamburg, described in "Accelerating AES
@@ -12,626 +12,506 @@
 
 #include <botan/aes.h>
 #include <botan/internal/ct_utils.h>
-#include <tmmintrin.h>
+#include <botan/internal/simd_32.h>
+
+#if defined(BOTAN_SIMD_USE_SSE2)
+  #include <tmmintrin.h>
+#elif defined(BOTAN_SIMD_USE_NEON)
+  #include <arm_neon.h>
+#endif
 
 namespace Botan {
 
 namespace {
 
-const __m128i low_nibs = _mm_set1_epi8(0x0F);
-
-const __m128i k_ipt1 = _mm_set_epi32(
-   0xCABAE090, 0x52227808, 0xC2B2E898, 0x5A2A7000);
-const __m128i k_ipt2 = _mm_set_epi32(
-   0xCD80B1FC, 0xB0FDCC81, 0x4C01307D, 0x317C4D00);
-
-const __m128i k_inv1 = _mm_set_epi32(
-   0x04070309, 0x0A0B0C02, 0x0E05060F, 0x0D080180);
-const __m128i k_inv2 = _mm_set_epi32(
-   0x030D0E0C, 0x02050809, 0x01040A06, 0x0F0B0780);
-
-const __m128i sb1u = _mm_set_epi32(
-   0xA5DF7A6E, 0x142AF544, 0xB19BE18F, 0xCB503E00);
-const __m128i sb1t = _mm_set_epi32(
-   0x3BF7CCC1, 0x0D2ED9EF, 0x3618D415, 0xFAE22300);
-
-const __m128i mc_forward[4] = {
-   _mm_set_epi32(0x0C0F0E0D, 0x080B0A09, 0x04070605, 0x00030201),
-   _mm_set_epi32(0x00030201, 0x0C0F0E0D, 0x080B0A09, 0x04070605),
-   _mm_set_epi32(0x04070605, 0x00030201, 0x0C0F0E0D, 0x080B0A09),
-   _mm_set_epi32(0x080B0A09, 0x04070605, 0x00030201, 0x0C0F0E0D)
-};
-
-const __m128i sr[4] = {
-   _mm_set_epi32(0x0F0E0D0C, 0x0B0A0908, 0x07060504, 0x03020100),
-   _mm_set_epi32(0x0B06010C, 0x07020D08, 0x030E0904, 0x0F0A0500),
-   _mm_set_epi32(0x070E050C, 0x030A0108, 0x0F060D04, 0x0B020900),
-   _mm_set_epi32(0x0306090C, 0x0F020508, 0x0B0E0104, 0x070A0D00),
-};
-
-#define mm_xor3(x, y, z) _mm_xor_si128(x, _mm_xor_si128(y, z))
-
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_schedule_transform(__m128i input,
-                               __m128i table_1,
-                               __m128i table_2)
+inline SIMD_4x32 shuffle(SIMD_4x32 a, SIMD_4x32 b)
    {
-   __m128i i_1 = _mm_and_si128(low_nibs, input);
-   __m128i i_2 = _mm_srli_epi32(_mm_andnot_si128(low_nibs, input), 4);
+#if defined(BOTAN_SIMD_USE_SSE2)
+   return SIMD_4x32(_mm_shuffle_epi8(a.raw(), b.raw()));
+#elif defined(BOTAN_SIMD_USE_NEON) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
-   return _mm_xor_si128(
-      _mm_shuffle_epi8(table_1, i_1),
-      _mm_shuffle_epi8(table_2, i_2));
-   }
+   const int8x16_t tbl = vreinterpretq_s8_m128i(a.raw());
+   const uint8x16_t idx = vreinterpretq_u8_m128i(b.raw());
 
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_schedule_mangle(__m128i k, uint8_t round_no)
-   {
-   __m128i t = _mm_shuffle_epi8(_mm_xor_si128(k, _mm_set1_epi8(0x5B)),
-                                mc_forward[0]);
-
-   __m128i t2 = t;
-
-   t = _mm_shuffle_epi8(t, mc_forward[0]);
-
-   t2 = mm_xor3(t2, t, _mm_shuffle_epi8(t, mc_forward[0]));
-
-   return _mm_shuffle_epi8(t2, sr[round_no % 4]);
-   }
-
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_schedule_192_smear(__m128i x, __m128i y)
-   {
-   return mm_xor3(y,
-                  _mm_shuffle_epi32(x, 0xFE),
-                  _mm_shuffle_epi32(y, 0x80));
-   }
-
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_schedule_mangle_dec(__m128i k, uint8_t round_no)
-   {
-   const __m128i dsk[8] = {
-      _mm_set_epi32(0x4AED9334, 0x82255BFC, 0xB6116FC8, 0x7ED9A700),
-      _mm_set_epi32(0x8BB89FAC, 0xE9DAFDCE, 0x45765162, 0x27143300),
-      _mm_set_epi32(0x4622EE8A, 0xADC90561, 0x27438FEB, 0xCCA86400),
-      _mm_set_epi32(0x73AEE13C, 0xBD602FF2, 0x815C13CE, 0x4F92DD00),
-      _mm_set_epi32(0xF83F3EF9, 0xFA3D3CFB, 0x03C4C502, 0x01C6C700),
-      _mm_set_epi32(0xA5526A9D, 0x7384BC4B, 0xEE1921D6, 0x38CFF700),
-      _mm_set_epi32(0xA080D3F3, 0x10306343, 0xE3C390B0, 0x53732000),
-      _mm_set_epi32(0x2F45AEC4, 0x8CE60D67, 0xA0CA214B, 0x036982E8)
+   // fixme use vdupq_n_s8
+   const uint8_t alignas(16) mask[16] = {
+      0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F,
+      0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F
    };
 
-   __m128i t = aes_schedule_transform(k, dsk[0], dsk[1]);
-   __m128i output = _mm_shuffle_epi8(t, mc_forward[0]);
+   const uint8x16_t idx_masked =
+      vandq_u8(idx, vld1q_u8(mask));  // avoid using meaningless bits
 
-   t = aes_schedule_transform(t, dsk[2], dsk[3]);
-   output = _mm_shuffle_epi8(_mm_xor_si128(t, output), mc_forward[0]);
-
-   t = aes_schedule_transform(t, dsk[4], dsk[5]);
-   output = _mm_shuffle_epi8(_mm_xor_si128(t, output), mc_forward[0]);
-
-   t = aes_schedule_transform(t, dsk[6], dsk[7]);
-   output = _mm_shuffle_epi8(_mm_xor_si128(t, output), mc_forward[0]);
-
-   return _mm_shuffle_epi8(output, sr[round_no % 4]);
+   return vreinterpretq_m128i_s8(vqtbl1q_s8(tbl, idx_masked));
+#else
+   #error "No shuffle implementation available"
+#endif
    }
 
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_schedule_mangle_last(__m128i k, uint8_t round_no)
+template<size_t I1, size_t I2, size_t I3, size_t I4>
+inline SIMD_4x32 shuffle32(SIMD_4x32 x)
    {
-   const __m128i out_tr1 = _mm_set_epi32(
-      0xF7974121, 0xDEBE6808, 0xFF9F4929, 0xD6B66000);
-   const __m128i out_tr2 = _mm_set_epi32(
-      0xE10D5DB1, 0xB05C0CE0, 0x01EDBD51, 0x50BCEC00);
-
-   k = _mm_shuffle_epi8(k, sr[round_no % 4]);
-   k = _mm_xor_si128(k, _mm_set1_epi8(0x5B));
-   return aes_schedule_transform(k, out_tr1, out_tr2);
+   return SIMD_4x32(_mm_shuffle_epi32(x.raw(), _MM_SHUFFLE(I1, I2, I3, I4)));
    }
 
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_schedule_mangle_last_dec(__m128i k)
+template<size_t I>
+inline SIMD_4x32 slli(SIMD_4x32 x)
    {
-   const __m128i deskew1 = _mm_set_epi32(
-      0x1DFEB95A, 0x5DBEF91A, 0x07E4A340, 0x47A4E300);
-   const __m128i deskew2 = _mm_set_epi32(
-      0x2841C2AB, 0xF49D1E77, 0x5F36B5DC, 0x83EA6900);
-
-   k = _mm_xor_si128(k, _mm_set1_epi8(0x5B));
-   return aes_schedule_transform(k, deskew1, deskew2);
+#if defined(BOTAN_SIMD_USE_SSE2)
+   return SIMD_4x32(_mm_slli_si128(x.raw(), 4*I));
+#else
+   #error "No ssli implementation available"
+#endif
    }
 
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_schedule_round(__m128i* rcon, __m128i input1, __m128i input2)
+inline SIMD_4x32 zero_top_half(SIMD_4x32 x)
    {
-   if(rcon)
-      {
-      input2 = _mm_xor_si128(_mm_alignr_epi8(_mm_setzero_si128(), *rcon, 15),
-                             input2);
-
-      *rcon = _mm_alignr_epi8(*rcon, *rcon, 15); // next rcon
-
-      input1 = _mm_shuffle_epi32(input1, 0xFF); // rotate
-      input1 = _mm_alignr_epi8(input1, input1, 1);
-      }
-
-   __m128i smeared = _mm_xor_si128(input2, _mm_slli_si128(input2, 4));
-   smeared = mm_xor3(smeared, _mm_slli_si128(smeared, 8), _mm_set1_epi8(0x5B));
-
-   __m128i t = _mm_srli_epi32(_mm_andnot_si128(low_nibs, input1), 4);
-
-   input1 = _mm_and_si128(low_nibs, input1);
-
-   __m128i t2 = _mm_shuffle_epi8(k_inv2, input1);
-
-   input1 = _mm_xor_si128(input1, t);
-
-   __m128i t3 = _mm_xor_si128(t2, _mm_shuffle_epi8(k_inv1, t));
-   __m128i t4 = _mm_xor_si128(t2, _mm_shuffle_epi8(k_inv1, input1));
-
-   __m128i t5 = _mm_xor_si128(input1, _mm_shuffle_epi8(k_inv1, t3));
-   __m128i t6 = _mm_xor_si128(t, _mm_shuffle_epi8(k_inv1, t4));
-
-   return mm_xor3(_mm_shuffle_epi8(sb1u, t5),
-                  _mm_shuffle_epi8(sb1t, t6),
-                  smeared);
+#if defined(BOTAN_SIMD_USE_SSE2)
+   return SIMD_4x32(_mm_slli_si128(_mm_srli_si128(x.raw(), 8), 8));
+#else
+   #error "No zero_top_half implementation available"
+#endif
    }
 
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_ssse3_encrypt(__m128i B, const __m128i* keys, size_t rounds)
+template<int C>
+inline SIMD_4x32 alignr(SIMD_4x32 a, SIMD_4x32 b)
    {
-   const __m128i sb2u = _mm_set_epi32(
-      0x5EB7E955, 0xBC982FCD, 0xE27A93C6, 0x0B712400);
-   const __m128i sb2t = _mm_set_epi32(
-      0xC2A163C8, 0xAB82234A, 0x69EB8840, 0x0AE12900);
+#if defined(BOTAN_SIMD_USE_SSE2)
+   return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), C));
+#else
+   #error "No alignr implementation available"
+#endif
+   }
 
-   const __m128i sbou = _mm_set_epi32(
-      0x15AABF7A, 0xC502A878, 0xD0D26D17, 0x6FBDC700);
-   const __m128i sbot = _mm_set_epi32(
-      0x8E1E90D1, 0x412B35FA, 0xCFE474A5, 0x5FBB6A00);
+const SIMD_4x32 k_ipt1 = SIMD_4x32(0x5A2A7000, 0xC2B2E898, 0x52227808, 0xCABAE090);
+const SIMD_4x32 k_ipt2 = SIMD_4x32(0x317C4D00, 0x4C01307D, 0xB0FDCC81, 0xCD80B1FC);
 
-   const __m128i mc_backward[4] = {
-      _mm_set_epi32(0x0E0D0C0F, 0x0A09080B, 0x06050407, 0x02010003),
-      _mm_set_epi32(0x0A09080B, 0x06050407, 0x02010003, 0x0E0D0C0F),
-      _mm_set_epi32(0x06050407, 0x02010003, 0x0E0D0C0F, 0x0A09080B),
-      _mm_set_epi32(0x02010003, 0x0E0D0C0F, 0x0A09080B, 0x06050407),
+const SIMD_4x32 k_inv1 = SIMD_4x32(0x0D080180, 0x0E05060F, 0x0A0B0C02, 0x04070309);
+const SIMD_4x32 k_inv2 = SIMD_4x32(0x0F0B0780, 0x01040A06, 0x02050809, 0x030D0E0C);
+
+const SIMD_4x32 sb1u = SIMD_4x32(0xCB503E00, 0xB19BE18F, 0x142AF544, 0xA5DF7A6E);
+const SIMD_4x32 sb1t = SIMD_4x32(0xFAE22300, 0x3618D415, 0x0D2ED9EF, 0x3BF7CCC1);
+
+const SIMD_4x32 mc_forward[4] = {
+   SIMD_4x32(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D),
+   SIMD_4x32(0x04070605, 0x080B0A09, 0x0C0F0E0D, 0x00030201),
+   SIMD_4x32(0x080B0A09, 0x0C0F0E0D, 0x00030201, 0x04070605),
+   SIMD_4x32(0x0C0F0E0D, 0x00030201, 0x04070605, 0x080B0A09)
+};
+
+const SIMD_4x32 sr[4] = {
+   SIMD_4x32(0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C),
+   SIMD_4x32(0x0F0A0500, 0x030E0904, 0x07020D08, 0x0B06010C),
+   SIMD_4x32(0x0B020900, 0x0F060D04, 0x030A0108, 0x070E050C),
+   SIMD_4x32(0x070A0D00, 0x0B0E0104, 0x0F020508, 0x0306090C),
+};
+
+const SIMD_4x32 lo_nibs_mask = SIMD_4x32::splat_u8(0x0F);
+const SIMD_4x32 hi_nibs_mask = SIMD_4x32::splat_u8(0xF0);
+
+inline SIMD_4x32 low_nibs(SIMD_4x32 x)
+   {
+   return lo_nibs_mask & x;
+   }
+
+inline SIMD_4x32 high_nibs(SIMD_4x32 x)
+   {
+   return (hi_nibs_mask & x).shr<4>();
+   }
+
+SIMD_4x32 aes_vperm_encrypt(SIMD_4x32 B, const uint32_t* keys, size_t rounds)
+   {
+   const SIMD_4x32 sb2u = SIMD_4x32(0x0B712400, 0xE27A93C6, 0xBC982FCD, 0x5EB7E955);
+   const SIMD_4x32 sb2t = SIMD_4x32(0x0AE12900, 0x69EB8840, 0xAB82234A, 0xC2A163C8);
+
+   const SIMD_4x32 sbou = SIMD_4x32(0x6FBDC700, 0xD0D26D17, 0xC502A878, 0x15AABF7A);
+   const SIMD_4x32 sbot = SIMD_4x32(0x5FBB6A00, 0xCFE474A5, 0x412B35FA, 0x8E1E90D1);
+
+   const SIMD_4x32 mc_backward[4] = {
+      SIMD_4x32(0x02010003, 0x06050407, 0x0A09080B, 0x0E0D0C0F),
+      SIMD_4x32(0x0E0D0C0F, 0x02010003, 0x06050407, 0x0A09080B),
+      SIMD_4x32(0x0A09080B, 0x0E0D0C0F, 0x02010003, 0x06050407),
+      SIMD_4x32(0x06050407, 0x0A09080B, 0x0E0D0C0F, 0x02010003),
    };
 
-   B = mm_xor3(_mm_shuffle_epi8(k_ipt1, _mm_and_si128(low_nibs, B)),
-               _mm_shuffle_epi8(k_ipt2,
-                                _mm_srli_epi32(
-                                   _mm_andnot_si128(low_nibs, B),
-                                   4)),
-               _mm_loadu_si128(keys));
+   B = shuffle(k_ipt1, low_nibs(B)) ^ shuffle(k_ipt2, high_nibs(B)) ^ SIMD_4x32(&keys[0]);
 
    for(size_t r = 1; ; ++r)
       {
-      const __m128i K = _mm_loadu_si128(keys + r);
+      const SIMD_4x32 K(&keys[4*r]);
 
-      __m128i t = _mm_srli_epi32(_mm_andnot_si128(low_nibs, B), 4);
+      SIMD_4x32 t = high_nibs(B);
+      B = low_nibs(B);
 
-      B = _mm_and_si128(low_nibs, B);
+      SIMD_4x32 t2 = shuffle(k_inv2, B);
 
-      __m128i t2 = _mm_shuffle_epi8(k_inv2, B);
+      B ^= t;
 
-      B = _mm_xor_si128(B, t);
+      SIMD_4x32 t3 = t2 ^ shuffle(k_inv1, t);
+      SIMD_4x32 t4 = t2 ^ shuffle(k_inv1, B);
 
-      __m128i t3 = _mm_xor_si128(t2, _mm_shuffle_epi8(k_inv1, t));
-      __m128i t4 = _mm_xor_si128(t2, _mm_shuffle_epi8(k_inv1, B));
-
-      __m128i t5 = _mm_xor_si128(B, _mm_shuffle_epi8(k_inv1, t3));
-      __m128i t6 = _mm_xor_si128(t, _mm_shuffle_epi8(k_inv1, t4));
+      SIMD_4x32 t5 = B ^ shuffle(k_inv1, t3);
+      SIMD_4x32 t6 = t ^ shuffle(k_inv1, t4);
 
       if(r == rounds)
          {
-         B = _mm_shuffle_epi8(
-            mm_xor3(_mm_shuffle_epi8(sbou, t5),
-                    _mm_shuffle_epi8(sbot, t6),
-                    K),
-            sr[r % 4]);
-
-         return B;
+         return shuffle(shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K, sr[r % 4]);
          }
 
-      __m128i t7 = mm_xor3(_mm_shuffle_epi8(sb1t, t6),
-                           _mm_shuffle_epi8(sb1u, t5),
-                           K);
+      SIMD_4x32 t7 = shuffle(sb1t, t6) ^ shuffle(sb1u, t5) ^ K;
 
-      __m128i t8 = mm_xor3(_mm_shuffle_epi8(sb2t, t6),
-                           _mm_shuffle_epi8(sb2u, t5),
-                           _mm_shuffle_epi8(t7, mc_forward[r % 4]));
+      SIMD_4x32 t8 = shuffle(sb2t, t6) ^ shuffle(sb2u, t5) ^ shuffle(t7, mc_forward[r % 4]);
 
-      B = mm_xor3(_mm_shuffle_epi8(t8, mc_forward[r % 4]),
-                  _mm_shuffle_epi8(t7, mc_backward[r % 4]),
-                  t8);
+      B = shuffle(t8, mc_forward[r % 4]) ^ shuffle(t7, mc_backward[r % 4]) ^ t8;
       }
    }
 
-BOTAN_FUNC_ISA("ssse3")
-__m128i aes_ssse3_decrypt(__m128i B, const __m128i* keys, size_t rounds)
+SIMD_4x32 aes_vperm_decrypt(SIMD_4x32 B, const uint32_t keys[], size_t rounds)
    {
-   const __m128i k_dipt1 = _mm_set_epi32(
-      0x154A411E, 0x114E451A, 0x0F505B04, 0x0B545F00);
-   const __m128i k_dipt2 = _mm_set_epi32(
-      0x12771772, 0xF491F194, 0x86E383E6, 0x60056500);
+   const SIMD_4x32 k_dipt1 = SIMD_4x32(0x0B545F00, 0x0F505B04, 0x114E451A, 0x154A411E);
+   const SIMD_4x32 k_dipt2 = SIMD_4x32(0x60056500, 0x86E383E6, 0xF491F194, 0x12771772);
 
-   const __m128i sb9u = _mm_set_epi32(
-      0xCAD51F50, 0x4F994CC9, 0x851C0353, 0x9A86D600);
-   const __m128i sb9t = _mm_set_epi32(
-      0x725E2C9E, 0xB2FBA565, 0xC03B1789, 0xECD74900);
+   const SIMD_4x32 sb9u = SIMD_4x32(0x9A86D600, 0x851C0353, 0x4F994CC9, 0xCAD51F50);
+   const SIMD_4x32 sb9t = SIMD_4x32(0xECD74900, 0xC03B1789, 0xB2FBA565, 0x725E2C9E);
 
-   const __m128i sbeu = _mm_set_epi32(
-      0x22426004, 0x64B4F6B0, 0x46F29296, 0x26D4D000);
-   const __m128i sbet = _mm_set_epi32(
-      0x9467F36B, 0x98593E32, 0x0C55A6CD, 0xFFAAC100);
+   const SIMD_4x32 sbeu = SIMD_4x32(0x26D4D000, 0x46F29296, 0x64B4F6B0, 0x22426004);
+   const SIMD_4x32 sbet = SIMD_4x32(0xFFAAC100, 0x0C55A6CD, 0x98593E32, 0x9467F36B);
 
-   const __m128i sbdu = _mm_set_epi32(
-      0xF56E9B13, 0x882A4439, 0x7D57CCDF, 0xE6B1A200);
-   const __m128i sbdt = _mm_set_epi32(
-      0x2931180D, 0x15DEEFD3, 0x3CE2FAF7, 0x24C6CB00);
+   const SIMD_4x32 sbdu = SIMD_4x32(0xE6B1A200, 0x7D57CCDF, 0x882A4439, 0xF56E9B13);
+   const SIMD_4x32 sbdt = SIMD_4x32(0x24C6CB00, 0x3CE2FAF7, 0x15DEEFD3, 0x2931180D);
 
-   const __m128i sbbu = _mm_set_epi32(
-      0x602646F6, 0xB0F2D404, 0xD0226492, 0x96B44200);
-   const __m128i sbbt = _mm_set_epi32(
-      0xF3FF0C3E, 0x3255AA6B, 0xC19498A6, 0xCD596700);
+   const SIMD_4x32 sbbu = SIMD_4x32(0x96B44200, 0xD0226492, 0xB0F2D404, 0x602646F6);
+   const SIMD_4x32 sbbt = SIMD_4x32(0xCD596700, 0xC19498A6, 0x3255AA6B, 0xF3FF0C3E);
 
-   __m128i mc = mc_forward[3];
+   const SIMD_4x32 sbou = SIMD_4x32(0x7EF94000, 0x1387EA53, 0xD4943E2D, 0xC7AA6DB9);
+   const SIMD_4x32 sbot = SIMD_4x32(0x93441D00, 0x12D7560F, 0xD8C58E9C, 0xCA4B8159);
 
-   __m128i t =
-      _mm_shuffle_epi8(k_dipt2,
-                       _mm_srli_epi32(
-                          _mm_andnot_si128(low_nibs, B),
-                          4));
+   SIMD_4x32 mc(mc_forward[3]);
 
-   B = mm_xor3(t, _mm_loadu_si128(keys),
-               _mm_shuffle_epi8(k_dipt1, _mm_and_si128(B, low_nibs)));
+   B = shuffle(k_dipt1, low_nibs(B)) ^ shuffle(k_dipt2, high_nibs(B)) ^ SIMD_4x32(&keys[0]);
 
    for(size_t r = 1; ; ++r)
       {
-      const __m128i K = _mm_loadu_si128(keys + r);
+      const SIMD_4x32 K(&keys[4*r]);
 
-      t = _mm_srli_epi32(_mm_andnot_si128(low_nibs, B), 4);
+      SIMD_4x32 t = high_nibs(B);
+      B = low_nibs(B);
 
-      B = _mm_and_si128(low_nibs, B);
+      SIMD_4x32 t2 = shuffle(k_inv2, B);
 
-      __m128i t2 = _mm_shuffle_epi8(k_inv2, B);
+      B ^= t;
 
-      B = _mm_xor_si128(B, t);
-
-      __m128i t3 = _mm_xor_si128(t2, _mm_shuffle_epi8(k_inv1, t));
-      __m128i t4 = _mm_xor_si128(t2, _mm_shuffle_epi8(k_inv1, B));
-      __m128i t5 = _mm_xor_si128(B, _mm_shuffle_epi8(k_inv1, t3));
-      __m128i t6 = _mm_xor_si128(t, _mm_shuffle_epi8(k_inv1, t4));
+      const SIMD_4x32 t3 = t2 ^ shuffle(k_inv1, t);
+      const SIMD_4x32 t4 = t2 ^ shuffle(k_inv1, B);
+      const SIMD_4x32 t5 = B ^ shuffle(k_inv1, t3);
+      const SIMD_4x32 t6 = t ^ shuffle(k_inv1, t4);
 
       if(r == rounds)
          {
-         const __m128i sbou = _mm_set_epi32(
-            0xC7AA6DB9, 0xD4943E2D, 0x1387EA53, 0x7EF94000);
-         const __m128i sbot = _mm_set_epi32(
-            0xCA4B8159, 0xD8C58E9C, 0x12D7560F, 0x93441D00);
-
-         __m128i x = _mm_shuffle_epi8(sbou, t5);
-         __m128i y = _mm_shuffle_epi8(sbot, t6);
-         x = _mm_xor_si128(x, K);
-         x = _mm_xor_si128(x, y);
-
+         const SIMD_4x32 x = shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K;
          const uint32_t which_sr = ((((rounds - 1) << 4) ^ 48) & 48) / 16;
-         return _mm_shuffle_epi8(x, sr[which_sr]);
+         return shuffle(x, sr[which_sr]);
          }
 
-      __m128i t8 = _mm_xor_si128(_mm_shuffle_epi8(sb9t, t6),
-                                 _mm_xor_si128(_mm_shuffle_epi8(sb9u, t5), K));
+      const SIMD_4x32 t8 = shuffle(sb9t, t6) ^ shuffle(sb9u, t5) ^ K;
+      const SIMD_4x32 t9 = shuffle(t8, mc) ^ shuffle(sbdu, t5) ^ shuffle(sbdt, t6);
+      const SIMD_4x32 t12 = shuffle(t9, mc) ^ shuffle(sbbu, t5) ^ shuffle(sbbt, t6);
 
-      __m128i t9 = mm_xor3(_mm_shuffle_epi8(t8, mc),
-                           _mm_shuffle_epi8(sbdu, t5),
-                           _mm_shuffle_epi8(sbdt, t6));
+      B = shuffle(t12, mc) ^ shuffle(sbeu, t5) ^ shuffle(sbet, t6);
 
-      __m128i t12 = _mm_xor_si128(
-         _mm_xor_si128(
-            _mm_shuffle_epi8(t9, mc),
-            _mm_shuffle_epi8(sbbu, t5)),
-         _mm_shuffle_epi8(sbbt, t6));
-
-      B = _mm_xor_si128(_mm_xor_si128(_mm_shuffle_epi8(t12, mc),
-                                      _mm_shuffle_epi8(sbeu, t5)),
-                        _mm_shuffle_epi8(sbet, t6));
-
-      mc = _mm_alignr_epi8(mc, mc, 12);
+      mc = alignr<12>(mc, mc);
       }
+   }
+
+void vperm_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
+                          const uint32_t keys[], size_t rounds)
+   {
+   CT::poison(in, blocks * 16);
+
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+      {
+      SIMD_4x32 B = SIMD_4x32::load_le(in + i*16); // ???
+      B = aes_vperm_encrypt(B, keys, rounds);
+      B.store_le(out + i*16);
+      }
+
+   CT::unpoison(in,  blocks * 16);
+   CT::unpoison(out, blocks * 16);
+   }
+
+void vperm_decrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
+                          const uint32_t keys[], size_t rounds)
+   {
+   CT::poison(in, blocks * 16);
+
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+      {
+      SIMD_4x32 B = SIMD_4x32::load_le(in + i*16); // ???
+      B = aes_vperm_decrypt(B, keys, rounds);
+      B.store_le(out + i*16);
+      }
+
+   CT::unpoison(in,  blocks * 16);
+   CT::unpoison(out, blocks * 16);
    }
 
 }
 
-/*
-* AES-128 Encryption
-*/
-BOTAN_FUNC_ISA("ssse3")
 void AES_128::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
-   __m128i* out_mm = reinterpret_cast<__m128i*>(out);
-
-   const __m128i* keys = reinterpret_cast<const __m128i*>(m_EK.data());
-
-   CT::poison(in, blocks * block_size());
-
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
-      {
-      __m128i B = _mm_loadu_si128(in_mm + i);
-      _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 10));
-      }
-
-   CT::unpoison(in,  blocks * block_size());
-   CT::unpoison(out, blocks * block_size());
+   vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 10);
    }
 
-/*
-* AES-128 Decryption
-*/
-BOTAN_FUNC_ISA("ssse3")
 void AES_128::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
-   __m128i* out_mm = reinterpret_cast<__m128i*>(out);
-
-   const __m128i* keys = reinterpret_cast<const __m128i*>(m_DK.data());
-
-   CT::poison(in, blocks * block_size());
-
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
-      {
-      __m128i B = _mm_loadu_si128(in_mm + i);
-      _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 10));
-      }
-
-   CT::unpoison(in,  blocks * block_size());
-   CT::unpoison(out, blocks * block_size());
+   vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 10);
    }
 
-/*
-* AES-128 Key Schedule
-*/
-BOTAN_FUNC_ISA("ssse3")
+void AES_192::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+   {
+   vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 12);
+   }
+
+void AES_192::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+   {
+   vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 12);
+   }
+
+void AES_256::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+   {
+   vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 14);
+   }
+
+void AES_256::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+   {
+   vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 14);
+   }
+
+namespace {
+
+SIMD_4x32 aes_schedule_transform(SIMD_4x32 input,
+                                 SIMD_4x32 table_1,
+                                 SIMD_4x32 table_2)
+   {
+   return shuffle(table_1, low_nibs(input)) ^ shuffle(table_2, high_nibs(input));
+   }
+
+SIMD_4x32 aes_schedule_mangle(SIMD_4x32 k, uint8_t round_no)
+   {
+   const SIMD_4x32 mc_forward0(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D);
+   const SIMD_4x32 srx(sr[round_no % 4]);
+
+   SIMD_4x32 t = shuffle(k ^ SIMD_4x32::splat_u8(0x5B), mc_forward0);
+   SIMD_4x32 t2 = t;
+   t = shuffle(t, mc_forward0);
+   t2 = t ^ t2 ^ shuffle(t, mc_forward0);
+   return shuffle(t2, srx);
+   }
+
+SIMD_4x32 aes_schedule_mangle_dec(SIMD_4x32 k, uint8_t round_no)
+   {
+   const SIMD_4x32 mc_forward0(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D);
+
+   const SIMD_4x32 dsk[8] = {
+      SIMD_4x32(0x7ED9A700, 0xB6116FC8, 0x82255BFC, 0x4AED9334),
+      SIMD_4x32(0x27143300, 0x45765162, 0xE9DAFDCE, 0x8BB89FAC),
+      SIMD_4x32(0xCCA86400, 0x27438FEB, 0xADC90561, 0x4622EE8A),
+      SIMD_4x32(0x4F92DD00, 0x815C13CE, 0xBD602FF2, 0x73AEE13C),
+      SIMD_4x32(0x01C6C700, 0x03C4C502, 0xFA3D3CFB, 0xF83F3EF9),
+      SIMD_4x32(0x38CFF700, 0xEE1921D6, 0x7384BC4B, 0xA5526A9D),
+      SIMD_4x32(0x53732000, 0xE3C390B0, 0x10306343, 0xA080D3F3),
+      SIMD_4x32(0x036982E8, 0xA0CA214B, 0x8CE60D67, 0x2F45AEC4),
+   };
+
+   SIMD_4x32 t = aes_schedule_transform(k, dsk[0], dsk[1]);
+   SIMD_4x32 output = shuffle(t, mc_forward0);
+
+   t = aes_schedule_transform(t, dsk[2], dsk[3]);
+   output = shuffle(t ^ output, mc_forward0);
+
+   t = aes_schedule_transform(t, dsk[4], dsk[5]);
+   output = shuffle(t ^ output, mc_forward0);
+
+   t = aes_schedule_transform(t, dsk[6], dsk[7]);
+   output = shuffle(t ^ output, mc_forward0);
+
+   return shuffle(output, SIMD_4x32(sr[round_no % 4]));
+   }
+
+SIMD_4x32 aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
+   {
+   const SIMD_4x32 out_tr1(0xD6B66000, 0xFF9F4929, 0xDEBE6808, 0xF7974121);
+   const SIMD_4x32 out_tr2(0x50BCEC00, 0x01EDBD51, 0xB05C0CE0, 0xE10D5DB1);
+
+   k = shuffle(k, SIMD_4x32(sr[round_no % 4]));
+   k ^= SIMD_4x32::splat_u8(0x5B);
+   return aes_schedule_transform(k, out_tr1, out_tr2);
+   }
+
+SIMD_4x32 aes_schedule_mangle_last_dec(SIMD_4x32 k)
+   {
+   const SIMD_4x32 deskew1(0x47A4E300, 0x07E4A340, 0x5DBEF91A, 0x1DFEB95A);
+   const SIMD_4x32 deskew2(0x83EA6900, 0x5F36B5DC, 0xF49D1E77, 0x2841C2AB);
+
+   k ^= SIMD_4x32::splat_u8(0x5B);
+   return aes_schedule_transform(k, deskew1, deskew2);
+   }
+
+SIMD_4x32 aes_schedule_round(SIMD_4x32 input1, SIMD_4x32 input2)
+   {
+   SIMD_4x32 smeared = input2 ^ slli<1>(input2);
+   smeared ^= slli<2>(smeared);
+   smeared ^= SIMD_4x32::splat_u8(0x5B);
+
+   SIMD_4x32 t = high_nibs(input1);
+   input1 = low_nibs(input1);
+
+   SIMD_4x32 t2 = shuffle(k_inv2, input1);
+
+   input1 ^= t;
+
+   SIMD_4x32 t3 = t2 ^ shuffle(k_inv1, t);
+   SIMD_4x32 t4 = t2 ^ shuffle(k_inv1, input1);
+
+   SIMD_4x32 t5 = input1 ^ shuffle(k_inv1, t3);
+   SIMD_4x32 t6 = t ^ shuffle(k_inv1, t4);
+
+   return smeared ^ shuffle(sb1u, t5) ^ shuffle(sb1t, t6);
+   }
+
+SIMD_4x32 aes_schedule_round(SIMD_4x32& rcon, SIMD_4x32 input1, SIMD_4x32 input2)
+   {
+   input2 ^= alignr<15>(SIMD_4x32(), rcon);
+   rcon = alignr<15>(rcon, rcon);
+   input1 = shuffle32<3,3,3,3>(input1);
+   input1 = alignr<1>(input1, input1);
+
+   return aes_schedule_round(input1, input2);
+   }
+
+SIMD_4x32 aes_schedule_192_smear(SIMD_4x32 x, SIMD_4x32 y)
+   {
+   return y ^ shuffle32<3,3,3,2>(x) ^ shuffle32<2,0,0,0>(y);
+   }
+
+}
+
 void AES_128::ssse3_key_schedule(const uint8_t keyb[], size_t)
    {
-   __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
-                                0x1F8391B9, 0xAF9DEEB6);
-
-   __m128i key = _mm_loadu_si128(reinterpret_cast<const __m128i*>(keyb));
-
    m_EK.resize(11*4);
    m_DK.resize(11*4);
 
-   __m128i* EK_mm = reinterpret_cast<__m128i*>(m_EK.data());
-   __m128i* DK_mm = reinterpret_cast<__m128i*>(m_DK.data());
+   SIMD_4x32 rcon(0xAF9DEEB6, 0x1F8391B9, 0x4D7C7D81, 0x702A9808);
 
-   _mm_storeu_si128(DK_mm + 10, _mm_shuffle_epi8(key, sr[2]));
+   SIMD_4x32 key = SIMD_4x32::load_le(keyb);
+
+   shuffle(key, sr[2]).store_le(&m_DK[4*10]);
 
    key = aes_schedule_transform(key, k_ipt1, k_ipt2);
-
-   _mm_storeu_si128(EK_mm, key);
+   key.store_le(&m_EK[0]);
 
    for(size_t i = 1; i != 10; ++i)
       {
-      key = aes_schedule_round(&rcon, key, key);
+      key = aes_schedule_round(rcon, key, key);
 
-      _mm_storeu_si128(EK_mm + i,
-                       aes_schedule_mangle(key, (12-i) % 4));
+      aes_schedule_mangle(key, (12-i) % 4).store_le(&m_EK[4*i]);
 
-      _mm_storeu_si128(DK_mm + (10-i),
-                       aes_schedule_mangle_dec(key, (10-i) % 4));
+      aes_schedule_mangle_dec(key, (10-i)%4).store_le(&m_DK[4*(10-i)]);
       }
 
-   key = aes_schedule_round(&rcon, key, key);
-   _mm_storeu_si128(EK_mm + 10, aes_schedule_mangle_last(key, 2));
-   _mm_storeu_si128(DK_mm, aes_schedule_mangle_last_dec(key));
+   key = aes_schedule_round(rcon, key, key);
+   aes_schedule_mangle_last(key, 2).store_le(&m_EK[4*10]);
+   aes_schedule_mangle_last_dec(key).store_le(&m_DK[0]);
    }
 
-/*
-* AES-192 Encryption
-*/
-BOTAN_FUNC_ISA("ssse3")
-void AES_192::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
-   __m128i* out_mm = reinterpret_cast<__m128i*>(out);
-
-   const __m128i* keys = reinterpret_cast<const __m128i*>(m_EK.data());
-
-   CT::poison(in, blocks * block_size());
-
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      __m128i B = _mm_loadu_si128(in_mm + i);
-      _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 12));
-      }
-
-   CT::unpoison(in,  blocks * block_size());
-   CT::unpoison(out, blocks * block_size());
-   }
-
-/*
-* AES-192 Decryption
-*/
-BOTAN_FUNC_ISA("ssse3")
-void AES_192::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
-   __m128i* out_mm = reinterpret_cast<__m128i*>(out);
-
-   const __m128i* keys = reinterpret_cast<const __m128i*>(m_DK.data());
-
-   CT::poison(in, blocks * block_size());
-
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      __m128i B = _mm_loadu_si128(in_mm + i);
-      _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 12));
-      }
-
-   CT::unpoison(in,  blocks * block_size());
-   CT::unpoison(out, blocks * block_size());
-   }
-
-/*
-* AES-192 Key Schedule
-*/
-BOTAN_FUNC_ISA("ssse3")
 void AES_192::ssse3_key_schedule(const uint8_t keyb[], size_t)
    {
-   __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
-                                0x1F8391B9, 0xAF9DEEB6);
-
    m_EK.resize(13*4);
    m_DK.resize(13*4);
 
-   __m128i* EK_mm = reinterpret_cast<__m128i*>(m_EK.data());
-   __m128i* DK_mm = reinterpret_cast<__m128i*>(m_DK.data());
+   SIMD_4x32 rcon(0xAF9DEEB6, 0x1F8391B9, 0x4D7C7D81, 0x702A9808);
 
-   __m128i key1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(keyb));
-   __m128i key2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((keyb + 8)));
+   SIMD_4x32 key1 = SIMD_4x32::load_le(keyb);
+   SIMD_4x32 key2 = SIMD_4x32::load_le(keyb + 8);
 
-   _mm_storeu_si128(DK_mm + 12, _mm_shuffle_epi8(key1, sr[0]));
+   shuffle(key1, sr[0]).store_le(&m_DK[12*4]);
 
    key1 = aes_schedule_transform(key1, k_ipt1, k_ipt2);
    key2 = aes_schedule_transform(key2, k_ipt1, k_ipt2);
 
-   _mm_storeu_si128(EK_mm + 0, key1);
-
-   // key2 with 8 high bytes masked off
-   __m128i t = _mm_slli_si128(_mm_srli_si128(key2, 8), 8);
+   key1.store_le(&m_EK[0]);
 
    for(size_t i = 0; i != 4; ++i)
       {
-      key2 = aes_schedule_round(&rcon, key2, key1);
+      // key2 with 8 high bytes masked off
+      SIMD_4x32 t = zero_top_half(key2);
+      key2 = aes_schedule_round(rcon, key2, key1);
 
-      _mm_storeu_si128(EK_mm + 3*i+1,
-                       aes_schedule_mangle(_mm_alignr_epi8(key2, t, 8), (i+3)%4));
-      _mm_storeu_si128(DK_mm + 11-3*i,
-                       aes_schedule_mangle_dec(_mm_alignr_epi8(key2, t, 8), (i+3)%4));
+      // fixme cse
+      aes_schedule_mangle(alignr<8>(key2, t), (i+3)%4).store_le(&m_EK[4*(3*i+1)]);
+      aes_schedule_mangle_dec(alignr<8>(key2, t), (i+3)%4).store_le(&m_DK[4*(11-3*i)]);
 
       t = aes_schedule_192_smear(key2, t);
 
-      _mm_storeu_si128(EK_mm + 3*i+2,
-                       aes_schedule_mangle(t, (i+2)%4));
-      _mm_storeu_si128(DK_mm + 10-3*i,
-                       aes_schedule_mangle_dec(t, (i+2)%4));
+      aes_schedule_mangle(t, (i+2)%4).store_le(&m_EK[4*(3*i+2)]);
+      aes_schedule_mangle_dec(t, (i+2)%4).store_le(&m_DK[4*(10-3*i)]);
 
-      key2 = aes_schedule_round(&rcon, t, key2);
+      key2 = aes_schedule_round(rcon, t, key2);
 
       if(i == 3)
          {
-         _mm_storeu_si128(EK_mm + 3*i+3,
-                          aes_schedule_mangle_last(key2, (i+1)%4));
-         _mm_storeu_si128(DK_mm + 9-3*i,
-                          aes_schedule_mangle_last_dec(key2));
+         aes_schedule_mangle_last(key2, (i+1)%4).store_le(&m_EK[4*(3*i+3)]);
+         aes_schedule_mangle_last_dec(key2).store_le(&m_DK[4*(9-3*i)]);
          }
       else
          {
-         _mm_storeu_si128(EK_mm + 3*i+3,
-                          aes_schedule_mangle(key2, (i+1)%4));
-         _mm_storeu_si128(DK_mm + 9-3*i,
-                          aes_schedule_mangle_dec(key2, (i+1)%4));
+         aes_schedule_mangle(key2, (i+1)%4).store_le(&m_EK[4*(3*i+3)]);
+         aes_schedule_mangle_dec(key2, (i+1)%4).store_le(&m_DK[4*(9-3*i)]);
          }
 
       key1 = key2;
-      key2 = aes_schedule_192_smear(key2,
-                                    _mm_slli_si128(_mm_srli_si128(t, 8), 8));
-      t = _mm_slli_si128(_mm_srli_si128(key2, 8), 8);
+      key2 = aes_schedule_192_smear(key2, zero_top_half(t));
       }
    }
 
-/*
-* AES-256 Encryption
-*/
-BOTAN_FUNC_ISA("ssse3")
-void AES_256::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
-   __m128i* out_mm = reinterpret_cast<__m128i*>(out);
-
-   const __m128i* keys = reinterpret_cast<const __m128i*>(m_EK.data());
-
-   CT::poison(in, blocks * block_size());
-
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      __m128i B = _mm_loadu_si128(in_mm + i);
-      _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 14));
-      }
-
-   CT::unpoison(in,  blocks * block_size());
-   CT::unpoison(out, blocks * block_size());
-   }
-
-/*
-* AES-256 Decryption
-*/
-BOTAN_FUNC_ISA("ssse3")
-void AES_256::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
-   {
-   const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
-   __m128i* out_mm = reinterpret_cast<__m128i*>(out);
-
-   const __m128i* keys = reinterpret_cast<const __m128i*>(m_DK.data());
-
-   CT::poison(in, blocks * block_size());
-
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      __m128i B = _mm_loadu_si128(in_mm + i);
-      _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 14));
-      }
-
-   CT::unpoison(in,  blocks * block_size());
-   CT::unpoison(out, blocks * block_size());
-   }
-
-/*
-* AES-256 Key Schedule
-*/
-BOTAN_FUNC_ISA("ssse3")
 void AES_256::ssse3_key_schedule(const uint8_t keyb[], size_t)
    {
-   __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
-                                0x1F8391B9, 0xAF9DEEB6);
-
    m_EK.resize(15*4);
    m_DK.resize(15*4);
 
-   __m128i* EK_mm = reinterpret_cast<__m128i*>(m_EK.data());
-   __m128i* DK_mm = reinterpret_cast<__m128i*>(m_DK.data());
+   SIMD_4x32 rcon(0xAF9DEEB6, 0x1F8391B9, 0x4D7C7D81, 0x702A9808);
 
-   __m128i key1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(keyb));
-   __m128i key2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((keyb + 16)));
+   SIMD_4x32 key1 = SIMD_4x32::load_le(keyb);
+   SIMD_4x32 key2 = SIMD_4x32::load_le(keyb + 16);
 
-   _mm_storeu_si128(DK_mm + 14, _mm_shuffle_epi8(key1, sr[2]));
+   shuffle(key1, sr[2]).store_le(&m_DK[4*14]);
 
    key1 = aes_schedule_transform(key1, k_ipt1, k_ipt2);
    key2 = aes_schedule_transform(key2, k_ipt1, k_ipt2);
 
-   _mm_storeu_si128(EK_mm + 0, key1);
-   _mm_storeu_si128(EK_mm + 1, aes_schedule_mangle(key2, 3));
+   key1.store_le(&m_EK[0]);
+   aes_schedule_mangle(key2, 3).store_le(&m_EK[4]);
 
-   _mm_storeu_si128(DK_mm + 13, aes_schedule_mangle_dec(key2, 1));
+   aes_schedule_mangle_dec(key2, 1).store_le(&m_DK[4*13]);
 
    for(size_t i = 2; i != 14; i += 2)
       {
-      __m128i k_t = key2;
-      key1 = key2 = aes_schedule_round(&rcon, key2, key1);
+      const SIMD_4x32 k_t = key2;
+      key1 = key2 = aes_schedule_round(rcon, key2, key1);
 
-      _mm_storeu_si128(EK_mm + i, aes_schedule_mangle(key2, i % 4));
-      _mm_storeu_si128(DK_mm + (14-i), aes_schedule_mangle_dec(key2, (i+2) % 4));
+      aes_schedule_mangle(key2, i % 4).store_le(&m_EK[4*i]);
+      aes_schedule_mangle_dec(key2, (i+2)%4).store_le(&m_DK[4*(14-i)]);
 
-      key2 = aes_schedule_round(nullptr, _mm_shuffle_epi32(key2, 0xFF), k_t);
-      _mm_storeu_si128(EK_mm + i + 1, aes_schedule_mangle(key2, (i - 1) % 4));
-      _mm_storeu_si128(DK_mm + (13-i), aes_schedule_mangle_dec(key2, (i+1) % 4));
+      key2 = aes_schedule_round(shuffle32<3,3,3,3>(key2), k_t);
+
+      aes_schedule_mangle(key2, (i-1)%4).store_le(&m_EK[4*(i+1)]);
+      aes_schedule_mangle_dec(key2, (i+1)%4).store_le(&m_DK[4*(13-i)]);
       }
 
-   key2 = aes_schedule_round(&rcon, key2, key1);
+   key2 = aes_schedule_round(rcon, key2, key1);
 
-   _mm_storeu_si128(EK_mm + 14, aes_schedule_mangle_last(key2, 2));
-   _mm_storeu_si128(DK_mm + 0, aes_schedule_mangle_last_dec(key2));
+   aes_schedule_mangle_last(key2, 2).store_le(&m_EK[4*14]);
+   aes_schedule_mangle_last_dec(key2).store_le(&m_DK[0]);
    }
 
 }
