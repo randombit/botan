@@ -303,6 +303,21 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          { return has_cpuid_bit(CPUID_RDSEED_BIT); }
 #endif
 
+      /**
+      * Check if the processor supports byte-level vector permutes
+      * (SSSE3, NEON, Altivec)
+      */
+      static bool has_vperm()
+         {
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+         return has_ssse3();
+#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+         return has_neon();
+#else
+         return false;
+#endif
+         }
+
       /*
       * Clear a CPUID bit
       * Call CPUID::initialize to reset

@@ -1,9 +1,9 @@
 <defines>
-AES_SSSE3 -> 20131128
+AES_VPERM -> 20190901
 </defines>
 
 <isa>
-ssse3
+neon
 </isa>
 
 <requires>

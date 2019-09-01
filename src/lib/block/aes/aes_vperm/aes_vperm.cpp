@@ -1,5 +1,5 @@
 /*
-* AES using SSSE3
+* AES using vector permutes (SSSE3, NEON)
 * (C) 2010,2016,2019 Jack Lloyd
 *
 * This is more or less a direct translation of public domain x86-64
@@ -28,30 +28,24 @@ inline SIMD_4x32 shuffle(SIMD_4x32 a, SIMD_4x32 b)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_shuffle_epi8(a.raw(), b.raw()));
-#elif defined(BOTAN_SIMD_USE_NEON) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
+#elif defined(BOTAN_SIMD_USE_NEON)
+   const uint8x16_t tbl = vreinterpretq_u8_u32(a.raw());
+   const uint8x16_t idx = vreinterpretq_u8_u32(b.raw());
 
-   const int8x16_t tbl = vreinterpretq_s8_m128i(a.raw());
-   const uint8x16_t idx = vreinterpretq_u8_m128i(b.raw());
+#if defined(BOTAN_TARGET_ARCH_IS_ARM32)
+   uint8x8x2_t tbl2 = { vget_low_u8(tbl), vget_high_u8(tbl) };
 
-   // fixme use vdupq_n_s8
-   const uint8_t alignas(16) mask[16] = {
-      0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F,
-      0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F, 0x8F
-   };
+   return SIMD_4x32(vreinterpretq_u32_u8(
+                       vcombine_u8(vtbl2_u8(tbl2, vget_low_u8(idx)),
+                                   vtbl2_u8(tbl2, vget_high_u8(idx)))));
 
-   const uint8x16_t idx_masked =
-      vandq_u8(idx, vld1q_u8(mask));  // avoid using meaningless bits
+#else
+   return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(tbl, idx)));
+#endif
 
-   return vreinterpretq_m128i_s8(vqtbl1q_s8(tbl, idx_masked));
 #else
    #error "No shuffle implementation available"
 #endif
-   }
-
-template<size_t I1, size_t I2, size_t I3, size_t I4>
-inline SIMD_4x32 shuffle32(SIMD_4x32 x)
-   {
-   return SIMD_4x32(_mm_shuffle_epi32(x.raw(), _MM_SHUFFLE(I1, I2, I3, I4)));
    }
 
 template<size_t I>
@@ -59,8 +53,8 @@ inline SIMD_4x32 slli(SIMD_4x32 x)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_slli_si128(x.raw(), 4*I));
-#else
-   #error "No ssli implementation available"
+#elif defined(BOTAN_SIMD_USE_NEON)
+   return SIMD_4x32(vreinterpretq_u32_u8(vextq_u8(vdupq_n_u8(0), vreinterpretq_u8_u32(x.raw()), 16 - 4*I)));
 #endif
    }
 
@@ -68,8 +62,10 @@ inline SIMD_4x32 zero_top_half(SIMD_4x32 x)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_slli_si128(_mm_srli_si128(x.raw(), 8), 8));
-#else
-   #error "No zero_top_half implementation available"
+#elif defined(BOTAN_SIMD_USE_NEON)
+   // fixme do better ?
+   SIMD_4x32 mask(0, 0, ~0, ~0);
+   return x & mask;
 #endif
    }
 
@@ -78,8 +74,8 @@ inline SIMD_4x32 alignr(SIMD_4x32 a, SIMD_4x32 b)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), C));
-#else
-   #error "No alignr implementation available"
+#elif defined(BOTAN_SIMD_USE_NEON)
+   return SIMD_4x32(vreinterpretq_u32_u8(vextq_u8(vreinterpretq_u8_u32(b.raw()), vreinterpretq_u8_u32(a.raw()), C)));
 #endif
    }
 
@@ -108,6 +104,8 @@ const SIMD_4x32 sr[4] = {
 
 const SIMD_4x32 lo_nibs_mask = SIMD_4x32::splat_u8(0x0F);
 const SIMD_4x32 hi_nibs_mask = SIMD_4x32::splat_u8(0xF0);
+
+const SIMD_4x32 shuffle3333 = SIMD_4x32::splat(0x0F0E0D0C);
 
 inline SIMD_4x32 low_nibs(SIMD_4x32 x)
    {
@@ -257,32 +255,32 @@ void vperm_decrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
 
 }
 
-void AES_128::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_128::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 10);
    }
 
-void AES_128::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_128::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 10);
    }
 
-void AES_192::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_192::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 12);
    }
 
-void AES_192::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_192::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 12);
    }
 
-void AES_256::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_256::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 14);
    }
 
-void AES_256::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_256::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 14);
    }
@@ -335,7 +333,7 @@ SIMD_4x32 aes_schedule_mangle_dec(SIMD_4x32 k, uint8_t round_no)
    t = aes_schedule_transform(t, dsk[6], dsk[7]);
    output = shuffle(t ^ output, mc_forward0);
 
-   return shuffle(output, SIMD_4x32(sr[round_no % 4]));
+   return shuffle(output, sr[round_no % 4]);
    }
 
 SIMD_4x32 aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
@@ -343,7 +341,7 @@ SIMD_4x32 aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
    const SIMD_4x32 out_tr1(0xD6B66000, 0xFF9F4929, 0xDEBE6808, 0xF7974121);
    const SIMD_4x32 out_tr2(0x50BCEC00, 0x01EDBD51, 0xB05C0CE0, 0xE10D5DB1);
 
-   k = shuffle(k, SIMD_4x32(sr[round_no % 4]));
+   k = shuffle(k, sr[round_no % 4]);
    k ^= SIMD_4x32::splat_u8(0x5B);
    return aes_schedule_transform(k, out_tr1, out_tr2);
    }
@@ -383,7 +381,7 @@ SIMD_4x32 aes_schedule_round(SIMD_4x32& rcon, SIMD_4x32 input1, SIMD_4x32 input2
    {
    input2 ^= alignr<15>(SIMD_4x32(), rcon);
    rcon = alignr<15>(rcon, rcon);
-   input1 = shuffle32<3,3,3,3>(input1);
+   input1 = shuffle(input1, shuffle3333);
    input1 = alignr<1>(input1, input1);
 
    return aes_schedule_round(input1, input2);
@@ -391,12 +389,16 @@ SIMD_4x32 aes_schedule_round(SIMD_4x32& rcon, SIMD_4x32 input1, SIMD_4x32 input2
 
 SIMD_4x32 aes_schedule_192_smear(SIMD_4x32 x, SIMD_4x32 y)
    {
-   return y ^ shuffle32<3,3,3,2>(x) ^ shuffle32<2,0,0,0>(y);
+   const SIMD_4x32 shuffle3332 =
+      SIMD_4x32(0x0B0A0908, 0x0F0E0D0C, 0x0F0E0D0C, 0x0F0E0D0C);
+   const SIMD_4x32 shuffle2000 =
+      SIMD_4x32(0x03020100, 0x03020100, 0x03020100, 0x0B0A0908);
+   return y ^ shuffle(x, shuffle3332) ^ shuffle(y, shuffle2000);
    }
 
 }
 
-void AES_128::ssse3_key_schedule(const uint8_t keyb[], size_t)
+void AES_128::vperm_key_schedule(const uint8_t keyb[], size_t)
    {
    m_EK.resize(11*4);
    m_DK.resize(11*4);
@@ -424,7 +426,7 @@ void AES_128::ssse3_key_schedule(const uint8_t keyb[], size_t)
    aes_schedule_mangle_last_dec(key).store_le(&m_DK[0]);
    }
 
-void AES_192::ssse3_key_schedule(const uint8_t keyb[], size_t)
+void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t)
    {
    m_EK.resize(13*4);
    m_DK.resize(13*4);
@@ -474,7 +476,7 @@ void AES_192::ssse3_key_schedule(const uint8_t keyb[], size_t)
       }
    }
 
-void AES_256::ssse3_key_schedule(const uint8_t keyb[], size_t)
+void AES_256::vperm_key_schedule(const uint8_t keyb[], size_t)
    {
    m_EK.resize(15*4);
    m_DK.resize(15*4);
@@ -502,7 +504,7 @@ void AES_256::ssse3_key_schedule(const uint8_t keyb[], size_t)
       aes_schedule_mangle(key2, i % 4).store_le(&m_EK[4*i]);
       aes_schedule_mangle_dec(key2, (i+2)%4).store_le(&m_DK[4*(14-i)]);
 
-      key2 = aes_schedule_round(shuffle32<3,3,3,3>(key2), k_t);
+      key2 = aes_schedule_round(shuffle(key2, shuffle3333), k_t);
 
       aes_schedule_mangle(key2, (i-1)%4).store_le(&m_EK[4*(i+1)]);
       aes_schedule_mangle_dec(key2, (i+1)%4).store_le(&m_DK[4*(13-i)]);

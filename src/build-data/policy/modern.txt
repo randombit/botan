@@ -59,7 +59,7 @@ locking_allocator
 http_util # needed by x509 for OCSP online checks
 
 aes_ni
-aes_ssse3
+aes_vperm
 aes_armv8
 aes_power8
 serpent_simd
