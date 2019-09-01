@@ -3,7 +3,8 @@ AES_VPERM -> 20190901
 </defines>
 
 <isa>
-neon
+#neon
+ssse3
 </isa>
 
 <requires>

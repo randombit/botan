@@ -33,7 +33,7 @@ inline SIMD_4x32 shuffle(SIMD_4x32 a, SIMD_4x32 b)
    const uint8x16_t idx = vreinterpretq_u8_u32(b.raw());
 
 #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
-   uint8x8x2_t tbl2 = { vget_low_u8(tbl), vget_high_u8(tbl) };
+   const uint8x8x2_t tbl2 = { vget_low_u8(tbl), vget_high_u8(tbl) };
 
    return SIMD_4x32(vreinterpretq_u32_u8(
                        vcombine_u8(vtbl2_u8(tbl2, vget_low_u8(idx)),
@@ -64,7 +64,7 @@ inline SIMD_4x32 zero_top_half(SIMD_4x32 x)
    return SIMD_4x32(_mm_slli_si128(_mm_srli_si128(x.raw(), 8), 8));
 #elif defined(BOTAN_SIMD_USE_NEON)
    // fixme do better ?
-   SIMD_4x32 mask(0, 0, ~0, ~0);
+   const SIMD_4x32 mask(0, 0, ~0, ~0);
    return x & mask;
 #endif
    }
@@ -117,13 +117,15 @@ inline SIMD_4x32 high_nibs(SIMD_4x32 x)
    return (hi_nibs_mask & x).shr<4>();
    }
 
-SIMD_4x32 aes_vperm_encrypt(SIMD_4x32 B, const uint32_t* keys, size_t rounds)
+inline SIMD_4x32 aes_enc_first_round(SIMD_4x32 B, SIMD_4x32 K)
+   {
+   return shuffle(k_ipt1, low_nibs(B)) ^ shuffle(k_ipt2, high_nibs(B)) ^ K;
+   }
+
+inline SIMD_4x32 aes_enc_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    {
    const SIMD_4x32 sb2u = SIMD_4x32(0x0B712400, 0xE27A93C6, 0xBC982FCD, 0x5EB7E955);
    const SIMD_4x32 sb2t = SIMD_4x32(0x0AE12900, 0x69EB8840, 0xAB82234A, 0xC2A163C8);
-
-   const SIMD_4x32 sbou = SIMD_4x32(0x6FBDC700, 0xD0D26D17, 0xC502A878, 0x15AABF7A);
-   const SIMD_4x32 sbot = SIMD_4x32(0x5FBB6A00, 0xCFE474A5, 0x412B35FA, 0x8E1E90D1);
 
    const SIMD_4x32 mc_backward[4] = {
       SIMD_4x32(0x02010003, 0x06050407, 0x0A09080B, 0x0E0D0C0F),
@@ -132,43 +134,46 @@ SIMD_4x32 aes_vperm_encrypt(SIMD_4x32 B, const uint32_t* keys, size_t rounds)
       SIMD_4x32(0x06050407, 0x0A09080B, 0x0E0D0C0F, 0x02010003),
    };
 
-   B = shuffle(k_ipt1, low_nibs(B)) ^ shuffle(k_ipt2, high_nibs(B)) ^ SIMD_4x32(&keys[0]);
+   const SIMD_4x32 Bh = high_nibs(B);
+   SIMD_4x32 Bl = low_nibs(B);
+   const SIMD_4x32 t2 = shuffle(k_inv2, Bl);
+   Bl ^= Bh;
 
-   for(size_t r = 1; ; ++r)
-      {
-      const SIMD_4x32 K(&keys[4*r]);
+   const SIMD_4x32 t5 = Bl ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
 
-      SIMD_4x32 t = high_nibs(B);
-      B = low_nibs(B);
+   const SIMD_4x32 t7 = shuffle(sb1t, t6) ^ shuffle(sb1u, t5) ^ K;
+   const SIMD_4x32 t8 = shuffle(sb2t, t6) ^ shuffle(sb2u, t5) ^ shuffle(t7, mc_forward[r % 4]);
 
-      SIMD_4x32 t2 = shuffle(k_inv2, B);
-
-      B ^= t;
-
-      SIMD_4x32 t3 = t2 ^ shuffle(k_inv1, t);
-      SIMD_4x32 t4 = t2 ^ shuffle(k_inv1, B);
-
-      SIMD_4x32 t5 = B ^ shuffle(k_inv1, t3);
-      SIMD_4x32 t6 = t ^ shuffle(k_inv1, t4);
-
-      if(r == rounds)
-         {
-         return shuffle(shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K, sr[r % 4]);
-         }
-
-      SIMD_4x32 t7 = shuffle(sb1t, t6) ^ shuffle(sb1u, t5) ^ K;
-
-      SIMD_4x32 t8 = shuffle(sb2t, t6) ^ shuffle(sb2u, t5) ^ shuffle(t7, mc_forward[r % 4]);
-
-      B = shuffle(t8, mc_forward[r % 4]) ^ shuffle(t7, mc_backward[r % 4]) ^ t8;
-      }
+   return shuffle(t8, mc_forward[r % 4]) ^ shuffle(t7, mc_backward[r % 4]) ^ t8;
    }
 
-SIMD_4x32 aes_vperm_decrypt(SIMD_4x32 B, const uint32_t keys[], size_t rounds)
+inline SIMD_4x32 aes_enc_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
+   {
+   const SIMD_4x32 sbou = SIMD_4x32(0x6FBDC700, 0xD0D26D17, 0xC502A878, 0x15AABF7A);
+   const SIMD_4x32 sbot = SIMD_4x32(0x5FBB6A00, 0xCFE474A5, 0x412B35FA, 0x8E1E90D1);
+
+   const SIMD_4x32 Bh = high_nibs(B);
+   SIMD_4x32 Bl = low_nibs(B);
+   const SIMD_4x32 t2 = shuffle(k_inv2, Bl);
+   Bl ^= Bh;
+
+   const SIMD_4x32 t5 = Bl ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
+
+   return shuffle(shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K, sr[r % 4]);
+   }
+
+inline SIMD_4x32 aes_dec_first_round(SIMD_4x32 B, SIMD_4x32 K)
    {
    const SIMD_4x32 k_dipt1 = SIMD_4x32(0x0B545F00, 0x0F505B04, 0x114E451A, 0x154A411E);
    const SIMD_4x32 k_dipt2 = SIMD_4x32(0x60056500, 0x86E383E6, 0xF491F194, 0x12771772);
 
+   return shuffle(k_dipt1, low_nibs(B)) ^ shuffle(k_dipt2, high_nibs(B)) ^ K;
+   }
+
+inline SIMD_4x32 aes_dec_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
+   {
    const SIMD_4x32 sb9u = SIMD_4x32(0x9A86D600, 0x851C0353, 0x4F994CC9, 0xCAD51F50);
    const SIMD_4x32 sb9t = SIMD_4x32(0xECD74900, 0xC03B1789, 0xB2FBA565, 0x725E2C9E);
 
@@ -181,55 +186,90 @@ SIMD_4x32 aes_vperm_decrypt(SIMD_4x32 B, const uint32_t keys[], size_t rounds)
    const SIMD_4x32 sbbu = SIMD_4x32(0x96B44200, 0xD0226492, 0xB0F2D404, 0x602646F6);
    const SIMD_4x32 sbbt = SIMD_4x32(0xCD596700, 0xC19498A6, 0x3255AA6B, 0xF3FF0C3E);
 
+   const SIMD_4x32 mcx[4] = {
+      SIMD_4x32(0x0C0F0E0D, 0x00030201, 0x04070605, 0x080B0A09),
+      SIMD_4x32(0x080B0A09, 0x0C0F0E0D, 0x00030201, 0x04070605),
+      SIMD_4x32(0x04070605, 0x080B0A09, 0x0C0F0E0D, 0x00030201),
+      SIMD_4x32(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D),
+   };
+
+   const SIMD_4x32 Bh = high_nibs(B);
+   B = low_nibs(B);
+   const SIMD_4x32 t2 = shuffle(k_inv2, B);
+
+   B ^= Bh;
+
+   const SIMD_4x32 t5 = B ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, B));
+
+   const SIMD_4x32 mc = mcx[(r-1)%4];
+
+   const SIMD_4x32 t8 = shuffle(sb9t, t6) ^ shuffle(sb9u, t5) ^ K;
+   const SIMD_4x32 t9 = shuffle(t8, mc) ^ shuffle(sbdu, t5) ^ shuffle(sbdt, t6);
+   const SIMD_4x32 t12 = shuffle(t9, mc) ^ shuffle(sbbu, t5) ^ shuffle(sbbt, t6);
+   return shuffle(t12, mc) ^ shuffle(sbeu, t5) ^ shuffle(sbet, t6);
+   }
+
+inline SIMD_4x32 aes_dec_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
+   {
    const SIMD_4x32 sbou = SIMD_4x32(0x7EF94000, 0x1387EA53, 0xD4943E2D, 0xC7AA6DB9);
    const SIMD_4x32 sbot = SIMD_4x32(0x93441D00, 0x12D7560F, 0xD8C58E9C, 0xCA4B8159);
 
-   SIMD_4x32 mc(mc_forward[3]);
+   const uint32_t which_sr = ((((r - 1) << 4) ^ 48) & 48) / 16;
 
-   B = shuffle(k_dipt1, low_nibs(B)) ^ shuffle(k_dipt2, high_nibs(B)) ^ SIMD_4x32(&keys[0]);
+   const SIMD_4x32 Bh = high_nibs(B);
+   B = low_nibs(B);
+   const SIMD_4x32 t2 = shuffle(k_inv2, B);
 
-   for(size_t r = 1; ; ++r)
-      {
-      const SIMD_4x32 K(&keys[4*r]);
+   B ^= Bh;
 
-      SIMD_4x32 t = high_nibs(B);
-      B = low_nibs(B);
+   const SIMD_4x32 t5 = B ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, B));
 
-      SIMD_4x32 t2 = shuffle(k_inv2, B);
-
-      B ^= t;
-
-      const SIMD_4x32 t3 = t2 ^ shuffle(k_inv1, t);
-      const SIMD_4x32 t4 = t2 ^ shuffle(k_inv1, B);
-      const SIMD_4x32 t5 = B ^ shuffle(k_inv1, t3);
-      const SIMD_4x32 t6 = t ^ shuffle(k_inv1, t4);
-
-      if(r == rounds)
-         {
-         const SIMD_4x32 x = shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K;
-         const uint32_t which_sr = ((((rounds - 1) << 4) ^ 48) & 48) / 16;
-         return shuffle(x, sr[which_sr]);
-         }
-
-      const SIMD_4x32 t8 = shuffle(sb9t, t6) ^ shuffle(sb9u, t5) ^ K;
-      const SIMD_4x32 t9 = shuffle(t8, mc) ^ shuffle(sbdu, t5) ^ shuffle(sbdt, t6);
-      const SIMD_4x32 t12 = shuffle(t9, mc) ^ shuffle(sbbu, t5) ^ shuffle(sbbt, t6);
-
-      B = shuffle(t12, mc) ^ shuffle(sbeu, t5) ^ shuffle(sbet, t6);
-
-      mc = alignr<12>(mc, mc);
-      }
+   const SIMD_4x32 x = shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K;
+   return shuffle(x, sr[which_sr]);
    }
 
 void vperm_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
-                          const uint32_t keys[], size_t rounds)
+                          const SIMD_4x32 K[], size_t rounds)
    {
    CT::poison(in, blocks * 16);
 
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+   const size_t blocks2 = blocks - (blocks % 2);
+
+   for(size_t i = 0; i != blocks2; i += 2)
+      {
+      SIMD_4x32 B0 = SIMD_4x32::load_le(in + i*16);
+      SIMD_4x32 B1 = SIMD_4x32::load_le(in + (i+1)*16);
+
+      B0 = aes_enc_first_round(B0, K[0]);
+      B1 = aes_enc_first_round(B1, K[0]);
+
+      for(size_t r = 1; r != rounds; ++r)
+         {
+         B0 = aes_enc_round(B0, K[r], r);
+         B1 = aes_enc_round(B1, K[r], r);
+         }
+
+      B0 = aes_enc_last_round(B0, K[rounds], rounds);
+      B1 = aes_enc_last_round(B1, K[rounds], rounds);
+
+      B0.store_le(out + i*16);
+      B1.store_le(out + (i+1)*16);
+      }
+
+   for(size_t i = blocks2; i < blocks; ++i)
       {
       SIMD_4x32 B = SIMD_4x32::load_le(in + i*16); // ???
-      B = aes_vperm_encrypt(B, keys, rounds);
+
+      B = aes_enc_first_round(B, K[0]);
+
+      for(size_t r = 1; r != rounds; ++r)
+         {
+         B = aes_enc_round(B, K[r], r);
+         }
+
+      B = aes_enc_last_round(B, K[rounds], rounds);
       B.store_le(out + i*16);
       }
 
@@ -238,14 +278,45 @@ void vperm_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
    }
 
 void vperm_decrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
-                          const uint32_t keys[], size_t rounds)
+                          const SIMD_4x32 K[], size_t rounds)
    {
    CT::poison(in, blocks * 16);
 
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+   const size_t blocks2 = blocks - (blocks % 2);
+
+   for(size_t i = 0; i != blocks2; i += 2)
+      {
+      SIMD_4x32 B0 = SIMD_4x32::load_le(in + i*16);
+      SIMD_4x32 B1 = SIMD_4x32::load_le(in + (i+1)*16);
+
+      B0 = aes_dec_first_round(B0, K[0]);
+      B1 = aes_dec_first_round(B1, K[0]);
+
+      for(size_t r = 1; r != rounds; ++r)
+         {
+         B0 = aes_dec_round(B0, K[r], r);
+         B1 = aes_dec_round(B1, K[r], r);
+         }
+
+      B0 = aes_dec_last_round(B0, K[rounds], rounds);
+      B1 = aes_dec_last_round(B1, K[rounds], rounds);
+
+      B0.store_le(out + i*16);
+      B1.store_le(out + (i+1)*16);
+      }
+
+   for(size_t i = blocks2; i < blocks; ++i)
       {
       SIMD_4x32 B = SIMD_4x32::load_le(in + i*16); // ???
-      B = aes_vperm_decrypt(B, keys, rounds);
+
+      B = aes_dec_first_round(B, K[0]);
+
+      for(size_t r = 1; r != rounds; ++r)
+         {
+         B = aes_dec_round(B, K[r], r);
+         }
+
+      B = aes_dec_last_round(B, K[rounds], rounds);
       B.store_le(out + i*16);
       }
 
@@ -257,32 +328,78 @@ void vperm_decrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
 
 void AES_128::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 10);
+   const SIMD_4x32 K[11] = {
+      SIMD_4x32(&m_EK[4* 0]), SIMD_4x32(&m_EK[4* 1]), SIMD_4x32(&m_EK[4* 2]),
+      SIMD_4x32(&m_EK[4* 3]), SIMD_4x32(&m_EK[4* 4]), SIMD_4x32(&m_EK[4* 5]),
+      SIMD_4x32(&m_EK[4* 6]), SIMD_4x32(&m_EK[4* 7]), SIMD_4x32(&m_EK[4* 8]),
+      SIMD_4x32(&m_EK[4* 9]), SIMD_4x32(&m_EK[4*10]),
+   };
+
+   return vperm_encrypt_blocks(in, out, blocks, K, 10);
    }
 
 void AES_128::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 10);
+   const SIMD_4x32 K[11] = {
+      SIMD_4x32(&m_DK[4* 0]), SIMD_4x32(&m_DK[4* 1]), SIMD_4x32(&m_DK[4* 2]),
+      SIMD_4x32(&m_DK[4* 3]), SIMD_4x32(&m_DK[4* 4]), SIMD_4x32(&m_DK[4* 5]),
+      SIMD_4x32(&m_DK[4* 6]), SIMD_4x32(&m_DK[4* 7]), SIMD_4x32(&m_DK[4* 8]),
+      SIMD_4x32(&m_DK[4* 9]), SIMD_4x32(&m_DK[4*10]),
+   };
+
+   return vperm_decrypt_blocks(in, out, blocks, K, 10);
    }
 
 void AES_192::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 12);
+   const SIMD_4x32 K[13] = {
+      SIMD_4x32(&m_EK[4* 0]), SIMD_4x32(&m_EK[4* 1]), SIMD_4x32(&m_EK[4* 2]),
+      SIMD_4x32(&m_EK[4* 3]), SIMD_4x32(&m_EK[4* 4]), SIMD_4x32(&m_EK[4* 5]),
+      SIMD_4x32(&m_EK[4* 6]), SIMD_4x32(&m_EK[4* 7]), SIMD_4x32(&m_EK[4* 8]),
+      SIMD_4x32(&m_EK[4* 9]), SIMD_4x32(&m_EK[4*10]), SIMD_4x32(&m_EK[4*11]),
+      SIMD_4x32(&m_EK[4*12]),
+   };
+
+   return vperm_encrypt_blocks(in, out, blocks, K, 12);
    }
 
 void AES_192::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 12);
+   const SIMD_4x32 K[13] = {
+      SIMD_4x32(&m_DK[4* 0]), SIMD_4x32(&m_DK[4* 1]), SIMD_4x32(&m_DK[4* 2]),
+      SIMD_4x32(&m_DK[4* 3]), SIMD_4x32(&m_DK[4* 4]), SIMD_4x32(&m_DK[4* 5]),
+      SIMD_4x32(&m_DK[4* 6]), SIMD_4x32(&m_DK[4* 7]), SIMD_4x32(&m_DK[4* 8]),
+      SIMD_4x32(&m_DK[4* 9]), SIMD_4x32(&m_DK[4*10]), SIMD_4x32(&m_DK[4*11]),
+      SIMD_4x32(&m_DK[4*12]),
+   };
+
+   return vperm_decrypt_blocks(in, out, blocks, K, 12);
    }
 
 void AES_256::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   vperm_encrypt_blocks(in, out, blocks, m_EK.data(), 14);
+   const SIMD_4x32 K[15] = {
+      SIMD_4x32(&m_EK[4* 0]), SIMD_4x32(&m_EK[4* 1]), SIMD_4x32(&m_EK[4* 2]),
+      SIMD_4x32(&m_EK[4* 3]), SIMD_4x32(&m_EK[4* 4]), SIMD_4x32(&m_EK[4* 5]),
+      SIMD_4x32(&m_EK[4* 6]), SIMD_4x32(&m_EK[4* 7]), SIMD_4x32(&m_EK[4* 8]),
+      SIMD_4x32(&m_EK[4* 9]), SIMD_4x32(&m_EK[4*10]), SIMD_4x32(&m_EK[4*11]),
+      SIMD_4x32(&m_EK[4*12]), SIMD_4x32(&m_EK[4*13]), SIMD_4x32(&m_EK[4*14]),
+   };
+
+   return vperm_encrypt_blocks(in, out, blocks, K, 14);
    }
 
 void AES_256::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   vperm_decrypt_blocks(in, out, blocks, m_DK.data(), 14);
+   const SIMD_4x32 K[15] = {
+      SIMD_4x32(&m_DK[4* 0]), SIMD_4x32(&m_DK[4* 1]), SIMD_4x32(&m_DK[4* 2]),
+      SIMD_4x32(&m_DK[4* 3]), SIMD_4x32(&m_DK[4* 4]), SIMD_4x32(&m_DK[4* 5]),
+      SIMD_4x32(&m_DK[4* 6]), SIMD_4x32(&m_DK[4* 7]), SIMD_4x32(&m_DK[4* 8]),
+      SIMD_4x32(&m_DK[4* 9]), SIMD_4x32(&m_DK[4*10]), SIMD_4x32(&m_DK[4*11]),
+      SIMD_4x32(&m_DK[4*12]), SIMD_4x32(&m_DK[4*13]), SIMD_4x32(&m_DK[4*14]),
+   };
+
+   return vperm_decrypt_blocks(in, out, blocks, K, 14);
    }
 
 namespace {
