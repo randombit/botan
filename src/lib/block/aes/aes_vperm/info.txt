@@ -3,9 +3,20 @@ AES_VPERM -> 20190901
 </defines>
 
 <isa>
-#neon
-ssse3
+x86_32:sse2
+x86_64:sse2
+x86_32:ssse3
+x86_64:ssse3
+arm32:neon
+arm64:neon
 </isa>
+
+<arch>
+x86_32
+x86_64
+arm32
+arm64
+</arch>
 
 <requires>
 simd
