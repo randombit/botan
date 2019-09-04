@@ -3,6 +3,7 @@ GCM_CLMUL_SSSE3 -> 20171020
 </defines>
 
 <isa>
+sse2
 ssse3
 </isa>
 
