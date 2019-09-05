@@ -90,7 +90,8 @@ class SIMD_4x32 final
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_simd = _mm_loadu_si128(reinterpret_cast<const __m128i*>(B));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         m_simd = (__vector unsigned int){B[0], B[1], B[2], B[3]};
+         __vector unsigned int val = { B[0], B[1], B[2], B[3]};
+         m_simd = val;
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_simd = vld1q_u32(B);
 #else
@@ -109,7 +110,8 @@ class SIMD_4x32 final
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_simd = _mm_set_epi32(B3, B2, B1, B0);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         m_simd = (__vector unsigned int){B0, B1, B2, B3};
+         __vector unsigned int val = {B0, B1, B2, B3};
+         m_simd = val;
 #elif defined(BOTAN_SIMD_USE_NEON)
          // Better way to do this?
          const uint32_t B[4] = { B0, B1, B2, B3 };
@@ -329,7 +331,8 @@ class SIMD_4x32 final
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
          const unsigned int r = static_cast<unsigned int>(ROT);
-         return SIMD_4x32(vec_rl(m_simd, (__vector unsigned int){r, r, r, r}));
+         __vector unsigned int rot = {r, r, r, r};
+         return SIMD_4x32(vec_rl(m_simd, rot));
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
@@ -514,7 +517,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          const unsigned int s = static_cast<unsigned int>(SHIFT);
-         return SIMD_4x32(vec_sl(m_simd, (__vector unsigned int){s, s, s, s}));
+         const __vector unsigned int shifts = {s, s, s, s};
+         return SIMD_4x32(vec_sl(m_simd, shifts));
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vshlq_n_u32(m_simd, SHIFT));
 #else
@@ -532,7 +536,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          const unsigned int s = static_cast<unsigned int>(SHIFT);
-         return SIMD_4x32(vec_sr(m_simd, (__vector unsigned int){s, s, s, s}));
+         const __vector unsigned int shifts = {s, s, s, s};
+         return SIMD_4x32(vec_sr(m_simd, shifts));
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vshrq_n_u32(m_simd, SHIFT));
 #else

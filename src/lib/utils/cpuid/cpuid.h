@@ -70,12 +70,24 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
 
       static bool is_little_endian()
          {
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+         return true;
+#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+         return false;
+#else
          return state().endian_status() == Endian_Status::Little;
+#endif
          }
 
       static bool is_big_endian()
          {
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+         return true;
+#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+         return false;
+#else
          return state().endian_status() == Endian_Status::Big;
+#endif
          }
 
       enum CPUID_bits : uint64_t {
