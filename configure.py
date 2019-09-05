@@ -490,6 +490,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--build-bogo-shim', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--build-extra-targets', default='cli,tests', dest="build_targets",
+                           help="build additional targets and tools (cli, tests, bogo_shim, docs)")
+
     build_group.add_option('--with-pkg-config', action='store_true', default=None,
                            help=optparse.SUPPRESS_HELP)
     build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
@@ -1957,14 +1960,18 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             return path
         return os.path.join(build_dir, path)
 
-    def all_targets():
+    def all_targets(options):
+        targets = [ t.strip().lower() for t in options.build_targets.split(',') ]
         yield 'libs'
-        yield 'cli'
-        yield 'tests'
-        yield 'docs'
+        if 'cli' in targets:
+            yield 'cli'
+        if 'tests' in targets:
+            yield 'tests'
+        if 'docs' in targets:
+            yield 'docs'
         if options.build_fuzzers:
             yield 'fuzzers'
-        if options.build_bogo_shim:
+        if options.build_bogo_shim or 'bogo_shim' in targets:
             yield 'bogo_shim'
 
     variables = {
@@ -1983,7 +1990,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'macos_so_compat_ver': '%s.%s.0' % (Version.packed(), Version.so_rev()),
         'macos_so_current_ver': '%s.%s.%s' % (Version.packed(), Version.so_rev(), Version.patch()),
 
-        'all_targets': ' '.join(all_targets()),
+        'all_targets': ' '.join(all_targets(options)),
 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
