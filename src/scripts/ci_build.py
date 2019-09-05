@@ -206,6 +206,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
                 flags += ['--cpu=mips64', '--with-endian=big']
                 cc_bin = 'mips64-linux-gnuabi64-g++'
                 test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/']
+                test_cmd.remove('simd_32') # no SIMD on MIPS
             else:
                 raise Exception("Unknown cross target '%s' for Linux" % (target))
     else:

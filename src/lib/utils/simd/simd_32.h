@@ -1,6 +1,6 @@
 /*
 * Lightweight wrappers for SIMD operations
-* (C) 2009,2011,2016,2017 Jack Lloyd
+* (C) 2009,2011,2016,2017,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,26 +9,26 @@
 #define BOTAN_SIMD_32_H_
 
 #include <botan/types.h>
-#include <botan/loadstor.h>
-#include <botan/bswap.h>
-#include <botan/cpuid.h>
 
 #if defined(BOTAN_TARGET_SUPPORTS_SSE2)
   #include <emmintrin.h>
   #define BOTAN_SIMD_USE_SSE2
 
 #elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
+  #include <botan/bswap.h>
+  #include <botan/loadstor.h>
   #include <altivec.h>
   #undef vector
   #undef bool
   #define BOTAN_SIMD_USE_ALTIVEC
 
 #elif defined(BOTAN_TARGET_SUPPORTS_NEON)
+  #include <botan/cpuid.h>
   #include <arm_neon.h>
   #define BOTAN_SIMD_USE_NEON
 
 #else
-  #include <botan/rotate.h>
+  #error "No SIMD instruction set enabled"
 #endif
 
 namespace Botan {
@@ -39,8 +39,6 @@ namespace Botan {
    typedef __vector unsigned int native_simd_type;
 #elif defined(BOTAN_SIMD_USE_NEON)
    typedef uint32x4_t native_simd_type;
-#else
-   typedef struct { uint32_t val[4]; } native_simd_type;
 #endif
 
 /**
@@ -74,11 +72,6 @@ class SIMD_4x32 final
          m_simd = vec_splat_u32(0);
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_simd = vdupq_n_u32(0);
-#else
-         m_simd.val[0] = 0;
-         m_simd.val[1] = 0;
-         m_simd.val[2] = 0;
-         m_simd.val[3] = 0;
 #endif
          }
 
@@ -94,11 +87,6 @@ class SIMD_4x32 final
          m_simd = val;
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_simd = vld1q_u32(B);
-#else
-         m_simd.val[0] = B[0];
-         m_simd.val[1] = B[1];
-         m_simd.val[2] = B[2];
-         m_simd.val[3] = B[3];
 #endif
          }
 
@@ -116,11 +104,6 @@ class SIMD_4x32 final
          // Better way to do this?
          const uint32_t B[4] = { B0, B1, B2, B3 };
          m_simd = vld1q_u32(B);
-#else
-         m_simd.val[0] = B0;
-         m_simd.val[1] = B1;
-         m_simd.val[2] = B2;
-         m_simd.val[3] = B3;
 #endif
          }
 
@@ -131,7 +114,7 @@ class SIMD_4x32 final
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_set1_epi32(B));
-#elif defined(BOTAN_SIMD_USE_ARM)
+#elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vdupq_n_u32(B));
 #else
          return SIMD_4x32(B, B, B, B);
@@ -145,8 +128,8 @@ class SIMD_4x32 final
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_set1_epi8(B));
-#elif defined(BOTAN_SIMD_USE_ARM)
-         return SIMD_4x32(vdupq_n_u8(B));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_4x32(vreinterpretq_u32_u8(vdupq_n_u8(B)));
 #else
          const uint32_t B4 = make_uint32(B, B, B, B);
          return SIMD_4x32(B4, B4, B4, B4);
@@ -161,27 +144,12 @@ class SIMD_4x32 final
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-
          uint32_t R[4];
          Botan::load_le(R, static_cast<const uint8_t*>(in), 4);
          return SIMD_4x32(R);
-
 #elif defined(BOTAN_SIMD_USE_NEON)
-
          SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
-
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-         return l.bswap();
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-         return l;
-#else
          return CPUID::is_big_endian() ? l.bswap() : l;
-#endif
-
-#else
-         SIMD_4x32 out;
-         Botan::load_le(out.m_simd.val, static_cast<const uint8_t*>(in), 4);
-         return out;
 #endif
          }
 
@@ -199,21 +167,8 @@ class SIMD_4x32 final
          return SIMD_4x32(R);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
-
          SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
-
-#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-         return l.bswap();
-#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-         return l;
-#else
          return CPUID::is_little_endian() ? l.bswap() : l;
-#endif
-
-#else
-         SIMD_4x32 out;
-         Botan::load_be(out.m_simd.val, static_cast<const uint8_t*>(in), 4);
-         return out;
 #endif
          }
 
@@ -241,12 +196,6 @@ class SIMD_4x32 final
          Botan::store_le(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
-
-#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-         vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
-#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-         vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
-#else
          if(CPUID::is_little_endian())
             {
             vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
@@ -255,10 +204,6 @@ class SIMD_4x32 final
             {
             vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
             }
-#endif
-
-#else
-         Botan::store_le(out, m_simd.val[0], m_simd.val[1], m_simd.val[2], m_simd.val[3]);
 #endif
          }
 
@@ -281,12 +226,6 @@ class SIMD_4x32 final
          Botan::store_be(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
-
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-         vst1q_u8(out, vreinterpretq_u8_u32(m_simd);
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-         vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
-#else
          if(CPUID::is_little_endian())
             {
             vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
@@ -295,10 +234,6 @@ class SIMD_4x32 final
             {
             vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
             }
-#endif
-
-#else
-         Botan::store_be(out, m_simd.val[0], m_simd.val[1], m_simd.val[2], m_simd.val[3]);
 #endif
          }
 
@@ -336,12 +271,7 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
-         #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
-
-         return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_simd, static_cast<int>(ROT)),
-                                    vshrq_n_u32(m_simd, static_cast<int>(32-ROT))));
-
-         #else
+#if defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
          BOTAN_IF_CONSTEXPR(ROT == 8)
             {
@@ -353,19 +283,9 @@ class SIMD_4x32 final
             {
             return SIMD_4x32(vreinterpretq_u32_u16(vrev32q_u16(vreinterpretq_u16_u32(m_simd))));
             }
-         else
-            {
-            return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_simd, static_cast<int>(ROT)),
-                                       vshrq_n_u32(m_simd, static_cast<int>(32-ROT))));
-            }
-
-         #endif
-
-#else
-         return SIMD_4x32(Botan::rotl<ROT>(m_simd.val[0]),
-                          Botan::rotl<ROT>(m_simd.val[1]),
-                          Botan::rotl<ROT>(m_simd.val[2]),
-                          Botan::rotl<ROT>(m_simd.val[3]));
+#endif
+         return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_simd, static_cast<int>(ROT)),
+                                    vshrq_n_u32(m_simd, static_cast<int>(32-ROT))));
 #endif
          }
 
@@ -436,11 +356,6 @@ class SIMD_4x32 final
          m_simd = vec_add(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_simd = vaddq_u32(m_simd, other.m_simd);
-#else
-         m_simd.val[0] += other.m_simd.val[0];
-         m_simd.val[1] += other.m_simd.val[1];
-         m_simd.val[2] += other.m_simd.val[2];
-         m_simd.val[3] += other.m_simd.val[3];
 #endif
          }
 
@@ -452,11 +367,6 @@ class SIMD_4x32 final
          m_simd = vec_sub(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_simd = vsubq_u32(m_simd, other.m_simd);
-#else
-         m_simd.val[0] -= other.m_simd.val[0];
-         m_simd.val[1] -= other.m_simd.val[1];
-         m_simd.val[2] -= other.m_simd.val[2];
-         m_simd.val[3] -= other.m_simd.val[3];
 #endif
          }
 
@@ -469,11 +379,6 @@ class SIMD_4x32 final
          m_simd = vec_xor(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_simd = veorq_u32(m_simd, other.m_simd);
-#else
-         m_simd.val[0] ^= other.m_simd.val[0];
-         m_simd.val[1] ^= other.m_simd.val[1];
-         m_simd.val[2] ^= other.m_simd.val[2];
-         m_simd.val[3] ^= other.m_simd.val[3];
 #endif
          }
 
@@ -485,11 +390,6 @@ class SIMD_4x32 final
          m_simd = vec_or(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_simd = vorrq_u32(m_simd, other.m_simd);
-#else
-         m_simd.val[0] |= other.m_simd.val[0];
-         m_simd.val[1] |= other.m_simd.val[1];
-         m_simd.val[2] |= other.m_simd.val[2];
-         m_simd.val[3] |= other.m_simd.val[3];
 #endif
          }
 
@@ -501,11 +401,6 @@ class SIMD_4x32 final
          m_simd = vec_and(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_simd = vandq_u32(m_simd, other.m_simd);
-#else
-         m_simd.val[0] &= other.m_simd.val[0];
-         m_simd.val[1] &= other.m_simd.val[1];
-         m_simd.val[2] &= other.m_simd.val[2];
-         m_simd.val[3] &= other.m_simd.val[3];
 #endif
          }
 
@@ -521,11 +416,6 @@ class SIMD_4x32 final
          return SIMD_4x32(vec_sl(m_simd, shifts));
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vshlq_n_u32(m_simd, SHIFT));
-#else
-         return SIMD_4x32(m_simd.val[0] << SHIFT,
-                          m_simd.val[1] << SHIFT,
-                          m_simd.val[2] << SHIFT,
-                          m_simd.val[3] << SHIFT);
 #endif
          }
 
@@ -540,10 +430,6 @@ class SIMD_4x32 final
          return SIMD_4x32(vec_sr(m_simd, shifts));
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vshrq_n_u32(m_simd, SHIFT));
-#else
-         return SIMD_4x32(m_simd.val[0] >> SHIFT, m_simd.val[1] >> SHIFT,
-                          m_simd.val[2] >> SHIFT, m_simd.val[3] >> SHIFT);
-
 #endif
          }
 
@@ -555,8 +441,6 @@ class SIMD_4x32 final
          return SIMD_4x32(vec_nor(m_simd, m_simd));
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vmvnq_u32(m_simd));
-#else
-         return SIMD_4x32(~m_simd.val[0], ~m_simd.val[1], ~m_simd.val[2], ~m_simd.val[3]);
 #endif
          }
 
@@ -574,11 +458,6 @@ class SIMD_4x32 final
 #elif defined(BOTAN_SIMD_USE_NEON)
          // NEON is also a & ~b
          return SIMD_4x32(vbicq_u32(other.m_simd, m_simd));
-#else
-         return SIMD_4x32((~m_simd.val[0]) & other.m_simd.val[0],
-                          (~m_simd.val[1]) & other.m_simd.val[1],
-                          (~m_simd.val[2]) & other.m_simd.val[2],
-                          (~m_simd.val[3]) & other.m_simd.val[3]);
 #endif
          }
 
@@ -606,15 +485,7 @@ class SIMD_4x32 final
          return SIMD_4x32(vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
-
          return SIMD_4x32(vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(m_simd))));
-
-#else
-         // scalar
-         return SIMD_4x32(reverse_bytes(m_simd.val[0]),
-                          reverse_bytes(m_simd.val[1]),
-                          reverse_bytes(m_simd.val[2]),
-                          reverse_bytes(m_simd.val[3]));
 #endif
          }
 
@@ -644,10 +515,8 @@ class SIMD_4x32 final
          B1.m_simd = vec_mergel(T0, T1);
          B2.m_simd = vec_mergeh(T2, T3);
          B3.m_simd = vec_mergel(T2, T3);
-#elif defined(BOTAN_SIMD_USE_NEON)
 
-#if defined(BOTAN_TARGET_ARCH_IS_ARM32)
-
+#elif defined(BOTAN_SIMD_USE_NEON) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
          const uint32x4x2_t T0 = vzipq_u32(B0.m_simd, B2.m_simd);
          const uint32x4x2_t T1 = vzipq_u32(B1.m_simd, B3.m_simd);
          const uint32x4x2_t O0 = vzipq_u32(T0.val[0], T1.val[0]);
@@ -658,31 +527,16 @@ class SIMD_4x32 final
          B2.m_simd = O1.val[0];
          B3.m_simd = O1.val[1];
 
-#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+#elif defined(BOTAN_SIMD_USE_NEON) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
          const uint32x4_t T0 = vzip1q_u32(B0.m_simd, B2.m_simd);
          const uint32x4_t T2 = vzip2q_u32(B0.m_simd, B2.m_simd);
-
          const uint32x4_t T1 = vzip1q_u32(B1.m_simd, B3.m_simd);
          const uint32x4_t T3 = vzip2q_u32(B1.m_simd, B3.m_simd);
 
          B0.m_simd = vzip1q_u32(T0, T1);
          B1.m_simd = vzip2q_u32(T0, T1);
-
          B2.m_simd = vzip1q_u32(T2, T3);
          B3.m_simd = vzip2q_u32(T2, T3);
-#endif
-
-#else
-         // scalar
-         SIMD_4x32 T0(B0.m_simd.val[0], B1.m_simd.val[0], B2.m_simd.val[0], B3.m_simd.val[0]);
-         SIMD_4x32 T1(B0.m_simd.val[1], B1.m_simd.val[1], B2.m_simd.val[1], B3.m_simd.val[1]);
-         SIMD_4x32 T2(B0.m_simd.val[2], B1.m_simd.val[2], B2.m_simd.val[2], B3.m_simd.val[2]);
-         SIMD_4x32 T3(B0.m_simd.val[3], B1.m_simd.val[3], B2.m_simd.val[3], B3.m_simd.val[3]);
-
-         B0 = T0;
-         B1 = T1;
-         B2 = T2;
-         B3 = T3;
 #endif
          }
 
