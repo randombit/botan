@@ -35,6 +35,10 @@ Version 2.12.0, Not Yet Released
 
 * Modifications to support GOST 34.10-2012 signatures (GH #2055 #2056 #1860 #1897)
 
+* Add support for constant time AES using NEON (GH #2093 #2095)
+
+* Improve performance of POWER8 AES instructions (GH #2096)
+
 * The BearSSL provider has been removed (GH #2020)
 
 * Add support for 64-bit version of RDRAND, doubling performance on x86-64 (GH #934 #2022)
