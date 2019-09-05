@@ -4,6 +4,7 @@ SHA1_X86_SHA_NI -> 20170518
 
 <isa>
 sha
+sse2
 ssse3
 sse41
 </isa>

@@ -167,7 +167,15 @@ class SIMD_4x32 final
 #elif defined(BOTAN_SIMD_USE_NEON)
 
          SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
+
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+         return l.bswap();
+#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+         return l;
+#else
          return CPUID::is_big_endian() ? l.bswap() : l;
+#endif
+
 #else
          SIMD_4x32 out;
          Botan::load_le(out.m_simd.val, static_cast<const uint8_t*>(in), 4);
@@ -181,11 +189,9 @@ class SIMD_4x32 final
       static SIMD_4x32 load_be(const void* in)
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
-
          return load_le(in).bswap();
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-
          uint32_t R[4];
          Botan::load_be(R, static_cast<const uint8_t*>(in), 4);
          return SIMD_4x32(R);
@@ -193,7 +199,14 @@ class SIMD_4x32 final
 #elif defined(BOTAN_SIMD_USE_NEON)
 
          SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
+
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+         return l.bswap();
+#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+         return l;
+#else
          return CPUID::is_little_endian() ? l.bswap() : l;
+#endif
 
 #else
          SIMD_4x32 out;
@@ -214,7 +227,7 @@ class SIMD_4x32 final
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
 
-         _mm_storeu_si128(reinterpret_cast<__m128i*>(out), m_simd);
+         _mm_storeu_si128(reinterpret_cast<__m128i*>(out), raw());
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
@@ -222,19 +235,26 @@ class SIMD_4x32 final
             __vector unsigned int V;
             uint32_t R[4];
             } vec;
-         vec.V = m_simd;
+         vec.V = raw();
          Botan::store_le(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
-         if(CPUID::is_big_endian())
-            {
-            bswap().store_le(out);
-            }
-         else
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+         vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
+#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+         vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
+#else
+         if(CPUID::is_little_endian())
             {
             vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
             }
+         else
+            {
+            vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
+            }
+#endif
+
 #else
          Botan::store_le(out, m_simd.val[0], m_simd.val[1], m_simd.val[2], m_simd.val[3]);
 #endif
@@ -260,14 +280,20 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+         vst1q_u8(out, vreinterpretq_u8_u32(m_simd);
+#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+         vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
+#else
          if(CPUID::is_little_endian())
             {
-            bswap().store_le(out);
+            vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
             }
          else
             {
             vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
             }
+#endif
 
 #else
          Botan::store_be(out, m_simd.val[0], m_simd.val[1], m_simd.val[2], m_simd.val[3]);

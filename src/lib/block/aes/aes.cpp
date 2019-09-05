@@ -456,13 +456,6 @@ const char* aes_provider()
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
-      {
-      return "ssse3";
-      }
-#endif
-
 #if defined(BOTAN_HAS_AES_POWER8)
    if(CPUID::has_ppc_crypto())
       {
@@ -474,6 +467,13 @@ const char* aes_provider()
    if(CPUID::has_arm_aes())
       {
       return "armv8";
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return "vperm";
       }
 #endif
 
@@ -501,13 +501,6 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
-      {
-      return ssse3_encrypt_n(in, out, blocks);
-      }
-#endif
-
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
@@ -519,6 +512,13 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ppc_crypto())
       {
       return power8_encrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_encrypt_n(in, out, blocks);
       }
 #endif
 
@@ -536,13 +536,6 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
-      {
-      return ssse3_decrypt_n(in, out, blocks);
-      }
-#endif
-
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
@@ -554,6 +547,13 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ppc_crypto())
       {
       return power8_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -569,10 +569,24 @@ void AES_128::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
       {
-      return ssse3_key_schedule(key, length);
+      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_POWER8)
+   if(CPUID::has_ppc_crypto())
+      {
+      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_key_schedule(key, length);
       }
 #endif
 
@@ -598,13 +612,6 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
-      {
-      return ssse3_encrypt_n(in, out, blocks);
-      }
-#endif
-
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
@@ -616,6 +623,13 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ppc_crypto())
       {
       return power8_encrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_encrypt_n(in, out, blocks);
       }
 #endif
 
@@ -633,13 +647,6 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
-      {
-      return ssse3_decrypt_n(in, out, blocks);
-      }
-#endif
-
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
@@ -651,6 +658,13 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ppc_crypto())
       {
       return power8_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -666,10 +680,24 @@ void AES_192::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
       {
-      return ssse3_key_schedule(key, length);
+      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_POWER8)
+   if(CPUID::has_ppc_crypto())
+      {
+      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_key_schedule(key, length);
       }
 #endif
 
@@ -695,13 +723,6 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
-      {
-      return ssse3_encrypt_n(in, out, blocks);
-      }
-#endif
-
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
@@ -713,6 +734,13 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ppc_crypto())
       {
       return power8_encrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_encrypt_n(in, out, blocks);
       }
 #endif
 
@@ -730,13 +758,6 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
-      {
-      return ssse3_decrypt_n(in, out, blocks);
-      }
-#endif
-
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
@@ -748,6 +769,13 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ppc_crypto())
       {
       return power8_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -763,10 +791,24 @@ void AES_256::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-   if(CPUID::has_ssse3())
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
       {
-      return ssse3_key_schedule(key, length);
+      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_POWER8)
+   if(CPUID::has_ppc_crypto())
+      {
+      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return vperm_key_schedule(key, length);
       }
 #endif
 

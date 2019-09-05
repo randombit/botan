@@ -8,6 +8,7 @@ shacal2
 
 <isa>
 sha
+sse2
 ssse3
 </isa>
 

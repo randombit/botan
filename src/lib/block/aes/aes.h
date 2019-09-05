@@ -31,10 +31,10 @@ class BOTAN_PUBLIC_API(2,0) AES_128 final : public Block_Cipher_Fixed_Params<16,
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-      void ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
-      void ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
-      void ssse3_key_schedule(const uint8_t key[], size_t length);
+#if defined(BOTAN_HAS_AES_VPERM)
+      void vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void vperm_key_schedule(const uint8_t key[], size_t length);
 #endif
 
 #if defined(BOTAN_HAS_AES_NI)
@@ -74,10 +74,10 @@ class BOTAN_PUBLIC_API(2,0) AES_192 final : public Block_Cipher_Fixed_Params<16,
       size_t parallelism() const override;
 
    private:
-#if defined(BOTAN_HAS_AES_SSSE3)
-      void ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
-      void ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
-      void ssse3_key_schedule(const uint8_t key[], size_t length);
+#if defined(BOTAN_HAS_AES_VPERM)
+      void vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void vperm_key_schedule(const uint8_t key[], size_t length);
 #endif
 
 #if defined(BOTAN_HAS_AES_NI)
@@ -120,10 +120,10 @@ class BOTAN_PUBLIC_API(2,0) AES_256 final : public Block_Cipher_Fixed_Params<16,
       size_t parallelism() const override;
 
    private:
-#if defined(BOTAN_HAS_AES_SSSE3)
-      void ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
-      void ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
-      void ssse3_key_schedule(const uint8_t key[], size_t length);
+#if defined(BOTAN_HAS_AES_VPERM)
+      void vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void vperm_key_schedule(const uint8_t key[], size_t length);
 #endif
 
 #if defined(BOTAN_HAS_AES_NI)

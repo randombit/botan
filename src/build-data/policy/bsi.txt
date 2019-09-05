@@ -51,7 +51,7 @@ hmac_drbg
 <if_available>
 # block
 aes_ni
-aes_ssse3
+aes_vperm
 aes_armv8
 aes_power8
 

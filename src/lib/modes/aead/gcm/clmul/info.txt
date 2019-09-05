@@ -3,6 +3,8 @@ GCM_CLMUL -> 20131227
 </defines>
 
 <isa>
+sse2
+ssse3
 aesni
 </isa>
 

@@ -901,8 +901,17 @@ class ModuleInfo(InfoObject):
             if supp_arch not in arch_info:
                 raise InternalError('Module %s mentions unknown arch %s' % (self.infofile, supp_arch))
 
+        def known_isa(isa):
+            if isa in all_isa_extn:
+                return True
+
+            compound_isa = isa.split(':')
+            if len(compound_isa) == 2 and compound_isa[0] in arch_info and compound_isa[1] in all_isa_extn:
+                return True
+            return False
+
         for isa in self.isa:
-            if isa not in all_isa_extn:
+            if not known_isa(isa):
                 raise InternalError('Module %s uses unknown ISA extension %s' % (self.infofile, isa))
 
     def sources(self):
@@ -917,6 +926,17 @@ class ModuleInfo(InfoObject):
     def external_headers(self):
         return self.header_external
 
+    def isas_needed(self, arch):
+        isas = []
+
+        for isa in self.isa:
+            if isa.find(':') == -1:
+                isas.append(isa)
+            elif isa.startswith(arch + ':'):
+                isas.append(isa[len(arch)+1:])
+
+        return isas
+
     def defines(self):
         return [(key + ' ' + value) for key, value in self._defines.items()]
 
@@ -925,6 +945,12 @@ class ModuleInfo(InfoObject):
         cpu_name = options.cpu
 
         for isa in self.isa:
+            if isa.find(':') > 0:
+                (arch, isa) = isa.split(':')
+
+                if arch != arch_name:
+                    continue
+
             if isa in options.disable_intrinsics:
                 return False # explicitly disabled
 
@@ -1182,11 +1208,19 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 raise InternalError("Compiler %s has so_link_command for unknown OS %s" % (self.infofile, os_name))
 
     def isa_flags_for(self, isa, arch):
+        if isa.find(':') > 0:
+            (isa_arch, isa) = isa.split(':')
+            if isa_arch != arch:
+                return ''
+            if isa in self.isa_flags:
+                return self.isa_flags[isa]
+
         if isa in self.isa_flags:
             return self.isa_flags[isa]
         arch_isa = '%s:%s' % (arch, isa)
         if arch_isa in self.isa_flags:
             return self.isa_flags[arch_isa]
+
         return None
 
     def get_isa_specific_flags(self, isas, arch, options):
@@ -1734,7 +1768,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
         if src in module_that_owns:
             module = module_that_owns[src]
-            isas = module.isa
+            isas = module.isas_needed(arch.basename)
             if 'simd' in module.dependencies(osinfo):
                 isas.append('simd')
 
@@ -2190,10 +2224,6 @@ class ModulesChooser(object):
         sorted_modules_to_load = sorted(modules_to_load)
 
         for modname in sorted_modules_to_load:
-            if modname.startswith('simd_') and modname != 'simd_engine':
-                logging.info('Using SIMD module ' + modname)
-
-        for modname in sorted_modules_to_load:
             if all_modules[modname].comment:
                 logging.info('%s: %s' % (modname, all_modules[modname].comment))
             if all_modules[modname].warning:
@@ -2615,8 +2645,9 @@ class AmalgamationGenerator(object):
     def _target_for_module(self, mod):
         target = ''
         if not self._options.single_amalgamation_file:
-            if mod.isa != []:
-                target = '_'.join(sorted(mod.isa))
+            isas = mod.isas_needed(self._options.arch)
+            if isas != []:
+                target = '_'.join(sorted(isas))
                 if target == 'sse2' and self._options.arch == 'x86_64':
                     target = '' # SSE2 is always available on x86-64
 
@@ -2629,9 +2660,9 @@ class AmalgamationGenerator(object):
             # Only first module for target is considered. Does this make sense?
             if self._target_for_module(mod) == target:
                 out = set()
-                for isa in mod.isa:
+                for isa in mod.isas_needed(self._options.arch):
                     if isa == 'aesni':
-                        isa = "aes,ssse3,pclmul"
+                        isa = "aes,pclmul"
                     elif isa == 'rdrand':
                         isa = 'rdrnd'
                     out.add(isa)
@@ -3331,7 +3362,7 @@ def main(argv):
         cc_arch = check_compiler_arch(options, cc, info_arch, source_paths)
 
         if cc_arch is not None and cc_arch != options.arch:
-            logging.warning("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
+            logging.error("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
     else:
         cc_min_version = options.cc_min_version or "0.0"
 

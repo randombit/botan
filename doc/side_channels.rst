@@ -244,12 +244,11 @@ Some x86, ARMv8 and POWER processors support AES instructions which
 are fast and are thought to be side channel silent. These instructions
 are used when available.
 
-On x86 processors without AES-NI but with SSSE3 (which includes older Intel
-Atoms and Core2 Duos, and even now some embedded or low power x86 chips), a
-version of AES using pshufb is used which is both fast and side channel silent.
-It is based on code by Mike Hamburg [VectorAes], see aes_ssse3.cpp. This same
-technique could be applied with NEON or AltiVec, and the paper suggests some
-optimizations for the AltiVec shuffle.
+On CPUs which do not have hardware AES instructions but do support SIMD vectors
+with a byte shuffle (including x86's SSSE3 and ARM's NEON), a version of AES is
+implemented which is side channel silent. This version is based on code by Mike
+Hamburg [VectorAes], see aes_vperm.cpp. This same technique could be applied
+with AltiVec, and the paper suggests some optimizations for the AltiVec shuffle.
 
 On all other processors, a table lookup version (T-tables) is used.  This
 approach is relatively fast, but known to be very vulnerable to side
