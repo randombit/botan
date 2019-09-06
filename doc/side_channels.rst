@@ -333,7 +333,8 @@ Hash Functions
 
 Most hash functions included in Botan such as MD5, SHA-1, SHA-2, SHA-3, Skein,
 and BLAKE2 do not require any input-dependent memory lookups, and so seem to not be
-affected by common CPU side channels.
+affected by common CPU side channels. However the implementations of Whirlpool
+and Streebog use table lookups and probably can be attacked by side channels.
 
 Memory comparisons
 ----------------------
