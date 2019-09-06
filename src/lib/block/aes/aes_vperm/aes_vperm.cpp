@@ -105,17 +105,15 @@ const SIMD_4x32 rcon[10] = {
    SIMD_4x32(0x00000083, 0x00000000, 0x00000000, 0x00000000),
 };
 
-const SIMD_4x32 lo_nibs_mask = SIMD_4x32::splat_u8(0x0F);
-const SIMD_4x32 hi_nibs_mask = SIMD_4x32::splat_u8(0xF0);
-const SIMD_4x32 xor_5B = SIMD_4x32::splat_u8(0x5B);
-
 inline SIMD_4x32 low_nibs(SIMD_4x32 x)
    {
+   const SIMD_4x32 lo_nibs_mask = SIMD_4x32::splat_u8(0x0F);
    return lo_nibs_mask & x;
    }
 
 inline SIMD_4x32 high_nibs(SIMD_4x32 x)
    {
+   const SIMD_4x32 hi_nibs_mask = SIMD_4x32::splat_u8(0xF0);
    return (hi_nibs_mask & x).shr<4>();
    }
 
@@ -418,7 +416,7 @@ SIMD_4x32 aes_schedule_mangle(SIMD_4x32 k, uint8_t round_no)
    const SIMD_4x32 mc_forward0(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D);
    const SIMD_4x32 srx(sr[round_no % 4]);
 
-   SIMD_4x32 t = shuffle(k ^ xor_5B, mc_forward0);
+   SIMD_4x32 t = shuffle(k ^ SIMD_4x32::splat_u8(0x5B), mc_forward0);
    SIMD_4x32 t2 = t;
    t = shuffle(t, mc_forward0);
    t2 = t ^ t2 ^ shuffle(t, mc_forward0);
@@ -461,7 +459,7 @@ SIMD_4x32 aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
    const SIMD_4x32 out_tr2(0x50BCEC00, 0x01EDBD51, 0xB05C0CE0, 0xE10D5DB1);
 
    k = shuffle(k, sr[round_no % 4]);
-   k ^= xor_5B;
+   k ^= SIMD_4x32::splat_u8(0x5B);
    return aes_schedule_transform(k, out_tr1, out_tr2);
    }
 
@@ -470,7 +468,7 @@ SIMD_4x32 aes_schedule_mangle_last_dec(SIMD_4x32 k)
    const SIMD_4x32 deskew1(0x47A4E300, 0x07E4A340, 0x5DBEF91A, 0x1DFEB95A);
    const SIMD_4x32 deskew2(0x83EA6900, 0x5F36B5DC, 0xF49D1E77, 0x2841C2AB);
 
-   k ^= xor_5B;
+   k ^= SIMD_4x32::splat_u8(0x5B);
    return aes_schedule_transform(k, deskew1, deskew2);
    }
 
@@ -478,20 +476,17 @@ SIMD_4x32 aes_schedule_round(SIMD_4x32 input1, SIMD_4x32 input2)
    {
    SIMD_4x32 smeared = input2 ^ shift_elems_left<1>(input2);
    smeared ^= shift_elems_left<2>(smeared);
-   smeared ^= xor_5B;
+   smeared ^= SIMD_4x32::splat_u8(0x5B);
 
-   SIMD_4x32 t = high_nibs(input1);
-   input1 = low_nibs(input1);
+   const SIMD_4x32 Bh = high_nibs(input1);
+   SIMD_4x32 Bl = low_nibs(input1);
 
-   SIMD_4x32 t2 = shuffle(k_inv2, input1);
+   const SIMD_4x32 t2 = shuffle(k_inv2, Bl);
 
-   input1 ^= t;
+   Bl ^= Bh;
 
-   SIMD_4x32 t3 = t2 ^ shuffle(k_inv1, t);
-   SIMD_4x32 t4 = t2 ^ shuffle(k_inv1, input1);
-
-   SIMD_4x32 t5 = input1 ^ shuffle(k_inv1, t3);
-   SIMD_4x32 t6 = t ^ shuffle(k_inv1, t4);
+   SIMD_4x32 t5 = Bl ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
 
    return smeared ^ shuffle(sb1u, t5) ^ shuffle(sb1t, t6);
    }
