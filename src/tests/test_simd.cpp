@@ -10,6 +10,8 @@
    #include <botan/internal/simd_32.h>
    #include <botan/cpuid.h>
    #include <botan/rotate.h>
+   #include <botan/loadstor.h>
+   #include <botan/bswap.h>
 #endif
 
 namespace Botan_Tests {
