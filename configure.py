@@ -1961,7 +1961,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         return os.path.join(build_dir, path)
 
     def all_targets(options):
-        targets = [ t.strip().lower() for t in options.build_targets.split(',') ]
+        targets = [t.strip().lower() for t in options.build_targets.split(',')]
         yield 'libs'
         if 'cli' in targets:
             yield 'cli'
