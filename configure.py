@@ -799,7 +799,8 @@ class ModuleInfo(InfoObject):
              'os_features', 'arch', 'isa', 'cc', 'comment', 'warning'],
             ['defines', 'libs', 'frameworks'],
             {
-                'load_on': 'auto'
+                'load_on': 'auto',
+                'endian': 'any',
             })
 
         def check_header_duplicates(header_list_public, header_list_internal):
@@ -852,6 +853,7 @@ class ModuleInfo(InfoObject):
         self.os_features = lex.os_features
         self.requires = lex.requires
         self.warning = combine_lines(lex.warning)
+        self.endian = lex.endian
 
         # Modify members
         self.source = [normalize_source_path(os.path.join(self.lives_in, s)) for s in self.source]
@@ -943,6 +945,10 @@ class ModuleInfo(InfoObject):
     def compatible_cpu(self, archinfo, options):
         arch_name = archinfo.basename
         cpu_name = options.cpu
+
+        if self.endian != 'any':
+            if self.endian != options.with_endian:
+                return False
 
         for isa in self.isa:
             if isa.find(':') > 0:
@@ -1935,19 +1941,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         return osinfo.ar_command
 
-    def choose_endian(arch_info, options):
-        if options.with_endian is not None:
-            return options.with_endian
-
-        if options.cpu.endswith('eb') or options.cpu.endswith('be'):
-            return 'big'
-        elif options.cpu.endswith('el') or options.cpu.endswith('le'):
-            return 'little'
-
-        if arch_info.endian:
-            logging.info('Defaulting to assuming %s endian', arch_info.endian)
-        return arch_info.endian
-
     build_dir = options.with_build_dir or os.path.curdir
     program_suffix = options.program_suffix or osinfo.program_suffix
 
@@ -2050,7 +2043,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'os': options.os,
         'arch': options.arch,
         'cpu_family': arch.family,
-        'endian': choose_endian(arch, options),
+        'endian': options.with_endian,
         'cpu_is_64bit': arch.wordsize == 64,
 
         'bakefile_arch': 'x86' if options.arch == 'x86_32' else 'x86_64',
@@ -3300,7 +3293,7 @@ def main(argv):
     Main driver
     """
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-statements
 
     options = process_command_line(argv[1:])
 
@@ -3368,6 +3361,21 @@ def main(argv):
 
     logging.info('Target is %s:%s-%s-%s' % (
         options.compiler, cc_min_version, options.os, options.arch))
+
+    def choose_endian(arch_info, options):
+        if options.with_endian is not None:
+            return options.with_endian
+
+        if options.cpu.endswith('eb') or options.cpu.endswith('be'):
+            return 'big'
+        elif options.cpu.endswith('el') or options.cpu.endswith('le'):
+            return 'little'
+
+        if arch_info.endian:
+            logging.info('Assuming target %s is %s endian', arch_info.basename, arch_info.endian)
+        return arch_info.endian
+
+    options.with_endian = choose_endian(arch, options)
 
     chooser = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options)
     loaded_module_names = chooser.choose()

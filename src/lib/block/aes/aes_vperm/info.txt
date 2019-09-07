@@ -2,6 +2,8 @@
 AES_VPERM -> 20190901
 </defines>
 
+endian little
+
 <isa>
 x86_32:sse2
 x86_64:sse2
