@@ -13,30 +13,30 @@ compiler:
 
 env:
   global:
-    - CCACHE_MAXSIZE=800M
+    - CCACHE_MAXSIZE=1G
     - ANDROID_NDK=android-ndk-r20
 
   matrix:
-    - BUILD_MODE="shared"
-    - BUILD_MODE="coverage"
-    - BUILD_MODE="fuzzers"
-    - BUILD_MODE="valgrind"
-    - BUILD_MODE="cross-i386"
-    - BUILD_MODE="cross-ppc32"
-    - BUILD_MODE="cross-ppc64"
-    - BUILD_MODE="cross-arm32"
-    - BUILD_MODE="cross-arm64"
-    - BUILD_MODE="cross-mips64"
-    - BUILD_MODE="cross-win64"
-    - BUILD_MODE="cross-android-arm32"
-    - BUILD_MODE="cross-android-arm64"
-    - BUILD_MODE="gcc4.8"
-    - BUILD_MODE="static"
-    - BUILD_MODE="mini-shared"
-    - BUILD_MODE="bsi"
-    - BUILD_MODE="nist"
-    - BUILD_MODE="docs"
-    - BUILD_MODE="lint"
+    - TARGET="shared"
+    - TARGET="coverage"
+    - TARGET="fuzzers"
+    - TARGET="valgrind"
+    - TARGET="cross-i386"
+    - TARGET="cross-ppc32"
+    - TARGET="cross-ppc64"
+    - TARGET="cross-arm32"
+    - TARGET="cross-arm64"
+    - TARGET="cross-mips64"
+    - TARGET="cross-win64"
+    - TARGET="cross-android-arm32"
+    - TARGET="cross-android-arm64"
+    - TARGET="gcc4.8"
+    - TARGET="static"
+    - TARGET="mini-shared"
+    - TARGET="bsi"
+    - TARGET="nist"
+    - TARGET="docs"
+    - TARGET="lint"
 
 matrix:
   exclude:
@@ -46,7 +46,7 @@ matrix:
 
     # XCode 9.4 ICEs on 32-bit ARM builds
     - os: osx
-      env: BUILD_MODE="cross-arm32"
+      env: TARGET="cross-arm32"
 
     # Run static, docs, lint, bsi, nist, fuzzers, coverage, valgrind,
     # sanitizer, minimized and non-ARM cross builds only on Linux/gcc.
@@ -54,62 +54,62 @@ matrix:
     # cause CI timeouts.
 
     - compiler: clang
-      env: BUILD_MODE="static"
+      env: TARGET="static"
     - compiler: clang
-      env: BUILD_MODE="bsi"
+      env: TARGET="bsi"
     - compiler: clang
-      env: BUILD_MODE="nist"
+      env: TARGET="nist"
     - compiler: clang
-      env: BUILD_MODE="lint"
+      env: TARGET="lint"
     - compiler: clang
-      env: BUILD_MODE="docs"
+      env: TARGET="docs"
     - compiler: clang
-      env: BUILD_MODE="coverage"
+      env: TARGET="coverage"
 
     - compiler: clang
-      env: BUILD_MODE="fuzzers"
+      env: TARGET="fuzzers"
     - compiler: clang
-      env: BUILD_MODE="valgrind"
+      env: TARGET="valgrind"
     - compiler: clang
-      env: BUILD_MODE="mini-shared"
+      env: TARGET="mini-shared"
     - compiler: clang
-      env: BUILD_MODE="cross-win64"
+      env: TARGET="cross-win64"
     - compiler: clang
-      env: BUILD_MODE="cross-ppc32"
+      env: TARGET="cross-ppc32"
     - compiler: clang
-      env: BUILD_MODE="cross-ppc64"
+      env: TARGET="cross-ppc64"
     - compiler: clang
-      env: BUILD_MODE="cross-mips64"
+      env: TARGET="cross-mips64"
     - compiler: clang
-      env: BUILD_MODE="cross-i386"
+      env: TARGET="cross-i386"
     - compiler: clang
-      env: BUILD_MODE="gcc4.8"
+      env: TARGET="gcc4.8"
 
    # No ARM Clang compiler on Linux
     - os: linux
       compiler: clang
-      env: BUILD_MODE="cross-arm32"
+      env: TARGET="cross-arm32"
     - os: linux
       compiler: clang
-      env: BUILD_MODE="cross-arm64"
+      env: TARGET="cross-arm64"
 
-   # Android NDK is Linux only
+   # Android NDK is Linux/clang only
     - os: osx
-      env: BUILD_MODE="cross-android-arm32"
+      env: TARGET="cross-android-arm32"
     - os: osx
-      env: BUILD_MODE="cross-android-arm64"
+      env: TARGET="cross-android-arm64"
     - os: linux
       compiler: gcc
-      env: BUILD_MODE="cross-android-arm32"
+      env: TARGET="cross-android-arm32"
     - os: linux
       compiler: gcc
-      env: BUILD_MODE="cross-android-arm64"
+      env: TARGET="cross-android-arm64"
 
 install:
   - ./src/scripts/ci/setup_travis.sh
 
 script:
-  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --without-pylint3 --pkcs11-lib=/usr/lib/softhsm/libsofthsm2.so $BUILD_MODE
+  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --without-pylint3 --pkcs11-lib=/usr/lib/softhsm/libsofthsm2.so $TARGET
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:

@@ -11,51 +11,51 @@ set -ev
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
-    if [ "$BUILD_MODE" = "valgrind" ]; then
+    if [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq update
         sudo apt-get install valgrind
 
-    elif [ "$BUILD_MODE" = "gcc4.8" ]; then
+    elif [ "$TARGET" = "gcc4.8" ]; then
         sudo apt-get -qq update
         sudo apt-get install g++-4.8
 
-    elif [ "$BUILD_MODE" = "cross-i386" ]; then
+    elif [ "$TARGET" = "cross-i386" ]; then
         sudo apt-get -qq update
         sudo apt-get install g++-multilib linux-libc-dev libc6-dev-i386
 
-    elif [ "$BUILD_MODE" = "cross-win64" ]; then
+    elif [ "$TARGET" = "cross-win64" ]; then
         sudo apt-get -qq update
         sudo apt-get install wine g++-mingw-w64-x86-64
 
-    elif [ "$BUILD_MODE" = "cross-arm32" ]; then
+    elif [ "$TARGET" = "cross-arm32" ]; then
         sudo apt-get -qq update
         sudo apt-get install qemu-user g++-arm-linux-gnueabihf
 
-    elif [ "$BUILD_MODE" = "cross-arm64" ]; then
+    elif [ "$TARGET" = "cross-arm64" ]; then
         sudo apt-get -qq update
         sudo apt-get install qemu-user g++-aarch64-linux-gnu
 
-    elif [ "$BUILD_MODE" = "cross-ppc32" ]; then
+    elif [ "$TARGET" = "cross-ppc32" ]; then
         sudo apt-get -qq update
         sudo apt-get install qemu-user g++-powerpc-linux-gnu
 
-    elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
+    elif [ "$TARGET" = "cross-ppc64" ]; then
         sudo apt-get -qq update
         sudo apt-get install qemu-user g++-powerpc64le-linux-gnu
 
-    elif [ "$BUILD_MODE" = "cross-mips64" ]; then
+    elif [ "$TARGET" = "cross-mips64" ]; then
         sudo apt-get -qq update
         sudo apt-get install qemu-user g++-mips64-linux-gnuabi64
 
-    elif [ "$BUILD_MODE" = "cross-android-arm32" ] || [ "$BUILD_MODE" = "cross-android-arm64" ]; then
+    elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ]; then
         wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux-x86_64.zip
         unzip -qq "$ANDROID_NDK"-linux-x86_64.zip
 
-    elif [ "$BUILD_MODE" = "lint" ]; then
+    elif [ "$TARGET" = "lint" ]; then
         sudo apt-get -qq update
         sudo apt-get install pylint
 
-    elif [ "$BUILD_MODE" = "coverage" ]; then
+    elif [ "$TARGET" = "coverage" ]; then
         # need updated softhsm to avoid https://github.com/opendnssec/SoftHSMv2/issues/239
         sudo add-apt-repository -y ppa:pkg-opendnssec/ppa
         sudo apt-get -qq update
@@ -69,7 +69,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
 
-    elif [ "$BUILD_MODE" = "docs" ]; then
+    elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq update
         sudo apt-get install doxygen python-docutils
 
