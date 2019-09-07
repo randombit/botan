@@ -127,19 +127,24 @@ template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
       }
    }
 
-template<typename T> inline void typecast_copy(uint8_t out[], T in)
+template<typename T> inline void typecast_copy(uint8_t out[], T in[], size_t N)
    {
-   std::memcpy(out, &in, sizeof(T));
-   }
-
-template<typename T> inline void typecast_copy(T& out, const uint8_t in[])
-   {
-   std::memcpy(&out, in, sizeof(T));
+   std::memcpy(out, in, sizeof(T)*N);
    }
 
 template<typename T> inline void typecast_copy(T out[], const uint8_t in[], size_t N)
    {
    std::memcpy(out, in, sizeof(T)*N);
+   }
+
+template<typename T> inline void typecast_copy(uint8_t out[], T in)
+   {
+   typecast_copy(out, &in, 1);
+   }
+
+template<typename T> inline void typecast_copy(T& out, const uint8_t in[])
+   {
+   typecast_copy(&out, in, 1);
    }
 
 /**
@@ -203,28 +208,27 @@ inline void xor_buf(uint8_t out[],
                     const uint8_t in[],
                     size_t length)
    {
-   while(length >= 16)
+   const size_t blocks = length - (length % 32);
+
+   for(size_t i = 0; i != blocks; i += 32)
       {
-      uint64_t x0, x1, y0, y1;
+      uint64_t x[4];
+      uint64_t y[4];
 
-      typecast_copy(x0, in);
-      typecast_copy(x1, in + 8);
-      typecast_copy(y0, out);
-      typecast_copy(y1, out + 8);
+      typecast_copy(x, out + i, 4);
+      typecast_copy(y, in + i, 4);
 
-      y0 ^= x0;
-      y1 ^= x1;
-      typecast_copy(out, y0);
-      typecast_copy(out + 8, y1);
-      out += 16; in += 16; length -= 16;
+      x[0] ^= y[0];
+      x[1] ^= y[1];
+      x[2] ^= y[2];
+      x[3] ^= y[3];
+
+      typecast_copy(out + i, x, 4);
       }
 
-   while(length > 0)
+   for(size_t i = blocks; i != length; ++i)
       {
-      out[0] ^= in[0];
-      out += 1;
-      in += 1;
-      length -= 1;
+      out[i] ^= in[i];
       }
    }
 
@@ -240,23 +244,28 @@ inline void xor_buf(uint8_t out[],
                     const uint8_t in2[],
                     size_t length)
    {
-   while(length >= 16)
-      {
-      uint64_t x0, x1, y0, y1;
-      typecast_copy(x0, in);
-      typecast_copy(x1, in + 8);
-      typecast_copy(y0, in2);
-      typecast_copy(y1, in2 + 8);
+   const size_t blocks = length - (length % 32);
 
-      x0 ^= y0;
-      x1 ^= y1;
-      typecast_copy(out, x0);
-      typecast_copy(out + 8, x1);
-      out += 16; in += 16; in2 += 16; length -= 16;
+   for(size_t i = 0; i != blocks; i += 32)
+      {
+      uint64_t x[4];
+      uint64_t y[4];
+
+      typecast_copy(x, in + i, 4);
+      typecast_copy(y, in2 + i, 4);
+
+      x[0] ^= y[0];
+      x[1] ^= y[1];
+      x[2] ^= y[2];
+      x[3] ^= y[3];
+
+      typecast_copy(out + i, x, 4);
       }
 
-   for(size_t i = 0; i != length; ++i)
+   for(size_t i = blocks; i != length; ++i)
+      {
       out[i] = in[i] ^ in2[i];
+      }
    }
 
 template<typename Alloc, typename Alloc2>

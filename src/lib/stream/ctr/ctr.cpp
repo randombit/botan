@@ -141,31 +141,27 @@ void CTR_BE::add_counter(const uint64_t counter)
 
    if(ctr_size == 4)
       {
-      size_t off = (BS - 4);
-      uint32_t low32 = static_cast<uint32_t>(counter + load_be<uint32_t>(&m_counter[off], 0));
+      const size_t off = (BS - 4);
+      const uint32_t low32 = static_cast<uint32_t>(counter + load_be<uint32_t>(&m_counter[off], 0));
 
       for(size_t i = 0; i != ctr_blocks; ++i)
          {
-         store_be(low32, &m_counter[off]);
-         off += BS;
-         low32 += 1;
+         store_be(uint32_t(low32 + i), &m_counter[i*BS+off]);
          }
       }
    else if(ctr_size == 8)
       {
-      size_t off = (BS - 8);
-      uint64_t low64 = counter + load_be<uint64_t>(&m_counter[off], 0);
+      const size_t off = (BS - 8);
+      const uint64_t low64 = counter + load_be<uint64_t>(&m_counter[off], 0);
 
       for(size_t i = 0; i != ctr_blocks; ++i)
          {
-         store_be(low64, &m_counter[off]);
-         off += BS;
-         low64 += 1;
+         store_be(uint64_t(low64 + i), &m_counter[i*BS+off]);
          }
       }
    else if(ctr_size == 16)
       {
-      size_t off = (BS - 16);
+      const size_t off = (BS - 16);
       uint64_t b0 = load_be<uint64_t>(&m_counter[off], 0);
       uint64_t b1 = load_be<uint64_t>(&m_counter[off], 1);
       b1 += counter;
@@ -173,9 +169,8 @@ void CTR_BE::add_counter(const uint64_t counter)
 
       for(size_t i = 0; i != ctr_blocks; ++i)
          {
-         store_be(b0, &m_counter[off]);
-         store_be(b1, &m_counter[off+8]);
-         off += BS;
+         store_be(b0, &m_counter[i*BS+off]);
+         store_be(b1, &m_counter[i*BS+off+8]);
          b1 += 1;
          b0 += (b1 == 0); // carry
          }
