@@ -4,7 +4,7 @@ Release Notes
 Version 2.12.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* GCM performance improvements (GH #2024)
+* GCM performance improvements (GH #2024 #2099)
 
 * RSA signature performance improvements (GH #2068 #2070)
 
