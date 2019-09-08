@@ -4,6 +4,10 @@ Release Notes
 Version 2.12.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Many currently public headers are being deprecated. Currently this means
+  a warning is issued if they are used by applications. In a future major
+  release they will be made internal. (GH #2061)
+
 * GCM performance improvements (GH #2024 #2099)
 
 * RSA signature performance improvements (GH #2068 #2070)
@@ -35,7 +39,7 @@ Version 2.12.0, Not Yet Released
 
 * Modifications to support GOST 34.10-2012 signatures (GH #2055 #2056 #1860 #1897)
 
-* Add support for constant time AES using NEON (GH #2093 #2095)
+* Add support for constant time AES using NEON and AltiVec (GH #2093 #2095 #2100)
 
 * Improve performance of POWER8 AES instructions (GH #2096)
 
