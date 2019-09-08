@@ -2,6 +2,8 @@
 AES_VPERM -> 20190901
 </defines>
 
+endian little
+
 <isa>
 x86_32:sse2
 x86_64:sse2
@@ -9,6 +11,8 @@ x86_32:ssse3
 x86_64:ssse3
 arm32:neon
 arm64:neon
+ppc32:altivec
+ppc64:altivec
 </isa>
 
 <arch>
@@ -16,6 +20,8 @@ x86_32
 x86_64
 arm32
 arm64
+ppc32
+ppc64
 </arch>
 
 <requires>

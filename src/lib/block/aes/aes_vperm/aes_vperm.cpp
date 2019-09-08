@@ -41,6 +41,15 @@ inline SIMD_4x32 shuffle(SIMD_4x32 a, SIMD_4x32 b)
    return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(tbl, idx)));
 #endif
 
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+   __vector unsigned char bv = (__vector unsigned char)b.raw();
+
+   const auto high_bit = vec_sl(vec_sr(bv, vec_splat_u8(7)), vec_splat_u8(4));
+   bv = vec_and(bv, vec_splat_u8(0x0F));
+   bv = vec_add(bv, high_bit);
+
+   const __vector unsigned int zero = vec_splat_u32(0);
+   return SIMD_4x32(vec_perm(a.raw(), zero, bv));
 #else
    #error "No shuffle implementation available"
 #endif
@@ -53,6 +62,16 @@ inline SIMD_4x32 shift_elems_left(SIMD_4x32 x)
    return SIMD_4x32(_mm_slli_si128(x.raw(), 4*I));
 #elif defined(BOTAN_SIMD_USE_NEON)
    return SIMD_4x32(vreinterpretq_u32_u8(vextq_u8(vdupq_n_u8(0), vreinterpretq_u8_u32(x.raw()), 16 - 4*I)));
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+   const __vector unsigned int zero = vec_splat_u32(0);
+
+   const __vector unsigned char shuf[3] = {
+     { 16, 17, 18, 19, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+     { 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7 },
+     { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 0, 1, 2, 3 },
+   };
+
+   return SIMD_4x32(vec_perm(x.raw(), zero, shuf[I-1]));
 #else
    #error "No shift_elems_left implementation available"
 #endif
@@ -64,6 +83,9 @@ inline SIMD_4x32 alignr8(SIMD_4x32 a, SIMD_4x32 b)
    return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), 8));
 #elif defined(BOTAN_SIMD_USE_NEON)
    return SIMD_4x32(vreinterpretq_u32_u8(vextq_u8(vreinterpretq_u8_u32(b.raw()), vreinterpretq_u8_u32(a.raw()), 8)));
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+   const __vector unsigned char mask = {8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23};
+   return SIMD_4x32(vec_perm(b.raw(), a.raw(), mask));
 #else
    #error "No alignr8 implementation available"
 #endif
