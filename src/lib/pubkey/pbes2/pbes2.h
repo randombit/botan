@@ -11,6 +11,8 @@
 #include <botan/alg_id.h>
 #include <chrono>
 
+BOTAN_FUTURE_INTERNAL_HEADER(pbes2.h)
+
 namespace Botan {
 
 class RandomNumberGenerator;

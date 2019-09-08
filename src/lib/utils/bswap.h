@@ -15,6 +15,8 @@
   #include <stdlib.h>
 #endif
 
+BOTAN_FUTURE_INTERNAL_HEADER(bswap.h)
+
 namespace Botan {
 
 /**

@@ -7,7 +7,6 @@
 #include "cli.h"
 #include <botan/rng.h>
 #include <botan/entropy_src.h>
-#include <botan/cpuid.h>
 #include <botan/hex.h>
 #include <botan/parsing.h>
 
@@ -77,7 +76,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
 #if defined(BOTAN_HAS_RDRAND_RNG)
    if(rng_type == "rdrand" || rng_type.empty())
       {
-      if(Botan::CPUID::has_rdrand())
+      if(Botan::RDRAND_RNG::available())
          return std::unique_ptr<Botan::RandomNumberGenerator>(new Botan::RDRAND_RNG);
       else if(rng_type.empty() == false)
          throw CLI_Error("RDRAND instruction not supported on this processor");

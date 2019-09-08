@@ -8,8 +8,11 @@
 #ifndef BOTAN_ATOMIC_H_
 #define BOTAN_ATOMIC_H_
 
+#include <botan/types.h>
 #include <atomic>
 #include <memory>
+
+//BOTAN_FUTURE_INTERNAL_HEADER(atomic.h)
 
 namespace Botan {
 

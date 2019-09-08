@@ -13,6 +13,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/hash.h>
+#include <botan/loadstor.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 #include <set>

@@ -6,6 +6,7 @@
 */
 
 #include <botan/sp800_108.h>
+#include <botan/loadstor.h>
 #include <botan/exceptn.h>
 #include <iterator>
 

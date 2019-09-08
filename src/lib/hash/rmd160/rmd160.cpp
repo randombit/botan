@@ -6,6 +6,7 @@
 */
 
 #include <botan/rmd160.h>
+#include <botan/loadstor.h>
 #include <botan/rotate.h>
 
 namespace Botan {

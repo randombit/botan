@@ -12,7 +12,6 @@
 #include <botan/rng.h>
 #include <botan/hex.h>
 #include <botan/symkey.h>
-#include <botan/cpuid.h>
 #include <iosfwd>
 #include <functional>
 #include <map>
@@ -642,7 +641,7 @@ class Text_Based_Test : public Test
       std::unique_ptr<std::istream> m_cur;
       std::string m_cur_src_name;
       std::deque<std::string> m_srcs;
-      std::vector<Botan::CPUID::CPUID_bits> m_cpu_flags;
+      std::vector<uint64_t> m_cpu_flags;
    };
 
 }

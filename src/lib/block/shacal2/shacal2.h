@@ -10,6 +10,8 @@
 
 #include <botan/block_cipher.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(shacal2.h)
+
 namespace Botan {
 
 /**

@@ -12,8 +12,11 @@
 #ifndef BOTAN_GF2M_SMALL_M_H_
 #define BOTAN_GF2M_SMALL_M_H_
 
-#include <vector>
 #include <botan/types.h>
+#include <vector>
+
+// fixme - still used in mceliece.h
+//BOTAN_FUTURE_INTERNAL_HEADER(gf2m_small_m.h)
 
 namespace Botan {
 

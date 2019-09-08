@@ -11,6 +11,8 @@
 #include <botan/mac.h>
 #include <botan/hash.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(hmac.h)
+
 namespace Botan {
 
 /**

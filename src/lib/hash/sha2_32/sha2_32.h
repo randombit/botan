@@ -11,6 +11,8 @@
 
 #include <botan/mdx_hash.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(sha2_32.h)
+
 namespace Botan {
 
 /**

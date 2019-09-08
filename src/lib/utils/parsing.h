@@ -17,6 +17,8 @@
 #include <functional>
 #include <map>
 
+BOTAN_FUTURE_INTERNAL_HEADER(parsing.h)
+
 namespace Botan {
 
 /**

@@ -10,6 +10,8 @@
 
 #include <botan/types.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(rotate.h)
+
 namespace Botan {
 
 /**

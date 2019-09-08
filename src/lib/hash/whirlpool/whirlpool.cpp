@@ -6,6 +6,7 @@
 */
 
 #include <botan/whrlpool.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+//BOTAN_FUTURE_INTERNAL_HEADER(tls_algos.h)
+
 namespace Botan {
 
 namespace TLS {

@@ -8,7 +8,7 @@
 #ifndef BOTAN_TLS_PROTOCOL_VERSION_H_
 #define BOTAN_TLS_PROTOCOL_VERSION_H_
 
-#include <botan/loadstor.h>
+#include <botan/types.h>
 #include <string>
 
 namespace Botan {
@@ -76,12 +76,12 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       /**
       * @return major version of the protocol version
       */
-      uint8_t major_version() const { return get_byte(0, m_version); }
+      uint8_t major_version() const { return static_cast<uint8_t>(m_version >> 8); }
 
       /**
       * @return minor version of the protocol version
       */
-      uint8_t minor_version() const { return get_byte(1, m_version); }
+      uint8_t minor_version() const { return static_cast<uint8_t>(m_version & 0xFF); }
 
       /**
       * @return the version code

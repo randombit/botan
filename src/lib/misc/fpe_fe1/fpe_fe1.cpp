@@ -6,6 +6,7 @@
 */
 
 #include <botan/fpe_fe1.h>
+#include <botan/loadstor.h>
 #include <botan/numthry.h>
 #include <botan/divide.h>
 #include <botan/reducer.h>

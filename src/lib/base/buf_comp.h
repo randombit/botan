@@ -9,7 +9,6 @@
 #define BOTAN_BUFFERED_COMPUTATION_H_
 
 #include <botan/secmem.h>
-#include <botan/loadstor.h>
 #include <string>
 
 namespace Botan {
@@ -51,27 +50,13 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
          add_data(in.data(), in.size());
          }
 
-      /**
-      * Add an integer in big-endian order
-      * @param in the value
-      */
-      template<typename T> void update_be(const T in)
-         {
-         uint8_t inb[sizeof(T)];
-         store_be(in, inb);
-         add_data(inb, sizeof(inb));
-         }
+      void update_be(uint16_t val);
+      void update_be(uint32_t val);
+      void update_be(uint64_t val);
 
-      /**
-      * Add an integer in little-endian order
-      * @param in the value
-      */
-      template<typename T> void update_le(const T in)
-         {
-         uint8_t inb[sizeof(T)];
-         store_le(in, inb);
-         add_data(inb, sizeof(inb));
-         }
+      void update_le(uint16_t val);
+      void update_le(uint32_t val);
+      void update_le(uint64_t val);
 
       /**
       * Add new input to process.

@@ -8,6 +8,7 @@
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/loadstor.h>
 #include <algorithm>
 
 namespace Botan {

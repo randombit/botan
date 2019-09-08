@@ -13,6 +13,9 @@
 #include <botan/bigint.h>
 #include <memory>
 
+// Currently exposed in PointGFp
+//BOTAN_FUTURE_INTERNAL_HEADER(curve_gfp.h)
+
 namespace Botan {
 
 class BOTAN_UNSTABLE_API CurveGFp_Repr

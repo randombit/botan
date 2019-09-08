@@ -8,7 +8,6 @@
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
 
-#include <botan/reducer.h>
 #include <botan/numthry.h>
 #include <botan/monty.h>
 #include <iterator>

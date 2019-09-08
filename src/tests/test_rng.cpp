@@ -30,7 +30,6 @@
 
 #if defined(BOTAN_HAS_RDRAND_RNG)
    #include <botan/rdrand_rng.h>
-   #include <botan/cpuid.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
@@ -756,7 +755,7 @@ class RDRAND_RNG_Tests final : public Test
          {
          Test::Result result("RDRAND_RNG");
 
-         if(Botan::CPUID::has_rdrand())
+         if(Botan::RDRAND_RNG::available())
             {
             Botan::RDRAND_RNG rng;
 

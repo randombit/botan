@@ -17,6 +17,8 @@
 #include <utility>
 #include <string>
 
+//BOTAN_FUTURE_INTERNAL_HEADER(polyn_gf2m.h)
+
 namespace Botan {
 
 class RandomNumberGenerator;

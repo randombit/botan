@@ -13,7 +13,7 @@ PYTHON_EXE     = %{python_exe}
 
 ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
-CXXFLAGS       = %{cc_compile_flags}
+CXXFLAGS       = %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT
 WARN_FLAGS     = %{cc_warning_flags}
 LIB_FLAGS      = %{lib_flags}
 LDFLAGS        = %{ldflags}

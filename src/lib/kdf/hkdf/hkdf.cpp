@@ -7,6 +7,7 @@
 */
 
 #include <botan/hkdf.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

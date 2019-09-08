@@ -10,6 +10,8 @@
 
 #include <botan/stream_cipher.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(salsa20.h)
+
 namespace Botan {
 
 /**

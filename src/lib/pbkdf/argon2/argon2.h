@@ -11,6 +11,8 @@
 
 namespace Botan {
 
+BOTAN_FUTURE_INTERNAL_HEADER(argon2.h)
+
 class RandomNumberGenerator;
 
 /**

@@ -8,8 +8,8 @@
 
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
    #include <botan/newhope.h>
-   #include <botan/sha3.h>
-   #include <botan/chacha.h>
+   #include <botan/hash.h>
+   #include <botan/stream_cipher.h>
    #include <botan/rng.h>
 #endif
 
@@ -48,7 +48,7 @@ class NEWHOPE_RNG final : public Botan::RandomNumberGenerator
          * random seed we compute the exact same result.
          */
          Botan::clear_mem(out, len);
-         m_chacha.cipher1(out, len);
+         m_chacha->cipher1(out, len);
 
          m_calls += 1;
 
@@ -63,7 +63,7 @@ class NEWHOPE_RNG final : public Botan::RandomNumberGenerator
             nonce[7] = m_calls;
             }
 
-         m_chacha.set_iv(nonce, 8);
+         m_chacha->set_iv(nonce, 8);
          }
 
       bool is_seeded() const override
@@ -80,6 +80,8 @@ class NEWHOPE_RNG final : public Botan::RandomNumberGenerator
 
       NEWHOPE_RNG(const std::vector<uint8_t>& seed)
          {
+         m_chacha = Botan::StreamCipher::create_or_throw("ChaCha20");
+
          if(seed.size() != 64 && seed.size() != 32)
             {
             throw Test_Error("Invalid NEWHOPE RNG seed");
@@ -88,16 +90,16 @@ class NEWHOPE_RNG final : public Botan::RandomNumberGenerator
          if(seed.size() == 64)
             {
             m_first.assign(seed.begin(), seed.begin() + 32);
-            m_chacha.set_key(seed.data() + 32, 32);
+            m_chacha->set_key(seed.data() + 32, 32);
             }
          else
             {
-            m_chacha.set_key(seed.data(), 32);
+            m_chacha->set_key(seed.data(), 32);
             }
          }
 
    private:
-      Botan::ChaCha m_chacha;
+      std::unique_ptr<Botan::StreamCipher> m_chacha;
       std::vector<uint8_t> m_first;
       uint8_t m_calls = 0;
    };
@@ -121,15 +123,15 @@ class NEWHOPE_Tests final : public Text_Based_Test
          NEWHOPE_RNG drbg_a(vars.get_req_bin("DRBG_SeedA"));
          NEWHOPE_RNG drbg_b(vars.get_req_bin("DRBG_SeedB"));
 
-         Botan::SHA_3_256 sha3;
+         std::unique_ptr<Botan::HashFunction> sha3 = Botan::HashFunction::create("SHA-3(256)");
 
          std::vector<uint8_t> send_a(Botan::NEWHOPE_SENDABYTES);
          Botan::newhope_poly a_sk;
          Botan::newhope_keygen(send_a.data(), &a_sk, drbg_a);
 
-         std::vector<uint8_t> h_send_a(sha3.output_length());
-         sha3.update(send_a);
-         sha3.final(h_send_a.data());
+         std::vector<uint8_t> h_send_a(sha3->output_length());
+         sha3->update(send_a);
+         sha3->final(h_send_a.data());
          result.test_eq("Hash Output A", h_send_a, h_output_a);
 
          std::vector<uint8_t> sharedkey_b(32);
@@ -137,9 +139,9 @@ class NEWHOPE_Tests final : public Text_Based_Test
          Botan::newhope_sharedb(sharedkey_b.data(), send_b.data(), send_a.data(), drbg_b);
          result.test_eq("Key B", sharedkey_b, shared_key);
 
-         std::vector<uint8_t> h_send_b(sha3.output_length());
-         sha3.update(send_b);
-         sha3.final(h_send_b.data());
+         std::vector<uint8_t> h_send_b(sha3->output_length());
+         sha3->update(send_b);
+         sha3->final(h_send_b.data());
          result.test_eq("Hash Output B", h_send_b, h_output_b);
 
          std::vector<uint8_t> sharedkey_a(32);

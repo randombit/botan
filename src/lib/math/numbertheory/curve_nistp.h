@@ -10,6 +10,8 @@
 
 #include <botan/bigint.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(curve_nistp.h)
+
 namespace Botan {
 
 /**

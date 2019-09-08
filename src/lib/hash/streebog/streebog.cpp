@@ -7,6 +7,7 @@
 */
 
 #include <botan/streebog.h>
+#include <botan/loadstor.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

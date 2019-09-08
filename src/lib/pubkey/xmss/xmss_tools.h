@@ -13,6 +13,8 @@
 #include <iterator>
 #include <type_traits>
 
+//BOTAN_FUTURE_INTERNAL_HEADER(xmss_tools.h)
+
 namespace Botan {
 
 /**
