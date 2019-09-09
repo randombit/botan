@@ -279,7 +279,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
 __acceptable_build_targets = ["static", "shared", "cli", "tests", "bogo_shim", "docs"]
 
 def read_build_targets(options):
-    if options.build_targets == None:   # not set => no list
+    if options.build_targets is None:   # not set => no list
         return None
     if not options.build_targets:  # empty string => empty list
         return []
@@ -3003,7 +3003,7 @@ def canonicalize_options(options, info_os, info_arch):
         build_targets = read_build_targets(options)
 
         # --build-targets was not provided: build default targets
-        if build_targets == None:
+        if build_targets is None:
             options.build_targets = "cli,tests"
             return
 
@@ -3016,13 +3016,13 @@ def canonicalize_options(options, info_os, info_arch):
                 raise UserError("unknown build target: %s" % build_target)
 
         # building the shared lib desired and without contradiction?
-        if options.build_shared_lib == None:
+        if options.build_shared_lib is None:
             options.build_shared_lib = "shared" in build_targets
         elif bool(options.build_shared_lib) != bool("shared" in build_targets):
             raise UserError("inconsistent usage of --enable/disable-shared-library and --build-targets")
 
         # building the static lib desired and without contradiction?
-        if options.build_static_lib == None:
+        if options.build_static_lib is None:
             options.build_static_lib = "static" in build_targets
         elif bool(options.build_static_lib) != bool("static" in build_targets):
             raise UserError("inconsistent usage of --enable/disable-static-library and --build-targets")
