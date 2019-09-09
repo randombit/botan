@@ -496,9 +496,6 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--build-bogo-shim', action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
-
     build_group.add_option('--build-targets', default=None, dest="build_targets",
                            help="build specific targets and tools (%s)" % ', '.join(ACCEPTABLE_BUILD_TARGETS))
 
@@ -1978,7 +1975,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             yield 'tests'
         if options.build_fuzzers:
             yield 'fuzzers'
-        if options.build_bogo_shim or 'bogo_shim' in targets:
+        if 'bogo_shim' in targets:
             yield 'bogo_shim'
         yield 'docs'
 
@@ -2130,7 +2127,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'include_paths': build_paths.format_include_paths(cc, options.with_external_includedir),
         'module_defines': sorted(flatten([m.defines() for m in modules])),
 
-        'build_bogo_shim': options.build_bogo_shim,
+        'build_bogo_shim': bool('bogo_shim' in read_build_targets(options)),
         'bogo_shim_src': os.path.join(source_paths.src_dir, 'bogo_shim', 'bogo_shim.cpp'),
 
         'os_features': osinfo.enabled_features(options),
