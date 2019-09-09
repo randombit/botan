@@ -490,7 +490,7 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--build-bogo-shim', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--build-extra-targets', default='cli,tests', dest="build_targets",
+    build_group.add_option('--build-targets', default='cli,tests', dest="build_targets",
                            help="build additional targets and tools (cli, tests, bogo_shim, docs)")
 
     build_group.add_option('--with-pkg-config', action='store_true', default=None,
