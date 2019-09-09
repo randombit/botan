@@ -12,8 +12,7 @@ Ciphers, Hashes, PBKDF
 
 * Stiched AES-NI GCM mode
 * Bitsliced AES or Camellia
-* Compressed tables for AES
-* AES using vector permutes for NEON
+* Vector permute AES only supports little-endian systems; fix for big-endian
 * Camellia using AES-NI
 * Poly1305 using AVX2
 * ASCON 1.2 (CAESAR)
@@ -39,7 +38,7 @@ Public Key Crypto, Math
 * Abstract representation of ECC point elements to allow specific
   implementations of the field arithmetic depending upon the curve.
 * Use NAF (joint sparse form) for ECC multi-exponentiation
-* Curves for pairings (BN-256 is widely implemented)
+* Curves for pairings (BN-256, BLS12-381)
 * Identity based encryption
 * BBS group signatures
 * Paillier homomorphic cryptosystem
@@ -60,6 +59,9 @@ Utility Functions
 
 * Add a memory span type
 * Make Memory_Pool more concurrent (currently uses a global lock)
+* Guarded integer type to prevent overflow bugs
+* Add logging callbacks
+* Add latency tracing framework
 
 Multiparty Protocols
 ----------------------
@@ -77,9 +79,7 @@ External Providers, Hardware Support
 * Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
 * Support iOS keychain access
 * POWER8 crypto extensions (SHA-2, GCM)
-* POWER9 on-chip RNG (DARN)
 * Better TPM support: NVRAM, PCR measurements, sealing
-* Intel SGX support
 * Support Intel QuickAssist accelerator cards
 
 TLS
@@ -163,13 +163,6 @@ Python
 
 * Write a CLI or HTTPS client in Python
 
-Library Infrastructure
-----------------------------------------
-
-* Guarded integer type to prevent overflow bugs
-* Add logging callbacks
-* Add latency tracing framework
-
 Build/Test
 ----------------------------------------
 
@@ -188,6 +181,7 @@ Build/Test
 * Add support for vxWorks
 * Add support for Fuschia OS
 * Add support for CloudABI
+* Add support for SGX
 
 FIPS 140 Build
 ---------------------------------------
