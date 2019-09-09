@@ -276,7 +276,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         else:
             raise InternalError("Unknown src info type '%s'" % (typ))
 
-ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "fuzzers", "bogo_shim", "docs"]
+ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim"]
 
 def read_build_targets(options):
     if options.build_targets is None:   # not set => no list
@@ -1976,12 +1976,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             yield 'cli'
         if 'tests' in targets:
             yield 'tests'
-        if 'docs' in targets:
-            yield 'docs'
         if options.build_fuzzers:
             yield 'fuzzers'
         if options.build_bogo_shim or 'bogo_shim' in targets:
             yield 'bogo_shim'
+        yield 'docs'
 
     variables = {
         'version_major':  Version.major(),
