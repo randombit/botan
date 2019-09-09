@@ -434,8 +434,8 @@ not exist until after you run the script for the first time).
 Also included in ``build/build.h`` are macros which let applications
 check which features are included in the current version of the
 library. All of them begin with ``BOTAN_HAS_``. For example, if
-``BOTAN_HAS_BLOWFISH`` is defined, then an application can include
-``<botan/blowfish.h>`` and use the Blowfish class.
+``BOTAN_HAS_RSA`` is defined, then an application knows that this
+version of the library has RSA available.
 
 ``BOTAN_MP_WORD_BITS``: This macro controls the size of the words used for
 calculations with the MPI implementation in Botan.  It must be set to either 32
