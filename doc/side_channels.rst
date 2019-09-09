@@ -245,10 +245,9 @@ are fast and are thought to be side channel silent. These instructions
 are used when available.
 
 On CPUs which do not have hardware AES instructions but do support SIMD vectors
-with a byte shuffle (including x86's SSSE3 and ARM's NEON), a version of AES is
-implemented which is side channel silent. This version is based on code by Mike
-Hamburg [VectorAes], see aes_vperm.cpp. This same technique could be applied
-with AltiVec, and the paper suggests some optimizations for the AltiVec shuffle.
+with a byte shuffle (including x86's SSSE3, ARM's NEON and PowerPC AltiVec), a
+version of AES is implemented which is side channel silent. This implementation
+is based on code by Mike Hamburg [VectorAes], see aes_vperm.cpp.
 
 On all other processors, a table lookup version (T-tables) is used.  This
 approach is relatively fast, but known to be very vulnerable to side
