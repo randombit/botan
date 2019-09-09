@@ -276,7 +276,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         else:
             raise InternalError("Unknown src info type '%s'" % (typ))
 
-__acceptable_build_targets = ["static", "shared", "cli", "tests", "bogo_shim", "docs"]
+ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "fuzzers", "bogo_shim", "docs"]
 
 def read_build_targets(options):
     if options.build_targets is None:   # not set => no list
@@ -500,7 +500,7 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
                            help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--build-targets', default=None, dest="build_targets",
-                           help="build specific targets and tools (%s)" % ', '.join(__acceptable_build_targets))
+                           help="build specific targets and tools (%s)" % ', '.join(ACCEPTABLE_BUILD_TARGETS))
 
     build_group.add_option('--with-pkg-config', action='store_true', default=None,
                            help=optparse.SUPPRESS_HELP)
@@ -3012,7 +3012,7 @@ def canonicalize_options(options, info_os, info_arch):
             raise UserError("select at least one --build-targets")
 
         for build_target in build_targets:
-            if build_target not in __acceptable_build_targets:
+            if build_target not in ACCEPTABLE_BUILD_TARGETS:
                 raise UserError("unknown build target: %s" % build_target)
 
         # building the shared lib desired and without contradiction?
