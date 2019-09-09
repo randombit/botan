@@ -275,7 +275,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             run_test_command = test_prefix + test_cmd
 
     if 'static' not in build_targets and 'shared' not in build_targets:
-        build_targets += ['static', 'shared']
+        build_targets += ['static', 'shared'] if target_os != 'windows' else ['shared']
     flags += ['--build-targets=%s' % ','.join(build_targets)]
 
     return flags, run_test_command, make_prefix
