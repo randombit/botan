@@ -278,13 +278,6 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
 
 ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim"]
 
-def read_build_targets(options):
-    if options.build_targets is None:   # not set => no list
-        return None
-    if not options.build_targets:  # empty string => empty list
-        return []
-    return [t.strip().lower() for t in options.build_targets.split(',')]
-
 def process_command_line(args): # pylint: disable=too-many-locals,too-many-statements
     """
     Handle command line options
@@ -1967,15 +1960,14 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         return os.path.join(build_dir, path)
 
     def all_targets(options):
-        targets = read_build_targets(options)
         yield 'libs'
-        if 'cli' in targets:
+        if 'cli' in options.build_targets:
             yield 'cli'
-        if 'tests' in targets:
+        if 'tests' in options.build_targets:
             yield 'tests'
         if options.build_fuzzers:
             yield 'fuzzers'
-        if 'bogo_shim' in targets:
+        if 'bogo_shim' in options.build_targets:
             yield 'bogo_shim'
         yield 'docs'
 
@@ -2127,7 +2119,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'include_paths': build_paths.format_include_paths(cc, options.with_external_includedir),
         'module_defines': sorted(flatten([m.defines() for m in modules])),
 
-        'build_bogo_shim': bool('bogo_shim' in read_build_targets(options)),
+        'build_bogo_shim': bool('bogo_shim' in options.build_targets),
         'bogo_shim_src': os.path.join(source_paths.src_dir, 'bogo_shim', 'bogo_shim.cpp'),
 
         'os_features': osinfo.enabled_features(options),
@@ -2996,17 +2988,11 @@ def canonicalize_options(options, info_os, info_arch):
 
     # select and sanity check build targets
     def canonicalize_build_targets(options):
-        build_targets = read_build_targets(options)
-
         # --build-targets was not provided: build default targets
-        if build_targets is None:
-            options.build_targets = "cli,tests"
-            return
+        if options.build_targets is None:
+            return ["cli", "tests"]
 
-        # --build-targets was set to empty string: invalid input
-        if not build_targets:
-            raise UserError("select at least one --build-targets")
-
+        build_targets = [t.strip().lower() for t in options.build_targets.split(',')]
         for build_target in build_targets:
             if build_target not in ACCEPTABLE_BUILD_TARGETS:
                 raise UserError("unknown build target: %s" % build_target)
@@ -3023,7 +3009,9 @@ def canonicalize_options(options, info_os, info_arch):
         elif bool(options.build_static_lib) != bool("static" in build_targets):
             raise UserError("inconsistent usage of --enable/disable-static-library and --build-targets")
 
-    canonicalize_build_targets(options)
+        return build_targets
+
+    options.build_targets = canonicalize_build_targets(options)
 
     shared_libs_supported = options.os in info_os and info_os[options.os].building_shared_supported()
 
