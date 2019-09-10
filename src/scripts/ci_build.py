@@ -65,15 +65,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
     flags = ['--prefix=%s' % (install_prefix),
              '--cc=%s' % (target_cc),
              '--os=%s' % (target_os)]
+    build_targets = ['cli', 'tests']
 
     if target_cpu is not None:
         flags += ['--cpu=%s' % (target_cpu)]
 
     if target in ['shared', 'mini-shared']:
-        flags += ['--disable-static']
+        build_targets += ['shared']
 
     if target in ['static', 'mini-static', 'fuzzers'] or target_os in ['ios', 'mingw']:
-        flags += ['--disable-shared']
+        build_targets += ['static']
 
     if target in ['mini-static', 'mini-shared']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
@@ -89,15 +90,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         # Arbitrarily test disable static on module policy builds
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
         flags += ['--module-policy=%s' % (target),
-                  '--enable-modules=tls',
-                  '--disable-static']
+                  '--enable-modules=tls']
+        build_targets += ['shared']
 
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
         test_cmd = None
 
     if target == 'coverage':
-        flags += ['--with-coverage-info', '--with-debug-info', '--test-mode', '--build-bogo-shim']
+        flags += ['--with-coverage-info', '--with-debug-info', '--test-mode']
+        build_targets += ['bogo_shim']
     if target == 'valgrind':
         # valgrind in 16.04 has a bug with rdrand handling
         flags += ['--with-valgrind', '--disable-rdrand']
@@ -128,8 +130,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         # these profiling flags) but we can't use --no-optimizations as that
         # will make running the tests too slow.
         flags += ['--cc-abi-flags=-fprofile-instr-generate -fcoverage-mapping',
-                  '--disable-shared',
                   '--optimize-for-size']
+        build_targets += ['static']
 
         make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
                        '--out-dir', 'bw-outputs']
@@ -273,6 +275,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         else:
             run_test_command = test_prefix + test_cmd
 
+    if 'static' not in build_targets and 'shared' not in build_targets:
+        build_targets += ['static', 'shared'] if target_os != 'windows' else ['shared']
+    flags += ['--build-targets=%s' % ','.join(build_targets)]
 
     return flags, run_test_command, make_prefix
 
