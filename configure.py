@@ -489,7 +489,7 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--build-targets', default=None, dest="build_targets",
+    build_group.add_option('--build-targets', default=None, dest="build_targets", action='append',
                            help="build specific targets and tools (%s)" % ', '.join(ACCEPTABLE_BUILD_TARGETS))
 
     build_group.add_option('--with-pkg-config', action='store_true', default=None,
@@ -2992,7 +2992,10 @@ def canonicalize_options(options, info_os, info_arch):
         if options.build_targets is None:
             return ["cli", "tests"]
 
-        build_targets = [t.strip().lower() for t in options.build_targets.split(',')]
+        # flatten the list of multiple --build-targets="" and comma separation
+        build_targets = [t.strip().lower() for ts in options.build_targets for t in ts.split(",")]
+
+        # validate that all requested build targets are available
         for build_target in build_targets:
             if build_target not in ACCEPTABLE_BUILD_TARGETS:
                 raise UserError("unknown build target: %s" % build_target)
