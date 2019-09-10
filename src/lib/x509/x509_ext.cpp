@@ -147,10 +147,22 @@ bool Extensions::add_new(Certificate_Extension* extn, bool critical)
    return true;
    }
 
+bool Extensions::remove(const OID& oid)
+   {
+   const bool erased = m_extension_info.erase(oid) > 0;
+
+   if(erased)
+      {
+      m_extension_oids.erase(std::find(m_extension_oids.begin(), m_extension_oids.end(), oid));
+      }
+
+   return erased;
+   }
+
 void Extensions::replace(Certificate_Extension* extn, bool critical)
    {
    // Remove it if it existed
-   m_extension_info.erase(extn->oid_of());
+   remove(extn->oid_of());
 
    const OID oid = extn->oid_of();
    Extensions_Info info(critical, extn);
