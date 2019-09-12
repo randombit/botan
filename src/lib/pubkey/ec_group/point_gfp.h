@@ -96,6 +96,7 @@ class BOTAN_PUBLIC_API(2,0) PointGFp final
 
       /**
       * Construct a point from its affine coordinates
+      * Prefer EC_Group::point(x,y) for this operation.
       * @param curve the base curve
       * @param x affine x coordinate
       * @param y affine y coordinate

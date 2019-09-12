@@ -30,9 +30,9 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    m_coord_y(y),
    m_coord_z(m_curve.get_1_rep())
    {
-   if(x <= 0 || x >= curve.get_p())
+   if(x < 0 || x >= curve.get_p())
       throw Invalid_Argument("Invalid PointGFp affine x");
-   if(y <= 0 || y >= curve.get_p())
+   if(y < 0 || y >= curve.get_p())
       throw Invalid_Argument("Invalid PointGFp affine y");
 
    secure_vector<word> monty_ws(m_curve.get_ws_size());
