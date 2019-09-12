@@ -183,6 +183,15 @@ bool Extensions::critical_extension_set(const OID& oid) const
    return false;
    }
 
+std::vector<uint8_t> Extensions::get_extension_bits(const OID& oid) const
+   {
+   auto i = m_extension_info.find(oid);
+   if(i == m_extension_info.end())
+      throw Invalid_Argument("Extensions::get_extension_bits no such extension set");
+
+   return i->second.bits();
+   }
+
 const Certificate_Extension* Extensions::get_extension_object(const OID& oid) const
    {
    auto extn = m_extension_info.find(oid);

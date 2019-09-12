@@ -1,5 +1,5 @@
 /*
-* (C) 2009 Jack Lloyd
+* (C) 2009,2019 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -91,7 +91,7 @@ Botan::X509_Cert_Options req_opts2(const std::string& sig_padding = "")
    }
 
 Botan::X509_Cert_Options req_opts3(const std::string& sig_padding = "")
-{
+   {
    Botan::X509_Cert_Options opts("Test User 2/US/Botan Project/Testing");
 
    opts.uri = "https://botan.randombit.net";
@@ -104,7 +104,7 @@ Botan::X509_Cert_Options req_opts3(const std::string& sig_padding = "")
    opts.more_dns.push_back("www.botan.randombit.net");
 
    return opts;
-}
+   }
 
 std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    {
@@ -128,7 +128,6 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
 
    return Botan::create_private_key(algo, Test::rng(), params);
    }
-
 
 Test::Result test_cert_status_strings()
    {
@@ -202,6 +201,50 @@ Test::Result test_cert_status_strings()
 
    }
 
+Test::Result test_x509_extension()
+   {
+   Test::Result result("X509 Extensions API");
+
+   Botan::Extensions extn;
+
+   const auto oid_bc = Botan::OID::from_string("X509v3.BasicConstraints");
+   const auto oid_skid = Botan::OID::from_string("X509v3.SubjectKeyIdentifier");
+
+   extn.add(new Botan::Cert_Extension::Basic_Constraints(true), true);
+
+   result.confirm("Basic constraints is set", extn.extension_set(oid_bc));
+   result.confirm("Basic constraints is critical", extn.critical_extension_set(oid_bc));
+   result.confirm("SKID is not set", !extn.extension_set(oid_skid));
+   result.confirm("SKID is not critical", !extn.critical_extension_set(oid_skid));
+
+   result.test_eq("Extension::get_extension_bits",
+                  extn.get_extension_bits(oid_bc), "30060101FF020100");
+
+   result.test_throws("Extension::get_extension_bits throws if not set",
+                      [&]() { extn.get_extension_bits(oid_skid); });
+
+   result.test_throws("Extension::add throws on second add",
+                      [&]() { extn.add(new Botan::Cert_Extension::Basic_Constraints(false), false); });
+
+   result.test_eq("Extension::get_extension_bits",
+                  extn.get_extension_bits(oid_bc), "30060101FF020100");
+
+   result.confirm("Returns false since extension already existed",
+                  !extn.add_new(new Botan::Cert_Extension::Basic_Constraints(false), false));
+
+   result.confirm("Basic constraints is still critical", extn.critical_extension_set(oid_bc));
+
+   extn.replace(new Botan::Cert_Extension::Basic_Constraints(false), false);
+   result.confirm("Replaced basic constraints is not critical", !extn.critical_extension_set(oid_bc));
+   result.test_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "3000");
+
+   result.confirm("Delete returns false if extn not set", !extn.remove(oid_skid));
+   result.confirm("Delete returns true if extn was set", extn.remove(oid_bc));
+   result.confirm("Basic constraints is not set", !extn.extension_set(oid_bc));
+   result.confirm("Basic constraints is not critical", !extn.critical_extension_set(oid_bc));
+
+   return result;
+   }
 
 Test::Result test_x509_dates()
    {
@@ -1645,6 +1688,7 @@ class X509_Cert_Unit_Tests final : public Test
          results.push_back(test_verify_gost2012_cert());
 #endif
 
+         results.push_back(test_x509_extension());
          results.push_back(test_x509_dates());
          results.push_back(test_cert_status_strings());
          results.push_back(test_x509_uninit());
