@@ -18,11 +18,19 @@
   #include <tmmintrin.h>
 #endif
 
+#if defined(BOTAN_SIMD_USE_SSE2)
+   #define BOTAN_VPERM_ISA "ssse3"
+#elif defined(BOTAN_SIMD_USE_NEON)
+   #define BOTAN_VPERM_ISA "+simd"
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+   #define BOTAN_VPERM_ISA "altivec"
+#endif
+
 namespace Botan {
 
 namespace {
 
-inline SIMD_4x32 shuffle(SIMD_4x32 a, SIMD_4x32 b)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shuffle(SIMD_4x32 a, SIMD_4x32 b)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_shuffle_epi8(a.raw(), b.raw()));
@@ -56,7 +64,7 @@ inline SIMD_4x32 shuffle(SIMD_4x32 a, SIMD_4x32 b)
    }
 
 template<size_t I>
-inline SIMD_4x32 shift_elems_left(SIMD_4x32 x)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shift_elems_left(SIMD_4x32 x)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_slli_si128(x.raw(), 4*I));
@@ -77,7 +85,7 @@ inline SIMD_4x32 shift_elems_left(SIMD_4x32 x)
 #endif
    }
 
-inline SIMD_4x32 alignr8(SIMD_4x32 a, SIMD_4x32 b)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) alignr8(SIMD_4x32 a, SIMD_4x32 b)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), 8));
