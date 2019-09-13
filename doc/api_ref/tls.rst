@@ -669,8 +669,8 @@ information about that session:
 .. note::
 
    The serialization format of Session is not considered stable and is allowed
-   to change even within a single major release cycle. In the event of such a
-   change, old sessions will no longer be able to be resumed.
+   to change even across minor releases. In the event of such a change, old
+   sessions will no longer be able to be resumed.
 
 .. cpp:class:: TLS::Session
 
@@ -1889,27 +1889,27 @@ A unified format is used for encrypting TLS sessions either for durable storage
 (on client or server) or when creating TLS session tickets. This format is *not
 stable* even across the same major version.
 
-The current session encryption scheme was introduced in 1.11.13.
+The current session encryption scheme was introduced in 2.13.0, replacing the
+format previously used since 1.11.13.
 
 Session encryption accepts a key of any length, though for best security a key
 of 256 bits should be used. This master key is used to key an instance of HMAC
-using the SHA-256 hash.
+using the SHA-512/256 hash.
 
-A random 96 bit nonce is created and included in the header. Then the nonce is
-hashed using the keyed HMAC to produce a 256-bit GCM key. This key and nonce
-pair are used to encrypt the session.
+First a "key name" or identifier is created, by HMAC'ing the fixed string "BOTAN
+TLS SESSION KEY NAME" and truncating to 4 bytes. This is the initial prefix of
+the encrypted session, and will remain fixed as long as the same ticket key is
+used. This allows quickly rejecting sessions which are encrypted using an
+unknown or incorrect key.
 
-The current design is unfortunate in several ways:
+Then a key used for AES-256 in GCM mode is created by first choosing a 128 bit
+random seed, and HMAC'ing it to produce a 256-bit value. This means for any one
+master key as many as 2\ :sup:`128` GCM keys can be created. This is done
+because NIST recommends that when using random nonces no one GCM key be used to
+encrypt more than 2\ :sup:`32` messages (to avoid the possiblity of nonce
+reuse).
 
- * If the random 96-bit nonce ever repeats, then the same GCM key *and nonce*
-   are used to encrypt 2 different sessions, breaking the security of sessions
-   encrypted using that duplicated key/nonce. The GCM nonce should have been
-   independently created and included in the header, making a key collision
-   harmless.
+A random 96-bit nonce is created and included in the header.
 
- * There is no simple way to detect old or rotated keys, except by attempting
-   decryption. Instead a key identifier should be included in the header.
-
- * There is no indicator of the format used, which makes handling format
-   upgrades without breaking compatability awkward.
-
+AES in GCM is used to encrypt and authenticate the serialized session. The
+key name, key seed, and AEAD nonce are all included as additional data.

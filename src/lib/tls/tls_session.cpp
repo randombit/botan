@@ -1,11 +1,12 @@
 /*
 * TLS Session State
-* (C) 2011-2012,2015 Jack Lloyd
+* (C) 2011-2012,2015,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/tls_session.h>
+#include <botan/loadstor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/asn1_str.h>
@@ -176,48 +177,114 @@ std::chrono::seconds Session::session_age() const
       std::chrono::system_clock::now() - m_start_time);
    }
 
+namespace {
+
+// The output length of the HMAC must be a valid keylength for the AEAD
+const char* TLS_SESSION_CRYPT_HMAC = "HMAC(SHA-512-256)";
+// SIV would be better, but we can't assume it is available
+const char* TLS_SESSION_CRYPT_AEAD = "AES-256/GCM";
+const char* TLS_SESSION_CRYPT_KEY_NAME = "BOTAN TLS SESSION KEY NAME";
+const uint64_t TLS_SESSION_CRYPT_MAGIC = 0x068B5A9D396C0000;
+const size_t TLS_SESSION_CRYPT_MAGIC_LEN = 8;
+const size_t TLS_SESSION_CRYPT_KEY_NAME_LEN = 4;
+const size_t TLS_SESSION_CRYPT_AEAD_NONCE_LEN = 12;
+const size_t TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN = 16;
+const size_t TLS_SESSION_CRYPT_AEAD_TAG_SIZE = 16;
+
+const size_t TLS_SESSION_CRYPT_HDR_LEN =
+   TLS_SESSION_CRYPT_MAGIC_LEN +
+   TLS_SESSION_CRYPT_KEY_NAME_LEN +
+   TLS_SESSION_CRYPT_AEAD_NONCE_LEN +
+   TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN;
+
+const size_t TLS_SESSION_CRYPT_OVERHEAD =
+   TLS_SESSION_CRYPT_HDR_LEN + TLS_SESSION_CRYPT_AEAD_TAG_SIZE;
+
+}
+
 std::vector<uint8_t>
 Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
    {
-   std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw("AES-256/GCM", ENCRYPTION);
-   const size_t nonce_len = aead->default_nonce_length();
-
-   const secure_vector<uint8_t> nonce = rng.random_vec(nonce_len);
-   const secure_vector<uint8_t> bits = this->DER_encode();
-
-   // Support any length key for input
-   std::unique_ptr<MessageAuthenticationCode> hmac(MessageAuthenticationCode::create("HMAC(SHA-256)"));
+   auto hmac = MessageAuthenticationCode::create_or_throw(TLS_SESSION_CRYPT_HMAC);
    hmac->set_key(key);
-   hmac->update(nonce);
-   aead->set_key(hmac->final());
 
-   secure_vector<uint8_t> buf = nonce;
+   // First derive the "key name"
+   std::vector<uint8_t> key_name(hmac->output_length());
+   hmac->update(TLS_SESSION_CRYPT_KEY_NAME);
+   hmac->final(key_name.data());
+   key_name.resize(TLS_SESSION_CRYPT_KEY_NAME_LEN);
+
+   std::vector<uint8_t> aead_nonce;
+   std::vector<uint8_t> key_seed;
+
+   rng.random_vec(aead_nonce, TLS_SESSION_CRYPT_AEAD_NONCE_LEN);
+   rng.random_vec(key_seed, TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN);
+
+   hmac->update(key_seed);
+   const secure_vector<uint8_t> aead_key = hmac->final();
+
+   secure_vector<uint8_t> bits = this->DER_encode();
+
+   // create the header
+   std::vector<uint8_t> buf;
+   buf.reserve(TLS_SESSION_CRYPT_OVERHEAD + bits.size());
+   buf.resize(TLS_SESSION_CRYPT_MAGIC_LEN);
+   store_be(TLS_SESSION_CRYPT_MAGIC, &buf[0]);
+   buf += key_name;
+   buf += key_seed;
+   buf += aead_nonce;
+
+   std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, ENCRYPTION);
+   BOTAN_ASSERT_NOMSG(aead->valid_nonce_length(TLS_SESSION_CRYPT_AEAD_NONCE_LEN));
+   BOTAN_ASSERT_NOMSG(aead->tag_size() == TLS_SESSION_CRYPT_AEAD_TAG_SIZE);
+   aead->set_key(aead_key);
+   aead->set_associated_data_vec(buf);
+   aead->start(aead_nonce);
+   aead->finish(bits, 0);
+
+   // append the ciphertext
    buf += bits;
-   aead->start(buf.data(), nonce_len);
-   aead->finish(buf, nonce_len);
-   return unlock(buf);
+   return buf;
    }
 
 Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& key)
    {
    try
       {
-      std::unique_ptr<AEAD_Mode> aead = AEAD_Mode::create_or_throw("AES-256/GCM", DECRYPTION);
-      const size_t nonce_len = aead->default_nonce_length();
-
-      if(in_len < nonce_len + aead->tag_size())
+      const size_t min_session_size = 48 + 4; // serious under-estimate
+      if(in_len < TLS_SESSION_CRYPT_OVERHEAD + min_session_size)
          throw Decoding_Error("Encrypted session too short to be valid");
 
-      // Support any length key for input
-      std::unique_ptr<MessageAuthenticationCode> hmac(MessageAuthenticationCode::create("HMAC(SHA-256)"));
+      const uint8_t* magic = &in[0];
+      const uint8_t* key_name = magic + TLS_SESSION_CRYPT_MAGIC_LEN;
+      const uint8_t* key_seed = key_name + TLS_SESSION_CRYPT_KEY_NAME_LEN;
+      const uint8_t* aead_nonce = key_seed + TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN;
+      const uint8_t* ctext = aead_nonce + TLS_SESSION_CRYPT_AEAD_NONCE_LEN;
+      const size_t ctext_len = in_len - TLS_SESSION_CRYPT_HDR_LEN; // includes the tag
+
+      if(load_be<uint64_t>(magic, 0) != TLS_SESSION_CRYPT_MAGIC)
+         throw Decoding_Error("Missing expected magic numbers");
+
+      auto hmac = MessageAuthenticationCode::create_or_throw(TLS_SESSION_CRYPT_HMAC);
       hmac->set_key(key);
-      hmac->update(in, nonce_len); // nonce bytes
-      aead->set_key(hmac->final());
 
-      aead->start(in, nonce_len);
-      secure_vector<uint8_t> buf(in + nonce_len, in + in_len);
+      // First derive and check the "key name"
+      std::vector<uint8_t> cmp_key_name(hmac->output_length());
+      hmac->update(TLS_SESSION_CRYPT_KEY_NAME);
+      hmac->final(cmp_key_name.data());
+
+      if(same_mem(cmp_key_name.data(), key_name, TLS_SESSION_CRYPT_KEY_NAME_LEN) == false)
+         throw Decoding_Error("Wrong key name for encrypted session");
+
+      hmac->update(key_seed, TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN);
+      const secure_vector<uint8_t> aead_key = hmac->final();
+
+      auto aead = AEAD_Mode::create_or_throw(TLS_SESSION_CRYPT_AEAD, DECRYPTION);
+      aead->set_key(aead_key);
+      aead->set_associated_data(in, TLS_SESSION_CRYPT_HDR_LEN);
+      aead->start(aead_nonce, TLS_SESSION_CRYPT_AEAD_NONCE_LEN);
+      secure_vector<uint8_t> buf(ctext, ctext + ctext_len);
       aead->finish(buf, 0);
-
       return Session(buf.data(), buf.size());
       }
    catch(std::exception& e)
