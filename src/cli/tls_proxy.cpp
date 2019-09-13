@@ -21,6 +21,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <botan/internal/os_utils.h>
 
 #include <botan/tls_server.h>
 #include <botan/x509cert.h>
@@ -458,7 +459,7 @@ class TLS_Proxy final : public Command
          {
          if(size_t t = get_arg_sz("threads"))
             return t;
-         if(size_t t = std::thread::hardware_concurrency())
+         if(size_t t = Botan::OS::get_cpu_available())
             return t;
          return 2;
          }
