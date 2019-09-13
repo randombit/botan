@@ -666,6 +666,12 @@ Every time your handshake callback is called, a new session has been
 established, and a ``TLS::Session`` is included that provides
 information about that session:
 
+.. note::
+
+   The serialization format of Session is not considered stable and is allowed
+   to change even within a single major release cycle. In the event of such a
+   change, old sessions will no longer be able to be resumed.
+
 .. cpp:class:: TLS::Session
 
    .. cpp:function:: Protocol_Version version() const
@@ -705,10 +711,8 @@ information about that session:
 
       Encrypts a session using a symmetric key *key* and returns a raw
       binary value that can later be passed to ``decrypt``. The key
-      may be of any length.
-
-      Currently the implementation encrypts the session using AES-256
-      in GCM mode with a random nonce.
+      may be of any length. The format is described in
+      :ref:`tls_session_encryption`.
 
    .. cpp:function:: static Session decrypt(const uint8_t ciphertext[], \
                                             size_t length, \
@@ -988,37 +992,29 @@ policy settings from a file.
      Signals that we prefer ECC points to be compressed when transmitted to us.
      The other party may not support ECC point compression and therefore may still
      send points uncompressed.
-    
+
      Note that the certificate used during authentication must also follow the other
      party's preference.
 
      Default: false
+
+     .. note::
+
+        Support for EC point compression is deprecated and will be removed in a
+        future major release.
 
  .. cpp:function:: bool acceptable_protocol_version(Protocol_Version version)
 
      Return true if this version of the protocol is one that we are
      willing to negotiate.
 
-     Default: Accepts TLS v1.0 or higher and DTLS v1.2 or higher.
+     Default: Accepts TLS v1.2 and DTLS v1.2, and rejects all older versions.
 
  .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
 
      If this returns true, a server will pick the cipher it prefers the
      most out of the client's list. Otherwise, it will negotiate the
      first cipher in the client's ciphersuite list that it supports.
-
- .. cpp:function:: bool negotiate_heartbeat_support() const
-
-     If this function returns true, clients will offer the heartbeat
-     support extension, and servers will respond to clients offering
-     the extension. Otherwise, clients will not offer heartbeat
-     support and servers will ignore clients offering heartbeat
-     support.
-
-     If this returns true, callers should expect to handle heartbeat
-     data in their ``alert_cb``.
-
-     Default: false
 
  .. cpp:function:: bool allow_client_initiated_renegotiation() const
 
@@ -1033,6 +1029,16 @@ policy settings from a file.
      If this function returns true, a client will accept a
      server-initiated renegotiation attempt. Otherwise it will send
      the server a non-fatal ``no_renegotiation`` alert.
+
+     Default: false
+
+ .. cpp:function:: bool abort_connection_on_undesired_renegotiation() const
+
+     If a renegotiation attempt is being rejected due to the configuration of
+     :cpp:func:`TLS::Policy::allow_client_initiated_renegotiation` or
+     :cpp:func:`TLS::Policy::allow_server_initiated_renegotiation`, and
+     this function returns true then the connection is closed with a fatal
+     alert instead of the default warning alert.
 
      Default: false
 
@@ -1873,3 +1879,37 @@ Stream Code Example
 
       io_context.run();
       }
+
+.. _tls_session_encryption:
+
+TLS Session Encryption
+-------------------------
+
+A unified format is used for encrypting TLS sessions either for durable storage
+(on client or server) or when creating TLS session tickets. This format is *not
+stable* even across the same major version.
+
+The current session encryption scheme was introduced in 1.11.13.
+
+Session encryption accepts a key of any length, though for best security a key
+of 256 bits should be used. This master key is used to key an instance of HMAC
+using the SHA-256 hash.
+
+A random 96 bit nonce is created and included in the header. Then the nonce is
+hashed using the keyed HMAC to produce a 256-bit GCM key. This key and nonce
+pair are used to encrypt the session.
+
+The current design is unfortunate in several ways:
+
+ * If the random 96-bit nonce ever repeats, then the same GCM key *and nonce*
+   are used to encrypt 2 different sessions, breaking the security of sessions
+   encrypted using that duplicated key/nonce. The GCM nonce should have been
+   independently created and included in the header, making a key collision
+   harmless.
+
+ * There is no simple way to detect old or rotated keys, except by attempting
+   decryption. Instead a key identifier should be included in the header.
+
+ * There is no indicator of the format used, which makes handling format
+   upgrades without breaking compatability awkward.
+
