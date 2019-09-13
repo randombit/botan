@@ -124,7 +124,11 @@ void Extensions::add(Certificate_Extension* extn, bool critical)
    {
    // sanity check: we don't want to have the same extension more than once
    if(m_extension_info.count(extn->oid_of()) > 0)
-      throw Invalid_Argument(extn->oid_name() + " extension already present in Extensions::add");
+      {
+      const std::string name = extn->oid_name();
+      delete extn;
+      throw Invalid_Argument("Extension " + name + " already present in Extensions::add");
+      }
 
    const OID oid = extn->oid_of();
    Extensions_Info info(critical, extn);
@@ -147,10 +151,22 @@ bool Extensions::add_new(Certificate_Extension* extn, bool critical)
    return true;
    }
 
+bool Extensions::remove(const OID& oid)
+   {
+   const bool erased = m_extension_info.erase(oid) > 0;
+
+   if(erased)
+      {
+      m_extension_oids.erase(std::find(m_extension_oids.begin(), m_extension_oids.end(), oid));
+      }
+
+   return erased;
+   }
+
 void Extensions::replace(Certificate_Extension* extn, bool critical)
    {
    // Remove it if it existed
-   m_extension_info.erase(extn->oid_of());
+   remove(extn->oid_of());
 
    const OID oid = extn->oid_of();
    Extensions_Info info(critical, extn);
@@ -169,6 +185,15 @@ bool Extensions::critical_extension_set(const OID& oid) const
    if(i != m_extension_info.end())
       return i->second.is_critical();
    return false;
+   }
+
+std::vector<uint8_t> Extensions::get_extension_bits(const OID& oid) const
+   {
+   auto i = m_extension_info.find(oid);
+   if(i == m_extension_info.end())
+      throw Invalid_Argument("Extensions::get_extension_bits no such extension set");
+
+   return i->second.bits();
    }
 
 const Certificate_Extension* Extensions::get_extension_object(const OID& oid) const

@@ -177,6 +177,12 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
       void replace(Certificate_Extension* extn, bool critical = false);
 
       /**
+      * Remove an extension from the list. Returns true if the
+      * extension had been set, false otherwise.
+      */
+      bool remove(const OID& oid);
+
+      /**
       * Searches for an extension by OID and returns the result.
       * Only the known extensions types declared in this header
       * are searched for by this function.
