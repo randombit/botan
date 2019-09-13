@@ -20,8 +20,14 @@ Version 2.12.0, Not Yet Released
 * Fix a bug which would cause Streebog to produce incorrect outputs for
   certain messages (GH #2082 #2083)
 
+* Fix a bug that prevented loading EC points with an affine x or y
+  value of 0. For certain curves such points can exist. (GH #2102)
+
 * Fix a bug which would cause PBKDF2 to go into a very long loop if
   it was requested to use an iteration count of 0. (GH #2090 #2088)
+
+* Add a function to remove an X.509 extension from an Extensions object.
+  (GH #2101 #2073 #2065)
 
 * In DTLS server, support a client crashing and then reconnecting from
   the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
