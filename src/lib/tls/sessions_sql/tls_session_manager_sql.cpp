@@ -80,7 +80,8 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
 
       // new database case
 
-      std::vector<uint8_t> salt = unlock(rng.random_vec(16));
+      std::vector<uint8_t> salt;
+      rng.random_vec(salt, 16);
       size_t iterations = 0;
 
       secure_vector<uint8_t> x = pbkdf->pbkdf_timed(32 + 2,

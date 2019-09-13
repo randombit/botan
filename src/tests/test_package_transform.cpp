@@ -30,7 +30,8 @@ class Package_Transform_Tests final : public Test
 
          for(size_t input_len = 2; input_len != 256; ++input_len)
             {
-            std::vector<uint8_t> input = unlock(Test::rng().random_vec(input_len));
+            std::vector<uint8_t> input;
+            Test::rng().random_vec(input, input_len);
             std::vector<uint8_t> output(input.size() + cipher->block_size());
 
             // aont_package owns/deletes the passed cipher object, kind of a bogus API

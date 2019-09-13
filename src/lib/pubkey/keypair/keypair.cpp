@@ -31,8 +31,8 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
    if(encryptor.maximum_input_size() == 0)
       return true;
 
-   std::vector<uint8_t> plaintext =
-      unlock(rng.random_vec(encryptor.maximum_input_size() - 1));
+   std::vector<uint8_t> plaintext;
+   rng.random_vec(plaintext, encryptor.maximum_input_size() - 1);
 
    std::vector<uint8_t> ciphertext = encryptor.encrypt(plaintext, rng);
    if(ciphertext == plaintext)

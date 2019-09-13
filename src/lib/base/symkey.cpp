@@ -18,7 +18,7 @@ namespace Botan {
 OctetString::OctetString(RandomNumberGenerator& rng,
                          size_t len)
    {
-   m_data = rng.random_vec(len);
+   rng.random_vec(m_data, len);
    }
 
 /*

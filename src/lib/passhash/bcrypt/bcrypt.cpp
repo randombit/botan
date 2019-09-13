@@ -146,7 +146,10 @@ std::string generate_bcrypt(const std::string& pass,
 
    if(version != 'a' && version != 'b' && version != 'y')
       throw Invalid_Argument("Unknown bcrypt version '" + std::string(1, version) + "'");
-   return make_bcrypt(pass, unlock(rng.random_vec(16)), work_factor, version);
+
+   std::vector<uint8_t> salt;
+   rng.random_vec(salt, 16);
+   return make_bcrypt(pass, salt, work_factor, version);
    }
 
 bool check_bcrypt(const std::string& pass, const std::string& hash)

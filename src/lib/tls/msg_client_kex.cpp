@@ -212,7 +212,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          {
          const Protocol_Version offered_version = state.client_hello()->version();
 
-         m_pre_master = rng.random_vec(48);
+         rng.random_vec(m_pre_master, 48);
          m_pre_master[0] = offered_version.major_version();
          m_pre_master[1] = offered_version.minor_version();
 
@@ -381,15 +381,15 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             {
             throw TLS_Exception(Alert::ILLEGAL_PARAMETER, e.what());
             }
-         catch(std::exception &)
+         catch(std::exception&)
             {
             /*
-            * Something failed in the DH computation. To avoid possible
-            * timing attacks, randomize the pre-master output and carry
-            * on, allowing the protocol to fail later in the finished
-            * checks.
+            * Something failed in the DH/ECDH computation. To avoid possible
+            * attacks which are based on triggering and detecting some edge
+            * failure condition, randomize the pre-master output and carry on,
+            * allowing the protocol to fail later in the finished checks.
             */
-            m_pre_master = rng.random_vec(ka_key->public_value().size());
+            rng.random_vec(m_pre_master, ka_key->public_value().size());
             }
 
          reader.assert_done();

@@ -284,7 +284,7 @@ class RSA_Blinding_Tests final : public Test
          */
          const size_t rng_bytes = rsa.get_n().bytes() + (2*8*BOTAN_BLINDING_REINIT_INTERVAL);
 
-         Botan_Tests::Fixed_Output_RNG fixed_rng(Botan::unlock(Test::rng().random_vec(rng_bytes)));
+         Botan_Tests::Fixed_Output_RNG fixed_rng(Test::rng(), rng_bytes);
          Botan::PK_Decryptor_EME decryptor(rsa, fixed_rng, "Raw", "base");
 
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL ; ++i)
