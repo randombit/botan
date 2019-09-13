@@ -140,9 +140,16 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
       */
       secure_vector<uint8_t> random_vec(size_t bytes)
          {
-         secure_vector<uint8_t> output(bytes);
-         this->randomize(output.data(), output.size());
+         secure_vector<uint8_t> output;
+         random_vec(output, bytes);
          return output;
+         }
+
+      template<typename Alloc>
+         void random_vec(std::vector<uint8_t, Alloc>& v, size_t bytes)
+         {
+         v.resize(bytes);
+         this->randomize(v.data(), v.size());
          }
 
       /**

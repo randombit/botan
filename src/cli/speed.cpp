@@ -1644,7 +1644,7 @@ class Speed final : public Command
             // Generate a new random ciphertext to decrypt
             if(ciphertext.empty() || enc_timer->under(msec))
                {
-               plaintext = unlock(rng().random_vec(enc.maximum_input_size()));
+               rng().random_vec(plaintext, enc.maximum_input_size());
                ciphertext = enc_timer->run([&]() { return enc.encrypt(plaintext, rng()); });
                }
 
@@ -1790,7 +1790,7 @@ class Speed final : public Command
                Length here is kind of arbitrary, but 48 bytes fits into a single
                hash block so minimizes hashing overhead versus the PK op itself.
                */
-               message = unlock(rng().random_vec(48));
+               rng().random_vec(message, 48);
 
                signature = sig_timer->run([&]() { return sig.sign_message(message, rng()); });
 

@@ -69,6 +69,13 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          m_buf.insert(m_buf.end(), in.begin(), in.end());
          }
 
+      Fixed_Output_RNG(RandomNumberGenerator& rng, size_t len)
+         {
+         std::vector<uint8_t> output;
+         rng.random_vec(output, len);
+         m_buf.insert(m_buf.end(), output.begin(), output.end());
+         }
+
       Fixed_Output_RNG() = default;
    protected:
       uint8_t random()
