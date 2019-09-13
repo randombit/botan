@@ -124,7 +124,11 @@ void Extensions::add(Certificate_Extension* extn, bool critical)
    {
    // sanity check: we don't want to have the same extension more than once
    if(m_extension_info.count(extn->oid_of()) > 0)
-      throw Invalid_Argument(extn->oid_name() + " extension already present in Extensions::add");
+      {
+      const std::string name = extn->oid_name();
+      delete extn;
+      throw Invalid_Argument("Extension " + name + " already present in Extensions::add");
+      }
 
    const OID oid = extn->oid_of();
    Extensions_Info info(critical, extn);
