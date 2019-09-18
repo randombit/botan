@@ -28,7 +28,8 @@ enum class Usage_Type
    TLS_SERVER_AUTH,
    TLS_CLIENT_AUTH,
    CERTIFICATE_AUTHORITY,
-   OCSP_RESPONDER
+   OCSP_RESPONDER,
+   ENCRYPTION
    };
 
 struct X509_Certificate_Data;

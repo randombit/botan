@@ -535,6 +535,9 @@ bool X509_Certificate::allowed_usage(Usage_Type usage) const
 
       case Usage_Type::CERTIFICATE_AUTHORITY:
          return is_CA_cert();
+
+      case Usage_Type::ENCRYPTION:
+         return (allowed_usage(KEY_ENCIPHERMENT) || allowed_usage(DATA_ENCIPHERMENT));
       }
 
    return false;
