@@ -2006,7 +2006,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'prefix': options.prefix or osinfo.install_root,
         'bindir': options.bindir or osinfo.bin_dir,
-        'libdir': options.libdir or osinfo.lib_dir,
+        'libdir': options.libdir or '/'.join(['${prefix}', osinfo.lib_dir]),
         'mandir': options.mandir or osinfo.man_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
