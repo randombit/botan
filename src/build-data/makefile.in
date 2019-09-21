@@ -27,7 +27,7 @@ EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
 BUILD_FLAGS    = $(ABI_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
-INSTALLED_LIB_DIR = %{prefix}/%{libdir}
+INSTALLED_LIB_DIR = %{libdir}
 
 # The primary target
 all: %{all_targets}
