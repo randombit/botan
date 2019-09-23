@@ -49,6 +49,7 @@ class OCSP_Tests final : public Test
             try
                {
                Botan::OCSP::Response resp(Test::read_binary_data_file(ocsp_input_path));
+               result.confirm("parsing was successful", resp.status() == Botan::OCSP::Response_Status_Code::Successful);
                result.test_success("Parsed input " + ocsp_input_path);
                }
             catch(Botan::Exception& e)
@@ -56,6 +57,9 @@ class OCSP_Tests final : public Test
                result.test_failure("Parsing failed", e.what());
                }
             }
+
+         Botan::OCSP::Response resp(Test::read_binary_data_file("x509/ocsp/patrickschmidt_ocsp_try_later_wrong_sig.der"));
+         result.confirm("parsing exposes correct status code", resp.status() == Botan::OCSP::Response_Status_Code::Try_Later);
 
          return result;
          }

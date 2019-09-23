@@ -92,6 +92,7 @@ std::string Request::base64_encode() const
 
 Response::Response(Certificate_Status_Code status)
    {
+   m_status = Response_Status_Code::Successful;
    m_dummy_response_status = status;
    }
 
@@ -106,11 +107,10 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
    response_outer.decode(resp_status, ENUMERATED, UNIVERSAL);
 
-   /*
-   * FIXME: properly decode error responses
-   */
-   if(resp_status != 0)
-      throw Decoding_Error("OCSP response status " + std::to_string(resp_status));
+   m_status = static_cast<Response_Status_Code>(resp_status);
+
+   if(m_status != Response_Status_Code::Successful)
+      { return; }
 
    if(response_outer.more_items())
       {

@@ -219,7 +219,8 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
       std::shared_ptr<const X509_Certificate> subject = cert_path.at(i);
       std::shared_ptr<const X509_Certificate> ca = cert_path.at(i+1);
 
-      if(i < ocsp_responses.size() && (ocsp_responses.at(i) != nullptr))
+      if(i < ocsp_responses.size() && (ocsp_responses.at(i) != nullptr)
+            && (ocsp_responses.at(i)->status() == OCSP::Response_Status_Code::Successful))
          {
          try
             {
