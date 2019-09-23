@@ -596,6 +596,21 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(hotp.check(520489, 7, 2), (True, 10))
         self.assertEqual(hotp.check(520489, 0, 9), (True, 10))
 
+    def test_totp(self):
+
+        totp = botan2.TOTP(b'12345678901234567890', digest="SHA-1", digits=8)
+
+        self.assertEqual(totp.generate(59), 94287082)
+        self.assertEqual(totp.generate(1111111109), 7081804)
+        self.assertEqual(totp.generate(1111111111), 14050471)
+        self.assertEqual(totp.generate(1234567890), 89005924)
+        self.assertEqual(totp.generate(1234567890), 89005924)
+        self.assertEqual(totp.generate(2000000000), 69279037)
+
+        self.assertTrue(totp.check(7081804, 1111111109))
+        self.assertTrue(totp.check(7081804, 1111111109 - 29))
+        self.assertFalse(totp.check(7081804, 1111111109 + 1))
+        self.assertTrue(totp.check(7081804, 1111111109 + 30, 1))
 
 if __name__ == '__main__':
     unittest.main()

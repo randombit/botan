@@ -22,7 +22,7 @@ from ctypes import CDLL, POINTER, byref, create_string_buffer, \
     c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char_p
 
 from sys import version_info, platform
-from time import strptime, mktime
+from time import strptime, mktime, time as system_time
 from binascii import hexlify
 from datetime import datetime
 
@@ -1587,6 +1587,29 @@ class HOTP(object):
             return (True, next_ctr.value)
         else:
             return (False, counter)
+
+class TOTP(object):
+    def __init__(self, key, digest="SHA-1", digits=6, timestep=30):
+        self.__obj = c_void_p(0)
+        _DLL.botan_totp_init(byref(self.__obj), key, len(key), _ctype_str(digest), digits, timestep)
+
+    def __del__(self):
+        _DLL.botan_totp_destroy(self.__obj)
+
+    def generate(self, timestamp=None):
+        if timestamp is None:
+            timestamp = int(system_time())
+        code = c_uint32(0)
+        _DLL.botan_totp_generate(self.__obj, byref(code), timestamp)
+        return code.value
+
+    def check(self, code, timestamp=None, acceptable_drift=0):
+        if timestamp is None:
+            timestamp = int(system_time())
+        rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)
+        if rc == 0:
+            return True
+        return False
 
 def nist_key_wrap(kek, key):
     output = create_string_buffer(len(key) + 8)
