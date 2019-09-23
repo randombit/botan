@@ -10,6 +10,10 @@
    #include <botan/hex.h>
 #endif
 
+#if defined(BOTAN_HAS_BASE32_CODEC)
+   #include <botan/base32.h>
+#endif
+
 #if defined(BOTAN_HAS_BASE58_CODEC)
    #include <botan/base58.h>
 #endif
@@ -139,7 +143,67 @@ class Base58_Decode final : public Command
 
 BOTAN_REGISTER_COMMAND("base58_dec", Base58_Decode);
 
-#endif // base64
+#endif // base58
+
+#if defined(BOTAN_HAS_BASE32_CODEC)
+
+class Base32_Encode final : public Command
+   {
+   public:
+      Base32_Encode() : Command("base32_enc file") {}
+
+      std::string group() const override
+         {
+         return "codec";
+         }
+
+      std::string description() const override
+         {
+         return "Encode given file to Base32";
+         }
+
+      void go() override
+         {
+         auto onData = [&](const uint8_t b[], size_t l)
+            {
+            output() << Botan::base32_encode(b, l);
+            };
+         this->read_file(get_arg("file"), onData, 768);
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("base32_enc", Base32_Encode);
+
+class Base32_Decode final : public Command
+   {
+   public:
+      Base32_Decode() : Command("base32_dec file") {}
+
+      std::string group() const override
+         {
+         return "codec";
+         }
+
+      std::string description() const override
+         {
+         return "Decode Base32 encoded file";
+         }
+
+      void go() override
+         {
+         auto write_bin = [&](const uint8_t b[], size_t l)
+            {
+            Botan::secure_vector<uint8_t> bin = Botan::base32_decode(reinterpret_cast<const char*>(b), l);
+            output().write(reinterpret_cast<const char*>(bin.data()), bin.size());
+            };
+
+         this->read_file(get_arg("file"), write_bin, 1024);
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("base32_dec", Base32_Decode);
+
+#endif // base32
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
 
