@@ -14,6 +14,7 @@
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/thread_pool.h>
+   #include <botan/internal/rwlock.h>
 #endif
 
 namespace Botan_Tests {
@@ -106,8 +107,8 @@ int Test_Runner::run(const Test_Options& opts)
       */
 
       std::vector<std::string> default_first = {
-         "block", "stream", "hash", "mac", "modes", "aead",
-         "kdf", "pbkdf", "hmac_drbg", "util"
+         "block", "stream", "hash", "mac", "aead",
+         "modes", "kdf", "pbkdf", "hmac_drbg", "util"
       };
 
       for(auto s : default_first)
@@ -298,6 +299,15 @@ std::string test_summary(size_t test_run, size_t tot_test_runs, uint64_t total_n
    return oss.str();
    }
 
+bool needs_serialization(const std::string& test_name)
+   {
+   if(test_name.substr(0, 6) == "pkcs11")
+      return true;
+   if(test_name == "block" || test_name == "hash" || test_name == "mac" || test_name == "stream" || test_name == "aead")
+      return true;
+   return false;
+   }
+
 }
 
 size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
@@ -313,20 +323,33 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
       {
       // If 0 then we let thread pool select the count
       Botan::Thread_Pool pool(test_threads);
+      Botan::RWLock rwlock;
 
       std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
 
+      auto run_test_exclusive = [&](const std::string& test_name) {
+         rwlock.lock();
+         std::vector<Test::Result> results = run_a_test(test_name);
+         rwlock.unlock();
+         return results;
+      };
+
+      auto run_test_shared = [&](const std::string& test_name) {
+         rwlock.lock_shared();
+         std::vector<Test::Result> results = run_a_test(test_name);
+         rwlock.unlock_shared();
+         return results;
+      };
+
       for(auto const& test_name : tests_to_run)
          {
-         if(test_name.substr(0, 6) == "pkcs11")
+         if(needs_serialization(test_name))
             {
-            // Run all PKCS11 tests on the main thread because they need to
-            // be serialized with respect to each other.
-            m_fut_results.push_back(std::async(std::launch::deferred, run_a_test, test_name));
+            m_fut_results.push_back(pool.run(run_test_exclusive, test_name));
             }
          else
             {
-            m_fut_results.push_back(pool.run(run_a_test, test_name));
+            m_fut_results.push_back(pool.run(run_test_shared, test_name));
             }
          }
 
