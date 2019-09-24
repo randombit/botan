@@ -10,6 +10,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace Botan_Tests {
 
