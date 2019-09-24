@@ -955,6 +955,7 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
                         const std::string& hash_fn = "SHA-256")
    {
    using Botan::Key_Constraints;
+   using Botan::Usage_Type;
 
    Test::Result result("X509 Usage");
 
@@ -989,6 +990,8 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    result.test_eq("key usage cRLSign not allowed",
                   user1_cert.allowed_usage(
                      Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)), false);
+   result.test_eq("encryption is not allowed",
+                  user1_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
 
    // cert only allows digitalSignature, so checking for only that should be ok
    result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
@@ -1013,6 +1016,9 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    result.confirm("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
    result.confirm("key usage multiple digitalSignature and cRLSign allowed", mult_usage_cert.allowed_usage(
                      Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)));
+   result.test_eq("encryption is not allowed",
+                  mult_usage_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
+
 
    opts.constraints = Key_Constraints::NO_CONSTRAINTS;
 
@@ -1026,6 +1032,28 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    // cert allows every usage
    result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
    result.confirm("key usage cRLSign allowed", no_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
+   result.confirm("key usage encryption allowed", no_usage_cert.allowed_usage(Usage_Type::ENCRYPTION));
+
+   if (sig_algo == "RSA")
+      {
+      // cert allows data encryption
+       opts.constraints = Key_Constraints(Key_Constraints::KEY_ENCIPHERMENT | Key_Constraints::DATA_ENCIPHERMENT);
+
+      const Botan::PKCS10_Request enc_req = Botan::X509::create_cert_req(
+               opts,
+               *user1_key,
+               hash_fn,
+               Test::rng());
+
+      const Botan::X509_Certificate enc_cert = ca.sign_request(
+               enc_req,
+               Test::rng(),
+               from_date(-1, 01, 01),
+               from_date(2, 01, 01));
+
+      result.confirm("cert allows encryption", enc_cert.allowed_usage(Usage_Type::ENCRYPTION));
+      result.confirm("cert does not allow TLS client auth", !enc_cert.allowed_usage(Usage_Type::TLS_CLIENT_AUTH));
+      }
 
    return result;
    }
