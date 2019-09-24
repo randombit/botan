@@ -189,6 +189,10 @@ def cli_base64_tests(_tmp_dir):
     test_cli("base64_enc", "-", "YmVlcyE=", "bees!")
     test_cli("base64_dec", "-", "bees!", "YmVlcyE=")
 
+def cli_base32_tests(_tmp_dir):
+    test_cli("base32_enc", "-", "MJSWK4ZB", "bees!")
+    test_cli("base32_dec", "-", "bees!", "MJSWK4ZB")
+
 def cli_base58_tests(_tmp_dir):
     test_cli("base58_enc", "-", "C6sRAr4", "bees!")
     test_cli("base58_dec", "-", "bees!", "C6sRAr4")
@@ -1074,6 +1078,7 @@ def main(args=None):
     test_fns = [
         cli_argon2_tests,
         cli_asn1_tests,
+        cli_base32_tests,
         cli_base58_tests,
         cli_base64_tests,
         cli_bcrypt_tests,
