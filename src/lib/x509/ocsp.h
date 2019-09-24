@@ -64,6 +64,20 @@ class BOTAN_PUBLIC_API(2,0) Request final
    };
 
 /**
+* OCSP response status.
+*
+* see https://tools.ietf.org/html/rfc6960#section-4.2.1
+*/
+enum class BOTAN_PUBLIC_API(2,12) Response_Status_Code {
+   Successful = 0,
+   Malformed_Request = 1,
+   Internal_Error = 2,
+   Try_Later = 3,
+   Sig_Required = 5,
+   Unauthorized = 6
+};
+
+/**
 * OCSP response.
 *
 * Note this class is only usable as an OCSP client
@@ -118,6 +132,11 @@ class BOTAN_PUBLIC_API(2,0) Response final
       Certificate_Status_Code verify_signature(const X509_Certificate& issuer) const;
 
       /**
+      * @return the status of the response
+      */
+      Response_Status_Code status() const { return m_status; }
+
+      /**
       * @return the time this OCSP response was supposedly produced at
       */
       const X509_Time& produced_at() const { return m_produced_at; }
@@ -161,6 +180,7 @@ class BOTAN_PUBLIC_API(2,0) Response final
       const std::vector<X509_Certificate> &certificates() const { return  m_certs; }
 
    private:
+      Response_Status_Code m_status;
       std::vector<uint8_t> m_response_bits;
       X509_Time m_produced_at;
       X509_DN m_signer_name;
