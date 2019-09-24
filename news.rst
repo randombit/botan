@@ -26,6 +26,8 @@ Version 2.12.0, Not Yet Released
 * Fix a bug which would cause PBKDF2 to go into a very long loop if
   it was requested to use an iteration count of 0. (GH #2090 #2088)
 
+* Properly decode OCSP responses which indicate an error (GH #2110)
+
 * Add a function to remove an X.509 extension from an Extensions object.
   (GH #2101 #2073 #2065)
 
@@ -57,6 +59,8 @@ Version 2.12.0, Not Yet Released
 
 * Add a new ``entropy`` cli which allows sampling the output of the entropy sources.
 
+* Add new ``base32_enc`` and ``base32_dec`` cli for base32 encoding operations. (GH #2111)
+
 * Cleanups in TLS record layer (GH #2021)
 
 * Support setting TLS policies in CLIs like ``tls_client`` and ``tls_proxy_server`` (GH #2047)
@@ -71,6 +75,8 @@ Version 2.12.0, Not Yet Released
 
 * In the Python module, also look for ``botan.dll`` so Python wrapper can run on Windows.
   (GH #2059 #2060)
+
+* Add support for TOTP algorithm to the Python module. (GH #2112)
 
 * Now the minimum Windows target is set to Windows 7 (GH #2036 #2028)
 
