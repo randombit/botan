@@ -30,6 +30,7 @@ Ciphers, Hashes, PBKDF
 * Threefish-1024
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Adiantum
+* CRC using clmul/pmull
 
 Public Key Crypto, Math
 ----------------------------------------
