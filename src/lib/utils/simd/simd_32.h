@@ -425,6 +425,8 @@ class SIMD_4x32 final
 
       template<int SHIFT> SIMD_4x32 shl() const
          {
+         static_assert(SHIFT > 0 && SHIFT <= 31, "Invalid shift count");
+
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_slli_epi32(m_simd, SHIFT));
 
@@ -510,6 +512,8 @@ class SIMD_4x32 final
       template<size_t I>
       SIMD_4x32 shift_elems_left() const
          {
+         static_assert(I <= 3, "Invalid shift count");
+
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_slli_si128(raw(), 4*I));
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -530,6 +534,8 @@ class SIMD_4x32 final
       template<size_t I>
       SIMD_4x32 shift_elems_right() const
          {
+         static_assert(I <= 3, "Invalid shift count");
+
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_srli_si128(raw(), 4*I));
 #elif defined(BOTAN_SIMD_USE_NEON)
