@@ -12,35 +12,26 @@
 #include <botan/cpuid.h>
 #include <botan/exceptn.h>
 
-#if defined(BOTAN_HAS_GCM_CLMUL)
-  #include <botan/internal/clmul.h>
+#if defined(BOTAN_HAS_GCM_CLMUL_CPU)
+  #include <botan/internal/clmul_cpu.h>
 #endif
 
 #if defined(BOTAN_HAS_GCM_CLMUL_SSSE3)
   #include <botan/internal/clmul_ssse3.h>
 #endif
 
-#if defined(BOTAN_HAS_GCM_PMULL)
-  #include <botan/internal/pmull.h>
-#endif
-
 namespace Botan {
 
 std::string GHASH::provider() const
    {
-#if defined(BOTAN_HAS_GCM_CLMUL)
-   if(CPUID::has_clmul())
+#if defined(BOTAN_HAS_GCM_CLMUL_CPU)
+   if(CPUID::has_carryless_multiply())
       return "clmul";
 #endif
 
 #if defined(BOTAN_HAS_GCM_CLMUL_SSSE3)
    if(CPUID::has_ssse3())
       return "ssse3";
-#endif
-
-#if defined(BOTAN_HAS_GCM_PMULL)
-   if(CPUID::has_arm_pmull())
-      return "pmull";
 #endif
 
    return "base";
@@ -50,8 +41,8 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
                          const uint8_t input[],
                          size_t blocks)
    {
-#if defined(BOTAN_HAS_GCM_CLMUL)
-   if(CPUID::has_clmul())
+#if defined(BOTAN_HAS_GCM_CLMUL_CPU)
+   if(CPUID::has_carryless_multiply())
       {
       return gcm_multiply_clmul(x.data(), m_H_pow.data(), input, blocks);
       }
@@ -61,13 +52,6 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
    if(CPUID::has_ssse3())
       {
       return gcm_multiply_ssse3(x.data(), m_HM.data(), input, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_GCM_PMULL)
-   if(CPUID::has_arm_pmull())
-      {
-      return gcm_multiply_pmull(x.data(), m_H_pow.data(), input, blocks);
       }
 #endif
 
@@ -169,22 +153,13 @@ void GHASH::key_schedule(const uint8_t key[], size_t length)
          }
       }
 
-#if defined(BOTAN_HAS_GCM_CLMUL)
-   if(CPUID::has_clmul())
+#if defined(BOTAN_HAS_GCM_CLMUL_CPU)
+   if(CPUID::has_carryless_multiply())
       {
       m_H_pow.resize(8);
       gcm_clmul_precompute(m_H.data(), m_H_pow.data());
       }
 #endif
-
-#if defined(BOTAN_HAS_GCM_PMULL)
-   if(CPUID::has_arm_pmull())
-      {
-      m_H_pow.resize(8);
-      gcm_pmull_precompute(m_H.data(), m_H_pow.data());
-      }
-#endif
-
    }
 
 void GHASH::start(const uint8_t nonce[], size_t len)

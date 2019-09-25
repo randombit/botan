@@ -334,6 +334,21 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
 #endif
          }
 
+      /**
+      * Check if the processor supports carryless multiply
+      * (CLMUL, PMULL)
+      */
+      static bool has_carryless_multiply()
+         {
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+         return has_clmul();
+#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+         return has_arm_pmull();
+#else
+         return false;
+#endif
+         }
+
       /*
       * Clear a CPUID bit
       * Call CPUID::initialize to reset
