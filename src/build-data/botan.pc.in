@@ -1,6 +1,6 @@
 prefix=%{prefix}
 exec_prefix=${prefix}
-libdir=${prefix}/%{libdir}
+libdir=%{libdir}
 includedir=${prefix}/include/botan-%{version_major}
 
 Name: Botan

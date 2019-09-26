@@ -1964,6 +1964,11 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             yield 'bogo_shim'
         yield 'docs'
 
+    def absolute_install_dir(p):
+        if os.path.isabs(p):
+            return p
+        return os.path.join(options.prefix or osinfo.install_root, p)
+
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -2005,8 +2010,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'program_suffix': program_suffix,
 
         'prefix': options.prefix or osinfo.install_root,
-        'bindir': options.bindir or osinfo.bin_dir,
-        'libdir': options.libdir or osinfo.lib_dir,
+        'bindir': absolute_install_dir(options.bindir or osinfo.bin_dir),
+        'libdir': absolute_install_dir(options.libdir or osinfo.lib_dir),
         'mandir': options.mandir or osinfo.man_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,

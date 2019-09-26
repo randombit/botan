@@ -156,8 +156,8 @@ def main(args):
     build_static_lib = bool(cfg['build_static_lib'])
     out_dir = cfg['out_dir']
 
-    bin_dir = os.path.join(options.prefix, options.bindir)
-    lib_dir = os.path.join(options.prefix, options.libdir)
+    bin_dir = options.bindir
+    lib_dir = options.libdir
     target_include_dir = os.path.join(options.prefix,
                                       options.includedir,
                                       'botan-%d' % (ver_major),
