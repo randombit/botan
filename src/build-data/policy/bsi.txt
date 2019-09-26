@@ -56,9 +56,8 @@ aes_armv8
 aes_power8
 
 # modes
-clmul
+clmul_cpu
 clmul_ssse3
-pmull
 
 # hash
 sha2_32_x86

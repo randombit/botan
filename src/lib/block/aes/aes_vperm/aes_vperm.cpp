@@ -18,14 +18,6 @@
   #include <tmmintrin.h>
 #endif
 
-#if defined(BOTAN_SIMD_USE_SSE2)
-   #define BOTAN_VPERM_ISA "ssse3"
-#elif defined(BOTAN_SIMD_USE_NEON)
-   #define BOTAN_VPERM_ISA "+simd"
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
-   #define BOTAN_VPERM_ISA "altivec"
-#endif
-
 namespace Botan {
 
 namespace {
@@ -63,34 +55,12 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shuffle(SIMD_4x32 a, SIMD_4x32 
 #endif
    }
 
-template<size_t I>
-inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shift_elems_left(SIMD_4x32 x)
-   {
-#if defined(BOTAN_SIMD_USE_SSE2)
-   return SIMD_4x32(_mm_slli_si128(x.raw(), 4*I));
-#elif defined(BOTAN_SIMD_USE_NEON)
-   return SIMD_4x32(vreinterpretq_u32_u8(vextq_u8(vdupq_n_u8(0), vreinterpretq_u8_u32(x.raw()), 16 - 4*I)));
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
-   const __vector unsigned int zero = vec_splat_u32(0);
-
-   const __vector unsigned char shuf[3] = {
-     { 16, 17, 18, 19, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
-     { 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7 },
-     { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 0, 1, 2, 3 },
-   };
-
-   return SIMD_4x32(vec_perm(x.raw(), zero, shuf[I-1]));
-#else
-   #error "No shift_elems_left implementation available"
-#endif
-   }
-
 inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) alignr8(SIMD_4x32 a, SIMD_4x32 b)
    {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), 8));
 #elif defined(BOTAN_SIMD_USE_NEON)
-   return SIMD_4x32(vreinterpretq_u32_u8(vextq_u8(vreinterpretq_u8_u32(b.raw()), vreinterpretq_u8_u32(a.raw()), 8)));
+   return SIMD_4x32(vextq_u32(b.raw(), a.raw(), 2));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
    const __vector unsigned char mask = {8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23};
    return SIMD_4x32(vec_perm(b.raw(), a.raw(), mask));
@@ -504,8 +474,8 @@ SIMD_4x32 aes_schedule_mangle_last_dec(SIMD_4x32 k)
 
 SIMD_4x32 aes_schedule_round(SIMD_4x32 input1, SIMD_4x32 input2)
    {
-   SIMD_4x32 smeared = input2 ^ shift_elems_left<1>(input2);
-   smeared ^= shift_elems_left<2>(smeared);
+   SIMD_4x32 smeared = input2 ^ input2.shift_elems_left<1>();
+   smeared ^= smeared.shift_elems_left<2>();
    smeared ^= SIMD_4x32::splat_u8(0x5B);
 
    const SIMD_4x32 Bh = high_nibs(input1);
@@ -588,7 +558,6 @@ void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t)
       // key2 with 8 high bytes masked off
       SIMD_4x32 t = key2;
       key2 = aes_schedule_round(rcon[2*i], key2, key1);
-
       const SIMD_4x32 key2t = alignr8(key2, t);
       aes_schedule_mangle(key2t, (i+3)%4).store_le(&m_EK[4*(3*i+1)]);
       aes_schedule_mangle_dec(key2t, (i+3)%4).store_le(&m_DK[4*(11-3*i)]);

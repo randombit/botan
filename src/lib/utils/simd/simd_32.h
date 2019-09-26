@@ -31,6 +31,19 @@
   #error "No SIMD instruction set enabled"
 #endif
 
+#if defined(BOTAN_SIMD_USE_SSE2)
+  #define BOTAN_SIMD_ISA "sse2"
+  #define BOTAN_VPERM_ISA "ssse3"
+  #define BOTAN_CLMUL_ISA "pclmul"
+#elif defined(BOTAN_SIMD_USE_NEON)
+  #define BOTAN_SIMD_ISA "+simd"
+  #define BOTAN_VPERM_ISA "+simd"
+  #define BOTAN_CLMUL_ISA "+crypto"
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+  #define BOTAN_SIMD_ISA "altivec"
+  #define BOTAN_VPERM_ISA "altivec"
+#endif
+
 namespace Botan {
 
 #if defined(BOTAN_SIMD_USE_SSE2)
@@ -172,7 +185,12 @@ class SIMD_4x32 final
 #endif
          }
 
-      void store_le(uint32_t out[]) const
+      void store_le(uint32_t out[4]) const
+         {
+         this->store_le(reinterpret_cast<uint8_t*>(out));
+         }
+
+      void store_le(uint64_t out[2]) const
          {
          this->store_le(reinterpret_cast<uint8_t*>(out));
          }
@@ -407,6 +425,8 @@ class SIMD_4x32 final
 
       template<int SHIFT> SIMD_4x32 shl() const
          {
+         static_assert(SHIFT > 0 && SHIFT <= 31, "Invalid shift count");
+
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_slli_epi32(m_simd, SHIFT));
 
@@ -486,6 +506,50 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(m_simd))));
+#endif
+         }
+
+      template<size_t I>
+      SIMD_4x32 shift_elems_left() const
+         {
+         static_assert(I <= 3, "Invalid shift count");
+
+#if defined(BOTAN_SIMD_USE_SSE2)
+         return SIMD_4x32(_mm_slli_si128(raw(), 4*I));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_4x32(vextq_u32(vdupq_n_u32(0), raw(), 4-I));
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+         const __vector unsigned int zero = vec_splat_u32(0);
+
+         const __vector unsigned char shuf[3] = {
+            { 16, 17, 18, 19, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+            { 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7 },
+            { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 0, 1, 2, 3 },
+         };
+
+         return SIMD_4x32(vec_perm(raw(), zero, shuf[I-1]));
+#endif
+         }
+
+      template<size_t I>
+      SIMD_4x32 shift_elems_right() const
+         {
+         static_assert(I <= 3, "Invalid shift count");
+
+#if defined(BOTAN_SIMD_USE_SSE2)
+         return SIMD_4x32(_mm_srli_si128(raw(), 4*I));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_4x32(vextq_u32(raw(), vdupq_n_u32(0), I));
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+         const __vector unsigned int zero = vec_splat_u32(0);
+
+         const __vector unsigned char shuf[3] = {
+            { 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 },
+            { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 },
+            { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 },
+         };
+
+         return SIMD_4x32(vec_perm(raw(), zero, shuf[I-1]));
 #endif
          }
 

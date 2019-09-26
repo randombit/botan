@@ -117,6 +117,14 @@ class SIMD_32_Tests final : public Test
          test_eq(result, "transpose t3", t3, pat3, pat3 + 1, pat3 + 2, pat3 + 3);
          test_eq(result, "transpose t4", t4, pat4, pat4 + 1, pat4 + 2, pat4 + 3);
 
+         test_eq(result, "shift left 1", input.shift_elems_left<1>(), 0, pat1, pat2, pat3);
+         test_eq(result, "shift left 2", input.shift_elems_left<2>(), 0, 0, pat1, pat2);
+         test_eq(result, "shift left 3", input.shift_elems_left<3>(), 0, 0, 0, pat1);
+
+         test_eq(result, "shift right 1", input.shift_elems_right<1>(), pat2, pat3, pat4, 0);
+         test_eq(result, "shift right 2", input.shift_elems_right<2>(), pat3, pat4, 0, 0);
+         test_eq(result, "shift right 3", input.shift_elems_right<3>(), pat4, 0, 0, 0);
+
          return {result};
          }
 
