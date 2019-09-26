@@ -67,11 +67,12 @@ void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
    m_chacha->set_iv(nonce, nonce_len);
 
-   secure_vector<uint8_t> first_block(64);
-   m_chacha->write_keystream(first_block.data(), first_block.size());
+   uint8_t first_block[64];
+   m_chacha->write_keystream(first_block, sizeof(first_block));
 
-   m_poly1305->set_key(first_block.data(), 32);
+   m_poly1305->set_key(first_block, 32);
    // Remainder of first block is discarded
+   secure_scrub_memory(first_block, sizeof(first_block));
 
    m_poly1305->update(m_ad);
 
@@ -111,8 +112,8 @@ void ChaCha20Poly1305_Encryption::finish(secure_vector<uint8_t>& buffer, size_t 
       }
    update_len(m_ctext_len);
 
-   const secure_vector<uint8_t> mac = m_poly1305->final();
-   buffer += std::make_pair(mac.data(), tag_size());
+   buffer.resize(buffer.size() + tag_size());
+   m_poly1305->final(&buffer[buffer.size() - tag_size()]);
    m_ctext_len = 0;
    m_nonce_len = 0;
    }
@@ -153,14 +154,16 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<uint8_t>& buffer, size_t 
       }
 
    update_len(m_ctext_len);
-   const secure_vector<uint8_t> mac = m_poly1305->final();
+
+   uint8_t mac[16];
+   m_poly1305->final(mac);
 
    const uint8_t* included_tag = &buf[remaining];
 
    m_ctext_len = 0;
    m_nonce_len = 0;
 
-   if(!constant_time_compare(mac.data(), included_tag, tag_size()))
+   if(!constant_time_compare(mac, included_tag, tag_size()))
       throw Invalid_Authentication_Tag("ChaCha20Poly1305 tag check failed");
    buffer.resize(offset + remaining);
    }
