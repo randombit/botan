@@ -58,9 +58,13 @@ uint8_t ct_compare_u8(const uint8_t x[],
                       size_t len)
    {
    volatile uint8_t difference = 0;
+   volatile const uint8_t *volatile ax =
+	   reinterpret_cast<volatile const uint8_t* volatile>(x);
+   volatile const uint8_t *volatile ay =
+	   reinterpret_cast<volatile const uint8_t* volatile>(y);
 
    for(size_t i = 0; i != len; ++i)
-      difference |= (x[i] ^ y[i]);
+      difference |= (ax[i] ^ ay[i]);
 
    return CT::Mask<uint8_t>::is_zero(difference).value();
    }
