@@ -9,3 +9,9 @@ avx2
 <requires>
 simd_avx2
 </requires>
+
+# We must exclude MSVC due to #2120
+<cc>
+gcc
+clang
+</cc>
