@@ -8,6 +8,7 @@
 #include <botan/ctr.h>
 #include <botan/exceptn.h>
 #include <botan/loadstor.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -209,15 +210,33 @@ void CTR_BE::seek(uint64_t offset)
    if(m_ctr_size == 4 && BS >= 8)
       {
       const uint32_t low32 = load_be<uint32_t>(&m_counter[BS-4], 0);
+
+      if(m_ctr_blocks >= 4 && is_power_of_2(m_ctr_blocks))
+         {
+         size_t written = 1;
+         while(written < m_ctr_blocks)
+            {
+            copy_mem(&m_counter[written*BS], &m_counter[0], BS*written);
+            written *= 2;
+            }
+         }
+      else
+         {
+         for(size_t i = 1; i != m_ctr_blocks; ++i)
+            {
+            copy_mem(&m_counter[i*BS], &m_counter[0], BS - 4);
+            }
+         }
+
       for(size_t i = 1; i != m_ctr_blocks; ++i)
          {
-         copy_mem(&m_counter[i*BS], &m_counter[0], BS - 4);
          const uint32_t c = static_cast<uint32_t>(low32 + i);
          store_be(c, &m_counter[(BS-4)+i*BS]);
          }
       }
    else
       {
+      // do everything sequentially:
       for(size_t i = 1; i != m_ctr_blocks; ++i)
          {
          buffer_insert(m_counter, i*BS, &m_counter[(i-1)*BS], BS);
