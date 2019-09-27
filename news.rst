@@ -8,7 +8,7 @@ Version 2.12.0, Not Yet Released
   a warning is issued if they are used by applications. In a future major
   release they will be made internal. (GH #2061)
 
-* GCM performance improvements (GH #2024 #2099)
+* GCM performance improvements (GH #2024 #2099 #2119)
 
 * ChaCha20Poly1305 performance improvements (GH #2117)
 
