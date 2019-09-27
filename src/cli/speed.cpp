@@ -1611,9 +1611,9 @@ class Speed final : public Command
                   }
 
                // Now test p+2, p+4, ... which may or may not be prime
-               for(size_t i = 2; i != 64; i += 2)
+               for(size_t i = 2; i <= 64; i += 2)
                   {
-                  is_prime_timer->run([&]() { Botan::is_prime(p, rng(), 64, true); });
+                  is_prime_timer->run([&]() { Botan::is_prime(p + i, rng(), 64, true); });
                   }
                }
 
