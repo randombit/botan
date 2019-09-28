@@ -11,9 +11,12 @@
 
 namespace Botan {
 
-XTS_Mode::XTS_Mode(BlockCipher* cipher) : m_cipher(cipher)
+XTS_Mode::XTS_Mode(BlockCipher* cipher) :
+   m_cipher(cipher),
+   m_cipher_block_size(m_cipher->block_size()),
+   m_cipher_parallelism(m_cipher->parallel_bytes())
    {
-   if(poly_double_supported_size(m_cipher->block_size()) == false)
+   if(poly_double_supported_size(m_cipher_block_size) == false)
       {
       throw Invalid_Argument("Cannot use " + cipher->name() + " with XTS");
       }
@@ -38,14 +41,9 @@ std::string XTS_Mode::name() const
    return cipher().name() + "/XTS";
    }
 
-size_t XTS_Mode::update_granularity() const
-   {
-   return cipher().parallel_bytes();
-   }
-
 size_t XTS_Mode::minimum_final_size() const
    {
-   return cipher().block_size();
+   return cipher_block_size();
    }
 
 Key_Length_Specification XTS_Mode::key_spec() const
@@ -55,12 +53,12 @@ Key_Length_Specification XTS_Mode::key_spec() const
 
 size_t XTS_Mode::default_nonce_length() const
    {
-   return cipher().block_size();
+   return cipher_block_size();
    }
 
 bool XTS_Mode::valid_nonce_length(size_t n) const
    {
-   return cipher().block_size() == n;
+   return cipher_block_size() == n;
    }
 
 void XTS_Mode::key_schedule(const uint8_t key[], size_t length)
@@ -107,7 +105,7 @@ size_t XTS_Encryption::output_length(size_t input_length) const
 size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(tweak_set());
-   const size_t BS = cipher().block_size();
+   const size_t BS = cipher_block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
    size_t blocks = sz / BS;
@@ -137,7 +135,7 @@ void XTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input in XTS encrypt");
 
-   const size_t BS = cipher().block_size();
+   const size_t BS = cipher_block_size();
 
    if(sz % BS == 0)
       {
@@ -181,7 +179,7 @@ size_t XTS_Decryption::output_length(size_t input_length) const
 size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
    {
    BOTAN_STATE_CHECK(tweak_set());
-   const size_t BS = cipher().block_size();
+   const size_t BS = cipher_block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
    size_t blocks = sz / BS;
@@ -211,7 +209,7 @@ void XTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input in XTS decrypt");
 
-   const size_t BS = cipher().block_size();
+   const size_t BS = cipher_block_size();
 
    if(sz % BS == 0)
       {
