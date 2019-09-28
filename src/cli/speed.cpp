@@ -81,6 +81,10 @@
    #include <botan/compression.h>
 #endif
 
+#if defined(BOTAN_HAS_POLY_DBL)
+   #include <botan/internal/poly_dbl.h>
+#endif
+
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
@@ -666,6 +670,12 @@ class Speed final : public Command
             else if(algo == "passhash9")
                {
                bench_passhash9();
+               }
+#endif
+#if defined(BOTAN_HAS_POLY_DBL)
+            else if(algo == "poly_dbl")
+               {
+               bench_poly_dbl(msec);
                }
 #endif
 
@@ -2107,6 +2117,26 @@ class Speed final : public Command
             record_result(keygen_timer);
             if(bench_pk_sig(*key, params, provider, "", msec) == 1)
                break;
+            }
+         }
+#endif
+
+#if defined(BOTAN_HAS_POLY_DBL)
+      void bench_poly_dbl(std::chrono::milliseconds msec)
+         {
+         for(size_t sz : { 8, 16, 24, 32, 64, 128 })
+            {
+            std::unique_ptr<Timer> be_timer = make_timer("poly_dbl_be_" + std::to_string(sz));
+            std::unique_ptr<Timer> le_timer = make_timer("poly_dbl_le_" + std::to_string(sz));
+
+            std::vector<uint8_t> buf(sz);
+            rng().randomize(buf.data(), sz);
+
+            be_timer->run_until_elapsed(msec, [&]() { Botan::poly_double_n(buf.data(), buf.data(), sz); });
+            le_timer->run_until_elapsed(msec, [&]() { Botan::poly_double_n_le(buf.data(), buf.data(), sz); });
+
+            record_result(be_timer);
+            record_result(le_timer);
             }
          }
 #endif

@@ -994,7 +994,7 @@ def cli_speed_tests(_tmp_dir):
 
     # these all have a common output format
     math_ops = ['mp_mul', 'mp_div', 'mp_div10', 'modexp', 'random_prime', 'inverse_mod',
-                'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'ecc_init',
+                'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'ecc_init', 'poly_dbl',
                 'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'primality_test',
                 'bcrypt', 'passhash9', 'argon2']
 
