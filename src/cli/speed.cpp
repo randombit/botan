@@ -1031,7 +1031,7 @@ class Speed final : public Command
 
                   if(iv.size() > 0)
                      {
-                     iv[0] += 1;
+                     iv[iv.size()-1] += 1;
                      }
                   }
                }
