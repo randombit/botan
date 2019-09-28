@@ -59,7 +59,7 @@ environment:
     - MSVS: 2019
       PLATFORM: x86_amd64
       TARGET: sanitizer
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
 install:
   - call src\scripts\ci\setup_appveyor.bat
