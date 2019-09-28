@@ -368,12 +368,12 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
 
       return tests_failed;
       }
-#endif
-
+#else
    if(test_threads > 1)
       {
       output() << "Running tests in multiple threads not enabled in this build\n";
       }
+#endif
 
    for(auto const& test_name : tests_to_run)
       {
