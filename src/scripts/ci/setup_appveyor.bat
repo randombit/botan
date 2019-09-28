@@ -11,5 +11,7 @@ cl
 appveyor DownloadFile https://github.com/mozilla/sccache/releases/download/%SCCACHE_VERSION%/sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
 tar -xf sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
 
-REM include QtCreator bin dir to get jom
-set PATH=%PATH%;C:\Qt\Tools\QtCreator\bin;sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc
+appveyor DownloadFile http://download.qt.io/official_releases/jom/jom.zip -FileName jom.zip
+7z e jom.zip
+
+set PATH=%PATH%;sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc
