@@ -4,9 +4,10 @@ Release Notes
 Version 2.12.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Many currently public headers are being deprecated. Currently this means
-  a warning is issued if they are used by applications. In a future major
-  release they will be made internal. (GH #2061)
+* Many currently public headers are being deprecated. If any such header is
+  included by an application, a warning is issued at compile time. Headers
+  issuing this warning will be made internal in a future major release.
+  (GH #2061)
 
 * Performance improvements for GCM (GH #2024 #2099 #2119), OCB (#2122),
   XTS (#2123) and ChaCha20Poly1305 (GH #2117), especially for small messages.
