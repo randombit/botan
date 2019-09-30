@@ -34,4 +34,5 @@ API Reference
    tpm
    otp
    ffi
+   env_vars
    python
