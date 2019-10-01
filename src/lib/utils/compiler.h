@@ -100,7 +100,7 @@
 #if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
 
   #if defined(__clang__)
-    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
+    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
     #define BOTAN_DEPRECATED_HEADER(hdr) _Pragma("message \"this header is deprecated\"")
 
     #if !defined(BOTAN_IS_BEING_BUILT)
