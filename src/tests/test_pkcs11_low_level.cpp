@@ -1,6 +1,7 @@
 /*
 * (C) 2016 Daniel Neus
 * (C) 2016 Philipp Weber
+* (C) 2019 Michael Boric
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -795,42 +796,42 @@ class LowLevelTests final : public Test
          {
          std::vector<Test::Result> results;
 
-         std::vector<std::function<Test::Result()>> fns =
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
             {
-            test_c_get_function_list
-            , test_low_level_ctor
-            , test_initialize_finalize
-            , test_c_get_info
-            , test_c_get_slot_list
-            , test_c_get_slot_info
-            , test_c_get_token_info
-            , test_c_wait_for_slot_event
-            , test_c_get_mechanism_list
-            , test_c_get_mechanism_info
-            , test_open_close_session
-            , test_c_close_all_sessions
-            , test_c_get_session_info
-            , test_c_init_token
-            , test_c_login_logout_security_officier /* only possible if token is initialized */
-            , test_c_init_pin
-            , test_c_login_logout_user /* only possible if token is initialized and user pin is set */
-            , test_c_set_pin
-            , test_c_create_object_c_destroy_object
-            , test_c_get_object_size
-            , test_c_get_attribute_value
-            , test_c_set_attribute_value
-            , test_c_copy_object
+            {STRING_AND_FUNCTION(test_c_get_function_list)}
+            , {STRING_AND_FUNCTION(test_low_level_ctor)}
+            , {STRING_AND_FUNCTION(test_initialize_finalize)}
+            , {STRING_AND_FUNCTION(test_c_get_info)}
+            , {STRING_AND_FUNCTION(test_c_get_slot_list)}
+            , {STRING_AND_FUNCTION(test_c_get_slot_info)}
+            , {STRING_AND_FUNCTION(test_c_get_token_info)}
+            , {STRING_AND_FUNCTION(test_c_wait_for_slot_event)}
+            , {STRING_AND_FUNCTION(test_c_get_mechanism_list)}
+            , {STRING_AND_FUNCTION(test_c_get_mechanism_info)}
+            , {STRING_AND_FUNCTION(test_open_close_session)}
+            , {STRING_AND_FUNCTION(test_c_close_all_sessions)}
+            , {STRING_AND_FUNCTION(test_c_get_session_info)}
+            , {STRING_AND_FUNCTION(test_c_init_token)}
+            , {STRING_AND_FUNCTION(test_c_login_logout_security_officier)} /* only possible if token is initialized */
+            , {STRING_AND_FUNCTION(test_c_init_pin)}
+            , {STRING_AND_FUNCTION(test_c_login_logout_user)} /* only possible if token is initialized and user pin is set */
+            , {STRING_AND_FUNCTION(test_c_set_pin)}
+            , {STRING_AND_FUNCTION(test_c_create_object_c_destroy_object)}
+            , {STRING_AND_FUNCTION(test_c_get_object_size)}
+            , {STRING_AND_FUNCTION(test_c_get_attribute_value)}
+            , {STRING_AND_FUNCTION(test_c_set_attribute_value)}
+            , {STRING_AND_FUNCTION(test_c_copy_object)}
             };
 
          for(size_t i = 0; i != fns.size(); ++i)
             {
             try
                {
-               results.push_back(fns[ i ]());
+               results.push_back(fns[i].second());
                }
             catch(PKCS11_ReturnError& e)
                {
-               results.push_back(Test::Result::Failure("PKCS11 low level test " + std::to_string(i), e.what()));
+               results.push_back(Test::Result::Failure("PKCS11 low level test " + fns[i].first, e.what()));
 
                if(e.get_return_value() == ReturnValue::PinIncorrect)
                   {
@@ -839,7 +840,7 @@ class LowLevelTests final : public Test
                }
             catch(std::exception& e)
                {
-               results.push_back(Test::Result::Failure("PKCS11 low level test " + std::to_string(i), e.what()));
+               results.push_back(Test::Result::Failure("PKCS11 low level test " + fns[i].first, e.what()));
                }
             }
 
