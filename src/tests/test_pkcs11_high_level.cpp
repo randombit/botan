@@ -57,9 +57,39 @@
 
 namespace Botan_Tests {
 
-namespace {
-
 #if defined(BOTAN_HAS_PKCS11)
+
+std::vector<Test::Result> run_pkcs11_tests(
+   const std::string& name,
+   std::vector<std::pair<std::string, std::function<Test::Result()>>>& fns)
+   {
+   std::vector<Test::Result> results;
+
+   for(size_t i = 0; i != fns.size(); ++i)
+      {
+      try
+         {
+         results.push_back(fns[i].second());
+         }
+      catch(Botan::PKCS11::PKCS11_ReturnError& e)
+         {
+         results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
+
+         if(e.get_return_value() == Botan::PKCS11::ReturnValue::PinIncorrect)
+            {
+            break; // Do not continue to not potentially lock the token
+            }
+         }
+      catch(std::exception& e)
+         {
+         results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
+         }
+      }
+
+   return results;
+   }
+
+namespace {
 
 using namespace Botan;
 using namespace PKCS11;
@@ -144,36 +174,6 @@ Test::Result test_module_get_info()
    result.test_ne("Cryptoki version != 0", info.cryptokiVersion.major, 0);
 
    return result;
-   }
-
-std::vector<Test::Result> run_pkcs11_tests(
-   const std::string& name,
-   std::vector<std::pair<std::string, std::function<Test::Result()>>>& fns)
-   {
-   std::vector<Test::Result> results;
-
-   for(size_t i = 0; i != fns.size(); ++i)
-      {
-         try
-            {
-               results.push_back(fns[i].second());
-            }
-         catch(Botan::PKCS11::PKCS11_ReturnError& e)
-            {
-               results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
-
-               if(e.get_return_value() == Botan::PKCS11::ReturnValue::PinIncorrect)
-                  {
-                     break; // Do not continue to not potentially lock the token
-                  }
-            }
-         catch(std::exception& e)
-            {
-               results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
-            }
-      }
-
-   return results;
    }
 
 class Module_Tests final : public Test
@@ -318,15 +318,14 @@ class Slot_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
-         {STRING_AND_FUNCTION(test_slot_get_available_slots)},
-         {STRING_AND_FUNCTION(test_slot_ctor)},
-         {STRING_AND_FUNCTION(test_get_slot_info)},
-         {STRING_AND_FUNCTION(test_slot_invalid_id)},
-         {STRING_AND_FUNCTION(test_get_token_info)},
-         {STRING_AND_FUNCTION(test_get_mechanism_list)},
-         {STRING_AND_FUNCTION(test_get_mechanisms_info)}
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
+            {STRING_AND_FUNCTION(test_slot_get_available_slots)},
+            {STRING_AND_FUNCTION(test_slot_ctor)},
+            {STRING_AND_FUNCTION(test_get_slot_info)},
+            {STRING_AND_FUNCTION(test_slot_invalid_id)},
+            {STRING_AND_FUNCTION(test_get_token_info)},
+            {STRING_AND_FUNCTION(test_get_mechanism_list)},
+            {STRING_AND_FUNCTION(test_get_mechanisms_info)}
          };
 
          return run_pkcs11_tests("Slot", fns);
@@ -453,14 +452,13 @@ class Session_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_session_ctor)},
             {STRING_AND_FUNCTION(test_session_ctor_invalid_slot)},
             {STRING_AND_FUNCTION(test_session_release)},
             {STRING_AND_FUNCTION(test_session_login_logout)},
             {STRING_AND_FUNCTION(test_session_info)}
-            };
+         };
 
          return run_pkcs11_tests("Session", fns);
          }
@@ -649,8 +647,7 @@ class Object_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_attribute_container)}
 #if defined(BOTAN_HAS_ASN1)
             , {STRING_AND_FUNCTION(test_create_destroy_data_object)}
@@ -658,7 +655,7 @@ class Object_Tests final : public Test
             , {STRING_AND_FUNCTION(test_object_finder)}
             , {STRING_AND_FUNCTION(test_object_copy)}
 #endif
-            };
+         };
 
          return run_pkcs11_tests("Object", fns);
          }
@@ -910,8 +907,7 @@ class PKCS11_RSA_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_rsa_privkey_import)},
             {STRING_AND_FUNCTION(test_rsa_pubkey_import)},
             {STRING_AND_FUNCTION(test_rsa_privkey_export)},
@@ -919,7 +915,7 @@ class PKCS11_RSA_Tests final : public Test
             {STRING_AND_FUNCTION(test_rsa_generate_key_pair)},
             {STRING_AND_FUNCTION(test_rsa_encrypt_decrypt)},
             {STRING_AND_FUNCTION(test_rsa_sign_verify)}
-            };
+         };
 
          return run_pkcs11_tests("PKCS11 RSA", fns);
          }
@@ -1184,8 +1180,7 @@ class PKCS11_ECDSA_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_ecdsa_privkey_import)},
             {STRING_AND_FUNCTION(test_ecdsa_privkey_export)},
             {STRING_AND_FUNCTION(test_ecdsa_pubkey_import)},
@@ -1194,7 +1189,7 @@ class PKCS11_ECDSA_Tests final : public Test
             {STRING_AND_FUNCTION(test_ecdsa_generate_keypair)},
             {STRING_AND_FUNCTION(test_ecdsa_sign_verify)},
             {STRING_AND_FUNCTION(test_ecdsa_curve_import)}
-            };
+         };
 
          return run_pkcs11_tests("PKCS11 ECDSA", fns);
          }
@@ -1416,8 +1411,7 @@ class PKCS11_ECDH_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_ecdh_privkey_import)},
             {STRING_AND_FUNCTION(test_ecdh_privkey_export)},
             {STRING_AND_FUNCTION(test_ecdh_pubkey_import)},
@@ -1425,7 +1419,7 @@ class PKCS11_ECDH_Tests final : public Test
             {STRING_AND_FUNCTION(test_ecdh_generate_private_key)},
             {STRING_AND_FUNCTION(test_ecdh_generate_keypair)},
             {STRING_AND_FUNCTION(test_ecdh_derive)}
-            };
+         };
 
          return run_pkcs11_tests("PKCS11 ECDH", fns);
          }
@@ -1505,13 +1499,12 @@ class PKCS11_RNG_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
-            {STRING_AND_FUNCTION(test_rng_generate_random)}
-            , {STRING_AND_FUNCTION(test_rng_add_entropy)}
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
 #if defined(BOTAN_HAS_HMAC_DRBG )&& defined(BOTAN_HAS_SHA2_64)
-            , {STRING_AND_FUNCTION(test_pkcs11_hmac_drbg)}
+            {STRING_AND_FUNCTION(test_pkcs11_hmac_drbg)},
 #endif
+            {STRING_AND_FUNCTION(test_rng_generate_random)},
+            {STRING_AND_FUNCTION(test_rng_add_entropy)}
             };
 
          return run_pkcs11_tests("PKCS11 RNG", fns);
@@ -1592,13 +1585,12 @@ class PKCS11_Token_Management_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_set_pin)},
             {STRING_AND_FUNCTION(test_initialize)},
             {STRING_AND_FUNCTION(test_change_pin)},
             {STRING_AND_FUNCTION(test_change_so_pin)}
-            };
+         };
 
          return run_pkcs11_tests("PKCS11 token management", fns);
          }
@@ -1640,10 +1632,9 @@ class PKCS11_X509_Tests final : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns =
-            {
+         std::vector<std::pair<std::string, std::function<Test::Result()>>> fns = {
             {STRING_AND_FUNCTION(test_x509_import)}
-            };
+         };
 
          return run_pkcs11_tests("PKCS11 X509", fns);
          }
