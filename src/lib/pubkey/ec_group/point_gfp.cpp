@@ -504,7 +504,7 @@ BigInt PointGFp::get_affine_x() const
    secure_vector<word> monty_ws;
 
    if(is_affine())
-      return m_curve.from_rep(m_coord_x, monty_ws);
+      return m_curve.from_rep_to_tmp(m_coord_x, monty_ws);
 
    BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
    z2 = m_curve.invert_element(z2, monty_ws);
@@ -523,7 +523,7 @@ BigInt PointGFp::get_affine_y() const
    secure_vector<word> monty_ws;
 
    if(is_affine())
-      return m_curve.from_rep(m_coord_y, monty_ws);
+      return m_curve.from_rep_to_tmp(m_coord_y, monty_ws);
 
    const BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
    const BigInt z3 = m_curve.mul_to_tmp(m_coord_z, z2, monty_ws);
@@ -548,14 +548,14 @@ bool PointGFp::on_the_curve() const
 
    secure_vector<word> monty_ws;
 
-   const BigInt y2 = m_curve.from_rep(m_curve.sqr_to_tmp(m_coord_y, monty_ws), monty_ws);
+   const BigInt y2 = m_curve.from_rep_to_tmp(m_curve.sqr_to_tmp(m_coord_y, monty_ws), monty_ws);
    const BigInt x3 = m_curve.mul_to_tmp(m_coord_x, m_curve.sqr_to_tmp(m_coord_x, monty_ws), monty_ws);
    const BigInt ax = m_curve.mul_to_tmp(m_coord_x, m_curve.get_a_rep(), monty_ws);
    const BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
 
    if(m_coord_z == z2) // Is z equal to 1 (in Montgomery form)?
       {
-      if(y2 != m_curve.from_rep(x3 + ax + m_curve.get_b_rep(), monty_ws))
+      if(y2 != m_curve.from_rep_to_tmp(x3 + ax + m_curve.get_b_rep(), monty_ws))
          return false;
       }
 
@@ -563,7 +563,7 @@ bool PointGFp::on_the_curve() const
    const BigInt ax_z4 = m_curve.mul_to_tmp(ax, m_curve.sqr_to_tmp(z2, monty_ws), monty_ws);
    const BigInt b_z6 = m_curve.mul_to_tmp(m_curve.get_b_rep(), m_curve.sqr_to_tmp(z3, monty_ws), monty_ws);
 
-   if(y2 != m_curve.from_rep(x3 + ax_z4 + b_z6, monty_ws))
+   if(y2 != m_curve.from_rep_to_tmp(x3 + ax_z4 + b_z6, monty_ws))
       return false;
 
    return true;
