@@ -1,11 +1,14 @@
 /*
 * (C) 2016 Daniel Neus
+* (C) 2019 Michael Boric
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_TESTS_PKCS11_H_
 #define BOTAN_TESTS_PKCS11_H_
+
+#define STRING_AND_FUNCTION(x) #x, x
 
 #include "tests.h"
 
