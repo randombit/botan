@@ -87,6 +87,10 @@ Version 2.12.0, Not Yet Released
 
 * Avoid using ``__GNUG__`` in headers that may be consumed by a C compiler (GH #2013)
 
+* Improve the PKCS11 tests (GH #2115)
+
+* Fix a warning from Klocwork (GH #2128 #2129)
+
 * Fix a bug which caused amalgamation builds to fail on iOS (GH #2045)
 
 * Support disabling thread local storage, needed for building on old iOS (GH #2045)p
