@@ -163,7 +163,7 @@ class BOTAN_UNSTABLE_API CurveGFp final
          m_repr->from_curve_rep(x, ws);
          }
 
-      BigInt from_rep(const BigInt& x, secure_vector<word>& ws) const
+      BigInt from_rep_to_tmp(const BigInt& x, secure_vector<word>& ws) const
          {
          BigInt xt(x);
          m_repr->from_curve_rep(xt, ws);
