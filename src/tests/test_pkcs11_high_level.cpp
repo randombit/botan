@@ -153,25 +153,25 @@ std::vector<Test::Result> run_pkcs11_tests(
    std::vector<Test::Result> results;
 
    for(size_t i = 0; i != fns.size(); ++i)
-   {
-      try
       {
-         results.push_back(fns[i].second());
-      }
-      catch(Botan::PKCS11::PKCS11_ReturnError& e)
-      {
-         results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
+         try
+            {
+               results.push_back(fns[i].second());
+            }
+         catch(Botan::PKCS11::PKCS11_ReturnError& e)
+            {
+               results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
 
-         if(e.get_return_value() == Botan::PKCS11::ReturnValue::PinIncorrect)
-         {
-            break; // Do not continue to not potentially lock the token
-         }
+               if(e.get_return_value() == Botan::PKCS11::ReturnValue::PinIncorrect)
+                  {
+                     break; // Do not continue to not potentially lock the token
+                  }
+            }
+         catch(std::exception& e)
+            {
+               results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
+            }
       }
-      catch(std::exception& e)
-      {
-         results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
-      }
-   }
 
    return results;
    }
