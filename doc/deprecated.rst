@@ -38,6 +38,8 @@ in a future major release:
 
 - All ciphersuites using DH key exchange (DHE-DSS, DHE-RSA, DHE-PSK, anon DH)
 
+- Support for renegotiation in TLS v1.2
+
 - All ciphersuites using static RSA key exchange
 
 - All anonymous (DH/ECDH) ciphersuites. This does not include PSK and
