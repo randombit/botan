@@ -915,14 +915,15 @@ class Speed final : public Command
          for(size_t buf_size : buf_sizes_in_blocks)
             {
             std::vector<uint8_t> buffer(buf_size);
+            const size_t blocks = buf_size / bs;
 
             std::unique_ptr<Timer> encrypt_timer = make_timer(cipher.name(), buffer.size(), "encrypt", provider, buf_size);
             std::unique_ptr<Timer> decrypt_timer = make_timer(cipher.name(), buffer.size(), "decrypt", provider, buf_size);
 
-            encrypt_timer->run_until_elapsed(runtime, [&]() { cipher.encrypt(buffer); });
+            encrypt_timer->run_until_elapsed(runtime, [&]() { cipher.encrypt_n(&buffer[0], &buffer[0], blocks); });
             record_result(encrypt_timer);
 
-            decrypt_timer->run_until_elapsed(runtime, [&]() { cipher.decrypt(buffer); });
+            decrypt_timer->run_until_elapsed(runtime, [&]() { cipher.decrypt_n(&buffer[0], &buffer[0], blocks); });
             record_result(decrypt_timer);
             }
          }
