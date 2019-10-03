@@ -299,6 +299,8 @@ std::string test_summary(size_t test_run, size_t tot_test_runs, uint64_t total_n
    return oss.str();
    }
 
+#if defined(BOTAN_HAS_THREAD_UTILS)
+
 bool needs_serialization(const std::string& test_name)
    {
    if(test_name.substr(0, 6) == "pkcs11")
@@ -307,6 +309,8 @@ bool needs_serialization(const std::string& test_name)
       return true;
    return false;
    }
+
+#endif
 
 }
 
@@ -318,7 +322,7 @@ size_t Test_Runner::run_tests(const std::vector<std::string>& tests_to_run,
    size_t tests_ran = 0, tests_failed = 0;
    const uint64_t start_time = Botan_Tests::Test::timestamp();
 
-#if defined(BOTAN_HAS_THREAD_UTILS) && defined(BOTAN_TARGET_OS_HAS_THREAD_LOCAL)
+#if defined(BOTAN_HAS_THREAD_UTILS)
    if(test_threads != 1)
       {
       // If 0 then we let thread pool select the count
