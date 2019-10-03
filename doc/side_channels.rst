@@ -83,7 +83,11 @@ under that key. This is the famous million message attack [MillionMsg].  A side
 channel such as a difference in time taken to handle valid and invalid RSA
 ciphertexts is enough to mount the attack [MillionMsgTiming].
 
-Preventing this issue in full requires some application level changes. In
+As a first step, the PKCS v1.5 decoding operation runs without any
+conditional jumps or indexes, with the only variance in runtime being
+based on the length of the public modulus, which is public information.
+
+Preventing the attack in full requires some application level changes. In
 protocols which know the expected length of the encrypted key, PK_Decryptor
 provides the function `decrypt_or_random` which first generates a random fake
 key, then decrypts the presented ciphertext, then in constant time either copies
@@ -174,10 +178,10 @@ This means the scalar multiplication involves only point additions and no
 doublings, which may help against attacks which rely on distinguishing between
 point doublings and point additions. The elements of the table are accessed by
 masked lookups, so as not to leak information about bits of the scalar via a
-cache side channel. However, whenever 3 sequential bits of the scalar are all 0,
-no operation is performed in that iteration of the loop. This exposes the scalar
-multiply to a cache-based side channel attack; scalar blinding is necessary to
-prevent this attack from leaking information about the scalar.
+cache side channel. However, whenever 3 sequential bits of the (masked) scalar
+are all 0, no operation is performed in that iteration of the loop. This exposes
+the scalar multiply to a cache-based side channel attack; scalar blinding is
+necessary to prevent this attack from leaking information about the scalar.
 
 The variable point multiplication algorithm uses a fixed-window algorithm. Since
 this is normally invoked using untrusted points (eg during ECDH key exchange) it
@@ -191,18 +195,17 @@ See point_gfp.cpp and point_mul.cpp
 ECDH
 ----------------------
 
-ECDH verifies (through its use of OS2ECP) that all input points
-received from the other party satisfy the curve equation. This
-prevents twist attacks. The same check is performed on the output
-point, which helps prevent fault attacks.
+ECDH verifies (through its use of OS2ECP) that all input points received from
+the other party satisfy the curve equation. This prevents twist attacks. The
+same check is performed on the output point, which helps prevent fault attacks.
 
 ECDSA
 ----------------------
 
-Inversion of the ECDSA nonce k must be done in constant time, as any
-leak of even a single bit of the nonce can be sufficient to allow
-recovering the private key. In Botan all inverses modulo an odd number
-are performed using a constant time algorithm due to Niels Möller.
+Inversion of the ECDSA nonce k must be done in constant time, as any leak of
+even a single bit of the nonce can be sufficient to allow recovering the private
+key. In Botan all inverses modulo an odd number are performed using a constant
+time algorithm due to Niels Möller.
 
 x25519
 ----------------------
@@ -217,7 +220,7 @@ TLS CBC ciphersuites
 ----------------------
 
 The original TLS v1.0 CBC Mac-then-Encrypt mode is vulnerable to an oracle
-attack.  If an attacker can distinguish padding errors through different error
+attack. If an attacker can distinguish padding errors through different error
 messages [TlsCbcOracle] or via a side channel attack like [Lucky13], they can
 abuse the server as a decryption oracle.
 
