@@ -1644,7 +1644,8 @@ BOTAN_REGISTER_TEST("pkcs11-x509", PKCS11_X509_Tests);
 
 #endif
 
+}
+
 #endif
 
-}
 }
