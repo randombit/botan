@@ -19,3 +19,7 @@ Contents
    side_channels
    dev_ref/contents
 
+.. toctree::
+   :hidden:
+
+   old_news
