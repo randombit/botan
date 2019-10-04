@@ -9,10 +9,39 @@ Version 2.12.0, Not Yet Released
   issuing this warning will be made internal in a future major release.
   (GH #2061)
 
+* RSA signature performance improvements (GH #2068 #2070)
+
 * Performance improvements for GCM (GH #2024 #2099 #2119), OCB (#2122),
   XTS (#2123) and ChaCha20Poly1305 (GH #2117), especially for small messages.
 
-* RSA signature performance improvements (GH #2068 #2070)
+* Add support for constant time AES using NEON and AltiVec (GH #2093 #2095 #2100)
+
+* Improve performance of POWER8 AES instructions (GH #2096)
+
+* Add support for the POWER9 hardware random number generator (GH #2026)
+
+* Add support for 64-bit version of RDRAND, doubling performance on x86-64 (GH #934 #2022)
+
+* In DTLS server, support a client crashing and then reconnecting from
+  the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
+
+* Optimize DTLS MTU splitting to split precisely to the set MTU (GH #2042)
+
+* Add support for the TLS v1.3 downgrade indicator. (GH #2027)
+
+* Improve the error messages generated when an invalid TLS state transition occurs
+  (GH #2030)
+
+* Fix some edge cases around TLS close_notify support. (GH #2054)
+
+* Modifications to support GOST 34.10-2012 signatures (GH #2055 #2056 #1860 #1897)
+
+* Add some new APIs on ``OID`` objects (GH #2057)
+
+* Properly decode OCSP responses which indicate an error (GH #2110)
+
+* Add a function to remove an X.509 extension from an Extensions object.
+  (GH #2101 #2073 #2065)
 
 * Support Argon2 outputs longer than 64 bytes (GH #2079 #2078)
 
@@ -28,49 +57,20 @@ Version 2.12.0, Not Yet Released
 * Fix a bug which would cause PBKDF2 to go into a very long loop if
   it was requested to use an iteration count of 0. (GH #2090 #2088)
 
-* Properly decode OCSP responses which indicate an error (GH #2110)
-
-* Add a function to remove an X.509 extension from an Extensions object.
-  (GH #2101 #2073 #2065)
-
-* In DTLS server, support a client crashing and then reconnecting from
-  the same source port, as described in RFC 6347 sec 4.2.8 (GH #2029)
-
-* Optimize DTLS MTU splitting to split precisely to the set MTU (GH #2042)
-
-* Improve the error messages generated when an invalid TLS state transition occurs
-  (GH #2030)
-
-* Add some new APIs on ``OID`` objects (GH #2057)
-
-* Fix some edge cases around TLS close_notify support. (GH #2054)
-
-* Add support for the TLS v1.3 downgrade indicator. (GH #2027)
-
-* Modifications to support GOST 34.10-2012 signatures (GH #2055 #2056 #1860 #1897)
-
-* Add support for constant time AES using NEON and AltiVec (GH #2093 #2095 #2100)
-
-* Improve performance of POWER8 AES instructions (GH #2096)
-
 * The BearSSL provider has been removed (GH #2020)
-
-* Add support for 64-bit version of RDRAND, doubling performance on x86-64 (GH #934 #2022)
-
-* Add support for the POWER9 hardware random number generator (GH #2026)
 
 * Add a new ``entropy`` cli which allows sampling the output of the entropy sources.
 
 * Add new ``base32_enc`` and ``base32_dec`` cli for base32 encoding operations. (GH #2111)
 
-* Cleanups in TLS record layer (GH #2021)
-
 * Support setting TLS policies in CLIs like ``tls_client`` and ``tls_proxy_server`` (GH #2047)
-
-* Fix typos in some OCSP enums which used "OSCP" instead. (GH #2048)
 
 * The tests now run in multithreaded mode by default. Provde option ``--test-threads=1`` to
   return to previous single-threaded behavior. (GH #2071 #2075)
+
+* Cleanups in TLS record layer (GH #2021)
+
+* Fix typos in some OCSP enums which used "OSCP" instead. (GH #2048)
 
 * In the Python module, avoid trying to load DLLs for names that don't match the current
   platform (GH #2062 #2059)
