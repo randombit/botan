@@ -360,6 +360,10 @@ class EC_Group_Tests : public Test
          p1 -= G * 2;
 
          result.test_eq("point subtraction", p1, G);
+
+         // The scalar multiplication algorithm relies on this being true:
+         Botan::PointGFp zero_coords = group.point(0, 0);
+         result.confirm("point (0,0) is not on the curve", !zero_coords.on_the_curve());
          }
 
       void test_point_swap(Test::Result& result, const Botan::EC_Group& group)
