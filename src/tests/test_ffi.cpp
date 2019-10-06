@@ -283,7 +283,7 @@ class FFI_Unit_Tests final : public Test
       Test::Result ffi_test_cert_validation()
          {
          Test::Result result("FFI Cert validation");
-#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
 
          botan_x509_cert_t root;
          int rc;
