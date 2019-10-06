@@ -67,8 +67,8 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PublicKey : public virtual EC_PublicKey
 /**
 * GOST-34.10 Private Key
 */
-class BOTAN_PUBLIC_API(2,0) GOST_3410_PrivateKey final : public GOST_3410_PublicKey,
-                                       public EC_PrivateKey
+class BOTAN_PUBLIC_API(2,0) GOST_3410_PrivateKey final :
+   public GOST_3410_PublicKey, public EC_PrivateKey
    {
    public:
       /**
@@ -88,8 +88,7 @@ class BOTAN_PUBLIC_API(2,0) GOST_3410_PrivateKey final : public GOST_3410_Public
       */
       GOST_3410_PrivateKey(RandomNumberGenerator& rng,
                            const EC_Group& domain,
-                           const BigInt& x = 0) :
-         EC_PrivateKey(rng, domain, x) {}
+                           const BigInt& x = 0);
 
       AlgorithmIdentifier pkcs8_algorithm_identifier() const override
          { return EC_PublicKey::algorithm_identifier(); }

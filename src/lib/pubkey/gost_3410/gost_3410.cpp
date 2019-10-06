@@ -1,5 +1,5 @@
 /*
-* GOST 34.10-2001 implemenation
+* GOST 34.10-2012
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
 * (C) 2008-2010,2015,2018 Jack Lloyd
@@ -42,7 +42,12 @@ std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const
 
 std::string GOST_3410_PublicKey::algo_name() const
    {
-   return "GOST-34.10-2012-" + std::to_string(domain().get_p_bits());
+   const size_t p_bits = domain().get_p_bits();
+
+   if(p_bits == 256 || p_bits == 512)
+      return "GOST-34.10-2012-" + std::to_string(p_bits);
+   else
+      throw Encoding_Error("GOST-34.10-2012 is not defined for parameters of this size");
    }
 
 AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
@@ -67,6 +72,11 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    m_domain_params = EC_Group(ecc_param_id);
 
+   const size_t p_bits = m_domain_params.get_p_bits();
+   if(p_bits != 256 && p_bits != 512)
+      throw Decoding_Error("GOST-34.10-2012 is not defined for parameters of size " +
+                           std::to_string(p_bits));
+
    secure_vector<uint8_t> bits;
    BER_Decoder(key_bits).decode(bits, OCTET_STRING);
 
@@ -86,6 +96,17 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    BOTAN_ASSERT(m_public_key.on_the_curve(),
                 "Loaded GOST 34.10 public key is on the curve");
+   }
+
+GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
+                                           const EC_Group& domain,
+                                           const BigInt& x) :
+   EC_PrivateKey(rng, domain, x)
+   {
+   const size_t p_bits = m_domain_params.get_p_bits();
+   if(p_bits != 256 && p_bits != 512)
+      throw Decoding_Error("GOST-34.10-2012 is not defined for parameters of size " +
+                           std::to_string(p_bits));
    }
 
 namespace {
