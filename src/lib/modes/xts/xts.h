@@ -58,8 +58,8 @@ class BOTAN_PUBLIC_API(2,0) XTS_Mode : public Cipher_Mode
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<BlockCipher> m_tweak_cipher;
       secure_vector<uint8_t> m_tweak;
-      const size_t m_cipher_parallelism;
       const size_t m_cipher_block_size;
+      const size_t m_cipher_parallelism;
    };
 
 /**
