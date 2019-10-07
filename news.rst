@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.12.0, Not Yet Released
+Version 2.12.0, 2019-10-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Many currently public headers are being deprecated. If any such header is
