@@ -20,7 +20,7 @@ class RandomNumberGenerator;
 
 namespace Roughtime {
 
-constexpr unsigned request_min_size = 1024;
+const unsigned request_min_size = 1024;
 
 class BOTAN_PUBLIC_API(2, 13) Roughtime_Error final : public Decoding_Error
    {
@@ -70,7 +70,9 @@ class BOTAN_PUBLIC_API(2, 13) Response final
 
       microseconds32 utc_radius() const { return m_utc_radius; }
    private:
-      Response(std::array<uint8_t, 72> dele, std::array<uint8_t, 64> sig, sys_microseconds64 utc_midp,
+      Response(const std::array<uint8_t, 72>& dele,
+               const std::array<uint8_t, 64>& sig,
+               sys_microseconds64 utc_midp,
                microseconds32 utc_radius)
          : m_cert_dele(dele)
          , m_cert_sig(sig)
