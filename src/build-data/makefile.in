@@ -57,7 +57,7 @@ clean:
 distclean:
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/cleanup.py --build-dir="%{build_dir}" --distclean
 
-install: libs cli docs
+install: %{install_targets}
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/install.py --prefix="%{prefix}" --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
 
 # Object Files
