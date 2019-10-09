@@ -7,7 +7,7 @@ CXX            = %{cxx}
 LINKER         = %{linker}
 AR             = %{ar_command}
 AR_OPTIONS     = %{ar_options}
-PYTHON_EXE     = "%{python_exe}"
+PYTHON_EXE     = %{python_exe}
 
 # Compiler Flags
 

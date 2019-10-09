@@ -18,6 +18,7 @@ environment:
       BOOST_ROOT: "C:\\Libraries\\boost_1_69_0"
       BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib32-msvc-14.0"
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc140-mt-x32-1_69.lib"
+      MAKE_TOOL: nmake
 
     # MSVC 2017 DLL x86-32
     - MSVS: 2017
@@ -27,6 +28,7 @@ environment:
       BOOST_ROOT: "C:\\Libraries\\boost_1_69_0"
       BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib32-msvc-14.1"
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x32-1_69.lib"
+      MAKE_TOOL: jom
 
     # MSVC 2017 DLL x86-64
     - MSVS: 2017
@@ -36,6 +38,7 @@ environment:
       BOOST_ROOT: "C:\\Libraries\\boost_1_69_0"
       BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib64-msvc-14.1"
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x64-1_69.lib"
+      MAKE_TOOL: jom
 
     # MSVC 2017 static x86-64
     - MSVS: 2017
@@ -45,6 +48,7 @@ environment:
       BOOST_ROOT: "C:\\Libraries\\boost_1_69_0"
       BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib64-msvc-14.1"
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x64-1_69.lib"
+      MAKE_TOOL: jom
 
     # MSVC 2019 static x86-64
     - MSVS: 2019
@@ -57,12 +61,13 @@ environment:
       PLATFORM: x86_amd64
       TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
+      MAKE_TOOL: jom
 
 install:
   - call src\scripts\ci\setup_appveyor.bat
 
 build_script:
-  - python src\scripts\ci_build.py --os=windows --cc=msvc --without-python3 --compiler-cache=sccache --make-tool=jom --cpu=%PLATFORM% %TARGET%
+  - python src\scripts\ci_build.py --os=windows --cc=msvc --without-python3 --compiler-cache=sccache --make-tool=%MAKE_TOOL% --cpu=%PLATFORM% %TARGET%
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
