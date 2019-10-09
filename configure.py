@@ -1962,7 +1962,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             yield 'fuzzers'
         if 'bogo_shim' in options.build_targets:
             yield 'bogo_shim'
-        yield 'docs'
+        if options.with_documentation:
+            yield 'docs'
 
     def absolute_install_dir(p):
         if os.path.isabs(p):
