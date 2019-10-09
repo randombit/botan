@@ -55,6 +55,7 @@ environment:
       PLATFORM: x86_amd64
       TARGET: static
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      MAKE_TOOL: jom
 
     # MSVC 2019 x86-64 preview w/debug iterators
     - MSVS: 2019p
