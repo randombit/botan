@@ -1,8 +1,10 @@
 Release Notes
 ========================================
 
-Version 2.13.0, Not Yet Released
+Version 2.12.1, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a bug that prevented compilation on x86-32 using GCC 4.9 (GH #2139)
 
 Version 2.12.0, 2019-10-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
