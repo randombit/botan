@@ -2003,6 +2003,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'cli_exe_name': osinfo.cli_exe_name + program_suffix,
         'cli_exe': join_with_build_dir(osinfo.cli_exe_name + program_suffix),
+        'build_cli_exe': bool('cli' in options.build_targets),
         'test_exe': join_with_build_dir('botan-test' + program_suffix),
 
         'lib_prefix': osinfo.lib_prefix,

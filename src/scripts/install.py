@@ -154,6 +154,7 @@ def main(args):
     target_os = cfg['os']
     build_shared_lib = bool(cfg['build_shared_lib'])
     build_static_lib = bool(cfg['build_static_lib'])
+    build_cli = bool(cfg['build_cli_exe'])
     out_dir = cfg['out_dir']
 
     bin_dir = options.bindir
@@ -208,14 +209,15 @@ def main(args):
                 finally:
                     os.chdir(prev_cwd)
 
-    copy_executable(cfg['cli_exe'], prepend_destdir(os.path.join(bin_dir, cfg['cli_exe_name'])))
+    if build_cli:
+        copy_executable(cfg['cli_exe'], prepend_destdir(os.path.join(bin_dir, cfg['cli_exe_name'])))
 
     # On MacOS, if we are using shared libraries and we install, we should fix
     # up the library name, otherwise the botan command won't work; ironically
     # we only need to do this because we previously changed it from a setting
     # that would be correct for installation to one that lets us run it from
     # the build directory
-    if target_os == 'macos' and build_shared_lib:
+    if target_os == 'macos' and build_shared_lib and build_cli:
         soname_abi = cfg['soname_abi']
 
         subprocess.check_call(['install_name_tool',
