@@ -4,6 +4,7 @@ ENTROPY_SRC_RDSEED -> 20151218
 
 <isa>
 rdseed
+sse2 # for mm_pause see #2139
 </isa>
 
 <header:internal>
