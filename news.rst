@@ -4,6 +4,14 @@ Release Notes
 Version 2.12.1, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix a bug that prevented building with nmake (GH #2142)
+
+* Fix an issue where make install would attempt to build targets which
+  were disabled. (GH #2140)
+
+* If the option ``--without-documentation`` is used, avoid invoking the
+  documentation build script. (GH #2138)
+
 * Fix a bug that prevented compilation on x86-32 using GCC 4.9 (GH #2139)
 
 Version 2.12.0, 2019-10-07
