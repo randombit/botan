@@ -508,7 +508,7 @@ def main(args=None):
         make_cmd = [options.make_tool]
         if root_dir != '.':
             make_cmd += ['-C', root_dir]
-        if options.build_jobs > 1:
+        if options.build_jobs > 1 and options.make_tool != 'nmake':
             make_cmd += ['-j%d' % (options.build_jobs)]
         make_cmd += ['-k']
 
