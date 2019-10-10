@@ -1964,6 +1964,13 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             yield 'bogo_shim'
         yield 'docs'
 
+    def install_targets(options):
+        yield 'libs'
+        if 'cli' in options.build_targets:
+            yield 'cli'
+        if options.with_documentation:
+            yield 'docs'
+
     def absolute_install_dir(p):
         if os.path.isabs(p):
             return p
@@ -1986,6 +1993,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'macos_so_current_ver': '%s.%s.%s' % (Version.packed(), Version.so_rev(), Version.patch()),
 
         'all_targets': ' '.join(all_targets(options)),
+        'install_targets': ' '.join(install_targets(options)),
 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
@@ -1995,6 +2003,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'cli_exe_name': osinfo.cli_exe_name + program_suffix,
         'cli_exe': join_with_build_dir(osinfo.cli_exe_name + program_suffix),
+        'build_cli_exe': bool('cli' in options.build_targets),
         'test_exe': join_with_build_dir('botan-test' + program_suffix),
 
         'lib_prefix': osinfo.lib_prefix,
