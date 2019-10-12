@@ -251,12 +251,12 @@ def cli_argon2_tests(_tmp_dir):
 def cli_gen_dl_group_tests(_tmp_dir):
 
     pem = """-----BEGIN X9.42 DH PARAMETERS-----
-MIIBJAKBgwTw7LQiLkXJsrgMVQxTPlWaQlYz/raZ+5RtIZe4YluQgRQGPFADLZ/t
-TOYzuIzZJFOcdKtEtrVkxZRGSkjZwKFKLUD6fzSjoC2M2EHktK/y5HsvxBxL4tKr
-q1ffbyPQi+iBLYTZAXygvxj2vWyrvA+/w4nbt1fStCHTDhWjLWqFpV9nAoGDAKzA
-HUu/IRl7OiUtW/dz36gzEJnaYtz4ZtJl0FG8RJiOe02lD8myqW2sVzYqMvKD0LGx
-x9fdSKC1G+aZ/NWtqrQjb66Daf7b0ddDx+bfWTWJ2dOtZd8IL2rmQQJm+JogDi9i
-huVYFicDNQGzi+nEKAzrZ1L/VxtiSiw/qw0IyOuVtz8CFjgPiPatvmWssQw2AuZ9
+MIIBJAKBgwVcMHlFVo64S86Y5KrlClZrIibOQ6iKm8Ih3Eb53XoQiSc33GtilRmP
+f7qKIVI86meoJHVU7gtaJk82yAYk6BksmZn0eXvUU7zD8yF/yH3yym0SfI0eH1OC
+2+esfGblePpHCtt5uO56pzIqCIpOq+8gTG7JbFHJvTb8nwmAWFLZvjepAoGDBHOP
+e5A/RNyeXz+16+7Jjh4QOXWo/c6kM0WrIHgFbaIkupRndG5bcy8aCjsbgiIpeWy1
+aNDURFB3UR3q1Si0gA7cvirDOH7lnN3C9zeohq+VPy5L7S3gKLGB1HXY/r2qLKhM
+6ziphMYZxtr+XhsbxbA/+MuNoP/He+kwlGLtDKiBdF4CFjgPiPatvmWssQw2AuZ9
 mFvAZ/8wal0=
 -----END X9.42 DH PARAMETERS-----"""
 
@@ -904,7 +904,7 @@ def cli_pk_encrypt_tests(tmp_dir):
 
     test_cli("keygen", ["--algo=RSA", "--provider=base", "--params=2048", "--output=%s" % (rsa_priv_key)], "")
 
-    key_hash = "891A3AA179639796B7A6348D2F1C3A8CC7E0FFED38BAE29143DF9B8A55391F28"
+    key_hash = "72AF3227EF57A728E894D54623EB8E2C0CD11A4A98BF2DF32DB052BF60897873"
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", rsa_priv_key], key_hash)
 
     test_cli("pkcs8", ["--pub-out", "%s/rsa.priv" % (tmp_dir), "--output=%s" % (rsa_pub_key)], "")
@@ -914,7 +914,7 @@ def cli_pk_encrypt_tests(tmp_dir):
 
     # Because we used a fixed DRBG for each invocation the same ctext is generated each time
     rng_output_hash = "32F5E7B61357DE8397EFDA1E598379DFD5EE21767BDF4E2A435F05117B836AC6"
-    ctext_hash = "5F45F360CF431C3E1BC126B1DB20CFE7A869AE7B67484A64F426A6349245EB51"
+    ctext_hash = "FF1F0EEC2C42DD61D78505C5DF624A19AE6FE2BAB0B8F7D878C7655D54C68FE0"
 
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", input_file], rng_output_hash)
 
