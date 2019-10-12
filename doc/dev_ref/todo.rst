@@ -14,10 +14,10 @@ Ciphers, Hashes, PBKDF
 * Bitsliced AES or Camellia
 * Vector permute AES only supports little-endian systems; fix for big-endian
 * Camellia using AES-NI
+* SM4 using AES-NI (https://github.com/mjosaarinen/sm4ni) or vector permute
 * Poly1305 using AVX2
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
-* Argon2 PBKDF (draft-irtf-cfrg-argon2)
 * Skein-MAC
 * PMAC
 * SIV-PMAC
@@ -94,11 +94,10 @@ TLS
 * Make finite field DH optional at build time
 * Authentication using TOFU (sqlite3 storage)
 * Certificate pinning (using TACK?)
-* Certificate Transparency
+* Certificate Transparency extensions
 * TLS supplemental authorization data (RFC 4680, RFC 5878)
 * DTLS-SCTP (RFC 6083)
 * Perspectives (http://perspectives-project.org/)
-* Support for server key stored in TPM or PKCS #11
 
 PKIX
 ----------------------------------------
@@ -206,7 +205,7 @@ CLI
 * `encrypt` / `decrypt` tools providing password based file encryption
 * Clone of `minisign` signature utility
 * Implementation of `tlsdate`
-* Utils for base32 and base58 encoding
+* Password store utility
 * TOTP calculator
 
 Documentation
