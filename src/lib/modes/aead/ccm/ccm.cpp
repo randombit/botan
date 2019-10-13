@@ -136,6 +136,8 @@ void CCM_Mode::inc(secure_vector<uint8_t>& C)
 
 secure_vector<uint8_t> CCM_Mode::format_b0(size_t sz)
    {
+   if(m_nonce.size() != 15-L())
+      throw Invalid_State("CCM mode must set nonce");
    secure_vector<uint8_t> B0(CCM_BS);
 
    const uint8_t b_flags =
@@ -150,6 +152,8 @@ secure_vector<uint8_t> CCM_Mode::format_b0(size_t sz)
 
 secure_vector<uint8_t> CCM_Mode::format_c0()
    {
+   if(m_nonce.size() != 15-L())
+      throw Invalid_State("CCM mode must set nonce");
    secure_vector<uint8_t> C(CCM_BS);
 
    const uint8_t a_flags = static_cast<uint8_t>(L() - 1);
@@ -209,6 +213,8 @@ void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    T ^= S0;
 
    buffer += std::make_pair(T.data(), tag_size());
+
+   reset();
    }
 
 void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
@@ -266,6 +272,8 @@ void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
       throw Invalid_Authentication_Tag("CCM tag check failed");
 
    buffer.resize(buffer.size() - tag_size());
+
+   reset();
    }
 
 }
