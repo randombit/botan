@@ -72,6 +72,7 @@ class BOTAN_PUBLIC_API(2,0) TPM_Context final
       TSS_HCONTEXT m_ctx;
       TSS_HKEY m_srk;
       TSS_HTPM m_tpm;
+      TSS_HPOLICY m_srk_policy;
    };
 
 class BOTAN_PUBLIC_API(2,0) TPM_RNG final : public Hardware_RNG
