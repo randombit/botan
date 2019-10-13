@@ -14,6 +14,12 @@ Version 2.12.1, Not Yet Released
 
 * Fix a bug that prevented compilation on x86-32 using GCC 4.9 (GH #2139)
 
+* Fix a bug in CCM encryption, where it was possible to call `finish` without
+  ever setting a nonce (GH #2151 #2150)
+
+* Improve ECIES/DLIES interfaces. If no initialization vector was set, they
+  would typically produce hard to understand exceptions. (GH #2151 #2150)
+
 Version 2.12.0, 2019-10-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
