@@ -61,6 +61,8 @@ class AEAD_Tests final : public Text_Based_Test
             {
             result.test_throws("Cannot process data until nonce is set (enc)",
                                [&]() { enc->update(garbage); });
+            result.test_throws("Cannot process data until nonce is set (enc)",
+                               [&]() { enc->finish(garbage); });
             }
 
          enc->set_ad(mutate_vec(ad));
@@ -222,6 +224,8 @@ class AEAD_Tests final : public Text_Based_Test
             {
             result.test_throws("Cannot process data until nonce is set (dec)",
                                [&]() { dec->update(garbage); });
+            result.test_throws("Cannot process data until nonce is set (dec)",
+                               [&]() { dec->finish(garbage); });
             }
 
          dec->start(mutate_vec(nonce));

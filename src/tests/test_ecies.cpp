@@ -196,8 +196,9 @@ class ECIES_Tests final : public Text_Based_Test
       ECIES_Tests()
          : Text_Based_Test(
               "pubkey/ecies.vec",
-              "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Iv,Mac,MacKeyLen,Format,"
-              "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext") {}
+              "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Mac,MacKeyLen,Format,"
+              "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext",
+              "Iv") {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
@@ -209,7 +210,7 @@ class ECIES_Tests final : public Text_Based_Test
          const std::string kdf = vars.get_req_str("Kdf");
          const std::string dem = vars.get_req_str("Dem");
          const size_t dem_key_len = vars.get_req_sz("DemKeyLen");
-         const std::vector<uint8_t> iv = vars.get_req_bin("Iv");
+         const std::vector<uint8_t> iv = vars.get_opt_bin("Iv");
          const std::string mac = vars.get_req_str("Mac");
          const size_t mac_key_len = vars.get_req_sz("MacKeyLen");
          const Botan::PointGFp::Compression_Type compression_type = get_compression_type(vars.get_req_str("Format"));
