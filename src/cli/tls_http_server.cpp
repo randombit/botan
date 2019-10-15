@@ -20,8 +20,6 @@
 #define _GLIBCXX_HAVE_GTHR_DEFAULT
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <botan/internal/os_utils.h>
 
 #include <botan/tls_server.h>
@@ -169,12 +167,12 @@ class HTTP_Parser final
 
 static const size_t READBUF_SIZE = 4096;
 
-class TLS_Asio_HTTP_Session final : public boost::enable_shared_from_this<TLS_Asio_HTTP_Session>,
+class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio_HTTP_Session>,
                                     public Botan::TLS::Callbacks,
                                     public HTTP_Parser::Callbacks
    {
    public:
-      typedef boost::shared_ptr<TLS_Asio_HTTP_Session> pointer;
+      typedef std::shared_ptr<TLS_Asio_HTTP_Session> pointer;
 
       static pointer create(
          boost::asio::io_service& io,
