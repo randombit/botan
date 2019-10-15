@@ -186,11 +186,11 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
 * @param direction ENCRYPTION or DECRYPTION
 * @param provider provider implementation to choose
 */
-inline Cipher_Mode* get_cipher_mode(const std::string& algo_spec,
-                                    Cipher_Dir direction,
-                                    const std::string& provider = "")
+inline std::unique_ptr<Cipher_Mode> get_cipher_mode(const std::string& algo_spec,
+                                                    Cipher_Dir direction,
+                                                    const std::string& provider = "")
    {
-   return Cipher_Mode::create(algo_spec, direction, provider).release();
+   return Cipher_Mode::create(algo_spec, direction, provider);
    }
 
 }

@@ -47,9 +47,9 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       *
       * @return public key
       */
-      Public_Key* subject_public_key() const
+      std::unique_ptr<Public_Key> subject_public_key() const
          {
-         return load_subject_public_key().release();
+         return load_subject_public_key();
          }
 
       /**

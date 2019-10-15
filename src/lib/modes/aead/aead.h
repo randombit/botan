@@ -111,9 +111,9 @@ class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
 * @param name AEAD name
 * @param direction ENCRYPTION or DECRYPTION
 */
-inline AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction)
+inline std::unique_ptr<AEAD_Mode> get_aead(const std::string& name, Cipher_Dir direction)
    {
-   return AEAD_Mode::create(name, direction, "").release();
+   return AEAD_Mode::create(name, direction, "");
    }
 
 }

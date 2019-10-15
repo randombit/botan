@@ -171,8 +171,7 @@ bool X509_Object::check_signature(const Public_Key* pub_key) const
    {
    if(!pub_key)
       throw Invalid_Argument("No key provided for " + PEM_label() + " signature check");
-   std::unique_ptr<const Public_Key> key(pub_key);
-   return check_signature(*key);
+   return check_signature(*pub_key);
    }
 
 bool X509_Object::check_signature(const Public_Key& pub_key) const

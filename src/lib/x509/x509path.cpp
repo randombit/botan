@@ -280,7 +280,7 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
          if(validation_time > crls[i]->next_update())
             status.insert(Certificate_Status_Code::CRL_HAS_EXPIRED);
 
-         if(crls[i]->check_signature(ca->subject_public_key()) == false)
+         if(crls[i]->check_signature(ca->subject_public_key().get()) == false)
             status.insert(Certificate_Status_Code::CRL_BAD_SIGNATURE);
 
          status.insert(Certificate_Status_Code::VALID_CRL_CHECKED);
