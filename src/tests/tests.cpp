@@ -749,6 +749,22 @@ uint32_t VarMap::get_req_u32(const std::string& key) const
    return static_cast<uint32_t>(get_req_sz(key));
    }
 
+uint64_t VarMap::get_req_u64(const std::string& key) const
+   {
+   auto i = m_vars.find(key);
+   if(i == m_vars.end())
+      {
+      throw Test_Error("Test missing variable " + key);
+      }
+   try
+      {
+      return std::stoull(i->second);
+      }
+   catch(std::exception&)
+      {
+      throw Test_Error("Invalid u64 value '" + i->second + "'");
+      }
+   }
 
 size_t VarMap::get_opt_sz(const std::string& key, const size_t def_value) const
    {

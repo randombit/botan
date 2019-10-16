@@ -580,6 +580,7 @@ class VarMap
 
       uint8_t get_req_u8(const std::string& key) const;
       uint32_t get_req_u32(const std::string& key) const;
+      uint64_t get_req_u64(const std::string& key) const;
 
       size_t get_opt_sz(const std::string& key, const size_t def_value) const;
 

@@ -3,7 +3,9 @@ SOCKETS -> 20171216
 </defines>
 
 <header:internal>
+uri.h
 socket.h
+socket_udp.h
 </header:internal>
 
 <libs>
