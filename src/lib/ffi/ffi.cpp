@@ -76,6 +76,8 @@ int ffi_map_error_type(Botan::ErrorType err)
          return BOTAN_FFI_ERROR_HTTP_ERROR;
       case Botan::ErrorType::TLSError:
          return BOTAN_FFI_ERROR_TLS_ERROR;
+      case Botan::ErrorType::RoughtimeError:
+         return BOTAN_FFI_ERROR_ROUGHTIME_ERROR;
       }
 
    return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
