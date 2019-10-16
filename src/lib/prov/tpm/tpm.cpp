@@ -153,7 +153,9 @@ std::string format_url(const TSS_UUID& tss_uuid, TSS_FLAG store_type)
 
 }
 
-TPM_Context::TPM_Context(pin_cb cb, const char* srk_password) : m_pin_cb(cb)
+TPM_Context::TPM_Context(pin_cb cb, const char* srk_password) : 
+   m_pin_cb(cb),
+   m_srk_policy(0)
    {
    TSPI_CHECK_SUCCESS(::Tspi_Context_Create(&m_ctx));
    TSPI_CHECK_SUCCESS(::Tspi_Context_Connect(m_ctx, nullptr));
@@ -164,11 +166,9 @@ TPM_Context::TPM_Context(pin_cb cb, const char* srk_password) : m_pin_cb(cb)
 
    TSPI_CHECK_SUCCESS(::Tspi_Context_LoadKeyByUUID(m_ctx, TSS_PS_TYPE_SYSTEM, SRK_UUID, &m_srk));
 
-   TSS_HPOLICY srk_policy;
-   TSPI_CHECK_SUCCESS(::Tspi_GetPolicyObject(m_srk, TSS_POLICY_USAGE, &srk_policy));
-   set_policy_secret(srk_policy, srk_password);
+   TSPI_CHECK_SUCCESS(::Tspi_GetPolicyObject(m_srk, TSS_POLICY_USAGE, &m_srk_policy));
+   set_policy_secret(m_srk_policy, srk_password);
 
-   // TODO: leaking policy object here?
    // TODO: do we have to cache it?
    // TODO: try to use SRK with null, if it fails call the pin cb?
    }
@@ -177,6 +177,7 @@ TPM_Context::~TPM_Context()
    {
    TSPI_CHECK_SUCCESS(::Tspi_Context_CloseObject(m_ctx, m_srk));
    //TSPI_CHECK_SUCCESS(::Tspi_Context_CloseObject(m_ctx, m_tpm));
+   TSPI_CHECK_SUCCESS(::Tspi_Context_Close(m_srk_policy));
    TSPI_CHECK_SUCCESS(::Tspi_Context_Close(m_ctx));
    }
 
