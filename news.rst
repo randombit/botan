@@ -1,6 +1,17 @@
 Release Notes
 ========================================
 
+Version 2.13.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add Roughtime client (GH #2143 #1842)
+
+* Improve RSA key generation performance (GH #2148)
+
+* Make gcd computation constant-time (GH #2147)
+
+* Use std::shared_ptr instead of boost::shared_ptr in some examples (GH #2155)
+
 Version 2.12.1, 2019-10-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
