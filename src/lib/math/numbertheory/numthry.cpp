@@ -19,6 +19,21 @@
 
 namespace Botan {
 
+namespace {
+
+void sub_abs(BigInt& z, const BigInt& x, const BigInt& y)
+   {
+   const size_t x_sw = x.sig_words();
+   const size_t y_sw = y.sig_words();
+   z.resize(std::max(x_sw, y_sw));
+
+   bigint_sub_abs(z.mutable_data(),
+                  x.data(), x_sw,
+                  y.data(), y_sw);
+   }
+
+}
+
 /*
 * Return the number of 0 bits at the end of n
 */
@@ -55,27 +70,48 @@ BigInt gcd(const BigInt& a, const BigInt& b)
    if(a == 1 || b == 1)
       return 1;
 
-   BigInt X[2] = { a, b };
-   X[0].set_sign(BigInt::Positive);
-   X[1].set_sign(BigInt::Positive);
+   BigInt f = a;
+   BigInt g = b;
+   f.set_sign(BigInt::Positive);
+   g.set_sign(BigInt::Positive);
 
-   const size_t shift = std::min(low_zero_bits(X[0]), low_zero_bits(X[1]));
+   const size_t common2s = std::min(low_zero_bits(f), low_zero_bits(g));
 
-   X[0] >>= shift;
-   X[1] >>= shift;
+   f >>= common2s;
+   g >>= common2s;
 
-   while(X[0].is_nonzero())
+   f.ct_cond_swap(f.is_even(), g);
+
+   int32_t delta = 1;
+
+   const size_t loop_cnt = 4 + 3*std::max(f.bits(), g.bits());
+
+   BigInt newg, t;
+   for(size_t i = 0; i != loop_cnt; ++i)
       {
-      X[0] >>= low_zero_bits(X[0]);
-      X[1] >>= low_zero_bits(X[1]);
+      g.shrink_to_fit();
+      f.shrink_to_fit();
+      sub_abs(newg, f, g);
 
-      const uint8_t sel = static_cast<uint8_t>(X[0] >= X[1]);
+      const uint8_t need_swap = (g.is_odd() && delta > 0);
 
-      X[sel^1] -= X[sel];
-      X[sel^1] >>= 1;
+      // if(need_swap) delta *= -1
+      delta *= CT::Mask<uint8_t>::expand(need_swap).select(0, 2) - 1;
+      f.ct_cond_swap(need_swap, g);
+      g.ct_cond_swap(need_swap, newg);
+
+      delta += 1;
+
+      t = g;
+      t += f;
+      g.ct_cond_assign(g.is_odd(), t);
+
+      g >>= 1;
       }
 
-   return (X[1] << shift);
+   f <<= common2s;
+
+   return f;
    }
 
 /*

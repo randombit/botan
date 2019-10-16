@@ -297,7 +297,6 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    const BigInt p_minus_1 = p - 1;
    const BigInt q_minus_1 = q - 1;
 
-   // FIXME: lcm calls gcd which is not completely const time
    const BigInt phi_n = lcm(p_minus_1, q_minus_1);
    // FIXME: this uses binary ext gcd because phi_n is even
    d = inverse_mod(e, phi_n);
