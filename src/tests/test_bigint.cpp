@@ -117,16 +117,6 @@ class BigInt_Unit_Tests final : public Test
             result.test_eq("P is prime", Botan::is_prime(p, Test::rng()), true);
             }
 
-         for(size_t bits = 5; bits <= 32; ++bits)
-            {
-            const BigInt last_p = p;
-            p = Botan::random_prime(Test::rng(), bits, last_p);
-
-            result.test_eq("Relatively prime", Botan::gcd(last_p, p), 1);
-            result.test_eq("Expected bit size", p.bits(), bits);
-            result.test_eq("P is prime", Botan::is_prime(p, Test::rng()), true);
-            }
-
          const size_t safe_prime_bits = 65;
          const BigInt safe_prime = Botan::random_safe_prime(Test::rng(), safe_prime_bits);
          result.test_eq("Safe prime size", safe_prime.bits(), safe_prime_bits);

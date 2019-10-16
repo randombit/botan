@@ -1,6 +1,6 @@
 /*
 * Prime Generation
-* (C) 1999-2007,2018 Jack Lloyd
+* (C) 1999-2007,2018,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +9,8 @@
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/loadstor.h>
+#include <botan/reducer.h>
+#include <botan/internal/primality.h>
 #include <algorithm>
 
 namespace Botan {
@@ -92,35 +94,42 @@ BigInt random_prime(RandomNumberGenerator& rng,
       throw Invalid_Argument("random_prime Invalid value for equiv/modulo");
 
    // Handle small values:
-   if(bits <= 1)
-      {
-      throw Invalid_Argument("random_prime: Can't make a prime of " +
-                             std::to_string(bits) + " bits");
-      }
-   else if(bits == 2)
-      {
-      return ((rng.next_byte() % 2) ? 2 : 3);
-      }
-   else if(bits == 3)
-      {
-      return ((rng.next_byte() % 2) ? 5 : 7);
-      }
-   else if(bits == 4)
-      {
-      return ((rng.next_byte() % 2) ? 11 : 13);
-      }
-   else if(bits <= 16)
-      {
-      for(;;)
-         {
-         // This is slightly biased, but for small primes it does not seem to matter
-         const uint8_t b0 = rng.next_byte();
-         const uint8_t b1 = rng.next_byte();
-         const size_t idx = make_uint16(b0, b1) % PRIME_TABLE_SIZE;
-         const uint16_t small_prime = PRIMES[idx];
 
-         if(high_bit(small_prime) == bits)
-            return small_prime;
+   if(bits <= 16)
+      {
+      if(equiv != 1 || modulo != 2 || coprime != 0)
+         throw Not_Implemented("random_prime equiv/modulo/coprime options not usable for small primes");
+
+      if(bits <= 1)
+         {
+         throw Invalid_Argument("random_prime: Can't make a prime of " +
+                                std::to_string(bits) + " bits");
+         }
+      else if(bits == 2)
+         {
+         return ((rng.next_byte() % 2) ? 2 : 3);
+         }
+      else if(bits == 3)
+         {
+         return ((rng.next_byte() % 2) ? 5 : 7);
+         }
+      else if(bits == 4)
+         {
+         return ((rng.next_byte() % 2) ? 11 : 13);
+         }
+      else
+         {
+         for(;;)
+            {
+            // This is slightly biased, but for small primes it does not seem to matter
+            const uint8_t b0 = rng.next_byte();
+            const uint8_t b1 = rng.next_byte();
+            const size_t idx = make_uint16(b0, b1) % PRIME_TABLE_SIZE;
+            const uint16_t small_prime = PRIMES[idx];
+
+            if(high_bit(small_prime) == bits)
+               return small_prime;
+            }
          }
       }
 
@@ -154,7 +163,13 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
          sieve.step(modulo);
 
-         if(sieve.passes(true) == false)
+         // p can be even if modulo is odd, continue on in that case
+         if(p.is_even() || sieve.passes(true) == false)
+            continue;
+
+         Modular_Reducer mod_p(p);
+
+         if(is_miller_rabin_probable_prime(p, mod_p, rng, 1) == false)
             continue;
 
          if(coprime > 1)
@@ -166,13 +181,20 @@ BigInt random_prime(RandomNumberGenerator& rng,
             * key generation, though RSA keygen should be using generate_rsa_prime.
             */
             if(inverse_mod(p - 1, coprime).is_zero())
+               {
                continue;
+               }
             }
 
          if(p.bits() > bits)
             break;
 
-         if(is_prime(p, rng, prob, true))
+         const size_t t = miller_rabin_test_iterations(bits, prob, true);
+
+         if(is_miller_rabin_probable_prime(p, mod_p, rng, t) == false)
+            continue;
+
+         if(is_lucas_probable_prime(p, mod_p))
             return p;
          }
       }
@@ -227,6 +249,16 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          if(sieve.passes() == false)
             continue;
 
+         Modular_Reducer mod_p(p);
+
+         /*
+         * Do a single primality test first before checking coprimality, since
+         * currently a single Miller-Rabin test is faster than computing modular
+         * inverse, and this eliminates almost all wasted modular inverses.
+         */
+         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, 1) == false)
+            continue;
+
          /*
          * Check if p - 1 and coprime are relatively prime by computing the inverse.
          *
@@ -252,7 +284,9 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          if(p.bits() > bits)
             break;
 
-         if(is_prime(p, prime_test_rng, prob, true))
+         const size_t t = miller_rabin_test_iterations(bits, prob, true);
+
+         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, t) == true)
             return p;
          }
       }
