@@ -604,7 +604,7 @@ class SIMD_4x32 final
 #endif
          }
 
-      native_simd_type raw() const { return m_simd; }
+      native_simd_type raw() const BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) { return m_simd; }
 
       explicit SIMD_4x32(native_simd_type x) : m_simd(x) {}
    private:
