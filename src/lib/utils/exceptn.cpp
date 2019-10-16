@@ -46,6 +46,8 @@ std::string to_string(ErrorType type)
          return "HttpError";
       case ErrorType::InvalidTag:
          return "InvalidTag";
+      case ErrorType::RoughtimeError:
+         return "RoughtimeError";
       case ErrorType::OpenSSLError :
          return "OpenSSLError";
       case ErrorType::CommonCryptoError:
