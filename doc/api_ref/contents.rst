@@ -33,6 +33,7 @@ API Reference
    pkcs11
    tpm
    otp
+   roughtime
    ffi
    env_vars
    python
