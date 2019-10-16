@@ -19,8 +19,6 @@
 #define _GLIBCXX_HAVE_GTHR_DEFAULT
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <botan/internal/os_utils.h>
 
 #include <botan/tls_server.h>
@@ -90,13 +88,13 @@ class ServerStatus
       std::atomic<size_t> m_clients_serviced;
    };
 
-class tls_proxy_session final : public boost::enable_shared_from_this<tls_proxy_session>,
+class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_session>,
                                 public Botan::TLS::Callbacks
    {
    public:
       enum { readbuf_size = 17 * 1024 };
 
-      typedef boost::shared_ptr<tls_proxy_session> pointer;
+      typedef std::shared_ptr<tls_proxy_session> pointer;
 
       static pointer create(
          boost::asio::io_service& io,
