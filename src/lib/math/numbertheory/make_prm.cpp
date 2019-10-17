@@ -180,7 +180,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
             * odd modulus anyway). This avoids a side channel attack against RSA
             * key generation, though RSA keygen should be using generate_rsa_prime.
             */
-            if(inverse_mod(p - 1, coprime).is_zero())
+            if(ct_inverse_mod_odd_modulus(p - 1, coprime).is_zero())
                {
                continue;
                }
@@ -194,8 +194,10 @@ BigInt random_prime(RandomNumberGenerator& rng,
          if(is_miller_rabin_probable_prime(p, mod_p, rng, t) == false)
             continue;
 
-         if(is_lucas_probable_prime(p, mod_p))
-            return p;
+         if(prob > 32 && !is_lucas_probable_prime(p, mod_p))
+            continue;
+
+         return p;
          }
       }
    }
@@ -273,7 +275,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          */
          BigInt p1 = p - 1;
          p1 >>= low_zero_bits(p1);
-         if(inverse_mod(coprime, p1).is_zero())
+         if(ct_inverse_mod_odd_modulus(coprime, p1).is_zero())
             {
             BOTAN_DEBUG_ASSERT(gcd(p1, coprime) > 1);
             continue;
