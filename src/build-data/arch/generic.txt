@@ -1,0 +1,4 @@
+
+# This target can be used when building an amalgamation which must
+# be built on multiple architectures, or when targetting a CPU
+# which the build system doesn't know about.

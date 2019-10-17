@@ -3403,8 +3403,9 @@ def main(argv):
         cc_min_version = options.cc_min_version or calculate_cc_min_version(options, cc, source_paths)
         cc_arch = check_compiler_arch(options, cc, info_arch, source_paths)
 
-        if cc_arch is not None and cc_arch != options.arch:
-            logging.error("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
+        if options.arch != 'generic':
+            if cc_arch is not None and cc_arch != options.arch:
+                logging.error("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
     else:
         cc_min_version = options.cc_min_version or "0.0"
 
