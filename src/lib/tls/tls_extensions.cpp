@@ -365,7 +365,9 @@ Supported_Groups::Supported_Groups(TLS_Data_Reader& reader,
    if(len % 2 == 1)
       throw Decoding_Error("Supported groups list of strange size");
 
-   for(size_t i = 0; i != len / 2; ++i)
+   const size_t elems = len / 2;
+
+   for(size_t i = 0; i != elems; ++i)
       {
       const uint16_t id = reader.get_uint16_t();
       m_groups.push_back(static_cast<Group_Params>(id));

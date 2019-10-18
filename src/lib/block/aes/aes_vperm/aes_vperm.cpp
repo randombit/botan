@@ -505,7 +505,7 @@ SIMD_4x32 aes_schedule_192_smear(SIMD_4x32 x, SIMD_4x32 y)
    const SIMD_4x32 shuffle2000 =
       SIMD_4x32(0x03020100, 0x03020100, 0x03020100, 0x0B0A0908);
 
-   const SIMD_4x32 zero_top_half(0, 0, ~0, ~0);
+   const SIMD_4x32 zero_top_half(0, 0, 0xFFFFFFFF, 0xFFFFFFFF);
    y &= zero_top_half;
    return y ^ shuffle(x, shuffle3332) ^ shuffle(y, shuffle2000);
    }
