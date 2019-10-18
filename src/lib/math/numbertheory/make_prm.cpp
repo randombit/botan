@@ -79,6 +79,11 @@ BigInt random_prime(RandomNumberGenerator& rng,
                     size_t equiv, size_t modulo,
                     size_t prob)
    {
+   if(bits <= 1)
+      {
+      throw Invalid_Argument("random_prime: Can't make a prime of " +
+                             std::to_string(bits) + " bits");
+      }
    if(coprime.is_negative() || (!coprime.is_zero() && coprime.is_even()) || coprime.bits() >= bits)
       {
       throw Invalid_Argument("random_prime: invalid coprime");
@@ -100,12 +105,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
       if(equiv != 1 || modulo != 2 || coprime != 0)
          throw Not_Implemented("random_prime equiv/modulo/coprime options not usable for small primes");
 
-      if(bits <= 1)
-         {
-         throw Invalid_Argument("random_prime: Can't make a prime of " +
-                                std::to_string(bits) + " bits");
-         }
-      else if(bits == 2)
+      if(bits == 2)
          {
          return ((rng.next_byte() % 2) ? 2 : 3);
          }
