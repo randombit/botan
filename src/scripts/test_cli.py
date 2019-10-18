@@ -536,7 +536,6 @@ def cli_roughtime_tests(tmp_dir):
     if not check_for_command("roughtime"):
         return
 
-    fixed_drbg_seed = "802" * 32
     server_port = random_port_number()
     chain_file = os.path.join(tmp_dir, 'roughtime-chain')
     ecosystem = os.path.join(tmp_dir, 'ecosystem')
@@ -591,7 +590,6 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
         f.write("Cloudflare-Roughtime ed25519 gD63hSj4ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
 
     test_cli("roughtime", [
-        "--rng-type=drbg", "--drbg-seed=" + fixed_drbg_seed,
         "--check-local-clock=0",
         "--chain-file=",
         "--servers-file=" + ecosystem]
@@ -601,13 +599,11 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
         f.write("Cloudflare-Roughtime ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp 127.0.0.1:" + str(server_port))
 
     test_cli("roughtime", [
-        "--rng-type=drbg", "--drbg-seed=" + fixed_drbg_seed,
         "--chain-file=",
         "--servers-file=" + ecosystem]
              , expected_stderr=b'ERROR: Local clock mismatch\n')
 
     test_cli("roughtime", [
-        "--rng-type=drbg", "--drbg-seed=" + fixed_drbg_seed,
         "--check-local-clock=0",
         "--chain-file=" + chain_file,
         "--servers-file=" + ecosystem]
@@ -621,7 +617,6 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
     server_request = request[1]
     server_response = response[1]
     test_cli("roughtime", [
-        "--rng-type=drbg", "--drbg-seed=" + fixed_drbg_seed,
         "--check-local-clock=0",
         "--chain-file=" + chain_file,
         "--host=127.0.0.1:" + str(server_port),
@@ -637,7 +632,6 @@ ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= 2A+I9q2+ZayxDDYC5n2YW8Bn/zB
     server_request = request[2]
     server_response = response[2]
     test_cli("roughtime", [
-        "--rng-type=drbg", "--drbg-seed=" + fixed_drbg_seed,
         "--check-local-clock=0",
         "--chain-file=" + chain_file,
         "--host=127.0.0.1:" + str(server_port),
@@ -1080,9 +1074,7 @@ def cli_pk_encrypt_tests(tmp_dir):
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", recovered_file], rng_output_hash)
 
 def cli_uuid_tests(_tmp_dir):
-    fixed_drbg_seed = "802" * 32
-
-    test_cli("uuid", ['--rng-type=drbg', '--drbg-seed=' + fixed_drbg_seed], "D80F88F6-ADBE-45AC-B10C-3602E67D985B")
+    test_cli("uuid", [], "D80F88F6-ADBE-45AC-B10C-3602E67D985B")
 
     uuid_re = re.compile(r'[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}')
 
