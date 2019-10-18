@@ -79,9 +79,9 @@ BigInt random_prime(RandomNumberGenerator& rng,
                     size_t equiv, size_t modulo,
                     size_t prob)
    {
-   if(coprime.is_negative())
+   if(coprime.is_negative() || (!coprime.is_zero() && coprime.is_even()) || coprime.bits() >= bits)
       {
-      throw Invalid_Argument("random_prime: coprime must be >= 0");
+      throw Invalid_Argument("random_prime: invalid coprime");
       }
    if(modulo == 0)
       {
@@ -149,16 +149,8 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
       Prime_Sieve sieve(p, bits);
 
-      size_t counter = 0;
-      while(true)
+      for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt)
          {
-         ++counter;
-
-         if(counter > MAX_ATTEMPTS)
-            {
-            break; // don't try forever, choose a new starting point
-            }
-
          p += modulo;
 
          sieve.step(modulo);
@@ -169,21 +161,31 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
          Modular_Reducer mod_p(p);
 
+         /*
+         First do a single M-R iteration to quickly elimate most non-primes,
+         before doing the coprimality check which is expensive
+         */
          if(is_miller_rabin_probable_prime(p, mod_p, rng, 1) == false)
             continue;
 
          if(coprime > 1)
             {
             /*
-            * Check if gcd(p - 1, coprime) != 1 by computing the inverse. The
-            * gcd algorithm is not constant time, but modular inverse is (for
-            * odd modulus anyway). This avoids a side channel attack against RSA
-            * key generation, though RSA keygen should be using generate_rsa_prime.
+            * Check if gcd(p - 1, coprime) != 1 by attempting to compute a
+            * modular inverse. We are assured coprime is odd (since if it was
+            * even, it would always have a common factor with p - 1), so
+            * take off the factors of 2 from (p-1) then compute the inverse
+            * of coprime modulo that integer.
             */
-            if(ct_inverse_mod_odd_modulus(p - 1, coprime).is_zero())
+            BigInt p1 = p - 1;
+            p1 >>= low_zero_bits(p1);
+            if(ct_inverse_mod_odd_modulus(coprime, p1).is_zero())
                {
+               BOTAN_DEBUG_ASSERT(gcd(p - 1, coprime) > 1);
                continue;
                }
+
+            BOTAN_DEBUG_ASSERT(gcd(p - 1, coprime) == 1);
             }
 
          if(p.bits() > bits)
@@ -234,16 +236,8 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
       const word step = 2;
 
-      size_t counter = 0;
-      while(true)
+      for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt)
          {
-         ++counter;
-
-         if(counter > MAX_ATTEMPTS)
-            {
-            break; // don't try forever, choose a new starting point
-            }
-
          p += step;
 
          sieve.step(step);
@@ -277,11 +271,11 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          p1 >>= low_zero_bits(p1);
          if(ct_inverse_mod_odd_modulus(coprime, p1).is_zero())
             {
-            BOTAN_DEBUG_ASSERT(gcd(p1, coprime) > 1);
+            BOTAN_DEBUG_ASSERT(gcd(p - 1, coprime) > 1);
             continue;
             }
 
-         BOTAN_DEBUG_ASSERT(gcd(p1, coprime) == 1);
+         BOTAN_DEBUG_ASSERT(gcd(p - 1, coprime) == 1);
 
          if(p.bits() > bits)
             break;
