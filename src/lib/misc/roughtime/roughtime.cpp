@@ -21,6 +21,9 @@ namespace Botan {
 
 namespace {
 
+// This exists to work around a LGTM false positive
+static_assert(Roughtime::request_min_size == 1024, "Expected minimum size");
+
 template< bool B, class T = void >
 using enable_if_t = typename std::enable_if<B,T>::type;
 
