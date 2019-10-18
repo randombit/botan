@@ -50,17 +50,17 @@ environment:
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x64-1_69.lib"
       MAKE_TOOL: jom
 
-    # MSVC 2019 static x86-64
+    # MSVC 2019 static x86-64 w/debug iterators
     - MSVS: 2019
       PLATFORM: x86_amd64
-      TARGET: static
+      TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       MAKE_TOOL: jom
 
-    # MSVC 2019 x86-64 preview w/debug iterators
+    # MSVC 2019 x86-64 preview
     - MSVS: 2019p
       PLATFORM: x86_amd64
-      TARGET: sanitizer
+      TARGET: static
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
       MAKE_TOOL: jom
 
