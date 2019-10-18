@@ -66,7 +66,7 @@ std::map<std::string, std::vector<uint8_t>> unpack_roughtime_packet(T bytes)
    std::map<std::string, std::vector<uint8_t>> tags;
    for(uint32_t i=0; i<num_tags; ++i)
       {
-      const uint32_t end = ((i+1) == num_tags) ? bytes.size() : start_content + from_little_endian<uint32_t>(buf + 4 + i*4);
+      const size_t end = ((i+1) == num_tags) ? bytes.size() : start_content + from_little_endian<uint32_t>(buf + 4 + i*4);
       if(end > bytes.size())
          { throw Roughtime::Roughtime_Error("Tag end index out of bounds"); }
       if(end < start)
@@ -76,7 +76,7 @@ std::map<std::string, std::vector<uint8_t>> unpack_roughtime_packet(T bytes)
       auto ret = tags.emplace(label, std::vector<uint8_t>(buf+start, buf+end));
       if(!ret.second)
          { throw Roughtime::Roughtime_Error(std::string("Map has duplicated tag: ") + label); }
-      start = end;
+      start = static_cast<uint32_t>(end);
       }
    return tags;
    }
