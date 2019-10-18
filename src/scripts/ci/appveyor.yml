@@ -7,6 +7,7 @@ environment:
   SCCACHE_CACHE_SIZE: 128M
   SCCACHE_VERSION: 0.2.10
   APPVEYOR_CACHE_ENTRY_ZIP_ARGS: -t7z -m0=lzma -mx=9
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
   matrix:
 
