@@ -26,13 +26,15 @@ constexpr bool isdigit(char ch)
 
 bool isDomain(const std::string& domain)
    {
-#if defined(__GLIBCXX__) && (__GLIBCXX__ < 20160726) //GCC 4.8 does not support regex
+#if defined(__GLIBCXX__) && (__GLIBCXX__ < 20160726)
+   // GCC 4.8 does not support regex
    return true;
-#endif
+#else
    std::regex re(
       R"(^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$)");
    std::cmatch m;
    return std::regex_match(domain.c_str(), m, re);
+#endif
    }
 
 bool isIPv4(const std::string& ip)
