@@ -118,9 +118,9 @@ template<typename T> inline void clear_mem(T* ptr, size_t n)
 
 // is_trivially_copyable is missing in g++ < 5.0
 #if !__clang__ && __GNUG__ && __GNUC__ < 5
-#define IS_TRIVIALLY_COPYABLE(T) true
+#define BOTAN_IS_TRIVIALLY_COPYABLE(T) true
 #else
-#define IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
+#define BOTAN_IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
 #endif
 
 /**
@@ -140,7 +140,7 @@ template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
 
 template<typename T> inline void typecast_copy(uint8_t out[], T in[], size_t N)
    {
-   static_assert(IS_TRIVIALLY_COPYABLE(T), "");
+   static_assert(BOTAN_IS_TRIVIALLY_COPYABLE(T), "");
    std::memcpy(out, in, sizeof(T)*N);
    }
 
@@ -163,7 +163,7 @@ template<typename T> inline void typecast_copy(T& out, const uint8_t in[])
 
 template <class To, class From> inline To typecast_copy(const From *src) noexcept
    {
-   static_assert(IS_TRIVIALLY_COPYABLE(From) && std::is_trivial<To>::value, "");
+   static_assert(BOTAN_IS_TRIVIALLY_COPYABLE(From) && std::is_trivial<To>::value, "");
    To dst;
    std::memcpy(&dst, src, sizeof(To));
    return dst;
