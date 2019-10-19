@@ -1,6 +1,7 @@
 /*
  * XMSS Public Key
  * (C) 2016,2017 Matthias Gierlings
+ * (C) 2019 René Korthaus, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -29,8 +30,6 @@ class XMSS_Verification_Operation;
 
 /**
  * An XMSS: Extended Hash-Based Signature public key.
- * The XMSS public key does not support the X509 standard. Instead the
- * raw format described in [1] is used.
  *
  * [1] XMSS: Extended Hash-Based Signatures,
  *     Request for Comments: 8391
@@ -56,10 +55,14 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
            m_public_seed(rng.random_vec(m_xmss_params.element_size())) {}
 
       /**
-       * Creates an XMSS public key from a byte sequence produced by
-       * raw_private_key().
-       **/
-      XMSS_PublicKey(const std::vector<uint8_t>& raw_key);
+       * Loads a public key.
+       *
+       * Public key must be encoded as in RFC
+       * draft-vangeest-x509-hash-sigs-03.
+       *
+       * @param key_bits DER encoded public key bits
+       */
+      XMSS_PublicKey(const std::vector<uint8_t>& key_bits);
 
       /**
        * Creates a new XMSS public key for a chosen XMSS signature method as
@@ -121,7 +124,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
 
       /**
        * Retrieves the Winternitz One Time Signature (WOTS) method,
-       * corrseponding to the chosen XMSS signature method.
+       * corresponding to the chosen XMSS signature method.
        *
        * @return XMSS WOTS signature method identifier.
        **/
@@ -188,7 +191,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override
          {
-         return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_NULL_PARAM);
+         return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
          }
 
       bool check_key(RandomNumberGenerator&, bool) const override
@@ -211,14 +214,16 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          }
 
       /**
-       * Returns a raw byte sequence as defined in [1].
-       * This method acts as an alias for raw_public_key().
+       * Returns the encoded public key as defined in RFC
+       * draft-vangeest-x509-hash-sigs-03.
        *
-       * @return raw public key bits.
+       * @return encoded public key bits
        **/
       std::vector<uint8_t> public_key_bits() const override
          {
-         return raw_public_key();
+         std::vector<uint8_t> output;
+         DER_Encoder(output).encode(raw_public_key(), OCTET_STRING);
+         return output;
          }
 
       /**
@@ -233,7 +238,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          }
 
       /**
-       * Generates a non standardized byte sequence representing the XMSS
+       * Generates a byte sequence representing the XMSS
        * public key, as defined in [1] (p. 23, "XMSS Public Key")
        *
        * @return 4-byte OID, followed by n-byte root node, followed by
@@ -242,6 +247,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
       virtual std::vector<uint8_t> raw_public_key() const;
 
    protected:
+      std::vector<uint8_t> m_raw_key;
       XMSS_Parameters m_xmss_params;
       XMSS_WOTS_Parameters m_wots_params;
       secure_vector<uint8_t> m_root;

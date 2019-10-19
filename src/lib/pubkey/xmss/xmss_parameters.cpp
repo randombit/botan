@@ -176,7 +176,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          m_wots_oid = XMSS_WOTS_Parameters::ots_algorithm_t::WOTSP_SHAKE_512;
          break;
       default:
-         throw Not_Implemented("Algorithm id does not match any known XMSS algorithm id.");
+         throw Not_Implemented("Algorithm id does not match any known XMSS algorithm id:" + std::to_string(oid));
          break;
       }
    }

@@ -118,7 +118,7 @@ class X509test_Path_Validation_Tests final : public Test
             results.push_back(result);
             }
 
-         // test softfail
+            // test softfail
             {
             Test::Result result("X509test path validation softfail");
             result.start_timer();
@@ -894,6 +894,42 @@ class Path_Validation_With_OCSP_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("x509_path_with_ocsp", Path_Validation_With_OCSP_Tests);
+
+class XMSS_Path_Validation_Tests final : public Test
+   {
+   public:
+      Test::Result validate_self_signed(const std::string& name, const std::string& file)
+      {
+      Test::Result result(name);
+
+      Botan::Path_Validation_Restrictions restrictions;
+      auto self_signed = Botan::X509_Certificate(Test::data_dir() + "/x509/xmss/" + file);
+
+      auto cert_path = std::vector<std::shared_ptr<const Botan::X509_Certificate>>{
+				            std::make_shared<const Botan::X509_Certificate>(self_signed)};
+      auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
+
+      auto status = Botan::PKIX::overall_status(Botan::PKIX::check_chain(cert_path, valid_time,
+				                                 "", Botan::Usage_Type::UNSPECIFIED, restrictions.minimum_key_strength(), restrictions.trusted_hashes()));
+      result.test_eq("Cert validation status",
+                  Botan::to_string(status), "Verified");
+      return result;
+      }
+
+      std::vector<Test::Result> run() override
+      {
+      if(Botan::has_filesystem_impl() == false)
+         {
+         return {Test::Result::Note("XMSS path validation",
+                                    "Skipping due to missing filesystem access")};
+         }
+
+      return  {validate_self_signed("XMSS path validation with certificate created by ISARA corp", "xmss_isara_root.pem"),
+               validate_self_signed("XMSS path validation with certificate created by BouncyCastle", "xmss_bouncycastle_sha256_10_root.pem")};
+      }
+   };
+
+BOTAN_REGISTER_TEST("x509_path_xmss", XMSS_Path_Validation_Tests);
 
 #endif
 

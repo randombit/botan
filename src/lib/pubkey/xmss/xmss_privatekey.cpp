@@ -17,6 +17,7 @@
 
 #include <botan/xmss_privatekey.h>
 #include <botan/internal/xmss_signature_operation.h>
+#include <botan/ber_dec.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/thread_pool.h>
@@ -24,8 +25,26 @@
 
 namespace Botan {
 
-XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
-   : XMSS_PublicKey(unlock(raw_key)),
+namespace {
+
+secure_vector<uint8_t> extract_raw_key(const secure_vector<uint8_t>& key_bits)
+{
+   secure_vector<uint8_t> raw_key;
+   try
+   {
+      BER_Decoder(key_bits).decode(raw_key, OCTET_STRING);
+   }
+   catch(Decoding_Error& e)
+   {
+      raw_key = key_bits;
+   }
+   return raw_key;
+}
+
+}
+
+XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& key_bits)
+   : XMSS_PublicKey(unlock(key_bits)),
      XMSS_Common_Ops(XMSS_PublicKey::m_xmss_params.oid()),
      m_wots_priv_key(m_wots_params.oid(), m_public_seed),
      m_index_reg(XMSS_Index_Registry::get_instance())
@@ -40,12 +59,14 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
    */
    static_assert(sizeof(size_t) >= 4, "size_t is big enough to support leaf index");
 
+   secure_vector<uint8_t> raw_key = extract_raw_key(key_bits);
+
    if(raw_key.size() != XMSS_PrivateKey::size())
       {
-      throw Decoding_Error("Invalid XMSS private key size detected.");
+      throw Decoding_Error("Invalid XMSS private key size");
       }
 
-   // extract & copy unused leaf index from raw_key.
+   // extract & copy unused leaf index from raw_key
    uint64_t unused_leaf = 0;
    auto begin = (raw_key.begin() + XMSS_PublicKey::size());
    auto end = raw_key.begin() + XMSS_PublicKey::size() + sizeof(uint32_t);

@@ -192,7 +192,7 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    std::string padding;
    if(sig_info.size() == 2)
       padding = sig_info[1];
-   else if(sig_info[0] == "Ed25519")
+   else if(sig_info[0] == "Ed25519" || sig_info[0] == "XMSS")
       padding = "Pure";
    else
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -312,6 +312,16 @@ std::string choose_sig_algo(AlgorithmIdentifier& sig_algo,
    else if(algo_name == "Ed25519")
       {
       padding = "Pure";
+      }
+   else if(algo_name == "XMSS")
+      {
+      if(user_specified.empty() == true)
+         {
+         throw Invalid_Argument("XMSS requires padding scheme");
+         }
+      padding = user_specified;
+      sig_algo = AlgorithmIdentifier(OID::from_string("XMSS"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      return padding;
       }
    else
       {
