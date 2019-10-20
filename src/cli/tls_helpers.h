@@ -50,6 +50,8 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
             {
             m_certstores.push_back(std::make_shared<Botan::System_Certificate_Store>());
             }
+#else
+         BOTAN_UNUSED(use_system_store);
 #endif
          }
 

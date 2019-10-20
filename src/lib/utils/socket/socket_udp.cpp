@@ -320,6 +320,9 @@ OS::open_socket_udp(const std::string& hostname,
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
    return std::unique_ptr<OS::SocketUDP>(new BSD_SocketUDP(hostname, service, timeout));
 #else
+   BOTAN_UNUSED(hostname);
+   BOTAN_UNUSED(service);
+   BOTAN_UNUSED(timeout);
    return std::unique_ptr<OS::SocketUDP>();
 #endif
    }

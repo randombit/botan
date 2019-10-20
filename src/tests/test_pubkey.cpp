@@ -539,6 +539,7 @@ std::vector<std::string> PK_Key_Generation_Test::possible_providers(
 
 namespace {
 
+#if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && (defined(BOTAN_HAS_SHA2_32) || defined(BOTAN_HAS_SCRYPT))
 void test_pbe_roundtrip(Test::Result& result,
                         const Botan::Private_Key& key,
                         const std::string& pbe_algo,
@@ -591,6 +592,7 @@ void test_pbe_roundtrip(Test::Result& result,
       result.test_failure("roundtrip encrypted BER private key", e.what());
       }
    }
+#endif
 
 }
 

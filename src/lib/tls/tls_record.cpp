@@ -71,6 +71,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
          }
 
 #else
+      BOTAN_UNUSED(uses_encrypt_then_mac);
       throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
       }

@@ -145,6 +145,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    // plausibility check
    if(dcache_line == 32 || dcache_line == 64 || dcache_line == 128)
       *cache_line_size = static_cast<size_t>(dcache_line);
+#else
+   BOTAN_UNUSED(cache_line_size);
 #endif
 
    const unsigned long hwcap_neon = OS::get_auxval(ARM_hwcap_bit::ARCH_hwcap_neon);

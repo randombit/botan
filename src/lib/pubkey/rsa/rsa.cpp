@@ -396,7 +396,7 @@ class RSA_Private_Operation
          the "Smooth RSA-CRT" method. https://eprint.iacr.org/2007/039.pdf
          */
 
-         const size_t powm_window = 4;
+         static constexpr size_t powm_window = 4;
 
          // Compute this in main thread to avoid racing on the rng
          const BigInt d1_mask(m_blinder.rng(), m_blinding_bits);
@@ -413,7 +413,7 @@ class RSA_Private_Operation
          */
          m.sig_words();
 
-         auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask, powm_window]() {
+         auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask]() {
 #endif
             const BigInt masked_d1 = m_private->get_d1() + (d1_mask * (m_private->get_p() - 1));
             auto powm_d1_p = monty_precompute(m_private->m_monty_p, m_private->m_mod_p.reduce(m), powm_window);

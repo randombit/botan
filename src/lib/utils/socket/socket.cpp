@@ -358,6 +358,9 @@ OS::open_socket(const std::string& hostname,
    return std::unique_ptr<OS::Socket>(new BSD_Socket(hostname, service, timeout));
 
 #else
+   BOTAN_UNUSED(hostname);
+   BOTAN_UNUSED(service);
+   BOTAN_UNUSED(timeout);
    // No sockets for you
    return std::unique_ptr<Socket>();
 #endif

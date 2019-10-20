@@ -315,6 +315,7 @@ size_t OS::system_page_size()
    else
       return default_page_size;
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
+   BOTAN_UNUSED(default_page_size);
    SYSTEM_INFO sys_info;
    ::GetSystemInfo(&sys_info);
    return sys_info.dwPageSize;

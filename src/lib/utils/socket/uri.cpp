@@ -28,6 +28,7 @@ bool isDomain(const std::string& domain)
    {
 #if defined(__GLIBCXX__) && (__GLIBCXX__ < 20160726)
    // GCC 4.8 does not support regex
+   BOTAN_UNUSED(domain);
    return true;
 #else
    std::regex re(

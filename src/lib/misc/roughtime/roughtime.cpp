@@ -168,7 +168,7 @@ Nonce::Nonce(RandomNumberGenerator& rng)
 
 std::array<uint8_t, request_min_size> encode_request(const Nonce& nonce)
    {
-   std::array<uint8_t, request_min_size> buf = {2, 0, 0, 0, 64, 0, 0, 0, 'N', 'O', 'N', 'C', 'P', 'A', 'D', 0xff};
+   std::array<uint8_t, request_min_size> buf = {{2, 0, 0, 0, 64, 0, 0, 0, 'N', 'O', 'N', 'C', 'P', 'A', 'D', 0xff}};
    std::memcpy(buf.data() + 16, nonce.get_nonce().data(), nonce.get_nonce().size());
    std::memset(buf.data() + 16 + nonce.get_nonce().size(), 0, buf.size() - 16 - nonce.get_nonce().size());
    return buf;
