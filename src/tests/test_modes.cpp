@@ -145,10 +145,10 @@ class Cipher_Mode_Tests final : public Text_Based_Test
                         mode.valid_nonce_length(mode.default_nonce_length()));
 
          // Test that disallowed nonce sizes result in an exception
-         const size_t large_nonce_size = 65000;
+         static constexpr size_t large_nonce_size = 65000;
          result.test_eq("Large nonce not allowed", mode.valid_nonce_length(large_nonce_size), false);
          result.test_throws("Large nonce causes exception",
-                            [&mode,large_nonce_size]() { mode.start(nullptr, large_nonce_size); });
+                            [&mode]() { mode.start(nullptr, large_nonce_size); });
 
          Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(update_granularity);
 

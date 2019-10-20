@@ -316,6 +316,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
                                            buf, m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
+   BOTAN_UNUSED(signature_valid);
    return true;
 #else
    return signature_valid;

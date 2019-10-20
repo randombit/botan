@@ -98,6 +98,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
                                            state.hash().get_contents(), m_signature);
 
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
+   BOTAN_UNUSED(signature_valid);
    return true;
 #else
    return signature_valid;
