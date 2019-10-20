@@ -34,16 +34,16 @@ template<class T, std::size_t N>
 struct is_array<std::array<T,N>>:std::true_type{};
 
 template<typename T>
-T impl_from_little_endian(const uint8_t* t, size_t i)
+T impl_from_little_endian(const uint8_t* t, const size_t i)
    {
-   static_assert(sizeof(T)<=sizeof(int64_t),"");
-   return (i == 0) ? T(0) : (T(static_cast<int64_t>(t[i-1]) << ((i-1)*8)) + impl_from_little_endian<T>(t,i-1));
+   static_assert(sizeof(T) <= sizeof(int64_t), "");
+   return T(static_cast<int64_t>(t[i]) << i * 8) + (i == 0 ? T(0) : impl_from_little_endian<T>(t, i - 1));
    }
 
 template<typename T>
 T from_little_endian(const uint8_t* t)
    {
-   return impl_from_little_endian<T>(t, sizeof(T));
+   return impl_from_little_endian<T>(t, sizeof(T) - 1);
    }
 
 template<typename T, enable_if_t<is_array<T>::value>* = nullptr>
