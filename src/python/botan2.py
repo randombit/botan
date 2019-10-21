@@ -1347,10 +1347,14 @@ class X509Cert(object): # pylint: disable=invalid-name
         return rc == 0
 
     def not_before(self):
-        return _call_fn_returning_sz(lambda l: _DLL.botan_x509_cert_not_before(self.__obj, l))
+        time = c_uint64(0)
+        _DLL.botan_x509_cert_not_before(self.__obj, byref(time))
+        return time.value
 
     def not_after(self):
-        return _call_fn_returning_sz(lambda l: _DLL.botan_x509_cert_not_after(self.__obj, l))
+        time = c_uint64(0)
+        _DLL.botan_x509_cert_not_after(self.__obj, byref(time))
+        return time.value
 
     def allowed_usage(self, usage_list):
         usage_values = {"NO_CONSTRAINTS": 0,
