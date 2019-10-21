@@ -1352,8 +1352,24 @@ class X509Cert(object): # pylint: disable=invalid-name
     def not_after(self):
         return _call_fn_returning_sz(lambda l: _DLL.botan_x509_cert_not_after(self.__obj, l))
 
-    def allowed_usage(self, usage):
-        rc = _DLL.botan_x509_cert_allowed_usage(self.__obj, usage)
+    def allowed_usage(self, usage_list):
+        usage_values = {"NO_CONSTRAINTS": 0,
+                        "DIGITAL_SIGNATURE": 32768,
+                        "NON_REPUDIATION": 16384,
+                        "KEY_ENCIPHERMENT": 8192,
+                        "DATA_ENCIPHERMENT": 4096,
+                        "KEY_AGREEMENT": 2048,
+                        "KEY_CERT_SIGN": 1024,
+                        "CRL_SIGN": 512,
+                        "ENCIPHER_ONLY": 256,
+                        "DECIPHER_ONLY": 128}
+        usage = 0
+        for u in usage_list:
+            if u not in usage_values:
+                return False
+            usage += usage_values[u]
+
+        rc = _DLL.botan_x509_cert_allowed_usage(self.__obj, c_uint(usage))
         return rc == 0
 
     def get_obj(self):
@@ -1362,7 +1378,7 @@ class X509Cert(object): # pylint: disable=invalid-name
     def verify(self,
                intermediates,
                trusted,
-               trusted_path,
+               trusted_path="",
                required_strength=0,
                hostname="",
                reference_time=0):
