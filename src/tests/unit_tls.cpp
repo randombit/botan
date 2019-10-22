@@ -657,7 +657,11 @@ void TLS_Handshake_Test::go()
 
          m_results.test_eq("TLS key material export", client_key.bits_of(), server_key.bits_of());
 
+         m_results.confirm("Client is active", client->is_active());
+         m_results.confirm("Client is not closed", !client->is_closed());
          client->close();
+         m_results.confirm("Client is no longer active", !client->is_active());
+         m_results.confirm("Client is closed", client->is_closed());
          }
       }
 
