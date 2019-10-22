@@ -442,7 +442,7 @@ ofvkP1EDmpx50fHLawIDAQAB
             self.assertEqual(a_pem, new_a.to_pem())
 
     def test_certs(self):
-        cert = botan2.X509Cert("src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt")
+        cert = botan2.X509Cert(filename="src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt")
         pubkey = cert.subject_public_key()
 
         self.assertEqual(pubkey.algo_name(), 'ECDSA')

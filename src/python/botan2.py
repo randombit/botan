@@ -1380,11 +1380,11 @@ class X509Cert(object): # pylint: disable=invalid-name
         return self.__obj
 
     def verify(self,
-               intermediates,
-               trusted,
-               trusted_path="",
+               intermediates=None,
+               trusted=None,
+               trusted_path=None,
                required_strength=0,
-               hostname="",
+               hostname=None,
                reference_time=0):
 
         c_intermediates = len(intermediates) * c_void_p
