@@ -278,6 +278,8 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
 
 bool Channel::is_active() const
    {
+   if(is_closed())
+      return false;
    return (active_state() != nullptr);
    }
 
