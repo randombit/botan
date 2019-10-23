@@ -494,7 +494,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
 
       Test::Result test_reseed_interval_limits() override
          {
-         Test::Result result("HMAC_DRBG reseed_interval");
+         Test::Result result("HMAC_DRBG reseed_interval_limits");
 
          const std::string mac_string = "HMAC(SHA-256)";
 
@@ -618,7 +618,7 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests
 
       Test::Result test_reseed_interval_limits() override
          {
-         Test::Result result("ChaCha_RNG reseed_interval");
+         Test::Result result("ChaCha_RNG reseed_interval_limits");
          // ChaCha_RNG doesn't apply any limits to reseed_interval
          return result;
          }
