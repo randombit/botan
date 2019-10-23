@@ -532,3 +532,124 @@ HOTP
       counter value is always identical to the counter that was passed
       in. If the code did verify and resync_range was zero, then the
       next counter will always be counter+1.
+
+X509Cert
+-----------------------------------------
+
+.. py:class:: X509Cert(filename=None, buf=None)
+
+   .. py:method:: time_starts()
+
+      Return the time the certificate becomes valid, as a string in form
+      "YYYYMMDDHHMMSSZ" where Z is a literal character reflecting that this time is
+      relative to UTC.
+
+   .. py:method:: time_expires()
+
+      Return the time the certificate expires, as a string in form
+      "YYYYMMDDHHMMSSZ" where Z is a literal character reflecting that this time is
+      relative to UTC.      
+
+   .. py:method:: to_string()
+
+      Format the certificate as a free-form string.
+
+   .. py:method:: fingerprint(hash_algo='SHA-256')
+
+      Return a fingerprint for the certificate, which is basically just a hash
+      of the binary contents. Normally SHA-1 or SHA-256 is used, but any hash
+      function is allowed.
+
+   .. py:method:: serial_number()
+
+      Return the serial number of the certificate.
+
+   .. py:method:: authority_key_id()
+
+      Return the authority key ID set in the certificate, which may be empty.
+
+   .. py:method:: subject_key_id()
+
+      Return the subject key ID set in the certificate, which may be empty.
+
+   .. py:method:: subject_public_key_bits()
+
+      Get the serialized representation of the public key included in this certificate.
+
+   .. py:method:: subject_public_key()
+
+      Get the public key included in this certificate as an object of class ``PublicKey``.
+
+   .. py:method:: subject_dn(key, index)
+
+      Get a value from the subject DN field.
+
+      ``key`` specifies a value to get, for instance ``"Name"`` or `"Country"`.  
+
+   .. py:method:: issuer_dn(key, index)
+
+      Get a value from the issuer DN field.
+
+      ``key`` specifies a value to get, for instance ``"Name"`` or `"Country"`.
+
+   .. py:method:: hostname_match(hostname)
+
+      Return True if the Common Name (CN) field of the certificate matches a given ``hostname``.
+
+   .. py:method:: not_before()
+
+      Return the time the certificate becomes valid, as seconds since epoch.   
+
+   .. py:method:: not_after()
+
+      Return the time the certificate expires, as seconds since epoch.
+
+   .. py:method:: allowed_usage(usage_list)
+
+      Return True if the certificates Key Usage extension contains all constraints given in ``usage_list``.
+      Also return True if the certificate doesn't have this extension.
+      Example usage constraints are: ``"DIGITAL_SIGNATURE"``, ``"KEY_CERT_SIGN"``, ``"CRL_SIGN"``.
+
+   .. py:method:: verify(intermediates=None, \
+                  trusted=None, \
+                  trusted_path=None, \
+                  required_strength=0, \
+                  hostname=None, \
+                  reference_time=0)
+
+      Verify a certificate. Returns 0 if validation was successful, returns a positive error code 
+      if the validation was unsuccesful.
+
+      ``intermediates`` is a list of untrusted subauthorities.
+
+      ``trusted`` is a list of trusted root CAs.
+
+      The `trusted_path` refers to a directory where one or more trusted CA
+      certificates are stored.
+
+      Set ``required_strength`` to indicate the minimum key and hash strength
+      that is allowed. For instance setting to 80 allows 1024-bit RSA and SHA-1.
+      Setting to 110 requires 2048-bit RSA and SHA-256 or higher. Set to zero
+      to accept a default.
+
+      If ``hostname`` is given, it will be checked against the certificates CN field.
+
+      Set ``reference_time`` to be the time which the certificate chain is
+      validated against. Use zero (default) to use the current system clock.
+
+   .. py:classmethod:: validation_status(error_code)
+
+      Return an informative string associated with the verification return code.
+
+     
+
+
+
+
+
+
+
+
+
+
+

@@ -376,7 +376,7 @@ def _set_prototypes(dll):
             [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_to_string, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_allowed_usage, [c_void_p, c_uint])
-    ffi_api(dll.botan_x509_cert_hostname_match, [c_void_p, c_char_p])
+    ffi_api(dll.botan_x509_cert_hostname_match, [c_void_p, c_char_p], [-1])
     ffi_api(dll.botan_x509_cert_verify,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
 
@@ -1338,6 +1338,82 @@ class X509Cert(object): # pylint: disable=invalid-name
         return _call_fn_returning_str(
             0, lambda b, bl: _DLL.botan_x509_cert_get_subject_dn(self.__obj, _ctype_str(key), index, b, bl))
 
+    def issuer_dn(self, key, index):
+        return _call_fn_returning_str(
+            0, lambda b, bl: _DLL.botan_x509_cert_get_issuer_dn(self.__obj, _ctype_str(key), index, b, bl))
+
+    def hostname_match(self, hostname):
+        rc = _DLL.botan_x509_cert_hostname_match(self.__obj, _ctype_str(hostname))
+        return rc == 0
+
+    def not_before(self):
+        time = c_uint64(0)
+        _DLL.botan_x509_cert_not_before(self.__obj, byref(time))
+        return time.value
+
+    def not_after(self):
+        time = c_uint64(0)
+        _DLL.botan_x509_cert_not_after(self.__obj, byref(time))
+        return time.value
+
+    def allowed_usage(self, usage_list):
+        usage_values = {"NO_CONSTRAINTS": 0,
+                        "DIGITAL_SIGNATURE": 32768,
+                        "NON_REPUDIATION": 16384,
+                        "KEY_ENCIPHERMENT": 8192,
+                        "DATA_ENCIPHERMENT": 4096,
+                        "KEY_AGREEMENT": 2048,
+                        "KEY_CERT_SIGN": 1024,
+                        "CRL_SIGN": 512,
+                        "ENCIPHER_ONLY": 256,
+                        "DECIPHER_ONLY": 128}
+        usage = 0
+        for u in usage_list:
+            if u not in usage_values:
+                return False
+            usage += usage_values[u]
+
+        rc = _DLL.botan_x509_cert_allowed_usage(self.__obj, c_uint(usage))
+        return rc == 0
+
+    def get_obj(self):
+        return self.__obj
+
+    def verify(self,
+               intermediates=None,
+               trusted=None,
+               trusted_path=None,
+               required_strength=0,
+               hostname=None,
+               reference_time=0):
+
+        c_intermediates = len(intermediates) * c_void_p
+        arr_intermediates = c_intermediates()
+        for i, ca in enumerate(intermediates):
+            arr_intermediates[i] = ca.get_obj()
+
+        c_trusted = len(trusted) * c_void_p
+        arr_trusted = c_trusted()
+        for i, ca in enumerate(trusted):
+            arr_trusted[i] = ca.get_obj()
+
+        error_code = c_int(0)
+
+        _DLL.botan_x509_cert_verify(byref(error_code),
+                                    self.__obj,
+                                    byref(arr_intermediates),
+                                    c_size_t(len(intermediates)),
+                                    byref(arr_trusted),
+                                    c_size_t(len(trusted)),
+                                    _ctype_str(trusted_path),
+                                    c_size_t(required_strength),
+                                    _ctype_str(hostname),
+                                    c_uint64(reference_time))
+        return error_code.value
+
+    @classmethod
+    def validation_status(cls, error_code):
+        return _ctype_to_str(_DLL.botan_x509_cert_validation_status(c_int(error_code)))
 
 class MPI(object):
 

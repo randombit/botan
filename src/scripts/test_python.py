@@ -463,6 +463,41 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertTrue(cert.to_string().startswith("Version: 3"))
 
+        self.assertEqual(cert.issuer_dn('Name', 0), 'csca-germany')
+        self.assertEqual(cert.issuer_dn('Organization', 0), 'bund')
+        self.assertEqual(cert.issuer_dn('Organizational Unit', 0), 'bsi')
+        self.assertEqual(cert.issuer_dn('Country', 0), 'DE')
+
+        self.assertTrue(cert.hostname_match('csca-germany'))
+        self.assertFalse(cert.hostname_match('csca-slovakia'))
+
+        self.assertEqual(cert.not_before(), 1184858838)
+        self.assertEqual(cert.not_after(), 1831907880)
+
+        self.assertTrue(cert.allowed_usage(["CRL_SIGN", "KEY_CERT_SIGN"]))
+        self.assertTrue(cert.allowed_usage(["KEY_CERT_SIGN"]))
+        self.assertFalse(cert.allowed_usage(["DIGITAL_SIGNATURE"]))
+        self.assertFalse(cert.allowed_usage(["DIGITAL_SIGNATURE", "CRL_SIGN"]))
+
+        root = botan2.X509Cert("src/tests/data/x509/nist/root.crt")
+
+        int09 = botan2.X509Cert("src/tests/data/x509/nist/test09/int.crt")
+        end09 = botan2.X509Cert("src/tests/data/x509/nist/test09/end.crt")
+        self.assertEqual(end09.verify([int09], [root]), 2001)
+
+        end04 = botan2.X509Cert("src/tests/data/x509/nist/test04/end.crt")
+        int04_1 = botan2.X509Cert("src/tests/data/x509/nist/test04/int1.crt")
+        int04_2 = botan2.X509Cert("src/tests/data/x509/nist/test04/int2.crt")
+        self.assertEqual(end04.verify([int04_1, int04_2], [], "src/tests/data/x509/nist/", required_strength=80), 0)
+        self.assertEqual(end04.verify([int04_1, int04_2], [], required_strength=80), 3000)
+        self.assertEqual(end04.verify([int04_1, int04_2], [root], required_strength=80, hostname="User1-CP.02.01"), 0)
+        self.assertEqual(end04.verify([int04_1, int04_2], [root], required_strength=80, hostname="invalid"), 4008)
+        self.assertEqual(end04.verify([int04_1, int04_2], [root], required_strength=80, reference_time=1), 2000)
+
+        self.assertEqual(botan2.X509Cert.validation_status(0), 'Verified')
+        self.assertEqual(botan2.X509Cert.validation_status(3000), 'Certificate issuer not found')
+        self.assertEqual(botan2.X509Cert.validation_status(4008), 'Certificate does not match provided name')
+
     def test_mpi(self):
         # pylint: disable=too-many-statements
         z = botan2.MPI()
