@@ -20,6 +20,11 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
    {
    BOTAN_ASSERT_NONNULL(m_mac);
 
+   if(reseed_interval == 0 || reseed_interval > static_cast<size_t>(1) << 48)
+      {
+      throw Invalid_Argument("Invalid value for reseed_interval");
+      }
+
    if(m_max_number_of_bytes_per_request == 0 || m_max_number_of_bytes_per_request > 64 * 1024)
       {
       throw Invalid_Argument("Invalid value for max_number_of_bytes_per_request");
@@ -38,6 +43,11 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
    m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
    {
    BOTAN_ASSERT_NONNULL(m_mac);
+
+   if(reseed_interval == 0 || reseed_interval > static_cast<size_t>(1) << 48)
+      {
+      throw Invalid_Argument("Invalid value for reseed_interval");
+      }
 
    if(m_max_number_of_bytes_per_request == 0 || m_max_number_of_bytes_per_request > 64 * 1024)
       {
