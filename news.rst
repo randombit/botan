@@ -10,7 +10,14 @@ Version 2.13.0, Not Yet Released
 
 * Make gcd computation constant-time (GH #2147)
 
-* Use std::shared_ptr instead of boost::shared_ptr in some examples (GH #2155)
+* Support more functionality for X.509 in the Python API (GH #2165)
+
+* Fix a bug introduced in 2.12.0 where ``TLS::Channel::is_active`` and
+  ``TLS::Channel::is_closed`` could simultanously return true.
+  (GH #2174 #2171)
+
+* Use ``std::shared_ptr`` instead of ``boost::shared_ptr`` in some examples.
+  (GH #2155)
 
 Version 2.12.1, 2019-10-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -25,7 +32,7 @@ Version 2.12.1, 2019-10-14
 
 * Fix a bug that prevented compilation on x86-32 using GCC 4.9 (GH #2139)
 
-* Fix a bug in CCM encryption, where it was possible to call `finish` without
+* Fix a bug in CCM encryption, where it was possible to call ``finish`` without
   ever setting a nonce (GH #2151 #2150)
 
 * Improve ECIES/DLIES interfaces. If no initialization vector was set, they
@@ -95,7 +102,7 @@ Version 2.12.0, 2019-10-07
 
 * Support setting TLS policies in CLIs like ``tls_client`` and ``tls_proxy_server`` (GH #2047)
 
-* The tests now run in multithreaded mode by default. Provde option ``--test-threads=1`` to
+* The tests now run in multithreaded mode by default. Provide option ``--test-threads=1`` to
   return to previous single-threaded behavior. (GH #2071 #2075)
 
 * Cleanups in TLS record layer (GH #2021)
