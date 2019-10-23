@@ -27,6 +27,7 @@ namespace Botan {
 
 namespace {
 
+// fall back to raw decoding for previous versions, which did not encode an OCTET STRING
 secure_vector<uint8_t> extract_raw_key(const secure_vector<uint8_t>& key_bits)
 {
    secure_vector<uint8_t> raw_key;
