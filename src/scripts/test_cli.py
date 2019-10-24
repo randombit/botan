@@ -1118,7 +1118,7 @@ def cli_speed_tests(_tmp_dir):
             logging.error("Unexpected line %s", line)
 
     output = test_cli("speed", ["--msec=%d" % (msec), "AES-128/GCM"], None).split('\n')
-    format_re_ks = re.compile(r'^AES-128/GCM\(16\) .* [0-9]+ key schedule/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+    format_re_ks = re.compile(r'^AES-128/GCM\(16\).* [0-9]+ key schedule/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
     format_re_cipher = re.compile(r'^AES-128/GCM\(16\) .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     for line in output:
         if format_re_ks.match(line) is None:
@@ -1132,7 +1132,7 @@ def cli_speed_tests(_tmp_dir):
     output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
 
     # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
-    format_re = re.compile(r'^.* [0-9]+ ([A-Za-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+    format_re = re.compile(r'^.* [0-9]+ ([A-Za-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
@@ -1152,7 +1152,7 @@ def cli_speed_tests(_tmp_dir):
 
     output = test_cli("speed", ["--msec=%d" % (msec), "scrypt"], None).split('\n')
 
-    format_re = re.compile(r'^scrypt-[0-9]+-[0-9]+-[0-9]+ \([0-9]+ MiB\) [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+ ms\)')
+    format_re = re.compile(r'^scrypt-[0-9]+-[0-9]+-[0-9]+ \([0-9]+ MiB\) [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
 
     for line in output:
         if format_re.match(line) is None:
@@ -1168,7 +1168,7 @@ def cli_speed_tests(_tmp_dir):
 
     # Entropy source rdseed output 128 bytes estimated entropy 0 in 0.02168 ms total samples 32
     output = test_cli("speed", ["--msec=%d" % (msec), "entropy"], None).split('\n')
-    format_re = re.compile(r'^Entropy source [_a-z]+ output [0-9]+ bytes estimated entropy [0-9]+ in [0-9]+\.[0-9]+ ms .*total samples [0-9]+')
+    format_re = re.compile(r'^Entropy source [_a-z0-9]+ output [0-9]+ bytes estimated entropy [0-9]+ in [0-9]+\.[0-9]+ ms .*total samples [0-9]+')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)

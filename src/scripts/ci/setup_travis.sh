@@ -11,7 +11,11 @@ set -ev
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
-    if [ "$TARGET" = "valgrind" ]; then
+    if [ "$TARGET" = "shared" ] && [ "$TRAVIS_ARCH" = "aarch64" ]; then
+        sudo apt-get -qq update
+        sudo apt-get install liblzma-dev libbz2-dev ccache
+
+    elif [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq update
         sudo apt-get install valgrind
 
