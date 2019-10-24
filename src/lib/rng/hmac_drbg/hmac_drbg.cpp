@@ -10,6 +10,26 @@
 
 namespace Botan {
 
+namespace {
+
+void check_limits(size_t reseed_interval,
+                  size_t max_number_of_bytes_per_request)
+   {
+   // SP800-90A permits up to 2^48, but it is not usable on 32 bit
+   // platforms, so we only allow up to 2^24, which is still reasonably high
+   if(reseed_interval == 0 || reseed_interval > static_cast<size_t>(1) << 24)
+      {
+      throw Invalid_Argument("Invalid value for reseed_interval");
+      }
+
+   if(max_number_of_bytes_per_request == 0 || max_number_of_bytes_per_request > 64 * 1024)
+      {
+      throw Invalid_Argument("Invalid value for max_number_of_bytes_per_request");
+      }
+   }
+
+}
+
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      RandomNumberGenerator& underlying_rng,
                      size_t reseed_interval,
@@ -20,10 +40,7 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
    {
    BOTAN_ASSERT_NONNULL(m_mac);
 
-   if(m_max_number_of_bytes_per_request == 0 || m_max_number_of_bytes_per_request > 64 * 1024)
-      {
-      throw Invalid_Argument("Invalid value for max_number_of_bytes_per_request");
-      }
+   check_limits(reseed_interval, max_number_of_bytes_per_request);
 
    clear();
    }
@@ -32,17 +49,14 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      RandomNumberGenerator& underlying_rng,
                      Entropy_Sources& entropy_sources,
                      size_t reseed_interval,
-                     size_t max_number_of_bytes_per_request ) :
+                     size_t max_number_of_bytes_per_request) :
    Stateful_RNG(underlying_rng, entropy_sources, reseed_interval),
    m_mac(std::move(prf)),
    m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
    {
    BOTAN_ASSERT_NONNULL(m_mac);
 
-   if(m_max_number_of_bytes_per_request == 0 || m_max_number_of_bytes_per_request > 64 * 1024)
-      {
-      throw Invalid_Argument("Invalid value for max_number_of_bytes_per_request");
-      }
+   check_limits(reseed_interval, max_number_of_bytes_per_request);
 
    clear();
    }
@@ -57,10 +71,7 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
    {
    BOTAN_ASSERT_NONNULL(m_mac);
 
-   if(m_max_number_of_bytes_per_request == 0 || m_max_number_of_bytes_per_request > 64 * 1024)
-      {
-      throw Invalid_Argument("Invalid value for max_number_of_bytes_per_request");
-      }
+   check_limits(reseed_interval, max_number_of_bytes_per_request);
 
    clear();
    }

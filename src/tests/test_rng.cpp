@@ -55,6 +55,7 @@ class Stateful_RNG_Tests : public Test
          std::vector<Test::Result> results;
          results.push_back(test_reseed_kat());
          results.push_back(test_reseed());
+         results.push_back(test_reseed_interval_limits());
          results.push_back(test_max_number_of_bytes_per_request());
          results.push_back(test_broken_entropy_input());
          results.push_back(test_check_nonce());
@@ -107,6 +108,8 @@ class Stateful_RNG_Tests : public Test
       virtual Test::Result test_security_level() = 0;
 
       virtual Test::Result test_max_number_of_bytes_per_request() = 0;
+
+      virtual Test::Result test_reseed_interval_limits() = 0;
    private:
       Test::Result test_reseed()
          {
@@ -489,6 +492,29 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
          return result;
          }
 
+      Test::Result test_reseed_interval_limits() override
+         {
+         Test::Result result("HMAC_DRBG reseed_interval limits");
+
+         const std::string mac_string = "HMAC(SHA-256)";
+
+         Request_Counting_RNG counting_rng;
+
+         result.test_throws("HMAC_DRBG does not accept 0 for reseed_interval",
+                            [&mac_string, &counting_rng]()
+            {
+            Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 0);
+            });
+
+         result.test_throws("HMAC_DRBG does not accept values higher than 2^24 for reseed_interval",
+                            [&mac_string, &counting_rng]()
+            {
+            Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, (static_cast<size_t>(1) << 24) + 1);
+            });
+
+         return result;
+         }
+
       Test::Result test_security_level() override
          {
          Test::Result result("HMAC_DRBG Security Level");
@@ -587,6 +613,13 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests
          {
          Test::Result result("ChaCha_RNG max_number_of_bytes_per_request");
          // ChaCha_RNG doesn't have this notion
+         return result;
+         }
+
+      Test::Result test_reseed_interval_limits() override
+         {
+         Test::Result result("ChaCha_RNG reseed_interval limits");
+         // ChaCha_RNG doesn't apply any limits to reseed_interval
          return result;
          }
 

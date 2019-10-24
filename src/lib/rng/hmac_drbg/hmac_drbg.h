@@ -43,7 +43,7 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
       * @param underlying_rng is a reference to some RNG which will be used
       * to perform the periodic reseeding
       * @param reseed_interval specifies a limit of how many times
-      * the RNG will be called before automatic reseeding is performed
+      * the RNG will be called before automatic reseeding is performed (max. 2^24)
       * @param max_number_of_bytes_per_request requests that are in size higher
       * than max_number_of_bytes_per_request are treated as if multiple single
       * requests of max_number_of_bytes_per_request size had been made.
@@ -70,7 +70,7 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
       * @param prf MAC to use as a PRF
       * @param entropy_sources will be polled to perform reseeding periodically
       * @param reseed_interval specifies a limit of how many times
-      * the RNG will be called before automatic reseeding is performed.
+      * the RNG will be called before automatic reseeding is performed (max. 2^24)
       * @param max_number_of_bytes_per_request requests that are in size higher
       * than max_number_of_bytes_per_request are treated as if multiple single
       * requests of max_number_of_bytes_per_request size had been made.
@@ -100,7 +100,7 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
       * to perform the periodic reseeding
       * @param entropy_sources will be polled to perform reseeding periodically
       * @param reseed_interval specifies a limit of how many times
-      * the RNG will be called before automatic reseeding is performed.
+      * the RNG will be called before automatic reseeding is performed (max. 2^24)
       * @param max_number_of_bytes_per_request requests that are in size higher
       * than max_number_of_bytes_per_request are treated as if multiple single
       * requests of max_number_of_bytes_per_request size had been made.
