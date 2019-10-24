@@ -11,6 +11,8 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    #include <arpa/inet.h>
+   #include <sys/socket.h>
+   #include <netinet/in.h>
 #elif defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
    #include <ws2tcpip.h>
 #endif
