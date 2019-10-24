@@ -29,7 +29,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     elif [ "$TARGET" = "cross-win64" ]; then
         sudo apt-get -qq update
-        sudo apt-get install wine g++-mingw-w64-x86-64
+        sudo apt-get install wine-development g++-mingw-w64-x86-64
 
     elif [ "$TARGET" = "cross-arm32" ]; then
         sudo apt-get -qq update
@@ -75,10 +75,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq update
-        sudo apt-get install doxygen python-docutils
-
-        # Version of Sphinx in 16.04 is too old and dies on enum definitions
-        sudo pip install sphinx==1.7.9
+        sudo apt-get install doxygen python-docutils python-sphinx
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then

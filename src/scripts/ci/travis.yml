@@ -1,6 +1,5 @@
 language: cpp
 
-dist: xenial
 sudo: required
 
 env:
@@ -10,36 +9,42 @@ env:
 jobs:
   include:
     - os: linux
+      dist: bionic
       name: Linux/GCC
       compiler: gcc
       env:
        - TARGET="shared"
 
     - os: linux
+      dist: bionic
       name: Linux/Clang
       compiler: clang
       env:
        - TARGET="shared"
 
     - os: linux
+      dist: xenial
       name: Coverage
       compiler: gcc
       env:
        - TARGET="coverage"
 
     - os: linux
+      dist: bionic
       name: Fuzzers
       compiler: gcc
       env:
        - TARGET="fuzzers"
 
     - os: linux
+      dist: bionic
       name: Valgrind
       compiler: gcc
       env:
        - TARGET="valgrind"
 
     - os: linux
+      dist: bionic
       name: Linux arm64
       arch: arm64
       compiler: gcc
@@ -55,30 +60,35 @@ jobs:
        - TARGET="shared"
 
     - os: linux
+      dist: bionic
       name: Linux i386 cross
       compiler: gcc
       env:
        - TARGET="cross-i386"
 
     - os: linux
+      dist: xenial
       name: Linux ppc32 cross
       compiler: gcc
       env:
        - TARGET="cross-ppc32"
 
     - os: linux
+      dist: bionic
       name: Linux arm32 cross
       compiler: gcc
       env:
        - TARGET="cross-arm32"
 
     - os: linux
+      dist: xenial
       name: Linux mips64 cross
       compiler: gcc
       env:
        - TARGET="cross-mips64"
 
     - os: linux
+      dist: bionic
       name: Android arm32 cross
       compiler: clang
       env:
@@ -86,6 +96,7 @@ jobs:
        - ANDROID_NDK=android-ndk-r20
 
     - os: linux
+      dist: bionic
       name: Android arm64 cross
       compiler: clang
       env:
@@ -93,6 +104,7 @@ jobs:
        - ANDROID_NDK=android-ndk-r20
 
     - os: linux
+      dist: bionic
       name: MinGW x86-64 cross
       compiler: gcc
       env:
@@ -111,36 +123,42 @@ jobs:
        - TARGET="cross-arm64"
 
     - os: linux
+      dist: bionic
       name: Linux GCC 4.8
       compiler: gcc
       env:
        - TARGET="gcc4.8"
 
     - os: linux
+      dist: bionic
       name: Minimized
       compiler: gcc
       env:
        - TARGET="mini-shared"
 
     - os: linux
+      dist: bionic
       name: BSI policy
       compiler: gcc
       env:
        - TARGET="bsi"
 
     - os: linux
+      dist: bionic
       name: NIST policy
       compiler: gcc
       env:
        - TARGET="nist"
 
     - os: linux
+      dist: bionic
       name: Pylint
       compiler: gcc
       env:
        - TARGET="lint"
 
     - os: linux
+      dist: bionic
       name: Documentation
       compiler: gcc
       env:

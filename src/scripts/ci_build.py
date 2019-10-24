@@ -183,7 +183,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             flags += ['--cpu=x86_64', '--cc-abi-flags=-static',
                       '--ar-command=x86_64-w64-mingw32-ar', '--without-os-feature=threads']
             test_cmd = [os.path.join(root_dir, 'botan-test.exe')] + test_cmd[1:]
-            # No runtime prefix required for Wine
+            test_prefix = ['wine']
         else:
             # Build everything but restrict what is run
             test_cmd += fast_tests
