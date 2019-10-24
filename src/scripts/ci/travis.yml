@@ -1,109 +1,150 @@
 language: cpp
 
-os:
-  - osx
-  - linux
-
 dist: xenial
 sudo: required
-
-compiler:
-  - clang
-  - gcc
 
 env:
   global:
     - CCACHE_MAXSIZE=1G
-    - ANDROID_NDK=android-ndk-r20
 
-  matrix:
-    - TARGET="shared"
-    - TARGET="coverage"
-    - TARGET="fuzzers"
-    - TARGET="valgrind"
-    - TARGET="cross-i386"
-    - TARGET="cross-ppc32"
-    - TARGET="cross-ppc64"
-    - TARGET="cross-arm32"
-    - TARGET="cross-arm64"
-    - TARGET="cross-mips64"
-    - TARGET="cross-win64"
-    - TARGET="cross-android-arm32"
-    - TARGET="cross-android-arm64"
-    - TARGET="gcc4.8"
-    - TARGET="static"
-    - TARGET="mini-shared"
-    - TARGET="bsi"
-    - TARGET="nist"
-    - TARGET="docs"
-    - TARGET="lint"
-
-matrix:
-  exclude:
-    # Skip GCC on OS X entirely
-    - os: osx
-      compiler: gcc
-
-    # XCode 9.4 ICEs on 32-bit ARM builds
-    - os: osx
-      env: TARGET="cross-arm32"
-
-    # Run static, docs, lint, bsi, nist, fuzzers, coverage, valgrind,
-    # sanitizer, minimized and non-ARM cross builds only on Linux/gcc.
-    # The sanitizer builds under Clang run the tests very slowly and
-    # cause CI timeouts.
-
-    - compiler: clang
-      env: TARGET="static"
-    - compiler: clang
-      env: TARGET="bsi"
-    - compiler: clang
-      env: TARGET="nist"
-    - compiler: clang
-      env: TARGET="lint"
-    - compiler: clang
-      env: TARGET="docs"
-    - compiler: clang
-      env: TARGET="coverage"
-
-    - compiler: clang
-      env: TARGET="fuzzers"
-    - compiler: clang
-      env: TARGET="valgrind"
-    - compiler: clang
-      env: TARGET="mini-shared"
-    - compiler: clang
-      env: TARGET="cross-win64"
-    - compiler: clang
-      env: TARGET="cross-ppc32"
-    - compiler: clang
-      env: TARGET="cross-ppc64"
-    - compiler: clang
-      env: TARGET="cross-mips64"
-    - compiler: clang
-      env: TARGET="cross-i386"
-    - compiler: clang
-      env: TARGET="gcc4.8"
-
-   # No ARM Clang compiler on Linux
+jobs:
+  include:
     - os: linux
+      name: Linux/GCC
+      compiler: gcc
+      env:
+       - TARGET="shared"
+
+    - os: linux
+      name: Linux/Clang
       compiler: clang
-      env: TARGET="cross-arm32"
-    - os: linux
-      compiler: clang
-      env: TARGET="cross-arm64"
+      env:
+       - TARGET="shared"
 
-   # Android NDK is Linux/clang only
-    - os: osx
-      env: TARGET="cross-android-arm32"
-    - os: osx
-      env: TARGET="cross-android-arm64"
     - os: linux
+      name: Coverage
       compiler: gcc
-      env: TARGET="cross-android-arm32"
+      env:
+       - TARGET="coverage"
+
     - os: linux
+      name: Fuzzers
       compiler: gcc
-      env: TARGET="cross-android-arm64"
+      env:
+       - TARGET="fuzzers"
+
+    - os: linux
+      name: Valgrind
+      compiler: gcc
+      env:
+       - TARGET="valgrind"
+
+    - os: linux
+      name: Linux arm64
+      arch: arm64
+      compiler: gcc
+      env:
+       - TARGET="shared"
+
+    - os: linux
+      dist: bionic
+      name: Linux ppc64le
+      arch: ppc64le
+      compiler: gcc
+      env:
+       - TARGET="shared"
+
+    - os: linux
+      name: Linux i386 cross
+      compiler: gcc
+      env:
+       - TARGET="cross-i386"
+
+    - os: linux
+      name: Linux ppc32 cross
+      compiler: gcc
+      env:
+       - TARGET="cross-ppc32"
+
+    - os: linux
+      name: Linux arm32 cross
+      compiler: gcc
+      env:
+       - TARGET="cross-arm32"
+
+    - os: linux
+      name: Linux mips64 cross
+      compiler: gcc
+      env:
+       - TARGET="cross-mips64"
+
+    - os: linux
+      name: Android arm32 cross
+      compiler: clang
+      env:
+       - TARGET="cross-android-arm32"
+       - ANDROID_NDK=android-ndk-r20
+
+    - os: linux
+      name: Android arm64 cross
+      compiler: clang
+      env:
+       - TARGET="cross-android-arm64"
+       - ANDROID_NDK=android-ndk-r20
+
+    - os: linux
+      name: MinGW x86-64 cross
+      compiler: gcc
+      env:
+       - TARGET="cross-win64"
+
+    - os: osx
+      name: macOS
+      compiler: clang
+      env:
+       - TARGET="shared"
+
+    - os: osx
+      name: iOS
+      compiler: clang
+      env:
+       - TARGET="cross-arm64"
+
+    - os: linux
+      name: Linux GCC 4.8
+      compiler: gcc
+      env:
+       - TARGET="gcc4.8"
+
+    - os: linux
+      name: Minimized
+      compiler: gcc
+      env:
+       - TARGET="mini-shared"
+
+    - os: linux
+      name: BSI policy
+      compiler: gcc
+      env:
+       - TARGET="bsi"
+
+    - os: linux
+      name: NIST policy
+      compiler: gcc
+      env:
+       - TARGET="nist"
+
+    - os: linux
+      name: Pylint
+      compiler: gcc
+      env:
+       - TARGET="lint"
+
+    - os: linux
+      name: Documentation
+      compiler: gcc
+      env:
+       - TARGET="docs"
 
 install:
   - ./src/scripts/ci/setup_travis.sh
