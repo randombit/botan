@@ -494,7 +494,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
 
       Test::Result test_reseed_interval_limits() override
          {
-         Test::Result result("HMAC_DRBG reseed_interval_limits");
+         Test::Result result("HMAC_DRBG reseed_interval limits");
 
          const std::string mac_string = "HMAC(SHA-256)";
 
@@ -506,10 +506,10 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
             Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 0);
             });
 
-         result.test_throws("HMAC_DRBG does not accept values higher than 2^48 for reseed_interval",
+         result.test_throws("HMAC_DRBG does not accept values higher than 2^24 for reseed_interval",
                             [&mac_string, &counting_rng]()
             {
-            Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, (static_cast<size_t>(1) << 48) + 1);
+            Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, (static_cast<size_t>(1) << 24) + 1);
             });
 
          return result;
@@ -618,7 +618,7 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests
 
       Test::Result test_reseed_interval_limits() override
          {
-         Test::Result result("ChaCha_RNG reseed_interval_limits");
+         Test::Result result("ChaCha_RNG reseed_interval limits");
          // ChaCha_RNG doesn't apply any limits to reseed_interval
          return result;
          }
