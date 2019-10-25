@@ -28,7 +28,9 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
 
 std::map<std::string, std::string> read_results(const std::string& results_file, const char delim = ':')
    {
@@ -895,6 +897,10 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
 BOTAN_REGISTER_TEST("x509_path_with_ocsp", Path_Validation_With_OCSP_Tests);
 
+#endif
+
+#if defined(BOTAN_HAS_XMSS_RFC8391)
+
 class XMSS_Path_Validation_Tests final : public Test
    {
    public:
@@ -930,6 +936,8 @@ class XMSS_Path_Validation_Tests final : public Test
    };
 
 BOTAN_REGISTER_TEST("x509_path_xmss", XMSS_Path_Validation_Tests);
+
+#endif
 
 #endif
 
