@@ -6,6 +6,8 @@ Version 2.13.0, Not Yet Released
 
 * Add Roughtime client (GH #2143 #1842)
 
+* Add support for XMSS X.509 certificates (GH #2172)
+
 * Improve RSA key generation performance (GH #2148)
 
 * Make gcd computation constant-time (GH #2147)
