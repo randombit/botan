@@ -2147,6 +2147,12 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'mod_list': sorted([m.basename for m in modules])
     }
 
+    if cc.basename == 'msvc' and variables['cxx_abi_flags'] != '':
+        # MSVC linker doesn't support/need the ABI options,
+        # just transfer them over to just the compiler invocations
+        variables['cc_compile_flags'] = '%s %s' % (variables['cxx_abi_flags'], variables['cc_compile_flags'])
+        variables['cxx_abi_flags'] = ''
+
     variables['lib_flags'] = cc.gen_lib_flags(options, variables)
     variables['cmake_lib_flags'] = cmake_escape(variables['lib_flags'])
 
