@@ -8,9 +8,6 @@ The Travis and AppVeyor builds are orchestrated using a script
 ``src/scripts/ci_build.py``. This allows one to easily reproduce the CI process
 on a local machine.
 
-A seperate repo https://github.com/randombit/botan-ci-tools holds
-binaries which are used by the CI.
-
 Travis CI
 -----------
 
