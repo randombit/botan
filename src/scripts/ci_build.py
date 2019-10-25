@@ -54,12 +54,12 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         # threads just slow down valgrind, qemu, etc
         test_cmd += ['--test-threads=1']
 
-    fast_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
-                  'hmac_drbg', 'hmac_drbg_unit',
-                  'tls', 'ffi',
-                  'rsa_sign', 'rsa_verify', 'dh_kat',
-                  'ecc_randomized', 'ecdh_kat', 'ecdsa_sign', 'curve25519_scalar',
-                  'cpuid', 'simd_32', 'os_utils', 'util', 'util_dates']
+    essential_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
+                       'hmac_drbg', 'hmac_drbg_unit',
+                       'tls', 'ffi',
+                       'rsa_sign', 'rsa_verify', 'dh_kat',
+                       'ecc_randomized', 'ecdh_kat', 'ecdsa_sign', 'curve25519_scalar',
+                       'cpuid', 'simd_32', 'os_utils', 'util', 'util_dates']
 
     install_prefix = os.path.join(tempfile.gettempdir(), 'botan-install')
     flags = ['--prefix=%s' % (install_prefix),
@@ -104,7 +104,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         # valgrind in 16.04 has a bug with rdrand handling
         flags += ['--with-valgrind', '--disable-rdrand']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
-        test_cmd += fast_tests
+        test_cmd += essential_tests
     if target == 'fuzzers':
         flags += ['--unsafe-fuzzer-mode']
 
@@ -186,7 +186,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             test_prefix = ['wine']
         else:
             # Build everything but restrict what is run
-            test_cmd += fast_tests
+            test_cmd += essential_tests
 
             if target == 'cross-arm32':
                 flags += ['--cpu=armv7']
