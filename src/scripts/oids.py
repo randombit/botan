@@ -256,7 +256,7 @@ bool sig_algo_and_pad_ok(const std::string algo, std::string padding)
 
 
 def main(args = None):
-    """ Print header files (oids.cpp, dn_ub.cpp) depending on the first argument and on srs/build-data/oids.txt
+    """ Print header files (oids.cpp, dn_ub.cpp) depending on the first argument and on src/build-data/oids.txt
 
         Choose 'oids' to print oids.cpp, needs to be written to src/lib/asn1/oids.cpp
         Choose 'dn_ub' to print dn_ub.cpp, needs to be written to src/lib/x509/X509_dn_ub.cpp

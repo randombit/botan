@@ -202,6 +202,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
 
       secure_vector<uint8_t> private_key_bits() const override
          {
+         return DER_Encoder().encode(raw_private_key(), OCTET_STRING).get_contents();
          return raw_private_key();
          }
 

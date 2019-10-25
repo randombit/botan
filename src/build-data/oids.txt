@@ -13,9 +13,13 @@
 1.3.6.1.4.1.3029.1.2.1 = ElGamal
 1.3.6.1.4.1.25258.1.3 = McEliece
 1.3.101.110 = Curve25519
-1.3.6.1.4.1.25258.1.5 = XMSS-draft6
-1.3.6.1.4.1.25258.1.8 = XMSS
 1.3.101.112 = Ed25519
+
+# XMSS
+1.3.6.1.4.1.25258.1.5 = XMSS-draft6
+1.3.6.1.4.1.25258.1.8 = XMSS-draft12
+# draft-vangeest-x509-hash-sigs-03
+0.4.0.127.0.15.1.1.13.0 = XMSS
 
 # X9.62 ecPublicKey, valid for ECDSA and ECDH (RFC 3279 sec 2.3.5)
 1.2.840.10045.2.1 = ECDSA
