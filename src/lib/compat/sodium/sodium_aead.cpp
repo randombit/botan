@@ -151,7 +151,7 @@ int Sodium::crypto_aead_chacha20poly1305_ietf_encrypt(uint8_t ctext[],
                                                       size_t ptext_len,
                                                       const uint8_t ad[],
                                                       size_t ad_len,
-                                                      const uint8_t* unused_secret_nonce,
+                                                      const uint8_t unused_secret_nonce[],
                                                       const uint8_t nonce[],
                                                       const uint8_t key[])
    {
@@ -164,7 +164,7 @@ int Sodium::crypto_aead_chacha20poly1305_ietf_encrypt(uint8_t ctext[],
 
 int Sodium::crypto_aead_chacha20poly1305_ietf_decrypt(uint8_t ptext[],
                                                       unsigned long long* ptext_len,
-                                                      uint8_t* unused_secret_nonce,
+                                                      uint8_t unused_secret_nonce[],
                                                       const uint8_t ctext[],
                                                       size_t ctext_len,
                                                       const uint8_t ad[],

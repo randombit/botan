@@ -155,7 +155,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
                          BOTAN_HAS_AES_NI \
                          BOTAN_HAS_AES_POWER8 \
-                         BOTAN_HAS_AES_SSSE3 \
+                         BOTAN_HAS_AES_VPERM \
                          BOTAN_HAS_CHACHA_SIMD32 \
                          BOTAN_HAS_CHACHA_AVX2 \
                          BOTAN_HAS_IDEA_SSE2 \
@@ -188,13 +188,11 @@ TAGFILES               =
 GENERATE_TAGFILE       =
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = YES
-PERL_PATH              = /usr/bin/perl
 
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool
 #---------------------------------------------------------------------------
 CLASS_DIAGRAMS         = YES
-MSCGEN_PATH            =
 HIDE_UNDOC_RELATIONS   = YES
 HAVE_DOT               = NO
 CLASS_GRAPH            = YES

@@ -34,7 +34,7 @@ int Sodium::crypto_sign_ed25519_detached(uint8_t sig[],
    return 0;
    }
 
-int Sodium::crypto_sign_ed25519_verify_detached(const uint8_t sig[64],
+int Sodium::crypto_sign_ed25519_verify_detached(const uint8_t sig[],
                                                 const uint8_t msg[],
                                                 size_t msg_len,
                                                 const uint8_t pk[32])
@@ -50,8 +50,8 @@ int Sodium::crypto_sign_ed25519_keypair(uint8_t pk[32], uint8_t sk[64])
    return crypto_sign_ed25519_seed_keypair(pk, sk, seed.data());
    }
 
-int Sodium::crypto_sign_ed25519_seed_keypair(uint8_t pk[32], uint8_t sk[64],
-                                             const uint8_t seed[32])
+int Sodium::crypto_sign_ed25519_seed_keypair(uint8_t pk[], uint8_t sk[],
+                                             const uint8_t seed[])
    {
    ed25519_gen_keypair(pk, sk, seed);
    return 0;
