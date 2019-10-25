@@ -255,9 +255,8 @@ class Stream
        * @throws NotImplemented if Connection_Side is not CLIENT
        */
       template <typename HandshakeHandler>
-      async_handshake(Connection_Side side, HandshakeHandler&& handler) ->
+      auto async_handshake(Connection_Side side, HandshakeHandler&& handler) ->
          BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler, void(boost::system::error_code))
-
          {
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(HandshakeHandler, handler) type_check;
 
@@ -465,7 +464,7 @@ class Stream
        *        void(boost::system::error_code, std::size_t)
        */
       template <typename ConstBufferSequence, typename WriteHandler>
-      async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler) ->
+      auto async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler) ->
          BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
                                        void(boost::system::error_code, std::size_t))
          {
@@ -502,7 +501,7 @@ class Stream
        *                void(boost::system::error_code, std::size_t)
        */
       template <typename MutableBufferSequence, typename ReadHandler>
-      async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler) ->
+      auto async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler) ->
          BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
                                        void(boost::system::error_code, std::size_t))
          {
