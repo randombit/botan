@@ -129,11 +129,12 @@ Nonce nonce_from_blind(const std::vector<uint8_t>& previous_response,
 /**
 * Makes an online Roughtime request via UDP and returns the Roughtime response.
 * @param url Roughtime server UDP endpoint (host:port)
+* @param nonce the nonce to send to the server
 * @param timeout a timeout on the UDP request
 * @return Roughtime response
 */
 BOTAN_PUBLIC_API(2, 13)
-std::vector<uint8_t> online_request(const std::string& uri,
+std::vector<uint8_t> online_request(const std::string& url,
                                     const Nonce& nonce,
                                     std::chrono::milliseconds timeout = std::chrono::seconds(3));
 

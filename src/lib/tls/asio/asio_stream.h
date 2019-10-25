@@ -136,6 +136,7 @@ class Stream
       /**
        * @brief Compatibility overload of @ref set_verify_callback
        *
+       * @param callback the callback implementation
        * @param ec This parameter is unused.
        */
       void set_verify_callback(Context::Verify_Callback callback, boost::system::error_code& ec)
@@ -153,6 +154,7 @@ class Stream
 
       /**
        * Not Implemented.
+       * @param depth the desired verification depth
        * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
       void set_verify_depth(int depth, boost::system::error_code& ec)
@@ -171,6 +173,7 @@ class Stream
 
       /**
        * Not Implemented.
+       * @param v the desired verify mode
        * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
       template <typename verify_mode>
@@ -189,7 +192,7 @@ class Stream
        *
        * The function call will block until handshaking is complete or an error occurs.
        *
-       * @param type The type of handshaking to be performed, i.e. as a client or as a server.
+       * @param side The type of handshaking to be performed, i.e. as a client or as a server.
        * @throws boost::system::system_error if error occured, or if the chosen Connection_Side is not available
        */
       void handshake(Connection_Side side)
@@ -204,7 +207,7 @@ class Stream
        *
        * The function call will block until handshaking is complete or an error occurs.
        *
-       * @param type The type of handshaking to be performed, i.e. as a client or as a server.
+       * @param side The type of handshaking to be performed, i.e. as a client or as a server.
        * @param ec Set to indicate what error occurred, if any.
        */
       void handshake(Connection_Side side, boost::system::error_code& ec)
@@ -246,15 +249,15 @@ class Stream
        *
        * This function call always returns immediately.
        *
-       * @param type The type of handshaking to be performed, i.e. as a client or as a server.
+       * @param side The type of handshaking to be performed, i.e. as a client or as a server.
        * @param handler The handler to be called when the handshake operation completes.
        *                The equivalent function signature of the handler must be: void(boost::system::error_code)
        * @throws NotImplemented if Connection_Side is not CLIENT
        */
       template <typename HandshakeHandler>
-      BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler,
-                                    void(boost::system::error_code))
-      async_handshake(Connection_Side side, HandshakeHandler&& handler)
+      async_handshake(Connection_Side side, HandshakeHandler&& handler) ->
+         BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler, void(boost::system::error_code))
+
          {
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(HandshakeHandler, handler) type_check;
 
@@ -462,9 +465,9 @@ class Stream
        *        void(boost::system::error_code, std::size_t)
        */
       template <typename ConstBufferSequence, typename WriteHandler>
-      BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
-                                    void(boost::system::error_code, std::size_t))
-      async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler)
+      async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler) ->
+         BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
+                                       void(boost::system::error_code, std::size_t))
          {
          BOOST_ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
 
@@ -499,9 +502,9 @@ class Stream
        *                void(boost::system::error_code, std::size_t)
        */
       template <typename MutableBufferSequence, typename ReadHandler>
-      BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
-                                    void(boost::system::error_code, std::size_t))
-      async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler)
+      async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler) ->
+         BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
+                                       void(boost::system::error_code, std::size_t))
          {
          BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
 
