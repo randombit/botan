@@ -21,11 +21,10 @@ For Botan 2, the tier-2 supported platforms are
 * Linux x86-32, GCC 4.8+
 * Linux arm32, GCC 4.8+
 * Windows x86-64, MinGW GCC
-* Apple OS X x86-64, XCode Clang
-* iOS arm32/arm64, XCode Clang
-* Android arm32, NDK Clang
+* macOS x86-64, XCode Clang
+* iOS aarch64, XCode Clang
+* Android aarch64, NDK Clang
 * FreeBSD x86-64, Clang 3.8+
-* IncludeOS x86-32, Clang 3.8+
 
 Some (but not all) of the tier-2 platforms are tested by CI. Everything should
 work, and if problems are encountered, the developers will probably be able to
