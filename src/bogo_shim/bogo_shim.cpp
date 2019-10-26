@@ -576,6 +576,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[])
       "expect-ticket-supports-early-data",
       //"expect-tls13-downgrade",
       "expect-verify-result",
+      "expect-no-hrr",
       //"export-traffic-secrets",
       "fail-cert-callback",
       //"fail-ddos-callback",
