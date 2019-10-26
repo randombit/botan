@@ -115,6 +115,7 @@ PKIX
 New Protocols / Formats
 ----------------------------------------
 
+* ACME protocol
 * ORAM (Circuit-ORAM, Path-ORAM, ??)
 * PKCS7 / Cryptographic Message Syntax
 * PKCS12 / PFX
@@ -165,7 +166,8 @@ Python
 Build/Test
 ----------------------------------------
 
-* Create Docker image for Travis that runs 16.04 and has all
+* Start using GitHub Actions for CI, especially Windows builds
+* Create Docker image for Travis that runs 18.04 and has all
   the tools we need pre-installed.
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
