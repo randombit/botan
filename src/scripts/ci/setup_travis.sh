@@ -65,7 +65,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get -qq update
         sudo apt-get install softhsm2 trousers libtspi-dev lcov python-coverage libboost-all-dev golang-1.10 gdb
         pip install --user codecov==2.0.10
-        git clone --depth 1 --branch runner-changes https://github.com/randombit/boringssl.git
+        git clone --depth 1 --branch runner-changes-golang1.10 https://github.com/randombit/boringssl.git
 
         sudo chgrp -R "$(id -g)" /var/lib/softhsm/ /etc/softhsm
         sudo mkdir /var/lib/softhsm/tokens
