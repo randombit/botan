@@ -489,6 +489,28 @@ Test::Result test_attribute_container()
    return result;
    }
 
+DataObjectProperties make_test_object(const std::string& label)
+   {
+   std::string value_string("test data");
+   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
+
+   std::size_t id = 1337;
+   std::string application = "Botan test application";
+
+   std::vector<uint8_t> encoded_id;
+   DER_Encoder(encoded_id).encode(id);
+
+   DataObjectProperties data_obj_props;
+   data_obj_props.set_application(application);
+   data_obj_props.set_label(label);
+   data_obj_props.set_value(value);
+   data_obj_props.set_token(true);
+   data_obj_props.set_modifiable(true);
+   data_obj_props.set_object_id(encoded_id);
+
+   return data_obj_props;
+   }
+
 #if defined(BOTAN_HAS_ASN1)
 Test::Result test_create_destroy_data_object()
    {
@@ -496,20 +518,8 @@ Test::Result test_create_destroy_data_object()
 
    TestSession test_session(true);
 
-   std::string value_string("test data");
-   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
-
-   std::size_t id = 1337;
-   std::string label = "Botan test data object";
-   std::string application = "Botan test application";
-   DataObjectProperties data_obj_props;
-   data_obj_props.set_application(application);
-   data_obj_props.set_label(label);
-   data_obj_props.set_value(value);
-   data_obj_props.set_token(true);
-   data_obj_props.set_modifiable(true);
-   data_obj_props.set_object_id(DER_Encoder().encode(id).get_contents_unlocked());
-
+   const std::string label = "Botan test data object";
+   auto data_obj_props = make_test_object(label);
    Object data_obj(test_session.session(), data_obj_props);
    result.test_success("Data object creation was successful");
 
@@ -526,19 +536,8 @@ Test::Result test_get_set_attribute_values()
    TestSession test_session(true);
 
    // create object
-   std::string value_string("test data");
-   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
-
-   std::size_t id = 1337;
-   std::string label = "Botan test data object";
-   std::string application = "Botan test application";
-   DataObjectProperties data_obj_props;
-   data_obj_props.set_application(application);
-   data_obj_props.set_label(label);
-   data_obj_props.set_value(value);
-   data_obj_props.set_token(true);
-   data_obj_props.set_modifiable(true);
-   data_obj_props.set_object_id(DER_Encoder().encode(id).get_contents_unlocked());
+   const std::string label = "Botan test data object";
+   auto data_obj_props = make_test_object(label);
    Object data_obj(test_session.session(), data_obj_props);
 
    // get attribute
@@ -567,19 +566,8 @@ Test::Result test_object_finder()
    TestSession test_session(true);
 
    // create object
-   std::string value_string("test data");
-   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
-
-   std::size_t id = 1337;
-   std::string label = "Botan test data object";
-   std::string application = "Botan test application";
-   DataObjectProperties data_obj_props;
-   data_obj_props.set_application(application);
-   data_obj_props.set_label(label);
-   data_obj_props.set_value(value);
-   data_obj_props.set_token(true);
-   data_obj_props.set_modifiable(true);
-   data_obj_props.set_object_id(DER_Encoder().encode(id).get_contents_unlocked());
+   const std::string label = "Botan test data object";
+   auto data_obj_props = make_test_object(label);
    Object data_obj(test_session.session(), data_obj_props);
 
    // search created object
@@ -610,19 +598,8 @@ Test::Result test_object_copy()
    TestSession test_session(true);
 
    // create object
-   std::string value_string("test data");
-   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
-
-   std::size_t id = 1337;
-   std::string label = "Botan test data object";
-   std::string application = "Botan test application";
-   DataObjectProperties data_obj_props;
-   data_obj_props.set_application(application);
-   data_obj_props.set_label(label);
-   data_obj_props.set_value(value);
-   data_obj_props.set_token(true);
-   data_obj_props.set_modifiable(true);
-   data_obj_props.set_object_id(DER_Encoder().encode(id).get_contents_unlocked());
+   const std::string label = "Botan test data object";
+   auto data_obj_props = make_test_object(label);
    Object data_obj(test_session.session(), data_obj_props);
 
    // copy created object
@@ -993,6 +970,13 @@ Test::Result test_ecdsa_privkey_export()
    return result;
    }
 
+std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::PointGFp& point)
+   {
+   std::vector<uint8_t> enc;
+   DER_Encoder(enc).encode(point.encode(PointGFp::UNCOMPRESSED), OCTET_STRING);
+   return enc;
+   }
+
 Test::Result test_ecdsa_pubkey_import()
    {
    Test::Result result("PKCS11 import ECDSA public key");
@@ -1003,9 +987,7 @@ Test::Result test_ecdsa_pubkey_import()
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
-   const std::vector<uint8_t> enc_point = DER_Encoder().encode(
-      priv_key.public_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING).
-      get_contents_unlocked();
+   const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
    // import to card
    EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
@@ -1034,9 +1016,7 @@ Test::Result test_ecdsa_pubkey_export()
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
-   const std::vector<uint8_t> enc_point = DER_Encoder().encode(
-      priv_key.public_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING).
-      get_contents_unlocked();
+   const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
    // import to card
    EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
@@ -1270,9 +1250,7 @@ Test::Result test_ecdh_pubkey_import()
    ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
-   const std::vector<uint8_t> enc_point = DER_Encoder().encode(
-      priv_key.public_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING).
-      get_contents_unlocked();
+   const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
    // import to card
    EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
@@ -1301,9 +1279,7 @@ Test::Result test_ecdh_pubkey_export()
    ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
-   const std::vector<uint8_t> enc_point = DER_Encoder().encode(
-      priv_key.public_point().encode(PointGFp::UNCOMPRESSED), OCTET_STRING).
-      get_contents_unlocked();
+   const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
    // import to card
    EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
@@ -1610,7 +1586,7 @@ Test::Result test_x509_import()
    TestSession test_session(true);
 
    X509_Certificate root(Test::data_file("x509/nist/test01/end.crt"));
-   X509_CertificateProperties props(DER_Encoder().encode(root.subject_dn()).get_contents_unlocked(), root.BER_encode());
+   X509_CertificateProperties props(root);
    props.set_label("Botan PKCS#11 test certificate");
    props.set_private(false);
    props.set_token(true);

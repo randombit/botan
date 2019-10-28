@@ -80,26 +80,17 @@ PKCS10_Request PKCS10_Request::create(const Private_Key& key,
 
    if(challenge.empty() == false)
       {
-      ASN1_String challenge_str(challenge, DIRECTORY_STRING);
-
-      tbs_req.encode(
-         Attribute("PKCS9.ChallengePassword",
-                   DER_Encoder().encode(challenge_str).get_contents_unlocked()
-            )
-         );
+      std::vector<uint8_t> value;
+      DER_Encoder(value).encode(ASN1_String(challenge, DIRECTORY_STRING));
+      tbs_req.encode(Attribute("PKCS9.ChallengePassword", value));
       }
 
-   tbs_req.encode(
-      Attribute("PKCS9.ExtensionRequest",
-                DER_Encoder()
-                   .start_cons(SEQUENCE)
-                      .encode(extensions)
-                   .end_cons()
-               .get_contents_unlocked()
-         )
-      )
-      .end_explicit()
-      .end_cons();
+   std::vector<uint8_t> extension_req;
+   DER_Encoder(extension_req).start_cons(SEQUENCE).encode(extensions).end_cons();
+   tbs_req.encode(Attribute("PKCS9.ExtensionRequest", extension_req));
+
+   // end the start_explicit above
+   tbs_req.end_explicit().end_cons();
 
    const std::vector<uint8_t> req =
       X509_Object::make_signed(signer.get(), rng, sig_algo,
