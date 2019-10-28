@@ -352,12 +352,13 @@ AlgorithmIdentifier TPM_PrivateKey::algorithm_identifier() const
 
 std::vector<uint8_t> TPM_PrivateKey::public_key_bits() const
    {
-   return DER_Encoder()
+   std::vector<uint8_t> bits;
+   DER_Encoder(bits)
       .start_cons(SEQUENCE)
         .encode(get_n())
         .encode(get_e())
-      .end_cons()
-      .get_contents_unlocked();
+      .end_cons();
+   return bits;
    }
 
 secure_vector<uint8_t> TPM_PrivateKey::private_key_bits() const

@@ -1356,7 +1356,9 @@ class String_Extension final : public Botan::Certificate_Extension
 
       std::vector<uint8_t> encode_inner() const override
          {
-         return Botan::DER_Encoder().encode(Botan::ASN1_String(m_contents, Botan::UTF8_STRING)).get_contents_unlocked();
+         std::vector<uint8_t> bits;
+         Botan::DER_Encoder(bits).encode(Botan::ASN1_String(m_contents, Botan::UTF8_STRING));
+         return bits;
          }
 
       void decode_inner(const std::vector<uint8_t>& in) override

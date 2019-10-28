@@ -55,7 +55,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement
          std::vector<uint8_t> der_encoded_other_key;
          if(m_key.point_encoding() == PublicPointEncoding::Der)
             {
-            der_encoded_other_key = DER_Encoder().encode(other_key, other_key_len, OCTET_STRING).get_contents_unlocked();
+            DER_Encoder(der_encoded_other_key).encode(other_key, other_key_len, OCTET_STRING);
             m_mechanism.set_ecdh_other_key(der_encoded_other_key.data(), der_encoded_other_key.size());
             }
          else

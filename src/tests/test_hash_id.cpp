@@ -55,9 +55,9 @@ class PKCS_HashID_Test final : public Test
                const Botan::AlgorithmIdentifier alg(oid, Botan::AlgorithmIdentifier::USE_NULL_PARAM);
                const std::vector<uint8_t> dummy_hash(hash_len);
 
-               Botan::DER_Encoder der;
+               std::vector<uint8_t> bits;
+               Botan::DER_Encoder der(bits);
                der.start_cons(Botan::SEQUENCE).encode(alg).encode(dummy_hash, Botan::OCTET_STRING).end_cons();
-               const std::vector<uint8_t> bits = der.get_contents_unlocked();
 
                result.test_eq("Dummy hash is expected size", bits.size() - pkcs_id.size(), dummy_hash.size());
 

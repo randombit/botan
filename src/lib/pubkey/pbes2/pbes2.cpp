@@ -239,23 +239,20 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    secure_vector<uint8_t> ctext = key_bits;
    enc->finish(ctext);
 
-   std::vector<uint8_t> pbes2_params;
+   std::vector<uint8_t> encoded_iv;
+   DER_Encoder(encoded_iv).encode(iv, OCTET_STRING);
 
+   std::vector<uint8_t> pbes2_params;
    DER_Encoder(pbes2_params)
       .start_cons(SEQUENCE)
       .encode(kdf_algo)
-      .encode(
-         AlgorithmIdentifier(cipher,
-            DER_Encoder().encode(iv, OCTET_STRING).get_contents_unlocked()
-            )
-         )
+      .encode(AlgorithmIdentifier(cipher, encoded_iv))
       .end_cons();
 
    AlgorithmIdentifier id(OID::from_string("PBE-PKCS5v20"), pbes2_params);
 
    return std::make_pair(id, unlock(ctext));
    }
-
 
 }
 
