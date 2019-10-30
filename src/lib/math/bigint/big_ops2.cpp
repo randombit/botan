@@ -143,22 +143,7 @@ BigInt& BigInt::mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws)
 
    BOTAN_DEBUG_ASSERT(*this < mod);
 
-   switch(y)
-      {
-      case 2:
-         *this <<= 1;
-         break;
-      case 4:
-         *this <<= 2;
-         break;
-      case 8:
-         *this <<= 3;
-         break;
-      default:
-         *this *= static_cast<word>(y);
-         break;
-      }
-
+   *this *= static_cast<word>(y);
    this->reduce_below(mod, ws);
    return (*this);
    }
