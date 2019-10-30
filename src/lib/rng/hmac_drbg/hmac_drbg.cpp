@@ -89,10 +89,12 @@ void HMAC_DRBG::clear()
    {
    Stateful_RNG::clear();
 
-   m_V.resize(m_mac->output_length());
+   const size_t output_length = m_mac->output_length();
+
+   m_V.resize(output_length);
    for(size_t i = 0; i != m_V.size(); ++i)
       m_V[i] = 0x01;
-   m_mac->set_key(std::vector<uint8_t>(m_mac->output_length(), 0x00));
+   m_mac->set_key(std::vector<uint8_t>(output_length, 0x00));
    }
 
 std::string HMAC_DRBG::name() const
@@ -146,10 +148,12 @@ void HMAC_DRBG::randomize_with_input(uint8_t output[], size_t output_len,
 */
 void HMAC_DRBG::update(const uint8_t input[], size_t input_len)
    {
+   secure_vector<uint8_t> T(m_V.size());
    m_mac->update(m_V);
    m_mac->update(0x00);
    m_mac->update(input, input_len);
-   m_mac->set_key(m_mac->final());
+   m_mac->final(T.data());
+   m_mac->set_key(T);
 
    m_mac->update(m_V.data(), m_V.size());
    m_mac->final(m_V.data());
@@ -159,7 +163,8 @@ void HMAC_DRBG::update(const uint8_t input[], size_t input_len)
       m_mac->update(m_V);
       m_mac->update(0x01);
       m_mac->update(input, input_len);
-      m_mac->set_key(m_mac->final());
+      m_mac->final(T.data());
+      m_mac->set_key(T);
 
       m_mac->update(m_V.data(), m_V.size());
       m_mac->final(m_V.data());
@@ -183,9 +188,12 @@ size_t HMAC_DRBG::security_level() const
    // SHA-160: 128 bits, SHA-224, SHA-512/224: 192 bits,
    // SHA-256, SHA-512/256, SHA-384, SHA-512: >= 256 bits
    // NIST SP 800-90A only supports up to 256 bits though
-   if(m_mac->output_length() < 32)
+
+   const size_t output_length = m_mac->output_length();
+
+   if(output_length < 32)
       {
-      return (m_mac->output_length() - 4) * 8;
+      return (output_length - 4) * 8;
       }
    else
       {
