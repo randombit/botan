@@ -89,7 +89,6 @@ TLS
 * Make DTLS support optional at build time
 * Improve/optimize DTLS defragmentation and retransmission
 * Implement logging callbacks for TLS
-* Make TLS v1.0 and v1.1 optional at build time
 * Make RSA optional at build time
 * Make finite field DH optional at build time
 * Authentication using TOFU (sqlite3 storage)

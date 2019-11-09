@@ -53,9 +53,6 @@ aes_armv8
 aes_power8
 
 # hash
-sha1_sse2
-sha1_x86
-sha1_armv8
 sha2_32_x86
 sha2_32_armv8
 sha2_32_bmi2
@@ -164,10 +161,7 @@ blake2
 comb4p
 gost_3411
 md4
-#md5 // needed for tls
 rmd160
-#sha1 // needed for tls
-#sha1_sse2 // needed for tls
 skein
 sm3
 streebog
@@ -185,4 +179,9 @@ x919_mac
 
 # misc
 bcrypt
+
+# tls
+tls_10
+tls_cbc
+
 </prohibited>
