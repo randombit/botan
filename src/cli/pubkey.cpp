@@ -101,7 +101,7 @@ BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 namespace {
 
 std::string choose_sig_padding(const std::string& key, const std::string& emsa, const std::string& hash)
-{
+   {
    std::string emsa_or_default = [&]() -> std::string
       {
       if(!emsa.empty())
@@ -133,7 +133,7 @@ std::string choose_sig_padding(const std::string& key, const std::string& emsa, 
       }
 
    return emsa_or_default + "(" + hash + ")";
-}
+   }
 
 }
 
@@ -164,9 +164,9 @@ class PK_Fingerprint final : public Command
             const std::string fprint = key->fingerprint_public(hash_algo);
 
             if(no_fsname)
-               output() << fprint << "\n";
+               { output() << fprint << "\n"; }
             else
-               output() << key_file << ": " << fprint << "\n";
+               { output() << key_file << ": " << fprint << "\n"; }
             }
          }
    };
@@ -223,9 +223,9 @@ class PK_Sign final : public Command
             {
             std::ofstream updated_key(key_file);
             if(passphrase.empty())
-               updated_key << Botan::PKCS8::PEM_encode(*key);
+               { updated_key << Botan::PKCS8::PEM_encode(*key); }
             else
-               updated_key << Botan::PKCS8::PEM_encode(*key, rng(), passphrase);
+               { updated_key << Botan::PKCS8::PEM_encode(*key, rng(), passphrase); }
             }
 
          output() << Botan::base64_encode(sig) << "\n";
@@ -460,13 +460,13 @@ class PK_Workfactor final : public Command
          const std::string type = get_arg("type");
 
          if(type == "rsa")
-            output() << Botan::if_work_factor(bits) << "\n";
+            { output() << Botan::if_work_factor(bits) << "\n"; }
          else if(type == "dl")
-            output() << Botan::dl_work_factor(bits) << "\n";
+            { output() << Botan::dl_work_factor(bits) << "\n"; }
          else if(type == "dl_exp")
-            output() << Botan::dl_exponent_size(bits) << "\n";
+            { output() << Botan::dl_exponent_size(bits) << "\n"; }
          else
-            throw CLI_Usage_Error("Unknown type for pk_workfactor");
+            { throw CLI_Usage_Error("Unknown type for pk_workfactor"); }
          }
    };
 
@@ -498,14 +498,14 @@ class Gen_DL_Group final : public Command
          if(type == "strong")
             {
             if(seed_str.size() > 0)
-               throw CLI_Usage_Error("Seed only supported for DSA param gen");
+               { throw CLI_Usage_Error("Seed only supported for DSA param gen"); }
             Botan::DL_Group grp(rng(), Botan::DL_Group::Strong, pbits);
             output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
             }
          else if(type == "subgroup")
             {
             if(seed_str.size() > 0)
-               throw CLI_Usage_Error("Seed only supported for DSA param gen");
+               { throw CLI_Usage_Error("Seed only supported for DSA param gen"); }
             Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
             output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
             }
@@ -515,11 +515,11 @@ class Gen_DL_Group final : public Command
             if(dsa_qbits == 0)
                {
                if(pbits == 1024)
-                  dsa_qbits = 160;
+                  { dsa_qbits = 160; }
                else if(pbits == 2048 || pbits == 3072)
-                  dsa_qbits = 256;
+                  { dsa_qbits = 256; }
                else
-                  throw CLI_Usage_Error("Invalid DSA p/q sizes");
+                  { throw CLI_Usage_Error("Invalid DSA p/q sizes"); }
                }
 
             if(seed_str.empty())
