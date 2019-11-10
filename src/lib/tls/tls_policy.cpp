@@ -277,17 +277,24 @@ bool Policy::send_fallback_scsv(Protocol_Version version) const
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
-   // Uses boolean optimization:
-   // First check the current version (left part), then if it is allowed
-   // (right part)
-   // checks are ordered according to their probability
-   return (
-           ( ( version == Protocol_Version::TLS_V12)  && allow_tls12()  ) ||
-           ( ( version == Protocol_Version::TLS_V10)  && allow_tls10()  ) ||
-           ( ( version == Protocol_Version::TLS_V11)  && allow_tls11()  ) ||
-           ( ( version == Protocol_Version::DTLS_V12) && allow_dtls12() ) ||
-           ( ( version == Protocol_Version::DTLS_V10) && allow_dtls10() )
-        );
+   if(version == Protocol_Version::TLS_V12 && allow_tls12())
+      return true;
+
+   if(version == Protocol_Version::DTLS_V12 && allow_dtls12())
+      return true;
+
+#if defined(BOTAN_HAS_TLS_V10)
+
+   if(version == Protocol_Version::TLS_V11 && allow_tls11())
+      return true;
+   if(version == Protocol_Version::TLS_V10 && allow_tls10())
+      return true;
+   if(version == Protocol_Version::DTLS_V10 && allow_dtls10())
+      return true;
+
+#endif
+
+   return false;
    }
 
 Protocol_Version Policy::latest_supported_version(bool datagram) const
@@ -296,18 +303,22 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const
       {
       if(acceptable_protocol_version(Protocol_Version::DTLS_V12))
          return Protocol_Version::DTLS_V12;
+#if defined(BOTAN_HAS_TLS_V10)
       if(acceptable_protocol_version(Protocol_Version::DTLS_V10))
          return Protocol_Version::DTLS_V10;
+#endif
       throw Invalid_State("Policy forbids all available DTLS version");
       }
    else
       {
       if(acceptable_protocol_version(Protocol_Version::TLS_V12))
          return Protocol_Version::TLS_V12;
+#if defined(BOTAN_HAS_TLS_V10)
       if(acceptable_protocol_version(Protocol_Version::TLS_V11))
          return Protocol_Version::TLS_V11;
       if(acceptable_protocol_version(Protocol_Version::TLS_V10))
          return Protocol_Version::TLS_V10;
+#endif
       throw Invalid_State("Policy forbids all available TLS version");
       }
    }

@@ -1,0 +1,10 @@
+<defines>
+TLS_V10 -> 20191109
+</defines>
+
+<requires>
+md5
+sha1
+par_hash
+tls_cbc
+</requires>

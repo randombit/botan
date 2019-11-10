@@ -768,10 +768,12 @@ class TLS_Unit_Tests final : public Test
 
          std::vector<Botan::TLS::Protocol_Version> versions =
             {
+#if defined(BOTAN_HAS_TLS_V10)
             Botan::TLS::Protocol_Version::TLS_V10,
             Botan::TLS::Protocol_Version::TLS_V11,
-            Botan::TLS::Protocol_Version::TLS_V12,
             Botan::TLS::Protocol_Version::DTLS_V10,
+#endif
+            Botan::TLS::Protocol_Version::TLS_V12,
             Botan::TLS::Protocol_Version::DTLS_V12
             };
 

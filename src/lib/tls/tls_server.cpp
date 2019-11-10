@@ -403,18 +403,22 @@ Protocol_Version select_version(const Botan::TLS::Policy& policy,
          {
          if(policy.allow_dtls12() && value_exists(supported_versions, Protocol_Version(Protocol_Version::DTLS_V12)))
             return Protocol_Version::DTLS_V12;
+#if defined(BOTAN_HAS_TLS_V10)
          if(policy.allow_dtls10() && value_exists(supported_versions, Protocol_Version(Protocol_Version::DTLS_V10)))
             return Protocol_Version::DTLS_V10;
+#endif
          throw TLS_Exception(Alert::PROTOCOL_VERSION, "No shared DTLS version");
          }
       else
          {
          if(policy.allow_tls12() && value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V12)))
             return Protocol_Version::TLS_V12;
+#if defined(BOTAN_HAS_TLS_V10)
          if(policy.allow_tls11() && value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V11)))
             return Protocol_Version::TLS_V11;
          if(policy.allow_tls10() && value_exists(supported_versions, Protocol_Version(Protocol_Version::TLS_V10)))
             return Protocol_Version::TLS_V10;
+#endif
          throw TLS_Exception(Alert::PROTOCOL_VERSION, "No shared TLS version");
          }
       }
