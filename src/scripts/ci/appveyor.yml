@@ -14,7 +14,6 @@ environment:
       TARGET: static
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       MAKE_TOOL: make
-      TARGET_OS: mingw
       TARGET_CC: gcc
 
     # MSVC 2015 DLL x86-32
@@ -26,7 +25,6 @@ environment:
       BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib32-msvc-14.0"
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc140-mt-x32-1_69.lib"
       MAKE_TOOL: nmake
-      TARGET_OS: windows
       TARGET_CC: msvc
 
     # MSVC 2017 DLL x86-32
@@ -38,7 +36,6 @@ environment:
       BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib32-msvc-14.1"
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x32-1_69.lib"
       MAKE_TOOL: jom
-      TARGET_OS: windows
       TARGET_CC: msvc
 
     # MSVC 2017 DLL x86-64
@@ -50,7 +47,6 @@ environment:
       BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib64-msvc-14.1"
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x64-1_69.lib"
       MAKE_TOOL: jom
-      TARGET_OS: windows
       TARGET_CC: msvc
 
     # MSVC 2017 static x86-64
@@ -62,7 +58,6 @@ environment:
       BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib64-msvc-14.1"
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x64-1_69.lib"
       MAKE_TOOL: jom
-      TARGET_OS: windows
       TARGET_CC: msvc
 
     # MSVC 2019 static x86-64 w/debug iterators
@@ -71,7 +66,6 @@ environment:
       TARGET: sanitizer
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       MAKE_TOOL: jom
-      TARGET_OS: windows
       TARGET_CC: msvc
 
     # MSVC 2019 x86-64 preview
@@ -80,14 +74,13 @@ environment:
       TARGET: static
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
       MAKE_TOOL: jom
-      TARGET_OS: windows
       TARGET_CC: msvc
 
 install:
   - call src\scripts\ci\setup_appveyor.bat
 
 build_script:
-  - python src\scripts\ci_build.py --os=%TARGET_OS% --cc=%TARGET_CC% --without-python3 --compiler-cache=sccache --make-tool=%MAKE_TOOL% --cpu=%PLATFORM% %TARGET%
+  - python src\scripts\ci_build.py --os=windows --cc=%TARGET_CC% --without-python3 --compiler-cache=sccache --make-tool=%MAKE_TOOL% --cpu=%PLATFORM% %TARGET%
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:

@@ -29,6 +29,7 @@ def get_concurrency():
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, root_dir, pkcs11_lib, use_gdb):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
+    print(target, target_os, target_cpu, target_cc)
     """
     Return the configure.py flags as well as make/test running prefixes
     """
@@ -45,6 +46,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
             target_os = 'mingw'
         elif target in ['cross-android-arm32', 'cross-android-arm64']:
             target_os = 'android'
+
+    if target_os == 'windows' and target_cc == 'gcc':
+        target_os = 'mingw'
 
     make_prefix = []
     test_prefix = []
