@@ -10,6 +10,7 @@
 #include "fuzzers.h"
 #include <botan/ec_group.h>
 #include <botan/reducer.h>
+#include <botan/numthry.h>
 
 namespace {
 
@@ -17,6 +18,30 @@ inline std::ostream& operator<<(std::ostream& o, const Botan::PointGFp& point)
    {
    o << point.get_affine_x() << "," << point.get_affine_y();
    return o;
+   }
+
+Botan::BigInt decompress_point(bool yMod2,
+                               const Botan::BigInt& x,
+                               const Botan::BigInt& curve_p,
+                               const Botan::BigInt& curve_a,
+                               const Botan::BigInt& curve_b)
+   {
+   Botan::BigInt xpow3 = x * x * x;
+
+   Botan::BigInt g = curve_a * x;
+   g += xpow3;
+   g += curve_b;
+   g = g % curve_p;
+
+   Botan::BigInt z = ressol(g, curve_p);
+
+   if(z < 0)
+      throw Botan::Exception("Could not perform square root");
+
+   if(z.get_bit(0) != yMod2)
+      z = curve_p - z;
+
+   return z;
    }
 
 void check_ecc_math(const Botan::EC_Group& group,
@@ -63,6 +88,18 @@ void check_ecc_math(const Botan::EC_Group& group,
 
    FUZZER_ASSERT_EQUAL(S1, S2);
    FUZZER_ASSERT_EQUAL(S1, S3);
+
+   try
+      {
+      const auto yp = decompress_point(true, a, group.get_p(), group.get_a(), group.get_b());
+      const auto pt_p = group.blinded_var_point_multiply(group.point(a, yp), b, fuzzer_rng(), ws);
+
+      const auto yn = -yp;
+      const auto pt_n = group.blinded_var_point_multiply(group.point(a, yn), b, fuzzer_rng(), ws);
+
+      FUZZER_ASSERT_EQUAL(pt_p, -pt_n);
+      }
+   catch(...) {}
    }
 
 }
