@@ -2973,9 +2973,11 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pyli
 
     if options.system_cert_bundle is None:
         default_paths = [
-            '/etc/ssl/certs/ca-certificates.crt', # Ubuntu, Arch
+            '/etc/ssl/certs/ca-certificates.crt', # Ubuntu, Debian, Arch, Gentoo
+            '/etc/pki/tls/certs/ca-bundle.crt', # RHEL
             '/etc/ssl/ca-bundle.pem', # SuSE
-            '/etc/ssl/cert.pem', # OpenBSD, FreeBSD
+            '/etc/ssl/cert.pem', # OpenBSD, FreeBSD, Alpine
+            '/etc/certs/ca-certificates.crt', # Solaris
         ]
 
         for path in default_paths:
