@@ -5,9 +5,9 @@ if %CC% == VC2015 call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcva
 if %CC% == VC2017 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 if %CC% == VC2019 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 if %CC% == VC2019p call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Preview\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
-if %CC% == MinGW set PATH=%PATH%;C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
+if %CC% == MinGW set PATH=%PATH%;C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1
 
-dir C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
+dir C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1
 
 rem check compiler version
 if %CC% == MinGW g++ -v else cl
