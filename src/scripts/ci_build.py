@@ -46,6 +46,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
         elif target in ['cross-android-arm32', 'cross-android-arm64']:
             target_os = 'android'
 
+    if target_os == 'windows' and target_cc == 'gcc':
+        target_os = 'mingw'
+
     make_prefix = []
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
