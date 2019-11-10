@@ -53,6 +53,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
                                              Cipher_Dir dir,
                                              const std::string& provider)
    {
+   BOTAN_UNUSED(provider);
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
    if(algo == "ChaCha20Poly1305")
       {
