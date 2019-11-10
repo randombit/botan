@@ -159,11 +159,14 @@ class PK_Fingerprint final : public Command
 
          for(std::string key_file : get_arg_list("keys"))
             {
-            std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_file));
+            std::unique_ptr<Botan::Public_Key> key(
+               key_file == "-"
+               ? Botan::X509::load_key(this->slurp_file("-", 4096))
+               : Botan::X509::load_key(key_file));
 
             const std::string fprint = key->fingerprint_public(hash_algo);
 
-            if(no_fsname)
+            if(no_fsname || key_file == "-")
                { output() << fprint << "\n"; }
             else
                { output() << key_file << ": " << fprint << "\n"; }
