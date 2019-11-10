@@ -61,7 +61,7 @@ inline bool all_zeros(const Botan::secure_vector<uint8_t>& v)
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   const Botan::secure_vector<uint8_t> Phash = { 1, 2, 3, 4 };
+   static const Botan::secure_vector<uint8_t> Phash = { 1, 2, 3, 4 };
 
    uint8_t lib_valid_mask = 0;
    const Botan::secure_vector<uint8_t> lib_output = Botan::oaep_find_delim(lib_valid_mask, in, len, Phash);
