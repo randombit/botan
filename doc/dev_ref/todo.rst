@@ -73,6 +73,7 @@ Multiparty Protocols
 External Providers, Hardware Support
 ----------------------------------------
 
+* Aarch64 inline asm for BigInt
 * Extend OpenSSL provider (DH, HMAC, CMAC, GCM)
 * Support using BoringSSL instead of OpenSSL or LibreSSL
 * /dev/crypto provider (ciphers, hashes)
