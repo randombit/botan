@@ -6,7 +6,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_MODES)
+#if (defined(BOTAN_HAS_AES) || defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)) && defined(BOTAN_HAS_AEAD_MODES)
 
 #include <botan/aead.h>
 #include <botan/hex.h>
