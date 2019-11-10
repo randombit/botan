@@ -7,8 +7,10 @@ if %CC% == VC2019 call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Communi
 if %CC% == VC2019p call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Preview\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 if %CC% == MinGW set PATH=%PATH%;C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
 
+dir C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
+
 rem check compiler version
-cl
+if %CC% == MinGW g++ -v else cl
 
 appveyor DownloadFile https://github.com/mozilla/sccache/releases/download/%SCCACHE_VERSION%/sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
 tar -xf sccache-%SCCACHE_VERSION%-x86_64-pc-windows-msvc.tar.gz
