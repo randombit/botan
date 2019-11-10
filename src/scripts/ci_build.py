@@ -29,7 +29,6 @@ def get_concurrency():
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, root_dir, pkcs11_lib, use_gdb):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
-    print(target, target_os, target_cpu, target_cc)
     """
     Return the configure.py flags as well as make/test running prefixes
     """
