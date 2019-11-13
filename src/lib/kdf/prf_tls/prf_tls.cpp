@@ -11,8 +11,8 @@
 namespace Botan {
 
 TLS_PRF::TLS_PRF() :
-   m_hmac_md5(MessageAuthenticationCode::create_or_throw("HMAC(MD5)")),
-   m_hmac_sha1(MessageAuthenticationCode::create_or_throw("HMAC(SHA-1)"))
+   TLS_PRF(MessageAuthenticationCode::create_or_throw("HMAC(MD5)"),
+           MessageAuthenticationCode::create_or_throw("HMAC(SHA-1)"))
    {
    }
 

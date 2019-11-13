@@ -135,7 +135,11 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       {
       if(provider.empty() || provider == "base")
          {
-         return std::unique_ptr<KDF>(new TLS_PRF);
+         auto hmac_md5 = MessageAuthenticationCode::create("HMAC(MD5)");
+         auto hmac_sha1 = MessageAuthenticationCode::create("HMAC(SHA-1)");
+
+         if(hmac_md5 && hmac_sha1)
+            return std::unique_ptr<KDF>(new TLS_PRF(std::move(hmac_md5), std::move(hmac_sha1)));
          }
       }
 #endif
