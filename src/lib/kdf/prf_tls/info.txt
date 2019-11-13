@@ -5,6 +5,4 @@ TLS_V12_PRF -> 20131128
 
 <requires>
 hmac
-md5
-sha1
 </requires>

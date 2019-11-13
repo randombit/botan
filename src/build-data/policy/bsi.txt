@@ -160,9 +160,11 @@ blake2
 comb4p
 gost_3411
 md4
+md5
 rmd160
 shake
 skein
+#sha1 // needed for x509
 sm3
 streebog
 tiger

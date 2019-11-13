@@ -160,9 +160,11 @@ emsa_x931
 blake2
 comb4p
 gost_3411
+md5
 md4
 rmd160
 skein
+#sha1 // needed for x509
 sm3
 streebog
 tiger
