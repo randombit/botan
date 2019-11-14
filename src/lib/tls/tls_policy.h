@@ -420,7 +420,7 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
    public:
       std::vector<std::string> allowed_ciphers() const override
          {
-         return std::vector<std::string>({"AES-256/GCM", "AES-128/GCM", "AES-256", "AES-128" });
+         return std::vector<std::string>({"AES-256/GCM", "AES-128/GCM", "AES-256", "AES-128", "AES-256/CCM", "AES-128/CCM"});
          }
 
       std::vector<std::string> allowed_signature_hashes() const override

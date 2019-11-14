@@ -4,7 +4,7 @@ allow_tls12 = true
 allow_dtls10 = false
 allow_dtls12 = false
 
-ciphers = AES-256/GCM AES-128/GCM AES-256 AES-128
+ciphers = AES-256/GCM AES-128/GCM AES-256 AES-128 AES-256/CCM AES-128/CCM
 signature_hashes = SHA-384 SHA-256
 macs = AEAD SHA-384 SHA-256
 key_exchange_methods = ECDH DH PSK ECDHE_PSK DHE_PSK
