@@ -451,8 +451,6 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
             Group_Params::BRAINPOOL256R1,
             Group_Params::SECP384R1,
             Group_Params::SECP256R1,
-            Group_Params::FFDHE_8192,
-            Group_Params::FFDHE_6144,
             Group_Params::FFDHE_4096,
             Group_Params::FFDHE_3072,
             Group_Params::FFDHE_2048
