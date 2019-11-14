@@ -425,7 +425,7 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
 
       std::vector<std::string> allowed_signature_hashes() const override
          {
-         return std::vector<std::string>({"SHA-384", "SHA-256"});
+         return std::vector<std::string>({"SHA-512", "SHA-384", "SHA-256"});
          }
 
       std::vector<std::string> allowed_macs() const override
