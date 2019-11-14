@@ -435,7 +435,7 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
 
       std::vector<std::string> allowed_key_exchange_methods() const override
          {
-         return std::vector<std::string>({"ECDH", "DH", "PSK", "ECDHE_PSK", "DHE_PSK"});
+         return std::vector<std::string>({"ECDH", "DH", "ECDHE_PSK", "DHE_PSK"});
          }
 
       std::vector<std::string> allowed_signature_methods() const override
