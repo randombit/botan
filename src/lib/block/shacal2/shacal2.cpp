@@ -54,6 +54,19 @@ void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
+#if defined(BOTAN_HAS_SHACAL2_AVX2)
+   if(CPUID::has_avx2())
+      {
+      while(blocks >= 8)
+         {
+         avx2_encrypt_8(in, out);
+         in += 8*BLOCK_SIZE;
+         out += 8*BLOCK_SIZE;
+         blocks -= 8;
+         }
+      }
+#endif
+
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32())
       {
@@ -103,6 +116,19 @@ void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 void SHACAL2::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_RK.empty() == false);
+
+#if defined(BOTAN_HAS_SHACAL2_AVX2)
+   if(CPUID::has_avx2())
+      {
+      while(blocks >= 8)
+         {
+         avx2_decrypt_8(in, out);
+         in += 8*BLOCK_SIZE;
+         out += 8*BLOCK_SIZE;
+         blocks -= 8;
+         }
+      }
+#endif
 
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32())
@@ -200,6 +226,13 @@ size_t SHACAL2::parallelism() const
       }
 #endif
 
+#if defined(BOTAN_HAS_SHACAL2_AVX2)
+   if(CPUID::has_avx2())
+      {
+      return 8;
+      }
+#endif
+
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32())
       {
@@ -216,6 +249,13 @@ std::string SHACAL2::provider() const
    if(CPUID::has_intel_sha())
       {
       return "intel_sha";
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHACAL2_AVX2)
+   if(CPUID::has_avx2())
+      {
+      return "avx2";
       }
 #endif
 

@@ -178,30 +178,25 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    R14 += SIMD_8x32::splat(state[14]);
    R15 += SIMD_8x32::splat(state[15]);
 
-   SIMD_8x32::transpose(R00, R01, R02, R03);
-   SIMD_8x32::transpose(R04, R05, R06, R07);
-   SIMD_8x32::transpose(R08, R09, R10, R11);
-   SIMD_8x32::transpose(R12, R13, R14, R15);
+   SIMD_8x32::transpose(R00, R01, R02, R03, R04, R05, R06, R07);
+   SIMD_8x32::transpose(R08, R09, R10, R11, R12, R13, R14, R15);
 
-   __m256i* output_mm = reinterpret_cast<__m256i*>(output);
-
-   _mm256_storeu_si256(output_mm     , _mm256_permute2x128_si256(R00.handle(), R04.handle(), 0 + (2 << 4)));
-   _mm256_storeu_si256(output_mm +  1, _mm256_permute2x128_si256(R08.handle(), R12.handle(), 0 + (2 << 4)));
-   _mm256_storeu_si256(output_mm +  2, _mm256_permute2x128_si256(R01.handle(), R05.handle(), 0 + (2 << 4)));
-   _mm256_storeu_si256(output_mm +  3, _mm256_permute2x128_si256(R09.handle(), R13.handle(), 0 + (2 << 4)));
-   _mm256_storeu_si256(output_mm +  4, _mm256_permute2x128_si256(R02.handle(), R06.handle(), 0 + (2 << 4)));
-   _mm256_storeu_si256(output_mm +  5, _mm256_permute2x128_si256(R10.handle(), R14.handle(), 0 + (2 << 4)));
-   _mm256_storeu_si256(output_mm +  6, _mm256_permute2x128_si256(R03.handle(), R07.handle(), 0 + (2 << 4)));
-   _mm256_storeu_si256(output_mm +  7, _mm256_permute2x128_si256(R11.handle(), R15.handle(), 0 + (2 << 4)));
-
-   _mm256_storeu_si256(output_mm +  8, _mm256_permute2x128_si256(R00.handle(), R04.handle(), 1 + (3 << 4)));
-   _mm256_storeu_si256(output_mm +  9, _mm256_permute2x128_si256(R08.handle(), R12.handle(), 1 + (3 << 4)));
-   _mm256_storeu_si256(output_mm + 10, _mm256_permute2x128_si256(R01.handle(), R05.handle(), 1 + (3 << 4)));
-   _mm256_storeu_si256(output_mm + 11, _mm256_permute2x128_si256(R09.handle(), R13.handle(), 1 + (3 << 4)));
-   _mm256_storeu_si256(output_mm + 12, _mm256_permute2x128_si256(R02.handle(), R06.handle(), 1 + (3 << 4)));
-   _mm256_storeu_si256(output_mm + 13, _mm256_permute2x128_si256(R10.handle(), R14.handle(), 1 + (3 << 4)));
-   _mm256_storeu_si256(output_mm + 14, _mm256_permute2x128_si256(R03.handle(), R07.handle(), 1 + (3 << 4)));
-   _mm256_storeu_si256(output_mm + 15, _mm256_permute2x128_si256(R11.handle(), R15.handle(), 1 + (3 << 4)));
+   R00.store_le(output);
+   R08.store_le(output + 32*1);
+   R01.store_le(output + 32*2);
+   R09.store_le(output + 32*3);
+   R02.store_le(output + 32*4);
+   R10.store_le(output + 32*5);
+   R03.store_le(output + 32*6);
+   R11.store_le(output + 32*7);
+   R04.store_le(output + 32*8);
+   R12.store_le(output + 32*9);
+   R05.store_le(output + 32*10);
+   R13.store_le(output + 32*11);
+   R06.store_le(output + 32*12);
+   R14.store_le(output + 32*13);
+   R07.store_le(output + 32*14);
+   R15.store_le(output + 32*15);
 
    SIMD_8x32::zero_registers();
 
