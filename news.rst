@@ -8,11 +8,26 @@ Version 2.13.0, Not Yet Released
 
 * Add support for XMSS X.509 certificates (GH #2172)
 
+* It is now possible to disable TLS v1.0/v1.1 and DTLS v1.0 at build time.
+  (GH #2188)
+
 * Improve RSA key generation performance (GH #2148)
 
 * Make gcd computation constant-time (GH #2147)
 
+* Add AVX2 implementation of SHACAL2 (GH #2196)
+
+* Update BSI policy to reflect 2019 update of TR 02102-2 (GH #2195)
+
 * Support more functionality for X.509 in the Python API (GH #2165)
+
+* Add ``generic`` CPU target useful when building for some new or unusual
+  platform.
+
+* Disable MD5 in BSI or NIST modes (GH #2188)
+
+* Disable stack protector on MinGW as it causes crashes with some recent
+  versions. (GH #2187)
 
 * Fix a bug introduced in 2.12.0 where ``TLS::Channel::is_active`` and
   ``TLS::Channel::is_closed`` could simultanously return true.
