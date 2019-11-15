@@ -114,9 +114,9 @@ def cli_config_tests(_tmp_dir):
 
     if len(prefix) < 4 or prefix[0] != '/':
         logging.error("Bad prefix %s" % (prefix))
-    if ("-I%s" % (prefix)) not in cflags:
+    if ("-I%s/include/botan-2" % (prefix)) not in cflags:
         logging.error("Bad cflags %s" % (cflags))
-    if ("-L%s" % (prefix)) not in ldflags:
+    if not ldflags.endswith(("-L%s/lib" % (prefix))):
         logging.error("Bad ldflags %s" % (ldflags))
     if "-lbotan-2" not in libs:
         logging.error("Bad libs %s" % (libs))
