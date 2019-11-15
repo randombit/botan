@@ -11,7 +11,7 @@ set -ev
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
-    if [ "$TRAVIS_ARCH" = "aarch64" ] || [ "$TRAVIS_ARCH" = "ppc64le" ]; then
+    if [ "$TRAVIS_ARCH" = "aarch64" ] || [ "$TRAVIS_ARCH" = "ppc64le" ] || [ "$TRAVIS_ARCH" = "s390x" ]; then
         sudo apt-get -qq update
         sudo apt-get install liblzma-dev libbz2-dev ccache
 

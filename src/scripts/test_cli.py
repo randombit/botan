@@ -703,14 +703,14 @@ gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1AiEA
 def cli_cpuid_tests(_tmp_dir):
     cpuid_output = test_cli("cpuid", [])
 
-    if not cpuid_output.startswith('CPUID flags: '):
-        logging.error('Unexpected cpuid output %s' % (cpuid_output))
+    if not cpuid_output.startswith('CPUID flags:'):
+        logging.error('Unexpected cpuid output "%s"' % (cpuid_output))
 
     flag_re = re.compile('[a-z0-9_]+')
     flags = cpuid_output[13:].split(' ')
     for flag in flags:
-        if flag_re.match(flag) is None:
-            logging.error('Unexpected CPUID flag name %s' % (flag))
+        if flag != '' and flag_re.match(flag) is None:
+            logging.error('Unexpected CPUID flag name "%s"' % (flag))
 
 def cli_cc_enc_tests(_tmp_dir):
     test_cli("cc_encrypt", ["8028028028028029", "pass"], "4308989841607208")
