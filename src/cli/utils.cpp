@@ -185,7 +185,7 @@ class Config_Info final : public Command
             {
             if(*BOTAN_LINK_FLAGS)
                output() << BOTAN_LINK_FLAGS << ' ';
-            output() << "-L" << BOTAN_INSTALL_PREFIX << "/" << BOTAN_INSTALL_LIB_DIR << "\n";
+            output() << "-L" << BOTAN_INSTALL_LIB_DIR << "\n";
             }
          else if(arg == "libs")
             {
