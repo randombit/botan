@@ -61,6 +61,13 @@ jobs:
        - TARGET="shared"
 
     - os: linux
+      name: Linux s390x
+      arch: s390x
+      compiler: gcc
+      env:
+       - TARGET="shared"
+
+    - os: linux
       dist: bionic
       name: Linux i386 cross
       compiler: gcc
@@ -80,13 +87,6 @@ jobs:
       compiler: gcc
       env:
        - TARGET="cross-arm32"
-
-    - os: linux
-      dist: xenial
-      name: Linux mips64 cross
-      compiler: gcc
-      env:
-       - TARGET="cross-mips64"
 
     - os: linux
       dist: bionic
