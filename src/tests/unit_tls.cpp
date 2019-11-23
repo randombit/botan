@@ -32,6 +32,10 @@
       #include <botan/dsa.h>
    #endif
 
+   #if defined(BOTAN_HAS_SRP6)
+      #include <botan/srp6.h>
+   #endif
+
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
       #include <botan/tls_session_manager_sqlite.h>
    #endif
@@ -296,6 +300,88 @@ create_creds(Botan::RandomNumberGenerator& rng,
 
    return cmt;
    }
+
+#if defined(BOTAN_HAS_SRP6)
+Botan::Credentials_Manager*
+create_srp6_creds(Botan::RandomNumberGenerator& rng)
+   {
+   class Credentials_Manager_SRP6 : public Botan::Credentials_Manager
+      {
+      public:
+         Credentials_Manager_SRP6(Botan::RandomNumberGenerator& rng)
+            {
+            m_group_id = "modp/srp/1024";
+            m_username = "srp6_username";
+            m_password = "srp6_password";
+            m_salt.resize(16);
+            rng.randomize(m_salt.data(), m_salt.size());
+
+            m_verifier = Botan::generate_srp6_verifier(m_username,
+                                                       m_password,
+                                                       m_salt,
+                                                       m_group_id,
+                                                       "SHA-1");
+            }
+
+         bool attempt_srp(const std::string& /*type*/,
+                          const std::string& /*context*/)
+            {
+            return true;
+            }
+
+         std::string srp_identifier(const std::string& /*type*/,
+                                    const std::string& /*context*/) override
+            {
+            return m_username;
+            }
+
+         std::string srp_password(const std::string& /*type*/,
+                                  const std::string& /*context*/,
+                                  const std::string& identifier) override
+            {
+            if(identifier == m_username)
+               return m_password;
+            return "";
+            }
+
+         bool srp_verifier(const std::string& /*type*/,
+                           const std::string& /*context*/,
+                           const std::string& identifier,
+                           std::string& group_name,
+                           Botan::BigInt& verifier,
+                           std::vector<uint8_t>& salt,
+                           bool generate_fake_on_unknown) override
+            {
+            // FIXME test generate_fake_on_unknown behavior
+            if(identifier == m_username)
+               {
+               group_name = m_group_id;
+               verifier = m_verifier;
+               salt = m_salt;
+               return true;
+               }
+            else if(generate_fake_on_unknown)
+               {
+               group_name = m_group_id;
+               verifier = m_verifier + 1;
+               salt = m_salt;
+               return true;
+               }
+            else
+               return false;
+            }
+
+         std::string m_username;
+         std::string m_password;
+         std::vector<uint8_t> m_salt;
+         std::string m_group_id;
+         Botan::BigInt m_verifier;
+      };
+
+   return new Credentials_Manager_SRP6(rng);
+   }
+#endif
+
 
 class TLS_Handshake_Test final
    {
@@ -761,7 +847,7 @@ class TLS_Unit_Tests final : public Test
          policy.set("allow_dtls10", "true");
          policy.set("allow_dtls12", "true");
 
-         if(kex_policy.find("RSA") != std::string::npos)
+         if(kex_policy.find("RSA") != std::string::npos || kex_policy.find("SRP") != std::string::npos)
             {
             policy.set("signature_methods", "IMPLICIT");
             }
@@ -892,6 +978,11 @@ class TLS_Unit_Tests final : public Test
 
          test_modern_versions("AES-128/GCM DSA", results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
                               { { "signature_methods", "DSA" } });
+#endif
+
+#if defined(BOTAN_HAS_SRP6)
+         std::unique_ptr<Botan::Credentials_Manager> srp6_creds(create_srp6_creds(rng));
+         test_all_versions("SRP6 AES", results, *client_ses, *server_ses, *srp6_creds, "SRP_SHA", "AES-128", "SHA-1", "false");
 #endif
 
 #endif
