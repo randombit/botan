@@ -61,6 +61,8 @@ in a future major release.
 
 - Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
 
+- DLIES
+
 - GOST 34.11-94 hash
 
 - CBC-MAC
