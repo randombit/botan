@@ -10,6 +10,9 @@ cipher_filter.h
 buf_filt.h
 key_filt.h
 
+b64_filt.h
+hex_filt.h
+
 secqueue.h
 
 data_snk.h
