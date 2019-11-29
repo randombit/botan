@@ -53,7 +53,7 @@ jobs:
        - TARGET="shared"
 
     - os: linux
-      dist: bionic
+      dist: xenial
       name: Linux ppc64le
       arch: ppc64le
       compiler: gcc
