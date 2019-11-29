@@ -448,6 +448,10 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
                            action='store_true', default=False,
                            help="Enable extra warnings")
 
+    build_group.add_option('--werror-mode', dest='werror_mode',
+                           action='store_true', default=False,
+                           help="Prohibit compiler warnings")
+
     build_group.add_option('--no-store-vc-rev', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
@@ -1153,6 +1157,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'ar_command': '',
                 'ar_options': '',
                 'ar_output_to': '',
+                'werror_flags': '',
             })
 
         self.add_framework_option = lex.add_framework_option
@@ -1192,6 +1197,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.visibility_attribute = lex.visibility_attribute
         self.visibility_build_flags = lex.visibility_build_flags
         self.warning_flags = lex.warning_flags
+        self.werror_flags = lex.werror_flags
 
     def cross_check(self, os_info, arch_info, all_isas):
 
@@ -1362,6 +1368,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def cc_warning_flags(self, options):
         def gen_flags():
             yield self.warning_flags
+            if options.werror_mode or options.maintainer_mode:
+                yield self.werror_flags
             if options.maintainer_mode:
                 yield self.maintainer_warning_flags
 

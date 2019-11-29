@@ -70,6 +70,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
              '--os=%s' % (target_os)]
     build_targets = ['cli', 'tests']
 
+    if target_cc in ['gcc', 'clang'] and target != 'gcc4.8':
+        flags += ['--werror-mode']
+
     if target_cpu is not None:
         flags += ['--cpu=%s' % (target_cpu)]
 

@@ -29,18 +29,18 @@ namespace {
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
 secure_vector<uint8_t> extract_raw_key(const secure_vector<uint8_t>& key_bits)
-{
+   {
    secure_vector<uint8_t> raw_key;
    try
-   {
+      {
       BER_Decoder(key_bits).decode(raw_key, OCTET_STRING);
-   }
-   catch(Decoding_Error& e)
-   {
+      }
+   catch(Decoding_Error&)
+      {
       raw_key = key_bits;
-   }
+      }
    return raw_key;
-}
+   }
 
 }
 
@@ -116,6 +116,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
                            size_t target_node_height,
                            XMSS_Address& adrs)
    {
+   BOTAN_ASSERT_NOMSG(target_node_height <= 30);
    BOTAN_ASSERT((start_idx % (1 << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
 
@@ -137,7 +138,8 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
    const size_t subtrees = static_cast<size_t>(1) << split_level;
    const size_t last_idx = (static_cast<size_t>(1) << (target_node_height)) + start_idx;
    const size_t offs = (last_idx - start_idx) / subtrees;
-   uint8_t level = split_level; // current level in the tree
+   // this cast cannot overflow because target_node_height is limited
+   uint8_t level = static_cast<uint8_t>(split_level); // current level in the tree
 
    BOTAN_ASSERT((last_idx - start_idx) % subtrees == 0,
                 "Number of worker threads in tree_hash need to divide range "

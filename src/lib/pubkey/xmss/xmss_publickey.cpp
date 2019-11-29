@@ -25,18 +25,18 @@ namespace {
 
 // fall back to raw decoding for previous versions, which did not encode an OCTET STRING
 std::vector<uint8_t> extract_raw_key(const std::vector<uint8_t>& key_bits)
-{
+   {
    std::vector<uint8_t> raw_key;
    try
-   {
+      {
       BER_Decoder(key_bits).decode(raw_key, OCTET_STRING);
-   }
-   catch(Decoding_Error& e)
-   {
+      }
+   catch(Decoding_Error&)
+      {
       raw_key = key_bits;
-   }
+      }
    return raw_key;
-}
+   }
 
 }
 
