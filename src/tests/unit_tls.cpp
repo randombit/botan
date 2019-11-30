@@ -324,7 +324,7 @@ create_srp6_creds(Botan::RandomNumberGenerator& rng)
             }
 
          bool attempt_srp(const std::string& /*type*/,
-                          const std::string& /*context*/)
+                          const std::string& /*context*/) override
             {
             return true;
             }
