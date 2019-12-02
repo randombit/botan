@@ -474,17 +474,19 @@ Multiple Precision Integers (MPI)
 -------------------------------------
 .. versionadded:: 2.8.0
 
-.. py:class:: MPI(initial_value=None)
+.. py:class:: MPI(initial_value=None, radix=None)
 
    Initialize an MPI object with specified value, left as zero otherwise.  The
    ``initial_value`` should be an ``int``, ``str``, or ``MPI``.
+   The ``radix`` value should be set to 16 when initializing from a base 16 `str` value.
+
 
    Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are
    defined.
 
    .. py:method:: inverse_mod(modulus)
 
-      Return the inverse of ``self`` modulo modulus, or zero if no inverse exists
+      Return the inverse of ``self`` modulo ``modulus``, or zero if no inverse exists
 
    .. py:method:: is_prime(rng, prob=128)
 
@@ -493,6 +495,15 @@ Multiple Precision Integers (MPI)
    .. py:method:: pow_mod(exponent, modulus):
 
       Return ``self`` to the ``exponent`` power modulo ``modulus``
+
+   .. py:method:: mod_mul(other, modulus):
+
+      Return the multiplication product of ``self`` and ``other`` modulo ``modulus``
+
+   .. py:method:: gcd(other):
+
+      Return the greatest common divisor of ``self`` and ``other``
+
 
 Format Preserving Encryption (FE1 scheme)
 -----------------------------------------
