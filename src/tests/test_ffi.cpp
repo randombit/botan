@@ -61,6 +61,7 @@ class FFI_Unit_Tests final : public Test
          results.push_back(ffi_test_mp(rng));
          results.push_back(ffi_test_pkcs_hash_id());
          results.push_back(ffi_test_cert_validation());
+         results.push_back(ffi_test_crl());
 
 #if defined(BOTAN_HAS_AES)
          results.push_back(ffi_test_block_ciphers());
@@ -280,6 +281,55 @@ class FFI_Unit_Tests final : public Test
          return result;
          }
 
+
+      Test::Result ffi_test_crl()
+         {
+         Test::Result result("FFI CRL");
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+         
+         const char *crl_string = "-----BEGIN X509 CRL-----\n"
+                                 "MIICoTCCAQkCAQEwDQYJKoZIhvcNAQELBQAwgZQxLTArBgNVBAMTJFVzYWJsZSBj\n"
+                                 "ZXJ0IHZhbGlkYXRpb246IFRlbXBvcmFyeSBDQTE5MDcGA1UECxMwQ2VudHJlIGZv\n"
+                                 "ciBSZXNlYXJjaCBvbiBDcnlwdG9ncmFwaHkgYW5kIFNlY3VyaXR5MRswGQYDVQQK\n"
+                                 "ExJNYXNhcnlrIFVuaXZlcnNpdHkxCzAJBgNVBAYTAkNaGA8yMDUwMDIyNTE1MjE0\n"
+                                 "MloYDzIwNTAwMjI1MTUyNDQxWjAAoDowODAfBgNVHSMEGDAWgBRKzxAvI4+rVVo/\n"
+                                 "JzLigRznREyB+TAVBgNVHRQEDgIMXcr16yNys/gjeuCFMA0GCSqGSIb3DQEBCwUA\n"
+                                 "A4IBgQCfxv/5REM/KUnzeVycph3dJr1Yrtxhc6pZmQ9pMzSW/nawLN3rUHm5oG44\n"
+                                 "ZuQgjvzE4PnbU0/DNRu/4w3H58kgrctJHHXbbvkU3lf2ZZLh2wBl+EUh92+/COow\n"
+                                 "ZyGB+jqj/XwB99hYUhrY6NLEWRz08kpgG6dnNMEU0uFqdQKWk0CQPnmgPRgDb8BW\n"
+                                 "IuMBcjY7aF9XoCZFOqPYdEvUKzAo4QGCf7uJ7fNGS3LqvjaLjAHJseSr5/yR7Q9r\n"
+                                 "nEdI38yKPbRj0tNHe7j+BbYg31C+X+AZZKJtlTg8GxYR3qfQio1kDgpZ3rQLzHY3\n"
+                                 "ea2MLX/Kdx9cPSwh4KwlcDxQmQKoELb4EnZW1CScSBHi9HQyCBNyCkgkOBMGcJqz\n"
+                                 "Ihq1dGeSf8eca9+Avk5kAQ3yjXK1TI2CDEi0msrXLr9XbgowXiOLLzR+rYkhQz+V\n"
+                                 "RnIoBwjnrGoJoz636KS170SZCB9ARNs17WE4IvbJdZrTXNOGaVZCQUUpiLRj4ZSO\n"
+                                 "Na/nobI=\n"
+                                 "-----END X509 CRL-----";
+         
+         botan_x509_crl_t bytecrl;
+         REQUIRE_FFI_OK(botan_x509_crl_load, (&bytecrl, (const uint8_t*)crl_string, 966));
+
+         botan_x509_crl_t crl;
+         REQUIRE_FFI_OK(botan_x509_crl_load_file, (&crl, Test::data_file("x509/nist/root.crl").c_str()));
+         
+         botan_x509_cert_t cert1;
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert1, Test::data_file("x509/nist/test01/end.crt").c_str()));
+         TEST_FFI_RC(-1, botan_x509_is_revoked, (crl, cert1));
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert1));
+            
+         botan_x509_cert_t cert2;
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert2, Test::data_file("x509/nist/test20/int.crt").c_str()));
+         TEST_FFI_RC(0, botan_x509_is_revoked, (crl, cert2));
+         TEST_FFI_RC(-1, botan_x509_is_revoked, (bytecrl, cert2));
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert2));
+
+         TEST_FFI_OK(botan_x509_crl_destroy, (crl));
+         TEST_FFI_OK(botan_x509_crl_destroy, (bytecrl));
+#endif
+         return result;
+         }
+
+
       Test::Result ffi_test_cert_validation()
          {
          Test::Result result("FFI Cert validation");
@@ -318,11 +368,38 @@ class FFI_Unit_Tests final : public Test
          result.confirm("Validation passed", rc == 0);
          result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Verified");
 
+         TEST_FFI_RC(1, botan_x509_cert_verify_with_crl, (&rc, end7, subs, 2, nullptr, 0, nullptr, 0, "x509/farce", 0, nullptr, 0));
+         result.confirm("Validation failed", rc == 3000);
+         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
+
+         botan_x509_crl_t rootcrl;
+
+         REQUIRE_FFI_OK(botan_x509_crl_load_file, (&rootcrl, Test::data_file("x509/nist/root.crl").c_str()));
+         TEST_FFI_RC(0, botan_x509_cert_verify_with_crl, (&rc, end7, subs, 2, &root, 1, &rootcrl, 1, nullptr, 80, nullptr, 0));
+         result.confirm("Validation passed", rc == 0);
+         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Verified");
+
+         botan_x509_cert_t end20;
+         botan_x509_cert_t sub20;
+         botan_x509_crl_t sub20crl;
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&end20, Test::data_file("x509/nist/test20/end.crt").c_str()));
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub20, Test::data_file("x509/nist/test20/int.crt").c_str()));
+         REQUIRE_FFI_OK(botan_x509_crl_load_file, (&sub20crl, Test::data_file("x509/nist/test20/int.crl").c_str()));
+         botan_x509_crl_t crls[2] = {sub20crl, rootcrl};
+         TEST_FFI_RC(1, botan_x509_cert_verify_with_crl, (&rc, end20, &sub20, 1, &root, 1, crls, 2, nullptr, 80, nullptr, 0));
+         result.confirm("Validation failed", rc == 5000);
+         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc),
+                        "Certificate is revoked");
+         
          TEST_FFI_OK(botan_x509_cert_destroy, (end2));
          TEST_FFI_OK(botan_x509_cert_destroy, (sub2));
          TEST_FFI_OK(botan_x509_cert_destroy, (end7));
          TEST_FFI_OK(botan_x509_cert_destroy, (sub7));
+         TEST_FFI_OK(botan_x509_cert_destroy, (end20));
+         TEST_FFI_OK(botan_x509_cert_destroy, (sub20));
+         TEST_FFI_OK(botan_x509_crl_destroy, (sub20crl));
          TEST_FFI_OK(botan_x509_cert_destroy, (root));
+         TEST_FFI_OK(botan_x509_crl_destroy, (rootcrl));
 
 #endif
          return result;
