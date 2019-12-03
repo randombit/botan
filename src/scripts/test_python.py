@@ -442,6 +442,7 @@ ofvkP1EDmpx50fHLawIDAQAB
             self.assertEqual(a_pem, new_a.to_pem())
 
     def test_certs(self):
+        # pylint: disable=too-many-statements
         cert = botan2.X509Cert(filename="src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt")
         pubkey = cert.subject_public_key()
 
@@ -497,6 +498,28 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(botan2.X509Cert.validation_status(0), 'Verified')
         self.assertEqual(botan2.X509Cert.validation_status(3000), 'Certificate issuer not found')
         self.assertEqual(botan2.X509Cert.validation_status(4008), 'Certificate does not match provided name')
+
+        rootcrl = botan2.X509CRL("src/tests/data/x509/nist/root.crl")
+
+        end01 = botan2.X509Cert("src/tests/data/x509/nist/test01/end.crt")
+        self.assertEqual(end01.verify([], [root], required_strength=80, crls=[rootcrl]), 0)
+
+        int20 = botan2.X509Cert("src/tests/data/x509/nist/test20/int.crt")
+        end20 = botan2.X509Cert("src/tests/data/x509/nist/test20/end.crt")
+        int20crl = botan2.X509CRL("src/tests/data/x509/nist/test20/int.crl")
+
+        self.assertEqual(end20.verify([int20], [root], required_strength=80, crls=[int20crl, rootcrl]), 5000)
+        self.assertEqual(botan2.X509Cert.validation_status(5000), 'Certificate is revoked')
+
+        int21 = botan2.X509Cert("src/tests/data/x509/nist/test21/int.crt")
+        end21 = botan2.X509Cert("src/tests/data/x509/nist/test21/end.crt")
+        int21crl = botan2.X509CRL("src/tests/data/x509/nist/test21/int.crl")
+        self.assertEqual(end21.verify([int21], [root], required_strength=80, crls=[int21crl, rootcrl]), 5000)
+
+        self.assertTrue(int20.is_revoked(rootcrl))
+        self.assertFalse(int04_1.is_revoked(rootcrl))
+        self.assertTrue(end21.is_revoked(int21crl))
+
 
     def test_mpi(self):
         # pylint: disable=too-many-statements
