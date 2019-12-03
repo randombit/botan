@@ -1836,7 +1836,7 @@ class Speed final : public Command
          if(invalid_sigs > 0)
             error_output() << invalid_sigs << " generated signatures rejected in PK signature bench\n";
 
-         const size_t events = std::min(sig_timer->events(), ver_timer->events());
+         const size_t events = static_cast<size_t>(std::min(sig_timer->events(), ver_timer->events()));
 
          record_result(sig_timer);
          record_result(ver_timer);

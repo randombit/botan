@@ -616,8 +616,8 @@ std::array<Attribute, 4> dtemplate =
       {
          { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Class), &object_class, sizeof(object_class) },
          { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Token), &btrue, sizeof(btrue) },
-         { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Label), const_cast< char* >(label.c_str()), label.size() },
-         { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Value), const_cast< char* >(data.c_str()), data.size() }
+         { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Label), const_cast<char*>(label.c_str()), static_cast<CK_ULONG>(label.size()) },
+         { static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Value), const_cast<char*>(data.c_str()), static_cast<CK_ULONG>(data.size()) }
       }
    };
 
@@ -766,7 +766,9 @@ Test::Result test_c_copy_object()
 
    std::string copied_label = "A copied data object";
 
-   Attribute copy_attribute_values = { static_cast< CK_ATTRIBUTE_TYPE >(AttributeType::Label), const_cast< char* >(copied_label.c_str()), copied_label.size() };
+   Attribute copy_attribute_values = {
+      static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Label), const_cast<char*>(copied_label.c_str()), static_cast<CK_ULONG>(copied_label.size())
+   };
 
    auto binder = std::bind(&LowLevel::C_CopyObject, *p11_low_level.get(), session_handle, object_handle,
                            &copy_attribute_values, 1, &copied_object_handle, std::placeholders::_1);

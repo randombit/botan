@@ -132,7 +132,10 @@ template<typename T> inline void clear_mem(T* ptr, size_t n)
 template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
    {
    static_assert(std::is_trivial<typename std::decay<T>::type>::value, "");
-   if(n > 0)
+   BOTAN_ASSERT_IMPLICATION(n > 0, in != nullptr && out != nullptr,
+                            "If n > 0 then args are not null");
+
+   if(in != nullptr && out != nullptr && n > 0)
       {
       std::memmove(out, in, sizeof(T)*n);
       }

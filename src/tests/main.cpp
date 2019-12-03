@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 
       int rc = tests.run(opts);
 
-#if defined(BOTAN_HAS_OPENSSL)
+#if defined(BOTAN_HAS_OPENSSL) && defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER < 0x01010000)
       if(opts.provider().empty() || opts.provider() == "openssl")
          {
          ERR_free_strings();
