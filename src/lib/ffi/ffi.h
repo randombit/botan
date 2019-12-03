@@ -1590,19 +1590,6 @@ BOTAN_PUBLIC_API(2,8) int botan_x509_cert_verify(
 */
 BOTAN_PUBLIC_API(2,8) const char* botan_x509_cert_validation_status(int code);
 
-/**
- * Key wrapping as per RFC 3394
- */
-BOTAN_PUBLIC_API(2,2)
-int botan_key_wrap3394(const uint8_t key[], size_t key_len,
-                       const uint8_t kek[], size_t kek_len,
-                       uint8_t wrapped_key[], size_t *wrapped_key_len);
-
-BOTAN_PUBLIC_API(2,2)
-int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
-                         const uint8_t kek[], size_t kek_len,
-                         uint8_t key[], size_t *key_len);
-
 /*
 * X.509 CRL
 **************************/
@@ -1614,8 +1601,16 @@ BOTAN_PUBLIC_API(2,13) int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const 
 
 BOTAN_PUBLIC_API(2,13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
 
+/**
+ * Given a CRL and a certificate, 
+ * check if the certificate is revoked on that particular CRL
+ */
 BOTAN_PUBLIC_API(2,13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert);
 
+/**
+ * Different flavor of `botan_x509_cert_verify`, supports revocation lists.
+ * CRLs are passed as an array, same as intermediates and trusted CAs 
+ */
 BOTAN_PUBLIC_API(2,13) int botan_x509_cert_verify_with_crl(
    int* validation_result,
    botan_x509_cert_t cert,
@@ -1630,6 +1625,18 @@ BOTAN_PUBLIC_API(2,13) int botan_x509_cert_verify_with_crl(
    const char* hostname,
    uint64_t reference_time);
 
+/**
+ * Key wrapping as per RFC 3394
+ */
+BOTAN_PUBLIC_API(2,2)
+int botan_key_wrap3394(const uint8_t key[], size_t key_len,
+                       const uint8_t kek[], size_t kek_len,
+                       uint8_t wrapped_key[], size_t *wrapped_key_len);
+
+BOTAN_PUBLIC_API(2,2)
+int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
+                         const uint8_t kek[], size_t kek_len,
+                         uint8_t key[], size_t *key_len);
 
 /**
 * HOTP

@@ -1152,7 +1152,51 @@ X.509 Certificates
     Set ``reference_time`` to be the time which the certificate chain is
     validated against. Use zero to use the current system clock.
 
+.. cpp:function:: int botan_x509_cert_verify_with_crl(int* validation_result, \
+                  botan_x509_cert_t cert, \
+                  const botan_x509_cert_t* intermediates, \
+                  size_t intermediates_len, \
+                  const botan_x509_cert_t* trusted, \
+                  size_t trusted_len, \
+                  const botan_x509_crl_t* crls, \
+                  size_t crls_len, \
+                  const char* trusted_path, \
+                  size_t required_strength, \
+                  const char* hostname, \
+                  uint64_t reference_time)
+
+   Certificate path validation supporting Certificate Revocation Lists.
+
+   Works the same as ``botan_x509_cert_cerify``.
+
+   ``crls`` is an array of ``botan_x509_crl_t`` objects, ``crls_len`` is its length.
+
 .. cpp:function:: const char* botan_x509_cert_validation_status(int code)
 
    Return a (statically allocated) string associated with the verification
    result.
+
+X.509 Certificate Revocation Lists
+----------------------------------------
+
+.. cpp:type:: opaque* botan_x509_crl_t
+
+   An opaque data type for an X.509 CRL.
+
+.. cpp:function:: int botan_x509_crl_load(botan_x509_crl_t* crl_obj, \
+                                        const uint8_t crl[], size_t crl_len)
+
+   Load a CRL from the DER or PEM representation.
+
+.. cpp:function:: int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* filename)
+
+   Load a CRL from a file.
+
+.. cpp:function:: int botan_x509_crl_destroy(botan_x509_crl_t crl)
+
+   Destroy the CRL object.
+
+.. cpp:function:: int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
+
+   Check whether a given ``crl`` contains a given ``cert``.
+   Return ``0`` when the certificate is revoked, ``-1`` otherwise.
