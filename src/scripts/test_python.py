@@ -507,11 +507,13 @@ ofvkP1EDmpx50fHLawIDAQAB
         big = botan2.MPI('0x85839682368923476892367235')
         self.assertEqual(big.bit_count(), 104)
         small = botan2.MPI(0xDEADBEEF)
+        radix = botan2.MPI("DEADBEEF", 16)
 
         self.assertEqual(hex_encode(small.to_bytes()), "deadbeef")
         self.assertEqual(hex_encode(big.to_bytes()), "85839682368923476892367235")
 
         self.assertEqual(int(small), 0xDEADBEEF)
+        self.assertEqual(int(radix), int(small))
 
         self.assertEqual(int(small >> 16), 0xDEAD)
 
@@ -576,6 +578,20 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         p = inv.pow_mod(botan2.MPI(46), mod)
         self.assertEqual(int(p), 42)
+
+        one = botan2.MPI(1)
+        twelve = botan2.MPI("C", 16)
+        eight = botan2.MPI(8)
+
+        mul = twelve.mod_mul(eight, inv)
+        self.assertEqual(int(mul), 27)
+
+        gcd = one.gcd(one)
+        self.assertEqual(one, gcd)
+        gcd = one.gcd(twelve)
+        self.assertEqual(one, gcd)
+        gcd = twelve.gcd(eight)
+        self.assertEqual(4, int(gcd))
 
     def test_mpi_random(self):
         rng = botan2.RandomNumberGenerator()

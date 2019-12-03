@@ -1415,9 +1415,9 @@ class X509Cert(object): # pylint: disable=invalid-name
     def validation_status(cls, error_code):
         return _ctype_to_str(_DLL.botan_x509_cert_validation_status(c_int(error_code)))
 
-class MPI(object):
+class MPI(object): # pylint: disable=too-many-public-methods
 
-    def __init__(self, initial_value=None):
+    def __init__(self, initial_value=None, radix=None):
 
         self.__obj = c_void_p(0)
         _DLL.botan_mp_init(byref(self.__obj))
@@ -1426,6 +1426,8 @@ class MPI(object):
             pass # left as zero
         elif isinstance(initial_value, MPI):
             _DLL.botan_mp_set_from_mp(self.__obj, initial_value.handle_())
+        elif radix is not None:
+            _DLL.botan_mp_set_from_radix_str(self.__obj, _ctype_str(initial_value), c_size_t(radix))
         elif isinstance(initial_value, str):
             _DLL.botan_mp_set_from_str(self.__obj, _ctype_str(initial_value))
         else:
@@ -1590,6 +1592,16 @@ class MPI(object):
         shift = c_size_t(shift)
         _DLL.botan_mp_rshift(self.__obj, self.__obj, shift)
         return self
+
+    def mod_mul(self, other, modulus):
+        r = MPI()
+        _DLL.botan_mp_mod_mul(r.handle_(), self.__obj, other.handle_(), modulus.handle_())
+        return r
+
+    def gcd(self, other):
+        r = MPI()
+        _DLL.botan_mp_gcd(r.handle_(), self.__obj, other.handle_())
+        return r
 
     def pow_mod(self, exponent, modulus):
         r = MPI()
