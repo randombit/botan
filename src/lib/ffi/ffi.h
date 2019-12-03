@@ -1603,6 +1603,34 @@ int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
                          const uint8_t kek[], size_t kek_len,
                          uint8_t key[], size_t *key_len);
 
+/*
+* X.509 CRL
+**************************/
+
+typedef struct botan_x509_crl_struct* botan_x509_crl_t;
+
+BOTAN_PUBLIC_API(2,13) int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path);
+BOTAN_PUBLIC_API(2,13) int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], size_t crl_bits_len);
+
+BOTAN_PUBLIC_API(2,13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
+
+BOTAN_PUBLIC_API(2,13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert);
+
+BOTAN_PUBLIC_API(2,13) int botan_x509_cert_verify_with_crl(
+   int* validation_result,
+   botan_x509_cert_t cert,
+   const botan_x509_cert_t* intermediates,
+   size_t intermediates_len,
+   const botan_x509_cert_t* trusted,
+   size_t trusted_len,
+   const botan_x509_crl_t* crls,
+   size_t crls_len,
+   const char* trusted_path,
+   size_t required_strength,
+   const char* hostname,
+   uint64_t reference_time);
+
+
 /**
 * HOTP
 */
