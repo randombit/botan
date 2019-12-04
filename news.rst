@@ -8,6 +8,8 @@ Version 2.13.0, Not Yet Released
 
 * Add support for XMSS X.509 certificates (GH #2172)
 
+* Add support for X.509 CRLs in FFI layer and Python wrapper (GH #2213)
+
 * It is now possible to disable TLS v1.0/v1.1 and DTLS v1.0 at build time.
   (GH #2188)
 

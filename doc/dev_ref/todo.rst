@@ -143,7 +143,6 @@ Compat Headers
 New C APIs
 ----------------------------------------
 
-* X.509 CRL handling
 * PKCS10 requests
 * Certificate signing
 * Expose TLS
