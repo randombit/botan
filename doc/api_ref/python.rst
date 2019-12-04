@@ -547,7 +547,7 @@ HOTP
 X509Cert
 -----------------------------------------
 
-.. py:class:: X509Cert(filename=None, buf=None)
+.. py:class:: X509Cert(filename=None, buf=None) 
 
    .. py:method:: time_starts()
 
@@ -626,7 +626,8 @@ X509Cert
                   trusted_path=None, \
                   required_strength=0, \
                   hostname=None, \
-                  reference_time=0)
+                  reference_time=0 \
+                  crls=None)
 
       Verify a certificate. Returns 0 if validation was successful, returns a positive error code 
       if the validation was unsuccesful.
@@ -648,16 +649,25 @@ X509Cert
       Set ``reference_time`` to be the time which the certificate chain is
       validated against. Use zero (default) to use the current system clock.
 
+      ``crls`` is a list of CRLs issued by either trusted or untrusted authorities.
+
    .. py:classmethod:: validation_status(error_code)
 
       Return an informative string associated with the verification return code.
 
-     
+   .. py:method:: is_revoked(self, crl)
 
+      Check if the certificate (``self``) is revoked on the given ``crl``.
 
+X509CRL
+-----------------------------------------
 
+.. py:class:: X509CRL(filename=None, buf=None)
 
+   Class representing an X.509 Certificate Revocation List.
 
+   A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
+   or from a bytestring, with the ``buf`` argument.
 
 
 
