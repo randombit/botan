@@ -85,7 +85,7 @@ const SIMD_4x32 mc_forward[4] = {
    SIMD_4x32(0x0C0F0E0D, 0x00030201, 0x04070605, 0x080B0A09)
 };
 
-const SIMD_4x32 sr[4] = {
+const SIMD_4x32 vperm_sr[4] = {
    SIMD_4x32(0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C),
    SIMD_4x32(0x0F0A0500, 0x030E0904, 0x07020D08, 0x0B06010C),
    SIMD_4x32(0x0B020900, 0x0F060D04, 0x030A0108, 0x070E050C),
@@ -161,7 +161,7 @@ inline SIMD_4x32 aes_enc_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    const SIMD_4x32 t5 = Bl ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
    const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
 
-   return shuffle(shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K, sr[r % 4]);
+   return shuffle(shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K, vperm_sr[r % 4]);
    }
 
 inline SIMD_4x32 aes_dec_first_round(SIMD_4x32 B, SIMD_4x32 K)
@@ -227,7 +227,7 @@ inline SIMD_4x32 aes_dec_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, B));
 
    const SIMD_4x32 x = shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K;
-   return shuffle(x, sr[which_sr]);
+   return shuffle(x, vperm_sr[which_sr]);
    }
 
 void vperm_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
@@ -414,13 +414,12 @@ SIMD_4x32 aes_schedule_transform(SIMD_4x32 input,
 SIMD_4x32 aes_schedule_mangle(SIMD_4x32 k, uint8_t round_no)
    {
    const SIMD_4x32 mc_forward0(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D);
-   const SIMD_4x32 srx(sr[round_no % 4]);
 
    SIMD_4x32 t = shuffle(k ^ SIMD_4x32::splat_u8(0x5B), mc_forward0);
    SIMD_4x32 t2 = t;
    t = shuffle(t, mc_forward0);
    t2 = t ^ t2 ^ shuffle(t, mc_forward0);
-   return shuffle(t2, srx);
+   return shuffle(t2, vperm_sr[round_no % 4]);
    }
 
 SIMD_4x32 aes_schedule_mangle_dec(SIMD_4x32 k, uint8_t round_no)
@@ -450,7 +449,7 @@ SIMD_4x32 aes_schedule_mangle_dec(SIMD_4x32 k, uint8_t round_no)
    t = aes_schedule_transform(t, dsk[6], dsk[7]);
    output = shuffle(t ^ output, mc_forward0);
 
-   return shuffle(output, sr[round_no % 4]);
+   return shuffle(output, vperm_sr[round_no % 4]);
    }
 
 SIMD_4x32 aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
@@ -458,7 +457,7 @@ SIMD_4x32 aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
    const SIMD_4x32 out_tr1(0xD6B66000, 0xFF9F4929, 0xDEBE6808, 0xF7974121);
    const SIMD_4x32 out_tr2(0x50BCEC00, 0x01EDBD51, 0xB05C0CE0, 0xE10D5DB1);
 
-   k = shuffle(k, sr[round_no % 4]);
+   k = shuffle(k, vperm_sr[round_no % 4]);
    k ^= SIMD_4x32::splat_u8(0x5B);
    return aes_schedule_transform(k, out_tr1, out_tr2);
    }
@@ -519,7 +518,7 @@ void AES_128::vperm_key_schedule(const uint8_t keyb[], size_t)
 
    SIMD_4x32 key = SIMD_4x32::load_le(keyb);
 
-   shuffle(key, sr[2]).store_le(&m_DK[4*10]);
+   shuffle(key, vperm_sr[2]).store_le(&m_DK[4*10]);
 
    key = aes_schedule_transform(key, k_ipt1, k_ipt2);
    key.store_le(&m_EK[0]);
@@ -546,7 +545,7 @@ void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t)
    SIMD_4x32 key1 = SIMD_4x32::load_le(keyb);
    SIMD_4x32 key2 = SIMD_4x32::load_le(keyb + 8);
 
-   shuffle(key1, sr[0]).store_le(&m_DK[12*4]);
+   shuffle(key1, vperm_sr[0]).store_le(&m_DK[12*4]);
 
    key1 = aes_schedule_transform(key1, k_ipt1, k_ipt2);
    key2 = aes_schedule_transform(key2, k_ipt1, k_ipt2);
@@ -593,7 +592,7 @@ void AES_256::vperm_key_schedule(const uint8_t keyb[], size_t)
    SIMD_4x32 key1 = SIMD_4x32::load_le(keyb);
    SIMD_4x32 key2 = SIMD_4x32::load_le(keyb + 16);
 
-   shuffle(key1, sr[2]).store_le(&m_DK[4*14]);
+   shuffle(key1, vperm_sr[2]).store_le(&m_DK[4*14]);
 
    key1 = aes_schedule_transform(key1, k_ipt1, k_ipt2);
    key2 = aes_schedule_transform(key2, k_ipt1, k_ipt2);
