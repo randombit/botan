@@ -50,7 +50,7 @@ XMSS_WOTS_PrivateKey::generate_public_key(XMSS_WOTS_PublicKey& pub_key,
    pub_key.set_key_data(std::move(in_key_data));
    for(size_t i = 0; i < m_wots_params.len(); i++)
       {
-      adrs.set_chain_address(i);
+      adrs.set_chain_address(static_cast<uint32_t>(i));
       chain(pub_key[i], 0, m_wots_params.wots_parameter() - 1, adrs,
             public_seed(), hash);
       }
@@ -72,7 +72,7 @@ XMSS_WOTS_PrivateKey::sign(const secure_vector<uint8_t>& msg,
 
    for(size_t i = 0; i < m_wots_params.len(); i++)
       {
-      adrs.set_chain_address(i);
+      adrs.set_chain_address(static_cast<uint32_t>(i));
       chain(sig[i], 0 , msg_digest[i], adrs, m_public_seed, hash);
       }
 

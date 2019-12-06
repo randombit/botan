@@ -84,7 +84,7 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature,
 
       XMSS_PrivateKey m_priv_key;
       secure_vector<uint8_t> m_randomness;
-      size_t m_leaf_idx;
+      uint32_t m_leaf_idx;
       bool m_is_initialized;
    };
 
