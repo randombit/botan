@@ -171,8 +171,6 @@ class BOTAN_PUBLIC_API(2,0) GF2m_Field
 
       gf2m gf_div(gf2m x, gf2m y) const;
 
-      gf2m gf_pow(gf2m x, int i) const;
-
       gf2m gf_exp(gf2m i) const
          {
          return m_gf_exp_table.at(i); /* alpha^i */

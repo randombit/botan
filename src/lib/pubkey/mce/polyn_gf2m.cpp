@@ -45,7 +45,7 @@ unsigned nlz_16bit(uint16_t x)
 
 int polyn_gf2m::calc_degree_secure() const
    {
-   int i = this->coeff.size() - 1;
+   int i = static_cast<int>(this->coeff.size()) - 1;
    int result = 0;
    uint32_t found_mask = 0;
    uint32_t tracker_mask = 0xffff;
@@ -68,14 +68,14 @@ gf2m random_gf2m(RandomNumberGenerator& rng)
    return make_uint16(b[1], b[0]);
    }
 
-gf2m random_code_element(unsigned code_length, RandomNumberGenerator& rng)
+gf2m random_code_element(uint16_t code_length, RandomNumberGenerator& rng)
    {
    if(code_length == 0)
       {
       throw Invalid_Argument("random_code_element() was supplied a code length of zero");
       }
    const unsigned nlz = nlz_16bit(code_length-1);
-   const gf2m mask = (1 << (16-nlz)) -1;
+   const gf2m mask = (1 << (16-nlz)) - 1;
 
    gf2m result;
 
@@ -94,7 +94,7 @@ polyn_gf2m::polyn_gf2m(polyn_gf2m const& other)
     m_sp_field(other.m_sp_field)
    { }
 
-polyn_gf2m::polyn_gf2m(   int d, std::shared_ptr<GF2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(int d, std::shared_ptr<GF2m_Field> sp_field)
    :m_deg(-1),
     coeff(d+1),
     m_sp_field(sp_field)
@@ -128,7 +128,7 @@ polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2
    {
    if(mem_len % sizeof(gf2m))
       {
-      throw Botan::Decoding_Error("illegal length of memory to decode ");
+      throw Decoding_Error("illegal length of memory to decode ");
       }
 
    uint32_t size = (mem_len / sizeof(this->coeff[0])) ;
@@ -143,7 +143,7 @@ polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2
       {
       if(this->coeff[i] >= (1 << sp_field->get_extension_degree()))
          {
-         throw Botan::Decoding_Error("error decoding polynomial");
+         throw Decoding_Error("error decoding polynomial");
          }
       }
    this->get_degree();
@@ -154,7 +154,7 @@ polyn_gf2m::polyn_gf2m( std::shared_ptr<GF2m_Field> sp_field) :
    m_deg(-1), coeff(1), m_sp_field(sp_field)
    {}
 
-polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, uint32_t mem_byte_len, std::shared_ptr<GF2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(int degree, const uint8_t* mem, size_t mem_byte_len, std::shared_ptr<GF2m_Field> sp_field)
    :m_sp_field(sp_field)
    {
    uint32_t j, k, l;
@@ -163,10 +163,10 @@ polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, uint32_t mem_byte_
    polyn_size = degree + 1;
    if(polyn_size * sp_field->get_extension_degree() > 8 * mem_byte_len)
       {
-      throw Botan::Decoding_Error("memory vector for polynomial has wrong size");
+      throw Decoding_Error("memory vector for polynomial has wrong size");
       }
    this->coeff = secure_vector<gf2m>(degree+1);
-   gf2m ext_deg = this->m_sp_field->get_extension_degree();
+   gf2m ext_deg = static_cast<gf2m>(this->m_sp_field->get_extension_degree());
    for (l = 0; l < polyn_size; l++)
       {
       k = (l * ext_deg) / 8;
@@ -227,7 +227,7 @@ void polyn_gf2m::set_to_zero()
 
 int polyn_gf2m::get_degree() const
    {
-   int d = this->coeff.size() - 1;
+   int d = static_cast<int>(this->coeff.size()) - 1;
    while ((d >= 0) && (this->coeff[d] == 0))
       --d;
    const_cast<polyn_gf2m*>(this)->m_deg = d;
@@ -387,7 +387,7 @@ polyn_gf2m polyn_gf2m::gcd(polyn_gf2m const& p1, polyn_gf2m const& p2)
 
 
 // Returns the degree of the smallest factor
-void polyn_gf2m::degppf(const polyn_gf2m & g, int* p_result)
+size_t polyn_gf2m::degppf(const polyn_gf2m& g)
    {
    polyn_gf2m s(g.get_sp_field());
 
@@ -399,7 +399,7 @@ void polyn_gf2m::degppf(const polyn_gf2m & g, int* p_result)
 
    p.set_degree(1);
    (*&p).set_coef(1, 1);
-   (*p_result) = d;
+   size_t result = static_cast<size_t>(d);
    for(size_t i = 1; i <= (d / 2) * ext_deg; ++i)
       {
       polyn_gf2m r = p.sqmod(u, d);
@@ -411,7 +411,7 @@ void polyn_gf2m::degppf(const polyn_gf2m & g, int* p_result)
 
          if(s.get_degree() > 0)
             {
-            (*p_result) = i / ext_deg;
+            result = i / ext_deg;
             break;
             }
          r[1] ^= 1;
@@ -423,7 +423,7 @@ void polyn_gf2m::degppf(const polyn_gf2m & g, int* p_result)
       r = s;
       }
 
-
+   return result;
    }
 
 void polyn_gf2m::patchup_deg_secure( uint32_t trgt_deg, volatile gf2m patch_elem)
@@ -636,24 +636,25 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
    return std::make_pair(u1,r1); // coefficients u,v
    }
 
-polyn_gf2m::polyn_gf2m(int t, Botan::RandomNumberGenerator& rng, std::shared_ptr<GF2m_Field> sp_field)
-   :m_deg(t),
+polyn_gf2m::polyn_gf2m(size_t t, RandomNumberGenerator& rng, std::shared_ptr<GF2m_Field> sp_field)
+   :m_deg(static_cast<int>(t)),
     coeff(t+1),
     m_sp_field(sp_field)
    {
-   (*this).set_coef( t, 1);
-   int degree = 0;
-   do
+   this->set_coef(t, 1);
+   for(;;)
       {
-      for (int i = 0; i < t; ++i)
+      for(size_t i = 0; i < t; ++i)
          {
-         (*this).set_coef( i, random_code_element(sp_field->get_cardinality(), rng));
+         this->set_coef(i, random_code_element(sp_field->get_cardinality(), rng));
          }
-      polyn_gf2m::degppf(*this, &degree);
-      }
-   while (degree < t);
-   }
 
+      const size_t degree = polyn_gf2m::degppf(*this);
+
+      if(degree >= t)
+         break;
+      }
+   }
 
 void polyn_gf2m::poly_shiftmod( const polyn_gf2m & g)
    {

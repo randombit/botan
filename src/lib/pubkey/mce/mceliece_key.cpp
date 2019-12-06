@@ -43,9 +43,9 @@ McEliece_PrivateKey::McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code
    *this = generate_mceliece_key(rng, ext_deg, code_length, t);
    }
 
-uint32_t McEliece_PublicKey::get_message_word_bit_length() const
+size_t McEliece_PublicKey::get_message_word_bit_length() const
    {
-   uint32_t codimension = ceil_log2(m_code_length) * m_t;
+   size_t codimension = ceil_log2(m_code_length) * m_t;
    return m_code_length - codimension;
    }
 
@@ -234,7 +234,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
       {
       throw Decoding_Error("encoded parity check matrix has length which is not a multiple of four");
       }
-   if(enc_H.size()/4 != bit_size_to_32bit_size(m_codimension) * m_code_length )
+   if(enc_H.size() / 4 != bit_size_to_32bit_size(m_codimension) * m_code_length)
       {
       throw Decoding_Error("encoded parity check matrix has wrong length");
       }
@@ -285,7 +285,7 @@ bool McEliece_PublicKey::operator==(const McEliece_PublicKey& other) const
       {
       return false;
       }
-   if(m_t != other.m_t )
+   if(m_t != other.m_t)
       {
       return false;
       }

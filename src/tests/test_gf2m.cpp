@@ -37,7 +37,7 @@ class GF2m_Tests final : public Test
          * This is testing one specific case where an overflow
          * occurred. It should be extended to test more of the interface.
          */
-         for(size_t degree = 2; degree <= 16; ++degree)
+         for(size_t degree = 2; degree <= 15; ++degree)
             {
             Botan::GF2m_Field field(degree);
 
