@@ -16,7 +16,14 @@
 #include <winsock2.h>
 #include <WS2tcpip.h>
 
+typedef SOCKET socket_type;
+
+inline socket_type invalid_socket() { return INVALID_SOCKET; }
+
 typedef size_t ssize_t;
+typedef int sendrecv_len_type;
+
+inline void close_socket(socket_type s) { ::closesocket(s); }
 
 #define STDIN_FILENO _fileno(stdin)
 
@@ -40,6 +47,12 @@ inline void init_sockets()
 inline void stop_sockets()
    {
    ::WSACleanup();
+   }
+
+inline std::string err_to_string(int e)
+   {
+   // TODO use strerror_s here
+   return "Error code " + std::to_string(e);
    }
 
 inline int close(int fd)
@@ -69,8 +82,19 @@ inline int send(int s, const uint8_t* buf, size_t len, int flags)
 #include <errno.h>
 #include <fcntl.h>
 
+typedef int socket_type;
+typedef size_t sendrecv_len_type;
+
+inline socket_type invalid_socket() { return -1; }
+inline void close_socket(socket_type s) { ::close(s); }
+
 inline void init_sockets() {}
 inline void stop_sockets() {}
+
+inline std::string err_to_string(int e)
+   {
+   return std::strerror(e);
+   }
 
 #endif
 
