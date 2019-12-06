@@ -66,8 +66,8 @@ The following enum values are defined in the FFI header:
 
    .. note::
 
-      If the environment variable ``BOTAN_FFI_PRINT_EXCEPTIONS`` is
-      set, then any exception which is caught by the FFI layer will
+      If the environment variable ``BOTAN_FFI_PRINT_EXCEPTIONS`` is set to any
+      non-empty value, then any exception which is caught by the FFI layer will
       first print the exception message to stderr before returning an
       error. This is sometimes useful for debugging.
 
