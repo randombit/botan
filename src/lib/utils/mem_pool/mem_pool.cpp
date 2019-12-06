@@ -149,7 +149,7 @@ class BitMap final
       BitMap(size_t bits) : m_len(bits)
          {
          m_bits.resize((bits + BITMASK_BITS - 1) / BITMASK_BITS);
-         m_main_mask = static_cast<bitmask_type>(0) - 1; // all bits set
+         m_main_mask = static_cast<bitmask_type>(~0);
          m_last_mask = m_main_mask;
 
          if(bits % BITMASK_BITS != 0)

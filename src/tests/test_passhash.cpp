@@ -102,7 +102,7 @@ class Argon2_Tests final : public Text_Based_Test
          else if(header == "Generate")
             {
             const std::vector<uint8_t> salt = vars.get_req_bin("Salt");
-            const size_t y = vars.get_req_sz("Mode");
+            const uint8_t y = vars.get_req_u8("Mode");
             const size_t M = vars.get_req_sz("M");
             const size_t t = vars.get_req_sz("T");
             const size_t p = vars.get_req_sz("P");

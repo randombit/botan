@@ -282,7 +282,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
       }
    else
       {
-      stmt1->bind(3,-1);
+      stmt1->bind(3, static_cast<size_t>(-1));
       }
 
    stmt1->spin();

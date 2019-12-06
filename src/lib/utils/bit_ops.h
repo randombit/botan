@@ -116,12 +116,14 @@ inline size_t ctz(T n)
    }
 
 template<typename T>
-size_t ceil_log2(T x)
+uint8_t ceil_log2(T x)
    {
+   static_assert(sizeof(T) < 32, "Abnormally large scalar");
+
    if(x >> (sizeof(T)*8-1))
       return sizeof(T)*8;
 
-   size_t result = 0;
+   uint8_t result = 0;
    T compare = 1;
 
    while(compare < x)

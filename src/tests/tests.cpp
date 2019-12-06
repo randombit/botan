@@ -568,7 +568,7 @@ std::vector<uint8_t> Test::read_binary_data_file(const std::string& path)
       {
       std::vector<uint8_t> buf(4096);
       file.read(reinterpret_cast<char*>(buf.data()), buf.size());
-      size_t got = file.gcount();
+      const size_t got = static_cast<size_t>(file.gcount());
 
       if(got == 0 && file.eof())
          {
