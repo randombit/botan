@@ -208,7 +208,7 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const std::string& 
       mech.m_parameters = std::make_shared<MechanismParameters>();
       mech.m_parameters->pss_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(mechanism_info.hash);
       mech.m_parameters->pss_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mechanism_info.mgf);
-      mech.m_parameters->pss_params.sLen = mechanism_info.salt_size;
+      mech.m_parameters->pss_params.sLen = static_cast<Ulong>(mechanism_info.salt_size);
       mech.m_mechanism.pParameter = mech.m_parameters.get();
       mech.m_mechanism.ulParameterLen = sizeof(RsaPkcsPssParams);
       }

@@ -7,7 +7,6 @@
 */
 
 #include <botan/p11_object.h>
-
 #include <map>
 
 namespace Botan {
@@ -22,19 +21,21 @@ AttributeContainer::AttributeContainer(ObjectClass object_class)
 void AttributeContainer::add_class(ObjectClass object_class)
    {
    m_numerics.emplace_back(static_cast< uint64_t >(object_class));
-   add_attribute(AttributeType::Class, reinterpret_cast< uint8_t* >(&m_numerics.back()), sizeof(ObjectClass));
+   add_attribute(AttributeType::Class,
+                 reinterpret_cast< uint8_t* >(&m_numerics.back()),
+                 static_cast<Ulong>(sizeof(ObjectClass)));
    }
 
 void AttributeContainer::add_string(AttributeType attribute, const std::string& value)
    {
    m_strings.push_back(value);
-   add_attribute(attribute, reinterpret_cast< const uint8_t* >(m_strings.back().data()), value.size());
+   add_attribute(attribute, reinterpret_cast<const uint8_t*>(m_strings.back().data()), static_cast<Ulong>(value.size()));
    }
 
 void AttributeContainer::add_binary(AttributeType attribute, const uint8_t* value, size_t length)
    {
    m_vectors.push_back(secure_vector<uint8_t>(value, value + length));
-   add_attribute(attribute, reinterpret_cast< const uint8_t* >(m_vectors.back().data()), length);
+   add_attribute(attribute, reinterpret_cast< const uint8_t* >(m_vectors.back().data()), static_cast<Ulong>(length));
    }
 
 void AttributeContainer::add_bool(AttributeType attribute, bool value)
@@ -86,8 +87,9 @@ void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* v
 ObjectFinder::ObjectFinder(Session& session, const std::vector<Attribute>& search_template)
    : m_session(session), m_search_terminated(false)
    {
-   module()->C_FindObjectsInit(m_session.get().handle(), const_cast< Attribute* >(search_template.data()),
-                               search_template.size());
+   module()->C_FindObjectsInit(m_session.get().handle(),
+                               const_cast< Attribute* >(search_template.data()),
+                               static_cast<Ulong>(search_template.size()));
    }
 
 ObjectFinder::~ObjectFinder() noexcept
@@ -192,7 +194,7 @@ Object::Object(Session& session, ObjectHandle handle)
 Object::Object(Session& session, const ObjectProperties& obj_props)
    : m_session(session), m_handle(0)
    {
-   m_session.get().module()->C_CreateObject(m_session.get().handle(), obj_props.data(), obj_props.count(), &m_handle);
+   m_session.get().module()->C_CreateObject(m_session.get().handle(), obj_props.data(), static_cast<Ulong>(obj_props.count()), &m_handle);
    }
 
 secure_vector<uint8_t> Object::get_attribute_value(AttributeType attribute) const
@@ -216,7 +218,8 @@ void Object::destroy() const
 ObjectHandle Object::copy(const AttributeContainer& modified_attributes) const
    {
    ObjectHandle copied_handle;
-   module()->C_CopyObject(m_session.get().handle(), m_handle, modified_attributes.data(), modified_attributes.count(),
+   module()->C_CopyObject(m_session.get().handle(), m_handle,
+                          modified_attributes.data(), static_cast<Ulong>(modified_attributes.count()),
                           &copied_handle);
    return copied_handle;
    }
