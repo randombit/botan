@@ -10,7 +10,7 @@ openssl.h
 
 <libs>
 all!windows -> crypto
-windows -> libeay32.lib
+windows -> libeay32
 </libs>
 
 <requires>
