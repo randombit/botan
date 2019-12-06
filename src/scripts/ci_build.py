@@ -26,7 +26,8 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
-def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, root_dir, pkcs11_lib, use_gdb):
+def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
+                    ccache, root_dir, pkcs11_lib, use_gdb, disable_werror):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
     """
@@ -70,7 +71,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache, ro
              '--os=%s' % (target_os)]
     build_targets = ['cli', 'tests']
 
-    if target_cc in ['gcc', 'clang'] and target != 'gcc4.8':
+    if not disable_werror:
         flags += ['--werror-mode']
 
     if target_cpu is not None:
@@ -383,6 +384,9 @@ def parse_args(args):
     parser.add_option('--without-pylint3', dest='use_pylint3', action='store_false',
                       help='Disable using python3 pylint')
 
+    parser.add_option('--disable-werror', action='store_true', default=False,
+                      help='Allow warnings to compile')
+
     parser.add_option('--run-under-gdb', dest='use_gdb', action='store_true', default=False,
                       help='Run test suite under gdb and capture backtrace')
 
@@ -399,7 +403,7 @@ def have_prog(prog):
     return False
 
 def main(args=None):
-    # pylint: disable=too-many-branches,too-many-statements,too-many-locals,too-many-return-statements
+    # pylint: disable=too-many-branches,too-many-statements,too-many-locals,too-many-return-statements,too-many-locals
     """
     Parse options, do the things
     """
@@ -507,7 +511,7 @@ def main(args=None):
         config_flags, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
             options.cc_bin, options.compiler_cache, root_dir,
-            options.pkcs11_lib, options.use_gdb)
+            options.pkcs11_lib, options.use_gdb, options.disable_werror)
 
         cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
 

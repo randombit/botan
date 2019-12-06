@@ -5,6 +5,7 @@ sudo: required
 env:
   global:
     - CCACHE_MAXSIZE=1G
+    - PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so
 
 jobs:
   include:
@@ -129,6 +130,7 @@ jobs:
       compiler: gcc
       env:
        - TARGET="gcc4.8"
+       - EXTRA_FLAGS="--disable-werror"
 
     - os: linux
       dist: bionic
@@ -169,7 +171,7 @@ install:
   - ./src/scripts/ci/setup_travis.sh
 
 script:
-  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --without-pylint3 --pkcs11-lib=/usr/lib/softhsm/libsofthsm2.so $TARGET
+  - ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX --without-pylint3 --pkcs11-lib=$PKCS11_LIB $EXTRA_FLAGS $TARGET
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:

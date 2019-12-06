@@ -26,6 +26,7 @@ environment:
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc140-mt-x32-1_69.lib"
       MAKE_TOOL: nmake
       TARGET_CC: msvc
+      EXTRA_FLAGS: "--disable-werror"
 
     # MSVC 2017 DLL x86-32
     - CC: VC2017
@@ -80,7 +81,7 @@ install:
   - call src\scripts\ci\setup_appveyor.bat
 
 build_script:
-  - python src\scripts\ci_build.py --os=windows --cc=%TARGET_CC% --without-python3 --compiler-cache=sccache --make-tool=%MAKE_TOOL% --cpu=%PLATFORM% %TARGET%
+  - python src\scripts\ci_build.py --os=windows --cc=%TARGET_CC% --without-python3 --compiler-cache=sccache --make-tool=%MAKE_TOOL% --cpu=%PLATFORM% %EXTRA_FLAGS% %TARGET%
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
