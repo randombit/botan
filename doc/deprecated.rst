@@ -63,6 +63,8 @@ in a future major release.
 
 - DLIES
 
+- MCEIES
+
 - GOST 34.11-94 hash
 
 - CBC-MAC
