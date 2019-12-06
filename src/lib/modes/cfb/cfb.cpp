@@ -82,7 +82,7 @@ void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   verify_key_set(m_keystream.size());
+   verify_key_set(!m_keystream.empty());
 
    if(nonce_len == 0)
       {
@@ -116,7 +116,7 @@ void CFB_Mode::shift_register()
 
 size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    {
-   verify_key_set(m_keystream.size());
+   verify_key_set(!m_keystream.empty());
    BOTAN_STATE_CHECK(m_state.empty() == false);
 
    const size_t shift = feedback();
@@ -181,7 +181,7 @@ inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len)
 
 size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    {
-   verify_key_set(m_keystream.size());
+   verify_key_set(!m_keystream.empty());
    BOTAN_STATE_CHECK(m_state.empty() == false);
 
    const size_t shift = feedback();

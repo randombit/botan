@@ -96,7 +96,7 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
 void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
                          const uint8_t input[], size_t length)
    {
-   verify_key_set(m_HM.size());
+   verify_key_set(!m_HM.empty());
 
    /*
    This assumes if less than block size input then we're just on the
