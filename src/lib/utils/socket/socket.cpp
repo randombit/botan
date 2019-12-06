@@ -139,6 +139,7 @@ class BSD_Socket final : public OS::Socket
       typedef SOCKET socket_type;
       typedef int socket_op_ret_type;
       typedef int socklen_type;
+      typedef int sendrecv_len_type;
       static socket_type invalid_socket() { return INVALID_SOCKET; }
       static void close_socket(socket_type s) { ::closesocket(s); }
       static std::string get_last_socket_error() { return std::to_string(::WSAGetLastError()); }
@@ -179,6 +180,7 @@ class BSD_Socket final : public OS::Socket
       typedef int socket_type;
       typedef ssize_t socket_op_ret_type;
       typedef socklen_t socklen_type;
+      typedef size_t sendrecv_len_type;
       static socket_type invalid_socket() { return -1; }
       static void close_socket(socket_type s) { ::close(s); }
       static std::string get_last_socket_error() { return ::strerror(errno); }
@@ -243,7 +245,7 @@ class BSD_Socket final : public OS::Socket
                   // Weirdly, Winsock uses a SOCKET type but wants FD_SET to get an int instead
                   FD_SET(static_cast<int>(m_socket), &write_set);
 
-                  active = ::select(m_socket + 1, nullptr, &write_set, nullptr, &timeout_tv);
+                  active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout_tv);
 
                   if(active)
                      {
@@ -295,13 +297,13 @@ class BSD_Socket final : public OS::Socket
          while(sent_so_far != len)
             {
             struct timeval timeout = make_timeout_tv();
-            int active = ::select(m_socket + 1, nullptr, &write_set, nullptr, &timeout);
+            int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
 
             if(active == 0)
                throw System_Error("Timeout during socket write");
 
             const size_t left = len - sent_so_far;
-            socket_op_ret_type sent = ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), left, 0);
+            socket_op_ret_type sent = ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), static_cast<sendrecv_len_type>(left), 0);
             if(sent < 0)
                throw System_Error("Socket write failed", errno);
             else
@@ -316,12 +318,12 @@ class BSD_Socket final : public OS::Socket
          FD_SET(m_socket, &read_set);
 
          struct timeval timeout = make_timeout_tv();
-         int active = ::select(m_socket + 1, &read_set, nullptr, nullptr, &timeout);
+         int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
 
          if(active == 0)
             throw System_Error("Timeout during socket read");
 
-         socket_op_ret_type got = ::recv(m_socket, cast_uint8_ptr_to_char(buf), len, 0);
+         socket_op_ret_type got = ::recv(m_socket, cast_uint8_ptr_to_char(buf), static_cast<sendrecv_len_type>(len), 0);
 
          if(got < 0)
             throw System_Error("Socket read failed", errno);
@@ -333,8 +335,8 @@ class BSD_Socket final : public OS::Socket
       struct timeval make_timeout_tv() const
          {
          struct timeval tv;
-         tv.tv_sec = static_cast<time_t>(m_timeout.count() / 1000000);
-         tv.tv_usec = static_cast<long>(m_timeout.count() % 1000000);;
+         tv.tv_sec = static_cast<decltype(timeval::tv_sec)>(m_timeout.count() / 1000000);
+         tv.tv_usec = static_cast<decltype(timeval::tv_usec)>(m_timeout.count() % 1000000);;
          return tv;
          }
 

@@ -175,7 +175,7 @@ class BSD_SocketUDP final : public OS::SocketUDP
 
             set_nonblocking(m_socket);
             memcpy(&sa, res->ai_addr, res->ai_addrlen);
-            salen=res->ai_addrlen;
+            salen = static_cast<socklen_t>(res->ai_addrlen);
             }
 
          ::freeaddrinfo(res);
@@ -204,13 +204,13 @@ class BSD_SocketUDP final : public OS::SocketUDP
          while(sent_so_far != len)
             {
             struct timeval timeout = make_timeout_tv();
-            int active = ::select(m_socket + 1, nullptr, &write_set, nullptr, &timeout);
+            int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
 
             if(active == 0)
                { throw System_Error("Timeout during socket write"); }
 
             const size_t left = len - sent_so_far;
-            socket_op_ret_type sent = ::sendto(m_socket, cast_uint8_ptr_to_char(buf + sent_so_far), left, 0, (sockaddr*)&sa, salen);
+            socket_op_ret_type sent = ::sendto(m_socket, cast_uint8_ptr_to_char(buf + sent_so_far), static_cast<sendrecv_len_type>(left), 0, (sockaddr*)&sa, salen);
             if(sent < 0)
                { throw System_Error("Socket write failed", errno); }
             else
@@ -225,12 +225,12 @@ class BSD_SocketUDP final : public OS::SocketUDP
          FD_SET(m_socket, &read_set);
 
          struct timeval timeout = make_timeout_tv();
-         int active = ::select(m_socket + 1, &read_set, nullptr, nullptr, &timeout);
+         int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
 
          if(active == 0)
             { throw System_Error("Timeout during socket read"); }
 
-         socket_op_ret_type got = ::recvfrom(m_socket, cast_uint8_ptr_to_char(buf), len, 0, nullptr, nullptr);
+         socket_op_ret_type got = ::recvfrom(m_socket, cast_uint8_ptr_to_char(buf), static_cast<sendrecv_len_type>(len), 0, nullptr, nullptr);
 
          if(got < 0)
             { throw System_Error("Socket read failed", errno); }
@@ -242,6 +242,7 @@ class BSD_SocketUDP final : public OS::SocketUDP
 #if defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
       typedef SOCKET socket_type;
       typedef int socket_op_ret_type;
+      typedef int sendrecv_len_type;
       static socket_type invalid_socket() { return INVALID_SOCKET; }
       static void close_socket(socket_type s) { ::closesocket(s); }
       static std::string get_last_socket_error() { return std::to_string(::WSAGetLastError()); }
@@ -281,6 +282,7 @@ class BSD_SocketUDP final : public OS::SocketUDP
 #else
       typedef int socket_type;
       typedef ssize_t socket_op_ret_type;
+      typedef size_t sendrecv_len_type;
       static socket_type invalid_socket() { return -1; }
       static void close_socket(socket_type s) { ::close(s); }
       static std::string get_last_socket_error() { return ::strerror(errno); }
@@ -299,8 +301,8 @@ class BSD_SocketUDP final : public OS::SocketUDP
       struct timeval make_timeout_tv() const
          {
          struct timeval tv;
-         tv.tv_sec = m_timeout.count() / 1000000;
-         tv.tv_usec = m_timeout.count() % 1000000;
+         tv.tv_sec = static_cast<decltype(timeval::tv_sec)>(m_timeout.count() / 1000000);
+         tv.tv_usec = static_cast<decltype(timeval::tv_usec)>(m_timeout.count() % 1000000);;
          return tv;
          }
 
