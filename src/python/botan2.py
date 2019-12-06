@@ -1395,6 +1395,7 @@ class X509Cert(object): # pylint: disable=invalid-name
                hostname=None,
                reference_time=0,
                crls=None):
+        #pylint: disable=too-many-locals
 
         if intermediates is not None:
             c_intermediates = len(intermediates) * c_void_p

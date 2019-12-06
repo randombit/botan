@@ -17,7 +17,7 @@ def hex_decode(buf):
     return binascii.unhexlify(buf.encode('ascii'))
 
 class BotanPythonTests(unittest.TestCase):
-    # pylint: disable=too-many-public-methods
+    # pylint: disable=too-many-public-methods,too-many-locals
 
     def test_version(self):
         version_str = botan2.version_string()
