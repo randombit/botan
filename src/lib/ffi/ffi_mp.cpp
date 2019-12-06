@@ -106,7 +106,7 @@ int botan_mp_to_hex(const botan_mp_t mp, char* out)
 
 int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* out_len)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
+   return BOTAN_FFI_RETURNING(Botan::BigInt, mp, bn, {
 
       if(digit_base == 0 || digit_base == 10)
          return write_str_output(out, out_len, bn.to_dec_string());
@@ -199,22 +199,22 @@ int botan_mp_div(botan_mp_t quotient,
 
 int botan_mp_equal(const botan_mp_t x_w, const botan_mp_t y_w)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, x_w, x, { return x == safe_get(y_w); });
+   return BOTAN_FFI_RETURNING(Botan::BigInt, x_w, x, { return x == safe_get(y_w); });
    }
 
 int botan_mp_is_zero(const botan_mp_t mp)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { return bn.is_zero(); });
+   return BOTAN_FFI_RETURNING(Botan::BigInt, mp, bn, { return bn.is_zero(); });
    }
 
 int botan_mp_is_odd(const botan_mp_t mp)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { return bn.is_odd(); });
+   return BOTAN_FFI_RETURNING(Botan::BigInt, mp, bn, { return bn.is_odd(); });
    }
 
 int botan_mp_is_even(const botan_mp_t mp)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { return bn.is_even(); });
+   return BOTAN_FFI_RETURNING(Botan::BigInt, mp, bn, { return bn.is_even(); });
    }
 
 int botan_mp_cmp(int* result, const botan_mp_t x_w, const botan_mp_t y_w)
@@ -280,13 +280,13 @@ int botan_mp_gcd(botan_mp_t out, const botan_mp_t x, const botan_mp_t y)
 
 int botan_mp_is_prime(const botan_mp_t mp, botan_rng_t rng, size_t test_prob)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, mp, n,
+   return BOTAN_FFI_RETURNING(Botan::BigInt, mp, n,
                        { return (Botan::is_prime(n, safe_get(rng), test_prob)) ? 1 : 0; });
    }
 
 int botan_mp_get_bit(const botan_mp_t mp, size_t bit)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, mp, n, { return (n.get_bit(bit)); });
+   return BOTAN_FFI_RETURNING(Botan::BigInt, mp, n, { return (n.get_bit(bit)); });
    }
 
 int botan_mp_set_bit(botan_mp_t mp, size_t bit)

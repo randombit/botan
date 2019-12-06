@@ -185,7 +185,7 @@ int botan_pk_op_verify_update(botan_pk_op_verify_t op, const uint8_t in[], size_
 
 int botan_pk_op_verify_finish(botan_pk_op_verify_t op, const uint8_t sig[], size_t sig_len)
    {
-   return BOTAN_FFI_DO(Botan::PK_Verifier, op, o, {
+   return BOTAN_FFI_RETURNING(Botan::PK_Verifier, op, o, {
       const bool legit = o.check_signature(sig, sig_len);
 
       if(legit)

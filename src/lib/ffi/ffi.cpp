@@ -18,7 +18,8 @@ namespace Botan_FFI {
 
 int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc)
    {
-   if(Botan::OS::read_env_variable("BOTAN_FFI_PRINT_EXCEPTIONS") != nullptr)
+   std::string val;
+   if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && val != "")
       {
       std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc);
       }

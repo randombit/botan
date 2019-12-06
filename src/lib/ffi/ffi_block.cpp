@@ -61,8 +61,8 @@ int botan_block_cipher_set_key(botan_block_cipher_t bc,
 */
 int botan_block_cipher_block_size(botan_block_cipher_t bc)
    {
-   return BOTAN_FFI_DO(Botan::BlockCipher, bc, b,
-                       { return static_cast<int>(b.block_size()); });
+   return BOTAN_FFI_RETURNING(Botan::BlockCipher, bc, b,
+                              { return static_cast<int>(b.block_size()); });
    }
 
 int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc,
