@@ -200,11 +200,11 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    NEON registers v0-v7 are caller saved in Aarch64
    */
 
-   auto neon_probe  = []() -> int { asm("and v0.16b, v0.16b, v0.16b"); return 1; };
-   auto aes_probe   = []() -> int { asm(".word 0x4e284800"); return 1; };
-   auto pmull_probe = []() -> int { asm(".word 0x0ee0e000"); return 1; };
-   auto sha1_probe  = []() -> int { asm(".word 0x5e280800"); return 1; };
-   auto sha2_probe  = []() -> int { asm(".word 0x5e282800"); return 1; };
+   auto neon_probe  = []() noexcept -> int { asm("and v0.16b, v0.16b, v0.16b"); return 1; };
+   auto aes_probe   = []() noexcept -> int { asm(".word 0x4e284800"); return 1; };
+   auto pmull_probe = []() noexcept -> int { asm(".word 0x0ee0e000"); return 1; };
+   auto sha1_probe  = []() noexcept -> int { asm(".word 0x5e280800"); return 1; };
+   auto sha2_probe  = []() noexcept -> int { asm(".word 0x5e282800"); return 1; };
 
    // Only bother running the crypto detection if we found NEON
 

@@ -99,7 +99,7 @@ class OS_Utils_Tests final : public Test
 
          // TODO better tests
          const uint64_t hr_ts1 = Botan::OS::get_high_resolution_clock();
-         result.test_ne("high resolution timestamp value is never zero", hr_ts1, 0);
+         result.confirm("high resolution timestamp value is never zero", hr_ts1 != 0);
 
          size_t counts = 0;
          while(counts < max_trials && (Botan::OS::get_high_resolution_clock() == hr_ts1))
@@ -128,7 +128,7 @@ class OS_Utils_Tests final : public Test
          Test::Result result("OS::get_system_timestamp_ns");
 
          uint64_t sys_ts1 = Botan::OS::get_system_timestamp_ns();
-         result.test_ne("System timestamp value is never zero", sys_ts1, 0);
+         result.confirm("System timestamp value is never zero", sys_ts1 != 0);
 
          // do something that consumes a little time
          Botan::OS::get_process_id();
@@ -155,7 +155,7 @@ class OS_Utils_Tests final : public Test
 
          // OS::run_cpu_instruction_probe only implemented for Unix signals or Windows SEH
 
-         std::function<int ()> ok_fn = []() -> int { return 5; };
+         std::function<int ()> ok_fn = []() noexcept -> int { return 5; };
          const int run_rc = Botan::OS::run_cpu_instruction_probe(ok_fn);
 
          if(run_rc == -3)
@@ -169,17 +169,17 @@ class OS_Utils_Tests final : public Test
          std::function<int ()> crash_probe;
 
 #if defined(BOTAN_TARGET_COMPILER_IS_MSVC)
-         crash_probe = []() -> int { __ud2(); return 3; };
+         crash_probe = []() noexcept -> int { __ud2(); return 3; };
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-         crash_probe = []() -> int { asm volatile("ud2"); return 3; };
+         crash_probe = []() noexcept -> int { asm volatile("ud2"); return 3; };
 
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
          //ARM: asm volatile (".word 0xf7f0a000\n");
          // illegal instruction in both ARM and Thumb modes
-         crash_probe = []() -> int { asm volatile(".word 0xe7f0def0\n"); return 3; };
+         crash_probe = []() noexcept -> int { asm volatile(".word 0xe7f0def0\n"); return 3; };
 
 #else
          /*

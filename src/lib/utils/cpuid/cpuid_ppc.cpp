@@ -86,7 +86,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    (others, too, maybe?) will trap and emulate it for us.
    */
 
-   int pvr = OS::run_cpu_instruction_probe([]() -> int {
+   int pvr = OS::run_cpu_instruction_probe([]() noexcept -> int {
       uint32_t pvr = 0;
       asm volatile("mfspr %0, 287" : "=r" (pvr));
       // Top 16 bits suffice to identify the model
