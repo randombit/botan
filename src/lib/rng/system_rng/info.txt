@@ -10,7 +10,7 @@ crypto_ng
 </os_features>
 
 <libs>
-uwp -> bcrypt.lib
+uwp -> bcrypt
 </libs>
 
 <requires>

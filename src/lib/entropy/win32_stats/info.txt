@@ -15,5 +15,5 @@ win32
 </os_features>
 
 <libs>
-windows -> user32.lib
+windows -> user32
 </libs>

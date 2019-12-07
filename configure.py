@@ -1138,7 +1138,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'add_lib_dir_option': '-L',
                 'add_compile_definition_option': '-D',
                 'add_sysroot_option': '',
-                'add_lib_option': '-l',
+                'add_lib_option': '-l%s',
                 'add_framework_option': '-framework ',
                 'preproc_flags': '-E',
                 'compile_flags': '-c',
@@ -2120,7 +2120,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'ar_output_to': cc.ar_output_to,
 
         'link_to': ' '.join(
-            [cc.add_lib_option + lib for lib in link_to('libs')] +
+            [(cc.add_lib_option % lib) for lib in link_to('libs')] +
             [cc.add_framework_option + fw for fw in link_to('frameworks')]
         ),
 
@@ -2129,7 +2129,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             [('"' + cc.add_framework_option + fw + '"') for fw in link_to('frameworks')]
         ),
 
-        'fuzzer_lib': (cc.add_lib_option + options.fuzzer_lib) if options.fuzzer_lib else '',
+        'fuzzer_lib': (cc.add_lib_option % options.fuzzer_lib) if options.fuzzer_lib else '',
         'libs_used': [lib.replace('.lib', '') for lib in link_to('libs')],
 
         'include_paths': build_paths.format_include_paths(cc, options.with_external_includedir),
@@ -2198,8 +2198,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         # llvm-link and msvc require just naming the file directly
         variables['link_to_botan'] = os.path.join(build_dir, variables['static_lib_name'])
     else:
-        variables['link_to_botan'] = '%s%s %s%s' % (cc.add_lib_dir_option, build_dir,
-                                                    cc.add_lib_option, variables['libname'])
+        variables['link_to_botan'] = '%s%s %s' % (cc.add_lib_dir_option, build_dir,
+                                                  (cc.add_lib_option % variables['libname']))
 
     return variables
 
