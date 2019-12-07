@@ -181,6 +181,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
         elif target == 'cross-i386':
             flags += ['--cpu=x86_32']
+        elif target == 'cross-arm32':
+            flags += ['--cpu=armv7']
+            cc_bin = 'arm-linux-gnueabihf-g++'
 
         elif target == 'cross-win64':
             # MinGW in 16.04 is lacking std::mutex for unknown reason
@@ -193,11 +196,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             # Build everything but restrict what is run
             test_cmd += essential_tests
 
-            if target == 'cross-arm32':
-                flags += ['--cpu=armv7']
-                cc_bin = 'arm-linux-gnueabihf-g++'
-                test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
-            elif target == 'cross-arm64':
+            if target == 'cross-arm64':
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
                 test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']

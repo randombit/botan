@@ -33,8 +33,9 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get install wine-development g++-mingw-w64-x86-64
 
     elif [ "$TARGET" = "cross-arm32" ]; then
+        sudo dpkg --add-architecture armhf
         sudo apt-get -qq update
-        sudo apt-get install qemu-user g++-arm-linux-gnueabihf
+        sudo apt-get install g++-arm-linux-gnueabihf libc6:armhf libstdc++6:armhf
 
     elif [ "$TARGET" = "cross-arm64" ]; then
         sudo apt-get -qq update
