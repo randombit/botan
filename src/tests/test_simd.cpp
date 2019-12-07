@@ -36,6 +36,13 @@ class SIMD_32_Tests final : public Test
          const uint32_t pat3 = 0x01234567;
          const uint32_t pat4 = 0xC0D0E0F0;
 
+         // pat1 + pat{1,2,3,4}
+         // precomputed to avoid integer overflow warnings
+         const uint32_t pat1_1 = 0x557799BA;
+         const uint32_t pat1_2 = 0x32210FFE;
+         const uint32_t pat1_3 = 0xABDF1244;
+         const uint32_t pat1_4 = 0x6B8CADCD;
+
          test_eq(result, "default init", Botan::SIMD_4x32(), 0, 0, 0, 0);
          test_eq(result, "SIMD scalar constructor", Botan::SIMD_4x32(1, 2, 3, 4), 1, 2, 3, 4);
 
@@ -62,13 +69,13 @@ class SIMD_32_Tests final : public Test
                  Botan::rotr<9>(pat4));
 
          Botan::SIMD_4x32 add = input + splat;
-         test_eq(result, "add +", add, pat1 + pat1, pat2 + pat1, pat3 + pat1, pat4 + pat1);
+         test_eq(result, "add +", add, pat1_1, pat1_2, pat1_3, pat1_4);
 
          add -= splat;
          test_eq(result, "sub -=", add, pat1, pat2, pat3, pat4);
 
          add += splat;
-         test_eq(result, "add +=", add, pat1 + pat1, pat2 + pat1, pat3 + pat1, pat4 + pat1);
+         test_eq(result, "add +=", add, pat1_1, pat1_2, pat1_3, pat1_4);
 
          test_eq(result, "xor", input ^ splat, 0, pat2 ^ pat1, pat3 ^ pat1, pat4 ^ pat1);
          test_eq(result, "or", input | splat, pat1, pat2 | pat1, pat3 | pat1, pat4 | pat1);

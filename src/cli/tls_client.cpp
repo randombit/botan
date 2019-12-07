@@ -8,8 +8,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && \
-   (defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2))
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
 #include <botan/tls_client.h>
 #include <botan/tls_policy.h>
@@ -195,7 +194,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
             struct timeval timeout = { 1, 0 };
 
-            ::select(m_sockfd + 1, &readfds, nullptr, nullptr, &timeout);
+            ::select(static_cast<int>(m_sockfd + 1), &readfds, nullptr, nullptr, &timeout);
 
             if(FD_ISSET(m_sockfd, &readfds))
                {
@@ -210,7 +209,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                   }
                else if(got == -1)
                   {
-                  output() << "Socket error: " << errno << " " << std::strerror(errno) << "\n";
+                  output() << "Socket error: " << errno << " " << err_to_string(errno) << "\n";
                   continue;
                   }
 
@@ -230,7 +229,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                   }
                else if(got == -1)
                   {
-                  output() << "Stdin error: " << errno << " " << std::strerror(errno) << "\n";
+                  output() << "Stdin error: " << errno << " " << err_to_string(errno) << "\n";
                   continue;
                   }
 
@@ -265,7 +264,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          }
 
    private:
-      int connect_to_host(const std::string& host, uint16_t port, bool tcp)
+      socket_type connect_to_host(const std::string& host, uint16_t port, bool tcp)
          {
          addrinfo hints;
          Botan::clear_mem(&hints, 1);
@@ -278,18 +277,18 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             throw CLI_Error("getaddrinfo failed for " + host);
             }
 
-         int fd = 0;
+         socket_type fd = 0;
 
          for(rp = res; rp != nullptr; rp = rp->ai_next)
             {
             fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
-            if(fd == -1)
+            if(fd == invalid_socket())
                {
                continue;
                }
 
-            if(::connect(fd, rp->ai_addr, rp->ai_addrlen) != 0)
+            if(::connect(fd, rp->ai_addr, static_cast<socklen_t>(rp->ai_addrlen)) != 0)
                {
                ::close(fd);
                continue;
@@ -427,7 +426,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             }
          }
 
-      int m_sockfd = -1;
+      socket_type m_sockfd = invalid_socket();
    };
 
 BOTAN_REGISTER_COMMAND("tls_client", TLS_Client);

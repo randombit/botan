@@ -79,7 +79,7 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature
             m_first_message.clear();
             }
 
-         m_key.module()->C_SignUpdate(m_key.session().handle(), const_cast<Byte*>(msg), msg_len);
+         m_key.module()->C_SignUpdate(m_key.session().handle(), const_cast<Byte*>(msg), static_cast<Ulong>(msg_len));
          }
 
       secure_vector<uint8_t> sign(RandomNumberGenerator&) override
@@ -136,7 +136,7 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
             m_first_message.clear();
             }
 
-         m_key.module()->C_VerifyUpdate(m_key.session().handle(), const_cast<Byte*>(msg), msg_len);
+         m_key.module()->C_VerifyUpdate(m_key.session().handle(), const_cast<Byte*>(msg), static_cast<Ulong>(msg_len));
          }
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override
@@ -145,14 +145,16 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification
          if(!m_first_message.empty())
             {
             // single call to update: perform single-part operation
-            m_key.module()->C_Verify(m_key.session().handle(), m_first_message.data(), m_first_message.size(),
-                                     const_cast<Byte*>(sig), sig_len, &return_value);
+            m_key.module()->C_Verify(m_key.session().handle(),
+                                     m_first_message.data(), static_cast<Ulong>(m_first_message.size()),
+                                     const_cast<Byte*>(sig), static_cast<Ulong>(sig_len),
+                                     &return_value);
             m_first_message.clear();
             }
          else
             {
             // multiple calls to update (or none): finish multiple-part operation
-            m_key.module()->C_VerifyFinal(m_key.session().handle(), const_cast<Byte*>(sig), sig_len, &return_value);
+            m_key.module()->C_VerifyFinal(m_key.session().handle(), const_cast<Byte*>(sig), static_cast<Ulong>(sig_len), &return_value);
             }
          m_initialized = false;
          if(return_value != ReturnValue::OK && return_value != ReturnValue::SignatureInvalid)
@@ -196,7 +198,8 @@ PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session, const EC_PublicKey
    Mechanism mechanism = { static_cast<CK_MECHANISM_TYPE>(MechanismType::EcKeyPairGen), nullptr, 0 };
 
    session.module()->C_GenerateKeyPair(session.handle(), &mechanism,
-                                       pub_props.data(), pub_props.count(), priv_props.data(), priv_props.count(),
+                                       pub_props.data(), static_cast<Ulong>(pub_props.count()),
+                                       priv_props.data(), static_cast<Ulong>(priv_props.count()),
                                        &pub_key_handle, &priv_key_handle);
 
    return std::make_pair(PKCS11_ECDSA_PublicKey(session, pub_key_handle), PKCS11_ECDSA_PrivateKey(session,

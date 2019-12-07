@@ -80,7 +80,7 @@ int botan_hotp_check(botan_hotp_t hotp,
                      size_t resync_range)
    {
 #if defined(BOTAN_HAS_HOTP)
-   return BOTAN_FFI_DO(Botan::HOTP, hotp, h, {
+   return BOTAN_FFI_RETURNING(Botan::HOTP, hotp, h, {
 
       auto resp = h.verify_hotp(hotp_code, hotp_counter, resync_range);
 

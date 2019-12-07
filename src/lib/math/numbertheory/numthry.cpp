@@ -93,7 +93,7 @@ BigInt gcd(const BigInt& a, const BigInt& b)
       f.shrink_to_fit();
       sub_abs(newg, f, g);
 
-      const uint8_t need_swap = (g.is_odd() && delta > 0);
+      const bool need_swap = (g.is_odd() && delta > 0);
 
       // if(need_swap) delta *= -1
       delta *= CT::Mask<uint8_t>::expand(need_swap).select(0, 2) - 1;

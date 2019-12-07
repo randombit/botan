@@ -23,9 +23,9 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
    public:
       explicit McEliece_PublicKey(const std::vector<uint8_t>& key_bits);
 
-      McEliece_PublicKey(const std::vector<uint8_t>& pub_matrix, uint32_t the_t, uint32_t the_code_length) :
+      McEliece_PublicKey(const std::vector<uint8_t>& pub_matrix, size_t t, size_t the_code_length) :
          m_public_matrix(pub_matrix),
-         m_t(the_t),
+         m_t(t),
          m_code_length(the_code_length){}
 
       McEliece_PublicKey(const McEliece_PublicKey& other) = default;
@@ -46,9 +46,9 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
       bool check_key(RandomNumberGenerator&, bool) const override
          { return true; }
 
-      uint32_t get_t() const { return m_t; }
-      uint32_t get_code_length() const { return m_code_length; }
-      uint32_t get_message_word_bit_length() const;
+      size_t get_t() const { return m_t; }
+      size_t get_code_length() const { return m_code_length; }
+      size_t get_message_word_bit_length() const;
       const std::vector<uint8_t>& get_public_matrix() const { return m_public_matrix; }
 
       bool operator==(const McEliece_PublicKey& other) const;
@@ -63,8 +63,8 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
       McEliece_PublicKey() : m_t(0), m_code_length(0) {}
 
       std::vector<uint8_t> m_public_matrix;
-      uint32_t m_t;
-      uint32_t m_code_length;
+      size_t m_t;
+      size_t m_code_length;
    };
 
 class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_PublicKey,
@@ -101,9 +101,9 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
       std::vector<gf2m> const& get_Linv() const { return m_Linv; }
       std::vector<polyn_gf2m> const& get_sqrtmod() const { return m_sqrtmod; }
 
-      inline uint32_t get_dimension() const { return m_dimension; }
+      inline size_t get_dimension() const { return m_dimension; }
 
-      inline uint32_t get_codimension() const { return m_codimension; }
+      inline size_t get_codimension() const { return m_codimension; }
 
       secure_vector<uint8_t> private_key_bits() const override;
 
@@ -121,8 +121,8 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
       std::vector<gf2m> m_Linv;
       std::vector<uint32_t> m_coeffs;
 
-      uint32_t m_codimension;
-      uint32_t m_dimension;
+      size_t m_codimension;
+      size_t m_dimension;
    };
 
 /**

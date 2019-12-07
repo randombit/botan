@@ -21,7 +21,7 @@ MDx_HashFunction::MDx_HashFunction(size_t block_len,
                                    uint8_t cnt_size) :
    m_pad_char(bit_big_endian == true ? 0x80 : 0x01),
    m_counter_size(cnt_size),
-   m_block_bits(static_cast<uint8_t>(ceil_log2(block_len))),
+   m_block_bits(ceil_log2(block_len)),
    m_count_big_endian(byte_big_endian),
    m_count(0),
    m_buffer(block_len),

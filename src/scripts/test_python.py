@@ -522,7 +522,7 @@ ofvkP1EDmpx50fHLawIDAQAB
 
 
     def test_mpi(self):
-        # pylint: disable=too-many-statements
+        # pylint: disable=too-many-statements,too-many-locals
         z = botan2.MPI()
         self.assertEqual(z.bit_count(), 0)
         five = botan2.MPI('5')

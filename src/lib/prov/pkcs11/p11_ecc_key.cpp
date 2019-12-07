@@ -95,7 +95,8 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, const std::vector<u
    ObjectHandle priv_key_handle = CK_INVALID_HANDLE;
    Mechanism mechanism = { CKM_EC_KEY_PAIR_GEN, nullptr, 0 };
    session.module()->C_GenerateKeyPair(session.handle(), &mechanism,
-                                       pub_key_props.data(), pub_key_props.count(), props.data(), props.count(),
+                                       pub_key_props.data(), static_cast<Ulong>(pub_key_props.count()),
+                                       props.data(), static_cast<Ulong>(props.count()),
                                        &pub_key_handle, &priv_key_handle);
 
    this->reset_handle(priv_key_handle);

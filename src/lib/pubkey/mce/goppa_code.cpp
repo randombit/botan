@@ -17,18 +17,19 @@ namespace Botan {
 namespace {
 
 void matrix_arr_mul(std::vector<uint32_t> matrix,
-                    uint32_t numo_rows,
-                    uint32_t words_per_row,
-                    const uint8_t* input_vec,
-                    uint32_t* output_vec, uint32_t output_vec_len)
+                    size_t numo_rows,
+                    size_t words_per_row,
+                    const uint8_t input_vec[],
+                    uint32_t output_vec[],
+                    size_t output_vec_len)
    {
    for(size_t j = 0; j < numo_rows; j++)
       {
       if((input_vec[j / 8] >> (j % 8)) & 1)
          {
-         for(size_t i = 0; i < output_vec_len; i ++)
+         for(size_t i = 0; i < output_vec_len; i++)
             {
-            output_vec[i] ^= matrix[ j * (words_per_row) + i];
+            output_vec[i] ^= matrix[j * (words_per_row) + i];
             }
          }
       }
@@ -42,8 +43,8 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
                                  const std::vector<polyn_gf2m> & sqrtmod,
                                  const std::vector<gf2m> & Linv)
    {
+   const size_t code_length = Linv.size();
    gf2m a;
-   uint32_t code_length = Linv.size();
    uint32_t t = g.get_degree();
 
    std::shared_ptr<GF2m_Field> sp_field = g.get_sp_field();
@@ -164,13 +165,13 @@ void mceliece_decrypt(
 * array */
 secure_vector<uint8_t> mceliece_decrypt(
    secure_vector<gf2m> & error_pos,
-   const uint8_t *ciphertext, uint32_t ciphertext_len,
+   const uint8_t *ciphertext, size_t ciphertext_len,
    const McEliece_PrivateKey & key)
    {
 
-   uint32_t dimension = key.get_dimension();
-   uint32_t codimension = key.get_codimension();
-   uint32_t t = key.get_goppa_polyn().get_degree();
+   const size_t dimension = key.get_dimension();
+   const size_t codimension = key.get_codimension();
+   const uint32_t t = key.get_goppa_polyn().get_degree();
    polyn_gf2m syndrome_polyn(key.get_goppa_polyn().get_sp_field()); // init as zero polyn
    const unsigned unused_pt_bits = dimension % 8;
    const uint8_t unused_pt_bits_mask = (1 << unused_pt_bits) - 1;
@@ -179,7 +180,7 @@ secure_vector<uint8_t> mceliece_decrypt(
       {
       throw Invalid_Argument("wrong size of McEliece ciphertext");
       }
-   uint32_t cleartext_len = (key.get_message_word_bit_length()+7)/8;
+   const size_t cleartext_len = (key.get_message_word_bit_length()+7)/8;
 
    if(cleartext_len != bit_size_to_byte_size(dimension))
       {
@@ -194,10 +195,10 @@ secure_vector<uint8_t> mceliece_decrypt(
                   syndrome_vec.data(), syndrome_vec.size());
 
    secure_vector<uint8_t> syndrome_byte_vec(bit_size_to_byte_size(codimension));
-   uint32_t syndrome_byte_vec_size = syndrome_byte_vec.size();
-   for(uint32_t i = 0; i < syndrome_byte_vec_size; i++)
+   const size_t syndrome_byte_vec_size = syndrome_byte_vec.size();
+   for(size_t i = 0; i < syndrome_byte_vec_size; i++)
       {
-      syndrome_byte_vec[i] = static_cast<uint8_t>(syndrome_vec[i/4] >> (8* (i % 4)));
+      syndrome_byte_vec[i] = static_cast<uint8_t>(syndrome_vec[i/4] >> (8 * (i % 4)));
       }
 
    syndrome_polyn = polyn_gf2m(t-1, syndrome_byte_vec.data(), bit_size_to_byte_size(codimension), key.get_goppa_polyn().get_sp_field());
@@ -205,12 +206,12 @@ secure_vector<uint8_t> mceliece_decrypt(
    syndrome_polyn.get_degree();
    error_pos = goppa_decode(syndrome_polyn, key.get_goppa_polyn(), key.get_sqrtmod(), key.get_Linv());
 
-   uint32_t nb_err = error_pos.size();
+   const size_t nb_err = error_pos.size();
 
    secure_vector<uint8_t> cleartext(cleartext_len);
    copy_mem(cleartext.data(), ciphertext, cleartext_len);
 
-   for(uint32_t i = 0; i < nb_err; i++)
+   for(size_t i = 0; i < nb_err; i++)
       {
       gf2m current = error_pos[i];
 

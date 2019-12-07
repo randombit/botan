@@ -10,7 +10,7 @@
 #include "sandbox.h"
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && \
-   (defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2))
+   defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
 #if defined(SO_USER_COOKIE)
 #define SOCKET_ID 1
@@ -22,6 +22,7 @@
 #include <botan/tls_policy.h>
 #include <botan/hex.h>
 #include <botan/internal/os_utils.h>
+#include <botan/mem_ops.h>
 
 #include <list>
 #include <fstream>
@@ -91,7 +92,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
             return;
             }
 
-         int server_fd = make_server_socket(port);
+         socket_type server_fd = make_server_socket(port);
          size_t clients_served = 0;
 
          while(true)
@@ -119,7 +120,8 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                peek_len = sizeof(dummy);
 #endif
 
-               if(::recvfrom(server_fd, static_cast<char*>(peek_buf), peek_len, MSG_PEEK, reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
+               if(::recvfrom(server_fd, static_cast<char*>(peek_buf), static_cast<sendrecv_len_type>(peek_len),
+                             MSG_PEEK, reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
                   {
                   throw CLI_Error("Could not peek next packet");
                   }
@@ -158,11 +160,11 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                   try
                      {
                      uint8_t buf[4 * 1024] = { 0 };
-                     ssize_t got = ::read(m_socket, buf, sizeof(buf));
+                     ssize_t got = ::recv(m_socket, Botan::cast_uint8_ptr_to_char(buf), sizeof(buf), 0);
 
                      if(got == -1)
                         {
-                        error_output() << "Error in socket read - " << std::strerror(errno) << std::endl;
+                        error_output() << "Error in socket read - " << err_to_string(errno) << std::endl;
                         break;
                         }
 
@@ -196,8 +198,8 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
                      error_output() << "Connection problem: " << e.what() << std::endl;
                      if(m_is_tcp)
                         {
-                        ::close(m_socket);
-                        m_socket = -1;
+                        close_socket(m_socket);
+                        m_socket = invalid_socket();
                         }
                      }
                   }
@@ -209,20 +211,20 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
 
             if(m_is_tcp)
                {
-               ::close(m_socket);
-               m_socket = -1;
+               close_socket(m_socket);
+               m_socket = invalid_socket();
                }
             }
 
-         ::close(server_fd);
+         close_socket(server_fd);
          }
    private:
-      int make_server_socket(uint16_t port)
+      socket_type make_server_socket(uint16_t port)
          {
          const int type = m_is_tcp ? SOCK_STREAM : SOCK_DGRAM;
 
-         int fd = ::socket(PF_INET, type, 0);
-         if(fd == -1)
+         socket_type fd = ::socket(PF_INET, type, 0);
+         if(fd == invalid_socket())
             {
             throw CLI_Error("Unable to acquire socket");
             }
@@ -237,7 +239,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
 
          if(::bind(fd, reinterpret_cast<struct sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
             {
-            ::close(fd);
+            close_socket(fd);
             throw CLI_Error("server bind failed");
             }
 
@@ -245,7 +247,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
             {
             if(::listen(fd, 100) != 0)
                {
-               ::close(fd);
+               close_socket(fd);
                throw CLI_Error("listen failed");
                }
             }
@@ -301,11 +303,11 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          {
          if(m_is_tcp)
             {
-            ssize_t sent = ::send(m_socket, buf, length, MSG_NOSIGNAL);
+            ssize_t sent = ::send(m_socket, buf, static_cast<sendrecv_len_type>(length), MSG_NOSIGNAL);
 
             if(sent == -1)
                {
-               error_output() << "Error writing to socket - " << std::strerror(errno) << std::endl;
+               error_output() << "Error writing to socket - " << err_to_string(errno) << std::endl;
                }
             else if(sent != static_cast<ssize_t>(length))
                {
@@ -316,7 +318,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
             {
             while(length)
                {
-               ssize_t sent = ::send(m_socket, buf, length, MSG_NOSIGNAL);
+               ssize_t sent = ::send(m_socket, buf, static_cast<sendrecv_len_type>(length), MSG_NOSIGNAL);
 
                if(sent == -1)
                   {
@@ -347,7 +349,7 @@ class TLS_Server final : public Command, public Botan::TLS::Callbacks
          return "echo/0.1";
          }
 
-      int m_socket = -1;
+      socket_type m_socket = invalid_socket();
       bool m_is_tcp = false;
       uint32_t m_socket_id = 0;
       std::string m_line_buf;

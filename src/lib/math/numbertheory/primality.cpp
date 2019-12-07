@@ -62,7 +62,7 @@ bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C)
 
    for(size_t i = 0; i != K_bits; ++i)
       {
-      const uint8_t k_bit = K.get_bit(K_bits - 1 - i);
+      const bool k_bit = K.get_bit(K_bits - 1 - i);
 
       Ut = mod_C.multiply(U, V);
 

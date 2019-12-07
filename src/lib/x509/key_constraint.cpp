@@ -97,7 +97,7 @@ void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
       permitted |= DIGITAL_SIGNATURE | NON_REPUDIATION | KEY_CERT_SIGN | CRL_SIGN;
       }
 
-   if((constraints & permitted) != constraints)
+   if(Key_Constraints(constraints & permitted) != constraints)
       {
       throw Invalid_Argument("Invalid " + name + " constraints " + key_constraints_to_string(constraints));
       }

@@ -384,21 +384,40 @@ size_t OS::get_memory_locking_limit()
    return 0;
    }
 
-const char* OS::read_env_variable(const std::string& name)
+bool OS::read_env_variable(std::string& value_out, const std::string& name)
    {
-   if(running_in_privileged_state())
-      return nullptr;
+   value_out = "";
 
-   return std::getenv(name.c_str());
+   if(running_in_privileged_state())
+      return false;
+
+#if defined(BOTAN_TARGET_OS_HAS_WIN32) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   char val[128] = { 0 };
+   size_t req_size = 0;
+   if(getenv_s(&req_size, val, sizeof(val), name.c_str()) == 0)
+      {
+      value_out = std::string(val, req_size);
+      return true;
+      }
+#else
+   if(const char* val = std::getenv(name.c_str()))
+      {
+      value_out = val;
+      return true;
+      }
+#endif
+
+   return false;
    }
 
 size_t OS::read_env_variable_sz(const std::string& name, size_t def)
    {
-   if(const char* env = read_env_variable(name))
+   std::string value;
+   if(read_env_variable(value, name))
       {
       try
          {
-         const size_t val = std::stoul(env, nullptr);
+         const size_t val = std::stoul(value, nullptr);
          return val;
          }
       catch(std::exception&) { /* ignore it */ }
@@ -613,19 +632,6 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
    if(rc != 0)
       throw System_Error("run_cpu_instruction_probe sigaction restore failed", errno);
-
-#elif defined(BOTAN_TARGET_OS_IS_WINDOWS) && defined(BOTAN_TARGET_COMPILER_IS_MSVC)
-
-   // Windows SEH
-   __try
-      {
-      probe_result = probe_fn();
-      }
-   __except(::GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION ?
-            EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
-      {
-      probe_result = -1;
-      }
 
 #else
    BOTAN_UNUSED(probe_fn);

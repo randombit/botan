@@ -137,15 +137,17 @@ int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags)
    {
    const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
 
-   return BOTAN_FFI_DO(Botan::Public_Key, key, k,
-                       { return (k.check_key(safe_get(rng), strong) == true) ? 0 : BOTAN_FFI_ERROR_INVALID_INPUT; });
+   return BOTAN_FFI_RETURNING(Botan::Public_Key, key, k, {
+      return (k.check_key(safe_get(rng), strong) == true) ? 0 : BOTAN_FFI_ERROR_INVALID_INPUT;
+      });
    }
 
 int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags)
    {
    const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k,
-                       { return (k.check_key(safe_get(rng), strong) == true) ? 0 : BOTAN_FFI_ERROR_INVALID_INPUT; });
+   return BOTAN_FFI_RETURNING(Botan::Private_Key, key, k, {
+      return (k.check_key(safe_get(rng), strong) == true) ? 0 : BOTAN_FFI_ERROR_INVALID_INPUT;
+      });
    }
 
 int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)

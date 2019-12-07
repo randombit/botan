@@ -15,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-uint32_t patch_root_array(gf2m* res_root_arr,
-                        uint32_t res_root_arr_len,
-                        uint32_t root_pos)
+void patch_root_array(gf2m res_root_arr[],
+                      size_t res_root_arr_len,
+                      size_t root_pos)
    {
    volatile gf2m patch_elem = 0x01;
    volatile gf2m cond_mask = (root_pos == res_root_arr_len);
@@ -29,21 +29,21 @@ uint32_t patch_root_array(gf2m* res_root_arr,
       gf2m masked_patch_elem = (patch_elem++) & cond_mask;
       res_root_arr[i] ^= masked_patch_elem++;
       }
-   return res_root_arr_len;
    }
 
 class gf2m_decomp_rootfind_state
    {
    public:
-      gf2m_decomp_rootfind_state(const polyn_gf2m & p_polyn, uint32_t code_length);
+      gf2m_decomp_rootfind_state(const polyn_gf2m & p_polyn, size_t code_length);
 
       void calc_LiK(const polyn_gf2m & sigma);
       gf2m calc_Fxj_j_neq_0( const polyn_gf2m & sigma, gf2m j_gray);
       void calc_next_Aij();
       void calc_Ai_zero(const polyn_gf2m & sigma);
       secure_vector<gf2m> find_roots(const polyn_gf2m & sigma);
-      uint32_t get_code_length() const { return code_length; }
-      uint32_t code_length;
+
+   private:
+      size_t m_code_length;
       secure_vector<gf2m> m_Lik; // size is outer_summands * m
       secure_vector<gf2m> m_Aij; // ...
       uint32_t m_outer_summands;
@@ -84,8 +84,8 @@ uint32_t brootf_decomp_calc_sum_limit(uint32_t t)
    return result;
    }
 
-gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn, uint32_t the_code_length) :
-   code_length(the_code_length), m_j(0), m_j_gray(0)
+gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn, size_t code_length) :
+   m_code_length(code_length), m_j(0), m_j_gray(0)
    {
    gf2m coeff_3;
    gf2m coeff_head;
@@ -272,12 +272,13 @@ secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m & si
 
    this->calc_Ai_zero(sigma);
    this->calc_LiK(sigma);
-   do
+   for(;;)
       {
       gf2m eval_result;
+
       if(this->m_j_gray == 0)
          {
-         eval_result = sigma.get_coef( 0);
+         eval_result = sigma.get_coef(0);
          }
       else
          {
@@ -286,27 +287,25 @@ secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m & si
 
       if(eval_result == 0)
          {
-
          result[root_pos] = this->m_j_gray;
          root_pos++;
-
          }
-      if(this->m_j + static_cast<uint32_t>(1) == this->get_code_length())
+
+      if(this->m_j + static_cast<uint32_t>(1) == m_code_length)
          {
          break;
          }
       this->calc_next_Aij();
-      }while(1);
+      }
 
    // side channel / fault attack countermeasure:
-   root_pos = patch_root_array(result.data(), result.size(), root_pos);
-   result.resize(root_pos);
+   patch_root_array(result.data(), result.size(), root_pos);
    return result;
    }
 
 } // end anonymous namespace
 
-secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, uint32_t code_length)
+secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, size_t code_length)
    {
    gf2m_decomp_rootfind_state state(polyn, code_length);
    return state.find_roots(polyn);

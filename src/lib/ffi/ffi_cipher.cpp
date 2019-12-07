@@ -192,7 +192,7 @@ int botan_cipher_set_associated_data(botan_cipher_t cipher,
                                      const uint8_t* ad,
                                      size_t ad_len)
    {
-   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, {
+   return BOTAN_FFI_RETURNING(Botan::Cipher_Mode, cipher, c, {
       if(Botan::AEAD_Mode* aead = dynamic_cast<Botan::AEAD_Mode*>(&c))
          {
          aead->set_associated_data(ad, ad_len);
@@ -204,7 +204,9 @@ int botan_cipher_set_associated_data(botan_cipher_t cipher,
 
 int botan_cipher_valid_nonce_length(botan_cipher_t cipher, size_t nl)
    {
-   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, { return c.valid_nonce_length(nl) ? 1 : 0; });
+   return BOTAN_FFI_RETURNING(Botan::Cipher_Mode, cipher, c, {
+      return c.valid_nonce_length(nl) ? 1 : 0;
+      });
    }
 
 int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl)

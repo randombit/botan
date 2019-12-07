@@ -18,8 +18,10 @@ namespace Botan {
 
 namespace {
 
-secure_vector<uint8_t> concat_vectors(const secure_vector<uint8_t>& a, const secure_vector<uint8_t>& b,
-                                   uint32_t dimension, uint32_t codimension)
+secure_vector<uint8_t> concat_vectors(const secure_vector<uint8_t>& a,
+                                      const secure_vector<uint8_t>& b,
+                                      size_t dimension,
+                                      size_t codimension)
    {
    secure_vector<uint8_t> x(bit_size_to_byte_size(dimension) + bit_size_to_byte_size(codimension));
 
@@ -34,10 +36,10 @@ secure_vector<uint8_t> concat_vectors(const secure_vector<uint8_t>& a, const sec
    else
       {
       copy_mem(&x[0], a.data(), (dimension / 8));
-      uint32_t l = dimension / 8;
+      size_t l = dimension / 8;
       x[l] = static_cast<uint8_t>(a[l] & ((1 << final_bits) - 1));
 
-      for(uint32_t k = 0; k < codimension / 8; ++k)
+      for(size_t k = 0; k < codimension / 8; ++k)
          {
          x[l] ^= static_cast<uint8_t>(b[k] << final_bits);
          ++l;
@@ -50,12 +52,12 @@ secure_vector<uint8_t> concat_vectors(const secure_vector<uint8_t>& a, const sec
    }
 
 secure_vector<uint8_t> mult_by_pubkey(const secure_vector<uint8_t>& cleartext,
-                                   std::vector<uint8_t> const& public_matrix,
-                                   uint32_t code_length, uint32_t t)
+                                      std::vector<uint8_t> const& public_matrix,
+                                      size_t code_length, size_t t)
    {
-   const uint32_t ext_deg = ceil_log2(code_length);
-   const uint32_t codimension = ext_deg * t;
-   const uint32_t dimension = code_length - codimension;
+   const size_t ext_deg = ceil_log2(code_length);
+   const size_t codimension = ext_deg * t;
+   const size_t dimension = code_length - codimension;
    secure_vector<uint8_t> cR(bit_size_to_32bit_size(codimension) * sizeof(uint32_t));
 
    const uint8_t* pt = public_matrix.data();
@@ -86,9 +88,9 @@ secure_vector<uint8_t> mult_by_pubkey(const secure_vector<uint8_t>& cleartext,
    return ciphertext;
    }
 
-secure_vector<uint8_t> create_random_error_vector(unsigned code_length,
-                                               unsigned error_weight,
-                                               RandomNumberGenerator& rng)
+secure_vector<uint8_t> create_random_error_vector(size_t code_length,
+                                                  size_t error_weight,
+                                                  RandomNumberGenerator& rng)
    {
    secure_vector<uint8_t> result((code_length+7)/8);
 
@@ -96,9 +98,10 @@ secure_vector<uint8_t> create_random_error_vector(unsigned code_length,
 
    while(bits_set < error_weight)
       {
-      gf2m x = random_code_element(code_length, rng);
+      gf2m x = random_code_element(static_cast<uint16_t>(code_length), rng);
 
-      const size_t byte_pos = x / 8, bit_pos = x % 8;
+      const size_t byte_pos = x / 8;
+      const size_t bit_pos = x % 8;
 
       const uint8_t mask = (1 << bit_pos);
 
@@ -120,10 +123,12 @@ void mceliece_encrypt(secure_vector<uint8_t>& ciphertext_out,
                       const McEliece_PublicKey& key,
                       RandomNumberGenerator& rng)
    {
-   secure_vector<uint8_t> error_mask = create_random_error_vector(key.get_code_length(), key.get_t(), rng);
+   const uint16_t code_length = static_cast<uint16_t>(key.get_code_length());
+
+   secure_vector<uint8_t> error_mask = create_random_error_vector(code_length, key.get_t(), rng);
 
    secure_vector<uint8_t> ciphertext = mult_by_pubkey(plaintext, key.get_public_matrix(),
-                                                   key.get_code_length(), key.get_t());
+                                                      key.get_code_length(), key.get_t());
 
    ciphertext ^= error_mask;
 

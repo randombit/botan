@@ -80,7 +80,7 @@ int botan_totp_check(botan_totp_t totp,
                      size_t acceptable_clock_drift)
    {
 #if defined(BOTAN_HAS_TOTP)
-   return BOTAN_FFI_DO(Botan::TOTP, totp, t, {
+   return BOTAN_FFI_RETURNING(Botan::TOTP, totp, t, {
       const bool ok = t.verify_totp(totp_code, timestamp, acceptable_clock_drift);
       return (ok ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER);
       });

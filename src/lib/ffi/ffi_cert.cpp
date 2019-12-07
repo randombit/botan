@@ -136,7 +136,7 @@ int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_le
 int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
+   return BOTAN_FFI_RETURNING(Botan::X509_Certificate, cert, c, {
       const Botan::Key_Constraints k = static_cast<Botan::Key_Constraints>(key_usage);
       if(c.allowed_usage(k))
          return BOTAN_FFI_SUCCESS;
@@ -405,10 +405,8 @@ int botan_x509_crl_destroy(botan_x509_crl_t crl)
 int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
    {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return ffi_guard_thunk(__func__, [=]() -> int {
-      int result = BOTAN_FFI_DO(Botan::X509_CRL, crl, c,
-                       { return c.is_revoked(safe_get(cert)) ? 0 : -1; });
-      return result;
+   return BOTAN_FFI_RETURNING(Botan::X509_CRL, crl, c, {
+      return c.is_revoked(safe_get(cert)) ? 0 : -1;
       });
 #else
    BOTAN_UNUSED(cert);
@@ -417,7 +415,7 @@ int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
 #endif
    }
 
-BOTAN_PUBLIC_API(2,13) int botan_x509_cert_verify_with_crl(
+int botan_x509_cert_verify_with_crl(
    int* result_code,
    botan_x509_cert_t cert,
    const botan_x509_cert_t* intermediates,

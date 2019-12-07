@@ -117,7 +117,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
                            XMSS_Address& adrs)
    {
    BOTAN_ASSERT_NOMSG(target_node_height <= 30);
-   BOTAN_ASSERT((start_idx % (1 << target_node_height)) == 0,
+   BOTAN_ASSERT((start_idx % (static_cast<size_t>(1) << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
@@ -184,13 +184,13 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
    while(level-- > 1)
       {
       std::vector<secure_vector<uint8_t>> ro_nodes(
-         nodes.begin(), nodes.begin() + (1 << (level+1)));
+         nodes.begin(), nodes.begin() + (static_cast<size_t>(1) << (level+1)));
 
-      for(size_t i = 0; i < (1U << level); i++)
+      for(size_t i = 0; i < (static_cast<size_t>(1) << level); i++)
          {
          BOTAN_ASSERT_NOMSG(xmss_hash.size() > i);
 
-         node_addresses[i].set_tree_height(target_node_height - (level + 1));
+         node_addresses[i].set_tree_height(static_cast<uint32_t>(target_node_height - (level + 1)));
          node_addresses[i].set_tree_index(
             (node_addresses[2 * i + 1].get_tree_index() - 1) >> 1);
          using rnd_tree_hash_fn_t =
@@ -222,7 +222,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
       }
 
    // Avoid creation an extra thread to calculate root node.
-   node_addresses[0].set_tree_height(target_node_height - 1);
+   node_addresses[0].set_tree_height(static_cast<uint32_t>(target_node_height - 1));
    node_addresses[0].set_tree_index(
       (node_addresses[1].get_tree_index() - 1) >> 1);
    randomize_tree_hash(nodes[0],
@@ -264,7 +264,7 @@ XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
    for(size_t i = start_idx; i < last_idx; i++)
       {
       adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
-      adrs.set_ots_address(i);
+      adrs.set_ots_address(static_cast<uint32_t>(i));
       this->wots_private_key().generate_public_key(
          pk,
          // getWOTS_SK(SK, s + i), reference implementation uses adrs
@@ -273,13 +273,13 @@ XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
          adrs,
          hash);
       adrs.set_type(XMSS_Address::Type::LTree_Address);
-      adrs.set_ltree_address(i);
+      adrs.set_ltree_address(static_cast<uint32_t>(i));
       create_l_tree(nodes[level], pk, adrs, seed, hash);
       node_levels[level] = 0;
 
       adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
       adrs.set_tree_height(0);
-      adrs.set_tree_index(i);
+      adrs.set_tree_index(static_cast<uint32_t>(i));
 
       while(level > 0 && node_levels[level] ==
             node_levels[level - 1])

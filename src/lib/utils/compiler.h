@@ -173,7 +173,7 @@
 * Define BOTAN_IF_CONSTEXPR
 */
 #if !defined(BOTAN_IF_CONSTEXPR)
-   #if __cplusplus > 201402
+   #if __cplusplus >= 201703
       #define BOTAN_IF_CONSTEXPR if constexpr
    #else
       #define BOTAN_IF_CONSTEXPR if

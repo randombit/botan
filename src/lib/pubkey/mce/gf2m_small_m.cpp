@@ -41,13 +41,13 @@ std::vector<gf2m> gf_exp_table(size_t deg, gf2m prime_poly)
    {
    // construct the table gf_exp[i]=alpha^i
 
-   std::vector<gf2m> tab((1 << deg) + 1);
+   std::vector<gf2m> tab((static_cast<size_t>(1) << deg) + 1);
 
    tab[0] = 1;
    for(size_t i = 1; i < tab.size(); ++i)
       {
-      const bool overflow = tab[i - 1] >> (deg - 1);
-      tab[i] = (tab[i-1] << 1) ^ (overflow ? prime_poly : 0);
+      const gf2m overflow = tab[i-1] >> (deg - 1);
+      tab[i] = (tab[i-1] << 1) ^ (overflow * prime_poly);
       }
 
    return tab;
@@ -68,9 +68,9 @@ const std::vector<gf2m>& exp_table(size_t deg)
 
 std::vector<gf2m> gf_log_table(size_t deg, const std::vector<gf2m>& exp)
    {
-   std::vector<gf2m> tab(1 << deg);
+   std::vector<gf2m> tab(static_cast<size_t>(1) << deg);
 
-   tab[0] = (1 << deg) - 1; // log of 0 is the order by convention
+   tab[0] = static_cast<gf2m>((static_cast<gf2m>(1) << deg) - 1); // log of 0 is the order by convention
    for(size_t i = 0; i < tab.size(); ++i)
       {
       tab[exp[i]] = static_cast<gf2m>(i);
@@ -118,28 +118,9 @@ GF2m_Field::GF2m_Field(size_t extdeg) : m_gf_extension_degree(extdeg),
 gf2m GF2m_Field::gf_div(gf2m x, gf2m y) const
    {
    const int32_t sub_res = static_cast<int32_t>(gf_log(x) - static_cast<int32_t>(gf_log(y)));
-   const int32_t modq_res = static_cast<int32_t>(_gf_modq_1(sub_res));
+   const gf2m modq_res = _gf_modq_1(sub_res);
    const int32_t div_res = static_cast<int32_t>(x) ? static_cast<int32_t>(gf_exp(modq_res)) : 0;
    return static_cast<gf2m>(div_res);
-   }
-
-// we suppose i >= 0. Par convention 0^0 = 1
-gf2m GF2m_Field::gf_pow(gf2m x, int i) const
-   {
-   if (i == 0)
-      return 1;
-   else if (x == 0)
-      return 0;
-   else
-      {
-      // i mod (q-1)
-      while (i >> get_extension_degree())
-         i = (i & (gf_ord())) + (i >> get_extension_degree());
-      i *= gf_log(x);
-      while (i >> get_extension_degree())
-         i = (i & (gf_ord())) + (i >> get_extension_degree());
-      return gf_exp(i);
-      }
    }
 
 }

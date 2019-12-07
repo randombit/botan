@@ -52,7 +52,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, BigIn
                        return .01;
                        };
 
-   bool active = rng.next_byte() % 2;
+   bool active = (rng.next_byte() > 128) ? true : false;
    for(size_t i = 0; i != bits; ++i)
       {
       x <<= 1;

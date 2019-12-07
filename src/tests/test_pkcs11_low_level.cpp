@@ -307,8 +307,11 @@ Test::Result test_c_get_slot_list()
    // assumes at least one smartcard reader is attached
    bool token_present = false;
 
-   auto binder = std::bind(static_cast< bool (LowLevel::*)(bool, std::vector<SlotId>&, ReturnValue*) const>
-                           (&LowLevel::C_GetSlotList), *p11_low_level.get(), std::ref(token_present), std::ref(slot_vec), std::placeholders::_1);
+   auto binder = std::bind(static_cast< bool (LowLevel::*)(bool, std::vector<SlotId>&, ReturnValue*) const>(&LowLevel::C_GetSlotList),
+                           *p11_low_level.get(),
+                           std::ref(token_present),
+                           std::ref(slot_vec),
+                           std::placeholders::_1);
 
    Test::Result result = test_function("C_GetSlotList", binder);
    result.test_ne("C_GetSlotList number of slots without attached token > 0", slot_vec.size(), 0);
@@ -624,7 +627,8 @@ std::array<Attribute, 4> dtemplate =
 ObjectHandle create_simple_data_object(const RAII_LowLevel& p11_low_level)
    {
    ObjectHandle object_handle;
-   p11_low_level.get()->C_CreateObject(p11_low_level.get_session_handle(), dtemplate.data(), dtemplate.size(),
+   p11_low_level.get()->C_CreateObject(p11_low_level.get_session_handle(),
+                                       dtemplate.data(), static_cast<Ulong>(dtemplate.size()),
                                        &object_handle);
    return object_handle;
    }
@@ -637,7 +641,8 @@ Test::Result test_c_create_object_c_destroy_object()
    ObjectHandle object_handle(0);
 
    auto create_bind = std::bind(&LowLevel::C_CreateObject, *p11_low_level.get(),
-                                session_handle, dtemplate.data(), dtemplate.size(), &object_handle, std::placeholders::_1);
+                                session_handle, dtemplate.data(), static_cast<Ulong>(dtemplate.size()),
+                                &object_handle, std::placeholders::_1);
 
    auto destroy_bind = std::bind(&LowLevel::C_DestroyObject, *p11_low_level.get(), session_handle,
                                  std::ref(object_handle), std::placeholders::_1);

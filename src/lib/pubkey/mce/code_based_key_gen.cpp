@@ -25,7 +25,7 @@ class binary_matrix final
       binary_matrix(size_t m_rown, size_t m_coln);
 
       void row_xor(size_t a, size_t b);
-      secure_vector<int> row_reduced_echelon_form();
+      secure_vector<size_t> row_reduced_echelon_form();
 
       /**
       * return the coefficient out of F_2
@@ -75,42 +75,41 @@ void binary_matrix::row_xor(size_t a, size_t b)
    }
 
 //the matrix is reduced from LSB...(from right)
-secure_vector<int> binary_matrix::row_reduced_echelon_form()
+secure_vector<size_t> binary_matrix::row_reduced_echelon_form()
    {
-   secure_vector<int> perm(m_coln);
+   secure_vector<size_t> perm(m_coln);
    for(size_t i = 0; i != m_coln; i++)
       {
-      perm[i] = i;//initialize permutation.
+      perm[i] = i; // initialize permutation.
       }
 
    uint32_t failcnt = 0;
 
-   uint32_t max = m_coln - 1;
+   size_t max = m_coln - 1;
    for(size_t i = 0; i != m_rown; i++, max--)
       {
-      uint32_t findrow = 0;
-      for(size_t j = i; j != m_rown; j++)
+      bool found_row = false;
+
+      for(size_t j = i; !found_row && j != m_rown; j++)
          {
          if(coef(j, max))
             {
             if(i != j) //not needed as ith row is 0 and jth row is 1.
                {
-               row_xor(i ,j);//xor to the row.(swap)?
+               row_xor(i, j);//xor to the row.(swap)?
                }
 
-            findrow=1;
-            break;
-            } //largest value found (end if)
+            found_row = true;
+            }
          }
 
-      if(!findrow)//if no row with a 1 found then swap last column and the column with no 1 down.
+      //if no row with a 1 found then swap last column and the column with no 1 down.
+      if(!found_row)
          {
-         perm[m_coln - m_rown - 1 - failcnt] = max;
+         perm[m_coln - m_rown - 1 - failcnt] = static_cast<int>(max);
          failcnt++;
-         if (!max)
+         if(!max)
             {
-            //CSEC_FREE_MEM_CHK_SET_NULL(*p_perm);
-            //CSEC_THR_RETURN();
             perm.resize(0);
             }
          i--;
@@ -120,17 +119,18 @@ secure_vector<int> binary_matrix::row_reduced_echelon_form()
          perm[i+m_coln - m_rown] = max;
          for(size_t j=i+1;j<m_rown;j++)//fill the column downwards with 0's
             {
-            if(coef(j,(max)))
+            if(coef(j, max))
                {
                row_xor(j,i);//check the arg. order.
                }
             }
 
-         for(int j=i-1;j>=0;j--)//fill the column with 0's upwards too.
+         //fill the column with 0's upwards too.
+         for(size_t j = i; j != 0; --j)
             {
-            if(coef(j,(max)))
+            if(coef(j - 1, max))
                {
-               row_xor(j,i);
+               row_xor(j - 1, i);
                }
             }
          }
@@ -149,25 +149,23 @@ void randomize_support(std::vector<gf2m>& L, RandomNumberGenerator& rng)
       }
    }
 
-std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, std::shared_ptr<GF2m_Field> sp_field, uint32_t code_length, uint32_t t )
+std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, std::shared_ptr<GF2m_Field> sp_field, size_t code_length, size_t t)
    {
    //L- Support
    //t- Number of errors
    //n- Length of the Goppa code
    //m- The extension degree of the GF
    //g- The generator polynomial.
-   gf2m x,y;
-   uint32_t r;
-   std::vector<int> Laux(code_length);
-   r=t*sp_field->get_extension_degree();
+
+   const size_t r = t * sp_field->get_extension_degree();
 
    binary_matrix H(r, code_length);
 
    for(size_t i = 0; i != code_length; i++)
       {
-      x = g->eval(lex_to_gray(L[i]));//evaluate the polynomial at the point L[i].
+      gf2m x = g->eval(lex_to_gray(L[i]));//evaluate the polynomial at the point L[i].
       x = sp_field->gf_inv(x);
-      y = x;
+      gf2m y = x;
       for(size_t j=0;j<t;j++)
          {
          for(size_t k=0;k<sp_field->get_extension_degree();k++)
@@ -182,11 +180,10 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
          }
       }//The H matrix is fed.
 
-   secure_vector<int> perm = H.row_reduced_echelon_form();
-   if (perm.size() == 0)
+   secure_vector<size_t> perm = H.row_reduced_echelon_form();
+   if(perm.size() == 0)
       {
-      // result still is NULL
-      throw Invalid_State("could not bring matrix in row reduced echelon form");
+      throw Invalid_State("McEliece keygen failed - could not bring matrix to row reduced echelon form");
       }
 
    std::unique_ptr<binary_matrix> result(new binary_matrix(code_length-r, r)) ;
@@ -194,12 +191,14 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
       {
       for(size_t j = 0; j < result->columns(); ++j)
          {
-         if (H.coef(j,perm[i]))
+         if(H.coef(j, perm[i]))
             {
             result->toggle_coeff(i,j);
             }
          }
       }
+
+   std::vector<gf2m> Laux(code_length);
    for(size_t i = 0; i < code_length; ++i)
       {
       Laux[i] = L[perm[i]];
@@ -207,7 +206,7 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
 
    for(size_t i = 0; i < code_length; ++i)
       {
-      L[i] = static_cast<gf2m>(Laux[i]);
+      L[i] = Laux[i];
       }
    return result;
    }
@@ -240,7 +239,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator & rng, size_t ex
    do
       {
       // create a random irreducible polynomial
-      g = polyn_gf2m (t, rng, sp_field);
+      g = polyn_gf2m(t, rng, sp_field);
 
       try
          {
@@ -253,14 +252,13 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator & rng, size_t ex
       } while (!success);
 
    std::vector<polyn_gf2m> sqrtmod = polyn_gf2m::sqrt_mod_init( g);
-   std::vector<polyn_gf2m> F = syndrome_init(g, L, code_length);
+   std::vector<polyn_gf2m> F = syndrome_init(g, L, static_cast<int>(code_length));
 
    // Each F[i] is the (precomputed) syndrome of the error vector with
    // a single '1' in i-th position.
    // We do not store the F[i] as polynomials of degree t , but
    // as binary vectors of length ext_deg * t (this will
    // speed up the syndrome computation)
-   //
    //
    std::vector<uint32_t> H(bit_size_to_32bit_size(codimension) * code_length);
    uint32_t* sk = H.data();
@@ -269,7 +267,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator & rng, size_t ex
       for(size_t l = 0; l < t; ++l)
          {
          const size_t k = (l * ext_deg) / 32;
-         const size_t j = (l * ext_deg) % 32;
+         const uint8_t j = (l * ext_deg) % 32;
          sk[k] ^= static_cast<uint32_t>(F[i].get_coef(l)) << j;
          if(j + ext_deg > 32)
             {

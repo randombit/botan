@@ -26,8 +26,9 @@ XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
       XMSS_Address& adrs,
       const secure_vector<uint8_t>& seed)
    {
+   const uint32_t next_index = static_cast<uint32_t>(sig.unused_leaf_index());
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
-   adrs.set_ots_address(sig.unused_leaf_index());
+   adrs.set_ots_address(next_index);
 
    XMSS_WOTS_PublicKey pub_key_ots(m_pub_key.wots_parameters().oid(),
                                    msg,
@@ -36,18 +37,18 @@ XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
                                    seed);
 
    adrs.set_type(XMSS_Address::Type::LTree_Address);
-   adrs.set_ltree_address(sig.unused_leaf_index());
+   adrs.set_ltree_address(next_index);
 
    std::array<secure_vector<uint8_t>, 2> node;
    create_l_tree(node[0], pub_key_ots, adrs, seed);
 
    adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
-   adrs.set_tree_index(sig.unused_leaf_index());
+   adrs.set_tree_index(next_index);
 
    for(size_t k = 0; k < m_xmss_params.tree_height(); k++)
       {
-      adrs.set_tree_height(k);
-      if(((sig.unused_leaf_index() / (1 << k)) & 0x01) == 0)
+      adrs.set_tree_height(static_cast<uint32_t>(k));
+      if(((next_index / (static_cast<size_t>(1) << k)) & 0x01) == 0)
          {
          adrs.set_tree_index(adrs.get_tree_index() >> 1);
          randomize_tree_hash(node[1],

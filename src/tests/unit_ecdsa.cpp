@@ -215,7 +215,7 @@ Test::Result test_ecdsa_create_save_load()
    Botan::DataSource_Memory pem_src(ecc_private_key_pem);
    std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(pem_src, Test::rng()));
    Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
-   result.confirm("the loaded key could be converted into an ECDSA_PrivateKey", loaded_ec_key);
+   result.confirm("the loaded key could be converted into an ECDSA_PrivateKey", loaded_ec_key != nullptr);
 
    if(loaded_ec_key)
       {
@@ -257,7 +257,7 @@ Test::Result test_unusual_curve()
    Botan::DataSource_Memory key_data_src(key_odd_curve_str);
    std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(key_data_src, Test::rng()));
 
-   result.confirm("reloaded key", loaded_key.get());
+   result.confirm("reloaded key", loaded_key.get() != nullptr);
 
    return result;
    }
@@ -365,9 +365,9 @@ Test::Result test_ecc_key_with_rfc5915_extensions()
       std::unique_ptr<Botan::Private_Key> pkcs8(
          Botan::PKCS8::load_key(Test::data_file("x509/ecc/ecc_private_with_rfc5915_ext.pem"), Test::rng()));
 
-      result.confirm("loaded RFC 5915 key", pkcs8.get());
+      result.confirm("loaded RFC 5915 key", pkcs8.get() != nullptr);
       result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
-      result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()));
+      result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
       }
    catch(std::exception& e)
       {
@@ -386,9 +386,9 @@ Test::Result test_ecc_key_with_rfc5915_parameters()
       std::unique_ptr<Botan::Private_Key> pkcs8(
          Botan::PKCS8::load_key(Test::data_file("x509/ecc/ecc_private_with_rfc5915_parameters.pem"), Test::rng()));
 
-      result.confirm("loaded RFC 5915 key", pkcs8.get());
+      result.confirm("loaded RFC 5915 key", pkcs8.get() != nullptr);
       result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
-      result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()));
+      result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
       }
    catch(std::exception& e)
       {

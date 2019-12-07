@@ -76,7 +76,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement
          attributes.add_numeric(AttributeType::KeyType, static_cast< CK_KEY_TYPE >(KeyType::GenericSecret));
          attributes.add_numeric(AttributeType::ValueLen, static_cast< CK_ULONG >(key_len));
          m_key.module()->C_DeriveKey(m_key.session().handle(), m_mechanism.data(), m_key.handle(), attributes.data(),
-                                     attributes.count(), &secret_handle);
+                                     static_cast<Ulong>(attributes.count()), &secret_handle);
 
          Object secret_object(m_key.session(), secret_handle);
          secure_vector<uint8_t> secret = secret_object.get_attribute_value(AttributeType::Value);
@@ -112,7 +112,8 @@ PKCS11_ECDH_KeyPair generate_ecdh_keypair(Session& session, const EC_PublicKeyGe
    Mechanism mechanism = { static_cast< CK_MECHANISM_TYPE >(MechanismType::EcKeyPairGen), nullptr, 0 };
 
    session.module()->C_GenerateKeyPair(session.handle(), &mechanism,
-                                       pub_props.data(), pub_props.count(), priv_props.data(), priv_props.count(),
+                                       pub_props.data(), static_cast<Ulong>(pub_props.count()),
+                                       priv_props.data(), static_cast<Ulong>(priv_props.count()),
                                        &pub_key_handle, &priv_key_handle);
 
    return std::make_pair(PKCS11_ECDH_PublicKey(session, pub_key_handle), PKCS11_ECDH_PrivateKey(session, priv_key_handle));
