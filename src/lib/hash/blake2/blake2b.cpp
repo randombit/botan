@@ -51,6 +51,7 @@ void BLAKE2b::state_init()
    m_H[0] ^= 0x01010000 ^ static_cast<uint8_t>(output_length());
    m_T[0] = m_T[1] = 0;
    m_F[0] = m_F[1] = 0;
+   m_bufpos = 0;
    }
 
 namespace {
@@ -177,7 +178,7 @@ void BLAKE2b::final_result(uint8_t output[])
    m_F[0] = 0xFFFFFFFFFFFFFFFF;
    compress(m_buffer.data(), 1, m_bufpos);
    copy_out_vec_le(output, output_length(), m_H);
-   clear();
+   state_init();
    }
 
 std::string BLAKE2b::name() const
