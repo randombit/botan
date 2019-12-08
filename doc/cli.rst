@@ -16,7 +16,7 @@ command is run with the ``--help`` option (like ``botan <command> --help``)
 some information about the usage of the command is printed.
 
 Starting in version 2.9, commands that take a passphrase (such as
-``gen_bcrypt`` or ``pkcs8``) will also accept the literal `-` to mean
+``gen_bcrypt`` or ``pkcs8``) will also accept the literal ``-`` to mean
 ask for the passphrase on the terminal. If supported by the operating
 system, echo will be disabled while reading the passphrase.
 
@@ -69,7 +69,8 @@ Public Key Cryptography
   defined (such as 3DES, Camellia, SM4, Twofish or Serpent). However most other
   implementations support only AES or 3DES in CBC mode. You can also choose
   Scrypt instead of PBKDF2, by using "Scrypt" instead of the name of a hash
-  function, for example "PBES2(AES-256/CBC,Scrypt)"
+  function, for example "PBES2(AES-256/CBC,Scrypt)". Scrypt is also supported by
+  some other implementations including OpenSSL.
 
 ``pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key``
   Open a PKCS #8 formatted key at *key*. If *key* is encrypted, the passphrase
@@ -89,6 +90,8 @@ Public Key Cryptography
   For ECDSA and DSA, the option ``--der-format`` outputs the signature as an
   ASN.1 encoded blob. Some other tools (including ``openssl``) default to this
   format.
+
+  The signature is formatted for your screen using base64.
 
 ``verify --der-format --hash=SHA-256 --emsa= pubkey file signature``
   Verify the authenticity of the data in *file* with the provided signature
@@ -189,10 +192,11 @@ TLS Server/Client
   advertise with Application-Layer Protocol Negotiation (ALPN).
 
 ``tls_server cert key --port=443 --type=tcp --policy=``
-  Implements a testing TLS server, which allows TLS clients to connect. Binds to
-  either TCP or UDP on port *port*. The server uses the certificate *cert* and
-  the respective PKCS #8 private key *key*. The server honors the TLS policy
-  defined in the *policy* file.
+  Implements a testing TLS server, which allows TLS clients to connect and which
+  echos any data that is sent to it. Binds to either TCP or UDP on port
+  *port*. The server uses the certificate *cert* and the respective PKCS #8
+  private key *key*. The server honors the TLS policy defined in the *policy*
+  file.
 
 ``tls_http_server cert key --port=443 --policy= --session-db --session-db-pass=``
   Only available if Boost.Asio support was enabled. Provides a simple HTTP server
@@ -284,10 +288,12 @@ Miscellaneous Commands
   similar to information provided by the ``pkg-config`` tool.
 
 ``cpuid``
-  List available processor flags (aes_ni, SIMD extensions, ...).
+  List available processor flags (AES-NI, SIMD extensions, ...).
 
-``asn1print file``
-  Decode and print *file* with ASN.1 Basic Encoding Rules (BER).
+``asn1print --pem file``
+  Decode and print *file* with ASN.1 Basic Encoding Rules (BER). If flag ``--pem`` is
+  used, or the filename ends in ``.pem``, then PEM encoding is assumed. Otherwise
+  the input is assumed to be binary DER/BER.
 
 ``http_get url``
   Retrieve resource from the passed http *url*.

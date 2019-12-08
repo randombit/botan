@@ -11,6 +11,8 @@ password hashing, and post quantum crypto schemes. A Python binding is included,
 and several other `language bindings
 <https://github.com/randombit/botan/wiki/Language-Bindings>`_ are available.
 It is used in many `open source and commercial products <https://github.com/randombit/botan/wiki/Users>`_.
+The library is accompanied by a featureful
+`command line interface <https://botan.randombit.net/handbook/cli.html>`_.
 
 See the `documentation <https://botan.randombit.net/handbook>`_ for more
 information about included features.
