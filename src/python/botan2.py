@@ -1264,22 +1264,28 @@ def mceies_decrypt(mce, aead, ct, ad):
                                                             b, bl))
 
 
+def _load_buf_or_file(filename, buf, file_fn, buf_fn):
+    if filename is None and buf is None:
+        raise BotanException("No filename or buf given")
+    if filename is not None and buf is not None:
+        raise BotanException("Both filename and buf given")
+
+    obj = c_void_p(0)
+
+    if filename is not None:
+        file_fn(byref(obj), _ctype_str(filename))
+    elif buf is not None:
+        buf_fn(byref(obj), _ctype_bits(buf), len(buf))
+
+    return obj
+
+
 #
 # X.509 certificates
 #
 class X509Cert(object): # pylint: disable=invalid-name
     def __init__(self, filename=None, buf=None):
-        if filename is None and buf is None:
-            raise BotanException("No filename or buf given")
-        if filename is not None and buf is not None:
-            raise BotanException("Both filename and buf given")
-
-        if filename is not None:
-            self.__obj = c_void_p(0)
-            _DLL.botan_x509_cert_load_file(byref(self.__obj), _ctype_str(filename))
-        elif buf is not None:
-            self.__obj = c_void_p(0)
-            _DLL.botan_x509_cert_load(byref(self.__obj), _ctype_bits(buf), len(buf))
+        self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_cert_load_file, _DLL.botan_x509_cert_load)
 
     def __del__(self):
         _DLL.botan_x509_cert_destroy(self.__obj)
@@ -1457,19 +1463,8 @@ class X509Cert(object): # pylint: disable=invalid-name
 # X.509 Certificate revocation lists
 #
 class X509CRL(object):
-
     def __init__(self, filename=None, buf=None):
-        if filename is None and buf is None:
-            raise BotanException("No filename or buf given")
-        if filename is not None and buf is not None:
-            raise BotanException("Both filename and buf given")
-
-        if filename is not None:
-            self.__obj = c_void_p(0)
-            _DLL.botan_x509_crl_load_file(byref(self.__obj), _ctype_str(filename))
-        elif buf is not None:
-            self.__obj = c_void_p(0)
-            _DLL.botan_x509_crl_load(byref(self.__obj), _ctype_bits(buf), len(buf))
+        self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_crl_load_file, _DLL.botan_x509_crl_load)
 
     def __del__(self):
         _DLL.botan_x509_crl_destroy(self.__obj)
