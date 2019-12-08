@@ -37,7 +37,7 @@ class OpenSSL_HashFunction final : public HashFunction
          {
          std::unique_ptr<OpenSSL_HashFunction> copy(new OpenSSL_HashFunction(m_name, nullptr));
          EVP_MD_CTX_copy(copy->m_md, m_md);
-         return std::move(copy);
+         return std::unique_ptr<HashFunction>(copy.release());
          }
 
       size_t output_length() const override
