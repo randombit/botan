@@ -18,7 +18,7 @@ namespace {
 
 auto VALID_MODES = std::map<std::string, std::string>{
          // Don't add algorithms here without extending tests
-         // in `src/scripts/cli_tests.py`
+         // in `src/scripts/test_cli_crypt.py`
          { "aes-128-cfb", "AES-128/CFB" },
          { "aes-192-cfb", "AES-192/CFB" },
          { "aes-256-cfb", "AES-256/CFB" },

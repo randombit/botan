@@ -568,9 +568,11 @@ def main(args=None):
         if target in ['shared', 'coverage'] and options.os != 'windows':
             botan_exe = os.path.join(root_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
 
-            test_scripts = ['cli_tests.py', 'test_cli.py']
+            test_scripts = ['test_cli.py', 'test_cli_crypt.py']
             for script in test_scripts:
-                cmds.append([py_interp, os.path.join(root_dir, 'src/scripts', script),
+                cmds.append([py_interp,
+                             os.path.join(root_dir, 'src/scripts', script),
+                             '--threads=%d' % (options.build_jobs),
                              botan_exe])
 
         python_tests = os.path.join(root_dir, 'src/scripts/test_python.py')

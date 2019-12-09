@@ -13,23 +13,18 @@ import vecparser
 
 cli_binary = ""
 
-SUPPORTED_ALGORITHMS = [
-    'AES-128/CFB',
-    'AES-192/CFB',
-    'AES-256/CFB',
-    'AES-128/GCM',
-    'AES-192/GCM',
-    'AES-256/GCM',
-    'AES-128/OCB',
-    'AES-128/XTS',
-    'AES-256/XTS',
-    'ChaCha20Poly1305',
-]
-
-def append_ordered(base, additional_elements):
-    for key in additional_elements:
-        value = additional_elements[key]
-        base[key] = value
+SUPPORTED_ALGORITHMS = {
+    "AES-128/CFB": "aes-128-cfb",
+    "AES-192/CFB": "aes-192-cfb",
+    "AES-256/CFB": "aes-256-cfb",
+    "AES-128/GCM": "aes-128-gcm",
+    "AES-192/GCM": "aes-192-gcm",
+    "AES-256/GCM": "aes-256-gcm",
+    "AES-128/OCB": "aes-128-ocb",
+    "AES-128/XTS": "aes-128-xts",
+    "AES-256/XTS": "aes-256-xts",
+    "ChaCha20Poly1305": "chacha20poly1305",
+}
 
 class TestSequence(unittest.TestCase):
     pass
@@ -44,32 +39,8 @@ def create_test(data):
         algorithm = data['Algorithm']
         direction = data['Direction']
 
-        # CFB
-        if algorithm == "AES-128/CFB":
-            mode = "aes-128-cfb"
-        elif algorithm == "AES-192/CFB":
-            mode = "aes-192-cfb"
-        elif algorithm == "AES-256/CFB":
-            mode = "aes-256-cfb"
-        # GCM
-        elif algorithm == "AES-128/GCM":
-            mode = "aes-128-gcm"
-        elif algorithm == "AES-192/GCM":
-            mode = "aes-192-gcm"
-        elif algorithm == "AES-256/GCM":
-            mode = "aes-256-gcm"
-        # OCB
-        elif algorithm == "AES-128/OCB":
-            mode = "aes-128-ocb"
-        # XTS
-        elif algorithm == "AES-128/XTS":
-            mode = "aes-128-xts"
-        elif algorithm == "AES-256/XTS":
-            mode = "aes-256-xts"
-        # ChaCha20Poly1305
-        elif algorithm == "ChaCha20Poly1305":
-            mode = "chacha20poly1305"
-        else:
+        mode = SUPPORTED_ALGORITHMS.get(algorithm)
+        if mode is None:
             raise Exception("Unknown algorithm: '" + algorithm + "'")
 
         cmd = [
@@ -81,14 +52,11 @@ def create_test(data):
             "--key=%s" % key]
         if direction == "decrypt":
             cmd += ['--decrypt']
-        # out_raw = subprocess.check_output(cmd)
 
         if direction == "decrypt":
             invalue = ciphertext
         else:
             invalue = plaintext
-
-        #print(cmd)
 
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         out_raw = p.communicate(input=binascii.unhexlify(invalue))[0]
@@ -132,36 +100,29 @@ if __name__ == '__main__':
     parser.add_argument('cli_binary',
                         help='path to the botan cli binary')
     parser.add_argument('--max-tests', type=int, default=20)
+    parser.add_argument('--threads', type=int, default=0)
     parser.add_argument('unittest_args', nargs="*")
     args = parser.parse_args()
 
     cli_binary = args.cli_binary
     max_tests = args.max_tests
 
-    vecfile_cfb = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'modes', 'cfb.vec'))
-    vecfile_gcm = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'gcm.vec'))
-    vecfile_ocb = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'ocb.vec'))
-    vecfile_xts = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'modes', 'xts.vec'))
-    vecfile_chacha20poly1305 = vecparser.VecDocument(os.path.join('src', 'tests', 'data', 'aead', 'chacha20poly1305.vec'))
-    #data = vecfile.get_data()
-    #for algo in data:
-    #    print(algo)
-    #    i = 0
-    #    for testcase in data[algo]:
-    #        i += 1
-    #        print(str(i) + ":", testcase)
+    test_data_dir = os.path.join('src', 'tests', 'data')
+
+    mode_test_data = [os.path.join(test_data_dir, 'modes', 'cfb.vec'),
+                      os.path.join(test_data_dir, 'aead', 'gcm.vec'),
+                      os.path.join(test_data_dir, 'aead', 'ocb.vec'),
+                      os.path.join(test_data_dir, 'modes', 'xts.vec'),
+                      os.path.join(test_data_dir, 'aead', 'chacha20poly1305.vec')]
 
     testdata = OrderedDict()
-    append_ordered(testdata, get_testdata(vecfile_cfb.get_data(), max_tests))
-    append_ordered(testdata, get_testdata(vecfile_gcm.get_data(), max_tests))
-    append_ordered(testdata, get_testdata(vecfile_ocb.get_data(), max_tests))
-    append_ordered(testdata, get_testdata(vecfile_xts.get_data(), max_tests))
-    append_ordered(testdata, get_testdata(vecfile_chacha20poly1305.get_data(), max_tests))
 
-    #for testname in testdata:
-    #    print(testname)
-    #    for key in testdata[testname]:
-    #        print("    " + key + ": " + testdata[testname][key])
+    for f in mode_test_data:
+        vecfile = vecparser.VecDocument(f)
+        vecdata = get_testdata(vecfile.get_data(), max_tests)
+        for key in vecdata:
+            testdata[key] = vecdata[key]
+
     for testname in testdata:
         test_method = create_test(testdata[testname])
         test_method.__name__ = 'test_%s' % testname

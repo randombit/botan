@@ -18,6 +18,8 @@ import re
 import random
 import json
 import binascii
+import multiprocessing
+from multiprocessing.pool import ThreadPool
 
 # pylint: disable=global-statement,unused-argument
 
@@ -1105,6 +1107,46 @@ def cli_tls_client_hello_tests(_tmp_dir):
     output_hash = "8EBFC3205ACFA98461128FE5D081D19254237AF84F7DAF000A3C992C3CF6DE44"
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", "-"], output_hash, output)
 
+def cli_speed_pk_tests(_tmp_dir):
+    msec = 1
+
+    pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
+                "DH", "DSA", "ElGamal", "Ed25519", "Curve25519", "NEWHOPE", "McEliece",
+                "RSA", "XMSS"]
+
+    output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
+
+    # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
+    format_re = re.compile(r'^.* [0-9]+ ([A-Za-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
+
+def cli_speed_pbkdf_tests(_tmp_dir):
+    msec = 1
+    pbkdf_ops = ['bcrypt', 'passhash9', 'argon2']
+
+    format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
+    for op in pbkdf_ops:
+        output = test_cli("speed", ["--msec=%d" % (msec), op], None).split('\n')
+        for line in output:
+            if format_re.match(line) is None:
+                logging.error("Unexpected line %s", line)
+
+def cli_speed_math_tests(_tmp_dir):
+    msec = 1
+    # these all have a common output format
+    math_ops = ['mp_mul', 'mp_div', 'mp_div10', 'modexp', 'random_prime', 'inverse_mod',
+                'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'ecc_init', 'poly_dbl',
+                'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'primality_test']
+
+    format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
+    for op in math_ops:
+        output = test_cli("speed", ["--msec=%d" % (msec), op], None).split('\n')
+        for line in output:
+            if format_re.match(line) is None:
+                logging.error("Unexpected line %s", line)
+
 def cli_speed_tests(_tmp_dir):
     # pylint: disable=too-many-branches
 
@@ -1136,31 +1178,6 @@ def cli_speed_tests(_tmp_dir):
         if format_re_ks.match(line) is None:
             if format_re_cipher.match(line) is None:
                 logging.error('Unexpected line %s', line)
-
-    pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
-                "DH", "DSA", "ElGamal", "Ed25519", "Curve25519", "NEWHOPE", "McEliece",
-                "RSA", "XMSS"]
-
-    output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
-
-    # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
-    format_re = re.compile(r'^.* [0-9]+ ([A-Za-z ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
-    for line in output:
-        if format_re.match(line) is None:
-            logging.error("Unexpected line %s", line)
-
-    # these all have a common output format
-    math_ops = ['mp_mul', 'mp_div', 'mp_div10', 'modexp', 'random_prime', 'inverse_mod',
-                'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'ecc_init', 'poly_dbl',
-                'bn_redc', 'nistp_redc', 'ecc_mult', 'ecc_ops', 'os2ecp', 'primality_test',
-                'bcrypt', 'passhash9', 'argon2']
-
-    format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
-    for op in math_ops:
-        output = test_cli("speed", ["--msec=%d" % (msec), op], None).split('\n')
-        for line in output:
-            if format_re.match(line) is None:
-                logging.error("Unexpected line %s", line)
 
     output = test_cli("speed", ["--msec=%d" % (msec), "scrypt"], None).split('\n')
 
@@ -1196,8 +1213,20 @@ def cli_speed_tests(_tmp_dir):
             if field not in b:
                 logging.error('Missing field %s in JSON record %s' % (field, b))
 
+def run_test(fn_name, fn):
+    start = time.time()
+    tmp_dir = tempfile.mkdtemp(prefix='botan_cli_')
+    try:
+        fn(tmp_dir)
+    except Exception as e: # pylint: disable=broad-except
+        logging.error("Test %s threw exception: %s", fn_name, e)
+
+    shutil.rmtree(tmp_dir)
+    end = time.time()
+    logging.info("Ran %s in %.02f sec", fn_name, end-start)
 
 def main(args=None):
+    # pylint: disable=too-many-branches
     if args is None:
         args = sys.argv
 
@@ -1206,18 +1235,23 @@ def main(args=None):
 
     parser.add_option('--verbose', action='store_true', default=False)
     parser.add_option('--quiet', action='store_true', default=False)
+    parser.add_option('--threads', action='store', type='int', default=0)
 
     (options, args) = parser.parse_args(args)
 
     setup_logging(options)
 
     if len(args) < 2:
-        logging.error("Usage: ./cli_tests.py path_to_botan_cli [test_regex]")
+        logging.error("Usage: %s path_to_botan_cli [test_regex]", args[0])
         return 1
 
     if not os.access(args[1], os.X_OK):
         logging.error("Could not access/execute %s", args[1])
         return 2
+
+    threads = options.threads
+    if threads == 0:
+        threads = multiprocessing.cpu_count()
 
     global CLI_PATH
     CLI_PATH = args[1]
@@ -1230,9 +1264,14 @@ def main(args=None):
             logging.error("Invalid regex: %s", str(e))
             return 1
 
-    start_time = time.time()
-
+    # some of the slowest tests are grouped up front
     test_fns = [
+        cli_speed_tests,
+        cli_speed_pk_tests,
+        cli_speed_math_tests,
+        cli_speed_pbkdf_tests,
+        cli_xmss_sign_tests,
+
         cli_argon2_tests,
         cli_asn1_tests,
         cli_base32_tests,
@@ -1256,7 +1295,6 @@ def main(args=None):
         cli_hmac_tests,
         cli_is_prime_tests,
         cli_key_tests,
-        cli_xmss_sign_tests,
         cli_mod_inverse_tests,
         cli_pbkdf_tune_tests,
         cli_pk_encrypt_tests,
@@ -1265,7 +1303,6 @@ def main(args=None):
         cli_rng_tests,
         cli_roughtime_check_tests,
         cli_roughtime_tests,
-        cli_speed_tests,
         cli_timing_test_tests,
         cli_tls_ciphersuite_tests,
         cli_tls_client_hello_tests,
@@ -1278,25 +1315,26 @@ def main(args=None):
         cli_version_tests,
         ]
 
+    tests_to_run = []
     for fn in test_fns:
         fn_name = fn.__name__
 
-        if test_regex is not None:
-            if test_regex.search(fn_name) is None:
-                continue
+        if test_regex is None or test_regex.search(fn_name) is not None:
+            tests_to_run.append((fn_name, fn))
 
-        logging.info("Running %s" % (fn_name))
+    start_time = time.time()
 
-        start = time.time()
-        tmp_dir = tempfile.mkdtemp(prefix='botan_cli_')
-        try:
-            fn(tmp_dir)
-        except Exception as e: # pylint: disable=broad-except
-            logging.error("Test %s threw exception: %s", fn_name, e)
+    if threads > 1:
+        pool = ThreadPool(processes=threads)
+        results = []
+        for test in tests_to_run:
+            results.append(pool.apply_async(run_test, test))
 
-        shutil.rmtree(tmp_dir)
-        end = time.time()
-        logging.debug("Ran %s in %.02f sec", fn_name, end-start)
+        for result in results:
+            result.get()
+    else:
+        for test in tests_to_run:
+            run_test(test[0], test[1])
 
     end_time = time.time()
 
