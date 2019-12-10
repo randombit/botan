@@ -54,10 +54,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    if target not in ['shared', 'static', 'sanitizer', 'fuzzers', 'gcc4.8', 'cross-i386', 'bsi', 'nist']:
-        # threads just slow down valgrind, qemu, etc
-        test_cmd += ['--test-threads=1']
-
     essential_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
                        'hmac_drbg', 'hmac_drbg_unit',
                        'tls', 'ffi',
@@ -111,6 +107,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         # valgrind in 16.04 has a bug with rdrand handling
         flags += ['--with-valgrind', '--disable-rdrand']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
+        # valgrind is single threaded anyway
+        test_cmd += ['--test-threads=1']
         test_cmd += essential_tests
     if target == 'fuzzers':
         flags += ['--unsafe-fuzzer-mode']
