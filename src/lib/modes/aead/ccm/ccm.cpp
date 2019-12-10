@@ -118,7 +118,7 @@ void CCM_Mode::encode_length(uint64_t len, uint8_t out[])
    {
    const size_t len_bytes = L();
 
-   BOTAN_ASSERT_NOMSG(len_bytes >= 1 && len_bytes <= 8);
+   BOTAN_ASSERT_NOMSG(len_bytes >= 2 && len_bytes <= 8);
 
    for(size_t i = 0; i != len_bytes; ++i)
       out[len_bytes-1-i] = get_byte(sizeof(uint64_t)-1-i, len);
