@@ -1226,7 +1226,7 @@ def run_test(fn_name, fn):
     logging.info("Ran %s in %.02f sec", fn_name, end-start)
 
 def main(args=None):
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-locals
     if args is None:
         args = sys.argv
 
