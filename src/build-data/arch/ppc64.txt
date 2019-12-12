@@ -12,6 +12,5 @@ ppc64el
 
 <isa_extensions>
 altivec
-ppccrypto
-power9
+powercrypto
 </isa_extensions>

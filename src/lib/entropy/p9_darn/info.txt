@@ -9,3 +9,7 @@ p9_darn.h
 <arch>
 ppc64
 </arch>
+
+<isa>
+powercrypto
+</isa>
