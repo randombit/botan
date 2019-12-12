@@ -72,7 +72,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
 
    const unsigned long hwcap_crypto = OS::get_auxval(PPC_hwcap_bit::ARCH_hwcap_crypto);
    if(hwcap_crypto & PPC_hwcap_bit::CRYPTO_bit)
-     detected_features |= CPUID::CPUID_PPC_CRYPTO_BIT;
+     detected_features |= CPUID::CPUID_POWER_CRYPTO_BIT;
    if(hwcap_crypto & PPC_hwcap_bit::DARN_bit)
      detected_features |= CPUID::CPUID_DARN_BIT;
 

@@ -343,15 +343,15 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     isa_extensions = [
         'SSE2', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX2', 'BMI2', 'RDRAND', 'RDSEED',
         'AES-NI', 'SHA-NI',
-        'AltiVec', 'NEON', 'ARMv8Crypto']
+        'AltiVec', 'NEON', 'ARMv8 Crypto', 'POWER Crypto']
 
     for isa_extn_name in isa_extensions:
-        isa_extn = isa_extn_name.lower()
+        isa_extn = isa_extn_name.lower().replace(' ', '')
 
         target_group.add_option('--disable-%s' % (isa_extn),
                                 help='disable %s intrinsics' % (isa_extn_name),
                                 action='append_const',
-                                const=isa_extn.replace('-', '').replace('.', ''),
+                                const=isa_extn.replace('-', '').replace('.', '').replace(' ', ''),
                                 dest='disable_intrinsics')
 
     build_group = optparse.OptionGroup(parser, 'Build options')
