@@ -252,6 +252,79 @@ class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("hash_nist_mc", Hash_NIST_MonteCarlo_Tests);
 
+class Hash_LongRepeat_Tests final : public Text_Based_Test
+   {
+   public:
+      Hash_LongRepeat_Tests() : Text_Based_Test("hash_rep.vec", "Input,TotalLength,Digest") {}
+
+      std::vector<std::string> possible_providers(const std::string& algo) override
+         {
+         return provider_filter(Botan::HashFunction::providers(algo));
+         }
+
+      // repeating the output several times reduces buffering overhead during processing
+      static std::vector<uint8_t> expand_input(const std::vector<uint8_t>& input, size_t min_len)
+         {
+         std::vector<uint8_t> output;
+         output.reserve(min_len);
+
+         while(output.size() < min_len)
+            output.insert(output.end(), input.begin(), input.end());
+
+         return output;
+         }
+
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
+         {
+         const std::vector<uint8_t> input = expand_input(vars.get_req_bin("Input"), 256);
+         const size_t total_len = vars.get_req_sz("TotalLength");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Digest");
+
+         Test::Result result("Long input " + algo);
+
+         const std::vector<std::string> providers = possible_providers(algo);
+
+         if(total_len > 1000000 && Test::run_long_tests() == false)
+            {
+            return result;
+            }
+
+         if(providers.empty())
+            {
+            result.note_missing("hash " + algo);
+            return result;
+            }
+
+         for(auto const& provider_ask : providers)
+            {
+            std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider_ask));
+
+            if(!hash)
+               {
+               result.test_failure("Hash " + algo + " supported by " + provider_ask + " but not found");
+               continue;
+               }
+
+            const size_t full_inputs = total_len / input.size();
+            const size_t leftover = total_len % input.size();
+
+            for(size_t i = 0; i != full_inputs; ++i)
+               hash->update(input);
+
+            if(leftover > 0)
+               hash->update(input.data(), leftover);
+
+            std::vector<uint8_t> output(hash->output_length());
+            hash->final(output.data());
+            result.test_eq("Output is expected", output, expected);
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("hash_rep", Hash_LongRepeat_Tests);
+
 }
 
 #endif
