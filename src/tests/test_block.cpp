@@ -32,6 +32,11 @@ class Block_Cipher_Tests final : public Text_Based_Test
 
          Test::Result result(algo);
 
+         if(iterations > 1 && run_long_tests() == false)
+            {
+            return result;
+            }
+
          const std::vector<std::string> providers = possible_providers(algo);
 
          if(providers.empty())
