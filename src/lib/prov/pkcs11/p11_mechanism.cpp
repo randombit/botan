@@ -96,12 +96,17 @@ static std::map<std::string, RSA_SignMechanism> SignMechanisms =
       { "EMSA4(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss) },
       { "EMSA4(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss) },
       { "EMSA4(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss) },
-      { "EMSA4(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss) },
-      { "EMSA4(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss) },
-      { "EMSA4(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss) },
 
+      { "EMSA4(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss) },
+      { "EMSA4(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss) },
       { "PSSR(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss) },
+
+      { "EMSA4(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss) },
+      { "EMSA4(SHA-384,MGF1,48)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss) },
       { "PSSR(SHA-384,MGF1,48)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss) },
+
+      { "EMSA4(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss) },
+      { "EMSA4(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss) },
       { "PSSR(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss) },
 
       { "ISO9796", RSA_SignMechanism(MechanismType::Rsa9796) }
