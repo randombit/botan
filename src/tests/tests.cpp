@@ -1072,9 +1072,6 @@ std::vector<Test::Result> Text_Based_Test::run()
             if(skip_this_test(header, vars))
                continue;
 
-            if(possible_providers(header).empty())
-               continue;
-
             ++test_cnt;
 
             uint64_t start = Test::timestamp();

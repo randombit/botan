@@ -1,5 +1,5 @@
 /*
-* (C) 2014,2015,2018 Jack Lloyd
+* (C) 2014,2015,2018,2019 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -179,6 +179,78 @@ class Hash_Function_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("hash", Hash_Function_Tests);
+
+class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test
+   {
+   public:
+      Hash_NIST_MonteCarlo_Tests() : Text_Based_Test("hash_mc.vec", "Seed,Count,Output") {}
+
+      std::vector<std::string> possible_providers(const std::string& algo) override
+         {
+         return provider_filter(Botan::HashFunction::providers(algo));
+         }
+
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
+         {
+         const std::vector<uint8_t> seed = vars.get_req_bin("Seed");
+         const size_t count = vars.get_req_sz("Count");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Output");
+
+         Test::Result result("NIST Monte Carlo " + algo);
+
+         const std::vector<std::string> providers = possible_providers(algo);
+
+         if(providers.empty())
+            {
+            result.note_missing("hash " + algo);
+            return result;
+            }
+
+         for(auto const& provider_ask : providers)
+            {
+            std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider_ask));
+
+            if(!hash)
+               {
+               result.test_failure("Hash " + algo + " supported by " + provider_ask + " but not found");
+               continue;
+               }
+
+            std::vector<std::vector<uint8_t>> input;
+            input.push_back(seed);
+            input.push_back(seed);
+            input.push_back(seed);
+
+            std::vector<uint8_t> buf(hash->output_length());
+
+            for(size_t j = 0; j <= count; ++j)
+               {
+               for(size_t i = 3; i != 1003; ++i)
+                  {
+                  hash->update(input[0]);
+                  hash->update(input[1]);
+                  hash->update(input[2]);
+
+                  hash->final(input[0].data());
+                  input[0].swap(input[1]);
+                  input[1].swap(input[2]);
+                  }
+
+               if(j < count)
+                  {
+                  input[0] = input[2];
+                  input[1] = input[2];
+                  }
+               }
+
+            result.test_eq("Output is expected", input[2], expected);
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("hash_nist_mc", Hash_NIST_MonteCarlo_Tests);
 
 }
 
