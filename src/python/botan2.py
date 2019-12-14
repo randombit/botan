@@ -26,7 +26,7 @@ from time import strptime, mktime, time as system_time
 from binascii import hexlify
 from datetime import datetime
 
-BOTAN_FFI_VERSION = 20180713
+BOTAN_FFI_VERSION = 20191214
 
 #
 # Base exception for all exceptions raised from this module
@@ -61,7 +61,7 @@ def _load_botan_dll(expected_version):
     else:
         # assumed to be some Unix/Linux system
         possible_dll_names.append('libbotan-2.so')
-        possible_dll_names += ['libbotan-2.so.%d' % (v) for v in reversed(range(8, 16))]
+        possible_dll_names += ['libbotan-2.so.%d' % (v) for v in reversed(range(13, 20))]
 
     for dll_name in possible_dll_names:
         try:
