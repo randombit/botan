@@ -11,11 +11,12 @@ set -ev
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
-    if [ "$TRAVIS_ARCH" = "aarch64" ] || [ "$TRAVIS_ARCH" = "ppc64le" ] || [ "$TRAVIS_ARCH" = "s390x" ]; then
+    if [ "$TRAVIS_ARCH" = "aarch64" ]; then
         sudo apt-get -qq update
         sudo apt-get install liblzma-dev libbz2-dev ccache
+    fi
 
-    elif [ "$TARGET" = "valgrind" ]; then
+    if [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq update
         sudo apt-get install valgrind
 
