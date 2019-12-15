@@ -9,6 +9,7 @@
 #include <memory>
 
 #if defined(BOTAN_HAS_TLS)
+  #include "test_rng.h"
   #include <botan/tls_alert.h>
   #include <botan/tls_policy.h>
   #include <botan/tls_session.h>
@@ -52,17 +53,34 @@ class TLS_Session_Tests final : public Test
                                      "SRP username",
                                      0x0000);
 
+         const std::string pem = session.PEM_encode();
+         Botan::TLS::Session session_from_pem(pem);
+         result.test_eq("Roundtrip from pem", session.DER_encode(), session_from_pem.DER_encode());
+
          const Botan::SymmetricKey key("ABCDEF");
-         std::vector<uint8_t> ctext1 = session.encrypt(key, Test::rng());
-         std::vector<uint8_t> ctext2 = session.encrypt(key, Test::rng());
+         const std::vector<uint8_t> ctext1 = session.encrypt(key, Test::rng());
+         const std::vector<uint8_t> ctext2 = session.encrypt(key, Test::rng());
 
          result.test_ne("TLS session encryption is non-determinsitic",
                         ctext1.data(), ctext1.size(),
                         ctext2.data(), ctext2.size());
 
-         Botan::TLS::Session dsession = Botan::TLS::Session::decrypt(ctext1.data(), ctext1.size(), key);
+         const std::vector<uint8_t> expected_hdr = Botan::hex_decode("068B5A9D396C0000F2322CAE");
 
+         result.test_eq("tls", "TLS session encryption same header",
+                        ctext1.data(), 12, expected_hdr.data(), 12);
+         result.test_eq("tls", "TLS session encryption same header",
+                        ctext2.data(), 12, expected_hdr.data(), 12);
+
+         Botan::TLS::Session dsession = Botan::TLS::Session::decrypt(ctext1.data(), ctext1.size(), key);
          result.test_eq("Decrypted session access works", dsession.srp_identifier(), "SRP username");
+
+         Fixed_Output_RNG frng1("00112233445566778899AABBCCDDEEFF802802802802802802802802");
+         const std::vector<uint8_t> ctextf1 = session.encrypt(key, frng1);
+         Fixed_Output_RNG frng2("00112233445566778899AABBCCDDEEFF802802802802802802802802");
+         const std::vector<uint8_t> ctextf2 = session.encrypt(key, frng2);
+
+         result.test_eq("Only randomness comes from RNG", ctextf1, ctextf2);
 
          return {result};
          }
