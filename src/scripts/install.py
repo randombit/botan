@@ -191,7 +191,7 @@ def main(args):
             libname = cfg['libname']
             soname_base = libname + '.dll'
             copy_executable(os.path.join(out_dir, soname_base),
-                            prepend_destdir(os.path.join(lib_dir, soname_base)))
+                            prepend_destdir(os.path.join(bin_dir, soname_base)))
         else:
             soname_patch = cfg['soname_patch']
             soname_abi = cfg['soname_abi']
