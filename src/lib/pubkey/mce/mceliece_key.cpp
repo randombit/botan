@@ -32,7 +32,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(polyn_gf2m const& goppa_polyn,
    m_sqrtmod(square_root_matrix),
    m_Linv(inverse_support),
    m_coeffs(parity_check_matrix_coeffs),
-   m_codimension(ceil_log2(inverse_support.size()) * goppa_polyn.get_degree()),
+   m_codimension(static_cast<size_t>(ceil_log2(inverse_support.size())) * goppa_polyn.get_degree()),
    m_dimension(inverse_support.size() - m_codimension)
    {
    }
