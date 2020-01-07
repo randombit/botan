@@ -173,7 +173,15 @@ class TLS_Client_Hello_Reader final : public Command
          if(!hello.session_id().empty())
             oss << "SessionID: " << Botan::hex_encode(hello.session_id()) << "\n";
          for(uint16_t csuite_id : hello.ciphersuites())
-            oss << "Cipher: " << Botan::TLS::Ciphersuite::by_id(csuite_id).to_string() << "\n";
+            {
+            auto csuite = Botan::TLS::Ciphersuite::by_id(csuite_id);
+            if(csuite.valid())
+               oss << "Cipher: " << csuite.to_string()  << "\n";
+            else if(csuite_id == 0x00FF)
+               oss << "Cipher: EMPTY_RENEGOTIATION_INFO_SCSV\n";
+            else
+               oss << "Cipher: Unknown (" << std::hex << csuite_id << ")\n";
+            }
 
          oss << "Supported signature schemes: ";
 
@@ -184,7 +192,17 @@ class TLS_Client_Hello_Reader final : public Command
          else
             {
             for(Botan::TLS::Signature_Scheme scheme : hello.signature_schemes())
-               oss << sig_scheme_to_string(scheme) << " ";
+               {
+               try
+                  {
+                  auto s = sig_scheme_to_string(scheme);
+                  oss << s << " ";
+                  }
+               catch(...)
+                  {
+                  oss << "(" << std::hex << static_cast<uint16_t>(scheme) << ") ";
+                  }
+               }
             oss << "\n";
             }
 
