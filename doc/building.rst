@@ -821,7 +821,18 @@ Set distribution specific version information
 --maintainer-mode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Enable extra warnings and turn most warnings into errors
+A build configuration used by library developers, which enables extra
+warnings and turns most warnings into errors.
+
+.. warning::
+
+   When this option is used, all relevant warnings available in the
+   most recent release of GCC/Clang are enabled, so it may fail to
+   build if your compiler is not sufficiently recent. In addition
+   there may be non-default configurations or unusual platforms which
+   cause warnings which are converted to errors. Patches addressing
+   such warnings are welcome, but otherwise no support is available
+   when using this option.
 
 --with-python-versions=N.M
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -446,7 +446,7 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
-                           help="Enable extra warnings")
+                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--werror-mode', dest='werror_mode',
                            action='store_true', default=False,
