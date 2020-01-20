@@ -42,14 +42,12 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shuffle(SIMD_4x32 a, SIMD_4x32 
 #endif
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-   __vector unsigned char bv = (__vector unsigned char)b.raw();
 
-   const auto high_bit = vec_sl(vec_sr(bv, vec_splat_u8(7)), vec_splat_u8(4));
-   bv = vec_and(bv, vec_splat_u8(0x0F));
-   bv = vec_add(bv, high_bit);
+   const auto zero = vec_splat_s8(0x00);
+   const auto mask = vec_cmplt((__vector signed char)b.raw(), zero);
+   const auto r = vec_perm((__vector signed char)a.raw(), (__vector signed char)a.raw(), (__vector unsigned char)b.raw());
+   return SIMD_4x32((__vector unsigned int)vec_sel(r, zero, mask));
 
-   const __vector unsigned int zero = vec_splat_u32(0);
-   return SIMD_4x32(vec_perm(a.raw(), zero, bv));
 #else
    #error "No shuffle implementation available"
 #endif
@@ -77,6 +75,11 @@ const SIMD_4x32 k_inv2 = SIMD_4x32(0x0F0B0780, 0x01040A06, 0x02050809, 0x030D0E0
 
 const SIMD_4x32 sb1u = SIMD_4x32(0xCB503E00, 0xB19BE18F, 0x142AF544, 0xA5DF7A6E);
 const SIMD_4x32 sb1t = SIMD_4x32(0xFAE22300, 0x3618D415, 0x0D2ED9EF, 0x3BF7CCC1);
+const SIMD_4x32 sbou = SIMD_4x32(0x6FBDC700, 0xD0D26D17, 0xC502A878, 0x15AABF7A);
+const SIMD_4x32 sbot = SIMD_4x32(0x5FBB6A00, 0xCFE474A5, 0x412B35FA, 0x8E1E90D1);
+
+const SIMD_4x32 sboud = SIMD_4x32(0x7EF94000, 0x1387EA53, 0xD4943E2D, 0xC7AA6DB9);
+const SIMD_4x32 sbotd = SIMD_4x32(0x93441D00, 0x12D7560F, 0xD8C58E9C, 0xCA4B8159);
 
 const SIMD_4x32 mc_forward[4] = {
    SIMD_4x32(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D),
@@ -105,35 +108,57 @@ const SIMD_4x32 rcon[10] = {
    SIMD_4x32(0x00000083, 0x00000000, 0x00000000, 0x00000000),
 };
 
+const SIMD_4x32 sb2u = SIMD_4x32(0x0B712400, 0xE27A93C6, 0xBC982FCD, 0x5EB7E955);
+const SIMD_4x32 sb2t = SIMD_4x32(0x0AE12900, 0x69EB8840, 0xAB82234A, 0xC2A163C8);
+
+const SIMD_4x32 k_dipt1 = SIMD_4x32(0x0B545F00, 0x0F505B04, 0x114E451A, 0x154A411E);
+const SIMD_4x32 k_dipt2 = SIMD_4x32(0x60056500, 0x86E383E6, 0xF491F194, 0x12771772);
+
+const SIMD_4x32 sb9u = SIMD_4x32(0x9A86D600, 0x851C0353, 0x4F994CC9, 0xCAD51F50);
+const SIMD_4x32 sb9t = SIMD_4x32(0xECD74900, 0xC03B1789, 0xB2FBA565, 0x725E2C9E);
+
+const SIMD_4x32 sbeu = SIMD_4x32(0x26D4D000, 0x46F29296, 0x64B4F6B0, 0x22426004);
+const SIMD_4x32 sbet = SIMD_4x32(0xFFAAC100, 0x0C55A6CD, 0x98593E32, 0x9467F36B);
+
+const SIMD_4x32 sbdu = SIMD_4x32(0xE6B1A200, 0x7D57CCDF, 0x882A4439, 0xF56E9B13);
+const SIMD_4x32 sbdt = SIMD_4x32(0x24C6CB00, 0x3CE2FAF7, 0x15DEEFD3, 0x2931180D);
+
+const SIMD_4x32 sbbu = SIMD_4x32(0x96B44200, 0xD0226492, 0xB0F2D404, 0x602646F6);
+const SIMD_4x32 sbbt = SIMD_4x32(0xCD596700, 0xC19498A6, 0x3255AA6B, 0xF3FF0C3E);
+
+const SIMD_4x32 mcx[4] = {
+   SIMD_4x32(0x0C0F0E0D, 0x00030201, 0x04070605, 0x080B0A09),
+   SIMD_4x32(0x080B0A09, 0x0C0F0E0D, 0x00030201, 0x04070605),
+   SIMD_4x32(0x04070605, 0x080B0A09, 0x0C0F0E0D, 0x00030201),
+   SIMD_4x32(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D),
+};
+
+const SIMD_4x32 mc_backward[4] = {
+   SIMD_4x32(0x02010003, 0x06050407, 0x0A09080B, 0x0E0D0C0F),
+   SIMD_4x32(0x0E0D0C0F, 0x02010003, 0x06050407, 0x0A09080B),
+   SIMD_4x32(0x0A09080B, 0x0E0D0C0F, 0x02010003, 0x06050407),
+   SIMD_4x32(0x06050407, 0x0A09080B, 0x0E0D0C0F, 0x02010003),
+};
+
+const SIMD_4x32 lo_nibs_mask = SIMD_4x32::splat_u8(0x0F);
+
 inline SIMD_4x32 low_nibs(SIMD_4x32 x)
    {
-   const SIMD_4x32 lo_nibs_mask = SIMD_4x32::splat_u8(0x0F);
    return lo_nibs_mask & x;
    }
 
 inline SIMD_4x32 high_nibs(SIMD_4x32 x)
    {
-   const SIMD_4x32 hi_nibs_mask = SIMD_4x32::splat_u8(0xF0);
-   return (hi_nibs_mask & x).shr<4>();
+   return (x.shr<4>() & lo_nibs_mask);
    }
 
-inline SIMD_4x32 aes_enc_first_round(SIMD_4x32 B, SIMD_4x32 K)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_enc_first_round(SIMD_4x32 B, SIMD_4x32 K)
    {
    return shuffle(k_ipt1, low_nibs(B)) ^ shuffle(k_ipt2, high_nibs(B)) ^ K;
    }
 
-inline SIMD_4x32 aes_enc_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_enc_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    {
-   const SIMD_4x32 sb2u = SIMD_4x32(0x0B712400, 0xE27A93C6, 0xBC982FCD, 0x5EB7E955);
-   const SIMD_4x32 sb2t = SIMD_4x32(0x0AE12900, 0x69EB8840, 0xAB82234A, 0xC2A163C8);
-
-   const SIMD_4x32 mc_backward[4] = {
-      SIMD_4x32(0x02010003, 0x06050407, 0x0A09080B, 0x0E0D0C0F),
-      SIMD_4x32(0x0E0D0C0F, 0x02010003, 0x06050407, 0x0A09080B),
-      SIMD_4x32(0x0A09080B, 0x0E0D0C0F, 0x02010003, 0x06050407),
-      SIMD_4x32(0x06050407, 0x0A09080B, 0x0E0D0C0F, 0x02010003),
-   };
-
    const SIMD_4x32 Bh = high_nibs(B);
    SIMD_4x32 Bl = low_nibs(B);
    const SIMD_4x32 t2 = shuffle(k_inv2, Bl);
@@ -148,11 +173,8 @@ inline SIMD_4x32 aes_enc_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    return shuffle(t8, mc_forward[r % 4]) ^ shuffle(t7, mc_backward[r % 4]) ^ t8;
    }
 
-inline SIMD_4x32 aes_enc_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_enc_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    {
-   const SIMD_4x32 sbou = SIMD_4x32(0x6FBDC700, 0xD0D26D17, 0xC502A878, 0x15AABF7A);
-   const SIMD_4x32 sbot = SIMD_4x32(0x5FBB6A00, 0xCFE474A5, 0x412B35FA, 0x8E1E90D1);
-
    const SIMD_4x32 Bh = high_nibs(B);
    SIMD_4x32 Bl = low_nibs(B);
    const SIMD_4x32 t2 = shuffle(k_inv2, Bl);
@@ -164,35 +186,13 @@ inline SIMD_4x32 aes_enc_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    return shuffle(shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K, vperm_sr[r % 4]);
    }
 
-inline SIMD_4x32 aes_dec_first_round(SIMD_4x32 B, SIMD_4x32 K)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_dec_first_round(SIMD_4x32 B, SIMD_4x32 K)
    {
-   const SIMD_4x32 k_dipt1 = SIMD_4x32(0x0B545F00, 0x0F505B04, 0x114E451A, 0x154A411E);
-   const SIMD_4x32 k_dipt2 = SIMD_4x32(0x60056500, 0x86E383E6, 0xF491F194, 0x12771772);
-
    return shuffle(k_dipt1, low_nibs(B)) ^ shuffle(k_dipt2, high_nibs(B)) ^ K;
    }
 
-inline SIMD_4x32 aes_dec_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_dec_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    {
-   const SIMD_4x32 sb9u = SIMD_4x32(0x9A86D600, 0x851C0353, 0x4F994CC9, 0xCAD51F50);
-   const SIMD_4x32 sb9t = SIMD_4x32(0xECD74900, 0xC03B1789, 0xB2FBA565, 0x725E2C9E);
-
-   const SIMD_4x32 sbeu = SIMD_4x32(0x26D4D000, 0x46F29296, 0x64B4F6B0, 0x22426004);
-   const SIMD_4x32 sbet = SIMD_4x32(0xFFAAC100, 0x0C55A6CD, 0x98593E32, 0x9467F36B);
-
-   const SIMD_4x32 sbdu = SIMD_4x32(0xE6B1A200, 0x7D57CCDF, 0x882A4439, 0xF56E9B13);
-   const SIMD_4x32 sbdt = SIMD_4x32(0x24C6CB00, 0x3CE2FAF7, 0x15DEEFD3, 0x2931180D);
-
-   const SIMD_4x32 sbbu = SIMD_4x32(0x96B44200, 0xD0226492, 0xB0F2D404, 0x602646F6);
-   const SIMD_4x32 sbbt = SIMD_4x32(0xCD596700, 0xC19498A6, 0x3255AA6B, 0xF3FF0C3E);
-
-   const SIMD_4x32 mcx[4] = {
-      SIMD_4x32(0x0C0F0E0D, 0x00030201, 0x04070605, 0x080B0A09),
-      SIMD_4x32(0x080B0A09, 0x0C0F0E0D, 0x00030201, 0x04070605),
-      SIMD_4x32(0x04070605, 0x080B0A09, 0x0C0F0E0D, 0x00030201),
-      SIMD_4x32(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D),
-   };
-
    const SIMD_4x32 Bh = high_nibs(B);
    B = low_nibs(B);
    const SIMD_4x32 t2 = shuffle(k_inv2, B);
@@ -210,11 +210,8 @@ inline SIMD_4x32 aes_dec_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    return shuffle(t12, mc) ^ shuffle(sbeu, t5) ^ shuffle(sbet, t6);
    }
 
-inline SIMD_4x32 aes_dec_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_dec_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    {
-   const SIMD_4x32 sbou = SIMD_4x32(0x7EF94000, 0x1387EA53, 0xD4943E2D, 0xC7AA6DB9);
-   const SIMD_4x32 sbot = SIMD_4x32(0x93441D00, 0x12D7560F, 0xD8C58E9C, 0xCA4B8159);
-
    const uint32_t which_sr = ((((r - 1) << 4) ^ 48) & 48) / 16;
 
    const SIMD_4x32 Bh = high_nibs(B);
@@ -226,12 +223,13 @@ inline SIMD_4x32 aes_dec_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r)
    const SIMD_4x32 t5 = B ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
    const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, B));
 
-   const SIMD_4x32 x = shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K;
+   const SIMD_4x32 x = shuffle(sboud, t5) ^ shuffle(sbotd, t6) ^ K;
    return shuffle(x, vperm_sr[which_sr]);
    }
 
-void vperm_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
-                          const SIMD_4x32 K[], size_t rounds)
+void BOTAN_FUNC_ISA(BOTAN_VPERM_ISA)
+   vperm_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
+                        const SIMD_4x32 K[], size_t rounds)
    {
    CT::poison(in, blocks * 16);
 
@@ -277,8 +275,9 @@ void vperm_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
    CT::unpoison(out, blocks * 16);
    }
 
-void vperm_decrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
-                          const SIMD_4x32 K[], size_t rounds)
+void BOTAN_FUNC_ISA(BOTAN_VPERM_ISA)
+   vperm_decrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks,
+                        const SIMD_4x32 K[], size_t rounds)
    {
    CT::poison(in, blocks * 16);
 
@@ -404,14 +403,15 @@ void AES_256::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
 namespace {
 
-SIMD_4x32 aes_schedule_transform(SIMD_4x32 input,
-                                 SIMD_4x32 table_1,
-                                 SIMD_4x32 table_2)
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA)
+   aes_schedule_transform(SIMD_4x32 input,
+                          SIMD_4x32 table_1,
+                          SIMD_4x32 table_2)
    {
    return shuffle(table_1, low_nibs(input)) ^ shuffle(table_2, high_nibs(input));
    }
 
-SIMD_4x32 aes_schedule_mangle(SIMD_4x32 k, uint8_t round_no)
+SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_mangle(SIMD_4x32 k, uint8_t round_no)
    {
    const SIMD_4x32 mc_forward0(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D);
 
@@ -422,7 +422,7 @@ SIMD_4x32 aes_schedule_mangle(SIMD_4x32 k, uint8_t round_no)
    return shuffle(t2, vperm_sr[round_no % 4]);
    }
 
-SIMD_4x32 aes_schedule_mangle_dec(SIMD_4x32 k, uint8_t round_no)
+SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_mangle_dec(SIMD_4x32 k, uint8_t round_no)
    {
    const SIMD_4x32 mc_forward0(0x00030201, 0x04070605, 0x080B0A09, 0x0C0F0E0D);
 
@@ -452,7 +452,7 @@ SIMD_4x32 aes_schedule_mangle_dec(SIMD_4x32 k, uint8_t round_no)
    return shuffle(output, vperm_sr[round_no % 4]);
    }
 
-SIMD_4x32 aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
+SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
    {
    const SIMD_4x32 out_tr1(0xD6B66000, 0xFF9F4929, 0xDEBE6808, 0xF7974121);
    const SIMD_4x32 out_tr2(0x50BCEC00, 0x01EDBD51, 0xB05C0CE0, 0xE10D5DB1);
@@ -462,7 +462,7 @@ SIMD_4x32 aes_schedule_mangle_last(SIMD_4x32 k, uint8_t round_no)
    return aes_schedule_transform(k, out_tr1, out_tr2);
    }
 
-SIMD_4x32 aes_schedule_mangle_last_dec(SIMD_4x32 k)
+SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_mangle_last_dec(SIMD_4x32 k)
    {
    const SIMD_4x32 deskew1(0x47A4E300, 0x07E4A340, 0x5DBEF91A, 0x1DFEB95A);
    const SIMD_4x32 deskew2(0x83EA6900, 0x5F36B5DC, 0xF49D1E77, 0x2841C2AB);
@@ -471,7 +471,7 @@ SIMD_4x32 aes_schedule_mangle_last_dec(SIMD_4x32 k)
    return aes_schedule_transform(k, deskew1, deskew2);
    }
 
-SIMD_4x32 aes_schedule_round(SIMD_4x32 input1, SIMD_4x32 input2)
+SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_round(SIMD_4x32 input1, SIMD_4x32 input2)
    {
    SIMD_4x32 smeared = input2 ^ input2.shift_elems_left<1>();
    smeared ^= smeared.shift_elems_left<2>();
@@ -490,14 +490,14 @@ SIMD_4x32 aes_schedule_round(SIMD_4x32 input1, SIMD_4x32 input2)
    return smeared ^ shuffle(sb1u, t5) ^ shuffle(sb1t, t6);
    }
 
-SIMD_4x32 aes_schedule_round(SIMD_4x32 rc, SIMD_4x32 input1, SIMD_4x32 input2)
+SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_round(SIMD_4x32 rc, SIMD_4x32 input1, SIMD_4x32 input2)
    {
    // This byte shuffle is equivalent to alignr<1>(shuffle32(input1, (3,3,3,3)));
    const SIMD_4x32 shuffle3333_15 = SIMD_4x32::splat(0x0C0F0E0D);
    return aes_schedule_round(shuffle(input1, shuffle3333_15), input2 ^ rc);
    }
 
-SIMD_4x32 aes_schedule_192_smear(SIMD_4x32 x, SIMD_4x32 y)
+SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_192_smear(SIMD_4x32 x, SIMD_4x32 y)
    {
    const SIMD_4x32 shuffle3332 =
       SIMD_4x32(0x0B0A0908, 0x0F0E0D0C, 0x0F0E0D0C, 0x0F0E0D0C);
