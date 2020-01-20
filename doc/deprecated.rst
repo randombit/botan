@@ -80,6 +80,9 @@ in a future major release.
 
 - All built in MODP groups < 2048 bits
 
+- Support for explicit ECC curve parameters and ImplicitCA encoded parameters in
+  EC_Group and all users (including X.509 certificates and PKCS#8 private keys).
+
 - All pre-created DSA groups
 
 - All or nothing package transform (``package.h``)
@@ -151,7 +154,6 @@ Deprecated Headers
   ``gmac.h``,
   ``gost_28147.h``,
   ``gost_3411.h``,
-  ``hash_id.h``,
   ``hkdf.h``,
   ``hmac.h``,
   ``http_util.h``,
