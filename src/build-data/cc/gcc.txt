@@ -78,6 +78,23 @@ arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
 </isa_flags>
 
+# Values used in BOTAN_FUNC_ISA eg __attribute__((target("X")))
+# values not set are assumed identical to basename; sse2 -> sse2
+<isa_targets>
+sse41 -> sse4.1
+sse42 -> sse4.2
+
+rdrand -> rdrnd
+
+armv8crypto -> "+crypto"
+armv8sm4 -> "+sm4"
+
+powercrypto -> "crypto"
+
+arm32:neon -> "fpu=neon"
+arm64:neon -> "+simd"
+</isa_targets>
+
 # Flags set here are included at compile and link time
 <mach_abi_linking>
 all!haiku,qnx -> "-pthread"

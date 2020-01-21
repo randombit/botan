@@ -1127,7 +1127,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             infofile,
             [],
             ['cpu_flags', 'cpu_flags_no_debug', 'so_link_commands', 'binary_link_commands',
-             'mach_abi_linking', 'isa_flags', 'sanitizers', 'lib_flags'],
+             'mach_abi_linking', 'isa_flags', 'isa_targets', 'sanitizers', 'lib_flags'],
             {
                 'binary_name': None,
                 'linker_name': None,
@@ -1177,6 +1177,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.coverage_flags = lex.coverage_flags
         self.debug_info_flags = lex.debug_info_flags
         self.isa_flags = lex.isa_flags
+        self.isa_targets = lex.isa_targets
         self.lang_flags = lex.lang_flags
         self.lib_flags = lex.lib_flags
         self.linker_name = lex.linker_name
@@ -1236,6 +1237,17 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             return self.isa_flags[arch_isa]
 
         return None
+
+    def get_isa_target_name(self, isa, arch):
+        if isa in self.isa_targets:
+            return self.isa_targets[isa]
+
+        arch_isa = '%s:%s' % (arch, isa)
+        if arch_isa in self.isa_targets:
+            return self.isa_targets[arch_isa]
+
+        # default...
+        return isa
 
     def get_isa_specific_flags(self, isas, arch, options):
         flags = set()
@@ -2663,7 +2675,9 @@ class AmalgamationGenerator(object):
 
         return lines
 
-    def __init__(self, build_paths, modules, options):
+    def __init__(self, cc, arch, build_paths, modules, options):
+        self._cc = cc
+        self._arch = arch
         self._build_paths = build_paths
         self._modules = modules
         self._options = options
@@ -2749,14 +2763,6 @@ class AmalgamationGenerator(object):
             logging.info('Writing amalgamation source to %s' % (filepath))
             amalgamation_files[target] = open(filepath, 'w', **encoding_kwords)
 
-        def gcc_isa(isa):
-            if isa == 'sse41':
-                return 'sse4.1'
-            elif isa == 'sse42':
-                return 'ssse4.2'
-            else:
-                return isa
-
         for target, f in amalgamation_files.items():
             AmalgamationHeader.write_banner(f)
             f.write('\n')
@@ -2769,9 +2775,14 @@ class AmalgamationGenerator(object):
                 if isa in isa_headers:
                     f.write(isa_headers[isa])
 
-                f.write('#if defined(__GNUG__) && !defined(__clang__)\n')
-                f.write('#pragma GCC target ("%s")\n' % (gcc_isa(isa)))
-                f.write('#endif\n')
+                pragma_str = self._cc.get_isa_target_name(isa, self._arch.basename)
+
+                if pragma_str != '':
+                    f.write('#if defined(__GNUG__) && !defined(__clang__)\n')
+                    f.write('#pragma GCC target ("%s")\n' % (pragma_str))
+                    f.write('#endif\n')
+                else:
+                    print("No pragma for %s???", isa)
 
         # target to include header map
         unconditional_headers_written = {}
@@ -3287,7 +3298,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
                  build_paths.external_include_dir)
 
     if options.amalgamation:
-        (amalg_cpp_files, amalg_headers) = AmalgamationGenerator(build_paths, using_mods, options).generate()
+        (amalg_cpp_files, amalg_headers) = AmalgamationGenerator(cc, arch, build_paths, using_mods, options).generate()
         build_paths.lib_sources = amalg_cpp_files
         template_vars['generated_files'] = ' '.join(amalg_cpp_files + amalg_headers)
 
