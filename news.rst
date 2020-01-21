@@ -1,6 +1,12 @@
 Release Notes
 ========================================
 
+Version 2.14.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Optimize the vector permute AES implementation, especially improving
+  performance on ARM and POWER. (GH #2243)
+
 Version 2.13.0, 2020-01-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
