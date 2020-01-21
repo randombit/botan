@@ -7,6 +7,9 @@ Version 2.14.0, Not Yet Released
 * Optimize the vector permute AES implementation, especially improving
   performance on ARM and POWER. (GH #2243)
 
+* Fix a bug that prevented compilation of the amalgamation on ARM and
+  POWER processors (GH #2245 #2241)
+
 Version 2.13.0, 2020-01-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
