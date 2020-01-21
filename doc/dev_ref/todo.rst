@@ -10,26 +10,23 @@ Request a new feature by opening a pull request to update this file.
 Ciphers, Hashes, PBKDF
 ----------------------------------------
 
-* Stiched AES-NI GCM mode
-* Bitsliced AES or Camellia
+* Stiched AES/GCM mode for CPUs supporting both AES and CLMUL
+* Combine AES-NI, ARMv8 and POWER AES implementations (as already done for CLMUL)
+* Scalar bitsliced AES
 * Vector permute AES only supports little-endian systems; fix for big-endian
-* Camellia using AES-NI
 * SM4 using AES-NI (https://github.com/mjosaarinen/sm4ni) or vector permute
 * Poly1305 using AVX2
-* ASCON 1.2 (CAESAR)
-* NORX-64 3.0 (CAESAR)
 * Skein-MAC
 * PMAC
 * SIV-PMAC
-* GCM-SIV (draft-irtf-cfrg-gcmsiv)
-* Extend Cascade_Cipher to support arbitrary number of ciphers
-* EME* tweakable block cipher (https://eprint.iacr.org/2004/125.pdf)
+* GCM-SIV (RFC 8452)
+* EME* tweakable block cipher (https://eprint.iacr.org/2004/125)
 * FFX format preserving encryption (NIST 800-38G)
 * SHA-512 using BMI2+AVX2
 * Constant time DES using BMI2
 * Threefish-1024
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
-* Adiantum
+* Adiantum (https://eprint.iacr.org/2018/720)
 * CRC using clmul/pmull
 
 Public Key Crypto, Math
@@ -41,18 +38,13 @@ Public Key Crypto, Math
 * Use NAF (joint sparse form) for ECC multi-exponentiation
 * Curves for pairings (BN-256, BLS12-381)
 * Identity based encryption
-* BBS group signatures
 * Paillier homomorphic cryptosystem
-* Socialist Millionaires Protocol
+* Socialist Millionaires Protocol (needed for OTRv3)
 * Hashing onto an elliptic curve (draft-irtf-cfrg-hash-to-curve)
-* OPAQUE PAKE (draft-krawczyk-cfrg-opaque)
+* New PAKEs (pending CFRG bakeoff results)
+* New post quantum schemes (pending NIST contest results)
 * SPHINX password store (https://eprint.iacr.org/2018/695)
-* SPAKE2+ (draft-irtf-cfrg-spake2)
-* SPHINCS+
-* Dilithium lattice based signatures
-* Kyber lattice based KEM
 * X448 and Ed448
-* FHMQV
 * Use GLV decomposition to speed up secp256k1 operations
 
 Utility Functions
@@ -97,7 +89,6 @@ TLS
 * Certificate Transparency extensions
 * TLS supplemental authorization data (RFC 4680, RFC 5878)
 * DTLS-SCTP (RFC 6083)
-* Perspectives (http://perspectives-project.org/)
 
 PKIX
 ----------------------------------------
@@ -109,14 +100,11 @@ PKIX
   are being informative and concise. (GH #656)
 * X.509 policy constraints
 * OCSP responder logic
-* X.509 attribute certificates (RFC 5755)
-* Support generating/verifying XMSS certificates
 
 New Protocols / Formats
 ----------------------------------------
 
 * ACME protocol
-* ORAM (Circuit-ORAM, Path-ORAM, ??)
 * PKCS7 / Cryptographic Message Syntax
 * PKCS12 / PFX
 * Off-The-Record v3 https://otr.cypherpunks.ca/
@@ -183,17 +171,6 @@ Build/Test
 * Add support for Fuschia OS
 * Add support for CloudABI
 * Add support for SGX
-
-FIPS 140 Build
----------------------------------------
-
-* Special build policy that disables all builtin crypto impls, then provides new
-  FIPS 140 versions implemented using just calls to the OpenSSL FIPS module API
-  plus wrapping the appropriate functions for self-tests and so on. This creates a
-  library in FIPS 140 validated form (since there is no 'crypto' anymore from
-  Botan, just the ASN.1 parser, TLS library, PKI etc all of which FIPS 140 does
-  not care about) without the enormous hassle and expense of actually having to
-  maintain a FIPS validation on Botan. Email Jack if you are interested in this.
 
 CLI
 ----------------------------------------
