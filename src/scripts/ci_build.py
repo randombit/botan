@@ -141,7 +141,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         flags += ['--build-fuzzers=test']
 
     if target in ['fuzzers', 'sanitizer']:
-        flags += ['--with-sanitizers', '--with-debug-asserts']
+        flags += ['--enable-sanitizers=address,undefined', '--with-debug-asserts']
 
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
