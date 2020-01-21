@@ -134,6 +134,7 @@ Cleanups
 -----------
 
 * Split test_ffi.cpp into multiple files
+* Unicode path support on Windows (GH #1615)
 
 Compat Headers
 ----------------
