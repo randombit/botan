@@ -306,34 +306,34 @@ The Amalgamation Build
 You can also configure Botan to be built using only a single source file; this
 is quite convenient if you plan to embed the library into another application.
 
-To generate the amalgamation, run ``configure.py`` with whatever
-options you would ordinarily use, along with the option
-``--amalgamation``. This will create two (rather large) files,
-``botan_all.h`` and ``botan_all.cpp``, plus (unless the option
-``--single-amalgamation-file`` is used) also some number of files like
-``botan_all_aesni.cpp`` and ``botan_all_sse2.cpp`` which need to be
-compiled with the appropriate compiler flags to enable that
-instruction set. The ISA specific files are only generated if there is
-code that requires them, so you can simplify your build. The
-``--minimized-build`` option (described elsewhere in this documentation)
-is also quite useful with the amalgamation.
+To generate the amalgamation, run ``configure.py`` with whatever options you
+would ordinarily use, along with the option ``--amalgamation``. This will create
+two (rather large) files, ``botan_all.h`` and ``botan_all.cpp``.
+
+.. note::
+
+   The library will as usual be configured to target some specific operating
+   system and CPU architecture. You can use the CPU target "generic" if you need
+   to target multiple CPU architectures, but this has the effect of disabling
+   *all* CPU specific features such as SIMD, AES instruction sets, or inline
+   assembly. If you need to ship amalgamations for multiple targets, it would be
+   better to create different amalgamation files for each individual target.
 
 Whenever you would have included a botan header, you can then include
-``botan_all.h``, and include ``botan_all.cpp`` along with the rest of
-the source files in your build. If you want to be able to easily
-switch between amalgamated and non-amalgamated versions (for instance
-to take advantage of prepackaged versions of botan on operating
-systems that support it), you can instead ignore ``botan_all.h`` and
-use the headers from ``build/include`` as normal.
+``botan_all.h``, and include ``botan_all.cpp`` along with the rest of the source
+files in your build. If you want to be able to easily switch between amalgamated
+and non-amalgamated versions (for instance to take advantage of prepackaged
+versions of botan on operating systems that support it), you can instead ignore
+``botan_all.h`` and use the headers from ``build/include`` as normal.
 
-You can also build the library using Botan's build system (as normal)
-but utilizing the amalgamation instead of the individual source files
-by running something like ``./configure.py --amalgamation && make``.
-This is essentially a very simple form of link time optimization;
-because the entire library source is visible to the compiler, it has
-more opportunities for interprocedural optimizations.
-Additionally, amalgamation builds usually have significantly shorter
-compile times for full rebuilds.
+You can also build the library using Botan's build system (as normal) but
+utilizing the amalgamation instead of the individual source files by running
+something like ``./configure.py --amalgamation && make``. This is essentially a
+very simple form of link time optimization; because the entire library source is
+visible to the compiler, it has more opportunities for interprocedural
+optimizations.  Additionally (assuming you are not making use of a compiler
+cache such as ``ccache`` or ``sccache``) amalgamation builds usually have
+significantly shorter compile times for full rebuilds.
 
 Modules Relying on Third Party Libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -752,16 +752,6 @@ Enable debug info and disable optimizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use amalgamation to build
-
-``--single-amalgamation-file``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default the amalgamation file is split up into several files,
-because using intrinsics requires enabling the relevant instruction
-set extension. This option selects generating a single file instead.
-
-This requires either MSVC, or a fairly recent version of GCC/Clang
-which supports the ``target`` attribute.
 
 ``--system-cert-bundle``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

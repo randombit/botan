@@ -41,8 +41,8 @@ inline uint32x4_t bqswap_32(uint32x4_t B)
 
 }
 
-BOTAN_FUNC_ISA("+sm4")
-void SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const
+void BOTAN_FUNC_ISA("arch=armv8.2-a+sm4")
+SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const
    {
    const uint32x4_t K0 = vld1q_u32(&m_RK[ 0]);
    const uint32x4_t K1 = vld1q_u32(&m_RK[ 4]);
@@ -102,8 +102,8 @@ void SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t output8[], size_t bl
       }
    }
 
-BOTAN_FUNC_ISA("+sm4")
-void SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const
+void BOTAN_FUNC_ISA("arch=armv8.2-a+sm4")
+SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const
    {
    const uint32x4_t K0 = qswap_32(vld1q_u32(&m_RK[ 0]));
    const uint32x4_t K1 = qswap_32(vld1q_u32(&m_RK[ 4]));
