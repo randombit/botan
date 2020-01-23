@@ -95,7 +95,10 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   m_y0.resize(GCM_BS);
+   if(m_y0.size() != GCM_BS)
+      m_y0.resize(GCM_BS);
+
+   clear_mem(m_y0.data(), m_y0.size());
 
    if(nonce_len == 12)
       {
@@ -109,11 +112,11 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
    m_ctr->set_iv(m_y0.data(), m_y0.size());
 
-   zeroise(m_y0);
+   clear_mem(m_y0.data(), m_y0.size());
    m_ctr->encipher(m_y0);
 
    m_ghash->start(m_y0.data(), m_y0.size());
-   m_y0.clear();
+   clear_mem(m_y0.data(), m_y0.size());
    }
 
 size_t GCM_Encryption::process(uint8_t buf[], size_t sz)
