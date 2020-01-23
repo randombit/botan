@@ -344,6 +344,8 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          return has_clmul();
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
          return has_arm_pmull();
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
+         return has_power_crypto();
 #else
          return false;
 #endif
