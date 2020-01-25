@@ -67,21 +67,6 @@ arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
 </isa_flags>
 
-<isa_targets>
-sse41 -> sse4.1
-sse42 -> sse4.2
-
-rdrand -> rdrnd
-
-armv8crypto -> "+crypto"
-armv8sm4 -> "+sm4"
-
-powercrypto -> "crypto"
-
-arm32:neon -> "fpu=neon"
-arm64:neon -> "+simd"
-</isa_targets>
-
 <cpu_flags>
 llvm    -> "-emit-llvm -fno-use-cxa-atexit"
 </cpu_flags>

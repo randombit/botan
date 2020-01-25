@@ -86,9 +86,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         # Arbitrarily test amalgamation with the static lib builds
         flags += ['--amalgamation']
 
-        if target_cc == 'msvc':
-            flags += ['--single-amalgamation-file']
-
     if target in ['bsi', 'nist']:
         # Arbitrarily test disable static on module policy builds
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs

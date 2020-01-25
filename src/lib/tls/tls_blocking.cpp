@@ -12,8 +12,6 @@ namespace Botan {
 
 namespace TLS {
 
-using namespace std::placeholders;
-
 Blocking_Client::Blocking_Client(read_fn reader,
                                  write_fn writer,
                                  Session_Manager& session_manager,
@@ -31,9 +29,9 @@ Blocking_Client::Blocking_Client(read_fn reader,
                   */
                TLS::Compat_Callbacks::SILENCE_DEPRECATION_WARNING::PLEASE,
                writer,
-               std::bind(&Blocking_Client::data_cb, this, _1, _2),
-               std::function<void (Alert)>(std::bind(&Blocking_Client::alert_cb, this, _1)),
-               std::bind(&Blocking_Client::handshake_cb, this, _1)
+               std::bind(&Blocking_Client::data_cb, this, std::placeholders::_1, std::placeholders::_2),
+               std::function<void (Alert)>(std::bind(&Blocking_Client::alert_cb, this, std::placeholders::_1)),
+               std::bind(&Blocking_Client::handshake_cb, this, std::placeholders::_1)
              )),
    m_channel(*m_callbacks.get(),
              session_manager,

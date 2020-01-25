@@ -3,7 +3,7 @@
 """
 Configuration program for botan
 
-(C) 2009,2010,2011,2012,2013,2014,2015,2016,2017,2018 Jack Lloyd
+(C) 2009-2020 Jack Lloyd
 (C) 2015,2016,2017 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
@@ -206,10 +206,8 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
         self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
 
-        if options.amalgamation:
-            self.lib_sources = ['botan_all.cpp']
-        else:
-            self.lib_sources = [normalize_source_path(s) for s in sorted(flatten([mod.sources() for mod in modules]))]
+        # this is overwritten if amalgamation is used
+        self.lib_sources = [normalize_source_path(s) for s in sorted(flatten([mod.sources() for mod in modules]))]
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
@@ -409,9 +407,8 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
                            default=False, action='store_true',
                            help='use amalgamation to build')
 
-    build_group.add_option('--single-amalgamation-file',
-                           default=False, action='store_true',
-                           help='build single file instead of splitting on ABI')
+    build_group.add_option('--name-amalgamation', metavar='NAME', default='botan_all',
+                           help='specify alternate name for amalgamation files')
 
     build_group.add_option('--with-build-dir', metavar='DIR', default='',
                            help='setup the build in DIR')
@@ -1127,7 +1124,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             infofile,
             [],
             ['cpu_flags', 'cpu_flags_no_debug', 'so_link_commands', 'binary_link_commands',
-             'mach_abi_linking', 'isa_flags', 'isa_targets', 'sanitizers', 'lib_flags'],
+             'mach_abi_linking', 'isa_flags', 'sanitizers', 'lib_flags'],
             {
                 'binary_name': None,
                 'linker_name': None,
@@ -1177,7 +1174,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.coverage_flags = lex.coverage_flags
         self.debug_info_flags = lex.debug_info_flags
         self.isa_flags = lex.isa_flags
-        self.isa_targets = lex.isa_targets
         self.lang_flags = lex.lang_flags
         self.lib_flags = lex.lib_flags
         self.linker_name = lex.linker_name
@@ -1237,17 +1233,6 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             return self.isa_flags[arch_isa]
 
         return None
-
-    def get_isa_target_name(self, isa, arch):
-        if isa in self.isa_targets:
-            return self.isa_targets[isa]
-
-        arch_isa = '%s:%s' % (arch, isa)
-        if arch_isa in self.isa_targets:
-            return self.isa_targets[arch_isa]
-
-        # default...
-        return isa
 
     def get_isa_specific_flags(self, isas, arch, options):
         flags = set()
@@ -1741,7 +1726,7 @@ def process_template_string(template_text, variables, template_source):
 def process_template(template_file, variables):
     return process_template_string(read_textfile(template_file), variables, template_file)
 
-def yield_objectfile_list(sources, obj_dir, obj_suffix):
+def yield_objectfile_list(sources, obj_dir, obj_suffix, options):
     obj_suffix = '.' + obj_suffix
 
     for src in sources:
@@ -1750,7 +1735,7 @@ def yield_objectfile_list(sources, obj_dir, obj_suffix):
 
         if 'src' in parts:
             parts = parts[parts.index('src')+2:]
-        elif filename.find('botan_all') != -1:
+        elif options.amalgamation and filename.find(options.name_amalgamation) != -1:
             parts = []
         else:
             raise InternalError("Unexpected file '%s/%s'" % (directory, filename))
@@ -1802,10 +1787,6 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
             return cc.get_isa_specific_flags(isas, arch, options)
 
-        if src.startswith('botan_all_'):
-            isas = src.replace('botan_all_', '').replace('.cpp', '').split('_')
-            return cc.get_isa_specific_flags(isas, arch, options)
-
         return ''
 
     def _build_info(sources, objects, target_type):
@@ -1844,7 +1825,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
         if src_list is not None:
             src_list.sort()
-            objects = list(yield_objectfile_list(src_list, src_dir, osinfo.obj_suffix))
+            objects = list(yield_objectfile_list(src_list, src_dir, osinfo.obj_suffix, options))
             build_info = _build_info(src_list, objects, t)
 
             for b in build_info:
@@ -2137,7 +2118,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         ),
 
         'cmake_link_to': ' '.join(
-            [lib for lib in link_to('libs')] +
+            link_to('libs') +
             [('"' + cc.add_framework_option + fw + '"') for fw in link_to('frameworks')]
         ),
 
@@ -2513,6 +2494,7 @@ class AmalgamationHelper(object):
     # Only matches at the beginning of the line. By convention, this means that the include
     # is not wrapped by condition macros
     _unconditional_any_include = re.compile(r'^#include <(.*)>')
+    # stddef.h is included in ffi.h
     _unconditional_std_include = re.compile(r'^#include <([^/\.]+|stddef.h)>')
 
     @staticmethod
@@ -2546,6 +2528,16 @@ class AmalgamationHelper(object):
             return match.group(1)
         else:
             return None
+
+    @staticmethod
+    def write_banner(fd):
+        fd.write("""/*
+* Botan %s Amalgamation
+* (C) 1999-2020 The Botan Authors
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+""" % (Version.as_string()))
 
 
 class AmalgamationHeader(object):
@@ -2600,40 +2592,16 @@ class AmalgamationHeader(object):
                 else:
                     yield line
 
-    @staticmethod
-    def write_banner(fd):
-        fd.write("""/*
-* Botan %s Amalgamation
-* (C) 1999-2018 The Botan Authors
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-""" % (Version.as_string()))
-
-    @staticmethod
-    def _write_start_include_guard(fd, title):
-        fd.write("""
-#ifndef %s
-#define %s
-
-""" % (title, title))
-
-    @staticmethod
-    def _write_end_include_guard(fd, title):
-        fd.write("\n#endif // %s\n" % (title))
-
     def write_to_file(self, filepath, include_guard):
         with open(filepath, 'w') as f:
-            self.write_banner(f)
-            self._write_start_include_guard(f, include_guard)
+            AmalgamationHelper.write_banner(f)
+            f.write("\n#ifndef %s\n#define %s\n\n" % (include_guard, include_guard))
             f.write(self.header_includes)
             f.write(self.contents)
-            self._write_end_include_guard(f, include_guard)
+            f.write("\n#endif // %s\n" % (include_guard))
 
 
 class AmalgamationGenerator(object):
-    filename_prefix = 'botan_all'
-
     _header_guard_pattern = re.compile(r'^#define BOTAN_.*_H_\s*$')
     _header_endif_pattern = re.compile(r'^#endif.*$')
 
@@ -2675,122 +2643,43 @@ class AmalgamationGenerator(object):
 
         return lines
 
-    def __init__(self, cc, arch, build_paths, modules, options):
-        self._cc = cc
-        self._arch = arch
+    def __init__(self, prefix, build_paths, modules, options):
+        self._filename_prefix = prefix
         self._build_paths = build_paths
         self._modules = modules
         self._options = options
 
-    def _target_for_module(self, mod):
-        target = ''
-        if not self._options.single_amalgamation_file:
-            isas = mod.isas_needed(self._options.arch)
-            if isas != []:
-                target = '_'.join(sorted(isas))
-                if target == 'sse2' and self._options.arch == 'x86_64':
-                    target = '' # SSE2 is always available on x86-64
-
-            if self._options.arch == 'x86_32' and 'simd' in mod.requires:
-                target = 'sse2'
-        return target
-
-    def _isas_for_target(self, target):
-        for mod in sorted(self._modules, key=lambda module: module.basename):
-            # Only first module for target is considered. Does this make sense?
-            if self._target_for_module(mod) == target:
-                out = set()
-                for isa in mod.isas_needed(self._options.arch):
-                    if isa == 'aesni':
-                        isa = "aes,pclmul"
-                    elif isa == 'rdrand':
-                        isa = 'rdrnd'
-                    out.add(isa)
-                return out
-        # Return set such that we can also iterate over result in the NA case
-        return set()
-
-    def _generate_headers(self):
-        pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
-        header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
-        logging.info('Writing amalgamation header to %s' % (header_name))
-        pub_header_amalag.write_to_file(header_name, "BOTAN_AMALGAMATION_H_")
-
-        isa_headers = {}
-        internal_headers_list = []
-
-        def known_isa_header(hdr):
-            if self._options.single_amalgamation_file:
-                return None
-            if hdr == 'simd_avx2.h':
-                return 'avx2'
-            return None
-
-        for hdr in self._build_paths.internal_headers:
-            isa = known_isa_header(os.path.basename(hdr))
-            if isa:
-                isa_headers[isa] = ''.join([line for line in AmalgamationGenerator.read_header(hdr)
-                                            if AmalgamationHelper.is_botan_include(line) is None])
-            else:
-                internal_headers_list.append(hdr)
-
-        internal_headers = AmalgamationHeader(internal_headers_list)
-        header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
-        logging.info('Writing amalgamation header to %s' % (header_int_name))
-        internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H_")
-
-        header_files = [header_name, header_int_name]
-        included_in_headers = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
-        return header_files, included_in_headers, isa_headers
-
-    def _generate_sources(self, amalgamation_headers, included_in_headers, isa_headers):
-        #pylint: disable=too-many-locals,too-many-branches
+    def generate(self):
         encoding_kwords = {}
         if sys.version_info[0] == 3:
             encoding_kwords['encoding'] = 'utf8'
 
-        # target to filepath map
-        amalgamation_sources = {}
-        for mod in self._modules:
-            target = self._target_for_module(mod)
-            amalgamation_sources[target] = '%s%s.cpp' % (
-                AmalgamationGenerator.filename_prefix,
-                '_' + target if target else '')
+        pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
+        amalgamation_header_fsname = '%s.h' % (self._filename_prefix)
+        logging.info('Writing amalgamation header to %s' % (amalgamation_header_fsname))
+        pub_header_amalag.write_to_file(amalgamation_header_fsname, "BOTAN_AMALGAMATION_H_")
+
+        internal_headers_list = []
+
+        for hdr in self._build_paths.internal_headers:
+            internal_headers_list.append(hdr)
 
         # file descriptors for all `amalgamation_sources`
-        amalgamation_files = {}
-        for target, filepath in amalgamation_sources.items():
-            logging.info('Writing amalgamation source to %s' % (filepath))
-            amalgamation_files[target] = open(filepath, 'w', **encoding_kwords)
+        amalgamation_fsname = '%s.cpp' % (self._filename_prefix)
+        logging.info('Writing amalgamation source to %s' % (amalgamation_fsname))
 
-        for target, f in amalgamation_files.items():
-            AmalgamationHeader.write_banner(f)
-            f.write('\n')
-            for header in amalgamation_headers:
-                f.write('#include "%s"\n' % (header))
-            f.write('\n')
+        amalgamation_file = open(amalgamation_fsname, 'w', **encoding_kwords)
 
-            for isa in self._isas_for_target(target):
+        AmalgamationHelper.write_banner(amalgamation_file)
+        amalgamation_file.write('\n#include "%s"\n\n' % (amalgamation_header_fsname))
 
-                if isa in isa_headers:
-                    f.write(isa_headers[isa])
+        internal_headers = AmalgamationHeader(internal_headers_list)
+        amalgamation_file.write(internal_headers.header_includes)
+        amalgamation_file.write(internal_headers.contents)
 
-                pragma_str = self._cc.get_isa_target_name(isa, self._arch.basename)
-
-                if pragma_str != '':
-                    f.write('#if defined(__GNUG__) && !defined(__clang__)\n')
-                    f.write('#pragma GCC target ("%s")\n' % (pragma_str))
-                    f.write('#endif\n')
-                else:
-                    print("No pragma for %s???", isa)
-
-        # target to include header map
-        unconditional_headers_written = {}
-        for target, _ in amalgamation_sources.items():
-            unconditional_headers_written[target] = included_in_headers.copy()
+        unconditional_headers = set([])
 
         for mod in sorted(self._modules, key=lambda module: module.basename):
-            tgt = self._target_for_module(mod)
             for src in sorted(mod.source):
                 with open(src, 'r', **encoding_kwords) as f:
                     for line in f:
@@ -2798,24 +2687,18 @@ class AmalgamationGenerator(object):
                             # Botan headers are inlined in amalgamation headers
                             continue
 
-                        if AmalgamationHelper.is_any_include(line) in unconditional_headers_written[tgt]:
+                        if AmalgamationHelper.is_any_include(line) in unconditional_headers:
                             # This include (conditional or unconditional) was unconditionally added before
                             continue
 
-                        amalgamation_files[tgt].write(line)
+                        amalgamation_file.write(line)
                         unconditional_header = AmalgamationHelper.is_unconditional_any_include(line)
                         if unconditional_header:
-                            unconditional_headers_written[tgt].add(unconditional_header)
+                            unconditional_headers.add(unconditional_header)
 
-        for f in amalgamation_files.values():
-            f.close()
+        amalgamation_file.close()
 
-        return set(amalgamation_sources.values())
-
-    def generate(self):
-        amalgamation_headers, included_in_headers, isa_headers = self._generate_headers()
-        amalgamation_sources = self._generate_sources(amalgamation_headers, included_in_headers, isa_headers)
-        return (sorted(amalgamation_sources), sorted(amalgamation_headers))
+        return ([amalgamation_fsname], [amalgamation_header_fsname])
 
 
 def have_program(program):
@@ -2883,7 +2766,7 @@ def load_info_files(search_dir, descr, filename_matcher, class_t):
                 info[info_obj.basename] = info_obj
 
     if info:
-        infotxt_basenames = ' '.join(sorted([key for key in info]))
+        infotxt_basenames = ' '.join(sorted(info.keys()))
         logging.debug('Loaded %d %s files: %s' % (len(info), descr, infotxt_basenames))
     else:
         logging.warning('Failed to load any %s files' % (descr))
@@ -3087,10 +2970,15 @@ def canonicalize_options(options, info_os, info_arch):
 # This method DOES NOT change options on behalf of the user but explains
 # why the given configuration does not work.
 def validate_options(options, info_os, info_cc, available_module_policies):
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
 
-    if options.single_amalgamation_file and not options.amalgamation:
-        raise UserError("--single-amalgamation-file requires --amalgamation.")
+    if options.name_amalgamation != 'botan_all':
+        if options.name_amalgamation == '':
+            raise UserError('Amalgamation basename must be non-empty')
+
+        acceptable_name_re = re.compile('^[a-zA-Z0-9_]+$')
+        if acceptable_name_re.match(options.name_amalgamation) is None:
+            raise UserError("Amalgamation basename must match [a-zA-Z0-9_]+")
 
     if options.os == "java":
         raise UserError("Jython detected: need --os and --cpu to set target")
@@ -3298,7 +3186,8 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
                  build_paths.external_include_dir)
 
     if options.amalgamation:
-        (amalg_cpp_files, amalg_headers) = AmalgamationGenerator(cc, arch, build_paths, using_mods, options).generate()
+        (amalg_cpp_files, amalg_headers) = AmalgamationGenerator(
+            options.name_amalgamation, build_paths, using_mods, options).generate()
         build_paths.lib_sources = amalg_cpp_files
         template_vars['generated_files'] = ' '.join(amalg_cpp_files + amalg_headers)
 
