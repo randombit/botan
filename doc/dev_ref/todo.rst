@@ -23,7 +23,7 @@ Ciphers, Hashes, PBKDF
 * EME* tweakable block cipher (https://eprint.iacr.org/2004/125)
 * FFX format preserving encryption (NIST 800-38G)
 * SHA-512 using BMI2+AVX2
-* Constant time DES using BMI2
+* Constant time DES using bitslicing and/or BMI2
 * Threefish-1024
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Adiantum (https://eprint.iacr.org/2018/720)
@@ -71,9 +71,10 @@ External Providers, Hardware Support
 * /dev/crypto provider (ciphers, hashes)
 * Windows CryptoNG provider (ciphers, hashes)
 * Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
-* Support iOS keychain access
-* POWER8 crypto extensions (SHA-2, GCM)
+* Add support for iOS keychain access
+* POWER8 SHA-2 extensions (GH #1486 + #1487)
 * Better TPM support: NVRAM, PCR measurements, sealing
+* Add support for TPM 2.0 hardware
 * Support Intel QuickAssist accelerator cards
 
 TLS
