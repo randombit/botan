@@ -46,6 +46,7 @@
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
   #define BOTAN_SIMD_ISA "altivec"
   #define BOTAN_VPERM_ISA "altivec"
+  #define BOTAN_CLMUL_ISA "crypto"
 #endif
 
 namespace Botan {

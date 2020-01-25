@@ -1,6 +1,6 @@
 /*
-* Hook for CLMUL/PMULL
-* (C) 2013,2017,2019 Jack Lloyd
+* Hook for CLMUL/PMULL/VPMSUM
+* (C) 2013,2017,2019,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -26,6 +26,9 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) reverse_vector(cons
    const uint8_t maskb[16] = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
    const uint8x16_t mask = vld1q_u8(maskb);
    return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(in.raw()), mask)));
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+   const __vector unsigned char mask = {15,14,13,12, 11,10,9,8, 7,6,5,4, 3,2,1,0};
+   return SIMD_4x32(vec_perm(in.raw(), in.raw(), mask));
 #endif
    }
 
@@ -40,6 +43,35 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) clmul(const SIMD_4x
    const uint64_t a = vgetq_lane_u64(vreinterpretq_u64_u32(x.raw()), M & 0x01);
    const uint64_t b = vgetq_lane_u64(vreinterpretq_u64_u32(H.raw()), (M & 0x10) >> 4);
    return SIMD_4x32(reinterpret_cast<uint32x4_t>(vmull_p64(a, b)));
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+   const SIMD_4x32 mask_lo = SIMD_4x32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF);
+
+   SIMD_4x32 i1 = x;
+   SIMD_4x32 i2 = H;
+
+   if(M == 0x11)
+      {
+      i1 &= mask_lo;
+      i2 &= mask_lo;
+      }
+   else if(M == 0x10)
+      {
+      i1 = i1.shift_elems_left<2>();
+      }
+   else if(M == 0x01)
+      {
+      i2 = i2.shift_elems_left<2>();
+      }
+   else if(M == 0x00)
+      {
+      i1 = mask_lo.andc(i1);
+      i2 = mask_lo.andc(i2);
+      }
+
+   return SIMD_4x32((__vector unsigned int)__builtin_crypto_vpmsumd(
+                       (__vector unsigned long)i1.raw(),
+                       (__vector unsigned long)i2.raw())
+      );
 #endif
    }
 

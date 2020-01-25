@@ -19,12 +19,14 @@ x86_64:ssse3
 x86_64:aesni
 arm64:neon
 arm64:armv8crypto
+ppc64:powercrypto
 </isa>
 
 <arch>
 x86_32
 x86_64
 arm64
+ppc64
 </arch>
 
 <cc>
