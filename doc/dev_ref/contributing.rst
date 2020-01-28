@@ -72,12 +72,12 @@ your change note as 'GH #000'.
 Update ``doc/credits.txt`` with your information so people know what you did!
 
 If you are interested in contributing but don't know where to start check out
-``doc/todo.rst`` for some ideas - these are changes we would almost certainly
-accept once they've passed code review.
+``doc/dev_ref/todo.rst`` for some ideas - these are changes we would almost
+certainly accept once they've passed code review.
 
 Also, try building and testing it on whatever hardware you have handy,
-especially non-x86 platforms, or especially C++11 compilers other than the
-regularly tested GCC, Clang, and Visual Studio compilers.
+especially unusual platforms, or using C++ compilers other than the regularly
+tested GCC, Clang, and Visual Studio.
 
 FFI Additions
 ----------------
@@ -122,19 +122,20 @@ For random scripts not typically run by an end-user (codegen, visualization, and
 so on) there isn't any need to worry about 2.6 and even just running under
 Python2 xor Python3 is acceptable if needed. Here it's fine to depend on any
 useful modules such as graphviz or matplotlib, regardless if it is available
-from a stock CPython install. Prefer Python3 for new scripts of this sort.
+from a stock CPython install. Since Python2 is now end of life, prefer Python3
+for new scripts of this sort.
 
 Build Tools and Hints
 ----------------------------------------
 
-If you don't already use it for all your C/C++ development, install
-``ccache`` now and configure a large cache on a fast disk. It allows for
-very quick rebuilds by caching the compiler output.
+If you don't already use it for all your C/C++ development, install ``ccache``
+(or on Windows, ``sccache``) right now, and configure a large cache on a fast
+disk. It allows for very quick rebuilds by caching the compiler output.
 
-Use ``--enable-sanitizers=`` flag to enable various sanitizer checks.
-Supported values including "address" and "undefined" for GCC and
-Clang.  GCC also supports "iterator" (checked iterators), and Clang
-supports "memory" (MSan) and "coverage" (for fuzzing).
+Use ``--enable-sanitizers=`` flag to enable various sanitizer checks.  Supported
+values including "address" and "undefined" for GCC and Clang. GCC also supports
+"iterator" (checked iterators), and Clang supports "memory" (MSan) and
+"coverage" (for fuzzing).
 
 On Linux if you have the ``lcov`` and ``gcov`` tools installed, then running
 ``./src/scripts/ci_build.py coverage`` will produce a coverage enabled build,
@@ -149,7 +150,7 @@ At the top of any new file add a comment with a copyright and a reference to the
 license, for example::
 
   /*
-  * (C) 2018 Copyright Holder
+  * (C) 20xx Copyright Holder
   * Botan is released under the Simplified BSD License (see license.txt)
   */
 
@@ -207,8 +208,8 @@ Compiler Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The library should always be as functional as possible when compiled with just
-C++11. However, feel free to use the C++11 language. Little mercy is given to
-sub-par C++11 compilers that don't actually implement the language.
+C++11. However, feel free to use the full C++11 language. No accomodations are
+made for compilers that are incomplete or buggy.
 
 Use of compiler extensions is fine whenever appropriate; this is typically
 restricted to a single file or an internal header. Compiler extensions used
@@ -229,13 +230,16 @@ If you're adding a small OS dependency in some larger piece of code, try to
 contain the actual non-portable operations to utils/os_utils.* and then call
 them from there.
 
-Old and obsolete systems are supported where convenient but generally speaking
-SunOS 5, IRIX 9, Windows 2000 and company are not secure platforms to build
-anything on so no special contortions are necessary. Patches that complicate the
-code in order to support any OS not supported by its vendor will likely be
-rejected. In writing OS specific code, feel free to assume roughly POSIX 2008,
-or for Windows Vista/2008 Server (the oldest versions still supported by
-Microsoft).
+As a policy, operating systems which are not supported by their original vendor
+are not supported by Botan either. Patches that complicate the code in order to
+support obsolete operating systems will likely be rejected. In writing OS
+specific code, feel free to assume roughly POSIX 2008, or for Windows, Windows 8
+/Server 2012 (which are as of this writing the oldest versions still supported
+by Microsoft).
+
+Some operating systems, such as OpenBSD, only support the latest release. For
+such cases, it's acceptable to add code that requires APIs added in the most
+recent release of that OS as soon as the release is available.
 
 Library Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -252,19 +256,13 @@ additional lines of code in the library. That is, if the library really does
 need this functionality, and it can be done in the library for less than that,
 then it makes sense to just write the code. Yup.
 
-Given the entire library is (according to cloc) 92K lines of code, that
-may give some estimate of the bar - you can do pretty much anything in 1000
-lines of well written C++11 (the implementations of *all* of the message
-authentication codes is much less than 1K SLOC).
+Currently the (optional) external dependencies of the library are OpenSSL (for
+access to fast and side channel hardened RSA, ECDSA, AES), some compression
+libraries (zlib, bzip2, lzma), sqlite3 database, Trousers (TPM integration),
+plus various operating system utilities like basic filesystem operations. These
+provide major pieces of functionality which seem worth the trouble of
+maintaining an integration with.
 
-Current the (optional) external dependencies of the library are OpenSSL (for
-access to fast and side channel hardened RSA, ECDSA, AES), zlib, bzip2, lzma,
-sqlite3, Trousers (TPM integration), PKCS #11, plus various operating system
-utilities like basic filesystem operations. These provide major pieces of
-functionality which seem worth the trouble of maintaining an integration with.
-
-Examples of other external dependencies that would be appropriate include
-integration with system crypto (/dev/crypto, CommonCrypto, CryptoAPI, ...),
-potentially a parallelism framework such as Cilk (as part of a larger design for
-parallel message processing, say), or hypothetically use of a safe ASN.1 parser
-(that is, one written in a safe language like Rust or OCaml providing a C API).
+At this point the most plausible examples of an appropriate new external
+dependency are all deeper integrations with system level cryptographic systems
+(CommonCrypto, CryptoAPI, /dev/crypto, iOS keychain, TPM 2.0, etc)
