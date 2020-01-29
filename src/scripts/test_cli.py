@@ -151,6 +151,19 @@ def cli_gen_prime_tests(_tmp_dir):
     test_cli("gen_prime", "64", "15568813029901363163")
     test_cli("gen_prime", "128", "287193909494025008847286845478788766073")
 
+def cli_cycle_counter(_tmp_dir):
+    output = test_cli("cpu_clock", None, None)
+
+    if output.startswith('No CPU cycle counter on this machine'):
+        return
+
+    have_clock_re = re.compile(r'Estimated CPU clock [0-9\.]+ (M|G)Hz')
+
+    if have_clock_re.match(output):
+        return
+
+    logging.error('Unexpected output from cpu_clock: %s', output)
+
 def cli_entropy_tests(_tmp_dir):
     output = test_cli("entropy", ["all"], None)
 
@@ -1279,6 +1292,7 @@ def main(args=None):
         cli_base64_tests,
         cli_bcrypt_tests,
         cli_cc_enc_tests,
+        cli_cycle_counter,
         cli_cert_issuance_tests,
         cli_compress_tests,
         cli_config_tests,
