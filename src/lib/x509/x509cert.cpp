@@ -50,6 +50,12 @@ struct X509_Certificate_Data
    std::string m_ocsp_responder;
    std::vector<std::string> m_ca_issuers;
 
+   std::vector<uint8_t> m_issuer_dn_bits_sha256;
+   std::vector<uint8_t> m_subject_dn_bits_sha256;
+
+   std::string m_fingerprint_sha1;
+   std::string m_fingerprint_sha256;
+
    AlternativeName m_subject_alt_name;
    AlternativeName m_issuer_alt_name;
    NameConstraints m_name_constraints;
@@ -313,12 +319,28 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
          }
       }
 
+   const std::vector<uint8_t> full_encoding = obj.BER_encode();
+
    std::unique_ptr<HashFunction> sha1(HashFunction::create("SHA-1"));
    if(sha1)
       {
       sha1->update(data->m_subject_public_key_bitstring);
       data->m_subject_public_key_bitstring_sha1 = sha1->final_stdvec();
       // otherwise left as empty, and we will throw if subject_public_key_bitstring_sha1 is called
+
+      data->m_fingerprint_sha1 = create_hex_fingerprint(full_encoding, "SHA-1");
+      }
+
+   std::unique_ptr<HashFunction> sha256(HashFunction::create("SHA-256"));
+   if(sha256)
+      {
+      sha256->update(data->m_issuer_dn_bits);
+      data->m_issuer_dn_bits_sha256 = sha256->final_stdvec();
+
+      sha256->update(data->m_subject_dn_bits);
+      data->m_subject_dn_bits_sha256 = sha256->final_stdvec();
+
+      data->m_fingerprint_sha256 = create_hex_fingerprint(full_encoding, "SHA-256");
       }
 
    data->m_subject_ds.add(data->m_subject_dn.contents());
@@ -675,16 +697,12 @@ std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
 
 std::vector<uint8_t> X509_Certificate::raw_issuer_dn_sha256() const
    {
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw("SHA-256"));
-   hash->update(raw_issuer_dn());
-   return hash->final_stdvec();
+   return data().m_issuer_dn_bits_sha256;
    }
 
 std::vector<uint8_t> X509_Certificate::raw_subject_dn_sha256() const
    {
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
-   hash->update(raw_subject_dn());
-   return hash->final_stdvec();
+   return data().m_subject_dn_bits_sha256;
    }
 
 namespace {
@@ -723,7 +741,21 @@ std::vector<std::string> X509_Certificate::policies() const
 
 std::string X509_Certificate::fingerprint(const std::string& hash_name) const
    {
-   return create_hex_fingerprint(this->BER_encode(), hash_name);
+   /*
+   * The SHA-1 and SHA-256 fingerprints are precomputed since these
+   * are the most commonly used. Especially, SHA-256 fingerprints are
+   * used for cycle detection during path construction.
+   *
+   * If SHA-1 or SHA-256 was missing at parsing time the vectors are
+   * left empty in which case we fall back to create_hex_fingerprint
+   * which will throw if the hash is unavailable.
+   */
+   if(hash_name == "SHA-256" && data().m_fingerprint_sha256.size() > 0)
+      return data().m_fingerprint_sha256;
+   else if(hash_name == "SHA-1" && data().m_fingerprint_sha1.size() > 0)
+      return data().m_fingerprint_sha1;
+   else
+      return create_hex_fingerprint(this->BER_encode(), hash_name);
    }
 
 bool X509_Certificate::matches_dns_name(const std::string& name) const
