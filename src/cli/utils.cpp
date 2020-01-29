@@ -10,6 +10,7 @@
 #include <botan/version.h>
 #include <botan/cpuid.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/os_utils.h>
 #include <sstream>
 #include <iomanip>
 
@@ -252,6 +253,81 @@ class Print_Cpuid final : public Command
    };
 
 BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
+
+class Cycle_Counter final : public Command
+   {
+   public:
+      Cycle_Counter() : Command("cpu_clock --test-duration=500") {}
+
+      std::string group() const override
+         {
+         return "info";
+         }
+
+      std::string description() const override
+         {
+         return "Estimate the speed of the CPU cycle counter";
+         }
+
+      void go() override
+         {
+         if(Botan::OS::get_cpu_cycle_counter() == 0)
+            {
+            output() << "No CPU cycle counter on this machine\n";
+            return;
+            }
+
+         const uint64_t test_duration_ns = get_arg_sz("test-duration") * 1000000;
+
+         if(test_duration_ns == 0)
+            {
+            output() << "Invalid test duration\n";
+            return;
+            }
+
+         const uint64_t cc_start = Botan::OS::get_cpu_cycle_counter();
+         const uint64_t ns_start = Botan::OS::get_system_timestamp_ns();
+
+         uint64_t cc_end = 0;
+         uint64_t ns_end = ns_start;
+
+         while((ns_end - ns_start) < test_duration_ns)
+            {
+            ns_end = Botan::OS::get_system_timestamp_ns();
+            cc_end = Botan::OS::get_cpu_cycle_counter();
+            }
+
+         if(cc_end <= cc_start)
+            {
+            output() << "Cycle counter seems to have wrapped, try again\n";
+            return;
+            }
+
+         if(ns_end <= ns_start)
+            {
+            output() << "System clock seems to have wrapped (?!?)\n";
+            return;
+            }
+
+         const uint64_t ns_duration = ns_end - ns_start;
+         const uint64_t cc_duration = cc_end - cc_start;
+
+         const double ratio = static_cast<double>(cc_duration) / ns_duration;
+
+         if(ratio >= 1.0)
+            {
+            // GHz
+            output() << "Estimated CPU clock " << std::setprecision(2) << ratio << " GHz\n";
+            }
+         else
+            {
+            // MHz
+            output() << "Estimated CPU clock " << static_cast<size_t>(ratio * 1000) << " MHz\n";
+            }
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("cpu_clock", Cycle_Counter);
 
 #if defined(BOTAN_HAS_UUID)
 
