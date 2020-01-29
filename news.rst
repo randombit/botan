@@ -4,11 +4,11 @@ Release Notes
 Version 2.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add support for using POWER8+ VPSUMD instruction to accelerate
-  GCM (GH #2247)
+* Add support for using POWER8+ VPSUMD instruction to accelerate GCM
+  (GH #2247)
 
 * Optimize the vector permute AES implementation, especially improving
-  performance on ARM and POWER. (GH #2243)
+  performance on ARMv7, Aarch64, and POWER. (GH #2243)
 
 * Support for splitting up the amalgamation file by ABI extension has
   been removed. Instead only ``botan_all.cpp`` and ``botan_all.h`` are
@@ -19,6 +19,11 @@ Version 2.14.0, Not Yet Released
 
 * Fix a bug that prevented compilation of the amalgamation on ARM and
   POWER processors (GH #2245 #2241)
+
+* Precompute and cache additional fields in X509_Certificate (GH #2250)
+
+* Add a CLI utility ``cpu_clock`` which estimates the speed of the
+  processor cycle counter. (GH #2251)
 
 * Work around a GCC bug affecting old libc (GH #2235)
 
