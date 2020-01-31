@@ -2,6 +2,8 @@
 GCM_CLMUL_CPU -> 20131227
 </defines>
 
+endian little
+
 <requires>
 simd
 </requires>

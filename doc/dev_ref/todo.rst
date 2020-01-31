@@ -73,6 +73,7 @@ External Providers, Hardware Support
 * Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
 * Add support for iOS keychain access
 * POWER8 SHA-2 extensions (GH #1486 + #1487)
+* Add support VPSUM on big-endian PPC64 (GH #2252)
 * Better TPM support: NVRAM, PCR measurements, sealing
 * Add support for TPM 2.0 hardware
 * Support Intel QuickAssist accelerator cards
