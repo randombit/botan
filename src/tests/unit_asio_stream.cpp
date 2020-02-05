@@ -558,6 +558,24 @@ class Asio_Stream_Tests final : public Test
          results.push_back(result);
          }
 
+      void test_sync_no_handshake(std::vector<Test::Result>& results)
+         {
+         net::io_context ioc;
+         TestStream      remote{ioc};
+
+         auto ctx = get_context();
+         Botan::TLS::Stream<TestStream> ssl(ctx, ioc);  // Note that we're not using MockChannel here
+         ssl.next_layer().connect(remote);
+         error_code ec;
+
+         net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+
+         Test::Result result("sync write_some without handshake fails gracefully");
+         result.confirm("reports an error", ec.failed());
+
+         results.push_back(result);
+         }
+
       void test_sync_write_some_buffer_sequence(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
@@ -754,6 +772,8 @@ class Asio_Stream_Tests final : public Test
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
+
+         test_sync_no_handshake(results);
 
          test_sync_handshake(results);
          test_sync_handshake_error(results);

@@ -113,7 +113,12 @@ class Stream
       lowest_layer_type& lowest_layer() { return m_nextLayer.lowest_layer(); }
       const lowest_layer_type& lowest_layer() const { return m_nextLayer.lowest_layer(); }
 
-      native_handle_type native_handle() { return m_native_handle.get(); }
+      native_handle_type native_handle()
+         {
+         if(m_native_handle == nullptr)
+            { throw Invalid_State("Invalid handshake state"); }
+         return m_native_handle.get();
+         }
 
       //! @}
       //! \name configuration and callback setters
