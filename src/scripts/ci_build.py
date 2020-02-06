@@ -27,7 +27,7 @@ def get_concurrency():
         return def_concurrency
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
-                    ccache, root_dir, pkcs11_lib, use_gdb, disable_werror):
+                    ccache, root_dir, pkcs11_lib, use_gdb, disable_werror, extra_cxxflags):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
     """
@@ -72,6 +72,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target_cpu is not None:
         flags += ['--cpu=%s' % (target_cpu)]
+
+    if extra_cxxflags != '':
+        flags += ['--extra-cxxflags=%s' % (extra_cxxflags)]
 
     if target in ['shared', 'mini-shared']:
         build_targets += ['shared']
@@ -342,6 +345,9 @@ def parse_args(args):
     parser.add_option('--make-tool', metavar='TOOL', default='make',
                       help='Specify tool to run to build source (default %default)')
 
+    parser.add_option('--extra-cxxflags', metavar='FLAGS', default='',
+                      help='Specify extra build flags')
+
     parser.add_option('--cpu', default=None,
                       help='Specify a target CPU platform')
 
@@ -506,7 +512,8 @@ def main(args=None):
         config_flags, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc,
             options.cc_bin, options.compiler_cache, root_dir,
-            options.pkcs11_lib, options.use_gdb, options.disable_werror)
+            options.pkcs11_lib, options.use_gdb, options.disable_werror,
+            options.extra_cxxflags)
 
         cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
 
