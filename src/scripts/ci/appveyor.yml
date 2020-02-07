@@ -60,6 +60,7 @@ environment:
       BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x64-1_69"
       MAKE_TOOL: jom
       TARGET_CC: msvc
+      EXTRA_FLAGS: "--extra-cxxflags=/DUNICODE"
 
     # MSVC 2019 static x86-64 w/debug iterators
     - CC: VC2019

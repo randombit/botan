@@ -105,7 +105,7 @@ class Handle_Guard
 
 HCERTSTORE open_cert_store(const char* cert_store_name)
    {
-   auto store = CertOpenSystemStore(NULL, cert_store_name);
+   auto store = CertOpenSystemStoreA(NULL, cert_store_name);
    if(!store)
       {
       throw Botan::Internal_Error(
