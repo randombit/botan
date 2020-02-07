@@ -315,7 +315,7 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     target_group.add_option('--cxxflags', metavar='FLAGS', default=None,
                             help='override all compiler flags')
 
-    target_group.add_option('--extra-cxxflags', metavar='FLAGS', default=None,
+    target_group.add_option('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
                             help='set extra compiler flags')
 
     target_group.add_option('--ldflags', metavar='FLAGS',
@@ -1412,8 +1412,8 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 if not (options.debug_mode or sanitizers_enabled):
                     yield self.cpu_flags_no_debug[options.arch]
 
-            if options.extra_cxxflags:
-                yield options.extra_cxxflags
+            for flag in options.extra_cxxflags:
+                yield flag
 
             for definition in options.define_build_macro:
                 yield self.add_compile_definition_option + definition

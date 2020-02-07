@@ -73,8 +73,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     if target_cpu is not None:
         flags += ['--cpu=%s' % (target_cpu)]
 
-    if extra_cxxflags != '':
-        flags += ['--extra-cxxflags=%s' % (extra_cxxflags)]
+    for flag in extra_cxxflags:
+        flags += ['--extra-cxxflags=%s' % (flag)]
 
     if target in ['shared', 'mini-shared']:
         build_targets += ['shared']
@@ -345,7 +345,7 @@ def parse_args(args):
     parser.add_option('--make-tool', metavar='TOOL', default='make',
                       help='Specify tool to run to build source (default %default)')
 
-    parser.add_option('--extra-cxxflags', metavar='FLAGS', default='',
+    parser.add_option('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
                       help='Specify extra build flags')
 
     parser.add_option('--cpu', default=None,
