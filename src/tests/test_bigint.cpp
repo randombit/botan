@@ -154,22 +154,20 @@ class BigInt_Unit_Tests final : public Test
 
       Test::Result test_get_substring()
          {
-         const size_t trials = 1000;
-
          Test::Result result("BigInt get_substring");
 
-         const Botan::BigInt r(Test::rng(), 250);
+         const size_t rbits = 1024;
 
-         for(size_t s = 1; s <= 32; ++s)
+         const Botan::BigInt r(Test::rng(), rbits);
+
+         for(size_t wlen = 1; wlen <= 32; ++wlen)
             {
-            for(size_t trial = 0; trial != trials; ++trial)
+            for(size_t offset = 0; offset != rbits + 64; ++offset)
                {
-               const size_t offset = Test::rng().next_byte();
-
-               const uint32_t val = r.get_substring(offset, s);
+               const uint32_t val = r.get_substring(offset, wlen);
 
                Botan::BigInt t = r >> offset;
-               t.mask_bits(s);
+               t.mask_bits(wlen);
 
                const uint32_t cmp = t.to_u32bit();
 

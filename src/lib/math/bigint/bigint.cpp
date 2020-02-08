@@ -216,18 +216,27 @@ uint32_t BigInt::get_substring(size_t offset, size_t length) const
    if(length == 0 || length > 32)
       throw Invalid_Argument("BigInt::get_substring invalid substring length");
 
-   const size_t byte_offset = offset / 8;
-   const size_t shift = (offset % 8);
    const uint32_t mask = 0xFFFFFFFF >> (32 - length);
 
-   const uint8_t b0 = byte_at(byte_offset);
-   const uint8_t b1 = byte_at(byte_offset + 1);
-   const uint8_t b2 = byte_at(byte_offset + 2);
-   const uint8_t b3 = byte_at(byte_offset + 3);
-   const uint8_t b4 = byte_at(byte_offset + 4);
-   const uint64_t piece = make_uint64(0, 0, 0, b4, b3, b2, b1, b0);
+   const size_t word_offset = offset / BOTAN_MP_WORD_BITS;
+   const size_t wshift = (offset % BOTAN_MP_WORD_BITS);
 
-   return static_cast<uint32_t>((piece >> shift) & mask);
+   /*
+   * The substring is contained within one or at most two words. The
+   * offset and length are not secret, so we can perform conditional
+   * operations on those values.
+   */
+   const word w0 = word_at(word_offset);
+
+   if(wshift == 0 || (offset + length) / BOTAN_MP_WORD_BITS == word_offset)
+      {
+      return static_cast<uint32_t>(w0 >> wshift) & mask;
+      }
+   else
+      {
+      const word w1 = word_at(word_offset + 1);
+      return static_cast<uint32_t>((w0 >> wshift) | (w1 << (BOTAN_MP_WORD_BITS - wshift))) & mask;
+      }
    }
 
 /*
