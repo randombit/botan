@@ -21,8 +21,8 @@
   #include <botan/internal/openssl.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-  #include <future>
+#if defined(BOTAN_HAS_THREAD_UTILS)
+  #include <botan/internal/thread_pool.h>
 #endif
 
 namespace Botan {
@@ -401,7 +401,7 @@ class RSA_Private_Operation
          // Compute this in main thread to avoid racing on the rng
          const BigInt d1_mask(m_blinder.rng(), m_blinding_bits);
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS) && !defined(BOTAN_HAS_VALGRIND)
+#if defined(BOTAN_HAS_THREAD_UTILS) && !defined(BOTAN_HAS_VALGRIND)
    #define BOTAN_RSA_USE_ASYNC
 #endif
 
@@ -413,7 +413,7 @@ class RSA_Private_Operation
          */
          m.sig_words();
 
-         auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask]() {
+         auto future_j1 = Thread_Pool::global_instance().run([this, &m, &d1_mask]() {
 #endif
             const BigInt masked_d1 = m_private->get_d1() + (d1_mask * (m_private->get_p() - 1));
             auto powm_d1_p = monty_precompute(m_private->m_monty_p, m_private->m_mod_p.reduce(m), powm_window);
