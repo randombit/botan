@@ -1,10 +1,6 @@
 <defines>
-ENTROPY_SRC_WIN32 -> 20131128
+ENTROPY_SRC_WIN32 -> 20200209
 </defines>
-
-<warning>
-This module can cause false positives with antivirus systems
-</warning>
 
 <header:internal>
 es_win32.h
@@ -13,7 +9,3 @@ es_win32.h
 <os_features>
 win32
 </os_features>
-
-<libs>
-windows -> user32
-</libs>
