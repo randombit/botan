@@ -9,3 +9,7 @@ es_win32.h
 <os_features>
 win32
 </os_features>
+
+<libs>
+windows -> user32
+</libs>
