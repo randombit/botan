@@ -89,6 +89,9 @@ def test_cli(cmd, cmd_options, expected_output=None, cmd_input=None, expected_st
         else:
             if stderr != expected_stderr:
                 logging.error("Got output on stderr %s which did not match expected value %s", stderr, expected_stderr)
+    else:
+        if expected_stderr is not None:
+            logging.error('Expected output on stderr but got nothing')
 
     output = stdout.decode('ascii').strip()
 
@@ -138,7 +141,7 @@ def cli_version_tests(_tmp_dir):
         logging.error("Unexpected version output %s" % (output))
 
     output = test_cli("version", ["--full"], None, None)
-    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9] \(.* revision .*, distribution .*\)')
+    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9] \(.* revision .*, distribution .*\)$')
     if not version_full_re.match(output):
         logging.error("Unexpected version output %s" % (output))
 
@@ -1146,6 +1149,62 @@ def cli_speed_pbkdf_tests(_tmp_dir):
             if format_re.match(line) is None:
                 logging.error("Unexpected line %s", line)
 
+def cli_speed_table_tests(_tmp_dir):
+    msec = 1
+
+    version_re = re.compile(r'^Botan 2\.[0-9]+\.[0-9] \(.*, revision .*, distribution .*\)')
+    cpuid_re = re.compile(r'^CPUID: [a-z_0-9 ]*$')
+    format_re = re.compile(r'^AES-128 .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
+    tbl_hdr_re = re.compile(r'^algo +operation +1024 bytes$')
+    tbl_val_re = re.compile(r'^AES-128 +(encrypt|decrypt) +[0-9]+(\.[0-9]{2})$')
+
+    output = test_cli("speed", ["--format=table", "--provider=base", "--msec=%d" % (msec), "AES-128"], None).split('\n')
+
+    if len(output) != 11:
+        logging.error('Unexpected number of lines from table output')
+
+    if version_re.match(output[0]) is None:
+        logging.error("Unexpected version line %s", output[0])
+
+    if output[1] != '':
+        if cpuid_re.match(output[1]) is None:
+            logging.error("Unexpected cpuid line %s", output[1])
+    elif output[2] != '':
+        logging.error("Expected newline got %s", output[2])
+
+    if format_re.match(output[3]) is None:
+        logging.error("Unexpected line %s", output[3])
+    if format_re.match(output[4]) is None:
+        logging.error("Unexpected line %s", output[4])
+    if output[5] != '':
+        logging.error("Expected newline got %s", output[5])
+
+    if tbl_hdr_re.match(output[6]) is None:
+        logging.error("Unexpected table header %s", output[6])
+    if tbl_val_re.match(output[7]) is None:
+        logging.error("Unexpected table header %s", output[7])
+    if tbl_val_re.match(output[8]) is None:
+        logging.error("Unexpected table header %s", output[8])
+    if output[9] != '':
+        logging.error("Expected newline got %s", output[9])
+    if output[10].find('results are the number of 1000s bytes processed per second') < 0:
+        logging.error("Unexpected trailing message got %s", output[10])
+
+def cli_speed_invalid_option_tests(_tmp_dir):
+    speed_usage = b"Usage: speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos\n"
+
+    test_cli("speed", ["--buf-size=0", "--msec=1", "AES-128"],
+             expected_stderr=b"Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))
+
+    test_cli("speed", ["--buf-size=F00F", "--msec=1", "AES-128"],
+             expected_stderr=b"Usage error: Invalid integer value 'F00F' for option buf-size\n%s" % (speed_usage))
+
+    test_cli("speed", ["--buf-size=90000000", "--msec=1", "AES-128"],
+             expected_stderr=b"Usage error: Specified buffer size is too large\n%s" % (speed_usage))
+
+    test_cli("speed", ["--clear-cpuid=goku", "--msec=1", "AES-128"],
+             expected_stderr=b"Warning don't know CPUID flag 'goku'\n")
+
 def cli_speed_math_tests(_tmp_dir):
     msec = 1
     # these all have a common output format
@@ -1283,6 +1342,8 @@ def main(args=None):
         cli_speed_pk_tests,
         cli_speed_math_tests,
         cli_speed_pbkdf_tests,
+        cli_speed_table_tests,
+        cli_speed_invalid_option_tests,
         cli_xmss_sign_tests,
 
         cli_argon2_tests,

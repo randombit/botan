@@ -1617,8 +1617,7 @@ class Speed final : public Command
 
                if(!ok)
                   {
-                  error_output() << "Generated prime " << p
-                                 << " which then failed primality test";
+                  error_output() << "Generated prime " << p << " which failed a primality test";
                   }
 
                // Now test p+2, p+4, ... which may or may not be prime
