@@ -188,6 +188,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
    ::sysctlbyname("hw.machine", machine, &size, nullptr, 0);
 
    detected_features = flags_by_ios_machine_type(machine);
+   // No way to detect this on iOS?
+   BOTAN_UNUSED(cache_line_size);
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
@@ -221,6 +223,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
       if(OS::run_cpu_instruction_probe(sha2_probe) == 1)
          detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
       }
+
+   BOTAN_UNUSED(cache_line_size);
 
 #endif
 
