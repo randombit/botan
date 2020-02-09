@@ -26,11 +26,7 @@ class DL_Group_Tests final : public Test
          {
          std::vector<Test::Result> results;
 
-         Botan::RandomNumberGenerator& rng = Test::rng();
-
          results.push_back(test_dl_encoding());
-         results.push_back(test_dl_named(rng));
-         results.push_back(test_dl_generate(rng));
          results.push_back(test_dl_errors());
 
          return results;
@@ -90,12 +86,20 @@ class DL_Group_Tests final : public Test
 
          return result;
          }
+   };
 
-      Test::Result test_dl_generate(Botan::RandomNumberGenerator& rng)
+BOTAN_REGISTER_TEST("dl_group", DL_Group_Tests);
+
+class DL_Generate_Group_Tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
          {
          Test::Result result("DL_Group generate");
 
          result.start_timer();
+
+         auto& rng = Test::rng();
 
          Botan::DL_Group dh1050(rng, Botan::DL_Group::Prime_Subgroup, 1050, 175);
          result.test_eq("DH p size", dh1050.get_p().bits(), 1050);
@@ -155,10 +159,16 @@ class DL_Group_Tests final : public Test
 
          result.end_timer();
 
-         return result;
+         return {result};
          }
+   };
 
-      Test::Result test_dl_named(Botan::RandomNumberGenerator& rng)
+BOTAN_REGISTER_TEST("dl_group_gen", DL_Generate_Group_Tests);
+
+class DL_Named_Group_Tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
          {
          const std::vector<std::string> dl_named =
             {
@@ -216,17 +226,17 @@ class DL_Group_Tests final : public Test
 
             if(group.p_bits() < 2048 || Test::run_long_tests())
                {
-               result.test_eq(name + " verifies", group.verify_group(rng, false), true);
+               result.test_eq(name + " verifies", group.verify_group(Test::rng(), false), true);
                }
 
             }
          result.end_timer();
 
-         return result;
+         return {result};
          }
    };
 
-BOTAN_REGISTER_TEST("dl_group", DL_Group_Tests);
+BOTAN_REGISTER_TEST("dl_group_named", DL_Named_Group_Tests);
 
 }
 
