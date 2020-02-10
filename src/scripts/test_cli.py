@@ -837,18 +837,20 @@ def cli_tls_socket_tests(tmp_dir):
                                    '--port=%d' % (server_port), server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    time.sleep(.5)
+    wait_time = 1.0
+
+    time.sleep(wait_time)
 
     tls_client = subprocess.Popen([CLI_PATH, 'tls_client', 'localhost',
                                    '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert)],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    time.sleep(.5)
+    time.sleep(wait_time)
 
     tls_client.stdin.write(client_msg)
     tls_client.stdin.flush()
 
-    time.sleep(.5)
+    time.sleep(wait_time)
 
     (stdout, stderr) = tls_client.communicate()
 
@@ -898,7 +900,8 @@ def cli_tls_http_server_tests(tmp_dir):
                                    '--port=%d' % (server_port), server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    time.sleep(.5)
+    wait_time = 1.0
+    time.sleep(wait_time)
 
     context = ssl.create_default_context(cafile=ca_cert)
     conn = HTTPSConnection('localhost', port=server_port, context=context)
@@ -977,7 +980,7 @@ def cli_tls_proxy_tests(tmp_dir):
                                   server_cert, priv_key, '--output=/tmp/proxy.err', '--max-clients=2'],
                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    time.sleep(.5)
+    time.sleep(wait_time)
 
     server_response = binascii.hexlify(os.urandom(32))
 
@@ -996,7 +999,7 @@ def cli_tls_proxy_tests(tmp_dir):
     http_thread.daemon = True
     http_thread.start()
 
-    time.sleep(.5)
+    time.sleep(wait_time)
 
     context = ssl.create_default_context(cafile=ca_cert)
 
