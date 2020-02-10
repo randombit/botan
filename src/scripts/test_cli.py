@@ -980,6 +980,8 @@ def cli_tls_proxy_tests(tmp_dir):
                                   server_cert, priv_key, '--output=/tmp/proxy.err', '--max-clients=2'],
                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+    wait_time = 1.0
+
     time.sleep(wait_time)
 
     server_response = binascii.hexlify(os.urandom(32))
