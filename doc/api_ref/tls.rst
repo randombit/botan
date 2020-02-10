@@ -28,7 +28,7 @@ If the reader is familiar with OpenSSL's BIO layer, it might be analogous
 to saying the only way of interacting with Botan's TLS is via a `BIO_mem` I/O
 abstraction. This makes the library completely agnostic to how you
 write your network layer, be it blocking sockets, libevent, asio, a
-message queue, lwIP on RTOS, some carrier pidgeons, etc.
+message queue, lwIP on RTOS, some carrier pigeons, etc.
 
 Starting in 1.11.31, the application callbacks are encapsulated as the class
 ``TLS::Callbacks`` with the following members. The first four (``tls_emit_data``,
