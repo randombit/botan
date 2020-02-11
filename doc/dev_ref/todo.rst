@@ -65,6 +65,7 @@ Multiparty Protocols
 External Providers, Hardware Support
 ----------------------------------------
 
+* Add support ARMv8.4-A SHA-512, SHA-3 and SM3
 * Aarch64 inline asm for BigInt
 * Extend OpenSSL provider (DH, HMAC, CMAC, GCM)
 * Support using BoringSSL instead of OpenSSL or LibreSSL
