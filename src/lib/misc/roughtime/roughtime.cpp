@@ -437,17 +437,17 @@ std::vector<Server_Information> servers_from_str(const std::string& str)
 
       const auto addresses = [&]()
          {
-         std::vector<std::string> addresses;
+         std::vector<std::string> addr;
          for(;;)
             {
             start = end + 1;
             end = s.find(' ', start);
             const auto address = s.substr(start, (end == std::string::npos) ? std::string::npos : end-start);
             if(address.empty())
-               { return addresses; }
-            addresses.push_back(address);
+               { return addr; }
+            addr.push_back(address);
             if(end == std::string::npos)
-               { return addresses; }
+               { return addr; }
             }
          }
       ();

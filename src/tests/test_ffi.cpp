@@ -287,7 +287,7 @@ class FFI_Unit_Tests final : public Test
          Test::Result result("FFI CRL");
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-         
+
          const char *crl_string = "-----BEGIN X509 CRL-----\n"
                                  "MIICoTCCAQkCAQEwDQYJKoZIhvcNAQELBQAwgZQxLTArBgNVBAMTJFVzYWJsZSBj\n"
                                  "ZXJ0IHZhbGlkYXRpb246IFRlbXBvcmFyeSBDQTE5MDcGA1UECxMwQ2VudHJlIGZv\n"
@@ -305,18 +305,18 @@ class FFI_Unit_Tests final : public Test
                                  "RnIoBwjnrGoJoz636KS170SZCB9ARNs17WE4IvbJdZrTXNOGaVZCQUUpiLRj4ZSO\n"
                                  "Na/nobI=\n"
                                  "-----END X509 CRL-----";
-         
+
          botan_x509_crl_t bytecrl;
-         REQUIRE_FFI_OK(botan_x509_crl_load, (&bytecrl, (const uint8_t*)crl_string, 966));
+         REQUIRE_FFI_OK(botan_x509_crl_load, (&bytecrl, reinterpret_cast<const uint8_t*>(crl_string), 966));
 
          botan_x509_crl_t crl;
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&crl, Test::data_file("x509/nist/root.crl").c_str()));
-         
+
          botan_x509_cert_t cert1;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert1, Test::data_file("x509/nist/test01/end.crt").c_str()));
          TEST_FFI_RC(-1, botan_x509_is_revoked, (crl, cert1));
          TEST_FFI_OK(botan_x509_cert_destroy, (cert1));
-            
+
          botan_x509_cert_t cert2;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert2, Test::data_file("x509/nist/test20/int.crt").c_str()));
          TEST_FFI_RC(0, botan_x509_is_revoked, (crl, cert2));
@@ -390,7 +390,7 @@ class FFI_Unit_Tests final : public Test
          result.confirm("Validation failed", rc == 5000);
          result.test_eq("Validation status string", botan_x509_cert_validation_status(rc),
                         "Certificate is revoked");
-         
+
          TEST_FFI_OK(botan_x509_cert_destroy, (end2));
          TEST_FFI_OK(botan_x509_cert_destroy, (sub2));
          TEST_FFI_OK(botan_x509_cert_destroy, (end7));

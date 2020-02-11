@@ -140,10 +140,10 @@ class Roughtime final : public Test
          Botan::Roughtime::Nonce nonce_a(Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
          result.confirm("nonce from array", nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
          rand64.push_back(10);
-         result.test_throws("vector oversize", [&rand64]() {Botan::Roughtime::Nonce nonce_v(rand64);}); //size 65
+         result.test_throws("vector oversize", [&rand64]() {Botan::Roughtime::Nonce nonce_v2(rand64);}); //size 65
          rand64.pop_back();
          rand64.pop_back();
-         result.test_throws("vector undersize", [&rand64]() {Botan::Roughtime::Nonce nonce_v(rand64);}); //size 63
+         result.test_throws("vector undersize", [&rand64]() {Botan::Roughtime::Nonce nonce_v2(rand64);}); //size 63
 
          return result;
          }

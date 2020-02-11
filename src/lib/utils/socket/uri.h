@@ -28,10 +28,10 @@ struct BOTAN_TEST_API URI
    static URI fromIPv6(const std::string& uri);
    static URI fromDomain(const std::string& uri);
    URI() = default;
-   URI(Type type, const std::string& host, unsigned short port)
-      : type { type }
-      , host { host }
-      , port { port }
+   URI(Type xtype, const std::string& xhost, unsigned short xport)
+      : type { xtype }
+      , host { xhost }
+      , port { xport }
       {}
    bool operator==(const URI& a) const
       {

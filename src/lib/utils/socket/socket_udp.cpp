@@ -210,7 +210,9 @@ class BSD_SocketUDP final : public OS::SocketUDP
                { throw System_Error("Timeout during socket write"); }
 
             const size_t left = len - sent_so_far;
-            socket_op_ret_type sent = ::sendto(m_socket, cast_uint8_ptr_to_char(buf + sent_so_far), static_cast<sendrecv_len_type>(left), 0, (sockaddr*)&sa, salen);
+            socket_op_ret_type sent = ::sendto(m_socket, cast_uint8_ptr_to_char(buf + sent_so_far),
+                                               static_cast<sendrecv_len_type>(left), 0,
+                                               reinterpret_cast<sockaddr*>(&sa), salen);
             if(sent < 0)
                { throw System_Error("Socket write failed", errno); }
             else
