@@ -143,6 +143,14 @@ The major certificate format in use today is X.509v3, used for instance in the
 
       Returns a free-form human readable string describing the certificate.
 
+  .. cpp:function:: std::string PEM_encode() const
+
+      Returns the PEM encoding of the certificate
+
+  .. cpp:function:: std::vector<uint8_t> BER_encode() const
+
+      Returns the DER/BER encoding of the certificate
+
 X.509 Distinguished Names
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
