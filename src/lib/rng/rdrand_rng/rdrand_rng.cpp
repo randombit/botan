@@ -23,7 +23,9 @@ namespace {
    typedef uint32_t rdrand_output;
 #endif
 
+#if !defined(BOTAN_USE_GCC_INLINE_ASM)
 BOTAN_FUNC_ISA("rdrnd")
+#endif
 rdrand_output read_rdrand()
    {
    /*
