@@ -920,7 +920,7 @@ policy settings from a file.
         simply allow only ECDH key exchange in the application policy. DH
         exchange also often involves transferring several additional Kb (without
         the benefit of post quantum security) so if CECPQ1 is being disabled for
-        traffic overhead reasons, DH should also be avoid.
+        traffic overhead reasons, DH should also be avoided.
 
      Also allowed: "RSA", "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
 
@@ -1016,13 +1016,15 @@ policy settings from a file.
      most out of the client's list. Otherwise, it will negotiate the
      first cipher in the client's ciphersuite list that it supports.
 
+     Default: true
+
  .. cpp:function:: bool allow_client_initiated_renegotiation() const
 
      If this function returns true, a server will accept a
      client-initiated renegotiation attempt. Otherwise it will send
      the client a non-fatal ``no_renegotiation`` alert.
 
-     Default: true
+     Default: false
 
  .. cpp:function:: bool allow_server_initiated_renegotiation() const
 
