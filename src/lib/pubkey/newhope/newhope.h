@@ -12,7 +12,7 @@
 #ifndef BOTAN_NEWHOPE_H_
 #define BOTAN_NEWHOPE_H_
 
-#include <botan/mem_ops.h>
+#include <botan/types.h>
 
 namespace Botan {
 
@@ -29,7 +29,7 @@ class newhope_poly final
    {
    public:
       uint16_t coeffs[1024];
-      ~newhope_poly() { secure_scrub_memory(coeffs, sizeof(coeffs)); }
+      ~newhope_poly();
    };
 
 enum Newhope_Params

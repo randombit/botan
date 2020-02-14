@@ -17,6 +17,11 @@
 
 namespace Botan {
 
+newhope_poly::~newhope_poly()
+   {
+   secure_scrub_memory(coeffs, sizeof(coeffs));
+   }
+
 typedef newhope_poly poly;
 
 namespace {

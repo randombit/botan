@@ -87,7 +87,10 @@ inline bool constant_time_compare(const uint8_t x[],
    }
 
 /**
-* Zero out some bytes
+* Zero out some bytes. Warning: use secure_scrub_memory instead if the
+* memory is about to be freed or otherwise the compiler thinks it can
+* elide the writes.
+*
 * @param ptr a pointer to memory to zero
 * @param bytes the number of bytes to zero in ptr
 */
@@ -114,10 +117,8 @@ template<typename T> inline void clear_mem(T* ptr, size_t n)
    clear_bytes(ptr, sizeof(T)*n);
    }
 
-
-
 // is_trivially_copyable is missing in g++ < 5.0
-#if !__clang__ && __GNUG__ && __GNUC__ < 5
+#if (BOTAN_GCC_VERSION > 0 && BOTAN_GCC_VERSION < 500)
 #define BOTAN_IS_TRIVIALLY_COPYABLE(T) true
 #else
 #define BOTAN_IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
