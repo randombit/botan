@@ -6,6 +6,7 @@ load_on vendor
 
 <header:internal>
 commoncrypto.h
+commoncrypto_utils.h
 </header:internal>
 
 <os_features>
