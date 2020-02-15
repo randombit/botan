@@ -25,7 +25,7 @@ class RandomNumberGenerator;
 */
 
 // TODO: change to just a secure_vector
-class newhope_poly final
+class BOTAN_UNSTABLE_API newhope_poly final
    {
    public:
       uint16_t coeffs[1024];
