@@ -14,8 +14,6 @@
 
 namespace Botan {
 
-class Key_Length_Specification;
-
 struct CommonCryptor_Opts
    {
    CCAlgorithm algo;
