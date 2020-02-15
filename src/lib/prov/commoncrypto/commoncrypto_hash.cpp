@@ -5,10 +5,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/hash.h>
 #include <botan/internal/commoncrypto.h>
-#include <CommonCrypto/CommonCrypto.h>
+#include <botan/hash.h>
 #include <unordered_map>
+
+#include <CommonCrypto/CommonCrypto.h>
 
 namespace Botan {
 

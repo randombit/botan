@@ -5,13 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/hex.h>
-
-#include <botan/block_cipher.h>
 #include <botan/internal/commoncrypto.h>
-#include <CommonCrypto/CommonCrypto.h>
+#include <botan/internal/commoncrypto_utils.h>
+#include <botan/hex.h>
+#include <botan/block_cipher.h>
 
-#include "commoncrypto_utils.h"
+#include <CommonCrypto/CommonCrypto.h>
 
 namespace Botan {
 
