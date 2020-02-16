@@ -95,7 +95,7 @@ CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo)
       {
       opts.algo = kCCAlgorithmBlowfish;
       opts.block_size = kCCBlockSizeBlowfish;
-      opts.key_spec = Key_Length_Specification(1, kCCKeySizeMaxBlowfish, 1);
+      opts.key_spec = Key_Length_Specification(kCCKeySizeMinBlowfish, kCCKeySizeMaxBlowfish, 1);
       }
    else if(algo_name == "CAST-128")
       {
