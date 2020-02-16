@@ -48,7 +48,7 @@ std::string CommonCrypto_Error::ccryptorstatus_to_string(CCCryptorStatus status)
    };
 
 
-CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo)
+CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo, bool cipher_only)
    {
    SCAN_Name spec(algo);
 
@@ -109,6 +109,9 @@ CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo)
       {
       throw CommonCrypto_Error("Unsupported cipher");
       }
+
+   if (cipher_only)
+      return opts;
 
    //TODO add CFB and XTS support
    if(cipher_mode.empty() || cipher_mode == "ECB")

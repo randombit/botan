@@ -236,7 +236,7 @@ make_commoncrypto_cipher_mode(const std::string& name, Cipher_Dir direction)
 
    try
       {
-      CommonCryptor_Opts opts = commoncrypto_opts_from_algo(name);
+      CommonCryptor_Opts opts = commoncrypto_opts_from_algo(name, false);
       return new CommonCrypto_Cipher_Mode(name, direction, opts);
       }
    catch(CommonCrypto_Error& e)

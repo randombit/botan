@@ -23,7 +23,7 @@ struct CommonCryptor_Opts
    Key_Length_Specification key_spec{0};
    };
 
-CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo);
+CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo, bool cipher_only);
 
 void commoncrypto_adjust_key_size(const uint8_t key[], size_t length,
                                   const CommonCryptor_Opts& opts, secure_vector<uint8_t>& full_key);
