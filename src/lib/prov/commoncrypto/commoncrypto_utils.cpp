@@ -132,12 +132,12 @@ CommonCryptor_Opts commoncrypto_opts_from_algo(const std::string& algo)
       throw CommonCrypto_Error("Unsupported cipher mode!");
       }
 
-   if(cipher_mode_padding == "NoPadding")
+   if(cipher_mode_padding.empty() || cipher_mode_padding == "NoPadding")
       {
       opts.padding = ccNoPadding;
       }
    /*
-   else if(cipher_mode_padding.empty() || cipher_mode_padding == "PKCS7")
+   else if(cipher_mode_padding == "PKCS7")
       {
       opts.padding = ccPKCS7Padding;
       }
