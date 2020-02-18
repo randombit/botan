@@ -24,6 +24,14 @@ jobs:
        - TARGET="shared"
 
     - os: linux
+      dist: bionic
+      name: Linux/Clang8
+      compiler: clang
+      env:
+       - TARGET="clang8"
+       - CXX="/usr/bin/clang++-8"
+
+    - os: linux
       dist: xenial
       name: Coverage
       compiler: gcc
