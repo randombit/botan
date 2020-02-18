@@ -11,19 +11,14 @@
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   const size_t half = len / 2;
    Botan::X509_DN dn1;
    Botan::X509_DN dn2;
 
    try
       {
-      Botan::BER_Decoder ber1(in, half);
-      dn1.decode_from(ber1);
-      ber1.verify_end();
-
-      Botan::BER_Decoder ber2(in + half, half);
-      dn2.decode_from(ber2);
-      ber2.verify_end();
+      Botan::BER_Decoder ber(in, len);
+      dn1.decode_from(ber);
+      dn2.decode_from(ber);
       }
    catch(...) { return; }
 
