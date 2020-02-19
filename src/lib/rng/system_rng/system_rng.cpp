@@ -119,7 +119,11 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
       void randomize(uint8_t buf[], size_t len) override
          {
-         ::arc4random_buf(buf, len);
+         // macOS 10.15 arc4random crashes if called with len == 0
+         if(len > 0)
+            {
+            ::arc4random_buf(buf, len);
+            }
          }
 
       bool accepts_input() const override { return false; }
