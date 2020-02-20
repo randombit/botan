@@ -28,4 +28,5 @@ virtual_lock
 threads
 thread_local
 filesystem
+certificate_store
 </target_features>
