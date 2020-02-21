@@ -129,7 +129,7 @@ Cert_Vector search_cert_stores(const _CRYPTOAPI_BLOB& blob, const DWORD& find_ty
       Handle_Guard<PCCERT_CONTEXT> cert_context = nullptr;
       while(cert_context.assign(CertFindCertificateInStore(
                                    windows_cert_store.get(), PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
-                                   NULL, find_type,
+                                   WINCRYPT_UNUSED_PARAM, find_type,
                                    &blob, cert_context.get())))
          {
          auto cert = std::make_shared<X509_Certificate>(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
