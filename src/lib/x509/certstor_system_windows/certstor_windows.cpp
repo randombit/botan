@@ -17,6 +17,8 @@
 #include <windows.h>
 #include <wincrypt.h>
 
+#define WINCRYPT_UNUSED_PARAM 0 // for avoiding warnings when passing NULL to unused params in win32 api that accept integer types
+
 namespace Botan {
 namespace {
 
@@ -105,7 +107,7 @@ class Handle_Guard
 
 HCERTSTORE open_cert_store(const char* cert_store_name)
    {
-   auto store = CertOpenSystemStoreA(NULL, cert_store_name);
+   auto store = CertOpenSystemStoreA(WINCRYPT_UNUSED_PARAM, cert_store_name);
    if(!store)
       {
       throw Botan::Internal_Error(
