@@ -100,6 +100,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
         test_cmd = None
 
+    if target == 'cross-win64':
+        # this test compiles under MinGW but fails when run under Wine
+        test_cmd += ['--skip-tests=certstor_system']
+
     if target == 'coverage':
         flags += ['--with-coverage-info', '--with-debug-info', '--test-mode']
         build_targets += ['bogo_shim']
