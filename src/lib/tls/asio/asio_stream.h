@@ -1,7 +1,7 @@
 /*
 * TLS ASIO Stream
-* (C) 2018-2019 Jack Lloyd
-*     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+* (C) 2018-2020 Jack Lloyd
+*     2018-2020 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -64,7 +64,8 @@ class Stream
       explicit Stream(Context& context, Args&& ... args)
          : m_context(context)
          , m_nextLayer(std::forward<Args>(args)...)
-         , m_core(m_receive_buffer, m_send_buffer, m_context)
+         , m_core(*this)
+         , m_shutdown_received(false)
          , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
@@ -83,7 +84,8 @@ class Stream
       explicit Stream(Arg&& arg, Context& context)
          : m_context(context)
          , m_nextLayer(std::forward<Arg>(arg))
-         , m_core(m_receive_buffer, m_send_buffer, m_context)
+         , m_core(*this)
+         , m_shutdown_received(false)
          , m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0')
          , m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size())
          {}
@@ -228,22 +230,7 @@ class Stream
             if(ec)
                { return; }
 
-            try
-               {
-               native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
-               }
-            catch(const TLS_Exception& e)
-               {
-               ec = e.type();
-               }
-            catch(const Botan::Exception& e)
-               {
-               ec = e.error_type();
-               }
-            catch(const std::exception&)
-               {
-               ec = Botan::ErrorType::Unknown;
-               }
+            process_encrypted_data(read_buffer, ec);
 
             send_pending_encrypted_data(ec);
             }
@@ -300,29 +287,18 @@ class Stream
        * This function is used to shut down SSL on the stream. The function call will block until SSL has been shut down
        * or an error occurs. Note that this will not close the lowest layer.
        *
+       * Note that this can be used in reaction of a received shutdown alert from the peer.
+       *
        * @param ec Set to indicate what error occured, if any.
        */
       void shutdown(boost::system::error_code& ec)
          {
-         try
+         try_with_error_code([&]
             {
             native_handle()->close();
-            }
-         catch(const TLS_Exception& e)
-            {
-            ec = e.type();
-            }
-         catch(const Botan::Exception& e)
-            {
-            ec = e.error_type();
-            }
-         catch(const std::exception&)
-            {
-            ec = Botan::ErrorType::Unknown;
-            }
+            }, ec);
 
-         if(!ec)
-            { send_pending_encrypted_data(ec); }
+         send_pending_encrypted_data(ec);
          }
 
       /**
@@ -330,6 +306,8 @@ class Stream
        *
        * This function is used to shut down SSL on the stream. The function call will block until SSL has been shut down
        * or an error occurs. Note that this will not close the lowest layer.
+       *
+       * Note that this can be used in reaction of a received shutdown alert from the peer.
        *
        * @throws boost::system::system_error if error occured
        */
@@ -345,7 +323,9 @@ class Stream
        *
        * This function call always returns immediately.
        *
-       * @param handler The handler to be called when the handshake operation completes.
+       * Note that this can be used in reaction of a received shutdown alert from the peer.
+       *
+       * @param handler The handler to be called when the shutdown operation completes.
        *                The equivalent function signature of the handler must be: void(boost::system::error_code)
        */
       template <typename ShutdownHandler>
@@ -369,7 +349,8 @@ class Stream
        * occurs.
        *
        * @param buffers The buffers into which the data will be read.
-       * @param ec Set to indicate what error occured, if any.
+       * @param ec Set to indicate what error occurred, if any. Specifically, StreamTruncated will be set if the peer
+       *           has closed the connection but did not properly shut down the SSL connection.
        * @return The number of bytes read. Returns 0 if an error occurred.
        */
       template <typename MutableBufferSequence>
@@ -383,21 +364,20 @@ class Stream
          if(ec)
             { return 0; }
 
-         try
+         process_encrypted_data(read_buffer, ec);
+
+         if(ec)  // something went wrong in process_encrypted_data()
+            { return 0; }
+
+         if(shutdown_received())
             {
-            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
+            // we just received a 'close_notify' from the peer and don't expect any more data
+            ec = boost::asio::error::eof;
             }
-         catch(const TLS_Exception& e)
+         else if(ec == boost::asio::error::eof)
             {
-            ec = e.type();
-            }
-         catch(const Botan::Exception& e)
-            {
-            ec = e.error_type();
-            }
-         catch(const std::exception&)
-            {
-            ec = Botan::ErrorType::Unknown;
+            // we did not expect this disconnection from the peer
+            ec = StreamError::StreamTruncated;
             }
 
          return !ec ? copy_received_data(buffers) : 0;
@@ -521,6 +501,12 @@ class Stream
 
       //! @}
 
+      //! @brief Indicates whether a close_notify alert has been received from the peer.
+      bool shutdown_received() const
+         {
+         return m_shutdown_received;
+         }
+
    protected:
       template <class H, class S, class M, class A> friend class detail::AsyncReadOperation;
       template <class H, class S, class A> friend class detail::AsyncWriteOperation;
@@ -538,28 +524,32 @@ class Stream
       class StreamCore : public Botan::TLS::Callbacks
          {
          public:
-            StreamCore(boost::beast::flat_buffer& receive_buffer, boost::beast::flat_buffer& send_buffer, Context& context)
-               : m_receive_buffer(receive_buffer), m_send_buffer(send_buffer), m_tls_context(context) {}
+            StreamCore(Stream& stream) : m_stream(stream) {}
 
             virtual ~StreamCore() = default;
 
             void tls_emit_data(const uint8_t data[], std::size_t size) override
                {
-               m_send_buffer.commit(
-                  boost::asio::buffer_copy(m_send_buffer.prepare(size), boost::asio::buffer(data, size))
+               m_stream.m_send_buffer.commit(
+                  boost::asio::buffer_copy(m_stream.m_send_buffer.prepare(size), boost::asio::buffer(data, size))
                );
                }
 
             void tls_record_received(uint64_t, const uint8_t data[], std::size_t size) override
                {
-               m_receive_buffer.commit(
-                  boost::asio::buffer_copy(m_receive_buffer.prepare(size), boost::asio::const_buffer(data, size))
+               m_stream.m_receive_buffer.commit(
+                  boost::asio::buffer_copy(m_stream.m_receive_buffer.prepare(size), boost::asio::const_buffer(data, size))
                );
                }
 
             void tls_alert(Botan::TLS::Alert alert) override
                {
-               BOTAN_UNUSED(alert);
+               if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
+                  {
+                  m_stream.set_shutdown_received();
+                  // Channel::process_alert will automatically write the corresponding close_notify response to the
+                  // send_buffer and close the native_handle after this function returns.
+                  }
                }
 
             std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const override
@@ -581,9 +571,9 @@ class Stream
                const std::string& hostname,
                const TLS::Policy& policy) override
                {
-               if(m_tls_context.has_verify_callback())
+               if(m_stream.m_context.has_verify_callback())
                   {
-                  m_tls_context.get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
+                  m_stream.m_context.get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
                   }
                else
                   {
@@ -591,9 +581,8 @@ class Stream
                   }
                }
 
-            boost::beast::flat_buffer& m_receive_buffer;
-            boost::beast::flat_buffer& m_send_buffer;
-            Context& m_tls_context;
+         private:
+            Stream& m_stream;
          };
 
       const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
@@ -660,6 +649,14 @@ class Stream
             }
          }
 
+      /** @brief Synchronously write encrypted data from the send buffer to the next layer.
+       *
+       * If this function is called with an error code other than 'Success', it will do nothing and return 0.
+       *
+       * @param ec Set to indicate what error occurred, if any. Specifically, StreamTruncated will be set if the peer
+       *           has closed the connection but did not properly shut down the SSL connection.
+       * @return The number of bytes written.
+       */
       size_t send_pending_encrypted_data(boost::system::error_code& ec)
          {
          if(ec)
@@ -667,9 +664,21 @@ class Stream
 
          auto writtenBytes = boost::asio::write(m_nextLayer, send_buffer(), ec);
          consume_send_buffer(writtenBytes);
+
+         if(ec == boost::asio::error::eof && !shutdown_received())
+            {
+            // transport layer was closed by peer without receiving 'close_notify'
+            ec = StreamError::StreamTruncated;
+            }
+
          return writtenBytes;
          }
 
+      /**
+       * @brief Pass plaintext data to the native handle for processing.
+       *
+       * The native handle will then create TLS records and hand them back to the Stream via the tls_emit_data callback.
+       */
       template <typename ConstBufferSequence>
       void tls_encrypt(const ConstBufferSequence& buffers, boost::system::error_code& ec)
          {
@@ -681,23 +690,54 @@ class Stream
                it++)
             {
             const boost::asio::const_buffer buffer = *it;
-            try
+            try_with_error_code([&]
                {
                native_handle()->send(static_cast<const uint8_t*>(buffer.data()), buffer.size());
-               }
-            catch(const TLS_Exception& e)
-               {
-               ec = e.type();
-               }
-            catch(const Botan::Exception& e)
-               {
-               ec = e.error_type();
-               }
-            catch(const std::exception&)
-               {
-               ec = Botan::ErrorType::Unknown;
-               }
+               }, ec);
             }
+         }
+
+      /**
+       * @brief Pass encrypted data to the native handle for processing.
+       *
+       * If an exception occurs while processing the data, an error code will be set.
+       *
+       * @param read_buffer Input buffer containing the encrypted data.
+       * @param ec Set to indicate what error occurred, if any.
+       */
+      void process_encrypted_data(const boost::asio::const_buffer& read_buffer, boost::system::error_code& ec)
+         {
+         try_with_error_code([&]
+            {
+            native_handle()->received_data(static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size());
+            }, ec);
+         }
+
+      //! @brief Catch exceptions and set an error_code
+      template <typename Fun>
+      void try_with_error_code(Fun f, boost::system::error_code& ec)
+         {
+         try
+            {
+            f();
+            }
+         catch(const TLS_Exception& e)
+            {
+            ec = e.type();
+            }
+         catch(const Botan::Exception& e)
+            {
+            ec = e.error_type();
+            }
+         catch(const std::exception&)
+            {
+            ec = Botan::ErrorType::Unknown;
+            }
+         }
+
+      void set_shutdown_received()
+         {
+         m_shutdown_received = true;
          }
 
       Context&                  m_context;
@@ -708,6 +748,8 @@ class Stream
 
       StreamCore                m_core;
       std::unique_ptr<ChannelT> m_native_handle;
+
+      bool m_shutdown_received;
 
       // Buffer space used to read input intended for the core
       std::vector<uint8_t>              m_input_buffer_space;

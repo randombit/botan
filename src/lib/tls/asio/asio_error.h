@@ -1,7 +1,7 @@
 /*
 * TLS Stream Errors
-* (C) 2018-2019 Jack Lloyd
-*     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+* (C) 2018-2020 Jack Lloyd
+*     2018-2020 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,6 +22,42 @@
 
 namespace Botan {
 namespace TLS {
+
+enum StreamError
+   {
+   StreamTruncated = 1
+   };
+
+class StreamCategory : public boost::system::error_category
+   {
+   public:
+      const char* name() const noexcept override
+         {
+         return "asio.ssl.stream";
+         }
+
+      std::string message(int value) const override
+         {
+         switch(value)
+            {
+            case StreamTruncated:
+               return "stream truncated";
+            default:
+               return "asio.botan.tls.stream error";
+            }
+         }
+   };
+
+inline const StreamCategory& botan_stream_category()
+   {
+   static StreamCategory category;
+   return category;
+   }
+
+inline boost::system::error_code make_error_code(Botan::TLS::StreamError e)
+   {
+   return boost::system::error_code(static_cast<int>(e), Botan::TLS::botan_stream_category());
+   }
 
 //! @brief An error category for TLS alerts
 struct BotanAlertCategory : boost::system::error_category
@@ -82,6 +118,11 @@ namespace boost {
 namespace system {
 
 template<> struct is_error_code_enum<Botan::TLS::Alert::Type>
+   {
+   static const bool value = true;
+   };
+
+template<> struct is_error_code_enum<Botan::TLS::StreamError>
    {
    static const bool value = true;
    };
