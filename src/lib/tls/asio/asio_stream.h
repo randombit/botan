@@ -318,6 +318,33 @@ class Stream
          boost::asio::detail::throw_error(ec, "shutdown");
          }
 
+   private:
+      /**
+       * @brief Internal wrapper type to adapt the expected signature of `async_shutdown`
+       *        to the completion handler signature of `AsyncWriteOperation`.
+       *
+       * This is boilerplate to ignore the `size_t` parameter that is passed to the
+       * completion handler of `AsyncWriteOperation`.
+       *
+       * @todo in C++14 and above this could be implemented as a mutable lambda expression
+       *       that captures `handler` by perfect forwarding, like so:
+       *
+       *       [h = std::forward<Handler>(handler)] (...) mutable { return h(ec); }
+       */
+      template <typename Handler>
+      class Wrapper
+         {
+         public:
+            Wrapper(Handler&& handler) : _handler(std::forward<Handler>(handler)) {}
+            void operator()(boost::system::error_code ec, size_t)
+               {
+               _handler(ec);
+               }
+         private:
+            Handler _handler;
+         };
+
+   public:
       /**
        * @brief Asynchronously shut down SSL on the stream.
        *
@@ -331,11 +358,26 @@ class Stream
       template <typename ShutdownHandler>
       void async_shutdown(ShutdownHandler&& handler)
          {
-         BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(ShutdownHandler, handler) type_check;
-         BOTAN_UNUSED(handler);
-         throw Not_Implemented("async shutdown is not implemented");
-         // TODO: Implement a subclass of AsyncBase that calls native_handle()->close() and writes pending data from
-         // the core to the network, e.g. using AsyncWriteOperation.
+         boost::system::error_code ec;
+         try_with_error_code([&]
+            {
+            native_handle()->close();
+            }, ec);
+         // If ec is set by native_handle->close(), the AsyncWriteOperation created below will do nothing but call the
+         // handler with the error_code set appropriately - no need to early return here.
+
+         using ShutdownHandlerWrapper = Wrapper<ShutdownHandler>;
+
+         ShutdownHandlerWrapper w(std::forward<ShutdownHandler>(handler));
+         BOOST_ASIO_SHUTDOWN_HANDLER_CHECK(ShutdownHandler, w) type_check;
+
+         boost::asio::async_completion<ShutdownHandlerWrapper, void(boost::system::error_code, std::size_t)>
+         init(w);
+
+         detail::AsyncWriteOperation<typename std::decay<ShutdownHandlerWrapper>::type, Stream>
+         op{std::move(init.completion_handler), *this, boost::asio::buffer_size(send_buffer())};
+
+         return init.result.get();
          }
 
       //! @}
