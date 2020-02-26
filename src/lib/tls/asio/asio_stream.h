@@ -23,6 +23,7 @@
 #include <botan/tls_channel.h>
 #include <botan/tls_client.h>
 #include <botan/tls_magic.h>
+#include <botan/tls_server.h>
 
 // We need to define BOOST_ASIO_DISABLE_SERIAL_PORT before any asio imports. Otherwise asio will include <termios.h>,
 // which interferes with Botan's amalgamation by defining macros like 'B0' and 'FF1'.
@@ -39,8 +40,6 @@ namespace TLS {
 
 /**
  * @brief boost::asio compatible SSL/TLS stream
- *
- * Currently only the TLS::Client specialization is implemented.
  *
  * @tparam StreamLayer type of the next layer, usually a network socket
  * @tparam ChannelT type of the native_handle, defaults to Botan::TLS::Channel, only needed for testing purposes
@@ -200,7 +199,7 @@ class Stream
        * The function call will block until handshaking is complete or an error occurs.
        *
        * @param side The type of handshaking to be performed, i.e. as a client or as a server.
-       * @throws boost::system::system_error if error occured, or if the chosen Connection_Side is not available
+       * @throws boost::system::system_error if error occured
        */
       void handshake(Connection_Side side)
          {
@@ -221,8 +220,11 @@ class Stream
          {
          setup_native_handle(side, ec);
 
-         // send client hello, which was written to the send buffer on client instantiation
-         send_pending_encrypted_data(ec);
+         if(side == CLIENT)
+            {
+            // send client hello, which was written to the send buffer on client instantiation
+            send_pending_encrypted_data(ec);
+            }
 
          while(!native_handle()->is_active() && !ec)
             {
@@ -244,11 +246,10 @@ class Stream
        * @param side The type of handshaking to be performed, i.e. as a client or as a server.
        * @param handler The handler to be called when the handshake operation completes.
        *                The equivalent function signature of the handler must be: void(boost::system::error_code)
-       * @throws NotImplemented if Connection_Side is not CLIENT
        */
       template <typename HandshakeHandler>
       auto async_handshake(Connection_Side side, HandshakeHandler&& handler) ->
-         BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler, void(boost::system::error_code))
+      BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler, void(boost::system::error_code))
          {
          BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(HandshakeHandler, handler) type_check;
 
@@ -492,8 +493,8 @@ class Stream
        */
       template <typename ConstBufferSequence, typename WriteHandler>
       auto async_write_some(const ConstBufferSequence& buffers, WriteHandler&& handler) ->
-         BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
-                                       void(boost::system::error_code, std::size_t))
+      BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
+                                    void(boost::system::error_code, std::size_t))
          {
          BOOST_ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
 
@@ -529,8 +530,8 @@ class Stream
        */
       template <typename MutableBufferSequence, typename ReadHandler>
       auto async_read_some(const MutableBufferSequence& buffers, ReadHandler&& handler) ->
-         BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
-                                       void(boost::system::error_code, std::size_t))
+      BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
+                                    void(boost::system::error_code, std::size_t))
          {
          BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
 
@@ -667,28 +668,36 @@ class Stream
        * Botan::TLS::Server.
        *
        * @param side The desired connection side (client or server)
-       * @param ec Set to NotImplemented when side is SERVER - currently only CLIENT is implemented
+       * @param ec Set to indicate what error occurred, if any.
        */
       template<class T = ChannelT>
       typename std::enable_if<std::is_same<Channel, T>::value>::type
       setup_native_handle(Connection_Side side, boost::system::error_code& ec)
          {
-         if(side == CLIENT)
+         try_with_error_code([&]
             {
-            m_native_handle = std::unique_ptr<Client>(
-                                 new Client(m_core,
-                                            m_context.m_session_manager,
-                                            m_context.m_credentials_manager,
-                                            m_context.m_policy,
-                                            m_context.m_rng,
-                                            m_context.m_server_info));
-            }
-         else
-            {
-            // TODO: First steps in order to support the server side of this stream would be to instantiate a
-            // Botan::TLS::Server instance as the stream's native_handle and implement the handshake appropriately.
-            ec = Botan::ErrorType::NotImplemented;
-            }
+            if(side == CLIENT)
+               {
+               m_native_handle = std::unique_ptr<Client>(
+                  new Client(m_core,
+                             m_context.m_session_manager,
+                             m_context.m_credentials_manager,
+                             m_context.m_policy,
+                             m_context.m_rng,
+                             m_context.m_server_info,
+                             Protocol_Version::latest_tls_version()));
+               }
+            else
+               {
+               m_native_handle = std::unique_ptr<Server>(
+                  new Server(m_core,
+                             m_context.m_session_manager,
+                             m_context.m_credentials_manager,
+                             m_context.m_policy,
+                             m_context.m_rng,
+                             false /* no DTLS */));
+               }
+            }, ec);
          }
 
       /** @brief Synchronously write encrypted data from the send buffer to the next layer.
