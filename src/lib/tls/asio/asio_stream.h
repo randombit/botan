@@ -29,7 +29,7 @@
 // which interferes with Botan's amalgamation by defining macros like 'B0' and 'FF1'.
 #define BOOST_ASIO_DISABLE_SERIAL_PORT
 #include <boost/asio.hpp>
-#include <boost/beast/core/flat_buffer.hpp>
+#include <boost/beast/core.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -102,18 +102,31 @@ class Stream
       //! @{
 
       using next_layer_type = typename std::remove_reference<StreamLayer>::type;
-      using lowest_layer_type = typename next_layer_type::lowest_layer_type;
-      using executor_type = typename next_layer_type::executor_type;
-      using native_handle_type = typename std::add_pointer<ChannelT>::type;
-
-      executor_type get_executor() noexcept { return m_nextLayer.get_executor(); }
 
       const next_layer_type& next_layer() const { return m_nextLayer; }
       next_layer_type& next_layer() { return m_nextLayer; }
 
+#if BOOST_VERSION >= 107000
+      /*
+       * From Boost 1.70 onwards Beast types no longer provide public access to the member function `lowest_layer()`.
+       * Instead, the new free-standing functions in Beast need to be used.
+       * See also: https://github.com/boostorg/beast/commit/6a658b5c3a36f8d58334f8b6582c01c3e87768ae
+       */
+      using lowest_layer_type = typename boost::beast::lowest_layer_type<StreamLayer>;
+
+      lowest_layer_type& lowest_layer() { return boost::beast::get_lowest_layer(m_nextLayer); }
+      const lowest_layer_type& lowest_layer() const { return boost::beast::get_lowest_layer(m_nextLayer); }
+#else
+      using lowest_layer_type = typename next_layer_type::lowest_layer_type;
+
       lowest_layer_type& lowest_layer() { return m_nextLayer.lowest_layer(); }
       const lowest_layer_type& lowest_layer() const { return m_nextLayer.lowest_layer(); }
+#endif
 
+      using executor_type = typename next_layer_type::executor_type;
+      executor_type get_executor() noexcept { return m_nextLayer.get_executor(); }
+
+      using native_handle_type = typename std::add_pointer<ChannelT>::type;
       native_handle_type native_handle()
          {
          if(m_native_handle == nullptr)
