@@ -8,7 +8,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_ASIO_STREAM)
 
 #include <botan/asio_stream.h>
 #include <botan/tls_callbacks.h>
