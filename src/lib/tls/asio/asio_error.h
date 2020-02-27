@@ -20,6 +20,13 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 
+/*
+ * This file defines Botan-specific subclasses of boost::system::error_category.
+ * In addition to the class definition, each category class is accompanied by function `make_error_code` used to create
+ * a `boost::system::error_code` of the category from some other kind of error in Botan (for example, a TLS alert).
+ * Since error_category instances should be singletons, there's also a method to get/create the instance for each class.
+ */
+
 namespace Botan {
 namespace TLS {
 
@@ -28,12 +35,13 @@ enum StreamError
    StreamTruncated = 1
    };
 
-class StreamCategory : public boost::system::error_category
+//! @brief An error category for errors from the TLS::Stream
+struct StreamCategory : public boost::system::error_category
    {
    public:
       const char* name() const noexcept override
          {
-         return "asio.ssl.stream";
+         return "Botan TLS Stream";
          }
 
       std::string message(int value) const override
@@ -43,7 +51,7 @@ class StreamCategory : public boost::system::error_category
             case StreamTruncated:
                return "stream truncated";
             default:
-               return "asio.botan.tls.stream error";
+               return "generic error";
             }
          }
    };
@@ -64,7 +72,7 @@ struct BotanAlertCategory : boost::system::error_category
    {
    const char* name() const noexcept override
       {
-      return "asio.botan.tls.alert";
+      return "Botan TLS Alert";
       }
 
    std::string message(int ev) const override
@@ -92,7 +100,7 @@ struct BotanErrorCategory : boost::system::error_category
    {
    const char* name() const noexcept override
       {
-      return "asio.botan.tls";
+      return "Botan";
       }
 
    std::string message(int ev) const override
@@ -114,6 +122,10 @@ inline boost::system::error_code make_error_code(Botan::ErrorType e)
 
 }  // namespace Botan
 
+ /*
+ * Add a template specialization of `is_error_code_enum` for each kind of error to allow automatic conversion to an
+ * error code.
+ */
 namespace boost {
 namespace system {
 
