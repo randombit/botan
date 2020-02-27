@@ -610,6 +610,7 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
          }
       }
 
+   start_buffering_records();
    if(resuming)
       {
       this->session_resume(pending_state, have_session_ticket_key, session_info);
@@ -618,6 +619,7 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
       {
       this->session_create(pending_state, have_session_ticket_key);
       }
+   send_buffered_records();
    }
 
 void Server::process_certificate_msg(Server_Handshake_State& pending_state,

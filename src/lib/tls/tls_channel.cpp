@@ -196,7 +196,12 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
 bool Channel::timeout_check()
    {
    if(m_pending_state)
-      return m_pending_state->handshake_io().timeout_check();
+      {
+      start_buffering_records();
+      bool retrans_needed = m_pending_state->handshake_io().timeout_check();
+      send_buffered_records();
+      return retrans_needed;
+      }
 
    //FIXME: scan cipher suites and remove epochs older than 2*MSL
    return false;
@@ -558,16 +563,31 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch
    const Protocol_Version record_version =
       (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
 
-   TLS::write_record(m_writebuf,
-                     record_type,
-                     record_version,
-                     sequence_numbers().next_write_sequence(epoch),
-                     input,
-                     length,
-                     cipher_state,
-                     m_rng);
-
-   callbacks().tls_emit_data(m_writebuf.data(), m_writebuf.size());
+   if (m_is_buffering_records && record_type != ALERT)
+      {
+      secure_vector<uint8_t> temp_writebuf;
+      TLS::write_record(temp_writebuf,
+                        record_type,
+                        record_version,
+                        sequence_numbers().next_write_sequence(epoch),
+                        input,
+                        length,
+                        cipher_state,
+                        m_rng);
+      m_buffered_messages.push_back(unlock(temp_writebuf));
+      }
+   else
+      {
+      TLS::write_record(m_writebuf,
+                        record_type,
+                        record_version,
+                        sequence_numbers().next_write_sequence(epoch),
+                        input,
+                        length,
+                        cipher_state,
+                        m_rng);
+      callbacks().tls_emit_data(m_writebuf.data(), m_writebuf.size());
+      }
    }
 
 void Channel::send_record_array(uint16_t epoch, uint8_t type, const uint8_t input[], size_t length)
@@ -782,6 +802,79 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       {
       throw Invalid_State("Channel::key_material_export connection not active");
       }
+   }
+
+void Channel::start_buffering_records()
+   {
+   m_buffered_messages.clear();
+   m_is_buffering_records = true;
+   }
+
+std::vector<uint8_t>
+Channel::coalesce_buffered_records(size_t length, size_t start, size_t end)
+   {
+   std::vector<uint8_t> buf(length);
+   size_t offset = 0;
+   for (size_t i = start; i < end; i++)
+      {
+      size_t record_len = m_buffered_messages[i].size();
+      copy_mem(&buf[offset],
+               m_buffered_messages[i].data(),
+               record_len);
+      offset += record_len;
+      }
+   return buf;
+   }
+
+void Channel::send_buffered_records()
+   {
+   m_is_buffering_records = false;
+
+   size_t msg_count = m_buffered_messages.size();
+
+   if (!msg_count)
+      {
+      return;
+      }
+
+   size_t payload_len = 0;
+   size_t start_offset = 0;
+   std::vector<uint8_t> writebuf;
+
+   if (m_is_datagram)
+      {
+      size_t mtu = policy().dtls_default_mtu();
+      for (size_t i = 0; i < msg_count; i++)
+         {
+         size_t msg_size = m_buffered_messages[i].size();
+         if (msg_size > mtu)
+            {
+            throw Internal_Error("Record is too long to fit in MTU");
+            }
+         payload_len += msg_size;
+         if (payload_len > mtu)
+            {
+            writebuf = coalesce_buffered_records(payload_len - msg_size,
+                                                 start_offset, i);
+            callbacks().tls_emit_data(writebuf.data(), writebuf.size());
+            start_offset = i;
+            payload_len = msg_size;
+            }
+         }
+      }
+   else
+      {
+      for (size_t i = 0; i < msg_count; i++)
+         {
+         payload_len += m_buffered_messages[i].size();
+         }
+      }
+
+   writebuf = coalesce_buffered_records(payload_len, start_offset, msg_count);
+   callbacks().tls_emit_data(writebuf.data(), writebuf.size());
+
+   m_buffered_messages.clear();
+   m_buffered_messages.shrink_to_fit();
    }
 
 }
