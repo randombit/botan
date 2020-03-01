@@ -377,7 +377,7 @@ std::unique_ptr<Private_Key> load_key(DataSource& source,
    {
    // We need to use bind rather than a lambda capturing `pass` here in order to avoid a Clang 8 bug.
    // See https://github.com/randombit/botan/issues/2255.
-   return load_key(source, std::bind([](const std::string pass) { return pass; }, pass), true);
+   return load_key(source, std::bind([](const std::string p) { return p; }, pass), true);
    }
 
 /*
@@ -458,7 +458,7 @@ Private_Key* load_key(const std::string& fsname,
    DataSource_Stream in(fsname);
    // We need to use bind rather than a lambda capturing `pass` here in order to avoid a Clang 8 bug.
    // See https://github.com/randombit/botan/issues/2255.
-   return PKCS8::load_key(in, std::bind([](const std::string pass) { return pass; }, pass)).release();
+   return PKCS8::load_key(in, std::bind([](const std::string p) { return p; }, pass)).release();
    }
 
 /*
