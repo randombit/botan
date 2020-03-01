@@ -10,6 +10,11 @@ Version 2.14.0, Not Yet Released
 * Optimize the vector permute AES implementation, especially improving
   performance on ARMv7, Aarch64, and POWER. (GH #2243)
 
+* Remove use of Binary Extended Euclidean Algorithm for modular inversions.
+  (GH #2287)
+
+* Add support for using Windows certificate store on MinGW (GH #2280)
+
 * Support for splitting up the amalgamation file by ABI extension has
   been removed. Instead only ``botan_all.cpp`` and ``botan_all.h`` are
   generated. (GH #2246)
@@ -22,10 +27,27 @@ Version 2.14.0, Not Yet Released
 
 * Precompute and cache additional fields in X509_Certificate (GH #2250)
 
+* Use the library thread pool instead of a new thread for RSA computations,
+  improving performance by up to 20%. (GH #2257)
+
+* Fix some build problems under Intel C++ (GH #2260)
+
+* Remove use of Toolhelp Windows library, which was known to trigger
+  false positives under some antivirus systems. (GH #2261)
+
+* Fix a compilation problem when building on Windows in Unicode mode.
+  Add Unicode build to CI to prevent regressions. (GH #2254 #2256)
+
 * Add a CLI utility ``cpu_clock`` which estimates the speed of the
   processor cycle counter. (GH #2251)
 
 * Work around a GCC bug affecting old libc (GH #2235)
+
+* Workaround a bug in macOS 10.15 which caused a test to crash.
+  (GH #2279 #2268)
+
+* Avoid a crash in PKCS8::load_key due to a bug in Clang 8.
+  (GH #2277)
 
 Version 2.13.0, 2020-01-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
