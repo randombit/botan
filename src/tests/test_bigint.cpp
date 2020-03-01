@@ -658,7 +658,7 @@ class BigInt_InvMod_Test final : public Text_Based_Test
          const Botan::BigInt mod = vars.get_req_bn("Modulus");
          const Botan::BigInt expected = vars.get_req_bn("Output");
 
-         const Botan::BigInt a_inv = Botan::inverse_euclid(a, mod);
+         const Botan::BigInt a_inv = Botan::inverse_mod(a, mod);
 
          result.test_eq("inverse_mod", a_inv, expected);
 
@@ -666,13 +666,12 @@ class BigInt_InvMod_Test final : public Text_Based_Test
             {
             result.test_eq("inverse ok", (a * a_inv) % mod, 1);
             }
-
-         if(mod.is_odd() && a < mod)
+         /*
+         else if((a % mod) > 0)
             {
-            result.test_eq("ct_inverse_odd_modulus",
-                           ct_inverse_mod_odd_modulus(a, mod),
-                           expected);
+            result.confirm("no inverse with gcd > 1", gcd(a, mod) > 1);
             }
+         */
 
          if(mod.is_odd() && a_inv != 0)
             {

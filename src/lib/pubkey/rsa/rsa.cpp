@@ -298,11 +298,10 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    const BigInt q_minus_1 = q - 1;
 
    const BigInt phi_n = lcm(p_minus_1, q_minus_1);
-   // FIXME: this uses binary ext gcd because phi_n is even
    d = inverse_mod(e, phi_n);
    d1 = ct_modulo(d, p_minus_1);
    d2 = ct_modulo(d, q_minus_1);
-   c = inverse_mod(q, p); // p odd, so uses const time algorithm
+   c = inverse_mod(q, p);
 
    RSA_PublicKey::init(std::move(n), std::move(e));
 
