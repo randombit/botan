@@ -171,21 +171,11 @@ BigInt random_prime(RandomNumberGenerator& rng,
          if(coprime > 1)
             {
             /*
-            * Check if gcd(p - 1, coprime) != 1 by attempting to compute a
-            * modular inverse. We are assured coprime is odd (since if it was
-            * even, it would always have a common factor with p - 1), so
-            * take off the factors of 2 from (p-1) then compute the inverse
-            * of coprime modulo that integer.
+            * Check if p - 1 and coprime are relatively prime, using gcd.
+            * The gcd computation is const-time
             */
-            BigInt p1 = p - 1;
-            p1 >>= low_zero_bits(p1);
-            if(ct_inverse_mod_odd_modulus(coprime, p1).is_zero())
-               {
-               BOTAN_DEBUG_ASSERT(gcd(p - 1, coprime) > 1);
+            if(gcd(p - 1, coprime) > 1)
                continue;
-               }
-
-            BOTAN_DEBUG_ASSERT(gcd(p - 1, coprime) == 1);
             }
 
          if(p.bits() > bits)
@@ -256,26 +246,10 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
             continue;
 
          /*
-         * Check if p - 1 and coprime are relatively prime by computing the inverse.
-         *
-         * We avoid gcd here because that algorithm is not constant time.
-         * Modular inverse is (for odd modulus anyway).
-         *
-         * We earlier verified that coprime argument is odd. Thus the factors of 2
-         * in (p - 1) cannot possibly be factors in coprime, so remove them from p - 1.
-         * Using an odd modulus allows the const time algorithm to be used.
-         *
-         * This assumes coprime < p - 1 which is always true for RSA.
+         * Check if p - 1 and coprime are relatively prime.
          */
-         BigInt p1 = p - 1;
-         p1 >>= low_zero_bits(p1);
-         if(ct_inverse_mod_odd_modulus(coprime, p1).is_zero())
-            {
-            BOTAN_DEBUG_ASSERT(gcd(p - 1, coprime) > 1);
+         if(gcd(p - 1, coprime) > 1)
             continue;
-            }
-
-         BOTAN_DEBUG_ASSERT(gcd(p - 1, coprime) == 1);
 
          if(p.bits() > bits)
             break;

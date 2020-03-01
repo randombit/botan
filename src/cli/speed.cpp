@@ -559,6 +559,10 @@ class Speed final : public Command
                {
                bench_rsa(provider, msec);
                }
+            else if(algo == "RSA_keygen")
+               {
+               bench_rsa_keygen(provider, msec);
+               }
 #endif
 #if defined(BOTAN_HAS_ECDSA)
             else if(algo == "ECDSA")
@@ -1535,28 +1539,22 @@ class Speed final : public Command
 
             const std::string bit_str = std::to_string(bits);
 
-            std::unique_ptr<Timer> invmod_timer = make_timer("binext-" + bit_str);
             std::unique_ptr<Timer> monty_timer = make_timer("monty-" + bit_str);
             std::unique_ptr<Timer> ct_invmod_timer = make_timer("ct-" + bit_str);
 
-            while(invmod_timer->under(runtime))
+            while(monty_timer->under(runtime))
                {
                const Botan::BigInt x(rng(), p.bits() - 1);
 
-               const Botan::BigInt x_inv1 = invmod_timer->run(
-                  [&] { return Botan::inverse_euclid(x, p); });
-
-               const Botan::BigInt x_inv2 = monty_timer->run(
+               const Botan::BigInt x_inv1 = monty_timer->run(
                   [&] { return Botan::normalized_montgomery_inverse(x, p); });
 
-               const Botan::BigInt x_inv3 = ct_invmod_timer->run(
-                  [&] { return Botan::ct_inverse_mod_odd_modulus(x, p); });
+               const Botan::BigInt x_inv2 = ct_invmod_timer->run(
+                  [&] { return Botan::inverse_mod(x, p); });
 
                BOTAN_ASSERT_EQUAL(x_inv1, x_inv2, "Same result");
-               BOTAN_ASSERT_EQUAL(x_inv1, x_inv3, "Same result");
                }
 
-            record_result(invmod_timer);
             record_result(monty_timer);
             record_result(ct_invmod_timer);
             }
@@ -1845,6 +1843,25 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_RSA)
+      void bench_rsa_keygen(const std::string& provider,
+                            std::chrono::milliseconds msec)
+         {
+         for(size_t keylen : { 1024, 2048, 3072, 4096 })
+            {
+            const std::string nm = "RSA-" + std::to_string(keylen);
+            std::unique_ptr<Timer> keygen_timer = make_timer(nm, provider, "keygen");
+
+            while(keygen_timer->under(msec))
+               {
+               std::unique_ptr<Botan::Private_Key> key(keygen_timer->run([&] {
+                  return Botan::create_private_key("RSA", rng(), std::to_string(keylen));
+                  }));
+               }
+
+            record_result(keygen_timer);
+            }
+         }
+
       void bench_rsa(const std::string& provider,
                      std::chrono::milliseconds msec)
          {

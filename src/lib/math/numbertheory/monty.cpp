@@ -49,7 +49,8 @@ Montgomery_Params::Montgomery_Params(const BigInt& p)
 
 BigInt Montgomery_Params::inv_mod_p(const BigInt& x) const
    {
-   return ct_inverse_mod_odd_modulus(x, p());
+   // TODO use Montgomery inverse here?
+   return inverse_mod(x, p());
    }
 
 BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const

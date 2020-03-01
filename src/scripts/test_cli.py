@@ -1133,7 +1133,7 @@ def cli_speed_pk_tests(_tmp_dir):
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
                 "DH", "DSA", "ElGamal", "Ed25519", "Curve25519", "NEWHOPE", "McEliece",
-                "RSA", "XMSS"]
+                "RSA", "RSA_keygen", "XMSS"]
 
     output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
 

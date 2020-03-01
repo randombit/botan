@@ -77,30 +77,40 @@ BigInt BOTAN_PUBLIC_API(2,0) lcm(const BigInt& x, const BigInt& y);
 BigInt BOTAN_PUBLIC_API(2,0) square(const BigInt& x);
 
 /**
-* Modular inversion
+* Modular inversion. This algorithm is const time with respect to x,
+* as long as x is less than modulus. It also avoids leaking
+* information about the modulus, except that it does leak which of 3
+* categories the modulus is in: an odd integer, a power of 2, or some
+* other even number.
+*
 * @param x a positive integer
 * @param modulus a positive integer
 * @return y st (x*y) % modulus == 1 or 0 if no such value
-* Not const time
 */
 BigInt BOTAN_PUBLIC_API(2,0) inverse_mod(const BigInt& x,
                                          const BigInt& modulus);
 
 /**
-* Modular inversion using extended binary Euclidian algorithm
+* Modular inversion
 * @param x a positive integer
 * @param modulus a positive integer
 * @return y st (x*y) % modulus == 1 or 0 if no such value
-* Not const time
 */
-BigInt BOTAN_PUBLIC_API(2,5) inverse_euclid(const BigInt& x,
-                                            const BigInt& modulus);
+inline BigInt BOTAN_DEPRECATED("Use inverse_mod")
+   inverse_euclid(const BigInt& x, const BigInt& modulus)
+   {
+   return inverse_mod(x, modulus);
+   }
 
 /**
 * Const time modular inversion
 * Requires the modulus be odd
 */
-BigInt BOTAN_PUBLIC_API(2,0) ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod);
+inline BigInt BOTAN_DEPRECATED("Use inverse_mod")
+   ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
+   {
+   return inverse_mod(n, mod);
+   }
 
 /**
 * Return a^-1 * 2^k mod b
