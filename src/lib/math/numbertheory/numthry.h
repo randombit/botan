@@ -77,8 +77,11 @@ BigInt BOTAN_PUBLIC_API(2,0) lcm(const BigInt& x, const BigInt& y);
 BigInt BOTAN_PUBLIC_API(2,0) square(const BigInt& x);
 
 /**
-* Modular inversion. This algorithm is const time as long as
-* x is less than modulus
+* Modular inversion. This algorithm is const time with respect to x,
+* as long as x is less than modulus. It also avoids leaking
+* information about the modulus, except that it does leak which of 3
+* categories the modulus is in: an odd integer, a power of 2, or some
+* other even number.
 *
 * @param x a positive integer
 * @param modulus a positive integer
