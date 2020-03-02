@@ -11,6 +11,17 @@
 
 namespace Botan {
 
+// Deprecated forwarding functions:
+BigInt inverse_euclid(const BigInt& x, const BigInt& modulus)
+   {
+   return inverse_mod(x, modulus);
+   }
+
+BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
+   {
+   return inverse_mod(n, mod);
+   }
+
 /*
 Sets result to a^-1 * 2^k mod a
 with n <= k <= 2n
