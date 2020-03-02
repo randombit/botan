@@ -2443,18 +2443,25 @@ def choose_link_method(options):
     req = options.link_method
 
     def useable_methods():
-        # Symbolic link support on Windows was introduced in Windows 6.0 (Vista) and Python 3.2
-        # Furthermore the SeCreateSymbolicLinkPrivilege is required in order to successfully create symlinks
-        # So only try to use symlinks on Windows if explicitly requested
 
-        if options.os in ['windows', 'mingw', 'cygwin']:
-            if req == 'symlink':
+        # Symbolic link support on Windows was introduced in Windows 6.0 (Vista)
+        # and Python 3.2. Furthermore, the SeCreateSymbolicLinkPrivilege is
+        # required in order to successfully create symlinks. So only try to use
+        # symlinks on Windows if explicitly requested.
+
+        # MinGW declares itself as 'Windows'
+        host_is_windows = python_platform_identifier() in ['windows', 'cygwin']
+
+        if 'symlink' in os.__dict__:
+            if host_is_windows:
+                if req == 'symlink':
+                    yield 'symlink'
+            else:
                 yield 'symlink'
-        elif 'symlink' in os.__dict__:
-            yield 'symlink'
 
         if 'link' in os.__dict__:
             yield 'hardlink'
+
         yield 'copy'
 
     for method in useable_methods():
@@ -2807,18 +2814,19 @@ def robust_makedirs(directory, max_retries=5):
     # Final attempt, pass any exceptions up to caller.
     os.makedirs(directory)
 
+def python_platform_identifier():
+    system_from_python = platform.system().lower()
+    if re.match('^cygwin_.*', system_from_python):
+        return 'cygwin'
+    else:
+        return system_from_python
 
 # This is for otions that have --with-XYZ and --without-XYZ. If user does not
 # set any of those, we choose a default here.
 # Mutates `options`
 def set_defaults_for_unset_options(options, info_arch, info_cc, info_os): # pylint: disable=too-many-branches
     if options.os is None:
-        system_from_python = platform.system().lower()
-        if re.match('^cygwin_.*', system_from_python):
-            logging.debug("Converting '%s' to 'cygwin'", system_from_python)
-            options.os = 'cygwin'
-        else:
-            options.os = system_from_python
+        options.os = python_platform_identifier()
         logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
 
     if options.os not in info_os:
