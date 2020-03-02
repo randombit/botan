@@ -15,6 +15,14 @@ Version 2.14.0, Not Yet Released
 
 * Add support for using Windows certificate store on MinGW (GH #2280)
 
+* Use the library thread pool instead of a new thread for RSA computations,
+  improving signature performance by up to 20%. (GH #2257)
+
+* Precompute and cache additional fields in X509_Certificate (GH #2250)
+
+* Add a CLI utility ``cpu_clock`` which estimates the speed of the
+  processor cycle counter. (GH #2251)
+
 * Support for splitting up the amalgamation file by ABI extension has
   been removed. Instead only ``botan_all.cpp`` and ``botan_all.h`` are
   generated. (GH #2246)
@@ -22,13 +30,10 @@ Version 2.14.0, Not Yet Released
 * Add new option ``--name-amalgamation`` which allows naming the
   amalgamation output, instead of the default ``botan_all``. (GH #2246)
 
+* Avoid using symbolic links on Windows (GH #2288 #2286 #2285)
+
 * Fix a bug that prevented compilation of the amalgamation on ARM and
   POWER processors (GH #2245 #2241)
-
-* Precompute and cache additional fields in X509_Certificate (GH #2250)
-
-* Use the library thread pool instead of a new thread for RSA computations,
-  improving performance by up to 20%. (GH #2257)
 
 * Fix some build problems under Intel C++ (GH #2260)
 
@@ -37,9 +42,6 @@ Version 2.14.0, Not Yet Released
 
 * Fix a compilation problem when building on Windows in Unicode mode.
   Add Unicode build to CI to prevent regressions. (GH #2254 #2256)
-
-* Add a CLI utility ``cpu_clock`` which estimates the speed of the
-  processor cycle counter. (GH #2251)
 
 * Work around a GCC bug affecting old libc (GH #2235)
 
