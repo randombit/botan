@@ -11,20 +11,20 @@ namespace Botan {
 
 namespace {
 
-inline
-void SHACAL2_Fwd(const SIMD_8x32& A, const SIMD_8x32& B, const SIMD_8x32& C, SIMD_8x32& D,
-                 const SIMD_8x32& E, const SIMD_8x32& F, const SIMD_8x32& G, SIMD_8x32& H,
-                 uint32_t RK)
+void BOTAN_FORCE_INLINE BOTAN_FUNC_ISA("avx2")
+   SHACAL2_Fwd(const SIMD_8x32& A, const SIMD_8x32& B, const SIMD_8x32& C, SIMD_8x32& D,
+               const SIMD_8x32& E, const SIMD_8x32& F, const SIMD_8x32& G, SIMD_8x32& H,
+               uint32_t RK)
    {
    H += E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_8x32::splat(RK);
    D += H;
    H += A.rho<2,13,22>() + ((A & B) | ((A | B) & C));
    }
 
-inline
-void SHACAL2_Rev(const SIMD_8x32& A, const SIMD_8x32& B, const SIMD_8x32& C, SIMD_8x32& D,
-                 const SIMD_8x32& E, const SIMD_8x32& F, const SIMD_8x32& G, SIMD_8x32& H,
-                 uint32_t RK)
+void BOTAN_FORCE_INLINE BOTAN_FUNC_ISA("avx2")
+   SHACAL2_Rev(const SIMD_8x32& A, const SIMD_8x32& B, const SIMD_8x32& C, SIMD_8x32& D,
+               const SIMD_8x32& E, const SIMD_8x32& F, const SIMD_8x32& G, SIMD_8x32& H,
+               uint32_t RK)
    {
    H -= A.rho<2,13,22>() + ((A & B) | ((A | B) & C));
    D -= H;
@@ -33,7 +33,7 @@ void SHACAL2_Rev(const SIMD_8x32& A, const SIMD_8x32& B, const SIMD_8x32& C, SIM
 
 }
 
-void SHACAL2::avx2_encrypt_8(const uint8_t in[], uint8_t out[]) const
+void BOTAN_FUNC_ISA("avx2") SHACAL2::avx2_encrypt_8(const uint8_t in[], uint8_t out[]) const
    {
    SIMD_8x32::reset_registers();
 
@@ -76,7 +76,7 @@ void SHACAL2::avx2_encrypt_8(const uint8_t in[], uint8_t out[]) const
    SIMD_8x32::zero_registers();
    }
 
-void SHACAL2::avx2_decrypt_8(const uint8_t in[], uint8_t out[]) const
+BOTAN_FUNC_ISA("avx2") void SHACAL2::avx2_decrypt_8(const uint8_t in[], uint8_t out[]) const
    {
    SIMD_8x32::reset_registers();
 

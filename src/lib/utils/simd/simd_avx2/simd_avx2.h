@@ -23,7 +23,7 @@ class SIMD_8x32 final
       SIMD_8x32(SIMD_8x32&& other) = default;
 
       BOTAN_FUNC_ISA("avx2")
-      SIMD_8x32()
+      BOTAN_FORCE_INLINE SIMD_8x32()
          {
          m_avx2 = _mm256_setzero_si256();
          }
@@ -77,6 +77,9 @@ class SIMD_8x32 final
          {
          static_assert(ROT > 0 && ROT < 32, "Invalid rotation constant");
 
+#if defined(__AVX512VL__)
+         return SIMD_8x32(_mm256_rol_epi32(m_avx2, ROT));
+#else
          BOTAN_IF_CONSTEXPR(ROT == 8)
             {
             const __m256i shuf_rotl_8 = _mm256_set_epi8(14, 13, 12, 15, 10, 9, 8, 11, 6, 5, 4, 7, 2, 1, 0, 3,
@@ -96,6 +99,7 @@ class SIMD_8x32 final
             return SIMD_8x32(_mm256_or_si256(_mm256_slli_epi32(m_avx2, static_cast<int>(ROT)),
                                              _mm256_srli_epi32(m_avx2, static_cast<int>(32-ROT))));
             }
+#endif
          }
 
       template<size_t ROT>
@@ -106,7 +110,7 @@ class SIMD_8x32 final
          }
 
       template<size_t ROT1, size_t ROT2, size_t ROT3>
-      SIMD_8x32 rho() const
+      SIMD_8x32 BOTAN_FUNC_ISA("avx2") rho() const
          {
          SIMD_8x32 res;
 
@@ -117,6 +121,7 @@ class SIMD_8x32 final
          return rot1 ^ rot2 ^ rot3;
          }
 
+      BOTAN_FUNC_ISA("avx2")
       SIMD_8x32 operator+(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -124,6 +129,7 @@ class SIMD_8x32 final
          return retval;
          }
 
+      BOTAN_FUNC_ISA("avx2")
       SIMD_8x32 operator-(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -131,6 +137,7 @@ class SIMD_8x32 final
          return retval;
          }
 
+      BOTAN_FUNC_ISA("avx2")
       SIMD_8x32 operator^(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -138,6 +145,7 @@ class SIMD_8x32 final
          return retval;
          }
 
+      BOTAN_FUNC_ISA("avx2")
       SIMD_8x32 operator|(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -145,6 +153,7 @@ class SIMD_8x32 final
          return retval;
          }
 
+      BOTAN_FUNC_ISA("avx2")
       SIMD_8x32 operator&(const SIMD_8x32& other) const
          {
          SIMD_8x32 retval(*this);
@@ -187,7 +196,7 @@ class SIMD_8x32 final
          return SIMD_8x32(_mm256_slli_epi32(m_avx2, SHIFT));
          }
 
-      template<int SHIFT> BOTAN_FUNC_ISA("avx2")SIMD_8x32 shr() const
+      template<int SHIFT> BOTAN_FUNC_ISA("avx2") SIMD_8x32 shr() const
          {
          return SIMD_8x32(_mm256_srli_epi32(m_avx2, SHIFT));
          }
