@@ -91,26 +91,17 @@ BigInt BOTAN_PUBLIC_API(2,0) inverse_mod(const BigInt& x,
                                          const BigInt& modulus);
 
 /**
-* Modular inversion
+* Deprecated modular inversion function. Use inverse_mod instead.
 * @param x a positive integer
 * @param modulus a positive integer
 * @return y st (x*y) % modulus == 1 or 0 if no such value
 */
-inline BigInt BOTAN_DEPRECATED("Use inverse_mod")
-   inverse_euclid(const BigInt& x, const BigInt& modulus)
-   {
-   return inverse_mod(x, modulus);
-   }
+BigInt BOTAN_DEPRECATED_API("Use inverse_mod") inverse_euclid(const BigInt& x, const BigInt& modulus);
 
 /**
-* Const time modular inversion
-* Requires the modulus be odd
+* Deprecated modular inversion function. Use inverse_mod instead.
 */
-inline BigInt BOTAN_DEPRECATED("Use inverse_mod")
-   ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
-   {
-   return inverse_mod(n, mod);
-   }
+BigInt BOTAN_DEPRECATED_API("Use inverse_mod") ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod);
 
 /**
 * Return a^-1 * 2^k mod b
