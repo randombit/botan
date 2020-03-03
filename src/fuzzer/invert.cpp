@@ -1,5 +1,5 @@
 /*
-* (C) 2015,2016 Jack Lloyd
+* (C) 2015,2016,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -54,13 +54,13 @@ Botan::BigInt ref_inverse_mod(const Botan::BigInt& n, const Botan::BigInt& mod)
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   if(len % 2 == 1 || len > 2*4096/8)
+   static const size_t max_bits = 4096;
+
+   if(len > 2*max_bits/8)
       return;
 
-   const size_t part_len = len / 2;
-
-   const Botan::BigInt x = Botan::BigInt::decode(in, part_len);
-   Botan::BigInt mod = Botan::BigInt::decode(in + part_len, part_len);
+   const Botan::BigInt x = Botan::BigInt::decode(in, len / 2);
+   Botan::BigInt mod = Botan::BigInt::decode(in + len / 2, len - len / 2);
 
    if(mod < 2)
       return;
