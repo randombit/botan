@@ -18,7 +18,7 @@ Version 2.14.0, Not Yet Released
 * Use the library thread pool instead of a new thread for RSA computations,
   improving signature performance by up to 20%. (GH #2257)
 
-* Precompute and cache additional fields in X509_Certificate (GH #2250)
+* Precompute and cache additional fields in ``X509_Certificate`` (GH #2250)
 
 * Add a CLI utility ``cpu_clock`` which estimates the speed of the
   processor cycle counter. (GH #2251)
