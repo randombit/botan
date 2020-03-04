@@ -40,7 +40,6 @@ default       -> "$(CXX) -shared -fPIC -Wl,-soname,{soname_abi}"
 </so_link_commands>
 
 <binary_link_commands>
-macos         -> "$(LINKER) -headerpad_max_install_names"
 linux         -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 freebsd       -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 default       -> "$(LINKER)"

@@ -301,6 +301,7 @@ def run_cmd(cmd, root_dir):
     cmd = [os.path.expandvars(elem) for elem in cmd]
     sub_env = os.environ.copy()
     sub_env['LD_LIBRARY_PATH'] = os.path.abspath(root_dir)
+    sub_env['DYLD_LIBRARY_PATH'] = os.path.abspath(root_dir)
     sub_env['PYTHONPATH'] = os.path.abspath(os.path.join(root_dir, 'src/python'))
     cwd = None
 
