@@ -1476,7 +1476,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
                 'doc_dir': 'share/doc',
                 'man_dir': 'share/man',
                 'use_stack_protector': 'true',
-                'so_post_link_command': '',
                 'cli_exe_name': 'botan',
                 'lib_prefix': 'lib',
                 'library_name': 'botan{suffix}-{major}',
@@ -1525,7 +1524,6 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.man_dir = lex.man_dir
         self.obj_suffix = lex.obj_suffix
         self.program_suffix = lex.program_suffix
-        self.so_post_link_command = lex.so_post_link_command
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
         self.use_stack_protector = (lex.use_stack_protector == "true")
@@ -2177,7 +2175,6 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             variables['soname_patch'] = osinfo.soname_pattern_patch.format(**variables)
 
         variables['lib_link_cmd'] = variables['lib_link_cmd'].format(**variables)
-        variables['post_link_cmd'] = osinfo.so_post_link_command.format(**variables) if options.build_shared_lib else ''
 
     lib_targets = []
     if options.build_static_lib:

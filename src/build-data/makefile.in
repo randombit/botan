@@ -19,7 +19,6 @@ LIB_FLAGS      = %{lib_flags}
 LDFLAGS        = %{ldflags}
 
 EXE_LINK_CMD   = %{exe_link_cmd}
-POST_LINK_CMD  = %{post_link_cmd}
 
 LIB_LINKS_TO   = %{link_to}
 EXE_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
@@ -71,11 +70,9 @@ TESTOBJS = %{join test_objs}
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) $(CLIOBJS) $(EXE_LINKS_TO) $(LDFLAGS) %{output_to_exe}$@
-	$(POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) $(TESTOBJS) $(EXE_LINKS_TO) $(LDFLAGS) %{output_to_exe}$@
-	$(POST_LINK_CMD)
 
 %{if build_fuzzers}
 

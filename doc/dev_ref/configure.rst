@@ -383,7 +383,6 @@ Variables:
   * ``obj_suffix`` (default "o") specifies the suffix used for object files
   * ``program_suffix`` (default "") specifies the suffix used for executables
   * ``shared_lib_symlinks``
-  * ``so_post_link_command``
   * ``soname_pattern_abi``
   * ``soname_pattern_base``
   * ``soname_pattern_patch``
