@@ -721,6 +721,11 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      void ct_cond_swap(bool predicate, BigInt& other);
 
      /**
+     * If predicate is true add value to *this
+     */
+     void ct_cond_add(bool predicate, const BigInt& value);
+
+     /**
      * If predicate is true flip the sign of *this
      */
      void cond_flip_sign(bool predicate);
@@ -982,7 +987,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
                  {
                  const word mask = (static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS)) - 1;
                  const size_t len = size() - (top_word + 1);
-                 if (len > 0)
+                 if(len > 0)
                     {
                     clear_mem(&m_reg[top_word+1], len);
                     }

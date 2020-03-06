@@ -10,6 +10,7 @@
 #include <botan/monty.h>
 #include <botan/divide.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/primality.h>
@@ -39,23 +40,25 @@ size_t low_zero_bits(const BigInt& n)
    {
    size_t low_zero = 0;
 
-   if(n.is_positive() && n.is_nonzero())
-      {
-      for(size_t i = 0; i != n.size(); ++i)
-         {
-         const word x = n.word_at(i);
+   auto seen_nonempty_word = CT::Mask<word>::cleared();
 
-         if(x)
-            {
-            low_zero += ctz(x);
-            break;
-            }
-         else
-            low_zero += BOTAN_MP_WORD_BITS;
-         }
+   for(size_t i = 0; i != n.size(); ++i)
+      {
+      const word x = n.word_at(i);
+
+      // ctz(0) will return sizeof(word)
+      const size_t tz_x = ctz(x);
+
+      // if x > 0 we want to count tz_x in total but not any
+      // further words, so set the mask after the addition
+      low_zero += seen_nonempty_word.if_not_set_return(tz_x);
+
+      seen_nonempty_word |= CT::Mask<word>::expand(x);
       }
 
-   return low_zero;
+   // if we saw no words with x > 0 then n == 0 and the value we have
+   // computed is meaningless. Instead return 0 in that case.
+   return seen_nonempty_word.if_set_return(low_zero);
    }
 
 /*
@@ -67,6 +70,8 @@ BigInt gcd(const BigInt& a, const BigInt& b)
       return 0;
    if(a == 1 || b == 1)
       return 1;
+
+   // See https://gcd.cr.yp.to/safegcd-20190413.pdf fig 1.2
 
    BigInt f = a;
    BigInt g = b;
@@ -100,10 +105,7 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 
       delta += 1;
 
-      t = g;
-      t += f;
-      g.ct_cond_assign(g.is_odd(), t);
-
+      g.ct_cond_add(g.is_odd(), f);
       g >>= 1;
       }
 
