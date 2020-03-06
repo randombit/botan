@@ -79,14 +79,14 @@ namespace {
 
 /**
 * Treating this MPI as a sequence of 32-bit words in big-endian
-* order, return word i (or 0 if out of range)
+* order, return word i. The array is assumed to be large enough.
 */
-inline uint32_t get_uint32(const BigInt& x, size_t i)
+inline uint32_t get_uint32(const word xw[], size_t i)
    {
 #if (BOTAN_MP_WORD_BITS == 32)
-   return x.word_at(i);
+   return xw[i];
 #else
-   return static_cast<uint32_t>(x.word_at(i/2) >> ((i % 2)*32));
+   return static_cast<uint32_t>(xw[i/2] >> ((i % 2)*32));
 #endif
    }
 
@@ -114,18 +114,21 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p192_limbs = 192 / BOTAN_MP_WORD_BITS;
 
-   const uint64_t X00 = get_uint32(x,  0);
-   const uint64_t X01 = get_uint32(x,  1);
-   const uint64_t X02 = get_uint32(x,  2);
-   const uint64_t X03 = get_uint32(x,  3);
-   const uint64_t X04 = get_uint32(x,  4);
-   const uint64_t X05 = get_uint32(x,  5);
-   const uint64_t X06 = get_uint32(x,  6);
-   const uint64_t X07 = get_uint32(x,  7);
-   const uint64_t X08 = get_uint32(x,  8);
-   const uint64_t X09 = get_uint32(x,  9);
-   const uint64_t X10 = get_uint32(x, 10);
-   const uint64_t X11 = get_uint32(x, 11);
+   x.grow_to(2*p192_limbs);
+   word* xw = x.mutable_data();
+
+   const uint64_t X00 = get_uint32(xw,  0);
+   const uint64_t X01 = get_uint32(xw,  1);
+   const uint64_t X02 = get_uint32(xw,  2);
+   const uint64_t X03 = get_uint32(xw,  3);
+   const uint64_t X04 = get_uint32(xw,  4);
+   const uint64_t X05 = get_uint32(xw,  5);
+   const uint64_t X06 = get_uint32(xw,  6);
+   const uint64_t X07 = get_uint32(xw,  7);
+   const uint64_t X08 = get_uint32(xw,  8);
+   const uint64_t X09 = get_uint32(xw,  9);
+   const uint64_t X10 = get_uint32(xw, 10);
+   const uint64_t X11 = get_uint32(xw, 11);
 
    const uint64_t S0 = X00 + X06 + X10;
    const uint64_t S1 = X01 + X07 + X11;
@@ -133,11 +136,6 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    const uint64_t S3 = X03 + X07 + X09 + X11;
    const uint64_t S4 = X04 + X08 + X10;
    const uint64_t S5 = X05 + X09 + X11;
-
-   x.mask_bits(192);
-   x.resize(p192_limbs + 1);
-
-   word* xw = x.mutable_data();
 
    uint64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
@@ -192,7 +190,8 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    CT::unpoison(S);
    BOTAN_ASSERT(S <= 2, "Expected overflow");
 
-   BOTAN_ASSERT_NOMSG(x.size() == p192_limbs + 1);
+   BOTAN_ASSERT_NOMSG(x.size() >= p192_limbs + 1);
+   x.mask_bits(192);
    word borrow = bigint_sub2(x.mutable_data(), p192_limbs + 1, p192_mults[S], p192_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p192_limbs + 1, p192_mults[0], p192_limbs);
@@ -210,20 +209,23 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const int64_t X00 = get_uint32(x,  0);
-   const int64_t X01 = get_uint32(x,  1);
-   const int64_t X02 = get_uint32(x,  2);
-   const int64_t X03 = get_uint32(x,  3);
-   const int64_t X04 = get_uint32(x,  4);
-   const int64_t X05 = get_uint32(x,  5);
-   const int64_t X06 = get_uint32(x,  6);
-   const int64_t X07 = get_uint32(x,  7);
-   const int64_t X08 = get_uint32(x,  8);
-   const int64_t X09 = get_uint32(x,  9);
-   const int64_t X10 = get_uint32(x, 10);
-   const int64_t X11 = get_uint32(x, 11);
-   const int64_t X12 = get_uint32(x, 12);
-   const int64_t X13 = get_uint32(x, 13);
+   x.grow_to(2*p224_limbs);
+   word* xw = x.mutable_data();
+
+   const int64_t X00 = get_uint32(xw,  0);
+   const int64_t X01 = get_uint32(xw,  1);
+   const int64_t X02 = get_uint32(xw,  2);
+   const int64_t X03 = get_uint32(xw,  3);
+   const int64_t X04 = get_uint32(xw,  4);
+   const int64_t X05 = get_uint32(xw,  5);
+   const int64_t X06 = get_uint32(xw,  6);
+   const int64_t X07 = get_uint32(xw,  7);
+   const int64_t X08 = get_uint32(xw,  8);
+   const int64_t X09 = get_uint32(xw,  9);
+   const int64_t X10 = get_uint32(xw, 10);
+   const int64_t X11 = get_uint32(xw, 11);
+   const int64_t X12 = get_uint32(xw, 12);
+   const int64_t X13 = get_uint32(xw, 13);
 
    // One full copy of P224 is added, so the result is always positive
 
@@ -234,11 +236,6 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    const int64_t S4 = 0xFFFFFFFF + X04 + X08 + X12 - X11;
    const int64_t S5 = 0xFFFFFFFF + X05 + X09 + X13 - X12;
    const int64_t S6 = 0xFFFFFFFF + X06 + X10 - X13;
-
-   x.mask_bits(224);
-   x.resize(p224_limbs + 1);
-
-   word* xw = x.mutable_data();
 
    int64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
@@ -295,7 +292,8 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    CT::unpoison(S);
    BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow");
 
-   BOTAN_ASSERT_NOMSG(x.size() == p224_limbs + 1);
+   BOTAN_ASSERT_NOMSG(x.size() >= p224_limbs + 1);
+   x.mask_bits(224);
    word borrow = bigint_sub2(x.mutable_data(), p224_limbs + 1, p224_mults[S], p224_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p224_limbs + 1, p224_mults[0], p224_limbs);
@@ -313,22 +311,25 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const int64_t X00 = get_uint32(x,  0);
-   const int64_t X01 = get_uint32(x,  1);
-   const int64_t X02 = get_uint32(x,  2);
-   const int64_t X03 = get_uint32(x,  3);
-   const int64_t X04 = get_uint32(x,  4);
-   const int64_t X05 = get_uint32(x,  5);
-   const int64_t X06 = get_uint32(x,  6);
-   const int64_t X07 = get_uint32(x,  7);
-   const int64_t X08 = get_uint32(x,  8);
-   const int64_t X09 = get_uint32(x,  9);
-   const int64_t X10 = get_uint32(x, 10);
-   const int64_t X11 = get_uint32(x, 11);
-   const int64_t X12 = get_uint32(x, 12);
-   const int64_t X13 = get_uint32(x, 13);
-   const int64_t X14 = get_uint32(x, 14);
-   const int64_t X15 = get_uint32(x, 15);
+   x.grow_to(2*p256_limbs);
+   word* xw = x.mutable_data();
+
+   const int64_t X00 = get_uint32(xw,  0);
+   const int64_t X01 = get_uint32(xw,  1);
+   const int64_t X02 = get_uint32(xw,  2);
+   const int64_t X03 = get_uint32(xw,  3);
+   const int64_t X04 = get_uint32(xw,  4);
+   const int64_t X05 = get_uint32(xw,  5);
+   const int64_t X06 = get_uint32(xw,  6);
+   const int64_t X07 = get_uint32(xw,  7);
+   const int64_t X08 = get_uint32(xw,  8);
+   const int64_t X09 = get_uint32(xw,  9);
+   const int64_t X10 = get_uint32(xw, 10);
+   const int64_t X11 = get_uint32(xw, 11);
+   const int64_t X12 = get_uint32(xw, 12);
+   const int64_t X13 = get_uint32(xw, 13);
+   const int64_t X14 = get_uint32(xw, 14);
+   const int64_t X15 = get_uint32(xw, 15);
 
    // Adds 6 * P-256 to prevent underflow
    const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - (X11 + X12 + X13) - X14;
@@ -339,11 +340,6 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    const int64_t S5 = 0x00000000 + X05 + (X13 + X14)*2 + X15 - X10 - X11;
    const int64_t S6 = 0x00000006 + X06 + X13 + X14*3 + X15*2 - X08 - X09;
    const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - (X11 + X12 + X13);
-
-   x.mask_bits(256);
-   x.resize(p256_limbs + 1);
-
-   word* xw = x.mutable_data();
 
    int64_t S = 0;
 
@@ -424,7 +420,8 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    CT::unpoison(S);
    BOTAN_ASSERT(S >= 0 && S <= 10, "Expected overflow");
 
-   BOTAN_ASSERT_NOMSG(x.size() == p256_limbs + 1);
+   BOTAN_ASSERT_NOMSG(x.size() >= p256_limbs + 1);
+   x.mask_bits(256);
    word borrow = bigint_sub2(x.mutable_data(), p256_limbs + 1, p256_mults[S], p256_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p256_limbs + 1, p256_mults[0], p256_limbs);
@@ -442,30 +439,33 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p384_limbs = (BOTAN_MP_WORD_BITS == 32) ? 12 : 6;
 
-   const int64_t X00 = get_uint32(x,  0);
-   const int64_t X01 = get_uint32(x,  1);
-   const int64_t X02 = get_uint32(x,  2);
-   const int64_t X03 = get_uint32(x,  3);
-   const int64_t X04 = get_uint32(x,  4);
-   const int64_t X05 = get_uint32(x,  5);
-   const int64_t X06 = get_uint32(x,  6);
-   const int64_t X07 = get_uint32(x,  7);
-   const int64_t X08 = get_uint32(x,  8);
-   const int64_t X09 = get_uint32(x,  9);
-   const int64_t X10 = get_uint32(x, 10);
-   const int64_t X11 = get_uint32(x, 11);
-   const int64_t X12 = get_uint32(x, 12);
-   const int64_t X13 = get_uint32(x, 13);
-   const int64_t X14 = get_uint32(x, 14);
-   const int64_t X15 = get_uint32(x, 15);
-   const int64_t X16 = get_uint32(x, 16);
-   const int64_t X17 = get_uint32(x, 17);
-   const int64_t X18 = get_uint32(x, 18);
-   const int64_t X19 = get_uint32(x, 19);
-   const int64_t X20 = get_uint32(x, 20);
-   const int64_t X21 = get_uint32(x, 21);
-   const int64_t X22 = get_uint32(x, 22);
-   const int64_t X23 = get_uint32(x, 23);
+   x.grow_to(2*p384_limbs);
+   word* xw = x.mutable_data();
+
+   const int64_t X00 = get_uint32(xw,  0);
+   const int64_t X01 = get_uint32(xw,  1);
+   const int64_t X02 = get_uint32(xw,  2);
+   const int64_t X03 = get_uint32(xw,  3);
+   const int64_t X04 = get_uint32(xw,  4);
+   const int64_t X05 = get_uint32(xw,  5);
+   const int64_t X06 = get_uint32(xw,  6);
+   const int64_t X07 = get_uint32(xw,  7);
+   const int64_t X08 = get_uint32(xw,  8);
+   const int64_t X09 = get_uint32(xw,  9);
+   const int64_t X10 = get_uint32(xw, 10);
+   const int64_t X11 = get_uint32(xw, 11);
+   const int64_t X12 = get_uint32(xw, 12);
+   const int64_t X13 = get_uint32(xw, 13);
+   const int64_t X14 = get_uint32(xw, 14);
+   const int64_t X15 = get_uint32(xw, 15);
+   const int64_t X16 = get_uint32(xw, 16);
+   const int64_t X17 = get_uint32(xw, 17);
+   const int64_t X18 = get_uint32(xw, 18);
+   const int64_t X19 = get_uint32(xw, 19);
+   const int64_t X20 = get_uint32(xw, 20);
+   const int64_t X21 = get_uint32(xw, 21);
+   const int64_t X22 = get_uint32(xw, 22);
+   const int64_t X23 = get_uint32(xw, 23);
 
    // One copy of P-384 is added to prevent underflow
    const int64_t S0 = 0xFFFFFFFF + X00 + X12 + X20 + X21 - X23;
@@ -480,11 +480,6 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    const int64_t S9 = 0xFFFFFFFF + X09 + X17 + X18 + X21 - X20;
    const int64_t SA = 0xFFFFFFFF + X10 + X18 + X19 + X22 - X21;
    const int64_t SB = 0xFFFFFFFF + X11 + X19 + X20 + X23 - X22;
-
-   x.mask_bits(384);
-   x.resize(p384_limbs + 1);
-
-   word* xw = x.mutable_data();
 
    int64_t S = 0;
 
@@ -578,7 +573,8 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    CT::unpoison(S);
    BOTAN_ASSERT(S >= 0 && S <= 4, "Expected overflow");
 
-   BOTAN_ASSERT_NOMSG(x.size() == p384_limbs + 1);
+   BOTAN_ASSERT_NOMSG(x.size() >= p384_limbs + 1);
+   x.mask_bits(384);
    word borrow = bigint_sub2(x.mutable_data(), p384_limbs + 1, p384_mults[S], p384_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
    bigint_cnd_add(borrow, x.mutable_data(), p384_limbs + 1, p384_mults[0], p384_limbs);
