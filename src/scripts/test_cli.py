@@ -269,12 +269,12 @@ def cli_argon2_tests(_tmp_dir):
 def cli_gen_dl_group_tests(_tmp_dir):
 
     pem = """-----BEGIN X9.42 DH PARAMETERS-----
-MIIBJAKBgwVcMHlFVo64S86Y5KrlClZrIibOQ6iKm8Ih3Eb53XoQiSc33GtilRmP
-f7qKIVI86meoJHVU7gtaJk82yAYk6BksmZn0eXvUU7zD8yF/yH3yym0SfI0eH1OC
-2+esfGblePpHCtt5uO56pzIqCIpOq+8gTG7JbFHJvTb8nwmAWFLZvjepAoGDBHOP
-e5A/RNyeXz+16+7Jjh4QOXWo/c6kM0WrIHgFbaIkupRndG5bcy8aCjsbgiIpeWy1
-aNDURFB3UR3q1Si0gA7cvirDOH7lnN3C9zeohq+VPy5L7S3gKLGB1HXY/r2qLKhM
-6ziphMYZxtr+XhsbxbA/+MuNoP/He+kwlGLtDKiBdF4CFjgPiPatvmWssQw2AuZ9
+MIIBJAKBgwTw7LQiLkXJsrgMVQxTPlWaQlYz/raZ+5RtIZe4YluQgRQGPFADLZ/t
+TOYzuIzZJFOcdKtEtrVkxZRGSkjZwKFKLUD6fzSjoC2M2EHktK/y5HsvxBxL4tKr
+q1ffbyPQi+iBLYTZAXygvxj2vWyrvA+/w4nbt1fStCHTDhWjLWqFpV9nAoGDAKzA
+HUu/IRl7OiUtW/dz36gzEJnaYtz4ZtJl0FG8RJiOe02lD8myqW2sVzYqMvKD0LGx
+x9fdSKC1G+aZ/NWtqrQjb66Daf7b0ddDx+bfWTWJ2dOtZd8IL2rmQQJm+JogDi9i
+huVYFicDNQGzi+nEKAzrZ1L/VxtiSiw/qw0IyOuVtz8CFjgPiPatvmWssQw2AuZ9
 mFvAZ/8wal0=
 -----END X9.42 DH PARAMETERS-----"""
 

@@ -1596,26 +1596,37 @@ class Speed final : public Command
          {
          const size_t coprime = 65537; // simulates RSA key gen
 
-         for(size_t bits : { 1024, 1536 })
+         for(size_t bits : { 256, 384, 512, 768, 1024, 1536 })
             {
             std::unique_ptr<Timer> genprime_timer = make_timer("random_prime " + std::to_string(bits));
+            std::unique_ptr<Timer> gensafe_timer = make_timer("random_safe_prime " + std::to_string(bits));
             std::unique_ptr<Timer> is_prime_timer = make_timer("is_prime " + std::to_string(bits));
 
-            while(genprime_timer->under(runtime) && is_prime_timer->under(runtime))
+            while(gensafe_timer->under(runtime))
                {
                const Botan::BigInt p = genprime_timer->run([&]
                   {
                   return Botan::random_prime(rng(), bits, coprime);
                   });
 
-               const bool ok = is_prime_timer->run([&]
-                  {
-                  return Botan::is_prime(p, rng(), 64, true);
-                  });
-
-               if(!ok)
+               if(!is_prime_timer->run([&] { return Botan::is_prime(p, rng(), 64, true); }))
                   {
                   error_output() << "Generated prime " << p << " which failed a primality test";
+                  }
+
+               const Botan::BigInt sg = gensafe_timer->run([&]
+                  {
+                  return Botan::random_safe_prime(rng(), bits);
+                  });
+
+               if(!is_prime_timer->run([&] { return Botan::is_prime(sg, rng(), 64, true); }))
+                  {
+                  error_output() << "Generated safe prime " << sg << " which failed a primality test";
+                  }
+
+               if(!is_prime_timer->run([&] { return Botan::is_prime(sg / 2, rng(), 64, true); }))
+                  {
+                  error_output() << "Generated prime " << sg/2 << " which failed a primality test";
                   }
 
                // Now test p+2, p+4, ... which may or may not be prime
@@ -1626,6 +1637,7 @@ class Speed final : public Command
                }
 
             record_result(genprime_timer);
+            record_result(gensafe_timer);
             record_result(is_prime_timer);
             }
          }
