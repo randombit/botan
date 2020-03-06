@@ -11,7 +11,9 @@ Version 2.14.0, Not Yet Released
   performance on ARMv7, Aarch64, and POWER. (GH #2243)
 
 * Remove use of Binary Extended Euclidean Algorithm for modular inversions.
-  (GH #2287)
+  (GH #2287 #2296)
+
+* Optimize NIST prime field reductions, improving ECDSA by 3-9% (GH #2295)
 
 * Add support for using Windows certificate store on MinGW (GH #2280)
 
@@ -22,6 +24,11 @@ Version 2.14.0, Not Yet Released
 
 * Add a CLI utility ``cpu_clock`` which estimates the speed of the
   processor cycle counter. (GH #2251)
+
+* Fix a bug which prevented using DER-encoded ECDSA signatures with a PKCS11
+  key (GH #2293)
+
+* Enable use of raw block ciphers from CommonCrypto (GH #2278)
 
 * Support for splitting up the amalgamation file by ABI extension has
   been removed. Instead only ``botan_all.cpp`` and ``botan_all.h`` are
