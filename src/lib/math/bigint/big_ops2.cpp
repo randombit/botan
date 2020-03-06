@@ -107,31 +107,12 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    if(ws.size() < mod_sw)
       ws.resize(mod_sw);
 
-#if 0
-   //Faster but not const time:
-
-   // Compute t - s
-   word borrow = bigint_sub3(ws.data(), data(), mod_sw, s.data(), mod_sw);
-
-   if(borrow)
-      {
-      // If t < s, instead compute p - (s - t)
-      bigint_sub2_rev(mutable_data(), s.data(), mod_sw);
-      bigint_sub2_rev(mutable_data(), mod.data(), mod_sw);
-      }
-   else
-      {
-      // No borrow so we already have the result we need
-      swap_reg(ws);
-      }
-#else
    if(mod_sw == 4)
       bigint_mod_sub_n<4>(mutable_data(), s.data(), mod.data(), ws.data());
    else if(mod_sw == 6)
       bigint_mod_sub_n<6>(mutable_data(), s.data(), mod.data(), ws.data());
    else
       bigint_mod_sub(mutable_data(), s.data(), mod.data(), mod_sw, ws.data());
-#endif
 
    return (*this);
    }
