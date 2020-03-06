@@ -122,9 +122,9 @@ BigInt random_prime(RandomNumberGenerator& rng,
          for(;;)
             {
             // This is slightly biased, but for small primes it does not seem to matter
-            const uint8_t b0 = rng.next_byte();
-            const uint8_t b1 = rng.next_byte();
-            const size_t idx = make_uint16(b0, b1) % PRIME_TABLE_SIZE;
+            uint8_t b[4];
+            rng.randomize(b, 4);
+            const size_t idx = load_le<uint32_t>(b, 0) % PRIME_TABLE_SIZE;
             const uint16_t small_prime = PRIMES[idx];
 
             if(high_bit(small_prime) == bits)
@@ -134,6 +134,8 @@ BigInt random_prime(RandomNumberGenerator& rng,
       }
 
    const size_t MAX_ATTEMPTS = 32*1024;
+
+   const size_t mr_trials = miller_rabin_test_iterations(bits, prob, true);
 
    while(true)
       {
@@ -161,15 +163,15 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
          Modular_Reducer mod_p(p);
 
-         /*
-         First do a single M-R iteration to quickly elimate most non-primes,
-         before doing the coprimality check which is expensive
-         */
-         if(is_miller_rabin_probable_prime(p, mod_p, rng, 1) == false)
-            continue;
-
          if(coprime > 1)
             {
+            /*
+            First do a single M-R iteration to quickly elimate most non-primes,
+            before doing the coprimality check which is expensive
+            */
+            if(is_miller_rabin_probable_prime(p, mod_p, rng, 1) == false)
+               continue;
+
             /*
             * Check if p - 1 and coprime are relatively prime, using gcd.
             * The gcd computation is const-time
@@ -181,9 +183,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
          if(p.bits() > bits)
             break;
 
-         const size_t t = miller_rabin_test_iterations(bits, prob, true);
-
-         if(is_miller_rabin_probable_prime(p, mod_p, rng, t) == false)
+         if(is_miller_rabin_probable_prime(p, mod_p, rng, mr_trials) == false)
             continue;
 
          if(prob > 32 && !is_lucas_probable_prime(p, mod_p))
@@ -213,18 +213,20 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
    const size_t MAX_ATTEMPTS = 32*1024;
 
+   const size_t mr_trials = miller_rabin_test_iterations(bits, prob, true);
+
    while(true)
       {
       BigInt p(keygen_rng, bits);
 
-      // Force lowest and two top bits on
+      // Force high two bits so multiplication always results in expected n bit integer
       p.set_bit(bits - 1);
       p.set_bit(bits - 2);
       p.set_bit(0);
 
-      Prime_Sieve sieve(p, bits);
-
       const word step = 2;
+
+      Prime_Sieve sieve(p, bits);
 
       for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt)
          {
@@ -239,8 +241,8 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
          /*
          * Do a single primality test first before checking coprimality, since
-         * currently a single Miller-Rabin test is faster than computing modular
-         * inverse, and this eliminates almost all wasted modular inverses.
+         * currently a single Miller-Rabin test is faster than computing gcd,
+         * and this eliminates almost all wasted gcd computations.
          */
          if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, 1) == false)
             continue;
@@ -254,9 +256,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          if(p.bits() > bits)
             break;
 
-         const size_t t = miller_rabin_test_iterations(bits, prob, true);
-
-         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, t) == true)
+         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, mr_trials) == true)
             return p;
          }
       }
@@ -271,25 +271,21 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
       throw Invalid_Argument("random_safe_prime: Can't make a prime of " +
                              std::to_string(bits) + " bits");
 
+   const size_t error_bound = 128;
+
    BigInt q, p;
    for(;;)
       {
       /*
-      Generate q == 2 (mod 3)
-
-      Otherwise [q == 1 (mod 3) case], 2*q+1 == 3 (mod 3) and not prime.
-
-      Initially allow a very high error prob (1/2**8) to allow for fast checks,
-      then if 2*q+1 turns out to be a prime go back and strongly check q.
+      Generate q == 2 (mod 3), since otherwise [in the case of q == 1 (mod 3)],
+      2*q+1 == 3 (mod 3) and so certainly not prime.
       */
-      q = random_prime(rng, bits - 1, 0, 2, 3, 8);
+      q = random_prime(rng, bits - 1, 0, 2, 3, error_bound);
       p = (q << 1) + 1;
 
-      if(is_prime(p, rng, 128, true))
+      if(is_prime(p, rng, error_bound, true))
          {
-         // We did only a weak check before, go back and verify q before returning
-         if(is_prime(q, rng, 128, true))
-            return p;
+         return p;
          }
       }
    }
