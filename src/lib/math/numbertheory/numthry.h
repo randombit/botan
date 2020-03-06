@@ -81,7 +81,8 @@ BigInt BOTAN_PUBLIC_API(2,0) square(const BigInt& x);
 * as long as x is less than modulus. It also avoids leaking
 * information about the modulus, except that it does leak which of 3
 * categories the modulus is in: an odd integer, a power of 2, or some
-* other even number.
+* other even number, and if the modulus is even, leaks the power of 2
+* which divides the modulus.
 *
 * @param x a positive integer
 * @param modulus a positive integer
