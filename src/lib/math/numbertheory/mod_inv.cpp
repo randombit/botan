@@ -8,6 +8,7 @@
 #include <botan/divide.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -101,12 +102,11 @@ namespace {
 
 BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    {
-   if(n.is_negative() || mod.is_negative())
-      throw Invalid_Argument("inverse_mod_odd_modulus: arguments must be non-negative");
-   if(mod < 3 || mod.is_even())
-      throw Invalid_Argument("Bad modulus to inverse_mod_odd_modulus");
-   if(n >= mod)
-      throw Invalid_Argument("inverse_mod_odd_modulus n >= mod not supported");
+   // Caller should assure these preconditions:
+   BOTAN_DEBUG_ASSERT(n.is_positive());
+   BOTAN_DEBUG_ASSERT(mod.is_positive());
+   BOTAN_DEBUG_ASSERT(n < mod);
+   BOTAN_DEBUG_ASSERT(mod >= 3 && mod.is_odd());
 
    /*
    This uses a modular inversion algorithm designed by Niels Möller
@@ -127,98 +127,85 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    about it, and the reference to the paper.
    */
 
-   // todo allow this to be pre-calculated and passed in as arg
-   BigInt mp1o2 = (mod + 1) >> 1;
-
    const size_t mod_words = mod.sig_words();
    BOTAN_ASSERT(mod_words > 0, "Not empty");
 
-   BigInt a = n;
-   BigInt b = mod;
-   BigInt u = 1, v = 0;
+   secure_vector<word> tmp_mem(5*mod_words);
 
-   a.grow_to(mod_words);
-   u.grow_to(mod_words);
-   v.grow_to(mod_words);
-   mp1o2.grow_to(mod_words);
+   word* v_w = &tmp_mem[0];
+   word* u_w = &tmp_mem[1*mod_words];
+   word* b_w = &tmp_mem[2*mod_words];
+   word* a_w = &tmp_mem[3*mod_words];
+   word* mp1o2 = &tmp_mem[4*mod_words];
 
-   secure_vector<word>& a_w = a.get_word_vector();
-   secure_vector<word>& b_w = b.get_word_vector();
-   secure_vector<word>& u_w = u.get_word_vector();
-   secure_vector<word>& v_w = v.get_word_vector();
+   copy_mem(a_w, n.data(), std::min(n.size(), mod_words));
+   copy_mem(b_w, mod.data(), std::min(mod.size(), mod_words));
+   u_w[0] = 1;
+   // v_w = 0
 
-   CT::poison(a_w.data(), a_w.size());
-   CT::poison(b_w.data(), b_w.size());
-   CT::poison(u_w.data(), u_w.size());
-   CT::poison(v_w.data(), v_w.size());
+   // compute (mod + 1) / 2 which [because mod is odd] is equal to
+   // (mod / 2) + 1
+   copy_mem(mp1o2, mod.data(), std::min(mod.size(), mod_words));
+   bigint_shr1(mp1o2, mod_words, 0, 1);
+   word carry = bigint_add2_nc(mp1o2, mod_words, u_w, 1);
+   BOTAN_ASSERT_NOMSG(carry == 0);
+
+   CT::poison(tmp_mem.data(), tmp_mem.size());
 
    // Only n.bits() + mod.bits() iterations are required, but avoid leaking the size of n
-   size_t bits = 2 * mod.bits();
+   size_t execs = 2 * mod.bits();
 
-   while(bits--)
+   while(execs--)
       {
-      /*
-      const word odd = a.is_odd();
-      a -= odd * b;
-      const word underflow = a.is_negative();
-      b += a * underflow;
-      a.set_sign(BigInt::Positive);
-
-      a >>= 1;
-
-      if(underflow)
-         {
-         std::swap(u, v);
-         }
-
-      u -= odd * v;
-      u += u.is_negative() * mod;
-
-      const word odd_u = u.is_odd();
-
-      u >>= 1;
-      u += mp1o2 * odd_u;
-      */
-
       const word odd_a = a_w[0] & 1;
 
       //if(odd_a) a -= b
-      word underflow = bigint_cnd_sub(odd_a, a_w.data(), b_w.data(), mod_words);
+      word underflow = bigint_cnd_sub(odd_a, a_w, b_w, mod_words);
 
       //if(underflow) { b -= a; a = abs(a); swap(u, v); }
-      bigint_cnd_add(underflow, b_w.data(), a_w.data(), mod_words);
-      bigint_cnd_abs(underflow, a_w.data(), mod_words);
-      bigint_cnd_swap(underflow, u_w.data(), v_w.data(), mod_words);
+      bigint_cnd_add(underflow, b_w, a_w, mod_words);
+      bigint_cnd_abs(underflow, a_w, mod_words);
+      bigint_cnd_swap(underflow, u_w, v_w, mod_words);
 
       // a >>= 1
-      bigint_shr1(a_w.data(), mod_words, 0, 1);
+      bigint_shr1(a_w, mod_words, 0, 1);
 
       //if(odd_a) u -= v;
-      word borrow = bigint_cnd_sub(odd_a, u_w.data(), v_w.data(), mod_words);
+      word borrow = bigint_cnd_sub(odd_a, u_w, v_w, mod_words);
 
       // if(borrow) u += p
-      bigint_cnd_add(borrow, u_w.data(), mod.data(), mod_words);
+      bigint_cnd_add(borrow, u_w, mod.data(), mod_words);
 
       const word odd_u = u_w[0] & 1;
 
       // u >>= 1
-      bigint_shr1(u_w.data(), mod_words, 0, 1);
+      bigint_shr1(u_w, mod_words, 0, 1);
 
       //if(odd_u) u += mp1o2;
-      bigint_cnd_add(odd_u, u_w.data(), mp1o2.data(), mod_words);
+      bigint_cnd_add(odd_u, u_w, mp1o2, mod_words);
       }
 
-   CT::unpoison(a_w.data(), a_w.size());
-   CT::unpoison(b_w.data(), b_w.size());
-   CT::unpoison(u_w.data(), u_w.size());
-   CT::unpoison(v_w.data(), v_w.size());
+   auto a_is_0 = CT::Mask<word>::set();
+   for(size_t i = 0; i != mod_words; ++i)
+      a_is_0 &= CT::Mask<word>::is_zero(a_w[i]);
 
-   BOTAN_ASSERT(a.is_zero(), "A is zero");
+   auto b_is_1 = CT::Mask<word>::is_equal(b_w[0], 1);
+   for(size_t i = 1; i != mod_words; ++i)
+      b_is_1 &= CT::Mask<word>::is_zero(b_w[i]);
 
-   if(b != 1)
-      return 0;
+   BOTAN_ASSERT(a_is_0.is_set(), "A is zero");
 
-   return v;
+   // if b != 1 then gcd(n,mod) > 1 and inverse does not exist
+   // in which case zero out the result to indicate this
+   (~b_is_1).if_set_zero_out(v_w, mod_words);
+
+   clear_mem(&tmp_mem[mod_words], 4*mod_words);
+
+   CT::unpoison(tmp_mem.data(), tmp_mem.size());
+
+   BigInt r;
+   r.swap_reg(tmp_mem);
+   return r;
    }
 
 BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
@@ -237,15 +224,25 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
    BigInt b = 1;
    BigInt X = 0;
 
-   for(size_t i = 0; i != k; ++i)
+   const size_t a_words = 1 + a.sig_words();
+
+   /*
+   Hide the exact value of k. k is anyway known to word length
+   granularity because of the length of a, so no point in doing more
+   than this.
+   */
+   const size_t iter = round_up(k, BOTAN_MP_WORD_BITS);
+
+   for(size_t i = 0; i != iter; ++i)
       {
       const bool b0 = b.get_bit(0);
-
       X.conditionally_set_bit(i, b0);
-      b -= a * b0;
-      b /= 2;
+      b.grow_to(a_words);
+      bigint_cnd_sub(b0, b.mutable_data(), b.size(), a.data(), a.sig_words());
+      b >>= 1;
       }
 
+   X.mask_bits(k);
    return X;
    }
 
@@ -257,9 +254,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       throw BigInt::DivideByZero();
    if(mod.is_negative() || n.is_negative())
       throw Invalid_Argument("inverse_mod: arguments must be non-negative");
-   if(n.is_zero())
-      return 0;
-   if(n.is_even() && mod.is_even())
+   if(n.is_zero() || (n.is_even() && mod.is_even()))
       return 0;
 
    if(mod.is_odd())
@@ -306,10 +301,10 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    // Compute h = c*(inv_2k-inv_o) mod 2^k
    BigInt h = c * (inv_2k - inv_o);
    const bool h_neg = h.is_negative();
-   h.mask_bits(mod_lz);
    h.set_sign(BigInt::Positive);
-   if(h_neg && h > 0)
-      h = BigInt::power_of_2(mod_lz) - h;
+   h.mask_bits(mod_lz);
+   const bool h_nonzero = h.is_nonzero();
+   h.ct_cond_assign(h_nonzero && h_neg, BigInt::power_of_2(mod_lz) - h);
 
    // Return result inv_o + h * o
    h *= o;
