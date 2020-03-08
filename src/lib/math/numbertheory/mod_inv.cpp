@@ -221,6 +221,7 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
 
    const size_t a_words = a.sig_words();
 
+   X.grow_to(round_up(k, BOTAN_MP_WORD_BITS) / BOTAN_MP_WORD_BITS);
    b.grow_to(a_words);
 
    /*
