@@ -455,6 +455,8 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
 
 void BigInt::ct_cond_add(bool predicate, const BigInt& value)
    {
+   if(this->is_negative() || value.is_negative())
+      throw Invalid_Argument("BigInt::ct_cond_add requires both values to be positive");
    this->grow_to(1 + value.sig_words());
 
    bigint_cnd_add(static_cast<word>(predicate),
