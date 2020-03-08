@@ -12,17 +12,6 @@
 
 namespace Botan {
 
-// Deprecated forwarding functions:
-BigInt inverse_euclid(const BigInt& x, const BigInt& modulus)
-   {
-   return inverse_mod(x, modulus);
-   }
-
-BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
-   {
-   return inverse_mod(n, mod);
-   }
-
 /*
 Sets result to a^-1 * 2^k mod a
 with n <= k <= 2n
@@ -199,6 +188,11 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    // in which case zero out the result to indicate this
    (~b_is_1).if_set_zero_out(v_w, mod_words);
 
+   /*
+   * We've placed the result in the lowest words of the temp buffer.
+   * So just clear out the other values and then give that buffer to a
+   * BigInt.
+   */
    clear_mem(&tmp_mem[mod_words], 4*mod_words);
 
    CT::unpoison(tmp_mem.data(), tmp_mem.size());
@@ -223,8 +217,11 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
 
    BigInt b = 1;
    BigInt X = 0;
+   BigInt newb;
 
-   const size_t a_words = 1 + a.sig_words();
+   const size_t a_words = a.sig_words();
+
+   b.grow_to(a_words);
 
    /*
    Hide the exact value of k. k is anyway known to word length
@@ -237,8 +234,8 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
       {
       const bool b0 = b.get_bit(0);
       X.conditionally_set_bit(i, b0);
-      b.grow_to(a_words);
-      bigint_cnd_sub(b0, b.mutable_data(), b.size(), a.data(), a.sig_words());
+      newb = b - a;
+      b.ct_cond_assign(b0, newb);
       b >>= 1;
       }
 
@@ -288,13 +285,15 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    */
 
    const BigInt o = mod >> mod_lz;
-   const BigInt inv_o = inverse_mod_odd_modulus(ct_modulo(n, o), o);
+   const BigInt n_redc = ct_modulo(n, o);
+   const BigInt inv_o = inverse_mod_odd_modulus(n_redc, o);
    const BigInt inv_2k = inverse_mod_pow2(n, mod_lz);
 
    // No modular inverse in this case:
    if(inv_o == 0 || inv_2k == 0)
       return 0;
 
+   const BigInt m2k = BigInt::power_of_2(mod_lz);
    // Compute the CRT parameter
    const BigInt c = inverse_mod_pow2(o, mod_lz);
 
@@ -304,12 +303,23 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    h.set_sign(BigInt::Positive);
    h.mask_bits(mod_lz);
    const bool h_nonzero = h.is_nonzero();
-   h.ct_cond_assign(h_nonzero && h_neg, BigInt::power_of_2(mod_lz) - h);
+   h.ct_cond_assign(h_nonzero && h_neg, m2k - h);
 
    // Return result inv_o + h * o
    h *= o;
    h += inv_o;
    return h;
+   }
+
+// Deprecated forwarding functions:
+BigInt inverse_euclid(const BigInt& x, const BigInt& modulus)
+   {
+   return inverse_mod(x, modulus);
+   }
+
+BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
+   {
+   return inverse_mod_odd_modulus(n, mod);
    }
 
 word monty_inverse(word a)

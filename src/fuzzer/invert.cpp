@@ -65,16 +65,16 @@ void fuzz(const uint8_t in[], size_t len)
    if(mod < 2)
       return;
 
-   const Botan::BigInt ref = ref_inverse_mod(x, mod);
    const Botan::BigInt lib = Botan::inverse_mod(x, mod);
+   const Botan::BigInt ref = ref_inverse_mod(x, mod);
 
    if(ref != lib)
       {
       FUZZER_WRITE_AND_CRASH("X = " << x << "\n"
-                             << "P = " << mod << "\n"
-                             << "GCD = " << gcd(x, mod) << "\n"
-                             << "Ref = " << ref << "\n"
-                             << "Lib  = " << lib << "\n"
+                             << "Mod = " << mod << "\n"
+                             << "GCD(X,Mod) = " << gcd(x, mod) << "\n"
+                             << "RefInv(X,Mod) = " << ref << "\n"
+                             << "LibInv(X,Mod)  = " << lib << "\n"
                              << "RefCheck = " << (x*ref)%mod << "\n"
                              << "LibCheck  = " << (x*lib)%mod << "\n");
       }
