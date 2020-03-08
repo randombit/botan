@@ -10,8 +10,8 @@ Version 2.14.0, Not Yet Released
 * Optimize the vector permute AES implementation, especially improving
   performance on ARMv7, Aarch64, and POWER. (GH #2243)
 
-* Remove use of Binary Extended Euclidean Algorithm for modular inversions.
-  (GH #2287 #2296)
+* Use a new algorithm for modular inversions which is both faster and
+  more resistant to side channel attacks. (GH #2287 #2296 #2301)
 
 * Optimize NIST prime field reductions, improving ECDSA by 3-9% (GH #2295)
 
