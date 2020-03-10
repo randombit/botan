@@ -80,7 +80,8 @@ def main(args=None):
     if not os.path.isfile(test_exe) or not os.access(test_exe, os.X_OK):
         raise Exception("Test binary not built")
 
-    run_and_check([ test_exe ], make_environment(build_shared_lib))
+    run_and_check([ test_exe, "--data-dir=%s" % cfg.get('test_data_dir') ],
+                  make_environment(build_shared_lib))
 
     return 0
 

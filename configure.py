@@ -180,6 +180,7 @@ class SourcePaths(object):
         self.scripts_dir = os.path.join(self.src_dir, 'scripts')
 
         # subdirs of src/
+        self.test_data_dir = os.path.join(self.src_dir, 'tests/data')
         self.sphinx_config_dir = os.path.join(self.configs_dir, 'sphinx')
 
 
@@ -1997,6 +1998,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
+        'test_data_dir': source_paths.test_data_dir,
         'doc_dir': source_paths.doc_dir,
         'scripts_dir': normalize_source_path(source_paths.scripts_dir),
         'python_dir': source_paths.python_dir,
