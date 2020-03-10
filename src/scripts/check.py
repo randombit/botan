@@ -74,13 +74,13 @@ def main(args=None):
 
     cfg = read_config(os.path.join(options.build_dir, 'build_config.json'))
 
-    test_exe         = cfg.get('test_exe')
+    test_exe = cfg.get('test_exe')
     build_shared_lib = cfg.get('build_shared_lib')
 
     if not os.path.isfile(test_exe) or not os.access(test_exe, os.X_OK):
         raise Exception("Test binary not built")
 
-    run_and_check([ test_exe, "--data-dir=%s" % cfg.get('test_data_dir') ],
+    run_and_check([test_exe, "--data-dir=%s" % cfg.get('test_data_dir')],
                   make_environment(build_shared_lib))
 
     return 0
