@@ -18,6 +18,10 @@ import platform
 def is_macos():
     return platform.system() == "Darwin"
 
+def is_linux():
+    return platform.system() == "Linux"
+
+
 def run_and_check(cmd_line, env=None, cwd=None):
 
     logging.info("Starting %s", ' '.join(cmd_line))
@@ -31,6 +35,20 @@ def run_and_check(cmd_line, env=None, cwd=None):
     if proc.returncode != 0:
         logging.error("Error running %s", ' '.join(cmd_line))
         sys.exit(1)
+
+
+def get_environment(shared_lib):
+    if not shared_lib:
+        return None
+
+    env = os.environ.copy()
+
+    if is_macos():
+        env["DYLD_LIBRARY_PATH"] = os.path.abspath(".")
+    elif is_linux():
+        env["LD_LIBRARY_PATH"] = os.path.abspath(".")
+
+    return env
 
 
 def parse_options(args):
@@ -62,11 +80,7 @@ def main(args=None):
     if shared_lib and not os.path.isfile(shared_lib):
         raise Exception("Shared library %s not found" % shared_lib)
 
-    env = os.environ.copy()
-    if shared_lib and is_macos():
-        env["DYLD_LIBRARY_PATH"] = "."
-
-    run_and_check([ test_exe ], env)
+    run_and_check([ test_exe ], get_environment(shared_lib))
 
     return 0
 
