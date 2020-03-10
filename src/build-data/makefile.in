@@ -60,12 +60,7 @@ install: %{install_targets}
 	$(PYTHON_EXE) $(SCRIPTS_DIR)/install.py --prefix="%{prefix}" --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
 
 check: tests
-%{if build_shared_lib}
-	$(PYTHON_EXE) $(SCRIPTS_DIR)/check.py --test-exe="%{test_exe}" --shared-lib="%{shared_lib_name}"
-%{endif}
-%{unless build_shared_lib}
-	$(PYTHON_EXE) $(SCRIPTS_DIR)/check.py --test-exe="%{test_exe}"
-%{endif}
+	$(PYTHON_EXE) $(SCRIPTS_DIR)/check.py --build-dir="%{build_dir}"
 
 # Object Files
 LIBOBJS = %{join lib_objs}

@@ -8,12 +8,13 @@ Implements the "make check" target
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import os
-import sys
-import optparse
-import subprocess
+import json
 import logging
+import optparse # pylint: disable=deprecated-module
+import os
 import platform
+import subprocess
+import sys
 
 def is_macos():
     return platform.system() == "Darwin"
@@ -37,8 +38,8 @@ def run_and_check(cmd_line, env=None, cwd=None):
         sys.exit(1)
 
 
-def get_environment(shared_lib):
-    if not shared_lib:
+def make_environment(build_shared_lib):
+    if not build_shared_lib:
         return None
 
     env = os.environ.copy()
@@ -53,10 +54,8 @@ def get_environment(shared_lib):
 
 def parse_options(args):
     parser = optparse.OptionParser()
-    parser.add_option('--test-exe', default='botan-test', metavar='BINARY',
-                      help='specify the botan-test binary name (default %default)')
-    parser.add_option('--shared-lib', default=None, metavar='SHARED_LIB',
-                      help='use shared library of botan (default %default)')
+    parser.add_option('--build-dir', default='build', metavar='DIR',
+                      help='specify the botan build directory (default %default)')
 
     (options, args) = parser.parse_args(args)
 
@@ -66,21 +65,29 @@ def parse_options(args):
     return options
 
 
+def read_config(config):
+    try:
+        with open(config) as f:
+            return json.load(f)
+    except OSError:
+        raise Exception('Failed to load build config %s - is build dir correct?' % (config))
+
+
 def main(args=None):
     if args is None:
         args = sys.argv
 
     options = parse_options(args)
-    test_exe = options.test_exe
-    shared_lib = options.shared_lib
+
+    cfg = read_config(os.path.join(options.build_dir, 'build_config.json'))
+
+    test_exe         = cfg.get('test_exe')
+    build_shared_lib = cfg.get('build_shared_lib')
 
     if not os.path.isfile(test_exe) or not os.access(test_exe, os.X_OK):
         raise Exception("Test binary not built")
 
-    if shared_lib and not os.path.isfile(shared_lib):
-        raise Exception("Shared library %s not found" % shared_lib)
-
-    run_and_check([ test_exe ], get_environment(shared_lib))
+    run_and_check([ test_exe ], make_environment(build_shared_lib))
 
     return 0
 
