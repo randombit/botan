@@ -12,16 +12,8 @@ import json
 import logging
 import optparse # pylint: disable=deprecated-module
 import os
-import platform
 import subprocess
 import sys
-
-def is_macos():
-    return platform.system() == "Darwin"
-
-def is_linux():
-    return platform.system() == "Linux"
-
 
 def run_and_check(cmd_line, env=None, cwd=None):
 
@@ -44,10 +36,11 @@ def make_environment(build_shared_lib):
 
     env = os.environ.copy()
 
-    if is_macos():
-        env["DYLD_LIBRARY_PATH"] = os.path.abspath(".")
-    elif is_linux():
-        env["LD_LIBRARY_PATH"] = os.path.abspath(".")
+    def extend_colon_list(k, n):
+        env[k] = n if k not in env else ":".join([env[k], n])
+
+    extend_colon_list("DYLD_LIBRARY_PATH", os.path.abspath("."))
+    extend_colon_list("LD_LIBRARY_PATH", os.path.abspath("."))
 
     return env
 
