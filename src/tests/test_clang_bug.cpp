@@ -19,7 +19,6 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-   #include <botan/system_rng.h>
    #include <botan/pkcs8.h>
    #include <botan/data_src.h>
 #endif // BOTAN_HAS_PUBLIC_KEY_CRYPTO
@@ -87,7 +86,6 @@ class Clang_Bug_41810 final : public Test
          {
          Test::Result result("PKCS8::load_key does not crash when compiled with Clang 8");
 
-         Botan::System_RNG rng;
          auto pem = getPrivateKey();
 
          Botan::DataSource_Memory ds(reinterpret_cast<const uint8_t*>(pem.data()), pem.size());
@@ -97,7 +95,7 @@ class Clang_Bug_41810 final : public Test
 
          try
             {
-            Botan::PKCS8::load_key(ds, rng, pw);
+            Botan::PKCS8::load_key(ds, Test::rng(), pw);
             result.test_failure("load_key should have thrown due to wrong password");
             }
          catch(const std::exception&)
