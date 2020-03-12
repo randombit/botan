@@ -121,12 +121,7 @@ The basic build procedure on Unix and Unix-like systems is::
 
    $ ./configure.py [--enable-modules=<list>] [--cc=CC]
    $ make
-   $ ./botan-test
-
-If that fails with an error about not being able to find libbotan.so,
-you may need to set ``LD_LIBRARY_PATH``::
-
-   $ LD_LIBRARY_PATH=. ./botan-test
+   $ make check
 
 If the tests look OK, install::
 
@@ -172,7 +167,7 @@ shell), and run::
 
    $ python configure.py --cc=msvc --os=windows
    $ nmake
-   $ botan-test.exe
+   $ nmake check
    $ nmake install
 
 Botan supports the nmake replacement `Jom <https://wiki.qt.io/Jom>`_

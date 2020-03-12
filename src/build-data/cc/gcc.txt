@@ -47,7 +47,6 @@ openbsd -> "$(CXX) -shared -fPIC"
 </so_link_commands>
 
 <binary_link_commands>
-linux         -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 default       -> "$(LINKER)"
 </binary_link_commands>
 
