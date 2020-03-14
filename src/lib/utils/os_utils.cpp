@@ -458,14 +458,17 @@ int get_locked_fd()
 
 std::vector<void*> OS::allocate_locked_pages(size_t count)
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-   static const int locked_fd = get_locked_fd();
-#endif
-
    std::vector<void*> result;
+
+#if (defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)) || defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
+
    result.reserve(count);
 
    const size_t page_size = OS::system_page_size();
+
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+   static const int locked_fd = get_locked_fd();
+#endif
 
    for(size_t i = 0; i != count; ++i)
       {
@@ -532,31 +535,40 @@ std::vector<void*> OS::allocate_locked_pages(size_t count)
 
       result.push_back(ptr);
       }
+#else
+   BOTAN_UNUSED(count);
+#endif
 
    return result;
    }
 
 void OS::page_allow_access(void* page)
    {
-   const size_t page_size = OS::system_page_size();
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   const size_t page_size = OS::system_page_size();
    ::mprotect(page, page_size, PROT_READ | PROT_WRITE);
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
+   const size_t page_size = OS::system_page_size();
    DWORD old_perms = 0;
    ::VirtualProtect(page, page_size, PAGE_READWRITE, &old_perms);
    BOTAN_UNUSED(old_perms);
+#else
+   BOTAN_UNUSED(page);
 #endif
    }
 
 void OS::page_prohibit_access(void* page)
    {
-   const size_t page_size = OS::system_page_size();
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   const size_t page_size = OS::system_page_size();
    ::mprotect(page, page_size, PROT_NONE);
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
+   const size_t page_size = OS::system_page_size();
    DWORD old_perms = 0;
    ::VirtualProtect(page, page_size, PAGE_NOACCESS, &old_perms);
    BOTAN_UNUSED(old_perms);
+#else
+   BOTAN_UNUSED(page);
 #endif
    }
 
