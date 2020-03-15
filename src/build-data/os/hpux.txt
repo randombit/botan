@@ -8,6 +8,7 @@ posix_mlock
 clock_gettime
 dev_random
 
+atomics
 sockets
 threads
 thread_local

@@ -60,6 +60,9 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get -qq update
         sudo apt-get install gcc-arm-none-eabi libstdc++-arm-none-eabi-newlib
 
+        echo 'extern "C" void __sync_synchronize() {}' >> src/tests/main.cpp
+        echo 'extern "C" void __sync_synchronize() {}' >> src/cli/main.cpp
+
     elif [ "$TARGET" = "lint" ]; then
         sudo apt-get -qq update
         sudo apt-get install pylint

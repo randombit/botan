@@ -18,6 +18,7 @@ getauxval
 # Added in API 28
 #getentropy
 
+atomics
 sockets
 threads
 thread_local

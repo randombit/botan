@@ -16,12 +16,13 @@ dev_random
 clock_gettime
 
 commoncrypto
+apple_keychain
+
+atomics
 sockets
 threads
 thread_local
 filesystem
-
-apple_keychain
 </target_features>
 
 <aliases>

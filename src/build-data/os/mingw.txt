@@ -25,6 +25,7 @@ win32
 rtlgenrandom
 virtual_lock
 
+atomics
 threads
 thread_local
 filesystem

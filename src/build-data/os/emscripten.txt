@@ -10,6 +10,7 @@ ar_options cr
 use_stack_protector no
 
 <target_features>
+atomics
 filesystem
 dev_random
 posix1

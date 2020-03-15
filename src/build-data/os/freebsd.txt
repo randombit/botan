@@ -14,6 +14,7 @@ cap_enter
 elf_aux_info
 getentropy
 
+atomics
 sockets
 threads
 thread_local

@@ -11,4 +11,5 @@ use_stack_protector no
 
 <target_features>
 filesystem
+atomics
 </target_features>
