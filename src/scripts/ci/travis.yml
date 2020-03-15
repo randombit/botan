@@ -150,6 +150,14 @@ jobs:
 
     - os: linux
       dist: bionic
+      arch: arm64
+      name: Baremetal
+      compiler: gcc
+      env:
+       - TARGET="baremetal"
+
+    - os: linux
+      dist: bionic
       name: BSI policy
       compiler: gcc
       env:

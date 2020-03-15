@@ -6,7 +6,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AEAD_MODES) && defined(BOTAN_HAS_EME_OAEP) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_PEM_CODEC)
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_AEAD_MODES) && defined(BOTAN_HAS_EME_OAEP) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_PEM_CODEC) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 #include <botan/pubkey.h>
 #include <botan/x509_key.h>

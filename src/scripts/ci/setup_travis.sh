@@ -56,6 +56,10 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux-x86_64.zip
         unzip -qq "$ANDROID_NDK"-linux-x86_64.zip
 
+    elif [ "$TARGET" = "baremetal" ]; then
+        sudo apt-get -qq update
+        sudo apt-get install gcc-arm-none-eabi libstdc++-arm-none-eabi-newlib
+
     elif [ "$TARGET" = "lint" ]; then
         sudo apt-get -qq update
         sudo apt-get install pylint

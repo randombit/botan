@@ -79,7 +79,7 @@ arm64:neon    -> ""
 
 # Flags set here are included at compile and link time
 <mach_abi_linking>
-all!haiku,qnx -> "-pthread"
+all!haiku,qnx,none -> "-pthread"
 
 openmp  -> "-fopenmp"
 

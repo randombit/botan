@@ -6,7 +6,7 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_TLS)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 #include <botan/tls_policy.h>
 #include <botan/tls_version.h>
