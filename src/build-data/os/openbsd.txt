@@ -17,6 +17,7 @@ getentropy
 explicit_bzero
 pledge
 
+atomics
 sockets
 threads
 thread_local

@@ -11,6 +11,8 @@ posix_mlock
 arc4random
 
 commoncrypto
+
+atomics
 sockets
 threads
 thread_local

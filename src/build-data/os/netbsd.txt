@@ -9,6 +9,7 @@ dev_random
 arc4random
 explicit_memset
 
+atomics
 sockets
 threads
 thread_local

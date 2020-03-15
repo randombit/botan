@@ -9,6 +9,7 @@ proc_fs
 dev_random
 arc4random
 
+atomics
 sockets
 threads
 thread_local

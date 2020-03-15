@@ -27,13 +27,9 @@ def get_concurrency():
         return def_concurrency
 
 def build_targets(target, target_os):
-    if target == 'baremetal':
-        yield 'static'
-        return
-
     if target in ['shared', 'mini-shared', 'bsi', 'nist']:
         yield 'shared'
-    elif target in ['static', 'mini-static', 'fuzzers']:
+    elif target in ['static', 'mini-static', 'fuzzers', 'baremetal']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -155,7 +151,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target == 'baremetal':
         cc_bin = 'arm-none-eabi-c++'
-        flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector']
+        flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
         test_cmd = None
 
     if is_cross_target:
@@ -558,10 +554,6 @@ def main(args=None):
 
             if target in ['coverage']:
                 make_targets += ['bogo_shim']
-
-            if target in ['baremetal']:
-                # everything else builds, but fails to link
-                make_targets = ['libs']
 
             cmds.append(make_prefix + make_cmd + make_targets)
 

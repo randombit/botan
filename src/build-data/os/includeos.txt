@@ -1,4 +1,5 @@
 <target_features>
 posix1
 dev_random
+atomics
 </target_features>

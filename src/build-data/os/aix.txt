@@ -10,6 +10,7 @@ clock_gettime
 dev_random
 proc_fs
 
+atomics
 sockets
 threads
 thread_local
