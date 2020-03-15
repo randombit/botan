@@ -31,9 +31,13 @@ def build_targets(target, target_os):
         yield 'static'
         return
 
-    if target in ['shared', 'mini-shared', 'bsi', 'nist'] or target_os in ['windows']:
+    if target in ['shared', 'mini-shared', 'bsi', 'nist']:
         yield 'shared'
-    elif target in ['static', 'mini-static', 'fuzzers'] or target_os in ['ios', 'mingw']:
+    elif target in ['static', 'mini-static', 'fuzzers']:
+        yield 'static'
+    elif target_os in ['windows']:
+        yield 'shared'
+    elif target_os in ['ios', 'mingw']:
         yield 'static'
     else:
         yield 'shared'
