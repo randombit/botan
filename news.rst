@@ -34,6 +34,15 @@ Version 2.14.0, Not Yet Released
   been removed. Instead only ``botan_all.cpp`` and ``botan_all.h`` are
   generated. (GH #2246)
 
+* Improve support for baremetal systems with no underlying OS.
+  (GH #2303 #2304 #2305)
+
+* The build system now avoids using ``-rpath=$ORIGIN`` or (on macOS)
+  install_name which allowed running the tests from the build
+  directory without setting ``LD_LIBRARY_PATH``/``DYLD_LIBRARY_PATH``
+  environment variables. Instead set the dynamic linker variables
+  appropriately, or use ``make check``. (GH #2294 #2302)
+
 * Add new option ``--name-amalgamation`` which allows naming the
   amalgamation output, instead of the default ``botan_all``. (GH #2246)
 
