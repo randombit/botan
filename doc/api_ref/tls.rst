@@ -497,6 +497,8 @@ The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
           }
        }
 
+.. _tls_server:
+
 TLS Servers
 ----------------------------------------
 
@@ -1641,7 +1643,7 @@ Server Code Example
 TLS Stream
 ----------------------------------------
 
-:cpp:class:`TLS::Stream` offers a Boost.Asio compatible wrapper around :cpp:class:`TLS::Client`.
+:cpp:class:`TLS::Stream` offers a Boost.Asio compatible wrapper around :cpp:class:`TLS::Client` and :cpp:class:`TLS::Server`.
 It can be used as an alternative to Boost.Asio's `ssl::stream <https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio/reference/ssl__stream.html>`_ with minor adjustments to the using code.
 It offers the following interface:
 
@@ -1654,7 +1656,7 @@ It offers the following interface:
                      explicit Stream(Context& context, Args&& ... args)
 
    Construct a new TLS stream.
-   The *context* parameter will be used to set up the underlying *native handle*, i.e. the :ref:`TLS::Client <tls_client>`, when :cpp:func:`handshake` is called.
+   The *context* parameter will be used to initialize the underlying *native handle*, i.e. the :ref:`TLS::Client <tls_client>` or :ref:`TLS::Server <tls_server>`, when :cpp:func:`handshake` is called.
    Using code must ensure the context is kept alive for the lifetime of the stream.
    The further *args* will be forwarded to the *next layer*'s constructor.
 
@@ -1668,7 +1670,6 @@ It offers the following interface:
    .. cpp:function:: void handshake(Connection_Side side, boost::system::error_code& ec)
 
    Set up the *native handle* and perform the TLS handshake.
-   As only the client side of the stream is currently implemented, *side* should be ``Connection_Side::CLIENT``.
 
    .. cpp:function:: void handshake(Connection_Side side)
 
@@ -1689,6 +1690,12 @@ It offers the following interface:
    .. cpp:function:: void shutdown()
 
    Overload of :cpp:func:`shutdown` that throws an exception if an error occurs.
+
+   .. cpp:function:: template <typename ShutdownHandler> \
+                     void async_shutdown(ShutdownHandler&& handler)
+
+   Asynchronous variant of :cpp:func:`shutdown`.
+   The function returns immediately and calls the *handler* callback function after performing asynchronous I/O to complete the TLS shutdown.
 
 
    .. cpp:function:: template <typename MutableBufferSequence> \
@@ -1734,7 +1741,7 @@ It offers the following interface:
 
 .. cpp:class:: TLS::Context
 
-   A helper class to initialize and configure the Stream's underlying *native handle* (see :cpp:class:`TLS::Client`).
+   A helper class to initialize and configure the Stream's underlying *native handle* (see :cpp:class:`TLS::Client` and :cpp:class:`TLS::Server`).
 
    .. cpp:function:: Context(Credentials_Manager&   credentialsManager, \
                              RandomNumberGenerator& randomNumberGenerator, \
@@ -1750,8 +1757,10 @@ It offers the following interface:
    will cause the stream to override the default implementation of the
    :cpp:func:`tls_verify_cert_chain` callback.
 
-Stream Code Example
-^^^^^^^^^^^^^^^^^^^^
+TLS Stream Client Code Example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The code below illustrates how to build a simple HTTPS client based on the TLS Stream and Boost.Beast. When run, it fetches the content of `https://botan.randombit.net/news.html` and prints it to stdout.
 
 .. code-block:: cpp
 

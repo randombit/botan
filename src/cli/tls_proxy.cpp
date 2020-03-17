@@ -25,6 +25,7 @@
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
 #include <botan/hex.h>
+#include <botan/rng.h>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
    #include <botan/tls_session_manager_sqlite.h>

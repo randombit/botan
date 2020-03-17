@@ -1,7 +1,7 @@
 /*
  * TLS Context
- * (C) 2018-2019 Jack Lloyd
- *     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+ * (C) 2018-2020 Jack Lloyd
+ *     2018-2020 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */

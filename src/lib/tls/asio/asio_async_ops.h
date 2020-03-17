@@ -1,7 +1,7 @@
 /*
 * Helpers for TLS ASIO Stream
-* (C) 2018-2019 Jack Lloyd
-*     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+* (C) 2018-2020 Jack Lloyd
+*     2018-2020 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -144,24 +144,18 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
                {
                // We have received encrypted data from the network, now hand it to TLS::Channel for decryption.
                boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytes_transferred};
-               try
-                  {
-                  m_stream.native_handle()->received_data(
-                     static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size()
-                  );
-                  }
-               catch(const TLS_Exception& e)
-                  {
-                  ec = e.type();
-                  }
-               catch(const Botan::Exception& e)
-                  {
-                  ec = e.error_type();
-                  }
-               catch(...)
-                  {
-                  ec = Botan::ErrorType::Unknown;
-                  }
+               m_stream.process_encrypted_data(read_buffer, ec);
+               }
+
+            if (m_stream.shutdown_received())
+               {
+               // we just received a 'close_notify' from the peer and don't expect any more data
+               ec = boost::asio::error::eof;
+               }
+            else if (ec == boost::asio::error::eof)
+               {
+               // we did not expect this disconnection from the peer
+               ec = StreamError::StreamTruncated;
                }
 
             if(!m_stream.has_received_data() && !ec && boost::asio::buffer_size(m_buffers) > 0)
@@ -242,6 +236,12 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
                return;
                }
 
+            if (ec == boost::asio::error::eof && !m_stream.shutdown_received())
+               {
+               // transport layer was closed by peer without receiving 'close_notify'
+               ec = StreamError::StreamTruncated;
+               }
+
             if(!isContinuation)
                {
                // Make sure the handler is not called without an intermediate initiating function.
@@ -293,28 +293,16 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
          {
          reenter(this)
             {
+            if(ec == boost::asio::error::eof)
+               {
+               ec = StreamError::StreamTruncated;
+               }
+
             if(bytesTransferred > 0 && !ec)
                {
                // Provide encrypted TLS data received from the network to TLS::Channel for decryption
                boost::asio::const_buffer read_buffer {m_stream.input_buffer().data(), bytesTransferred};
-               try
-                  {
-                  m_stream.native_handle()->received_data(
-                     static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size()
-                  );
-                  }
-               catch(const TLS_Exception& e)
-                  {
-                  ec = e.type();
-                  }
-               catch(const Botan::Exception& e)
-                  {
-                  ec = e.error_type();
-                  }
-               catch(...)
-                  {
-                  ec = Botan::ErrorType::Unknown;
-                  }
+               m_stream.process_encrypted_data(read_buffer, ec);
                }
 
             if(m_stream.has_data_to_send() && !ec)
@@ -325,11 +313,10 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                // operation will eventually call `*this` as its own handler, passing the 0 back to this call operator.
                // This is necessary because the check of `bytesTransferred > 0` assumes that `bytesTransferred` bytes
                // were just read and are available in input_buffer for further processing.
-               AsyncWriteOperation<
-               AsyncHandshakeOperation<typename std::decay<Handler>::type, Stream, Allocator>,
-                                       Stream,
-                                       Allocator>
-                                       op{std::move(*this), m_stream, 0};
+               AsyncWriteOperation<AsyncHandshakeOperation<typename std::decay<Handler>::type, Stream, Allocator>,
+                                   Stream,
+                                   Allocator>
+                                   op{std::move(*this), m_stream, 0};
                return;
                }
 

@@ -1,14 +1,14 @@
 /*
 * TLS ASIO Stream Unit Tests
-* (C) 2018-2019 Jack Lloyd
-*     2018-2019 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+* (C) 2018-2020 Jack Lloyd
+*     2018-2020 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_ASIO_STREAM)
 
 #include <botan/asio_stream.h>
 #include <botan/tls_callbacks.h>
@@ -177,7 +177,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
          // fail right away
-         FailCount  fc{0, net::error::eof};
+         FailCount  fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
          auto ctx = get_context();
@@ -192,7 +192,7 @@ class Asio_Stream_Tests final : public Test
 
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
-         result.confirm("propagates error code", ec == net::error::eof);
+         result.confirm("propagates error code", ec == net::error::no_recovery);
          results.push_back(result);
          }
 
@@ -246,7 +246,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
          // fail right away
-         FailCount  fc{0, net::error::eof};
+         FailCount  fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
          auto ctx = get_context();
@@ -261,7 +261,7 @@ class Asio_Stream_Tests final : public Test
          auto handler = [&](const error_code &ec)
             {
             result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
-            result.confirm("propagates error code", ec == net::error::eof);
+            result.confirm("propagates error code", ec == net::error::no_recovery);
             };
 
          ssl.async_handshake(Botan::TLS::CLIENT, handler);
@@ -345,7 +345,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
          // fail right away
-         FailCount  fc{0, net::error::eof};
+         FailCount  fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
          auto ctx = get_context();
@@ -359,7 +359,7 @@ class Asio_Stream_Tests final : public Test
 
          Test::Result result("sync read_some error");
          result.test_eq("didn't transfer anything", bytes_transferred, 0);
-         result.confirm("propagates error code", ec == net::error::eof);
+         result.confirm("propagates error code", ec == net::error::no_recovery);
 
          results.push_back(result);
          }
@@ -467,7 +467,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
          // fail right away
-         FailCount  fc{0, net::error::eof};
+         FailCount  fc{0, net::error::no_recovery};
          auto ctx = get_context();
          AsioStream ssl(ctx, ioc, fc);
          uint8_t    data[TEST_DATA_SIZE];
@@ -477,7 +477,7 @@ class Asio_Stream_Tests final : public Test
          auto read_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.test_eq("didn't transfer anything", bytes_transferred, 0);
-            result.confirm("propagates error code", ec == net::error::eof);
+            result.confirm("propagates error code", ec == net::error::no_recovery);
             };
 
          net::mutable_buffer buf {data, TEST_DATA_SIZE};
@@ -558,6 +558,24 @@ class Asio_Stream_Tests final : public Test
          results.push_back(result);
          }
 
+      void test_sync_no_handshake(std::vector<Test::Result>& results)
+         {
+         net::io_context ioc;
+         TestStream      remote{ioc};
+
+         auto ctx = get_context();
+         Botan::TLS::Stream<TestStream> ssl(ctx, ioc);  // Note that we're not using MockChannel here
+         ssl.next_layer().connect(remote);
+         error_code ec;
+
+         net::write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), ec);
+
+         Test::Result result("sync write_some without handshake fails gracefully");
+         result.confirm("reports an error", ec.failed());
+
+         results.push_back(result);
+         }
+
       void test_sync_write_some_buffer_sequence(std::vector<Test::Result>& results)
          {
          net::io_context ioc;
@@ -600,7 +618,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
          // fail right away
-         FailCount  fc{0, net::error::eof};
+         FailCount  fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
          auto ctx = get_context();
@@ -613,7 +631,7 @@ class Asio_Stream_Tests final : public Test
 
          Test::Result result("sync write_some error");
          result.test_eq("didn't transfer anything", bytes_transferred, 0);
-         result.confirm("propagates error code", ec == net::error::eof);
+         result.confirm("propagates error code", ec == net::error::no_recovery);
 
          results.push_back(result);
          }
@@ -706,7 +724,7 @@ class Asio_Stream_Tests final : public Test
          {
          net::io_context ioc;
          // fail right away
-         FailCount  fc{0, net::error::eof};
+         FailCount  fc{0, net::error::no_recovery};
          TestStream remote{ioc};
 
          auto ctx = get_context();
@@ -718,7 +736,7 @@ class Asio_Stream_Tests final : public Test
          auto write_handler = [&](const error_code &ec, std::size_t bytes_transferred)
             {
             result.test_eq("committed some bytes to the core", bytes_transferred, TEST_DATA_SIZE);
-            result.confirm("propagates error code", ec == net::error::eof);
+            result.confirm("propagates error code", ec == net::error::no_recovery);
             };
 
          net::async_write(ssl, net::const_buffer(TEST_DATA, TEST_DATA_SIZE), write_handler);
@@ -754,6 +772,8 @@ class Asio_Stream_Tests final : public Test
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
+
+         test_sync_no_handshake(results);
 
          test_sync_handshake(results);
          test_sync_handshake_error(results);
