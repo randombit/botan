@@ -8,7 +8,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_ASIO_STREAM)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_ASIO_STREAM) && defined(BOTAN_TARGET_OS_HAS_THREADS)
 
 // first version to be compatible with Networking TS (N4656) and boost::beast
 #include <boost/version.hpp>
@@ -46,8 +46,9 @@ class Timeout_Exception : public std::runtime_error
       using std::runtime_error::runtime_error;
    };
 
-struct Side
+class Side
    {
+   public:
       Side()
          : m_credentials_manager(true, ""),
            m_ctx(m_credentials_manager, m_rng, m_session_mgr, m_policy, Botan::TLS::Server_Information()) {}
@@ -92,8 +93,9 @@ struct Side
       char m_data[max_msg_length];
    };
 
-struct Result_Wrapper
+class Result_Wrapper
    {
+   public:
       Result_Wrapper(net::io_context& ioc, const std::string& name) : m_timer(ioc), m_result(name) {}
 
       Result& result() { return m_result; }
