@@ -136,6 +136,8 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
         this->swap(other);
         }
 
+     ~BigInt() { const_time_unpoison(); }
+
      /**
      * Move assignment
      */
@@ -637,7 +639,7 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      * Resize the vector to the minimum word size to hold the integer, or
      * min_size words, whichever is larger
      */
-     void shrink_to_fit(size_t min_size = 0)
+     void BOTAN_DEPRECATED("Use resize if required") shrink_to_fit(size_t min_size = 0)
         {
         m_data.shrink_to_fit(min_size);
         }

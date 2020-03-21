@@ -75,10 +75,14 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 
    BigInt f = a;
    BigInt g = b;
+   f.const_time_poison();
+   g.const_time_poison();
+
    f.set_sign(BigInt::Positive);
    g.set_sign(BigInt::Positive);
 
    const size_t common2s = std::min(low_zero_bits(f), low_zero_bits(g));
+   CT::unpoison(common2s);
 
    f >>= common2s;
    g >>= common2s;
@@ -92,8 +96,6 @@ BigInt gcd(const BigInt& a, const BigInt& b)
    BigInt newg, t;
    for(size_t i = 0; i != loop_cnt; ++i)
       {
-      g.shrink_to_fit();
-      f.shrink_to_fit();
       sub_abs(newg, f, g);
 
       const bool need_swap = (g.is_odd() && delta > 0);
@@ -110,6 +112,9 @@ BigInt gcd(const BigInt& a, const BigInt& b)
       }
 
    f <<= common2s;
+
+   f.const_time_unpoison();
+   g.const_time_unpoison();
 
    return f;
    }
