@@ -505,10 +505,8 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other)
       this->set_word_at(i, mask.select(o_word, t_word));
       }
 
-   if(sign() != other.sign())
-      {
-      cond_flip_sign(predicate);
-      }
+   const bool different_sign = sign() != other.sign();
+   cond_flip_sign(predicate && different_sign);
    }
 
 #if defined(BOTAN_HAS_VALGRIND)

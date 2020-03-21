@@ -127,6 +127,8 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    word* a_w = &tmp_mem[3*mod_words];
    word* mp1o2 = &tmp_mem[4*mod_words];
 
+   CT::poison(tmp_mem.data(), tmp_mem.size());
+
    copy_mem(a_w, n.data(), std::min(n.size(), mod_words));
    copy_mem(b_w, mod.data(), std::min(mod.size(), mod_words));
    u_w[0] = 1;
@@ -139,12 +141,10 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    word carry = bigint_add2_nc(mp1o2, mod_words, u_w, 1);
    BOTAN_ASSERT_NOMSG(carry == 0);
 
-   CT::poison(tmp_mem.data(), tmp_mem.size());
-
    // Only n.bits() + mod.bits() iterations are required, but avoid leaking the size of n
-   size_t execs = 2 * mod.bits();
+   const size_t execs = 2 * mod.bits();
 
-   while(execs--)
+   for(size_t i = 0; i != execs; ++i)
       {
       const word odd_a = a_w[0] & 1;
 
@@ -241,6 +241,7 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
       }
 
    X.mask_bits(k);
+   X.const_time_unpoison();
    return X;
    }
 

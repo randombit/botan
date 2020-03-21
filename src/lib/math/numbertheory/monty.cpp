@@ -273,13 +273,7 @@ void Montgomery_Int::fix_size()
    if(m_v.sig_words() > p_words)
       throw Internal_Error("Montgomery_Int::fix_size v too large");
 
-   secure_vector<word>& w = m_v.get_word_vector();
-
-   if(w.size() != p_words)
-      {
-      w.resize(p_words);
-      w.shrink_to_fit();
-      }
+   m_v.grow_to(p_words);
    }
 
 bool Montgomery_Int::operator==(const Montgomery_Int& other) const
