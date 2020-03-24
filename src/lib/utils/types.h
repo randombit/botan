@@ -100,6 +100,13 @@ using s32bit = std::int32_t;
   #error BOTAN_MP_WORD_BITS must be 32 or 64
 #endif
 
+/*
+* Should this assert fail on your system please contact the developers
+* for assistance in porting.
+*/
+static_assert(sizeof(std::size_t) == 8 || sizeof(std::size_t) == 4,
+              "This platform has an unexpected size for size_t");
+
 }
 
 #endif
