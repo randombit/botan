@@ -16,6 +16,10 @@
 #else
   #include <botan/internal/os_utils.h>
 
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
+  #include <sys/auxv.h>
+#endif
+
 #endif
 
 #endif
@@ -142,7 +146,7 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
 
 #if defined(AT_DCACHEBSIZE)
    // Exists only on Linux
-   const unsigned long dcache_line = ::getauxval(AT_DCACHEBSIZE);
+   const unsigned long dcache_line = OS::get_auxval(AT_DCACHEBSIZE);
 
    // plausibility check
    if(dcache_line == 32 || dcache_line == 64 || dcache_line == 128)
