@@ -135,8 +135,7 @@ void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    padding().add_padding(buffer, bytes_in_final_block, BS);
 
-   if((buffer.size()-offset) % BS)
-      throw Internal_Error("Did not pad to full block size in " + name());
+   BOTAN_ASSERT_EQUAL(buffer.size() % BS, offset % BS, "Padded to block boundary");
 
    update(buffer, offset);
    }

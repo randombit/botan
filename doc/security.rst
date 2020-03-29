@@ -15,6 +15,23 @@ mail please use::
 This key can be found in the file ``doc/pgpkey.txt`` or online at
 https://keybase.io/jacklloyd and on most PGP keyservers.
 
+2020
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* 2020-03-24: Side channel during CBC padding
+
+  The CBC padding operations were not constant time and as a result would leak
+  the length of the plaintext values which were being padded to an attacker
+  running a side channel attack via shared resources such as cache or branch
+  predictor. No information about the contents was leaked, but the length alone
+  might be used to make inferences about the contents. This issue affects TLS
+  CBC ciphersuites as well as CBC encryption using PKCS7 or other similar padding
+  mechanisms. In all cases, the unpadding operations were already constant time
+  and are not affected. Reported by Maximilian Blochberger of Universität
+  Hamburg.
+
+  Fixed in 2.14.0, all prior versions affected.
+
 2018
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
