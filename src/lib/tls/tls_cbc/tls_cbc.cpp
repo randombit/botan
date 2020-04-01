@@ -180,7 +180,7 @@ void TLS_CBC_HMAC_AEAD_Encryption::cbc_encrypt_record(
    cbc().start(cbc_state());
    cbc().process(&buffer[offset], buffer.size() - offset);
 
-   cbc_state().assign(&buffer[buffer.size() - block_size()], &buffer[buffer.size()]);
+   cbc_state().assign(buffer.data() + (buffer.size() - block_size()), buffer.data() + buffer.size());
    }
 
 size_t TLS_CBC_HMAC_AEAD_Encryption::output_length(size_t input_length) const
