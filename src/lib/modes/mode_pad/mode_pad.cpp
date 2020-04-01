@@ -1,6 +1,6 @@
 /*
 * CBC Padding Methods
-* (C) 1999-2007,2013,2018 Jack Lloyd
+* (C) 1999-2007,2013,2018,2020 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -40,12 +40,39 @@ BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
 */
 void PKCS7_Padding::add_padding(secure_vector<uint8_t>& buffer,
                                 size_t last_byte_pos,
-                                size_t block_size) const
+                                size_t BS) const
    {
-   const uint8_t pad_value = static_cast<uint8_t>(block_size - last_byte_pos);
+   /*
+   Padding format is
+   01
+   0202
+   030303
+   ...
+   */
+   BOTAN_DEBUG_ASSERT(last_byte_pos < BS);
 
-   for(size_t i = 0; i != pad_value; ++i)
-      buffer.push_back(pad_value);
+   const uint8_t padding_len = static_cast<uint8_t>(BS - last_byte_pos);
+
+   buffer.resize(buffer.size() + padding_len);
+
+   CT::poison(&last_byte_pos, 1);
+   CT::poison(buffer.data(), buffer.size());
+
+   BOTAN_DEBUG_ASSERT(buffer.size() % BS == 0);
+   BOTAN_DEBUG_ASSERT(buffer.size() >= BS);
+
+   const size_t start_of_last_block = buffer.size() - BS;
+   const size_t end_of_last_block = buffer.size();
+   const size_t start_of_padding = buffer.size() - padding_len;
+
+   for(size_t i = start_of_last_block; i != end_of_last_block; ++i)
+      {
+      auto needs_padding = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gte(i, start_of_padding));
+      buffer[i] = needs_padding.select(padding_len, buffer[i]);
+      }
+
+   CT::unpoison(buffer.data(), buffer.size());
+   CT::unpoison(last_byte_pos);
    }
 
 /*
@@ -88,15 +115,40 @@ size_t PKCS7_Padding::unpad(const uint8_t input[], size_t input_length) const
 */
 void ANSI_X923_Padding::add_padding(secure_vector<uint8_t>& buffer,
                                     size_t last_byte_pos,
-                                    size_t block_size) const
+                                    size_t BS) const
    {
-   const uint8_t pad_value = static_cast<uint8_t>(block_size - last_byte_pos);
+   /*
+   Padding format is
+   01
+   0002
+   000003
+   ...
+   */
+   BOTAN_DEBUG_ASSERT(last_byte_pos < BS);
 
-   for(size_t i = last_byte_pos; i < block_size-1; ++i)
+   const uint8_t padding_len = static_cast<uint8_t>(BS - last_byte_pos);
+
+   buffer.resize(buffer.size() + padding_len);
+
+   CT::poison(&last_byte_pos, 1);
+   CT::poison(buffer.data(), buffer.size());
+
+   BOTAN_DEBUG_ASSERT(buffer.size() % BS == 0);
+   BOTAN_DEBUG_ASSERT(buffer.size() >= BS);
+
+   const size_t start_of_last_block = buffer.size() - BS;
+   const size_t end_of_zero_padding = buffer.size() - 1;
+   const size_t start_of_padding = buffer.size() - padding_len;
+
+   for(size_t i = start_of_last_block; i != end_of_zero_padding; ++i)
       {
-      buffer.push_back(0);
+      auto needs_padding = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gte(i, start_of_padding));
+      buffer[i] = needs_padding.select(0, buffer[i]);
       }
-   buffer.push_back(pad_value);
+
+   buffer[buffer.size()-1] = padding_len;
+   CT::unpoison(buffer.data(), buffer.size());
+   CT::unpoison(last_byte_pos);
    }
 
 /*
@@ -133,12 +185,41 @@ size_t ANSI_X923_Padding::unpad(const uint8_t input[], size_t input_length) cons
 */
 void OneAndZeros_Padding::add_padding(secure_vector<uint8_t>& buffer,
                                       size_t last_byte_pos,
-                                      size_t block_size) const
+                                      size_t BS) const
    {
-   buffer.push_back(0x80);
+   /*
+   Padding format is
+   80
+   8000
+   800000
+   ...
+   */
 
-   for(size_t i = last_byte_pos + 1; i % block_size; ++i)
-      buffer.push_back(0x00);
+   BOTAN_DEBUG_ASSERT(last_byte_pos < BS);
+
+   const uint8_t padding_len = static_cast<uint8_t>(BS - last_byte_pos);
+
+   buffer.resize(buffer.size() + padding_len);
+
+   CT::poison(&last_byte_pos, 1);
+   CT::poison(buffer.data(), buffer.size());
+
+   BOTAN_DEBUG_ASSERT(buffer.size() % BS == 0);
+   BOTAN_DEBUG_ASSERT(buffer.size() >= BS);
+
+   const size_t start_of_last_block = buffer.size() - BS;
+   const size_t end_of_last_block = buffer.size();
+   const size_t start_of_padding = buffer.size() - padding_len;
+
+   for(size_t i = start_of_last_block; i != end_of_last_block; ++i)
+      {
+      auto needs_80 = CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(i, start_of_padding));
+      auto needs_00 = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gt(i, start_of_padding));
+      buffer[i] = needs_00.select(0x00, needs_80.select(0x80, buffer[i]));
+      }
+
+   CT::unpoison(buffer.data(), buffer.size());
+   CT::unpoison(last_byte_pos);
    }
 
 /*
@@ -179,14 +260,42 @@ size_t OneAndZeros_Padding::unpad(const uint8_t input[], size_t input_length) co
 */
 void ESP_Padding::add_padding(secure_vector<uint8_t>& buffer,
                               size_t last_byte_pos,
-                              size_t block_size) const
+                              size_t BS) const
    {
-   uint8_t pad_value = 0x01;
+   /*
+   Padding format is
+   01
+   0102
+   010203
+   ...
+   */
+   BOTAN_DEBUG_ASSERT(last_byte_pos < BS);
 
-   for(size_t i = last_byte_pos; i < block_size; ++i)
+   const uint8_t padding_len = static_cast<uint8_t>(BS - last_byte_pos);
+
+   buffer.resize(buffer.size() + padding_len);
+
+   CT::poison(&last_byte_pos, 1);
+   CT::poison(buffer.data(), buffer.size());
+
+   BOTAN_DEBUG_ASSERT(buffer.size() % BS == 0);
+   BOTAN_DEBUG_ASSERT(buffer.size() >= BS);
+
+   const size_t start_of_last_block = buffer.size() - BS;
+   const size_t end_of_last_block = buffer.size();
+   const size_t start_of_padding = buffer.size() - padding_len;
+
+   uint8_t pad_ctr = 0x01;
+
+   for(size_t i = start_of_last_block; i != end_of_last_block; ++i)
       {
-      buffer.push_back(pad_value++);
+      auto needs_padding = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gte(i, start_of_padding));
+      buffer[i] = needs_padding.select(pad_ctr, buffer[i]);
+      pad_ctr = needs_padding.select(pad_ctr + 1, pad_ctr);
       }
+
+   CT::unpoison(buffer.data(), buffer.size());
+   CT::unpoison(last_byte_pos);
    }
 
 /*

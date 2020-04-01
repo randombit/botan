@@ -1,6 +1,6 @@
 /*
 * TLS CBC Record Handling
-* (C) 2012,2013,2014,2015,2016 Jack Lloyd
+* (C) 2012,2013,2014,2015,2016,2020 Jack Lloyd
 * (C) 2016 Juraj Somorovsky
 * (C) 2016 Matthias Gierlings
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
@@ -143,6 +143,7 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data(const uint8_t ad[], size_
    if(use_encrypt_then_mac())
       {
       // AAD hack for EtM
+      // EtM uses ciphertext size instead of plaintext size for AEAD input
       const uint16_t pt_size = make_uint16(assoc_data()[11], assoc_data()[12]);
       const uint16_t enc_size = static_cast<uint16_t>(round_up(iv_size() + pt_size + 1, block_size()));
       assoc_data()[11] = get_byte<uint16_t>(0, enc_size);
@@ -150,12 +151,36 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data(const uint8_t ad[], size_
       }
    }
 
-void TLS_CBC_HMAC_AEAD_Encryption::cbc_encrypt_record(uint8_t buf[], size_t buf_size)
+void TLS_CBC_HMAC_AEAD_Encryption::cbc_encrypt_record(
+   secure_vector<uint8_t>& buffer, size_t offset, size_t padding_length)
    {
-   cbc().start(cbc_state());
-   cbc().process(buf, buf_size);
+   // We always do short padding:
+   BOTAN_ASSERT_NOMSG(padding_length <= 16);
 
-   cbc_state().assign(buf + buf_size - block_size(), buf + buf_size);
+   buffer.resize(buffer.size() + padding_length);
+
+   const uint8_t padding_val = static_cast<uint8_t>(padding_length - 1);
+
+   CT::poison(&padding_val, 1);
+   CT::poison(&padding_length, 1);
+   CT::poison(buffer.data(), buffer.size());
+
+   const size_t last_block_starts = buffer.size() - block_size();
+   const size_t padding_starts = buffer.size() - padding_length;
+   for(size_t i = last_block_starts; i != buffer.size(); ++i)
+      {
+      auto add_padding = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gte(i, padding_starts));
+      buffer[i] = add_padding.select(padding_val, buffer[i]);
+      }
+
+   CT::unpoison(padding_val);
+   CT::unpoison(padding_length);
+   CT::unpoison(buffer.data(), buffer.size());
+
+   cbc().start(cbc_state());
+   cbc().process(&buffer[offset], buffer.size() - offset);
+
+   cbc_state().assign(buffer.data() + (buffer.size() - block_size()), buffer.data() + buffer.size());
    }
 
 size_t TLS_CBC_HMAC_AEAD_Encryption::output_length(size_t input_length) const
@@ -167,18 +192,19 @@ size_t TLS_CBC_HMAC_AEAD_Encryption::output_length(size_t input_length) const
 void TLS_CBC_HMAC_AEAD_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
-   buffer.resize(offset); // truncate, leaving just header
-   const size_t header_size = offset;
 
-   buffer.insert(buffer.end(), msg().begin(), msg().end());
+   const size_t msg_size = msg().size();
 
-   const size_t input_size = msg().size() + 1 + (use_encrypt_then_mac() ? 0 : tag_size());
+   const size_t input_size = msg_size + 1 + (use_encrypt_then_mac() ? 0 : tag_size());
    const size_t enc_size = round_up(input_size, block_size());
-   const size_t pad_val = enc_size - input_size;
-   const size_t buf_size = enc_size + (use_encrypt_then_mac() ? tag_size() : 0);
+   BOTAN_DEBUG_ASSERT(enc_size % block_size() == 0);
 
-   BOTAN_ASSERT(enc_size % block_size() == 0,
-                "Buffer is an even multiple of block size");
+   const uint8_t padding_val = static_cast<uint8_t>(enc_size - input_size);
+   const size_t padding_length = static_cast<size_t>(padding_val) + 1;
+
+   buffer.reserve(offset + msg_size + padding_length + tag_size());
+   buffer.resize(offset + msg_size);
+   copy_mem(&buffer[offset], msg().data(), msg_size);
 
    mac().update(assoc_data());
 
@@ -189,25 +215,17 @@ void TLS_CBC_HMAC_AEAD_Encryption::finish(secure_vector<uint8_t>& buffer, size_t
          mac().update(cbc_state());
          }
 
-      for(size_t i = 0; i != pad_val + 1; ++i)
-         buffer.push_back(static_cast<uint8_t>(pad_val));
-      cbc_encrypt_record(&buffer[header_size], enc_size);
+      cbc_encrypt_record(buffer, offset, padding_length);
+      mac().update(&buffer[offset], enc_size);
+      buffer.resize(buffer.size() + tag_size());
+      mac().final(&buffer[buffer.size() - tag_size()]);
       }
-
-   // EtM also uses ciphertext size instead of plaintext size for AEAD input
-   const uint8_t* mac_input = (use_encrypt_then_mac() ? &buffer[header_size] : msg().data());
-   const size_t mac_input_len = (use_encrypt_then_mac() ? enc_size : msg().size());
-
-   mac().update(mac_input, mac_input_len);
-
-   buffer.resize(buffer.size() + tag_size());
-   mac().final(&buffer[buffer.size() - tag_size()]);
-
-   if(use_encrypt_then_mac() == false)
+   else
       {
-      for(size_t i = 0; i != pad_val + 1; ++i)
-         buffer.push_back(static_cast<uint8_t>(pad_val));
-      cbc_encrypt_record(&buffer[header_size], buf_size);
+      mac().update(&buffer[offset], msg_size);
+      buffer.resize(buffer.size() + tag_size());
+      mac().final(&buffer[buffer.size() - tag_size()]);
+      cbc_encrypt_record(buffer, offset, padding_length);
       }
    }
 

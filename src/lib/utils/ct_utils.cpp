@@ -51,13 +51,14 @@ secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input,
 
    bad_input.if_set_zero_out(output.data(), output.size());
 
+   CT::unpoison(output.data(), output.size());
+   CT::unpoison(output_bytes);
+
    /*
    This is potentially not const time, depending on how std::vector is
    implemented. But since we are always reducing length, it should
    just amount to setting the member var holding the length.
    */
-   CT::unpoison(output.data(), output.size());
-   CT::unpoison(output_bytes);
    output.resize(output_bytes);
    return output;
    }
