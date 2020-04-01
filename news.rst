@@ -13,7 +13,16 @@ Version 2.14.0, Not Yet Released
 * Use a new algorithm for modular inversions which is both faster and
   more resistant to side channel attacks. (GH #2287 #2296 #2301)
 
+* Address an issue in CBC padding which would leak the length of the
+  plaintext which was being padded. Unpadding during decryption was
+  not affected. (GH #2312)
+
 * Optimize NIST prime field reductions, improving ECDSA by 3-9% (GH #2295)
+
+* Increase the size of the ECC blinding mask and scale it based on the
+  size of the group order. (GH #880 #893 #2308)
+
+* Add server side support for the TLS asio wrapper. (GH #2229)
 
 * Add support for using Windows certificate store on MinGW (GH #2280)
 
@@ -34,8 +43,8 @@ Version 2.14.0, Not Yet Released
   been removed. Instead only ``botan_all.cpp`` and ``botan_all.h`` are
   generated. (GH #2246)
 
-* Improve support for baremetal systems with no underlying OS.
-  (GH #2303 #2304 #2305)
+* Improve support for baremetal systems with no underlying OS, with
+  target OS ``none`` (GH #2303 #2304 #2305)
 
 * The build system now avoids using ``-rpath=$ORIGIN`` or (on macOS)
   install_name which allowed running the tests from the build
