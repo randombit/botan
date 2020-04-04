@@ -243,6 +243,8 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       void reset_active_association_state();
 
+      void set_prestate(uint16_t in_message_seq, uint16_t out_message_seq);
+
    private:
       void init(size_t io_buf_sze);
 
@@ -258,6 +260,8 @@ class BOTAN_PUBLIC_API(2,0) Channel
                         uint16_t epoch, uint8_t type, const uint8_t input[], size_t length);
 
       void reset_state();
+
+      void reset_prestate();
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
@@ -309,6 +313,9 @@ class BOTAN_PUBLIC_API(2,0) Channel
       secure_vector<uint8_t> m_record_buf;
 
       bool m_has_been_closed;
+
+      uint16_t pre_in_message_seq = 0;
+      uint16_t pre_out_message_seq = 0;
    };
 
 }

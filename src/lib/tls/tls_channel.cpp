@@ -104,6 +104,18 @@ void Channel::reset_active_association_state()
       m_sequence_numbers->reset();
    }
 
+void Channel::set_prestate(uint16_t in_message_seq, uint16_t out_message_seq)
+   {
+   pre_in_message_seq = in_message_seq;
+   pre_out_message_seq = out_message_seq;
+   }
+
+void Channel::reset_prestate()
+   {
+   pre_in_message_seq = 0;
+   pre_out_message_seq = 0;
+   }
+
 Channel::~Channel()
    {
    // So unique_ptr destructors run correctly
@@ -168,6 +180,15 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
          m_sequence_numbers.reset(new Stream_Sequence_Numbers);
       }
 
+   for (uint64_t seq = 0; seq < pre_in_message_seq; seq++)
+      {
+      m_sequence_numbers->read_accept(seq);
+      }
+   for (uint16_t seq = 0; seq < pre_out_message_seq; seq++)
+      {
+      m_sequence_numbers->next_write_sequence(0);
+      }
+
    using namespace std::placeholders;
 
    std::unique_ptr<Handshake_IO> io;
@@ -178,7 +199,8 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
                   sequence_numbers(),
                   static_cast<uint16_t>(m_policy.dtls_default_mtu()),
                   m_policy.dtls_initial_timeout(),
-                  m_policy.dtls_maximum_timeout()));
+                  m_policy.dtls_maximum_timeout(),
+                  pre_in_message_seq, pre_out_message_seq));
       }
    else
       {
@@ -189,6 +211,8 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
 
    if(auto active = active_state())
       m_pending_state->set_version(active->version());
+
+   reset_prestate();
 
    return *m_pending_state.get();
    }

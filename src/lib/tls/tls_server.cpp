@@ -290,6 +290,32 @@ get_server_certs(const std::string& hostname,
    return cert_chains;
    }
 
+void unconnected_write_record(
+   secure_vector<uint8_t>& output,
+   uint8_t record_type,
+   Protocol_Version version,
+   uint64_t record_sequence,
+   const uint8_t* message,
+   size_t message_len)
+   {
+   output.clear();
+   output.push_back(record_type);
+   output.push_back(version.major_version());
+   output.push_back(version.minor_version());
+
+   if(version.is_datagram_protocol())
+      {
+      for(size_t i = 0; i != 8; ++i)
+         output.push_back(get_byte(i, record_sequence));
+      }
+
+   const uint16_t len16 = static_cast<uint16_t>(message_len);
+   output.push_back(get_byte(0, len16));
+   output.push_back(get_byte(1, len16));
+
+   output.insert(output.end(), message, message + message_len);
+   }
+
 }
 
 /*
@@ -306,6 +332,21 @@ Server::Server(Callbacks& callbacks,
            true, is_datagram, io_buf_sz),
    m_creds(creds)
    {
+   }
+
+Server::Server(Callbacks& callbacks,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               DTLS_Prestate prestate,
+               size_t io_buf_sz) :
+   Channel(callbacks, session_manager, rng, policy,
+           true, true, io_buf_sz),
+   m_creds(creds)
+   {
+   BOTAN_ASSERT(prestate.cookie_valid, "Cookie is invalid");
+   set_prestate(prestate.in_message_seq, prestate.out_message_seq);
    }
 
 Server::Server(output_fn output,
@@ -1019,6 +1060,122 @@ void Server::session_create(Server_Handshake_State& pending_state,
       }
 
    pending_state.server_hello_done(new Server_Hello_Done(pending_state.handshake_io(), pending_state.hash()));
+   }
+
+DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
+                               const Policy& policy,
+                               const std::string& client_identity,
+                               const uint8_t input[],
+                               size_t buf_size,
+                               output_fn emit_data_fn)
+   {
+   secure_vector<uint8_t> readbuf;
+   secure_vector<uint8_t> record_buf;
+   Stream_Sequence_Numbers seq;
+   // a hacky use of Stream_Sqeuence_Numbers
+   SymmetricKey cookie_secret;
+   size_t consumed = 0;
+
+   const Record_Header record =
+      read_record(true, readbuf, input,
+                  buf_size, consumed,
+                  record_buf, &seq, [](uint16_t) -> std::shared_ptr<Connection_Cipher_State> {return nullptr;},
+                  true);
+   // should read_record be refactored to get rid of those quirks?
+
+   if (record.type() != HANDSHAKE)
+      {
+      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
+         "Not a handshake record");
+      }
+
+   const Handshake_Type msg_type =
+      static_cast<Handshake_Type>(record_buf[0]);
+
+   if (msg_type != CLIENT_HELLO)
+      {
+      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
+         "Not a client hello");
+      }
+
+   if (record_buf.size() < 12)
+      {
+      throw TLS_Exception(Alert::Type::DECODE_ERROR,
+         "Message is too short");
+      }
+
+   const size_t length = 4 + make_uint32(0, record_buf[1], record_buf[2], record_buf[3]);
+
+   if (record_buf.size() != length + 8)
+      {
+      throw TLS_Exception(Alert::Type::DECODE_ERROR,
+         "Bad length in client hello");
+      }
+
+   const uint16_t msg_seq = make_uint16(record_buf[4], record_buf[5]);
+
+   if (msg_seq > 2)
+      {
+      // is it possible for a Client Hello to get beyond seq=2?
+      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
+         "Unexpected sequence number");
+      }
+
+   const size_t fragment_len = make_uint32(0, record_buf[9], record_buf[10], record_buf[11]);
+
+   if (fragment_len != length - 4)
+      {
+      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
+         "Fragmented first client hello");
+      }
+
+   std::vector<uint8_t> msg_contents(record_buf.begin() + 12, record_buf.begin() + length + 8);
+   Client_Hello client_hello(msg_contents);
+   const Protocol_Version client_offer = client_hello.version();
+
+   if (!client_offer.is_datagram_protocol() ||
+       client_offer.major_version() == 0xFF)
+      {
+      throw TLS_Exception(Alert::Type::PROTOCOL_VERSION,
+         "Client offered an impossible DTLS version");
+      }
+
+   try
+      {
+      cookie_secret = creds.psk("tls-server", "dtls-cookie-secret", "");
+      }
+   catch (...)
+      {
+      throw TLS_Exception(Alert::Type::INTERNAL_ERROR,
+         "No available DTLS cookie");
+      }
+
+   Hello_Verify_Request verify(client_hello.cookie_input_data(), client_identity, cookie_secret);
+   if (client_hello.cookie() == verify.cookie())
+      {
+      return {true, msg_seq, msg_seq};
+      }
+   else
+      {
+      Datagram_Handshake_IO::unconnected_send_message(
+         0, 0, verify.type(), verify.serialize(),
+         static_cast<uint16_t>(policy.dtls_default_mtu()),
+         [&](uint16_t epoch, uint8_t record_type,
+             const std::vector<uint8_t>& record) {
+            Botan::secure_vector<uint8_t> temp_writebuf;
+            unconnected_write_record(
+               temp_writebuf,
+               record_type,
+               client_offer,
+               0,
+               record.data(),
+               record.size());
+            emit_data_fn(
+               temp_writebuf.data(),
+               temp_writebuf.size());
+         });
+      return {false, 0, 0};
+      }
    }
 }
 

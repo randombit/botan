@@ -20,6 +20,14 @@ namespace TLS {
 
 class Server_Handshake_State;
 
+struct BOTAN_UNSTABLE_API DTLS_Prestate final
+   {
+   public:
+   bool cookie_valid = false;
+   uint16_t in_message_seq = 0;
+   uint16_t out_message_seq = 0;
+   };
+
 /**
 * TLS Server
 */
@@ -27,6 +35,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
    {
    public:
       typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
+      typedef std::function<void (const uint8_t[], size_t)> output_fn;
 
       /**
       * Server initialization
@@ -55,6 +64,20 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
              const Policy& policy,
              RandomNumberGenerator& rng,
              bool is_datagram = false,
+             size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
+         );
+
+      /**
+       * Server initialization with a DTLS prestate, which implies DTLS.
+       * It is expected that received_data be called again with
+       * the last message that passes pre_verify_cookie.
+       */
+      Server(Callbacks& callbacks,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             DTLS_Prestate prestate,
              size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
          );
 
@@ -111,6 +134,19 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       * session can choose a new protocol.
       */
       std::string application_protocol() const override { return m_next_protocol; }
+
+      /**
+      * Verify whether a Client Hello message has a correct session cookie.
+      * Returns the prestate associated with the Client Hello.
+      * Use DTLS_Prestate::cookie_valid to check the result.
+      */
+      static DTLS_Prestate pre_verify_cookie(
+         Credentials_Manager& creds,
+         const Policy& policy,
+         const std::string& client_identity,
+         const uint8_t input[],
+         size_t buf_size,
+         output_fn emit_data_fn);
 
    private:
       std::vector<X509_Certificate>
