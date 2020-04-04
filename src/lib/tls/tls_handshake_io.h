@@ -216,11 +216,11 @@ class Datagram_Handshake_IO final : public Handshake_IO
       uint64_t m_last_write = 0;
       uint64_t m_next_timeout = 0;
 
-      uint16_t m_in_message_seq = 0;
-      uint16_t m_out_message_seq = 0;
-
       writer_fn m_send_hs;
       uint16_t m_mtu;
+
+      uint16_t m_in_message_seq = 0;
+      uint16_t m_out_message_seq = 0;
    };
 
 }
