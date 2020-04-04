@@ -11,6 +11,9 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/tls_magic.h>
+#include <botan/internal/tls_record.h>
+#include <botan/internal/tls_seq_numbers.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
@@ -1151,16 +1154,20 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
       }
 
    Hello_Verify_Request verify(client_hello.cookie_input_data(), client_identity, cookie_secret);
+
+   DTLS_Prestate prestate;
    if (client_hello.cookie() == verify.cookie())
       {
-      return {true, msg_seq, msg_seq};
+      prestate.cookie_valid = true;
+      prestate.in_message_seq = msg_seq;
+      prestate.out_message_seq = msg_seq;
       }
    else
       {
       Datagram_Handshake_IO::unconnected_send_message(
          0, 0, verify.type(), verify.serialize(),
          static_cast<uint16_t>(policy.dtls_default_mtu()),
-         [&](uint16_t epoch, uint8_t record_type,
+         [&](uint16_t, uint8_t record_type,
              const std::vector<uint8_t>& record) {
             Botan::secure_vector<uint8_t> temp_writebuf;
             unconnected_write_record(
@@ -1174,8 +1181,8 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
                temp_writebuf.data(),
                temp_writebuf.size());
          });
-      return {false, 0, 0};
       }
+   return prestate;
    }
 }
 
