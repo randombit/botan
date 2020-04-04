@@ -1092,6 +1092,12 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
          "Not a handshake record");
       }
 
+   if (record_buf.size() < 12)
+      {
+      throw TLS_Exception(Alert::Type::DECODE_ERROR,
+         "Message is too short");
+      }
+
    const Handshake_Type msg_type =
       static_cast<Handshake_Type>(record_buf[0]);
 
@@ -1099,12 +1105,6 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
       {
       throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
          "Not a client hello");
-      }
-
-   if (record_buf.size() < 12)
-      {
-      throw TLS_Exception(Alert::Type::DECODE_ERROR,
-         "Message is too short");
       }
 
    const size_t length = 4 + make_uint32(0, record_buf[1], record_buf[2], record_buf[3]);
