@@ -1109,7 +1109,7 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
 
    const size_t length = 4 + make_uint32(0, record_buf[1], record_buf[2], record_buf[3]);
 
-   if (record_buf.size() != length + 8)
+   if (length <= 4 || record_buf.size() != length + 8)
       {
       throw TLS_Exception(Alert::Type::DECODE_ERROR,
          "Bad length in client hello");
