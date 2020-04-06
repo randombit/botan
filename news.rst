@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.14.0, Not Yet Released
+Version 2.14.0, 2020-04-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for using POWER8+ VPSUMD instruction to accelerate GCM
@@ -15,7 +15,8 @@ Version 2.14.0, Not Yet Released
 
 * Address an issue in CBC padding which would leak the length of the
   plaintext which was being padded. Unpadding during decryption was
-  not affected. (GH #2312)
+  not affected. Thanks to Maximilian Blochberger for reporting this.
+  (GH #2312)
 
 * Optimize NIST prime field reductions, improving ECDSA by 3-9% (GH #2295)
 
