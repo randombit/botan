@@ -909,6 +909,15 @@ BOTAN_REGISTER_TEST("pkcs11-rsa", PKCS11_RSA_Tests);
 
 /***************************** PKCS11 ECDSA *****************************/
 
+#if defined(BOTAN_HAS_ECC_GROUP)
+std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::PointGFp& point)
+   {
+   std::vector<uint8_t> enc;
+   DER_Encoder(enc).encode(point.encode(PointGFp::UNCOMPRESSED), OCTET_STRING);
+   return enc;
+   }
+#endif
+
 #if defined(BOTAN_HAS_ECDSA)
 
 Test::Result test_ecdsa_privkey_import()
@@ -974,13 +983,6 @@ Test::Result test_ecdsa_privkey_export()
 
    pk.destroy();
    return result;
-   }
-
-std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::PointGFp& point)
-   {
-   std::vector<uint8_t> enc;
-   DER_Encoder(enc).encode(point.encode(PointGFp::UNCOMPRESSED), OCTET_STRING);
-   return enc;
    }
 
 Test::Result test_ecdsa_pubkey_import()
