@@ -27,7 +27,6 @@ constraints. So before release:
 
  - Run under valgrind, building with ``--with-valgrind`` flag
  - Using Clang sanitizers (ASan + UbSan)
- - Native or cross compile for Linux aarch64 and ppc64le
  - Native compile on FreeBSD x86-64
  - Native compile on at least one unusual platform (AIX, NetBSD, ...)
  - Build the website content to detect any Doxygen problems
