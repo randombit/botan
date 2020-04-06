@@ -697,11 +697,15 @@ std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
 
 std::vector<uint8_t> X509_Certificate::raw_issuer_dn_sha256() const
    {
+   if(data().m_issuer_dn_bits_sha256.empty())
+      throw Encoding_Error("X509_Certificate::raw_issuer_dn_sha256 called but SHA-256 disabled in build");
    return data().m_issuer_dn_bits_sha256;
    }
 
 std::vector<uint8_t> X509_Certificate::raw_subject_dn_sha256() const
    {
+   if(data().m_subject_dn_bits_sha256.empty())
+      throw Encoding_Error("X509_Certificate::raw_subject_dn_sha256 called but SHA-256 disabled in build");
    return data().m_subject_dn_bits_sha256;
    }
 
