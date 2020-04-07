@@ -49,8 +49,8 @@ def try_to_run(cmdline):
     if failed:
         print("FAILURE")
         print(stdout)
-        print(stdout.decode('ascii'))
-        print(stderr.decode('ascii'))
+        print(stdout)
+        print(stderr)
         sys.stdout.flush()
         #sys.exit(1)
 
@@ -59,7 +59,6 @@ def try_to_run(cmdline):
 def run_test_build(configure_py, modules, include, jobs, run_tests):
     config = [configure_py, '--without-documentation']
 
-    print(modules)
     if include:
         config.append('--minimized')
         if modules:
@@ -76,7 +75,15 @@ def run_test_build(configure_py, modules, include, jobs, run_tests):
     if run_tests is False:
         return True
 
-    return try_to_run(['./botan-test', '--test-threads=%d' % (jobs)])
+    # Flaky test causing errors when running tests (GH #2197)
+    tests_to_skip = ['gost_3411_sign']
+
+    cmdline = ['./botan-test', '--test-threads=%d' % (jobs)]
+
+    if len(tests_to_skip) > 0:
+        cmdline.append('--skip-tests=%s' % (','.join(tests_to_skip)))
+
+    return try_to_run(cmdline)
 
 def main(args):
 
