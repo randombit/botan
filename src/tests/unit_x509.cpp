@@ -603,7 +603,7 @@ Test::Result test_verify_gost2012_cert()
    {
    Test::Result result("X509 GOST-2012 certificates");
 
-#if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG)
+#if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG) && defined(BOTAN_HAS_EMSA1)
    try
       {
       Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
@@ -1597,6 +1597,11 @@ class X509_Cert_Unit_Tests final : public Test
             {
 #if !defined(BOTAN_HAS_EMSA_PKCS1)
             if(algo == "RSA")
+               continue;
+#endif
+
+#if !defined(BOTAN_HAS_EMSA1)
+            if(algo != "RSA" && algo != "Ed25519")
                continue;
 #endif
 

@@ -28,8 +28,12 @@
    #include <botan/der_enc.h>
 #endif
 
-#if defined (BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pubkey.h>
+#endif
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+   #include <botan/ec_group.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_PKCS11)
@@ -909,7 +913,7 @@ BOTAN_REGISTER_TEST("pkcs11-rsa", PKCS11_RSA_Tests);
 
 /***************************** PKCS11 ECDSA *****************************/
 
-#if defined(BOTAN_HAS_ECC_GROUP)
+#if defined(BOTAN_HAS_ECC_GROUP) && (defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH))
 std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::PointGFp& point)
    {
    std::vector<uint8_t> enc;
