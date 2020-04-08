@@ -49,10 +49,8 @@ def try_to_run(cmdline):
     if failed:
         print("FAILURE")
         print(stdout)
-        print(stdout)
         print(stderr)
         sys.stdout.flush()
-        #sys.exit(1)
 
     return not failed
 
@@ -75,8 +73,8 @@ def run_test_build(configure_py, modules, include, jobs, run_tests):
     if run_tests is False:
         return True
 
-    # Flaky test causing errors when running tests (GH #2197)
-    tests_to_skip = ['gost_3411_sign']
+    # Flaky test causing errors when running tests
+    tests_to_skip = []
 
     cmdline = ['./botan-test', '--test-threads=%d' % (jobs)]
 

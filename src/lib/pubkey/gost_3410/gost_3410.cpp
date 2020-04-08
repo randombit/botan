@@ -54,12 +54,12 @@ AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    {
    std::vector<uint8_t> params;
 
-   DER_Encoder(params)
-      .start_cons(SEQUENCE)
-         .encode(domain().get_curve_oid())
-      .end_cons();
+   const OID gost_oid = get_oid();
+   const OID domain_oid = domain().get_curve_oid();
 
-   return AlgorithmIdentifier(get_oid(), params);
+   DER_Encoder(params).start_cons(SEQUENCE).encode(domain_oid).end_cons();
+
+   return AlgorithmIdentifier(gost_oid, params);
    }
 
 GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,

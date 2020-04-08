@@ -23,7 +23,7 @@ class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification
       GOST_3410_2001_Verification_Tests() : PK_Signature_Verification_Test(
             "GOST 34.10-2001",
             "pubkey/gost_3410_verify.vec",
-            "P,A,B,Gx,Gy,Order,Cofactor,Px,Py,Hash,Msg,Signature") {}
+            "P,A,B,Gx,Gy,Oid,Order,Cofactor,Px,Py,Hash,Msg,Signature") {}
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
@@ -34,11 +34,12 @@ class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification
          const BigInt Gy = vars.get_req_bn("Gy");
          const BigInt order = vars.get_req_bn("Order");
          const BigInt cofactor = vars.get_req_bn("Cofactor");
+         const Botan::OID oid(vars.get_req_str("Oid"));
+
+         Botan::EC_Group group(p, a, b, Gx, Gy, order, cofactor, oid);
 
          const BigInt Px = vars.get_req_bn("Px");
          const BigInt Py = vars.get_req_bn("Py");
-
-         Botan::EC_Group group(p, a, b, Gx, Gy, order, cofactor);
 
          const Botan::PointGFp public_point = group.point(Px, Py);
 
@@ -61,7 +62,7 @@ class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
       GOST_3410_2001_Signature_Tests() : PK_Signature_Generation_Test(
             "GOST 34.10-2001",
             "pubkey/gost_3410_sign.vec",
-            "P,A,B,Gx,Gy,Order,X,Cofactor,Hash,Nonce,Msg,Signature") {}
+            "P,A,B,Gx,Gy,Oid,Order,X,Cofactor,Hash,Nonce,Msg,Signature") {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
@@ -72,12 +73,11 @@ class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
          const BigInt Gy = vars.get_req_bn("Gy");
          const BigInt order = vars.get_req_bn("Order");
          const BigInt cofactor = vars.get_req_bn("Cofactor");
-
-         const BigInt x = vars.get_req_bn("X");
-
-         const Botan::OID oid("1.3.6.1.4.1.25258.2");
+         const Botan::OID oid(vars.get_req_str("Oid"));
 
          Botan::EC_Group group(p, a, b, Gx, Gy, order, cofactor, oid);
+
+         const BigInt x = vars.get_req_bn("X");
 
          std::unique_ptr<Botan::Private_Key> key(new Botan::GOST_3410_PrivateKey(Test::rng(), group, x));
          return key;

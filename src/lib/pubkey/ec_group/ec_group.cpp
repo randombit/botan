@@ -62,6 +62,12 @@ class EC_Group_Data final
                  this->g_y() == g_y);
          }
 
+      void set_oid(const OID& oid)
+         {
+         BOTAN_STATE_CHECK(m_oid.empty());
+         m_oid = oid;
+         }
+
       const OID& oid() const { return m_oid; }
       const BigInt& p() const { return m_curve.get_p(); }
       const BigInt& a() const { return m_curve.get_a(); }
@@ -178,16 +184,39 @@ class EC_Group_Data_Map final
 
          for(auto i : m_registered_curves)
             {
-            if(oid.has_value())
+            if(!oid.empty())
                {
                if(i->oid() == oid)
+                  {
+                  if(!i->match(p, a, b, g_x, g_y, order, cofactor))
+                     throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
+                                            " but another curve is already registered using that OID");
                   return i;
+                  }
                else if(i->oid().has_value())
-                  continue;
+                  continue; // distinct OIDs so not a match
                }
 
             if(i->match(p, a, b, g_x, g_y, order, cofactor))
+               {
+               /*
+               * If the same curve was previously created without an OID
+               * but has been registered again using an OID, save that OID.
+               */
+               if(oid.empty() == false)
+                  {
+                  if(i->oid().empty() == true)
+                     {
+                     i->set_oid(oid);
+                     }
+                  else
+                     {
+                     throw Invalid_Argument("Cannot register ECC group with OID " + oid.to_string() +
+                                            " already registered using " + i->oid().to_string());
+                     }
+                  }
                return i;
+               }
             }
 
          // Not found - if OID is set try looking up that way
@@ -205,28 +234,14 @@ class EC_Group_Data_Map final
             }
 
          // Not found or no OID, add data and return
-         return add_curve(p, a, b, g_x, g_y, order, cofactor, oid);
-         }
-
-   private:
-
-      std::shared_ptr<EC_Group_Data> add_curve(const BigInt& p,
-                                               const BigInt& a,
-                                               const BigInt& b,
-                                               const BigInt& g_x,
-                                               const BigInt& g_y,
-                                               const BigInt& order,
-                                               const BigInt& cofactor,
-                                               const OID& oid)
-         {
          std::shared_ptr<EC_Group_Data> d =
             std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid);
 
-         // This function is always called with the lock held
          m_registered_curves.push_back(d);
          return d;
          }
 
+   private:
       mutex_type m_mutex;
       std::vector<std::shared_ptr<EC_Group_Data>> m_registered_curves;
    };
