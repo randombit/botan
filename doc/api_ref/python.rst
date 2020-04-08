@@ -387,11 +387,11 @@ Private Key
 
   .. py:method:: to_pem()
 
-     Return the PEM encoded private key (unencrypted)
+     Return the PEM encoded private key (unencrypted). Like ``self.export(True)``
 
   .. py:method:: to_der()
 
-     Return the PEM encoded private key (unencrypted)
+     Return the PEM encoded private key (unencrypted). Like ``self.export(False)``
 
   .. py:method:: check_key(rng_obj, strong=True):
 
@@ -413,14 +413,6 @@ Private Key
      Exports the private key in PKCS8 format, encrypted using the
      provided passphrase. If ``pem`` is True, the result is a PEM
      encoded string. Otherwise it is a binary DER value.
-
-  .. py:method:: to_der()
-
-     Like ``self.export(False)``
-
-  .. py:method:: to_pem()
-
-     Like ``self.export(True)``
 
   .. py:method:: get_field(field_name)
 
