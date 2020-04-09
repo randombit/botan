@@ -134,12 +134,26 @@ def sphinx_supports_concurrency():
     output, _ = proc.communicate()
     if isinstance(output, bytes):
         output = output.decode('ascii')
+    output = output.strip()
+
     # Sphinx v1.1.3
     # sphinx-build 1.7.4
     match = re.match(r'^(?:[a-zA-Z_-]+) v?(([0-9]+)\.([0-9]+))', output)
-    # default to using concurrency when uncertain
-    version = StrictVersion(match.group(1)) if match else StrictVersion('1.2')
-    return version >= StrictVersion('1.4')
+
+    if match is None:
+        # If regex doesn't match, disable by default
+        logging.warning("Did not recognize sphinx version from '%s'", output)
+        return False
+
+    version = StrictVersion(match.group(1))
+
+    if version < StrictVersion('1.4'):
+        # not supported
+        return False
+    if version >= StrictVersion('3.0'):
+        # Bug in Sphinx 3.0 https://github.com/sphinx-doc/sphinx/issues/7438
+        return False
+    return True
 
 def read_config(config):
     try:
