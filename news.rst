@@ -4,6 +4,12 @@ Release Notes
 Version 2.15.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* When building documentation using Sphinx avoid parallel builds
+  with version 3.0 due to a bug in that version (GH #2326 #2324)
+
+* Fix a flaky test that would occasionally fail when running the
+  tests with a large number of threads. (GH #2325 #2197)
+
 Version 2.14.0, 2020-04-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
