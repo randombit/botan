@@ -150,7 +150,7 @@ def sphinx_supports_concurrency():
     if version < StrictVersion('1.4'):
         # not supported
         return False
-    if version >= StrictVersion('3.0'):
+    if version == StrictVersion('3.0'):
         # Bug in Sphinx 3.0 https://github.com/sphinx-doc/sphinx/issues/7438
         return False
     return True
