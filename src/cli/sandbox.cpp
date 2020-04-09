@@ -5,7 +5,7 @@
 */
 
 #include "sandbox.h"
-#include <botan/build.h>
+#include <botan/mem_ops.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
   #include <unistd.h>
@@ -29,6 +29,8 @@ Sandbox::Sandbox()
 
 bool Sandbox::init()
    {
+   Botan::initialize_allocator();
+
 #if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
    const static char *opts = "stdio rpath inet error";
    return (::pledge(opts, nullptr) == 0);
