@@ -252,6 +252,7 @@ void Threefish_512::key_schedule(const uint8_t key[], size_t)
    {
    // todo: define key schedule for smaller keys
    m_K.resize(9);
+   m_K_save.resize(9);
 
    for(size_t i = 0; i != 8; ++i)
       m_K[i] = load_le<uint64_t>(key, i);
@@ -267,7 +268,21 @@ void Threefish_512::key_schedule(const uint8_t key[], size_t)
 void Threefish_512::clear()
    {
    zap(m_K);
+   zap(m_K_save);
    zap(m_T);
    }
 
+    void Threefish_512::save_key_data()
+    {
+        for(size_t i = 0; i != 9; ++i) {
+            m_K_save[i] = m_K[i];
+        }
+
+    }
+    void Threefish_512::restore_key_data()
+    {
+        for(size_t i = 0; i != 9; ++i) {
+            m_K[i] = m_K_save[i];
+        }
+    }
 }

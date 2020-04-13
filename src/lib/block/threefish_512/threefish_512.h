@@ -47,10 +47,16 @@ class BOTAN_PUBLIC_API(2,0) Threefish_512 final :
       void skein_feedfwd(const secure_vector<uint64_t>& M,
                          const secure_vector<uint64_t>& T);
 
+      // Save current key data, restore the saved data: needed for Skein 'counter' mode to
+      // produce longer hashes
+      void save_key_data();
+      void restore_key_data();
+
       // Private data
       secure_vector<uint64_t> m_T;
       secure_vector<uint64_t> m_K;
-   };
+      secure_vector<uint64_t> m_K_save;
+    };
 
 }
 
