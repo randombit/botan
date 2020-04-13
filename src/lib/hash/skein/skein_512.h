@@ -38,7 +38,22 @@ class BOTAN_PUBLIC_API(2,0) Skein_512 final : public HashFunction
       std::unique_ptr<HashFunction> copy_state() const override;
       std::string name() const override;
       void clear() override;
-   private:
+      void setMacKey(const uint8_t key[], size_t key_len);
+
+      /**
+       * @brief Hash a bit stream.
+       *
+       * This function implements the Skein feature to hash a bit stream of arbitrary
+       * length. No requirement that the number of bits is a multiple of 8. An application
+       * may always use this function to update the hash, just make sure to use number
+       * of bits instead number of bytes.
+       *
+       * @param input Input data
+       * @param lengthInBits Length of data in number of bits
+       */
+      void add_data_bits(const uint8_t input[], size_t lengthInBits);
+
+private:
       enum type_code {
          SKEIN_KEY = 0,
          SKEIN_CONFIG = 4,
@@ -53,6 +68,14 @@ class BOTAN_PUBLIC_API(2,0) Skein_512 final : public HashFunction
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t out[]) override;
 
+
+      /**
+       * @brief compute a Skein hash but without the OUTPUT stage, used to get intermediate results.
+       *
+       * @param out Hash output
+       */
+      void final_result_pad(uint8_t out[]);
+
       void ubi_512(const uint8_t msg[], size_t msg_len);
 
       void initial_block();
@@ -65,6 +88,7 @@ class BOTAN_PUBLIC_API(2,0) Skein_512 final : public HashFunction
       secure_vector<uint64_t> m_T;
       secure_vector<uint8_t> m_buffer;
       size_t m_buf_pos;
+      secure_vector<uint8_t> m_macKey;
    };
 
 }
