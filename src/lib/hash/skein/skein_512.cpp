@@ -101,7 +101,7 @@ void Skein_512::initial_block()
        const uint8_t* bits = cast_char_ptr_to_uint8(m_personalization.data());
        uint8_t dummyOut[64] = { 0 };
 
-       reset_tweak(SKEIN_PERSONALIZATION, true);
+       reset_tweak(SKEIN_PERSONALIZATION, false);
 
        // add_data, final_result_pad: these call skein_feedfwd one or more times to process
        // the full length of personalization data to setup chain variables
