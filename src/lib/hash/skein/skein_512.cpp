@@ -10,7 +10,7 @@
 #include <botan/exceptn.h>
 #include <algorithm>
 
-#include <iostream>
+
 namespace Botan {
 
 Skein_512::Skein_512(size_t arg_output_bits,
@@ -77,7 +77,6 @@ void Skein_512::initial_block()
 
 
    // When a MAC key is present compute a hash from key data as follows:
-   // - set tweak to SKEIN_MAC and final block to true because it's used only one time
    // - Threefish key (aka chaining variable) already set to empty key above - OK
    // - The key may be of any length >= 1
    // - compute hash without Skein OUTPUT stage
@@ -85,7 +84,7 @@ void Skein_512::initial_block()
    if (!m_macKey.empty()) {
        uint8_t hashedKey[64] = { 0 };
 
-       reset_tweak(SKEIN_KEY, true);
+       reset_tweak(SKEIN_KEY, false);
        add_data(m_macKey.data(), m_macKey.size());
        final_result_pad(hashedKey);
        m_threefish->set_key(hashedKey, sizeof(hashedKey));
