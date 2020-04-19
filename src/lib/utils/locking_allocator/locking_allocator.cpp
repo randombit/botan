@@ -10,6 +10,8 @@
 #include <botan/internal/mem_pool.h>
 
 namespace Botan {
+   
+static mlock_allocator& mlock_allocator_instance = mlock_allocator::instance();
 
 void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    {
