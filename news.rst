@@ -4,6 +4,13 @@ Release Notes
 Version 2.15.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The documentation claimed that mlocked pages were created
+  with a guard page both before and after. However only a
+  trailing guard page was used. Add a leading guard page. (GH #2334)
+
+* Workaround a bug in GCC's UbSan which triggered on a code sequence
+  in XMSS (GH #2322)
+
 * When building documentation using Sphinx avoid parallel builds
   with version 3.0 due to a bug in that version (GH #2326 #2324)
 
