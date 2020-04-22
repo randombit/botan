@@ -899,6 +899,64 @@ BOTAN_REGISTER_TEST("x509_path_with_ocsp", Path_Validation_With_OCSP_Tests);
 
 #endif
 
+#if defined(BOTAN_HAS_ECDSA)
+
+class CVE_2020_0601_Tests final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("CVE-2020-0601");
+         auto ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ca.pem"));
+         auto fake_ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/fake_ca.pem"));
+         auto ee_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ee.pem"));
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(ca_crt);
+
+         const auto restrictions = Botan::Path_Validation_Restrictions(false, 80, false);
+
+         const auto valid_time = Botan::calendar_point(2020, 1, 20, 0, 0, 0).to_std_timepoint();
+
+         const auto path_result1 = Botan::x509_path_validate(
+            std::vector<Botan::X509_Certificate>{ ee_crt, fake_ca_crt },
+            restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+            valid_time, std::chrono::milliseconds(0), {});
+
+         result.confirm("Validation failed", !path_result1.successful_validation());
+
+         result.confirm("Expected status",
+                        path_result1.result() == Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
+
+         const auto path_result2 = Botan::x509_path_validate(
+            std::vector<Botan::X509_Certificate>{ ee_crt },
+            restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED,
+            valid_time, std::chrono::milliseconds(0), {});
+
+         result.confirm("Validation failed", !path_result2.successful_validation());
+
+         result.confirm("Expected status",
+                        path_result2.result() == Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
+
+         // Verify the signature from the bad CA is actually correct
+         Botan::Certificate_Store_In_Memory frusted;
+         frusted.add_certificate(fake_ca_crt);
+
+         const auto path_result3 = Botan::x509_path_validate(
+            std::vector<Botan::X509_Certificate>{ ee_crt },
+            restrictions, frusted, "", Botan::Usage_Type::UNSPECIFIED,
+            valid_time, std::chrono::milliseconds(0), {});
+
+         result.confirm("Validation succeeded", path_result3.successful_validation());
+
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("x509_cve_2020_0601", CVE_2020_0601_Tests);
+
+#endif
+
 #if defined(BOTAN_HAS_XMSS_RFC8391)
 
 class XMSS_Path_Validation_Tests final : public Test
