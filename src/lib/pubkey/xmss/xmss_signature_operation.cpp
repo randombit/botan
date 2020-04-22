@@ -18,12 +18,13 @@
 namespace Botan {
 
 XMSS_Signature_Operation::XMSS_Signature_Operation(
-   const XMSS_PrivateKey& private_key)
-   : XMSS_Common_Ops(private_key.xmss_oid()),
-     m_priv_key(private_key),
-     m_randomness(0),
-     m_leaf_idx(0),
-     m_is_initialized(false)
+   const XMSS_PrivateKey& private_key) :
+   m_priv_key(private_key),
+   m_xmss_params(private_key.xmss_oid()),
+   m_hash(private_key.xmss_hash_function()),
+   m_randomness(0),
+   m_leaf_idx(0),
+   m_is_initialized(false)
    {}
 
 XMSS_WOTS_PublicKey::TreeSignature

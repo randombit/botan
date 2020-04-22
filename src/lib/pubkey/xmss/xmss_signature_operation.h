@@ -15,10 +15,10 @@
 #include <botan/xmss_parameters.h>
 #include <botan/xmss_privatekey.h>
 #include <botan/xmss_address.h>
-#include <botan/xmss_common_ops.h>
 #include <botan/pk_ops.h>
 #include <botan/internal/xmss_signature.h>
 #include <botan/xmss_wots_publickey.h>
+#include <botan/xmss_common_ops.h>
 
 namespace Botan {
 
@@ -31,8 +31,7 @@ namespace Botan {
  *     Release: May 2018.
  *     https://datatracker.ietf.org/doc/rfc8391/
  **/
-class XMSS_Signature_Operation final : public virtual PK_Ops::Signature,
-                                       public XMSS_Common_Ops
+class XMSS_Signature_Operation final : public virtual PK_Ops::Signature
    {
    public:
       XMSS_Signature_Operation(const XMSS_PrivateKey& private_key);
@@ -83,6 +82,8 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature,
       void initialize();
 
       XMSS_PrivateKey m_priv_key;
+      const XMSS_Parameters m_xmss_params;
+      XMSS_Hash m_hash;
       secure_vector<uint8_t> m_randomness;
       uint32_t m_leaf_idx;
       bool m_is_initialized;
