@@ -16,6 +16,7 @@ Ciphers, Hashes, PBKDF
 * Vector permute AES only supports little-endian systems; fix for big-endian
 * SM4 using AES-NI (https://github.com/mjosaarinen/sm4ni) or vector permute
 * Poly1305 using AVX2
+* ChaCha using SSSE3
 * Skein-MAC
 * PMAC
 * SIV-PMAC
@@ -184,6 +185,7 @@ CLI
 * Change `tls_server` to be a tty<->socket app, like `tls_client` is,
   instead of a bogus echo server.
 * `encrypt` / `decrypt` tools providing password based file encryption
+* Add ECM factoring
 * Clone of `minisign` signature utility
 * Implementation of `tlsdate`
 * Password store utility
