@@ -172,6 +172,7 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
       std::vector<uint16_t> m_suites;
       std::vector<uint8_t> m_comp_methods;
       std::vector<uint8_t> m_hello_cookie; // DTLS only
+      std::vector<uint8_t> m_cookie_input_bits; // DTLS only
 
       Extensions m_extensions;
    };

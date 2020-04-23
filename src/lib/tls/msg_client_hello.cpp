@@ -243,21 +243,10 @@ std::vector<uint8_t> Client_Hello::serialize() const
 
 std::vector<uint8_t> Client_Hello::cookie_input_data() const
    {
-   std::vector<uint8_t> buf;
+   if(m_cookie_input_bits.empty())
+      throw Invalid_State("Client_Hello::cookie_input_data called but was not computed");
 
-   buf.push_back(m_version.major_version());
-   buf.push_back(m_version.minor_version());
-   buf += m_random;
-
-   append_tls_length_value(buf, m_session_id, 1);
-
-   append_tls_length_value(buf, m_suites, 2);
-   append_tls_length_value(buf, m_comp_methods, 1);
-
-   // Here we don't serialize the extensions since the client extensions
-   // may contain values we don't know how to serialize back.
-
-   return buf;
+   return m_cookie_input_bits;
    }
 
 /*
@@ -274,13 +263,25 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
    const uint8_t minor_version = reader.get_byte();
 
    m_version = Protocol_Version(major_version, minor_version);
-
    m_random = reader.get_fixed<uint8_t>(32);
-
    m_session_id = reader.get_range<uint8_t>(1, 0, 32);
+
+   std::unique_ptr<HashFunction> sha256;
+   if(m_version.is_datagram_protocol())
+      {
+      sha256 = HashFunction::create_or_throw("SHA-256");
+      sha256->update(reader.get_data_read_so_far());
+      }
 
    if(m_version.is_datagram_protocol())
       m_hello_cookie = reader.get_range<uint8_t>(1, 0, 255);
+
+   if(sha256)
+      {
+      sha256->update(reader.get_remaining());
+      m_cookie_input_bits.resize(sha256->output_length());
+      sha256->final(m_cookie_input_bits.data());
+      }
 
    m_suites = reader.get_range_vector<uint16_t>(2, 1, 32767);
 
