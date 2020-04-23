@@ -591,6 +591,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == SERVER_HELLO_DONE)
       {
+      start_buffering_records();
+
       state.server_hello_done(new Server_Hello_Done(contents));
 
       if(state.server_certs() != nullptr &&
@@ -678,6 +680,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       change_cipher_spec_writer(CLIENT);
 
       state.client_finished(new Finished(state.handshake_io(), state, CLIENT));
+
+      send_buffered_records();
 
       if(state.server_hello()->supports_session_ticket())
          state.set_expected_next(NEW_SESSION_TICKET);

@@ -243,6 +243,10 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       void reset_active_association_state();
 
+      void start_buffering_records();
+
+      void send_buffered_records();
+
    private:
       void init(size_t io_buf_sze);
 
@@ -280,6 +284,10 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       void process_alert(const secure_vector<uint8_t>& record);
 
+      std::vector<uint8_t> coalesce_buffered_records(size_t length,
+                                                     size_t start,
+                                                     size_t end);
+
       const bool m_is_server;
       const bool m_is_datagram;
 
@@ -308,7 +316,11 @@ class BOTAN_PUBLIC_API(2,0) Channel
       secure_vector<uint8_t> m_readbuf;
       secure_vector<uint8_t> m_record_buf;
 
+      /* buffered messages to coalesce */
+      std::vector<std::vector<uint8_t>> m_buffered_messages;
+
       bool m_has_been_closed;
+      bool m_is_buffering_records = false;
    };
 
 }
