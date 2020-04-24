@@ -1364,6 +1364,19 @@ class DTLS_Cookie_Verify_Test : public Test
    public:
       std::vector<Test::Result> run() override
          {
+         std::vector<Test::Result> results;
+         for(int r1 = 0; r1 <= 3; r1++)
+            {
+            for(int r2 = 0; r2 <= 3; r2++)
+               {
+               results.push_back(run_once(r1, r2));
+               }
+            }
+         return results;
+         }
+
+      Test::Result run_once(int num_retrans1, int num_retrans2)
+         {
          class Test_Callbacks : public Botan::TLS::Callbacks
             {
             public:
@@ -1428,7 +1441,7 @@ class DTLS_Cookie_Verify_Test : public Test
                   }
             };
 
-         class Datagram_PSK_Policy : public Botan::TLS::Policy
+         class Mock_Retransmission_Policy : public Botan::TLS::Policy
             {
             public:
                std::vector<std::string> allowed_macs() const override
@@ -1444,12 +1457,16 @@ class DTLS_Cookie_Verify_Test : public Test
                bool allow_dtls12() const override { return true;  }
 
                bool allow_dtls_epoch0_restart() const override { return false; }
+               size_t dtls_initial_timeout() const { return 0; }
+               size_t dtls_maximum_timeout() const { return 0; }
             };
 
-         Test::Result result("DTLS cookie verify");
+         Test::Result result("DTLS cookie verify, " +
+                             std::to_string(num_retrans1) + "/" +
+                             std::to_string(num_retrans2) + " retrans");
 
-         Datagram_PSK_Policy server_policy;
-         Datagram_PSK_Policy client_policy;
+         Mock_Retransmission_Policy server_policy;
+         Mock_Retransmission_Policy client_policy;
          Credentials_PSK creds;
          Botan::TLS::Session_Manager_Noop server_sessions;
          Botan::TLS::Session_Manager_Noop client_sessions;
@@ -1462,6 +1479,11 @@ class DTLS_Cookie_Verify_Test : public Test
          Botan::TLS::Client client(client_callbacks, client_sessions, creds, client_policy, rng(),
                                     Botan::TLS::Server_Information("localhost"),
                                     Botan::TLS::Protocol_Version::latest_dtls_version());
+
+         for(int i = 0; i < num_retrans1; i++)
+            {
+            client.timeout_check();
+            }
 
          Botan::TLS::DTLS_Prestate prestate;
          prestate = Botan::TLS::Server::pre_verify_cookie(
@@ -1480,6 +1502,11 @@ class DTLS_Cookie_Verify_Test : public Test
          client.received_data(s2c.data(), s2c.size());
 
          s2c.clear();
+
+         for(int i = 0; i < num_retrans2; i++)
+            {
+            client.timeout_check();
+            }
 
          prestate = Botan::TLS::Server::pre_verify_cookie(
             creds, server_policy, "localhost", c2s.data(), c2s.size(),
@@ -1546,7 +1573,7 @@ class DTLS_Cookie_Verify_Test : public Test
                }
             }
 
-         return {result};
+         return result;
          }
    };
 
