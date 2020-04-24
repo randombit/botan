@@ -1470,7 +1470,7 @@ class DTLS_Cookie_Verify_Test : public Test
                s2c.insert(s2c.end(), bits, bits + len);
             });
 
-         if (prestate.cookie_valid)
+         if (prestate.cookie_valid())
             {
             result.test_failure("Invalid cookie reported valid");
             }
@@ -1487,9 +1487,9 @@ class DTLS_Cookie_Verify_Test : public Test
                s2c.insert(s2c.end(), bits, bits + len);
             });
 
-         if (!prestate.cookie_valid)
+         if (!prestate.cookie_valid())
             {
-            result.test_failure("Valid cookie report invalid");
+            result.test_failure("Valid cookie reported invalid");
             }
 
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, server_policy, rng(), prestate);

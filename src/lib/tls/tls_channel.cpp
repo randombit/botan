@@ -8,6 +8,7 @@
 
 #include <botan/tls_channel.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_server.h>
 #include <botan/tls_messages.h>
 #include <botan/kdf.h>
 #include <botan/internal/tls_handshake_state.h>
@@ -104,16 +105,9 @@ void Channel::reset_active_association_state()
       m_sequence_numbers->reset();
    }
 
-void Channel::set_prestate(uint16_t in_message_seq, uint16_t out_message_seq)
+void Channel::set_prestate(DTLS_Prestate& prestate)
    {
-   pre_in_message_seq = in_message_seq;
-   pre_out_message_seq = out_message_seq;
-   }
-
-void Channel::reset_prestate()
-   {
-   pre_in_message_seq = 0;
-   pre_out_message_seq = 0;
+   m_prestate.reset(new DTLS_Prestate(prestate));
    }
 
 Channel::~Channel()
@@ -180,13 +174,26 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
          m_sequence_numbers.reset(new Stream_Sequence_Numbers);
       }
 
-   for (uint64_t seq = 0; seq < pre_in_message_seq; seq++)
+   uint16_t pre_in_message_seq = 0;
+   uint16_t pre_out_message_seq = 0;
+
+   if(m_prestate)
       {
-      m_sequence_numbers->read_accept(seq);
-      }
-   for (uint16_t seq = 0; seq < pre_out_message_seq; seq++)
-      {
-      m_sequence_numbers->next_write_sequence(0);
+      BOTAN_ASSERT(version.is_datagram_protocol(),
+                   "Negotiating TLS but a DTLS prestate is set");
+
+      pre_in_message_seq = m_prestate->m_in_message_seq;
+      pre_out_message_seq = m_prestate->m_out_message_seq;
+
+      for (uint64_t seq = 0; seq < pre_in_message_seq; seq++)
+         {
+         m_sequence_numbers->read_accept(seq);
+         }
+      for (uint16_t seq = 0; seq < pre_out_message_seq; seq++)
+         {
+         m_sequence_numbers->next_write_sequence(/*epoch=*/0);
+         }
+      m_prestate.reset();
       }
 
    using namespace std::placeholders;
@@ -211,8 +218,6 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
 
    if(auto active = active_state())
       m_pending_state->set_version(active->version());
-
-   reset_prestate();
 
    return *m_pending_state.get();
    }

@@ -30,6 +30,7 @@ class Handshake_Message;
 class Client_Hello;
 class Server_Hello;
 class Policy;
+class DTLS_Prestate;
 
 /**
 * Generic interface for TLS endpoint
@@ -243,7 +244,7 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       void reset_active_association_state();
 
-      void set_prestate(uint16_t in_message_seq, uint16_t out_message_seq);
+      void set_prestate(DTLS_Prestate& prestate);
 
    private:
       void init(size_t io_buf_sze);
@@ -260,8 +261,6 @@ class BOTAN_PUBLIC_API(2,0) Channel
                         uint16_t epoch, uint8_t type, const uint8_t input[], size_t length);
 
       void reset_state();
-
-      void reset_prestate();
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
@@ -314,8 +313,7 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       bool m_has_been_closed;
 
-      uint16_t pre_in_message_seq = 0;
-      uint16_t pre_out_message_seq = 0;
+      std::unique_ptr<DTLS_Prestate> m_prestate;
    };
 
 }

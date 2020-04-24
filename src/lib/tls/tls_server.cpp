@@ -12,7 +12,6 @@
 #include <botan/internal/stl_util.h>
 #include <botan/tls_magic.h>
 #include <botan/internal/tls_record.h>
-#include <botan/internal/tls_seq_numbers.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
@@ -293,33 +292,21 @@ get_server_certs(const std::string& hostname,
    return cert_chains;
    }
 
-void unconnected_write_record(
-   secure_vector<uint8_t>& output,
-   uint8_t record_type,
-   Protocol_Version version,
-   uint64_t record_sequence,
-   const uint8_t* message,
-   size_t message_len)
+}
+
+DTLS_Prestate::DTLS_Prestate(bool validity,
+                             uint16_t in_message_seq,
+                             uint16_t out_message_seq) :
+   m_validity(validity),
+   m_in_message_seq(in_message_seq),
+   m_out_message_seq(out_message_seq)
    {
-   output.clear();
-   output.push_back(record_type);
-   output.push_back(version.major_version());
-   output.push_back(version.minor_version());
-
-   if(version.is_datagram_protocol())
-      {
-      for(size_t i = 0; i != 8; ++i)
-         output.push_back(get_byte(i, record_sequence));
-      }
-
-   const uint16_t len16 = static_cast<uint16_t>(message_len);
-   output.push_back(get_byte(0, len16));
-   output.push_back(get_byte(1, len16));
-
-   output.insert(output.end(), message, message + message_len);
    }
 
-}
+bool DTLS_Prestate::cookie_valid() const
+   {
+   return m_validity;
+   }
 
 /*
 * TLS Server Constructor
@@ -342,14 +329,14 @@ Server::Server(Callbacks& callbacks,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
-               DTLS_Prestate prestate,
+               DTLS_Prestate& prestate,
                size_t io_buf_sz) :
    Channel(callbacks, session_manager, rng, policy,
            true, true, io_buf_sz),
    m_creds(creds)
    {
-   BOTAN_ASSERT(prestate.cookie_valid, "Cookie is invalid");
-   set_prestate(prestate.in_message_seq, prestate.out_message_seq);
+   BOTAN_ASSERT(prestate.cookie_valid(), "Cookie is invalid");
+   set_prestate(prestate);
    }
 
 Server::Server(output_fn output,
@@ -1074,17 +1061,15 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
    {
    secure_vector<uint8_t> readbuf;
    secure_vector<uint8_t> record_buf;
-   Stream_Sequence_Numbers seq;
-   // a hacky use of Stream_Sqeuence_Numbers
    SymmetricKey cookie_secret;
    size_t consumed = 0;
 
    const Record_Header record =
       read_record(true, readbuf, input,
                   buf_size, consumed,
-                  record_buf, &seq, [](uint16_t) -> std::shared_ptr<Connection_Cipher_State> {return nullptr;},
+                  record_buf, nullptr,
+                  [](uint16_t) -> std::shared_ptr<Connection_Cipher_State> {return nullptr;},
                   true);
-   // should read_record be refactored to get rid of those quirks?
 
    if (record.type() != HANDSHAKE)
       {
@@ -1116,6 +1101,12 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
       }
 
    const uint16_t msg_seq = make_uint16(record_buf[4], record_buf[5]);
+
+   if (record.epoch() != 0)
+      {
+      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
+         "Initial client hello is not epoch 0");
+      }
 
    if (msg_seq > 2)
       {
@@ -1155,12 +1146,9 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
 
    Hello_Verify_Request verify(client_hello.cookie_input_data(), client_identity, cookie_secret);
 
-   DTLS_Prestate prestate;
    if (client_hello.cookie() == verify.cookie())
       {
-      prestate.cookie_valid = true;
-      prestate.in_message_seq = msg_seq;
-      prestate.out_message_seq = msg_seq;
+      return DTLS_Prestate(true, msg_seq, msg_seq);
       }
    else
       {
@@ -1168,21 +1156,22 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
          0, 0, verify.type(), verify.serialize(),
          static_cast<uint16_t>(policy.dtls_default_mtu()),
          [&](uint16_t, uint8_t record_type,
-             const std::vector<uint8_t>& record) {
+             const std::vector<uint8_t>& message) {
             Botan::secure_vector<uint8_t> temp_writebuf;
-            unconnected_write_record(
+            write_unencrypted_record(
                temp_writebuf,
                record_type,
                client_offer,
-               0,
-               record.data(),
-               record.size());
+               record.sequence(),
+               /* send the record with the same sequence received from client */
+               message.data(),
+               message.size());
             emit_data_fn(
                temp_writebuf.data(),
                temp_writebuf.size());
          });
       }
-   return prestate;
+   return DTLS_Prestate();
    }
 }
 

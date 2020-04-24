@@ -20,12 +20,23 @@ namespace TLS {
 
 class Server_Handshake_State;
 
-struct BOTAN_UNSTABLE_API DTLS_Prestate final
+class BOTAN_UNSTABLE_API DTLS_Prestate final
    {
    public:
-   bool cookie_valid = false;
-   uint16_t in_message_seq = 0;
-   uint16_t out_message_seq = 0;
+      DTLS_Prestate() = default;
+
+      DTLS_Prestate(bool validity,
+                    uint16_t in_message_seq,
+                    uint16_t out_message_seq);
+
+      bool cookie_valid() const;
+
+   private:
+      bool m_validity = false;
+      uint16_t m_in_message_seq = 0;
+      uint16_t m_out_message_seq = 0;
+
+      friend class Channel;
    };
 
 /**
@@ -77,7 +88,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
              Credentials_Manager& creds,
              const Policy& policy,
              RandomNumberGenerator& rng,
-             DTLS_Prestate prestate,
+             DTLS_Prestate& prestate,
              size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
          );
 
