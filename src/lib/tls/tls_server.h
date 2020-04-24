@@ -27,6 +27,7 @@ class BOTAN_UNSTABLE_API DTLS_Prestate final
 
       DTLS_Prestate(bool validity,
                     uint16_t in_message_seq,
+                    uint64_t in_record_seq,
                     uint16_t out_message_seq);
 
       bool cookie_valid() const;
@@ -34,6 +35,7 @@ class BOTAN_UNSTABLE_API DTLS_Prestate final
    private:
       bool m_validity = false;
       uint16_t m_in_message_seq = 0;
+      uint64_t m_in_record_seq = 0;
       uint16_t m_out_message_seq = 0;
 
       friend class Channel;

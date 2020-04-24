@@ -185,14 +185,12 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
       pre_in_message_seq = m_prestate->m_in_message_seq;
       pre_out_message_seq = m_prestate->m_out_message_seq;
 
-      for (uint64_t seq = 0; seq < pre_in_message_seq; seq++)
-         {
-         m_sequence_numbers->read_accept(seq);
-         }
-      for (uint16_t seq = 0; seq < pre_out_message_seq; seq++)
-         {
-         m_sequence_numbers->next_write_sequence(/*epoch=*/0);
-         }
+      const uint64_t in_record_seq = m_prestate->m_in_record_seq;
+      const uint64_t out_record_seq = m_prestate->m_out_message_seq;
+      // our outgoing record sequence should equal message sequence
+      // since we never retransmit Hello Verify
+
+      m_sequence_numbers->skip_to(in_record_seq, out_record_seq);
       m_prestate.reset();
       }
 

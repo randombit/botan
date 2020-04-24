@@ -32,6 +32,8 @@ class Connection_Sequence_Numbers
       virtual bool already_seen(uint64_t seq) const = 0;
       virtual void read_accept(uint64_t seq) = 0;
 
+      virtual void skip_to(uint64_t read_seq, uint64_t write_seq) = 0;
+
       virtual void reset() = 0;
    };
 
@@ -59,6 +61,12 @@ class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers
 
       bool already_seen(uint64_t) const override { return false; }
       void read_accept(uint64_t) override { m_read_seq_no++; }
+
+      void skip_to(uint64_t read_seq, uint64_t write_seq) override
+         {
+         m_read_seq_no = read_seq;
+         m_write_seq_no = write_seq;
+         }
 
    private:
       uint64_t m_write_seq_no;
@@ -157,6 +165,14 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers
                m_window_bits = 0;
                }
             }
+         }
+
+      void skip_to(uint64_t read_seq, uint64_t write_seq) override
+         {
+         m_window_highest = read_seq;
+         // discard our window here
+         m_window_bits = 0;
+         m_write_seqs[m_write_epoch] = write_seq;
          }
 
    private:

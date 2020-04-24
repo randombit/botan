@@ -296,9 +296,11 @@ get_server_certs(const std::string& hostname,
 
 DTLS_Prestate::DTLS_Prestate(bool validity,
                              uint16_t in_message_seq,
+                             uint64_t in_record_seq,
                              uint16_t out_message_seq) :
    m_validity(validity),
    m_in_message_seq(in_message_seq),
+   m_in_record_seq(in_record_seq),
    m_out_message_seq(out_message_seq)
    {
    }
@@ -1108,13 +1110,6 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
          "Initial client hello is not epoch 0");
       }
 
-   if (msg_seq > 2)
-      {
-      // is it possible for a Client Hello to get beyond seq=2?
-      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
-         "Unexpected sequence number");
-      }
-
    const size_t fragment_len = make_uint32(0, record_buf[9], record_buf[10], record_buf[11]);
 
    if (fragment_len != length - 4)
@@ -1148,12 +1143,14 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
 
    if (client_hello.cookie() == verify.cookie())
       {
-      return DTLS_Prestate(true, msg_seq, msg_seq);
+      return DTLS_Prestate(true, msg_seq,
+                           record.sequence(),
+                           msg_seq);
       }
    else
       {
       Datagram_Handshake_IO::unconnected_send_message(
-         0, 0, verify.type(), verify.serialize(),
+         msg_seq, 0, verify.type(), verify.serialize(),
          static_cast<uint16_t>(policy.dtls_default_mtu()),
          [&](uint16_t, uint8_t record_type,
              const std::vector<uint8_t>& message) {
@@ -1162,8 +1159,7 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
                temp_writebuf,
                record_type,
                client_offer,
-               record.sequence(),
-               /* send the record with the same sequence received from client */
+               msg_seq,
                message.data(),
                message.size());
             emit_data_fn(
