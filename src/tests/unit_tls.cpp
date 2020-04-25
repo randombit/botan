@@ -1457,8 +1457,8 @@ class DTLS_Cookie_Verify_Test : public Test
                bool allow_dtls12() const override { return true;  }
 
                bool allow_dtls_epoch0_restart() const override { return false; }
-               size_t dtls_initial_timeout() const { return 0; }
-               size_t dtls_maximum_timeout() const { return 0; }
+               size_t dtls_initial_timeout() const override { return 0; }
+               size_t dtls_maximum_timeout() const override { return 0; }
             };
 
          Test::Result result("DTLS cookie verify, " +
