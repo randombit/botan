@@ -429,7 +429,8 @@ inline void bigint_shr1(word x[], size_t x_size,
    {
    const size_t top = x_size >= word_shift ? (x_size - word_shift) : 0;
 
-   copy_mem(x, x + word_shift, top);
+   if(top > 0)
+      copy_mem(x, x + word_shift, top);
    clear_mem(x + top, std::min(word_shift, x_size));
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
@@ -467,7 +468,8 @@ inline void bigint_shr2(word y[], const word x[], size_t x_size,
    {
    const size_t new_size = x_size < word_shift ? 0 : (x_size - word_shift);
 
-   copy_mem(y, x + word_shift, new_size);
+   if(new_size > 0)
+      copy_mem(y, x + word_shift, new_size);
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
    const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);

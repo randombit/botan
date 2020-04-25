@@ -47,7 +47,7 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(const std::string& file, 
 
    DataSource_Stream file_stream(file);
 
-   for(const std::vector<uint8_t> der : decode_all_certificates(file_stream))
+   for(const std::vector<uint8_t>& der : decode_all_certificates(file_stream))
       {
       std::shared_ptr<const X509_Certificate> cert = std::make_shared<const X509_Certificate>(der.data(), der.size());
 
