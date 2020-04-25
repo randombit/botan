@@ -109,11 +109,11 @@ Ciphers, hashes, MACs, and checksums
 
 * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, (X)ChaCha20Poly1305
 * Cipher modes CTR, CBC, XTS, CFB, OFB
-* Block ciphers AES, ARIA, Blowfish, Camellia, CAST-128, DES/3DES, GOST 28147,
-  IDEA, Lion, Noekeon, SEED, Serpent, SHACAL2, SM4, Threefish-512, Twofish, XTEA
+* Block ciphers AES, ARIA, Blowfish, Camellia, CAST-128, DES/3DES, IDEA,
+  Lion, Noekeon, SEED, Serpent, SHACAL2, SM4, Threefish-512, Twofish
 * Stream ciphers (X)ChaCha20, (X)Salsa20, SHAKE-128, RC4
 * Hash functions SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b,
-  Skein-512, SM3, Tiger, Whirlpool, GOST 34.11-94, GOST 34.11-2012
+  Skein-512, SM3, Streebog, Whirlpool
 * Authentication codes HMAC, CMAC, Poly1305, SipHash, GMAC, X9.19 DES-MAC
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 

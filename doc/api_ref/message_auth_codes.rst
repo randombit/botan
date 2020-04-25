@@ -203,6 +203,9 @@ authenticated. Avoid unless required for compatibility.
 
 Available if ``BOTAN_HAS_CBC_MAC`` is defined.
 
+.. warning::
+   CBC-MAC support is deprecated and will be removed in a future major release.
+
 CMAC
 ~~~~~~~~~~~~
 
@@ -221,6 +224,10 @@ lost.
 
 Available if ``BOTAN_HAS_GMAC`` is defined.
 
+.. warning::
+   Due to the nonce requirement, GMAC is exceptionally fragile. Avoid it unless
+   absolutely required.
+
 HMAC
 ~~~~~~~~~~~~
 
@@ -237,6 +244,10 @@ message, or all security is lost.
 
 Available if ``BOTAN_HAS_POLY1305`` is defined.
 
+.. warning::
+   Due to the nonce requirement, Poly1305 is exceptionally fragile. Avoid it unless
+   absolutely required.
+
 SipHash
 ~~~~~~~~~~~~
 
@@ -249,7 +260,9 @@ Available if ``BOTAN_HAS_SIPHASH`` is defined.
 X9.19-MAC
 ~~~~~~~~~~~~
 
-A CBC-MAC variant sometimes used in finance. Always uses DES. Avoid unless
-required.
+A CBC-MAC variant sometimes used in finance. Always uses DES.
+Sometimes called the "DES retail MAC", also standardized in ISO 9797-1.
+
+It is slow and has known attacks. Avoid unless required.
 
 Available if ``BOTAN_HAS_X919_MAC`` is defined.

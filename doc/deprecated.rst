@@ -59,13 +59,13 @@ Deprecated Functionality
 This section lists cryptographic functionality which will be removed
 in a future major release.
 
-- Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
+- Block ciphers CAST-256, GOST 28147, Kasumi, MISTY1, DESX, and XTEA.
+
+- Hash functions GOST 34.11-94 and Tiger
 
 - DLIES
 
 - MCEIES
-
-- GOST 34.11-94 hash
 
 - CBC-MAC
 

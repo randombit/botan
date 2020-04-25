@@ -157,11 +157,11 @@ block of plaintext with AES-256 using two different keys.
 Available Ciphers
 ---------------------
 
-Botan includes a number of block ciphers that are specific to particular
-countries, as well as a few that are included mostly due to their use in
-specific protocols such as PGP but not widely used elsewhere. The ciphers that
-seem best for new code are AES, Serpent, and Threefish-512. If you are
-developing new code and have no particular opinion, pick AES-256.
+Botan includes a number of block ciphers that are specific to particular countries, as
+well as a few that are included mostly due to their use in specific protocols such as PGP
+but not widely used elsewhere. If you are developing new code and have no particular
+opinion, use AES-256. If you desire an alternative to AES, consider Serpent, SHACAL2 or
+Threefish.
 
 .. warning:: Avoid any 64-bit block cipher in new designs. There are
              combinatoric issues that affect any 64-bit cipher that render it
@@ -206,17 +206,20 @@ CAST-256
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A 128-bit cipher that was a contestant in the NIST AES competition.
-Rarely used, and now deprecated in Botan. Use AES or Serpent instead.
+Almost never used in practice. Prefer AES or Serpent.
 
 Available if ``BOTAN_HAS_CAST256`` is defined.
+
+.. warning::
+   Support for CAST-256 is deprecated and will be removed in a future major release.
 
 Camellia
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Comes in three variants, Camellia-128, Camellia-192, and Camellia-256.
 
-A Japanese design standardized by ISO, NESSIE and CRYPTREC. Somewhat common.
-Prefer AES or Serpent in new designs.
+A Japanese design standardized by ISO, NESSIE and CRYPTREC.
+Rarely used outside of Japan.
 
 Available if ``BOTAN_HAS_CAMELLIA`` is defined.
 
@@ -237,15 +240,21 @@ it insecure to any well-resourced attacker. DESX and 3DES extend the key length,
 and are still thought to be secure, modulo the limitation of a 64-bit block.
 All are somewhat common in some industries such as finance. Avoid in new code.
 
+.. warning::
+   Support for DESX is deprecated and it will be removed in a future major release.
+
 Available if ``BOTAN_HAS_DES`` is defined.
 
 GOST-28147-89
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A old 64-bit Russian cipher. Possible security issues. Avoid unless
-compatibility is needed.
+Aka "Magma". An old 64-bit Russian cipher. Possible security issues, avoid
+unless compatibility is needed.
 
 Available if ``BOTAN_HAS_GOST_28147_89`` is defined.
+
+.. warning::
+   Support for this cipher is deprecated and will be removed in a future major release.
 
 IDEA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -263,6 +272,9 @@ it outside of this context.
 
 Available if ``BOTAN_HAS_KASUMI`` is defined.
 
+.. warning::
+   Support for Kasumi is deprecated and will be removed in a future major release.
+
 Lion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -277,11 +289,12 @@ MISTY1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A 64-bit Japanese cipher standardized by NESSIE and ISO. Seemingly secure, but
-quite slow and saw little adoption. No reason to use it in new code. The
-implementation in Botan is deprecated, and it is likely to be removed in a
-future release.
+quite slow and saw little adoption. No reason to use it in new code.
 
 Available if ``BOTAN_HAS_MISTY1`` is defined.
+
+.. warning::
+   Support for MISTY1 is deprecated and will be removed in a future major release.
 
 Noekeon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -294,7 +307,7 @@ Available if ``BOTAN_HAS_NOEKEON`` is defined.
 SEED
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A older South Korean cipher, widely used in industry there.
+A older South Korean cipher, widely used in industry there. No reason to choose it otherwise.
 
 Available if ``BOTAN_HAS_SEED`` is defined.
 
@@ -319,8 +332,8 @@ Available if ``BOTAN_HAS_SM4`` is defined.
 Serpent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An AES contender. Widely considered the most conservative design. Fairly slow,
-especially if no SIMD instruction set is available.
+An AES contender. Widely considered the most conservative design. Fairly slow
+unless SIMD instructions are available.
 
 Available if ``BOTAN_HAS_SERPENT`` is defined.
 
@@ -335,7 +348,8 @@ Available if ``BOTAN_HAS_THREEFISH_512`` is defined.
 Twofish
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An AES contender. Somewhat complicated key setup and a "kitchen sink" design.
+A 128-bit block cipher that was one of the AES finalists. Has a somewhat complicated key
+setup and a "kitchen sink" design.
 
 Available if ``BOTAN_HAS_TWOFISH`` is defined.
 
