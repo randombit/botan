@@ -36,9 +36,19 @@ class BOTAN_PUBLIC_API(2,0) mlock_allocator final
 
       ~mlock_allocator();
 
+      friend class mlock_allocator_initializer;
+
       std::unique_ptr<Memory_Pool> m_pool;
       std::vector<void*> m_locked_pages;
    };
+
+extern mlock_allocator& mlock_allocator_instance;
+
+// this class needs to remain in a public header, even if locking_allocator.h becomes internal
+static struct mlock_allocator_initializer {
+   mlock_allocator_initializer ();
+   ~mlock_allocator_initializer ();
+} mlock_allocator_initializer_instance;
 
 }
 

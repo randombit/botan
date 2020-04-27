@@ -8,10 +8,10 @@
 #include <botan/locking_allocator.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/mem_pool.h>
+#include <new>
+#include <type_traits>
 
 namespace Botan {
-   
-static mlock_allocator& mlock_allocator_instance = mlock_allocator::instance();
 
 void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    {
@@ -70,8 +70,32 @@ mlock_allocator::~mlock_allocator()
 
 mlock_allocator& mlock_allocator::instance()
    {
-   static mlock_allocator mlock;
-   return mlock;
+   return mlock_allocator_instance;
+   }
+
+/*
+Schwarz counter / nifty counter idiom
+see: https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Nifty_Counter
+*/
+static int nifty_counter;
+static typename std::aligned_storage<sizeof (mlock_allocator), alignof (mlock_allocator)>::type
+   mlock_allocator_buf;
+mlock_allocator& mlock_allocator_instance = reinterpret_cast<mlock_allocator&> (mlock_allocator_buf);
+
+mlock_allocator_initializer::mlock_allocator_initializer ()
+   {
+   if (nifty_counter++ == 0)
+      {
+      new (&mlock_allocator_instance) mlock_allocator(); // placement new
+      }
+   }
+
+mlock_allocator_initializer::~mlock_allocator_initializer ()
+   {
+   if (--nifty_counter == 0)
+      {
+      (&mlock_allocator_instance)->~mlock_allocator(); // placement delete
+      }
    }
 
 }
