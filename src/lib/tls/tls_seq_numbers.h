@@ -170,8 +170,7 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers
       void skip_to(uint64_t read_seq, uint64_t write_seq) override
          {
          m_window_highest = read_seq;
-         // discard our window here
-         m_window_bits = 0;
+         m_window_bits = ~(static_cast<uint64_t>(1));
          m_write_seqs[m_write_epoch] = write_seq;
          }
 
