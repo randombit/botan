@@ -1482,6 +1482,7 @@ class DTLS_Cookie_Verify_Test : public Test
 
          for(int i = 0; i < num_retrans1; i++)
             {
+            c2s.clear();
             client.timeout_check();
             }
 
@@ -1505,6 +1506,7 @@ class DTLS_Cookie_Verify_Test : public Test
 
          for(int i = 0; i < num_retrans2; i++)
             {
+            c2s.clear();
             client.timeout_check();
             }
 

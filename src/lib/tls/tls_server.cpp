@@ -1143,9 +1143,14 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
 
    if (client_hello.cookie() == verify.cookie())
       {
-      return DTLS_Prestate(true, msg_seq,
-                           record.sequence(),
-                           msg_seq);
+      // We apply the prestate **after** reading client hello,
+      // so we should be expecting rec_seq+1 then.
+      // Note, if we inject the client hello directly in TLS::Server
+      // constructor then in_message_seq should also be msg_seq+1
+      return DTLS_Prestate(true,
+                           /*in_message_seq=*/msg_seq,
+                           /*in_record_seq=*/record.sequence() + 1,
+                           /*out_message_seq=*/msg_seq);
       }
    else
       {
