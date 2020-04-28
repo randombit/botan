@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(2,0) mlock_allocator final
 
       ~mlock_allocator();
 
-      friend class mlock_allocator_initializer;
+      friend struct mlock_allocator_initializer;
 
       std::unique_ptr<Memory_Pool> m_pool;
       std::vector<void*> m_locked_pages;
