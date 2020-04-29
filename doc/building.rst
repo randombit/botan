@@ -562,6 +562,8 @@ versions. Default is auto detection.
 
 Set path to compiler binary
 
+If not provided, the value of the ``CXX`` environment variable is used if set.
+
 ``--cc-abi-flags=FLAGS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -592,10 +594,14 @@ Set flags to pass to the linker. This is equivalent to setting ``LDFLAGS``
 Set the path to the tool to use to create static archives (``ar``).
 This is normally only used for cross-compilation.
 
+If not provided, the value of the ``AR`` environment variable is used if set.
+
 ``--ar-options=AR_OPTIONS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specify the options to pass to ``ar``.
+
+If not provided, the value of the ``AR_OPTIONS`` environment variable is used if set.
 
 ``--msvc-runtime=RT``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -685,7 +691,12 @@ Disable use of NEON intrinsics
 ``--disable-armv8crypto``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Disable use of ARMv8Crypto intrinsics
+Disable use of ARMv8 Crypto intrinsics
+
+``--disable-powercrypto``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of POWER Crypto intrinsics
 
 ``--with-debug-info``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -748,7 +759,7 @@ Enable debug info and disable optimizations
 
 Use amalgamation to build
 
-``--system-cert-bundle``
+``--system-cert-bundle=PATH``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set a path to a file containing one or more trusted CA certificates in
@@ -821,6 +832,16 @@ warnings and turns most warnings into errors.
    such warnings are welcome, but otherwise no support is available
    when using this option.
 
+``--werror-mode``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Turns most warnings into errors.
+
+``--no-install-python-module``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Skip installing Python module.
+
 ``--with-python-versions=N.M``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -848,6 +869,12 @@ read one input from stdin and then exit.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specify an additional library that fuzzer binaries must link with.
+
+``--build-targets=BUILD_TARGETS``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Build only the specific targets and tools
+(``static``, ``shared``, ``cli``, ``tests``, ``bogo_shim``).
 
 ``--boost-library-name``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -893,100 +920,100 @@ Currently available policies include ``bsi``, ``nist`` and ``modern``::
 
  $ ./configure.py --module-policy=bsi --enable-modules=tls,xts
 
---enable-modules=MODS
+``--enable-modules=MODS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable some specific modules
 
---disable-modules=MODS
+``--disable-modules=MODS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Disable some specific modules
 
---minimized-build
+``--minimized-build``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Start with the bare minimum. This is mostly useful in conjuction with
-`--enable-modules`` to get a build that has just the features a
+``--enable-modules`` to get a build that has just the features a
 particular application requires.
 
---with-boost
+``--with-boost``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use Boost.Asio for networking support. This primarily affects the
 command line utils.
 
---with-bzip2
+``--with-bzip2``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable bzip2 compression
 
---with-lzma
+``--with-lzma``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable lzma compression
 
---with-zlib
+``--with-zlib``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable using zlib compression
 
---with-openssl
+``--with-openssl``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable using OpenSSL for certain operations
 
---with-commoncrypto
+``--with-commoncrypto``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable using CommonCrypto for certain operations
 
---with-sqlite3
+``--with-sqlite3``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable using sqlite3 for data storage
 
---with-tpm
+``--with-tpm``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enable support for TPM
 
---program-suffix=SUFFIX
+``--program-suffix=SUFFIX``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A string to append to all program binaries.
 
---library-suffix=SUFFIX
+``--library-suffix=SUFFIX``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A string to append to all library names.
 
---prefix=DIR
+``--prefix=DIR``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set the install prefix.
 
---docdir=DIR
+``--docdir=DIR``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set the documentation installation dir.
 
---bindir=DIR
+``--bindir=DIR``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set the binary installation dir.
 
---libdir=DIR
+``--libdir=DIR``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set the library installation dir.
 
---mandir=DIR
+``--mandir=DIR``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set the man page installation dir.
 
---includedir=DIR
+``--includedir=DIR``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set the include file installation dir.
