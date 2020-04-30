@@ -151,7 +151,9 @@ file for a module with no dependencies might just contain a macro define.
 Lists:
  * ``comment`` and ``warning`` provides block-comments which
    are displayed to the user at build time.
- * ``requires`` is a list of module dependencies.
+ * ``requires`` is a list of module dependencies. An ``os_features`` can be
+   specified as a condition for needing the dependency by writing it before
+   the module name and separated by a ``?``, e.g. ``rtlgenrandom?dyn_load``.
  * ``header:internal`` is the list of headers (from the current module)
    which are internal-only.
  * ``header:public`` is a the list of headers (from the
@@ -167,6 +169,8 @@ Lists:
    for the PKCS11 headers.
  * ``arch`` is a list of architectures this module may be used on.
  * ``isa`` lists ISA features which must be enabled to use this module.
+   Can be proceeded by an ``arch`` name followed by a ``:`` if it is only needed
+   on a specific architecture, e.g. ``x86_64:ssse3``.
  * ``cc`` is a list of compilers which can be used with this module. If the
    compiler name is suffixed with a version (like "gcc:5.0") then only compilers
    with that minimum version can use the module.
@@ -185,13 +189,16 @@ Maps:
 Variables:
  * ``load_on`` Can take on values ``never``, ``always``, ``auto``, ``dep`` or ``vendor``.
    TODO describe the behavior of these
+ * ``endian`` Required endian for the module (``any`` (default), ``little``, ``big``)
 
 An example::
 
    # Disable this by default
    load_on never
 
-   need_isa sse2
+   <isa>
+   sse2
+   </isa>
 
    <defines>
    DEFINE1 -> 20180104
@@ -311,13 +318,13 @@ Variables:
     name the output object.
   * ``output_to_exe`` (default "-o") gives the compiler option used to
     name the output object.
-  * ``add_include_dir_option`` (default "-I") gives the compiler option used to
+  * ``add_include_dir_option`` (default "-I") gives the compiler option used
     to specify an additional include dir.
-  * ``add_lib_dir_option`` (default "-L") gives the compiler option used to
+  * ``add_lib_dir_option`` (default "-L") gives the compiler option used
     to specify an additional library dir.
-  * ``add_sysroot_option``
-  * ``add_lib_option`` (default "-l") gives the compiler option to
-    link in a library.
+  * ``add_sysroot_option`` gives the compiler option used to specify the sysroot.
+  * ``add_lib_option`` (default "-l%s") gives the compiler option to
+    link in a library. ``%s`` will be replaced with the library name.
   * ``add_framework_option`` (default "-framework") gives the compiler option
     to add a macOS framework.
   * ``preproc_flags`` (default "-E") gives the compiler option used to run
@@ -333,18 +340,21 @@ Variables:
   * ``coverage_flags`` gives the compiler flags to use when generating coverage
     information.
   * ``stack_protector_flags`` gives compiler flags to enable stack overflow checking.
-  * ``shared_flags``
+  * ``shared_flags`` gives compiler flags to use when generation shared libraries.
   * ``lang_flags`` gives compiler flags used to enable the required version of C++.
   * ``warning_flags`` gives warning flags to enable.
   * ``maintainer_warning_flags`` gives extra warning flags to enable during maintainer
     mode builds.
-  * ``visibility_build_flags``
-  * ``visibility_attribute``
+  * ``visibility_build_flags`` gives compiler flags to control symbol visibility
+    when generation shared libraries.
+  * ``visibility_attribute`` gives the attribute to use in the ``BOTAN_DLL`` macro
+    to specify visibility when generation shared libraries.
   * ``ar_command`` gives the command to build static libraries
   * ``ar_options`` gives the options to pass to ``ar_command``, if not set here
     takes this from the OS specific information.
   * ``ar_output_to`` gives the flag to pass to ``ar_command`` to specify where to
     output the static library.
+  * ``werror_flags`` gives the complier flags to treat warnings as errors.
 
 Supporting a new OS
 ---------------------------
@@ -359,6 +369,7 @@ Lists:
     macro ``BOTAN_TARGET_OS_HAS_XXX`` to be defined at build time. Use
     ``configure.py --list-os-features`` to list the currently defined OS
     features.
+  * ``feature_macros`` is a list of macros to define.
 
 Variables:
   * ``ar_command`` gives the command to build static libraries
@@ -377,16 +388,20 @@ Variables:
     by default.
   * ``lib_dir`` (default "lib") specifies where library should be installed,
     relative to install_root.
-  * ``lib_prefix``
+  * ``lib_prefix`` (default "lib") prefix to add to the library name
   * ``library_name``
   * ``man_dir`` specifies where man files should be installed, relative to install_root
   * ``obj_suffix`` (default "o") specifies the suffix used for object files
   * ``program_suffix`` (default "") specifies the suffix used for executables
-  * ``shared_lib_symlinks``
+  * ``shared_lib_symlinks`` (default "yes) specifies if symbolic names should be
+    created from the base and patch soname to the library name.
   * ``soname_pattern_abi``
   * ``soname_pattern_base``
   * ``soname_pattern_patch``
-  * ``soname_suffix``
-  * ``static_suffix``
-  * ``use_stack_protector``
-  * ``uses_pkg_config``
+  * ``soname_suffix`` file extension to use for shared library if ``soname_pattern_base``
+    is not specified.
+  * ``static_suffix`` (default "a") file extension to use for static library.
+  * ``use_stack_protector`` (default "true") specify if by default stack smashing
+    protections should be enabled.
+  * ``uses_pkg_config`` (default "yes") specify if by default a pkg-config file
+    should be created.

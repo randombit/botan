@@ -1493,7 +1493,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             if lex.soname_pattern_patch == '' and lex.soname_pattern_abi == '':
                 self.soname_pattern_patch = lex.soname_pattern_base
                 self.soname_pattern_abi = lex.soname_pattern_base
-            elif lex.soname_pattern_abi != '' and lex.soname_pattern_abi != '':
+            elif lex.soname_pattern_patch != '' and lex.soname_pattern_abi != '':
                 self.soname_pattern_patch = lex.soname_pattern_patch
                 self.soname_pattern_abi = lex.soname_pattern_abi
             else:
