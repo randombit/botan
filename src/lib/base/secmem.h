@@ -174,6 +174,17 @@ void zap(std::vector<T, Alloc>& vec)
    vec.shrink_to_fit();
    }
 
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+/**
+* mlock_allocator_initializer is part of a nifty counter idiom which ensures
+* correct initialization order even for static objects
+*/
+static struct BOTAN_DLL mlock_allocator_initializer {
+  mlock_allocator_initializer ();
+  ~mlock_allocator_initializer ();
+} mlock_allocator_initializer_instance;
+#endif
+
 }
 
 #endif
