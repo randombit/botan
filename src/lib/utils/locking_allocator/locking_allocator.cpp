@@ -78,9 +78,11 @@ mlock_allocator& mlock_allocator::instance()
 Schwarz counter / nifty counter idiom
 see: https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Nifty_Counter
 */
+namespace {
 static int nifty_counter;
 static typename std::aligned_storage<sizeof (mlock_allocator), alignof (mlock_allocator)>::type
    mlock_allocator_buf;
+}
 mlock_allocator& mlock_allocator_instance = reinterpret_cast<mlock_allocator&> (mlock_allocator_buf);
 
 mlock_allocator_initializer::mlock_allocator_initializer ()
