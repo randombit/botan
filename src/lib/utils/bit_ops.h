@@ -147,6 +147,25 @@ inline size_t var_ctz32(uint32_t n)
 #endif
    }
 
+template<typename T>
+inline T bit_permute_step(T x, T mask, size_t shift)
+   {
+   /*
+   See https://reflectionsonsecurity.wordpress.com/2014/05/11/efficient-bit-permutation-using-delta-swaps/
+   and http://programming.sirrida.de/bit_perm.html
+   */
+   const T swap = ((x >> shift) ^ x) & mask;
+   return (x ^ swap) ^ (swap << shift);
+   }
+
+template<typename T>
+inline void swap_bits(T& x, T& y, T mask, size_t shift)
+   {
+   const T swap = ((x >> shift) ^ y) & mask;
+   x ^= swap << shift;
+   y ^= swap;
+   }
+
 }
 
 #endif
