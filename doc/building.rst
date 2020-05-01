@@ -871,7 +871,7 @@ read one input from stdin and then exit.
 Specify an additional library that fuzzer binaries must link with.
 
 ``--build-targets=BUILD_TARGETS``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Build only the specific targets and tools
 (``static``, ``shared``, ``cli``, ``tests``, ``bogo_shim``).
