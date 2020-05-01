@@ -4,6 +4,8 @@ Release Notes
 Version 2.15.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* AES key expansion is now constant time. (GH #2346)
+
 * The documentation claimed that mlocked pages were created
   with a guard page both before and after. However only a
   trailing guard page was used. Add a leading guard page. (GH #2334)
@@ -16,6 +18,9 @@ Version 2.15.0, Not Yet Released
 
 * Fix a flaky test that would occasionally fail when running the
   tests with a large number of threads. (GH #2325 #2197)
+
+* Additional algorithms are now deprecated: XTEA, GOST, and Tiger.
+  They will be removed in a future major release.
 
 Version 2.14.0, 2020-04-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
