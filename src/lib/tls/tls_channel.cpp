@@ -828,6 +828,11 @@ void Channel::process_prestate(DTLS_Prestate* prestate)
       send_fatal_alert(e.type());
       throw;
       }
+   catch(Decoding_Error&)
+      {
+      send_fatal_alert(Alert::DECODE_ERROR);
+      throw;
+      }
    catch(...)
       {
       send_fatal_alert(Alert::INTERNAL_ERROR);
