@@ -1092,6 +1092,13 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
                           "Not a handshake record");
       }
 
+   // the same check as in Channel::received_data
+   if (record.version().major_version() != 0xFE)
+      {
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                          "Unexpected record version");
+      }
+
    if (record_buf.size() < 12)
       {
       throw TLS_Exception(Alert::DECODE_ERROR,
@@ -1145,6 +1152,12 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
                           "Client offered an impossible DTLS version");
       }
 
+   const Protocol_Version negotiated_version =
+      select_version(policy, client_offer,
+                     Protocol_Version(),
+                     client_hello.sent_fallback_scsv(),
+                     client_hello.supported_versions());
+
    try
       {
       cookie_secret = creds.psk("tls-server", "dtls-cookie-secret", "");
@@ -1179,7 +1192,7 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
             write_unencrypted_record(
                temp_writebuf,
                record_type,
-               client_offer,
+               negotiated_version,
                msg_seq,
                message.data(),
                message.size());
