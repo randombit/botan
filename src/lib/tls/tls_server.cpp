@@ -1068,11 +1068,11 @@ void Server::session_create(Server_Handshake_State& pending_state,
    }
 
 DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
-                               const Policy& policy,
-                               const std::string& client_identity,
-                               const uint8_t input[],
-                               size_t buf_size,
-                               output_fn emit_data_fn)
+                                        const Policy& policy,
+                                        const std::string& client_identity,
+                                        const uint8_t input[],
+                                        size_t buf_size,
+                                        output_fn emit_data_fn)
    {
    secure_vector<uint8_t> readbuf;
    secure_vector<uint8_t> record_buf;
@@ -1088,14 +1088,14 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
 
    if (record.type() != HANDSHAKE)
       {
-      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
-         "Not a handshake record");
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                          "Not a handshake record");
       }
 
    if (record_buf.size() < 12)
       {
-      throw TLS_Exception(Alert::Type::DECODE_ERROR,
-         "Message is too short");
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Message is too short");
       }
 
    const Handshake_Type msg_type =
@@ -1103,32 +1103,32 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
 
    if (msg_type != CLIENT_HELLO)
       {
-      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
-         "Not a client hello");
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                        "Not a client hello");
       }
 
    const size_t length = 4 + make_uint32(0, record_buf[1], record_buf[2], record_buf[3]);
 
    if (length <= 4 || record_buf.size() != length + 8)
       {
-      throw TLS_Exception(Alert::Type::DECODE_ERROR,
-         "Bad length in client hello");
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Bad length in client hello");
       }
 
    const uint16_t msg_seq = make_uint16(record_buf[4], record_buf[5]);
 
    if (record.epoch() != 0)
       {
-      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
-         "Initial client hello is not epoch 0");
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                          "Initial client hello is not epoch 0");
       }
 
    const size_t fragment_len = make_uint32(0, record_buf[9], record_buf[10], record_buf[11]);
 
    if (fragment_len != length - 4)
       {
-      throw TLS_Exception(Alert::Type::UNEXPECTED_MESSAGE,
-         "Fragmented first client hello");
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                          "Fragmented first client hello");
       }
 
    std::unique_ptr<std::vector<uint8_t>> msg_contents(
@@ -1141,8 +1141,8 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
    if (!client_offer.is_datagram_protocol() ||
        client_offer.major_version() == 0xFF)
       {
-      throw TLS_Exception(Alert::Type::PROTOCOL_VERSION,
-         "Client offered an impossible DTLS version");
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                          "Client offered an impossible DTLS version");
       }
 
    try
@@ -1151,7 +1151,7 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
       }
    catch (...)
       {
-      throw TLS_Exception(Alert::Type::INTERNAL_ERROR,
+      throw TLS_Exception(Alert::INTERNAL_ERROR,
          "No available DTLS cookie");
       }
 
@@ -1160,7 +1160,7 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
    if (client_hello.cookie() == verify.cookie())
       {
       // We apply the prestate **after** reading client hello,
-      // so we should be expecting rec_seq+1 then.
+      // so we should be expecting seq+1 then.
       return DTLS_Prestate(/*validity=*/true,
                            /*contents=*/std::move(msg_contents),
                            /*record_version=*/record.version(),
