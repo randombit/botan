@@ -214,7 +214,8 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       virtual Handshake_State* new_handshake_state(class Handshake_IO* io) = 0;
 
-      Handshake_State& create_handshake_state(Protocol_Version version);
+      Handshake_State& create_handshake_state(Protocol_Version version,
+                                              DTLS_Prestate* prestate = nullptr);
 
       void inspect_handshake_message(const Handshake_Message& msg);
 
@@ -244,7 +245,7 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       void reset_active_association_state();
 
-      void set_prestate(DTLS_Prestate& prestate);
+      void process_prestate(DTLS_Prestate* prestate);
 
    private:
       void init(size_t io_buf_sze);
@@ -312,8 +313,6 @@ class BOTAN_PUBLIC_API(2,0) Channel
       secure_vector<uint8_t> m_record_buf;
 
       bool m_has_been_closed;
-
-      std::unique_ptr<DTLS_Prestate> m_prestate;
    };
 
 }

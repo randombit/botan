@@ -26,14 +26,29 @@ class BOTAN_UNSTABLE_API DTLS_Prestate final
       DTLS_Prestate() = default;
 
       DTLS_Prestate(bool validity,
+                    std::unique_ptr<std::vector<uint8_t>> contents,
+                    Protocol_Version record_version,
                     uint16_t in_message_seq,
                     uint64_t in_record_seq,
                     uint16_t out_message_seq);
 
+      DTLS_Prestate(const DTLS_Prestate&) = delete;
+
+      DTLS_Prestate& operator=(const DTLS_Prestate&) = delete;
+
+      DTLS_Prestate(DTLS_Prestate&&) = default;
+
+      DTLS_Prestate& operator=(DTLS_Prestate&&) = default;
+
       bool cookie_valid() const;
+
+      void invalidate();
 
    private:
       bool m_validity = false;
+
+      std::unique_ptr<std::vector<uint8_t>> m_contents;
+      Protocol_Version m_record_version;
       uint16_t m_in_message_seq = 0;
       uint64_t m_in_record_seq = 0;
       uint16_t m_out_message_seq = 0;
@@ -82,8 +97,8 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
       /**
        * Server initialization with a DTLS prestate, which implies DTLS.
-       * It is expected that received_data be called again with
-       * the last message that passes pre_verify_cookie.
+       * An exception will be thrown if the prestate cannot be accepted.
+       * Throws exactly the same exception that received_data can throw.
        */
       Server(Callbacks& callbacks,
              Session_Manager& session_manager,
@@ -209,6 +224,8 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
       // Set by deprecated constructor, Server calls both this fn and Callbacks version
       next_protocol_fn m_choose_next_protocol;
+
+      bool m_prestate_set = false;
    };
 
 }

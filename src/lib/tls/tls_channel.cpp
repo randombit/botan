@@ -105,11 +105,6 @@ void Channel::reset_active_association_state()
       m_sequence_numbers->reset();
    }
 
-void Channel::set_prestate(DTLS_Prestate& prestate)
-   {
-   m_prestate.reset(new DTLS_Prestate(prestate));
-   }
-
 Channel::~Channel()
    {
    // So unique_ptr destructors run correctly
@@ -149,7 +144,8 @@ bool Channel::save_session(const Session& session)
    return callbacks().tls_session_established(session);
    }
 
-Handshake_State& Channel::create_handshake_state(Protocol_Version version)
+Handshake_State& Channel::create_handshake_state(Protocol_Version version,
+                                                 DTLS_Prestate* prestate)
    {
    if(pending_state())
       throw Internal_Error("create_handshake_state called during handshake");
@@ -177,21 +173,20 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    uint16_t pre_in_message_seq = 0;
    uint16_t pre_out_message_seq = 0;
 
-   if(m_prestate)
+   if(prestate)
       {
       BOTAN_ASSERT(version.is_datagram_protocol(),
                    "Negotiating TLS but a DTLS prestate is set");
 
-      pre_in_message_seq = m_prestate->m_in_message_seq;
-      pre_out_message_seq = m_prestate->m_out_message_seq;
+      pre_in_message_seq = prestate->m_in_message_seq;
+      pre_out_message_seq = prestate->m_out_message_seq;
 
-      const uint64_t in_record_seq = m_prestate->m_in_record_seq;
-      const uint64_t out_record_seq = m_prestate->m_out_message_seq;
+      const uint64_t in_record_seq = prestate->m_in_record_seq;
+      const uint64_t out_record_seq = prestate->m_out_message_seq;
       // our outgoing record sequence should equal message sequence
       // since we never retransmit Hello Verify
 
       m_sequence_numbers->skip_to(in_record_seq, out_record_seq);
-      m_prestate.reset();
       }
 
    using namespace std::placeholders;
@@ -812,6 +807,31 @@ SymmetricKey Channel::key_material_export(const std::string& label,
    else
       {
       throw Invalid_State("Channel::key_material_export connection not active");
+      }
+   }
+
+void Channel::process_prestate(DTLS_Prestate* prestate)
+   {
+   BOTAN_ASSERT(m_is_server && m_is_datagram, "Must be a DTLS Server");
+
+   try
+      {
+      process_handshake_msg(nullptr,
+                            create_handshake_state(prestate->m_record_version,
+                                                   prestate),
+                            CLIENT_HELLO,
+                            *prestate->m_contents,
+                            false);
+      }
+   catch(TLS_Exception& e)
+      {
+      send_fatal_alert(e.type());
+      throw;
+      }
+   catch(...)
+      {
+      send_fatal_alert(Alert::INTERNAL_ERROR);
+      throw;
       }
    }
 

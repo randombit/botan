@@ -295,10 +295,14 @@ get_server_certs(const std::string& hostname,
 }
 
 DTLS_Prestate::DTLS_Prestate(bool validity,
+                             std::unique_ptr<std::vector<uint8_t>> contents,
+                             Protocol_Version record_version,
                              uint16_t in_message_seq,
                              uint64_t in_record_seq,
                              uint16_t out_message_seq) :
    m_validity(validity),
+   m_contents(std::move(contents)),
+   m_record_version(record_version),
    m_in_message_seq(in_message_seq),
    m_in_record_seq(in_record_seq),
    m_out_message_seq(out_message_seq)
@@ -308,6 +312,11 @@ DTLS_Prestate::DTLS_Prestate(bool validity,
 bool DTLS_Prestate::cookie_valid() const
    {
    return m_validity;
+   }
+
+void DTLS_Prestate::invalidate()
+   {
+   m_validity = false;
    }
 
 /*
@@ -335,10 +344,12 @@ Server::Server(Callbacks& callbacks,
                size_t io_buf_sz) :
    Channel(callbacks, session_manager, rng, policy,
            true, true, io_buf_sz),
-   m_creds(creds)
+   m_creds(creds),
+   m_prestate_set(true)
    {
    BOTAN_ASSERT(prestate.cookie_valid(), "Cookie is invalid");
-   set_prestate(prestate);
+   prestate.invalidate();
+   process_prestate(&prestate);
    }
 
 Server::Server(output_fn output,
@@ -570,7 +581,9 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
    if(!value_exists(compression_methods, uint8_t(0)))
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Client did not offer NULL compression");
 
-   if(initial_handshake && datagram)
+   const bool already_verified = m_prestate_set;
+
+   if(initial_handshake && datagram && !already_verified)
       {
       SymmetricKey cookie_secret;
 
@@ -1118,8 +1131,11 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
          "Fragmented first client hello");
       }
 
-   std::vector<uint8_t> msg_contents(record_buf.begin() + 12, record_buf.begin() + length + 8);
-   Client_Hello client_hello(msg_contents);
+   std::unique_ptr<std::vector<uint8_t>> msg_contents(
+      new std::vector<uint8_t>(record_buf.begin() + 12,
+                               record_buf.begin() + length + 8));
+
+   Client_Hello client_hello(*msg_contents);
    const Protocol_Version client_offer = client_hello.version();
 
    if (!client_offer.is_datagram_protocol() ||
@@ -1145,10 +1161,10 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
       {
       // We apply the prestate **after** reading client hello,
       // so we should be expecting rec_seq+1 then.
-      // Note, if we inject the client hello directly in TLS::Server
-      // constructor then in_message_seq should also be msg_seq+1
-      return DTLS_Prestate(true,
-                           /*in_message_seq=*/msg_seq,
+      return DTLS_Prestate(/*validity=*/true,
+                           /*contents=*/std::move(msg_contents),
+                           /*record_version=*/record.version(),
+                           /*in_message_seq=*/msg_seq + 1,
                            /*in_record_seq=*/record.sequence() + 1,
                            /*out_message_seq=*/msg_seq);
       }

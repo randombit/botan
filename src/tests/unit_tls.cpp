@@ -1521,6 +1521,8 @@ class DTLS_Cookie_Verify_Test : public Test
             result.test_failure("Valid cookie reported invalid");
             }
 
+         c2s.clear();
+
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, server_policy, rng(), prestate);
 
          bool client_to_server_sent = false;
