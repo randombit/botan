@@ -1525,6 +1525,11 @@ class DTLS_Cookie_Verify_Test : public Test
 
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, server_policy, rng(), prestate);
 
+         if (prestate.cookie_valid())
+            {
+            result.test_failure("Cookie is not invalidated");
+            }
+
          bool client_to_server_sent = false;
          bool server_to_client_sent = false;
 
