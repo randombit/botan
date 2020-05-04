@@ -11,6 +11,9 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/tls_magic.h>
+
+#include <botan/hash.h>
+#include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_record.h>
 #include <botan/loadstor.h>
 
@@ -290,6 +293,31 @@ get_server_certs(const std::string& hostname,
       }
 
    return cert_chains;
+   }
+
+std::pair<std::vector<uint8_t>, std::vector<uint8_t>>
+read_cookie_and_input_bits(const std::vector<uint8_t>& buf)
+   {
+   BOTAN_ASSERT_NOMSG(buf.size() > 41);
+
+   TLS_Data_Reader reader("ClientHello", buf);
+
+   reader.discard_next(34); // version, random
+
+   const size_t sess_id_len = reader.get_byte();
+   reader.discard_next(sess_id_len);
+
+   std::unique_ptr<HashFunction> sha256;
+   sha256 = HashFunction::create_or_throw("SHA-256");
+   sha256->update(reader.get_data_read_so_far());
+
+   std::vector<uint8_t> cookie = reader.get_range<uint8_t>(1, 0, 255);
+
+   sha256->update(reader.get_remaining());
+   std::vector<uint8_t> input_bits(sha256->output_length());
+   sha256->final(input_bits.data());
+
+   return std::make_pair(cookie, input_bits);
    }
 
 }
@@ -1076,7 +1104,6 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
    {
    secure_vector<uint8_t> readbuf;
    secure_vector<uint8_t> record_buf;
-   SymmetricKey cookie_secret;
    size_t consumed = 0;
 
    const Record_Header record =
@@ -1099,7 +1126,14 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
                           "Unexpected record version");
       }
 
-   if (record_buf.size() < 12)
+   if (record.epoch() != 0)
+      {
+      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
+                          "Initial client hello is not epoch 0");
+      }
+
+   // 12 bytes message header plus 41 bytes contents
+   if (record_buf.size() < 53)
       {
       throw TLS_Exception(Alert::DECODE_ERROR,
                           "Message is too short");
@@ -1123,13 +1157,6 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
       }
 
    const uint16_t msg_seq = make_uint16(record_buf[4], record_buf[5]);
-
-   if (record.epoch() != 0)
-      {
-      throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
-                          "Initial client hello is not epoch 0");
-      }
-
    const size_t fragment_len = make_uint32(0, record_buf[9], record_buf[10], record_buf[11]);
 
    if (fragment_len != length - 4)
@@ -1138,26 +1165,7 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
                           "Fragmented first client hello");
       }
 
-   std::unique_ptr<std::vector<uint8_t>> msg_contents(
-      new std::vector<uint8_t>(record_buf.begin() + 12,
-                               record_buf.begin() + length + 8));
-
-   Client_Hello client_hello(*msg_contents);
-   const Protocol_Version client_offer = client_hello.version();
-
-   if (!client_offer.is_datagram_protocol() ||
-       client_offer.major_version() == 0xFF)
-      {
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                          "Client offered an impossible DTLS version");
-      }
-
-   const Protocol_Version negotiated_version =
-      select_version(policy, client_offer,
-                     Protocol_Version(),
-                     client_hello.sent_fallback_scsv(),
-                     client_hello.supported_versions());
-
+   SymmetricKey cookie_secret;
    try
       {
       cookie_secret = creds.psk("tls-server", "dtls-cookie-secret", "");
@@ -1168,12 +1176,18 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
                           "No available DTLS cookie");
       }
 
-   Hello_Verify_Request verify(client_hello.cookie_input_data(), client_identity, cookie_secret);
+   std::unique_ptr<std::vector<uint8_t>> msg_contents(
+      new std::vector<uint8_t>(record_buf.begin() + 12,
+                               record_buf.begin() + length + 8));
 
-   if (client_hello.cookie() == verify.cookie())
+   std::vector<uint8_t> cookie, input_bits;
+   std::tie(cookie, input_bits) = read_cookie_and_input_bits(*msg_contents);
+
+   Hello_Verify_Request verify(input_bits, client_identity, cookie_secret);
+
+   if (cookie == verify.cookie())
       {
-      // We apply the prestate **after** reading client hello,
-      // so we should be expecting seq+1 then.
+      // We should be expecting seq+1 when done with client hello.
       return DTLS_Prestate(/*validity=*/true,
                            /*contents=*/std::move(msg_contents),
                            /*record_version=*/record.version(),
@@ -1192,7 +1206,7 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
             write_unencrypted_record(
                temp_writebuf,
                record_type,
-               negotiated_version,
+               Protocol_Version::DTLS_V10,
                msg_seq,
                message.data(),
                message.size());
