@@ -1165,7 +1165,7 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
    catch (...)
       {
       throw TLS_Exception(Alert::INTERNAL_ERROR,
-         "No available DTLS cookie");
+                          "No available DTLS cookie");
       }
 
    Hello_Verify_Request verify(client_hello.cookie_input_data(), client_identity, cookie_secret);
