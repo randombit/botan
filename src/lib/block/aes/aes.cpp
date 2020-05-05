@@ -1,8 +1,5 @@
 /*
-* AES
 * (C) 1999-2010,2015,2017,2018,2020 Jack Lloyd
-*
-* Based on the public domain reference implementation by Paulo Baretto
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,67 +12,9 @@
 #include <botan/internal/ct_utils.h>
 #include <type_traits>
 
-/*
-* This implementation is based on table lookups which are known to be
-* vulnerable to timing and cache based side channel attacks. Some
-* countermeasures are used which may be helpful in some situations:
-*
-* - Only a single 256-word T-table is used, with rotations applied.
-*   Most implementations use 4 (or sometimes 5) T-tables, which leaks
-*   much more information via cache usage.
-*
-* - The TE and TD tables are computed at runtime to avoid flush+reload
-*   attacks using clflush. As different processes will not share the
-*   same underlying table data, an attacker can't manipulate another
-*   processes cache lines via their shared reference to the library
-*   read only segment. (However, prime+probe attacks are still possible.)
-*
-* - Each cache line of the lookup tables is accessed at the beginning
-*   of each call to encrypt or decrypt. (See the Z variable below)
-*
-* If available SSSE3 or AES-NI are used instead of this version, as both
-* are faster and immune to side channel attacks.
-*
-* Some AES cache timing papers for reference:
-*
-* "Software mitigations to hedge AES against cache-based software side
-* channel vulnerabilities" https://eprint.iacr.org/2006/052.pdf
-*
-* "Cache Games - Bringing Access-Based Cache Attacks on AES to Practice"
-* http://www.ieee-security.org/TC/SP2011/PAPERS/2011/paper031.pdf
-*
-* "Cache-Collision Timing Attacks Against AES" Bonneau, Mironov
-* http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.88.4753
-*/
-
 namespace Botan {
 
 namespace {
-
-alignas(64)
-const uint8_t SE[256] = {
-   0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B,
-   0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0,
-   0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0, 0xB7, 0xFD, 0x93, 0x26,
-   0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
-   0x04, 0xC7, 0x23, 0xC3, 0x18, 0x96, 0x05, 0x9A, 0x07, 0x12, 0x80, 0xE2,
-   0xEB, 0x27, 0xB2, 0x75, 0x09, 0x83, 0x2C, 0x1A, 0x1B, 0x6E, 0x5A, 0xA0,
-   0x52, 0x3B, 0xD6, 0xB3, 0x29, 0xE3, 0x2F, 0x84, 0x53, 0xD1, 0x00, 0xED,
-   0x20, 0xFC, 0xB1, 0x5B, 0x6A, 0xCB, 0xBE, 0x39, 0x4A, 0x4C, 0x58, 0xCF,
-   0xD0, 0xEF, 0xAA, 0xFB, 0x43, 0x4D, 0x33, 0x85, 0x45, 0xF9, 0x02, 0x7F,
-   0x50, 0x3C, 0x9F, 0xA8, 0x51, 0xA3, 0x40, 0x8F, 0x92, 0x9D, 0x38, 0xF5,
-   0xBC, 0xB6, 0xDA, 0x21, 0x10, 0xFF, 0xF3, 0xD2, 0xCD, 0x0C, 0x13, 0xEC,
-   0x5F, 0x97, 0x44, 0x17, 0xC4, 0xA7, 0x7E, 0x3D, 0x64, 0x5D, 0x19, 0x73,
-   0x60, 0x81, 0x4F, 0xDC, 0x22, 0x2A, 0x90, 0x88, 0x46, 0xEE, 0xB8, 0x14,
-   0xDE, 0x5E, 0x0B, 0xDB, 0xE0, 0x32, 0x3A, 0x0A, 0x49, 0x06, 0x24, 0x5C,
-   0xC2, 0xD3, 0xAC, 0x62, 0x91, 0x95, 0xE4, 0x79, 0xE7, 0xC8, 0x37, 0x6D,
-   0x8D, 0xD5, 0x4E, 0xA9, 0x6C, 0x56, 0xF4, 0xEA, 0x65, 0x7A, 0xAE, 0x08,
-   0xBA, 0x78, 0x25, 0x2E, 0x1C, 0xA6, 0xB4, 0xC6, 0xE8, 0xDD, 0x74, 0x1F,
-   0x4B, 0xBD, 0x8B, 0x8A, 0x70, 0x3E, 0xB5, 0x66, 0x48, 0x03, 0xF6, 0x0E,
-   0x61, 0x35, 0x57, 0xB9, 0x86, 0xC1, 0x1D, 0x9E, 0xE1, 0xF8, 0x98, 0x11,
-   0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
-   0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F,
-   0xB0, 0x54, 0xBB, 0x16 };
 
 alignas(64)
 const uint8_t SD[256] = {
@@ -103,7 +42,6 @@ const uint8_t SD[256] = {
    0x55, 0x21, 0x0C, 0x7D };
 
 inline constexpr uint8_t xtime(uint8_t s) { return static_cast<uint8_t>(s << 1) ^ ((s >> 7) * 0x1B); }
-inline constexpr uint8_t xtime3(uint8_t s) { return xtime(s) ^ s; }
 
 inline uint32_t InvMixColumn(uint8_t s1)
    {
@@ -118,8 +56,8 @@ inline uint32_t InvMixColumn(uint8_t s1)
    }
 
 /*
-This is a bitsliced AES sbox computation which can execute up
-to 32 parallel sbox computations.
+This is an AES sbox circuit which can execute in bitsliced mode up to 32x in
+parallel.
 
 The circuit is from "A depth-16 circuit for the AES S-box" by Boyar
 and Peralta (https://eprint.iacr.org/2011/332.pdf)
@@ -318,31 +256,196 @@ inline uint32_t SE_word(uint32_t x)
    return x;
    }
 
-const uint32_t* AES_TE()
+inline void bit_transpose(uint32_t B[8])
    {
-   class TE_Table final
+   swap_bits<uint32_t>(B[1], B[0], 0x55555555, 1);
+   swap_bits<uint32_t>(B[3], B[2], 0x55555555, 1);
+   swap_bits<uint32_t>(B[5], B[4], 0x55555555, 1);
+   swap_bits<uint32_t>(B[7], B[6], 0x55555555, 1);
+
+   swap_bits<uint32_t>(B[2], B[0], 0x33333333, 2);
+   swap_bits<uint32_t>(B[3], B[1], 0x33333333, 2);
+   swap_bits<uint32_t>(B[6], B[4], 0x33333333, 2);
+   swap_bits<uint32_t>(B[7], B[5], 0x33333333, 2);
+
+   swap_bits<uint32_t>(B[4], B[0], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[5], B[1], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[6], B[2], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[7], B[3], 0x0F0F0F0F, 4);
+   }
+
+inline void ks_expand(uint32_t B[8], const uint32_t K[], size_t r)
+   {
+   /*
+   This is bit_transpose of K[r..r+4] || K[r..r+4], we can save some computation
+   due to knowing the first and second halves are the same data.
+   */
+   for(size_t i = 0; i != 4; ++i)
+      B[i] = K[r + i];
+
+   swap_bits<uint32_t>(B[1], B[0], 0x55555555, 1);
+   swap_bits<uint32_t>(B[3], B[2], 0x55555555, 1);
+
+   swap_bits<uint32_t>(B[2], B[0], 0x33333333, 2);
+   swap_bits<uint32_t>(B[3], B[1], 0x33333333, 2);
+
+   B[4] = B[0];
+   B[5] = B[1];
+   B[6] = B[2];
+   B[7] = B[3];
+
+   swap_bits<uint32_t>(B[4], B[0], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[5], B[1], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[6], B[2], 0x0F0F0F0F, 4);
+   swap_bits<uint32_t>(B[7], B[3], 0x0F0F0F0F, 4);
+   }
+
+inline void shift_rows(uint32_t B[8])
+   {
+   for(size_t i = 0; i != 8; ++i)
       {
-      public:
-         TE_Table()
-            {
-            uint32_t* p = reinterpret_cast<uint32_t*>(&data);
-            for(size_t i = 0; i != 256; ++i)
-               {
-               const uint8_t s = SE[i];
-               p[i] = make_uint32(xtime(s), s, s, xtime3(s));
-               }
-            }
+      uint32_t x = B[i];
+      // 3 0 1 2 7 4 5 6 10 11 8 9 14 15 12 13 17 18 19 16 21 22 23 20 24 25 26 27 28 29 30 31
+      x = bit_permute_step<uint32_t>(x, 0x00223311, 2);  // Butterfly, stage 1
+      x = bit_permute_step<uint32_t>(x, 0x00550055, 1);  // Butterfly, stage 0
+      B[i] = x;
+      }
+   }
 
-         const uint32_t* ptr() const
-            {
-            return reinterpret_cast<const uint32_t*>(&data);
-            }
-      private:
-         std::aligned_storage<256*sizeof(uint32_t), 64>::type data;
-      };
+inline void mix_columns(uint32_t B[8])
+   {
+   /*
+   This is equivalent to what T-tables mix columns looks like when you decompose it:
 
-   static TE_Table table;
-   return table.ptr();
+   // carry high bits in B[0] to positions in 0x1b == 0b11011
+   const uint32_t X2[8] = {
+      B[1],
+      B[2],
+      B[3],
+      B[4] ^ B[0],
+      B[5] ^ B[0],
+      B[6],
+      B[7] ^ B[0],
+      B[0],
+   };
+   for(size_t i = 0; i != 8; i++)
+      {
+      const uint32_t X3 = B[i] ^ X2[i];
+
+      uint8_t b0 = get_byte(0, X2[i]) ^ get_byte(1, X3) ^ get_byte(2, B[i]) ^ get_byte(3, B[i]);
+      uint8_t b1 = get_byte(0, B[i]) ^ get_byte(1, X2[i]) ^ get_byte(2, X3) ^ get_byte(3, B[i]);
+      uint8_t b2 = get_byte(0, B[i]) ^ get_byte(1, B[i]) ^ get_byte(2, X2[i]) ^ get_byte(3, X3);
+      uint8_t b3 = get_byte(0, X3) ^ get_byte(1, B[i]) ^ get_byte(2, B[i]) ^ get_byte(3, X2[i]);
+
+      B[i] = make_uint32(b0, b1, b2, b3);
+      }
+
+   Notice that each byte of B[i], X2[i] and X3 is used once in each column, so
+   we can instead effect the selections by rotations and do the XORs in word units
+   instead of bytes. Unrolling and expanding the definition of X2 then combining
+   similar terms results in the expressions below. The end result is very
+   similar to the MixColumns found in section 4.4 and Appendix A of "Faster and
+   Timing-Attack Resistant AES-GCM" (https://eprint.iacr.org/2009/129.pdf) except
+   suited to our word size, and of course we cannot make use of word/byte shuffles
+   to perform the rotations.
+   */
+
+   const uint32_t R24[8] = {
+      rotr<24>(B[0]),
+      rotr<24>(B[1]),
+      rotr<24>(B[2]),
+      rotr<24>(B[3]),
+      rotr<24>(B[4]),
+      rotr<24>(B[5]),
+      rotr<24>(B[6]),
+      rotr<24>(B[7])
+   };
+
+   const uint32_t R8_16[8] = {
+      rotr<8>(B[0]) ^ rotr<16>(B[0]),
+      rotr<8>(B[1]) ^ rotr<16>(B[1]),
+      rotr<8>(B[2]) ^ rotr<16>(B[2]),
+      rotr<8>(B[3]) ^ rotr<16>(B[3]),
+      rotr<8>(B[4]) ^ rotr<16>(B[4]),
+      rotr<8>(B[5]) ^ rotr<16>(B[5]),
+      rotr<8>(B[6]) ^ rotr<16>(B[6]),
+      rotr<8>(B[7]) ^ rotr<16>(B[7])
+   };
+
+   const uint32_t B0 = B[1] ^ R24[0] ^ R24[1] ^ R8_16[0];
+   B[1] = B[2] ^ R24[1] ^ R24[2] ^ R8_16[1];
+   B[2] = B[3] ^ R24[2] ^ R24[3] ^ R8_16[2];
+   B[3] = B[0] ^ B[4] ^ R24[0] ^ R24[3] ^ R24[4] ^ R8_16[3];
+   B[4] = B[5] ^ B[0] ^ R24[0] ^ R24[4] ^ R24[5] ^ R8_16[4];
+   B[5] = B[6] ^ R24[5] ^ R24[6] ^ R8_16[5];
+   B[6] = B[7] ^ B[0] ^ R24[0] ^ R24[6] ^ R24[7] ^ R8_16[6];
+   B[7] = B[0] ^ R24[0] ^ R24[7] ^ R8_16[7];
+   B[0] = B0;
+   }
+
+/*
+* AES Encryption
+*/
+void aes_encrypt_n(const uint8_t in[], uint8_t out[],
+                   size_t blocks,
+                   const secure_vector<uint32_t>& EK,
+                   const secure_vector<uint8_t>& ME)
+   {
+   BOTAN_ASSERT(EK.size() && ME.size() == 16, "Key was set");
+   BOTAN_ASSERT(EK.size() == 40 || EK.size() == 48 || EK.size() == 56, "Expected EK size");
+
+   uint32_t KS[56*2] = { 0 }; // actual maximum is EK.size() * 2
+   for(size_t i = 4; i < EK.size(); i += 4)
+      {
+      ks_expand(&KS[2*(i-4)], EK.data(), i);
+      }
+
+   while(blocks > 0)
+      {
+      const size_t this_loop = (blocks >= 2) ? 2 : 1;
+
+      uint32_t B[8] = { 0 };
+
+      load_be(B, in, this_loop*4);
+
+      B[0] ^= EK[0];
+      B[1] ^= EK[1];
+      B[2] ^= EK[2];
+      B[3] ^= EK[3];
+      B[4] ^= EK[0];
+      B[5] ^= EK[1];
+      B[6] ^= EK[2];
+      B[7] ^= EK[3];
+
+      bit_transpose(B);
+
+      for(size_t r = 4; r < EK.size(); r += 4)
+         {
+         AES_SBOX(B);
+         shift_rows(B);
+         mix_columns(B);
+
+         for(size_t i = 0; i != 8; ++i)
+            B[i] ^= KS[2*(r-4) + i];
+         }
+
+      // Final round:
+      AES_SBOX(B);
+      shift_rows(B);
+      bit_transpose(B);
+
+      for(size_t i = 0; i != 8; ++i)
+         B[i] ^= load_be<uint32_t>(ME.data(), i % 4);
+
+      if(this_loop == 2)
+         store_be(out, B[0], B[1], B[2], B[3], B[4], B[5], B[6], B[7]);
+      else
+         store_be(out, B[0], B[1], B[2], B[3]);
+
+      in += this_loop*16;
+      out += this_loop*16;
+      blocks -= this_loop;
+      }
    }
 
 const uint32_t* AES_TD()
@@ -371,85 +474,11 @@ const uint32_t* AES_TD()
    return table.ptr();
    }
 
-#define AES_T(T, K, V0, V1, V2, V3)                                     \
-   (K ^ T[get_byte(0, V0)] ^                                            \
-    rotr< 8>(T[get_byte(1, V1)]) ^                                      \
-    rotr<16>(T[get_byte(2, V2)]) ^                                      \
+#define AES_T(T, K, V0, V1, V2, V3)             \
+   (K ^ T[get_byte(0, V0)] ^                    \
+    rotr< 8>(T[get_byte(1, V1)]) ^              \
+    rotr<16>(T[get_byte(2, V2)]) ^              \
     rotr<24>(T[get_byte(3, V3)]))
-
-/*
-* AES Encryption
-*/
-void aes_encrypt_n(const uint8_t in[], uint8_t out[],
-                   size_t blocks,
-                   const secure_vector<uint32_t>& EK,
-                   const secure_vector<uint8_t>& ME)
-   {
-   BOTAN_ASSERT(EK.size() && ME.size() == 16, "Key was set");
-
-   const size_t cache_line_size = CPUID::cache_line_size();
-   const uint32_t* TE = AES_TE();
-
-   // Hit every cache line of TE
-   volatile uint32_t Z = 0;
-   for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
-      {
-      Z |= TE[i];
-      }
-   Z &= TE[82]; // this is zero, which hopefully the compiler cannot deduce
-
-   for(size_t i = 0; i < blocks; ++i)
-      {
-      uint32_t T0, T1, T2, T3;
-      load_be(in + 16*i, T0, T1, T2, T3);
-
-      T0 ^= EK[0];
-      T1 ^= EK[1];
-      T2 ^= EK[2];
-      T3 ^= EK[3];
-
-      T0 ^= Z;
-
-      uint32_t B0 = AES_T(TE, EK[4], T0, T1, T2, T3);
-      uint32_t B1 = AES_T(TE, EK[5], T1, T2, T3, T0);
-      uint32_t B2 = AES_T(TE, EK[6], T2, T3, T0, T1);
-      uint32_t B3 = AES_T(TE, EK[7], T3, T0, T1, T2);
-
-      for(size_t r = 2*4; r < EK.size(); r += 2*4)
-         {
-         T0 = AES_T(TE, EK[r  ], B0, B1, B2, B3);
-         T1 = AES_T(TE, EK[r+1], B1, B2, B3, B0);
-         T2 = AES_T(TE, EK[r+2], B2, B3, B0, B1);
-         T3 = AES_T(TE, EK[r+3], B3, B0, B1, B2);
-
-         B0 = AES_T(TE, EK[r+4], T0, T1, T2, T3);
-         B1 = AES_T(TE, EK[r+5], T1, T2, T3, T0);
-         B2 = AES_T(TE, EK[r+6], T2, T3, T0, T1);
-         B3 = AES_T(TE, EK[r+7], T3, T0, T1, T2);
-         }
-
-      /*
-      * Use TE[x] >> 8 instead of SE[] so encryption only references a single
-      * lookup table.
-      */
-      out[16*i+ 0] = static_cast<uint8_t>(TE[get_byte(0, B0)] >> 8) ^ ME[0];
-      out[16*i+ 1] = static_cast<uint8_t>(TE[get_byte(1, B1)] >> 8) ^ ME[1];
-      out[16*i+ 2] = static_cast<uint8_t>(TE[get_byte(2, B2)] >> 8) ^ ME[2];
-      out[16*i+ 3] = static_cast<uint8_t>(TE[get_byte(3, B3)] >> 8) ^ ME[3];
-      out[16*i+ 4] = static_cast<uint8_t>(TE[get_byte(0, B1)] >> 8) ^ ME[4];
-      out[16*i+ 5] = static_cast<uint8_t>(TE[get_byte(1, B2)] >> 8) ^ ME[5];
-      out[16*i+ 6] = static_cast<uint8_t>(TE[get_byte(2, B3)] >> 8) ^ ME[6];
-      out[16*i+ 7] = static_cast<uint8_t>(TE[get_byte(3, B0)] >> 8) ^ ME[7];
-      out[16*i+ 8] = static_cast<uint8_t>(TE[get_byte(0, B2)] >> 8) ^ ME[8];
-      out[16*i+ 9] = static_cast<uint8_t>(TE[get_byte(1, B3)] >> 8) ^ ME[9];
-      out[16*i+10] = static_cast<uint8_t>(TE[get_byte(2, B0)] >> 8) ^ ME[10];
-      out[16*i+11] = static_cast<uint8_t>(TE[get_byte(3, B1)] >> 8) ^ ME[11];
-      out[16*i+12] = static_cast<uint8_t>(TE[get_byte(0, B3)] >> 8) ^ ME[12];
-      out[16*i+13] = static_cast<uint8_t>(TE[get_byte(1, B0)] >> 8) ^ ME[13];
-      out[16*i+14] = static_cast<uint8_t>(TE[get_byte(2, B1)] >> 8) ^ ME[14];
-      out[16*i+15] = static_cast<uint8_t>(TE[get_byte(3, B2)] >> 8) ^ ME[15];
-      }
-   }
 
 /*
 * AES Decryption
@@ -642,7 +671,15 @@ size_t aes_parallelism()
       }
 #endif
 
-   return 1;
+#if defined(BOTAN_HAS_AES_VPERM)
+   if(CPUID::has_vperm())
+      {
+      return 2;
+      }
+#endif
+
+   // bitsliced:
+   return 2;
    }
 
 const char* aes_provider()
