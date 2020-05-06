@@ -24,22 +24,6 @@ typedef __vector unsigned char Altivec8x16;
 
 namespace {
 
-inline Altivec64x2 load_key(const uint32_t key[])
-   {
-   Altivec32x4 vec = vec_vsx_ld(0, key);
-
-   if(CPUID::is_little_endian())
-      {
-      const Altivec8x16 mask = {12,13,14,15, 8,9,10,11, 4,5,6,7, 0,1,2,3};
-      const Altivec8x16 zero = {0};
-      return (Altivec64x2)vec_perm((Altivec8x16)vec, zero, mask);
-      }
-   else
-      {
-      return (Altivec64x2)vec;
-      }
-   }
-
 inline Altivec8x16 reverse_vec(Altivec8x16 src)
    {
    if(CPUID::is_little_endian())
@@ -52,6 +36,11 @@ inline Altivec8x16 reverse_vec(Altivec8x16 src)
       {
       return src;
       }
+   }
+
+inline Altivec64x2 load_key(const uint32_t key[])
+   {
+   return (Altivec64x2)reverse_vec((Altivec8x16)vec_vsx_ld(0, key));;
    }
 
 inline Altivec64x2 load_block(const uint8_t src[])

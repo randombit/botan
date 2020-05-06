@@ -644,7 +644,8 @@ inline uint32_t SE_word(uint32_t x)
 
 void aes_key_schedule(const uint8_t key[], size_t length,
                       secure_vector<uint32_t>& EK,
-                      secure_vector<uint32_t>& DK)
+                      secure_vector<uint32_t>& DK,
+                      bool bswap_keys = false)
    {
    static const uint32_t RC[10] = {
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
@@ -706,17 +707,14 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    copy_mem(EK.data(), XEK.data(), EK.size());
    copy_mem(DK.data(), XDK.data(), DK.size());
 
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
+   if(bswap_keys)
       {
-      // ARM needs the subkeys to be byte reversed
-
+      // HW AES on little endian needs the subkeys to be byte reversed
       for(size_t i = 0; i != EK.size(); ++i)
          EK[i] = reverse_bytes(EK[i]);
       for(size_t i = 0; i != DK.size(); ++i)
          DK[i] = reverse_bytes(DK[i]);
       }
-#endif
 
    CT::unpoison(EK.data(), EK.size());
    CT::unpoison(DK.data(), DK.size());
@@ -826,8 +824,7 @@ void AES_128::key_schedule(const uint8_t key[], size_t length)
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes())
       {
-      // POWER and ARM use the standard key schedule code
-      return aes_key_schedule(key, length, m_EK, m_DK);
+      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
       }
 #endif
 
@@ -901,8 +898,7 @@ void AES_192::key_schedule(const uint8_t key[], size_t length)
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes())
       {
-      // POWER and ARM use the standard key schedule code
-      return aes_key_schedule(key, length, m_EK, m_DK);
+      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
       }
 #endif
 
@@ -976,8 +972,7 @@ void AES_256::key_schedule(const uint8_t key[], size_t length)
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes())
       {
-      // POWER and ARM use the standard key schedule code
-      return aes_key_schedule(key, length, m_EK, m_DK);
+      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
       }
 #endif
 
