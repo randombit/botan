@@ -484,9 +484,6 @@ inline void inv_shift_rows(uint32_t B[8])
 
 inline void mix_columns(uint32_t B[8])
    {
-   /*
-   This is equivalent to what T-tables mix columns looks like when you decompose it:
-
    // carry high bits in B[0] to positions in 0x1b == 0b11011
    const uint32_t X2[8] = {
       B[1],
@@ -498,59 +495,12 @@ inline void mix_columns(uint32_t B[8])
       B[7] ^ B[0],
       B[0],
    };
+
    for(size_t i = 0; i != 8; i++)
       {
       const uint32_t X3 = B[i] ^ X2[i];
-
-      uint8_t b0 = get_byte(0, X2[i]) ^ get_byte(1, X3) ^ get_byte(2, B[i]) ^ get_byte(3, B[i]);
-      uint8_t b1 = get_byte(0, B[i]) ^ get_byte(1, X2[i]) ^ get_byte(2, X3) ^ get_byte(3, B[i]);
-      uint8_t b2 = get_byte(0, B[i]) ^ get_byte(1, B[i]) ^ get_byte(2, X2[i]) ^ get_byte(3, X3);
-      uint8_t b3 = get_byte(0, X3) ^ get_byte(1, B[i]) ^ get_byte(2, B[i]) ^ get_byte(3, X2[i]);
-
-      B[i] = make_uint32(b0, b1, b2, b3);
+      B[i] = X2[i] ^ rotr<8>(B[i]) ^ rotr<16>(B[i]) ^ rotr<24>(X3);
       }
-
-   Notice that each byte of B[i], X2[i] and X3 is used once in each column, so
-   we can instead effect the selections by rotations and do the XORs in word units
-   instead of bytes. Unrolling and expanding the definition of X2 then combining
-   similar terms results in the expressions below. The end result is very
-   similar to the MixColumns found in section 4.4 and Appendix A of "Faster and
-   Timing-Attack Resistant AES-GCM" (https://eprint.iacr.org/2009/129.pdf) except
-   suited to our word size, and of course we cannot make use of word/byte shuffles
-   to perform the rotations.
-   */
-
-   const uint32_t R24[8] = {
-      rotr<24>(B[0]),
-      rotr<24>(B[1]),
-      rotr<24>(B[2]),
-      rotr<24>(B[3]),
-      rotr<24>(B[4]),
-      rotr<24>(B[5]),
-      rotr<24>(B[6]),
-      rotr<24>(B[7])
-   };
-
-   const uint32_t R8_16[8] = {
-      rotr<8>(B[0] ^ rotr<8>(B[0])),
-      rotr<8>(B[1] ^ rotr<8>(B[1])),
-      rotr<8>(B[2] ^ rotr<8>(B[2])),
-      rotr<8>(B[3] ^ rotr<8>(B[3])),
-      rotr<8>(B[4] ^ rotr<8>(B[4])),
-      rotr<8>(B[5] ^ rotr<8>(B[5])),
-      rotr<8>(B[6] ^ rotr<8>(B[6])),
-      rotr<8>(B[7] ^ rotr<8>(B[7])),
-   };
-
-   const uint32_t B0 = B[1] ^ R24[0] ^ R24[1] ^ R8_16[0];
-   B[1] = B[2] ^ R24[1] ^ R24[2] ^ R8_16[1];
-   B[2] = B[3] ^ R24[2] ^ R24[3] ^ R8_16[2];
-   B[3] = B[0] ^ B[4] ^ R24[0] ^ R24[3] ^ R24[4] ^ R8_16[3];
-   B[4] = B[5] ^ B[0] ^ R24[0] ^ R24[4] ^ R24[5] ^ R8_16[4];
-   B[5] = B[6] ^ R24[5] ^ R24[6] ^ R8_16[5];
-   B[6] = B[7] ^ B[0] ^ R24[0] ^ R24[6] ^ R24[7] ^ R8_16[6];
-   B[7] = B[0] ^ R24[0] ^ R24[7] ^ R8_16[7];
-   B[0] = B0;
    }
 
 void inv_mix_columns(uint32_t B[8])
