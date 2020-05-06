@@ -112,7 +112,7 @@ inline void store_blocks(Altivec64x2 B0, Altivec64x2 B1,
 }
 
 BOTAN_FUNC_ISA("crypto")
-void AES_128::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const Altivec64x2 K0  = load_key(&m_EK[0]);
    const Altivec64x2 K1  = load_key(&m_EK[4]);
@@ -176,7 +176,7 @@ void AES_128::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    }
 
 BOTAN_FUNC_ISA("crypto")
-void AES_128::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const Altivec64x2 K0  = load_key(&m_EK[40]);
    const Altivec64x2 K1  = load_key(&m_EK[36]);
@@ -240,7 +240,7 @@ void AES_128::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    }
 
 BOTAN_FUNC_ISA("crypto")
-void AES_192::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const Altivec64x2 K0  = load_key(&m_EK[0]);
    const Altivec64x2 K1  = load_key(&m_EK[4]);
@@ -310,7 +310,7 @@ void AES_192::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    }
 
 BOTAN_FUNC_ISA("crypto")
-void AES_192::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const Altivec64x2 K0  = load_key(&m_EK[48]);
    const Altivec64x2 K1  = load_key(&m_EK[44]);
@@ -380,7 +380,7 @@ void AES_192::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    }
 
 BOTAN_FUNC_ISA("crypto")
-void AES_256::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const Altivec64x2 K0  = load_key(&m_EK[0]);
    const Altivec64x2 K1  = load_key(&m_EK[4]);
@@ -456,7 +456,7 @@ void AES_256::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    }
 
 BOTAN_FUNC_ISA("crypto")
-void AES_256::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const Altivec64x2 K0  = load_key(&m_EK[56]);
    const Altivec64x2 K1  = load_key(&m_EK[52]);

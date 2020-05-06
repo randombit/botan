@@ -13,6 +13,10 @@
 
 namespace Botan {
 
+#if defined(BOTAN_HAS_AES_POWER8) || defined(BOTAN_HAS_AES_ARMV8) || defined(BOTAN_HAS_AES_NI)
+   #define BOTAN_HAS_HW_AES_SUPPORT
+#endif
+
 namespace {
 
 /*
@@ -721,31 +725,17 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
 size_t aes_parallelism()
    {
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return 4;
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
-      return 4;
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
-      {
-      return 4;
+      return 4; // pipelined
       }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm())
       {
-      return 2;
+      return 2; // pipelined
       }
 #endif
 
@@ -755,24 +745,10 @@ size_t aes_parallelism()
 
 const char* aes_provider()
    {
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return "aesni";
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
-      return "power8";
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
-      {
-      return "armv8";
+      return "cpu";
       }
 #endif
 
@@ -800,24 +776,10 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_EK.empty() == false);
 
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aesni_encrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
-      {
-      return armv8_encrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
-      return power8_encrypt_n(in, out, blocks);
+      return hw_aes_encrypt_n(in, out, blocks);
       }
 #endif
 
@@ -835,24 +797,10 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_DK.empty() == false);
 
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aesni_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
-      {
-      return armv8_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
-      return power8_decrypt_n(in, out, blocks);
+      return hw_aes_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -875,16 +823,10 @@ void AES_128::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
+      // POWER and ARM use the standard key schedule code
       return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
@@ -909,24 +851,10 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_EK.empty() == false);
 
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aesni_encrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
-      {
-      return armv8_encrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
-      return power8_encrypt_n(in, out, blocks);
+      return hw_aes_encrypt_n(in, out, blocks);
       }
 #endif
 
@@ -944,24 +872,10 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_DK.empty() == false);
 
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aesni_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
-      {
-      return armv8_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
-      return power8_decrypt_n(in, out, blocks);
+      return hw_aes_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -984,16 +898,10 @@ void AES_192::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
+      // POWER and ARM use the standard key schedule code
       return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
@@ -1018,24 +926,10 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_EK.empty() == false);
 
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aesni_encrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
-      {
-      return armv8_encrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
-      return power8_encrypt_n(in, out, blocks);
+      return hw_aes_encrypt_n(in, out, blocks);
       }
 #endif
 
@@ -1053,24 +947,10 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_DK.empty() == false);
 
-#if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aesni_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
-      {
-      return armv8_decrypt_n(in, out, blocks);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
-      return power8_decrypt_n(in, out, blocks);
+      return hw_aes_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -1093,16 +973,10 @@ void AES_256::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-#if defined(BOTAN_HAS_AES_ARMV8)
-   if(CPUID::has_arm_aes())
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   if(CPUID::has_hw_aes())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK);
-      }
-#endif
-
-#if defined(BOTAN_HAS_AES_POWER8)
-   if(CPUID::has_power_crypto())
-      {
+      // POWER and ARM use the standard key schedule code
       return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
