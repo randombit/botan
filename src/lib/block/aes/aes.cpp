@@ -660,43 +660,43 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    CT::poison(key, length);
 
-   secure_vector<uint32_t> XEK(length + 32);
-   secure_vector<uint32_t> XDK(length + 32);
+   EK.resize(length + 32);
+   DK.resize(length + 32);
 
    for(size_t i = 0; i != X; ++i)
-      XEK[i] = load_be<uint32_t>(key, i);
+      EK[i] = load_be<uint32_t>(key, i);
 
    for(size_t i = X; i < 4*(rounds+1); i += X)
       {
-      XEK[i] = XEK[i-X] ^ RC[(i-X)/X] ^ rotl<8>(SE_word(XEK[i-1]));
+      EK[i] = EK[i-X] ^ RC[(i-X)/X] ^ rotl<8>(SE_word(EK[i-1]));
 
       for(size_t j = 1; j != X; ++j)
          {
-         XEK[i+j] = XEK[i+j-X];
+         EK[i+j] = EK[i+j-X];
 
          if(X == 8 && j == 4)
-            XEK[i+j] ^= SE_word(XEK[i+j-1]);
+            EK[i+j] ^= SE_word(EK[i+j-1]);
          else
-            XEK[i+j] ^= XEK[i+j-1];
+            EK[i+j] ^= EK[i+j-1];
          }
       }
 
    for(size_t i = 0; i != 4*(rounds+1); i += 4)
       {
-      XDK[i  ] = XEK[4*rounds-i  ];
-      XDK[i+1] = XEK[4*rounds-i+1];
-      XDK[i+2] = XEK[4*rounds-i+2];
-      XDK[i+3] = XEK[4*rounds-i+3];
+      DK[i  ] = EK[4*rounds-i  ];
+      DK[i+1] = EK[4*rounds-i+1];
+      DK[i+2] = EK[4*rounds-i+2];
+      DK[i+3] = EK[4*rounds-i+3];
       }
 
    for(size_t i = 4; i != length + 24; ++i)
       {
-      const uint8_t s0 = get_byte(0, XDK[i]);
-      const uint8_t s1 = get_byte(1, XDK[i]);
-      const uint8_t s2 = get_byte(2, XDK[i]);
-      const uint8_t s3 = get_byte(3, XDK[i]);
+      const uint8_t s0 = get_byte(0, DK[i]);
+      const uint8_t s1 = get_byte(1, DK[i]);
+      const uint8_t s2 = get_byte(2, DK[i]);
+      const uint8_t s3 = get_byte(3, DK[i]);
 
-      XDK[i] = InvMixColumn(s0) ^
+      DK[i] = InvMixColumn(s0) ^
          rotr<8>(InvMixColumn(s1)) ^
          rotr<16>(InvMixColumn(s2)) ^
          rotr<24>(InvMixColumn(s3));
@@ -704,8 +704,6 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    EK.resize(length + 24 + 4);
    DK.resize(length + 24 + 4);
-   copy_mem(EK.data(), XEK.data(), EK.size());
-   copy_mem(DK.data(), XDK.data(), DK.size());
 
    if(bswap_keys)
       {
