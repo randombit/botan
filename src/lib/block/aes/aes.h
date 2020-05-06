@@ -56,7 +56,6 @@ class BOTAN_PUBLIC_API(2,0) AES_128 final : public Block_Cipher_Fixed_Params<16,
 #endif
 
       secure_vector<uint32_t> m_EK, m_DK;
-      secure_vector<uint8_t> m_ME, m_MD;
    };
 
 /**
@@ -101,7 +100,6 @@ class BOTAN_PUBLIC_API(2,0) AES_192 final : public Block_Cipher_Fixed_Params<16,
       void key_schedule(const uint8_t key[], size_t length) override;
 
       secure_vector<uint32_t> m_EK, m_DK;
-      secure_vector<uint8_t> m_ME, m_MD;
    };
 
 /**
@@ -147,7 +145,6 @@ class BOTAN_PUBLIC_API(2,0) AES_256 final : public Block_Cipher_Fixed_Params<16,
       void key_schedule(const uint8_t key[], size_t length) override;
 
       secure_vector<uint32_t> m_EK, m_DK;
-      secure_vector<uint8_t> m_ME, m_MD;
    };
 
 }

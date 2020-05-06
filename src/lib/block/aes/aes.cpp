@@ -483,13 +483,11 @@ void inv_mix_columns(uint32_t B[8])
 */
 void aes_encrypt_n(const uint8_t in[], uint8_t out[],
                    size_t blocks,
-                   const secure_vector<uint32_t>& EK,
-                   const secure_vector<uint8_t>& ME)
+                   const secure_vector<uint32_t>& EK)
    {
-   BOTAN_ASSERT(EK.size() && ME.size() == 16, "Key was set");
-   BOTAN_ASSERT(EK.size() == 40 || EK.size() == 48 || EK.size() == 56, "Expected EK size");
+   BOTAN_ASSERT(EK.size() == 44 || EK.size() == 52 || EK.size() == 60, "Key was set");
 
-   const size_t rounds = EK.size() / 4;
+   const size_t rounds = (EK.size() - 4) / 4;
 
    uint32_t KS[13*8] = { 0 }; // actual maximum is (rounds - 1) * 8
    for(size_t i = 0; i < rounds - 1; i += 1)
@@ -526,7 +524,7 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       bit_transpose(B);
 
       for(size_t i = 0; i != 8; ++i)
-         B[i] ^= load_be<uint32_t>(ME.data(), i % 4);
+         B[i] ^= EK[4*rounds + i % 4];
 
       if(this_loop == 2)
          store_be(out, B[0], B[1], B[2], B[3], B[4], B[5], B[6], B[7]);
@@ -543,12 +541,11 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 * AES Decryption
 */
 void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
-                   const secure_vector<uint32_t>& DK,
-                   const secure_vector<uint8_t>& MD)
+                   const secure_vector<uint32_t>& DK)
    {
-   BOTAN_ASSERT(DK.size() && MD.size() == 16, "Key was set");
+   BOTAN_ASSERT(DK.size() == 44 || DK.size() == 52 || DK.size() == 60, "Key was set");
 
-   const size_t rounds = DK.size() / 4;
+   const size_t rounds = (DK.size() - 4) / 4;
 
    uint32_t KS[13*8] = { 0 }; // actual maximum is (rounds - 1) * 8
    for(size_t i = 0; i < rounds - 1; i += 1)
@@ -585,7 +582,7 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       bit_transpose(B);
 
       for(size_t i = 0; i != 8; ++i)
-         B[i] ^= load_be<uint32_t>(MD.data(), i % 4);
+         B[i] ^= DK[4*rounds + i % 4];
 
       if(this_loop == 2)
          store_be(out, B[0], B[1], B[2], B[3], B[4], B[5], B[6], B[7]);
@@ -643,9 +640,7 @@ inline uint32_t SE_word(uint32_t x)
 
 void aes_key_schedule(const uint8_t key[], size_t length,
                       secure_vector<uint32_t>& EK,
-                      secure_vector<uint32_t>& DK,
-                      secure_vector<uint8_t>& ME,
-                      secure_vector<uint8_t>& MD)
+                      secure_vector<uint32_t>& DK)
    {
    static const uint32_t RC[10] = {
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
@@ -702,17 +697,8 @@ void aes_key_schedule(const uint8_t key[], size_t length,
          rotr<24>(InvMixColumn(s3));
       }
 
-   ME.resize(16);
-   MD.resize(16);
-
-   for(size_t i = 0; i != 4; ++i)
-      {
-      store_be(XEK[i+4*rounds], &ME[4*i]);
-      store_be(XEK[i], &MD[4*i]);
-      }
-
-   EK.resize(length + 24);
-   DK.resize(length + 24);
+   EK.resize(length + 24 + 4);
+   DK.resize(length + 24 + 4);
    copy_mem(EK.data(), XEK.data(), EK.size());
    copy_mem(DK.data(), XDK.data(), DK.size());
 
@@ -730,8 +716,6 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    CT::unpoison(EK.data(), EK.size());
    CT::unpoison(DK.data(), DK.size());
-   CT::unpoison(ME.data(), ME.size());
-   CT::unpoison(MD.data(), MD.size());
    CT::unpoison(key, length);
    }
 
@@ -844,7 +828,7 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
+   aes_encrypt_n(in, out, blocks, m_EK);
    }
 
 void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
@@ -879,7 +863,7 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
+   aes_decrypt_n(in, out, blocks, m_DK);
    }
 
 void AES_128::key_schedule(const uint8_t key[], size_t length)
@@ -894,14 +878,14 @@ void AES_128::key_schedule(const uint8_t key[], size_t length)
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
 
 #if defined(BOTAN_HAS_AES_POWER8)
    if(CPUID::has_power_crypto())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
 
@@ -912,15 +896,13 @@ void AES_128::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+   aes_key_schedule(key, length, m_EK, m_DK);
    }
 
 void AES_128::clear()
    {
    zap(m_EK);
    zap(m_DK);
-   zap(m_ME);
-   zap(m_MD);
    }
 
 void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
@@ -955,7 +937,7 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
+   aes_encrypt_n(in, out, blocks, m_EK);
    }
 
 void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
@@ -990,7 +972,7 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
+   aes_decrypt_n(in, out, blocks, m_DK);
    }
 
 void AES_192::key_schedule(const uint8_t key[], size_t length)
@@ -1005,14 +987,14 @@ void AES_192::key_schedule(const uint8_t key[], size_t length)
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
 
 #if defined(BOTAN_HAS_AES_POWER8)
    if(CPUID::has_power_crypto())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
 
@@ -1023,15 +1005,13 @@ void AES_192::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+   aes_key_schedule(key, length, m_EK, m_DK);
    }
 
 void AES_192::clear()
    {
    zap(m_EK);
    zap(m_DK);
-   zap(m_ME);
-   zap(m_MD);
    }
 
 void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
@@ -1066,7 +1046,7 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
+   aes_encrypt_n(in, out, blocks, m_EK);
    }
 
 void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
@@ -1101,7 +1081,7 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
-   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
+   aes_decrypt_n(in, out, blocks, m_DK);
    }
 
 void AES_256::key_schedule(const uint8_t key[], size_t length)
@@ -1116,14 +1096,14 @@ void AES_256::key_schedule(const uint8_t key[], size_t length)
 #if defined(BOTAN_HAS_AES_ARMV8)
    if(CPUID::has_arm_aes())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
 
 #if defined(BOTAN_HAS_AES_POWER8)
    if(CPUID::has_power_crypto())
       {
-      return aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+      return aes_key_schedule(key, length, m_EK, m_DK);
       }
 #endif
 
@@ -1134,15 +1114,13 @@ void AES_256::key_schedule(const uint8_t key[], size_t length)
       }
 #endif
 
-   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
+   aes_key_schedule(key, length, m_EK, m_DK);
    }
 
 void AES_256::clear()
    {
    zap(m_EK);
    zap(m_DK);
-   zap(m_ME);
-   zap(m_MD);
    }
 
 }

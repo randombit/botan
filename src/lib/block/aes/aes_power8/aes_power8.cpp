@@ -124,7 +124,7 @@ void AES_128::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    const Altivec64x2 K7  = load_key(&m_EK[28]);
    const Altivec64x2 K8  = load_key(&m_EK[32]);
    const Altivec64x2 K9  = load_key(&m_EK[36]);
-   const Altivec64x2 K10 = load_block(m_ME.data());
+   const Altivec64x2 K10 = load_key(&m_EK[40]);
 
    while(blocks >= 4)
       {
@@ -178,7 +178,7 @@ void AES_128::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 BOTAN_FUNC_ISA("crypto")
 void AES_128::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const Altivec64x2 K0  = load_block(m_ME.data());
+   const Altivec64x2 K0  = load_key(&m_EK[40]);
    const Altivec64x2 K1  = load_key(&m_EK[36]);
    const Altivec64x2 K2  = load_key(&m_EK[32]);
    const Altivec64x2 K3  = load_key(&m_EK[28]);
@@ -254,7 +254,7 @@ void AES_192::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    const Altivec64x2 K9  = load_key(&m_EK[36]);
    const Altivec64x2 K10 = load_key(&m_EK[40]);
    const Altivec64x2 K11 = load_key(&m_EK[44]);
-   const Altivec64x2 K12 = load_block(m_ME.data());
+   const Altivec64x2 K12 = load_key(&m_EK[48]);
 
    while(blocks >= 4)
       {
@@ -312,7 +312,7 @@ void AES_192::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 BOTAN_FUNC_ISA("crypto")
 void AES_192::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const Altivec64x2 K0  = load_block(m_ME.data());
+   const Altivec64x2 K0  = load_key(&m_EK[48]);
    const Altivec64x2 K1  = load_key(&m_EK[44]);
    const Altivec64x2 K2  = load_key(&m_EK[40]);
    const Altivec64x2 K3  = load_key(&m_EK[36]);
@@ -396,7 +396,7 @@ void AES_256::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    const Altivec64x2 K11 = load_key(&m_EK[44]);
    const Altivec64x2 K12 = load_key(&m_EK[48]);
    const Altivec64x2 K13 = load_key(&m_EK[52]);
-   const Altivec64x2 K14 = load_block(m_ME.data());
+   const Altivec64x2 K14 = load_key(&m_EK[56]);
 
    while(blocks >= 4)
       {
@@ -458,7 +458,7 @@ void AES_256::power8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
 BOTAN_FUNC_ISA("crypto")
 void AES_256::power8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const Altivec64x2 K0  = load_block(m_ME.data());
+   const Altivec64x2 K0  = load_key(&m_EK[56]);
    const Altivec64x2 K1  = load_key(&m_EK[52]);
    const Altivec64x2 K2  = load_key(&m_EK[48]);
    const Altivec64x2 K3  = load_key(&m_EK[44]);
