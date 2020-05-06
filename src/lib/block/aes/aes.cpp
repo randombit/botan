@@ -489,10 +489,12 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
    BOTAN_ASSERT(EK.size() && ME.size() == 16, "Key was set");
    BOTAN_ASSERT(EK.size() == 40 || EK.size() == 48 || EK.size() == 56, "Expected EK size");
 
-   uint32_t KS[56*2] = { 0 }; // actual maximum is EK.size() * 2
-   for(size_t i = 4; i < EK.size(); i += 4)
+   const size_t rounds = EK.size() / 4;
+
+   uint32_t KS[13*8] = { 0 }; // actual maximum is (rounds - 1) * 8
+   for(size_t i = 0; i < rounds - 1; i += 1)
       {
-      ks_expand(&KS[2*(i-4)], EK.data(), i);
+      ks_expand(&KS[8*i], EK.data(), 4*i + 4);
       }
 
    while(blocks > 0)
@@ -508,14 +510,14 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 
       bit_transpose(B);
 
-      for(size_t r = 4; r < EK.size(); r += 4)
+      for(size_t r = 0; r != rounds - 1; ++r)
          {
          AES_SBOX(B);
          shift_rows(B);
          mix_columns(B);
 
          for(size_t i = 0; i != 8; ++i)
-            B[i] ^= KS[2*(r-4) + i];
+            B[i] ^= KS[8*r + i];
          }
 
       // Final round:
@@ -546,10 +548,12 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
    {
    BOTAN_ASSERT(DK.size() && MD.size() == 16, "Key was set");
 
-   uint32_t KS[56*2] = { 0 }; // actual maximum is DK.size() * 2
-   for(size_t i = 4; i < DK.size(); i += 4)
+   const size_t rounds = DK.size() / 4;
+
+   uint32_t KS[13*8] = { 0 }; // actual maximum is (rounds - 1) * 8
+   for(size_t i = 0; i < rounds - 1; i += 1)
       {
-      ks_expand(&KS[2*(i-4)], DK.data(), i);
+      ks_expand(&KS[8*i], DK.data(), 4*i + 4);
       }
 
    while(blocks > 0)
@@ -565,14 +569,14 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
 
       bit_transpose(B);
 
-      for(size_t r = 4; r < DK.size(); r += 4)
+      for(size_t r = 0; r != rounds - 1; ++r)
          {
          AES_INV_SBOX(B);
          inv_shift_rows(B);
          inv_mix_columns(B);
 
          for(size_t i = 0; i != 8; ++i)
-            B[i] ^= KS[2*(r-4) + i];
+            B[i] ^= KS[8*r + i];
          }
 
       // Final round:
