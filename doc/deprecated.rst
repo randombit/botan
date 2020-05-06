@@ -253,6 +253,11 @@ Other API deprecations
 - Using a default output length for "SHAKE-128" and "SHAKE-256". Instead,
   always specify the desired output length.
 
+- Currently if KDF interface is invoked with a requested output length larger
+  than supported by the KDF, it returns instead a truncated key. In a future
+  major release, instead if KDF is called with a length larger than it supports
+  an exception will be thrown.
+
 - The TLS constructors taking ``std::function`` for callbacks. Instead
   use the ``TLS::Callbacks`` interface.
 
