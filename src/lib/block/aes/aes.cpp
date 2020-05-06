@@ -227,6 +227,165 @@ void AES_SBOX(uint32_t V[8])
    V[7] = S7;
    }
 
+void AES_INV_SBOX(uint32_t V[8])
+   {
+   const uint32_t I0 = V[0];
+   const uint32_t I1 = V[1];
+   const uint32_t I2 = V[2];
+   const uint32_t I3 = V[3];
+   const uint32_t I4 = V[4];
+   const uint32_t I5 = V[5];
+   const uint32_t I6 = V[6];
+   const uint32_t I7 = V[7];
+
+   // Figure 6:  Top linear transform in reverse direction
+   const uint32_t T23 = I0 ^ I3;
+   const uint32_t T22 = ~(I1 ^ I3);
+   const uint32_t T2 = ~(I0 ^ I1);
+   const uint32_t T1 = I3 ^ I4;
+   const uint32_t T24 = ~(I4 ^ I7);
+   const uint32_t R5 = I6 ^ I7;
+   const uint32_t T8 = ~(I1 ^ T23);
+   const uint32_t T19 = T22 ^ R5;
+   const uint32_t T9 = ~(I7 ^ T1);
+   const uint32_t T10 = T2 ^ T24;
+   const uint32_t T13 = T2 ^ R5;
+   const uint32_t T3 = T1 ^ R5;
+   const uint32_t T25 = ~(I2 ^ T1);
+   const uint32_t R13 = I1 ^ I6;
+   const uint32_t T17 = ~(I2 ^ T19);
+   const uint32_t T20 = T24 ^ R13;
+   const uint32_t T4 = I4 ^ T8;
+   const uint32_t R17 = ~(I2 ^ I5);
+   const uint32_t R18 = ~(I5 ^ I6);
+   const uint32_t R19 = ~(I2 ^ I4);
+   const uint32_t Y5 = I0 ^ R17;
+   const uint32_t T6 = T22 ^ R17;
+   const uint32_t T16 = R13 ^ R19;
+   const uint32_t T27 = T1 ^ R18;
+   const uint32_t T15 = T10 ^ T27;
+   const uint32_t T14 = T10 ^ R18;
+   const uint32_t T26 = T3 ^ T16;
+
+   const uint32_t D = Y5;
+
+   // Figure 7:  Shared part of AES S-box circuit
+   const uint32_t M1 = T13 & T6;
+   const uint32_t M2 = T23 & T8;
+   const uint32_t M3 = T14 ^ M1;
+   const uint32_t M4 = T19 & D;
+   const uint32_t M5 = M4 ^ M1;
+   const uint32_t M6 = T3 & T16;
+   const uint32_t M7 = T22 & T9;
+   const uint32_t M8 = T26 ^ M6;
+   const uint32_t M9 = T20 & T17;
+   const uint32_t M10 = M9 ^ M6;
+   const uint32_t M11 = T1 & T15;
+   const uint32_t M12 = T4 & T27;
+   const uint32_t M13 = M12 ^ M11;
+   const uint32_t M14 = T2 & T10;
+   const uint32_t M15 = M14 ^ M11;
+   const uint32_t M16 = M3 ^ M2;
+
+   const uint32_t M17 = M5 ^ T24;
+   const uint32_t M18 = M8 ^ M7;
+   const uint32_t M19 = M10 ^ M15;
+   const uint32_t M20 = M16 ^ M13;
+   const uint32_t M21 = M17 ^ M15;
+   const uint32_t M22 = M18 ^ M13;
+   const uint32_t M23 = M19 ^ T25;
+   const uint32_t M24 = M22 ^ M23;
+   const uint32_t M25 = M22 & M20;
+   const uint32_t M26 = M21 ^ M25;
+   const uint32_t M27 = M20 ^ M21;
+   const uint32_t M28 = M23 ^ M25;
+   const uint32_t M29 = M28 & M27;
+   const uint32_t M30 = M26 & M24;
+   const uint32_t M31 = M20 & M23;
+   const uint32_t M32 = M27 & M31;
+
+   const uint32_t M33 = M27 ^ M25;
+   const uint32_t M34 = M21 & M22;
+   const uint32_t M35 = M24 & M34;
+   const uint32_t M36 = M24 ^ M25;
+   const uint32_t M37 = M21 ^ M29;
+   const uint32_t M38 = M32 ^ M33;
+   const uint32_t M39 = M23 ^ M30;
+   const uint32_t M40 = M35 ^ M36;
+   const uint32_t M41 = M38 ^ M40;
+   const uint32_t M42 = M37 ^ M39;
+   const uint32_t M43 = M37 ^ M38;
+   const uint32_t M44 = M39 ^ M40;
+   const uint32_t M45 = M42 ^ M41;
+   const uint32_t M46 = M44 & T6;
+   const uint32_t M47 = M40 & T8;
+   const uint32_t M48 = M39 & D;
+
+   const uint32_t M49 = M43 & T16;
+   const uint32_t M50 = M38 & T9;
+   const uint32_t M51 = M37 & T17;
+   const uint32_t M52 = M42 & T15;
+   const uint32_t M53 = M45 & T27;
+   const uint32_t M54 = M41 & T10;
+   const uint32_t M55 = M44 & T13;
+   const uint32_t M56 = M40 & T23;
+   const uint32_t M57 = M39 & T19;
+   const uint32_t M58 = M43 & T3;
+   const uint32_t M59 = M38 & T22;
+   const uint32_t M60 = M37 & T20;
+   const uint32_t M61 = M42 & T1;
+   const uint32_t M62 = M45 & T4;
+   const uint32_t M63 = M41 & T2;
+
+   // Figure 9 Bottom linear transform in reverse direction
+   const uint32_t P0 = M52 ^ M61;
+   const uint32_t P1 = M58 ^ M59;
+   const uint32_t P2 = M54 ^ M62;
+   const uint32_t P3 = M47 ^ M50;
+   const uint32_t P4 = M48 ^ M56;
+   const uint32_t P5 = M46 ^ M51;
+   const uint32_t P6 = M49 ^ M60;
+   const uint32_t P7 = P0 ^ P1;
+   const uint32_t P8 = M50 ^ M53;
+   const uint32_t P9 = M55 ^ M63;
+   const uint32_t P10 = M57 ^ P4;
+   const uint32_t P11 = P0 ^ P3;
+   const uint32_t P12 = M46 ^ M48;
+   const uint32_t P13 = M49 ^ M51;
+   const uint32_t P14 = M49 ^ M62;
+   const uint32_t P15 = M54 ^ M59;
+   const uint32_t P16 = M57 ^ M61;
+   const uint32_t P17 = M58 ^ P2;
+   const uint32_t P18 = M63 ^ P5;
+   const uint32_t P19 = P2 ^ P3;
+   const uint32_t P20 = P4 ^ P6;
+   const uint32_t P22 = P2 ^ P7;
+   const uint32_t P23 = P7 ^ P8;
+   const uint32_t P24 = P5 ^ P7;
+   const uint32_t P25 = P6 ^ P10;
+   const uint32_t P26 = P9 ^ P11;
+   const uint32_t P27 = P10 ^ P18;
+   const uint32_t P28 = P11 ^ P25;
+   const uint32_t P29 = P15 ^ P20;
+   const uint32_t W0 = P13 ^ P22;
+   const uint32_t W1 = P26 ^ P29;
+   const uint32_t W2 = P17 ^ P28;
+   const uint32_t W3 = P12 ^ P22;
+   const uint32_t W4 = P23 ^ P27;
+   const uint32_t W5 = P19 ^ P24;
+   const uint32_t W6 = P14 ^ P23;
+   const uint32_t W7 = P9 ^ P16;
+
+   V[0] = W0;
+   V[1] = W1;
+   V[2] = W2;
+   V[3] = W3;
+   V[4] = W4;
+   V[5] = W5;
+   V[6] = W6;
+   V[7] = W7;
+   }
+
 inline uint32_t SE_word(uint32_t x)
    {
    uint32_t I[8] = { 0 };
@@ -312,6 +471,17 @@ inline void shift_rows(uint32_t B[8])
       }
    }
 
+inline void inv_shift_rows(uint32_t B[8])
+   {
+   for(size_t i = 0; i != 8; ++i)
+      {
+      uint32_t x = B[i];
+      x = bit_permute_step<uint32_t>(x, 0x00550055, 1);  // Butterfly, stage 0
+      x = bit_permute_step<uint32_t>(x, 0x00223311, 2);  // Butterfly, stage 1
+      B[i] = x;
+      }
+   }
+
 inline void mix_columns(uint32_t B[8])
    {
    /*
@@ -362,14 +532,14 @@ inline void mix_columns(uint32_t B[8])
    };
 
    const uint32_t R8_16[8] = {
-      rotr<8>(B[0]) ^ rotr<16>(B[0]),
-      rotr<8>(B[1]) ^ rotr<16>(B[1]),
-      rotr<8>(B[2]) ^ rotr<16>(B[2]),
-      rotr<8>(B[3]) ^ rotr<16>(B[3]),
-      rotr<8>(B[4]) ^ rotr<16>(B[4]),
-      rotr<8>(B[5]) ^ rotr<16>(B[5]),
-      rotr<8>(B[6]) ^ rotr<16>(B[6]),
-      rotr<8>(B[7]) ^ rotr<16>(B[7])
+      rotr<8>(B[0] ^ rotr<8>(B[0])),
+      rotr<8>(B[1] ^ rotr<8>(B[1])),
+      rotr<8>(B[2] ^ rotr<8>(B[2])),
+      rotr<8>(B[3] ^ rotr<8>(B[3])),
+      rotr<8>(B[4] ^ rotr<8>(B[4])),
+      rotr<8>(B[5] ^ rotr<8>(B[5])),
+      rotr<8>(B[6] ^ rotr<8>(B[6])),
+      rotr<8>(B[7] ^ rotr<8>(B[7])),
    };
 
    const uint32_t B0 = B[1] ^ R24[0] ^ R24[1] ^ R8_16[0];
@@ -381,6 +551,55 @@ inline void mix_columns(uint32_t B[8])
    B[6] = B[7] ^ B[0] ^ R24[0] ^ R24[6] ^ R24[7] ^ R8_16[6];
    B[7] = B[0] ^ R24[0] ^ R24[7] ^ R8_16[7];
    B[0] = B0;
+   }
+
+void inv_mix_columns(uint32_t B[8])
+   {
+   const uint32_t X2[8] = {
+      B[1],
+      B[2],
+      B[3],
+      B[4] ^ B[0],
+      B[5] ^ B[0],
+      B[6],
+      B[7] ^ B[0],
+      B[0],
+   };
+   const uint32_t X4[8] = {
+      X2[1],
+      X2[2],
+      X2[3],
+      X2[4] ^ X2[0],
+      X2[5] ^ X2[0],
+      X2[6],
+      X2[7] ^ X2[0],
+      X2[0],
+   };
+   const uint32_t X8[8] = {
+      X4[1],
+      X4[2],
+      X4[3],
+      X4[4] ^ X4[0],
+      X4[5] ^ X4[0],
+      X4[6],
+      X4[7] ^ X4[0],
+      X4[0],
+   };
+
+   for(size_t i = 0; i != 8; i++)
+      {
+      const uint32_t X9 = X8[i] ^ B[i];
+      const uint32_t X11 = X9 ^ X2[i];
+      const uint32_t X13 = X9 ^ X4[i];
+      const uint32_t X14 = X8[i] ^ X4[i] ^ X2[i];
+
+      uint8_t b0 = get_byte(0, X14) ^ get_byte(1, X11) ^ get_byte(2, X13) ^ get_byte(3, X9);
+      uint8_t b1 = get_byte(0, X9) ^ get_byte(1, X14) ^ get_byte(2, X11) ^ get_byte(3, X13);
+      uint8_t b2 = get_byte(0, X13) ^ get_byte(1, X9) ^ get_byte(2, X14) ^ get_byte(3, X11);
+      uint8_t b3 = get_byte(0, X11) ^ get_byte(1, X13) ^ get_byte(2, X9) ^ get_byte(3, X14);
+
+      B[i] = make_uint32(b0, b1, b2, b3);
+      }
    }
 
 /*
@@ -408,14 +627,8 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 
       load_be(B, in, this_loop*4);
 
-      B[0] ^= EK[0];
-      B[1] ^= EK[1];
-      B[2] ^= EK[2];
-      B[3] ^= EK[3];
-      B[4] ^= EK[0];
-      B[5] ^= EK[1];
-      B[6] ^= EK[2];
-      B[7] ^= EK[3];
+      for(size_t i = 0; i != 8; ++i)
+         B[i] ^= EK[i % 4];
 
       bit_transpose(B);
 
@@ -448,38 +661,6 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       }
    }
 
-const uint32_t* AES_TD()
-   {
-   class TD_Table final
-      {
-      public:
-         TD_Table()
-            {
-            uint32_t* p = reinterpret_cast<uint32_t*>(&data);
-            for(size_t i = 0; i != 256; ++i)
-               {
-               p[i] = InvMixColumn(SD[i]);
-               }
-            }
-
-         const uint32_t* ptr() const
-            {
-            return reinterpret_cast<const uint32_t*>(&data);
-            }
-      private:
-         std::aligned_storage<256*sizeof(uint32_t), 64>::type data;
-      };
-
-   static TD_Table table;
-   return table.ptr();
-   }
-
-#define AES_T(T, K, V0, V1, V2, V3)             \
-   (K ^ T[get_byte(0, V0)] ^                    \
-    rotr< 8>(T[get_byte(1, V1)]) ^              \
-    rotr<16>(T[get_byte(2, V2)]) ^              \
-    rotr<24>(T[get_byte(3, V3)]))
-
 /*
 * AES Decryption
 */
@@ -489,70 +670,53 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
    {
    BOTAN_ASSERT(DK.size() && MD.size() == 16, "Key was set");
 
-   const size_t cache_line_size = CPUID::cache_line_size();
-   const uint32_t* TD = AES_TD();
-
-   volatile uint32_t Z = 0;
-   for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
+   uint32_t KS[56*2] = { 0 }; // actual maximum is DK.size() * 2
+   for(size_t i = 4; i < DK.size(); i += 4)
       {
-      Z |= TD[i];
+      ks_expand(&KS[2*(i-4)], DK.data(), i);
       }
-   for(size_t i = 0; i < 256; i += cache_line_size)
+
+   while(blocks > 0)
       {
-      Z |= SD[i];
-      }
-   Z &= TD[99]; // this is zero, which hopefully the compiler cannot deduce
+      const size_t this_loop = (blocks >= 2) ? 2 : 1;
 
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      uint32_t T0 = load_be<uint32_t>(in, 0) ^ DK[0];
-      uint32_t T1 = load_be<uint32_t>(in, 1) ^ DK[1];
-      uint32_t T2 = load_be<uint32_t>(in, 2) ^ DK[2];
-      uint32_t T3 = load_be<uint32_t>(in, 3) ^ DK[3];
+      uint32_t B[8] = { 0 };
 
-      T0 ^= Z;
+      load_be(B, in, this_loop*4);
 
-      uint32_t B0 = AES_T(TD, DK[4], T0, T3, T2, T1);
-      uint32_t B1 = AES_T(TD, DK[5], T1, T0, T3, T2);
-      uint32_t B2 = AES_T(TD, DK[6], T2, T1, T0, T3);
-      uint32_t B3 = AES_T(TD, DK[7], T3, T2, T1, T0);
+      for(size_t i = 0; i != 8; ++i)
+         B[i] ^= DK[i % 4];
 
-      for(size_t r = 2*4; r < DK.size(); r += 2*4)
+      bit_transpose(B);
+
+      for(size_t r = 4; r < DK.size(); r += 4)
          {
-         T0 = AES_T(TD, DK[r  ], B0, B3, B2, B1);
-         T1 = AES_T(TD, DK[r+1], B1, B0, B3, B2);
-         T2 = AES_T(TD, DK[r+2], B2, B1, B0, B3);
-         T3 = AES_T(TD, DK[r+3], B3, B2, B1, B0);
+         AES_INV_SBOX(B);
+         inv_shift_rows(B);
+         inv_mix_columns(B);
 
-         B0 = AES_T(TD, DK[r+4], T0, T3, T2, T1);
-         B1 = AES_T(TD, DK[r+5], T1, T0, T3, T2);
-         B2 = AES_T(TD, DK[r+6], T2, T1, T0, T3);
-         B3 = AES_T(TD, DK[r+7], T3, T2, T1, T0);
+         for(size_t i = 0; i != 8; ++i)
+            B[i] ^= KS[2*(r-4) + i];
          }
 
-      out[ 0] = SD[get_byte(0, B0)] ^ MD[0];
-      out[ 1] = SD[get_byte(1, B3)] ^ MD[1];
-      out[ 2] = SD[get_byte(2, B2)] ^ MD[2];
-      out[ 3] = SD[get_byte(3, B1)] ^ MD[3];
-      out[ 4] = SD[get_byte(0, B1)] ^ MD[4];
-      out[ 5] = SD[get_byte(1, B0)] ^ MD[5];
-      out[ 6] = SD[get_byte(2, B3)] ^ MD[6];
-      out[ 7] = SD[get_byte(3, B2)] ^ MD[7];
-      out[ 8] = SD[get_byte(0, B2)] ^ MD[8];
-      out[ 9] = SD[get_byte(1, B1)] ^ MD[9];
-      out[10] = SD[get_byte(2, B0)] ^ MD[10];
-      out[11] = SD[get_byte(3, B3)] ^ MD[11];
-      out[12] = SD[get_byte(0, B3)] ^ MD[12];
-      out[13] = SD[get_byte(1, B2)] ^ MD[13];
-      out[14] = SD[get_byte(2, B1)] ^ MD[14];
-      out[15] = SD[get_byte(3, B0)] ^ MD[15];
+      // Final round:
+      AES_INV_SBOX(B);
+      inv_shift_rows(B);
+      bit_transpose(B);
 
-      in += 16;
-      out += 16;
+      for(size_t i = 0; i != 8; ++i)
+         B[i] ^= load_be<uint32_t>(MD.data(), i % 4);
+
+      if(this_loop == 2)
+         store_be(out, B[0], B[1], B[2], B[3], B[4], B[5], B[6], B[7]);
+      else
+         store_be(out, B[0], B[1], B[2], B[3]);
+
+      in += this_loop*16;
+      out += this_loop*16;
+      blocks -= this_loop;
       }
    }
-
-#undef AES_T
 
 void aes_key_schedule(const uint8_t key[], size_t length,
                       secure_vector<uint32_t>& EK,
