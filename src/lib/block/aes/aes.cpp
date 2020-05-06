@@ -593,12 +593,7 @@ void inv_mix_columns(uint32_t B[8])
       const uint32_t X13 = X9 ^ X4[i];
       const uint32_t X14 = X8[i] ^ X4[i] ^ X2[i];
 
-      uint8_t b0 = get_byte(0, X14) ^ get_byte(1, X11) ^ get_byte(2, X13) ^ get_byte(3, X9);
-      uint8_t b1 = get_byte(0, X9) ^ get_byte(1, X14) ^ get_byte(2, X11) ^ get_byte(3, X13);
-      uint8_t b2 = get_byte(0, X13) ^ get_byte(1, X9) ^ get_byte(2, X14) ^ get_byte(3, X11);
-      uint8_t b3 = get_byte(0, X11) ^ get_byte(1, X13) ^ get_byte(2, X9) ^ get_byte(3, X14);
-
-      B[i] = make_uint32(b0, b1, b2, b3);
+      B[i] = X14 ^ rotr<8>(X9) ^ rotr<24>(X11) ^ rotr<16>(X13);
       }
    }
 
