@@ -305,6 +305,12 @@ read_cookie_and_input_bits(const std::vector<uint8_t>& buf)
    reader.discard_next(34); // version, random
 
    const size_t sess_id_len = reader.get_byte();
+
+   if (sess_id_len > 32)
+      {
+      throw Decoding_Error("Invalid ClientHello: session id is too long");
+      }
+
    reader.discard_next(sess_id_len);
 
    std::unique_ptr<HashFunction> sha256;
