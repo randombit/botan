@@ -660,8 +660,8 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    CT::poison(key, length);
 
-   EK.resize(length + 32);
-   DK.resize(length + 32);
+   EK.resize(length + 28);
+   DK.resize(length + 28);
 
    for(size_t i = 0; i != X; ++i)
       EK[i] = load_be<uint32_t>(key, i);
@@ -670,7 +670,7 @@ void aes_key_schedule(const uint8_t key[], size_t length,
       {
       EK[i] = EK[i-X] ^ RC[(i-X)/X] ^ rotl<8>(SE_word(EK[i-1]));
 
-      for(size_t j = 1; j != X; ++j)
+      for(size_t j = 1; j != X && (i+j) < EK.size(); ++j)
          {
          EK[i+j] = EK[i+j-X];
 
@@ -689,7 +689,7 @@ void aes_key_schedule(const uint8_t key[], size_t length,
       DK[i+3] = EK[4*rounds-i+3];
       }
 
-   for(size_t i = 4; i != length + 24; ++i)
+   for(size_t i = 4; i != DK.size() - 4; ++i)
       {
       const uint8_t s0 = get_byte(0, DK[i]);
       const uint8_t s1 = get_byte(1, DK[i]);
@@ -701,9 +701,6 @@ void aes_key_schedule(const uint8_t key[], size_t length,
          rotr<16>(InvMixColumn(s2)) ^
          rotr<24>(InvMixColumn(s3));
       }
-
-   EK.resize(length + 24 + 4);
-   DK.resize(length + 24 + 4);
 
    if(bswap_keys)
       {
