@@ -24,7 +24,7 @@ debug_info_flags "/Zi /FS"
 
 preproc_flags "/nologo /EP"
 
-lang_flags "/EHs /GR /D_ENABLE_EXTENDED_ALIGNED_STORAGE"
+lang_flags "/EHs /GR"
 
 # 4250: diamond inheritence warning
 # 4251: STL types used in DLL interface
