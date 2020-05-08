@@ -615,7 +615,7 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
    if(!value_exists(compression_methods, uint8_t(0)))
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER, "Client did not offer NULL compression");
 
-   const bool already_verified = m_prestate_set;
+   const bool already_verified = m_prestate_set && !epoch0_restart;
 
    if(initial_handshake && datagram && !already_verified)
       {
