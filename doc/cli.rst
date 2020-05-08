@@ -20,9 +20,12 @@ Starting in version 2.9, commands that take a passphrase (such as
 ask for the passphrase on the terminal. If supported by the operating
 system, echo will be disabled while reading the passphrase.
 
+Most arguments that take a path to a file will also accept the literal ``-``
+to mean the file content should be read from STDIN instead.
+
 Hash Function
 ----------------
-``hash --algo=SHA-256 --buf-size=4096 --no-fsname files``
+``hash --algo=SHA-256 --buf-size=4096 --no-fsname --format=hex *files``
   Compute the *algo* digest over the data in any number of *files*. If
   no files are listed on the command line, the input source defaults
   to standard input. Unless the ``--no-fsname`` option is given, the
@@ -31,6 +34,14 @@ Hash Function
 
 Password Hash
 ----------------
+``gen_argon2 --mem=65536 --p=1 --t=1 password``
+  Calculate the Argon2 password digest of *password*. *mem* is the amount of
+  memory to use in Kb, *p* the parallelization parameter and *t* the number of
+  iterations to use.
+
+``check_argon2 password hash``
+  Checks if the Argon2 hash of the passed *password* equals the passed *hash* value.
+
 ``gen_bcrypt --work-factor=12 password``
   Calculate the bcrypt password digest of *password*. *work-factor* is an
   integer between 4 and 18.  A higher *work-factor* value results in a
@@ -38,6 +49,9 @@ Password Hash
 
 ``check_bcrypt password hash``
   Checks if the bcrypt hash of the passed *password* equals the passed *hash* value.
+
+``pbkdf_tune --algo=Scrypt --max-mem=256 --output-len=32 --check *times``
+  Tunes the PBKDF algorithm specified with ``--algo=`` for the given *times*.
 
 HMAC
 ----------------
@@ -47,9 +61,15 @@ HMAC
   defaults to STDIN. Unless the ``--no-fsname`` option is given, the
   filename is printed alongside the HMAC value.
 
+Encryption
+----------------
+``encryption --buf-size=4096 --decrypt --mode= --key= --iv= --ad=``
+  Encrypt a given file with the specified *mode*.  If ``--decrypt`` is provided
+  the file is decrypted instead.
+
 Public Key Cryptography
 -------------------------------------
-``keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out``
+``keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --provider= --der-out``
   Generate a PKCS #8 *algo* private key. If *der-out* is passed, the pair is BER
   encoded.  Otherwise, PEM encoding is used. To protect the PKCS #8 formatted
   key, it is recommended to encrypt it with a provided *passphrase*. *pbe* is
@@ -78,7 +98,7 @@ Public Key Cryptography
   the passphrase passed as *pass-out*. The parameters *pbe-millis* and *pbe*
   work similarly to ``keygen``.
 
-``sign --der-format --passphrase= --hash=SHA-256 --emsa= key file``
+``sign --der-format --passphrase= --hash=SHA-256 --emsa= --provider= key file``
   Sign the data in *file* using the PKCS #8 private key *key*. If *key* is
   encrypted, the used passphrase must be passed as *pass-in*. *emsa* specifies
   the signature scheme and *hash* the cryptographic hash function used in the
@@ -128,10 +148,17 @@ Public Key Cryptography
   Decrypts a file encrypted with ``pk_encrypt``. If the key is encrypted using a
   password, it will be prompted for on the terminal.
 
+``fingerprint --no-fsname --algo=SHA-256 *keys``
+  Calculate the public key fingerprint of the *keys*.
+
+``pk_workfactor --type=rsa bits``
+  Provide an estimate of the strength of a public key based on it's size.
+  ``--type=`` can be "rsa", "dl" or "dl_exp".
+
 X.509
 ----------------------------------------------
 
-``gen_pkcs10 key CN --country= --organization= --email= --key-pass= --hash=SHA-256  --emsa=``
+``gen_pkcs10 key CN --country= --organization= --ca --path-limit=1 --email= --dns= --ext-ku= --key-pass= --hash=SHA-256  --emsa=``
   Generate a PKCS #10 certificate signing request (CSR) using the passed PKCS #8
   private key *key*. If the private key is encrypted, the decryption passphrase
   *key-pass* has to be passed.*emsa* specifies the padding scheme to be used
@@ -140,7 +167,7 @@ X.509
     - For RSA keys EMSA4 (RSA-PSS) is the default scheme.
     - For ECDSA, DSA, ECGDSA, ECKCDSA and GOST-34.10 keys *emsa* defaults to EMSA1.
 
-``gen_self_signed key CN --country= --dns= --organization= --email= --key-pass= --ca --hash=SHA-256 --emsa=``
+``gen_self_signed key CN --country= --dns= --organization= --email= --path-limit=1 --days=365 --key-pass= --ca --hash=SHA-256 --emsa= --der``
   Generate a self signed X.509 certificate using the PKCS #8 private key
   *key*. If the private key is encrypted, the decryption passphrase *key-pass*
   has to be passed. If *ca* is passed, the certificate is marked for certificate
@@ -159,11 +186,11 @@ X.509
   padding scheme to be used when calculating the signature. *emsa* defaults to
   the padding scheme used in the CA certificate.
 
-``ocsp_check subject issuer``
+``ocsp_check --timeout=3000 subject issuer``
   Verify an X.509 certificate against the issuers OCSP responder. Pass the
   certificate to validate as *subject* and the CA certificate as *issuer*.
 
-``cert_info --fingerprint --ber file``
+``cert_info --fingerprint file``
   Parse X.509 PEM certificate and display data fields. If ``--fingerprint`` is
   used, the certificate's fingerprint is also printed.
 
@@ -172,41 +199,51 @@ X.509
   validated. The list of trusted CA certificates is passed with *ca_certs*,
   which is a list of one or more certificates.
 
+``trust_roots --dn --dn-only --display``
+  List the certificates in the system trust store.
+
 TLS Server/Client
 -----------------------
 
+The ``--policy=`` argument of the TLS commands specifies the TLS policy to use.
+The policy can be any of the the strings "default", "suiteb_128", "suiteb_192",
+"bsi", "strict", or "all" to denote built-in policies, or it can name a file
+from which a policy description will be read.
+
 ``tls_ciphers --policy=default --version=tls1.2``
   Prints the list of ciphersuites that will be offered under a particular
-  policy/version. The policy can be any of the the strings "default",
-  "suiteb_128", "suiteb_192", "strict", or "all" to denote built-in policies, or
-  it can name a file from which a policy description will be read.
+  policy/version.
 
-``tls_client host --port=443 --print-certs --policy= --tls1.0 --tls1.1 --tls1.2 --session-db= --session-db-pass= --next-protocols= --type=tcp``
+``tls_client host --port=443 --print-certs --policy=default --tls1.0 --tls1.1 --tls1.2 --skip-system-cert-store --trusted-cas= --session-db= --session-db-pass= --next-protocols= --type=tcp``
   Implements a testing TLS client, which connects to *host* via TCP or UDP on
   port *port*. The TLS version can be set with the flags *tls1.0*, *tls1.1* and
   *tls1.2* of which the lowest specified version is automatically chosen.  If
   none of the TLS version flags is set, the latest supported version is
-  chosen. The client honors the TLS policy defined in the *policy* file and
+  chosen. The client honors the TLS policy specified with *policy* and
   prints all certificates in the chain, if *print-certs* is passed.
   *next-protocols* is a comma separated list and specifies the protocols to
   advertise with Application-Layer Protocol Negotiation (ALPN).
 
-``tls_server cert key --port=443 --type=tcp --policy=``
+``tls_server cert key --port=443 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0``
   Implements a testing TLS server, which allows TLS clients to connect and which
   echos any data that is sent to it. Binds to either TCP or UDP on port
   *port*. The server uses the certificate *cert* and the respective PKCS #8
-  private key *key*. The server honors the TLS policy defined in the *policy*
-  file.
+  private key *key*. The server honors the TLS policy specified with *policy*.
+  *socket-id* is only available on FreeBSD and sets the *so_user_cookie* value
+  of the used socket.
 
-``tls_http_server cert key --port=443 --policy= --session-db --session-db-pass=``
+``tls_http_server cert key --port=443 --policy=default --threads=0 --max-clients=0 --session-db --session-db-pass=``
   Only available if Boost.Asio support was enabled. Provides a simple HTTP server
   which replies to all requests with an informational text output. The server
-  honors the TLS policy defined in the *policy* file.
+  honors the TLS policy specified with *policy*.
 
-``tls_proxy listen_port target_host target_port server_cert server_key``
+``tls_proxy listen_port target_host target_port server_cert server_key--policy=default --threads=0 --max-clients=0 --session-db= --session-db-pass=``
   Only available if Boost.Asio support was enabled. Listens on a port and
   forwards all connects to a target server specified at
   ``target_host`` and ``target_port``.
+
+``tls_client_hello --hex input``
+  Parse and print a TLS client hello message.
 
 Number Theory
 -----------------------
@@ -219,6 +256,9 @@ Number Theory
 
 ``gen_prime --count=1 bits``
   Samples *count* primes with a length of *bits* bits.
+
+``mod_inverse n mod``
+  Calculates a modular inverse.
 
 PSK Database
 --------------------
@@ -263,6 +303,18 @@ Split a file into several shares.
 Data Encoding/Decoding
 ------------------------
 
+``base32_dec file``
+  Encode *file* to Base32.
+
+``base32_enc file``
+  Decode Base32 encoded *file*.
+
+``base58_enc --check file``
+  Encode *file* to Base58. If ``--check`` is provided Base58Check is used.
+
+``base58_dec --check file``
+  Decode Base58 encoded *file*. If ``--check`` is provided Base58Check is used.
+
 ``base64_dec file``
   Encode *file* to Base64.
 
@@ -281,6 +333,9 @@ Miscellaneous Commands
   Print the version number. If option ``--full`` is provided,
   additional details are printed.
 
+``has_command cmd``
+  Test if the command *cmd* is available.
+
 ``config info_type``
   Prints build information, useful for applications which want to
   build against the library.  The ``info_type`` argument can be any of
@@ -290,27 +345,39 @@ Miscellaneous Commands
 ``cpuid``
   List available processor flags (AES-NI, SIMD extensions, ...).
 
-``asn1print --pem file``
+``cpu_clock --test-duration=500``
+  Estimate the speed of the CPU cycle counter.
+
+``asn1print --skip-context-specific --print-limit=4096 --bin-limit=2048 --max-depth=64 --pem file```
   Decode and print *file* with ASN.1 Basic Encoding Rules (BER). If flag ``--pem`` is
   used, or the filename ends in ``.pem``, then PEM encoding is assumed. Otherwise
   the input is assumed to be binary DER/BER.
 
-``http_get url``
+``http_get --redirects=1 --timeout=3000 url``
   Retrieve resource from the passed http *url*.
 
-``speed --msec=500 --provider= --buf-size=1024 algos``
+``speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos``
   Measures the speed of the passed *algos*. If no *algos* are passed all
   available speed tests are executed. *msec* (in milliseconds) sets the period
   of measurement for each algorithm. The *buf-size* option allows testing the
   same algorithm on one or more input sizes, for example
   ``speed --buf-size=136,1500 AES-128/GCM`` tests the performance of GCM for
   small and large packet sizes.
+  *format* can be "default", "table" or "json".
 
-``rng --system --rdrand bytes``
+``timing_test test_type --test-data-file= --test-data-dir=src/tests/data/timing --warmup-runs=1000 --measurement-runs=10000``
+  Run various timing side channel tests.
+
+``rng --format=hex --system --rdrand --auto --entropy --drbg --drbg-seed= *bytes``
   Sample *bytes* random bytes from the specified random number generator. If
-  *system* is set, the system RNG is used. If *system* is unset and *rdrand* is
-  set, the hardware RDRAND instruction is used if available. If both are unset,
-  HMAC_DRBG is used.
+  *system* is set, the system RNG is used. If *rdrand* is set, the hardware
+  RDRAND instruction is used. If *auto* is set, AutoSeeded_RNG is used, seeded
+  with the system RNG if available or the global entropy source otherwise. If
+  *entropy* is set, AutoSeeded_RNG is used, seeded with the global entropy
+  source. If *drbg* is set, HMAC_DRBG is used seeded with *drbg-seed*.
+
+``entropy --truncate-at=128 source``
+  Sample a raw entropy source.
 
 ``cc_encrypt CC passphrase --tweak=``
   Encrypt the passed valid credit card number *CC* using FPE encryption and the
@@ -322,3 +389,18 @@ Miscellaneous Commands
 ``cc_decrypt CC passphrase --tweak=``
   Decrypt the passed valid ciphertext *CC* using FPE decryption with
   the passphrase *passphrase* and the tweak *tweak*.
+
+``roughtime_check --raw-time chain-file``
+  Parse and validate a Roughtime chain file.
+
+``roughtime --raw-time --chain-file=roughtime-chain --max-chain-size=128 --check-local-clock=60 --host= --pubkey= --servers-file=``
+  Retrieve time from a Roughtime server and store it in a chain file.
+
+``uuid``
+  Generate and print a random UUID.
+
+``compress --type=gzip --level=6 --buf-size=8192 file``
+  Compress a given file.
+
+``decompress --buf-size=8192 file``
+  Decompress a given compressed archive.
