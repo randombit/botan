@@ -523,7 +523,8 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       ks_expand(&KS[8*i], EK.data(), 4*i + 4);
       }
 
-   const size_t BITSLICED_BLOCKS = 2;
+   const size_t BLOCK_SIZE = 16;
+   const size_t BITSLICED_BLOCKS = 8*sizeof(uint32_t) / BLOCK_SIZE;
 
    while(blocks > 0)
       {
@@ -558,8 +559,8 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
 
       copy_out_be(out, this_loop*4*sizeof(uint32_t), B);
 
-      in += this_loop * 16;
-      out += this_loop * 16;
+      in += this_loop * BLOCK_SIZE;
+      out += this_loop * BLOCK_SIZE;
       blocks -= this_loop;
       }
    }
@@ -580,7 +581,8 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       ks_expand(&KS[8*i], DK.data(), 4*i + 4);
       }
 
-   const size_t BITSLICED_BLOCKS = 2;
+   const size_t BLOCK_SIZE = 16;
+   const size_t BITSLICED_BLOCKS = 8*sizeof(uint32_t) / BLOCK_SIZE;
 
    while(blocks > 0)
       {
@@ -615,8 +617,8 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
 
       copy_out_be(out, this_loop*4*sizeof(uint32_t), B);
 
-      in += this_loop * 16;
-      out += this_loop * 16;
+      in += this_loop * BLOCK_SIZE;
+      out += this_loop * BLOCK_SIZE;
       blocks -= this_loop;
       }
    }
