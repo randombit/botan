@@ -12,7 +12,6 @@ Ciphers, Hashes, PBKDF
 
 * Stiched AES/GCM mode for CPUs supporting both AES and CLMUL
 * Combine AES-NI, ARMv8 and POWER AES implementations (as already done for CLMUL)
-* Scalar bitsliced AES
 * Vector permute AES only supports little-endian systems; fix for big-endian
 * SM4 using AES-NI (https://github.com/mjosaarinen/sm4ni) or vector permute
 * Poly1305 using AVX2

@@ -1,6 +1,6 @@
 toolsets = vs2013;
 shared-library botan {
-   defines = "BOTAN_DLL=__declspec(dllexport)" _ENABLE_EXTENDED_ALIGNED_STORAGE;
+   defines = "BOTAN_DLL=__declspec(dllexport)";
    sources {
 %{for lib_srcs}
       %{i}

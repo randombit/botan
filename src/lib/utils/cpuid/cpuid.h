@@ -335,6 +335,22 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          }
 
       /**
+      * Check if the processor supports hardware AES instructions
+      */
+      static bool has_hw_aes()
+         {
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+         return has_aes_ni();
+#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+         return has_arm_aes();
+#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+         return has_power_crypto();
+#else
+         return false;
+#endif
+         }
+
+      /**
       * Check if the processor supports carryless multiply
       * (CLMUL, PMULL)
       */
