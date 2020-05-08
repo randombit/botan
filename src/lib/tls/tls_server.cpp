@@ -1163,9 +1163,10 @@ DTLS_Prestate Server::pre_verify_cookie(Credentials_Manager& creds,
       }
 
    const uint16_t msg_seq = make_uint16(record_buf[4], record_buf[5]);
+   const size_t fragment_offset = make_uint32(0, record_buf[6], record_buf[7], record_buf[8]);
    const size_t fragment_len = make_uint32(0, record_buf[9], record_buf[10], record_buf[11]);
 
-   if (fragment_len != length - 4)
+   if (fragment_offset != 0 || fragment_len != length - 4)
       {
       throw TLS_Exception(Alert::UNEXPECTED_MESSAGE,
                           "Fragmented first client hello");
