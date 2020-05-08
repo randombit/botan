@@ -4,20 +4,20 @@ Release Notes
 Version 2.15.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* AES key expansion is now constant time. (GH #2346)
+* AES is now constant time on all CPUs (GH #2346 #2348 #2329)
 
-* The documentation claimed that mlocked pages were created
-  with a guard page both before and after. However only a
-  trailing guard page was used. Add a leading guard page. (GH #2334)
+* The documentation claimed that mlocked pages were created with a
+  guard page both before and after. However only a trailing guard page
+  was used. Add a leading guard page. (GH #2334)
 
 * Workaround a bug in GCC's UbSan which triggered on a code sequence
   in XMSS (GH #2322)
 
-* When building documentation using Sphinx avoid parallel builds
-  with version 3.0 due to a bug in that version (GH #2326 #2324)
+* When building documentation using Sphinx avoid parallel builds with
+  version 3.0 due to a bug in that version (GH #2326 #2324)
 
-* Fix a flaky test that would occasionally fail when running the
-  tests with a large number of threads. (GH #2325 #2197)
+* Fix a flaky test that would occasionally fail when running the tests
+  with a large number of threads. (GH #2325 #2197)
 
 * Additional algorithms are now deprecated: XTEA, GOST, and Tiger.
   They will be removed in a future major release.
