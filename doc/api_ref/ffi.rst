@@ -208,7 +208,7 @@ Random Number Generators
    "user": ``AutoSeeded_RNG``,
    "user-threadsafe": serialized ``AutoSeeded_RNG``,
    "null": ``Null_RNG`` (always fails),
-   "rdrand": ``RDRAND_RNG`` (if available)
+   "hwrnd" or "rdrand": ``Processor_RNG`` (if available)
 
 .. cpp:function:: int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
 

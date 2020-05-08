@@ -28,8 +28,8 @@
    #include <botan/system_rng.h>
 #endif
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
-   #include <botan/rdrand_rng.h>
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+   #include <botan/processor_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
@@ -779,31 +779,31 @@ BOTAN_REGISTER_TEST("system_rng", System_RNG_Tests);
 
 #endif
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
 
-class RDRAND_RNG_Tests final : public Test
+class Processor_RNG_Tests final : public Test
    {
    public:
       std::vector<Test::Result> run() override
          {
-         Test::Result result("RDRAND_RNG");
+         Test::Result result("Processor_RNG");
 
-         if(Botan::RDRAND_RNG::available())
+         if(Botan::Processor_RNG::available())
             {
-            Botan::RDRAND_RNG rng;
+            Botan::Processor_RNG rng;
 
-            result.test_eq("Expected name", rng.name(), "RDRAND");
-            result.confirm("RDRAND always seeded", rng.is_seeded());
+            result.test_ne("Has a name", rng.name(), "");
+            result.confirm("CPU RNG always seeded", rng.is_seeded());
             rng.clear(); // clear is a noop for rdrand
-            result.confirm("RDRAND always seeded", rng.is_seeded());
+            result.confirm("CPU RNG always seeded", rng.is_seeded());
 
             size_t reseed_bits = rng.reseed(Botan::Entropy_Sources::global_sources(),
                                             256,
                                             std::chrono::seconds(1));
-            result.test_eq("RDRAND cannot consume inputs", reseed_bits, size_t(0));
+            result.test_eq("CPU RNG cannot consume inputs", reseed_bits, size_t(0));
 
             /*
-            RDRAND_RNG ignores add_entropy calls - confirm this by passing
+            Processor_RNG ignores add_entropy calls - confirm this by passing
             an invalid ptr/length field to add_entropy. If it examined its
             arguments, it would crash...
             */
@@ -819,8 +819,8 @@ class RDRAND_RNG_Tests final : public Test
             }
          else
             {
-            result.test_throws("RDRAND_RNG throws if instruction not available",
-                               []() { Botan::RDRAND_RNG rng; });
+            result.test_throws("Processor_RNG throws if instruction not available",
+                               []() { Botan::Processor_RNG rng; });
             }
 
 
@@ -828,7 +828,7 @@ class RDRAND_RNG_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("rdrand_rng", RDRAND_RNG_Tests);
+BOTAN_REGISTER_TEST("processor_rng", Processor_RNG_Tests);
 
 #endif
 
