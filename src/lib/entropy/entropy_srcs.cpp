@@ -116,7 +116,10 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
    if(name == "hwrng" || name == "rdrand" || name == "p9_darn")
       {
-      return std::unique_ptr<Entropy_Source>(new Processor_RNG_EntropySource);
+      if(Processor_RNG::available())
+         {
+         return std::unique_ptr<Entropy_Source>(new Processor_RNG_EntropySource);
+         }
       }
 #endif
 

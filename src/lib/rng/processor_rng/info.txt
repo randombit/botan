@@ -9,3 +9,8 @@ icc
 msvc
 </cc>
 
+<arch>
+x86_32
+x86_64
+ppc64
+</arch>
