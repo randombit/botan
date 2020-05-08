@@ -396,25 +396,49 @@ inline void ks_expand(uint32_t B[8], const uint32_t K[], size_t r)
 
 inline void shift_rows(uint32_t B[8])
    {
+   // 3 0 1 2 7 4 5 6 10 11 8 9 14 15 12 13 17 18 19 16 21 22 23 20 24 25 26 27 28 29 30 31
+#if defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
+   for(size_t i = 0; i != 8; i += 2)
+      {
+      uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i+1];
+      x = bit_permute_step<uint64_t>(x, 0x0022331100223311, 2);
+      x = bit_permute_step<uint64_t>(x, 0x0055005500550055, 1);
+      B[i] = static_cast<uint32_t>(x >> 32);
+      B[i+1] = static_cast<uint32_t>(x);
+      }
+#else
    for(size_t i = 0; i != 8; ++i)
       {
       uint32_t x = B[i];
-      // 3 0 1 2 7 4 5 6 10 11 8 9 14 15 12 13 17 18 19 16 21 22 23 20 24 25 26 27 28 29 30 31
-      x = bit_permute_step<uint32_t>(x, 0x00223311, 2);  // Butterfly, stage 1
-      x = bit_permute_step<uint32_t>(x, 0x00550055, 1);  // Butterfly, stage 0
+      x = bit_permute_step<uint32_t>(x, 0x00223311, 2);
+      x = bit_permute_step<uint32_t>(x, 0x00550055, 1);
       B[i] = x;
       }
+#endif
    }
 
 inline void inv_shift_rows(uint32_t B[8])
    {
+   // Inverse of shift_rows, just inverting the steps
+
+#if defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
+   for(size_t i = 0; i != 8; i += 2)
+      {
+      uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i+1];
+      x = bit_permute_step<uint64_t>(x, 0x0055005500550055, 1);
+      x = bit_permute_step<uint64_t>(x, 0x0022331100223311, 2);
+      B[i] = static_cast<uint32_t>(x >> 32);
+      B[i+1] = static_cast<uint32_t>(x);
+      }
+#else
    for(size_t i = 0; i != 8; ++i)
       {
       uint32_t x = B[i];
-      x = bit_permute_step<uint32_t>(x, 0x00550055, 1);  // Butterfly, stage 0
-      x = bit_permute_step<uint32_t>(x, 0x00223311, 2);  // Butterfly, stage 1
+      x = bit_permute_step<uint32_t>(x, 0x00550055, 1);
+      x = bit_permute_step<uint32_t>(x, 0x00223311, 2);
       B[i] = x;
       }
+#endif
    }
 
 inline void mix_columns(uint32_t B[8])
@@ -478,7 +502,7 @@ void inv_mix_columns(uint32_t B[8])
       const uint32_t X13 = X9 ^ X4[i];
       const uint32_t X14 = X8[i] ^ X4[i] ^ X2[i];
 
-      B[i] = X14 ^ rotr<8>(X9) ^ rotr<24>(X11) ^ rotr<16>(X13);
+      B[i] = X14 ^ rotr<8>(X9) ^ rotr<16>(X13) ^ rotr<24>(X11);
       }
    }
 
@@ -499,9 +523,11 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       ks_expand(&KS[8*i], EK.data(), 4*i + 4);
       }
 
+   const size_t BITSLICED_BLOCKS = 2;
+
    while(blocks > 0)
       {
-      const size_t this_loop = (blocks >= 2) ? 2 : 1;
+      const size_t this_loop = std::min(blocks, BITSLICED_BLOCKS);
 
       uint32_t B[8] = { 0 };
 
@@ -530,13 +556,10 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       for(size_t i = 0; i != 8; ++i)
          B[i] ^= EK[4*rounds + i % 4];
 
-      if(this_loop == 2)
-         store_be(out, B[0], B[1], B[2], B[3], B[4], B[5], B[6], B[7]);
-      else
-         store_be(out, B[0], B[1], B[2], B[3]);
+      copy_out_be(out, this_loop*4*sizeof(uint32_t), B);
 
-      in += this_loop*16;
-      out += this_loop*16;
+      in += this_loop * 16;
+      out += this_loop * 16;
       blocks -= this_loop;
       }
    }
@@ -557,9 +580,11 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       ks_expand(&KS[8*i], DK.data(), 4*i + 4);
       }
 
+   const size_t BITSLICED_BLOCKS = 2;
+
    while(blocks > 0)
       {
-      const size_t this_loop = (blocks >= 2) ? 2 : 1;
+      const size_t this_loop = std::min(blocks, BITSLICED_BLOCKS);
 
       uint32_t B[8] = { 0 };
 
@@ -588,13 +613,10 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       for(size_t i = 0; i != 8; ++i)
          B[i] ^= DK[4*rounds + i % 4];
 
-      if(this_loop == 2)
-         store_be(out, B[0], B[1], B[2], B[3], B[4], B[5], B[6], B[7]);
-      else
-         store_be(out, B[0], B[1], B[2], B[3]);
+      copy_out_be(out, this_loop*4*sizeof(uint32_t), B);
 
-      in += this_loop*16;
-      out += this_loop*16;
+      in += this_loop * 16;
+      out += this_loop * 16;
       blocks -= this_loop;
       }
    }
@@ -613,31 +635,19 @@ inline uint32_t InvMixColumn(uint8_t s1)
    return make_uint32(s14, s9, s13, s11);
    }
 
-inline uint32_t SE_word(uint32_t x)
+uint32_t SE_word(uint32_t x)
    {
    uint32_t I[8] = { 0 };
 
-   // 0 8 16 24 1 9 17 25 2 10 18 26 3 11 19 27 4 12 20 28 5 13 21 29 6 14 22 30 7 15 23 31
-   x = bit_permute_step<uint32_t>(x, 0x00aa00aa, 7);  // Bit index swap 0,3
-   x = bit_permute_step<uint32_t>(x, 0x0000cccc, 14); // Bit index swap 1,4
-   x = bit_permute_step<uint32_t>(x, 0x00f000f0, 4);  // Bit index swap 2,3
-   x = bit_permute_step<uint32_t>(x, 0x0000ff00, 8);  // Bit index swap 3,4
-
    for(size_t i = 0; i != 8; ++i)
-      I[i] = (x >> (28-4*i)) & 0xF;
+      I[i] = (x >> (7-i)) & 0x01010101;
 
    AES_SBOX(I);
 
    x = 0;
 
    for(size_t i = 0; i != 8; ++i)
-      x = (x << 4) + (I[i] & 0xF);
-
-   // 0 4 8 12 16 20 24 28 1 5 9 13 17 21 25 29 2 6 10 14 18 22 26 30 3 7 11 15 19 23 27 31
-   x = bit_permute_step<uint32_t>(x, 0x0a0a0a0a, 3);  // Bit index swap 0,2
-   x = bit_permute_step<uint32_t>(x, 0x00cc00cc, 6);  // Bit index swap 1,3
-   x = bit_permute_step<uint32_t>(x, 0x0000f0f0, 12);  // Bit index swap 2,4
-   x = bit_permute_step<uint32_t>(x, 0x0000ff00, 8);  // Bit index swap 3,4
+      x |= ((I[i] & 0x01010101) << (7-i));
 
    return x;
    }
