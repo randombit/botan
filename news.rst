@@ -4,7 +4,11 @@ Release Notes
 Version 2.15.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* AES is now constant time on all CPUs (GH #2346 #2348 #2329)
+* AES is now constant time on all CPUs (GH #2346 #2348 #2353 #2329)
+
+* Add Processor_RNG which wraps RDRAND or the POWER DARN RNG
+  instructions. The previous RDRAND_RNG interface is deprecated.
+  (GH #2352)
 
 * The documentation claimed that mlocked pages were created with a
   guard page both before and after. However only a trailing guard page
