@@ -17,169 +17,193 @@ namespace Botan {
    #define BOTAN_HAS_HW_AES_SUPPORT
 #endif
 
+/*
+* One of three AES implementation strategies are used to get a constant time
+* implementation which is immune to common cache/timing based side channels:
+*
+* - If AES hardware support is available (AES-NI, POWER8, Aarch64) use that
+*
+* - If 128-bit SIMD with byte shuffles are available (SSSE3, NEON, or Altivec),
+*   use the vperm technique published by Mike Hamburg at CHES 2009.
+*
+* - If no hardware or SIMD support, fall back to a constant time bitsliced
+*   implementation. This uses 32-bit words resulting in 2 blocks being processed
+*   in parallel. Moving to 4 blocks (with 64-bit words) would approximately
+*   double performance on 64-bit CPUs. Likewise moving to 128 bit SIMD would
+*   again approximately double performance vs 64-bit. However the assumption is
+*   that most 64-bit CPUs either have hardware AES or SIMD shuffle support and
+*   that the majority of users falling back to this code will be 32-bit cores.
+*   If this assumption proves to be unsound, the bitsliced code can easily be
+*   extended to operate on either 32 or 64 bit words depending on the native
+*   wordsize of the target processor.
+*
+* Useful references
+*
+* - "Accelerating AES with Vector Permute Instructions" Mike Hamburg
+*   https://www.shiftleft.org/papers/vector_aes/vector_aes.pdf
+*
+* - "Faster and Timing-Attack Resistant AES-GCM" Käsper and Schwabe
+*   https://eprint.iacr.org/2009/129.pdf
+*
+* - "A new combinational logic minimization technique with applications to cryptology."
+*   Boyar and Peralta https://eprint.iacr.org/2009/191.pdf
+*
+* - "A depth-16 circuit for the AES S-box" Boyar and Peralta
+*    https://eprint.iacr.org/2011/332.pdf
+*
+* - "A Very Compact S-box for AES" Canright
+*   https://www.iacr.org/archive/ches2005/032.pdf
+*   https://core.ac.uk/download/pdf/36694529.pdf (extended)
+*/
+
 namespace {
 
 /*
 This is an AES sbox circuit which can execute in bitsliced mode up to 32x in
 parallel.
 
-The circuit is from "A depth-16 circuit for the AES S-box" by Boyar
-and Peralta (https://eprint.iacr.org/2011/332.pdf)
+The circuit is from the "Circuit Minimization Team" group
+http://www.cs.yale.edu/homes/peralta/CircuitStuff/CMT.html
+http://www.cs.yale.edu/homes/peralta/CircuitStuff/SLP_AES_113.txt
+
+This circuit has size 113 and depth 27. In software it is much faster than
+circuits which are considered faster for hardware purposes (where circuit depth
+is the critical constraint), because unlike in hardware, on common CPUs we can
+only execute - at best - 3 or 4 logic operations per cycle. So a smaller circuit
+is superior. On an x86-64 machine this circuit is about 15% faster than the
+circuit of size 128 and depth 16 given in "A depth-16 circuit for the AES S-box".
+
+Another circuit for AES Sbox of size 102 and depth 24 is describted in "New
+Circuit Minimization Techniques for Smaller and Faster AES SBoxes"
+[https://eprint.iacr.org/2019/802] however it relies on "non-standard" gates
+like MUX, NOR, NAND, etc and so in practice in bitsliced software, its size is
+actually a bit larger than this circuit, as few CPUs have such instructions and
+otherwise they must be emulated using a sequence of available bit operations.
 */
 void AES_SBOX(uint32_t V[8])
    {
-   const uint32_t I0 = V[0];
-   const uint32_t I1 = V[1];
-   const uint32_t I2 = V[2];
-   const uint32_t I3 = V[3];
-   const uint32_t I4 = V[4];
-   const uint32_t I5 = V[5];
-   const uint32_t I6 = V[6];
-   const uint32_t I7 = V[7];
+   const uint32_t U0 = V[0];
+   const uint32_t U1 = V[1];
+   const uint32_t U2 = V[2];
+   const uint32_t U3 = V[3];
+   const uint32_t U4 = V[4];
+   const uint32_t U5 = V[5];
+   const uint32_t U6 = V[6];
+   const uint32_t U7 = V[7];
 
-   // Figure 5:  Top linear transform in forward direction.
-   const uint32_t T1 = I0 ^ I3;
-   const uint32_t T2 = I0 ^ I5;
-   const uint32_t T3 = I0 ^ I6;
-   const uint32_t T4 = I3 ^ I5;
-   const uint32_t T5 = I4 ^ I6;
-   const uint32_t T6 = T1 ^ T5;
-   const uint32_t T7 = I1 ^ I2;
-
-   const uint32_t T8 = I7 ^ T6;
-   const uint32_t T9 = I7 ^ T7;
-   const uint32_t T10 = T6 ^ T7;
-   const uint32_t T11 = I1 ^ I5;
-   const uint32_t T12 = I2 ^ I5;
-   const uint32_t T13 = T3 ^ T4;
-   const uint32_t T14 = T6 ^ T11;
-
-   const uint32_t T15 = T5 ^ T11;
-   const uint32_t T16 = T5 ^ T12;
-   const uint32_t T17 = T9 ^ T16;
-   const uint32_t T18 = I3 ^ I7;
-   const uint32_t T19 = T7 ^ T18;
-   const uint32_t T20 = T1 ^ T19;
-   const uint32_t T21 = I6 ^ I7;
-
-   const uint32_t T22 = T7 ^ T21;
-   const uint32_t T23 = T2 ^ T22;
-   const uint32_t T24 = T2 ^ T10;
-   const uint32_t T25 = T20 ^ T17;
-   const uint32_t T26 = T3 ^ T16;
-   const uint32_t T27 = T1 ^ T12;
-
-   const uint32_t D = I7;
-
-   // Figure 7:  Shared part of AES S-box circuit
-   const uint32_t M1 = T13 & T6;
-   const uint32_t M2 = T23 & T8;
-   const uint32_t M3 = T14 ^ M1;
-   const uint32_t M4 = T19 & D;
-   const uint32_t M5 = M4 ^ M1;
-   const uint32_t M6 = T3 & T16;
-   const uint32_t M7 = T22 & T9;
-   const uint32_t M8 = T26 ^ M6;
-   const uint32_t M9 = T20 & T17;
-   const uint32_t M10 = M9 ^ M6;
-   const uint32_t M11 = T1 & T15;
-   const uint32_t M12 = T4 & T27;
-   const uint32_t M13 = M12 ^ M11;
-   const uint32_t M14 = T2 & T10;
-   const uint32_t M15 = M14 ^ M11;
-   const uint32_t M16 = M3 ^ M2;
-
-   const uint32_t M17 = M5 ^ T24;
-   const uint32_t M18 = M8 ^ M7;
-   const uint32_t M19 = M10 ^ M15;
-   const uint32_t M20 = M16 ^ M13;
-   const uint32_t M21 = M17 ^ M15;
-   const uint32_t M22 = M18 ^ M13;
-   const uint32_t M23 = M19 ^ T25;
-   const uint32_t M24 = M22 ^ M23;
-   const uint32_t M25 = M22 & M20;
-   const uint32_t M26 = M21 ^ M25;
-   const uint32_t M27 = M20 ^ M21;
-   const uint32_t M28 = M23 ^ M25;
-   const uint32_t M29 = M28 & M27;
-   const uint32_t M30 = M26 & M24;
-   const uint32_t M31 = M20 & M23;
-   const uint32_t M32 = M27 & M31;
-
-   const uint32_t M33 = M27 ^ M25;
-   const uint32_t M34 = M21 & M22;
-   const uint32_t M35 = M24 & M34;
-   const uint32_t M36 = M24 ^ M25;
-   const uint32_t M37 = M21 ^ M29;
-   const uint32_t M38 = M32 ^ M33;
-   const uint32_t M39 = M23 ^ M30;
-   const uint32_t M40 = M35 ^ M36;
-   const uint32_t M41 = M38 ^ M40;
-   const uint32_t M42 = M37 ^ M39;
-   const uint32_t M43 = M37 ^ M38;
-   const uint32_t M44 = M39 ^ M40;
-   const uint32_t M45 = M42 ^ M41;
-   const uint32_t M46 = M44 & T6;
-   const uint32_t M47 = M40 & T8;
-   const uint32_t M48 = M39 & D;
-
-   const uint32_t M49 = M43 & T16;
-   const uint32_t M50 = M38 & T9;
-   const uint32_t M51 = M37 & T17;
-   const uint32_t M52 = M42 & T15;
-   const uint32_t M53 = M45 & T27;
-   const uint32_t M54 = M41 & T10;
-   const uint32_t M55 = M44 & T13;
-   const uint32_t M56 = M40 & T23;
-   const uint32_t M57 = M39 & T19;
-   const uint32_t M58 = M43 & T3;
-   const uint32_t M59 = M38 & T22;
-   const uint32_t M60 = M37 & T20;
-   const uint32_t M61 = M42 & T1;
-   const uint32_t M62 = M45 & T4;
-   const uint32_t M63 = M41 & T2;
-
-   // Figure 8:  Bottom linear transform in forward direction.
-   const uint32_t L0 = M61 ^ M62;
-   const uint32_t L1 = M50 ^ M56;
-   const uint32_t L2 = M46 ^ M48;
-   const uint32_t L3 = M47 ^ M55;
-   const uint32_t L4 = M54 ^ M58;
-   const uint32_t L5 = M49 ^ M61;
-   const uint32_t L6 = M62 ^ L5;
-   const uint32_t L7 = M46 ^ L3;
-   const uint32_t L8 = M51 ^ M59;
-   const uint32_t L9 = M52 ^ M53;
-   const uint32_t L10 = M53 ^ L4;
-   const uint32_t L11 = M60 ^ L2;
-   const uint32_t L12 = M48 ^ M51;
-   const uint32_t L13 = M50 ^ L0;
-   const uint32_t L14 = M52 ^ M61;
-   const uint32_t L15 = M55 ^ L1;
-   const uint32_t L16 = M56 ^ L0;
-   const uint32_t L17 = M57 ^ L1;
-   const uint32_t L18 = M58 ^ L8;
-   const uint32_t L19 = M63 ^ L4;
-
-   const uint32_t L20 = L0 ^ L1;
-   const uint32_t L21 = L1 ^ L7;
-   const uint32_t L22 = L3 ^ L12;
-   const uint32_t L23 = L18 ^ L2;
-   const uint32_t L24 = L15 ^ L9;
-   const uint32_t L25 = L6 ^ L10;
-   const uint32_t L26 = L7 ^ L9;
-   const uint32_t L27 = L8 ^ L10;
-   const uint32_t L28 = L11 ^ L14;
-   const uint32_t L29 = L11 ^ L17;
-
-   const uint32_t S0 = L6 ^ L24;
-   const uint32_t S1 = ~(L16 ^ L26);
-   const uint32_t S2 = ~(L19 ^ L28);
-   const uint32_t S3 = L6 ^ L21;
-   const uint32_t S4 = L20 ^ L22;
-   const uint32_t S5 = L25 ^ L29;
-   const uint32_t S6 = ~(L13 ^ L27);
-   const uint32_t S7 = ~(L6 ^ L23);
+   const uint32_t y14 = U3 ^ U5;
+   const uint32_t y13 = U0 ^ U6;
+   const uint32_t y9 = U0 ^ U3;
+   const uint32_t y8 = U0 ^ U5;
+   const uint32_t t0 = U1 ^ U2;
+   const uint32_t y1 = t0 ^ U7;
+   const uint32_t y4 = y1 ^ U3;
+   const uint32_t y12 = y13 ^ y14;
+   const uint32_t y2 = y1 ^ U0;
+   const uint32_t y5 = y1 ^ U6;
+   const uint32_t y3 = y5 ^ y8;
+   const uint32_t t1 = U4 ^ y12;
+   const uint32_t y15 = t1 ^ U5;
+   const uint32_t y20 = t1 ^ U1;
+   const uint32_t y6 = y15 ^ U7;
+   const uint32_t y10 = y15 ^ t0;
+   const uint32_t y11 = y20 ^ y9;
+   const uint32_t y7 = U7 ^ y11;
+   const uint32_t y17 = y10 ^ y11;
+   const uint32_t y19 = y10 ^ y8;
+   const uint32_t y16 = t0 ^ y11;
+   const uint32_t y21 = y13 ^ y16;
+   const uint32_t y18 = U0 ^ y16;
+   const uint32_t t2 = y12 & y15;
+   const uint32_t t3 = y3 & y6;
+   const uint32_t t4 = t3 ^ t2;
+   const uint32_t t5 = y4 & U7;
+   const uint32_t t6 = t5 ^ t2;
+   const uint32_t t7 = y13 & y16;
+   const uint32_t t8 = y5 & y1;
+   const uint32_t t9 = t8 ^ t7;
+   const uint32_t t10 = y2 & y7;
+   const uint32_t t11 = t10 ^ t7;
+   const uint32_t t12 = y9 & y11;
+   const uint32_t t13 = y14 & y17;
+   const uint32_t t14 = t13 ^ t12;
+   const uint32_t t15 = y8 & y10;
+   const uint32_t t16 = t15 ^ t12;
+   const uint32_t t17 = t4 ^ y20;
+   const uint32_t t18 = t6 ^ t16;
+   const uint32_t t19 = t9 ^ t14;
+   const uint32_t t20 = t11 ^ t16;
+   const uint32_t t21 = t17 ^ t14;
+   const uint32_t t22 = t18 ^ y19;
+   const uint32_t t23 = t19 ^ y21;
+   const uint32_t t24 = t20 ^ y18;
+   const uint32_t t25 = t21 ^ t22;
+   const uint32_t t26 = t21 & t23;
+   const uint32_t t27 = t24 ^ t26;
+   const uint32_t t28 = t25 & t27;
+   const uint32_t t29 = t28 ^ t22;
+   const uint32_t t30 = t23 ^ t24;
+   const uint32_t t31 = t22 ^ t26;
+   const uint32_t t32 = t31 & t30;
+   const uint32_t t33 = t32 ^ t24;
+   const uint32_t t34 = t23 ^ t33;
+   const uint32_t t35 = t27 ^ t33;
+   const uint32_t t36 = t24 & t35;
+   const uint32_t t37 = t36 ^ t34;
+   const uint32_t t38 = t27 ^ t36;
+   const uint32_t t39 = t29 & t38;
+   const uint32_t t40 = t25 ^ t39;
+   const uint32_t t41 = t40 ^ t37;
+   const uint32_t t42 = t29 ^ t33;
+   const uint32_t t43 = t29 ^ t40;
+   const uint32_t t44 = t33 ^ t37;
+   const uint32_t t45 = t42 ^ t41;
+   const uint32_t z0 = t44 & y15;
+   const uint32_t z1 = t37 & y6;
+   const uint32_t z2 = t33 & U7;
+   const uint32_t z3 = t43 & y16;
+   const uint32_t z4 = t40 & y1;
+   const uint32_t z5 = t29 & y7;
+   const uint32_t z6 = t42 & y11;
+   const uint32_t z7 = t45 & y17;
+   const uint32_t z8 = t41 & y10;
+   const uint32_t z9 = t44 & y12;
+   const uint32_t z10 = t37 & y3;
+   const uint32_t z11 = t33 & y4;
+   const uint32_t z12 = t43 & y13;
+   const uint32_t z13 = t40 & y5;
+   const uint32_t z14 = t29 & y2;
+   const uint32_t z15 = t42 & y9;
+   const uint32_t z16 = t45 & y14;
+   const uint32_t z17 = t41 & y8;
+   const uint32_t tc1 = z15 ^ z16;
+   const uint32_t tc2 = z10 ^ tc1;
+   const uint32_t tc3 = z9 ^ tc2;
+   const uint32_t tc4 = z0 ^ z2;
+   const uint32_t tc5 = z1 ^ z0;
+   const uint32_t tc6 = z3 ^ z4;
+   const uint32_t tc7 = z12 ^ tc4;
+   const uint32_t tc8 = z7 ^ tc6;
+   const uint32_t tc9 = z8 ^ tc7;
+   const uint32_t tc10 = tc8 ^ tc9;
+   const uint32_t tc11 = tc6 ^ tc5;
+   const uint32_t tc12 = z3 ^ z5;
+   const uint32_t tc13 = z13 ^ tc1;
+   const uint32_t tc14 = tc4 ^ tc12;
+   const uint32_t S3 = tc3 ^ tc11;
+   const uint32_t tc16 = z6 ^ tc8;
+   const uint32_t tc17 = z14 ^ tc10;
+   const uint32_t tc18 = tc13 ^ tc14;
+   const uint32_t S7 = ~(z12 ^ tc18);
+   const uint32_t tc20 = z15 ^ tc16;
+   const uint32_t tc21 = tc2 ^ z11;
+   const uint32_t S0 = tc3 ^ tc16;
+   const uint32_t S6 = ~(tc10 ^ tc18);
+   const uint32_t S4 = tc14 ^ S3;
+   const uint32_t S1 = ~(S3 ^ tc16);
+   const uint32_t tc26 = tc17 ^ tc20;
+   const uint32_t S2 = ~(tc26 ^ z17);
+   const uint32_t S5 = tc21 ^ tc17;
 
    V[0] = S0;
    V[1] = S1;
@@ -191,163 +215,152 @@ void AES_SBOX(uint32_t V[8])
    V[7] = S7;
    }
 
+/*
+A circuit for inverse AES Sbox of size 121 and depth 21 from
+http://www.cs.yale.edu/homes/peralta/CircuitStuff/CMT.html
+http://www.cs.yale.edu/homes/peralta/CircuitStuff/Sinv.txt
+*/
 void AES_INV_SBOX(uint32_t V[8])
    {
-   const uint32_t I0 = V[0];
-   const uint32_t I1 = V[1];
-   const uint32_t I2 = V[2];
-   const uint32_t I3 = V[3];
-   const uint32_t I4 = V[4];
-   const uint32_t I5 = V[5];
-   const uint32_t I6 = V[6];
-   const uint32_t I7 = V[7];
+   const uint32_t U0 = V[0];
+   const uint32_t U1 = V[1];
+   const uint32_t U2 = V[2];
+   const uint32_t U3 = V[3];
+   const uint32_t U4 = V[4];
+   const uint32_t U5 = V[5];
+   const uint32_t U6 = V[6];
+   const uint32_t U7 = V[7];
 
-   // Figure 6:  Top linear transform in reverse direction
-   const uint32_t T23 = I0 ^ I3;
-   const uint32_t T22 = ~(I1 ^ I3);
-   const uint32_t T2 = ~(I0 ^ I1);
-   const uint32_t T1 = I3 ^ I4;
-   const uint32_t T24 = ~(I4 ^ I7);
-   const uint32_t R5 = I6 ^ I7;
-   const uint32_t T8 = ~(I1 ^ T23);
-   const uint32_t T19 = T22 ^ R5;
-   const uint32_t T9 = ~(I7 ^ T1);
-   const uint32_t T10 = T2 ^ T24;
-   const uint32_t T13 = T2 ^ R5;
-   const uint32_t T3 = T1 ^ R5;
-   const uint32_t T25 = ~(I2 ^ T1);
-   const uint32_t R13 = I1 ^ I6;
-   const uint32_t T17 = ~(I2 ^ T19);
-   const uint32_t T20 = T24 ^ R13;
-   const uint32_t T4 = I4 ^ T8;
-   const uint32_t R17 = ~(I2 ^ I5);
-   const uint32_t R18 = ~(I5 ^ I6);
-   const uint32_t R19 = ~(I2 ^ I4);
-   const uint32_t Y5 = I0 ^ R17;
-   const uint32_t T6 = T22 ^ R17;
-   const uint32_t T16 = R13 ^ R19;
-   const uint32_t T27 = T1 ^ R18;
-   const uint32_t T15 = T10 ^ T27;
-   const uint32_t T14 = T10 ^ R18;
-   const uint32_t T26 = T3 ^ T16;
+   const uint32_t Y0 = U0 ^ U3;
+   const uint32_t Y2 = ~(U1 ^ U3);
+   const uint32_t Y4 = U0 ^ Y2;
+   const uint32_t RTL0 = U6 ^ U7;
+   const uint32_t Y1 = Y2 ^ RTL0;
+   const uint32_t Y7 = ~(U2 ^ Y1);
+   const uint32_t RTL1 = U3 ^ U4;
+   const uint32_t Y6 = ~(U7 ^ RTL1);
+   const uint32_t Y3 = Y1 ^ RTL1;
+   const uint32_t RTL2 = ~(U0 ^ U2);
+   const uint32_t Y5 = U5 ^ RTL2;
+   const uint32_t sa1 = Y0 ^ Y2;
+   const uint32_t sa0 = Y1 ^ Y3;
+   const uint32_t sb1 = Y4 ^ Y6;
+   const uint32_t sb0 = Y5 ^ Y7;
+   const uint32_t ah = Y0 ^ Y1;
+   const uint32_t al = Y2 ^ Y3;
+   const uint32_t aa = sa0 ^ sa1;
+   const uint32_t bh = Y4 ^ Y5;
+   const uint32_t bl = Y6 ^ Y7;
+   const uint32_t bb = sb0 ^ sb1;
+   const uint32_t ab20 = sa0 ^ sb0;
+   const uint32_t ab22 = al ^ bl;
+   const uint32_t ab23 = Y3 ^ Y7;
+   const uint32_t ab21 = sa1 ^ sb1;
+   const uint32_t abcd1 = ah & bh;
+   const uint32_t rr1 = Y0 & Y4;
+   const uint32_t ph11 = ab20 ^ abcd1;
+   const uint32_t t01 = Y1 & Y5;
+   const uint32_t ph01 = t01 ^ abcd1;
+   const uint32_t abcd2 = al & bl;
+   const uint32_t r1 = Y2 & Y6;
+   const uint32_t pl11 = ab22 ^ abcd2;
+   const uint32_t r2 = Y3 & Y7;
+   const uint32_t pl01 = r2 ^ abcd2;
+   const uint32_t r3 = sa0 & sb0;
+   const uint32_t vr1 = aa & bb;
+   const uint32_t pr1 = vr1 ^ r3;
+   const uint32_t wr1 = sa1 & sb1;
+   const uint32_t qr1 = wr1 ^ r3;
+   const uint32_t ab0 = ph11 ^ rr1;
+   const uint32_t ab1 = ph01 ^ ab21;
+   const uint32_t ab2 = pl11 ^ r1;
+   const uint32_t ab3 = pl01 ^ qr1;
+   const uint32_t cp1 = ab0 ^ pr1;
+   const uint32_t cp2 = ab1 ^ qr1;
+   const uint32_t cp3 = ab2 ^ pr1;
+   const uint32_t cp4 = ab3 ^ ab23;
+   const uint32_t tinv1 = cp3 ^ cp4;
+   const uint32_t tinv2 = cp3 & cp1;
+   const uint32_t tinv3 = cp2 ^ tinv2;
+   const uint32_t tinv4 = cp1 ^ cp2;
+   const uint32_t tinv5 = cp4 ^ tinv2;
+   const uint32_t tinv6 = tinv5 & tinv4;
+   const uint32_t tinv7 = tinv3 & tinv1;
+   const uint32_t d2 = cp4 ^ tinv7;
+   const uint32_t d0 = cp2 ^ tinv6;
+   const uint32_t tinv8 = cp1 & cp4;
+   const uint32_t tinv9 = tinv4 & tinv8;
+   const uint32_t tinv10 = tinv4 ^ tinv2;
+   const uint32_t d1 = tinv9 ^ tinv10;
+   const uint32_t tinv11 = cp2 & cp3;
+   const uint32_t tinv12 = tinv1 & tinv11;
+   const uint32_t tinv13 = tinv1 ^ tinv2;
+   const uint32_t d3 = tinv12 ^ tinv13;
+   const uint32_t sd1 = d1 ^ d3;
+   const uint32_t sd0 = d0 ^ d2;
+   const uint32_t dl = d0 ^ d1;
+   const uint32_t dh = d2 ^ d3;
+   const uint32_t dd = sd0 ^ sd1;
+   const uint32_t abcd3 = dh & bh;
+   const uint32_t rr2 = d3 & Y4;
+   const uint32_t t02 = d2 & Y5;
+   const uint32_t abcd4 = dl & bl;
+   const uint32_t r4 = d1 & Y6;
+   const uint32_t r5 = d0 & Y7;
+   const uint32_t r6 = sd0 & sb0;
+   const uint32_t vr2 = dd & bb;
+   const uint32_t wr2 = sd1 & sb1;
+   const uint32_t abcd5 = dh & ah;
+   const uint32_t r7 = d3 & Y0;
+   const uint32_t r8 = d2 & Y1;
+   const uint32_t abcd6 = dl & al;
+   const uint32_t r9 = d1 & Y2;
+   const uint32_t r10 = d0 & Y3;
+   const uint32_t r11 = sd0 & sa0;
+   const uint32_t vr3 = dd & aa;
+   const uint32_t wr3 = sd1 & sa1;
+   const uint32_t ph12 = rr2 ^ abcd3;
+   const uint32_t ph02 = t02 ^ abcd3;
+   const uint32_t pl12 = r4 ^ abcd4;
+   const uint32_t pl02 = r5 ^ abcd4;
+   const uint32_t pr2 = vr2 ^ r6;
+   const uint32_t qr2 = wr2 ^ r6;
+   const uint32_t p0 = ph12 ^ pr2;
+   const uint32_t p1 = ph02 ^ qr2;
+   const uint32_t p2 = pl12 ^ pr2;
+   const uint32_t p3 = pl02 ^ qr2;
+   const uint32_t ph13 = r7 ^ abcd5;
+   const uint32_t ph03 = r8 ^ abcd5;
+   const uint32_t pl13 = r9 ^ abcd6;
+   const uint32_t pl03 = r10 ^ abcd6;
+   const uint32_t pr3 = vr3 ^ r11;
+   const uint32_t qr3 = wr3 ^ r11;
+   const uint32_t p4 = ph13 ^ pr3;
+   const uint32_t S7 = ph03 ^ qr3;
+   const uint32_t p6 = pl13 ^ pr3;
+   const uint32_t p7 = pl03 ^ qr3;
+   const uint32_t S3 = p1 ^ p6;
+   const uint32_t S6 = p2 ^ p6;
+   const uint32_t S0 = p3 ^ p6;
+   const uint32_t X11 = p0 ^ p2;
+   const uint32_t S5 = S0 ^ X11;
+   const uint32_t X13 = p4 ^ p7;
+   const uint32_t X14 = X11 ^ X13;
+   const uint32_t S1 = S3 ^ X14;
+   const uint32_t X16 = p1 ^ S7;
+   const uint32_t S2 = X14 ^ X16;
+   const uint32_t X18 = p0 ^ p4;
+   const uint32_t X19 = S5 ^ X16;
+   const uint32_t S4 = X18 ^ X19;
 
-   const uint32_t D = Y5;
-
-   // Figure 7:  Shared part of AES S-box circuit
-   const uint32_t M1 = T13 & T6;
-   const uint32_t M2 = T23 & T8;
-   const uint32_t M3 = T14 ^ M1;
-   const uint32_t M4 = T19 & D;
-   const uint32_t M5 = M4 ^ M1;
-   const uint32_t M6 = T3 & T16;
-   const uint32_t M7 = T22 & T9;
-   const uint32_t M8 = T26 ^ M6;
-   const uint32_t M9 = T20 & T17;
-   const uint32_t M10 = M9 ^ M6;
-   const uint32_t M11 = T1 & T15;
-   const uint32_t M12 = T4 & T27;
-   const uint32_t M13 = M12 ^ M11;
-   const uint32_t M14 = T2 & T10;
-   const uint32_t M15 = M14 ^ M11;
-   const uint32_t M16 = M3 ^ M2;
-
-   const uint32_t M17 = M5 ^ T24;
-   const uint32_t M18 = M8 ^ M7;
-   const uint32_t M19 = M10 ^ M15;
-   const uint32_t M20 = M16 ^ M13;
-   const uint32_t M21 = M17 ^ M15;
-   const uint32_t M22 = M18 ^ M13;
-   const uint32_t M23 = M19 ^ T25;
-   const uint32_t M24 = M22 ^ M23;
-   const uint32_t M25 = M22 & M20;
-   const uint32_t M26 = M21 ^ M25;
-   const uint32_t M27 = M20 ^ M21;
-   const uint32_t M28 = M23 ^ M25;
-   const uint32_t M29 = M28 & M27;
-   const uint32_t M30 = M26 & M24;
-   const uint32_t M31 = M20 & M23;
-   const uint32_t M32 = M27 & M31;
-
-   const uint32_t M33 = M27 ^ M25;
-   const uint32_t M34 = M21 & M22;
-   const uint32_t M35 = M24 & M34;
-   const uint32_t M36 = M24 ^ M25;
-   const uint32_t M37 = M21 ^ M29;
-   const uint32_t M38 = M32 ^ M33;
-   const uint32_t M39 = M23 ^ M30;
-   const uint32_t M40 = M35 ^ M36;
-   const uint32_t M41 = M38 ^ M40;
-   const uint32_t M42 = M37 ^ M39;
-   const uint32_t M43 = M37 ^ M38;
-   const uint32_t M44 = M39 ^ M40;
-   const uint32_t M45 = M42 ^ M41;
-   const uint32_t M46 = M44 & T6;
-   const uint32_t M47 = M40 & T8;
-   const uint32_t M48 = M39 & D;
-
-   const uint32_t M49 = M43 & T16;
-   const uint32_t M50 = M38 & T9;
-   const uint32_t M51 = M37 & T17;
-   const uint32_t M52 = M42 & T15;
-   const uint32_t M53 = M45 & T27;
-   const uint32_t M54 = M41 & T10;
-   const uint32_t M55 = M44 & T13;
-   const uint32_t M56 = M40 & T23;
-   const uint32_t M57 = M39 & T19;
-   const uint32_t M58 = M43 & T3;
-   const uint32_t M59 = M38 & T22;
-   const uint32_t M60 = M37 & T20;
-   const uint32_t M61 = M42 & T1;
-   const uint32_t M62 = M45 & T4;
-   const uint32_t M63 = M41 & T2;
-
-   // Figure 9 Bottom linear transform in reverse direction
-   const uint32_t P0 = M52 ^ M61;
-   const uint32_t P1 = M58 ^ M59;
-   const uint32_t P2 = M54 ^ M62;
-   const uint32_t P3 = M47 ^ M50;
-   const uint32_t P4 = M48 ^ M56;
-   const uint32_t P5 = M46 ^ M51;
-   const uint32_t P6 = M49 ^ M60;
-   const uint32_t P7 = P0 ^ P1;
-   const uint32_t P8 = M50 ^ M53;
-   const uint32_t P9 = M55 ^ M63;
-   const uint32_t P10 = M57 ^ P4;
-   const uint32_t P11 = P0 ^ P3;
-   const uint32_t P12 = M46 ^ M48;
-   const uint32_t P13 = M49 ^ M51;
-   const uint32_t P14 = M49 ^ M62;
-   const uint32_t P15 = M54 ^ M59;
-   const uint32_t P16 = M57 ^ M61;
-   const uint32_t P17 = M58 ^ P2;
-   const uint32_t P18 = M63 ^ P5;
-   const uint32_t P19 = P2 ^ P3;
-   const uint32_t P20 = P4 ^ P6;
-   const uint32_t P22 = P2 ^ P7;
-   const uint32_t P23 = P7 ^ P8;
-   const uint32_t P24 = P5 ^ P7;
-   const uint32_t P25 = P6 ^ P10;
-   const uint32_t P26 = P9 ^ P11;
-   const uint32_t P27 = P10 ^ P18;
-   const uint32_t P28 = P11 ^ P25;
-   const uint32_t P29 = P15 ^ P20;
-   const uint32_t W0 = P13 ^ P22;
-   const uint32_t W1 = P26 ^ P29;
-   const uint32_t W2 = P17 ^ P28;
-   const uint32_t W3 = P12 ^ P22;
-   const uint32_t W4 = P23 ^ P27;
-   const uint32_t W5 = P19 ^ P24;
-   const uint32_t W6 = P14 ^ P23;
-   const uint32_t W7 = P9 ^ P16;
-
-   V[0] = W0;
-   V[1] = W1;
-   V[2] = W2;
-   V[3] = W3;
-   V[4] = W4;
-   V[5] = W5;
-   V[6] = W6;
-   V[7] = W7;
+   V[0] = S0;
+   V[1] = S1;
+   V[2] = S2;
+   V[3] = S3;
+   V[4] = S4;
+   V[5] = S5;
+   V[6] = S6;
+   V[7] = S7;
    }
 
 inline void bit_transpose(uint32_t B[8])
