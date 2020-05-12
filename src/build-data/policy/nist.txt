@@ -70,12 +70,10 @@ sha2_32_armv8
 # entropy sources
 dev_random
 proc_walk
-rdrand
 rdseed
 win32_stats
 
 # rng
-rdrand_rng
 system_rng
 
 # utils

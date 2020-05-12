@@ -12,6 +12,10 @@
   #include <botan/system_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+  #include <botan/processor_rng.h>
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
   #include <botan/internal/rdrand.h>
 #endif
@@ -43,9 +47,9 @@
 
 namespace Botan {
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-
 namespace {
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
 
 class System_RNG_EntropySource final : public Entropy_Source
    {
@@ -60,9 +64,45 @@ class System_RNG_EntropySource final : public Entropy_Source
       std::string name() const override { return "system_rng"; }
    };
 
-}
+#endif
+
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+
+class Processor_RNG_EntropySource final : public Entropy_Source
+   {
+   public:
+      size_t poll(RandomNumberGenerator& rng) override
+         {
+         /*
+         * Intel's documentation for RDRAND at
+         * https://software.intel.com/en-us/articles/intel-digital-random-number-generator-drng-software-implementation-guide
+         * claims that software can guarantee a reseed event by polling enough data:
+         * "There is an upper bound of 511 samples per seed in the implementation
+         * where samples are 128 bits in size and can provide two 64-bit random
+         * numbers each."
+         *
+         * By requesting 65536 bits we are asking for 512 samples and thus are assured
+         * that at some point in producing the output, at least one reseed of the
+         * internal state will occur.
+         *
+         * The reseeding conditions of the POWER and ARM processor RNGs are not known
+         * but probably work in a somewhat similar manner. The exact amount requested
+         * may be tweaked if and when such conditions become publically known.
+         */
+         const size_t poll_bits = 65536;
+         rng.reseed_from_rng(m_hwrng, poll_bits);
+         // Avoid trusting a black box, don't count this as contributing entropy:
+         return 0;
+         }
+
+      std::string name() const override { return m_hwrng.name(); }
+   private:
+      Processor_RNG m_hwrng;
+   };
 
 #endif
+
+}
 
 std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    {
@@ -73,10 +113,13 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       }
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
-   if(name == "rdrand")
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+   if(name == "hwrng" || name == "rdrand" || name == "p9_darn")
       {
-      return std::unique_ptr<Entropy_Source>(new Intel_Rdrand);
+      if(Processor_RNG::available())
+         {
+         return std::unique_ptr<Entropy_Source>(new Processor_RNG_EntropySource);
+         }
       }
 #endif
 
@@ -84,13 +127,6 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    if(name == "rdseed")
       {
       return std::unique_ptr<Entropy_Source>(new Intel_Rdseed);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_DARN)
-   if(name == "p9_darn")
-      {
-      return std::unique_ptr<Entropy_Source>(new POWER9_DARN);
       }
 #endif
 

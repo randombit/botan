@@ -61,8 +61,8 @@
    #include <botan/hmac_drbg.h>
 #endif
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
-   #include <botan/rdrand_rng.h>
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+   #include <botan/processor_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_RNG)
@@ -771,11 +771,11 @@ class Speed final : public Command
                bench_rng(Botan::system_rng(), "System_RNG", msec, buf_sizes);
 #endif
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
-               if(Botan::CPUID::has_rdrand())
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+               if(Botan::Processor_RNG::available())
                   {
-                  Botan::RDRAND_RNG rdrand;
-                  bench_rng(rdrand, "RDRAND", msec, buf_sizes);
+                  Botan::Processor_RNG hwrng;
+                  bench_rng(hwrng, "Processor_RNG", msec, buf_sizes);
                   }
 #endif
 

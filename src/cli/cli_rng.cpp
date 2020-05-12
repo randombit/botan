@@ -18,8 +18,8 @@
    #include <botan/system_rng.h>
 #endif
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
-   #include <botan/rdrand_rng.h>
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+   #include <botan/processor_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
@@ -73,13 +73,13 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
       }
 #endif
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
-   if(rng_type == "rdrand" || rng_type.empty())
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+   if(rng_type == "rdrand" || rng_type == "cpu" || rng_type.empty())
       {
-      if(Botan::RDRAND_RNG::available())
-         return std::unique_ptr<Botan::RandomNumberGenerator>(new Botan::RDRAND_RNG);
+      if(Botan::Processor_RNG::available())
+         return std::unique_ptr<Botan::RandomNumberGenerator>(new Botan::Processor_RNG);
       else if(rng_type.empty() == false)
-         throw CLI_Error("RDRAND instruction not supported on this processor");
+         throw CLI_Error("RNG instruction not supported on this processor");
       }
 #endif
 

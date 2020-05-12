@@ -2,14 +2,12 @@
 RDRAND_RNG -> 20160619
 </defines>
 
-<isa>
-rdrand
-</isa>
+<requires>
+processor_rng
+</requires>
 
-<cc>
-gcc
-clang
-icc
-msvc
-</cc>
-
+# Avoid building RDRAND_RNG on non-x86 since that would be confusing
+<arch>
+x86_32
+x86_64
+</arch>

@@ -8,8 +8,8 @@
 #include <botan/internal/os_utils.h>
 #include <botan/loadstor.h>
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
-  #include <botan/rdrand_rng.h>
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+  #include <botan/processor_rng.h>
 #endif
 
 namespace Botan {
@@ -46,11 +46,11 @@ void Stateful_RNG::randomize_with_ts_input(uint8_t output[], size_t output_len)
 
    store_le(OS::get_high_resolution_clock(), additional_input);
 
-#if defined(BOTAN_HAS_RDRAND_RNG)
-   if(RDRAND_RNG::available())
+#if defined(BOTAN_HAS_PROCESSOR_RNG)
+   if(Processor_RNG::available())
       {
-      RDRAND_RNG rdrand;
-      rdrand.randomize(additional_input + 8, sizeof(additional_input) - 8);
+      Processor_RNG hwrng;
+      hwrng.randomize(additional_input + 8, sizeof(additional_input) - 8);
       }
    else
 #endif
