@@ -193,12 +193,12 @@ void AES_SBOX(uint32_t V[8])
    const uint32_t S3 = tc3 ^ tc11;
    const uint32_t tc16 = z6 ^ tc8;
    const uint32_t tc17 = z14 ^ tc10;
-   const uint32_t tc18 = tc13 ^ tc14;
-   const uint32_t S7 = ~(z12 ^ tc18);
+   const uint32_t tc18 = ~tc13 ^ tc14;
+   const uint32_t S7 = z12 ^ tc18;
    const uint32_t tc20 = z15 ^ tc16;
    const uint32_t tc21 = tc2 ^ z11;
    const uint32_t S0 = tc3 ^ tc16;
-   const uint32_t S6 = ~(tc10 ^ tc18);
+   const uint32_t S6 = tc10 ^ tc18;
    const uint32_t S4 = tc14 ^ S3;
    const uint32_t S1 = ~(S3 ^ tc16);
    const uint32_t tc26 = tc17 ^ tc20;
