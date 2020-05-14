@@ -477,46 +477,37 @@ inline void mix_columns(uint32_t B[8])
 
 void inv_mix_columns(uint32_t B[8])
    {
-   const uint32_t X2[8] = {
-      B[1],
+   /*
+   OpenSSL's bsaes implementation credits Jussi Kivilinna with the lovely
+   matrix decomposition
+
+   | 0e 0b 0d 09 |   | 02 03 01 01 |   | 05 00 04 00 |
+   | 09 0e 0b 0d | = | 01 02 03 01 | x | 00 05 00 04 |
+   | 0d 09 0e 0b |   | 01 01 02 03 |   | 04 00 05 00 |
+   | 0b 0d 09 0e |   | 03 01 01 02 |   | 00 04 00 05 |
+
+   Notice the first component is simply the MixColumns matrix. So we can
+   multiply first by (05,00,04,00) then perform MixColumns to get the equivalent
+   of InvMixColumn.
+   */
+   const uint32_t X4[8] = {
       B[2],
       B[3],
       B[4] ^ B[0],
-      B[5] ^ B[0],
-      B[6],
+      B[5] ^ B[0] ^ B[1],
+      B[6] ^ B[1],
       B[7] ^ B[0],
-      B[0],
-   };
-   const uint32_t X4[8] = {
-      X2[1],
-      X2[2],
-      X2[3],
-      X2[4] ^ X2[0],
-      X2[5] ^ X2[0],
-      X2[6],
-      X2[7] ^ X2[0],
-      X2[0],
-   };
-   const uint32_t X8[8] = {
-      X4[1],
-      X4[2],
-      X4[3],
-      X4[4] ^ X4[0],
-      X4[5] ^ X4[0],
-      X4[6],
-      X4[7] ^ X4[0],
-      X4[0],
+      B[0] ^ B[1],
+      B[1],
    };
 
    for(size_t i = 0; i != 8; i++)
       {
-      const uint32_t X9 = X8[i] ^ B[i];
-      const uint32_t X11 = X9 ^ X2[i];
-      const uint32_t X13 = X9 ^ X4[i];
-      const uint32_t X14 = X8[i] ^ X4[i] ^ X2[i];
-
-      B[i] = X14 ^ rotr<8>(X9) ^ rotr<16>(X13) ^ rotr<24>(X11);
+      const uint32_t X5 = X4[i] ^ B[i];
+      B[i] = X5 ^ rotr<16>(X4[i]);
       }
+
+   mix_columns(B);
    }
 
 /*
@@ -706,26 +697,29 @@ void aes_key_schedule(const uint8_t key[], size_t length,
          }
       }
 
-   for(size_t i = 0; i != 4*(rounds+1); i += 4)
-      {
-      DK[i  ] = EK[4*rounds-i  ];
-      DK[i+1] = EK[4*rounds-i+1];
-      DK[i+2] = EK[4*rounds-i+2];
-      DK[i+3] = EK[4*rounds-i+3];
-      }
+   DK[0] = EK[4*rounds  ];
+   DK[1] = EK[4*rounds+1];
+   DK[2] = EK[4*rounds+2];
+   DK[3] = EK[4*rounds+3];
 
-   for(size_t i = 4; i != DK.size() - 4; ++i)
+   for(size_t i = 4; i != 4*rounds; ++i)
       {
-      const uint8_t s0 = get_byte(0, DK[i]);
-      const uint8_t s1 = get_byte(1, DK[i]);
-      const uint8_t s2 = get_byte(2, DK[i]);
-      const uint8_t s3 = get_byte(3, DK[i]);
+      const uint32_t K = EK[4*rounds - 4*(i/4) + (i%4)];
+      const uint8_t s0 = get_byte(0, K);
+      const uint8_t s1 = get_byte(1, K);
+      const uint8_t s2 = get_byte(2, K);
+      const uint8_t s3 = get_byte(3, K);
 
       DK[i] = InvMixColumn(s0) ^
          rotr<8>(InvMixColumn(s1)) ^
          rotr<16>(InvMixColumn(s2)) ^
          rotr<24>(InvMixColumn(s3));
       }
+
+   DK[4*rounds  ] = EK[0];
+   DK[4*rounds+1] = EK[1];
+   DK[4*rounds+2] = EK[2];
+   DK[4*rounds+3] = EK[3];
 
    if(bswap_keys)
       {
