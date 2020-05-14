@@ -4,7 +4,9 @@ Release Notes
 Version 2.15.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* AES is now constant time on all CPUs (GH #2346 #2348 #2353 #2329)
+* Replace the T-Tables implementation of AES with a 32-bit bitsliced
+  version. As a result AES is now constant time on all processors.
+  (GH #2346 #2348 #2353 #2329 #2355)
 
 * Add Processor_RNG which wraps RDRAND or the POWER DARN RNG
   instructions. The previous RDRAND_RNG interface is deprecated.
