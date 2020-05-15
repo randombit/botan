@@ -351,23 +351,28 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
         self.assertEqual(pub.get_field('public_y'), priv.get_field('public_y'))
 
-        signer = botan2.PKSign(priv, hash_fn)
+        signer = botan2.PKSign(priv, hash_fn, True)
         signer.update(msg)
         signature = signer.finish(rng)
 
         verifier = botan2.PKVerify(pub, hash_fn)
+        verifier.update(msg)
+        #fails because DER/not-DER mismatch
+        self.assertFalse(verifier.check_signature(signature))
+
+        verifier = botan2.PKVerify(pub, hash_fn, True)
         verifier.update(msg)
         self.assertTrue(verifier.check_signature(signature))
 
         pub_x = pub.get_field('public_x')
         pub_y = priv.get_field('public_y')
         pub2 = botan2.PublicKey.load_ecdsa(group, pub_x, pub_y)
-        verifier = botan2.PKVerify(pub2, hash_fn)
+        verifier = botan2.PKVerify(pub2, hash_fn, True)
         verifier.update(msg)
         self.assertTrue(verifier.check_signature(signature))
 
         priv2 = botan2.PrivateKey.load_ecdsa(group, priv.get_field('x'))
-        signer = botan2.PKSign(priv2, hash_fn)
+        signer = botan2.PKSign(priv2, hash_fn, True)
         # sign empty message
         signature = signer.finish(rng)
 

@@ -1170,9 +1170,9 @@ class PKDecrypt(object):
         return outbuf.raw[0:int(outbuf_sz.value)]
 
 class PKSign(object): # pylint: disable=invalid-name
-    def __init__(self, key, padding):
+    def __init__(self, key, padding, der=False):
         self.__obj = c_void_p(0)
-        flags = c_uint32(0) # always zero in this ABI
+        flags = c_uint32(1) if der else c_uint32(0)
         _DLL.botan_pk_op_sign_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
 
     def __del__(self):
@@ -1189,9 +1189,9 @@ class PKSign(object): # pylint: disable=invalid-name
         return outbuf.raw[0:int(outbuf_sz.value)]
 
 class PKVerify(object):
-    def __init__(self, key, padding):
+    def __init__(self, key, padding, der=False):
         self.__obj = c_void_p(0)
-        flags = c_uint32(0) # always zero in this ABI
+        flags = c_uint32(1) if der else c_uint32(0)
         _DLL.botan_pk_op_verify_create(byref(self.__obj), key.handle_(), _ctype_str(padding), flags)
 
     def __del__(self):
