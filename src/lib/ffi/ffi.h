@@ -1406,6 +1406,9 @@ BOTAN_PUBLIC_API(2,0) int botan_pk_op_decrypt(botan_pk_op_decrypt_t op,
 /*
 * Signature Generation
 */
+
+#define BOTAN_PUBKEY_DER_FORMAT_SIGNATURE 1
+
 typedef struct botan_pk_op_sign_struct* botan_pk_op_sign_t;
 
 BOTAN_PUBLIC_API(2,0)
