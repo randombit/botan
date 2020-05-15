@@ -11,418 +11,436 @@
 #ifndef BOTAN_SERPENT_SBOX_H_
 #define BOTAN_SERPENT_SBOX_H_
 
-#define SBoxE1(B0, B1, B2, B3)                    \
-   do {                                           \
-      B3 ^= B0;                                   \
-      auto B4 = B1;                               \
-      B1 &= B3;                                   \
-      B4 ^= B2;                                   \
-      B1 ^= B0;                                   \
-      B0 |= B3;                                   \
-      B0 ^= B4;                                   \
-      B4 ^= B3;                                   \
-      B3 ^= B2;                                   \
-      B2 |= B1;                                   \
-      B2 ^= B4;                                   \
-      B4 = ~B4;                                   \
-      B4 |= B1;                                   \
-      B1 ^= B3;                                   \
-      B1 ^= B4;                                   \
-      B3 |= B0;                                   \
-      B1 ^= B3;                                   \
-      B4 ^= B3;                                   \
-      B3 = B0;                                    \
-      B0 = B1;                                    \
-      B1 = B4;                                    \
-   } while(0)
+#include <botan/build.h>
 
-#define SBoxE2(B0, B1, B2, B3)                    \
-   do {                                           \
-      B0 = ~B0;                                   \
-      B2 = ~B2;                                   \
-      auto B4 = B0;                               \
-      B0 &= B1;                                   \
-      B2 ^= B0;                                   \
-      B0 |= B3;                                   \
-      B3 ^= B2;                                   \
-      B1 ^= B0;                                   \
-      B0 ^= B4;                                   \
-      B4 |= B1;                                   \
-      B1 ^= B3;                                   \
-      B2 |= B0;                                   \
-      B2 &= B4;                                   \
-      B0 ^= B1;                                   \
-      B1 &= B2;                                   \
-      B1 ^= B0;                                   \
-      B0 &= B2;                                   \
-      B4 ^= B0;                                   \
-      B0 = B2;                                    \
-      B2 = B3;                                    \
-      B3 = B1;                                    \
-      B1 = B4;                                    \
-   } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxE0(T& B0, T& B1, T& B2, T& B3)
+   {
+   B3 ^= B0;
+   T B4 = B1;
+   B1 &= B3;
+   B4 ^= B2;
+   B1 ^= B0;
+   B0 |= B3;
+   B0 ^= B4;
+   B4 ^= B3;
+   B3 ^= B2;
+   B2 |= B1;
+   B2 ^= B4;
+   B4 = ~B4;
+   B4 |= B1;
+   B1 ^= B3;
+   B1 ^= B4;
+   B3 |= B0;
+   B1 ^= B3;
+   B4 ^= B3;
+   B3 = B0;
+   B0 = B1;
+   B1 = B4;
+   }
 
-#define SBoxE3(B0, B1, B2, B3)                    \
-   do {                                           \
-      auto B4 = B0;                               \
-      B0 &= B2;                                   \
-      B0 ^= B3;                                   \
-      B2 ^= B1;                                   \
-      B2 ^= B0;                                   \
-      B3 |= B4;                                   \
-      B3 ^= B1;                                   \
-      B4 ^= B2;                                   \
-      B1 = B3;                                    \
-      B3 |= B4;                                   \
-      B3 ^= B0;                                   \
-      B0 &= B1;                                   \
-      B4 ^= B0;                                   \
-      B1 ^= B3;                                   \
-      B1 ^= B4;                                   \
-      B0 = B2;                                    \
-      B2 = B1;                                    \
-      B1 = B3;                                    \
-      B3 = ~B4;                                   \
-   } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxE1(T& B0, T& B1, T& B2, T& B3)
+   {
+   B0 = ~B0;
+   B2 = ~B2;
+   T B4 = B0;
+   B0 &= B1;
+   B2 ^= B0;
+   B0 |= B3;
+   B3 ^= B2;
+   B1 ^= B0;
+   B0 ^= B4;
+   B4 |= B1;
+   B1 ^= B3;
+   B2 |= B0;
+   B2 &= B4;
+   B0 ^= B1;
+   B1 &= B2;
+   B1 ^= B0;
+   B0 &= B2;
+   B4 ^= B0;
+   B0 = B2;
+   B2 = B3;
+   B3 = B1;
+   B1 = B4;
+   }
 
-#define SBoxE4(B0, B1, B2, B3)                    \
-   do {                                           \
-      auto B4 = B0;                               \
-      B0 |= B3;                                   \
-      B3 ^= B1;                                   \
-      B1 &= B4;                                   \
-      B4 ^= B2;                                   \
-      B2 ^= B3;                                   \
-      B3 &= B0;                                   \
-      B4 |= B1;                                   \
-      B3 ^= B4;                                   \
-      B0 ^= B1;                                   \
-      B4 &= B0;                                   \
-      B1 ^= B3;                                   \
-      B4 ^= B2;                                   \
-      B1 |= B0;                                   \
-      B1 ^= B2;                                   \
-      B0 ^= B3;                                   \
-      B2 = B1;                                    \
-      B1 |= B3;                                   \
-      B0 ^= B1;                                   \
-      B1 = B2;                                    \
-      B2 = B3;                                    \
-      B3 = B4;                                    \
-   } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxE2(T& B0, T& B1, T& B2, T& B3)
+   {
+   T B4 = B0;
+   B0 &= B2;
+   B0 ^= B3;
+   B2 ^= B1;
+   B2 ^= B0;
+   B3 |= B4;
+   B3 ^= B1;
+   B4 ^= B2;
+   B1 = B3;
+   B3 |= B4;
+   B3 ^= B0;
+   B0 &= B1;
+   B4 ^= B0;
+   B1 ^= B3;
+   B1 ^= B4;
+   B0 = B2;
+   B2 = B1;
+   B1 = B3;
+   B3 = ~B4;
+   }
 
-#define SBoxE5(B0, B1, B2, B3)                    \
-   do {                                           \
-      B1 ^= B3;                                   \
-      B3 = ~B3;                                   \
-      B2 ^= B3;                                   \
-      B3 ^= B0;                                   \
-      auto B4 = B1;                               \
-      B1 &= B3;                                   \
-      B1 ^= B2;                                   \
-      B4 ^= B3;                                   \
-      B0 ^= B4;                                   \
-      B2 &= B4;                                   \
-      B2 ^= B0;                                   \
-      B0 &= B1;                                   \
-      B3 ^= B0;                                   \
-      B4 |= B1;                                   \
-      B4 ^= B0;                                   \
-      B0 |= B3;                                   \
-      B0 ^= B2;                                   \
-      B2 &= B3;                                   \
-      B0 = ~B0;                                   \
-      B4 ^= B2;                                   \
-      B2 = B0;                                    \
-      B0 = B1;                                    \
-      B1 = B4;                                    \
-   } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxE3(T& B0, T& B1, T& B2, T& B3)
+   {
+   T B4 = B0;
+   B0 |= B3;
+   B3 ^= B1;
+   B1 &= B4;
+   B4 ^= B2;
+   B2 ^= B3;
+   B3 &= B0;
+   B4 |= B1;
+   B3 ^= B4;
+   B0 ^= B1;
+   B4 &= B0;
+   B1 ^= B3;
+   B4 ^= B2;
+   B1 |= B0;
+   B1 ^= B2;
+   B0 ^= B3;
+   B2 = B1;
+   B1 |= B3;
+   B0 ^= B1;
+   B1 = B2;
+   B2 = B3;
+   B3 = B4;
+   }
 
-#define SBoxE6(B0, B1, B2, B3)                    \
-   do {                                           \
-      B0 ^= B1;                                   \
-      B1 ^= B3;                                   \
-      B3 = ~B3;                                   \
-      auto B4 = B1;                               \
-      B1 &= B0;                                   \
-      B2 ^= B3;                                   \
-      B1 ^= B2;                                   \
-      B2 |= B4;                                   \
-      B4 ^= B3;                                   \
-      B3 &= B1;                                   \
-      B3 ^= B0;                                   \
-      B4 ^= B1;                                   \
-      B4 ^= B2;                                   \
-      B2 ^= B0;                                   \
-      B0 &= B3;                                   \
-      B2 = ~B2;                                   \
-      B0 ^= B4;                                   \
-      B4 |= B3;                                   \
-      B4 ^= B2;                                   \
-      B2 = B0;                                    \
-      B0 = B1;                                    \
-      B1 = B3;                                    \
-      B3 = B4;                                    \
-   } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxE4(T& B0, T& B1, T& B2, T& B3)
+   {
+   B1 ^= B3;
+   B3 = ~B3;
+   B2 ^= B3;
+   B3 ^= B0;
+   T B4 = B1;
+   B1 &= B3;
+   B1 ^= B2;
+   B4 ^= B3;
+   B0 ^= B4;
+   B2 &= B4;
+   B2 ^= B0;
+   B0 &= B1;
+   B3 ^= B0;
+   B4 |= B1;
+   B4 ^= B0;
+   B0 |= B3;
+   B0 ^= B2;
+   B2 &= B3;
+   B0 = ~B0;
+   B4 ^= B2;
+   B2 = B0;
+   B0 = B1;
+   B1 = B4;
+   }
 
-#define SBoxE7(B0, B1, B2, B3)                    \
-   do {                                           \
-      B2 = ~B2;                                   \
-      auto B4 = B3;                               \
-      B3 &= B0;                                   \
-      B0 ^= B4;                                   \
-      B3 ^= B2;                                   \
-      B2 |= B4;                                   \
-      B1 ^= B3;                                   \
-      B2 ^= B0;                                   \
-      B0 |= B1;                                   \
-      B2 ^= B1;                                   \
-      B4 ^= B0;                                   \
-      B0 |= B3;                                   \
-      B0 ^= B2;                                   \
-      B4 ^= B3;                                   \
-      B4 ^= B0;                                   \
-      B3 = ~B3;                                   \
-      B2 &= B4;                                   \
-      B3 ^= B2;                                   \
-      B2 = B4;                                    \
-   } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxE5(T& B0, T& B1, T& B2, T& B3)
+   {
+   B0 ^= B1;
+   B1 ^= B3;
+   B3 = ~B3;
+   T B4 = B1;
+   B1 &= B0;
+   B2 ^= B3;
+   B1 ^= B2;
+   B2 |= B4;
+   B4 ^= B3;
+   B3 &= B1;
+   B3 ^= B0;
+   B4 ^= B1;
+   B4 ^= B2;
+   B2 ^= B0;
+   B0 &= B3;
+   B2 = ~B2;
+   B0 ^= B4;
+   B4 |= B3;
+   B4 ^= B2;
+   B2 = B0;
+   B0 = B1;
+   B1 = B3;
+   B3 = B4;
+   }
 
-#define SBoxE8(B0, B1, B2, B3)                    \
-   do {                                           \
-      auto B4 = B1;                               \
-      B1 |= B2;                                   \
-      B1 ^= B3;                                   \
-      B4 ^= B2;                                   \
-      B2 ^= B1;                                   \
-      B3 |= B4;                                   \
-      B3 &= B0;                                   \
-      B4 ^= B2;                                   \
-      B3 ^= B1;                                   \
-      B1 |= B4;                                   \
-      B1 ^= B0;                                   \
-      B0 |= B4;                                   \
-      B0 ^= B2;                                   \
-      B1 ^= B4;                                   \
-      B2 ^= B1;                                   \
-      B1 &= B0;                                   \
-      B1 ^= B4;                                   \
-      B2 = ~B2;                                   \
-      B2 |= B0;                                   \
-      B4 ^= B2;                                   \
-      B2 = B1;                                    \
-      B1 = B3;                                    \
-      B3 = B0;                                    \
-      B0 = B4;                                    \
-   } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxE6(T& B0, T& B1, T& B2, T& B3)
+   {
+   B2 = ~B2;
+   T B4 = B3;
+   B3 &= B0;
+   B0 ^= B4;
+   B3 ^= B2;
+   B2 |= B4;
+   B1 ^= B3;
+   B2 ^= B0;
+   B0 |= B1;
+   B2 ^= B1;
+   B4 ^= B0;
+   B0 |= B3;
+   B0 ^= B2;
+   B4 ^= B3;
+   B4 ^= B0;
+   B3 = ~B3;
+   B2 &= B4;
+   B3 ^= B2;
+   B2 = B4;
+   }
 
-#define SBoxD1(B0, B1, B2, B3)                    \
-   do {                                           \
-      B2 = ~B2;                                   \
-      auto B4 = B1;                               \
-      B1 |= B0;                                   \
-      B4 = ~B4;                                   \
-      B1 ^= B2;                                   \
-      B2 |= B4;                                   \
-      B1 ^= B3;                                   \
-      B0 ^= B4;                                   \
-      B2 ^= B0;                                   \
-      B0 &= B3;                                   \
-      B4 ^= B0;                                   \
-      B0 |= B1;                                   \
-      B0 ^= B2;                                   \
-      B3 ^= B4;                                   \
-      B2 ^= B1;                                   \
-      B3 ^= B0;                                   \
-      B3 ^= B1;                                   \
-      B2 &= B3;                                   \
-      B4 ^= B2;                                   \
-      B2 = B1;                                    \
-      B1 = B4;                                    \
-      } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxE7(T& B0, T& B1, T& B2, T& B3)
+   {
+   T B4 = B1;
+   B1 |= B2;
+   B1 ^= B3;
+   B4 ^= B2;
+   B2 ^= B1;
+   B3 |= B4;
+   B3 &= B0;
+   B4 ^= B2;
+   B3 ^= B1;
+   B1 |= B4;
+   B1 ^= B0;
+   B0 |= B4;
+   B0 ^= B2;
+   B1 ^= B4;
+   B2 ^= B1;
+   B1 &= B0;
+   B1 ^= B4;
+   B2 = ~B2;
+   B2 |= B0;
+   B4 ^= B2;
+   B2 = B1;
+   B1 = B3;
+   B3 = B0;
+   B0 = B4;
+   }
 
-#define SBoxD2(B0, B1, B2, B3)                    \
-   do {                                           \
-      auto B4 = B1;                               \
-      B1 ^= B3;                                   \
-      B3 &= B1;                                   \
-      B4 ^= B2;                                   \
-      B3 ^= B0;                                   \
-      B0 |= B1;                                   \
-      B2 ^= B3;                                   \
-      B0 ^= B4;                                   \
-      B0 |= B2;                                   \
-      B1 ^= B3;                                   \
-      B0 ^= B1;                                   \
-      B1 |= B3;                                   \
-      B1 ^= B0;                                   \
-      B4 = ~B4;                                   \
-      B4 ^= B1;                                   \
-      B1 |= B0;                                   \
-      B1 ^= B0;                                   \
-      B1 |= B4;                                   \
-      B3 ^= B1;                                   \
-      B1 = B0;                                    \
-      B0 = B4;                                    \
-      B4 = B2;                                    \
-      B2 = B3;                                    \
-      B3 = B4;                                    \
-      } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxD0(T& B0, T& B1, T& B2, T& B3)
+   {
+   B2 = ~B2;
+   T B4 = B1;
+   B1 |= B0;
+   B4 = ~B4;
+   B1 ^= B2;
+   B2 |= B4;
+   B1 ^= B3;
+   B0 ^= B4;
+   B2 ^= B0;
+   B0 &= B3;
+   B4 ^= B0;
+   B0 |= B1;
+   B0 ^= B2;
+   B3 ^= B4;
+   B2 ^= B1;
+   B3 ^= B0;
+   B3 ^= B1;
+   B2 &= B3;
+   B4 ^= B2;
+   B2 = B1;
+   B1 = B4;
+   }
 
-#define SBoxD3(B0, B1, B2, B3)                    \
-   do {                                           \
-      B2 ^= B3;                                   \
-      B3 ^= B0;                                   \
-      auto B4 = B3;                               \
-      B3 &= B2;                                   \
-      B3 ^= B1;                                   \
-      B1 |= B2;                                   \
-      B1 ^= B4;                                   \
-      B4 &= B3;                                   \
-      B2 ^= B3;                                   \
-      B4 &= B0;                                   \
-      B4 ^= B2;                                   \
-      B2 &= B1;                                   \
-      B2 |= B0;                                   \
-      B3 = ~B3;                                   \
-      B2 ^= B3;                                   \
-      B0 ^= B3;                                   \
-      B0 &= B1;                                   \
-      B3 ^= B4;                                   \
-      B3 ^= B0;                                   \
-      B0 = B1;                                    \
-      B1 = B4;                                    \
-      } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxD1(T& B0, T& B1, T& B2, T& B3)
+   {
+   T B4 = B1;
+   B1 ^= B3;
+   B3 &= B1;
+   B4 ^= B2;
+   B3 ^= B0;
+   B0 |= B1;
+   B2 ^= B3;
+   B0 ^= B4;
+   B0 |= B2;
+   B1 ^= B3;
+   B0 ^= B1;
+   B1 |= B3;
+   B1 ^= B0;
+   B4 = ~B4;
+   B4 ^= B1;
+   B1 |= B0;
+   B1 ^= B0;
+   B1 |= B4;
+   B3 ^= B1;
+   B1 = B0;
+   B0 = B4;
+   B4 = B2;
+   B2 = B3;
+   B3 = B4;
+   }
 
-#define SBoxD4(B0, B1, B2, B3)                    \
-   do {                                           \
-      auto B4 = B2;                               \
-      B2 ^= B1;                                   \
-      B0 ^= B2;                                   \
-      B4 &= B2;                                   \
-      B4 ^= B0;                                   \
-      B0 &= B1;                                   \
-      B1 ^= B3;                                   \
-      B3 |= B4;                                   \
-      B2 ^= B3;                                   \
-      B0 ^= B3;                                   \
-      B1 ^= B4;                                   \
-      B3 &= B2;                                   \
-      B3 ^= B1;                                   \
-      B1 ^= B0;                                   \
-      B1 |= B2;                                   \
-      B0 ^= B3;                                   \
-      B1 ^= B4;                                   \
-      B0 ^= B1;                                   \
-      B4 = B0;                                    \
-      B0 = B2;                                    \
-      B2 = B3;                                    \
-      B3 = B4;                                    \
-      } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxD2(T& B0, T& B1, T& B2, T& B3)
+   {
+   B2 ^= B3;
+   B3 ^= B0;
+   T B4 = B3;
+   B3 &= B2;
+   B3 ^= B1;
+   B1 |= B2;
+   B1 ^= B4;
+   B4 &= B3;
+   B2 ^= B3;
+   B4 &= B0;
+   B4 ^= B2;
+   B2 &= B1;
+   B2 |= B0;
+   B3 = ~B3;
+   B2 ^= B3;
+   B0 ^= B3;
+   B0 &= B1;
+   B3 ^= B4;
+   B3 ^= B0;
+   B0 = B1;
+   B1 = B4;
+   }
 
-#define SBoxD5(B0, B1, B2, B3)                    \
-   do {                                           \
-      auto B4 = B2;                               \
-      B2 &= B3;                                   \
-      B2 ^= B1;                                   \
-      B1 |= B3;                                   \
-      B1 &= B0;                                   \
-      B4 ^= B2;                                   \
-      B4 ^= B1;                                   \
-      B1 &= B2;                                   \
-      B0 = ~B0;                                   \
-      B3 ^= B4;                                   \
-      B1 ^= B3;                                   \
-      B3 &= B0;                                   \
-      B3 ^= B2;                                   \
-      B0 ^= B1;                                   \
-      B2 &= B0;                                   \
-      B3 ^= B0;                                   \
-      B2 ^= B4;                                   \
-      B2 |= B3;                                   \
-      B3 ^= B0;                                   \
-      B2 ^= B1;                                   \
-      B1 = B3;                                    \
-      B3 = B4;                                    \
-      } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxD3(T& B0, T& B1, T& B2, T& B3)
+   {
+   T B4 = B2;
+   B2 ^= B1;
+   B0 ^= B2;
+   B4 &= B2;
+   B4 ^= B0;
+   B0 &= B1;
+   B1 ^= B3;
+   B3 |= B4;
+   B2 ^= B3;
+   B0 ^= B3;
+   B1 ^= B4;
+   B3 &= B2;
+   B3 ^= B1;
+   B1 ^= B0;
+   B1 |= B2;
+   B0 ^= B3;
+   B1 ^= B4;
+   B0 ^= B1;
+   B4 = B0;
+   B0 = B2;
+   B2 = B3;
+   B3 = B4;
+   }
 
-#define SBoxD6(B0, B1, B2, B3)                    \
-   do {                                           \
-      B1 = ~B1;                                   \
-      auto B4 = B3;                               \
-      B2 ^= B1;                                   \
-      B3 |= B0;                                   \
-      B3 ^= B2;                                   \
-      B2 |= B1;                                   \
-      B2 &= B0;                                   \
-      B4 ^= B3;                                   \
-      B2 ^= B4;                                   \
-      B4 |= B0;                                   \
-      B4 ^= B1;                                   \
-      B1 &= B2;                                   \
-      B1 ^= B3;                                   \
-      B4 ^= B2;                                   \
-      B3 &= B4;                                   \
-      B4 ^= B1;                                   \
-      B3 ^= B4;                                   \
-      B4 = ~B4;                                   \
-      B3 ^= B0;                                   \
-      B0 = B1;                                    \
-      B1 = B4;                                    \
-      B4 = B3;                                    \
-      B3 = B2;                                    \
-      B2 = B4;                                    \
-      } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxD4(T& B0, T& B1, T& B2, T& B3)
+   {
+   T B4 = B2;
+   B2 &= B3;
+   B2 ^= B1;
+   B1 |= B3;
+   B1 &= B0;
+   B4 ^= B2;
+   B4 ^= B1;
+   B1 &= B2;
+   B0 = ~B0;
+   B3 ^= B4;
+   B1 ^= B3;
+   B3 &= B0;
+   B3 ^= B2;
+   B0 ^= B1;
+   B2 &= B0;
+   B3 ^= B0;
+   B2 ^= B4;
+   B2 |= B3;
+   B3 ^= B0;
+   B2 ^= B1;
+   B1 = B3;
+   B3 = B4;
+   }
 
-#define SBoxD7(B0, B1, B2, B3)                    \
-   do {                                           \
-      B0 ^= B2;                                   \
-      auto B4 = B2;                               \
-      B2 &= B0;                                   \
-      B4 ^= B3;                                   \
-      B2 = ~B2;                                   \
-      B3 ^= B1;                                   \
-      B2 ^= B3;                                   \
-      B4 |= B0;                                   \
-      B0 ^= B2;                                   \
-      B3 ^= B4;                                   \
-      B4 ^= B1;                                   \
-      B1 &= B3;                                   \
-      B1 ^= B0;                                   \
-      B0 ^= B3;                                   \
-      B0 |= B2;                                   \
-      B3 ^= B1;                                   \
-      B4 ^= B0;                                   \
-      B0 = B1;                                    \
-      B1 = B2;                                    \
-      B2 = B4;                                    \
-      } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxD5(T& B0, T& B1, T& B2, T& B3)
+   {
+   B1 = ~B1;
+   T B4 = B3;
+   B2 ^= B1;
+   B3 |= B0;
+   B3 ^= B2;
+   B2 |= B1;
+   B2 &= B0;
+   B4 ^= B3;
+   B2 ^= B4;
+   B4 |= B0;
+   B4 ^= B1;
+   B1 &= B2;
+   B1 ^= B3;
+   B4 ^= B2;
+   B3 &= B4;
+   B4 ^= B1;
+   B3 ^= B4;
+   B4 = ~B4;
+   B3 ^= B0;
+   B0 = B1;
+   B1 = B4;
+   B4 = B3;
+   B3 = B2;
+   B2 = B4;
+   }
 
-#define SBoxD8(B0, B1, B2, B3)                    \
-   do {                                           \
-      auto B4 = B2;                               \
-      B2 ^= B0;                                   \
-      B0 &= B3;                                   \
-      B4 |= B3;                                   \
-      B2 = ~B2;                                   \
-      B3 ^= B1;                                   \
-      B1 |= B0;                                   \
-      B0 ^= B2;                                   \
-      B2 &= B4;                                   \
-      B3 &= B4;                                   \
-      B1 ^= B2;                                   \
-      B2 ^= B0;                                   \
-      B0 |= B2;                                   \
-      B4 ^= B1;                                   \
-      B0 ^= B3;                                   \
-      B3 ^= B4;                                   \
-      B4 |= B0;                                   \
-      B3 ^= B2;                                   \
-      B4 ^= B2;                                   \
-      B2 = B1;                                    \
-      B1 = B0;                                    \
-      B0 = B3;                                    \
-      B3 = B4;                                    \
-      } while(0)
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxD6(T& B0, T& B1, T& B2, T& B3)
+   {
+   B0 ^= B2;
+   T B4 = B2;
+   B2 &= B0;
+   B4 ^= B3;
+   B2 = ~B2;
+   B3 ^= B1;
+   B2 ^= B3;
+   B4 |= B0;
+   B0 ^= B2;
+   B3 ^= B4;
+   B4 ^= B1;
+   B1 &= B3;
+   B1 ^= B0;
+   B0 ^= B3;
+   B0 |= B2;
+   B3 ^= B1;
+   B4 ^= B0;
+   B0 = B1;
+   B1 = B2;
+   B2 = B4;
+   }
+
+template<typename T>
+BOTAN_FORCE_INLINE void SBoxD7(T& B0, T& B1, T& B2, T& B3)
+   {
+   T B4 = B2;
+   B2 ^= B0;
+   B0 &= B3;
+   B4 |= B3;
+   B2 = ~B2;
+   B3 ^= B1;
+   B1 |= B0;
+   B0 ^= B2;
+   B2 &= B4;
+   B3 &= B4;
+   B1 ^= B2;
+   B2 ^= B0;
+   B0 |= B2;
+   B4 ^= B1;
+   B0 ^= B3;
+   B3 ^= B4;
+   B4 |= B0;
+   B3 ^= B2;
+   B4 ^= B2;
+   B2 = B1;
+   B1 = B0;
+   B0 = B3;
+   B3 = B4;
+   }
 
 #endif
