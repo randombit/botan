@@ -16,6 +16,9 @@ Version 2.15.0, Not Yet Released
   guard page both before and after. However only a trailing guard page
   was used. Add a leading guard page. (GH #2334)
 
+* Add support for generating and verifying DER-encoded ECDSA signatures
+  in the C and Python interfaces. (GH #2357 #2356)
+
 * Workaround a bug in GCC's UbSan which triggered on a code sequence
   in XMSS (GH #2322)
 
