@@ -126,6 +126,7 @@ Cleanups
 
 * Split test_ffi.cpp into multiple files
 * Unicode path support on Windows (GH #1615)
+* The X.509 path validation tests have much duplicated logic
 
 Compat Headers
 ----------------

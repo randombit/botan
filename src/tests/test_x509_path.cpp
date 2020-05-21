@@ -541,6 +541,55 @@ std::vector<Test::Result> Validate_V1Cert_Test::run()
 
 BOTAN_REGISTER_TEST("x509_v1_ca", Validate_V1Cert_Test);
 
+class Validate_V2Uid_in_V1_Test final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override;
+   };
+
+std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run()
+   {
+   if(Botan::has_filesystem_impl() == false)
+      {
+      return {Test::Result::Note("Path validation",
+                                 "Skipping due to missing filesystem access")};
+      }
+
+   std::vector<Test::Result> results;
+
+   const std::string root_crt = Test::data_file("/x509/v2-in-v1/root.pem");
+   const std::string int_crt  = Test::data_file("/x509/v2-in-v1/int.pem");
+   const std::string ee_crt   = Test::data_file("/x509/v2-in-v1/leaf.pem");
+
+   auto validation_time =
+      Botan::calendar_point(2020, 1, 1, 1, 0, 0).to_std_timepoint();
+
+   Botan::X509_Certificate root(root_crt);
+   Botan::X509_Certificate intermediate(int_crt);
+   Botan::X509_Certificate ee_cert(ee_crt);
+
+   Botan::Certificate_Store_In_Memory trusted;
+   trusted.add_certificate(root);
+
+   std::vector<Botan::X509_Certificate> chain = { ee_cert, intermediate };
+
+   Botan::Path_Validation_Restrictions restrictions;
+   Botan::Path_Validation_Result validation_result =
+      Botan::x509_path_validate(chain, restrictions, trusted, "",
+                                Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+   Test::Result result("Verifying v1 certificate using v2 uid fields");
+   result.test_eq("Path validation failed",
+                  validation_result.successful_validation(), false);
+   result.test_eq("Path validation result",
+                  validation_result.result_string(),
+                  "Encountered v2 identifiers in v1 certificate");
+
+   return {result};
+   }
+
+BOTAN_REGISTER_TEST("x509_v2uid_in_v1", Validate_V2Uid_in_V1_Test);
+
 class BSI_Path_Validation_Tests final : public Test
 
    {
