@@ -14,7 +14,6 @@ namespace Botan {
 
 /**
 * Certificate validation status code
-* Warning: reflect any changes to this in botan_cert_status_code in ffi.h
 */
 enum class Certificate_Status_Code {
    OK = 0,
@@ -83,6 +82,7 @@ enum class Certificate_Status_Code {
    OCSP_RESPONSE_INVALID = 4504,
    EXT_IN_V1_V2_CERT = 4505,
    DUPLICATE_CERT_POLICY = 4506,
+   V2_IDENTIFIERS_IN_V1_CERT = 4507,
 
    // Hard failures
    CERT_IS_REVOKED = 5000,

@@ -148,6 +148,16 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
          }
 
       // Check cert extensions
+
+      if(subject->x509_version() == 1)
+         {
+         if(subject->v2_issuer_key_id().empty() == false ||
+            subject->v2_subject_key_id().empty() == false)
+            {
+            status.insert(Certificate_Status_Code::V2_IDENTIFIERS_IN_V1_CERT);
+            }
+         }
+
       Extensions extensions = subject->v3_extensions();
       const auto& extensions_vec = extensions.extensions();
       if(subject->x509_version() < 3 && !extensions_vec.empty())
