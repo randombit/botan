@@ -149,45 +149,63 @@ CPUID::bit_from_string(const std::string& tok)
       return {Botan::CPUID::CPUID_SSE2_BIT};
    if(tok == "ssse3")
       return {Botan::CPUID::CPUID_SSSE3_BIT};
-   if(tok == "aesni")
+   if(tok == "sse41")
+      return {Botan::CPUID::CPUID_SSE41_BIT};
+   if(tok == "sse42")
+      return {Botan::CPUID::CPUID_SSE42_BIT};
+   // aes_ni is the string printed on the console when running "botan cpuid"
+   if(tok == "aesni" || tok == "aes_ni")
       return {Botan::CPUID::CPUID_AESNI_BIT};
    if(tok == "clmul")
       return {Botan::CPUID::CPUID_CLMUL_BIT};
    if(tok == "avx2")
       return {Botan::CPUID::CPUID_AVX2_BIT};
-   if(tok == "sha")
+   if(tok == "avx512f")
+      return {Botan::CPUID::CPUID_AVX512F_BIT};
+   // there were two if statements testing "sha" and "intel_sha" separately; combined
+   if(tok == "sha" || tok=="intel_sha")
       return {Botan::CPUID::CPUID_SHA_BIT};
+   if(tok == "rdtsc")
+      return {Botan::CPUID::CPUID_RDTSC_BIT};
+   if(tok == "bmi1")
+      return {Botan::CPUID::CPUID_BMI1_BIT};
    if(tok == "bmi2")
       return {Botan::CPUID::CPUID_BMI2_BIT};
    if(tok == "adx")
       return {Botan::CPUID::CPUID_ADX_BIT};
-   if(tok == "intel_sha")
-      return {Botan::CPUID::CPUID_SHA_BIT};
+   if(tok == "rdrand")
+      return {Botan::CPUID::CPUID_RDRAND_BIT};
+   if(tok == "rdseed")
+      return {Botan::CPUID::CPUID_RDSEED_BIT};
 
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    if(tok == "altivec" || tok == "simd")
       return {Botan::CPUID::CPUID_ALTIVEC_BIT};
    if(tok == "power_crypto")
       return {Botan::CPUID::CPUID_POWER_CRYPTO_BIT};
+   if(tok == "darn_rng")
+      return {Botan::CPUID::CPUID_DARN_BIT};
 
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    if(tok == "neon" || tok == "simd")
       return {Botan::CPUID::CPUID_ARM_NEON_BIT};
-   if(tok == "armv8sha1")
+   if(tok == "arm_sve")
+      return {Botan::CPUID::CPUID_ARM_SVE_BIT};
+   if(tok == "armv8sha1" || tok == "arm_sha1")
       return {Botan::CPUID::CPUID_ARM_SHA1_BIT};
-   if(tok == "armv8sha2")
+   if(tok == "armv8sha2" || tok == "arm_sha2")
       return {Botan::CPUID::CPUID_ARM_SHA2_BIT};
-   if(tok == "armv8aes")
+   if(tok == "armv8aes" || tok == "arm_aes")
       return {Botan::CPUID::CPUID_ARM_AES_BIT};
-   if(tok == "armv8pmull")
+   if(tok == "armv8pmull" || tok == "arm_pmull")
       return {Botan::CPUID::CPUID_ARM_PMULL_BIT};
-   if(tok == "armv8sha3")
+   if(tok == "armv8sha3" || tok == "arm_sha3")
       return {Botan::CPUID::CPUID_ARM_SHA3_BIT};
-   if(tok == "armv8sha2_512")
+   if(tok == "armv8sha2_512" || tok == "arm_sha2_512")
       return {Botan::CPUID::CPUID_ARM_SHA2_512_BIT};
-   if(tok == "armv8sm3")
+   if(tok == "armv8sm3" || tok == "arm_sm3")
       return {Botan::CPUID::CPUID_ARM_SM3_BIT};
-   if(tok == "armv8sm4")
+   if(tok == "armv8sm4" || tok == "arm_sm4")
       return {Botan::CPUID::CPUID_ARM_SM4_BIT};
 
 #else
