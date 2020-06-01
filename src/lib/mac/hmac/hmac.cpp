@@ -1,12 +1,13 @@
 /*
 * HMAC
-* (C) 1999-2007,2014 Jack Lloyd
+* (C) 1999-2007,2014,2020 Jack Lloyd
 *     2007 Yves Jerschow
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/hmac.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -54,27 +55,55 @@ void HMAC::key_schedule(const uint8_t key[], size_t length)
    m_hash->clear();
 
    m_ikey.resize(m_hash_block_size);
-   set_mem(m_ikey.data(), m_hash_block_size, ipad);
-
    m_okey.resize(m_hash_block_size);
-   set_mem(m_okey.data(), m_hash_block_size, opad);
+
+   clear_mem(m_ikey.data(), m_ikey.size());
+   clear_mem(m_okey.data(), m_okey.size());
+
+   /*
+   * Sometimes the HMAC key length itself is sensitive, as with PBKDF2 where it
+   * reveals the length of the passphrase. Make some attempt to hide this to
+   * side channels. Clearly if the secret is longer than the block size then the
+   * branch to hash first reveals that. In addition, counting the number of
+   * compression functions executed reveals the size at the granularity of the
+   * hash function's block size.
+   *
+   * The greater concern is for smaller keys; being able to detect when a
+   * passphrase is say 4 bytes may assist choosing weaker targets. Even though
+   * the loop bounds are constant, we can only actually read key[0..length] so
+   * it doesn't seem possible to make this computation truly constant time.
+   *
+   * We don't mind leaking if the length is exactly zero since that's
+   * trivial to simply check.
+   */
 
    if(length > m_hash_block_size)
       {
       m_hash->update(key, length);
       m_hash->final(m_ikey.data());
-
-      xor_buf(m_okey.data(), m_ikey.data(), m_hash_output_length);
-
-      for(size_t i = 0; i != m_hash_output_length; ++i)
+      }
+   else if(length > 0)
+      {
+      for(size_t i = 0, i_mod_length = 0; i != m_hash_block_size; ++i)
          {
-         m_ikey[i] ^= ipad;
+         /*
+         access key[i % length] but avoiding division due to variable
+         time computation on some processors.
+         */
+         auto needs_reduction = CT::Mask<size_t>::is_lte(length, i_mod_length);
+         i_mod_length = needs_reduction.select(0, i_mod_length);
+         const uint8_t kb = key[i_mod_length];
+
+         auto in_range = CT::Mask<size_t>::is_lt(i, length);
+         m_ikey[i] = static_cast<uint8_t>(in_range.if_set_return(kb));
+         i_mod_length += 1;
          }
       }
-   else
+
+   for(size_t i = 0; i != m_hash_block_size; ++i)
       {
-      xor_buf(m_ikey, key, length);
-      xor_buf(m_okey, key, length);
+      m_ikey[i] ^= ipad;
+      m_okey[i] = m_ikey[i] ^ ipad ^ opad;
       }
 
    m_hash->update(m_ikey);
