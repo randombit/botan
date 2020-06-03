@@ -979,7 +979,9 @@ void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder&
         .decode_optional_implicit(m_point, ASN1_Tag(0),
                                   ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED),
                                   SEQUENCE, CONSTRUCTED)
-      .end_cons().end_cons();
+        .end_cons()
+        .discard_remaining()
+      .end_cons();
    }
 
 std::vector<uint8_t> CRL_Issuing_Distribution_Point::encode_inner() const

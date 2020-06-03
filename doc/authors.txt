@@ -87,6 +87,7 @@ Simon Cogliani
 Simon Warta (Kullo GmbH)
 slaviber
 souch
+Stefan Rückl (Sagemcom Fröschl GmbH)
 t0b3
 tcely
 Technische Universitat Darmstadt
