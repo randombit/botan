@@ -425,16 +425,16 @@ class DL_Group_Info final : public Command
 
       void go() override
          {
-         Botan::DL_Group ec_group(get_arg("name"));
+         Botan::DL_Group dl_group(get_arg("name"));
 
          if(flag_set("pem"))
             {
-            output() << ec_group.PEM_encode(Botan::DL_Group::ANSI_X9_42_DH_PARAMETERS);
+            output() << dl_group.PEM_encode(Botan::DL_Group::ANSI_X9_42_DH_PARAMETERS);
             }
          else
             {
-            output() << "P = " << std::hex << ec_group.get_p() << "\n"
-                     << "G = " << ec_group.get_g() << "\n";
+            output() << "P = " << std::hex << dl_group.get_p() << "\n"
+                     << "G = " << dl_group.get_g() << "\n";
             }
 
          }
