@@ -63,8 +63,6 @@ PKCS10_Request PKCS10_Request::create(const Private_Key& key,
                                       const std::string& padding_scheme,
                                       const std::string& challenge)
    {
-   const std::map<std::string,std::string> sig_opts = { {"padding", padding_scheme} };
-
    AlgorithmIdentifier sig_algo;
    std::unique_ptr<PK_Signer> signer = choose_sig_format(sig_algo, key, rng, hash_fn, padding_scheme);
 

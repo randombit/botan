@@ -398,8 +398,6 @@ PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
 
    std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
 
-   std::vector<std::unique_ptr<Botan::PK_Decryptor>> decryptors;
-
    for(auto const& dec_provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::PK_Decryptor> decryptor;

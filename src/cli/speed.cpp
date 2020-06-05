@@ -1128,15 +1128,15 @@ class Speed final : public Command
          {
          for(std::string group_name : groups)
             {
-            const Botan::EC_Group group(group_name);
+            const Botan::EC_Group ec_group(group_name);
 
             std::unique_ptr<Timer> add_timer = make_timer(group_name + " add");
             std::unique_ptr<Timer> addf_timer = make_timer(group_name + " addf");
             std::unique_ptr<Timer> dbl_timer = make_timer(group_name + " dbl");
 
-            const Botan::PointGFp& base_point = group.get_base_point();
-            Botan::PointGFp non_affine_pt = group.get_base_point() * 1776; // create a non-affine point
-            Botan::PointGFp pt = group.get_base_point();
+            const Botan::PointGFp& base_point = ec_group.get_base_point();
+            Botan::PointGFp non_affine_pt = ec_group.get_base_point() * 1776; // create a non-affine point
+            Botan::PointGFp pt = ec_group.get_base_point();
 
             std::vector<Botan::BigInt> ws(Botan::PointGFp::WORKSPACE_SIZE);
 
@@ -1173,13 +1173,13 @@ class Speed final : public Command
          {
          for(std::string group_name : groups)
             {
-            const Botan::EC_Group group(group_name);
+            const Botan::EC_Group ec_group(group_name);
 
             std::unique_ptr<Timer> mult_timer = make_timer(group_name + " Montgomery ladder");
             std::unique_ptr<Timer> blinded_mult_timer = make_timer(group_name + " blinded comb");
             std::unique_ptr<Timer> blinded_var_mult_timer = make_timer(group_name + " blinded window");
 
-            const Botan::PointGFp& base_point = group.get_base_point();
+            const Botan::PointGFp& base_point = ec_group.get_base_point();
 
             std::vector<Botan::BigInt> ws;
 
@@ -1187,15 +1187,15 @@ class Speed final : public Command
                   blinded_mult_timer->under(runtime) &&
                   blinded_var_mult_timer->under(runtime))
                {
-               const Botan::BigInt scalar(rng(), group.get_p_bits());
+               const Botan::BigInt scalar(rng(), ec_group.get_p_bits());
 
                const Botan::PointGFp r1 = mult_timer->run([&]() { return base_point * scalar; });
 
                const Botan::PointGFp r2 = blinded_mult_timer->run(
-                  [&]() { return group.blinded_base_point_multiply(scalar, rng(), ws); });
+                  [&]() { return ec_group.blinded_base_point_multiply(scalar, rng(), ws); });
 
                const Botan::PointGFp r3 = blinded_var_mult_timer->run(
-                  [&]() { return group.blinded_var_point_multiply(base_point, scalar, rng(), ws); });
+                  [&]() { return ec_group.blinded_var_point_multiply(base_point, scalar, rng(), ws); });
 
                BOTAN_ASSERT_EQUAL(r1, r2, "Same point computed by Montgomery and comb");
                BOTAN_ASSERT_EQUAL(r1, r3, "Same point computed by Montgomery and window");
@@ -1214,17 +1214,17 @@ class Speed final : public Command
 
          for(std::string group_name : groups)
             {
-            const Botan::EC_Group group(group_name);
+            const Botan::EC_Group ec_group(group_name);
 
             while(uncmp_timer->under(runtime) && cmp_timer->under(runtime))
                {
                const Botan::BigInt k(rng(), 256);
-               const Botan::PointGFp p = group.get_base_point() * k;
+               const Botan::PointGFp p = ec_group.get_base_point() * k;
                const std::vector<uint8_t> os_cmp = p.encode(Botan::PointGFp::COMPRESSED);
                const std::vector<uint8_t> os_uncmp = p.encode(Botan::PointGFp::UNCOMPRESSED);
 
-               uncmp_timer->run([&]() { group.OS2ECP(os_uncmp); });
-               cmp_timer->run([&]() { group.OS2ECP(os_cmp); });
+               uncmp_timer->run([&]() { ec_group.OS2ECP(os_uncmp); });
+               cmp_timer->run([&]() { ec_group.OS2ECP(os_cmp); });
                }
 
             record_result(uncmp_timer);

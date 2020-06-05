@@ -32,7 +32,7 @@ XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(const std
       { return XMSS_SHA2_20_512; }
    if(param_set == "XMSS-SHAKE_10_256")
       { return XMSS_SHAKE_10_256; }
-   if(param_set == "XMSS-SHAKE_10_256")
+   if(param_set == "XMSS-SHAKE_16_256")
       { return XMSS_SHAKE_16_256; }
    if(param_set == "XMSS-SHAKE_20_256")
       { return XMSS_SHAKE_20_256; }
