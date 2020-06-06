@@ -663,11 +663,13 @@ void Channel::send_alert(const Alert& alert)
       m_pending_state.reset();
 
    if(alert.is_fatal())
+   {
       if(auto active = active_state())
+      {
          m_session_manager.remove_entry(active->server_hello()->session_id());
-
-   if(alert.is_fatal())
+      }
       reset_state();
+   }
 
    if(alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal())
       {
