@@ -1,6 +1,6 @@
 /*
 * X.509 SIGNED Object
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -189,10 +189,11 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
    if(sig_info.size() < 1 || sig_info.size() > 2 || sig_info[0] != pub_key.algo_name())
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
 
+   const std::string pub_key_algo = sig_info[0];
    std::string padding;
    if(sig_info.size() == 2)
       padding = sig_info[1];
-   else if(sig_info[0] == "Ed25519" || sig_info[0] == "XMSS")
+   else if(pub_key_algo == "Ed25519" || pub_key_algo == "XMSS")
       padding = "Pure";
    else
       return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
@@ -239,6 +240,40 @@ Certificate_Status_Code X509_Object::verify_signature(const Public_Key& pub_key)
          }
 
       padding += "(" + hash_algo + "," + mgf_algo + "," + std::to_string(pss_parameter.salt_len) + ")";
+      }
+   else
+      {
+      /*
+      * For all other signature types the signature parameters should
+      * be either NULL or empty. In theory there is some distinction between
+      * these but in practice they seem to be used somewhat interchangeably.
+      *
+      * The various RFCs all have prescriptions of what is allowed:
+      * RSA - NULL (RFC 3279)
+      * DSA - empty (RFC 3279)
+      * ECDSA - empty (RFC 3279)
+      * GOST - empty (RFC 4491)
+      * Ed25519 - empty (RFC 8410)
+      * XMSS - empty (draft-vangeest-x509-hash-sigs)
+      *
+      * But in practice we find RSA with empty and ECDSA will NULL all
+      * over the place so it's not really possible to enforce. For Ed25519
+      * and XMSS because they are new we attempt to enforce.
+      */
+      if(pub_key_algo == "Ed25519" || pub_key_algo == "XMSS")
+         {
+         if(!signature_algorithm().parameters_are_empty())
+            {
+            return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+            }
+         }
+      else
+         {
+         if(!signature_algorithm().parameters_are_null_or_empty())
+            {
+            return Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS;
+            }
+         }
       }
 
    try
