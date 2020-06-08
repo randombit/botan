@@ -136,7 +136,7 @@ std::string Timer::result_string_ops() const
       if(cycles_consumed() != 0)
          {
          const double cycles_per_op = static_cast<double>(cycles_consumed()) / events();
-         const size_t precision = (cycles_per_op < 10000) ? 2 : 0;
+         const int precision = (cycles_per_op < 10000) ? 2 : 0;
          oss << " " << std::fixed << std::setprecision(precision) << cycles_per_op << " cycles/op";
          }
 
