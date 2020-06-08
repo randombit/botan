@@ -6,6 +6,7 @@
 */
 
 #include <botan/block_cipher.h>
+#include <botan/internal/safeint.h>
 #include <botan/internal/openssl.h>
 #include <openssl/evp.h>
 
@@ -38,7 +39,9 @@ class OpenSSL_BlockCipher final : public BlockCipher
          {
          verify_key_set(m_key_set);
          int out_len = 0;
-         if(!EVP_EncryptUpdate(m_encrypt, out, &out_len, in, blocks * m_block_sz))
+         const size_t total_bytes = blocks * m_block_sz;
+         const int itotal_bytes = checked_cast_to<int>(total_bytes);
+         if(!EVP_EncryptUpdate(m_encrypt, out, &out_len, in, itotal_bytes))
             throw OpenSSL_Error("EVP_EncryptUpdate", ERR_get_error());
          }
 
@@ -46,7 +49,9 @@ class OpenSSL_BlockCipher final : public BlockCipher
          {
          verify_key_set(m_key_set);
          int out_len = 0;
-         if(!EVP_DecryptUpdate(m_decrypt, out, &out_len, in, blocks * m_block_sz))
+         const size_t total_bytes = blocks * m_block_sz;
+         const int itotal_bytes = checked_cast_to<int>(total_bytes);
+         if(!EVP_DecryptUpdate(m_decrypt, out, &out_len, in, itotal_bytes))
             throw OpenSSL_Error("EVP_DecryptUpdate", ERR_get_error());
          }
 
@@ -143,8 +148,9 @@ void OpenSSL_BlockCipher::key_schedule(const uint8_t key[], size_t length)
       }
    else
       {
-      if(EVP_CIPHER_CTX_set_key_length(m_encrypt, length) == 0 ||
-         EVP_CIPHER_CTX_set_key_length(m_decrypt, length) == 0)
+      const int ilength = checked_cast_to<int>(length);
+      if(EVP_CIPHER_CTX_set_key_length(m_encrypt, ilength) == 0 ||
+         EVP_CIPHER_CTX_set_key_length(m_decrypt, ilength) == 0)
          throw Invalid_Argument("OpenSSL_BlockCipher: Bad key length for " +
                                 m_cipher_name);
       }

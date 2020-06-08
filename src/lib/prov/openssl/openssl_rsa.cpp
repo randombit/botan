@@ -83,7 +83,8 @@ class OpenSSL_RSA_Encryption_Operation final : public PK_Ops::Encryption
             inbuf.assign(msg, msg + msg_len);
             }
 
-         int rc = ::RSA_public_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
+         int rc = ::RSA_public_encrypt(static_cast<int>(inbuf.size()), inbuf.data(),
+                                       outbuf.data(),
                                        m_openssl_rsa.get(), m_padding);
          if(rc < 0)
             throw OpenSSL_Error("RSA_public_encrypt", ERR_get_error());
@@ -118,7 +119,8 @@ class OpenSSL_RSA_Decryption_Operation final : public PK_Ops::Decryption
                                   const uint8_t msg[], size_t msg_len) override
          {
          secure_vector<uint8_t> buf(::RSA_size(m_openssl_rsa.get()));
-         int rc = ::RSA_private_decrypt(msg_len, msg, buf.data(), m_openssl_rsa.get(), m_padding);
+         int rc = ::RSA_private_decrypt(static_cast<int>(msg_len), msg,
+                                        buf.data(), m_openssl_rsa.get(), m_padding);
          if(rc < 0 || static_cast<size_t>(rc) > buf.size())
             {
             valid_mask = 0;
@@ -183,7 +185,8 @@ class OpenSSL_RSA_Verification_Operation final : public PK_Ops::Verification_wit
 
          secure_vector<uint8_t> outbuf(mod_sz);
 
-         int rc = ::RSA_public_decrypt(inbuf.size(), inbuf.data(), outbuf.data(),
+         int rc = ::RSA_public_decrypt(static_cast<int>(inbuf.size()), inbuf.data(),
+                                       outbuf.data(),
                                        m_openssl_rsa.get(), RSA_NO_PADDING);
          if(rc < 0)
             throw Invalid_Argument("RSA_public_decrypt");
@@ -224,7 +227,8 @@ class OpenSSL_RSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
 
          secure_vector<uint8_t> outbuf(mod_sz);
 
-         int rc = ::RSA_private_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
+         int rc = ::RSA_private_encrypt(static_cast<int>(inbuf.size()), inbuf.data(),
+                                        outbuf.data(),
                                         m_openssl_rsa.get(), RSA_NO_PADDING);
          if(rc < 0)
             throw OpenSSL_Error("RSA_private_encrypt", ERR_get_error());
@@ -280,9 +284,9 @@ make_openssl_rsa_private_key(RandomNumberGenerator& rng, size_t rsa_bits)
    if (rsa_bits > INT_MAX)
       throw Internal_Error("rsa_bits overflow");
 
-   secure_vector<uint8_t> seed(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+   secure_vector<uint8_t> seed(128);
    rng.randomize(seed.data(), seed.size());
-   RAND_seed(seed.data(), seed.size());
+   RAND_seed(seed.data(), static_cast<int>(seed.size()));
 
    std::unique_ptr<BIGNUM, std::function<void (BIGNUM*)>> bn(BN_new(), BN_free);
    if(!bn)
@@ -293,7 +297,7 @@ make_openssl_rsa_private_key(RandomNumberGenerator& rng, size_t rsa_bits)
    std::unique_ptr<RSA, std::function<void (RSA*)>> rsa(RSA_new(), RSA_free);
    if(!rsa)
       throw OpenSSL_Error("RSA_new", ERR_get_error());
-   if(!RSA_generate_key_ex(rsa.get(), rsa_bits, bn.get(), nullptr))
+   if(!RSA_generate_key_ex(rsa.get(), static_cast<int>(rsa_bits), bn.get(), nullptr))
       throw OpenSSL_Error("RSA_generate_key_ex", ERR_get_error());
 
    uint8_t* der = nullptr;

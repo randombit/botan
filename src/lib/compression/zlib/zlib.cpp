@@ -16,7 +16,7 @@ namespace Botan {
 
 namespace {
 
-class Zlib_Stream : public Zlib_Style_Stream<z_stream, Bytef>
+class Zlib_Stream : public Zlib_Style_Stream<z_stream, Bytef, unsigned int>
    {
    public:
       Zlib_Stream()
@@ -51,7 +51,7 @@ class Zlib_Compression_Stream : public Zlib_Stream
          else if(level == 0)
             level = 6;
 
-         int rc = ::deflateInit2(streamp(), level, Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY);
+         int rc = ::deflateInit2(streamp(), static_cast<int>(level), Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY);
 
          if(rc != Z_OK)
             throw Compression_Error("deflateInit2", ErrorType::ZlibError, rc);

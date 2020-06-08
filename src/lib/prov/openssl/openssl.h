@@ -33,16 +33,16 @@ enum Cipher_Dir : int;
 class BOTAN_PUBLIC_API(2,0) OpenSSL_Error final : public Exception
    {
    public:
-      OpenSSL_Error(const std::string& what, int err) :
+      OpenSSL_Error(const std::string& what, unsigned long err) :
          Exception(what + " failed: " + ERR_error_string(err, nullptr)),
          m_err(err) {}
 
       ErrorType error_type() const noexcept override { return ErrorType::OpenSSLError; }
 
-      int error_code() const noexcept override { return m_err; }
+      int error_code() const noexcept override { return static_cast<int>(m_err); }
 
    private:
-      int m_err;
+      unsigned long m_err;
    };
 
 /* Block Ciphers */

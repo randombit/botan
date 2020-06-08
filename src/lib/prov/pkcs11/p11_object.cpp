@@ -29,13 +29,13 @@ void AttributeContainer::add_class(ObjectClass object_class)
 void AttributeContainer::add_string(AttributeType attribute, const std::string& value)
    {
    m_strings.push_back(value);
-   add_attribute(attribute, reinterpret_cast<const uint8_t*>(m_strings.back().data()), static_cast<Ulong>(value.size()));
+   add_attribute(attribute, reinterpret_cast<const uint8_t*>(m_strings.back().data()), static_cast<uint32_t>(value.size()));
    }
 
 void AttributeContainer::add_binary(AttributeType attribute, const uint8_t* value, size_t length)
    {
    m_vectors.push_back(secure_vector<uint8_t>(value, value + length));
-   add_attribute(attribute, reinterpret_cast< const uint8_t* >(m_vectors.back().data()), static_cast<Ulong>(length));
+   add_attribute(attribute, reinterpret_cast< const uint8_t* >(m_vectors.back().data()), static_cast<uint32_t>(length));
    }
 
 void AttributeContainer::add_bool(AttributeType attribute, bool value)

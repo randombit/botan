@@ -60,7 +60,7 @@ class LZMA_Compression_Stream final : public LZMA_Stream
          else if(level > 9)
             level = 9; // clamp to maximum allowed value
 
-         lzma_ret rc = ::lzma_easy_encoder(streamp(), level, LZMA_CHECK_CRC64);
+         lzma_ret rc = ::lzma_easy_encoder(streamp(), static_cast<uint32_t>(level), LZMA_CHECK_CRC64);
 
          if(rc != LZMA_OK)
             throw Compression_Error("lzam_easy_encoder", ErrorType::LzmaError, rc);

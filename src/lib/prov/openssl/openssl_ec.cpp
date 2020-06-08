@@ -170,22 +170,17 @@ class OpenSSL_ECDSA_Verification_Operation final : public PK_Ops::Verification_w
          std::unique_ptr<ECDSA_SIG, std::function<void (ECDSA_SIG*)>> sig(nullptr, ECDSA_SIG_free);
          sig.reset(::ECDSA_SIG_new());
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-         sig->r = BN_bin2bn(sig_bytes              , sig_len / 2, sig->r);
-         sig->s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, sig->s);
-#else
-         BIGNUM* r = BN_bin2bn(sig_bytes              , sig_len / 2, nullptr);
-         BIGNUM* s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, nullptr);
+         BIGNUM* r = BN_bin2bn(sig_bytes              , static_cast<int>(sig_len / 2), nullptr);
+         BIGNUM* s = BN_bin2bn(sig_bytes + sig_len / 2, static_cast<int>(sig_len / 2), nullptr);
          if(r == nullptr || s == nullptr)
             throw OpenSSL_Error("BN_bin2bn sig s", ERR_get_error());
 
          ECDSA_SIG_set0(sig.get(), r, s);
-#endif
 
-         const int res = ECDSA_do_verify(msg, msg_len, sig.get(), m_ossl_ec.get());
+         const int res = ECDSA_do_verify(msg, static_cast<int>(msg_len), sig.get(), m_ossl_ec.get());
          if(res < 0)
             {
-            int err = ERR_get_error();
+            auto err = ERR_get_error();
 
             bool hard_error = true;
 
@@ -237,7 +232,7 @@ class OpenSSL_ECDSA_Signing_Operation final : public PK_Ops::Signature_with_EMSA
                                    RandomNumberGenerator&) override
          {
          std::unique_ptr<ECDSA_SIG, std::function<void (ECDSA_SIG*)>> sig(nullptr, ECDSA_SIG_free);
-         sig.reset(::ECDSA_do_sign(msg, msg_len, m_ossl_ec.get()));
+         sig.reset(::ECDSA_do_sign(msg, static_cast<int>(msg_len), m_ossl_ec.get()));
 
          if(!sig)
             throw OpenSSL_Error("ECDSA_do_sign", ERR_get_error());
