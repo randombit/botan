@@ -240,6 +240,13 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       {
       if(ext->get_is_ca() == true)
          {
+         /*
+         * RFC 5280 section 4.2.1.3 requires that CAs include KeyUsage in all
+         * intermediate CA certificates they issue. Currently we accept it being
+         * missing, as do most other implementations. But it may be worth
+         * removing this entirely, or alternately adding a warning level
+         * validation failure for it.
+         */
          if(data->m_key_constraints == NO_CONSTRAINTS ||
             (data->m_key_constraints & KEY_CERT_SIGN))
             {
