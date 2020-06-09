@@ -117,15 +117,15 @@ inline uint32_t SM4_Tp(uint32_t b)
 
 #define SM4_E_RNDS(B, R, F) do {                           \
    B##0 ^= F(B##1 ^ B##2 ^ B##3 ^ m_RK[4*R+0]);            \
-   B##1 ^= F(B##0 ^ B##2 ^ B##3 ^ m_RK[4*R+1]);            \
-   B##2 ^= F(B##0 ^ B##1 ^ B##3 ^ m_RK[4*R+2]);            \
+   B##1 ^= F(B##2 ^ B##3 ^ B##0 ^ m_RK[4*R+1]);            \
+   B##2 ^= F(B##3 ^ B##0 ^ B##1 ^ m_RK[4*R+2]);            \
    B##3 ^= F(B##0 ^ B##1 ^ B##2 ^ m_RK[4*R+3]);            \
    } while(0)
 
 #define SM4_D_RNDS(B, R, F) do {                           \
    B##0 ^= F(B##1 ^ B##2 ^ B##3 ^ m_RK[4*R+3]);            \
-   B##1 ^= F(B##0 ^ B##2 ^ B##3 ^ m_RK[4*R+2]);            \
-   B##2 ^= F(B##0 ^ B##1 ^ B##3 ^ m_RK[4*R+1]);            \
+   B##1 ^= F(B##2 ^ B##3 ^ B##0 ^ m_RK[4*R+2]);            \
+   B##2 ^= F(B##3 ^ B##0 ^ B##1 ^ m_RK[4*R+1]);            \
    B##3 ^= F(B##0 ^ B##1 ^ B##2 ^ m_RK[4*R+0]);            \
    } while(0)
 
