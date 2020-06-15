@@ -729,6 +729,8 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
          pending_state.srp_identifier(),
          pending_state.server_hello()->srtp_profile());
 
+      start_buffering_records();
+
       if(save_session(session_info))
          {
          if(pending_state.server_hello()->supports_session_ticket())
@@ -761,6 +763,8 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
       change_cipher_spec_writer(SERVER);
 
       pending_state.server_finished(new Finished(pending_state.handshake_io(), pending_state, SERVER));
+
+      send_buffered_records();
       }
 
    activate_session();
