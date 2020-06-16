@@ -71,8 +71,14 @@ class CommonCrypto_HashFunction final : public HashFunction
    private:
       void add_data(const uint8_t input[], size_t length) override
          {
-         if(m_info.update(&m_ctx, input, length) != 1)
-            throw CommonCrypto_Error("CC_" + m_info.name + "_Update");
+         /* update len parameter is 32 bit unsigned integer, feed input in parts */
+         while (length > 0)
+            {
+            CC_LONG update_len = (length > 0xFFFFFFFFUL) ? 0xFFFFFFFFUL : static_cast<CC_LONG>(length);
+            m_info.update(&m_ctx, input, update_len);
+            input += update_len;
+            length -= update_len;
+            }
          }
 
       void final_result(uint8_t output[]) override
