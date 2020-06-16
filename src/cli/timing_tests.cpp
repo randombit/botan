@@ -69,7 +69,7 @@ class Timing_Test
          A constant seed is ok here since the timing test rng just needs to be
          "random" but not cryptographically secure - even std::rand() would be ok.
          */
-         const std::string drbg_seed(64, '*');
+         const std::string drbg_seed(64, 'A');
          m_rng = cli_make_rng("", drbg_seed); // throws if it can't find anything to use
          }
 
