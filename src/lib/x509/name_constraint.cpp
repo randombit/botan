@@ -115,9 +115,13 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
       {
       match_fn = std::mem_fn(&GeneralName::matches_dn);
 
-      std::stringstream ss;
-      ss << dn;
-      nam.push_back(ss.str());
+      nam.push_back(dn.to_string());
+
+      const auto alt_dn = alt_name.dn();
+      if(alt_dn.empty() == false)
+         {
+         nam.push_back(alt_dn.to_string());
+         }
       }
    else if(type() == "IP")
       {

@@ -1,12 +1,14 @@
 /*
 * Certificate Message
-* (C) 2004-2006,2012 Jack Lloyd
+* (C) 2004-2006,2012,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/tls_messages.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_exceptn.h>
+#include <botan/tls_alert.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
@@ -61,6 +63,19 @@ Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& policy)
       m_certs.push_back(X509_Certificate(cert_buf));
 
       certs += cert_size + 3;
+      }
+
+   /*
+   * TLS 1.0 through 1.2 all seem to require that the certificate be
+   * precisely a v3 certificate. In fact the strict wording would seem
+   * to require that every certificate in the chain be v3. But often
+   * the intermediates are outside of the control of the server.
+   * But, require that the leaf certificate be v3
+   */
+   if(m_certs.size() > 0 && m_certs[0].x509_version() != 3)
+      {
+      throw TLS_Exception(Alert::BAD_CERTIFICATE,
+                          "The leaf certificate must be v3");
       }
    }
 
