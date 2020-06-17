@@ -271,27 +271,37 @@ class ECDSA_Timing_Test final : public Timing_Test
       const Botan::ECDSA_PrivateKey m_privkey;
       const Botan::BigInt& m_x;
       std::vector<Botan::BigInt> m_ws;
+      Botan::BigInt m_b, m_b_inv;
    };
 
 ECDSA_Timing_Test::ECDSA_Timing_Test(std::string ecgroup)
    : m_group(ecgroup)
    , m_privkey(timing_test_rng(), m_group)
    , m_x(m_privkey.private_value())
-   {}
+   {
+      m_b = m_group.random_scalar(timing_test_rng());
+      m_b_inv = m_group.inverse_mod_order(m_b);
+   }
 
 ticks ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input)
    {
    const Botan::BigInt k(input.data(), input.size());
-   const Botan::BigInt msg(5); // fixed message to minimize noise
+   Botan::BigInt m(5); // fixed message to minimize noise
 
    ticks start = get_ticks();
 
-   //The following ECDSA operations involve and should not leak any information about k.
-
+   // the following ECDSA operations involve and should not leak any information about k
+   const Botan::BigInt r = m_group.mod_order(
+      m_group.blinded_base_point_multiply_x(k, timing_test_rng(), m_ws));
    const Botan::BigInt k_inv = m_group.inverse_mod_order(k);
-   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, timing_test_rng(), m_ws);
-   const Botan::BigInt r = m_group.mod_order(k_times_P.get_affine_x());
-   const Botan::BigInt s = m_group.multiply_mod_order(k_inv, mul_add(m_x, r, msg));
+
+   m_b = m_group.square_mod_order(m_b);
+   m_b_inv = m_group.square_mod_order(m_b_inv);
+
+   m = m_group.multiply_mod_order(m_b, m_group.mod_order(m));
+   const Botan::BigInt xr_m = m_group.mod_order(m_group.multiply_mod_order(m_x, m_b, r) + m);
+
+   const Botan::BigInt s = m_group.multiply_mod_order(k_inv, xr_m, m_b_inv);
 
    BOTAN_UNUSED(r, s);
 
