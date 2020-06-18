@@ -224,7 +224,7 @@ void Client::send_client_hello(Handshake_State& state_base,
 namespace {
 
 bool key_usage_matches_ciphersuite(Key_Constraints usage,
-                                   Ciphersuite suite)
+                                   const Ciphersuite& suite)
    {
    if(usage == NO_CONSTRAINTS)
       return true; // anything goes ...
