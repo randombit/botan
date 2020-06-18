@@ -47,6 +47,14 @@ jobs:
 
     - os: linux
       dist: bionic
+      name: Linux s390x
+      arch: s390x
+      compiler: gcc
+      env:
+       - TARGET="shared"
+
+    - os: linux
+      dist: bionic
       name: Linux arm64
       arch: arm64
       compiler: gcc
@@ -57,14 +65,6 @@ jobs:
       dist: bionic
       name: Linux ppc64le
       arch: ppc64le
-      compiler: gcc
-      env:
-       - TARGET="shared"
-
-    - os: linux
-      dist: bionic
-      name: Linux s390x
-      arch: s390x
       compiler: gcc
       env:
        - TARGET="shared"
