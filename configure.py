@@ -3198,6 +3198,12 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
         build_paths.lib_sources = amalg_cpp_files
         template_vars['generated_files'] = ' '.join(amalg_cpp_files + amalg_headers)
 
+        # Inserting an amalgamation generated using DLL visibility flags into a
+        # binary project will either cause errors (on Windows) or unnecessary overhead.
+        # Provide a hint
+        if options.build_shared_lib:
+            logging.warning('Unless you are building a DLL or .so from the amalgamation, use --disable-shared as well')
+
     template_vars.update(generate_build_info(build_paths, using_mods, cc, arch, osinfo, options))
 
     with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w') as f:
