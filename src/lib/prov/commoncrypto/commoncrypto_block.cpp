@@ -97,6 +97,7 @@ void CommonCrypto_BlockCipher::key_schedule(const uint8_t key[], size_t length)
    {
    secure_vector<uint8_t> full_key(key, key + length);
 
+   clear();
    commoncrypto_adjust_key_size(key, length, m_opts, full_key);
 
    CCCryptorStatus status;
@@ -130,6 +131,18 @@ BlockCipher* CommonCrypto_BlockCipher::clone() const
 void CommonCrypto_BlockCipher::clear()
    {
    m_key_set = false;
+
+   if(m_encrypt)
+      {
+      CCCryptorRelease(m_encrypt);
+      m_encrypt = nullptr;
+      }
+
+   if(m_decrypt)
+      {
+      CCCryptorRelease(m_decrypt);
+      m_decrypt = nullptr;
+      }
    }
 }
 
