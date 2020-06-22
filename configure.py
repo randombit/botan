@@ -2060,6 +2060,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'handbook_output_dir': build_paths.handbook_output_dir,
         'doc_output_dir_doxygen': build_paths.doc_output_dir_doxygen,
 
+        'compiler_include_dirs': '%s %s' % (build_paths.include_dir, build_paths.external_include_dir),
+
         'os': options.os,
         'arch': options.arch,
         'cpu_family': arch.family,
