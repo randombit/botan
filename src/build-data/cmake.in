@@ -36,7 +36,7 @@ set(COMPILER_FEATURES $<$<NOT:$<CONFIG:DEBUG>>:${COMPILER_FEATURES_RELEASE}>  $<
 set(SHARED_FEATURES %{cmake_lib_flags})
 set(STATIC_FEATURES -DBOTAN_DLL=)
 set(COMPILER_WARNINGS %{cc_warning_flags})
-set(COMPILER_INCLUDE_DIRS build/include build/include/external)
+set(COMPILER_INCLUDE_DIRS %{compiler_include_dirs})
 if(ENABLED_LTO)
     set(COMPILER_FEATURES ${COMPILER_FEATURES} -lto)
 endif()
