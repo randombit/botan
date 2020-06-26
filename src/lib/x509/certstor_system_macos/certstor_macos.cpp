@@ -376,11 +376,7 @@ Certificate_Store_MacOS::find_cert(const X509_DN& subject_dn,
       return nullptr;  // certificate not found
       }
 
-   if(certs.size() != 1)
-      {
-      throw Lookup_Error("ambiguous certificate result");
-      }
-
+   // `count` might be greater than 1, but we'll just select the first match
    return certs.front();
    }
 
