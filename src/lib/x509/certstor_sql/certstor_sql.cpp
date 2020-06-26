@@ -52,27 +52,24 @@ Certificate_Store_In_SQL::find_cert(const X509_DN& subject_dn, const std::vector
 
    if(key_id.empty())
       {
-      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1");
+      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1 LIMIT 1");
       stmt->bind(1, dn_encoding);
       }
    else
       {
       stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE\
-                                        subject_dn == ?1 AND (key_id == NULL OR key_id == ?2)");
+                                        subject_dn == ?1 AND (key_id == NULL OR key_id == ?2) LIMIT 1");
       stmt->bind(1, dn_encoding);
       stmt->bind(2,key_id);
       }
 
-   std::shared_ptr<const X509_Certificate> cert;
    while(stmt->step())
       {
       auto blob = stmt->get_blob(0);
-      cert = std::make_shared<X509_Certificate>(
-            std::vector<uint8_t>(blob.first,blob.first + blob.second));
-
+      return std::make_shared<X509_Certificate>(std::vector<uint8_t>(blob.first, blob.first + blob.second));
       }
 
-   return cert;
+   return std::shared_ptr<const X509_Certificate>();
    }
 
 std::vector<std::shared_ptr<const X509_Certificate>>
