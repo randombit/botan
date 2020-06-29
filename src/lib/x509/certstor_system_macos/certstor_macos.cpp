@@ -118,6 +118,14 @@ X509_DN normalize(const X509_DN& dn)
    return result;
    }
 
+std::vector<uint8_t> normalizeAndSerialize(const X509_DN& dn)
+   {
+   std::vector<uint8_t> result_dn;
+   DER_Encoder encoder(result_dn);
+   normalize(dn).encode_into(encoder);
+   return result_dn;
+   }
+
 std::string to_string(const CFStringRef cfstring)
    {
    const char* ccstr = CFStringGetCStringPtr(cfstring, kCFStringEncodingUTF8);
@@ -157,17 +165,6 @@ void check_success(const OSStatus status, const std::string context)
    }
 
 template <typename T>
-void check_notnull(const scoped_CFType<T>& value, const std::string context)
-   {
-   if(value)
-      {
-      return;
-      }
-
-   throw Internal_Error(std::string("failed to ") + context);
-   }
-
-template <typename T>
 void check_notnull(const T& value, const std::string context)
    {
    if(value)
@@ -176,102 +173,6 @@ void check_notnull(const T& value, const std::string context)
       }
 
    throw Internal_Error(std::string("failed to ") + context);
-   }
-
-SecCertificateRef to_SecCertificateRef(CFTypeRef object)
-   {
-   if(!object || CFGetTypeID(object) != SecCertificateGetTypeID())
-      {
-      throw Internal_Error("cannot convert CFTypeRef to SecCertificateRef");
-      }
-
-   return static_cast<SecCertificateRef>(const_cast<void*>(object));
-   }
-
-CFArrayRef to_CFArrayRef(CFTypeRef object)
-   {
-   if(!object || CFGetTypeID(object) != CFArrayGetTypeID())
-      {
-      throw Internal_Error("cannot convert CFTypeRef to CFArrayRef");
-      }
-
-   return static_cast<CFArrayRef>(const_cast<void*>(object));
-   }
-
-/**
- * Create a CFDataRef view over some provided std::vector<uint8_t. The data is
- * not copied but the resulting CFDataRef uses the std::vector's buffer as data
- * store. Note that the CFDataRef still needs to be manually freed, hence the
- * scoped_CFType wrapper.
- */
-scoped_CFType<CFDataRef> createCFDataView(const std::vector<uint8_t>& data)
-   {
-   return scoped_CFType<CFDataRef>(
-             CFDataCreateWithBytesNoCopy(kCFAllocatorDefault,
-                                         data.data(),
-                                         data.size(),
-                                         kCFAllocatorNull));
-   }
-
-/**
- * Convert a SecCertificateRef object into a Botan::X509_Certificate
- */
-std::shared_ptr<const X509_Certificate> readCertificate(SecCertificateRef cert)
-   {
-   scoped_CFType<CFDataRef> derData(SecCertificateCopyData(cert));
-   check_notnull(derData, "read extracted certificate");
-
-   // TODO: factor this out into a createDataSourceView() as soon as this class
-   //       gets a move-constructor
-   const auto data   = CFDataGetBytePtr(derData.get());
-   const auto length = CFDataGetLength(derData.get());
-
-   DataSource_Memory ds(data, length);
-   return std::make_shared<Botan::X509_Certificate>(ds);
-   }
-
-/**
- * Reads all certificates from a given CFArrayRef into a result vector
- */
-std::vector<std::shared_ptr<const X509_Certificate>> readAllCertificates(CFArrayRef searchResult)
-   {
-   if(!searchResult)
-      {
-      return {};  // no certificates found
-      }
-
-   const auto count = CFArrayGetCount(searchResult);
-   BOTAN_ASSERT(count > 0, "certificate result list contains data");
-
-   std::vector<std::shared_ptr<const X509_Certificate>> output;
-   output.reserve(count);
-   for(unsigned int i = 0; i < count; ++i)
-      {
-      auto cf_cert = to_SecCertificateRef(CFArrayGetValueAtIndex(searchResult, i));
-      output.emplace_back(readCertificate(cf_cert));
-      }
-
-   return output;
-   }
-
-/**
- * Reads a single certificate from a given CFArrayRef into a result vector.
- * Note that this simply takes the first certificate in the array if it contains
- * more than one.
- */
-std::shared_ptr<const X509_Certificate> readSingleCertificate(scoped_CFType<CFArrayRef> searchResult)
-   {
-   if(!searchResult)
-      {
-      return nullptr;  // no certificate found
-      }
-
-   const auto count = CFArrayGetCount(searchResult.get());
-   BOTAN_ASSERT(count > 0, "certificate result list contains an object");
-
-   // `count` might be greater than 1, but we'll just select the first match
-   auto cfCert = to_SecCertificateRef(CFArrayGetValueAtIndex(searchResult.get(), 0));
-   return readCertificate(cfCert);
    }
 
 }  // namespace
@@ -301,7 +202,7 @@ class Certificate_Store_MacOS_Impl
             Query(const Query& other) = delete;
             Query& operator=(const Query& other) = delete;
 
-
+         public:
             void addParameter(CFStringRef key, CFTypeRef value)
                {
                m_keys.emplace_back(key);
@@ -315,14 +216,15 @@ class Certificate_Store_MacOS_Impl
                m_data_store.emplace_back(std::move(value));
                const auto& data = m_data_store.back();
 
-               m_data_refs.emplace_back(createCFDataView(data));
+               m_data_refs.emplace_back(CFDataCreateWithBytesNoCopy(kCFAllocatorDefault,
+                                        data.data(),
+                                        data.size(),
+                                        kCFAllocatorNull));
                const auto& data_ref = m_data_refs.back();
-
                check_notnull(data_ref, "create CFDataRef of search object failed");
 
                addParameter(key, data_ref.get());
                }
-
 
             /**
              * Amends the user-provided search query with generic filter rules
@@ -398,17 +300,31 @@ class Certificate_Store_MacOS_Impl
          scoped_CFType<CFTypeRef> result(nullptr);
          search(std::move(query), &result.get());
 
-         return (result) ? readCertificate(to_SecCertificateRef(result.get())) : nullptr;
+         return (result) ? readCertificate(result.get()) : nullptr;
          }
 
       std::vector<std::shared_ptr<const X509_Certificate>> findAll(Query query) const
          {
          query.addParameter(kSecMatchLimit, kSecMatchLimitAll);
 
-         scoped_CFType<CFTypeRef> result(nullptr);
-         search(std::move(query), &result.get());
+         scoped_CFType<CFArrayRef> result(nullptr);
+         search(std::move(query), (CFTypeRef*)&result.get());
 
-         return (result) ? readAllCertificates(to_CFArrayRef(result.get())) : std::vector<std::shared_ptr<const X509_Certificate>>();
+         std::vector<std::shared_ptr<const X509_Certificate>> output;
+
+         if(result)
+            {
+            const auto count = CFArrayGetCount(result.get());
+            BOTAN_ASSERT(count > 0, "certificate result list contains data");
+
+            for(unsigned int i = 0; i < count; ++i)
+               {
+               auto cert = CFArrayGetValueAtIndex(result.get(), i);
+               output.emplace_back(readCertificate(cert));
+               }
+            }
+
+         return output;
          }
 
    protected:
@@ -427,6 +343,28 @@ class Certificate_Store_MacOS_Impl
          check_notnull(result, "look up certificate (invalid result value)");
          }
 
+      /**
+       * Convert a CFTypeRef object into a Botan::X509_Certificate
+       */
+      std::shared_ptr<const X509_Certificate> readCertificate(CFTypeRef object) const
+         {
+         if(!object || CFGetTypeID(object) != SecCertificateGetTypeID())
+            {
+            throw Internal_Error("cannot convert CFTypeRef to SecCertificateRef");
+            }
+
+         auto cert = static_cast<SecCertificateRef>(const_cast<void*>(object));
+
+         scoped_CFType<CFDataRef> derData(SecCertificateCopyData(cert));
+         check_notnull(derData, "read extracted certificate");
+
+         const auto data   = CFDataGetBytePtr(derData.get());
+         const auto length = CFDataGetLength(derData.get());
+
+         DataSource_Memory ds(data, length);
+         return std::make_shared<Botan::X509_Certificate>(ds);
+         }
+
       CFArrayRef keychains() const { return m_keychains.get(); }
       SecPolicyRef policy() const { return m_policy.get(); }
 
@@ -437,6 +375,13 @@ class Certificate_Store_MacOS_Impl
       scoped_CFType<CFArrayRef>      m_keychains;
    };
 
+//
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//
+//   Implementation of Botan::Certificate_Store interface ...
+//
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//
 
 Certificate_Store_MacOS::Certificate_Store_MacOS() :
    m_impl(std::make_shared<Certificate_Store_MacOS_Impl>())
@@ -467,12 +412,8 @@ std::shared_ptr<const X509_Certificate>
 Certificate_Store_MacOS::find_cert(const X509_DN& subject_dn,
                                    const std::vector<uint8_t>& key_id) const
    {
-   std::vector<uint8_t> dn_data;
-   DER_Encoder encoder(dn_data);
-   normalize(subject_dn).encode_into(encoder);
-
    Certificate_Store_MacOS_Impl::Query query;
-   query.addParameter(kSecAttrSubject, dn_data);
+   query.addParameter(kSecAttrSubject, normalizeAndSerialize(subject_dn));
 
    if(!key_id.empty())
       {
@@ -486,12 +427,8 @@ std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_MacOS::fi
          const X509_DN& subject_dn,
          const std::vector<uint8_t>& key_id) const
    {
-   std::vector<uint8_t> dn_data;
-   DER_Encoder encoder(dn_data);
-   normalize(subject_dn).encode_into(encoder);
-
    Certificate_Store_MacOS_Impl::Query query;
-   query.addParameter(kSecAttrSubject, dn_data);
+   query.addParameter(kSecAttrSubject, normalizeAndSerialize(subject_dn));
 
    if(!key_id.empty())
       {
