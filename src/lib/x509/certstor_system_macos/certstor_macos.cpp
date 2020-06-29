@@ -209,7 +209,51 @@ std::shared_ptr<const X509_Certificate> readCertificate(SecCertificateRef cert)
    return std::make_shared<Botan::X509_Certificate>(ds);
    }
 
-}
+/**
+ * Reads all certificates from a given CFArrayRef into a result vector
+ */
+std::vector<std::shared_ptr<const X509_Certificate>> readAllCertificates(scoped_CFType<CFArrayRef> searchResult)
+   {
+   if(!searchResult)
+      {
+      return {};  // no certificates found
+      }
+
+   const auto count = CFArrayGetCount(searchResult.get());
+   BOTAN_ASSERT(count > 0, "certificate result list contains data");
+
+   std::vector<std::shared_ptr<const X509_Certificate>> output;
+   output.reserve(count);
+   for(unsigned int i = 0; i < count; ++i)
+      {
+      auto cfCert = to_SecCertificateRef(CFArrayGetValueAtIndex(searchResult.get(), i));
+      output.emplace_back(readCertificate(cfCert));
+      }
+
+   return output;
+   }
+
+/**
+ * Reads a single certificate from a given CFArrayRef into a result vector.
+ * Note that this simply takes the first certificate in the array if it contains
+ * more than one.
+ */
+std::shared_ptr<const X509_Certificate> readSingleCertificate(scoped_CFType<CFArrayRef> searchResult)
+   {
+   if(!searchResult)
+      {
+      return nullptr;  // no certificate found
+      }
+
+   const auto count = CFArrayGetCount(searchResult.get());
+   BOTAN_ASSERT(count > 0, "certificate result list contains an object");
+
+   // `count` might be greater than 1, but we'll just select the first match
+   auto cfCert = to_SecCertificateRef(CFArrayGetValueAtIndex(searchResult.get(), 0));
+   return readCertificate(cfCert);
+   }
+
+}  // namespace
 
 /**
  * Internal class implementation (i.e. Pimpl) to keep the required platform-
@@ -339,28 +383,20 @@ Certificate_Store_MacOS::Certificate_Store_MacOS() :
 
 std::vector<X509_DN> Certificate_Store_MacOS::all_subjects() const
    {
-   scoped_CFType<CFArrayRef> result(m_impl->search());
-
-   if(!result)
-      {
-      return {};  // not a single certificate found in the keychain
-      }
-
-   const auto count = CFArrayGetCount(result.get());
-   BOTAN_ASSERT(count > 0, "subject result list contains data");
+   // Note: This fetches and parses all certificates in the trust store.
+   //       Apple's API provides SecCertificateCopyNormalizedSubjectSequence
+   //       which facilitates reading the certificate DN without parsing the
+   //       entire certificate via Botan::X509_Certificate. However, this
+   //       function applies the same DN "normalization" as stated above.
+   const auto certificates = readAllCertificates(m_impl->search());
 
    std::vector<X509_DN> output;
-   output.reserve(count);
-   for(unsigned int i = 0; i < count; ++i)
+   std::transform(certificates.cbegin(), certificates.cend(),
+                  std::back_inserter(output),
+                  [](const std::shared_ptr<const X509_Certificate> cert)
       {
-      // Note: Apple's API provides SecCertificateCopyNormalizedSubjectSequence
-      //       which would have saved us from reading a Botan::X509_Certificate,
-      //       however, this function applies the same DN "normalization" as
-      //       stated above.
-      auto cfCert = to_SecCertificateRef(CFArrayGetValueAtIndex(result.get(), i));
-      auto cert = readCertificate(cfCert);
-      output.emplace_back(cert->subject_dn());
-      }
+      return cert->subject_dn();
+      });
 
    return output;
    }
@@ -403,25 +439,7 @@ std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_MacOS::fi
       query_params.push_back({kSecAttrSubjectKeyID, keyid_cfdata.get()});
       }
 
-   scoped_CFType<CFArrayRef> result(m_impl->search(std::move(query_params)));
-
-   if(!result)
-      {
-      return {};  // no certificates found
-      }
-
-   const auto count = CFArrayGetCount(result.get());
-   BOTAN_ASSERT(count > 0, "certificate result list contains data");
-
-   std::vector<std::shared_ptr<const X509_Certificate>> output;
-   output.reserve(count);
-   for(unsigned int i = 0; i < count; ++i)
-      {
-      auto cfCert = to_SecCertificateRef(CFArrayGetValueAtIndex(result.get(), i));
-      output.emplace_back(readCertificate(cfCert));
-      }
-
-   return output;
+   return readAllCertificates(m_impl->search(std::move(query_params)));
    }
 
 std::shared_ptr<const X509_Certificate>
@@ -440,17 +458,7 @@ Certificate_Store_MacOS::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& ke
          {kSecAttrPublicKeyHash, key_hash_cfdata.get()},
       }));
 
-   if(!result)
-      {
-      return nullptr;  // no certificate found
-      }
-
-   const auto count = CFArrayGetCount(result.get());
-   BOTAN_ASSERT(count > 0, "certificate result list contains an object");
-
-   // `count` might be greater than 1, but we'll just select the first match
-   auto cfCert = to_SecCertificateRef(CFArrayGetValueAtIndex(result.get(), 0));
-   return readCertificate(cfCert);
+   return readSingleCertificate(std::move(result));
    }
 
 std::shared_ptr<const X509_Certificate>
