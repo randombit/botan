@@ -269,7 +269,77 @@ class Certificate_Store_MacOS_Impl
          "/Library/Keychains/System.keychain";
 
    public:
-      using Query = std::vector<std::pair<CFStringRef, CFTypeRef>>;
+      class Query
+         {
+         public:
+            Query() = default;
+            ~Query() = default;
+            Query(Query&& other) = default;
+            Query& operator=(Query&& other) = default;
+
+            Query(const Query& other) = delete;
+            Query& operator=(const Query& other) = delete;
+
+
+            void addParameter(CFStringRef key, CFTypeRef value)
+               {
+               m_keys.emplace_back(key);
+               m_values.emplace_back(value);
+               }
+
+            void addParameter(CFStringRef key, std::vector<uint8_t> value)
+               {
+               // TODO C++17: std::vector::emplace_back will return the reference
+               //             to the inserted object straight away.
+               m_data_store.emplace_back(std::move(value));
+               const auto& data = m_data_store.back();
+
+               m_data_refs.emplace_back(createCFDataView(data));
+               const auto& data_ref = m_data_refs.back();
+
+               check_notnull(data_ref, "create CFDataRef of search object failed");
+
+               addParameter(key, data_ref.get());
+               }
+
+
+            /**
+             * Amends the user-provided search query with generic filter rules
+             * for the associated system keychains and transforms it into a
+             * representation that can be passed to the Apple keychain API.
+             */
+            scoped_CFType<CFDictionaryRef> prepare(const CFArrayRef& keychains,
+                                                   const SecPolicyRef& policy)
+               {
+               addParameter(kSecClass,            kSecClassCertificate);
+               addParameter(kSecReturnRef,        kCFBooleanTrue);
+               addParameter(kSecMatchLimit,       kSecMatchLimitAll);
+               addParameter(kSecMatchTrustedOnly, kCFBooleanTrue);
+               addParameter(kSecMatchSearchList,  keychains);
+               addParameter(kSecMatchPolicy,      policy);
+
+               BOTAN_ASSERT_EQUAL(m_keys.size(), m_values.size(), "valid key-value pairs");
+
+               auto query = scoped_CFType<CFDictionaryRef>(CFDictionaryCreate(
+                               kCFAllocatorDefault, (const void**)m_keys.data(),
+                               (const void**)m_values.data(), m_keys.size(),
+                               &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+               check_notnull(query, "create search query");
+
+               return query;
+               }
+
+         private:
+            using Data     = std::vector<std::vector<uint8_t>>;
+            using DataRefs = std::vector<scoped_CFType<CFDataRef>>;
+            using Keys     = std::vector<CFStringRef>;
+            using Values   = std::vector<CFTypeRef>;
+
+            Data     m_data_store;
+            DataRefs m_data_refs;
+            Keys     m_keys;
+            Values   m_values;
+         };
 
    public:
       Certificate_Store_MacOS_Impl() :
@@ -312,11 +382,9 @@ class Certificate_Store_MacOS_Impl
        * \returns      an array with the resulting certificates or nullptr if
        *               no matching certificate was found
        */
-      scoped_CFType<CFArrayRef> search(Query query = Query()) const
+      scoped_CFType<CFArrayRef> search(Query query) const
          {
-         scoped_CFType<CFDictionaryRef> fullQuery(
-            prepareQuery(std::move(query)));
-         check_notnull(fullQuery, "create search query");
+         scoped_CFType<CFDictionaryRef> fullQuery(query.prepare(keychains(), policy()));
 
          scoped_CFType<CFArrayRef> result(nullptr);
          auto status = SecItemCopyMatching(fullQuery.get(),
@@ -333,40 +401,6 @@ class Certificate_Store_MacOS_Impl
          }
 
    protected:
-      /**
-       * Amends the user-provided search query with generic filter rules for
-       * the associated system keychains.
-       */
-      scoped_CFType<CFDictionaryRef> prepareQuery(Query pairs) const
-         {
-         std::vector<CFStringRef> keys({kSecClass,
-                                        kSecReturnRef,
-                                        kSecMatchLimit,
-                                        kSecMatchTrustedOnly,
-                                        kSecMatchSearchList,
-                                        kSecMatchPolicy});
-         std::vector<CFTypeRef>   values({kSecClassCertificate,
-                                          kCFBooleanTrue,
-                                          kSecMatchLimitAll,
-                                          kCFBooleanTrue,
-                                          keychains(),
-                                          policy()});
-         keys.reserve(pairs.size() + keys.size());
-         values.reserve(pairs.size() + values.size());
-
-         for(const auto& pair : pairs)
-            {
-            keys.push_back(pair.first);
-            values.push_back(pair.second);
-            }
-
-         BOTAN_ASSERT_EQUAL(keys.size(), values.size(), "valid key-value pairs");
-
-         return scoped_CFType<CFDictionaryRef>(CFDictionaryCreate(
-               kCFAllocatorDefault, (const void**)keys.data(),
-               (const void**)values.data(), keys.size(),
-               &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
-         }
 
    private:
       scoped_CFType<SecPolicyRef>    m_policy;
@@ -388,7 +422,7 @@ std::vector<X509_DN> Certificate_Store_MacOS::all_subjects() const
    //       which facilitates reading the certificate DN without parsing the
    //       entire certificate via Botan::X509_Certificate. However, this
    //       function applies the same DN "normalization" as stated above.
-   const auto certificates = readAllCertificates(m_impl->search());
+   const auto certificates = readAllCertificates(m_impl->search({}));
 
    std::vector<X509_DN> output;
    std::transform(certificates.cbegin(), certificates.cend(),
@@ -424,22 +458,15 @@ std::vector<std::shared_ptr<const X509_Certificate>> Certificate_Store_MacOS::fi
    DER_Encoder encoder(dn_data);
    normalize(subject_dn).encode_into(encoder);
 
-   scoped_CFType<CFDataRef> dn_cfdata(createCFDataView(dn_data));
-   check_notnull(dn_cfdata, "create DN search object");
+   Certificate_Store_MacOS_Impl::Query query;
+   query.addParameter(kSecAttrSubject, dn_data);
 
-   Certificate_Store_MacOS_Impl::Query query_params(
-      {
-         {kSecAttrSubject, dn_cfdata.get()}
-      });
-
-   scoped_CFType<CFDataRef> keyid_cfdata(createCFDataView(key_id));
-   check_notnull(keyid_cfdata, "create key ID search object");
    if(!key_id.empty())
       {
-      query_params.push_back({kSecAttrSubjectKeyID, keyid_cfdata.get()});
+      query.addParameter(kSecAttrSubjectKeyID, key_id);
       }
 
-   return readAllCertificates(m_impl->search(std::move(query_params)));
+   return readAllCertificates(m_impl->search(std::move(query)));
    }
 
 std::shared_ptr<const X509_Certificate>
@@ -450,15 +477,10 @@ Certificate_Store_MacOS::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& ke
       throw Invalid_Argument("Certificate_Store_MacOS::find_cert_by_pubkey_sha1 invalid hash");
       }
 
-   scoped_CFType<CFDataRef> key_hash_cfdata(createCFDataView(key_hash));
-   check_notnull(key_hash_cfdata, "create key hash search object");
+   Certificate_Store_MacOS_Impl::Query query;
+   query.addParameter(kSecAttrPublicKeyHash, key_hash);
 
-   scoped_CFType<CFArrayRef> result(m_impl->search(
-      {
-         {kSecAttrPublicKeyHash, key_hash_cfdata.get()},
-      }));
-
-   return readSingleCertificate(std::move(result));
+   return readSingleCertificate(m_impl->search(std::move(query)));
    }
 
 std::shared_ptr<const X509_Certificate>
