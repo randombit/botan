@@ -4,9 +4,31 @@ Release Notes
 Version 2.15.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix a bug where the name constraint extension did not constrain the
+  alternative DN field which can be included in a subject alternative name. This
+  would allow a corrupted sub-CA which was otherwise constrained by a name
+  constraint to issue a certificate with a prohibited DN.
+
+* Fix a bug in the TLS server during client authentication where where
+  if a (disabled by default) static RSA ciphersuite was selected, then
+  no certificate request would be sent. This would have an equivalent
+  effect to a client which simply replied with an empty Certificate
+  message. (GH #2367)
+
 * Replace the T-Tables implementation of AES with a 32-bit bitsliced
   version. As a result AES is now constant time on all processors.
   (GH #2346 #2348 #2353 #2329 #2355)
+
+* In TLS, enforce that the key usage given in the server certificate
+  allows the operation being performed in the ciphersuite. (GH #2367)
+
+* In X.509 certificates, verify that the algorithm parameters are
+  the expected NULL or empty. (GH #2367)
+
+* Change the HMAC key schedule to attempt to reduce the information
+  leaked from the key schedule with regards to the length of the key,
+  as this is at times (as for example in PBKDF2) sensitive information.
+  (GH #2362)
 
 * Add Processor_RNG which wraps RDRAND or the POWER DARN RNG
   instructions. The previous RDRAND_RNG interface is deprecated.
@@ -24,6 +46,8 @@ Version 2.15.0, Not Yet Released
 
 * When building documentation using Sphinx avoid parallel builds with
   version 3.0 due to a bug in that version (GH #2326 #2324)
+
+* Fix a memory leak in the CommonCrypto block cipher calls (GH #2371)
 
 * Fix a flaky test that would occasionally fail when running the tests
   with a large number of threads. (GH #2325 #2197)
