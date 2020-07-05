@@ -81,15 +81,6 @@ std::vector<X509_DN> Flatfile_Certificate_Store::all_subjects() const
    return m_all_subjects;
    }
 
-std::shared_ptr<const X509_Certificate>
-Flatfile_Certificate_Store::find_cert(const X509_DN& subject_dn,
-                                      const std::vector<uint8_t>& key_id) const
-   {
-   std::vector<std::shared_ptr<const X509_Certificate>> found_certs = find_all_certs(subject_dn, key_id);
-
-   return !found_certs.empty() ? found_certs.front() : nullptr;
-   }
-
 std::vector<std::shared_ptr<const X509_Certificate>> Flatfile_Certificate_Store::find_all_certs(
          const X509_DN& subject_dn,
          const std::vector<uint8_t>& key_id) const
