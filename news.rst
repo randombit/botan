@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.15.0, Not Yet Released
+Version 2.15.0, 2020-07-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a bug where the name constraint extension did not constrain the
