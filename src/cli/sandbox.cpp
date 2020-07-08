@@ -18,6 +18,16 @@
 
 namespace Botan_CLI {
 
+#if defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
+struct SandboxPrivDelete {
+  void operator()(priv_set_t *ps)
+    {
+  ::priv_emptyset(ps);
+  ::priv_freeset(ps);
+    }
+};
+#endif
+
 Sandbox::Sandbox()
    {
 #if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
@@ -68,54 +78,31 @@ bool Sandbox::init()
 
    return (::cap_enter() == 0);
 #elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
-   priv_set_t *ps;
+   priv_set_t *tmp;
+   std::unique_ptr<priv_set_t, SandboxPrivDelete> ps;
+   const char *const priv_perms[] = {
+	   PRIV_PROC_FORK,
+	   PRIV_PROC_EXEC,
+	   PRIV_PROC_INFO,
+	   PRIV_PROC_SESSION,
+   };
 
-   if ((ps = ::priv_allocset()) == nullptr)
+   if ((tmp = ::priv_allocset()) == nullptr)
       {
       return false;
       }
 
-   ::priv_basicset(ps);
+   ps = std::unique_ptr<priv_set_t, SandboxPrivDelete>(tmp);
+   ::priv_basicset(ps.get());
 
-   if (::priv_delset(ps, PRIV_PROC_FORK) == -1)
-      {
-      ::priv_freeset(ps);
-      return false;
-      }
+   for (auto perm: priv_perms)
+   {
+     if (::priv_delset(ps.get(), perm) == -1)
+     {
+        return false;
+     }
+   }
 
-   if (::priv_delset(ps, PRIV_PROC_EXEC) == -1)
-      {
-      ::priv_freeset(ps);
-      return false;
-      }
-
-   if (::priv_delset(ps, PRIV_PROC_INFO) == -1)
-      {
-      ::priv_freeset(ps);
-      return false;
-      }
-
-   if (::priv_delset(ps, PRIV_PROC_SESSION) == -1)
-      {
-      ::priv_freeset(ps);
-      return false;
-      }
-
-   if (::setppriv(PRIV_SET, PRIV_PERMITTED, ps) == -1)
-      {
-      ::priv_freeset(ps);
-      return false;
-      }
-
-   if (::setppriv(PRIV_SET, PRIV_INHERITABLE, ps) == -1)
-      {
-      ::priv_freeset(ps);
-      return false;
-      }
-
-   ::priv_emptyset(ps);
-
-   ::priv_freeset(ps);
    return true;
 #else
    return true;
