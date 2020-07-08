@@ -13,6 +13,7 @@ threads
 thread_local
 sockets
 filesystem
+setppriv
 </target_features>
 
 <aliases>

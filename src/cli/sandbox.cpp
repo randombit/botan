@@ -12,6 +12,8 @@
 #elif defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
   #include <sys/capsicum.h>
   #include <unistd.h>
+#elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
+  #include <priv.h>
 #endif
 
 namespace Botan_CLI {
@@ -22,6 +24,8 @@ Sandbox::Sandbox()
    m_name = "pledge";
 #elif defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
    m_name = "capsicum";
+#elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
+   m_name = "privilege";
 #else
    m_name = "<none>";
 #endif
@@ -63,6 +67,56 @@ bool Sandbox::init()
       }
 
    return (::cap_enter() == 0);
+#elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
+   priv_set_t *ps;
+
+   if ((ps = ::priv_allocset()) == nullptr)
+      {
+      return false;
+      }
+
+   ::priv_basicset(ps);
+
+   if (::priv_delset(ps, PRIV_PROC_FORK) == -1)
+      {
+      ::priv_freeset(ps);
+      return false;
+      }
+
+   if (::priv_delset(ps, PRIV_PROC_EXEC) == -1)
+      {
+      ::priv_freeset(ps);
+      return false;
+      }
+
+   if (::priv_delset(ps, PRIV_PROC_INFO) == -1)
+      {
+      ::priv_freeset(ps);
+      return false;
+      }
+
+   if (::priv_delset(ps, PRIV_PROC_SESSION) == -1)
+      {
+      ::priv_freeset(ps);
+      return false;
+      }
+
+   if (::setppriv(PRIV_SET, PRIV_PERMITTED, ps) == -1)
+      {
+      ::priv_freeset(ps);
+      return false;
+      }
+
+   if (::setppriv(PRIV_SET, PRIV_INHERITABLE, ps) == -1)
+      {
+      ::priv_freeset(ps);
+      return false;
+      }
+
+   ::priv_emptyset(ps);
+
+   ::priv_freeset(ps);
+   return true;
 #else
    return true;
 #endif
