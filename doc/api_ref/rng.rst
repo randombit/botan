@@ -204,12 +204,14 @@ a reseeding. Or, if a RNG or entropy source was provided to the ``ChaCha_RNG``
 constructor, then reseeding will be performed automatically after a certain
 interval of requests.
 
-RDRAND_RNG
+Processor_RNG
 ^^^^^^^^^^^^^^^^^
 
-This RNG type directly calls the x86 ``rdrand`` instruction. If the instruction
-is not available it will throw at runtime, you can check beforehand by calling
-``Botan::CPUID::has_rdrand()``.
+This RNG type directly invokes a CPU instruction capable of generating
+a cryptographically secure random number. On x86 it uses ``rdrand``,
+on POWER ``darn``. If the relevant instruction is not available, the
+constructor of the class will throw at runtime. You can test
+beforehand by checking the result of ``Processor_RNG::available()``.
 
 TPM_RNG
 ^^^^^^^^^^^^^^^^^

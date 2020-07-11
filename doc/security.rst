@@ -18,6 +18,19 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2020
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2020-07-05: Failure to enforce name constraints on alternative names
+
+  The path validation algorithm enforced name constraints on the primary DN
+  included in the certificate but failed to do so against alternative DNs which
+  may be included in the subject alternative name. This would allow a corrupted
+  sub-CA which was constrained by a name constraints extension in its own
+  certificate to issue a certificate containing a prohibited DN. Until 2.15.0,
+  there was no API to access these alternative name DNs so it is unlikely that
+  any application would make incorrect access control decisions on the basis of
+  the incorrect DN. Reported by Mario Korth of Ruhr-Universität Bochum.
+
+  Introduced in 1.11.29, fixed in 2.15.0
+
 * 2020-03-24: Side channel during CBC padding
 
   The CBC padding operations were not constant time and as a result would leak

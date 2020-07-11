@@ -148,6 +148,16 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
          }
 
       // Check cert extensions
+
+      if(subject->x509_version() == 1)
+         {
+         if(subject->v2_issuer_key_id().empty() == false ||
+            subject->v2_subject_key_id().empty() == false)
+            {
+            status.insert(Certificate_Status_Code::V2_IDENTIFIERS_IN_V1_CERT);
+            }
+         }
+
       Extensions extensions = subject->v3_extensions();
       const auto& extensions_vec = extensions.extensions();
       if(subject->x509_version() < 3 && !extensions_vec.empty())
@@ -731,12 +741,12 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
          // push a deletion marker on the stack for backtracing later
          stack.push_back({std::shared_ptr<const X509_Certificate>(nullptr),false});
 
-         for(const auto trusted_cert : trusted_issuers)
+         for(const auto& trusted_cert : trusted_issuers)
             {
             stack.push_back({trusted_cert,true});
             }
 
-         for(const auto misc : misc_issuers)
+         for(const auto& misc : misc_issuers)
             {
             stack.push_back({misc,false});
             }

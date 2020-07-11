@@ -53,7 +53,7 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
          store.insert_key(a.certificate, *a.private_key);
          }
 
-      for(const auto certandkey : certsandkeys)
+      for(const auto& certandkey : certsandkeys)
          {
          const auto cert = certandkey.certificate;
          const auto key = certandkey.private_key;
@@ -195,7 +195,7 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
 
       result.test_eq("Check subject list length", subjects.size(), 6);
 
-      for(const auto sub : subjects)
+      for(const auto& sub : subjects)
          {
          std::stringstream ss;
 
@@ -300,7 +300,7 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
          store.add_certificate(a.certificate);
          }
 
-      for(const auto certandkey : certsandkeys)
+      for(const auto& certandkey : certsandkeys)
          {
          const auto cert = certandkey.certificate;
          const auto hash = cert.raw_subject_dn_sha256();

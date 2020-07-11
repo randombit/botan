@@ -91,7 +91,9 @@ const char* to_string(Certificate_Status_Code code)
       case Certificate_Status_Code::DUPLICATE_CERT_EXTENSION:
          return "Duplicate certificate extension encountered";
       case Certificate_Status_Code::EXT_IN_V1_V2_CERT:
-         return "Encountered extension in certificate with version < 3";
+         return "Encountered extension in certificate with version that does not allow it";
+      case Certificate_Status_Code::V2_IDENTIFIERS_IN_V1_CERT:
+         return "Encountered v2 identifiers in v1 certificate";
       case Certificate_Status_Code::OCSP_SIGNATURE_ERROR:
          return "OCSP signature error";
       case Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND:

@@ -143,8 +143,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     if target in ['fuzzers', 'sanitizer']:
         flags += ['--with-debug-asserts']
 
-        # Can't use gcc UbSan ATM due to false positive in XMSS
-        if target_cc in ['clang']:
+        if target_cc in ['clang', 'gcc']:
             flags += ['--enable-sanitizers=address,undefined']
         else:
             flags += ['--with-sanitizers']

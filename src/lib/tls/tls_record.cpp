@@ -187,16 +187,10 @@ inline void append_u16_len(secure_vector<uint8_t>& output, size_t len_field)
    output.push_back(get_byte(1, len16));
    }
 
-}
-
-void write_record(secure_vector<uint8_t>& output,
-                  uint8_t record_type,
-                  Protocol_Version version,
-                  uint64_t record_sequence,
-                  const uint8_t* message,
-                  size_t message_len,
-                  Connection_Cipher_State* cs,
-                  RandomNumberGenerator& rng)
+void write_record_header(secure_vector<uint8_t>& output,
+                         uint8_t record_type,
+                         Protocol_Version version,
+                         uint64_t record_sequence)
    {
    output.clear();
 
@@ -209,33 +203,54 @@ void write_record(secure_vector<uint8_t>& output,
       for(size_t i = 0; i != 8; ++i)
          output.push_back(get_byte(i, record_sequence));
       }
+   }
 
-   if(!cs) // initial unencrypted handshake records
-      {
-      append_u16_len(output, message_len);
-      output.insert(output.end(), message, message + message_len);
-      return;
-      }
+}
 
-   AEAD_Mode& aead = cs->aead();
-   std::vector<uint8_t> aad = cs->format_ad(record_sequence, record_type, version, static_cast<uint16_t>(message_len));
+void write_unencrypted_record(secure_vector<uint8_t>& output,
+                              uint8_t record_type,
+                              Protocol_Version version,
+                              uint64_t record_sequence,
+                              const uint8_t* message,
+                              size_t message_len)
+   {
+   if(record_type == APPLICATION_DATA)
+      throw Internal_Error("Writing an unencrypted TLS application data record");
+   write_record_header(output, record_type, version, record_sequence);
+   append_u16_len(output, message_len);
+   output.insert(output.end(), message, message + message_len);
+   }
+
+void write_record(secure_vector<uint8_t>& output,
+                  uint8_t record_type,
+                  Protocol_Version version,
+                  uint64_t record_sequence,
+                  const uint8_t* message,
+                  size_t message_len,
+                  Connection_Cipher_State& cs,
+                  RandomNumberGenerator& rng)
+   {
+   write_record_header(output, record_type, version, record_sequence);
+
+   AEAD_Mode& aead = cs.aead();
+   std::vector<uint8_t> aad = cs.format_ad(record_sequence, record_type, version, static_cast<uint16_t>(message_len));
 
    const size_t ctext_size = aead.output_length(message_len);
 
-   const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
+   const size_t rec_size = ctext_size + cs.nonce_bytes_from_record();
 
    aead.set_ad(aad);
 
-   const std::vector<uint8_t> nonce = cs->aead_nonce(record_sequence, rng);
+   const std::vector<uint8_t> nonce = cs.aead_nonce(record_sequence, rng);
 
    append_u16_len(output, rec_size);
 
-   if(cs->nonce_bytes_from_record() > 0)
+   if(cs.nonce_bytes_from_record() > 0)
       {
-      if(cs->nonce_format() == Nonce_Format::CBC_MODE)
+      if(cs.nonce_format() == Nonce_Format::CBC_MODE)
          output += nonce;
       else
-         output += std::make_pair(&nonce[cs->nonce_bytes_from_handshake()], cs->nonce_bytes_from_record());
+         output += std::make_pair(&nonce[cs.nonce_bytes_from_handshake()], cs.nonce_bytes_from_record());
       }
 
    const size_t header_size = output.size();

@@ -123,6 +123,17 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PublicKey : public virtual Public_Key
          }
 
       /**
+       * Retrieves the XMSS parameters determined by the chosen XMSS Signature
+       * method.
+       *
+       * @return XMSS parameters.
+       **/
+      std::string xmss_hash_function() const
+         {
+         return m_xmss_params.hash_function_name();
+         }
+
+      /**
        * Retrieves the Winternitz One Time Signature (WOTS) method,
        * corresponding to the chosen XMSS signature method.
        *

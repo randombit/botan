@@ -126,10 +126,17 @@ Named like "Blake2b" which selects default 512-bit output, or as
 GOST-34.11
 ^^^^^^^^^^^^^^^
 
+.. deprecated:: 2.11
+
 Available if ``BOTAN_HAS_GOST_34_11`` is defined.
 
 Russian national standard hash. It is old, slow, and has some weaknesses. Avoid
 it unless you must.
+
+.. warning::
+   As this hash function is no longer approved by the latest Russian standards,
+   support for GOST 34.11 hash is deprecated and will be removed in a future
+   major release.
 
 Keccak-1600
 ^^^^^^^^^^^^^^^
@@ -185,8 +192,9 @@ SHA-512
 
 Available if ``BOTAN_HAS_SHA2_64`` is defined.
 
-SHA-512 is faster than SHA-256 on 64-bit processors. Also includes
-the truncated variants SHA-384 and SHA-512/256.
+SHA-512 is faster than SHA-256 on 64-bit processors. Also includes the
+truncated variants SHA-384 and SHA-512/256, which have the advantage
+of avoiding message extension attacks.
 
 SHA-3
 ^^^^^^^^^^^^^^^
@@ -258,6 +266,8 @@ unless compatibility is needed.
 Tiger
 ^^^^^^^^^^^^^^^
 
+.. deprecated:: 2.15
+
 Available if ``BOTAN_HAS_TIGER`` is defined.
 
 An older 192-bit hash function, optimized for 64-bit systems. Possibly
@@ -266,6 +276,12 @@ vulnerable to side channels due to its use of table lookups.
 Tiger supports variable length output (16, 20 or 24 bytes) and
 variable rounds (which must be at least 3). Default is 24 byte output
 and 3 rounds. Specify with names like "Tiger" or "Tiger(20,5)".
+
+.. warning::
+  There are documented (albeit impractical) attacks on the full Tiger
+  hash leading to preimage attacks. This indicates possibility of a
+  serious weakness in the hash and for this reason it is deprecated
+  and will be removed in a future major release of the library.
 
 Whirlpool
 ^^^^^^^^^^^^^^^

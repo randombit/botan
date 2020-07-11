@@ -384,19 +384,19 @@ class EC_Group_Info final : public Command
 
       void go() override
          {
-         Botan::EC_Group group(get_arg("name"));
+         Botan::EC_Group ec_group(get_arg("name"));
 
          if(flag_set("pem"))
             {
-            output() << group.PEM_encode();
+            output() << ec_group.PEM_encode();
             }
          else
             {
-            output() << "P = " << std::hex << group.get_p() << "\n"
-                     << "A = " << std::hex << group.get_a() << "\n"
-                     << "B = " << std::hex << group.get_b() << "\n"
-                     << "N = " << std::hex << group.get_order() << "\n"
-                     << "G = " << group.get_g_x() << "," << group.get_g_y() << "\n";
+            output() << "P = " << std::hex << ec_group.get_p() << "\n"
+                     << "A = " << std::hex << ec_group.get_a() << "\n"
+                     << "B = " << std::hex << ec_group.get_b() << "\n"
+                     << "N = " << std::hex << ec_group.get_order() << "\n"
+                     << "G = " << ec_group.get_g_x() << "," << ec_group.get_g_y() << "\n";
             }
 
          }
@@ -425,16 +425,16 @@ class DL_Group_Info final : public Command
 
       void go() override
          {
-         Botan::DL_Group group(get_arg("name"));
+         Botan::DL_Group dl_group(get_arg("name"));
 
          if(flag_set("pem"))
             {
-            output() << group.PEM_encode(Botan::DL_Group::ANSI_X9_42_DH_PARAMETERS);
+            output() << dl_group.PEM_encode(Botan::DL_Group::ANSI_X9_42_DH_PARAMETERS);
             }
          else
             {
-            output() << "P = " << std::hex << group.get_p() << "\n"
-                     << "G = " << group.get_g() << "\n";
+            output() << "P = " << std::hex << dl_group.get_p() << "\n"
+                     << "G = " << dl_group.get_g() << "\n";
             }
 
          }

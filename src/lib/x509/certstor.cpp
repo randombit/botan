@@ -13,6 +13,22 @@
 
 namespace Botan {
 
+Certificate_Store::~Certificate_Store() {}
+
+std::shared_ptr<const X509_Certificate>
+Certificate_Store::find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const
+   {
+   const auto certs = find_all_certs(subject_dn, key_id);
+
+   if(certs.empty())
+      {
+      return nullptr;  // certificate not found
+      }
+
+   // `count` might be greater than 1, but we'll just select the first match
+   return certs.front();
+   }
+
 std::shared_ptr<const X509_CRL> Certificate_Store::find_crl_for(const X509_Certificate&) const
    {
    return {};

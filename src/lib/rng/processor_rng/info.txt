@@ -1,0 +1,16 @@
+<defines>
+PROCESSOR_RNG -> 20200508
+</defines>
+
+<cc>
+gcc
+clang
+icc
+msvc
+</cc>
+
+<arch>
+x86_32
+x86_64
+ppc64
+</arch>

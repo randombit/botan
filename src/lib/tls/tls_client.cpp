@@ -221,6 +221,26 @@ void Client::send_client_hello(Handshake_State& state_base,
    secure_renegotiation_check(state.client_hello());
    }
 
+namespace {
+
+bool key_usage_matches_ciphersuite(Key_Constraints usage,
+                                   const Ciphersuite& suite)
+   {
+   if(usage == NO_CONSTRAINTS)
+      return true; // anything goes ...
+
+   if(suite.kex_method() == Kex_Algo::STATIC_RSA)
+      {
+      return (usage & KEY_ENCIPHERMENT) | (usage & DATA_ENCIPHERMENT);
+      }
+   else
+      {
+      return (usage & DIGITAL_SIGNATURE) | (usage & NON_REPUDIATION);
+      }
+   }
+
+}
+
 /*
 * Process a handshake message
 */
@@ -506,6 +526,10 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(peer_key->algo_name() != expected_key_type)
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
+
+      if(!key_usage_matches_ciphersuite(server_cert.constraints(), state.ciphersuite()))
+         throw TLS_Exception(Alert::BAD_CERTIFICATE,
+                             "Certificate usage constraints do not allow this ciphersuite");
 
       state.server_public_key.reset(peer_key.release());
 

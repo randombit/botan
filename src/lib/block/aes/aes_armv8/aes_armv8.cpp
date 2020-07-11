@@ -54,22 +54,21 @@ namespace Botan {
 * AES-128 Encryption
 */
 BOTAN_FUNC_ISA("+crypto")
-void AES_128::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
-   const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_ME.data());
 
-   const uint8x16_t K0 = vld1q_u8(skey + 0);
-   const uint8x16_t K1 = vld1q_u8(skey + 16);
-   const uint8x16_t K2 = vld1q_u8(skey + 32);
-   const uint8x16_t K3 = vld1q_u8(skey + 48);
-   const uint8x16_t K4 = vld1q_u8(skey + 64);
-   const uint8x16_t K5 = vld1q_u8(skey + 80);
-   const uint8x16_t K6 = vld1q_u8(skey + 96);
-   const uint8x16_t K7 = vld1q_u8(skey + 112);
-   const uint8x16_t K8 = vld1q_u8(skey + 128);
-   const uint8x16_t K9 = vld1q_u8(skey + 144);
-   const uint8x16_t K10 = vld1q_u8(mkey);
+   const uint8x16_t K0 = vld1q_u8(skey + 0*16);
+   const uint8x16_t K1 = vld1q_u8(skey + 1*16);
+   const uint8x16_t K2 = vld1q_u8(skey + 2*16);
+   const uint8x16_t K3 = vld1q_u8(skey + 3*16);
+   const uint8x16_t K4 = vld1q_u8(skey + 4*16);
+   const uint8x16_t K5 = vld1q_u8(skey + 5*16);
+   const uint8x16_t K6 = vld1q_u8(skey + 6*16);
+   const uint8x16_t K7 = vld1q_u8(skey + 7*16);
+   const uint8x16_t K8 = vld1q_u8(skey + 8*16);
+   const uint8x16_t K9 = vld1q_u8(skey + 9*16);
+   const uint8x16_t K10 = vld1q_u8(skey + 10*16);
 
    while(blocks >= 4)
       {
@@ -120,22 +119,21 @@ void AES_128::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 * AES-128 Decryption
 */
 BOTAN_FUNC_ISA("+crypto")
-void AES_128::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());
-   const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_MD.data());
 
-   const uint8x16_t K0 = vld1q_u8(skey + 0);
-   const uint8x16_t K1 = vld1q_u8(skey + 16);
-   const uint8x16_t K2 = vld1q_u8(skey + 32);
-   const uint8x16_t K3 = vld1q_u8(skey + 48);
-   const uint8x16_t K4 = vld1q_u8(skey + 64);
-   const uint8x16_t K5 = vld1q_u8(skey + 80);
-   const uint8x16_t K6 = vld1q_u8(skey + 96);
-   const uint8x16_t K7 = vld1q_u8(skey + 112);
-   const uint8x16_t K8 = vld1q_u8(skey + 128);
-   const uint8x16_t K9 = vld1q_u8(skey + 144);
-   const uint8x16_t K10 = vld1q_u8(mkey);
+   const uint8x16_t K0 = vld1q_u8(skey + 0*16);
+   const uint8x16_t K1 = vld1q_u8(skey + 1*16);
+   const uint8x16_t K2 = vld1q_u8(skey + 2*16);
+   const uint8x16_t K3 = vld1q_u8(skey + 3*16);
+   const uint8x16_t K4 = vld1q_u8(skey + 4*16);
+   const uint8x16_t K5 = vld1q_u8(skey + 5*16);
+   const uint8x16_t K6 = vld1q_u8(skey + 6*16);
+   const uint8x16_t K7 = vld1q_u8(skey + 7*16);
+   const uint8x16_t K8 = vld1q_u8(skey + 8*16);
+   const uint8x16_t K9 = vld1q_u8(skey + 9*16);
+   const uint8x16_t K10 = vld1q_u8(skey + 10*16);
 
    while(blocks >= 4)
       {
@@ -186,24 +184,23 @@ void AES_128::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 * AES-192 Encryption
 */
 BOTAN_FUNC_ISA("+crypto")
-void AES_192::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
-   const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_ME.data());
 
-   const uint8x16_t K0 = vld1q_u8(skey + 0);
-   const uint8x16_t K1 = vld1q_u8(skey + 16);
-   const uint8x16_t K2 = vld1q_u8(skey + 32);
-   const uint8x16_t K3 = vld1q_u8(skey + 48);
-   const uint8x16_t K4 = vld1q_u8(skey + 64);
-   const uint8x16_t K5 = vld1q_u8(skey + 80);
-   const uint8x16_t K6 = vld1q_u8(skey + 96);
-   const uint8x16_t K7 = vld1q_u8(skey + 112);
-   const uint8x16_t K8 = vld1q_u8(skey + 128);
-   const uint8x16_t K9 = vld1q_u8(skey + 144);
-   const uint8x16_t K10 = vld1q_u8(skey + 160);
-   const uint8x16_t K11 = vld1q_u8(skey + 176);
-   const uint8x16_t K12 = vld1q_u8(mkey);
+   const uint8x16_t K0 = vld1q_u8(skey + 0*16);
+   const uint8x16_t K1 = vld1q_u8(skey + 1*16);
+   const uint8x16_t K2 = vld1q_u8(skey + 2*16);
+   const uint8x16_t K3 = vld1q_u8(skey + 3*16);
+   const uint8x16_t K4 = vld1q_u8(skey + 4*16);
+   const uint8x16_t K5 = vld1q_u8(skey + 5*16);
+   const uint8x16_t K6 = vld1q_u8(skey + 6*16);
+   const uint8x16_t K7 = vld1q_u8(skey + 7*16);
+   const uint8x16_t K8 = vld1q_u8(skey + 8*16);
+   const uint8x16_t K9 = vld1q_u8(skey + 9*16);
+   const uint8x16_t K10 = vld1q_u8(skey + 10*16);
+   const uint8x16_t K11 = vld1q_u8(skey + 11*16);
+   const uint8x16_t K12 = vld1q_u8(skey + 12*16);
 
    while(blocks >= 4)
       {
@@ -258,24 +255,23 @@ void AES_192::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 * AES-192 Decryption
 */
 BOTAN_FUNC_ISA("+crypto")
-void AES_192::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());
-   const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_MD.data());
 
-   const uint8x16_t K0 = vld1q_u8(skey + 0);
-   const uint8x16_t K1 = vld1q_u8(skey + 16);
-   const uint8x16_t K2 = vld1q_u8(skey + 32);
-   const uint8x16_t K3 = vld1q_u8(skey + 48);
-   const uint8x16_t K4 = vld1q_u8(skey + 64);
-   const uint8x16_t K5 = vld1q_u8(skey + 80);
-   const uint8x16_t K6 = vld1q_u8(skey + 96);
-   const uint8x16_t K7 = vld1q_u8(skey + 112);
-   const uint8x16_t K8 = vld1q_u8(skey + 128);
-   const uint8x16_t K9 = vld1q_u8(skey + 144);
-   const uint8x16_t K10 = vld1q_u8(skey + 160);
-   const uint8x16_t K11 = vld1q_u8(skey + 176);
-   const uint8x16_t K12 = vld1q_u8(mkey);
+   const uint8x16_t K0 = vld1q_u8(skey + 0*16);
+   const uint8x16_t K1 = vld1q_u8(skey + 1*16);
+   const uint8x16_t K2 = vld1q_u8(skey + 2*16);
+   const uint8x16_t K3 = vld1q_u8(skey + 3*16);
+   const uint8x16_t K4 = vld1q_u8(skey + 4*16);
+   const uint8x16_t K5 = vld1q_u8(skey + 5*16);
+   const uint8x16_t K6 = vld1q_u8(skey + 6*16);
+   const uint8x16_t K7 = vld1q_u8(skey + 7*16);
+   const uint8x16_t K8 = vld1q_u8(skey + 8*16);
+   const uint8x16_t K9 = vld1q_u8(skey + 9*16);
+   const uint8x16_t K10 = vld1q_u8(skey + 10*16);
+   const uint8x16_t K11 = vld1q_u8(skey + 11*16);
+   const uint8x16_t K12 = vld1q_u8(skey + 12*16);
 
    while(blocks >= 4)
       {
@@ -330,26 +326,25 @@ void AES_192::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 * AES-256 Encryption
 */
 BOTAN_FUNC_ISA("+crypto")
-void AES_256::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_EK.data());
-   const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_ME.data());
 
-   const uint8x16_t K0 = vld1q_u8(skey + 0);
-   const uint8x16_t K1 = vld1q_u8(skey + 16);
-   const uint8x16_t K2 = vld1q_u8(skey + 32);
-   const uint8x16_t K3 = vld1q_u8(skey + 48);
-   const uint8x16_t K4 = vld1q_u8(skey + 64);
-   const uint8x16_t K5 = vld1q_u8(skey + 80);
-   const uint8x16_t K6 = vld1q_u8(skey + 96);
-   const uint8x16_t K7 = vld1q_u8(skey + 112);
-   const uint8x16_t K8 = vld1q_u8(skey + 128);
-   const uint8x16_t K9 = vld1q_u8(skey + 144);
-   const uint8x16_t K10 = vld1q_u8(skey + 160);
-   const uint8x16_t K11 = vld1q_u8(skey + 176);
-   const uint8x16_t K12 = vld1q_u8(skey + 192);
-   const uint8x16_t K13 = vld1q_u8(skey + 208);
-   const uint8x16_t K14 = vld1q_u8(mkey);
+   const uint8x16_t K0 = vld1q_u8(skey + 0*16);
+   const uint8x16_t K1 = vld1q_u8(skey + 1*16);
+   const uint8x16_t K2 = vld1q_u8(skey + 2*16);
+   const uint8x16_t K3 = vld1q_u8(skey + 3*16);
+   const uint8x16_t K4 = vld1q_u8(skey + 4*16);
+   const uint8x16_t K5 = vld1q_u8(skey + 5*16);
+   const uint8x16_t K6 = vld1q_u8(skey + 6*16);
+   const uint8x16_t K7 = vld1q_u8(skey + 7*16);
+   const uint8x16_t K8 = vld1q_u8(skey + 8*16);
+   const uint8x16_t K9 = vld1q_u8(skey + 9*16);
+   const uint8x16_t K10 = vld1q_u8(skey + 10*16);
+   const uint8x16_t K11 = vld1q_u8(skey + 11*16);
+   const uint8x16_t K12 = vld1q_u8(skey + 12*16);
+   const uint8x16_t K13 = vld1q_u8(skey + 13*16);
+   const uint8x16_t K14 = vld1q_u8(skey + 14*16);
 
    while(blocks >= 4)
       {
@@ -408,26 +403,25 @@ void AES_256::armv8_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 * AES-256 Decryption
 */
 BOTAN_FUNC_ISA("+crypto")
-void AES_256::armv8_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
+void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const uint8_t *skey = reinterpret_cast<const uint8_t*>(m_DK.data());
-   const uint8_t *mkey = reinterpret_cast<const uint8_t*>(m_MD.data());
 
-   const uint8x16_t K0 = vld1q_u8(skey + 0);
-   const uint8x16_t K1 = vld1q_u8(skey + 16);
-   const uint8x16_t K2 = vld1q_u8(skey + 32);
-   const uint8x16_t K3 = vld1q_u8(skey + 48);
-   const uint8x16_t K4 = vld1q_u8(skey + 64);
-   const uint8x16_t K5 = vld1q_u8(skey + 80);
-   const uint8x16_t K6 = vld1q_u8(skey + 96);
-   const uint8x16_t K7 = vld1q_u8(skey + 112);
-   const uint8x16_t K8 = vld1q_u8(skey + 128);
-   const uint8x16_t K9 = vld1q_u8(skey + 144);
-   const uint8x16_t K10 = vld1q_u8(skey + 160);
-   const uint8x16_t K11 = vld1q_u8(skey + 176);
-   const uint8x16_t K12 = vld1q_u8(skey + 192);
-   const uint8x16_t K13 = vld1q_u8(skey + 208);
-   const uint8x16_t K14 = vld1q_u8(mkey);
+   const uint8x16_t K0 = vld1q_u8(skey + 0*16);
+   const uint8x16_t K1 = vld1q_u8(skey + 1*16);
+   const uint8x16_t K2 = vld1q_u8(skey + 2*16);
+   const uint8x16_t K3 = vld1q_u8(skey + 3*16);
+   const uint8x16_t K4 = vld1q_u8(skey + 4*16);
+   const uint8x16_t K5 = vld1q_u8(skey + 5*16);
+   const uint8x16_t K6 = vld1q_u8(skey + 6*16);
+   const uint8x16_t K7 = vld1q_u8(skey + 7*16);
+   const uint8x16_t K8 = vld1q_u8(skey + 8*16);
+   const uint8x16_t K9 = vld1q_u8(skey + 9*16);
+   const uint8x16_t K10 = vld1q_u8(skey + 10*16);
+   const uint8x16_t K11 = vld1q_u8(skey + 11*16);
+   const uint8x16_t K12 = vld1q_u8(skey + 12*16);
+   const uint8x16_t K13 = vld1q_u8(skey + 13*16);
+   const uint8x16_t K14 = vld1q_u8(skey + 14*16);
 
    while(blocks >= 4)
       {

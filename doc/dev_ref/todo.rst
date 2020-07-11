@@ -12,10 +12,10 @@ Ciphers, Hashes, PBKDF
 
 * Stiched AES/GCM mode for CPUs supporting both AES and CLMUL
 * Combine AES-NI, ARMv8 and POWER AES implementations (as already done for CLMUL)
-* Scalar bitsliced AES
 * Vector permute AES only supports little-endian systems; fix for big-endian
 * SM4 using AES-NI (https://github.com/mjosaarinen/sm4ni) or vector permute
 * Poly1305 using AVX2
+* ChaCha using SSSE3
 * Skein-MAC
 * PMAC
 * SIV-PMAC
@@ -65,7 +65,7 @@ Multiparty Protocols
 External Providers, Hardware Support
 ----------------------------------------
 
-* Add support ARMv8.4-A SHA-512, SHA-3 and SM3
+* Add support ARMv8.4-A SHA-512, SHA-3, SM3 and RNG
 * Aarch64 inline asm for BigInt
 * Extend OpenSSL provider (DH, HMAC, CMAC, GCM)
 * Support using BoringSSL instead of OpenSSL or LibreSSL
@@ -126,6 +126,7 @@ Cleanups
 
 * Split test_ffi.cpp into multiple files
 * Unicode path support on Windows (GH #1615)
+* The X.509 path validation tests have much duplicated logic
 
 Compat Headers
 ----------------
@@ -184,6 +185,7 @@ CLI
 * Change `tls_server` to be a tty<->socket app, like `tls_client` is,
   instead of a bogus echo server.
 * `encrypt` / `decrypt` tools providing password based file encryption
+* Add ECM factoring
 * Clone of `minisign` signature utility
 * Implementation of `tlsdate`
 * Password store utility

@@ -558,14 +558,18 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch
    const Protocol_Version record_version =
       (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
 
-   TLS::write_record(m_writebuf,
-                     record_type,
-                     record_version,
-                     sequence_numbers().next_write_sequence(epoch),
-                     input,
-                     length,
-                     cipher_state,
-                     m_rng);
+   const uint64_t next_seq = sequence_numbers().next_write_sequence(epoch);
+
+   if(cipher_state == nullptr)
+      {
+      TLS::write_unencrypted_record(m_writebuf, record_type, record_version, next_seq,
+                                    input, length);
+      }
+   else
+      {
+      TLS::write_record(m_writebuf, record_type, record_version, next_seq,
+                        input, length, *cipher_state, m_rng);
+      }
 
    callbacks().tls_emit_data(m_writebuf.data(), m_writebuf.size());
    }
@@ -659,11 +663,13 @@ void Channel::send_alert(const Alert& alert)
       m_pending_state.reset();
 
    if(alert.is_fatal())
+   {
       if(auto active = active_state())
+      {
          m_session_manager.remove_entry(active->server_hello()->session_id());
-
-   if(alert.is_fatal())
+      }
       reset_state();
+   }
 
    if(alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal())
       {

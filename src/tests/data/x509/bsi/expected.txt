@@ -33,8 +33,8 @@ cert_path_CRL_15$No CRL with matching distribution point for certificate
 cert_path_CRL_16$Certificate is revoked
 cert_path_crypt_01$Signature error
 cert_path_crypt_02$Signature error
-cert_path_ext_01$Encountered extension in certificate with version < 3
-cert_path_ext_02$Encountered extension in certificate with version < 3
+cert_path_ext_01$Encountered extension in certificate with version that does not allow it
+cert_path_ext_02$Encountered extension in certificate with version that does not allow it
 cert_path_ext_03$Verified
 cert_path_ext_04$Unknown critical extension encountered
 cert_path_ext_05$Duplicate certificate extension encountered

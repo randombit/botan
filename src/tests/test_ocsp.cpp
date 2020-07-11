@@ -335,7 +335,9 @@ class OCSP_Tests final : public Test
             {
             if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
                {
-               result.confirm("Status ok", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD) > 0);
+               const bool status_good = ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD) > 0;
+               const bool server_not_found = ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE) > 0;
+               result.confirm("Expected status", status_good || server_not_found);
                }
             }
 

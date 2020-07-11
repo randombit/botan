@@ -105,6 +105,20 @@ std::vector<std::string> AlternativeName::get_attribute(const std::string& attr)
    return results;
    }
 
+X509_DN AlternativeName::dn() const
+   {
+   X509_DN dn;
+   auto range = m_alt_info.equal_range("DN");
+
+   for(auto i = range.first; i != range.second; ++i)
+      {
+      std::istringstream strm(i->second);
+      strm >> dn;
+      }
+
+   return dn;
+   }
+
 /*
 * Return if this object has anything useful
 */

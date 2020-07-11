@@ -81,13 +81,12 @@ simd
 sessions_sql
 certstor_sql
 
-rdrand_rng
 system_rng
+processor_rng
 
 # entropy sources
 dev_random
 proc_walk
-rdrand
 rdseed
 win32_stats
 </if_available>

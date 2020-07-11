@@ -37,6 +37,14 @@ class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
       const OID& get_oid() const { return oid; }
       const std::vector<uint8_t>& get_parameters() const { return parameters; }
 
+      bool parameters_are_null() const;
+      bool parameters_are_empty() const { return parameters.empty(); }
+
+      bool parameters_are_null_or_empty() const
+         {
+         return parameters_are_empty() || parameters_are_null();
+         }
+
    BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES:
       /*
       * These values are public for historical reasons, but in a future release

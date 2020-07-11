@@ -123,7 +123,6 @@
         "PartialClientFinishedWithClientHello": "Need to check for buffered messages when CCS (bug)",
         "SendUnencryptedFinished-DTLS": "Need to check for buffered messages when CCS (bug)",
 
-        "ECDSAKeyUsage-TLS12": "Botan ignores KeyUsage (bug)",
-        "RSAKeyUsage-*": "Botan ignores KeyUsage (bug)"
+        "RSAKeyUsage-*-UnenforcedTLS*": "We always enforce key usage"
     }
 }

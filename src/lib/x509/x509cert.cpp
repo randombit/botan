@@ -215,6 +215,14 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Key_Usage>())
       {
       data->m_key_constraints = ext->get_constraints();
+      /*
+      RFC 5280: When the keyUsage extension appears in a certificate,
+      at least one of the bits MUST be set to 1.
+      */
+      if(data->m_key_constraints == NO_CONSTRAINTS)
+         {
+         throw Decoding_Error("Certificate has invalid encoding for KeyUsage");
+         }
       }
    else
       {
@@ -240,6 +248,13 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       {
       if(ext->get_is_ca() == true)
          {
+         /*
+         * RFC 5280 section 4.2.1.3 requires that CAs include KeyUsage in all
+         * intermediate CA certificates they issue. Currently we accept it being
+         * missing, as do most other implementations. But it may be worth
+         * removing this entirely, or alternately adding a warning level
+         * validation failure for it.
+         */
          if(data->m_key_constraints == NO_CONSTRAINTS ||
             (data->m_key_constraints & KEY_CERT_SIGN))
             {

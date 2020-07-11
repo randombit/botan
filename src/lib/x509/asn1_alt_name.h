@@ -11,6 +11,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/asn1_str.h>
 #include <botan/asn1_oid.h>
+#include <botan/x509_dn.h>
 #include <map>
 
 namespace Botan {
@@ -43,6 +44,8 @@ class BOTAN_PUBLIC_API(2,0) AlternativeName final : public ASN1_Object
          {
          return m_othernames;
          }
+
+      X509_DN dn() const;
 
       bool has_items() const;
 

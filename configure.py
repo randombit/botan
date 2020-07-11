@@ -1493,7 +1493,7 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
             if lex.soname_pattern_patch == '' and lex.soname_pattern_abi == '':
                 self.soname_pattern_patch = lex.soname_pattern_base
                 self.soname_pattern_abi = lex.soname_pattern_base
-            elif lex.soname_pattern_abi != '' and lex.soname_pattern_abi != '':
+            elif lex.soname_pattern_patch != '' and lex.soname_pattern_abi != '':
                 self.soname_pattern_patch = lex.soname_pattern_patch
                 self.soname_pattern_abi = lex.soname_pattern_abi
             else:
@@ -2059,6 +2059,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'doc_output_dir': build_paths.doc_output_dir,
         'handbook_output_dir': build_paths.handbook_output_dir,
         'doc_output_dir_doxygen': build_paths.doc_output_dir_doxygen,
+
+        'compiler_include_dirs': '%s %s' % (build_paths.include_dir, build_paths.external_include_dir),
 
         'os': options.os,
         'arch': options.arch,
@@ -3197,6 +3199,12 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
             options.name_amalgamation, build_paths, using_mods, options).generate()
         build_paths.lib_sources = amalg_cpp_files
         template_vars['generated_files'] = ' '.join(amalg_cpp_files + amalg_headers)
+
+        # Inserting an amalgamation generated using DLL visibility flags into a
+        # binary project will either cause errors (on Windows) or unnecessary overhead.
+        # Provide a hint
+        if options.build_shared_lib:
+            logging.warning('Unless you are building a DLL or .so from the amalgamation, use --disable-shared as well')
 
     template_vars.update(generate_build_info(build_paths, using_mods, cc, arch, osinfo, options))
 

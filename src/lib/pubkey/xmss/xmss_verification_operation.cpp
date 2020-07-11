@@ -9,14 +9,15 @@
  **/
 
 #include <botan/internal/xmss_verification_operation.h>
+#include <botan/xmss_common_ops.h>
 
 namespace Botan {
 
 XMSS_Verification_Operation::XMSS_Verification_Operation(
-   const XMSS_PublicKey& public_key)
-   : XMSS_Common_Ops(public_key.xmss_oid()),
-     m_pub_key(public_key),
-     m_msg_buf(0)
+   const XMSS_PublicKey& public_key) :
+   m_pub_key(public_key),
+   m_hash(public_key.xmss_hash_function()),
+   m_msg_buf(0)
    {
    }
 
@@ -26,6 +27,8 @@ XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
       XMSS_Address& adrs,
       const secure_vector<uint8_t>& seed)
    {
+   const auto params = m_pub_key.xmss_parameters();
+
    const uint32_t next_index = static_cast<uint32_t>(sig.unused_leaf_index());
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(next_index);
@@ -40,31 +43,35 @@ XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
    adrs.set_ltree_address(next_index);
 
    std::array<secure_vector<uint8_t>, 2> node;
-   create_l_tree(node[0], pub_key_ots, adrs, seed);
+   XMSS_Common_Ops::create_l_tree(node[0], pub_key_ots, adrs, seed, m_hash, params);
 
    adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
    adrs.set_tree_index(next_index);
 
-   for(size_t k = 0; k < m_xmss_params.tree_height(); k++)
+   for(size_t k = 0; k < params.tree_height(); k++)
       {
       adrs.set_tree_height(static_cast<uint32_t>(k));
       if(((next_index / (static_cast<size_t>(1) << k)) & 0x01) == 0)
          {
          adrs.set_tree_index(adrs.get_tree_index() >> 1);
-         randomize_tree_hash(node[1],
-                             node[0],
-                             sig.tree().authentication_path()[k],
-                             adrs,
-                             seed);
+         XMSS_Common_Ops::randomize_tree_hash(node[1],
+                                              node[0],
+                                              sig.tree().authentication_path()[k],
+                                              adrs,
+                                              seed,
+                                              m_hash,
+                                              params);
          }
       else
          {
          adrs.set_tree_index((adrs.get_tree_index() - 1) >> 1);
-         randomize_tree_hash(node[1],
-                             sig.tree().authentication_path()[k],
-                             node[0],
-                             adrs,
-                             seed);
+         XMSS_Common_Ops::randomize_tree_hash(node[1],
+                                              sig.tree().authentication_path()[k],
+                                              node[0],
+                                              adrs,
+                                              seed,
+                                              m_hash,
+                                              params);
          }
       node[0] = node[1];
       }
@@ -80,7 +87,7 @@ XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
    secure_vector<uint8_t> index_bytes;
    XMSS_Tools::concat(index_bytes,
                       sig.unused_leaf_index(),
-                      m_xmss_params.element_size());
+                      m_pub_key.xmss_parameters().element_size());
    secure_vector<uint8_t> msg_digest =
       m_hash.h_msg(sig.randomness(),
                    public_key.root(),

@@ -69,7 +69,7 @@ class Timing_Test
          A constant seed is ok here since the timing test rng just needs to be
          "random" but not cryptographically secure - even std::rand() would be ok.
          */
-         const std::string drbg_seed(64, '*');
+         const std::string drbg_seed(64, 'A');
          m_rng = cli_make_rng("", drbg_seed); // throws if it can't find anything to use
          }
 
@@ -80,18 +80,19 @@ class Timing_Test
                                       size_t warmup_runs,
                                       size_t measurement_runs);
 
-      virtual std::vector<uint8_t> prepare_input(std::string input)
+      virtual std::vector<uint8_t> prepare_input(const std::string& input)
          {
          return Botan::hex_decode(input);
          }
 
-      virtual ticks measure_critical_function(std::vector<uint8_t> input) = 0;
+      virtual ticks measure_critical_function(const std::vector<uint8_t>& input) = 0;
 
    protected:
       static ticks get_ticks()
          {
          // Returns CPU counter or best approximation (monotonic clock of some kind)
-         return Botan::OS::get_high_resolution_clock();
+         //return Botan::OS::get_high_resolution_clock();
+         return Botan::OS::get_system_timestamp_ns();
          }
 
       Botan::RandomNumberGenerator& timing_test_rng()
@@ -114,14 +115,14 @@ class Bleichenbacker_Timing_Test final : public Timing_Test
          , m_enc(m_pubkey, timing_test_rng(), "Raw")
          , m_dec(m_privkey, timing_test_rng(), "PKCS1v15") {}
 
-      std::vector<uint8_t> prepare_input(std::string input) override
+      std::vector<uint8_t> prepare_input(const std::string& input) override
          {
          const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
          const std::vector<uint8_t> encrypted = m_enc.encrypt(input_vector, timing_test_rng());
          return encrypted;
          }
 
-      ticks measure_critical_function(std::vector<uint8_t> input) override
+      ticks measure_critical_function(const std::vector<uint8_t>& input) override
          {
          const ticks start = get_ticks();
          m_dec.decrypt_or_random(input.data(), m_ctext_length, m_expected_content_size, timing_test_rng());
@@ -158,14 +159,14 @@ class Manger_Timing_Test final : public Timing_Test
          , m_enc(m_pubkey, timing_test_rng(), m_encrypt_padding)
          , m_dec(m_privkey, timing_test_rng(), m_decrypt_padding) {}
 
-      std::vector<uint8_t> prepare_input(std::string input) override
+      std::vector<uint8_t> prepare_input(const std::string& input) override
          {
          const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
          const std::vector<uint8_t> encrypted = m_enc.encrypt(input_vector, timing_test_rng());
          return encrypted;
          }
 
-      ticks measure_critical_function(std::vector<uint8_t> input) override
+      ticks measure_critical_function(const std::vector<uint8_t>& input) override
          {
          ticks start = get_ticks();
          try
@@ -207,8 +208,8 @@ class Lucky13_Timing_Test final : public Timing_Test
                  Botan::MessageAuthenticationCode::create_or_throw("HMAC(" + m_mac_algo + ")"),
                  16, m_mac_keylen, Botan::TLS::Protocol_Version::TLS_V11, false) {}
 
-      std::vector<uint8_t> prepare_input(std::string input) override;
-      ticks measure_critical_function(std::vector<uint8_t> input) override;
+      std::vector<uint8_t> prepare_input(const std::string& input) override;
+      ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 
    private:
       const std::string m_mac_algo;
@@ -216,7 +217,7 @@ class Lucky13_Timing_Test final : public Timing_Test
       Botan::TLS::TLS_CBC_HMAC_AEAD_Decryption m_dec;
    };
 
-std::vector<uint8_t> Lucky13_Timing_Test::prepare_input(std::string input)
+std::vector<uint8_t> Lucky13_Timing_Test::prepare_input(const std::string& input)
    {
    const std::vector<uint8_t> input_vector = Botan::hex_decode(input);
    const std::vector<uint8_t> key(16);
@@ -231,7 +232,7 @@ std::vector<uint8_t> Lucky13_Timing_Test::prepare_input(std::string input)
    return unlock(buf);
    }
 
-ticks Lucky13_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
+ticks Lucky13_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input)
    {
    Botan::secure_vector<uint8_t> data(input.begin(), input.end());
    Botan::secure_vector<uint8_t> aad(13);
@@ -263,34 +264,44 @@ class ECDSA_Timing_Test final : public Timing_Test
    public:
       ECDSA_Timing_Test(std::string ecgroup);
 
-      ticks measure_critical_function(std::vector<uint8_t> input) override;
+      ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 
    private:
       const Botan::EC_Group m_group;
       const Botan::ECDSA_PrivateKey m_privkey;
       const Botan::BigInt& m_x;
       std::vector<Botan::BigInt> m_ws;
+      Botan::BigInt m_b, m_b_inv;
    };
 
 ECDSA_Timing_Test::ECDSA_Timing_Test(std::string ecgroup)
    : m_group(ecgroup)
    , m_privkey(timing_test_rng(), m_group)
    , m_x(m_privkey.private_value())
-   {}
+   {
+      m_b = m_group.random_scalar(timing_test_rng());
+      m_b_inv = m_group.inverse_mod_order(m_b);
+   }
 
-ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
+ticks ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input)
    {
    const Botan::BigInt k(input.data(), input.size());
-   const Botan::BigInt msg(5); // fixed message to minimize noise
+   Botan::BigInt m(5); // fixed message to minimize noise
 
    ticks start = get_ticks();
 
-   //The following ECDSA operations involve and should not leak any information about k.
-
+   // the following ECDSA operations involve and should not leak any information about k
+   const Botan::BigInt r = m_group.mod_order(
+      m_group.blinded_base_point_multiply_x(k, timing_test_rng(), m_ws));
    const Botan::BigInt k_inv = m_group.inverse_mod_order(k);
-   const Botan::PointGFp k_times_P = m_group.blinded_base_point_multiply(k, timing_test_rng(), m_ws);
-   const Botan::BigInt r = m_group.mod_order(k_times_P.get_affine_x());
-   const Botan::BigInt s = m_group.multiply_mod_order(k_inv, mul_add(m_x, r, msg));
+
+   m_b = m_group.square_mod_order(m_b);
+   m_b_inv = m_group.square_mod_order(m_b_inv);
+
+   m = m_group.multiply_mod_order(m_b, m_group.mod_order(m));
+   const Botan::BigInt xr_m = m_group.mod_order(m_group.multiply_mod_order(m_x, m_b, r) + m);
+
+   const Botan::BigInt s = m_group.multiply_mod_order(k_inv, xr_m, m_b_inv);
 
    BOTAN_UNUSED(r, s);
 
@@ -310,14 +321,14 @@ class ECC_Mul_Timing_Test final : public Timing_Test
          m_group(ecgroup)
          {}
 
-      ticks measure_critical_function(std::vector<uint8_t> input) override;
+      ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 
    private:
       const Botan::EC_Group m_group;
       std::vector<Botan::BigInt> m_ws;
    };
 
-ticks ECC_Mul_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
+ticks ECC_Mul_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input)
    {
    const Botan::BigInt k(input.data(), input.size());
 
@@ -341,12 +352,12 @@ class Powmod_Timing_Test final : public Timing_Test
          {
          }
 
-      ticks measure_critical_function(std::vector<uint8_t> input) override;
+      ticks measure_critical_function(const std::vector<uint8_t>& input) override;
    private:
       Botan::DL_Group m_group;
    };
 
-ticks Powmod_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
+ticks Powmod_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input)
    {
    const Botan::BigInt x(input.data(), input.size());
    const size_t max_x_bits = m_group.p_bits();
@@ -372,13 +383,13 @@ class Invmod_Timing_Test final : public Timing_Test
          m_p = Botan::random_prime(timing_test_rng(), p_bits);
          }
 
-      ticks measure_critical_function(std::vector<uint8_t> input) override;
+      ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 
    private:
       Botan::BigInt m_p;
    };
 
-ticks Invmod_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
+ticks Invmod_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input)
    {
    const Botan::BigInt k(input.data(), input.size());
 
@@ -417,10 +428,10 @@ std::vector<std::vector<ticks>> Timing_Test::execute_evaluation(
       }
 
    size_t total_runs = 0;
+   std::vector<ticks> results(inputs.size());
+
    while(total_runs < (warmup_runs + measurement_runs))
       {
-      std::vector<ticks> results(inputs.size());
-
       for(size_t i = 0; i != inputs.size(); ++i)
          {
          results[i] = measure_critical_function(inputs[i]);
@@ -428,7 +439,7 @@ std::vector<std::vector<ticks>> Timing_Test::execute_evaluation(
 
       total_runs++;
 
-      if(total_runs >= warmup_runs)
+      if(total_runs > warmup_runs)
          {
          for(size_t i = 0; i != results.size(); ++i)
             {
@@ -445,7 +456,7 @@ class Timing_Test_Command final : public Command
    public:
       Timing_Test_Command()
          : Command("timing_test test_type --test-data-file= --test-data-dir=src/tests/data/timing "
-                   "--warmup-runs=1000 --measurement-runs=10000") {}
+                   "--warmup-runs=5000 --measurement-runs=50000") {}
 
       std::string group() const override
          {

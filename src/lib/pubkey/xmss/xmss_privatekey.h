@@ -18,7 +18,6 @@
 #include <botan/xmss_parameters.h>
 #include <botan/xmss_publickey.h>
 #include <botan/atomic.h>
-#include <botan/xmss_common_ops.h>
 #include <botan/xmss_wots_privatekey.h>
 #include <botan/xmss_index_registry.h>
 
@@ -35,7 +34,6 @@ namespace Botan {
  *     https://datatracker.ietf.org/doc/rfc8391/
  **/
 class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKey,
-   public XMSS_Common_Ops,
    public virtual Private_Key
    {
    public:
@@ -81,10 +79,10 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
                       const secure_vector<uint8_t>& root,
                       const secure_vector<uint8_t>& public_seed)
          : XMSS_PublicKey(xmss_algo_id, root, public_seed),
-           XMSS_Common_Ops(xmss_algo_id),
            m_wots_priv_key(XMSS_PublicKey::m_xmss_params.ots_oid(),
                            public_seed,
                            wots_priv_seed),
+           m_hash(XMSS_PublicKey::m_xmss_params.hash_function_name()),
            m_prf(prf),
            m_index_reg(XMSS_Index_Registry::get_instance())
          {
@@ -263,6 +261,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
                              XMSS_Hash& hash);
 
       XMSS_WOTS_PrivateKey m_wots_priv_key;
+      XMSS_Hash m_hash;
       secure_vector<uint8_t> m_prf;
       XMSS_Index_Registry& m_index_reg;
    };

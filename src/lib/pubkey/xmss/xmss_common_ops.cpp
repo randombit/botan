@@ -16,7 +16,8 @@ XMSS_Common_Ops::randomize_tree_hash(secure_vector<uint8_t>& result,
                                      const secure_vector<uint8_t>& right,
                                      XMSS_Address& adrs,
                                      const secure_vector<uint8_t>& seed,
-                                     XMSS_Hash& hash)
+                                     XMSS_Hash& hash,
+                                     const XMSS_Parameters& params)
    {
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Key_Mode);
    secure_vector<uint8_t> key { hash.prf(seed, adrs.bytes()) };
@@ -31,7 +32,7 @@ XMSS_Common_Ops::randomize_tree_hash(secure_vector<uint8_t>& result,
                 bitmask_r.size() == right.size(),
                 "Bitmask size doesn't match node size.");
 
-   secure_vector<uint8_t> concat_xor(m_xmss_params.element_size() * 2);
+   secure_vector<uint8_t> concat_xor(params.element_size() * 2);
    for(size_t i = 0; i < left.size(); i++)
       {
       concat_xor[i] = left[i] ^ bitmask_l[i];
@@ -47,9 +48,10 @@ XMSS_Common_Ops::create_l_tree(secure_vector<uint8_t>& result,
                                wots_keysig_t pk,
                                XMSS_Address& adrs,
                                const secure_vector<uint8_t>& seed,
-                               XMSS_Hash& hash)
+                               XMSS_Hash& hash,
+                               const XMSS_Parameters& params)
    {
-   size_t l = m_xmss_params.len();
+   size_t l = params.len();
    adrs.set_tree_height(0);
 
    while(l > 1)
@@ -57,7 +59,7 @@ XMSS_Common_Ops::create_l_tree(secure_vector<uint8_t>& result,
       for(size_t i = 0; i < l >> 1; i++)
          {
          adrs.set_tree_index(static_cast<uint32_t>(i));
-         randomize_tree_hash(pk[i], pk[2 * i], pk[2 * i + 1], adrs, seed, hash);
+         randomize_tree_hash(pk[i], pk[2 * i], pk[2 * i + 1], adrs, seed, hash, params);
          }
       if(l & 0x01)
          {

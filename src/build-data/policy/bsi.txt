@@ -70,12 +70,11 @@ sha3_bmi2
 # entropy sources
 dev_random
 proc_walk
-rdrand
 rdseed
 win32_stats
 
 # rng
-rdrand_rng
+processor_rng
 system_rng
 
 # utils
