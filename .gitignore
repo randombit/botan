@@ -79,6 +79,8 @@ callgrind.*
 /*.txt
 /*.rst
 
+/cmake-build-debug
+
 # Add back files from the toplevel
 !/news.rst
 !/readme.rst
