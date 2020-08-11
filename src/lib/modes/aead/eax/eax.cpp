@@ -36,7 +36,7 @@ secure_vector<uint8_t> eax_prf(uint8_t tag, size_t block_size,
 * EAX_Mode Constructor
 */
 EAX_Mode::EAX_Mode(BlockCipher* cipher, size_t tag_size) :
-   m_tag_size(tag_size ? tag_size : cipher->block_size()),
+   m_tag_size(tag_size),
    m_cipher(cipher),
    m_ctr(new CTR_BE(m_cipher->clone())),
    m_cmac(new CMAC(m_cipher->clone()))
