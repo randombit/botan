@@ -1,6 +1,17 @@
 Release Notes
 ========================================
 
+Version 2.16.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a bug in EAX which allowed requesting a 0 length tag, which had
+  the effect of using a full length tag. Instead omit the length field,
+  or request the full tag length explicitly. GH #2392 #2390
+
+* Fix a memory leak in GCM where if passed an unsuitable block cipher
+  (eg not 128 bit) it would throw an exception and leak the cipher
+  object. GH #2392 #2388
+
 Version 2.15.0, 2020-07-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
