@@ -33,7 +33,7 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
       virtual Key_Length_Specification key_spec() const = 0;
 
       /**
-      * @return minimum allowed key length
+      * @return maximum allowed key length
       */
       size_t maximum_keylength() const
          {
@@ -41,7 +41,7 @@ class BOTAN_PUBLIC_API(2,0) SymmetricAlgorithm
          }
 
       /**
-      * @return maximum allowed key length
+      * @return minimum allowed key length
       */
       size_t minimum_keylength() const
          {
