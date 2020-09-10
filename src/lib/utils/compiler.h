@@ -90,7 +90,7 @@
 * Define BOTAN_MALLOC_FN
 */
 #if defined(__ibmxl__)
-  // XLC pretends to be both Clang and GCC, but is neither
+  /* XLC pretends to be both Clang and GCC, but is neither */
   #define BOTAN_MALLOC_FN __attribute__ ((malloc))
 #elif defined(__GNUC__)
   #define BOTAN_MALLOC_FN __attribute__ ((malloc, alloc_size(1,2)))
