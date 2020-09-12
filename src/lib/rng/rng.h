@@ -225,8 +225,12 @@ class BOTAN_PUBLIC_API(2,0) Null_RNG final : public RandomNumberGenerator
 * Wraps access to a RNG in a mutex
 * Note that most of the time it's much better to use a RNG per thread
 * otherwise the RNG will act as an unnecessary contention point
+*
+* Since 2.16.0 all Stateful_RNG instances have an internal lock, so
+* this class is no longer needed. It will be removed in a future major
+* release.
 */
-class BOTAN_PUBLIC_API(2,0) Serialized_RNG final : public RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("No longer required") Serialized_RNG final : public RandomNumberGenerator
    {
    public:
       void randomize(uint8_t out[], size_t len) override
@@ -273,7 +277,7 @@ class BOTAN_PUBLIC_API(2,0) Serialized_RNG final : public RandomNumberGenerator
          m_rng->add_entropy(in, len);
          }
 
-      BOTAN_DEPRECATED("Use Serialized_RNG(new AutoSeeded_RNG)") Serialized_RNG();
+      BOTAN_DEPRECATED("Use Serialized_RNG(new AutoSeeded_RNG) instead") Serialized_RNG();
 
       explicit Serialized_RNG(RandomNumberGenerator* rng) : m_rng(rng) {}
    private:

@@ -34,6 +34,11 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
       explicit HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf);
 
       /**
+      * Constructor taking a string for the hash
+      */
+      explicit HMAC_DRBG(const std::string& hmac_hash);
+
+      /**
       * Initialize an HMAC_DRBG instance with the given MAC as PRF (normally HMAC)
       *
       * Automatic reseeding from @p underlying_rng will take place after
@@ -119,27 +124,7 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
                 size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL,
                 size_t max_number_of_bytes_per_request = 64 * 1024);
 
-      /**
-      * Constructor taking a string for the hash
-      */
-      explicit HMAC_DRBG(const std::string& hmac_hash) :
-         Stateful_RNG(),
-         m_mac(MessageAuthenticationCode::create_or_throw("HMAC(" + hmac_hash + ")")),
-         m_max_number_of_bytes_per_request(64 * 1024)
-         {
-         clear();
-         }
-
       std::string name() const override;
-
-      void clear() override;
-
-      void randomize(uint8_t output[], size_t output_len) override;
-
-      void randomize_with_input(uint8_t output[], size_t output_len,
-                                const uint8_t input[], size_t input_len) override;
-
-      void add_entropy(const uint8_t input[], size_t input_len) override;
 
       size_t security_level() const override;
 
@@ -147,11 +132,17 @@ class BOTAN_PUBLIC_API(2,0) HMAC_DRBG final : public Stateful_RNG
          { return m_max_number_of_bytes_per_request; }
 
    private:
-      void update(const uint8_t input[], size_t input_len);
+      void update(const uint8_t input[], size_t input_len) override;
+
+      void generate_output(uint8_t output[], size_t output_len,
+                           const uint8_t input[], size_t input_len) override;
+
+      void clear_state() override;
 
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       secure_vector<uint8_t> m_V;
       const size_t m_max_number_of_bytes_per_request;
+      const size_t m_security_level;
    };
 
 }
