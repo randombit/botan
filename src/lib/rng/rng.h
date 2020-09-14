@@ -230,7 +230,7 @@ class BOTAN_PUBLIC_API(2,0) Null_RNG final : public RandomNumberGenerator
 * this class is no longer needed. It will be removed in a future major
 * release.
 */
-class BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("No longer required") Serialized_RNG final : public RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) Serialized_RNG final : public RandomNumberGenerator
    {
    public:
       void randomize(uint8_t out[], size_t len) override
@@ -279,6 +279,10 @@ class BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("No longer required") Serialized_RN
 
       BOTAN_DEPRECATED("Use Serialized_RNG(new AutoSeeded_RNG) instead") Serialized_RNG();
 
+      /*
+      * Since 2.16.0 this is no longer needed for any RNG type. This
+      * class will be removed in a future major release.
+      */
       explicit Serialized_RNG(RandomNumberGenerator* rng) : m_rng(rng) {}
    private:
       mutable mutex_type m_mutex;
