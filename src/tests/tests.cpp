@@ -595,14 +595,6 @@ void Test::set_test_options(const Test_Options& opts)
 //static
 void Test::set_test_rng(std::unique_ptr<Botan::RandomNumberGenerator> rng)
    {
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-   if(m_opts.test_threads() != 1)
-      {
-      m_test_rng.reset(new Botan::Serialized_RNG(rng.release()));
-      return;
-      }
-#endif
-
    m_test_rng.reset(rng.release());
    }
 

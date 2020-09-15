@@ -60,8 +60,8 @@ Several different RNG types are implemented. Some access hardware RNGs, which
 are only available on certain platforms. Others are mostly useful in specific
 situations.
 
-Generally prefer using either the system RNG, or else ``AutoSeeded_RNG`` which is
-intended to provide best possible behavior in a userspace PRNG.
+Generally prefer using the system RNG, or if not available use ``AutoSeeded_RNG``
+which is intended to provide best possible behavior in a userspace PRNG.
 
 System_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -99,8 +99,11 @@ future, fortunately there is no compatibility concerns when changing
 any RNG since the only expectation is it produces bits
 indistinguishable from random.
 
-.. note:: Like most other classes in Botan, it is not safe to share an instance
-          of ``AutoSeeded_RNG`` among multiple threads without serialization.
+.. note:: Starting in 2.16.0, AutoSeeded_RNG uses an internal lock and so is
+          safe to share among threads. However if possible it is still better to
+          use a RNG per thread as otherwise the RNG object needlessly creates a
+          point of contention. In previous versions, the RNG does not have an
+          internal lock and all access to it must be serialized.
 
 The current version uses HMAC_DRBG with either SHA-384 or SHA-256. The
 initial seed is generated either by the system PRNG (if available) or

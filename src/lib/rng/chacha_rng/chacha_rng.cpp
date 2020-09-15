@@ -52,24 +52,15 @@ ChaCha_RNG::ChaCha_RNG(Entropy_Sources& entropy_sources,
    clear();
    }
 
-void ChaCha_RNG::clear()
+void ChaCha_RNG::clear_state()
    {
-   Stateful_RNG::clear();
-
    m_hmac->set_key(std::vector<uint8_t>(m_hmac->output_length(), 0x00));
    m_chacha->set_key(m_hmac->final());
    }
 
-void ChaCha_RNG::randomize(uint8_t output[], size_t output_len)
+void ChaCha_RNG::generate_output(uint8_t output[], size_t output_len,
+                                 const uint8_t input[], size_t input_len)
    {
-   randomize_with_input(output, output_len, nullptr, 0);
-   }
-
-void ChaCha_RNG::randomize_with_input(uint8_t output[], size_t output_len,
-                                      const uint8_t input[], size_t input_len)
-   {
-   reseed_check();
-
    if(input_len > 0)
       {
       update(input, input_len);
@@ -86,16 +77,6 @@ void ChaCha_RNG::update(const uint8_t input[], size_t input_len)
    secure_vector<uint8_t> mac_key(m_hmac->output_length());
    m_chacha->write_keystream(mac_key.data(), mac_key.size());
    m_hmac->set_key(mac_key);
-   }
-
-void ChaCha_RNG::add_entropy(const uint8_t input[], size_t input_len)
-   {
-   update(input, input_len);
-
-   if(8*input_len >= security_level())
-      {
-      reset_reseed_counter();
-      }
    }
 
 size_t ChaCha_RNG::security_level() const

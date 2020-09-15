@@ -32,7 +32,7 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
          {
          rng.reset(new Botan::System_RNG);
          }
-      else if(rng_type_s == "user")
+      else if(rng_type_s == "user" || rng_type_s == "user-threadsafe")
          {
          rng.reset(new Botan::AutoSeeded_RNG);
          }
@@ -44,12 +44,6 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
       else if((rng_type_s == "rdrand" || rng_type_s == "hwrng") && Botan::Processor_RNG::available())
          {
          rng.reset(new Botan::Processor_RNG);
-         }
-#endif
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-      else if(rng_type_s == "user-threadsafe")
-         {
-         rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
          }
 #endif
 

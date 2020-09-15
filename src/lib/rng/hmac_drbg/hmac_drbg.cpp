@@ -12,6 +12,25 @@ namespace Botan {
 
 namespace {
 
+size_t hmac_drbg_security_level(size_t mac_output_length)
+   {
+   // security strength of the hash function
+   // for pre-image resistance (see NIST SP 800-57)
+   // SHA-160: 128 bits
+   // SHA-224, SHA-512/224: 192 bits,
+   // SHA-256, SHA-512/256, SHA-384, SHA-512: >= 256 bits
+   // NIST SP 800-90A only supports up to 256 bits though
+
+   if(mac_output_length < 32)
+      {
+      return (mac_output_length - 4) * 8;
+      }
+   else
+      {
+      return 32 * 8;
+      }
+   }
+
 void check_limits(size_t reseed_interval,
                   size_t max_number_of_bytes_per_request)
    {
@@ -36,7 +55,8 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      size_t max_number_of_bytes_per_request) :
    Stateful_RNG(underlying_rng, reseed_interval),
    m_mac(std::move(prf)),
-   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
+   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request),
+   m_security_level(hmac_drbg_security_level(m_mac->output_length()))
    {
    BOTAN_ASSERT_NONNULL(m_mac);
 
@@ -52,7 +72,8 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      size_t max_number_of_bytes_per_request) :
    Stateful_RNG(underlying_rng, entropy_sources, reseed_interval),
    m_mac(std::move(prf)),
-   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
+   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request),
+   m_security_level(hmac_drbg_security_level(m_mac->output_length()))
    {
    BOTAN_ASSERT_NONNULL(m_mac);
 
@@ -67,7 +88,8 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      size_t max_number_of_bytes_per_request) :
    Stateful_RNG(entropy_sources, reseed_interval),
    m_mac(std::move(prf)),
-   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
+   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request),
+   m_security_level(hmac_drbg_security_level(m_mac->output_length()))
    {
    BOTAN_ASSERT_NONNULL(m_mac);
 
@@ -79,22 +101,33 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf) :
    Stateful_RNG(),
    m_mac(std::move(prf)),
-   m_max_number_of_bytes_per_request(64*1024)
+   m_max_number_of_bytes_per_request(64*1024),
+   m_security_level(hmac_drbg_security_level(m_mac->output_length()))
    {
    BOTAN_ASSERT_NONNULL(m_mac);
    clear();
    }
 
-void HMAC_DRBG::clear()
+HMAC_DRBG::HMAC_DRBG(const std::string& hmac_hash) :
+   Stateful_RNG(),
+   m_mac(MessageAuthenticationCode::create_or_throw("HMAC(" + hmac_hash + ")")),
+   m_max_number_of_bytes_per_request(64 * 1024),
+   m_security_level(hmac_drbg_security_level(m_mac->output_length()))
    {
-   Stateful_RNG::clear();
+   clear();
+   }
 
-   const size_t output_length = m_mac->output_length();
+void HMAC_DRBG::clear_state()
+   {
+   if(m_V.size() == 0)
+      {
+      const size_t output_length = m_mac->output_length();
+      m_V.resize(output_length);
+      }
 
-   m_V.resize(output_length);
    for(size_t i = 0; i != m_V.size(); ++i)
       m_V[i] = 0x01;
-   m_mac->set_key(std::vector<uint8_t>(output_length, 0x00));
+   m_mac->set_key(std::vector<uint8_t>(m_V.size(), 0x00));
    }
 
 std::string HMAC_DRBG::name() const
@@ -102,44 +135,30 @@ std::string HMAC_DRBG::name() const
    return "HMAC_DRBG(" + m_mac->name() + ")";
    }
 
-void HMAC_DRBG::randomize(uint8_t output[], size_t output_len)
-   {
-   randomize_with_input(output, output_len, nullptr, 0);
-   }
-
 /*
 * HMAC_DRBG generation
 * See NIST SP800-90A section 10.1.2.5
 */
-void HMAC_DRBG::randomize_with_input(uint8_t output[], size_t output_len,
-                                     const uint8_t input[], size_t input_len)
+void HMAC_DRBG::generate_output(uint8_t output[], size_t output_len,
+                                const uint8_t input[], size_t input_len)
    {
-   while(output_len > 0)
+   if(input_len > 0)
       {
-      size_t this_req = std::min(m_max_number_of_bytes_per_request, output_len);
-      output_len -= this_req;
-
-      reseed_check();
-
-      if(input_len > 0)
-         {
-         update(input, input_len);
-         }
-
-      while(this_req)
-         {
-         const size_t to_copy = std::min(this_req, m_V.size());
-         m_mac->update(m_V.data(), m_V.size());
-         m_mac->final(m_V.data());
-         copy_mem(output, m_V.data(), to_copy);
-
-         output += to_copy;
-         this_req -= to_copy;
-         }
-
       update(input, input_len);
       }
 
+   while(output_len > 0)
+      {
+      const size_t to_copy = std::min(output_len, m_V.size());
+      m_mac->update(m_V.data(), m_V.size());
+      m_mac->final(m_V.data());
+      copy_mem(output, m_V.data(), to_copy);
+
+      output += to_copy;
+      output_len -= to_copy;
+      }
+
+   update(input, input_len);
    }
 
 /*
@@ -171,33 +190,8 @@ void HMAC_DRBG::update(const uint8_t input[], size_t input_len)
       }
    }
 
-void HMAC_DRBG::add_entropy(const uint8_t input[], size_t input_len)
-   {
-   update(input, input_len);
-
-   if(8*input_len >= security_level())
-      {
-      reset_reseed_counter();
-      }
-   }
-
 size_t HMAC_DRBG::security_level() const
    {
-   // security strength of the hash function
-   // for pre-image resistance (see NIST SP 800-57)
-   // SHA-160: 128 bits, SHA-224, SHA-512/224: 192 bits,
-   // SHA-256, SHA-512/256, SHA-384, SHA-512: >= 256 bits
-   // NIST SP 800-90A only supports up to 256 bits though
-
-   const size_t output_length = m_mac->output_length();
-
-   if(output_length < 32)
-      {
-      return (output_length - 4) * 8;
-      }
-   else
-      {
-      return 32 * 8;
-      }
+   return m_security_level;
    }
 }
