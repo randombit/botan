@@ -31,16 +31,29 @@ std::string http_transact(const std::string& hostname,
    std::unique_ptr<OS::Socket> socket;
 
    const std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
+   std::string service, host;
+
+   const auto port_sep = hostname.find(":");
+   if(port_sep == std::string::npos)
+      {
+      service = "http";
+      host = hostname;
+      }
+   else
+      {
+      service = hostname.substr(port_sep + 1, std::string::npos);
+      host = hostname.substr(0, port_sep);
+      }
 
    try
       {
-      socket = OS::open_socket(hostname, "http", timeout);
+      socket = OS::open_socket(host, service, timeout);
       if(!socket)
          throw Not_Implemented("No socket support enabled in build");
       }
    catch(std::exception& e)
       {
-      throw HTTP_Error("HTTP connection to " + hostname + " failed: " + e.what());
+      throw HTTP_Error("HTTP connection to " + host + " failed: " + e.what());
       }
 
    // Blocks until entire message has been written
