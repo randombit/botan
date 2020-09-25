@@ -2,7 +2,9 @@
 #define BOTAN_BUILD_CONFIG_H_
 
 /*
-* This file was automatically generated running
+* Build configuration for Botan %{version}
+*
+* Automatically generated from
 * '%{command_line}'
 *
 * Target
@@ -15,6 +17,11 @@
 #define BOTAN_VERSION_MINOR %{version_minor}
 #define BOTAN_VERSION_PATCH %{version_patch}
 #define BOTAN_VERSION_DATESTAMP %{version_datestamp}
+
+%{if version_suffix}
+#define BOTAN_VERSION_SUFFIX %{version_suffix}
+#define BOTAN_VERSION_SUFFIX_STR "%{version_suffix}"
+%{endif}
 
 #define BOTAN_VERSION_RELEASE_TYPE "%{release_type}"
 

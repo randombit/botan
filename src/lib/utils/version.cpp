@@ -23,7 +23,11 @@ const char* short_version_cstr()
    {
    return STR(BOTAN_VERSION_MAJOR) "."
           STR(BOTAN_VERSION_MINOR) "."
-          STR(BOTAN_VERSION_PATCH);
+          STR(BOTAN_VERSION_PATCH)
+#if defined(BOTAN_VERSION_SUFFIX)
+          STR(BOTAN_VERSION_SUFFIX)
+#endif
+      ;
    }
 
 const char* version_cstr()
@@ -36,7 +40,11 @@ const char* version_cstr()
 
    return "Botan " STR(BOTAN_VERSION_MAJOR) "."
                    STR(BOTAN_VERSION_MINOR) "."
-                   STR(BOTAN_VERSION_PATCH) " ("
+                   STR(BOTAN_VERSION_PATCH)
+#if defined(BOTAN_VERSION_SUFFIX)
+                   STR(BOTAN_VERSION_SUFFIX)
+#endif
+                   " ("
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
                    "UNSAFE FUZZER MODE BUILD "
 #endif
