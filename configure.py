@@ -90,6 +90,13 @@ class Version(object):
         if not Version.data:
             root_dir = os.path.dirname(os.path.realpath(__file__))
             Version.data = parse_version_file(os.path.join(root_dir, 'src/build-data/version.txt'))
+
+            suffix = Version.data["release_suffix"]
+            if suffix != "":
+                suffix_re = re.compile('-(alpha|beta|rc)[0-9]+')
+
+                if not suffix_re.match(suffix):
+                    raise Exception("Unexpected version suffix '%s'" % (suffix))
         return Version.data
 
     @staticmethod
@@ -103,6 +110,10 @@ class Version(object):
     @staticmethod
     def patch():
         return Version.get_data()["release_patch"]
+
+    @staticmethod
+    def suffix():
+        return Version.get_data()["release_suffix"]
 
     @staticmethod
     def packed():
@@ -123,7 +134,7 @@ class Version(object):
 
     @staticmethod
     def as_string():
-        return '%d.%d.%d' % (Version.major(), Version.minor(), Version.patch())
+        return '%d.%d.%d%s' % (Version.major(), Version.minor(), Version.patch(), Version.suffix())
 
     @staticmethod
     def vc_rev():
@@ -1981,6 +1992,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
         'version_patch':  Version.patch(),
+        'version_suffix': Version.suffix(),
         'version_vc_rev': 'unknown' if options.no_store_vc_rev else Version.vc_rev(),
         'abi_rev':        Version.so_rev(),
 

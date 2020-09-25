@@ -376,10 +376,14 @@ class Version_Tests final : public Test
          std::string sversion_str = Botan::short_version_string();
          result.test_eq("Same short version string", sversion_str, std::string(sversion_cstr));
 
-         const std::string expected_sversion =
+         std::string expected_sversion =
             std::to_string(BOTAN_VERSION_MAJOR) + "." +
             std::to_string(BOTAN_VERSION_MINOR) + "." +
             std::to_string(BOTAN_VERSION_PATCH);
+
+#if defined(BOTAN_VERSION_SUFFIX)
+         expected_sversion += BOTAN_VERSION_SUFFIX_STR;
+#endif
 
          result.test_eq("Short version string has expected format",
                         sversion_str, expected_sversion);

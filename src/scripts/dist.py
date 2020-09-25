@@ -164,32 +164,36 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
     if snapshot_branch:
         assert target_version == snapshot_branch
 
-    version_file_name = os.path.basename(version_file)
-
     contents = open(version_file).readlines()
 
     version_re = re.compile('release_(major|minor|patch) = ([0-9]+)')
+    version_suffix_re = re.compile('release_suffix = \'(-(alpha|beta|rc)[0-9]+)\'')
 
-    def content_rewriter():
+    def content_rewriter(target_version):
+        version_info = {}
+
+        release_type = 'release'
+
+        # Not included in old version files so set a default
+        version_info["suffix"] = ""
+
         for line in contents:
 
             if not snapshot_branch:
-                # Verify the version set in the source matches the tag
                 match = version_re.match(line)
                 if match:
-                    name_to_idx = {
-                        'major': 0,
-                        'minor': 1,
-                        'patch': 2
-                    }
-                    version_parts = target_version.split('.')
-                    assert len(version_parts) == 3
-                    in_tag = int(version_parts[name_to_idx[match.group(1)]])
-                    in_file = int(match.group(2))
+                    version_info[match.group(1)] = int(match.group(2))
 
-                    if in_tag != in_file:
-                        raise Exception('Version number part "%s" in %s does not match tag %s' %
-                                        (match.group(1), version_file_name, target_version))
+                match = version_suffix_re.match(line)
+                if match:
+                    suffix = match.group(1)
+                    version_info['suffix'] = suffix
+                    if suffix.find('alpha') >= 0:
+                        release_type = 'alpha'
+                    elif suffix.find('beta') >= 0:
+                        release_type = 'beta'
+                    elif suffix.find('rc') >= 0:
+                        release_type = 'release candidate'
 
             if line == 'release_vc_rev = None\n':
                 yield 'release_vc_rev = \'git:%s\'\n' % (rev_id)
@@ -199,14 +203,29 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
                 if target_version == snapshot_branch:
                     yield "release_type = 'snapshot:%s'\n" % (snapshot_branch)
                 else:
-                    yield "release_type = 'release'\n"
+                    yield "release_type = '%s'\n" % (release_type)
             else:
                 yield line
 
-    open(version_file, 'w').write(''.join(list(content_rewriter())))
+        if not snapshot_branch:
+            for req_var in ["major", "minor", "patch", "suffix"]:
+                if req_var not in version_info.keys():
+                    raise Exception('Missing version field for %s in version file' % (req_var))
 
-def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file):
+            marked_version = "%d.%d.%d%s" % (version_info["major"],
+                                             version_info["minor"],
+                                             version_info["patch"],
+                                             version_info["suffix"])
 
+            if marked_version != target_version:
+                raise Exception('Release version file %s does not match tagged version %s' % (
+                    marked_version, target_version))
+
+    new_contents = ''.join(list(content_rewriter(target_version)))
+    open(version_file, 'w').write(new_contents)
+
+def write_archive(version, output_basename, archive_type, rel_epoch, all_files, hash_file):
+    # pylint: disable=too-many-locals
     def archive_suffix(archive_type):
         if archive_type == 'tgz':
             return 'tgz'
@@ -240,14 +259,21 @@ def write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file
     # gzip format embeds the original filename, tarfile.py does the wrong
     # thing unless the output name ends in .gz. So pass an explicit
     # fileobj in that case, and supply a name in the form tarfile expects.
-    if archive_type == 'tgz':
-        archive = tarfile.open(output_basename + '.tar.gz',
-                               write_mode(archive_type),
-                               fileobj=open(output_archive, 'wb'))
-    else:
-        archive = tarfile.open(output_basename + '.tar',
-                               write_mode(archive_type),
-                               fileobj=open(output_archive, 'wb'))
+    archive_suffix = '.tar.gz' if archive_type == 'tgz' else '.tar'
+
+    def archive_format(version):
+        # A change in Python meant that 2.14 and 2.15 were released with a
+        # tarfile using POSIX pax format (the new default for tarfile module)
+        # instead of the previously used GNU format.
+        if version in ['2.14.0', '2.15.0']:
+            return tarfile.PAX_FORMAT
+        else:
+            return tarfile.GNU_FORMAT
+
+    archive = tarfile.open(output_basename + archive_suffix,
+                           write_mode(archive_type),
+                           format=archive_format(version),
+                           fileobj=open(output_archive, 'wb'))
 
     for f in all_files:
         tarinfo = archive.gettarinfo(f)
@@ -329,10 +355,6 @@ def main(args=None):
     elif len(args) == 1:
         try:
             logging.info('Creating release for version %s' % (target_version))
-
-            (major, minor, patch) = [int(x) for x in target_version.split('.')]
-
-            assert target_version == '%d.%d.%d' % (major, minor, patch)
         except ValueError as e:
             logging.error('Invalid version number %s' % (target_version))
 
@@ -404,7 +426,12 @@ def main(args=None):
         hash_file = open(options.write_hash_file, 'w')
 
     for archive_type in archives:
-        output_files.append(write_archive(output_basename, archive_type, rel_epoch, all_files, hash_file))
+        output_files.append(write_archive(target_version,
+                                          output_basename,
+                                          archive_type,
+                                          rel_epoch,
+                                          all_files,
+                                          hash_file))
 
     if hash_file is not None:
         hash_file.close()
