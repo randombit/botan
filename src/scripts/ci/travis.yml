@@ -45,13 +45,13 @@ jobs:
       env:
        - TARGET="valgrind"
 
-#    - os: linux
-#      dist: bionic
-#      name: Linux s390x
-#      arch: s390x
-#      compiler: gcc
-#      env:
-#       - TARGET="shared"
+    - os: linux
+      dist: bionic
+      name: Linux s390x
+      arch: s390x
+      compiler: gcc
+      env:
+       - TARGET="shared"
 
     - os: linux
       dist: bionic
@@ -97,7 +97,7 @@ jobs:
       compiler: clang
       env:
        - TARGET="cross-android-arm32"
-       - ANDROID_NDK=android-ndk-r20
+       - ANDROID_NDK=android-ndk-r21d
 
     - os: linux
       dist: bionic
@@ -105,7 +105,7 @@ jobs:
       compiler: clang
       env:
        - TARGET="cross-android-arm64"
-       - ANDROID_NDK=android-ndk-r20
+       - ANDROID_NDK=android-ndk-r21d
 
     - os: linux
       dist: bionic
