@@ -13,6 +13,12 @@ Version 2.16.0, Not Yet Released
 * RandomNumberGenerator::add_entropy_T assumed its input was a POD
   type but did not verify this. (GH #2403)
 
+* Support OCSP responders that live on a non-standard port (GH #2401)
+
+* Add support for Solaris sandbox (GH #2385)
+
+* Support suffixes on release numbers for alpha/beta releases (GH #2404)
+
 * Fix a bug in EAX which allowed requesting a 0 length tag, which had
   the effect of using a full length tag. Instead omit the length field,
   or request the full tag length explicitly. (GH #2392 #2390)
