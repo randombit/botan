@@ -29,10 +29,6 @@
   #include <botan/cast128.h>
 #endif
 
-#if defined(BOTAN_HAS_CAST_256)
-  #include <botan/cast256.h>
-#endif
-
 #if defined(BOTAN_HAS_CASCADE)
   #include <botan/cascade.h>
 #endif
@@ -251,13 +247,6 @@ BlockCipher::create(const std::string& algo,
    if(algo == "CAST-128" || algo == "CAST5")
       {
       return std::unique_ptr<BlockCipher>(new CAST_128);
-      }
-#endif
-
-#if defined(BOTAN_HAS_CAST_256)
-   if(algo == "CAST-256")
-      {
-      return std::unique_ptr<BlockCipher>(new CAST_256);
       }
 #endif
 

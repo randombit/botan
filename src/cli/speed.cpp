@@ -345,7 +345,6 @@ class Speed final : public Command
             "ARIA-256",
             "Blowfish",
             "CAST-128",
-            "CAST-256",
             "Camellia-128",
             "Camellia-192",
             "Camellia-256",

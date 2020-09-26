@@ -202,17 +202,6 @@ A 64-bit cipher, commonly used in OpenPGP.
 
 Available if ``BOTAN_HAS_CAST128`` is defined.
 
-CAST-256
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 128-bit cipher that was a contestant in the NIST AES competition.
-Almost never used in practice. Prefer AES or Serpent.
-
-Available if ``BOTAN_HAS_CAST256`` is defined.
-
-.. warning::
-   Support for CAST-256 is deprecated and will be removed in a future major release.
-
 Camellia
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
