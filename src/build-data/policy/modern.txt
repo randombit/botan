@@ -96,14 +96,11 @@ win32_stats
 tls_cbc
 
 cast128
-cast256
 des
 gost_28147
 idea
 idea_sse2
-kasumi
 lion
-misty1
 rc4
 seed
 xtea

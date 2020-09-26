@@ -90,14 +90,11 @@ blowfish
 camellia
 cascade
 cast128
-cast256
 des
 gost_28147
 idea
 idea_sse2
-kasumi
 lion
-misty1
 noekeon
 noekeon_simd
 seed
@@ -166,7 +163,6 @@ skein
 #sha1 // needed for x509
 sm3
 streebog
-tiger
 whirlpool
 keccak
 
