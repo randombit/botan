@@ -253,17 +253,6 @@ due to its use in PGP. Avoid in new designs.
 
 Available if ``BOTAN_HAS_IDEA`` is defined.
 
-Kasumi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 64-bit cipher used in 3GPP mobile phone protocols. There is no reason to use
-it outside of this context.
-
-Available if ``BOTAN_HAS_KASUMI`` is defined.
-
-.. warning::
-   Support for Kasumi is deprecated and will be removed in a future major release.
-
 Lion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -45,10 +45,6 @@
   #include <botan/idea.h>
 #endif
 
-#if defined(BOTAN_HAS_KASUMI)
-  #include <botan/kasumi.h>
-#endif
-
 #if defined(BOTAN_HAS_LION)
   #include <botan/lion.h>
 #endif
@@ -244,13 +240,6 @@ BlockCipher::create(const std::string& algo,
    if(algo == "IDEA")
       {
       return std::unique_ptr<BlockCipher>(new IDEA);
-      }
-#endif
-
-#if defined(BOTAN_HAS_KASUMI)
-   if(algo == "KASUMI")
-      {
-      return std::unique_ptr<BlockCipher>(new KASUMI);
       }
 #endif
 

@@ -352,7 +352,6 @@ class Speed final : public Command
             "TripleDES",
             "GOST-28147-89",
             "IDEA",
-            "KASUMI",
             "Noekeon",
             "SHACAL2",
             "SM4",

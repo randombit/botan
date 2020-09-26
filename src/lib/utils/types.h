@@ -33,7 +33,7 @@ namespace Botan {
 * <dt>Block Ciphers<dd>
 *        @ref aria.h "ARIA", @ref aes.h "AES", @ref Blowfish, @ref camellia.h "Camellia", @ref Cascade_Cipher "Cascade",
 *        @ref CAST_128 "CAST-128", @ref CAST_128 DES, @ref TripleDES "3DES",
-*        @ref GOST_28147_89 "GOST 28147-89", IDEA, KASUMI, Lion, Noekeon, SEED, Serpent, SHACAL2, SM4,
+*        @ref GOST_28147_89 "GOST 28147-89", IDEA, Lion, Noekeon, SEED, Serpent, SHACAL2, SM4,
 *        @ref Threefish_512 "Threefish", Twofish, XTEA
 * <dt>Stream Ciphers<dd>
 *        ChaCha, @ref CTR_BE "CTR", OFB, RC4, Salsa20
