@@ -1,9 +1,0 @@
-<defines>
-PACKAGE_TRANSFORM -> 20131128
-</defines>
-
-<requires>
-ctr
-rng
-filters
-</requires>
