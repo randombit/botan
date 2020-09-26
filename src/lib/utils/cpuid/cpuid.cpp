@@ -92,11 +92,13 @@ void CPUID::initialize()
 
 CPUID::CPUID_Data::CPUID_Data()
    {
+   m_cache_line_size = 0;
+   m_processor_features = 0;
+
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
     defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
     defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-   m_cache_line_size = 0;
    m_processor_features = detect_cpu_features(&m_cache_line_size);
 
 #endif
