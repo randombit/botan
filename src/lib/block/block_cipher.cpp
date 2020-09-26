@@ -35,7 +35,6 @@
 
 #if defined(BOTAN_HAS_DES)
   #include <botan/des.h>
-  #include <botan/desx.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST_28147_89)
@@ -219,11 +218,6 @@ BlockCipher::create(const std::string& algo,
    if(algo == "DES")
       {
       return std::unique_ptr<BlockCipher>(new DES);
-      }
-
-   if(algo == "DESX")
-      {
-      return std::unique_ptr<BlockCipher>(new DESX);
       }
 
    if(algo == "TripleDES" || algo == "3DES" || algo == "DES-EDE")

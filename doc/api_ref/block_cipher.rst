@@ -221,16 +221,16 @@ good cipher (such as Serpent, SHACAL2, or AES-256) is more than sufficient.
 
 Available if ``BOTAN_HAS_CASCADE`` is defined.
 
-DES, 3DES, DESX
+DES and 3DES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Originally designed by IBM and NSA in the 1970s. Today, DES's 56-bit key renders
-it insecure to any well-resourced attacker. DESX and 3DES extend the key length,
-and are still thought to be secure, modulo the limitation of a 64-bit block.
+it insecure to any well-resourced attacker. 3DES extends the key length,
+and is still thought to be secure, modulo the limitation of a 64-bit block.
 All are somewhat common in some industries such as finance. Avoid in new code.
 
-.. warning::
-   Support for DESX is deprecated and it will be removed in a future major release.
+Most implementations of DES, including the one currently used in Botan, are
+vulnerable to side channel attacks - another reason to avoid it.
 
 Available if ``BOTAN_HAS_DES`` is defined.
 
