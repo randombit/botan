@@ -257,13 +257,13 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
 #endif
 
 #if defined(BOTAN_HAS_SHAKE)
-   if(req.algo_name() == "SHAKE-128")
+   if(req.algo_name() == "SHAKE-128" && req.arg_count() == 1)
       {
-      return std::unique_ptr<HashFunction>(new SHAKE_128(req.arg_as_integer(0, 128)));
+      return std::unique_ptr<HashFunction>(new SHAKE_128(req.arg_as_integer(0)));
       }
-   if(req.algo_name() == "SHAKE-256")
+   if(req.algo_name() == "SHAKE-256" && req.arg_count() == 1)
       {
-      return std::unique_ptr<HashFunction>(new SHAKE_256(req.arg_as_integer(0, 256)));
+      return std::unique_ptr<HashFunction>(new SHAKE_256(req.arg_as_integer(0)));
       }
 #endif
 
