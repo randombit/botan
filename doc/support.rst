@@ -48,7 +48,7 @@ Branch Support Status
 -------------------------
 
 Following table provides the support status for Botan branches as of
-February 2020. Any branch not listed here (including 1.11) is no
+September 2020. Any branch not listed here (including 1.11) is no
 longer supported. Dates in the future are approximate.
 
 ============== ============== ========================== ============
@@ -56,7 +56,7 @@ Branch         First Release  End of Active Development  End of Life
 ============== ============== ========================== ============
 1.8            2008-12-08     2010-08-31                 2016-02-13
 1.10           2011-06-20     2012-07-10                 2018-12-31
-2.x            2017-01-06     2021?                      2024 or later
+2.x            2017-01-06     2020-10-05                 2024-01-01 or later
 3.x            2021?          ?                          ?
 ============== ============== ========================== ============
 
