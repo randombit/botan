@@ -44,7 +44,7 @@ namespace Botan {
 * <dt>Non-Cryptographic Checksums<dd>
 *        Adler32, CRC24, CRC32
 * <dt>Message Authentication Codes<dd>
-*        @ref CBC_MAC "CBC-MAC", CMAC, HMAC, Poly1305, SipHash, ANSI_X919_MAC
+*        CMAC, HMAC, Poly1305, SipHash, ANSI_X919_MAC
 * <dt>Random Number Generators<dd>
 *        AutoSeeded_RNG, HMAC_DRBG, Processor_RNG, System_RNG
 * <dt>Key Derivation<dd>

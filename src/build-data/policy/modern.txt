@@ -103,9 +103,7 @@ idea_sse2
 lion
 rc4
 seed
-xtea
 
-cbc_mac
 x919_mac
 
 # MD5 and SHA1 are broken but not prohibited. They are widely in use

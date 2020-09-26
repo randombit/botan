@@ -106,7 +106,6 @@ shacal2_simd
 threefish_512
 threefish_512_avx2
 twofish
-xtea
 
 # modes
 chacha20poly1305
@@ -167,7 +166,6 @@ whirlpool
 chacha_rng
 
 # mac
-cbc_mac
 poly1305
 siphash
 x919_mac

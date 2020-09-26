@@ -194,18 +194,6 @@ Available MACs
 Currently the following MAC algorithms are available in Botan. In new code,
 default to HMAC with a strong hash like SHA-256 or SHA-384.
 
-CBC-MAC
-~~~~~~~~~~~~
-
-An older authentication code based on a block cipher. Serious security problems,
-in particular **insecure** if messages of several different lengths are
-authenticated. Avoid unless required for compatibility.
-
-Available if ``BOTAN_HAS_CBC_MAC`` is defined.
-
-.. warning::
-   CBC-MAC support is deprecated and will be removed in a future major release.
-
 CMAC
 ~~~~~~~~~~~~
 
