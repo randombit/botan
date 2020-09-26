@@ -353,7 +353,6 @@ class Speed final : public Command
             "GOST-28147-89",
             "IDEA",
             "KASUMI",
-            "MISTY1",
             "Noekeon",
             "SHACAL2",
             "SM4",

@@ -54,10 +54,6 @@
   #include <botan/lion.h>
 #endif
 
-#if defined(BOTAN_HAS_MISTY1)
-  #include <botan/misty1.h>
-#endif
-
 #if defined(BOTAN_HAS_NOEKEON)
   #include <botan/noekeon.h>
 #endif
@@ -261,13 +257,6 @@ BlockCipher::create(const std::string& algo,
    if(algo == "KASUMI")
       {
       return std::unique_ptr<BlockCipher>(new KASUMI);
-      }
-#endif
-
-#if defined(BOTAN_HAS_MISTY1)
-   if(algo == "MISTY1")
-      {
-      return std::unique_ptr<BlockCipher>(new MISTY1);
       }
 #endif
 

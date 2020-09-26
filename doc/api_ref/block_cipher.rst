@@ -274,17 +274,6 @@ necessary.
 
 Available if ``BOTAN_HAS_LION`` is defined.
 
-MISTY1
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 64-bit Japanese cipher standardized by NESSIE and ISO. Seemingly secure, but
-quite slow and saw little adoption. No reason to use it in new code.
-
-Available if ``BOTAN_HAS_MISTY1`` is defined.
-
-.. warning::
-   Support for MISTY1 is deprecated and will be removed in a future major release.
-
 Noekeon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
