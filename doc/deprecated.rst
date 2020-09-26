@@ -65,6 +65,8 @@ in a future major release.
 
 - DLIES
 
+- MCEIES
+
 - CBC-MAC
 
 - GCM support for 64-bit tags
@@ -83,6 +85,9 @@ in a future major release.
 
 - All support for loading, generating or using RSA keys with a public
   exponent larger than 2**64-1
+
+- All or nothing package transform (``package.h``)
+
 
 Deprecated Headers
 ^^^^^^^^^^^^^^^^^^^^^^

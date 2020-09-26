@@ -77,10 +77,6 @@
   #include <botan/threefish_512.h>
 #endif
 
-#if defined(BOTAN_HAS_XTEA)
-  #include <botan/xtea.h>
-#endif
-
 #if defined(BOTAN_HAS_OPENSSL)
   #include <botan/internal/openssl.h>
 #endif
@@ -254,13 +250,6 @@ BlockCipher::create(const std::string& algo,
    if(algo == "SM4")
       {
       return std::unique_ptr<BlockCipher>(new SM4);
-      }
-#endif
-
-#if defined(BOTAN_HAS_XTEA)
-   if(algo == "XTEA")
-      {
-      return std::unique_ptr<BlockCipher>(new XTEA);
       }
 #endif
 

@@ -319,10 +319,3 @@ A 128-bit block cipher that was one of the AES finalists. Has a somewhat complic
 setup and a "kitchen sink" design.
 
 Available if ``BOTAN_HAS_TWOFISH`` is defined.
-
-XTEA
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 64-bit cipher popular for its simple implementation. Avoid in new code.
-
-Available if ``BOTAN_HAS_XTEA`` is defined.

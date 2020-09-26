@@ -358,7 +358,6 @@ class Speed final : public Command
             "Serpent",
             "Threefish-512",
             "Twofish",
-            "XTEA",
 
             /* Cipher modes */
             "AES-128/CBC",
