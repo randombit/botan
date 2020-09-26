@@ -1480,11 +1480,9 @@ BOTAN_PUBLIC_API(2,0) int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs
 
 
 /*
-*
-* @param mce_key must be a McEliece key
-* ct_len should be pt_len + n/8 + a few?
+* Always returns BOTAN_FFI_ERROR_NOT_IMPLEMENTED
 */
-BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Poorly specified, avoid in new code")
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("No longer implemented")
 int botan_mceies_encrypt(botan_pubkey_t mce_key,
                          botan_rng_t rng,
                          const char* aead,
@@ -1492,7 +1490,10 @@ int botan_mceies_encrypt(botan_pubkey_t mce_key,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t ct[], size_t* ct_len);
 
-BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Poorly specified, avoid in new code")
+/*
+* Always returns BOTAN_FFI_ERROR_NOT_IMPLEMENTED
+*/
+BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("No longer implemented")
 int botan_mceies_decrypt(botan_privkey_t mce_key,
                          const char* aead,
                          const uint8_t ct[], size_t ct_len,

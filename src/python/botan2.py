@@ -1234,35 +1234,6 @@ class PKKeyAgreement(object):
                                                                      other, len(other),
                                                                      salt, len(salt)))
 
-#
-# MCEIES encryption
-# Must be used with McEliece keys
-#
-def mceies_encrypt(mce, rng_obj, aead, pt, ad):
-    return _call_fn_returning_vec(len(pt) + 1024, lambda b, bl:
-                                  _DLL.botan_mceies_encrypt(mce.handle_(),
-                                                            rng_obj.handle_(),
-                                                            _ctype_str(aead),
-                                                            _ctype_bits(pt),
-                                                            len(pt),
-                                                            _ctype_bits(ad),
-                                                            len(ad),
-                                                            b, bl))
-
-def mceies_decrypt(mce, aead, ct, ad):
-
-    #msg = cast(msg, c_char_p)
-    #ll = c_size_t(ll)
-
-    return _call_fn_returning_vec(len(ct), lambda b, bl:
-                                  _DLL.botan_mceies_decrypt(mce.handle_(),
-                                                            _ctype_str(aead),
-                                                            _ctype_bits(ct),
-                                                            len(ct),
-                                                            _ctype_bits(ad),
-                                                            len(ad),
-                                                            b, bl))
-
 
 def _load_buf_or_file(filename, buf, file_fn, buf_fn):
     if filename is None and buf is None:

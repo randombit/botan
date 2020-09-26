@@ -140,7 +140,6 @@ ed25519
 elgamal
 gost_3410
 mce
-mceies
 rfc6979
 newhope
 sm2

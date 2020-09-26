@@ -120,7 +120,6 @@ elgamal
 gost_3410
 
 emsa_x931
-pbkdf1
 prf_x942
 
 passhash9

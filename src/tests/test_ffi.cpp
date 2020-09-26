@@ -2418,35 +2418,6 @@ class FFI_Unit_Tests final : public Test
 
             // TODO test KEM
 
-#if defined(BOTAN_HAS_MCEIES)
-            const uint8_t ad[8] = { 0xAD, 0xAD, 0xAD, 0xAD, 0xBE, 0xEE, 0xEE, 0xFF };
-            const size_t ad_len = sizeof(ad);
-
-            const Botan::secure_vector<uint8_t> plaintext = Test::rng().random_vec(Test::rng().next_byte());
-            size_t plaintext_len = plaintext.size();
-            size_t ciphertext_len = 0;
-
-            // first calculate ciphertext length
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_mceies_encrypt, (pub, rng, "AES-256/OCB", plaintext.data(),
-                        plaintext.size(), ad, ad_len, nullptr, &ciphertext_len));
-            std::vector<uint8_t> ciphertext(ciphertext_len);
-
-            // now encrypt
-            if(TEST_FFI_OK(botan_mceies_encrypt, (pub, rng, "AES-256/OCB", plaintext.data(), plaintext.size(), ad, ad_len,
-                                                  ciphertext.data(), &ciphertext_len)))
-               {
-               std::vector<uint8_t> decrypted(ciphertext.size());
-               size_t decrypted_len = plaintext_len;
-
-               TEST_FFI_OK(botan_mceies_decrypt, (priv, "AES-256/OCB", ciphertext.data(), ciphertext.size(), ad, ad_len,
-                                                  decrypted.data(), &decrypted_len));
-
-               decrypted.resize(decrypted_len);
-
-               result.test_eq("MCIES plaintext", decrypted, plaintext);
-               }
-#endif
-
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             }

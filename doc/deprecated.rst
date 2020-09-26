@@ -65,8 +65,6 @@ in a future major release.
 
 - DLIES
 
-- MCEIES
-
 - CBC-MAC
 
 - GCM support for 64-bit tags

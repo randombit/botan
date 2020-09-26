@@ -138,7 +138,6 @@ eckcdsa
 elgamal
 gost_3410
 mce
-mceies
 rfc6979
 newhope
 cecpq1
