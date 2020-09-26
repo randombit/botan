@@ -1,7 +1,0 @@
-<defines>
-TIGER -> 20131128
-</defines>
-
-<requires>
-mdx_hash
-</requires>

@@ -73,10 +73,6 @@
   #include <botan/sm3.h>
 #endif
 
-#if defined(BOTAN_HAS_TIGER)
-  #include <botan/tiger.h>
-#endif
-
 #if defined(BOTAN_HAS_WHIRLPOOL)
   #include <botan/whrlpool.h>
 #endif
@@ -227,15 +223,6 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
 #endif
 
    const SCAN_Name req(algo_spec);
-
-#if defined(BOTAN_HAS_TIGER)
-   if(req.algo_name() == "Tiger")
-      {
-      return std::unique_ptr<HashFunction>(
-         new Tiger(req.arg_as_integer(0, 24),
-                   req.arg_as_integer(1, 3)));
-      }
-#endif
 
 #if defined(BOTAN_HAS_SKEIN_512)
    if(req.algo_name() == "Skein-512")

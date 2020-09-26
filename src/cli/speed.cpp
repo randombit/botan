@@ -394,7 +394,6 @@ class Speed final : public Command
             "RIPEMD-160",
             "Skein-512",
             "Blake2b",
-            "Tiger",
             "Whirlpool",
 
             /* MACs */

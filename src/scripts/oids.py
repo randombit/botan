@@ -200,7 +200,7 @@ def format_set_map(m):
         s += '{ "%s", {' % k
         for pad in v:
             s += '"%s", ' % pad
-        if len(v) is not 0:
+        if len(v) != 0:
             s = s[:-2]
         s += '} },\n'
     s = s[:-1]

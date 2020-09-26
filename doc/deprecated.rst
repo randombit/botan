@@ -61,7 +61,7 @@ in a future major release.
 
 - Block ciphers GOST 28147, Kasumi, DESX, and XTEA.
 
-- Hash functions GOST 34.11-94 and Tiger
+- Hash functions GOST 34.11-94
 
 - DLIES
 
