@@ -69,8 +69,6 @@ in a future major release.
 
 - CBC-MAC
 
-- PBKDF1 key derivation
-
 - GCM support for 64-bit tags
 
 - Weak or rarely used ECC builtin groups including "secp160k1", "secp160r1",
