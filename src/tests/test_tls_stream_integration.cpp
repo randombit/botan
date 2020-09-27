@@ -80,7 +80,7 @@ class Side
             }
 
          return max_msg_length - bytes_transferred;
-         };
+         }
 
    protected:
       Botan::AutoSeeded_RNG m_rng;
@@ -328,6 +328,8 @@ class TestBase
            m_server(server),
            m_result(ioc, name) {}
 
+      virtual ~TestBase() = default;
+
       virtual void finishAsynchronousWork() {}
 
       Result result() { return m_result.result(); }
@@ -497,7 +499,7 @@ class Test_Eager_Close_Sync : public Synchronous_Test
       Test_Eager_Close_Sync(net::io_context& ioc, std::shared_ptr<Server> server)
          : Synchronous_Test(ioc, server, "Test Eager Close Sync") {}
 
-      void run_synchronous_client()
+      void run_synchronous_client() override
          {
          error_code ec;
 
@@ -572,7 +574,7 @@ class Test_Close_Without_Shutdown_Sync : public Synchronous_Test
       Test_Close_Without_Shutdown_Sync(net::io_context& ioc, std::shared_ptr<Server> server)
          : Synchronous_Test(ioc, server, "Test Close Without Shutdown Sync") {}
 
-      void run_synchronous_client()
+      void run_synchronous_client() override
          {
          error_code ec;
          net::connect(m_client.stream().lowest_layer(), k_endpoints, ec);
@@ -643,7 +645,7 @@ class Test_No_Shutdown_Response_Sync : public Synchronous_Test
       Test_No_Shutdown_Response_Sync(net::io_context& ioc, std::shared_ptr<Server> server)
          : Synchronous_Test(ioc, server, "Test No Shutdown Response Sync") {}
 
-      void run_synchronous_client()
+      void run_synchronous_client() override
          {
          error_code ec;
          net::connect(m_client.stream().lowest_layer(), k_endpoints, ec);
