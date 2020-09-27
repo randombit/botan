@@ -1,7 +1,5 @@
 language: cpp
 
-sudo: required
-
 env:
   global:
     - CCACHE_MAXSIZE=1G
@@ -10,14 +8,14 @@ env:
 jobs:
   include:
     - os: linux
-      dist: bionic
+      dist: focal
       name: Linux/GCC
       compiler: gcc
       env:
        - TARGET="shared"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Linux/Clang
       compiler: clang
       env:
@@ -31,7 +29,7 @@ jobs:
        - TARGET="coverage"
 
     - os: linux
-      dist: bionic
+      dist: focal
       arch: arm64
       name: Fuzzers
       compiler: gcc
@@ -39,14 +37,14 @@ jobs:
        - TARGET="fuzzers"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Valgrind
       compiler: gcc
       env:
        - TARGET="valgrind"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Linux s390x
       arch: s390x
       compiler: gcc
@@ -54,7 +52,7 @@ jobs:
        - TARGET="shared"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Linux arm64
       arch: arm64
       compiler: gcc
@@ -62,7 +60,7 @@ jobs:
        - TARGET="shared"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Linux ppc64le
       arch: ppc64le
       compiler: gcc
@@ -70,7 +68,7 @@ jobs:
        - TARGET="shared"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Linux i386 cross
       compiler: gcc
       env:
@@ -92,7 +90,7 @@ jobs:
        - TARGET="cross-arm32"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Android arm32 cross
       compiler: clang
       env:
@@ -100,7 +98,7 @@ jobs:
        - ANDROID_NDK=android-ndk-r21d
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Android arm64 cross
       compiler: clang
       env:
@@ -108,7 +106,7 @@ jobs:
        - ANDROID_NDK=android-ndk-r21d
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: MinGW x86-64 cross
       compiler: gcc
       env:
@@ -135,7 +133,7 @@ jobs:
        - EXTRA_FLAGS="--disable-werror"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Linux Clang 8
       compiler: clang
       env:
@@ -143,14 +141,14 @@ jobs:
        - CXX="/usr/bin/clang++-8"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Minimized
       compiler: gcc
       env:
        - TARGET="mini-shared"
 
     - os: linux
-      dist: bionic
+      dist: focal
       arch: arm64
       name: Baremetal
       compiler: gcc
@@ -158,28 +156,28 @@ jobs:
        - TARGET="baremetal"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: BSI policy
       compiler: gcc
       env:
        - TARGET="bsi"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: NIST policy
       compiler: gcc
       env:
        - TARGET="nist"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Pylint
       compiler: gcc
       env:
        - TARGET="lint"
 
     - os: linux
-      dist: bionic
+      dist: focal
       name: Documentation
       compiler: gcc
       env:

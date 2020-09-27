@@ -83,7 +83,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq update
-        sudo apt-get install doxygen python-docutils python-sphinx
+        sudo apt-get install doxygen python-docutils python3-sphinx
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
