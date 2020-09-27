@@ -291,6 +291,27 @@ class Argon2_KAT_Tests final : public Text_Based_Test
 
          result.test_eq("derived key", output, expected);
 
+         auto pwdhash_fam = Botan::PasswordHashFamily::create(mode);
+
+         if(!pwdhash_fam)
+            {
+            result.test_failure("Argon2 is missing PasswordHashFamily");
+            return result;
+            }
+
+         if(ad.size() == 0)
+            {
+            auto pwdhash = pwdhash_fam->from_params(M, T, P);
+
+            std::vector<uint8_t> pwdhash_derived(expected.size());
+            pwdhash->derive_key(pwdhash_derived.data(), pwdhash_derived.size(),
+                                reinterpret_cast<const char*>(passphrase.data()),
+                                passphrase.size(),
+                                salt.data(), salt.size());
+
+            result.test_eq("pwdhash derived key", pwdhash_derived, expected);
+            }
+
          return result;
          }
 
