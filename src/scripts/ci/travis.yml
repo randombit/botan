@@ -4,7 +4,7 @@ sudo: required
 
 env:
   global:
-    - CCACHE_MAXSIZE=1G
+    - CCACHE_MAXSIZE=1536M
     - PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so
 
 jobs:
