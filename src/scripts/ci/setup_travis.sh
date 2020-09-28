@@ -34,7 +34,8 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     elif [ "$TARGET" = "cross-arm32" ]; then
         sudo dpkg --add-architecture armhf
         sudo apt-get -qq update
-        sudo apt-get install g++-arm-linux-gnueabihf libc6:armhf libstdc++6:armhf
+        sudo apt-get install g++-arm-linux-gnueabihf
+        sudo apt-get install -o APT::Immediate-Configure=0 libc6:armhf libstdc++6:armhf
 
     elif [ "$TARGET" = "cross-arm64" ]; then
         sudo apt-get -qq update
