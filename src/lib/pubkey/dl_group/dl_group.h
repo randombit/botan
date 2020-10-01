@@ -311,8 +311,10 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       * Decode a DER/BER encoded group into this instance.
       * @param ber a vector containing the DER/BER encoded group
       * @param format the format of the encoded group
+      *
+      * @warning avoid this. Instead use the DL_Group constructor
       */
-      void BOTAN_DEPRECATED("Use DL_Group constructor") BER_decode(const std::vector<uint8_t>& ber, Format format);
+      void BER_decode(const std::vector<uint8_t>& ber, Format format);
 
       /**
       * Decode a PEM encoded group into this instance.
