@@ -215,6 +215,8 @@ class DL_Named_Group_Tests final : public Test
             // 8192 bit ~~ 2**202 strength
             result.confirm("Plausible strength", strength >= 80 && strength < 210);
 
+            result.confirm("Expected source", group.source() == Botan::DL_Group_Source::Builtin);
+
             if(name.find("modp/srp/") == std::string::npos)
                {
                result.test_ne("DL_Group q is set", group.get_q(), 0);
@@ -224,9 +226,9 @@ class DL_Named_Group_Tests final : public Test
                result.test_eq("DL_Group q is not set for SRP groups", group.get_q(), 0);
                }
 
-            if(group.p_bits() < 2048 || Test::run_long_tests())
+            if(group.p_bits() <= 1536 || Test::run_long_tests())
                {
-               result.test_eq(name + " verifies", group.verify_group(Test::rng(), false), true);
+               result.test_eq(name + " strong verifies", group.verify_group(Test::rng(), true), true);
                }
 
             }

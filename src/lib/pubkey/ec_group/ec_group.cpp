@@ -32,7 +32,8 @@ class EC_Group_Data final
                     const BigInt& g_y,
                     const BigInt& order,
                     const BigInt& cofactor,
-                    const OID& oid) :
+                    const OID& oid,
+                    EC_Group_Source source) :
          m_curve(p, a, b),
          m_base_point(m_curve, g_x, g_y),
          m_g_x(g_x),
@@ -45,7 +46,8 @@ class EC_Group_Data final
          m_p_bits(p.bits()),
          m_order_bits(order.bits()),
          m_a_is_minus_3(a == p - 3),
-         m_a_is_zero(a.is_zero())
+         m_a_is_zero(a.is_zero()),
+         m_source(source)
          {
          }
 
@@ -118,6 +120,8 @@ class EC_Group_Data final
          return m_base_mult.mul(k, rng, m_order, ws);
          }
 
+      EC_Group_Source source() const { return m_source; }
+
    private:
       CurveGFp m_curve;
       PointGFp m_base_point;
@@ -133,6 +137,7 @@ class EC_Group_Data final
       size_t m_order_bits;
       bool m_a_is_minus_3;
       bool m_a_is_zero;
+      EC_Group_Source m_source;
    };
 
 class EC_Group_Data_Map final
@@ -178,7 +183,8 @@ class EC_Group_Data_Map final
                                                       const BigInt& g_y,
                                                       const BigInt& order,
                                                       const BigInt& cofactor,
-                                                      const OID& oid)
+                                                      const OID& oid,
+                                                      EC_Group_Source source)
          {
          lock_guard_type<mutex_type> lock(m_mutex);
 
@@ -235,7 +241,7 @@ class EC_Group_Data_Map final
 
          // Not found or no OID, add data and return
          std::shared_ptr<EC_Group_Data> d =
-            std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid);
+            std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, source);
 
          m_registered_curves.push_back(d);
          return d;
@@ -283,11 +289,12 @@ EC_Group::load_EC_group_info(const char* p_str,
    const BigInt order(order_str);
    const BigInt cofactor(1); // implicit
 
-   return std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid);
+   return std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, EC_Group_Source::Builtin);
    }
 
 //static
-std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[], size_t len)
+std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[], size_t len,
+                                                             EC_Group_Source source)
    {
    BER_Decoder ber(bits, len);
    BER_Object obj = ber.get_next_object();
@@ -344,7 +351,8 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
 
       std::pair<BigInt, BigInt> base_xy = Botan::OS2ECP(base_pt.data(), base_pt.size(), p, a, b);
 
-      return ec_group_data().lookup_or_create(p, a, b, base_xy.first, base_xy.second, order, cofactor, OID());
+      return ec_group_data().lookup_or_create(p, a, b, base_xy.first, base_xy.second,
+                                              order, cofactor, OID(), source);
       }
    else
       {
@@ -389,12 +397,19 @@ EC_Group::EC_Group(const std::string& str)
          {
          // OK try it as PEM ...
          secure_vector<uint8_t> ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
-         this->m_data = BER_decode_EC_group(ber.data(), ber.size());
+         this->m_data = BER_decode_EC_group(ber.data(), ber.size(), EC_Group_Source::ExternalSource);
          }
       }
 
    if(m_data == nullptr)
       throw Invalid_Argument("Unknown ECC group '" + str + "'");
+   }
+
+//static
+EC_Group EC_Group::EC_Group_from_PEM(const std::string& pem)
+   {
+   const auto ber = PEM_Code::decode_check_label(pem, "EC PARAMETERS");
+   return EC_Group(ber.data(), ber.size());
    }
 
 //static
@@ -420,12 +435,13 @@ EC_Group::EC_Group(const BigInt& p,
                    const BigInt& cofactor,
                    const OID& oid)
    {
-   m_data = ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid);
+   m_data = ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid,
+                                             EC_Group_Source::ExternalSource);
    }
 
-EC_Group::EC_Group(const std::vector<uint8_t>& ber)
+EC_Group::EC_Group(const uint8_t ber[], size_t ber_len)
    {
-   m_data = BER_decode_EC_group(ber.data(), ber.size());
+   m_data = BER_decode_EC_group(ber, ber_len, EC_Group_Source::ExternalSource);
    }
 
 const EC_Group_Data& EC_Group::data() const
@@ -538,6 +554,11 @@ BigInt EC_Group::inverse_mod_order(const BigInt& x) const
 const OID& EC_Group::get_curve_oid() const
    {
    return data().oid();
+   }
+
+EC_Group_Source EC_Group::source() const
+   {
+   return data().source();
    }
 
 size_t EC_Group::point_size(PointGFp::Compression_Type format) const
@@ -701,29 +722,37 @@ bool EC_Group::verify_public_element(const PointGFp& point) const
    }
 
 bool EC_Group::verify_group(RandomNumberGenerator& rng,
-                            bool) const
+                            bool strong) const
    {
+   const bool is_builtin = source() == EC_Group_Source::Builtin;
+
+   if(is_builtin && !strong)
+      return true;
+
    const BigInt& p = get_p();
    const BigInt& a = get_a();
    const BigInt& b = get_b();
    const BigInt& order = get_order();
    const PointGFp& base_point = get_base_point();
 
+   if(p <= 3 || order <= 0)
+      return false;
    if(a < 0 || a >= p)
       return false;
    if(b <= 0 || b >= p)
       return false;
-   if(order <= 0)
-      return false;
+
+   const size_t test_prob = 128;
+   const bool is_randomly_generated = is_builtin;
 
    //check if field modulus is prime
-   if(!is_prime(p, rng, 128))
+   if(!is_prime(p, rng, test_prob, is_randomly_generated))
       {
       return false;
       }
 
    //check if order is prime
-   if(!is_prime(order, rng, 128))
+   if(!is_prime(order, rng, test_prob, is_randomly_generated))
       {
       return false;
       }

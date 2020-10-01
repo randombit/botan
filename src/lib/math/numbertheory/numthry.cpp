@@ -236,7 +236,10 @@ bool is_prime(const BigInt& n,
       if(is_miller_rabin_probable_prime(n, mod_n, rng, t) == false)
          return false;
 
-      return is_lucas_probable_prime(n, mod_n);
+      if(is_random)
+         return true;
+      else
+         return is_lucas_probable_prime(n, mod_n);
       }
    else
       {
