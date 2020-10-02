@@ -543,6 +543,8 @@ void test_pbe_roundtrip(Test::Result& result,
                         const std::string& pbe_algo,
                         const std::string& passphrase)
    {
+   const auto pkcs8 = key.private_key_info();
+
    try
       {
       Botan::DataSource_Memory data_src(
@@ -555,11 +557,7 @@ void test_pbe_roundtrip(Test::Result& result,
 
       result.confirm("recovered private key from encrypted blob", loaded.get() != nullptr);
       result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-      try
-         {
-         result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
-         }
-      catch(Botan::Lookup_Error&) {}
+      result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
       }
    catch(std::exception& e)
       {
@@ -578,12 +576,7 @@ void test_pbe_roundtrip(Test::Result& result,
 
       result.confirm("recovered private key from BER blob", loaded.get() != nullptr);
       result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-
-      try
-         {
-         result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
-         }
-      catch(Botan::Lookup_Error&) {}
+      result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
       }
    catch(std::exception& e)
       {
@@ -651,17 +644,13 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
          // Test DER public key round trips OK
          try
             {
-            Botan::DataSource_Memory data_src(Botan::X509::BER_encode(key));
+            const auto ber = key.subject_public_key();
+            Botan::DataSource_Memory data_src(ber);
             std::unique_ptr<Botan::Public_Key> loaded(Botan::X509::load_key(data_src));
 
             result.confirm("recovered public key from private", loaded.get() != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
-
-            try
-               {
-               result.confirm("public key passes self tests", loaded->check_key(Test::rng(), true));
-               }
-            catch(Botan::Lookup_Error&) {}
+            result.test_eq("public key has same encoding", loaded->subject_public_key(), ber);
             }
          catch(std::exception& e)
             {
@@ -671,18 +660,14 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
          // Test PEM private key round trips OK
          try
             {
-            Botan::DataSource_Memory data_src(Botan::PKCS8::PEM_encode(key));
+            const auto ber = key.private_key_info();
+            Botan::DataSource_Memory data_src(ber);
             std::unique_ptr<Botan::Private_Key> loaded(
                Botan::PKCS8::load_key(data_src, Test::rng()));
 
             result.confirm("recovered private key from PEM blob", loaded.get() != nullptr);
             result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-
-            try
-               {
-               result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
-               }
-            catch(Botan::Lookup_Error&) {}
+            result.test_eq("reloaded key has same encoding", loaded->private_key_info(), ber);
             }
          catch(std::exception& e)
             {
@@ -696,11 +681,6 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
             result.confirm("recovered public key from private", loaded.get() != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
-            try
-               {
-               result.confirm("private key passes self tests", loaded->check_key(Test::rng(), true));
-               }
-            catch(Botan::Lookup_Error&) {}
             }
          catch(std::exception& e)
             {
