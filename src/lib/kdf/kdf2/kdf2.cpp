@@ -31,6 +31,7 @@ size_t KDF2::kdf(uint8_t key[], size_t key_len,
       offset += added;
       }
 
+   // FIXME: returns truncated output
    return offset;
    }
 

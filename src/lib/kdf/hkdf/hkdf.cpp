@@ -44,6 +44,7 @@ size_t HKDF_Extract::kdf(uint8_t key[], size_t key_len,
 
    const size_t written = std::min(prk.size(), key_len);
    copy_mem(&key[0], prk.data(), written);
+   // FIXME: returns truncated output
    return written;
    }
 
@@ -71,6 +72,7 @@ size_t HKDF_Expand::kdf(uint8_t key[], size_t key_len,
       offset += written;
       }
 
+   // FIXME: returns truncated output
    return offset;
    }
 
