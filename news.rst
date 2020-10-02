@@ -10,6 +10,12 @@ Version 2.16.0, Not Yet Released
   objects; for performance reasons it is always preferable to use
   a RNG per thread if a userspace RNG is needed. (GH #2399)
 
+* DL_Group and EC_Group objects now track if they were created from a
+  known trusted group (such as P-256 or an IPsec DH parameter).  If
+  so, then verification tests can be relaxed, as compared to
+  parameters which may have been maliciously constructed in order to
+  pass primality checks. (GH #2409)
+
 * RandomNumberGenerator::add_entropy_T assumed its input was a POD
   type but did not verify this. (GH #2403)
 
