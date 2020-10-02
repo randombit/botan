@@ -26,6 +26,7 @@ size_t KDF1::kdf(uint8_t key[], size_t key_len,
       }
 
    m_hash->final(key);
+   // FIXME: returns truncated output
    return m_hash->output_length();
    }
 

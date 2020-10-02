@@ -22,9 +22,7 @@ size_t SP800_56C::kdf(uint8_t key[], size_t key_len,
    m_prf->final(k_dk);
 
    // Key Expansion
-   m_exp->kdf(key, key_len, k_dk.data(), k_dk.size(), nullptr, 0, label, label_len);
-
-   return key_len;
+   return m_exp->kdf(key, key_len, k_dk.data(), k_dk.size(), nullptr, 0, label, label_len);
    }
 
 }

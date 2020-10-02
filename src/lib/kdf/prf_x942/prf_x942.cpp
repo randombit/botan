@@ -80,6 +80,7 @@ size_t X942_PRF::kdf(uint8_t key[], size_t key_len,
       ++counter;
       }
 
+   // FIXME: returns truncated output
    return offset;
    }
 
