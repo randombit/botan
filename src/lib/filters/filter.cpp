@@ -7,6 +7,7 @@
 
 #include <botan/filter.h>
 #include <botan/exceptn.h>
+#include <memory>
 
 namespace Botan {
 
@@ -70,11 +71,11 @@ void Filter::finish_msg()
 /*
 * Attach a filter to the current port
 */
-void Filter::attach(Filter* new_filter)
+void Filter::attach(std::shared_ptr<Filter>  new_filter)
    {
    if(new_filter)
       {
-      Filter* last = this;
+      std::shared_ptr<Filter>  last = this;
       while(last->get_next())
          last = last->get_next();
       last->m_next[last->current_port()] = new_filter;
@@ -94,7 +95,7 @@ void Filter::set_port(size_t new_port)
 /*
 * Return the next Filter in the logical chain
 */
-Filter* Filter::get_next() const
+std::shared_ptr<Filter>  Filter::get_next() const
    {
    if(m_port_num < m_next.size())
       return m_next[m_port_num];
@@ -104,7 +105,7 @@ Filter* Filter::get_next() const
 /*
 * Set the next Filters
 */
-void Filter::set_next(Filter* filters[], size_t size)
+void Filter::set_next(std::shared_ptr<Filter>  filters[], size_t size)
    {
    m_next.clear();
 
