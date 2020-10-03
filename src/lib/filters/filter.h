@@ -12,6 +12,7 @@
 #include <botan/secmem.h>
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace Botan {
 
