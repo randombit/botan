@@ -13,6 +13,7 @@
 #include <botan/exceptn.h>
 #include <initializer_list>
 #include <iosfwd>
+#include <memory>
 
 namespace Botan {
 
@@ -309,7 +310,7 @@ class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
       * only modification of the pipe at initialization (before use)
       * rather than after messages have been processed.
       */
-      void append_filter(Filter* filt);
+      void append_filter(std::shared_ptr<Filter> filt);
 
       /**
       * Prepend a new filter onto the filter sequence. This may only be
@@ -320,35 +321,35 @@ class BOTAN_PUBLIC_API(2,0) Pipe final : public DataSource
       * only modification of the pipe at initialization (before use)
       * rather than after messages have been processed.
       */
-      void prepend_filter(Filter* filt);
+      void prepend_filter(std::shared_ptr<Filter>  filt);
 
       /**
       * Construct a Pipe of up to four filters. The filters are set up
       * in the same order as the arguments.
       */
-      Pipe(Filter* = nullptr, Filter* = nullptr,
-           Filter* = nullptr, Filter* = nullptr);
+      Pipe(std::shared_ptr<Filter>  = nullptr, std::shared_ptr<Filter>  = nullptr,
+           std::shared_ptr<Filter>  = nullptr, std::shared_ptr<Filter>  = nullptr);
 
       /**
       * Construct a Pipe from a list of filters
       * @param filters the set of filters to use
       */
-      explicit Pipe(std::initializer_list<Filter*> filters);
+      explicit Pipe(std::initializer_list<std::shared_ptr<Filter> > filters);
 
       Pipe(const Pipe&) = delete;
       Pipe& operator=(const Pipe&) = delete;
 
       ~Pipe();
    private:
-      void destruct(Filter*);
-      void do_append(Filter* filt);
-      void do_prepend(Filter* filt);
-      void find_endpoints(Filter*);
-      void clear_endpoints(Filter*);
+      void destruct(std::shared_ptr<Filter> );
+      void do_append(std::shared_ptr<Filter>  filt);
+      void do_prepend(std::shared_ptr<Filter>  filt);
+      void find_endpoints(std::shared_ptr<Filter> );
+      void clear_endpoints(std::shared_ptr<Filter> );
 
       message_id get_message_no(const std::string&, message_id) const;
 
-      Filter* m_pipe;
+      std::shared_ptr<Filter>  m_pipe;
       std::unique_ptr<Output_Buffers> m_outputs;
       message_id m_default_read;
       bool m_inside_msg;
