@@ -121,17 +121,17 @@ class BOTAN_PUBLIC_API(2,0) Filter
       * Attach another filter to this one
       * @param f filter to attach
       */
-      void attach(Filter* f);
+      void attach(std::shared_ptr<Filter>  f);
 
       /**
       * @param filters the filters to set
       * @param count number of items in filters
       */
-      void set_next(Filter* filters[], size_t count);
-      Filter* get_next() const;
+      void set_next(std::shared_ptr<Filter>  filters[], size_t count);
+      std::shared_ptr<Filter>  get_next() const;
 
       secure_vector<uint8_t> m_write_queue;
-      std::vector<Filter*> m_next; // not owned
+      std::vector<std::shared_ptr<Filter> > m_next; // not owned
       size_t m_port_num, m_filter_owns;
 
       // true if filter belongs to a pipe --> prohibit filter sharing!
@@ -151,9 +151,9 @@ class BOTAN_PUBLIC_API(2,0) Fanout_Filter : public Filter
 
       void set_port(size_t n) { Filter::set_port(n); }
 
-      void set_next(Filter* f[], size_t n) { Filter::set_next(f, n); }
+      void set_next(std::shared_ptr<Filter>  f[], size_t n) { Filter::set_next(f, n); }
 
-      void attach(Filter* f) { Filter::attach(f); }
+      void attach(std::shared_ptr<Filter>  f) { Filter::attach(f); }
 
    private:
       friend class Threaded_Fork;
