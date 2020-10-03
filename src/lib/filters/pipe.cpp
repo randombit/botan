@@ -8,6 +8,7 @@
 #include <botan/pipe.h>
 #include <botan/internal/out_buf.h>
 #include <botan/secqueue.h>
+#include <memory>
 
 namespace Botan {
 
@@ -30,7 +31,7 @@ class Null_Filter final : public Filter
 /*
 * Pipe Constructor
 */
-Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4) :
+Pipe::Pipe(std::shared_ptr<Filter>  f1, std::shared_ptr<Filter>  f2, std::shared_ptr<Filter>  f3, std::shared_ptr<Filter>  f4) :
    Pipe({f1,f2,f3,f4})
    {
    }
@@ -38,7 +39,7 @@ Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4) :
 /*
 * Pipe Constructor
 */
-Pipe::Pipe(std::initializer_list<Filter*> args)
+Pipe::Pipe(std::initializer_list<std::shared_ptr<Filter> > args)
    {
    m_outputs.reset(new Output_Buffers);
    m_pipe = nullptr;
@@ -70,13 +71,9 @@ void Pipe::reset()
 /*
 * Destroy the Pipe
 */
-void Pipe::destruct(Filter* to_kill)
+void Pipe::destruct(std::shared_ptr<Filter>  to_kill)
    {
-   if(!to_kill || dynamic_cast<SecureQueue*>(to_kill))
-      return;
-   for(size_t j = 0; j != to_kill->total_ports(); ++j)
-      destruct(to_kill->m_next[j]);
-   delete to_kill;
+      //unecessary now
    }
 
 /*
@@ -161,7 +158,7 @@ void Pipe::end_msg()
       throw Invalid_State("Pipe::end_msg: Message was already ended");
    m_pipe->finish_msg();
    clear_endpoints(m_pipe);
-   if(dynamic_cast<Null_Filter*>(m_pipe))
+   if(dynamic_cast<std::shared_ptr<Null_Filter> >(m_pipe))
       {
       delete m_pipe;
       m_pipe = nullptr;
@@ -174,7 +171,7 @@ void Pipe::end_msg()
 /*
 * Find the endpoints of the Pipe
 */
-void Pipe::find_endpoints(Filter* f)
+void Pipe::find_endpoints(std::shared_ptr<Filter>  f)
    {
    for(size_t j = 0; j != f->total_ports(); ++j)
       if(f->m_next[j] && !dynamic_cast<SecureQueue*>(f->m_next[j]))
@@ -190,7 +187,7 @@ void Pipe::find_endpoints(Filter* f)
 /*
 * Remove the SecureQueues attached to the Filter
 */
-void Pipe::clear_endpoints(Filter* f)
+void Pipe::clear_endpoints(std::shared_ptr<Filter>  f)
    {
    if(!f) return;
    for(size_t j = 0; j != f->total_ports(); ++j)
@@ -201,12 +198,12 @@ void Pipe::clear_endpoints(Filter* f)
       }
    }
 
-void Pipe::append(Filter* filter)
+void Pipe::append(std::shared_ptr<Filter>  filter)
    {
    do_append(filter);
    }
 
-void Pipe::append_filter(Filter* filter)
+void Pipe::append_filter(std::shared_ptr<Filter>  filter)
    {
    if(m_outputs->message_count() != 0)
       throw Invalid_State("Cannot call Pipe::append_filter after start_msg");
@@ -214,12 +211,12 @@ void Pipe::append_filter(Filter* filter)
    do_append(filter);
    }
 
-void Pipe::prepend(Filter* filter)
+void Pipe::prepend(std::shared_ptr<Filter>  filter)
    {
    do_prepend(filter);
    }
 
-void Pipe::prepend_filter(Filter* filter)
+void Pipe::prepend_filter(std::shared_ptr<Filter>  filter)
    {
    if(m_outputs->message_count() != 0)
       throw Invalid_State("Cannot call Pipe::prepend_filter after start_msg");
@@ -230,7 +227,7 @@ void Pipe::prepend_filter(Filter* filter)
 /*
 * Append a Filter to the Pipe
 */
-void Pipe::do_append(Filter* filter)
+void Pipe::do_append(std::shared_ptr<Filter>  filter)
    {
    if(!filter)
       return;
@@ -251,7 +248,7 @@ void Pipe::do_append(Filter* filter)
 /*
 * Prepend a Filter to the Pipe
 */
-void Pipe::do_prepend(Filter* filter)
+void Pipe::do_prepend(std::shared_ptr<Filter>  filter)
    {
    if(m_inside_msg)
       throw Invalid_State("Cannot prepend to a Pipe while it is processing");
