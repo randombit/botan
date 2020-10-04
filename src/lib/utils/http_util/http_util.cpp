@@ -135,7 +135,7 @@ Response http_sync(http_exch_fn http_transact,
    if(port_sep == std::string::npos)
       {
       service = "http";
-      hostname = hostname;
+      // hostname not modified
       }
    else
       {
