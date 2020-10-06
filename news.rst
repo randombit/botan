@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.16.0, Not Yet Released
+Version 2.16.0, 2020-10-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Now userspace PRNG objects (such as AutoSeeded_RNG and HMAC_DRBG)
