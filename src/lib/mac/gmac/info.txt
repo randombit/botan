@@ -3,6 +3,6 @@ GMAC -> 20160207
 </defines>
 
 <requires>
-gcm
+ghash
 block
 </requires>

@@ -51,8 +51,8 @@ prf_tls
 newhope
 ed25519
 
-clmul_cpu
-clmul_ssse3
+ghash_cpu
+ghash_vperm
 
 locking_allocator
 http_util # needed by x509 for OCSP online checks
