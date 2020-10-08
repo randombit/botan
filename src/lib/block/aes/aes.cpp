@@ -627,18 +627,26 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       }
    }
 
-inline constexpr uint8_t xtime(uint8_t s) { return static_cast<uint8_t>(s << 1) ^ ((s >> 7) * 0x1B); }
-
-inline uint32_t InvMixColumn(uint8_t s1)
+inline uint32_t xtime32(uint32_t s)
    {
-   const uint8_t s2 = xtime(s1);
-   const uint8_t s4 = xtime(s2);
-   const uint8_t s8 = xtime(s4);
-   const uint8_t s9 = s8 ^ s1;
-   const uint8_t s11 = s9 ^ s2;
-   const uint8_t s13 = s9 ^ s4;
-   const uint8_t s14 = s8 ^ s4 ^ s2;
-   return make_uint32(s14, s9, s13, s11);
+   const uint32_t lo_bit = 0x01010101;
+   const uint32_t mask = 0x7F7F7F7F;
+   const uint32_t poly = 0x1B;
+
+   return ((s & mask) << 1) ^ (((s >> 7) & lo_bit) * poly);
+   }
+
+inline uint32_t InvMixColumn(uint32_t s1)
+   {
+   const uint32_t s2 = xtime32(s1);
+   const uint32_t s4 = xtime32(s2);
+   const uint32_t s8 = xtime32(s4);
+   const uint32_t s9 = s8 ^ s1;
+   const uint32_t s11 = s9 ^ s2;
+   const uint32_t s13 = s9 ^ s4;
+   const uint32_t s14 = s8 ^ s4 ^ s2;
+
+   return s14 ^ rotr<8>(s9) ^ rotr<16>(s13) ^ rotr<24>(s11);
    }
 
 uint32_t SE_word(uint32_t x)
@@ -705,15 +713,7 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    for(size_t i = 4; i != 4*rounds; ++i)
       {
       const uint32_t K = EK[4*rounds - 4*(i/4) + (i%4)];
-      const uint8_t s0 = get_byte(0, K);
-      const uint8_t s1 = get_byte(1, K);
-      const uint8_t s2 = get_byte(2, K);
-      const uint8_t s3 = get_byte(3, K);
-
-      DK[i] = InvMixColumn(s0) ^
-         rotr<8>(InvMixColumn(s1)) ^
-         rotr<16>(InvMixColumn(s2)) ^
-         rotr<24>(InvMixColumn(s3));
+      DK[i] = InvMixColumn(K);
       }
 
    DK[4*rounds  ] = EK[0];
