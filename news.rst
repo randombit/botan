@@ -4,6 +4,12 @@ Release Notes
 Version 2.17.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Small optimization in the non-hardware assisted AES key generation
+  code path (GH #2417)
+
+* Move the GHASH code to a new module in utils, making it possible
+  to build GMAC support without requiring GCM (GH #2416)
+
 Version 2.16.0, 2020-10-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
