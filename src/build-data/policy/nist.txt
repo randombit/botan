@@ -60,8 +60,8 @@ sha2_64_bmi2
 sha3_bmi2
 
 # modes
-clmul_cpu
-clmul_ssse3
+ghash_cpu
+ghash_vperm
 
 # hash
 sha2_32_x86

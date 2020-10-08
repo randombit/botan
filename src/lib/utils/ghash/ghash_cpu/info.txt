@@ -1,5 +1,5 @@
 <defines>
-GCM_CLMUL_CPU -> 20131227
+GHASH_CLMUL_CPU -> 20201002
 </defines>
 
 endian little
@@ -7,10 +7,6 @@ endian little
 <requires>
 simd
 </requires>
-
-<header:internal>
-clmul_cpu.h
-</header:internal>
 
 <isa>
 x86_32:sse2

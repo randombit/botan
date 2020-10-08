@@ -12,46 +12,38 @@
 #include <botan/cpuid.h>
 #include <botan/exceptn.h>
 
-#if defined(BOTAN_HAS_GCM_CLMUL_CPU)
-  #include <botan/internal/clmul_cpu.h>
-#endif
-
-#if defined(BOTAN_HAS_GCM_CLMUL_SSSE3)
-  #include <botan/internal/clmul_ssse3.h>
-#endif
-
 namespace Botan {
 
 std::string GHASH::provider() const
    {
-#if defined(BOTAN_HAS_GCM_CLMUL_CPU)
+#if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has_carryless_multiply())
       return "clmul";
 #endif
 
-#if defined(BOTAN_HAS_GCM_CLMUL_SSSE3)
-   if(CPUID::has_ssse3())
-      return "ssse3";
+#if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
+   if(CPUID::has_vperm())
+      return "vperm";
 #endif
 
    return "base";
    }
 
-void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
+void GHASH::ghash_multiply(secure_vector<uint8_t>& x,
                          const uint8_t input[],
                          size_t blocks)
    {
-#if defined(BOTAN_HAS_GCM_CLMUL_CPU)
+#if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has_carryless_multiply())
       {
-      return gcm_multiply_clmul(x.data(), m_H_pow.data(), input, blocks);
+      return ghash_multiply_cpu(x.data(), m_H_pow.data(), input, blocks);
       }
 #endif
 
-#if defined(BOTAN_HAS_GCM_CLMUL_SSSE3)
-   if(CPUID::has_ssse3())
+#if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
+   if(CPUID::has_vperm())
       {
-      return gcm_multiply_ssse3(x.data(), m_HM.data(), input, blocks);
+      return ghash_multiply_vperm(x.data(), m_HM.data(), input, blocks);
       }
 #endif
 
@@ -108,14 +100,14 @@ void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
 
    if(full_blocks > 0)
       {
-      gcm_multiply(ghash, input, full_blocks);
+      ghash_multiply(ghash, input, full_blocks);
       }
 
    if(final_bytes)
       {
       uint8_t last_block[GCM_BS] = { 0 };
       copy_mem(last_block, input + full_blocks * GCM_BS, final_bytes);
-      gcm_multiply(ghash, last_block, 1);
+      ghash_multiply(ghash, last_block, 1);
       secure_scrub_memory(last_block, final_bytes);
       }
    }
@@ -153,11 +145,11 @@ void GHASH::key_schedule(const uint8_t key[], size_t length)
          }
       }
 
-#if defined(BOTAN_HAS_GCM_CLMUL_CPU)
+#if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has_carryless_multiply())
       {
       m_H_pow.resize(8);
-      gcm_clmul_precompute(m_H.data(), m_H_pow.data());
+      ghash_precompute_cpu(m_H.data(), m_H_pow.data());
       }
 #endif
    }
