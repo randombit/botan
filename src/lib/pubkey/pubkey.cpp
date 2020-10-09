@@ -223,6 +223,12 @@ SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
    return m_op->agree(key_len, in, in_len, salt, salt_len);
    }
 
+static void check_der_format_supported(Signature_Format format, size_t parts)
+   {
+      if(format != IEEE_1363 && parts == 1)
+         throw Invalid_Argument("PK: This algorithm does not support DER encoding");
+   }
+
 PK_Signer::PK_Signer(const Private_Key& key,
                      RandomNumberGenerator& rng,
                      const std::string& emsa,
@@ -235,6 +241,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
    m_sig_format = format;
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
+   check_der_format_supported(format, m_parts);
    }
 
 PK_Signer::~PK_Signer() { /* for unique_ptr */ }
@@ -310,14 +317,14 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
    m_sig_format = format;
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
+   check_der_format_supported(format, m_parts);
    }
 
 PK_Verifier::~PK_Verifier() { /* for unique_ptr */ }
 
 void PK_Verifier::set_input_format(Signature_Format format)
    {
-   if(format != IEEE_1363 && m_parts == 1)
-      throw Invalid_Argument("PK_Verifier: This algorithm does not support DER encoding");
+   check_der_format_supported(format, m_parts);
    m_sig_format = format;
    }
 

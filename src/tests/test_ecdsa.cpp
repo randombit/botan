@@ -12,6 +12,7 @@
 #if defined(BOTAN_HAS_ECDSA)
    #include "test_pubkey.h"
    #include <botan/ecdsa.h>
+   #include <botan/pk_algs.h>
 #endif
 
 namespace Botan_Tests {
@@ -138,6 +139,18 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
 #endif
    };
 
+class ECDSA_Sign_Verify_DER_Test final : public PK_Sign_Verify_DER_Test
+   {
+   public:
+      ECDSA_Sign_Verify_DER_Test() :
+         PK_Sign_Verify_DER_Test("ECDSA", "EMSA1(SHA-512)") {}
+
+      std::unique_ptr<Botan::Private_Key> key() const override
+         {
+         return Botan::create_private_key( "ECDSA",  Test::rng(), "secp256r1" );
+         }
+   };
+
 class ECDSA_Keygen_Tests final : public PK_Key_Generation_Test
    {
    public:
@@ -245,6 +258,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
 BOTAN_REGISTER_TEST("ecdsa_verify", ECDSA_Verification_Tests);
 BOTAN_REGISTER_TEST("ecdsa_verify_wycheproof", ECDSA_Wycheproof_Verification_Tests);
 BOTAN_REGISTER_TEST("ecdsa_sign", ECDSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("ecdsa_sign_verify_der", ECDSA_Sign_Verify_DER_Test);
 BOTAN_REGISTER_TEST("ecdsa_keygen", ECDSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("ecdsa_invalid", ECDSA_Invalid_Key_Tests);
 
