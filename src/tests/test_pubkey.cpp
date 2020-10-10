@@ -278,6 +278,63 @@ PK_Signature_NonVerification_Test::run_one_test(const std::string& pad_hdr, cons
    return result;
    }
 
+std::vector<Test::Result>
+PK_Sign_Verify_DER_Test::run()
+   {
+   const std::vector<uint8_t> message = {'f', 'o', 'o', 'b', 'a', 'r'};
+   const std::string padding = m_padding;
+
+   std::unique_ptr<Botan::Private_Key> privkey = key();
+
+   Test::Result result(algo_name() + "/" + padding + " signature sign/verify using DER format");
+
+   for(auto const& provider : possible_providers(algo_name()))
+      {
+      std::unique_ptr<Botan::PK_Signer> signer;
+      std::unique_ptr<Botan::PK_Verifier> verifier;
+
+      try
+         {
+         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::DER_SEQUENCE, provider));
+         verifier.reset(new Botan::PK_Verifier(*privkey, padding, Botan::DER_SEQUENCE, provider));
+         }
+      catch(Botan::Lookup_Error& e)
+         {
+         result.test_note("Skipping sign/verify with " + provider, e.what());
+         }
+
+      if(signer && verifier)
+         {
+         try
+            {
+            std::vector<uint8_t> generated_signature = signer->sign_message(message, Test::rng());
+            const bool verified = verifier->verify_message(message, generated_signature);
+
+            result.test_eq("correct signature valid with " + provider, verified, true);
+
+            if(test_random_invalid_sigs())
+               {
+               check_invalid_signatures(result, *verifier, message, generated_signature);
+               }
+            }
+         catch(std::exception& e)
+            {
+            result.test_failure("verification threw exception", e.what());
+            }
+         }
+      }
+
+   return {result};
+   }
+
+std::vector<std::string> PK_Sign_Verify_DER_Test::possible_providers(
+   const std::string& algo)
+   {
+   std::vector<std::string> pk_provider =
+      Botan::probe_provider_private_key(algo, { "base", "commoncrypto", "openssl", "tpm" });
+   return Test::provider_filter(pk_provider);
+   }
+
 Test::Result
 PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars)
    {

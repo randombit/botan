@@ -104,6 +104,32 @@ class PK_Signature_NonVerification_Test : public PK_Test
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
    };
 
+class PK_Sign_Verify_DER_Test : public Test
+   {
+   public:
+      PK_Sign_Verify_DER_Test(const std::string& algo,
+                              const std::string& padding)
+         : m_algo(algo), m_padding(padding) {}
+
+      std::string algo_name() const
+         {
+         return m_algo;
+         }
+
+   protected:
+      std::vector<Test::Result> run() override final;
+
+      virtual std::unique_ptr<Botan::Private_Key> key() const = 0;
+
+      virtual bool test_random_invalid_sigs() const { return true; }
+
+      std::vector<std::string> possible_providers(const std::string& params) override;
+
+   private:
+      std::string m_algo;
+      std::string m_padding;
+   };
+
 class PK_Encryption_Decryption_Test : public PK_Test
    {
    public:
