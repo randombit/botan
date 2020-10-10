@@ -649,6 +649,14 @@ inline uint32_t InvMixColumn(uint32_t s1)
    return s14 ^ rotr<8>(s9) ^ rotr<16>(s13) ^ rotr<24>(s11);
    }
 
+void InvMixColumn_x4(uint32_t x[4])
+   {
+   x[0] = InvMixColumn(x[0]);
+   x[1] = InvMixColumn(x[1]);
+   x[2] = InvMixColumn(x[2]);
+   x[3] = InvMixColumn(x[3]);
+   }
+
 uint32_t SE_word(uint32_t x)
    {
    uint32_t I[8] = { 0 };
@@ -682,6 +690,9 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    const size_t rounds = (length / 4) + 6;
 
+   // Help the optimizer
+   BOTAN_ASSERT_NOMSG(rounds == 10 || rounds == 12 || rounds == 14);
+
    CT::poison(key, length);
 
    EK.resize(length + 28);
@@ -705,21 +716,18 @@ void aes_key_schedule(const uint8_t key[], size_t length,
          }
       }
 
-   DK[0] = EK[4*rounds  ];
-   DK[1] = EK[4*rounds+1];
-   DK[2] = EK[4*rounds+2];
-   DK[3] = EK[4*rounds+3];
-
-   for(size_t i = 4; i != 4*rounds; ++i)
+   for(size_t i = 0; i != 4*(rounds+1); i += 4)
       {
-      const uint32_t K = EK[4*rounds - 4*(i/4) + (i%4)];
-      DK[i] = InvMixColumn(K);
+      DK[i  ] = EK[4*rounds - i  ];
+      DK[i+1] = EK[4*rounds - i+1];
+      DK[i+2] = EK[4*rounds - i+2];
+      DK[i+3] = EK[4*rounds - i+3];
       }
 
-   DK[4*rounds  ] = EK[0];
-   DK[4*rounds+1] = EK[1];
-   DK[4*rounds+2] = EK[2];
-   DK[4*rounds+3] = EK[3];
+   for(size_t i = 4; i != 4*rounds; i += 4)
+      {
+      InvMixColumn_x4(&DK[i]);
+      }
 
    if(bswap_keys)
       {
