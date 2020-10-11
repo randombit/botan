@@ -97,7 +97,7 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 # BoGo shim
 %{out_dir}/botan_bogo_shim: %{bogo_shim_src} $(LIBRARIES)
-	$(CXX) $(BUILD_FLAGS) %{include_paths} %{bogo_shim_src} $(EXE_LINKS_TO) $(LDFLAGS) %{output_to_exe}$@
+	$(CXX) $(BUILD_FLAGS) %{include_paths} %{bogo_shim_src} $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
 
 %{endif}
 
