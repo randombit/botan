@@ -5,6 +5,7 @@ family arm
 
 <aliases>
 aarch64
+aarch64_be
 armv8
 armv8-a
 </aliases>
