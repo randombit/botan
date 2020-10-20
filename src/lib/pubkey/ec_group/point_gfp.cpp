@@ -427,6 +427,12 @@ void PointGFp::force_all_affine(std::vector<PointGFp>& points,
       return;
       }
 
+   for(size_t i = 0; i != points.size(); ++i)
+      {
+      if(points[i].is_zero())
+         throw Invalid_State("Cannot convert zero ECC point to affine");
+      }
+
    /*
    For >= 2 points use Montgomery's trick
 

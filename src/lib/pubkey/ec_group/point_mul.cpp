@@ -9,6 +9,7 @@
 #include <botan/reducer.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
+#include <iostream>
 
 namespace Botan {
 
@@ -375,7 +376,19 @@ PointGFp_Multi_Point_Precompute::PointGFp_Multi_Point_Precompute(const PointGFp&
    m_M.push_back(y3.plus(x2, ws));
    m_M.push_back(y3.plus(x3, ws));
 
-   PointGFp::force_all_affine(m_M, ws[0].get_word_vector());
+   bool no_infinity = true;
+   for(auto& pt : m_M)
+      {
+      if(pt.is_zero())
+         no_infinity = false;
+      }
+
+   if(no_infinity)
+      {
+      PointGFp::force_all_affine(m_M, ws[0].get_word_vector());
+      }
+
+   m_no_infinity = no_infinity;
    }
 
 PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
@@ -402,7 +415,10 @@ PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
       // This function is not intended to be const time
       if(z12)
          {
-         H.add_affine(m_M[z12-1], ws);
+         if(m_no_infinity)
+            H.add_affine(m_M[z12-1], ws);
+         else
+            H.add(m_M[z12-1], ws);
          }
       }
 

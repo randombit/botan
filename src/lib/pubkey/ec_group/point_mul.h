@@ -77,6 +77,7 @@ class PointGFp_Multi_Point_Precompute final
                          const BigInt& k2) const;
    private:
       std::vector<PointGFp> m_M;
+      bool m_no_infinity;
    };
 
 }
