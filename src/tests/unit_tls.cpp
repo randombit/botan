@@ -271,7 +271,7 @@ create_creds(Botan::RandomNumberGenerator& rng,
    std::unique_ptr<Botan::X509_Certificate> dsa_ca_cert;
 
 #if defined(BOTAN_HAS_DSA)
-   const Botan::DL_Group dsa_params("modp/ietf/2048");
+   const Botan::DL_Group dsa_params("dsa/jce/1024");
 
    dsa_ca_key.reset(new Botan::DSA_PrivateKey(rng, dsa_params));
    dsa_srv_key.reset(new Botan::DSA_PrivateKey(rng, dsa_params));
@@ -781,6 +781,11 @@ class Test_Policy final : public Botan::TLS::Text_Policy
          return 1024;
          }
 
+      size_t minimum_dsa_group_size() const override
+         {
+         return 1024;
+         }
+
       size_t minimum_signature_strength() const override
          {
          return 80;
@@ -973,11 +978,14 @@ class TLS_Unit_Tests final : public Test
          test_modern_versions("AES-128 DH", results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256");
 
 #if defined(BOTAN_HAS_DSA)
-         test_modern_versions("AES-128 DSA", results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256",
-                              { { "signature_methods", "DSA" } });
+         if(Test::run_long_tests())
+            {
+            test_modern_versions("AES-128 DSA", results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256",
+                                 { { "signature_methods", "DSA" } });
 
-         test_modern_versions("AES-128/GCM DSA", results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
-                              { { "signature_methods", "DSA" } });
+            test_modern_versions("AES-128/GCM DSA", results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
+                                 { { "signature_methods", "DSA" } });
+            }
 #endif
 
 #if defined(BOTAN_HAS_SRP6)
