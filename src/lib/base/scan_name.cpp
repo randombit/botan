@@ -32,8 +32,11 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
          }
       else if(name[i].first < level)
          {
-         output += ")," + name[i].second;
-         --paren_depth;
+         for (size_t j = name[i].first; j < level; j++) {
+            output += ")";
+            --paren_depth;
+         }
+         output += "," + name[i].second;
          }
       else
          {
@@ -58,7 +61,7 @@ SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
    }
 
 SCAN_Name::SCAN_Name(std::string algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info()
-   {
+   { 
    if(algo_spec.size() == 0)
       throw Invalid_Argument("Expected algorithm name, got empty string");
 
