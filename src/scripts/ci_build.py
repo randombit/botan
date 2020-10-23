@@ -222,6 +222,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
                 flags += ['--cpu=ppc32']
                 cc_bin = 'powerpc-linux-gnu-g++'
                 test_prefix = ['qemu-ppc', '-L', '/usr/powerpc-linux-gnu/']
+                for slow_test in ['tls', 'ffi']:
+                    test_cmd.remove(slow_test)
             elif target == 'cross-ppc64':
                 flags += ['--cpu=ppc64', '--with-endian=little']
                 cc_bin = 'powerpc64le-linux-gnu-g++'
