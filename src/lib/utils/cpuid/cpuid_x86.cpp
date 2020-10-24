@@ -124,12 +124,22 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          BMI1 = (1ULL << 3),
          AVX2 = (1ULL << 5),
          BMI2 = (1ULL << 8),
-         AVX512F = (1ULL << 16),
+         AVX512_F = (1ULL << 16),
+         AVX512_DQ = (1ULL << 17),
          RDSEED = (1ULL << 18),
          ADX = (1ULL << 19),
+         AVX512_IFMA = (1ULL << 21),
          SHA = (1ULL << 29),
+         AVX512_BW = (1ULL << 30),
+         AVX512_VL = (1ULL << 31),
+         AVX512_VBMI = (1ULL << 33),
+         AVX512_VBMI2 = (1ULL << 38),
+         AVX512_VAES = (1ULL << 41),
+         AVX512_VCLMUL = (1ULL << 42),
+         AVX512_VBITALG = (1ULL << 44),
       };
-      uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
+
+      const uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
 
       if(flags7 & x86_CPUID_7_bits::AVX2)
          features_detected |= CPUID::CPUID_AVX2_BIT;
@@ -145,8 +155,34 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
             features_detected |= CPUID::CPUID_BMI2_BIT;
          }
 
-      if(flags7 & x86_CPUID_7_bits::AVX512F)
+      if(flags7 & x86_CPUID_7_bits::AVX512_F)
+         {
          features_detected |= CPUID::CPUID_AVX512F_BIT;
+
+         if(flags7 & x86_CPUID_7_bits::AVX512_DQ)
+            features_detected |= CPUID::CPUID_AVX512DQ_BIT;
+         if(flags7 & x86_CPUID_7_bits::AVX512_BW)
+            features_detected |= CPUID::CPUID_AVX512BW_BIT;
+
+         const uint64_t ICELAKE_FLAGS =
+            x86_CPUID_7_bits::AVX512_F |
+            x86_CPUID_7_bits::AVX512_DQ |
+            x86_CPUID_7_bits::AVX512_IFMA |
+            x86_CPUID_7_bits::AVX512_BW |
+            x86_CPUID_7_bits::AVX512_VL |
+            x86_CPUID_7_bits::AVX512_VBMI |
+            x86_CPUID_7_bits::AVX512_VBMI2 |
+            x86_CPUID_7_bits::AVX512_VBITALG;
+
+         if((flags7 & ICELAKE_FLAGS) == ICELAKE_FLAGS)
+            features_detected |= CPUID::CPUID_AVX512_ICL_BIT;
+
+         if(flags7 & x86_CPUID_7_bits::AVX512_VAES)
+            features_detected |= CPUID::CPUID_AVX512_AES_BIT;
+         if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL)
+            features_detected |= CPUID::CPUID_AVX512_CLMUL_BIT;
+         }
+
       if(flags7 & x86_CPUID_7_bits::RDSEED)
          features_detected |= CPUID::CPUID_RDSEED_BIT;
       if(flags7 & x86_CPUID_7_bits::ADX)

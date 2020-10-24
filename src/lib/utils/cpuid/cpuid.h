@@ -97,25 +97,33 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
          // These values have no relation to cpuid bitfields
 
          // SIMD instruction sets
-         CPUID_SSE2_BIT    = (1ULL << 0),
-         CPUID_SSSE3_BIT   = (1ULL << 1),
-         CPUID_SSE41_BIT   = (1ULL << 2),
-         CPUID_SSE42_BIT   = (1ULL << 3),
-         CPUID_AVX2_BIT    = (1ULL << 4),
-         CPUID_AVX512F_BIT = (1ULL << 5),
+         CPUID_SSE2_BIT       = (1ULL << 0),
+         CPUID_SSSE3_BIT      = (1ULL << 1),
+         CPUID_SSE41_BIT      = (1ULL << 2),
+         CPUID_SSE42_BIT      = (1ULL << 3),
+         CPUID_AVX2_BIT       = (1ULL << 4),
+         CPUID_AVX512F_BIT    = (1ULL << 5),
 
-         // Misc useful instructions
-         CPUID_RDTSC_BIT   = (1ULL << 10),
-         CPUID_BMI2_BIT    = (1ULL << 11),
-         CPUID_ADX_BIT     = (1ULL << 12),
-         CPUID_BMI1_BIT    = (1ULL << 13),
+         CPUID_AVX512DQ_BIT   = (1ULL << 6),
+         CPUID_AVX512BW_BIT   = (1ULL << 7),
+
+         // Ice Lake profile: AVX-512 F, DQ, BW, IFMA, VBMI, VBMI2, BITALG
+         CPUID_AVX512_ICL_BIT = (1ULL << 11),
 
          // Crypto-specific ISAs
-         CPUID_AESNI_BIT   = (1ULL << 16),
-         CPUID_CLMUL_BIT   = (1ULL << 17),
-         CPUID_RDRAND_BIT  = (1ULL << 18),
-         CPUID_RDSEED_BIT  = (1ULL << 19),
-         CPUID_SHA_BIT     = (1ULL << 20),
+         CPUID_AESNI_BIT        = (1ULL << 16),
+         CPUID_CLMUL_BIT        = (1ULL << 17),
+         CPUID_RDRAND_BIT       = (1ULL << 18),
+         CPUID_RDSEED_BIT       = (1ULL << 19),
+         CPUID_SHA_BIT          = (1ULL << 20),
+         CPUID_AVX512_AES_BIT   = (1ULL << 21),
+         CPUID_AVX512_CLMUL_BIT = (1ULL << 22),
+
+         // Misc useful instructions
+         CPUID_RDTSC_BIT      = (1ULL << 48),
+         CPUID_ADX_BIT        = (1ULL << 49),
+         CPUID_BMI1_BIT       = (1ULL << 50),
+         CPUID_BMI2_BIT       = (1ULL << 51),
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
@@ -267,6 +275,36 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       */
       static bool has_avx512f()
          { return has_cpuid_bit(CPUID_AVX512F_BIT); }
+
+      /**
+      * Check if the processor supports AVX-512DQ
+      */
+      static bool has_avx512dq()
+         { return has_cpuid_bit(CPUID_AVX512DQ_BIT); }
+
+      /**
+      * Check if the processor supports AVX-512BW
+      */
+      static bool has_avx512bw()
+         { return has_cpuid_bit(CPUID_AVX512BW_BIT); }
+
+      /**
+      * Check if the processor supports AVX-512 Ice Lake profile
+      */
+      static bool has_avx512_icelake()
+         { return has_cpuid_bit(CPUID_AVX512_ICL_BIT); }
+
+      /**
+      * Check if the processor supports AVX-512 AES (VAES)
+      */
+      static bool has_avx512_aes()
+         { return has_cpuid_bit(CPUID_AVX512_AES_BIT); }
+
+      /**
+      * Check if the processor supports AVX-512 VPCLMULQDQ
+      */
+      static bool has_avx512_clmul()
+         { return has_cpuid_bit(CPUID_AVX512_CLMUL_BIT); }
 
       /**
       * Check if the processor supports BMI1

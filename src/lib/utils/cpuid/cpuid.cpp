@@ -40,6 +40,9 @@ std::string CPUID::to_string()
    CPUID_PRINT(sse42);
    CPUID_PRINT(avx2);
    CPUID_PRINT(avx512f);
+   CPUID_PRINT(avx512dq);
+   CPUID_PRINT(avx512bw);
+   CPUID_PRINT(avx512_icelake);
 
    CPUID_PRINT(rdtsc);
    CPUID_PRINT(bmi1);
@@ -51,6 +54,8 @@ std::string CPUID::to_string()
    CPUID_PRINT(rdrand);
    CPUID_PRINT(rdseed);
    CPUID_PRINT(intel_sha);
+   CPUID_PRINT(avx512_aes);
+   CPUID_PRINT(avx512_clmul);
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
@@ -164,6 +169,8 @@ CPUID::bit_from_string(const std::string& tok)
       return {Botan::CPUID::CPUID_AVX2_BIT};
    if(tok == "avx512f")
       return {Botan::CPUID::CPUID_AVX512F_BIT};
+   if(tok == "avx512_icelake")
+      return {Botan::CPUID::CPUID_AVX512_ICL_BIT};
    // there were two if statements testing "sha" and "intel_sha" separately; combined
    if(tok == "sha" || tok=="intel_sha")
       return {Botan::CPUID::CPUID_SHA_BIT};
@@ -179,6 +186,10 @@ CPUID::bit_from_string(const std::string& tok)
       return {Botan::CPUID::CPUID_RDRAND_BIT};
    if(tok == "rdseed")
       return {Botan::CPUID::CPUID_RDSEED_BIT};
+   if(tok == "avx512_aes")
+      return {Botan::CPUID::CPUID_AVX512_AES_BIT};
+   if(tok == "avx512_clmul")
+      return {Botan::CPUID::CPUID_AVX512_CLMUL_BIT};
 
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    if(tok == "altivec" || tok == "simd")
