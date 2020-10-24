@@ -159,7 +159,12 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
          {
          features_detected |= CPUID::CPUID_AVX512F_BIT;
 
-         const uint64_t icelake_flags =
+         if(flags7 & x86_CPUID_7_bits::AVX512_DQ)
+            features_detected |= CPUID::CPUID_AVX512DQ_BIT;
+         if(flags7 & x86_CPUID_7_bits::AVX512_BW)
+            features_detected |= CPUID::CPUID_AVX512BW_BIT;
+
+         const uint64_t ICELAKE_FLAGS =
             x86_CPUID_7_bits::AVX512_F |
             x86_CPUID_7_bits::AVX512_DQ |
             x86_CPUID_7_bits::AVX512_IFMA |
@@ -169,8 +174,8 @@ uint64_t CPUID::CPUID_Data::detect_cpu_features(size_t* cache_line_size)
             x86_CPUID_7_bits::AVX512_VBMI2 |
             x86_CPUID_7_bits::AVX512_VBITALG;
 
-         if((flags7 & icelake_flags) == icelake_flags)
-            features_detected |= CPUID::CPUID_AVX512_ICELAKE_BIT;
+         if((flags7 & ICELAKE_FLAGS) == ICELAKE_FLAGS)
+            features_detected |= CPUID::CPUID_AVX512_ICL_BIT;
 
          if(flags7 & x86_CPUID_7_bits::AVX512_VAES)
             features_detected |= CPUID::CPUID_AVX512_AES_BIT;
