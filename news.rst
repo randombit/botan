@@ -4,11 +4,28 @@ Release Notes
 Version 2.17.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix a bug in ECDSA verification when the public key was chosen to be
+  a small multiple of the group generator. In that case, verification
+  would fail even if the signature was actually valid. (GH #2425)
+
 * Small optimizations in the non-hardware assisted AES key generation
   code path (GH #2417 #2418)
 
 * Move the GHASH code to a new module in utils, making it possible
   to build GMAC support without requiring GCM (GH #2416)
+
+* Add more detection logic for AVX-512 features (GH #2430)
+
+* Avoid std::is_pod which is deprecated in C++20 (GH #2429)
+
+* Fix a bug parsing deeply nested cipher names (GH #2426)
+
+* Add support for "aarch64_be" target CPU (GH #2422)
+
+* Fix order of linker flags so they are always applied effectively (GH #2420)
+
+* Prevent requesting DER encoding of signatures when the algorithm
+  did not support it (GH #2419)
 
 Version 2.16.0, 2020-10-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
