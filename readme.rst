@@ -36,8 +36,8 @@ what is new. Botan is also available through most
 `distributions <https://github.com/randombit/botan/wiki/Distros>`_
 such as Fedora, Debian, Arch and Homebrew.
 
-.. image:: https://travis-ci.org/randombit/botan.svg?branch=master
-    :target: https://travis-ci.org/randombit/botan
+.. image:: https://api.travis-ci.com/randombit/botan.svg?branch=master
+    :target: https://travis-ci.com/github/randombit/botan
     :alt: Travis CI status
 
 .. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce/branch/master?svg=true

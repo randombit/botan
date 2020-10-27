@@ -11,11 +11,11 @@ on a local machine.
 Travis CI
 -----------
 
-https://travis-ci.org/randombit/botan
+https://travis-ci.com/github/randombit/botan
 
 This is the primary CI, and tests the Linux, macOS, and iOS builds. Among other
-things it runs tests using valgrind, cross compilation to different
-architectures (currently ARM, PowerPC and MIPS), MinGW build, and a build that
+things it runs tests using valgrind, compilation on various architectures
+(currently including ARM, PPC64, and S390x), MinGW build, and a build that
 produces the coverage report.
 
 The Travis configurations is in ``src/scripts/ci/travis.yml``, which executes a
@@ -70,6 +70,6 @@ OSS-Fuzz
 
 https://github.com/google/oss-fuzz/
 
-OSS-Fuzz is a distributed fuzzer run by Google. Every night, each library fuzzer
-in ``src/fuzzer`` is built and run on many machines with any findings reported
-to the developers by email.
+OSS-Fuzz is a distributed fuzzer run by Google. Every night, each library fuzzers
+in ``src/fuzzer`` are built and run on many machines, with any findings reported
+to the developers via email.
