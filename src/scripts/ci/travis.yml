@@ -119,11 +119,6 @@ jobs:
       env:
        - TARGET="lint"
 
-    - name: Documentation
-      arch: arm64
-      env:
-       - TARGET="docs"
-
 install:
   - ./src/scripts/ci/setup_travis.sh
 
