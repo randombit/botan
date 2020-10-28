@@ -14,8 +14,7 @@ jobs:
       env:
        - TARGET="shared"
 
-    - dist: xenial
-      name: Coverage
+    - name: Coverage
       env:
        - TARGET="coverage"
        - CCACHE_MAXSIZE=2G
