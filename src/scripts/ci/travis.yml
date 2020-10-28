@@ -29,6 +29,7 @@ jobs:
     - name: Valgrind
       env:
        - TARGET="valgrind"
+       - CCACHE_MAXSIZE=2G
 
     - name: Linux s390x
       arch: s390x
