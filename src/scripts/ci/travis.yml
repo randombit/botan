@@ -18,7 +18,7 @@ jobs:
       name: Coverage
       env:
        - TARGET="coverage"
-       - CCACHE_MAX_SIZE=2G
+       - CCACHE_MAXSIZE=2G
        - PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so
 
     - arch: arm64
