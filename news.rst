@@ -4,6 +4,11 @@ Release Notes
 Version 2.17.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix a bug in ECDSA which could occur when the group size and hash length
+  differ. In this case, on occasion the generated signature would not be
+  accepted by other ECDSA implementations. This was particularly likely to
+  affect users of 160-bit or 239-bit curves. (GH #2433 #2415)
+
 * Fix a bug in ECDSA verification when the public key was chosen to be
   a small multiple of the group generator. In that case, verification
   would fail even if the signature was actually valid. (GH #2425)
