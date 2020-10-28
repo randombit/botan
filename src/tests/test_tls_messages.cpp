@@ -225,7 +225,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_messages", TLS_Message_Parsing_Test);
+BOTAN_REGISTER_TEST("tls", "tls_messages", TLS_Message_Parsing_Test);
 
 #endif
 

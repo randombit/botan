@@ -148,7 +148,7 @@ class OCB_Wide_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ocb_wide", OCB_Wide_KAT_Tests);
+BOTAN_REGISTER_TEST("modes", "ocb_wide", OCB_Wide_KAT_Tests);
 
 class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
    {
@@ -261,7 +261,7 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ocb_long_wide", OCB_Wide_Long_KAT_Tests);
+BOTAN_REGISTER_TEST("modes", "ocb_long_wide", OCB_Wide_Long_KAT_Tests);
 
 class OCB_Long_KAT_Tests final : public Text_Based_Test
    {
@@ -358,7 +358,7 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ocb_long", OCB_Long_KAT_Tests);
+BOTAN_REGISTER_TEST("modes", "ocb_long", OCB_Long_KAT_Tests);
 
 #endif
 

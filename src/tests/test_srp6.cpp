@@ -86,7 +86,7 @@ class SRP6_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("srp6_kat", SRP6_KAT_Tests);
+BOTAN_REGISTER_TEST("pake", "srp6_kat", SRP6_KAT_Tests);
 
 #if defined(BOTAN_HAS_SHA2_32)
 
@@ -123,7 +123,7 @@ class SRP6_RT_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("srp6", SRP6_RT_Tests);
+BOTAN_REGISTER_TEST("pake", "srp6", SRP6_RT_Tests);
 
 #endif
 

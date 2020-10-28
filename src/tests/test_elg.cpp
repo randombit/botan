@@ -53,8 +53,8 @@ class ElGamal_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("elgamal_encrypt", ElGamal_KAT_Tests);
-BOTAN_REGISTER_TEST("elgamal_keygen", ElGamal_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "elgamal_encrypt", ElGamal_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "elgamal_keygen", ElGamal_Keygen_Tests);
 
 #endif
 

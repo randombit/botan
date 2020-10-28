@@ -149,10 +149,10 @@ class Diffie_Hellman_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("dh_kat", Diffie_Hellman_KAT_Tests);
-BOTAN_REGISTER_TEST("dh_invalid", DH_Invalid_Key_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dh_kat", Diffie_Hellman_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dh_invalid", DH_Invalid_Key_Tests);
 
-BOTAN_REGISTER_TEST("dh_keygen", Diffie_Hellman_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dh_keygen", Diffie_Hellman_Keygen_Tests);
 
 #endif
 

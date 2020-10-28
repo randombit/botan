@@ -299,7 +299,7 @@ class Certstor_Flatfile_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("certstor_flatfile", Certstor_Flatfile_Tests);
+BOTAN_REGISTER_TEST("x509", "certstor_flatfile", Certstor_Flatfile_Tests);
 
 }
 

@@ -50,7 +50,7 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecc_basemul", ECC_Basepoint_Mul_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecc_basemul", ECC_Basepoint_Mul_Tests);
 
 class ECC_Varpoint_Mul_Tests final : public Text_Based_Test
    {
@@ -88,7 +88,7 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecc_varmul", ECC_Varpoint_Mul_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecc_varmul", ECC_Varpoint_Mul_Tests);
 
 #endif
 

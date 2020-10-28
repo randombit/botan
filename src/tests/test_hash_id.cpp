@@ -87,7 +87,7 @@ class PKCS_HashID_Test final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("pkcs_hash_id", PKCS_HashID_Test);
+BOTAN_REGISTER_TEST("pubkey", "pkcs_hash_id", PKCS_HashID_Test);
 #endif
 
 }

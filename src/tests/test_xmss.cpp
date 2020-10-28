@@ -117,10 +117,10 @@ class XMSS_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("xmss_sign", XMSS_Signature_Tests);
-BOTAN_REGISTER_TEST("xmss_verify", XMSS_Signature_Verify_Tests);
-BOTAN_REGISTER_TEST("xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
-BOTAN_REGISTER_TEST("xmss_keygen", XMSS_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "xmss_sign", XMSS_Signature_Tests);
+BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
+BOTAN_REGISTER_TEST("pubkey", "xmss_verify_invalid", XMSS_Signature_Verify_Invalid_Tests);
+BOTAN_REGISTER_TEST("pubkey", "xmss_keygen", XMSS_Keygen_Tests);
 
 #endif
 

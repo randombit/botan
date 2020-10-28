@@ -460,7 +460,7 @@ class ECDSA_Unit_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecdsa_unit", ECDSA_Unit_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_unit", ECDSA_Unit_Tests);
 #endif
 
 }

@@ -252,7 +252,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("modes", Cipher_Mode_Tests);
+BOTAN_REGISTER_TEST("modes", "modes", Cipher_Mode_Tests);
 
 class Cipher_Mode_IV_Carry_Tests final : public Test
    {
@@ -430,7 +430,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test
    };
 
 
-BOTAN_REGISTER_TEST("iv_carryover", Cipher_Mode_IV_Carry_Tests);
+BOTAN_REGISTER_TEST("modes", "iv_carryover", Cipher_Mode_IV_Carry_Tests);
 
 #endif
 

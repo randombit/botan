@@ -718,7 +718,7 @@ class Tls_Stream_Integration_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_stream_integration", Tls_Stream_Integration_Tests);
+BOTAN_REGISTER_TEST("tls", "tls_stream_integration", Tls_Stream_Integration_Tests);
 
 }  // namespace Botan_Tests
 

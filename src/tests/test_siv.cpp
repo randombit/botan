@@ -63,7 +63,7 @@ class SIV_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("siv_ad", SIV_Tests);
+BOTAN_REGISTER_TEST("modes", "siv_ad", SIV_Tests);
 
 #endif
 

@@ -128,7 +128,7 @@ class Entropy_Source_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("entropy", Entropy_Source_Tests);
+BOTAN_REGISTER_TEST("rng", "entropy", Entropy_Source_Tests);
 
 }
 

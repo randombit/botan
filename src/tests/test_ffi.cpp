@@ -2796,7 +2796,7 @@ class FFI_Unit_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("ffi", FFI_Unit_Tests);
+BOTAN_REGISTER_TEST("ffi", "ffi", FFI_Unit_Tests);
 
 #endif
 

@@ -88,7 +88,7 @@ class DL_Group_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("dl_group", DL_Group_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dl_group", DL_Group_Tests);
 
 class DL_Generate_Group_Tests final : public Test
    {
@@ -163,7 +163,7 @@ class DL_Generate_Group_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("dl_group_gen", DL_Generate_Group_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dl_group_gen", DL_Generate_Group_Tests);
 
 class DL_Named_Group_Tests final : public Test
    {
@@ -238,7 +238,7 @@ class DL_Named_Group_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("dl_group_named", DL_Named_Group_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dl_group_named", DL_Named_Group_Tests);
 
 }
 

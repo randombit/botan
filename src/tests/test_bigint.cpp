@@ -217,7 +217,7 @@ class BigInt_Unit_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("bigint_unit", BigInt_Unit_Tests);
+BOTAN_REGISTER_TEST("math", "bigint_unit", BigInt_Unit_Tests);
 
 class BigInt_Add_Test final : public Text_Based_Test
    {
@@ -250,7 +250,7 @@ class BigInt_Add_Test final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("bn_add", BigInt_Add_Test);
+BOTAN_REGISTER_TEST("math", "bn_add", BigInt_Add_Test);
 
 class BigInt_Sub_Test final : public Text_Based_Test
    {
@@ -275,7 +275,7 @@ class BigInt_Sub_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_sub", BigInt_Sub_Test);
+BOTAN_REGISTER_TEST("math", "bn_sub", BigInt_Sub_Test);
 
 class BigInt_Mul_Test final : public Text_Based_Test
    {
@@ -305,7 +305,7 @@ class BigInt_Mul_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_mul", BigInt_Mul_Test);
+BOTAN_REGISTER_TEST("math", "bn_mul", BigInt_Mul_Test);
 
 class BigInt_Sqr_Test final : public Text_Based_Test
    {
@@ -326,7 +326,7 @@ class BigInt_Sqr_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_sqr", BigInt_Sqr_Test);
+BOTAN_REGISTER_TEST("math", "bn_sqr", BigInt_Sqr_Test);
 
 class BigInt_Div_Test final : public Text_Based_Test
    {
@@ -365,7 +365,7 @@ class BigInt_Div_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_div", BigInt_Div_Test);
+BOTAN_REGISTER_TEST("math", "bn_div", BigInt_Div_Test);
 
 class BigInt_Mod_Test final : public Text_Based_Test
    {
@@ -417,7 +417,7 @@ class BigInt_Mod_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_mod", BigInt_Mod_Test);
+BOTAN_REGISTER_TEST("math", "bn_mod", BigInt_Mod_Test);
 
 class BigInt_GCD_Test final : public Text_Based_Test
    {
@@ -440,7 +440,7 @@ class BigInt_GCD_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_gcd", BigInt_GCD_Test);
+BOTAN_REGISTER_TEST("math", "bn_gcd", BigInt_GCD_Test);
 
 class BigInt_Jacobi_Test final : public Text_Based_Test
    {
@@ -468,7 +468,7 @@ class BigInt_Jacobi_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_jacobi", BigInt_Jacobi_Test);
+BOTAN_REGISTER_TEST("math", "bn_jacobi", BigInt_Jacobi_Test);
 
 class BigInt_Lshift_Test final : public Text_Based_Test
    {
@@ -493,7 +493,7 @@ class BigInt_Lshift_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_lshift", BigInt_Lshift_Test);
+BOTAN_REGISTER_TEST("math", "bn_lshift", BigInt_Lshift_Test);
 
 class BigInt_Rshift_Test final : public Text_Based_Test
    {
@@ -518,7 +518,7 @@ class BigInt_Rshift_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_rshift", BigInt_Rshift_Test);
+BOTAN_REGISTER_TEST("math", "bn_rshift", BigInt_Rshift_Test);
 
 class BigInt_Powmod_Test final : public Text_Based_Test
    {
@@ -571,7 +571,7 @@ class BigInt_Powmod_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_powmod", BigInt_Powmod_Test);
+BOTAN_REGISTER_TEST("math", "bn_powmod", BigInt_Powmod_Test);
 
 class BigInt_IsPrime_Test final : public Text_Based_Test
    {
@@ -595,7 +595,7 @@ class BigInt_IsPrime_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_isprime", BigInt_IsPrime_Test);
+BOTAN_REGISTER_TEST("math", "bn_isprime", BigInt_IsPrime_Test);
 
 class BigInt_IsSquare_Test final : public Text_Based_Test
    {
@@ -614,7 +614,7 @@ class BigInt_IsSquare_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_issquare", BigInt_IsSquare_Test);
+BOTAN_REGISTER_TEST("math", "bn_issquare", BigInt_IsSquare_Test);
 
 class BigInt_Ressol_Test final : public Text_Based_Test
    {
@@ -643,7 +643,7 @@ class BigInt_Ressol_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_ressol", BigInt_Ressol_Test);
+BOTAN_REGISTER_TEST("math", "bn_ressol", BigInt_Ressol_Test);
 
 class BigInt_InvMod_Test final : public Text_Based_Test
    {
@@ -684,7 +684,7 @@ class BigInt_InvMod_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_invmod", BigInt_InvMod_Test);
+BOTAN_REGISTER_TEST("math", "bn_invmod", BigInt_InvMod_Test);
 
 class BigInt_Rand_Test final : public Text_Based_Test
    {
@@ -709,7 +709,7 @@ class BigInt_Rand_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_rand", BigInt_Rand_Test);
+BOTAN_REGISTER_TEST("math", "bn_rand", BigInt_Rand_Test);
 
 class Lucas_Primality_Test final : public Test
    {
@@ -750,7 +750,7 @@ class Lucas_Primality_Test final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("bn_lucas", Lucas_Primality_Test);
+BOTAN_REGISTER_TEST("math", "bn_lucas", Lucas_Primality_Test);
 
 class DSA_ParamGen_Test final : public Text_Based_Test
    {
@@ -798,7 +798,7 @@ class DSA_ParamGen_Test final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("dsa_param", DSA_ParamGen_Test);
+BOTAN_REGISTER_TEST("math", "dsa_param", DSA_ParamGen_Test);
 
 #endif
 

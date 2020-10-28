@@ -113,7 +113,7 @@ class URI_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("uri", URI_Tests);
+BOTAN_REGISTER_TEST("utils", "uri", URI_Tests);
 
 }  // namespace Botan_Tests
 

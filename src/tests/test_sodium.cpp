@@ -665,7 +665,7 @@ class Sodium_API_Tests : public Test
 
    };
 
-BOTAN_REGISTER_TEST("sodium", Sodium_API_Tests);
+BOTAN_REGISTER_TEST("compat", "sodium", Sodium_API_Tests);
 
 #endif
 

@@ -65,7 +65,7 @@ Test::Result thread_pool()
    return result;
    }
 
-BOTAN_REGISTER_TEST_FN("thread_pool", thread_pool);
+BOTAN_REGISTER_TEST_FN("utils", "thread_pool", thread_pool);
 
 }
 

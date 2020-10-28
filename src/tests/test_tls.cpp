@@ -86,7 +86,7 @@ class TLS_Session_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_session", TLS_Session_Tests);
+BOTAN_REGISTER_TEST("tls", "tls_session", TLS_Session_Tests);
 
 #if defined(BOTAN_HAS_TLS_CBC)
 
@@ -108,7 +108,7 @@ class TLS_CBC_Padding_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_cbc_padding", TLS_CBC_Padding_Tests);
+BOTAN_REGISTER_TEST("tls", "tls_cbc_padding", TLS_CBC_Padding_Tests);
 
 class TLS_CBC_Tests final : public Text_Based_Test
    {
@@ -221,7 +221,7 @@ class TLS_CBC_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_cbc", TLS_CBC_Tests);
+BOTAN_REGISTER_TEST("tls", "tls_cbc", TLS_CBC_Tests);
 
 #endif
 
@@ -285,7 +285,7 @@ class Test_TLS_Alert_Strings : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_alert_strings", Test_TLS_Alert_Strings);
+BOTAN_REGISTER_TEST("tls", "tls_alert_strings", Test_TLS_Alert_Strings);
 
 class Test_TLS_Policy_Text : public Test
    {
@@ -364,7 +364,7 @@ class Test_TLS_Policy_Text : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_policy_text", Test_TLS_Policy_Text);
+BOTAN_REGISTER_TEST("tls", "tls_policy_text", Test_TLS_Policy_Text);
 
 class Test_TLS_Ciphersuites : public Test
    {
@@ -399,7 +399,7 @@ class Test_TLS_Ciphersuites : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_ciphersuites", Test_TLS_Ciphersuites);
+BOTAN_REGISTER_TEST("tls", "tls_ciphersuites", Test_TLS_Ciphersuites);
 
 class Test_TLS_Algo_Strings : public Test
    {
@@ -487,7 +487,7 @@ class Test_TLS_Algo_Strings : public Test
 
    };
 
-BOTAN_REGISTER_TEST("tls_algo_strings", Test_TLS_Algo_Strings);
+BOTAN_REGISTER_TEST("tls", "tls_algo_strings", Test_TLS_Algo_Strings);
 
 #endif
 

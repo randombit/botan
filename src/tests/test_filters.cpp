@@ -785,7 +785,7 @@ class Filter_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("filter", Filter_Tests);
+BOTAN_REGISTER_TEST("filters", "filter", Filter_Tests);
 
 #endif
 

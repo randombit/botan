@@ -513,7 +513,7 @@ class TestClassRegistration
          }
    };
 
-#define BOTAN_REGISTER_TEST(name, Test_Class)                 \
+#define BOTAN_REGISTER_TEST(_category, name, Test_Class)                 \
    TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(name)
 
 typedef Test::Result (*test_fn)();
@@ -542,7 +542,7 @@ class TestFnRegistration
          }
    };
 
-#define BOTAN_REGISTER_TEST_FN(name, fn_name)         \
+#define BOTAN_REGISTER_TEST_FN(_category, name, fn_name) \
    TestFnRegistration reg_ ## fn_name(name, fn_name)
 
 class VarMap

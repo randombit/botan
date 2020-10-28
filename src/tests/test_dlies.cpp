@@ -103,7 +103,7 @@ class DLIES_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("dlies", DLIES_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dlies", DLIES_KAT_Tests);
 
 Test::Result test_xor()
    {
@@ -198,7 +198,7 @@ class DLIES_Unit_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("dlies_unit", DLIES_Unit_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dlies_unit", DLIES_Unit_Tests);
 
 #endif
 

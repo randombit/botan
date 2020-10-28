@@ -108,7 +108,7 @@ class Clang_Bug_41810 final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("clang_bug", Clang_Bug_41810);
+BOTAN_REGISTER_TEST("misc", "clang_bug", Clang_Bug_41810);
 
 #endif // BOTAN_HAS_PUBLIC_KEY_CRYPTO
 

@@ -79,7 +79,7 @@ class TPM_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("tpm", TPM_Tests);
+BOTAN_REGISTER_TEST("tpm", "tpm", TPM_Tests);
 
 class UUID_Tests final : public Test
    {
@@ -108,7 +108,7 @@ class UUID_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("tpm_uuid", UUID_Tests);
+BOTAN_REGISTER_TEST("tpm", "tpm_uuid", UUID_Tests);
 
 #endif
 

@@ -1732,7 +1732,7 @@ class X509_Cert_Unit_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("x509_unit", X509_Cert_Unit_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_unit", X509_Cert_Unit_Tests);
 
 #endif
 

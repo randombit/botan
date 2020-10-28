@@ -201,7 +201,7 @@ class OS_Utils_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("os_utils", OS_Utils_Tests);
+BOTAN_REGISTER_TEST("utils", "os_utils", OS_Utils_Tests);
 
 }
 

@@ -63,7 +63,7 @@ class X509_DN_Comparisons_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("x509_dn_cmp", X509_DN_Comparisons_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_dn_cmp", X509_DN_Comparisons_Tests);
 #endif
 
 }

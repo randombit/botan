@@ -62,8 +62,8 @@ class ECDH_Keygen_Tests final : public PK_Key_Generation_Test
    };
 
 
-BOTAN_REGISTER_TEST("ecdh_kat", ECDH_KAT_Tests);
-BOTAN_REGISTER_TEST("ecdh_keygen", ECDH_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdh_kat", ECDH_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdh_keygen", ECDH_Keygen_Tests);
 
 #endif
 

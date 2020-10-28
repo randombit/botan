@@ -64,7 +64,7 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("sm2_sig", SM2_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "sm2_sig", SM2_Signature_KAT_Tests);
 
 class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test
    {
@@ -96,7 +96,7 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test
 
 }
 
-BOTAN_REGISTER_TEST("sm2_enc", SM2_Encryption_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "sm2_enc", SM2_Encryption_KAT_Tests);
 
 class SM2_Keygen_Tests final : public PK_Key_Generation_Test
    {
@@ -112,7 +112,7 @@ class SM2_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("sm2_keygen", SM2_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "sm2_keygen", SM2_Keygen_Tests);
 
 
 #endif

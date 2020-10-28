@@ -111,9 +111,9 @@ class Ed25519_Curdle_Format_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("ed25519_verify", Ed25519_Verification_Tests);
-BOTAN_REGISTER_TEST("ed25519_sign", Ed25519_Signature_Tests);
-BOTAN_REGISTER_TEST("ed25519_curdle", Ed25519_Curdle_Format_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ed25519_verify", Ed25519_Verification_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ed25519_sign", Ed25519_Signature_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ed25519_curdle", Ed25519_Curdle_Format_Tests);
 
 #endif
 

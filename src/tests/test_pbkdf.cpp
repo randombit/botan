@@ -83,7 +83,7 @@ class PBKDF_KAT_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("pbkdf", PBKDF_KAT_Tests);
+BOTAN_REGISTER_TEST("pbkdf", "pbkdf", PBKDF_KAT_Tests);
 
 class Pwdhash_Tests : public Test
    {
@@ -160,7 +160,7 @@ class Pwdhash_Tests : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("pwdhash", Pwdhash_Tests);
+BOTAN_REGISTER_TEST("pbkdf", "pwdhash", Pwdhash_Tests);
 
 #endif
 
@@ -192,7 +192,7 @@ class Bcrypt_PBKDF_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bcrypt_pbkdf", Bcrypt_PBKDF_KAT_Tests);
+BOTAN_REGISTER_TEST("pbkdf", "bcrypt_pbkdf", Bcrypt_PBKDF_KAT_Tests);
 
 #endif
 
@@ -246,7 +246,7 @@ class Scrypt_KAT_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("scrypt", Scrypt_KAT_Tests);
+BOTAN_REGISTER_TEST("pbkdf", "scrypt", Scrypt_KAT_Tests);
 
 #endif
 
@@ -317,7 +317,7 @@ class Argon2_KAT_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("argon2", Argon2_KAT_Tests);
+BOTAN_REGISTER_TEST("pbkdf", "argon2", Argon2_KAT_Tests);
 
 #endif
 
@@ -369,7 +369,7 @@ class PGP_S2K_Iter_Test final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("pgp_s2k_iter", PGP_S2K_Iter_Test);
+BOTAN_REGISTER_TEST("pbkdf", "pgp_s2k_iter", PGP_S2K_Iter_Test);
 
 #endif
 

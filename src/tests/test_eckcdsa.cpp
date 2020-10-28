@@ -69,8 +69,8 @@ class ECKCDSA_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("eckcdsa_sign", ECKCDSA_Signature_KAT_Tests);
-BOTAN_REGISTER_TEST("eckcdsa_keygen", ECKCDSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "eckcdsa_sign", ECKCDSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "eckcdsa_keygen", ECKCDSA_Keygen_Tests);
 
 #endif
 

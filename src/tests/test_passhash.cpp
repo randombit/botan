@@ -77,7 +77,7 @@ class Bcrypt_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bcrypt", Bcrypt_Tests);
+BOTAN_REGISTER_TEST("pbkdf", "bcrypt", Bcrypt_Tests);
 
 #endif
 
@@ -125,7 +125,7 @@ class Argon2_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("argon2_pass", Argon2_Tests);
+BOTAN_REGISTER_TEST("pbkdf", "argon2_pass", Argon2_Tests);
 
 #endif
 
@@ -201,7 +201,7 @@ class Passhash9_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("passhash9", Passhash9_Tests);
+BOTAN_REGISTER_TEST("pbkdf", "passhash9", Passhash9_Tests);
 
 #endif
 

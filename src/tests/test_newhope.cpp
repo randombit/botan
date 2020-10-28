@@ -152,7 +152,7 @@ class NEWHOPE_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("newhope", NEWHOPE_Tests);
+BOTAN_REGISTER_TEST("pubkey", "newhope", NEWHOPE_Tests);
 
 #endif
 
