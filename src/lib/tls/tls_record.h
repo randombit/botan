@@ -137,9 +137,9 @@ class Record_Header final
 * @param message the record contents
 * @param message_len is size of message
 */
-void write_unencrypted_record(secure_vector<uint8_t>& output,
+void write_unencrypted_record(secure_vector<uint8_t>& write_buffer,
                               uint8_t record_type,
-                              Protocol_Version version,
+                              Protocol_Version record_version,
                               uint64_t record_sequence,
                               const uint8_t* message,
                               size_t message_len);

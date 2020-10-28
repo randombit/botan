@@ -102,7 +102,7 @@ BigInt BOTAN_DEPRECATED_API("Use inverse_mod") inverse_euclid(const BigInt& x, c
 /**
 * Deprecated modular inversion function. Use inverse_mod instead.
 */
-BigInt BOTAN_DEPRECATED_API("Use inverse_mod") ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod);
+BigInt BOTAN_DEPRECATED_API("Use inverse_mod") ct_inverse_mod_odd_modulus(const BigInt& x, const BigInt& modulus);
 
 /**
 * Return a^-1 * 2^k mod b

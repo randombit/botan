@@ -172,7 +172,10 @@ PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
                          BOTAN_HAS_SHACAL2_X86 \
                          BOTAN_HAS_SM4_ARMV8 \
                          BOTAN_HAS_THREEFISH_512_AVX2 \
+                         BOTAN_HAS_GHASH_CLMUL_CPU \
+                         BOTAN_HAS_GHASH_CLMUL_VPERM \
                          BOTAN_DEPRECATED(msg)= \
+                         BOTAN_DEPRECATED_API(msg)= \
                          BOTAN_PUBLIC_API(maj,min)= \
                          BOTAN_HAS_TLS \
                          BOTAN_HAS_BOOST_ASIO \
