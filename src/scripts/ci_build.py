@@ -74,8 +74,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
     essential_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes', 'kdf',
-                       'hmac_drbg', 'hmac_drbg_unit',
-                       'tls', 'ffi',
+                       'hmac_drbg', 'hmac_drbg_unit', 'tls'
                        'rsa_sign', 'rsa_verify', 'dh_kat',
                        'ecc_randomized', 'ecdh_kat', 'ecdsa_sign', 'curve25519_scalar',
                        'cpuid', 'simd_32', 'os_utils', 'util', 'util_dates']
