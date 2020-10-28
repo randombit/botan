@@ -1,114 +1,76 @@
 language: cpp
-
-env:
-  global:
-    - CCACHE_MAXSIZE=1536M
-    - PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so
+os: linux
+dist: focal
+compiler: gcc
 
 jobs:
   include:
-    - os: linux
-      dist: focal
-      name: Linux/GCC
-      compiler: gcc
+    - name: Linux/GCC
       env:
        - TARGET="shared"
 
-    - os: linux
-      dist: focal
-      name: Linux/Clang
+    - name: Linux/Clang
       compiler: clang
       env:
        - TARGET="shared"
 
-    - os: linux
-      dist: xenial
+    - dist: xenial
       name: Coverage
-      compiler: gcc
       env:
        - TARGET="coverage"
+       - PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so
 
-    - os: linux
-      dist: focal
-      arch: arm64
+    - arch: arm64
       name: Fuzzers
-      compiler: gcc
       env:
        - TARGET="fuzzers"
 
-    - os: linux
-      dist: focal
-      name: Valgrind
-      compiler: gcc
+    - name: Valgrind
       env:
        - TARGET="valgrind"
 
-    - os: linux
-      dist: focal
-      name: Linux s390x
+    - name: Linux s390x
       arch: s390x
-      compiler: gcc
       env:
        - TARGET="shared"
 
-    - os: linux
-      dist: focal
-      name: Linux arm64
+    - name: Linux arm64
       arch: arm64
-      compiler: gcc
       env:
        - TARGET="shared"
 
-    - os: linux
-      dist: focal
-      name: Linux ppc64le
+    - name: Linux ppc64le
       arch: ppc64le
-      compiler: gcc
       env:
        - TARGET="shared"
 
-    - os: linux
-      dist: focal
-      name: Linux i386 cross
-      compiler: gcc
+    - name: Linux i386 cross
       env:
        - TARGET="cross-i386"
 
-    - os: linux
-      dist: xenial
+    - dist: xenial
       name: Linux ppc32 cross
-      compiler: gcc
       env:
        - TARGET="cross-ppc32"
 
-    - os: linux
-      dist: focal
-      arch: arm64
+    - arch: arm64
       name: Linux arm32 cross
-      compiler: gcc
       env:
        - TARGET="cross-arm32"
 
-    - os: linux
-      dist: focal
-      name: Android arm32 cross
+    - name: Android arm32 cross
       compiler: clang
       env:
        - TARGET="cross-android-arm32"
        - ANDROID_NDK=android-ndk-r21d
 
-    - os: linux
-      dist: focal
-      name: Android arm64 cross
+    - name: Android arm64 cross
       compiler: clang
       env:
        - TARGET="cross-android-arm64"
        - ANDROID_NDK=android-ndk-r21d
 
-    - os: linux
-      dist: focal
-      name: MinGW x86-64 cross
-      compiler: gcc
+    - name: MinGW x86-64 cross
       env:
        - TARGET="cross-win64"
 
@@ -124,62 +86,40 @@ jobs:
       env:
        - TARGET="cross-arm64"
 
-    - os: linux
-      dist: bionic
+    - dist: bionic
       name: Linux GCC 4.8
-      compiler: gcc
       env:
        - TARGET="gcc4.8"
        - EXTRA_FLAGS="--disable-werror"
 
-    - os: linux
-      dist: focal
-      name: Linux Clang 8
+    - name: Linux Clang 8
       compiler: clang
       env:
        - TARGET="clang8"
        - CXX="/usr/bin/clang++-8"
 
-    - os: linux
-      dist: focal
-      name: Minimized
-      compiler: gcc
+    - name: Minimized
       env:
        - TARGET="mini-shared"
 
-    - os: linux
-      dist: focal
-      arch: arm64
+    - arch: arm64
       name: Baremetal
-      compiler: gcc
       env:
        - TARGET="baremetal"
 
-    - os: linux
-      dist: focal
-      name: BSI policy
-      compiler: gcc
+    - name: BSI policy
       env:
        - TARGET="bsi"
 
-    - os: linux
-      dist: focal
-      name: NIST policy
-      compiler: gcc
+    - name: NIST policy
       env:
        - TARGET="nist"
 
-    - os: linux
-      dist: focal
-      name: Pylint
-      compiler: gcc
+    - name: Pylint
       env:
        - TARGET="lint"
 
-    - os: linux
-      dist: focal
-      name: Documentation
-      compiler: gcc
+    - name: Documentation
       env:
        - TARGET="docs"
 
