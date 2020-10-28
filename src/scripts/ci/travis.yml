@@ -5,90 +5,86 @@ compiler: gcc
 
 jobs:
   include:
-    - name: Linux/GCC
-      env:
-       - TARGET="shared"
-
-    - name: Linux/Clang
+    - name: Linux x86_64 (Clang)
       compiler: clang
       env:
        - TARGET="shared"
 
-    - name: Coverage
+    - name: Coverage (GCC)
       env:
        - TARGET="coverage"
        - CCACHE_MAXSIZE=2G
        - PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so
 
-    - arch: arm64
-      name: Fuzzers
+    - name: Fuzzers (GCC)
+      arch: arm64
       env:
        - TARGET="fuzzers"
 
-    - name: Valgrind
+    - name: Valgrind (GCC)
       env:
        - TARGET="valgrind"
        - CCACHE_MAXSIZE=2G
 
-    - name: Linux s390x
+    - name: Linux s390x (GCC)
       arch: s390x
       env:
        - TARGET="shared"
 
-    - name: Linux arm64
+    - name: Linux arm64 (GCC)
       arch: arm64
       env:
        - TARGET="shared"
 
-    - name: Linux ppc64le
+    - name: Linux ppc64le (GCC)
       arch: ppc64le
       env:
        - TARGET="shared"
 
-    - name: Linux i386 cross
-      env:
-       - TARGET="cross-i386"
-
-    - dist: xenial
-      name: Linux ppc32 cross
+    - name: Linux ppc32 cross (GCC)
+      dist: xenial
       env:
        - TARGET="cross-ppc32"
 
-    - arch: arm64
-      name: Linux arm32 cross
+    - name: Linux arm32 cross (GCC)
+      arch: arm64
       env:
        - TARGET="cross-arm32"
 
-    - name: Android arm32 cross
+    - name: Android arm32 cross (NDK Clang)
       compiler: clang
       env:
        - TARGET="cross-android-arm32"
        - ANDROID_NDK=android-ndk-r21d
 
-    - name: Android arm64 cross
+    - name: Android arm64 cross (NDK Clang)
       compiler: clang
       env:
        - TARGET="cross-android-arm64"
        - ANDROID_NDK=android-ndk-r21d
 
-    - name: MinGW x86-64 cross
+    - name: MinGW x86-64 cross (GCC)
       env:
        - TARGET="cross-win64"
 
-    - os: osx
-      name: macOS
+    - name: Linux i386 cross (GCC)
+      env:
+       - TARGET="cross-i386"
+
+    - name: macOS x86_64 (XCode Clang)
+      os: osx
       compiler: clang
       env:
        - TARGET="shared"
 
-    - os: osx
-      name: iOS
+    - name: iOS arm64 (XCode Clang)
+      os: osx
       compiler: clang
       env:
        - TARGET="cross-arm64"
 
-    - dist: bionic
-      name: Linux GCC 4.8
+    - name: Linux GCC 4.8
+      dist: bionic
       env:
        - TARGET="gcc4.8"
        - EXTRA_FLAGS="--disable-werror"
@@ -100,27 +96,32 @@ jobs:
        - CXX="/usr/bin/clang++-8"
 
     - name: Minimized
+      arch: arm64
       env:
        - TARGET="mini-shared"
 
-    - arch: arm64
-      name: Baremetal
+    - name: Baremetal (GCC)
+      arch: arm64
       env:
        - TARGET="baremetal"
 
     - name: BSI policy
+      arch: arm64
       env:
        - TARGET="bsi"
 
     - name: NIST policy
+      arch: arm64
       env:
        - TARGET="nist"
 
     - name: Pylint
+      arch: arm64
       env:
        - TARGET="lint"
 
     - name: Documentation
+      arch: arm64
       env:
        - TARGET="docs"
 
