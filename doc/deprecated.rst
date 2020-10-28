@@ -65,10 +65,6 @@ in a future major release.
 
 - DLIES
 
-- MCEIES
-
-- CBC-MAC
-
 - GCM support for 64-bit tags
 
 - Weak or rarely used ECC builtin groups including "secp160k1", "secp160r1",
@@ -85,9 +81,6 @@ in a future major release.
 
 - All support for loading, generating or using RSA keys with a public
   exponent larger than 2**64-1
-
-- All or nothing package transform (``package.h``)
-
 
 Deprecated Headers
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -263,9 +256,6 @@ Other API deprecations
 
 - Directly accessing the member variables of types ``calendar_point``,
   ``ASN1_Attribute``, ``AlgorithmIdentifier``, and ``BER_Object``
-
-- Using a default output length for "SHAKE-128" and "SHAKE-256". Instead,
-  always specify the desired output length.
 
 - Currently, for certain KDFs, if KDF interface is invoked with a
   requested output length larger than supported by the KDF, it returns
