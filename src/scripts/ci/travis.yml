@@ -116,7 +116,6 @@ jobs:
        - TARGET="nist"
 
     - name: Pylint
-      arch: arm64
       env:
        - TARGET="lint"
 
