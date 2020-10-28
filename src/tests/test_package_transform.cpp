@@ -65,7 +65,7 @@ class Package_Transform_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("package_transform", Package_Transform_Tests);
+BOTAN_REGISTER_TEST("misc", "package_transform", Package_Transform_Tests);
 
 #endif
 

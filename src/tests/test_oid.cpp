@@ -106,7 +106,7 @@ class OID_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("oid", OID_Tests);
+BOTAN_REGISTER_TEST("asn1", "oid", OID_Tests);
 
 #endif
 

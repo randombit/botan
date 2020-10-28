@@ -49,7 +49,7 @@ class PEM_Tests : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("pem", PEM_Tests);
+BOTAN_REGISTER_TEST("pubkey", "pem", PEM_Tests);
 
 }
 

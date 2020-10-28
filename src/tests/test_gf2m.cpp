@@ -66,7 +66,7 @@ class GF2m_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("gf2m", GF2m_Tests);
+BOTAN_REGISTER_TEST("pubkey", "gf2m", GF2m_Tests);
 
 #endif
 

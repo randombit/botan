@@ -197,7 +197,7 @@ class Utility_Function_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("util", Utility_Function_Tests);
+BOTAN_REGISTER_TEST("utils", "util", Utility_Function_Tests);
 
 class CT_Mask_Tests final : public Test
    {
@@ -236,7 +236,7 @@ class CT_Mask_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("ct_utils", CT_Mask_Tests);
+BOTAN_REGISTER_TEST("utils", "ct_utils", CT_Mask_Tests);
 
 class BitOps_Tests final : public Test
    {
@@ -331,7 +331,7 @@ class BitOps_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("bit_ops", BitOps_Tests);
+BOTAN_REGISTER_TEST("utils", "bit_ops", BitOps_Tests);
 
 #if defined(BOTAN_HAS_POLY_DBL)
 
@@ -354,7 +354,7 @@ class Poly_Double_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("poly_dbl", Poly_Double_Tests);
+BOTAN_REGISTER_TEST("utils", "poly_dbl", Poly_Double_Tests);
 
 #endif
 
@@ -405,7 +405,7 @@ class Version_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("versioning", Version_Tests);
+BOTAN_REGISTER_TEST("utils", "versioning", Version_Tests);
 
 class Date_Format_Tests final : public Text_Based_Test
    {
@@ -482,7 +482,7 @@ class Date_Format_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("util_dates", Date_Format_Tests);
+BOTAN_REGISTER_TEST("utils", "util_dates", Date_Format_Tests);
 
 #if defined(BOTAN_HAS_BASE32_CODEC)
 
@@ -560,7 +560,7 @@ class Base32_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("base32", Base32_Tests);
+BOTAN_REGISTER_TEST("utils", "base32", Base32_Tests);
 
 #endif
 
@@ -608,7 +608,7 @@ class Base58_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("base58", Base58_Tests);
+BOTAN_REGISTER_TEST("utils", "base58", Base58_Tests);
 
 class Base58_Check_Tests final : public Text_Based_Test
    {
@@ -652,7 +652,7 @@ class Base58_Check_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("base58c", Base58_Check_Tests);
+BOTAN_REGISTER_TEST("utils", "base58c", Base58_Check_Tests);
 
 #endif
 
@@ -732,7 +732,7 @@ class Base64_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("base64", Base64_Tests);
+BOTAN_REGISTER_TEST("utils", "base64", Base64_Tests);
 
 #endif
 
@@ -858,7 +858,7 @@ class Charset_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("charset", Charset_Tests);
+BOTAN_REGISTER_TEST("utils", "charset", Charset_Tests);
 
 class Hostname_Tests final : public Text_Based_Test
    {
@@ -882,7 +882,7 @@ class Hostname_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("hostname", Hostname_Tests);
+BOTAN_REGISTER_TEST("utils", "hostname", Hostname_Tests);
 
 class ReadKV_Tests final : public Text_Based_Test
    {
@@ -959,7 +959,7 @@ class ReadKV_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("util_read_kv", ReadKV_Tests);
+BOTAN_REGISTER_TEST("utils", "util_read_kv", ReadKV_Tests);
 
 class CPUID_Tests final : public Test
    {
@@ -1009,7 +1009,7 @@ class CPUID_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("cpuid", CPUID_Tests);
+BOTAN_REGISTER_TEST("utils", "cpuid", CPUID_Tests);
 
 #if defined(BOTAN_HAS_UUID)
 
@@ -1077,7 +1077,7 @@ class UUID_Tests : public Test
 
    };
 
-BOTAN_REGISTER_TEST("uuid", UUID_Tests);
+BOTAN_REGISTER_TEST("utils", "uuid", UUID_Tests);
 
 #endif
 

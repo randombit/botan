@@ -65,7 +65,7 @@ class HMAC_DRBG_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("hmac_drbg", HMAC_DRBG_Tests);
+BOTAN_REGISTER_TEST("rng", "hmac_drbg", HMAC_DRBG_Tests);
 
 #endif
 
@@ -107,7 +107,7 @@ class ChaCha_RNG_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("chacha_rng", ChaCha_RNG_Tests);
+BOTAN_REGISTER_TEST("rng", "chacha_rng", ChaCha_RNG_Tests);
 
 #endif
 

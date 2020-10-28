@@ -186,7 +186,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecies_iso", ECIES_ISO_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecies_iso", ECIES_ISO_Tests);
 
 #endif
 
@@ -236,7 +236,7 @@ class ECIES_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("ecies", ECIES_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecies", ECIES_Tests);
 
 #if defined(BOTAN_HAS_KDF1_18033) && defined(BOTAN_HAS_HMAC) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_64)
 
@@ -438,7 +438,7 @@ class ECIES_Unit_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecies_unit", ECIES_Unit_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecies_unit", ECIES_Unit_Tests);
 
 #endif
 

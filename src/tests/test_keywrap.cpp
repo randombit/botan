@@ -52,7 +52,7 @@ class RFC3394_Keywrap_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("rfc3394", RFC3394_Keywrap_Tests);
+BOTAN_REGISTER_TEST("keywrap", "rfc3394", RFC3394_Keywrap_Tests);
 #endif
 
 #if defined(BOTAN_HAS_NIST_KEYWRAP) && defined(BOTAN_HAS_AES)
@@ -122,7 +122,7 @@ class NIST_Keywrap_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("nist_key_wrap", NIST_Keywrap_Tests);
+BOTAN_REGISTER_TEST("keywrap", "nist_key_wrap", NIST_Keywrap_Tests);
 
 class NIST_Keywrap_Invalid_Tests final : public Text_Based_Test
    {
@@ -175,7 +175,7 @@ class NIST_Keywrap_Invalid_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("nist_key_wrap_invalid", NIST_Keywrap_Invalid_Tests);
+BOTAN_REGISTER_TEST("keywrap", "nist_key_wrap_invalid", NIST_Keywrap_Invalid_Tests);
 #endif
 
 }

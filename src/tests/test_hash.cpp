@@ -67,7 +67,7 @@ class Invalid_Hash_Name_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("invalid_name_hash", Invalid_Hash_Name_Tests);
+BOTAN_REGISTER_TEST("hash", "invalid_name_hash", Invalid_Hash_Name_Tests);
 
 class Hash_Function_Tests final : public Text_Based_Test
    {
@@ -178,7 +178,7 @@ class Hash_Function_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("hash", Hash_Function_Tests);
+BOTAN_REGISTER_TEST("hash", "hash", Hash_Function_Tests);
 
 class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test
    {
@@ -250,7 +250,7 @@ class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("hash_nist_mc", Hash_NIST_MonteCarlo_Tests);
+BOTAN_REGISTER_TEST("hash", "hash_nist_mc", Hash_NIST_MonteCarlo_Tests);
 
 class Hash_LongRepeat_Tests final : public Text_Based_Test
    {
@@ -323,7 +323,7 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("hash_rep", Hash_LongRepeat_Tests);
+BOTAN_REGISTER_TEST("hash", "hash_rep", Hash_LongRepeat_Tests);
 
 }
 

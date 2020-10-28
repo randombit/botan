@@ -110,9 +110,9 @@ class GOST_3410_2001_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("gost_3410_verify", GOST_3410_2001_Verification_Tests);
-BOTAN_REGISTER_TEST("gost_3410_sign", GOST_3410_2001_Signature_Tests);
-BOTAN_REGISTER_TEST("gost_3410_keygen", GOST_3410_2001_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "gost_3410_verify", GOST_3410_2001_Verification_Tests);
+BOTAN_REGISTER_TEST("pubkey", "gost_3410_sign", GOST_3410_2001_Signature_Tests);
+BOTAN_REGISTER_TEST("pubkey", "gost_3410_keygen", GOST_3410_2001_Keygen_Tests);
 
 #endif
 

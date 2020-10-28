@@ -196,7 +196,7 @@ class SIMD_32_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("simd_32", SIMD_32_Tests);
+BOTAN_REGISTER_TEST("utils", "simd_32", SIMD_32_Tests);
 #endif
 
 }

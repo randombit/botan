@@ -149,7 +149,7 @@ class Message_Auth_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("mac", Message_Auth_Tests);
+BOTAN_REGISTER_TEST("mac", "mac", Message_Auth_Tests);
 
 #endif
 

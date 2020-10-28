@@ -573,7 +573,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests
 
    };
 
-BOTAN_REGISTER_TEST("hmac_drbg_unit", HMAC_DRBG_Unit_Tests);
+BOTAN_REGISTER_TEST("rng", "hmac_drbg_unit", HMAC_DRBG_Unit_Tests);
 
 #endif
 
@@ -652,7 +652,7 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests
 
    };
 
-BOTAN_REGISTER_TEST("chacha_rng_unit", ChaCha_RNG_Unit_Tests);
+BOTAN_REGISTER_TEST("rng", "chacha_rng_unit", ChaCha_RNG_Unit_Tests);
 
 #endif
 
@@ -739,7 +739,7 @@ class AutoSeeded_RNG_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("auto_rng_unit", AutoSeeded_RNG_Tests);
+BOTAN_REGISTER_TEST("rng", "auto_rng_unit", AutoSeeded_RNG_Tests);
 
 #endif
 
@@ -775,7 +775,7 @@ class System_RNG_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("system_rng", System_RNG_Tests);
+BOTAN_REGISTER_TEST("rng", "system_rng", System_RNG_Tests);
 
 #endif
 
@@ -828,7 +828,7 @@ class Processor_RNG_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("processor_rng", Processor_RNG_Tests);
+BOTAN_REGISTER_TEST("rng", "processor_rng", Processor_RNG_Tests);
 
 #endif
 

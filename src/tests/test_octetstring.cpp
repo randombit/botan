@@ -161,7 +161,7 @@ class OctetString_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("octetstring", OctetString_Tests);
+BOTAN_REGISTER_TEST("utils", "octetstring", OctetString_Tests);
 
 }
 

@@ -72,7 +72,7 @@ class HOTP_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("otp_hotp", HOTP_KAT_Tests);
+BOTAN_REGISTER_TEST("otp", "otp_hotp", HOTP_KAT_Tests);
 
 #endif
 
@@ -135,7 +135,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("otp_totp", TOTP_KAT_Tests);
+BOTAN_REGISTER_TEST("otp", "otp_totp", TOTP_KAT_Tests);
 #endif
 
 }

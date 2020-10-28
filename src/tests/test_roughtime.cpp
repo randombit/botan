@@ -47,7 +47,7 @@ class Roughtime_Request_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("roughtime_request", Roughtime_Request_Tests);
+BOTAN_REGISTER_TEST("roughtime", "roughtime_request", Roughtime_Request_Tests);
 
 
 class Roughtime_Response_Tests final : public Text_Based_Test
@@ -99,7 +99,7 @@ class Roughtime_Response_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("roughtime_response", Roughtime_Response_Tests);
+BOTAN_REGISTER_TEST("roughtime", "roughtime_response", Roughtime_Response_Tests);
 
 class Roughtime_nonce_from_blind_Tests final : public Text_Based_Test
    {
@@ -123,7 +123,7 @@ class Roughtime_nonce_from_blind_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("roughtime_nonce_from_blind", Roughtime_nonce_from_blind_Tests);
+BOTAN_REGISTER_TEST("roughtime", "roughtime_nonce_from_blind", Roughtime_nonce_from_blind_Tests);
 
 
 
@@ -257,7 +257,7 @@ class Roughtime final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("roughtime", Roughtime);
+BOTAN_REGISTER_TEST("roughtime", "roughtime", Roughtime);
 
 #endif
 

@@ -44,7 +44,7 @@ class PK_Workfactor_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("pk_workfactor", PK_Workfactor_Tests);
+BOTAN_REGISTER_TEST("pubkey", "pk_workfactor", PK_Workfactor_Tests);
 #endif
 
 }

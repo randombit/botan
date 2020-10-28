@@ -252,7 +252,7 @@ class PSK_DB_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("psk_db", PSK_DB_Tests);
+BOTAN_REGISTER_TEST("misc", "psk_db", PSK_DB_Tests);
 
 }
 

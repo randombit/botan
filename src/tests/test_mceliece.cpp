@@ -112,7 +112,7 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("mce_keygen", McEliece_Keygen_Encrypt_Test);
+BOTAN_REGISTER_TEST("pubkey", "mce_keygen", McEliece_Keygen_Encrypt_Test);
 #endif
 
 
@@ -279,7 +279,7 @@ class McEliece_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("mceliece", McEliece_Tests);
+BOTAN_REGISTER_TEST("pubkey", "mceliece", McEliece_Tests);
 
 #endif
 

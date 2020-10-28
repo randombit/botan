@@ -198,6 +198,6 @@ class Test_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("testcode", Test_Tests);
+BOTAN_REGISTER_TEST("utils", "testcode", Test_Tests);
 
 }

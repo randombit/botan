@@ -78,7 +78,7 @@ class TSS_Recovery_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("tss_recovery", TSS_Recovery_Tests);
+BOTAN_REGISTER_TEST("utils", "tss_recovery", TSS_Recovery_Tests);
 
 class TSS_Generation_Tests final : public Text_Based_Test
    {
@@ -154,7 +154,7 @@ class TSS_Generation_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("tss_generation", TSS_Generation_Tests);
+BOTAN_REGISTER_TEST("utils", "tss_generation", TSS_Generation_Tests);
 
 #endif // BOTAN_HAS_THRESHOLD_SECRET_SHARING
 

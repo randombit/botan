@@ -432,7 +432,8 @@ class Test
 
       virtual std::vector<std::string> possible_providers(const std::string&);
 
-      static void register_test(const std::string& name,
+      static void register_test(const std::string& category,
+                                const std::string& name,
                                 std::function<Test* ()> maker_fn);
 
       static std::map<std::string, std::function<Test* ()>>& global_registry();
@@ -506,15 +507,15 @@ template<typename Test_Class>
 class TestClassRegistration
    {
    public:
-      TestClassRegistration(const std::string& name)
+      TestClassRegistration(const std::string& category, const std::string& name)
          {
          auto test_maker = []() -> Test* { return new Test_Class; };
-         Test::register_test(name, test_maker);
+         Test::register_test(category, name, test_maker);
          }
    };
 
-#define BOTAN_REGISTER_TEST(name, Test_Class)                 \
-   TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(name)
+#define BOTAN_REGISTER_TEST(category, name, Test_Class)                 \
+   TestClassRegistration<Test_Class> reg_ ## Test_Class ## _tests(category, name)
 
 typedef Test::Result (*test_fn)();
 
@@ -535,15 +536,15 @@ class FnTest : public Test
 class TestFnRegistration
    {
    public:
-      TestFnRegistration(const std::string& name, test_fn fn)
+      TestFnRegistration(const std::string& category, const std::string& name, test_fn fn)
          {
          auto test_maker = [=]() -> Test* { return new FnTest(fn); };
-         Test::register_test(name, test_maker);
+         Test::register_test(category, name, test_maker);
          }
    };
 
-#define BOTAN_REGISTER_TEST_FN(name, fn_name)         \
-   TestFnRegistration reg_ ## fn_name(name, fn_name)
+#define BOTAN_REGISTER_TEST_FN(category, name, fn_name) \
+   TestFnRegistration reg_ ## fn_name(category, name, fn_name)
 
 class VarMap
    {

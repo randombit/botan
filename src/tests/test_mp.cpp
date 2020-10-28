@@ -138,7 +138,7 @@ class MP_Unit_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("mp_unit", MP_Unit_Tests);
+BOTAN_REGISTER_TEST("math", "mp_unit", MP_Unit_Tests);
 
 #endif
 

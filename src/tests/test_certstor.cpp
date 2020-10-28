@@ -427,7 +427,7 @@ class Certstor_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("certstor", Certstor_Tests);
+BOTAN_REGISTER_TEST("x509", "certstor", Certstor_Tests);
 #endif
 }
 }

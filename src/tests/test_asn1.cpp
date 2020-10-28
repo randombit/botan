@@ -289,7 +289,7 @@ class ASN1_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("asn1", ASN1_Tests);
+BOTAN_REGISTER_TEST("asn1", "asn1", ASN1_Tests);
 
 class ASN1_Time_Parsing_Tests final : public Text_Based_Test
    {
@@ -332,7 +332,7 @@ class ASN1_Time_Parsing_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("asn1_time", ASN1_Time_Parsing_Tests);
+BOTAN_REGISTER_TEST("asn1", "asn1_time", ASN1_Time_Parsing_Tests);
 
 class ASN1_Printer_Tests final : public Test
    {
@@ -358,7 +358,7 @@ class ASN1_Printer_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("asn1_printer", ASN1_Printer_Tests);
+BOTAN_REGISTER_TEST("asn1", "asn1_printer", ASN1_Printer_Tests);
 
 #endif
 

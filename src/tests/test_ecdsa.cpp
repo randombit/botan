@@ -210,7 +210,7 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecdsa_key_recovery", ECDSA_Key_Recovery_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_key_recovery", ECDSA_Key_Recovery_Tests);
 
 #endif
 
@@ -255,12 +255,12 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecdsa_verify", ECDSA_Verification_Tests);
-BOTAN_REGISTER_TEST("ecdsa_verify_wycheproof", ECDSA_Wycheproof_Verification_Tests);
-BOTAN_REGISTER_TEST("ecdsa_sign", ECDSA_Signature_KAT_Tests);
-BOTAN_REGISTER_TEST("ecdsa_sign_verify_der", ECDSA_Sign_Verify_DER_Test);
-BOTAN_REGISTER_TEST("ecdsa_keygen", ECDSA_Keygen_Tests);
-BOTAN_REGISTER_TEST("ecdsa_invalid", ECDSA_Invalid_Key_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify", ECDSA_Verification_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify_wycheproof", ECDSA_Wycheproof_Verification_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign", ECDSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign_verify_der", ECDSA_Sign_Verify_DER_Test);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen", ECDSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_invalid", ECDSA_Invalid_Key_Tests);
 
 #endif
 

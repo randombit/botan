@@ -64,7 +64,7 @@ class Datastore_Tests : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("x509_datastore", Datastore_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_datastore", Datastore_Tests);
 
 }
 

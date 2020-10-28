@@ -66,7 +66,7 @@ class Cryptobox_KAT final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("cryptobox", Cryptobox_KAT);
+BOTAN_REGISTER_TEST("misc", "cryptobox", Cryptobox_KAT);
 
 #endif
 

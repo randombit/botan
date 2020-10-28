@@ -51,7 +51,7 @@ class RFC6979_KAT_Tests final : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("rfc6979", RFC6979_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rfc6979", RFC6979_KAT_Tests);
 
 #endif
 

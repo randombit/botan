@@ -39,7 +39,7 @@ class Curve25519_Sclarmult_Tests final : public Text_Based_Test
          return result;
          }
    };
-BOTAN_REGISTER_TEST("curve25519_scalar", Curve25519_Sclarmult_Tests);
+BOTAN_REGISTER_TEST("pubkey", "curve25519_scalar", Curve25519_Sclarmult_Tests);
 
 class Curve25519_Agreement_Tests final : public PK_Key_Agreement_Test
    {
@@ -67,7 +67,7 @@ class Curve25519_Agreement_Tests final : public PK_Key_Agreement_Test
          return vars.get_req_bin("CounterKey");
          }
    };
-BOTAN_REGISTER_TEST("curve25519_agreement", Curve25519_Agreement_Tests);
+BOTAN_REGISTER_TEST("pubkey", "curve25519_agreement", Curve25519_Agreement_Tests);
 
 class Curve25519_Roundtrip_Test final : public Test
    {
@@ -150,7 +150,7 @@ class Curve25519_Roundtrip_Test final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("curve25519_rt", Curve25519_Roundtrip_Test);
+BOTAN_REGISTER_TEST("pubkey", "curve25519_rt", Curve25519_Roundtrip_Test);
 
 class Curve25519_Keygen_Tests final : public PK_Key_Generation_Test
    {
@@ -165,7 +165,7 @@ class Curve25519_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("curve25519_keygen", Curve25519_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "curve25519_keygen", Curve25519_Keygen_Tests);
 
 #endif
 

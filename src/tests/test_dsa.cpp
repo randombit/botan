@@ -100,9 +100,9 @@ class DSA_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("dsa_sign", DSA_KAT_Tests);
-BOTAN_REGISTER_TEST("dsa_verify", DSA_Verification_Tests);
-BOTAN_REGISTER_TEST("dsa_keygen", DSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dsa_sign", DSA_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dsa_verify", DSA_Verification_Tests);
+BOTAN_REGISTER_TEST("pubkey", "dsa_keygen", DSA_Keygen_Tests);
 
 #endif
 

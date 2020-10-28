@@ -809,7 +809,7 @@ class Asio_Stream_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("tls_asio_stream", Asio_Stream_Tests);
+BOTAN_REGISTER_TEST("tls", "tls_asio_stream", Asio_Stream_Tests);
 
 }  // namespace Botan_Tests
 

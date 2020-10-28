@@ -317,16 +317,16 @@ class RSA_Blinding_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("rsa_encrypt", RSA_ES_KAT_Tests);
-BOTAN_REGISTER_TEST("rsa_decrypt", RSA_Decryption_KAT_Tests);
-BOTAN_REGISTER_TEST("rsa_sign", RSA_Signature_KAT_Tests);
-BOTAN_REGISTER_TEST("rsa_pss", RSA_PSS_KAT_Tests);
-BOTAN_REGISTER_TEST("rsa_pss_raw", RSA_PSS_Raw_KAT_Tests);
-BOTAN_REGISTER_TEST("rsa_verify", RSA_Signature_Verify_Tests);
-BOTAN_REGISTER_TEST("rsa_verify_invalid", RSA_Signature_Verify_Invalid_Tests);
-BOTAN_REGISTER_TEST("rsa_kem", RSA_KEM_Tests);
-BOTAN_REGISTER_TEST("rsa_keygen", RSA_Keygen_Tests);
-BOTAN_REGISTER_TEST("rsa_blinding", RSA_Blinding_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_encrypt", RSA_ES_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_decrypt", RSA_Decryption_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_sign", RSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_pss", RSA_PSS_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_pss_raw", RSA_PSS_Raw_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_verify", RSA_Signature_Verify_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_verify_invalid", RSA_Signature_Verify_Invalid_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_kem", RSA_KEM_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_keygen", RSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_blinding", RSA_Blinding_Tests);
 
 #endif
 

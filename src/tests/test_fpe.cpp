@@ -42,7 +42,7 @@ class FPE_FE1_Tests final : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("fpe_fe1", FPE_FE1_Tests);
+BOTAN_REGISTER_TEST("misc", "fpe_fe1", FPE_FE1_Tests);
 
 #endif
 

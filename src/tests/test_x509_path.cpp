@@ -181,7 +181,7 @@ class X509test_Path_Validation_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("x509_path_x509test", X509test_Path_Validation_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_path_x509test", X509test_Path_Validation_Tests);
 
 class NIST_Path_Validation_Tests final : public Test
    {
@@ -289,7 +289,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
    return results;
    }
 
-BOTAN_REGISTER_TEST("x509_path_nist", NIST_Path_Validation_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_path_nist", NIST_Path_Validation_Tests);
 
 class Extended_Path_Validation_Tests final : public Test
    {
@@ -365,7 +365,7 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run()
    return results;
    }
 
-BOTAN_REGISTER_TEST("x509_path_extended", Extended_Path_Validation_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_path_extended", Extended_Path_Validation_Tests);
 
 class PSS_Path_Validation_Tests : public Test
    {
@@ -482,7 +482,7 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run()
    return results;
    }
 
-BOTAN_REGISTER_TEST("x509_path_rsa_pss", PSS_Path_Validation_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_path_rsa_pss", PSS_Path_Validation_Tests);
 
 class Validate_V1Cert_Test final : public Test
    {
@@ -539,7 +539,7 @@ std::vector<Test::Result> Validate_V1Cert_Test::run()
    return {result};
    }
 
-BOTAN_REGISTER_TEST("x509_v1_ca", Validate_V1Cert_Test);
+BOTAN_REGISTER_TEST("x509", "x509_v1_ca", Validate_V1Cert_Test);
 
 class Validate_V2Uid_in_V1_Test final : public Test
    {
@@ -588,7 +588,7 @@ std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run()
    return {result};
    }
 
-BOTAN_REGISTER_TEST("x509_v2uid_in_v1", Validate_V2Uid_in_V1_Test);
+BOTAN_REGISTER_TEST("x509", "x509_v2uid_in_v1", Validate_V2Uid_in_V1_Test);
 
 class Validate_Name_Constraint_SAN_Test final : public Test
    {
@@ -637,7 +637,7 @@ std::vector<Test::Result> Validate_Name_Constraint_SAN_Test::run()
    return {result};
    }
 
-BOTAN_REGISTER_TEST("x509_name_constraint_san", Validate_Name_Constraint_SAN_Test);
+BOTAN_REGISTER_TEST("x509", "x509_name_constraint_san", Validate_Name_Constraint_SAN_Test);
 
 class BSI_Path_Validation_Tests final : public Test
 
@@ -812,7 +812,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run()
    return results;
    }
 
-BOTAN_REGISTER_TEST("x509_path_bsi", BSI_Path_Validation_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_path_bsi", BSI_Path_Validation_Tests);
 
 class Path_Validation_With_OCSP_Tests final : public Test
    {
@@ -993,7 +993,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
    };
 
-BOTAN_REGISTER_TEST("x509_path_with_ocsp", Path_Validation_With_OCSP_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_path_with_ocsp", Path_Validation_With_OCSP_Tests);
 
 #endif
 
@@ -1051,7 +1051,7 @@ class CVE_2020_0601_Tests final : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("x509_cve_2020_0601", CVE_2020_0601_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_cve_2020_0601", CVE_2020_0601_Tests);
 
 #endif
 
@@ -1091,7 +1091,7 @@ class XMSS_Path_Validation_Tests final : public Test
       }
    };
 
-BOTAN_REGISTER_TEST("x509_path_xmss", XMSS_Path_Validation_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_path_xmss", XMSS_Path_Validation_Tests);
 
 #endif
 

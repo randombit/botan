@@ -480,9 +480,11 @@ std::map<std::string, std::function<Test* ()>>& Test::global_registry()
    }
 
 //static
-void Test::register_test(const std::string& name,
+void Test::register_test(const std::string& category,
+                         const std::string& name,
                          std::function<Test* ()> maker_fn)
    {
+   BOTAN_UNUSED(category);
    if(Test::global_registry().count(name) != 0)
       throw Test_Error("Duplicate registration of test '" + name + "'");
 
