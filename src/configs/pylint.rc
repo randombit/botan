@@ -60,7 +60,7 @@ confidence=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 
-disable=missing-docstring,no-else-return,logging-not-lazy,locally-disabled,import-outside-toplevel
+disable=missing-docstring,no-else-return,logging-not-lazy,locally-disabled,import-outside-toplevel,super-with-arguments,raise-missing-from
 
 
 [REPORTS]
