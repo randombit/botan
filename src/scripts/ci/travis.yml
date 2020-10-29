@@ -5,11 +5,6 @@ compiler: gcc
 
 jobs:
   include:
-    - name: Linux x86_64 (Clang)
-      compiler: clang
-      env:
-       - TARGET="shared"
-
     - name: Coverage (GCC)
       env:
        - TARGET="coverage"
@@ -31,13 +26,23 @@ jobs:
       env:
        - TARGET="shared"
 
+    - name: Linux ppc64le (GCC)
+      arch: ppc64le
+      env:
+       - TARGET="shared"
+
     - name: Linux arm64 (GCC)
       arch: arm64
       env:
        - TARGET="shared"
 
-    - name: Linux ppc64le (GCC)
-      arch: ppc64le
+    - name: Linux arm32 cross (GCC)
+      arch: arm64
+      env:
+       - TARGET="cross-arm32"
+
+    - name: Linux x86_64 (Clang)
+      compiler: clang
       env:
        - TARGET="shared"
 
@@ -46,10 +51,17 @@ jobs:
       env:
        - TARGET="cross-ppc32"
 
-    - name: Linux arm32 cross (GCC)
-      arch: arm64
+    - name: macOS x86_64 (XCode Clang)
+      os: osx
+      compiler: clang
       env:
-       - TARGET="cross-arm32"
+       - TARGET="shared"
+
+    - name: iOS arm64 (XCode Clang)
+      os: osx
+      compiler: clang
+      env:
+       - TARGET="cross-arm64"
 
     - name: Android arm32 cross (NDK Clang)
       compiler: clang
@@ -70,18 +82,6 @@ jobs:
     - name: Linux i386 cross (GCC)
       env:
        - TARGET="cross-i386"
-
-    - name: macOS x86_64 (XCode Clang)
-      os: osx
-      compiler: clang
-      env:
-       - TARGET="shared"
-
-    - name: iOS arm64 (XCode Clang)
-      os: osx
-      compiler: clang
-      env:
-       - TARGET="cross-arm64"
 
     - name: Linux GCC 4.8
       dist: bionic
