@@ -4,11 +4,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/cert_status.h>
+#include <botan/pkix_enums.h>
 
 namespace Botan {
 
-//static
 const char* to_string(Certificate_Status_Code code)
    {
    switch(code)

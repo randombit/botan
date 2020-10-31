@@ -11,6 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/pkcs8.h>
 #include <botan/data_src.h>
+#include <botan/pkix_types.h>
 
 namespace Botan {
 

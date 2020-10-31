@@ -6,11 +6,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/build.h>
-
 #include <botan/certstor_flatfile.h>
+#include <botan/pkix_types.h>
 #include <botan/data_src.h>
 #include <botan/pem.h>
+#include <stdexcept>
 
 namespace Botan {
 namespace {

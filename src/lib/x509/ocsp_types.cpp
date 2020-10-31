@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/ocsp_types.h>
+#include <botan/ocsp.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/x509_ext.h>

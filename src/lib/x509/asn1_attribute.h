@@ -2,10 +2,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_NAME_CONSTRAINT_H_
-#define BOTAN_NAME_CONSTRAINT_H_
+#ifndef BOTAN_ASN1_ATTRIBUTE_H_
+#define BOTAN_ASN1_ATTRIBUTE_H_
 
 #include <botan/pkix_types.h>
-BOTAN_DEPRECATED_HEADER(name_constraint.h)
+BOTAN_DEPRECATED_HEADER(asn1_attribute.h)
 
 #endif

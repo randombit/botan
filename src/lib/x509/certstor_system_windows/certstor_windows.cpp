@@ -7,6 +7,7 @@
 */
 
 #include <botan/certstor_windows.h>
+#include <botan/pkix_types.h>
 #include <botan/der_enc.h>
 
 #include <array>

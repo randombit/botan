@@ -6,20 +6,20 @@
 */
 
 #include <botan/x509_ca.h>
+#include <botan/x509_key.h>
 #include <botan/x509self.h>
-#include <botan/pkcs10.h>
+#include <botan/x509_ext.h>
+#include <botan/pkix_types.h>
 #include <botan/pubkey.h>
 #include <botan/der_enc.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/oids.h>
 #include <botan/hash.h>
-#include <botan/key_constraint.h>
 #include <botan/emsa.h>
 #include <botan/scan_name.h>
 #include <algorithm>
 #include <iterator>
-#include <map>
 
 namespace Botan {
 

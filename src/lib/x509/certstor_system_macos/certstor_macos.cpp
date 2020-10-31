@@ -6,22 +6,19 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/build.h>
-
 #include <algorithm>
 #include <array>
 
-#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreServices/CoreServices.h>
-
-#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/certstor_macos.h>
 #include <botan/data_src.h>
 #include <botan/der_enc.h>
 #include <botan/exceptn.h>
-#include <botan/x509_dn.h>
+#include <botan/pkix_types.h>
+
+#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 
 namespace Botan {
 

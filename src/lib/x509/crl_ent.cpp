@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/crl_ent.h>
+#include <botan/x509_crl.h>
 #include <botan/x509cert.h>
 #include <botan/x509_ext.h>
 #include <botan/der_enc.h>

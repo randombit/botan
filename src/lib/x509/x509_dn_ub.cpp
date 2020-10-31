@@ -9,7 +9,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/x509_dn.h>
+#include <botan/pkix_types.h>
 #include <botan/asn1_obj.h>
 #include <map>
 
