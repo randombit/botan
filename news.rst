@@ -13,6 +13,15 @@ Version 2.17.0, Not Yet Released
   a small multiple of the group generator. In that case, verification
   would fail even if the signature was actually valid. (GH #2425)
 
+* SIV's functionality of supporting multiple associated data inputs has been
+  generalized onto the AEAD_Mode interface. However at the moment SIV is the
+  only AEAD implemented which supports more than one AD. (GH #2440)
+
+* The contents of ASN.1 headers ``asn1_str.h``, ``asn1_time.h``, ``asn1_oid.h``
+  and ``alg_id.h`` have been moved to ``asn1_obj.h``. The header files remain
+  but simply forward the include to ``asn1_obj.h``. These now-empty header files
+  are deprecated, and will be removed in a future major release. (GH #2441)
+
 * Small optimizations in the non-hardware assisted AES key generation
   code path (GH #2417 #2418)
 
@@ -25,7 +34,7 @@ Version 2.17.0, Not Yet Released
 
 * Fix a bug parsing deeply nested cipher names (GH #2426)
 
-* Add support for "aarch64_be" target CPU (GH #2422)
+* Add support for ``aarch64_be`` target CPU (GH #2422)
 
 * Fix order of linker flags so they are always applied effectively (GH #2420)
 
