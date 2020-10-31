@@ -78,9 +78,14 @@ void SIV_Mode::key_schedule(const uint8_t key[], size_t length)
    m_ad_macs.clear();
    }
 
+size_t SIV_Mode::maximum_associated_data_inputs() const
+   {
+   return block_size() * 8 - 2;
+   }
+
 void SIV_Mode::set_associated_data_n(size_t n, const uint8_t ad[], size_t length)
    {
-   const size_t max_ads = block_size() * 8 - 2;
+   const size_t max_ads = maximum_associated_data_inputs();
    if(n > max_ads)
       throw Invalid_Argument(name() + " allows no more than " + std::to_string(max_ads) + " ADs");
 

@@ -7,8 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_AEAD_SIV)
-   #include <botan/siv.h>
-   #include <botan/block_cipher.h>
+   #include <botan/aead.h>
    #include <botan/parsing.h>
 #endif
 
@@ -32,17 +31,17 @@ class SIV_Tests final : public Text_Based_Test
          const std::vector<std::string> ad_list =
             Botan::split_on(vars.get_req_str("ADs"), ',');
 
-         Test::Result result(algo + "/SIV");
+         const std::string siv_name = algo + "/SIV";
 
-         auto cipher = Botan::BlockCipher::create(algo);
+         Test::Result result(siv_name);
 
-         if(!cipher)
+         auto siv = Botan::AEAD_Mode::create(siv_name, Botan::ENCRYPTION);
+
+         if(!siv)
             {
             result.test_note("Skipping test due to missing cipher");
             return result;
             }
-
-         std::unique_ptr<Botan::SIV_Mode> siv(new Botan::SIV_Encryption(cipher.release()));
 
          siv->set_key(key);
 
