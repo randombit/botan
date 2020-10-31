@@ -11,12 +11,10 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <botan/alg_id.h>
 #include <botan/rng.h>
-#include <botan/asn1_oid.h>
+#include <botan/asn1_obj.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
-#include <botan/types.h>
 #include <botan/xmss_wots_parameters.h>
 #include <botan/xmss_address.h>
 #include <botan/xmss_hash.h>

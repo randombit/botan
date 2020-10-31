@@ -10,7 +10,7 @@
 */
 
 #include <botan/x509_dn.h>
-#include <botan/asn1_oid.h>
+#include <botan/asn1_obj.h>
 #include <map>
 
 namespace {

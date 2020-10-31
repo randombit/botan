@@ -9,9 +9,7 @@
 #if defined(BOTAN_HAS_ASN1)
    #include <botan/der_enc.h>
    #include <botan/ber_dec.h>
-   #include <botan/asn1_str.h>
    #include <botan/asn1_print.h>
-   #include <botan/asn1_time.h>
 #endif
 
 namespace Botan_Tests {

@@ -9,7 +9,7 @@
 #include <botan/rng.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/alg_id.h>
+#include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/scan_name.h>

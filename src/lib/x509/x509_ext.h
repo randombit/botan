@@ -9,7 +9,6 @@
 #define BOTAN_X509_EXTENSIONS_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/asn1_oid.h>
 #include <botan/asn1_alt_name.h>
 #include <botan/cert_status.h>
 #include <botan/name_constraint.h>

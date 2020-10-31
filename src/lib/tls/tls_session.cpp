@@ -9,7 +9,7 @@
 #include <botan/loadstor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/asn1_str.h>
+#include <botan/asn1_obj.h>
 #include <botan/pem.h>
 #include <botan/aead.h>
 #include <botan/mac.h>

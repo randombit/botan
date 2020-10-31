@@ -17,7 +17,7 @@
 #include <set>
 
 #if defined(BOTAN_HAS_ASN1)
-  #include <botan/asn1_oid.h>
+  #include <botan/asn1_obj.h>
 #endif
 
 namespace Botan {

@@ -9,8 +9,6 @@
 #include <botan/hex.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/asn1_time.h>
-#include <botan/asn1_str.h>
 #include <botan/oids.h>
 #include <iomanip>
 #include <sstream>
@@ -228,7 +226,7 @@ void ASN1_Formatter::decode(std::ostream& output,
          }
       else if(type_tag == UTC_TIME || type_tag == GENERALIZED_TIME)
          {
-         X509_Time time;
+         ASN1_Time time;
          data.decode(time);
          output << format(type_tag, class_tag, level, length, time.readable_string());
          }

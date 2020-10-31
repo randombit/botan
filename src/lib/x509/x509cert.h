@@ -10,7 +10,7 @@
 
 #include <botan/x509_obj.h>
 #include <botan/x509_key.h>
-#include <botan/asn1_time.h>
+#include <botan/asn1_obj.h>
 #include <botan/key_constraint.h>
 #include <botan/name_constraint.h>
 #include <memory>

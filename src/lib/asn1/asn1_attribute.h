@@ -9,7 +9,6 @@
 #define BOTAN_ASN1_ATTRIBUTE_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/asn1_oid.h>
 #include <vector>
 
 namespace Botan {

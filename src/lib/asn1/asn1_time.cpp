@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/asn1_time.h>
+#include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/exceptn.h>
@@ -16,7 +16,7 @@
 
 namespace Botan {
 
-X509_Time::X509_Time(const std::chrono::system_clock::time_point& time)
+ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time)
    {
    calendar_point cal = calendar_value(time);
 
@@ -30,37 +30,37 @@ X509_Time::X509_Time(const std::chrono::system_clock::time_point& time)
    m_tag = (m_year >= 2050) ? GENERALIZED_TIME : UTC_TIME;
    }
 
-X509_Time::X509_Time(const std::string& t_spec, ASN1_Tag tag)
+ASN1_Time::ASN1_Time(const std::string& t_spec, ASN1_Tag tag)
    {
    set_to(t_spec, tag);
    }
 
-void X509_Time::encode_into(DER_Encoder& der) const
+void ASN1_Time::encode_into(DER_Encoder& der) const
    {
    BOTAN_ARG_CHECK(m_tag == UTC_TIME || m_tag == GENERALIZED_TIME,
-                   "X509_Time: Bad encoding tag");
+                   "ASN1_Time: Bad encoding tag");
 
    der.add_object(m_tag, UNIVERSAL, to_string());
    }
 
-void X509_Time::decode_from(BER_Decoder& source)
+void ASN1_Time::decode_from(BER_Decoder& source)
    {
    BER_Object ber_time = source.get_next_object();
 
    set_to(ASN1::to_string(ber_time), ber_time.type());
    }
 
-std::string X509_Time::to_string() const
+std::string ASN1_Time::to_string() const
    {
    if(time_is_set() == false)
-      throw Invalid_State("X509_Time::to_string: No time set");
+      throw Invalid_State("ASN1_Time::to_string: No time set");
 
    uint32_t full_year = m_year;
 
    if(m_tag == UTC_TIME)
       {
       if(m_year < 1950 || m_year >= 2050)
-         throw Encoding_Error("X509_Time: The time " + readable_string() +
+         throw Encoding_Error("ASN1_Time: The time " + readable_string() +
                               " cannot be encoded as a UTCTime");
 
       full_year = (m_year >= 2000) ? (m_year - 2000) : (m_year - 1900);
@@ -90,10 +90,10 @@ std::string X509_Time::to_string() const
    return repr;
    }
 
-std::string X509_Time::readable_string() const
+std::string ASN1_Time::readable_string() const
    {
    if(time_is_set() == false)
-      throw Invalid_State("X509_Time::readable_string: No time set");
+      throw Invalid_State("ASN1_Time::readable_string: No time set");
 
    // desired format: "%04d/%02d/%02d %02d:%02d:%02d UTC"
    std::stringstream output;
@@ -110,15 +110,15 @@ std::string X509_Time::readable_string() const
    return output.str();
    }
 
-bool X509_Time::time_is_set() const
+bool ASN1_Time::time_is_set() const
    {
    return (m_year != 0);
    }
 
-int32_t X509_Time::cmp(const X509_Time& other) const
+int32_t ASN1_Time::cmp(const ASN1_Time& other) const
    {
    if(time_is_set() == false)
-      throw Invalid_State("X509_Time::cmp: No time set");
+      throw Invalid_State("ASN1_Time::cmp: No time set");
 
    const int32_t EARLIER = -1, LATER = 1, SAME_TIME = 0;
 
@@ -138,7 +138,7 @@ int32_t X509_Time::cmp(const X509_Time& other) const
    return SAME_TIME;
    }
 
-void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
+void ASN1_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
    {
    if(spec_tag == UTC_OR_GENERALIZED_TIME)
       {
@@ -215,7 +215,7 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
 /*
 * Do a general sanity check on the time
 */
-bool X509_Time::passes_sanity_check() const
+bool ASN1_Time::passes_sanity_check() const
    {
    // AppVeyor's trust store includes a cert with expiration date in 3016 ...
    if(m_year < 1950 || m_year > 3100)
@@ -258,33 +258,33 @@ bool X509_Time::passes_sanity_check() const
    return true;
    }
 
-std::chrono::system_clock::time_point X509_Time::to_std_timepoint() const
+std::chrono::system_clock::time_point ASN1_Time::to_std_timepoint() const
    {
    return calendar_point(m_year, m_month, m_day, m_hour, m_minute, m_second).to_std_timepoint();
    }
 
-uint64_t X509_Time::time_since_epoch() const
+uint64_t ASN1_Time::time_since_epoch() const
    {
    auto tp = this->to_std_timepoint();
    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
    }
 
 /*
-* Compare two X509_Times for in various ways
+* Compare two ASN1_Times for in various ways
 */
-bool operator==(const X509_Time& t1, const X509_Time& t2)
+bool operator==(const ASN1_Time& t1, const ASN1_Time& t2)
    { return (t1.cmp(t2) == 0); }
-bool operator!=(const X509_Time& t1, const X509_Time& t2)
+bool operator!=(const ASN1_Time& t1, const ASN1_Time& t2)
    { return (t1.cmp(t2) != 0); }
 
-bool operator<=(const X509_Time& t1, const X509_Time& t2)
+bool operator<=(const ASN1_Time& t1, const ASN1_Time& t2)
    { return (t1.cmp(t2) <= 0); }
-bool operator>=(const X509_Time& t1, const X509_Time& t2)
+bool operator>=(const ASN1_Time& t1, const ASN1_Time& t2)
    { return (t1.cmp(t2) >= 0); }
 
-bool operator<(const X509_Time& t1, const X509_Time& t2)
+bool operator<(const ASN1_Time& t1, const ASN1_Time& t2)
    { return (t1.cmp(t2) < 0); }
-bool operator>(const X509_Time& t1, const X509_Time& t2)
+bool operator>(const ASN1_Time& t1, const ASN1_Time& t2)
    { return (t1.cmp(t2) > 0); }
 
 }
