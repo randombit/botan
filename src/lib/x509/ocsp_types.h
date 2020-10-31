@@ -9,7 +9,7 @@
 #define BOTAN_OCSP_TYPES_H_
 
 #include <botan/x509cert.h>
-#include <botan/asn1_time.h>
+#include <botan/asn1_obj.h>
 #include <botan/bigint.h>
 
 namespace Botan {

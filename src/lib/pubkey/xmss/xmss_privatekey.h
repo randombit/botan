@@ -11,7 +11,7 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
-#include <botan/alg_id.h>
+#include <botan/asn1_obj.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/types.h>

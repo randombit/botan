@@ -9,7 +9,7 @@
 #include <botan/data_src.h>
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
-#include <botan/alg_id.h>
+#include <botan/asn1_obj.h>
 #include <botan/pk_algs.h>
 
 namespace Botan {

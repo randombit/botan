@@ -257,6 +257,9 @@ Deprecated Headers
   ``stl_compatibility.h``,
   ``uuid.h``,
 
+  Merged into other headers:
+  ``alg_id.h``, ``asn1_oid.h``, ``asn1_str.h``, and ``asn1_time.h`` - use ``asn1_obj.h``
+
 Other API deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

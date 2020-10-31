@@ -8,7 +8,7 @@
 #ifndef BOTAN_CRL_ENTRY_H_
 #define BOTAN_CRL_ENTRY_H_
 
-#include <botan/asn1_time.h>
+#include <botan/asn1_obj.h>
 
 namespace Botan {
 

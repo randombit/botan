@@ -11,7 +11,7 @@
 #define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
 #include <botan/point_gfp.h>
-#include <botan/asn1_oid.h>
+#include <botan/asn1_obj.h>
 #include <memory>
 #include <set>
 

@@ -15,7 +15,6 @@
 namespace Botan {
 
 class BigInt;
-class ASN1_Object;
 
 /**
 * General DER Encoding Object

@@ -9,8 +9,6 @@
 #define BOTAN_X509_ALT_NAME_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/asn1_str.h>
-#include <botan/asn1_oid.h>
 #include <botan/x509_dn.h>
 #include <map>
 

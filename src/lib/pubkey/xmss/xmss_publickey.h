@@ -13,8 +13,7 @@
 #include <iterator>
 #include <memory>
 #include <string>
-#include <botan/alg_id.h>
-#include <botan/asn1_oid.h>
+#include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
 #include <botan/exceptn.h>
 #include <botan/rng.h>
