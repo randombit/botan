@@ -39,6 +39,14 @@
 
 namespace Botan {
 
+void AEAD_Mode::set_associated_data_n(size_t i, const uint8_t ad[], size_t ad_len)
+   {
+   if(i == 0)
+      this->set_associated_data(ad, ad_len);
+   else
+      throw Invalid_Argument("AEAD '" + name() + "' does not support multiple associated data");
+   }
+
 std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(const std::string& algo,
                                                       Cipher_Dir dir,
                                                       const std::string& provider)
