@@ -14,6 +14,7 @@
    #include <botan/x509self.h>
    #include <botan/x509path.h>
    #include <botan/x509_ca.h>
+   #include <botan/x509_ext.h>
    #include <botan/pk_algs.h>
    #include <botan/ber_dec.h>
    #include <botan/der_enc.h>

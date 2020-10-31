@@ -15,7 +15,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
-#include <botan/x509_dn.h>
+#include <botan/pkix_types.h>
 
 namespace Botan_Tests {
 

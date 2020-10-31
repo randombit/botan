@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/key_constraint.h>
+#include <botan/pkix_types.h>
 #include <botan/pk_keys.h>
 #include <vector>
 

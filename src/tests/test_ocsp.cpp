@@ -11,7 +11,6 @@
    #include <botan/x509path.h>
    #include <botan/certstor.h>
    #include <botan/calendar.h>
-   #include <botan/cert_status.h>
    #include <fstream>
 #endif
 

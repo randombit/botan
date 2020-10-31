@@ -53,7 +53,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_PKCS11)
    #include <botan/p11_x509.h>
-   #include <botan/x509_dn.h>
+   #include <botan/pkix_types.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG)

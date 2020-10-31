@@ -9,7 +9,7 @@
 #define BOTAN_X509_OBJECT_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/cert_status.h>
+#include <botan/pkix_enums.h>
 #include <vector>
 
 namespace Botan {

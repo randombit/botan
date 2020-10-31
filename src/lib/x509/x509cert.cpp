@@ -7,6 +7,7 @@
 */
 
 #include <botan/x509cert.h>
+#include <botan/x509_key.h>
 #include <botan/datastor.h>
 #include <botan/pk_keys.h>
 #include <botan/x509_ext.h>
@@ -708,6 +709,11 @@ std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
       {
       throw Decoding_Error("X509_Certificate::load_subject_public_key", e);
       }
+   }
+
+Public_Key* X509_Certificate::subject_public_key() const
+   {
+   return load_subject_public_key().release();
    }
 
 std::vector<uint8_t> X509_Certificate::raw_issuer_dn_sha256() const

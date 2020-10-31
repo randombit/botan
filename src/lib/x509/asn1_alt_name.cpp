@@ -6,14 +6,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/asn1_alt_name.h>
+#include <botan/pkix_types.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
 #include <botan/internal/stl_util.h>
 #include <botan/parsing.h>
 #include <botan/loadstor.h>
-#include <botan/x509_dn.h>
 
 #include <sstream>
 

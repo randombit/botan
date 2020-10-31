@@ -5,11 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/name_constraint.h>
-#include <botan/asn1_alt_name.h>
+#include <botan/pkix_types.h>
 #include <botan/ber_dec.h>
 #include <botan/loadstor.h>
-#include <botan/x509_dn.h>
 #include <botan/x509cert.h>
 #include <botan/parsing.h>
 #include <sstream>

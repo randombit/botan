@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   #include <botan/x509_dn.h>
+   #include <botan/pkix_types.h>
    #include <botan/ber_dec.h>
 #endif
 
