@@ -8,14 +8,6 @@ environment:
 
   matrix:
 
-    # MinGW GCC
-    - CC: MinGW
-      PLATFORM: x86_amd64
-      TARGET: static
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      MAKE_TOOL: mingw32-make
-      TARGET_CC: gcc
-
     # MSVC 2015 DLL x86-32
     - CC: VC2015
       PLATFORM: x86
@@ -77,6 +69,14 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
       MAKE_TOOL: jom
       TARGET_CC: msvc
+
+    # MinGW GCC
+    - CC: MinGW
+      PLATFORM: x86_amd64
+      TARGET: static
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      MAKE_TOOL: mingw32-make
+      TARGET_CC: gcc
 
 install:
   - call src\scripts\ci\setup_appveyor.bat
