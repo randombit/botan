@@ -22,6 +22,14 @@ Version 2.17.0, Not Yet Released
   but simply forward the include to ``asn1_obj.h``. These now-empty header files
   are deprecated, and will be removed in a future major release. (GH #2441)
 
+* The contents of X.509/PKIX headers ``asn1_attribute.h`` ``asn1_alt_name.h``
+  ``name_constraint.h`` ``x509_dn.h`` ``cert_status.h`` and ``key_constraint.h``
+  have been merged into ``pkix_enums.h`` (for enumerations) and ``pkix_types.h``
+  (for all other definitions). The previous header files remain but simply
+  forward the include to the new header containing the definition. These
+  now-empty header files are deprecated, and will be removed in a future major
+  release. (GH #2441)
+
 * Small optimizations in the non-hardware assisted AES key generation
   code path (GH #2417 #2418)
 
