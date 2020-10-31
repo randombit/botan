@@ -3,30 +3,28 @@ XMSS_RFC8391 -> 20190623
 </defines>
 
 <header:public>
-atomic.h
 xmss.h
 xmss_hash.h
-xmss_index_registry.h
-xmss_address.h
 xmss_parameters.h
 xmss_key_pair.h
 xmss_privatekey.h
 xmss_publickey.h
-xmss_tools.h
 xmss_wots_parameters.h
 xmss_wots_privatekey.h
 xmss_wots_publickey.h
-
-# future internal:
-xmss_common_ops.h
 </header:public>
 
 <header:internal>
-xmss_wots_addressed_privatekey.h
-xmss_wots_addressed_publickey.h
+atomic.h
+xmss_address.h
+xmss_common_ops.h
+xmss_index_registry.h
 xmss_signature.h
 xmss_signature_operation.h
+xmss_tools.h
 xmss_verification_operation.h
+xmss_wots_addressed_privatekey.h
+xmss_wots_addressed_publickey.h
 </header:internal>
 
 <requires>

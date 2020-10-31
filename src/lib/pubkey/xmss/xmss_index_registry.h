@@ -11,7 +11,7 @@
 #include <string>
 
 #include <botan/secmem.h>
-#include <botan/atomic.h>
+#include <botan/internal/atomic.h>
 #include <botan/mutex.h>
 
 //BOTAN_FUTURE_INTERNAL_HEADER(xmss_index_registry.h)

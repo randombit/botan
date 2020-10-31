@@ -15,10 +15,11 @@
 #include <botan/pk_keys.h>
 #include <botan/rng.h>
 #include <botan/xmss_wots_parameters.h>
-#include <botan/xmss_address.h>
 #include <botan/xmss_wots_publickey.h>
 
 namespace Botan {
+
+class XMSS_Address;
 
 /** A Winternitz One Time Signature private key for use with Extended Hash-Based
  * Signatures.
@@ -121,13 +122,7 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
        *
        * @return WOTS secret key.
        **/
-      wots_keysig_t at(size_t i, XMSS_Hash& hash)
-         {
-         secure_vector<uint8_t> idx_bytes;
-         XMSS_Tools::concat(idx_bytes, i, m_wots_params.element_size());
-         hash.h(idx_bytes, m_private_seed, idx_bytes);
-         return generate(idx_bytes, hash);
-         }
+      wots_keysig_t at(size_t i, XMSS_Hash& hash);
 
       /**
        * Retrieves the i-th WOTS private key using pseudo random key
@@ -156,12 +151,7 @@ class XMSS_WOTS_PrivateKey final : public virtual XMSS_WOTS_PublicKey,
        *
        * @return WOTS secret key.
        **/
-      wots_keysig_t at(const XMSS_Address& adrs, XMSS_Hash& hash)
-         {
-         secure_vector<uint8_t> result;
-         hash.prf(result, m_private_seed, adrs.bytes());
-         return generate(result, hash);
-         }
+      wots_keysig_t at(const XMSS_Address& adrs, XMSS_Hash& hash);
 
       inline wots_keysig_t operator[](const XMSS_Address& adrs)
          {

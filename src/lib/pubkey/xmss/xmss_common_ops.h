@@ -11,7 +11,7 @@
 #include <vector>
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
-#include <botan/xmss_address.h>
+#include <botan/internal/xmss_address.h>
 #include <botan/xmss_hash.h>
 
 BOTAN_FUTURE_INTERNAL_HEADER(xmss_common_ops.h)

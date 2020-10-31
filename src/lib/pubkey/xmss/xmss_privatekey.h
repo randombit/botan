@@ -17,11 +17,13 @@
 #include <botan/types.h>
 #include <botan/xmss_parameters.h>
 #include <botan/xmss_publickey.h>
-#include <botan/atomic.h>
 #include <botan/xmss_wots_privatekey.h>
-#include <botan/xmss_index_registry.h>
 
 namespace Botan {
+
+template<typename> class Atomic;
+
+class XMSS_Index_Registry;
 
 /**
  * An XMSS: Extended Hash-Based Signature private key.
@@ -77,17 +79,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
                       const secure_vector<uint8_t>& wots_priv_seed,
                       const secure_vector<uint8_t>& prf,
                       const secure_vector<uint8_t>& root,
-                      const secure_vector<uint8_t>& public_seed)
-         : XMSS_PublicKey(xmss_algo_id, root, public_seed),
-           m_wots_priv_key(XMSS_PublicKey::m_xmss_params.ots_oid(),
-                           public_seed,
-                           wots_priv_seed),
-           m_hash(XMSS_PublicKey::m_xmss_params.hash_function_name()),
-           m_prf(prf),
-           m_index_reg(XMSS_Index_Registry::get_instance())
-         {
-         set_unused_leaf_index(idx_leaf);
-         }
+                      const secure_vector<uint8_t>& public_seed);
 
       bool stateful_operation() const override { return true; }
 
@@ -98,10 +90,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        *
        * @return Index of the last unused leaf.
        **/
-      size_t unused_leaf_index() const
-         {
-         return *recover_global_leaf_index();
-         }
+      size_t unused_leaf_index() const;
 
       /**
        * Sets the last unused leaf index of the private key. The leaf index
@@ -110,38 +99,9 @@ class BOTAN_PUBLIC_API(2,0) XMSS_PrivateKey final : public virtual XMSS_PublicKe
        *
        * @param idx Index of the last unused leaf.
        **/
-      void set_unused_leaf_index(size_t idx)
-         {
-         if(idx >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
-            {
-            throw Decoding_Error("XMSS private key leaf index out of bounds");
-            }
-         else
-            {
-            std::atomic<size_t>& index =
-               static_cast<std::atomic<size_t>&>(*recover_global_leaf_index());
-            size_t current = 0;
+      void set_unused_leaf_index(size_t idx);
 
-            do
-               {
-               current = index.load();
-               if(current > idx)
-                  { return; }
-               }
-            while(!index.compare_exchange_strong(current, idx));
-            }
-         }
-
-      size_t reserve_unused_leaf_index()
-         {
-         size_t idx = (static_cast<std::atomic<size_t>&>(
-                          *recover_global_leaf_index())).fetch_add(1);
-         if(idx >= (1ull << XMSS_PublicKey::m_xmss_params.tree_height()))
-            {
-            throw Decoding_Error("XMSS private key, one time signatures exhaused");
-            }
-         return idx;
-         }
+      size_t reserve_unused_leaf_index();
 
       /**
        * Winternitz One Time Signature Scheme key utilized for signing

@@ -9,6 +9,7 @@
  **/
 
 #include <botan/xmss_wots_publickey.h>
+#include <botan/internal/xmss_address.h>
 
 namespace Botan {
 
