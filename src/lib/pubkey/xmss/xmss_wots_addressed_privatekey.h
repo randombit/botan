@@ -8,7 +8,7 @@
 #ifndef BOTAN_XMSS_WOTS_ADDRESSED_PRIVATEKEY_H_
 #define BOTAN_XMSS_WOTS_ADDRESSED_PRIVATEKEY_H_
 
-#include <botan/xmss_address.h>
+#include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_wots_addressed_publickey.h>
 #include <botan/xmss_wots_privatekey.h>
 

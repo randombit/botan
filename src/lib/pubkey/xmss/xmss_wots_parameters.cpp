@@ -13,6 +13,7 @@
  **/
 
 #include <botan/xmss_wots_parameters.h>
+#include <botan/internal/xmss_tools.h>
 #include <botan/exceptn.h>
 #include <cmath>
 

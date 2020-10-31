@@ -8,7 +8,6 @@
 #ifndef BOTAN_XMSS_WOTS_PARAMETERS_H_
 #define BOTAN_XMSS_WOTS_PARAMETERS_H_
 
-#include <botan/xmss_tools.h>
 #include <botan/secmem.h>
 #include <map>
 #include <string>

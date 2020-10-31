@@ -16,10 +16,11 @@
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/xmss_wots_parameters.h>
-#include <botan/xmss_address.h>
 #include <botan/xmss_hash.h>
 
 namespace Botan {
+
+class XMSS_Address;
 
 typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
 

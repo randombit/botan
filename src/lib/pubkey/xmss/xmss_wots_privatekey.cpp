@@ -9,6 +9,8 @@
  **/
 
 #include <botan/xmss_wots_privatekey.h>
+#include <botan/internal/xmss_tools.h>
+#include <botan/internal/xmss_address.h>
 
 namespace Botan {
 
@@ -77,6 +79,21 @@ XMSS_WOTS_PrivateKey::sign(const secure_vector<uint8_t>& msg,
       }
 
    return sig;
+   }
+
+wots_keysig_t XMSS_WOTS_PrivateKey::at(const XMSS_Address& adrs, XMSS_Hash& hash)
+   {
+   secure_vector<uint8_t> result;
+   hash.prf(result, m_private_seed, adrs.bytes());
+   return generate(result, hash);
+   }
+
+wots_keysig_t XMSS_WOTS_PrivateKey::at(size_t i, XMSS_Hash& hash)
+   {
+   secure_vector<uint8_t> idx_bytes;
+   XMSS_Tools::concat(idx_bytes, i, m_wots_params.element_size());
+   hash.h(idx_bytes, m_private_seed, idx_bytes);
+   return generate(idx_bytes, hash);
    }
 
 }
