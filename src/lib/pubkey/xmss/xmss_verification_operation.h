@@ -8,13 +8,8 @@
 #ifndef BOTAN_XMSS_VERIFICATION_OPERATION_H_
 #define BOTAN_XMSS_VERIFICATION_OPERATION_H_
 
-#include <array>
-#include <cstddef>
-#include <iterator>
-#include <string>
-#include <botan/types.h>
-#include <botan/xmss_publickey.h>
 #include <botan/pk_ops.h>
+#include <botan/xmss.h>
 #include <botan/internal/xmss_signature.h>
 
 namespace Botan {

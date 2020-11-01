@@ -14,10 +14,11 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
+#include <botan/xmss.h>
 #include <botan/internal/xmss_verification_operation.h>
-#include <botan/xmss_publickey.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <iterator>
 
 namespace Botan {
 
@@ -39,6 +40,13 @@ std::vector<uint8_t> extract_raw_key(const std::vector<uint8_t>& key_bits)
    }
 
 }
+
+XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
+                               RandomNumberGenerator& rng)
+   : m_xmss_params(xmss_oid), m_wots_params(m_xmss_params.ots_oid()),
+     m_root(m_xmss_params.element_size()),
+     m_public_seed(rng.random_vec(m_xmss_params.element_size()))
+   {}
 
 XMSS_PublicKey::XMSS_PublicKey(const std::vector<uint8_t>& key_bits)
    : m_raw_key(extract_raw_key(key_bits)),
@@ -109,6 +117,13 @@ std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const
              std::back_inserter(result));
 
    return result;
+   }
+
+std::vector<uint8_t> XMSS_PublicKey::public_key_bits() const
+   {
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(raw_public_key(), OCTET_STRING);
+   return output;
    }
 
 }

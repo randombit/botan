@@ -15,11 +15,13 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#include <botan/xmss_privatekey.h>
+#include <botan/xmss.h>
 #include <botan/internal/xmss_signature_operation.h>
 #include <botan/internal/xmss_index_registry.h>
 #include <botan/internal/xmss_common_ops.h>
 #include <botan/ber_dec.h>
+#include <botan/der_enc.h>
+#include <iterator>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/thread_pool.h>
@@ -312,6 +314,11 @@ XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
       level++; //push temporary node to stack
       }
    result = nodes[level - 1];
+   }
+
+secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const
+   {
+   return DER_Encoder().encode(raw_private_key(), OCTET_STRING).get_contents();
    }
 
 std::shared_ptr<Atomic<size_t>>
