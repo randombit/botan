@@ -18,6 +18,7 @@
 #include <botan/internal/xmss_verification_operation.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <iterator>
 
 namespace Botan {
 

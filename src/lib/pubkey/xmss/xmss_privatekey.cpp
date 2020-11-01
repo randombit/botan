@@ -21,6 +21,7 @@
 #include <botan/internal/xmss_common_ops.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <iterator>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/thread_pool.h>
