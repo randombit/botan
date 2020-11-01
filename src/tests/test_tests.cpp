@@ -177,10 +177,34 @@ class Test_Tests final : public Test
             }
 #endif
 
-         return {result};
+         return {result, test_testsuite_rng()};
          }
 
    private:
+      Test::Result test_testsuite_rng()
+         {
+         Test::Result result("Testsuite_RNG");
+
+         size_t histogram[256] = { 0 };
+
+         const size_t RUNS = 1000;
+
+         for(size_t i = 0; i != 256 * RUNS; ++i)
+            {
+            histogram[rng().next_byte()] += 1;
+            }
+
+         for(size_t i = 0; i != 256; ++i)
+            {
+            if(histogram[i] < RUNS / 2 || histogram[i] > RUNS * 2)
+               result.test_failure("Testsuite_RNG produced non-uniform output");
+            else
+               result.test_success("Testsuite_RNG seemed roughly uniform");
+            }
+
+         return result;
+         }
+
       void verify_failure(const std::string& what,
                           Test::Result& result,
                           const Test::Result& test_result)

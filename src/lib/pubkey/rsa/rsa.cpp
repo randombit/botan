@@ -291,6 +291,10 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
       // TODO could generate primes in thread pool
       p = generate_rsa_prime(rng, rng, p_bits, e);
       q = generate_rsa_prime(rng, rng, q_bits, e);
+
+      if(p == q)
+         throw Internal_Error("RNG failure during RSA key generation");
+
       n = p * q;
       } while(n.bits() != bits);
 
@@ -321,6 +325,9 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
       return false;
 
    if(get_p() * get_q() != get_n())
+      return false;
+
+   if(get_p() == get_q())
       return false;
 
    if(get_d1() != ct_modulo(get_d(), get_p() - 1))

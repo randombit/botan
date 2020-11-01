@@ -8,7 +8,6 @@
 #include "tests.h"
 
 #include <botan/version.h>
-#include <botan/rotate.h>
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>
 
@@ -76,15 +75,16 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator
 
          for(size_t i = 0; i != ROUNDS; ++i)
             {
-            m_a += static_cast<uint32_t>(i);
+            m_a += static_cast<uint32_t>(i ^ 0x5555);
 
-            m_a = Botan::rotl<9>(m_a);
+            m_a *= 0x9e3779b9;
             m_b ^= m_a;
             m_d ^= m_c;
 
             m_a += m_d;
             m_c += m_b;
-            m_c = Botan::rotl<23>(m_c);
+
+            m_c += (m_c >> 17);
             }
          }
 
