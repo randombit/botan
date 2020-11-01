@@ -60,6 +60,14 @@
   #include <mach/vm_statistics.h>
 #endif
 
+#if defined(BOTAN_TARGET_OS_IS_FREEBSD)
+  #define MADV_DONTDUMP MADV_NOCORE
+#endif
+
+#if defined(BOTAN_TARGET_OS_IS_OPENBSD)
+  #define MADV_DONTDUMP MADV_CONCEAL
+#endif
+
 namespace Botan {
 
 // Not defined in OS namespace for historical reasons
