@@ -8,17 +8,11 @@
 #ifndef BOTAN_XMSS_SIGNATURE_OPERATION_H_
 #define BOTAN_XMSS_SIGNATURE_OPERATION_H_
 
-#include <cstddef>
-#include <string>
-#include <botan/secmem.h>
-#include <botan/types.h>
-#include <botan/xmss_parameters.h>
-#include <botan/xmss_privatekey.h>
-#include <botan/internal/xmss_address.h>
 #include <botan/pk_ops.h>
+#include <botan/xmss.h>
+#include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_signature.h>
 #include <botan/xmss_wots_publickey.h>
-#include <botan/internal/xmss_common_ops.h>
 
 namespace Botan {
 
