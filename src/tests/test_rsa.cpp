@@ -216,6 +216,36 @@ class RSA_Keygen_Tests final : public PK_Key_Generation_Test
          }
    };
 
+class RSA_Keygen_Bad_RNG_Test final : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("RSA keygen with bad RNG");
+
+         /*
+         We don't need to count requests here; actually this test
+         is relying on the fact that the Request_Counting_RNG outputs
+         repeating 808080...
+         */
+         Request_Counting_RNG rng;
+
+         try
+            {
+            Botan::RSA_PrivateKey rsa(rng, 1024);
+            result.test_failure("Generated a key with a bad RNG");
+            }
+         catch(Botan::Internal_Error& e)
+            {
+            result.test_success("Key generation with bad RNG failed");
+            result.test_eq("Expected message",
+                           e.what(), "Internal error: RNG failure during RSA key generation");
+            }
+
+         return {result};
+         }
+   };
+
 class RSA_Blinding_Tests final : public Test
    {
    public:
@@ -326,6 +356,7 @@ BOTAN_REGISTER_TEST("pubkey", "rsa_verify", RSA_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_verify_invalid", RSA_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_kem", RSA_KEM_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_keygen", RSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_keygen_badrng", RSA_Keygen_Bad_RNG_Test);
 BOTAN_REGISTER_TEST("pubkey", "rsa_blinding", RSA_Blinding_Tests);
 
 #endif
