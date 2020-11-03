@@ -1,10 +1,11 @@
 <defines>
-XMSS_RFC8391 -> 20190623
+XMSS_RFC8391 -> 20201101
 </defines>
 
 <header:public>
 xmss.h
 xmss_hash.h
+xmss_wots.h
 xmss_parameters.h
 xmss_key_pair.h
 xmss_privatekey.h

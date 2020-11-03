@@ -12,8 +12,7 @@
 #include <botan/pk_keys.h>
 #include <botan/exceptn.h>
 #include <botan/xmss_parameters.h>
-#include <botan/xmss_wots_parameters.h>
-#include <botan/xmss_wots_privatekey.h>
+#include <botan/xmss_wots.h>
 
 namespace Botan {
 

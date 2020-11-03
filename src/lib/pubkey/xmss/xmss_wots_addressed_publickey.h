@@ -10,7 +10,7 @@
 #define BOTAN_XMSS_WOTS_ADDRESSED_PUBLICKEY_H_
 
 #include <botan/internal/xmss_address.h>
-#include <botan/xmss_wots_publickey.h>
+#include <botan/xmss_wots.h>
 
 namespace Botan {
 

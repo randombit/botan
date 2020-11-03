@@ -7,21 +7,16 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_HOTP)
+#if defined(BOTAN_HAS_HOTP) && defined(BOTAN_HAS_TOTP)
    #include <botan/parsing.h>
-   #include <botan/hotp.h>
+   #include <botan/otp.h>
    #include <botan/hash.h>
-#endif
-
-#if defined(BOTAN_HAS_TOTP)
-   #include <botan/totp.h>
    #include <botan/calendar.h>
-   #include <botan/hash.h>
 #endif
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_HOTP)
+#if defined(BOTAN_HAS_HOTP) && defined(BOTAN_HAS_TOTP)
 
 class HOTP_KAT_Tests final : public Text_Based_Test
    {
@@ -73,10 +68,6 @@ class HOTP_KAT_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("otp", "otp_hotp", HOTP_KAT_Tests);
-
-#endif
-
-#if defined(BOTAN_HAS_TOTP)
 
 class TOTP_KAT_Tests final : public Text_Based_Test
    {
@@ -136,6 +127,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("otp", "otp_totp", TOTP_KAT_Tests);
+
 #endif
 
 }
