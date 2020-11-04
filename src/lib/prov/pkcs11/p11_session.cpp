@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/p11_session.h>
+#include <botan/p11_types.h>
 
 namespace Botan {
 namespace PKCS11 {
