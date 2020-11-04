@@ -8,7 +8,7 @@
 #ifndef BOTAN_INTERNAL_COMMONCRYPTO_UTILS_H_
 #define BOTAN_INTERNAL_COMMONCRYPTO_UTILS_H_
 
-#include <botan/key_spec.h>
+#include <botan/sym_algo.h>
 
 #include <CommonCrypto/CommonCrypto.h>
 

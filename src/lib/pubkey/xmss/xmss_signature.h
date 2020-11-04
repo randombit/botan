@@ -13,7 +13,7 @@
 #include <botan/types.h>
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
-#include <botan/xmss_wots_publickey.h>
+#include <botan/xmss_wots.h>
 
 namespace Botan {
 

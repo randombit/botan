@@ -8,7 +8,7 @@
 #include <botan/internal/ffi_util.h>
 
 #if defined(BOTAN_HAS_TOTP)
-   #include <botan/totp.h>
+   #include <botan/otp.h>
 #endif
 
 extern "C" {

@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/totp.h>
+#include <botan/otp.h>
 #include <botan/calendar.h>
 
 namespace Botan {

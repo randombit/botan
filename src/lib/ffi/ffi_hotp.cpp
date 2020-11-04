@@ -8,7 +8,7 @@
 #include <botan/internal/ffi_util.h>
 
 #if defined(BOTAN_HAS_HOTP)
-   #include <botan/hotp.h>
+   #include <botan/otp.h>
 #endif
 
 extern "C" {
