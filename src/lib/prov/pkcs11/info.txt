@@ -29,8 +29,4 @@ p11_randomgenerator.h
 p11_rsa.h
 p11_types.h
 p11_x509.h
-
-p11_module.h
-p11_slot.h
-p11_session.h
 </header:public>

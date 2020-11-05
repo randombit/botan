@@ -1,3 +1,7 @@
 <defines>
 CERTSTOR_SQL -> 20160818
 </defines>
+
+<header:public>
+certstor_sql.h
+</header:public>

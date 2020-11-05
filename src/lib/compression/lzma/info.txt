@@ -7,3 +7,7 @@ load_on vendor
 <libs>
 all -> lzma
 </libs>
+
+<header:public>
+lzma.h
+</header:public>

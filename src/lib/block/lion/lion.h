@@ -12,8 +12,6 @@
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(lion.h)
-
 namespace Botan {
 
 /**
@@ -24,7 +22,7 @@ namespace Botan {
 
 * https://www.cl.cam.ac.uk/~rja14/Papers/bear-lion.pdf
 */
-class BOTAN_PUBLIC_API(2,0) Lion final : public BlockCipher
+class Lion final : public BlockCipher
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

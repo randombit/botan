@@ -5,7 +5,7 @@
 */
 #include "fuzzers.h"
 
-#include <botan/oaep.h>
+#include <botan/internal/oaep.h>
 #include <botan/hex.h>
 
 namespace {

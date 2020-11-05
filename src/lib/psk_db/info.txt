@@ -9,3 +9,7 @@ base64
 sha2_32
 nist_keywrap
 </requires>
+
+<header:public>
+psk_db.h
+</header:public>

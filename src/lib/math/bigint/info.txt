@@ -4,8 +4,11 @@ BIGINT -> 20131128
 
 <header:public>
 bigint.h
-divide.h
 </header:public>
+
+<header:internal>
+divide.h
+</header:internal>
 
 <requires>
 mp

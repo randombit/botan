@@ -15,7 +15,7 @@
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/stl_util.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

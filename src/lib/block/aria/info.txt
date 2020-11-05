@@ -1,7 +1,3 @@
 <defines>
 ARIA -> 20170415
 </defines>
-
-<header:public>
-aria.h
-</header:public>

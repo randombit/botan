@@ -7,8 +7,8 @@
 #include <botan/base58.h>
 #include <botan/exceptn.h>
 #include <botan/bigint.h>
-#include <botan/divide.h>
-#include <botan/loadstor.h>
+#include <botan/internal/divide.h>
+#include <botan/internal/loadstor.h>
 #include <botan/hash.h>
 
 namespace Botan {

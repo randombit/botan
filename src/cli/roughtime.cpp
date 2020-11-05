@@ -15,7 +15,7 @@
 #include <botan/base64.h>
 #include <botan/ed25519.h>
 #include <botan/hash.h>
-#include <botan/calendar.h>
+#include <botan/internal/calendar.h>
 
 #include <iomanip>
 #include <fstream>

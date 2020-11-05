@@ -12,11 +12,10 @@
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
 #include <botan/internal/xmss_address.h>
-#include <botan/xmss_hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(xmss_common_ops.h)
 
 namespace Botan {
+
+class XMSS_Hash;
 
 typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
 

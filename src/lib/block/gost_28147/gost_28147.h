@@ -10,8 +10,6 @@
 
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(gost_28147.h)
-
 namespace Botan {
 
 /**
@@ -20,7 +18,7 @@ namespace Botan {
 * considered a local configuration issue. Several different sets are
 * used.
 */
-class BOTAN_PUBLIC_API(2,0) GOST_28147_89_Params final
+class GOST_28147_89_Params final
    {
    public:
       /**
@@ -57,7 +55,7 @@ class BOTAN_PUBLIC_API(2,0) GOST_28147_89_Params final
 /**
 * GOST 28147-89
 */
-class BOTAN_PUBLIC_API(2,0) GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
+class GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

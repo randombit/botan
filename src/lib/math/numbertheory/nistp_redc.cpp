@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/curve_nistp.h>
+#include <botan/internal/curve_nistp.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_asmi.h>
 #include <botan/internal/ct_utils.h>

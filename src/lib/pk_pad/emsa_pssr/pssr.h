@@ -8,17 +8,15 @@
 #ifndef BOTAN_PSSR_H_
 #define BOTAN_PSSR_H_
 
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 #include <botan/hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(pssr.h)
 
 namespace Botan {
 
 /**
 * PSSR (called EMSA4 in IEEE 1363 and in old versions of the library)
 */
-class BOTAN_PUBLIC_API(2,0) PSSR final : public EMSA
+class PSSR final : public EMSA
    {
    public:
 
@@ -61,7 +59,7 @@ class BOTAN_PUBLIC_API(2,0) PSSR final : public EMSA
 * PSSR_Raw
 * This accepts a pre-hashed buffer
 */
-class BOTAN_PUBLIC_API(2,3) PSSR_Raw final : public EMSA
+class PSSR_Raw final : public EMSA
    {
    public:
 

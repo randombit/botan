@@ -16,7 +16,7 @@
 #include <botan/pk_algs.h>
 
 #if defined(BOTAN_HAS_PKCS5_PBES2)
-   #include <botan/pbes2.h>
+   #include <botan/internal/pbes2.h>
 #endif
 
 namespace Botan {

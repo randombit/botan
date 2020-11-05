@@ -11,14 +11,12 @@
 #include <botan/hash.h>
 #include <vector>
 
-BOTAN_FUTURE_INTERNAL_HEADER(par_hash.h)
-
 namespace Botan {
 
 /**
 * Parallel Hashes
 */
-class BOTAN_PUBLIC_API(2,0) Parallel final : public HashFunction
+class Parallel final : public HashFunction
    {
    public:
       void clear() override;

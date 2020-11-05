@@ -8,7 +8,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/charset.h>
+#include <botan/internal/charset.h>
 
 namespace Botan {
 

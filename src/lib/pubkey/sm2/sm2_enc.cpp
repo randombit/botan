@@ -7,7 +7,7 @@
 
 #include <botan/sm2.h>
 #include <botan/internal/point_mul.h>
-#include <botan/pk_ops.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/kdf.h>

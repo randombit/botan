@@ -7,11 +7,11 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PK_PADDING)
-   #include <botan/emsa.h>
+   #include <botan/internal/emsa.h>
 #endif
 
 #if defined(BOTAN_HAS_EME_PKCS1)
-   #include <botan/eme_pkcs.h>
+   #include <botan/internal/eme_pkcs.h>
 #endif
 
 namespace Botan_Tests {

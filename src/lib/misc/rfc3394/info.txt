@@ -6,3 +6,7 @@ RFC3394_KEYWRAP -> 20131128
 aes
 nist_keywrap
 </requires>
+
+<header:public>
+rfc3394.h
+</header:public>

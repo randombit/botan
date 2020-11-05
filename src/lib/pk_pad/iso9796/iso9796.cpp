@@ -5,11 +5,11 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#include <botan/iso9796.h>
+#include <botan/internal/iso9796.h>
 #include <botan/rng.h>
 #include <botan/exceptn.h>
-#include <botan/mgf1.h>
-#include <botan/hash_id.h>
+#include <botan/internal/mgf1.h>
+#include <botan/internal/hash_id.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 

@@ -8,7 +8,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
-#include <botan/datastor.h>
+#include <botan/internal/datastor.h>
 
 namespace Botan_Tests {
 

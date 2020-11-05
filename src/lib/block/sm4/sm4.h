@@ -10,14 +10,12 @@
 
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(sm4.h)
-
 namespace Botan {
 
 /**
 * SM4
 */
-class BOTAN_PUBLIC_API(2,2) SM4 final : public Block_Cipher_Fixed_Params<16, 16>
+class SM4 final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

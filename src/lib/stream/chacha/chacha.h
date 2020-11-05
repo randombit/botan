@@ -10,14 +10,12 @@
 
 #include <botan/stream_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(chacha.h)
-
 namespace Botan {
 
 /**
 * DJB's ChaCha (https://cr.yp.to/chacha.html)
 */
-class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
+class ChaCha final : public StreamCipher
    {
    public:
       /**

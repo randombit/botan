@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/kdf1_iso18033.h>
+#include <botan/internal/kdf1_iso18033.h>
 
 namespace Botan {
 

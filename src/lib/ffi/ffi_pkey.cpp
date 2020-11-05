@@ -16,7 +16,7 @@
 #include <botan/pk_algs.h>
 
 #if defined(BOTAN_HAS_HASH_ID)
-  #include <botan/hash_id.h>
+  #include <botan/internal/hash_id.h>
 #endif
 
 extern "C" {

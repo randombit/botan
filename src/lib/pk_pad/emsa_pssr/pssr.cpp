@@ -5,10 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/pssr.h>
+#include <botan/internal/pssr.h>
 #include <botan/exceptn.h>
 #include <botan/rng.h>
-#include <botan/mgf1.h>
+#include <botan/internal/mgf1.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/der_enc.h>
 #include <botan/pk_keys.h>

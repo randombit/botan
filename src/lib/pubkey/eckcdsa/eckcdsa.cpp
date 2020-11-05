@@ -9,9 +9,9 @@
 #include <botan/eckcdsa.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
-#include <botan/keypair.h>
+#include <botan/internal/keypair.h>
 #include <botan/reducer.h>
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
 

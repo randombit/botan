@@ -10,14 +10,12 @@
 
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(des.h)
-
 namespace Botan {
 
 /**
 * DES
 */
-class BOTAN_PUBLIC_API(2,0) DES final : public Block_Cipher_Fixed_Params<8, 8>
+class DES final : public Block_Cipher_Fixed_Params<8, 8>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
@@ -35,7 +33,7 @@ class BOTAN_PUBLIC_API(2,0) DES final : public Block_Cipher_Fixed_Params<8, 8>
 /**
 * Triple DES
 */
-class BOTAN_PUBLIC_API(2,0) TripleDES final : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
+class TripleDES final : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

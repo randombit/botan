@@ -5,3 +5,7 @@ PEM_CODEC -> 20131128
 <requires>
 base64
 </requires>
+
+<header:public>
+pem.h
+</header:public>

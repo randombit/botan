@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/ccm.h>
-#include <botan/loadstor.h>
+#include <botan/internal/ccm.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

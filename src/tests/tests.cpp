@@ -10,7 +10,7 @@
 #include <fstream>
 #include <iomanip>
 #include <botan/hex.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/stl_util.h>
 #include <botan/cpuid.h>

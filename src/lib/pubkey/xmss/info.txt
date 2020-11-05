@@ -7,17 +7,12 @@ xmss.h
 xmss_hash.h
 xmss_wots.h
 xmss_parameters.h
-xmss_key_pair.h
-xmss_privatekey.h
-xmss_publickey.h
-xmss_wots_parameters.h
-xmss_wots_privatekey.h
-xmss_wots_publickey.h
 </header:public>
 
 <header:internal>
 atomic.h
 xmss_address.h
+xmss_common_ops.h
 xmss_common_ops.h
 xmss_index_registry.h
 xmss_signature.h

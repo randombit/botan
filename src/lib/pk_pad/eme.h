@@ -11,8 +11,6 @@
 #include <botan/secmem.h>
 #include <string>
 
-BOTAN_FUTURE_INTERNAL_HEADER(eme.h)
-
 namespace Botan {
 
 class RandomNumberGenerator;
@@ -20,7 +18,7 @@ class RandomNumberGenerator;
 /**
 * Encoding Method for Encryption
 */
-class BOTAN_PUBLIC_API(2,0) EME
+class EME
    {
    public:
       virtual ~EME() = default;
@@ -87,7 +85,7 @@ class BOTAN_PUBLIC_API(2,0) EME
 * @param algo_spec the name of the EME to create
 * @return pointer to newly allocated object of that type
 */
-BOTAN_PUBLIC_API(2,0) EME*  get_eme(const std::string& algo_spec);
+EME*  get_eme(const std::string& algo_spec);
 
 }
 

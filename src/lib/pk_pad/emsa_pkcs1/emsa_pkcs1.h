@@ -8,10 +8,8 @@
 #ifndef BOTAN_EMSA_PKCS1_H_
 #define BOTAN_EMSA_PKCS1_H_
 
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 #include <botan/hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(emsa_pkcs1.h)
 
 namespace Botan {
 
@@ -20,7 +18,7 @@ namespace Botan {
 * aka PKCS #1 block type 1
 * aka EMSA3 from IEEE 1363
 */
-class BOTAN_PUBLIC_API(2,0) EMSA_PKCS1v15 final : public EMSA
+class EMSA_PKCS1v15 final : public EMSA
    {
    public:
       /**
@@ -55,7 +53,7 @@ class BOTAN_PUBLIC_API(2,0) EMSA_PKCS1v15 final : public EMSA
 * (which according to QCA docs is "identical to PKCS#11's CKM_RSA_PKCS
 * mechanism", something I have not confirmed)
 */
-class BOTAN_PUBLIC_API(2,0) EMSA_PKCS1v15_Raw final : public EMSA
+class EMSA_PKCS1v15_Raw final : public EMSA
    {
    public:
       EMSA* clone() override { return new EMSA_PKCS1v15_Raw(); }

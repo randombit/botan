@@ -8,3 +8,7 @@ load_on vendor
 all!windows -> z
 windows -> zlib
 </libs>
+
+<header:public>
+zlib.h
+</header:public>

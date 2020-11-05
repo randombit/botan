@@ -14,7 +14,7 @@
 
 #include <botan/secmem.h>
 #include <botan/types.h>
-#include <botan/pk_ops.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/mceliece.h>
 #include <botan/polyn_gf2m.h>
 

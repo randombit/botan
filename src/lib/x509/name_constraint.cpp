@@ -7,9 +7,9 @@
 
 #include <botan/pkix_types.h>
 #include <botan/ber_dec.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/x509cert.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <sstream>
 
 namespace Botan {

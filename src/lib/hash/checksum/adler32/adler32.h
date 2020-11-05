@@ -10,14 +10,12 @@
 
 #include <botan/hash.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(adler32.h)
-
 namespace Botan {
 
 /**
 * The Adler32 checksum, used in zlib
 */
-class BOTAN_PUBLIC_API(2,0) Adler32 final : public HashFunction
+class Adler32 final : public HashFunction
    {
    public:
       std::string name() const override { return "Adler32"; }

@@ -6,9 +6,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/crc24.h>
-#include <botan/loadstor.h>
-#include <botan/bswap.h>
+#include <botan/internal/crc24.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/bswap.h>
 
 namespace Botan {
 

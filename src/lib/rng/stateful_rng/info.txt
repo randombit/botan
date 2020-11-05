@@ -1,3 +1,7 @@
 <defines>
 STATEFUL_RNG -> 20160819
 </defines>
+
+<header:public>
+stateful_rng.h
+</header:public>

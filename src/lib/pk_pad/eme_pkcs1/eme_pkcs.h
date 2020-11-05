@@ -8,16 +8,14 @@
 #ifndef BOTAN_EME_PKCS1_H_
 #define BOTAN_EME_PKCS1_H_
 
-#include <botan/eme.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(eme_pkcs.h)
+#include <botan/internal/eme.h>
 
 namespace Botan {
 
 /**
 * EME from PKCS #1 v1.5
 */
-class BOTAN_PUBLIC_API(2,0) EME_PKCS1v15 final : public EME
+class BOTAN_TEST_API EME_PKCS1v15 final : public EME
    {
    public:
       size_t maximum_input_size(size_t) const override;

@@ -9,11 +9,11 @@
 */
 
 #include <botan/internal/tls_cbc.h>
-#include <botan/cbc.h>
+#include <botan/internal/cbc.h>
 
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 

@@ -10,3 +10,7 @@ sha2_32
 ctr
 aes
 </requires>
+
+<header:public>
+newhope.h
+</header:public>

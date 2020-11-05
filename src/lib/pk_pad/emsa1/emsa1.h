@@ -8,10 +8,8 @@
 #ifndef BOTAN_EMSA1_H_
 #define BOTAN_EMSA1_H_
 
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 #include <botan/hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(emsa1.h)
 
 namespace Botan {
 
@@ -19,7 +17,7 @@ namespace Botan {
 * EMSA1 from IEEE 1363
 * Essentially, sign the hash directly
 */
-class BOTAN_PUBLIC_API(2,0) EMSA1 final : public EMSA
+class EMSA1 final : public EMSA
    {
    public:
       /**

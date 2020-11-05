@@ -10,7 +10,7 @@
 #if defined(BOTAN_HAS_OPENSSL) && defined(BOTAN_HAS_RC4)
 
 #include <botan/internal/openssl.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/exceptn.h>
 #include <openssl/rc4.h>
 

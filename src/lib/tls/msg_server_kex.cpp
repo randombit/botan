@@ -12,7 +12,7 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/credentials_manager.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/pubkey.h>
 
 #include <botan/dh.h>

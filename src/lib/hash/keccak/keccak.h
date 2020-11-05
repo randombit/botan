@@ -14,12 +14,10 @@
 
 namespace Botan {
 
-BOTAN_FUTURE_INTERNAL_HEADER(keccak.h)
-
 /**
 * Keccak[1600], a SHA-3 candidate
 */
-class BOTAN_PUBLIC_API(2,0) Keccak_1600 final : public HashFunction
+class Keccak_1600 final : public HashFunction
    {
    public:
 

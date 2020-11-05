@@ -10,8 +10,6 @@
 
 #include <botan/bigint.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(pow_mod.h)
-
 namespace Botan {
 
 class Modular_Exponentiator;
@@ -19,7 +17,7 @@ class Modular_Exponentiator;
 /**
 * Modular Exponentiator Proxy
 */
-class BOTAN_PUBLIC_API(2,0) Power_Mod
+class BOTAN_TEST_API Power_Mod
    {
    public:
 
@@ -88,7 +86,7 @@ class BOTAN_PUBLIC_API(2,0) Power_Mod
 /**
 * Fixed Exponent Modular Exponentiator Proxy
 */
-class BOTAN_PUBLIC_API(2,0) Fixed_Exponent_Power_Mod final : public Power_Mod
+class Fixed_Exponent_Power_Mod final : public Power_Mod
    {
    public:
       BigInt operator()(const BigInt& b) const
@@ -104,7 +102,7 @@ class BOTAN_PUBLIC_API(2,0) Fixed_Exponent_Power_Mod final : public Power_Mod
 /**
 * Fixed Base Modular Exponentiator Proxy
 */
-class BOTAN_PUBLIC_API(2,0) Fixed_Base_Power_Mod final : public Power_Mod
+class Fixed_Base_Power_Mod final : public Power_Mod
    {
    public:
       BigInt operator()(const BigInt& e) const

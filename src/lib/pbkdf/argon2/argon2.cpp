@@ -5,10 +5,10 @@
 */
 
 #include <botan/argon2.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
-#include <botan/rotate.h>
+#include <botan/internal/rotate.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

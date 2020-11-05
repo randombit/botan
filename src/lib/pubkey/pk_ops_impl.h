@@ -8,10 +8,10 @@
 #ifndef BOTAN_PK_OPERATION_IMPL_H_
 #define BOTAN_PK_OPERATION_IMPL_H_
 
-#include <botan/pk_ops.h>
-#include <botan/eme.h>
+#include <botan/internal/pk_ops.h>
+#include <botan/internal/eme.h>
 #include <botan/kdf.h>
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 
 namespace Botan {
 

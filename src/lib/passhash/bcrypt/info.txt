@@ -7,3 +7,7 @@ blowfish
 rng
 base64
 </requires>
+
+<header:public>
+bcrypt.h
+</header:public>

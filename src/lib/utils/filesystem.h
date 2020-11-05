@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * No_Filesystem_Access Exception
 */
-class BOTAN_PUBLIC_API(2,0) No_Filesystem_Access final : public Exception
+class No_Filesystem_Access final : public Exception
    {
    public:
       No_Filesystem_Access() : Exception("No filesystem access enabled.")

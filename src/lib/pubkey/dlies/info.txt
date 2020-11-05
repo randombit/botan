@@ -8,3 +8,7 @@ kdf
 mac
 modes
 </requires>
+
+<header:public>
+dlies.h
+</header:public>

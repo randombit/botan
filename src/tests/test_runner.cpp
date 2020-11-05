@@ -8,7 +8,7 @@
 #include "tests.h"
 
 #include <botan/version.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/cpuid.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)

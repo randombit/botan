@@ -6,13 +6,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/pbes2.h>
+#include <botan/internal/pbes2.h>
 #include <botan/cipher_mode.h>
 #include <botan/pbkdf.h>
 #include <botan/pwdhash.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <botan/rng.h>

@@ -11,7 +11,7 @@
 #endif
 
 #if defined(BOTAN_HAS_HKDF)
-   #include <botan/hkdf.h>
+   #include <botan/internal/hkdf.h>
    #include <botan/hash.h>
 #endif
 

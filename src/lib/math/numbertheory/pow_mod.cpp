@@ -6,10 +6,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/pow_mod.h>
+#include <botan/internal/pow_mod.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
-#include <botan/monty.h>
+#include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/rounding.h>
 #include <vector>

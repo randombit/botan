@@ -5,3 +5,7 @@ PBKDF2 -> 20180902
 <requires>
 hmac
 </requires>
+
+<header:public>
+pbkdf2.h
+</header:public>

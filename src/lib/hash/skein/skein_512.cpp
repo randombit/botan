@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/skein_512.h>
-#include <botan/loadstor.h>
+#include <botan/internal/skein_512.h>
+#include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
 #include <algorithm>
 

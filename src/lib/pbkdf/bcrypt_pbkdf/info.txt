@@ -6,3 +6,7 @@ PBKDF_BCRYPT -> 20190531
 blowfish
 sha2_64
 </requires>
+
+<header:public>
+bcrypt_pbkdf.h
+</header:public>

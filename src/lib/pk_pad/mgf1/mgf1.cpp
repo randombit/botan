@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/mgf1.h>
+#include <botan/internal/mgf1.h>
 #include <botan/hash.h>
 #include <algorithm>
 

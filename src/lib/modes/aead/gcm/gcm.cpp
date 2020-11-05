@@ -6,10 +6,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/gcm.h>
-#include <botan/ghash.h>
+#include <botan/internal/gcm.h>
+#include <botan/internal/ghash.h>
 #include <botan/block_cipher.h>
-#include <botan/ctr.h>
+#include <botan/internal/ctr.h>
 
 namespace Botan {
 

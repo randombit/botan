@@ -5,3 +5,7 @@ TLS_SESSION_MANAGER_SQL_DB -> 20141219
 <requires>
 pbkdf2
 </requires>
+
+<header:public>
+tls_session_manager_sql.h
+</header:public>

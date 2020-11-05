@@ -12,15 +12,13 @@
 #include <botan/aead.h>
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(ccm.h)
-
 namespace Botan {
 
 /**
 * Base class for CCM encryption and decryption
 * @see RFC 3610
 */
-class BOTAN_PUBLIC_API(2,0) CCM_Mode : public AEAD_Mode
+class CCM_Mode : public AEAD_Mode
    {
    public:
       size_t process(uint8_t buf[], size_t sz) override;
@@ -77,7 +75,7 @@ class BOTAN_PUBLIC_API(2,0) CCM_Mode : public AEAD_Mode
 /**
 * CCM Encryption
 */
-class BOTAN_PUBLIC_API(2,0) CCM_Encryption final : public CCM_Mode
+class CCM_Encryption final : public CCM_Mode
    {
    public:
       /**
@@ -101,7 +99,7 @@ class BOTAN_PUBLIC_API(2,0) CCM_Encryption final : public CCM_Mode
 /**
 * CCM Decryption
 */
-class BOTAN_PUBLIC_API(2,0) CCM_Decryption final : public CCM_Mode
+class CCM_Decryption final : public CCM_Mode
    {
    public:
       /**

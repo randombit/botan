@@ -11,14 +11,12 @@
 
 #include <botan/hash.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(crc24.h)
-
 namespace Botan {
 
 /**
 * 24-bit cyclic redundancy check
 */
-class BOTAN_PUBLIC_API(2,0) CRC24 final : public HashFunction
+class CRC24 final : public HashFunction
    {
    public:
       std::string name() const override { return "CRC24"; }

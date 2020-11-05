@@ -6,7 +6,7 @@
 */
 
 #include <botan/otp.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

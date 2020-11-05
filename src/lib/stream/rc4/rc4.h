@@ -11,14 +11,12 @@
 #include <botan/stream_cipher.h>
 #include <botan/types.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(rc4.h)
-
 namespace Botan {
 
 /**
 * RC4 stream cipher
 */
-class BOTAN_PUBLIC_API(2,0) RC4 final : public StreamCipher
+class RC4 final : public StreamCipher
    {
    public:
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override;

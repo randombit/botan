@@ -8,10 +8,10 @@
 #include <botan/tpm.h>
 #include <botan/rsa.h>
 #include <botan/hash.h>
-#include <botan/hash_id.h>
+#include <botan/internal/hash_id.h>
 #include <botan/der_enc.h>
-#include <botan/workfactor.h>
-#include <botan/pk_ops.h>
+#include <botan/internal/workfactor.h>
+#include <botan/internal/pk_ops.h>
 #include <sstream>
 
 #include <tss/platform.h>

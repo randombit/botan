@@ -7,7 +7,7 @@
 #include <botan/argon2.h>
 #include <botan/rng.h>
 #include <botan/base64.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <sstream>
 
 namespace Botan {

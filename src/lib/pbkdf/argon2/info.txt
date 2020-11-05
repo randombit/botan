@@ -7,3 +7,7 @@ blake2
 base64
 </requires>
 
+
+<header:public>
+argon2.h
+</header:public>

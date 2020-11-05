@@ -11,7 +11,7 @@
 #include <botan/internal/ffi_mp.h>
 #include <botan/reducer.h>
 #include <botan/numthry.h>
-#include <botan/divide.h>
+#include <botan/internal/divide.h>
 
 extern "C" {
 

@@ -1,3 +1,7 @@
 <requires>
 entropy
 </requires>
+
+<header:public>
+rng.h
+</header:public>

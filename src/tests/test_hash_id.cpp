@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_HASH_ID) && defined(BOTAN_HAS_ASN1)
-  #include <botan/hash_id.h>
+  #include <botan/internal/hash_id.h>
   #include <botan/der_enc.h>
   #include <botan/asn1_obj.h>
 #endif

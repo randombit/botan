@@ -5,3 +5,7 @@ NIST_KEYWRAP -> 20171119
 <requires>
 block
 </requires>
+
+<header:public>
+nist_keywrap.h
+</header:public>

@@ -10,14 +10,12 @@
 
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(threefish_512.h)
-
 namespace Botan {
 
 /**
 * Threefish-512
 */
-class BOTAN_PUBLIC_API(2,0) Threefish_512 final :
+class Threefish_512 final :
    public Block_Cipher_Fixed_Params<64, 64, 0, 1, Tweakable_Block_Cipher>
    {
    public:

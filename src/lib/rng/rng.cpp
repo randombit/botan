@@ -6,7 +6,7 @@
 
 #include <botan/rng.h>
 #include <botan/entropy_src.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)

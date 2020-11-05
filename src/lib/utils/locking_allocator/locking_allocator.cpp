@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/locking_allocator.h>
+#include <botan/internal/locking_allocator.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/mem_pool.h>
 

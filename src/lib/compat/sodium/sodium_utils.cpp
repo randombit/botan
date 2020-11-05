@@ -5,12 +5,12 @@
 */
 
 #include <botan/sodium.h>
-#include <botan/chacha.h>
+#include <botan/internal/chacha.h>
 #include <botan/mem_ops.h>
 #include <botan/system_rng.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

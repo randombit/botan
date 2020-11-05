@@ -8,7 +8,7 @@
 #include <botan/cpuid.h>
 #include <botan/types.h>
 #include <botan/exceptn.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <ostream>
 
 namespace Botan {

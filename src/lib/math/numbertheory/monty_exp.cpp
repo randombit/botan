@@ -11,7 +11,7 @@
 #include <botan/internal/rounding.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
-#include <botan/monty.h>
+#include <botan/internal/monty.h>
 
 namespace Botan {
 

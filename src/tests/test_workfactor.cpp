@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-   #include <botan/workfactor.h>
+   #include <botan/internal/workfactor.h>
 #endif
 
 namespace Botan_Tests {

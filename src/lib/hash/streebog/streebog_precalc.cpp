@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <botan/streebog.h>
+#include <botan/internal/streebog.h>
 
 namespace Botan {
 

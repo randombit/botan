@@ -7,7 +7,7 @@
 
 #include <botan/cpuid.h>
 #include <botan/mem_ops.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 

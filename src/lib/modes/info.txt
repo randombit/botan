@@ -5,5 +5,8 @@ CIPHER_MODES -> 20180124
 
 <header:public>
 cipher_mode.h
-stream_mode.h
 </header:public>
+
+<header:internal>
+stream_mode.h
+</header:internal>

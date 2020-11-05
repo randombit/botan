@@ -10,14 +10,12 @@
 
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(camellia.h)
-
 namespace Botan {
 
 /**
 * Camellia-128
 */
-class BOTAN_PUBLIC_API(2,0) Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16>
+class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
@@ -35,7 +33,7 @@ class BOTAN_PUBLIC_API(2,0) Camellia_128 final : public Block_Cipher_Fixed_Param
 /**
 * Camellia-192
 */
-class BOTAN_PUBLIC_API(2,0) Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24>
+class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
@@ -53,7 +51,7 @@ class BOTAN_PUBLIC_API(2,0) Camellia_192 final : public Block_Cipher_Fixed_Param
 /**
 * Camellia-256
 */
-class BOTAN_PUBLIC_API(2,0) Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32>
+class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

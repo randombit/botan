@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/shacal2.h>
+#include <botan/internal/shacal2.h>
 #include <botan/internal/simd_avx2.h>
 
 namespace Botan {

@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/cascade.h>
+#include <botan/internal/cascade.h>
 
 namespace Botan {
 

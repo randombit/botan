@@ -14,8 +14,6 @@
 #include <vector>
 #include <map>
 
-BOTAN_FUTURE_INTERNAL_HEADER(datastor.h)
-
 namespace Botan {
 
 /**
@@ -66,7 +64,7 @@ class BOTAN_UNSTABLE_API Data_Store final
 * @param info data store containing DN information
 * @return DN containing attributes from data store
 */
-BOTAN_PUBLIC_API(2,0) X509_DN
+X509_DN
 BOTAN_DEPRECATED("Avoid roundtripping names through Data_Store")
 create_dn(const Data_Store& info);
 
@@ -75,7 +73,7 @@ create_dn(const Data_Store& info);
 * @param info data store containing AlternativeName information
 * @return AlternativeName containing attributes from data store
 */
-BOTAN_PUBLIC_API(2,0) AlternativeName
+AlternativeName
 BOTAN_DEPRECATED("Avoid roundtripping names through Data_Store")
 create_alt_name(const Data_Store& info);
 

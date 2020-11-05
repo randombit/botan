@@ -11,7 +11,7 @@
 #include <botan/tls_policy.h>
 #include <botan/tls_version.h>
 #include <botan/tls_messages.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/hex.h>
 #include <sstream>
 

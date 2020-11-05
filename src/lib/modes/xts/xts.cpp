@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/xts.h>
+#include <botan/internal/xts.h>
 #include <botan/internal/poly_dbl.h>
 
 namespace Botan {

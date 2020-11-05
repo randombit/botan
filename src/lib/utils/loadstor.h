@@ -10,11 +10,9 @@
 #define BOTAN_LOAD_STORE_H_
 
 #include <botan/types.h>
-#include <botan/bswap.h>
+#include <botan/internal/bswap.h>
 #include <botan/mem_ops.h>
 #include <vector>
-
-BOTAN_FUTURE_INTERNAL_HEADER(loadstor.h)
 
 #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
    #define BOTAN_ENDIAN_N2L(x) reverse_bytes(x)

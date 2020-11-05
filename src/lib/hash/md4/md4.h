@@ -8,16 +8,14 @@
 #ifndef BOTAN_MD4_H_
 #define BOTAN_MD4_H_
 
-#include <botan/mdx_hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(md4.h)
+#include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
 /**
 * MD4
 */
-class BOTAN_PUBLIC_API(2,0) MD4 final : public MDx_HashFunction
+class MD4 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "MD4"; }

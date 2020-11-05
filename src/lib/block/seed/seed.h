@@ -10,14 +10,12 @@
 
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(seed.h)
-
 namespace Botan {
 
 /**
 * SEED, a Korean block cipher
 */
-class BOTAN_PUBLIC_API(2,0) SEED final : public Block_Cipher_Fixed_Params<16, 16>
+class SEED final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

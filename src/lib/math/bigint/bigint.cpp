@@ -10,7 +10,7 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

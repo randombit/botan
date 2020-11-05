@@ -10,71 +10,71 @@
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_AES)
-  #include <botan/aes.h>
+  #include <botan/internal/aes.h>
 #endif
 
 #if defined(BOTAN_HAS_ARIA)
-  #include <botan/aria.h>
+  #include <botan/internal/aria.h>
 #endif
 
 #if defined(BOTAN_HAS_BLOWFISH)
-  #include <botan/blowfish.h>
+  #include <botan/internal/blowfish.h>
 #endif
 
 #if defined(BOTAN_HAS_CAMELLIA)
-  #include <botan/camellia.h>
+  #include <botan/internal/camellia.h>
 #endif
 
 #if defined(BOTAN_HAS_CAST_128)
-  #include <botan/cast128.h>
+  #include <botan/internal/cast128.h>
 #endif
 
 #if defined(BOTAN_HAS_CASCADE)
-  #include <botan/cascade.h>
+  #include <botan/internal/cascade.h>
 #endif
 
 #if defined(BOTAN_HAS_DES)
-  #include <botan/des.h>
+  #include <botan/internal/des.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST_28147_89)
-  #include <botan/gost_28147.h>
+  #include <botan/internal/gost_28147.h>
 #endif
 
 #if defined(BOTAN_HAS_IDEA)
-  #include <botan/idea.h>
+  #include <botan/internal/idea.h>
 #endif
 
 #if defined(BOTAN_HAS_LION)
-  #include <botan/lion.h>
+  #include <botan/internal/lion.h>
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON)
-  #include <botan/noekeon.h>
+  #include <botan/internal/noekeon.h>
 #endif
 
 #if defined(BOTAN_HAS_SEED)
-  #include <botan/seed.h>
+  #include <botan/internal/seed.h>
 #endif
 
 #if defined(BOTAN_HAS_SERPENT)
-  #include <botan/serpent.h>
+  #include <botan/internal/serpent.h>
 #endif
 
 #if defined(BOTAN_HAS_SHACAL2)
-  #include <botan/shacal2.h>
+  #include <botan/internal/shacal2.h>
 #endif
 
 #if defined(BOTAN_HAS_SM4)
-  #include <botan/sm4.h>
+  #include <botan/internal/sm4.h>
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
-  #include <botan/twofish.h>
+  #include <botan/internal/twofish.h>
 #endif
 
 #if defined(BOTAN_HAS_THREEFISH_512)
-  #include <botan/threefish_512.h>
+  #include <botan/internal/threefish_512.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)

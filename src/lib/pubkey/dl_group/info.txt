@@ -8,3 +8,7 @@ bigint
 numbertheory
 pem
 </requires>
+
+<header:public>
+dl_group.h
+</header:public>

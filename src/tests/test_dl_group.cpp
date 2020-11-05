@@ -10,7 +10,7 @@
 
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
-   #include <botan/workfactor.h>
+   #include <botan/internal/workfactor.h>
 #endif
 
 namespace Botan_Tests {

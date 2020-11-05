@@ -10,7 +10,7 @@
    #include <botan/ocsp.h>
    #include <botan/x509path.h>
    #include <botan/certstor.h>
-   #include <botan/calendar.h>
+   #include <botan/internal/calendar.h>
    #include <fstream>
 #endif
 

@@ -6,3 +6,7 @@ UUID -> 20180930
 rng
 hex
 </requires>
+
+<header:public>
+uuid.h
+</header:public>

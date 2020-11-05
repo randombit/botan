@@ -13,7 +13,7 @@
 #include <botan/ber_dec.h>
 #include <botan/secmem.h>
 #include <botan/point_gfp.h>
-#include <botan/workfactor.h>
+#include <botan/internal/workfactor.h>
 
 namespace Botan {
 

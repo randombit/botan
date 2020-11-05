@@ -12,7 +12,7 @@
 #include <botan/pbkdf.h>
 #include <botan/data_src.h>
 #include <botan/pem.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/mem_ops.h>
 
 namespace Botan {

@@ -8,8 +8,8 @@
 #include <botan/elgamal.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/monty_exp.h>
-#include <botan/keypair.h>
-#include <botan/blinding.h>
+#include <botan/internal/keypair.h>
+#include <botan/internal/blinding.h>
 
 namespace Botan {
 

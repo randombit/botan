@@ -12,8 +12,6 @@
 #include <botan/secmem.h>
 #include <string>
 
-BOTAN_FUTURE_INTERNAL_HEADER(mode_pad.h)
-
 namespace Botan {
 
 /**
@@ -25,7 +23,7 @@ namespace Botan {
 * a padding mode for CBC, which happens to consume the last
 * two block (and requires use of the block cipher).
 */
-class BOTAN_PUBLIC_API(2,0) BlockCipherModePaddingMethod
+class BOTAN_TEST_API BlockCipherModePaddingMethod
    {
    public:
       /**
@@ -66,7 +64,7 @@ class BOTAN_PUBLIC_API(2,0) BlockCipherModePaddingMethod
 /**
 * PKCS#7 Padding
 */
-class BOTAN_PUBLIC_API(2,0) PKCS7_Padding final : public BlockCipherModePaddingMethod
+class BOTAN_TEST_API PKCS7_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<uint8_t>& buffer,
@@ -83,7 +81,7 @@ class BOTAN_PUBLIC_API(2,0) PKCS7_Padding final : public BlockCipherModePaddingM
 /**
 * ANSI X9.23 Padding
 */
-class BOTAN_PUBLIC_API(2,0) ANSI_X923_Padding final : public BlockCipherModePaddingMethod
+class BOTAN_TEST_API ANSI_X923_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<uint8_t>& buffer,
@@ -100,7 +98,7 @@ class BOTAN_PUBLIC_API(2,0) ANSI_X923_Padding final : public BlockCipherModePadd
 /**
 * One And Zeros Padding (ISO/IEC 9797-1, padding method 2)
 */
-class BOTAN_PUBLIC_API(2,0) OneAndZeros_Padding final : public BlockCipherModePaddingMethod
+class BOTAN_TEST_API OneAndZeros_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<uint8_t>& buffer,
@@ -117,7 +115,7 @@ class BOTAN_PUBLIC_API(2,0) OneAndZeros_Padding final : public BlockCipherModePa
 /**
 * ESP Padding (RFC 4304)
 */
-class BOTAN_PUBLIC_API(2,0) ESP_Padding final : public BlockCipherModePaddingMethod
+class BOTAN_TEST_API ESP_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<uint8_t>& buffer,
@@ -134,7 +132,7 @@ class BOTAN_PUBLIC_API(2,0) ESP_Padding final : public BlockCipherModePaddingMet
 /**
 * Null Padding
 */
-class BOTAN_PUBLIC_API(2,0) Null_Padding final : public BlockCipherModePaddingMethod
+class Null_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<uint8_t>&, size_t, size_t) const override
@@ -153,7 +151,7 @@ class BOTAN_PUBLIC_API(2,0) Null_Padding final : public BlockCipherModePaddingMe
 * Get a block cipher padding mode by name (eg "NoPadding" or "PKCS7")
 * @param algo_spec block cipher padding mode name
 */
-BOTAN_PUBLIC_API(2,0) BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec);
+BOTAN_TEST_API BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec);
 
 }
 

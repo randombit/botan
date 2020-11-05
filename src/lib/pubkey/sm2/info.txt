@@ -12,3 +12,7 @@ rng
 sm3
 kdf2
 </requires>
+
+<header:public>
+sm2.h
+</header:public>

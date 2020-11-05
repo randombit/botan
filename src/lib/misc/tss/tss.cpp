@@ -8,7 +8,7 @@
 #include <botan/tss.h>
 #include <botan/rng.h>
 #include <botan/hash.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/hex.h>
 
 namespace Botan {

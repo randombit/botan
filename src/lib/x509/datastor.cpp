@@ -5,9 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/datastor.h>
+#include <botan/internal/datastor.h>
 #include <botan/exceptn.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/hex.h>
 #include <botan/internal/stl_util.h>
 

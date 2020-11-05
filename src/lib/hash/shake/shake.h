@@ -12,14 +12,12 @@
 #include <botan/secmem.h>
 #include <string>
 
-BOTAN_FUTURE_INTERNAL_HEADER(shake.h)
-
 namespace Botan {
 
 /**
 * SHAKE-128
 */
-class BOTAN_PUBLIC_API(2,0) SHAKE_128 final : public HashFunction
+class SHAKE_128 final : public HashFunction
    {
    public:
 
@@ -51,7 +49,7 @@ class BOTAN_PUBLIC_API(2,0) SHAKE_128 final : public HashFunction
 /**
 * SHAKE-256
 */
-class BOTAN_PUBLIC_API(2,0) SHAKE_256 final : public HashFunction
+class SHAKE_256 final : public HashFunction
    {
    public:
 

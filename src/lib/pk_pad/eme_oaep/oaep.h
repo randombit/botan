@@ -8,10 +8,8 @@
 #ifndef BOTAN_OAEP_H_
 #define BOTAN_OAEP_H_
 
-#include <botan/eme.h>
+#include <botan/internal/eme.h>
 #include <botan/hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(oaep.h)
 
 namespace Botan {
 
@@ -19,7 +17,7 @@ namespace Botan {
 * OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
 * as specified in PKCS#1 v2.0 (RFC 2437)
 */
-class BOTAN_PUBLIC_API(2,0) OAEP final : public EME
+class OAEP final : public EME
    {
    public:
       size_t maximum_input_size(size_t) const override;

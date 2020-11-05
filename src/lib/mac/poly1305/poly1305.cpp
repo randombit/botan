@@ -8,9 +8,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/poly1305.h>
-#include <botan/loadstor.h>
-#include <botan/mul128.h>
+#include <botan/internal/poly1305.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/mul128.h>
 #include <botan/internal/donna128.h>
 #include <botan/internal/ct_utils.h>
 

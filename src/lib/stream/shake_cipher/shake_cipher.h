@@ -11,14 +11,12 @@
 #include <botan/stream_cipher.h>
 #include <botan/secmem.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(shake_cipher.h)
-
 namespace Botan {
 
 /**
 * SHAKE-128 XOF presented as a stream cipher
 */
-class BOTAN_PUBLIC_API(2,0) SHAKE_128_Cipher final : public StreamCipher
+class SHAKE_128_Cipher final : public StreamCipher
    {
    public:
       SHAKE_128_Cipher();

@@ -8,7 +8,7 @@
 #include <botan/reducer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
-#include <botan/divide.h>
+#include <botan/internal/divide.h>
 
 namespace Botan {
 

@@ -4,10 +4,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/aes.h>
-#include <botan/loadstor.h>
+#include <botan/internal/aes.h>
+#include <botan/internal/loadstor.h>
 #include <botan/cpuid.h>
-#include <botan/rotate.h>
+#include <botan/internal/rotate.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 

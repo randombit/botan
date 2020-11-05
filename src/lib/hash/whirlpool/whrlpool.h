@@ -8,16 +8,14 @@
 #ifndef BOTAN_WHIRLPOOL_H_
 #define BOTAN_WHIRLPOOL_H_
 
-#include <botan/mdx_hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(whrlpool.h)
+#include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
 /**
 * Whirlpool
 */
-class BOTAN_PUBLIC_API(2,0) Whirlpool final : public MDx_HashFunction
+class Whirlpool final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "Whirlpool"; }

@@ -11,14 +11,12 @@
 #include <botan/stream_cipher.h>
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(ofb.h)
-
 namespace Botan {
 
 /**
 * Output Feedback Mode
 */
-class BOTAN_PUBLIC_API(2,0) OFB final : public StreamCipher
+class OFB final : public StreamCipher
    {
    public:
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override;

@@ -9,8 +9,8 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/exceptn.h>
-#include <botan/parsing.h>
-#include <botan/calendar.h>
+#include <botan/internal/parsing.h>
+#include <botan/internal/calendar.h>
 #include <sstream>
 #include <iomanip>
 

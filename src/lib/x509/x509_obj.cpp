@@ -9,9 +9,9 @@
 #include <botan/pubkey.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/pem.h>
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 #include <algorithm>
 
 namespace Botan {

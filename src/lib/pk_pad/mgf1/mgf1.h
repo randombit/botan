@@ -22,7 +22,7 @@ class HashFunction;
 * @param out output buffer
 * @param out_len size of the output buffer in bytes
 */
-void BOTAN_PUBLIC_API(2,0) mgf1_mask(HashFunction& hash,
+void mgf1_mask(HashFunction& hash,
                          const uint8_t in[], size_t in_len,
                          uint8_t out[], size_t out_len);
 

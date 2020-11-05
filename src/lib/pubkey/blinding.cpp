@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/blinding.h>
+#include <botan/internal/blinding.h>
 
 namespace Botan {
 

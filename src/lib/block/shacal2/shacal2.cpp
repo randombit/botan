@@ -5,9 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/shacal2.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
+#include <botan/internal/shacal2.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
 #include <botan/cpuid.h>
 
 namespace Botan {

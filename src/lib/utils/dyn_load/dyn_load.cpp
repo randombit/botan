@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/dyn_load.h>
+#include <botan/internal/dyn_load.h>
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)

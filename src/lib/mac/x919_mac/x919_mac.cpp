@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/x919_mac.h>
+#include <botan/internal/x919_mac.h>
 
 namespace Botan {
 

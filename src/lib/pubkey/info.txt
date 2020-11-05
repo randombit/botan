@@ -3,19 +3,19 @@ PUBLIC_KEY_CRYPTO -> 20131128
 </defines>
 
 <header:public>
-blinding.h
 pk_algs.h
 pk_keys.h
-pk_ops.h
 pk_ops_fwd.h
 pkcs8.h
 pubkey.h
-workfactor.h
 x509_key.h
 </header:public>
 
 <header:internal>
+blinding.h
+pk_ops.h
 pk_ops_impl.h
+workfactor.h
 </header:internal>
 
 <requires>

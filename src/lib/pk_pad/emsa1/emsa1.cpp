@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/emsa1.h>
+#include <botan/internal/emsa1.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/internal/padding.h>

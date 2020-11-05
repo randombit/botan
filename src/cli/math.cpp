@@ -9,7 +9,7 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
 
 #include <botan/numthry.h>
-#include <botan/monty.h>
+#include <botan/internal/monty.h>
 #include <iterator>
 
 namespace Botan_CLI {

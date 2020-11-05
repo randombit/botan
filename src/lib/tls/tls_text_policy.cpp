@@ -8,7 +8,7 @@
 
 #include <botan/tls_policy.h>
 #include <botan/exceptn.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <sstream>
 
 namespace Botan {

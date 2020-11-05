@@ -7,8 +7,8 @@
 
 #include <botan/numthry.h>
 #include <botan/reducer.h>
-#include <botan/monty.h>
-#include <botan/divide.h>
+#include <botan/internal/monty.h>
+#include <botan/internal/divide.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>

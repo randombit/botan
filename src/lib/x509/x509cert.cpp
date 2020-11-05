@@ -8,11 +8,11 @@
 
 #include <botan/x509cert.h>
 #include <botan/x509_key.h>
-#include <botan/datastor.h>
+#include <botan/internal/datastor.h>
 #include <botan/pk_keys.h>
 #include <botan/x509_ext.h>
 #include <botan/ber_dec.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/bigint.h>
 #include <botan/oids.h>
 #include <botan/hash.h>

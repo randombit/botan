@@ -10,14 +10,12 @@
 
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(cast128.h)
-
 namespace Botan {
 
 /**
 * CAST-128
 */
-class BOTAN_PUBLIC_API(2,0) CAST_128 final : public Block_Cipher_Fixed_Params<8, 11, 16>
+class CAST_128 final : public Block_Cipher_Fixed_Params<8, 11, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

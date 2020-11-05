@@ -12,11 +12,10 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_FILTERS)
-   #include <botan/secqueue.h>
+   #include <botan/internal/secqueue.h>
    #include <botan/pipe.h>
    #include <botan/filters.h>
    #include <botan/data_snk.h>
-   #include <botan/cipher_filter.h>
 #endif
 
 #if defined(BOTAN_HAS_PIPE_UNIXFD_IO)

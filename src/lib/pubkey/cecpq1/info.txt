@@ -7,3 +7,7 @@ newhope
 curve25519
 </requires>
 
+
+<header:public>
+cecpq1.h
+</header:public>

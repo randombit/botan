@@ -5,21 +5,21 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/eme.h>
+#include <botan/internal/eme.h>
 #include <botan/scan_name.h>
 #include <botan/exceptn.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 
 #if defined(BOTAN_HAS_EME_OAEP)
-#include <botan/oaep.h>
+#include <botan/internal/oaep.h>
 #endif
 
 #if defined(BOTAN_HAS_EME_PKCS1)
-#include <botan/eme_pkcs.h>
+#include <botan/internal/eme_pkcs.h>
 #endif
 
 #if defined(BOTAN_HAS_EME_RAW)
-#include <botan/eme_raw.h>
+#include <botan/internal/eme_raw.h>
 #endif
 
 namespace Botan {

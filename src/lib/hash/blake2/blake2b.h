@@ -12,14 +12,12 @@
 #include <string>
 #include <memory>
 
-BOTAN_FUTURE_INTERNAL_HEADER(blake2b.h)
-
 namespace Botan {
 
 /**
 * BLAKE2B
 */
-class BOTAN_PUBLIC_API(2,0) BLAKE2b final : public HashFunction
+class BLAKE2b final : public HashFunction
    {
    public:
       /**

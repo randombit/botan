@@ -7,14 +7,14 @@
 
 #include <botan/rsa.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/keypair.h>
-#include <botan/blinding.h>
+#include <botan/internal/keypair.h>
+#include <botan/internal/blinding.h>
 #include <botan/reducer.h>
-#include <botan/workfactor.h>
+#include <botan/internal/workfactor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/monty.h>
-#include <botan/divide.h>
+#include <botan/internal/monty.h>
+#include <botan/internal/divide.h>
 #include <botan/internal/monty_exp.h>
 
 #if defined(BOTAN_HAS_OPENSSL)

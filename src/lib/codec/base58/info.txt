@@ -6,3 +6,7 @@ BASE58_CODEC -> 20181209
 sha2_32
 bigint
 </requires>
+
+<header:public>
+base58.h
+</header:public>
