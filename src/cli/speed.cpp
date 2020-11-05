@@ -1356,7 +1356,7 @@ class Speed final : public Command
                y.randomize(rng(), q_bits);
 
                div_timer->start();
-               Botan::divide(x, y, q1, r1);
+               Botan::vartime_divide(x, y, q1, r1);
                div_timer->stop();
 
                ct_div_timer->start();
@@ -1395,7 +1395,7 @@ class Speed final : public Command
                x.randomize(rng(), n_bits);
 
                div_timer->start();
-               Botan::divide(x, ten, q1, r1);
+               Botan::vartime_divide(x, ten, q1, r1);
                div_timer->stop();
 
                ct_div_timer->start();

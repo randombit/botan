@@ -9,6 +9,7 @@
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 #include <botan/monty.h>
+#include <botan/divide.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
@@ -214,9 +215,10 @@ namespace {
 */
 BigInt make_dsa_generator(const BigInt& p, const BigInt& q)
    {
-   const BigInt e = (p - 1) / q;
+   BigInt e, r;
+   vartime_divide(p - 1, q, e, r);
 
-   if(e == 0 || (p - 1) % q > 0)
+   if(e == 0 || r > 0)
       throw Invalid_Argument("make_dsa_generator q does not divide p-1");
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i)

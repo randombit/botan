@@ -156,7 +156,7 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y)
 *
 * See Handbook of Applied Cryptography section 14.2.5
 */
-void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
+void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
    {
    if(y_arg.is_zero())
       throw BigInt::DivideByZero();
