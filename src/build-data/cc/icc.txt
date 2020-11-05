@@ -5,7 +5,7 @@ binary_name icpc
 optimization_flags "-O2"
 size_optimization_flags "-Os"
 
-lang_flags "-std=c++11"
+lang_flags "-std=c++17"
 warning_flags "-w1"
 shared_flags "-fPIC"
 
