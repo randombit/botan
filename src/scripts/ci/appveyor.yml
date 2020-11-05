@@ -2,57 +2,11 @@
 clone_depth: 5
 
 environment:
-  SCCACHE_CACHE_SIZE: 160M
+  SCCACHE_CACHE_SIZE: 300M
   SCCACHE_VERSION: 0.2.12
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
   matrix:
-
-    # MSVC 2015 DLL x86-32
-    - CC: VC2015
-      PLATFORM: x86
-      TARGET: shared
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      BOOST_ROOT: "C:\\Libraries\\boost_1_69_0"
-      BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib32-msvc-14.0"
-      BOOST_SYSTEM_LIBRARY: "libboost_system-vc140-mt-x32-1_69"
-      MAKE_TOOL: nmake
-      TARGET_CC: msvc
-      EXTRA_FLAGS: "--disable-werror"
-
-    # MSVC 2017 DLL x86-32
-    - CC: VC2017
-      PLATFORM: x86
-      TARGET: shared
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      BOOST_ROOT: "C:\\Libraries\\boost_1_69_0"
-      BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib32-msvc-14.1"
-      BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x32-1_69"
-      MAKE_TOOL: jom
-      TARGET_CC: msvc
-
-    # MSVC 2017 DLL x86-64
-    - CC: VC2017
-      PLATFORM: x86_amd64
-      TARGET: shared
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      BOOST_ROOT: "C:\\Libraries\\boost_1_69_0"
-      BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib64-msvc-14.1"
-      BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x64-1_69"
-      MAKE_TOOL: jom
-      TARGET_CC: msvc
-
-    # MSVC 2017 static x86-64
-    - CC: VC2017
-      PLATFORM: x86_amd64
-      TARGET: static
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      BOOST_ROOT: "C:\\Libraries\\boost_1_69_0"
-      BOOST_LIBRARYDIR: "C:\\Libraries\\boost_1_69_0\\lib64-msvc-14.1"
-      BOOST_SYSTEM_LIBRARY: "libboost_system-vc141-mt-x64-1_69"
-      MAKE_TOOL: jom
-      TARGET_CC: msvc
-      EXTRA_FLAGS: "--extra-cxxflags=/DUNICODE --extra-cxxflags=/D_UNICODE"
 
     # MSVC 2019 static x86-64 w/debug iterators
     - CC: VC2019
