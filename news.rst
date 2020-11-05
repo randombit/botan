@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.17.0, Not Yet Released
+Version 2.17.0, 2020-11-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a bug in ECDSA which could occur when the group size and hash length
