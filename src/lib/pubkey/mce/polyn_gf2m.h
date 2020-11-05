@@ -13,13 +13,17 @@
 #define BOTAN_POLYN_GF2M_H_
 
 #include <botan/secmem.h>
-#include <botan/gf2m_small_m.h>
 #include <utility>
 #include <string>
 
+// Currently must be visible for MSVC
 //BOTAN_FUTURE_INTERNAL_HEADER(polyn_gf2m.h)
 
 namespace Botan {
+
+typedef uint16_t gf2m;
+
+class GF2m_Field;
 
 class RandomNumberGenerator;
 

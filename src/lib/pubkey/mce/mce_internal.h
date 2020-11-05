@@ -16,6 +16,7 @@
 #include <botan/types.h>
 #include <botan/pk_ops.h>
 #include <botan/mceliece.h>
+#include <botan/polyn_gf2m.h>
 
 namespace Botan {
 

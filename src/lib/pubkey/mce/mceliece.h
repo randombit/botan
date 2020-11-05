@@ -14,9 +14,12 @@
 
 #include <botan/pk_keys.h>
 #include <botan/polyn_gf2m.h>
-#include <botan/exceptn.h>
 
 namespace Botan {
+
+typedef uint16_t gf2m;
+
+class polyn_gf2m;
 
 class BOTAN_PUBLIC_API(2,0) McEliece_PublicKey : public virtual Public_Key
    {
@@ -94,9 +97,11 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
                           std::vector<gf2m> const& inverse_support,
                           std::vector<uint8_t> const& public_matrix );
 
+      ~McEliece_PrivateKey();
+
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
-      polyn_gf2m const& get_goppa_polyn() const { return m_g; }
+      polyn_gf2m const& get_goppa_polyn() const;
       std::vector<uint32_t> const& get_H_coeffs() const { return m_coeffs; }
       std::vector<gf2m> const& get_Linv() const { return m_Linv; }
       std::vector<polyn_gf2m> const& get_sqrtmod() const { return m_sqrtmod; }
@@ -116,7 +121,7 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
                                   const std::string& params,
                                   const std::string& provider) const override;
    private:
-      polyn_gf2m m_g;
+      std::vector<polyn_gf2m> m_g; // single element
       std::vector<polyn_gf2m> m_sqrtmod;
       std::vector<gf2m> m_Linv;
       std::vector<uint32_t> m_coeffs;

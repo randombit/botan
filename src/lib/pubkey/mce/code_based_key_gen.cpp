@@ -13,6 +13,7 @@
 #include <botan/mceliece.h>
 #include <botan/internal/mce_internal.h>
 #include <botan/internal/code_based_util.h>
+#include <botan/polyn_gf2m.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
