@@ -4,7 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/psk_db_sql.h>
+#include <botan/psk_db.h>
+#include <botan/database.h>
 
 namespace Botan {
 
@@ -18,6 +19,11 @@ Encrypted_PSK_Database_SQL::Encrypted_PSK_Database_SQL(const secure_vector<uint8
    m_db->create_table(
       "create table if not exists " + m_table_name +
       "(psk_name TEXT PRIMARY KEY, psk_value TEXT)");
+   }
+
+Encrypted_PSK_Database_SQL::~Encrypted_PSK_Database_SQL()
+   {
+   /* for ~unique_ptr */
    }
 
 void Encrypted_PSK_Database_SQL::kv_del(const std::string& name)

@@ -8,7 +8,7 @@
 
 #if defined(BOTAN_HAS_PSK_DB) && defined(BOTAN_HAS_SQLITE3)
 
-#include <botan/psk_db_sql.h>
+#include <botan/psk_db.h>
 #include <botan/sqlite3.h>
 #include <botan/hex.h>
 

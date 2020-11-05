@@ -6,7 +6,8 @@ PSK Database
 Many applications need to store pre-shared keys (hereafter PSKs) for
 authentication purposes.
 
-An abstract interface to PSK stores is provided in ``psk_db.h``
+An abstract interface to PSK stores, along with some implementations
+of same, are provided in ``psk_db.h``
 
 .. cpp:class:: PSK_Database
 
@@ -75,7 +76,8 @@ encrypts both names and PSKs. It must be subclassed to provide the storage.
       multiple different master keys with the same underlying storage. Each
       master key will be responsible for a subset of the keys. An attacker who
       knows one of the keys will be able to tell there are other values
-      encrypted under another key.
+      encrypted under another key, but will not be able to tell how many other
+      master keys are in use.
 
    .. cpp:function:: virtual void kv_set(const std::string& index, const std::string& value) = 0
 
@@ -96,7 +98,7 @@ encrypts both names and PSKs. It must be subclassed to provide the storage.
       non-empty string).
 
 A subclass of ``Encrypted_PSK_Database`` which stores data in a SQL database
-is also available. This class is declared in ``psk_db_sql.h``:
+is also available.
 
 .. cpp:class:: Encrypted_PSK_Database_SQL : public Encrypted_PSK_Database
 
