@@ -30,6 +30,11 @@ Version 2.17.0, Not Yet Released
   now-empty header files are deprecated, and will be removed in a future major
   release. (GH #2441)
 
+* A number of other headers including those related to HOTP/TOTP, XMSS,
+  PKCS11, PSK_DB have also been merged. Any now deprecated/empty headers
+  simply include the new header and issue a deprecation warning.
+  (GH #2443 #2446 #2447 2448 #2449)
+
 * Small optimizations in the non-hardware assisted AES key generation
   code path (GH #2417 #2418)
 
