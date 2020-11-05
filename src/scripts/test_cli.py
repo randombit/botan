@@ -119,11 +119,11 @@ def cli_config_tests(_tmp_dir):
 
     if len(prefix) < 4 or prefix[0] != '/':
         logging.error("Bad prefix %s" % (prefix))
-    if ("-I%s/include/botan-2" % (prefix)) not in cflags:
+    if ("-I%s/include/botan-3" % (prefix)) not in cflags:
         logging.error("Bad cflags %s" % (cflags))
     if not ldflags.endswith(("-L%s/lib" % (prefix))):
         logging.error("Bad ldflags %s" % (ldflags))
-    if "-lbotan-2" not in libs:
+    if "-lbotan-3" not in libs:
         logging.error("Bad libs %s" % (libs))
 
 def cli_help_tests(_tmp_dir):
@@ -136,12 +136,12 @@ def cli_help_tests(_tmp_dir):
 def cli_version_tests(_tmp_dir):
     output = test_cli("version", None, None)
 
-    version_re = re.compile(r'[0-9]\.[0-9]+\.[0-9]')
+    version_re = re.compile(r'[0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?')
     if not version_re.match(output):
         logging.error("Unexpected version output %s" % (output))
 
     output = test_cli("version", ["--full"], None, None)
-    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9] \(.* revision .*, distribution .*\)$')
+    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)? \(.* revision .*, distribution .*\)$')
     if not version_full_re.match(output):
         logging.error("Unexpected version output %s" % (output))
 
@@ -913,7 +913,7 @@ def cli_tls_http_server_tests(tmp_dir):
 
     body = str(resp.read())
 
-    if body.find('TLS negotiation with Botan 2.') < 0:
+    if body.find('TLS negotiation with Botan 3.') < 0:
         logging.error('Unexpected response body')
 
     conn.request("POST", "/logout")
@@ -1157,7 +1157,7 @@ def cli_speed_pbkdf_tests(_tmp_dir):
 def cli_speed_table_tests(_tmp_dir):
     msec = 1
 
-    version_re = re.compile(r'^Botan 2\.[0-9]+\.[0-9] \(.*, revision .*, distribution .*\)')
+    version_re = re.compile(r'^Botan 3\.[0-9]+\.[0-9](\-.*[0-9]+)? \(.*, revision .*, distribution .*\)')
     cpuid_re = re.compile(r'^CPUID: [a-z_0-9 ]*$')
     format_re = re.compile(r'^AES-128 .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     tbl_hdr_re = re.compile(r'^algo +operation +1024 bytes$')
