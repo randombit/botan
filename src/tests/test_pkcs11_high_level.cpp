@@ -17,9 +17,6 @@
 
 #if defined(BOTAN_HAS_PKCS11)
    #include <botan/p11.h>
-   #include <botan/p11_slot.h>
-   #include <botan/p11_session.h>
-   #include <botan/p11_module.h>
    #include <botan/p11_object.h>
    #include <botan/p11_randomgenerator.h>
 #endif
