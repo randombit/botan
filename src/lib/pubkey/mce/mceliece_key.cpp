@@ -11,6 +11,7 @@
  */
 
 #include <botan/mceliece.h>
+#include <botan/polyn_gf2m.h>
 #include <botan/internal/mce_internal.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/code_based_util.h>
@@ -28,7 +29,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(polyn_gf2m const& goppa_polyn,
                                          std::vector<gf2m> const& inverse_support,
                                          std::vector<uint8_t> const& public_matrix) :
    McEliece_PublicKey(public_matrix, goppa_polyn.get_degree(), inverse_support.size()),
-   m_g(goppa_polyn),
+   m_g{goppa_polyn},
    m_sqrtmod(square_root_matrix),
    m_Linv(inverse_support),
    m_coeffs(parity_check_matrix_coeffs),
@@ -41,6 +42,13 @@ McEliece_PrivateKey::McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code
    {
    uint32_t ext_deg = ceil_log2(code_length);
    *this = generate_mceliece_key(rng, ext_deg, code_length, t);
+   }
+
+McEliece_PrivateKey::~McEliece_PrivateKey() = default;
+
+const polyn_gf2m& McEliece_PrivateKey::get_goppa_polyn() const
+   {
+   return m_g[0];
    }
 
 size_t McEliece_PublicKey::get_message_word_bit_length() const
@@ -120,7 +128,7 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const
       .encode(static_cast<size_t>(get_t()))
       .end_cons()
       .encode(m_public_matrix, OCTET_STRING)
-      .encode(m_g.encode(), OCTET_STRING); // g as octet string
+      .encode(m_g[0].encode(), OCTET_STRING); // g as octet string
    enc.start_cons(SEQUENCE);
    for(size_t i = 0; i < m_sqrtmod.size(); i++)
       {
@@ -189,8 +197,8 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
    m_dimension = (n - m_codimension);
 
    std::shared_ptr<GF2m_Field> sp_field(new GF2m_Field(ext_deg));
-   m_g = polyn_gf2m(enc_g, sp_field);
-   if(m_g.get_degree() != static_cast<int>(t))
+   m_g = { polyn_gf2m(enc_g, sp_field) };
+   if(m_g[0].get_degree() != static_cast<int>(t))
       {
       throw Decoding_Error("degree of decoded Goppa polynomial is incorrect");
       }
