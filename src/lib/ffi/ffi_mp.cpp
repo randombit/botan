@@ -192,7 +192,7 @@ int botan_mp_div(botan_mp_t quotient,
    {
    return BOTAN_FFI_DO(Botan::BigInt, quotient, q, {
       Botan::BigInt r;
-      Botan::divide(safe_get(x), safe_get(y), q, r);
+      Botan::vartime_divide(safe_get(x), safe_get(y), q, r);
       safe_get(remainder) = r;
       });
    }
