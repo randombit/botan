@@ -1,3 +1,0 @@
-<defines>
-XTEA -> 20131128
-</defines>

@@ -345,7 +345,6 @@ class Speed final : public Command
             "ARIA-256",
             "Blowfish",
             "CAST-128",
-            "CAST-256",
             "Camellia-128",
             "Camellia-192",
             "Camellia-256",
@@ -353,15 +352,12 @@ class Speed final : public Command
             "TripleDES",
             "GOST-28147-89",
             "IDEA",
-            "KASUMI",
-            "MISTY1",
             "Noekeon",
             "SHACAL2",
             "SM4",
             "Serpent",
             "Threefish-512",
             "Twofish",
-            "XTEA",
 
             /* Cipher modes */
             "AES-128/CBC",
@@ -396,7 +392,6 @@ class Speed final : public Command
             "RIPEMD-160",
             "Skein-512",
             "Blake2b",
-            "Tiger",
             "Whirlpool",
 
             /* MACs */

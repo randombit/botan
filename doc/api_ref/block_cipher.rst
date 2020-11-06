@@ -202,17 +202,6 @@ A 64-bit cipher, commonly used in OpenPGP.
 
 Available if ``BOTAN_HAS_CAST128`` is defined.
 
-CAST-256
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 128-bit cipher that was a contestant in the NIST AES competition.
-Almost never used in practice. Prefer AES or Serpent.
-
-Available if ``BOTAN_HAS_CAST256`` is defined.
-
-.. warning::
-   Support for CAST-256 is deprecated and will be removed in a future major release.
-
 Camellia
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -232,16 +221,16 @@ good cipher (such as Serpent, SHACAL2, or AES-256) is more than sufficient.
 
 Available if ``BOTAN_HAS_CASCADE`` is defined.
 
-DES, 3DES, DESX
+DES and 3DES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Originally designed by IBM and NSA in the 1970s. Today, DES's 56-bit key renders
-it insecure to any well-resourced attacker. DESX and 3DES extend the key length,
-and are still thought to be secure, modulo the limitation of a 64-bit block.
+it insecure to any well-resourced attacker. 3DES extends the key length,
+and is still thought to be secure, modulo the limitation of a 64-bit block.
 All are somewhat common in some industries such as finance. Avoid in new code.
 
-.. warning::
-   Support for DESX is deprecated and it will be removed in a future major release.
+Most implementations of DES, including the one currently used in Botan, are
+vulnerable to side channel attacks - another reason to avoid it.
 
 Available if ``BOTAN_HAS_DES`` is defined.
 
@@ -264,17 +253,6 @@ due to its use in PGP. Avoid in new designs.
 
 Available if ``BOTAN_HAS_IDEA`` is defined.
 
-Kasumi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 64-bit cipher used in 3GPP mobile phone protocols. There is no reason to use
-it outside of this context.
-
-Available if ``BOTAN_HAS_KASUMI`` is defined.
-
-.. warning::
-   Support for Kasumi is deprecated and will be removed in a future major release.
-
 Lion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -284,17 +262,6 @@ protocols where being able to encrypt large or arbitrary length blocks is
 necessary.
 
 Available if ``BOTAN_HAS_LION`` is defined.
-
-MISTY1
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 64-bit Japanese cipher standardized by NESSIE and ISO. Seemingly secure, but
-quite slow and saw little adoption. No reason to use it in new code.
-
-Available if ``BOTAN_HAS_MISTY1`` is defined.
-
-.. warning::
-   Support for MISTY1 is deprecated and will be removed in a future major release.
 
 Noekeon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -352,10 +319,3 @@ A 128-bit block cipher that was one of the AES finalists. Has a somewhat complic
 setup and a "kitchen sink" design.
 
 Available if ``BOTAN_HAS_TWOFISH`` is defined.
-
-XTEA
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 64-bit cipher popular for its simple implementation. Avoid in new code.
-
-Available if ``BOTAN_HAS_XTEA`` is defined.

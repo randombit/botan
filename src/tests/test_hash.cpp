@@ -26,8 +26,6 @@ class Invalid_Hash_Name_Tests final : public Test
          test_invalid_name(result, "Blake2b(9)", "Bad output bits size for BLAKE2b");
          test_invalid_name(result, "Comb4P(MD5,MD5)", "Comb4P: Must use two distinct hashes");
          test_invalid_name(result, "Comb4P(MD5,SHA-256)", "Comb4P: Incompatible hashes MD5 and SHA-256");
-         test_invalid_name(result, "Tiger(168)", "Tiger: Illegal hash output size: 168");
-         test_invalid_name(result, "Tiger(20,2)", "Tiger: Invalid number of passes: 2");
          test_invalid_name(result, "Keccak-1600(160)", "Keccak_1600: Invalid output length 160");
          test_invalid_name(result, "SHA-3(160)", "SHA_3: Invalid output length 160");
 

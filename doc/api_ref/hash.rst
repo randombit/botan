@@ -263,26 +263,6 @@ unless compatibility is needed.
    interacts with its linear layer in a way which may provide a backdoor when
    used in certain ways. Avoid Streebog if at all possible.
 
-Tiger
-^^^^^^^^^^^^^^^
-
-.. deprecated:: 2.15
-
-Available if ``BOTAN_HAS_TIGER`` is defined.
-
-An older 192-bit hash function, optimized for 64-bit systems. Possibly
-vulnerable to side channels due to its use of table lookups.
-
-Tiger supports variable length output (16, 20 or 24 bytes) and
-variable rounds (which must be at least 3). Default is 24 byte output
-and 3 rounds. Specify with names like "Tiger" or "Tiger(20,5)".
-
-.. warning::
-  There are documented (albeit impractical) attacks on the full Tiger
-  hash leading to preimage attacks. This indicates possibility of a
-  serious weakness in the hash and for this reason it is deprecated
-  and will be removed in a future major release of the library.
-
 Whirlpool
 ^^^^^^^^^^^^^^^
 

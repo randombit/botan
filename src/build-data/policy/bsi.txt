@@ -90,14 +90,11 @@ blowfish
 camellia
 cascade
 cast128
-cast256
 des
 gost_28147
 idea
 idea_sse2
-kasumi
 lion
-misty1
 noekeon
 noekeon_simd
 seed
@@ -111,7 +108,6 @@ sm4
 threefish_512
 threefish_512_avx2
 twofish
-xtea
 
 # modes
 chacha20poly1305
@@ -143,7 +139,6 @@ ed25519
 elgamal
 gost_3410
 mce
-mceies
 rfc6979
 newhope
 sm2
@@ -166,7 +161,6 @@ skein
 #sha1 // needed for x509
 sm3
 streebog
-tiger
 whirlpool
 keccak
 
@@ -174,7 +168,6 @@ keccak
 chacha_rng
 
 # mac
-cbc_mac
 poly1305
 siphash
 x919_mac

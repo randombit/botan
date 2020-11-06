@@ -197,14 +197,6 @@ class BotanPythonTests(unittest.TestCase):
         mce_pub = mce_priv.get_public_key()
         self.assertEqual(mce_pub.estimated_strength(), 128)
 
-        mce_plaintext = rng.get(16)
-        mce_ad = rng.get(48)
-        mce_ciphertext = botan2.mceies_encrypt(mce_pub, rng, 'ChaCha20Poly1305', mce_plaintext, mce_ad)
-
-        mce_decrypt = botan2.mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
-
-        self.assertEqual(mce_plaintext, mce_decrypt)
-
     def test_rsa_load_store(self):
 
         rsa_priv_pem = """-----BEGIN PRIVATE KEY-----

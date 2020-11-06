@@ -9,10 +9,6 @@
 #include <botan/exceptn.h>
 #include <botan/scan_name.h>
 
-#if defined(BOTAN_HAS_PBKDF1)
-#include <botan/pbkdf1.h>
-#endif
-
 #if defined(BOTAN_HAS_PBKDF2)
 #include <botan/pbkdf2.h>
 #endif
@@ -43,15 +39,6 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
          }
 
       return nullptr;
-      }
-#endif
-
-#if defined(BOTAN_HAS_PBKDF1)
-   if(req.algo_name() == "PBKDF1" && req.arg_count() == 1)
-      {
-      if(auto hash = HashFunction::create(req.arg(0)))
-         return std::unique_ptr<PBKDF>(new PKCS5_PBKDF1(hash.release()));
-
       }
 #endif
 

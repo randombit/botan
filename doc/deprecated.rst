@@ -59,17 +59,11 @@ Deprecated Functionality
 This section lists cryptographic functionality which will be removed
 in a future major release.
 
-- Block ciphers CAST-256, GOST 28147, Kasumi, MISTY1, DESX, and XTEA.
+- Block ciphers GOST 28147 and XTEA.
 
-- Hash functions GOST 34.11-94 and Tiger
+- Hash functions GOST 34.11-94
 
 - DLIES
-
-- MCEIES
-
-- CBC-MAC
-
-- PBKDF1 key derivation
 
 - GCM support for 64-bit tags
 
@@ -87,9 +81,6 @@ in a future major release.
 
 - All support for loading, generating or using RSA keys with a public
   exponent larger than 2**64-1
-
-- All or nothing package transform (``package.h``)
-
 
 Deprecated Headers
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -265,9 +256,6 @@ Other API deprecations
 
 - Directly accessing the member variables of types ``calendar_point``,
   ``ASN1_Attribute``, ``AlgorithmIdentifier``, and ``BER_Object``
-
-- Using a default output length for "SHAKE-128" and "SHAKE-256". Instead,
-  always specify the desired output length.
 
 - Currently, for certain KDFs, if KDF interface is invoked with a
   requested output length larger than supported by the KDF, it returns

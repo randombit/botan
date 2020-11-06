@@ -10,10 +10,6 @@
 #include <botan/scan_name.h>
 #include <botan/mem_ops.h>
 
-#if defined(BOTAN_HAS_CBC_MAC)
-  #include <botan/cbc_mac.h>
-#endif
-
 #if defined(BOTAN_HAS_CMAC)
   #include <botan/cmac.h>
 #endif
@@ -102,17 +98,6 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       }
 #endif
 
-
-#if defined(BOTAN_HAS_CBC_MAC)
-   if(req.algo_name() == "CBC-MAC" && req.arg_count() == 1)
-      {
-      if(provider.empty() || provider == "base")
-         {
-         if(auto bc = BlockCipher::create(req.arg(0)))
-            return std::unique_ptr<MessageAuthenticationCode>(new CBC_MAC(bc.release()));
-         }
-      }
-#endif
 
 #if defined(BOTAN_HAS_ANSI_X919_MAC)
    if(req.algo_name() == "X9.19-MAC")

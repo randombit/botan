@@ -35,7 +35,6 @@ class PKCS_HashID_Test final : public Test
             {"SHA-3(384)", 48},
             {"SHA-3(512)", 64},
             {"SM3", 32},
-            {"Tiger(24,3)", 24}
          };
 
          std::vector<Test::Result> results;

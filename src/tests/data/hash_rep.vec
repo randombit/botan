@@ -1,10 +1,4 @@
 
-[Tiger]
-# From NESSIE submission
-Input = 61
-TotalLength = 1000000
-Digest = 6DB0E2729CBEAD93D715C6A7D36302E9B3CEE0D2BC314B41
-
 # Long SHA-1/2/3 from https://www.di-mgt.com.au/sha_testvectors.html
 
 [SHA-1]

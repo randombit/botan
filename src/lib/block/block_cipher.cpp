@@ -29,17 +29,12 @@
   #include <botan/cast128.h>
 #endif
 
-#if defined(BOTAN_HAS_CAST_256)
-  #include <botan/cast256.h>
-#endif
-
 #if defined(BOTAN_HAS_CASCADE)
   #include <botan/cascade.h>
 #endif
 
 #if defined(BOTAN_HAS_DES)
   #include <botan/des.h>
-  #include <botan/desx.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST_28147_89)
@@ -50,16 +45,8 @@
   #include <botan/idea.h>
 #endif
 
-#if defined(BOTAN_HAS_KASUMI)
-  #include <botan/kasumi.h>
-#endif
-
 #if defined(BOTAN_HAS_LION)
   #include <botan/lion.h>
-#endif
-
-#if defined(BOTAN_HAS_MISTY1)
-  #include <botan/misty1.h>
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON)
@@ -88,10 +75,6 @@
 
 #if defined(BOTAN_HAS_THREEFISH_512)
   #include <botan/threefish_512.h>
-#endif
-
-#if defined(BOTAN_HAS_XTEA)
-  #include <botan/xtea.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)
@@ -229,11 +212,6 @@ BlockCipher::create(const std::string& algo,
       return std::unique_ptr<BlockCipher>(new DES);
       }
 
-   if(algo == "DESX")
-      {
-      return std::unique_ptr<BlockCipher>(new DESX);
-      }
-
    if(algo == "TripleDES" || algo == "3DES" || algo == "DES-EDE")
       {
       return std::unique_ptr<BlockCipher>(new TripleDES);
@@ -254,31 +232,10 @@ BlockCipher::create(const std::string& algo,
       }
 #endif
 
-#if defined(BOTAN_HAS_CAST_256)
-   if(algo == "CAST-256")
-      {
-      return std::unique_ptr<BlockCipher>(new CAST_256);
-      }
-#endif
-
 #if defined(BOTAN_HAS_IDEA)
    if(algo == "IDEA")
       {
       return std::unique_ptr<BlockCipher>(new IDEA);
-      }
-#endif
-
-#if defined(BOTAN_HAS_KASUMI)
-   if(algo == "KASUMI")
-      {
-      return std::unique_ptr<BlockCipher>(new KASUMI);
-      }
-#endif
-
-#if defined(BOTAN_HAS_MISTY1)
-   if(algo == "MISTY1")
-      {
-      return std::unique_ptr<BlockCipher>(new MISTY1);
       }
 #endif
 
@@ -293,13 +250,6 @@ BlockCipher::create(const std::string& algo,
    if(algo == "SM4")
       {
       return std::unique_ptr<BlockCipher>(new SM4);
-      }
-#endif
-
-#if defined(BOTAN_HAS_XTEA)
-   if(algo == "XTEA")
-      {
-      return std::unique_ptr<BlockCipher>(new XTEA);
       }
 #endif
 

@@ -58,10 +58,6 @@
   #include <botan/mceliece.h>
 #endif
 
-#if defined(BOTAN_HAS_MCEIES)
-  #include <botan/mceies.h>
-#endif
-
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
   #include <botan/dh.h>
 #endif
@@ -937,20 +933,8 @@ int botan_mceies_decrypt(botan_privkey_t mce_key_obj,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t out[], size_t* out_len)
    {
-   return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::Private_Key& key = safe_get(mce_key_obj);
-
-#if defined(BOTAN_HAS_MCELIECE) && defined(BOTAN_HAS_MCEIES)
-      Botan::McEliece_PrivateKey* mce = dynamic_cast<Botan::McEliece_PrivateKey*>(&key);
-      if(!mce)
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
-
-      const Botan::secure_vector<uint8_t> pt = mceies_decrypt(*mce, ct, ct_len, ad, ad_len, aead);
-      return write_vec_output(out, out_len, pt);
-#else
-      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-      });
+   BOTAN_UNUSED(mce_key_obj, aead, ct, ct_len, ad, ad_len, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
    }
 
 int botan_mceies_encrypt(botan_pubkey_t mce_key_obj,
@@ -960,21 +944,8 @@ int botan_mceies_encrypt(botan_pubkey_t mce_key_obj,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t out[], size_t* out_len)
    {
-   return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::Public_Key& key = safe_get(mce_key_obj);
-      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-
-#if defined(BOTAN_HAS_MCELIECE) && defined(BOTAN_HAS_MCEIES)
-      Botan::McEliece_PublicKey* mce = dynamic_cast<Botan::McEliece_PublicKey*>(&key);
-      if(!mce)
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
-
-      Botan::secure_vector<uint8_t> ct = mceies_encrypt(*mce, pt, pt_len, ad, ad_len, rng, aead);
-      return write_vec_output(out, out_len, ct);
-#else
-      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-      });
+   BOTAN_UNUSED(mce_key_obj, rng_obj, aead, pt, pt_len, ad, ad_len, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
    }
 
 }

@@ -181,10 +181,3 @@ iteration count (this should be significantly larger than the size of the
 longest passphrase that might reasonably be used; somewhere from 1024 to 65536
 would probably be about right). Using both a reasonably sized salt and a large
 iteration count is highly recommended to prevent password guessing attempts.
-
-PBKDF1
-^^^^^^^^^^^^
-
-PBKDF1 is an old scheme that can only produce an output length at most
-as long as the hash function. It is deprecated and will be removed in
-a future release. It is not supported through :cpp:class:`PasswordHash`.

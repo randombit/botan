@@ -84,6 +84,12 @@ class BOTAN_PUBLIC_API(2,0) SCAN_Name final
       size_t arg_as_integer(size_t i, size_t def_value) const;
 
       /**
+      * @param i which argument
+      * @return ith argument as an integer
+      */
+      size_t arg_as_integer(size_t i) const;
+
+      /**
       * @return cipher mode (if any)
       */
       std::string cipher_mode() const
