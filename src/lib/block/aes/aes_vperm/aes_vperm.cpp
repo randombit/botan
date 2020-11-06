@@ -44,9 +44,9 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shuffle(SIMD_4x32 a, SIMD_4x32 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
    const auto zero = vec_splat_s8(0x00);
-   const auto mask = vec_cmplt((__vector signed char)b.raw(), zero);
-   const auto r = vec_perm((__vector signed char)a.raw(), (__vector signed char)a.raw(), (__vector unsigned char)b.raw());
-   return SIMD_4x32((__vector unsigned int)vec_sel(r, zero, mask));
+   const auto mask = vec_cmplt(reinterpret_cast<__vector signed char>(b.raw()), zero);
+   const auto r = vec_perm(reinterpret_cast<__vector signed char>(a.raw()), reinterpret_cast<__vector signed char>(a.raw()), reinterpret_cast<__vector unsigned char>(b.raw()));
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(vec_sel(r, zero, mask)));
 
 #else
    #error "No shuffle implementation available"

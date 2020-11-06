@@ -22,7 +22,7 @@ class Fuzzer_TLS_Policy : public Botan::TLS::Policy
    {
    public:
       std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version version,
-                                             bool have_srp) const
+                                             bool have_srp) const override
          {
          std::vector<uint16_t> ciphersuites;
 

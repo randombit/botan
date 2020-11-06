@@ -58,7 +58,7 @@ Dynamically_Loaded_Library::~Dynamically_Loaded_Library()
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    ::dlclose(m_lib);
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
-   ::FreeLibrary((HMODULE)m_lib);
+   ::FreeLibrary(reinterpret_cast<HMODULE>(m_lib));
 #endif
    }
 
@@ -69,7 +69,7 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    addr = ::dlsym(m_lib, symbol.c_str());
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
-   addr = reinterpret_cast<void*>(::GetProcAddress((HMODULE)m_lib, symbol.c_str()));
+   addr = reinterpret_cast<void*>(::GetProcAddress(reinterpret_cast<HMODULE>(m_lib), symbol.c_str()));
 #endif
 
    if(!addr)

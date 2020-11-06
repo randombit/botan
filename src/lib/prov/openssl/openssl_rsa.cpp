@@ -59,7 +59,7 @@ class OpenSSL_RSA_Encryption_Operation final : public PK_Ops::Encryption
 
       size_t ciphertext_length(size_t) const override { return ::RSA_size(m_openssl_rsa.get()); }
 
-      size_t max_input_bits() const override { return m_bits; };
+      size_t max_input_bits() const override { return m_bits; }
 
       secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len,
                                   RandomNumberGenerator&) override
