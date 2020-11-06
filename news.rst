@@ -10,9 +10,16 @@ Version 3.0.0, Not Yet Released
 * Switch the build to C++17 mode; require at least GCC 9, Clang 7 or MSVC 2019.
   (GH #2455)
 
+* Remove many deprecated headers (GH #2456)
+
+* Many headers which were previously marked as becoming internal in 2.x have
+  now been made internal (GH #2456)
+
 * Remove support for HP and Pathscale compilers (GH #2455)
 
 * Remove support for Google NaCl (GH #2455)
+
+* Improve DragonflyBSD platform support (GH #2457)
 
 Version 2.17.0, 2020-11-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
