@@ -28,6 +28,7 @@ ppc64
 </arch>
 
 <cc>
-gcc:4.9
-clang:3.8
+gcc
+clang
+msvc
 </cc>

@@ -7,6 +7,6 @@ armv8crypto
 </isa>
 
 <cc>
-gcc:4.9
-clang:3.8
+gcc
+clang
 </cc>

@@ -31,6 +31,6 @@ simd
 <cc>
 gcc
 clang
-msvc:19.10 # VC 2017
+msvc
 sunstudio
 </cc>

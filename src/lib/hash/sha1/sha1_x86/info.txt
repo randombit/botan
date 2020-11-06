@@ -10,7 +10,7 @@ sse41
 </isa>
 
 <cc>
-clang:3.9
-gcc:5.0
-msvc:19.0 # MSVS 2015
+clang
+gcc
+msvc
 </cc>
