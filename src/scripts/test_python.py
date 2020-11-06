@@ -23,8 +23,8 @@ class BotanPythonTests(unittest.TestCase):
         version_str = botan2.version_string()
         self.assertTrue(version_str.startswith('Botan '))
 
-        self.assertEqual(botan2.version_major(), 2)
-        self.assertGreaterEqual(botan2.version_minor(), 8)
+        self.assertEqual(botan2.version_major(), 3)
+        self.assertGreaterEqual(botan2.version_minor(), 0)
 
         self.assertGreaterEqual(botan2.ffi_api_version(), 20180713)
 
