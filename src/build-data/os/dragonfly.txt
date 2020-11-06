@@ -8,6 +8,8 @@ clock_gettime
 proc_fs
 dev_random
 arc4random
+explicit_bzero
+getrandom
 
 atomics
 sockets
