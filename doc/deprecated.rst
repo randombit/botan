@@ -59,9 +59,9 @@ Deprecated Functionality
 This section lists cryptographic functionality which will be removed
 in a future major release.
 
-- Block ciphers GOST 28147 and XTEA.
+- Block cipher GOST 28147
 
-- Hash functions GOST 34.11-94
+- Hash function GOST 34.11-94
 
 - DLIES
 
@@ -282,7 +282,3 @@ Deprecated Build Targets
 
 - Configuring a build (with ``configure.py``) using Python2. In a future
   major release, Python3 will be required.
-
-- Platform support for Google Native Client
-
-- Support for PathScale and HP compilers

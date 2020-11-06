@@ -4,6 +4,16 @@ Release Notes
 Version 3.0.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Remove several deprecated algorithms including CAST-256, MISTY1, Kasumi,
+  DESX, XTEA, PBKDF1, MCEIES, CBC-MAC and Tiger (GH #2434)
+
+* Switch the build to C++17 mode; require at least GCC 9, Clang 7 or MSVC 2019.
+  (GH #2455)
+
+* Remove support for HP and Pathscale compilers (GH #2455)
+
+* Remove support for Google NaCl (GH #2455)
+
 Version 2.17.0, 2020-11-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
