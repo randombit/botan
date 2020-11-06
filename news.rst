@@ -15,6 +15,9 @@ Version 3.0.0, Not Yet Released
 * Many headers which were previously marked as becoming internal in 2.x have
   now been made internal (GH #2456)
 
+* Re-enable support for CLMUL instruction on Visual C++, which was accidentally
+  disabled starting in 2.12.0
+
 * Remove support for HP and Pathscale compilers (GH #2455)
 
 * Remove support for Google NaCl (GH #2455)
