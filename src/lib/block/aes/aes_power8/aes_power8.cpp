@@ -40,17 +40,17 @@ inline Altivec8x16 reverse_vec(Altivec8x16 src)
 
 inline Altivec64x2 load_key(const uint32_t key[])
    {
-   return (Altivec64x2)reverse_vec((Altivec8x16)vec_vsx_ld(0, key));;
+   return reinterpret_cast<Altivec64x2>(reverse_vec(reinterpret_cast<Altivec8x16>(vec_vsx_ld(0, key))));
    }
 
 inline Altivec64x2 load_block(const uint8_t src[])
    {
-   return (Altivec64x2)reverse_vec(vec_vsx_ld(0, src));
+   return reinterpret_cast<Altivec64x2>(reverse_vec(vec_vsx_ld(0, src)));
    }
 
 inline void store_block(Altivec64x2 src, uint8_t dest[])
    {
-   vec_vsx_st(reverse_vec((Altivec8x16)src), 0, dest);
+   vec_vsx_st(reverse_vec(reinterpret_cast<Altivec8x16>(src)), 0, dest);
    }
 
 inline void store_blocks(Altivec64x2 B0, Altivec64x2 B1,

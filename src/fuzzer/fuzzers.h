@@ -87,7 +87,7 @@ int fuzz_files(char* files[])
       if(in.good())
          {
          std::vector<uint8_t> buf(max_fuzzer_input_size);
-         in.read((char*)buf.data(), buf.size());
+         in.read(reinterpret_cast<char*>(buf.data()), buf.size());
          const size_t got = in.gcount();
          buf.resize(got);
          buf.shrink_to_fit();
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 #endif
       {
       std::vector<uint8_t> buf(max_fuzzer_input_size);
-      std::cin.read((char*)buf.data(), buf.size());
+      std::cin.read(reinterpret_cast<char*>(buf.data()), buf.size());
       const size_t got = std::cin.gcount();
 
       buf.resize(got);

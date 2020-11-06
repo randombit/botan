@@ -46,11 +46,6 @@ jobs:
       env:
        - TARGET="shared"
 
-    - name: Linux ppc32 cross (GCC)
-      dist: xenial
-      env:
-       - TARGET="cross-ppc32"
-
     - name: macOS x86_64 (XCode Clang)
       os: osx
       compiler: clang
@@ -83,18 +78,6 @@ jobs:
       env:
        - TARGET="cross-i386"
 
-    - name: Linux GCC 4.8
-      dist: bionic
-      env:
-       - TARGET="gcc4.8"
-       - EXTRA_FLAGS="--disable-werror"
-
-    - name: Linux Clang 8
-      compiler: clang
-      env:
-       - TARGET="clang8"
-       - CXX="/usr/bin/clang++-8"
-
     - name: Minimized
       arch: arm64
       env:
@@ -109,11 +92,6 @@ jobs:
       arch: arm64
       env:
        - TARGET="bsi"
-
-    - name: NIST policy
-      arch: arm64
-      env:
-       - TARGET="nist"
 
     - name: Pylint
       arch: arm64
