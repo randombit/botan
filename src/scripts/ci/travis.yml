@@ -48,12 +48,14 @@ jobs:
 
     - name: macOS x86_64 (XCode Clang)
       os: osx
+      osx_image: xcode12.2
       compiler: clang
       env:
        - TARGET="shared"
 
     - name: iOS arm64 (XCode Clang)
       os: osx
+      osx_image: xcode12.2
       compiler: clang
       env:
        - TARGET="cross-arm64"
