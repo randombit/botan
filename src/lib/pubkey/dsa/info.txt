@@ -10,3 +10,7 @@ numbertheory
 emsa1
 sha2_32
 </requires>
+
+<header:public>
+dsa.h
+</header:public>

@@ -7,9 +7,9 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_AEAD_OCB)
-   #include <botan/ocb.h>
+   #include <botan/internal/ocb.h>
    #include <botan/block_cipher.h>
-   #include <botan/loadstor.h>
+   #include <botan/internal/loadstor.h>
    #include <botan/internal/poly_dbl.h>
 #endif
 
@@ -263,6 +263,8 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("modes", "ocb_long_wide", OCB_Wide_Long_KAT_Tests);
 
+#if defined(BOTAN_HAS_AES)
+
 class OCB_Long_KAT_Tests final : public Text_Based_Test
    {
    public:
@@ -282,12 +284,7 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
 
          Test::Result result("OCB long");
 
-         std::unique_ptr<Botan::BlockCipher> aes(Botan::BlockCipher::create(algo));
-         if(!aes)
-            {
-            result.note_missing(algo);
-            return result;
-            }
+         std::unique_ptr<Botan::BlockCipher> aes(Botan::BlockCipher::create_or_throw(algo));
 
          Botan::OCB_Encryption enc(aes->clone(), taglen / 8);
          Botan::OCB_Decryption dec(aes->clone(), taglen / 8);
@@ -326,8 +323,8 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
    private:
       void ocb_encrypt(Test::Result& result,
                        std::vector<uint8_t>& output_to,
-                       Botan::OCB_Encryption& enc,
-                       Botan::OCB_Decryption& dec,
+                       Botan::AEAD_Mode& enc,
+                       Botan::AEAD_Mode& dec,
                        const std::vector<uint8_t>& nonce,
                        const std::vector<uint8_t>& pt,
                        const std::vector<uint8_t>& ad)
@@ -359,6 +356,8 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("modes", "ocb_long", OCB_Long_KAT_Tests);
+
+#endif
 
 #endif
 

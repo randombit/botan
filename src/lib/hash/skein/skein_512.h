@@ -9,18 +9,16 @@
 #define BOTAN_SKEIN_512_H_
 
 #include <botan/hash.h>
-#include <botan/threefish_512.h>
+#include <botan/internal/threefish_512.h>
 #include <string>
 #include <memory>
-
-BOTAN_FUTURE_INTERNAL_HEADER(skin_512.h)
 
 namespace Botan {
 
 /**
 * Skein-512, a SHA-3 candidate
 */
-class BOTAN_PUBLIC_API(2,0) Skein_512 final : public HashFunction
+class Skein_512 final : public HashFunction
    {
    public:
       /**

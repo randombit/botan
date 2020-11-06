@@ -15,7 +15,7 @@
 #if defined(BOTAN_HAS_FFI)
    #include <botan/hex.h>
    #include <botan/ffi.h>
-   #include <botan/loadstor.h>
+   #include <botan/internal/loadstor.h>
    #include <set>
 #endif
 
@@ -199,7 +199,7 @@ class FFI_Unit_Tests final : public Test
          // RNG test and initialization
          botan_rng_t rng;
          botan_rng_t system_rng;
-         botan_rng_t rdrand_rng = nullptr;
+         botan_rng_t hwrng_rng = nullptr;
          botan_rng_t null_rng;
 
          TEST_FFI_FAIL("invalid rng type", botan_rng_init, (&rng, "invalid_type"));
@@ -207,7 +207,7 @@ class FFI_Unit_Tests final : public Test
          REQUIRE_FFI_OK(botan_rng_init, (&system_rng, "system"));
          REQUIRE_FFI_OK(botan_rng_init, (&null_rng, "null"));
 
-         int rc = botan_rng_init(&rdrand_rng, "rdrand");
+         int rc = botan_rng_init(&hwrng_rng, "hwrng");
          result.confirm("Either success or not implemented", rc == 0 || rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
 
          std::vector<uint8_t> outbuf(512);
@@ -227,9 +227,9 @@ class FFI_Unit_Tests final : public Test
             TEST_FFI_OK(botan_rng_reseed, (rng, 256));
 
             TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_rng_reseed_from_rng, (rng, null_rng, 256));
-            if(rdrand_rng)
+            if(hwrng_rng)
                {
-               TEST_FFI_OK(botan_rng_reseed_from_rng, (rng, rdrand_rng, 256));
+               TEST_FFI_OK(botan_rng_reseed_from_rng, (rng, hwrng_rng, 256));
                }
             TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_rng_get, (null_rng, outbuf.data(), outbuf.size()));
 
@@ -250,7 +250,7 @@ class FFI_Unit_Tests final : public Test
          TEST_FFI_OK(botan_rng_destroy, (rng));
          TEST_FFI_OK(botan_rng_destroy, (null_rng));
          TEST_FFI_OK(botan_rng_destroy, (system_rng));
-         TEST_FFI_OK(botan_rng_destroy, (rdrand_rng));
+         TEST_FFI_OK(botan_rng_destroy, (hwrng_rng));
 
          return result;
          }

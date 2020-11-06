@@ -12,8 +12,6 @@
 #include <botan/asn1_obj.h>
 #include <string>
 
-BOTAN_FUTURE_INTERNAL_HEADER(emsa.h)
-
 namespace Botan {
 
 class Private_Key;
@@ -24,7 +22,7 @@ class RandomNumberGenerator;
 *
 * Any way of encoding/padding signatures
 */
-class BOTAN_PUBLIC_API(2,0) EMSA
+class EMSA
    {
    public:
       virtual ~EMSA() = default;
@@ -91,7 +89,7 @@ class BOTAN_PUBLIC_API(2,0) EMSA
 * @param algo_spec the name of the EMSA to create
 * @return pointer to newly allocated object of that type
 */
-BOTAN_PUBLIC_API(2,0) EMSA* get_emsa(const std::string& algo_spec);
+BOTAN_TEST_API EMSA* get_emsa(const std::string& algo_spec);
 
 /**
 * Returns the hash function used in the given EMSA scheme
@@ -100,7 +98,7 @@ BOTAN_PUBLIC_API(2,0) EMSA* get_emsa(const std::string& algo_spec);
 * @param algo_spec the name of the EMSA
 * @return hash function used in the given EMSA scheme
 */
-BOTAN_PUBLIC_API(2,0) std::string hash_for_emsa(const std::string& algo_spec);
+BOTAN_TEST_API std::string hash_for_emsa(const std::string& algo_spec);
 
 }
 

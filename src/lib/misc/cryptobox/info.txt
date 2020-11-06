@@ -12,3 +12,7 @@ pem
 serpent
 sha2_64
 </requires>
+
+<header:public>
+cryptobox.h
+</header:public>

@@ -8,16 +8,14 @@
 #ifndef BOTAN_MD5_H_
 #define BOTAN_MD5_H_
 
-#include <botan/mdx_hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(md5.h)
+#include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
 /**
 * MD5
 */
-class BOTAN_PUBLIC_API(2,0) MD5 final : public MDx_HashFunction
+class MD5 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "MD5"; }

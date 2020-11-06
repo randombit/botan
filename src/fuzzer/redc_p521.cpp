@@ -6,7 +6,7 @@
 
 #include "fuzzers.h"
 #include <botan/reducer.h>
-#include <botan/curve_nistp.h>
+#include <botan/internal/curve_nistp.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {

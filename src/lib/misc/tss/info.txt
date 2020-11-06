@@ -8,3 +8,7 @@ hex
 sha1
 sha2_32
 </requires>
+
+<header:public>
+tss.h
+</header:public>

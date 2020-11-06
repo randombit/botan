@@ -16,9 +16,9 @@
 * Internet & Security Agency homepage</A>
 */
 
-#include <botan/aria.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
+#include <botan/internal/aria.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
 #include <botan/cpuid.h>
 
 namespace Botan {

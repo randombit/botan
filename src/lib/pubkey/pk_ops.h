@@ -33,7 +33,7 @@ namespace PK_Ops {
 /**
 * Public key encryption interface
 */
-class BOTAN_PUBLIC_API(2,0) Encryption
+class Encryption
    {
    public:
       virtual secure_vector<uint8_t> encrypt(const uint8_t msg[],
@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(2,0) Encryption
 /**
 * Public key decryption interface
 */
-class BOTAN_PUBLIC_API(2,0) Decryption
+class Decryption
    {
    public:
       virtual secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
@@ -65,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) Decryption
 /**
 * Public key signature verification interface
 */
-class BOTAN_PUBLIC_API(2,0) Verification
+class Verification
    {
    public:
       /*
@@ -87,7 +87,7 @@ class BOTAN_PUBLIC_API(2,0) Verification
 /**
 * Public key signature creation interface
 */
-class BOTAN_PUBLIC_API(2,0) Signature
+class Signature
    {
    public:
       /*
@@ -114,7 +114,7 @@ class BOTAN_PUBLIC_API(2,0) Signature
 /**
 * A generic key agreement operation (eg DH or ECDH)
 */
-class BOTAN_PUBLIC_API(2,0) Key_Agreement
+class Key_Agreement
    {
    public:
       virtual secure_vector<uint8_t> agree(size_t key_len,
@@ -129,7 +129,7 @@ class BOTAN_PUBLIC_API(2,0) Key_Agreement
 /**
 * KEM (key encapsulation)
 */
-class BOTAN_PUBLIC_API(2,0) KEM_Encryption
+class KEM_Encryption
    {
    public:
       virtual void kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
@@ -142,7 +142,7 @@ class BOTAN_PUBLIC_API(2,0) KEM_Encryption
       virtual ~KEM_Encryption() = default;
    };
 
-class BOTAN_PUBLIC_API(2,0) KEM_Decryption
+class KEM_Decryption
    {
    public:
       virtual secure_vector<uint8_t> kem_decrypt(const uint8_t encap_key[],

@@ -10,7 +10,7 @@
 #include <new>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
-  #include <botan/locking_allocator.h>
+  #include <botan/internal/locking_allocator.h>
 #endif
 
 namespace Botan {

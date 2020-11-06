@@ -16,3 +16,7 @@ uwp -> bcrypt
 <requires>
 rtlgenrandom?dyn_load
 </requires>
+
+<header:public>
+system_rng.h
+</header:public>

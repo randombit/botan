@@ -10,14 +10,12 @@
 
 #include <botan/hash.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(mdx_hash.h)
-
 namespace Botan {
 
 /**
 * MDx Hash Function Base Class
 */
-class BOTAN_PUBLIC_API(2,0) MDx_HashFunction : public HashFunction
+class MDx_HashFunction : public HashFunction
    {
    public:
       /**

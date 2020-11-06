@@ -7,13 +7,11 @@
 #ifndef BOTAN_EME_RAW_H_
 #define BOTAN_EME_RAW_H_
 
-#include <botan/eme.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(eme_raw.h)
+#include <botan/internal/eme.h>
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(2,0) EME_Raw final : public EME
+class EME_Raw final : public EME
    {
    public:
       size_t maximum_input_size(size_t i) const override;

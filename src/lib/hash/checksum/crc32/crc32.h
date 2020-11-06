@@ -10,14 +10,12 @@
 
 #include <botan/hash.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(crc32.h)
-
 namespace Botan {
 
 /**
 * 32-bit cyclic redundancy check
 */
-class BOTAN_PUBLIC_API(2,0) CRC32 final : public HashFunction
+class CRC32 final : public HashFunction
    {
    public:
       std::string name() const override { return "CRC32"; }

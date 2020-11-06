@@ -7,7 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/sha160.h>
+#include <botan/internal/sha160.h>
 #include <arm_neon.h>
 
 namespace Botan {

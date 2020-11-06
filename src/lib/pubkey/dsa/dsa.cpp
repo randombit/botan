@@ -7,15 +7,15 @@
 */
 
 #include <botan/dsa.h>
-#include <botan/keypair.h>
+#include <botan/internal/keypair.h>
 #include <botan/reducer.h>
 #include <botan/rng.h>
-#include <botan/divide.h>
+#include <botan/internal/divide.h>
 #include <botan/internal/pk_ops_impl.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/emsa.h>
-  #include <botan/rfc6979.h>
+  #include <botan/internal/emsa.h>
+  #include <botan/internal/rfc6979.h>
 #endif
 
 namespace Botan {

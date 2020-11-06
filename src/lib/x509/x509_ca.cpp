@@ -13,10 +13,10 @@
 #include <botan/pubkey.h>
 #include <botan/der_enc.h>
 #include <botan/bigint.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/oids.h>
 #include <botan/hash.h>
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 #include <botan/scan_name.h>
 #include <algorithm>
 #include <iterator>

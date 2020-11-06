@@ -6,3 +6,7 @@ AUTO_RNG -> 20161126
 <requires>
 hmac_drbg
 </requires>
+
+<header:public>
+auto_rng.h
+</header:public>

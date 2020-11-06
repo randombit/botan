@@ -8,9 +8,9 @@
 #ifndef BOTAN_XMSS_VERIFICATION_OPERATION_H_
 #define BOTAN_XMSS_VERIFICATION_OPERATION_H_
 
-#include <botan/pk_ops.h>
-#include <botan/xmss.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/internal/xmss_signature.h>
+#include <botan/xmss.h>
 
 namespace Botan {
 

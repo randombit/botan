@@ -12,14 +12,12 @@
 #include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(cfb.h)
-
 namespace Botan {
 
 /**
 * CFB Mode
 */
-class BOTAN_PUBLIC_API(2,0) CFB_Mode : public Cipher_Mode
+class CFB_Mode : public Cipher_Mode
    {
    public:
       std::string name() const override final;
@@ -64,7 +62,7 @@ class BOTAN_PUBLIC_API(2,0) CFB_Mode : public Cipher_Mode
 /**
 * CFB Encryption
 */
-class BOTAN_PUBLIC_API(2,0) CFB_Encryption final : public CFB_Mode
+class CFB_Encryption final : public CFB_Mode
    {
    public:
       /**
@@ -84,7 +82,7 @@ class BOTAN_PUBLIC_API(2,0) CFB_Encryption final : public CFB_Mode
 /**
 * CFB Decryption
 */
-class BOTAN_PUBLIC_API(2,0) CFB_Decryption final : public CFB_Mode
+class CFB_Decryption final : public CFB_Mode
    {
    public:
       /**

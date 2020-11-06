@@ -8,3 +8,7 @@ rng
 sha2_64
 socket
 </requires>
+
+<header:public>
+roughtime.h
+</header:public>

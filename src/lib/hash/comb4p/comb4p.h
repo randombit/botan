@@ -10,15 +10,13 @@
 
 #include <botan/hash.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(comb4p.h)
-
 namespace Botan {
 
 /**
 * Combines two hash functions using a Feistel scheme. Described in
 * "On the Security of Hash Function Combiners", Anja Lehmann
 */
-class BOTAN_PUBLIC_API(2,0) Comb4P final : public HashFunction
+class Comb4P final : public HashFunction
    {
    public:
       /**

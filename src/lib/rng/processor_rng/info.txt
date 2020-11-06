@@ -14,3 +14,7 @@ x86_32
 x86_64
 ppc64
 </arch>
+
+<header:public>
+processor_rng.h
+</header:public>

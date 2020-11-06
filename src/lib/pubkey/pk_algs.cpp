@@ -6,7 +6,7 @@
 */
 
 #include <botan/pk_algs.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>

@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/sm4.h>
+#include <botan/internal/sm4.h>
 #include <arm_neon.h>
 
 namespace Botan {

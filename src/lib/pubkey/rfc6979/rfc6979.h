@@ -12,13 +12,11 @@
 #include <string>
 #include <memory>
 
-BOTAN_FUTURE_INTERNAL_HEADER(rfc6979.h)
-
 namespace Botan {
 
 class HMAC_DRBG;
 
-class BOTAN_PUBLIC_API(2,0) RFC6979_Nonce_Generator final
+class BOTAN_TEST_API RFC6979_Nonce_Generator final
    {
    public:
       /**
@@ -45,10 +43,11 @@ class BOTAN_PUBLIC_API(2,0) RFC6979_Nonce_Generator final
 * @param h the message hash already reduced mod q
 * @param hash the hash function used to generate h
 */
-BigInt BOTAN_PUBLIC_API(2,0) generate_rfc6979_nonce(const BigInt& x,
-                                        const BigInt& q,
-                                        const BigInt& h,
-                                        const std::string& hash);
+BOTAN_TEST_API
+BigInt generate_rfc6979_nonce(const BigInt& x,
+                              const BigInt& q,
+                              const BigInt& h,
+                              const std::string& hash);
 
 }
 

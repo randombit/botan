@@ -4,17 +4,6 @@ CODEC_FILTERS -> 20131128
 </defines>
 
 <header:public>
-basefilt.h
-comp_filter.h
-cipher_filter.h
-buf_filt.h
-key_filt.h
-
-b64_filt.h
-hex_filt.h
-
-secqueue.h
-
 data_snk.h
 filter.h
 filters.h
@@ -22,6 +11,7 @@ pipe.h
 </header:public>
 
 <header:internal>
+secqueue.h
 out_buf.h
 </header:internal>
 

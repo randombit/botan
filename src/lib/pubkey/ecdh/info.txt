@@ -8,3 +8,7 @@ ec_group
 ecc_key
 numbertheory
 </requires>
+
+<header:public>
+ecdh.h
+</header:public>

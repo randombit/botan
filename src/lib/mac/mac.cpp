@@ -11,29 +11,29 @@
 #include <botan/mem_ops.h>
 
 #if defined(BOTAN_HAS_CMAC)
-  #include <botan/cmac.h>
+  #include <botan/internal/cmac.h>
 #endif
 
 #if defined(BOTAN_HAS_GMAC)
-  #include <botan/gmac.h>
+  #include <botan/internal/gmac.h>
   #include <botan/block_cipher.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC)
-  #include <botan/hmac.h>
+  #include <botan/internal/hmac.h>
   #include <botan/hash.h>
 #endif
 
 #if defined(BOTAN_HAS_POLY1305)
-  #include <botan/poly1305.h>
+  #include <botan/internal/poly1305.h>
 #endif
 
 #if defined(BOTAN_HAS_SIPHASH)
-  #include <botan/siphash.h>
+  #include <botan/internal/siphash.h>
 #endif
 
 #if defined(BOTAN_HAS_ANSI_X919_MAC)
-  #include <botan/x919_mac.h>
+  #include <botan/internal/x919_mac.h>
 #endif
 
 namespace Botan {

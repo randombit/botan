@@ -8,3 +8,7 @@ hmac
 numbertheory
 sha2_32
 </requires>
+
+<header:public>
+fpe_fe1.h
+</header:public>

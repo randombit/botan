@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/noekeon.h>
+#include <botan/internal/noekeon.h>
 #include <botan/internal/simd_32.h>
 
 namespace Botan {

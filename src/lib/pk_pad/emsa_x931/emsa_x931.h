@@ -8,10 +8,8 @@
 #ifndef BOTAN_EMSA_X931_H_
 #define BOTAN_EMSA_X931_H_
 
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 #include <botan/hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(emsa_x931.h)
 
 namespace Botan {
 
@@ -20,7 +18,7 @@ namespace Botan {
 * Useful for Rabin-Williams, also sometimes used with RSA in
 * odd protocols.
 */
-class BOTAN_PUBLIC_API(2,0) EMSA_X931 final : public EMSA
+class EMSA_X931 final : public EMSA
    {
    public:
       /**

@@ -837,10 +837,10 @@ class ModuleInfo(InfoObject):
 
         self.source = all_source_files
 
-        # If not entry for the headers, all are assumed public
+        # If not entry for the headers, all are assumed internal
         if lex.header_internal == [] and lex.header_public == []:
-            self.header_public = list(all_header_files)
-            self.header_internal = []
+            self.header_public = []
+            self.header_internal = list(all_header_files)
         else:
             self.header_public = lex.header_public
             self.header_internal = lex.header_internal

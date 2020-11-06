@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/sp800_108.h>
-#include <botan/loadstor.h>
+#include <botan/internal/sp800_108.h>
+#include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
 #include <iterator>
 

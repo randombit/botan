@@ -5,3 +5,11 @@ ASN1 -> 20171109
 <requires>
 bigint
 </requires>
+
+<header:public>
+asn1_print.h
+asn1_obj.h
+der_enc.h
+oids.h
+ber_dec.h
+</header:public>

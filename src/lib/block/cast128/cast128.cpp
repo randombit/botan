@@ -5,10 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/cast128.h>
+#include <botan/internal/cast128.h>
 #include <botan/internal/cast_sboxes.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
 
 namespace Botan {
 

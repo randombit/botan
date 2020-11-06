@@ -7,8 +7,8 @@
 
 #include <botan/scrypt.h>
 #include <botan/pbkdf2.h>
-#include <botan/salsa20.h>
-#include <botan/loadstor.h>
+#include <botan/internal/salsa20.h>
+#include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/timer.h>

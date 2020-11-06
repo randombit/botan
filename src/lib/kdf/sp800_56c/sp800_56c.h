@@ -11,14 +11,12 @@
 #include <botan/kdf.h>
 #include <botan/mac.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(sp800_56c.h)
-
 namespace Botan {
 
 /**
  * NIST SP 800-56C KDF
  */
-class BOTAN_PUBLIC_API(2,0) SP800_56C final : public KDF
+class SP800_56C final : public KDF
    {
    public:
       std::string name() const override { return "SP800-56C(" + m_prf->name() + ")"; }

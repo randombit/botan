@@ -8,7 +8,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/x509path.h>
-   #include <botan/calendar.h>
+   #include <botan/internal/calendar.h>
 #endif
 
 #include <utility>

@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/whrlpool.h>
+#include <botan/internal/whrlpool.h>
 
 namespace Botan {
 

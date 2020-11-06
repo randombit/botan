@@ -8,7 +8,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/gf2m_small_m.h>
+#include <botan/internal/gf2m_small_m.h>
 #include <botan/exceptn.h>
 #include <string>
 

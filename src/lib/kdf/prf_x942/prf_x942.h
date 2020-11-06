@@ -11,14 +11,12 @@
 #include <botan/kdf.h>
 #include <botan/asn1_obj.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(prf_x942.h)
-
 namespace Botan {
 
 /**
 * PRF from ANSI X9.42
 */
-class BOTAN_PUBLIC_API(2,0) X942_PRF final : public KDF
+class X942_PRF final : public KDF
    {
    public:
       std::string name() const override;

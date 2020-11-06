@@ -9,16 +9,14 @@
 #define BOTAN_GOST_3411_H_
 
 #include <botan/hash.h>
-#include <botan/gost_28147.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(gost_3411.h)
+#include <botan/internal/gost_28147.h>
 
 namespace Botan {
 
 /**
 * GOST 34.11
 */
-class BOTAN_PUBLIC_API(2,0) GOST_34_11 final : public HashFunction
+class GOST_34_11 final : public HashFunction
    {
    public:
       std::string name() const override { return "GOST-R-34.11-94" ; }

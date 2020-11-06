@@ -11,12 +11,12 @@
 #include <botan/ecdsa.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
-#include <botan/keypair.h>
+#include <botan/internal/keypair.h>
 #include <botan/reducer.h>
-#include <botan/emsa.h>
+#include <botan/internal/emsa.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/rfc6979.h>
+  #include <botan/internal/rfc6979.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)

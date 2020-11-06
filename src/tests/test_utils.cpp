@@ -11,14 +11,14 @@
 #include "tests.h"
 #include <functional>
 #include <ctime>
-#include <botan/loadstor.h>
-#include <botan/calendar.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/calendar.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/cpuid.h>
-#include <botan/charset.h>
-#include <botan/parsing.h>
+#include <botan/internal/charset.h>
+#include <botan/internal/parsing.h>
 #include <botan/version.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
@@ -766,15 +766,11 @@ class Charset_Tests final : public Text_Based_Test
             }
          else if(type == "UTF16-LATIN1")
             {
-            converted = Botan::Charset::transcode(in_str,
-                                                  Botan::Character_Set::LATIN1_CHARSET,
-                                                  Botan::Character_Set::UCS2_CHARSET);
+            converted = Botan::ucs2_to_latin1(in_str);
             }
          else if(type == "LATIN1-UTF8")
             {
-            converted = Botan::Charset::transcode(in_str,
-                                                  Botan::Character_Set::UTF8_CHARSET,
-                                                  Botan::Character_Set::LATIN1_CHARSET);
+            converted = Botan::latin1_to_utf8(in_str);
             }
          else
             {
@@ -797,18 +793,14 @@ class Charset_Tests final : public Text_Based_Test
                                            0x78, 0x00, 0x61, 0x00, 0x62, 0x00, 0x63, 0x00, 0x64, 0x00, 0x65, 0x00, 0x66
                                          };
 
-            Botan::Charset::transcode(std::string(input.begin(), input.end()),
-                                      Botan::Character_Set::LATIN1_CHARSET,
-                                      Botan::Character_Set::UCS2_CHARSET);
+            Botan::ucs2_to_latin1(std::string(input.begin(), input.end()));
             });
 
          result.test_throws("conversion fails for UTF16 string with odd number of bytes", []()
             {
             std::vector<uint8_t> input = { 0x00, 0x61, 0x00 };
 
-            Botan::Charset::transcode(std::string(input.begin(), input.end()),
-                                      Botan::Character_Set::LATIN1_CHARSET,
-                                      Botan::Character_Set::UCS2_CHARSET);
+            Botan::ucs2_to_latin1(std::string(input.begin(), input.end()));
             });
 
          return result;

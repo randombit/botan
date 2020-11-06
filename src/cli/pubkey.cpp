@@ -19,7 +19,7 @@
 #include <botan/pk_algs.h>
 #include <botan/pkcs8.h>
 #include <botan/pubkey.h>
-#include <botan/workfactor.h>
+#include <botan/internal/workfactor.h>
 #include <botan/data_src.h>
 
 #include <fstream>

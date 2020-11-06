@@ -11,7 +11,7 @@
 #if defined(BOTAN_HAS_ECC_GROUP)
   #include <botan/bigint.h>
   #include <botan/numthry.h>
-  #include <botan/curve_nistp.h>
+  #include <botan/internal/curve_nistp.h>
   #include <botan/pk_keys.h>
   #include <botan/point_gfp.h>
   #include <botan/ec_group.h>

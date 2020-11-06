@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/monty.h>
+#include <botan/internal/monty.h>
 #include <botan/reducer.h>
 #include <botan/internal/mp_core.h>
 

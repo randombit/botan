@@ -11,14 +11,12 @@
 #include <botan/mac.h>
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(cmac.h)
-
 namespace Botan {
 
 /**
 * CMAC, also known as OMAC1
 */
-class BOTAN_PUBLIC_API(2,0) CMAC final : public MessageAuthenticationCode
+class CMAC final : public MessageAuthenticationCode
    {
    public:
       std::string name() const override;
@@ -31,18 +29,6 @@ class BOTAN_PUBLIC_API(2,0) CMAC final : public MessageAuthenticationCode
          {
          return m_cipher->key_spec();
          }
-
-      /**
-      * CMAC's polynomial doubling operation
-      *
-      * This function was only exposed for use elsewhere in the library, but it is not
-      * longer used. This function will be removed in a future release.
-      *
-      * @param in the input
-      */
-      static secure_vector<uint8_t>
-         BOTAN_DEPRECATED("This was only for internal use and is no longer used")
-         poly_double(const secure_vector<uint8_t>& in);
 
       /**
       * @param cipher the block cipher to use

@@ -12,13 +12,11 @@
 #include <vector>
 #include <memory>
 
-BOTAN_FUTURE_INTERNAL_HEADER(locking_allocator.h)
-
 namespace Botan {
 
 class Memory_Pool;
 
-class BOTAN_PUBLIC_API(2,0) mlock_allocator final
+class mlock_allocator final
    {
    public:
       static mlock_allocator& instance();

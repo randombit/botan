@@ -6,3 +6,7 @@ HMAC_DRBG -> 20140319
 hmac
 stateful_rng
 </requires>
+
+<header:public>
+hmac_drbg.h
+</header:public>

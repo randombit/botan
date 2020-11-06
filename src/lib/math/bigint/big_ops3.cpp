@@ -7,7 +7,7 @@
 */
 
 #include <botan/bigint.h>
-#include <botan/divide.h>
+#include <botan/internal/divide.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>

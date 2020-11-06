@@ -11,8 +11,6 @@
 
 #include <botan/aead.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(ocb.h)
-
 namespace Botan {
 
 class BlockCipher;
@@ -30,7 +28,7 @@ class L_computer;
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
 */
-class BOTAN_PUBLIC_API(2,0) OCB_Mode : public AEAD_Mode
+class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
    {
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len) override;
@@ -85,7 +83,7 @@ class BOTAN_PUBLIC_API(2,0) OCB_Mode : public AEAD_Mode
       secure_vector<uint8_t> m_offset;
    };
 
-class BOTAN_PUBLIC_API(2,0) OCB_Encryption final : public OCB_Mode
+class BOTAN_TEST_API OCB_Encryption final : public OCB_Mode
    {
    public:
       /**
@@ -107,7 +105,7 @@ class BOTAN_PUBLIC_API(2,0) OCB_Encryption final : public OCB_Mode
       void encrypt(uint8_t input[], size_t blocks);
    };
 
-class BOTAN_PUBLIC_API(2,0) OCB_Decryption final : public OCB_Mode
+class BOTAN_TEST_API OCB_Decryption final : public OCB_Mode
    {
    public:
       /**

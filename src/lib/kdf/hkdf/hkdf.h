@@ -12,18 +12,12 @@
 #include <botan/mac.h>
 #include <botan/kdf.h>
 
-/*
-* The definitions of HKDF, HKDF_Extract, HKDF_Expand will be made internal
-* in the future. However the function hkdf_expand_label will still be defined.
-*/
-//BOTAN_FUTURE_INTERNAL_HEADER(hkdf.h)
-
 namespace Botan {
 
 /**
 * HKDF from RFC 5869.
 */
-class BOTAN_PUBLIC_API(2,0) HKDF final : public KDF
+class HKDF final : public KDF
    {
    public:
       /**
@@ -47,7 +41,7 @@ class BOTAN_PUBLIC_API(2,0) HKDF final : public KDF
 /**
 * HKDF Extraction Step from RFC 5869.
 */
-class BOTAN_PUBLIC_API(2,0) HKDF_Extract final : public KDF
+class HKDF_Extract final : public KDF
    {
    public:
       /**
@@ -71,7 +65,7 @@ class BOTAN_PUBLIC_API(2,0) HKDF_Extract final : public KDF
 /**
 * HKDF Expansion Step from RFC 5869.
 */
-class BOTAN_PUBLIC_API(2,0) HKDF_Expand final : public KDF
+class HKDF_Expand final : public KDF
    {
    public:
       /**
@@ -104,7 +98,7 @@ class BOTAN_PUBLIC_API(2,0) HKDF_Expand final : public KDF
 * @param length the desired output length
 */
 secure_vector<uint8_t>
-BOTAN_PUBLIC_API(2,3) hkdf_expand_label(
+BOTAN_TEST_API hkdf_expand_label(
    const std::string& hash_fn,
    const uint8_t secret[], size_t secret_len,
    const std::string& label,

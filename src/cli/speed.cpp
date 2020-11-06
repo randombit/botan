@@ -18,7 +18,6 @@
 
 // Always available:
 #include <botan/entropy_src.h>
-#include <botan/parsing.h>
 #include <botan/cpuid.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/timer.h>
@@ -26,7 +25,7 @@
 
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>
-   #include <botan/divide.h>
+   #include <botan/internal/divide.h>
 #endif
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
@@ -90,13 +89,13 @@
    #include <botan/pubkey.h>
    #include <botan/pk_algs.h>
    #include <botan/x509_key.h>
-   #include <botan/workfactor.h>
+   #include <botan/internal/workfactor.h>
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/numthry.h>
    #include <botan/reducer.h>
-   #include <botan/curve_nistp.h>
+   #include <botan/internal/curve_nistp.h>
    #include <botan/internal/primality.h>
 #endif
 
@@ -292,7 +291,7 @@ std::vector<size_t> unique_buffer_sizes(const std::string& cmdline_arg)
    const size_t MAX_BUF_SIZE = 64*1024*1024;
 
    std::set<size_t> buf;
-   for(std::string size_str : Botan::split_on(cmdline_arg, ','))
+   for(std::string size_str : Command::split_on(cmdline_arg, ','))
       {
       size_t x = 0;
       try
@@ -424,7 +423,7 @@ class Speed final : public Command
          {
          std::chrono::milliseconds msec(get_arg_sz("msec"));
          const std::string provider = get_arg("provider");
-         std::vector<std::string> ecc_groups = Botan::split_on(get_arg("ecc-groups"), ',');
+         std::vector<std::string> ecc_groups = Command::split_on(get_arg("ecc-groups"), ',');
          const std::string format = get_arg("format");
          const std::string clock_ratio = get_arg("cpu-clock-ratio");
          m_clock_speed = get_arg_sz("cpu-clock-speed");
@@ -474,7 +473,7 @@ class Speed final : public Command
 
          const std::vector<size_t> buf_sizes = unique_buffer_sizes(get_arg("buf-size"));
 
-         for(std::string cpuid_to_clear : Botan::split_on(get_arg("clear-cpuid"), ','))
+         for(std::string cpuid_to_clear : Command::split_on(get_arg("clear-cpuid"), ','))
             {
             auto bits = Botan::CPUID::bit_from_string(cpuid_to_clear);
             if(bits.empty())

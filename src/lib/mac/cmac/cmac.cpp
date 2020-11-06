@@ -5,21 +5,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/cmac.h>
+#include <botan/internal/cmac.h>
 #include <botan/exceptn.h>
 #include <botan/internal/poly_dbl.h>
 
 namespace Botan {
-
-/*
-* Perform CMAC's multiplication in GF(2^n)
-*/
-secure_vector<uint8_t> CMAC::poly_double(const secure_vector<uint8_t>& in)
-   {
-   secure_vector<uint8_t> out(in.size());
-   poly_double_n(out.data(), in.data(), out.size());
-   return out;
-   }
 
 /*
 * Update an CMAC Calculation

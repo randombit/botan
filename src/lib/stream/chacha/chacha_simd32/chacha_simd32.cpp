@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/chacha.h>
+#include <botan/internal/chacha.h>
 #include <botan/internal/simd_32.h>
 
 namespace Botan {

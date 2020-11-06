@@ -6,3 +6,7 @@ TLS_SQLITE3_SESSION_MANAGER -> 20131128
 sessions_sql
 sqlite3
 </requires>
+
+<header:public>
+tls_session_manager_sqlite.h
+</header:public>

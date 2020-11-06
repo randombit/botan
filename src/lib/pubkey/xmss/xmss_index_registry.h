@@ -14,8 +14,6 @@
 #include <botan/internal/atomic.h>
 #include <botan/mutex.h>
 
-//BOTAN_FUTURE_INTERNAL_HEADER(xmss_index_registry.h)
-
 namespace Botan {
 
 /**

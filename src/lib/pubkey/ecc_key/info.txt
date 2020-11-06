@@ -9,3 +9,7 @@ bigint
 ec_group
 numbertheory
 </requires>
+
+<header:public>
+ecc_key.h
+</header:public>

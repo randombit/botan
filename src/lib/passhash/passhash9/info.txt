@@ -7,3 +7,7 @@ pbkdf2
 rng
 base64
 </requires>
+
+<header:public>
+passhash9.h
+</header:public>

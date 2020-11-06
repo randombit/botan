@@ -16,7 +16,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/code_based_util.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/rng.h>

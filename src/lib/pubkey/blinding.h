@@ -12,8 +12,6 @@
 #include <botan/reducer.h>
 #include <functional>
 
-BOTAN_FUTURE_INTERNAL_HEADER(blinding.h)
-
 namespace Botan {
 
 class RandomNumberGenerator;
@@ -21,7 +19,7 @@ class RandomNumberGenerator;
 /**
 * Blinding Function Object.
 */
-class BOTAN_PUBLIC_API(2,0) Blinder final
+class Blinder final
    {
    public:
       /**

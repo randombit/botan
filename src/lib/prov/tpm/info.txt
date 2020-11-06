@@ -14,3 +14,7 @@ hash_id
 rsa
 rng
 </requires>
+
+<header:public>
+tpm.h
+</header:public>

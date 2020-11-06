@@ -9,7 +9,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/internal/bit_ops.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/oids.h>
 #include <algorithm>
 #include <sstream>

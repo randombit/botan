@@ -6,8 +6,8 @@
 */
 
 #include <botan/bigint.h>
-#include <botan/divide.h>
-#include <botan/charset.h>
+#include <botan/internal/divide.h>
+#include <botan/internal/charset.h>
 #include <botan/hex.h>
 
 namespace Botan {

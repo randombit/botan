@@ -8,16 +8,14 @@
 #ifndef BOTAN_SHA_64BIT_H_
 #define BOTAN_SHA_64BIT_H_
 
-#include <botan/mdx_hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(sha2_64.h)
+#include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
 /**
 * SHA-384
 */
-class BOTAN_PUBLIC_API(2,0) SHA_384 final : public MDx_HashFunction
+class SHA_384 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-384"; }
@@ -40,7 +38,7 @@ class BOTAN_PUBLIC_API(2,0) SHA_384 final : public MDx_HashFunction
 /**
 * SHA-512
 */
-class BOTAN_PUBLIC_API(2,0) SHA_512 final : public MDx_HashFunction
+class SHA_512 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-512"; }
@@ -78,7 +76,7 @@ class BOTAN_PUBLIC_API(2,0) SHA_512 final : public MDx_HashFunction
 /**
 * SHA-512/256
 */
-class BOTAN_PUBLIC_API(2,0) SHA_512_256 final : public MDx_HashFunction
+class SHA_512_256 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-512-256"; }

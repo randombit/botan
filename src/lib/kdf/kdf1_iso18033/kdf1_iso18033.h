@@ -11,14 +11,12 @@
 #include <botan/kdf.h>
 #include <botan/hash.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(kdf1_iso18033.h)
-
 namespace Botan {
 
 /**
 * KDF1, from ISO 18033-2
 */
-class BOTAN_PUBLIC_API(2,0) KDF1_18033 final : public KDF
+class KDF1_18033 final : public KDF
    {
    public:
       std::string name() const override { return "KDF1-18033(" + m_hash->name() + ")"; }

@@ -8,7 +8,7 @@
 #include <botan/dh.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/monty_exp.h>
-#include <botan/blinding.h>
+#include <botan/internal/blinding.h>
 
 namespace Botan {
 

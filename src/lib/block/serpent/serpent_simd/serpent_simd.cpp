@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/serpent.h>
+#include <botan/internal/serpent.h>
 #include <botan/internal/serpent_sbox.h>
 #include <botan/internal/simd_32.h>
 

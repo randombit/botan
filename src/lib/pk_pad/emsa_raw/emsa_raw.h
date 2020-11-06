@@ -8,9 +8,7 @@
 #ifndef BOTAN_EMSA_RAW_H_
 #define BOTAN_EMSA_RAW_H_
 
-#include <botan/emsa.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(emsa_raw.h)
+#include <botan/internal/emsa.h>
 
 namespace Botan {
 
@@ -18,7 +16,7 @@ namespace Botan {
 * EMSA-Raw - sign inputs directly
 * Don't use this unless you know what you are doing.
 */
-class BOTAN_PUBLIC_API(2,0) EMSA_Raw final : public EMSA
+class EMSA_Raw final : public EMSA
    {
    public:
       EMSA* clone() override { return new EMSA_Raw(); }

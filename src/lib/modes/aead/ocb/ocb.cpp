@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/ocb.h>
+#include <botan/internal/ocb.h>
 #include <botan/block_cipher.h>
 #include <botan/internal/poly_dbl.h>
 #include <botan/internal/bit_ops.h>

@@ -10,14 +10,12 @@
 
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(noekeon.h)
-
 namespace Botan {
 
 /**
 * Noekeon
 */
-class BOTAN_PUBLIC_API(2,0) Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
+class Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

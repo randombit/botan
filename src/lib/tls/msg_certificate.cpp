@@ -12,7 +12,7 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_hash.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/data_src.h>
 
 namespace Botan {

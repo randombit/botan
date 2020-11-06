@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/rc4.h>
+#include <botan/internal/rc4.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

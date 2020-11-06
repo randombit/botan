@@ -8,10 +8,10 @@
 
 #if defined(BOTAN_HAS_SIMD_32)
    #include <botan/internal/simd_32.h>
+   #include <botan/internal/bswap.h>
+   #include <botan/internal/rotate.h>
    #include <botan/cpuid.h>
-   #include <botan/rotate.h>
-   #include <botan/loadstor.h>
-   #include <botan/bswap.h>
+   #include <botan/internal/loadstor.h>
 #endif
 
 namespace Botan_Tests {

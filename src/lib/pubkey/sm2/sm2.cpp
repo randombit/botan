@@ -9,11 +9,11 @@
 #include <botan/sm2.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/numthry.h>
-#include <botan/keypair.h>
+#include <botan/internal/keypair.h>
 #include <botan/hash.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 
 namespace Botan {
 

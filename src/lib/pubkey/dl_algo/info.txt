@@ -8,3 +8,7 @@ dl_group
 numbertheory
 rng
 </requires>
+
+<header:public>
+dl_algo.h
+</header:public>

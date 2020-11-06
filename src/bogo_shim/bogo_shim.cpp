@@ -16,12 +16,12 @@
 #include <botan/tls_algos.h>
 #include <botan/data_src.h>
 #include <botan/pkcs8.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/oids.h>
 #include <botan/chacha_rng.h>
 #include <botan/base64.h>
 #include <botan/hex.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <botan/mem_ops.h>
 #include <iostream>
 #include <vector>

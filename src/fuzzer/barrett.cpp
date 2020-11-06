@@ -7,7 +7,7 @@
 #include "fuzzers.h"
 #include <botan/numthry.h>
 #include <botan/reducer.h>
-#include <botan/divide.h>
+#include <botan/internal/divide.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {

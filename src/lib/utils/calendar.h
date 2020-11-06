@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * Struct representing a particular date and time
 */
-class BOTAN_PUBLIC_API(2,0) calendar_point
+class BOTAN_TEST_API calendar_point
    {
    public:
 
@@ -55,6 +55,14 @@ class BOTAN_PUBLIC_API(2,0) calendar_point
          year(y), month(mon), day(d), hour(h), minutes(min), seconds(sec) {}
 
       /**
+      * Convert a time_point to a calendar_point
+      * @param time_point a time point from the system clock
+      * @return calendar_point object representing this time point
+      */
+      static calendar_point from_time_point(
+         const std::chrono::system_clock::time_point& time_point);
+
+      /**
       * Returns an STL timepoint object
       */
       std::chrono::system_clock::time_point to_std_timepoint() const;
@@ -65,7 +73,7 @@ class BOTAN_PUBLIC_API(2,0) calendar_point
       */
       std::string to_string() const;
 
-   BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES:
+   private:
       /*
       The member variables are public for historical reasons. Use the get_xxx() functions
       defined above. These members will be made private in a future major release.
@@ -78,13 +86,10 @@ class BOTAN_PUBLIC_API(2,0) calendar_point
       uint32_t seconds;
    };
 
-/**
-* Convert a time_point to a calendar_point
-* @param time_point a time point from the system clock
-* @return calendar_point object representing this time point
-*/
-BOTAN_PUBLIC_API(2,0) calendar_point calendar_value(
-   const std::chrono::system_clock::time_point& time_point);
+inline calendar_point calendar_value(const std::chrono::system_clock::time_point& time_point)
+   {
+   return calendar_point::from_time_point(time_point);
+   }
 
 }
 

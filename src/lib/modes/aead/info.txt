@@ -1,3 +1,7 @@
 <defines>
 AEAD_MODES -> 20131128
 </defines>
+
+<header:public>
+aead.h
+</header:public>

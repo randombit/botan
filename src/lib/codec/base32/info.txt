@@ -1,3 +1,7 @@
 <defines>
 BASE32_CODEC -> 20180418
 </defines>
+
+<header:public>
+base32.h
+</header:public>

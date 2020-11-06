@@ -11,7 +11,6 @@
 #include <map>
 #include <set>
 #include <vector>
-#include <botan/parsing.h>
 #include "cli_exceptions.h"
 
 namespace Botan_CLI {
@@ -36,6 +35,8 @@ class Argument_Parser final
 
       std::vector<std::string> get_arg_list(const std::string& what) const;
 
+      static std::vector<std::string> split_on(const std::string& str, char delim);
+
    private:
       // set in constructor
       std::vector<std::string> m_spec_args;
@@ -48,6 +49,31 @@ class Argument_Parser final
       std::set<std::string> m_user_flags;
       std::vector<std::string> m_user_rest;
    };
+
+std::vector<std::string> Argument_Parser::split_on(const std::string& str, char delim)
+   {
+   std::vector<std::string> elems;
+   if(str.empty()) return elems;
+
+   std::string substr;
+   for(auto i = str.begin(); i != str.end(); ++i)
+      {
+      if(*i == delim)
+         {
+         if(!substr.empty())
+            elems.push_back(substr);
+         substr.clear();
+         }
+      else
+         substr += *i;
+      }
+
+   if(substr.empty())
+      throw CLI_Error("Unable to split string: " + str);
+   elems.push_back(substr);
+
+   return elems;
+   }
 
 bool Argument_Parser::flag_set(const std::string& flag_name) const
    {
@@ -99,7 +125,7 @@ std::vector<std::string> Argument_Parser::get_arg_list(const std::string& what) 
    if(what == m_spec_rest)
       return m_user_rest;
 
-   return Botan::split_on(get_arg(what), ',');
+   return split_on(get_arg(what), ',');
    }
 
 void Argument_Parser::parse_args(const std::vector<std::string>& params)
@@ -213,7 +239,7 @@ Argument_Parser::Argument_Parser(const std::string& spec,
             : CLI_Error("Invalid command spec '" + bad_spec + "'") {}
       };
 
-   const std::vector<std::string> parts = Botan::split_on(spec, ' ');
+   const std::vector<std::string> parts = split_on(spec, ' ');
 
    if(parts.size() == 0)
       {

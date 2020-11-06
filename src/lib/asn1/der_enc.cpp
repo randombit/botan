@@ -8,7 +8,7 @@
 #include <botan/der_enc.h>
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 

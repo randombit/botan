@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/streebog.h>
-#include <botan/loadstor.h>
+#include <botan/internal/streebog.h>
+#include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

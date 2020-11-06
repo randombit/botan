@@ -8,8 +8,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/aes.h>
-#include <botan/loadstor.h>
+#include <botan/internal/aes.h>
+#include <botan/internal/loadstor.h>
 #include <arm_neon.h>
 
 namespace Botan {

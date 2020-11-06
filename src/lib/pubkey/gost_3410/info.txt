@@ -10,3 +10,7 @@ ecc_key
 numbertheory
 rng
 </requires>
+
+<header:public>
+gost_3410.h
+</header:public>

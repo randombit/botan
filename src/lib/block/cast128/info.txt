@@ -2,11 +2,3 @@
 CAST -> 20131128
 CAST_128 -> 20171203
 </defines>
-
-<header:internal>
-cast_sboxes.h
-</header:internal>
-
-<header:public>
-cast128.h
-</header:public>

@@ -1,3 +1,7 @@
 <defines>
 BASE64_CODEC -> 20131128
 </defines>
+
+<header:public>
+base64.h
+</header:public>

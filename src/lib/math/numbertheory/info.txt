@@ -3,16 +3,16 @@ NUMBERTHEORY -> 20131128
 </defines>
 
 <header:public>
-curve_nistp.h
 numthry.h
-pow_mod.h
 reducer.h
-monty.h
 </header:public>
 
 <header:internal>
-primality.h
+curve_nistp.h
+monty.h
 monty_exp.h
+pow_mod.h
+primality.h
 </header:internal>
 
 <requires>

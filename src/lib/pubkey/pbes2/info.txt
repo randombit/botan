@@ -8,3 +8,7 @@ cbc
 hmac
 pbkdf2
 </requires>
+
+<header:internal>
+pbes2.h
+</header:internal>

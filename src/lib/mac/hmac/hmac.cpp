@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/hmac.h>
+#include <botan/internal/hmac.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {

@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/shake.h>
-#include <botan/sha3.h>
+#include <botan/internal/shake.h>
+#include <botan/internal/sha3.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

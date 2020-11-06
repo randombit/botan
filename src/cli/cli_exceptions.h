@@ -7,6 +7,9 @@
 #ifndef BOTAN_CLI_EXCEPTIONS_H_
 #define BOTAN_CLI_EXCEPTIONS_H_
 
+#include <stdexcept>
+#include <string>
+
 namespace Botan_CLI {
 
 class CLI_Error : public std::runtime_error

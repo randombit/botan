@@ -10,8 +10,6 @@
 
 #include <botan/bigint.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(divide.h)
-
 namespace Botan {
 
 /**
@@ -21,10 +19,11 @@ namespace Botan {
 * @param q will be set to x / y
 * @param r will be set to x % y
 */
-void BOTAN_UNSTABLE_API vartime_divide(const BigInt& x,
-                                       const BigInt& y,
-                                       BigInt& q,
-                                       BigInt& r);
+BOTAN_TEST_API
+void vartime_divide(const BigInt& x,
+                    const BigInt& y,
+                    BigInt& q,
+                    BigInt& r);
 
 /**
 * BigInt division, const time variant
@@ -37,10 +36,11 @@ void BOTAN_UNSTABLE_API vartime_divide(const BigInt& x,
 * @param q will be set to x / y
 * @param r will be set to x % y
 */
-void BOTAN_PUBLIC_API(2,9) ct_divide(const BigInt& x,
-                                     const BigInt& y,
-                                     BigInt& q,
-                                     BigInt& r);
+BOTAN_TEST_API
+void ct_divide(const BigInt& x,
+               const BigInt& y,
+               BigInt& q,
+               BigInt& r);
 
 inline void divide(const BigInt& x,
                    const BigInt& y,
@@ -78,10 +78,11 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y)
 * @param q will be set to x / y
 * @param r will be set to x % y
 */
-void BOTAN_PUBLIC_API(2,9) ct_divide_u8(const BigInt& x,
-                                        uint8_t y,
-                                        BigInt& q,
-                                        uint8_t& r);
+BOTAN_TEST_API
+void ct_divide_u8(const BigInt& x,
+                  uint8_t y,
+                  BigInt& q,
+                  uint8_t& r);
 
 /**
 * BigInt modulo, const time variant
@@ -93,8 +94,9 @@ void BOTAN_PUBLIC_API(2,9) ct_divide_u8(const BigInt& x,
 * @param modulo a positive integer
 * @return result x % modulo
 */
-BigInt BOTAN_PUBLIC_API(2,9) ct_modulo(const BigInt& x,
-                                       const BigInt& modulo);
+BOTAN_TEST_API
+BigInt ct_modulo(const BigInt& x,
+                 const BigInt& modulo);
 
 }
 

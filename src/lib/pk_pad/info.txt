@@ -7,12 +7,3 @@ asn1
 rng
 pubkey
 </requires>
-
-<header:internal>
-padding.h
-</header:internal>
-
-<header:public>
-eme.h
-emsa.h
-</header:public>

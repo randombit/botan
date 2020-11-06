@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
-   #include <botan/mode_pad.h>
+   #include <botan/internal/mode_pad.h>
 #endif
 
 namespace Botan_Tests {

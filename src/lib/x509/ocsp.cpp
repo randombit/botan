@@ -13,7 +13,7 @@
 #include <botan/oids.h>
 #include <botan/base64.h>
 #include <botan/pubkey.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
   #include <botan/http_util.h>

@@ -12,14 +12,12 @@
 #include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(xts.h)
-
 namespace Botan {
 
 /**
 * IEEE P1619 XTS Mode
 */
-class BOTAN_PUBLIC_API(2,0) XTS_Mode : public Cipher_Mode
+class XTS_Mode : public Cipher_Mode
    {
    public:
       std::string name() const override;
@@ -65,7 +63,7 @@ class BOTAN_PUBLIC_API(2,0) XTS_Mode : public Cipher_Mode
 /**
 * IEEE P1619 XTS Encryption
 */
-class BOTAN_PUBLIC_API(2,0) XTS_Encryption final : public XTS_Mode
+class XTS_Encryption final : public XTS_Mode
    {
    public:
       /**
@@ -83,7 +81,7 @@ class BOTAN_PUBLIC_API(2,0) XTS_Encryption final : public XTS_Mode
 /**
 * IEEE P1619 XTS Decryption
 */
-class BOTAN_PUBLIC_API(2,0) XTS_Decryption final : public XTS_Mode
+class XTS_Decryption final : public XTS_Mode
    {
    public:
       /**

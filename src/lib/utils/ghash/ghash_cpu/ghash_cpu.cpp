@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/ghash.h>
+#include <botan/internal/ghash.h>
 #include <botan/internal/simd_32.h>
 
 #if defined(BOTAN_SIMD_USE_SSE2)

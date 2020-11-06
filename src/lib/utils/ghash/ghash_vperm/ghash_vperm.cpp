@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/ghash.h>
+#include <botan/internal/ghash.h>
 #include <immintrin.h>
 
 namespace Botan {

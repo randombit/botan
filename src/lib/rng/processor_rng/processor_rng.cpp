@@ -5,7 +5,7 @@
 */
 
 #include <botan/processor_rng.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/cpuid.h>
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) && !defined(BOTAN_USE_GCC_INLINE_ASM)

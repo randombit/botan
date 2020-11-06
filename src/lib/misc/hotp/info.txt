@@ -7,3 +7,7 @@ TOTP -> 20180816
 hmac
 utils
 </requires>
+
+<header:public>
+otp.h
+</header:public>

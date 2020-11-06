@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/mode_pad.h>
+#include <botan/internal/mode_pad.h>
 #include <botan/exceptn.h>
 #include <botan/internal/ct_utils.h>
 

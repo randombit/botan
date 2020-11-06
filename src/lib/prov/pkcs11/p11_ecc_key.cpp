@@ -11,7 +11,7 @@
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
 
-#include <botan/workfactor.h>
+#include <botan/internal/workfactor.h>
 #include <botan/ber_dec.h>
 
 namespace Botan {

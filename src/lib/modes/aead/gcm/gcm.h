@@ -12,8 +12,6 @@
 #include <botan/aead.h>
 #include <botan/sym_algo.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(gcm.h)
-
 namespace Botan {
 
 class BlockCipher;
@@ -23,7 +21,7 @@ class GHASH;
 /**
 * GCM Mode
 */
-class BOTAN_PUBLIC_API(2,0) GCM_Mode : public AEAD_Mode
+class GCM_Mode : public AEAD_Mode
    {
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len) override;
@@ -66,7 +64,7 @@ class BOTAN_PUBLIC_API(2,0) GCM_Mode : public AEAD_Mode
 /**
 * GCM Encryption
 */
-class BOTAN_PUBLIC_API(2,0) GCM_Encryption final : public GCM_Mode
+class GCM_Encryption final : public GCM_Mode
    {
    public:
       /**
@@ -89,7 +87,7 @@ class BOTAN_PUBLIC_API(2,0) GCM_Encryption final : public GCM_Mode
 /**
 * GCM Decryption
 */
-class BOTAN_PUBLIC_API(2,0) GCM_Decryption final : public GCM_Mode
+class GCM_Decryption final : public GCM_Mode
    {
    public:
       /**

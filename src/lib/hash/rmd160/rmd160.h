@@ -8,16 +8,14 @@
 #ifndef BOTAN_RIPEMD_160_H_
 #define BOTAN_RIPEMD_160_H_
 
-#include <botan/mdx_hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(rmd160.h)
+#include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
 /**
 * RIPEMD-160
 */
-class BOTAN_PUBLIC_API(2,0) RIPEMD_160 final : public MDx_HashFunction
+class RIPEMD_160 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "RIPEMD-160"; }

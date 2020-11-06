@@ -8,7 +8,7 @@
 
 #include <botan/p11.h>
 #include <botan/p11_types.h>
-#include <botan/dyn_load.h>
+#include <botan/internal/dyn_load.h>
 
 #include <cstdint>
 #include <string>

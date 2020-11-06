@@ -8,3 +8,7 @@ dl_group
 keypair
 numbertheory
 </requires>
+
+<header:public>
+elgamal.h
+</header:public>

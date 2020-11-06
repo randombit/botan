@@ -8,7 +8,7 @@
 #include <botan/system_rng.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_RTLGENRANDOM)
-  #include <botan/dyn_load.h>
+  #include <botan/internal/dyn_load.h>
   #define NOMINMAX 1
   #define _WINSOCKAPI_ // stop windows.h including winsock.h
   #include <windows.h>

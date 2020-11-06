@@ -99,8 +99,9 @@ class Command
 
       std::string cmd_name() const;
 
-   protected:
+      static std::vector<std::string> split_on(const std::string& str, char delim);
 
+   protected:
       /*
       * The actual functionality of the cli command implemented in subclass.
       * The return value from main will be zero.

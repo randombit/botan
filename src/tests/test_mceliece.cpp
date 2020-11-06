@@ -12,7 +12,7 @@
 
    #include <botan/mceliece.h>
    #include <botan/pubkey.h>
-   #include <botan/loadstor.h>
+   #include <botan/internal/loadstor.h>
    #include <botan/hash.h>
    #include <botan/hex.h>
 

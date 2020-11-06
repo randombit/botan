@@ -8,7 +8,7 @@
 
 #if defined(BOTAN_HAS_BLOWFISH)
 
-#include <botan/blowfish.h>
+#include <botan/internal/blowfish.h>
 
 namespace Botan_Tests {
 

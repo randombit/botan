@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/cfb.h>
+#include <botan/internal/cfb.h>
 
 namespace Botan {
 

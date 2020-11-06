@@ -8,7 +8,7 @@
 #ifndef BOTAN_CURVE25519_DONNA128_H_
 #define BOTAN_CURVE25519_DONNA128_H_
 
-#include <botan/mul128.h>
+#include <botan/internal/mul128.h>
 
 namespace Botan {
 

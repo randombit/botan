@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/keypair.h>
+#include <botan/internal/keypair.h>
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 

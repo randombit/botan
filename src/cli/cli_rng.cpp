@@ -8,7 +8,7 @@
 #include <botan/rng.h>
 #include <botan/entropy_src.h>
 #include <botan/hex.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>

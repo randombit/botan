@@ -7,7 +7,6 @@
 #include "cli.h"
 #include "argparse.h"
 #include <botan/rng.h>
-#include <botan/parsing.h>
 #include <botan/internal/os_utils.h>
 #include <iostream>
 #include <fstream>
@@ -42,6 +41,12 @@ std::string Command::cmd_name() const
 std::string Command::help_text() const
    {
    return "Usage: " + m_spec;
+   }
+
+//static
+std::vector<std::string> Command::split_on(const std::string& str, char delim)
+   {
+   return Argument_Parser::split_on(str, delim);
    }
 
 int Command::run(const std::vector<std::string>& params)

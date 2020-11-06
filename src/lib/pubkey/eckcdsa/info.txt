@@ -15,3 +15,7 @@ pk_pad
 rng
 sha2_32
 </requires>
+
+<header:public>
+eckcdsa.h
+</header:public>

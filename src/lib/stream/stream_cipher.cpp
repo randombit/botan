@@ -10,27 +10,27 @@
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_CHACHA)
-  #include <botan/chacha.h>
+  #include <botan/internal/chacha.h>
 #endif
 
 #if defined(BOTAN_HAS_SALSA20)
-  #include <botan/salsa20.h>
+  #include <botan/internal/salsa20.h>
 #endif
 
 #if defined(BOTAN_HAS_SHAKE_CIPHER)
-  #include <botan/shake_cipher.h>
+  #include <botan/internal/shake_cipher.h>
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE)
-  #include <botan/ctr.h>
+  #include <botan/internal/ctr.h>
 #endif
 
 #if defined(BOTAN_HAS_OFB)
-  #include <botan/ofb.h>
+  #include <botan/internal/ofb.h>
 #endif
 
 #if defined(BOTAN_HAS_RC4)
-  #include <botan/rc4.h>
+  #include <botan/internal/rc4.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)

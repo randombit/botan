@@ -8,16 +8,14 @@
 #ifndef BOTAN_SHA_160_H_
 #define BOTAN_SHA_160_H_
 
-#include <botan/mdx_hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(sha160.h)
+#include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
 /**
 * NIST's SHA-160
 */
-class BOTAN_PUBLIC_API(2,0) SHA_160 final : public MDx_HashFunction
+class SHA_160 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-160"; }

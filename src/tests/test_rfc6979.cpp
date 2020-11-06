@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-   #include <botan/rfc6979.h>
+   #include <botan/internal/rfc6979.h>
    #include <botan/hash.h>
 #endif
 

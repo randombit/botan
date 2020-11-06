@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/sp800_56a.h>
+#include <botan/internal/sp800_56a.h>
 #include <botan/scan_name.h>
 #include <botan/exceptn.h>
 

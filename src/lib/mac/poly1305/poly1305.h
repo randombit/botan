@@ -11,15 +11,13 @@
 #include <botan/mac.h>
 #include <memory>
 
-BOTAN_FUTURE_INTERNAL_HEADER(poly1305.h)
-
 namespace Botan {
 
 /**
 * DJB's Poly1305
 * Important note: each key can only be used once
 */
-class BOTAN_PUBLIC_API(2,0) Poly1305 final : public MessageAuthenticationCode
+class Poly1305 final : public MessageAuthenticationCode
    {
    public:
       std::string name() const override { return "Poly1305"; }

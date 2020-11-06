@@ -12,39 +12,39 @@
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_HKDF)
-#include <botan/hkdf.h>
+#include <botan/internal/hkdf.h>
 #endif
 
 #if defined(BOTAN_HAS_KDF1)
-#include <botan/kdf1.h>
+#include <botan/internal/kdf1.h>
 #endif
 
 #if defined(BOTAN_HAS_KDF2)
-#include <botan/kdf2.h>
+#include <botan/internal/kdf2.h>
 #endif
 
 #if defined(BOTAN_HAS_KDF1_18033)
-#include <botan/kdf1_iso18033.h>
+#include <botan/internal/kdf1_iso18033.h>
 #endif
 
 #if defined(BOTAN_HAS_TLS_V10_PRF) || defined(BOTAN_HAS_TLS_V12_PRF)
-#include <botan/prf_tls.h>
+#include <botan/internal/prf_tls.h>
 #endif
 
 #if defined(BOTAN_HAS_X942_PRF)
-#include <botan/prf_x942.h>
+#include <botan/internal/prf_x942.h>
 #endif
 
 #if defined(BOTAN_HAS_SP800_108)
-#include <botan/sp800_108.h>
+#include <botan/internal/sp800_108.h>
 #endif
 
 #if defined(BOTAN_HAS_SP800_56A)
-#include <botan/sp800_56a.h>
+#include <botan/internal/sp800_56a.h>
 #endif
 
 #if defined(BOTAN_HAS_SP800_56C)
-#include <botan/sp800_56c.h>
+#include <botan/internal/sp800_56c.h>
 #endif
 
 namespace Botan {

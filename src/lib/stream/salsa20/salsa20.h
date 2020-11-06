@@ -10,14 +10,12 @@
 
 #include <botan/stream_cipher.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(salsa20.h)
-
 namespace Botan {
 
 /**
 * DJB's Salsa20 (and XSalsa20)
 */
-class BOTAN_PUBLIC_API(2,0) Salsa20 final : public StreamCipher
+class Salsa20 final : public StreamCipher
    {
    public:
       void cipher(const uint8_t in[], uint8_t out[], size_t length) override;

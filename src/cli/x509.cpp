@@ -17,7 +17,6 @@
 #include <botan/x509path.h>
 #include <botan/x509self.h>
 #include <botan/data_src.h>
-#include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_OCSP)
    #include <botan/ocsp.h>
@@ -328,7 +327,7 @@ class Gen_Self_Signed final : public Command
          opts.country      = get_arg("country");
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
-         opts.more_dns = Botan::split_on(get_arg("dns"), ',');
+         opts.more_dns = Command::split_on(get_arg("dns"), ',');
          const bool der_format = flag_set("der");
 
          std::string emsa = get_arg("emsa");
@@ -387,14 +386,14 @@ class Generate_PKCS10 final : public Command
          opts.country      = get_arg("country");
          opts.organization = get_arg("organization");
          opts.email        = get_arg("email");
-         opts.more_dns     = Botan::split_on(get_arg("dns"), ',');
+         opts.more_dns     = Command::split_on(get_arg("dns"), ',');
 
          if(flag_set("ca"))
             {
             opts.CA_key(get_arg_sz("path-limit"));
             }
 
-         for(std::string ext_ku : Botan::split_on(get_arg("ext-ku"), ','))
+         for(std::string ext_ku : Command::split_on(get_arg("ext-ku"), ','))
             {
             opts.add_ex_constraint(ext_ku);
             }

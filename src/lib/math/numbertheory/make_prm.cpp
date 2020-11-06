@@ -8,7 +8,7 @@
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/reducer.h>
 #include <botan/internal/primality.h>
 #include <algorithm>

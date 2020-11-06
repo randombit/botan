@@ -6,8 +6,8 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#include <botan/gmac.h>
-#include <botan/ghash.h>
+#include <botan/internal/gmac.h>
+#include <botan/internal/ghash.h>
 #include <botan/exceptn.h>
 #include <botan/block_cipher.h>
 

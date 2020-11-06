@@ -5,3 +5,7 @@ PGP_S2K -> 20170527
 <requires>
 hash
 </requires>
+
+<header:public>
+pgp_s2k.h
+</header:public>

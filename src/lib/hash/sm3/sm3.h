@@ -8,9 +8,7 @@
 #ifndef BOTAN_SM3_H_
 #define BOTAN_SM3_H_
 
-#include <botan/mdx_hash.h>
-
-BOTAN_FUTURE_INTERNAL_HEADER(sm3.h)
+#include <botan/internal/mdx_hash.h>
 
 namespace Botan {
 
@@ -22,7 +20,7 @@ enum {
 /**
 * SM3
 */
-class BOTAN_PUBLIC_API(2,2) SM3 final : public MDx_HashFunction
+class SM3 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SM3"; }

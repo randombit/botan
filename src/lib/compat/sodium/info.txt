@@ -15,3 +15,7 @@ hmac
 siphash
 system_rng
 </requires>
+
+<header:public>
+sodium.h
+</header:public>

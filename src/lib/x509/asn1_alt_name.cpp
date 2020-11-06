@@ -11,8 +11,8 @@
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
 #include <botan/internal/stl_util.h>
-#include <botan/parsing.h>
-#include <botan/loadstor.h>
+#include <botan/internal/parsing.h>
+#include <botan/internal/loadstor.h>
 
 #include <sstream>
 

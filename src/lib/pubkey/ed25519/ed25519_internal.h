@@ -12,7 +12,7 @@
 #define BOTAN_ED25519_INT_H_
 
 #include <botan/internal/ed25519_fe.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

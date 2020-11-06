@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 #include "fuzzers.h"
-#include <botan/divide.h>
+#include <botan/internal/divide.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {

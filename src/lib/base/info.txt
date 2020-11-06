@@ -1,9 +1,5 @@
 <header:public>
-botan.h
 buf_comp.h
-init.h
-key_spec.h
-lookup.h
 secmem.h
 scan_name.h
 sym_algo.h

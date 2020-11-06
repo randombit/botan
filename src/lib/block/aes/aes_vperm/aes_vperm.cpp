@@ -10,7 +10,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/aes.h>
+#include <botan/internal/aes.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/simd_32.h>
 

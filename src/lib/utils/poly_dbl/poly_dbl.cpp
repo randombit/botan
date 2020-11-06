@@ -5,7 +5,7 @@
 */
 
 #include <botan/internal/poly_dbl.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

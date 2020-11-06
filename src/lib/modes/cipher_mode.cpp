@@ -6,9 +6,9 @@
 */
 
 #include <botan/cipher_mode.h>
-#include <botan/stream_mode.h>
+#include <botan/internal/stream_mode.h>
 #include <botan/scan_name.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 #include <sstream>
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
@@ -20,15 +20,15 @@
 #endif
 
 #if defined(BOTAN_HAS_MODE_CBC)
-  #include <botan/cbc.h>
+  #include <botan/internal/cbc.h>
 #endif
 
 #if defined(BOTAN_HAS_MODE_CFB)
-  #include <botan/cfb.h>
+  #include <botan/internal/cfb.h>
 #endif
 
 #if defined(BOTAN_HAS_MODE_XTS)
-  #include <botan/xts.h>
+  #include <botan/internal/xts.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)

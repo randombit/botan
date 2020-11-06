@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/prf_tls.h>
+#include <botan/internal/prf_tls.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

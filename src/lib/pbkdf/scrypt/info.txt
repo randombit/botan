@@ -8,3 +8,7 @@ pbkdf2
 hmac
 sha2_32
 </requires>
+
+<header:public>
+scrypt.h
+</header:public>

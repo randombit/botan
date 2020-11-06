@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/idea.h>
+#include <botan/internal/idea.h>
 #include <botan/internal/ct_utils.h>
 #include <emmintrin.h>
 

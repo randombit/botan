@@ -8,3 +8,7 @@ mac
 ecdh
 modes
 </requires>
+
+<header:public>
+ecies.h
+</header:public>

@@ -8,3 +8,7 @@ sha2_32
 chacha
 stateful_rng
 </requires>
+
+<header:public>
+chacha_rng.h
+</header:public>

@@ -5,9 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/charset.h>
+#include <botan/internal/charset.h>
 #include <botan/exceptn.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <cctype>
 
 namespace Botan {
@@ -128,10 +128,6 @@ std::string utf8_to_latin1(const std::string& utf8)
    return iso8859;
    }
 
-namespace Charset {
-
-namespace {
-
 /*
 * Convert from UCS-2 to ISO 8859-1
 */
@@ -177,32 +173,7 @@ std::string latin1_to_utf8(const std::string& iso8859)
    return utf8;
    }
 
-}
-
-/*
-* Perform character set transcoding
-*/
-std::string transcode(const std::string& str,
-                      Character_Set to, Character_Set from)
-   {
-   if(to == LOCAL_CHARSET)
-      to = LATIN1_CHARSET;
-   if(from == LOCAL_CHARSET)
-      from = LATIN1_CHARSET;
-
-   if(to == from)
-      return str;
-
-   if(from == LATIN1_CHARSET && to == UTF8_CHARSET)
-      return latin1_to_utf8(str);
-   if(from == UTF8_CHARSET && to == LATIN1_CHARSET)
-      return utf8_to_latin1(str);
-   if(from == UCS2_CHARSET && to == LATIN1_CHARSET)
-      return ucs2_to_latin1(str);
-
-   throw Invalid_Argument("Unknown transcoding operation from " +
-                          std::to_string(from) + " to " + std::to_string(to));
-   }
+namespace Charset {
 
 /*
 * Check if a character represents a digit

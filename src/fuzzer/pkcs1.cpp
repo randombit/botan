@@ -5,7 +5,7 @@
 */
 #include "fuzzers.h"
 
-#include <botan/eme_pkcs.h>
+#include <botan/internal/eme_pkcs.h>
 #include <botan/hex.h>
 
 namespace {

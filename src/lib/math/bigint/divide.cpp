@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/divide.h>
+#include <botan/internal/divide.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_madd.h>
 #include <botan/internal/ct_utils.h>

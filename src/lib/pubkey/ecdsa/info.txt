@@ -12,3 +12,7 @@ rng
 emsa1
 sha2_32
 </requires>
+
+<header:public>
+ecdsa.h
+</header:public>

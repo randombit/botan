@@ -5,10 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/gost_28147.h>
+#include <botan/internal/gost_28147.h>
 #include <botan/exceptn.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
 
 namespace Botan {
 

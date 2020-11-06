@@ -12,8 +12,6 @@
 #include <atomic>
 #include <memory>
 
-//BOTAN_FUTURE_INTERNAL_HEADER(atomic.h)
-
 namespace Botan {
 
 template <typename T>

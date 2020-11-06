@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/calendar.h>
+#include <botan/internal/calendar.h>
 #include <botan/exceptn.h>
 #include <ctime>
 #include <sstream>
@@ -107,9 +107,9 @@ std::string calendar_point::to_string() const
    return output.str();
    }
 
-
-calendar_point calendar_value(
-   const std::chrono::system_clock::time_point& time_point)
+//static
+calendar_point
+calendar_point::from_time_point(const std::chrono::system_clock::time_point& time_point)
    {
    std::tm tm = do_gmtime(std::chrono::system_clock::to_time_t(time_point));
 

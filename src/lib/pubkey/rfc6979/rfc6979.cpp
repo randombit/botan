@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/rfc6979.h>
+#include <botan/internal/rfc6979.h>
 #include <botan/hmac_drbg.h>
 #include <botan/mac.h>
 

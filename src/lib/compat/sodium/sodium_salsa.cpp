@@ -5,8 +5,8 @@
 */
 
 #include <botan/sodium.h>
-#include <botan/salsa20.h>
-#include <botan/loadstor.h>
+#include <botan/internal/salsa20.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

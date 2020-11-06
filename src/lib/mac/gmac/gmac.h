@@ -11,8 +11,6 @@
 
 #include <botan/mac.h>
 
-BOTAN_FUTURE_INTERNAL_HEADER(gmac.h)
-
 namespace Botan {
 
 class BlockCipher;
@@ -24,7 +22,7 @@ class GHASH;
 * GMAC requires a unique initialization vector be used for each message.
 * This must be provided via the MessageAuthenticationCode::start() API
 */
-class BOTAN_PUBLIC_API(2,0) GMAC final : public MessageAuthenticationCode
+class GMAC final : public MessageAuthenticationCode
    {
    public:
       void clear() override;

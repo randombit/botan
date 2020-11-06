@@ -9,11 +9,11 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/bigint.h>
    #include <botan/numthry.h>
-   #include <botan/divide.h>
+   #include <botan/internal/divide.h>
    #include <botan/internal/primality.h>
    #include <botan/reducer.h>
-   #include <botan/pow_mod.h>
-   #include <botan/parsing.h>
+   #include <botan/internal/pow_mod.h>
+   #include <botan/internal/parsing.h>
    #include "test_rng.h"
 #endif
 

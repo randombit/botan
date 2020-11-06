@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/workfactor.h>
+#include <botan/internal/workfactor.h>
 #include <algorithm>
 #include <cmath>
 

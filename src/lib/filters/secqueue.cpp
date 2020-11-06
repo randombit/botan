@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/secqueue.h>
+#include <botan/internal/secqueue.h>
 #include <algorithm>
 
 namespace Botan {

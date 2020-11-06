@@ -7,9 +7,9 @@
 
 #include <botan/bcrypt.h>
 #include <botan/rng.h>
-#include <botan/blowfish.h>
+#include <botan/internal/blowfish.h>
 #include <botan/base64.h>
-#include <botan/parsing.h>
+#include <botan/internal/parsing.h>
 
 namespace Botan {
 
