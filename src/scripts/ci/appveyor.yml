@@ -2,13 +2,13 @@
 clone_depth: 5
 
 environment:
-  SCCACHE_CACHE_SIZE: 300M
+  SCCACHE_CACHE_SIZE: 320M
   SCCACHE_VERSION: 0.2.12
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
   matrix:
 
-    # MSVC 2019 static x86-64 w/debug iterators
+    # MSVC 2019 x86-64 w/debug iterators
     - CC: VC2019
       PLATFORM: x86_amd64
       TARGET: sanitizer
@@ -19,7 +19,7 @@ environment:
     # MSVC 2019 x86-64 preview
     - CC: VC2019p
       PLATFORM: x86_amd64
-      TARGET: static
+      TARGET: shared
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
       MAKE_TOOL: jom
       TARGET_CC: msvc

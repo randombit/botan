@@ -98,15 +98,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     if target in ['mini-static', 'mini-shared']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
-    if target == 'static':
-        # Arbitrarily test amalgamation with the static lib builds
-        flags += ['--amalgamation']
-
     if target in ['bsi', 'nist']:
-        # Arbitrarily test disable static on module policy builds
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
-        flags += ['--module-policy=%s' % (target),
-                  '--enable-modules=tls']
+        flags += ['--module-policy=%s' % (target), '--enable-modules=tls']
 
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
@@ -131,9 +125,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target == 'fuzzers':
         flags += ['--unsafe-fuzzer-mode']
-
-    if target in ['fuzzers', 'coverage', 'valgrind']:
-        flags += ['--with-debug-info']
 
     if target in ['fuzzers', 'coverage']:
         flags += ['--build-fuzzers=test']
