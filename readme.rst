@@ -27,9 +27,9 @@ If you think you have found a security issue, see the `security page
 <https://botan.randombit.net/security.html>`_ for contact information.
 
 The latest release is
-`2.17.0 <https://botan.randombit.net/releases/Botan-2.17.0.tar.xz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-2.17.0.tar.xz.asc>`_,
-released on 2020-11-05.
+`2.17.1 <https://botan.randombit.net/releases/Botan-2.17.1.tar.xz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-2.17.1.tar.xz.asc>`_,
+released on 2020-11-07.
 All releases are signed with a `PGP key <https://botan.randombit.net/pgpkey.txt>`_.
 See the `release notes <https://botan.randombit.net/news.html>`_ for
 what is new. Botan is also available through most

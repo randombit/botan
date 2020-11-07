@@ -29,6 +29,15 @@ Version 3.0.0, Not Yet Released
 
 * Improve DragonflyBSD platform support (GH #2457)
 
+Version 2.17.1, 2020-11-07
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a build problem that could occur if Python was not in the PATH.
+  This was known to occur on some installations of macOS.
+
+* Re-enable support for the x86 CLMUL instruction on Visual C++, which was
+  accidentally disabled starting in 2.12.0. (GH #2460)
+
 Version 2.17.0, 2020-11-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
