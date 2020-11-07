@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.17.1, Not Yet Released
+Version 2.17.1, 2020-11-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a build problem that could occur if Python was not in the PATH.
