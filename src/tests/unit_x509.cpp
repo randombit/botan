@@ -1353,8 +1353,6 @@ class String_Extension final : public Botan::Certificate_Extension
          return "String Extension";
          }
 
-      void contents_to(Botan::Data_Store&, Botan::Data_Store&) const override {}
-
       std::vector<uint8_t> encode_inner() const override
          {
          std::vector<uint8_t> bits;
