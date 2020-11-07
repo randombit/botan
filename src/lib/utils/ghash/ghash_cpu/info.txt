@@ -30,4 +30,5 @@ ppc64
 <cc>
 gcc:4.9
 clang:3.8
+msvc
 </cc>
