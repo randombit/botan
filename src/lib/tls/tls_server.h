@@ -20,6 +20,42 @@ namespace TLS {
 
 class Server_Handshake_State;
 
+class BOTAN_UNSTABLE_API DTLS_Prestate final
+   {
+   public:
+      DTLS_Prestate() = default;
+
+      DTLS_Prestate(bool validity,
+                    std::unique_ptr<std::vector<uint8_t>> contents,
+                    Protocol_Version record_version,
+                    uint16_t in_message_seq,
+                    uint64_t in_record_seq,
+                    uint16_t out_message_seq);
+
+      DTLS_Prestate(const DTLS_Prestate&) = delete;
+
+      DTLS_Prestate& operator=(const DTLS_Prestate&) = delete;
+
+      DTLS_Prestate(DTLS_Prestate&&) = default;
+
+      DTLS_Prestate& operator=(DTLS_Prestate&&) = default;
+
+      bool cookie_valid() const;
+
+      void invalidate();
+
+   private:
+      bool m_validity = false;
+
+      std::unique_ptr<std::vector<uint8_t>> m_contents;
+      Protocol_Version m_record_version;
+      uint16_t m_in_message_seq = 0;
+      uint64_t m_in_record_seq = 0;
+      uint16_t m_out_message_seq = 0;
+
+      friend class Channel;
+   };
+
 /**
 * TLS Server
 */
@@ -27,6 +63,7 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
    {
    public:
       typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
+      typedef std::function<void (const uint8_t[], size_t)> output_fn;
 
       /**
       * Server initialization
@@ -55,6 +92,20 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
              const Policy& policy,
              RandomNumberGenerator& rng,
              bool is_datagram = false,
+             size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
+         );
+
+      /**
+       * Server initialization with a DTLS prestate, which implies DTLS.
+       * An exception will be thrown if the prestate cannot be accepted.
+       * Throws exactly the same exception that received_data can throw.
+       */
+      Server(Callbacks& callbacks,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             DTLS_Prestate& prestate,
              size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
          );
 
@@ -112,6 +163,19 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
       */
       std::string application_protocol() const override { return m_next_protocol; }
 
+      /**
+      * Verify whether a Client Hello message has a correct session cookie.
+      * Returns the prestate associated with the Client Hello.
+      * Use DTLS_Prestate::cookie_valid to check the result.
+      */
+      static DTLS_Prestate pre_verify_cookie(
+         Credentials_Manager& creds,
+         const Policy& policy,
+         const std::string& client_identity,
+         const uint8_t input[],
+         size_t buf_size,
+         output_fn emit_data_fn);
+
    private:
       std::vector<X509_Certificate>
          get_peer_cert_chain(const Handshake_State& state) const override;
@@ -160,6 +224,8 @@ class BOTAN_PUBLIC_API(2,0) Server final : public Channel
 
       // Set by deprecated constructor, Server calls both this fn and Callbacks version
       next_protocol_fn m_choose_next_protocol;
+
+      bool m_prestate_set = false;
    };
 
 }

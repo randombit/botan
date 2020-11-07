@@ -105,13 +105,16 @@ class Datagram_Handshake_IO final : public Handshake_IO
 
       Datagram_Handshake_IO(writer_fn writer,
                             class Connection_Sequence_Numbers& seq,
-                            uint16_t mtu, uint64_t initial_timeout_ms, uint64_t max_timeout_ms) :
+                            uint16_t mtu, uint64_t initial_timeout_ms, uint64_t max_timeout_ms,
+                            uint16_t pre_in_message_seq = 0, uint16_t pre_out_message_seq = 0) :
          m_seqs(seq),
          m_flights(1),
          m_initial_timeout(initial_timeout_ms),
          m_max_timeout(max_timeout_ms),
          m_send_hs(writer),
-         m_mtu(mtu)
+         m_mtu(mtu),
+         m_in_message_seq(pre_in_message_seq),
+         m_out_message_seq(pre_out_message_seq)
          {}
 
       Protocol_Version initial_record_version() const override;
@@ -133,26 +136,35 @@ class Datagram_Handshake_IO final : public Handshake_IO
 
       std::pair<Handshake_Type, std::vector<uint8_t>>
          get_next_record(bool expecting_ccs) override;
+
+      static std::vector<uint8_t> unconnected_send_message(
+         uint16_t msg_seq, uint16_t epoch,
+         Handshake_Type msg_type,
+         const std::vector<uint8_t>& msg,
+         uint16_t m_mtu,
+         writer_fn send_hs);
+
    private:
       void retransmit_flight(size_t flight);
       void retransmit_last_flight();
 
-      std::vector<uint8_t> format_fragment(
+      static std::vector<uint8_t> format_fragment(
          const uint8_t fragment[],
          size_t fragment_len,
          uint16_t frag_offset,
          uint16_t msg_len,
          Handshake_Type type,
-         uint16_t msg_sequence) const;
+         uint16_t msg_sequence);
 
-      std::vector<uint8_t> format_w_seq(
+      static std::vector<uint8_t> format_w_seq(
          const std::vector<uint8_t>& handshake_msg,
          Handshake_Type handshake_type,
-         uint16_t msg_sequence) const;
+         uint16_t msg_sequence);
 
-      std::vector<uint8_t> send_message(uint16_t msg_seq, uint16_t epoch,
-                                     Handshake_Type msg_type,
-                                     const std::vector<uint8_t>& msg);
+      std::vector<uint8_t> send_message(
+         uint16_t msg_seq, uint16_t epoch,
+         Handshake_Type msg_type,
+         const std::vector<uint8_t>& msg);
 
       class Handshake_Reassembly final
          {
@@ -204,11 +216,11 @@ class Datagram_Handshake_IO final : public Handshake_IO
       uint64_t m_last_write = 0;
       uint64_t m_next_timeout = 0;
 
-      uint16_t m_in_message_seq = 0;
-      uint16_t m_out_message_seq = 0;
-
       writer_fn m_send_hs;
       uint16_t m_mtu;
+
+      uint16_t m_in_message_seq = 0;
+      uint16_t m_out_message_seq = 0;
    };
 
 }

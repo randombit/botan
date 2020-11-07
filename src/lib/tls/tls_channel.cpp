@@ -8,6 +8,7 @@
 
 #include <botan/tls_channel.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_server.h>
 #include <botan/tls_messages.h>
 #include <botan/kdf.h>
 #include <botan/internal/tls_handshake_state.h>
@@ -143,7 +144,8 @@ bool Channel::save_session(const Session& session)
    return callbacks().tls_session_established(session);
    }
 
-Handshake_State& Channel::create_handshake_state(Protocol_Version version)
+Handshake_State& Channel::create_handshake_state(Protocol_Version version,
+                                                 DTLS_Prestate* prestate)
    {
    if(pending_state())
       throw Internal_Error("create_handshake_state called during handshake");
@@ -168,6 +170,25 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
          m_sequence_numbers.reset(new Stream_Sequence_Numbers);
       }
 
+   uint16_t pre_in_message_seq = 0;
+   uint16_t pre_out_message_seq = 0;
+
+   if(prestate)
+      {
+      BOTAN_ASSERT(version.is_datagram_protocol(),
+                   "Negotiating TLS but a DTLS prestate is set");
+
+      pre_in_message_seq = prestate->m_in_message_seq;
+      pre_out_message_seq = prestate->m_out_message_seq;
+
+      const uint64_t in_record_seq = prestate->m_in_record_seq;
+      const uint64_t out_record_seq = prestate->m_out_message_seq;
+      // our outgoing record sequence should equal message sequence
+      // since we never retransmit Hello Verify
+
+      m_sequence_numbers->skip_to(in_record_seq, out_record_seq);
+      }
+
    using namespace std::placeholders;
 
    std::unique_ptr<Handshake_IO> io;
@@ -178,7 +199,8 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
                   sequence_numbers(),
                   static_cast<uint16_t>(m_policy.dtls_default_mtu()),
                   m_policy.dtls_initial_timeout(),
-                  m_policy.dtls_maximum_timeout()));
+                  m_policy.dtls_maximum_timeout(),
+                  pre_in_message_seq, pre_out_message_seq));
       }
    else
       {
@@ -787,6 +809,36 @@ SymmetricKey Channel::key_material_export(const std::string& label,
    else
       {
       throw Invalid_State("Channel::key_material_export connection not active");
+      }
+   }
+
+void Channel::process_prestate(DTLS_Prestate* prestate)
+   {
+   BOTAN_ASSERT(m_is_server && m_is_datagram, "Must be a DTLS Server");
+
+   try
+      {
+      process_handshake_msg(nullptr,
+                            create_handshake_state(prestate->m_record_version,
+                                                   prestate),
+                            CLIENT_HELLO,
+                            *prestate->m_contents,
+                            false);
+      }
+   catch(TLS_Exception& e)
+      {
+      send_fatal_alert(e.type());
+      throw;
+      }
+   catch(Decoding_Error&)
+      {
+      send_fatal_alert(Alert::DECODE_ERROR);
+      throw;
+      }
+   catch(...)
+      {
+      send_fatal_alert(Alert::INTERNAL_ERROR);
+      throw;
       }
    }
 

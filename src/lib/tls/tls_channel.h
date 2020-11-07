@@ -30,6 +30,7 @@ class Handshake_Message;
 class Client_Hello;
 class Server_Hello;
 class Policy;
+class DTLS_Prestate;
 
 /**
 * Generic interface for TLS endpoint
@@ -213,7 +214,8 @@ class BOTAN_PUBLIC_API(2,0) Channel
 
       virtual Handshake_State* new_handshake_state(class Handshake_IO* io) = 0;
 
-      Handshake_State& create_handshake_state(Protocol_Version version);
+      Handshake_State& create_handshake_state(Protocol_Version version,
+                                              DTLS_Prestate* prestate = nullptr);
 
       void inspect_handshake_message(const Handshake_Message& msg);
 
@@ -242,6 +244,8 @@ class BOTAN_PUBLIC_API(2,0) Channel
       Callbacks& callbacks() const { return m_callbacks; }
 
       void reset_active_association_state();
+
+      void process_prestate(DTLS_Prestate* prestate);
 
    private:
       void init(size_t io_buf_sze);

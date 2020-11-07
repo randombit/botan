@@ -44,6 +44,11 @@ class TLS_Data_Reader final
          return std::vector<uint8_t>(m_buf.begin() + m_offset, m_buf.end());
          }
 
+      std::vector<uint8_t> get_data_read_so_far()
+         {
+         return std::vector<uint8_t>(m_buf.begin(), m_buf.begin() + m_offset);
+         }
+
       void discard_next(size_t bytes)
          {
          assert_at_least(bytes);

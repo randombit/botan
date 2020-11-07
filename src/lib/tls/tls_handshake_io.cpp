@@ -351,7 +351,7 @@ Datagram_Handshake_IO::format_fragment(const uint8_t fragment[],
                                        uint16_t frag_offset,
                                        uint16_t msg_len,
                                        Handshake_Type type,
-                                       uint16_t msg_sequence) const
+                                       uint16_t msg_sequence)
    {
    std::vector<uint8_t> send_buf(12 + frag_len);
 
@@ -375,7 +375,7 @@ Datagram_Handshake_IO::format_fragment(const uint8_t fragment[],
 std::vector<uint8_t>
 Datagram_Handshake_IO::format_w_seq(const std::vector<uint8_t>& msg,
                                     Handshake_Type type,
-                                    uint16_t msg_sequence) const
+                                    uint16_t msg_sequence)
    {
    return format_fragment(msg.data(), msg.size(), 0, static_cast<uint16_t>(msg.size()), type, msg_sequence);
    }
@@ -422,19 +422,33 @@ Datagram_Handshake_IO::send_under_epoch(const Handshake_Message& msg, uint16_t e
    return send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
    }
 
-std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
-                                                      uint16_t epoch,
-                                                      Handshake_Type msg_type,
-                                                      const std::vector<uint8_t>& msg_bits)
+std::vector<uint8_t>
+Datagram_Handshake_IO::send_message(uint16_t msg_seq,
+                                    uint16_t epoch,
+                                    Handshake_Type msg_type,
+                                    const std::vector<uint8_t>& msg_bits)
+   {
+   return unconnected_send_message(msg_seq, epoch,
+                                   msg_type, msg_bits,
+                                   m_mtu, m_send_hs);
+   }
+
+std::vector<uint8_t>
+Datagram_Handshake_IO::unconnected_send_message(uint16_t msg_seq,
+                                                uint16_t epoch,
+                                                Handshake_Type msg_type,
+                                                const std::vector<uint8_t>& msg_bits,
+                                                uint16_t mtu,
+                                                writer_fn send_hs)
    {
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
 
    const std::vector<uint8_t> no_fragment =
       format_w_seq(msg_bits, msg_type, msg_seq);
 
-   if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
+   if(no_fragment.size() + DTLS_HEADER_SIZE <= mtu)
       {
-      m_send_hs(epoch, HANDSHAKE, no_fragment);
+      send_hs(epoch, HANDSHAKE, no_fragment);
       }
    else
       {
@@ -450,10 +464,10 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
       const size_t ciphersuite_overhead = (epoch > 0) ? 128 : 0;
       const size_t header_overhead = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_LEN;
 
-      if(m_mtu <= (header_overhead + ciphersuite_overhead))
+      if(mtu <= (header_overhead + ciphersuite_overhead))
          throw Invalid_Argument("DTLS MTU is too small to send headers");
 
-      const size_t max_rec_size = m_mtu - (header_overhead + ciphersuite_overhead);
+      const size_t max_rec_size = mtu - (header_overhead + ciphersuite_overhead);
 
       while(frag_offset != msg_bits.size())
          {
@@ -467,7 +481,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
                             msg_type,
                             msg_seq);
 
-         m_send_hs(epoch, HANDSHAKE, frag);
+         send_hs(epoch, HANDSHAKE, frag);
 
          frag_offset += frag_len;
          }
