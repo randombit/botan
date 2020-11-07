@@ -125,11 +125,6 @@ Other API deprecations
 - The TLS constructors taking ``std::function`` for callbacks. Instead
   use the ``TLS::Callbacks`` interface.
 
-- Using ``X509_Certificate::subject_info`` and ``issuer_info`` to access any
-  information that is not included in the DN or subject alternative name. Prefer
-  using the specific assessor functions for other data, eg instead of
-  ``cert.subject_info("X509.Certificate.serial")`` use ``cert.serial_number()``.
-
 - The ``Buffered_Computation`` base class. In a future release the
   class will be removed, and all of member functions instead declared
   directly on ``MessageAuthenticationCode`` and ``HashFunction``. So

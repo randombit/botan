@@ -152,7 +152,6 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
 
       /**
       * Get the CRL's distribution point
-      * @return CRL.IssuingDistributionPoint from the CRL's Data_Store
       */
       std::string crl_issuing_distribution_point() const;
 

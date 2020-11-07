@@ -9,7 +9,6 @@
 
 #include <botan/x509_ext.h>
 #include <botan/x509cert.h>
-#include <botan/internal/datastor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/hash.h>
@@ -295,20 +294,6 @@ void Extensions::decode_from(BER_Decoder& from_source)
    sequence.verify_end();
    }
 
-/*
-* Write the extensions to an info store
-*/
-void Extensions::contents_to(Data_Store& subject_info,
-                             Data_Store& issuer_info) const
-   {
-   for(auto&& m_extn_info : m_extension_info)
-      {
-      m_extn_info.second.obj().contents_to(subject_info, issuer_info);
-      subject_info.add(m_extn_info.second.obj().oid_name() + ".is_critical",
-                       m_extn_info.second.is_critical());
-      }
-   }
-
 namespace Cert_Extension {
 
 /*
@@ -351,15 +336,6 @@ void Basic_Constraints::decode_inner(const std::vector<uint8_t>& in)
 
    if(m_is_ca == false)
       m_path_limit = 0;
-   }
-
-/*
-* Return a textual representation
-*/
-void Basic_Constraints::contents_to(Data_Store& subject, Data_Store&) const
-   {
-   subject.add("X509v3.BasicConstraints.is_ca", (m_is_ca ? 1 : 0));
-   subject.add("X509v3.BasicConstraints.path_constraint", static_cast<uint32_t>(m_path_limit));
    }
 
 /*
@@ -419,14 +395,6 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in)
    }
 
 /*
-* Return a textual representation
-*/
-void Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
-   {
-   subject.add("X509v3.KeyUsage", m_constraints);
-   }
-
-/*
 * Encode the extension
 */
 std::vector<uint8_t> Subject_Key_ID::encode_inner() const
@@ -442,14 +410,6 @@ std::vector<uint8_t> Subject_Key_ID::encode_inner() const
 void Subject_Key_ID::decode_inner(const std::vector<uint8_t>& in)
    {
    BER_Decoder(in).decode(m_key_id, OCTET_STRING).verify_end();
-   }
-
-/*
-* Return a textual representation
-*/
-void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
-   {
-   subject.add("X509v3.SubjectKeyIdentifier", m_key_id);
    }
 
 /*
@@ -494,15 +454,6 @@ void Authority_Key_ID::decode_inner(const std::vector<uint8_t>& in)
    }
 
 /*
-* Return a textual representation
-*/
-void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
-   {
-   if(m_key_id.size())
-      issuer.add("X509v3.AuthorityKeyIdentifier", m_key_id);
-   }
-
-/*
 * Encode the extension
 */
 std::vector<uint8_t> Subject_Alternative_Name::encode_inner() const
@@ -539,23 +490,6 @@ void Issuer_Alternative_Name::decode_inner(const std::vector<uint8_t>& in)
    }
 
 /*
-* Return a textual representation
-*/
-void Subject_Alternative_Name::contents_to(Data_Store& subject_info,
-                                           Data_Store&) const
-   {
-   subject_info.add(get_alt_name().contents());
-   }
-
-/*
-* Return a textual representation
-*/
-void Issuer_Alternative_Name::contents_to(Data_Store&, Data_Store& issuer_info) const
-   {
-   issuer_info.add(get_alt_name().contents());
-   }
-
-/*
 * Encode the extension
 */
 std::vector<uint8_t> Extended_Key_Usage::encode_inner() const
@@ -574,15 +508,6 @@ std::vector<uint8_t> Extended_Key_Usage::encode_inner() const
 void Extended_Key_Usage::decode_inner(const std::vector<uint8_t>& in)
    {
    BER_Decoder(in).decode_list(m_oids);
-   }
-
-/*
-* Return a textual representation
-*/
-void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
-   {
-   for(size_t i = 0; i != m_oids.size(); ++i)
-      subject.add("X509v3.ExtendedKeyUsage", m_oids[i].to_string());
    }
 
 /*
@@ -627,27 +552,6 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in)
       throw Encoding_Error("Empty Name Contraint extension");
 
    m_name_constraints = NameConstraints(std::move(permit),std::move(exclude));
-   }
-
-/*
-* Return a textual representation
-*/
-void Name_Constraints::contents_to(Data_Store& subject, Data_Store&) const
-   {
-   std::stringstream ss;
-
-   for(const GeneralSubtree& gs: m_name_constraints.permitted())
-      {
-      ss << gs;
-      subject.add("X509v3.NameConstraints.permitted", ss.str());
-      ss.str(std::string());
-      }
-   for(const GeneralSubtree& gs: m_name_constraints.excluded())
-      {
-      ss << gs;
-      subject.add("X509v3.NameConstraints.excluded", ss.str());
-      ss.str(std::string());
-      }
    }
 
 void Name_Constraints::validate(const X509_Certificate& subject, const X509_Certificate& issuer,
@@ -780,15 +684,6 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in)
       m_oids.push_back(policies[i].oid());
    }
 
-/*
-* Return a textual representation
-*/
-void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
-   {
-   for(size_t i = 0; i != m_oids.size(); ++i)
-      info.add("X509v3.CertificatePolicies", m_oids[i].to_string());
-   }
-
 void Certificate_Policies::validate(
    const X509_Certificate& /*subject*/,
    const X509_Certificate& /*issuer*/,
@@ -852,14 +747,6 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
       }
    }
 
-void Authority_Information_Access::contents_to(Data_Store& subject, Data_Store&) const
-   {
-   if(!m_ocsp_responder.empty())
-      subject.add("OCSP.responder", m_ocsp_responder);
-   for(const std::string& ca_issuer : m_ca_issuers)
-      subject.add("PKIX.CertificateAuthorityIssuers", ca_issuer);
-   }
-
 /*
 * Checked accessor for the crl_number member
 */
@@ -900,14 +787,6 @@ void CRL_Number::decode_inner(const std::vector<uint8_t>& in)
    }
 
 /*
-* Return a textual representation
-*/
-void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
-   {
-   info.add("X509v3.CRLNumber", static_cast<uint32_t>(m_crl_number));
-   }
-
-/*
 * Encode the extension
 */
 std::vector<uint8_t> CRL_ReasonCode::encode_inner() const
@@ -925,14 +804,6 @@ void CRL_ReasonCode::decode_inner(const std::vector<uint8_t>& in)
    size_t reason_code = 0;
    BER_Decoder(in).decode(reason_code, ENUMERATED, UNIVERSAL);
    m_reason = static_cast<CRL_Code>(reason_code);
-   }
-
-/*
-* Return a textual representation
-*/
-void CRL_ReasonCode::contents_to(Data_Store& info, Data_Store&) const
-   {
-   info.add("X509v3.CRLReasonCode", m_reason);
    }
 
 std::vector<uint8_t> CRL_Distribution_Points::encode_inner() const
@@ -961,12 +832,6 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf)
    m_crl_distribution_urls.push_back(ss.str());
    }
 
-void CRL_Distribution_Points::contents_to(Data_Store& subject, Data_Store&) const
-   {
-   for(const std::string& crl_url : m_crl_distribution_urls)
-      subject.add("CRL.DistributionPoint", crl_url);
-   }
-
 void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&) const
    {
    throw Not_Implemented("CRL_Distribution_Points encoding");
@@ -992,19 +857,6 @@ void CRL_Issuing_Distribution_Point::decode_inner(const std::vector<uint8_t>& bu
    BER_Decoder(buf).decode(m_distribution_point).verify_end();
    }
 
-void CRL_Issuing_Distribution_Point::contents_to(Data_Store& info, Data_Store&) const
-   {
-   auto contents = m_distribution_point.point().contents();
-   std::stringstream ss;
-
-   for(const auto& pair : contents)
-      {
-      ss << pair.first << ": " << pair.second << " ";
-      }
-
-   info.add("X509v3.CRLIssuingDistributionPoint", ss.str());
-   }
-
 std::vector<uint8_t> Unknown_Extension::encode_inner() const
    {
    return m_bytes;
@@ -1014,11 +866,6 @@ void Unknown_Extension::decode_inner(const std::vector<uint8_t>& bytes)
    {
    // Just treat as an opaque blob at this level
    m_bytes = bytes;
-   }
-
-void Unknown_Extension::contents_to(Data_Store&, Data_Store&) const
-   {
-   // No information store
    }
 
 }

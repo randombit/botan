@@ -22,7 +22,6 @@
 namespace Botan {
 
 class X509_Certificate;
-class Data_Store;
 class Public_Key;
 
 /**
@@ -370,15 +369,6 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Extension
       virtual Certificate_Extension* copy() const = 0;
 
       /*
-      * Add the contents of this extension into the information
-      * for the subject and/or issuer, as necessary.
-      * @param subject the subject info
-      * @param issuer the issuer info
-      */
-      virtual void contents_to(Data_Store& subject,
-                               Data_Store& issuer) const = 0;
-
-      /*
       * Callback visited during path validation.
       *
       * An extension can implement this callback to inspect
@@ -471,7 +461,6 @@ class BOTAN_PUBLIC_API(2,0) Extensions final : public ASN1_Object
 
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
-      void contents_to(Data_Store&, Data_Store&) const;
 
       /**
       * Adds a new extension to the list.

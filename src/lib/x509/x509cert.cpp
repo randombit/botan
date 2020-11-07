@@ -8,7 +8,6 @@
 
 #include <botan/x509cert.h>
 #include <botan/x509_key.h>
-#include <botan/internal/datastor.h>
 #include <botan/pk_keys.h>
 #include <botan/x509_ext.h>
 #include <botan/ber_dec.h>
@@ -60,9 +59,6 @@ struct X509_Certificate_Data
    AlternativeName m_subject_alt_name;
    AlternativeName m_issuer_alt_name;
    NameConstraints m_name_constraints;
-
-   Data_Store m_subject_ds;
-   Data_Store m_issuer_ds;
 
    size_t m_version = 0;
    size_t m_path_len_constraint = 0;
@@ -358,10 +354,6 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
       data->m_fingerprint_sha256 = create_hex_fingerprint(full_encoding, "SHA-256");
       }
-
-   data->m_subject_ds.add(data->m_subject_dn.contents());
-   data->m_issuer_ds.add(data->m_issuer_dn.contents());
-   data->m_v3_extensions.contents_to(data->m_subject_ds, data->m_issuer_ds);
 
    return data;
    }
@@ -670,7 +662,7 @@ X509_Certificate::subject_info(const std::string& req) const
    if(req == "X509.Certificate.serial")
       return {hex_encode(serial_number())};
 
-   return data().m_subject_ds.get(req);
+   return {};
    }
 
 /*
@@ -693,7 +685,7 @@ X509_Certificate::issuer_info(const std::string& req) const
    if(req == "X509.Certificate.dn_bits")
       return {hex_encode(this->raw_issuer_dn())};
 
-   return data().m_issuer_ds.get(req);
+   return {};
    }
 
 /*

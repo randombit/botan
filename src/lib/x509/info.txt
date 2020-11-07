@@ -25,7 +25,3 @@ x509cert.h
 x509path.h
 x509self.h
 </header:public>
-
-<header:internal>
-datastor.h
-</header:internal>
