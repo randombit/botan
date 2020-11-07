@@ -2086,7 +2086,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'mp_bits': choose_mp_bits(),
 
-        'python_exe': os.path.basename(sys.executable),
+        'python_exe': sys.executable,
         'python_version': options.python_version,
         'install_python_module': not options.no_install_python_module,
 
