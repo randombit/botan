@@ -18,6 +18,11 @@ Version 3.0.0, Not Yet Released
 * Re-enable support for CLMUL instruction on Visual C++, which was accidentally
   disabled starting in 2.12.0
 
+* Remove deprecated ``Data_Store`` class (GH #2461)
+
+* Remove deprecated public member variables of ``OID``, ``Attribute``,
+  ``BER_Object``, and ``AlgorithmIdentifier``. (GH #2462)
+
 * Remove support for HP and Pathscale compilers (GH #2455)
 
 * Remove support for Google NaCl (GH #2455)
