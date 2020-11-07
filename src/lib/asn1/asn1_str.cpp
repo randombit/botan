@@ -100,14 +100,6 @@ ASN1_String::ASN1_String(const std::string& str) :
    {}
 
 /*
-* Return this string in ISO 8859-1 encoding
-*/
-std::string ASN1_String::iso_8859() const
-   {
-   return utf8_to_latin1(m_utf8_str);
-   }
-
-/*
 * DER encode an ASN1_String
 */
 void ASN1_String::encode_into(DER_Encoder& encoder) const

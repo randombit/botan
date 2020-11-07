@@ -168,20 +168,18 @@ class BOTAN_PUBLIC_API(2,0) Attribute final : public ASN1_Object
       void decode_from(BER_Decoder& from) override;
 
       Attribute() = default;
-      Attribute(const OID&, const std::vector<uint8_t>&);
-      Attribute(const std::string&, const std::vector<uint8_t>&);
+      Attribute(const OID& oid, const std::vector<uint8_t>& params);
+      Attribute(const std::string& oid_str, const std::vector<uint8_t>& params);
 
-      const OID& get_oid() const { return oid; }
+      const OID& oid() const { return m_oid; }
+      const std::vector<uint8_t>& parameters() const { return m_parameters; }
 
-      const std::vector<uint8_t>& get_parameters() const { return parameters; }
+      const OID& get_oid() const { return m_oid; }
+      const std::vector<uint8_t>& get_parameters() const { return m_parameters; }
 
-   BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES:
-      /*
-      * These values are public for historical reasons, but in a future release
-      * they will be made private. Do not access them.
-      */
-      OID oid;
-      std::vector<uint8_t> parameters;
+   private:
+      OID m_oid;
+      std::vector<uint8_t> m_parameters;
    };
 
 /**

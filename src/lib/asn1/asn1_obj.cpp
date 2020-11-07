@@ -24,64 +24,64 @@ std::vector<uint8_t> ASN1_Object::BER_encode() const
 /*
 * Check a type invariant on BER data
 */
-void BER_Object::assert_is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_,
+void BER_Object::assert_is_a(ASN1_Tag expected_type_tag, ASN1_Tag expected_class_tag,
                              const std::string& descr) const
    {
-   if(this->is_a(type_tag_, class_tag_) == false)
+   if(this->is_a(expected_type_tag, expected_class_tag) == false)
       {
       std::stringstream msg;
 
       msg << "Tag mismatch when decoding " << descr << " got ";
 
-      if(class_tag == NO_OBJECT && type_tag == NO_OBJECT)
+      if(m_class_tag == NO_OBJECT && m_type_tag == NO_OBJECT)
          {
          msg << "EOF";
          }
       else
          {
-         if(class_tag == UNIVERSAL || class_tag == CONSTRUCTED)
+         if(m_class_tag == UNIVERSAL || m_class_tag == CONSTRUCTED)
             {
-            msg << asn1_tag_to_string(type_tag);
+            msg << asn1_tag_to_string(m_type_tag);
             }
          else
             {
-            msg << std::to_string(type_tag);
+            msg << std::to_string(m_type_tag);
             }
 
-         msg << "/" << asn1_class_to_string(class_tag);
+         msg << "/" << asn1_class_to_string(m_class_tag);
          }
 
       msg << " expected ";
 
-      if(class_tag_ == UNIVERSAL || class_tag_ == CONSTRUCTED)
+      if(expected_class_tag == UNIVERSAL || expected_class_tag == CONSTRUCTED)
          {
-         msg << asn1_tag_to_string(type_tag_);
+         msg << asn1_tag_to_string(expected_type_tag);
          }
       else
          {
-         msg << std::to_string(type_tag_);
+         msg << std::to_string(expected_type_tag);
          }
 
-      msg << "/" << asn1_class_to_string(class_tag_);
+      msg << "/" << asn1_class_to_string(expected_class_tag);
 
       throw BER_Decoding_Error(msg.str());
       }
    }
 
-bool BER_Object::is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_) const
+bool BER_Object::is_a(ASN1_Tag expected_type_tag, ASN1_Tag expected_class_tag) const
    {
-   return (type_tag == type_tag_ && class_tag == class_tag_);
+   return (m_type_tag == expected_type_tag && m_class_tag == expected_class_tag);
    }
 
-bool BER_Object::is_a(int type_tag_, ASN1_Tag class_tag_) const
+bool BER_Object::is_a(int expected_type_tag, ASN1_Tag expected_class_tag) const
    {
-   return is_a(ASN1_Tag(type_tag_), class_tag_);
+   return is_a(ASN1_Tag(expected_type_tag), expected_class_tag);
    }
 
-void BER_Object::set_tagging(ASN1_Tag t, ASN1_Tag c)
+void BER_Object::set_tagging(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
-   type_tag = t;
-   class_tag = c;
+   m_type_tag = type_tag;
+   m_class_tag = class_tag;
    }
 
 std::string asn1_class_to_string(ASN1_Tag type)

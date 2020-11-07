@@ -99,7 +99,7 @@ class BOTAN_PUBLIC_API(2,0) ASN1_Object
 class BOTAN_PUBLIC_API(2,0) BER_Object final
    {
    public:
-      BER_Object() : type_tag(NO_OBJECT), class_tag(UNIVERSAL) {}
+      BER_Object() : m_type_tag(NO_OBJECT), m_class_tag(UNIVERSAL) {}
 
       BER_Object(const BER_Object& other) = default;
 
@@ -109,16 +109,19 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       BER_Object& operator=(BER_Object&& other) = default;
 
-      bool is_set() const { return type_tag != NO_OBJECT; }
+      bool is_set() const { return m_type_tag != NO_OBJECT; }
 
       ASN1_Tag tagging() const { return ASN1_Tag(type() | get_class()); }
 
-      ASN1_Tag type() const { return type_tag; }
-      ASN1_Tag get_class() const { return class_tag; }
+      ASN1_Tag type_tag() const { return m_type_tag; }
+      ASN1_Tag class_tag() const { return m_class_tag; }
 
-      const uint8_t* bits() const { return value.data(); }
+      ASN1_Tag type() const { return m_type_tag; }
+      ASN1_Tag get_class() const { return m_class_tag; }
 
-      size_t length() const { return value.size(); }
+      const uint8_t* bits() const { return m_value.data(); }
+
+      size_t length() const { return m_value.size(); }
 
       void assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag,
                        const std::string& descr = "object") const;
@@ -127,16 +130,9 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       bool is_a(int type_tag, ASN1_Tag class_tag) const;
 
-   BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES:
-      /*
-      * The following member variables are public for historical reasons, but
-      * will be made private in a future major release. Use the accessor
-      * functions above.
-      */
-      ASN1_Tag type_tag, class_tag;
-      secure_vector<uint8_t> value;
-
    private:
+      ASN1_Tag m_type_tag, m_class_tag;
+      secure_vector<uint8_t> m_value;
 
       friend class BER_Decoder;
 
@@ -144,8 +140,8 @@ class BOTAN_PUBLIC_API(2,0) BER_Object final
 
       uint8_t* mutable_bits(size_t length)
          {
-         value.resize(length);
-         return value.data();
+         m_value.resize(length);
+         return m_value.data();
          }
    };
 
@@ -246,15 +242,6 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       const std::vector<uint32_t>& get_id() const { return get_components(); }
 
       /**
-      * Get this OID as a string
-      * @return string representing this OID
-      */
-      std::string BOTAN_DEPRECATED("Use OID::to_string") as_string() const
-         {
-         return this->to_string();
-         }
-
-      /**
       * Get this OID as a dotted-decimal string
       * @return string representing this OID
       */
@@ -273,22 +260,6 @@ class BOTAN_PUBLIC_API(2,0) OID final : public ASN1_Object
       bool operator==(const OID& other) const
          {
          return m_id == other.m_id;
-         }
-
-      /**
-      * Reset this instance to an empty OID.
-      */
-      void BOTAN_DEPRECATED("Avoid mutation of OIDs") clear() { m_id.clear(); }
-
-      /**
-      * Add a component to this OID.
-      * @param new_comp the new component to add to the end of this OID
-      * @return reference to *this
-      */
-      BOTAN_DEPRECATED("Avoid mutation of OIDs") OID& operator+=(uint32_t new_comp)
-         {
-         m_id.push_back(new_comp);
-         return (*this);
          }
 
    private:
@@ -403,9 +374,6 @@ class BOTAN_PUBLIC_API(2,0) ASN1_String final : public ASN1_Object
 
       bool empty() const { return m_utf8_str.empty(); }
 
-      std::string BOTAN_DEPRECATED("Use value() to get UTF-8 string instead")
-         iso_8859() const;
-
       /**
       * Return true iff this is a tag for a known string type we can handle.
       * This ignores string types that are not supported, eg teletexString
@@ -442,24 +410,23 @@ class BOTAN_PUBLIC_API(2,0) AlgorithmIdentifier final : public ASN1_Object
       AlgorithmIdentifier(const OID& oid, const std::vector<uint8_t>& params);
       AlgorithmIdentifier(const std::string& oid_name, const std::vector<uint8_t>& params);
 
-      const OID& get_oid() const { return oid; }
-      const std::vector<uint8_t>& get_parameters() const { return parameters; }
+      const OID& oid() const { return m_oid; }
+      const std::vector<uint8_t>& parameters() const { return m_parameters; }
+
+      const OID& get_oid() const { return m_oid; }
+      const std::vector<uint8_t>& get_parameters() const { return m_parameters; }
 
       bool parameters_are_null() const;
-      bool parameters_are_empty() const { return parameters.empty(); }
+      bool parameters_are_empty() const { return m_parameters.empty(); }
 
       bool parameters_are_null_or_empty() const
          {
          return parameters_are_empty() || parameters_are_null();
          }
 
-   BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES:
-      /*
-      * These values are public for historical reasons, but in a future release
-      * they will be made private. Do not access them.
-      */
-      OID oid;
-      std::vector<uint8_t> parameters;
+   private:
+      OID m_oid;
+      std::vector<uint8_t> m_parameters;
    };
 
 /*

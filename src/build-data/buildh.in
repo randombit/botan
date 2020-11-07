@@ -118,16 +118,6 @@
 * Things you can edit (but probably shouldn't)
 */
 
-#if !defined(BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES)
-
-  #if defined(BOTAN_NO_DEPRECATED)
-     #define BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES private
-  #else
-     #define BOTAN_DEPRECATED_PUBLIC_MEMBER_VARIABLES public
-  #endif
-
-#endif
-
 /* How much to allocate for a buffer of no particular size */
 #define BOTAN_DEFAULT_BUFFER_SIZE 1024
 
