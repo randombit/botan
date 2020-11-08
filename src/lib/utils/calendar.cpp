@@ -59,7 +59,7 @@ size_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day)
 
 std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
    {
-   if(get_year() < 1970)
+   if(year() < 1970)
       throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1970");
 
    // 32 bit time_t ends at January 19, 2038
@@ -68,20 +68,20 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
 
    BOTAN_IF_CONSTEXPR(sizeof(std::time_t) == 4)
       {
-      if(get_year() > 2037)
+      if(year() > 2037)
          {
          throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2037 on this system");
          }
       }
 
    // This upper bound is completely arbitrary
-   if(get_year() >= 2400)
+   if(year() >= 2400)
       {
       throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2400");
       }
 
-   const uint64_t seconds_64 = (days_since_epoch(get_year(), get_month(), get_day()) * 86400) +
-                                (get_hour() * 60 * 60) + (get_minutes() * 60) + get_seconds();
+   const uint64_t seconds_64 = (days_since_epoch(year(), month(), day()) * 86400) +
+                                (hour() * 60 * 60) + (minutes() * 60) + seconds();
 
    const time_t seconds_time_t = static_cast<time_t>(seconds_64);
 
@@ -98,25 +98,25 @@ std::string calendar_point::to_string() const
    // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
    std::stringstream output;
    output << std::setfill('0')
-          << std::setw(4) << get_year() << "-"
-          << std::setw(2) << get_month() << "-"
-          << std::setw(2) << get_day() << "T"
-          << std::setw(2) << get_hour() << ":"
-          << std::setw(2) << get_minutes() << ":"
-          << std::setw(2) << get_seconds();
+          << std::setw(4) << year() << "-"
+          << std::setw(2) << month() << "-"
+          << std::setw(2) << day() << "T"
+          << std::setw(2) << hour() << ":"
+          << std::setw(2) << minutes() << ":"
+          << std::setw(2) << seconds();
    return output.str();
    }
 
-calendar_point calendar_point_from_time_point(const std::chrono::system_clock::time_point& time_point)
+calendar_point::calendar_point(const std::chrono::system_clock::time_point& time_point)
    {
    std::tm tm = do_gmtime(std::chrono::system_clock::to_time_t(time_point));
 
-   return calendar_point(tm.tm_year + 1900,
-                         tm.tm_mon + 1,
-                         tm.tm_mday,
-                         tm.tm_hour,
-                         tm.tm_min,
-                         tm.tm_sec);
+   m_year = tm.tm_year + 1900;
+   m_month = tm.tm_mon + 1;
+   m_day = tm.tm_mday;
+   m_hour = tm.tm_hour;
+   m_minutes = tm.tm_min;
+   m_seconds = tm.tm_sec;
    }
 
 }
