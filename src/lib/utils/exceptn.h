@@ -377,59 +377,6 @@ class BOTAN_PUBLIC_API(2,0) Invalid_OID final : public Decoding_Error
       explicit Invalid_OID(const std::string& oid);
    };
 
-/*
-   The following exception types are deprecated, no longer used,
-   and will be removed in a future major release
-*/
-
-/**
-* Self Test Failure Exception
-*
-* This exception is no longer used. It will be removed in a future major release.
-*/
-class BOTAN_PUBLIC_API(2,0) Self_Test_Failure final : public Internal_Error
-   {
-   public:
-      BOTAN_DEPRECATED("no longer used") explicit Self_Test_Failure(const std::string& err);
-   };
-
-/**
-* No_Provider_Found Exception
-*
-* This exception is no longer used. It will be removed in a future major release.
-*/
-class BOTAN_PUBLIC_API(2,0) No_Provider_Found final : public Exception
-   {
-   public:
-      BOTAN_DEPRECATED("no longer used") explicit No_Provider_Found(const std::string& name);
-   };
-
-/**
-* Policy_Violation Exception
-*
-* This exception is no longer used. It will be removed in a future major release.
-*/
-class BOTAN_PUBLIC_API(2,0) Policy_Violation final : public Invalid_State
-   {
-   public:
-      BOTAN_DEPRECATED("no longer used") explicit Policy_Violation(const std::string& err);
-   };
-
-/**
-* Unsupported_Argument Exception
-*
-* An argument that is invalid because it is not supported by Botan.
-* It might or might not be valid in another context like a standard.
-*
-* This exception is no longer used, instead Not_Implemented is thrown.
-* It will be removed in a future major release.
-*/
-class BOTAN_PUBLIC_API(2,0) Unsupported_Argument final : public Invalid_Argument
-   {
-   public:
-      BOTAN_DEPRECATED("no longer used") explicit Unsupported_Argument(const std::string& msg) : Invalid_Argument(msg) {}
-   };
-
 template<typename E, typename... Args>
 inline void do_throw_error(const char* file, int line, const char* func, Args... args)
    {
