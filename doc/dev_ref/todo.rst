@@ -124,7 +124,6 @@ New Protocols / Formats
 Cleanups
 -----------
 
-* Split test_ffi.cpp into multiple files
 * Unicode path support on Windows (GH #1615)
 * The X.509 path validation tests have much duplicated logic
 
@@ -147,20 +146,10 @@ New C APIs
 * DL_Group
 * EC_Group
 
-Python
-----------------
-
-* Anywhere Pylint warnings too-many-locals, too-many-branches, or
-  too-many-statements are skipped, fix the code so Pylint no longer warns.
-
-* Write a CLI or HTTPS client in Python
-
 Build/Test
 ----------------------------------------
 
-* Start using GitHub Actions for CI, especially Windows builds
-* Create Docker image for Travis that runs 18.04 and has all
-  the tools we need pre-installed.
+* Explore using GitHub Actions for Windows builds
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
   debug info during CI
@@ -190,6 +179,7 @@ CLI
 * Implementation of `tlsdate`
 * Password store utility
 * TOTP calculator
+* Clone of magic wormhole
 
 Documentation
 ----------------------------------------
