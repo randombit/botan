@@ -68,63 +68,17 @@ Client::Client(Callbacks& callbacks,
                RandomNumberGenerator& rng,
                const Server_Information& info,
                const Protocol_Version& offer_version,
-               const std::vector<std::string>& next_protos,
+               const std::vector<std::string>& next_protocols,
                size_t io_buf_sz) :
    Channel(callbacks, session_manager, rng, policy,
            false, offer_version.is_datagram_protocol(), io_buf_sz),
    m_creds(creds),
    m_info(info)
    {
-   init(offer_version, next_protos);
-   }
-
-Client::Client(output_fn data_output_fn,
-               data_cb proc_cb,
-               alert_cb recv_alert_cb,
-               handshake_cb hs_cb,
-               Session_Manager& session_manager,
-               Credentials_Manager& creds,
-               const Policy& policy,
-               RandomNumberGenerator& rng,
-               const Server_Information& info,
-               const Protocol_Version& offer_version,
-               const std::vector<std::string>& next_protos,
-               size_t io_buf_sz) :
-   Channel(data_output_fn, proc_cb, recv_alert_cb, hs_cb, Channel::handshake_msg_cb(),
-           session_manager, rng, policy, false, offer_version.is_datagram_protocol(), io_buf_sz),
-   m_creds(creds),
-   m_info(info)
-   {
-   init(offer_version, next_protos);
-   }
-
-Client::Client(output_fn data_output_fn,
-               data_cb proc_cb,
-               alert_cb recv_alert_cb,
-               handshake_cb hs_cb,
-               handshake_msg_cb hs_msg_cb,
-               Session_Manager& session_manager,
-               Credentials_Manager& creds,
-               const Policy& policy,
-               RandomNumberGenerator& rng,
-               const Server_Information& info,
-               const Protocol_Version& offer_version,
-               const std::vector<std::string>& next_protos) :
-   Channel(data_output_fn, proc_cb, recv_alert_cb, hs_cb, hs_msg_cb,
-           session_manager, rng, policy, false, offer_version.is_datagram_protocol()),
-   m_creds(creds),
-   m_info(info)
-   {
-   init(offer_version, next_protos);
-   }
-
-void Client::init(const Protocol_Version& protocol_version,
-                  const std::vector<std::string>& next_protocols)
-   {
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
-   Handshake_State& state = create_handshake_state(protocol_version);
-   send_client_hello(state, false, protocol_version,
+   Handshake_State& state = create_handshake_state(offer_version);
+   send_client_hello(state, false, offer_version,
                      srp_identifier, next_protocols);
    }
 
