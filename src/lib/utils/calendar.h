@@ -59,7 +59,7 @@ class BOTAN_TEST_API calendar_point
       * @param time_point a time point from the system clock
       * @return calendar_point object representing this time point
       */
-      static calendar_point from_time_point(
+      static BOTAN_TEST_API calendar_point from_time_point(
          const std::chrono::system_clock::time_point& time_point);
 
       /**
