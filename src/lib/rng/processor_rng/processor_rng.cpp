@@ -36,7 +36,13 @@ namespace {
    typedef uint64_t hwrng_output;
 #endif
 
-hwrng_output read_hwrng(bool& success)
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   #define BOTAN_HWRNG_ISA "rdrnd"
+#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+   #define BOTAN_HWRNG_ISA "power9"
+#endif
+
+hwrng_output BOTAN_FUNC_ISA(BOTAN_HWRNG_ISA) read_hwrng(bool& success)
    {
    hwrng_output output = 0;
    success = false;
