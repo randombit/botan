@@ -451,7 +451,7 @@ class Date_Format_Tests final : public Text_Based_Test
                }
             else
                {
-               Botan::calendar_point c2 = Botan::calendar_value(c.to_std_timepoint());
+               Botan::calendar_point c2 = Botan::calendar_point_from_time_point(c.to_std_timepoint());
                result.test_is_eq(date_str + " year", c2.get_year(), d[0]);
                result.test_is_eq(date_str + " month", c2.get_month(), d[1]);
                result.test_is_eq(date_str + " day", c2.get_day(), d[2]);

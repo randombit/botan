@@ -55,14 +55,6 @@ class BOTAN_TEST_API calendar_point
          year(y), month(mon), day(d), hour(h), minutes(min), seconds(sec) {}
 
       /**
-      * Convert a time_point to a calendar_point
-      * @param time_point a time point from the system clock
-      * @return calendar_point object representing this time point
-      */
-      static BOTAN_TEST_API calendar_point from_time_point(
-         const std::chrono::system_clock::time_point& time_point);
-
-      /**
       * Returns an STL timepoint object
       */
       std::chrono::system_clock::time_point to_std_timepoint() const;
@@ -86,10 +78,12 @@ class BOTAN_TEST_API calendar_point
       uint32_t seconds;
    };
 
-inline calendar_point calendar_value(const std::chrono::system_clock::time_point& time_point)
-   {
-   return calendar_point::from_time_point(time_point);
-   }
+/**
+* Convert a time_point to a calendar_point
+* @param time_point a time point from the system clock
+* @return calendar_point object representing this time point
+*/
+calendar_point BOTAN_TEST_API calendar_point_from_time_point(const std::chrono::system_clock::time_point& time_point);
 
 }
 
