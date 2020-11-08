@@ -640,23 +640,6 @@ X509_Certificate::subject_info(const std::string& req) const
    if(subject_alt_name().has_field(req))
       return subject_alt_name().get_attribute(req);
 
-   // These will be removed later:
-   if(req == "X509.Certificate.v2.key_id")
-      return {hex_encode(this->v2_subject_key_id())};
-   if(req == "X509v3.SubjectKeyIdentifier")
-      return {hex_encode(this->subject_key_id())};
-   if(req == "X509.Certificate.dn_bits")
-      return {hex_encode(this->raw_subject_dn())};
-   if(req == "X509.Certificate.start")
-      return {not_before().to_string()};
-   if(req == "X509.Certificate.end")
-      return {not_after().to_string()};
-
-   if(req == "X509.Certificate.version")
-      return {std::to_string(x509_version())};
-   if(req == "X509.Certificate.serial")
-      return {hex_encode(serial_number())};
-
    return {};
    }
 
@@ -671,14 +654,6 @@ X509_Certificate::issuer_info(const std::string& req) const
 
    if(issuer_alt_name().has_field(req))
       return issuer_alt_name().get_attribute(req);
-
-   // These will be removed later:
-   if(req == "X509.Certificate.v2.key_id")
-      return {hex_encode(this->v2_issuer_key_id())};
-   if(req == "X509v3.AuthorityKeyIdentifier")
-      return {hex_encode(this->authority_key_id())};
-   if(req == "X509.Certificate.dn_bits")
-      return {hex_encode(this->raw_issuer_dn())};
 
    return {};
    }
