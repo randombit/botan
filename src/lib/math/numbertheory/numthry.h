@@ -15,18 +15,6 @@ namespace Botan {
 class RandomNumberGenerator;
 
 /**
-* Fused multiply-add
-* @param a an integer
-* @param b an integer
-* @param c an integer
-* @return (a*b)+c
-*/
-BigInt BOTAN_PUBLIC_API(2,0) BOTAN_DEPRECATED("Just use (a*b)+c")
-   mul_add(const BigInt& a,
-           const BigInt& b,
-           const BigInt& c);
-
-/**
 * Return the absolute value
 * @param n an integer
 * @return absolute value of n

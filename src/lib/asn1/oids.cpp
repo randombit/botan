@@ -61,12 +61,6 @@ class OID_Map final
          return OID();
          }
 
-      bool have_oid(const std::string& str)
-         {
-         lock_guard_type<mutex_type> lock(m_mutex);
-         return m_str2oid.find(str) != m_str2oid.end();
-         }
-
       static OID_Map& global_registry()
          {
          static OID_Map g_map;
@@ -124,11 +118,6 @@ std::string OIDS::oid2str_or_throw(const OID& oid)
    if(s.empty())
       throw Lookup_Error("No name associated with OID " + oid.to_string());
    return s;
-   }
-
-bool OIDS::have_oid(const std::string& name)
-   {
-   return OID_Map::global_registry().have_oid(name);
    }
 
 }

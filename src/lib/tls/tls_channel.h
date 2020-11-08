@@ -66,24 +66,6 @@ class BOTAN_PUBLIC_API(2,0) Channel
               bool is_datagram,
               size_t io_buf_sz = IO_BUF_DEFAULT_SIZE);
 
-      /**
-       * DEPRECATED. This constructor is only provided for backward
-       * compatibility and should not be used in new implementations.
-       * (Not marked deprecated since it is only called internally, by
-       * other deprecated constructors)
-       */
-      Channel(output_fn out,
-              data_cb app_data_cb,
-              alert_cb alert_cb,
-              handshake_cb hs_cb,
-              handshake_msg_cb hs_msg_cb,
-              Session_Manager& session_manager,
-              RandomNumberGenerator& rng,
-              const Policy& policy,
-              bool is_server,
-              bool is_datagram,
-              size_t io_buf_sz = IO_BUF_DEFAULT_SIZE);
-
       Channel(const Channel&) = delete;
 
       Channel& operator=(const Channel&) = delete;
@@ -244,8 +226,6 @@ class BOTAN_PUBLIC_API(2,0) Channel
       void reset_active_association_state();
 
    private:
-      void init(size_t io_buf_sze);
-
       void send_record(uint8_t record_type, const std::vector<uint8_t>& record);
 
       void send_record_under_epoch(uint16_t epoch, uint8_t record_type,
@@ -284,7 +264,6 @@ class BOTAN_PUBLIC_API(2,0) Channel
       const bool m_is_datagram;
 
       /* callbacks */
-      std::unique_ptr<Compat_Callbacks> m_compat_callbacks;
       Callbacks& m_callbacks;
 
       /* external state */

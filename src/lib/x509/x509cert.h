@@ -148,24 +148,6 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       std::vector<uint8_t> raw_subject_dn_sha256() const;
 
       /**
-      * Get the notBefore of the certificate as a string
-      * @return notBefore of the certificate
-      */
-      std::string BOTAN_DEPRECATED("Use not_before().to_string()") start_time() const
-         {
-         return not_before().to_string();
-         }
-
-      /**
-      * Get the notAfter of the certificate as a string
-      * @return notAfter of the certificate
-      */
-      std::string BOTAN_DEPRECATED("Use not_after().to_string()") end_time() const
-         {
-         return not_after().to_string();
-         }
-
-      /**
       * Get the notBefore of the certificate as X509_Time
       * @return notBefore of the certificate
       */
@@ -258,14 +240,6 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       bool has_constraints(Key_Constraints constraints) const;
 
       /**
-      * Returns true if and only if @param ex_constraint (referring to an
-      * extended key constraint, eg "PKIX.ServerAuth") is included in the
-      * extended key extension.
-      */
-      bool BOTAN_DEPRECATED("Use version taking an OID")
-         has_ex_constraint(const std::string& ex_constraint) const;
-
-      /**
       * Returns true if and only if OID @param ex_constraint is
       * included in the extended key extension.
       */
@@ -292,14 +266,6 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       Key_Constraints constraints() const;
 
       /**
-      * Get the key constraints as defined in the ExtendedKeyUsage
-      * extension of this certificate.
-      * @return key constraints
-      */
-      std::vector<std::string>
-         BOTAN_DEPRECATED("Use extended_key_usage") ex_constraints() const;
-
-      /**
       * Get the key usage as defined in the ExtendedKeyUsage extension
       * of this certificate, or else an empty vector.
       * @return key usage
@@ -318,8 +284,6 @@ class BOTAN_PUBLIC_API(2,0) X509_Certificate : public X509_Object
       * of this certificate.
       * @return certificate policies
       */
-      std::vector<std::string> BOTAN_DEPRECATED("Use certificate_policy_oids") policies() const;
-
       const std::vector<OID>& certificate_policy_oids() const;
 
       /**
