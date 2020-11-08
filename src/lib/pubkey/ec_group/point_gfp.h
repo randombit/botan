@@ -380,14 +380,6 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
    return scalar * point;
    }
 
-// encoding and decoding
-inline secure_vector<uint8_t> BOTAN_DEPRECATED("Use PointGFp::encode")
-   EC2OSP(const PointGFp& point, uint8_t format)
-   {
-   std::vector<uint8_t> enc = point.encode(static_cast<PointGFp::Compression_Type>(format));
-   return secure_vector<uint8_t>(enc.begin(), enc.end());
-   }
-
 /**
 * Perform point decoding
 * Use EC_Group::OS2ECP instead
@@ -415,24 +407,6 @@ PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
    { return OS2ECP(data.data(), data.size(), curve); }
 
 class PointGFp_Var_Point_Precompute;
-
-/**
-* Deprecated API for point multiplication
-* Use EC_Group::blinded_base_point_multiply or EC_Group::blinded_var_point_multiply
-*/
-class BOTAN_PUBLIC_API(2,0) Blinded_Point_Multiply final
-   {
-   public:
-      Blinded_Point_Multiply(const PointGFp& base, const BigInt& order, size_t h = 0);
-
-      ~Blinded_Point_Multiply();
-
-      PointGFp BOTAN_DEPRECATED("Use alternative APIs") blinded_multiply(const BigInt& scalar, RandomNumberGenerator& rng);
-   private:
-      std::vector<BigInt> m_ws;
-      const BigInt& m_order;
-      std::unique_ptr<PointGFp_Var_Point_Precompute> m_point_mul;
-   };
 
 }
 

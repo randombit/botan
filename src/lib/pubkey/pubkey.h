@@ -13,11 +13,6 @@
 #include <botan/symkey.h>
 #include <string>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-  #define BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS
-#endif
-
 namespace Botan {
 
 class RandomNumberGenerator;
@@ -181,23 +176,6 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
                 const std::string& emsa,
                 Signature_Format format = IEEE_1363,
                 const std::string& provider = "");
-
-#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
-      /**
-      * Construct a PK Signer.
-      * @param key the key to use inside this signer
-      * @param emsa the EMSA to use
-      * An example would be "EMSA1(SHA-224)".
-      * @param format the signature format to use
-      */
-      BOTAN_DEPRECATED("Use constructor taking a RNG object")
-      PK_Signer(const Private_Key& key,
-                const std::string& emsa,
-                Signature_Format format = IEEE_1363,
-                const std::string& provider = "") :
-         PK_Signer(key, system_rng(), emsa, format, provider)
-         {}
-#endif
 
       ~PK_Signer();
 
@@ -426,21 +404,6 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
                        const std::string& kdf,
                        const std::string& provider = "");
 
-#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
-      /**
-      * Construct a PK Key Agreement.
-      * @param key the key to use
-      * @param kdf name of the KDF to use (or 'Raw' for no KDF)
-      * @param provider the algo provider to use (or empty for default)
-      */
-      BOTAN_DEPRECATED("Use constructor taking a RNG object")
-      PK_Key_Agreement(const Private_Key& key,
-                       const std::string& kdf,
-                       const std::string& provider = "") :
-         PK_Key_Agreement(key, system_rng(), kdf, provider)
-         {}
-#endif
-
       ~PK_Key_Agreement();
 
       // For ECIES
@@ -543,19 +506,6 @@ class BOTAN_PUBLIC_API(2,0) PK_Encryptor_EME final : public PK_Encryptor
                        const std::string& padding,
                        const std::string& provider = "");
 
-#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
-      /**
-      * Construct an instance.
-      * @param key the key to use inside the encryptor
-      * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
-      */
-      BOTAN_DEPRECATED("Use constructor taking a RNG object")
-      PK_Encryptor_EME(const Public_Key& key,
-                       const std::string& padding,
-                       const std::string& provider = "") :
-         PK_Encryptor_EME(key, system_rng(), padding, provider) {}
-#endif
-
       ~PK_Encryptor_EME();
 
       PK_Encryptor_EME& operator=(const PK_Encryptor_EME&) = delete;
@@ -591,20 +541,6 @@ class BOTAN_PUBLIC_API(2,0) PK_Decryptor_EME final : public PK_Decryptor
                        const std::string& eme,
                        const std::string& provider = "");
 
-
-#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
-      /**
-      * Construct an instance.
-      * @param key the key to use inside the decryptor
-      * @param eme the message encoding scheme to use (eg "OAEP(SHA-256)")
-      */
-      BOTAN_DEPRECATED("Use constructor taking a RNG object")
-      PK_Decryptor_EME(const Private_Key& key,
-                       const std::string& eme,
-                       const std::string& provider = "") :
-         PK_Decryptor_EME(key, system_rng(), eme, provider) {}
-#endif
-
       size_t plaintext_length(size_t ptext_len) const override;
 
       ~PK_Decryptor_EME();
@@ -635,14 +571,6 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Encryptor final
                        RandomNumberGenerator& rng,
                        const std::string& kem_param = "",
                        const std::string& provider = "");
-
-#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
-      BOTAN_DEPRECATED("Use constructor taking a RNG object")
-      PK_KEM_Encryptor(const Public_Key& key,
-                       const std::string& kem_param = "",
-                       const std::string& provider = "") :
-         PK_KEM_Encryptor(key, system_rng(), kem_param, provider) {}
-#endif
 
       ~PK_KEM_Encryptor();
 
@@ -729,15 +657,6 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Decryptor final
                        RandomNumberGenerator& rng,
                        const std::string& kem_param = "",
                        const std::string& provider = "");
-
-#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
-      BOTAN_DEPRECATED("Use constructor taking a RNG object")
-      PK_KEM_Decryptor(const Private_Key& key,
-                       const std::string& kem_param = "",
-                       const std::string& provider = "") :
-         PK_KEM_Decryptor(key, system_rng(), kem_param, provider)
-         {}
-#endif
 
       ~PK_KEM_Decryptor();
       PK_KEM_Decryptor& operator=(const PK_KEM_Decryptor&) = delete;

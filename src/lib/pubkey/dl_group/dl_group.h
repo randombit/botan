@@ -316,19 +316,7 @@ class BOTAN_PUBLIC_API(2,0) DL_Group final
       */
       void BER_decode(const std::vector<uint8_t>& ber, Format format);
 
-      /**
-      * Decode a PEM encoded group into this instance.
-      * @param pem the PEM encoding of the group
-      */
-      void BOTAN_DEPRECATED("Use DL_Group_from_PEM") PEM_decode(const std::string& pem);
-
       DL_Group_Source source() const;
-
-      /**
-      * Return PEM representation of named DL group
-      */
-      static std::string BOTAN_DEPRECATED("Use DL_Group(name).PEM_encode()")
-         PEM_for_named_group(const std::string& name);
 
       /*
       * For internal use only

@@ -211,12 +211,6 @@ class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
        */
       std::string fingerprint_private(const std::string& alg) const;
 
-      BOTAN_DEPRECATED("Use fingerprint_private or fingerprint_public")
-         inline std::string fingerprint(const std::string& alg) const
-         {
-         return fingerprint_private(alg); // match behavior in previous versions
-         }
-
       /**
       * This is an internal library function exposed on key types.
       * In almost all cases applications should use wrappers in pubkey.h
