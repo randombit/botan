@@ -112,7 +112,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target == 'coverage':
         flags += ['--with-coverage-info', '--with-debug-info', '--test-mode']
-        test_cmd += ['--skip-tests=tls_stream_integration']
 
     if target == 'valgrind':
         # valgrind in 16.04 has a bug with rdrand handling
