@@ -18,7 +18,7 @@ namespace Botan {
 
 ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time)
    {
-   calendar_point cal = calendar_value(time);
+   calendar_point cal = calendar_point_from_time_point(time);
 
    m_year   = cal.get_year();
    m_month  = cal.get_month();

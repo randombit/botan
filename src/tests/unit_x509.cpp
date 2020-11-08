@@ -30,7 +30,7 @@ namespace {
 
 Botan::X509_Time from_date(const int y, const int m, const int d)
    {
-   const size_t this_year = Botan::calendar_value(std::chrono::system_clock::now()).get_year();
+   const size_t this_year = Botan::calendar_point_from_time_point(std::chrono::system_clock::now()).get_year();
 
    Botan::calendar_point t(static_cast<uint32_t>(this_year + y), m, d, 0, 0, 0);
    return Botan::X509_Time(t.to_std_timepoint());
