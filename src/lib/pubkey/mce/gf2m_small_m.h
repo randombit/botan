@@ -15,8 +15,6 @@
 #include <botan/types.h>
 #include <vector>
 
-BOTAN_FUTURE_INTERNAL_HEADER(gf2m_small_m.h)
-
 namespace Botan {
 
 typedef uint16_t gf2m;
@@ -24,7 +22,7 @@ typedef uint16_t gf2m;
 /**
 * GF(2^m) field for m = [2...16]
 */
-class BOTAN_PUBLIC_API(2,0) GF2m_Field
+class BOTAN_TEST_API GF2m_Field
    {
    public:
       explicit GF2m_Field(size_t extdeg);
