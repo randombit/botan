@@ -48,26 +48,6 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
 
       /**
       * Construct Domain paramers from specified parameters
-      * @param curve elliptic curve
-      * @param base_point a base point
-      * @param order the order of the base point
-      * @param cofactor the cofactor
-      */
-      BOTAN_DEPRECATED("Use version taking all BigInts")
-      EC_Group(const CurveGFp& curve,
-               const PointGFp& base_point,
-               const BigInt& order,
-               const BigInt& cofactor) :
-         EC_Group(curve.get_p(),
-                  curve.get_a(),
-                  curve.get_b(),
-                  base_point.get_affine_x(),
-                  base_point.get_affine_y(),
-                  order,
-                  cofactor) {}
-
-      /**
-      * Construct Domain paramers from specified parameters
       * @param p the elliptic curve p
       * @param a the elliptic curve a param
       * @param b the elliptic curve b param
@@ -140,12 +120,6 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       * @return string containing PEM data
       */
       std::string PEM_encode() const;
-
-      /**
-      * Return domain parameter curve
-      * @result domain parameter curve
-      */
-      BOTAN_DEPRECATED("Avoid CurveGFp") const CurveGFp& get_curve() const;
 
       /**
       * Return if a == -3 mod p
@@ -255,12 +229,6 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
 
       /**
       * Return the OID of these domain parameters
-      * @result the OID as a string
-      */
-      std::string BOTAN_DEPRECATED("Use get_curve_oid") get_oid() const { return get_curve_oid().to_string(); }
-
-      /**
-      * Return the OID of these domain parameters
       * @result the OID
       */
       const OID& get_curve_oid() const;
@@ -345,12 +313,6 @@ class BOTAN_PUBLIC_API(2,0) EC_Group final
       bool operator==(const EC_Group& other) const;
 
       EC_Group_Source source() const;
-
-      /**
-      * Return PEM representation of named EC group
-      * Deprecated: Use EC_Group(name).PEM_encode() if this is needed
-      */
-      static std::string BOTAN_DEPRECATED("See header comment") PEM_for_named_group(const std::string& name);
 
       /**
       * Return a set of known named EC groups

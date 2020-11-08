@@ -9,6 +9,7 @@
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/pubkey.h>
+#include <botan/system_rng.h>
 
 extern "C" {
 

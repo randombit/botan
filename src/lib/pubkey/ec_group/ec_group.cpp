@@ -412,20 +412,6 @@ EC_Group EC_Group::EC_Group_from_PEM(const std::string& pem)
    return EC_Group(ber.data(), ber.size());
    }
 
-//static
-std::string EC_Group::PEM_for_named_group(const std::string& name)
-   {
-   try
-      {
-      EC_Group group(name);
-      return group.PEM_encode();
-      }
-   catch(...)
-      {
-      return "";
-      }
-   }
-
 EC_Group::EC_Group(const BigInt& p,
                    const BigInt& a,
                    const BigInt& b,
@@ -449,11 +435,6 @@ const EC_Group_Data& EC_Group::data() const
    if(m_data == nullptr)
       throw Invalid_State("EC_Group uninitialized");
    return *m_data;
-   }
-
-const CurveGFp& EC_Group::get_curve() const
-   {
-   return data().curve();
    }
 
 bool EC_Group::a_is_minus_3() const

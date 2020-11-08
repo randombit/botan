@@ -29,28 +29,6 @@ PointGFp multi_exponentiate(const PointGFp& x, const BigInt& z1,
    return xy_mul.multi_exp(z1, z2);
    }
 
-Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base,
-                                               const BigInt& order,
-                                               size_t h) :
-   m_ws(PointGFp::WORKSPACE_SIZE),
-   m_order(order)
-   {
-   BOTAN_UNUSED(h);
-   Null_RNG null_rng;
-   m_point_mul.reset(new PointGFp_Var_Point_Precompute(base, null_rng, m_ws));
-   }
-
-Blinded_Point_Multiply::~Blinded_Point_Multiply()
-   {
-   /* for ~unique_ptr */
-   }
-
-PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar,
-                                                  RandomNumberGenerator& rng)
-   {
-   return m_point_mul->mul(scalar, rng, m_order, m_ws);
-   }
-
 PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& base,
                                                                const Modular_Reducer& mod_order) :
    m_base_point(base),
