@@ -66,7 +66,9 @@ class BOTAN_PUBLIC_API(2,0) PK_Encryptor
       virtual ~PK_Encryptor() = default;
 
       PK_Encryptor(const PK_Encryptor&) = delete;
+      PK_Encryptor(PK_Encryptor&&) = delete;
       PK_Encryptor& operator=(const PK_Encryptor&) = delete;
+      PK_Encryptor& operator=(PK_Encryptor&&) = delete;
 
    private:
       virtual std::vector<uint8_t> enc(const uint8_t[], size_t,
@@ -146,7 +148,9 @@ class BOTAN_PUBLIC_API(2,0) PK_Decryptor
       virtual ~PK_Decryptor() = default;
 
       PK_Decryptor(const PK_Decryptor&) = delete;
+      PK_Decryptor(PK_Decryptor&&) = delete;
       PK_Decryptor& operator=(const PK_Decryptor&) = delete;
+      PK_Decryptor& operator=(PK_Decryptor&&) = delete;
 
    private:
       virtual secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask,
@@ -180,7 +184,9 @@ class BOTAN_PUBLIC_API(2,0) PK_Signer final
       ~PK_Signer();
 
       PK_Signer(const PK_Signer&) = delete;
+      PK_Signer(PK_Signer&&) = delete;
       PK_Signer& operator=(const PK_Signer&) = delete;
+      PK_Signer& operator=(PK_Signer&&) = delete;
 
       /**
       * Sign a message all in one go
@@ -290,8 +296,10 @@ class BOTAN_PUBLIC_API(2,0) PK_Verifier final
 
       ~PK_Verifier();
 
-      PK_Verifier& operator=(const PK_Verifier&) = delete;
       PK_Verifier(const PK_Verifier&) = delete;
+      PK_Verifier(PK_Verifier&&) = delete;
+      PK_Verifier& operator=(const PK_Verifier&) = delete;
+      PK_Verifier& operator=(PK_Verifier&&) = delete;
 
       /**
       * Verify a signature.
@@ -406,12 +414,12 @@ class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement final
 
       ~PK_Key_Agreement();
 
-      // For ECIES
-      PK_Key_Agreement& operator=(PK_Key_Agreement&&);
-      PK_Key_Agreement(PK_Key_Agreement&&);
-
-      PK_Key_Agreement& operator=(const PK_Key_Agreement&) = delete;
       PK_Key_Agreement(const PK_Key_Agreement&) = delete;
+      PK_Key_Agreement& operator=(const PK_Key_Agreement&) = delete;
+      PK_Key_Agreement& operator=(PK_Key_Agreement&&) = delete;
+
+      // For ECIES
+      PK_Key_Agreement(PK_Key_Agreement&&);
 
       /**
       * Perform Key Agreement Operation
@@ -508,8 +516,10 @@ class BOTAN_PUBLIC_API(2,0) PK_Encryptor_EME final : public PK_Encryptor
 
       ~PK_Encryptor_EME();
 
-      PK_Encryptor_EME& operator=(const PK_Encryptor_EME&) = delete;
       PK_Encryptor_EME(const PK_Encryptor_EME&) = delete;
+      PK_Encryptor_EME(PK_Encryptor_EME&&) = delete;
+      PK_Encryptor_EME& operator=(const PK_Encryptor_EME&) = delete;
+      PK_Encryptor_EME& operator=(PK_Encryptor_EME&&) = delete;
 
       /**
       * Return an upper bound on the ciphertext length for a particular
@@ -544,8 +554,10 @@ class BOTAN_PUBLIC_API(2,0) PK_Decryptor_EME final : public PK_Decryptor
       size_t plaintext_length(size_t ptext_len) const override;
 
       ~PK_Decryptor_EME();
-      PK_Decryptor_EME& operator=(const PK_Decryptor_EME&) = delete;
       PK_Decryptor_EME(const PK_Decryptor_EME&) = delete;
+      PK_Decryptor_EME(PK_Decryptor_EME&&) = delete;
+      PK_Decryptor_EME& operator=(const PK_Decryptor_EME&) = delete;
+      PK_Decryptor_EME& operator=(PK_Decryptor_EME&&) = delete;
    private:
       secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask,
                                      const uint8_t in[],
@@ -574,8 +586,10 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Encryptor final
 
       ~PK_KEM_Encryptor();
 
-      PK_KEM_Encryptor& operator=(const PK_KEM_Encryptor&) = delete;
       PK_KEM_Encryptor(const PK_KEM_Encryptor&) = delete;
+      PK_KEM_Encryptor(PK_KEM_Encryptor&&) = delete;
+      PK_KEM_Encryptor& operator=(const PK_KEM_Encryptor&) = delete;
+      PK_KEM_Encryptor& operator=(PK_KEM_Encryptor&&) = delete;
 
       /**
       * Generate a shared key for data encryption.
@@ -659,8 +673,10 @@ class BOTAN_PUBLIC_API(2,0) PK_KEM_Decryptor final
                        const std::string& provider = "");
 
       ~PK_KEM_Decryptor();
-      PK_KEM_Decryptor& operator=(const PK_KEM_Decryptor&) = delete;
       PK_KEM_Decryptor(const PK_KEM_Decryptor&) = delete;
+      PK_KEM_Decryptor(PK_KEM_Decryptor&&) = delete;
+      PK_KEM_Decryptor& operator=(const PK_KEM_Decryptor&) = delete;
+      PK_KEM_Decryptor& operator=(PK_KEM_Decryptor&&) = delete;
 
       /**
       * Decrypts the shared key for data encryption.
