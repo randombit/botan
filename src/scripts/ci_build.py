@@ -544,7 +544,7 @@ def main(args=None):
             make_targets = ['libs', 'tests', 'cli']
 
             if target in ['coverage', 'fuzzers']:
-                make_targets += ['tests', 'cli', 'fuzzers', 'fuzzer_corpus_zip']
+                make_targets += ['fuzzer_corpus_zip', 'fuzzers']
 
             if target in ['coverage']:
                 make_targets += ['bogo_shim']
