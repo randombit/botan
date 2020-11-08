@@ -8,6 +8,7 @@ Contents
    goals
    support
    building
+   migration_guide
    api_ref/contents
    cli
    deprecated
