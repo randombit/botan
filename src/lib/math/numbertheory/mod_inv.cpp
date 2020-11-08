@@ -12,81 +12,6 @@
 
 namespace Botan {
 
-/*
-Sets result to a^-1 * 2^k mod a
-with n <= k <= 2n
-Returns k
-
-"The Montgomery Modular Inverse - Revisited" Çetin Koç, E. Savas
-https://citeseerx.ist.psu.edu/viewdoc/citations?doi=10.1.1.75.8377
-
-A const time implementation of this algorithm is described in
-"Constant Time Modular Inversion" Joppe W. Bos
-http://www.joppebos.com/files/CTInversion.pdf
-*/
-size_t almost_montgomery_inverse(BigInt& result,
-                                 const BigInt& a,
-                                 const BigInt& p)
-   {
-   size_t k = 0;
-
-   BigInt u = p, v = a, r = 0, s = 1;
-
-   while(v > 0)
-      {
-      if(u.is_even())
-         {
-         u >>= 1;
-         s <<= 1;
-         }
-      else if(v.is_even())
-         {
-         v >>= 1;
-         r <<= 1;
-         }
-      else if(u > v)
-         {
-         u -= v;
-         u >>= 1;
-         r += s;
-         s <<= 1;
-         }
-      else
-         {
-         v -= u;
-         v >>= 1;
-         s += r;
-         r <<= 1;
-         }
-
-      ++k;
-      }
-
-   if(r >= p)
-      {
-      r -= p;
-      }
-
-   result = p - r;
-
-   return k;
-   }
-
-BigInt normalized_montgomery_inverse(const BigInt& a, const BigInt& p)
-   {
-   BigInt r;
-   size_t k = almost_montgomery_inverse(r, a, p);
-
-   for(size_t i = 0; i != k; ++i)
-      {
-      if(r.is_odd())
-         r += p;
-      r >>= 1;
-      }
-
-   return r;
-   }
-
 namespace {
 
 BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
@@ -259,8 +184,8 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    if(mod.is_odd())
       {
       /*
-      Fastpath for common case. This leaks information if n > mod
-      but we don't guarantee const time behavior in that case.
+      Fastpath for common case. This leaks if n is greater than mod or
+      not, but we don't guarantee const time behavior in that case.
       */
       if(n < mod)
          return inverse_mod_odd_modulus(n, mod);
@@ -311,46 +236,6 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    h *= o;
    h += inv_o;
    return h;
-   }
-
-// Deprecated forwarding functions:
-BigInt inverse_euclid(const BigInt& x, const BigInt& modulus)
-   {
-   return inverse_mod(x, modulus);
-   }
-
-BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
-   {
-   return inverse_mod_odd_modulus(n, mod);
-   }
-
-word monty_inverse(word a)
-   {
-   if(a % 2 == 0)
-      throw Invalid_Argument("monty_inverse only valid for odd integers");
-
-   /*
-   * From "A New Algorithm for Inversion mod p^k" by Çetin Kaya Koç
-   * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
-   */
-
-   word b = 1;
-   word r = 0;
-
-   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
-      {
-      const word bi = b % 2;
-      r >>= 1;
-      r += bi << (BOTAN_MP_WORD_BITS - 1);
-
-      b -= a * bi;
-      b >>= 1;
-      }
-
-   // Now invert in addition space
-   r = (MP_WORD_MAX - r) + 1;
-
-   return r;
    }
 
 }

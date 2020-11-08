@@ -8,6 +8,7 @@
 #include <botan/dl_group.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
+#include <botan/internal/primality.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/divide.h>
 #include <botan/der_enc.h>

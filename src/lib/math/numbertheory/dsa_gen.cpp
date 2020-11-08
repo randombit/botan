@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/primality.h>
 #include <botan/numthry.h>
 #include <botan/hash.h>
 #include <botan/reducer.h>

@@ -1,6 +1,7 @@
 /*
 * Number Theory Functions
 * (C) 1999-2011,2016,2018,2019 Jack Lloyd
+* (C) 2007,2008 Falko Strenzke, FlexSecure GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -32,6 +33,160 @@ void sub_abs(BigInt& z, const BigInt& x, const BigInt& y)
    }
 
 }
+
+/*
+* Tonelli-Shanks algorithm
+*/
+BigInt ressol(const BigInt& a, const BigInt& p)
+   {
+   if(p <= 1 || p.is_even())
+      throw Invalid_Argument("ressol: invalid prime");
+
+   if(a == 0)
+      return 0;
+   else if(a < 0)
+      throw Invalid_Argument("ressol: value to solve for must be positive");
+   else if(a >= p)
+      throw Invalid_Argument("ressol: value to solve for must be less than p");
+
+   if(p == 2)
+      return a;
+
+   if(jacobi(a, p) != 1) // not a quadratic residue
+      return -BigInt(1);
+
+   if(p % 4 == 3) // The easy case
+      {
+      return power_mod(a, ((p+1) >> 2), p);
+      }
+
+   size_t s = low_zero_bits(p - 1);
+   BigInt q = p >> s;
+
+   q -= 1;
+   q >>= 1;
+
+   Modular_Reducer mod_p(p);
+
+   BigInt r = power_mod(a, q, p);
+   BigInt n = mod_p.multiply(a, mod_p.square(r));
+   r = mod_p.multiply(r, a);
+
+   if(n == 1)
+      return r;
+
+   // find random non quadratic residue z
+   BigInt z = 2;
+   while(jacobi(z, p) == 1) // while z quadratic residue
+      ++z;
+
+   BigInt c = power_mod(z, (q << 1) + 1, p);
+
+   while(n > 1)
+      {
+      q = n;
+
+      size_t i = 0;
+      while(q != 1)
+         {
+         q = mod_p.square(q);
+         ++i;
+
+         if(i >= s)
+            {
+            return -BigInt(1);
+            }
+         }
+
+      c = power_mod(c, BigInt::power_of_2(s-i-1), p);
+      r = mod_p.multiply(r, c);
+      c = mod_p.square(c);
+      n = mod_p.multiply(n, c);
+      s = i;
+      }
+
+   return r;
+   }
+
+/*
+* Calculate the Jacobi symbol
+*/
+int32_t jacobi(const BigInt& a, const BigInt& n)
+   {
+   if(n.is_even() || n < 2)
+      throw Invalid_Argument("jacobi: second argument must be odd and > 1");
+
+   BigInt x = a % n;
+   BigInt y = n;
+   int32_t J = 1;
+
+   while(y > 1)
+      {
+      x %= y;
+      if(x > y / 2)
+         {
+         x = y - x;
+         if(y % 4 == 3)
+            J = -J;
+         }
+      if(x.is_zero())
+         return 0;
+
+      size_t shifts = low_zero_bits(x);
+      x >>= shifts;
+      if(shifts % 2)
+         {
+         word y_mod_8 = y % 8;
+         if(y_mod_8 == 3 || y_mod_8 == 5)
+            J = -J;
+         }
+
+      if(x % 4 == 3 && y % 4 == 3)
+         J = -J;
+      std::swap(x, y);
+      }
+   return J;
+   }
+
+/*
+* Multiply-Add Operation
+*/
+BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
+   {
+   if(c.is_negative())
+      throw Invalid_Argument("mul_add: Third argument must be > 0");
+
+   BigInt::Sign sign = BigInt::Positive;
+   if(a.sign() != b.sign())
+      sign = BigInt::Negative;
+
+   const size_t a_sw = a.sig_words();
+   const size_t b_sw = b.sig_words();
+   const size_t c_sw = c.sig_words();
+
+   BigInt r(sign, std::max(a_sw + b_sw, c_sw) + 1);
+   secure_vector<word> workspace(r.size());
+
+   bigint_mul(r.mutable_data(), r.size(),
+              a.data(), a.size(), a_sw,
+              b.data(), b.size(), b_sw,
+              workspace.data(), workspace.size());
+
+   const size_t r_size = std::max(r.sig_words(), c_sw);
+   bigint_add2(r.mutable_data(), r_size, c.data(), c_sw);
+   return r;
+   }
+
+/*
+* Square a BigInt
+*/
+BigInt square(const BigInt& x)
+   {
+   BigInt z = x;
+   secure_vector<word> ws;
+   z.square(ws);
+   return z;
+   }
 
 /*
 * Return the number of 0 bits at the end of n

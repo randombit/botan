@@ -5,12 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/primality.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/reducer.h>
-#include <botan/internal/primality.h>
 #include <algorithm>
 
 namespace Botan {
