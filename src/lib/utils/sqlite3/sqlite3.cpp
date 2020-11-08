@@ -81,27 +81,27 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, size_t val)
    {
    if(val != static_cast<size_t>(static_cast<int>(val))) // is this cast legit?
       throw SQL_DB_Error("sqlite3 cannot store " + std::to_string(val) + " without truncation");
-   int rc = ::sqlite3_bind_int(m_stmt, column, val);
+   int rc = ::sqlite3_bind_int(m_stmt, column, static_cast<int>(val));
    if(rc != SQLITE_OK)
       throw SQL_DB_Error("sqlite3_bind_int failed", rc);
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_clock::time_point time)
    {
-   const int timeval = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
-   bind(column, timeval);
+   const uint64_t timeval = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
+   bind(column, static_cast<size_t>(timeval));
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<uint8_t>& val)
    {
-   int rc = ::sqlite3_bind_blob(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT);
+   int rc = ::sqlite3_bind_blob(m_stmt, column, val.data(), static_cast<int>(val.size()), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const uint8_t* p, size_t len)
    {
-   int rc = ::sqlite3_bind_blob(m_stmt, column, p, len, SQLITE_TRANSIENT);
+   int rc = ::sqlite3_bind_blob(m_stmt, column, p, static_cast<int>(len), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }

@@ -41,20 +41,20 @@ class Compression_Alloc_Info final
 /**
 * Wrapper for Zlib/Bzlib/LZMA stream types
 */
-template<typename Stream, typename ByteType>
+template<typename Stream, typename ByteType, typename StreamLenType = size_t>
 class Zlib_Style_Stream : public Compression_Stream
    {
    public:
       void next_in(uint8_t* b, size_t len) override
          {
          m_stream.next_in = reinterpret_cast<ByteType*>(b);
-         m_stream.avail_in = len;
+         m_stream.avail_in = static_cast<StreamLenType>(len);
          }
 
       void next_out(uint8_t* b, size_t len) override
          {
          m_stream.next_out = reinterpret_cast<ByteType*>(b);
-         m_stream.avail_out = len;
+         m_stream.avail_out = static_cast<StreamLenType>(len);
          }
 
       size_t avail_in() const override { return m_stream.avail_in; }

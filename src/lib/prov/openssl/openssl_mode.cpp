@@ -112,10 +112,10 @@ size_t OpenSSL_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
       return 0;
    if(msg_len > INT_MAX)
       throw Internal_Error("msg_len overflow");
-   int outl = msg_len;
+   int outl = static_cast<int>(msg_len);
    secure_vector<uint8_t> out(outl);
 
-   if(!EVP_CipherUpdate(m_cipher, out.data(), &outl, msg, msg_len))
+   if(!EVP_CipherUpdate(m_cipher, out.data(), &outl, msg, outl))
       throw OpenSSL_Error("EVP_CipherUpdate", ERR_get_error());
    copy_mem(msg, out.data(), outl);
    return outl;
@@ -132,7 +132,7 @@ void OpenSSL_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
    const size_t buf_size = buffer.size() - offset;
 
    size_t written = process(buf, buf_size);
-   int outl = buf_size - written;
+   int outl = static_cast<int>(buf_size - written);
    secure_vector<uint8_t> out(outl);
 
    if(!EVP_CipherFinal_ex(m_cipher, out.data(), &outl))
@@ -201,7 +201,7 @@ Key_Length_Specification OpenSSL_Cipher_Mode::key_spec() const
 
 void OpenSSL_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
    {
-   if(!EVP_CIPHER_CTX_set_key_length(m_cipher, length))
+   if(!EVP_CIPHER_CTX_set_key_length(m_cipher, static_cast<int>(length)))
       throw OpenSSL_Error("EVP_CIPHER_CTX_set_key_length", ERR_get_error());
    if(!EVP_CipherInit_ex(m_cipher, nullptr, nullptr, key, nullptr, -1))
       throw OpenSSL_Error("EVP_CipherInit_ex key", ERR_get_error());

@@ -18,7 +18,7 @@ namespace Botan {
 
 namespace {
 
-class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char>
+class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char, unsigned int>
    {
    public:
       Bzip2_Stream()
@@ -46,7 +46,7 @@ class Bzip2_Compression_Stream final : public Bzip2_Stream
          if(block_size == 0 || block_size >= 9)
             block_size = 9;
 
-         int rc = BZ2_bzCompressInit(streamp(), block_size, 0, 0);
+         int rc = BZ2_bzCompressInit(streamp(), static_cast<unsigned int>(block_size), 0, 0);
 
          if(rc != BZ_OK)
             throw Compression_Error("BZ2_bzCompressInit", ErrorType::Bzip2Error, rc);

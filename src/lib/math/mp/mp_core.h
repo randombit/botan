@@ -724,7 +724,7 @@ inline word bigint_divop(word n1, word n0, word d)
       throw Invalid_Argument("bigint_divop divide by zero");
 
 #if defined(BOTAN_HAS_MP_DWORD)
-   return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) / d;
+   return static_cast<word>(((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) / d);
 #else
 
    word high = n1 % d;

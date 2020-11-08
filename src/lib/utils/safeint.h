@@ -34,6 +34,15 @@ inline size_t checked_add(size_t x, size_t y, const char* file, int line)
    return z;
    }
 
+template<typename RT, typename AT>
+RT checked_cast_to(AT i)
+   {
+   RT c = static_cast<RT>(i);
+   if(i != static_cast<AT>(c))
+      throw Internal_Error("Error during integer conversion");
+   return c;
+   }
+
 #define BOTAN_CHECKED_ADD(x,y) checked_add(x,y,__FILE__,__LINE__)
 
 }
