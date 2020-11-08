@@ -175,14 +175,6 @@ class BOTAN_PUBLIC_API(2,0) RandomNumberGenerator
             b = this->next_byte();
          return b;
          }
-
-      /**
-      * Create a seeded and active RNG object for general application use
-      * Added in 1.8.0
-      * Use AutoSeeded_RNG instead
-      */
-      BOTAN_DEPRECATED("Use AutoSeeded_RNG")
-      static RandomNumberGenerator* make_rng();
    };
 
 /**
@@ -278,8 +270,6 @@ class BOTAN_PUBLIC_API(2,0) Serialized_RNG final : public RandomNumberGenerator
          lock_guard_type<mutex_type> lock(m_mutex);
          m_rng->add_entropy(in, len);
          }
-
-      BOTAN_DEPRECATED("Use Serialized_RNG(new AutoSeeded_RNG) instead") Serialized_RNG();
 
       /*
       * Since 2.16.0 this is no longer needed for any RNG type. This

@@ -307,23 +307,6 @@ size_t BigInt::bits() const
    }
 
 /*
-* Calcluate the size in a certain base
-*/
-size_t BigInt::encoded_size(Base base) const
-   {
-   static const double LOG_2_BASE_10 = 0.30102999566;
-
-   if(base == Binary)
-      return bytes();
-   else if(base == Hexadecimal)
-      return 2*bytes();
-   else if(base == Decimal)
-      return static_cast<size_t>((bits() * LOG_2_BASE_10) + 1);
-   else
-      throw Invalid_Argument("Unknown base for BigInt encoding");
-   }
-
-/*
 * Return the negation of this number
 */
 BigInt BigInt::operator-() const
@@ -519,33 +502,5 @@ void BigInt::const_time_unpoison() const
    CT::unpoison(m_data.const_data(), m_data.size());
    }
 #endif
-
-void BigInt::const_time_lookup(secure_vector<word>& output,
-                               const std::vector<BigInt>& vec,
-                               size_t idx)
-   {
-   const size_t words = output.size();
-
-   clear_mem(output.data(), output.size());
-
-   CT::poison(&idx, sizeof(idx));
-
-   for(size_t i = 0; i != vec.size(); ++i)
-      {
-      BOTAN_ASSERT(vec[i].size() >= words,
-                   "Word size as expected in const_time_lookup");
-
-      const auto mask = CT::Mask<word>::is_equal(i, idx);
-
-      for(size_t w = 0; w != words; ++w)
-         {
-         const word viw = vec[i].word_at(w);
-         output[w] = mask.if_set_return(viw);
-         }
-      }
-
-   CT::unpoison(idx);
-   CT::unpoison(output.data(), output.size());
-   }
 
 }

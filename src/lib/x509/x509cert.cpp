@@ -583,11 +583,6 @@ bool X509_Certificate::has_constraints(Key_Constraints constraints) const
    return ((this->constraints() & constraints) != 0);
    }
 
-bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
-   {
-   return has_ex_constraint(OID::from_string(ex_constraint));
-   }
-
 bool X509_Certificate::has_ex_constraint(const OID& usage) const
    {
    const std::vector<OID>& ex = extended_key_usage();
@@ -720,40 +715,6 @@ std::vector<uint8_t> X509_Certificate::raw_subject_dn_sha256() const
    if(data().m_subject_dn_bits_sha256.empty())
       throw Encoding_Error("X509_Certificate::raw_subject_dn_sha256 called but SHA-256 disabled in build");
    return data().m_subject_dn_bits_sha256;
-   }
-
-namespace {
-
-/*
-* Lookup each OID in the vector
-*/
-std::vector<std::string> lookup_oids(const std::vector<OID>& oids)
-   {
-   std::vector<std::string> out;
-
-   for(const OID& oid : oids)
-      {
-      out.push_back(oid.to_formatted_string());
-      }
-   return out;
-   }
-
-}
-
-/*
-* Return the list of extended key usage OIDs
-*/
-std::vector<std::string> X509_Certificate::ex_constraints() const
-   {
-   return lookup_oids(extended_key_usage());
-   }
-
-/*
-* Return the list of certificate policies
-*/
-std::vector<std::string> X509_Certificate::policies() const
-   {
-   return lookup_oids(certificate_policy_oids());
    }
 
 std::string X509_Certificate::fingerprint(const std::string& hash_name) const

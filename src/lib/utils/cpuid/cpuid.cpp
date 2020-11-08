@@ -84,12 +84,6 @@ std::string CPUID::to_string()
    }
 
 //static
-void CPUID::print(std::ostream& o)
-   {
-   o << "CPUID flags: " << CPUID::to_string() << "\n";
-   }
-
-//static
 void CPUID::initialize()
    {
    state() = CPUID_Data();

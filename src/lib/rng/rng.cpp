@@ -66,26 +66,4 @@ void RandomNumberGenerator::reseed_from_rng(RandomNumberGenerator& rng, size_t p
       }
    }
 
-RandomNumberGenerator* RandomNumberGenerator::make_rng()
-   {
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-   return new AutoSeeded_RNG;
-#else
-   throw Not_Implemented("make_rng failed, no AutoSeeded_RNG in this build");
-#endif
-   }
-
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-Serialized_RNG::Serialized_RNG() : m_rng(new AutoSeeded_RNG) {}
-#else
-Serialized_RNG::Serialized_RNG()
-   {
-   throw Not_Implemented("Serialized_RNG default constructor failed: AutoSeeded_RNG disabled in build");
-   }
-#endif
-
-#endif
-
 }

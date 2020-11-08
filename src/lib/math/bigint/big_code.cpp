@@ -49,63 +49,6 @@ std::string BigInt::to_hex_string() const
    }
 
 /*
-* Encode a BigInt
-*/
-void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
-   {
-   secure_vector<uint8_t> enc = n.encode_locked(base);
-   copy_mem(output, enc.data(), enc.size());
-   }
-
-namespace {
-
-std::vector<uint8_t> str_to_vector(const std::string& s)
-   {
-   std::vector<uint8_t> v(s.size());
-   std::memcpy(v.data(), s.data(), s.size());
-   return v;
-   }
-
-secure_vector<uint8_t> str_to_lvector(const std::string& s)
-   {
-   secure_vector<uint8_t> v(s.size());
-   std::memcpy(v.data(), s.data(), s.size());
-   return v;
-   }
-
-}
-
-/*
-* Encode a BigInt
-*/
-std::vector<uint8_t> BigInt::encode(const BigInt& n, Base base)
-   {
-   if(base == Binary)
-      return BigInt::encode(n);
-   else if(base == Hexadecimal)
-      return str_to_vector(n.to_hex_string());
-   else if(base == Decimal)
-      return str_to_vector(n.to_dec_string());
-   else
-      throw Invalid_Argument("Unknown BigInt encoding base");
-   }
-
-/*
-* Encode a BigInt
-*/
-secure_vector<uint8_t> BigInt::encode_locked(const BigInt& n, Base base)
-   {
-   if(base == Binary)
-      return BigInt::encode_locked(n);
-   else if(base == Hexadecimal)
-      return str_to_lvector(n.to_hex_string());
-   else if(base == Decimal)
-      return str_to_lvector(n.to_dec_string());
-   else
-      throw Invalid_Argument("Unknown BigInt encoding base");
-   }
-
-/*
 * Encode a BigInt, with leading 0s if needed
 */
 secure_vector<uint8_t> BigInt::encode_1363(const BigInt& n, size_t bytes)

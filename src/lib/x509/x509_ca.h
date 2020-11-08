@@ -13,12 +13,9 @@
 #include <chrono>
 #include <map>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#endif
-
 namespace Botan {
 
+class RandomNumberGenerator;
 class BigInt;
 class Private_Key;
 class PKCS10_Request;
@@ -187,15 +184,6 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
               const std::map<std::string,std::string>& opts,
               const std::string& hash_fn,
               RandomNumberGenerator& rng);
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-      BOTAN_DEPRECATED("Use version taking RNG object")
-      X509_CA(const X509_Certificate& ca_certificate,
-              const Private_Key& key,
-              const std::string& hash_fn) :
-         X509_CA(ca_certificate, key, hash_fn, system_rng())
-         {}
-#endif
 
       X509_CA(const X509_CA&) = delete;
       X509_CA& operator=(const X509_CA&) = delete;

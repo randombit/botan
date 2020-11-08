@@ -45,11 +45,6 @@ class BOTAN_PUBLIC_API(2,0) OctetString final
       */
       std::string to_string() const;
 
-      std::string BOTAN_DEPRECATED("Use OctetString::to_string") as_string() const
-         {
-         return this->to_string();
-         }
-
       /**
       * XOR the contents of another octet string into this one
       * @param other octet string

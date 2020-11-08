@@ -261,9 +261,6 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Policies final : public Certificate_Exte
       Certificate_Policies() = default;
       explicit Certificate_Policies(const std::vector<OID>& o) : m_oids(o) {}
 
-      BOTAN_DEPRECATED("Use get_policy_oids")
-      std::vector<OID> get_oids() const { return m_oids; }
-
       const std::vector<OID>& get_policy_oids() const { return m_oids; }
 
       static OID static_oid() { return OID("2.5.29.32"); }

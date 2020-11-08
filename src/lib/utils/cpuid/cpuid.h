@@ -46,13 +46,6 @@ class BOTAN_PUBLIC_API(2,1) CPUID final
       static bool has_simd_32();
 
       /**
-      * Deprecated equivalent to
-      * o << "CPUID flags: " << CPUID::to_string() << "\n";
-      */
-      BOTAN_DEPRECATED("Use CPUID::to_string")
-      static void print(std::ostream& o);
-
-      /**
       * Return a possibly empty string containing list of known CPU
       * extensions. Each name will be seperated by a space, and the ordering
       * will be arbitrary. This list only contains values that are useful to
