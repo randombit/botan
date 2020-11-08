@@ -8,7 +8,7 @@
 
 #include <botan/certstor_windows.h>
 #include <botan/pkix_types.h>
-#include <botan/der_enc.h>
+#include <functional>
 
 #include <array>
 #include <vector>
@@ -162,14 +162,13 @@ Cert_Vector find_cert_by_dn_and_key_id(const Botan::X509_DN& subject_dn,
    {
    _CRYPTOAPI_BLOB blob;
    DWORD find_type;
-   std::vector<uint8_t> dn_data;
+   std::vector<uint8_t> dn_data; // has to live until search completes
 
    // if key_id is available, prefer searching that, as it should be "more unique" than the subject DN
    if(key_id.empty())
       {
       find_type = CERT_FIND_SUBJECT_NAME;
-      DER_Encoder encoder(dn_data);
-      subject_dn.encode_into(encoder);
+      dn_data = subject_dn.DER_encode();
       blob.cbData = static_cast<DWORD>(dn_data.size());
       blob.pbData = reinterpret_cast<BYTE*>(dn_data.data());
       }

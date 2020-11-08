@@ -66,6 +66,8 @@ class BOTAN_PUBLIC_API(2,0) X509_DN final : public ASN1_Object
       */
       const std::vector<uint8_t>& get_bits() const { return m_dn_bits; }
 
+      std::vector<uint8_t> DER_encode() const;
+
       bool empty() const { return m_rdn.empty(); }
 
       std::string to_string() const;
