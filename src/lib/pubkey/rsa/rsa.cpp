@@ -453,7 +453,7 @@ class RSA_Private_Operation
          */
 
          j1 = m_private->m_mod_p.multiply(m_private->m_mod_p.reduce((m_private->get_p() + j1) - j2), m_private->get_c());
-         return mul_add(j1, m_private->get_q(), j2);
+         return j1*m_private->get_q() + j2;
          }
 
       std::shared_ptr<const RSA_Public_Data> m_public;
