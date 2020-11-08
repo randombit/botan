@@ -9,6 +9,7 @@
 
 #include <botan/types.h>
 #include <memory>
+#include <vector>
 
 namespace Botan {
 
@@ -94,6 +95,38 @@ bool BOTAN_TEST_API is_miller_rabin_probable_prime(const BigInt& n,
                                                    const Modular_Reducer& mod_n,
                                                    RandomNumberGenerator& rng,
                                                    size_t t);
+
+/**
+* Generate DSA parameters using the FIPS 186 kosherizer
+* @param rng a random number generator
+* @param p_out where the prime p will be stored
+* @param q_out where the prime q will be stored
+* @param pbits how long p will be in bits
+* @param qbits how long q will be in bits
+* @return random seed used to generate this parameter set
+*/
+std::vector<uint8_t>
+generate_dsa_primes(RandomNumberGenerator& rng,
+                    BigInt& p_out, BigInt& q_out,
+                    size_t pbits, size_t qbits);
+
+/**
+* Generate DSA parameters using the FIPS 186 kosherizer
+* @param rng a random number generator
+* @param p_out where the prime p will be stored
+* @param q_out where the prime q will be stored
+* @param pbits how long p will be in bits
+* @param qbits how long q will be in bits
+* @param seed the seed used to generate the parameters
+* @param offset optional offset from seed to start searching at
+* @return true if seed generated a valid DSA parameter set, otherwise
+          false. p_out and q_out are only valid if true was returned.
+*/
+bool BOTAN_TEST_API generate_dsa_primes(RandomNumberGenerator& rng,
+                                        BigInt& p_out, BigInt& q_out,
+                                        size_t pbits, size_t qbits,
+                                        const std::vector<uint8_t>& seed,
+                                        size_t offset = 0);
 
 }
 

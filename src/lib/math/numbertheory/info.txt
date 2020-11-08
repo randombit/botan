@@ -1,5 +1,5 @@
 <defines>
-NUMBERTHEORY -> 20131128
+NUMBERTHEORY -> 20201108
 </defines>
 
 <header:public>
@@ -11,7 +11,6 @@ reducer.h
 curve_nistp.h
 monty.h
 monty_exp.h
-pow_mod.h
 primality.h
 </header:internal>
 

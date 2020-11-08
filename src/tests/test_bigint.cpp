@@ -12,7 +12,6 @@
    #include <botan/internal/divide.h>
    #include <botan/internal/primality.h>
    #include <botan/reducer.h>
-   #include <botan/internal/pow_mod.h>
    #include <botan/internal/parsing.h>
    #include "test_rng.h"
 #endif
@@ -535,38 +534,6 @@ class BigInt_Powmod_Test final : public Text_Based_Test
          const BigInt expected = vars.get_req_bn("Output");
 
          result.test_eq("power_mod", Botan::power_mod(base, exponent, modulus), expected);
-
-         /*
-         * Only the basic power_mod interface supports negative base
-         */
-         if(base.is_negative())
-            return result;
-
-         Botan::Power_Mod pow_mod1(modulus);
-
-         pow_mod1.set_base(base);
-         pow_mod1.set_exponent(exponent);
-         result.test_eq("pow_mod1", pow_mod1.execute(), expected);
-
-         Botan::Power_Mod pow_mod2(modulus);
-
-         // Reverses ordering which affects window size
-         pow_mod2.set_exponent(exponent);
-         pow_mod2.set_base(base);
-         result.test_eq("pow_mod2", pow_mod2.execute(), expected);
-         result.test_eq("pow_mod2 #2", pow_mod2.execute(), expected);
-
-         if(modulus.is_odd())
-            {
-            // TODO: test different hints
-            // also TODO: remove bogus hinting arguments :)
-            Botan::Power_Mod pow_mod3(modulus, Botan::Power_Mod::NO_HINTS, /*disable_montgomery=*/true);
-
-            pow_mod3.set_exponent(exponent);
-            pow_mod3.set_base(base);
-            result.test_eq("pow_mod_fixed_window", pow_mod3.execute(), expected);
-            }
-
          return result;
          }
    };
@@ -672,13 +639,6 @@ class BigInt_InvMod_Test final : public Text_Based_Test
             result.confirm("no inverse with gcd > 1", gcd(a, mod) > 1);
             }
          */
-
-         if(mod.is_odd() && a_inv != 0)
-            {
-            result.test_eq("normalized_montgomery_inverse",
-                           normalized_montgomery_inverse(a, mod),
-                           expected);
-            }
 
          return result;
          }
