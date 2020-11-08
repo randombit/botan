@@ -47,7 +47,7 @@ class RoughtimeCheck final : public Command
             if(flag_set("raw-time"))
                { output() << Botan::Roughtime::Response::sys_microseconds64(response.utc_midpoint()).time_since_epoch().count(); }
             else
-               { output() << Botan::calendar_point_from_time_point(response.utc_midpoint()).to_string(); }
+               { output() << Botan::calendar_point(response.utc_midpoint()).to_string(); }
             output() << " (+-" << Botan::Roughtime::Response::microseconds32(response.utc_radius()).count() << "us)\n";
             }
          }
@@ -116,7 +116,7 @@ class Roughtime final : public Command
          if(flag_set("raw-time"))
             { output() << "UTC " << Botan::Roughtime::Response::sys_microseconds64(response.utc_midpoint()).time_since_epoch().count(); }
          else
-            { output() << "UTC " << Botan::calendar_point_from_time_point(response.utc_midpoint()).to_string(); }
+            { output() << "UTC " << Botan::calendar_point(response.utc_midpoint()).to_string(); }
          output() << " (+-" << Botan::Roughtime::Response::microseconds32(response.utc_radius()).count() << "us)";
          if(!response.validate(public_key))
             {

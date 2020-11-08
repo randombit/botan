@@ -23,24 +23,24 @@ class BOTAN_TEST_API calendar_point
    public:
 
       /** The year */
-      uint32_t get_year() const { return year; }
+      uint32_t year() const { return m_year; }
 
       /** The month, 1 through 12 for Jan to Dec */
-      uint32_t get_month() const { return month; }
+      uint32_t month() const { return m_month; }
 
       /** The day of the month, 1 through 31 (or 28 or 30 based on month */
-      uint32_t get_day() const { return day; }
+      uint32_t day() const { return m_day; }
 
       /** Hour in 24-hour form, 0 to 23 */
-      uint32_t get_hour() const { return hour; }
+      uint32_t hour() const { return m_hour; }
 
       /** Minutes in the hour, 0 to 60 */
-      uint32_t get_minutes() const { return minutes; }
+      uint32_t minutes() const { return m_minutes; }
 
       /** Seconds in the minute, 0 to 60, but might be slightly
       larger to deal with leap seconds on some systems
       */
-      uint32_t get_seconds() const { return seconds; }
+      uint32_t seconds() const { return m_seconds; }
 
       /**
       * Initialize a calendar_point
@@ -52,7 +52,13 @@ class BOTAN_TEST_API calendar_point
       * @param sec the second
       */
       calendar_point(uint32_t y, uint32_t mon, uint32_t d, uint32_t h, uint32_t min, uint32_t sec) :
-         year(y), month(mon), day(d), hour(h), minutes(min), seconds(sec) {}
+        m_year(y), m_month(mon), m_day(d), m_hour(h), m_minutes(min), m_seconds(sec) {}
+
+      /**
+      * Convert a time_point to a calendar_point
+      * @param time_point a time point from the system clock
+      */
+      calendar_point(const std::chrono::system_clock::time_point& time_point);
 
       /**
       * Returns an STL timepoint object
@@ -66,24 +72,13 @@ class BOTAN_TEST_API calendar_point
       std::string to_string() const;
 
    private:
-      /*
-      The member variables are public for historical reasons. Use the get_xxx() functions
-      defined above. These members will be made private in a future major release.
-      */
-      uint32_t year;
-      uint32_t month;
-      uint32_t day;
-      uint32_t hour;
-      uint32_t minutes;
-      uint32_t seconds;
+      uint32_t m_year;
+      uint32_t m_month;
+      uint32_t m_day;
+      uint32_t m_hour;
+      uint32_t m_minutes;
+      uint32_t m_seconds;
    };
-
-/**
-* Convert a time_point to a calendar_point
-* @param time_point a time point from the system clock
-* @return calendar_point object representing this time point
-*/
-calendar_point BOTAN_TEST_API calendar_point_from_time_point(const std::chrono::system_clock::time_point& time_point);
 
 }
 
