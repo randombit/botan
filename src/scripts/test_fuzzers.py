@@ -9,6 +9,7 @@ import optparse # pylint: disable=deprecated-module
 import stat
 import multiprocessing
 import time
+import tempfile
 
 def run_fuzzer_gdb(args):
     (fuzzer_bin, corpus_file) = args
@@ -151,9 +152,23 @@ def main(args=None):
             crash_count = 0
             sys.stdout.flush()
     else:
-        for fuzzer in sorted(list(fuzzers_with_corpus)):
+        # Generate a random corpus for fuzzers without a corpus
+        random_corpus_dir = tempfile.mkdtemp(prefix='fuzzer_corpus_')
+
+        for i in range(100):
+            random_input = os.urandom(i)
+            fd = open(os.path.join(random_corpus_dir, 'input_%d' % (i)), 'wb')
+            fd.write(random_input)
+            fd.close()
+
+        for fuzzer in sorted(list(fuzzers)):
             fuzzer_bin = os.path.join(fuzzer_dir, fuzzer)
-            corpus_subdir = os.path.join(corpus_dir, fuzzer)
+
+            if fuzzer in fuzzers_with_corpus:
+                corpus_subdir = os.path.join(corpus_dir, fuzzer)
+            else:
+                corpus_subdir = random_corpus_dir
+
             corpus_files = [os.path.join(corpus_subdir, l) for l in sorted(list(os.listdir(corpus_subdir)))]
 
             start = time.time()
