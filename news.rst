@@ -4,9 +4,6 @@ Release Notes
 Version 3.0.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Remove several deprecated algorithms including CAST-256, MISTY1, Kasumi,
-  DESX, XTEA, PBKDF1, MCEIES, CBC-MAC and Tiger (GH #2434)
-
 * Switch the build to C++17 mode; require at least GCC 9, Clang 7 or MSVC 2019.
   (GH #2455)
 
@@ -14,6 +11,15 @@ Version 3.0.0, Not Yet Released
 
 * Many headers which were previously marked as becoming internal in 2.x have
   now been made internal (GH #2456)
+
+* Remove several deprecated algorithms including CAST-256, MISTY1, Kasumi,
+  DESX, XTEA, PBKDF1, MCEIES, CBC-MAC and Tiger (GH #2434)
+
+* Resolve an issue in the modular square root function which could cause
+  a near-infinite loop if used with a composite modulus of a certain form
+  where finding a quadratic non-residue is hard. (GH #2478 #2476)
+
+* Add new ``X509_DN::DER_encode`` function. (GH #2472)
 
 * Re-enable support for CLMUL instruction on Visual C++, which was accidentally
   disabled starting in 2.12.0
@@ -26,6 +32,8 @@ Version 3.0.0, Not Yet Released
 * Remove support for HP and Pathscale compilers (GH #2455)
 
 * Remove support for Google NaCl (GH #2455)
+
+* Add more tests of the Jacobi symbol calculation (#2477)
 
 * Improve DragonflyBSD platform support (GH #2457)
 
