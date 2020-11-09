@@ -867,7 +867,7 @@ Code example:
 
       // import to card
       Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props( priv_key_sw.DER_domain(),
-         Botan::DER_Encoder().encode( EC2OSP( priv_key_sw.public_point(), Botan::PointGFp::UNCOMPRESSED ),
+         Botan::DER_Encoder().encode(priv_key_sw.public_point().encode(Botan::PointGFp::Compression_Type::UNCOMPRESSED ),
          Botan::OCTET_STRING ).get_contents_unlocked() );
 
       pub_import_props.set_token( true );
@@ -1018,8 +1018,9 @@ Code example:
 
       // set import properties
       Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props( priv_key_sw.DER_domain(),
-         Botan::DER_Encoder().encode( EC2OSP( priv_key_sw.public_point(), Botan::PointGFp::UNCOMPRESSED ),
-         Botan::OCTET_STRING ).get_contents_unlocked() );
+         Botan::DER_Encoder().encode(
+           priv_key_sw.public_point().encode(Botan::PointGFp::Compression_Type::UNCOMPRESSED ),
+           Botan::OCTET_STRING ).get_contents_unlocked() );
 
       pub_import_props.set_token( true );
       pub_import_props.set_private( false );
@@ -1069,12 +1070,10 @@ Code example:
       Botan::PK_Key_Agreement kb( key_pair_other.second, rng, "Raw", "pkcs11" );
 
       Botan::SymmetricKey alice_key = ka.derive_key( 32,
-         Botan::unlock( Botan::EC2OSP( key_pair_other.first.public_point(),
-         Botan::PointGFp::UNCOMPRESSED ) ) );
+         key_pair_other.first.public_point().encode(Botan::PointGFp::UNCOMPRESSED));
 
       Botan::SymmetricKey bob_key = kb.derive_key( 32,
-         Botan::unlock( Botan::EC2OSP( key_pair.first.public_point(),
-         Botan::PointGFp::UNCOMPRESSED ) ) );
+         key_pair.first.public_point().encode(Botan::PointGFp::UNCOMPRESSED));
 
       bool eq = alice_key == bob_key;
 
@@ -1209,7 +1208,7 @@ Code example:
 
       // set props
       Botan::PKCS11::X509_CertificateProperties props(
-         Botan::DER_Encoder().encode( root.subject_dn() ).get_contents_unlocked(), root.BER_encode() );
+         root.subject_dn().DER_encode(), root.BER_encode());
 
       props.set_label( "Botan PKCS#11 test certificate" );
       props.set_private( false );

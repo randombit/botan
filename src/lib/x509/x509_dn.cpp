@@ -235,6 +235,14 @@ bool operator<(const X509_DN& dn1, const X509_DN& dn2)
    return false;
    }
 
+std::vector<uint8_t> X509_DN::DER_encode() const
+   {
+   std::vector<uint8_t> result;
+   DER_Encoder der(result);
+   this->encode_into(der);
+   return result;
+   }
+
 /*
 * DER encode a DistinguishedName
 */
@@ -279,6 +287,8 @@ void X509_DN::decode_from(BER_Decoder& source)
 
    BER_Decoder sequence(bits);
 
+   m_rdn.clear();
+
    while(sequence.more_items())
       {
       BER_Decoder rdn = sequence.start_cons(SET);
@@ -297,6 +307,7 @@ void X509_DN::decode_from(BER_Decoder& source)
          }
       }
 
+   // Have to assign last as add_attribute zaps m_dn_bits
    m_dn_bits = bits;
    }
 

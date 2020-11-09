@@ -12,7 +12,6 @@
 #include <botan/ber_dec.h>
 #include <botan/certstor_macos.h>
 #include <botan/data_src.h>
-#include <botan/der_enc.h>
 #include <botan/exceptn.h>
 #include <botan/pkix_types.h>
 
@@ -117,10 +116,7 @@ X509_DN normalize(const X509_DN& dn)
 
 std::vector<uint8_t> normalizeAndSerialize(const X509_DN& dn)
    {
-   std::vector<uint8_t> result_dn;
-   DER_Encoder encoder(result_dn);
-   normalize(dn).encode_into(encoder);
-   return result_dn;
+   return normalize(dn).DER_encode();
    }
 
 std::string to_string(const CFStringRef cfstring)
