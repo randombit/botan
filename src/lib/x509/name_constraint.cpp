@@ -11,6 +11,7 @@
 #include <botan/x509cert.h>
 #include <botan/internal/parsing.h>
 #include <sstream>
+#include <functional>
 
 namespace Botan {
 
