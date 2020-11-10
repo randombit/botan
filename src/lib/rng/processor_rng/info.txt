@@ -18,3 +18,7 @@ ppc64
 <header:public>
 processor_rng.h
 </header:public>
+
+<isa>
+ppc64:power9
+</isa>
