@@ -51,10 +51,23 @@ BigInt ressol(const BigInt& a, const BigInt& p)
    if(n == 1)
       return r;
 
-   // find random non quadratic residue z
-   BigInt z = 2;
-   while(jacobi(z, p) == 1) // while z quadratic residue
-      ++z;
+   // find random quadratic nonresidue z
+   word z = 2;
+   for(;;)
+      {
+      if(jacobi(z, p) == -1) // found one
+         break;
+
+      z += 1; // try next z
+
+      /*
+      * The expected number of tests to find a non-residue modulo a
+      * prime is 2. If we have not found one after 256 then almost
+      * certainly we have been given a non-prime p.
+      */
+      if(z >= 256)
+         return -BigInt(1);
+      }
 
    BigInt c = power_mod(z, (q << 1) + 1, p);
 
