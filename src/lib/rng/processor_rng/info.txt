@@ -14,3 +14,7 @@ x86_32
 x86_64
 ppc64
 </arch>
+
+<isa>
+ppc64:power9
+</isa>
