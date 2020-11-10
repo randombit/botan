@@ -2016,6 +2016,8 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'all_targets': ' '.join(all_targets(options)),
         'install_targets': ' '.join(install_targets(options)),
 
+        'abs_root_dir': os.path.dirname(os.path.realpath(__file__)),
+
         'base_dir': source_paths.base_dir,
         'src_dir': source_paths.src_dir,
         'test_data_dir': source_paths.test_data_dir,
@@ -3231,17 +3233,17 @@ def do_io_for_build(cc, arch, osinfo, using_mods, build_paths, source_paths, tem
     with open(os.path.join(build_paths.build_dir, 'build_config.json'), 'w') as f:
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
+    if options.compiler == 'clang':
+        write_template(in_build_dir('compile_commands.json'), in_build_data('compile_commands.json.in'))
+
     if options.with_cmake:
         logging.warning("CMake build is only for development: use make for production builds")
-        cmake_template = os.path.join(source_paths.build_data_dir, 'cmake.in')
-        write_template('CMakeLists.txt', cmake_template)
+        write_template('CMakeLists.txt', in_build_data('cmake.in'))
     elif options.with_bakefile:
         logging.warning("Bakefile build is only for development: use make for production builds")
-        bakefile_template = os.path.join(source_paths.build_data_dir, 'bakefile.in')
-        write_template('botan.bkl', bakefile_template)
+        write_template('botan.bkl', in_build_data('bakefile.in'))
     else:
-        makefile_template = os.path.join(source_paths.build_data_dir, 'makefile.in')
-        write_template(template_vars['makefile_path'], makefile_template)
+        write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
 
     if options.with_rst2man:
         rst2man_file = os.path.join(build_paths.build_dir, 'botan.rst')
