@@ -11,10 +11,7 @@
 #include <botan/types.h>
 #include <string>
 #include <vector>
-#include <set>
-
 #include <istream>
-#include <functional>
 #include <map>
 
 namespace Botan {
@@ -35,17 +32,6 @@ parse_algorithm_name(const std::string& scan_name);
 */
 BOTAN_TEST_API std::vector<std::string> split_on(
    const std::string& str, char delim);
-
-/**
-* Split a string on a character predicate
-* @param str the input string
-* @param pred the predicate
-*
-* This function will likely be removed in a future release
-*/
-std::vector<std::string>
-split_on_pred(const std::string& str,
-              std::function<bool (char)> pred);
 
 /**
 * Join a string

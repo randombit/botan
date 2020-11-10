@@ -116,19 +116,13 @@ std::vector<std::string> parse_algorithm_name(const std::string& namex)
 
 std::vector<std::string> split_on(const std::string& str, char delim)
    {
-   return split_on_pred(str, [delim](char c) { return c == delim; });
-   }
-
-std::vector<std::string> split_on_pred(const std::string& str,
-                                       std::function<bool (char)> pred)
-   {
    std::vector<std::string> elems;
    if(str.empty()) return elems;
 
    std::string substr;
    for(auto i = str.begin(); i != str.end(); ++i)
       {
-      if(pred(*i))
+      if(*i == delim)
          {
          if(!substr.empty())
             elems.push_back(substr);
