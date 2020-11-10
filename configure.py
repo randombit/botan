@@ -1988,6 +1988,14 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
             return p
         return os.path.join(options.prefix or osinfo.install_root, p)
 
+    def choose_python_exe():
+        exe = sys.executable
+
+        if exe[1] == ':': # Windows style paths
+            return exe.replace('\\', '/')
+
+        return exe
+
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -2086,7 +2094,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'mp_bits': choose_mp_bits(),
 
-        'python_exe': sys.executable,
+        'python_exe': choose_python_exe(),
         'python_version': options.python_version,
         'install_python_module': not options.no_install_python_module,
 
