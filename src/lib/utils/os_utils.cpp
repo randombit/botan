@@ -132,7 +132,7 @@ unsigned long OS::get_auxval(unsigned long id)
    return 0;
 #elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    unsigned long auxinfo = 0;
-   ::elf_aux_info(id, &auxinfo, sizeof(auxinfo));
+   ::elf_aux_info(static_cast<int>(id), &auxinfo, sizeof(auxinfo));
    return auxinfo;
 #else
    BOTAN_UNUSED(id);
