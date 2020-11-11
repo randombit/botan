@@ -11,7 +11,7 @@
  */
 
 #include <botan/mceliece.h>
-#include <botan/polyn_gf2m.h>
+#include <botan/internal/polyn_gf2m.h>
 #include <botan/internal/mce_internal.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/code_based_util.h>

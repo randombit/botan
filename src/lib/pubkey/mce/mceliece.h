@@ -13,7 +13,6 @@
 #define BOTAN_MCELIECE_KEY_H_
 
 #include <botan/pk_keys.h>
-#include <botan/polyn_gf2m.h>
 
 namespace Botan {
 
