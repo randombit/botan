@@ -52,7 +52,7 @@ std::string TLS::Callbacks::tls_decode_group_param(Group_Params group_param)
 
 void TLS::Callbacks::tls_verify_cert_chain(
    const std::vector<X509_Certificate>& cert_chain,
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
+   const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
    const std::vector<Certificate_Store*>& trusted_roots,
    Usage_Type usage,
    const std::string& hostname,

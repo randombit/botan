@@ -143,7 +143,7 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
       * @return the full path from subject to trust root
       * This path may be empty
       */
-      const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path() const { return m_cert_path; }
+      const std::vector<X509_Certificate>& cert_path() const { return m_cert_path; }
 
       /**
       * @return true iff the validation was successful
@@ -193,7 +193,7 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
       * @param cert_chain the certificate chain that was validated
       */
       Path_Validation_Result(CertificatePathStatusCodes status,
-                             std::vector<std::shared_ptr<const X509_Certificate>>&& cert_chain);
+                             std::vector<X509_Certificate>&& cert_chain);
 
       /**
       * Create a Path_Validation_Result
@@ -204,7 +204,7 @@ class BOTAN_PUBLIC_API(2,0) Path_Validation_Result final
    private:
       CertificatePathStatusCodes m_all_status;
       CertificatePathStatusCodes m_warnings;
-      std::vector<std::shared_ptr<const X509_Certificate>> m_cert_path;
+      std::vector<X509_Certificate> m_cert_path;
       Certificate_Status_Code m_overall;
    };
 
@@ -231,7 +231,7 @@ Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(
    Usage_Type usage = Usage_Type::UNSPECIFIED,
    std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now(),
    std::chrono::milliseconds ocsp_timeout = std::chrono::milliseconds(0),
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp = {});
+   const std::vector<std::optional<OCSP::Response>>& ocsp_resp = {});
 
 /**
 * PKIX Path Validation
@@ -253,7 +253,7 @@ Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(
    Usage_Type usage = Usage_Type::UNSPECIFIED,
    std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now(),
    std::chrono::milliseconds ocsp_timeout = std::chrono::milliseconds(0),
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp = {});
+   const std::vector<std::optional<OCSP::Response>>& ocsp_resp = {});
 
 /**
 * PKIX Path Validation
@@ -275,7 +275,7 @@ Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(
    Usage_Type usage = Usage_Type::UNSPECIFIED,
    std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now(),
    std::chrono::milliseconds ocsp_timeout = std::chrono::milliseconds(0),
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp = {});
+   const std::vector<std::optional<OCSP::Response>>& ocsp_resp = {});
 
 /**
 * PKIX Path Validation
@@ -297,7 +297,7 @@ Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(
    Usage_Type usage = Usage_Type::UNSPECIFIED,
    std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now(),
    std::chrono::milliseconds ocsp_timeout = std::chrono::milliseconds(0),
-   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp = {});
+   const std::vector<std::optional<OCSP::Response>>& ocsp_resp = {});
 
 
 /**
@@ -309,10 +309,10 @@ Path_Validation_Result BOTAN_PUBLIC_API(2,0) x509_path_validate(
 namespace PKIX {
 
 Certificate_Status_Code
-build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const X509_Certificate>>>& cert_paths,
+build_all_certificate_paths(std::vector<std::vector<X509_Certificate>>& cert_paths,
                             const std::vector<Certificate_Store*>& trusted_certstores,
-                            const std::shared_ptr<const X509_Certificate>& end_entity,
-                            const std::vector<std::shared_ptr<const X509_Certificate>>& end_entity_extra);
+                            const std::optional<X509_Certificate>& end_entity,
+                            const std::vector<X509_Certificate>& end_entity_extra);
 
 
 /**
@@ -324,10 +324,10 @@ build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const X509_C
 * @return result of the path building operation (OK or error)
 */
 Certificate_Status_Code
-BOTAN_PUBLIC_API(2,0) build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>>& cert_path_out,
+BOTAN_PUBLIC_API(2,0) build_certificate_path(std::vector<X509_Certificate>& cert_path_out,
                                  const std::vector<Certificate_Store*>& trusted_certstores,
-                                 const std::shared_ptr<const X509_Certificate>& end_entity,
-                                 const std::vector<std::shared_ptr<const X509_Certificate>>& end_entity_extra);
+                                 const X509_Certificate& end_entity,
+                                 const std::vector<X509_Certificate>& end_entity_extra);
 
 /**
 * Check the certificate chain, but not any revocation data
@@ -347,7 +347,7 @@ BOTAN_PUBLIC_API(2,0) build_certificate_path(std::vector<std::shared_ptr<const X
 * then the result for that certificate is successful. If all results are
 */
 CertificatePathStatusCodes
-BOTAN_PUBLIC_API(2,0) check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+BOTAN_PUBLIC_API(2,0) check_chain(const std::vector<X509_Certificate>& cert_path,
                       std::chrono::system_clock::time_point ref_time,
                       const std::string& hostname,
                       Usage_Type usage,
@@ -366,8 +366,8 @@ BOTAN_PUBLIC_API(2,0) check_chain(const std::vector<std::shared_ptr<const X509_C
 * @return revocation status
 */
 CertificatePathStatusCodes
-BOTAN_PUBLIC_API(2, 0) check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
-                                  const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
+BOTAN_PUBLIC_API(2, 0) check_ocsp(const std::vector<X509_Certificate>& cert_path,
+                                  const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
                                   const std::vector<Certificate_Store*>& certstores,
                                   std::chrono::system_clock::time_point ref_time,
                                   std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero());
@@ -382,9 +382,9 @@ BOTAN_PUBLIC_API(2, 0) check_ocsp(const std::vector<std::shared_ptr<const X509_C
 * @return revocation status
 */
 CertificatePathStatusCodes
-BOTAN_PUBLIC_API(2,0) check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
-                    const std::vector<std::shared_ptr<const X509_CRL>>& crls,
-                    std::chrono::system_clock::time_point ref_time);
+BOTAN_PUBLIC_API(2,0) check_crl(const std::vector<X509_Certificate>& cert_path,
+                                const std::vector<std::optional<X509_CRL>>& crls,
+                                std::chrono::system_clock::time_point ref_time);
 
 /**
 * Check CRLs for revocation information
@@ -395,7 +395,7 @@ BOTAN_PUBLIC_API(2,0) check_crl(const std::vector<std::shared_ptr<const X509_Cer
 * @return revocation status
 */
 CertificatePathStatusCodes
-BOTAN_PUBLIC_API(2,0) check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+BOTAN_PUBLIC_API(2,0) check_crl(const std::vector<X509_Certificate>& cert_path,
                     const std::vector<Certificate_Store*>& certstores,
                     std::chrono::system_clock::time_point ref_time);
 
@@ -418,7 +418,7 @@ BOTAN_PUBLIC_API(2,0) check_crl(const std::vector<std::shared_ptr<const X509_Cer
 * @return revocation status
 */
 CertificatePathStatusCodes
-BOTAN_PUBLIC_API(2, 0) check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+BOTAN_PUBLIC_API(2, 0) check_ocsp_online(const std::vector<X509_Certificate>& cert_path,
       const std::vector<Certificate_Store*>& trusted_certstores,
       std::chrono::system_clock::time_point ref_time,
       std::chrono::milliseconds timeout,
@@ -440,7 +440,7 @@ BOTAN_PUBLIC_API(2, 0) check_ocsp_online(const std::vector<std::shared_ptr<const
 * @return revocation status
 */
 CertificatePathStatusCodes
-BOTAN_PUBLIC_API(2,0) check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+BOTAN_PUBLIC_API(2,0) check_crl_online(const std::vector<X509_Certificate>& cert_path,
                            const std::vector<Certificate_Store*>& trusted_certstores,
                            Certificate_Store_In_Memory* certstore_to_recv_crls,
                            std::chrono::system_clock::time_point ref_time,

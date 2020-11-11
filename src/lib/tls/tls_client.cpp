@@ -571,11 +571,11 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
             {
             auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-client", m_info.hostname());
 
-            std::vector<std::shared_ptr<const OCSP::Response>> ocsp;
+            std::vector<std::optional<OCSP::Response>> ocsp;
             if(state.server_cert_status() != nullptr)
                {
                try {
-                   ocsp.push_back(std::make_shared<OCSP::Response>(state.server_cert_status()->response()));
+                  ocsp.push_back(OCSP::Response(state.server_cert_status()->response()));
                }
                catch(Decoding_Error&)
                   {

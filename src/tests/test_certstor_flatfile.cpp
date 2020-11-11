@@ -61,7 +61,7 @@ Test::Result find_certificate_by_pubkey_sha1()
       auto cert = certstore.find_cert_by_pubkey_sha1(get_key_id());
       result.end_timer();
 
-      if(result.test_not_null("found certificate", cert.get()))
+      if(result.test_not_nullopt("found certificate", cert))
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_int_eq("exactly one CN", cns.size(), 1);
@@ -95,7 +95,7 @@ Test::Result find_cert_by_subject_dn()
       auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
       result.end_timer();
 
-      if(result.test_not_null("found certificate", cert.get()))
+      if(result.test_not_nullopt("found certificate", cert))
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_int_eq("exactly one CN", cns.size(), 1);
@@ -124,7 +124,7 @@ Test::Result find_cert_by_utf8_subject_dn()
 
       result.end_timer();
 
-      if(result.test_not_null("found certificate", cert.get()))
+      if(result.test_not_nullopt("found certificate", cert))
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
@@ -152,7 +152,7 @@ Test::Result find_cert_by_subject_dn_and_key_id()
       auto cert = certstore.find_cert(dn, get_key_id());
       result.end_timer();
 
-      if(result.test_not_null("found certificate", cert.get()))
+      if(result.test_not_nullopt("found certificate", cert))
          {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_int_eq("exactly one CN", cns.size(), 1);
@@ -183,7 +183,7 @@ Test::Result find_certs_by_subject_dn_and_key_id()
       if(result.confirm("result not empty", !certs.empty()) &&
             result.test_eq("exactly one certificate", certs.size(), 1))
          {
-         auto cns = certs.front()->subject_dn().get_attribute("CN");
+         auto cns = certs.front().subject_dn().get_attribute("CN");
          result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), "DST Root CA X3");
          }

@@ -229,7 +229,7 @@ class BOTAN_PUBLIC_API(2,0) Name_Constraints final : public Certificate_Extensio
       Name_Constraints(const NameConstraints &nc) : m_name_constraints(nc) {}
 
       void validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-            const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+            const std::vector<X509_Certificate>& cert_path,
             std::vector<std::set<Certificate_Status_Code>>& cert_status,
             size_t pos) override;
 
@@ -267,7 +267,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Policies final : public Certificate_Exte
       OID oid_of() const override { return static_oid(); }
 
       void validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-            const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+            const std::vector<X509_Certificate>& cert_path,
             std::vector<std::set<Certificate_Status_Code>>& cert_status,
             size_t pos) override;
    private:
@@ -481,7 +481,7 @@ class BOTAN_PUBLIC_API(2,4) Unknown_Extension final : public Certificate_Extensi
       bool is_critical_extension() const { return m_critical; }
 
       void validate(const X509_Certificate&, const X509_Certificate&,
-            const std::vector<std::shared_ptr<const X509_Certificate>>&,
+            const std::vector<X509_Certificate>&,
             std::vector<std::set<Certificate_Status_Code>>& cert_status,
             size_t pos) override
          {

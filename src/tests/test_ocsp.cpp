@@ -21,14 +21,14 @@ namespace Botan_Tests {
 class OCSP_Tests final : public Test
    {
    private:
-      std::shared_ptr<const Botan::X509_Certificate> load_test_X509_cert(const std::string& path)
+      Botan::X509_Certificate load_test_X509_cert(const std::string& path)
          {
-         return std::make_shared<const Botan::X509_Certificate>(Test::data_file(path));
+         return Botan::X509_Certificate(Test::data_file(path));
          }
 
-      std::shared_ptr<const Botan::OCSP::Response> load_test_OCSP_resp(const std::string& path)
+      Botan::OCSP::Response load_test_OCSP_resp(const std::string& path)
          {
-         return std::make_shared<const Botan::OCSP::Response>(Test::read_binary_data_file(path));
+         return Botan::OCSP::Response(Test::read_binary_data_file(path));
          }
 
       Test::Result test_response_parsing()
@@ -131,13 +131,13 @@ class OCSP_Tests final : public Test
          {
          Test::Result result("OCSP request check with next_update w/o max_age");
 
-         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
 
-         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
 
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
@@ -169,13 +169,13 @@ class OCSP_Tests final : public Test
          {
          Test::Result result("OCSP request check with next_update with max_age");
 
-         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
 
-         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
 
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
@@ -210,13 +210,13 @@ class OCSP_Tests final : public Test
          {
          Test::Result result("OCSP request check w/o next_update with max_age");
 
-         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+         auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
 
-         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
 
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
@@ -249,13 +249,13 @@ class OCSP_Tests final : public Test
          {
          Test::Result result("OCSP request check w/o next_update w/o max_age");
 
-         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+         auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
 
-         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
 
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
@@ -285,14 +285,13 @@ class OCSP_Tests final : public Test
          {
          Test::Result result("OCSP request softfail check");
 
-         std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("x509/ocsp/randombit.pem");
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
 
-         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ee, ca, trust_root };
+         const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp =
-            std::make_shared<const Botan::OCSP::Response>(Botan::Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
+         Botan::OCSP::Response ocsp(Botan::Certificate_Status_Code::OCSP_NO_REVOCATION_URL);
 
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
@@ -318,10 +317,10 @@ class OCSP_Tests final : public Test
          Test::Result result("OCSP online check");
 
          // Expired end-entity certificate:
-         std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
-         std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/identrust.pem");
 
-         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { ca, trust_root };
+         const std::vector<Botan::X509_Certificate> cert_path = { ca, trust_root };
 
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);

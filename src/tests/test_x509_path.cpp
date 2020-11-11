@@ -412,38 +412,41 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run()
          continue;
          }
 
-      std::shared_ptr<Botan::X509_CRL> crl;
-      std::shared_ptr<Botan::X509_Certificate> end;
-      std::shared_ptr<Botan::X509_Certificate> root;
+      std::optional<Botan::X509_CRL> crl;
+      std::optional<Botan::X509_Certificate> end;
+      std::optional<Botan::X509_Certificate> root;
       Botan::Certificate_Store_In_Memory store;
-      std::shared_ptr<Botan::PKCS10_Request> csr;
-      auto validation_time = Botan::calendar_point(std::atoi((validation_times_iter++)->second.c_str()), 0, 0, 0, 0,
-                             0).to_std_timepoint();
+      std::optional<Botan::PKCS10_Request> csr;
+
+      auto validation_time = Botan::calendar_point(
+         std::atoi((validation_times_iter++)->second.c_str()),
+         0, 0, 0, 0, 0).to_std_timepoint();
+
       for(auto const& file : all_files)
          {
          if(file.find("end.crt") != std::string::npos)
             {
-            end.reset(new Botan::X509_Certificate(file));
+            end = Botan::X509_Certificate(file);
             }
          else if(file.find("root.crt") != std::string::npos)
             {
-            root.reset(new Botan::X509_Certificate(file));
+            root = Botan::X509_Certificate(file);
             store.add_certificate(*root);
             }
          else if(file.find(".crl") != std::string::npos)
             {
-            crl.reset(new Botan::X509_CRL(file));
+            crl = Botan::X509_CRL(file);
             }
          else if(file.find(".csr") != std::string::npos)
             {
-            csr.reset(new Botan::PKCS10_Request(file));
+            csr = Botan::PKCS10_Request(file);
             }
          }
 
       if(end && crl && root)    // CRL tests
          {
-         const std::vector<std::shared_ptr<const Botan::X509_Certificate>> cert_path = { end, root };
-         const std::vector<std::shared_ptr<const Botan::X509_CRL>> crls = { crl };
+         const std::vector<Botan::X509_Certificate> cert_path = { *end, *root };
+         const std::vector<std::optional<Botan::X509_CRL>> crls = { crl };
          auto crl_status = Botan::PKIX::check_crl(cert_path, crls,
                            validation_time);   // alternatively we could just call crl.check_signature( root_pubkey )
 
@@ -823,9 +826,9 @@ class Path_Validation_With_OCSP_Tests final : public Test
          return Botan::X509_Certificate(Test::data_file(path));
          }
 
-      std::shared_ptr<const Botan::OCSP::Response> load_test_OCSP_resp(const std::string& path)
+      std::optional<Botan::OCSP::Response> load_test_OCSP_resp(const std::string& path)
          {
-         return std::make_shared<const Botan::OCSP::Response>(Test::read_binary_data_file(path));
+         return Botan::OCSP::Response(Test::read_binary_data_file(path));
          }
 
       Test::Result validate_with_ocsp_with_next_update_without_max_age()
@@ -842,7 +845,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
          const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+         std::optional<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
 
          auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
@@ -882,7 +885,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
          const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
 
          auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
@@ -922,7 +925,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
          const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
 
          auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
@@ -961,7 +964,7 @@ class Path_Validation_With_OCSP_Tests final : public Test
 
          const std::vector<Botan::X509_Certificate> cert_path = { ee, ca, trust_root };
 
-         std::shared_ptr<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
 
          auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected)
@@ -1068,8 +1071,7 @@ class XMSS_Path_Validation_Tests final : public Test
       Botan::Path_Validation_Restrictions restrictions;
       auto self_signed = Botan::X509_Certificate(Test::data_dir() + "/x509/xmss/" + file);
 
-      auto cert_path = std::vector<std::shared_ptr<const Botan::X509_Certificate>>{
-				            std::make_shared<const Botan::X509_Certificate>(self_signed)};
+      auto cert_path = std::vector<Botan::X509_Certificate>{self_signed};
       auto valid_time = Botan::calendar_point(2019, 10, 8, 4, 45, 0).to_std_timepoint();
 
       auto status = Botan::PKIX::overall_status(Botan::PKIX::check_chain(cert_path, valid_time,

@@ -384,7 +384,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Extension
       * @param pos Position of subject certificate in cert_path
       */
       virtual void validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-            const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+            const std::vector<X509_Certificate>& cert_path,
             std::vector<std::set<Certificate_Status_Code>>& cert_status,
             size_t pos);
 

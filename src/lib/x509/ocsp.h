@@ -168,7 +168,7 @@ class BOTAN_PUBLIC_API(2,0) Response final
       * some cases.
       */
       Certificate_Status_Code check_signature(const std::vector<Certificate_Store*>& trust_roots,
-                                              const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path = {}) const;
+                                              const std::vector<X509_Certificate>& cert_path = {}) const;
 
       /**
       * Verify that issuer's key signed this response

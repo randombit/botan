@@ -110,7 +110,7 @@ Extensions::create_extn_obj(const OID& oid,
 * Validate the extension (the default implementation is a NOP)
 */
 void Certificate_Extension::validate(const X509_Certificate&, const X509_Certificate&,
-      const std::vector<std::shared_ptr<const X509_Certificate>>&,
+      const std::vector<X509_Certificate>&,
       std::vector<std::set<Certificate_Status_Code>>&,
       size_t)
    {
@@ -555,7 +555,7 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in)
    }
 
 void Name_Constraints::validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-      const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+      const std::vector<X509_Certificate>& cert_path,
       std::vector<std::set<Certificate_Status_Code>>& cert_status,
       size_t pos)
    {
@@ -580,7 +580,7 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
 
          for(auto c: m_name_constraints.permitted())
             {
-            switch(c.base().matches(*cert_path.at(j)))
+            switch(c.base().matches(cert_path.at(j)))
                {
                case GeneralName::MatchResult::NotFound:
                case GeneralName::MatchResult::All:
@@ -597,7 +597,7 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
 
          for(auto c: m_name_constraints.excluded())
             {
-            switch(c.base().matches(*cert_path.at(j)))
+            switch(c.base().matches(cert_path.at(j)))
                {
                case GeneralName::MatchResult::All:
                case GeneralName::MatchResult::Some:
@@ -687,7 +687,7 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in)
 void Certificate_Policies::validate(
    const X509_Certificate& /*subject*/,
    const X509_Certificate& /*issuer*/,
-   const std::vector<std::shared_ptr<const X509_Certificate>>& /*cert_path*/,
+   const std::vector<X509_Certificate>& /*cert_path*/,
    std::vector<std::set<Certificate_Status_Code>>& cert_status,
    size_t pos)
    {

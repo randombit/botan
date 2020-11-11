@@ -186,12 +186,12 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
    }
 
 Certificate_Status_Code Response::check_signature(const std::vector<Certificate_Store*>& trusted_roots,
-                                                  const std::vector<std::shared_ptr<const X509_Certificate>>& ee_cert_path) const
+                                                  const std::vector<X509_Certificate>& ee_cert_path) const
    {
    if (m_responses.empty())
       return m_dummy_response_status;
 
-   std::shared_ptr<const X509_Certificate> signing_cert;
+   std::optional<X509_Certificate> signing_cert;
 
    for(size_t i = 0; i != trusted_roots.size(); ++i)
       {
@@ -223,13 +223,13 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
       for(size_t i = 1; i < ee_cert_path.size(); ++i)
          {
          // Check all CA certificates in the (assumed validated) EE cert path
-         if(!m_signer_name.empty() && ee_cert_path[i]->subject_dn() == m_signer_name)
+         if(!m_signer_name.empty() && ee_cert_path[i].subject_dn() == m_signer_name)
             {
             signing_cert = ee_cert_path[i];
             break;
             }
 
-         if(m_key_hash.size() > 0 && ee_cert_path[i]->subject_public_key_bitstring_sha1() == m_key_hash)
+         if(m_key_hash.size() > 0 && ee_cert_path[i].subject_public_key_bitstring_sha1() == m_key_hash)
             {
             signing_cert = ee_cert_path[i];
             break;
@@ -244,13 +244,13 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
          // Check all CA certificates in the (assumed validated) EE cert path
          if(!m_signer_name.empty() && m_certs[i].subject_dn() == m_signer_name)
             {
-            signing_cert = std::make_shared<const X509_Certificate>(m_certs[i]);
+            signing_cert = m_certs[i];
             break;
             }
 
          if(m_key_hash.size() > 0 && m_certs[i].subject_public_key_bitstring_sha1() == m_key_hash)
             {
-            signing_cert = std::make_shared<const X509_Certificate>(m_certs[i]);
+            signing_cert = m_certs[i];
             break;
             }
          }
