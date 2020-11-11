@@ -233,7 +233,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         if target_os in ['osx', 'ios']:
             flags += ['--with-commoncrypto']
 
-        if target_os == 'osx' or target == 'coverage':
+        if target == 'coverage':
             flags += ['--with-boost']
 
         if target_os == 'windows' and target in ['shared', 'static']:
