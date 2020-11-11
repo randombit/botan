@@ -24,12 +24,11 @@ debug_info_flags "/Zi /FS"
 
 preproc_flags "/nologo /EP"
 
-lang_flags "/EHs /GR"
+lang_flags "/std:c++17 /EHs /GR"
 
 # 4250: diamond inheritence warning
 # 4251: STL types used in DLL interface
 # 4275: ???
-# 4127: conditional expression is constant, consider using if constexpr
 warning_flags "/W4 /wd4250 /wd4251 /wd4275 /wd4127"
 
 werror_flags "/WX"
