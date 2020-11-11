@@ -192,10 +192,6 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode_Filter final : public Keyed_Filter,
       secure_vector<uint8_t> m_buffer;
    };
 
-// deprecated aliases, will be removed in a future major release
-typedef Cipher_Mode_Filter Transform_Filter;
-typedef Transform_Filter Transformation_Filter;
-
 /*
 * Get a cipher object
 */
