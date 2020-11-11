@@ -86,9 +86,9 @@ OID::OID(const std::string& oid_str)
       m_id = parse_oid_str(oid_str);
 
       if(m_id.size() < 2 || m_id[0] > 2)
-         throw Invalid_OID(oid_str);
+         throw Decoding_Error("Invalid OID " + oid_str);
       if((m_id[0] == 0 || m_id[0] == 1) && m_id[1] > 39)
-         throw Invalid_OID(oid_str);
+         throw Decoding_Error("Invalid OID " + oid_str);
       }
    }
 

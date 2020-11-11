@@ -134,26 +134,22 @@ Invalid_Algorithm_Name::Invalid_Algorithm_Name(const std::string& name):
    {}
 
 Encoding_Error::Encoding_Error(const std::string& name) :
-   Invalid_Argument("Encoding error: " + name)
+   Exception("Encoding error: " + name)
    {}
 
 Decoding_Error::Decoding_Error(const std::string& name) :
-   Invalid_Argument(name)
+   Exception(name)
    {}
 
 Decoding_Error::Decoding_Error(const std::string& msg, const std::exception& e) :
-   Invalid_Argument(msg, e)
+   Exception(msg, e)
    {}
 
 Decoding_Error::Decoding_Error(const std::string& name, const char* exception_message) :
-   Invalid_Argument(name + " failed with exception " + exception_message) {}
+   Exception(name + " failed with exception " + exception_message) {}
 
 Invalid_Authentication_Tag::Invalid_Authentication_Tag(const std::string& msg) :
    Exception("Invalid authentication tag: " + msg)
-   {}
-
-Invalid_OID::Invalid_OID(const std::string& oid) :
-   Decoding_Error("Invalid ASN.1 OID: " + oid)
    {}
 
 Stream_IO_Error::Stream_IO_Error(const std::string& err) :

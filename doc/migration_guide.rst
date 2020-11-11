@@ -33,6 +33,19 @@ Tiger have been removed. The expectation is that literally nobody was using any
 of these algorithms for anything. All are obscure, and many are (more or less)
 broken.
 
+Exception Changes
+-------------------
+
+Several exceptions, mostly ones not used by the library, were removed.
+
+A few others that were very specific (such as Illegal_Point) were replaced
+by throws of their immediate base class exception type.
+
+The base class of Encoding_Error and Decoding_Error changed from
+Invalid_Argument to Exception. If you are explicitly catching Invalid_Argument,
+verify that you do not need to now also explicitly catch Encoding_Error and/or
+Decoding_Error.
+
 X.509 Certificate Info Access
 -------------------------------
 

@@ -372,6 +372,8 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
          throw Internal_Error("PK_Verifier: Invalid signature format enum");
       }
    catch(Invalid_Argument&) { return false; }
+   catch(Decoding_Error&) { return false; }
+   catch(Encoding_Error&) { return false; }
    }
 
 }

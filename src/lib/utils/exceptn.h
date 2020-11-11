@@ -176,12 +176,8 @@ class BOTAN_PUBLIC_API(2,0) Invalid_Algorithm_Name final : public Invalid_Argume
 
 /**
 * Encoding_Error Exception
-*
-* This exception derives from Invalid_Argument for historical reasons, and it
-* does not make any real sense for it to do so. In a future major release this
-* exception type will derive directly from Exception instead.
 */
-class BOTAN_PUBLIC_API(2,0) Encoding_Error final : public Invalid_Argument
+class BOTAN_PUBLIC_API(2,0) Encoding_Error final : public Exception
    {
    public:
       explicit Encoding_Error(const std::string& name);
@@ -191,12 +187,8 @@ class BOTAN_PUBLIC_API(2,0) Encoding_Error final : public Invalid_Argument
 
 /**
 * A decoding error occurred.
-*
-* This exception derives from Invalid_Argument for historical reasons, and it
-* does not make any real sense for it to do so. In a future major release this
-* exception type will derive directly from Exception instead.
 */
-class BOTAN_PUBLIC_API(2,0) Decoding_Error : public Invalid_Argument
+class BOTAN_PUBLIC_API(2,0) Decoding_Error : public Exception
    {
    public:
       explicit Decoding_Error(const std::string& name);
@@ -358,23 +350,6 @@ class BOTAN_PUBLIC_API(2,0) Not_Implemented final : public Exception
       explicit Not_Implemented(const std::string& err);
 
       ErrorType error_type() const noexcept override { return ErrorType::NotImplemented; }
-   };
-
-/*
-   The following exception types are still in use for compatability reasons,
-   but are deprecated and will be removed in a future major release.
-   Instead catch the base class.
-*/
-
-/**
-* An invalid OID string was used.
-*
-* This exception will be removed in a future major release.
-*/
-class BOTAN_PUBLIC_API(2,0) Invalid_OID final : public Decoding_Error
-   {
-   public:
-      explicit Invalid_OID(const std::string& oid);
    };
 
 template<typename E, typename... Args>

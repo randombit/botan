@@ -175,7 +175,7 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
 BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    {
    if(mod.is_zero())
-      throw BigInt::DivideByZero();
+      throw Invalid_Argument("inverse_mod modulus cannot be zero");
    if(mod.is_negative() || n.is_negative())
       throw Invalid_Argument("inverse_mod: arguments must be non-negative");
    if(n.is_zero() || (n.is_even() && mod.is_even()))
