@@ -231,7 +231,7 @@ The resulting static library can be linked to your app in Xcode.
 For Android
 ---------------------
 
-Modern versions of Android NDK use Clang and support C++11. Simply
+Modern versions of Android NDK use Clang and support C++17. Simply
 configure using the appropriate NDK compiler::
 
   $ export CXX=/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++

@@ -208,7 +208,7 @@ Compiler Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The library should always be as functional as possible when compiled with just
-C++11. However, feel free to use the full C++11 language. No accomodations are
+Standard C++17. However, feel free to use the full language. No accomodations are
 made for compilers that are incomplete or buggy.
 
 Use of compiler extensions is fine whenever appropriate; this is typically

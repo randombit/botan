@@ -4,7 +4,7 @@ libdir=%{libdir}
 includedir=${prefix}/include/botan-%{version_major}
 
 Name: Botan
-Description: Crypto and TLS for C++11
+Description: Crypto and TLS for Modern C++
 Version: %{version}
 
 Libs: -L${libdir} -l%{libname} %{cxx_abi_flags}
