@@ -66,7 +66,7 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
    // https://msdn.microsoft.com/en-us/library/2093ets1.aspx
    // Throw after 2037 if 32 bit time_t is used
 
-   BOTAN_IF_CONSTEXPR(sizeof(std::time_t) == 4)
+   if constexpr(sizeof(std::time_t) == 4)
       {
       if(year() > 2037)
          {

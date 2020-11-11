@@ -167,13 +167,13 @@
 #endif
 
 /*
-* Define BOTAN_IF_CONSTEXPR
+* Define if constexpr
 */
-#if !defined(BOTAN_IF_CONSTEXPR)
+#if !defined(if constexpr)
    #if __cplusplus >= 201703
-      #define BOTAN_IF_CONSTEXPR if constexpr
+      #define if constexpr if constexpr
    #else
-      #define BOTAN_IF_CONSTEXPR if
+      #define if constexpr if
    #endif
 #endif
 

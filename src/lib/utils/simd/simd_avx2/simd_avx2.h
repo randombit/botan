@@ -80,14 +80,14 @@ class SIMD_8x32 final
 #if defined(__AVX512VL__)
          return SIMD_8x32(_mm256_rol_epi32(m_avx2, ROT));
 #else
-         BOTAN_IF_CONSTEXPR(ROT == 8)
+         if constexpr(ROT == 8)
             {
             const __m256i shuf_rotl_8 = _mm256_set_epi8(14, 13, 12, 15, 10, 9, 8, 11, 6, 5, 4, 7, 2, 1, 0, 3,
                                                         14, 13, 12, 15, 10, 9, 8, 11, 6, 5, 4, 7, 2, 1, 0, 3);
 
             return SIMD_8x32(_mm256_shuffle_epi8(m_avx2, shuf_rotl_8));
             }
-         else BOTAN_IF_CONSTEXPR(ROT == 16)
+         else if constexpr(ROT == 16)
             {
             const __m256i shuf_rotl_16 = _mm256_set_epi8(13, 12, 15, 14, 9, 8, 11, 10, 5, 4, 7, 6, 1, 0, 3, 2,
                                                          13, 12, 15, 14, 9, 8, 11, 10, 5, 4, 7, 6, 1, 0, 3, 2);
