@@ -167,17 +167,6 @@
 #endif
 
 /*
-* Define if constexpr
-*/
-#if !defined(if constexpr)
-   #if __cplusplus >= 201703
-      #define if constexpr if constexpr
-   #else
-      #define if constexpr if
-   #endif
-#endif
-
-/*
 * Define BOTAN_PARALLEL_FOR
 */
 #if !defined(BOTAN_PARALLEL_FOR)
