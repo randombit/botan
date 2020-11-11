@@ -67,7 +67,7 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
    CT::poison(out, blocks * 8);
    CT::poison(K, 52);
 
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+   for(size_t i = 0; i < blocks; ++i)
       {
       uint16_t X1, X2, X3, X4;
       load_be(in + BLOCK_SIZE*i, X1, X2, X3, X4);

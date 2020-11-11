@@ -10,7 +10,6 @@
 #define BOTAN_ASSERTION_CHECKING_H_
 
 #include <botan/build.h>
-#include <botan/compiler.h>
 
 namespace Botan {
 
@@ -18,7 +17,7 @@ namespace Botan {
 * Called when an assertion fails
 * Throws an Exception object
 */
-BOTAN_NORETURN void BOTAN_PUBLIC_API(2,0)
+[[noreturn]] void BOTAN_PUBLIC_API(2,0)
    assertion_failure(const char* expr_str,
                      const char* assertion_made,
                      const char* func,
@@ -29,9 +28,9 @@ BOTAN_NORETURN void BOTAN_PUBLIC_API(2,0)
 * Called when an invalid argument is used
 * Throws Invalid_Argument
 */
-BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_argument(const char* message,
-                                                              const char* func,
-                                                              const char* file);
+[[noreturn]] void BOTAN_UNSTABLE_API throw_invalid_argument(const char* message,
+                                                            const char* func,
+                                                            const char* file);
 
 
 #define BOTAN_ARG_CHECK(expr, msg)                                      \
@@ -41,9 +40,9 @@ BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_argument(const char* messag
 * Called when an invalid state is encountered
 * Throws Invalid_State
 */
-BOTAN_NORETURN void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
-                                                           const char* func,
-                                                           const char* file);
+[[noreturn]] void BOTAN_UNSTABLE_API throw_invalid_state(const char* message,
+                                                         const char* func,
+                                                         const char* file);
 
 
 #define BOTAN_STATE_CHECK(expr)                                     \

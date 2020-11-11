@@ -486,7 +486,7 @@ inline void bigint_shr2(word y[], const word x[], size_t x_size,
 /*
 * Linear Multiply - returns the carry
 */
-inline word BOTAN_WARN_UNUSED_RESULT bigint_linmul2(word x[], size_t x_size, word y)
+[[nodiscard]] inline word bigint_linmul2(word x[], size_t x_size, word y)
    {
    const size_t blocks = x_size - (x_size % 8);
 

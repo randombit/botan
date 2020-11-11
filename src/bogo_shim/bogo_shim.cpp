@@ -62,7 +62,7 @@ void shim_log(const std::string& s)
       }
    }
 
-void BOTAN_NORETURN shim_exit_with_error(const std::string& s, int rc = 1)
+[[noreturn]] void shim_exit_with_error(const std::string& s, int rc = 1)
    {
    shim_log("Exiting with " + s);
    std::cerr << s << "\n";
