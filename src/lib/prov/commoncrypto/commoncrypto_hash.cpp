@@ -131,15 +131,6 @@ make_commoncrypto_hash(const std::string& name)
       return MAKE_COMMONCRYPTO_HASH_2(name, SHA1);
 #endif
 
-#if defined(BOTAN_HAS_MD5)
-   if(name == "MD5")
-      return MAKE_COMMONCRYPTO_HASH_1(MD5);
-#endif
-
-#if defined(BOTAN_HAS_MD4)
-   if(name == "MD4")
-      return MAKE_COMMONCRYPTO_HASH_1(MD4);
-#endif
    return nullptr;
    }
 
