@@ -10,7 +10,6 @@
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
-#include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {

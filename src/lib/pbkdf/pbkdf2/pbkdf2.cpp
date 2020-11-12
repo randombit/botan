@@ -8,7 +8,6 @@
 
 #include <botan/pbkdf2.h>
 #include <botan/exceptn.h>
-#include <botan/internal/rounding.h>
 #include <botan/internal/timer.h>
 
 namespace Botan {

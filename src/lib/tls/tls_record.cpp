@@ -13,7 +13,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/rng.h>
 

@@ -9,7 +9,6 @@
 #include <botan/internal/commoncrypto_utils.h>
 #include <botan/cipher_mode.h>
 #include <botan/internal/parsing.h>
-#include <botan/internal/rounding.h>
 #include <botan/scan_name.h>
 
 namespace Botan {
