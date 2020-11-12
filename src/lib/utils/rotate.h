@@ -43,7 +43,7 @@ inline constexpr T rotr(T input)
 * @return input rotated left by rot bits
 */
 template<typename T>
-inline T rotl_var(T input, size_t rot)
+inline constexpr T rotl_var(T input, size_t rot)
    {
    return rot ? static_cast<T>((input << rot) | (input >> (sizeof(T)*8 - rot))) : input;
    }
@@ -55,7 +55,7 @@ inline T rotl_var(T input, size_t rot)
 * @return input rotated right by rot bits
 */
 template<typename T>
-inline T rotr_var(T input, size_t rot)
+inline constexpr T rotr_var(T input, size_t rot)
    {
    return rot ? static_cast<T>((input >> rot) | (input << (sizeof(T)*8 - rot))) : input;
    }
