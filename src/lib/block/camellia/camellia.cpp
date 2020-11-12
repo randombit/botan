@@ -648,7 +648,7 @@ inline uint64_t FLINV(uint64_t v, uint64_t K)
 void encrypt(const uint8_t in[], uint8_t out[], size_t blocks,
              const secure_vector<uint64_t>& SK, const size_t rounds)
    {
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+   for(size_t i = 0; i < blocks; ++i)
       {
       uint64_t D1, D2;
       load_be(in + 16*i, D1, D2);
@@ -689,7 +689,7 @@ void encrypt(const uint8_t in[], uint8_t out[], size_t blocks,
 void decrypt(const uint8_t in[], uint8_t out[], size_t blocks,
              const secure_vector<uint64_t>& SK, const size_t rounds)
    {
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+   for(size_t i = 0; i < blocks; ++i)
       {
       uint64_t D1, D2;
       load_be(in + 16*i, D1, D2);
