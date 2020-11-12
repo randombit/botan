@@ -107,7 +107,7 @@ BigInt operator/(const BigInt& x, const BigInt& y)
 BigInt operator/(const BigInt& x, word y)
    {
    if(y == 0)
-      throw BigInt::DivideByZero();
+      throw Invalid_Argument("BigInt::operator/ divide by zero");
    else if(y == 1)
       return x;
    else if(y == 2)
@@ -131,9 +131,9 @@ BigInt operator/(const BigInt& x, word y)
 BigInt operator%(const BigInt& n, const BigInt& mod)
    {
    if(mod.is_zero())
-      throw BigInt::DivideByZero();
+      throw Invalid_Argument("BigInt::operator% divide by zero");
    if(mod.is_negative())
-      throw Invalid_Argument("BigInt::operator%: modulus must be > 0");
+      throw Invalid_Argument("BigInt::operator% modulus must be > 0");
    if(n.is_positive() && mod.is_positive() && n < mod)
       return n;
 
@@ -153,7 +153,7 @@ BigInt operator%(const BigInt& n, const BigInt& mod)
 word operator%(const BigInt& n, word mod)
    {
    if(mod == 0)
-      throw BigInt::DivideByZero();
+      throw Invalid_Argument("BigInt::operator% divide by zero");
 
    if(mod == 1)
       return 0;

@@ -251,7 +251,7 @@ BigInt& BigInt::operator%=(const BigInt& mod)
 word BigInt::operator%=(word mod)
    {
    if(mod == 0)
-      throw BigInt::DivideByZero();
+      throw Invalid_Argument("BigInt::operator%= divide by zero");
 
    word remainder = 0;
 

@@ -159,7 +159,7 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y)
 void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
    {
    if(y_arg.is_zero())
-      throw BigInt::DivideByZero();
+      throw Invalid_Argument("vartime_divide: cannot divide by zero");
 
    const size_t y_words = y_arg.sig_words();
 

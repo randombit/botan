@@ -126,14 +126,13 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
    tbs_crl.decode_optional(version, INTEGER, UNIVERSAL);
 
    if(version != 0 && version != 1)
-      throw X509_CRL::X509_CRL_Error("Unknown X.509 CRL version " +
-                           std::to_string(version+1));
+      throw Decoding_Error("Unknown X.509 CRL version " + std::to_string(version+1));
 
    AlgorithmIdentifier sig_algo_inner;
    tbs_crl.decode(sig_algo_inner);
 
    if(sig_algo != sig_algo_inner)
-      throw X509_CRL::X509_CRL_Error("Algorithm identifier mismatch");
+      throw Decoding_Error("Algorithm identifier mismatch in CRL");
 
    tbs_crl.decode(data->m_issuer)
       .decode(data->m_this_update)
@@ -162,7 +161,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body,
       }
 
    if(next.is_set())
-      throw X509_CRL::X509_CRL_Error("Unknown tag in CRL");
+      throw Decoding_Error("Unknown tag following extensions in CRL");
 
    tbs_crl.verify_end();
 

@@ -19,12 +19,6 @@ class RandomNumberGenerator;
 class DataSource;
 
 /**
-* The two types of X509 encoding supported by Botan.
-* This enum is not used anymore, and will be removed in a future major release.
-*/
-enum X509_Encoding { RAW_BER, PEM };
-
-/**
 * This namespace contains functions for handling X.509 public keys
 */
 namespace X509 {

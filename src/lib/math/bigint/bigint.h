@@ -35,18 +35,6 @@ class BOTAN_PUBLIC_API(2,0) BigInt final
      enum Sign { Negative = 0, Positive = 1 };
 
      /**
-     * DivideByZero Exception
-     *
-     * In a future release this exception will be removed and its usage
-     * replaced by Invalid_Argument
-     */
-     class BOTAN_PUBLIC_API(2,0) DivideByZero final : public Invalid_Argument
-        {
-        public:
-           DivideByZero() : Invalid_Argument("BigInt divide by zero") {}
-        };
-
-     /**
      * Create empty BigInt
      */
      BigInt() = default;
