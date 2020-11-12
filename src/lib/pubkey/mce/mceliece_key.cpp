@@ -11,7 +11,7 @@
  */
 
 #include <botan/mceliece.h>
-#include <botan/polyn_gf2m.h>
+#include <botan/internal/polyn_gf2m.h>
 #include <botan/internal/mce_internal.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/code_based_util.h>
@@ -22,6 +22,11 @@
 #include <botan/rng.h>
 
 namespace Botan {
+
+McEliece_PrivateKey::McEliece_PrivateKey(const McEliece_PrivateKey&) = default;
+McEliece_PrivateKey::McEliece_PrivateKey(McEliece_PrivateKey&&) = default;
+McEliece_PrivateKey& McEliece_PrivateKey::operator=(const McEliece_PrivateKey&) = default;
+McEliece_PrivateKey& McEliece_PrivateKey::operator=(McEliece_PrivateKey&&) = default;
 
 McEliece_PrivateKey::McEliece_PrivateKey(polyn_gf2m const& goppa_polyn,
                                          std::vector<uint32_t> const& parity_check_matrix_coeffs,

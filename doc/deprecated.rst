@@ -95,7 +95,6 @@ Deprecated Headers
   Internal implementation headers - seemingly no reason for applications to use:
   ``curve_gfp.h``,
   ``mdx_hash.h``,
-  ``polyn_gf2m.h``,
   ``reducer.h``,
   ``scan_name.h``,
   ``tls_algos.h``,

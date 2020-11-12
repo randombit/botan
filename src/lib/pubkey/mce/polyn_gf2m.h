@@ -16,9 +16,6 @@
 #include <utility>
 #include <string>
 
-// Currently must be visible for MSVC
-//BOTAN_FUTURE_INTERNAL_HEADER(polyn_gf2m.h)
-
 namespace Botan {
 
 typedef uint16_t gf2m;

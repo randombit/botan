@@ -13,7 +13,6 @@
 #define BOTAN_MCELIECE_KEY_H_
 
 #include <botan/pk_keys.h>
-#include <botan/polyn_gf2m.h>
 
 namespace Botan {
 
@@ -98,6 +97,11 @@ class BOTAN_PUBLIC_API(2,0) McEliece_PrivateKey final : public virtual McEliece_
                           std::vector<uint8_t> const& public_matrix );
 
       ~McEliece_PrivateKey();
+
+      McEliece_PrivateKey(const McEliece_PrivateKey&);
+      McEliece_PrivateKey(McEliece_PrivateKey&&);
+      McEliece_PrivateKey& operator=(const McEliece_PrivateKey&);
+      McEliece_PrivateKey& operator=(McEliece_PrivateKey&&);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
