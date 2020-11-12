@@ -7,27 +7,30 @@ ticket on GitHub to make sure you're on the right track.
 
 Request a new feature by opening a pull request to update this file.
 
-Ciphers, Hashes, PBKDF
+New Ciphers/Hashes/MACs
+----------------------------------------
+* GCM-SIV (RFC 8452)
+* EME* tweakable block cipher (https://eprint.iacr.org/2004/125)
+* PMAC
+* SIV-PMAC
+* Threefish-1024
+* Skein-MAC
+* FFX format preserving encryption (NIST 800-38G)
+* Adiantum (https://eprint.iacr.org/2018/720)
+
+Improved Ciphers Implementations
 ----------------------------------------
 
 * Stiched AES/GCM mode for CPUs supporting both AES and CLMUL
 * Combine AES-NI, ARMv8 and POWER AES implementations (as already done for CLMUL)
+* Support for VAES (Zen3/Ice Lake)
 * Vector permute AES only supports little-endian systems; fix for big-endian
 * SM4 using AES-NI (https://github.com/mjosaarinen/sm4ni) or vector permute
 * Poly1305 using AVX2
 * ChaCha using SSSE3
-* Skein-MAC
-* PMAC
-* SIV-PMAC
-* GCM-SIV (RFC 8452)
-* EME* tweakable block cipher (https://eprint.iacr.org/2004/125)
-* FFX format preserving encryption (NIST 800-38G)
 * SHA-512 using BMI2+AVX2
 * Constant time DES using bitslicing and/or BMI2
-* Threefish-1024
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
-* Adiantum (https://eprint.iacr.org/2018/720)
-* CRC using clmul/pmull
 
 Public Key Crypto, Math
 ----------------------------------------
