@@ -342,6 +342,9 @@ def process_command_line(args): # pylint: disable=too-many-locals,too-many-state
     target_group.add_option('--msvc-runtime', metavar='RT', default=None,
                             help='specify MSVC runtime (MT, MD, MTd, MDd)')
 
+    target_group.add_option('--compiler-cache',
+                            help='specify a compiler cache to use')
+
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
@@ -1996,6 +1999,14 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         return exe
 
+    def choose_cxx_exe():
+        cxx = options.compiler_binary or cc.binary_name
+
+        if options.compiler_cache is None:
+            return cxx
+        else:
+            return '%s %s' % (options.compiler_cache, cxx)
+
     variables = {
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
@@ -2098,7 +2109,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'python_version': options.python_version,
         'install_python_module': not options.no_install_python_module,
 
-        'cxx': (options.compiler_binary or cc.binary_name),
+        'cxx': choose_cxx_exe(),
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or '$(CXX)',
         'make_supports_phony': osinfo.basename != 'windows',
