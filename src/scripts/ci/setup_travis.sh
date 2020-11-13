@@ -15,10 +15,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get -qq update
         sudo apt-get install valgrind
 
-    elif [ "$TARGET" = "gcc4.8" ]; then
-        sudo apt-get -qq update
-        sudo apt-get install g++-4.8
-
     elif [ "$TARGET" = "cross-i386" ]; then
         sudo apt-get -qq update
         sudo apt-get install g++-multilib linux-libc-dev libc6-dev-i386
@@ -32,22 +28,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get -qq update
         sudo apt-get install g++-arm-linux-gnueabihf
         sudo apt-get install -o APT::Immediate-Configure=0 libc6:armhf libstdc++6:armhf
-
-    elif [ "$TARGET" = "cross-arm64" ]; then
-        sudo apt-get -qq update
-        sudo apt-get install qemu-user g++-aarch64-linux-gnu
-
-    elif [ "$TARGET" = "cross-ppc32" ]; then
-        sudo apt-get -qq update
-        sudo apt-get install qemu-user g++-powerpc-linux-gnu
-
-    elif [ "$TARGET" = "cross-ppc64" ]; then
-        sudo apt-get -qq update
-        sudo apt-get install qemu-user g++-powerpc64le-linux-gnu
-
-    elif [ "$TARGET" = "cross-mips64" ]; then
-        sudo apt-get -qq update
-        sudo apt-get install qemu-user g++-mips64-linux-gnuabi64
 
     elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ]; then
         wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux-x86_64.zip
