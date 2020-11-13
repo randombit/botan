@@ -20,7 +20,7 @@ namespace Botan {
 * If top bit of arg is set, return ~0. Otherwise return 0.
 */
 template<typename T>
-inline T expand_top_bit(T a)
+inline constexpr T expand_top_bit(T a)
    {
    return static_cast<T>(0) - (a >> (sizeof(T)*8-1));
    }
@@ -29,7 +29,7 @@ inline T expand_top_bit(T a)
 * If arg is zero, return ~0. Otherwise return 0
 */
 template<typename T>
-inline T ct_is_zero(T x)
+inline constexpr T ct_is_zero(T x)
    {
    return expand_top_bit<T>(~x & (x - 1));
    }
@@ -52,7 +52,7 @@ inline constexpr bool is_power_of_2(T arg)
 * @return index of the highest set bit in n
 */
 template<typename T>
-inline size_t high_bit(T n)
+inline constexpr size_t high_bit(T n)
    {
    size_t hb = 0;
 
@@ -74,7 +74,7 @@ inline size_t high_bit(T n)
 * @return number of significant bytes in n
 */
 template<typename T>
-inline size_t significant_bytes(T n)
+inline constexpr size_t significant_bytes(T n)
    {
    size_t b = 0;
 
@@ -96,7 +96,7 @@ inline size_t significant_bytes(T n)
 * @return maximum x st 2^x divides n
 */
 template<typename T>
-inline size_t ctz(T n)
+inline constexpr size_t ctz(T n)
    {
    /*
    * If n == 0 then this function will compute 8*sizeof(T)-1, so
@@ -116,7 +116,7 @@ inline size_t ctz(T n)
    }
 
 template<typename T>
-uint8_t ceil_log2(T x)
+constexpr uint8_t ceil_log2(T x)
    {
    static_assert(sizeof(T) < 32, "Abnormally large scalar");
 
@@ -136,7 +136,7 @@ uint8_t ceil_log2(T x)
    }
 
 // Potentially variable time ctz used for OCB
-inline size_t var_ctz32(uint32_t n)
+inline constexpr size_t var_ctz32(uint32_t n)
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
    if(n == 0)
@@ -148,7 +148,7 @@ inline size_t var_ctz32(uint32_t n)
    }
 
 template<typename T>
-inline T bit_permute_step(T x, T mask, size_t shift)
+inline constexpr T bit_permute_step(T x, T mask, size_t shift)
    {
    /*
    See https://reflectionsonsecurity.wordpress.com/2014/05/11/efficient-bit-permutation-using-delta-swaps/
@@ -159,7 +159,7 @@ inline T bit_permute_step(T x, T mask, size_t shift)
    }
 
 template<typename T>
-inline void swap_bits(T& x, T& y, T mask, size_t shift)
+inline constexpr void swap_bits(T& x, T& y, T mask, size_t shift)
    {
    const T swap = ((x >> shift) ^ y) & mask;
    x ^= swap << shift;

@@ -11,76 +11,52 @@
 
 #include <botan/types.h>
 
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-  #include <stdlib.h>
-#endif
-
 namespace Botan {
 
 /**
 * Swap a 16 bit integer
 */
-inline uint16_t reverse_bytes(uint16_t val)
+inline constexpr uint16_t reverse_bytes(uint16_t x)
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
-   return __builtin_bswap16(val);
+   return __builtin_bswap16(x);
 #else
-   return static_cast<uint16_t>((val << 8) | (val >> 8));
+   return static_cast<uint16_t>((x << 8) | (x >> 8));
 #endif
    }
 
 /**
 * Swap a 32 bit integer
+*
+* We cannot use MSVC's _byteswap_ulong because it does not consider
+* the builtin to be constexpr.
 */
-inline uint32_t reverse_bytes(uint32_t val)
+inline constexpr uint32_t reverse_bytes(uint32_t x)
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
-   return __builtin_bswap32(val);
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-   return _byteswap_ulong(val);
-
-#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-
-   // GCC-style inline assembly for x86 or x86-64
-   asm("bswapl %0" : "=r" (val) : "0" (val));
-   return val;
-
+   return __builtin_bswap32(x);
 #else
-   // Generic implementation
-   uint16_t hi = static_cast<uint16_t>(val >> 16);
-   uint16_t lo = static_cast<uint16_t>(val);
-
-   hi = reverse_bytes(hi);
-   lo = reverse_bytes(lo);
-
-   return (static_cast<uint32_t>(lo) << 16) | hi;
+   // MSVC at least recognizes this as a bswap
+   return ((x & 0x000000FF) << 24) |
+          ((x & 0x0000FF00) <<  8) |
+          ((x & 0x00FF0000) >>  8) |
+          ((x & 0xFF000000) >> 24);
 #endif
    }
 
 /**
 * Swap a 64 bit integer
+*
+* We cannot use MSVC's _byteswap_uint64 because it does not consider
+* the builtin to be constexpr.
 */
-inline uint64_t reverse_bytes(uint64_t val)
+inline constexpr uint64_t reverse_bytes(uint64_t x)
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_XLC)
-   return __builtin_bswap64(val);
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-   return _byteswap_uint64(val);
-
-#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
-   // GCC-style inline assembly for x86-64
-   asm("bswapq %0" : "=r" (val) : "0" (val));
-   return val;
-
+   return __builtin_bswap64(x);
 #else
-   /* Generic implementation. Defined in terms of 32-bit bswap so any
-    * optimizations in that version can help.
-    */
-
-   uint32_t hi = static_cast<uint32_t>(val >> 32);
-   uint32_t lo = static_cast<uint32_t>(val);
+   uint32_t hi = static_cast<uint32_t>(x >> 32);
+   uint32_t lo = static_cast<uint32_t>(x);
 
    hi = reverse_bytes(hi);
    lo = reverse_bytes(lo);
@@ -93,7 +69,7 @@ inline uint64_t reverse_bytes(uint64_t val)
 * Swap 4 Ts in an array
 */
 template<typename T>
-inline void bswap_4(T x[4])
+inline constexpr void bswap_4(T x[4])
    {
    x[0] = reverse_bytes(x[0]);
    x[1] = reverse_bytes(x[1]);

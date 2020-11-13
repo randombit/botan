@@ -94,7 +94,7 @@ inline bool constant_time_compare(const uint8_t x[],
 * @param ptr a pointer to memory to zero
 * @param bytes the number of bytes to zero in ptr
 */
-inline void clear_bytes(void* ptr, size_t bytes)
+inline constexpr void clear_bytes(void* ptr, size_t bytes)
    {
    if(bytes > 0)
       {
@@ -112,7 +112,7 @@ inline void clear_bytes(void* ptr, size_t bytes)
 * @param ptr a pointer to an array of Ts to zero
 * @param n the number of Ts pointed to by ptr
 */
-template<typename T> inline void clear_mem(T* ptr, size_t n)
+template<typename T> inline constexpr void clear_mem(T* ptr, size_t n)
    {
    clear_bytes(ptr, sizeof(T)*n);
    }
@@ -123,7 +123,7 @@ template<typename T> inline void clear_mem(T* ptr, size_t n)
 * @param in the source array
 * @param n the number of elements of in/out
 */
-template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
+template<typename T> inline constexpr void copy_mem(T* out, const T* in, size_t n)
    {
    static_assert(std::is_trivial<typename std::decay<T>::type>::value, "");
    BOTAN_ASSERT_IMPLICATION(n > 0, in != nullptr && out != nullptr,
@@ -135,30 +135,30 @@ template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
       }
    }
 
-template<typename T> inline void typecast_copy(uint8_t out[], T in[], size_t N)
+template<typename T> inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
    {
    static_assert(std::is_trivially_copyable<T>::value, "Safe to memcpy");
    std::memcpy(out, in, sizeof(T)*N);
    }
 
-template<typename T> inline void typecast_copy(T out[], const uint8_t in[], size_t N)
+template<typename T> inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
    {
    static_assert(std::is_trivial<T>::value, "Safe to memcpy");
    std::memcpy(out, in, sizeof(T)*N);
    }
 
-template<typename T> inline void typecast_copy(uint8_t out[], T in)
+template<typename T> inline constexpr void typecast_copy(uint8_t out[], T in)
    {
    typecast_copy(out, &in, 1);
    }
 
-template<typename T> inline void typecast_copy(T& out, const uint8_t in[])
+template<typename T> inline constexpr void typecast_copy(T& out, const uint8_t in[])
    {
    static_assert(std::is_trivial<typename std::decay<T>::type>::value, "Safe case");
    typecast_copy(&out, in, 1);
    }
 
-template <class To, class From> inline To typecast_copy(const From *src) noexcept
+template <class To, class From> inline constexpr To typecast_copy(const From *src) noexcept
    {
    static_assert(std::is_trivially_copyable<From>::value && std::is_trivial<To>::value, "Safe for memcpy");
    To dst;
@@ -172,7 +172,7 @@ template <class To, class From> inline To typecast_copy(const From *src) noexcep
 * @param n the number of Ts pointed to by ptr
 * @param val the value to set each byte to
 */
-inline void set_mem(uint8_t* ptr, size_t n, uint8_t val)
+inline constexpr void set_mem(uint8_t* ptr, size_t n, uint8_t val)
    {
    if(n > 0)
       {
