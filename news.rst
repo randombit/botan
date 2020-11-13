@@ -37,6 +37,20 @@ Version 3.0.0, Not Yet Released
 
 * Improve DragonflyBSD platform support (GH #2457)
 
+Version 2.17.2, 2020-11-13
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix an build problem on ppc64 introduced with certain recent
+  versions of GCC or binutils where using the DARN instruction
+  requires using an appropriate -mcpu flag to enable the instruction
+  in the assembler. (GH #2481 2463)
+
+* Resolve an issue in the modular square root algorithm where a loop
+  to find a quadratic non-residue could, for a carefully chosen
+  composite modulus, not terminte in a timely manner. (GH #2482 #2476)
+
+* Fix a regression in MinGW builds introduced in 2.17.1
+
 Version 2.17.1, 2020-11-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
