@@ -165,16 +165,16 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(description="")
     parser.add_argument('cli_binary', help='path to the botan cli binary')
-    parser.add_argument('--max-tests', type=int, default=50, metavar="M")
     parser.add_argument('--threads', type=int, default=0, metavar="T")
     parser.add_argument('--verbose', action='store_true', default=False)
     parser.add_argument('--quiet', action='store_true', default=False)
+    parser.add_argument('--run-slow-tests', action='store_true', default=False)
     args = parser.parse_args()
 
     setup_logging(args)
 
     cli_binary = args.cli_binary
-    max_tests = args.max_tests
+    max_tests = 0 if args.run_slow_tests else 50
     threads = args.threads
 
     if threads == 0:
