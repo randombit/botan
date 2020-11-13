@@ -2,7 +2,8 @@
 
 """
 CI build script
-(C) 2017 Jack Lloyd
+(C) 2017,2020 Jack Lloyd
+
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
@@ -86,6 +87,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
              '--os=%s' % (target_os),
              '--build-targets=%s' % ','.join(build_targets(target, target_os))]
 
+    if ccache is not None:
+        flags += ['--no-store-vc-rev', '--compiler-cache=%s' % (ccache)]
+
     if not disable_werror:
         flags += ['--werror-mode']
 
@@ -138,9 +142,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
-
-    if target == 'parallel':
-        flags += ['--with-openmp']
 
     if target == 'baremetal':
         cc_bin = 'arm-none-eabi-c++'
@@ -224,9 +225,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     else:
         # Flags specific to native targets
 
-        if target == 'gcc4.8':
-            cc_bin = 'g++-4.8'
-
         if target_os in ['osx', 'linux']:
             flags += ['--with-bzip2', '--with-sqlite', '--with-zlib']
 
@@ -257,20 +255,13 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
                 # is not installed on the CI image
                 flags += ['--with-openssl']
 
-        if target in ['sonar', 'coverage']:
+        if target in ['coverage']:
             flags += ['--with-tpm']
             test_cmd += ['--run-long-tests', '--run-online-tests']
             if pkcs11_lib and os.access(pkcs11_lib, os.R_OK):
                 test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
 
-    if ccache is None:
-        flags += ['--cc-bin=%s' % (cc_bin)]
-    elif ccache == 'clcache':
-        flags += ['--cc-bin=%s' % (ccache)]
-    else:
-        flags += ['--cc-bin=%s %s' % (ccache, cc_bin)]
-        # Avoid putting the revision in build.h, which helps ccache hit rates
-        flags += ['--no-store-vc-rev']
+    flags += ['--cc-bin=%s' % (cc_bin)]
 
     if test_cmd is None:
         run_test_command = None
@@ -372,7 +363,7 @@ def parse_args(args):
                       help='Set number of jobs to run in parallel (default %default)')
 
     parser.add_option('--compiler-cache', default=None, metavar='CC',
-                      help='Set a compiler cache to use (ccache, sccache, clcache)')
+                      help='Set a compiler cache to use (ccache, sccache)')
 
     parser.add_option('--pkcs11-lib', default=None, metavar='LIB',
                       help='Set PKCS11 lib to use for testing')
@@ -449,18 +440,12 @@ def main(args=None):
             return 1
 
     if options.compiler_cache is None and options.cc != 'msvc':
-        # Autodetect ccache, unless using clang profiling - ccache seems to misbehave there
-        if have_prog('ccache') and target not in ['sonar']:
+        # Autodetect ccache
+        if have_prog('ccache'):
             options.compiler_cache = 'ccache'
 
-    if options.compiler_cache == 'clcache' and target in ['sanitizer']:
-        # clcache doesn't support /Zi so using it just adds overhead with
-        # no benefit
-        options.compiler_cache = None
-
-    if target == 'sonar' and os.getenv('SONAR_TOKEN') is None:
-        print('Skipping Sonar scan due to missing SONAR_TOKEN env variable')
-        return 0
+    if options.compiler_cache not in ['ccache', 'sccache']:
+        raise Exception("Don't know about %s as a compiler cache" % (options.compiler_cache))
 
     root_dir = options.root_dir
 
@@ -530,15 +515,7 @@ def main(args=None):
         if target == 'docs':
             cmds.append(make_cmd + ['docs'])
         else:
-
-            ccache_show_stats = {
-                'ccache': '--show-stats',
-                'sccache': '--show-stats',
-                'clcache': '-s'
-            }
-
-            if options.compiler_cache in ccache_show_stats:
-                cmds.append([options.compiler_cache, ccache_show_stats[options.compiler_cache]])
+            cmds.append([options.compiler_cache, '--show-stats'])
 
             make_targets = ['libs', 'tests', 'cli']
 
@@ -550,8 +527,7 @@ def main(args=None):
 
             cmds.append(make_prefix + make_cmd + make_targets)
 
-            if options.compiler_cache in ccache_show_stats:
-                cmds.append([options.compiler_cache, ccache_show_stats[options.compiler_cache]])
+            cmds.append([options.compiler_cache, '--show-stats'])
 
         if run_test_command is not None:
             cmds.append(run_test_command)
@@ -598,19 +574,7 @@ def main(args=None):
         if target in ['shared', 'static', 'bsi', 'nist']:
             cmds.append(make_cmd + ['install'])
 
-        if target in ['sonar']:
-
-            cmds.append(['llvm-profdata', 'merge', '-sparse', 'default.profraw', '-o', 'botan.profdata'])
-            cmds.append(['llvm-cov', 'show', './botan-test',
-                         '-instr-profile=botan.profdata',
-                         '>', 'build/cov_report.txt'])
-            sonar_config = os.path.join(root_dir, 'src/configs/sonar-project.properties')
-            cmds.append(['sonar-scanner',
-                         '-Dproject.settings=%s' % (sonar_config),
-                         '-Dsonar.login=$SONAR_TOKEN'])
-
         if target in ['coverage']:
-
             if not have_prog('lcov'):
                 print('Error: lcov not found in PATH (%s)' % (os.getenv('PATH')))
                 return 1
