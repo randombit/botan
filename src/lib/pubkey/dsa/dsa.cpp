@@ -87,10 +87,6 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_group(dsa.get_group()),
          m_x(dsa.get_x())
          {
-#if defined(BOTAN_HAS_RFC6979_GENERATOR)
-         m_rfc6979_hash = hash_for_emsa(emsa);
-#endif
-
          m_b = BigInt::random_integer(rng, 2, dsa.group_q());
          m_b_inv = m_group.inverse_mod_q(m_b);
          }
@@ -103,10 +99,6 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
    private:
       const DL_Group m_group;
       const BigInt& m_x;
-#if defined(BOTAN_HAS_RFC6979_GENERATOR)
-      std::string m_rfc6979_hash;
-#endif
-
       BigInt m_b, m_b_inv;
    };
 
@@ -123,7 +115,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    BOTAN_UNUSED(rng);
-   const BigInt k = generate_rfc6979_nonce(m_x, q, m, m_rfc6979_hash);
+   const BigInt k = generate_rfc6979_nonce(m_x, q, m, this->hash_for_signature());
 #else
    const BigInt k = BigInt::random_integer(rng, 1, q);
 #endif
