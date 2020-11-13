@@ -1313,6 +1313,7 @@ def main(args=None):
     parser.add_option('--verbose', action='store_true', default=False)
     parser.add_option('--quiet', action='store_true', default=False)
     parser.add_option('--threads', action='store', type='int', default=0)
+    parser.add_option('--run-slow-tests', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
 
@@ -1341,8 +1342,7 @@ def main(args=None):
             logging.error("Invalid regex: %s", str(e))
             return 1
 
-    # some of the slowest tests are grouped up front
-    test_fns = [
+    slow_test_fns = [
         cli_speed_tests,
         cli_speed_pk_tests,
         cli_speed_math_tests,
@@ -1350,7 +1350,9 @@ def main(args=None):
         cli_speed_table_tests,
         cli_speed_invalid_option_tests,
         cli_xmss_sign_tests,
+    ]
 
+    fast_test_fns = [
         cli_argon2_tests,
         cli_asn1_tests,
         cli_base32_tests,
@@ -1394,6 +1396,13 @@ def main(args=None):
         cli_uuid_tests,
         cli_version_tests,
         ]
+
+    test_fns = []
+
+    if options.run_slow_tests:
+        test_fns = slow_test_fns + fast_test_fns
+    else:
+        test_fns = fast_test_fns
 
     tests_to_run = []
     for fn in test_fns:
