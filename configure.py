@@ -2139,9 +2139,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
-        'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + ' ' + external_link_cmd(),
-        'exe_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + ' ' + external_link_cmd(),
-        'post_link_cmd': '',
+        'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options),
+        'exe_link_cmd': cc.binary_link_command_for(osinfo.basename, options),
+        'external_link_cmd': external_link_cmd(),
 
         'ar_command': ar_command(),
         'ar_options': options.ar_options or cc.ar_options or osinfo.ar_options,
