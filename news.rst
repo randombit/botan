@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.17.2, Not Yet Released
+Version 2.17.2, 2020-11-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix an build problem on ppc64 introduced with certain recent
