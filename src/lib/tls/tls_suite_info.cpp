@@ -2,7 +2,7 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt hash fe1ef8f3492b0708f3b14c9e8f8de55188c1b3c0)
+* (tls-parameters.txt sha256 6412d7a966151d409d463681e5427e706cd9066f13d34ca7a89f8cc2f7dff4b2)
 * by ./src/scripts/tls_suite_info.py on 2020-11-16
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -10,9 +10,7 @@
 
 #include <botan/tls_ciphersuite.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 //static
 const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
@@ -187,7 +185,5 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
 
    return g_ciphersuite_list;
    }
-
-}
 
 }
