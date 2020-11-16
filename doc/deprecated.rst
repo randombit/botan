@@ -42,9 +42,6 @@ in a future major release:
 
 - All ciphersuites using static RSA key exchange
 
-- All anonymous (DH/ECDH) ciphersuites. This does not include PSK and
-  ECDHE-PSK, which will be retained.
-
 - SRP ciphersuites. This is implied by the removal of CBC mode, since
   all available SRP ciphersuites use CBC. To avoid use of obsolete
   ciphers, it would be better to instead perform a standard TLS

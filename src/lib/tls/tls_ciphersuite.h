@@ -168,7 +168,7 @@ class BOTAN_PUBLIC_API(2,0) Ciphersuite final
       */
       const char* m_iana_id = nullptr;
 
-      Auth_Method m_auth_method = Auth_Method::ANONYMOUS;
+      Auth_Method m_auth_method = Auth_Method::IMPLICIT;
       Kex_Algo m_kex_algo = Kex_Algo::STATIC_RSA;
       KDF_Algo m_prf_algo = KDF_Algo::SHA_1;
       Nonce_Format m_nonce_format = Nonce_Format::CBC_MODE;

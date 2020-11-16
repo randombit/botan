@@ -74,7 +74,6 @@ enum class Auth_Method {
 
    // These are placed outside the encodable range
    IMPLICIT = 0x10000,
-   ANONYMOUS
 };
 
 std::string BOTAN_TEST_API auth_method_to_string(Auth_Method method);

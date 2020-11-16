@@ -92,8 +92,6 @@ std::string auth_method_to_string(Auth_Method method)
          return "ECDSA";
       case Auth_Method::IMPLICIT:
          return "IMPLICIT";
-      case Auth_Method::ANONYMOUS:
-         return "ANONYMOUS";
       }
 
     throw Invalid_State("auth_method_to_string unknown enum value");
@@ -109,8 +107,6 @@ Auth_Method auth_method_from_string(const std::string& str)
       return Auth_Method::ECDSA;
    if(str == "IMPLICIT")
       return Auth_Method::IMPLICIT;
-   if(str == "ANONYMOUS" || str == "")
-      return Auth_Method::ANONYMOUS;
 
    throw Invalid_Argument("Bad signature method " + str);
    }
