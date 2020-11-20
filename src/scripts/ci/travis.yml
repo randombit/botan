@@ -16,16 +16,6 @@ jobs:
       env:
        - TARGET="fuzzers"
 
-    - name: Valgrind (GCC)
-      env:
-       - TARGET="valgrind"
-       - CCACHE_MAXSIZE=2G
-
-    - name: Linux s390x (GCC)
-      arch: s390x
-      env:
-       - TARGET="shared"
-
     - name: Linux ppc64le (GCC)
       arch: ppc64le
       env:
@@ -36,23 +26,7 @@ jobs:
       env:
        - TARGET="shared"
 
-    - name: Linux arm32 cross (GCC)
-      arch: arm64
-      env:
-       - TARGET="cross-arm32"
-
     - name: Linux x86_64 (Clang)
-      compiler: clang
-      env:
-       - TARGET="shared"
-
-    - name: Linux ppc32 cross (GCC)
-      dist: xenial
-      env:
-       - TARGET="cross-ppc32"
-
-    - name: macOS x86_64 (XCode Clang)
-      os: osx
       compiler: clang
       env:
        - TARGET="shared"
@@ -63,42 +37,17 @@ jobs:
       env:
        - TARGET="cross-arm64"
 
-    - name: Android arm32 cross (NDK Clang)
-      compiler: clang
-      env:
-       - TARGET="cross-android-arm32"
-       - ANDROID_NDK=android-ndk-r21d
-
     - name: Android arm64 cross (NDK Clang)
       compiler: clang
       env:
        - TARGET="cross-android-arm64"
        - ANDROID_NDK=android-ndk-r21d
 
-    - name: MinGW x86-64 cross (GCC)
-      env:
-       - TARGET="cross-win64"
-
-    - name: Linux i386 cross (GCC)
-      env:
-       - TARGET="cross-i386"
-
     - name: Linux GCC 4.8
       dist: bionic
       env:
        - TARGET="gcc4.8"
        - EXTRA_FLAGS="--disable-werror"
-
-    - name: Linux Clang 8
-      compiler: clang
-      env:
-       - TARGET="clang8"
-       - CXX="/usr/bin/clang++-8"
-
-    - name: Minimized
-      arch: arm64
-      env:
-       - TARGET="mini-shared"
 
     - name: Baremetal (GCC)
       arch: arm64
@@ -109,17 +58,6 @@ jobs:
       arch: arm64
       env:
        - TARGET="bsi"
-
-    - name: NIST policy
-      arch: arm64
-      env:
-       - TARGET="nist"
-
-    - name: Pylint
-      arch: arm64
-      dist: bionic
-      env:
-       - TARGET="lint"
 
 install:
   - ./src/scripts/ci/setup_travis.sh
