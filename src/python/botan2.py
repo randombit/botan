@@ -70,10 +70,11 @@ def _load_botan_dll(expected_version):
     for dll_name in possible_dll_names:
         try:
             dll = CDLL(dll_name)
-            dll.botan_ffi_supports_api.argtypes = [c_uint32]
-            dll.botan_ffi_supports_api.restype = c_int
-            if dll.botan_ffi_supports_api(expected_version) == 0:
-                return dll
+            if hasattr(dll, 'botan_ffi_supports_api'):
+                dll.botan_ffi_supports_api.argtypes = [c_uint32]
+                dll.botan_ffi_supports_api.restype = c_int
+                if dll.botan_ffi_supports_api(expected_version) == 0:
+                    return dll
         except OSError:
             pass
 
