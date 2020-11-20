@@ -16,16 +16,6 @@ jobs:
       env:
        - TARGET="fuzzers"
 
-    - name: Valgrind (GCC)
-      env:
-       - TARGET="valgrind"
-       - CCACHE_MAXSIZE=2G
-
-    - name: Linux s390x (GCC)
-      arch: s390x
-      env:
-       - TARGET="shared"
-
     - name: Linux ppc64le (GCC)
       arch: ppc64le
       env:
@@ -60,12 +50,6 @@ jobs:
       env:
        - TARGET="cross-arm64"
 
-    - name: Android arm32 cross (NDK Clang)
-      compiler: clang
-      env:
-       - TARGET="cross-android-arm32"
-       - ANDROID_NDK=android-ndk-r21d
-
     - name: Android arm64 cross (NDK Clang)
       compiler: clang
       env:
@@ -79,11 +63,6 @@ jobs:
     - name: Linux i386 cross (GCC)
       env:
        - TARGET="cross-i386"
-
-    - name: Minimized
-      arch: arm64
-      env:
-       - TARGET="mini-shared"
 
     - name: Baremetal (GCC)
       arch: arm64
