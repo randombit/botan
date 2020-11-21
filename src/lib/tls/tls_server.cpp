@@ -224,7 +224,6 @@ uint16_t choose_ciphersuite(
                // If empty, then implicit SHA-1 (TLS v1.2 rules)
                client_sig_methods.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
                client_sig_methods.push_back(Signature_Scheme::ECDSA_SHA1);
-               client_sig_methods.push_back(Signature_Scheme::DSA_SHA1);
                }
 
             bool we_support_some_hash_by_client = false;

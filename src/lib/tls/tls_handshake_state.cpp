@@ -415,7 +415,6 @@ Handshake_State::choose_sig_format(const Private_Key& key,
          // Implicit SHA-1
          requested.push_back(Signature_Scheme::RSA_PKCS1_SHA1);
          requested.push_back(Signature_Scheme::ECDSA_SHA1);
-         requested.push_back(Signature_Scheme::DSA_SHA1);
          }
 
       for(Signature_Scheme scheme : allowed)

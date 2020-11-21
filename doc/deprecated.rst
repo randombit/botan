@@ -26,8 +26,6 @@ in a future major release:
 
 - Support for TLSv1.0/v1.1 and DTLS v1.0
 
-- All support for DSA ciphersuites/certificates
-
 - Support for point compression in TLS. This is supported in v1.2 but
   removed in v1.3. For simplicity it will be removed in v1.2 also.
 
