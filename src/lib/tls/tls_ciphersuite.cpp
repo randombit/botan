@@ -100,8 +100,7 @@ bool Ciphersuite::cbc_ciphersuite() const
 
 bool Ciphersuite::signature_used() const
    {
-   return auth_method() != Auth_Method::ANONYMOUS &&
-          auth_method() != Auth_Method::IMPLICIT;
+   return auth_method() != Auth_Method::IMPLICIT;
    }
 
 Ciphersuite Ciphersuite::by_id(uint16_t suite)

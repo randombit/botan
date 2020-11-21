@@ -110,7 +110,6 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       "RSA",
       //"DSA",
       //"IMPLICIT",
-      //"ANONYMOUS" (anon)
       };
    }
 

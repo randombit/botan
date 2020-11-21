@@ -445,7 +445,6 @@ class Test_TLS_Algo_Strings : public Test
             Botan::TLS::Auth_Method::DSA,
             Botan::TLS::Auth_Method::ECDSA,
             Botan::TLS::Auth_Method::IMPLICIT,
-            Botan::TLS::Auth_Method::ANONYMOUS
             });
 
          for(Botan::TLS::Auth_Method meth : auth_methods)

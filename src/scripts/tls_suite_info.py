@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 """
 Used to generate lib/tls/tls_suite_info.cpp from IANA params
@@ -125,7 +125,7 @@ def to_ciphersuite_info(code, name):
 
     mode = cipher[-1]
     if mode not in ['CBC', 'GCM', 'CCM(8)', 'CCM', 'OCB']:
-        print "#warning Unknown mode '%s' for ciphersuite %s (0x%d)" % (' '.join(cipher), name, code)
+        print("#warning Unknown mode '%s' for ciphersuite %s (0x%d)" % (' '.join(cipher), name, code))
 
     if mode != 'CBC':
         if mode == 'OCB':
@@ -149,8 +149,8 @@ def open_input(args):
         except OSError:
             pass
 
-        import urllib2
-        return urllib2.urlopen(iana_url)
+        import urllib.request, urllib.error, urllib.parse
+        return urllib.request.urlopen(iana_url)
     else:
          return open(args[1])
 
@@ -194,7 +194,7 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
-    weak_crypto = ['EXPORT', 'RC2', 'IDEA', 'RC4', '_DES_', 'WITH_NULL', 'GOST']
+    weak_crypto = ['EXPORT', 'RC2', 'IDEA', 'RC4', '_DES_', 'WITH_NULL', 'GOST', '_anon_']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA'] # not supported
     protocol_goop = ['SCSV', 'KRB5']
     maybe_someday = ['RSA_PSK', 'ECCPWD']
@@ -212,6 +212,7 @@ def main(args = None):
     contents = ''
 
     for line in open_input(args):
+        line = line.decode('utf8')
         contents += line
         match = ciphersuite_re.match(line)
         if match:
@@ -226,9 +227,9 @@ def main(args = None):
             if should_use and name.find('_WITH_') > 0:
                 suites[code] = to_ciphersuite_info(code, name)
 
-    sha1 = hashlib.sha1()
-    sha1.update(contents)
-    contents_hash = sha1.hexdigest()
+    sha256 = hashlib.sha256()
+    sha256.update(contents.encode('utf8'))
+    contents_hash = sha256.hexdigest()
 
     if options.save_download:
         out = open('tls-parameters.txt', 'w')
@@ -287,7 +288,7 @@ def main(args = None):
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt hash %s)
+* (tls-parameters.txt sha256 %s)
 * by %s on %s
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -299,9 +300,7 @@ def main(args = None):
 
     suite_info += """#include <botan/tls_ciphersuite.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 //static
 const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
@@ -325,12 +324,10 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
    }
 
 }
-
-}
 """
 
     if options.output == '-':
-        print suite_info,
+        print(suite_info)
     else:
         out = open(options.output, 'w')
         out.write(suite_info)
