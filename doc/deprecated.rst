@@ -34,7 +34,7 @@ in a future major release:
 - All CBC mode ciphersuites. This includes all available 3DES and SEED
   ciphersuites. This implies also removing Encrypt-then-MAC extension.
 
-- All ciphersuites using DH key exchange (DHE-DSS, DHE-RSA, DHE-PSK, anon DH)
+- All ciphersuites using DH key exchange (DHE-RSA, DHE-PSK)
 
 - Support for renegotiation in TLS v1.2
 
