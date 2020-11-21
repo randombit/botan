@@ -15,6 +15,9 @@ Version 3.0.0, Not Yet Released
 * Remove several deprecated algorithms including CAST-256, MISTY1, Kasumi,
   DESX, XTEA, PBKDF1, MCEIES, CBC-MAC and Tiger (GH #2434)
 
+* Remove several deprecated features in TLS including DSA ciphersuites (GH #2505),
+  anonymous ciphersuites (GH #2497)
+
 * Resolve an issue in the modular square root function which could cause
   a near-infinite loop if used with a composite modulus of a certain form
   where finding a quadratic non-residue is hard. (GH #2478 #2476)
@@ -36,6 +39,17 @@ Version 3.0.0, Not Yet Released
 * Add more tests of the Jacobi symbol calculation (#2477)
 
 * Improve DragonflyBSD platform support (GH #2457)
+
+* Move the main CI build to Github Actions (GH #2504 #2503 #2501)
+
+* Correct a linking bug when using `--with-external-libdir`` (GH #2496)
+
+* Further adoption of ``constexpr`` (GH #2490)
+
+* Remove support for MD4 and MD5 from CommonCrypto as support is deprecated
+  there.
+
+* Generate a ``compile_commands.json`` for use with Clang tooling.
 
 Version 2.17.2, 2020-11-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
