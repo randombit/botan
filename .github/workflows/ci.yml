@@ -18,6 +18,9 @@ jobs:
 
       matrix:
         include:
+          - target: coverage
+            compiler: gcc
+            host_os: ubuntu-20.04
           - target: shared
             compiler: gcc
             host_os: ubuntu-20.04
