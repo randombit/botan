@@ -7,7 +7,7 @@
 
 command -v shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
-set -ev
+set -ex
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
