@@ -36,7 +36,6 @@ enum Handshake_Extension_Type {
    TLSEXT_CERTIFICATE_TYPES      = 9,
    TLSEXT_SUPPORTED_GROUPS       = 10,
    TLSEXT_EC_POINT_FORMATS       = 11,
-   TLSEXT_SRP_IDENTIFIER         = 12,
    TLSEXT_SIGNATURE_ALGORITHMS   = 13,
    TLSEXT_USE_SRTP               = 14,
    TLSEXT_ALPN                   = 16,
@@ -100,34 +99,6 @@ class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension
    private:
       std::string m_sni_host_name;
    };
-
-#if defined(BOTAN_HAS_SRP6)
-/**
-* SRP identifier extension (RFC 5054)
-*/
-class BOTAN_UNSTABLE_API SRP_Identifier final : public Extension
-   {
-   public:
-      static Handshake_Extension_Type static_type()
-         { return TLSEXT_SRP_IDENTIFIER; }
-
-      Handshake_Extension_Type type() const override { return static_type(); }
-
-      explicit SRP_Identifier(const std::string& identifier) :
-         m_srp_identifier(identifier) {}
-
-      SRP_Identifier(TLS_Data_Reader& reader,
-                     uint16_t extension_size);
-
-      std::string identifier() const { return m_srp_identifier; }
-
-      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
-
-      bool empty() const override { return m_srp_identifier.empty(); }
-   private:
-      std::string m_srp_identifier;
-   };
-#endif
 
 /**
 * Renegotiation Indication Extension (RFC 5746)

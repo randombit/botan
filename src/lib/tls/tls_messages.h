@@ -25,10 +25,6 @@
   #include <botan/cecpq1.h>
 #endif
 
-#if defined(BOTAN_HAS_SRP6)
-  #include <botan/srp6.h>
-#endif
-
 namespace Botan {
 
 class Public_Key;
@@ -74,20 +70,16 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
          {
          public:
             Settings(const Protocol_Version version,
-                     const std::string& hostname = "",
-                     const std::string& srp_identifier = "") :
+                     const std::string& hostname = "") :
                m_new_session_version(version),
-               m_hostname(hostname),
-               m_srp_identifier(srp_identifier) {}
+               m_hostname(hostname) {}
 
             const Protocol_Version protocol_version() const { return m_new_session_version; }
             const std::string& hostname() const { return m_hostname; }
-            const std::string& srp_identifier() const { return m_srp_identifier; }
 
          private:
             const Protocol_Version m_new_session_version;
             const std::string m_hostname;
-            const std::string m_srp_identifier;
          };
 
       Handshake_Type type() const override { return CLIENT_HELLO; }
@@ -117,10 +109,6 @@ class BOTAN_UNSTABLE_API Client_Hello final : public Handshake_Message
       bool prefers_compressed_ec_points() const;
 
       std::string sni_hostname() const;
-
-#if defined(BOTAN_HAS_SRP6)
-      std::string srp_identifier() const;
-#endif
 
       bool secure_renegotiation() const;
 
@@ -543,15 +531,6 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
       // Only valid for certain kex types
       const Private_Key& server_kex_key() const;
 
-#if defined(BOTAN_HAS_SRP6)
-      // Only valid for SRP negotiation
-      SRP6_Server_Session& server_srp_params() const
-         {
-         BOTAN_ASSERT_NONNULL(m_srp_params);
-         return *m_srp_params;
-         }
-#endif
-
 #if defined(BOTAN_HAS_CECPQ1)
       // Only valid for CECPQ1 negotiation
       const CECPQ1_key& cecpq1_key() const
@@ -576,10 +555,6 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message
       ~Server_Key_Exchange() = default;
    private:
       std::vector<uint8_t> serialize() const override;
-
-#if defined(BOTAN_HAS_SRP6)
-      std::unique_ptr<SRP6_Server_Session> m_srp_params;
-#endif
 
 #if defined(BOTAN_HAS_CECPQ1)
       std::unique_ptr<CECPQ1_key> m_cecpq1_key;

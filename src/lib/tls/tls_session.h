@@ -54,7 +54,6 @@ class BOTAN_PUBLIC_API(2,0) Session final
               const std::vector<X509_Certificate>& peer_certs,
               const std::vector<uint8_t>& session_ticket,
               const Server_Information& server_info,
-              const std::string& srp_identifier,
               uint16_t srtp_profile);
 
       /**
@@ -134,11 +133,6 @@ class BOTAN_PUBLIC_API(2,0) Session final
       Connection_Side side() const { return m_connection_side; }
 
       /**
-      * Get the SRP identity (if sent by the client in the initial handshake)
-      */
-      const std::string& srp_identifier() const { return m_srp_identifier; }
-
-      /**
       * Get the saved master secret
       */
       const secure_vector<uint8_t>& master_secret() const { return m_master_secret; }
@@ -200,7 +194,6 @@ class BOTAN_PUBLIC_API(2,0) Session final
 
       std::vector<X509_Certificate> m_peer_certs;
       Server_Information m_server_info; // optional
-      std::string m_srp_identifier; // optional
    };
 
 }

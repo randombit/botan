@@ -3,7 +3,7 @@
 *
 * This file was automatically generated from the IANA assignments
 * (tls-parameters.txt sha256 6412d7a966151d409d463681e5427e706cd9066f13d34ca7a89f8cc2f7dff4b2)
-* by ./src/scripts/tls_suite_info.py on 2020-11-17
+* by ./src/scripts/tls_suite_info.py on 2020-11-21
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -65,12 +65,6 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0xC012, "ECDHE_RSA_WITH_3DES_EDE_CBC_SHA", Auth_Method::RSA, Kex_Algo::ECDH, "3DES", 24, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
       Ciphersuite(0xC013, "ECDHE_RSA_WITH_AES_128_CBC_SHA", Auth_Method::RSA, Kex_Algo::ECDH, "AES-128", 16, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
       Ciphersuite(0xC014, "ECDHE_RSA_WITH_AES_256_CBC_SHA", Auth_Method::RSA, Kex_Algo::ECDH, "AES-256", 32, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
-      Ciphersuite(0xC01A, "SRP_SHA_WITH_3DES_EDE_CBC_SHA", Auth_Method::IMPLICIT, Kex_Algo::SRP_SHA, "3DES", 24, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
-      Ciphersuite(0xC01B, "SRP_SHA_RSA_WITH_3DES_EDE_CBC_SHA", Auth_Method::RSA, Kex_Algo::SRP_SHA, "3DES", 24, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
-      Ciphersuite(0xC01D, "SRP_SHA_WITH_AES_128_CBC_SHA", Auth_Method::IMPLICIT, Kex_Algo::SRP_SHA, "AES-128", 16, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
-      Ciphersuite(0xC01E, "SRP_SHA_RSA_WITH_AES_128_CBC_SHA", Auth_Method::RSA, Kex_Algo::SRP_SHA, "AES-128", 16, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
-      Ciphersuite(0xC020, "SRP_SHA_WITH_AES_256_CBC_SHA", Auth_Method::IMPLICIT, Kex_Algo::SRP_SHA, "AES-256", 32, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
-      Ciphersuite(0xC021, "SRP_SHA_RSA_WITH_AES_256_CBC_SHA", Auth_Method::RSA, Kex_Algo::SRP_SHA, "AES-256", 32, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
       Ciphersuite(0xC023, "ECDHE_ECDSA_WITH_AES_128_CBC_SHA256", Auth_Method::ECDSA, Kex_Algo::ECDH, "AES-128", 16, "SHA-256", 32, KDF_Algo::SHA_256, Nonce_Format::CBC_MODE),
       Ciphersuite(0xC024, "ECDHE_ECDSA_WITH_AES_256_CBC_SHA384", Auth_Method::ECDSA, Kex_Algo::ECDH, "AES-256", 32, "SHA-384", 48, KDF_Algo::SHA_384, Nonce_Format::CBC_MODE),
       Ciphersuite(0xC027, "ECDHE_RSA_WITH_AES_128_CBC_SHA256", Auth_Method::RSA, Kex_Algo::ECDH, "AES-128", 16, "SHA-256", 32, KDF_Algo::SHA_256, Nonce_Format::CBC_MODE),

@@ -104,15 +104,6 @@ bool check_for_resume(Session& session_info,
                     session_info.ciphersuite_code()))
       return false;
 
-#if defined(BOTAN_HAS_SRP6)
-   // client sent a different SRP identity
-   if(client_hello->srp_identifier() != "")
-      {
-      if(client_hello->srp_identifier() != session_info.srp_identifier())
-         return false;
-      }
-#endif
-
    // client sent a different SNI hostname
    if(client_hello->sni_hostname() != "")
       {
@@ -158,14 +149,12 @@ bool check_for_resume(Session& session_info,
 uint16_t choose_ciphersuite(
    const Policy& policy,
    Protocol_Version version,
-   Credentials_Manager& creds,
    const std::map<std::string, std::vector<X509_Certificate>>& cert_chains,
    const Client_Hello& client_hello)
    {
    const bool our_choice = policy.server_uses_own_ciphersuite_preferences();
-   const bool have_srp = creds.attempt_srp("tls-server", client_hello.sni_hostname());
    const std::vector<uint16_t> client_suites = client_hello.ciphersuites();
-   const std::vector<uint16_t> server_suites = policy.ciphersuite_list(version, have_srp);
+   const std::vector<uint16_t> server_suites = policy.ciphersuite_list(version);
 
    if(server_suites.empty())
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -247,20 +236,6 @@ uint16_t choose_ciphersuite(
                }
             }
          }
-
-#if defined(BOTAN_HAS_SRP6)
-      /*
-      The client may offer SRP cipher suites in the hello message but
-      omit the SRP extension.  If the server would like to select an
-      SRP cipher suite in this case, the server SHOULD return a fatal
-      "unknown_psk_identity" alert immediately after processing the
-      client hello message.
-       - RFC 5054 section 2.5.1.2
-      */
-      if(suite.kex_method() == Kex_Algo::SRP_SHA && client_hello.srp_identifier() == "")
-         throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
-                             "Client wanted SRP but did not send username");
-#endif
 
       return suite_id;
       }
@@ -686,7 +661,6 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
          get_peer_cert_chain(pending_state),
          std::vector<uint8_t>(),
          Server_Information(pending_state.client_hello()->sni_hostname()),
-         pending_state.srp_identifier(),
          pending_state.server_hello()->srtp_profile());
 
       if(save_session(session_info))
@@ -871,7 +845,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
       }
 
    const uint16_t ciphersuite = choose_ciphersuite(policy(), pending_state.version(),
-                                                   m_creds, cert_chains,
+                                                   cert_chains,
                                                    *pending_state.client_hello());
 
    Server_Hello::Settings srv_settings(

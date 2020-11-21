@@ -141,7 +141,6 @@ enum class Kex_Algo {
    DH,
    ECDH,
    CECPQ1,
-   SRP_SHA,
    PSK,
    DHE_PSK,
    ECDHE_PSK,

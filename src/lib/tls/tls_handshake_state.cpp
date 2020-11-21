@@ -359,18 +359,6 @@ Handshake_State::get_next_handshake_msg()
    return m_handshake_io->get_next_record(expecting_ccs);
    }
 
-std::string Handshake_State::srp_identifier() const
-   {
-#if defined(BOTAN_HAS_SRP6)
-   // Authenticated via the successful key exchange
-   if(ciphersuite().valid() && ciphersuite().kex_method() == Kex_Algo::SRP_SHA)
-      return client_hello()->srp_identifier();
-#endif
-
-   return "";
-   }
-
-
 std::vector<uint8_t> Handshake_State::session_ticket() const
    {
    if(new_session_ticket() && !new_session_ticket()->ticket().empty())

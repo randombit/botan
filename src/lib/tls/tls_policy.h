@@ -205,7 +205,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual void check_peer_key_acceptable(const Public_Key& public_key) const;
 
       /**
-      * If this function returns false, unknown SRP/PSK identifiers
+      * If this function returns false, unknown PSK identifiers
       * will be rejected with an unknown_psk_identifier alert as soon
       * as the non-existence is identified. Otherwise, a false
       * identifier value will be used and the protocol allowed to
@@ -295,8 +295,7 @@ class BOTAN_PUBLIC_API(2,0) Policy
       /**
       * Return allowed ciphersuites, in order of preference
       */
-      virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version,
-                                                     bool have_srp) const;
+      virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version) const;
 
       /**
       * @return the default MTU for DTLS
