@@ -224,13 +224,7 @@ bool Ciphersuite::is_usable() const
 #endif
       }
 
-   if(auth_method() == Auth_Method::DSA)
-      {
-#if !defined(BOTAN_HAS_DSA)
-      return false;
-#endif
-      }
-   else if(auth_method() == Auth_Method::ECDSA)
+   if(auth_method() == Auth_Method::ECDSA)
       {
 #if !defined(BOTAN_HAS_ECDSA)
       return false;

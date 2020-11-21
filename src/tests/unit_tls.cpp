@@ -28,10 +28,6 @@
    #include <botan/x509_ca.h>
    #include <botan/x509self.h>
 
-   #if defined(BOTAN_HAS_DSA)
-      #include <botan/dsa.h>
-   #endif
-
    #if defined(BOTAN_HAS_SRP6)
       #include <botan/srp6.h>
    #endif
@@ -58,36 +54,19 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
                                const Botan::X509_Certificate& ecdsa_cert,
                                Botan::Private_Key* ecdsa_key,
                                const Botan::X509_Certificate& ecdsa_ca,
-                               const Botan::X509_CRL& ecdsa_crl,
-                               const Botan::X509_Certificate* dsa_cert,
-                               Botan::Private_Key* dsa_key,
-                               const Botan::X509_Certificate* dsa_ca,
-                               Botan::X509_CRL* dsa_crl) :
+                               const Botan::X509_CRL& ecdsa_crl) :
          m_rsa_cert(rsa_cert),
          m_rsa_ca(rsa_ca),
          m_rsa_key(rsa_key),
          m_ecdsa_cert(ecdsa_cert),
          m_ecdsa_ca(ecdsa_ca),
-         m_ecdsa_key(ecdsa_key),
-         m_dsa_cert(dsa_cert),
-         m_dsa_ca(dsa_ca),
-         m_dsa_key(dsa_key),
-         m_dsa_crl(dsa_crl)
+         m_ecdsa_key(ecdsa_key)
          {
          std::unique_ptr<Botan::Certificate_Store_In_Memory> store(new Botan::Certificate_Store_In_Memory);
          store->add_certificate(m_rsa_ca);
          store->add_certificate(m_ecdsa_ca);
          store->add_crl(rsa_crl);
          store->add_crl(ecdsa_crl);
-
-         if(m_dsa_ca != nullptr)
-            {
-            store->add_certificate(*m_dsa_ca);
-            }
-         if(m_dsa_crl != nullptr)
-            {
-            store->add_crl(*m_dsa_crl);
-            }
 
          m_stores.push_back(std::move(store));
          m_provides_client_certs = with_client_certs;
@@ -111,6 +90,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
          const std::string& type,
          const std::string& context) override
          {
+         BOTAN_UNUSED(context);
          std::vector<Botan::X509_Certificate> chain;
 
          if(m_acceptable_cas.empty())
@@ -132,20 +112,6 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
                   chain.push_back(m_ecdsa_ca);
                   break;
                   }
-#if defined(BOTAN_HAS_DSA)
-               else if(key_type == "DSA")
-                  {
-                  if(m_dsa_cert == nullptr || m_dsa_ca == nullptr)
-                     {
-                     throw Test_Error("No DSA certificates set for " + type + "/" + context);
-                     }
-                  chain.push_back(*m_dsa_cert);
-                  chain.push_back(*m_dsa_ca);
-                  break;
-                  }
-#else
-               BOTAN_UNUSED(context);
-#endif
                }
             }
 
@@ -163,10 +129,6 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
          if(crt == m_ecdsa_cert)
             {
             return m_ecdsa_key.get();
-            }
-         if(crt == *m_dsa_cert)
-            {
-            return m_dsa_key.get();
             }
          return nullptr;
          }
@@ -207,9 +169,6 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager
       Botan::X509_Certificate m_ecdsa_cert, m_ecdsa_ca;
       std::unique_ptr<Botan::Private_Key> m_ecdsa_key;
 
-      std::unique_ptr<const Botan::X509_Certificate> m_dsa_cert, m_dsa_ca;
-      std::unique_ptr<Botan::Private_Key> m_dsa_key;
-      std::unique_ptr<Botan::X509_CRL> m_dsa_crl;
       std::vector<std::unique_ptr<Botan::Certificate_Store>> m_stores;
       bool m_provides_client_certs;
       std::vector<Botan::X509_DN> m_acceptable_cas;
@@ -270,33 +229,10 @@ create_creds(Botan::RandomNumberGenerator& rng,
    std::unique_ptr<Botan::X509_Certificate> dsa_srv_cert;
    std::unique_ptr<Botan::X509_Certificate> dsa_ca_cert;
 
-#if defined(BOTAN_HAS_DSA)
-   const Botan::DL_Group dsa_params("dsa/jce/1024");
-
-   dsa_ca_key.reset(new Botan::DSA_PrivateKey(rng, dsa_params));
-   dsa_srv_key.reset(new Botan::DSA_PrivateKey(rng, dsa_params));
-
-   Botan::X509_Cert_Options dsa_ca_opts("DSA Test CA/VT");
-   dsa_ca_opts.CA_key(1);
-
-   dsa_ca_cert.reset(new Botan::X509_Certificate(
-                        Botan::X509::create_self_signed_cert(dsa_ca_opts, *dsa_ca_key, "SHA-256", rng)));
-
-   const Botan::PKCS10_Request dsa_req =
-      Botan::X509::create_cert_req(server_opts, *dsa_srv_key, "SHA-256", rng);
-
-   Botan::X509_CA dsa_ca(*dsa_ca_cert, *dsa_ca_key, "SHA-256", rng);
-   dsa_srv_cert.reset(new Botan::X509_Certificate(
-                         dsa_ca.sign_request(dsa_req, rng, start_time, end_time)));
-
-   dsa_crl.reset(new Botan::X509_CRL(dsa_ca.new_crl(rng)));
-#endif
-
    Credentials_Manager_Test* cmt = new Credentials_Manager_Test(
       with_client_certs,
       rsa_srv_cert, rsa_srv_key.release(), rsa_ca_cert, rsa_crl,
-      ecdsa_srv_cert, ecdsa_srv_key.release(), ecdsa_ca_cert, ecdsa_crl,
-      dsa_srv_cert.release(), dsa_srv_key.release(), dsa_ca_cert.release(), dsa_crl.release());
+      ecdsa_srv_cert, ecdsa_srv_key.release(), ecdsa_ca_cert, ecdsa_crl);
 
    return cmt;
    }
@@ -722,7 +658,7 @@ void TLS_Handshake_Test::go()
 
             std::vector<Botan::X509_DN> acceptable_CAs = test_creds.get_acceptable_cas();
 
-            m_results.test_gte("client got CA list", acceptable_CAs.size(), 2); // DSA is optional
+            m_results.test_eq("client got CA list", acceptable_CAs.size(), 2); // RSA + ECDSA
 
             for(const Botan::X509_DN& dn : acceptable_CAs)
                {
@@ -777,11 +713,6 @@ class Test_Policy final : public Botan::TLS::Text_Policy
          }
 
       size_t minimum_rsa_bits() const override
-         {
-         return 1024;
-         }
-
-      size_t minimum_dsa_group_size() const override
          {
          return 1024;
          }
@@ -976,17 +907,6 @@ class TLS_Unit_Tests final : public Test
          client_ses->remove_all();
 
          test_modern_versions("AES-128 DH", results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256");
-
-#if defined(BOTAN_HAS_DSA)
-         if(Test::run_long_tests())
-            {
-            test_modern_versions("AES-128 DSA", results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256",
-                                 { { "signature_methods", "DSA" } });
-
-            test_modern_versions("AES-128/GCM DSA", results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
-                                 { { "signature_methods", "DSA" } });
-            }
-#endif
 
 #if defined(BOTAN_HAS_SRP6)
          std::unique_ptr<Botan::Credentials_Manager> srp6_creds(create_srp6_creds(rng));

@@ -196,11 +196,6 @@ class BOTAN_PUBLIC_API(2,0) Policy
       virtual size_t minimum_rsa_bits() const;
 
       /**
-      * Minimum DSA group size, default 2048 bits
-      */
-      virtual size_t minimum_dsa_group_size() const;
-
-      /**
       * Throw an exception if you don't like the peer's key.
       * Default impl checks the key size against minimum_rsa_bits, minimum_ecdsa_group_size,
       * or minimum_ecdh_group_size depending on the key's type.
@@ -464,7 +459,6 @@ class BOTAN_PUBLIC_API(2,0) BSI_TR_02102_2 : public Policy
 
       size_t minimum_rsa_bits() const override { return 2000; }
       size_t minimum_dh_group_size() const override { return 2000; }
-      size_t minimum_dsa_group_size() const override { return 2000; }
 
       size_t minimum_ecdh_group_size() const override { return 250; }
       size_t minimum_ecdsa_group_size() const override { return 250; }

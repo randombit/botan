@@ -221,12 +221,6 @@ size_t Policy::minimum_rsa_bits() const
    return 2048;
    }
 
-size_t Policy::minimum_dsa_group_size() const
-   {
-   // FIPS 186-3
-   return 2048;
-   }
-
 void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
    {
    const std::string algo_name = public_key.algo_name();
@@ -241,10 +235,6 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
    else if(algo_name == "DH")
       {
       expected_keylength = minimum_dh_group_size();
-      }
-   else if(algo_name == "DSA")
-      {
-      expected_keylength = minimum_dsa_group_size();
       }
    else if(algo_name == "ECDH" || algo_name == "Curve25519")
       {
