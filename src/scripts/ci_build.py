@@ -367,7 +367,7 @@ def parse_args(args):
     parser.add_option('--compiler-cache', default=None, metavar='CC',
                       help='Set a compiler cache to use (ccache, sccache)')
 
-    parser.add_option('--pkcs11-lib', default=None, metavar='LIB',
+    parser.add_option('--pkcs11-lib', default=os.getenv('PKCS11_LIB'), metavar='LIB',
                       help='Set PKCS11 lib to use for testing')
 
     parser.add_option('--with-python3', dest='use_python3', action='store_true', default=None,
