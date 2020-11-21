@@ -25,9 +25,9 @@ def get_concurrency():
         return def_concurrency
 
 def build_targets(target, target_os):
-    if target in ['shared', 'mini-shared', 'bsi', 'nist']:
+    if target in ['shared', 'minimized', 'bsi', 'nist']:
         yield 'shared'
-    elif target in ['static', 'mini-static', 'fuzzers', 'baremetal']:
+    elif target in ['static', 'fuzzers', 'baremetal']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -99,7 +99,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
     for flag in extra_cxxflags:
         flags += ['--extra-cxxflags=%s' % (flag)]
 
-    if target in ['mini-static', 'mini-shared']:
+    if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
     if target in ['bsi', 'nist']:
@@ -152,9 +152,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
         if target_os == 'ios':
             make_prefix = ['xcrun', '--sdk', 'iphoneos']
             test_cmd = None
-            if target == 'cross-arm32':
-                flags += ['--cpu=armv7', '--cc-abi-flags=-arch armv7 -arch armv7s -stdlib=libc++']
-            elif target == 'cross-arm64':
+            if target == 'cross-ios-arm64':
                 flags += ['--cpu=arm64', '--cc-abi-flags=-arch arm64 -stdlib=libc++']
             else:
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
@@ -188,9 +186,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
 
         elif target == 'cross-i386':
             flags += ['--cpu=x86_32']
-        elif target == 'cross-arm32':
-            flags += ['--cpu=armv7']
-            cc_bin = 'arm-linux-gnueabihf-g++'
 
         elif target == 'cross-win64':
             # MinGW in 16.04 is lacking std::mutex for unknown reason
@@ -203,7 +198,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             # Build everything but restrict what is run
             test_cmd += essential_tests
 
-            if target == 'cross-arm64':
+            if target == 'cross-arm32':
+                flags += ['--cpu=armv7']
+                cc_bin = 'arm-linux-gnueabihf-g++'
+                test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
+            elif target == 'cross-arm64':
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
                 test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']
@@ -250,7 +249,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin,
             flags += ['--with-lzma']
 
         if target_os == 'linux':
-            if target not in ['sanitizer', 'valgrind', 'mini-shared', 'mini-static']:
+            if target not in ['sanitizer', 'valgrind', 'minimized']:
                 # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
                 # is not installed on the CI image
                 flags += ['--with-openssl']
@@ -320,13 +319,19 @@ def run_cmd(cmd, root_dir):
         if cmd[0] not in ['lcov']:
             sys.exit(proc.returncode)
 
+def default_os():
+    platform_os = platform.system().lower()
+    if platform_os == 'darwin':
+        return 'osx'
+    return platform_os
+
 def parse_args(args):
     """
     Parse arguments
     """
     parser = optparse.OptionParser()
 
-    parser.add_option('--os', default=platform.system().lower(),
+    parser.add_option('--os', default=default_os(),
                       help='Set the target os (default %default)')
     parser.add_option('--cc', default='gcc',
                       help='Set the target compiler type (default %default)')
@@ -353,9 +358,6 @@ def parse_args(args):
 
     parser.add_option('--branch', metavar='B', default=None,
                       help='Specify branch being built')
-
-    parser.add_option('--add-travis-folds', action='store_true', default=False,
-                      help='Add fold markers for Travis UI')
 
     parser.add_option('--dry-run', action='store_true', default=False,
                       help='Just show commands to be executed')
@@ -417,8 +419,6 @@ def main(args=None):
 
     target = args[1]
 
-    use_python2 = have_prog('python2')
-
     if options.use_python3 is None:
         use_python3 = have_prog('python3')
     else:
@@ -444,7 +444,7 @@ def main(args=None):
         if have_prog('ccache'):
             options.compiler_cache = 'ccache'
 
-    if options.compiler_cache not in ['ccache', 'sccache']:
+    if options.compiler_cache not in [None, 'ccache', 'sccache']:
         raise Exception("Don't know about %s as a compiler cache" % (options.compiler_cache))
 
     root_dir = options.root_dir
@@ -456,16 +456,8 @@ def main(args=None):
 
     if target == 'lint':
 
-        if not use_python2 and not use_python3:
-            raise Exception('No python interpreters found cannot lint')
-
         pylint_rc = '--rcfile=%s' % (os.path.join(root_dir, 'src/configs/pylint.rc'))
         pylint_flags = [pylint_rc, '--reports=no']
-
-        # Some disabled rules specific to Python2
-        # superfluous-parens: needed for Python3 compatible print statements
-        # too-many-locals: variable counting differs from pylint3
-        py2_flags = '--disable=superfluous-parens,too-many-locals'
 
         # Some disabled rules specific to Python3
         # useless-object-inheritance: complains about code still useful in Python2
@@ -489,9 +481,6 @@ def main(args=None):
             'src/scripts/python_unittests_unix.py']
 
         full_paths = [os.path.join(root_dir, s) for s in py_scripts]
-
-        if use_python2:
-            cmds.append(['python2', '-m', 'pylint'] + pylint_flags + [py2_flags] + full_paths)
 
         if use_python3 and options.use_pylint3:
             cmds.append(['python3', '-m', 'pylint'] + pylint_flags + [py3_flags] + full_paths)
@@ -566,8 +555,6 @@ def main(args=None):
                     # Python on AppVeyor is a 32-bit binary so only test for 32-bit
                     cmds.append([py_interp, '-b', python_tests])
             else:
-                if use_python2:
-                    cmds.append(['python2', '-b', python_tests])
                 if use_python3:
                     cmds.append(['python3', '-b', python_tests])
 
@@ -597,7 +584,7 @@ def main(args=None):
                              python_tests])
 
             if have_prog('codecov'):
-                # If codecov exists assume we are on Travis and report to codecov.io
+                # If codecov exists assume we are in CI and report to codecov.io
                 cmds.append(['codecov', '>', 'codecov_stdout.log'])
             else:
                 # Otherwise generate a local HTML report
