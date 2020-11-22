@@ -5,17 +5,6 @@ compiler: gcc
 
 jobs:
   include:
-    - name: Coverage (GCC)
-      env:
-       - TARGET="coverage"
-       - CCACHE_MAXSIZE=2G
-       - PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so
-
-    - name: Fuzzers (GCC)
-      arch: arm64
-      env:
-       - TARGET="fuzzers"
-
     - name: Linux ppc64le (GCC)
       arch: ppc64le
       env:
@@ -26,38 +15,11 @@ jobs:
       env:
        - TARGET="shared"
 
-    - name: Linux x86_64 (Clang)
-      compiler: clang
-      env:
-       - TARGET="shared"
-
-    - name: iOS arm64 (XCode Clang)
-      os: osx
-      compiler: clang
-      env:
-       - TARGET="cross-arm64"
-
-    - name: Android arm64 cross (NDK Clang)
-      compiler: clang
-      env:
-       - TARGET="cross-android-arm64"
-       - ANDROID_NDK=android-ndk-r21d
-
     - name: Linux GCC 4.8
       dist: bionic
       env:
        - TARGET="gcc4.8"
        - EXTRA_FLAGS="--disable-werror"
-
-    - name: Baremetal (GCC)
-      arch: arm64
-      env:
-       - TARGET="baremetal"
-
-    - name: BSI policy
-      arch: arm64
-      env:
-       - TARGET="bsi"
 
 install:
   - ./src/scripts/ci/setup_travis.sh
