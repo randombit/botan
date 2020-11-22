@@ -10,6 +10,11 @@ jobs:
       env:
        - TARGET="shared"
 
+    - name: Linux arm64 (GCC)
+      arch: arm64
+      env:
+       - TARGET="shared"
+
 install:
   - ./src/scripts/ci/setup_travis.sh
 
