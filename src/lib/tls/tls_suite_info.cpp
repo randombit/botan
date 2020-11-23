@@ -3,7 +3,7 @@
 *
 * This file was automatically generated from the IANA assignments
 * (tls-parameters.txt sha256 6412d7a966151d409d463681e5427e706cd9066f13d34ca7a89f8cc2f7dff4b2)
-* by ./src/scripts/tls_suite_info.py on 2020-11-21
+* by ./src/scripts/tls_suite_info.py on 2020-11-23
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -37,8 +37,6 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0x008F, "DHE_PSK_WITH_3DES_EDE_CBC_SHA", Auth_Method::IMPLICIT, Kex_Algo::DHE_PSK, "3DES", 24, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
       Ciphersuite(0x0090, "DHE_PSK_WITH_AES_128_CBC_SHA", Auth_Method::IMPLICIT, Kex_Algo::DHE_PSK, "AES-128", 16, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
       Ciphersuite(0x0091, "DHE_PSK_WITH_AES_256_CBC_SHA", Auth_Method::IMPLICIT, Kex_Algo::DHE_PSK, "AES-256", 32, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
-      Ciphersuite(0x0096, "RSA_WITH_SEED_CBC_SHA", Auth_Method::IMPLICIT, Kex_Algo::STATIC_RSA, "SEED", 16, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
-      Ciphersuite(0x009A, "DHE_RSA_WITH_SEED_CBC_SHA", Auth_Method::RSA, Kex_Algo::DH, "SEED", 16, "SHA-1", 20, KDF_Algo::SHA_1, Nonce_Format::CBC_MODE),
       Ciphersuite(0x009C, "RSA_WITH_AES_128_GCM_SHA256", Auth_Method::IMPLICIT, Kex_Algo::STATIC_RSA, "AES-128/GCM", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),
       Ciphersuite(0x009D, "RSA_WITH_AES_256_GCM_SHA384", Auth_Method::IMPLICIT, Kex_Algo::STATIC_RSA, "AES-256/GCM", 32, "AEAD", 0, KDF_Algo::SHA_384, Nonce_Format::AEAD_IMPLICIT_4),
       Ciphersuite(0x009E, "DHE_RSA_WITH_AES_128_GCM_SHA256", Auth_Method::RSA, Kex_Algo::DH, "AES-128/GCM", 16, "AEAD", 0, KDF_Algo::SHA_256, Nonce_Format::AEAD_IMPLICIT_4),

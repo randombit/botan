@@ -48,7 +48,6 @@ enum class Cipher_Algo {
    ARIA_256_GCM,
 
    DES_EDE_CBC_HMAC_SHA1 = 1000,
-   SEED_CBC_HMAC_SHA1,
 };
 
 enum class KDF_Algo {

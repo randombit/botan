@@ -59,7 +59,6 @@ std::vector<std::string> Policy::allowed_ciphers() const
       //"AES-128",
       //"Camellia-256",
       //"Camellia-128",
-      //"SEED",
       //"3DES",
       };
    }

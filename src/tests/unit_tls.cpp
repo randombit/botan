@@ -812,10 +812,6 @@ class TLS_Unit_Tests final : public Test
             test_all_versions("3DES ECDH", results, *client_ses, *server_ses, *creds, "ECDH", "3DES", "SHA-1", etm_setting);
 #endif
 
-#if defined(BOTAN_HAS_SEED)
-            test_all_versions("SEED RSA", results, *client_ses, *server_ses, *creds, "RSA", "SEED", "SHA-1", etm_setting);
-#endif
-
             server_ses->remove_all();
             }
          client_ses->remove_all();
